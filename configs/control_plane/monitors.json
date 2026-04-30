@@ -1,0 +1,193 @@
+{
+  "live.inout_runner": [
+    {
+      "name": "cycle_count",
+      "label": "Cycle",
+      "source": "jsonl_tail",
+      "path_template": "logs/inout_heartbeat.jsonl",
+      "extractor": { "key": "cycle" },
+      "format": "int",
+      "unit": ""
+    },
+    {
+      "name": "open_trades",
+      "label": "Open Trades",
+      "source": "jsonl_tail",
+      "path_template": "logs/inout_heartbeat.jsonl",
+      "extractor": { "key": "open_trades" },
+      "format": "int",
+      "unit": ""
+    },
+    {
+      "name": "open_risk_pct",
+      "label": "Open Risk",
+      "source": "jsonl_tail",
+      "path_template": "logs/inout_heartbeat.jsonl",
+      "extractor": { "key": "open_risk_pct" },
+      "format": "float",
+      "unit": "%"
+    },
+    {
+      "name": "last_heartbeat_ts",
+      "label": "Last Heartbeat",
+      "source": "jsonl_tail",
+      "path_template": "logs/inout_heartbeat.jsonl",
+      "extractor": { "key": "ts" },
+      "format": "timestamp",
+      "unit": ""
+    },
+    {
+      "name": "dry_run",
+      "label": "Dry Run",
+      "source": "jsonl_tail",
+      "path_template": "logs/inout_heartbeat.jsonl",
+      "extractor": { "key": "dry_run" },
+      "format": "str",
+      "unit": ""
+    }
+  ],
+
+  "tuning.auto_tuner_multi": [
+    {
+      "name": "current_iter",
+      "label": "Current Iter",
+      "source": "json_file",
+      "path_template": "{args.output_dir}/checkpoint_multi.json",
+      "extractor": { "jsonpath": "[-1].iteration" },
+      "format": "int",
+      "unit": ""
+    },
+    {
+      "name": "n_iter_logged",
+      "label": "Iters Logged",
+      "source": "json_file",
+      "path_template": "{args.output_dir}/checkpoint_multi.json",
+      "extractor": { "jsonpath": "__len__" },
+      "format": "int",
+      "unit": ""
+    },
+    {
+      "name": "best_fitness",
+      "label": "Best Fitness",
+      "source": "log_regex",
+      "path_template": "{log_dir}/combined.log",
+      "extractor": { "pattern": "best[_ ]?score[=: ]+([\\-0-9.eE+]+)", "group": 1, "scan": "tail_last" },
+      "format": "float",
+      "unit": ""
+    },
+    {
+      "name": "elapsed_s",
+      "label": "Elapsed",
+      "source": "json_file",
+      "path_template": "{args.output_dir}/checkpoint_multi.json",
+      "extractor": { "jsonpath": "[-1].elapsed_s" },
+      "format": "duration",
+      "unit": ""
+    }
+  ],
+
+  "validation.config_validator": [
+    {
+      "name": "decision",
+      "label": "Gate Decision",
+      "source": "json_file",
+      "path_template": "results/validation/report.json",
+      "extractor": { "jsonpath": "decision" },
+      "format": "str",
+      "unit": ""
+    },
+    {
+      "name": "final_score",
+      "label": "Final Score",
+      "source": "json_file",
+      "path_template": "results/validation/report.json",
+      "extractor": { "jsonpath": "metrics.final_score" },
+      "format": "float",
+      "unit": ""
+    },
+    {
+      "name": "total_trades",
+      "label": "Trades",
+      "source": "json_file",
+      "path_template": "results/validation/report.json",
+      "extractor": { "jsonpath": "metrics.total_trades" },
+      "format": "int",
+      "unit": ""
+    },
+    {
+      "name": "max_dd",
+      "label": "Max DD",
+      "source": "json_file",
+      "path_template": "results/validation/report.json",
+      "extractor": { "jsonpath": "metrics.max_drawdown_across" },
+      "format": "float",
+      "unit": "%"
+    },
+    {
+      "name": "hard_failures",
+      "label": "Hard Failures",
+      "source": "json_file",
+      "path_template": "results/validation/report.json",
+      "extractor": { "jsonpath": "hard_failures.__len__" },
+      "format": "int",
+      "unit": ""
+    }
+  ],
+
+  "backtest.v2": [
+    {
+      "name": "summary_file_size",
+      "label": "Summary Size",
+      "source": "file_stat",
+      "path_template": "{args.output}/**/*_summary.json",
+      "extractor": { "attr": "size" },
+      "format": "int",
+      "unit": "bytes"
+    },
+    {
+      "name": "summary_mtime",
+      "label": "Summary Updated",
+      "source": "file_stat",
+      "path_template": "{args.output}/**/*_summary.json",
+      "extractor": { "attr": "mtime" },
+      "format": "timestamp",
+      "unit": ""
+    },
+    {
+      "name": "trade_count",
+      "label": "Trade Count",
+      "source": "log_regex",
+      "path_template": "{log_dir}/combined.log",
+      "extractor": { "pattern": "([0-9]+) trades", "group": 1, "scan": "tail_last" },
+      "format": "int",
+      "unit": ""
+    },
+    {
+      "name": "pnl_rr",
+      "label": "PnL (RR)",
+      "source": "log_regex",
+      "path_template": "{log_dir}/combined.log",
+      "extractor": { "pattern": "PnL\\(net\\)=([+\\-0-9.]+)R", "group": 1, "scan": "tail_last" },
+      "format": "float",
+      "unit": "R"
+    },
+    {
+      "name": "win_rate",
+      "label": "Win Rate",
+      "source": "log_regex",
+      "path_template": "{log_dir}/combined.log",
+      "extractor": { "pattern": "WR=([0-9.]+)%", "group": 1, "scan": "tail_last" },
+      "format": "float",
+      "unit": "%"
+    },
+    {
+      "name": "max_dd",
+      "label": "Max DD",
+      "source": "log_regex",
+      "path_template": "{log_dir}/combined.log",
+      "extractor": { "pattern": "MaxDD=([0-9.]+)%", "group": 1, "scan": "tail_last" },
+      "format": "float",
+      "unit": "%"
+    }
+  ]
+}

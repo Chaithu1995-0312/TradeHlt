@@ -1,0 +1,7 @@
+﻿python : C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\python.exe: No module named pytest
+At line:1 char:20
++ ... radelatest; python -m pytest tests/test_expansion_governance_bridge.p ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\Hi\App...le named pytest:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

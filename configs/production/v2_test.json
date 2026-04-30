@@ -1,0 +1,42 @@
+{
+  "version": "v2_test",
+  "config_id": "v2_test_candidate_1",
+  "created_at": "2026-04-11T20:01:10.282837",
+  "promoted_at": "2026-04-11T20:01:10.282837",
+  "params": {
+    "retest_depth_max": 0.2,
+    "retest_atr_depth_fraction": 0.3,
+    "body_ratio_min": 0.6,
+    "atr_multiplier_min": 2.0,
+    "expansion_atr_min_distance": 0.3
+  },
+  "config_hash": "ea517a5b1c28dd663d9915b95809d25f89ddbae16418ff3b6d91b90ccead00f8",
+  "validation_summary": {
+    "config_id": "v2_test_candidate_1",
+    "final_score": 0.6125,
+    "mean_score": 0.6125,
+    "consistency_penalty": 0.0,
+    "score_std_dev": 0.0,
+    "total_trades": 19,
+    "max_drawdown": 0.0111,
+    "instruments": [
+      "AUDUSD"
+    ],
+    "per_instrument": {
+      "AUDUSD": {
+        "score": 0.6125,
+        "trades": 19,
+        "win_rate": 0.5789,
+        "expectancy_rr": 0.5745,
+        "max_drawdown": 0.0111,
+        "total_pnl_rr": 10.9152,
+        "error": null
+      }
+    },
+    "warnings": [
+      "AUDUSD: low trade count (19) -- sample may be marginal."
+    ]
+  },
+  "notes": "",
+  "schema_version": "1.0"
+}

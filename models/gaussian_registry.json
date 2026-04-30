@@ -1,13 +1,13 @@
 {
   "v1": {
-    "active": false,
+    "active": true,
     "metrics": {
       "corr_expected_rr": 0.2,
       "calibration_error": 0.08
     }
   },
   "v2": {
-    "active": true,
+    "active": false,
     "metrics": {
       "corr_expected_rr": 0.05,
       "calibration_error": 0.1
@@ -37,5 +37,10 @@
     },
     "trained_at": "2026-03-25T07:43:22Z",
     "active": false
+  },
+  "_registry_meta": {
+    "repaired_at": "2026-04-03",
+    "repair_reason": "v2 artifact missing; fell back to v1 per SAFE MODE policy",
+    "original_active": "v2"
   }
 }

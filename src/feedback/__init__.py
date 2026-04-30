@@ -1,0 +1,1 @@
+# src/feedback — AI Feedback layer (offline LLM suggestions only)

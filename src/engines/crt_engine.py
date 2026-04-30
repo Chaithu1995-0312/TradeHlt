@@ -1,0 +1,62 @@
+"""
+crt_engine.py
+Parallel engine wrapper — calls compute_scores() from engines.scoring_engine.py
+"""
+import json
+import logging
+import time
+from pathlib import Path
+
+from engines.scoring_engine import compute_scores
+from utils.logging_config import get_log_path
+
+Path("logs").mkdir(exist_ok=True)
+_log = logging.getLogger("crt_engine")
+_handler = logging.FileHandler(get_log_path("crt_engine"))
+_handler.setFormatter(logging.Formatter("%(message)s"))
+_log.addHandler(_handler)
+_log.setLevel(logging.INFO)
+_log.propagate = False
+
+
+def compute(trade_id: str, features: dict, context: dict) -> dict:
+    try:
+        result = compute_scores(
+            body_ratio=float(features["body_ratio"]),
+            move=float(features["disp_strength"]),
+            atr=float(features["atr"]),
+            retest_depth=float(features["retest_depth"]),
+            candles_since_retest=int(features.get("candles_since_retest", context.get("candles_since_retest", 0))),
+            sweep_detected=bool(features.get("sweep_detected", context.get("sweep_detected", False))),
+            double_sweep=bool(features["double_sweep"]),
+        )
+        out = {"score": result.get("final", result.get("score", 0.0))}
+    except Exception as e:
+        out = {"score": 0.0, "reason": str(e)}
+
+    _log.info(json.dumps(_json_serializable({
+        "t": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "id": trade_id,
+        "engine": "crt",
+        "in": {
+            "body_ratio": features.get("body_ratio", 0.0),
+            "retest_depth": features.get("retest_depth", 0.0),
+            "displacement": features.get("displacement", 0.0),
+        },
+        "out": out,
+    })))
+    return out
+import numpy as np
+
+def _json_serializable(obj):
+    if isinstance(obj, np.floating):
+        return float(obj)
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, dict):
+        return {k: _json_serializable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_json_serializable(i) for i in obj]
+    return obj

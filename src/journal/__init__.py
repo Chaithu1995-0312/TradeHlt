@@ -1,0 +1,1 @@
+# src/journal — Trade journal and schema

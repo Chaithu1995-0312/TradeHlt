@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tradelatest — Codebase Architecture Diagram</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, #161b22, #1f2937);
+    border-bottom: 1px solid #30363d;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  header h1 { font-size: 1.5rem; font-weight: 700; color: #58a6ff; }
+  header span {
+    font-size: 0.85rem; color: #8b949e;
+    background: #21262d; border: 1px solid #30363d;
+    border-radius: 20px; padding: 3px 12px;
+  }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    padding: 14px 32px;
+    background: #161b22; border-bottom: 1px solid #30363d;
+  }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 0.78rem; color: #8b949e; }
+  .legend-dot { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+  .tabs {
+    display: flex; gap: 0; padding: 0 32px;
+    background: #161b22; border-bottom: 1px solid #30363d; overflow-x: auto;
+  }
+  .tab {
+    padding: 12px 20px; cursor: pointer; font-size: 0.85rem;
+    color: #8b949e; border-bottom: 2px solid transparent; white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: #e6edf3; }
+  .tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+  .diagram-container { padding: 24px 32px; overflow: auto; }
+  .diagram-panel { display: none; }
+  .diagram-panel.active { display: block; }
+  .mermaid {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 10px; padding: 24px; min-width: 900px;
+  }
+  .section-label {
+    font-size: 0.8rem; color: #8b949e; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px; background: #30363d;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>&#x1F501; Tradelatest &mdash; Architecture Diagram</h1>
+  <span>v1_multi_2026_03</span>
+  <span>2026-04-20</span>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#1f6feb"></div>Data / Config Store</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#388bfd"></div>Training Pipeline</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div>Signal Engine / Runtime</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f78166"></div>Risk / Gate</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d29922"></div>Portfolio / Execution</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#bc8cff"></div>LLM / AI Layer</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff7b72"></div>Governance / Expansion</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#79c0ff"></div>Agent / Control Plane</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#56d364"></div>Analytics / Feedback</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('full', this)">Full Architecture</div>
+  <div class="tab" onclick="showTab('training', this)">Training Pipeline</div>
+  <div class="tab" onclick="showTab('runtime', this)">Live Runtime</div>
+  <div class="tab" onclick="showTab('governance', this)">Governance &amp; Expansion</div>
+  <div class="tab" onclick="showTab('agent', this)">Agent &amp; Control Plane</div>
+</div>
+
+<div class="diagram-container">
+
+<!-- ===== FULL ARCHITECTURE ===== -->
+<div class="diagram-panel active" id="tab-full">
+  <div class="section-label">Complete system &mdash; all layers and inter-module data flows</div>
+  <div class="mermaid">
+%%{init: {'theme':'dark','themeVariables':{'primaryColor':'#1f6feb','primaryTextColor':'#e6edf3','lineColor':'#58a6ff','fontFamily':'Segoe UI, sans-serif','clusterBkg':'#0d1117','clusterBorder':'#30363d'}}}%%
+flowchart TD
+
+  subgraph DATA["Data Sources and Stores"]
+    direction LR
+    CSV["CSV Market Data\ndata/*.csv"]
+    MODELS_DIR["models/\ngaussian_registry.json\nzone_registry.json\ntradenet_*.pth"]
+    PROD_CFG["configs/production/\nv1_multi_2026_03.json\nregime_map.json"]
+    PROMO_LOG["configs/\npromotion_log.jsonl"]
+    BASELINE["results/baseline/\nmanifest.json"]
+    CHECKPOINT["results/tuner/\ncheckpoint_multi.json"]
+  end
+
+  subgraph FEATURES["Feature Engineering  src/features/"]
+    FP["feature_pipeline.py\nretest_depth  body_ratio\ndisp_strength  atr"]
+  end
+
+  subgraph TRAINING["Offline Training Pipeline  src/training/"]
+    direction TB
+    RR_BUILDER["rr_dataset_builder.py\n3-level RR label extraction"]
+    DS_VAL["dataset_validator.py\nlabel entropy  class balance\nmin-sample threshold"]
+    TRAIN_PL["train_pipeline.py\nPhase-5 calibration gate"]
+    MODEL_REG["model_registry.py\nGOV-3 atomic promotion\nPROMOTION_MARGIN=2%"]
+    AUTO_TUNE["auto_tuner_multi.py\nmulti-instrument optimiser"]
+    BASELINE_CAP["baseline_capture.py\nschema hash  config SHA-256"]
+  end
+
+  subgraph PROMO["Promotion Gate"]
+    CONFIG_VAL["config_validator.py\nConfigValidator\nHARD: trades>=10, DD<=35%, fit>=0.15\nSOFT: win%, expectancy, std_dev"]
+    PROMO_MGR["promotion_manager.py\nSHA-256 hash  changelog\nrollback support"]
+  end
+
+  subgraph RUNTIME["Runtime Engines  src/runtime/"]
+    direction LR
+    BT_RUNNER["backtest_v2.py\nBacktestRunner\n+ FeatureMonitor window=500\ndrift Z>3.0 WARNING\ndrift Z>2.5 DEBUG"]
+    LIVE_ENG["live_engine_hook.py\nEngineRunner\nsession normalisation\nUltronRiskGate wired"]
+  end
+
+  subgraph CORE_ENG["Core Signal Engine  src/engines/  src/core/"]
+    direction TB
+    FUSION["FusionEngine\nfusion_use_evaluate flag"]
+    ZONE_GATE["ZoneGate\nzone_registry lookup"]
+    TRAP_VAL["TrapValidator\ntrap pattern filter"]
+    LLAMA_GATE["llama_gate.py\ntimeout=2s  fail_count=10\nfallback 1.0"]
+    BITNET["src/bitnet/\nBitNet inference\n1-bit quantised"]
+  end
+
+  subgraph SCANNER["Scanner  src/scanner/"]
+    UNIVERSE["universe.py\ncandidate symbols"]
+    RANKER["ranker.py\nrank by score"]
+    SIG_POOL["signal_pool.py\nqueued signals"]
+    SCANNER_MAIN["scanner.py\norchestrator"]
+  end
+
+  subgraph REGIME["Market Regime  src/regime/"]
+    REG_CLS["regime_classifier.py\ntrend  range  volatile"]
+    CFG_ROUTER["config_router.py\nroutes config per regime"]
+  end
+
+  subgraph RISK["Risk and Decision Layer"]
+    ULTRON["UltronRiskGate\nposition sizing\ndrawdown guard"]
+    EXEC_PLAN["execution_planner.py\nExecutionPlannerV1_2\nentry  SL  TP  RR  TTL"]
+  end
+
+  subgraph PORTFOLIO["Portfolio Management  src/portfolio/"]
+    ALLOC["allocator.py\nrisk-adjusted sizing"]
+    EXPOSE["exposure_tracker.py\nopen risk tracking"]
+    CORR["correlation_engine.py\ninter-asset correlation"]
+    CAP_POL["capital_policy.py\nmax exposure rules"]
+  end
+
+  subgraph EXEC["Execution Layer  src/execution/"]
+    EXEC_LOOP["loop.py\nExecution Loop\norder lifecycle"]
+    ALERT_MGR["alert_manager.py\nnotification dispatch"]
+    OVERRIDE["override_handler.py\nmanual overrides"]
+  end
+
+  subgraph ANALYTICS["Journal  Analytics  Feedback"]
+    TRADE_LOG["trade_logger.py\nTradeLogger + schema.py"]
+    PERF["performance.py\nwin%  expectancy  sharpe"]
+    CLUSTER["clustering.py\ntrade cluster analysis"]
+    AI_FB["ai_feedback.py\nAI-driven insight loop"]
+  end
+
+  subgraph GOV["Governance and Expansion  src/governance/  src/expansion/"]
+    EXP_ENGINE["expansion_engine.py\nExpansionEngine\npolicy lifecycle"]
+    POLICY_SCH["policy_schema.py\nPolicySchema validation"]
+    LLM_EXTRACT["llm_pattern_extractor.py\nLLMPatternExtractor"]
+    CFG_MUTATE["config_mutator.py\nConfigMutator"]
+    EXP_EVAL["evaluator.py\nExpansionEvaluator"]
+    EXP_INTEG["expansion_integration.py\nbridges expansion to production"]
+  end
+
+  subgraph LLM_RES["LLM Research  src/llm_research/"]
+    PAT_EXT["pattern_extractor.py\nPatternExtractor"]
+    POL_BUILD["policy_builder.py\nPolicyBuilder"]
+    FWD_TEST["forward_tester.py\nForwardTester"]
+    LLM_EVAL["evaluator.py\nLLMEvaluator"]
+  end
+
+  subgraph AGENT["Agent  src/agent/"]
+    INT_ROUTER["intent_router.py\nIntentRouter\ncopilot / governance"]
+    PLAN_COMP["plan_compiler.py\nPlanCompiler"]
+    AGENT_EXEC["executor.py\nAgentExecutor"]
+    TOOL_REG["tool_registry.py\nToolRegistry"]
+  end
+
+  subgraph CP["Control Plane  src/control_plane/"]
+    CP_SRV["server.py\nFastAPI REST\njob management"]
+    CP_REG["registry.py\nservice registry"]
+  end
+
+  UI["Dashboard\nsrc/ui/dashboard.py"]
+
+  CSV --> FP
+  FP --> RR_BUILDER
+  RR_BUILDER --> DS_VAL
+  DS_VAL --> TRAIN_PL
+  TRAIN_PL --> MODEL_REG
+  MODEL_REG --> AUTO_TUNE
+  AUTO_TUNE --> CHECKPOINT
+  CHECKPOINT --> PROMO_MGR
+  PROMO_MGR --> CONFIG_VAL
+  CONFIG_VAL --> BT_RUNNER
+  CONFIG_VAL -->|"ValidationReport APPROVE"| PROD_CFG
+  PROMO_MGR --> PROMO_LOG
+  MODEL_REG --> MODELS_DIR
+  BASELINE_CAP --> BASELINE
+
+  PROD_CFG --> CFG_ROUTER
+  MODELS_DIR --> FUSION
+  CSV --> LIVE_ENG
+  FP --> LIVE_ENG
+  LIVE_ENG --> FUSION
+  LIVE_ENG --> ULTRON
+
+  UNIVERSE --> RANKER
+  RANKER --> SIG_POOL
+  SIG_POOL --> SCANNER_MAIN
+  SCANNER_MAIN --> FUSION
+
+  REG_CLS --> CFG_ROUTER
+  CFG_ROUTER --> FUSION
+
+  FUSION --> ZONE_GATE
+  FUSION --> LLAMA_GATE
+  LLAMA_GATE --> BITNET
+  ZONE_GATE --> TRAP_VAL
+  TRAP_VAL --> ULTRON
+
+  ULTRON --> EXEC_PLAN
+  EXEC_PLAN --> ALLOC
+  ALLOC --> EXPOSE
+  EXPOSE --> CORR
+  CORR --> CAP_POL
+  CAP_POL --> EXEC_LOOP
+  EXEC_LOOP --> ALERT_MGR
+  EXEC_LOOP --> OVERRIDE
+
+  EXEC_LOOP --> TRADE_LOG
+  TRADE_LOG --> PERF
+  PERF --> CLUSTER
+  CLUSTER --> AI_FB
+  AI_FB --> EXP_ENGINE
+
+  EXP_ENGINE --> POLICY_SCH
+  EXP_ENGINE --> LLM_EXTRACT
+  LLM_EXTRACT --> CFG_MUTATE
+  CFG_MUTATE --> EXP_EVAL
+  EXP_EVAL --> EXP_INTEG
+  EXP_INTEG --> PROD_CFG
+
+  PAT_EXT --> POL_BUILD
+  POL_BUILD --> FWD_TEST
+  FWD_TEST --> LLM_EVAL
+  LLM_EVAL --> EXP_ENGINE
+
+  INT_ROUTER --> PLAN_COMP
+  PLAN_COMP --> AGENT_EXEC
+  AGENT_EXEC --> TOOL_REG
+  TOOL_REG --> LIVE_ENG
+  TOOL_REG --> PROMO_MGR
+  TOOL_REG --> EXP_ENGINE
+
+  CP_SRV --> CP_REG
+  CP_REG --> LIVE_ENG
+  CP_REG --> PROMO_MGR
+  CP_SRV --> AGENT_EXEC
+
+  PERF --> UI
+  LIVE_ENG --> UI
+  CP_SRV --> UI
+  </div>
+</div>
+
+<!-- ===== TRAINING PIPELINE ===== -->
+<div class="diagram-panel" id="tab-training">
+  <div class="section-label">Offline training pipeline &mdash; raw CSV to promoted production config</div>
+  <div class="mermaid">
+%%{init: {'theme':'dark','themeVariables':{'primaryColor':'#388bfd','lineColor':'#58a6ff','fontFamily':'Segoe UI, sans-serif','clusterBkg':'#0d1117','clusterBorder':'#30363d'}}}%%
+flowchart TD
+
+  CSV["data/*.csv\nOHLCV market data"]
+
+  subgraph FE["Feature Engineering  src/features/"]
+    FP["feature_pipeline.py\nextract: retest_depth  body_ratio\ndisp_strength  atr_mult  zone_tags"]
+  end
+
+  subgraph BUILD["Dataset Building  src/training/"]
+    RR["rr_dataset_builder.py\n3-level RR label priority\n1. rr_achieved\n2. pnl_rr_net\n3. computed from price"]
+    VAL["dataset_validator.py\nhard: min samples\nlabel entropy  class balance"]
+  end
+
+  subgraph TRAIN["Model Training  src/training/"]
+    TP["train_pipeline.py\nPhase-5 calibration gate\nprior to model registration"]
+    MR["model_registry.py\nGOV-3 atomic promotion\nPROMOTION_MARGIN = 2%\nimmutable version log"]
+    MODELS["models/\ngaussian_registry.json\ntradenet_*.pth\nzone_registry.json"]
+  end
+
+  subgraph TUNE["Auto Tuning  scripts/training/"]
+    AT["auto_tuner_multi.py\nmulti-instrument\nhyper-parameter search"]
+    CKP["results/tuner/\ncheckpoint_multi.json\nbest params per instrument"]
+  end
+
+  subgraph GATE["Promotion Gate"]
+    PM["promotion_manager.py\n- approved ValidationReport required\n- SHA-256 config hash\n- score_std_dev tracked\n- immutable promotion_log.jsonl"]
+    CV["config_validator.py  ConfigValidator\nper-instrument BacktestRunner\nHARD: trades>=10  DD<=35%  fitness>=0.15\nSOFT: win%<35%  expectancy<-0.5R  std_dev>0.30"]
+    BT["backtest_v2.py  BacktestRunner\n+ FeatureMonitor window=500\nHARD drift Z>3.0  WARNING\nSOFT drift Z>2.5  DEBUG\nBacktestMetrics with feature_drift"]
+  end
+
+  subgraph RESULT["Production Artifacts"]
+    PROD["configs/production/\nv1_multi_2026_03.json"]
+    LOG["configs/promotion_log.jsonl\nimmutable audit trail"]
+    BASE["results/baseline/\nts_phase0/manifest.json\nschema hash + config SHA-256"]
+  end
+
+  CSV --> FP
+  FP --> RR
+  RR --> VAL
+  VAL --> TP
+  TP --> MR
+  MR --> MODELS
+  MODELS --> AT
+  AT --> CKP
+  CKP --> PM
+  PM --> CV
+  CV --> BT
+  BT -->|"BacktestMetrics"| CV
+  CV -->|"APPROVE"| PM
+  PM --> PROD
+  PM --> LOG
+  TP -->|"baseline_capture.py"| BASE
+  </div>
+</div>
+
+<!-- ===== LIVE RUNTIME ===== -->
+<div class="diagram-panel" id="tab-runtime">
+  <div class="section-label">Live trading runtime &mdash; market data to order execution</div>
+  <div class="mermaid">
+%%{init: {'theme':'dark','themeVariables':{'primaryColor':'#3fb950','lineColor':'#58a6ff','fontFamily':'Segoe UI, sans-serif','clusterBkg':'#0d1117','clusterBorder':'#30363d'}}}%%
+flowchart TD
+
+  subgraph INPUT["Inputs"]
+    FEED["Market Feed\nlive tick / candle data"]
+    PROD["configs/production/\nactive config JSON"]
+    MODELS["models/\ngaussian  tradenet  zones"]
+  end
+
+  subgraph FE["Feature Engineering  src/features/"]
+    FP["feature_pipeline.py\nretest_depth  body_ratio\ndisp_strength  atr"]
+  end
+
+  subgraph SCANNER["Scanner  src/scanner/"]
+    UNI["universe.py\nwatchlist / symbols"]
+    RNK["ranker.py\nsignal rank score"]
+    SP["signal_pool.py\nqueued candidates"]
+    SCN["scanner.py\norchestrator"]
+  end
+
+  subgraph REGIME["Regime  src/regime/"]
+    RC["regime_classifier.py\ntrend  range  volatile"]
+    CR["config_router.py\nselect config per regime\nregime_map.json"]
+  end
+
+  subgraph ENGINE["Core Signal Engine  src/engines/  src/core/"]
+    FUSION["FusionEngine\nfusion_use_evaluate flag\nfeature-flagged evaluate path"]
+    ZG["ZoneGate\nzone_registry lookup\nconfluence check"]
+    TV["TrapValidator\nbull / bear trap filter"]
+    LG["llama_gate.py\nLLaMA inference\ntimeout=2s  fail_count=10\nfallback 1.0 on failure"]
+    BN["BitNet inference\nsrc/bitnet/\n1-bit quantised model"]
+    LH["live_engine_hook.py\nEngineRunner API contract\nsession normalisation\nUltronRiskGate wired"]
+  end
+
+  subgraph RISK["Risk and Decision  src/execution/"]
+    URG["UltronRiskGate\nposition sizing\ndrawdown guard\nmax concurrent positions"]
+    EP["execution_planner.py\nExecutionPlannerV1_2\nentry  SL  TP  RR  TTL\nper-intent TP multiplier\nconservative / standard / aggressive"]
+  end
+
+  subgraph PORT["Portfolio  src/portfolio/"]
+    AL["allocator.py\nrisk-adjusted lot size"]
+    ET["exposure_tracker.py\nopen risk per symbol"]
+    CE["correlation_engine.py\ninter-asset correlation"]
+    CP["capital_policy.py\nmax exposure limits"]
+  end
+
+  subgraph EXEC["Execution  src/execution/"]
+    EL["loop.py\nExecution Loop\norder lifecycle mgmt"]
+    AM["alert_manager.py\nnotification dispatch"]
+    OH["override_handler.py\nmanual override injection"]
+  end
+
+  FEED --> FP
+  PROD --> CR
+  MODELS --> FUSION
+
+  FP --> UNI
+  UNI --> RNK
+  RNK --> SP
+  SP --> SCN
+  SCN --> FUSION
+
+  FP --> RC
+  RC --> CR
+  CR --> FUSION
+
+  FUSION --> ZG
+  FUSION --> LG
+  LG --> BN
+  ZG --> TV
+  TV --> LH
+  LH --> URG
+
+  URG --> EP
+  EP --> AL
+  AL --> ET
+  ET --> CE
+  CE --> CP
+  CP --> EL
+  EL --> AM
+  EL --> OH
+  </div>
+</div>
+
+<!-- ===== GOVERNANCE ===== -->
+<div class="diagram-panel" id="tab-governance">
+  <div class="section-label">Governance, Expansion and LLM Research &mdash; policy-driven config mutation loop</div>
+  <div class="mermaid">
+%%{init: {'theme':'dark','themeVariables':{'primaryColor':'#ff7b72','lineColor':'#58a6ff','fontFamily':'Segoe UI, sans-serif','clusterBkg':'#0d1117','clusterBorder':'#30363d'}}}%%
+flowchart TD
+
+  subgraph FEEDBACK["Analytics and Feedback  src/analytics/  src/feedback/"]
+    TL["trade_logger.py\nTradeLogger  schema.py\nstructured trade records"]
+    PERF["performance.py\nwin%  expectancy  sharpe\nper-instrument breakdown"]
+    CLUST["clustering.py\ntrade cluster analysis\nbehavioural segments"]
+    AIFB["ai_feedback.py\nAIFeedback\nLLM-driven insight generation"]
+  end
+
+  subgraph LLM_R["LLM Research  src/llm_research/"]
+    PE["pattern_extractor.py\nPatternExtractor\nextract price/vol patterns"]
+    PB["policy_builder.py\nPolicyBuilder\nconstruct candidate policy"]
+    FT["forward_tester.py\nForwardTester\nout-of-sample eval"]
+    LE["evaluator.py\nLLMEvaluator\nscoring and ranking"]
+  end
+
+  subgraph EXP["Expansion Engine  src/expansion/"]
+    EE["expansion_engine.py\nExpansionEngine\npolicy lifecycle mgmt"]
+    PS["policy_schema.py\nPolicySchema\nvalidate candidate policy"]
+    LLME["llm_pattern_extractor.py\nLLMPatternExtractor\nprompt to pattern JSON"]
+    CM["config_mutator.py\nConfigMutator\napply delta to config"]
+    EV["evaluator.py\nExpansionEvaluator\nbacktest-based scoring"]
+  end
+
+  subgraph INTEG["Governance Integration  src/governance/"]
+    EI["expansion_integration.py\nbridges Expansion to Production\nhard gate: score threshold\nrollback on failure"]
+  end
+
+  subgraph PROD_CFG["Production Config Store"]
+    PC["configs/production/\n*.json  active config"]
+    PL["configs/promotion_log.jsonl\nimmutable audit trail"]
+  end
+
+  TL --> PERF
+  PERF --> CLUST
+  CLUST --> AIFB
+  AIFB --> PE
+
+  PE --> PB
+  PB --> FT
+  FT --> LE
+  LE --> EE
+
+  EE --> PS
+  EE --> LLME
+  LLME --> CM
+  CM --> EV
+  EV --> EI
+
+  EI -->|"approved mutation"| PC
+  EI --> PL
+  </div>
+</div>
+
+<!-- ===== AGENT & CONTROL PLANE ===== -->
+<div class="diagram-panel" id="tab-agent">
+  <div class="section-label">Agent orchestration and Control Plane REST API</div>
+  <div class="mermaid">
+%%{init: {'theme':'dark','themeVariables':{'primaryColor':'#79c0ff','lineColor':'#58a6ff','fontFamily':'Segoe UI, sans-serif','clusterBkg':'#0d1117','clusterBorder':'#30363d'}}}%%
+flowchart TD
+
+  subgraph USER["External Interfaces"]
+    HTTP["HTTP Client\nREST  dashboard"]
+    CLI["CLI\npromotion_manager.py\nconfig_validator.py\nbaseline_capture.py"]
+  end
+
+  subgraph CP["Control Plane  src/control_plane/"]
+    SRV["server.py\nFastAPI REST API\njob queue  health  config"]
+    REG["registry.py\nservice registry\nendpoint discovery"]
+  end
+
+  subgraph AGENT["Agent  src/agent/"]
+    IR["intent_router.py\nIntentRouter\nclassify user intent\ncopilot  governance"]
+    PC["plan_compiler.py\nPlanCompiler\nbuild step-by-step plan"]
+    AE["executor.py\nAgentExecutor\nexecute plan steps\nconfirmation gates"]
+    TR["tool_registry.py\nToolRegistry\ndispatches to subsystems"]
+
+    subgraph PROMPTS["Prompt Templates"]
+      SC["system_copilot.md"]
+      SG["system_governance.md"]
+      IP["intent_router.md"]
+      TS["tool_schema.md"]
+    end
+  end
+
+  subgraph SUBSYSTEMS["Target Subsystems"]
+    LE["live_engine_hook.py\nEngineRunner"]
+    PM["promotion_manager.py"]
+    EE["expansion_engine.py"]
+    CV["config_validator.py"]
+  end
+
+  subgraph UI_LAYER["UI  src/ui/"]
+    DASH["dashboard.py\nlive PnL  signals\nregime  alerts"]
+  end
+
+  HTTP --> SRV
+  SRV --> REG
+  REG --> LE
+  REG --> PM
+  SRV --> AE
+  SRV --> DASH
+
+  CLI --> PM
+  CLI --> CV
+
+  IR --> PC
+  PC --> AE
+  AE --> TR
+  TR --> LE
+  TR --> PM
+  TR --> EE
+  TR --> CV
+
+  IR -.->|uses| SC
+  IR -.->|uses| SG
+  IR -.->|uses| IP
+  AE -.->|uses| TS
+  </div>
+</div>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    securityLevel: 'loose',
+    flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' }
+  });
+
+  function showTab(name, el) {
+    document.querySelectorAll('.diagram-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    el.classList.add('active');
+  }
+</script>
+</body>
+</html>

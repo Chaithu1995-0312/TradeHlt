@@ -1,0 +1,58 @@
+{
+  "tune_only": {
+    "mode": "pipeline",
+    "patterns": ["^tune only", "^just tune", "run tuner", "run auto.?tun", "grid search only"]
+  },
+  "tune_and_validate": {
+    "mode": "pipeline",
+    "patterns": ["tune.*and.*valid", "tune.*then.*valid", "run.*tune.*valid"]
+  },
+  "tune_and_promote": {
+    "mode": "pipeline",
+    "patterns": ["tune.*promot", "promot.*after.*tun", "tune.*and.*promot", "retrain.*promot", "full.*tun.*promot"]
+  },
+  "validate_only": {
+    "mode": "pipeline",
+    "patterns": ["^validate", "just.*valid", "run.*valid", "check.*valid", "valid.*only"]
+  },
+  "promote_only": {
+    "mode": "pipeline",
+    "patterns": ["^promote", "just.*promot", "promot.*latest", "promot.*checkpoint", "push.*to.*prod"]
+  },
+  "backtest_only": {
+    "mode": "pipeline",
+    "patterns": ["^backtest", "just.*backtest", "run.*backtest", "replay"]
+  },
+  "full_pipeline": {
+    "mode": "pipeline",
+    "patterns": ["full.*pipeline", "run.*everything", "end.*to.*end", "tune.*valid.*promot.*backtest"]
+  },
+  "advise_signal": {
+    "mode": "copilot",
+    "patterns": ["advise.*signal", "what.*signal", "should.*take", "explain.*signal", "analyse.*signal", "analyze.*signal"]
+  },
+  "veto_query": {
+    "mode": "copilot",
+    "patterns": ["veto", "should.*skip", "should.*pass", "why.*buy", "why.*sell", "reject.*signal"]
+  },
+  "resize_query": {
+    "mode": "copilot",
+    "patterns": ["resize", "position.*size", "how.*much.*risk", "factor.*position", "adjust.*size"]
+  },
+  "governance_inspect": {
+    "mode": "governance",
+    "patterns": ["inspect.*govern", "check.*govern", "review.*govern", "governance.*status", "meta.*dry.*run"]
+  },
+  "governance_propose": {
+    "mode": "governance",
+    "patterns": ["propose.*config", "suggest.*tweak", "reflect.*on.*trade", "why.*win.*rate", "config.*change", "patch.*config"]
+  },
+  "governance_run": {
+    "mode": "governance",
+    "patterns": ["run.*governance", "meta.*loop", "governance.*loop", "run.*reflect", "run.*gov"]
+  },
+  "audit_inspect": {
+    "mode": null,
+    "patterns": ["audit.*log", "show.*audit", "tail.*audit", "recent.*decisions"]
+  }
+}

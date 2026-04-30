@@ -1,0 +1,6 @@
+{
+  "performance_drop_threshold": 0.10,
+  "feature_shift_threshold": 0.10,
+  "rolling_window_size": 50,
+  "baseline_window_size": 100
+}

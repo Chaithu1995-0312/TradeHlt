@@ -1,0 +1,93 @@
+{
+  "version": "v1_multi_2026_03_force_accept",
+  "config_id": "cfg_force_accept_20260407",
+  "created_at": "2026-04-07T00:00:00",
+  "promoted_at": "2026-04-07T00:00:00",
+  "params": {
+    "retest_depth_max": 0.30,
+    "retest_atr_depth_fraction": 0.50,
+    "body_ratio_min": 0.65,
+    "atr_multiplier_min": 1.50,
+    "expansion_atr_min_distance": 0.20
+  },
+  "engine_runner": {
+    "min_atr": 0.0001,
+    "allowed_sessions": ["asia", "london", "new_york", "overlap"],
+    "bitnet_zone_threshold": 0.0,
+      "zone_registry_path": "models/zone_registry.json",
+      "rr_fusion": {
+        "enabled": false,
+        "model_path": "models/rr_model.json",
+        "threshold": 0.5
+      },
+      "dual_engine": {
+      "trend_strength_threshold": 0.15,
+      "momentum_threshold": 0.30,
+      "range_volatility_threshold": 0.80,
+      "breakout_min_score": 0.10,
+      "trap_min_score": 0.10,
+      "neutral_min_score": 0.25,
+      "fusion_min_score": 0.10
+    }
+  },
+  "execution_planner": {
+    "min_rr_ratio": 1.0,
+    "atr_mult_breakout_tp": 2.0,
+    "atr_mult_pullback_tp": 1.5,
+    "atr_mult_reversal_tp": 1.0,
+    "atr_mult_sweep_tp": 1.2,
+    "ttl_breakout_sec": 180,
+    "ttl_pullback_sec": 300,
+    "ttl_reversal_sec": 120,
+    "ttl_liq_sweep_sec": 240,
+    "default_sl_atr_mult": 1.0,
+    "risk_percent": 0.5,
+    "lookback_candles_sl": 5,
+    "liquidity_lookback": 20,
+    "liquidity_volume_threshold": 1.5,
+    "liquidity_touch_count": 2,
+    "reject_unknown_intent": false,
+    "precision_overrides": {
+      "XAUUSD": 2,
+      "BTCUSDT": 2,
+      "ETHUSDT": 2
+    }
+  },
+  "ultron_risk_gate": {
+    "max_risk_per_trade_pct": 1.0,
+    "max_portfolio_risk_pct": 5.0,
+    "max_trades_per_day": 50,
+    "max_daily_loss_pct": 10.0,
+    "min_rr_ratio": 1.0,
+    "regime_factors": {
+      "trend":     1.0,
+      "range":     0.8,
+      "neutral":   0.6,
+      "uncertain": 0.5
+    }
+  },
+  "decision_engine": {
+    "score_threshold": 0.25,
+    "p_win_threshold": 0.1,
+    "rr_threshold": 1.0,
+    "weak_component_threshold": 0.55
+  },
+  "validation_summary": {
+    "config_id": "cfg_force_accept_20260407",
+    "final_score": null,
+    "mean_score": null,
+    "consistency_penalty": null,
+    "total_trades": null,
+    "max_drawdown": null,
+    "instruments": ["EURUSD", "GBPUSD", "BTCUSDT", "XAUUSD", "AUDUSD"],
+    "per_instrument": {},
+    "warnings": [
+      "FORCE ACCEPT CONFIG – for reflection buffer only. Not for live trading."
+    ]
+  },
+  "feature_store": {
+    "max_history": 1000
+  },
+  "notes": "Temporary config to force ACCEPT decisions. All thresholds lowered. Zone gate will be neutral (0.5) because registry may be missing.",
+  "schema_version": "1.2"
+}

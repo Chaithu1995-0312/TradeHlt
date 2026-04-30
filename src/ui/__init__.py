@@ -1,0 +1,1 @@
+# src/ui — Dashboard (minimal Flask-lite API)

@@ -1,0 +1,20 @@
+{
+  "required_features": [
+    "gaussian_score",
+    "rr_ratio",
+    "sweep_flag",
+    "volume_spike",
+    "regime_score"
+  ],
+  "optional_features": {
+    "liquidity_distance": 0.0
+  },
+  "normalization": {
+    "gaussian_score": { "min": 0, "max": 1 },
+    "rr_ratio": { "cap": 5.0 },
+    "sweep_flag": { "type": "int", "values": [0,1] },
+    "volume_spike": { "type": "int", "values": [0,1] },
+    "regime_score": { "min": 0, "max": 1 },
+    "liquidity_distance": { "min": 0, "max": 1 }
+  }
+}

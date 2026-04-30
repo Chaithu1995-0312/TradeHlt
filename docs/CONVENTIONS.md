@@ -1,0 +1,270 @@
+# CONVENTIONS.md
+
+> Coding and structural conventions observed across the Tradelatest codebase.
+> Every rule here is backed by actual usage in `src/`, `scripts/`, or `configs/`.
+
+---
+
+## 1. Naming Conventions
+
+| Element                 | Convention                          | Examples from codebase                                                        |
+| ----------------------- | ----------------------------------- | ----------------------------------------------------------------------------- |
+| Modules / files         | `snake_case.py`                     | `engine_runner.py`, `ultron_risk_gate.py`, `execution_planner.py`             |
+| Packages (folders)      | `lowercase`, short, single-word     | `core/`, `engines/`, `governance/`, `inout/`, `runtime/`                      |
+| Classes                 | `PascalCase`                        | `ConfigValidator`, `BacktestRunner`, `ExecutionPlannerV1_2`, `UltronRiskGate` |
+| Functions / methods     | `snake_case`                        | `get_prod_section`, `promote_from_checkpoint`, `compute_weighted_cluster_score` |
+| Public API methods      | No leading underscore               | `validate`, `run`, `evaluate`, `plan`                                         |
+| Private helpers         | `_leading_underscore`               | `_load_validator_cfg`, `_validator_require`, `_safe`, `_params_to_crt_config` |
+| Module-level constants  | `SCREAMING_SNAKE_CASE`              | `EXPECTED_ENGINES`, `CANONICAL_FEATURES`, `DUAL_ENGINE_DEFAULTS`              |
+| Module-level privates   | `_LEADING_UPPER_SNAKE`              | `_VALIDATOR_CFG`, `_GATE_MIN_TRADES_PER_INSTRUMENT`, `_FITNESS_WEIGHTS`       |
+| Enum members            | `UPPER_SNAKE_CASE`                  | `CRTState.DISPLACEMENT`, `Direction.LONG`, `RejectReason.NO_DOUBLE_SWEEP`     |
+| Dataclasses             | `PascalCase`                        | `Candle`, `Range`, `Trade`, `BacktestConfig`, `RunRecord`, `CommandSpec`      |
+| Config JSON keys        | `snake_case`                        | `min_trades_per_instrument`, `fusion_min_score`, `weight_crt`                 |
+| Versioned config files  | `v{N}_{label}_{YYYY_MM}.json`       | `v1_multi_2026_03.json`, `v2_test.json`                                       |
+| Archived configs        | `{original}_archived_{YYYYMMDD_HHMMSS}.json` | `v2_test_archived_20260411_200110.json`                               |
+| Instrument CSVs         | `{SYMBOL}_{TIMEFRAME}.csv`          | `EURUSD_M15.csv`, `XAUUSD_M15.csv`, `BTCUSDT_M15.csv`                         |
+| Models in registry      | Hash-suffixed for immutability      | See `core/model_registry.py` GOV-3 atomic promotion                           |
+| JSONL log files         | `{subject}_{action}.jsonl`          | `agent_audit.jsonl`, `expansion_trace.jsonl`, `promotion_log.jsonl`           |
+
+**There are no DB tables in this codebase** (no ORM, no migrations). "Table-like" shapes live in JSON configs and dataclasses.
+
+---
+
+## 2. Folder Placement Rules
+
+Decide where a new file goes by asking "what is it?" then matching against this table.
+
+| Type of file                                    | Lives in                                 | Notes                                                         |
+| ----------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------- |
+| Importable production module                    | `src/<subpackage>/`                      | Every subpackage has `__init__.py`; packaged via setuptools   |
+| New scoring engine (emits `{score, intent}`)    | `src/engines/`                           | Must plug into `EngineRunner`'s `EXPECTED_ENGINES` set        |
+| New decision / risk / fusion logic              | `src/core/`                              | Core owns the decision kernel; do not scatter across engines  |
+| New validator or config transform               | `src/config_layer/`                      | Builders, validators, decision rules, `llama_gate`, planner   |
+| RR-specific fusion / dataset code               | `src/config_layer/rr/`                   | RR layer kept isolated for independent re-training            |
+| Feature extraction or drift code                | `src/features/`                          | Canonical 35-dim schema lives in `feature_schema.py`          |
+| Governance / promotion / shadow logic           | `src/governance/`                        | All pre-prod gates live here                                  |
+| Live execution (state machine, executor)        | `src/inout/`                             | Strictly live-mode; no backtest logic                         |
+| Execution harness (replay, baseline, backtest)  | `src/runtime/`                           | Drives engines over data; no decision logic of its own        |
+| Agent / NL-driven automation                    | `src/agent/`                             | Tools go in `tool_registry.py`; plans in `PLAN_REGISTRY`      |
+| HTTP server / command registry / UI             | `src/control_plane/`                     | Stdlib only — no FastAPI / Flask                              |
+| CLI entry point (runnable script)               | `scripts/<category>/`                    | Import `src.*` packages — never define production logic here  |
+| Unit / integration tests                        | `tests/` (flat) or `tests/<subpackage>/` | pytest; `pythonpath=["src","scripts"]`                        |
+| New production config version                   | `configs/production/v{N}_{label}_{YYYY_MM}.json` | Immutable once promoted                               |
+| Experimental / spec doc                         | `configs/experimental/spec/*.md`         | Design docs, not runtime                                      |
+| Runtime artifacts (never commit)                | `results/`                               | Tuner checkpoints, baselines, validation reports              |
+| JSONL audit logs                                | `logs/`                                  | Append-only, structured                                       |
+| Documentation (human-facing)                    | `docs/`                                  | Handover, CLI matrix, architecture                            |
+
+**Never place runtime logic in `scripts/`** — scripts are thin CLI wrappers that import from `src/`.
+
+---
+
+## 3. Error Handling Patterns
+
+Three distinct modes, chosen deliberately per context:
+
+### 3.1 Fail-fast at module import (config load)
+
+Used when a missing value would cause silent incorrect behavior. Applied uniformly via a `_require_key` helper:
+
+```python
+def _validator_require(cfg: dict, key: str) -> object:
+    if key not in cfg:
+        raise KeyError(
+            f"Required config key '{key}' missing from config_validator section. "
+            f"Add it to configs/production/v1_multi_2026_03.json."
+        )
+    return cfg[key]
+
+_VALIDATOR_CFG = _load_validator_cfg()
+_GATE_MIN_TRADES_PER_INSTRUMENT = int(_validator_require(_VALIDATOR_CFG, "min_trades_per_instrument"))
+# Module will not import if key is missing.
+```
+
+The loader itself wraps import errors into `RuntimeError` with actionable remediation text:
+
+```python
+try:
+    from config_layer.production_config import get_prod_section
+    cfg = get_prod_section("config_validator")
+    if not cfg:
+        raise RuntimeError("... Add it to configs/production/v1_multi_2026_03.json.")
+    return cfg
+except ImportError as exc:
+    raise RuntimeError(f"Failed to import production_config: {exc}...") from exc
+```
+
+### 3.2 Optional-import guard (non-blocking capability)
+
+Used when a capability is nice-to-have. Never silently ignore — record a feature flag:
+
+```python
+try:
+    from features.feature_monitor import FeatureMonitor
+    _MONITOR_AVAILABLE = True
+except Exception:
+    FeatureMonitor = None
+    _MONITOR_AVAILABLE = False
+```
+
+Also used for RR fusion: `_RR_FUSION_IMPORT_ERROR = None` on success, stores the exception otherwise for later surfacing.
+
+### 3.3 Fail-open with circuit breaker (external I/O)
+
+Used for LLM / HTTP calls that must not stall the hot path. Pattern lives in `llama_gate.py`:
+
+```python
+try:
+    response = requests.post(SERVER_URL, ..., timeout=REQUEST_TIMEOUT)
+except (requests.RequestException, urllib.error.URLError):
+    FAIL_COUNT += 1
+    if FAIL_COUNT > fail_count_disable:   # circuit open
+        return 1.0                         # neutral score — do not block
+```
+
+After `fail_count_disable` consecutive failures the gate returns a neutral score and logs `WARNING` once per state transition.
+
+### 3.4 Structured rejection (decision-path errors)
+
+Business-logic errors (bad params, insufficient data) are **not** raised — they return a structured report with a rejection reason:
+
+```python
+return ConfigValidator._reject(
+    config_id, params,
+    hard_failures=["No CSV paths provided -- nothing to validate."],
+)
+# → {"decision": "REJECT", "hard_failures": [...], "warnings": [...], ...}
+```
+
+This preserves auditability and lets callers diff successive rejections.
+
+---
+
+## 4. "API Response" / Result Wrapper Format
+
+This codebase has **no REST API**. "Results" are Python dicts / dataclasses returned to callers, with a consistent shape:
+
+### 4.1 Decision reports (`ValidationReport`, `GateResult`, engine output)
+
+Every decision-producing function returns a dict with at minimum:
+
+```python
+{
+    "decision":       "APPROVE" | "REJECT" | "ACCEPT",   # explicit outcome
+    "config_id":      str,                               # or signal_id / trade_id
+    "validated_at":   ISO-8601 UTC timestamp,
+    "metrics":        {...},                             # quantitative detail
+    "hard_failures":  [str, ...],                        # blocking issues
+    "warnings":       [str, ...],                        # non-blocking
+}
+```
+
+Examples of this shape: `ValidationReport` (`config_validator.py`), `GateResult` (`ultron_risk_gate.py`), engine results from `EngineRunner.run()`.
+
+### 4.2 Audit log lines (JSONL)
+
+Every JSONL log line is a complete, self-contained JSON object with at minimum `timestamp` and a `kind` discriminator. Lines never reference prior context. `configs/promotion_log.jsonl`, `logs/agent_audit.jsonl`, `logs/expansion_trace.jsonl` all follow this.
+
+### 4.3 Control-plane HTTP responses
+
+`src/control_plane/server.py` returns JSON via stdlib `http.server`:
+
+```python
+# response shape:
+{"status": "ok" | "error", "data": {...}, "error": str | None}
+```
+
+---
+
+## 5. Import Ordering & Module Resolution
+
+Observed order (top of almost every `src/` module):
+
+```python
+# 1. __future__ (if used)
+from __future__ import annotations
+
+# 2. Standard library — alphabetised
+import json
+import math
+import sys
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+# 3. Third-party — alphabetised
+import numpy as np
+import pandas as pd
+import requests
+
+# 4. Path bootstrap (if module is run as script)
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+# 5. Internal imports — by subpackage, absolute paths rooted at src/
+from config_layer.production_config import get_prod_section
+from core.engine_runner import EngineRunner
+from engines.adapter_engine import TrapValidatorEngine
+from utils.logging_config import get_flow_logger
+```
+
+### 5.1 Module resolution rules
+
+* Packages are rooted at `src/` (`[tool.setuptools.packages.find] where = ["src"]`).
+* Scripts in `scripts/` get `src/` on `sys.path` via pytest config (`pythonpath = ["src","scripts"]`) or explicit bootstrap.
+* **Absolute imports only** — no `from .foo import bar` in production modules.
+* `src/` is never prefixed in imports: write `from core.engine_runner import X`, not `from src.core.engine_runner import X`.
+
+---
+
+## 6. Logging Conventions
+
+Every module gets a named flow logger:
+
+```python
+from utils.logging_config import get_flow_logger
+logger = get_flow_logger("ENGINE_RUNNER")   # uppercase, underscore-separated, subject-named
+```
+
+Levels used by this codebase:
+
+| Level    | Use case                                                                 |
+| -------- | ------------------------------------------------------------------------ |
+| DEBUG    | Soft drift (Z>2.5), per-candle trace, per-engine score breakdown         |
+| INFO     | Normal pipeline progress, validation start/end, config load success       |
+| WARNING  | Hard drift (Z>3.0), circuit-breaker state changes, soft-gate failures    |
+| ERROR    | Caught exceptions that did not halt execution                            |
+| CRITICAL | Reserved (not currently used in `src/`)                                  |
+
+**Never `print()` in `src/` modules.** `print()` is only acceptable in `scripts/` CLI entry points and `ConfigValidator.validate()` banners (legacy artifact).
+
+---
+
+## 7. Dataclass / Type Conventions
+
+* `@dataclass` for all value objects (`Candle`, `Range`, `Trade`, `BacktestConfig`, `RunRecord`).
+* `@dataclass(frozen=True)` for config-derived objects that travel across layers (used in CommandSpec).
+* Prefer `Enum` for finite state sets (`CRTState`, `Direction`, `RejectReason`) — never stringly-typed.
+* `from_prod_config(cls, cfg: dict) -> "Self"` class method is the canonical config→dataclass bridge.
+* Type annotations are required for all public methods; `Any` is acceptable only for config-dict payloads.
+
+---
+
+## 8. Anti-Patterns Explicitly Avoided
+
+| Anti-pattern                           | Rule                                                                                 | Enforcement site                                                   |
+| -------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| **Magic numbers in Python**            | Every tunable value lives in `configs/production/*.json`                             | Modules fail-fast at import if config keys are absent              |
+| **Partial fusion (silent)**            | If any engine of `{crt, gaussian, zone_gate, rr}` is missing → hard reject           | `engine_runner.EXPECTED_ENGINES` completeness check                |
+| **Lookahead in backtest**              | Candle-by-candle streaming only; feature builder cannot see future bars              | `src/runtime/backtest_v2.py` design contract                       |
+| **Silent promotion**                   | Promotion without an approved `ValidationReport` is impossible                       | `PromotionManager` checks `report["decision"] == "APPROVE"` + SHA-256 hash |
+| **Unbounded parameter mutation**       | Expansion engine enforces `PARAM_BOUNDS` per mutable parameter                       | `src/expansion/policy_schema.py`                                   |
+| **Mutable production configs**         | Prod configs are versioned; promotion archives the prior version with timestamp      | `{version}_archived_{ts}.json` pattern                             |
+| **LLM in the hot path without fallback** | `llama_gate` enforces timeout + circuit breaker + neutral 1.0 fallback             | `fail_count_disable`, `request_timeout` in config                  |
+| **Schema drift without guard**         | `CANONICAL_FEATURES` hash is baselined; schema changes require explicit re-baseline  | `src/runtime/baseline_capture.py`                                  |
+| **Decisions without audit**            | Every ACCEPT / REJECT flows through `Collector` + signal-specific audit              | `src/core/collector.py`, `src/core/signal_audit.py`                |
+| **Hidden randomness in decision paths** | Deterministic inputs → deterministic outputs; randomness confined to training only  | Codebase-wide                                                      |
+| **Unicode-unsafe console output**      | Windows cp1252 fallback for non-ASCII; no raw `print` of arbitrary strings           | `src/utils/console_safe.py`                                        |
+| **Re-explaining context mid-session**  | Agent sessions reference session-log entries instead of repeating                    | Per `CLAUDE.md` token control rules                                |

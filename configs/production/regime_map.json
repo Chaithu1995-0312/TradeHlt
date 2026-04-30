@@ -1,0 +1,31 @@
+{
+  "TRENDING": "BALANCED",
+  "RANGING": "SAFE",
+  "HIGH_VOLATILITY": "AGGRESSIVE",
+  "DEFAULT": "SAFE",
+  "fusion_weights": {
+    "RANGING": {
+      "crt": 0.4,
+      "gaussian": 0.3,
+      "zone": 0.2,
+      "rr": 0.1
+    },
+    "TRENDING": {
+      "crt": 0.4,
+      "gaussian": 0.3,
+      "zone": 0.2,
+      "rr": 0.1
+    },
+    "HIGH_VOLATILITY": {
+      "crt": 0.4,
+      "gaussian": 0.3,
+      "zone": 0.2,
+      "rr": 0.1
+    }
+  },
+  "bitnet_thresholds": {
+    "RANGING": 0.5,
+    "TRENDING": 0.5,
+    "HIGH_VOLATILITY": 0.5
+  }
+}

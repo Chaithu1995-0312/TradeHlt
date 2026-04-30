@@ -1,0 +1,1 @@
+# src/analytics — Performance analytics and trade clustering

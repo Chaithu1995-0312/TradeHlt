@@ -1,0 +1,20 @@
+{
+  "training_data_format": {
+    "type": "jsonl",
+    "line_schema": {
+      "features": {
+        "type": "object",
+        "properties": {
+          "gaussian_score": { "type": "number" },
+          "rr_ratio": { "type": "number" },
+          "sweep_flag": { "type": "integer" },
+          "volume_spike": { "type": "integer" },
+          "regime_score": { "type": "number" },
+          "liquidity_distance": { "type": "number" }
+        },
+        "required": ["gaussian_score", "rr_ratio", "sweep_flag", "volume_spike", "regime_score"]
+      },
+      "label": { "type": "integer", "enum": [0,1] }
+    }
+  }
+}
