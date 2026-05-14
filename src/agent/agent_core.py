@@ -63,7 +63,7 @@ class AgentCore:
 
     @staticmethod
     def _llm_chat(messages, **kwargs):
-        from config_layer.llama_gate import llm_chat
+        from config_layer.llm_inference_client import llm_chat
         return llm_chat(messages, **kwargs)
 
     # ── Public API ────────────────────────────────────────────────────────────

@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 from core.fusion_engine import FusionEngine
-from config_layer.llama_gate import llm_chat
+from config_layer.llm_inference_client import llm_chat
 from expansion.policy_schema import (
     RegimeWeightCandidate,
     RegimeSearchResult,

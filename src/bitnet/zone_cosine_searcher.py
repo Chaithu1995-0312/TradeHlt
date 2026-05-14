@@ -1,5 +1,5 @@
 """
-BitNet Search Engine
+Zone Cosine Searcher
 Searches for closest matching zone vectors using cosine similarity.
 
 Exports

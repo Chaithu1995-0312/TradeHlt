@@ -77,7 +77,7 @@ class StabilityChecker:
         split_metrics    : per-split metric dicts for inspection/logging
         """
         # Lazy import to avoid circular dependency
-        from bitnet.search_engine import _evaluate_subset
+        from bitnet.zone_cosine_searcher import _evaluate_subset
 
         n_splits = n_splits or cls.N_SPLITS
         n = len(X)

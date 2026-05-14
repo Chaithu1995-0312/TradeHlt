@@ -58,7 +58,7 @@ class _DummyAdapter:
 
 
 class _DummyGaussian:
-    def compute(self, _payload):
+    def compute(self, _payload, **kwargs):
         return {"score": 0.6}
 
 

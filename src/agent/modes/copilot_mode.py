@@ -135,7 +135,7 @@ def _risk_check(instrument: str, trade_json: str = "") -> dict:
 )
 def _advise_veto(scores_json: str, instrument: str = "") -> dict:
     try:
-        from config_layer.llama_gate import llm_chat
+        from config_layer.llm_inference_client import llm_chat
         scores = json.loads(scores_json)
         scores_text = "\n".join(f"  {k}: {v}" for k, v in scores.items())
         messages = [

@@ -7,7 +7,7 @@ CANONICAL NAMING:
                     Called externally by live_engine_hook.py AFTER
                     EngineRunner.run() + ExecutionPlannerV1_2.plan().
 
-  RegimeGovernor  (ultron_gate.py) = SIGNAL-QUALITY FILTER.
+  RegimeGovernor  (regime_governor.py) = SIGNAL-QUALITY FILTER.
                     Step 6 inside EngineRunner. Regime-based penalties + daily quota.
                     NOT a capital gate. (Class name: UltronGovernor — backward compat.)
 

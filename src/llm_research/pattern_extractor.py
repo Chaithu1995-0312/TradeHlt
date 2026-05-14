@@ -78,7 +78,7 @@ def extract_patterns(
     log.info("PatternExtractor: loaded %d trades from %s", len(trades), trades_csv)
 
     try:
-        from src.config_layer.llama_gate import llm_chat
+        from src.config_layer.llm_inference_client import llm_chat
         policy = _llm_extract(trades, llm_chat)
         policy.trade_count_analyzed = len(trades)
         return policy

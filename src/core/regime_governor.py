@@ -1,6 +1,6 @@
 """
-src/core/ultron_gate.py
-========================
+src/core/regime_governor.py
+============================
 CANONICAL NAMING (use these names in all new code and comments):
 
   RegimeGovernor   (THIS FILE, canonical name)   — SIGNAL-QUALITY FILTER

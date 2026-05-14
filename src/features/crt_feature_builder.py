@@ -1,5 +1,5 @@
 """
-BitNet Feature Builder
+CRT Feature Builder
 Converts CRT trade, candle and state objects to canonical feature schema.
 
 STRICT CONTRACT: Output dict ALWAYS contains EXACTLY ALL CANONICAL_FEATURES.

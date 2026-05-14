@@ -5,7 +5,7 @@ import math
 from typing import Dict, Optional
 
 from features.feature_schema import CANONICAL_FEATURES
-from config_layer.llama_gate import llm_score_safe
+from config_layer.llm_inference_client import llm_score_safe
 from features.schema_validator import validate_feature_values, validate_features
 
 log = logging.getLogger("ScoringEngine")
@@ -56,7 +56,7 @@ def compute_gaussian_score(features: list, params: dict) -> float:
     Compute weighted Gaussian score from a feature vector and zone params.
     """
     try:
-        from bitnet.search_engine import compute_gaussian_score as _cgs
+        from bitnet.zone_cosine_searcher import compute_gaussian_score as _cgs
 
         return _cgs(features, params)
     except ImportError:

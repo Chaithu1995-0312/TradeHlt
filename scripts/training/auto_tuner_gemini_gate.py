@@ -1,7 +1,7 @@
 """
-auto_tuner.py
+auto_tuner_gemini_gate.py
 ═══════════════════════════════════════════════════════════════════════════════
-CRT Engine — Auto-Tuner  (Ultron Phase-6 / Quant Research Infrastructure)
+CRT Engine — Auto-Tuner with Gemini LLM gate  (Ultron Phase-6 / Quant Research Infrastructure)
 
 ROBUSTNESS UPGRADES (v2):
   - Multiprocessing: Parallel execution across CPU cores.
@@ -36,7 +36,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
 from config_layer.config_builder import ConfigBuilder
-from config_layer.llama_gate import llm_score
+from config_layer.llm_inference_client import llm_score
 
 
 # ── Import from backtest_v2 (must be in same directory) ────────────────────

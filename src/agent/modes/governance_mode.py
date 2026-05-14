@@ -88,7 +88,7 @@ def _meta_governor_dry_run(
     trades_csv: str = "logs/trades.csv",
 ) -> dict:
     try:
-        from governance.meta_governor_executor import MetaGovernorExecutor
+        from governance.bitnet_governance_executor import MetaGovernorExecutor
         from governance.reflection_buffer_advanced import ReflectionBuffer
         rb = ReflectionBuffer()
         rb.load_and_merge(collector_log=collector_log, trades_csv=trades_csv)

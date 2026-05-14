@@ -9,7 +9,7 @@ def _make_runner():
             return {"score": 1.0, "reason": "ok"}
 
     class DummyGaussian:
-        def compute(self, payload):
+        def compute(self, payload, **kwargs):
             return {"score": 0.2}
 
     class DummyBitNet:

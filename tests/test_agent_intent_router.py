@@ -10,7 +10,7 @@ Actual API:
 Notes:
   - Patterns loaded from src/agent/prompts/intent_patterns.json (relative to CWD = repo root)
   - Regex match → confidence=0.85
-  - LLM lazy import: patch "config_layer.llama_gate.llm_chat"
+  - LLM lazy import: patch "config_layer.llm_inference_client.llm_chat"
   - Unclassified returns mode=None, intent_key="ask_user", confidence=0.0
 """
 
@@ -126,7 +126,7 @@ def test_llm_classify_high_confidence():
     """LLM response with valid intent_key + confidence >= floor → used as result."""
     router = _router(use_llm=True, confidence_floor=0.6)
     mock_response = '{"intent_key": "tune_and_promote", "confidence": 0.92}'
-    with patch("config_layer.llama_gate.llm_chat", return_value=mock_response):
+    with patch("config_layer.llm_inference_client.llm_chat", return_value=mock_response):
         result = router.classify("retrain the model please", [])
     assert result["mode"] == "pipeline"
     assert result["intent_key"] == "tune_and_promote"
@@ -137,7 +137,7 @@ def test_llm_classify_invalid_intent_key_falls_back_to_ask_user():
     """LLM returning an unrecognised intent_key must be reset to ask_user."""
     router = _router(use_llm=True, confidence_floor=0.6)
     mock_response = '{"intent_key": "totally_unknown_intent", "confidence": 0.95}'
-    with patch("config_layer.llama_gate.llm_chat", return_value=mock_response):
+    with patch("config_layer.llm_inference_client.llm_chat", return_value=mock_response):
         result = router.classify("do the mysterious thing", [])
     # Unrecognised key → ask_user; below floor after reset → fallback
     assert result["intent_key"] == "ask_user"
@@ -147,7 +147,7 @@ def test_llm_classify_low_confidence_falls_back():
     """LLM confidence below floor → result not used; regex fallback applies."""
     router = _router(use_llm=True, confidence_floor=0.6)
     mock_response = '{"intent_key": "tune_and_promote", "confidence": 0.3}'
-    with patch("config_layer.llama_gate.llm_chat", return_value=mock_response):
+    with patch("config_layer.llm_inference_client.llm_chat", return_value=mock_response):
         # Input that won't match regex either → ask_user
         result = router.classify("do the thing", [])
     # Either regex matched something OR fallback ask_user — must not be the low-conf LLM answer
@@ -157,7 +157,7 @@ def test_llm_classify_low_confidence_falls_back():
 def test_llm_failure_falls_back_to_regex():
     """LLM RuntimeError → regex takes over; clear regex match must be returned."""
     router = _router(use_llm=True, confidence_floor=0.6)
-    with patch("config_layer.llama_gate.llm_chat", side_effect=RuntimeError("LLM down")):
+    with patch("config_layer.llm_inference_client.llm_chat", side_effect=RuntimeError("LLM down")):
         # "run.*backtest" pattern → backtest_only
         result = router.classify("run backtest on GBPUSD", [])
     assert result["mode"] == "pipeline"

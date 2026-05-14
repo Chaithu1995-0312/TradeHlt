@@ -1,5 +1,5 @@
 """
-TrapValidatorEngine — adapter/gating layer.
+TrapValidatorEngine — data integrity validator and pre-gating layer.
 
 Validates whether market conditions meet the structural preconditions
 for a trade to be considered. Returns score=0.0 to block, score=1.0 to pass.

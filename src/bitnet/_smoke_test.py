@@ -18,7 +18,7 @@ def test_zone_validator():
 
 
 def test_gaussian_scoring():
-    from bitnet.search_engine import ZoneCandidate, compute_gaussian_score, compute_gaussian_score_from_candidate
+    from bitnet.zone_cosine_searcher import ZoneCandidate, compute_gaussian_score, compute_gaussian_score_from_candidate
 
     # Peak score at exact mu values
     cand = ZoneCandidate(
@@ -45,7 +45,7 @@ def test_gaussian_scoring():
 
 def test_evaluate_subset():
     import random
-    from bitnet.search_engine import ZoneCandidate, _evaluate_subset
+    from bitnet.zone_cosine_searcher import ZoneCandidate, _evaluate_subset
 
     rng = random.Random(99)
     N = 200
@@ -68,7 +68,7 @@ def test_evaluate_subset():
 
 def test_stability_checker():
     import random
-    from bitnet.search_engine import ZoneCandidate
+    from bitnet.zone_cosine_searcher import ZoneCandidate
     from bitnet.stability_checker import StabilityChecker
 
     rng = random.Random(7)

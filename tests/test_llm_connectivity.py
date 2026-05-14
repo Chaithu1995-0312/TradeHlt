@@ -1,7 +1,7 @@
 """
 tests/test_llm_connectivity.py
 ═══════════════════════════════════════════════════════════════════════════════
-Validates LLM connectivity for llama_gate.py.
+Validates LLM connectivity for llm_inference_client.py.
 
 Coverage per TESTING.md §4 (External I/O — llama_gate):
   ✓ Happy call → score in [0.0, 1.0]
@@ -31,7 +31,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 # ── Import target module ───────────────────────────────────────────────────────
-import config_layer.llama_gate as lg
+import config_layer.llm_inference_client as lg
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────

@@ -92,10 +92,21 @@ bt_module.CandleLoader   = _StubCandleLoader
 bt_module.BacktestRunner = _StubBacktestRunner
 sys.modules["backtest_v2"] = bt_module
 
-# Stub llama_gate
-llm_module = types.ModuleType("llama_gate")
-llm_module.llm_score = lambda metrics: 0.9
-sys.modules["llama_gate"] = llm_module
+# Stub the bare "llm_inference_client" key (legacy fallback — kept for any
+# code that might import without the config_layer prefix).  Do NOT stub
+# "config_layer.llm_inference_client" here: the real module loads cleanly and
+# installing a thin stub at module-collection time would poison every
+# subsequent test that imports the real implementation.
+llm_module = types.ModuleType("llm_inference_client")
+llm_module.llm_score        = lambda metrics: 0.9
+llm_module.llm_score_safe   = lambda metrics: 0.9
+llm_module.llm_score_batch  = lambda metrics_list: [0.9] * len(metrics_list)
+llm_module.llm_score_cached = lambda metrics: 0.9
+llm_module.cached_llm_score = lambda metrics: 0.9
+llm_module.llm_chat         = lambda messages, **kw: "ok"
+llm_module.llm_insight      = lambda text, **kw: "ok"
+llm_module._fallback_insight = lambda text: "ok"
+sys.modules["llm_inference_client"] = llm_module
 
 # Stub market_router (old import — should NOT be used, but must not crash import)
 mr_module = types.ModuleType("market_router")

@@ -146,7 +146,7 @@ class BitNetZoneGate:
     def _load_registry(self, path: str) -> None:
         """Load zone registry from JSON. Fail-safe: empty zones on any error."""
         try:
-            from bitnet.search_engine import load_zone_registry
+            from bitnet.zone_cosine_searcher import load_zone_registry
             zones = load_zone_registry(path)
             # Validate expected BitNet schema (mu/sigma/weights/threshold)
             valid = [
@@ -240,7 +240,7 @@ class BitNetZoneGate:
 
         # Score against all zones; allow if ANY zone passes
         try:
-            from bitnet.search_engine import compute_gaussian_score as _cgs
+            from bitnet.zone_cosine_searcher import compute_gaussian_score as _cgs
         except ImportError:
             return {
                 "allowed": True, "score": 1.0, "threshold": 0.0,

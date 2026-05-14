@@ -1,8 +1,8 @@
 """
-llama_gate.py
+llm_inference_client.py
 ═══════════════════════════════════════════════════════════════════════════════
-Semantic evaluation gate using a persistent local inference server.
-Provides a qualitative score multiplier to the quantitative backtest metrics.
+LLM inference client providing scoring, narrative generation, and chat via a
+persistent local inference server (llama.cpp) with Groq cloud fallback.
 
 Also provides llm_insight() — generative narrative reporting for trade
 decisions, session summaries, and evaluation reports. Used by insight_reporter.

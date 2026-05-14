@@ -40,7 +40,7 @@ def extract_feature_vector(features: dict) -> list:
     Extract and order features into a canonical float vector for BitNet input.
 
     This is the SINGLE canonical implementation used across dataset_builder,
-    zone_gate, zone_gate_engine, train_pipeline, and bitnet/search_engine.
+    zone_gate, zone_gate_engine, train_pipeline, and bitnet/zone_cosine_searcher.
 
     Rules:
     - ALL keys from features.feature_schema must be present — no silent defaults.

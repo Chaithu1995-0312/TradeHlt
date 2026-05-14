@@ -18,7 +18,7 @@ ENGINE COMPLETENESS POLICY:
 import logging
 import math
 import os
-from engines.adapter_engine import TrapValidatorEngine
+from engines.trap_validator_engine import TrapValidatorEngine
 from engines.crt_engine import compute as crt_compute
 from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
 from engines.ml_gaussian_engine import MLGaussianEngine
@@ -35,7 +35,7 @@ from utils.logging_config import get_flow_logger
 # RegimeGovernor = Step-6 signal-quality filter (canonical name).
 # UltronGovernor = backward-compat alias for the same class.
 # NOT the capital-protection layer — that is UltronRiskGate (ultron_risk_gate.py).
-from core.ultron_gate import UltronGovernor, RegimeGovernor  # noqa: F401  both exported for callers
+from core.regime_governor import UltronGovernor, RegimeGovernor  # noqa: F401  both exported for callers
 
 try:
     from config_layer.rr.rr_fusion import RRFusionLayer

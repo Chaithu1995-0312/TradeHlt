@@ -107,7 +107,7 @@ class IntentRouter:
         messages.extend(conversation[-2:])
         messages.append({"role": "user", "content": user_input})
 
-        from config_layer.llama_gate import llm_chat
+        from config_layer.llm_inference_client import llm_chat
         raw = llm_chat(messages, max_tokens=64, temperature=0.0)
         if not raw:
             return None

@@ -10,7 +10,7 @@ CANONICAL NAMING CONTEXT:
                     Multiplies trade.risk_percent by a regime-specific factor
                     before delegating unconditionally to UltronRiskGate.evaluate().
   UltronRiskGate  (ultron_risk_gate.py) = CAPITAL PROTECTION LAYER (never bypassed).
-  RegimeGovernor  (ultron_gate.py)      = SIGNAL-QUALITY FILTER inside EngineRunner Step 6.
+  RegimeGovernor  (regime_governor.py)  = SIGNAL-QUALITY FILTER inside EngineRunner Step 6.
 
 SR-1 COMPLIANCE: UltronRiskGate is NEVER bypassed or modified.
 This wrapper only pre-scales risk_percent; the gate's evaluate() is ALWAYS called.

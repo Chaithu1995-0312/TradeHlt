@@ -6,7 +6,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from governance.meta_governor_executor import MetaGovernorExecutor
+from governance.bitnet_governance_executor import MetaGovernorExecutor
 
 
 def test_log_governance_event_writes_jsonl_with_required_fields(tmp_path):

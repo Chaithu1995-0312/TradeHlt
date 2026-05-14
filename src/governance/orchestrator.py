@@ -47,7 +47,7 @@ import logging
 import sys
 from pathlib import Path
 
-from governance.meta_governor_executor import MetaGovernorExecutor
+from governance.bitnet_governance_executor import MetaGovernorExecutor
 from governance.reflection_buffer_advanced import ReflectionBuffer
 from governance.shadow_promotion_gate import ShadowPromotionGate
 

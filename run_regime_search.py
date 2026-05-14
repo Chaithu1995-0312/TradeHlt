@@ -22,7 +22,7 @@ sys.path.insert(0, 'src')
 from search.regime_weight_searcher import RegimeWeightSearcher
 from runtime.backtest_v2 import BacktestRunner, BacktestConfig
 from expansion.evaluator import Evaluator
-from config_layer.llama_gate import llm_chat
+from config_layer.llm_inference_client import llm_chat
 from regime.config_router import ConfigRouter
 
 
