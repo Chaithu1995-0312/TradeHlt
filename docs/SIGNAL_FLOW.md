@@ -68,7 +68,7 @@ mode (per [`CONVENTIONS.md`](CONVENTIONS.md) §3), and cross-references.
                    `decision_engine` (threshold), `engine_runner.fusion_use_evaluate`
                    feature flag
 - **Emits:**       `DecisionResult` ∈ {GO / PASS / REJECT} with `RejectReason` enum
-- **Failure mode:** fail-fast on weight-sum drift; fail-open on `llama_gate`
+- **Failure mode:** fail-fast on weight-sum drift; fail-open on `llm_inference_client`
                     timeout (returns neutral 1.0 after `fail_count_disable`)
 - **Tap point:**   the AI Agent (Copilot mode) reads `DecisionResult` *read-only*
                    for narrative insight — it does not mutate the result

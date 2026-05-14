@@ -14,7 +14,7 @@
 | Packaging          | `pyproject.toml` only              | No `requirements.txt`, no `setup.py`                                  |
 | Data / numerics    | pandas, numpy, scipy               | imported across `src/features`, `src/runtime`, `src/engines`          |
 | ML / training      | scikit-learn, torch (PyTorch)      | `src/training/trainer.py`, `src/engines/ml_gaussian_engine.py`        |
-| Local LLM          | llama-cpp-python (GGUF)            | Consumed via `src/config_layer/llama_gate.py` → local HTTP server     |
+| Local LLM          | llama-cpp-python (GGUF)            | Consumed via `src/config_layer/llm_inference_client.py` → local HTTP server |
 | BitNet inference   | `src/bitnet/bitnet_inference.py`   | GGUF model at `models/bitnet_b1_58_70b.gguf`                          |
 | Fallback LLM       | Groq API                           | Key in `.env` → `GROQ_API_KEY`                                        |
 | HTTP control plane | `http.server.ThreadingHTTPServer`  | `src/control_plane/server.py` (stdlib only — no FastAPI)              |
@@ -35,11 +35,11 @@ D:\Tradelatest/
 ├── src/                          # Production Python package (setuptools package root)
 │   ├── agent/                    # AI automation agent — NL→intent→deterministic plan→tool exec
 │   ├── bitnet/                   # BitNet GGUF inference + zone validation
-│   ├── config_layer/             # Config loaders, builders, validators, decision rules (CRT, llama_gate, execution_planner)
+│   ├── config_layer/             # Config loaders, builders, validators, decision rules (CRT, llm_inference_client, execution_planner)
 │   │   └── rr/                   # Risk-reward fusion layer (dataset builder, RR model fusion)
 │   ├── control_plane/            # Stdlib HTTP server + HTML UI for command execution
 │   ├── core/                     # Decision kernel: EngineRunner, FusionEngine, DecisionEngine, UltronRiskGate, Collector
-│   ├── engines/                  # 4 scoring engines + adapter gating engine
+│   ├── engines/                  # 4 scoring engines + trap-validation gating engine
 │   ├── expansion/                # Deterministic parameter-expansion explorer (bounded mutation)
 │   ├── features/                 # 35-dim canonical feature schema, pipeline, drift monitor
 │   ├── governance/               # PromotionManager, shadow testing, portfolio validation, meta-governor
@@ -203,7 +203,7 @@ Tool dispatch (17 tools in tool_registry) → audit.jsonl + intent_log.jsonl
 
 | Integration                  | Purpose                           | Touch point                                         | Failure mode                                             |
 | ---------------------------- | --------------------------------- | --------------------------------------------------- | -------------------------------------------------------- |
-| **Local llama.cpp server**   | LLM tie-breaker + agent intent    | `config_layer/llama_gate.py` — `server_url` from prod config | Circuit breaker: after `fail_count_disable` retries, returns neutral `1.0` |
+| **Local llama.cpp server**   | LLM tie-breaker + agent intent    | `config_layer/llm_inference_client.py` — `server_url` from prod config | Circuit breaker: after `fail_count_disable` retries, returns neutral `1.0` |
 | **Groq API**                 | Fallback LLM when local unavailable | `.env` → `GROQ_API_KEY`                           | Soft-fail via same circuit breaker                       |
 | **BitNet GGUF (local file)** | Zone scoring + agent reasoning    | `src/bitnet/bitnet_inference.py` → `models/bitnet_b1_58_70b.gguf` | Optional import guard → `_MONITOR_AVAILABLE = False`     |
 | **CSV market data**          | Historical replay                 | `data/*_M15.csv`                                    | Hard fail in `BacktestRunner` if missing                 |
@@ -235,7 +235,7 @@ Single source of truth — **no magic numbers in Python code**. The JSON contain
 | `decision_engine`   | `core/decision_engine.py`                                   | Score thresholds for ACCEPT / REJECT                               |
 | `crt_engine`        | `config_layer/crt_engine_v2.py`                             | CRT state machine parameters                                       |
 | `governance`        | `governance/shadow_promotion_gate.py`                       | Shadow testing config                                              |
-| `llama_gate`        | `config_layer/llama_gate.py`                                | LLM server URL, timeouts, `fail_count_disable`, `request_timeout`  |
+| `llama_gate`        | `config_layer/llm_inference_client.py`                      | LLM server URL, timeouts, `fail_count_disable`, `request_timeout`  |
 | `config_validator`  | `config_layer/config_validator.py`                          | Hard + soft gate thresholds, fitness weights, trade count target   |
 | `agent`             | `src/agent/*`                                               | BitNet 3B config, REPL mode, `copilot_auto_narrate=false`          |
 

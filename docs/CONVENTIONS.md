@@ -39,7 +39,7 @@ Decide where a new file goes by asking "what is it?" then matching against this 
 | Importable production module                    | `src/<subpackage>/`                      | Every subpackage has `__init__.py`; packaged via setuptools   |
 | New scoring engine (emits `{score, intent}`)    | `src/engines/`                           | Must plug into `EngineRunner`'s `EXPECTED_ENGINES` set        |
 | New decision / risk / fusion logic              | `src/core/`                              | Core owns the decision kernel; do not scatter across engines  |
-| New validator or config transform               | `src/config_layer/`                      | Builders, validators, decision rules, `llama_gate`, planner   |
+| New validator or config transform               | `src/config_layer/`                      | Builders, validators, decision rules, `llm_inference_client`, planner |
 | RR-specific fusion / dataset code               | `src/config_layer/rr/`                   | RR layer kept isolated for independent re-training            |
 | Feature extraction or drift code                | `src/features/`                          | Canonical 35-dim schema lives in `feature_schema.py`          |
 | Governance / promotion / shadow logic           | `src/governance/`                        | All pre-prod gates live here                                  |
@@ -111,7 +111,7 @@ Also used for RR fusion: `_RR_FUSION_IMPORT_ERROR = None` on success, stores the
 
 ### 3.3 Fail-open with circuit breaker (external I/O)
 
-Used for LLM / HTTP calls that must not stall the hot path. Pattern lives in `llama_gate.py`:
+Used for LLM / HTTP calls that must not stall the hot path. Pattern lives in `llm_inference_client.py`:
 
 ```python
 try:
@@ -206,7 +206,7 @@ if str(_ROOT) not in sys.path:
 # 5. Internal imports — by subpackage, absolute paths rooted at src/
 from config_layer.production_config import get_prod_section
 from core.engine_runner import EngineRunner
-from engines.adapter_engine import TrapValidatorEngine
+from engines.trap_validator_engine import TrapValidatorEngine
 from utils.logging_config import get_flow_logger
 ```
 
@@ -262,7 +262,7 @@ Levels used by this codebase:
 | **Silent promotion**                   | Promotion without an approved `ValidationReport` is impossible                       | `PromotionManager` checks `report["decision"] == "APPROVE"` + SHA-256 hash |
 | **Unbounded parameter mutation**       | Expansion engine enforces `PARAM_BOUNDS` per mutable parameter                       | `src/expansion/policy_schema.py`                                   |
 | **Mutable production configs**         | Prod configs are versioned; promotion archives the prior version with timestamp      | `{version}_archived_{ts}.json` pattern                             |
-| **LLM in the hot path without fallback** | `llama_gate` enforces timeout + circuit breaker + neutral 1.0 fallback             | `fail_count_disable`, `request_timeout` in config                  |
+| **LLM in the hot path without fallback** | `llm_inference_client` enforces timeout + circuit breaker + neutral 1.0 fallback   | `fail_count_disable`, `request_timeout` in config                  |
 | **Schema drift without guard**         | `CANONICAL_FEATURES` hash is baselined; schema changes require explicit re-baseline  | `src/runtime/baseline_capture.py`                                  |
 | **Decisions without audit**            | Every ACCEPT / REJECT flows through `Collector` + signal-specific audit              | `src/core/collector.py`, `src/core/signal_audit.py`                |
 | **Hidden randomness in decision paths** | Deterministic inputs → deterministic outputs; randomness confined to training only  | Codebase-wide                                                      |

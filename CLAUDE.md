@@ -80,7 +80,7 @@ Before touching any code, read these in order:
 - **Single production config version is active at a time.** Archived versions are preserved as `{version}_archived_{ts}.json` but are not hot-swappable — rollback requires restoring and re-loading.
 - **Four engines are mandatory.** `EXPECTED_ENGINES = {"crt", "gaussian", "zone_gate", "rr"}`. Removing one without updating the completeness check will produce silent partial fusion.
 - **No lookahead is allowed in backtests.** `BacktestRunner` streams candle-by-candle; feature builders that peek ahead will break determinism and must be rejected in review.
-- **LLM is a tie-breaker, not a hot-path dependency.** `llama_gate` returns neutral `1.0` after `fail_count_disable` failures. Any code path that cannot tolerate that fallback is broken by design.
+- **LLM is a tie-breaker, not a hot-path dependency.** `llm_inference_client` returns neutral `1.0` after `fail_count_disable` failures. Any code path that cannot tolerate that fallback is broken by design.
 - **Windows console encoding.** Non-ASCII output must go through `src/utils/console_safe.py` (cp1252 fallback). Direct `print` of arbitrary strings in CLI entry points risks `UnicodeEncodeError`.
 - **Control plane is localhost-only.** No auth layer, no TLS — do not expose `localhost:8787` externally.
 - **Schema hash is load-bearing.** Any change to `CANONICAL_FEATURES` or `FEATURE_SCHEMA` invalidates the baseline and requires `python src/runtime/baseline_capture.py --label <new>` before training.
@@ -189,7 +189,7 @@ This keeps discussion grounded and skips re-explaining structure.
   - HARD drift (Z>3.0) → `WARNING` log; soft drift (Z>2.5) → `DEBUG` log.
   - Drift stats attached to `BacktestMetrics.distribution["feature_drift"]` in final output.
 - `FusionEngine.evaluate()` path already behind `fusion_use_evaluate` feature flag in production config.
-- `llama_gate.py` already implements timeout/fallback controls (`fail_count_disable=10`, `request_timeout=2.0s`, returns 1.0 on failure).
+- `llm_inference_client.py` already implements timeout/fallback controls (`fail_count_disable=10`, `request_timeout=2.0s`, returns 1.0 on failure).
 
 ### Phase 3 — Data & Model Quality
 - `rr_dataset_builder.py` implements canonical RR label extraction with 3-level priority (rr_achieved → pnl_rr_net → computed).
