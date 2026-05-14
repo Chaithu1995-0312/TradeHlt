@@ -1,0 +1,46 @@
+{
+  "top_engine_signal": {
+    "engine": "CRT_RETEST",
+    "regime": "EXPANSION",
+    "threshold": 0.65,
+    "rationale": "Current score-outcome correlation is only 0.139, indicating poor predictive power. Backtest shows 60% win rate but negative net RR due to costs. Retest depth feature (mean 0.045, range 0–0.76) combined with expansion regime shows highest average win size (best trade +5.33R). Raising minimum retest depth to 0.65 filters out marginal setups and improves risk-reward."
+  },
+  "sessions_to_avoid": [
+    {
+      "regime": "RANGE",
+      "engine": "CRT_DISPLACEMENT",
+      "reason": "OFF_SESSION (24 trades, 54% win rate, -3.10R PnL) and Wednesday (12 trades, 50% win rate, -9.03R PnL) dominate losses. Range-bound markets with displacement signals produce false breakouts, especially during low-liquidity hours."
+    },
+    {
+      "regime": "SWEEP",
+      "engine": "CRT",
+      "reason": "Sweep patterns without retest confirmation led to the worst trade (-4.06R). Avoid sweeps during Wednesday Asian session (lost 9R overall)."
+    }
+  ],
+  "recommended_fusion_min": 0.35,
+  "bitnet_disagreement_verdict": "investigate",
+  "config_changes": [
+    {
+      "param": "min_retest_depth",
+      "from": 0.0,
+      "to": 0.25,
+      "rationale": "Current mean retest depth is 0.045, but many trades had depth=0 (no retest). Those trades underperformed (e.g., CRT-0002, CRT-0003). Requiring a minimum retest depth of 0.25 eliminates low-quality sweeps and improves win rate."
+    },
+    {
+      "param": "session_filter",
+      "from": "ALL",
+      "to": "ASIA,LONDON,NEWYORK",
+      "rationale": "OFF_SESSION produced 24 trades with -3.10R (60% of all trades). Excluding OFF_SESSION and Wednesdays would have increased net PnL by ~12R, turning the strategy profitable."
+    },
+    {
+      "param": "cost_slippage_buffer",
+      "from": 0.0,
+      "to": 1.5,
+      "rationale": "Total slippage + spread = 120.6 pips, average cost 3.0 pips per trade. Raw PnL -0.71R vs net -0.45R (cost drag -0.26R). Adding a 1.5 pip buffer to stop-loss and take-profit reduces false triggers from spread noise."
+    }
+  ],
+  "trap_pattern": {
+    "description": "Low-liquidity sweeps without retest: 24 OFF_SESSION trades produced negative expectancy (-0.13R per trade). These occur when price sweeps a swing point but immediately reverses without a retest of the displaced zone, often during Asian open or Friday afternoon.",
+    "filter_rule": "REJECT IF (session IN ('OFF_SESSION') OR day_of_week='Wednesday') AND retest_depth < 0.25 AND volatility_regime < 1.5"
+  }
+}

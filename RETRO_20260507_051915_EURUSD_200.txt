@@ -1,0 +1,67 @@
+You are a quantitative trading signal analyst with expertise in CRT (Change of Range Theory) pattern recognition, regime-based filtering, and risk-reward optimization.
+
+Analyze these trading signal decisions to find high-ROI patterns and actionable config improvements.
+
+===== DATA SOURCE =====
+Instrument: EURUSD
+Source: results.csv (last 200 non-integrity-failed rows)
+Total signals analyzed: 200
+Decision breakdown:
+  BITNET_REJECT=200
+
+===== COMPARISON GROUPS =====
+NOTE: No ACCEPT decisions exist in this dataset — the system rejected everything.
+Group A (REJECT): 0 signals — rejected by fusion/decision engine.
+Group B (BITNET_REJECT): 200 signals — rejected specifically by BitNet zone gate.
+
+Your job: find what is blocking ALL trades and recommend threshold relaxation.
+
+===== SCORE DISTRIBUTION =====
+Average fusion score (all signals):   0.0000
+Average fusion score (REJECT):  0.0000 ± 0.0000
+Average fusion score (BITNET_REJECT): 0.0000
+
+===== REGIME BREAKDOWN (REJECT signals) =====
+Top regimes: N/A
+
+===== ENGINE SELECTION (REJECT signals) =====
+Most-selected engines: N/A
+
+===== REJECTION / FILTER REASONS =====
+  None
+
+===== CONFIDENCE BUCKETS =====
+REJECT signal buckets: N/A
+BITNET_REJECT signal buckets: HIGH_REJECT(192), MID_REJECT(8)
+
+===== BITNET (ZONE GATE) =====
+BitNet AGREES with REJECT: 0 signals
+BitNet DISAGREES with REJECT: 0 signals
+
+===== SAMPLE REJECT SIGNALS =====
+  No REJECT signals found
+
+===== SAMPLE BITNET_REJECT SIGNALS =====
+  score=0.000 regime=? engine=? bitnet=0.000 bucket=HIGH_REJECT
+  score=0.000 regime=? engine=? bitnet=0.000 bucket=HIGH_REJECT
+  score=0.000 regime=? engine=? bitnet=0.000 bucket=HIGH_REJECT
+  score=0.000 regime=? engine=? bitnet=0.000 bucket=HIGH_REJECT
+  score=0.000 regime=? engine=? bitnet=-0.850 bucket=HIGH_REJECT
+
+===== YOUR ANALYSIS TASK =====
+1. Why is the system rejecting 100% of signals? Which gate is the bottleneck?
+2. Which regime + engine scores are closest to passing — what threshold tweak helps?
+3. What fusion score minimum would allow some high-quality setups through?
+4. BitNet is rejecting many signals — is this a calibration problem or correct?
+5. Give 3 concrete config parameter changes to unlock quality trades.
+6. Identify the primary blocker pattern preventing any executions.
+
+Respond ONLY in valid JSON with this exact structure:
+{
+  "top_engine_signal": {"engine": "<str>", "regime": "<str>", "threshold": <float>, "rationale": "<str>"},
+  "sessions_to_avoid": [{"regime": "<str>", "engine": "<str>", "reason": "<str>"}],
+  "recommended_fusion_min": <float>,
+  "bitnet_disagreement_verdict": "<risky|acceptable|investigate>",
+  "config_changes": [{"param": "<str>", "from": <value>, "to": <value>, "rationale": "<str>"}],
+  "trap_pattern": {"description": "<str>", "filter_rule": "<str>"}
+}

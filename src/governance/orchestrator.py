@@ -91,19 +91,28 @@ class GovernanceOrchestrator:
 
     def run(
         self,
-        collector_log: str,
-        trades_csv: str,
+        collector_log: str | None,
+        trades_csv: str | None,
         baseline_pnl: float,
+        *,
+        compressed_summary_path: str | None = None,
     ) -> dict:
         """
         Execute the full 4-step governance loop.
 
+        Either pass `collector_log` + `trades_csv` (legacy raw-log path) OR
+        `compressed_summary_path` pointing at JSON produced by
+        scripts/analysis/compress_logs_for_llm.py.
+
         Parameters
         ----------
-        collector_log : path to Collector JSONL output (decisions).
+        collector_log : path to Collector JSONL output (decisions). May be None
+                        when compressed_summary_path is provided.
         trades_csv    : path to backtest trades CSV (outcomes with pnl_rr_net).
+                        May be None when compressed_summary_path is provided.
         baseline_pnl  : PnL of the current active config on the same data,
                         used as the promotion threshold.
+        compressed_summary_path : optional pre-computed summary JSON path.
 
         Returns
         -------
@@ -114,11 +123,25 @@ class GovernanceOrchestrator:
             reason    : human-readable outcome explanation.
         """
         # ── Step 1+2: Reflection ──────────────────────────────────────────────
-        log.info("Step 1/4  Loading and merging decisions + trade outcomes …")
-        reflection = ReflectionBuffer(
-            logs_path=collector_log,
-            trades_path=trades_csv,
-        )
+        compressed_summary = None
+        if compressed_summary_path:
+            log.info("Step 1/4  Loading compressed summary %s …", compressed_summary_path)
+            try:
+                compressed_summary = json.loads(
+                    Path(compressed_summary_path).read_text(encoding="utf-8")
+                )
+            except Exception as exc:
+                log.error("Failed to load compressed summary: %s", exc)
+                return {"patch": None, "promoted": False, "reason": str(exc)}
+            reflection = ReflectionBuffer(
+                compressed_summary=compressed_summary,
+            )
+        else:
+            log.info("Step 1/4  Loading and merging decisions + trade outcomes …")
+            reflection = ReflectionBuffer(
+                logs_path=collector_log,
+                trades_path=trades_csv,
+            )
         try:
             df = reflection.load_and_merge()
         except Exception as exc:
@@ -202,10 +225,16 @@ def _parse_args(argv=None):
         description="Run the full CRT governance loop: "
                     "Reflection → MetaGovernor → ShadowGate → Promotion",
     )
-    p.add_argument("--collector-log",  required=True,
-                   help="Path to Collector JSONL output (logs/collector.jsonl)")
-    p.add_argument("--trades-csv",     required=True,
-                   help="Path to backtest trades CSV with pnl_rr_net column")
+    p.add_argument("--collector-log",
+                   help="Path to Collector JSONL output (logs/collector.jsonl). "
+                        "Mutually exclusive with --compressed-summary.")
+    p.add_argument("--trades-csv",
+                   help="Path to backtest trades CSV with pnl_rr_net column. "
+                        "Mutually exclusive with --compressed-summary.")
+    p.add_argument("--compressed-summary",
+                   help="Pre-computed summary JSON from "
+                        "scripts/analysis/compress_logs_for_llm.py. When set, "
+                        "raw-log parsing is bypassed.")
     p.add_argument("--baseline-pnl",   required=True, type=float,
                    help="PnL of active production config (promotion threshold)")
     p.add_argument("--active-config",
@@ -224,6 +253,22 @@ def _parse_args(argv=None):
 
 def main(argv=None):
     args = _parse_args(argv)
+
+    if args.compressed_summary:
+        if args.collector_log or args.trades_csv:
+            sys.stderr.write(
+                "orchestrator: --compressed-summary is mutually exclusive with "
+                "--collector-log/--trades-csv.\n"
+            )
+            sys.exit(2)
+    else:
+        if not (args.collector_log and args.trades_csv):
+            sys.stderr.write(
+                "orchestrator: provide either --compressed-summary OR "
+                "both --collector-log and --trades-csv.\n"
+            )
+            sys.exit(2)
+
     orchestrator = GovernanceOrchestrator(
         active_config_path=args.active_config,
         bitnet_bin=args.bitnet_bin,
@@ -235,6 +280,7 @@ def main(argv=None):
         collector_log=args.collector_log,
         trades_csv=args.trades_csv,
         baseline_pnl=args.baseline_pnl,
+        compressed_summary_path=args.compressed_summary,
     )
     print(json.dumps(result, indent=2))
     sys.exit(0 if result["promoted"] else 1)

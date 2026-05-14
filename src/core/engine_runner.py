@@ -68,6 +68,7 @@ ENGINE_RUNNER_DEFAULTS: dict = {
     "zone_registry_path":       "models/zone_registry.json",
     "zone_gate_execution_mode": "normal",
     "zone_mode":                "hard",
+    "zone_min_samples":         50,
     "debug_mode":               False,
     "gaussian_impl":            "heuristic",
     "convergence_window":       500,
@@ -349,6 +350,9 @@ class EngineRunner:
         self.decision = DecisionEngine(config)
         self.collector = Collector()
 
+        from config_layer.production_config import PROD_VERSION as _pv
+        logger.info("Production config version: %s", _pv)
+
         dual_cfg = _cfg_require(config, "dual_engine", "engine_runner")
         self.dual_cfg = dual_cfg  # no fallback — all keys must be in JSON
 
@@ -357,7 +361,8 @@ class EngineRunner:
 
         # BitNet zone gate — lazy-loaded singleton; fail-open if registry missing
         zone_registry_path = str(_cfg_require(config, "zone_registry_path", "engine_runner"))
-        self._zone_gate = get_zone_gate(zone_registry_path)
+        _zone_min_samples  = int(config.get("zone_min_samples", 50))
+        self._zone_gate = get_zone_gate(zone_registry_path, min_samples=_zone_min_samples)
 
         # Observability + adaptive control
         debug_mode = bool(_cfg_require(config, "debug_mode", "engine_runner"))
@@ -546,7 +551,17 @@ class EngineRunner:
             "meta": zone_raw,
         }
         crt_result = crt_compute(trade_id="Test:", features=input_data, context={})
-        gaussian_result = self.gaussian.compute(input_data)
+        # Extract CRT-determined direction so the gaussian engine can apply
+        # feature mirroring for short trades (MLGaussianEngine / direction-aware path).
+        # input_data["direction"] is an int (1=LONG, -1=SHORT) set by backtest_v2.py
+        # lines 1639-1641 before calling engine_runner.run().  Falls back to "long"
+        # when direction is absent (live path without explicit direction injection).
+        try:
+            _dir_raw = int(input_data.get("direction", input_data.get("signal_dir", 1)) or 1)
+        except (TypeError, ValueError):
+            _dir_raw = 1
+        _gauss_dir = "short" if _dir_raw < 0 else "long"
+        gaussian_result = self.gaussian.compute(input_data, direction=_gauss_dir)
         rr_result = self.rr.compute(input_data)
         base_rr_score = _safe_float(rr_result.get("score"), 0.0)
 
@@ -591,6 +606,19 @@ class EngineRunner:
             "zone_gate": zone_result,
             "rr": rr_result,
         }
+
+        # 5th engine — StrategyOrchestrator consensus (injected via context dict).
+        # live_engine_hook calls StrategyOrchestrator BEFORE EngineRunner and injects
+        # the consensus score under context["strategy_consensus_score"].
+        # FusionEngine picks it up only when FusionConfig.weight_strategy_consensus > 0.
+        _consensus_score = _safe_float(
+            (context or {}).get("strategy_consensus_score"), -1.0
+        )
+        if _consensus_score >= 0.0:
+            engine_results["strategy_consensus"] = {
+                "score": max(0.0, min(1.0, _consensus_score)),
+                "direction": int((context or {}).get("strategy_consensus_direction", 0)),
+            }
 
         # Audit: record all engine scores
         self._audit.record_engines(engine_results)

@@ -151,7 +151,7 @@ def validate_logs(
             if event == "ENTRY":
                 rpt.entry_records += 1
                 tid = rec.get("trade_id", "")
-                if tid:
+                if tid and tid not in entries:   # keep first occurrence; discard zero-padded duplicates
                     entries[tid] = rec
 
             elif event == "EXIT":
@@ -182,6 +182,10 @@ def validate_logs(
 
         # Feature extraction + validation
         feature_dict = entry.get("features", {})
+        if feature_dict and all(v == 0.0 for v in feature_dict.values()):
+            rpt.skipped_bad_features += 1
+            rpt.warnings.append(f"trade_id={tid[:8]}… all-zero feature vector, skipped")
+            continue
         try:
             vec = feature_dict_to_vector(feature_dict)
             validate_vector(vec, TRADENET_SCHEMA, label=f"trade_id={tid[:8]}")

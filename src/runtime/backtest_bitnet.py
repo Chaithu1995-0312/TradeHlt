@@ -1,4 +1,4 @@
-﻿"""
+"""
 backtest_bitnet.py
 ==============
 Row-by-row backtest runner with BitNet as HARD GATEKEEPER.

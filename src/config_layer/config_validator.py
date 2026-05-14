@@ -527,7 +527,7 @@ if __name__ == "__main__":
 
     # validate-params
     vpf = sub.add_parser("validate-params", help="Validate a params JSON file")
-    vpf.add_argument("--params", required=True, help="JSON file with params dict")
+    vpf.add_argument("--params", required=True, help="JSON file path or inline JSON string with params dict")
     vpf.add_argument("--data-dir", default="data")
     vpf.add_argument("--config-id", default="cli_validation")
     vpf.add_argument("--output", default=None)
@@ -543,8 +543,12 @@ if __name__ == "__main__":
             version=args.version, csv_paths=csv_paths
         )
     elif args.cmd == "validate-params":
-        with open(args.params) as f:
-            params = json.load(f)
+        raw = args.params.strip()
+        if raw.startswith("{"):
+            params = json.loads(raw)
+        else:
+            with open(raw) as f:
+                params = json.load(f)
         csv_paths = ConfigValidator._discover_csvs(args.data_dir)
         if not csv_paths:
             print(f"\nNo CSVs found in {args.data_dir}. Provide instrument CSVs.\n")

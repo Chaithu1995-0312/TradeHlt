@@ -187,7 +187,7 @@ def extract_target(trade: Any, features: dict) -> Tuple[float, int]:
     outcome = trade_dict.get("outcome")
     if outcome is not None:
         if isinstance(outcome, str):
-            win = 1 if outcome.strip().upper() in ("WIN", "W", "TP", "1") else 0
+            win = 1 if outcome.strip().upper() in ("WIN", "W", "TP", "TP_HIT", "1") else 0
         else:
             try:
                 win = 1 if int(outcome) == 1 else 0

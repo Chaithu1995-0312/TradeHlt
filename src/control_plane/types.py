@@ -5,7 +5,7 @@ from typing import Any, Literal
 
 CommandMode = Literal["python-file", "module"]
 RunStatus = Literal["queued", "running", "succeeded", "failed", "stopped"]
-ArgKind = Literal["str", "int", "float", "bool", "list", "choice"]
+ArgKind = Literal["str", "int", "float", "bool", "list", "choice", "file", "file-multi"]
 
 
 @dataclass(frozen=True)
@@ -20,6 +20,11 @@ class ArgSpec:
     positional: bool = False
     positional_index: int = 0
     applies_to: tuple[str, ...] = ()
+    min_val: float | None = None
+    max_val: float | None = None
+    file_glob: str = ""
+    auto_default: str = ""   # "date_version" → JS pre-fills v5_auto_YYYY_MM
+                              # "compressed_from_logs" → JS derives from sibling logs field
 
 
 @dataclass(frozen=True)

@@ -88,17 +88,19 @@ class MLGaussianEngine:
             self._scaler = None
             self._load_failed = True
 
-    def compute(self, input_data: dict, candle_idx: int = 0) -> dict:
+    def compute(self, input_data: dict, candle_idx: int = 0, direction: str = "long") -> dict:
         """
-        Compute ML-based score from 32-dim canonical feature dict.
+        Compute ML-based score from 35-dim canonical feature dict.
 
         Pipeline:
           1. Lazy model load
-          2. Extract 32-dim vector via dataset_builder.extract_feature_vector()
-          3. Validate dimension matches model.n_features
-          4. Scale with self._scaler.transform_one()
-          5. Call self._model.predict_expected_rr(scaled)
-          6. Map expected_rr → score via sigmoid: 1 / (1 + exp(-expected_rr))
+          2. Extract 35-dim vector via dataset_builder.extract_feature_vector()
+          3. If direction='short', mirror directional features to long perspective
+             (must match the mirroring applied during training with --mirror-short-features)
+          4. Validate dimension matches model.n_features
+          5. Scale with self._scaler.transform_one()
+          6. Call self._model.predict_expected_rr(scaled)
+          7. Map expected_rr → score via sigmoid: 1 / (1 + exp(-expected_rr))
 
         Returns dict with: score, reason, meta (on success)
         """
@@ -113,6 +115,16 @@ class MLGaussianEngine:
         try:
             from features.dataset_builder import extract_feature_vector
             vec = extract_feature_vector(input_data)
+
+            # Mirror directional features for short trades so the model (trained in
+            # long perspective via --mirror-short-features) scores correctly.
+            if direction == "short":
+                try:
+                    from core.model_registry import _mirror_features_for_short
+                    from features.feature_schema import CANONICAL_FEATURE_ORDER
+                    vec = _mirror_features_for_short(vec, CANONICAL_FEATURE_ORDER)
+                except Exception as _me:
+                    logger.debug("MLGaussianEngine: short mirroring skipped — %s", _me)
 
             if len(vec) != self._model.n_features:
                 logger.error(

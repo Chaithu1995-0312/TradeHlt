@@ -1,74 +1,89 @@
 """
-RREngine — Risk-Reward scoring engine.
+RREngine — Candle Polarity Index (formerly misnamed "RR Engine").
 
-Computes the best achievable Risk-Reward ratio from actual price levels
-(close, high, low) rather than fixed ATR multiples.
+SEMANTIC NOTE (audit fix 2026-05-14):
+  This engine does NOT compute forward-looking Risk:Reward. The entry is at the
+  current candle's CLOSE; the High and Low of that same candle are already in
+  the past. Computing (high-close)/(close-low) is therefore measuring CANDLE
+  STRUCTURE, not tradable future RR.
 
-Bull scenario:  entry=close, stop=low,  target=high
-Bear scenario:  entry=close, stop=high, target=low
+  Previous formula had a deeper bug: close at candle-LOW → bull_stop=0 →
+  div/zero → score=0, AND close at candle-HIGH → bull_target=0 → score=0.
+  Only mid-candle closes scored >0, which is the OPPOSITE of what CRT wants
+  (CRT entries favour closes near candle extremes = committed directional bars).
 
-The best of the two scenarios is used as the score driver.
+  NEW FORMULA — Candle Polarity Index (CPI):
+    candle_range = high - low  (+ epsilon for doji protection)
+    upper_body   = (high - close) / candle_range   → 1 when close at low  (bullish pin)
+    lower_body   = (close - low)  / candle_range   → 1 when close at high (bearish pin)
+    score        = max(upper_body, lower_body)
 
-FIX NOTE (vs previous implementation):
-  Previously: stop=atr*1.5, target=atr*3.0 → rr=2.0 always (constant).
-  Now: stop and target are derived from real price-level distances.
+  Score interpretation:
+    1.0  → Close at either extreme → strong directional commitment (ideal CRT candle)
+    0.5  → Close at midpoint → doji / indecision (lower quality)
+    0.0  → Degenerate candle (high == low)
+
+  The UltronRiskGate RR check (Check 2: rr_ratio < min_rr_ratio) is SEPARATE
+  and uses CRT-derived forward SL/TP levels, not this engine's output.
+  This engine contributes 20% to the fusion score as a candle-quality signal.
 """
 
 import logging
 
+_EPS = 1e-9
 logger = logging.getLogger(__name__)
 
 
 class RREngine:
+    """Candle Polarity Index engine. Scores candle structure for directional commitment."""
+
     def __init__(self, config: dict):
         self.config = config
+        # min_rr retained for backward config compat; no longer used in scoring
         self.min_rr = config.get("min_rr", 1.5)
 
     def compute(self, input_data: dict) -> dict:
         try:
-            close = input_data["close"]
-            high = input_data["high"]
-            low = input_data["low"]
-            # atr kept for context / future extensions but NOT used in ratio calc
-            atr = input_data["atr"]  # noqa: F841
+            close = float(input_data["close"])
+            high  = float(input_data["high"])
+            low   = float(input_data["low"])
 
             # Sanity: high must be >= close >= low
             if not (high >= close >= low):
                 return {
-                    "score": 0.0,
-                    "reason": f"invalid_price_structure:high={high},close={close},low={low}"
+                    "score":           0.0,
+                    "candle_polarity": 0.0,
+                    "reason":          f"invalid_price_structure:h={high},c={close},l={low}",
                 }
 
-            # --- Bull scenario ---
-            bull_stop = close - low       # risk: distance from entry down to support
-            bull_target = high - close    # reward: distance from entry up to resistance
+            candle_range = high - low
+            if candle_range < _EPS:
+                # Degenerate doji — no structure to score
+                return {
+                    "score":           0.0,
+                    "candle_polarity": 0.0,
+                    "reason":          "doji_zero_range",
+                }
 
-            # --- Bear scenario ---
-            bear_stop = high - close      # risk: distance from entry up to resistance
-            bear_target = close - low     # reward: distance from entry down to support
+            # Fraction of the candle above and below the close
+            upper_body = (high  - close) / candle_range  # 1.0 when close at low  (bull pin)
+            lower_body = (close - low)   / candle_range  # 1.0 when close at high (bear pin)
 
-            # Best RR across both scenarios
-            bull_rr = bull_target / bull_stop if bull_stop > 0 else 0.0
-            bear_rr = bear_target / bear_stop if bear_stop > 0 else 0.0
-            rr_ratio = max(bull_rr, bear_rr)
-
-            if rr_ratio <= 0:
-                return {"score": 0.0, "rr_ratio": 0.0, "reason": "zero_rr_ratio"}
-
-            if rr_ratio >= self.min_rr:
-                # Normalize: score=0.5 at exactly min_rr, approaches 1.0 as rr → ∞
-                score = min(1.0, rr_ratio / (self.min_rr * 2))
-            else:
-                score = 0.0
+            # Polarity: peaks at 1.0 when close is at either extreme
+            polarity = max(upper_body, lower_body)
 
             return {
-                "score": round(score, 4),
-                "rr_ratio": round(rr_ratio, 4),
-                "reason": f"rr_ratio:{round(rr_ratio, 4)}",
+                "score":           round(polarity, 4),
+                "candle_polarity": round(polarity, 4),
+                # Keep legacy field name so any callers reading "rr_ratio" still work
+                "rr_ratio":        round(polarity, 4),
+                "reason":          f"candle_polarity:{round(polarity, 4)}",
+                "semantic":        "candle_structure_quality",  # not forward RR
             }
 
         except KeyError as e:
-            logger.error(f"RREngine missing key: {e}")
-            return {"score": 0.0, "rr_ratio": 0.0, "reason": f"missing_key:{e}"}
-        except ZeroDivisionError:
-            return {"score": 0.0, "rr_ratio": 0.0, "reason": "zero_division"}
+            logger.error("RREngine missing key: %s", e)
+            return {"score": 0.0, "candle_polarity": 0.0, "rr_ratio": 0.0, "reason": f"missing_key:{e}"}
+        except (TypeError, ValueError) as e:
+            logger.error("RREngine value error: %s", e)
+            return {"score": 0.0, "candle_polarity": 0.0, "rr_ratio": 0.0, "reason": f"value_error:{e}"}

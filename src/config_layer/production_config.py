@@ -38,34 +38,48 @@ from datetime import time as dt_time
 from pathlib import Path
 from typing import Optional
 
+import logging as _logging
+
 from config_layer.config_builder import ConfigBuilder
 from config_layer.crt_engine_v2 import CRTConfig
 
+_log = _logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PRODUCTION VERSION
-# Resolved automatically from configs/production/ACTIVE_VERSION (pointer file
-# written by PromotionManager._write_to_registry on every promotion).
-# Hardcoded string below is the fallback for fresh checkouts with no pointer.
+# Resolved from configs/production/ACTIVE_VERSION (pointer file written by
+# PromotionManager on every successful promotion). Raises RuntimeError if the
+# file is absent or empty — never silently falls back to a hardcoded version.
 # ─────────────────────────────────────────────────────────────────────────────
 
 PRODUCTION_REGISTRY_DIR: str = "configs/production"
 
-_FALLBACK_PROD_VERSION: str = "v1_multi_2026_03"
 _ACTIVE_VERSION_FILE: Path = Path(PRODUCTION_REGISTRY_DIR) / "ACTIVE_VERSION"
 
-def _resolve_prod_version() -> str:
-    """Return version from pointer file, or fall back to hardcoded default."""
-    try:
-        if _ACTIVE_VERSION_FILE.exists():
-            resolved = _ACTIVE_VERSION_FILE.read_text(encoding="utf-8").strip()
-            if resolved:
-                return resolved
-    except OSError:
-        pass
-    return _FALLBACK_PROD_VERSION
 
-PROD_VERSION: str = _resolve_prod_version()
+def get_active_version() -> str:
+    """Read version from ACTIVE_VERSION pointer file. Raises RuntimeError if missing/empty."""
+    if not _ACTIVE_VERSION_FILE.exists():
+        raise RuntimeError(
+            "No active version pointer found at configs/production/ACTIVE_VERSION. "
+            "Run promotion_manager.py promote first."
+        )
+    try:
+        resolved = _ACTIVE_VERSION_FILE.read_text(encoding="utf-8").strip()
+    except OSError as exc:
+        raise RuntimeError(
+            f"Failed to read configs/production/ACTIVE_VERSION: {exc}"
+        ) from exc
+    if not resolved:
+        raise RuntimeError(
+            "configs/production/ACTIVE_VERSION is empty. "
+            "Run promotion_manager.py promote first."
+        )
+    _log.info("Active production config: %s", resolved)
+    return resolved
+
+
+PROD_VERSION: str = get_active_version()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -236,7 +250,18 @@ def load_prod_config_from_registry(
         coerced = _coerce_crt_engine(crt_engine)
         merged = {**coerced, **params}   # params (tuned) wins over crt_engine defaults
     else:
-        merged = params
+        merged = dict(params)
+
+    # ── Pull allowed_sessions from engine_runner section ───────────────────
+    # JSON stores lowercase ("london", "new_york"); CRTConfig.session_windows
+    # uses uppercase keys without underscores ("LONDON", "NEWYORK"), so we
+    # normalize on load.
+    _er = data.get("engine_runner", {})
+    if isinstance(_er, dict) and "allowed_sessions" in _er:
+        merged["allowed_sessions"] = tuple(
+            str(s).upper().replace("_", "")
+            for s in _er["allowed_sessions"]
+        )
 
     return ConfigBuilder.build(instrument, overrides=merged)
 
@@ -307,6 +332,35 @@ def get_prod_section(section: str, version: Optional[str] = None) -> dict:
             f"Add the missing section to v1_multi_2026_03.json."
         )
     return data[section]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FULL CONFIG ACCESSOR
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_full_config_dict(version: Optional[str] = None) -> dict:
+    """
+    Return the entire production registry JSON for the given version.
+
+    Unlike get_prod_section(), which fetches one section, this returns every
+    top-level key (params, engine_runner, crt_engine, fusion_engine, …) as a
+    single dict.  Useful for config dumps and audit tooling.
+
+    Parameters
+    ----------
+    version : str | None
+        Config version string.  Defaults to PROD_VERSION.
+
+    Returns
+    -------
+    dict
+        Raw registry JSON (no hash verification — audit-only path).
+    """
+    v = version or PROD_VERSION
+    registry_path = _get_registry_path(v)
+    _assert_registry_exists(registry_path)
+    with open(registry_path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

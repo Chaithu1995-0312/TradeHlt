@@ -25,6 +25,55 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _extract_instrument(args: dict[str, Any], command_id: str = "") -> str:
+    """
+    Derive instrument/coin label from run args for directory naming.
+
+    Priority order:
+      1. args["instrument"]                     — explicit (backtest, scanner, etc.)
+      2. args["csv"] stem first segment         — "data/EURUSD_M15.csv" → "EURUSD"
+      3. args["opportunities"] first path       — "logs/opportunities_EURUSD.jsonl" → "EURUSD"
+      4. args["logs"] first path                — same opportunities-style pattern
+      5. command_id category prefix             — "training.discover_zones" → "TRAINING"
+      6. Fallback                               → "GENERAL"
+
+    Returns an UPPERCASE string safe for use as a directory name.
+    """
+    # 1. Explicit instrument arg
+    inst = str(args.get("instrument") or "").strip().upper()
+    if inst:
+        return inst
+
+    # 2. CSV path: data/EURUSD_M15.csv → stem "EURUSD_M15" → first segment "EURUSD"
+    csv_val = str(args.get("csv") or "").strip()
+    if csv_val:
+        part = Path(csv_val).stem.split("_")[0].upper()
+        if 2 <= len(part) <= 10:
+            return part
+
+    # 3 & 4. List-type paths: opportunities_EURUSD.jsonl → last "_"-segment "EURUSD"
+    for key in ("opportunities", "logs"):
+        val: Any = args.get(key, "")
+        if isinstance(val, list):
+            val = val[0] if val else ""
+        val = str(val or "").strip()
+        if val:
+            stem = Path(val).stem                       # "opportunities_EURUSD"
+            parts = stem.rsplit("_", 1)
+            if len(parts) == 2:
+                candidate = parts[-1].upper()
+                if 2 <= len(candidate) <= 10:
+                    return candidate
+
+    # 5. Command category: "training.discover_zones" → "TRAINING"
+    if "." in command_id:
+        cat = command_id.split(".")[0].upper()
+        if cat:
+            return cat
+
+    return "GENERAL"
+
+
 class JobManager:
     def __init__(
         self,
@@ -41,6 +90,12 @@ class JobManager:
         self._runs_dir.mkdir(parents=True, exist_ok=True)
         self._history_dir = self._state_dir / "monitor_history"
         self._history_dir.mkdir(parents=True, exist_ok=True)
+        # New structured storage roots
+        self._results_dir = self._repo_root / "results"   # results/{instrument}/*.json
+        self._logs_root   = self._repo_root / "logs"      # logs/{instrument}/*.log
+        self._results_dir.mkdir(parents=True, exist_ok=True)
+        # run_id → Path of its persisted state JSON (populated in create_run / _load_existing)
+        self._state_files: dict[str, Path] = {}
         self._monitors_path = monitors_path or default_monitors_path(self._repo_root)
         try:
             self._monitor_specs: dict[str, tuple[MonitorFieldSpec, ...]] = load_monitor_specs(self._monitors_path)
@@ -51,22 +106,65 @@ class JobManager:
         self._processes: dict[str, subprocess.Popen[str]] = {}
         self._load_existing()
 
-    def _run_file(self, run_id: str) -> Path:
-        return self._runs_dir / f"{run_id}.json"
+    def _run_file(self, run_id: str, instrument: str = "GENERAL") -> Path:
+        """
+        Return the state-JSON path for a run.
+        New format: results/{instrument}/{instrument}_{run_id[:8]}.json
+        Falls back to legacy path if state_files mapping not populated.
+        """
+        if run_id in self._state_files:
+            return self._state_files[run_id]
+        inst_dir = self._results_dir / instrument
+        inst_dir.mkdir(parents=True, exist_ok=True)
+        return inst_dir / f"{instrument}_{run_id[:8]}.json"
 
     def _load_existing(self) -> None:
+        """
+        Load persisted run records on startup.
+        Scans new location first (results/**/*.json with _run_record marker),
+        then falls back to legacy location (logs/control_plane/runs/*.json).
+        """
         known = {f.name for f in dataclasses.fields(RunRecord)}
-        for run_file in sorted(self._runs_dir.glob("*.json")):
+
+        # ── New structured location: results/{instrument}/{instrument}_{id}.json ──
+        for run_file in sorted(self._results_dir.glob("**/*.json")):
             try:
                 payload = json.loads(run_file.read_text(encoding="utf-8"))
+                if not payload.get("_run_record"):
+                    continue   # skip real result files (calibration, backtest, etc.)
                 filtered = {k: v for k, v in payload.items() if k in known}
                 record = RunRecord(**filtered)
                 self._records[record.run_id] = record
+                self._state_files[record.run_id] = run_file
             except Exception:
                 continue
 
+        # ── Legacy location: logs/control_plane/runs/{run_id}.json ──────────────
+        if self._runs_dir.exists():
+            for run_file in sorted(self._runs_dir.glob("*.json")):
+                try:
+                    payload = json.loads(run_file.read_text(encoding="utf-8"))
+                    filtered = {k: v for k, v in payload.items() if k in known}
+                    record = RunRecord(**filtered)
+                    if record.run_id not in self._records:   # don't overwrite new-format record
+                        self._records[record.run_id] = record
+                        self._state_files[record.run_id] = run_file
+                except Exception:
+                    continue
+
     def _persist(self, record: RunRecord) -> None:
+        """Write run state to its designated JSON file (new structured path or legacy fallback)."""
+        path = self._state_files.get(record.run_id)
+        if path is None:
+            # Fallback: derive instrument from args and write to new location
+            inst = _extract_instrument(record.args, record.command_id)
+            inst_dir = self._results_dir / inst
+            inst_dir.mkdir(parents=True, exist_ok=True)
+            path = inst_dir / f"{inst}_{record.run_id[:8]}.json"
+            self._state_files[record.run_id] = path
+
         payload = {
+            "_run_record": True,               # marker — prevents mixing with real result files
             "run_id": record.run_id,
             "command_id": record.command_id,
             "args": record.args,
@@ -81,7 +179,8 @@ class JobManager:
             "error": record.error,
             "monitor_snapshot": record.monitor_snapshot,
         }
-        self._run_file(record.run_id).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
     def list_commands(self) -> tuple[CommandSpec, ...]:
         return self._specs
@@ -121,12 +220,22 @@ class JobManager:
 
         merged_args = merge_command_args(spec, user_args or {})
         command_line = build_command_line(spec, merged_args)
-        run_id = uuid.uuid4().hex
-        run_dir = self._state_dir / run_id
-        run_dir.mkdir(parents=True, exist_ok=True)
-        stdout_path = run_dir / "stdout.log"
-        stderr_path = run_dir / "stderr.log"
-        combined_path = run_dir / "combined.log"
+        run_id   = uuid.uuid4().hex
+        short_id = run_id[:8]
+
+        # ── Instrument-aware log directory: logs/{INSTRUMENT}/ ──────────────────
+        instrument = _extract_instrument(merged_args, command_id)
+        log_dir    = self._logs_root / instrument
+        log_dir.mkdir(parents=True, exist_ok=True)
+        stdout_path   = log_dir / f"{instrument}_{short_id}.stdout"
+        stderr_path   = log_dir / f"{instrument}_{short_id}.stderr"
+        combined_path = log_dir / f"{instrument}_{short_id}.log"
+
+        # ── Run state JSON: results/{INSTRUMENT}/{INSTRUMENT}_{short_id}.json ───
+        state_dir  = self._results_dir / instrument
+        state_dir.mkdir(parents=True, exist_ok=True)
+        state_path = state_dir / f"{instrument}_{short_id}.json"
+        self._state_files[run_id] = state_path
 
         record = RunRecord(
             run_id=run_id,
@@ -136,8 +245,8 @@ class JobManager:
             status="queued",
             started_at=_now_iso(),
             log_paths={
-                "stdout": str(stdout_path),
-                "stderr": str(stderr_path),
+                "stdout":   str(stdout_path),
+                "stderr":   str(stderr_path),
                 "combined": str(combined_path),
             },
             artifact_paths=[],

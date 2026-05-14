@@ -28,12 +28,20 @@ Design principles:
 """
 
 from __future__ import annotations
+import json
 import logging
+import os
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 from utils.logging_config import get_flow_logger
 
 logger = get_flow_logger("ULTRON_RISK_GATE")
+
+# FRAG-1 fix: persisted kill-switch state file.
+# Written atomically on first trip; cleared only by reset_kill_switch().
+# Lives outside the registry dir so it survives config reloads.
+_KS_STATE_PATH = Path("logs") / "kill_switch_state.json"
 
 # ── Default config (mirrors configs/production/v1_multi_2026_03.json values) ─
 DEFAULT_CONFIG: dict = {
@@ -43,6 +51,18 @@ DEFAULT_CONFIG: dict = {
     "max_trades_per_day":    10,
     "max_daily_loss_pct":    3.0,
     "min_rr_ratio":          1.5,
+    # Execution cost tax (audit fix 2026-05-14):
+    # The min_rr_ratio check uses the raw CRT-derived RR.  In live trading the
+    # spread and expected slippage reduce the realised RR.  These two config keys
+    # let the gate reject trades whose post-cost RR falls below min_rr_ratio,
+    # even if the gross RR passes.  Set both to 0.0 to disable (backtest default).
+    "spread_pips":           0.0,  # broker spread in pips (e.g. 1.5 for EURUSD ECN)
+    "slippage_pips":         0.0,  # expected slippage in pips (e.g. 0.5)
+    "pip_size":              0.0001,  # value of 1 pip in price units (0.0001 for FX majors)
+    # FRAG-6 fix: minimum SL distance enforcement.
+    # 0.0 = disabled (backtest default).  Set to e.g. 5.0 for live FX to
+    # prevent orders where slippage would consume the entire stop distance.
+    "min_sl_pips":           0.0,
 }
 
 
@@ -88,6 +108,48 @@ class UltronRiskGate:
         if isinstance(config, dict):
             effective.update(config)
         self.config: dict[str, Any] = effective
+        # FRAG-1 fix: load persisted kill-switch state from disk so the gate
+        # cannot be bypassed across instantiations by resetting daily_loss_pct.
+        self._kill_switch_tripped: bool = self._load_ks_state()
+
+    # ── Kill-switch state persistence (FRAG-1 fix) ───────────────────────────
+
+    def _load_ks_state(self) -> bool:
+        """Read persisted kill-switch flag from disk.  Fail-open: returns False."""
+        try:
+            if _KS_STATE_PATH.exists():
+                state = json.loads(_KS_STATE_PATH.read_text(encoding="utf-8"))
+                return bool(state.get("tripped", False))
+        except Exception:
+            pass
+        return False
+
+    def _save_ks_state(self, tripped: bool, reason: str = "") -> None:
+        """Atomically persist kill-switch state.  Fail-open: never raises."""
+        try:
+            _KS_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            state = {
+                "tripped":    tripped,
+                "reason":     reason,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+            tmp = _KS_STATE_PATH.with_suffix(".tmp")
+            tmp.write_text(json.dumps(state, indent=2), encoding="utf-8")
+            os.replace(tmp, _KS_STATE_PATH)
+        except Exception as exc:
+            logger.warning("UltronRiskGate: kill-switch state persistence failed: %s", exc)
+
+    def reset_kill_switch(self) -> None:
+        """
+        Clear the persisted kill-switch state — operator admin action.
+
+        Call this at the start of a new trading day or after manual review
+        confirms the risk condition has been resolved.  The gate will resume
+        approving trades on the next evaluate() call after reset.
+        """
+        self._kill_switch_tripped = False
+        self._save_ks_state(False, reason="reset_by_operator")
+        logger.warning("UltronRiskGate: kill switch reset by operator call.")
 
     # ── Public interface ──────────────────────────────────────────────────────
 
@@ -137,6 +199,18 @@ class UltronRiskGate:
 
         execution_id = trade.get("execution_id", "UNKNOWN")
 
+        # ── Check 0: Persisted kill-switch state (FRAG-1 fix) ────────────────
+        # Guards against callers that reset daily_loss_pct between calls to
+        # bypass the stateless Check 4.  The flag is cleared only via
+        # reset_kill_switch() — an explicit operator action.
+        if self._kill_switch_tripped:
+            logger.warning(
+                "UltronRiskGate: kill switch ACTIVE (persisted) — "
+                "blocking execution_id=%s. Call reset_kill_switch() to re-enable.",
+                execution_id,
+            )
+            return self._reject(trade, "kill_switch_active", portfolio_state)
+
         # ── Check 1: TTL ─────────────────────────────────────────────────────
         expires_at_raw = trade.get("expires_at")
         if expires_at_raw:
@@ -152,10 +226,37 @@ class UltronRiskGate:
                 # Malformed timestamp — treat as expired for safety
                 return self._reject(trade, "malformed_expires_at", portfolio_state)
 
-        # ── Check 2: RR floor ────────────────────────────────────────────────
-        rr_ratio = float(trade.get("rr_ratio", 0.0))
-        if rr_ratio < float(self.config["min_rr_ratio"]):
-            return self._reject(trade, "rr_too_low", portfolio_state)
+        # ── Check 2: RR floor (with spread+slippage tax) ────────────────────
+        rr_ratio   = float(trade.get("rr_ratio", 0.0))
+        min_rr     = float(self.config["min_rr_ratio"])
+        # Execution cost tax: deduct spread+slippage as a fraction of sl_distance.
+        # Only applied when both pip_size > 0 and cost pips > 0.
+        spread_pips   = float(self.config.get("spread_pips",   0.0))
+        slippage_pips = float(self.config.get("slippage_pips", 0.0))
+        pip_size      = float(self.config.get("pip_size",      0.0001))
+        total_cost_pips = spread_pips + slippage_pips
+        if total_cost_pips > 0 and pip_size > 0:
+            entry = float(trade.get("entry_price", 0.0))
+            sl    = float(trade.get("stop_loss",   0.0))
+            sl_distance = abs(entry - sl)
+            if sl_distance > 0:
+                cost_as_rr_fraction = (total_cost_pips * pip_size) / sl_distance
+                rr_ratio = max(0.0, rr_ratio - cost_as_rr_fraction)
+        if rr_ratio < min_rr:
+            return self._reject(trade, "rr_too_low_after_costs", portfolio_state)
+
+        # ── Check 2.5: Per-symbol duplicate position guard (FRAG-2) ──────────
+        # Only enforced when the caller populates portfolio_state["positions"].
+        # Legacy callers that omit "positions" are unaffected (empty dict = skip).
+        instrument = trade.get("symbol", trade.get("instrument", ""))
+        if instrument:
+            open_pos_map = portfolio_state.get("positions", {})
+            if open_pos_map.get(instrument):
+                logger.warning(
+                    "UltronRiskGate: position already open for %s — "
+                    "rejecting duplicate (FRAG-2).", instrument,
+                )
+                return self._reject(trade, "position_already_open", portfolio_state)
 
         # ── Check 3: Daily trade limit ────────────────────────────────────────
         trades_today = int(portfolio_state.get("trades_today", 0))
@@ -165,6 +266,21 @@ class UltronRiskGate:
         # ── Check 4: Kill switch (daily loss) ────────────────────────────────
         daily_loss = float(portfolio_state.get("daily_loss_pct", 0.0))
         if daily_loss >= float(self.config["max_daily_loss_pct"]):
+            # FRAG-1: persist flag so subsequent calls are blocked even if the
+            # caller resets daily_loss_pct to 0.  Cleared only by reset_kill_switch().
+            self._kill_switch_tripped = True
+            self._save_ks_state(
+                True,
+                reason=(
+                    f"daily_loss_pct={daily_loss:.2f}% >= "
+                    f"max_daily_loss_pct={self.config['max_daily_loss_pct']}%"
+                ),
+            )
+            logger.error(
+                "UltronRiskGate: kill switch TRIPPED — daily_loss=%.2f%% >= limit=%.2f%%. "
+                "State persisted to %s. Call reset_kill_switch() to re-enable.",
+                daily_loss, float(self.config["max_daily_loss_pct"]), _KS_STATE_PATH,
+            )
             return self._reject(trade, "kill_switch", portfolio_state)
 
         # ── Check 5: Portfolio exposure cap ──────────────────────────────────
@@ -184,6 +300,24 @@ class UltronRiskGate:
         risk_per_unit = abs(entry - sl)
         if risk_per_unit == 0.0:
             return self._reject(trade, "invalid_sl_distance", portfolio_state)
+
+        # ── Check 6b: Minimum SL distance enforcement (FRAG-6) ───────────────
+        # Prevents trades where the SL is so tight that spread + slippage
+        # would consume the entire risk distance.  Only enforced when
+        # min_sl_pips > 0 and pip_size > 0 (0.0 = disabled, backtest default).
+        min_sl_pips = float(self.config.get("min_sl_pips", 0.0))
+        if min_sl_pips > 0 and pip_size > 0:
+            sl_pips = risk_per_unit / pip_size
+            # Effective minimum: the larger of min_sl_pips and 2× spread
+            min_from_spread = spread_pips * 2.0
+            effective_min_sl_pips = max(min_sl_pips, min_from_spread)
+            if sl_pips < effective_min_sl_pips:
+                logger.warning(
+                    "UltronRiskGate: SL too tight — sl_pips=%.2f < effective_min=%.2f "
+                    "(min_sl_pips=%.2f, spread×2=%.2f). Rejecting (FRAG-6).",
+                    sl_pips, effective_min_sl_pips, min_sl_pips, min_from_spread,
+                )
+                return self._reject(trade, "sl_distance_too_tight", portfolio_state)
 
         # ── Check 7: Position sizing (final) ──────────────────────────────────
         balance = float(portfolio_state.get("account_balance", 10000.0))

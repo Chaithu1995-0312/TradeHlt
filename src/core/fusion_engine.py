@@ -126,10 +126,13 @@ class FusionConfig:
     tier_quarter: float = 0.50  # score >= tier_quarter → risk 0.25×
 
     # Per-engine weights used by compute() to aggregate multi-engine scores.
-    weight_crt:       float = 0.30
-    weight_gaussian:  float = 0.25
-    weight_zone_gate: float = 0.25
-    weight_rr:        float = 0.20
+    weight_crt:                  float = 0.30
+    weight_gaussian:             float = 0.25
+    weight_zone_gate:            float = 0.25
+    weight_rr:                   float = 0.20
+    # 5th engine — StrategyOrchestrator consensus.  Default 0.0 means disabled;
+    # set to e.g. 0.10 in production config to activate.
+    weight_strategy_consensus:   float = 0.0
 
     # Conflict resolution policy — "conservative" or "majority"
     conflict_resolution_policy: str = "conservative"
@@ -305,6 +308,11 @@ class FusionEngine:
         )
         score_zonegate = _extract_score(engine_results.get("zone_gate", {}), ("score", "zone", "final_score"))
         score_rr = _extract_score(engine_results.get("rr", {}), ("score", "rr", "final_score"))
+        # 5th engine — StrategyOrchestrator consensus score (optional, 0.0 if absent)
+        score_consensus = _extract_score(
+            engine_results.get("strategy_consensus", {}),
+            ("score", "confidence", "final_score"),
+        )
 
         # FIX 3 — track zone_gate health; exclude if always-zero (dead engine)
         self._health_zonegate.push(score_zonegate)
@@ -398,17 +406,20 @@ class FusionEngine:
         # ── Weighted aggregation (always computed) ───────────────────────────
         # FIX 3: exclude zone_gate weight when it is detected as dead so a
         # permanently-zero engine cannot suppress all signals.
-        w_zonegate = 0.0 if zone_gate_dead else self.cfg.weight_zone_gate
+        # 5th engine (strategy_consensus) included only when its weight > 0.
+        w_zonegate   = 0.0 if zone_gate_dead else self.cfg.weight_zone_gate
+        w_consensus  = self.cfg.weight_strategy_consensus  # 0.0 → disabled
         total_w = (
             self.cfg.weight_crt + self.cfg.weight_gaussian +
-            w_zonegate + self.cfg.weight_rr
+            w_zonegate + self.cfg.weight_rr + w_consensus
         ) or 1.0  # guard: all-zero weights → equal contribution
         weighted_fusion_score = _clamp(
             (
                 self.cfg.weight_crt      * score_crt +
                 self.cfg.weight_gaussian * score_gaussian +
                 w_zonegate               * score_zonegate +
-                self.cfg.weight_rr       * score_rr
+                self.cfg.weight_rr       * score_rr +
+                w_consensus              * score_consensus
             ) / total_w
         )
 
@@ -447,15 +458,19 @@ class FusionEngine:
         # FIX 2 — normalise compressed score to [0, 1] before returning
         normalized = self._normalizer.push_and_normalize(final_score)
 
+        scores_dict: dict = {
+            "crt":       round(score_crt,       4),
+            "gaussian":  round(score_gaussian,  4),
+            "zone_gate": round(score_zonegate,  4),
+            "rr":        round(score_rr,        4),
+        }
+        if w_consensus > 0.0:
+            scores_dict["strategy_consensus"] = round(score_consensus, 4)
+
         return {
             "final_score":      round(final_score, 4),
             "normalized_score": round(normalized,  4),   # FIX 5 — always present
-            "scores": {
-                "crt":       round(score_crt,       4),
-                "gaussian":  round(score_gaussian,  4),
-                "zone_gate": round(score_zonegate,  4),
-                "rr":        round(score_rr,         4),
-            },
+            "scores":           scores_dict,
             "missing_engines": [],
             "zone_gate_dead":   zone_gate_dead,           # FIX 5 — signals dead engine state
             **conv_debug,
@@ -588,3 +603,92 @@ class FusionEngine:
             return "TRADE", 0.25
         else:
             return "REJECT", 0.0
+
+    # ── Multi-strategy fusion (Sprint 4 extension — non-breaking) ─────────────
+
+    def fuse_strategy_results(
+        self,
+        results: list,
+        weights: Optional[dict] = None,
+        min_signals: int = 2,
+        min_agreement: float = 0.60,
+    ) -> dict:
+        """
+        Aggregate a list of StrategyResult objects into a scored fusion dict.
+
+        Designed to be called with the output of StrategyOrchestrator.compute()
+        (all_results list) to produce a score compatible with FusionEngine.compute()
+        consumers.
+
+        Parameters
+        ----------
+        results      : list[StrategyResult] — all strategy outputs for one candle
+        weights      : {strategy_id: weight} — defaults to equal weighting
+        min_signals  : completeness gate — minimum actionable strategies required
+        min_agreement: consensus gate — fraction of actionable that must agree
+
+        Returns
+        -------
+        dict with keys: final_score, signal, confidence, signal_count,
+                        agree_count, agreement_ratio, action, strategy_scores
+        """
+        actionable = [r for r in results if r.signal in ("BUY", "SELL") and r.confidence > 0.0]
+        n_total = len(results)
+        n_signal = len(actionable)
+
+        def _reject(reason: str) -> dict:
+            return {
+                "final_score": 0.0, "signal": "NO_TRADE",
+                "confidence": 0.0, "signal_count": n_signal,
+                "agree_count": 0, "agreement_ratio": 0.0,
+                "action": "REJECT", "reason": reason,
+                "strategy_scores": {},
+            }
+
+        if n_signal < min_signals:
+            return _reject(f"completeness_gate:{n_signal}<{min_signals}")
+
+        buy_r  = [r for r in actionable if r.signal == "BUY"]
+        sell_r = [r for r in actionable if r.signal == "SELL"]
+        consensus = "BUY" if len(buy_r) >= len(sell_r) else "SELL"
+        agree_r = buy_r if consensus == "BUY" else sell_r
+        n_agree = len(agree_r)
+        agreement_ratio = n_agree / n_signal
+
+        if agreement_ratio < min_agreement:
+            return _reject(f"consensus_gate:{agreement_ratio:.0%}<{min_agreement:.0%}")
+
+        # Weighted aggregation over agreeing results
+        eq_w = 1.0 / n_agree
+        total_w = 0.0
+        w_score = 0.0
+        w_conf = 0.0
+        strategy_scores: dict = {}
+
+        for r in agree_r:
+            w = float(weights.get(r.strategy_id, eq_w)) if weights else eq_w
+            w_score += r.score * w
+            w_conf += r.confidence * w
+            total_w += w
+            strategy_scores[r.strategy_id] = round(r.score, 4)
+
+        if total_w > 0:
+            w_score /= total_w
+            w_conf /= total_w
+
+        final_score = _clamp(w_score)
+        normalized = self._normalizer.push_and_normalize(final_score)
+        action, risk_mult = self._decide(normalized)
+
+        return {
+            "final_score":      round(final_score, 4),
+            "normalized_score": round(normalized,  4),
+            "signal":           consensus,
+            "confidence":       round(_clamp(w_conf), 4),
+            "signal_count":     n_signal,
+            "agree_count":      n_agree,
+            "agreement_ratio":  round(agreement_ratio, 4),
+            "action":           action,
+            "risk_mult":        risk_mult,
+            "strategy_scores":  strategy_scores,
+        }

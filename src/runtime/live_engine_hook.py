@@ -2,6 +2,13 @@
 live_engine_hook.py
 Subclass wrapper around LiveEngine - does NOT modify live_engine.py.
 Calls EngineRunner -> ExecutionPlannerV1_2 -> UltronRiskGate after process() returns.
+
+Sprint 6 additions (non-breaking):
+  - StrategyOrchestrator runs all 10 strategies per candle; result merged into output.
+  - KillSwitch gate: if tripped, blocks execution and sends Telegram alert.
+  - TelegramBridge: sends signal alerts and kill-switch notifications.
+  - MT5Bridge: places/closes orders in MetaTrader 5 (dry_run=True until live).
+  - register_trade_outcome(pnl_inr): call when a position closes to update KillSwitch.
 """
 from __future__ import annotations
 
@@ -11,9 +18,10 @@ from datetime import date, datetime, timezone
 import core.collector as collector
 
 from core.engine_runner import EngineRunner
+from core.gate_intelligence import compute_crt_levels
 from engines.live_engine import LiveEngine
 from config_layer.execution_planner import ExecutionPlannerV1_2
-from config_layer.production_config import get_prod_metadata
+from config_layer.production_config import get_prod_metadata, get_prod_section
 from core.ultron_risk_gate import UltronRiskGate
 from core.ultron_risk_gate_wrapper import UltronRiskGateWrapper
 from utils.logging_config import get_flow_logger
@@ -32,11 +40,60 @@ except Exception:
     FeatureStore = None  # type: ignore[assignment,misc]
     _STORE_AVAILABLE = False
 
+try:
+    from strategies.strategy_orchestrator import StrategyOrchestrator
+    _ORCH_AVAILABLE = True
+except Exception:
+    StrategyOrchestrator = None  # type: ignore[assignment,misc]
+    _ORCH_AVAILABLE = False
+
+try:
+    from uat.kill_switch import KillSwitch
+    _KS_AVAILABLE = True
+except Exception:
+    KillSwitch = None  # type: ignore[assignment,misc]
+    _KS_AVAILABLE = False
+
+try:
+    from live.telegram_bridge import TelegramBridge
+    _TELEGRAM_AVAILABLE = True
+except Exception:
+    TelegramBridge = None  # type: ignore[assignment,misc]
+    _TELEGRAM_AVAILABLE = False
+
+try:
+    from live.mt5_bridge import MT5Bridge
+    _MT5_AVAILABLE = True
+except Exception:
+    MT5Bridge = None  # type: ignore[assignment,misc]
+    _MT5_AVAILABLE = False
+
+try:
+    from regime.regime_classifier import RegimeClassifier
+    from regime.config_router import ConfigRouter
+    _REGIME_AVAILABLE = True
+except Exception:
+    RegimeClassifier = None  # type: ignore[assignment,misc]
+    ConfigRouter = None      # type: ignore[assignment,misc]
+    _REGIME_AVAILABLE = False
+
 logger = get_flow_logger("LIVE_HOOK")
+
+from config_layer.production_config import PROD_VERSION as _LIVE_PROD_VERSION
+logger.info("Production config version: %s", _LIVE_PROD_VERSION)
 
 _ENGINE_CONFIG_CACHE: dict | None = None
 _feature_monitor = None  # initialized lazily from config
 _feature_store = None    # FeatureStore singleton — canonical ingestion boundary
+
+# Sprint 6 singletons — initialized lazily on first process() call
+_orchestrator: "StrategyOrchestrator | None" = None
+_kill_switch:  "KillSwitch | None"           = None
+_telegram:     "TelegramBridge | None"       = None
+_mt5:          "MT5Bridge | None"            = None
+_live_cfg:          dict | None                   = None
+_regime_classifier: "RegimeClassifier | None"    = None
+_config_router:     "ConfigRouter | None"         = None
 
 
 def _safe_float(value, default: float = 0.0) -> float:
@@ -44,6 +101,15 @@ def _safe_float(value, default: float = 0.0) -> float:
         return float(value)
     except (TypeError, ValueError):
         return default
+
+
+def _precision(symbol: str, exec_cfg: dict) -> int:
+    """Return decimal precision for rounding prices for a given symbol."""
+    return int(
+        exec_cfg.get("precision_overrides", {}).get(
+            symbol, exec_cfg.get("precision_default", 8)
+        )
+    )
 
 
 def _normalize_session(value) -> str:
@@ -185,6 +251,30 @@ def _load_engine_config() -> dict:
         _feature_store = FeatureStore(max_history=int(max_history))
 
     _ENGINE_CONFIG_CACHE = deepcopy(merged)
+
+    # ── Per-session config dump ────────────────────────────────────────────
+    try:
+        from datetime import datetime as _dt, timezone as _tz
+        from utils.config_dumper import dump_config as _dump_config
+        from config_layer.production_config import get_full_config_dict, PRODUCTION_REGISTRY_DIR
+        _run_id = _dt.now(_tz.utc).strftime("live_%Y%m%d_%H%M%S")
+        _full_reg = get_full_config_dict()
+        _dump_payload = {
+            "mode":               "live",
+            "config_version":     _LIVE_PROD_VERSION,
+            "source_config_path": f"{PRODUCTION_REGISTRY_DIR}/{_LIVE_PROD_VERSION}.json",
+            "overrides":          {},
+            "engine_runner":      merged,
+            "crt_engine":         _full_reg.get("crt_engine", {}),
+            "execution_planner":  _full_reg.get("execution_planner", {}),
+            "fusion_engine":      _full_reg.get("fusion_engine", {}),
+            "ultron_risk_gate":   _full_reg.get("ultron_risk_gate", {}),
+        }
+        _dump_path = _dump_config(_dump_payload, instrument="LIVE", run_id=_run_id)
+        logger.info("Full config dumped to: %s", _dump_path)
+    except Exception as _dump_err:
+        logger.warning("Config dump skipped: %s", _dump_err)
+
     return merged
 
 
@@ -322,6 +412,95 @@ class _DailyResetTracker:
 _daily_reset_tracker = _DailyResetTracker()
 
 
+# ── Sprint 6: lazy singleton initialisation ────────────────────────────────────
+
+def _get_live_cfg() -> dict:
+    global _live_cfg
+    if _live_cfg is None:
+        _live_cfg = get_prod_section("live_integration") or {}
+    return _live_cfg
+
+
+def _get_orchestrator(pair: str, timeframe: str) -> "StrategyOrchestrator | None":
+    global _orchestrator
+    if _orchestrator is None and _ORCH_AVAILABLE and StrategyOrchestrator is not None:
+        try:
+            _orchestrator = StrategyOrchestrator(pair=pair, timeframe=timeframe)
+            logger.info("LIVE_HOOK: StrategyOrchestrator initialised (%s/%s).", pair, timeframe)
+        except Exception as exc:
+            logger.warning("LIVE_HOOK: StrategyOrchestrator init failed (ignored): %s", exc)
+    return _orchestrator
+
+
+def _get_regime_classifier() -> "RegimeClassifier | None":
+    global _regime_classifier, _config_router
+    if _regime_classifier is None and _REGIME_AVAILABLE and RegimeClassifier is not None:
+        try:
+            _regime_classifier = RegimeClassifier()
+            _config_router = ConfigRouter() if ConfigRouter is not None else None
+            logger.info("LIVE_HOOK: RegimeClassifier initialised.")
+        except Exception as exc:
+            logger.warning("LIVE_HOOK: RegimeClassifier init failed (ignored): %s", exc)
+    return _regime_classifier
+
+
+def _get_kill_switch() -> "KillSwitch | None":
+    global _kill_switch
+    if _kill_switch is None and _KS_AVAILABLE and KillSwitch is not None:
+        try:
+            _kill_switch = KillSwitch.from_prod_config()
+            logger.info("LIVE_HOOK: KillSwitch initialised.")
+        except Exception as exc:
+            logger.warning("LIVE_HOOK: KillSwitch init failed (ignored): %s", exc)
+    return _kill_switch
+
+
+def _get_telegram() -> "TelegramBridge | None":
+    global _telegram
+    if _telegram is None and _TELEGRAM_AVAILABLE and TelegramBridge is not None:
+        try:
+            _telegram = TelegramBridge.from_prod_config()
+        except Exception as exc:
+            logger.warning("LIVE_HOOK: TelegramBridge init failed (ignored): %s", exc)
+    return _telegram
+
+
+def _get_mt5() -> "MT5Bridge | None":
+    global _mt5
+    if _mt5 is None and _MT5_AVAILABLE and MT5Bridge is not None:
+        try:
+            _mt5 = MT5Bridge.from_prod_config()
+            _mt5.connect()
+        except Exception as exc:
+            logger.warning("LIVE_HOOK: MT5Bridge init failed (ignored): %s", exc)
+    return _mt5
+
+
+def register_trade_outcome(pnl_inr: float) -> bool:
+    """
+    Call this when a position closes to update the KillSwitch loss accumulators.
+
+    Returns True if the kill switch just tripped on this outcome.
+    Safe to call even if KillSwitch is unavailable (returns False).
+    """
+    ks = _get_kill_switch()
+    if ks is None:
+        return False
+    just_tripped = ks.register_trade(pnl_inr=pnl_inr)
+    if just_tripped:
+        tg = _get_telegram()
+        if tg is not None:
+            try:
+                tg.send_kill_switch(
+                    reason       = ks.trip_reason(),
+                    daily_loss_inr  = ks.daily_loss_inr(),
+                    weekly_loss_inr = ks.weekly_loss_inr(),
+                )
+            except Exception as exc:
+                logger.warning("LIVE_HOOK: Telegram kill-switch alert failed: %s", exc)
+    return just_tripped
+
+
 class HookedLiveEngine(LiveEngine):
     def process(
         self,
@@ -363,6 +542,8 @@ class HookedLiveEngine(LiveEngine):
                     trade_data.get("symbol", "UNKNOWN"), candle_idx, _fs_err,
                 )
 
+        _get_regime_classifier()  # ensure singleton initialised before context block
+
         drift_features = {
             "body_ratio": float(engine_input.get("body_ratio", 0.0)),
             "retest_depth": float(engine_input.get("retest_depth", 0.0)),
@@ -378,7 +559,23 @@ class HookedLiveEngine(LiveEngine):
             "sweep_detected": bool(trade_data.get("sweep_detected", False)),
             "double_sweep": bool(trade_data.get("double_sweep", False)),
             "symbol": str(trade_data.get("symbol", "UNKNOWN")),
+            "timeframe": str(trade_data.get("timeframe", timeframe)),
         }
+
+        # Regime injection — classify market regime and inject into context so
+        # EngineRunner can select regime-aware fusion weights via ConfigRouter.
+        if _REGIME_AVAILABLE and _regime_classifier is not None:
+            try:
+                regime_label = _regime_classifier.classify(engine_input)
+                context["regime"] = regime_label
+                if _config_router is not None:
+                    context["fusion_weights"] = _config_router.get_fusion_weights(regime_label)
+                logger.debug(
+                    "LIVE_HOOK: regime=%s for %s candle %d",
+                    regime_label, trade_data.get("symbol", "UNKNOWN"), candle_idx,
+                )
+            except Exception as _regime_err:
+                logger.debug("LIVE_HOOK: RegimeClassifier failed (ignored): %s", _regime_err)
 
         engine_config = _load_engine_config()
 
@@ -406,6 +603,47 @@ class HookedLiveEngine(LiveEngine):
             except Exception as _drift_err:
                 logger.debug("FeatureMonitor update/detect failed (ignored): %s", _drift_err)
 
+        # ── 5th engine: StrategyOrchestrator consensus ──────────────────────────
+        # Must run BEFORE EngineRunner.run() so the score can be injected into
+        # the context dict and picked up by FusionEngine.compute() as a 5th
+        # weighted input.  The parallel post-hoc call in Sprint 6 is removed.
+        _orch_pair = str(trade_data.get("symbol", "EURUSD"))
+        _orch_tf   = str(trade_data.get("timeframe", timeframe))
+        _orch_pre  = _get_orchestrator(pair=_orch_pair, timeframe=_orch_tf)
+        _orch_result = None
+        if _orch_pre is not None:
+            try:
+                _orch_candle = {
+                    "open":   float(engine_input.get("open",   0.0)),
+                    "high":   float(engine_input.get("high",   0.0)),
+                    "low":    float(engine_input.get("low",    0.0)),
+                    "close":  float(engine_input.get("close",  0.0)),
+                    "volume": float(engine_input.get("volume", 1.0)),
+                }
+                _orch_result = _orch_pre.compute(engine_input, _orch_candle)
+                # Inject consensus into context so EngineRunner forwards it to FusionEngine
+                context["strategy_consensus_score"] = float(_orch_result.confidence)
+                context["strategy_consensus_direction"] = (
+                    1 if _orch_result.signal == "BUY"
+                    else (-1 if _orch_result.signal == "SELL" else 0)
+                )
+                logger.debug(
+                    "LIVE_HOOK: StrategyOrchestrator pre-run %s/%s signal=%s conf=%.2f",
+                    _orch_pair, _orch_tf, _orch_result.signal, _orch_result.confidence,
+                )
+            except Exception as _orch_pre_err:
+                logger.warning(
+                    "LIVE_HOOK: StrategyOrchestrator pre-run failed (ignored): %s",
+                    _orch_pre_err,
+                )
+
+        # Thread direction into engine_input so Gaussian engine scores direction-aware.
+        # Mirrors backtest_v2.py lines 1639-1641 (direction / signal_dir / trade_direction).
+        _dir_val = int(context.get("strategy_consensus_direction", 0))
+        engine_input["direction"]        = _dir_val
+        engine_input["signal_dir"]       = _dir_val
+        engine_input["trade_direction"]  = _dir_val
+
         engine_outputs = EngineRunner(engine_config).run(engine_input, context)
 
         exec_planner_cfg = engine_config.get("execution_planner")
@@ -414,6 +652,11 @@ class HookedLiveEngine(LiveEngine):
                 "LIVE_HOOK: 'execution_planner' section missing from engine_config. "
                 "Ensure _load_engine_config() includes it from v1_multi_2026_03.json."
             )
+        # Merge gate_intelligence config so GateIntelligence receives its thresholds
+        exec_planner_cfg = {
+            **exec_planner_cfg,
+            **engine_config.get("gate_intelligence", {}),
+        }
         # account_balance must be supplied by caller; no inline default
         if "account_balance" not in trade_data:
             raise KeyError(
@@ -429,59 +672,116 @@ class HookedLiveEngine(LiveEngine):
         planner = ExecutionPlannerV1_2(exec_planner_cfg)
         trade_plan = planner.plan(engine_outputs, engine_input, trade_context)
         logger.info(
-            "ExecutionPlanner: %s | intent=%s | rr=%s",
+            "ExecutionPlanner: %s | intent=%s | gate_score=%s",
             trade_plan.get("decision"),
             trade_plan.get("trade_intent"),
-            trade_plan.get("rr_ratio"),
+            trade_plan.get("gate", {}).get("final_score"),
         )
 
         ultron_result = {"decision": "skipped", "risk_reason": "planner_did_not_execute"}
         if trade_plan.get("decision") == "execute":
-            # Portfolio state keys must all be present in trade_data — no defaults
-            required_portfolio_keys = (
-                "account_balance", "total_open_risk_pct",
-                "trades_today", "daily_loss_pct", "open_positions"
+            # ── CRT-style SL/TP (CRT engine is sole SL/TP authority) ─────────
+            _crt_cfg  = engine_config.get("crt_engine", {})
+            _intent   = trade_plan.get("trade_intent", "UNKNOWN").upper()
+            _tp1_key  = f"tp1_atr_multiplier_{_intent.lower()}"
+            _tp1_mult = float(_crt_cfg.get(_tp1_key, _crt_cfg.get("tp1_atr_multiplier", 1.0)))
+            _tp2_mult = float(_crt_cfg.get("tp2_atr_multiplier", 2.0))
+            _crt = compute_crt_levels(
+                entry        = float(trade_plan["entry_price"]),
+                direction    = int(trade_plan["direction"]),
+                low          = float(engine_input["low"]),
+                high         = float(engine_input["high"]),
+                atr          = float(engine_input["atr"]),
+                sl_atr_buffer= float(_crt_cfg.get("sl_atr_buffer", 0.2)),
+                tp1_mult     = _tp1_mult,
+                tp2_mult     = _tp2_mult,
             )
-            missing_ps = [k for k in required_portfolio_keys if k not in trade_data]
-            if missing_ps:
-                raise KeyError(
-                    f"LIVE_HOOK: missing portfolio state keys in trade_data: {missing_ps}. "
-                    "Caller must supply all portfolio state fields."
-                )
-            portfolio_state = {
-                "account_balance":      float(trade_data["account_balance"]),
-                "total_open_risk_pct":  float(trade_data["total_open_risk_pct"]),
-                "trades_today":         int(trade_data["trades_today"]),
-                "daily_loss_pct":       float(trade_data["daily_loss_pct"]),
-                "open_positions":       int(trade_data["open_positions"]),
-            }
-            _daily_reset_tracker.apply_reset_if_new_day(portfolio_state)  # GAP-006
-            ultron_cfg = engine_config.get("ultron_risk_gate")
-            if not isinstance(ultron_cfg, dict):
-                raise RuntimeError(
-                    "LIVE_HOOK: 'ultron_risk_gate' missing from engine_config. "
-                    "Ensure _load_engine_config() includes it."
-                )
-            # Regime-aware risk pre-scaling via UltronRiskGateWrapper (SR-1 compliant:
-            # wrapper never bypasses UltronRiskGate — it only pre-scales risk_percent
-            # by regime factor before delegating unconditionally to gate.evaluate()).
-            # regime is set by EngineRunner.run() Step 6/7 and is always present.
-            _regime = str(engine_outputs.get("regime", "neutral"))
-            gate = UltronRiskGate(ultron_cfg)
-            wrapper = UltronRiskGateWrapper(
-                gate,
-                regime_factors=ultron_cfg.get("regime_factors"),  # from ultron_risk_gate config
-                debug_mode=bool(engine_config.get("debug_mode", False)),
+            _prec = _precision(trade_plan["symbol"], exec_planner_cfg)
+            trade_plan["stop_loss"]        = round(_crt["sl"],  _prec)
+            trade_plan["take_profit_1"]    = round(_crt["tp1"], _prec)
+            trade_plan["take_profit_2"]    = round(_crt["tp2"], _prec)
+            trade_plan["rr_ratio"]         = 1.0   # always 1R by CRT construction
+            trade_plan["risk_percent"]     = float(exec_planner_cfg.get("risk_percent", 0.5))
+            _risk_dist = _crt["risk_dist"]
+            _balance   = float(trade_data["account_balance"])
+            trade_plan["position_size_hint"] = (
+                round((_balance * trade_plan["risk_percent"] / 100.0) / _risk_dist, 4)
+                if _risk_dist > 0 else None
             )
-            ultron_result = wrapper.evaluate(trade_plan, portfolio_state, regime=_regime)
             logger.info(
-                "UltronRiskGate: %s | reason=%s | size=%s | regime=%s | risk_factor=%s",
-                ultron_result.get("decision"),
-                ultron_result.get("risk_reason"),
-                ultron_result.get("final_position_size"),
-                _regime,
-                wrapper._factors.get(_regime, 1.0),
+                "CRT levels: sl=%.5f tp1=%.5f tp2=%.5f risk_dist=%.5f",
+                trade_plan["stop_loss"],
+                trade_plan["take_profit_1"],
+                trade_plan["take_profit_2"],
+                _risk_dist,
             )
+
+            # ── GAP-6 fix: Naked-order guard ──────────────────────────────────
+            # compute_crt_levels() returns sl=0.0 / tp=0.0 when ATR=0 or the
+            # direction is unknown.  UltronRiskGate's Check 6 handles sl==entry
+            # but never validates TP — a broker order with tp=0 goes out naked.
+            # Reject before touching portfolio state to keep the gate stateless.
+            _sl_ok = bool(trade_plan.get("stop_loss"))
+            _tp_ok = bool(trade_plan.get("take_profit_1"))
+            if not _sl_ok or not _tp_ok:
+                logger.error(
+                    "LIVE_HOOK: SL/TP incomplete after CRT levels "
+                    "(sl=%s tp1=%s risk_dist=%.5f) — rejecting to prevent naked order.",
+                    trade_plan.get("stop_loss"), trade_plan.get("take_profit_1"), _risk_dist,
+                )
+                ultron_result = {
+                    "decision":            "reject",
+                    "risk_reason":         "MISSING_SL_TP",
+                    "execution_id":        trade_plan.get("execution_id", "UNKNOWN"),
+                    "final_position_size": 0.0,
+                    "portfolio_state":     {},
+                }
+            else:
+                # Portfolio state keys must all be present in trade_data — no defaults
+                required_portfolio_keys = (
+                    "account_balance", "total_open_risk_pct",
+                    "trades_today", "daily_loss_pct", "open_positions"
+                )
+                missing_ps = [k for k in required_portfolio_keys if k not in trade_data]
+                if missing_ps:
+                    raise KeyError(
+                        f"LIVE_HOOK: missing portfolio state keys in trade_data: {missing_ps}. "
+                        "Caller must supply all portfolio state fields."
+                    )
+                portfolio_state = {
+                    "account_balance":      float(trade_data["account_balance"]),
+                    "total_open_risk_pct":  float(trade_data["total_open_risk_pct"]),
+                    "trades_today":         int(trade_data["trades_today"]),
+                    "daily_loss_pct":       float(trade_data["daily_loss_pct"]),
+                    "open_positions":       int(trade_data["open_positions"]),
+                }
+                _daily_reset_tracker.apply_reset_if_new_day(portfolio_state)  # GAP-006
+                ultron_cfg = engine_config.get("ultron_risk_gate")
+                if not isinstance(ultron_cfg, dict):
+                    raise RuntimeError(
+                        "LIVE_HOOK: 'ultron_risk_gate' missing from engine_config. "
+                        "Ensure _load_engine_config() includes it."
+                    )
+                # Regime-aware risk pre-scaling via UltronRiskGateWrapper (SR-1 compliant:
+                # wrapper never bypasses UltronRiskGate — it only pre-scales risk_percent
+                # by regime factor before delegating unconditionally to gate.evaluate()).
+                # regime is set by EngineRunner.run() Step 6/7 and is always present.
+                _regime = str(engine_outputs.get("regime", "neutral"))
+                gate = UltronRiskGate(ultron_cfg)
+                wrapper = UltronRiskGateWrapper(
+                    gate,
+                    regime_factors=ultron_cfg.get("regime_factors"),  # from ultron_risk_gate config
+                    debug_mode=bool(engine_config.get("debug_mode", False)),
+                )
+                ultron_result = wrapper.evaluate(trade_plan, portfolio_state, regime=_regime)
+                logger.info(
+                    "UltronRiskGate: %s | reason=%s | size=%s | regime=%s | risk_factor=%s",
+                    ultron_result.get("decision"),
+                    ultron_result.get("risk_reason"),
+                    ultron_result.get("final_position_size"),
+                    _regime,
+                    wrapper._factors.get(_regime, 1.0),
+                )
 
         outcome = {
             "win": False,
@@ -495,6 +795,79 @@ class HookedLiveEngine(LiveEngine):
         }
         collector.collect(trade_id, engine_input, engine_outputs, outcome, context=context)
 
-        # Surface drift severity so upstream callers can decide whether to gate.
+        # ── Sprint 6: StrategyOrchestrator + KillSwitch + Telegram + MT5 ───────
+
+        _pair = str(trade_data.get("symbol", "EURUSD"))
+        _tf   = str(trade_data.get("timeframe", "M15"))
+
+        # 1. Kill switch pre-check — block if already tripped
+        _ks = _get_kill_switch()
+        _ks_blocked = False
+        if _ks is not None and _ks.is_tripped():
+            _ks_blocked = True
+            logger.warning(
+                "LIVE_HOOK: KillSwitch ACTIVE (%s) — blocking execution for %s.",
+                _ks.trip_reason(), _pair,
+            )
+            result["ks_blocked"]  = True
+            result["ks_reason"]   = _ks.trip_reason()
+            result["drift_severity"] = _drift_severity
+            return result
+
+        # StrategyOrchestrator already ran as 5th engine before EngineRunner — see
+        # pre-run block above.  Attach its result to output for callers/logging.
+        if _orch_result is not None:
+            result["orchestrator"] = _orch_result.to_dict()
+
+        # 2. Send Telegram signal alert if ultron approved
+        if ultron_result.get("decision") == "APPROVE" and not _ks_blocked:
+            _tg = _get_telegram()
+            if _tg is not None:
+                try:
+                    _sl_inr = float(trade_plan.get("sl_inr", 0.0))
+                    _tp_inr = float(trade_plan.get("tp_inr", 0.0))
+                    _rr     = float(trade_plan.get("rr_ratio", 0.0))
+                    _sig    = str(trade_plan.get("trade_intent", "BUY"))
+                    _entry  = float(engine_input.get("close", 0.0))
+                    _conf   = float(engine_outputs.get("final_score", 0.0))
+                    _scores = (
+                        _orch_result.to_dict().get("strategy_scores", {})
+                        if _orch_result is not None else {}
+                    )
+                    _tg.send_signal_alert(
+                        pair=_pair, timeframe=_tf, signal=_sig,
+                        confidence=_conf, entry_price=_entry,
+                        sl_inr=_sl_inr, tp_inr=_tp_inr, rr_ratio=_rr,
+                        strategy_scores=_scores,
+                    )
+                except Exception as exc:
+                    logger.warning("LIVE_HOOK: Telegram signal alert failed (ignored): %s", exc)
+
+        # 4. MT5 order — only when ultron APPROVE and not kill-switch blocked
+        _mt5_ticket = None
+        if ultron_result.get("decision") == "APPROVE" and not _ks_blocked:
+            _mt5_bridge = _get_mt5()
+            if _mt5_bridge is not None:
+                try:
+                    _lot  = float(ultron_result.get("final_position_size", 0.01))
+                    _act  = str(trade_plan.get("trade_intent", "BUY"))
+                    _sl_p = float(trade_plan.get("sl_price",  0.0))
+                    _tp_p = float(trade_plan.get("tp_price",  0.0))
+                    _mt5_ticket = _mt5_bridge.send_order(
+                        symbol=_pair, action=_act,
+                        lot_size=_lot, sl_price=_sl_p, tp_price=_tp_p,
+                        comment=f"tradelatest_{_pair}_{_tf}",
+                    )
+                    if _mt5_ticket is not None:
+                        logger.info(
+                            "LIVE_HOOK: MT5 order placed — ticket=%s pair=%s action=%s lot=%.2f",
+                            _mt5_ticket, _pair, _act, _lot,
+                        )
+                except Exception as exc:
+                    logger.warning("LIVE_HOOK: MT5Bridge send_order failed (ignored): %s", exc)
+
+        result["ks_blocked"]   = _ks_blocked
+        result["ks_reason"]    = _ks.trip_reason() if _ks is not None else ""
+        result["mt5_ticket"]   = _mt5_ticket
         result["drift_severity"] = _drift_severity
         return result

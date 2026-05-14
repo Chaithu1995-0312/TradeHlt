@@ -219,9 +219,12 @@ class HeuristicGaussianEngine:
             return self._registry.sigma
         return 1.0
 
-    def compute(self, input_data: dict, candle_idx: int = 0) -> dict:
+    def compute(self, input_data: dict, candle_idx: int = 0, direction: str = "long") -> dict:
         """
         Compute Gaussian probability score from canonical feature dict.
+
+        direction is accepted for API compatibility with MLGaussianEngine but is
+        intentionally ignored — the heuristic Gaussian kernel is direction-agnostic.
 
         Args:
             input_data: dict with at least ema_fast, ema_slow, momentum_score

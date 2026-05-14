@@ -1,0 +1,37 @@
+{
+  "20260406T005347": {
+    "version": "20260406T005347",
+    "model_file": "models/tradenet_p5_20260406T005347.pth",
+    "metrics": {},
+    "trained_at": "2026-05-14T18:29:55Z",
+    "active": true
+  },
+  "20260405T204109": {
+    "version": "20260405T204109",
+    "model_file": "models\\tradenet_p5_20260405T204109.pth",
+    "metrics": {},
+    "trained_at": "2026-05-14T18:30:23Z",
+    "active": false
+  },
+  "20260405T211455": {
+    "version": "20260405T211455",
+    "model_file": "models\\tradenet_p5_20260405T211455.pth",
+    "metrics": {},
+    "trained_at": "2026-05-14T18:30:23Z",
+    "active": false
+  },
+  "20260405T213213": {
+    "version": "20260405T213213",
+    "model_file": "models\\tradenet_p5_20260405T213213.pth",
+    "metrics": {},
+    "trained_at": "2026-05-14T18:30:23Z",
+    "active": false
+  },
+  "20260405T224424": {
+    "version": "20260405T224424",
+    "model_file": "models\\tradenet_p5_20260405T224424.pth",
+    "metrics": {},
+    "trained_at": "2026-05-14T18:30:23Z",
+    "active": false
+  }
+}

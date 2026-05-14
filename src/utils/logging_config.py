@@ -1,4 +1,4 @@
-﻿"""
+"""
 Centralized Logging Configuration for Trading System
 Provides per-flow logging differentiation and aligned format across all modules.
 
@@ -80,6 +80,21 @@ FLOWS = {
     "COLLECTOR": {
         "file": f"flow_collector_{RUN_ID}.log",
         "color": "\033[90m",  # Gray
+        "level": logging.INFO
+    },
+    "STRATEGY_ENGINE": {
+        "file": f"flow_strategy_engine_{RUN_ID}.log",
+        "color": "\033[36m",   # Teal
+        "level": logging.INFO
+    },
+    "DATA_INGESTION": {
+        "file": f"flow_data_ingestion_{RUN_ID}.log",
+        "color": "\033[35m",   # Purple
+        "level": logging.INFO
+    },
+    "GATE_INTELLIGENCE": {
+        "file": f"flow_gate_intelligence_{RUN_ID}.log",
+        "color": "\033[93m",   # Yellow
         "level": logging.INFO
     }
 }

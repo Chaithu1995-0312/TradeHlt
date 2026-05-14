@@ -4,11 +4,26 @@ from pathlib import Path
 from features.feature_schema import CANONICAL_FEATURES
 
 class ReflectionBuffer:
-    def __init__(self, logs_path="logs/collector.jsonl", trades_path="results/real_backtest/AUDUSD_trades.csv"):
+    def __init__(
+        self,
+        logs_path="logs/collector.jsonl",
+        trades_path="results/real_backtest/AUDUSD_trades.csv",
+        *,
+        compressed_summary: dict | None = None,
+    ):
         self.logs_path = Path(logs_path)
         self.trades_path = Path(trades_path)
+        # Optional pre-computed summary produced by
+        # scripts/analysis/compress_logs_for_llm.py. When set, the buffer
+        # bypasses raw log parsing and builds prompts directly from the dict.
+        self.compressed_summary = compressed_summary
 
     def load_and_merge(self) -> pd.DataFrame:
+        if self.compressed_summary is not None:
+            # Compressed-summary path skips the raw merge — return an empty
+            # DataFrame so callers that only use generate_prompt_payload()
+            # still work, and any column lookups fail loudly.
+            return pd.DataFrame()
         decisions = []
         with open(self.logs_path, 'r') as f:
             for line in f:
@@ -47,6 +62,9 @@ class ReflectionBuffer:
         return df_merged
 
     def generate_prompt_payload(self, df: pd.DataFrame, output_path="logs/meta_prompt.txt"):
+        if self.compressed_summary is not None:
+            return self._prompt_from_compressed_summary(output_path)
+
         # Filter only ACCEPT decisions (since REJECT has no outcome)
         df_accepts = df[df['decision'] == 'ACCEPT'].dropna(subset=['pnl_rr_net'])
         
@@ -89,4 +107,52 @@ Based on this divergence, output a JSON patch to adjust `fusion_min_score` and `
         with open(output_path, 'w') as f:
             f.write(prompt)
         print(f"Reflection payload written to {output_path}")
+        return prompt
+
+    def _prompt_from_compressed_summary(self, output_path: str) -> str:
+        """Build a meta-governor prompt directly from a compressed summary dict.
+
+        Schema mirrors what scripts/analysis/compress_logs_for_llm.py emits:
+          {summary, data, anomalies}
+        Avoids re-parsing the raw collector log / trades CSV.
+        """
+        s = self.compressed_summary or {}
+        summary = s.get("summary", {})
+        data = s.get("data", {})
+        anomalies = s.get("anomalies", [])
+        n_total = summary.get("n_total", 0)
+        counts_outcome = summary.get("counts_outcome", {})
+        top_pos = data.get("top_positive_corr", [])[:3]
+        top_neg = data.get("top_negative_corr", [])[:3]
+        delta = data.get("top_tp_minus_sl_delta", [])[:3]
+        anomaly_count = len(anomalies)
+
+        def _fmt_pairs(pairs):
+            return ", ".join(f"{name}={val:+.3f}" for name, val in pairs) or "n/a"
+
+        prompt = (
+            "[SYSTEM] You are the Nexus Meta-Governor. Your role is strict, "
+            "deterministic parameter optimization. Do not explain your reasoning. "
+            "Output ONLY a valid JSON object.\n\n"
+            "[COMPRESSED SUMMARY]\n"
+            f"records={n_total} | outcomes={counts_outcome} | "
+            f"rr_mean={summary.get('rr_mean')} rr_std={summary.get('rr_std')}\n\n"
+            "[TOP FEATURE CORRELATIONS WITH RR]\n"
+            f"positive: {_fmt_pairs(top_pos)}\n"
+            f"negative: {_fmt_pairs(top_neg)}\n"
+            f"tp_minus_sl_delta: {_fmt_pairs(delta)}\n"
+            f"anomalies_flagged: {anomaly_count}\n\n"
+            "[TASK]\n"
+            "Output a JSON patch adjusting `fusion_min_score` and "
+            "`weak_component_threshold` so weak setups are filtered.\n\n"
+            "[REQUIRED OUTPUT FORMAT]\n"
+            "{\n"
+            "    \"decision_engine\": {\"weak_component_threshold\": <float>},\n"
+            "    \"fusion_min_score\": <float>\n"
+            "}"
+        )
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w", encoding="utf-8") as fh:
+            fh.write(prompt)
+        print(f"Reflection payload (compressed) written to {output_path}")
         return prompt

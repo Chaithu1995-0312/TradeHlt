@@ -10,6 +10,7 @@ from pathlib import Path
 
 Path("logs").mkdir(exist_ok=True)
 from utils.logging_config import get_flow_logger
+from config_layer.production_config import PROD_VERSION as _COLLECTOR_PROD_VERSION
 _log = get_flow_logger("COLLECTOR")
 
 
@@ -106,6 +107,7 @@ def collect(
 
     record = {
         "t": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "config_version": _COLLECTOR_PROD_VERSION,
         "id": trade_id,
         "features": {
             "body_ratio": _to_float(features.get("body_ratio", 0.0), 0.0),

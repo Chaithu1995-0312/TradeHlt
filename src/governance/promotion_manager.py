@@ -105,6 +105,7 @@ class PromotionManager:
         report_path: str,
         version: str,
         notes: str = "",
+        csv_paths: Optional[dict] = None,
     ) -> dict:
         """
         Promote an already-validated config to the production registry.
@@ -117,6 +118,12 @@ class PromotionManager:
             Production version label, e.g. 'v1_multi_2026_03'.
         notes : str
             Optional human notes attached to this promotion.
+        csv_paths : dict, optional
+            GAP-4 fix: {instrument: csv_path} dict.  When provided, re-runs
+            ConfigValidator on the report's params before promoting.  This
+            guards against stale or tampered reports (the report JSON on disk
+            could have been modified after the original validation run).
+            Omit for backwards-compat; a warning is printed when absent.
 
         Returns
         -------
@@ -129,6 +136,46 @@ class PromotionManager:
 
         with open(report_path) as f:
             report = json.load(f)
+
+        # GAP-4 fix: enforce decision gate — never promote a non-APPROVE report.
+        # The original code trusted the JSON on disk without checking this field.
+        if report.get("decision") != "APPROVE":
+            return PromotionManager._fail(
+                f"Report decision is '{report.get('decision', 'MISSING')}' "
+                f"(path: {report_path}) — only APPROVE reports can be promoted. "
+                f"Re-run validation and check rejection reasons."
+            )
+
+        # GAP-4 fix: when csv_paths provided, re-run ConfigValidator to confirm
+        # the report is still current (not stale from a previous config version).
+        if csv_paths:
+            params = report.get("params", {})
+            if not params:
+                return PromotionManager._fail(
+                    "Report has no 'params' key — cannot re-validate. "
+                    "Promote from tuner checkpoint instead."
+                )
+            print(f"\n  ℹ️  GAP-4: Re-running ConfigValidator to verify report is current…")
+            fresh_report = ConfigValidator.validate(
+                params=params,
+                csv_paths=csv_paths,
+                config_id=f"{version}_re_validate",
+            )
+            if fresh_report.get("decision") != "APPROVE":
+                return PromotionManager._fail(
+                    f"Re-validation FAILED — report may be stale or tampered. "
+                    f"Original decision: APPROVE. Fresh decision: {fresh_report.get('decision')}. "
+                    f"Warnings: {fresh_report.get('warnings', [])}. "
+                    f"Re-tune and re-validate before promoting."
+                )
+            print(f"  ✅ Re-validation passed — using fresh metrics for promotion.")
+            report = fresh_report  # use freshly validated metrics
+        else:
+            print(
+                f"\n  ⚠️  GAP-4: promote_from_report called without csv_paths — "
+                f"skipping re-validation. Pass csv_paths={{instrument: csv_path}} "
+                f"to verify the report is current before promoting."
+            )
 
         return PromotionManager._execute_promotion(report, version, notes)
 
@@ -279,18 +326,53 @@ class PromotionManager:
 
     @staticmethod
     def load_version(version: str, registry_dir: str = PRODUCTION_REGISTRY_DIR) -> dict:
-        """Load a production registry entry by version string."""
+        """
+        Load a production registry entry by version string.
+
+        GAP-5 fix: validates the stored SHA-256 config_hash against the
+        params dict on every load.  Raises RuntimeError on mismatch — the
+        file may have been tampered with after promotion.
+        """
         path = Path(registry_dir) / f"{version}.json"
         if not path.exists():
             raise FileNotFoundError(f"Version not found: {path}")
         with open(path) as f:
-            return json.load(f)
+            data = json.load(f)
+
+        # GAP-5 fix: integrity check — recompute hash and compare to stored value
+        stored_hash = data.get("config_hash")
+        params      = data.get("params")
+        if stored_hash and params:
+            actual_hash = PromotionManager._compute_config_hash(params)
+            if actual_hash != stored_hash:
+                raise RuntimeError(
+                    f"Config integrity check FAILED for version '{version}': "
+                    f"stored={stored_hash[:16]}… actual={actual_hash[:16]}…. "
+                    f"The config file may have been modified after promotion. "
+                    f"Re-promote from a validated checkpoint to restore integrity."
+                )
+        elif stored_hash and not params:
+            print(
+                f"  ⚠️  load_version: version '{version}' has a config_hash but no "
+                f"'params' key — hash not validated (sparse config)."
+            )
+
+        return data
 
     # ── Internal helpers ──────────────────────────────────────────────────
 
     @staticmethod
     def _execute_promotion(report: dict, version: str, notes: str) -> dict:
         """Core promotion logic — writes to registry, logs event."""
+        # GAP-4 safety backstop: _execute_promotion should only ever receive
+        # APPROVE reports.  promote_from_tuner_checkpoint checks this before
+        # calling; promote_from_report now also checks.  This guard catches any
+        # direct callers that bypass those entry points.
+        if report.get("decision") is not None and report.get("decision") != "APPROVE":
+            return PromotionManager._fail(
+                f"_execute_promotion safety gate: report decision='"
+                f"{report.get('decision')}' is not APPROVE — promotion rejected."
+            )
         params = report.get("params", {})
         if not params:
             return PromotionManager._fail("Report has no params.")
@@ -351,6 +433,7 @@ class PromotionManager:
         config_hash = PromotionManager._compute_config_hash(params)
         return {
             "version":            version,
+            "promoted_version":   version,
             "config_id":          config_id,
             "created_at":         datetime.now(timezone.utc).isoformat(),
             "promoted_at":        datetime.now(timezone.utc).isoformat(),
@@ -445,7 +528,7 @@ class PromotionManager:
         # hardcodes "1.0" but the full base config carries the correct value
         # ("1.3").  Inheriting it from the base avoids a silent downgrade.
         _METADATA_KEYS = (
-            "version", "config_id", "created_at", "promoted_at",
+            "version", "promoted_version", "config_id", "created_at", "promoted_at",
             "params", "config_hash", "validation_summary", "notes",
         )
 
@@ -584,7 +667,8 @@ if __name__ == "__main__":
     # from-report command
     from_report_p = subp.add_parser("from-report", help="Promote from a validation report")
     from_report_p.add_argument("--report",  required=True, help="Path to approved report JSON")
-    from_report_p.add_argument("--version", required=True)
+    from_report_p.add_argument("--version", default=None,
+                               help="Version label; defaults to config_id from the report")
     from_report_p.add_argument("--notes",   default="")
 
     args = ap.parse_args()
@@ -615,9 +699,18 @@ if __name__ == "__main__":
         sys.exit(0 if result.get("status") == "PROMOTED" else 1)
 
     elif args.command == "from-report":
+        version = args.version
+        if version is None:
+            import json as _json
+            with open(args.report) as _f:
+                _rpt = _json.load(_f)
+            version = _rpt.get("config_id")
+            if not version:
+                ap.error("--version is required: report contains no config_id to derive from")
+            print(f"[promotion_manager] --version not supplied; using config_id '{version}' from report")
         result = PromotionManager.promote_from_report(
             report_path=args.report,
-            version=args.version,
+            version=version,
             notes=args.notes,
         )
         sys.exit(0 if result.get("status") == "PROMOTED" else 1)

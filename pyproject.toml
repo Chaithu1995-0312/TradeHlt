@@ -10,6 +10,9 @@ requires-python = ">=3.10"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[project.optional-dependencies]
+hummingbot = ["hummingbot>=2.0.0"]
+
 [tool.pytest.ini_options]
 pythonpath = ["src", "scripts"]
 testpaths = ["tests"]

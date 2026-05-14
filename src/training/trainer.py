@@ -635,12 +635,28 @@ def train(
 # SAVE / LOAD
 # ─────────────────────────────────────────────────────────────────────────────
 
-def save_model(model, name: str) -> Path:
+def save_model(model, name: str, metrics: dict | None = None) -> Path:
     import torch
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
     path = MODELS_DIR / name
     torch.save(model.state_dict(), path)
-    log.info(f"Model saved → {path}")
+    log.info("Model saved -> %s", path)
+
+    # ── Register in TradeNet versioned registry (fail-open) ──────────────────
+    try:
+        from core.model_registry import register_tradenet, promote_tradenet, get_active_tradenet
+        # Extract version token from filename: "tradenet_p5_20260406T005347.pth" → "20260406T005347"
+        stem   = Path(name).stem           # e.g. "tradenet_p5_20260406T005347"
+        parts  = stem.split("_")
+        version = parts[-1] if len(parts) >= 3 else stem
+        register_tradenet(version, str(path), metrics or {})
+        # Auto-promote if no active version exists
+        if get_active_tradenet() is None:
+            ok, reason = promote_tradenet(version)
+            log.info("TradeNet auto-promoted (first deployment): %s | %s", version, reason)
+    except Exception as _reg_err:
+        log.warning("TradeNet registry update failed (non-fatal): %s", _reg_err)
+
     return path
 
 

@@ -83,6 +83,7 @@ class BitNetZoneGate:
         zones:     list = None,
         zone_path: str  = ZONE_REGISTRY_PATH,
         enabled:   bool = True,
+        config:    dict = None,
     ):
         """
         Parameters
@@ -90,10 +91,17 @@ class BitNetZoneGate:
         zones     : pre-loaded zone list (if None, loaded from zone_path)
         zone_path : path to zone_registry.json (default ZONE_REGISTRY_PATH)
         enabled   : if False, gate is a no-op pass-through (default True)
+        config    : optional config dict. Supports:
+                    ``zone_min_samples`` (int, default 50) — if the total
+                    training sample count across all zones is below this
+                    threshold, the gate auto-bypasses with reason
+                    "underpowered_zone_registry" rather than producing
+                    spurious rejections from an under-trained registry.
         """
-        self.enabled   = enabled
+        self.enabled    = enabled
         self._zone_path = zone_path
         self._zones: list = []
+        self._underpowered: bool = False
 
         if not enabled:
             log.info("BitNetZoneGate: disabled (pass-through mode)")
@@ -105,6 +113,25 @@ class BitNetZoneGate:
             self._load_registry(zone_path)
 
         log.info(f"BitNetZoneGate: loaded {len(self._zones)} zones from {zone_path}")
+
+        # ── Underpowered-registry guard ─────────────────────────────────────
+        # The zone "weight" field tracks the number of training samples in each
+        # cluster.  If the total is below zone_min_samples the registry was
+        # built from too few trades (often a cross-instrument bootstrap) and
+        # will produce noisy similarity scores.  In that case the gate
+        # auto-bypasses rather than injecting spurious rejections.
+        _cfg = config or {}
+        _min_samples = float(_cfg.get("zone_min_samples", 50))
+        _total_samples = sum(float(z.get("weight", 0)) for z in self._zones)
+        if self._zones and _total_samples < _min_samples:
+            self._underpowered = True
+            log.warning(
+                "BitNetZoneGate: registry has only %.0f training samples "
+                "(threshold %.0f).  Gate will auto-bypass with reason "
+                "'underpowered_zone_registry'.  Rebuild the registry with "
+                ">= %.0f per-instrument profitable trades to re-activate.",
+                _total_samples, _min_samples, _min_samples,
+            )
 
     @classmethod
     def from_path(cls, path: str = ZONE_REGISTRY_PATH) -> "BitNetZoneGate":
@@ -179,8 +206,20 @@ class BitNetZoneGate:
                 "allowed":   True,
                 "score":     1.0,
                 "threshold": 0.0,
-                "zone_id":   "none",
+                "zone_id":   None,
                 "reason":    "gate_disabled",
+            }
+
+        # Underpowered registry → auto-bypass (avoid spurious rejections from
+        # a registry built on too few / cross-instrument training samples).
+        if self._underpowered:
+            return {
+                "allowed":   True,
+                "score":     1.0,
+                "threshold": 0.0,
+                "zone_id":   None,
+                "reason":    "underpowered_zone_registry",
+                "top_scores": [],
             }
 
         # No zones loaded → CRITICAL log + fail-open with visible warning
@@ -256,16 +295,29 @@ class BitNetZoneGate:
 _ZONE_GATE: Optional["BitNetZoneGate"] = None
 
 
-def get_zone_gate(path: str = ZONE_REGISTRY_PATH) -> "BitNetZoneGate":
+def get_zone_gate(
+    path: str = ZONE_REGISTRY_PATH,
+    min_samples: int = 50,
+) -> "BitNetZoneGate":
     """
     Get (or create) the singleton BitNetZoneGate.
 
     Lazy-loads on first call. Subsequent calls return the same instance.
     Call get_zone_gate().reload() to force refresh from disk.
+
+    Parameters
+    ----------
+    path        : Path to zone registry JSON.
+    min_samples : Minimum total training samples required before the gate is
+                  active.  Registries with fewer samples auto-bypass.
+                  Mirrors ``engine_runner.zone_min_samples`` in the prod config.
     """
     global _ZONE_GATE
     if _ZONE_GATE is None:
-        _ZONE_GATE = BitNetZoneGate.from_path(path)
+        _ZONE_GATE = BitNetZoneGate(
+            zone_path=path,
+            config={"zone_min_samples": min_samples},
+        )
     return _ZONE_GATE
 
 

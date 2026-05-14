@@ -1,0 +1,937 @@
+{
+  "version": "v2_multi_2026_04",
+  "config_id": "multi_strategy_v2_2026_05",
+  "created_at": "2026-05-01T18:37:42.774313+00:00",
+  "promoted_at": "2026-05-01T18:37:42.774313+00:00",
+  "params": {
+    "strategy_system": "10-strategy-v2"
+  },
+  "engine_runner": {
+    "model_path": "results/model_export_format.json",
+    "min_atr": 0.0003,
+    "allowed_sessions": [
+      "london",
+      "new_york",
+      "overlap"
+    ],
+    "bitnet_zone_threshold": 0.25,
+    "zone_registry_path": "models/zone_registry.json",
+    "zone_gate_execution_mode": "normal",
+    "zone_mode": "hard",
+    "debug_mode": false,
+    "gaussian_impl": "heuristic",
+    "convergence_window": 500,
+    "rr_fusion": {
+      "enabled": false,
+      "model_path": "models/rr_model.json",
+      "threshold": 0.5
+    },
+    "dual_engine": {
+      "trend_strength_threshold": 0.15,
+      "momentum_threshold": 0.3,
+      "range_volatility_threshold": 0.8,
+      "breakout_min_score": 0.3,
+      "trap_min_score": 0.32,
+      "neutral_min_score": 0.32,
+      "fusion_min_score": 0.25
+    },
+    "fusion_compare_evaluate": true,
+    "fusion_use_evaluate": false,
+    "ultron_gate_enabled": false
+  },
+  "sl_tp_comparison": {
+    "_comment": "Reference params for legacy SL/TP method — used ONLY by SLTPComparator, never in live path",
+    "legacy_sl_atr_mult":          1.0,
+    "legacy_tp_atr_mult_breakout": 2.0,
+    "legacy_tp_atr_mult_pullback": 1.5,
+    "legacy_tp_atr_mult_reversal": 1.0,
+    "legacy_tp_atr_mult_sweep":    1.2,
+    "primary_metric":              "expectancy_rr",
+    "max_candles_per_trade":       100,
+    "output_path":                 "results/sl_tp_comparison.json"
+  },
+  "execution_planner": {
+    "min_rr_ratio": 1.5,
+    "atr_mult_breakout_tp": 2.0,
+    "atr_mult_pullback_tp": 1.5,
+    "atr_mult_reversal_tp": 1.0,
+    "atr_mult_sweep_tp": 1.2,
+    "ttl_breakout_sec": 180,
+    "ttl_pullback_sec": 300,
+    "ttl_reversal_sec": 120,
+    "ttl_liq_sweep_sec": 240,
+    "default_sl_atr_mult": 1.0,
+    "risk_percent": 0.5,
+    "lookback_candles_sl": 5,
+    "liquidity_lookback": 20,
+    "liquidity_volume_threshold": 1.5,
+    "liquidity_touch_count": 2,
+    "reject_unknown_intent": true,
+    "precision_default": 8,
+    "default_account_balance": 10000.0,
+    "ttl_unknown_sec": 180,
+    "precision_overrides": {
+      "XAUUSD": 2,
+      "BTCUSDT": 2,
+      "ETHUSDT": 2,
+      "BTCUSD": 2,
+      "ETHUSD": 2
+    }
+  },
+  "ultron_risk_gate": {
+    "disabled": false,
+    "max_risk_per_trade_pct": 1.0,
+    "max_portfolio_risk_pct": 5.0,
+    "max_trades_per_day": 10,
+    "max_daily_loss_pct": 3.0,
+    "min_rr_ratio": 1.5,
+    "regime_factors": {
+      "trend": 1.0,
+      "range": 0.8,
+      "neutral": 0.6,
+      "uncertain": 0.5
+    }
+  },
+  "governance": {
+    "min_shadow_trades": 30,
+    "shadow_data_csv": "data/AUDUSD_M15.csv",
+    "shadow_output_csv": "results/shadow_trades.csv"
+  },
+  "fusion_engine": {
+    "weight_crt": 0.3,
+    "weight_gaussian": 0.25,
+    "weight_zone_gate": 0.25,
+    "weight_rr": 0.2,
+    "conflict_resolution_policy": "conservative",
+    "gaussian_weight": 0.6,
+    "neural_weight": 0.4,
+    "llm_weight": 0.2,
+    "llm_lower_band": 0.45,
+    "llm_upper_band": 0.65,
+    "enable_llm": true,
+    "tier_full": 0.75,
+    "tier_half": 0.6,
+    "tier_quarter": 0.5
+  },
+  "decision_engine": {
+    "score_threshold": 0.45,
+    "p_win_threshold": 0.4,
+    "rr_threshold": 1.2,
+    "weak_component_threshold": 0.55,
+    "weak_link_weight": 0.3
+  },
+  "validation_summary": {
+    "config_id": "multi_strategy_v2_2026_05",
+    "final_score": 0.2389,
+    "mean_score": 0.2389,
+    "consistency_penalty": 0.0,
+    "score_std_dev": 0.0048,
+    "total_trades": 194954,
+    "max_drawdown": 48810663.5,
+    "instruments": [
+      "EURUSD",
+      "GBPUSD",
+      "AUDUSD"
+    ],
+    "per_instrument": {
+      "EURUSD": {
+        "score": 0.2321,
+        "strategy_results": {
+          "S1": {
+            "strategy_id": "S1",
+            "trades": 770,
+            "wins": 252,
+            "losses": 481,
+            "timeouts": 37,
+            "win_rate": 0.3438,
+            "profit_factor": 1.048,
+            "expectancy_inr": 746.45,
+            "total_pnl_inr": 574768.85,
+            "max_drawdown": 50002.83,
+            "score": 0.1955
+          },
+          "S2": {
+            "strategy_id": "S2",
+            "trades": 421,
+            "wins": 158,
+            "losses": 246,
+            "timeouts": 17,
+            "win_rate": 0.3911,
+            "profit_factor": 0.963,
+            "expectancy_inr": -533.03,
+            "total_pnl_inr": -224403.75,
+            "max_drawdown": 362046.82,
+            "score": 0.2297
+          },
+          "S3": {
+            "strategy_id": "S3",
+            "trades": 3818,
+            "wins": 550,
+            "losses": 1582,
+            "timeouts": 1686,
+            "win_rate": 0.258,
+            "profit_factor": 0.869,
+            "expectancy_inr": -1349.99,
+            "total_pnl_inr": -5154259.07,
+            "max_drawdown": 5381769.21,
+            "score": 0.15
+          },
+          "S4": {
+            "strategy_id": "S4",
+            "trades": 3432,
+            "wins": 1239,
+            "losses": 1958,
+            "timeouts": 235,
+            "win_rate": 0.3876,
+            "profit_factor": 0.949,
+            "expectancy_inr": -724.27,
+            "total_pnl_inr": -2485686.35,
+            "max_drawdown": 3847224.0,
+            "score": 0.2267
+          },
+          "S5": {
+            "strategy_id": "S5",
+            "trades": 18403,
+            "wins": 10482,
+            "losses": 7893,
+            "timeouts": 28,
+            "win_rate": 0.5704,
+            "profit_factor": 1.594,
+            "expectancy_inr": 6362.59,
+            "total_pnl_inr": 117090776.28,
+            "max_drawdown": 10023.41,
+            "score": 0.6356
+          },
+          "S6": {
+            "strategy_id": "S6",
+            "trades": 8520,
+            "wins": 3431,
+            "losses": 5087,
+            "timeouts": 2,
+            "win_rate": 0.4028,
+            "profit_factor": 1.012,
+            "expectancy_inr": 174.48,
+            "total_pnl_inr": 1486552.19,
+            "max_drawdown": 1237212.65,
+            "score": 0.2417
+          },
+          "S7": {
+            "strategy_id": "S7",
+            "trades": 13495,
+            "wins": 3027,
+            "losses": 9064,
+            "timeouts": 1404,
+            "win_rate": 0.2504,
+            "profit_factor": 0.835,
+            "expectancy_inr": -2770.0,
+            "total_pnl_inr": -37381093.8,
+            "max_drawdown": 37381093.8,
+            "score": 0.15
+          },
+          "S8": {
+            "strategy_id": "S8",
+            "trades": 8844,
+            "wins": 2519,
+            "losses": 5649,
+            "timeouts": 676,
+            "win_rate": 0.3084,
+            "profit_factor": 0.892,
+            "expectancy_inr": -1725.34,
+            "total_pnl_inr": -15258893.72,
+            "max_drawdown": 15333878.2,
+            "score": 0.1574
+          },
+          "S9": {
+            "strategy_id": "S9",
+            "trades": 12122,
+            "wins": 3973,
+            "losses": 7755,
+            "timeouts": 394,
+            "win_rate": 0.3388,
+            "profit_factor": 0.922,
+            "expectancy_inr": -1244.12,
+            "total_pnl_inr": -15081262.42,
+            "max_drawdown": 15126240.63,
+            "score": 0.184
+          },
+          "S10": {
+            "strategy_id": "S10",
+            "trades": 624,
+            "wins": 182,
+            "losses": 438,
+            "timeouts": 4,
+            "win_rate": 0.2935,
+            "profit_factor": 0.831,
+            "expectancy_inr": -2962.72,
+            "total_pnl_inr": -1848734.93,
+            "max_drawdown": 1923760.97,
+            "score": 0.15
+          }
+        },
+        "trades": 70449,
+        "win_rate": 0.3913,
+        "max_drawdown": 37381093.79999986
+      },
+      "GBPUSD": {
+        "score": 0.2425,
+        "strategy_results": {
+          "S1": {
+            "strategy_id": "S1",
+            "trades": 764,
+            "wins": 263,
+            "losses": 470,
+            "timeouts": 31,
+            "win_rate": 0.3588,
+            "profit_factor": 1.119,
+            "expectancy_inr": 1830.98,
+            "total_pnl_inr": 1398867.96,
+            "max_drawdown": 299778.25,
+            "score": 0.2193
+          },
+          "S2": {
+            "strategy_id": "S2",
+            "trades": 380,
+            "wins": 162,
+            "losses": 207,
+            "timeouts": 11,
+            "win_rate": 0.439,
+            "profit_factor": 1.174,
+            "expectancy_inr": 2368.14,
+            "total_pnl_inr": 899894.61,
+            "max_drawdown": 249745.41,
+            "score": 0.2977
+          },
+          "S3": {
+            "strategy_id": "S3",
+            "trades": 4582,
+            "wins": 721,
+            "losses": 2006,
+            "timeouts": 1855,
+            "win_rate": 0.2644,
+            "profit_factor": 0.899,
+            "expectancy_inr": -1104.52,
+            "total_pnl_inr": -5060926.64,
+            "max_drawdown": 5949971.59,
+            "score": 0.15
+          },
+          "S4": {
+            "strategy_id": "S4",
+            "trades": 5683,
+            "wins": 2374,
+            "losses": 3049,
+            "timeouts": 260,
+            "win_rate": 0.4378,
+            "profit_factor": 1.168,
+            "expectancy_inr": 2251.06,
+            "total_pnl_inr": 12792790.64,
+            "max_drawdown": 498207.34,
+            "score": 0.2958
+          },
+          "S5": {
+            "strategy_id": "S5",
+            "trades": 22260,
+            "wins": 13256,
+            "losses": 8999,
+            "timeouts": 5,
+            "win_rate": 0.5956,
+            "profit_factor": 1.768,
+            "expectancy_inr": 7754.68,
+            "total_pnl_inr": 172619225.76,
+            "max_drawdown": 49961.52,
+            "score": 0.524
+          },
+          "S6": {
+            "strategy_id": "S6",
+            "trades": 9334,
+            "wins": 3926,
+            "losses": 5407,
+            "timeouts": 1,
+            "win_rate": 0.4207,
+            "profit_factor": 1.089,
+            "expectancy_inr": 1290.45,
+            "total_pnl_inr": 12045103.13,
+            "max_drawdown": 374842.92,
+            "score": 0.269
+          },
+          "S7": {
+            "strategy_id": "S7",
+            "trades": 14742,
+            "wins": 3463,
+            "losses": 10165,
+            "timeouts": 1114,
+            "win_rate": 0.2541,
+            "profit_factor": 0.852,
+            "expectancy_inr": -2553.69,
+            "total_pnl_inr": -37646540.06,
+            "max_drawdown": 37646540.06,
+            "score": 0.15
+          },
+          "S8": {
+            "strategy_id": "S8",
+            "trades": 10697,
+            "wins": 3179,
+            "losses": 6978,
+            "timeouts": 540,
+            "win_rate": 0.313,
+            "profit_factor": 0.911,
+            "expectancy_inr": -1447.42,
+            "total_pnl_inr": -15483011.67,
+            "max_drawdown": 15483011.67,
+            "score": 0.1614
+          },
+          "S9": {
+            "strategy_id": "S9",
+            "trades": 12142,
+            "wins": 4069,
+            "losses": 7841,
+            "timeouts": 232,
+            "win_rate": 0.3416,
+            "profit_factor": 0.934,
+            "expectancy_inr": -1063.55,
+            "total_pnl_inr": -12913652.35,
+            "max_drawdown": 13183439.71,
+            "score": 0.1864
+          },
+          "S10": {
+            "strategy_id": "S10",
+            "trades": 675,
+            "wins": 217,
+            "losses": 451,
+            "timeouts": 7,
+            "win_rate": 0.3249,
+            "profit_factor": 0.962,
+            "expectancy_inr": -628.73,
+            "total_pnl_inr": -424390.6,
+            "max_drawdown": 1199026.22,
+            "score": 0.1718
+          }
+        },
+        "trades": 81259,
+        "win_rate": 0.4097,
+        "max_drawdown": 37646540.059999906
+      },
+      "AUDUSD": {
+        "score": 0.2421,
+        "strategy_results": {
+          "S1": {
+            "strategy_id": "S1",
+            "trades": 720,
+            "wins": 232,
+            "losses": 382,
+            "timeouts": 106,
+            "win_rate": 0.3779,
+            "profit_factor": 1.215,
+            "expectancy_inr": 2844.84,
+            "total_pnl_inr": 2048281.4,
+            "max_drawdown": 99901.56,
+            "score": 0.2504
+          },
+          "S2": {
+            "strategy_id": "S2",
+            "trades": 318,
+            "wins": 116,
+            "losses": 191,
+            "timeouts": 11,
+            "win_rate": 0.3779,
+            "profit_factor": 0.911,
+            "expectancy_inr": -1336.32,
+            "total_pnl_inr": -424949.06,
+            "max_drawdown": 462388.07,
+            "score": 0.2182
+          },
+          "S3": {
+            "strategy_id": "S3",
+            "trades": 2170,
+            "wins": 98,
+            "losses": 548,
+            "timeouts": 1524,
+            "win_rate": 0.1517,
+            "profit_factor": 0.447,
+            "expectancy_inr": -3481.56,
+            "total_pnl_inr": -7554992.34,
+            "max_drawdown": 7817208.58,
+            "score": 0.15
+          },
+          "S4": {
+            "strategy_id": "S4",
+            "trades": 180,
+            "wins": 78,
+            "losses": 82,
+            "timeouts": 20,
+            "win_rate": 0.4875,
+            "profit_factor": 1.427,
+            "expectancy_inr": 4860.03,
+            "total_pnl_inr": 874805.03,
+            "max_drawdown": 24962.02,
+            "score": 0.4783
+          },
+          "S5": {
+            "strategy_id": "S5",
+            "trades": 5763,
+            "wins": 3178,
+            "losses": 2540,
+            "timeouts": 45,
+            "win_rate": 0.5558,
+            "profit_factor": 1.501,
+            "expectancy_inr": 5521.5,
+            "total_pnl_inr": 31820387.82,
+            "max_drawdown": 74963.05,
+            "score": 0.449
+          },
+          "S6": {
+            "strategy_id": "S6",
+            "trades": 6239,
+            "wins": 2337,
+            "losses": 3894,
+            "timeouts": 8,
+            "win_rate": 0.3751,
+            "profit_factor": 0.9,
+            "expectancy_inr": -1556.28,
+            "total_pnl_inr": -9709602.49,
+            "max_drawdown": 9996927.35,
+            "score": 0.2157
+          },
+          "S7": {
+            "strategy_id": "S7",
+            "trades": 12010,
+            "wins": 2051,
+            "losses": 7080,
+            "timeouts": 2879,
+            "win_rate": 0.2246,
+            "profit_factor": 0.724,
+            "expectancy_inr": -4058.97,
+            "total_pnl_inr": -48748261.46,
+            "max_drawdown": 48810663.5,
+            "score": 0.15
+          },
+          "S8": {
+            "strategy_id": "S8",
+            "trades": 4633,
+            "wins": 1091,
+            "losses": 2739,
+            "timeouts": 803,
+            "win_rate": 0.2849,
+            "profit_factor": 0.797,
+            "expectancy_inr": -3001.31,
+            "total_pnl_inr": -13905070.31,
+            "max_drawdown": 14079751.83,
+            "score": 0.15
+          },
+          "S9": {
+            "strategy_id": "S9",
+            "trades": 10607,
+            "wins": 3372,
+            "losses": 6379,
+            "timeouts": 856,
+            "win_rate": 0.3458,
+            "profit_factor": 0.952,
+            "expectancy_inr": -728.33,
+            "total_pnl_inr": -7725376.56,
+            "max_drawdown": 7790329.81,
+            "score": 0.1901
+          },
+          "S10": {
+            "strategy_id": "S10",
+            "trades": 606,
+            "wins": 186,
+            "losses": 391,
+            "timeouts": 29,
+            "win_rate": 0.3224,
+            "profit_factor": 0.951,
+            "expectancy_inr": -782.39,
+            "total_pnl_inr": -474125.71,
+            "max_drawdown": 849161.94,
+            "score": 0.1696
+          }
+        },
+        "trades": 43246,
+        "win_rate": 0.3446,
+        "max_drawdown": 48810663.50000014
+      }
+    },
+    "warnings": [
+      "S3: win_rate=24.9% < 30%",
+      "S3: profit_factor=0.83 < 1.0",
+      "S7: win_rate=24.5% < 30%",
+      "S7: profit_factor=0.81 < 1.0",
+      "S8: profit_factor=0.88 < 1.0",
+      "S9: profit_factor=0.94 < 1.0",
+      "S10: profit_factor=0.91 < 1.0"
+    ]
+  },
+  "crt_engine": {
+    "score_decay_lambda": 0.05,
+    "max_spread_pct": 0.05,
+    "atr_period": 14,
+    "atr_buffer_multiplier": 3,
+    "max_sweep_age_candles": 20,
+    "atr_min_displacement": 1.2,
+    "confirmation_body_min": 0.6,
+    "sl_atr_buffer": 0.2,
+    "tp1_atr_multiplier": 1.0,
+    "tp2_atr_multiplier": 2.0,
+    "bitnet_main_threshold": 0.55,
+    "news_blackout_minutes": 15,
+    "retrace_reset_pct": 0.5,
+    "conf_alpha": 0.7,
+    "conf_beta": 0.3,
+    "conf_weights": [
+      0.35,
+      0.35,
+      0.15,
+      0.15
+    ],
+    "conf_floor": 0.2,
+    "weak_link_weight": 0.3,
+    "ema_fast": 2,
+    "ema_slow": 5,
+    "tier_1_threshold": 0.75,
+    "tier_2_threshold": 0.3,
+    "soft_conf_max_candles": 3,
+    "sizing_bands": [
+      [
+        0.75,
+        0.01
+      ],
+      [
+        0.55,
+        0.005
+      ]
+    ],
+    "session_windows": {
+      "LONDON": [
+        "07:00",
+        "10:00"
+      ],
+      "NEWYORK": [
+        "13:00",
+        "16:00"
+      ],
+      "ASIA": [
+        "00:00",
+        "03:00"
+      ]
+    }
+  },
+  "rr_model": {
+    "ridge_alpha": 10.0,
+    "gnb_var_smoothing": 1e-09,
+    "drift_threshold": 1.5,
+    "mahal_clip": 500.0,
+    "confidence_bypass_threshold": 0.3,
+    "min_samples": 20,
+    "dataset_min_samples": 20,
+    "score_weights": {
+      "gaussian": 0.5,
+      "ml": 0.3,
+      "confidence": 0.2
+    },
+    "model_path": "models/rr_model.json",
+    "dataset_path": "models/rr_dataset.json"
+  },
+  "gaussian_scorer": {
+    "retest_mu": 0.237,
+    "retest_s2": 0.04,
+    "body_mu": 0.847,
+    "body_s2": 0.021,
+    "disp_mu": 2.177,
+    "disp_s2": 1.196,
+    "sigmoid_k": 4.5,
+    "sigmoid_x0": 0.5,
+    "execute_p": 0.5,
+    "decay_lambda": 0.0
+  },
+  "training": {
+    "min_records_to_train": 200,
+    "min_records_recommend": 500
+  },
+  "phase5_calibration": {
+    "val_ratio": 0.3,
+    "min_val_samples": 30,
+    "min_corr": 0.1,
+    "max_cal_error": 0.25,
+    "cv_corr_std_max": 0.05,
+    "cv_n_folds": 3
+  },
+  "tuner": {
+    "trade_count_floor": 3,
+    "trade_count_target": 50,
+    "consistency_alpha": 0.1,
+    "fitness_weights": {
+      "expectancy_rr": 0.5,
+      "win_rate": 0.2,
+      "trade_count_norm": 0.2,
+      "drawdown": 0.1
+    },
+    "llm_gate": {
+      "base_score_trigger": 0.1,
+      "hard_reject_threshold": 0.2,
+      "blend_weights": [
+        0.7,
+        0.3
+      ]
+    },
+    "phase2_min_iter": 20
+  },
+  "portfolio": {
+    "initial_capital": 100000.0,
+    "risk_pct": 0.01,
+    "slippage_atr_fraction": 0.08,
+    "warmup_candles": 100,
+    "output_dir": "results/portfolio"
+  },
+  "llama_gate": {
+    "server_url": "http://127.0.0.1:8080/completion",
+    "request_timeout": 2.0,
+    "probe_timeout": 1.0,
+    "fail_count_disable": 10,
+    "score_n_predict": 4,
+    "score_temperature": 0.0,
+    "insight_max_tokens": 300,
+    "insight_temperature": 0.3,
+    "groq_fallback_enabled": true,
+    "groq_model": "llama-3.3-70b-versatile",
+    "groq_score_max_tokens": 8,
+    "groq_score_temperature": 0.0
+  },
+  "config_validator": {
+    "min_trades_per_instrument": 10,
+    "max_drawdown_pct": 0.35,
+    "min_win_rate": 0.35,
+    "min_expectancy": -0.5,
+    "score_threshold": 0.15,
+    "max_score_std_dev": 0.3,
+    "trade_count_target": 50,
+    "warmup_candles": 30,
+    "fitness_weights": {
+      "expectancy_rr": 0.5,
+      "win_rate": 0.2,
+      "trade_count_norm": 0.2,
+      "drawdown": 0.1
+    }
+  },
+  "backtest": {
+    "htf_candles_per_range": 4,
+    "warmup_candles": 30,
+    "slippage_enabled": true,
+    "slippage_atr_fraction": 0.1,
+    "slippage_seed": 42,
+    "simulated_spread_pct": 0.0002,
+    "initial_capital": 100000.0,
+    "risk_pct_per_trade": 0.01,
+    "use_compounding": true,
+    "gap_reset_enabled": true,
+    "gap_reset_minutes": 120,
+    "event_flush_every": 100
+  },
+  "feature_monitor": {
+    "window_size": 500,
+    "hard_drift_z": 3.0,
+    "soft_drift_z": 2.5
+  },
+  "feature_store": {
+    "max_history": 1000
+  },
+  "notes": "Automated 10-strategy promotion \u2014 20260501_183742",
+  "schema_version": "1.3",
+  "inout": {
+    "scanner": {
+      "allowed_symbols": [
+        "BTCUSDT",
+        "ETHUSDT"
+      ],
+      "scan_timeframes": [
+        "M1",
+        "M5"
+      ],
+      "candle_expansion_atr_mult": 1.8,
+      "volume_spike_mult": 2.0,
+      "volume_lookback": 20,
+      "min_atr_threshold": 0.0003,
+      "structure_lookback": 10,
+      "require_all_conditions": false,
+      "min_composite_score": 0.55,
+      "cooldown_seconds": 120
+    },
+    "exit": {
+      "tp1_fraction": 0.3,
+      "tp2_fraction": 0.5,
+      "runner_fraction": 0.2,
+      "tp1_rr": 1.0,
+      "tp2_rr": 2.0,
+      "sl_structure_lookback": 5,
+      "sl_atr_buffer_mult": 0.2,
+      "runner_trail_atr_mult": 2.5,
+      "p75_factor": 1.4,
+      "min_confidence_for_prob_exit": 0.2,
+      "min_prob_samples": 20,
+      "tp2_abandon_prob": 0.25,
+      "runner_extend_prob_threshold": 0.4,
+      "runner_tight_prob_threshold": 0.2,
+      "tp1_near_threshold": 0.002,
+      "high_atr_pct_skip": 0.01
+    },
+    "time": {
+      "min_time_min": 3,
+      "default_time_min": 8,
+      "max_time_min": 15
+    },
+    "risk": {
+      "max_concurrent_trades": 3,
+      "max_total_exposure_pct": 3.0,
+      "risk_per_trade_pct": 0.5,
+      "dedup_window_seconds": 300
+    },
+    "probability": {
+      "approach": "D",
+      "model_dir": "data/inout_prob_models",
+      "blend_weight": 0.6,
+      "tp1_min_prob": 0.35,
+      "tp2_min_prob": 0.3,
+      "min_confidence": 0.1,
+      "prob_blend_alpha": 0.7,
+      "auto_retrain_n": 50,
+      "min_train_records": 10
+    },
+    "db": {
+      "path": "logs/inout_trades.db",
+      "wal_mode": true,
+      "timeout": 5.0
+    },
+    "logging": {
+      "audit_log_path": "logs/inout_audit.jsonl",
+      "log_level": "INFO"
+    }
+  },
+  "capital_management": {
+    "total_capital_inr": 100000,
+    "max_risk_per_trade_pct": 0.25,
+    "max_risk_per_trade_inr": 25000,
+    "max_monthly_drawdown_pct": 0.25,
+    "max_monthly_drawdown_inr": 25000,
+    "monthly_drawdown_warn_inr": 20000,
+    "kill_switch_daily_loss_inr": 10000,
+    "usd_to_inr_rate": 84.0,
+    "pip_value_per_lot": {
+      "EURUSD": 10.0,
+      "GBPUSD": 10.0,
+      "USDJPY": 9.1,
+      "USDCHF": 10.0,
+      "AUDUSD": 10.0,
+      "USDCAD": 7.7,
+      "NZDUSD": 10.0
+    }
+  },
+  "data_ingestion": {
+    "db_url": "postgresql://localhost/tradelatest",
+    "schema": "public",
+    "ohlcv_table": "ohlcv_data",
+    "pairs": [
+      "EURUSD",
+      "GBPUSD",
+      "USDJPY",
+      "USDCHF",
+      "AUDUSD",
+      "USDCAD",
+      "NZDUSD"
+    ],
+    "timeframes": [
+      "M1",
+      "M5",
+      "M15",
+      "H1",
+      "H4",
+      "D1"
+    ],
+    "mt5_enabled": false,
+    "csv_fallback_dir": "data",
+    "batch_size": 1000,
+    "connection_timeout_sec": 10
+  },
+  "strategy_engine": {
+    "s01_crt": {
+      "min_score": 0.65,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 2.0,
+      "confidence_scale": 1.0
+    },
+    "s02_mean_reversion": {
+      "rsi_oversold": 30.0,
+      "rsi_overbought": 70.0,
+      "bb_proximity_pct": 0.002,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 1.5,
+      "min_confidence": 0.55
+    },
+    "s03_breakout": {
+      "breakout_atr_mult": 0.5,
+      "min_volume_ratio": 1.3,
+      "sl_atr_mult": 1.0,
+      "tp_rr_ratio": 2.5,
+      "min_confidence": 0.55
+    },
+    "s09_pattern_recog": {
+      "hammer_wick_mult": 2.0,
+      "engulf_body_mult": 1.1,
+      "sl_atr_mult": 1.2,
+      "tp_rr_ratio": 1.8,
+      "min_confidence": 0.5
+    },
+    "s10_trap": {
+      "trap_min_disp_strength": 0.6,
+      "reversal_body_ratio": 0.5,
+      "sl_atr_mult": 1.0,
+      "tp_rr_ratio": 2.0,
+      "min_confidence": 0.6,
+      "max_candles_since_sweep": 3
+    },
+    "s04_stat_arb": {
+      "z_entry_threshold": 1.5,
+      "z_exit_threshold": 0.5,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 1.5,
+      "min_confidence": 0.55,
+      "trend_filter": true
+    },
+    "s05_grid": {
+      "n_levels": 5,
+      "proximity_atr_mult": 0.4,
+      "sl_atr_mult": 0.8,
+      "tp_rr_ratio": 1.2,
+      "min_confidence": 0.5,
+      "min_range_atr": 3.0
+    },
+    "s06_scalping": {
+      "macd_hist_min": 2e-05,
+      "momentum_min": 0.3,
+      "sl_atr_mult": 0.5,
+      "tp_rr_ratio": 1.5,
+      "min_confidence": 0.55,
+      "session_hours_start": 7,
+      "session_hours_end": 17,
+      "max_spread_pct": 0.0003
+    },
+    "s07_news_sentiment": {
+      "news_volatility_ratio": 2.0,
+      "max_spread_pct": 0.0005,
+      "zone_strength_min": 0.55,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 1.5,
+      "min_confidence": 0.55
+    },
+    "s08_ml_ensemble": {
+      "rsi_weight": 0.2,
+      "momentum_weight": 0.25,
+      "macd_weight": 0.2,
+      "volume_weight": 0.15,
+      "trend_weight": 0.2,
+      "min_score": 0.45,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 2.0,
+      "min_confidence": 0.58,
+      "bitnet_weight": 0.4,
+      "feature_weight": 0.6
+    }
+  },
+  "config_hash": "37a62e091ece30cf8dd5b535c14a4a6a09ef03fb9610bde3a2530cd3e42be1ff"
+}

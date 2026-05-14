@@ -1,0 +1,11 @@
+{
+  "legacy_2026_04": {
+    "version": "legacy_2026_04",
+    "model_file": "models/zone_registry.json",
+    "n_zones": 1,
+    "n_clusters_requested": 8,
+    "feature_order": [],
+    "trained_at": "2026-05-14T18:30:05Z",
+    "active": true
+  }
+}

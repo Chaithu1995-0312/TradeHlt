@@ -1,7 +1,7 @@
 import glob, subprocess, sys, os
 
-files = [f for f in glob.glob('**/*.py', recursive=True) 
-         if not any(x in f for x in ['Archieve','Backup','FuturePhaseConfig','bitnet_parity','venv'])
+files = [f for f in glob.glob('**/*.py', recursive=True)
+         if not any(x in f for x in ['Archieve','Backup','FuturePhaseConfig','bitnet_parity','venv','.claude'])
          and f.endswith('.py') and f != 'python_runner.py']
 
 print(f"Total files: {len(files)}", flush=True)

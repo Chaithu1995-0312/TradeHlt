@@ -72,6 +72,7 @@ from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from fusion_engine import FusionResult
+    from typing import Union
 
 log = logging.getLogger("TradeLogger")
 
@@ -98,7 +99,7 @@ class TradeLogger:
         session:       str,
         regime:        str,
         features:      dict,
-        fusion_result: "FusionResult",
+        fusion_result: "Union[FusionResult, dict]",
         risk_pct:      float,
         entry_price:   float,
         sl_price:      float,
@@ -119,7 +120,7 @@ class TradeLogger:
             "session":     session,
             "regime":      regime,
             "features":    _safe_features(features),
-            "fusion":      fusion_result.to_dict(),
+            "fusion":      fusion_result.to_dict() if hasattr(fusion_result, "to_dict") else (fusion_result or {}),
             "risk_pct":    round(risk_pct, 6),
             "entry_price": round(entry_price, 6),
             "sl_price":    round(sl_price,    6),

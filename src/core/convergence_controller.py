@@ -47,6 +47,12 @@ _THRESH_STEP = 0.02
 _ACCEPT_RATE_HIGH = 0.30   # if above this → increase threshold
 _ACCEPT_RATE_LOW  = 0.10   # if below this → decrease threshold
 
+# Absolute quality floor — if final_score is below this, reject regardless of
+# how low the adaptive threshold has drifted.  Prevents "forced trades" during
+# low-signal / random-walk regimes where the adaptive threshold self-lowers to
+# meet the _ACCEPT_RATE_LOW target.  Operator can override via constructor.
+_ABS_QUALITY_FLOOR = 0.30
+
 # Sigmoid calibration defaults
 _SIG_K = 8.0
 _SIG_T = 0.6
@@ -74,11 +80,13 @@ class ConvergenceController:
 
     def __init__(
         self,
-        window_size:       int   = 500,
-        initial_threshold: float = 0.50,
+        window_size:        int   = 500,
+        initial_threshold:  float = 0.50,
+        abs_quality_floor:  float = _ABS_QUALITY_FLOOR,
     ) -> None:
-        self._window_size = window_size
-        self._threshold   = _clamp(initial_threshold, _THRESH_MIN, _THRESH_MAX)
+        self._window_size      = window_size
+        self._threshold        = _clamp(initial_threshold, _THRESH_MIN, _THRESH_MAX)
+        self._abs_quality_floor = _clamp(abs_quality_floor, 0.0, _THRESH_MAX)
         # Rolling window of bool outcomes for accept_rate computation
         self._outcome_window: deque[bool] = deque(maxlen=window_size)
 
@@ -140,14 +148,17 @@ class ConvergenceController:
         if not self.is_warm:
             base = float(weighted_score) if weighted_score is not None else sum(raw.values()) / 4.0
             base = _clamp(base)
+            floor_breached_cs = base < self._abs_quality_floor
             return {
-                "final_score":    round(base, 4),
-                "scores":         raw,
-                "missing_engines": missing,
-                "variance":       0.0,
-                "entropy":        0.0,
-                "threshold":      self._threshold,
-                "accepted":       base > self._threshold,
+                "final_score":       round(base, 4),
+                "scores":            raw,
+                "missing_engines":   missing,
+                "variance":          0.0,
+                "entropy":           0.0,
+                "threshold":         self._threshold,
+                "abs_quality_floor": round(self._abs_quality_floor, 4),
+                "floor_breached":    floor_breached_cs,
+                "accepted":          (base > self._threshold) and not floor_breached_cs,
                 **({"debug": {"cold_start": True, "raw": raw, "weighted_score": weighted_score}} if debug else {}),
             }
 
@@ -193,17 +204,25 @@ class ConvergenceController:
             elif accept_rate < _ACCEPT_RATE_LOW:
                 self._threshold = _clamp(self._threshold - _THRESH_STEP, _THRESH_MIN, _THRESH_MAX)
 
-        # --- Step 6: Accept decision ---
-        accepted = final > self._threshold
+        # --- Step 6: Accept decision — enforce absolute quality floor ---
+        # The adaptive threshold can drift down to _THRESH_MIN (0.30) when the
+        # accept_rate is chronically low.  Without a floor, the controller forces
+        # trades during low-signal regimes.  The abs_quality_floor ensures that no
+        # matter how low the adaptive threshold falls, the final_score must still
+        # exceed a minimum absolute threshold before a trade is accepted.
+        floor_breached = final < self._abs_quality_floor
+        accepted = (final > self._threshold) and not floor_breached
 
         result: dict = {
-            "final_score":     round(final, 4),
-            "scores":          calibrated,
-            "missing_engines": missing,
-            "variance":        round(variance, 6),
-            "entropy":         round(entropy, 6),
-            "threshold":       round(self._threshold, 4),
-            "accepted":        accepted,
+            "final_score":      round(final, 4),
+            "scores":           calibrated,
+            "missing_engines":  missing,
+            "variance":         round(variance, 6),
+            "entropy":          round(entropy, 6),
+            "threshold":        round(self._threshold, 4),
+            "abs_quality_floor": round(self._abs_quality_floor, 4),
+            "floor_breached":   floor_breached,
+            "accepted":         accepted,
         }
 
         if debug:

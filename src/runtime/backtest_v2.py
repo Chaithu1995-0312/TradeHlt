@@ -29,7 +29,7 @@ import random
 import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterator, Optional
 
@@ -61,6 +61,8 @@ from config_layer.crt_engine_v2 import (
     Candle, CRTConfig, CRTEngine, CRTState, Direction,
     EngineState, Range, Trade,
 )
+from config_layer.production_config import PROD_VERSION, load_prod_config_from_registry
+from config_layer.config_builder import ConfigBuilder
 
 # ─────────────────────────────────────────────────────────────────
 # LOGGING
@@ -131,6 +133,9 @@ class BacktestConfig:
 
     # ── Engine config override (instance-specific) ────────────────
     crt_config: Optional[CRTConfig] = None
+
+    # ── Scorer mode ───────────────────────────────────────────────
+    scorer_mode: str = "calibrated"   # "calibrated" | "static"
 
     @classmethod
     def from_prod_config(
@@ -243,6 +248,7 @@ class TradeRecord:
     cached_disp_strength:   float = 0.0   # displacement / ATR ratio
     cached_session:         str   = ""    # session label recorded at RETEST
     cached_double_sweep:    bool  = False # double-sweep confirmed at RETEST
+    config_version:         str   = field(default_factory=lambda: PROD_VERSION)
 
     @property
     def is_winner(self) -> bool:
@@ -904,6 +910,7 @@ class TradeJournal:
             row["cached_disp_strength"] = round(r.cached_disp_strength, 6)
             row["cached_session"]       = r.cached_session
             row["cached_double_sweep"]  = int(r.cached_double_sweep)
+            row["config_version"]       = r.config_version
             rows.append(row)
         return rows
 
@@ -936,6 +943,7 @@ class BacktestMetrics:
     monthly_pnl:           dict  = field(default_factory=lambda: defaultdict(float))
     capital_curve:         dict  = field(default_factory=dict)   # [G3]
     distribution:          dict  = field(default_factory=dict)   # [G5]
+    hard_drift_pauses:     int   = 0
 
     @property
     def win_rate(self) -> float:
@@ -977,6 +985,7 @@ class BacktestMetrics:
             "monthly_pnl":         {k: round(v, 4) for k, v in self.monthly_pnl.items()},
             "capital_curve":       self.capital_curve,
             "distribution":        self.distribution,
+            "config_version":      PROD_VERSION,
         }
 
 
@@ -1173,22 +1182,69 @@ class ReportWriter:
 
 
 # ─────────────────────────────────────────────────────────────────
+# PHASE-5 SCORER STUB — injection anchor for phase5_calibration.py
+# ─────────────────────────────────────────────────────────────────
+
+
+# -----------------------------------------------------------------
+# # [Phase-5] CALIBRATED GAUSSIAN SCORER — DYNAMIC LOADER
+# Model params now live in models/gaussian_{version}.json and are loaded
+# at runtime via core.model_registry.load_active_gaussian_scorer().
+# The _P5_PARAMS literal and the injected scorer body are deprecated;
+# phase5_calibration.py no longer writes to this file.
+# -----------------------------------------------------------------
+
+# DEPRECATED — kept empty for backwards compat with any external imports.
+# Models load dynamically; see core.model_registry.GaussianScorer.
+_P5_PARAMS: dict = {}
+
+
+class CRTCalibratedScorer:
+    """Backwards-compat shim. Delegates to core.model_registry's dynamic loader.
+
+    Returns the active gaussian model (or NoOpScorer fallback) at construction
+    time. .compute() is forwarded to the underlying scorer so callers that
+    instantiate CRTCalibratedScorer() directly keep working.
+    """
+
+    def __init__(self):
+        from core.model_registry import load_active_gaussian_scorer
+        self._delegate = load_active_gaussian_scorer()
+        self.version = getattr(self._delegate, "version", None)
+
+    def compute(self, features, candle_idx, direction: str = "long"):
+        return self._delegate.compute(features, candle_idx, direction=direction)
+
+
+class CRTGaussianScorer:
+    """Default no-op scorer. Replaced by CRTCalibratedScorer after phase5 --integrate."""
+    def compute(self, features: dict, candle_idx: int):
+        return None
+
+
+# ─────────────────────────────────────────────────────────────────
 # BACKTEST RUNNER v2
 # ─────────────────────────────────────────────────────────────────
 
 class BacktestRunner:
     def __init__(self, bt_config: BacktestConfig, csv_path: str = None,
-                 skip_features: bool = False):
+                 skip_features: bool = False, overrides: dict | None = None):
         """
         skip_features=True  — skips FeaturePipeline entirely (csv_path still recorded
         but not processed).  Use for tuner workers where fitness is derived from
         metric scalars only and feature columns in _trades.csv are not needed.
         All other behaviour (candle loop, CRT engine, metrics) is unchanged.
+
+        overrides — dict of CLI flags that were explicitly set (e.g. {"--threshold": "0.75"}).
+                    Recorded in the per-run config dump for full auditability.
         """
-        self.cfg     = bt_config
-        self.log     = bt_log
-        self.crt_cfg = bt_config.crt_config or CRTConfig()
+        self.cfg      = bt_config
+        self.log      = bt_log
+        self.crt_cfg  = bt_config.crt_config or ConfigBuilder.build(
+            bt_config.instrument or "EURUSD"
+        )
         self.csv_path = csv_path
+        self._overrides: dict = overrides or {}
         self.feature_vectors = None
         self.feature_ts_to_idx: dict = {}  # timestamp → row-index in feature_vectors
         if self.csv_path and not skip_features:
@@ -1240,9 +1296,59 @@ class BacktestRunner:
         except Exception:
             self._monitor = None
             self._monitor_available = False
+
+        # Phase-5 scorer gate — choose based on scorer_mode
+        if bt_config.scorer_mode == "static":
+            self._scorer = CRTGaussianScorer()
+        else:
+            self._scorer = CRTCalibratedScorer()
+
+        # Fusion JSONL logger — one file per instrument under logs/
+        from utils.trade_logger import TradeLogger as _TradeLogger
+        _log_dir = Path("logs")
+        _log_dir.mkdir(exist_ok=True)
+        self._trade_logger = _TradeLogger(_log_dir / f"{bt_config.instrument}_fusion.jsonl")
+
     def run(self, candle_source: Iterator[Candle], total_candles: int,
             output_dir: str = "results") -> BacktestMetrics:
-        
+        self.log.info("Production config version: %s", PROD_VERSION)
+
+        # ── Per-run config dump ───────────────────────────────────────────────
+        try:
+            import dataclasses as _dc
+            from utils.config_dumper import dump_config as _dump_config, _asdict_serializable
+            from config_layer.production_config import get_full_config_dict, PRODUCTION_REGISTRY_DIR
+            _run_id = datetime.now(timezone.utc).strftime("run_%Y%m%d_%H%M%S")
+            _source_path = (
+                f"{PRODUCTION_REGISTRY_DIR}/{PROD_VERSION}.json"
+            )
+            _bt_params = {
+                k: v for k, v in _dc.asdict(self.cfg).items()
+                if k != "crt_config"  # serialised separately below
+            }
+            _crt_dict = _asdict_serializable(self.crt_cfg)
+            _full_reg = get_full_config_dict()
+            _dump_payload = {
+                "mode":               "backtest",
+                "config_version":     PROD_VERSION,
+                "source_config_path": _source_path,
+                "overrides":          self._overrides,
+                "backtest_params":    _bt_params,
+                "crt_engine":         _crt_dict,
+                "engine_runner":      _full_reg.get("engine_runner", {}),
+                "fusion_engine":      _full_reg.get("fusion_engine", {}),
+                "execution_planner":  _full_reg.get("execution_planner", {}),
+                "decision_engine":    _full_reg.get("decision_engine", {}),
+            }
+            _dump_path = _dump_config(
+                _dump_payload,
+                instrument=self.cfg.instrument,
+                run_id=_run_id,
+            )
+            self.log.info("Full config dumped to: %s", _dump_path)
+        except Exception as _dump_err:
+            self.log.warning("Config dump skipped: %s", _dump_err)
+
     # Ensure vectors is a list of lists (or numpy array)
         engine  = CRTEngine(self.crt_cfg)
         htf     = HTFBuilder(self.cfg.htf_candles_per_range, self.cfg.instrument)
@@ -1269,6 +1375,51 @@ class BacktestRunner:
         state_path:     list[str] = []
         last_risk_score = 0.0
         last_session    = ""
+
+        # ── Phase 3 / Phase 4 config (loaded once per run) ────────────────────
+        try:
+            from config_layer.production_config import get_prod_section as _gps_bt
+            _ep_cfg_bt = _gps_bt("execution_planner")
+            _fm_cfg_bt = _gps_bt("feature_monitor")
+            _partial_tp_enabled  = bool(_ep_cfg_bt.get("partial_tp_breakeven_enabled", False))
+            _partial_tp_fraction = float(_ep_cfg_bt.get("partial_tp_fraction", 0.5))
+            _drift_pause_enabled = bool(_fm_cfg_bt.get("drift_regime_pause_enabled", False))
+            _drift_cooldown      = int(_fm_cfg_bt.get("drift_cooldown_candles", 10))
+        except Exception:
+            _partial_tp_enabled  = False
+            _partial_tp_fraction = 0.5
+            _drift_pause_enabled = False
+            _drift_cooldown      = 10
+
+        _drift_pause_remaining = 0
+        _hard_drift_pauses     = 0
+
+        # ── EngineRunner gate (live-mode pipeline wired into backtest) ────────
+        # Runs adapter → fusion → dual-engine → decision_engine on each candidate
+        # trade. Opt-in via BACKTEST_ENGINE_GATE=1 env var (requires loaded feature
+        # parquet — when feature_vector is zeros, adapter rejects 100%).
+        _engine_runner = None
+        _engine_rejected_count = 0
+        if os.getenv("BACKTEST_ENGINE_GATE", "0") == "1":
+            try:
+                from config_layer.production_config import get_prod_section as _gps_er
+                from core.engine_runner import EngineRunner as _ER
+                _er_cfg = dict(_gps_er("engine_runner") or {})
+                try:
+                    _er_cfg.setdefault("fusion_engine", dict(_gps_er("fusion_engine")))
+                except Exception:
+                    pass
+                try:
+                    for _k, _v in dict(_gps_er("decision_engine")).items():
+                        _er_cfg.setdefault(_k, _v)
+                except Exception:
+                    pass
+                if _er_cfg:
+                    _engine_runner = _ER(_er_cfg)
+                    self.log.info("EngineRunner gate wired into backtest path (BACKTEST_ENGINE_GATE=1)")
+            except Exception as _exc:
+                self.log.warning(f"EngineRunner gate disabled ({_exc})")
+                _engine_runner = None
 
         self.log.info(
             f"Backtest v2 | {self.cfg.instrument} | {total_candles:,} candles | "
@@ -1392,64 +1543,226 @@ class BacktestRunner:
                         )
                     feature_vector = [0.0] * len(CANONICAL_FEATURES)
 
-                # Phase 2: update FeatureMonitor and log drift signals
-                if self._monitor_available and self._monitor is not None:
-                    try:
-                        _feat_names = CANONICAL_FEATURES
-                        _fv = feature_vector
-                        _drift_dict = {}
-                        for _fn in ("retest_depth", "body_ratio", "disp_strength"):
-                            _idx = _feat_names.index(_fn) if _fn in _feat_names else -1
-                            _drift_dict[_fn] = float(_fv[_idx]) if 0 <= _idx < len(_fv) else 0.0
-                        self._monitor.update(_drift_dict)
-                        _sev = self._monitor.detect_drift_severity(_drift_dict)
-                        if _sev == "hard":
-                            self.log.warning(
-                                "FeatureMonitor: HARD drift at candle %d (%s) — "
-                                "features strongly OOD (Z>3.0).",
-                                candle_idx, self.cfg.instrument,
-                            )
-                        elif _sev == "soft":
-                            self.log.debug(
-                                "FeatureMonitor: soft drift at candle %d (%s).",
-                                candle_idx, self.cfg.instrument,
-                            )
-                    except Exception:
-                        pass
+                # ── Phase-5 scorer gate ────────────────────────────────────
+                # Rejects trades whose predicted win-probability is below 0.35.
+                # No-op while self._scorer is CRTGaussianScorer (returns None).
+                # Active once swapped to CRTCalibratedScorer after --integrate.
+                _p5_rejected = False
+                _p5 = None
+                # ── Drift cooldown gate: veto trades during post-HARD-drift pause ──
+                if _drift_pause_remaining > 0:
+                    _drift_pause_remaining -= 1
+                    journal.on_rejected(
+                        "drift_cooldown", candle_idx, candle.timestamp, state_path, 0.0
+                    )
+                    state_path = []
+                    _p5_rejected = True
+                if not _p5_rejected and self._scorer is not None:
+                    _feat_map_p5 = {
+                        name: feature_vector[i]
+                        for i, name in enumerate(CANONICAL_FEATURES)
+                    }
+                    _p5_dir = getattr(engine.state.direction, "value", "LONG").lower()
+                    _p5 = self._scorer.compute(_feat_map_p5, candle_idx, direction=_p5_dir)
+                    if _p5 is not None and _p5["p_win"] < 0.35:
+                        journal.on_rejected(
+                            f"P5_SCORE_LOW:{_p5['p_win']:.3f}",
+                            candle_idx, candle.timestamp,
+                            state_path, _p5["score"],
+                        )
+                        state_path = []
+                        _p5_rejected = True
 
-                journal.on_trade_opened(
-                    trade          = engine.state.active_trade,
-                    candle         = candle,
-                    candle_index   = candle_idx,
-                    risk_score     = last_risk_score,
-                    state_path     = state_path,
-                    htf_id         = htf.current_htf_id,
-                    session        = last_session,
-                    atr            = engine.state.atr,
-                    spread_half    = spread_half,
-                    feature_vector = feature_vector,
-                    # Universe-B live metrics injected from the result dict —
-                    # CRTEngine.get_live_metrics() was called immediately after
-                    # TRADE_OPENED so these reflect the entry-candle state exactly.
-                    # NOTE: must read from `result` (the full dict), not `action`
-                    # (which is just the string value of result["action"]).
-                    live_metrics   = result.get("live_metrics", {}),
-                )
-                state_path = []
+                # ── FeatureMonitor drift update ─────────────────────────────────
+                _drift_vetoed = False
+                if not _p5_rejected:
+                    if self._monitor_available and self._monitor is not None:
+                        try:
+                            _feat_names = CANONICAL_FEATURES
+                            _fv = feature_vector
+                            _drift_dict = {}
+                            for _fn in ("retest_depth", "body_ratio", "disp_strength"):
+                                _idx = _feat_names.index(_fn) if _fn in _feat_names else -1
+                                _drift_dict[_fn] = float(_fv[_idx]) if 0 <= _idx < len(_fv) else 0.0
+                            self._monitor.update(_drift_dict)
+                            _sev = self._monitor.detect_drift_severity(_drift_dict)
+                            if _sev == "hard":
+                                self.log.warning(
+                                    "FeatureMonitor: HARD drift at candle %d (%s) — "
+                                    "features strongly OOD (Z>3.0). Pausing %d candles.",
+                                    candle_idx, self.cfg.instrument, _drift_cooldown,
+                                )
+                                if _drift_pause_enabled:
+                                    _drift_pause_remaining = _drift_cooldown
+                                    _hard_drift_pauses += 1
+                                    _drift_vetoed = True
+                                    journal.on_rejected(
+                                        "hard_drift_veto",
+                                        candle_idx, candle.timestamp, state_path, 0.0,
+                                    )
+                                    state_path = []
+                            elif _sev == "soft":
+                                self.log.debug(
+                                    "FeatureMonitor: soft drift at candle %d (%s).",
+                                    candle_idx, self.cfg.instrument,
+                                )
+                        except Exception:
+                            pass
+
+                # ── EngineRunner gate (adapter / fusion / dual / decision) ──
+                _engine_vetoed = False
+                if not _p5_rejected and not _drift_vetoed and _engine_runner is not None:
+                    try:
+                        _feat_map_er = {
+                            name: feature_vector[i]
+                            for i, name in enumerate(CANONICAL_FEATURES)
+                        }
+                        _feat_map_er.setdefault("close",     candle.close)
+                        _feat_map_er.setdefault("high",      candle.high)
+                        _feat_map_er.setdefault("low",       candle.low)
+                        _feat_map_er.setdefault("open",      candle.open)
+                        _feat_map_er.setdefault("volume",    candle.volume)
+                        _feat_map_er.setdefault("atr",       engine.state.atr)
+                        _feat_map_er.setdefault("timestamp", str(candle.timestamp))
+                        # Map feature_vector's numeric session (0/1/2) → adapter's expected
+                        # string ("asia"/"london"/"new_york"). FeaturePipeline encodes it
+                        # int8; adapter session_map handles ints natively, so leave it.
+                        # No override — the int will be correctly resolved by adapter_engine.
+                        # Adapter requires this sentinel; FeatureStore adds it in live path.
+                        if self.feature_vectors is not None and _fv_idx >= 0:
+                            _feat_map_er["_data_integrity"] = "real"
+                        # Pass CRT-determined direction so ultron_gate doesn't reject
+                        # with "<regime>_no_direction" when breakout/trap are tied.
+                        _crt_dir = engine.state.direction
+                        if _crt_dir is not None:
+                            _dir_int = getattr(_crt_dir, "value", _crt_dir)
+                            try:
+                                _feat_map_er["direction"]    = int(_dir_int)
+                                _feat_map_er["signal_dir"]   = int(_dir_int)
+                                _feat_map_er["trade_direction"] = int(_dir_int)
+                            except Exception:
+                                pass
+                        _er_result = _engine_runner.run(
+                            _feat_map_er,
+                            context={"instrument": self.cfg.instrument},
+                        )
+                        _decision = (_er_result or {}).get("decision") or (_er_result or {}).get("status", "")
+                        _reason = (_er_result or {}).get("reason", "engine_runner_reject")
+                        _stage  = (_er_result or {}).get("reject_stage", "?")
+                        # Backtest-mode bypass: zone_gate_invalid is a production-only
+                        # rule that requires a populated zone_registry.json. With ≤5
+                        # zones loaded (treated as "no zones") we can't fairly enforce
+                        # it in backtest. Live behavior unchanged.
+                        _bypass_zone = (
+                            os.getenv("BACKTEST_BYPASS_ZONE_INVALID", "1") == "1"
+                            and "zone_gate_invalid" in str(_reason)
+                        )
+                        if str(_decision).upper() in ("REJECT", "REJECTED", "HOLD") and not _bypass_zone:
+                            _engine_vetoed = True
+                            _engine_rejected_count += 1
+                            if _engine_rejected_count <= 5:
+                                self.log.info(
+                                    f"EngineRunner REJECT #{_engine_rejected_count} "
+                                    f"stage={_stage} reason={_reason}"
+                                )
+                            journal.on_rejected(
+                                f"engine_runner:{_stage}:{_reason}",
+                                candle_idx, candle.timestamp, state_path, last_risk_score,
+                            )
+                            state_path = []
+                    except Exception as _er_exc:
+                        # Fail-soft: log but allow trade through
+                        self.log.debug(f"EngineRunner gate exception (allow): {_er_exc}")
+
+                if not _p5_rejected and not _drift_vetoed and not _engine_vetoed:
+                    journal.on_trade_opened(
+                        trade          = engine.state.active_trade,
+                        candle         = candle,
+                        candle_index   = candle_idx,
+                        risk_score     = last_risk_score,
+                        state_path     = state_path,
+                        htf_id         = htf.current_htf_id,
+                        session        = last_session,
+                        atr            = engine.state.atr,
+                        spread_half    = spread_half,
+                        feature_vector = feature_vector,
+                        # Universe-B live metrics injected from the result dict —
+                        # CRTEngine.get_live_metrics() was called immediately after
+                        # TRADE_OPENED so these reflect the entry-candle state exactly.
+                        # NOTE: must read from `result` (the full dict), not `action`
+                        # (which is just the string value of result["action"]).
+                        live_metrics   = result.get("live_metrics", {}),
+                    )
+                    # Log ENTRY to fusion JSONL for downstream Gaussian/TradeNet training
+                    # Guard: skip when feature lookup missed (all-zero vector corrupts training data)
+                    _orec = journal.open_trade
+                    _fv_valid = any(v != 0.0 for v in feature_vector)
+                    if _orec is not None and not _fv_valid:
+                        self.log.warning(
+                            "Skipping ENTRY log for %s — feature timestamp lookup missed "
+                            "(candle_ts=%s not in feature index). Trade not written to fusion log.",
+                            _orec.trade_id,
+                            candle.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                        )
+                    if _orec is not None and _fv_valid:
+                        self._trade_logger.log_entry(
+                            trade_id      = _orec.trade_id,
+                            instrument    = _orec.instrument,
+                            direction     = _orec.direction,
+                            session       = _orec.session,
+                            regime        = "",
+                            features      = _orec.features,
+                            fusion_result = _p5 or {},
+                            risk_pct      = _orec.risk_pct,
+                            entry_price   = _orec.entry_price_raw,
+                            sl_price      = _orec.sl_price,
+                            tp1_price     = _orec.tp1_price,
+                            tp2_price     = _orec.tp2_price,
+                            opened_at     = _orec.opened_at,
+                        )
+                    state_path = []
 
             elif "TRADE_STOPPED" in action or "TRADE_TP2" in action or "TRADE_TP1" in action:
                 if journal.open_trade and engine.state.active_trade:
                     t = engine.state.active_trade
-                    if "STOPPED" in action:
-                        exit_raw, reason = t.sl_price, "STOPPED"
-                    elif "TP2" in action:
-                        exit_raw, reason = t.tp2_price, "TP2"
+                    _closed = None
+                    _trade_status = getattr(t, "status", "OPEN")
+                    if "TP1" in action and "TP2" not in action and _partial_tp_enabled:
+                        # Phase 3: partial TP — engine already moved SL→entry and set
+                        # status="TP1". Don't close yet; runner continues to TP2 or BE.
+                        self.log.info(
+                            "TP1_PARTIAL: runner live for %s | partial_pnl=%.5f SL→%.5f",
+                            t.id, t.partial_pnl, t.sl_price,
+                        )
                     else:
-                        exit_raw, reason = t.tp1_price, "TP1"
-                    journal.on_trade_closed(
-                        t, exit_raw, reason,
-                        candle, candle_idx, engine.state.atr, spread_half,
-                    )
+                        if "STOPPED" in action:
+                            if _trade_status == "TP1" and _partial_tp_enabled:
+                                # Runner stopped at breakeven; blend exit = 50%@TP1 + 50%@entry
+                                exit_raw = 0.5 * t.tp1_price + 0.5 * t.sl_price
+                                reason = "TP1_BE_STOP"
+                            else:
+                                exit_raw, reason = t.sl_price, "STOPPED"
+                        elif "TP2" in action:
+                            if _trade_status == "TP1" and _partial_tp_enabled:
+                                # Runner reached TP2; blend exit = 50%@TP1 + 50%@TP2
+                                exit_raw = 0.5 * t.tp1_price + 0.5 * t.tp2_price
+                                reason = "TP1_TP2"
+                            else:
+                                exit_raw, reason = t.tp2_price, "TP2"
+                        else:
+                            exit_raw, reason = t.tp1_price, "TP1"
+                        _closed = journal.on_trade_closed(
+                            t, exit_raw, reason,
+                            candle, candle_idx, engine.state.atr, spread_half,
+                        )
+                    if _closed is not None:
+                        self._trade_logger.log_exit(
+                            trade_id         = _closed.trade_id,
+                            pnl_rr_net       = _closed.pnl_rr_net,
+                            exit_reason      = _closed.exit_reason,
+                            duration_candles = _closed.candle_close - _closed.candle_open,
+                            closed_at        = _closed.closed_at,
+                        )
 
             elif action.startswith("RISK_REJECTED"):
                 reason = action.split(":", 1)[1] if ":" in action else "unknown"
@@ -1458,11 +1771,27 @@ class BacktestRunner:
                 state_path = []
 
             elif action == "RESET" and journal.open_trade and engine.state.active_trade:
-                journal.on_trade_closed(
-                    engine.state.active_trade, candle.close,
-                    "RESET_CLOSE", candle, candle_idx,
+                t = engine.state.active_trade
+                _t_status = getattr(t, "status", "OPEN")
+                if _t_status == "TP1" and _partial_tp_enabled:
+                    # Runner alive at RESET: blend exit = 50%@TP1 + 50%@SL (already at trail/BE)
+                    _exit_raw = 0.5 * t.tp1_price + 0.5 * t.sl_price
+                    _reset_reason = "TP1_BE_RESET"
+                else:
+                    _exit_raw = candle.close
+                    _reset_reason = "RESET_CLOSE"
+                _closed = journal.on_trade_closed(
+                    t, _exit_raw, _reset_reason, candle, candle_idx,
                     engine.state.atr, spread_half,
                 )
+                if _closed is not None:
+                    self._trade_logger.log_exit(
+                        trade_id         = _closed.trade_id,
+                        pnl_rr_net       = _closed.pnl_rr_net,
+                        exit_reason      = _closed.exit_reason,
+                        duration_candles = _closed.candle_close - _closed.candle_open,
+                        closed_at        = _closed.closed_at,
+                    )
 
             # ── Event flush ────────────────────────────────────────
             if len(engine.state.event_log) >= self.cfg.event_flush_every:
@@ -1477,11 +1806,19 @@ class BacktestRunner:
         if journal.open_trade and engine.state.active_trade and engine.candle_buffer:
             last = engine.candle_buffer[-1]
             spread_half = last.close * self.cfg.simulated_spread_pct / 2
-            journal.on_trade_closed(
+            _closed = journal.on_trade_closed(
                 engine.state.active_trade, last.close,
                 "BACKTEST_END", last, candle_idx,
                 engine.state.atr, spread_half,
             )
+            if _closed is not None:
+                self._trade_logger.log_exit(
+                    trade_id         = _closed.trade_id,
+                    pnl_rr_net       = _closed.pnl_rr_net,
+                    exit_reason      = _closed.exit_reason,
+                    duration_candles = _closed.candle_close - _closed.candle_open,
+                    closed_at        = _closed.closed_at,
+                )
 
         m = met_eng.compute(journal, cap, candle_idx, state_counts, gap_resets)
 
@@ -1495,6 +1832,9 @@ class BacktestRunner:
                     m.distribution = {"feature_drift": drift_stats}
             except Exception:
                 pass
+
+        # Phase 4: attach hard drift pause count
+        m.hard_drift_pauses = _hard_drift_pauses
 
         paths = writer.write_all(m, journal, flushed_events)
 
@@ -1612,32 +1952,80 @@ def main():
     ap.add_argument("--spread",       type=float, default=None)
     ap.add_argument("--no-slip",      action="store_true", default=False)
     ap.add_argument("--no-gap-reset", action="store_true", default=False)
-    ap.add_argument("--sweep-age",    type=int,   default=20)
-    ap.add_argument("--decay",        type=float, default=0.10)
-    ap.add_argument("--threshold",    type=float, default=0.75)
+    ap.add_argument("--sweep-age",    type=int,   default=None)
+    ap.add_argument("--decay",        type=float, default=None)
+    ap.add_argument("--threshold",    type=float, default=None)
     ap.add_argument("--config", help="JSON config file (not used by CRT backtest)")
+    ap.add_argument("--scorer", choices=["static", "calibrated"], default="calibrated",
+                    help="static = no-op scorer (CRT-only); calibrated = phase-5 GaussianNB gate")
     args = ap.parse_args()
 
-    crt_cfg = CRTConfig(
-        max_sweep_age_candles=args.sweep_age,
-        score_decay_lambda=args.decay,
-        score_threshold=args.threshold,
+    # Collect which CLI flags were explicitly set (for config dump audit trail).
+    _cli_overrides: dict = {}
+
+    # Determine instrument for market routing. Multi-instrument runs use EURUSD as the
+    # Forex baseline; crt_engine JSON values override the base, so numeric params are
+    # correct regardless of which instrument is routed later.
+    _instr_hint = (
+        args.instrument if args.instrument not in ("AUTO", "ALL")
+        else Path(args.csv).stem.upper() if not Path(args.csv).is_dir()
+        else "EURUSD"
     )
+
+    # Load ALL CRTConfig fields from the production JSON (params + crt_engine merged).
+    crt_cfg = load_prod_config_from_registry(PROD_VERSION, _instr_hint)
+
+    # Apply explicit CLI overrides only for flags that were actually passed.
+    _crt_cli: dict = {}
+    if args.sweep_age is not None:
+        _crt_cli["max_sweep_age_candles"] = args.sweep_age
+        _cli_overrides["--sweep-age"] = str(args.sweep_age)
+    if args.decay is not None:
+        _crt_cli["score_decay_lambda"] = args.decay
+        _cli_overrides["--decay"] = str(args.decay)
+    if args.threshold is not None:
+        _crt_cli["score_threshold"] = args.threshold
+        _cli_overrides["--threshold"] = str(args.threshold)
+
+    if _crt_cli:
+        crt_cfg = ConfigBuilder.from_existing(_instr_hint, crt_cfg, extra_overrides=_crt_cli)
+
+    _cli_overrides["--scorer"] = args.scorer
+
     # Load base config from JSON; CLI args override only when explicitly passed
     cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
-    if args.htf         is not None: cfg.htf_candles_per_range = args.htf
-    if args.warmup      is not None: cfg.warmup_candles        = args.warmup
-    if args.capital     is not None: cfg.initial_capital       = args.capital
-    if args.risk_pct    is not None: cfg.risk_pct_per_trade    = args.risk_pct
-    if args.spread      is not None: cfg.simulated_spread_pct  = args.spread
-    if args.no_slip:                  cfg.slippage_enabled      = False
-    if args.no_gap_reset:             cfg.gap_reset_enabled     = False
+    if args.htf         is not None:
+        cfg.htf_candles_per_range = args.htf
+        _cli_overrides["--htf"] = str(args.htf)
+    if args.warmup      is not None:
+        cfg.warmup_candles = args.warmup
+        _cli_overrides["--warmup"] = str(args.warmup)
+    if args.capital     is not None:
+        cfg.initial_capital = args.capital
+        _cli_overrides["--capital"] = str(args.capital)
+    if args.risk_pct    is not None:
+        cfg.risk_pct_per_trade = args.risk_pct
+        _cli_overrides["--risk-pct"] = str(args.risk_pct)
+    if args.spread      is not None:
+        cfg.simulated_spread_pct = args.spread
+        _cli_overrides["--spread"] = str(args.spread)
+    if args.no_slip:
+        cfg.slippage_enabled = False
+        _cli_overrides["--no-slip"] = "true"
+    if args.no_gap_reset:
+        cfg.gap_reset_enabled = False
+        _cli_overrides["--no-gap-reset"] = "true"
+    cfg.scorer_mode = args.scorer
 
     # Optional: additional JSON override file (informational only)
     if args.config:
-        with open(args.config) as f:
-            overrides = json.load(f)
-        safe_print(f"Config overrides loaded from {args.config} (not applied to CRT backtest)")
+        bt_log.warning(
+            "Using overridden config: %s (production version %s ignored)",
+            args.config, PROD_VERSION,
+        )
+        _cli_overrides["--config"] = args.config
+        import config_layer.production_config as _pc
+        _pc.PROD_VERSION = f"CUSTOM:{Path(args.config).name}"
 
     csv_path = Path(args.csv)
 
@@ -1649,7 +2037,7 @@ def main():
         cfg.instrument = args.instrument if args.instrument != "AUTO" else csv_path.stem.upper()
         cfg.pip_size = MultiInstrumentRunner.INSTRUMENT_PIP.get(cfg.instrument, 0.0001)
         loader = CandleLoader(str(csv_path), cfg.instrument)
-        runner = BacktestRunner(cfg, csv_path=str(csv_path))
+        runner = BacktestRunner(cfg, csv_path=str(csv_path), overrides=_cli_overrides)
         runner.run(loader.stream(), loader.count(), args.output)
         
 # ─────────────────────────────────────────────────────────────────────────────

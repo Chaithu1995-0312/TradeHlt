@@ -26,7 +26,7 @@ USAGE
   python auto_tuner.py --csv data/GBPUSD_M15_real.csv --n-iter 200
 
 ASSUMPTIONS
-  - backtest_v2.py and crt_engine_v2.py are in the same directory
+  - backtest_v2.py lives at src/runtime/backtest_v2.py (import as runtime.backtest_v2)
   - Data files: data/{INSTRUMENT}_M15_real.csv  (or _M15.csv)
   - Each backtest run is deterministic (seeded RNGs in BacktestConfig)
   - Fitness function is calibrated for 50+ trade minimum
@@ -71,9 +71,9 @@ from config_layer.config_builder import ConfigBuilder
 
 
 
-# ── Import from backtest_v2 (must be in same directory) ────────────────────
+# ── Import from backtest_v2 (src/runtime/backtest_v2.py via editable install) ─
 try:
-    from backtest_v2 import (
+    from runtime.backtest_v2 import (
         BacktestConfig,
         BacktestRunner,
         CandleLoader,
@@ -94,6 +94,10 @@ logging.basicConfig(
 )
 tuner_log = logging.getLogger("AutoTuner")
 tuner_log.setLevel(logging.INFO)
+
+from config_layer.production_config import PROD_VERSION as _TUNER_PROD_VERSION
+tuner_log.info("Production config version: %s", _TUNER_PROD_VERSION)
+
 LOG_FILE = "results/tuner/live_log.jsonl"
 
 def log_event(data: dict):

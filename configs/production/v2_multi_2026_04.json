@@ -1,12 +1,12 @@
 {
   "version": "v2_multi_2026_04",
   "config_id": "v2_multi_2026_04_candidate_1",
-  "created_at": "2026-04-28T20:27:02.924281",
-  "promoted_at": "2026-04-28T20:27:02.924281",
+  "created_at": "2026-05-06T19:34:01.007073+00:00",
+  "promoted_at": "2026-05-06T19:34:01.007073+00:00",
   "params": {
-    "retest_depth_max": 0.25,
-    "retest_atr_depth_fraction": 0.4,
-    "body_ratio_min": 0.75,
+    "retest_depth_max": 0.15,
+    "retest_atr_depth_fraction": 0.3,
+    "body_ratio_min": 0.65,
     "atr_multiplier_min": 1.0,
     "expansion_atr_min_distance": 0.3
   },
@@ -26,7 +26,7 @@
     "gaussian_impl": "heuristic",
     "convergence_window": 500,
     "rr_fusion": {
-      "enabled": false,
+      "enabled": true,
       "model_path": "models/rr_model.json",
       "threshold": 0.5
     },
@@ -36,30 +36,23 @@
       "range_volatility_threshold": 0.8,
       "breakout_min_score": 0.3,
       "trap_min_score": 0.32,
-      "neutral_min_score": 0.32,
+      "neutral_min_score": 0.45,
       "fusion_min_score": 0.25
     },
     "fusion_compare_evaluate": true,
     "fusion_use_evaluate": false,
-    "ultron_gate_enabled": false
+    "ultron_gate_enabled": false,
+    "zone_min_samples": 50
   },
   "execution_planner": {
-    "min_rr_ratio": 1.5,
-    "atr_mult_breakout_tp": 2.0,
-    "atr_mult_pullback_tp": 1.5,
-    "atr_mult_reversal_tp": 1.0,
-    "atr_mult_sweep_tp": 1.2,
-    "ttl_breakout_sec": 180,
-    "ttl_pullback_sec": 300,
-    "ttl_reversal_sec": 120,
-    "ttl_liq_sweep_sec": 240,
-    "default_sl_atr_mult": 1.0,
+    "ttl_breakout_sec": 300,
+    "ttl_pullback_sec": 420,
+    "ttl_reversal_sec": 180,
+    "ttl_liq_sweep_sec": 300,
     "risk_percent": 0.5,
-    "lookback_candles_sl": 5,
-    "liquidity_lookback": 20,
-    "liquidity_volume_threshold": 1.5,
-    "liquidity_touch_count": 2,
     "reject_unknown_intent": true,
+    "partial_tp_breakeven_enabled": true,
+    "partial_tp_fraction": 0.5,
     "precision_default": 8,
     "default_account_balance": 10000.0,
     "ttl_unknown_sec": 180,
@@ -71,6 +64,24 @@
       "ETHUSD": 2
     }
   },
+  "sl_tp_comparison": {
+    "_comment": "Reference params for legacy SL/TP method \u00e2\u20ac\u201d used ONLY by SLTPComparator, never in live path",
+    "legacy_sl_atr_mult": 1.0,
+    "legacy_tp_atr_mult_breakout": 2.0,
+    "legacy_tp_atr_mult_pullback": 1.5,
+    "legacy_tp_atr_mult_reversal": 1.0,
+    "legacy_tp_atr_mult_sweep": 1.2,
+    "primary_metric": "expectancy_rr",
+    "max_candles_per_trade": 100,
+    "output_path": "results/sl_tp_comparison.json"
+  },
+  "gate_intelligence": {
+    "gate_weight_intent": 0.35,
+    "gate_weight_vol": 0.2,
+    "gate_weight_liquidity": 0.2,
+    "gate_weight_structure": 0.25,
+    "gate_approval_threshold": 0.55
+  },
   "ultron_risk_gate": {
     "disabled": false,
     "max_risk_per_trade_pct": 1.0,
@@ -79,9 +90,9 @@
     "max_daily_loss_pct": 3.0,
     "min_rr_ratio": 1.5,
     "regime_factors": {
-      "trend":     1.0,
-      "range":     0.8,
-      "neutral":   0.6,
+      "trend": 1.0,
+      "range": 0.8,
+      "neutral": 0.6,
       "uncertain": 0.5
     }
   },
@@ -91,9 +102,9 @@
     "shadow_output_csv": "results/shadow_trades.csv"
   },
   "fusion_engine": {
-    "weight_crt": 0.3,
-    "weight_gaussian": 0.25,
-    "weight_zone_gate": 0.25,
+    "weight_crt": 0.4,
+    "weight_gaussian": 0.2,
+    "weight_zone_gate": 0.2,
     "weight_rr": 0.2,
     "conflict_resolution_policy": "conservative",
     "gaussian_weight": 0.6,
@@ -103,51 +114,40 @@
     "llm_upper_band": 0.65,
     "enable_llm": true,
     "tier_full": 0.75,
-    "tier_half": 0.60,
-    "tier_quarter": 0.50
+    "tier_half": 0.6,
+    "tier_quarter": 0.5
   },
   "decision_engine": {
     "score_threshold": 0.45,
     "p_win_threshold": 0.4,
-    "rr_threshold": 1.2,
-    "weak_component_threshold": 0.55,
-    "weak_link_weight": 0.30
+    "rr_threshold": 1.5,
+    "weak_component_threshold": 0.4,
+    "weak_link_weight": 0.3
   },
   "validation_summary": {
     "config_id": "v2_multi_2026_04_candidate_1",
-    "final_score": 0.5585,
-    "mean_score": 0.5751,
-    "consistency_penalty": 0.0166,
-    "score_std_dev": 0.0332,
-    "total_trades": 65,
-    "max_drawdown": 0.1281,
+    "final_score": 0.5966,
+    "mean_score": 0.5966,
+    "consistency_penalty": 0.0,
+    "score_std_dev": 0.0,
+    "total_trades": 36,
+    "max_drawdown": 0.0806,
     "instruments": [
-      "EURUSD",
-      "GBPUSD"
+      "EURUSD"
     ],
     "per_instrument": {
       "EURUSD": {
-        "score": 0.6083,
-        "trades": 34,
-        "win_rate": 0.5882,
-        "expectancy_rr": 0.1398,
-        "max_drawdown": 0.1281,
-        "total_pnl_rr": 4.7532,
-        "error": null
-      },
-      "GBPUSD": {
-        "score": 0.5419,
-        "trades": 31,
-        "win_rate": 0.4516,
-        "expectancy_rr": -0.0796,
-        "max_drawdown": 0.1251,
-        "total_pnl_rr": -2.4667,
+        "score": 0.5966,
+        "trades": 36,
+        "win_rate": 0.5556,
+        "expectancy_rr": -0.0034,
+        "max_drawdown": 0.0806,
+        "total_pnl_rr": -0.1218,
         "error": null
       }
     },
     "warnings": [
-      "EURUSD: low trade count (34) -- sample may be marginal.",
-      "GBPUSD: low trade count (31) -- sample may be marginal."
+      "EURUSD: low trade count (36) -- sample may be marginal."
     ]
   },
   "crt_engine": {
@@ -161,61 +161,94 @@
     "sl_atr_buffer": 0.2,
     "tp1_atr_multiplier": 1.0,
     "tp2_atr_multiplier": 2.0,
+    "tp1_atr_multiplier_breakout": 1.5,
+    "tp1_atr_multiplier_pullback": 0.8,
+    "tp1_atr_multiplier_liq_sweep": 1.2,
+    "tp1_atr_multiplier_reversal": 1.0,
     "bitnet_main_threshold": 0.55,
     "news_blackout_minutes": 15,
-    "retrace_reset_pct": 0.50,
-    "conf_alpha": 0.70,
-    "conf_beta": 0.30,
-    "conf_weights": [0.35, 0.35, 0.15, 0.15],
-    "conf_floor": 0.20,
-    "weak_link_weight": 0.30,
+    "retrace_reset_pct": 0.5,
+    "conf_alpha": 0.7,
+    "conf_beta": 0.3,
+    "conf_weights": [
+      0.35,
+      0.35,
+      0.15,
+      0.15
+    ],
+    "conf_floor": 0.2,
+    "weak_link_weight": 0.3,
     "ema_fast": 2,
     "ema_slow": 5,
     "tier_1_threshold": 0.75,
-    "tier_2_threshold": 0.30,
+    "tier_2_threshold": 0.3,
     "soft_conf_max_candles": 3,
-    "sizing_bands": [[0.75, 0.010], [0.55, 0.005]],
+    "sizing_bands": [
+      [
+        0.75,
+        0.01
+      ],
+      [
+        0.55,
+        0.005
+      ]
+    ],
     "session_windows": {
-      "LONDON":  ["07:00", "10:00"],
-      "NEWYORK": ["13:00", "16:00"],
-      "ASIA":    ["00:00", "03:00"]
-    }
+      "LONDON": [
+        "07:00",
+        "10:00"
+      ],
+      "NEWYORK": [
+        "13:00",
+        "16:00"
+      ],
+      "ASIA": [
+        "00:00",
+        "03:00"
+      ]
+    },
+    "max_displacement_strength": 2.0
   },
   "rr_model": {
     "ridge_alpha": 10.0,
-    "gnb_var_smoothing": 1e-9,
+    "gnb_var_smoothing": 1e-09,
     "drift_threshold": 1.5,
     "mahal_clip": 500.0,
     "confidence_bypass_threshold": 0.3,
     "min_samples": 20,
     "dataset_min_samples": 20,
-    "score_weights": {"gaussian": 0.5, "ml": 0.3, "confidence": 0.2},
+    "score_weights": {
+      "gaussian": 0.5,
+      "ml": 0.3,
+      "confidence": 0.2
+    },
     "model_path": "models/rr_model.json",
     "dataset_path": "models/rr_dataset.json"
   },
   "gaussian_scorer": {
     "retest_mu": 0.237,
-    "retest_s2": 0.040,
+    "retest_s2": 0.04,
     "body_mu": 0.847,
     "body_s2": 0.021,
     "disp_mu": 2.177,
     "disp_s2": 1.196,
     "sigmoid_k": 4.5,
-    "sigmoid_x0": 0.50,
-    "execute_p": 0.50,
+    "sigmoid_x0": 0.5,
+    "execute_p": 0.5,
     "decay_lambda": 0.0
   },
   "training": {
-    "min_records_to_train": 200,
-    "min_records_recommend": 500
+    "min_records_to_train": 10,
+    "min_records_recommend": 10
   },
   "phase5_calibration": {
-    "val_ratio":        0.30,
-    "min_val_samples":  30,
-    "min_corr":         0.10,
-    "max_cal_error":    0.25,
-    "cv_corr_std_max":  0.05,
-    "cv_n_folds":       3
+    "val_ratio": 0.3,
+    "min_val_samples": 5,
+    "min_corr": -1.0,
+    "max_cal_error": 0.25,
+    "cv_corr_std_max": 0.05,
+    "cv_n_folds": 2,
+    "require_cv_stable": false
   },
   "tuner": {
     "trade_count_floor": 3,
@@ -230,7 +263,10 @@
     "llm_gate": {
       "base_score_trigger": 0.1,
       "hard_reject_threshold": 0.2,
-      "blend_weights": [0.7, 0.3]
+      "blend_weights": [
+        0.7,
+        0.3
+      ]
     },
     "phase2_min_iter": 20
   },
@@ -261,7 +297,7 @@
     "min_win_rate": 0.35,
     "min_expectancy": -0.5,
     "score_threshold": 0.15,
-    "max_score_std_dev": 0.30,
+    "max_score_std_dev": 0.3,
     "trade_count_target": 50,
     "warmup_candles": 30,
     "fitness_weights": {
@@ -275,7 +311,7 @@
     "htf_candles_per_range": 4,
     "warmup_candles": 30,
     "slippage_enabled": true,
-    "slippage_atr_fraction": 0.10,
+    "slippage_atr_fraction": 0.1,
     "slippage_seed": 42,
     "simulated_spread_pct": 0.0002,
     "initial_capital": 100000.0,
@@ -288,18 +324,25 @@
   "feature_monitor": {
     "window_size": 500,
     "hard_drift_z": 3.0,
-    "soft_drift_z": 2.5
+    "soft_drift_z": 2.5,
+    "drift_regime_pause_enabled": true,
+    "drift_cooldown_candles": 10
   },
   "feature_store": {
     "max_history": 1000
   },
-  "config_hash": "769a30629b3c328e0c8968f8375b8939f2b72b9c3b74e25c2d120ca03ac1da34",
-  "notes": "April tuner run, 3-month window. Patched: merge-into-base applied retroactively (v2_multi_2026_04 was originally sparse; all engine sections now inherited from v1_multi_2026_03 base).",
+  "notes": "April tuner run, 3-month window",
   "schema_version": "1.3",
   "inout": {
     "scanner": {
-      "allowed_symbols": ["BTCUSDT", "ETHUSDT"],
-      "scan_timeframes": ["M1", "M5"],
+      "allowed_symbols": [
+        "BTCUSDT",
+        "ETHUSDT"
+      ],
+      "scan_timeframes": [
+        "M1",
+        "M5"
+      ],
       "candle_expansion_atr_mult": 1.8,
       "volume_spike_mult": 2.0,
       "volume_lookback": 20,
@@ -358,5 +401,136 @@
       "audit_log_path": "logs/inout_audit.jsonl",
       "log_level": "INFO"
     }
-  }
+  },
+  "capital_management": {
+    "total_capital_inr": 100000,
+    "max_risk_per_trade_pct": 0.25,
+    "max_risk_per_trade_inr": 25000,
+    "max_monthly_drawdown_pct": 0.25,
+    "max_monthly_drawdown_inr": 25000,
+    "monthly_drawdown_warn_inr": 20000,
+    "kill_switch_daily_loss_inr": 10000,
+    "usd_to_inr_rate": 84.0,
+    "pip_value_per_lot": {
+      "EURUSD": 10.0,
+      "GBPUSD": 10.0,
+      "USDJPY": 9.1,
+      "USDCHF": 10.0,
+      "AUDUSD": 10.0,
+      "USDCAD": 7.7,
+      "NZDUSD": 10.0
+    }
+  },
+  "data_ingestion": {
+    "db_url": "postgresql://localhost/tradelatest",
+    "schema": "public",
+    "ohlcv_table": "ohlcv_data",
+    "pairs": [
+      "EURUSD",
+      "GBPUSD",
+      "USDJPY",
+      "USDCHF",
+      "AUDUSD",
+      "USDCAD",
+      "NZDUSD"
+    ],
+    "timeframes": [
+      "M1",
+      "M5",
+      "M15",
+      "H1",
+      "H4",
+      "D1"
+    ],
+    "mt5_enabled": false,
+    "csv_fallback_dir": "data",
+    "batch_size": 1000,
+    "connection_timeout_sec": 10
+  },
+  "strategy_engine": {
+    "s01_crt": {
+      "min_score": 0.65,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 2.0,
+      "confidence_scale": 1.0
+    },
+    "s02_mean_reversion": {
+      "rsi_oversold": 30.0,
+      "rsi_overbought": 70.0,
+      "bb_proximity_pct": 0.002,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 1.5,
+      "min_confidence": 0.55
+    },
+    "s03_breakout": {
+      "breakout_atr_mult": 0.5,
+      "min_volume_ratio": 1.3,
+      "sl_atr_mult": 1.0,
+      "tp_rr_ratio": 2.5,
+      "min_confidence": 0.55
+    },
+    "s09_pattern_recog": {
+      "hammer_wick_mult": 2.0,
+      "engulf_body_mult": 1.1,
+      "sl_atr_mult": 1.2,
+      "tp_rr_ratio": 1.8,
+      "min_confidence": 0.5
+    },
+    "s10_trap": {
+      "trap_min_disp_strength": 0.6,
+      "reversal_body_ratio": 0.5,
+      "sl_atr_mult": 1.0,
+      "tp_rr_ratio": 2.0,
+      "min_confidence": 0.6,
+      "max_candles_since_sweep": 3
+    },
+    "s04_stat_arb": {
+      "z_entry_threshold": 1.5,
+      "z_exit_threshold": 0.5,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 1.5,
+      "min_confidence": 0.55,
+      "trend_filter": true
+    },
+    "s05_grid": {
+      "n_levels": 5,
+      "proximity_atr_mult": 0.4,
+      "sl_atr_mult": 0.8,
+      "tp_rr_ratio": 1.2,
+      "min_confidence": 0.5,
+      "min_range_atr": 3.0
+    },
+    "s06_scalping": {
+      "macd_hist_min": 2e-05,
+      "momentum_min": 0.3,
+      "sl_atr_mult": 0.5,
+      "tp_rr_ratio": 1.5,
+      "min_confidence": 0.55,
+      "session_hours_start": 7,
+      "session_hours_end": 17,
+      "max_spread_pct": 0.0003
+    },
+    "s07_news_sentiment": {
+      "news_volatility_ratio": 2.0,
+      "max_spread_pct": 0.0005,
+      "zone_strength_min": 0.55,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 1.5,
+      "min_confidence": 0.55
+    },
+    "s08_ml_ensemble": {
+      "rsi_weight": 0.2,
+      "momentum_weight": 0.25,
+      "macd_weight": 0.2,
+      "volume_weight": 0.15,
+      "trend_weight": 0.2,
+      "min_score": 0.45,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 2.0,
+      "min_confidence": 0.58,
+      "bitnet_weight": 0.4,
+      "feature_weight": 0.6
+    }
+  },
+  "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613"
 }

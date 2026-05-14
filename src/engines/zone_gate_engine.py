@@ -200,17 +200,8 @@ def run_zone_gate_engine(
     dict with keys: score, passed, vector, valid
     Additional keys when force_pass active: force_pass_override, real_passed
     """
-    # Step 1: Canonical input validation – fail closed
-    try:
-        features = filter_canonical_inputs(raw_features)
-    except (ValueError, TypeError, AssertionError) as e:
-        logger.error("ZoneGate: canonical input error – %s. Blocking.", e)
-        _ZONE_COUNTERS["total_block"] += 1
-        reason = "canonical_error"
-        _ZONE_COUNTERS["block_reason_dist"][reason] = (
-            _ZONE_COUNTERS["block_reason_dist"].get(reason, 0) + 1
-        )
-        return {"score": 0.0, "passed": False, "vector": [], "valid": False}
+    # Step 1: Canonical input validation – fail fast, let ValueError propagate
+    features = filter_canonical_inputs(raw_features)
 
     # Step 2: Registry validation – fail‑open (neutral) on any error
     if zone_registry is not None:

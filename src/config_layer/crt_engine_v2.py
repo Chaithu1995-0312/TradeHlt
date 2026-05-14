@@ -284,6 +284,14 @@ class CRTConfig:
     # [PATCH 5] Adaptive retest depth
     retest_atr_depth_fraction: float = 0.50   # adaptive ceiling = 0.5 * ATR
 
+    # [PATCH 7] Displacement strength ceiling
+    # Displacement is measured as wick_size / ATR at the displacement candle.
+    # High values (>2.0) indicate an overextended impulse move — the market has
+    # already exhausted momentum, so a subsequent retest is unlikely to have
+    # enough fuel to continue.  Empirical finding from EURUSD M15 backtest:
+    # winners had cached_disp ≤ 1.95, losers ranged 1.33–6.10.
+    max_displacement_strength: float = 2.0
+
     # [PATCH 6] Time-decay scoring
     score_decay_lambda:    float = 0.05    # decay rate per candle since retest
 
@@ -296,6 +304,11 @@ class CRTConfig:
     sl_atr_buffer: float = 0.2           # SL buffer
     tp1_atr_multiplier: float = 1.0
     tp2_atr_multiplier: float = 2.0
+    # Per-intent TP1 multipliers (override tp1_atr_multiplier when intent is known)
+    tp1_atr_multiplier_breakout:  float = 1.5
+    tp1_atr_multiplier_pullback:  float = 0.8
+    tp1_atr_multiplier_liq_sweep: float = 1.2
+    tp1_atr_multiplier_reversal:  float = 1.0
     bitnet_main_threshold: float = 0.55
     use_bitnet: bool = False
 
@@ -305,6 +318,11 @@ class CRTConfig:
         "NEWYORK": (time(13, 0), time(16, 0)),
         "ASIA":    (time(0,  0), time(3,  0)),
     })
+
+    # Sessions in which trade signals are allowed to fire.
+    # Mirrors engine_runner.allowed_sessions; populated from JSON via config_builder.
+    # UPPERCASE to match session_windows keys.
+    allowed_sessions: tuple = ("LONDON", "NEWYORK", "OVERLAP")
 
     # Reset triggers
     retrace_reset_pct:   float = 0.50
@@ -679,6 +697,22 @@ class StateMachine:
                 f"(static={static_ceiling:.5f} atr={atr_ceiling:.5f})"
             )
             return False
+
+        # ── [PATCH 7] Displacement strength ceiling ───────────────────────────
+        # Check BEFORE committing retest state (cheap early exit).
+        # disp.wick_size / ATR > max_displacement_strength → overextended move.
+        # Cache the value so it's available even if the guard fires.
+        _disp_check = state.displacement_candle
+        _atr_check  = state.atr
+        if _disp_check is not None and _atr_check > 0:
+            _disp_strength = _disp_check.wick_size / _atr_check
+            if _disp_strength > self.config.max_displacement_strength:
+                self.log.debug(
+                    f"Retest REJECTED [PATCH 7]: disp_strength={_disp_strength:.3f} > "
+                    f"max_displacement_strength={self.config.max_displacement_strength:.3f} "
+                    f"— overextended impulse, retest unlikely to sustain"
+                )
+                return False
 
         state.retest_candle       = candle
         state.retest_candle_index = state.current_candle_index  # [PATCH 6]
@@ -1137,6 +1171,22 @@ class ExecutionEngine:
         raw = f"{instrument}|{ts_norm}|{direction}|{round(entry, 5):.5f}"
         return "CRT-" + hashlib.md5(raw.encode("utf-8")).hexdigest()[:16]
 
+    @staticmethod
+    def _derive_trade_intent(features: dict) -> str:
+        """Classify trade intent from cached features for TP multiplier selection."""
+        if features.get("sweep_detected") or features.get("double_sweep"):
+            return "liq_sweep"
+        rd  = float(features.get("retest_depth",         0.0))
+        csr = int(  features.get("candles_since_retest", 99))
+        mom = float(features.get("momentum_score",       0.0))
+        if 0.3 <= rd <= 0.7 and csr <= 5 and mom > 0:
+            return "pullback"
+        body = float(features.get("body_ratio",    0.0))
+        disp = float(features.get("disp_strength", 0.0))
+        if body > 0.6 and disp > 1.5:
+            return "breakout"
+        return "reversal"
+
     def build_trade(
         self, state: EngineState, risk_engine: Optional[UltronRiskEngine] = None
     ) -> Optional[Trade]:
@@ -1191,14 +1241,18 @@ class ExecutionEngine:
             return None
 
         # [Phase-2] Anchor TP1 and TP2 to actual risk distance (R-multiples)
-        # TP1 = entry ± 1R, TP2 = entry ± 2R — exact, instrument-agnostic.
-        risk_dist = abs(entry - sl)
+        # TP1 uses per-intent multiplier; TP2 uses tp2_atr_multiplier (default 2R).
+        risk_dist  = abs(entry - sl)
+        _intent    = self._derive_trade_intent(state.cached_features or {})
+        _tp1_key   = f"tp1_atr_multiplier_{_intent}"
+        _tp1_mult  = getattr(self.config, _tp1_key, self.config.tp1_atr_multiplier)
+        _tp2_mult  = self.config.tp2_atr_multiplier
         if direction == Direction.LONG:
-            tp1 = entry + 1.0 * risk_dist
-            tp2 = entry + 2.0 * risk_dist
+            tp1 = entry + _tp1_mult * risk_dist
+            tp2 = entry + _tp2_mult * risk_dist
         else:
-            tp1 = entry - 1.0 * risk_dist
-            tp2 = entry - 2.0 * risk_dist
+            tp1 = entry - _tp1_mult * risk_dist
+            tp2 = entry - _tp2_mult * risk_dist
 
         # [PATCH: Proportional sizing — priority order]
         # 1. Gaussian scorer already wrote risk_pct onto the Trade object via runner
@@ -1290,12 +1344,13 @@ class ExecutionEngine:
             # [P2] Partial close: book 50% of the TP1 move
             trade.partial_pnl = 0.5 * pnl_direction * (trade.tp1_price - trade.entry_price)
             trade.pnl         = trade.partial_pnl
-            # [P2] Shift SL to breakeven on the remaining 50% runner
-            trade.sl_price    = trade.entry_price
+            # [Phase-A.2] Half-way trail-SL on the runner: locks in 0.5R minimum
+            # instead of plain breakeven. SL = entry + 0.5 * (TP1 − entry).
+            trade.sl_price    = trade.entry_price + 0.5 * (trade.tp1_price - trade.entry_price)
             trade.status      = "TP1"
             self.log.info(
                 f"Trade TP1 HIT | {trade.id} | "
-                f"partial_pnl={trade.partial_pnl:.5f} SL→BE={trade.entry_price:.5f}"
+                f"partial_pnl={trade.partial_pnl:.5f} SL→trail={trade.sl_price:.5f}"
             )
             return "TP1"
 
@@ -1319,6 +1374,12 @@ class ResetLogic:
         current_htf_id: str,
     ) -> tuple[bool, str]:
         if state.active_range is None:
+            return False, ""
+
+        # [Phase-A.3] Protect active trades from reset — let SL/TP/TTL decide
+        # the exit. Without this, retrace / HTF-flip / extension kills trades
+        # 1 candle after open, before TP1 or SL can fire.
+        if state.active_trade and state.active_trade.status in ("OPEN", "TP1"):
             return False, ""
 
         if current_htf_id != state.active_range.htf_candle_id:
@@ -1552,6 +1613,30 @@ class CRTEngine:
                     # ── Override final score with fusion S for downstream sizing ──
                     if self.state.risk_score:
                         self.state.risk_score.score_override = final_S
+
+                    # ── Session filter (mirrors engine_runner.allowed_sessions) ──
+                    # Skip trade open if candle's session is not in the allowed set.
+                    # Live mode would reject anyway via adapter_engine; doing it here
+                    # avoids burning a CRT setup on a session that won't trade.
+                    _ts_time = candle.timestamp.time()
+                    _sess_name = "OFF_SESSION"
+                    for _name, (_start, _end) in self.config.session_windows.items():
+                        if _start <= _ts_time <= _end:
+                            _sess_name = _name
+                            break
+                    if _sess_name not in self.config.allowed_sessions:
+                        self.ev_log.record(
+                            "FILTER_REJECTED", candle,
+                            reason=f"off_session:{_sess_name}",
+                            metadata={"session_name": _sess_name},
+                        )
+                        self.sm.reset_to_range(
+                            self.state, "off_session_filter",
+                            candle, self.ev_log,
+                        )
+                        action["action"] = "FILTER_REJECTED"
+                        action["state_after"] = self.state.current_state.name
+                        return action
 
                     self.sm.try_retest_to_execution(self.state, candle, self.ev_log)
                     trade = self.executor.build_trade(self.state, self.risk)

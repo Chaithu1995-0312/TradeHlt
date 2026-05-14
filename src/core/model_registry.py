@@ -432,6 +432,19 @@ class GaussianModelRegistry:
             new_corr    = new_metrics.get("corr_expected_rr", 0.0)
             new_cal     = new_metrics.get("calibration_error", 1.0)
 
+            # GAP-3 fix: absolute quality floor — blocks ALL promotions when corr < 0.
+            # A negative-corr model performs worse than random; never deploy regardless
+            # of force=True, first-deployment path, or regression-guard bypass.
+            if new_corr < 0.0:
+                reason = (
+                    f"Gaussian promotion BLOCKED (GAP-3 absolute floor): {version} "
+                    f"corr={new_corr:+.4f} < 0.0 — model degrades performance. "
+                    f"Re-train with corrected data or features. "
+                    f"force=True does NOT bypass this guard."
+                )
+                log.error(reason)
+                return False, reason
+
             # Derive current_active from registry scan (single source of truth inside lock)
             active_versions = [k for k, v in reg.items() if v.get("active", False)]
             current_active  = active_versions[0] if active_versions else None
@@ -509,11 +522,473 @@ class GaussianModelRegistry:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# DYNAMIC GAUSSIAN SCORER LOADER
+#
+# Replaces the hardcoded _P5_PARAMS / CRTCalibratedScorer pattern that required
+# editing backtest_v2.py for every retrain. Runtime modules call
+# load_active_gaussian_scorer() and get a ready-to-use scorer object whose
+# .compute(features, candle_idx) signature matches CRTCalibratedScorer.
+# ─────────────────────────────────────────────────────────────────────────────
+
+import math as _math
+
+# Direction-mirroring constants (must match phase5_calibration._MIRROR_*).
+# Applied at inference time for short trades when the model was trained in long perspective.
+_GMIRROR_NEGATE: frozenset = frozenset({
+    "ema_spread", "trend_bias", "trend_strength", "momentum_score",
+    "rsi_14", "macd_line", "macd_signal", "macd_hist",
+    "break_of_structure", "liquidity_sweep",
+})
+_GMIRROR_SWAP: list = [("higher_high", "lower_low"), ("swing_high", "swing_low")]
+
+
+def _mirror_features_for_short(x: list, feature_order) -> list:
+    """Mirror a 35-dim feature vector from short perspective to long perspective."""
+    idx = {name: i for i, name in enumerate(feature_order)}
+    result = list(x)
+    for fname in _GMIRROR_NEGATE:
+        i = idx.get(fname)
+        if i is not None:
+            result[i] = -result[i]
+    for fa, fb in _GMIRROR_SWAP:
+        ia, ib = idx.get(fa), idx.get(fb)
+        if ia is not None and ib is not None:
+            result[ia], result[ib] = result[ib], result[ia]
+    return result
+
+
+class GaussianScorer:
+    """Calibrated GaussianNB scorer loaded from a JSON params bundle.
+
+    Params shape matches what phase5_calibration.py emits in
+    `models/gaussian_{version}.json`:
+      {schema_version, schema_checksum, feature_names, n_features, n_classes,
+       class_priors, means, vars, rr_weights, scaler_mean, scaler_std}
+    """
+
+    def __init__(self, params: dict, version: Optional[str] = None) -> None:
+        self.version       = version
+        self._n_features   = int(params["n_features"])
+        self._n_classes    = int(params["n_classes"])
+        self._priors       = params["class_priors"]
+        self._means        = params["means"]
+        self._vars         = params["vars"]
+        self._rr_weights   = params["rr_weights"]
+        self._scaler_mean  = params["scaler_mean"]
+        self._scaler_std   = params["scaler_std"]
+
+    @classmethod
+    def from_json(cls, path: Path, version: Optional[str] = None) -> "GaussianScorer":
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        # save_gaussian_model() writes nested {model:{...}, scaler:{mean,std}}
+        if "model" in raw and "scaler" in raw:
+            params = dict(raw["model"])
+            params["scaler_mean"] = raw["scaler"]["mean"]
+            params["scaler_std"] = raw["scaler"]["std"]
+        else:
+            params = raw  # legacy flat format
+        return cls(params, version=version)
+
+    def _scale(self, x):
+        return [(x[i] - self._scaler_mean[i]) / self._scaler_std[i]
+                for i in range(self._n_features)]
+
+    def _predict_proba(self, xs):
+        lp = []
+        for c in range(self._n_classes):
+            v = _math.log(self._priors[c] + 1e-300)
+            for f in range(self._n_features):
+                mu, va = self._means[c][f], self._vars[c][f]
+                v -= 0.5 * _math.log(2 * _math.pi * va) + (xs[f] - mu) ** 2 / (2 * va)
+            lp.append(v)
+        mx = max(lp)
+        ex = [_math.exp(v - mx) for v in lp]
+        t  = sum(ex)
+        return [e / t for e in ex]
+
+    def compute(self, features, candle_idx, direction: str = "long"):
+        if not features:
+            return None
+        try:
+            from features.feature_pipeline import build_feature_vector as _b
+            from features.feature_schema import CANONICAL_FEATURE_ORDER as _CFO
+            x  = _b(features)
+            if direction == "short":
+                x = _mirror_features_for_short(x, _CFO)
+            p  = self._predict_proba(self._scale(x))
+            er = sum(w * q for w, q in zip(self._rr_weights, p))
+            sc = min(1.0, max(0.0, er / (max(self._rr_weights) or 1.0)))
+            return {
+                "score":       round(sc, 4),
+                "p_win":       round(p[2] + p[3], 4),
+                "p_loss":      round(p[0], 4),
+                "p_weak":      round(p[1], 4),
+                "p_mid":       round(p[2], 4),
+                "p_strong":    round(p[3], 4),
+                "expected_rr": round(er, 4),
+            }
+        except Exception:
+            return None
+
+
+class NoOpScorer:
+    """Fallback scorer used when no active gaussian model is on disk.
+
+    Mirrors the existing default behaviour of CRTGaussianScorer.compute() —
+    returns None so downstream gates treat the score as neutral.
+    """
+
+    def __init__(self, reason: str = "no active gaussian model") -> None:
+        self.reason = reason
+        log.warning("NoOpScorer active (%s) — gaussian gating disabled.", reason)
+
+    def compute(self, features, candle_idx, direction: str = "long"):
+        return None
+
+
+def load_active_gaussian_scorer(models_dir: Path = MODELS_DIR):
+    """Return the active gaussian scorer or a NoOpScorer fallback.
+
+    Resolution order for the model file:
+      1. registry entry's `model_file` field (if present and exists)
+      2. convention: `models/gaussian_{version}.json`
+    """
+    version = get_active_gaussian()
+    if version is None:
+        return NoOpScorer("no active gaussian registered")
+
+    reg = _gaussian_registry._load()
+    entry = reg.get(version, {})
+    candidate_path: Optional[Path] = None
+
+    declared = entry.get("model_file")
+    if declared:
+        p = Path(declared)
+        if p.exists():
+            candidate_path = p
+
+    if candidate_path is None:
+        p = models_dir / f"gaussian_{version}.json"
+        if p.exists():
+            candidate_path = p
+
+    if candidate_path is None:
+        return NoOpScorer(f"active gaussian {version} not on disk")
+
+    try:
+        scorer = GaussianScorer.from_json(candidate_path, version=version)
+        log.info("Active gaussian loaded: %s (%s)", version, candidate_path)
+        return scorer
+    except Exception as e:
+        log.warning("Gaussian load failed for %s (%s): %s", version, candidate_path, e)
+        return NoOpScorer(f"load failed: {e}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ZONE GATE REGISTRY  (versioned, never overwrites)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ZoneGateRegistry:
+    """
+    Versioned registry for Zone Gate model files.
+
+    Each entry stores:
+      {version, model_file, n_zones, n_clusters_requested, feature_order,
+       trained_at, active}
+
+    On promote(): sets active=True for the target version and writes the
+    versioned file content to the canonical zone_registry.json path so that
+    existing engine_runner / runtime code continues reading from config-driven
+    path without changes.
+    """
+
+    def __init__(self, models_dir: Path = MODELS_DIR) -> None:
+        self.dir      = models_dir
+        self.reg_path = models_dir / "zone_gate_registry.json"
+        self.dir.mkdir(parents=True, exist_ok=True)
+
+    def _load(self) -> dict:
+        if not self.reg_path.exists():
+            return {}
+        try:
+            return json.loads(self.reg_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            log.warning("ZoneGateRegistry load failed: %s", e)
+            return {}
+
+    def _save(self, reg: dict) -> None:
+        _assert_single_active(reg, active_key="active")
+        _save_atomic(self.reg_path, reg)
+
+    def register(
+        self,
+        version: str,
+        model_file: str,
+        n_zones: int,
+        n_clusters_requested: int,
+        feature_order: list,
+    ) -> dict:
+        reg = self._load()
+        if version in reg:
+            log.warning("ZoneGate version %s already registered — skipping", version)
+            return reg[version]
+        entry = {
+            "version":              version,
+            "model_file":           model_file,
+            "n_zones":              n_zones,
+            "n_clusters_requested": n_clusters_requested,
+            "feature_order":        feature_order,
+            "trained_at":           time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "active":               False,
+        }
+        reg[version] = entry
+        self._save(reg)
+        log.info("ZoneGateRegistry | registered %s (%d zones)", version, n_zones)
+        return entry
+
+    def promote(self, version: str) -> tuple[bool, str]:
+        lock_path = self.reg_path.with_suffix(".lock")
+        with _PROMOTE_LOCK, _file_lock(lock_path):
+            reg = self._load()
+            if version not in reg:
+                return False, f"ZoneGate version {version} not in registry"
+            for k in reg:
+                reg[k]["active"] = False
+            reg[version]["active"] = True
+            self._save(reg)
+            reason = f"ZoneGate promoted: {version}"
+            log.info(reason)
+            return True, reason
+
+    def get_active(self) -> Optional[str]:
+        reg = self._load()
+        for v, entry in reg.items():
+            if entry.get("active", False):
+                return v
+        return None
+
+    def get_active_entry(self) -> Optional[dict]:
+        reg = self._load()
+        for entry in reg.values():
+            if entry.get("active", False):
+                return entry
+        return None
+
+    def list_versions(self) -> list[dict]:
+        reg = self._load()
+        return sorted(reg.values(), key=lambda x: x.get("trained_at", ""), reverse=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RR MODEL REGISTRY  (versioned, never overwrites)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class RRModelRegistry:
+    """
+    Versioned registry for RR dataset + model files.
+
+    Dataset and model may be registered separately (build-dataset → train-model
+    are separate CLI commands). Both share the same version key so the registry
+    entry grows from {dataset_file} → {dataset_file, model_file} as training progresses.
+    """
+
+    def __init__(self, models_dir: Path = MODELS_DIR) -> None:
+        self.dir      = models_dir
+        self.reg_path = models_dir / "rr_registry.json"
+        self.dir.mkdir(parents=True, exist_ok=True)
+
+    def _load(self) -> dict:
+        if not self.reg_path.exists():
+            return {}
+        try:
+            return json.loads(self.reg_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            log.warning("RRModelRegistry load failed: %s", e)
+            return {}
+
+    def _save(self, reg: dict) -> None:
+        _assert_single_active(reg, active_key="active")
+        _save_atomic(self.reg_path, reg)
+
+    def register_dataset(
+        self,
+        version: str,
+        dataset_file: str,
+        n_samples: int,
+        n_features: int,
+    ) -> dict:
+        """Register or update a dataset-only entry (model may be trained later)."""
+        reg     = self._load()
+        existing = reg.get(version, {})
+        entry = {
+            "version":      version,
+            "dataset_file": dataset_file,
+            "model_file":   existing.get("model_file", None),
+            "model_exists": bool(existing.get("model_file")),
+            "n_samples":    n_samples,
+            "n_features":   n_features,
+            "metrics":      existing.get("metrics", {}),
+            "trained_at":   existing.get(
+                "trained_at", time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            ),
+            "active":       existing.get("active", False),
+        }
+        reg[version] = entry
+        self._save(reg)
+        log.info("RRRegistry | registered dataset %s (%d samples)", version, n_samples)
+        return entry
+
+    def register_model(
+        self,
+        version: str,
+        model_file: str,
+        metrics: dict,
+    ) -> dict:
+        """Update (or create) a registry entry with the trained model path + metrics."""
+        reg = self._load()
+        entry = reg.get(version, {
+            "version":      version,
+            "dataset_file": None,
+            "n_samples":    0,
+            "n_features":   35,
+            "trained_at":   time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "active":       False,
+        })
+        entry["model_file"]   = model_file
+        entry["model_exists"] = True
+        entry["metrics"]      = metrics
+        reg[version] = entry
+        self._save(reg)
+        log.info("RRRegistry | registered model %s", version)
+        return entry
+
+    def promote(self, version: str) -> tuple[bool, str]:
+        lock_path = self.reg_path.with_suffix(".lock")
+        with _PROMOTE_LOCK, _file_lock(lock_path):
+            reg = self._load()
+            if version not in reg:
+                return False, f"RR version {version} not in registry"
+            for k in reg:
+                reg[k]["active"] = False
+            reg[version]["active"] = True
+            self._save(reg)
+            reason = f"RR promoted: {version}"
+            log.info(reason)
+            return True, reason
+
+    def get_active(self) -> Optional[str]:
+        reg = self._load()
+        for v, entry in reg.items():
+            if entry.get("active", False):
+                return v
+        return None
+
+    def get_active_entry(self) -> Optional[dict]:
+        reg = self._load()
+        for entry in reg.values():
+            if entry.get("active", False):
+                return entry
+        return None
+
+    def list_versions(self) -> list[dict]:
+        reg = self._load()
+        return sorted(reg.values(), key=lambda x: x.get("trained_at", ""), reverse=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TRADENET REGISTRY  (versioned, never overwrites)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TradeNetRegistry:
+    """
+    Versioned registry for TradeNet .pth model files.
+
+    Existing timestamped .pth files are registered on first use.
+    The active version is the one last explicitly promoted.
+    """
+
+    def __init__(self, models_dir: Path = MODELS_DIR) -> None:
+        self.dir      = models_dir
+        self.reg_path = models_dir / "tradenet_registry.json"
+        self.dir.mkdir(parents=True, exist_ok=True)
+
+    def _load(self) -> dict:
+        if not self.reg_path.exists():
+            return {}
+        try:
+            return json.loads(self.reg_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            log.warning("TradeNetRegistry load failed: %s", e)
+            return {}
+
+    def _save(self, reg: dict) -> None:
+        _assert_single_active(reg, active_key="active")
+        _save_atomic(self.reg_path, reg)
+
+    def register(
+        self,
+        version: str,
+        model_file: str,
+        metrics: dict,
+    ) -> dict:
+        reg = self._load()
+        if version in reg:
+            log.warning("TradeNet version %s already registered — skipping", version)
+            return reg[version]
+        entry = {
+            "version":    version,
+            "model_file": model_file,
+            "metrics":    metrics,
+            "trained_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "active":     False,
+        }
+        reg[version] = entry
+        self._save(reg)
+        log.info("TradeNetRegistry | registered %s", version)
+        return entry
+
+    def promote(self, version: str) -> tuple[bool, str]:
+        lock_path = self.reg_path.with_suffix(".lock")
+        with _PROMOTE_LOCK, _file_lock(lock_path):
+            reg = self._load()
+            if version not in reg:
+                return False, f"TradeNet version {version} not in registry"
+            for k in reg:
+                reg[k]["active"] = False
+            reg[version]["active"] = True
+            self._save(reg)
+            reason = f"TradeNet promoted: {version}"
+            log.info(reason)
+            return True, reason
+
+    def get_active(self) -> Optional[str]:
+        reg = self._load()
+        for v, entry in reg.items():
+            if entry.get("active", False):
+                return v
+        return None
+
+    def get_active_entry(self) -> Optional[dict]:
+        reg = self._load()
+        for entry in reg.values():
+            if entry.get("active", False):
+                return entry
+        return None
+
+    def list_versions(self) -> list[dict]:
+        reg = self._load()
+        return sorted(reg.values(), key=lambda x: x.get("trained_at", ""), reverse=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # MODULE-LEVEL SINGLETON
 # ─────────────────────────────────────────────────────────────────────────────
 
-_registry = ModelRegistry()
+_registry          = ModelRegistry()
 _gaussian_registry = GaussianModelRegistry()
+_zone_gate_registry = ZoneGateRegistry()
+_rr_registry        = RRModelRegistry()
+_tradenet_registry  = TradeNetRegistry()
 
 
 def register(model_name: str, eval_result: EvalResult) -> ModelEntry:
@@ -547,3 +1022,83 @@ def get_active_gaussian() -> Optional[str]:
 
 def print_gaussian_leaderboard() -> None:
     _gaussian_registry.print_gaussian_leaderboard()
+
+
+# Zone Gate registry convenience functions
+def register_zone_gate(
+    version: str,
+    model_file: str,
+    n_zones: int,
+    n_clusters_requested: int,
+    feature_order: list,
+) -> dict:
+    return _zone_gate_registry.register(
+        version, model_file, n_zones, n_clusters_requested, feature_order
+    )
+
+
+def promote_zone_gate(version: str) -> tuple[bool, str]:
+    return _zone_gate_registry.promote(version)
+
+
+def get_active_zone_gate() -> Optional[str]:
+    return _zone_gate_registry.get_active()
+
+
+def get_active_zone_gate_entry() -> Optional[dict]:
+    return _zone_gate_registry.get_active_entry()
+
+
+def list_zone_gate_versions() -> list[dict]:
+    return _zone_gate_registry.list_versions()
+
+
+# RR Model registry convenience functions
+def register_rr_dataset(
+    version: str,
+    dataset_file: str,
+    n_samples: int,
+    n_features: int,
+) -> dict:
+    return _rr_registry.register_dataset(version, dataset_file, n_samples, n_features)
+
+
+def register_rr_model(version: str, model_file: str, metrics: dict) -> dict:
+    return _rr_registry.register_model(version, model_file, metrics)
+
+
+def promote_rr(version: str) -> tuple[bool, str]:
+    return _rr_registry.promote(version)
+
+
+def get_active_rr() -> Optional[str]:
+    return _rr_registry.get_active()
+
+
+def get_active_rr_entry() -> Optional[dict]:
+    return _rr_registry.get_active_entry()
+
+
+def list_rr_versions() -> list[dict]:
+    return _rr_registry.list_versions()
+
+
+# TradeNet registry convenience functions
+def register_tradenet(version: str, model_file: str, metrics: dict) -> dict:
+    return _tradenet_registry.register(version, model_file, metrics)
+
+
+def promote_tradenet(version: str) -> tuple[bool, str]:
+    return _tradenet_registry.promote(version)
+
+
+def get_active_tradenet() -> Optional[str]:
+    return _tradenet_registry.get_active()
+
+
+def get_active_tradenet_entry() -> Optional[dict]:
+    return _tradenet_registry.get_active_entry()
+
+
+def list_tradenet_versions() -> list[dict]:
+    return _tradenet_registry.list_versions()

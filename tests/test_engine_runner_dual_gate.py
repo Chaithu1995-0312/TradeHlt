@@ -63,12 +63,16 @@ def _make_runner():
     return runner
 
 
+def _stub_zone_gate(**kwargs):
+    """Stub for run_zone_gate_engine — returns neutral pass so dual-gate tests
+    are not affected by canonical-key validation added in zone_gate_engine.py."""
+    return {"score": 0.4, "passed": True, "vector": [], "valid": True}
+
+
 def test_dual_gate_trend_selects_breakout(monkeypatch):
-    monkeypatch.setattr(
-        engine_runner,
-        "crt_compute",
-        lambda trade_id, features, context: {"score": 0.1},
-    )
+    monkeypatch.setattr(engine_runner, "crt_compute",
+                        lambda trade_id, features, context: {"score": 0.1})
+    monkeypatch.setattr(engine_runner, "run_zone_gate_engine", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
@@ -87,11 +91,9 @@ def test_dual_gate_trend_selects_breakout(monkeypatch):
 
 
 def test_dual_gate_range_selects_trap(monkeypatch):
-    monkeypatch.setattr(
-        engine_runner,
-        "crt_compute",
-        lambda trade_id, features, context: {"score": 0.1},
-    )
+    monkeypatch.setattr(engine_runner, "crt_compute",
+                        lambda trade_id, features, context: {"score": 0.1})
+    monkeypatch.setattr(engine_runner, "run_zone_gate_engine", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
@@ -110,11 +112,9 @@ def test_dual_gate_range_selects_trap(monkeypatch):
 
 
 def test_dual_gate_neutral_low_confidence_rejects(monkeypatch):
-    monkeypatch.setattr(
-        engine_runner,
-        "crt_compute",
-        lambda trade_id, features, context: {"score": 0.1},
-    )
+    monkeypatch.setattr(engine_runner, "crt_compute",
+                        lambda trade_id, features, context: {"score": 0.1})
+    monkeypatch.setattr(engine_runner, "run_zone_gate_engine", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
@@ -132,11 +132,9 @@ def test_dual_gate_neutral_low_confidence_rejects(monkeypatch):
 
 
 def test_layered_flow_fusion_runs_before_dual_veto(monkeypatch):
-    monkeypatch.setattr(
-        engine_runner,
-        "crt_compute",
-        lambda trade_id, features, context: {"score": 0.1},
-    )
+    monkeypatch.setattr(engine_runner, "crt_compute",
+                        lambda trade_id, features, context: {"score": 0.1})
+    monkeypatch.setattr(engine_runner, "run_zone_gate_engine", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {

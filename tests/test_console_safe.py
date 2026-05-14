@@ -1,4 +1,4 @@
-﻿import io
+import io
 import logging
 
 from utils.console_safe import SafeStreamHandler, safe_print, sanitize_for_console

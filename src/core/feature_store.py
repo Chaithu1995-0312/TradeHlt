@@ -16,6 +16,10 @@ from features.schema_validator import validate_features
 logger = logging.getLogger(__name__)
 
 
+class FeatureValidationError(ValueError):
+    """Raised by FeatureStore.validate_or_raise() on schema mismatch."""
+
+
 @dataclass(frozen=True)
 class FeatureFrame:
     """Immutable feature snapshot at a given candle index."""
@@ -131,10 +135,21 @@ class FeatureStore:
             d["volume_ratio"] = 1.0
             logger.warning("volume_ratio missing, set to 1.0")
 
+    def validate_or_raise(self, features: Dict) -> None:
+        """
+        Public contract enforcer — call before passing any feature dict to an engine.
+        Raises FeatureValidationError (subclass of ValueError) on schema mismatch.
+        """
+        missing = [k for k in CANONICAL_FEATURES if k not in features]
+        if missing:
+            raise FeatureValidationError(
+                f"FeatureStore: missing canonical keys: {missing}"
+            )
+        validate_features(features, CANONICAL_FEATURES)
+
     def _validate_schema(self, d: Dict) -> None:
-        """Ensure all canonical keys are present and types are correct."""
+        """Internal schema check used by process()."""
         missing = [k for k in CANONICAL_FEATURES if k not in d]
         if missing:
             raise ValueError(f"FeatureStore: missing canonical keys: {missing}")
-        # Reuse existing validator (type checks, etc.)
         validate_features(d, CANONICAL_FEATURES)

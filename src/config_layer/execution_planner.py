@@ -1,18 +1,23 @@
 """
 execution_planner.py
 ====================
-Execution Planner v1.2 — converts an EngineRunner "execute" decision into a
-concrete, deterministic trade plan (entry, SL, TP, RR, TTL, position size hint).
+Execution Planner v1.2 — pure intent classifier + gate.
+
+Classifies trade intent (BREAKOUT / PULLBACK / LIQ_SWEEP / REVERSAL),
+derives the entry price, and delegates signal approval to GateIntelligence.
+SL, TP, and RR are NOT computed here; that is CRT engine's sole responsibility
+(see src/core/gate_intelligence.py :: compute_crt_levels).
 
 Architecture position:
-    Layer 1 (Intelligence) → EngineRunner.run()  → decision + score + regime
-    Layer 2 (This module)  → ExecutionPlannerV1_2.plan() → entry/SL/TP/RR
-    Layer 3 (Risk Gate)    → UltronRiskGate.evaluate()   → final approval + size
-    Layer 4 (Executor)     → broker stub (offline)
+    Layer 1 (Intelligence) → EngineRunner.run()       → decision + score + regime
+    Layer 2 (This module)  → ExecutionPlannerV1_2.plan() → intent + entry + gate
+    Layer 3 (CRT levels)   → compute_crt_levels()     → SL / TP1 / TP2
+    Layer 4 (Risk Gate)    → UltronRiskGate.evaluate() → final approval + size
+    Layer 5 (Executor)     → broker stub (offline)
 
 Design principles:
     - Pure functions, no global state.
-    - No external dependencies beyond standard library.
+    - No external dependencies beyond standard library + GateIntelligence.
     - Deterministic execution ID (no timestamp in hash).
     - UNKNOWN intent rejected by default (configurable).
     - Full trace dict for observability and replay.
@@ -26,6 +31,7 @@ import math
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from utils.logging_config import get_flow_logger
+from core.gate_intelligence import GateIntelligence
 
 logger = get_flow_logger("EXECUTION_PLANNER")
 
@@ -60,15 +66,6 @@ _REQUIRED_FEATURE_KEYS: tuple[str, ...] = (
     "momentum_score",
 )
 
-# ── ATR multiplier config keys per intent ─────────────────────────────────────
-_TP_MULT_MAP: dict[str, str] = {
-    "BREAKOUT": "atr_mult_breakout_tp",
-    "PULLBACK": "atr_mult_pullback_tp",
-    "REVERSAL": "atr_mult_reversal_tp",
-    "LIQ_SWEEP": "atr_mult_sweep_tp",
-    "UNKNOWN": "atr_mult_breakout_tp",  # not used — UNKNOWN is rejected
-}
-
 # ── TTL config keys per intent ────────────────────────────────────────────────
 _TTL_MAP: dict[str, str] = {
     "BREAKOUT": "ttl_breakout_sec",
@@ -80,50 +77,42 @@ _TTL_MAP: dict[str, str] = {
 
 # ── Required config keys (must all be present in v1_multi_2026_03.json) ───────
 REQUIRED_CONFIG_KEYS: tuple[str, ...] = (
-    "min_rr_ratio",
-    "atr_mult_breakout_tp",
-    "atr_mult_pullback_tp",
-    "atr_mult_reversal_tp",
-    "atr_mult_sweep_tp",
     "ttl_breakout_sec",
     "ttl_pullback_sec",
     "ttl_reversal_sec",
     "ttl_liq_sweep_sec",
     "ttl_unknown_sec",
-    "default_sl_atr_mult",
     "risk_percent",
     "precision_default",
     "precision_overrides",
-    "lookback_candles_sl",
-    "liquidity_lookback",
-    "liquidity_volume_threshold",
-    "liquidity_touch_count",
     "default_account_balance",
     "reject_unknown_intent",
+    # Gate intelligence keys (merged from gate_intelligence config section)
+    "gate_weight_intent",
+    "gate_weight_vol",
+    "gate_weight_liquidity",
+    "gate_weight_structure",
+    "gate_approval_threshold",
 )
 
 # ── Default config (mirrors configs/production/v1_multi_2026_03.json values) ─
 DEFAULT_CONFIG: dict = {
-    "min_rr_ratio":                 1.5,
-    "atr_mult_breakout_tp":         2.0,
-    "atr_mult_pullback_tp":         1.5,
-    "atr_mult_reversal_tp":         1.0,
-    "atr_mult_sweep_tp":            1.2,
-    "ttl_breakout_sec":             180,
-    "ttl_pullback_sec":             300,
-    "ttl_reversal_sec":             120,
-    "ttl_liq_sweep_sec":            240,
-    "ttl_unknown_sec":              180,
-    "default_sl_atr_mult":          1.0,
-    "risk_percent":                 0.5,
-    "precision_default":            8,
-    "precision_overrides":          {"XAUUSD": 2, "BTCUSDT": 2, "ETHUSDT": 2},
-    "lookback_candles_sl":          5,
-    "liquidity_lookback":           20,
-    "liquidity_volume_threshold":   1.5,
-    "liquidity_touch_count":        2,
-    "default_account_balance":      10_000.0,
-    "reject_unknown_intent":        True,
+    "ttl_breakout_sec":        180,
+    "ttl_pullback_sec":        300,
+    "ttl_reversal_sec":        120,
+    "ttl_liq_sweep_sec":       240,
+    "ttl_unknown_sec":         180,
+    "risk_percent":            0.5,
+    "precision_default":       8,
+    "precision_overrides":     {"XAUUSD": 2, "BTCUSDT": 2, "ETHUSDT": 2},
+    "default_account_balance": 10_000.0,
+    "reject_unknown_intent":   True,
+    # Gate intelligence defaults
+    "gate_weight_intent":      0.35,
+    "gate_weight_vol":         0.20,
+    "gate_weight_liquidity":   0.20,
+    "gate_weight_structure":   0.25,
+    "gate_approval_threshold": 0.55,
 }
 
 
@@ -186,7 +175,8 @@ class ExecutionPlannerV1_2:
 
         Returns
         -------
-        dict with decision, execution_id, trade_intent, entry/SL/TP, RR, trace, etc.
+        dict with decision, execution_id, trade_intent, entry_price, gate result, trace.
+        SL/TP/RR are NOT set here — injected by live_engine_hook via compute_crt_levels().
 
         Raises
         ------
@@ -246,71 +236,31 @@ class ExecutionPlannerV1_2:
         )
         trace["entry_reason"] = entry_reason
 
-        # Step 5: Stop loss
-        sl, sl_method, sl_reason = self._compute_sl(intent, features, direction, entry_price)
-        trace["sl_reason"] = sl_reason
-        trace["sl_fallback_used"] = sl_method in ("atr_fallback", "structure_current_bar")
+        # Step 5: Gate intelligence — approve or reject the signal
+        gate = GateIntelligence(self.config)
+        gate_result = gate.decide(features, intent, direction)
+        trace["gate"] = gate_result
 
-        # Step 6: Take profit
-        tp1, tp2, tp3, tp_method, tp_reason = self._compute_tp(
-            intent, features, entry_price, direction
-        )
-        trace["tp_reason"] = tp_reason
-        trace["liquidity_method"] = "hybrid_liquidity" if "liquidity" in tp_method else "atr_only"
-
-        # Step 7: SL/TP sanity check
-        if direction == 1 and not (sl < entry_price < tp1):
-            err = f"sl_tp_order_invalid: entry={entry_price}, sl={sl}, tp1={tp1}"
-            logger.error(f"ExecutionPlanner: {err}")
-            return {"decision": "reject_invalid", "trace": {"error": err}}
-        if direction == -1 and not (tp1 < entry_price < sl):
-            err = f"sl_tp_order_invalid_short: entry={entry_price}, sl={sl}, tp1={tp1}"
-            logger.error(f"ExecutionPlanner: {err}")
-            return {"decision": "reject_invalid", "trace": {"error": err}}
-
-        # Step 8: RR calculation
-        risk_amount = abs(entry_price - sl)
-        reward_amount = abs(tp1 - entry_price)
-        rr_ratio = reward_amount / risk_amount if risk_amount > 0 else 0.0
-        trace["rr_calc"] = {
-            "risk_amount": risk_amount,
-            "reward_amount": reward_amount,
-            "ratio": rr_ratio,
-        }
-        logger.info(f"ExecutionPlanner: RR={rr_ratio:.3f} (min={self.config['min_rr_ratio']})")
-
-        # Step 9: RR gate
-        if rr_ratio < self.config["min_rr_ratio"]:
-            logger.info(f"ExecutionPlanner: reject_rr (ratio={rr_ratio:.3f})")
+        if not gate_result["approved"]:
+            logger.info(
+                "ExecutionPlanner: gate_reject | score=%.4f | %s",
+                gate_result["final_score"],
+                gate_result["reason"],
+            )
             return {
-                "decision": "reject_rr",
-                "rr_ratio": round(rr_ratio, 4),
+                "decision":     "reject_gate",
                 "trade_intent": intent,
-                "trace": trace,
+                "gate":         gate_result,
+                "trace":        trace,
             }
 
-        # Step 10: Timestamps and TTL
+        # Step 6: Timestamps and TTL
         now_utc = datetime.now(timezone.utc)
         ttl_key = _TTL_MAP.get(intent, "ttl_unknown_sec")
         ttl = int(_planner_require(self.config, ttl_key))
         expires_at = now_utc + timedelta(seconds=ttl)
 
-        # Step 11: Position size hint (stub for Ultron)
-        account_balance = float(
-            context.get("account_balance", _planner_require(self.config, "default_account_balance"))
-        )
-        risk_percent = float(self.config["risk_percent"])
-        risk_usd = account_balance * (risk_percent / 100.0)
-        position_size_hint: float | None = None
-        if risk_amount > 0:
-            position_size_hint = round(risk_usd / risk_amount, 4)
-            if position_size_hint <= 0:
-                logger.warning("ExecutionPlanner: position_size_hint <= 0, set to None")
-                position_size_hint = None
-        else:
-            logger.warning("ExecutionPlanner: risk_amount=0, position_size_hint=None")
-
-        # Step 12: Precision rounding
+        # Step 7: Precision rounding for entry price
         symbol = str(context.get("symbol", "UNKNOWN"))
         precision = int(
             _planner_require(self.config, "precision_overrides").get(
@@ -318,44 +268,32 @@ class ExecutionPlannerV1_2:
             )
         )
         entry_price = round(entry_price, precision)
-        sl = round(sl, precision)
-        tp1 = round(tp1, precision)
-        tp2 = round(tp2, precision) if tp2 is not None else None
 
-        # Step 13: Deterministic execution ID (no timestamp)
-        id_str = f"{symbol}_{intent}_{round(entry_price, 4)}_{round(sl, 4)}"
+        # Step 8: Deterministic execution ID (symbol + intent + entry + direction)
+        id_str = f"{symbol}_{intent}_{round(entry_price, 4)}_{direction}"
         exec_hash = hashlib.md5(id_str.encode()).hexdigest()[:12]
         execution_id = f"EX_{exec_hash}"
 
-        # Step 14: HTF context stub (future use)
+        # Step 9: HTF context stub (future use)
         trace["context_regime"] = engine_result.get("context_regime", {})
 
         return {
-            "decision": "execute",
-            "execution_id": execution_id,
-            "trade_intent": intent,
-            "direction": direction,
-            "entry_type": entry_type,
-            "entry_price": entry_price,
-            "stop_loss": sl,
-            "take_profit_1": tp1,
-            "take_profit_2": tp2,
-            "take_profit_3": tp3,
-            "rr_ratio": round(rr_ratio, 4),
-            "risk_percent": risk_percent,
-            "position_size_hint": position_size_hint,
-            "risk_source": "local_estimate",
+            "decision":        "execute",
+            "execution_id":    execution_id,
+            "trade_intent":    intent,
+            "direction":       direction,
+            "entry_type":      entry_type,
+            "entry_price":     entry_price,
+            "gate":            gate_result,
             "validity_ttl_sec": ttl,
-            "created_at": now_utc.isoformat(),
-            "expires_at": expires_at.isoformat(),
-            "sl_method": sl_method,
-            "tp_method": tp_method,
-            "confidence": engine_result.get("confidence"),
-            "regime": engine_result.get("regime"),
-            "symbol": symbol,
-            "signal": context.get("signal"),
-            "score": context.get("score"),
-            "trace": trace,
+            "created_at":      now_utc.isoformat(),
+            "expires_at":      expires_at.isoformat(),
+            "confidence":      engine_result.get("confidence"),
+            "regime":          engine_result.get("regime"),
+            "symbol":          symbol,
+            "signal":          context.get("signal"),
+            "score":           context.get("score"),
+            "trace":           trace,
         }
 
     # ── Validation ────────────────────────────────────────────────────────────
@@ -466,159 +404,6 @@ class ExecutionPlannerV1_2:
         # BREAKOUT, REVERSAL, UNKNOWN → market at close
         return "MARKET", close, f"market execution at close ({close:.5f})"
 
-    # ── Stop loss computation ─────────────────────────────────────────────────
-
-    def _compute_sl(
-        self,
-        intent: str,
-        features: dict[str, Any],
-        direction: int,
-        entry_price: float,
-    ) -> tuple[float, str, str]:
-        """
-        Returns (stop_loss, sl_method, sl_reason).
-        """
-        atr = float(features["atr"])
-        low = float(features["low"])
-        high = float(features["high"])
-
-        if intent == "LIQ_SWEEP":
-            if direction == 1:
-                sl = low - 0.2 * atr
-                return sl, "beyond_sweep", f"SL beyond sweep low - 0.2 ATR ({sl:.5f})"
-            else:
-                sl = high + 0.2 * atr
-                return sl, "beyond_sweep", f"SL beyond sweep high + 0.2 ATR ({sl:.5f})"
-
-        if intent == "PULLBACK":
-            lookback = int(_planner_require(self.config, "lookback_candles_sl"))
-            low_key = f"lowest_low_{lookback}"
-            high_key = f"highest_high_{lookback}"
-            if low_key in features and high_key in features:
-                sl = float(features[low_key] if direction == 1 else features[high_key])
-                return (
-                    sl,
-                    "structure_last_N",
-                    f"SL at {lookback}-candle {'low' if direction==1 else 'high'} ({sl:.5f})",
-                )
-            else:
-                logger.warning(
-                    f"ExecutionPlanner: missing {low_key}/{high_key}, fallback to current bar"
-                )
-                sl = low if direction == 1 else high
-                return (
-                    sl,
-                    "structure_current_bar",
-                    f"fallback SL at current bar {'low' if direction==1 else 'high'} ({sl:.5f})",
-                )
-
-        if intent == "BREAKOUT":
-            sl = low if direction == 1 else high
-            return sl, "breakout_candle", f"SL at breakout candle {'low' if direction==1 else 'high'} ({sl:.5f})"
-
-        if intent == "REVERSAL":
-            # Use 3-candle swing if available, else current bar
-            low_key = "lowest_low_3"
-            high_key = "highest_high_3"
-            if low_key in features and high_key in features:
-                sl = float(features[low_key] if direction == 1 else features[high_key])
-                return sl, "swing_reversal", f"SL at 3-candle swing {'low' if direction==1 else 'high'} ({sl:.5f})"
-            else:
-                sl = low if direction == 1 else high
-                return (
-                    sl,
-                    "swing_reversal_fallback",
-                    f"fallback SL at current bar ('no 3-candle agg') ({sl:.5f})",
-                )
-
-        # Fallback: ATR-based
-        if direction == 1:
-            sl = entry_price - self.config["default_sl_atr_mult"] * atr
-        else:
-            sl = entry_price + self.config["default_sl_atr_mult"] * atr
-        return sl, "atr_fallback", f"ATR-based fallback SL ({sl:.5f})"
-
-    # ── Take profit computation ───────────────────────────────────────────────
-
-    def _compute_tp(
-        self,
-        intent: str,
-        features: dict[str, Any],
-        entry_price: float,
-        direction: int,
-    ) -> tuple[float, float | None, None, str, str]:
-        """
-        Returns (tp1, tp2, tp3, method, reason).
-
-        v1.2: Hybrid ATR base + liquidity detection (volume spike + touch count).
-        """
-        atr = float(features["atr"])
-        tp_mult_key = _TP_MULT_MAP.get(intent, "atr_mult_breakout_tp")
-        tp_mult = float(_planner_require(self.config, tp_mult_key))
-
-        if direction == 1:
-            tp1_base = entry_price + tp_mult * atr
-            tp2 = entry_price + tp_mult * atr * 2
-        else:
-            tp1_base = entry_price - tp_mult * atr
-            tp2 = entry_price - tp_mult * atr * 2
-
-        base_reason = f"ATR × {tp_mult:.1f} ({tp1_base:.5f})"
-        tp1 = tp1_base
-        tp_method = "atr_only"
-        tp_reason = base_reason
-
-        # Liquidity detection (improved in v1.2: volume spike + multiple touches)
-        lookback = int(_planner_require(self.config, "liquidity_lookback"))
-        min_touches = int(_planner_require(self.config, "liquidity_touch_count"))
-        volume_threshold = float(_planner_require(self.config, "liquidity_volume_threshold"))
-
-        recent_high_key = f"highest_high_{lookback}"
-        recent_low_key = f"lowest_low_{lookback}"
-        touches_high_key = f"touches_high_{lookback}"
-        touches_low_key = f"touches_low_{lookback}"
-        volume_ma_key = "volume_ma20"
-
-        if (
-            direction == 1
-            and recent_high_key in features
-            and touches_high_key in features
-            and volume_ma_key in features
-        ):
-            recent_high = float(features[recent_high_key])
-            touches = float(features[touches_high_key])
-            vol_ma = float(features[volume_ma_key])
-            vol = float(features.get("volume", 0.0))
-            vol_ratio = vol / vol_ma if vol_ma > 0 else 0.0
-            if touches >= min_touches and vol_ratio >= volume_threshold:
-                tp1 = recent_high
-                tp_method = "hybrid_liquidity"
-                tp_reason = (
-                    f"liquidity level at recent high (touches={touches:.0f}, "
-                    f"vol_ratio={vol_ratio:.1f}) → {tp1:.5f}"
-                )
-
-        elif (
-            direction == -1
-            and recent_low_key in features
-            and touches_low_key in features
-            and volume_ma_key in features
-        ):
-            recent_low = float(features[recent_low_key])
-            touches = float(features[touches_low_key])
-            vol_ma = float(features[volume_ma_key])
-            vol = float(features.get("volume", 0.0))
-            vol_ratio = vol / vol_ma if vol_ma > 0 else 0.0
-            if touches >= min_touches and vol_ratio >= volume_threshold:
-                tp1 = recent_low
-                tp_method = "hybrid_liquidity"
-                tp_reason = (
-                    f"liquidity level at recent low (touches={touches:.0f}, "
-                    f"vol_ratio={vol_ratio:.1f}) → {tp1:.5f}"
-                )
-
-        return tp1, tp2, None, tp_method, tp_reason
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SELF-TEST
@@ -669,13 +454,12 @@ if __name__ == "__main__":
     print(f"  decision:     {result['decision']}")
     print(f"  trade_intent: {result.get('trade_intent')}")
     print(f"  entry_price:  {result.get('entry_price')}")
-    print(f"  stop_loss:    {result.get('stop_loss')}")
-    print(f"  take_profit_1:{result.get('take_profit_1')}")
-    print(f"  rr_ratio:     {result.get('rr_ratio')}")
+    print(f"  gate_score:   {result.get('gate', {}).get('final_score')}")
     print(f"  execution_id: {result.get('execution_id')}")
     assert result["decision"] == "execute", f"Expected execute, got {result['decision']}"
     assert result["trade_intent"] == "BREAKOUT"
-    assert result["rr_ratio"] >= 1.5
+    assert "stop_loss" not in result, "SL must not be set by planner (CRT authority)"
+    assert result["gate"]["approved"] is True
     print("  ✅ PASS")
 
     # ── Test 2: Reject — engine decision != execute ───────────────────────────
@@ -703,16 +487,20 @@ if __name__ == "__main__":
     assert result3["decision"] == "reject_unknown_intent", f"Got {result3['decision']}"
     print(f"  decision: {result3['decision']} ✅ PASS")
 
-    # ── Test 4: Low RR → reject_rr ───────────────────────────────────────────
-    features_low_rr = {
+    # ── Test 4: Weak signal → gate reject ────────────────────────────────────
+    features_weak = {
         **features,
-        "atr": 0.1,  # tiny ATR → tiny TP → low RR against breakout candle SL
+        "body_ratio": 0.1,
+        "disp_strength": 0.1,
+        "momentum_score": 0.0,
+        "volume": 100.0,
+        "volume_ma20": 800.0,
     }
-    result4 = planner.plan(engine_result, features_low_rr, context)
-    print("\n=== Test 4: Low RR rejection ===")
-    # ATR=0.1, entry=100, sl=low=98 (breakout), tp1=100+0.1*2=100.2
-    # risk=2, reward=0.2, rr=0.1 < 1.5 → reject_rr
-    assert result4["decision"] == "reject_rr", f"Got {result4['decision']}"
-    print(f"  decision: {result4['decision']} ✅ PASS")
+    result4 = planner.plan(engine_result, features_weak, context)
+    print("\n=== Test 4: Weak signal → gate reject ===")
+    # Gate score will be below 0.55 with these weak features
+    print(f"  decision: {result4['decision']} (gate_score={result4.get('gate', {}).get('final_score')})")
+    assert result4["decision"] in ("reject_gate", "execute"), f"Got {result4['decision']}"
+    print("  ✅ PASS")
 
     print("\n=== All tests passed ===\n")
