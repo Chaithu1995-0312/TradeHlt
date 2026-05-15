@@ -244,7 +244,7 @@ Single source of truth — **no magic numbers in Python code**. The JSON contain
 ```python
 # Every consumer loads its slice the same way:
 from config_layer.production_config import get_prod_section
-cfg = get_prod_section("llama_gate")
+cfg = get_prod_section("llama_gate")  # "llama_gate" is the JSON key; module is config_layer/llm_inference_client.py
 value = _require_key(cfg, "server_url")  # raises KeyError if missing → RuntimeError
 ```
 

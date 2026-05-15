@@ -136,7 +136,7 @@ When you add a new module under `src/`, your tests should cover **at minimum**:
 | `src/governance/*`           | APPROVE promotion; hard-gate rejection; shadow insufficient trades; rollback path   |
 | `src/agent/*`                | Intent regex match; intent LLM fallback; write-tool confirm-gate; path-guard veto   |
 | `src/expansion/*`            | Mutation within bounds; out-of-bounds rejection; regression rejection               |
-| External I/O (`llama_gate`)  | Happy call; timeout → retry; circuit-breaker open → neutral return                  |
+| External I/O (`llm_inference_client`)  | Happy call; timeout → retry; circuit-breaker open → neutral return                  |
 
 ---
 

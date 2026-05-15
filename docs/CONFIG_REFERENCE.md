@@ -221,7 +221,7 @@ Consumed by `src/config_layer/rr/rr_fusion.py`.
 
 ## `llama_gate` — Local LLM Server
 
-Consumed by `src/config_layer/llama_gate.py`.
+Consumed by `src/config_layer/llm_inference_client.py`.
 
 | Key                    | Type  | Default                                  | Purpose                                               |
 | ---------------------- | ----- | ---------------------------------------- | ----------------------------------------------------- |

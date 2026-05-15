@@ -140,7 +140,7 @@ class IntentRouter:
         return {"mode": None, "intent_key": "ask_user", "confidence": 0.0}
 ```
 
-Regex patterns live in `src/agent/prompts/intent_patterns.json`. The `llm_chat_fn` is injected (usually `llama_gate.llm_chat`) and is expected to return a JSON blob the router extracts.
+Regex patterns live in `src/agent/prompts/intent_patterns.json`. The `llm_chat_fn` is injected (usually `llm_inference_client.llm_chat`) and is expected to return a JSON blob the router extracts.
 
 ### 4.2 Intent catalogue
 

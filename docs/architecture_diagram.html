@@ -138,7 +138,7 @@ flowchart TD
     FUSION["FusionEngine\nfusion_use_evaluate flag"]
     ZONE_GATE["ZoneGate\nzone_registry lookup"]
     TRAP_VAL["TrapValidator\ntrap pattern filter"]
-    LLAMA_GATE["llama_gate.py\ntimeout=2s  fail_count=10\nfallback 1.0"]
+    LLAMA_GATE["llm_inference_client.py\ntimeout=2s  fail_count=10\nfallback 1.0"]
     BITNET["src/bitnet/\nBitNet inference\n1-bit quantised"]
   end
 
@@ -383,7 +383,7 @@ flowchart TD
     FUSION["FusionEngine\nfusion_use_evaluate flag\nfeature-flagged evaluate path"]
     ZG["ZoneGate\nzone_registry lookup\nconfluence check"]
     TV["TrapValidator\nbull / bear trap filter"]
-    LG["llama_gate.py\nLLaMA inference\ntimeout=2s  fail_count=10\nfallback 1.0 on failure"]
+    LG["llm_inference_client.py\nLLM inference\ntimeout=2s  fail_count=10\nfallback 1.0 on failure"]
     BN["BitNet inference\nsrc/bitnet/\n1-bit quantised model"]
     LH["live_engine_hook.py\nEngineRunner API contract\nsession normalisation\nUltronRiskGate wired"]
   end

@@ -26,7 +26,7 @@ the doc's reference math lives next to the code that consumes it. The original
 |------|--------|
 | Doc's `random()*0.05/0.06/0.08` jitter into production heads | CLAUDE.md governance: production scoring must be deterministic. Jitter exists only inside the standalone reference harness for ground-truth reproduction. |
 | Replacing production scoring with the doc's 4-head BitNet formulas | Production uses an EURCAD-calibrated empirical Gaussian (`crt_gaussian_scorer.py`) that is the source of truth. The doc's heads were calibrated on a 49-candle BTCUSDT sample — too small to migrate the multi-instrument production stack to. |
-| Lowering LLM trigger to `fusion >= 0.46` | Production contract is the `[0.45, 0.65]` uncertainty band in `FusionConfig` and `llama_gate.py`. Changing it would require re-running the promotion validators per the governance flow in CLAUDE.md. |
+| Lowering LLM trigger to `fusion >= 0.46` | Production contract is the `[0.45, 0.65]` uncertainty band in `FusionConfig` and `llm_inference_client.py`. Changing it would require re-running the promotion validators per the governance flow in CLAUDE.md. |
 | The doc's idx-guard reorder fix in `RangeDetector.detect_sweep` | The production engine uses range-boundary sweep detection, not geometry-first. There is no idx<4 guard blocking geometric classification. The fix is applied **only** in the standalone reference harness, where it is correct per the doc. |
 
 ---

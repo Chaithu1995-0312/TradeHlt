@@ -88,7 +88,7 @@ def _require(cfg: dict, key: str) -> object:
     """Strict accessor — raises if `key` is missing from `cfg`.
 
     Mirrors `_validator_require` in `config_validator.py` and `_require_lg`
-    in `llama_gate.py`. Every required config value goes through this.
+    in `llm_inference_client.py`. Every required config value goes through this.
     """
     if key not in cfg:
         raise KeyError(
@@ -139,7 +139,7 @@ class ExampleServiceConfig:
 # ============================================================================
 
 class _CircuitBreaker:
-    """Minimal fail-open breaker. Mirrors the pattern in llama_gate.py.
+    """Minimal fail-open breaker. Mirrors the pattern in llm_inference_client.py.
 
     After `fail_count_disable` consecutive failures the breaker opens and the
     wrapped call returns the neutral value without invoking the upstream.

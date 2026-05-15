@@ -38,7 +38,7 @@ Entry → BacktestRunner → EngineRunner.run()
   ├── config_layer/crt_engine_v2.py   (CRT state machine — backtest loop)
   ├── config_layer/production_config.py
   ├── config_layer/config_builder.py
-  ├── config_layer/llama_gate.py      (optional LLM tie-breaker)
+  ├── config_layer/llm_inference_client.py  (optional LLM tie-breaker)
   ├── features/feature_pipeline.py    (optional import guard)
   ├── features/feature_schema.py
   ├── features/feature_monitor.py     (drift detection on TRADE_OPENED)

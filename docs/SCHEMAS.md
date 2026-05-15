@@ -404,7 +404,7 @@ ValidationReport ─(report_id)─▶ PromotionLogLine
                                       │
             ┌─────────────┬───────────┼───────────────┬──────────────┐
             ▼             ▼           ▼               ▼              ▼
-      EngineRunner  FusionEngine  ExecPlanner   UltronRiskGate  llama_gate
+      EngineRunner  FusionEngine  ExecPlanner   UltronRiskGate  llm_inference_client
 
 checkpoint_multi.json ──(params)──▶ ConfigValidator.validate()
                                         │
