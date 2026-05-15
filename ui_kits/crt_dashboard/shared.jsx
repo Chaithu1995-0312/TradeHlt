@@ -13,7 +13,10 @@ function Sidebar({ active, footer }) {
     <aside className="side">
       <div className="brand"><span className="logo" /> CRT</div>
       {items.map(it => (
-        <a key={it.id} className={it.id === active ? "active" : ""}>
+        <a key={it.id}
+           className={it.id === active ? "active" : ""}
+           onClick={() => typeof window.__crtNav === 'function' && window.__crtNav(it.id)}
+           style={{cursor: 'pointer'}}>
           <svg className="ico" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d={it.icon} />
           </svg>

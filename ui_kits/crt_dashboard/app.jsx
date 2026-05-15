@@ -1,35 +1,27 @@
-// Top-level CRT dashboard — composes all six panels in a 2-column grid
-// matching the prototype's overview layout.
+// Top-level CRT dashboard — single-panel navigation.
+// Click a sidebar item to switch sections; only the active panel renders.
 
 function CrtDashboard() {
+  const [activePage, setActivePage] = React.useState("Runtime");
+
+  // Expose setter so Sidebar <a> onClick can call window.__crtNav(id)
+  window.__crtNav = setActivePage;
+
+  const PAGES = [
+    { id: "Runtime",   index: 1, title: "Runtime / Live Trading Dashboard",             sub: "Live Execution · Model Fusion · Real-time State",                    Component: RuntimePage   },
+    { id: "Research",  index: 2, title: "Research / Opportunity Explorer (Pipeline B)", sub: "Unbiased Market Cartography · Opportunity Scanning · Feature Space", Component: ResearchPage  },
+    { id: "Models",    index: 3, title: "Models / Model Registry & Governance",          sub: "Model Catalog · Performance · Promotion · Lineage",                 Component: ModelsPage    },
+    { id: "Trades",    index: 4, title: "Trades / Trade Analytics & Journal",            sub: "Performance · Distribution · Sessions · Detailed Journal",          Component: TradesPage    },
+    { id: "Backtests", index: 5, title: "Backtests / Backtest Lab",                      sub: "Strategy Backtesting · Walk Forward · Robustness",                  Component: BacktestsPage },
+    { id: "System",    index: 6, title: "System / System Health & Data Status",          sub: "Data Integrity · Jobs · Alerts · Infrastructure",                   Component: SystemPage    },
+  ];
+
+  const active = PAGES.find(p => p.id === activePage) || PAGES[0];
+
   return (
     <div className="dash-root">
-      <div className="dashboard-grid">
-        <div>
-          <SectionTitle index="1" title="Runtime / Live Trading Dashboard" subtitle="Live Execution · Model Fusion · Real-time State" />
-          <RuntimePage />
-        </div>
-        <div>
-          <SectionTitle index="2" title="Research / Opportunity Explorer (Pipeline B)" subtitle="Unbiased Market Cartography · Opportunity Scanning · Feature Space" />
-          <ResearchPage />
-        </div>
-        <div>
-          <SectionTitle index="3" title="Models / Model Registry & Governance" subtitle="Model Catalog · Performance · Promotion · Lineage" />
-          <ModelsPage />
-        </div>
-        <div>
-          <SectionTitle index="4" title="Trades / Trade Analytics & Journal" subtitle="Performance · Distribution · Sessions · Detailed Journal" />
-          <TradesPage />
-        </div>
-        <div>
-          <SectionTitle index="5" title="Backtests / Backtest Lab" subtitle="Strategy Backtesting · Walk Forward · Robustness" />
-          <BacktestsPage />
-        </div>
-        <div>
-          <SectionTitle index="6" title="System / System Health & Data Status" subtitle="Data Integrity · Jobs · Alerts · Infrastructure" />
-          <SystemPage />
-        </div>
-      </div>
+      <SectionTitle index={active.index} title={active.title} subtitle={active.sub} />
+      <active.Component />
     </div>
   );
 }
