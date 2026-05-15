@@ -20,7 +20,16 @@ function CrtDashboard() {
 
   return (
     <div className="dash-root">
-      <SectionTitle index={active.index} title={active.title} subtitle={active.sub} />
+      <div style={{ position: "relative" }}>
+        <SectionTitle index={active.index} title={active.title} subtitle={active.sub} />
+        {activePage !== "Runtime" && (
+          <button
+            className="btn outline"
+            style={{ position:"absolute", top:0, right:0, fontSize:11, padding:"5px 12px" }}
+            onClick={() => setActivePage("Runtime")}
+          >← Runtime</button>
+        )}
+      </div>
       <active.Component />
     </div>
   );
