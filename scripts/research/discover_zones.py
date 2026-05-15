@@ -101,7 +101,12 @@ def _kmeans(points: list[list[float]], k: int, max_iter: int = 30,
 
 
 def discover(opportunities: list[Path], *, n_clusters: int, min_samples: int,
-             feature_weights: list[float]) -> dict:
+             feature_weights: list[float], subsample: int = 1) -> dict:
+    """
+    subsample: keep every Nth record (1 = all records; 5 = 20% of data).
+    Subsampling is deterministic (index % subsample == 0) so results are
+    reproducible across runs on the same JSONL.
+    """
     if len(feature_weights) != len(CANONICAL_FEATURE_ORDER):
         raise ValueError(
             f"feature_weights length {len(feature_weights)} != "
@@ -110,8 +115,13 @@ def discover(opportunities: list[Path], *, n_clusters: int, min_samples: int,
     vectors: list[list[float]] = []
     rr_values: list[float] = []
     outcomes: list[str] = []
+    _rec_idx = 0
     for path in opportunities:
         for rec in _load_records(path):
+            if subsample > 1 and _rec_idx % subsample != 0:
+                _rec_idx += 1
+                continue
+            _rec_idx += 1
             v = _vector_from_record(rec, feature_weights)
             if v is None:
                 continue
@@ -122,8 +132,8 @@ def discover(opportunities: list[Path], *, n_clusters: int, min_samples: int,
     if not vectors:
         raise ValueError("No usable feature vectors found in inputs.")
     logger.info(
-        "loaded %d vectors from %d files; clustering into %d zones",
-        len(vectors), len(opportunities), n_clusters,
+        "loaded %d vectors from %d files (subsample=%d); clustering into %d zones",
+        len(vectors), len(opportunities), subsample, n_clusters,
     )
 
     assignments, centers = _kmeans(vectors, n_clusters)
@@ -172,6 +182,9 @@ def main(argv=None) -> int:
     ap.add_argument("--version", default=None,
                     help="Version key for zone_gate_registry.json "
                          "(auto-generates YYYYMM_v1 if omitted)")
+    ap.add_argument("--subsample", type=int, default=1, metavar="N",
+                    help="Keep every Nth record (default 1 = all). "
+                         "Use 5-10 on large JSONL files to speed up the pure-Python KMeans.")
     ap.add_argument("--no-promote", dest="promote", action="store_false", default=True,
                     help="Skip promoting this version as active (useful for experiments)")
     args = ap.parse_args(argv)
@@ -188,7 +201,8 @@ def main(argv=None) -> int:
 
     paths = [Path(p) for p in args.opportunities]
     result = discover(paths, n_clusters=args.n_clusters,
-                      min_samples=args.min_samples, feature_weights=weights)
+                      min_samples=args.min_samples, feature_weights=weights,
+                      subsample=args.subsample)
 
     # ── versioned save ──────────────────────────────────────────────────────
     import time as _time
