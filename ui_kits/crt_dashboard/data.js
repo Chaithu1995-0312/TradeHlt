@@ -119,6 +119,11 @@ const MODELS = [
   { ver: "v2",               type: "Gaussian (Heuristic)", corr:  0.0500,  cal: 0.1000, trained: "—",          samples: null, status: "Archived",  action: "View" },
 ];
 
+// Non-Gaussian model registries (overwritten by realData.js on live load)
+const ZONE_GATE_MODELS = [];
+const RR_MODELS = [];
+const TRADENET_MODELS = [];
+
 // Trade analytics
 const TRADE_KPIS = {
   totalPnl: "+356.42",

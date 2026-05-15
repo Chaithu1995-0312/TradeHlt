@@ -1583,6 +1583,15 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                 if path == "/api/models":
                     self._send_json(HTTPStatus.OK, dash_api.models_payload())
                     return
+                if path == "/api/zone_gate_models":
+                    self._send_json(HTTPStatus.OK, dash_api.zone_gate_models_payload())
+                    return
+                if path == "/api/rr_models":
+                    self._send_json(HTTPStatus.OK, dash_api.rr_models_payload())
+                    return
+                if path == "/api/tradenet_models":
+                    self._send_json(HTTPStatus.OK, dash_api.tradenet_models_payload())
+                    return
                 if path == "/api/instruments":
                     self._send_json(HTTPStatus.OK, dash_api.instruments_payload())
                     return
@@ -1737,6 +1746,21 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                     result = dash_api.promote_model_payload(version, force)
                     code   = HTTPStatus.OK if result["ok"] else HTTPStatus.BAD_REQUEST
                     self._send_json(code, result)
+                    return
+                if path == "/api/promote_zone_gate":
+                    body   = self._read_json_body()
+                    result = dash_api.promote_zone_gate_payload(body.get("version", ""))
+                    self._send_json(HTTPStatus.OK if result["ok"] else HTTPStatus.BAD_REQUEST, result)
+                    return
+                if path == "/api/promote_rr":
+                    body   = self._read_json_body()
+                    result = dash_api.promote_rr_payload(body.get("version", ""))
+                    self._send_json(HTTPStatus.OK if result["ok"] else HTTPStatus.BAD_REQUEST, result)
+                    return
+                if path == "/api/promote_tradenet":
+                    body   = self._read_json_body()
+                    result = dash_api.promote_tradenet_payload(body.get("version", ""))
+                    self._send_json(HTTPStatus.OK if result["ok"] else HTTPStatus.BAD_REQUEST, result)
                     return
                 # ── Report LLM route ─────────────────────────────────────────
                 if path.startswith("/runs/") and path.endswith("/report/llm"):

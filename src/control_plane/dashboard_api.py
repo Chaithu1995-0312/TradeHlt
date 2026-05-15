@@ -421,6 +421,99 @@ class TradingDashboardAPI:
         except Exception as exc:
             return {"ok": False, "reason": str(exc), "active_version": None}
 
+    # ── Non-Gaussian model registry lists ─────────────────────────────────────
+
+    def _promote_registry(self, reg_path: Path, version: str, label: str) -> dict[str, Any]:
+        """Generic atomic promote for any model registry JSON."""
+        try:
+            reg = json.loads(reg_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            return {"ok": False, "reason": f"cannot read {label} registry: {exc}"}
+        if version not in reg or not isinstance(reg[version], dict):
+            return {"ok": False, "reason": f"{label} version '{version}' not found"}
+        for k, e in reg.items():
+            if isinstance(e, dict):
+                e["active"] = False
+        reg[version]["active"] = True
+        tmp = reg_path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(reg, indent=2), encoding="utf-8")
+        os.replace(tmp, reg_path)
+        return {"ok": True, "reason": f"{label} promoted: {version}", "active_version": version}
+
+    def zone_gate_models_payload(self) -> dict[str, Any]:
+        reg = _read_json(MODELS_DIR / "zone_gate_registry.json")
+        if not reg:
+            return {"models": [], "error": "zone_gate_registry.json not found"}
+        models = []
+        for key, entry in reg.items():
+            if not isinstance(entry, dict):
+                continue
+            mf = entry.get("model_file", "")
+            models.append({
+                "version":              entry.get("version", key),
+                "active":               bool(entry.get("active", False)),
+                "n_zones":              entry.get("n_zones", 0),
+                "n_clusters_requested": entry.get("n_clusters_requested", 0),
+                "trained_at":           (entry.get("trained_at") or "")[:10],
+                "model_file":           mf,
+                "file_exists":          (REPO_ROOT / mf).exists() if mf else False,
+            })
+        models.sort(key=lambda x: x.get("trained_at") or "0000", reverse=True)
+        return {"models": models}
+
+    def rr_models_payload(self) -> dict[str, Any]:
+        reg = _read_json(MODELS_DIR / "rr_registry.json")
+        if not reg:
+            return {"models": [], "error": "rr_registry.json not found"}
+        models = []
+        for key, entry in reg.items():
+            if not isinstance(entry, dict):
+                continue
+            m = entry.get("metrics") or {}
+            models.append({
+                "version":      entry.get("version", key),
+                "active":       bool(entry.get("active", False)),
+                "n_samples":    entry.get("n_samples"),
+                "n_features":   entry.get("n_features", 35),
+                "ridge_alpha":  m.get("ridge_alpha"),
+                "model_file":   entry.get("model_file"),
+                "model_exists": bool(entry.get("model_exists", False)),
+                "dataset_file": entry.get("dataset_file"),
+                "trained_at":   (entry.get("trained_at") or "")[:10],
+            })
+        models.sort(key=lambda x: x.get("trained_at") or "0000", reverse=True)
+        return {"models": models}
+
+    def tradenet_models_payload(self) -> dict[str, Any]:
+        reg = _read_json(MODELS_DIR / "tradenet_registry.json")
+        if not reg:
+            return {"models": [], "error": "tradenet_registry.json not found"}
+        models = []
+        for key, entry in reg.items():
+            if not isinstance(entry, dict):
+                continue
+            mf = entry.get("model_file", "")
+            mf_path = REPO_ROOT / mf if mf else None
+            models.append({
+                "version":    entry.get("version", key),
+                "active":     bool(entry.get("active", False)),
+                "model_file": mf,
+                "trained_at": (entry.get("trained_at") or "")[:10],
+                "metrics":    entry.get("metrics", {}),
+                "file_exists": mf_path.exists() if mf_path else False,
+            })
+        models.sort(key=lambda x: x.get("trained_at") or "0000", reverse=True)
+        return {"models": models}
+
+    def promote_zone_gate_payload(self, version: str) -> dict[str, Any]:
+        return self._promote_registry(MODELS_DIR / "zone_gate_registry.json", version, "zone_gate")
+
+    def promote_rr_payload(self, version: str) -> dict[str, Any]:
+        return self._promote_registry(MODELS_DIR / "rr_registry.json", version, "rr")
+
+    def promote_tradenet_payload(self, version: str) -> dict[str, Any]:
+        return self._promote_registry(MODELS_DIR / "tradenet_registry.json", version, "tradenet")
+
     # ── Opportunities ─────────────────────────────────────────────────────────
 
     def opportunities_payload(

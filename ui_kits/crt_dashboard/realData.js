@@ -201,6 +201,50 @@ async function _init() {
     }
   }
 
+  // ── /api/zone_gate_models, /api/rr_models, /api/tradenet_models ─────────
+  const [zgR, rrModR, tnR] = await Promise.allSettled([
+    fetch(_API + "/api/zone_gate_models").then(r => r.json()),
+    fetch(_API + "/api/rr_models").then(r => r.json()),
+    fetch(_API + "/api/tradenet_models").then(r => r.json()),
+  ]);
+
+  if (zgR.status === "fulfilled") {
+    window.ZONE_GATE_MODELS = (zgR.value.models || []).map(m => ({
+      ver:       m.version || "—",
+      nZones:    m.n_zones || 0,
+      nClusters: m.n_clusters_requested || 0,
+      trained:   m.trained_at || "—",
+      modelFile: (m.model_file || "").split(/[\\/]/).pop() || "—",
+      fileExists: !!m.file_exists,
+      status:    m.active ? "ACTIVE" : "Archived",
+      action:    m.active ? "Active" : "Promote",
+    }));
+  }
+
+  if (rrModR.status === "fulfilled") {
+    window.RR_MODELS = (rrModR.value.models || []).map(m => ({
+      ver:        m.version || "—",
+      samples:    m.n_samples,
+      features:   m.n_features || 35,
+      ridgeAlpha: m.ridge_alpha,
+      modelExists: !!m.model_exists,
+      trained:    m.trained_at || "—",
+      status:     m.active ? "ACTIVE" : "Archived",
+      action:     m.active ? "Active" : "Promote",
+    }));
+  }
+
+  if (tnR.status === "fulfilled") {
+    window.TRADENET_MODELS = (tnR.value.models || []).map(m => ({
+      ver:       m.version || "—",
+      modelFile: (m.model_file || "").split(/[\\/]/).pop() || "—",
+      trained:   m.trained_at || "—",
+      fileExists: !!m.file_exists,
+      status:    m.active ? "ACTIVE" : "Archived",
+      action:    m.active ? "Active" : "Promote",
+    }));
+  }
+
   // ── Deferred React mount ─────────────────────────────────────────────────
   // app.jsx exports window.CrtDashboard and skips its own mount when
   // window._REAL_DATA_LOADING === true. We mount here after data is ready.
