@@ -4,7 +4,7 @@
     "model_file": "models/tradenet_p5_20260406T005347.pth",
     "metrics": {},
     "trained_at": "2026-05-14T18:29:55Z",
-    "active": true
+    "active": false
   },
   "20260405T204109": {
     "version": "20260405T204109",

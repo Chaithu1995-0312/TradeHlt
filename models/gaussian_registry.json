@@ -234,7 +234,7 @@
       "n_val": 0
     },
     "trained_at": "2026-05-12T22:00:41Z",
-    "active": true
+    "active": false
   },
   "v4_val_test": {
     "version": "v4_val_test",
@@ -285,5 +285,55 @@
     },
     "trained_at": "2026-05-13T07:02:57Z",
     "active": false
+  },
+  "v5_balanced": {
+    "version": "v5_balanced",
+    "model_file": "models\\gaussian_v5_balanced.json",
+    "feature_schema": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "volume_ratio",
+      "double_sweep",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "trend_bias",
+      "trend_strength",
+      "momentum_score",
+      "atr",
+      "volatility_ratio",
+      "rsi_14",
+      "macd_line",
+      "macd_signal",
+      "macd_hist",
+      "sweep_detected",
+      "liquidity_sweep",
+      "break_of_structure",
+      "swing_high",
+      "swing_low",
+      "higher_high",
+      "lower_low",
+      "body_size",
+      "wick_size",
+      "body_ratio",
+      "volatility_regime",
+      "session",
+      "hour_of_day",
+      "disp_strength",
+      "retest_depth",
+      "candles_since_retest"
+    ],
+    "schema_version": "2.0",
+    "metrics": {
+      "corr_expected_rr": 0.203,
+      "calibration_error": 0.0462,
+      "n_train": 484700,
+      "n_val": 0
+    },
+    "trained_at": "2026-05-15T04:23:18Z",
+    "active": true
   }
 }

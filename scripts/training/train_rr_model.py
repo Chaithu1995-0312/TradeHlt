@@ -41,6 +41,14 @@ from core.model_registry import (
     get_active_rr_entry,
 )
 
+# Indices (0-based) of absolute-price / size features in CANONICAL_FEATURES order.
+# Zeroing these at train-time (and matching inference-time) prevents the Ridge
+# regression from anchoring on instrument price level — a non-generalizable signal.
+#   open=0  high=1   low=2    close=3   volume=4
+#   ema_fast=7  ema_slow=8   macd_line=16  macd_signal=17
+#   body_size=26  wick_size=27
+_PRICE_FEATURE_INDICES: list = [0, 1, 2, 3, 4, 7, 8, 16, 17, 26, 27]
+
 
 def main() -> None:
     ap = argparse.ArgumentParser(
@@ -65,6 +73,15 @@ def main() -> None:
         "--promote", action="store_true", default=False,
         help="Set this version as active after training (also writes canonical rr_model.json)",
     )
+    ap.add_argument(
+        "--zero-price-features", action="store_true", default=False,
+        help=(
+            "Zero absolute price/size features before training "
+            "(open, high, low, close, volume, ema_fast, ema_slow, "
+            "macd_line, macd_signal, body_size, wick_size — indices 0-4,7-8,16-17,26-27). "
+            "Removes price-level anchoring so the model generalises across price regimes."
+        ),
+    )
     args = ap.parse_args()
 
     # ── Resolve dataset path ─────────────────────────────────────────────────
@@ -82,10 +99,22 @@ def main() -> None:
     n_features = len(X[0]) if X else 0
     print(f"  {n_samples} samples, {n_features} features")
 
+    # ── Feature zeroing (price-level de-anchoring) ───────────────────────────
+    zero_indices: list = _PRICE_FEATURE_INDICES if args.zero_price_features else []
+    if zero_indices:
+        for row in X:
+            for idx in zero_indices:
+                if idx < len(row):
+                    row[idx] = 0.0
+        print(f"  Zeroed {len(zero_indices)} price-level features at indices: {zero_indices}")
+
     # ── Train ────────────────────────────────────────────────────────────────
     trainer = RRPatternTrainer()
     state   = trainer.train(X, y_rr, y_win)
     n_train = state.get("n_train", n_samples)
+    # Persist zero_indices in the model state so NanoInferenceEngine can apply
+    # the same mask at predict-time — zero_indices=[] means no masking (backward compat).
+    state["zero_indices"] = zero_indices
     print(f"Training complete — n_train={n_train}")
 
     # ── Version + output path ────────────────────────────────────────────────

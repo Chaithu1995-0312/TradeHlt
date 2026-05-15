@@ -259,6 +259,7 @@ class NanoInferenceEngine:
         "gnb_mu_win",
         "scale_mu",
         "scale_sigma",
+        "zero_indices",   # tuple[int] — features zeroed at train-time; same mask applied at predict-time
     )
 
     def __init__(self, state_dict: Dict[str, Any]) -> None:
@@ -277,6 +278,9 @@ class NanoInferenceEngine:
 
         self.conf_mu = tuple(float(x) for x in state_dict["conf_mu"])
         self.conf_P = tuple(tuple(float(x) for x in row) for row in state_dict["conf_P"])
+        # zero_indices: features zeroed at train-time — apply same mask at predict-time.
+        # Empty tuple when loading models trained without --zero-price-features (backward compat).
+        self.zero_indices = tuple(int(i) for i in state_dict.get("zero_indices", []))
 
     @classmethod
     def load(cls, path: str = DEFAULT_MODEL_PATH) -> "NanoInferenceEngine":
@@ -294,6 +298,14 @@ class NanoInferenceEngine:
         n = len(self.W)
         if len(features) != n:
             raise ValueError(f"NanoInferenceEngine.predict: expected {n} features, got {len(features)}.")
+
+        # Apply same feature zeroing used at train-time (price-level de-anchoring).
+        # Mutating caller data is unexpected; always work on a copy when zeroing.
+        if self.zero_indices:
+            features = list(features)
+            for idx in self.zero_indices:
+                if idx < n:
+                    features[idx] = 0.0
 
         X = [
             (float(features[i]) - self.scale_mu[i]) / self.scale_sigma[i]

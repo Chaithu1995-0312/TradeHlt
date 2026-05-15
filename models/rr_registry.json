@@ -22,6 +22,20 @@
       "ridge_alpha": 10.0
     },
     "trained_at": "2026-05-14T18:35:01Z",
-    "active": true
+    "active": false
+  },
+  "202605_v2": {
+    "version": "202605_v2",
+    "dataset_file": null,
+    "n_samples": 0,
+    "n_features": 35,
+    "trained_at": "2026-05-15T04:15:37Z",
+    "active": true,
+    "model_file": "models/rr_model_202605_v2.json",
+    "model_exists": true,
+    "metrics": {
+      "n_train": 141687,
+      "ridge_alpha": 10.0
+    }
   }
 }
