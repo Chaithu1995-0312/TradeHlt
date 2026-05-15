@@ -1635,6 +1635,9 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                         ".md":   "text/plain; charset=utf-8",
                     }
                     _fp = REPO_ROOT / path.lstrip("/")
+                    # Trailing slash or directory → serve index.html
+                    if _fp.is_dir():
+                        _fp = _fp / "index.html"
                     if not _fp.exists() or not _fp.is_file():
                         self._send_json(HTTPStatus.NOT_FOUND, {"error": f"Not found: {path}"})
                         return
