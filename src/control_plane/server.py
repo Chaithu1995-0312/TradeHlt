@@ -1523,6 +1523,7 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
             self.send_response(code)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
+            self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
             self.wfile.write(body)
 
@@ -1620,6 +1621,32 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                 if path == "/api/backtest_history":
                     self._send_json(HTTPStatus.OK, dash_api.backtest_history_payload())
                     return
+                # ── ui_kits/ static file serving (React UI kits) ─────────────
+                if path.startswith("/ui_kits/"):
+                    _MIME = {
+                        ".html": "text/html; charset=utf-8",
+                        ".js":   "application/javascript; charset=utf-8",
+                        ".jsx":  "application/javascript; charset=utf-8",
+                        ".css":  "text/css; charset=utf-8",
+                        ".json": "application/json; charset=utf-8",
+                        ".png":  "image/png",
+                        ".jpg":  "image/jpeg",
+                        ".svg":  "image/svg+xml",
+                        ".md":   "text/plain; charset=utf-8",
+                    }
+                    _fp = REPO_ROOT / path.lstrip("/")
+                    if not _fp.exists() or not _fp.is_file():
+                        self._send_json(HTTPStatus.NOT_FOUND, {"error": f"Not found: {path}"})
+                        return
+                    _ct   = _MIME.get(_fp.suffix.lower(), "application/octet-stream")
+                    _body = _fp.read_bytes()
+                    self.send_response(HTTPStatus.OK)
+                    self.send_header("Content-Type", _ct)
+                    self.send_header("Content-Length", str(len(_body)))
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(_body)
+                    return
                 # ── Existing Control Plane routes ─────────────────────────────
                 if path == "/":
                     self._send_html(HTTPStatus.OK, api.ui_html())
@@ -1683,6 +1710,14 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                 self._send_json(HTTPStatus.NOT_FOUND, {"error": str(exc)})
             except Exception as exc:
                 self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+
+        def do_OPTIONS(self) -> None:
+            """CORS preflight — allows ui_kits pages served via file:// to call the API."""
+            self.send_response(HTTPStatus.NO_CONTENT)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.end_headers()
 
         def do_POST(self) -> None:
             parsed = urllib.parse.urlparse(self.path)
