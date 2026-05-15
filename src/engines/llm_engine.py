@@ -1,13 +1,13 @@
 """
 llm_engine.py
-Parallel engine wrapper — calls llm_score_safe() from llm_inference_client.py.
+Parallel engine wrapper — calls llm_score_safe() from llm_scorer.py.
 """
 import json
 import logging
 import time
 from pathlib import Path
 
-from config_layer.llm_inference_client import llm_score_safe
+from config_layer.llm_scorer import llm_score_safe
 from utils.logging_config import get_log_path
 
 Path("logs").mkdir(exist_ok=True)

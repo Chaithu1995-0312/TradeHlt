@@ -57,7 +57,7 @@ try:
     from backtest_v2 import BacktestConfig, BacktestRunner, CandleLoader
     from config_layer.crt_engine_v2 import CRTConfig          # kept only for type hints
     from config_layer.config_builder import ConfigBuilder      # REQUIRED — replaces get_crt_config
-    from config_layer.llm_inference_client import llm_score
+    from config_layer.llm_scorer import llm_score
 except ImportError as e:
     safe_print(f"\n  IMPORT ERROR: {e}\n"
           "  Ensure backtest_v2.py, crt_engine_v2.py, config_builder.py "

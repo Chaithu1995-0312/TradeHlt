@@ -5,7 +5,7 @@ import math
 from typing import Dict, Optional
 
 from features.feature_schema import CANONICAL_FEATURES
-from config_layer.llm_inference_client import llm_score_safe
+from config_layer.llm_scorer import llm_score_safe
 from features.schema_validator import validate_feature_values, validate_features
 
 log = logging.getLogger("ScoringEngine")

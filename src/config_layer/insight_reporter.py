@@ -46,7 +46,7 @@ import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from config_layer.llm_inference_client import llm_insight, _fallback_insight
+from config_layer.llm_narrative import llm_insight, _fallback_insight
 
 log = logging.getLogger("InsightReporter")
 

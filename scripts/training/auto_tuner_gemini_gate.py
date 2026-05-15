@@ -36,7 +36,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
 from config_layer.config_builder import ConfigBuilder
-from config_layer.llm_inference_client import llm_score
+from config_layer.llm_scorer import llm_score
 
 
 # ── Import from backtest_v2 (must be in same directory) ────────────────────

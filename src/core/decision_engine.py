@@ -10,51 +10,32 @@ FIX 3 — Dead Engine Neutralization: zone_gate_invalid check is bypassed when
 FIX 4 — Minimum Acceptance Fallback: decide_batch() promotes top-N signals
          when zero pass, guaranteeing ACCEPT > 0 per batch.
 FIX 5 — Logging: threshold_used and reject_stage always present in output.
+
+DynamicThreshold has been extracted to core/dynamic_threshold.py.
+It is re-exported here for backward compatibility.
+New code should import it from core.dynamic_threshold directly.
 """
 
 from __future__ import annotations
 
 import logging
-from collections import deque
 from dataclasses import dataclass
 from typing import Any
+
+from core.dynamic_threshold import (        # noqa: F401 — re-exports for backward compat
+    DynamicThreshold,
+    _THRESHOLD_MIN,
+    _THRESHOLD_MAX,
+    _THRESHOLD_PERCENTILE,
+)
 
 log = logging.getLogger("DecisionEngine")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# FIX 1 — DYNAMIC THRESHOLD
+# FIX 1 — DYNAMIC THRESHOLD (implementation lives in core/dynamic_threshold.py)
 # ─────────────────────────────────────────────────────────────────────────────
 
-_THRESHOLD_PERCENTILE = 85
-_THRESHOLD_MIN        = 0.45
-_THRESHOLD_MAX        = 0.65
-_FALLBACK_TOP_N       = 3
-
-
-class DynamicThreshold:
-    """
-    Percentile-based threshold: threshold = percentile(scores, 85),
-    clamped to [0.45, 0.65]. Returns 0.55 (midpoint) until history exists.
-    """
-
-    def __init__(self, window: int = 1000) -> None:
-        self._scores: deque[float] = deque(maxlen=window)
-
-    def update(self, score: float) -> None:
-        self._scores.append(score)
-
-    def compute(self) -> float:
-        if not self._scores:
-            return (_THRESHOLD_MIN + _THRESHOLD_MAX) / 2.0
-        sorted_scores = sorted(self._scores)
-        n   = len(sorted_scores)
-        idx = min(int(n * _THRESHOLD_PERCENTILE / 100), n - 1)
-        raw = sorted_scores[idx]
-        return max(_THRESHOLD_MIN, min(_THRESHOLD_MAX, raw))
-
-    @property
-    def n_samples(self) -> int:
-        return len(self._scores)
+_FALLBACK_TOP_N = 3
 
 
 # ─────────────────────────────────────────────────────────────────────────────
