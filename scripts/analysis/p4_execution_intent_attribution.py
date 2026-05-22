@@ -120,28 +120,44 @@ def _capture_state(state, label: str, candle=None) -> dict:
         pass
 
     rs = state.risk_score
+
+    # candles_since_retest: NOT stored in cached_features — computed from engine state.
+    # Using None (not 0) when either index is unavailable to avoid silently encoding missing→0.
+    _cur_idx = getattr(state, "current_candle_index", None)
+    _ret_idx = getattr(state, "retest_candle_index",  None)
+    _csr = (max(0, _cur_idx - _ret_idx)
+            if (_cur_idx is not None and _ret_idx is not None) else None)
+
+    # double_sweep is stored in cached_features as bool (False in this dataset);
+    # explicit int() conversion keeps it numeric for _stat() comparisons.
+    _ds = feats.get("double_sweep", None)
+    _ds = int(_ds) if _ds is not None else None
+
     return {
         "label":               label,
         "direction":           state.direction.value if state.direction else "NONE",
         "zone_pct":            zone_pct,
         "session":             session_name,
         "intent":              _intent,
-        "risk_score_final":    round(rs.final, 4)         if rs else None,
-        "risk_score_sweep":    round(rs.sweep_score, 4)   if rs else None,
+        "risk_score_final":    round(rs.final, 4)          if rs else None,
+        "risk_score_sweep":    round(rs.sweep_score, 4)    if rs else None,
         "risk_score_breakout": round(rs.breakout_score, 4) if rs else None,
-        "risk_score_retest":   round(rs.retest_score, 4)  if rs else None,
-        "risk_score_time":     round(rs.time_score, 4)    if rs else None,
-        "risk_score_decay":    round(rs.decay_factor, 4)  if rs else None,
-        # Canonical features relevant to quality
-        "retest_depth":        float(feats.get("retest_depth",         0.0)),
-        "disp_strength":       float(feats.get("disp_strength",        0.0)),
-        "body_ratio":          float(feats.get("body_ratio",           0.0)),
-        "candles_since_retest":int(  feats.get("candles_since_retest", 99)),
-        "momentum_score":      float(feats.get("momentum_score",       0.0)),
-        "sweep_detected":      int(  feats.get("sweep_detected",       0)),
-        "double_sweep":        int(  feats.get("double_sweep",         0)),
-        "volume_ratio":        float(feats.get("volume_ratio",         0.0)),
-        "volume_spike":        int(  feats.get("volume_spike",         0)),
+        "risk_score_retest":   round(rs.retest_score, 4)   if rs else None,
+        "risk_score_time":     round(rs.time_score, 4)     if rs else None,
+        "risk_score_decay":    round(rs.decay_factor, 4)   if rs else None,
+        # Canonical features from cached_features (see crt_engine_v2.py:737-744)
+        # Present: retest_depth, body_ratio, disp_strength, double_sweep, session, retest_index
+        # Absent:  momentum_score, volume_ratio, volume_spike, sweep_detected, candles_since_retest
+        "retest_depth":        float(feats.get("retest_depth",  0.0)) if "retest_depth"  in feats else None,
+        "disp_strength":       float(feats.get("disp_strength", 0.0)) if "disp_strength" in feats else None,
+        "body_ratio":          float(feats.get("body_ratio",    0.0)) if "body_ratio"    in feats else None,
+        "candles_since_retest": _csr,  # derived from engine state, NOT cached_features
+        "double_sweep":        _ds,    # stored as bool in cached_features; None if absent
+        # Genuinely absent from cached_features (show None so _stat() reports 'n/a' correctly)
+        "momentum_score":      None,
+        "sweep_detected":      None,
+        "volume_ratio":        None,
+        "volume_spike":        None,
         "n_feats":             len(feats),
         # Range geometry
         "range_h_ref":         round(rng.h_ref, 6) if rng else None,
@@ -242,6 +258,11 @@ def _fmt(v, decimals=3):
     if v is None: return "None"
     if isinstance(v, float): return f"{v:.{decimals}f}"
     return str(v)
+
+def _safe(v, decimals=3):
+    """Format stat mean — None (missing data) → 'n/a'; 0.0 → '0.000' (valid zero, not n/a)."""
+    if v is None: return "n/a"
+    return _fmt(v, decimals)
 
 def _stat(lst, key, filter_fn=None):
     vals = [r[key] for r in lst if r.get(key) is not None]
@@ -354,24 +375,36 @@ for field in ["risk_score_final", "risk_score_sweep", "risk_score_breakout",
     e_s = _stat(executed,     field)
     z_s = _stat(zone_rejects, field)
     s_s = _stat(sess_rejects, field)
-    print(f"  {label:<22} {_fmt(e_s['mean'] or 'n/a'):>10} {_fmt(z_s['mean'] or 'n/a'):>10} {_fmt(s_s['mean'] or 'n/a'):>10}")
+    print(f"  {label:<22} {_safe(e_s['mean']):>10} {_safe(z_s['mean']):>10} {_safe(s_s['mean']):>10}")
 print()
 
 # =============================================================================
 # SECTION 5: FEATURE COMPARISON
 # =============================================================================
+# Notes on feature availability in state.cached_features (crt_engine_v2.py:737-744):
+#   PRESENT:  retest_depth, body_ratio, disp_strength, double_sweep, session, retest_index
+#   ABSENT:   momentum_score, volume_ratio, volume_spike, sweep_detected
+#   DERIVED:  candles_since_retest (from engine state, not cached_features)
 print("-- Canonical Feature Comparison --")
-print(f"  {'Feature':<24} {'Exec mean':>10} {'Zone mean':>10} {'Sess mean':>10}")
-features_to_compare = [
-    "retest_depth", "disp_strength", "body_ratio",
-    "candles_since_retest", "momentum_score", "volume_ratio", "volume_spike",
-    "sweep_detected", "double_sweep",
-]
+print(f"  {'Feature':<24} {'Exec mean':>10} {'Zone mean':>10} {'Sess mean':>10}  source")
+_feat_source = {
+    "retest_depth":         "cached",
+    "disp_strength":        "cached",
+    "body_ratio":           "cached",
+    "candles_since_retest": "state",
+    "double_sweep":         "cached",
+    "momentum_score":       "absent",
+    "volume_ratio":         "absent",
+    "volume_spike":         "absent",
+    "sweep_detected":       "absent",
+}
+features_to_compare = list(_feat_source.keys())
 for feat in features_to_compare:
     e_s = _stat(executed,     feat)
     z_s = _stat(zone_rejects, feat)
     s_s = _stat(sess_rejects, feat)
-    print(f"  {feat:<24} {_fmt(e_s['mean'] or 'n/a'):>10} {_fmt(z_s['mean'] or 'n/a'):>10} {_fmt(s_s['mean'] or 'n/a'):>10}")
+    src = _feat_source.get(feat, "?")
+    print(f"  {feat:<24} {_safe(e_s['mean']):>10} {_safe(z_s['mean']):>10} {_safe(s_s['mean']):>10}  [{src}]")
 print()
 
 # =============================================================================
