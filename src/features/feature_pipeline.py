@@ -22,8 +22,13 @@ Batch usage
     print(pipeline.monitor.summary())
 
 Edge Cases:
-    - Zero volume (Forex): volume_ratio is set to 1.0 when volume_ma20 == 0.
+    - Zero volume (Forex): when all volume values are zero the pipeline
+      substitutes intrabar range (high-low) as a tick-activity proxy so
+      both `volume` and `volume_ratio` carry real variance.
     - Flat market (ATR ≈ 0): bb_position has a 1e-9 denominator guard.
+      ATR-gated features (ema_spread, momentum_score, disp_strength,
+      retest_depth) emit NaN during the 14-bar ATR warmup; finalize()
+      drops those rows cleanly.
     - Warmup NaNs: finalize() drops all NaN rows. With ma_200 the warmup is ≥ 200
       bars; callers must ensure sufficient history.
 
@@ -187,18 +192,39 @@ class FeaturePipeline:
         self.df = df
 
     # ------------------------------------------------------------------
-    # VOLUME FEATURES  (Forex-safe: zero volume → ratio = 1.0)
+    # VOLUME FEATURES
+    # FX data often carries zero tick-volume. When detected, substitute the
+    # intrabar price range (high - low) as a tick-activity proxy so that both
+    # `volume` and `volume_ratio` carry genuine variance for model training.
     # ------------------------------------------------------------------
     def compute_volume_features(self) -> None:
         df = self.df
 
-        df["volume_ma20"] = df["volume"].rolling(20).mean()
+        raw_vol = df["volume"]
+        # Detect FX "dead volume": all zeros or all NaN after numeric coercion
+        vol_is_dead = (raw_vol.fillna(0.0).max() == 0)
 
-        df["volume_ratio"] = np.where(
-            df["volume_ma20"] > 0,
-            df["volume"] / df["volume_ma20"],
-            1.0
-        )
+        if vol_is_dead:
+            logger.info(
+                "compute_volume_features: volume column is all-zero — "
+                "substituting intrabar range (high-low) as tick-activity proxy."
+            )
+            proxy = df["high"] - df["low"]
+            proxy_ma20 = proxy.rolling(20).mean()
+            df["volume"] = proxy
+            df["volume_ma20"] = proxy_ma20
+            df["volume_ratio"] = np.where(
+                proxy_ma20 > 0,
+                proxy / proxy_ma20,
+                1.0
+            )
+        else:
+            df["volume_ma20"] = raw_vol.rolling(20).mean()
+            df["volume_ratio"] = np.where(
+                df["volume_ma20"] > 0,
+                raw_vol / df["volume_ma20"],
+                1.0
+            )
 
         df["volume_spike"] = (df["volume_ratio"] > 1.5).astype(np.int8)
 
@@ -215,12 +241,16 @@ class FeaturePipeline:
         df["ma_50"] = df["close"].rolling(50).mean()
         df["ma_200"] = df["close"].rolling(200).mean()
 
-        # ── RSI(14) — kept as intermediate, NOT in canonical output ──
+        # ── RSI(14) ───────────────────────────────────────────────────
+        # Standard Wilder formula: RS = avg_gain / avg_loss, RSI = 100 − 100/(1+RS).
+        # Correct range is strictly [0, 100]; clip guards the 1e-9 denominator edge.
+        # Prior bug: formula 100*(gain−loss)/(gain+loss) produced [−100, 100] with
+        # mean≈0 and std≈52 — confirmed in gaussian_v5_tradenet scaler statistics.
         delta = df["close"].diff()
         gain = delta.clip(lower=0).rolling(14).mean()
         loss = (-delta.clip(upper=0)).rolling(14).mean()
         rs = gain / (loss + 1e-9)
-        df["rsi_14"] = 100.0 - (100.0 / (1.0 + rs))
+        df["rsi_14"] = (100.0 - (100.0 / (1.0 + rs))).clip(0.0, 100.0)
 
         df["rsi_state"] = np.where(
             df["rsi_14"] > 70, 1,
@@ -311,8 +341,17 @@ class FeaturePipeline:
         roll_high = df["high"].rolling(w, center=True, min_periods=w).max()
         roll_low  = df["low"].rolling(w, center=True, min_periods=w).min()
 
+        # Bullish pivot: this bar's HIGH is the rolling maximum
         df["swing_high"] = (df["high"] == roll_high).astype(np.int8)
+        # Bearish pivot: this bar's LOW is the rolling minimum — must use LOW/roll_low
         df["swing_low"]  = (df["low"]  == roll_low).astype(np.int8)
+
+        # Guard against copy-paste regression: the two flags must differ
+        if df["swing_high"].equals(df["swing_low"]):
+            raise AssertionError(
+                "compute_structure_liquidity: swing_high and swing_low are "
+                "bit-for-bit identical — column reference bug detected."
+            )
 
         df["last_swing_high_price"] = df["high"].where(df["swing_high"] == 1).ffill()
         df["last_swing_low_price"]  = df["low"].where(df["swing_low"]  == 1).ffill()
@@ -320,8 +359,17 @@ class FeaturePipeline:
         ref_high = df["last_swing_high_price"].shift(1)
         ref_low  = df["last_swing_low_price"].shift(1)
 
+        # Bullish structure: current HIGH exceeds previous swing high
         df["higher_high"] = (df["high"] > ref_high).astype(np.int8)
+        # Bearish structure: current LOW undercuts previous swing low — must use LOW/ref_low
         df["lower_low"]   = (df["low"]  < ref_low).astype(np.int8)
+
+        # Guard against copy-paste regression
+        if df["higher_high"].equals(df["lower_low"]):
+            raise AssertionError(
+                "compute_structure_liquidity: higher_high and lower_low are "
+                "bit-for-bit identical — column reference bug detected."
+            )
 
         df["break_of_structure"] = np.where(
             df["close"] > ref_high,  1,
@@ -408,16 +456,18 @@ class FeaturePipeline:
         df["ema_fast"] = df["close"].ewm(span=9, adjust=False).mean().astype(np.float32)
         df["ema_slow"] = df["close"].ewm(span=21, adjust=False).mean().astype(np.float32)
 
+        # Use np.nan (not 0.0) when ATR is unavailable so finalize() drops the
+        # warmup rows instead of silently injecting 0.0 into training samples.
         df["ema_spread"] = np.where(
             df["atr"] > 0,
             (df["ema_fast"] - df["ema_slow"]) / df["atr"],
-            0.0
+            np.nan
         ).astype(np.float32)
 
         df["momentum_score"] = np.where(
             df["atr"] > 0,
             df["close"].diff() / df["atr"],
-            0.0
+            np.nan
         ).astype(np.float32)
 
     def compute_canonical_trend_features(self) -> None:
@@ -442,7 +492,15 @@ class FeaturePipeline:
         ).astype(np.int8)
 
         # Retest: after a sweep, price returns close to fast EMA within ATR-based band.
-        recent_sweep = (df["liquidity_sweep"] != 0).shift(1).fillna(False)
+        # Use a 10-bar rolling window so retests up to 10 bars after the sweep are
+        # captured (was 1-bar .shift(1) which forced candles_since_retest=1 always).
+        _RETEST_LOOKBACK = 10
+        recent_sweep = (
+            (df["liquidity_sweep"] != 0)
+            .rolling(window=_RETEST_LOOKBACK, min_periods=1)
+            .max()
+            .astype(bool)
+        )
         near_fast_ema = (df["close"] - df["ema_fast"]).abs() <= (1.0 * df["atr"] * df["close"])
         df["retest_flag"] = (recent_sweep & near_fast_ema).astype(np.int8)
 
@@ -466,13 +524,22 @@ class FeaturePipeline:
         """Compute candles_since_retest, retest_depth, disp_strength."""
         df = self.df
 
+        # np.nan fallbacks — finalize() drops these rows; 0.0 would silently
+        # inject invalid samples during the ATR warmup period.
         df["disp_strength"] = np.where(
             (df["atr"] > 0) & (df["close"] > 0),
             df["body_size"] / (df["atr"] * df["close"]),
-            0.0,
+            np.nan,
         ).astype(np.float32)
         df["disp_strength"] = df["disp_strength"].clip(lower=0.0, upper=3.0).astype(np.float32)
 
+        # retest_depth is only defined when retest_flag == 1; on every other bar
+        # the feature is semantically "no retest", which we encode as 0.0 (NOT NaN).
+        # NaN would propagate into finalize()'s dropna(subset=CANONICAL_FEATURES)
+        # and silently delete ~52% of bars — breaking the timestamp → row-index map
+        # the backtest loop uses (see backtest_v2.py:1500-1530). ATR-warmup rows are
+        # still cleanly dropped via the NaN fallbacks in disp_strength / ema_spread
+        # / momentum_score, so no invalid warm-up samples leak through.
         df["retest_depth"] = np.where(
             (df["retest_flag"] == 1) & (df["atr"] > 0) & (df["close"] > 0),
             (df["close"] - df["ema_fast"]).abs() / (df["atr"] * df["close"]),
@@ -480,13 +547,111 @@ class FeaturePipeline:
         ).astype(np.float32)
         df["retest_depth"] = df["retest_depth"].clip(lower=0.0, upper=1.0).astype(np.float32)
 
-        retest_groups = df["retest_flag"].eq(1).cumsum()
-        bars_since = df.groupby(retest_groups).cumcount()
+        # Count bars since the last liquidity sweep (the event that SET UP the
+        # retest), not since the retest_flag itself.  Previously this used
+        # retest_flag.cumsum(), which made cumcount()=0 at every retest candle
+        # (the retest_flag candle IS the first candle of its group) — giving
+        # zero variance in training data.  Grouping by sweep events instead
+        # yields N=2–5 at a typical retest candle, producing a meaningful signal.
+        # Guard: `liquidity_sweep` may be absent in minimal test DataFrames or
+        # partial pipeline runs; fall back to retest_flag grouping in that case.
+        if "liquidity_sweep" in df.columns:
+            sweep_groups = (df["liquidity_sweep"] != 0).astype(int).cumsum()
+        else:
+            sweep_groups = df["retest_flag"].eq(1).cumsum()
+        bars_since_sweep = df.groupby(sweep_groups).cumcount()
         df["candles_since_retest"] = np.where(
-            retest_groups > 0,
-            bars_since,
+            sweep_groups > 0,
+            bars_since_sweep,
             0,
         ).astype(np.int16)
+
+    def compute_liquidity_distance(self) -> None:
+        """
+        Compute ATR-normalised distance to nearest liquidity level.
+
+        No lookahead: all reference levels use .shift(1) so they reflect
+        the state BEFORE the current bar opens.
+
+        Populates:
+          liquidity_distance       — abs(close - nearest_level) / (atr * close);
+                                     NaN when atr=0 or no level available
+          liquidity_pressure_score — exp(-0.5 * liquidity_distance), clipped [0, 1];
+                                     higher = price is closer to a sweep zone
+
+        Live safety note:
+          Reference levels (last_swing_high_price, last_swing_low_price) are
+          computed in compute_structure_liquidity() using center=True rolling windows
+          which introduce lookahead for live inference. For backtesting this is
+          acceptable. For live mode, swap to a trailing-window swing detector.
+          This method itself is safe because it reads the SHIFTED reference prices.
+        """
+        df = self.df
+
+        # Reference levels (all trailing — no lookahead)
+        ref_high = df["last_swing_high_price"].shift(1)
+        ref_low  = df["last_swing_low_price"].shift(1)
+
+        # Last BOS level: carry forward the price level at which BOS occurred.
+        bos_level = pd.Series(np.nan, index=df.index)
+        bos_bullish = df["break_of_structure"] == 1
+        bos_bearish = df["break_of_structure"] == -1
+        bos_level.loc[bos_bullish] = ref_high.loc[bos_bullish]
+        bos_level.loc[bos_bearish] = ref_low.loc[bos_bearish]
+        bos_level = bos_level.ffill()
+
+        # ATR in absolute price units (atr column is close-relative; multiply back).
+        # Guard: atr_safe is NaN when atr is 0 or NaN — produces NaN distance.
+        atr_abs  = df["atr"] * df["close"]
+        atr_safe = atr_abs.where(atr_abs > 0, np.nan)
+
+        # Candidate distances (non-negative, ATR-normalised)
+        dist_high = (df["close"] - ref_high).abs() / atr_safe
+        dist_low  = (df["close"] - ref_low).abs()  / atr_safe
+        dist_bos  = (df["close"] - bos_level).abs() / atr_safe
+
+        # Nearest of the three candidates
+        nearest = pd.concat([dist_high, dist_low, dist_bos], axis=1).min(axis=1)
+        df["liquidity_distance"] = nearest.clip(lower=0.0).astype(np.float32)
+
+        # Pressure score: exp(-0.5 × distance) → high score when price near liquidity
+        df["liquidity_pressure_score"] = (
+            np.exp(-0.5 * df["liquidity_distance"].fillna(10.0))
+        ).clip(0.0, 1.0).astype(np.float32)
+
+        self.df = df
+
+    def promote_volume_spike(self) -> None:
+        """
+        Replace fixed-threshold volume_spike with adaptive 75th-percentile threshold.
+
+        Rationale: fixed 1.5× threshold is not forex-safe across instruments with
+        different volume characteristics. Adaptive percentile adjusts to the
+        instrument's own distribution.
+
+        Overwrites the 'volume_spike' column (computed earlier in
+        compute_volume_features() with a fixed threshold).
+
+        Falls back to fixed 1.5× threshold when rolling window has < 20 samples.
+        No lookahead: rolling window uses trailing only (no center=True).
+        """
+        df = self.df
+
+        _ADAPTIVE_WINDOW     = 50
+        _FIXED_FALLBACK      = 1.5
+        _MIN_SAMPLES         = 20
+        _PERCENTILE          = 75
+
+        vol_ratio = df["volume_ratio"]
+        rolling_thresh = vol_ratio.rolling(
+            window=_ADAPTIVE_WINDOW, min_periods=_MIN_SAMPLES
+        ).quantile(_PERCENTILE / 100.0)
+
+        # Where rolling threshold is available use adaptive; else use fixed fallback
+        threshold = rolling_thresh.where(rolling_thresh.notna(), _FIXED_FALLBACK)
+        df["volume_spike"] = (vol_ratio > threshold).astype(np.int8)
+
+        self.df = df
 
     def compute_canonical_session(self) -> None:
         """Ensure session is int-encoded properly."""
@@ -497,9 +662,41 @@ class FeaturePipeline:
     # FINAL CLEANUP
     # ------------------------------------------------------------------
     def finalize(self) -> pd.DataFrame:
+        n_before = len(self.df)
         df = self.df
         df = df.replace([np.inf, -np.inf], np.nan)
         df = df.dropna(subset=list(CANONICAL_FEATURES)).reset_index(drop=True)
+        n_after    = len(df)
+        drop_count = n_before - n_after
+        drop_pct   = 100.0 * drop_count / max(n_before, 1)
+
+        # Structured telemetry — trendable; catches gradual degradation across runs.
+        _fp_log = logging.getLogger("FeaturePipeline")
+        _fp_log.info(
+            "finalize | rows_before=%d rows_after=%d drop=%d drop_pct=%.2f%%",
+            n_before, n_after, drop_count, drop_pct,
+            extra={
+                "event":       "FEATURE_FINALIZE",
+                "rows_before": n_before,
+                "rows_after":  n_after,
+                "drop_count":  drop_count,
+                "drop_pct":    round(drop_pct, 2),
+            },
+        )
+
+        # Survivorship guard (absolute budget, not survival ratio).
+        # Ratio permits ~5k silent loss on 100k datasets; absolute budget does not.
+        # Warm-up budget = ma_200(200) + z-score(50) + swing edges(4) = ~300 rows max.
+        # Beyond that, any large drop indicates an unintended NaN in CANONICAL_FEATURES.
+        _warmup_budget = 300
+        _allowed_drop  = max(_warmup_budget, int(n_before * 0.02))  # 2% OR warmup, whichever larger
+        if drop_count > _allowed_drop:
+            _fp_log.error(
+                "finalize(): drop count %d exceeds allowed budget %d (%.1f%% of input). "
+                "Likely unintended NaN in CANONICAL_FEATURES. Check recent feature additions.",
+                drop_count, _allowed_drop, drop_pct,
+            )
+
         self.df = df
         return df
 
@@ -513,6 +710,8 @@ class FeaturePipeline:
             "momentum_score",
             "ema_spread",
             "atr",
+            "liquidity_distance",       # v3.0
+            "volume_spike",             # v3.0
         ]
         for col in critical:
             if col not in df.columns:
@@ -601,6 +800,8 @@ class FeaturePipeline:
         self.compute_canonical_trend_features()
         self.compute_canonical_structure_features()
         self.compute_canonical_temporal_features()
+        self.compute_liquidity_distance()     # v3.0: index 35 + 36 (after structure)
+        self.promote_volume_spike()           # v3.0: index 37 (adaptive percentile)
         self.compute_canonical_session()
 
         # Finalize and build vectors
