@@ -1,12 +1,23 @@
 """
 regen_bitnet_35.py
 ==================
-Regenerate model_export_format.json with input_dim=35 to match CANONICAL_FEATURES.
+Regenerate model_export_format.json with input_dim=35 (legacy v2.0 schema)
+wrapped in the canonical bitnet_v3 envelope (schema_version + feature_dim +
+feature_order_hash + feature_names + layers + metadata).
+
+The model itself remains 35-dim — this script is a legacy bridge generator
+for environments still consuming v2.0 schema. New training should target the
+38-feature canonical ordering via export_bitnet_model.py.
 
 Architecture: 35 → 32 → 16 → 1  (BitNet binary weights + learned scales)
 """
 import json
 import random
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+from bitnet.model_contract import build_envelope
 
 random.seed(42)
 
@@ -48,28 +59,34 @@ def make_layer(in_dim: int, out_dim: int, name: str) -> dict:
     return {"name": name, "weights": weights, "scale": scale}
 
 
-model = {
-    "schema": "bitnet_export_v1",
-    "schema_version": "v5",
-    "input_dim": INPUT_DIM,
-    "architecture": f"{INPUT_DIM}->{HIDDEN1}->{HIDDEN2}->{OUTPUT}",
-    "feature_order": FEATURE_ORDER,
-    "layers": [
-        make_layer(INPUT_DIM, HIDDEN1, "fc1"),
-        make_layer(HIDDEN1,   HIDDEN2, "fc2"),
-        make_layer(HIDDEN2,   OUTPUT,  "fc3"),
-    ]
-}
+layers = [
+    make_layer(INPUT_DIM, HIDDEN1, "fc1"),
+    make_layer(HIDDEN1,   HIDDEN2, "fc2"),
+    make_layer(HIDDEN2,   OUTPUT,  "fc3"),
+]
+
+model = build_envelope(
+    layers,
+    feature_names=FEATURE_ORDER,
+    metadata={
+        "source":            "regen_bitnet_35",
+        "legacy_dim":        INPUT_DIM,
+        "architecture":      f"{INPUT_DIM}->{HIDDEN1}->{HIDDEN2}->{OUTPUT}",
+        "previous_schema":   "bitnet_export_v1",
+        "previous_schema_version": "v5",
+    },
+)
 
 output_path = "model_export_format.json"
-with open(output_path, "w") as f:
+with open(output_path, "w", encoding="utf-8") as f:
     json.dump(model, f, indent=2)
 
-print(f"✅ Generated BitNet model: {INPUT_DIM}→{HIDDEN1}→{HIDDEN2}→{OUTPUT}")
-print(f"   input_dim     : {model['input_dim']}")
-print(f"   schema        : {model['schema']} / {model['schema_version']}")
-print(f"   fc1 shape     : {len(model['layers'][0]['weights'])} x {len(model['layers'][0]['weights'][0])}")
-print(f"   fc2 shape     : {len(model['layers'][1]['weights'])} x {len(model['layers'][1]['weights'][0])}")
-print(f"   fc3 shape     : {len(model['layers'][2]['weights'])} x {len(model['layers'][2]['weights'][0])}")
-print(f"   feature_order : {len(model['feature_order'])} features")
-print(f"   Saved to      : {output_path}")
+print(f"Generated BitNet model: {INPUT_DIM}->{HIDDEN1}->{HIDDEN2}->{OUTPUT}")
+print(f"   feature_dim       : {model['feature_dim']}")
+print(f"   schema_version    : {model['schema_version']}")
+print(f"   feature_order_hash: {model['feature_order_hash']}")
+print(f"   fc1 shape         : {len(model['layers'][0]['weights'])} x {len(model['layers'][0]['weights'][0])}")
+print(f"   fc2 shape         : {len(model['layers'][1]['weights'])} x {len(model['layers'][1]['weights'][0])}")
+print(f"   fc3 shape         : {len(model['layers'][2]['weights'])} x {len(model['layers'][2]['weights'][0])}")
+print(f"   feature_names     : {len(model['feature_names'])} features")
+print(f"   Saved to          : {output_path}")

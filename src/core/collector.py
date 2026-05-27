@@ -154,6 +154,17 @@ def collect(
                 "p_win": p_win,
             },
         },
+        # Phase D: strategy memory — populated from context["strategy"] when available.
+        # winning_id: strategy that produced the top signal ("S1" | "S3" | "").
+        # crt_path: compact CRT transition codes at decision time (["S","D","T","X"]).
+        # pattern_hash: 16-char SHA-256 cluster fingerprint for expectancy lookup.
+        # hypotheses: StrategyIntent.to_dict() list from OrchestratorResult.
+        "strategy": {
+            "winning_id":   str(context.get("strategy", {}).get("winning_id",   "")),
+            "crt_path":     list(context.get("strategy", {}).get("crt_path",    [])),
+            "pattern_hash": str(context.get("strategy", {}).get("pattern_hash", "")),
+            "hypotheses":   list(context.get("strategy", {}).get("hypotheses",  [])),
+        },
     }
     _log.info(json.dumps(_json_serializable(record)))
 class Collector:

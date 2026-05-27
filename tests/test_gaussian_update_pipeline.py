@@ -41,8 +41,20 @@ def _make_X_y(n: int = 60):
 
 
 def _make_paired_records(n: int = 60):
-    """Minimal paired records list — content not inspected by run_gaussian_update."""
-    return [{"trade_id": f"t{i}", "features": {}} for i in range(n)]
+    """Minimal paired records list matching the contract expected by run_gaussian_update.
+    train_pipeline.py reads feature_vec + outcome directly from these records."""
+    import random
+    random.seed(42)
+    return [
+        {
+            "trade_id":   f"t{i}",
+            "features":   {},
+            "feature_vec": [random.gauss(0, 1) for _ in range(N_FEATURES)],
+            "outcome":    {"pnl_rr_net": random.uniform(-1, 3),
+                           "win": random.choice([True, False])},
+        }
+        for i in range(n)
+    ]
 
 
 def _make_val_report(trainable: bool = True):

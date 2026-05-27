@@ -2,19 +2,28 @@
 Centralized Logging Configuration for Trading System
 Provides per-flow logging differentiation and aligned format across all modules.
 
-Flows:
+Flows active in every standard backtest (no env flags required):
     FEATURE_PIPELINE  - Step 1: Feature computation pipeline
     ZONE_GATE         - Step 2: BitNet Zone Gate engine
+
+Flows active only when BACKTEST_ENGINE_GATE=1:
     ENGINE_RUNNER     - Step 3: Engine fusion + decision
     EXECUTION_PLANNER - Step 4: Trade plan generation
-    ULTRON_RISK_GATE  - Step 5: Final risk approval
-    LIVE_HOOK         - Live execution hook layer
-    COLLECTOR         - Structured data collector
+    ULTRON_RISK_GATE  - Step 5: Final risk approval (also needs disabled=False in config)
+    COLLECTOR         - Structured data collector (called by EngineRunner)
+    COGNITIVE_BUS     - Async cognitive layer (also needs cognitive_layer.enabled=True)
+    crt_engine / llm_engine loggers (parallel engine wrappers via EngineRunner)
 
-All flows log to:
-  1. Dedicated individual log file: logs/flow_{name}.log
-  2. Aggregated system log: logs/trade_system.log
+Live-mode only:
+    LIVE_HOOK         - Live execution hook layer
+
+All coin-scoped flows log to:
+  1. Dedicated per-flow file: logs/run_{RUN_ID}/{symbol}/flow_{name}.log
+  2. Aggregated system log:  logs/run_{RUN_ID}/{symbol}/trade_system.log
+     (populated by modules that use logging.getLogger("trade_system"))
   3. Console with color coded flow prefix
+
+File handlers are created lazily (delay=True) — files only appear on first write.
 """
 
 import logging
@@ -35,13 +44,17 @@ LOG_DIR.mkdir(exist_ok=True, parents=True)
 RUN_ID: str = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
-def get_log_path(name: str, ext: str = "log") -> Path:
+def get_log_path(name: str, ext: str = "log", symbol: Optional[str] = None) -> Path:
     """
-    Return a run-stamped path: logs/{name}_{RUN_ID}.{ext}
+    Return a run-stamped log path.
 
-    Use this everywhere instead of bare 'logs/foo.log' strings so that each
-    process invocation writes to its own files.
+    With symbol → logs/run_{RUN_ID}/{symbol}/{name}.{ext}  (coin-scoped run dir)
+    Without     → logs/{name}_{RUN_ID}.{ext}               (legacy flat path)
     """
+    if symbol:
+        run_dir = LOG_DIR / f"run_{RUN_ID}" / symbol
+        run_dir.mkdir(parents=True, exist_ok=True)
+        return run_dir / f"{name}.{ext}"
     return LOG_DIR / f"{name}_{RUN_ID}.{ext}"
 
 
@@ -96,7 +109,38 @@ FLOWS = {
         "file": f"flow_gate_intelligence_{RUN_ID}.log",
         "color": "\033[93m",   # Yellow
         "level": logging.INFO
-    }
+    },
+    # ── Cognitive / Replay / Regime flows (Part 11 additions) ─────────────
+    "REPLAY_MEMORY": {
+        "file": f"flow_replay_memory_{RUN_ID}.log",
+        "color": "\033[34m",   # Blue
+        "level": logging.INFO
+    },
+    "REPLAY_DRIFT_GOVERNOR": {
+        "file": f"flow_replay_drift_{RUN_ID}.log",
+        "color": "\033[34m",   # Blue
+        "level": logging.INFO
+    },
+    "MARKET_STATE_CLUSTER": {
+        "file": f"flow_market_state_{RUN_ID}.log",
+        "color": "\033[35m",   # Purple
+        "level": logging.INFO
+    },
+    "TRADENET_META": {
+        "file": f"flow_tradenet_meta_{RUN_ID}.log",
+        "color": "\033[36m",   # Teal
+        "level": logging.INFO
+    },
+    "HIERARCHICAL_META_FUSION": {
+        "file": f"flow_hmf_{RUN_ID}.log",
+        "color": "\033[33m",   # Orange/Brown
+        "level": logging.INFO
+    },
+    "COGNITIVE_BUS": {
+        "file": f"flow_cognitive_bus_{RUN_ID}.log",
+        "color": "\033[35m",   # Purple
+        "level": logging.INFO
+    },
 }
 
 BASE_FORMAT = "[%(asctime)s] [FLOW:%(flow_name)s] [%(levelname)s] %(message)s"
@@ -130,9 +174,11 @@ class ColoredFlowFormatter(logging.Formatter):
 
 def get_flow_logger(flow_name: str) -> logging.Logger:
     """
-    Get a configured logger for a specific system flow.
-    Creates per-flow file handler + aggregated system handler + console handler.
-    
+    Get a logger for a specific system flow (console output only).
+    File handlers are attached lazily by init_coin_logging(symbol) when a
+    BacktestRunner is started, keeping log files coin-scoped under
+    logs/run_{RUN_ID}/{symbol}/.
+
     Args:
         flow_name: One of the predefined flow names from FLOWS dict
     Returns:
@@ -152,17 +198,7 @@ def get_flow_logger(flow_name: str) -> logging.Logger:
     logger.setLevel(config["level"])
     logger.addFilter(FlowLogFilter(flow_name))
 
-    # 1. Dedicated per-flow file handler
-    flow_file_handler = logging.FileHandler(LOG_DIR / config["file"], encoding="utf-8")
-    flow_file_handler.setFormatter(logging.Formatter(BASE_FORMAT, DATE_FORMAT))
-    logger.addHandler(flow_file_handler)
-
-    # 2. Aggregated system log handler — stamped per run
-    system_file_handler = logging.FileHandler(get_log_path("trade_system"), encoding="utf-8")
-    system_file_handler.setFormatter(logging.Formatter(BASE_FORMAT, DATE_FORMAT))
-    logger.addHandler(system_file_handler)
-
-    # 3. Console handler with coloring
+    # Console handler only — file handlers added by init_coin_logging()
     console_handler = SafeStreamHandler()
     console_handler.setFormatter(ColoredFlowFormatter(flow_name, BASE_FORMAT, DATE_FORMAT))
     logger.addHandler(console_handler)
@@ -170,19 +206,84 @@ def get_flow_logger(flow_name: str) -> logging.Logger:
     return logger
 
 
-def setup_logging() -> None:
-    """Initialize logging system. Call once at application startup."""
-    logging.basicConfig(level=logging.WARNING, format=BASE_FORMAT, datefmt=DATE_FORMAT)
+# ── Coin-level log management ─────────────────────────────────────────────────
+# Maps symbol → list of (logger, handler) pairs attached during init_coin_logging.
+_coin_file_handlers: dict[str, list[tuple[logging.Logger, logging.Handler]]] = {}
 
-    # Pre-configure all flow loggers
+
+def init_coin_logging(symbol: str) -> None:
+    """Attach per-coin file handlers to all flow loggers and engine loggers.
+
+    Creates logs/run_{RUN_ID}/{symbol}/ and writes each flow's log there.
+    Safe to call multiple times for the same symbol (idempotent).
+    For multi-coin sequential runs, call close_coin_logging(prev_symbol) first.
+    """
+    if symbol in _coin_file_handlers:
+        return
+
+    run_dir = LOG_DIR / f"run_{RUN_ID}" / symbol
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    pairs: list[tuple[logging.Logger, logging.Handler]] = []
+    fmt = logging.Formatter(BASE_FORMAT, DATE_FORMAT)
+
+    for flow_name, config in FLOWS.items():
+        # get_flow_logger ensures FlowLogFilter is on the logger before the
+        # FileHandler is attached — without it %(flow_name)s in BASE_FORMAT
+        # raises a KeyError that Python's logging swallows silently, producing
+        # 0-byte files even when records DO arrive.
+        logger = get_flow_logger(flow_name)
+        stem = config["file"].replace(f"_{RUN_ID}.log", "")
+        # delay=True: file is only created on first actual write — no 0-byte ghosts
+        fh = logging.FileHandler(run_dir / f"{stem}.log", encoding="utf-8", delay=True)
+        fh.setFormatter(fmt)
+        logger.addHandler(fh)
+        pairs.append((logger, fh))
+
+    # Engine loggers that manage their own named loggers (JSON-only format)
+    for eng_name in ("crt_engine", "llm_engine"):
+        eng_logger = logging.getLogger(eng_name)
+        if not eng_logger.propagate:
+            eh = logging.FileHandler(run_dir / f"{eng_name}.log", encoding="utf-8", delay=True)
+            eh.setFormatter(logging.Formatter("%(message)s"))
+            eng_logger.addHandler(eh)
+            pairs.append((eng_logger, eh))
+
+    # Aggregated trade_system.log — a single file capturing records from any
+    # module that uses logging.getLogger("trade_system").  Populated only when
+    # those modules explicitly log; delay=True prevents a 0-byte ghost file.
+    ts_logger = logging.getLogger("trade_system")
+    ts_logger.setLevel(logging.DEBUG)
+    ts_logger.propagate = False
+    if not any(isinstance(h, logging.FileHandler) for h in ts_logger.handlers):
+        ts_fh = logging.FileHandler(run_dir / "trade_system.log", encoding="utf-8", delay=True)
+        ts_fh.setFormatter(fmt)
+        ts_logger.addHandler(ts_fh)
+        pairs.append((ts_logger, ts_fh))
+
+    _coin_file_handlers[symbol] = pairs
+
+
+def close_coin_logging(symbol: str) -> None:
+    """Flush and remove per-coin file handlers (call between coins in multi-coin runs)."""
+    for logger, handler in _coin_file_handlers.pop(symbol, []):
+        try:
+            handler.flush()
+            handler.close()
+            logger.removeHandler(handler)
+        except Exception:
+            pass
+
+
+def setup_logging() -> None:
+    """Initialize console logging for all flows (non-backtest entry points).
+
+    Backtest runs should call init_coin_logging(symbol) instead to get
+    coin-scoped file output under logs/run_{RUN_ID}/{symbol}/.
+    """
+    logging.basicConfig(level=logging.WARNING, format=BASE_FORMAT, datefmt=DATE_FORMAT)
     for flow_name in FLOWS:
         get_flow_logger(flow_name)
-
-    # Root logger handler for non-flow logs — stamped per run
-    root_logger = logging.getLogger()
-    root_file_handler = logging.FileHandler(get_log_path("root"), encoding="utf-8")
-    root_file_handler.setFormatter(logging.Formatter("[%(asctime)s] [ROOT] [%(levelname)s] %(message)s", DATE_FORMAT))
-    root_logger.addHandler(root_file_handler)
 
 
 if __name__ == "__main__":

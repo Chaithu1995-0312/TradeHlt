@@ -41,7 +41,13 @@
     },
     "fusion_compare_evaluate": true,
     "fusion_use_evaluate": false,
-    "ultron_gate_enabled": false
+    "ultron_gate_enabled": false,
+    "signal_belief": {
+      "enabled": false,
+      "decay": 0.70,
+      "high_conviction_threshold": 0.65,
+      "min_confirmations": 2
+    }
   },
   "execution_planner": {
     "ttl_breakout_sec": 300,
@@ -64,7 +70,7 @@
     }
   },
   "sl_tp_comparison": {
-    "_comment": "Reference params for legacy SL/TP method \u2014 used ONLY by SLTPComparator, never in live path",
+    "_comment": "Reference params for legacy SL/TP method — used ONLY by SLTPComparator, never in live path",
     "legacy_sl_atr_mult": 1.0,
     "legacy_tp_atr_mult_breakout": 2.0,
     "legacy_tp_atr_mult_pullback": 1.5,
@@ -114,7 +120,37 @@
     "enable_llm": true,
     "tier_full": 0.75,
     "tier_half": 0.6,
-    "tier_quarter": 0.5
+    "tier_quarter": 0.5,
+    "regime_fusion_weights": {
+      "TRENDING": {
+        "crt": 0.38,
+        "gaussian": 0.2,
+        "zone_gate": 0.12,
+        "rr": 0.2,
+        "strategy_consensus": 0.1
+      },
+      "RANGING": {
+        "crt": 0.18,
+        "gaussian": 0.32,
+        "zone_gate": 0.15,
+        "rr": 0.25,
+        "strategy_consensus": 0.1
+      },
+      "VOLATILE": {
+        "crt": 0.28,
+        "gaussian": 0.14,
+        "zone_gate": 0.12,
+        "rr": 0.16,
+        "strategy_consensus": 0.3
+      },
+      "UNKNOWN": {
+        "crt": 0.4,
+        "gaussian": 0.2,
+        "zone_gate": 0.2,
+        "rr": 0.2,
+        "strategy_consensus": 0.0
+      }
+    }
   },
   "decision_engine": {
     "score_threshold": 0.45,
@@ -145,7 +181,7 @@
       }
     },
     "warnings": [
-      "AUDUSD: low trade count (42) \u00e2\u20ac\u201d sample may be marginal."
+      "AUDUSD: low trade count (42) â€” sample may be marginal."
     ],
     "updated_at": "2026-04-10T18:27:25.290581Z"
   },
@@ -248,6 +284,20 @@
     "cv_n_folds": 2,
     "require_cv_stable": false
   },
+  "training_trigger": {
+    "min_new_samples": 500,
+    "drift_window_hours": 24,
+    "drift_event_threshold": 5,
+    "cooldown_hours": 6.0,
+    "marker_path": "results/training_trigger.json",
+    "opportunity_glob": "logs/**/opportunities.jsonl",
+    "integrity_log": "logs/integrity_events.jsonl",
+    "drift_event_kinds": [
+      "RR_BYPASS",
+      "RR_LLM_FALLBACK",
+      "PROMOTION_FAILED"
+    ]
+  },
   "tuner": {
     "trade_count_floor": 3,
     "trade_count_target": 50,
@@ -273,7 +323,13 @@
     "risk_pct": 0.01,
     "slippage_atr_fraction": 0.08,
     "warmup_candles": 100,
-    "output_dir": "results/portfolio"
+    "output_dir": "results/portfolio",
+    "correlation": {
+      "lookback_days": 20,
+      "cache_ttl_secs": 3600,
+      "min_observations": 10,
+      "max_staleness_days": 3
+    }
   },
   "llama_gate": {
     "server_url": "http://127.0.0.1:8080/completion",
@@ -571,5 +627,113 @@
       "ETHUSDT"
     ],
     "max_records_per_request": 500
-  }
+  },
+  "alphavantage_data": {
+    "api_key": "demo",
+    "from_symbol": "AUD",
+    "to_symbol": "USD",
+    "interval": "15min",
+    "start_date": "2024-01-01",
+    "end_date": "2025-01-01",
+    "output_dir": "data/alphavantage",
+    "request_delay_s": 1.2
+  },
+  "agent": {
+    "enabled": true,
+    "server_url": "http://127.0.0.1:8080/completion",
+    "chat_max_tokens": 512,
+    "chat_temperature": 0.2,
+    "max_iterations_per_turn": 6,
+    "intent_router": {
+      "use_llm": true,
+      "llm_confidence_floor": 0.6,
+      "regex_fallback_table": "src/agent/prompts/intent_patterns.json"
+    },
+    "write_tools_enabled": [],
+    "copilot_auto_narrate": false,
+    "audit_log_path": "logs/agent_audit.jsonl",
+    "session_dir": "logs/agent_sessions",
+    "groq": {
+      "api_key_env": "GROQ_API_KEY",
+      "model": "llama-3.1-70b-versatile",
+      "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "request_timeout_s": 8.0,
+      "max_tokens": 1024,
+      "temperature": 0.1,
+      "fail_count_disable": 5
+    },
+    "findings": {
+      "enabled": true,
+      "auto_synthesize_on_run": false,
+      "redact_patterns": [
+        "api_key",
+        "secret",
+        "password",
+        "token",
+        "AV_API_KEY",
+        "GROQ_API_KEY"
+      ],
+      "max_source_chars": 8000,
+      "log_tail_lines": 200
+    }
+  },
+  "cognitive_layer": {
+    "enabled": false,
+    "opportunities_dir": "logs",
+    "zone_registry_path": "models/zone_registry.json",
+    "max_replay_records": 50000,
+    "min_cluster_samples": 5,
+    "hmf_allow_threshold": 0.6,
+    "hmf_reduce_threshold": 0.45,
+    "decay_half_life_days": 30.0,
+    "staleness_threshold_days": 90.0
+  },
+  "replay_memory": {
+    "max_records": 50000,
+    "decay_half_life_days": 30.0,
+    "min_cluster_samples": 5,
+    "staleness_threshold_days": 90.0,
+    "mahal_clip": 500.0,
+    "confidence_bypass_threshold": 0.3
+  },
+  "market_state_cluster": {
+    "min_cluster_samples": 5,
+    "cooldown_bars": 5
+  },
+  "tradenet_meta": {
+    "timeout_ms": 100,
+    "fallback_score": 0.5
+  },
+  "drift_governance": {
+    "max_staleness_days": 60.0,
+    "staleness_pct_threshold": 0.7,
+    "concentration_threshold": 0.8,
+    "contamination_threshold": 0.9,
+    "outcome_entropy_floor": 0.3,
+    "novelty_score_floor": 0.1
+  },
+  "cognitive_bus": {
+    "enabled": false,
+    "queue_maxsize": 500,
+    "telemetry_path": "logs/cognitive_telemetry.jsonl"
+  },
+  "latency_budgets": {
+    "execution_plane_target_ms": 50,
+    "execution_plane_hard_max_ms": 100,
+    "cognitive_bus_emit_max_ms": 1,
+    "note": "Execution plane budget covers steps 1-7 + lineage flush. Cognitive bus is async; budget applies only to emit() call."
+  },
+  "event_fabric": {
+    "enabled": true,
+    "generation_warning_gap": 100,
+    "lineage_log_path": "logs/decision_lineage.jsonl",
+    "telemetry_log_path": "logs/cognitive_telemetry.jsonl",
+    "engine_telemetry_log_path": "logs/engine_telemetry.jsonl",
+    "drift_audit_log_path": "logs/drift_audit.jsonl",
+    "note": "event_fabric is always enabled once any cognitive component is active. generation_warning_gap: warn if two consecutive events have generation gap > N (indicates dropped events or out-of-order processing)."
+  },
+  "bitnet": {
+    "bitnet_thresholds_path": "src/bitnet/bitnet_thresholds.json"
+  },
+  "config_hash": "2b40c55adb9f077986818eabf5f99407c8e98dd28fd0913b2c675518f52a4d09"
 }

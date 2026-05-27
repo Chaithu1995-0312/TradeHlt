@@ -373,20 +373,30 @@ def save_gaussian_model(
     """
     Save model + scaler + metadata as a single JSON bundle.
     NEVER overwrites — caller must use versioned names.
+    name may be a sub-path (e.g. "EURUSD/20260518_130248/gaussian_v6.json")
+    for run-scoped output; the parent directory is created automatically.
 
     Returns path to saved file.
     """
-    MODELS_DIR.mkdir(parents=True, exist_ok=True)
     path = MODELS_DIR / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Import feature_order_hash for schema drift detection (Part 1 — FeatureSchemaRegistry).
+    # Fail-open: empty string when feature_schema not yet importable (e.g. early bootstrap).
+    try:
+        from features.feature_schema import FEATURE_ORDER_HASH as _foh
+    except Exception:
+        _foh = ""
 
     bundle = {
-        "model":          model.to_dict(),
-        "scaler":         scaler.to_dict(),
-        "metrics":        metrics,
-        "feature_schema": feature_schema or list(GAUSSIAN_SCHEMA.feature_names),
-        "schema_name":    "gaussian",       # PATCH v3: explicit schema tag for safe loading
-        "schema_version": GAUSSIAN_SCHEMA.version,  # PATCH v3: version check on load
-        "schema_checksum": GAUSSIAN_SCHEMA.checksum,  # PATCH v3: tamper / drift detection
+        "model":              model.to_dict(),
+        "scaler":             scaler.to_dict(),
+        "metrics":            metrics,
+        "feature_schema":     feature_schema or list(GAUSSIAN_SCHEMA.feature_names),
+        "schema_name":        "gaussian",       # PATCH v3: explicit schema tag for safe loading
+        "schema_version":     GAUSSIAN_SCHEMA.version,  # PATCH v3: version check on load
+        "schema_checksum":    GAUSSIAN_SCHEMA.checksum,  # PATCH v3: tamper / drift detection
+        "feature_order_hash": _foh,             # Part 1: FeatureSchemaRegistry correlation key
     }
     path.write_text(json.dumps(bundle, indent=2))
     log.info(f"Gaussian model saved → {path}")
@@ -424,10 +434,41 @@ def load_gaussian_model(
             f"use the matching model version."
         )
 
+    # Audit missing-scaler failures so they land in logs/integrity_events.jsonl
+    # rather than only as a stack trace. Preserves original exception type for
+    # missing-key vs explicit-None so existing callers see no behaviour change.
+    if bundle.get("scaler") is None:
+        try:
+            from utils.integrity_events import emit_integrity_event
+            emit_integrity_event(
+                "GAUSSIAN_MISSING_SCALER", "ERROR", "trainer",
+                {"model_path": str(path), "model_name": name,
+                 "note": "re-train with current trainer to produce a scaler"},
+            )
+        except Exception:
+            pass
+        if "scaler" not in bundle:
+            raise KeyError("scaler")
+        raise RuntimeError(
+            f"Gaussian model '{name}' has scaler=None. "
+            f"Re-train with the current trainer to produce a calibrated scaler. "
+            f"Refusing to load uncalibrated model."
+        )
+
     model  = GaussianNBModel.from_dict(bundle["model"])
     scaler = StandardScaler.from_dict(bundle["scaler"])
     meta   = bundle.get("metrics", {})
     meta["feature_schema"] = saved_schema
+
+    # Part 1 — FeatureSchemaRegistry: register stored hash so callers can
+    # detect schema drift at inference time via check_compatibility(name).
+    _stored_hash = bundle.get("feature_order_hash", "")
+    if _stored_hash:
+        try:
+            from features.feature_schema import FeatureSchemaRegistry
+            FeatureSchemaRegistry.register(name, _stored_hash)
+        except Exception:
+            pass   # fail-open: registry unavailable doesn't break loading
 
     log.info(f"Gaussian model loaded ← {path}")
     return model, scaler, meta
@@ -579,17 +620,23 @@ def train(
     lr:        float = 0.001,
     batch_size: int  = 64,
     verbose:   bool  = True,
+    class_weight_auto: bool = True,
 ):
     """
     Train TradeNet on (X, y).
 
     Parameters
     ----------
-    X       : feature vectors (list of lists, length N_FEATURES each)
-    y       : binary labels (1 = win, 0 = loss)
-    epochs  : training iterations over full dataset
-    lr      : Adam learning rate
-    batch_size : mini-batch size; if <= 0 or > len(X), uses full batch
+    X                 : feature vectors (list of lists, length N_FEATURES each)
+                        Should be SCALED (use StandardScaler before calling).
+    y                 : binary labels (1 = win, 0 = loss)
+    epochs            : training iterations over full dataset
+    lr                : Adam learning rate
+    batch_size        : mini-batch size; if <= 0 or > len(X), uses full batch
+    class_weight_auto : when True (default), automatically compute pos_weight
+                        = n_neg / n_pos and apply per-sample weighting to
+                        BCELoss. Prevents majority-class collapse on imbalanced
+                        datasets (typical forex/crypto win rate ~30-40%).
 
     Returns
     -------
@@ -601,7 +648,17 @@ def train(
 
     model   = _build_model()
     opt     = torch.optim.Adam(model.parameters(), lr=lr)
-    loss_fn = nn.BCELoss()
+    # Per-sample weighted BCELoss — weight tensor applied each forward pass.
+    # reduction='none' returns per-sample losses so we can scale by class weight.
+    loss_fn = nn.BCELoss(reduction='none')
+
+    # Compute pos_weight to balance gradient contribution from minority class.
+    n_pos = max(1, sum(y))
+    n_neg = max(1, len(y) - n_pos)
+    pos_weight_val = float(n_neg) / float(n_pos) if class_weight_auto else 1.0
+    if verbose:
+        print(f"  Class balance: {n_pos} wins / {n_neg} losses  "
+              f"pos_weight={pos_weight_val:.3f}")
 
     X_t = torch.tensor(X, dtype=torch.float32)
     y_t = torch.tensor(y, dtype=torch.float32).unsqueeze(1)
@@ -615,8 +672,15 @@ def train(
     for epoch in range(1, epochs + 1):
         epoch_loss = 0.0
         for xb, yb in loader:
-            pred  = model(xb)
-            loss  = loss_fn(pred, yb)
+            pred     = model(xb)
+            raw_loss = loss_fn(pred, yb)          # shape [batch, 1]
+            # Win samples weighted by pos_weight_val; loss samples by 1.0
+            w        = torch.where(
+                yb == 1,
+                torch.full_like(yb, pos_weight_val),
+                torch.ones_like(yb),
+            )
+            loss = (raw_loss * w).mean()
             opt.zero_grad()
             loss.backward()
             opt.step()
@@ -635,21 +699,54 @@ def train(
 # SAVE / LOAD
 # ─────────────────────────────────────────────────────────────────────────────
 
-def save_model(model, name: str, metrics: dict | None = None) -> Path:
+def save_model(
+    model,
+    name: str,
+    metrics: dict | None = None,
+    version: str | None = None,
+    scaler: Optional["StandardScaler"] = None,
+    instrument: Optional[str] = None,
+    run_id: Optional[str] = None,
+) -> Path:
     import torch
-    MODELS_DIR.mkdir(parents=True, exist_ok=True)
     path = MODELS_DIR / name
+    path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(model.state_dict(), path)
     log.info("Model saved -> %s", path)
+
+    # Persist the input scaler alongside the model so make_neural_fn() can
+    # apply the same normalisation at inference time.
+    if scaler is not None:
+        scaler_path = path.parent / f"{path.stem}_scaler.json"
+        # Include feature_order_hash so FeatureSchemaRegistry can detect schema
+        # drift at load time (Part 1).  Fail-open when feature_schema unavailable.
+        try:
+            from features.feature_schema import FEATURE_ORDER_HASH as _foh_tn
+        except Exception:
+            _foh_tn = ""
+        scaler_bundle = scaler.to_dict()
+        scaler_bundle["feature_order_hash"] = _foh_tn
+        scaler_path.write_text(json.dumps(scaler_bundle, indent=2))
+        log.info("TradeNet scaler saved -> %s", scaler_path)
 
     # ── Register in TradeNet versioned registry (fail-open) ──────────────────
     try:
         from core.model_registry import register_tradenet, promote_tradenet, get_active_tradenet
-        # Extract version token from filename: "tradenet_p5_20260406T005347.pth" → "20260406T005347"
-        stem   = Path(name).stem           # e.g. "tradenet_p5_20260406T005347"
-        parts  = stem.split("_")
-        version = parts[-1] if len(parts) >= 3 else stem
-        register_tradenet(version, str(path), metrics or {})
+        # Gap-1 fix: use explicit version when provided; fall back to filename parse
+        # only for legacy callers using the old "tradenet_p5_{timestamp}.pth" format.
+        if version is None:
+            stem   = Path(name).stem   # e.g. "tradenet_p5_20260406T005347"
+            parts  = stem.split("_")
+            # Old format has exactly 3 segments; take last (timestamp).
+            # New format (e.g. "tradenet_v5_tradenet_2026_05") has 5+ segments
+            # — the last token would be meaningless. Caller must pass version=.
+            version = parts[-1] if len(parts) == 3 else stem
+            log.warning(
+                "save_model: version inferred from filename as %r — pass version= "
+                "explicitly to avoid registry key collisions.", version
+            )
+        register_tradenet(version, str(path), metrics or {},
+                          instrument=instrument, run_id=run_id)
         # Auto-promote if no active version exists
         if get_active_tradenet() is None:
             ok, reason = promote_tradenet(version)
@@ -669,21 +766,60 @@ def load_model(name: str):
     return model
 
 
+def load_tradenet_scaler(name: str) -> Optional[StandardScaler]:
+    """
+    Load the StandardScaler saved alongside a TradeNet model.
+
+    Looks for  models/{stem}_scaler.json  next to the .pth file.
+    Returns None if no scaler file exists (backward-compatible: models
+    trained before this fix will return None and inference falls back to
+    raw unscaled features).
+
+    Parameters
+    ----------
+    name : model filename, e.g. "tradenet_v5_tradenet_2026_05_eur.pth"
+    """
+    scaler_path = MODELS_DIR / f"{Path(name).stem}_scaler.json"
+    if not scaler_path.exists():
+        return None
+    data = json.loads(scaler_path.read_text())
+
+    # Part 1 — FeatureSchemaRegistry: register stored hash at load time.
+    _stored_hash = data.get("feature_order_hash", "")
+    if _stored_hash:
+        try:
+            from features.feature_schema import FeatureSchemaRegistry
+            FeatureSchemaRegistry.register(name, _stored_hash)
+        except Exception:
+            pass   # fail-open
+
+    return StandardScaler.from_dict(data)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # INFERENCE WRAPPER  (used by FusionEngine as neural_fn)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def make_neural_fn(model):
+def make_neural_fn(model, scaler: Optional[StandardScaler] = None):
     """
     Returns a callable(features: dict) -> float suitable for FusionEngine.neural_fn.
 
     Input  : cached_features dict (keys: retest_depth, body_ratio, ...)
     Output : float probability in [0, 1]
 
+    Parameters
+    ----------
+    model  : trained TradeNet (eval mode)
+    scaler : StandardScaler saved alongside the model, or None.
+             When provided, the feature vector is normalised before inference
+             — required for models trained with the post-fix scaling pipeline.
+             Old models trained without a scaler pass None (backward compat).
+
     Usage:
-      from trainer import load_model, make_neural_fn
-      model = load_model("model_v1.pth")
-      fn    = make_neural_fn(model)
+      from trainer import load_model, load_tradenet_scaler, make_neural_fn
+      model  = load_model("tradenet_v5_x.pth")
+      scaler = load_tradenet_scaler("tradenet_v5_x.pth")   # None for old models
+      fn     = make_neural_fn(model, scaler=scaler)
       fusion = FusionEngine(..., neural_fn=fn)
     """
     import torch
@@ -691,7 +827,9 @@ def make_neural_fn(model):
 
     def _infer(features: dict) -> float:
         try:
-            vec = extract_feature_vector(features)   # 32-dim canonical vector
+            vec = extract_feature_vector(features)   # 35-dim canonical vector
+            if scaler is not None:
+                vec = scaler.transform_one(vec)       # normalise (same scaler as training)
             # Correct shape: [1, N_FEATURES] — unsqueeze(0) adds batch dim
             x   = torch.tensor(vec, dtype=torch.float32).unsqueeze(0)
             with torch.no_grad():
@@ -701,3 +839,36 @@ def make_neural_fn(model):
             return 0.5
 
     return _infer
+
+
+def make_neural_fn_v2(instrument: Optional[str] = None,
+                      model_path: Optional[str] = None):
+    """Wrapper for TradeNet v2 (3-head survival classifier) that preserves the
+    ``Callable[[dict], float] -> float`` interface FusionEngine.neural expects.
+
+    Returns the composite ``0.4·p_tp1 + 0.4·p_tp2 + 0.2·p_survives_be`` for v2
+    envelopes; falls back to the single sigmoid for legacy v1 .pth via the
+    TradeNetV2 bridge. When no model is registered for the instrument, returns
+    ``None`` so FusionEngine renormalises remaining engines (lines 599-606).
+
+    Parameters
+    ----------
+    instrument : per-instrument lookup via TradeNetRegistry.__active__[instrument]
+    model_path : explicit envelope path; overrides registry lookup
+
+    Usage
+    -----
+        from training.trainer import make_neural_fn_v2
+        fusion = FusionEngine(..., neural_fn=make_neural_fn_v2(instrument="ETHUSDT"))
+    """
+    from training.trade_net_v2 import TradeNetV2
+
+    tnv2 = TradeNetV2(model_path=model_path, instrument=instrument)
+
+    def _infer_v2(features: dict):
+        result = tnv2.predict(features)
+        if result is None:
+            return None
+        return float(result["tradenet_score"])
+
+    return _infer_v2

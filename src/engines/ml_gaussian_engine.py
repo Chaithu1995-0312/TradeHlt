@@ -49,11 +49,26 @@ class MLGaussianEngine:
         Sets self._load_failed = True on any exception (fail-open).
         """
         try:
+            import os
             from core.model_registry import GaussianModelRegistry
             from training.trainer import load_gaussian_model
 
             registry = GaussianModelRegistry()
-            active_version = registry.get_active_gaussian()
+
+            # Instrument-aware lookup: GAUSSIAN_INSTRUMENT env var takes priority,
+            # then config["instrument"] key, then legacy EURUSD fallback.
+            _instrument = os.getenv("GAUSSIAN_INSTRUMENT") or (
+                self.config.get("instrument") if isinstance(self.config, dict) else None
+            )
+            active_version = (
+                registry.get_active_version(_instrument) if _instrument else None
+            ) or registry.get_active_gaussian()
+
+            if _instrument and active_version:
+                logger.info(
+                    "MLGaussianEngine: instrument-aware lookup '%s' → version '%s'",
+                    _instrument, active_version,
+                )
 
             if active_version is None:
                 logger.warning(
@@ -66,6 +81,13 @@ class MLGaussianEngine:
             reg_data = registry._load()
             entry = reg_data.get(active_version, {})
             model_file = entry.get("model_file", f"{active_version}.json")
+
+            # Strip leading "models/" prefix: load_gaussian_model prepends MODELS_DIR
+            # internally, so passing a path already rooted at "models/" doubles it.
+            from pathlib import Path as _Path
+            _mf = _Path(model_file)
+            if _mf.parts and _mf.parts[0].lower() == "models":
+                model_file = str(_Path(*_mf.parts[1:]))
 
             model, scaler, _meta = load_gaussian_model(model_file)
 
@@ -126,6 +148,14 @@ class MLGaussianEngine:
                 except Exception as _me:
                     logger.debug("MLGaussianEngine: short mirroring skipped — %s", _me)
 
+            if len(vec) > self._model.n_features:
+                # Schema migration: pipeline produces v3.0 (38-dim) but model was
+                # trained on v2.0 (35-dim). Truncate silently — backward compat.
+                logger.debug(
+                    "MLGaussianEngine: truncating vector %d → %d (schema migration).",
+                    len(vec), self._model.n_features,
+                )
+                vec = vec[:self._model.n_features]
             if len(vec) != self._model.n_features:
                 logger.error(
                     "MLGaussianEngine: feature vector length %d != model.n_features %d. "

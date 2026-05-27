@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from src.control_plane.types import ArgSpec, CommandSpec
+from src.control_plane.cp_types import ArgSpec, CommandSpec
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -27,6 +27,8 @@ WORKFLOW_STAGE_ORDER: tuple[str, ...] = (
 _WORKFLOW_STAGE_BY_COMMAND: dict[str, str] = {
     "data.prepare_data": "Data Prep",
     "data.unified_data_builder": "Data Prep",
+    "data.fetch_alphavantage": "Data Prep",
+    "data.fetch_hummingbot": "Data Prep",
     "tuning.auto_tuner_multi": "Tuning",
     "tuning.auto_tuner": "Tuning",
     "training.opportunity_scanner": "Model Training",
@@ -72,21 +74,25 @@ _QUICKSTART_NOTES_BY_COMMAND: dict[str, tuple[str, ...]] = {
         "Run after data prep — generates unbiased JSONL training data for all ML models.",
         "Set --tp-atr-mult 2.0 --sl-atr-mult 1.0 to match the production 2R target.",
         "Output: logs/opportunities_{instrument}.jsonl — feed this into Phase 5 and Discover Zones.",
+        "Run once per instrument (e.g. 8 runs for 8 instruments). Multi-select all resulting JSONL files when feeding Phase-5 Calibration and Discover Zones.",
     ),
     "training.phase5_calibration": (
         "Run after Opportunity Scanner — trains the Gaussian model on unbiased historical data.",
         "Use --force to save a MARGINAL model (corr below 0.05 gate) for testing.",
         "Check results/p5_calibration_{version}.json for corr_expected_rr and calibration_error.",
+        "Accepts multiple --opportunities files — pass ALL per-instrument JSONL outputs from Opportunity Scanner for a merged shared model.",
     ),
     "training.discover_zones": (
         "Run after Opportunity Scanner — clusters candle contexts into zone registry for Zone Gate.",
         "Start with --n-clusters 8 and increase if zone coverage is low.",
         "Output: models/zone_registry_kmeans.json — loaded by the Zone Gate engine at runtime.",
+        "Accepts multiple --opportunities files — pass ALL per-instrument JSONL outputs from Opportunity Scanner for a merged shared registry.",
     ),
     "training.build_rr_dataset": (
         "Preferred: use --opportunities (unbiased JSONL). Legacy: --csv / --dir for trades CSVs.",
         "Each run saves a versioned models/rr_dataset_{version}.json + updates rr_registry.json.",
         "Follow with 'Train RR Model' to train the model from the saved dataset.",
+        "Accepts multiple --opportunities files — pass ALL per-instrument JSONL outputs from Opportunity Scanner for a merged shared dataset.",
     ),
     "training.train_rr_model": (
         "Trains RR Pattern Miner from the active (or specified) rr_registry dataset.",
@@ -107,6 +113,16 @@ _QUICKSTART_NOTES_BY_COMMAND: dict[str, tuple[str, ...]] = {
         "Run after Opportunity Scanner to prepare logs for LLM governance review.",
         "Pass logs/opportunities_*.jsonl (or fusion JSONL) as --logs input.",
         "Output: compact JSON with summary/data/anomalies — feed to Governance Orchestrator.",
+    ),
+    "data.fetch_alphavantage": (
+        "Requires a free Alpha Vantage API key — set AV_API_KEY environment variable or pass --api-key.",
+        "Free tier: 25 requests/day. Fetching 1 year of M15 data = 12 monthly API calls per pair.",
+        "Output lands in data/ as {PAIR}_M15.csv — feed directly into Prepare Data (validate-only) next.",
+    ),
+    "data.fetch_hummingbot": (
+        "Fetches from Binance/Bybit/OKX via Hummingbot connectors — no API key required for public candles.",
+        "Output lands in data/ as {PAIR}_M15.csv — feed directly into Prepare Data (validate-only) next.",
+        "Use 'binance' exchange for BTCUSDT/ETHUSDT. Use 'bybit' for XAUUSD (spot).",
     ),
     "validation.config_validator": (
         "Gate candidate params with hard and soft quality checks.",
@@ -153,6 +169,8 @@ _QUICKSTART_NOTES_BY_COMMAND: dict[str, tuple[str, ...]] = {
 _RECOMMENDED_NEXT_BY_COMMAND: dict[str, tuple[str, ...]] = {
     "data.prepare_data": ("data.unified_data_builder", "tuning.auto_tuner_multi"),
     "data.unified_data_builder": ("tuning.auto_tuner_multi",),
+    "data.fetch_alphavantage": ("data.prepare_data",),
+    "data.fetch_hummingbot": ("data.prepare_data",),
     "tuning.auto_tuner_multi": ("training.opportunity_scanner", "validation.config_validator"),
     "tuning.auto_tuner": ("training.opportunity_scanner", "validation.config_validator"),
     "training.opportunity_scanner": ("training.phase5_calibration", "training.discover_zones"),
@@ -165,12 +183,12 @@ _RECOMMENDED_NEXT_BY_COMMAND: dict[str, tuple[str, ...]] = {
     "analysis.compress_logs": ("governance.orchestrator",),
     "validation.config_validator": ("promotion.manager", "replay.unified"),
     "promotion.manager": ("baseline.capture", "live.inout_runner"),
-    "governance.orchestrator": ("promotion.manager",),
+    "governance.orchestrator": ("live.inout_runner",),
     "replay.unified": ("backtest.v2", "backtest.bitnet"),
     "backtest.v2": ("validation.config_validator",),
     "backtest.bitnet": ("replay.unified",),
     "baseline.capture": ("tuning.auto_tuner_multi",),
-    "live.inout_runner": ("replay.unified",),
+    "live.inout_runner": ("replay.unified", "governance.orchestrator"),
 }
 
 
@@ -204,6 +222,16 @@ def core_command_specs() -> tuple[CommandSpec, ...]:
             category="Data Prep",
             mode="python-file",
             script="scripts/data/unified_data_builder.py",
+            quickstart_notes=("Use for batch multi-instrument build when data arrives in mixed layouts.",),
+            args_schema=(
+                ArgSpec("instruments", flag=None, kind="list", default=[],
+                        positional=True, positional_index=0,
+                        help="Instruments to build (empty = all configured). e.g. EURUSD GBPUSD"),
+                ArgSpec("data_dir",      flag="--data-dir",      kind="str",  default="data",  help="Directory with raw M1 CSVs"),
+                ArgSpec("output_dir",    flag="--output-dir",    kind="str",  default="data",  help="Directory to write M15 CSVs"),
+                ArgSpec("validate_only", flag="--validate-only", kind="bool", default=False,   help="Validate existing M15 files only, no building"),
+                ArgSpec("dry_run",       flag="--dry-run",       kind="bool", default=False,   help="Preview what would be built, no output"),
+            ),
             artifacts=("data/*.csv", "results/**/*.json"),
         ),
         CommandSpec(
@@ -295,7 +323,7 @@ def core_command_specs() -> tuple[CommandSpec, ...]:
                         applies_to=("promote", "from-report"),
                         help="Version label — auto-filled as v5_auto_YYYY_MM"),
                 ArgSpec("data_dir", flag="--data-dir", kind="str", default="data", applies_to=("promote",)),
-                ArgSpec("instruments", flag="--instruments", kind="list", default=[], applies_to=("promote",)),
+                ArgSpec("instruments", flag="--instruments", kind="list", default=["EURUSD", "GBPUSD", "BTCUSDT", "XAUUSD"], applies_to=("promote",)),
                 ArgSpec("notes", flag="--notes", kind="str", default="", applies_to=("promote", "from-report")),
                 ArgSpec("no_llm", flag="--no-llm", kind="bool", default=False, applies_to=("promote",)),
                 ArgSpec("report", flag="--report", kind="file", default=None,
@@ -313,12 +341,15 @@ def core_command_specs() -> tuple[CommandSpec, ...]:
             mode="python-file",
             script="src/governance/orchestrator.py",
             args_schema=(
-                ArgSpec("collector_log", flag="--collector-log", kind="file", required=True,
+                ArgSpec("compressed_summary", flag="--compressed-summary", kind="file", required=False,
+                        file_glob="logs/compressed_*.json",
+                        help="Pre-computed compressed summary JSON from compress_logs (mutually exclusive with --collector-log/--trades-csv)"),
+                ArgSpec("collector_log", flag="--collector-log", kind="file", required=False,
                         file_glob="logs/**/*.jsonl",
-                        help="Live collector JSONL log file"),
-                ArgSpec("trades_csv", flag="--trades-csv", kind="file", required=True,
+                        help="Live collector JSONL log file (mutually exclusive with --compressed-summary)"),
+                ArgSpec("trades_csv", flag="--trades-csv", kind="file", required=False,
                         file_glob="results/**/*_trades.csv",
-                        help="Trades CSV from live runner or backtest"),
+                        help="Trades CSV from live runner or backtest (mutually exclusive with --compressed-summary)"),
                 ArgSpec("baseline_pnl", flag="--baseline-pnl", kind="float", required=True, min_val=-10000000.0, max_val=10000000.0, help="Baseline PnL from same dataset for comparison"),
                 ArgSpec("active_config", flag="--active-config", kind="file",
                         default="configs/production/v2_multi_2026_04.json",
@@ -359,8 +390,8 @@ def core_command_specs() -> tuple[CommandSpec, ...]:
             args_schema=(
                 ArgSpec("csv", flag="--csv", kind="file", required=True, file_glob="data/*.csv", help="M15 OHLCV CSV file from data folder"),
                 ArgSpec("instrument", flag="--instrument", kind="choice",
-                        default="EURUSD", choices=_KNOWN_INSTRUMENTS,
-                        help="Instrument — used for output naming and session detection"),
+                        default="AUTO", choices=_KNOWN_INSTRUMENTS + ("AUTO",),
+                        help="Instrument — used for output naming and session detection. AUTO = detect from CSV filename"),
                 ArgSpec("output", flag="--output", kind="str", default="results", help="Directory for backtest result outputs"),
                 ArgSpec("htf", flag="--htf", kind="int", default=None, min_val=1, max_val=100, help="Higher-timeframe lookback candles (1–100)"),
                 ArgSpec("warmup", flag="--warmup", kind="int", default=None, min_val=10, max_val=1000, help="Candles to warm up indicators before scoring (10–1000)"),
@@ -585,6 +616,324 @@ def core_command_specs() -> tuple[CommandSpec, ...]:
             ),
             artifacts=("logs/compressed_*.json",),
         ),
+        # ── Maintenance ───────────────────────────────────────────────────────
+        CommandSpec(
+            id="maintenance.update_config_hash",
+            title="Update Config Hash",
+            description="Recompute and write the SHA-256 hash for a production config JSON. Run after any manual config edit.",
+            category="Maintenance",
+            mode="python-file",
+            script="scripts/update_config_hash.py",
+            args_schema=(
+                ArgSpec("config_file", flag=None, kind="file", required=True, positional=True, positional_index=0,
+                        file_glob="configs/production/*.json", help="Production config JSON to hash"),
+                ArgSpec("check",   flag="--check",   kind="bool", default=False, help="Only verify hash — do not update"),
+                ArgSpec("dry_run", flag="--dry-run", kind="bool", default=False, help="Show what would change without writing"),
+            ),
+            artifacts=("configs/production/*.json",),
+        ),
+        CommandSpec(
+            id="maintenance.health_checker",
+            title="Health Checker",
+            description="Run system health checks and expose a status endpoint.",
+            category="Maintenance",
+            mode="python-file",
+            script="src/monitoring/health_checker.py",
+            args_schema=(
+                ArgSpec("port", flag="--port", kind="int", default=8788, min_val=1024, max_val=65535, help="HTTP port for health endpoint (1024-65535)"),
+            ),
+            artifacts=("logs/health_checker.log",),
+        ),
+        CommandSpec(
+            id="maintenance.build_zone_registry",
+            title="Build Zone Registry from Trades",
+            description="Rebuild per-instrument zone registry JSON files from *_trades.csv output.",
+            category="Maintenance",
+            mode="python-file",
+            script="scripts/misc/build_zone_registry_from_trades.py",
+            args_schema=(
+                ArgSpec("csv",             flag="--csv",             kind="file", default=None,
+                        file_glob="results/**/*_trades.csv", help="Single *_trades.csv to process"),
+                ArgSpec("dir",             flag="--dir",             kind="str",  default=None, help="Directory to scan for *_trades.csv"),
+                ArgSpec("glob",            flag="--glob",            kind="str",  default=None, help="Glob pattern for trades CSVs"),
+                ArgSpec("output_root",     flag="--output-root",     kind="str",  default="models/bitnet", help="Base output dir for per-instrument registries"),
+                ArgSpec("global_registry", flag="--global-registry", kind="bool", default=False, help="Write to models/zone_registry.json"),
+            ),
+            artifacts=("models/bitnet/**/*.json", "models/zone_registry.json"),
+        ),
+        # ── Groq Bridge ───────────────────────────────────────────────────────
+        CommandSpec(
+            id="groq.prepare_retrospective",
+            title="Prepare Retrospective",
+            description="Phase-1 Groq Bridge: prepare a retrospective prompt from trades/opportunities for LLM review.",
+            category="Groq Bridge",
+            mode="python-file",
+            script="scripts/groq_bridge/prepare_retrospective.py",
+            args_schema=(
+                ArgSpec("source",             flag="--source",             kind="file",  default=None,
+                        file_glob="logs/*.jsonl", help="Source file (trades CSV or opportunities JSONL)"),
+                ArgSpec("compressed_summary", flag="--compressed-summary", kind="file",  default=None,
+                        file_glob="logs/compressed_*.json", help="Pre-computed compressed summary JSON"),
+                ArgSpec("target_model",       flag="--target-model",       kind="str",   default=None, help="Target model type (gaussian/zone_gate/rr)"),
+                ArgSpec("output",             flag="--output",             kind="str",   default=None, help="Output path for prompt file"),
+                ArgSpec("summary",            flag="--summary",            kind="file",  default=None,
+                        file_glob="logs/*_summary.json", help="Optional pre-computed summary JSON"),
+                ArgSpec("last_n",             flag="--last-n",             kind="int",   default=200, min_val=10, max_val=5000, help="Max recent rows to include (10-5000)"),
+                ArgSpec("instrument",         flag="--instrument",         kind="str",   default="UNKNOWN", help="Instrument label for session ID"),
+                ArgSpec("dry_run",            flag="--dry-run",            kind="bool",  default=False, help="Preview prompt without writing"),
+            ),
+            artifacts=("logs/groq_sessions/*/prompt.txt",),
+        ),
+        CommandSpec(
+            id="groq.ingest_response",
+            title="Ingest Groq Response",
+            description="Phase-1 Groq Bridge: ingest LLM JSON response and optionally apply config/training suggestions.",
+            category="Groq Bridge",
+            mode="python-file",
+            script="scripts/groq_bridge/ingest_response.py",
+            args_schema=(
+                ArgSpec("session",            flag="--session",            kind="str",   default=None, help="Session ID (RETRO_...)"),
+                ArgSpec("response_file",      flag="--response-file",      kind="file",  default=None,
+                        file_glob="logs/groq_sessions/**/*.json", help="Path to file with Groq JSON response"),
+                ArgSpec("list_sessions",      flag="--list-sessions",      kind="bool",  default=False, help="List all sessions"),
+                ArgSpec("show",               flag="--show",               kind="bool",  default=False, help="Show insights for a session"),
+                ArgSpec("record_score",       flag="--record-score",       kind="float", default=None, help="Record post-backtest validation score"),
+                ArgSpec("apply_config",       flag="--apply-config",       kind="bool",  default=False, help="Apply config changes from session"),
+                ArgSpec("apply_to_training",  flag="--apply-to-training",  kind="bool",  default=False, help="Treat response as LLM hypertuning suggestions"),
+                ArgSpec("target_model",       flag="--target-model",       kind="str",   default=None, help="Target model for --apply-to-training"),
+                ArgSpec("opportunities",      flag="--opportunities",      kind="file",  default=None,
+                        file_glob="logs/opportunities_*.jsonl", help="Opportunity log to forward"),
+                ArgSpec("version",            flag="--version",            kind="str",   default=None, auto_default="date_version", help="Model version label"),
+                ArgSpec("groq_model",         flag="--groq-model",         kind="str",   default="llama-3.3-70b-versatile", help="Groq model name for logging"),
+            ),
+            artifacts=("logs/groq_sessions/**/insights.json",),
+        ),
+        CommandSpec(
+            id="groq.apply_llm_suggestions",
+            title="Apply LLM Suggestions",
+            description="Phase-1 Groq Bridge: apply LLM hyperparameter suggestions from a JSON response file to re-train a model.",
+            category="Groq Bridge",
+            mode="python-file",
+            script="scripts/groq_bridge/apply_llm_suggestions.py",
+            args_schema=(
+                ArgSpec("target_model",    flag="--target-model",    kind="str",  required=True, help="Target model type (gaussian/zone_gate/rr)"),
+                ArgSpec("suggestions_file",flag="--suggestions-file",kind="file", required=True,
+                        file_glob="logs/groq_sessions/**/*.json", help="LLM JSON response file"),
+                ArgSpec("opportunities",   flag="--opportunities",   kind="file", required=True,
+                        file_glob="logs/opportunities_*.jsonl", help="Opportunity JSONL used for training"),
+                ArgSpec("version",         flag="--version",         kind="str",  required=True, auto_default="date_version", help="Version label for trained model"),
+            ),
+            artifacts=("models/gaussian_*.json", "models/zone_registry_*.json"),
+        ),
+        # ── Analysis ──────────────────────────────────────────────────────────
+        CommandSpec(
+            id="analysis.daily_crypto_structure",
+            title="Daily Crypto Structure",
+            description="Extract daily market structure from BTC/crypto JSONL collector logs into a CSV report.",
+            category="Analysis",
+            mode="python-file",
+            script="scripts/analysis/daily_crypto_structure.py",
+            args_schema=(
+                ArgSpec("log",    flag="--log",    kind="file",  required=True, file_glob="logs/*.log", help="Collector log file"),
+                ArgSpec("output", flag="--output", kind="str",   default="btc_daily_structure.csv", help="Output CSV path"),
+            ),
+            artifacts=("btc_daily_structure.csv",),
+        ),
+        CommandSpec(
+            id="analysis.schema_audit",
+            title="Schema Audit",
+            description="Audit trades CSV files for schema consistency against CANONICAL_FEATURES.",
+            category="Analysis",
+            mode="python-file",
+            script="scripts/analysis/schema_audit.py",
+            args_schema=(
+                ArgSpec("root", flag="--root", kind="str",  default=None, help="Root dir to scan for *_trades.csv"),
+                ArgSpec("csv",  flag="--csv",  kind="file", default=None, file_glob="results/**/*_trades.csv", help="Single trades CSV to check"),
+            ),
+            artifacts=(),
+        ),
+        CommandSpec(
+            id="analysis.sl_tp_comparator",
+            title="SL/TP Comparator",
+            description="Run dual SL/TP strategy comparison on an M15 CSV and report optimal settings.",
+            category="Analysis",
+            mode="python-file",
+            script="src/analytics/sl_tp_comparator.py",
+            args_schema=(
+                ArgSpec("csv",        flag="--csv",        kind="file",   required=True, file_glob="data/*.csv", help="M15 OHLCV CSV file"),
+                ArgSpec("instrument", flag="--instrument", kind="choice", default="UNKNOWN", choices=_KNOWN_INSTRUMENTS, help="Instrument symbol"),
+                ArgSpec("output",     flag="--output",     kind="str",    default=None, help="Output JSON path"),
+                ArgSpec("metric",     flag="--metric",     kind="str",    default=None, help="Primary comparison metric override"),
+            ),
+            artifacts=("results/sl_tp_comparison_*.json",),
+        ),
+        CommandSpec(
+            id="analysis.fusion_shadow",
+            title="Fusion Shadow Analysis",
+            description="Analyse EngineRunner fusion decisions from flow_collector.log — compares shadow vs live gate outputs.",
+            category="Analysis",
+            mode="python-file",
+            script="src/runtime/analyze_fusion_shadow.py",
+            args_schema=(
+                ArgSpec("log_path",   flag="--log-path",   kind="str", default="logs/flow_collector.log", help="Collector log file path"),
+                ArgSpec("output_dir", flag="--output-dir", kind="str", default="results/validation/automation", help="Output directory for analysis JSON"),
+            ),
+            artifacts=("results/validation/automation/*.json",),
+        ),
+        # ── Agent ─────────────────────────────────────────────────────────────
+        CommandSpec(
+            id="agent.cli",
+            title="Agent REPL",
+            description="Launch the CRT Trading Agent REPL for natural-language pipeline control.",
+            category="Agent",
+            mode="python-file",
+            script="src/agent/cli.py",
+            args_schema=(
+                ArgSpec("resume", flag="--resume", kind="str", default=None, help="Resume a prior agent session by ID"),
+            ),
+            artifacts=("logs/agent_audit.jsonl", "logs/agent_intent_log.jsonl"),
+        ),
+        # ── Additional Data Prep ───────────────────────────────────────────────
+        CommandSpec(
+            id="data.historical_fetcher",
+            title="Historical Data Fetcher",
+            description="Fetch multi-pair historical OHLCV data from exchange APIs into data/ directory.",
+            category="Data Prep",
+            mode="python-file",
+            script="src/data_ingestion/historical_fetcher.py",
+            args_schema=(
+                ArgSpec("pair",      flag="--pair",      kind="str",  default=None, help="Trading pair (e.g. EURUSD)"),
+                ArgSpec("timeframe", flag="--timeframe", kind="str",  default="M15", help="Timeframe (e.g. M15, H1)"),
+                ArgSpec("start",     flag="--start",     kind="str",  default=None, help="Start date YYYY-MM-DD"),
+                ArgSpec("end",       flag="--end",       kind="str",  default=None, help="End date YYYY-MM-DD"),
+                ArgSpec("all_pairs", flag="--all-pairs", kind="bool", default=False, help="Fetch all configured pairs"),
+            ),
+            artifacts=("data/*.csv",),
+        ),
+        CommandSpec(
+            id="data.fetch_alphavantage",
+            title="Fetch Forex Data (AlphaVantage)",
+            description="Download M15 forex OHLCV candles from Alpha Vantage FX_INTRADAY API into data/.",
+            category="Data Prep",
+            mode="python-file",
+            script="scripts/data/fetch_candles_alphavantage.py",
+            args_schema=(
+                ArgSpec("pair", flag="--pair", kind="choice", required=True,
+                        choices=("EURUSD", "GBPUSD", "AUDUSD", "USDJPY", "USDCHF", "USDCAD", "NZDUSD", "EURCAD"),
+                        help="Forex pair to fetch"),
+                ArgSpec("start", flag="--start", kind="date", required=True,
+                        help="Start date inclusive (YYYY-MM-DD)"),
+                ArgSpec("end",   flag="--end",   kind="date", required=True,
+                        help="End date exclusive (YYYY-MM-DD)"),
+                ArgSpec("interval", flag="--interval", kind="choice", default="15min",
+                        choices=("1min", "5min", "15min", "30min", "60min"),
+                        help="Candle interval (default 15min)"),
+                ArgSpec("api_key", flag="--api-key", kind="str", default=None,
+                        help="Alpha Vantage API key (falls back to AV_API_KEY env var then config)"),
+                ArgSpec("out", flag="--out", kind="str", default="data",
+                        help="Output directory (default: data/)"),
+                ArgSpec("config", flag="--config", kind="file",
+                        default="configs/production/v1_multi_2026_03.json",
+                        file_glob="configs/production/*.json",
+                        help="Production config JSON (provides api_key and defaults)"),
+            ),
+            artifacts=("data/*.csv",),
+        ),
+        CommandSpec(
+            id="data.fetch_hummingbot",
+            title="Fetch Crypto Data (Hummingbot)",
+            description="Download M15 crypto OHLCV candles from exchange via Hummingbot connector into data/.",
+            category="Data Prep",
+            mode="python-file",
+            script="scripts/data/fetch_candles_hummingbot.py",
+            args_schema=(
+                ArgSpec("pair", flag="--pair", kind="choice", required=True,
+                        choices=("BTCUSDT", "ETHUSDT", "XAUUSD"),
+                        help="Crypto pair to fetch"),
+                ArgSpec("exchange", flag="--exchange", kind="choice", default="binance",
+                        choices=("binance", "bybit", "okx", "kucoin", "kraken"),
+                        help="Exchange connector (default: binance)"),
+                ArgSpec("start", flag="--start", kind="date", required=True,
+                        help="Start date inclusive (YYYY-MM-DD)"),
+                ArgSpec("end",   flag="--end",   kind="date", required=True,
+                        help="End date exclusive (YYYY-MM-DD)"),
+                ArgSpec("interval", flag="--interval", kind="choice", default="15m",
+                        choices=("1m", "5m", "15m", "30m", "1h", "4h", "1d"),
+                        help="Candle interval (default 15m)"),
+                ArgSpec("out", flag="--out", kind="str", default="data",
+                        help="Output directory (default: data/)"),
+                ArgSpec("config", flag="--config", kind="file",
+                        default="configs/production/v1_multi_2026_03.json",
+                        file_glob="configs/production/*.json",
+                        help="Production config JSON (provides exchange/interval defaults)"),
+            ),
+            artifacts=("data/*.csv",),
+        ),
+        # ── Additional Tuning ─────────────────────────────────────────────────
+        CommandSpec(
+            id="tuning.auto_tuner_gemini_gate",
+            title="Auto Tuner (Gemini Gate)",
+            description="CRT Engine auto-tuner with Gemini gate variant — multi-instrument Bayesian optimisation.",
+            category="Tuning",
+            mode="python-file",
+            script="scripts/training/auto_tuner_gemini_gate.py",
+            args_schema=(
+                ArgSpec("csv",         flag="--csv",         kind="file",  default=None, file_glob="data/*.csv", help="Single M15 CSV path"),
+                ArgSpec("instrument",  flag="--instrument",  kind="choice", default=None, choices=_KNOWN_INSTRUMENTS, help="Instrument symbol"),
+                ArgSpec("data_dir",    flag="--data-dir",    kind="str",   default="data", help="Directory with M15 CSVs"),
+                ArgSpec("instruments", flag="--instruments", kind="list",  default=[], help="Instruments for multi-instrument mode"),
+                ArgSpec("output_dir",  flag="--output-dir",  kind="str",   default="results/tuner", help="Tuner output directory"),
+                ArgSpec("n_iter",      flag="--n-iter",      kind="int",   default=100, min_val=1, max_val=1000, help="Bayesian optimisation iterations"),
+                ArgSpec("seed",        flag="--seed",        kind="int",   default=42, help="Random seed"),
+                ArgSpec("workers",     flag="--workers",     kind="int",   default=None, help="CPU workers (None=auto)"),
+                ArgSpec("train_split", flag="--train-split", kind="float", default=1.0, min_val=0.1, max_val=1.0, help="Train split fraction"),
+            ),
+            artifacts=("results/tuner/checkpoint_*.json",),
+        ),
+        # ── Additional Validation & Promotion ────────────────────────────────
+        CommandSpec(
+            id="validation.portfolio",
+            title="Portfolio Validation",
+            description="Run portfolio-level validation across all instruments and emit a consolidated report.",
+            category="Validation & Promotion",
+            mode="python-file",
+            script="src/governance/portfolio_validation.py",
+            args_schema=(
+                ArgSpec("output",  flag="--output",  kind="str",   default="results/portfolio", help="Output directory for validation reports"),
+                ArgSpec("capital", flag="--capital", kind="float", default=100000.0, min_val=1000.0, help="Starting capital for portfolio simulation"),
+            ),
+            artifacts=("results/portfolio/*.json",),
+        ),
+        CommandSpec(
+            id="promotion.promote_v2",
+            title="Promote v2",
+            description="Thin wrapper for v2 multi-instrument promotion — validate and write production config.",
+            category="Validation & Promotion",
+            mode="python-file",
+            script="scripts/governance/promote_v2.py",
+            args_schema=(
+                ArgSpec("version",   flag="--version",   kind="str",  default="v2_multi_2026_04", help="Production version label"),
+                ArgSpec("dry_run",   flag="--dry-run",   kind="bool", default=False, help="Validate only — do not write"),
+                ArgSpec("config_id", flag="--config-id", kind="str",  default="multi_strategy_v2_2026_05", help="Config ID label for validation report"),
+            ),
+            artifacts=("configs/production/*.json", "configs/promotion_log.jsonl"),
+        ),
+        # ── Model Training (additional) ───────────────────────────────────────
+        CommandSpec(
+            id="training.train_bitnet",
+            title="Train BitNet",
+            description="Train legacy BitNet ternary model from M15 CSV data.",
+            category="Model Training",
+            mode="python-file",
+            script="scripts/training/train_bitnet.py",
+            args_schema=(
+                ArgSpec("csv",    flag="--csv",    kind="list",  default=[], help="M15 CSV paths (space-separated)"),
+                ArgSpec("epochs", flag="--epochs", kind="int",   default=300, min_val=1, max_val=5000, help="Training epochs"),
+                ArgSpec("lr",     flag="--lr",     kind="float", default=0.001, min_val=1e-6, max_val=1.0, help="Learning rate"),
+                ArgSpec("out",    flag="--out",    kind="str",   default="model.json", help="Output model JSON path"),
+            ),
+            artifacts=("model.json", "models/bitnet/**/*.json"),
+        ),
     )
     enriched: list[CommandSpec] = []
     for spec in specs:
@@ -676,7 +1025,11 @@ def build_command_line(spec: CommandSpec, merged_args: dict[str, Any]) -> list[s
         value = merged_args.get(arg.key)
         if value is None:
             continue
-        command.append(str(value))
+        if arg.kind in ("list", "file-multi"):
+            for item in list(value):
+                command.append(str(item))
+        else:
+            command.append(str(value))
 
     for arg in spec.args_schema:
         if arg.positional:
@@ -757,6 +1110,7 @@ def generate_cli_matrix_markdown(specs: tuple[CommandSpec, ...] | None = None) -
     for spec in chosen:
         seed_args: dict[str, Any] = {}
         for arg in spec.args_schema:
+            # Seed required args with no default
             if arg.required and arg.default is None:
                 if arg.kind == "int":
                     seed_args[arg.key] = 1
@@ -768,7 +1122,14 @@ def generate_cli_matrix_markdown(specs: tuple[CommandSpec, ...] | None = None) -
                     seed_args[arg.key] = arg.choices[0]
                 else:
                     seed_args[arg.key] = f"<{arg.key}>"
-        preview = shell_preview(render_command(spec, seed_args))
+            # Also fix optional choice args whose default is not in choices
+            elif (arg.kind == "choice" and arg.choices and arg.default is not None
+                  and arg.default not in arg.choices):
+                seed_args[arg.key] = arg.choices[0]
+        try:
+            preview = shell_preview(render_command(spec, seed_args))
+        except (ValueError, KeyError):
+            preview = f"python -m {spec.script} ..."
         artifacts = ", ".join(spec.artifacts) if spec.artifacts else "-"
         suggested = ", ".join(spec.recommended_next_command_ids) if spec.recommended_next_command_ids else "-"
         lines.append(f"| `{spec.id}` | {spec.category} | `{preview}` | `{artifacts}` | `{suggested}` |")

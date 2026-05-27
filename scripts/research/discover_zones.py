@@ -166,14 +166,30 @@ def discover(opportunities: list[Path], *, n_clusters: int, min_samples: int,
     }
 
 
+def _read_run_id_from_jsonl(path: Path) -> str:
+    """Return run_id from the first-line run_header of a JSONL, or empty string."""
+    try:
+        with path.open("r", encoding="utf-8") as fh:
+            rec = json.loads(fh.readline().strip())
+        if rec.get("type") == "run_header":
+            return rec.get("run_id", "")
+    except Exception:
+        pass
+    return ""
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--opportunities", nargs="+", required=True,
-                    help="One or more opportunity JSONL paths")
-    ap.add_argument("--output", required=True, type=Path,
+    ap.add_argument("--opportunities", nargs="+", required=False, default=None,
+                    help="One or more opportunity JSONL paths. "
+                         "When omitted, auto-resolves to "
+                         "logs/{instrument}/{run_id}/opportunities.jsonl "
+                         "if --instrument and --run-id/--run are given.")
+    ap.add_argument("--output", required=False, type=Path, default=None,
                     help="Canonical output path (e.g. models/zone_registry.json). "
-                         "Always written when --promote (default). Also used as "
-                         "fallback filename base when --version is omitted.")
+                         "When omitted and --instrument is provided, auto-derives "
+                         "from JSONL run_header: "
+                         "models/{instrument}/{run_id}/zone_registry.json")
     ap.add_argument("--n-clusters", type=int, default=8)
     ap.add_argument("--min-samples", type=int, default=15)
     ap.add_argument("--feature-weights", default="",
@@ -187,12 +203,52 @@ def main(argv=None) -> int:
                          "Use 5-10 on large JSONL files to speed up the pure-Python KMeans.")
     ap.add_argument("--no-promote", dest="promote", action="store_false", default=True,
                     help="Skip promoting this version as active (useful for experiments)")
+    ap.add_argument("--instrument", default="",
+                    help="Instrument label (e.g. EURUSD, BTCUSDT). When provided, "
+                         "embeds in versioned output filename: "
+                         "zone_registry_{instrument}_{version}.json")
+    ap.add_argument("--run-id", "--run", dest="run_id", default=None,
+                    help="Run ID for path scoping (e.g. 20260519_113806). "
+                         "Default: read from JSONL run_header. "
+                         "When given with --instrument and no --opportunities, "
+                         "auto-resolves logs/{instrument}/{run_id}/opportunities.jsonl.")
     args = ap.parse_args(argv)
 
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
     )
+
+    # ── Resolve run_id — from arg, then JSONL header ─────────────────────────
+    _run_id = args.run_id or ""
+    if not _run_id and args.opportunities:
+        _run_id = _read_run_id_from_jsonl(Path(args.opportunities[0]))
+
+    # ── Auto-resolve --opportunities from --instrument + --run-id ────────────
+    if not args.opportunities:
+        if args.instrument and _run_id:
+            auto_path = Path("logs") / args.instrument / _run_id / "opportunities.jsonl"
+            if not auto_path.exists():
+                print(f"ERROR: auto-resolved opportunities not found: {auto_path}",
+                      file=sys.stderr)
+                return 1
+            args.opportunities = [str(auto_path)]
+            logger.info("Auto-resolved opportunities: %s", auto_path)
+        else:
+            print("ERROR: --opportunities is required unless both --instrument and "
+                  "--run-id/--run are given.", file=sys.stderr)
+            return 1
+
+    # ── Resolve --output when omitted ───────────────────────────────────────
+    if args.output is None:
+        if args.instrument and _run_id:
+            args.output = Path("models") / args.instrument / _run_id / "zone_registry.json"
+        elif args.instrument:
+            args.output = Path("models") / f"zone_registry_{args.instrument}.json"
+        else:
+            print("ERROR: --output is required when --instrument is not given.",
+                  file=sys.stderr)
+            return 1
 
     if args.feature_weights:
         weights = [float(x) for x in args.feature_weights.split(",") if x.strip()]
@@ -207,26 +263,38 @@ def main(argv=None) -> int:
     # ── versioned save ──────────────────────────────────────────────────────
     import time as _time
     version = args.version or _time.strftime("%Y%m_v1")
+    # Instrument-scoped registry key prevents collision when multiple instruments
+    # use the same version string (e.g. ETHUSDT and EURUSD both at "202605_v1").
+    reg_version = f"{version}_{args.instrument.lower()}" if args.instrument else version
 
-    # Derive versioned filename alongside the canonical output path
-    versioned_path = args.output.parent / f"zone_registry_{version}.json"
+    # Derive versioned filename — run-scoped when instrument + run_id available
+    if args.instrument and _run_id:
+        base_name = f"zone_registry_{args.instrument}_{version}.json"
+        versioned_path = Path("models") / args.instrument / _run_id / base_name
+    elif args.instrument:
+        base_name = f"zone_registry_{args.instrument}_{version}.json"
+        versioned_path = args.output.parent / base_name
+    else:
+        base_name = f"zone_registry_{version}.json"
+        versioned_path = args.output.parent / base_name
     versioned_path.parent.mkdir(parents=True, exist_ok=True)
     versioned_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     logger.info("Saved versioned zone registry -> %s (%d zones)",
                 versioned_path, len(result["zones"]))
     print(f"Versioned file: {versioned_path}")
+    print(f"OUTPUT:zone_registry:{versioned_path.resolve()}")
 
     # ── register in zone_gate_registry.json ────────────────────────────────
     try:
         from core.model_registry import register_zone_gate, promote_zone_gate
         register_zone_gate(
-            version=version,
+            version=reg_version,           # instrument-scoped key
             model_file=str(versioned_path),
             n_zones=len(result["zones"]),
             n_clusters_requested=args.n_clusters,
             feature_order=result.get("feature_order", []),
         )
-        logger.info("Registered in zone_gate_registry: %s", version)
+        logger.info("Registered in zone_gate_registry: %s", reg_version)
     except Exception as e:
         logger.warning("Zone gate registry update failed (non-fatal): %s", e)
 
@@ -234,7 +302,7 @@ def main(argv=None) -> int:
     if args.promote:
         try:
             from core.model_registry import promote_zone_gate
-            ok, reason = promote_zone_gate(version)
+            ok, reason = promote_zone_gate(reg_version)
             logger.info("Promote: %s", reason)
         except Exception as e:
             logger.warning("promote_zone_gate failed (non-fatal): %s", e)
@@ -246,7 +314,7 @@ def main(argv=None) -> int:
     else:
         logger.info("--no-promote set; canonical %s NOT updated", args.output)
 
-    print(f"Version: {version}  Zones: {len(result['zones'])}")
+    print(f"Version: {reg_version}  Zones: {len(result['zones'])}")
     return 0
 
 

@@ -5,3 +5,8 @@ logs
 results
 *.bak
 venv
+.env
+.claude
+models\
+logs.zip
+docs

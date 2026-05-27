@@ -18,6 +18,7 @@ ENGINE COMPLETENESS POLICY:
 import logging
 import math
 import os
+from typing import Optional
 from engines.trap_validator_engine import TrapValidatorEngine
 from engines.crt_engine import compute as crt_compute
 from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
@@ -261,25 +262,45 @@ class EngineRunner:
     @staticmethod
     def _get_gaussian_engine(config: dict):
         """
-        Instantiate the correct Gaussian engine based on GAUSSIAN_IMPL env var.
+        Instantiate primary Gaussian engine from config["gaussian_impl"] only.
 
-        Priority: env var GAUSSIAN_IMPL > config["gaussian_impl"]
-        config["gaussian_impl"] is required (no default) — must be set in JSON.
+        GAUSSIAN_IMPL env var removed — config is the single source of truth.
 
         Values:
-          "heuristic" → HeuristicGaussianEngine (EMA/momentum kernel)
-          "ml"        → MLGaussianEngine (GaussianNBModel, 32-dim)
+          "heuristic"  → HeuristicGaussianEngine (EMA/momentum kernel)
+          "ml"         → MLGaussianEngine (GaussianNBModel)
+          "shadow_ml"  → HeuristicGaussianEngine (production score);
+                         MLGaussianEngine runs as shadow via _get_shadow_gaussian_engine()
         """
         cfg_impl = config.get("gaussian_impl", "heuristic") if isinstance(config, dict) else "heuristic"
-        impl = os.getenv("GAUSSIAN_IMPL", str(cfg_impl))
-        impl = impl.lower()
+        impl = cfg_impl.lower()
 
         if impl == "ml":
-            logger.info("EngineRunner: using MLGaussianEngine (GAUSSIAN_IMPL=ml)")
+            logger.info("EngineRunner: using MLGaussianEngine (config: gaussian_impl=ml)")
             return MLGaussianEngine(config)
-        else:
-            logger.info("EngineRunner: using HeuristicGaussianEngine (GAUSSIAN_IMPL=%s)", impl)
+        elif impl == "shadow_ml":
+            logger.info(
+                "EngineRunner: using HeuristicGaussianEngine + MLGaussianEngine shadow "
+                "(config: gaussian_impl=shadow_ml)"
+            )
             return HeuristicGaussianEngine(config)
+        else:
+            logger.info("EngineRunner: using HeuristicGaussianEngine (config: gaussian_impl=%s)", impl)
+            return HeuristicGaussianEngine(config)
+
+    @staticmethod
+    def _get_shadow_gaussian_engine(config: dict):
+        """
+        Return MLGaussianEngine shadow when gaussian_impl=shadow_ml, else None.
+
+        The shadow engine's score is logged to engines_raw["gaussian"]["shadow"] but
+        never enters engine_results["gaussian"]["score"] — FusionEngine is unaffected.
+        """
+        cfg_impl = config.get("gaussian_impl", "") if isinstance(config, dict) else ""
+        if cfg_impl.lower() == "shadow_ml":
+            logger.info("EngineRunner: shadow MLGaussianEngine instantiated (shadow_ml mode)")
+            return MLGaussianEngine(config)
+        return None
 
     def __init__(self, config: dict):
         if not isinstance(config, dict):
@@ -288,6 +309,7 @@ class EngineRunner:
 
         self.adapter = TrapValidatorEngine(config)
         self.gaussian = self._get_gaussian_engine(config)
+        self.gaussian_shadow = self._get_shadow_gaussian_engine(config)  # None unless shadow_ml
         self.rr = RREngine(config)
         self.rr_fusion = None
         self._rr_fusion_enabled = False
@@ -372,6 +394,29 @@ class EngineRunner:
         # ultron_gate_enabled controls RegimeGovernor, NOT UltronRiskGate (capital protection layer).
         self._regime_governor = RegimeGovernor()
         self._regime_governor_enabled = bool(_cfg_require(config, "ultron_gate_enabled", "engine_runner"))
+
+        # SignalBeliefTracker gate — accumulates post-fusion conviction over consecutive candles.
+        # Registry injected by BacktestRunner/LiveRunner — EngineRunner reads only, never owns.
+        _belief_cfg = config.get("signal_belief", {})
+        self._belief_enabled = bool(_belief_cfg.get("enabled", False))
+
+        # ── Cognitive Bus (async, advisory only — steps 8-10) ─────────────────
+        # Runs in a background daemon thread. NEVER blocks the execution path.
+        # Cognitive output is written to logs/cognitive_telemetry.jsonl only.
+        # The "cognitive" key is NOT in the run() return dict.
+        self._cognitive_bus: Optional["CognitiveBus"] = None
+        _cognitive_cfg = config.get("cognitive_layer", {})
+        if bool(_cognitive_cfg.get("enabled", False)):
+            try:
+                from cognitive.cognitive_bus import CognitiveBus as _CognitiveBus  # noqa
+                self._cognitive_bus = _CognitiveBus(config)
+                self._cognitive_bus.start()
+                logger.info("EngineRunner: CognitiveBus started")
+            except Exception as _cbus_exc:
+                logger.warning(
+                    "EngineRunner: CognitiveBus init failed (non-blocking): %s",
+                    _cbus_exc,
+                )
 
     def _reject(
         self,
@@ -562,6 +607,23 @@ class EngineRunner:
             _dir_raw = 1
         _gauss_dir = "short" if _dir_raw < 0 else "long"
         gaussian_result = self.gaussian.compute(input_data, direction=_gauss_dir)
+
+        # Shadow ML comparison (shadow_ml mode only).
+        # Heuristic score already in gaussian_result["score"] → enters fusion unchanged.
+        # ML score attached under ["shadow"] → logged to engines_raw, never in fusion.
+        if self.gaussian_shadow is not None:
+            try:
+                _sh = self.gaussian_shadow.compute(input_data, direction=_gauss_dir)
+                gaussian_result["shadow"] = {
+                    "score":     _sh["score"],
+                    "reason":    _sh.get("reason", "shadow_ml"),
+                    "meta":      _sh.get("meta", {}),
+                    "delta":     round(_sh["score"] - gaussian_result["score"], 4),
+                    "agreement": bool((_sh["score"] >= 0.5) == (gaussian_result["score"] >= 0.5)),
+                }
+            except Exception as _se:
+                logger.debug("EngineRunner: shadow gaussian compute failed — %s", _se)
+
         rr_result = self.rr.compute(input_data)
         base_rr_score = _safe_float(rr_result.get("score"), 0.0)
 
@@ -641,7 +703,10 @@ class EngineRunner:
         # ------------------------------------------------------------------ #
         # Step 4: Fusion                                                      #
         # ------------------------------------------------------------------ #
-        fusion_result = self.fusion.compute(engine_results)
+        # Detect regime up-front so fusion weights can adapt to it. Same value
+        # is reused at Step 6 by RegimeGovernor — avoids a second computation.
+        current_regime = detect_regime(input_data, self.dual_cfg)
+        fusion_result = self.fusion.compute(engine_results, regime=current_regime)
         use_evaluate = bool(getattr(self, "_fusion_use_evaluate", False))
         compare_evaluate = bool(getattr(self, "_fusion_compare_evaluate", False))
         if use_evaluate or compare_evaluate:
@@ -707,12 +772,41 @@ class EngineRunner:
             )
 
         # ------------------------------------------------------------------ #
+        # Step 5b: Belief gate — temporal conviction accumulator              #
+        # Accumulates post-fusion score over consecutive same-direction        #
+        # candles before allowing DecisionEngine to proceed.                  #
+        # Gate: abs(belief) >= HIGH_CONVICTION OR confirm_count >= MIN_CONFS  #
+        # Registry injected by BacktestRunner/LiveRunner — never owned here.  #
+        # ------------------------------------------------------------------ #
+        _belief_registry = context.get("belief_registry")
+        _fusion_dir = int(context.get("strategy_consensus_direction", 0))
+        if _belief_registry is not None and self._belief_enabled:
+            _instrument   = str(context.get("instrument", "UNKNOWN"))
+            _timeframe    = str(context.get("timeframe", "M15"))
+            _tracker      = _belief_registry.get(_instrument, _timeframe)
+            _belief_state = _tracker.update(final_score, _fusion_dir)
+            logger.debug(
+                "BELIEF_GATE: instrument=%s tf=%s belief=%.4f direction=%d "
+                "confirm_count=%d approved=%s reason=%s",
+                _instrument, _timeframe, _belief_state.belief, _fusion_dir,
+                _belief_state.confirm_count, _belief_state.approved, _belief_state.reason,
+            )
+            if not _belief_state.approved:
+                return {
+                    "decision":      "HOLD",
+                    "stage":         "BELIEF_GATE",
+                    "reason":        _belief_state.reason,
+                    "belief":        round(_belief_state.belief, 4),
+                    "confirm_count": _belief_state.confirm_count,
+                }
+
+        # ------------------------------------------------------------------ #
         # Step 6: Dual-engine regime gate (RegimeGovernor)                    #
         # Controlled by engine_runner.ultron_gate_enabled in production JSON. #
         # false → training/backtest path (no quota or percentile filtering).  #
         # true  → live trading path (full RegimeGovernor active).             #
         # ------------------------------------------------------------------ #
-        regime = detect_regime(input_data, self.dual_cfg)
+        regime = current_regime  # already computed before Step 4 fusion
         dual_results = {
             "breakout": breakout_engine(input_data, self.dual_cfg),
             "trap":     trap_engine(input_data, self.dual_cfg),
@@ -851,5 +945,52 @@ class EngineRunner:
             reason=str(decision_result.get("reason", "")),
         )
         self._audit.flush()
+
+        # ── Fire-and-forget: emit decision snapshot to async CognitiveBus ─────
+        # Executes AFTER all decision logic is complete. Non-blocking.
+        # Drops silently on queue full. cognitive key is NOT in return dict.
+        if getattr(self, "_cognitive_bus", None) is not None:
+            try:
+                import uuid as _uuid  # noqa
+                import time as _t      # noqa
+                from cognitive.cognitive_bus import DecisionSnapshot as _DS  # noqa
+                from events.event_fabric import make_event_envelope, EventType  # noqa
+                _did = _uuid.uuid4().hex[:8]
+                _env = make_event_envelope(
+                    event_type = EventType.DECISION_SNAPSHOT,
+                    instrument = str(input_data.get("instrument", "")),
+                    source     = "EngineRunner",
+                    payload    = {
+                        "decision_id": _did,
+                        "decision":    str(decision_result.get("decision", "")),
+                        "score":       round(float(decision_result.get("final_score", 0.0)), 4),
+                        "cluster_id":  int(
+                            engine_results.get("zone_gate", {}).get("cluster_id", -1)
+                            if isinstance(engine_results.get("zone_gate"), dict) else -1
+                        ),
+                    },
+                )
+                _zone_r = engine_results.get("zone_gate") or {}
+                _gauss_r = engine_results.get("gaussian") or {}
+                _rr_r   = engine_results.get("rr") or {}
+                self._cognitive_bus.emit(_DS(
+                    decision_id     = _did,
+                    event_id        = _env["event_id"],
+                    generation      = _env["generation"],
+                    timestamp       = _env["timestamp"],
+                    instrument      = str(input_data.get("instrument", "")),
+                    schema_hash     = _env["schema_hash"],
+                    features        = dict(input_data),
+                    zone_result     = dict(_zone_r) if isinstance(_zone_r, dict) else {},
+                    gaussian_result = dict(_gauss_r) if isinstance(_gauss_r, dict) else {},
+                    rr_result       = dict(_rr_r)   if isinstance(_rr_r, dict) else {},
+                    fusion_result   = dict(fusion_result) if isinstance(fusion_result, dict) else {},
+                    decision        = str(decision_result.get("decision", "")),
+                    cluster_id      = int(
+                        _zone_r.get("cluster_id", -1) if isinstance(_zone_r, dict) else -1
+                    ),
+                ))
+            except Exception:
+                pass  # cognitive bus emit never blocks or raises
 
         return decision_result

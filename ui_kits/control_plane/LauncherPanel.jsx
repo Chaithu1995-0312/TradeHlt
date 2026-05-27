@@ -11,12 +11,13 @@ function shellQuote(s) {
   return "'" + str.replace(/'/g, "'\\''") + "'";
 }
 
-function LauncherPanel({ commands, categories, runs, search, setSearch, onRun, onStop, onInspect, selectedRunId, onCommandComplete }) {
+function LauncherPanel({ commands, categories, runs, search, setSearch, onRun, onStop, onInspect, selectedRunId, onCommandComplete, onReport, onContext }) {
   const [category, setCategory] = useStateL(categories[0] || "");
   const cmdsInCategory = commands.filter(c => c.category === category);
   const [commandId, setCommandId] = useStateL(cmdsInCategory[0]?.id);
   const cmd = commands.find(c => c.id === commandId) || cmdsInCategory[0];
   const [args, setArgs] = useStateL({});
+  const [instrAutoFilled, setInstrAutoFilled] = useStateL(false);
 
   useEffectL(() => {
     const newCmds = commands.filter(c => c.category === category);
@@ -24,10 +25,17 @@ function LauncherPanel({ commands, categories, runs, search, setSearch, onRun, o
   }, [category]);
 
   useEffectL(() => {
+    if (categories.length > 0 && !categories.includes(category)) {
+      setCategory(categories[0]);
+    }
+  }, [categories.length]);
+
+  useEffectL(() => {
     if (!cmd) return;
     const init = {};
     (cmd.args_schema || []).forEach(a => { init[a.key] = a.default; });
     setArgs(init);
+    setInstrAutoFilled(false);
   }, [commandId]);
 
   const setArg = (k, v) => setArgs(prev => ({ ...prev, [k]: v }));
@@ -54,8 +62,13 @@ function LauncherPanel({ commands, categories, runs, search, setSearch, onRun, o
     for (const a of positionals) {
       if (!isApplicable(a)) continue;
       const v = args[a.key];
-      if (v === undefined || v === null || v === "") continue;
-      parts.push(shellQuote(v));
+      if (v === undefined || v === null || v === "" || (Array.isArray(v) && !v.length)) continue;
+      if (a.kind === "list" || a.kind === "file-multi") {
+        const arr = Array.isArray(v) ? v : String(v).split(",").map(x => x.trim()).filter(Boolean);
+        for (const item of arr) parts.push(shellQuote(item));
+      } else {
+        parts.push(shellQuote(v));
+      }
     }
     for (const a of schema) {
       if (a.positional) continue;
@@ -63,7 +76,7 @@ function LauncherPanel({ commands, categories, runs, search, setSearch, onRun, o
       const v = args[a.key];
       if (v === undefined || v === null || v === "") continue;
       if (a.kind === "bool") { if (v) parts.push(a.flag); continue; }
-      if (a.kind === "list") {
+      if (a.kind === "list" || a.kind === "file-multi") {
         const arr = Array.isArray(v) ? v : String(v).split(",").map(x => x.trim()).filter(Boolean);
         if (!arr.length) continue;
         parts.push(a.flag);
@@ -123,13 +136,16 @@ function LauncherPanel({ commands, categories, runs, search, setSearch, onRun, o
             }
 
             if (a.kind === "choice") {
+              const isAutoFilled = instrAutoFilled && a.key === "instrument";
               return (
                 <React.Fragment key={a.key}>
                   <Label>
                     {a.positional ? <span style={{ color: "#0ea5a3" }}>● </span> : null}
                     {a.key}{a.required && <span style={{ color: "#ef4444" }}> *</span>}
+                    {isAutoFilled && <span style={{ color: "#0ea5a3", fontSize: 10, marginLeft: 4 }}>auto</span>}
                   </Label>
-                  <Select value={v ?? ""} onChange={e => setArg(a.key, e.target.value)}>
+                  <Select value={v ?? ""} disabled={isAutoFilled} onChange={e => setArg(a.key, e.target.value)}
+                    style={isAutoFilled ? { opacity: 0.7 } : {}}>
                     {(a.choices || []).map(c => <option key={c} value={c}>{c}</option>)}
                   </Select>
                 </React.Fragment>
@@ -163,7 +179,7 @@ function LauncherPanel({ commands, categories, runs, search, setSearch, onRun, o
             }
 
             if (comboOptions) {
-              const isMulti = a.kind === "list";
+              const isMulti = a.kind === "list" || a.kind === "file-multi";
               return (
                 <React.Fragment key={a.key}>
                   <Label>
@@ -178,7 +194,47 @@ function LauncherPanel({ commands, categories, runs, search, setSearch, onRun, o
                     options={comboOptions}
                     value={isMulti ? (Array.isArray(v) ? v : []) : (v ?? "")}
                     placeholder={comboPlaceholder}
-                    onChange={(next) => setArg(a.key, next)}
+                    onChange={(next) => {
+                      setArg(a.key, next);
+                      if (k === "files") {
+                        const files = Array.isArray(next) ? next : (next ? [next] : []);
+                        const instrArg = (cmd?.args_schema || []).find(s => s.key === "instrument");
+                        if (files.length > 0 && instrArg) {
+                          const inferredAll = files.map(f =>
+                            f.split("/").pop().split("\\").pop().split("_")[0].toUpperCase()
+                          );
+                          const valid = instrArg.choices
+                            ? inferredAll.filter(i => instrArg.choices.includes(i))
+                            : inferredAll;
+                          const unique = [...new Set(valid)];
+                          if (unique.length === 1) {
+                            setArg("instrument", unique[0]);
+                            setInstrAutoFilled(true);
+                          } else {
+                            setInstrAutoFilled(false);
+                          }
+                        } else {
+                          setInstrAutoFilled(false);
+                        }
+                      }
+                    }}
+                  />
+                </React.Fragment>
+              );
+            }
+
+            // ── Date picker ───────────────────────────────────────────────────
+            if (a.kind === "date") {
+              return (
+                <React.Fragment key={a.key}>
+                  <Label>
+                    {a.positional ? <span style={{ color: "#0ea5a3" }}>● </span> : null}
+                    {a.key}{a.required && <span style={{ color: "#ef4444" }}> *</span>}
+                  </Label>
+                  <Input
+                    type="date"
+                    value={v ?? ""}
+                    onChange={e => setArg(a.key, e.target.value)}
                   />
                 </React.Fragment>
               );
@@ -238,15 +294,21 @@ function LauncherPanel({ commands, categories, runs, search, setSearch, onRun, o
         <div style={{ maxHeight: 330, overflow: "auto", marginTop: 8 }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr><th style={th}>Run</th><th style={th}>Command</th><th style={th}>Status</th></tr>
+              <tr><th style={th}>Run</th><th style={th}>Command</th><th style={th}>Status</th><th style={{ ...th, width: 52, textAlign: "center" }}>Act</th></tr>
             </thead>
             <tbody>
               {filteredRuns.map(r => (
                 <tr key={r.run_id} onClick={() => onInspect(r.run_id)}
                     style={{ cursor: "pointer", background: r.run_id === selectedRunId ? "#0f1b2e" : "transparent" }}>
                   <td style={{ ...td, fontFamily: "ui-monospace,Menlo,monospace" }}>{r.run_id.slice(0, 8)}</td>
-                  <td style={td}>{r.command_id}</td>
+                  <td style={td}>{commands.find(c => c.id === r.command_id)?.title || r.command_id}</td>
                   <td style={td}><StatusPill status={r.status} /></td>
+                  <td style={{ ...td, textAlign: "center", whiteSpace: "nowrap" }}>
+                    <span title="Download Report" style={iconBtnStyle}
+                      onClick={e => { e.stopPropagation(); onReport && onReport(r.run_id); }}>📋</span>
+                    <span title="Context Report" style={iconBtnStyle}
+                      onClick={e => { e.stopPropagation(); onContext && onContext(r.run_id); }}>🧠</span>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -259,5 +321,6 @@ function LauncherPanel({ commands, categories, runs, search, setSearch, onRun, o
 
 const th = { borderBottom: "1px solid #23364e", padding: "6px 4px", fontSize: 12, textAlign: "left", color: "#9fb0c8" };
 const td = { borderBottom: "1px solid #23364e", padding: "6px 4px", fontSize: 12 };
+const iconBtnStyle = { cursor: "pointer", fontSize: 14, padding: "0 3px", opacity: 0.8, userSelect: "none" };
 
 window.LauncherPanel = LauncherPanel;

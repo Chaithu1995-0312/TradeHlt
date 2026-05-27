@@ -102,10 +102,42 @@ const SCATTER_POINTS = (() => {
 })();
 
 const SCAN_JOBS = [
-  { id: "SCAN-1582", inst: "EURUSD", time: "2025-05-15 01:10", rec: "242,398", status: "Completed" },
-  { id: "SCAN-1581", inst: "XAUUSD", time: "2025-05-14 23:30", rec: "198,552", status: "Completed" },
-  { id: "SCAN-1580", inst: "BTCUSD", time: "2025-05-14 21:45", rec: "312,671", status: "Completed" },
-  { id: "SCAN-1579", inst: "GBPUSD", time: "2025-05-14 19:20", rec: "215,332", status: "Completed" },
+  {
+    id: "SCAN-1582", inst: "EURUSD", time: "2025-05-15 01:10", rec: "242,398", status: "Completed",
+    kpis: { totalOpps:{value:"242,398",sub:"EURUSD · Long + Short"}, winRateTP:"43.21%", avgRR:"1.84 R", profitFactor:"1.38", timeoutRate:"3.21%" },
+    outcomes: [
+      { label:"TP Hit",  value:104660, pct:"43.2%", color:"#22c55e" },
+      { label:"SL Hit",  value:129966, pct:"53.6%", color:"#ef4444" },
+      { label:"Timeout", value:7772,   pct:"3.2%",  color:"#facc15" },
+    ],
+  },
+  {
+    id: "SCAN-1581", inst: "XAUUSD", time: "2025-05-14 23:30", rec: "198,552", status: "Completed",
+    kpis: { totalOpps:{value:"198,552",sub:"XAUUSD · Long + Short"}, winRateTP:"38.91%", avgRR:"2.12 R", profitFactor:"1.29", timeoutRate:"7.14%" },
+    outcomes: [
+      { label:"TP Hit",  value:77288,  pct:"38.9%", color:"#22c55e" },
+      { label:"SL Hit",  value:107127, pct:"54.0%", color:"#ef4444" },
+      { label:"Timeout", value:14137,  pct:"7.1%",  color:"#facc15" },
+    ],
+  },
+  {
+    id: "SCAN-1580", inst: "BTCUSD", time: "2025-05-14 21:45", rec: "312,671", status: "Completed",
+    kpis: { totalOpps:{value:"312,671",sub:"BTCUSD · Long + Short"}, winRateTP:"46.82%", avgRR:"1.63 R", profitFactor:"1.51", timeoutRate:"4.88%" },
+    outcomes: [
+      { label:"TP Hit",  value:146416, pct:"46.8%", color:"#22c55e" },
+      { label:"SL Hit",  value:150983, pct:"48.3%", color:"#ef4444" },
+      { label:"Timeout", value:15272,  pct:"4.9%",  color:"#facc15" },
+    ],
+  },
+  {
+    id: "SCAN-1579", inst: "GBPUSD", time: "2025-05-14 19:20", rec: "215,332", status: "Completed",
+    kpis: { totalOpps:{value:"215,332",sub:"GBPUSD · Long + Short"}, winRateTP:"41.04%", avgRR:"1.72 R", profitFactor:"1.32", timeoutRate:"5.62%" },
+    outcomes: [
+      { label:"TP Hit",  value:88346,  pct:"41.0%", color:"#22c55e" },
+      { label:"SL Hit",  value:114940, pct:"53.4%", color:"#ef4444" },
+      { label:"Timeout", value:11906,  pct:"5.5%",  color:"#facc15" },
+    ],
+  },
 ];
 
 // Models
@@ -212,11 +244,131 @@ const RECENT_JOBS = [
   { id: "JOB-8839", type: "Log Compression",  time: "2025-05-14 21:30", status: "Completed" },
 ];
 
+// ── New globals for prototype design ──────────────────────────
+const EXEC_KPIS = {
+  totalPnl: "+356.42", totalPnlDelta: "↑ 1.62%",
+  winRate: "54.37%",   winRateDelta:  "↑ 2.18%",
+  profitFactor: "1.38", pfDelta:      "↑ 0.11",
+  avgRR: "1.62 / -1.03", avgRRDelta:  "↑ 0.07",
+  expectancy: "0.42",  expDelta:      "↑ 0.04",
+};
+
+const ALERTS = [
+  { icon:"⚠", title:"Model Drift Detected",  sub:"RR_Miner_v2",       age:"2m ago",  level:"warn" },
+  { icon:"⚠", title:"Win Rate Drop (London)", sub:"-12% vs 7D avg",    age:"5m ago",  level:"warn" },
+  { icon:"⚠", title:"High SL Hit Rate",       sub:"Current: 63%",      age:"13m ago", level:"warn" },
+  { icon:"⚠", title:"Data Delay Detected",    sub:"EURUSD M15",        age:"9m ago",  level:"warn" },
+];
+
+const STATUS_STRIP = {
+  activeModel: "CRT v5", promotionGuard: "KMeans Clustering",
+  schema: "35-dim Feature Space", dataIntegrity: "100%",
+};
+
+const SESSION_EQUITY = (() => {
+  const walk = (start, len) => {
+    const out = [start]; let v = start;
+    for (let i = 1; i < len; i++) { v += (Math.random() - 0.45) * 8; out.push(+v.toFixed(1)); }
+    return out;
+  };
+  return { asian: walk(0,60), london: walk(0,60), ny: walk(0,60), overlap: walk(0,60) };
+})();
+
+const SIGNAL_PIPELINE = [
+  { name:"Market Data",   val:"Live",       status:"ok", icon:"📡" },
+  { name:"Feature Engine",val:"98%",        status:"ok", icon:"⚙"  },
+  { name:"Gaussian Gate", val:"12 / 18",    status:"ok", icon:"🔵" },
+  { name:"Zone Gate",     val:"8 / 12",     status:"ok", icon:"📍" },
+  { name:"RR Miner",      val:"Top: 2.45",  status:"ok", icon:"📈" },
+  { name:"Exec Planner",  val:"2 Signals",  status:"ok", icon:"📋" },
+  { name:"Risk Manager",  val:"Approved",   status:"ok", icon:"✓"  },
+  { name:"Orders",        val:"1 Live",     status:"ok", icon:"💹" },
+];
+
+const EVENT_STREAM = [
+  { time:"13:24", event:"Order Filled",      inst:"EURUSD", status:"ok", latency:"50ms" },
+  { time:"13:21", event:"Signal Approved",   inst:"EURUSD", status:"ok", latency:"27ms" },
+  { time:"13:18", event:"Zone Gate Passed",  inst:"EURUSD", status:"ok", latency:"41ms" },
+  { time:"13:16", event:"Gaussian Accepted", inst:"EURUSD", status:"ok", latency:"18ms" },
+  { time:"13:12", event:"Feature Generated", inst:"EURUSD", status:"ok", latency:"23ms" },
+];
+
+const ACTIVE_SIGNALS = {
+  count: 2, long: 1, short: 1,
+  topSignal: { inst:"EURUSD", conf:0.80, rr:2.45, entry:1.08134, stop:1.07990 },
+};
+
+const LATENCY_SERIES = {
+  ingestion: [45,42,50,38,46], feature: [22,25,20,24,23],
+  model: [18,20,17,21,19], execution: [30,28,35,31,29],
+};
+
+const QUEUE_DEPTHS = { ingestion:1, feature:3, signal:3 };
+
+const FEATURE_DRIFT = [
+  { name:"RSI_14",         psi:0.08, color:"#22c55e", status:"OK"    },
+  { name:"Volatility Ratio",psi:0.14, color:"#facc15", status:"WARN"  },
+  { name:"Swing High",      psi:0.06, color:"#22c55e", status:"OK"    },
+  { name:"Hour of Day",     psi:0.04, color:"#22c55e", status:"OK"    },
+  { name:"Candles Since Retest",psi:0.23, color:"#ef4444", status:"ALERT" },
+];
+
+const LINEAGE_NODES = [
+  { ver:"CRT v4.2", date:"2025-01", active:false },
+  { ver:"CRT v4.3", date:"2025-06", active:false },
+  { ver:"CRT v4.4", date:"2025-11", active:false },
+  { ver:"CRT v5",   date:"2026-05", active:true  },
+];
+
+const SHADOW_COMPARE = {
+  active: { ver:"v4_mirrored", winRate:"54.37%", pf:"1.38", avgRR:"1.62", dd:"-8.46", trades:412 },
+  shadow: { ver:"v4_val_test", winRate:"56.12%", pf:"1.44", avgRR:"1.70", dd:"-7.21", trades:398 },
+  readiness: 82,
+};
+
+const PROMOTION_HISTORY = [
+  { from:"CRT v4.3", to:"CRT v4.4", date:"2025-11-02", reason:"Win rate +4.2%",      by:"Auto-Promoter" },
+  { from:"CRT v4.4", to:"CRT v5",   date:"2026-05-12", reason:"Corr improved 0.21",  by:"Auto-Promoter" },
+];
+
+const REGIME_PERF = [
+  { regime:"Trending",      trades:1862, winRate:"58.21%", pf:"1.91" },
+  { regime:"Range",         trades:682,  winRate:"49.12%", pf:"1.12" },
+  { regime:"Low Volatile",  trades:420,  winRate:"60.34%", pf:"1.89" },
+  { regime:"High Volatile", trades:318,  winRate:"60.34%", pf:"1.89" },
+];
+
+const TRADE_TRACE = [
+  { time:"20:12:34", event:"Order Filled",       sub:"Fill: 1.08245",      dot:"ok"    },
+  { time:"20:12:31", event:"Risk Approved",       sub:"UltronRiskGate: OK", dot:"ok"    },
+  { time:"20:12:28", event:"RR Score 2.45",       sub:"RR Miner score",     dot:"ok"    },
+  { time:"20:12:26", event:"Zone Gate Passed",    sub:"Zone 3 of 8",        dot:"ok"    },
+  { time:"20:12:24", event:"Gaussian Accepted",   sub:"Corr: +0.2066",      dot:"ok"    },
+  { time:"20:12:20", event:"Features Generated",  sub:"35-dim vector",      dot:"muted" },
+  { time:"20:12:18", event:"Market Data",         sub:"EURUSD M15 bar",     dot:"muted" },
+];
+
+const SEQ_PATTERNS = [
+  { chain:["Sweep","Displacement","Retest","TP2"],   rate:"62.4%", n:1842, color:"#22c55e" },
+  { chain:["Sweep","Retest","TP1"],                  rate:"51.2%", n:984,  color:"#facc15" },
+  { chain:["Range","Break","Retest","TP2"],          rate:"58.7%", n:712,  color:"#22c55e" },
+  { chain:["Sweep","Displacement","SL"],             rate:"37.6%", n:622,  color:"#ef4444" },
+];
+
+// ── Runtime-backed globals (now owned by app.jsx / ApiClient) ────────────────
+// RT_KPIS, MODELS, ZONE_GATE_MODELS, RR_MODELS, TRADENET_MODELS,
+// TRADE_JOURNAL, TRADE_KPIS, EQ_TRADES, EQ_RUNTIME, RESEARCH_KPIS,
+// OUTCOMES_SEGMENTS, BT_HISTORY, BT_KPIS, EQ_BACKTEST → REMOVED.
+// Pages receive these via props from app.jsx. Do not re-add here.
+
 Object.assign(window, {
-  RT_KPIS, FUSION_SEGMENTS, LIVE_SIGNAL, EQ_RUNTIME, RT_TRADES,
-  RESEARCH_KPIS, OUTCOMES_SEGMENTS, STACKED_OUTCOMES, SCATTER_POINTS, SCAN_JOBS,
-  MODELS,
-  TRADE_KPIS, EQ_TRADES, SESSION_PNL, TRADE_JOURNAL,
-  BT_KPIS, EQ_BACKTEST, DRAWDOWN, MONTHLY_RETURNS,
+  // Static scaffold: no backend endpoint exists yet
+  // TODO: replace each with /api/{endpoint} when backend is ready
+  FUSION_SEGMENTS, LIVE_SIGNAL, STACKED_OUTCOMES, SCATTER_POINTS, SCAN_JOBS,
+  DRAWDOWN, MONTHLY_RETURNS,
   SYS_KPIS, DATA_INTEGRITY, RECENT_JOBS,
+  EXEC_KPIS, ALERTS, STATUS_STRIP, SESSION_EQUITY,
+  SIGNAL_PIPELINE, EVENT_STREAM, ACTIVE_SIGNALS, LATENCY_SERIES, QUEUE_DEPTHS,
+  FEATURE_DRIFT, LINEAGE_NODES, SHADOW_COMPARE, PROMOTION_HISTORY,
+  REGIME_PERF, TRADE_TRACE, SEQ_PATTERNS,
 });

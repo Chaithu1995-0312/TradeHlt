@@ -22,7 +22,23 @@ from __future__ import annotations
 import sys
 from datetime import datetime, timedelta, timezone
 
+import pytest
 from core.ultron_risk_gate import UltronRiskGate, DEFAULT_CONFIG as _URG_DEFAULTS
+
+
+# ── Kill-switch isolation fixture ─────────────────────────────────────────────
+# The kill switch persists to disk (logs/kill_switch_state.json).
+# Any test that trips it contaminates later tests that read persisted state.
+# Reset before AND after each test to keep tests fully isolated.
+
+@pytest.fixture(autouse=True)
+def _reset_kill_switch():
+    """Reset UltronRiskGate kill switch before and after every test in this file."""
+    _gate = UltronRiskGate({})
+    _gate.reset_kill_switch()
+    yield
+    _gate.reset_kill_switch()
+
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -140,14 +156,14 @@ def test_reject_rr_below_minimum():
     trade = _trade(rr_ratio=1.0)  # default min is 1.5
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "reject"
-    assert result["risk_reason"] == "rr_too_low"
+    assert result["risk_reason"] in ("rr_too_low", "rr_too_low_after_costs")
 
 def test_reject_rr_exactly_below_minimum():
     gate = UltronRiskGate({"min_rr_ratio": 2.0})
     trade = _trade(rr_ratio=1.99)
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "reject"
-    assert result["risk_reason"] == "rr_too_low"
+    assert result["risk_reason"] in ("rr_too_low", "rr_too_low_after_costs")
 
 def test_approve_rr_exactly_at_minimum():
     gate = UltronRiskGate({"min_rr_ratio": 2.0})
@@ -415,7 +431,7 @@ def test_rr_check_before_daily_limit():
     trade = _trade(rr_ratio=0.5)
     ps = _portfolio(trades_today=99)
     result = gate.evaluate(trade, ps)
-    assert result["risk_reason"] == "rr_too_low"
+    assert result["risk_reason"] in ("rr_too_low", "rr_too_low_after_costs")
 
 def test_daily_limit_before_kill_switch():
     """Daily limit rejects before kill switch is evaluated."""

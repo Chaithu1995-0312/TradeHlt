@@ -319,6 +319,68 @@ class ModelRegistry:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# GAUSSIAN REGISTRY — per-instrument active map + helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+_ACTIVE_MAP_KEY = "__active__"
+
+
+def _is_meta_key(k: str) -> bool:
+    # Double-underscore prefix marks registry metadata (not a version entry).
+    return isinstance(k, str) and k.startswith("__")
+
+
+def _assert_single_active_per_instrument(reg: dict) -> None:
+    """At most one entry per instrument may have active=True."""
+    by_inst: dict = {}
+    for k, v in reg.items():
+        if _is_meta_key(k) or not isinstance(v, dict):
+            continue
+        if v.get("active", False):
+            inst = v.get("instrument", "_unknown")
+            by_inst.setdefault(inst, []).append(k)
+    for inst, versions in by_inst.items():
+        if len(versions) > 1:
+            raise RuntimeError(
+                f"GOV-3 violation: instrument {inst!r} has multiple "
+                f"active versions {versions}. Write aborted."
+            )
+
+
+def _migrate_gaussian_registry(reg: dict) -> dict:
+    """One-time migration: populate __active__ map from entry-level active flags
+    when the map is absent. Idempotent — safe to call on every load."""
+    if not isinstance(reg, dict) or _ACTIVE_MAP_KEY in reg:
+        return reg
+    active_map: dict = {}
+    for k, v in reg.items():
+        if _is_meta_key(k) or not isinstance(v, dict):
+            continue
+        if v.get("active", False):
+            inst = v.get("instrument")
+            if inst:
+                active_map[inst] = k
+            else:
+                log.warning(
+                    "Gaussian migration: version %s is active but has no "
+                    "instrument field — skipping in __active__ map", k
+                )
+    reg[_ACTIVE_MAP_KEY] = active_map
+    try:
+        from utils.integrity_events import emit_integrity_event
+        emit_integrity_event(
+            "GAUSSIAN_REGISTRY_MIGRATED", "INFO", "model_registry",
+            {
+                "active_map": active_map,
+                "n_versions": sum(1 for k in reg if not _is_meta_key(k)),
+            },
+        )
+    except Exception:
+        pass
+    return reg
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # GAUSSIAN MODEL REGISTRY  (versioned, never overwrites)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -342,14 +404,15 @@ class GaussianModelRegistry:
         if not self.reg_path.exists():
             return {}
         try:
-            return json.loads(self.reg_path.read_text(encoding="utf-8"))
+            raw = json.loads(self.reg_path.read_text(encoding="utf-8"))
+            return _migrate_gaussian_registry(raw)
         except Exception as e:
             log.warning(f"Gaussian registry load failed: {e}")
             return {}
 
     def _save(self, reg: dict) -> None:
-        # GOV-3: guard then atomic rename
-        _assert_single_active(reg, active_key="active")
+        # GOV-3: per-instrument invariant — one active per instrument, written atomically.
+        _assert_single_active_per_instrument(reg)
         _save_atomic(self.reg_path, reg)
 
     def register_gaussian(
@@ -358,6 +421,8 @@ class GaussianModelRegistry:
         model_file: str,
         feature_schema: list,
         metrics: dict,
+        instrument: Optional[str] = None,
+        run_id: Optional[str] = None,
     ) -> dict:
         reg = self._load()
         if version in reg:
@@ -382,6 +447,10 @@ class GaussianModelRegistry:
             "trained_at": metrics.get("trained_at", time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())),
             "active":     False,
         }
+        if instrument:
+            entry["instrument"] = instrument
+        if run_id:
+            entry["run_id"] = run_id
         reg[version] = entry
         self._save(reg)
         log.info(
@@ -394,19 +463,26 @@ class GaussianModelRegistry:
     def promote_gaussian(
         self,
         version: str,
+        *,
+        instrument: Optional[str] = None,
         force: bool = False,
         max_regression: float = 0.01,
     ) -> tuple[bool, str]:
         """
-        Promote a Gaussian version to active.
+        Promote a Gaussian version to active for a given instrument.
 
-        FIX 3: Compares against current active model metrics.
-        Blocks promotion if new model regresses by more than max_regression
-        on corr_expected_rr (unless force=True).
+        Active pointer lives in reg["__active__"][instrument]. Promotion only
+        affects the named instrument; other instruments' active versions are
+        untouched.
+
+        FIX 3: Compares against current active model metrics for the SAME
+        instrument. Blocks promotion if new model regresses by more than
+        max_regression on corr_expected_rr (unless force=True).
 
         Parameters
         ----------
         version        : version to promote
+        instrument     : target instrument; if None, derived from reg[version]["instrument"]
         force          : bypass performance comparison (use for first deploy or testing)
         max_regression : max allowed corr decrease vs current active (default 0.01 = 1%)
         """
@@ -445,22 +521,70 @@ class GaussianModelRegistry:
                 log.error(reason)
                 return False, reason
 
-            # Derive current_active from registry scan (single source of truth inside lock)
-            active_versions = [k for k, v in reg.items() if v.get("active", False)]
-            current_active  = active_versions[0] if active_versions else None
+            # Resolve instrument target — explicit arg wins; else derive from entry;
+            # else fall back to a "_default" bucket so legacy callers that never set
+            # an instrument continue to work. Misuse is audited so call sites can be
+            # found and updated.
+            if instrument is None:
+                instrument = reg[version].get("instrument")
+                if instrument:
+                    try:
+                        from utils.integrity_events import emit_integrity_event
+                        emit_integrity_event(
+                            "GAUSSIAN_PROMOTE_INSTRUMENT_INFERRED", "INFO", "model_registry",
+                            {"version": version, "instrument": instrument},
+                        )
+                    except Exception:
+                        pass
+            if not instrument:
+                instrument = "_default"
+                try:
+                    from utils.integrity_events import emit_integrity_event
+                    emit_integrity_event(
+                        "GAUSSIAN_PROMOTE_INSTRUMENT_MISSING", "WARNING", "model_registry",
+                        {"version": version,
+                         "note": "no instrument arg passed and entry has no 'instrument' field — "
+                                 "promoted into '_default' bucket. Update caller to pass instrument=."},
+                    )
+                except Exception:
+                    pass
 
-            # First deployment — no comparison needed
+            # Per-instrument active pointer — __active__ map is source of truth.
+            active_map = reg.setdefault(_ACTIVE_MAP_KEY, {})
+            current_active = active_map.get(instrument)
+
+            # Legacy fallback: if map is empty for this instrument, scan entries
+            # (covers freshly-migrated registries where the map was just built).
+            if current_active is None:
+                for k, v in reg.items():
+                    if _is_meta_key(k) or not isinstance(v, dict):
+                        continue
+                    if v.get("active") and v.get("instrument") == instrument:
+                        current_active = k
+                        break
+
+            # First deployment for this instrument — no comparison needed
             if current_active is None:
                 reg[version]["active"] = True
+                active_map[instrument] = version
+                reg[_ACTIVE_MAP_KEY] = active_map
                 self._save(reg)
-                reason = f"First Gaussian deployment: {version} (corr={new_corr:+.4f})"
+                reason = (
+                    f"First Gaussian deployment for {instrument}: {version} "
+                    f"(corr={new_corr:+.4f})"
+                )
                 log.info(reason)
                 return True, reason
 
             if current_active not in reg:
                 reg[version]["active"] = True
+                active_map[instrument] = version
+                reg[_ACTIVE_MAP_KEY] = active_map
                 self._save(reg)
-                reason = f"Promoted Gaussian {version} (current active not found in registry)"
+                reason = (
+                    f"Promoted Gaussian {version} for {instrument} "
+                    f"(current active not found in registry)"
+                )
                 log.info(reason)
                 return True, reason
 
@@ -479,28 +603,58 @@ class GaussianModelRegistry:
                     log.warning(reason)
                     return False, reason
 
-            # Deactivate current, activate new — all in-memory before write
+            # Deactivate current for THIS instrument only; activate new.
             reg[current_active]["active"] = False
             reg[version]["active"] = True
-            # Single atomic write; GOV-3 guard inside _save()
+            active_map[instrument] = version
+            reg[_ACTIVE_MAP_KEY] = active_map
+            # Single atomic write; per-instrument GOV-3 guard inside _save()
             self._save(reg)
             reason = (
-                f"Promoted Gaussian {version} (corr={new_corr:+.4f} cal={new_cal:.4f}) "
+                f"Promoted Gaussian {version} for {instrument} "
+                f"(corr={new_corr:+.4f} cal={new_cal:.4f}) "
                 f"over {current_active} (corr={cur_corr:+.4f} cal={cur_cal:.4f})"
             )
             log.info(reason)
             return True, reason
 
     def get_active_gaussian(self) -> Optional[str]:
+        """Legacy: returns active version for the default instrument (EURUSD).
+        Prefer get_active_version(instrument) for new callers."""
+        return self.get_active_version("EURUSD")
+
+    def get_active_version(self, instrument: str) -> Optional[str]:
         reg = self._load()
-        for version, entry in reg.items():
-            if entry.get("active", False):
-                return version
-        return None
+        active_map = reg.get(_ACTIVE_MAP_KEY, {})
+        return active_map.get(instrument)
+
+    def rollback_gaussian(self, instrument: str) -> tuple[bool, str]:
+        """Promote the previous (by trained_at desc) version for the instrument.
+        Returns (False, "no_history") if there is no prior version to roll back to."""
+        reg = self._load()
+        active_map = reg.get(_ACTIVE_MAP_KEY, {})
+        current = active_map.get(instrument)
+        if not current:
+            return False, f"No active version for instrument {instrument!r}"
+        candidates = sorted(
+            [k for k, v in reg.items()
+             if not _is_meta_key(k) and isinstance(v, dict)
+             and v.get("instrument") == instrument and k != current],
+            key=lambda k: reg[k].get("trained_at", ""),
+            reverse=True,
+        )
+        if not candidates:
+            return False, "no_history"
+        previous = candidates[0]
+        return self.promote_gaussian(previous, instrument=instrument, force=True)
 
     def list_gaussian(self) -> list[dict]:
         reg = self._load()
-        return sorted(reg.values(), key=lambda x: x.get("trained_at", ""), reverse=True)
+        return sorted(
+            [v for k, v in reg.items() if not _is_meta_key(k) and isinstance(v, dict)],
+            key=lambda x: x.get("trained_at", ""),
+            reverse=True,
+        )
 
     def print_gaussian_leaderboard(self) -> None:
         entries = self.list_gaussian()
@@ -816,6 +970,8 @@ class RRModelRegistry:
         dataset_file: str,
         n_samples: int,
         n_features: int,
+        instrument: Optional[str] = None,
+        run_id: Optional[str] = None,
     ) -> dict:
         """Register or update a dataset-only entry (model may be trained later)."""
         reg     = self._load()
@@ -833,6 +989,10 @@ class RRModelRegistry:
             ),
             "active":       existing.get("active", False),
         }
+        if instrument:
+            entry["instrument"] = instrument
+        if run_id:
+            entry["run_id"] = run_id
         reg[version] = entry
         self._save(reg)
         log.info("RRRegistry | registered dataset %s (%d samples)", version, n_samples)
@@ -886,7 +1046,10 @@ class RRModelRegistry:
     def get_active_entry(self) -> Optional[dict]:
         reg = self._load()
         for entry in reg.values():
-            if entry.get("active", False):
+            # Gap-7 fix: skip orphan entries where model_file was never written.
+            # These arise when a dataset is built but training never completes.
+            # Returning such an entry would cause TypeError on open(model_file).
+            if entry.get("active", False) and entry.get("model_file") is not None:
                 return entry
         return None
 
@@ -899,12 +1062,46 @@ class RRModelRegistry:
 # TRADENET REGISTRY  (versioned, never overwrites)
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _migrate_tradenet_registry(reg: dict) -> dict:
+    """Populate __active__ map from entry-level active flags on first load.
+    Idempotent — safe to call on every load."""
+    if not isinstance(reg, dict) or _ACTIVE_MAP_KEY in reg:
+        return reg
+    active_map: dict = {}
+    for k, v in reg.items():
+        if _is_meta_key(k) or not isinstance(v, dict):
+            continue
+        if v.get("active", False):
+            inst = v.get("instrument")
+            if inst:
+                active_map[inst] = k
+            else:
+                log.warning(
+                    "TradeNet migration: version %s is active but has no "
+                    "instrument field — skipping in __active__ map", k
+                )
+    reg[_ACTIVE_MAP_KEY] = active_map
+    try:
+        from utils.integrity_events import emit_integrity_event
+        emit_integrity_event(
+            "TRADENET_REGISTRY_MIGRATED", "INFO", "model_registry",
+            {
+                "active_map": active_map,
+                "n_versions": sum(1 for k in reg if not _is_meta_key(k)),
+            },
+        )
+    except Exception:
+        pass
+    return reg
+
+
 class TradeNetRegistry:
     """
-    Versioned registry for TradeNet .pth model files.
+    Versioned registry for TradeNet model files (.pth v1 or JSON envelope v2).
 
-    Existing timestamped .pth files are registered on first use.
-    The active version is the one last explicitly promoted.
+    Per-instrument active pointer lives in reg["__active__"][instrument].
+    Promotion only affects the named instrument — other instruments are untouched.
+    Mirrors GaussianModelRegistry semantics.
     """
 
     def __init__(self, models_dir: Path = MODELS_DIR) -> None:
@@ -916,13 +1113,14 @@ class TradeNetRegistry:
         if not self.reg_path.exists():
             return {}
         try:
-            return json.loads(self.reg_path.read_text(encoding="utf-8"))
+            raw = json.loads(self.reg_path.read_text(encoding="utf-8"))
+            return _migrate_tradenet_registry(raw)
         except Exception as e:
             log.warning("TradeNetRegistry load failed: %s", e)
             return {}
 
     def _save(self, reg: dict) -> None:
-        _assert_single_active(reg, active_key="active")
+        _assert_single_active_per_instrument(reg)
         _save_atomic(self.reg_path, reg)
 
     def register(
@@ -930,6 +1128,8 @@ class TradeNetRegistry:
         version: str,
         model_file: str,
         metrics: dict,
+        instrument: Optional[str] = None,
+        run_id: Optional[str] = None,
     ) -> dict:
         reg = self._load()
         if version in reg:
@@ -942,42 +1142,177 @@ class TradeNetRegistry:
             "trained_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "active":     False,
         }
+        if instrument:
+            entry["instrument"] = instrument
+        if run_id:
+            entry["run_id"] = run_id
         reg[version] = entry
         self._save(reg)
         log.info("TradeNetRegistry | registered %s", version)
         return entry
 
-    def promote(self, version: str) -> tuple[bool, str]:
+    def promote(
+        self,
+        version: str,
+        *,
+        instrument: Optional[str] = None,
+        force: bool = False,
+        max_regression: float = 0.01,
+    ) -> tuple[bool, str]:
+        """
+        Promote a TradeNet version to active for a given instrument.
+
+        Primary metric for regression guard: ``metrics["auc_p_tp1"]`` (mirrors
+        Gaussian's ``corr_expected_rr`` role). When the new entry has no
+        ``auc_p_tp1`` field — legacy v1 entries store only generic ``metrics``
+        — the regression guard is skipped silently and ``force`` semantics
+        still apply.
+        """
         lock_path = self.reg_path.with_suffix(".lock")
         with _PROMOTE_LOCK, _file_lock(lock_path):
             reg = self._load()
             if version not in reg:
                 return False, f"TradeNet version {version} not in registry"
-            for k in reg:
-                reg[k]["active"] = False
+
+            new_metrics = reg[version].get("metrics", {}) or {}
+            new_auc = new_metrics.get("auc_p_tp1")
+
+            if instrument is None:
+                instrument = reg[version].get("instrument")
+                if instrument:
+                    try:
+                        from utils.integrity_events import emit_integrity_event
+                        emit_integrity_event(
+                            "TRADENET_PROMOTE_INSTRUMENT_INFERRED", "INFO", "model_registry",
+                            {"version": version, "instrument": instrument},
+                        )
+                    except Exception:
+                        pass
+            if not instrument:
+                instrument = "_default"
+                try:
+                    from utils.integrity_events import emit_integrity_event
+                    emit_integrity_event(
+                        "TRADENET_PROMOTE_INSTRUMENT_MISSING", "WARNING", "model_registry",
+                        {"version": version,
+                         "note": "no instrument arg and entry has no 'instrument' field — "
+                                 "promoted into '_default' bucket. Update caller to pass instrument=."},
+                    )
+                except Exception:
+                    pass
+
+            active_map = reg.setdefault(_ACTIVE_MAP_KEY, {})
+            current_active = active_map.get(instrument)
+            if current_active is None:
+                for k, v in reg.items():
+                    if _is_meta_key(k) or not isinstance(v, dict):
+                        continue
+                    if v.get("active") and v.get("instrument") == instrument:
+                        current_active = k
+                        break
+
+            if current_active is None or current_active not in reg:
+                reg[version]["active"] = True
+                active_map[instrument] = version
+                reg[_ACTIVE_MAP_KEY] = active_map
+                self._save(reg)
+                reason = (
+                    f"First TradeNet deployment for {instrument}: {version}"
+                    + (f" (auc_p_tp1={new_auc:+.4f})" if new_auc is not None else "")
+                )
+                log.info(reason)
+                return True, reason
+
+            cur_metrics = reg[current_active].get("metrics", {}) or {}
+            cur_auc = cur_metrics.get("auc_p_tp1")
+
+            if not force and new_auc is not None and cur_auc is not None:
+                if new_auc < cur_auc - max_regression:
+                    reason = (
+                        f"TradeNet promotion BLOCKED: {version} auc_p_tp1={new_auc:+.4f} "
+                        f"< current {current_active} auc_p_tp1={cur_auc:+.4f} - {max_regression} "
+                        f"(regression={cur_auc - new_auc:.4f}). Use force=True to override."
+                    )
+                    log.warning(reason)
+                    return False, reason
+
+            reg[current_active]["active"] = False
             reg[version]["active"] = True
+            active_map[instrument] = version
+            reg[_ACTIVE_MAP_KEY] = active_map
             self._save(reg)
-            reason = f"TradeNet promoted: {version}"
+            tag = ""
+            if new_auc is not None and cur_auc is not None:
+                tag = f" (auc_p_tp1={new_auc:+.4f} over {cur_auc:+.4f})"
+            reason = f"Promoted TradeNet {version} for {instrument}{tag} over {current_active}"
             log.info(reason)
             return True, reason
 
     def get_active(self) -> Optional[str]:
+        """Legacy: returns active version for any instrument (first match in __active__).
+        Prefer get_active_version(instrument) for new callers."""
         reg = self._load()
+        active_map = reg.get(_ACTIVE_MAP_KEY, {})
+        if active_map:
+            return next(iter(active_map.values()))
         for v, entry in reg.items():
+            if _is_meta_key(v) or not isinstance(entry, dict):
+                continue
             if entry.get("active", False):
                 return v
         return None
 
-    def get_active_entry(self) -> Optional[dict]:
+    def get_active_version(self, instrument: str) -> Optional[str]:
         reg = self._load()
-        for entry in reg.values():
+        active_map = reg.get(_ACTIVE_MAP_KEY, {})
+        v = active_map.get(instrument)
+        if v:
+            return v
+        # Legacy fallback: scan entries
+        for k, entry in reg.items():
+            if _is_meta_key(k) or not isinstance(entry, dict):
+                continue
+            if entry.get("active") and entry.get("instrument") == instrument:
+                return k
+        return None
+
+    def get_active_entry(self, instrument: Optional[str] = None) -> Optional[dict]:
+        reg = self._load()
+        if instrument:
+            v = self.get_active_version(instrument)
+            return reg.get(v) if v else None
+        # Legacy: first active entry
+        for k, entry in reg.items():
+            if _is_meta_key(k) or not isinstance(entry, dict):
+                continue
             if entry.get("active", False):
                 return entry
         return None
 
+    def rollback_tradenet(self, instrument: str) -> tuple[bool, str]:
+        reg = self._load()
+        active_map = reg.get(_ACTIVE_MAP_KEY, {})
+        current = active_map.get(instrument)
+        if not current:
+            return False, f"No active TradeNet version for instrument {instrument!r}"
+        candidates = sorted(
+            [k for k, v in reg.items()
+             if not _is_meta_key(k) and isinstance(v, dict)
+             and v.get("instrument") == instrument and k != current],
+            key=lambda k: reg[k].get("trained_at", ""),
+            reverse=True,
+        )
+        if not candidates:
+            return False, "no_history"
+        return self.promote(candidates[0], instrument=instrument, force=True)
+
     def list_versions(self) -> list[dict]:
         reg = self._load()
-        return sorted(reg.values(), key=lambda x: x.get("trained_at", ""), reverse=True)
+        return sorted(
+            [v for k, v in reg.items() if not _is_meta_key(k) and isinstance(v, dict)],
+            key=lambda x: x.get("trained_at", ""),
+            reverse=True,
+        )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1008,16 +1343,35 @@ def print_leaderboard(n: int = 10) -> None:
 
 
 # Gaussian registry convenience functions
-def register_gaussian(version: str, model_file: str, feature_schema: list, metrics: dict) -> dict:
-    return _gaussian_registry.register_gaussian(version, model_file, feature_schema, metrics)
+def register_gaussian(version: str, model_file: str, feature_schema: list, metrics: dict,
+                      instrument: Optional[str] = None,
+                      run_id: Optional[str] = None) -> dict:
+    return _gaussian_registry.register_gaussian(version, model_file, feature_schema, metrics,
+                                                instrument=instrument, run_id=run_id)
 
 
-def promote_gaussian(version: str) -> tuple[bool, str]:
-    return _gaussian_registry.promote_gaussian(version)
+def promote_gaussian(
+    version: str,
+    *,
+    instrument: Optional[str] = None,
+    force: bool = False,
+    max_regression: float = 0.01,
+) -> tuple[bool, str]:
+    return _gaussian_registry.promote_gaussian(
+        version, instrument=instrument, force=force, max_regression=max_regression
+    )
 
 
 def get_active_gaussian() -> Optional[str]:
     return _gaussian_registry.get_active_gaussian()
+
+
+def get_active_version(instrument: str) -> Optional[str]:
+    return _gaussian_registry.get_active_version(instrument)
+
+
+def rollback_gaussian(instrument: str) -> tuple[bool, str]:
+    return _gaussian_registry.rollback_gaussian(instrument)
 
 
 def print_gaussian_leaderboard() -> None:
@@ -1059,8 +1413,11 @@ def register_rr_dataset(
     dataset_file: str,
     n_samples: int,
     n_features: int,
+    instrument: Optional[str] = None,
+    run_id: Optional[str] = None,
 ) -> dict:
-    return _rr_registry.register_dataset(version, dataset_file, n_samples, n_features)
+    return _rr_registry.register_dataset(version, dataset_file, n_samples, n_features,
+                                          instrument=instrument, run_id=run_id)
 
 
 def register_rr_model(version: str, model_file: str, metrics: dict) -> dict:
@@ -1084,20 +1441,41 @@ def list_rr_versions() -> list[dict]:
 
 
 # TradeNet registry convenience functions
-def register_tradenet(version: str, model_file: str, metrics: dict) -> dict:
-    return _tradenet_registry.register(version, model_file, metrics)
+def register_tradenet(version: str, model_file: str, metrics: dict,
+                      instrument: Optional[str] = None,
+                      run_id: Optional[str] = None) -> dict:
+    return _tradenet_registry.register(version, model_file, metrics,
+                                       instrument=instrument, run_id=run_id)
 
 
-def promote_tradenet(version: str) -> tuple[bool, str]:
-    return _tradenet_registry.promote(version)
+def promote_tradenet(
+    version: str,
+    *,
+    instrument: Optional[str] = None,
+    force: bool = False,
+    max_regression: float = 0.01,
+) -> tuple[bool, str]:
+    return _tradenet_registry.promote(
+        version, instrument=instrument, force=force, max_regression=max_regression
+    )
 
 
-def get_active_tradenet() -> Optional[str]:
+def get_active_tradenet(instrument: Optional[str] = None) -> Optional[str]:
+    if instrument:
+        return _tradenet_registry.get_active_version(instrument)
     return _tradenet_registry.get_active()
 
 
-def get_active_tradenet_entry() -> Optional[dict]:
-    return _tradenet_registry.get_active_entry()
+def get_active_tradenet_entry(instrument: Optional[str] = None) -> Optional[dict]:
+    return _tradenet_registry.get_active_entry(instrument)
+
+
+def get_active_tradenet_version(instrument: str) -> Optional[str]:
+    return _tradenet_registry.get_active_version(instrument)
+
+
+def rollback_tradenet(instrument: str) -> tuple[bool, str]:
+    return _tradenet_registry.rollback_tradenet(instrument)
 
 
 def list_tradenet_versions() -> list[dict]:

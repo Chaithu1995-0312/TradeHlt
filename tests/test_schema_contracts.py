@@ -50,12 +50,14 @@ def test_no_duplicates():
         seen.add(f)
 
 
-# ── 3. Exactly 35 features ────────────────────────────────────────────────────
+# ── 3. Exactly 38 features (schema v3.0 — Part 1 adds liquidity_distance,
+#          liquidity_pressure_score, volume_spike at indices 35-37)
 def test_feature_count():
-    from features.feature_schema import CANONICAL_FEATURES
-    assert len(CANONICAL_FEATURES) == 35, (
-        f"Expected 35 canonical features, got {len(CANONICAL_FEATURES)}"
+    from features.feature_schema import CANONICAL_FEATURES, CANONICAL_FEATURE_DIM
+    assert len(CANONICAL_FEATURES) == 38, (
+        f"Expected 38 canonical features (schema v3.0), got {len(CANONICAL_FEATURES)}"
     )
+    assert CANONICAL_FEATURE_DIM == 38
 
 
 # ── 4. FEATURE_INDEX_MAP consistency ─────────────────────────────────────────

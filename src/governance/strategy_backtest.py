@@ -263,10 +263,15 @@ class StrategyBacktester:
             except (TypeError, ValueError):
                 return False
 
-        session_val = row.get("session", "london")
+        # Map numeric session encoding back to canonical strings. SESSION_UNKNOWN=-1.0
+        # must not silently coerce to "london" (which would re-introduce the exact
+        # contamination Phase-Integrity Phase 4 removed). Unknown values flow through
+        # as "unknown" so downstream gates (e.g. trap_validator allowed_sessions)
+        # reject rather than misclassify.
+        session_val = row.get("session", "unknown")
         if isinstance(session_val, (int, float)):
             session_map = {0: "asia", 1: "london", 2: "new_york", 3: "overlap"}
-            session_val = session_map.get(int(session_val), "london")
+            session_val = session_map.get(int(session_val), "unknown")
 
         vol_regime = row.get("volatility_regime", "RANGING")
         if isinstance(vol_regime, (int, float)):

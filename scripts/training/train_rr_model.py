@@ -82,16 +82,43 @@ def main() -> None:
             "Removes price-level anchoring so the model generalises across price regimes."
         ),
     )
+    ap.add_argument(
+        "--instrument", default="",
+        help="Instrument label (e.g. ETHUSDT). When given with --run-id/--run and no "
+             "--dataset, auto-resolves models/{instrument}/{run_id}/rr_dataset.json.",
+    )
+    ap.add_argument(
+        "--run-id", "--run", dest="run_id", default=None,
+        help="Run ID (e.g. 20260519_113806). With --instrument auto-resolves both "
+             "input dataset and output model paths to the run-scoped directory.",
+    )
     args = ap.parse_args()
 
     # ── Resolve dataset path ─────────────────────────────────────────────────
     dataset_path = args.dataset
     if not dataset_path:
-        entry = get_active_rr_entry()
-        if entry and entry.get("dataset_file"):
-            dataset_path = entry["dataset_file"]
+        if args.instrument and args.run_id:
+            # Run-scoped: pick canonical rr_dataset.json from the run directory
+            run_dir = Path("models") / args.instrument / args.run_id
+            auto_ds = run_dir / "rr_dataset.json"
+            if not auto_ds.exists():
+                # Fallback: first versioned file in run dir
+                candidates = sorted(run_dir.glob("rr_dataset_*.json"))
+                if candidates:
+                    auto_ds = candidates[-1]
+                else:
+                    raise SystemExit(
+                        f"No rr_dataset*.json found in {run_dir}. "
+                        f"Run build_rr_dataset.py first."
+                    )
+            dataset_path = str(auto_ds)
+            print(f"Auto-resolved dataset: {dataset_path}")
         else:
-            dataset_path = "models/rr_dataset.json"
+            entry = get_active_rr_entry()
+            if entry and entry.get("dataset_file"):
+                dataset_path = entry["dataset_file"]
+            else:
+                dataset_path = "models/rr_dataset.json"
     print(f"Loading dataset: {dataset_path}")
 
     X, y_rr, y_win = load_dataset(dataset_path)
@@ -119,29 +146,40 @@ def main() -> None:
 
     # ── Version + output path ────────────────────────────────────────────────
     version = args.version or time.strftime("%Y%m_v1")
-    output  = args.output  or f"models/rr_model_{version}.json"
+    if args.output:
+        output = args.output
+    elif args.instrument and args.run_id:
+        # Run-scoped output alongside the dataset
+        output = str(Path("models") / args.instrument / args.run_id
+                     / f"rr_model_{version}.json")
+    else:
+        output = f"models/rr_model_{version}.json"
 
     Path(output).parent.mkdir(parents=True, exist_ok=True)
     trainer.save(output)
     print(f"Saved model -> {output}")
+    print(f"OUTPUT:rr_model:{Path(output).resolve()}")
 
     # ── Register ─────────────────────────────────────────────────────────────
     metrics = {
-        "n_train":    n_train,
+        "n_train":     n_train,
         "ridge_alpha": state.get("ridge_alpha", 1.0),
     }
-    register_rr_model(version, output, metrics)
-    print(f"Registered in rr_registry: {version}")
+    # Instrument-scoped registry key prevents collision across instruments
+    reg_version = f"{version}_{args.instrument.lower()}" if args.instrument else version
+    register_rr_model(reg_version, output, metrics)
+    print(f"Registered in rr_registry: {reg_version}")
 
     # ── Promote ──────────────────────────────────────────────────────────────
     if args.promote:
-        ok, reason = promote_rr(version)
+        ok, reason = promote_rr(reg_version)
         print(f"Promote: {reason}")
         # Also write to canonical rr_model.json so engine_runner path still works
         shutil.copy2(output, "models/rr_model.json")
         print("Canonical models/rr_model.json updated")
     else:
-        print(f"To promote: python train_rr_model.py --version {version} ... --promote")
+        instr_flag = f" --instrument {args.instrument} --run-id {args.run_id}" if args.instrument else ""
+        print(f"To promote: python train_rr_model.py{instr_flag} --version {version} --promote")
 
 
 if __name__ == "__main__":

@@ -3,9 +3,12 @@ rr_fusion.py
 Advisory RR fusion layer using canonical 24-feature validation.
 """
 
+import logging
 import os
 import warnings
 from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 from config_layer.rr.rr_pattern_miner import NanoInferenceEngine, DEFAULT_MODEL_PATH
 from features.feature_pipeline import build_feature_vector
@@ -18,7 +21,10 @@ from features.feature_schema import (
 )
 
 try:
-    from production_config import get_prod_section as _get_section
+    try:
+        from config_layer.production_config import get_prod_section as _get_section
+    except ImportError:
+        from production_config import get_prod_section as _get_section  # standalone script path
     _DRIFT_THRESHOLD: float = _get_section("rr_model").get("drift_threshold", 1.5)
 except Exception:
     _DRIFT_THRESHOLD: float = 1.5
@@ -114,6 +120,23 @@ class RRFusionLayer:
             disp = float(features["disp_strength"])
 
             if depth > _DRIFT_THRESHOLD or body > _DRIFT_THRESHOLD or disp > _DRIFT_THRESHOLD:
+                logger.warning(
+                    "RRFusionLayer: feature drift detected (depth=%.3f body=%.3f disp=%.3f "
+                    "threshold=%.1f) — RR model bypassed, falling back to Gaussian.",
+                    depth, body, disp, _DRIFT_THRESHOLD,
+                )
+                # Audit-trail emit so TrainingTrigger._drift_gate_open() and
+                # post-hoc forensics see this in logs/integrity_events.jsonl.
+                # Wrapped: import failure must not break the hot-path fallback.
+                try:
+                    from utils.integrity_events import emit_integrity_event
+                    emit_integrity_event(
+                        "RR_BYPASS", "WARNING", "rr_fusion",
+                        {"depth": depth, "body": body, "disp": disp,
+                         "threshold": _DRIFT_THRESHOLD},
+                    )
+                except Exception:
+                    pass
                 return _passthrough(g_score, g_pwin, "drift_detected")
 
             vector = build_feature_vector(features)

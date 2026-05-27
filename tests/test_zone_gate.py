@@ -52,8 +52,9 @@ def _make_runner_for_routing_test():
         def __init__(self):
             self.last = None
 
-        def compute(self, payload):
+        def compute(self, payload, *, regime=None, **kwargs):
             self.last = payload
+            self.last_regime = regime
             return {"final_score": 0.5}
 
     class DummyCollector:

@@ -39,18 +39,21 @@ function DonutChart({ segments, size = 150, thickness = 22, centerLabel, centerS
   );
 }
 
-function LineChart({ values, width = 380, height = 150, color = "#22d3ee", areaFill = "#22d3ee", padding = { l: 28, r: 12, t: 8, b: 22 }, yTicks = 4, xLabels = [], showYAxis = true, showGrid = true }) {
+function LineChart({ values, data, width = 380, height = 150, color = "#22d3ee", areaFill = "#22d3ee", padding = { l: 28, r: 12, t: 8, b: 22 }, yTicks = 4, xLabels = [], showYAxis = true, showGrid = true }) {
+  // Accept either `values` or `data` prop for backward-compat
+  const pts = (values || data || []);
+  if (!pts.length) return <svg width="100%" height={height} />;
   const { l, r, t, b } = padding;
   const innerW = width - l - r;
   const innerH = height - t - b;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  const min = Math.min(...pts);
+  const max = Math.max(...pts);
   const yMin = min - (max - min) * 0.08;
   const yMax = max + (max - min) * 0.08;
-  const fx = (i) => l + (i / (values.length - 1)) * innerW;
+  const fx = (i) => l + (i / (pts.length - 1)) * innerW;
   const fy = (v) => t + (1 - (v - yMin) / (yMax - yMin)) * innerH;
-  const path = values.map((v, i) => `${i === 0 ? "M" : "L"}${fx(i).toFixed(1)},${fy(v).toFixed(1)}`).join(" ");
-  const area = `${path} L${fx(values.length - 1).toFixed(1)},${t + innerH} L${fx(0).toFixed(1)},${t + innerH} Z`;
+  const path = pts.map((v, i) => `${i === 0 ? "M" : "L"}${fx(i).toFixed(1)},${fy(v).toFixed(1)}`).join(" ");
+  const area = `${path} L${fx(pts.length - 1).toFixed(1)},${t + innerH} L${fx(0).toFixed(1)},${t + innerH} Z`;
   // y ticks
   const ticks = [];
   for (let i = 0; i <= yTicks; i++) {
@@ -165,34 +168,43 @@ function StackedBarChart({ data, colors, width = 520, height = 170, padding = { 
   );
 }
 
-function VerticalBars({ items, width = 380, height = 200, padding = { l: 26, r: 8, t: 24, b: 22 } }) {
+function VerticalBars({ items, data, maxVal, width = 380, height = 200, padding = { l: 26, r: 8, t: 24, b: 22 } }) {
+  // Accept either `items` or `data` prop for backward-compat with callers using `data=`
+  const rows = items || data || [];
   const { l, r, t, b } = padding;
   const innerW = width - l - r;
   const innerH = height - t - b;
-  const max = Math.max(...items.map(it => it.value)) * 1.1;
-  const barW = (innerW / items.length) * 0.55;
-  const gap = (innerW / items.length) * 0.45;
+  // Accept optional `maxVal` override; otherwise derive from data
+  const max = maxVal != null
+    ? maxVal
+    : rows.length ? Math.max(...rows.map(it => Math.abs(it.value || 0))) * 1.1 : 100;
+  const safeMax = max || 100;  // guard against zero
+  const barW = rows.length ? (innerW / rows.length) * 0.55 : 20;
+  const gap  = rows.length ? (innerW / rows.length) * 0.45 : 10;
+  // Derive 4 evenly-spaced tick values from the actual max
+  const tickVals = [0.25, 0.5, 0.75, 1.0].map(f => Math.round(safeMax * f));
   return (
     <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-      {[0, 50, 100, 150].map((v, i) => {
-        if (v > max) return null;
-        const y = t + (1 - v / max) * innerH;
+      {tickVals.map((v, i) => {
+        const y = t + (1 - v / safeMax) * innerH;
         return (
           <g key={i}>
             <line x1={l} x2={l + innerW} y1={y} y2={y} stroke="#1e2a44" strokeDasharray="2 3" />
-            <text x={l - 4} y={y + 3} textAnchor="end" fontSize="10" fill="#7f8da6">{v}</text>
+            <text x={l - 4} y={y + 3} textAnchor="end" fontSize="10" fill="#7f8da6">
+              {v >= 1000 ? `${(v/1000).toFixed(1)}K` : v}
+            </text>
           </g>
         );
       })}
-      {items.map((it, i) => {
+      {rows.map((it, i) => {
         const x = l + i * (barW + gap) + gap / 2;
-        const h = (it.value / max) * innerH;
+        const h = Math.max(1, (Math.abs(it.value || 0) / safeMax) * innerH);
         const y = t + innerH - h;
         return (
           <g key={i}>
             <rect x={x} y={y} width={barW} height={h} fill={it.color} rx="2" />
             <text x={x + barW / 2} y={y - 6} textAnchor="middle" fontSize="11" fontWeight="700" fill={it.color}>
-              {it.value > 0 ? "+" : ""}{it.value.toFixed(2)}
+              {(it.value || 0) > 0 ? "+" : ""}{(+(it.value || 0)).toFixed(it.value >= 10 ? 0 : 2)}
             </text>
             <text x={x + barW / 2} y={height - 4} textAnchor="middle" fontSize="11" fill="#7f8da6">{it.label}</text>
           </g>

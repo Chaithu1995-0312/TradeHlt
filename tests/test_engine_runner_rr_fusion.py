@@ -82,8 +82,9 @@ class _DummyFusion:
             },
         )()
 
-    def compute(self, payload):
+    def compute(self, payload, *, regime=None, **kwargs):
         self.last = payload
+        self.last_regime = regime
         return {"final_score": 0.9}
 
     def evaluate(self, features, signal, candle_idx=0):

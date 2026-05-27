@@ -29,9 +29,10 @@ def _make_runner():
             self.called = False
             self.last = None
 
-        def compute(self, payload):
+        def compute(self, payload, *, regime=None, **kwargs):
             self.called = True
             self.last = payload
+            self.last_regime = regime
             return {"final_score": 0.8}
 
     class DummyCollector:

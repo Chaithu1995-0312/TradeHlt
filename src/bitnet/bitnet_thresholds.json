@@ -1,0 +1,17 @@
+{
+    "__default__": 0.5,
+    "__schema_version__": "bitnet_thresholds_v1",
+    "__note__": "Per-instrument per-regime acceptance thresholds. Managed by BitNetThresholdAdapter. All values start at 0.5 — identical to the previous hardcoded behaviour. Zero behavioural change until the adapter calibrates them.",
+    "ETHUSDT": {
+        "DEFAULT":  0.5,
+        "TRENDING": 0.5,
+        "RANGING":  0.5,
+        "UNKNOWN":  0.5
+    },
+    "EURUSD": {
+        "DEFAULT":  0.5,
+        "TRENDING": 0.5,
+        "RANGING":  0.5,
+        "UNKNOWN":  0.5
+    }
+}

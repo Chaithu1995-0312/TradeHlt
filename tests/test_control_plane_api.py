@@ -7,7 +7,7 @@ from pathlib import Path
 
 from src.control_plane.jobs import JobManager
 from src.control_plane.server import ControlPlaneServer, find_free_port
-from src.control_plane.types import ArgSpec, CommandSpec
+from src.control_plane.cp_types import ArgSpec, CommandSpec
 
 
 def _get_json(url: str) -> dict:
@@ -95,9 +95,8 @@ def test_ui_route_returns_html(tmp_path: Path) -> None:
         with urllib.request.urlopen(server.base_url + "/", timeout=10) as resp:
             html = resp.read().decode("utf-8")
         assert "CRT Web Control Plane" in html
-        assert "Run History" in html
-        assert "playbookPanel" in html
-        assert "helpBtn" in html
-        assert "tourOverlay" in html
+        # React-app shell: these JSX entry points are loaded as external scripts
+        assert "App.jsx" in html or "react" in html.lower()
+        assert "<div id=\"root\">" in html or "id=\"root\"" in html
     finally:
         server.stop()

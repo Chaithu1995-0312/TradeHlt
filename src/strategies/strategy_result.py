@@ -13,7 +13,12 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, FrozenSet, Optional
+
+if TYPE_CHECKING:
+    # Imported for type annotations only — avoids circular imports at runtime.
+    # At runtime all annotations are strings (from __future__ import annotations).
+    from strategies.strategy_intent import StrategyIntent  # noqa: F401
 
 # ── Valid domain values ──────────────────────────────────────────────────────
 
@@ -73,6 +78,15 @@ class StrategyResult:
     ts:          str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
+
+    # ── Phase B additions (backward-compatible defaults) ─────────────────────
+    # intent_obj: populated by StrategyIntentBuilder in _aggregate(); None until then.
+    # capabilities: frozenset emitted by the strategy itself (frozenset is immutable,
+    #   hashable, cannot be accidentally mutated after emit).
+    #   Strategies that understand CRT transition path emit frozenset({"transition_path"}).
+    #   All others use the default frozenset() — NO change to S02-S09 required.
+    intent_obj:    Optional["StrategyIntent"] = field(default=None, repr=False)
+    capabilities:  FrozenSet[str]             = field(default_factory=frozenset, repr=False)
 
     # ── Validation ───────────────────────────────────────────────────────────
 
@@ -137,8 +151,17 @@ class StrategyResult:
     # ── Serialisation ────────────────────────────────────────────────────────
 
     def to_dict(self) -> Dict[str, Any]:
-        """Returns a plain dict safe for JSON serialisation and LLMLogger."""
-        return asdict(self)
+        """Returns a plain dict safe for JSON serialisation and LLMLogger.
+
+        Phase-B fields (intent_obj, capabilities) are excluded:
+        - intent_obj contains a lazy Callable (_evidence_factory) — use
+          result.intent_obj.to_dict() explicitly when serialising intents.
+        - capabilities is a frozenset — internal-use only, not JSON-safe.
+        """
+        d = asdict(self)
+        d.pop("intent_obj", None)
+        d.pop("capabilities", None)
+        return d
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), default=str)

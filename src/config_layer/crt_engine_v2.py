@@ -24,10 +24,12 @@ import math
 from dataclasses import dataclass, field
 from datetime import datetime, time
 from enum import Enum, auto
-from typing import Optional
+from types import MappingProxyType
+from typing import Any, List, Mapping, Optional
 from features.feature_schema import CANONICAL_FEATURES
 from features.schema_validator import validate_features
 from config_layer.crt_sweep_taxonomy import classify_sweep as _classify_sweep_geometry
+from utils.sweep_trace_logger import SweepTraceLogger
 # ─────────────────────────────────────────────────────────────────
 # LOGGING
 # ─────────────────────────────────────────────────────────────────
@@ -540,6 +542,16 @@ class StateMachine:
                 state_from=state.current_state.name,
                 state_to=target.name,
                 reason=reason,
+                # Enrich metadata so recent_transition_path() can reconstruct WHY each
+                # transition happened without any duplicate storage on EngineState.
+                # dict() copy of cached_features prevents reference aliasing —
+                # if the caller later mutates state.cached_features this snapshot stays stable.
+                metadata={
+                    "sweep_type":    state.sweep_event.sweep_type if state.sweep_event else None,
+                    "disp_strength": state.cached_features.get("disp_strength") if state.cached_features else None,
+                    "atr":           state.atr,
+                    "features":      dict(state.cached_features) if state.cached_features else {},
+                },
             )
 
         state.current_state = target
@@ -1423,7 +1435,8 @@ class CRTEngine:
     All patches wired through here.
     """
 
-    def __init__(self, config: Optional[CRTConfig] = None):
+    def __init__(self, config: Optional[CRTConfig] = None,
+                 sweep_tracer: Optional[SweepTraceLogger] = None):
         # Config MUST be provided via ConfigBuilder.build(instrument).
         # Direct CRTConfig() fallback is forbidden — it bypasses the market router.
         if config is None:
@@ -1440,6 +1453,7 @@ class CRTEngine:
         self.state    = EngineState()
         self.ev_log   = EventLogger(self.state)    # [PATCH 4]
         self.candle_buffer: list[Candle] = []
+        self._sweep_tracer = sweep_tracer           # Layer 0 sweep trace (optional)
         self.log = logging.getLogger("CRT.Orchestrator")
 
     # ── Public API ────────────────────────────────────────────
@@ -1546,6 +1560,31 @@ class CRTEngine:
                 )
                 self.sm.try_range_to_sweep(self.state, sweep, self.ev_log)
                 action["action"] = "SWEEP_DETECTED"
+                # ── Layer 0: Sweep Trace Packet ────────────────────────────
+                if self._sweep_tracer is not None and self.state.active_range is not None:
+                    rng = self.state.active_range
+                    _cross_high = candle.high > rng.h_ref and candle.close < rng.h_ref
+                    _cross_low  = candle.low  < rng.l_ref and candle.close > rng.l_ref
+                    _ref        = rng.h_ref if _cross_high else rng.l_ref
+                    _pen_pts    = abs(sweep.price - _ref)
+                    _pen_atr    = _pen_pts / self.state.atr if self.state.atr > 0 else 0.0
+                    self._sweep_tracer.emit(
+                        candle_index      = candle.index,
+                        range_high        = rng.h_ref,
+                        range_low         = rng.l_ref,
+                        candle_open       = candle.open,
+                        candle_high       = candle.high,
+                        candle_low        = candle.low,
+                        candle_close      = candle.close,
+                        cross_high        = _cross_high,
+                        cross_low         = _cross_low,
+                        penetration_points = _pen_pts,
+                        penetration_atr   = _pen_atr,
+                        decision          = "SWEEP_HIGH" if _cross_high else "SWEEP_LOW",
+                        state_before      = "RANGE",
+                        state_after       = "SWEEP",
+                        expired           = False,
+                    )
 
         elif s == CRTState.SWEEP:
             # [PATCH 2] Age check happens inside try_sweep_to_displacement
@@ -1556,6 +1595,31 @@ class CRTEngine:
                 (self.state.current_candle_index - self.state.sweep_event.candle_index)
                 > self.config.max_sweep_age_candles
             ):
+                # ── Layer 0: Sweep Trace Packet (expired) — capture BEFORE reset ──
+                if self._sweep_tracer is not None and self.state.active_range is not None:
+                    rng = self.state.active_range
+                    _cross_high = candle.high > rng.h_ref and candle.close < rng.h_ref
+                    _cross_low  = candle.low  < rng.l_ref and candle.close > rng.l_ref
+                    _ref        = rng.h_ref if _cross_high else rng.l_ref
+                    _pen_pts    = abs(candle.high - _ref) if _cross_high else abs(candle.low - _ref)
+                    _pen_atr    = _pen_pts / self.state.atr if self.state.atr > 0 else 0.0
+                    self._sweep_tracer.emit(
+                        candle_index      = candle.index,
+                        range_high        = rng.h_ref,
+                        range_low         = rng.l_ref,
+                        candle_open       = candle.open,
+                        candle_high       = candle.high,
+                        candle_low        = candle.low,
+                        candle_close      = candle.close,
+                        cross_high        = _cross_high,
+                        cross_low         = _cross_low,
+                        penetration_points = _pen_pts,
+                        penetration_atr   = _pen_atr,
+                        decision          = "NONE",
+                        state_before      = "SWEEP",
+                        state_after       = "RANGE",
+                        expired           = True,
+                    )
                 self.sm.reset_to_range(self.state, "Sweep expired", candle, self.ev_log)
                 action["action"] = "SWEEP_EXPIRED"
 
@@ -1650,6 +1714,7 @@ class CRTEngine:
                             price=trade.entry_price,
                             metadata={
                                 "id": trade.id,
+                                "session_name": _sess_name,
                                 "S_score": final_S,
                                 "sl": trade.sl_price,
                                 "tp1": trade.tp1_price,
@@ -1725,3 +1790,74 @@ class CRTEngine:
 
 def state_risk_score(state: EngineState) -> Optional[float]:
     return state.risk_score.final if state.risk_score else None
+
+
+# ─────────────────────────────────────────────────────────────────
+# PHASE A — CRT TRANSITION PATH VIEW LAYER
+# View type + function that reads existing event_log (no new storage on EngineState).
+# Architecture invariant: CRT never knows strategy outcome.
+#                         StrategyOrchestrator never mutates CRT state.
+# ─────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True, slots=True)
+class CRTTransitionEvent:
+    """Typed, immutable VIEW of a single CRT state transition.
+
+    Constructed on demand from event_log — never stored on EngineState.
+    `feature_snapshot` is a MappingProxyType (copy-then-freeze) — downstream
+    code that tries to write to it gets a TypeError, enforcing the invariant
+    that StrategyOrchestrator MUST NEVER mutate CRT state.
+    """
+    candle_idx:       int
+    timestamp:        datetime
+    from_state:       str                 # e.g. "SWEEP"
+    to_state:         str                 # e.g. "DISPLACEMENT"
+    trigger_reason:   str                 # copied from EngineEvent.reason
+    sweep_type:       Optional[str]       # from metadata["sweep_type"]
+    disp_strength:    Optional[float]     # from metadata["disp_strength"]
+    atr:              float               # from metadata["atr"]
+    feature_snapshot: Mapping[str, Any]   # READ-ONLY — MappingProxyType at construction
+
+
+def recent_transition_path(
+    state: EngineState,
+    n: int = 16,
+) -> List[CRTTransitionEvent]:
+    """Build a typed, windowed view of the last *n* state transitions.
+
+    Reads from state.event_log (canonical truth) — no duplicate storage.
+    Returns up to *n* `CRTTransitionEvent` items (fewer if the run has not
+    yet produced that many transitions).
+
+    Usage:
+        path = recent_transition_path(engine.state)
+        # Inject into features before orchestrator call:
+        features["_transition_path"] = path
+
+    The key ``"_transition_path"`` is the canonical dict key everywhere —
+    never use ``"_transition_history"``.
+    """
+    transitions = [
+        ev for ev in state.event_log
+        if ev.event == "STATE_TRANSITION"
+    ][-n:]
+
+    result: List[CRTTransitionEvent] = []
+    for ev in transitions:
+        meta = ev.metadata or {}
+        result.append(CRTTransitionEvent(
+            candle_idx      = ev.candle_index,
+            timestamp       = ev.timestamp,
+            from_state      = ev.state_from or "",
+            to_state        = ev.state_to or "",
+            trigger_reason  = ev.reason or "",
+            sweep_type      = meta.get("sweep_type"),
+            disp_strength   = meta.get("disp_strength"),
+            atr             = float(meta.get("atr", state.atr)),
+            # dict() copy THEN MappingProxyType:
+            # - dict() prevents ev.metadata["features"]["x"]=y from silently
+            #   reflecting through the proxy after construction.
+            # - MappingProxyType raises TypeError on any write attempt.
+            feature_snapshot = MappingProxyType(dict(meta.get("features", {}))),
+        ))
+    return result

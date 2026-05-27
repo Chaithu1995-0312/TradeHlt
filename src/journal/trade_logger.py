@@ -21,6 +21,15 @@ except Exception:
     _collector_mod = None  # type: ignore[assignment]
     _COLLECTOR_AVAILABLE = False
 
+# Threshold above which trade_journal.jsonl is flagged as systemically corrupted.
+MAX_CORRUPTION_RATIO: float = 0.10
+
+try:
+    from src.utils.integrity_events import emit_integrity_event  # noqa: F401
+except Exception:  # pragma: no cover
+    def emit_integrity_event(*_a, **_kw):  # type: ignore[no-redef]
+        return None
+
 
 class TradeLogger:
     """
@@ -62,16 +71,50 @@ class TradeLogger:
                 log.debug("TradeLogger: Collector routing failed (ignored): %s", exc)
 
     def load_all(self) -> list:
-        """Load all TradeRecord dicts from the log file."""
+        """Load all TradeRecord dicts from the log file.
+
+        Malformed lines no longer fail silently — they emit a JSONL_CORRUPTION
+        integrity event and (if the file is >10% malformed) a
+        JSONL_CORRUPTION_THRESHOLD_EXCEEDED event. The return shape is
+        unchanged: a list of dicts for the valid lines.
+        """
         if not self._path.exists():
             return []
-        records = []
+        records: list = []
+        malformed = 0
+        valid = 0
         with open(self._path, encoding="utf-8") as f:
-            for line in f:
+            for lineno, line in enumerate(f, 1):
                 line = line.strip()
-                if line:
-                    try:
-                        records.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        pass
+                if not line:
+                    continue
+                try:
+                    records.append(json.loads(line))
+                    valid += 1
+                except json.JSONDecodeError as exc:
+                    malformed += 1
+                    emit_integrity_event(
+                        "JSONL_CORRUPTION",
+                        "WARNING",
+                        "src.journal.trade_logger",
+                        {
+                            "path":        str(self._path),
+                            "line_number": lineno,
+                            "raw_preview": line[:160],
+                            "error":       str(exc),
+                        },
+                    )
+        total = malformed + valid
+        if total and (malformed / total) > MAX_CORRUPTION_RATIO:
+            emit_integrity_event(
+                "JSONL_CORRUPTION_THRESHOLD_EXCEEDED",
+                "ERROR",
+                "src.journal.trade_logger",
+                {
+                    "path":             str(self._path),
+                    "malformed_lines":  malformed,
+                    "valid_lines":      valid,
+                    "corruption_ratio": malformed / total,
+                },
+            )
         return records

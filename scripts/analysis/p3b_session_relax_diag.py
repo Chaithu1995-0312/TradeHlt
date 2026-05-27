@@ -3,47 +3,42 @@
 P3b Diagnostic - Session relaxation: add ASIA + OFF_SESSION to allowed_sessions.
 
 Hypothesis:
-  4 of 14 RETEST->EXECUTION setups (baseline) are blocked by the session filter
-  (3 OFF_SESSION, 1 ASIA). If the session filter is too conservative, relaxing
-  it should add trades with quality >= baseline.
+  A portion of RETEST->EXECUTION setups are blocked by the session filter
+  (OFF_SESSION, ASIA). If the session filter is too conservative, relaxing it
+  should add trades with quality >= baseline.
 
 Patch:
   Single config attribute override on the loaded CRTConfig instance.
   No source files modified.
 
-  crt_cfg.allowed_sessions = ("LONDON", "NEWYORK", "OVERLAP", "ASIA", "OFF_SESSION")
+  crt_cfg.allowed_sessions = baseline_sessions + add_sessions
 
-Baseline (htf=4, ETHUSDT M15):
-  RETEST -> EXECUTION  : 4 / 14  (28.6%)
-  Off-session rejects  : 4  (3 OFF_SESSION + 1 ASIA)
-  Trades               : 4
-  PnL net R            : +1.57R
-  avg_R per trade      : +0.39R
-
-Metrics collected post-run:
-  - Trades added (count of new trades vs baseline)
-  - R expectancy of ADDED trades only (not portfolio average)
-  - avg_R portfolio (blended baseline + new)
-  - Win rate on new trades
-  - Session histogram of new trades (which sessions they came from)
-  - MaxDD
-  - RETEST -> EXECUTION conversion rate
+Auto-baseline:
+  This script runs TWO backtests automatically:
+  Run 0 (baseline)  — original allowed_sessions (from production config)
+  Run 1 (patched)   — baseline + add_sessions
+  Delta is computed as Run1 - Run0 for all metrics.
 
 Decision rule:
-  PASS  : trades > 4 AND R_expectancy_added >= 0.39R AND MaxDD <= 0.0132
-  MIXED : trades > 4 AND R_expectancy_added < 0.39R
-    -> Session filter is quality governor; OFF_SESSION adds noise
-  NONE  : trades = 4 (session-allowed setups blocked by other guards)
+  PASS  : added_trades > 0 AND r_expectancy_added >= min_r_exp AND MaxDD <= max_dd
+  MIXED : added_trades > 0 AND r_expectancy_added < min_r_exp
+    -> Session filter is quality governor; added sessions bring noise
+  NONE  : added_trades = 0 (session-allowed setups blocked by other guards)
 
 Usage:
     cd D:\\Tradelatest
-    python scripts\\analysis\\p3b_session_relax_diag.py
+    python scripts\\analysis\\p3b_session_relax_diag.py --instrument BTCUSDT
+    python scripts\\analysis\\p3b_session_relax_diag.py --instrument SOLUSDT
+    python scripts\\analysis\\p3b_session_relax_diag.py --instrument BNBUSDT --min-r-exp 0.20
+    python scripts\\analysis\\p3b_session_relax_diag.py --instrument ETHUSDT
+    python scripts\\analysis\\p3b_session_relax_diag.py --instrument BTCUSDT --csv data/BTCUSDT_M15.csv
 """
 
 import sys
 import os
 import json
 import time
+import argparse
 import collections
 from pathlib import Path
 
@@ -63,132 +58,180 @@ from runtime.backtest_v2 import (
     load_prod_config_from_registry, PROD_VERSION, MultiInstrumentRunner,
 )
 
-CSV_PATH   = str(_ROOT / "data" / "ETHUSDT_M15.csv")
-INSTRUMENT = "ETHUSDT"
-OUTPUT_DIR = str(_ROOT / "results")
+# =============================================================================
+# CLI ARGUMENTS + DATA FILE RESOLUTION
+# =============================================================================
+def _resolve_data_file(instrument: str, csv_override: str | None) -> str:
+    if csv_override:
+        p = Path(csv_override)
+        if not p.exists():
+            sys.exit(f"[ERROR] --csv path not found: {csv_override}")
+        return str(p)
+    candidates = [
+        _ROOT / "data" / f"{instrument}_M15.csv",
+        _ROOT / "data" / f"{instrument}_M15_2year.csv",
+        _ROOT / "data" / f"{instrument}_M15_2year.xlsx",
+        _ROOT / "data" / f"{instrument}_M15.xlsx",
+    ]
+    for c in candidates:
+        if c.exists():
+            return str(c)
+    checked = "\n  ".join(str(c) for c in candidates)
+    sys.exit(f"[ERROR] No data file found for {instrument}. Checked:\n  {checked}")
+
+_ap = argparse.ArgumentParser(description="P3b session relaxation diagnostic")
+_ap.add_argument("--instrument",   required=True,
+                 help="Symbol to run, e.g. BTCUSDT, SOLUSDT, ETHUSDT")
+_ap.add_argument("--csv",          default=None,
+                 help="Explicit path to data file (CSV). Auto-resolved if omitted.")
+_ap.add_argument("--output-dir",   default=str(_ROOT / "results"),
+                 help="Directory for backtest run output (default: results)")
+_ap.add_argument("--add-sessions", default="ASIA,OFF_SESSION",
+                 help="Comma-separated sessions to ADD to allowed_sessions "
+                      "(default: ASIA,OFF_SESSION)")
+_ap.add_argument("--min-r-exp",    type=float, default=0.39,
+                 help="Quality gate: min R expectancy on ADDED trades (default: 0.39)")
+_ap.add_argument("--max-dd",       type=float, default=0.0132,
+                 help="Quality gate: max drawdown fraction (default: 0.0132)")
+args = _ap.parse_args()
+
+INSTRUMENT   = args.instrument
+CSV_PATH     = _resolve_data_file(args.instrument, args.csv)
+OUTPUT_DIR   = args.output_dir
+ADD_SESSIONS = tuple(s.strip() for s in args.add_sessions.split(",") if s.strip())
+MIN_R_EXP    = args.min_r_exp
+MAX_DD       = args.max_dd
 
 # =============================================================================
-# PATCH — override allowed_sessions after config load (one attribute change)
-# CRTConfig is a frozen dataclass; use dataclasses.replace to produce a new
-# instance with the relaxed session set.
+# LOAD PRODUCTION CONFIG
 # =============================================================================
 crt_cfg_orig = load_prod_config_from_registry(PROD_VERSION, INSTRUMENT)
 
-_baseline_sessions = tuple(crt_cfg_orig.allowed_sessions)  # snapshot before patch
-_patched_sessions  = ("LONDON", "NEWYORK", "OVERLAP", "ASIA", "OFF_SESSION")
-crt_cfg = dataclasses.replace(crt_cfg_orig, allowed_sessions=_patched_sessions)
+_baseline_sessions = tuple(crt_cfg_orig.allowed_sessions)
+_patched_sessions  = _baseline_sessions + tuple(s for s in ADD_SESSIONS
+                                                  if s not in _baseline_sessions)
+crt_cfg_patched = dataclasses.replace(crt_cfg_orig, allowed_sessions=_patched_sessions)
 
-print(f"[P3b] Session patch applied:")
+print(f"[P3b] Session patch for {INSTRUMENT}:")
 print(f"      baseline  : {_baseline_sessions}")
 print(f"      patched   : {_patched_sessions}")
 print(f"      added     : {set(_patched_sessions) - set(_baseline_sessions)}")
-
-cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
-cfg.instrument = INSTRUMENT
-cfg.pip_size   = MultiInstrumentRunner.INSTRUMENT_PIP.get(INSTRUMENT, 0.0001)
-
-print(f"\n[P3b] Running backtest: {CSV_PATH}")
-print(f"      instrument : {INSTRUMENT}")
-print(f"      prod_ver   : {PROD_VERSION}\n")
-
-loader = CandleLoader(CSV_PATH, INSTRUMENT)
-runner = BacktestRunner(cfg, csv_path=CSV_PATH, overrides={"diagnostic": "P3b_session_relax"})
-
-_t0 = time.time()
-metrics = runner.run(loader.stream(), loader.count(), OUTPUT_DIR)
-_elapsed = time.time() - _t0
-print(f"\n[P3b] Backtest complete in {_elapsed:.1f}s")
+print(f"      min_r_exp : {MIN_R_EXP}  max_dd: {MAX_DD}")
+print(f"      data      : {CSV_PATH}")
+print(f"      prod_ver  : {PROD_VERSION}\n")
 
 # =============================================================================
-# FIND EVENTS JSONL
+# TWO-RUN HELPER
 # =============================================================================
-results_root = Path(OUTPUT_DIR)
-candidates = sorted(
-    results_root.glob(f"run_*_{INSTRUMENT}/{INSTRUMENT}_events.jsonl"),
-    key=lambda p: p.stat().st_mtime,
-    reverse=True,
-)
-if not candidates:
-    print("[P3b] ERROR: events JSONL not found")
-    sys.exit(1)
+def _run_one(crt_cfg, label: str):
+    """Run a single backtest and return (metrics, events_path)."""
+    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
+    cfg.instrument = INSTRUMENT
+    cfg.pip_size   = MultiInstrumentRunner.INSTRUMENT_PIP.get(INSTRUMENT, 0.0001)
 
-events_path = candidates[0]
-print(f"[P3b] Parsing: {events_path}\n")
+    loader = CandleLoader(CSV_PATH, INSTRUMENT)
+    runner = BacktestRunner(
+        cfg, csv_path=CSV_PATH,
+        overrides={"diagnostic": label, "instrument": INSTRUMENT},
+    )
 
-with open(events_path, encoding="utf-8") as f:
+    t0 = time.time()
+    metrics = runner.run(loader.stream(), loader.count(), OUTPUT_DIR)
+    elapsed = time.time() - t0
+    print(f"[P3b] {label} complete in {elapsed:.1f}s  "
+          f"({metrics.approved_trades} trades, pnl={metrics.total_pnl_rr_net:+.4f}R)")
+
+    results_root = Path(OUTPUT_DIR)
+    candidates = sorted(
+        results_root.glob(f"run_*_{INSTRUMENT}/{INSTRUMENT}_events.jsonl"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    if not candidates:
+        sys.exit(f"[P3b] ERROR: events JSONL not found after {label}")
+    return metrics, candidates[0]
+
+# =============================================================================
+# RUN 0 — BASELINE (original sessions)
+# =============================================================================
+print("[P3b] Run 0: baseline (original sessions)...")
+baseline_metrics, baseline_events_path = _run_one(crt_cfg_orig, "P3b_baseline")
+
+# =============================================================================
+# RUN 1 — PATCHED (session-relaxed)
+# =============================================================================
+print("[P3b] Run 1: patched (session-relaxed)...")
+patched_metrics, patched_events_path = _run_one(crt_cfg_patched, "P3b_session_relax")
+
+# =============================================================================
+# PARSE EVENTS — Run 1 (patched)
+# =============================================================================
+print(f"\n[P3b] Parsing patched events: {patched_events_path}")
+with open(patched_events_path, encoding="utf-8") as f:
     events = [json.loads(line) for line in f if line.strip()]
 
 # =============================================================================
-# PARSE EVENTS
+# PARSE EVENTS — Run 0 (baseline, for funnel baseline column)
 # =============================================================================
-trans_counts = collections.Counter(
-    (e.get("state_from"), e.get("state_to"))
-    for e in events if e.get("event") == "STATE_TRANSITION"
-    and "state_from" in e and "state_to" in e
-)
+with open(baseline_events_path, encoding="utf-8") as f:
+    baseline_events = [json.loads(line) for line in f if line.strip()]
 
-range_to_sweep  = trans_counts.get(("RANGE",        "SWEEP"),        0)
-sweep_to_disp   = trans_counts.get(("SWEEP",        "DISPLACEMENT"), 0)
-disp_to_exp     = trans_counts.get(("DISPLACEMENT", "EXPANSION"),    0)
-exp_to_retest   = trans_counts.get(("EXPANSION",    "RETEST"),       0)
-retest_to_exec  = trans_counts.get(("RETEST",       "EXECUTION"),    0)
-exec_to_res     = trans_counts.get(("EXECUTION",    "RESOLUTION"),   0)
+def _trans_counts(ev_list):
+    return collections.Counter(
+        (e.get("state_from"), e.get("state_to"))
+        for e in ev_list if e.get("event") == "STATE_TRANSITION"
+        and "state_from" in e and "state_to" in e
+    )
+
+tc_patched  = _trans_counts(events)
+tc_baseline = _trans_counts(baseline_events)
+
+def _tc(tc, pair):
+    return tc.get(pair, 0)
+
+# Funnel transitions
+_PAIRS = [
+    ("RANGE",        "SWEEP",        "RANGE -> SWEEP"),
+    ("SWEEP",        "DISPLACEMENT", "SWEEP -> DISPLACEMENT"),
+    ("DISPLACEMENT", "EXPANSION",    "DISPLACEMENT -> EXPANSION"),
+    ("EXPANSION",    "RETEST",       "EXPANSION -> RETEST"),
+    ("RETEST",       "EXECUTION",    "RETEST -> EXECUTION"),
+    ("EXECUTION",    "RESOLUTION",   "EXECUTION -> RESOLUTION"),
+]
 
 # FILTER_REJECTED breakdown
-all_rejects  = [e for e in events if e.get("event") == "FILTER_REJECTED"]
-zone_rejects = [e for e in all_rejects if "zone" in e.get("reason", "").lower()]
-sess_rejects = [e for e in all_rejects if "off_session" in e.get("reason", "").lower()]
+all_rejects_p  = [e for e in events        if e.get("event") == "FILTER_REJECTED"]
+zone_rejects_p = [e for e in all_rejects_p if "zone" in e.get("reason", "").lower()]
+sess_rejects_p = [e for e in all_rejects_p if "off_session" in e.get("reason", "").lower()]
 
-# Session histogram of remaining off_session rejects (should now be 0 if patch worked)
+all_rejects_b  = [e for e in baseline_events if e.get("event") == "FILTER_REJECTED"]
+zone_rejects_b = [e for e in all_rejects_b   if "zone" in e.get("reason", "").lower()]
+sess_rejects_b = [e for e in all_rejects_b   if "off_session" in e.get("reason", "").lower()]
+
 sess_by_name = collections.Counter(
-    e.get("metadata", {}).get("session_name", "?") for e in sess_rejects
+    e.get("metadata", {}).get("session_name", "?") for e in sess_rejects_p
 )
 
 # Trade metrics
-trades   = metrics.approved_trades     if metrics else "?"
-pnl_net  = round(metrics.total_pnl_rr_net, 4) if metrics else "?"
-win_rate = round(metrics.win_rate, 4)          if metrics else "?"
-max_dd   = round(getattr(metrics, "max_drawdown_pct", 0.0) or 0.0, 4) if metrics else "?"
+trades_p   = patched_metrics.approved_trades
+trades_b   = baseline_metrics.approved_trades
+pnl_net_p  = round(patched_metrics.total_pnl_rr_net,  4)
+pnl_net_b  = round(baseline_metrics.total_pnl_rr_net, 4)
+win_rate_p = round(patched_metrics.win_rate, 4)
+max_dd_p   = round(getattr(patched_metrics, "max_drawdown_pct", 0.0) or 0.0, 4)
 
-# Per-trade R computation
-trade_events = [e for e in events if e.get("event") == "TRADE_OPENED"]
-# Compute R expectancy from RESOLUTION events (which have pnl_rr)
-resolution_events = [e for e in events if e.get("event") in
-                     ("TRADE_TP1", "TRADE_TP2", "TRADE_STOPPED")]
+# Delta computation (replaces BASELINE_* hardcoded constants)
+added_trades      = trades_p - trades_b
+added_total_pnl   = pnl_net_p - pnl_net_b
+r_expectancy_added = round(added_total_pnl / max(added_trades, 1), 4) if added_trades > 0 else 0.0
+avg_rr_portfolio  = round(pnl_net_p / max(trades_p, 1), 4)
+avg_rr_baseline   = round(pnl_net_b / max(trades_b, 1), 4)
 
-# Try to get per-trade R from trade logger / resolution events
-# The backtest metrics object should have per-trade breakdown
-per_trade_rr = []
-if metrics and hasattr(metrics, "trades") and metrics.trades:
-    for t in metrics.trades:
-        rr = getattr(t, "pnl_rr_net", None) or getattr(t, "pnl_rr", None)
-        if rr is not None:
-            per_trade_rr.append((getattr(t, "id", "?"), round(float(rr), 4)))
-
-# If per-trade breakdown not available, compute avg_R from totals
-avg_rr_portfolio = round(metrics.total_pnl_rr_net / max(metrics.approved_trades, 1), 4) \
-    if metrics else "?"
-
-# Estimate added trades vs baseline
-BASELINE_TRADES = 4
-BASELINE_AVG_RR = 0.39
-added_trades = (trades - BASELINE_TRADES) if isinstance(trades, int) else "?"
-
-# R expectancy of ADDED trades:
-# total_pnl = baseline_pnl + added_pnl
-# added_pnl = total_pnl - baseline_pnl (approx: assume baseline trades unchanged)
-BASELINE_TOTAL_PNL = 1.57
-if isinstance(pnl_net, float) and isinstance(added_trades, int) and added_trades > 0:
-    added_total_rr = pnl_net - BASELINE_TOTAL_PNL
-    r_expectancy_added = round(added_total_rr / added_trades, 4)
-else:
-    r_expectancy_added = "?"
-
-# Session histogram of new trades (from TRADE_OPENED metadata if session recorded)
+# Session histogram of executed trades (patched run)
 session_histogram = collections.Counter()
 for e in events:
     if e.get("event") == "TRADE_OPENED":
-        sess = e.get("metadata", {}).get("session", "UNKNOWN")
+        sess = e.get("metadata", {}).get("session_name", "UNKNOWN")
         session_histogram[sess] += 1
 
 # =============================================================================
@@ -196,8 +239,9 @@ for e in events:
 # =============================================================================
 SEP = "-" * 68
 
+print()
 print(SEP)
-print("P3b DIAGNOSTIC RESULTS - Session relaxation (ASIA + OFF_SESSION added)")
+print(f"P3b DIAGNOSTIC RESULTS - Session relaxation ({INSTRUMENT})")
 print(SEP)
 print()
 
@@ -206,45 +250,37 @@ print(f"  Baseline sessions : {_baseline_sessions}")
 print(f"  Patched sessions  : {_patched_sessions}")
 print()
 
-print("-- Funnel (P3b) vs Baseline --")
-print(f"  {'Transition':<32} {'P3b':>8}  {'Baseline':>8}  {'Delta':>8}")
-print(f"  {'RANGE -> SWEEP':<32} {range_to_sweep:>8}  {'1,726':>8}  {range_to_sweep-1726:>+8}")
-print(f"  {'SWEEP -> DISPLACEMENT':<32} {sweep_to_disp:>8}  {'357':>8}  {sweep_to_disp-357:>+8}")
-print(f"  {'DISPLACEMENT -> EXPANSION':<32} {disp_to_exp:>8}  {'15':>8}  {disp_to_exp-15:>+8}")
-print(f"  {'EXPANSION -> RETEST':<32} {exp_to_retest:>8}  {'14':>8}  {exp_to_retest-14:>+8}")
-print(f"  {'RETEST -> EXECUTION':<32} {retest_to_exec:>8}  {'4':>8}  {retest_to_exec-4:>+8}  <- KEY")
-print(f"  {'EXECUTION -> RESOLUTION':<32} {exec_to_res:>8}  {'4':>8}  {exec_to_res-4:>+8}")
+print("-- Funnel: Patched vs Baseline --")
+print(f"  {'Transition':<32} {'Patched':>8}  {'Baseline':>8}  {'Delta':>8}")
+for from_s, to_s, label in _PAIRS:
+    p_val = _tc(tc_patched,  (from_s, to_s))
+    b_val = _tc(tc_baseline, (from_s, to_s))
+    marker = "  <- KEY" if to_s == "EXECUTION" else ""
+    print(f"  {label:<32} {p_val:>8}  {b_val:>8}  {p_val-b_val:>+8}{marker}")
 print()
 
-print("-- FILTER_REJECTED breakdown (P3b) --")
-print(f"  Total FILTER_REJECTED  : {len(all_rejects)}  (baseline: 10)")
-print(f"  Zone-position rejects  : {len(zone_rejects)}  (baseline: 6, should be unchanged)")
-print(f"  Off-session rejects    : {len(sess_rejects)}  (target: 0 — all sessions allowed)")
+print("-- FILTER_REJECTED breakdown --")
+print(f"  Total FILTER_REJECTED  : patched={len(all_rejects_p)}  baseline={len(all_rejects_b)}")
+print(f"  Zone-position rejects  : patched={len(zone_rejects_p)}  baseline={len(zone_rejects_b)}")
+print(f"  Off-session rejects    : patched={len(sess_rejects_p)}  baseline={len(sess_rejects_b)}  (target: 0)")
 if sess_by_name:
-    print(f"  Remaining session rejects by name:")
+    print(f"  Remaining off-session rejects by name:")
     for name, cnt in sess_by_name.most_common():
         print(f"    {name:<15} : {cnt}")
 print()
 
-print("-- Trade metrics (P3b) vs Baseline --")
-print(f"  Trades              : {str(trades):>6}   (baseline: 4)")
-print(f"  Added trades        : {str(added_trades):>6}")
-print(f"  PnL net R           : {str(pnl_net):>6}   (baseline: +1.57R)")
-print(f"  avg_R (portfolio)   : {str(avg_rr_portfolio):>6}   (baseline: +0.39R)")
-print(f"  R expectancy added  : {str(r_expectancy_added):>6}   (target: >= +0.39R)")
-print(f"  Win rate            : {str(win_rate):>6}   (baseline: 0.5)")
-print(f"  Max DD              : {str(max_dd):>6}   (baseline: 0.011)")
+print("-- Trade metrics: Patched vs Baseline --")
+print(f"  Trades              : {trades_p:>6}   (baseline: {trades_b})")
+print(f"  Added trades        : {added_trades:>6}")
+print(f"  PnL net R           : {pnl_net_p:>+7.4f}   (baseline: {pnl_net_b:+.4f}R)")
+print(f"  avg_R (portfolio)   : {avg_rr_portfolio:>+7.4f}   (baseline: {avg_rr_baseline:+.4f}R)")
+print(f"  R expectancy added  : {r_expectancy_added:>+7.4f}   (target: >= {MIN_R_EXP:+.2f}R)")
+print(f"  Win rate            : {win_rate_p:>6.4f}   (baseline: {baseline_metrics.win_rate:.4f})")
+print(f"  Max DD              : {max_dd_p:>6.4f}   (baseline: {baseline_metrics.max_drawdown_pct:.4f})")
 print()
 
-if per_trade_rr:
-    print("-- Per-trade R breakdown --")
-    for tid, rr in per_trade_rr:
-        flag = "  (new)" if len(per_trade_rr) > BASELINE_TRADES else ""
-        print(f"  {tid}  {rr:>+8.4f}R{flag}")
-    print()
-
 if session_histogram:
-    print("-- Session histogram of executed trades --")
+    print("-- Session histogram of executed trades (patched run) --")
     for sess, cnt in session_histogram.most_common():
         print(f"  {sess:<15} : {cnt}")
     print()
@@ -254,49 +290,50 @@ if session_histogram:
 # =============================================================================
 print("-- Success criteria --")
 criteria = [
-    ("Trades > baseline (4)",
-     isinstance(trades, int) and trades > BASELINE_TRADES,
-     f"{trades}"),
-    ("R expectancy added >= 0.39R",
-     isinstance(r_expectancy_added, float) and r_expectancy_added >= BASELINE_AVG_RR,
-     f"{r_expectancy_added}"),
-    ("Portfolio avg_R >= 0.39R",
-     isinstance(avg_rr_portfolio, float) and avg_rr_portfolio >= BASELINE_AVG_RR,
-     f"{avg_rr_portfolio}"),
-    ("MaxDD <= 0.0132 (baseline x1.2)",
-     isinstance(max_dd, float) and max_dd <= 0.0132,
-     f"{max_dd}"),
+    (f"Trades > baseline ({trades_b})",
+     trades_p > trades_b,
+     f"{trades_p}"),
+    (f"R expectancy added >= {MIN_R_EXP:.2f}R",
+     added_trades > 0 and r_expectancy_added >= MIN_R_EXP,
+     f"{r_expectancy_added:+.4f}R"),
+    (f"Portfolio avg_R >= {MIN_R_EXP:.2f}R",
+     avg_rr_portfolio >= MIN_R_EXP,
+     f"{avg_rr_portfolio:+.4f}R"),
+    (f"MaxDD <= {MAX_DD:.4f}",
+     max_dd_p <= MAX_DD,
+     f"{max_dd_p:.4f}"),
     ("Off-session rejects = 0",
-     len(sess_rejects) == 0,
-     f"{len(sess_rejects)} remaining"),
+     len(sess_rejects_p) == 0,
+     f"{len(sess_rejects_p)} remaining"),
 ]
 for label, passed, val in criteria:
     status = "PASS" if passed else "FAIL"
-    print(f"  [{status}] {label:<40} {val}")
+    print(f"  [{status}] {label:<44} {val}")
 print()
 
 # =============================================================================
 # VERDICT
 # =============================================================================
 print("-- Verdict --")
-all_pass = all(p for _, p, _ in criteria)
-trades_up = isinstance(trades, int) and trades > BASELINE_TRADES
-r_ok      = isinstance(r_expectancy_added, float) and r_expectancy_added >= BASELINE_AVG_RR
+trades_up = trades_p > trades_b
+r_ok      = added_trades > 0 and r_expectancy_added >= MIN_R_EXP
+all_pass  = all(p for _, p, _ in criteria)
 
 if not trades_up:
     print("  Trades unchanged. Session-allowed setups blocked by other guards.")
-    print("  Session filter was not the execution governor.")
+    print("  Session filter was NOT the execution governor for this instrument.")
 elif trades_up and r_ok and all_pass:
-    print("  PASS: trades up, R expectancy of added trades >= baseline.")
+    print(f"  PASS: {added_trades} trades added, R expectancy of added trades >= {MIN_R_EXP:.2f}R.")
     print("  Session relaxation is ROI-positive.")
     print("  -> Proceed to P3c (zone relax). Then config-gate allowed_sessions.")
 elif trades_up and not r_ok:
-    print("  MIXED: trades up but R expectancy of added trades below baseline.")
-    print("  Session filter IS a quality governor for OFF_SESSION setups.")
+    print(f"  MIXED: {added_trades} trades added but R expectancy below {MIN_R_EXP:.2f}R.")
+    print("  Session filter IS a quality governor for these sessions.")
     print("  -> Do NOT relax globally. Investigate per-session quality separately.")
 else:
     print("  PARTIAL: review criteria table above.")
 print()
-print(f"[P3b] Events JSONL : {events_path}")
-print(f"[P3b] Total events : {len(events)}")
+print(f"[P3b] Baseline events : {baseline_events_path}")
+print(f"[P3b] Patched events  : {patched_events_path}")
+print(f"[P3b] Total events    : baseline={len(baseline_events)}  patched={len(events)}")
 print(SEP)

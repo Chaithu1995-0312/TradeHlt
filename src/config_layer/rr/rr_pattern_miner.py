@@ -23,7 +23,10 @@ N_FEATURES = CANONICAL_FEATURE_DIM
 
 # ── Load from production config; fall back to coded defaults if unavailable ──
 try:
-    from production_config import get_prod_section as _get_section
+    try:
+        from config_layer.production_config import get_prod_section as _get_section
+    except ImportError:
+        from production_config import get_prod_section as _get_section  # standalone script path
     _RR_CFG = _get_section("rr_model")
 except Exception:
     _RR_CFG = {}
@@ -296,6 +299,10 @@ class NanoInferenceEngine:
         threshold: float = 0.5,
     ) -> Dict[str, Any]:
         n = len(self.W)
+        # Backward compat: if caller provides more features than the model expects
+        # (schema v3.0 → 38 features, model trained on v2.0 → 35), silently truncate.
+        if len(features) > n:
+            features = list(features)[:n]
         if len(features) != n:
             raise ValueError(f"NanoInferenceEngine.predict: expected {n} features, got {len(features)}.")
 

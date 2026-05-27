@@ -1,37 +1,54 @@
 {
-  "20260406T005347": {
-    "version": "20260406T005347",
-    "model_file": "models/tradenet_p5_20260406T005347.pth",
-    "metrics": {},
-    "trained_at": "2026-05-14T18:29:55Z",
+  "v5_tradenet_2026_05_eur": {
+    "version": "v5_tradenet_2026_05_eur",
+    "model_file": "models\\tradenet_v5_tradenet_2026_05_eur.pth",
+    "metrics": {
+      "accuracy": 0.7102,
+      "composite_score": 0.4432,
+      "n_train": 23472,
+      "n_test": 10060
+    },
+    "trained_at": "2026-05-18T06:35:58Z",
     "active": false
   },
-  "20260405T204109": {
-    "version": "20260405T204109",
-    "model_file": "models\\tradenet_p5_20260405T204109.pth",
-    "metrics": {},
-    "trained_at": "2026-05-14T18:30:23Z",
+  "v6_2026_05_btc": {
+    "version": "v6_2026_05_btc",
+    "model_file": "models\\tradenet_v6_2026_05_btc.pth",
+    "metrics": {
+      "accuracy": 0.7102,
+      "composite_score": 0.4432,
+      "n_train": 23472,
+      "n_test": 10060
+    },
+    "trained_at": "2026-05-18T06:35:58Z",
     "active": false
   },
-  "20260405T211455": {
-    "version": "20260405T211455",
-    "model_file": "models\\tradenet_p5_20260405T211455.pth",
-    "metrics": {},
-    "trained_at": "2026-05-14T18:30:23Z",
-    "active": false
+  "v6_2026_05_eur": {
+    "version": "v6_2026_05_eur",
+    "model_file": "models\\EURUSD\\20260519_002117\\tradenet_v6_2026_05_eur.pth",
+    "metrics": {
+      "accuracy": 0.6982,
+      "composite_score": 0.4957,
+      "n_train": 71255,
+      "n_test": 30539
+    },
+    "trained_at": "2026-05-18T19:26:22Z",
+    "active": false,
+    "instrument": "EURUSD",
+    "run_id": "20260519_002117"
   },
-  "20260405T213213": {
-    "version": "20260405T213213",
-    "model_file": "models\\tradenet_p5_20260405T213213.pth",
-    "metrics": {},
-    "trained_at": "2026-05-14T18:30:23Z",
-    "active": false
-  },
-  "20260405T224424": {
-    "version": "20260405T224424",
-    "model_file": "models\\tradenet_p5_20260405T224424.pth",
-    "metrics": {},
-    "trained_at": "2026-05-14T18:30:23Z",
-    "active": false
+  "v5_auto_2026_06_eth": {
+    "version": "v5_auto_2026_06_eth",
+    "model_file": "models\\ETHUSDT\\20260519_113806\\tradenet_v5_auto_2026_06_eth.pth",
+    "metrics": {
+      "accuracy": 0.625,
+      "composite_score": 0.4575,
+      "n_train": 71255,
+      "n_test": 30539
+    },
+    "trained_at": "2026-05-19T07:54:18Z",
+    "active": true,
+    "instrument": "ETHUSDT",
+    "run_id": "20260519_113806"
   }
 }

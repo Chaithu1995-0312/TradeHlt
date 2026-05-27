@@ -32,6 +32,14 @@ from typing import Optional
 
 log = logging.getLogger("LiveEngine")
 
+try:
+    from utils.registry_refresh import RegistryWatcher
+except Exception:  # pragma: no cover — keep live engine importable in stripped envs
+    class RegistryWatcher:  # type: ignore[no-redef]
+        def __init__(self, *_a, **_kw): pass
+        def needs_reload(self) -> bool: return False
+        def mark_loaded(self) -> None: pass
+
 LOGS_DIR       = Path("logs")
 ALERT_LOG_PATH = LOGS_DIR / "live_alerts.jsonl"
 
@@ -102,6 +110,8 @@ class BitNetZoneGate:
         self._zone_path = zone_path
         self._zones: list = []
         self._underpowered: bool = False
+        # Hot-reload watcher: detects discover_zones promotion mid-session.
+        self._watcher = RegistryWatcher(zone_path)
 
         if not enabled:
             log.info("BitNetZoneGate: disabled (pass-through mode)")
@@ -111,6 +121,7 @@ class BitNetZoneGate:
             self._zones = zones
         else:
             self._load_registry(zone_path)
+        self._watcher.mark_loaded()
 
         log.info(f"BitNetZoneGate: loaded {len(self._zones)} zones from {zone_path}")
 
@@ -200,6 +211,12 @@ class BitNetZoneGate:
             zone_id   : str   — ID of the best-matching zone
             reason    : str   — human-readable gate decision reason
         """
+        # Hot-reload: if zone_registry.json was rewritten since last check,
+        # refresh in place. Cheap stat() per candle.
+        if self.enabled and self._watcher.needs_reload():
+            log.info("BitNetZoneGate: registry changed at %s; reloading", self._zone_path)
+            self.reload()
+
         # Gate explicitly disabled → always allow
         if not self.enabled:
             return {
@@ -354,8 +371,8 @@ class LiveEngineConfig:
     @classmethod
     def from_env(cls) -> "LiveEngineConfig":
         return cls(
-            bot_token              = os.environ.get("TELEGRAM_BOT_TOKEN", "8540111634:AAF29RTVnbIiBBMxITfSJ50WnwiQVGaZqhY"),
-            chat_id                = os.environ.get("TELEGRAM_CHAT_ID",   "1103644701"),
+            bot_token              = os.environ.get("TELEGRAM_BOT_TOKEN", ""),
+            chat_id                = os.environ.get("TELEGRAM_CHAT_ID",   ""),
             enabled                = os.environ.get("LIVE_ENGINE_ENABLED", "0") == "1",
             rr_threshold           = float(os.environ.get("LIVE_RR_THRESHOLD",    "1.5")),
             confidence_min         = float(os.environ.get("LIVE_CONF_MIN",        "0.55")),
@@ -587,6 +604,71 @@ def _log_alert(entry: dict) -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# TRAINING-TRIGGER (throttled live-mode evaluation)
+# ─────────────────────────────────────────────────────────────────────────────
+# Module-level counter — TrainingTrigger.should_trigger() walks the integrity
+# log + opportunity glob, which is disk-heavy. We piggyback on LiveEngine.process
+# (called every M15 candle) but only do the full check every N invocations.
+_BYPASS_CHECK_COUNTER: int = 0
+_BYPASS_CHECK_EVERY_N: int = 50  # ~12.5h between checks at 1 candle/15min
+
+
+def _maybe_telegram_training_alert(
+    symbol:     str,
+    instrument: str,
+    bot_token:  str,
+    chat_id:    str,
+) -> None:
+    """Throttled TrainingTrigger evaluation. On fire: send a Telegram message
+    with the pre-filled CLI command and emit TRAINING_RECOMMENDED.
+
+    Cheap counter path runs every call; the heavy gate check + Telegram +
+    emit only fires once per _BYPASS_CHECK_EVERY_N invocations. Never raises
+    — failure to evaluate the trigger must not break the live decision loop.
+    """
+    global _BYPASS_CHECK_COUNTER
+    _BYPASS_CHECK_COUNTER += 1
+    if _BYPASS_CHECK_COUNTER < _BYPASS_CHECK_EVERY_N:
+        return
+    _BYPASS_CHECK_COUNTER = 0
+    try:
+        from training.training_trigger import TrainingTrigger
+        from utils.integrity_events import emit_integrity_event
+        trig = TrainingTrigger.from_prod_config()
+        if not trig.should_trigger():
+            return
+        run_id = time.strftime("%Y%m%d_%H%M%S")
+        cli_cmd = (
+            "python scripts/auto_train_from_opportunities.py "
+            f"--instruments {instrument} --refresh-zones "
+            f"--promote-if-approved --run-id {run_id}"
+        )
+        message = (
+            "📊 *Training Recommended*\n"
+            f"Symbol: `{symbol}`\n"
+            "RR fusion bypass threshold exceeded.\n\n"
+            "Run:\n"
+            f"`{cli_cmd}`"
+        )
+        sent, err = send_telegram_alert(
+            message=message, bot_token=bot_token, chat_id=chat_id,
+        )
+        emit_integrity_event(
+            "TRAINING_RECOMMENDED", "WARNING", "live_engine",
+            {"instrument":     instrument,
+             "symbol":         symbol,
+             "trigger_source": "live_rr_drift",
+             "telegram_sent":  bool(sent),
+             "telegram_error": err,
+             "cli_cmd":        cli_cmd,
+             "run_id":         run_id},
+        )
+        trig.mark_fired()
+    except Exception as exc:  # noqa: BLE001 — never block the live loop
+        log.debug("TrainingTrigger live-check failed (non-fatal): %s", exc)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # LIVE ENGINE
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -672,6 +754,7 @@ class LiveEngine:
         # ── Step 1: Build + validate feature vector ───────────────────────────
         try:
             from features.dataset_builder import build_feature_vector, validate_feature_vector
+            from features.feature_schema import CANONICAL_FEATURES
             vec = build_feature_vector(trade_data, lambda_decay=0.05)
             validate_feature_vector(vec, context="LiveEngine.process")
         except Exception as e:
@@ -679,6 +762,22 @@ class LiveEngine:
             result["reason"] = f"feature_error: {e}"
             _log_alert(result)
             return result
+
+        # Snapshot the canonical feature dict + a stable alert_id into the
+        # result so logs/live_alerts.jsonl carries the decision context.
+        # ingest_live_outcomes.py pairs outcomes against alert_id later.
+        feature_snapshot = {
+            k: float(trade_data[k])
+            for k in CANONICAL_FEATURES
+            if k in trade_data
+        }
+        result["features"]  = feature_snapshot
+        result["direction"] = str(trade_data.get("direction", ""))
+        result["candle_ts"] = trade_data.get("timestamp") or trade_data.get("candle_ts")
+        # Stable per-(symbol, candle_ts, regime, direction) ID — collisions only
+        # within the same decision context, which is the dedup level we want.
+        _id_seed = f"{symbol}|{result['candle_ts']}|{regime}|{session}|{result['direction']}"
+        result["alert_id"] = hashlib.sha1(_id_seed.encode("utf-8")).hexdigest()[:16]
 
         # ── Step 2: Scale ─────────────────────────────────────────────────────
         try:
@@ -799,6 +898,16 @@ class LiveEngine:
 
         # ── Step 9: Audit log ─────────────────────────────────────────────────
         _log_alert(result)
+
+        # ── Step 10: Throttled training-trigger evaluation ────────────────────
+        # Cheap per-candle (counter increment); full disk-walk + Telegram only
+        # on every Nth call. Never raises.
+        _maybe_telegram_training_alert(
+            symbol     = symbol,
+            instrument = symbol,
+            bot_token  = self.config.bot_token,
+            chat_id    = self.config.chat_id,
+        )
         return result
 
     def dry_run(

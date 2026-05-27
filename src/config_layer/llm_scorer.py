@@ -47,6 +47,9 @@ logger = logging.getLogger("LlamaGate")
 
 # Independent circuit-breaker counter for scoring (separate from llm_chat counter)
 FAIL_COUNT = 0
+# True once the circuit has tripped — callers query this to distinguish
+# "LLM scored 1.0" from "LLM gate is open and returning neutral fallback"
+CIRCUIT_OPEN = False
 
 
 class LLMEndpointUnavailableError(RuntimeError):
@@ -79,7 +82,7 @@ def _groq_score(prompt: str) -> tuple[float, str]:
     Raises nothing.
     """
     if not _groq_available():
-        return 1.0, ""
+        return 0.5, ""
 
     # Late-bind _groq_request through the parent module so that monkeypatch
     # on llm_inference_client._groq_request (the standard test pattern) is
@@ -95,15 +98,15 @@ def _groq_score(prompt: str) -> tuple[float, str]:
     logger.debug("_groq_score raw output: '%s'", raw)
 
     if not raw:
-        return 1.0, ""
+        return 0.5, ""
 
     match = re.search(r"\b(0\.\d+|1\.0|0\.0)\b", raw)
     if match:
         score = max(0.0, min(1.0, float(match.group(1))))
         logger.info("_groq_score → %.4f  (model=%s  raw='%s')", score, _GROQ_MODEL, raw)
         return score, raw
-    logger.warning("_groq_score: could not parse float from '%s'. Returning 1.0.", raw)
-    return 1.0, raw
+    logger.warning("_groq_score: could not parse float from '%s'. Returning 0.5 (neutral abstention).", raw)
+    return 0.5, raw
 
 
 def llm_score(metrics: dict, endpoint: str = SERVER_URL) -> float:
@@ -195,10 +198,10 @@ def llm_score(metrics: dict, endpoint: str = SERVER_URL) -> float:
             return groq_score_val
         logger.warning("llm_score: Groq also failed — falling to fail-open.")
 
-    # ── 3. fail-open ───────────────────────────────────────────────────────
+    # ── 3. neutral abstention ──────────────────────────────────────────────
     logger.warning(
         "llm_score: all backends failed (local=%s, groq_enabled=%s, groq_key_set=%s). "
-        "Returning 1.0 (fail-open).",
+        "Returning 0.5 (neutral abstention).",
         _local_error, _GROQ_FALLBACK_ENABLED, bool(_GROQ_API_KEY),
     )
     _append_llm_audit({
@@ -211,10 +214,10 @@ def llm_score(metrics: dict, endpoint: str = SERVER_URL) -> float:
         "input_metrics": metrics,
         "prompt":        prompt,
         "raw_output":    None,
-        "parsed_score":  1.0,
+        "parsed_score":  0.5,
         "local_error":   _local_error,
     })
-    return 1.0
+    return 0.5
 
 
 def llm_score_batch(
@@ -238,7 +241,7 @@ def llm_score_batch(
             scores.append(llm_score(metrics, endpoint=endpoint))
         except Exception as exc:
             logger.error("llm_score_batch: unexpected error scoring item: %s", exc)
-            scores.append(1.0)
+            scores.append(0.5)
 
     if fail_on_unavailable and scores:
         probe_payload = json.dumps(
@@ -274,14 +277,29 @@ def llm_score_cached(metrics: dict) -> float:
 
 
 def llm_score_safe(metrics: dict) -> float:
-    """Circuit-breaker wrapper: returns 1.0 (neutral) after _FAIL_COUNT_DISABLE failures."""
-    global FAIL_COUNT
+    """Circuit-breaker wrapper: returns 0.5 (neutral abstention) after _FAIL_COUNT_DISABLE failures.
+
+    Callers should check llm_scorer.CIRCUIT_OPEN to distinguish a genuine 0.5
+    score from a fallback neutral returned because the gate is disabled.
+    """
+    global FAIL_COUNT, CIRCUIT_OPEN
     try:
         score = llm_score(metrics)
         FAIL_COUNT = 0
         return score
-    except Exception:
+    except Exception as _exc:
         FAIL_COUNT += 1
         if FAIL_COUNT > _FAIL_COUNT_DISABLE:
-            return 1.0  # circuit open — disable gate
-        return 1.0
+            if not CIRCUIT_OPEN:
+                CIRCUIT_OPEN = True
+                logger.error(
+                    "LLM scoring circuit OPEN after %d failures — gate disabled, "
+                    "returning neutral 0.5 for all subsequent calls. Last error: %s",
+                    FAIL_COUNT, _exc,
+                )
+            return 0.5  # circuit open — gate disabled
+        logger.warning(
+            "LLM scoring failure %d/%d — returning neutral 0.5. Error: %s",
+            FAIL_COUNT, _FAIL_COUNT_DISABLE, _exc,
+        )
+        return 0.5  # transient failure — gate still active

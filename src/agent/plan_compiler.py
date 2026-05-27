@@ -108,6 +108,16 @@ PLAN_REGISTRY: Dict[str, List[ToolStep]] = {
     "audit_inspect": [
         _s("audit.tail"),
     ],
+    # ── Findings (cross-mode, on-demand post-run synthesis) ───────────────────
+    "findings_synthesize": [
+        _s("findings.synthesize"),
+    ],
+    "findings_recent": [
+        _s("findings.list_recent", n=10),
+    ],
+    "findings_explain": [
+        _s("findings.explain"),
+    ],
 }
 
 _ASK_PLAN = Plan(intent_key="ask_user", steps=[])

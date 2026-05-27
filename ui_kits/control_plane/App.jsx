@@ -8,15 +8,22 @@ function App() {
   const [selectedRunId, setSelectedRunId] = useState(null);
   const [latestRunId, setLatestRunId] = useState(null);
   const [completed, setCompleted] = useState({});
+  const [contextRunId, setContextRunId] = useState(null);
 
   const data = mockApi.commands();
   const runs = mockApi.listRuns(search).runs;
   const dashEntries = mockApi.dashboard().commands;
 
   const selectedRun = selectedRunId ? mockApi.getRun(selectedRunId).run : null;
-  const logs = selectedRunId ? mockApi.logs(selectedRunId) : null;
   const arts = selectedRunId ? mockApi.artifacts(selectedRunId) : null;
   const mons = selectedRunId ? mockApi.monitors(selectedRunId) : { fields: [] };
+
+  const onReport = (runId) => {
+    window.open(`http://localhost:8787/runs/${runId}/report/excel`, "_blank");
+  };
+  const onContext = (runId) => {
+    setContextRunId(runId);
+  };
 
   const onRun = (cmd, args, cmdline) => {
     const { run } = mockApi.createRun(cmd.id, args, cmdline);
@@ -28,7 +35,7 @@ function App() {
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(120deg,#0f1724,#1a2438)", color: "#e6edf7", fontFamily: '"Segoe UI", system-ui, Arial, sans-serif', fontSize: 13 }}>
-      <Header view={view} onToggleView={() => setView(v => v === "dashboard" ? "runs" : "dashboard")} onHelp={() => setTourOpen(true)} />
+      <Header view={view} setView={setView} onHelp={() => setTourOpen(true)} />
       {view === "runs" ? (
         <main style={{ display: "grid", gridTemplateColumns: "310px 380px 1fr", gap: 14, padding: 14, minHeight: "calc(100vh - 56px)", boxSizing: "border-box" }}>
           <PlaybookPanel
@@ -49,15 +56,28 @@ function App() {
             onInspect={setSelectedRunId}
             selectedRunId={selectedRunId}
             onCommandComplete={(id) => setCompleted(c => ({ ...c, [id]: true }))}
+            onReport={onReport}
+            onContext={onContext}
           />
-          <InspectorPanel run={selectedRun} logs={logs?.logs} artifacts={arts} monitors={mons} />
+          <InspectorPanel run={selectedRun} artifacts={arts} monitors={mons} onReport={onReport} onContext={onContext} />
         </main>
-      ) : (
+      ) : view === "dashboard" ? (
         <main style={{ padding: 14 }}>
           <DashboardView entries={dashEntries} commands={data.commands} />
         </main>
+      ) : view === "workflow" ? (
+        <WorkflowPanel />
+      ) : (
+        <AgentPanel />
       )}
       <Tour open={tourOpen} onClose={() => setTourOpen(false)} />
+      {contextRunId && (
+        <ContextModal
+          runId={contextRunId}
+          run={mockApi.getRun(contextRunId)?.run || null}
+          onClose={() => setContextRunId(null)}
+        />
+      )}
     </div>
   );
 }

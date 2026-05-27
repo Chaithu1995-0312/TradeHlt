@@ -45,8 +45,16 @@ async function _fetchDashboard() {
   } catch (e) { console.warn("[realApi] fetchDashboard failed:", e.message); }
 }
 
+async function _fetchCatalog() {
+  try {
+    const d = await fetch(BASE + "/catalog").then(r => r.json());
+    window.CATALOG = d;
+    _notify();
+  } catch (e) { console.warn("[realApi] fetchCatalog failed:", e.message); }
+}
+
 // --- Startup + 2-second polling ---
-Promise.all([_fetchCommands(), _fetchRuns(), _fetchDashboard()]).catch(() => {});
+Promise.all([_fetchCommands(), _fetchRuns(), _fetchDashboard(), _fetchCatalog()]).catch(() => {});
 setInterval(() => Promise.all([_fetchRuns(), _fetchDashboard()]).catch(() => {}), 2000);
 
 // --- Public API (matches mockApi interface exactly) ---
@@ -161,7 +169,7 @@ const mockApi = {
     fetch(BASE + `/commands/${commandId}/runs`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify(args || {}),
+      body:    JSON.stringify({ args: args || {} }),
     }).then(r => r.json()).then(d => {
       if (d.run) {
         _runCache[d.run.run_id] = d.run;
@@ -182,5 +190,11 @@ const mockApi = {
       .then(d => { if (d.run) { _runCache[d.run.run_id] = d.run; _notify(); } })
       .catch(e => { console.warn("[realApi] stop failed:", e.message); });
     return {};
+  },
+
+  /** Request a Claude-powered Context Report for a completed run. */
+  contextReport(runId) {
+    return fetch(BASE + `/runs/${runId}/context/report`, { method: "POST" })
+      .then(r => r.json());
   },
 };

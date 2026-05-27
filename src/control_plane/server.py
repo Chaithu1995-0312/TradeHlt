@@ -8,15 +8,45 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
+import sys as _sys; _sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.control_plane.jobs import JobManager
 from src.control_plane.registry import REPO_ROOT, command_spec_to_json, workflow_stage_order
 from src.control_plane.dashboard_api import TradingDashboardAPI
 from src.control_plane.report_api import RunReportAPI
+from src.control_plane.context_report import ContextReportAPI
+from src.control_plane.code_context_extractor import extract_code_context
 
 
 def _json_bytes(payload: dict[str, Any]) -> bytes:
     return json.dumps(payload, indent=2).encode("utf-8")
+
+
+def _tail_jsonl_lines(path: Path, limit: int) -> list[dict]:
+    """
+    Read the last ``limit`` valid JSON lines from a JSONL file.
+    Returns newest-first. Malformed lines are skipped silently.
+    Used by /api/agent/* endpoints.
+    """
+    if not path.exists() or not path.is_file():
+        return []
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+    except Exception:
+        return []
+    out: list[dict] = []
+    for line in reversed(lines):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            out.append(json.loads(line))
+        except Exception:
+            continue
+        if len(out) >= limit:
+            break
+    return out
 
 
 class ControlPlaneAPI:
@@ -1514,11 +1544,28 @@ setInterval(loadStatus, 10000);
 """
 
 
-def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_api: RunReportAPI | None = None):
+def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_api: RunReportAPI | None = None, context_api: ContextReportAPI | None = None):
+    import logging as _logging
+
+    _req_log_path  = REPO_ROOT / "logs" / "control_plane" / "requests.log"
+    _poll_log_path = REPO_ROOT / "logs" / "control_plane" / "polling.log"
+    for _p in (_req_log_path, _poll_log_path):
+        _p.parent.mkdir(parents=True, exist_ok=True)
+    _req_logger  = _logging.getLogger("crt.requests")
+    _poll_logger = _logging.getLogger("crt.polling")
+    for _lg, _lpath in ((_req_logger, _req_log_path), (_poll_logger, _poll_log_path)):
+        if not _lg.handlers:
+            _fh = _logging.FileHandler(str(_lpath), encoding="utf-8")
+            _fh.setFormatter(_logging.Formatter("%(asctime)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S"))
+            _lg.addHandler(_fh)
+            _lg.setLevel(_logging.INFO)
+            _lg.propagate = False
+
     class Handler(BaseHTTPRequestHandler):
         server_version = "CRTControlPlane/1.0"
 
         def _send_json(self, code: int, payload: dict[str, Any]) -> None:
+            _req_logger.info("  RESP %d %s", int(code), json.dumps(payload)[:300])
             body = _json_bytes(payload)
             self.send_response(code)
             self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -1561,6 +1608,7 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
             if not payload:
                 return {}
             loaded = json.loads(payload)
+            _req_logger.info("  BODY %s", payload[:600])
             if isinstance(loaded, dict):
                 return loaded
             raise ValueError("Expected JSON object body.")
@@ -1578,7 +1626,8 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                     self._send_json(HTTPStatus.OK, dash_api.model_versions_payload())
                     return
                 if path == "/api/status":
-                    self._send_json(HTTPStatus.OK, dash_api.status_payload())
+                    _inst = query.get("instrument", ["EURUSD"])[0]
+                    self._send_json(HTTPStatus.OK, dash_api.status_payload(_inst))
                     return
                 if path == "/api/models":
                     self._send_json(HTTPStatus.OK, dash_api.models_payload())
@@ -1612,6 +1661,14 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                     instrument = query.get("instrument", ["EURUSD"])[0]
                     self._send_json(HTTPStatus.OK, dash_api.opportunity_stats_payload(instrument))
                     return
+                if path == "/api/scan_jobs":
+                    instrument = query.get("instrument", ["EURUSD"])[0]
+                    self._send_json(HTTPStatus.OK, dash_api.scan_jobs_payload(instrument))
+                    return
+                if path == "/api/opportunity_analytics":
+                    instrument = query.get("instrument", ["EURUSD"])[0]
+                    self._send_json(HTTPStatus.OK, dash_api.opportunity_analytics_payload(instrument))
+                    return
                 if path == "/api/trades":
                     try:
                         page     = int(query.get("page",     ["1"])[0])
@@ -1629,6 +1686,64 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                     return
                 if path == "/api/backtest_history":
                     self._send_json(HTTPStatus.OK, dash_api.backtest_history_payload())
+                    return
+                # ── Agent panel endpoints (read-only JSONL tails) ─────────────
+                if path == "/api/agent/findings":
+                    try:
+                        limit = int(query.get("limit", ["20"])[0])
+                    except (ValueError, IndexError):
+                        limit = 20
+                    limit = min(max(limit, 1), 200)
+                    self._send_json(HTTPStatus.OK, {
+                        "findings": _tail_jsonl_lines(REPO_ROOT / "logs" / "agent_findings.jsonl", limit),
+                    })
+                    return
+                if path == "/api/agent/audit":
+                    try:
+                        limit = int(query.get("limit", ["20"])[0])
+                    except (ValueError, IndexError):
+                        limit = 20
+                    limit = min(max(limit, 1), 500)
+                    self._send_json(HTTPStatus.OK, {
+                        "audit": _tail_jsonl_lines(REPO_ROOT / "logs" / "agent_audit.jsonl", limit),
+                    })
+                    return
+                if path == "/api/agent/llm_requests":
+                    try:
+                        limit = int(query.get("limit", ["20"])[0])
+                    except (ValueError, IndexError):
+                        limit = 20
+                    limit = min(max(limit, 1), 200)
+                    self._send_json(HTTPStatus.OK, {
+                        "requests": _tail_jsonl_lines(REPO_ROOT / "logs" / "agent_llm_requests.jsonl", limit),
+                    })
+                    return
+                # ── Catalog endpoint — populates window.CATALOG in React UI ──
+                if path == "/catalog":
+                    _data_dir    = REPO_ROOT / "data"
+                    _cfg_dir     = REPO_ROOT / "configs" / "production"
+                    data_csv     = sorted(
+                        p.relative_to(REPO_ROOT).as_posix()
+                        for p in _data_dir.glob("*.csv") if p.is_file()
+                    ) if _data_dir.is_dir() else []
+                    data_all     = sorted(
+                        p.relative_to(REPO_ROOT).as_posix()
+                        for p in _data_dir.glob("**/*") if p.is_file()
+                    ) if _data_dir.is_dir() else []
+                    prod_configs = sorted(
+                        p.relative_to(REPO_ROOT).as_posix()
+                        for p in _cfg_dir.glob("*.json")
+                        if p.is_file() and "_archived_" not in p.name
+                    ) if _cfg_dir.is_dir() else []
+                    prod_versions = [Path(c).stem for c in prod_configs]
+                    instruments   = dash_api.instruments_payload()["instruments"]
+                    self._send_json(HTTPStatus.OK, {
+                        "data_csv":      data_csv,
+                        "data_all":      data_all,
+                        "instruments":   instruments,
+                        "prod_configs":  prod_configs,
+                        "prod_versions": prod_versions,
+                    })
                     return
                 # ── ui_kits/ static file serving (React UI kits) ─────────────
                 if path.startswith("/ui_kits/"):
@@ -1656,12 +1771,18 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                     self.send_header("Content-Type", _ct)
                     self.send_header("Content-Length", str(len(_body)))
                     self.send_header("Access-Control-Allow-Origin", "*")
+                    if _fp.suffix.lower() in (".js", ".jsx"):
+                        self.send_header("Cache-Control", "no-store")
                     self.end_headers()
                     self.wfile.write(_body)
                     return
                 # ── Existing Control Plane routes ─────────────────────────────
                 if path == "/":
-                    self._send_html(HTTPStatus.OK, api.ui_html())
+                    self.send_response(HTTPStatus.FOUND)
+                    self.send_header("Location", "/ui_kits/control_plane/")
+                    self.send_header("Content-Length", "0")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
                     return
                 if path == "/commands":
                     self._send_json(HTTPStatus.OK, api.commands_payload())
@@ -1762,6 +1883,16 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                     result = dash_api.promote_tradenet_payload(body.get("version", ""))
                     self._send_json(HTTPStatus.OK if result["ok"] else HTTPStatus.BAD_REQUEST, result)
                     return
+                if path == "/api/explain_model":
+                    body       = self._read_json_body()
+                    model_type = body.get("model_type", "")
+                    version    = body.get("version", "")
+                    if not model_type or not version:
+                        self._send_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "model_type and version required"})
+                        return
+                    result = dash_api.explain_model_payload(model_type, version)
+                    self._send_json(HTTPStatus.OK if result["ok"] else HTTPStatus.BAD_GATEWAY, result)
+                    return
                 # ── Report LLM route ─────────────────────────────────────────
                 if path.startswith("/runs/") and path.endswith("/report/llm"):
                     run_id   = path.split("/")[2]
@@ -1774,6 +1905,32 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                         return
                     result = report_api.llm_analysis(run_snap, logs, arts)
                     code   = HTTPStatus.OK if result["ok"] else HTTPStatus.BAD_GATEWAY
+                    self._send_json(code, result)
+                    return
+                # ── Context Report route ──────────────────────────────────────
+                if path.startswith("/runs/") and path.endswith("/context/report"):
+                    run_id   = path.split("/")[2]
+                    run_snap = api.run_payload(run_id)["run"]
+                    logs     = api.logs_payload(run_id)["logs"]
+                    arts     = api.artifacts_payload(run_id)["artifacts"]
+                    if context_api is None:
+                        self._send_json(HTTPStatus.SERVICE_UNAVAILABLE,
+                                        {"error": "ContextReportAPI not initialised"})
+                        return
+                    from pathlib import Path as _Path
+                    _repo_root = _Path(__file__).resolve().parents[2]
+                    cmdline  = run_snap.get("command_line") or []
+                    if isinstance(cmdline, str):
+                        import shlex as _shlex
+                        cmdline = _shlex.split(cmdline)
+                    code_ctx = extract_code_context(
+                        cmdline,
+                        logs.get("stdout", ""),
+                        logs.get("stderr", ""),
+                        _repo_root,
+                    )
+                    result = context_api.context_analysis(run_snap, logs, arts, code_ctx)
+                    code   = HTTPStatus.OK if result.get("ok") else HTTPStatus.BAD_GATEWAY
                     self._send_json(code, result)
                     return
                 # ── Existing routes ───────────────────────────────────────────
@@ -1789,6 +1946,24 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                     run_id = path.split("/")[2]
                     self._send_json(HTTPStatus.OK, api.stop_payload(run_id))
                     return
+                # ── Agent findings synthesis ──────────────────────────────────
+                if path == "/api/agent/synthesize":
+                    body   = self._read_json_body()
+                    run_id = body.get("run_id", "").strip()
+                    if not run_id:
+                        self._send_json(HTTPStatus.BAD_REQUEST, {"error": "run_id required"})
+                        return
+                    try:
+                        from src.agent.findings_synthesizer import synthesize_finding
+                        finding = synthesize_finding(run_id)
+                        ok = finding.get("status") not in ("run_not_found", "invalid_input")
+                        self._send_json(
+                            HTTPStatus.OK if ok else HTTPStatus.BAD_REQUEST,
+                            {"ok": ok, "finding": finding},
+                        )
+                    except Exception as exc:
+                        self._send_json(HTTPStatus.BAD_GATEWAY, {"ok": False, "error": str(exc)})
+                    return
                 self._send_json(HTTPStatus.NOT_FOUND, {"error": f"Unknown route: {path}"})
             except KeyError as exc:
                 self._send_json(HTTPStatus.NOT_FOUND, {"error": str(exc)})
@@ -1797,7 +1972,14 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
 
         def log_message(self, fmt: str, *args: Any) -> None:
             import sys
-            print(f"[CRT] {self.address_string()} {fmt % args}", file=sys.stderr, flush=True)
+            msg = fmt % args
+            print(f"[CRT] {self.address_string()} {msg}", file=sys.stderr, flush=True)
+            path = getattr(self, "path", "") or ""
+            is_poll = "/monitors" in path or path.startswith("/runs?") or path == "/monitors/dashboard"
+            if is_poll:
+                _poll_logger.info("%s %s", self.address_string(), msg)
+            else:
+                _req_logger.info("%s %s", self.address_string(), msg)
 
     return Handler
 
@@ -1810,6 +1992,7 @@ class ControlPlaneServer:
         self._api = ControlPlaneAPI(self._manager)
         self._dash_api = TradingDashboardAPI()
         self._report_api = RunReportAPI()
+        self._context_api = ContextReportAPI()
         self._httpd: ThreadingHTTPServer | None = None
         self._thread: threading.Thread | None = None
 
@@ -1830,7 +2013,7 @@ class ControlPlaneServer:
     def start(self) -> None:
         if self._httpd is not None:
             return
-        handler = create_handler(self._api, self._dash_api, self._report_api)
+        handler = create_handler(self._api, self._dash_api, self._report_api, self._context_api)
         self._httpd = ThreadingHTTPServer((self._host, self._port), handler)
         self._thread = threading.Thread(target=self._httpd.serve_forever, daemon=True)
         self._thread.start()

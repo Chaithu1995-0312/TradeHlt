@@ -460,6 +460,29 @@ class TradeDataset:
         )
 
     @classmethod
+    def from_live_alerts(
+        cls,
+        path: "str | Path",
+        mirror_short: bool = True,
+    ) -> "TradeDataset":
+        """Load JSONL produced by scripts/research/ingest_live_outcomes.py.
+
+        The ingest script's output schema is identical to opportunities.jsonl
+        (features dict + rr_achieved + direction + instrument), so this wrapper
+        delegates to ``from_opportunities`` and only retags the source for
+        downstream provenance tracking. Closes the feedback loop on live-
+        executed trades whose outcomes have been paired with their originating
+        alerts.
+        """
+        ds = cls.from_opportunities(path, mirror_short=mirror_short)
+        p = Path(path)
+        return cls(
+            trades=ds.trades, X=ds.X, y_rr=ds.y_rr,
+            source=f"live_alerts:{p.name}",
+            n_instruments=ds.n_instruments, instruments=ds.instruments,
+        )
+
+    @classmethod
     def from_trade_records(
         cls,
         trade_records: list,
@@ -812,7 +835,9 @@ def verify_gaussian_model(
 
     # 1. Load model
     try:
-        loaded_model, loaded_scaler, _ = load_gaussian_model(model_path.name)
+        loaded_model, loaded_scaler, _ = load_gaussian_model(
+            str(model_path.relative_to(Path("models")))
+        )
         _pass_fail("Load saved model", True, f"{model_path}")
     except Exception as e:
         _pass_fail("Load saved model", False, str(e))
@@ -899,7 +924,9 @@ def verify_tradenet_model(
     # 1. Try to load model
     try:
         import torch
-        loaded_model = load_tradenet_model(model_path.name)
+        loaded_model = load_tradenet_model(
+            str(model_path.relative_to(Path("models")))
+        )
         _pass_fail("Load saved TradeNet model", True, f"{model_path}")
     except ImportError:
         _pass_fail("Load saved TradeNet model", False,
@@ -980,6 +1007,8 @@ def run_tradenet_training(
     train_ratio: float = 0.70,
     epochs:      int   = 100,
     lr:          float = 0.001,
+    instrument:  str   = "",
+    run_id:      str   = "",
 ) -> Optional[Path]:
     """
     Train TradeNet binary classifier on the same feature vectors as Gaussian.
@@ -1000,12 +1029,30 @@ def run_tradenet_training(
     print(f"  TRADENET TRAINING  (schema: {SCHEMA_VERSION})")
     print(f"{'=' * W}")
 
-    # Check torch availability
+    # Gap-6 fix: hard crash instead of silent skip — torch is mandatory for TradeNet.
+    # torch 2.2.2+cpu is installed for Python 3.12 only.  If you see this error,
+    # re-run the entire command with  py -3.12  instead of  python.
     try:
         import torch
     except ImportError:
-        print("  [SKIP] torch not installed — TradeNet training skipped.")
-        return None
+        import sys as _sys
+        _sys.stderr.write(
+            "\n"
+            "====================================================================\n"
+            "  FATAL: torch not found in this Python environment\n"
+            "\n"
+            "  TradeNet training requires PyTorch (torch 2.2.2+cpu).\n"
+            "  torch is installed for Python 3.12, NOT the current Python.\n"
+            "\n"
+            "  Fix -- re-run with py -3.12:\n"
+            "    py -3.12 scripts/training/phase5_calibration.py \\\n"
+            "        --opportunities <file> --version <ver> --train --tradenet\n"
+            "\n"
+            "  Verify torch: py -3.12 -c \"import torch; print(torch.__version__)\"\n"
+            "====================================================================\n"
+            "\n"
+        )
+        _sys.exit(1)
 
     X, y_rr = dataset.X, dataset.y_rr
     n       = len(X)
@@ -1019,7 +1066,7 @@ def run_tradenet_training(
 
     if n_train < 50:
         print(f"  [SKIP] TradeNet: insufficient training samples ({n_train} < 50).")
-        return None
+        return None, {}
 
     X_train, y_train = X[:n_train], y_bin[:n_train]
     X_test,  y_test  = X[n_train:], y_bin[n_train:]
@@ -1027,43 +1074,75 @@ def run_tradenet_training(
     print(f"  Samples: {n} total  |  {n_train} train  |  {n_test} test")
     print(f"  Win rate (train): {sum(y_train)/len(y_train):.2%}")
 
-    # Train
+    # ── Normalise features (mirrors the Gaussian pipeline) ────────────────────
+    # Raw features span vastly different scales:
+    #   open/close/ema_*  ≈ 60000  vs  trend_bias/body_ratio  ≈ 1.0
+    # Without scaling, large-magnitude gradients dominate and suppress indicator
+    # signals, causing the model to collapse to the majority class (loss).
+    from training.trainer import StandardScaler as TnScaler
+    tn_scaler = TnScaler()
+    tn_scaler.fit(X_train)                                  # fit on train only (no leakage)
+    X_train_sc = tn_scaler.transform(X_train)
+    X_test_sc  = tn_scaler.transform(X_test) if X_test else []
+    print(f"  StandardScaler fit: {TRADENET_SCHEMA.n_features} features "
+          f"(n_train={n_train})")
+
+    # Train on SCALED data.
+    # class_weight_auto=True (default) applies pos_weight = n_neg/n_pos per batch
+    # to prevent majority-class (loss) collapse.
     try:
         print(f"  Training TradeNet for {epochs} epochs...")
         tn_model = train_tradenet(
-            X_train, y_train,
+            X_train_sc, y_train,
             epochs=epochs, lr=lr, batch_size=64, verbose=True,
         )
     except Exception as e:
         print(f"  [ERROR] TradeNet training failed: {e}")
         import traceback; traceback.print_exc()
-        return None
+        return None, {}
 
-    # Evaluate on test set
+    # Evaluate on SCALED test set — Gap-2 fix: capture metrics dict for registry
+    tn_metrics: dict = {}
     if n_test > 0:
         try:
-            tn_eval = evaluate_tradenet(tn_model, X_test, y_test)
+            tn_eval = evaluate_tradenet(tn_model, X_test_sc, y_test)
             tn_eval.print(label="TradeNet test")
             print(f"  accuracy={tn_eval.accuracy:.4f}  composite={tn_eval.composite_score:.4f}")
+            tn_metrics = {
+                "accuracy":        round(float(tn_eval.accuracy),        4),
+                "composite_score": round(float(tn_eval.composite_score), 4),
+                "n_train":         n_train,
+                "n_test":          n_test,
+            }
         except Exception as e:
             print(f"  [WARN] TradeNet evaluation failed: {e}")
 
-    # Save
-    model_filename = f"tradenet_{version}.pth"
+    # Save — Gap-1 fix: pass version= explicitly so registry key matches version string.
+    # Also pass scaler= so make_neural_fn() can apply the same normalisation at
+    # inference time (saves alongside .pth as tradenet_{version}_scaler.json).
+    if instrument:
+        model_filename = f"{instrument}/{run_id}/tradenet_{version}.pth"
+    else:
+        model_filename = f"tradenet_{version}.pth"
     try:
-        model_path = save_tradenet_model(tn_model, model_filename)
+        model_path = save_tradenet_model(tn_model, model_filename,
+                                         metrics=tn_metrics, version=version,
+                                         scaler=tn_scaler,
+                                         instrument=instrument or None,
+                                         run_id=run_id or None)
         print(f"  TradeNet saved -> {model_path}")
     except Exception as e:
         print(f"  [ERROR] TradeNet save failed: {e}")
-        return None
+        return None, {}
 
-    # Post-training verification
+    # Post-training verification (use scaled data for consistency)
     if n_test > 0:
-        verify_tradenet_model(model_path, X_test, y_test)
+        verify_tradenet_model(model_path, X_test_sc, y_test)
     else:
-        verify_tradenet_model(model_path, X_train[:20], y_train[:20])
+        verify_tradenet_model(model_path, X_train_sc[:20], y_train[:20])
 
-    return model_path
+    # Gap-3 fix: return (path, metrics) so caller can patch p5 report
+    return model_path, tn_metrics
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1229,8 +1308,14 @@ def main() -> None:
                     help="Random seed for synthetic data (default: 42)")
     ap.add_argument("--audit-only",    action="store_true")
     ap.add_argument("--train",         action="store_true")
+    ap.add_argument("--gaussian",      action="store_true",
+                    help="Train Gaussian NB model (use with --train; "
+                         "mutually exclusive with --tradenet).")
     ap.add_argument("--tradenet",      action="store_true",
-                    help="Also train and validate TradeNet binary classifier")
+                    help="Train TradeNet binary classifier (use with --train; "
+                         "mutually exclusive with --gaussian). "
+                         "Runs standalone — does not require a prior --gaussian run "
+                         "in the same session.")
     ap.add_argument("--integrate",     action="store_true",
                     help="DEPRECATED — models now load dynamically via "
                          "core.model_registry. Flag is accepted for backwards "
@@ -1259,15 +1344,60 @@ def main() -> None:
     ap.add_argument("--no-mirror-short-features", dest="mirror_short_features",
                     action="store_false",
                     help="Disable short-feature mirroring (use for direction-filtered logs).")
+    ap.add_argument("--instrument", default="",
+                    help="Instrument label (e.g. EURUSD, BTCUSDT). When provided, "
+                         "the calibration report is written to "
+                         "results/{instrument}/{run_id}/p5_calibration_{version}.json "
+                         "and the gaussian registry entry gains 'instrument' and 'run_id' fields.")
+    ap.add_argument("--run-id", "--run", dest="run_id", default=None,
+                    help="Run ID for path scoping (e.g. 20260519_113806). "
+                         "When given with --instrument and no --opportunities, "
+                         "auto-resolves logs/{instrument}/{run_id}/opportunities.jsonl. "
+                         "Default: read from JSONL run_header; auto-generate YYYYMMDD_HHMMSS if absent.")
     args = ap.parse_args()
+
+    # ── Auto-resolve --opportunities from --instrument + --run-id ────────────
+    if not args.opportunities and not args.synthetic and not args.cached and args.csv is None:
+        if args.instrument and args.run_id:
+            auto_path = Path("logs") / args.instrument / args.run_id / "opportunities.jsonl"
+            if not auto_path.exists():
+                print(f"ERROR: auto-resolved opportunities not found: {auto_path}",
+                      file=sys.stderr)
+                sys.exit(1)
+            args.opportunities = str(auto_path)
+            print(f"Auto-resolved opportunities: {auto_path}")
 
     # Default to csv mode when no source flag is given (--results-dirs already set)
     if not args.synthetic and not args.cached and not args.opportunities and args.csv is None:
         args.csv = "."   # value unused; triggers csv loading branch
 
     # --synthetic / --opportunities imply --train by default
+    _train_explicit = args.train   # True when user passed --train explicitly
     if (args.synthetic or args.opportunities) and not args.audit_only:
         args.train = True
+        # Auto-select Gaussian ONLY when --train was not explicit (implied mode).
+        # When --train is explicit the user MUST specify --gaussian or --tradenet.
+        if not _train_explicit and not args.gaussian and not args.tradenet:
+            args.gaussian = True
+
+    # ── Enforce --train requires exactly one of --gaussian / --tradenet ──────
+    if args.train:
+        if args.gaussian and args.tradenet:
+            print(
+                "ERROR: --gaussian and --tradenet are mutually exclusive.\n"
+                "  Train Gaussian only:  ... --train --gaussian\n"
+                "  Train TradeNet only:  ... --train --tradenet",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        if not args.gaussian and not args.tradenet:
+            print(
+                "ERROR: --train requires exactly one model flag.\n"
+                "  Train Gaussian only:  ... --train --gaussian\n"
+                "  Train TradeNet only:  ... --train --tradenet",
+                file=sys.stderr,
+            )
+            sys.exit(1)
 
     if not (args.audit_only or args.train):
         args.audit_only = True
@@ -1294,6 +1424,35 @@ def main() -> None:
         # Override module-level rr_to_class so run_calibration's LOO-CV
         # class assignment honours the LLM-supplied buckets.
         globals()["rr_to_class"] = _make_rr_to_class(rr_buckets)
+
+    # ── Upfront input validation ─────────────────────────────────────────────
+    if args.opportunities:
+        opp_path = Path(args.opportunities)
+        if not opp_path.exists():
+            print(f"\nERROR: --opportunities file not found: {opp_path}", file=sys.stderr)
+            sys.exit(1)
+        if opp_path.stat().st_size == 0:
+            print(f"\nERROR: --opportunities file is empty: {opp_path}", file=sys.stderr)
+            sys.exit(1)
+    if args.cached:
+        cached_path = Path(args.cached)
+        if not cached_path.exists():
+            print(f"\nERROR: --cached file not found: {cached_path}", file=sys.stderr)
+            sys.exit(1)
+
+    # ── Resolve run_id (inherited from JSONL run_header, or auto-generated) ───
+    _run_id: str = args.run_id or ""
+    if not _run_id and args.opportunities:
+        try:
+            with Path(args.opportunities).open("r", encoding="utf-8") as _fh:
+                _hdr = json.loads(_fh.readline().strip())
+            if _hdr.get("type") == "run_header":
+                _run_id = _hdr.get("run_id", "")
+        except Exception:
+            pass
+    if not _run_id:
+        _run_id = time.strftime("%Y%m%d_%H%M%S")
+    log.info("run_id: %s", _run_id)
 
     # ── Load / generate dataset ───────────────────────────────────────────────
     print("\nLoading phase5 dataset...")
@@ -1336,7 +1495,7 @@ def main() -> None:
         return
 
     # ── Gaussian training ─────────────────────────────────────────────────────
-    if args.train:
+    if args.train and args.gaussian:
         version = args.version or f"p5_{time.strftime('%Y%m%dT%H%M%S')}"
         try:
             result = run_calibration(
@@ -1377,7 +1536,10 @@ def main() -> None:
         # Save model
         model_path: Optional[Path] = None
         if result.eval_result.corr_expected_rr >= MIN_LOO_CORR_TO_SAVE or args.force:
-            model_file = f"gaussian_{version}.json"
+            if args.instrument:
+                model_file = f"{args.instrument}/{_run_id}/gaussian_{version}.json"
+            else:
+                model_file = f"gaussian_{version}.json"
             model_path = save_gaussian_model(
                 result.model, result.scaler,
                 metrics=result.train_metrics,
@@ -1386,6 +1548,7 @@ def main() -> None:
             )
             result.model_path = model_path
             print(f"  Model saved -> {model_path}")
+            print(f"OUTPUT:gaussian:{Path(model_path).resolve()}")
 
             # ── Post-training Gaussian verification ────────────────────────────
             n_total  = len(dataset.X)
@@ -1399,8 +1562,12 @@ def main() -> None:
             print(f"  Model NOT saved (corr={result.eval_result.corr_expected_rr:+.4f} "
                   f"< threshold {MIN_LOO_CORR_TO_SAVE}). Use --force to override.")
 
-        # Save calibration report
-        report_path = Path(args.base) / "results" / f"p5_calibration_{version}.json"
+        # Save calibration report — run-scoped when --instrument is provided
+        if args.instrument:
+            report_path = (Path(args.base) / "results"
+                           / args.instrument / _run_id / f"p5_calibration_{version}.json")
+        else:
+            report_path = Path(args.base) / "results" / f"p5_calibration_{version}.json"
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(json.dumps({
             "version": version, "schema_version": SCHEMA_VERSION,
@@ -1420,6 +1587,7 @@ def main() -> None:
             "source": dataset.source,
         }, indent=2))
         print(f"  Report saved -> {report_path}")
+        print(f"OUTPUT:report:{report_path.resolve()}")
 
         # ── GAP-1: Auto-register in gaussian_registry.json ──────────────────
         # register_gaussian() is idempotent when version already exists.
@@ -1438,9 +1606,25 @@ def main() -> None:
                     str(model_path),
                     list(GAUSSIAN_SCHEMA.feature_names),
                     _reg_metrics,
+                    instrument=args.instrument or None,
+                    run_id=_run_id or None,
                 )
                 log.info("GAP-1: Model auto-registered in gaussian_registry: %s", version)
                 print(f"  Model registered  -> gaussian_registry.json [{version}]")
+
+                # Gap-4 fix: auto-promote when no active Gaussian exists
+                # (mirrors the TradeNet auto-promote pattern in trainer.save_model)
+                try:
+                    _promo_instrument = (args.instrument or "EURUSD")
+                    if get_active_gaussian() is None:
+                        promoted, reason = promote_gaussian(
+                            version, instrument=_promo_instrument
+                        )
+                        log.info("Gaussian auto-promoted (no prior active version): %s", reason)
+                        print(f"  Auto-promoted     -> {reason}")
+                except Exception as _auto_err:
+                    log.warning("Gaussian auto-promotion check failed (non-fatal): %s", _auto_err)
+
             except Exception as _reg_err:
                 log.warning(
                     "GAP-1: register_gaussian() failed (non-fatal, promote separately): %s",
@@ -1464,15 +1648,39 @@ def main() -> None:
                 print("\n  Promotion skipped (integration_approved=False). Use --force.")
 
     # ── TradeNet training ─────────────────────────────────────────────────────
-    if args.tradenet:
+    if args.train and args.tradenet:
         version = args.version or f"p5_{time.strftime('%Y%m%dT%H%M%S')}"
-        tn_path = run_tradenet_training(
+        # Gap-3 fix: unpack (path, metrics) tuple returned by run_tradenet_training
+        tn_path, tn_metrics = run_tradenet_training(
             dataset,
             version=version,
             train_ratio=args.train_ratio,
+            instrument=args.instrument or "",
+            run_id=_run_id,
         )
         if tn_path:
             _pass_fail("TradeNet end-to-end pipeline", True, str(tn_path))
+            # Resolve report_path for standalone TradeNet run.
+            # When Gaussian was trained in a prior command the report already exists;
+            # when it wasn't, patching is skipped gracefully (fail-open).
+            if args.instrument:
+                _tn_report = (Path(args.base) / "results"
+                              / args.instrument / _run_id / f"p5_calibration_{version}.json")
+            else:
+                _tn_report = (Path(args.base) / "results"
+                              / f"p5_calibration_{version}.json")
+            try:
+                rdata = json.loads(_tn_report.read_text())
+                rdata["tradenet"] = {
+                    "model_path": str(tn_path),
+                    "version":    version,
+                    "status":     "trained",
+                    "metrics":    tn_metrics,
+                }
+                _tn_report.write_text(json.dumps(rdata, indent=2))
+                print(f"  Report updated with TradeNet section -> {_tn_report}")
+            except Exception as _patch_err:
+                log.warning("Could not patch report with TradeNet section: %s", _patch_err)
         else:
             _pass_fail("TradeNet end-to-end pipeline", False,
                        "training failed or torch not available")

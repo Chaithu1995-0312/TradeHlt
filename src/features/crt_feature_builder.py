@@ -6,9 +6,16 @@ STRICT CONTRACT: Output dict ALWAYS contains EXACTLY ALL CANONICAL_FEATURES.
 No missing keys. No extra keys. All values float.
 """
 import logging
+import os
 import numpy as np
 
-from features.feature_schema import CANONICAL_FEATURES, SESSION_MAP, TREND_MAP
+from features.feature_schema import CANONICAL_FEATURES, SESSION_MAP, SESSION_UNKNOWN, TREND_MAP
+
+try:
+    from src.utils.integrity_events import emit_integrity_event  # noqa: F401
+except Exception:  # pragma: no cover
+    def emit_integrity_event(*_a, **_kw):  # type: ignore[no-redef]
+        return None
 
 logger = logging.getLogger(__name__)
 
@@ -113,8 +120,25 @@ def build_bitnet_features(trade: dict, candle: dict, state: dict) -> dict:
     # --------------------------
     # Time / Session
     # --------------------------
-    session = str(candle.get("session", "unknown")).lower()
-    features["session"]            = SESSION_MAP.get(session, 0.0)
+    raw_session = candle.get("session")
+    session = str(raw_session if raw_session is not None else "unknown").strip().lower()
+    if session in SESSION_MAP:
+        features["session"] = SESSION_MAP[session]
+    else:
+        # Explicit out-of-band encoding (no longer silently mapped to 0.0=london).
+        features["session"] = SESSION_UNKNOWN
+        emit_integrity_event(
+            "SESSION_UNKNOWN",
+            "WARNING",
+            "crt_feature_builder",
+            {
+                "raw_session":   repr(raw_session),
+                "normalized":    session,
+                "encoded_value": SESSION_UNKNOWN,
+            },
+        )
+        if os.environ.get("STRICT_SESSION_VALIDATION", "false").lower() == "true":
+            raise ValueError(f"Unknown session value: {raw_session!r}")
     features["hour_of_day"]        = float(candle.get("hour_of_day", 0.0))
 
     # --------------------------
@@ -127,10 +151,12 @@ def build_bitnet_features(trade: dict, candle: dict, state: dict) -> dict:
     # --------------------------
     # NaN Guard
     # --------------------------
+    _nan_replaced = 0
     for k, v in features.items():
         if np.isnan(v) or np.isinf(v):
             logger.warning("NaN/inf detected in %s → setting to 0.0", k)
             features[k] = 0.0
+            _nan_replaced += 1
 
     # --------------------------
     # STRICT SCHEMA VALIDATION
@@ -142,5 +168,12 @@ def build_bitnet_features(trade: dict, candle: dict, state: dict) -> dict:
         missing = canonical_keys - output_keys
         extra   = output_keys - canonical_keys
         raise AssertionError(f"Feature schema mismatch!\nMissing: {missing}\nExtra: {extra}")
+
+    # Data-completeness signal: fraction of non-zero canonical features after NaN guard.
+    # Stored as _quality so gate callers can abstain on thin/empty inputs.
+    # BitNetRunner and other canonical-key consumers ignore this key safely.
+    total = len(CANONICAL_FEATURES)
+    non_zero = sum(1 for k in CANONICAL_FEATURES if features[k] != 0.0)
+    features["_quality"] = round(non_zero / total, 4) if total else 0.0
 
     return features

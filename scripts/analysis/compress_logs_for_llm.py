@@ -29,6 +29,15 @@ from typing import Iterable
 
 logger = logging.getLogger("CompressLogs")
 
+# Threshold above which a JSONL file is flagged as systemically corrupted.
+MAX_CORRUPTION_RATIO: float = 0.10
+
+try:
+    from src.utils.integrity_events import emit_integrity_event  # noqa: F401
+except Exception:  # pragma: no cover
+    def emit_integrity_event(*_a, **_kw):  # type: ignore[no-redef]
+        return None
+
 
 def _iter_records(paths: Iterable[Path]):
     for p in paths:
@@ -37,15 +46,44 @@ def _iter_records(paths: Iterable[Path]):
         except OSError as exc:
             logger.warning("skip %s: %s", p, exc)
             continue
+        malformed = 0
+        valid = 0
         with fh:
-            for line in fh:
+            for lineno, line in enumerate(fh, 1):
                 line = line.strip()
                 if not line:
                     continue
                 try:
-                    yield json.loads(line)
-                except json.JSONDecodeError:
+                    rec = json.loads(line)
+                    valid += 1
+                    yield rec
+                except json.JSONDecodeError as exc:
+                    malformed += 1
+                    emit_integrity_event(
+                        "JSONL_CORRUPTION",
+                        "WARNING",
+                        "compress_logs_for_llm",
+                        {
+                            "path":        str(p),
+                            "line_number": lineno,
+                            "raw_preview": line[:160],
+                            "error":       str(exc),
+                        },
+                    )
                     continue
+        total = malformed + valid
+        if total and (malformed / total) > MAX_CORRUPTION_RATIO:
+            emit_integrity_event(
+                "JSONL_CORRUPTION_THRESHOLD_EXCEEDED",
+                "ERROR",
+                "compress_logs_for_llm",
+                {
+                    "path":             str(p),
+                    "malformed_lines":  malformed,
+                    "valid_lines":      valid,
+                    "corruption_ratio": malformed / total,
+                },
+            )
 
 
 def _quantile(sorted_xs: list[float], q: float) -> float:
@@ -201,6 +239,18 @@ def compress(paths: list[Path], top_n_features: int = 8) -> dict:
     return {"summary": summary, "data": data, "anomalies": anomalies}
 
 
+def _read_run_id_from_jsonl(path: Path) -> str:
+    """Return run_id from the first-line run_header of a JSONL, or empty string."""
+    try:
+        with path.open("r", encoding="utf-8") as fh:
+            rec = json.loads(fh.readline().strip())
+        if rec.get("type") == "run_header":
+            return rec.get("run_id", "")
+    except Exception:
+        pass
+    return ""
+
+
 def _expand_globs(patterns: list[str]) -> list[Path]:
     paths: list[Path] = []
     for pat in patterns:
@@ -216,8 +266,15 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--logs", nargs="+", required=True,
                     help="One or more JSONL paths (globs allowed)")
-    ap.add_argument("--output", required=True, type=Path,
-                    help="Destination JSON file")
+    ap.add_argument("--output", type=Path, default=None,
+                    help="Destination JSON file. Required unless --instrument is provided.")
+    ap.add_argument("--instrument", default="",
+                    help="Instrument label (e.g. EURUSD, BTCUSDT). When provided and "
+                         "--output is absent, output is run-scoped: "
+                         "logs/{instrument}/{run_id}/compressed.json")
+    ap.add_argument("--run-id", default=None,
+                    help="Override run_id for output path "
+                         "(default: read from JSONL run_header)")
     ap.add_argument("--top-n-features", type=int, default=8)
     args = ap.parse_args(argv)
 
@@ -226,7 +283,31 @@ def main(argv=None) -> int:
         format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
     )
 
-    paths = _expand_globs(args.logs)
+    # Upfront input validation (must happen before output path resolution so we
+    # can read the run_header from the first JSONL file)
+    expanded = _expand_globs(args.logs)
+    missing = [p for p in expanded if not p.exists()]
+    if missing:
+        for p in missing:
+            print(f"ERROR: input file not found: {p}", file=sys.stderr)
+        return 1
+    paths = expanded
+
+    # Resolve output path (run-scoped when instrument is given)
+    if args.output is None:
+        _run_id = args.run_id
+        if not _run_id and paths:
+            _run_id = _read_run_id_from_jsonl(paths[0])
+        if args.instrument and _run_id:
+            args.output = Path("logs") / args.instrument / _run_id / "compressed.json"
+        elif args.instrument:
+            # Fallback: no run_id available (old flat JSONL without run_header)
+            args.output = Path("logs") / f"compressed_{args.instrument}.json"
+        else:
+            print("ERROR: --output is required when --instrument is not given.",
+                  file=sys.stderr)
+            return 1
+
     summary = compress(paths, top_n_features=args.top_n_features)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -235,7 +316,7 @@ def main(argv=None) -> int:
         "compressed %d files -> %s (%d records)",
         len(paths), args.output, summary["summary"]["n_total"],
     )
-    print(args.output)
+    print(f"OUTPUT:compressed:{args.output.resolve()}")
     return 0
 
 

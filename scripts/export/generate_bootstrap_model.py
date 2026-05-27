@@ -15,7 +15,11 @@ Run:
 
 import json
 import random
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+from bitnet.model_contract import feature_order_hash
 
 random.seed(42)
 
@@ -35,13 +39,16 @@ l1_w, l1_b = _layer(IN_DIM, H1)
 l2_w, l2_b = _layer(H1, H2)
 lo_w, lo_b = _layer(H2, OUT)
 
+_FEATURE_ORDER = [
+    "body_ratio", "retest_depth", "disp_strength",
+    "atr", "candles_since_retest", "double_sweep",
+]
+
 model = {
-    "schema":       "legacy_6input",
-    "architecture": f"{IN_DIM}->{H1}->{H2}->{OUT}",
-    "feature_order": [
-        "body_ratio", "retest_depth", "disp_strength",
-        "atr", "candles_since_retest", "double_sweep"
-    ],
+    "schema":             "legacy_6input",
+    "architecture":       f"{IN_DIM}->{H1}->{H2}->{OUT}",
+    "feature_order":      _FEATURE_ORDER,
+    "feature_order_hash": feature_order_hash(_FEATURE_ORDER),
     "layer1_w": l1_w, "layer1_b": l1_b,
     "layer2_w": l2_w, "layer2_b": l2_b,
     "out_w":    lo_w, "out_b":    lo_b,

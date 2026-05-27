@@ -106,5 +106,5 @@ class ArgFiller:
             logger.warning("ArgFiller: JSON parse failed for '%s': %s", tool_name, raw[:80])
             return {"args": current_args, "clarify": None}
 
-        merged = {**current_args, **parsed.get("args", {})}
+        merged = {**parsed.get("args", {}), **current_args}
         return {"args": merged, "clarify": parsed.get("clarify")}

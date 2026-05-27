@@ -23,7 +23,7 @@
     "zone_gate_execution_mode": "normal",
     "zone_mode": "hard",
     "debug_mode": false,
-    "gaussian_impl": "heuristic",
+    "gaussian_impl": "ml",
     "convergence_window": 500,
     "rr_fusion": {
       "enabled": true,
@@ -65,7 +65,7 @@
     }
   },
   "sl_tp_comparison": {
-    "_comment": "Reference params for legacy SL/TP method \u00e2\u20ac\u201d used ONLY by SLTPComparator, never in live path",
+    "_comment": "Reference params for legacy SL/TP method â€” used ONLY by SLTPComparator, never in live path",
     "legacy_sl_atr_mult": 1.0,
     "legacy_tp_atr_mult_breakout": 2.0,
     "legacy_tp_atr_mult_pullback": 1.5,
@@ -115,7 +115,37 @@
     "enable_llm": true,
     "tier_full": 0.75,
     "tier_half": 0.6,
-    "tier_quarter": 0.5
+    "tier_quarter": 0.5,
+    "regime_fusion_weights": {
+      "TRENDING": {
+        "crt": 0.38,
+        "gaussian": 0.2,
+        "zone_gate": 0.12,
+        "rr": 0.2,
+        "strategy_consensus": 0.1
+      },
+      "RANGING": {
+        "crt": 0.18,
+        "gaussian": 0.32,
+        "zone_gate": 0.15,
+        "rr": 0.25,
+        "strategy_consensus": 0.1
+      },
+      "VOLATILE": {
+        "crt": 0.28,
+        "gaussian": 0.14,
+        "zone_gate": 0.12,
+        "rr": 0.16,
+        "strategy_consensus": 0.3
+      },
+      "UNKNOWN": {
+        "crt": 0.4,
+        "gaussian": 0.2,
+        "zone_gate": 0.2,
+        "rr": 0.2,
+        "strategy_consensus": 0.0
+      }
+    }
   },
   "decision_engine": {
     "score_threshold": 0.45,
@@ -214,7 +244,7 @@
     "gnb_var_smoothing": 1e-09,
     "drift_threshold": 1.5,
     "mahal_clip": 500.0,
-    "confidence_bypass_threshold": 0.3,
+    "confidence_bypass_threshold": 0.0,
     "min_samples": 20,
     "dataset_min_samples": 20,
     "score_weights": {
@@ -250,6 +280,20 @@
     "cv_n_folds": 2,
     "require_cv_stable": false
   },
+  "training_trigger": {
+    "min_new_samples": 500,
+    "drift_window_hours": 24,
+    "drift_event_threshold": 5,
+    "cooldown_hours": 6.0,
+    "marker_path": "results/training_trigger.json",
+    "opportunity_glob": "logs/**/opportunities.jsonl",
+    "integrity_log": "logs/integrity_events.jsonl",
+    "drift_event_kinds": [
+      "RR_BYPASS",
+      "RR_LLM_FALLBACK",
+      "PROMOTION_FAILED"
+    ]
+  },
   "tuner": {
     "trade_count_floor": 3,
     "trade_count_target": 50,
@@ -275,7 +319,13 @@
     "risk_pct": 0.01,
     "slippage_atr_fraction": 0.08,
     "warmup_candles": 100,
-    "output_dir": "results/portfolio"
+    "output_dir": "results/portfolio",
+    "correlation": {
+      "lookback_days": 20,
+      "cache_ttl_secs": 3600,
+      "min_observations": 10,
+      "max_staleness_days": 3
+    }
   },
   "llama_gate": {
     "server_url": "http://127.0.0.1:8080/completion",
@@ -532,5 +582,79 @@
       "feature_weight": 0.6
     }
   },
-  "config_hash": "c2568b6afb4a9eed3a4beb293b2806583410c60375b3ac5bd87596f4260bcba7"
+  "agent": {
+    "enabled": true,
+    "server_url": "http://127.0.0.1:8080/completion",
+    "chat_max_tokens": 512,
+    "chat_temperature": 0.2,
+    "max_iterations_per_turn": 6,
+    "intent_router": {
+      "use_llm": true,
+      "llm_confidence_floor": 0.6,
+      "regex_fallback_table": "src/agent/prompts/intent_patterns.json"
+    },
+    "write_tools_enabled": [],
+    "copilot_auto_narrate": false,
+    "audit_log_path": "logs/agent_audit.jsonl",
+    "session_dir": "logs/agent_sessions",
+    "groq": {
+      "api_key_env": "GROQ_API_KEY",
+      "model": "llama-3.1-70b-versatile",
+      "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "request_timeout_s": 8.0,
+      "max_tokens": 1024,
+      "temperature": 0.1,
+      "fail_count_disable": 5
+    },
+    "findings": {
+      "enabled": true,
+      "auto_synthesize_on_run": false,
+      "redact_patterns": [
+        "api_key",
+        "secret",
+        "password",
+        "token",
+        "AV_API_KEY",
+        "GROQ_API_KEY"
+      ],
+      "max_source_chars": 8000,
+      "log_tail_lines": 200
+    }
+  },
+  "bitnet": {
+    "bitnet_thresholds_path": "src/bitnet/bitnet_thresholds.json"
+  },
+  "config_hash": "c2568b6afb4a9eed3a4beb293b2806583410c60375b3ac5bd87596f4260bcba7",
+  "live_integration": {
+    "telegram": {
+      "enabled": false,
+      "bot_token": "",
+      "chat_id": "",
+      "timeout_s": 5,
+      "dry_run": true
+    },
+    "mt5": {
+      "enabled": false,
+      "server": "",
+      "login": 0,
+      "password": "",
+      "lot_min": 0.01,
+      "lot_max": 10.0,
+      "dry_run": true
+    }
+  },
+  "uat": {
+    "kill_switch": {
+      "loss_threshold_r": 5.0,
+      "window_trades": 10,
+      "enabled": true,
+      "persist_path": "logs/kill_switch_state.json"
+    },
+    "monte_carlo": {
+      "n_simulations": 1000,
+      "initial_capital_inr": 100000.0,
+      "ruin_threshold_pct": 0.5,
+      "random_seed": 42
+    }
+  }
 }

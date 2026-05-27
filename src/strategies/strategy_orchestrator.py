@@ -40,6 +40,8 @@ if str(_ROOT / "src") not in sys.path:
 
 from config_layer.production_config import get_prod_section   # type: ignore
 from strategies.base_strategy import BaseStrategy              # type: ignore
+from strategies.intent_builder import StrategyIntentBuilder    # type: ignore
+from strategies.strategy_intent import StrategyIntent          # type: ignore
 from strategies.strategy_result import StrategyResult          # type: ignore
 from strategies.s01_crt_wrapper import S01CRTWrapper           # type: ignore
 from strategies.s02_mean_reversion import S02MeanReversion     # type: ignore
@@ -157,6 +159,9 @@ class OrchestratorResult:
     )
     elapsed_ms:      float = 0.0
     gate_reason:     str   = ""
+    # Phase B: one StrategyIntent per non-NO_TRADE result (all strategies represented).
+    # Populated by StrategyIntentBuilder inside _aggregate() — empty list for NO_TRADE gate.
+    hypotheses:      List[StrategyIntent] = field(default_factory=list)
 
     def is_actionable(self) -> bool:
         return self.signal in ("BUY", "SELL") and self.confidence > 0.0
@@ -178,6 +183,9 @@ class OrchestratorResult:
         d = asdict(self)
         d["top_result"] = self.top_result.to_dict() if self.top_result else None
         d["all_results"] = [r.to_dict() for r in self.all_results]
+        # Phase B: hypotheses contain StrategyIntent objects with lazy Callable fields.
+        # Use StrategyIntent.to_dict() which materialises evidence and is JSON-safe.
+        d["hypotheses"] = [h.to_dict() for h in self.hypotheses]
         return d
 
 
@@ -239,7 +247,7 @@ class StrategyOrchestrator:
             all_results.append(result)
 
         elapsed_ms = (time.perf_counter() - t0) * 1000.0
-        return self._aggregate(all_results, elapsed_ms)
+        return self._aggregate(all_results, elapsed_ms, features)
 
     @property
     def strategy_ids(self) -> List[str]:
@@ -251,6 +259,7 @@ class StrategyOrchestrator:
         self,
         all_results: List[StrategyResult],
         elapsed_ms: float,
+        features: Optional[dict] = None,
     ) -> OrchestratorResult:
         cfg = self._cfg
         min_signals: int = int(cfg.get("min_signal_strategies", 2))
@@ -260,6 +269,18 @@ class StrategyOrchestrator:
         actionable = [r for r in all_results if r.is_actionable()]
         active_count = len(all_results)
         signal_count = len(actionable)
+
+        # Phase B: build StrategyIntent for every result (builder returns None for NO_TRADE).
+        # Runs before the gates so ALL strategies are represented in hypotheses,
+        # including those filtered by the completeness/consensus gate.
+        _feat = features or {}
+        _intent_builder = StrategyIntentBuilder()
+        for _r in all_results:
+            if _r.intent_obj is None:
+                _r.intent_obj = _intent_builder.build(_r, _feat)
+        _hypotheses: List[StrategyIntent] = [
+            _r.intent_obj for _r in all_results if _r.intent_obj is not None
+        ]
 
         def _no_trade(reason: str) -> OrchestratorResult:
             return OrchestratorResult(
@@ -310,7 +331,7 @@ class StrategyOrchestrator:
         top_result = max(agree_results, key=lambda r: r.confidence)
 
         logger.info(
-            "Orchestrator %s %s: %s signal_count=%d agree=%d/%d ratio=%.0%% "
+            "Orchestrator %s %s: %s signal_count=%d agree=%d/%d ratio=%.0f%% "
             "score=%.3f conf=%.2f elapsed=%.1fms",
             self.pair, self.timeframe, consensus_signal,
             signal_count, agree_count, signal_count,
@@ -331,6 +352,7 @@ class StrategyOrchestrator:
             timeframe=self.timeframe,
             elapsed_ms=elapsed_ms,
             gate_reason="",
+            hypotheses=_hypotheses,
         )
         _append_audit(_build_audit_record(result))
         return result

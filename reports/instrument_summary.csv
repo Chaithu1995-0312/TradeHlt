@@ -1,0 +1,2 @@
+instrument,n_records,win_rate,mean_rr,mean_duration_candles,mean_feature_quality,replay_ready_count,regime_dist,rr_bucket_dist
+ETHUSDT,203588,0.661758,0.014852,2.2256,0.943678,203588,"{""RANGING"": 76704, ""TRENDING"": 126884}","{""BASE"": 12906, ""LOSS"": 68844, ""SCRATCH"": 112538, ""STRONG"": 9300}"

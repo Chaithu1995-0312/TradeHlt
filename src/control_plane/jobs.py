@@ -18,7 +18,7 @@ from src.control_plane.monitors import (
     load_monitor_specs,
 )
 from src.control_plane.registry import REPO_ROOT, build_command_line, command_map, core_command_specs, merge_command_args
-from src.control_plane.types import CommandSpec, RunRecord
+from src.control_plane.cp_types import CommandSpec, RunRecord
 
 
 def _now_iso() -> str:

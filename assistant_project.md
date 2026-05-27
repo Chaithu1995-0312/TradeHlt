@@ -1,4 +1,4 @@
----
+﻿---
 📝 SESSION LOG ENTRY
 Date: 2026-05-02T00:00Z
 Topic: Integration Strategy — Unified Execution Spine (All 4 Phases Complete)
@@ -1537,4 +1537,65 @@ Decision/Output: |
 Open Questions: None. All layers complete.
 Next Step: Run full backtest on EURUSD CSV and confirm "Active gaussian loaded: v4_mirrored"
   log line appears; or scan trade log for P5_SCORE_LOW rejections to see model is gating.
+---
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-25 13:07:00 +05:30
+Topic: Start latest trade discovery trace
+Decision/Output: Began tracing latest `run_20260525_133555` accepted trades from result artifacts, logs, and source code only.
+Open Questions: Which exact latest result/log/config artifacts correspond to the run id until filesystem inspection confirms them.
+Next Step: Locate latest result/log/config artifacts and extract per-trade discovery evidence.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-25 13:08:00 +05:30
+Topic: Located latest run logs
+Decision/Output: Found `logs/run_20260525_133555` and latest config dump `BNBUSDT_run_20260525_080607_config.json`; result folder needs matching by timestamp because no exact `results/run_20260525_133555*` directory exists.
+Open Questions: Exact results folder paired with log run timestamp.
+Next Step: List adjacent result directories and inspect BNBUSDT run artifacts.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-25 13:09:00 +05:30
+Topic: Paired latest result and log folders
+Decision/Output: Matched `results/run_20260525_133607_BNBUSDT` to `logs/run_20260525_133555/BNBUSDT` by write time and config dump; noted missing EngineRunner collector logs in latest run.
+Open Questions: Whether missing collector logs indicate `BACKTEST_ENGINE_GATE=0` or logging not configured for latest run.
+Next Step: Extract accepted trade rows, state transitions, raw OHLC windows, canonical feature definitions, and available fusion/BitNet artifacts.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-25 13:10:00 +05:30
+Topic: BitNet status for latest accepted trades
+Decision/Output: Latest config dump shows `crt_engine.use_bitnet=false`; accepted trades have `bitnet_score_at_entry=0.0` and blank `bitnet_decision_at_entry`, so BitNet fields must be marked not evaluated/UNKNOWN rather than accepted.
+Open Questions: None for BitNet status.
+Next Step: Extract event windows and raw OHLC around each accepted trade discovery.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-25 13:12:00 +05:30
+Topic: Preparing TRADE_DISCOVERY_TRACE.md
+Decision/Output: Collected raw OHLC windows, state transition windows, source equations, config flags, and accepted trade rows; identified index mismatch between trade CSV candle index and event-log candle index.
+Open Questions: None blocking document creation.
+Next Step: Write `TRADE_DISCOVERY_TRACE.md` with exact artifacts and UNKNOWN for unavailable telemetry.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-25 13:14:00 +05:30
+Topic: Repair assistant_project.md log file
+Decision/Output: Detected accidental truncation of `assistant_project.md` during session-log appends; restored the log file from repository content and re-appended current trace entries.
+Open Questions: None.
+Next Step: Finalize trace delivery.
+---
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-25 13:15:00 +05:30
+Topic: Completed latest trade discovery trace document
+Decision/Output: Created `TRADE_DISCOVERY_TRACE.md` for `logs/run_20260525_133555` and paired `results/run_20260525_133607_BNBUSDT`, tracing each accepted trade from artifacts/source and marking unavailable Fusion/BitNet telemetry as UNKNOWN.
+Open Questions: Whether to rerun with EngineRunner collector logging enabled to populate Fusion inputs instead of UNKNOWN.
+Next Step: Review `TRADE_DISCOVERY_TRACE.md`; rerun with full EngineRunner logging if Fusion score attribution is required.
 ---

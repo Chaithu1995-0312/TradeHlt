@@ -101,6 +101,12 @@ PARAM_SPACE: dict[str, list] = {
     "body_ratio_min":             [0.50, 0.60, 0.65, 0.70, 0.75, 0.80],
     "atr_multiplier_min":         [1.00, 1.20, 1.50, 1.75, 2.00],
     "expansion_atr_min_distance": [0.10, 0.15, 0.20, 0.25, 0.30],
+    # TP/SL sizing — exact CRTConfig field names, auto-threaded via hasattr filter
+    # in _run_single_instrument(); no additional plumbing required.
+    # tp2_atr_multiplier: main TP target distance in ATR units (default 2.0 = 2R)
+    # sl_atr_buffer:      ATR-scaled gap placed beyond displacement-candle extreme (default 0.2)
+    "tp2_atr_multiplier":  [1.5, 2.0, 2.5, 3.0, 3.5],
+    "sl_atr_buffer":       [0.1, 0.2, 0.3, 0.5, 0.75],
 }
 
 SPACE_SIZE = 1

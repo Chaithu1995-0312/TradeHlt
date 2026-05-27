@@ -620,6 +620,14 @@ class HookedLiveEngine(LiveEngine):
                     "close":  float(engine_input.get("close",  0.0)),
                     "volume": float(engine_input.get("volume", 1.0)),
                 }
+                # Phase A/B: inject CRT transition path so StrategyIntentBuilder
+                # can use CRT-enriched evidence for S01/S10.
+                # Live hook is request-based (no continuous CRT state machine here).
+                # [] → builder falls back to generic feature-summary evidence (graceful).
+                # TODO: when a live CRT state machine is wired, replace with:
+                #   from config_layer.crt_engine_v2 import recent_transition_path
+                #   engine_input["_transition_path"] = recent_transition_path(crt_state)
+                engine_input.setdefault("_transition_path", [])
                 _orch_result = _orch_pre.compute(engine_input, _orch_candle)
                 # Inject consensus into context so EngineRunner forwards it to FusionEngine
                 context["strategy_consensus_score"] = float(_orch_result.confidence)
@@ -792,6 +800,11 @@ class HookedLiveEngine(LiveEngine):
             "trade_plan": trade_plan,
             "ultron": ultron_result,
             "drift_severity": _drift_severity,
+            # ── BitNet adaptive-threshold audit (defaults preserve old shape) ──
+            # Live path does not currently invoke BitNet inference; fields are
+            # populated only if EngineRunner forwards a bitnet_score upstream.
+            "bitnet_score_at_entry":    float(engine_outputs.get("bitnet_score", 0.0)),
+            "bitnet_decision_at_entry": str(engine_outputs.get("bitnet_decision", "")),
         }
         collector.collect(trade_id, engine_input, engine_outputs, outcome, context=context)
 

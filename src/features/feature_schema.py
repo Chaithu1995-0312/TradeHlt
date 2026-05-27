@@ -1,8 +1,18 @@
 # Canonical feature schema — single source of truth for all feature extraction pipelines.
 # Any change to feature names, order, or dimension MUST be made here and propagated.
+#
+# Schema v3.0 adds 3 features at indices 35-37:
+#   Index 35: liquidity_distance       — ATR-normalised distance to nearest liquidity level
+#   Index 36: liquidity_pressure_score — composite proximity/directional score [0, 1]
+#   Index 37: volume_spike             — promoted from internal, int8 {0, 1}
+#
+# Models trained on schema v2.0 have n_features=35.
+# All model loaders must check n_features against their stored value and
+# slice the input vector to model.n_features when there is a mismatch.
 
 import hashlib
 import json
+import logging as _logging
 
 FEATURE_SCHEMA = {
     "atr": float,
@@ -34,9 +44,10 @@ FEATURE_SCHEMA = {
 # Canonical feature order for vector construction.
 # Total vector dimension = 32.
 CANONICAL_FEATURES = tuple([
+    # ── indices 0-34 (v2.0, preserved unchanged) ─────────────────────────────
     "open", "high", "low", "close", "volume",
-    "volume_ratio",          # <-- ADD
-    "double_sweep",          # <-- ADD
+    "volume_ratio",
+    "double_sweep",
     "ema_fast", "ema_slow", "ema_spread",
     "trend_bias", "trend_strength",
     "momentum_score",
@@ -48,46 +59,45 @@ CANONICAL_FEATURES = tuple([
     "body_size", "wick_size", "body_ratio",
     "volatility_regime",
     "session", "hour_of_day",
-    "disp_strength", "retest_depth", "candles_since_retest"
+    "disp_strength", "retest_depth", "candles_since_retest",
+    # ── indices 35-37 (v3.0, NEW) ─────────────────────────────────────────────
+    "liquidity_distance",       # index 35 — ATR-normalised distance to nearest liq level
+    "liquidity_pressure_score", # index 36 — composite proximity score [0, 1]
+    "volume_spike",             # index 37 — promoted from internal, int8 {0, 1}
 ])
 
-CANONICAL_FEATURE_DIM = len(CANONICAL_FEATURES)   # now 35
+# v2.0 backward-compat sentinel — model loaders that stored 35 features slice to this.
+SCHEMA_V2_FEATURE_DIM: int = 35
 
-CANONICAL_FEATURE_ORDER = [
-    "open", "high", "low", "close", "volume",
-    "volume_ratio",          # <-- ADD
-    "double_sweep",          # <-- ADD
-    "ema_fast", "ema_slow", "ema_spread",
-    "trend_bias", "trend_strength",
-    "momentum_score",
-    "atr", "volatility_ratio",
-    "rsi_14",
-    "macd_line", "macd_signal", "macd_hist",
-    "sweep_detected", "liquidity_sweep", "break_of_structure",
-    "swing_high", "swing_low", "higher_high", "lower_low",
-    "body_size", "wick_size", "body_ratio",
-    "volatility_regime",
-    "session", "hour_of_day",
-    "disp_strength", "retest_depth", "candles_since_retest"
-]
+CANONICAL_FEATURE_ORDER = list(CANONICAL_FEATURES)
 
-# Total number of floats produced by extract_feature_vector().
-# MUST equal len(CANONICAL_FEATURE_ORDER).
-CANONICAL_FEATURE_DIM: int = 35
+# Total number of floats produced by extract_feature_vector() under schema v3.0.
+# MUST equal len(CANONICAL_FEATURES).
+CANONICAL_FEATURE_DIM: int = 38
 
 assert len(CANONICAL_FEATURE_ORDER) == CANONICAL_FEATURE_DIM, (
     f"CANONICAL_FEATURE_ORDER has {len(CANONICAL_FEATURE_ORDER)} entries "
     f"but CANONICAL_FEATURE_DIM is set to {CANONICAL_FEATURE_DIM}. "
     "Update one or both to match."
 )
+assert len(CANONICAL_FEATURES) == CANONICAL_FEATURE_DIM, (
+    f"CANONICAL_FEATURES has {len(CANONICAL_FEATURES)} entries "
+    f"but CANONICAL_FEATURE_DIM is {CANONICAL_FEATURE_DIM}."
+)
 
-# Strict encoding maps — NO default values. Unknown values raise ValueError.
+# Strict encoding maps. Unknown values are explicitly encoded as SESSION_UNKNOWN
+# (NOT silently mapped to 0.0). When STRICT_SESSION_VALIDATION=true the
+# encoder (src/features/crt_feature_builder.py) raises ValueError instead.
 SESSION_MAP: dict = {
     "london": 0.0,
     "newyork": 1.0,
     "asian": 2.0,
     "overlap": 3.0,
 }
+
+# Out-of-band marker for unknown / unrecognized session strings. Chosen so it
+# never collides with any mapped session value (all of which are >= 0.0).
+SESSION_UNKNOWN: float = -1.0
 
 TREND_MAP: dict = {
     "bullish": 1.0,
@@ -97,9 +107,19 @@ TREND_MAP: dict = {
 
 
 # --- SCHEMA HASH (CANONICAL) ---
-# Hash is computed solely from CANONICAL_FEATURES names in order.
-# Any change to the feature list will produce a different hash.
+# MD5 of concatenated feature names — legacy; retained for backward compat.
 SCHEMA_HASH: str = hashlib.md5("".join(CANONICAL_FEATURES).encode()).hexdigest()
+
+# FEATURE_ORDER_HASH — SHA-256 of the ordered feature name list.
+# Detects semantic corruption: if a model was trained on a different ordering,
+# its stored hash will differ from this value even if len() matches.
+# Used by FeatureSchemaRegistry to catch silent truncation corruption.
+def _feature_order_hash(features: tuple) -> str:
+    """Stable SHA-256[:16] of feature name ordering. Changes if order or names change."""
+    payload = json.dumps(list(features), sort_keys=False).encode()
+    return hashlib.sha256(payload).hexdigest()[:16]
+
+FEATURE_ORDER_HASH: str = _feature_order_hash(CANONICAL_FEATURES)
 
 
 # ── SchemaObject ───────────────────────────────────────────────────────────────
@@ -168,21 +188,21 @@ class SchemaObject:
 
 # ── Schema versioning (required by model_registry.py and training/trainer.py) ──
 
-SCHEMA_VERSION: str = "1.0"
+SCHEMA_VERSION: str = "3.0"   # was "1.0"; v2.0 = 35 features; v3.0 = 38 features
 
-# TradeNet upgraded to 32 canonical features (was 6).
+# TradeNet — uses full canonical vector (n_features computed dynamically from CANONICAL_FEATURES).
 TRADENET_SCHEMA = SchemaObject(
     name="tradenet",
-    n_features=len(CANONICAL_FEATURES),   # 32
-    version="2.0",
+    n_features=len(CANONICAL_FEATURES),   # 38 (schema v3.0)
+    version="3.0",
     features=list(CANONICAL_FEATURES),
 )
 
-# Gaussian upgraded to 32 canonical features (was 11).
+# Gaussian NB — uses full canonical vector.
 GAUSSIAN_SCHEMA = SchemaObject(
     name="gaussian",
-    n_features=len(CANONICAL_FEATURES),   # 32
-    version="2.0",
+    n_features=len(CANONICAL_FEATURES),   # 38 (schema v3.0)
+    version="3.0",
     features=list(CANONICAL_FEATURES),
 )
 
@@ -195,6 +215,67 @@ _SCHEMA_REGISTRY: dict = {
 class SchemaVersionError(Exception):
     """Raised when a model's schema version does not match the expected version."""
     pass
+
+
+class FeatureSchemaRegistry:
+    """
+    Maps model instances to the schema they were trained on.
+
+    Every model loader that calls register() can detect at inference time
+    whether its stored feature_order_hash matches the current runtime hash.
+    This prevents silent semantic corruption when a 38-dim vector is truncated
+    to 35 dims — the *shape* is preserved but features[31] may mean something
+    different in the old model than in the new schema.
+
+    Usage
+    -----
+    # At model save time (in trainer.py):
+        FeatureSchemaRegistry.register(version="gaussian_v6", hash=FEATURE_ORDER_HASH)
+
+    # At inference time (in ml_gaussian_engine.py, zone_gate_engine.py, etc.):
+        compatible = FeatureSchemaRegistry.check_compatibility("gaussian_v6")
+        if not compatible:
+            vec = vec[:SCHEMA_V2_FEATURE_DIM]   # truncate to model's training dim
+    """
+    _registry: dict[str, str] = {}  # version → stored feature_order_hash
+
+    @classmethod
+    def register(cls, version: str, feature_order_hash: str) -> None:
+        """Record the feature_order_hash a model was trained on."""
+        cls._registry[version] = feature_order_hash
+
+    @classmethod
+    def check_compatibility(cls, version: str, fail_closed: bool = True) -> bool:
+        """
+        Returns True  if stored hash == runtime hash (same schema, no truncation needed).
+        Returns False if mismatch (schema migration; caller should truncate to model dim).
+        Returns False if version was never registered and fail_closed=True (default).
+        Returns True  if version was never registered and fail_closed=False (legacy opt-in).
+        """
+        stored = cls._registry.get(version)
+        if stored is None:
+            if fail_closed:
+                _logging.getLogger("FeatureSchemaRegistry").warning(
+                    "Unknown model version=%s has no registered schema hash — "
+                    "rejecting (fail_closed=True). Register with FeatureSchemaRegistry.register().",
+                    version,
+                )
+                return False
+            return True  # explicit opt-in to fail-open (legacy callers only)
+        if stored != FEATURE_ORDER_HASH:
+            _logging.getLogger("FeatureSchemaRegistry").warning(
+                "Schema mismatch for model=%s: stored_hash=%s runtime_hash=%s "
+                "— model was trained on a different feature ordering; "
+                "truncation will be applied.",
+                version, stored, FEATURE_ORDER_HASH,
+            )
+            return False
+        return True
+
+    @classmethod
+    def registered_versions(cls) -> list:
+        """Return all registered version strings."""
+        return list(cls._registry.keys())
 
 
 def schema_for_model(model_type: str):

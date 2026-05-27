@@ -204,7 +204,7 @@ class AgentCore:
     def _derive_outcome(self, steps) -> str:
         outcomes = [tc.outcome for tc in self.state.tool_calls[-len(steps):]]
         if not outcomes:
-            return "success"
+            return "no_op"
         if "denied" in outcomes:
             return "denied"
         if all(o == "success" for o in outcomes):

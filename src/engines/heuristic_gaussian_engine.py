@@ -21,6 +21,7 @@ import os
 from typing import Optional
 
 from features.feature_schema import CANONICAL_FEATURES
+from utils.registry_refresh import RegistryWatcher
 
 logger = logging.getLogger(__name__)
 
@@ -57,12 +58,19 @@ def _normalize_registry_entry(version: str, entry: dict) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class GaussianRegistry:
-    """Registry loader with artifact validation and version fallback."""
+    """Registry loader with artifact validation and version fallback.
+
+    Reads per-instrument active pointer from raw["__active__"][instrument] when
+    available; falls back to entry-level active flag scoped by instrument for
+    legacy registries that haven't been migrated yet.
+    """
 
     def __init__(self, registry_path: str = GAUSSIAN_REGISTRY_PATH,
-                 models_dir: str = GAUSSIAN_MODELS_DIR):
+                 models_dir: str = GAUSSIAN_MODELS_DIR,
+                 instrument: str = "EURUSD"):
         self.registry_path = registry_path
         self.models_dir = models_dir
+        self.instrument = instrument
         self._entries: dict = {}
         self._active_version: Optional[str] = None
 
@@ -80,31 +88,49 @@ class GaussianRegistry:
                 f"GaussianRegistry: registry must be a JSON object, got {type(raw).__name__}"
             )
 
+        # Skip meta keys (e.g. "__active__") when normalising version entries.
         self._entries = {
             v: _normalize_registry_entry(v, entry)
             for v, entry in raw.items()
+            if not v.startswith("__") and isinstance(entry, dict)
         }
 
-        active_versions = [v for v, e in self._entries.items() if e["active"]]
+        active_map = raw.get("__active__", {}) if isinstance(raw.get("__active__"), dict) else {}
+        requested_version = active_map.get(self.instrument)
 
-        if not active_versions:
+        if requested_version is None:
+            # Legacy fallback: scan entry-level active flag scoped by instrument.
+            matches = [
+                v for v, e in self._entries.items()
+                if e.get("active") and raw.get(v, {}).get("instrument") == self.instrument
+            ]
+            if matches:
+                if len(matches) > 1:
+                    logger.warning(
+                        "GaussianRegistry[%s]: multiple active versions %s — using first: %s",
+                        self.instrument, matches, matches[0],
+                    )
+                requested_version = matches[0]
+
+        if requested_version is None:
             raise RuntimeError(
-                "GaussianRegistry: no version has active=true in the registry."
+                f"GaussianRegistry: no active version for instrument "
+                f"{self.instrument!r} in {self.registry_path}"
             )
 
-        if len(active_versions) > 1:
-            logger.warning(
-                "GaussianRegistry: multiple active versions found %s — using first: %s",
-                active_versions, active_versions[0],
-            )
-
-        requested_version = active_versions[0]
         self._active_version = self._resolve_with_fallback(requested_version)
         return self
 
     def _artifact_exists(self, version: str) -> bool:
         entry = self._entries.get(version, {})
         model_file = entry.get("model_file", f"{version}.json")
+        # Strip leading "models/" prefix: registry stores full path (e.g. "models/BNBUSDT/..."),
+        # but self.models_dir is already "models" — joining doubles the prefix.
+        # Same fix applied to ml_gaussian_engine.py.
+        from pathlib import Path as _Path
+        _mf = _Path(model_file)
+        if _mf.parts and _mf.parts[0].lower() == "models":
+            model_file = str(_Path(*_mf.parts[1:]))
         path = os.path.join(self.models_dir, model_file)
         return os.path.exists(path)
 
@@ -171,9 +197,12 @@ class HeuristicGaussianEngine:
       3. Defaults (mu=0.0, sigma=1.0) if registry is absent and no override
     """
 
-    def __init__(self, config: dict, preload_registry: bool = False):
+    def __init__(self, config: dict, *, instrument: Optional[str] = None,
+                 preload_registry: bool = False):
         self.config = config
+        self._instrument: str = instrument or config.get("instrument", "EURUSD")
         self._registry: Optional[GaussianRegistry] = None
+        self._loaded_version: Optional[str] = None
 
         self._mu_override: Optional[float] = (
             float(config["gaussian_mu"]) if "gaussian_mu" in config else None
@@ -182,26 +211,46 @@ class HeuristicGaussianEngine:
             float(config["gaussian_sigma"]) if "gaussian_sigma" in config else None
         )
 
+        # Hot-reload: watches gaussian_registry.json mtime; reload fires once
+        # per advancement at the next compute() call. Lets a successful
+        # promote_gaussian() take effect mid-session without process restart.
+        self._watcher = RegistryWatcher(
+            config.get("gaussian_registry_path", GAUSSIAN_REGISTRY_PATH)
+        )
+
         if preload_registry:
             self._load_registry()
+            self._watcher.mark_loaded()
 
     def _load_registry(self) -> None:
         registry_path = self.config.get("gaussian_registry_path", GAUSSIAN_REGISTRY_PATH)
         try:
-            self._registry = GaussianRegistry(registry_path).load()
+            self._registry = GaussianRegistry(
+                registry_path, instrument=self._instrument
+            ).load()
+            self._loaded_version = self._registry.active_version
             logger.info(
-                "HeuristicGaussianEngine: loaded registry — active version '%s'",
-                self._registry.active_version,
+                "HeuristicGaussianEngine[%s]: loaded registry — active version '%s'",
+                self._instrument, self._loaded_version,
             )
         except (FileNotFoundError, RuntimeError) as exc:
+            try:
+                from utils.integrity_events import emit_integrity_event
+                emit_integrity_event(
+                    "GAUSSIAN_NO_MODEL", "WARNING", "heuristic_gaussian_engine",
+                    {"instrument": self._instrument, "error": str(exc)},
+                )
+            except Exception:
+                pass
             logger.warning(
-                "HeuristicGaussianEngine: registry load failed (%s). "
+                "HeuristicGaussianEngine[%s]: registry load failed (%s). "
                 "Using config/default mu=%.2f, sigma=%.2f.",
-                exc,
+                self._instrument, exc,
                 self._mu_override or 0.0,
                 self._sigma_override or 1.0,
             )
             self._registry = None
+            self._loaded_version = None
 
     @property
     def mu(self) -> float:
@@ -235,6 +284,17 @@ class HeuristicGaussianEngine:
         """
         if self._registry is None and self._mu_override is None:
             self._load_registry()
+            self._watcher.mark_loaded()
+        elif self._registry is not None and self._watcher.needs_reload():
+            prev = self._loaded_version
+            self._registry = None
+            self._load_registry()
+            self._watcher.mark_loaded()
+            if self._loaded_version != prev:
+                logger.info(
+                    "HeuristicGaussianEngine[%s]: reloaded — '%s' -> '%s'",
+                    self._instrument, prev, self._loaded_version,
+                )
 
         assert isinstance(input_data, dict), "HeuristicGaussianEngine input must be dict"
         assert len(input_data) >= len(CANONICAL_FEATURES), (

@@ -124,6 +124,11 @@ class ConfigBuilder:
         # Carry forward all fields from existing config as overrides
         existing_overrides = dataclasses.asdict(existing)
 
+        # Strip keys not present in the current CRTConfig schema to guard
+        # against TypeError when replaying checkpoints from older schema versions
+        valid_fields = {f.name for f in dataclasses.fields(CRTConfig)}
+        existing_overrides = {k: v for k, v in existing_overrides.items() if k in valid_fields}
+
         # Merge: existing fields first, then extra_overrides win
         if extra_overrides:
             _validate_override_keys(extra_overrides)

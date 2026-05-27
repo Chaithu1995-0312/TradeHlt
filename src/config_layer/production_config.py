@@ -180,7 +180,7 @@ def get_prod_metadata() -> dict:
     """
     registry_path = _get_registry_path(PROD_VERSION)
     _assert_registry_exists(registry_path)
-    with open(registry_path) as f:
+    with open(registry_path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -220,7 +220,7 @@ def load_prod_config_from_registry(
     registry_path = _get_registry_path(version, registry_dir)
     _assert_registry_exists(registry_path)
 
-    with open(registry_path) as f:
+    with open(registry_path, encoding="utf-8") as f:
         data = json.load(f)
 
     params = data.get("params", {})
@@ -236,10 +236,10 @@ def load_prod_config_from_registry(
         if stored_hash:
             _verify_config_hash(params, stored_hash)
         else:
-            warnings.warn(
-                f"Registry {registry_path} has no 'config_hash' field. "
-                "Run promotion_manager.py to regenerate with hash.",
-                stacklevel=2,
+            raise RuntimeError(
+                f"Registry {registry_path} has no 'config_hash' field — "
+                "refusing to load an unhashed config. "
+                "Run promotion_manager.py to regenerate with hash."
             )
 
     # ── Merge crt_engine section into overrides ────────────────────────────
@@ -323,7 +323,7 @@ def get_prod_section(section: str, version: Optional[str] = None) -> dict:
     v = version or PROD_VERSION
     registry_path = _get_registry_path(v)
     _assert_registry_exists(registry_path)
-    with open(registry_path) as f:
+    with open(registry_path, encoding="utf-8") as f:
         data = json.load(f)
     if section not in data:
         raise RuntimeError(

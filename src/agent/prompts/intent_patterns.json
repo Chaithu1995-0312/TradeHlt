@@ -54,5 +54,17 @@
   "audit_inspect": {
     "mode": null,
     "patterns": ["audit.*log", "show.*audit", "tail.*audit", "recent.*decisions"]
+  },
+  "findings_synthesize": {
+    "mode": null,
+    "patterns": ["^synthesi[sz]e .*([a-f0-9]{6,})", "^analy[sz]e (run|finding) ([a-f0-9]{6,})", "diagnose .*([a-f0-9]{6,})"]
+  },
+  "findings_recent": {
+    "mode": null,
+    "patterns": ["^(show|list|recent) findings?", "what.*findings", "any.*findings"]
+  },
+  "findings_explain": {
+    "mode": null,
+    "patterns": ["^(explain|why) (run|finding) ([a-f0-9]{6,})", "explain.*([a-f0-9]{6,})"]
   }
 }

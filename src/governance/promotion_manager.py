@@ -31,10 +31,11 @@ Usage:
         csv_paths={...},
     )
 
-    # Promote from an existing validation report
+    # Promote from an existing validation report (csv_paths required for re-validation)
     result = PromotionManager.promote_from_report(
         report_path="results/validation/approved/cfg_2026_03_24_001.json",
         version="v1_multi_2026_03",
+        csv_paths={"EURUSD": "data/EURUSD_M15.csv", "GBPUSD": "data/GBPUSD_M15.csv"},
     )
 
     # List all production versions
@@ -104,8 +105,8 @@ class PromotionManager:
     def promote_from_report(
         report_path: str,
         version: str,
+        csv_paths: dict,
         notes: str = "",
-        csv_paths: Optional[dict] = None,
     ) -> dict:
         """
         Promote an already-validated config to the production registry.
@@ -116,14 +117,11 @@ class PromotionManager:
             Path to an approved ValidationReport JSON file.
         version : str
             Production version label, e.g. 'v1_multi_2026_03'.
+        csv_paths : dict
+            {instrument: csv_path} dict. Re-runs ConfigValidator on the report's
+            params before promoting to guard against stale or tampered reports.
         notes : str
             Optional human notes attached to this promotion.
-        csv_paths : dict, optional
-            GAP-4 fix: {instrument: csv_path} dict.  When provided, re-runs
-            ConfigValidator on the report's params before promoting.  This
-            guards against stale or tampered reports (the report JSON on disk
-            could have been modified after the original validation run).
-            Omit for backwards-compat; a warning is printed when absent.
 
         Returns
         -------
@@ -148,34 +146,27 @@ class PromotionManager:
 
         # GAP-4 fix: when csv_paths provided, re-run ConfigValidator to confirm
         # the report is still current (not stale from a previous config version).
-        if csv_paths:
-            params = report.get("params", {})
-            if not params:
-                return PromotionManager._fail(
-                    "Report has no 'params' key — cannot re-validate. "
-                    "Promote from tuner checkpoint instead."
-                )
-            print(f"\n  ℹ️  GAP-4: Re-running ConfigValidator to verify report is current…")
-            fresh_report = ConfigValidator.validate(
-                params=params,
-                csv_paths=csv_paths,
-                config_id=f"{version}_re_validate",
+        params = report.get("params", {})
+        if not params:
+            return PromotionManager._fail(
+                "Report has no 'params' key — cannot re-validate. "
+                "Promote from tuner checkpoint instead."
             )
-            if fresh_report.get("decision") != "APPROVE":
-                return PromotionManager._fail(
-                    f"Re-validation FAILED — report may be stale or tampered. "
-                    f"Original decision: APPROVE. Fresh decision: {fresh_report.get('decision')}. "
-                    f"Warnings: {fresh_report.get('warnings', [])}. "
-                    f"Re-tune and re-validate before promoting."
-                )
-            print(f"  ✅ Re-validation passed — using fresh metrics for promotion.")
-            report = fresh_report  # use freshly validated metrics
-        else:
-            print(
-                f"\n  ⚠️  GAP-4: promote_from_report called without csv_paths — "
-                f"skipping re-validation. Pass csv_paths={{instrument: csv_path}} "
-                f"to verify the report is current before promoting."
+        print(f"\n  Re-running ConfigValidator to verify report is current…")
+        fresh_report = ConfigValidator.validate(
+            params=params,
+            csv_paths=csv_paths,
+            config_id=f"{version}_re_validate",
+        )
+        if fresh_report.get("decision") != "APPROVE":
+            return PromotionManager._fail(
+                f"Re-validation FAILED — report may be stale or tampered. "
+                f"Original decision: APPROVE. Fresh decision: {fresh_report.get('decision')}. "
+                f"Warnings: {fresh_report.get('warnings', [])}. "
+                f"Re-tune and re-validate before promoting."
             )
+        print(f"  Re-validation passed — using fresh metrics for promotion.")
+        report = fresh_report  # use freshly validated metrics
 
         return PromotionManager._execute_promotion(report, version, notes)
 
@@ -670,6 +661,11 @@ if __name__ == "__main__":
     from_report_p.add_argument("--version", default=None,
                                help="Version label; defaults to config_id from the report")
     from_report_p.add_argument("--notes",   default="")
+    from_report_p.add_argument("--data-dir", required=True,
+                               help="Directory containing per-instrument CSV files (required for re-validation)")
+    from_report_p.add_argument("--instruments", nargs="+",
+                               default=["EURUSD", "GBPUSD", "BTCUSDT", "XAUUSD"],
+                               help="Instruments to validate against (default: EURUSD GBPUSD BTCUSDT XAUUSD)")
 
     args = ap.parse_args()
 
@@ -708,10 +704,21 @@ if __name__ == "__main__":
             if not version:
                 ap.error("--version is required: report contains no config_id to derive from")
             print(f"[promotion_manager] --version not supplied; using config_id '{version}' from report")
+        data_dir = Path(args.data_dir)
+        csv_paths = {}
+        for inst in [i.upper() for i in args.instruments]:
+            for candidate in [data_dir / f"{inst}_M15.csv", data_dir / f"{inst}.csv"]:
+                if candidate.exists():
+                    csv_paths[inst] = str(candidate)
+                    break
+        if not csv_paths:
+            print(f"\n  ERROR: No CSV files found in {data_dir} for instruments {args.instruments}.\n")
+            sys.exit(1)
         result = PromotionManager.promote_from_report(
             report_path=args.report,
             version=version,
             notes=args.notes,
+            csv_paths=csv_paths,
         )
         sys.exit(0 if result.get("status") == "PROMOTED" else 1)
 

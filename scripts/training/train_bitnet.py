@@ -32,6 +32,7 @@ import json
 import math
 import random
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent.parent
@@ -237,19 +238,54 @@ def train(
 
 # ── CLI ────────────────────────────────────────────────────────────────────────
 
+_REGISTRY_PATH = _ROOT / "models" / "bitnet" / "bitnet_registry.json"
+
+
+def _update_registry(version: str, model_file: str, model: dict, csv_paths: list[str]) -> None:
+    _REGISTRY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    registry: dict = {}
+    if _REGISTRY_PATH.exists():
+        registry = json.loads(_REGISTRY_PATH.read_text())
+    # Mark all existing entries inactive before adding the new active one
+    for entry in registry.values():
+        entry["active"] = False
+    registry[version] = {
+        "version":       version,
+        "model_file":    model_file,
+        "schema":        model.get("schema", "legacy_6input"),
+        "architecture":  model.get("architecture"),
+        "feature_order": model.get("feature_order", []),
+        "trained_on":    model.get("trained_on", 0),
+        "trained_at":    datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "csv_paths":     csv_paths,
+        "active":        True,
+    }
+    _REGISTRY_PATH.write_text(json.dumps(registry, indent=2))
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Train model.json for bitnet_score()")
+    parser = argparse.ArgumentParser(description="Train legacy 6-input BitNet model")
     parser.add_argument("--csv", nargs="+",
                         default=["data/EURUSD_M15.csv",
                                  "data/GBPUSD_M15.csv",
                                  "data/AUDUSD_M15.csv"])
-    parser.add_argument("--epochs", type=int, default=300)
-    parser.add_argument("--lr",     type=float, default=0.001)
-    parser.add_argument("--out",    default="model.json")
+    parser.add_argument("--epochs",  type=int, default=300)
+    parser.add_argument("--lr",      type=float, default=0.001)
+    parser.add_argument("--version", default=None,
+                        help="Version label; auto-derived from timestamp if omitted")
+    parser.add_argument("--out",     default=None,
+                        help="Output path; defaults to models/bitnet/bitnet_{version}.json")
     args = parser.parse_args()
 
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+    version  = args.version or f"legacy_{ts}"
+    out_path = Path(args.out) if args.out else (_ROOT / "models" / "bitnet" / f"bitnet_{version}.json")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
     print(f"\nBitNet Training — {IN_DIM}->{H1}->{H2}->{OUT}")
-    print(f"CSVs: {args.csv}")
+    print(f"Version : {version}")
+    print(f"Output  : {out_path}")
+    print(f"CSVs    : {args.csv}")
 
     X, y = build_dataset(args.csv)
     if not X:
@@ -264,7 +300,7 @@ def main() -> None:
         import random as _rnd
         _rnd.seed(42)
         if len(wins) < len(losses):
-            wins = [_rnd.choice(wins) for _ in range(len(losses))]  # oversample wins
+            wins = [_rnd.choice(wins) for _ in range(len(losses))]
         else:
             losses = [_rnd.choice(losses) for _ in range(len(wins))]
         balanced = wins + losses
@@ -282,10 +318,12 @@ def main() -> None:
     print(f"\nTraining ({args.epochs} epochs, lr={args.lr})...")
     model = train(X_norm, y, epochs=args.epochs, lr=args.lr)
 
-    out_path = Path(args.out)
     out_path.write_text(json.dumps(model, indent=2))
     print(f"\nSaved: {out_path}  ({len(X)} samples, {args.epochs} epochs)")
-    print("Run 'python scripts/export/generate_bootstrap_model.py' to reset to random weights.\n")
+
+    model_file = str(out_path.relative_to(_ROOT)).replace("\\", "/")
+    _update_registry(version, model_file, model, args.csv)
+    print(f"Registered: {version} → {_REGISTRY_PATH}")
 
 
 if __name__ == "__main__":

@@ -76,7 +76,7 @@ def _cli() -> None:
     )
 
     if args.command == "tradenet":
-        result = run_training_pipeline(data_path=args.data, model_fn=_stub_model_fn,
+        result = run_training_pipeline(data_path=args.data, model_fn=_real_tradenet_fn,
                                        output_path=args.output)
         print(f"\nTradeNet pipeline complete. Valid records: "
               f"{result.get('dataset_validation', {}).get('valid', '?')}")
@@ -96,13 +96,49 @@ def _cli() -> None:
         sys.exit(1)
 
 
-def _stub_model_fn(X, y) -> dict:
+def _real_tradenet_fn(X: list, y: list) -> dict:
     """
-    Placeholder model_fn used by the CLI. Replace with an actual trainer call
-    (e.g. from training.trainer import train as model_fn) for real training runs.
+    Gap-5 fix: real TradeNet model_fn wired to training.trainer.train().
+
+    Requires torch (Python 3.12).  Fails hard with a clear error if torch is
+    not available so the caller knows to use  py -3.12  (see Gap-6 fix).
     """
-    log.warning("_stub_model_fn: no model trainer wired — returning empty results.")
-    return {"n_samples": len(X), "note": "stub model_fn — wire a real trainer"}
+    # ── torch pre-flight ─────────────────────────────────────────────────────
+    try:
+        import torch
+    except ImportError:
+        sys.exit(
+            "\n"
+            "====================================================================\n"
+            "  FATAL: torch not found in this Python environment\n"
+            "\n"
+            "  Re-run with:\n"
+            "    py -3.12 scripts/training/train_pipeline.py tradenet ...\n"
+            "====================================================================\n"
+        )
+
+    # ── train ─────────────────────────────────────────────────────────────────
+    from training.trainer import train, save_model
+    model = train(X, y, verbose=True)
+
+    # ── evaluate (quick binary accuracy on training set) ─────────────────────
+    import torch as _th
+    X_t = _th.tensor(X, dtype=_th.float32)
+    with _th.no_grad():
+        preds = model(X_t).squeeze(1).numpy()
+    preds_bin = (preds >= 0.5).astype(int)
+    y_arr     = [int(v) for v in y]
+    accuracy  = float(sum(p == t for p, t in zip(preds_bin, y_arr)) / len(y_arr))
+
+    # ── save + register via trainer.save_model ───────────────────────────────
+    import time as _time
+    version = f"cli_{_time.strftime('%Y%m%dT%H%M%S')}"
+    metrics = {"accuracy": round(accuracy, 4), "n_train": len(X)}
+    save_model(model, f"tradenet_{version}.pth", metrics=metrics, version=version)
+
+    log.info("_real_tradenet_fn: trained n=%d  accuracy=%.4f  version=%s",
+             len(X), accuracy, version)
+    return {"n_samples": len(X), "accuracy": round(accuracy, 4), "version": version}
 
 
 if __name__ == "__main__":

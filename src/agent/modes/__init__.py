@@ -2,3 +2,4 @@
 from . import pipeline_mode  # noqa: F401
 from . import copilot_mode   # noqa: F401
 from . import governance_mode  # noqa: F401
+from . import findings_mode   # noqa: F401

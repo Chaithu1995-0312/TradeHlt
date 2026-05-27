@@ -184,7 +184,23 @@ function SectionTitle({ children, right }) {
   );
 }
 
-function InspectorPanel({ run, logs, artifacts, monitors }) {
+function InspectorPanel({ run, artifacts, monitors, onReport, onContext }) {
+  const [synth, setSynth] = useStateI("idle"); // "idle"|"loading"|"done"|"error"
+
+  const onSynthesize = () => {
+    if (!run || synth === "loading") return;
+    setSynth("loading");
+    fetch("/api/agent/synthesize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ run_id: run.run_id }),
+    })
+      .then(r => r.json())
+      .then(j => setSynth(j.ok ? "done" : "error"))
+      .catch(() => setSynth("error"))
+      .finally(() => setTimeout(() => setSynth("idle"), 3000));
+  };
+
   if (!run) {
     return (
       <Panel title="Run Inspector" id="inspectorPanel">
@@ -195,6 +211,21 @@ function InspectorPanel({ run, logs, artifacts, monitors }) {
   return (
     <Panel title="Run Inspector" id="inspectorPanel">
       <RunSummary run={run} />
+      <div style={{ display: "flex", gap: 8, margin: "10px 0 4px" }}>
+        <Button onClick={() => onReport && onReport(run.run_id)}>📋 Report</Button>
+        <Button onClick={() => onContext && onContext(run.run_id)} style={{ background: "#1a2e4a", border: "1px solid #0ea5a3", color: "#0ea5a3" }}>🧠 Context</Button>
+        <Button
+          onClick={onSynthesize}
+          disabled={synth === "loading"}
+          style={{
+            background: synth === "done" ? "#1a3a2a" : synth === "error" ? "#3a1a1a" : "#1a2438",
+            border: `1px solid ${synth === "done" ? "#7ee787" : synth === "error" ? "#ff7b72" : "#7b3f00"}`,
+            color: synth === "done" ? "#7ee787" : synth === "error" ? "#ff7b72" : "#d29922",
+            opacity: synth === "loading" ? 0.6 : 1,
+          }}>
+          {synth === "loading" ? "..." : synth === "done" ? "[+] Synthesized" : synth === "error" ? "[!] Failed" : "Synthesize"}
+        </Button>
+      </div>
 
       <SectionTitle right={<CopyBtn text={run.cmdline || ""} />}>Resolved Command</SectionTitle>
       <Pre>{run.cmdline || "—"}</Pre>
@@ -208,11 +239,20 @@ function InspectorPanel({ run, logs, artifacts, monitors }) {
       <SectionTitle>Monitored Fields</SectionTitle>
       <MonitoredFieldsTable fields={monitors?.fields} history={run.field_history} />
 
-      <SectionTitle>Stdout</SectionTitle>
-      <Pre>{logs?.stdout || ""}</Pre>
-
-      <SectionTitle>Stderr</SectionTitle>
-      <Pre>{logs?.stderr || ""}</Pre>
+      {run.log_paths && Object.keys(run.log_paths).length > 0 && (
+        <React.Fragment>
+          <SectionTitle>Log Files</SectionTitle>
+          <div style={{ fontSize: 11, color: "#9fb0c8", marginBottom: 4 }}>
+            Run ID: <span style={{ fontFamily: "ui-monospace,Menlo,monospace", color: "#e6edf7" }}>{run.run_id}</span>
+          </div>
+          {Object.entries(run.log_paths).map(([key, path]) => (
+            <div key={key} style={{ display: "flex", gap: 8, fontSize: 11, padding: "3px 0", borderBottom: "1px dashed #1a2e4a" }}>
+              <span style={{ color: "#9fb0c8", width: 60, flexShrink: 0 }}>{key}</span>
+              <span style={{ fontFamily: "ui-monospace,Menlo,monospace", color: "#0ea5a3", wordBreak: "break-all" }}>{path}</span>
+            </div>
+          ))}
+        </React.Fragment>
+      )}
 
       <SectionTitle right={<span style={{ fontSize: 11, color: "#9fb0c8" }}>{(artifacts?.artifacts || []).length}</span>}>Artifacts</SectionTitle>
       {(artifacts?.artifacts || []).length === 0 && <div style={{ fontSize: 12, color: "#9fb0c8" }}>No artifacts.</div>}
@@ -226,4 +266,148 @@ function InspectorPanel({ run, logs, artifacts, monitors }) {
   );
 }
 
+// ── ContextModal ────────────────────────────────────────────────────────────
+function ContextModal({ runId, run, onClose }) {
+  const [state, setStateCtx] = useStateI("idle"); // idle | loading | done | error
+  const [data, setData]     = useStateI(null);
+  const [openCode, setOpenCode] = useStateI(false);
+
+  useEffectI(() => {
+    if (!runId) return;
+    setStateCtx("loading");
+    setData(null);
+    mockApi.contextReport(runId)
+      .then(d => { setData(d); setStateCtx(d.ok ? "done" : "error"); })
+      .catch(e => { setData({ error: String(e) }); setStateCtx("error"); });
+  }, [runId]);
+
+  const sections = data?.sections || {};
+  const recs     = Array.isArray(sections.recommendations) ? sections.recommendations : [];
+
+  return (
+    <React.Fragment>
+      {/* Backdrop */}
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 300 }} />
+      {/* Modal */}
+      <div style={{
+        position: "fixed", top: "50%", left: "50%",
+        transform: "translate(-50%,-50%)",
+        zIndex: 301, width: "min(820px,92vw)", maxHeight: "85vh",
+        background: "#122033", border: "1px solid #0ea5a3", borderRadius: 12,
+        display: "flex", flexDirection: "column", overflow: "hidden",
+      }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: "1px solid #23364e", flexShrink: 0 }}>
+          <div>
+            <span style={{ fontSize: 15, fontWeight: 700, color: "#0ea5a3" }}>🧠 Context Report</span>
+            <span style={{ fontSize: 11, color: "#9fb0c8", fontFamily: "ui-monospace,Menlo,monospace", marginLeft: 10 }}>{runId?.slice(0, 12)}</span>
+          </div>
+          <span onClick={onClose} style={{ cursor: "pointer", fontSize: 18, color: "#9fb0c8", lineHeight: 1 }}>✕</span>
+        </div>
+
+        {/* Body */}
+        <div style={{ overflowY: "auto", padding: "16px 18px", flex: 1 }}>
+
+          {/* Loading */}
+          {state === "loading" && (
+            <div style={{ textAlign: "center", padding: "40px 0", color: "#9fb0c8", fontSize: 13 }}>
+              <div style={{ fontSize: 22, marginBottom: 10 }}>⏳</div>
+              Analyzing execution context…
+            </div>
+          )}
+
+          {/* Error */}
+          {state === "error" && (
+            <div style={{ background: "#2d1515", border: "1px solid #ef4444", borderRadius: 8, padding: 14, color: "#ef4444", fontSize: 13 }}>
+              <strong>Analysis failed:</strong> {data?.error || "Unknown error"}
+            </div>
+          )}
+
+          {/* Done */}
+          {state === "done" && (
+            <React.Fragment>
+              {/* Execution Summary */}
+              {run && (
+                <React.Fragment>
+                  <div style={ctxSectionTitle}>Execution Summary</div>
+                  <div style={{ background: "#0f1b2e", borderRadius: 8, padding: 12, fontSize: 12, color: "#e6edf7", fontFamily: "ui-monospace,Menlo,monospace", marginBottom: 14 }}>
+                    <div><span style={{ color: "#9fb0c8" }}>command  </span>{run.command_id}</div>
+                    <div><span style={{ color: "#9fb0c8" }}>status   </span><span style={{ color: run.status === "succeeded" ? "#22c55e" : run.status === "failed" ? "#ef4444" : "#f59e0b" }}>{run.status}</span></div>
+                    <div><span style={{ color: "#9fb0c8" }}>exit code</span> {run.exit_code ?? "—"}</div>
+                    {data.model && <div style={{ marginTop: 6, color: "#6b7a93" }}>model: {data.model} · symbols: {data.code_context_count ?? 0}</div>}
+                  </div>
+                </React.Fragment>
+              )}
+
+              {/* Root Cause */}
+              {sections.root_cause && (
+                <React.Fragment>
+                  <div style={ctxSectionTitle}>Root Cause</div>
+                  <div style={ctxBox}>{sections.root_cause}</div>
+                </React.Fragment>
+              )}
+
+              {/* Architecture Notes */}
+              {sections.architecture_notes && (
+                <React.Fragment>
+                  <div style={ctxSectionTitle}>Architecture Notes</div>
+                  <div style={ctxBox}>{sections.architecture_notes}</div>
+                </React.Fragment>
+              )}
+
+              {/* Artifact Analysis */}
+              {sections.artifact_analysis && (
+                <React.Fragment>
+                  <div style={ctxSectionTitle}>Artifact Analysis</div>
+                  <div style={ctxBox}>{sections.artifact_analysis}</div>
+                </React.Fragment>
+              )}
+
+              {/* Recommendations */}
+              {recs.length > 0 && (
+                <React.Fragment>
+                  <div style={ctxSectionTitle}>Recommendations</div>
+                  <ol style={{ margin: "0 0 14px 0", paddingLeft: 22 }}>
+                    {recs.map((r, i) => (
+                      <li key={i} style={{ fontSize: 13, color: "#e6edf7", padding: "3px 0" }}>{r}</li>
+                    ))}
+                  </ol>
+                </React.Fragment>
+              )}
+
+              {/* Code Context — collapsible */}
+              {(data.code_context_count ?? 0) > 0 && (
+                <React.Fragment>
+                  <div style={{ ...ctxSectionTitle, cursor: "pointer", userSelect: "none" }} onClick={() => setOpenCode(v => !v)}>
+                    Code Context {openCode ? "▲" : "▼"}
+                    <span style={{ fontSize: 11, color: "#9fb0c8", marginLeft: 8 }}>{data.code_context_count} symbol{data.code_context_count !== 1 ? "s" : ""} extracted</span>
+                  </div>
+                  {openCode && (
+                    <div style={{ fontSize: 11, color: "#9fb0c8", fontStyle: "italic", marginBottom: 8 }}>
+                      (Code context is embedded in the prompt sent to Claude — expand here for reference only)
+                    </div>
+                  )}
+                </React.Fragment>
+              )}
+
+              {data.parse_warning && (
+                <div style={{ marginTop: 10, fontSize: 11, color: "#f59e0b" }}>⚠ {data.parse_warning}</div>
+              )}
+            </React.Fragment>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "10px 18px", borderTop: "1px solid #23364e", display: "flex", justifyContent: "flex-end", flexShrink: 0 }}>
+          <Button onClick={onClose}>Close</Button>
+        </div>
+      </div>
+    </React.Fragment>
+  );
+}
+
+const ctxSectionTitle = { fontSize: 12, fontWeight: 700, color: "#0ea5a3", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6, marginTop: 0 };
+const ctxBox = { background: "#0f1b2e", borderRadius: 8, padding: 12, fontSize: 13, color: "#e6edf7", lineHeight: 1.6, marginBottom: 14, whiteSpace: "pre-wrap", wordBreak: "break-word" };
+
+window.ContextModal = ContextModal;
 window.InspectorPanel = InspectorPanel;

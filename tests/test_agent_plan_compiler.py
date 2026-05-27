@@ -8,7 +8,7 @@ Actual API:
   PlanCompiler.filter(plan, skip_tools: set) -> Plan
   Plan.intent_key, Plan.steps (List[ToolStep]), Plan.filter(skip)
   ToolStep.tool, ToolStep.default_args
-  PLAN_REGISTRY: Dict[str, List[ToolStep]]  — 14 intents
+  PLAN_REGISTRY: Dict[str, List[ToolStep]]  — 17 intents
 
 Helper:
   _tools(plan) -> list[str]   — extracts tool names from Plan.steps in order
@@ -169,6 +169,8 @@ _EXPECTED_INTENTS = {
     "governance_inspect", "governance_propose", "governance_run",
     # Cross-mode
     "audit_inspect",
+    # Findings / post-run synthesis
+    "findings_synthesize", "findings_recent", "findings_explain",
 }
 
 
@@ -193,3 +195,29 @@ def test_all_registry_tools_are_strings():
         if not isinstance(s.tool, str) or not s.tool
     ]
     assert not bad, f"Non-string or empty tool names found: {bad}"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Findings / post-run synthesis intents
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_findings_synthesize_single_step():
+    """findings_synthesize: single step findings.synthesize."""
+    plan = PlanCompiler.build("findings_synthesize")
+    assert _tools(plan) == ["findings.synthesize"]
+
+
+def test_findings_recent_default_n():
+    """findings_recent: single step findings.list_recent with default n=10."""
+    plan = PlanCompiler.build("findings_recent")
+    assert _tools(plan) == ["findings.list_recent"]
+    step = plan.steps[0]
+    assert step.default_args.get("n") == 10, (
+        f"findings.list_recent must default n=10, got {step.default_args!r}"
+    )
+
+
+def test_findings_explain_single_step():
+    """findings_explain: single step findings.explain."""
+    plan = PlanCompiler.build("findings_explain")
+    assert _tools(plan) == ["findings.explain"]

@@ -176,10 +176,9 @@ def run_unified_replay(
         output_dir=str(out_base / f"{instrument}_{ts}_v2_truth"),
     )
 
-    # Layer B: gate-mode comparisons (skipped if BitNet model file is missing)
+    # Layer B: gate-mode comparisons (raises if BitNet model file is missing)
     modes = ["hard_gate", "score_only_audit", "force_accept_baseline"]
     gate_results = {}
-    bitnet_skip_reason = None
     try:
         for mode in modes:
             rows = run_backtest_bitnet(config, effective_data_path, gate_mode=mode, months=None)
@@ -188,9 +187,10 @@ def run_unified_replay(
                 "sample_rows": rows[:25],
             }
     except FileNotFoundError as exc:
-        bitnet_skip_reason = str(exc)
-        import logging as _logging
-        _logging.getLogger(__name__).warning("Layer B skipped — BitNet model not found: %s", exc)
+        raise FileNotFoundError(
+            f"Unified replay requires a BitNet model but none was found: {exc}. "
+            f"Train one with: python scripts/training/train_bitnet.py --csv data/*.csv"
+        ) from exc
 
     report = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -202,7 +202,6 @@ def run_unified_replay(
         "config_version": config.get("version"),
         "execution_truth_v2": metrics_v2.to_dict(),
         "gate_modes": gate_results,
-        "bitnet_skip_reason": bitnet_skip_reason,
     }
 
     out_path = out_base / f"{instrument}_{ts}_unified_report.json"

@@ -87,12 +87,14 @@ class TradingDashboardAPI:
 
     # ── Status ────────────────────────────────────────────────────────────────
 
-    def status_payload(self) -> dict[str, Any]:
+    def status_payload(self, instrument: str = "EURUSD") -> dict[str, Any]:
         """
+        Returns per-instrument runtime status.
+        Args:
+            instrument: trading pair (e.g. "EURUSD", "BTCUSDT")
         Returns:
-            active_config, active_model_version, active_model_corr,
-            kill_switch {tripped, trip_reason, trip_ts, daily_loss_inr, weekly_loss_inr},
-            trades_last_24h
+            instrument, active_config, active_model_version, active_model_corr,
+            latest_run, kill_switch, trades_last_24h
         """
         # Active config version
         try:
@@ -100,23 +102,31 @@ class TradingDashboardAPI:
         except FileNotFoundError:
             active_config = "unknown"
 
-        # Active model from registry
+        # Per-instrument active model: scan models/{instrument}/ for latest run dir
         active_model_version = None
-        active_model_corr = None
+        active_model_corr    = None
+        latest_run           = None
+        inst_models_dir = MODELS_DIR / instrument
         try:
-            reg = json.loads(GAUSSIAN_REGISTRY.read_text(encoding="utf-8"))
-            for key, entry in reg.items():
-                if key.startswith("_") or not isinstance(entry, dict):
-                    continue
-                if entry.get("active"):
-                    active_model_version = entry.get("version", key)
-                    m = entry.get("metrics") or {}
-                    active_model_corr = m.get("corr_expected_rr")
-                    break
+            if inst_models_dir.is_dir():
+                runs = sorted(
+                    d.name for d in inst_models_dir.iterdir() if d.is_dir()
+                )
+                if runs:
+                    latest_run  = runs[-1]
+                    run_dir     = inst_models_dir / latest_run
+                    g_files     = sorted(run_dir.glob("gaussian_*.json"))
+                    if g_files:
+                        stem = g_files[-1].stem          # e.g. "gaussian_v6_2026_05_eur"
+                        active_model_version = stem.replace("gaussian_", "", 1)
+                        model_data = _read_json(g_files[-1])
+                        if isinstance(model_data, dict):
+                            m = model_data.get("metrics") or {}
+                            active_model_corr = m.get("corr_expected_rr")
         except Exception:
             pass
 
-        # Kill switch state (file may not exist)
+        # Kill switch state (global — not per-instrument)
         ks: dict[str, Any] = {
             "tripped": False,
             "trip_reason": None,
@@ -132,9 +142,9 @@ class TradingDashboardAPI:
             ks["daily_loss_inr"]  = raw_ks.get("daily_loss_inr")
             ks["weekly_loss_inr"] = raw_ks.get("weekly_loss_inr")
 
-        # Trades in last 24h from most recent EURUSD trades CSV
+        # Trades in last 24h for the requested instrument
         trades_last_24h = 0
-        csv_path = _find_latest_trades_csv("EURUSD")
+        csv_path = _find_latest_trades_csv(instrument)
         if csv_path:
             try:
                 cutoff = _iso_now() - timedelta(hours=24)
@@ -143,7 +153,6 @@ class TradingDashboardAPI:
                     for row in reader:
                         ts_raw = row.get("opened_at", "")
                         try:
-                            # Handle both space-separated and T-separated ISO strings
                             ts = datetime.fromisoformat(ts_raw.replace(" ", "T"))
                             if ts.tzinfo is None:
                                 ts = ts.replace(tzinfo=timezone.utc)
@@ -155,9 +164,11 @@ class TradingDashboardAPI:
                 pass
 
         return {
+            "instrument":           instrument,
             "active_config":        active_config,
             "active_model_version": active_model_version,
             "active_model_corr":    active_model_corr,
+            "latest_run":           latest_run,
             "kill_switch":          ks,
             "trades_last_24h":      trades_last_24h,
         }
@@ -188,6 +199,8 @@ class TradingDashboardAPI:
                 "calibration_error":  m.get("calibration_error"),
                 "n_train":            m.get("n_train"),
                 "trained_at":         entry.get("trained_at"),
+                "run_id":             entry.get("run_id"),
+                "instrument":         entry.get("instrument"),
             })
 
         # Sort by trained_at descending; None sorts last
@@ -457,6 +470,8 @@ class TradingDashboardAPI:
                 "trained_at":           (entry.get("trained_at") or "")[:10],
                 "model_file":           mf,
                 "file_exists":          (REPO_ROOT / mf).exists() if mf else False,
+                "run_id":               entry.get("run_id"),
+                "instrument":           entry.get("instrument"),
             })
         models.sort(key=lambda x: x.get("trained_at") or "0000", reverse=True)
         return {"models": models}
@@ -480,6 +495,8 @@ class TradingDashboardAPI:
                 "model_exists": bool(entry.get("model_exists", False)),
                 "dataset_file": entry.get("dataset_file"),
                 "trained_at":   (entry.get("trained_at") or "")[:10],
+                "run_id":       entry.get("run_id"),
+                "instrument":   entry.get("instrument"),
             })
         models.sort(key=lambda x: x.get("trained_at") or "0000", reverse=True)
         return {"models": models}
@@ -501,6 +518,8 @@ class TradingDashboardAPI:
                 "trained_at": (entry.get("trained_at") or "")[:10],
                 "metrics":    entry.get("metrics", {}),
                 "file_exists": mf_path.exists() if mf_path else False,
+                "run_id":     entry.get("run_id"),
+                "instrument": entry.get("instrument"),
             })
         models.sort(key=lambda x: x.get("trained_at") or "0000", reverse=True)
         return {"models": models}
@@ -529,12 +548,12 @@ class TradingDashboardAPI:
         Never loads the full file (289 MB for EURUSD).
         Features dict is excluded from response records.
         """
-        path = LOGS_DIR / f"opportunities_{instrument}.jsonl"
+        path = self._find_opportunity_file(instrument)
         empty = {
             "records": [], "page": page, "per_page": per_page,
             "total_count_estimate": 0, "has_more": False, "count_is_estimate": True,
         }
-        if not path.exists():
+        if path is None:
             return empty
 
         filtered = bool(direction or outcome)
@@ -592,6 +611,30 @@ class TradingDashboardAPI:
             "count_is_estimate":    True,
         }
 
+    # ── Opportunity helpers ───────────────────────────────────────────────────
+
+    def _find_opportunity_file(self, instrument: str) -> "Path | None":
+        """Resolve the latest opportunities JSONL for an instrument.
+
+        Priority:
+          1. logs/{instrument}/{latest_run_dir}/opportunities.jsonl  (scanner output)
+          2. logs/opportunities_{instrument}.jsonl                   (legacy flat file)
+        Returns None if neither exists.
+        """
+        run_dir = LOGS_DIR / instrument
+        if run_dir.is_dir():
+            runs = sorted(
+                (d for d in run_dir.iterdir() if d.is_dir()),
+                key=lambda d: d.name,
+                reverse=True,
+            )
+            for run in runs:
+                candidate = run / "opportunities.jsonl"
+                if candidate.exists():
+                    return candidate
+        flat = LOGS_DIR / f"opportunities_{instrument}.jsonl"
+        return flat if flat.exists() else None
+
     # ── Opportunity stats ─────────────────────────────────────────────────────
 
     def opportunity_stats_payload(self, instrument: str = "EURUSD") -> dict[str, Any]:
@@ -599,15 +642,17 @@ class TradingDashboardAPI:
         Aggregate win rates from the first 10,000 records of the opportunity log.
         Win = rr_achieved > 0.
         Session comes from record['features']['session'] (float like 1.0, 2.0, 3.0).
+        Also returns avg_rr across the sampled window.
         """
-        path = LOGS_DIR / f"opportunities_{instrument}.jsonl"
+        path = self._find_opportunity_file(instrument)
         empty = {
             "win_rate_by_direction": {},
             "win_rate_by_session":   {},
             "outcome_distribution":  {},
             "total_sampled":         0,
+            "avg_rr":                None,
         }
-        if not path.exists():
+        if path is None:
             return empty
 
         dir_wins: dict[str, int] = {}
@@ -615,6 +660,8 @@ class TradingDashboardAPI:
         sess_wins: dict[str, int] = {}
         sess_total: dict[str, int] = {}
         outcome_counts: dict[str, int] = {}
+        rr_sum:   float = 0.0
+        rr_count: int   = 0
         n = 0
 
         try:
@@ -629,12 +676,18 @@ class TradingDashboardAPI:
                         rec = json.loads(raw_line)
                     except json.JSONDecodeError:
                         continue
+                    if rec.get("type") == "run_header":
+                        continue
 
                     n += 1
                     d   = rec.get("direction", "unknown")
                     rr  = float(rec.get("rr_achieved", 0.0) or 0.0)
                     win = rr > 0
                     oc  = rec.get("outcome", "UNKNOWN")
+
+                    # avg_rr accumulator
+                    rr_sum   += rr
+                    rr_count += 1
 
                     # Direction win rate
                     dir_total[d] = dir_total.get(d, 0) + 1
@@ -666,6 +719,121 @@ class TradingDashboardAPI:
             "win_rate_by_session":   wr_sess,
             "outcome_distribution":  outcome_counts,
             "total_sampled":         n,
+            "avg_rr":                round(rr_sum / rr_count, 4) if rr_count else None,
+        }
+
+    def scan_jobs_payload(self, instrument: str = "EURUSD") -> dict[str, Any]:
+        """List completed opportunity scanner runs for an instrument (latest 20)."""
+        run_dir = LOGS_DIR / instrument
+        if not run_dir.is_dir():
+            return {"jobs": []}
+        jobs: list[dict] = []
+        for d in sorted(run_dir.iterdir(), key=lambda d: d.name, reverse=True):
+            if not d.is_dir():
+                continue
+            opp_file = d / "opportunities.jsonl"
+            if not opp_file.exists():
+                continue
+            run_id   = d.name          # "YYYYMMDD_HHMMSS"
+            job_time = run_id
+            rec_est  = _estimate_line_count(opp_file)
+            # Try to read run_header for richer metadata
+            try:
+                with open(opp_file, "r", encoding="utf-8", errors="replace") as f:
+                    first_line = f.readline().strip()
+                hdr = json.loads(first_line) if first_line else {}
+                if hdr.get("type") == "run_header":
+                    job_time = hdr.get("started_at", run_id)[:16].replace("T", " ")
+            except Exception:
+                pass
+            jobs.append({
+                "id":     f"SCAN-{run_id}",
+                "inst":   instrument,
+                "time":   job_time,
+                "rec":    f"{max(0, rec_est - 1):,}",   # subtract header line
+                "status": "Completed",
+            })
+        return {"jobs": jobs[:20]}
+
+    def opportunity_analytics_payload(self, instrument: str = "EURUSD") -> dict[str, Any]:
+        """Stride-sampled analytics for scatter + time-series charts.
+
+        Reads up to ~2,000 records uniformly across the file (stride-based).
+        Returns:
+          scatter_points     — list of {x, y, color} (max 300)
+          outcomes_over_time — list of {period, tp, sl, to} bucketed by quarter
+        """
+        path = self._find_opportunity_file(instrument)
+        empty: dict[str, Any] = {"scatter_points": [], "outcomes_over_time": []}
+        if path is None:
+            return empty
+
+        total_lines = _estimate_line_count(path)
+        stride      = max(1, total_lines // 2_000)
+        OUTCOME_COLOR = {
+            "TP_HIT":  "#22c55e",
+            "SL_HIT":  "#ef4444",
+            "TIMEOUT": "#facc15",
+        }
+        scatter: list[dict] = []
+        buckets: dict[str, dict] = {}
+
+        try:
+            with open(path, "r", encoding="utf-8", errors="replace") as f:
+                for i, raw_line in enumerate(f):
+                    if i % stride != 0:
+                        continue
+                    raw_line = raw_line.strip()
+                    if not raw_line:
+                        continue
+                    try:
+                        rec = json.loads(raw_line)
+                    except json.JSONDecodeError:
+                        continue
+                    if rec.get("type") == "run_header":
+                        continue
+
+                    outcome = rec.get("outcome", "UNKNOWN")
+                    feats   = rec.get("features") or {}
+                    rr      = float(rec.get("rr_achieved", 0) or 0)
+
+                    # Scatter: rsi_14 as x-axis, rr_achieved mapped to 0–100 as y-axis
+                    rsi = float(feats.get("rsi_14", 50) or 50)
+                    y   = min(100.0, max(0.0, (rr + 1) * 50.0))
+                    scatter.append({
+                        "x":     round(rsi, 1),
+                        "y":     round(y, 1),
+                        "color": OUTCOME_COLOR.get(outcome, "#7f8da6"),
+                    })
+
+                    # Time-series: bucket by quarter
+                    ts = rec.get("timestamp", "")
+                    if ts and len(ts) >= 7:
+                        try:
+                            yr  = int(ts[:4])
+                            mo  = int(ts[5:7])
+                            qtr = (mo - 1) // 3 + 1
+                            key = f"{yr}-Q{qtr}"
+                            if key not in buckets:
+                                buckets[key] = {"tp": 0, "sl": 0, "to": 0}
+                            if outcome == "TP_HIT":
+                                buckets[key]["tp"] += 1
+                            elif outcome == "SL_HIT":
+                                buckets[key]["sl"] += 1
+                            elif outcome == "TIMEOUT":
+                                buckets[key]["to"] += 1
+                        except ValueError:
+                            pass
+        except Exception:
+            return empty
+
+        outcomes_over_time = [
+            {"period": k, **v}
+            for k, v in sorted(buckets.items())
+        ]
+        return {
+            "scatter_points":     scatter[:300],
+            "outcomes_over_time": outcomes_over_time,
         }
 
     # ── Trades ────────────────────────────────────────────────────────────────
@@ -803,14 +971,96 @@ class TradingDashboardAPI:
     # ── Available instruments ─────────────────────────────────────────────────
 
     def instruments_payload(self) -> dict[str, Any]:
-        """Return instruments that have opportunity log files on disk."""
-        available = [
-            i for i in KNOWN_INSTRUMENTS
-            if (LOGS_DIR / f"opportunities_{i}.jsonl").exists()
+        """
+        Return instruments sourced from the active production config.
+        Combines data_ingestion.pairs (forex) + inout.scanner.allowed_symbols (crypto).
+        Falls back to KNOWN_INSTRUMENTS if the config cannot be read.
+        """
+        try:
+            active_ver  = ACTIVE_VERSION_FILE.read_text(encoding="utf-8").strip()
+            cfg_path    = PROD_CONFIG_DIR / f"{active_ver}.json"
+            cfg         = _read_json(cfg_path) or {}
+            pairs       = cfg.get("data_ingestion", {}).get("pairs", [])
+            syms        = cfg.get("inout", {}).get("scanner", {}).get("allowed_symbols", [])
+            merged      = sorted(set(pairs) | set(syms))
+            if merged:
+                return {"instruments": merged}
+        except Exception:
+            pass
+        # Fallback: return first two known instruments
+        return {"instruments": KNOWN_INSTRUMENTS[:2]}
+
+
+    # ── Groq model explainer ──────────────────────────────────────────────────
+
+    def explain_model_payload(self, model_type: str, version: str) -> dict[str, Any]:
+        """Call GroqClient to generate a plain-English explanation of model training results.
+
+        model_type: one of "gaussian", "zone_gate", "rr", "tradenet"
+        version:    registry key (e.g. "v5_auto_2026_06_eth")
+        Returns:    {"ok": True, "explanation": str} or {"ok": False, "error": str}
+        """
+        REGISTRIES: dict[str, Path] = {
+            "gaussian":  MODELS_DIR / "gaussian_registry.json",
+            "zone_gate": MODELS_DIR / "zone_gate_registry.json",
+            "rr":        MODELS_DIR / "rr_registry.json",
+            "tradenet":  MODELS_DIR / "tradenet_registry.json",
+        }
+        reg_path = REGISTRIES.get(model_type)
+        if not reg_path or not reg_path.exists():
+            return {"ok": False, "error": f"Unknown model type or missing registry: {model_type}"}
+
+        try:
+            registry = json.loads(reg_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            return {"ok": False, "error": f"Registry parse error: {exc}"}
+
+        entry = registry.get(version)
+        if not entry or not isinstance(entry, dict):
+            return {"ok": False, "error": f"Version not found: {version}"}
+
+        metrics = entry.get("metrics") or {}
+        ctx_lines = [
+            f"Model type: {model_type}",
+            f"Version: {version}",
+            f"Trained at: {(entry.get('trained_at') or '—')[:10]}",
+            f"Active: {entry.get('active', False)}",
+            f"Instrument: {entry.get('instrument', 'multi')}",
+            f"Run ID: {entry.get('run_id', 'n/a')}",
         ]
-        if not available:
-            available = KNOWN_INSTRUMENTS[:2]  # sensible default for empty state
-        return {"instruments": available}
+        # Append all metric fields
+        for k, v in metrics.items():
+            ctx_lines.append(f"{k}: {v}")
+        # Model-type-specific extras
+        for field in ("n_zones", "n_samples", "n_features", "n_clusters_requested",
+                      "ridge_alpha", "calibration_error", "corr_expected_rr"):
+            val = entry.get(field)
+            if val is not None:
+                ctx_lines.append(f"{field}: {val}")
+        if entry.get("n_train"):
+            ctx_lines.append(f"n_train: {entry['n_train']}")
+
+        context = "\n".join(ctx_lines)
+        prompt = (
+            f"You are an expert quant analyst reviewing a machine-learning trading model.\n\n"
+            f"Model stats:\n{context}\n\n"
+            f"In 3–5 bullet points, explain in plain English:\n"
+            f"1. How good is this model (correlation, calibration, accuracy)?\n"
+            f"2. Is the training dataset large enough to trust?\n"
+            f"3. Any red flags or concerns?\n"
+            f"4. Is it ready for live trading?\n"
+            f"Be concise, specific, and use non-technical language where possible."
+        )
+
+        try:
+            from src.agent.groq_client import GroqClient
+            client = GroqClient()
+            explanation = client.chat(prompt, max_tokens=512)
+            if not explanation:
+                return {"ok": False, "error": "Groq returned empty response (check GROQ_API_KEY or circuit breaker)"}
+            return {"ok": True, "explanation": explanation, "version": version, "model_type": model_type}
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
 
 
 # ── Private helpers ───────────────────────────────────────────────────────────

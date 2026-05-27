@@ -32,7 +32,9 @@ Baseline (htf=4, ETHUSDT M15):
 
 Usage:
     cd D:\\Tradelatest
-    python scripts\\analysis\\p3a_zone_attribution_diag.py
+    python scripts\\analysis\\p3a_zone_attribution_diag.py --instrument BTCUSDT
+    python scripts\\analysis\\p3a_zone_attribution_diag.py --instrument ETHUSDT
+    python scripts\\analysis\\p3a_zone_attribution_diag.py --instrument SOLUSDT --csv data/SOLUSDT_M15.csv
 """
 
 import sys
@@ -40,6 +42,7 @@ import os
 import json
 import time
 import copy
+import argparse
 import collections
 from pathlib import Path
 from datetime import datetime
@@ -119,9 +122,39 @@ from runtime.backtest_v2 import (
     load_prod_config_from_registry, PROD_VERSION, MultiInstrumentRunner,
 )
 
-CSV_PATH   = str(_ROOT / "data" / "ETHUSDT_M15.csv")
-INSTRUMENT = "ETHUSDT"
-OUTPUT_DIR = str(_ROOT / "results")
+# =============================================================================
+# CLI ARGUMENTS + DATA FILE RESOLUTION
+# =============================================================================
+def _resolve_data_file(instrument: str, csv_override: str | None) -> str:
+    if csv_override:
+        p = Path(csv_override)
+        if not p.exists():
+            sys.exit(f"[ERROR] --csv path not found: {csv_override}")
+        return str(p)
+    candidates = [
+        _ROOT / "data" / f"{instrument}_M15.csv",
+        _ROOT / "data" / f"{instrument}_M15_2year.csv",
+        _ROOT / "data" / f"{instrument}_M15_2year.xlsx",
+        _ROOT / "data" / f"{instrument}_M15.xlsx",
+    ]
+    for c in candidates:
+        if c.exists():
+            return str(c)
+    checked = "\n  ".join(str(c) for c in candidates)
+    sys.exit(f"[ERROR] No data file found for {instrument}. Checked:\n  {checked}")
+
+_ap = argparse.ArgumentParser(description="P3a zone/session attribution diagnostic")
+_ap.add_argument("--instrument", required=True,
+                 help="Symbol to run, e.g. BTCUSDT, SOLUSDT, ETHUSDT")
+_ap.add_argument("--csv",        default=None,
+                 help="Explicit path to data file (CSV). Auto-resolved if omitted.")
+_ap.add_argument("--output-dir", default=str(_ROOT / "results"),
+                 help="Directory for backtest run output (default: results)")
+args = _ap.parse_args()
+
+INSTRUMENT = args.instrument
+CSV_PATH   = _resolve_data_file(args.instrument, args.csv)
+OUTPUT_DIR = args.output_dir
 
 print(f"\n[P3a] Running backtest: {CSV_PATH}")
 print(f"      instrument : {INSTRUMENT}")

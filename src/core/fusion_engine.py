@@ -100,6 +100,29 @@ def _clamp(x: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return max(lo, min(hi, x))
 
 
+# Sentinel for compute(..., regime=...) — distinguishes "no regime argument
+# passed" from "regime explicitly set to UNKNOWN". The former preserves the
+# pre-patch scalar-weight behaviour; the latter actively selects the UNKNOWN
+# regime profile from cfg.regime_fusion_weights.
+_REGIME_NOT_PROVIDED: str = "__not_provided__"
+
+
+# Normalises regime labels from any upstream source (detect_regime returns
+# lowercase trend/range/neutral; RegimeClassifier returns uppercase
+# TRENDING/RANGING/HIGH_VOLATILITY). Anything not listed falls back to
+# "UNKNOWN" inside compute() and triggers a FUSION_UNKNOWN_REGIME event.
+_REGIME_NORM = {
+    "trend":           "TRENDING",
+    "range":           "RANGING",
+    "neutral":         "UNKNOWN",
+    "high_volatility": "VOLATILE",
+    "volatile":        "VOLATILE",
+    "trending":        "TRENDING",
+    "ranging":         "RANGING",
+    "unknown":         "UNKNOWN",
+}
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
@@ -133,6 +156,17 @@ class FusionConfig:
     # 5th engine — StrategyOrchestrator consensus.  Default 0.0 means disabled;
     # set to e.g. 0.10 in production config to activate.
     weight_strategy_consensus:   float = 0.0
+
+    # Regime-aware weight profiles. compute() looks these up by normalised
+    # regime label ONLY when an explicit `regime=` argument is passed.
+    # UNKNOWN mirrors the scalar weight_* defaults above so a degraded-regime
+    # path matches the no-regime-arg path exactly.
+    regime_fusion_weights: dict = field(default_factory=lambda: {
+        "TRENDING": {"crt": 0.38, "gaussian": 0.20, "zone_gate": 0.12, "rr": 0.20, "strategy_consensus": 0.10},
+        "RANGING":  {"crt": 0.18, "gaussian": 0.32, "zone_gate": 0.15, "rr": 0.25, "strategy_consensus": 0.10},
+        "VOLATILE": {"crt": 0.28, "gaussian": 0.14, "zone_gate": 0.12, "rr": 0.16, "strategy_consensus": 0.30},
+        "UNKNOWN":  {"crt": 0.30, "gaussian": 0.25, "zone_gate": 0.25, "rr": 0.20, "strategy_consensus": 0.00},
+    })
 
     # Conflict resolution policy — "conservative" or "majority"
     conflict_resolution_policy: str = "conservative"
@@ -253,15 +287,21 @@ class FusionEngine:
         self._health_neural   = EngineHealthTracker()
         self._health_zonegate = EngineHealthTracker()
 
-    def compute(self, engine_results: dict, trade=None, weights=None) -> dict:
+    def compute(self, engine_results: dict, trade=None, weights=None, regime: str = _REGIME_NOT_PROVIDED) -> dict:
         """
         Aggregate multi-engine outputs only.
         Expects engine_results with keys: crt, gaussian, zone_gate, rr.
-        
+
         Parameters
         ----------
-        weights : optional dict with keys "crt", "gaussian", "zone", "rr"
-                  If provided, overrides config weights. Must sum to 1.0 ±0.01.
+        weights : optional dict with keys "crt", "gaussian", "zone"|"zone_gate",
+                  "rr" (and optionally "strategy_consensus"). If provided,
+                  overrides config and regime weights. Must sum to 1.0 ±0.01.
+        regime  : optional regime label ("TRENDING" / "RANGING" / "VOLATILE" /
+                  "UNKNOWN" — lowercase variants accepted via _REGIME_NORM).
+                  When omitted, the static FusionConfig scalar weights are used
+                  (backward-compatible path). When set, the matching profile
+                  from `cfg.regime_fusion_weights` is selected.
         """
         expected = ("crt", "gaussian", "zone_gate", "rr")
         missing = [name for name in expected if name not in engine_results]
@@ -272,23 +312,50 @@ class FusionEngine:
                 "missing_engines": missing,
                 "reason": "missing_engine_outputs",
             }
-            
+
+        # Regime-aware weight resolution.
+        # Priority: explicit `weights=` override → explicit `regime=` lookup →
+        # scalar config defaults (preserved for callers that pass neither).
+        regime_weights = None
+        if weights is None and regime is not _REGIME_NOT_PROVIDED:
+            regime_weights_table = getattr(self.cfg, "regime_fusion_weights", {}) or {}
+            regime_key = _REGIME_NORM.get(str(regime).lower().strip(), "UNKNOWN")
+            regime_weights = regime_weights_table.get(regime_key)
+            if regime_weights is not None:
+                weights = regime_weights
+                raw = str(regime).strip()
+                if raw and raw.lower() not in _REGIME_NORM and regime_key == "UNKNOWN":
+                    try:
+                        from src.utils.integrity_events import emit_integrity_event
+                        emit_integrity_event(
+                            "FUSION_UNKNOWN_REGIME", "WARNING", "fusion_engine",
+                            {"regime_received": raw, "fallback": "UNKNOWN"},
+                        )
+                    except Exception:
+                        pass  # telemetry must never break fusion
+
         # Resolve weights
         if weights is None:
             w_crt = self.cfg.weight_crt
             w_gaussian = self.cfg.weight_gaussian
             w_zone = self.cfg.weight_zone_gate
             w_rr = self.cfg.weight_rr
+            w_consensus_override = None
         else:
-            if not all(k in weights for k in ("crt", "gaussian", "zone", "rr")):
-                raise ValueError("Weights dict must contain keys: crt, gaussian, zone, rr")
-            weight_sum = sum(weights.values())
+            # Accept either {crt, gaussian, zone, rr} (legacy override shape)
+            # or {crt, gaussian, zone_gate, rr, strategy_consensus} (regime profile).
+            zone_key = "zone_gate" if "zone_gate" in weights else "zone"
+            required = ("crt", "gaussian", zone_key, "rr")
+            if not all(k in weights for k in required):
+                raise ValueError(f"Weights dict must contain keys: {required}")
+            weight_sum = sum(float(v) for v in weights.values())
             if abs(weight_sum - 1.0) > 0.01:
                 raise ValueError(f"Weights sum to {weight_sum:.3f}, must be 1.0 ±0.01")
             w_crt = weights["crt"]
             w_gaussian = weights["gaussian"]
-            w_zone = weights["zone"]
+            w_zone = weights[zone_key]
             w_rr = weights["rr"]
+            w_consensus_override = weights.get("strategy_consensus")  # may be None
 
         def _extract_score(payload: dict, preferred_keys: tuple[str, ...]) -> float:
             if not isinstance(payload, dict):
@@ -407,19 +474,22 @@ class FusionEngine:
         # FIX 3: exclude zone_gate weight when it is detected as dead so a
         # permanently-zero engine cannot suppress all signals.
         # 5th engine (strategy_consensus) included only when its weight > 0.
-        w_zonegate   = 0.0 if zone_gate_dead else self.cfg.weight_zone_gate
-        w_consensus  = self.cfg.weight_strategy_consensus  # 0.0 → disabled
+        # Weights come from `weights=` override → regime profile → config defaults.
+        w_zonegate  = 0.0 if zone_gate_dead else w_zone
+        w_consensus = (
+            w_consensus_override if w_consensus_override is not None
+            else self.cfg.weight_strategy_consensus
+        )
         total_w = (
-            self.cfg.weight_crt + self.cfg.weight_gaussian +
-            w_zonegate + self.cfg.weight_rr + w_consensus
+            w_crt + w_gaussian + w_zonegate + w_rr + w_consensus
         ) or 1.0  # guard: all-zero weights → equal contribution
         weighted_fusion_score = _clamp(
             (
-                self.cfg.weight_crt      * score_crt +
-                self.cfg.weight_gaussian * score_gaussian +
-                w_zonegate               * score_zonegate +
-                self.cfg.weight_rr       * score_rr +
-                w_consensus              * score_consensus
+                w_crt       * score_crt +
+                w_gaussian  * score_gaussian +
+                w_zonegate  * score_zonegate +
+                w_rr        * score_rr +
+                w_consensus * score_consensus
             ) / total_w
         )
 

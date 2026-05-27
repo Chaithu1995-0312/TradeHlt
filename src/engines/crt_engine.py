@@ -5,18 +5,13 @@ Parallel engine wrapper — calls compute_scores() from engines.scoring_engine.p
 import json
 import logging
 import time
-from pathlib import Path
 
 from engines.scoring_engine import compute_scores
-from utils.logging_config import get_log_path
 
-Path("logs").mkdir(exist_ok=True)
 _log = logging.getLogger("crt_engine")
-_handler = logging.FileHandler(get_log_path("crt_engine"))
-_handler.setFormatter(logging.Formatter("%(message)s"))
-_log.addHandler(_handler)
 _log.setLevel(logging.INFO)
 _log.propagate = False
+# FileHandler attached by init_coin_logging(symbol) in BacktestRunner.__init__
 
 
 def compute(trade_id: str, features: dict, context: dict) -> dict:

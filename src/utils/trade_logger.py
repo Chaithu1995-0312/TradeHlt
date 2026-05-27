@@ -85,7 +85,13 @@ DEFAULT_LOG_PATH = Path("logs/fusion_trades.jsonl")
 
 class TradeLogger:
 
-    def __init__(self, path: Path | str = DEFAULT_LOG_PATH) -> None:
+    def __init__(self, path: Path | str | None = None,
+                 instrument: str = "") -> None:
+        if path is None:
+            if instrument:
+                path = Path(f"logs/fusion_trades_{instrument}.jsonl")
+            else:
+                path = DEFAULT_LOG_PATH
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -244,3 +250,15 @@ def set_log_path(path: str | Path) -> None:
     """Override default log path (call before first trade)."""
     global _default_logger
     _default_logger = TradeLogger(path)
+
+
+def set_instrument(instrument: str) -> None:
+    """Route the module-level singleton to a per-instrument log file.
+    Call once at startup before any trades are logged.
+
+    Example:
+        set_instrument("BTCUSDT")  →  logs/fusion_trades_BTCUSDT.jsonl
+        set_instrument("EURUSD")   →  logs/fusion_trades_EURUSD.jsonl
+    """
+    global _default_logger
+    _default_logger = TradeLogger(instrument=instrument)

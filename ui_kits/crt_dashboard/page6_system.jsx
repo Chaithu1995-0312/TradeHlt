@@ -1,16 +1,18 @@
 // Page 6 — System / System Health & Data Status
 
-function SystemPage() {
-  const k = SYS_KPIS;
+function SystemPage({ activeSub, selectedInstrument }) {
+  const k = window.SYS_KPIS || SYS_KPIS || {};
   return (
-    <div className="panel-frame">
-      <Sidebar active="System" footer={
+    <div>
+      <div className="page-header">
         <div>
-          <div className="muted" style={{ marginBottom: 6 }}>System Status</div>
-          <div><span className="dot" style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#22c55e", marginRight: 6, boxShadow: "0 0 6px #34d399" }} />HEALTHY</div>
+          <div className="page-title">System / System Health &amp; Data Status</div>
+          <div className="page-sub">
+            Data Integrity · Jobs · Alerts · Infrastructure
+            <span className="muted" style={{ marginLeft:8, fontSize:10 }}>Global data · not instrument-filtered</span>
+          </div>
         </div>
-      } />
-      <div className="body">
+      </div>
         <div className="kpis" style={{ gridTemplateColumns: "repeat(5, 1fr)" }}>
           <Kpi label="Data Feeds"   tone="num" value={k.dataFeeds.value} sub={k.dataFeeds.sub} />
           <Kpi label="Last Data"    value={k.lastData.value} sub={k.lastData.sub} />
@@ -77,7 +79,6 @@ function SystemPage() {
             ))}
           </div>
         </div>
-      </div>
     </div>
   );
 }

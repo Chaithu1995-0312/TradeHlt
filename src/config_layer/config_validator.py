@@ -142,48 +142,34 @@ def _run_instrument(
     crt_config,
     warmup: int | None = None,
 ) -> dict:
-    """Run a single-instrument backtest and return a metrics dict."""
-    try:
-        from runtime.backtest_v2 import BacktestConfig, BacktestRunner, CandleLoader
-        cfg = BacktestConfig.from_prod_config(
-            instrument=instrument,
-            crt_config=crt_config,
-        )
-        # honour explicit warmup override (e.g. from CLI --warmup flag)
-        if warmup is not None:
-            cfg.warmup_candles = warmup
-        loader = CandleLoader(str(csv_path), instrument)
-        runner = BacktestRunner(cfg, csv_path=str(csv_path))
-        m = runner.run(loader.stream(), loader.count(), output_dir="results/validation_tmp")
+    """Run a single-instrument backtest and return a metrics dict. Raises on any failure."""
+    from runtime.backtest_v2 import BacktestConfig, BacktestRunner, CandleLoader
+    cfg = BacktestConfig.from_prod_config(
+        instrument=instrument,
+        crt_config=crt_config,
+    )
+    if warmup is not None:
+        cfg.warmup_candles = warmup
+    loader = CandleLoader(str(csv_path), instrument)
+    runner = BacktestRunner(cfg, csv_path=str(csv_path))
+    m = runner.run(loader.stream(), loader.count(), output_dir="results/validation_tmp")
 
-        n_trades   = m.approved_trades
-        win_rate   = _safe(m.win_rate)
-        exp_rr     = _safe(m.avg_rr_net)
-        max_dd     = _safe(m.max_drawdown_pct)
-        total_pnl  = _safe(m.total_pnl_rr_net)
+    n_trades  = m.approved_trades
+    win_rate  = _safe(m.win_rate)
+    exp_rr    = _safe(m.avg_rr_net)
+    max_dd    = _safe(m.max_drawdown_pct)
+    total_pnl = _safe(m.total_pnl_rr_net)
+    score     = _fitness_score(win_rate, exp_rr, n_trades, max_dd)
 
-        score = _fitness_score(win_rate, exp_rr, n_trades, max_dd)
-
-        return {
-            "score":          round(score, 4),
-            "trades":         n_trades,
-            "win_rate":       round(win_rate, 4),
-            "expectancy_rr":  round(exp_rr, 4),
-            "max_drawdown":   round(max_dd, 4),
-            "total_pnl_rr":   round(total_pnl, 4),
-            "error":          None,
-        }
-
-    except Exception as exc:
-        return {
-            "score":         -999.0,
-            "trades":        0,
-            "win_rate":      0.0,
-            "expectancy_rr": 0.0,
-            "max_drawdown":  1.0,
-            "total_pnl_rr":  0.0,
-            "error":         str(exc),
-        }
+    return {
+        "score":         round(score, 4),
+        "trades":        n_trades,
+        "win_rate":      round(win_rate, 4),
+        "expectancy_rr": round(exp_rr, 4),
+        "max_drawdown":  round(max_dd, 4),
+        "total_pnl_rr":  round(total_pnl, 4),
+        "error":         None,
+    }
 
 
 def _aggregate_metrics(per_instrument: dict) -> dict:
@@ -371,16 +357,19 @@ class ConfigValidator:
         per_instrument: dict = {}
         for inst, csv_path in csv_paths.items():
             if not Path(csv_path).exists():
-                per_instrument[inst] = {
-                    "score": -999.0, "trades": 0,
-                    "win_rate": 0.0, "expectancy_rr": 0.0,
-                    "max_drawdown": 1.0, "total_pnl_rr": 0.0,
-                    "error": f"CSV not found: {csv_path}",
-                }
-                continue
+                return ConfigValidator._reject(
+                    config_id, params,
+                    hard_failures=[f"CSV not found for {inst}: {csv_path}"],
+                )
 
             print(f"  Running {inst} ...")
-            result = _run_instrument(inst, csv_path, crt_config, warmup=warmup_candles)
+            try:
+                result = _run_instrument(inst, csv_path, crt_config, warmup=warmup_candles)
+            except Exception as exc:
+                return ConfigValidator._reject(
+                    config_id, params,
+                    hard_failures=[f"Backtest failed for {inst}: {exc}"],
+                )
             per_instrument[inst] = result
 
             status = "OK" if result["error"] is None else f"ERROR: {result['error']}"

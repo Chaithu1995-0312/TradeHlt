@@ -139,6 +139,8 @@ class S01CRTWrapper(BaseStrategy):
             strategy_id=self.strategy_id,
             pair=self.pair,
             timeframe=self.timeframe,
+            # S01 understands CRT transition path — builder uses CRT-enriched evidence.
+            capabilities=frozenset({"transition_path"}),
         )
         result_obj.validate()
         logger.info(

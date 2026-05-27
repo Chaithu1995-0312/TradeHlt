@@ -24,6 +24,12 @@ if str(ROOT_DIR) not in sys.path:
 
 from utils.console_safe import safe_print
 
+try:
+    from src.utils.integrity_events import emit_integrity_event  # noqa: F401
+except Exception:  # pragma: no cover
+    def emit_integrity_event(*_a, **_kw):  # type: ignore[no-redef]
+        return None
+
 
 def _safe_float(value: Any) -> float | None:
     try:
@@ -46,7 +52,16 @@ def _extract_json_payload(line: str) -> dict[str, Any] | None:
     payload = line[idx:]
     try:
         loaded = json.loads(payload)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
+        emit_integrity_event(
+            "JSONL_CORRUPTION",
+            "WARNING",
+            "src.runtime.analyze_fusion_shadow",
+            {
+                "raw_preview": payload[:160],
+                "error":       str(exc),
+            },
+        )
         return None
     if isinstance(loaded, dict):
         return loaded

@@ -192,6 +192,8 @@ class S10TrapStrategy(BaseStrategy):
             strategy_id=self.strategy_id,
             pair=self.pair,
             timeframe=self.timeframe,
+            # S10 trap detection uses CRT structure — builder uses CRT-enriched evidence.
+            capabilities=frozenset({"transition_path"}),
         )
         result.validate()
         logger.info(

@@ -8,7 +8,7 @@ SRC_DIR = ROOT_DIR / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from src.control_plane.registry import generate_cli_matrix_markdown
+from control_plane.registry import generate_cli_matrix_markdown
 
 
 def main() -> None:

@@ -1,40 +1,109 @@
 {
-  "legacy_2026_05": {
-    "version": "legacy_2026_05",
-    "dataset_file": "models/rr_dataset.json",
+  "202505_v2": {
+    "version": "202505_v2",
+    "dataset_file": "models\\rr_dataset_202505_v2.json",
     "model_file": null,
     "model_exists": false,
-    "n_samples": 141687,
+    "n_samples": 101794,
     "n_features": 35,
     "metrics": {},
-    "trained_at": "2026-05-14T18:30:15Z",
+    "trained_at": "2026-05-18T06:31:29Z",
     "active": false
   },
-  "202605_v1": {
-    "version": "202605_v1",
-    "dataset_file": "models\\rr_dataset_202605_v1.json",
-    "model_file": "models/rr_model_202605_v1.json",
-    "model_exists": true,
-    "n_samples": 141687,
-    "n_features": 35,
-    "metrics": {
-      "n_train": 141687,
-      "ridge_alpha": 10.0
-    },
-    "trained_at": "2026-05-14T18:35:01Z",
-    "active": false
-  },
-  "202605_v2": {
-    "version": "202605_v2",
+  "v5_auto_2026_06": {
+    "version": "v5_auto_2026_06",
     "dataset_file": null,
     "n_samples": 0,
     "n_features": 35,
-    "trained_at": "2026-05-15T04:15:37Z",
-    "active": true,
-    "model_file": "models/rr_model_202605_v2.json",
+    "trained_at": "2026-05-18T06:31:44Z",
+    "active": false,
+    "model_file": "models/rr_model_v5_auto_2026_06.json",
     "model_exists": true,
     "metrics": {
-      "n_train": 141687,
+      "n_train": 101794,
+      "ridge_alpha": 10.0
+    }
+  },
+  "v6_2026_05_btc": {
+    "version": "v6_2026_05_btc",
+    "dataset_file": null,
+    "n_samples": 0,
+    "n_features": 35,
+    "trained_at": "2026-05-18T06:31:44Z",
+    "active": false,
+    "model_file": "models/rr_model_v6_2026_05_btc.json",
+    "model_exists": true,
+    "metrics": {
+      "n_train": 33532,
+      "ridge_alpha": 10.0
+    }
+  },
+  "202605_v1": {
+    "version": "202605_v1",
+    "dataset_file": "models\\BNBUSDT\\bnbusdt_balanced_20260524\\rr_dataset_202605_v1.json",
+    "model_file": null,
+    "model_exists": false,
+    "n_samples": 49000,
+    "n_features": 38,
+    "metrics": {},
+    "trained_at": "2026-05-19T06:51:41Z",
+    "active": false,
+    "instrument": "BNBUSDT",
+    "run_id": "bnbusdt_balanced_20260524"
+  },
+  "202605_v1_ethusdt": {
+    "version": "202605_v1_ethusdt",
+    "dataset_file": null,
+    "n_samples": 0,
+    "n_features": 35,
+    "trained_at": "2026-05-19T08:02:28Z",
+    "active": false,
+    "model_file": "models\\ETHUSDT\\20260519_113806\\rr_model_202605_v1.json",
+    "model_exists": true,
+    "metrics": {
+      "n_train": 101794,
+      "ridge_alpha": 10.0
+    }
+  },
+  "v5_auto_2026_06_eth2_ethusdt": {
+    "version": "v5_auto_2026_06_eth2_ethusdt",
+    "dataset_file": null,
+    "n_samples": 0,
+    "n_features": 35,
+    "trained_at": "2026-05-19T08:32:17Z",
+    "active": false,
+    "model_file": "models\\ETHUSDT\\20260519_134711\\rr_model_v5_auto_2026_06_eth2.json",
+    "model_exists": true,
+    "metrics": {
+      "n_train": 101794,
+      "ridge_alpha": 10.0
+    }
+  },
+  "202605_bnb_v1_bnbusdt": {
+    "version": "202605_bnb_v1_bnbusdt",
+    "dataset_file": null,
+    "n_samples": 0,
+    "n_features": 35,
+    "trained_at": "2026-05-24T05:44:31Z",
+    "active": false,
+    "model_file": "models/rr_model_202605_bnb_v1.json",
+    "model_exists": true,
+    "metrics": {
+      "n_train": 139942,
+      "ridge_alpha": 10.0
+    }
+  },
+  "202605_bnb_v2_bnbusdt": {
+    "version": "202605_bnb_v2_bnbusdt",
+    "dataset_file": null,
+    "n_samples": 0,
+    "n_features": 35,
+    "trained_at": "2026-05-24T06:34:26Z",
+    "active": true,
+    "model_file": "models/rr_model_202605_bnb_v2.json",
+    "model_exists": true,
+    "metrics": {
+      "n_train": 49000,
       "ridge_alpha": 10.0
     }
   }

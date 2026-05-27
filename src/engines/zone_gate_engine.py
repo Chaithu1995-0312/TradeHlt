@@ -19,8 +19,11 @@ from typing import Callable, List, Optional
 
 from features.feature_schema import CANONICAL_FEATURE_ORDER, CANONICAL_FEATURE_DIM
 from utils.zone_schema_migrator import validate_zone_schema, ZoneSchemaError
+from utils.logging_config import get_flow_logger
 
-logger = logging.getLogger(__name__)
+# Use the named ZONE_GATE flow logger so records land in the coin-scoped
+# flow_zone_gate.log file created by init_coin_logging().
+logger = get_flow_logger("ZONE_GATE")
 _debug_logger = logging.getLogger("ZONE_GATE_DEBUG")
 
 CANONICAL_KEYS: List[str] = list(CANONICAL_FEATURE_ORDER)
@@ -162,6 +165,19 @@ def _extract_vector(features: dict) -> list:
         vector = [float(features[k]) for k in CANONICAL_KEYS]
     except (TypeError, ValueError) as exc:
         raise ValueError(f"Feature value coercion failed: {exc}") from exc
+
+    # Backward compat: if the pipeline produces a v3.0 vector (38 features) but
+    # the zone model was trained on v2.0 (35 features), silently truncate.
+    # CANONICAL_KEYS is already updated for v3.0, so the vector may be longer
+    # than the centroid vectors stored in an older zone registry.
+    if len(vector) > CANONICAL_FEATURE_DIM:
+        logger.debug(
+            "_extract_vector: truncating vector from %d to %d (schema migration).",
+            len(vector), CANONICAL_FEATURE_DIM,
+        )
+        vector = vector[:CANONICAL_FEATURE_DIM]
+
+    # Only assert on under-length (broken pipeline), not over-length (migration).
     assert len(vector) == CANONICAL_FEATURE_DIM, (
         f"Vector length mismatch: expected {CANONICAL_FEATURE_DIM}, got {len(vector)}"
     )

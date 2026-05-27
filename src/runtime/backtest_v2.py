@@ -248,7 +248,21 @@ class TradeRecord:
     cached_disp_strength:   float = 0.0   # displacement / ATR ratio
     cached_session:         str   = ""    # session label recorded at RETEST
     cached_double_sweep:    bool  = False # double-sweep confirmed at RETEST
+    # ── [BitNet adaptive threshold] score that led to this trade's approval ──
+    # Populated from CRTEngine.state.bitnet_main_score at on_trade_opened time.
+    # Used by BitNetThresholdAdapter to fit per-instrument per-regime thresholds
+    # against (score, exit_reason) outcomes. Defaults preserve old-record loads.
+    bitnet_score_at_entry:    float = 0.0
+    bitnet_decision_at_entry: str   = ""   # "ACCEPT" | "REJECT" | "" (not evaluated)
     config_version:         str   = field(default_factory=lambda: PROD_VERSION)
+    # ── [Phase D] Strategy memory fields ─────────────────────────────────────
+    # Populated at trade close by BacktestRunner._on_trade_close().
+    # winning_strategy_id: strategy that produced the top signal (from OrchestratorResult).
+    # crt_path: compact CRT transition codes at decision time (["S","D","T","X"]).
+    # pattern_hash: 16-char SHA-256 fingerprint for cluster-level expectancy lookup.
+    winning_strategy_id: str       = ""
+    crt_path:            list      = field(default_factory=list)
+    pattern_hash:        str       = ""
 
     @property
     def is_winner(self) -> bool:
@@ -718,6 +732,8 @@ class TradeJournal:
         risk_score: float, state_path: list, htf_id: str,
         session: str, atr: float, spread_half: float, feature_vector,
         live_metrics: dict = None,   # Universe-B live state from CRTEngine.get_live_metrics()
+        bitnet_score: float = 0.0,
+        bitnet_decision: str = "",
     ) -> None:
         # [G1+G2] Compute realistic fill prices
         _, _, _, _ = self.slip.compute_fill_prices(
@@ -782,6 +798,8 @@ class TradeJournal:
             cached_disp_strength  = float(lm.get("cached_disp_strength", 0.0)),
             cached_session        = str(lm.get("cached_session",         "")),
             cached_double_sweep   = bool(lm.get("cached_double_sweep",   False)),
+            bitnet_score_at_entry    = float(bitnet_score),
+            bitnet_decision_at_entry = str(bitnet_decision),
         )
 
     def on_trade_closed(
@@ -910,6 +928,9 @@ class TradeJournal:
             row["cached_disp_strength"] = round(r.cached_disp_strength, 6)
             row["cached_session"]       = r.cached_session
             row["cached_double_sweep"]  = int(r.cached_double_sweep)
+            # ── BitNet adaptive-threshold audit ──────────────────────────────
+            row["bitnet_score_at_entry"]    = round(r.bitnet_score_at_entry, 6)
+            row["bitnet_decision_at_entry"] = r.bitnet_decision_at_entry
             row["config_version"]       = r.config_version
             rows.append(row)
         return rows
@@ -1245,6 +1266,16 @@ class BacktestRunner:
         )
         self.csv_path = csv_path
         self._overrides: dict = overrides or {}
+
+        # Coin-level log init — creates logs/run_{RUN_ID}/{instrument}/ and
+        # attaches FileHandlers to all flow loggers and engine loggers.
+        # MUST run before FeaturePipeline so the very first log messages land
+        # in the coin-scoped directory rather than being lost to console-only.
+        from utils.logging_config import init_coin_logging, RUN_ID as _RUN_ID
+        init_coin_logging(bt_config.instrument)
+        from utils.sweep_trace_logger import SweepTraceLogger
+        self._sweep_tracer = SweepTraceLogger(run_id=_RUN_ID, instrument=bt_config.instrument)
+
         self.feature_vectors = None
         self.feature_ts_to_idx: dict = {}  # timestamp → row-index in feature_vectors
         if self.csv_path and not skip_features:
@@ -1278,22 +1309,23 @@ class BacktestRunner:
                     len(self.feature_ts_to_idx), _sample_keys,
                 )
             except Exception as _fp_err:
-                import traceback as _tb
-                bt_log.warning(
-                    "FeaturePipeline init FAILED for %s — "
-                    "all feature columns will default to 0.0.\n"
-                    "Exception: %s\nTraceback:\n%s",
-                    self.csv_path, _fp_err, _tb.format_exc(),
-                )
-                self.feature_vectors = None
-                self.feature_ts_to_idx = {}
+                raise RuntimeError(
+                    f"FeaturePipeline init FAILED for {self.csv_path} — "
+                    f"cannot run backtest with broken feature pipeline. "
+                    f"Use skip_features=True only for tuner workers that do not need feature columns. "
+                    f"Root cause: {_fp_err}"
+                ) from _fp_err
 
         # Phase 2: FeatureMonitor for drift detection in replay loop
         try:
             from features.feature_monitor import FeatureMonitor
             self._monitor = FeatureMonitor(window_size=500)
             self._monitor_available = True
-        except Exception:
+        except Exception as _fm_err:
+            bt_log.error(
+                "FeatureMonitor init FAILED — drift detection is DISABLED for this run. "
+                "Root cause: %s", _fm_err
+            )
             self._monitor = None
             self._monitor_available = False
 
@@ -1303,12 +1335,50 @@ class BacktestRunner:
         else:
             self._scorer = CRTCalibratedScorer()
 
-        # Fusion JSONL logger — one file per instrument under logs/
+        # Fusion JSONL — one file per run, scoped under the coin log dir
+        # _RUN_ID imported above alongside init_coin_logging
         from utils.trade_logger import TradeLogger as _TradeLogger
-        _log_dir = Path("logs")
-        _log_dir.mkdir(exist_ok=True)
-        self._trade_logger = _TradeLogger(_log_dir / f"{bt_config.instrument}_fusion.jsonl")
+        _run_log_dir = Path("logs") / f"run_{_RUN_ID}" / bt_config.instrument
+        _run_log_dir.mkdir(parents=True, exist_ok=True)
+        self._trade_logger = _TradeLogger(_run_log_dir / f"{bt_config.instrument}_fusion.jsonl")
 
+        # Phase C — SignalBeliefTracker lifecycle container.
+        # RuntimeContext owns the BeliefRegistry; EngineRunner only reads it.
+        # Isolated per BacktestRunner instance — no module-global state.
+        try:
+            from core.signal_belief_tracker import RuntimeContext as _RuntimeContext, BeliefRegistry as _BeliefRegistry
+            from config_layer.production_config import get_prod_section as _gps
+            _belief_cfg = (_gps("engine_runner") or {}).get("signal_belief", {})
+            self._runtime_ctx = _RuntimeContext(
+                belief_registry=_BeliefRegistry(_belief_cfg)
+            )
+        except Exception as _bel_err:
+            bt_log.warning(
+                "BeliefRegistry init FAILED — belief gate DISABLED for this run. "
+                "Root cause: %s", _bel_err
+            )
+            self._runtime_ctx = None
+
+        # ── StrategyOrchestrator (parallel entry families: S1-S10) ─────────────
+        # Runs all 10 strategies per candle and produces consensus signal.
+        # Consensus score is injected into EngineRunner context as
+        # strategy_consensus_score, consumed by FusionEngine when
+        # weight_strategy_consensus > 0 in production config.
+        try:
+            from strategies.strategy_orchestrator import StrategyOrchestrator
+            self._orch = StrategyOrchestrator(
+                pair=bt_config.instrument or "BNBUSDT",
+                timeframe="M15",
+            )
+            self._orch_available = True
+            bt_log.info("StrategyOrchestrator initialised for %s", bt_config.instrument)
+        except Exception as _orch_err:
+            bt_log.warning(
+                "StrategyOrchestrator init FAILED — strategy consensus DISABLED "
+                "for this run. Root cause: %s", _orch_err
+            )
+            self._orch = None
+            self._orch_available = False
     def run(self, candle_source: Iterator[Candle], total_candles: int,
             output_dir: str = "results") -> BacktestMetrics:
         self.log.info("Production config version: %s", PROD_VERSION)
@@ -1335,10 +1405,10 @@ class BacktestRunner:
                 "overrides":          self._overrides,
                 "backtest_params":    _bt_params,
                 "crt_engine":         _crt_dict,
-                "engine_runner":      _full_reg.get("engine_runner", {}),
-                "fusion_engine":      _full_reg.get("fusion_engine", {}),
-                "execution_planner":  _full_reg.get("execution_planner", {}),
-                "decision_engine":    _full_reg.get("decision_engine", {}),
+                "engine_runner":      _full_reg["engine_runner"],
+                "fusion_engine":      _full_reg["fusion_engine"],
+                "execution_planner":  _full_reg["execution_planner"],
+                "decision_engine":    _full_reg["decision_engine"],
             }
             _dump_path = _dump_config(
                 _dump_payload,
@@ -1350,7 +1420,7 @@ class BacktestRunner:
             self.log.warning("Config dump skipped: %s", _dump_err)
 
     # Ensure vectors is a list of lists (or numpy array)
-        engine  = CRTEngine(self.crt_cfg)
+        engine  = CRTEngine(self.crt_cfg, sweep_tracer=self._sweep_tracer)
         htf     = HTFBuilder(self.cfg.htf_candles_per_range, self.cfg.instrument)
         slip    = SlippageModel(
             self.cfg.slippage_atr_fraction if self.cfg.slippage_enabled else 0.0,
@@ -1377,49 +1447,50 @@ class BacktestRunner:
         last_session    = ""
 
         # ── Phase 3 / Phase 4 config (loaded once per run) ────────────────────
-        try:
-            from config_layer.production_config import get_prod_section as _gps_bt
-            _ep_cfg_bt = _gps_bt("execution_planner")
-            _fm_cfg_bt = _gps_bt("feature_monitor")
-            _partial_tp_enabled  = bool(_ep_cfg_bt.get("partial_tp_breakeven_enabled", False))
-            _partial_tp_fraction = float(_ep_cfg_bt.get("partial_tp_fraction", 0.5))
-            _drift_pause_enabled = bool(_fm_cfg_bt.get("drift_regime_pause_enabled", False))
-            _drift_cooldown      = int(_fm_cfg_bt.get("drift_cooldown_candles", 10))
-        except Exception:
-            _partial_tp_enabled  = False
-            _partial_tp_fraction = 0.5
-            _drift_pause_enabled = False
-            _drift_cooldown      = 10
+        from config_layer.production_config import get_prod_section as _gps_bt
+        _ep_cfg_bt = _gps_bt("execution_planner")
+        _fm_cfg_bt = _gps_bt("feature_monitor")
+        _partial_tp_enabled  = bool(_ep_cfg_bt.get("partial_tp_breakeven_enabled", False))
+        _partial_tp_fraction = float(_ep_cfg_bt.get("partial_tp_fraction", 0.5))
+        _drift_pause_enabled = bool(_fm_cfg_bt.get("drift_regime_pause_enabled", False))
+        _drift_cooldown      = int(_fm_cfg_bt.get("drift_cooldown_candles", 10))
 
         _drift_pause_remaining = 0
         _hard_drift_pauses     = 0
 
+        # ── Phase D — strategy memory tracking ───────────────────────────────
+        # Helper defined in run() scope to capture engine/state via closure.
+        # Called after every journal.on_trade_closed() that returns a record.
+        # _last_strategy_id: strategy that produced the top signal for the
+        #   open trade (blank in standard backtest; set by EngineRunner when
+        #   strategy_id is surfaced in the result dict).
+        # _last_sweep_type:  sweep_type from CRT sweep event at entry time.
+        #   Used by compute_pattern_hash to avoid state-name collisions.
+        _last_strategy_id: str = ""
+        _last_sweep_type:  str = ""
+        try:
+            from utils.pattern_hasher import encode_crt_path as _enc_path, compute_pattern_hash as _comp_hash
+            from config_layer.crt_engine_v2 import recent_transition_path as _recent_path
+            _phase_d_available = True
+        except Exception as _pd_err:
+            bt_log.warning("Phase D pattern_hasher unavailable — strategy memory disabled. %s", _pd_err)
+            _phase_d_available = False
+
         # ── EngineRunner gate (live-mode pipeline wired into backtest) ────────
         # Runs adapter → fusion → dual-engine → decision_engine on each candidate
-        # trade. Opt-in via BACKTEST_ENGINE_GATE=1 env var (requires loaded feature
-        # parquet — when feature_vector is zeros, adapter rejects 100%).
+        # trade. Enabled by default; set BACKTEST_ENGINE_GATE=0 to disable.
         _engine_runner = None
         _engine_rejected_count = 0
-        if os.getenv("BACKTEST_ENGINE_GATE", "0") == "1":
-            try:
-                from config_layer.production_config import get_prod_section as _gps_er
-                from core.engine_runner import EngineRunner as _ER
-                _er_cfg = dict(_gps_er("engine_runner") or {})
-                try:
-                    _er_cfg.setdefault("fusion_engine", dict(_gps_er("fusion_engine")))
-                except Exception:
-                    pass
-                try:
-                    for _k, _v in dict(_gps_er("decision_engine")).items():
-                        _er_cfg.setdefault(_k, _v)
-                except Exception:
-                    pass
-                if _er_cfg:
-                    _engine_runner = _ER(_er_cfg)
-                    self.log.info("EngineRunner gate wired into backtest path (BACKTEST_ENGINE_GATE=1)")
-            except Exception as _exc:
-                self.log.warning(f"EngineRunner gate disabled ({_exc})")
-                _engine_runner = None
+        if os.getenv("BACKTEST_ENGINE_GATE", "1") == "1":
+            from config_layer.production_config import get_prod_section as _gps_er
+            from core.engine_runner import EngineRunner as _ER
+            _er_cfg = dict(_gps_er("engine_runner"))
+            _er_cfg.setdefault("fusion_engine", dict(_gps_er("fusion_engine")))
+            for _k, _v in dict(_gps_er("decision_engine")).items():
+                _er_cfg.setdefault(_k, _v)
+            _er_cfg["instrument"] = self.cfg.instrument  # instrument-aware Gaussian lookup
+            _engine_runner = _ER(_er_cfg)
+            self.log.info("EngineRunner gate wired into backtest path (BACKTEST_ENGINE_GATE=1)")
 
         self.log.info(
             f"Backtest v2 | {self.cfg.instrument} | {total_candles:,} candles | "
@@ -1466,11 +1537,21 @@ class BacktestRunner:
                 gap_resets += 1
                 if journal.open_trade and engine.state.active_trade:
                     spread_half = candle.close * self.cfg.simulated_spread_pct / 2
-                    journal.on_trade_closed(
+                    _gap_closed = journal.on_trade_closed(
                         engine.state.active_trade, candle.open,
                         "GAP_RESET_CLOSE", candle, candle_idx,
                         engine.state.atr, spread_half,
                     )
+                    # Phase D: attach strategy memory fields
+                    if _gap_closed is not None and _phase_d_available:
+                        try:
+                            _gap_closed.winning_strategy_id = _last_strategy_id
+                            _gap_closed.crt_path            = _enc_path(_recent_path(engine.state))
+                            _gap_closed.pattern_hash        = _comp_hash(
+                                _gap_closed.features, sweep_type=_last_sweep_type or None,
+                            )
+                        except Exception:
+                            pass
                 engine.sm.reset_to_range(engine.state, gap_reason, candle, engine.ev_log)
                 state_path = []
 
@@ -1611,6 +1692,7 @@ class BacktestRunner:
 
                 # ── EngineRunner gate (adapter / fusion / dual / decision) ──
                 _engine_vetoed = False
+                _er_result = None   # default; set inside gate when BACKTEST_ENGINE_GATE=1
                 if not _p5_rejected and not _drift_vetoed and _engine_runner is not None:
                     try:
                         _feat_map_er = {
@@ -1642,9 +1724,38 @@ class BacktestRunner:
                                 _feat_map_er["trade_direction"] = int(_dir_int)
                             except Exception:
                                 pass
+                        # ── StrategyOrchestrator consensus (runs once per candle) ──
+                        _strat_consensus_score = -1.0
+                        _strat_consensus_dir = 0
+                        if self._orch_available and self.feature_vectors is not None:
+                            try:
+                                _feat_dict = {
+                                    name: feature_vector[i]
+                                    for i, name in enumerate(CANONICAL_FEATURES)
+                                    if i < len(feature_vector)
+                                }
+                                _feat_dict["close"] = candle.close
+                                _feat_dict["atr"] = engine.state.atr
+                                _candle_dict = {"close": candle.close, "high": candle.high, "low": candle.low, "open": candle.open, "volume": candle.volume}
+                                _orch_result = self._orch.compute(_feat_dict, _candle_dict)
+                                if _orch_result.is_actionable():
+                                    _strat_consensus_score = _orch_result.score
+                                    _strat_consensus_dir = 1 if _orch_result.signal == "BUY" else -1
+                            except Exception:
+                                pass  # fail-open
+
+                        _er_context = {
+                            "instrument":                    self.cfg.instrument,
+                            "timeframe":                     getattr(self.cfg, "timeframe", "M15"),
+                            "strategy_consensus_direction":  int(_feat_map_er.get("direction", 0)),
+                        }
+                        if _strat_consensus_score >= 0.0:
+                            _er_context["strategy_consensus_score"] = _strat_consensus_score
+                        if self._runtime_ctx is not None:
+                            _er_context["belief_registry"] = self._runtime_ctx.belief_registry
                         _er_result = _engine_runner.run(
                             _feat_map_er,
-                            context={"instrument": self.cfg.instrument},
+                            context=_er_context,
                         )
                         _decision = (_er_result or {}).get("decision") or (_er_result or {}).get("status", "")
                         _reason = (_er_result or {}).get("reason", "engine_runner_reject")
@@ -1675,6 +1786,19 @@ class BacktestRunner:
                         self.log.debug(f"EngineRunner gate exception (allow): {_er_exc}")
 
                 if not _p5_rejected and not _drift_vetoed and not _engine_vetoed:
+                    # BitNet score recorded at approval time. crt_engine_v2 sets
+                    # state.bitnet_main_score during compute_score()/approve() when
+                    # use_bitnet is on and required features present; absent attr
+                    # → BitNet was not evaluated → "" decision (adapter ignores).
+                    _bn_score = getattr(engine.state, "bitnet_main_score", None)
+                    if _bn_score is None:
+                        _bn_score_val = 0.0
+                        _bn_decision  = ""
+                    else:
+                        _bn_score_val = float(_bn_score)
+                        # Trade reached this point ⇒ score cleared the engine's
+                        # internal BitNet gate ⇒ implicit ACCEPT.
+                        _bn_decision  = "ACCEPT"
                     journal.on_trade_opened(
                         trade          = engine.state.active_trade,
                         candle         = candle,
@@ -1691,8 +1815,15 @@ class BacktestRunner:
                         # TRADE_OPENED so these reflect the entry-candle state exactly.
                         # NOTE: must read from `result` (the full dict), not `action`
                         # (which is just the string value of result["action"]).
-                        live_metrics   = result.get("live_metrics", {}),
+                        live_metrics    = result.get("live_metrics", {}),
+                        bitnet_score    = _bn_score_val,
+                        bitnet_decision = _bn_decision,
                     )
+                    # Phase D: capture per-trade context for strategy memory
+                    _sw_ev = getattr(engine.state, "sweep_event", None)
+                    _last_sweep_type = str(getattr(_sw_ev, "sweep_type", "") or "")
+                    # strategy_id surfaces via EngineRunner result (BACKTEST_ENGINE_GATE=1 only)
+                    _last_strategy_id = str((_er_result or {}).get("top_strategy_id", ""))
                     # Log ENTRY to fusion JSONL for downstream Gaussian/TradeNet training
                     # Guard: skip when feature lookup missed (all-zero vector corrupts training data)
                     _orec = journal.open_trade
@@ -1756,6 +1887,16 @@ class BacktestRunner:
                             candle, candle_idx, engine.state.atr, spread_half,
                         )
                     if _closed is not None:
+                        # Phase D: attach strategy memory fields before any downstream read
+                        if _phase_d_available:
+                            try:
+                                _closed.winning_strategy_id = _last_strategy_id
+                                _closed.crt_path            = _enc_path(_recent_path(engine.state))
+                                _closed.pattern_hash        = _comp_hash(
+                                    _closed.features, sweep_type=_last_sweep_type or None,
+                                )
+                            except Exception:
+                                pass
                         self._trade_logger.log_exit(
                             trade_id         = _closed.trade_id,
                             pnl_rr_net       = _closed.pnl_rr_net,
@@ -1785,6 +1926,16 @@ class BacktestRunner:
                     engine.state.atr, spread_half,
                 )
                 if _closed is not None:
+                    # Phase D: attach strategy memory fields
+                    if _phase_d_available:
+                        try:
+                            _closed.winning_strategy_id = _last_strategy_id
+                            _closed.crt_path            = _enc_path(_recent_path(engine.state))
+                            _closed.pattern_hash        = _comp_hash(
+                                _closed.features, sweep_type=_last_sweep_type or None,
+                            )
+                        except Exception:
+                            pass
                     self._trade_logger.log_exit(
                         trade_id         = _closed.trade_id,
                         pnl_rr_net       = _closed.pnl_rr_net,
@@ -1843,6 +1994,40 @@ class BacktestRunner:
         for k, p in paths.items():
             if p:
                 self.log.info(f"  {k:<15} → {p}")
+
+        # Post-run training-trigger check: if cooldown/samples/drift gates open,
+        # emit TRAINING_RECOMMENDED so the operator sees it in the audit log.
+        # Backtest path → log only (no Telegram spam per batch). Wrapped so a
+        # missing prod-config section or any disk error can never fail the run.
+        try:
+            from training.training_trigger import TrainingTrigger
+            from utils.integrity_events import emit_integrity_event
+            _trig = TrainingTrigger.from_prod_config()
+            if _trig.should_trigger():
+                _instr = getattr(self.cfg, "instrument", "")
+                emit_integrity_event(
+                    "TRAINING_RECOMMENDED", "INFO", "backtest_runner",
+                    {"instrument":     _instr,
+                     "results_dir":    str(output_dir),
+                     "trigger_source": "backtest_completion"},
+                )
+                self.log.info(
+                    "TrainingTrigger fired post-backtest for %s. "
+                    "Run: python scripts/auto_train_from_opportunities.py "
+                    "--instruments %s --refresh-zones --promote-if-approved",
+                    _instr, _instr,
+                )
+                _trig.mark_fired()
+        except Exception as _exc:
+            self.log.debug("TrainingTrigger check failed (non-fatal): %s", _exc)
+
+        # Release coin-scoped file handlers so multi-coin sequential runs don't
+        # accumulate open handles or double-write to a previous coin's log dir.
+        from utils.logging_config import close_coin_logging
+        close_coin_logging(self.cfg.instrument)
+
+        self._sweep_tracer.close()
+
         return m
 
     def _session(self, ts: datetime) -> str:

@@ -158,26 +158,40 @@ def test_deterministic_feature_order():
 # ---------------------------------------------------------------------------
 
 def test_zero_volume_ratio():
-    """When all volume == 0, volume_ratio must be 1.0 (Forex fallback)."""
+    """When all volume == 0, the pipeline substitutes intrabar range (high-low)
+    as a Forex tick-activity proxy.  volume_ratio will vary (proxy / rolling mean)
+    rather than being 1.0; assert it is all positive and contains no NaN/inf.
+    """
     df = _make_zero_volume_ohlcv(500)
     pipeline = FeaturePipeline(df)
     enriched_df, _vectors = pipeline.run()
 
-    ratio_col = enriched_df["volume_ratio"]
-    assert (ratio_col == 1.0).all(), (
-        f"Expected all volume_ratio == 1.0 for zero-volume data, "
-        f"got min={ratio_col.min():.4f}, max={ratio_col.max():.4f}"
+    ratio_col = enriched_df["volume_ratio"].dropna()
+    assert len(ratio_col) > 0, "Expected non-empty volume_ratio after proxy substitution"
+    assert (ratio_col > 0).all(), (
+        f"volume_ratio must be positive after intrabar-range proxy substitution "
+        f"(min={ratio_col.min():.4f})"
     )
+    import numpy as np
+    assert not np.isinf(ratio_col).any(), "volume_ratio contains inf after proxy substitution"
 
 
 def test_zero_volume_no_spike():
-    """When all volume == 0, volume_spike must be 0 (ratio 1.0 ≤ 1.5 threshold)."""
+    """When all volume == 0, the pipeline uses an adaptive 75th-percentile spike
+    threshold over the intrabar-range proxy.  volume_spike must be binary {0,1}
+    and the column must have no NaN values (dtype int8).
+    Schema v3.0: volume_spike is a canonical feature (Part 2 — promote_volume_spike).
+    """
     df = _make_zero_volume_ohlcv(500)
     pipeline = FeaturePipeline(df)
     enriched_df, _ = pipeline.run()
 
-    assert (enriched_df["volume_spike"] == 0).all(), (
-        "volume_spike should be 0 when volume is always 0"
+    spike = enriched_df["volume_spike"]
+    assert spike.dtype == "int8", f"volume_spike must be int8, got {spike.dtype}"
+    assert not spike.isna().any(), "volume_spike must not contain NaN"
+    unique_vals = set(spike.unique())
+    assert unique_vals.issubset({0, 1}), (
+        f"volume_spike must be binary {{0,1}}, got {unique_vals}"
     )
 
 
