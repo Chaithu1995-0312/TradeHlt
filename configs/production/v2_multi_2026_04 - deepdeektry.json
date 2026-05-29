@@ -65,7 +65,7 @@
     }
   },
   "sl_tp_comparison": {
-    "_comment": "Reference params for legacy SL/TP method â€” used ONLY by SLTPComparator, never in live path",
+    "_comment": "Reference params for legacy SL/TP method \u00e2\u20ac\u201d used ONLY by SLTPComparator, never in live path",
     "legacy_sl_atr_mult": 1.0,
     "legacy_tp_atr_mult_breakout": 2.0,
     "legacy_tp_atr_mult_pullback": 1.5,
@@ -213,6 +213,13 @@
     "tier_1_threshold": 0.75,
     "tier_2_threshold": 0.3,
     "soft_conf_max_candles": 5,
+    "pending_displacement_ttl_candles": 4,
+    "max_expansion_age_candles": 495,
+    "max_expansion_age_hours": 124,
+    "expansion_age_warn_candles": 342,
+    "shadow_age_penalty_lambda": 0.0,
+    "shadow_age_norm_candles": 0,
+    "shadow_advisory_only": true,
     "sizing_bands": [
       [
         0.75,

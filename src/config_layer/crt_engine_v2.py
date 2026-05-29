@@ -30,6 +30,20 @@ from features.feature_schema import CANONICAL_FEATURES
 from features.schema_validator import validate_features
 from config_layer.crt_sweep_taxonomy import classify_sweep as _classify_sweep_geometry
 from utils.sweep_trace_logger import SweepTraceLogger
+from utils.integrity_events import emit_integrity_event
+import statistics as _statistics
+import json as _json
+from pathlib import Path as _Path
+
+# M2 — enveloped CRT state-transition stream (additive dual-write; mirrors M1 idiom).
+# Guarded import keeps crt_engine_v2 importable even if the event fabric is absent.
+try:
+    from events.event_fabric import make_event_envelope as _make_event_envelope, EventType as _EventType
+    _ENVELOPE_OK = True
+except Exception:  # noqa: BLE001
+    _ENVELOPE_OK = False
+
+_CRT_TRANSITIONS_LOG = _Path("logs/crt_transitions.jsonl")
 # ─────────────────────────────────────────────────────────────────
 # LOGGING
 # ─────────────────────────────────────────────────────────────────
@@ -47,13 +61,15 @@ logger = logging.getLogger("CRT_ENGINE_V2")
 # ─────────────────────────────────────────────────────────────────
 
 class CRTState(Enum):
-    RANGE        = auto()
-    SWEEP        = auto()
-    DISPLACEMENT = auto()
-    EXPANSION    = auto()
-    RETEST       = auto()
-    EXECUTION    = auto()
-    RESOLUTION   = auto()
+    RANGE          = auto()
+    SHADOW_PENDING = auto()   # Cross-window displacement memory active; awaiting sweep confirmation
+    SWEEP          = auto()
+    DISPLACEMENT   = auto()
+    EXPANSION      = auto()
+    EXPIRED        = auto()   # Phase 3b — soft archive: TTL exceeded, one-candle pause before RANGE reset
+    RETEST         = auto()
+    EXECUTION      = auto()
+    RESOLUTION     = auto()
 
 
 class Direction(Enum):
@@ -250,6 +266,28 @@ class EngineState:
     # EMA state for momentum smoothing (initialised on first candle)
     ema_fast_val:         float = 0.0
     ema_slow_val:         float = 0.0
+    # Phase 0b telemetry context (set from backtest loop; read by reset_to_range)
+    htf_remaining_candles: int  = 0
+    _displacement_entry_idx: int = 0   # candle_index when DISPLACEMENT state was entered
+    # Phase 1 — Shadow displacement memory (survives one HTF reset, expires after TTL)
+    pending_displacement_candle:       Optional[Candle]   = None
+    pending_displacement_dir:          Direction           = Direction.NONE
+    pending_displacement_ttl:          int                 = 0
+    pending_displacement_source_htf:   str                 = ""
+    pending_displacement_formed_idx:   int                 = 0
+    pending_displacement_age_at_reset: int                 = 0
+    pending_displacement_reason_created: str               = ""
+    # Phase 2b — Persists True from SHADOW_EXPANSION_CONFIRMED until reset, so TRADE_OPENED
+    # can read it even though the shadow action fired on an earlier candle.
+    _came_from_shadow:                 bool                = False
+    # Phase 3a — candle_index when EXPANSION state was entered; used for candidate_age_at_entry.
+    _expansion_entry_idx:              int                 = 0
+    # Phase 3b — wall-clock timestamp when EXPANSION was entered; enables hour-based TTL check.
+    _expansion_entry_ts:               Optional[datetime]  = None
+    # Phase 4b — HTF alignment of pending displacement at shadow expansion entry; None for normal.
+    # True  = displacement direction still aligned with current HTF range midpoint.
+    # False = direction conflict; shadow context is structurally misaligned.
+    _shadow_htf_alignment:             Optional[bool]      = None
 
     def update_emas(self, close: float, fast: int = 2, slow: int = 5) -> None:
         """Standard EMA update. α = 2/(N+1). Seeds from first close."""
@@ -347,6 +385,39 @@ class CRTConfig:
     tier_2_threshold:   float = 0.30   # half risk
     soft_conf_max_candles: int = 3     # evaluation window (was 5-candle binary gate)
 
+    # ── Shadow displacement protection (Phase 1) ──────────────────
+    # Candles a pending_displacement memory survives after an HTF reset.
+    # TTL = 4 = one HTF window (4 × M15 = 1 h).  Set to 0 to disable.
+    pending_displacement_ttl_candles: int = 4
+
+    # ── Expansion TTL guard (Phase 3b) ────────────────────────────
+    # Expire if EITHER candle OR hour limit is exceeded. Set 0 to disable either.
+    # Derived from Phase 3a: min(P99_non_outlier=495 candles, 7d=672 candles) = 495 candles.
+    # 495 M15 candles = 123.75 hours → max_expansion_age_hours = 124 (ceiling).
+    # P95 (342 candles) used as TEMPORAL_STALE_WIN warn threshold.
+    max_expansion_age_candles: int   = 495   # expire after this many candles (≈5.2 days)
+    max_expansion_age_hours:   int   = 124   # expire after this many hours (timestamp-based)
+    expansion_age_warn_candles: int  = 342   # TEMPORAL_STALE_WIN warning if trade opened above P95
+
+    # ── Shadow age-decay gate (Phase 4b) ─────────────────────────
+    # Exponential decay applied to the S-score of shadow candidates at soft-conf approval.
+    # effective_score = final_S × exp(−λ × candidate_age_at_entry)
+    # 0.0 = OFF (no decay, Phase 3b behavior).  Experiment levels: 0.00 | 0.10 | 0.20 | 0.35
+    # At shadow age=4 (invariant): λ=0.10 → ×0.670 | λ=0.20 → ×0.449 | λ=0.35 → ×0.247
+    shadow_age_penalty_lambda: float = 0.0
+
+    # Normalisation denominator for the shadow age-decay (Phase 4b Variant B).
+    # 0 = Variant A (raw): exp(-λ × age)        — λ not interpretable when age is constant.
+    # N = Variant B (normalised): exp(-λ × age/N) — λ=1.0 means "at max age (N), score → 1/e".
+    # Recommended for Variant B: set to pending_displacement_ttl_candles (= 4).
+    # A/B parity check: Variant A λ=0.20 ≡ Variant B λ=0.80, norm=4 (same penalty at age=4).
+    shadow_age_norm_candles: int = 0
+
+    # Advisory-only shadow: if True, shadow expansions never produce trades.
+    # Shadow still tracks telemetry through EXPANSION→RETEST; EXECUTION is blocked.
+    # Fallback when no λ satisfies the composite shadow governance gate.
+    shadow_advisory_only: bool = False
+
     # ── Proportional sizing bands (score → risk_pct) ─────────────
     sizing_bands: list = field(default_factory=lambda: [
         (0.75, 0.010),   # Tier 1 → 1.0%
@@ -396,11 +467,451 @@ class EventLogger:
             f"EVENT | {ev.event} | idx={ev.candle_index} "
             f"{ev.state_from}→{ev.state_to} | {ev.reason}"
         )
+        self._emit_enveloped(ev)
         return ev
+
+    def _emit_enveloped(self, ev: EngineEvent) -> None:
+        """M2 dual-write: emit STATE_TRANSITION events as a canonical envelope to
+        logs/crt_transitions.jsonl. Read-only projection of the in-memory EngineEvent —
+        state.event_log above stays the source of truth and is never altered. The flat
+        payload carries candle ts + candle_index, so the stream is replay-comparable.
+        Fail-open: any error is swallowed so the state machine is never disrupted."""
+        if not _ENVELOPE_OK or ev.event != "STATE_TRANSITION":
+            return
+        try:
+            env = _make_event_envelope(
+                event_type = _EventType.STATE_TRANSITION.value,
+                instrument = "",
+                source     = "CRTEngine",
+                payload    = ev.to_dict(),
+            )
+            _CRT_TRANSITIONS_LOG.parent.mkdir(parents=True, exist_ok=True)
+            with open(_CRT_TRANSITIONS_LOG, "a", encoding="utf-8") as fh:
+                fh.write(_json.dumps(env) + "\n")
+        except Exception as e:  # noqa: BLE001
+            self.log.debug(f"CRT transition envelope emit failed: {e}")
 
     def dump(self) -> list[dict]:
         """Serialise full event log to list of dicts (DynamoDB-ready)."""
         return [e.to_dict() for e in self._state.event_log]
+
+
+# ─────────────────────────────────────────────────────────────────
+# PHASE-0 TELEMETRY COLLECTOR
+# Passive observability sidecar — zero behavior change.
+# Accumulates five event types during a run; flushed once at end.
+# ─────────────────────────────────────────────────────────────────
+
+class TelemetryCollector:
+    """Collects CRT funnel telemetry without altering any state machine logic."""
+
+    def __init__(self) -> None:
+        self._transition_counts: dict[str, int] = {}
+        self._state_entered_idx: int = 0
+        # Per-expansion episode running state
+        self._expansion_active: bool = False
+        self._expansion_start_idx: int = 0
+        self._expansion_max_depth: float = 0.0
+        self._expansion_ceiling_at_max: float = 0.0
+        self._expansion_time_to_max: int = 0
+        # Expansion dwell histogram (candles spent in EXPANSION per episode)
+        self._expansion_dwells: list[int] = []
+        self._expansion_start_ts: Optional[datetime] = None   # Phase 3a — wall-clock entry time
+        # Phase 3b RC1: last candle seen while EXPANSION active — for correct RUN_END closure.
+        # Without this, open episodes at flush() collapse to zero duration (start=end).
+        self._last_expansion_seen_idx: int = 0
+        self._last_expansion_seen_ts: Optional[datetime] = None
+        # Phase 3b RC-Closure: track the reason of the first (highest-priority) closure call.
+        # Allows on_expansion_ended() to reject duplicate lower-priority late calls.
+        self._expansion_ended_reason: str = ""
+        # Closure priority: higher number wins when multiple reasons apply simultaneously.
+        # Order: RETEST (execution success) > EXPIRED (TTL) > RESET (interrupted) > RUN_END (flush)
+        self._CLOSURE_PRIORITY: dict[str, int] = {
+            "QUALIFIED": 4,   # Retest fired — structure delivered
+            "EXPIRED":   3,   # TTL guard fired
+            "RESET":     2,   # HTF or other reset interrupted (any non-QUALIFIED/EXPIRED reason)
+            "RUN_END":   1,   # Flush at end of run
+        }
+        # Accumulated records by type
+        self._expansion_records: list[dict] = []
+        self._reset_records:     list[dict] = []
+        self._candidate_records: list[dict] = []
+        self._decision_records:  list[dict] = []
+        # Active candidate lifecycle (one at a time)
+        self._active_candidate: Optional[dict] = None
+
+    # ── State entry tracking ──────────────────────────────────────
+
+    def on_state_entered(
+        self, state_name: str, candle_index: int,
+        candle_ts: Optional[datetime] = None,   # Phase 3a — wall-clock timestamp for age_hours_actual
+    ) -> None:
+        """Called from StateMachine._transition() on every valid state entry."""
+        self._transition_counts[state_name] = (
+            self._transition_counts.get(state_name, 0) + 1
+        )
+        self._state_entered_idx = candle_index
+        if state_name == "EXPANSION":
+            self._expansion_active         = True
+            self._expansion_start_idx      = candle_index
+            self._expansion_start_ts       = candle_ts     # Phase 3a
+            self._last_expansion_seen_idx  = candle_index  # Phase 3b RC1
+            self._last_expansion_seen_ts   = candle_ts     # Phase 3b RC1
+            self._expansion_ended_reason   = ""            # Phase 3b RC-Closure: reset per episode
+            self._expansion_max_depth      = 0.0
+            self._expansion_ceiling_at_max = 0.0
+            self._expansion_time_to_max    = 0
+        # Update active candidate state list (exclude RANGE / RESOLUTION)
+        if (self._active_candidate is not None
+                and state_name not in ("RANGE", "RESOLUTION")
+                and state_name not in self._active_candidate["entered_states"]):
+            self._active_candidate["entered_states"].append(state_name)
+            self._active_candidate["last_seen_idx"] = candle_index
+
+    # ── Expansion retrace tracking ────────────────────────────────
+
+    def on_expansion_retrace_check(
+        self, candle_index: int, depth_abs: float, ceiling: float,
+        candle_ts: Optional[datetime] = None,   # Phase 3b RC1 — update last-seen timestamp
+    ) -> None:
+        """Called once per candle in try_expansion_to_retest(), before filtering."""
+        if not self._expansion_active:
+            return
+        if depth_abs > self._expansion_max_depth:
+            self._expansion_max_depth      = depth_abs
+            self._expansion_ceiling_at_max = ceiling
+            self._expansion_time_to_max    = candle_index - self._expansion_start_idx
+        # Phase 3b RC1: keep last-seen position current so RUN_END flush uses real episode end
+        self._last_expansion_seen_idx = candle_index
+        if candle_ts is not None:
+            self._last_expansion_seen_ts = candle_ts
+
+    def on_expansion_ended(
+        self, candle_index: int, reason: str,
+        end_ts: Optional[datetime] = None,        # Phase 3a — actual candle timestamp at episode end
+        shadow_used: bool = False,                # Phase 3a — was this a shadow expansion?
+        candidate_age_at_entry: int = 0,          # Phase 3a — candles from displacement → expansion
+        age_pct_of_threshold: float = 0.0,        # Phase 3b — age/TTL×100; 0.0 if no TTL active
+    ) -> None:
+        """Emit per-episode EXPANSION_RETRACE_CHECK record when episode terminates."""
+        # Phase 3b RC-Closure: closure priority guard.
+        # Map reason to priority bucket. Any reason not in QUALIFIED/EXPIRED/RUN_END → RESET (2).
+        _new_prio = self._CLOSURE_PRIORITY.get(
+            reason if reason in self._CLOSURE_PRIORITY else "RESET", 0
+        )
+        if not self._expansion_active:
+            # Episode already closed — allow a higher-priority late arrival to patch the record
+            _old_prio = self._CLOSURE_PRIORITY.get(
+                self._expansion_ended_reason if self._expansion_ended_reason in self._CLOSURE_PRIORITY
+                else "RESET", 0
+            )
+            if _new_prio > _old_prio and self._expansion_records:
+                # Patch the most recent record's ended_by and outcome
+                _last = self._expansion_records[-1]
+                _last["ended_by"] = (
+                    "retest"  if reason == "QUALIFIED"
+                    else "eof"      if reason == "RUN_END"
+                    else "expired"  if reason == "EXPIRED"
+                    else "reset"
+                )
+                _last["outcome"] = (
+                    "QUALIFIED"    if reason == "QUALIFIED"
+                    else "RUN_END"      if reason == "RUN_END"
+                    else "EXPIRED"      if reason == "EXPIRED"
+                    else "INTERRUPTED"
+                )
+                self._expansion_ended_reason = reason
+            return
+        self._expansion_active = False
+        self._expansion_ended_reason = reason  # Phase 3b RC-Closure: record winning reason
+        dwell = candle_index - self._expansion_start_idx
+        self._expansion_dwells.append(dwell)
+
+        # Phase 3a: ended_by taxonomy (key diagnostic for Case A vs Case B)
+        _ended_by = (
+            "retest"   if reason == "QUALIFIED"
+            else "eof"      if reason == "RUN_END"
+            else "expired"  if reason == "EXPIRED"
+            else "reset"
+        )
+
+        # Phase 3a: dual age_hours — actual from timestamps, estimated from M15 approximation
+        _age_estimated: float = round(dwell * 15 / 60, 2)
+        _age_actual: Optional[float] = None
+        if self._expansion_start_ts is not None and end_ts is not None:
+            _age_actual = round(
+                (end_ts - self._expansion_start_ts).total_seconds() / 3600.0, 2
+            )
+
+        # Phase 3b RC2: emit CLOCK_DRIFT — INFO if >10%, WARNING if >25%.
+        # 5% was too aggressive: markets have gaps, DST, and exchange timestamp variance.
+        if _age_actual is not None and _age_estimated > 0:
+            _drift_pct = abs(_age_actual - _age_estimated) / _age_estimated
+            if _drift_pct > 0.10:
+                _drift_severity = "WARNING" if _drift_pct > 0.25 else "INFO"
+                emit_integrity_event(
+                    "CLOCK_DRIFT", _drift_severity, "crt_engine",
+                    {
+                        "age_hours_actual":    _age_actual,
+                        "age_hours_estimated": _age_estimated,
+                        "drift_pct":           round(_drift_pct * 100, 1),
+                        "candle_index":        candle_index,
+                    },
+                )
+
+        outcome = (
+            "QUALIFIED"    if reason == "QUALIFIED"
+            else "RUN_END"      if reason == "RUN_END"
+            else "EXPIRED"      if reason == "EXPIRED"
+            else "RESET_HTF"    if "HTF" in reason
+            else "RESET_RETRACE"    if "retrace" in reason.lower()
+            else "RESET_EXTENSION"  if "extension" in reason.lower()
+            else "RESET_OTHER"
+        )
+        self._expansion_records.append({
+            "kind":                        "EXPANSION_RETRACE_CHECK",
+            "episode_start_idx":           self._expansion_start_idx,
+            "episode_end_idx":             candle_index,
+            "duration_candles":            dwell,
+            "age_hours_actual":            _age_actual,          # Phase 3a — None if timestamps absent
+            "age_hours_estimated":         _age_estimated,       # Phase 3a — M15 approximation
+            "ended_by":                    _ended_by,            # Phase 3a
+            "shadow_used":                 shadow_used,          # Phase 3a
+            "candidate_age_at_entry":      candidate_age_at_entry,  # Phase 3a
+            "max_retrace_depth_abs":       self._expansion_max_depth,
+            "ceiling_at_max":              self._expansion_ceiling_at_max,
+            "time_to_max_retrace_candles": self._expansion_time_to_max,
+            "age_pct_of_threshold":        age_pct_of_threshold,         # Phase 3b — 0.0 if no TTL active
+            "freshness_ratio":             round(age_pct_of_threshold / 100.0, 3),  # Phase 3b RC5
+            "qualified":                   outcome == "QUALIFIED",
+            "outcome":                     outcome,
+        })
+
+    # ── Reset attribution ─────────────────────────────────────────
+
+    def on_reset(
+        self, from_state: str, reason: str, candle_index: int,
+        displacement_age_candles: int = 0,
+        ema_aligned: bool = False,
+        remaining_htf_candles: int = 0,
+        direction_consistent: bool = False,
+        candle_ts: Optional[datetime] = None,       # Phase 3a — for age_hours_actual
+        shadow_used: bool = False,                  # Phase 3a — was expansion shadow-sourced?
+        candidate_age_at_entry: int = 0,            # Phase 3a — candles from displacement → expansion
+    ) -> None:
+        """Called from StateMachine.reset_to_range() before state changes."""
+        state_age = candle_index - self._state_entered_idx
+        self._state_entered_idx = candle_index  # RANGE entry time
+        self._transition_counts["RANGE"] = (
+            self._transition_counts.get("RANGE", 0) + 1
+        )
+        # Compute expansion probability score for DISPLACEMENT+HTF resets
+        _would_expand_score = 0.0
+        if from_state == "DISPLACEMENT" and "HTF" in reason:
+            _would_expand_score = (
+                min(displacement_age_candles / 3, 1.0) * 0.30
+                + (0.30 if ema_aligned else 0.0)
+                + (0.25 if direction_consistent else 0.0)
+                + min(remaining_htf_candles / 4, 1.0) * 0.15
+            )
+        self._reset_records.append({
+            "kind":                  "RESET_ATTRIBUTED",
+            "candle_index":          candle_index,
+            "from_state":            from_state,
+            "to_state":              "RANGE",
+            "reason":                reason,
+            "state_age_candles":     state_age,
+            "candidate_id":          (
+                self._active_candidate["candidate_id"]
+                if self._active_candidate else None
+            ),
+            "htf_window_position":   (
+                self._active_candidate.get("disp_htf_pos")
+                if self._active_candidate else None
+            ),
+            "would_expand_score":    round(_would_expand_score, 4),
+            "would_expand_threshold": 0.55,
+            "would_expand":          _would_expand_score >= 0.55,
+        })
+        # Close expansion episode if it was active (pass Phase 3a context for rich records)
+        if from_state == "EXPANSION":
+            self.on_expansion_ended(
+                candle_index, reason,
+                end_ts=candle_ts,
+                shadow_used=shadow_used,
+                candidate_age_at_entry=candidate_age_at_entry,
+            )
+        # Classify and close active candidate
+        if self._active_candidate is not None:
+            death = (
+                "RESET_HTF"        if "HTF" in reason
+                else "RESET_RETRACE"   if "retrace" in reason.lower()
+                else "RESET_EXTENSION" if "extension" in reason.lower()
+                else "SWEEP_EXPIRED"   if "expired" in reason.lower() or "Sweep expired" in reason
+                else "SOFT_CONF_TIMEOUT" if ("confirmation" in reason.lower()
+                                              or "timeout" in reason.lower())
+                else "FILTER_REJECTED" if any(k in reason for k in
+                                               ("discount zone", "premium zone", "off_session"))
+                else "RESET_OTHER"
+            )
+            self._close_candidate(death, candle_index)
+
+    # ── Candidate lifecycle ───────────────────────────────────────
+
+    def on_candidate_opened(
+        self, candidate_id: str, candle_index: int, ts: str,
+        shadow: bool = False,
+    ) -> None:
+        """Called when a new SWEEP (or shadow sweep) is detected."""
+        if self._active_candidate is not None:
+            self._close_candidate("RUN_OVERLAP", candle_index)
+        self._active_candidate = {
+            "candidate_id":     candidate_id,
+            "first_seen_idx":   candle_index,
+            "first_seen_ts":    ts,
+            "last_seen_idx":    candle_index,
+            "entered_states":   ["SWEEP"],
+            "max_score_seen":   0.0,
+            "shadow_used":      shadow,
+            "score_at_approval": None,
+            "death_reason":     None,
+        }
+
+    def on_candidate_score(self, score: float) -> None:
+        """Track highest S-score seen across all soft-conf evaluations."""
+        if self._active_candidate and score > self._active_candidate["max_score_seen"]:
+            self._active_candidate["max_score_seen"] = score
+
+    def on_displacement_htf_position(self, position: int, remaining: int) -> None:
+        """Record which HTF-window position (1-4) the displacement was detected on."""
+        if self._active_candidate is not None:
+            self._active_candidate["disp_htf_pos"]       = position
+            self._active_candidate["disp_htf_remaining"] = remaining
+
+    def on_candidate_accepted(
+        self,
+        candle_index:          int,
+        score_at_approval:     float = 0.0,
+        shadow_context:        Optional[dict] = None,   # Phase 4b
+        shadow_displacement_br: float = 0.0,            # Phase 4b — body_ratio of pending disp candle
+    ) -> None:
+        """Called when TRADE_OPENED fires — candidate lifecycle ends as ACCEPTED."""
+        if self._active_candidate is not None:
+            self._active_candidate["score_at_approval"]      = score_at_approval
+            self._active_candidate["shadow_context"]         = shadow_context or {}   # Phase 4b
+            self._active_candidate["shadow_displacement_br"] = shadow_displacement_br  # Phase 4b
+        self._close_candidate("ACCEPTED", candle_index)
+
+    def _close_candidate(self, death_reason: str, candle_index: int) -> None:
+        if self._active_candidate is None:
+            return
+        c = self._active_candidate
+        self._candidate_records.append({
+            "kind":              "CANDIDATE_LIFECYCLE",
+            "candidate_id":      c["candidate_id"],
+            "first_seen_idx":    c["first_seen_idx"],
+            "first_seen_ts":     c["first_seen_ts"],
+            "last_seen_idx":     candle_index,
+            "age_candles":       candle_index - c["first_seen_idx"],
+            "entered_states":    c["entered_states"],
+            "max_score_seen":    c["max_score_seen"],
+            "shadow_used":          c.get("shadow_used", False),
+            "score_at_approval":    c.get("score_at_approval"),    # None if not accepted
+            "shadow_context":       c.get("shadow_context", {}),   # Phase 4b — age/penalty/alignment
+            "shadow_displacement_br": c.get("shadow_displacement_br", 0.0),  # Phase 4b
+            "death_reason":         death_reason,
+        })
+        self._active_candidate = None
+
+    # ── Decision distance ─────────────────────────────────────────
+
+    def on_decision_distance(
+        self,
+        candle_index: int,
+        score_actual: float,
+        score_threshold: float,
+        accepted: bool,
+        rejection_reason: str,
+        soft_conf_candle_num: int,
+    ) -> None:
+        """Called after every S-score computation inside the soft-conf window."""
+        self._decision_records.append({
+            "kind":               "DECISION_DISTANCE",
+            "candle_index":       candle_index,
+            "candidate_id":       (
+                self._active_candidate["candidate_id"]
+                if self._active_candidate else None
+            ),
+            "score_actual":       score_actual,
+            "score_threshold":    score_threshold,
+            "decision_distance":  abs(score_actual - score_threshold),
+            "accepted":           accepted,
+            "rejection_reason":   rejection_reason,
+            "soft_conf_candle_num": soft_conf_candle_num,
+        })
+
+    # ── Flush ─────────────────────────────────────────────────────
+
+    def flush(self) -> list[dict]:
+        """Return all telemetry records. Called once at end-of-run."""
+        # Phase 3b RC1: use _last_expansion_seen_idx/ts, not _expansion_start_idx.
+        # Using start_idx caused open episodes to collapse to zero duration at flush time.
+        if self._expansion_active:
+            self.on_expansion_ended(
+                self._last_expansion_seen_idx, "RUN_END",
+                end_ts=self._last_expansion_seen_ts,
+            )
+        if self._active_candidate is not None:
+            self._close_candidate("RUN_END", self._state_entered_idx)
+
+        _dwells = self._expansion_dwells
+        _sorted_d = sorted(_dwells) if _dwells else []
+        _dwell_stats: dict = {
+            "count":   len(_dwells),
+            "mean":    round(_statistics.mean(_dwells), 1)    if _dwells else 0,
+            "median":  round(_statistics.median(_dwells), 1)  if _dwells else 0,
+            "p90":     _sorted_d[int(0.90 * len(_sorted_d))]  if len(_dwells) >= 10 else 0,
+            "p99":     _sorted_d[int(0.99 * len(_sorted_d))]  if len(_dwells) >= 10 else 0,  # Phase 3a
+            "max":     max(_dwells, default=0),
+            # Phase 3a: ended_by_counts — primary Case A/B diagnostic
+            "ended_by_counts": {
+                "retest":  sum(1 for r in self._expansion_records if r.get("ended_by") == "retest"),
+                "reset":   sum(1 for r in self._expansion_records if r.get("ended_by") == "reset"),
+                "eof":     sum(1 for r in self._expansion_records if r.get("ended_by") == "eof"),
+                "expired": sum(1 for r in self._expansion_records if r.get("ended_by") == "expired"),
+            },
+        }
+
+        # Phase 3b RC3: UNBOUNDED_STATE — CRITICAL if any episode exceeds max(P95×3, median×25).
+        # P99 is self-referential with small N (the anomaly inflates P99, masking itself).
+        # P95×3 is stable: normal episodes stay below, the 20k-candle outlier fires reliably.
+        if len(_dwells) >= 10:
+            _p95    = _sorted_d[int(0.95 * len(_sorted_d))]
+            _median = _statistics.median(_dwells)
+            _threshold = max(_p95 * 3, _median * 25)
+            _unbounded = [d for d in _dwells if d > _threshold]
+            if _unbounded:
+                emit_integrity_event(
+                    "UNBOUNDED_STATE", "CRITICAL", "crt_engine",
+                    {
+                        "state":     "EXPANSION",
+                        "p95":       _p95,
+                        "median":    _median,
+                        "threshold": _threshold,
+                        "offenders": _unbounded,
+                    },
+                )
+
+        records: list[dict] = [{
+            "kind":                  "TRANSITION_COUNTER",
+            "state_entry_counts":    dict(self._transition_counts),
+            "expansion_dwell_stats": _dwell_stats,
+        }]
+        records.extend(self._expansion_records)
+        records.extend(self._reset_records)
+        records.extend(self._candidate_records)
+        records.extend(self._decision_records)
+        return records
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -502,20 +1013,23 @@ class RangeDetector:
 # ─────────────────────────────────────────────────────────────────
 
 VALID_TRANSITIONS: dict[CRTState, list[CRTState]] = {
-    CRTState.RANGE:        [CRTState.SWEEP],
-    CRTState.SWEEP:        [CRTState.DISPLACEMENT, CRTState.RANGE],
-    CRTState.DISPLACEMENT: [CRTState.EXPANSION, CRTState.RANGE],
-    CRTState.EXPANSION:    [CRTState.RETEST, CRTState.RANGE],
-    CRTState.RETEST:       [CRTState.EXECUTION, CRTState.RANGE],
-    CRTState.EXECUTION:    [CRTState.RESOLUTION],
-    CRTState.RESOLUTION:   [CRTState.RANGE],
+    CRTState.RANGE:          [CRTState.SWEEP, CRTState.SHADOW_PENDING],
+    CRTState.SHADOW_PENDING: [CRTState.SWEEP, CRTState.RANGE],
+    CRTState.SWEEP:          [CRTState.DISPLACEMENT, CRTState.EXPANSION, CRTState.RANGE],
+    CRTState.DISPLACEMENT:   [CRTState.EXPANSION, CRTState.RANGE],
+    CRTState.EXPANSION:      [CRTState.RETEST, CRTState.EXPIRED, CRTState.RANGE],  # Phase 3b: EXPIRED added
+    CRTState.EXPIRED:        [CRTState.RANGE],   # Phase 3b — one-candle soft archive then RANGE
+    CRTState.RETEST:         [CRTState.EXECUTION, CRTState.RANGE],
+    CRTState.EXECUTION:      [CRTState.RESOLUTION],
+    CRTState.RESOLUTION:     [CRTState.RANGE],
 }
 
 
 class StateMachine:
 
-    def __init__(self, config: CRTConfig):
+    def __init__(self, config: CRTConfig, telemetry: Optional["TelemetryCollector"] = None):
         self.config = config
+        self.telemetry = telemetry
         self.log = logging.getLogger("CRT.StateMachine")
 
     def _transition(
@@ -555,6 +1069,22 @@ class StateMachine:
             )
 
         state.current_state = target
+        if target == CRTState.DISPLACEMENT and candle:
+            state._displacement_entry_idx = candle.index
+        if target == CRTState.EXPANSION and candle:          # Phase 3a/3b
+            state._expansion_entry_idx = candle.index
+            state._expansion_entry_ts  = candle.timestamp   # Phase 3b — for hour-based TTL
+        if self.telemetry and candle:
+            self.telemetry.on_state_entered(target.name, candle.index, candle_ts=candle.timestamp)
+            if target == CRTState.RETEST and self.telemetry._expansion_active:
+                self.telemetry.on_expansion_ended(
+                    candle.index, "QUALIFIED",
+                    end_ts=candle.timestamp,                                       # Phase 3a
+                    shadow_used=state._came_from_shadow,                           # Phase 3a
+                    candidate_age_at_entry=(                                       # Phase 3a
+                        state._expansion_entry_idx - state._displacement_entry_idx
+                    ),
+                )
         return True
 
     # ── Transition guards ─────────────────────────────────────
@@ -569,6 +1099,45 @@ class StateMachine:
             state, CRTState.SWEEP,
             f"Sweep @ {sweep.price:.5f} idx={sweep.candle_index}",
             sweep.candle, ev_logger,
+        )
+
+    def try_range_to_shadow_pending(
+        self, state: EngineState, sweep: "SweepEvent",
+        ev_logger: Optional[EventLogger] = None
+    ) -> bool:
+        """Transition RANGE→SHADOW_PENDING when a confirming sweep fires while pending memory is active."""
+        state.sweep_event = sweep
+        state.direction   = sweep.direction
+        return self._transition(
+            state, CRTState.SHADOW_PENDING,
+            f"Shadow resume: confirming sweep @ {sweep.price:.5f} dir={sweep.direction.value}",
+            sweep.candle, ev_logger,
+        )
+
+    def try_shadow_pending_to_expansion(
+        self, state: EngineState, candle: Candle,
+        ev_logger: Optional[EventLogger] = None
+    ) -> bool:
+        """Restore prior-window displacement context and collapse SHADOW_PENDING→SWEEP→EXPANSION.
+
+        Bypasses the body_ratio / ATR displacement strength check because displacement
+        was already validated in the previous HTF window.  The confirming sweep in the
+        new window is sufficient evidence that the move is continuing.
+        """
+        state.displacement_candle = state.pending_displacement_candle
+        state.direction           = state.pending_displacement_dir
+        # Two-step transition for full audit trail
+        ok_sweep = self._transition(
+            state, CRTState.SWEEP,
+            f"Shadow: prior-window displacement restored from idx={state.pending_displacement_formed_idx}",
+            candle, ev_logger,
+        )
+        if not ok_sweep:
+            return False
+        return self._transition(
+            state, CRTState.EXPANSION,
+            "Shadow resume: displacement carried from prior HTF window — strength check skipped",
+            candle, ev_logger,
         )
 
     def try_sweep_to_displacement(
@@ -698,6 +1267,12 @@ class StateMachine:
             depth_abs = rng.h_ref - candle.close
         
         min_depth = 0.1 * atr if atr > 0 else 0.0
+        # [TELEMETRY] Track every retrace attempt regardless of outcome (RC1: pass candle_ts)
+        if self.telemetry:
+            self.telemetry.on_expansion_retrace_check(
+                state.current_candle_index, depth_abs, adaptive_ceiling,
+                candle_ts=candle.timestamp,
+            )
         if depth_abs < min_depth:
             return False
 
@@ -809,6 +1384,35 @@ class StateMachine:
         self.log.info(f"RESET → RANGE | {reason}")
         state.transition_log.append({"from": state.current_state.name, "to": "RANGE", "reason": reason})
 
+        # [TELEMETRY] Reset attribution + expansion/candidate closure
+        if self.telemetry and candle:
+            _disp_age = (
+                candle.index - state._displacement_entry_idx
+                if state.current_state == CRTState.DISPLACEMENT
+                else 0
+            )
+            _ema_aligned = (
+                (state.ema_fast_val > state.ema_slow_val) == (state.direction.value == "LONG")
+                if state.direction.value in ("LONG", "SHORT") else False
+            )
+            _dir_con = (
+                (candle.close > candle.open) == (state.direction.value == "LONG")
+                if state.direction.value in ("LONG", "SHORT") else False
+            )
+            self.telemetry.on_reset(
+                state.current_state.name, reason, candle.index,
+                displacement_age_candles=_disp_age,
+                ema_aligned=_ema_aligned,
+                remaining_htf_candles=state.htf_remaining_candles,
+                direction_consistent=_dir_con,
+                candle_ts=candle.timestamp,                              # Phase 3a
+                shadow_used=state._came_from_shadow,                     # Phase 3a
+                candidate_age_at_entry=(                                 # Phase 3a
+                    state._expansion_entry_idx - state._displacement_entry_idx
+                    if state.current_state == CRTState.EXPANSION else 0
+                ),
+            )
+
         if ev_logger and candle:
             ev_logger.record(
                 "RESET", candle,
@@ -817,16 +1421,44 @@ class StateMachine:
                 reason=reason,
             )
 
-        state.current_state       = CRTState.RANGE
-        state.sweep_event         = None
-        state.displacement_candle = None
-        state.retest_candle       = None
-        state.retest_candle_index = 0
-        state.risk_score          = None
-        state.direction           = Direction.NONE
-        state.cached_features     = None   # [CACHE] invalidate on reset
+        # [Phase 1] Create pending displacement memory before clearing, if appropriate
+        _create_shadow = (
+            state.current_state == CRTState.DISPLACEMENT
+            and state.displacement_candle is not None
+            and "HTF" in reason
+        )
+        if _create_shadow:
+            state.pending_displacement_candle        = state.displacement_candle
+            state.pending_displacement_dir           = state.direction
+            state.pending_displacement_ttl           = self.config.pending_displacement_ttl_candles
+            state.pending_displacement_source_htf    = (
+                state.active_range.htf_candle_id if state.active_range else ""
+            )
+            state.pending_displacement_formed_idx    = state._displacement_entry_idx
+            state.pending_displacement_age_at_reset  = (
+                candle.index - state._displacement_entry_idx if candle else 0
+            )
+            state.pending_displacement_reason_created = reason
+        elif state.pending_displacement_ttl > 0 and not _create_shadow:
+            # Non-HTF reset (retrace, extension, session) expires any existing shadow memory
+            state.pending_displacement_candle  = None
+            state.pending_displacement_ttl     = 0
+            state.pending_displacement_dir     = Direction.NONE
+
+        state.current_state        = CRTState.RANGE
+        state.sweep_event          = None
+        state.displacement_candle  = None
+        state.retest_candle        = None
+        state.retest_candle_index  = 0
+        state.risk_score           = None
+        state.direction            = Direction.NONE
+        state.cached_features      = None   # [CACHE] invalidate on reset
         state.evaluating_soft_conf = False  # clear soft conf window on every reset
         state.soft_conf_candles    = 0
+        state._came_from_shadow      = False  # [Phase 2b] clear shadow flag on reset
+        state._expansion_entry_idx   = 0      # [Phase 3a] clear expansion entry tracker
+        state._expansion_entry_ts    = None   # [Phase 3b] clear hour-based TTL anchor
+        state._shadow_htf_alignment  = None   # [Phase 4b] clear HTF alignment signal
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -1444,10 +2076,11 @@ class CRTEngine:
                 "CRTEngine requires an explicit CRTConfig. "
                 "Use ConfigBuilder.build(instrument) to create one."
             )
-        self.config   = config
-        self.detector = RangeDetector(self.config)
-        self.sm       = StateMachine(self.config)
-        self.risk     = UltronRiskEngine(self.config)
+        self.config    = config
+        self.detector  = RangeDetector(self.config)
+        self.telemetry = TelemetryCollector()
+        self.sm        = StateMachine(self.config, self.telemetry)
+        self.risk      = UltronRiskEngine(self.config)
         self.executor = ExecutionEngine(self.config)
         self.reset_lg = ResetLogic(self.config)
         self.state    = EngineState()
@@ -1481,6 +2114,10 @@ class CRTEngine:
     def dump_event_log(self) -> list[dict]:
         """Return full typed event log as list of dicts (DynamoDB-ready)."""
         return self.ev_log.dump()
+
+    def dump_telemetry(self) -> list[dict]:
+        """Return all Phase-0 telemetry records. Call once at end-of-run."""
+        return self.telemetry.flush()
 
     def process_candle(self, candle: Candle, htf_candle_id: str) -> dict:
         # [PATCH 4] Auto-assign candle index
@@ -1548,43 +2185,126 @@ class CRTEngine:
         s = self.state.current_state
 
         if s == CRTState.RANGE:
+            # ── Pending displacement TTL countdown ─────────────────────
+            if self.state.pending_displacement_ttl > 0:
+                self.state.pending_displacement_ttl -= 1
+                if self.state.pending_displacement_ttl == 0:
+                    self.log.debug(
+                        f"Shadow memory expired (TTL exhausted) at idx={candle.index}"
+                    )
+                    self.state.pending_displacement_candle = None
+                    self.state.pending_displacement_dir    = Direction.NONE
+
             sweep = self.detector.detect_sweep(
                 candle, self.state.active_range,
                 self.state.sweep_event, self.state.current_candle_index,  # [PATCH 2]
             )
             if sweep:
-                self.ev_log.record(
-                    "SWEEP", candle,
-                    direction=sweep.direction.value, price=sweep.price,
-                    metadata={"double_confirmed": sweep.double_confirmed},
-                )
-                self.sm.try_range_to_sweep(self.state, sweep, self.ev_log)
-                action["action"] = "SWEEP_DETECTED"
-                # ── Layer 0: Sweep Trace Packet ────────────────────────────
-                if self._sweep_tracer is not None and self.state.active_range is not None:
-                    rng = self.state.active_range
-                    _cross_high = candle.high > rng.h_ref and candle.close < rng.h_ref
-                    _cross_low  = candle.low  < rng.l_ref and candle.close > rng.l_ref
-                    _ref        = rng.h_ref if _cross_high else rng.l_ref
-                    _pen_pts    = abs(sweep.price - _ref)
-                    _pen_atr    = _pen_pts / self.state.atr if self.state.atr > 0 else 0.0
-                    self._sweep_tracer.emit(
-                        candle_index      = candle.index,
-                        range_high        = rng.h_ref,
-                        range_low         = rng.l_ref,
-                        candle_open       = candle.open,
-                        candle_high       = candle.high,
-                        candle_low        = candle.low,
-                        candle_close      = candle.close,
-                        cross_high        = _cross_high,
-                        cross_low         = _cross_low,
-                        penetration_points = _pen_pts,
-                        penetration_atr   = _pen_atr,
-                        decision          = "SWEEP_HIGH" if _cross_high else "SWEEP_LOW",
-                        state_before      = "RANGE",
-                        state_after       = "SWEEP",
-                        expired           = False,
+                # ── Shadow resume path: sweep matches pending displacement ──
+                if (self.state.pending_displacement_candle is not None
+                        and sweep.direction == self.state.pending_displacement_dir):
+                    self.sm.try_range_to_shadow_pending(self.state, sweep, self.ev_log)
+                    action["action"] = "SHADOW_SWEEP_DETECTED"
+                    self.telemetry.on_candidate_opened(
+                        f"CAND-{candle.index}", candle.index, candle.timestamp.isoformat(),
+                        shadow=True,
                     )
+                else:
+                    # ── Normal sweep path ──────────────────────────────────
+                    self.ev_log.record(
+                        "SWEEP", candle,
+                        direction=sweep.direction.value, price=sweep.price,
+                        metadata={"double_confirmed": sweep.double_confirmed},
+                    )
+                    self.sm.try_range_to_sweep(self.state, sweep, self.ev_log)
+                    action["action"] = "SWEEP_DETECTED"
+                    # [TELEMETRY] Open candidate lifecycle record
+                    self.telemetry.on_candidate_opened(
+                        f"CAND-{candle.index}", candle.index, candle.timestamp.isoformat()
+                    )
+                    # ── Layer 0: Sweep Trace Packet ────────────────────────
+                    if self._sweep_tracer is not None and self.state.active_range is not None:
+                        rng = self.state.active_range
+                        _cross_high = candle.high > rng.h_ref and candle.close < rng.h_ref
+                        _cross_low  = candle.low  < rng.l_ref and candle.close > rng.l_ref
+                        _ref        = rng.h_ref if _cross_high else rng.l_ref
+                        _pen_pts    = abs(sweep.price - _ref)
+                        _pen_atr    = _pen_pts / self.state.atr if self.state.atr > 0 else 0.0
+                        self._sweep_tracer.emit(
+                            candle_index      = candle.index,
+                            range_high        = rng.h_ref,
+                            range_low         = rng.l_ref,
+                            candle_open       = candle.open,
+                            candle_high       = candle.high,
+                            candle_low        = candle.low,
+                            candle_close      = candle.close,
+                            cross_high        = _cross_high,
+                            cross_low         = _cross_low,
+                            penetration_points = _pen_pts,
+                            penetration_atr   = _pen_atr,
+                            decision          = "SWEEP_HIGH" if _cross_high else "SWEEP_LOW",
+                            state_before      = "RANGE",
+                            state_after       = "SWEEP",
+                            expired           = False,
+                        )
+
+        elif s == CRTState.SHADOW_PENDING:
+            # ── SHADOW_LEAK integrity check ────────────────────────────────
+            _stored_sweep = self.state.sweep_event
+            _shadow_ok = (
+                _stored_sweep is not None
+                and _stored_sweep.direction == self.state.pending_displacement_dir
+            )
+            if not _shadow_ok:
+                emit_integrity_event(
+                    "SHADOW_LEAK", "ERROR", "crt_engine",
+                    {
+                        "candidate_id": f"CAND-{candle.index}",
+                        "pending_dir":  self.state.pending_displacement_dir.value
+                                        if self.state.pending_displacement_dir else "NONE",
+                        "sweep_dir":    _stored_sweep.direction.value
+                                        if _stored_sweep else "NONE",
+                        "candle_index": candle.index,
+                    },
+                )
+                self.state.pending_displacement_ttl    = 0
+                self.state.pending_displacement_candle = None
+                self.state.pending_displacement_dir    = Direction.NONE
+                self.sm.reset_to_range(
+                    self.state, "SHADOW_LEAK: sweep invalid or direction mismatch",
+                    candle, self.ev_log,
+                )
+                action["action"] = "SHADOW_LEAK"
+            else:
+                # Valid resume: collapse SHADOW_PENDING → SWEEP → EXPANSION
+                _pending_formed = self.state.pending_displacement_formed_idx
+                _pending_src    = self.state.pending_displacement_source_htf
+                if self.sm.try_shadow_pending_to_expansion(self.state, candle, self.ev_log):
+                    action["action"] = "SHADOW_EXPANSION_CONFIRMED"
+                    action["shadow_source_htf"]      = _pending_src
+                    action["shadow_formed_idx"]      = _pending_formed
+                    self.state._came_from_shadow     = True  # persists until reset
+                    # Phase 4b: compute HTF alignment BEFORE clearing pending_displacement_dir
+                    # True = pending direction still aligned with HTF range midpoint (discount/premium ok)
+                    # False = direction conflict; None = no range data available
+                    _rng = self.state.active_range
+                    _pdir = self.state.pending_displacement_dir
+                    if _rng is not None and _pdir != Direction.NONE:
+                        _htf_mid = (_rng.h_ref + _rng.l_ref) / 2.0
+                        self.state._shadow_htf_alignment = (
+                            (_pdir == Direction.LONG  and candle.close < _htf_mid)
+                            or (_pdir == Direction.SHORT and candle.close > _htf_mid)
+                        )
+                    else:
+                        self.state._shadow_htf_alignment = None
+                    # Clear pending memory now that it has been consumed
+                    self.state.pending_displacement_ttl            = 0
+                    self.state.pending_displacement_candle         = None
+                    self.state.pending_displacement_dir            = Direction.NONE
+                    self.state.pending_displacement_source_htf     = ""
+                    self.state.pending_displacement_formed_idx     = 0
+                    self.state.pending_displacement_age_at_reset   = 0
+                    self.state.pending_displacement_reason_created = ""
 
         elif s == CRTState.SWEEP:
             # [PATCH 2] Age check happens inside try_sweep_to_displacement
@@ -1630,6 +2350,10 @@ class CRTEngine:
 
         elif s == CRTState.EXPANSION:
             self.log.debug(f"EXPANSION STATE ACTIVE | idx={candle.index}")
+
+            # ── RC-Closure: RETEST has priority=4 > EXPIRED priority=3.
+            # Try retest FIRST so a qualifying retest always wins over TTL expiry
+            # on the same candle. If retest fires, we return before the TTL check runs.
             if self.sm.try_expansion_to_retest(self.state, candle, self.state.atr, self.ev_log):
                 action["action"] = "RETEST_CONFIRMED"
                 # Begin soft confirmation window (replaces binary 5-candle gate)
@@ -1639,6 +2363,82 @@ class CRTEngine:
                     "BEGIN_SOFT_CONF", candle,
                     reason="Retest locked — evaluating soft confirmation manifold"
                 )
+
+            else:
+                # ── Phase 3b: Expansion TTL guard ─────────────────────────────────
+                # Runs only when retest did NOT fire on this candle (RC-Closure).
+                _max_c = self.config.max_expansion_age_candles
+                _max_h = self.config.max_expansion_age_hours
+                _exp_age_c = candle.index - self.state._expansion_entry_idx
+
+                # Hour-based age: prefer actual timestamp delta; fall back to M15 approximation
+                if self.state._expansion_entry_ts is not None:
+                    _age_h = (candle.timestamp - self.state._expansion_entry_ts).total_seconds() / 3600.0
+                else:
+                    _age_h = _exp_age_c * 15.0 / 60.0   # M15 approximation
+
+                _ttl_exceeded = (
+                    (_max_c > 0 and _exp_age_c > _max_c)
+                    or (_max_h > 0 and _age_h > _max_h)
+                )
+
+                if _ttl_exceeded:
+                    # ── would_trade_if_alive: structural quality check on displacement candle ──
+                    _dc = self.state.displacement_candle
+                    _would_trade = False
+                    _body_ratio  = 0.0
+                    if _dc is not None:
+                        _rng2 = _dc.high - _dc.low
+                        _body_ratio  = abs(_dc.close - _dc.open) / _rng2 if _rng2 > 0 else 0.0
+                        _would_trade = _body_ratio >= self.config.body_ratio_min
+
+                    # freshness_ratio = age/ttl (0.20=fresh, 0.80=aging, >1.0=stale)
+                    _freshness_ratio = round(_exp_age_c / _max_c, 3) if _max_c > 0 else 0.0
+                    _age_pct         = round(_freshness_ratio * 100.0, 1)  # % form for on_expansion_ended
+
+                    # retest_distance: how far was price from triggering a retest at expiry?
+                    # depth proxy = max retrace seen during this episode (from telemetry tracker)
+                    _current_depth_abs   = self.telemetry._expansion_max_depth
+                    _retest_ceiling      = self.config.retest_depth_max   # config fraction ceiling
+                    _retest_distance_abs = max(0.0, _retest_ceiling - _current_depth_abs)
+                    _retest_depth_pct    = (
+                        round(_current_depth_abs / _retest_ceiling, 3)
+                        if _retest_ceiling > 0 else 0.0
+                    )
+
+                    emit_integrity_event("EXPANSION_EXPIRED", "WARNING", "crt_engine", {
+                        "candidate_id":          f"CAND-{self.state._expansion_entry_idx}",
+                        "expansion_age_candles": _exp_age_c,
+                        "expansion_age_hours":   round(_age_h, 1),
+                        "source":                "shadow" if self.state._came_from_shadow else "normal",
+                        "shadow_used":           self.state._came_from_shadow,
+                        "would_trade_if_alive":  _would_trade,
+                        "freshness_ratio":       _freshness_ratio,     # RC5: 0.20=fresh, 1.20=stale
+                        "age_pct_of_threshold":  _age_pct,             # e.g. 400/500 → 80.0%
+                        "retest_distance_abs":   round(_retest_distance_abs, 6),  # RC5
+                        "retest_depth_pct":      _retest_depth_pct,    # RC5: 0-1+, >1 = would have triggered
+                        "score":                 round(_body_ratio, 4),
+                        "candle_index":          candle.index,
+                    })
+                    self.telemetry.on_expansion_ended(
+                        candle.index, "EXPIRED",
+                        end_ts=candle.timestamp,
+                        shadow_used=self.state._came_from_shadow,
+                        candidate_age_at_entry=(
+                            self.state._expansion_entry_idx - self.state._displacement_entry_idx
+                        ),
+                        age_pct_of_threshold=_age_pct,
+                    )
+                    self.sm._transition(
+                        self.state, CRTState.EXPIRED, "expansion_ttl_exceeded", candle, self.ev_log
+                    )
+                    action["action"] = "EXPANSION_EXPIRED"
+
+        # ── Phase 3b: EXPIRED branch ──────────────────────────────────────────
+        # One-candle soft archive state: the episode label is committed, now reset to RANGE.
+        elif s == CRTState.EXPIRED:
+            self.sm.reset_to_range(self.state, "expansion_ttl_exceeded", candle, self.ev_log)
+            action["action"] = "EXPANSION_TTL_RESET"
 
         # ── SOFT CONFIRMATION MANIFOLD (replaces binary awaiting_confirmation) ──
         elif self.state.evaluating_soft_conf:
@@ -1654,6 +2454,62 @@ class CRTEngine:
             # ── Evaluate geometric fusion score on this candle ──
             approved, reason, final_S = self.risk.approve_with_soft_conf(
                 self.state, candle
+            )
+
+            # ── Phase 4b: Shadow age-decay gate ──────────────────────────────
+            # Applies only to shadow candidates (state._came_from_shadow == True).
+            # effective_S = final_S × exp(−λ × candidate_age_at_entry)
+            # If effective_S < tier_2_threshold, override approval to rejected.
+            _effective_S        = final_S
+            _freshness_mult     = 1.0
+            _shadow_ctx: dict   = {}
+            _shadow_disp_br     = 0.0
+            if self.state._came_from_shadow:
+                _cand_age = (
+                    self.state._expansion_entry_idx - self.state._displacement_entry_idx
+                )
+                _lambda = self.config.shadow_age_penalty_lambda
+                _norm   = self.config.shadow_age_norm_candles  # Phase 4b Variant B
+                if _lambda > 0.0:
+                    # Variant B (normalised) when norm > 0; Variant A (raw) when norm == 0.
+                    # Normalised: λ=1.0 means "at max shadow age (norm candles), score → 1/e".
+                    _age_input      = (_cand_age / _norm) if _norm > 0 else _cand_age
+                    _freshness_mult = math.exp(-_lambda * _age_input)
+                    _effective_S    = final_S * _freshness_mult
+                    # Override: if decay pushed score below threshold, un-approve
+                    if approved and _effective_S < self.config.tier_2_threshold:
+                        approved = False
+                        reason   = RejectReason.LOW_SCORE
+                _shadow_ctx = {
+                    "age":                  _cand_age,
+                    "age_normalised":       round(_cand_age / _norm, 3) if _norm > 0 else None,
+                    "htf_alignment":        self.state._shadow_htf_alignment,
+                    "freshness_multiplier": round(_freshness_mult, 4),
+                    "score_before":         round(final_S, 4),
+                    "score_after":          round(_effective_S, 4),
+                    "lambda":               _lambda,
+                    "norm_candles":         _norm,
+                    "variant":              "B_normalised" if _norm > 0 else "A_raw",
+                }
+                # Pending displacement body_ratio (stored at expansion entry for Phase 5 label)
+                _pdc = self.state.pending_displacement_candle   # already cleared; use cached value
+                # Note: pending_displacement_candle is None here (cleared at SHADOW_EXPANSION_CONFIRMED).
+                # shadow_displacement_br must be computed at expansion entry if needed for Phase 5.
+                # For Phase 4b, we log 0.0; Phase 5 can add a _shadow_displacement_br field to EngineState.
+                _shadow_disp_br = 0.0
+            # ─────────────────────────────────────────────────────────────────
+
+            # [TELEMETRY] Track S-score and decision gap every soft-conf evaluation
+            self.telemetry.on_candidate_score(_effective_S)
+            self.telemetry.on_decision_distance(
+                candle_index=candle.index,
+                score_actual=_effective_S,
+                score_threshold=self.config.tier_2_threshold,
+                accepted=approved,
+                rejection_reason=(
+                    reason.value if reason else ("APPROVED" if approved else "UNKNOWN")
+                ),
+                soft_conf_candle_num=self.state.soft_conf_candles,
             )
 
             if approved:
@@ -1702,6 +2558,24 @@ class CRTEngine:
                         action["state_after"] = self.state.current_state.name
                         return action
 
+                    # ── Phase 4b: shadow_advisory_only hard block ─────────────
+                    # Shadow still tracks telemetry; EXECUTION is suppressed.
+                    if self.config.shadow_advisory_only and self.state._came_from_shadow:
+                        emit_integrity_event("SHADOW_ADVISORY_BLOCK", "INFO", "crt_engine", {
+                            "candidate_id":         f"CAND-{self.state._expansion_entry_idx}",
+                            "score_before":         round(final_S, 4),
+                            "score_after":          round(_effective_S, 4),
+                            "freshness_multiplier": round(_freshness_mult, 4),
+                            "htf_alignment":        self.state._shadow_htf_alignment,
+                            "candle_index":         candle.index,
+                        })
+                        self.sm.reset_to_range(
+                            self.state, "shadow_advisory_only", candle, self.ev_log
+                        )
+                        action["action"] = "SHADOW_ADVISORY_BLOCK"
+                        return action
+                    # ─────────────────────────────────────────────────────────
+
                     self.sm.try_retest_to_execution(self.state, candle, self.ev_log)
                     trade = self.executor.build_trade(self.state, self.risk)
 
@@ -1715,7 +2589,7 @@ class CRTEngine:
                             metadata={
                                 "id": trade.id,
                                 "session_name": _sess_name,
-                                "S_score": final_S,
+                                "S_score": _effective_S,   # Phase 4b: log penalised score
                                 "sl": trade.sl_price,
                                 "tp1": trade.tp1_price,
                                 "tp2": trade.tp2_price,
@@ -1728,6 +2602,50 @@ class CRTEngine:
                         # Embed live engine state so the backtest never needs to
                         # reach back into a static batch array for audit columns.
                         action["live_metrics"] = self.get_live_metrics()
+                        # [TELEMETRY] Close candidate as ACCEPTED — Phase 4b: include shadow_context
+                        self.telemetry.on_candidate_accepted(
+                            candle.index,
+                            score_at_approval=_effective_S,
+                            shadow_context=_shadow_ctx if self.state._came_from_shadow else {},
+                            shadow_displacement_br=_shadow_disp_br,
+                        )
+
+                        # ── Phase 3b: Temporal integrity events ───────────────────
+                        _struct_age = candle.index - self.state._expansion_entry_idx
+
+                        # TEMPORAL_PARADOX (CRITICAL): last-resort guard — trade opened
+                        # after TTL should have expired. If this fires, the TTL check
+                        # has a gap (e.g. RETEST priority override let a stale trade through).
+                        if (self.config.max_expansion_age_candles > 0
+                                and _struct_age > self.config.max_expansion_age_candles):
+                            emit_integrity_event(
+                                "TEMPORAL_PARADOX", "CRITICAL", "crt_engine",
+                                {
+                                    "candidate_id":  f"CAND-{self.state._expansion_entry_idx}",
+                                    "structure_age": _struct_age,
+                                    "max_allowed":   self.config.max_expansion_age_candles,
+                                    "shadow_used":   self.state._came_from_shadow,
+                                    "candle_index":  candle.index,
+                                },
+                            )
+                            # Note: trade is NOT cancelled here — RETEST > EXPIRED by design.
+                            # TEMPORAL_PARADOX is informational: it shows TTL was overridden
+                            # by a valid retest. Investigate if count > 0 after production run.
+
+                        # TEMPORAL_STALE_WIN (WARNING): trade opened from expansion older than
+                        # P95 (342 candles). Trade still executes — this labels it for training.
+                        _warn_age = self.config.expansion_age_warn_candles
+                        if _warn_age > 0 and _struct_age > _warn_age:
+                            emit_integrity_event(
+                                "TEMPORAL_STALE_WIN", "WARNING", "crt_engine",
+                                {
+                                    "candidate_id":   f"CAND-{self.state._expansion_entry_idx}",
+                                    "structure_age":  _struct_age,
+                                    "warn_threshold": _warn_age,
+                                    "shadow_used":    self.state._came_from_shadow,
+                                    "candle_index":   candle.index,
+                                },
+                            )
 
             elif self.state.soft_conf_candles >= self.config.soft_conf_max_candles:
                 # Evaluation window expired — no qualifying manifold found

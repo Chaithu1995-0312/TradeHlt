@@ -14,6 +14,11 @@
 
 ## 2. Companion Documentation (read these when the task touches their domain)
 
+> **Front door:** [`README.md`](README.md) is the repo entry point — Quick Start + the full
+> 4-tier docs map + authoritative-source rules. Historical/point-in-time analyses live in
+> [`docs/analysis/`](docs/analysis/README.md) (not living docs). The table below is the
+> task→doc lookup.
+
 | File                              | Covers                                                                               |
 | --------------------------------- | ------------------------------------------------------------------------------------ |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)       | Tech stack with versions, full directory tree, end-to-end data flow, design patterns, external integrations (llama.cpp / Groq / BitNet GGUF), production-config section index, CLI entry points. |
@@ -25,6 +30,9 @@
 | [`docs/AGENT_REFERENCE.md`](docs/AGENT_REFERENCE.md) | Complete agent reference: 14 intents (pipeline / copilot / governance / cross-mode), 20 tools with args/write flags, deterministic `PLAN_REGISTRY` tables, `IntentRouter` regex+LLM classification flow, `PlanCompiler` API, `Executor` confirm-gate + path-guard, `AgentState`, audit log formats (`logs/agent_audit.jsonl`, `logs/agent_intent_log.jsonl`), agent config, REPL CLI, add-a-new-tool procedure. |
 | [`docs/GOVERNANCE.md`](docs/GOVERNANCE.md) | End-to-end promotion workflow, `PromotionManager` API (`promote_from_report` / `promote_from_tuner_checkpoint` / `promote_direct` / `list_versions` / `load_version`), registry layout + archive naming, `configs/promotion_log.jsonl` line schemas (PROMOTED / PROMOTION_FAILED), `ShadowPromotionGate` two-gate flow, `MetaGovernorExecutor`, `PortfolioValidation`, rollback procedure, pre-promotion checklist, write-authority matrix. |
 | [`docs/SIGNAL_FLOW.md`](docs/SIGNAL_FLOW.md) | End-to-end candle→order linear walk for the CRT spine (Steps 1–7) with module / entry-point / config / failure-mode per step, the four async kitchen feeders (Governance, Training, AI Agent, INOUT) and where each joins the spine, cross-reference matrix, Mermaid swim-lane diagram. |
+| [`docs/architecture/TRIGGER_VOCABULARY.md`](docs/architecture/TRIGGER_VOCABULARY.md) | LLM trigger-word vocabulary for owning the codebase: `Continue` / `Next step` / `Next plan` / `Validate` / `Implement` (Tier 1) + `Orient`/`Status` / `Map` / `Audit` / `Plan` / `Log` (Tier 2). Per trigger: action · docs loaded · exit condition. See §12. |
+| [`docs/architecture/GOAL.md`](docs/architecture/GOAL.md) | North-star goal document (plain language): purpose, the happy flow (candle→order), the 7 invariants + five governance questions, the deviation policy (throughput-improving deviations OK if invariants hold), migration target. The "what good looks like" baseline. |
+| [`docs/CLI_MATRIX.md`](docs/CLI_MATRIX.md) | Auto-generated command catalog (from `control_plane/registry.py`): every CLI invocation, artifacts, suggested next step. Authoritative for "how do I run X." |
 
 ---
 
@@ -84,7 +92,7 @@ Before touching any code, read these in order:
 - **Windows console encoding.** Non-ASCII output must go through `src/utils/console_safe.py` (cp1252 fallback). Direct `print` of arbitrary strings in CLI entry points risks `UnicodeEncodeError`.
 - **Control plane is localhost-only.** No auth layer, no TLS — do not expose `localhost:8787` externally.
 - **Schema hash is load-bearing.** Any change to `CANONICAL_FEATURES` or `FEATURE_SCHEMA` invalidates the baseline and requires `python src/runtime/baseline_capture.py --label <new>` before training.
-- **`CRTState` transitions are not a free graph.** Only `RANGE → SWEEP → DISPLACEMENT → EXPANSION → RETEST → EXECUTION → RESOLUTION` is legal.
+- **`CRTState` transitions are not a free graph.** The legal map is **9 states** (golden path `RANGE → SWEEP → DISPLACEMENT → EXPANSION → RETEST → EXECUTION → RESOLUTION`, plus the `SHADOW_PENDING` branch `RANGE ↔ SHADOW_PENDING → SWEEP` (Phase 1) and the `EXPIRED` TTL branch `EXPANSION → EXPIRED → RANGE` (Phase 3b soft-archive)). Authoritative: `VALID_TRANSITIONS` (`crt_engine_v2.py:981`) / `EVENT_TAXONOMY.md §3`.
 - **No database.** Any request to "add a table" or "use the ORM" is a convention break — consult `docs/SCHEMAS.md §1` before proposing alternatives.
 
 ---
@@ -208,3 +216,36 @@ This keeps discussion grounded and skips re-explaining structure.
 - `ConfigValidator.validate()` is the mandatory pre-promotion gate (hard + soft quality gates).
 - Rollback: restore archived `configs/production/{version}_archived_{ts}.json` and update `PROD_VERSION`.
 - **Promote:** `python promotion_manager.py promote --checkpoint results/tuner/checkpoint_multi.json --version v2_... --data-dir data/`
+
+---
+
+## 12. Trigger Vocabulary (LLM ownership commands)
+
+Single-word commands that let a session **own** this codebase — self-navigate, advance
+the migration, validate, and implement — without re-deriving context each turn. Full
+spec (action · docs loaded · exit condition · compositions) in
+[`docs/architecture/TRIGGER_VOCABULARY.md`](docs/architecture/TRIGGER_VOCABULARY.md).
+
+**Cold start:** a fresh session runs `Orient` first — see the Cold-start recipe at the top
+of [`TRIGGER_VOCABULARY.md`](docs/architecture/TRIGGER_VOCABULARY.md).
+
+**Tier 1 — execution:**
+- **Continue** — resume the active work from where it left off (reads latest `docs/implementation_plan/*.md` + SESSION LOG + `MEMORY.md`).
+- **Next step** — do the next discrete step *within* the current milestone.
+- **Next plan** — `Validate` the current milestone, then enter the next M0–M5 milestone (or draft a new plan).
+- **Validate** — run the verification gate (`pytest` per `docs/TESTING.md` + determinism/replay check + Five Questions). **Read-only.**
+- **Implement** — turn the approved plan into surgical additive code per §3, then auto-`Validate`.
+
+**Tier 2 — ownership / navigation:**
+- **Orient** / **Status** — one-screen state report (plan + SESSION LOG + `MEMORY.md`). **Read-only.**
+- **Map** — load architecture context to locate where a change lands (`docs/architecture/CODEBASE_STATE_MAP.md`, `SERVICE_BOUNDARY_MAP.md`, `EVENT_TAXONOMY.md`, `docs/SIGNAL_FLOW.md`). **Read-only.**
+- **Audit** — re-verify each architecture doc's `file:line` citations vs code; additive doc-only fixes.
+- **Plan** — enter plan mode → Explore → design → write `docs/implementation_plan/` → `ExitPlanMode`.
+- **Log** — append the `📝 SESSION LOG ENTRY` block (the §6 mandate, named explicitly).
+
+**Doctrine (all four enforced):** triggers are advisory orchestration and grant **no new
+authority** (never bypass write-authority / path-guard / `y/N` confirm / `APPROVE`
+promotion gate); every trigger ends with the §6 SESSION LOG; every state-changing trigger
+is scored against the Five Governance Questions; triggers compose (`Continue` = `Orient →
+Map → Next step → Validate → Log`). The governance superset (`Promote` / `Baseline` /
+`Rehash` / `Rollback`) is referenced, not redefined — see `docs/GOVERNANCE.md`.

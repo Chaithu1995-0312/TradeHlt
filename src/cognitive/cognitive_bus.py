@@ -40,6 +40,7 @@ from utils.logging_config import get_flow_logger
 logger = get_flow_logger("COGNITIVE_BUS")
 
 _TELEMETRY_PATH              = Path("logs/cognitive_telemetry.jsonl")
+_REPLAY_QUERY_PATH           = Path("logs/replay_queries.jsonl")  # M2 — monitoring-only
 _QUEUE_MAXSIZE               = 500    # hard cap; oldest events dropped silently if full
 _BACKPRESSURE_ALERT_THRESHOLD = 0.05  # 5% drop rate → WARNING log
 _MAX_ENGINE_INIT_FAILURES    = 3      # after this many failures, stop retrying
@@ -246,6 +247,32 @@ class CognitiveBus:
             )
             return False
 
+    def _emit_replay_query(self, snap: DecisionSnapshot, replay_r: dict) -> None:
+        """M2 dual-write: emit the replay-memory lookup as a REPLAY_QUERY envelope to
+        logs/replay_queries.jsonl. Monitoring-only (async thread → non-replay-comparable);
+        observation only, never feeds a decision. Fail-open: errors are swallowed."""
+        try:
+            from events.event_fabric import make_event_envelope, EventType  # noqa
+            env = make_event_envelope(
+                event_type      = EventType.REPLAY_QUERY.value,
+                instrument      = snap.instrument,
+                source          = "CognitiveBus",
+                payload         = {
+                    "decision_id":         snap.decision_id,
+                    "cluster_id":          snap.cluster_id,
+                    "similarity_score":    replay_r.get("similarity_score"),
+                    "historical_winrate":  replay_r.get("historical_winrate"),
+                    "cluster_stability":   replay_r.get("cluster_stability"),
+                    "sample_size":         replay_r.get("sample_size"),
+                },
+                parent_event_id = snap.event_id,
+            )
+            _REPLAY_QUERY_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with _REPLAY_QUERY_PATH.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(env) + "\n")
+        except Exception:  # noqa: BLE001
+            pass
+
     def _process(self, snap: DecisionSnapshot) -> None:
         """
         Process one snapshot through the full cognitive pipeline.
@@ -264,6 +291,10 @@ class CognitiveBus:
                 feature_vector=feature_vals,
                 cluster_id=snap.cluster_id,
             )
+            # M2 — REPLAY_QUERY event. Emitted from the CognitiveBus worker thread, so it
+            # is MONITORING-ONLY and NOT replay-comparable (async emission order is not
+            # deterministic, like generation/wall-clock timestamp). Never feeds a decision.
+            self._emit_replay_query(snap, replay_r)
             replay_feats  = self._replay_memory.get_replay_features(snap.cluster_id)
             cluster_stats = self._replay_memory._cluster_stats.get(snap.cluster_id)
 

@@ -78,6 +78,17 @@ log = logging.getLogger("TradeLogger")
 
 DEFAULT_LOG_PATH = Path("logs/fusion_trades.jsonl")
 
+# M1 telemetry normalization — canonical enveloped dual-write target.
+TRADE_LIFECYCLE_LOG = Path("logs/trade_lifecycle.jsonl")
+
+# Optional event-fabric import. Fail-open: if unavailable, the flat
+# fusion_trades.jsonl write is completely unaffected.
+try:
+    from events.event_fabric import make_event_envelope, EventType
+    _ENVELOPE_OK = True
+except Exception:  # noqa: BLE001
+    _ENVELOPE_OK = False
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # LOGGER CLASS
@@ -193,6 +204,27 @@ class TradeLogger:
                 fh.write(json.dumps(record) + "\n")
         except Exception as e:
             log.error(f"TradeLogger write failed: {e}")
+        self._emit_enveloped(record)
+
+    def _emit_enveloped(self, record: dict) -> None:
+        """M1 dual-write: emit the same record as a canonical TRADE_LIFECYCLE envelope
+        to logs/trade_lifecycle.jsonl. Read-only projection of the flat record — the
+        flat write above is the source of truth and is never altered. Fail-open: any
+        error is swallowed so trade logging and replay are never disrupted."""
+        if not _ENVELOPE_OK:
+            return
+        try:
+            env = make_event_envelope(
+                event_type = EventType.TRADE_LIFECYCLE.value,  # plain string, matches existing emitters
+                instrument = str(record.get("instrument", "")),
+                source     = "TradeLogger",
+                payload    = record,
+            )
+            TRADE_LIFECYCLE_LOG.parent.mkdir(parents=True, exist_ok=True)
+            with open(TRADE_LIFECYCLE_LOG, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(env) + "\n")
+        except Exception as e:  # noqa: BLE001
+            log.debug(f"TradeLogger envelope emit failed: {e}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

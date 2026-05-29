@@ -1,4 +1,148 @@
-﻿---
+﻿<!-- ============================================================= -->
+<!-- ARCHITECTURE MIGRATION DOCTRINE — keep this block at the top.  -->
+<!-- Canonical companion docs live in docs/architecture/.          -->
+<!-- ============================================================= -->
+
+# ARCHITECTURE MIGRATION DOCTRINE
+
+**North star — LLM context economy.** We migrate toward an event-driven LLM-event-
+microservices architecture so a future LLM loads only the *one* service it needs
+(ins → flow → outs) instead of the whole codebase. Microservice boundaries = context
+separation. Telemetry is curated into per-episode "LLM logs" so context does not grow
+unbounded. Every application flow is documented as a loadable context unit.
+
+**Priority order (ranks above refactor speed):**
+replay correctness > explainability > telemetry continuity > advisory-AI >
+(structure validity ≠ execution validity).
+
+**The five governance questions — apply as a pre-merge checklist to every change:**
+1. Does replay remain deterministic?
+2. Does telemetry remain comparable across runs?
+3. Can this state be audited later?
+4. Can an LLM reason about this event?
+5. Is execution authority still isolated?
+
+**Standing rules:**
+- **Consolidate on `src/events/event_fabric.py` — never fork the event system.**
+- LLMs are advisory governance, **never** execution authority.
+- No lookahead in replay; deterministic seeds mandatory; comparison ignores
+  `event_id`/`generation`/wall-clock `timestamp`.
+- New telemetry is additive; no field removed without a documented superseding field.
+
+**Migration sequencing index** (detail in `docs/implementation_plan/`):
+- **M0** — Map & doctrine: `docs/architecture/{CODEBASE_STATE_MAP,EVENT_TAXONOMY,
+  SERVICE_BOUNDARY_MAP,REPLAY_GOVERNANCE,LLM_GOVERNANCE_LAYER}.md` + `services/`.
+- **M1** — Telemetry normalization (envelope trade writers) + per-episode LLM log.
+- **M2** — Event extraction (CRTState transitions + silent EventTypes).
+- **M3** — Orchestration de-coupling (kill `live_engine_hook` singletons).
+- **M4** — Dependency inversion (governance/analytics stop importing `runtime.backtest_v2`).
+- **M5** — LLM-layer hardening (`GOVERNANCE_MODE`, decision-path assertions, advisory event contract).
+
+<!-- ============================================================= -->
+<!-- SESSION LOG (newest first). Append new entries below the       -->
+<!-- doctrine block, above prior entries.                           -->
+<!-- ============================================================= -->
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-28T20:00Z
+Topic: Architecture migration M0 (event-driven, LLM-context-economy docs) + plan-persistence automation
+Decision/Output: |
+  PLAN PERSISTENCE (Workstream A):
+    - PostToolUse(Write) hook added to .claude/settings.local.json. Copies plan files
+      from ~/.claude/plans/ into docs/implementation_plan/ when file_path is under the
+      plans dir AND cwd matches Tradelatest. Uses args-form powershell.exe (pwsh absent
+      on Win10 Home; shell:"powershell" would have failed). Pipe-tested + live-fire verified.
+    - Current plan captured to docs/implementation_plan/.
+  M0 DOCS (docs/architecture/):
+    - CODEBASE_STATE_MAP.md, EVENT_TAXONOMY.md, SERVICE_BOUNDARY_MAP.md,
+      REPLAY_GOVERNANCE.md, LLM_GOVERNANCE_LAYER.md + this doctrine header.
+    - services/_TEMPLATE.md + services/decision_spine.md (exemplar).
+  KEY FINDINGS: event fabric already exists (consolidate, don't fork); decision spine
+    already microservice-clean; LLM already isolated from execution. VALID_TRANSITIONS
+    graph at crt_engine_v2.py:981-991; trade writers (fusion_trades/sweep_trace) NOT
+    enveloped (M1 targets); integrity_events intentionally exempt.
+Open Questions: M1 code not yet implemented.
+Next Step: M1 Part 1 (envelope trade_logger.py + sweep_trace_logger.py, dual-write) →
+  M1 Part 2 (per-episode logs/llm_episodes.jsonl) → determinism acceptance gate + pytest.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-28T01:00Z
+Topic: Phase 3b Gate + Phase 5 Plan — expired_counterfactual_rr script and Phase 5 design
+Decision/Output: |
+  PHASE 3B GATE CLOSED:
+    Script: scripts/analysis/p3b_gate_expired_counterfactual_rr.py
+    Result: 7 expired candidates simulated. 6/7 had NO qualifying retest in 200-candle window.
+    1 simulated trade (shadow CAND-27492 LONG): rr=-1.0 (SL hit at candle 27989).
+    mean_counterfactual_rr = -1.0 (N=1). VERDICT: TTL correctly cut stale structure.
+    Report: results/run_20260527_134013_BNBUSDT_M15/BNBUSDT_M15_phase3b_report.md
+    Note: ceiling=0 for 2 candidates (no retrace in expansion) -> ATR fallback applied.
+  PHASE 5 PLAN (approved):
+    Architecture: CRT (discover) | TTL (bound) | Decay (govern) | Threshold (rank).
+    Phase 5a: Replay Selectivity Sweep — tier_2_threshold=[0.44..0.60], 7 backtest runs.
+    Phase 5b: Reject Audit — simulate outcome_if_taken for LOW_SCORE rejects.
+    Phase 5c: Telemetry additions (code changes):
+      - Rename _age -> _cross_window_distance in soft-conf decay path + shadow_context dict
+      - Reorder advisory_block AFTER on_candidate_accepted() (execution gate, not approval mutation)
+      - Add approval_path: NORMAL|SHADOW|SHADOW_DECAYED|SHADOW_BLOCKED to CANDIDATE_LIFECYCLE
+      - Add context_source: PRIOR_HTF|SAME_HTF to shadow_context dict
+      - Add decision_distance = abs(score - threshold) to CANDIDATE_LIFECYCLE
+      - Add _htf_transition_distance to EngineState + BacktestRunner
+    Governance refinements: shadow composite gate adds shadow_n>=10 minimum.
+  PLAN FILE: Phase 3b status updated to PASS PROMOTION GATE. Phase 5a-5c sections added.
+  MEMORY: MEMORY.md updated. Phase 5a plan entry added.
+Open Questions: Phase 5a threshold sweep not yet run (waiting for user to proceed).
+Next Step: Phase 5c code changes OR Phase 5a threshold sweep in backtest.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-28T00:00Z
+Topic: Phase 4b — Experiment results, verdict, and production config update
+Decision/Output: |
+  Ran 7 backtest experiments (A0–A3, B1–B3) with shadow_age_penalty_lambda and shadow_age_norm_candles.
+  INSPECTION TABLE (filled):
+    A0 lam=0.00 norm=0: shad_n=22 shad_RR=-0.290 norm_n=15 norm_RR=+0.314 DD=9.23R WR=45.9%
+    A1 lam=0.10 norm=0: shad_n=22 shad_RR=-0.290 norm_n=15 norm_RR=+0.314 DD=9.23R WR=45.9%
+    A2 lam=0.20 norm=0: shad_n=4  shad_RR=-0.394 norm_n=15 norm_RR=+0.336 DD=3.18R WR=52.6%
+    A3 lam=0.35 norm=0: shad_n=0  shad_RR=n/a    norm_n=15 norm_RR=+0.328 DD=2.08R WR=60.0%
+    B1 lam=0.40 norm=4: IDENTICAL to A1 (parity confirmed)
+    B2 lam=0.80 norm=4: IDENTICAL to A2 (parity confirmed)
+    B3 lam=1.39 norm=4: IDENTICAL to A3 (parity confirmed)
+  KEY FINDING: shadow_quality_improves = FALSE. At A2 (4 survivors), RR WORSENS -0.290→-0.394.
+    Score is inversely correlated within shadow group. Decay = pure threshold shifting.
+  A/B PARITY: Variant B (norm=4) is clean reparametrization. Adopt for future lambda tuning.
+  VERDICT: shadow_advisory_only = True applied to production config.
+  CONFIG CHANGE: configs/production/v2_multi_2026_04 - deepdeektry.json
+    "shadow_advisory_only": false → true. Config re-hashed (2026-05-28).
+  NORMAL-ONLY BASELINE: 15 trades WR=60% avg_RR=+0.328 DD=2.08R (77% DD reduction from 9.23R).
+  PLAN FILE: Phase 4b marked complete, inspection table filled, promotion gate table updated.
+  MEMORY: project_phase4b_findings.md created. MEMORY.md index updated.
+Open Questions: expired_counterfactual_rr (Phase 3b promotion blocker) still pending.
+Next Step: Phase 5 — decision selectivity (raise tier_2_threshold until approval_rate < 95%).
+  Or: expired_counterfactual_rr post-processing script (unblocks Phase 3b promotion gate).
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-27T15:26:31Z
+Topic: Phase 4b — Shadow Age-Decay Gate implementation
+Decision/Output: |
+  Implemented shadow_age_penalty_lambda in crt_engine_v2.py.
+  Architecture: memory → freshness → decide (not memory → reject).
+  Changes:
+    1. CRTConfig: shadow_age_penalty_lambda: float = 0.0, shadow_advisory_only: bool = False
+    2. EngineState: _shadow_htf_alignment: Optional[bool] = None (cleared on reset)
+    3. SHADOW_PENDING branch: compute HTF alignment before pending_displacement_dir is cleared
+    4. Soft-conf path: effective_S = final_S × exp(-λ × candidate_age_at_entry) for shadow only
+       Un-approve if effective_S < tier_2_threshold after decay
+    5. shadow_advisory_only hard block before try_retest_to_execution
+    6. on_candidate_accepted: shadow_context dict + shadow_displacement_br telemetry fields
+    7. _close_candidate: includes shadow_context + shadow_displacement_br in CANDIDATE_LIFECYCLE
+    8. Production config: shadow_age_penalty_lambda=0.0, shadow_advisory_only=false added
+    9. Config re-hashed
+  Tests: CRT, engine, schema, p4_observability — 87 passed, 0 new failures.
+  Experiment matrix: λ=0.00 (baseline) | 0.10 | 0.20 | 0.35
+  λ=0.00 → 22 shadow trades (Phase 3b). λ=0.35 → effectively advisory_only.
+Open Questions: expired_counterfactual_rr (promotion blocker) still pending.
+Next Step: Run 4 backtest experiments with λ=0.00/0.10/0.20/0.35; evaluate composite gate.
+---
 📝 SESSION LOG ENTRY
 Date: 2026-05-02T00:00Z
 Topic: Integration Strategy — Unified Execution Spine (All 4 Phases Complete)
@@ -1598,4 +1742,397 @@ Topic: Completed latest trade discovery trace document
 Decision/Output: Created `TRADE_DISCOVERY_TRACE.md` for `logs/run_20260525_133555` and paired `results/run_20260525_133607_BNBUSDT`, tracing each accepted trade from artifacts/source and marking unavailable Fusion/BitNet telemetry as UNKNOWN.
 Open Questions: Whether to rerun with EngineRunner collector logging enabled to populate Fusion inputs instead of UNKNOWN.
 Next Step: Review `TRADE_DISCOVERY_TRACE.md`; rerun with full EngineRunner logging if Fusion score attribution is required.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-27T07:55Z
+Topic: Phase 0 telemetry implementation + structural unknown answers
+Decision/Output: |
+  Implemented 5 telemetry event types in src/config_layer/crt_engine_v2.py:
+  - TelemetryCollector class (~200 lines, passive sidecar, zero behavior change)
+  - StateMachine: telemetry param + on_state_entered / on_expansion_ended hooks in _transition()
+  - try_expansion_to_retest(): on_expansion_retrace_check() after depth_abs/ceiling computed
+  - reset_to_range(): on_reset() before state mutation
+  - CRTEngine: TelemetryCollector() created in __init__, dump_telemetry() method added
+  - process_candle(): on_candidate_opened() after SWEEP_DETECTED, on_candidate_score() +
+    on_decision_distance() after approve_with_soft_conf(), on_candidate_accepted() after TRADE_OPENED
+  - backtest_v2.py: writes {instrument}_crt_telemetry.jsonl sidecar after writer.write_all()
+
+  Re-ran BNBUSDT backtest (run_20260527_074732_BNBUSDT, 14,016 candles, 2 trades confirmed).
+  Telemetry: 2,649 records written.
+
+  PHASE 0 FINDINGS (all structural unknowns answered):
+
+  True episode counts:
+    SWEEP=600, DISPLACEMENT=154, EXPANSION=8, RETEST=7, EXECUTION=2
+    (Prior HYPOTHESIS of ~184 EXPANSION episodes was wrong by 23x)
+
+  Actual survival rates:
+    SWEEP→DISPLACEMENT:     25.7% (154/600)
+    DISPLACEMENT→EXPANSION:  5.2% (8/154)   ← PRIMARY BOTTLENECK
+    EXPANSION→RETEST:        87.5% (7/8)    ← Hypothesis was 180° wrong
+    RETEST→EXECUTION:        28.6% (2/7)    ← killed by zone/session filter
+
+  Reset attribution:
+    HTF_CHANGE:     1995/2033 = 98.1%
+    Retrace:        27/2033   = 1.3%
+    Zone/session:   5/2033    = 0.2%
+
+  Decision distances: 7 evaluations, all approved. 0 near-misses. S-score not a bottleneck.
+  
+  Zone/session filter at RETEST: 3x "Not in discount zone" + 2x "off_session_filter".
+
+  PLAN REVISION REQUIRED:
+  - Candidate 1 (retest_depth_max) = INVALIDATED (ceiling not binding)
+  - Candidate 4 (soft_conf_max_candles) = INVALIDATED (all approved on candle 1)
+  - New primary lever: HTF window protection for DISPLACEMENT state
+  - New secondary lever: zone filter relaxation (kills 3/7 retest episodes)
+  - Candidates 2+3 (body_ratio + atr_multiplier) remain valid but secondary
+
+Open Questions: |
+  1. Why does DISPLACEMENT have only 5.2% EXPANSION survival? Is it purely HTF timing
+     (need expansion candle within same 4-candle window) or are there additional checks?
+  2. Is the "discount/premium zone" filter appropriate for BNBUSDT crypto (which trends)?
+  3. Should DISPLACEMENT receive HTF protection (like EXPANSION/RETEST)?
+Next Step: User reviews Phase 0 findings. Propose revised Phase 1 with correct bottleneck targets.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-27T08:30Z
+Topic: Phase 1 — Shadow Displacement Protection (SHADOW_PENDING state) fully implemented and verified
+Decision/Output: |
+  Completed Edits 11–14 of the Phase 0b+Phase 1 plan:
+  - Edit 11: Added SHADOW_PENDING branch to CRTEngine.process_candle() with SHADOW_LEAK guard
+    (emit_integrity_event + pending memory expiry). Modified RANGE branch to decrement TTL and
+    detect shadow sweeps (RANGE→SHADOW_PENDING path). Added try_range_to_shadow_pending() and
+    try_shadow_pending_to_expansion() helpers to StateMachine.
+  - Edit 12: Added pending_displacement_ttl_candles: int = 4 to CRTConfig.
+  - Edit 13: Added "pending_displacement_ttl_candles": 4 to v2_multi_2026_04 - deepdeektry.json.
+    No rehash needed (only crt_engine section changed, not params).
+  - Edit 14: Added counterfactual comparison section to BacktestRunner._print_summary() with
+    shadow_sweep_count, shadow_expansion_count, shadow_leak_count counters in run loop.
+
+  Phase 1 re-run (run_20260527_082939_BNBUSDT, 70,080 candles):
+  All Phase 1 decision gates PASSED:
+    - SHADOW_LEAK: 0 [OK] (hard gate)
+    - SHADOW_PENDING entries: 69
+    - EXPANSION: 93 (24 normal + 69 shadow) > baseline 8
+    - Normal DISPLACEMENT→EXPANSION: 4.8% (24/499) — stable vs 5.2% Phase 0b
+    - Trades: 14 | WR=71.4% | AvgRR=0.49R | PnL=+6.83R
+    - Shadow recovery: 69/379 HTF displacement resets (18.2%), 59% of would_expand=true pool
+
+Open Questions:
+  - Zone filter: 3 RETEST episodes killed by midpoint filter (not zone model). Measure
+    midpoint_rr vs zone_model_rr before wiring zone model into process_candle().
+  - ILLEGAL RANGE→RESOLUTION warnings are pre-existing (trade close while state=RANGE after
+    post-resolution reset) — separate fix, not related to Phase 1.
+  - ConfigValidator.validate() must run before any promotion of shadow-enabled config.
+
+Next Step: Zone filter measurement — midpoint_rr vs zone_model_rr comparison for the 3
+  RETEST-killed episodes. Wire BNBUSDT zone model if zone_model_rr significantly outperforms.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-27T12:20Z
+Topic: Phase 2b — Score inversion diagnosis + shadow_used propagation fix + expansion dwell histogram
+Decision/Output: |
+  Phase 2b telemetry additions implemented:
+  - shadow_used flag: on_candidate_opened(shadow=), _came_from_shadow on EngineState, 
+    propagated through on_trade_opened(shadow_used=) to TradeRecord CSV column.
+  - score_at_approval: on_candidate_accepted(score_at_approval=) stored in CANDIDATE_LIFECYCLE.
+  - expansion_dwell_stats: list accumulated in on_expansion_ended(), stats in flush() TRANSITION_COUNTER.
+
+  Bug fixed: shadow_used was being set on engine's Trade object (not TradeRecord). Fixed by passing
+  _is_shadow_trade through journal.on_trade_opened() signature directly.
+
+  Phase 2b Results (run_20260527_121953_BNBUSDT, 70,080 candles, N=14 trades):
+  1. SCORE INVERSION: Pearson r(score,outcome) = -0.070 (N=14). NOT −0.936 — that was N=5 noise.
+     Shadow(n=7): r=-0.295, Normal(n=7): r=+0.284. Neither significant. Gate PASSED: no recalibration.
+  2. APPROVAL USEFULNESS: tier_2_threshold=0.30 is below all candidates (floor ≈0.44).
+     Raising to 0.55 drops 29% (4/14 trades, gate says raise only if drop <5%) — do NOT raise yet.
+  3. EXPANSION DWELL CRISIS: max=20,115 candles (≈209 days, 1 pathological episode idx=7992→28107).
+     73/93 episodes (78%) resolve in ≤1 candle. p90=81 (below 100 threshold). BUT max indicates
+     a structural correctness bug — EXPANSION has no TTL guard. One trade was opened on a 
+     14-month-old displacement candle.
+
+Open Questions:
+  - Should expansion TTL be based on candles (e.g. max_expansion_candles=200) or wall-clock time?
+  - What caused the 20,115-candle episode to eventually qualify? Need to inspect idx=28107 candle.
+  - Does the pathological episode account for meaningful PnL in the 14-trade set?
+
+Next Step: Phase 3 — Add expansion TTL guard (max_expansion_candles config key).
+  This is a structural correctness fix (not a threshold tweak) and must come before threshold
+  raise or zone model wiring.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-29
+Topic: M1 complete — telemetry normalization + per-episode LLM log
+Decision/Output: |
+  M1 Part 1 — Envelope trade-domain JSONL writers:
+  - sweep_trace_logger.py: added _SWEEP_LIFECYCLE_LOG, _SWEEP_ENVELOPE_OK flag,
+    _emit_enveloped() method (fail-open), called from emit(). Dual-writes to
+    logs/sweep_lifecycle.jsonl as EventType.ENGINE_TELEMETRY, source=SweepTraceLogger.
+  - trade_logger.py: was already done in prior session (TRADE_LIFECYCLE dual-write).
+
+  M1 Part 2 — Per-episode LLM log:
+  - New module: src/utils/episode_summarizer.py
+    - EpisodeSummarizer class: per-run aggregator, deterministic (candle-ts only)
+    - Episode = one CRT lifecycle traversal (any RANGE departure → RANGE return)
+    - Methods: on_state_transition, on_trade_opened, on_trade_closed, on_rejected,
+      on_drift, on_governance_flag, flush
+    - Outcome classification: TRADE_WIN, TRADE_LOSS, REJECTED, EXPIRED, RESET, NO_SIGNAL
+    - Writes to logs/llm_episodes.jsonl (flat, replay-comparable) +
+      logs/llm_episodes.enveloped.jsonl (COGNITIVE_TELEMETRY envelope)
+  - backtest_v2.py wired at: __init__ (instantiate), state_transition (line ~1600),
+    trade_opened (after log_entry), trade_closed (3 exit sites + BACKTEST_END),
+    rejected (drift_cooldown, P5_SCORE_LOW, hard_drift_veto, engine_runner, RISK_REJECTED),
+    flush() before metrics compute.
+
+  EVENT_TAXONOMY.md updated: new M1 enveloped streams table added.
+
+  Verification:
+  - ast.parse() clean on all 3 files
+  - tests/ -k "trade_logger or sweep_trace or episode_summarizer or backtest": 18 passed
+  - Episode lifecycle assertions: TRADE_WIN, TRADE_LOSS, REJECTED, RESET all correct
+  - Pre-existing failures (22 before / 19 on clean tree): unchanged
+
+Open Questions:
+  - None — M1 complete per plan scope.
+
+Next Step: M0/M1 pass is complete. Next migration step is M2 (emit CRTState transitions
+  as enveloped events, wire declared-silent EventTypes: REPLAY_QUERY, FEATURE_SNAPSHOT,
+  REGIME_CLASSIFICATION). Or return to Phase 5 threshold sweep (per MEMORY notes).
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-29
+Topic: Doc alignment pass — post-M1 audit fixes (4 gaps)
+Decision/Output: |
+  Full codebase audit of all docs/architecture/ documents against actual source.
+  5 docs verified ACCURATE (CODEBASE_STATE_MAP, SERVICE_BOUNDARY_MAP, REPLAY_GOVERNANCE,
+  services/decision_spine, services/_TEMPLATE). 3 docs had minor gaps — fixed:
+
+  1. EVENT_TAXONOMY.md §1: make_event_envelope() cite :116 → :117 (off-by-one)
+  2. EVENT_TAXONOMY.md §2: Added TRADE_LIFECYCLE row to EventType registry table;
+     updated heading "9 members (56-65)" → "10 members (56-66)"; updated ENGINE_TELEMETRY
+     row to reflect SweepTraceLogger dual-write to sweep_lifecycle.jsonl
+  3. LLM_GOVERNANCE_LAYER.md §4: Added "(M5 — not yet implemented in codebase)" marker
+     to GOVERNANCE_MODE flag description to prevent future LLM confusion
+  4. docs/implementation_plan/ plan file: Marked M0 and M1 as COMPLETE (2026-05-29)
+     in Migration Sequencing list and M1 section heading
+
+  All 12 architecture/service docs now verified against code, with fix history.
+
+Open Questions: None.
+Next Step: M2 (emit CRTState transitions as enveloped events, wire REPLAY_QUERY,
+  FEATURE_SNAPSHOT, REGIME_CLASSIFICATION) — or return to Phase 5 threshold sweep.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-29
+Topic: Trigger Vocabulary — LLM ownership commands embedded in CLAUDE.md
+Decision/Output: |
+  Created docs/architecture/TRIGGER_VOCABULARY.md (new self-contained context unit) +
+  added a lean pointer in CLAUDE.md. Defines single-word triggers so any future LLM
+  session can "own" the codebase without re-deriving context each turn.
+
+  Delivery (per clarifying Q&A): full vocab in the new doc; CLAUDE.md gets only §2
+  table row + new compact §12 (no tables duplicated). Scope: Tier 1 (named 5) primary,
+  Tier 2 (ownership set) secondary. Governance superset (Promote/Baseline/Rehash/
+  Rollback) deferred — referenced via docs/GOVERNANCE.md, not redefined.
+
+  Tier 1 (execution): Continue · Next step · Next plan · Validate (read-only) · Implement
+  Tier 2 (navigation): Orient/Status · Map · Audit · Plan · Log
+  Each trigger documented with: action · docs/prompts loaded · exit condition.
+
+  Doctrine (4 rules): (1) triggers are advisory orchestration, grant NO new authority
+  (never bypass write-authority/path-guard/y-N confirm/APPROVE promotion gate);
+  (2) every trigger ends with §6 SESSION LOG; (3) every state-changing trigger scored
+  against the Five Governance Questions; (4) triggers compose (Continue = Orient → Map →
+  Next step → Validate → Log). Canonical compositions listed in §3 of the new doc.
+
+  Verification: all referenced docs resolve (Glob confirmed docs/architecture/*.md +
+  SIGNAL_FLOW/TESTING/CONVENTIONS/SCHEMAS/EXAMPLE_SERVICE/GOVERNANCE). Docs-only — no
+  code/config/decision/replay behavior change. §12 appended after §11, no renumbering.
+
+Open Questions: None.
+Next Step: Dogfood the vocabulary next session (issue "Orient" / "Validate" cold). Or
+  resume migration: M2 (emit CRTState transitions + wire declared-silent EventTypes).
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-29
+Topic: Cold-start bootstrap recipe for the trigger vocabulary
+Decision/Output: |
+  Added a deterministic "Cold start (read this first)" section to the top of
+  docs/architecture/TRIGGER_VOCABULARY.md (between the purpose blockquote and §0
+  Doctrine; §0–§5 numbering unchanged) + a one-line pointer in CLAUDE.md §12.
+
+  Problem it fixes: the trigger tables describe each command in isolation; a truly cold
+  next session reading CLAUDE.md → §12 → TRIGGER_VOCABULARY.md had no "what to do first,
+  in what order" recipe. It could fire a trigger before knowing the active milestone.
+
+  Recipe (deterministic, ordered): (1) you're already in CLAUDE.md, pointed here via §12;
+  (2) run Orient — read newest docs/implementation_plan/*.md (status header), then last
+  1-2 SESSION LOG blocks at tail of assistant_project.md, then MEMORY.md index; report
+  milestone/done/next/open in one screen; (3) if a task was given, run Map; else await a
+  trigger; (4) obey §0 doctrine on every trigger. "You are now warm."
+
+  Validated by a live cold dogfood this session: the three Orient loads (plan header +
+  SESSION LOG tail + MEMORY.md index) resolve and yield correct status. The recipe just
+  encodes the read order so the next session doesn't guess.
+
+  Docs-only, additive, no code/config/behavior change. Per delivery decision: no
+  .claude/commands/ files, no SessionStart hook — the recipe is prose fired by the LLM
+  reading CLAUDE.md.
+
+Open Questions: None.
+Next Step: Cold-start path is now self-contained. Next session can be started fresh to
+  confirm the recipe self-orients with zero prompting; or resume migration at M2
+  (emit CRTState transitions + wire declared-silent EventTypes).
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-29
+Topic: M2 complete — event extraction (CRTState transitions + 3 declared-silent EventTypes)
+Decision/Output: |
+  Additive, logging-only. Mirrors the M1 dual-write idiom (guarded import, _emit_enveloped,
+  fail-open). Curated cadence (not per-bar firehose) confirmed with user; REPLAY_QUERY wired
+  at the async CognitiveBus site (no deterministic synchronous home) — confirmed after
+  checking assistant_project.md had no prior REPLAY_QUERY data.
+
+  Code changes:
+  - event_fabric.py: added additive EventType.STATE_TRANSITION (11 members now).
+  - crt_engine_v2.py: guarded import + _CRT_TRANSITIONS_LOG; EventLogger._emit_enveloped()
+    dual-writes each STATE_TRANSITION EngineEvent to logs/crt_transitions.jsonl
+    (payload=ev.to_dict(), candle-ts keyed → replay-comparable). instrument="" (CRTConfig
+    carries no symbol). In-memory event_log + {instrument}_events.jsonl flush untouched.
+  - engine_runner.py: module helper _emit_enveloped_jsonl() (fail-open). FEATURE_SNAPSHOT on
+    decision bars (after audit.flush, before DECISION_SNAPSHOT block) → logs/feature_snapshots.jsonl.
+    REGIME_CLASSIFICATION on-change (self._last_regime, after detect_regime :735) →
+    logs/regime_classifications.jsonl.
+  - cognitive_bus.py: _emit_replay_query() after replay_memory.query() → logs/replay_queries.jsonl.
+    MONITORING-ONLY / non-replay-comparable (async worker thread).
+
+  Docs: EVENT_TAXONOMY.md §2 (STATE_TRANSITION row + 3 silent types flipped to emitted, 10→11),
+  §3 (CRT transition envelope note), §4 (new M2 streams table).
+
+  Verification:
+  - AST + import smoke clean on all 4 edited files; enum members + envelope build OK.
+  - No-regression: focused pytest subset (-k "engine_runner or crt or event or telemetry")
+    = 9 failed / 94 passed / 9 skipped. The SAME 9 fail on the clean tree (stash-reverted
+    engine_runner.py + cognitive_bus.py) → all pre-existing (gaussian_shadow attr, ml/heuristic
+    impl switch, dual-gate, rr-fusion); M2 adds ZERO new failures.
+  - Determinism gate (AUDUSD_M15, 2276 candles, 2 identical runs): summary.json identical;
+    crt_transitions payloads byte-identical (174=174) after stripping event_id/generation/
+    timestamp; 0 trades both runs → trade ledger trivially identical. CRT backtest harness does
+    not route through EngineRunner.run(), so feature_snapshots/regime streams are exercised by
+    the passing engine_runner pytest, not the backtest.
+
+  Five governance questions: all pass. REPLAY_QUERY flagged non-comparable; all 4 emits are
+  post-decision, write-only, fail-open side effects — none gate a trade (execution authority isolated).
+
+Open Questions: None — M2 complete per plan scope.
+
+Next Step: M3 — orchestration de-coupling (kill live_engine_hook singletons → injection;
+  defer module-level config loads). Or return to Phase 5 threshold sweep (per MEMORY notes).
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-29
+Topic: Working agreement + GOAL.md north-star doc
+Decision/Output: |
+  Established collaboration protocol (per user request, in plain language):
+  - Act autonomously at ~100% confidence on reversible work; involve user only on
+    ambiguous/judgment parts; parallelize independent work; never freeze whole task on one
+    open question.
+  - Communicate in plain human language, point-first; deep detail secondary.
+  - Deviation policy: changes checked vs GOAL.md invariants; throughput-improving
+    deviations that keep invariants are acceptable (note, don't block).
+  Saved to memory: user_role.md, feedback_collaboration_protocol.md (+ MEMORY.md index).
+
+  Created docs/architecture/GOAL.md — north-star goal document: purpose in one paragraph,
+  the happy flow (candle → 4 engines → fusion → decision → planner → risk gate → order),
+  §3 invariants (the 7 rules + five governance questions), §4 deviation policy
+  (acceptable/flag/not-acceptable), §5 migration target. High-level by design; references
+  SIGNAL_FLOW / CODEBASE_STATE_MAP / EVENT_TAXONOMY rather than duplicating.
+
+Open Questions: GOAL.md scope/location offered for redirection (currently
+  docs/architecture/GOAL.md, system-north-star scope). Awaiting any correction.
+Next Step: Resume migration at M3, or refine GOAL.md scope if user wants a different cut.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-29
+Topic: Validated GOAL.md vs code — fixed 2 CRT accuracy gaps (GOAL.md + CLAUDE.md §4)
+Decision/Output: |
+  Validated docs/architecture/GOAL.md against source. Everything checked out (four-engine
+  completeness gate, spine class names FusionEngine/DecisionEngine/ExecutionPlannerV1_2/
+  UltronRiskGate.evaluate, APPROVE-only promotion + promotion_log.jsonl + SHA-256, LLM
+  timeout/disable config, priority order, no-DB, five governance questions) EXCEPT two CRT
+  gaps in the §2 happy flow:
+  1. State list showed 7 states; real VALID_TRANSITIONS (crt_engine_v2.py:981-991) has 9 —
+     was missing SHADOW_PENDING (Phase 1) + EXPIRED (Phase 3b TTL). CLAUDE.md §4 was the
+     stale source GOAL.md inherited from.
+  2. Conflated the CRT state machine (the 9-state spine/driver, crt_engine_v2.py) with the
+     "crt" scoring engine (engines/crt_engine.py → compute_scores(), one of four fused scores).
+
+  Fixes (user chose "fix both briefly" + "fix CLAUDE.md §4 too"):
+  - GOAL.md §2 step [1]: crt bullet now says it's one fused score; added a line that the CRT
+    state machine is the spine walking a 9-state lifecycle (golden path + SHADOW_PENDING +
+    EXPIRED branches), cross-ref EVENT_TAXONOMY §3.
+  - CLAUDE.md §4: transition bullet rewritten to the 9-state map (golden path + SHADOW_PENDING
+    + EXPIRED branches), authoritative = VALID_TRANSITIONS / EVENT_TAXONOMY §3.
+
+  Verification: grep confirms remaining arrow occurrences are now framed as "golden path"
+  within the 9-state map (no standalone 7-state-only claim). Docs-only; no code/config change.
+
+Open Questions: None.
+Next Step: Resume migration at M3 (orchestration de-coupling), or Phase 5 threshold sweep.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-05-29
+Topic: Docs structure — README front door, de-ambiguation, docs/analysis/ reorg
+Decision/Output: |
+  Goal: give the repo a clear entry point + structure and remove ambiguity. User chose
+  "README hub: both" + "reorganize files too".
+
+  - README.md (was UTF-16 junk → now real UTF-8 front door): what-is paragraph + human Quick
+    Start (venv, pip install -e ., first backtest on AUDUSD, pytest, output locations, honest
+    note that pyproject declares no 3rd-party deps) + 4-tier docs map with per-doc ownership +
+    authoritative-source rules + "if you're an LLM start at CLAUDE.md/TRIGGER_VOCABULARY".
+    NOTE: Write tool preserved the original UTF-16LE encoding; had to iconv → UTF-8. Watch
+    this when overwriting pre-existing non-UTF-8 files.
+  - AGENTS.md: was a stale duplicate of CLAUDE.md doctrine → shrunk to a pointer (CLAUDE.md
+    is authoritative; AGENTS.md kept only for tools that read the name).
+  - docs/analysis/ (NEW): git mv'd 10 point-in-time reports here (9 tracked renames + 1
+    untracked DISCOVERY_FUNNEL_ANALYSIS) — CODEBASE_ANALYSIS, RUNTIME_LOGIC_ANALYSIS,
+    SYSTEM_ANALYSIS_REPORT_20260421, COMMAND_SOURCE_AUDIT, TRADE_DISCOVERY_TRACE,
+    PERFORMANCE_IMPROVEMENT_PLAN, INTEGRATION_AUDIT, RR_DATA_INTEGRITY_AUDIT_2026_04_30,
+    SESSION_ANALYSIS_2026_04_28 + the funnel. Added docs/analysis/README.md catalog
+    (file·date·topic, "not living docs"). Intra-set cross-links stay valid (same folder).
+  - Removed stray git-tracked file "D<U+F03A>Tradelatestassistant_project.md" (stale 9KB
+    partial dup of the 139KB assistant_project.md; recoverable from history).
+  - CLAUDE.md §2: added front-door pointer (README + docs/analysis) + table rows for GOAL.md
+    and CLI_MATRIX.md.
+
+  Verification: zero .py references to any moved report (git grep); git status shows 9 R
+  renames + 1 D; all 20 README links resolve; README now UTF-8; backtest + pytest commands
+  valid. Docs-only — no code/config/determinism impact. control_plane/ + handover/ left in place.
+
+Open Questions: None.
+Next Step: Resume migration at M3 (orchestration de-coupling), or Phase 5 threshold sweep.
 ---

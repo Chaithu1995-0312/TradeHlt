@@ -35,6 +35,17 @@ from typing import Optional
 
 _log = logging.getLogger(__name__)
 
+# M1 telemetry normalisation — enveloped dual-write target.
+_SWEEP_LIFECYCLE_LOG = Path("logs/sweep_lifecycle.jsonl")
+
+# Optional event-fabric import.  Fail-open: if unavailable, the flat
+# sweep_trace.jsonl write is completely unaffected.
+try:
+    from events.event_fabric import make_event_envelope, EventType
+    _SWEEP_ENVELOPE_OK = True
+except Exception:          # noqa: BLE001
+    _SWEEP_ENVELOPE_OK = False
+
 _EPS = 0.001  # float epsilon to avoid division-by-zero
 
 # Number of required fields for completeness calculation.
@@ -314,6 +325,25 @@ class SweepTraceLogger:
         line = json.dumps(record, default=str) + "\n"
         self._fh.write(line)
         self._fh.flush()
+        self._emit_enveloped(record)
+
+    def _emit_enveloped(self, record: dict) -> None:
+        """M1 dual-write: emit the same record as an ENGINE_TELEMETRY envelope
+        to logs/sweep_lifecycle.jsonl. Fail-open: any error is swallowed."""
+        if not _SWEEP_ENVELOPE_OK:
+            return
+        try:
+            env = make_event_envelope(
+                event_type = EventType.ENGINE_TELEMETRY.value,
+                instrument = self._instrument,
+                source     = "SweepTraceLogger",
+                payload    = record,
+            )
+            _SWEEP_LIFECYCLE_LOG.parent.mkdir(parents=True, exist_ok=True)
+            with open(_SWEEP_LIFECYCLE_LOG, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(env) + "\n")
+        except Exception as e:          # noqa: BLE001
+            _log.debug("SweepTraceLogger envelope emit failed: %s", e)
 
     def close(self) -> None:
         """Explicitly flush and close the JSONL file."""

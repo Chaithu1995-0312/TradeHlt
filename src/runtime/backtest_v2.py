@@ -263,6 +263,8 @@ class TradeRecord:
     winning_strategy_id: str       = ""
     crt_path:            list      = field(default_factory=list)
     pattern_hash:        str       = ""
+    # [Phase 2b] Shadow displacement flag — True if trade entered via SHADOW_PENDING path
+    shadow_used:         bool      = False
 
     @property
     def is_winner(self) -> bool:
@@ -734,6 +736,7 @@ class TradeJournal:
         live_metrics: dict = None,   # Universe-B live state from CRTEngine.get_live_metrics()
         bitnet_score: float = 0.0,
         bitnet_decision: str = "",
+        shadow_used: bool = False,   # [Phase 2b] True if trade came via SHADOW_PENDING path
     ) -> None:
         # [G1+G2] Compute realistic fill prices
         _, _, _, _ = self.slip.compute_fill_prices(
@@ -800,6 +803,7 @@ class TradeJournal:
             cached_double_sweep   = bool(lm.get("cached_double_sweep",   False)),
             bitnet_score_at_entry    = float(bitnet_score),
             bitnet_decision_at_entry = str(bitnet_decision),
+            shadow_used              = shadow_used,
         )
 
     def on_trade_closed(
@@ -932,6 +936,7 @@ class TradeJournal:
             row["bitnet_score_at_entry"]    = round(r.bitnet_score_at_entry, 6)
             row["bitnet_decision_at_entry"] = r.bitnet_decision_at_entry
             row["config_version"]       = r.config_version
+            row["shadow_used"]          = int(r.shadow_used)
             rows.append(row)
         return rows
 
@@ -1342,6 +1347,12 @@ class BacktestRunner:
         _run_log_dir.mkdir(parents=True, exist_ok=True)
         self._trade_logger = _TradeLogger(_run_log_dir / f"{bt_config.instrument}_fusion.jsonl")
 
+        # M1 Part 2 — per-episode LLM log (deterministic, read-only projection)
+        from utils.episode_summarizer import EpisodeSummarizer as _EpisodeSummarizer
+        self._episode_summarizer = _EpisodeSummarizer(
+            instrument=bt_config.instrument, run_id=_RUN_ID
+        )
+
         # Phase C — SignalBeliefTracker lifecycle container.
         # RuntimeContext owns the BeliefRegistry; EngineRunner only reads it.
         # Isolated per BacktestRunner instance — no module-global state.
@@ -1443,8 +1454,9 @@ class BacktestRunner:
         gap_resets      = 0
         flushed_events: list[dict] = []
         state_path:     list[str] = []
-        last_risk_score = 0.0
-        last_session    = ""
+        last_risk_score  = 0.0
+        last_session     = ""
+        _is_shadow_trade = False   # [Phase 2b] reset each trade open
 
         # ── Phase 3 / Phase 4 config (loaded once per run) ────────────────────
         from config_layer.production_config import get_prod_section as _gps_bt
@@ -1500,6 +1512,14 @@ class BacktestRunner:
         )
 
         prev_candle: Optional[Candle] = None
+        # [Phase 0b] HTF window position tracking (1-based within candles_per_range window)
+        _htf_pos:       int = 0
+        _prev_htf_id:   str = ""
+        _htf_remaining: int = self.cfg.htf_candles_per_range
+        # [Phase 1] Shadow displacement counters for counterfactual comparison
+        _shadow_sweep_count:     int = 0   # SHADOW_PENDING entries (resume attempts)
+        _shadow_expansion_count: int = 0   # successful SHADOW_EXPANSION_CONFIRMED
+        _shadow_leak_count:      int = 0   # SHADOW_LEAK integrity events
 
         for candle in candle_source:
             candle_idx += 1
@@ -1513,6 +1533,15 @@ class BacktestRunner:
                 )
 
             htf.push(candle)
+            # [Phase 0b] Update HTF window position counter
+            if htf.current_htf_id != _prev_htf_id:
+                _htf_pos       = 1
+                _prev_htf_id   = htf.current_htf_id
+                _htf_remaining = self.cfg.htf_candles_per_range - 1
+            else:
+                _htf_pos      += 1
+                _htf_remaining = max(0, _htf_remaining - 1)
+            engine.state.htf_remaining_candles = _htf_remaining
 
             # ── Warmup ─────────────────────────────────────────────
             if not warmup_done:
@@ -1570,13 +1599,29 @@ class BacktestRunner:
             state_counts[prev_state] += 1
             if prev_state != curr_state:
                 state_path.append(f"{prev_state}→{curr_state}")
+                # M1 — episode summarizer: notify on every state change
+                self._episode_summarizer.on_state_transition(
+                    prev_state, curr_state, candle.timestamp, candle_idx
+                )
 
             action = result.get("action", "NONE")
+            # [Phase 0b] Stamp HTF position on displacement events
+            if action == "DISPLACEMENT_CONFIRMED":
+                engine.telemetry.on_displacement_htf_position(_htf_pos, _htf_remaining)
+            # [Phase 1] Shadow displacement counters
+            if action == "SHADOW_SWEEP_DETECTED":
+                _shadow_sweep_count += 1
+            elif action == "SHADOW_EXPANSION_CONFIRMED":
+                _shadow_expansion_count += 1
+            elif action == "SHADOW_LEAK":
+                _shadow_leak_count += 1
 
             if "TRADE_OPENED" in action and engine.state.active_trade:
                 last_risk_score = engine.state.risk_score.final \
                                   if engine.state.risk_score else 0.0
                 last_session = self._session(candle.timestamp)
+                # [Phase 2b] Capture shadow flag here; passed to journal.on_trade_opened below.
+                _is_shadow_trade = engine.state._came_from_shadow
                 # Timestamp-keyed lookup: immune to off-by-one and warmup-offset bugs.
                 # Old code used candle_idx (1-based, counts all raw rows) to index
                 # feature_vectors (0-based, NaN warmup rows already dropped+reset),
@@ -1636,6 +1681,7 @@ class BacktestRunner:
                     journal.on_rejected(
                         "drift_cooldown", candle_idx, candle.timestamp, state_path, 0.0
                     )
+                    self._episode_summarizer.on_rejected("drift_cooldown", candle.timestamp)
                     state_path = []
                     _p5_rejected = True
                 if not _p5_rejected and self._scorer is not None:
@@ -1650,6 +1696,9 @@ class BacktestRunner:
                             f"P5_SCORE_LOW:{_p5['p_win']:.3f}",
                             candle_idx, candle.timestamp,
                             state_path, _p5["score"],
+                        )
+                        self._episode_summarizer.on_rejected(
+                            f"P5_SCORE_LOW:{_p5['p_win']:.3f}", candle.timestamp
                         )
                         state_path = []
                         _p5_rejected = True
@@ -1680,6 +1729,12 @@ class BacktestRunner:
                                     journal.on_rejected(
                                         "hard_drift_veto",
                                         candle_idx, candle.timestamp, state_path, 0.0,
+                                    )
+                                    self._episode_summarizer.on_rejected(
+                                        "hard_drift_veto", candle.timestamp
+                                    )
+                                    self._episode_summarizer.on_drift(
+                                        "hard_drift", candle.timestamp
                                     )
                                     state_path = []
                             elif _sev == "soft":
@@ -1736,6 +1791,11 @@ class BacktestRunner:
                                 }
                                 _feat_dict["close"] = candle.close
                                 _feat_dict["atr"] = engine.state.atr
+                                # Phase A/B: inject CRT transition path so StrategyIntentBuilder
+                                # can use CRT-enriched evidence for S01/S10 (capabilities={"transition_path"}).
+                                # Guarded by _phase_d_available — same import block as _recent_path (line ~1473).
+                                if _phase_d_available:
+                                    _feat_dict["_transition_path"] = _recent_path(engine.state)
                                 _candle_dict = {"close": candle.close, "high": candle.high, "low": candle.low, "open": candle.open, "volume": candle.volume}
                                 _orch_result = self._orch.compute(_feat_dict, _candle_dict)
                                 if _orch_result.is_actionable():
@@ -1780,6 +1840,9 @@ class BacktestRunner:
                                 f"engine_runner:{_stage}:{_reason}",
                                 candle_idx, candle.timestamp, state_path, last_risk_score,
                             )
+                            self._episode_summarizer.on_rejected(
+                                f"engine_runner:{_stage}:{_reason}", candle.timestamp
+                            )
                             state_path = []
                     except Exception as _er_exc:
                         # Fail-soft: log but allow trade through
@@ -1818,6 +1881,7 @@ class BacktestRunner:
                         live_metrics    = result.get("live_metrics", {}),
                         bitnet_score    = _bn_score_val,
                         bitnet_decision = _bn_decision,
+                        shadow_used     = _is_shadow_trade,
                     )
                     # Phase D: capture per-trade context for strategy memory
                     _sw_ev = getattr(engine.state, "sweep_event", None)
@@ -1850,6 +1914,16 @@ class BacktestRunner:
                             tp1_price     = _orec.tp1_price,
                             tp2_price     = _orec.tp2_price,
                             opened_at     = _orec.opened_at,
+                        )
+                        # M1 — episode summarizer: trade opened
+                        self._episode_summarizer.on_trade_opened(
+                            trade_id    = _orec.trade_id,
+                            entry_price = _orec.entry_price_raw,
+                            sl_price    = _orec.sl_price,
+                            tp2_price   = _orec.tp2_price,
+                            direction   = str(getattr(_orec.direction, "value", _orec.direction)),
+                            candle_ts   = candle.timestamp,
+                            features    = _orec.features or {},
                         )
                     state_path = []
 
@@ -1904,11 +1978,19 @@ class BacktestRunner:
                             duration_candles = _closed.candle_close - _closed.candle_open,
                             closed_at        = _closed.closed_at,
                         )
+                        # M1 — episode summarizer: trade closed
+                        self._episode_summarizer.on_trade_closed(
+                            trade_id    = _closed.trade_id,
+                            pnl_rr_net  = _closed.pnl_rr_net,
+                            exit_reason = _closed.exit_reason,
+                            candle_ts   = candle.timestamp,
+                        )
 
             elif action.startswith("RISK_REJECTED"):
                 reason = action.split(":", 1)[1] if ":" in action else "unknown"
                 score  = engine.state.risk_score.final if engine.state.risk_score else 0.0
                 journal.on_rejected(reason, candle_idx, candle.timestamp, state_path, score)
+                self._episode_summarizer.on_rejected(reason, candle.timestamp)
                 state_path = []
 
             elif action == "RESET" and journal.open_trade and engine.state.active_trade:
@@ -1943,6 +2025,13 @@ class BacktestRunner:
                         duration_candles = _closed.candle_close - _closed.candle_open,
                         closed_at        = _closed.closed_at,
                     )
+                    # M1 — episode summarizer: trade closed (RESET path)
+                    self._episode_summarizer.on_trade_closed(
+                        trade_id    = _closed.trade_id,
+                        pnl_rr_net  = _closed.pnl_rr_net,
+                        exit_reason = _closed.exit_reason,
+                        candle_ts   = candle.timestamp,
+                    )
 
             # ── Event flush ────────────────────────────────────────
             if len(engine.state.event_log) >= self.cfg.event_flush_every:
@@ -1970,6 +2059,16 @@ class BacktestRunner:
                     duration_candles = _closed.candle_close - _closed.candle_open,
                     closed_at        = _closed.closed_at,
                 )
+                # M1 — episode summarizer: trade closed (BACKTEST_END)
+                self._episode_summarizer.on_trade_closed(
+                    trade_id    = _closed.trade_id,
+                    pnl_rr_net  = _closed.pnl_rr_net,
+                    exit_reason = _closed.exit_reason,
+                    candle_ts   = last.timestamp,
+                )
+
+        # M1 — episode summarizer: flush any open episode at run end
+        self._episode_summarizer.flush()
 
         m = met_eng.compute(journal, cap, candle_idx, state_counts, gap_resets)
 
@@ -1989,7 +2088,24 @@ class BacktestRunner:
 
         paths = writer.write_all(m, journal, flushed_events)
 
-        self._print_summary(m)
+        # [TELEMETRY] Write Phase-0 CRT funnel telemetry sidecar
+        try:
+            _tel_records = engine.dump_telemetry()
+            if _tel_records:
+                _tel_path = writer.output_dir / f"{self.cfg.instrument}_crt_telemetry.jsonl"
+                with open(_tel_path, "w", encoding="utf-8") as _tf:
+                    for _rec in _tel_records:
+                        _tf.write(json.dumps(_rec, default=str) + "\n")
+                self.log.info("Telemetry: %s (%d records)", _tel_path, len(_tel_records))
+        except Exception as _tel_exc:
+            self.log.warning("Telemetry write failed (non-fatal): %s", _tel_exc)
+
+        self._print_summary(
+            m,
+            shadow_sweep_count=_shadow_sweep_count,
+            shadow_expansion_count=_shadow_expansion_count,
+            shadow_leak_count=_shadow_leak_count,
+        )
         self.log.info("Output:")
         for k, p in paths.items():
             if p:
@@ -2037,12 +2153,29 @@ class BacktestRunner:
                 return name
         return "OFF_SESSION"
 
-    def _print_summary(self, m: BacktestMetrics) -> None:
+    def _print_summary(
+        self,
+        m: BacktestMetrics,
+        shadow_sweep_count: int = 0,
+        shadow_expansion_count: int = 0,
+        shadow_leak_count: int = 0,
+    ) -> None:
         self.log.info("─" * 55)
         self.log.info(f"  {m.instrument} | {m.approved_trades} trades | "
                       f"WR={m.win_rate:.1%} | AvgRR={m.avg_rr_net:.2f}R | "
                       f"PnL(net)={m.total_pnl_rr_net:+.2f}R | "
                       f"MaxDD={m.max_drawdown_pct:.1%}")
+        if shadow_sweep_count > 0 or shadow_expansion_count > 0 or shadow_leak_count > 0:
+            _leak_tag = "OK" if shadow_leak_count == 0 else f"FAIL ({shadow_leak_count})"
+            self.log.info("─" * 55)
+            self.log.info("  COUNTERFACTUAL COMPARISON (shadow displacement path)")
+            self.log.info(f"    Shadow resume attempts : {shadow_sweep_count}")
+            self.log.info(f"    Shadow expansions      : {shadow_expansion_count}")
+            self.log.info(f"    SHADOW_LEAK            : {shadow_leak_count} [{_leak_tag}]")
+            if shadow_leak_count > 0:
+                self.log.warning(
+                    "  SHADOW_LEAK > 0 — replay is invalid; investigate before promotion."
+                )
         self.log.info("─" * 55)
 
 

@@ -18,6 +18,8 @@ ENGINE COMPLETENESS POLICY:
 import logging
 import math
 import os
+import json as _json
+from pathlib import Path as _Path
 from typing import Optional
 from engines.trap_validator_engine import TrapValidatorEngine
 from engines.crt_engine import compute as crt_compute
@@ -48,6 +50,29 @@ except Exception as _rr_fusion_import_exc:  # pragma: no cover - defensive impor
 logger = get_flow_logger("ENGINE_RUNNER")
 
 EXPECTED_ENGINES = {"crt", "gaussian", "zone_gate", "rr"}
+
+# M2 — curated enveloped telemetry streams (additive; observation-only; mirrors M1 idiom).
+_FEATURE_SNAPSHOT_LOG      = _Path("logs/feature_snapshots.jsonl")
+_REGIME_CLASSIFICATION_LOG = _Path("logs/regime_classifications.jsonl")
+
+
+def _emit_enveloped_jsonl(event_type_name: str, instrument: str, payload: dict, path: "_Path") -> None:
+    """M2 curated telemetry: append one canonical envelope to `path`. Observation only —
+    never gates a decision. Fail-open: any error (incl. absent event fabric) is swallowed
+    so the decision path is never disrupted."""
+    try:
+        from events.event_fabric import make_event_envelope, EventType  # noqa: PLC0415
+        env = make_event_envelope(
+            event_type = EventType[event_type_name].value,
+            instrument = instrument,
+            source     = "EngineRunner",
+            payload    = payload,
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(_json.dumps(env) + "\n")
+    except Exception:  # noqa: BLE001
+        pass
 
 # Default dual-engine thresholds (mirrors production config values)
 DUAL_ENGINE_DEFAULTS: dict = {
@@ -405,6 +430,8 @@ class EngineRunner:
         # Cognitive output is written to logs/cognitive_telemetry.jsonl only.
         # The "cognitive" key is NOT in the run() return dict.
         self._cognitive_bus: Optional["CognitiveBus"] = None
+        # M2 — last emitted regime, for on-change REGIME_CLASSIFICATION telemetry.
+        self._last_regime: Optional[str] = None
         _cognitive_cfg = config.get("cognitive_layer", {})
         if bool(_cognitive_cfg.get("enabled", False)):
             try:
@@ -706,6 +733,17 @@ class EngineRunner:
         # Detect regime up-front so fusion weights can adapt to it. Same value
         # is reused at Step 6 by RegimeGovernor — avoids a second computation.
         current_regime = detect_regime(input_data, self.dual_cfg)
+        # M2 — emit REGIME_CLASSIFICATION on change only (regime is a deterministic
+        # function of features and stable across many bars; per-bar emission would be
+        # noise). Observation-only; does not feed fusion.
+        if current_regime != self._last_regime:
+            _emit_enveloped_jsonl(
+                "REGIME_CLASSIFICATION",
+                str(input_data.get("instrument", "")),
+                {"regime": current_regime, "prev_regime": self._last_regime},
+                _REGIME_CLASSIFICATION_LOG,
+            )
+            self._last_regime = current_regime
         fusion_result = self.fusion.compute(engine_results, regime=current_regime)
         use_evaluate = bool(getattr(self, "_fusion_use_evaluate", False))
         compare_evaluate = bool(getattr(self, "_fusion_compare_evaluate", False))
@@ -945,6 +983,21 @@ class EngineRunner:
             reason=str(decision_result.get("reason", "")),
         )
         self._audit.flush()
+
+        # M2 — FEATURE_SNAPSHOT on decision bars (one per scored decision; same cadence
+        # as DECISION_SNAPSHOT below). Curated, not per-bar: this point is reached only
+        # after fusion + decision, so the feature vector is complete and was scored.
+        # Observation-only; never feeds a decision.
+        _emit_enveloped_jsonl(
+            "FEATURE_SNAPSHOT",
+            str(input_data.get("instrument", "")),
+            {
+                "decision": str(decision_result.get("decision", "")),
+                "regime":   current_regime,
+                "features": dict(input_data),
+            },
+            _FEATURE_SNAPSHOT_LOG,
+        )
 
         # ── Fire-and-forget: emit decision snapshot to async CognitiveBus ─────
         # Executes AFTER all decision logic is complete. Non-blocking.

@@ -63,6 +63,8 @@ class EventType(str, Enum):
     FEATURE_SNAPSHOT        = "FEATURE_SNAPSHOT"
     REGIME_CLASSIFICATION   = "REGIME_CLASSIFICATION"
     QUEUE_HEALTH            = "QUEUE_HEALTH"   # CognitiveBus health snapshots
+    TRADE_LIFECYCLE         = "TRADE_LIFECYCLE"  # M1: trade ENTRY/EXIT/REJECT (enveloped dual-write)
+    STATE_TRANSITION        = "STATE_TRANSITION"  # M2: CRT state-machine transitions (enveloped dual-write)
 
 
 # ── Thread-safe generation counter ───────────────────────────────────────────

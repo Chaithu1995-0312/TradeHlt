@@ -132,5 +132,26 @@
       "Bash(pytest tests/test_crt_session_filter.py tests/test_engine_runner_dual_gate.py tests/test_execution_planner.py -q)",
       "Bash(python -m pytest tests/test_zone_gate_min_samples.py -v)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell",
+            "args": [
+              "-NoProfile",
+              "-NonInteractive",
+              "-Command",
+              "try{$j=[Console]::In.ReadToEnd()|ConvertFrom-Json;$f=$j.tool_input.file_path;if($f -and ($f -match '\\.claude[\\\\/]+plans[\\\\/]') -and ($j.cwd -match 'Tradelatest')){$d='D:\\Tradelatest\\docs\\implementation_plan';if(!(Test-Path $d)){New-Item -ItemType Directory -Force -Path $d|Out-Null};Copy-Item -LiteralPath $f -Destination $d -Force}}catch{}"
+            ],
+            "timeout": 15,
+            "statusMessage": "Persisting plan to docs/implementation_plan"
+          }
+        ]
+      }
+    ]
   }
 }
