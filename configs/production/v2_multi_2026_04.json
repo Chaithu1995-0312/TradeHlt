@@ -532,5 +532,58 @@
       "feature_weight": 0.6
     }
   },
+  "dataset_integrity": {
+    "canonical_data_roots": ["data"],
+    "path_pattern": "{symbol}_{timeframe}.csv",
+    "enforce_path_consistency": true,
+    "max_missing_pct": 0.02,
+    "max_single_gap_candles": 100,
+    "max_gap_span_minutes": 1440,
+    "default_bar_minutes": 15,
+    "future_ts_tolerance_minutes": 0,
+    "write_fingerprint_report": true,
+    "duplicate_resolution_mode": "reject_all",
+    "session_calendar": {
+      "crypto_quote_suffixes": ["USDT", "USDC", "BUSD"],
+      "metals_prefixes": ["XAU", "XAG", "XPT", "XPD"],
+      "weekday_open_hour": 22,
+      "weekday_open_weekday": 6,
+      "weekday_close_hour": 21,
+      "weekday_close_weekday": 4,
+      "weekday_daily_break_hours": [21]
+    }
+  },
+  "live_integration": {
+    "telegram": {
+      "enabled": false,
+      "bot_token": "",
+      "chat_id": "",
+      "timeout_s": 5,
+      "dry_run": true
+    },
+    "mt5": {
+      "enabled": false,
+      "server": "",
+      "login": 0,
+      "password": "",
+      "lot_min": 0.01,
+      "lot_max": 10.0,
+      "dry_run": true
+    }
+  },
+  "uat": {
+    "kill_switch": {
+      "loss_threshold_r": 5.0,
+      "window_trades": 10,
+      "enabled": true,
+      "persist_path": "logs/kill_switch_state.json"
+    },
+    "monte_carlo": {
+      "n_simulations": 1000,
+      "initial_capital_inr": 100000.0,
+      "ruin_threshold_pct": 0.5,
+      "random_seed": 42
+    }
+  },
   "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613"
 }
