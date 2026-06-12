@@ -103,6 +103,22 @@ def _safe_float(value, default: float = 0.0) -> float:
         return default
 
 
+def _require_ohlcv_value(data: dict, field: str, *, source: str = "Live trade_data") -> float:
+    """Strict accessor for a mandatory OHLCV field — no default, no substitution.
+
+    Raises ValueError if the field is absent, None, non-numeric, or NaN/inf.
+    """
+    if field not in data or data[field] is None:
+        raise ValueError(f"{source} missing required field: {field}")
+    try:
+        v = float(data[field])
+    except (TypeError, ValueError):
+        raise ValueError(f"{source} field '{field}' is not numeric: {data[field]!r}")
+    if v != v or v in (float("inf"), float("-inf")):  # NaN/inf guard
+        raise ValueError(f"{source} field '{field}' is NaN/inf")
+    return v
+
+
 def _precision(symbol: str, exec_cfg: dict) -> int:
     """Return decimal precision for rounding prices for a given symbol."""
     return int(
@@ -279,10 +295,11 @@ def _load_engine_config() -> dict:
 
 
 def _build_engine_input(trade_data: dict) -> dict:
-    close = _safe_float(trade_data.get("close"), 0.0)
-    open_ = _safe_float(trade_data.get("open"), close)
-    high = _safe_float(trade_data.get("high"), max(open_, close))
-    low = _safe_float(trade_data.get("low"), min(open_, close))
+    # Six OHLCV fields are mandatory — strict access, no cascade/default.
+    close = _require_ohlcv_value(trade_data, "close")
+    open_ = _require_ohlcv_value(trade_data, "open")
+    high = _require_ohlcv_value(trade_data, "high")
+    low = _require_ohlcv_value(trade_data, "low")
     ema_fast = _safe_float(trade_data.get("ema_fast"), close)
     ema_slow = _safe_float(trade_data.get("ema_slow"), close)
     disp_strength = _safe_float(
@@ -296,7 +313,7 @@ def _build_engine_input(trade_data: dict) -> dict:
         "high": high,
         "low": low,
         "close": close,
-        "volume": _safe_float(trade_data.get("volume"), 1.0),
+        "volume": _require_ohlcv_value(trade_data, "volume"),
         "atr": max(0.0, _safe_float(trade_data.get("atr"), 0.0)),
         "ema_fast": ema_fast,
         "ema_slow": ema_slow,
@@ -326,11 +343,12 @@ def _build_ohlcv_and_auxiliary(trade_data: dict) -> tuple[dict, dict]:
 
     Returns (ohlcv: dict, auxiliary: dict).
     """
-    close  = _safe_float(trade_data.get("close"), 0.0)
-    open_  = _safe_float(trade_data.get("open"), close)
-    high   = _safe_float(trade_data.get("high"), max(open_, close))
-    low    = _safe_float(trade_data.get("low"), min(open_, close))
-    volume = _safe_float(trade_data.get("volume"), 1.0)
+    # Six OHLCV fields are mandatory — strict access, no cascade/default.
+    close  = _require_ohlcv_value(trade_data, "close")
+    open_  = _require_ohlcv_value(trade_data, "open")
+    high   = _require_ohlcv_value(trade_data, "high")
+    low    = _require_ohlcv_value(trade_data, "low")
+    volume = _require_ohlcv_value(trade_data, "volume")
 
     ohlcv = {"open": open_, "high": high, "low": low, "close": close, "volume": volume}
 
@@ -517,8 +535,13 @@ class HookedLiveEngine(LiveEngine):
 
         trade_id = str(trade_data.get("symbol", "UNKNOWN")) + "_" + str(candle_idx)
 
-        # Build raw engine input (fallback path and baseline for FeatureStore split)
+        # Build raw engine input (fallback path and baseline for FeatureStore split).
+        # _build_engine_input enforces the six OHLCV fields (fail-fast here, not
+        # swallowed by the FeatureStore try-block below). timestamp is likewise
+        # mandatory and must never be derived from the candle index.
         engine_input = _build_engine_input(trade_data)
+        if "timestamp" not in trade_data or trade_data["timestamp"] is None:
+            raise ValueError("Live trade_data missing required field: timestamp")
 
         # FeatureStore path — canonical ingestion boundary.
         # On success: engine_input is replaced by a validated FeatureFrame dict
@@ -528,7 +551,7 @@ class HookedLiveEngine(LiveEngine):
         if _STORE_AVAILABLE and _feature_store is not None:
             try:
                 _ohlcv, _auxiliary = _build_ohlcv_and_auxiliary(trade_data)
-                _timestamp = trade_data.get("timestamp", candle_idx)
+                _timestamp = trade_data["timestamp"]  # guaranteed present (checked above)
                 _frame = _feature_store.process(candle_idx, _timestamp, _ohlcv, _auxiliary)
                 engine_input = _frame.features  # dict: 35 canonical keys + _data_integrity
                 logger.debug(
@@ -614,11 +637,11 @@ class HookedLiveEngine(LiveEngine):
         if _orch_pre is not None:
             try:
                 _orch_candle = {
-                    "open":   float(engine_input.get("open",   0.0)),
-                    "high":   float(engine_input.get("high",   0.0)),
-                    "low":    float(engine_input.get("low",    0.0)),
-                    "close":  float(engine_input.get("close",  0.0)),
-                    "volume": float(engine_input.get("volume", 1.0)),
+                    "open":   float(engine_input["open"]),
+                    "high":   float(engine_input["high"]),
+                    "low":    float(engine_input["low"]),
+                    "close":  float(engine_input["close"]),
+                    "volume": float(engine_input["volume"]),
                 }
                 # Phase A/B: inject CRT transition path so StrategyIntentBuilder
                 # can use CRT-enriched evidence for S01/S10.
@@ -841,7 +864,7 @@ class HookedLiveEngine(LiveEngine):
                     _tp_inr = float(trade_plan.get("tp_inr", 0.0))
                     _rr     = float(trade_plan.get("rr_ratio", 0.0))
                     _sig    = str(trade_plan.get("trade_intent", "BUY"))
-                    _entry  = float(engine_input.get("close", 0.0))
+                    _entry  = float(engine_input["close"])
                     _conf   = float(engine_outputs.get("final_score", 0.0))
                     _scores = (
                         _orch_result.to_dict().get("strategy_scores", {})

@@ -38,6 +38,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pandas as pd  # top-level so tests can monkeypatch backtest_v2.pd
 
 from features.feature_schema import CANONICAL_FEATURES
+from data_ingestion.ohlcv_schema import (
+    DatasetIntegrityError,
+    OHLCV_DATE_FORMATS,
+    parse_ohlcv_timestamp,
+    require_ohlcv_columns,
+    require_unique_ohlcv_headers,
+    validate_ohlcv_row,
+)
+from data_ingestion.dataset_integrity import (
+    DatasetDecision,
+    validate_dataset,
+    validate_universe,
+)
 from utils.console_safe import SafeStreamHandler, safe_print
 
 # Top-level class references so tests can monkeypatch backtest_v2.FeaturePipeline etc.
@@ -93,6 +106,14 @@ try:
     bt_log.addHandler(_bt_fh)
 except Exception:
     pass  # never block startup
+
+
+# ─────────────────────────────────────────────────────────────────
+# ROI / RETURNS TELEMETRY — additive, measure-only (never gated)
+# ─────────────────────────────────────────────────────────────────
+_ROI_DEFAULTS = {
+    "profit_factor_inf_sentinel": 999.0,   # PF when there are no losing trades
+}
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -603,12 +624,9 @@ class DistributionAnalyser:
 # ─────────────────────────────────────────────────────────────────
 
 class CandleLoader:
-    DATE_FORMATS = [
-        "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M",
-        "%Y.%m.%d %H:%M:%S", "%Y.%m.%d %H:%M",
-        "%Y/%m/%d %H:%M:%S", "%d/%m/%Y %H:%M",
-        "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d",
-    ]
+    # Single source of truth lives in ohlcv_schema.OHLCV_DATE_FORMATS; kept as a
+    # class attribute for backward compatibility with callers/tests.
+    DATE_FORMATS = list(OHLCV_DATE_FORMATS)
     COLUMN_ALIASES = {
         "timestamp": ["timestamp", "datetime", "date time", "open time"],
         "date":      ["date"],
@@ -633,17 +651,18 @@ class CandleLoader:
         return None
 
     def _parse_timestamp(self, raw: str) -> datetime:
-        for fmt in self.DATE_FORMATS:
-            try:
-                return datetime.strptime(raw.strip(), fmt)
-            except ValueError:
-                continue
-        raise ValueError(f"Cannot parse timestamp: '{raw}'")
+        # Delegate to the shared parser (single source of truth).
+        return parse_ohlcv_timestamp(raw)
 
     def stream(self) -> Iterator[Candle]:
         with open(self.filepath, newline="", encoding="utf-8-sig") as f:
             reader = csv.reader(f)
             headers = [h.strip() for h in next(reader)]
+            # L1 — reject duplicate column headers (e.g. "... volume volume"),
+            # which would silently shadow the real column under set-based checks.
+            require_unique_ohlcv_headers(
+                headers, source=f"Historical dataset {self.filepath}"
+            )
             ts_col   = self._detect_column(headers, "timestamp")
             date_col = self._detect_column(headers, "date")
             time_col = self._detect_column(headers, "time_col")
@@ -654,22 +673,53 @@ class CandleLoader:
             v_col = self._detect_column(headers, "volume")
 
             use_split = (ts_col is None and date_col is not None and time_col is not None)
-            if o_col is None or h_col is None or l_col is None or c_col is None:
-                raise ValueError(f"Cannot map OHLC columns. Headers: {headers}")
+            # Phase 1 — all six mandatory columns must resolve to a header (a
+            # split date+time pair satisfies "timestamp"). volume is mandatory.
+            resolved = set()
+            if ts_col is not None or use_split:
+                resolved.add("timestamp")
+            for field_name, col in (("open", o_col), ("high", h_col),
+                                    ("low", l_col), ("close", c_col), ("volume", v_col)):
+                if col is not None:
+                    resolved.add(field_name)
+            require_ohlcv_columns(resolved, source=f"Historical dataset {self.filepath}")
 
+            prev_ts: Optional[datetime] = None
             for line_num, row in enumerate(reader, start=2):
-                try:
-                    raw_ts = (row[date_col].strip() + " " + row[time_col].strip()
-                              if use_split else row[ts_col].strip())
-                    ts  = self._parse_timestamp(raw_ts)
-                    o   = float(row[o_col]); h = float(row[h_col])
-                    l   = float(row[l_col]); c = float(row[c_col])
-                    vol = float(row[v_col]) if v_col is not None else 0.0
-                    if h < max(o, c) or l > min(o, c) or h == l:
-                        continue
-                    yield Candle(timestamp=ts, open=o, high=h, low=l, close=c, volume=vol)
-                except (ValueError, IndexError):
-                    continue
+                if not row or all(not cell.strip() for cell in row):
+                    continue  # skip blank/EOF lines (not a data fallback)
+                raw_ts = (row[date_col].strip() + " " + row[time_col].strip()
+                          if use_split else row[ts_col].strip())
+                ts  = self._parse_timestamp(raw_ts)
+                # L2 inline backstop — sequence integrity. The full pre-flight
+                # gate (dataset_integrity.validate_dataset) does the complete
+                # analysis; this always-on guard catches duplicate/out-of-order
+                # timestamps even if a caller streams a file without pre-flight.
+                if prev_ts is not None:
+                    if ts == prev_ts:
+                        raise DatasetIntegrityError(
+                            f"Duplicate timestamp {ts.isoformat()} (line {line_num}) "
+                            f"in {self.filepath}"
+                        )
+                    if ts < prev_ts:
+                        raise ValueError(
+                            f"Out-of-order timestamp {ts.isoformat()} < "
+                            f"{prev_ts.isoformat()} (line {line_num}) in {self.filepath}"
+                        )
+                prev_ts = ts
+                o   = float(row[o_col]); h = float(row[h_col])
+                l   = float(row[l_col]); c = float(row[c_col])
+                vol = float(row[v_col])
+                # Phase 2 — value integrity: non-negative volume, candle
+                # consistency. Malformed rows now RAISE (no silent skip) so a
+                # corrupt dataset fails fast instead of yielding a truncated
+                # candle stream.
+                validate_ohlcv_row(
+                    o, h, l, c, vol,
+                    source=f"Historical dataset {self.filepath}",
+                    line=line_num,
+                )
+                yield Candle(timestamp=ts, open=o, high=h, low=l, close=c, volume=vol)
 
     def count(self) -> int:
         with open(self.filepath, "r", encoding="utf-8-sig") as f:
@@ -738,11 +788,14 @@ class TradeJournal:
         bitnet_decision: str = "",
         shadow_used: bool = False,   # [Phase 2b] True if trade came via SHADOW_PENDING path
     ) -> None:
-        # [G1+G2] Compute realistic fill prices
-        _, _, _, _ = self.slip.compute_fill_prices(
-            trade.entry_price, trade.entry_price,
-            trade.direction, atr, spread_half,
-        )
+        # [G1+G2] Realistic entry fill from a single slippage draw.
+        # NOTE (trust-layer F3, 2026-06-10): the prior code called
+        # compute_fill_prices() here and discarded all four results, then re-drew
+        # entry_slip — burning an extra entry+exit draw per trade-open and leaving
+        # the used entry/exit slips unpaired. Exit slippage is drawn independently
+        # at close time in on_trade_closed(), so entry-open consumes exactly one
+        # entry_slip draw. Deterministic given slippage_seed; this changes the RNG
+        # draw sequence (and thus the ledger) — see backtest-trust-audit-2026-06-10.
         feature_map = {name: feature_vector[i] for i, name in enumerate(CANONICAL_FEATURES)}
         e_slip = self.slip.entry_slip(atr, trade.direction)
         entry_fill = trade.entry_price + e_slip + spread_half
@@ -971,6 +1024,15 @@ class BacktestMetrics:
     distribution:          dict  = field(default_factory=dict)   # [G5]
     hard_drift_pauses:     int   = 0
 
+    # ── ROI / returns telemetry (additive, measure-only) ──────────────────────
+    gross_win_rr:          float = 0.0
+    gross_loss_rr:         float = 0.0   # negative (sum of losing pnl_rr_net)
+    profit_factor:         float = 0.0
+    total_return_pct:      float = 0.0
+    annualized_return_pct: float = 0.0
+    return_to_max_dd:      float = 0.0
+    funnel_counts:         dict  = field(default_factory=dict)   # CRT-state funnel
+
     @property
     def win_rate(self) -> float:
         t = self.wins + self.losses
@@ -1011,6 +1073,14 @@ class BacktestMetrics:
             "monthly_pnl":         {k: round(v, 4) for k, v in self.monthly_pnl.items()},
             "capital_curve":       self.capital_curve,
             "distribution":        self.distribution,
+            # ── ROI / returns telemetry (additive, measure-only) ──────────────
+            "total_return_pct":      round(self.total_return_pct, 6),
+            "annualized_return_pct": round(self.annualized_return_pct, 6),
+            "profit_factor":         round(self.profit_factor, 4),
+            "return_to_max_dd":      round(self.return_to_max_dd, 4),
+            "gross_win_rr":          round(self.gross_win_rr, 4),
+            "gross_loss_rr":         round(self.gross_loss_rr, 4),
+            "funnel_counts":         dict(self.funnel_counts),
             "config_version":      PROD_VERSION,
         }
 
@@ -1035,8 +1105,10 @@ class MetricsEngine:
         for r in journal.rejections:
             m.rejection_reasons[r.reason] += 1
         m.capital_curve = capital.to_dict()
+        m.funnel_counts = dict(state_counts)   # CRT-state funnel for sweep attribution
 
         if not trades:
+            self._roi_block(m, trades, capital, total_candles)   # ROI on zero-trade run
             return m
 
         m.wins           = sum(1 for t in trades if t.pnl_rr_net > 0)
@@ -1055,7 +1127,34 @@ class MetricsEngine:
                 m.monthly_pnl[t.opened_at.strftime("%Y-%m")] += t.pnl_rr_net
 
         m.distribution = self.dist.analyse(trades)  # [G5]
+        self._roi_block(m, trades, capital, total_candles)   # ROI / returns telemetry
         return m
+
+    def _roi_block(self, m: BacktestMetrics, trades: list,
+                   cap: "CapitalCurve", total_candles: int) -> None:
+        """Post-hoc ROI / returns telemetry. Additive, measure-only — never gated.
+
+        Reads only t.pnl_rr_net per trade. PF uses gross win / |gross loss| in R;
+        when there are no losses the inf-sentinel is used. annualized_return_pct is
+        span-aware (M15 candles → years), so IS/OOS rates are comparable.
+        """
+        m.gross_win_rr  = sum(t.pnl_rr_net for t in trades if t.pnl_rr_net > 0)
+        m.gross_loss_rr = sum(t.pnl_rr_net for t in trades if t.pnl_rr_net <= 0)  # ≤0
+        if m.gross_loss_rr < 0:
+            m.profit_factor = round(m.gross_win_rr / abs(m.gross_loss_rr), 4)
+        else:
+            m.profit_factor = _ROI_DEFAULTS["profit_factor_inf_sentinel"]
+
+        m.total_return_pct = cap.total_return_pct
+        max_dd = cap.max_drawdown_pct
+        m.return_to_max_dd = round(m.total_return_pct / max_dd, 6) if max_dd > 0 else 0.0
+
+        # span-aware CAGR: years = total_candles × 15 min / minutes-in-a-year
+        years = (total_candles * 15) / (365 * 24 * 60) if total_candles > 0 else 0.0
+        if years > 0 and (1.0 + m.total_return_pct) > 0:
+            m.annualized_return_pct = (1.0 + m.total_return_pct) ** (1.0 / years) - 1.0
+        else:
+            m.annualized_return_pct = 0.0
 
     def _max_dd_rr(self, pnl: list[float]) -> float:
         eq = peak = dd = 0.0
@@ -1297,6 +1396,9 @@ class BacktestRunner:
                         )
                     elif "date" in raw_df.columns:
                         raw_df["timestamp"] = raw_df["date"]
+                # Fail fast on a malformed source before any feature work.
+                # (FeaturePipeline re-runs full value validation internally.)
+                require_ohlcv_columns(raw_df.columns, source=f"Historical dataset {self.csv_path}")
                 pipeline = FeaturePipeline(raw_df)
                 enriched_df, self.feature_vectors = pipeline.run()
                 # Build O(1) timestamp → row-index lookup.
@@ -2180,6 +2282,31 @@ class BacktestRunner:
 
 
 # ─────────────────────────────────────────────────────────────────
+# DATASET INTEGRITY PRE-FLIGHT (L2 gate)
+# ─────────────────────────────────────────────────────────────────
+
+def _preflight_dataset(csv_path: str, instrument: str, log: logging.Logger) -> bool:
+    """L2 pre-flight gate. Runs the whole-sequence integrity validator before a
+    file is streamed. Returns True if the file may proceed (APPROVE/WARN),
+    False if it must be skipped (REJECT). Never aborts a batch — a rejected
+    instrument is logged and skipped. A WARN runs but is logged with its report."""
+    rep = validate_dataset(csv_path, instrument=instrument, raise_on_fail=False)
+    decision = rep.get("decision")
+    if decision == DatasetDecision.REJECT.value:
+        log.error(
+            "[dataset_integrity] REJECT %s (%s): %s — skipping instrument.",
+            csv_path, instrument, "; ".join(rep.get("hard_failures", [])),
+        )
+        return False
+    if decision == DatasetDecision.WARN.value:
+        log.warning(
+            "[dataset_integrity] WARN %s (%s): %s",
+            csv_path, instrument, "; ".join(rep.get("warnings", [])),
+        )
+    return True
+
+
+# ─────────────────────────────────────────────────────────────────
 # MULTI-INSTRUMENT RUNNER
 # ─────────────────────────────────────────────────────────────────
 
@@ -2203,6 +2330,12 @@ class MultiInstrumentRunner:
             bt_log.warning(f"No CSVs in {self.data_dir}")
             return []
 
+        # L2+L3 pre-flight over the whole universe (single pass): per-file integrity
+        # plus cross-file checks (exact-duplicate REJECT, overlap WARN). The returned
+        # decision map is the per-file gate — REJECT files are skipped, never aborting
+        # the batch.
+        decisions = validate_universe(str(self.data_dir))["decisions"]
+
         results = []
         for csv_path in csv_files:
             instrument = self._infer(csv_path.stem)
@@ -2213,6 +2346,15 @@ class MultiInstrumentRunner:
         )
             cfg.instrument = instrument
             cfg.pip_size   = self.INSTRUMENT_PIP.get(instrument, 0.0001)
+
+            decision = decisions.get(str(csv_path), DatasetDecision.APPROVE.value)
+            if decision == DatasetDecision.REJECT.value:
+                bt_log.error("[dataset_integrity] REJECT %s (%s) — skipping instrument.",
+                             csv_path, instrument)
+                continue
+            if decision == DatasetDecision.WARN.value:
+                bt_log.warning("[dataset_integrity] WARN %s (%s) — running with report.",
+                               csv_path, instrument)
 
             try:
                 loader = CandleLoader(str(csv_path), instrument)
@@ -2354,6 +2496,10 @@ def main():
         # Single instrument
         cfg.instrument = args.instrument if args.instrument != "AUTO" else csv_path.stem.upper()
         cfg.pip_size = MultiInstrumentRunner.INSTRUMENT_PIP.get(cfg.instrument, 0.0001)
+        # L2 pre-flight gate — refuse to backtest a structurally corrupt dataset.
+        if not _preflight_dataset(str(csv_path), cfg.instrument, bt_log):
+            bt_log.error("Aborting single-instrument backtest: dataset rejected.")
+            sys.exit(1)
         loader = CandleLoader(str(csv_path), cfg.instrument)
         runner = BacktestRunner(cfg, csv_path=str(csv_path), overrides=_cli_overrides)
         runner.run(loader.stream(), loader.count(), args.output)
@@ -2410,7 +2556,7 @@ def run_backtest(config: dict, csv_path: str) -> list:
             "signal":     signal,
             "confidence": confidence,
             "score":      score,
-            "volume":     float(row.get("volume", 0.0)),
+            "volume":     float(row["volume"]),  # guaranteed by FeaturePipeline schema gate
         }
 
         result = runner.run(input_data, context)

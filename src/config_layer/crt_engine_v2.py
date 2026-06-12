@@ -344,6 +344,16 @@ class CRTConfig:
     sl_atr_buffer: float = 0.2           # SL buffer
     tp1_atr_multiplier: float = 1.0
     tp2_atr_multiplier: float = 2.0
+    # [trust-layer F2, 2026-06-10] Exit-trigger model (GOVERNED). "intrabar_touch"
+    # (default) fires SL/TP on a high/low wick touch with conservative SL-before-TP
+    # same-bar ordering (see CRTEngine._intrabar_trigger_price); "close_only" is the
+    # legacy optimistic bound (close-crossing only). Adopting intrabar makes backtest
+    # metrics realistic for an SL-based strategy. See
+    # docs/analysis/exit-model-adoption-2026-06-10.md.
+    exit_model: str = "intrabar_touch"
+    # BREAKOUT-vs-REVERSAL intent boundary (displacement strength). Per-symbol
+    # overrides resolve via production_config.resolve_breakout_disp_threshold.
+    breakout_disp_threshold: float = 1.5
     # Per-intent TP1 multipliers (override tp1_atr_multiplier when intent is known)
     tp1_atr_multiplier_breakout:  float = 1.5
     tp1_atr_multiplier_pullback:  float = 0.8
@@ -1816,8 +1826,12 @@ class ExecutionEngine:
         return "CRT-" + hashlib.md5(raw.encode("utf-8")).hexdigest()[:16]
 
     @staticmethod
-    def _derive_trade_intent(features: dict) -> str:
-        """Classify trade intent from cached features for TP multiplier selection."""
+    def _derive_trade_intent(features: dict, breakout_disp_threshold: float = 1.5) -> str:
+        """Classify trade intent from cached features for TP multiplier selection.
+
+        breakout_disp_threshold defaults to the historical hardcoded 1.5 so static
+        callers are unchanged; the engine passes its per-symbol resolved value.
+        """
         if features.get("sweep_detected") or features.get("double_sweep"):
             return "liq_sweep"
         rd  = float(features.get("retest_depth",         0.0))
@@ -1827,7 +1841,7 @@ class ExecutionEngine:
             return "pullback"
         body = float(features.get("body_ratio",    0.0))
         disp = float(features.get("disp_strength", 0.0))
-        if body > 0.6 and disp > 1.5:
+        if body > 0.6 and disp > breakout_disp_threshold:
             return "breakout"
         return "reversal"
 
@@ -1887,7 +1901,9 @@ class ExecutionEngine:
         # [Phase-2] Anchor TP1 and TP2 to actual risk distance (R-multiples)
         # TP1 uses per-intent multiplier; TP2 uses tp2_atr_multiplier (default 2R).
         risk_dist  = abs(entry - sl)
-        _intent    = self._derive_trade_intent(state.cached_features or {})
+        _intent    = self._derive_trade_intent(
+            state.cached_features or {}, self.config.breakout_disp_threshold
+        )
         _tp1_key   = f"tp1_atr_multiplier_{_intent}"
         _tp1_mult  = getattr(self.config, _tp1_key, self.config.tp1_atr_multiplier)
         _tp2_mult  = self.config.tp2_atr_multiplier
@@ -2068,7 +2084,8 @@ class CRTEngine:
     """
 
     def __init__(self, config: Optional[CRTConfig] = None,
-                 sweep_tracer: Optional[SweepTraceLogger] = None):
+                 sweep_tracer: Optional[SweepTraceLogger] = None,
+                 intrabar_exits: Optional[bool] = None):
         # Config MUST be provided via ConfigBuilder.build(instrument).
         # Direct CRTConfig() fallback is forbidden — it bypasses the market router.
         if config is None:
@@ -2077,6 +2094,19 @@ class CRTEngine:
                 "Use ConfigBuilder.build(instrument) to create one."
             )
         self.config    = config
+        # [trust-layer F2] Resolve the exit-trigger model ONCE (not per candle).
+        # Precedence: explicit arg > env TRUST_INTRABAR_TOUCH (ad-hoc override) >
+        # crt_engine.exit_model config > default intrabar_touch.
+        import os as _os
+        _env = _os.environ.get("TRUST_INTRABAR_TOUCH")
+        if intrabar_exits is not None:
+            self._intrabar_exits = bool(intrabar_exits)
+        elif _env is not None:
+            self._intrabar_exits = (_env == "1")
+        else:
+            self._intrabar_exits = (
+                str(getattr(self.config, "exit_model", "intrabar_touch")) == "intrabar_touch"
+            )
         self.detector  = RangeDetector(self.config)
         self.telemetry = TelemetryCollector()
         self.sm        = StateMachine(self.config, self.telemetry)
@@ -2090,6 +2120,31 @@ class CRTEngine:
         self.log = logging.getLogger("CRT.Orchestrator")
 
     # ── Public API ────────────────────────────────────────────
+
+    @staticmethod
+    def _intrabar_trigger_price(trade: Trade, candle: Candle) -> float:
+        """[trust-layer F2/WS4B] Intrabar high/low-touch trigger price for the active
+        trade, with conservative same-bar ordering (SL assumed hit before TP when a bar
+        spans both). Returns the price to feed ExecutionEngine.update_trade so its
+        existing TP2>SL>TP1 logic fires; returns candle.close when nothing is touched.
+        MEASURE-ONLY — only reached when TRUST_INTRABAR_TOUCH=1."""
+        is_long = trade.direction == Direction.LONG
+        hi, lo = candle.high, candle.low
+        sl, tp1, tp2 = trade.sl_price, trade.tp1_price, trade.tp2_price
+        sl_touch  = (lo <= sl) if is_long else (hi >= sl)
+        tp1_touch = (hi >= tp1) if is_long else (lo <= tp1)
+        tp2_touch = (hi >= tp2) if is_long else (lo <= tp2)
+        if trade.status == "TP1":          # runner live: TP2 target or BE/trail stop
+            if sl_touch:                   # conservative: stop/BE before further target
+                return sl
+            if tp2_touch:
+                return tp2
+        else:                              # OPEN: full SL or first partial TP1
+            if sl_touch:                   # conservative: SL before TP1 on a spanning bar
+                return sl
+            if tp1_touch:
+                return tp1
+        return candle.close
 
     def initialise_range(
         self, candles: list[Candle], htf_candle_id: str, session: str = "UNKNOWN"
@@ -2166,7 +2221,19 @@ class CRTEngine:
 
         # ── Active trade management ───────────────────────────
         if self.state.active_trade and self.state.active_trade.status in ("OPEN", "TP1"):
-            result = self.executor.update_trade(self.state.active_trade, candle.close)
+            # [trust-layer F2, 2026-06-10] GOVERNED exit model (resolved once in
+            # __init__ → self._intrabar_exits). intrabar_touch (default): SL/TP fire on a
+            # high/low wick touch with conservative SL-before-TP same-bar ordering, then
+            # drive the partial-TP state machine via the level price. close_only (legacy
+            # optimistic bound): trigger only when candle.close crosses the level. Exit
+            # booking uses the level price (backtest_v2.py:2003/2010/2012) either way, so
+            # fills stay consistent.
+            _t = self.state.active_trade
+            if self._intrabar_exits:
+                _trigger_price = self._intrabar_trigger_price(_t, candle)
+            else:
+                _trigger_price = candle.close
+            result = self.executor.update_trade(_t, _trigger_price)
             if result in ("STOPPED", "TP2", "TP1"):
                 self.ev_log.record(
                     f"TRADE_{result}", candle,
