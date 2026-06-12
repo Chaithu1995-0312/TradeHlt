@@ -4,9 +4,9 @@ logs
 *results*.zip
 results
 *.bak
+reports/dataset_integrity/
 venv
 .env
 .claude
 models\
 logs.zip
-docs
