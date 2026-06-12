@@ -15,7 +15,7 @@
 | Bucket | Count | Files | Classification | Research-blocking? |
 |---|---|---|---|---|
 | **Config-section split-brain** | ~28 → **0** | `test_dataset_integrity` (21), `uat`(5 err), `live_integration` (2) | ✅ **RESOLVED by R1 (2026-06-12)** — sections added to the active config, behavior-neutral; 75 tests green | was YES — now closed |
-| **Branch-scoped (post-TP3)** | ~16 | `test_roi_gaps` (10), `test_promotion_engine_overrides` (4), `_FREQ_BOOST`/`tp3_enabled` | invalid on `patch` (F-016) | no, but pollutes signal (A-5) |
+| **Branch-scoped (post-TP3)** | ~14 → **0 fail** | `test_roi_gaps` (10), `test_promotion_engine_overrides` (4) | ✅ **FENCED by R3 (2026-06-12)** — capability-probe `skipif`; now skip-with-reason, auto-reactivate on the feature lineage | resolved (A-5) |
 | **Dormant sidecars** | 11 | `replay/test_assign_cluster` (8), `test_replay_memory_engine` (2), `test_timing_reconstructor` (1) | F-012 sidecar; RME fix wired to v1 config only | no |
 | **External-dep** | 11 | `test_llm_connectivity` | LLM fail-open tie-breaker; env (no llama/Groq) | no |
 | **Real telemetry gap** | 3 | `test_execution_planner_replay` | `TelemetryCollector.on_retest_replay` missing (A-7) | partial |
