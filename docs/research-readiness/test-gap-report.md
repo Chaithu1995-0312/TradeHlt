@@ -18,7 +18,7 @@
 | **Branch-scoped (post-TP3)** | ~14 → **0 fail** | `test_roi_gaps` (10), `test_promotion_engine_overrides` (4) | ✅ **FENCED by R3 (2026-06-12)** — capability-probe `skipif`; now skip-with-reason, auto-reactivate on the feature lineage | resolved (A-5) |
 | **Dormant sidecars** | 11 | `replay/test_assign_cluster` (8), `test_replay_memory_engine` (2), `test_timing_reconstructor` (1) | F-012 sidecar; RME fix wired to v1 config only | no |
 | **External-dep** | 11 | `test_llm_connectivity` | LLM fail-open tie-breaker; env (no llama/Groq) | no |
-| **Real telemetry gap** | 3 | `test_execution_planner_replay` | `TelemetryCollector.on_retest_replay` missing (A-7) | partial |
+| **Real telemetry gap** | 3 → **0** | `test_execution_planner_replay` | ✅ **RESOLVED by R4 (2026-06-12)** — additive `on_retest_replay` emitter restored, behavior-neutral | resolved (A-7) |
 | **Doc-drift** | 2 | `test_codebase_structure_doc`, `test_control_plane_doc_alignment` | `src/research` row missing; AGENTS.md | no |
 
 ## Module classification (subpackage granularity)

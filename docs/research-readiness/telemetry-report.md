@@ -13,7 +13,7 @@
 | **Engines** | `*_crt_telemetry.jsonl` (per-candle state/scores, 11k+ records); `logs/engine_telemetry.jsonl` (score/conf/latency/cluster/failure) | ✅ | ✅ | engine telemetry to global `logs/`, not run dir |
 | **Fusion** | fused score in events; `logs/decision_lineage.jsonl` (per-engine outputs) | ✅ | ⚠️ | **fusion intermediate weights** not consistently emitted |
 | **Decision** | `*_events.jsonl`; rejection_reasons in summary | ✅ | ✅ | reject-reason taxonomy good |
-| **Execution** | `ExecutionPlan` in events; `*_trades.csv` (entry/SL/TP/RR/TTL) | ✅ | ⚠️ | **UltronRiskGate sizing rationale** not fully traced; `TelemetryCollector.on_retest_replay` **missing (A-7)** |
+| **Execution** | `ExecutionPlan` in events; `*_trades.csv` (entry/SL/TP/RR/TTL); `RETEST_REPLAY` records | ✅ | ⚠️ | **UltronRiskGate sizing rationale** not fully traced (`on_retest_replay` restored by R4) |
 | **Trades** | `*_trades.csv` (full ledger, 4dp R / 2dp capital) | ✅ | ✅ | the durable ledger artifact |
 | **Metrics** | `*_summary.json`; `*_report.txt` | ✅ | ✅ | oracle-verified (Phase 4) |
 
@@ -27,8 +27,9 @@
   outcome) supports offline learning/attribution.
 
 ## Gaps (ranked)
-1. **A-7 — `TelemetryCollector.on_retest_replay` missing** → 3 `test_execution_planner_replay`
-   failures. A retest-replay explainability path is broken. *(medium)*
+1. ~~**A-7 — `TelemetryCollector.on_retest_replay` missing**~~ → ✅ **RESOLVED by R4 (2026-06-12)**:
+   additive RETEST_REPLAY emitter restored (behavior-neutral); the 3 `test_execution_planner_replay`
+   reds are green. *(was medium)*
 2. **Fusion intermediate weights** not consistently persisted — given fusion weighting drives
    accept/reject, the *why* of a fused score is partially opaque. *(medium)*
 3. **UltronRiskGate sizing rationale** (which sub-check reduced size, by how much) not in the

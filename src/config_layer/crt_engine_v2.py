@@ -547,6 +547,7 @@ class TelemetryCollector:
         self._reset_records:     list[dict] = []
         self._candidate_records: list[dict] = []
         self._decision_records:  list[dict] = []
+        self._retest_replay_records: list[dict] = []
         # Active candidate lifecycle (one at a time)
         self._active_candidate: Optional[dict] = None
 
@@ -860,6 +861,52 @@ class TelemetryCollector:
             "soft_conf_candle_num": soft_conf_candle_num,
         })
 
+    def on_retest_replay(
+        self,
+        *,
+        candle_index: int,
+        timestamp: str,
+        direction: int,
+        entry: float,
+        disp_low: float,
+        disp_high: float,
+        atr: float,
+        sl_atr_buffer: float,
+        tp1_mult: float,
+        tp2_mult: float,
+        intent: str,
+        score: float,
+        accepted: bool,
+        reject_reason: Optional[str],
+    ) -> None:
+        """Additive, measure-only telemetry for the execution-planner replay experiment.
+
+        Records a retest decision point's geometry + intent + score + accept/reject so the
+        offline experiment (scripts/research/execution_planner_replay.py) can reconstruct
+        structure-vs-vanilla SL/TP and run the 2x2 attribution. OFF-SPINE: there is no
+        production caller, so _retest_replay_records stays empty in normal backtests and
+        flush() output is unchanged (replay determinism + ledger byte-identity preserved).
+        Explicit signature (not **kwargs) so the schema is self-documenting and a future
+        field change fails loudly. Mirrors on_decision_distance.
+        """
+        self._retest_replay_records.append({
+            "kind":          "RETEST_REPLAY",
+            "candle_index":  candle_index,
+            "timestamp":     timestamp,
+            "direction":     direction,
+            "entry":         entry,
+            "disp_low":      disp_low,
+            "disp_high":     disp_high,
+            "atr":           atr,
+            "sl_atr_buffer": sl_atr_buffer,
+            "tp1_mult":      tp1_mult,
+            "tp2_mult":      tp2_mult,
+            "intent":        intent,
+            "score":         score,
+            "accepted":      accepted,
+            "reject_reason": reject_reason,
+        })
+
     # ── Flush ─────────────────────────────────────────────────────
 
     def flush(self) -> list[dict]:
@@ -921,6 +968,7 @@ class TelemetryCollector:
         records.extend(self._reset_records)
         records.extend(self._candidate_records)
         records.extend(self._decision_records)
+        records.extend(self._retest_replay_records)
         return records
 
 
