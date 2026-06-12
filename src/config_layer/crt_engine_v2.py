@@ -1683,7 +1683,7 @@ class UltronRiskEngine:
             if self.config.use_bitnet:
                 bn_score = bitnet_score(features)
                 self.log.info(f"BitNetMain Score: {bn_score:.4f}")
-                if bn_score < 0.55:
+                if bn_score < self.config.bitnet_main_threshold:
                     self.log.warning(f"REJECTED BY BITNET MAIN (score={bn_score:.3f})")
                     return False, RejectReason.LOW_SCORE, 0.0
 # else: BitNet is disabled – no check
@@ -1753,7 +1753,7 @@ class UltronRiskEngine:
 
             self.log.info(f"BitNetMain Score: {bitnet_main_score:.4f}")
 
-            if bitnet_main_score < 0.55:
+            if bitnet_main_score < self.config.bitnet_main_threshold:
                 self.log.warning(f"REJECTED BY BITNET MAIN (score={bitnet_main_score:.3f})")
                 return False, RejectReason.LOW_SCORE, 0.0
         state.risk_score = rs

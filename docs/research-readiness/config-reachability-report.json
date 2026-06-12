@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-12T13:53:13+00:00",
+  "generated_at": "2026-06-12T14:20:50+00:00",
   "active_version": "v2_multi_2026_04",
   "crtconfig_field_count": 48,
   "section_loaded_via_get_prod_section": {
@@ -213,8 +213,7 @@
   },
   "summary": {
     "METADATA": 8,
-    "READ_AND_USED": 203,
-    "HARDCODED_OVERRIDE": 3,
+    "READ_AND_USED": 206,
     "READ_BUT_INERT": 14,
     "SHADOW_ONLY": 15
   },
@@ -1127,9 +1126,11 @@
     {
       "section": "crt_engine",
       "key": "bitnet_main_threshold",
-      "verdict": "HARDCODED_OVERRIDE",
-      "evidence": [],
-      "note": "gate compares against literal 0.55 (crt_engine_v2.py:1686,1756); config knob unread"
+      "verdict": "READ_AND_USED",
+      "evidence": [
+        "src/config_layer/crt_engine_v2.py"
+      ],
+      "note": ""
     },
     {
       "section": "crt_engine",
@@ -1964,6 +1965,7 @@
       "evidence": [
         "src/features/feature_monitor.py",
         "src/research/config.py",
+        "src/runtime/backtest_v2.py",
         "src/runtime/live_engine_hook.py"
       ],
       "note": ""
@@ -1971,16 +1973,22 @@
     {
       "section": "feature_monitor",
       "key": "hard_drift_z",
-      "verdict": "HARDCODED_OVERRIDE",
-      "evidence": [],
-      "note": "FeatureMonitor hardcodes hard_threshold=3.0 (feature_monitor.py:167); knob unread"
+      "verdict": "READ_AND_USED",
+      "evidence": [
+        "src/runtime/backtest_v2.py",
+        "src/runtime/live_engine_hook.py"
+      ],
+      "note": ""
     },
     {
       "section": "feature_monitor",
       "key": "soft_drift_z",
-      "verdict": "HARDCODED_OVERRIDE",
-      "evidence": [],
-      "note": "FeatureMonitor hardcodes soft_threshold=2.5 (feature_monitor.py:166); knob unread"
+      "verdict": "READ_AND_USED",
+      "evidence": [
+        "src/runtime/backtest_v2.py",
+        "src/runtime/live_engine_hook.py"
+      ],
+      "note": ""
     },
     {
       "section": "feature_monitor",

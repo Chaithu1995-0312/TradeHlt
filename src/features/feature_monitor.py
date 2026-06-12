@@ -71,8 +71,18 @@ class FeatureMonitor:
         Older samples are discarded automatically.
     """
 
-    def __init__(self, window_size: int = 500) -> None:
+    def __init__(
+        self,
+        window_size: int = 500,
+        soft_threshold: float = 2.5,
+        hard_threshold: float = 3.0,
+    ) -> None:
         self.window_size = window_size
+        # Governed drift Z-thresholds (config: feature_monitor.soft_drift_z /
+        # hard_drift_z). Stored so detect_drift_severity() honors config rather than
+        # its own hardcoded defaults. Defaults here equal the historical literals.
+        self.soft_threshold = soft_threshold
+        self.hard_threshold = hard_threshold
         self._buffer: deque[List[float]] = deque(maxlen=window_size)
         self._n_drift_detected: int = 0
         self._n_total: int = 0
@@ -163,22 +173,30 @@ class FeatureMonitor:
     def detect_drift_severity(
         self,
         features: Dict[str, float],
-        soft_threshold: float = 2.5,
-        hard_threshold: float = 3.0,
+        soft_threshold: float | None = None,
+        hard_threshold: float | None = None,
     ) -> str:
         """
         Return drift severity: 'none', 'soft', or 'hard'.
 
+        Thresholds default to the instance values (set from config at construction:
+        feature_monitor.soft_drift_z / hard_drift_z); pass explicitly to override.
+
         Args:
             features:       canonical feature dict
-            soft_threshold: Z-score for soft drift (default 2.5)
-            hard_threshold: Z-score for hard drift (default 3.0)
+            soft_threshold: Z-score for soft drift (default: instance soft_threshold)
+            hard_threshold: Z-score for hard drift (default: instance hard_threshold)
 
         Returns:
             'hard'  â€” strongly out-of-distribution (consider rejecting trade)
             'soft'  â€” mildly out-of-distribution (reduce confidence)
             'none'  â€” within expected distribution
         """
+        if soft_threshold is None:
+            soft_threshold = self.soft_threshold
+        if hard_threshold is None:
+            hard_threshold = self.hard_threshold
+
         stats = self._compute_stats()
         if stats is None:
             return "none"

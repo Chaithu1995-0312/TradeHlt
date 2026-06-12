@@ -1426,7 +1426,18 @@ class BacktestRunner:
         # Phase 2: FeatureMonitor for drift detection in replay loop
         try:
             from features.feature_monitor import FeatureMonitor
-            self._monitor = FeatureMonitor(window_size=500)
+            from config_layer.production_config import get_prod_section
+            try:
+                _fm_cfg = get_prod_section("feature_monitor")
+            except Exception:
+                _fm_cfg = {}
+            # Governed drift thresholds (config: feature_monitor.soft_drift_z /
+            # hard_drift_z); defaults equal the historical hardcoded literals.
+            self._monitor = FeatureMonitor(
+                window_size=int(_fm_cfg.get("window_size", 500)),
+                soft_threshold=float(_fm_cfg.get("soft_drift_z", 2.5)),
+                hard_threshold=float(_fm_cfg.get("hard_drift_z", 3.0)),
+            )
             self._monitor_available = True
         except Exception as _fm_err:
             bt_log.error(

@@ -246,7 +246,11 @@ def _load_engine_config() -> dict:
                 "Required key 'window_size' missing from feature_monitor config. "
                 "Add it to configs/production/v1_multi_2026_03.json."
             )
-        _feature_monitor = FeatureMonitor(window_size=int(window_size))
+        _feature_monitor = FeatureMonitor(
+            window_size=int(window_size),
+            soft_threshold=float(fm_cfg.get("soft_drift_z", 2.5)),
+            hard_threshold=float(fm_cfg.get("hard_drift_z", 3.0)),
+        )
 
     # Initialize FeatureStore as canonical ingestion boundary.
     # Validates all 35 CANONICAL_FEATURES, computes history-derived double_sweep,

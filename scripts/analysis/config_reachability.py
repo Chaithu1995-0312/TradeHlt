@@ -81,16 +81,10 @@ _CRT_META_SUBDICTS = {
 
 # Curated HARDCODED_OVERRIDE map — fields the static pass flags READ_BUT_INERT, but
 # manual source review confirms a magic-number literal is used INSTEAD of the config
-# knob (verified during the 2026-06-12 research-readiness audit). Tuning these in
-# config is a silent no-op. Evidence cites are required so the verdict is auditable.
-_HARDCODED_OVERRIDES = {
-    "bitnet_main_threshold":
-        "gate compares against literal 0.55 (crt_engine_v2.py:1686,1756); config knob unread",
-    "hard_drift_z":
-        "FeatureMonitor hardcodes hard_threshold=3.0 (feature_monitor.py:167); knob unread",
-    "soft_drift_z":
-        "FeatureMonitor hardcodes soft_threshold=2.5 (feature_monitor.py:166); knob unread",
-}
+# knob. Tuning such a knob is a silent no-op. Evidence cites are required so the verdict
+# is auditable. (Empty since 2026-06-12 R2: bitnet_main_threshold + feature_monitor
+# {soft,hard}_drift_z were WIRED to config — they now classify as READ_AND_USED.)
+_HARDCODED_OVERRIDES: dict[str, str] = {}
 
 # Dormant / sidecar module path fragments (F-012, F-005, topic "dormant" list).
 # A reference that lands ONLY here is SHADOW_ONLY, not live consumption.
