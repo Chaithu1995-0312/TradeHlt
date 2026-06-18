@@ -1,0 +1,18 @@
+{
+  "flow": "agent",
+  "title": "AI Automation Agent",
+  "doc": "docs/reference/agent-reference.md",
+  "service_ids": ["S9"],
+  "entrypoint": "agent.cli",
+  "modules": [
+    "agent.agent_core",
+    "agent.intent_router",
+    "agent.plan_compiler",
+    "agent.tool_planner",
+    "agent.executor",
+    "agent.tool_registry",
+    "agent.audit",
+    "agent.state"
+  ],
+  "keywords": ["agent", "intent", "plan", "executor", "tool", "repl"]
+}

@@ -165,12 +165,18 @@ class ContextReportAPI:
         logs: dict[str, str],
         artifacts: list[dict[str, Any]],
         code_context: list[dict[str, Any]],
+        graph_context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Build execution context prompt, send to Claude, parse structured JSON response.
 
+        `graph_context` (flow slice / dependency neighbourhood from `dot_graph_context`) is
+        accepted and surfaced in the response as additive metadata. In M1 it is NOT fed to the
+        LLM prompt (no behaviour change); M2 wires it into the architecture-analyst prompt.
+
         Returns:
-            {"ok": True,  "sections": {...}, "model": str, "code_context_count": int}
+            {"ok": True,  "sections": {...}, "model": str, "code_context_count": int,
+             "graph_context": {...} | None}
             {"ok": False, "error": str}
         """
         _load_dotenv()
@@ -227,6 +233,7 @@ class ContextReportAPI:
                 },
                 "model":               _MODEL,
                 "code_context_count":  len(code_context),
+                "graph_context":       graph_context,
                 "parse_warning":       f"JSON decode failed ({exc}); showing raw response",
             }
 
@@ -241,4 +248,5 @@ class ContextReportAPI:
             "sections":           sections,
             "model":              _MODEL,
             "code_context_count": len(code_context),
+            "graph_context":      graph_context,
         }

@@ -1,0 +1,16 @@
+{
+  "flow": "governance",
+  "title": "Governance / Promotion",
+  "doc": "docs/architecture/replay-governance.md",
+  "service_ids": ["S5"],
+  "entrypoint": "governance.promotion_manager",
+  "modules": [
+    "governance.promotion_manager",
+    "config_layer.config_validator",
+    "governance.shadow_promotion_gate",
+    "governance.portfolio_validation",
+    "governance.orchestrator",
+    "core.model_registry"
+  ],
+  "keywords": ["promotion", "validation", "shadow", "governance", "config_validator"]
+}

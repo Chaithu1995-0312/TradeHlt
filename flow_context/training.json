@@ -1,0 +1,18 @@
+{
+  "flow": "training",
+  "title": "Training / Model Pipeline",
+  "doc": "docs/architecture/service-boundary-map.md",
+  "service_ids": ["S5", "S6"],
+  "entrypoint": "training.train_pipeline",
+  "modules": [
+    "features.dataset_builder",
+    "features.dataset_validator",
+    "config_layer.rr.rr_dataset_builder",
+    "training.trainer",
+    "training.train_pipeline",
+    "training.phase5_calibration",
+    "training.evaluator",
+    "core.model_registry"
+  ],
+  "keywords": ["dataset", "trainer", "calibration", "registry", "training"]
+}

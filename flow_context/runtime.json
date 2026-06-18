@@ -1,0 +1,18 @@
+{
+  "flow": "runtime",
+  "title": "Runtime / Signal Spine",
+  "doc": "docs/architecture/signal-flow.md",
+  "service_ids": ["S1", "S2", "S3", "S4"],
+  "entrypoint": "runtime.backtest_v2",
+  "modules": [
+    "features.feature_pipeline",
+    "core.feature_store",
+    "core.engine_runner",
+    "core.fusion_engine",
+    "core.decision_engine",
+    "config_layer.execution_planner",
+    "core.ultron_risk_gate",
+    "core.collector"
+  ],
+  "keywords": ["signal", "fusion", "decision_engine", "ultron", "execution", "candle"]
+}

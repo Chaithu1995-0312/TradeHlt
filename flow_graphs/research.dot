@@ -1,0 +1,88 @@
+digraph flow_research {
+    rankdir=LR;
+    node [shape=box, fontsize=10];
+
+    subgraph "cluster_research" {
+        label="research — Edge Discovery / Research Platform"; style="rounded";
+        "research.cli";
+        "research.contracts";
+        "research.controls";
+        "research.costs";
+        "research.measurement.forward_walk";
+        "research.qualification";
+        "research.registry";
+        "research.runner";
+    }
+
+    // 1-hop dependency boundary (not flow members)
+    "config_layer.crt_engine_v2" [style="dashed", fontcolor="#888888"];
+    "interpreters.adapter" [style="dashed", fontcolor="#888888"];
+    "research.config" [style="dashed", fontcolor="#888888"];
+    "research.controls.always_long" [style="dashed", fontcolor="#888888"];
+    "research.controls.random_baseline" [style="dashed", fontcolor="#888888"];
+    "research.cross_sectional" [style="dashed", fontcolor="#888888"];
+    "research.exit_grid" [style="dashed", fontcolor="#888888"];
+    "research.forensics" [style="dashed", fontcolor="#888888"];
+    "research.hypotheses" [style="dashed", fontcolor="#888888"];
+    "research.hypotheses.expansion_breakout" [style="dashed", fontcolor="#888888"];
+    "research.hypotheses.mean_reversion" [style="dashed", fontcolor="#888888"];
+    "research.hypotheses.spine_hypothesis" [style="dashed", fontcolor="#888888"];
+    "research.measurement" [style="dashed", fontcolor="#888888"];
+    "research.measurement.metrics" [style="dashed", fontcolor="#888888"];
+    "research.provenance" [style="dashed", fontcolor="#888888"];
+    "research.regime_conditioning" [style="dashed", fontcolor="#888888"];
+    "runtime.backtest_v2" [style="dashed", fontcolor="#888888"];
+
+    // member -> member (intra-flow dependencies)
+    "research.cli" -> "research.controls";
+    "research.cli" -> "research.costs";
+    "research.cli" -> "research.qualification";
+    "research.cli" -> "research.registry";
+    "research.cli" -> "research.runner";
+    "research.controls" -> "research.registry";
+    "research.measurement.forward_walk" -> "research.contracts";
+    "research.qualification" -> "research.contracts";
+    "research.qualification" -> "research.costs";
+    "research.registry" -> "research.contracts";
+    "research.runner" -> "research.contracts";
+    "research.runner" -> "research.costs";
+    "research.runner" -> "research.measurement.forward_walk";
+    "research.runner" -> "research.registry";
+
+    // boundary dependencies (one endpoint outside the flow)
+    "interpreters.adapter" -> "research.contracts";
+    "research.cli" -> "research.config";
+    "research.cli" -> "research.hypotheses";
+    "research.cli" -> "research.measurement.metrics";
+    "research.cli" -> "research.provenance";
+    "research.contracts" -> "config_layer.crt_engine_v2";
+    "research.controls" -> "research.controls.always_long";
+    "research.controls" -> "research.controls.random_baseline";
+    "research.controls.always_long" -> "research.contracts";
+    "research.controls.random_baseline" -> "research.contracts";
+    "research.cross_sectional" -> "research.costs";
+    "research.cross_sectional" -> "research.qualification";
+    "research.exit_grid" -> "research.contracts";
+    "research.exit_grid" -> "research.costs";
+    "research.exit_grid" -> "research.measurement.forward_walk";
+    "research.forensics" -> "research.costs";
+    "research.forensics" -> "research.measurement.forward_walk";
+    "research.forensics" -> "research.registry";
+    "research.hypotheses.expansion_breakout" -> "research.contracts";
+    "research.hypotheses.expansion_breakout" -> "research.registry";
+    "research.hypotheses.mean_reversion" -> "research.contracts";
+    "research.hypotheses.mean_reversion" -> "research.registry";
+    "research.hypotheses.spine_hypothesis" -> "research.contracts";
+    "research.hypotheses.spine_hypothesis" -> "research.registry";
+    "research.measurement" -> "research.measurement.forward_walk";
+    "research.measurement.metrics" -> "research.contracts";
+    "research.measurement.metrics" -> "research.costs";
+    "research.qualification" -> "research.measurement.metrics";
+    "research.regime_conditioning" -> "research.contracts";
+    "research.regime_conditioning" -> "research.costs";
+    "research.regime_conditioning" -> "research.qualification";
+    "research.runner" -> "research.config";
+    "research.runner" -> "research.measurement.metrics";
+    "research.runner" -> "research.provenance";
+    "research.runner" -> "runtime.backtest_v2";
+}

@@ -1,0 +1,44 @@
+digraph flow_control_plane {
+    rankdir=LR;
+    node [shape=box, fontsize=10];
+
+    subgraph "cluster_control_plane" {
+        label="control_plane — Control Plane / HTTP UI"; style="rounded";
+        "control_plane.code_context_extractor";
+        "control_plane.context_report";
+        "control_plane.dashboard_api";
+        "control_plane.dot_graph_context";
+        "control_plane.jobs";
+        "control_plane.monitors";
+        "control_plane.registry";
+        "control_plane.report_api";
+        "control_plane.server";
+    }
+
+    // 1-hop dependency boundary (not flow members)
+    "agent.findings_synthesizer" [style="dashed", fontcolor="#888888"];
+    "agent.groq_client" [style="dashed", fontcolor="#888888"];
+    "control_plane" [style="dashed", fontcolor="#888888"];
+    "control_plane.cp_types" [style="dashed", fontcolor="#888888"];
+
+    // member -> member (intra-flow dependencies)
+    "control_plane.jobs" -> "control_plane.monitors";
+    "control_plane.jobs" -> "control_plane.registry";
+    "control_plane.server" -> "control_plane.code_context_extractor";
+    "control_plane.server" -> "control_plane.context_report";
+    "control_plane.server" -> "control_plane.dashboard_api";
+    "control_plane.server" -> "control_plane.dot_graph_context";
+    "control_plane.server" -> "control_plane.jobs";
+    "control_plane.server" -> "control_plane.registry";
+    "control_plane.server" -> "control_plane.report_api";
+
+    // boundary dependencies (one endpoint outside the flow)
+    "agent.findings_synthesizer" -> "control_plane.registry";
+    "control_plane" -> "control_plane.jobs";
+    "control_plane" -> "control_plane.registry";
+    "control_plane" -> "control_plane.server";
+    "control_plane.dashboard_api" -> "agent.groq_client";
+    "control_plane.jobs" -> "control_plane.cp_types";
+    "control_plane.registry" -> "control_plane.cp_types";
+    "control_plane.server" -> "agent.findings_synthesizer";
+}

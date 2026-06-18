@@ -1,0 +1,19 @@
+{
+  "flow": "control_plane",
+  "title": "Control Plane / HTTP UI",
+  "doc": "docs/architecture/service-boundary-map.md",
+  "service_ids": ["S9"],
+  "entrypoint": "control_plane.server",
+  "modules": [
+    "control_plane.server",
+    "control_plane.registry",
+    "control_plane.jobs",
+    "control_plane.monitors",
+    "control_plane.dashboard_api",
+    "control_plane.report_api",
+    "control_plane.context_report",
+    "control_plane.code_context_extractor",
+    "control_plane.dot_graph_context"
+  ],
+  "keywords": ["control_plane", "server", "jobs", "registry", "command", "http"]
+}

@@ -1,3 +1,5 @@
+"""Stdlib-HTTP control-plane server (localhost:8787 dashboard and API)."""
+
 from __future__ import annotations
 
 import json
@@ -16,6 +18,7 @@ from src.control_plane.dashboard_api import TradingDashboardAPI
 from src.control_plane.report_api import RunReportAPI
 from src.control_plane.context_report import ContextReportAPI
 from src.control_plane.code_context_extractor import extract_code_context
+from src.control_plane.dot_graph_context import extract_graph_context
 
 
 def _json_bytes(payload: dict[str, Any]) -> bytes:
@@ -1929,7 +1932,10 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                         logs.get("stderr", ""),
                         _repo_root,
                     )
-                    result = context_api.context_analysis(run_snap, logs, arts, code_ctx)
+                    # Flow-scoped architectural graph context (fail-open; M1 surfaces it as
+                    # metadata only — the LLM prompt is unchanged until M2).
+                    graph_ctx = extract_graph_context(code_ctx, _repo_root)
+                    result = context_api.context_analysis(run_snap, logs, arts, code_ctx, graph_ctx)
                     code   = HTTPStatus.OK if result.get("ok") else HTTPStatus.BAD_GATEWAY
                     self._send_json(code, result)
                     return

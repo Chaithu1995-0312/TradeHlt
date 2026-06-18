@@ -1,0 +1,49 @@
+digraph flow_agent {
+    rankdir=LR;
+    node [shape=box, fontsize=10];
+
+    subgraph "cluster_agent" {
+        label="agent — AI Automation Agent"; style="rounded";
+        "agent.agent_core";
+        "agent.audit";
+        "agent.executor";
+        "agent.intent_router";
+        "agent.plan_compiler";
+        "agent.state";
+        "agent.tool_planner";
+        "agent.tool_registry";
+    }
+
+    // 1-hop dependency boundary (not flow members)
+    "agent.cli" [style="dashed", fontcolor="#888888"];
+    "agent.modes.copilot_mode" [style="dashed", fontcolor="#888888"];
+    "agent.modes.findings_mode" [style="dashed", fontcolor="#888888"];
+    "agent.modes.governance_mode" [style="dashed", fontcolor="#888888"];
+    "agent.modes.log_query_mode" [style="dashed", fontcolor="#888888"];
+    "agent.modes.pipeline_mode" [style="dashed", fontcolor="#888888"];
+    "config_layer.llm_inference_client" [style="dashed", fontcolor="#888888"];
+
+    // member -> member (intra-flow dependencies)
+    "agent.agent_core" -> "agent.audit";
+    "agent.agent_core" -> "agent.executor";
+    "agent.agent_core" -> "agent.intent_router";
+    "agent.agent_core" -> "agent.plan_compiler";
+    "agent.agent_core" -> "agent.state";
+    "agent.agent_core" -> "agent.tool_planner";
+    "agent.agent_core" -> "agent.tool_registry";
+    "agent.executor" -> "agent.state";
+    "agent.executor" -> "agent.tool_registry";
+    "agent.intent_router" -> "agent.tool_planner";
+
+    // boundary dependencies (one endpoint outside the flow)
+    "agent.agent_core" -> "config_layer.llm_inference_client";
+    "agent.cli" -> "agent.agent_core";
+    "agent.cli" -> "agent.state";
+    "agent.intent_router" -> "config_layer.llm_inference_client";
+    "agent.modes.copilot_mode" -> "agent.tool_planner";
+    "agent.modes.copilot_mode" -> "agent.tool_registry";
+    "agent.modes.findings_mode" -> "agent.tool_registry";
+    "agent.modes.governance_mode" -> "agent.tool_registry";
+    "agent.modes.log_query_mode" -> "agent.tool_registry";
+    "agent.modes.pipeline_mode" -> "agent.tool_registry";
+}

@@ -1,0 +1,73 @@
+digraph flow_governance {
+    rankdir=LR;
+    node [shape=box, fontsize=10];
+
+    subgraph "cluster_governance" {
+        label="governance — Governance / Promotion"; style="rounded";
+        "config_layer.config_validator";
+        "core.model_registry";
+        "governance.orchestrator";
+        "governance.portfolio_validation";
+        "governance.promotion_manager";
+        "governance.shadow_promotion_gate";
+    }
+
+    // 1-hop dependency boundary (not flow members)
+    "agent.modes.governance_mode" [style="dashed", fontcolor="#888888"];
+    "agent.modes.pipeline_mode" [style="dashed", fontcolor="#888888"];
+    "config_layer.config_builder" [style="dashed", fontcolor="#888888"];
+    "config_layer.crt_engine_v2" [style="dashed", fontcolor="#888888"];
+    "config_layer.goal_schema" [style="dashed", fontcolor="#888888"];
+    "config_layer.goal_validator" [style="dashed", fontcolor="#888888"];
+    "config_layer.production_config" [style="dashed", fontcolor="#888888"];
+    "engines.ml_gaussian_engine" [style="dashed", fontcolor="#888888"];
+    "engines.tradenet_meta_engine" [style="dashed", fontcolor="#888888"];
+    "features.feature_pipeline" [style="dashed", fontcolor="#888888"];
+    "features.feature_schema" [style="dashed", fontcolor="#888888"];
+    "governance" [style="dashed", fontcolor="#888888"];
+    "governance.bitnet_governance_executor" [style="dashed", fontcolor="#888888"];
+    "governance.expansion_integration" [style="dashed", fontcolor="#888888"];
+    "governance.reflection_buffer_advanced" [style="dashed", fontcolor="#888888"];
+    "runtime.backtest_v2" [style="dashed", fontcolor="#888888"];
+    "runtime.baseline_capture" [style="dashed", fontcolor="#888888"];
+    "training.evaluator" [style="dashed", fontcolor="#888888"];
+    "training.trade_net_v2" [style="dashed", fontcolor="#888888"];
+    "training.train_pipeline" [style="dashed", fontcolor="#888888"];
+    "training.trainer" [style="dashed", fontcolor="#888888"];
+    "utils.integrity_events" [style="dashed", fontcolor="#888888"];
+
+    // member -> member (intra-flow dependencies)
+    "governance.orchestrator" -> "governance.shadow_promotion_gate";
+    "governance.promotion_manager" -> "config_layer.config_validator";
+
+    // boundary dependencies (one endpoint outside the flow)
+    "agent.modes.governance_mode" -> "governance.orchestrator";
+    "agent.modes.governance_mode" -> "governance.shadow_promotion_gate";
+    "agent.modes.pipeline_mode" -> "config_layer.config_validator";
+    "agent.modes.pipeline_mode" -> "governance.promotion_manager";
+    "config_layer.config_validator" -> "config_layer.crt_engine_v2";
+    "config_layer.config_validator" -> "config_layer.goal_schema";
+    "config_layer.config_validator" -> "config_layer.goal_validator";
+    "config_layer.config_validator" -> "config_layer.production_config";
+    "config_layer.config_validator" -> "runtime.backtest_v2";
+    "core.model_registry" -> "config_layer.production_config";
+    "core.model_registry" -> "features.feature_pipeline";
+    "core.model_registry" -> "features.feature_schema";
+    "core.model_registry" -> "training.evaluator";
+    "core.model_registry" -> "utils.integrity_events";
+    "engines.ml_gaussian_engine" -> "core.model_registry";
+    "engines.tradenet_meta_engine" -> "core.model_registry";
+    "governance" -> "governance.orchestrator";
+    "governance.expansion_integration" -> "governance.shadow_promotion_gate";
+    "governance.orchestrator" -> "governance.bitnet_governance_executor";
+    "governance.orchestrator" -> "governance.reflection_buffer_advanced";
+    "governance.portfolio_validation" -> "config_layer.config_builder";
+    "governance.portfolio_validation" -> "config_layer.crt_engine_v2";
+    "governance.portfolio_validation" -> "config_layer.production_config";
+    "governance.portfolio_validation" -> "runtime.backtest_v2";
+    "runtime.backtest_v2" -> "core.model_registry";
+    "runtime.baseline_capture" -> "core.model_registry";
+    "training.trade_net_v2" -> "core.model_registry";
+    "training.train_pipeline" -> "core.model_registry";
+    "training.trainer" -> "core.model_registry";
+}

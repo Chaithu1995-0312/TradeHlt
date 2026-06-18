@@ -1,0 +1,109 @@
+digraph flow_runtime {
+    rankdir=LR;
+    node [shape=box, fontsize=10];
+
+    subgraph "cluster_runtime" {
+        label="runtime — Runtime / Signal Spine"; style="rounded";
+        "config_layer.execution_planner";
+        "core.collector";
+        "core.decision_engine";
+        "core.engine_runner";
+        "core.feature_store";
+        "core.fusion_engine";
+        "core.ultron_risk_gate";
+        "features.feature_pipeline";
+    }
+
+    // 1-hop dependency boundary (not flow members)
+    "agent.modes.copilot_mode" [style="dashed", fontcolor="#888888"];
+    "cognitive.cognitive_bus" [style="dashed", fontcolor="#888888"];
+    "config_layer.production_config" [style="dashed", fontcolor="#888888"];
+    "config_layer.rr.rr_dataset_builder" [style="dashed", fontcolor="#888888"];
+    "config_layer.rr.rr_fusion" [style="dashed", fontcolor="#888888"];
+    "core.acceptance_controller" [style="dashed", fontcolor="#888888"];
+    "core.convergence_controller" [style="dashed", fontcolor="#888888"];
+    "core.dynamic_threshold" [style="dashed", fontcolor="#888888"];
+    "core.gate_intelligence" [style="dashed", fontcolor="#888888"];
+    "core.model_registry" [style="dashed", fontcolor="#888888"];
+    "core.regime_governor" [style="dashed", fontcolor="#888888"];
+    "core.signal_audit" [style="dashed", fontcolor="#888888"];
+    "data_ingestion.ohlcv_schema" [style="dashed", fontcolor="#888888"];
+    "engines.crt_engine" [style="dashed", fontcolor="#888888"];
+    "engines.heuristic_gaussian_engine" [style="dashed", fontcolor="#888888"];
+    "engines.live_engine" [style="dashed", fontcolor="#888888"];
+    "engines.ml_gaussian_engine" [style="dashed", fontcolor="#888888"];
+    "engines.rr_engine" [style="dashed", fontcolor="#888888"];
+    "engines.trap_validator_engine" [style="dashed", fontcolor="#888888"];
+    "engines.zone_gate_engine" [style="dashed", fontcolor="#888888"];
+    "events.event_fabric" [style="dashed", fontcolor="#888888"];
+    "features.feature_monitor" [style="dashed", fontcolor="#888888"];
+    "features.feature_schema" [style="dashed", fontcolor="#888888"];
+    "features.schema_validator" [style="dashed", fontcolor="#888888"];
+    "governance.strategy_backtest" [style="dashed", fontcolor="#888888"];
+    "journal.trade_logger" [style="dashed", fontcolor="#888888"];
+    "llm_research.forward_tester" [style="dashed", fontcolor="#888888"];
+    "runtime.backtest_bitnet" [style="dashed", fontcolor="#888888"];
+    "runtime.backtest_v2" [style="dashed", fontcolor="#888888"];
+    "runtime.live_engine_hook" [style="dashed", fontcolor="#888888"];
+    "search.regime_weight_searcher" [style="dashed", fontcolor="#888888"];
+    "utils.integrity_events" [style="dashed", fontcolor="#888888"];
+    "utils.logging_config" [style="dashed", fontcolor="#888888"];
+
+    // member -> member (intra-flow dependencies)
+    "core.engine_runner" -> "core.collector";
+    "core.engine_runner" -> "core.decision_engine";
+    "core.engine_runner" -> "core.fusion_engine";
+
+    // boundary dependencies (one endpoint outside the flow)
+    "agent.modes.copilot_mode" -> "config_layer.execution_planner";
+    "agent.modes.copilot_mode" -> "core.engine_runner";
+    "agent.modes.copilot_mode" -> "core.fusion_engine";
+    "agent.modes.copilot_mode" -> "core.ultron_risk_gate";
+    "config_layer.execution_planner" -> "core.gate_intelligence";
+    "config_layer.execution_planner" -> "utils.logging_config";
+    "config_layer.rr.rr_dataset_builder" -> "features.feature_pipeline";
+    "config_layer.rr.rr_fusion" -> "features.feature_pipeline";
+    "core.collector" -> "config_layer.production_config";
+    "core.collector" -> "utils.logging_config";
+    "core.decision_engine" -> "core.dynamic_threshold";
+    "core.engine_runner" -> "cognitive.cognitive_bus";
+    "core.engine_runner" -> "config_layer.production_config";
+    "core.engine_runner" -> "config_layer.rr.rr_fusion";
+    "core.engine_runner" -> "core.acceptance_controller";
+    "core.engine_runner" -> "core.convergence_controller";
+    "core.engine_runner" -> "core.regime_governor";
+    "core.engine_runner" -> "core.signal_audit";
+    "core.engine_runner" -> "engines.crt_engine";
+    "core.engine_runner" -> "engines.heuristic_gaussian_engine";
+    "core.engine_runner" -> "engines.live_engine";
+    "core.engine_runner" -> "engines.ml_gaussian_engine";
+    "core.engine_runner" -> "engines.rr_engine";
+    "core.engine_runner" -> "engines.trap_validator_engine";
+    "core.engine_runner" -> "engines.zone_gate_engine";
+    "core.engine_runner" -> "events.event_fabric";
+    "core.engine_runner" -> "utils.logging_config";
+    "core.feature_store" -> "features.feature_schema";
+    "core.feature_store" -> "features.schema_validator";
+    "core.fusion_engine" -> "utils.integrity_events";
+    "core.model_registry" -> "features.feature_pipeline";
+    "core.ultron_risk_gate" -> "utils.logging_config";
+    "features.feature_pipeline" -> "data_ingestion.ohlcv_schema";
+    "features.feature_pipeline" -> "features.feature_monitor";
+    "features.feature_pipeline" -> "features.feature_schema";
+    "features.feature_pipeline" -> "features.schema_validator";
+    "features.feature_pipeline" -> "utils.logging_config";
+    "governance.strategy_backtest" -> "features.feature_pipeline";
+    "journal.trade_logger" -> "core.collector";
+    "llm_research.forward_tester" -> "config_layer.execution_planner";
+    "llm_research.forward_tester" -> "core.engine_runner";
+    "runtime.backtest_bitnet" -> "core.engine_runner";
+    "runtime.backtest_bitnet" -> "features.feature_pipeline";
+    "runtime.backtest_v2" -> "core.engine_runner";
+    "runtime.backtest_v2" -> "features.feature_pipeline";
+    "runtime.live_engine_hook" -> "config_layer.execution_planner";
+    "runtime.live_engine_hook" -> "core.collector";
+    "runtime.live_engine_hook" -> "core.engine_runner";
+    "runtime.live_engine_hook" -> "core.feature_store";
+    "runtime.live_engine_hook" -> "core.ultron_risk_gate";
+    "search.regime_weight_searcher" -> "core.fusion_engine";
+}
