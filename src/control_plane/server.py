@@ -18,7 +18,36 @@ from src.control_plane.dashboard_api import TradingDashboardAPI
 from src.control_plane.report_api import RunReportAPI
 from src.control_plane.context_report import ContextReportAPI
 from src.control_plane.code_context_extractor import extract_code_context
-from src.control_plane.dot_graph_context import extract_graph_context
+from src.control_plane.dot_graph_context import (
+    extract_graph_context, resolve_flow_for_command, build_flow_code_context,
+)
+
+
+def _resolve_context_provider() -> str:
+    """Zero-cost by default: env CONTEXT_REPORT_PROVIDER → prod config → 'export'."""
+    import os as _os
+    p = _os.environ.get("CONTEXT_REPORT_PROVIDER", "").strip()
+    if p:
+        return p
+    try:
+        from src.config_layer.production_config import get_prod_section
+        return str((get_prod_section("context_report") or {}).get("provider", "export"))
+    except Exception:
+        return "export"
+
+
+def _make_llm_caller(provider: str):
+    """Free BitNet-local → Groq caller for the local/groq providers; None otherwise."""
+    if provider not in ("local", "groq"):
+        return None
+    from src.config_layer.llm_inference_client import llm_chat
+
+    def _caller(system, prompt):
+        return llm_chat(
+            [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
+            max_tokens=1024,
+        )
+    return _caller
 
 
 def _json_bytes(payload: dict[str, Any]) -> bytes:
@@ -1837,6 +1866,57 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                         limit = 50
                     self._send_json(HTTPStatus.OK, api.monitor_history_payload(command_id, limit=limit))
                     return
+                # ── Workflow-node Context (M5): code (flow) + run + doc per pipeline stage ──
+                if path.startswith("/workflow/nodes/") and path.endswith("/context"):
+                    command_id = path[len("/workflow/nodes/"):-len("/context")]
+                    from pathlib import Path as _Path
+                    _repo_root = _Path(__file__).resolve().parents[2]
+                    spec = getattr(api.manager, "_spec_by_id", {}).get(command_id)
+                    script = getattr(spec, "script", None) if spec else None
+                    flow_man = resolve_flow_for_command(command_id, _repo_root, script=script)
+                    # Architecture/code context for the node's flow (export by default — $0).
+                    architecture: dict[str, Any] = {"available": False}
+                    if flow_man is not None and context_api is not None:
+                        flow_cc   = build_flow_code_context(flow_man, _repo_root)
+                        graph_ctx = extract_graph_context(flow_cc, _repo_root)
+                        provider  = _resolve_context_provider()
+                        synth_run = {"command_id": command_id, "status": "flow-context"}
+                        architecture = context_api.context_analysis(
+                            synth_run, {"stdout": "", "stderr": ""}, [], flow_cc, graph_ctx,
+                            provider=provider, llm_caller=_make_llm_caller(provider),
+                        )
+                        if architecture.get("source") == "export" and architecture.get("prompt"):
+                            try:
+                                out_dir = _repo_root / "logs" / "context_prompts"
+                                out_dir.mkdir(parents=True, exist_ok=True)
+                                out_file = out_dir / f"flow_{flow_man['flow']}.md"
+                                out_file.write_text(
+                                    f"<!-- system -->\n{architecture.get('system','')}\n\n"
+                                    f"<!-- prompt -->\n{architecture['prompt']}\n", encoding="utf-8")
+                                architecture["prompt_file"] = str(
+                                    out_file.relative_to(_repo_root)).replace("\\", "/")
+                            except OSError:
+                                pass
+                    # Latest run for this command (runs are sorted newest-first).
+                    latest_run = None
+                    try:
+                        for r in api.runs_payload()["runs"]:
+                            if r.get("command_id") == command_id:
+                                latest_run = api.run_payload(r["run_id"])["run"]
+                                latest_run["artifacts"] = api.artifacts_payload(r["run_id"])["artifacts"]
+                                break
+                    except Exception:
+                        latest_run = None
+                    self._send_json(HTTPStatus.OK, {
+                        "command":      command_id,
+                        "title":        getattr(spec, "title", command_id) if spec else command_id,
+                        "flow":         flow_man["flow"] if flow_man else None,
+                        "flow_title":   flow_man.get("title") if flow_man else None,
+                        "doc":          flow_man.get("doc") if flow_man else None,
+                        "architecture": architecture,
+                        "latest_run":   latest_run,
+                    })
+                    return
                 if path.startswith("/runs/"):
                     run_id = path.split("/")[2]
                     self._send_json(HTTPStatus.OK, api.run_payload(run_id))
@@ -1932,10 +2012,30 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                         logs.get("stderr", ""),
                         _repo_root,
                     )
-                    # Flow-scoped architectural graph context (fail-open; M1 surfaces it as
-                    # metadata only — the LLM prompt is unchanged until M2).
+                    # Flow-scoped architectural graph context (fail-open).
                     graph_ctx = extract_graph_context(code_ctx, _repo_root)
-                    result = context_api.context_analysis(run_snap, logs, arts, code_ctx, graph_ctx)
+                    # Provider resolution (zero-cost by default): export = hand the prompt to Claude
+                    # Code; local/groq = free BitNet→Groq via llm_chat; api = metered Anthropic.
+                    provider   = _resolve_context_provider()
+                    llm_caller = _make_llm_caller(provider)
+                    result = context_api.context_analysis(
+                        run_snap, logs, arts, code_ctx, graph_ctx,
+                        provider=provider, llm_caller=llm_caller,
+                    )
+                    # export: also persist the prompt so it can be read directly in Claude Code.
+                    if result.get("source") == "export" and result.get("prompt"):
+                        try:
+                            out_dir = _repo_root / "logs" / "context_prompts"
+                            out_dir.mkdir(parents=True, exist_ok=True)
+                            out_file = out_dir / f"{run_id}.md"
+                            out_file.write_text(
+                                f"<!-- system -->\n{result.get('system','')}\n\n"
+                                f"<!-- prompt -->\n{result['prompt']}\n",
+                                encoding="utf-8",
+                            )
+                            result["prompt_file"] = str(out_file.relative_to(_repo_root)).replace("\\", "/")
+                        except OSError:
+                            pass
                     code   = HTTPStatus.OK if result.get("ok") else HTTPStatus.BAD_GATEWAY
                     self._send_json(code, result)
                     return

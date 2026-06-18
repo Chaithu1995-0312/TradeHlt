@@ -15,5 +15,6 @@
     "control_plane.code_context_extractor",
     "control_plane.dot_graph_context"
   ],
-  "keywords": ["control_plane", "server", "jobs", "registry", "command", "http"]
+  "keywords": ["control_plane", "server", "jobs", "registry", "command", "http"],
+  "command_ids": []
 }

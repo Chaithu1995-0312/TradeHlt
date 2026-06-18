@@ -91,7 +91,7 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | --- | --- |
 | `control_plane` | Stdlib-HTTP control plane: localhost dashboard, command registry, job runner. |
 | `control_plane.code_context_extractor` | code_context_extractor.py — AST-based code extraction for Context Reports. |
-| `control_plane.context_report` | context_report.py — ContextReportAPI: Claude-powered operational intelligence for runs. |
+| `control_plane.context_report` | context_report.py — ContextReportAPI: Claude-powered ARCHITECTURE ANALYST for runs. |
 | `control_plane.cp_types` | _(no module docstring)_ |
 | `control_plane.dashboard_api` | dashboard_api.py |
 | `control_plane.dot_graph_context` | dot_graph_context.py — flow resolution + architectural graph context for Context Reports. |

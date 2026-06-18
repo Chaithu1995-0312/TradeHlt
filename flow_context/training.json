@@ -14,5 +14,8 @@
     "training.evaluator",
     "core.model_registry"
   ],
-  "keywords": ["dataset", "trainer", "calibration", "registry", "training"]
+  "keywords": ["dataset", "trainer", "calibration", "registry", "training"],
+  "command_ids": ["training.auto_train", "training.discover_zones", "training.build_rr_dataset",
+                  "training.train_rr_model", "training.opportunity_scanner", "training.phase5_calibration",
+                  "training.train_pipeline", "tuning.auto_tuner_multi", "tuning.auto_tuner"]
 }

@@ -68,6 +68,7 @@ flowchart LR
     config_layer --> runtime
     config_layer --> utils
     control_plane --> agent
+    control_plane --> config_layer
     core --> cognitive
     core --> config_layer
     core --> engines
@@ -122,6 +123,7 @@ flowchart LR
     replay --> events
     replay --> utils
     research --> config_layer
+    research --> data_ingestion
     research --> runtime
     runtime --> analytics
     runtime --> bitnet
@@ -420,6 +422,8 @@ flowchart LR
     control_plane_server["control_plane.server"]
     agent_findings_synthesizer["agent.findings_synthesizer"]
     agent_groq_client["agent.groq_client"]
+    config_layer_llm_inference_client["config_layer.llm_inference_client"]
+    config_layer_production_config["config_layer.production_config"]
     control_plane --> control_plane_jobs
     control_plane --> control_plane_registry
     control_plane --> control_plane_server
@@ -429,6 +433,8 @@ flowchart LR
     control_plane_jobs --> control_plane_registry
     control_plane_registry --> control_plane_cp_types
     control_plane_server --> agent_findings_synthesizer
+    control_plane_server --> config_layer_llm_inference_client
+    control_plane_server --> config_layer_production_config
     control_plane_server --> control_plane_code_context_extractor
     control_plane_server --> control_plane_context_report
     control_plane_server --> control_plane_dashboard_api
@@ -954,6 +960,7 @@ flowchart LR
     research_structural_asymmetry["research.structural_asymmetry"]
     config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
     config_layer_production_config["config_layer.production_config"]
+    data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
     runtime_backtest_v2["runtime.backtest_v2"]
     research_adapters --> research_adapters_spine_signal_source
     research_adapters_spine_signal_source --> config_layer_production_config
@@ -979,6 +986,7 @@ flowchart LR
     research_controls_always_long --> research_indicators
     research_controls_random_baseline --> research_contracts
     research_controls_random_baseline --> research_indicators
+    research_cross_sectional --> data_ingestion_ohlcv_schema
     research_cross_sectional --> research_costs
     research_cross_sectional --> research_qualification
     research_cross_sectional --> runtime_backtest_v2

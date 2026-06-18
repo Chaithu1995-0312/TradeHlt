@@ -64,6 +64,20 @@ python scripts/analysis/gen_flow_graphs.py --flow runtime   # print one slice, w
 - **M2 — architecture-analyst report (planned).** Swap the Context prompt to an architecture-analyst
   contract returning `executive_summary · architecture_notes · code_flow · impact_radius ·
   structural_observations`, fed by the flow slice; render the sections in the Context modal.
+- **M2P — pluggable report provider (done).** The Context report answers the analyst prompt via a
+  provider, resolved as env `CONTEXT_REPORT_PROVIDER` → prod config `context_report.provider` →
+  default `export`. Values:
+  - `export` (default, **$0**) — no LLM call; returns + saves the prompt
+    (`logs/context_prompts/<run>.md`) to paste into Claude Code.
+  - `local` / `groq` — the server injects an `llm_caller` over `llm_inference_client.llm_chat`
+    (BitNet-local → Groq free-tier); the 5-key parse is shared with `api`.
+  - `api` — metered Anthropic (`claude-haiku-4-5`); opt-in, needs `ANTHROPIC_API_KEY`.
+- **M5 — Workflow-node Context (done).** Each `flow_context` manifest also carries `command_ids[]`
+  (the Workflow-DAG nodes it owns). `resolve_flow_for_command` (command_ids → `script` fallback) +
+  `build_flow_code_context` (synthesizes code context from a flow's modules, no run needed) feed
+  `GET /workflow/nodes/<command_id>/context` → `{flow, doc, architecture (export-first), latest_run}`.
+  Clicking a Workflow node opens a drawer (code/architecture + run details + flow doc). Unmapped nodes
+  (`data.*`) fail open to run-only.
 - **M3 — manual multi-LLM hook (optional).** `pack_story --flow` bounds a transfer pack to one flow.
 - **M4 — automated merge engine (deferred).**
 

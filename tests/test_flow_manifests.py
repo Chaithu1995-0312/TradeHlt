@@ -30,7 +30,8 @@ import gen_flow_graphs as gfg  # noqa: E402
 from gen_code_map import build_graph  # noqa: E402
 
 _MANIFESTS = sorted(_FLOW_CONTEXT.glob("*.json"))
-_REQUIRED_KEYS = ("flow", "title", "doc", "service_ids", "entrypoint", "modules", "keywords")
+_REQUIRED_KEYS = ("flow", "title", "doc", "service_ids", "entrypoint", "modules", "keywords",
+                  "command_ids")
 
 
 @pytest.fixture(scope="module")
@@ -56,6 +57,9 @@ def test_manifest_shape(path):
     assert data["flow"] == path.stem, f"{path.name}: 'flow' must equal filename stem"
     assert isinstance(data["modules"], list) and data["modules"], f"{path.name}: 'modules' must be non-empty"
     assert isinstance(data["keywords"], list) and data["keywords"], f"{path.name}: 'keywords' must be non-empty"
+    cmds = data["command_ids"]
+    assert isinstance(cmds, list) and all(isinstance(c, str) for c in cmds), \
+        f"{path.name}: 'command_ids' must be a list of strings"
 
 
 @pytest.mark.parametrize("path", _MANIFESTS, ids=lambda p: p.stem)

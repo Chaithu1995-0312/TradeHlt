@@ -12,5 +12,6 @@
     "governance.orchestrator",
     "core.model_registry"
   ],
-  "keywords": ["promotion", "validation", "shadow", "governance", "config_validator"]
+  "keywords": ["promotion", "validation", "shadow", "governance", "config_validator"],
+  "command_ids": ["promotion.manager", "promotion.promote_v2", "governance.orchestrator"]
 }

@@ -14,5 +14,6 @@
     "research.costs",
     "research.controls"
   ],
-  "keywords": ["research", "hypothesis", "forward_walk", "qualification", "edge"]
+  "keywords": ["research", "hypothesis", "forward_walk", "qualification", "edge"],
+  "command_ids": ["research.runner"]
 }

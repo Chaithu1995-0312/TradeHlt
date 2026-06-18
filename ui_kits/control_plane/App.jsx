@@ -9,6 +9,7 @@ function App() {
   const [latestRunId, setLatestRunId] = useState(null);
   const [completed, setCompleted] = useState({});
   const [contextRunId, setContextRunId] = useState(null);
+  const [contextCommandId, setContextCommandId] = useState(null);
 
   const data = mockApi.commands();
   const runs = mockApi.listRuns(search).runs;
@@ -66,7 +67,7 @@ function App() {
           <DashboardView entries={dashEntries} commands={data.commands} />
         </main>
       ) : view === "workflow" ? (
-        <WorkflowPanel />
+        <WorkflowPanel onNode={setContextCommandId} />
       ) : (
         <AgentPanel />
       )}
@@ -76,6 +77,13 @@ function App() {
           runId={contextRunId}
           run={mockApi.getRun(contextRunId)?.run || null}
           onClose={() => setContextRunId(null)}
+        />
+      )}
+      {contextCommandId && (
+        <NodeContextDrawer
+          commandId={contextCommandId}
+          onClose={() => setContextCommandId(null)}
+          onOpenRun={(runId) => { setContextCommandId(null); setContextRunId(runId); }}
         />
       )}
     </div>

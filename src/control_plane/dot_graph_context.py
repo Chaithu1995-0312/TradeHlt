@@ -18,8 +18,10 @@ contract as `code_context_extractor.py`). Fail-open: any missing artifact degrad
 """
 from __future__ import annotations
 
+import ast
 import json
 import re
+import textwrap
 from pathlib import Path
 from typing import Any
 
@@ -95,7 +97,8 @@ def resolve_flow(code_context: list[dict[str, Any]], repo_root: Path) -> dict[st
     Pick the flow whose membership best matches the executed modules.
 
     Score = module-set overlap, +2 if the flow entrypoint is among the executed modules,
-    +0.5 per manifest keyword found inside an executed module name (tiebreaker). None if no overlap.
+    +0.5 per manifest keyword found inside an executed module name (tiebreaker). A flow qualifies
+    on module overlap OR an entrypoint match; None only if neither a member nor the entrypoint ran.
     """
     executed = _executed_modules(code_context, repo_root)
     if not executed:
@@ -105,12 +108,15 @@ def resolve_flow(code_context: list[dict[str, Any]], repo_root: Path) -> dict[st
     best_score = 0.0
     for man in _load_manifests(repo_root):
         modules = set(man.get("modules", []))
-        overlap = len(exec_set & modules)
-        if overlap == 0:
-            continue
-        score = float(overlap)
+        # A flow matches if any of its modules ran OR its entrypoint ran. The entrypoint is
+        # definitionally part of the flow but is usually NOT listed in `modules` (it is the harness
+        # that runs the spine, e.g. runtime.backtest_v2) — so its bonus must be counted BEFORE the
+        # skip, otherwise a clean entrypoint-only run (the common case) resolves to no flow.
+        score = float(len(exec_set & modules))
         if man.get("entrypoint") in exec_set:
             score += 2.0
+        if score == 0.0:
+            continue                      # neither a member nor the entrypoint ran → not this flow
         kws = man.get("keywords", [])
         score += 0.5 * sum(1 for kw in kws if any(kw in m for m in executed))
         if score > best_score:
@@ -181,3 +187,80 @@ def extract_graph_context(code_context: list[dict[str, Any]], repo_root: Path) -
         "nodes": [_neighbors(m, list(nbr_edges)) for m in touched],
         "edge_count": len(nbr_edges),
     }
+
+
+# ── workflow-node → flow (M5) ──────────────────────────────────────────────────
+# Caps for the flow-level code context (when there is no run to extract from).
+_MAX_FLOW_MODULES = 6        # modules expanded into code context
+_MAX_SYMS_PER_MODULE = 2     # top-level defs taken per module
+_MAX_SYM_CHARS = 1_200       # per code block
+
+
+def resolve_flow_for_command(command_id: str, repo_root: Path,
+                             script: str | None = None) -> dict[str, Any] | None:
+    """
+    Map a Workflow-DAG node (a command id) to its flow manifest.
+
+    Primary: the manifest whose curated ``command_ids`` contains the id (SSOT).
+    Fallback: the command's ``script`` mapped via `_file_to_module` to a flow's member module.
+    Returns the manifest or None (unmapped → caller falls open to run-only). Fail-open.
+    """
+    if not command_id:
+        return None
+    manifests = _load_manifests(repo_root)
+    for man in manifests:
+        if command_id in (man.get("command_ids") or []):
+            return man
+    if script:
+        mod = _file_to_module(script, repo_root)
+        if mod:
+            for man in manifests:
+                if mod in set(man.get("modules", [])):
+                    return man
+    return None
+
+
+def _module_to_path(module: str, repo_root: Path) -> Path | None:
+    parts = module.split(".")
+    p = repo_root.joinpath("src", *parts).with_suffix(".py")
+    if p.exists():
+        return p
+    pkg = repo_root.joinpath("src", *parts, "__init__.py")
+    return pkg if pkg.exists() else None
+
+
+def _top_level_symbols(path: Path) -> list[dict[str, Any]]:
+    try:
+        source = path.read_text(encoding="utf-8", errors="replace")
+        tree = ast.parse(source)
+    except (OSError, SyntaxError):
+        return []
+    lines = source.splitlines(keepends=True)
+    out: list[dict[str, Any]] = []
+    for node in ast.iter_child_nodes(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        start = node.lineno - 1
+        end = getattr(node, "end_lineno", start + 1)
+        block = textwrap.dedent("".join(lines[start:end]))[:_MAX_SYM_CHARS]
+        out.append({
+            "file": str(path), "symbol": node.name,
+            "kind": "class" if isinstance(node, ast.ClassDef) else "function",
+            "start_line": node.lineno, "end_line": end, "code": block,
+            "source": "flow_module",
+        })
+    return out
+
+
+def build_flow_code_context(flow_manifest: dict[str, Any], repo_root: Path) -> list[dict[str, Any]]:
+    """
+    Synthesize a `code_context` (same shape as `extract_code_context`) from a flow's member modules,
+    so the architecture report works for a Workflow node that has **no run** yet. Bounded.
+    """
+    out: list[dict[str, Any]] = []
+    for module in (flow_manifest.get("modules") or [])[:_MAX_FLOW_MODULES]:
+        path = _module_to_path(module, repo_root)
+        if not path:
+            continue
+        out.extend(_top_level_symbols(path)[:_MAX_SYMS_PER_MODULE])
+    return out

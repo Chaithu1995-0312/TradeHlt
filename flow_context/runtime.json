@@ -14,5 +14,6 @@
     "core.ultron_risk_gate",
     "core.collector"
   ],
-  "keywords": ["signal", "fusion", "decision_engine", "ultron", "execution", "candle"]
+  "keywords": ["signal", "fusion", "decision_engine", "ultron", "execution", "candle"],
+  "command_ids": ["live.inout_runner", "backtest.v2", "backtest.bitnet", "replay.unified"]
 }

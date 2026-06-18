@@ -18,6 +18,8 @@ digraph flow_control_plane {
     // 1-hop dependency boundary (not flow members)
     "agent.findings_synthesizer" [style="dashed", fontcolor="#888888"];
     "agent.groq_client" [style="dashed", fontcolor="#888888"];
+    "config_layer.llm_inference_client" [style="dashed", fontcolor="#888888"];
+    "config_layer.production_config" [style="dashed", fontcolor="#888888"];
     "control_plane" [style="dashed", fontcolor="#888888"];
     "control_plane.cp_types" [style="dashed", fontcolor="#888888"];
 
@@ -41,4 +43,6 @@ digraph flow_control_plane {
     "control_plane.jobs" -> "control_plane.cp_types";
     "control_plane.registry" -> "control_plane.cp_types";
     "control_plane.server" -> "agent.findings_synthesizer";
+    "control_plane.server" -> "config_layer.llm_inference_client";
+    "control_plane.server" -> "config_layer.production_config";
 }

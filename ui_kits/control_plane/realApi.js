@@ -197,4 +197,9 @@ const mockApi = {
     return fetch(BASE + `/runs/${runId}/context/report`, { method: "POST" })
       .then(r => r.json());
   },
+
+  /** Workflow-node Context (M5): flow code + latest run + doc for a pipeline stage. */
+  nodeContext(commandId) {
+    return fetch(BASE + `/workflow/nodes/${commandId}/context`).then(r => r.json());
+  },
 };

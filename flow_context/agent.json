@@ -14,5 +14,6 @@
     "agent.audit",
     "agent.state"
   ],
-  "keywords": ["agent", "intent", "plan", "executor", "tool", "repl"]
+  "keywords": ["agent", "intent", "plan", "executor", "tool", "repl"],
+  "command_ids": []
 }
