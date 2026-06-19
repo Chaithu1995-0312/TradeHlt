@@ -10,3 +10,11 @@ venv
 .claude
 models\
 logs.zip
+context/
+multi_llm/turns/
+multi_llm/turn_ledger.jsonl
+# mt5_analytics generated/ephemeral output (rebuildable from MT5 history)
+mt5_analytics/artifacts/
+mt5_analytics/reports/
+mt5_analytics/state/
+mt5_analytics/audit/
