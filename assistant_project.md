@@ -500,3 +500,13 @@ Belief Update / ROI / Goal: Goal: validate the kernel + analytics against real b
 Open Questions: DST: offset auto-detected per-run so EEST↔EET handled; document that historical rebuilds spanning a DST change use a single current offset (minor; revisit if cross-DST windows matter). broker_semantics for this demo: only partial_close exercisable on hedging via market orders (pyramid/reopen spawn separate positions; INOUT/post-close-swap need netting/overnight).
 Next Step: Validation phase CLOSED. Capability plugins now unblocked (review-recommended order: Phase 8 dashboard → 7 parquet/duckdb → gaussian/crt → 9-11). Or commit this milestone.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-06-19
+Topic: Phase 8 — Streamlit dashboard (read-only capability plugin) built against v0.1.0
+Decision/Output: Built mt5_analytics/ui/ as a READ-ONLY visualization plugin (consumes truth, never creates it — no MT5 connect, no reconstruction, no writes, no new state/authority). Split for CI-testability: ui/dashboard_data.py is Streamlit-FREE pure loaders + display aggregations (load_episodes/features, load_coverage/gaps/broker_semantics/verification_md; summary_stats/session_breakdown/regime_breakdown/mfe_mae_points/durations — reuses src analytics.metrics_oracle for WR/PF/expectancy/maxDD). ui/streamlit_dashboard.py = thin render shell (7 screens: verification PASS/FAIL, coverage maturity+gaps+broker registry, performance summary, trade table, MFE-vs-MAE scatter, session+regime breakdown, duration dist); render() guarded under __main__ so plain import never executes UI; run via `streamlit run`. test_dashboard_data.py (6 tests) covers aggregations + loaders + empty-safety. Suite 62→68 green; py_compile OK. streamlit NOT installed in this env (optional-deps group) → can't render live here; data layer fully tested, shell compiles.
+Belief Update / ROI / Goal: Goal: make the validated ledger visible without creating new truth. Belief: dashboard is pure consumer — kept the v0.1.0 foundation frozen (zero reconstruction/adapter/schema changes). Knowledge ROI: medium (visibility capability, *information not authority* §6.5). Action: user installs streamlit (`pip install streamlit`) + `streamlit run mt5_analytics/ui/streamlit_dashboard.py` to view; offer to install+launch for a live preview. Foundation (reconstruction/adapter/episode-schema v1.0) remains frozen per review.
+Open Questions: Live render unverified (streamlit absent). Commit Phase 8 now or after a live preview? Parquet/DuckDB/drift/clustering/montecarlo still deferred until JSONL proves insufficient.
+Next Step: Optionally install streamlit + launch for a screenshot; then commit Phase 8 as a separate capability commit on top of mt5-analytics-v0.1.0.
+---
