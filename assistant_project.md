@@ -522,3 +522,13 @@ Belief Update / ROI / Goal: Goal: an HONEST broker-semantics metric. Belief: the
 Open Questions: 9A pending (open one position, hold overnight across rollover → capture post_close_swap → expect Silver→Platinum). DST: pinned +3 wrong after late-Oct.
 Next Step: commit+tag v0.3.0; add generator hold/close modes; place one overnight-hold position to capture swap tomorrow.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-06-19
+Topic: Phase 9A tooling (hold/close modes) ready; overnight swap BLOCKED by market-closed
+Decision/Output: Added `hold` (open ONE lot, LEAVE OPEN, skip L4/L5 cleanup) + `close` (cleanup-only) modes to manual_tools/trade_generator.py for the post-close-swap capture. Attempted to place the overnight-hold position → retcode=10018 TRADE_RETCODE_MARKET_CLOSED (FX market closed — weekend/after-hours; consistent with the earlier stale-tick offset). So 9A cannot run now: the position must be opened during market hours AND held across a broker daily rollover for swap to accrue. Tooling primitives (_send/_close_all_by_magic) already validated; committed as small additive tooling (no new tag).
+Belief Update / ROI / Goal: Goal: capture the last reachable-unseen pattern (post_close_swap) → hedging broker Silver 50 → Platinum 100. Belief: 9A is purely market-time-gated now (not a code/kernel issue). Knowledge ROI: low-new (a 7th operational gate: MARKET_CLOSED) — expected, not a defect. Action: when FX reopens (Sun ~21:00 UTC), run `trade_generator --confirm --require-hedging --account-hash 1b818c9a… --patterns hold`, leave open overnight across rollover, then `--patterns close` + coverage + verify.
+Open Questions: Does this broker emit swap as a separate post-close deal or fold it into the close deal? (Gate-2 watch when 9A runs.) DST: pinned +3 valid until late-Oct.
+Next Step: Await market open → run overnight hold → close → expect post_close_swaps OBSERVED, coverage Platinum (2/2 reachable), verify PASS. If swap shape is unexpected → torture fixture + minimal patch (Gate 2).
+---

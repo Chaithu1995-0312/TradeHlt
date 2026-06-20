@@ -158,6 +158,8 @@ _PLAN = {
     "partial": "open 2*lot -> close lot -> close lot (partial scale-out)",
     "pyramid": "open lot -> open lot -> close all (scale-in)",
     "reopen": "open->close, then open->close again (same symbol)",
+    "hold": "open ONE lot and LEAVE IT OPEN (overnight swap capture; no cleanup)",
+    "close": "close all MAGIC-tagged positions (run after an overnight 'hold')",
 }
 
 
@@ -243,6 +245,18 @@ def main(argv=None) -> int:
             elif pat == "reopen":
                 _open_and_close(args.symbol, "buy", args.lot, args.hold_seconds)
                 _open_and_close(args.symbol, "buy", args.lot, args.hold_seconds)
+            elif pat == "hold":
+                _send(args.symbol, mt5.ORDER_TYPE_BUY, args.lot)   # open & LEAVE OPEN
+            elif pat == "close":
+                pass   # handled by the cleanup sweep below
+
+        # 'hold' deliberately leaves the position open (overnight swap capture) — skip L4/L5.
+        if "hold" in patterns:
+            open_pos = [p for p in (mt5.positions_get(symbol=args.symbol) or [])
+                        if p.magic == MAGIC]
+            _p(f"\nLEFT OPEN {len(open_pos)} position(s): tickets={[p.ticket for p in open_pos]}")
+            _p("Swap accrues at the broker's daily rollover. Tomorrow close with --patterns close.")
+            return 0
 
         remaining = _close_all_by_magic(args.symbol)   # L4 + L5
         _p(f"\nopened={_counter['opened']} closed={_counter['closed']} remaining={remaining}")
