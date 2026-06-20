@@ -22,3 +22,20 @@ Schema versions did NOT change (field shapes are identical) — only timestamp *
 **Also in this change:** `MT5Adapter` is reference-counted (`mt5.initialize()/shutdown()` are
 process-global; nested `with MT5Adapter()` — e.g. a harness adapter that also calls
 `rebuild.run` — must not tear down the shared connection).
+
+## 2026-06-19 — server offset PINNED explicitly + account-aware coverage (Phase 9B/9C)
+**Offset (config, no code change):** the tick-based auto-detect (`server_utc_offset_hours: null`)
+is a **market-hours-only** convenience — when the market is closed the last tick is stale and
+yields a WRONG offset (observed: +3h during market hours, −5h off-market), which silently shifts
+`history_deals_get` query bounds and drops recent deals from narrow windows. **Fix:** pin
+`analytics.json:server_utc_offset_hours = 3` (MetaQuotes-Demo is EET/EEST; **+3 = EEST/summer**).
+**DST caveat:** flip to **+2** at the EU DST end (late Oct) — or set back to `null` and only run
+coverage/verify during market hours so auto-detect is reliable. This does NOT change `episode_id`
+(the pinned +3 equals the in-market auto-detected +3), so **no rebuild required**.
+
+**Account-aware coverage (Phase 9 — Reality Classification):** `coverage_score` is now
+`observed / reachable` where `reachable = f(margin_mode, fee_model)` — a pattern the broker cannot
+structurally emit is **N_A**, not a failing gap. Three explicit states (`PatternStatus`): OBSERVED /
+REACHABLE_UNSEEN / N_A. `deal_coverage.json` / `coverage_gaps.json` gained `account_type`,
+`reachable`, `classification`, `reachable_unseen`, `n_a`. Report-format change only; the
+account-agnostic functions stay backward-compatible (`reachable=None`).

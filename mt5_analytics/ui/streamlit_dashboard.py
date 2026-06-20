@@ -50,10 +50,19 @@ def render() -> None:
         c1.metric("Maturity", f"{cov.get('coverage_score', 0)}/100", cov.get("tier", ""))
         c2.metric("Trade positions", cov.get("trade_positions", 0))
         c3.metric("Account ops skipped", cov.get("account_ops_skipped", 0))
+        if cov.get("account_type"):
+            st.caption(f"Account: {cov['account_type']} · "
+                       f"score is observed / reachable (N/A patterns excluded)")
         if gaps:
             st.write("**Validated:**", ", ".join(gaps.get("validated", [])) or "(none)")
-            st.write("**Missing (unseen by reality):**",
-                     ", ".join(gaps.get("missing", [])) or "(none)")
+            if "n_a" in gaps:   # account-aware format
+                st.write("**Reachable but unseen:**",
+                         ", ".join(gaps.get("reachable_unseen", [])) or "(none)")
+                st.write("**N/A for this broker:**",
+                         ", ".join(gaps.get("n_a", [])) or "(none)")
+            else:
+                st.write("**Missing (unseen by reality):**",
+                         ", ".join(gaps.get("missing", [])) or "(none)")
         bs = dd.load_broker_semantics(report_root)
         if bs:
             st.write("**Broker capability registry (monotonic):**")

@@ -23,17 +23,28 @@ from ..engines.deal_characterizer import (
     EXPECTED_PATTERNS,
     broker_capabilities,
     characterize_deal_stream,
+    classify,
     coverage_gaps,
     coverage_score,
+    reachable_patterns,
     to_markdown,
 )
+from ..engines.position_reconstructor import is_position_deal
 
 
-def coverage_report(deals) -> dict:
-    """Pure: counts + gaps + maturity score for a deal stream."""
+def _account_type(margin_mode) -> str:
+    return {0: "netting", 1: "exchange", 2: "hedging"}.get(int(margin_mode), str(margin_mode))
+
+
+def coverage_report(deals, *, reachable: "set | None" = None) -> dict:
+    """Pure: counts + gaps + maturity score. Account-aware when `reachable` is supplied."""
     counts = characterize_deal_stream(deals)
-    return {"counts": counts, "gaps": coverage_gaps(counts),
-            "score": coverage_score(counts)}
+    return {
+        "counts": counts,
+        "gaps": coverage_gaps(counts, reachable),
+        "score": coverage_score(counts, reachable),
+        "classification": classify(counts, reachable) if reachable is not None else None,
+    }
 
 
 def _merge_broker_semantics(path: Path, broker_key: str, counts: dict) -> dict:
@@ -65,22 +76,35 @@ def run(date_from: _dt.datetime, date_to: _dt.datetime, *, cfg: "dict | None" = 
         deals = adapter.history_deals_get(date_from, date_to)
         info = adapter.account_info()
 
-    rep = coverage_report(deals)
+    # Account-aware reachability (Reality Classification): score against what THIS broker
+    # can structurally emit, not against all conceivable patterns.
+    margin_mode = info.get("margin_mode", 2)   # default hedging if unknown
+    commission_charged = any(
+        float(d.get("commission", 0.0) or 0.0) != 0.0 for d in deals if is_position_deal(d))
+    reachable = reachable_patterns(margin_mode, commission_charged)
+
+    rep = coverage_report(deals, reachable=reachable)
     counts, gaps, score = rep["counts"], rep["gaps"], rep["score"]
 
     (reality / "deal_coverage.json").write_text(
-        json.dumps({**counts, **score}, indent=2, sort_keys=True), encoding="utf-8")
+        json.dumps({**counts, **score, "account_type": _account_type(margin_mode),
+                    "margin_mode": margin_mode, "reachable": sorted(reachable),
+                    "classification": rep["classification"]},
+                   indent=2, sort_keys=True), encoding="utf-8")
     (reality / "coverage_gaps.json").write_text(
         json.dumps(gaps, indent=2, sort_keys=True), encoding="utf-8")
-    (reality / "deal_coverage.md").write_text(to_markdown(counts), encoding="utf-8")
+    (reality / "deal_coverage.md").write_text(
+        to_markdown(counts, reachable), encoding="utf-8")
 
     broker_key = f"{info.get('company', '?')}|{info.get('server', '?')}"
     bs_path = reality / "broker_semantics.json"
-    bs_path.write_text(
-        json.dumps(_merge_broker_semantics(bs_path, broker_key, counts),
-                   indent=2, sort_keys=True), encoding="utf-8")
+    merged = _merge_broker_semantics(bs_path, broker_key, counts)
+    merged[broker_key]["_margin_mode"] = margin_mode   # account context (not a pattern)
+    bs_path.write_text(json.dumps(merged, indent=2, sort_keys=True), encoding="utf-8")
 
-    append_audit("coverage_run", {**counts, **score, "broker": broker_key}, cfg=cfg)
+    append_audit("coverage_run",
+                 {**counts, **score, "broker": broker_key,
+                  "account_type": _account_type(margin_mode)}, cfg=cfg)
     return rep
 
 

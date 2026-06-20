@@ -11,10 +11,15 @@ from conftest import make_deal  # type: ignore
 
 from mt5_analytics.engines.deal_characterizer import (
     EXPECTED_PATTERNS,
+    N_A,
+    OBSERVED,
+    REACHABLE_UNSEEN,
     broker_capabilities,
     characterize_deal_stream,
+    classify,
     coverage_gaps,
     coverage_score,
+    reachable_patterns,
 )
 from mt5_analytics.engines.position_reconstructor import (
     DEAL_ENTRY_IN,
@@ -103,3 +108,44 @@ def test_empty_stream_bronze():
     s = coverage_score(c)
     assert s["coverage_score"] == 0 and s["tier"] == "Bronze"
     assert set(coverage_gaps(c)["missing"]) == set(EXPECTED_PATTERNS)
+
+
+# ── Phase 9: Reality Classification (account-aware) ──────────────────────────────
+def test_reachable_patterns_hedging_spread_only():
+    r = reachable_patterns(margin_mode=2, commission_charged=False)
+    assert r == {"partial_closes", "post_close_swaps"}     # netting-only + commission excluded
+
+
+def test_reachable_patterns_netting_and_commission():
+    r = reachable_patterns(margin_mode=0, commission_charged=True)
+    assert {"pyramids", "inout_reversals", "reopens"} <= r  # netting unlocks these
+    assert "separate_commission_deals" in r
+
+
+def test_classify_three_states_on_hedging():
+    counts = {"partial_closes": 1}     # only partial observed
+    reachable = reachable_patterns(2, False)
+    st = classify(counts, reachable)
+    assert st["partial_closes"] == OBSERVED
+    assert st["post_close_swaps"] == REACHABLE_UNSEEN   # broker CAN, not yet seen
+    assert st["pyramids"] == N_A and st["inout_reversals"] == N_A  # impossible on hedging
+
+
+def test_account_aware_score_observed_over_reachable():
+    reachable = reachable_patterns(2, False)            # {partial, swap} = 2 reachable
+    # partial only -> 1/2 = 50 (Silver), NOT 1/6 = 17 (Bronze)
+    s1 = coverage_score({"partial_closes": 1}, reachable)
+    assert s1["coverage_score"] == 50 and s1["tier"] == "Silver"
+    # both reachable observed -> 2/2 = 100 Platinum (honest: all this broker CAN emit)
+    s2 = coverage_score({"partial_closes": 1, "post_close_swaps": 1}, reachable)
+    assert s2["coverage_score"] == 100 and s2["tier"] == "Platinum"
+
+
+def test_account_aware_gaps_separate_na_from_unseen():
+    reachable = reachable_patterns(2, False)
+    g = coverage_gaps({"partial_closes": 1}, reachable)
+    assert g["validated"] == ["partial_closes"]
+    assert g["reachable_unseen"] == ["post_close_swaps"]
+    assert set(g["n_a"]) == {"pyramids", "inout_reversals", "reopens",
+                             "separate_commission_deals"}
+    assert "missing" not in g     # three-state format, no boolean "missing"

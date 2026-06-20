@@ -33,6 +33,42 @@ EXPECTED_PATTERNS = (
     "post_close_swaps",
 )
 
+# Reality Classification (Phase 9): a pattern is one of three DISTINCT states — never a bool.
+# Conflating "impossible on this broker" with "not yet seen" is the metric lying.
+OBSERVED = "OBSERVED"                  # count > 0
+REACHABLE_UNSEEN = "REACHABLE_UNSEEN"  # the broker CAN emit it; we just haven't yet
+N_A = "N_A"                            # structurally impossible on this account/fee model
+
+ACCOUNT_MARGIN_MODE_RETAIL_NETTING = 0  # mt5.ACCOUNT_MARGIN_MODE_RETAIL_NETTING
+
+
+def reachable_patterns(margin_mode, commission_charged: bool) -> set:
+    """Which EXPECTED_PATTERNS this account can STRUCTURALLY emit.
+
+    partial_close / post_close_swap: any account. pyramid / INOUT / reopen: netting only
+    (on hedging each order is a separate position — no scale-in, no reversal, no id reuse).
+    separate_commission: only a commission-charging (non-spread-only) broker.
+    """
+    reachable = {"partial_closes", "post_close_swaps"}
+    if int(margin_mode) == ACCOUNT_MARGIN_MODE_RETAIL_NETTING:
+        reachable |= {"pyramids", "inout_reversals", "reopens"}
+    if commission_charged:
+        reachable |= {"separate_commission_deals"}
+    return reachable
+
+
+def classify(counts: dict, reachable: set) -> dict:
+    """Per-pattern PatternStatus given observed counts + the reachable set."""
+    out = {}
+    for p in EXPECTED_PATTERNS:
+        if counts.get(p, 0) > 0:
+            out[p] = OBSERVED          # observed ⇒ reachable by definition
+        elif p in reachable:
+            out[p] = REACHABLE_UNSEEN
+        else:
+            out[p] = N_A
+    return out
+
 
 def _vol(d) -> float:
     return float(d.get("volume", 0.0) or 0.0)
@@ -108,19 +144,29 @@ def characterize_deal_stream(deals) -> dict:
     return counts
 
 
-def coverage_gaps(counts: dict) -> dict:
-    """Split EXPECTED_PATTERNS into validated (count > 0) vs missing (count == 0)."""
-    validated = [p for p in EXPECTED_PATTERNS if counts.get(p, 0) > 0]
-    missing = [p for p in EXPECTED_PATTERNS if counts.get(p, 0) == 0]
-    return {"validated": validated, "missing": missing}
+def coverage_gaps(counts: dict, reachable: "set | None" = None) -> dict:
+    """Account-agnostic (reachable=None) → {validated, missing}.
+    Account-aware → {validated, reachable_unseen, n_a} (impossible ≠ not-yet-seen)."""
+    if reachable is None:
+        return {
+            "validated": [p for p in EXPECTED_PATTERNS if counts.get(p, 0) > 0],
+            "missing": [p for p in EXPECTED_PATTERNS if counts.get(p, 0) == 0],
+        }
+    return {
+        "validated": [p for p in EXPECTED_PATTERNS if p in reachable and counts.get(p, 0) > 0],
+        "reachable_unseen": [p for p in EXPECTED_PATTERNS
+                             if p in reachable and counts.get(p, 0) == 0],
+        "n_a": [p for p in EXPECTED_PATTERNS if p not in reachable],
+    }
 
 
-def coverage_score(counts: dict) -> dict:
-    """0–100 maturity score + tier (Bronze/Silver/Gold/Platinum)."""
-    gaps = coverage_gaps(counts)
-    n_val = len(gaps["validated"])
-    total = len(EXPECTED_PATTERNS)
-    score = round(100.0 * n_val / total) if total else 0
+def coverage_score(counts: dict, reachable: "set | None" = None) -> dict:
+    """Maturity score + tier. Denominator = reachable patterns when supplied
+    (observed / (observed + reachable_unseen)), else all EXPECTED_PATTERNS."""
+    universe = list(reachable) if reachable is not None else list(EXPECTED_PATTERNS)
+    total = len(universe)
+    n_val = len([p for p in universe if counts.get(p, 0) > 0])
+    score = round(100.0 * n_val / total) if total else 100
     tier = ("Platinum" if score == 100 else "Gold" if score >= 75
             else "Silver" if score >= 50 else "Bronze")
     return {"coverage_score": score, "validated_patterns": n_val,
@@ -132,25 +178,35 @@ def broker_capabilities(counts: dict) -> dict:
     return {p: counts.get(p, 0) > 0 for p in EXPECTED_PATTERNS}
 
 
-def to_markdown(counts: dict) -> str:
-    gaps = coverage_gaps(counts)
-    score = coverage_score(counts)
+def to_markdown(counts: dict, reachable: "set | None" = None) -> str:
+    gaps = coverage_gaps(counts, reachable)
+    score = coverage_score(counts, reachable)
+    denom = len(reachable) if reachable is not None else len(EXPECTED_PATTERNS)
+    status = classify(counts, reachable) if reachable is not None else None
     lines = [
         "# Broker Semantics Coverage",
         "",
         f"**Maturity:** {score['coverage_score']}/100 ({score['tier']}) — "
-        f"{score['validated_patterns']}/{len(EXPECTED_PATTERNS)} patterns validated",
+        f"{score['validated_patterns']}/{denom} reachable patterns validated",
         "",
-        "| Pattern | Count |",
-        "| --- | --- |",
+        "| Pattern | Count | Status |",
+        "| --- | --- | --- |",
     ]
-    lines += [f"| {p} | {counts.get(p, 0)} |" for p in EXPECTED_PATTERNS]
+    lines += [f"| {p} | {counts.get(p, 0)} | {status[p] if status else ''} |"
+              for p in EXPECTED_PATTERNS]
     lines += [
-        f"| trade_positions | {counts.get('trade_positions', 0)} |",
-        f"| account_ops_skipped | {counts.get('account_ops_skipped', 0)} |",
+        f"| trade_positions | {counts.get('trade_positions', 0)} | |",
+        f"| account_ops_skipped | {counts.get('account_ops_skipped', 0)} | |",
         "",
         f"**Validated:** {', '.join(gaps['validated']) or '(none yet)'}",
-        "",
-        f"**Missing (unseen by reality):** {', '.join(gaps['missing']) or '(none)'}",
     ]
+    if reachable is not None:
+        lines += [
+            "",
+            f"**Reachable but unseen:** {', '.join(gaps['reachable_unseen']) or '(none)'}",
+            "",
+            f"**N/A for this broker:** {', '.join(gaps['n_a']) or '(none)'}",
+        ]
+    else:
+        lines += ["", f"**Missing (unseen by reality):** {', '.join(gaps['missing']) or '(none)'}"]
     return "\n".join(lines) + "\n"

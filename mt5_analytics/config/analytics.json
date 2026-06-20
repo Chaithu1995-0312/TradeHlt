@@ -5,7 +5,7 @@
   "audit_root": "mt5_analytics/audit",
   "atr_period": 14,
   "regime_tercile_window": 480,
-  "server_utc_offset_hours": null,
+  "server_utc_offset_hours": 3,
   "sessions": {
     "asia_start": 0,
     "asia_end": 8,
