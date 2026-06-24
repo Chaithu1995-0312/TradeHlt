@@ -74,26 +74,14 @@ def _vol(d) -> float:
     return float(d.get("volume", 0.0) or 0.0)
 
 
-def _has_post_close_swap(dlist) -> bool:
-    """A zero-volume swap record arriving while the position is already flat (post-close)."""
-    open_vol = 0.0
-    closed_once = False
-    for d in dlist:
-        v = _vol(d)
-        if v <= _VOL_EPS:
-            if abs(float(d.get("swap", 0.0) or 0.0)) > 0 and closed_once and abs(open_vol) <= _VOL_EPS:
-                return True
-            continue
-        entry = int(d.get("entry", DEAL_ENTRY_IN))
-        if entry == DEAL_ENTRY_IN:
-            open_vol += v
-        elif entry in (DEAL_ENTRY_OUT, DEAL_ENTRY_OUT_BY):
-            open_vol -= v
-        elif entry == DEAL_ENTRY_INOUT:
-            open_vol = v - abs(open_vol)
-        if abs(open_vol) <= _VOL_EPS:
-            closed_once = True
-    return False
+def _incurred_swap(dlist) -> bool:
+    """True if the position was charged swap, in EITHER broker representation:
+      • folded into a trade deal (volume>0 with swap!=0) — MetaQuotes-Demo's form,
+        observed 2026-06-24: the close OUT deal carried swap=-0.02; OR
+      • a separate zero-volume swap record (the synthetic-fixture form).
+    Reconstruction sums swap regardless of representation (net_pnl is correct either way);
+    this is purely the coverage signal that the broker's overnight-swap path was exercised."""
+    return any(abs(float(d.get("swap", 0.0) or 0.0)) > 1e-9 for d in dlist)
 
 
 def characterize_deal_stream(deals) -> dict:
@@ -138,7 +126,7 @@ def characterize_deal_stream(deals) -> dict:
         if any(_vol(d) <= _VOL_EPS and abs(float(d.get("commission", 0.0) or 0.0)) > 0
                for d in dlist):
             counts["separate_commission_deals"] += 1
-        if _has_post_close_swap(dlist):
+        if _incurred_swap(dlist):
             counts["post_close_swaps"] += 1
 
     return counts

@@ -39,3 +39,14 @@ structurally emit is **N_A**, not a failing gap. Three explicit states (`Pattern
 REACHABLE_UNSEEN / N_A. `deal_coverage.json` / `coverage_gaps.json` gained `account_type`,
 `reachable`, `classification`, `reachable_unseen`, `n_a`. Report-format change only; the
 account-agnostic functions stay backward-compatible (`reachable=None`).
+
+## 2026-06-24 — Phase 9A: post-close swap captured; swap is FOLDED (coverage-layer only)
+Held a 0.01 EURUSD demo position ~51.6h across rollovers (swap accrued −0.02). **Finding:**
+MetaQuotes-Demo **folds swap into the close deal** (the OUT deal has `volume>0` AND `swap≠0`) — NOT
+a separate zero-volume swap record. **Reconstruction was already correct** (`net_pnl −10.62 =
+gross −10.6 + swap −0.02`, `verify` PASS, 8=8, P/L diff 0.0) — **zero kernel change**. Only the
+characterizer's swap detector was broadened (`_incurred_swap` = any deal with `swap≠0`, folded or
+separate) so coverage recognizes the broker's real swap form. Result: hedging broker now **Platinum
+(2/2 reachable)** — every structurally-possible pattern observed + verified; pyramid/INOUT/reopen/
+separate-commission remain honestly N/A. This is a coverage-layer refinement (Gate-2-lite), not a
+reconstruction defect.

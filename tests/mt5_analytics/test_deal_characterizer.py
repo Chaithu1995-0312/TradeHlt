@@ -141,6 +141,18 @@ def test_account_aware_score_observed_over_reachable():
     assert s2["coverage_score"] == 100 and s2["tier"] == "Platinum"
 
 
+def test_folded_swap_counts_as_post_close_swap():
+    # Reality (MetaQuotes-Demo, 2026-06-24): swap is FOLDED into the close deal
+    # (volume>0, swap!=0), not a separate record. Must still count as observed.
+    deals = [
+        make_deal(800, 1, entry=DEAL_ENTRY_IN, deal_type=DEAL_TYPE_BUY,
+                  volume=1.0, price=100, t=B),
+        make_deal(800, 2, entry=DEAL_ENTRY_OUT, deal_type=DEAL_TYPE_SELL,
+                  volume=1.0, price=99, t=B + 200_000, profit=-1.0, swap=-0.02),
+    ]
+    assert characterize_deal_stream(deals)["post_close_swaps"] == 1
+
+
 def test_account_aware_gaps_separate_na_from_unseen():
     reachable = reachable_patterns(2, False)
     g = coverage_gaps({"partial_closes": 1}, reachable)
