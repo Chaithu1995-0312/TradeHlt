@@ -48,7 +48,9 @@ Decide where a new file goes by asking "what is it?" then matching against this 
 | Agent / NL-driven automation                    | `src/agent/`                             | Tools go in `tool_registry.py`; plans in `PLAN_REGISTRY`      |
 | HTTP server / command registry / UI             | `src/control_plane/`                     | Stdlib only — no FastAPI / Flask                              |
 | CLI entry point (runnable script)               | `scripts/<category>/`                    | Import `src.*` packages — never define production logic here  |
-| Unit / integration tests                        | `tests/` (flat) or `tests/<subpackage>/` | pytest; `pythonpath=["src","scripts"]`                        |
+| MT5 post-trade analytics module                 | `mt5_analytics/<subpackage>/`            | Separate top-level READ-ONLY subsystem beside `src/` (like `multi_llm/`, `flow_context/`); imports `src.*`; reconstruction kernel + schemas frozen |
+| Execution utility that PLACES orders            | `manual_tools/`                          | Deliberately OUTSIDE `mt5_analytics/` (read-only) AND `tests/` (observe-only): *tests observe, generators act*. Demo-only, hard-gated (e.g. `trade_generator.py`) |
+| Unit / integration tests                        | `tests/` (flat) or `tests/<subpackage>/` | pytest; `pythonpath=["src","scripts","."]`                    |
 | New production config version                   | `configs/production/v{N}_{label}_{YYYY_MM}.json` | Immutable once promoted                               |
 | Experimental / spec doc                         | `configs/experimental/spec/*.md`         | Design docs, not runtime                                      |
 | Runtime artifacts (never commit)                | `results/`                               | Tuner checkpoints, baselines, validation reports              |

@@ -59,6 +59,15 @@ D:\Tradelatest/
 │   ├── misc/                     # Historical data, replay validators, parity checks
 │   └── training/                 # auto_tuner, auto_tuner_multi, train_pipeline, phase5_calibration
 │
+├── mt5_analytics/                # MT5-FIRST post-trade analytics — separate, READ-ONLY subsystem beside Tradelatest (imports src/)
+│   ├── core/                     # mt5_adapter (read-only), shared_pipeline, rebuild, daemon, verify, coverage, checkpoint
+│   ├── engines/                  # position_reconstructor (frozen kernel), features/, deal_characterizer
+│   ├── providers/                # CandleProvider protocol (fixture / MT5)
+│   ├── storage/ · schemas/ · registry/ · ui/   # partition writer + manifests, frozen v1.0 schemas, engine registry, Streamlit dashboard
+│   └── MIGRATIONS.md             # artifact-affecting changes (UTC normalization, swap representation)
+│
+├── manual_tools/                 # EXECUTION utilities kept OUTSIDE the read-only analytics layer (demo-only trade_generator)
+│
 ├── tests/                        # pytest suite (50+ files)
 │   └── inout/                    # Live-executor subpackage tests
 │
