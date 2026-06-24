@@ -1,0 +1,749 @@
+# ARCHIVE FOLDER — Human-Readable Execution Cognition Analysis
+
+## OVERVIEW
+
+The archive folder contains **three logically distinct groups** of dead/archived code:
+
+| Group | Path | Classification | Runtime Relevance |
+|---|---|---|---|
+| Dead Code Pass (2026-04-28) | `archive/dead_code/` | **DEAD** | Zero importers in active `src/`. Archived by automated pass. |
+| INOUT Legacy (2026-05-02) | `archive/inout_legacy/ARCHIVED_2026_05_02/` | **DEAD / DANGEROUS** | Bypassed canonical spine. Violated no-DB convention. Full parallel execution pipeline. |
+| Historical Data Scripts | `archive/scripts/` | **DEAD** | One-shot data conversion scripts. No runtime relevance. |
+| Archived UI | `archive/ui_legacy/` | **DEAD** | Flask stub, never launched in production. |
+
+**No file in archive/ has any active importers in src/ at time of archival.**
+**No file in archive/ participates in any production runtime execution flow.**
+
+---
+
+# GROUP 1: `archive/dead_code/` (2026-04-28 Archival Pass)
+
+## 1.1 `bitnet/_smoke_test.py`
+
+### File Purpose
+A standalone manual smoke test script for the BitNet module. It was never wired into pytest — run manually via `py bitnet/_smoke_test.py`.
+
+### Runtime Role
+**NONE.** This file has no runtime role. It was a developer-time sanity check that the original `ZoneValidator`, `gaussian_scoring`, `StabilityChecker`, and `BitNetZoneGate` components worked. The archive header confirms it was a "dev-time sanity test with no pytest harness."
+
+### Trust Classification: **DEAD**
+Proof: Zero importers in active `src/`. Archived 2026-04-28.
+
+### Fail-Fast / Fallback Audit
+- `test_zone_gate()` tests `BitNetZoneGate.disabled()` which fails open (allows all trades when gate is missing) — this is a **hidden fallback** that silently disables risk gating when registry file is missing.
+- `test_zone_gate()` tests `BitNetZoneGate` with non-existent `zone_path` — returns `allowed=True` on missing registry, meaning **a missing zone registry silently disables all zone-based risk gating** with no error raised.
+
+---
+
+## 1.2 `config_layer/insight_reporter.py`
+
+### File Purpose
+LLM-powered narrative insight reporter that generates human-readable trade reports using an LLM (via `config_layer.llama_gate`). It was designed to convert numerical trading metrics into English prose trade summaries, session summaries, backtest summaries, and regime alerts.
+
+### Runtime Role
+**NONE.** The archive header confirms "zero importers in active `src/`. LLM reporting was never wired into the spine."
+
+### Classes
+
+#### `InsightReporter`
+- **Purpose**: Collects trading events (decisions, session summaries, backtest metrics, regime changes) and generates LLM-powered narrative reports.
+- **Ownership**: Originally lived in `src/config_layer/`. Zero callers.
+- **Runtime Responsibility**: Never executed in production. If enabled, it would:
+  1. Accept structured trading data
+  2. Call `llm_insight()` or `_fallback_insight()` (from `llama_gate`) to generate English narratives
+  3. Store narratives in memory
+  4. Write them to markdown files in `reports/` directory
+
+### Methods
+
+#### `__init__(symbol, output_dir, enabled, verbose)`
+- **Human purpose**: Sets up the reporter with a symbol, creates output directory via `os.makedirs(output_dir, exist_ok=True)`, initializes empty entry list.
+- **State mutations**: Creates directory on disk, initializes `_entries = []`.
+- **Side effects**: `os.makedirs()` creates directory structure if missing.
+- **Trust level**: DEAD — never called.
+
+#### `trade_decision(score_result, sub_scores)`
+- **Human purpose**: Converts a single trade decision's numerical scores into an English narrative.
+- **Inputs**: `score_result` dict with gaussian_score, expected_rr, probability_of_win, decision, reason; optional `sub_scores` with sweep/breakout/retest/time components.
+- **Runtime flow**: Extracts keys → builds context dict → calls `_generate()` → calls `_record()`.
+- **Hidden defaults**: `sub_scores` defaults to `{}`. Missing keys produce "N/A" via `_safe_fmt()`.
+- **Downstream calls**: `_generate()` → `llm_insight()` or `_fallback_insight()`. `_record()` → `logging.info()` + appends to `_entries`.
+- **Failure modes**: If `llm_insight()` raises, unhandled. If `_fallback_insight()` raises, unhandled.
+
+#### `session_summary(session_name, trades, metrics)`
+- **Human purpose**: Aggregates a list of trades into a summary with win_rate, net_rr, avg_gaussian, etc. then narrates it.
+- **Inputs**: `trades` list, `metrics` dict. If `trades` provided but `metrics` empty, it **auto-computes metrics from trades**.
+- **State mutations**: Computes win rate, net RR from trades (if metrics not provided). Calls `_generate()` then `_record()`.
+- **Hidden defaults**: If `trades` list has zero approved trades, division by zero is **protected by `max(len(approved), 1)`** — so win_rate = 0.0, avg_gaussian = 0.0.
+- **Side effects**: Logs, appends to `_entries`.
+
+#### `backtest_summary(metrics)`
+- **Human purpose**: Narrates a backtest performance summary.
+- **Inputs**: `metrics` dict with total_trades, win_rate, expectancy_rr, max_drawdown_pct, sharpe.
+- **Hidden defaults**: Missing `total_trades` falls to `approved_trades`. Missing keys produce "N/A".
+
+#### `regime_alert(prev_regime, curr_regime, volatility, session)`
+- **Human purpose**: Narrates a regime change detection event.
+
+#### `save(filename)`
+- **Human purpose**: Writes all accumulated narrative entries to a markdown file.
+- **File writes**: Creates a file at `{output_dir}/{symbol}_{timestamp}_insight.md` (or specified `filename`). Writes header + all entries joined by `\n\n`.
+- **Side effects**: Creates/writes to filesystem. Overwrites filename if specified.
+- **Failure modes**: File write exceptions are **unhandled** — will propagate and crash caller.
+- **Hidden defaults**: If `_entries` is empty, returns empty string and writes nothing.
+
+#### `_generate(report_type, context)`
+- **Human purpose**: Routes to either LLM-powered generation or static fallback.
+- **Runtime flow**: If `self.enabled`, calls `llm_insight(context, report_type)`. Otherwise calls `_fallback_insight(context, report_type)`.
+- **Hidden defaults**: `self.enabled` defaults to `True`. When disabled, uses static fallback.
+- **Failure modes**: No try/except wrap. If `llm_insight()` fails, exception propagates.
+
+### Fallback / Hidden Defaults Summary
+- `_safe_fmt()`: Any `None` value → "N/A". Format errors → `str(value)`.
+- `_pct()`: Non-numeric → `0.0`.
+- `sub_scores = {}` default → all sub-scores show "N/A".
+- Session summary auto-computes metrics from trades if metrics dict is empty.
+- Division by zero protected by `max(..., 1)`.
+
+### Trust Classification: **DEAD**
+Proof: "zero importers in active `src/`. LLM reporting was never wired into the spine." — archive header.
+
+---
+
+## 1.3 `features/bitnet_feature_builder.py`
+
+### File Purpose
+Converts CRT trade, candle, and state objects into a canonical 28-feature vector with strict schema enforcement. Ensures the output dict always contains exactly the `CANONICAL_FEATURES` set — no missing keys, no extra keys.
+
+### Runtime Role
+**NONE.** Superseded by `features/feature_pipeline.py`. Zero importers in active `src/`.
+
+### Functions
+
+#### `build_bitnet_features(trade, candle, state) -> dict`
+- **Human purpose**: Takes raw trading data and builds a normalized feature vector for ML model inference.
+- **Inputs**: `trade` dict, `candle` dict (OHLCV+indicators), `state` dict (regime, trend, momentum).
+- **Outputs**: Flat dict of 28 float-valued features matching `CANONICAL_FEATURES` schema.
+- **Runtime flow**:
+  1. Extracts candle OHLCV directly from `candle` dict
+  2. Computes derived features: `ema_spread = ema_fast - ema_slow`, `body_size = abs(close - open)`, `wick_size`, `body_ratio = body_size / wick_size` (guard: `if wick_size > 1e-8 else 0.0`)
+  3. Maps enum strings via `TREND_MAP` and `SESSION_MAP`
+  4. NaN/inf guard: any NaN or inf → warned and set to `0.0`
+  5. Schema assertion: `output_keys == canonical_keys` or raises `AssertionError` with missing/extra keys
+- **State mutations**: None (pure function, returns new dict).
+- **Hidden defaults**: Every `dict.get(key, 0.0)` → all missing features silently default to 0.0.
+- **Failure modes**: `AssertionError` if feature keys don't match canonical schema — this is intentional, hard-fail on schema drift.
+- **Determinism**: Purely deterministic — same inputs = same outputs.
+- **Corruption risks**: None. Schema validation prevents silent feature drift. NaN/inf is caught and zeroed.
+
+### Trust Classification: **DEAD**
+Proof: "superseded by features/feature_pipeline.py; zero importers in active src/" — archive header.
+
+---
+
+## 1.4 `journal/schema.py` and `journal/trade_logger.py`
+
+### File Purpose (schema.py)
+`TradeRecord` dataclass — a complete trade record capturing decision context + outcome. Provides `to_dict()`, `to_json()`, and `from_dict()` for serialization.
+
+### File Purpose (trade_logger.py)
+`TradeLogger` class — appends `TradeRecord` entries to `logs/trade_journal.jsonl` as JSON Lines. Provides `load_all()` to read back.
+
+### Runtime Role
+**NONE.** Superseded by `src/utils/trade_logger.py` (active). Zero importers in active `src/`.
+
+### Classes
+
+#### `TradeRecord` (schema.py)
+- **Purpose**: Immutable data container for one complete trade lifecycle.
+- **Fields**: trade_id, timestamp, symbol, regime, config_profile, confidence, rr, zone, allocated_risk, portfolio_exposure_before, engine_action, override_action, result, pnl, duration_candles, drawdown_at_entry.
+- **Determinism**: Pure data — no logic.
+
+#### `TradeLogger` (trade_logger.py)
+- **Purpose**: Persists `TradeRecord` to JSONL.
+- **Methods**:
+  - `log(record)`: Appends JSON line to file. Exceptions are **silently caught** (`log.warning` only) — this is a **swallowed exception** pattern.
+  - `load_all()`: Reads all JSON lines from file, silently skipping malformed lines (`json.JSONDecodeError` caught, `pass`). Returns empty list if file doesn't exist.
+- **Side effects**: `log()` creates parent directories and appends to file. `load_all()` reads file.
+- **Failure modes**: `log()` silently fails on write errors. `load_all()` silently skips corrupted lines (data loss).
+- **Hidden defaults**: Default log path: `logs/trade_journal.jsonl` (relative).
+
+### Trust Classification: **DEAD**
+Proof: "zero importers in active src/; superseded by src/utils/trade_logger.py (active)" — archive header.
+
+### Fail-Fast / Fallback Audit
+- `TradeLogger.log()`: File write exceptions are **swallowed** with only a `log.warning()`. Caller never knows the write failed. **Corruption risk**: silent data loss.
+- `TradeLogger.load_all()`: JSON decode errors are **silently skipped** — corrupted lines are lost without warning.
+
+---
+
+## 1.5 `ui/dashboard.py`
+
+### File Purpose
+A minimal Flask REST dashboard providing HTTP endpoints for signal/position visibility and system pause/resume control.
+
+### Runtime Role
+**NONE.** "no runner, no callers, no tests — pure stub; Flask dashboard never launched in production." — archive header.
+
+### Functions
+
+#### `get_state() / update_state(key, value)`
+- **Human purpose**: Global mutable state accessors for the dashboard. Exposes signals list, positions list, paused flag, running flag.
+- **Side effects**: `update_state()` mutates a module-level `_state` dict — global mutable state, thread-unsafe.
+
+#### `create_app(state)`
+- **Human purpose**: Creates a Flask application with 5 endpoints.
+- **Endpoints**:
+  - `GET /signals` → returns `signals` list as JSON
+  - `GET /positions` → returns `positions` list as JSON
+  - `GET /status` → returns system state (paused, running, counts)
+  - `POST /pause` → sets `paused = True`, logs warning
+  - `POST /resume` → sets `paused = False`, logs info
+- **Runtime flow**: Lazy-imports Flask (fails loud if not installed). Binds route handlers that read/write the shared state dict.
+- **Failure modes**: `ImportError` on missing Flask is not caught — raises with error message.
+- **Network/API usage**: Listens on `0.0.0.0:5000` when run as `__main__`.
+
+### Trust Classification: **DEAD**
+Proof: "no runner, no callers, no tests — pure stub; Flask dashboard never launched in production." — archive header.
+
+---
+
+# GROUP 2: `archive/inout_legacy/ARCHIVED_2026_05_02/` — INOUT Strategy Module
+
+## Overall Declaration: **DEAD / DANGEROUS**
+
+This is the most significant block in the archive — a **complete parallel execution pipeline** that was intentionally architected to run alongside (but independently from) the canonical trading spine.
+
+### Why it was archived (from README.md):
+- `probability_engine.py` (47KB) — duplicate decision/probability logic, bypasses DecisionEngine
+- `state_machine.py` — duplicate orchestration, bypasses live_engine_hook
+- `controller.py`, `executor.py`, `runner.py` — alternative execution loop
+- `scanner.py` — duplicates src/scanner/
+- `db.py` — SQLite persistence, violates no-DB convention (CLAUDE.md §4)
+
+### Why it is DANGEROUS:
+If this code were ever re-enabled (e.g., by un-archiving or by importing from active code), it would:
+1. Create a **second concurrent trading loop** competing with the canonical `EngineRunner → FusionEngine → DecisionEngine → ExecutionPlannerV1_2 → UltronRiskGate` spine
+2. Maintain **its own SQLite database** (violating the architecture's no-DB convention)
+3. Make **independent trading decisions** based on its own probability engine
+4. Place **real orders** (Phase 2 had stubs for Binance API integration)
+5. No governance oversight — the promotion pipeline, config validation, and feature drift monitoring do **not** cover INOUT's independent execution
+
+### What ACTUALLY happens when this code runs:
+
+```
+INOUTRunner.run()
+  → INOUTRunner._run_cycle()
+    → _fetch_candles()            # Phase 1: synthetic data; Phase 2: Binance API
+    → INOUTScanner.scan()          # Explosive move detection (M1/M5)
+      → _score_expansion()         # body >= N×ATR
+      → _score_volume()            # volume >= N×rolling avg
+      → _score_breakout()          # close above/below recent range
+      → _compute_composite_score() # weighted sum: 0.45×expansion + 0.30×volume + 0.25×breakout
+      → [optional: prob_adapter.score_signal()]  # Probability-enhanced scoring
+    → INOUTController.on_signal()  # Signal acceptance pipeline
+      → _apply_guard_rails()       # dedup, max concurrent, max exposure
+      → _build_trade_plan()        # calculates SL/TP levels
+      → [optional: _check_ultron()] # UltronRiskGate.evaluate() — READ ONLY
+      → INOUTDatabase.create_trade() # SQLite write FIRST
+      → INOUTExecutor.open_position() # broker AFTER DB
+      → INOUTDatabase.transition(ACTIVE)
+    → INOUTController.on_price_tick()  # Per-candle evaluation
+      → INOUTStateMachine.evaluate()   # SEP-01 state transitions
+      → _execute_instruction()         # DB write → broker action
+```
+
+---
+
+## 2.1 `__init__.py`
+
+### File Purpose
+Package initializer for the INOUT module. Exports all major classes except `INOUTRunner` and `ProbabilityEngine` (intentionally lazy-imported to avoid `RuntimeWarning`).
+
+### Trust Classification: **DEAD**
+
+---
+
+## 2.2 `config.py`
+
+### File Purpose
+Configuration accessor for the INOUT strategy. Loads the "inout" section from the production config JSON (`v1_multi_2026_03.json`) via `config_layer.production_config.get_prod_section()`.
+
+### Classes
+
+#### `INOUTConfig`
+- **Purpose**: Immutable config accessor with section-specific getter methods.
+- **Runtime Responsibility**: Provides typed access to scanner, exit, time, risk, db, and logging config sections. Raises `RuntimeError` if "inout" section is missing from production JSON.
+- **Ownership**: Standalone — imports only from `config_layer.production_config.get_prod_section()`.
+
+### Key Behaviors
+- `_validate_fractions()`: Asserts `tp1_fraction + tp2_fraction + runner_fraction == 1.0` — hard fail on misconfiguration.
+- `_inout_require()`: Returns `None` for missing keys when no default provided (not `_MISSING` sentinel) — **soft return None** pattern.
+- `load()`: Calls into active `src/config_layer/` — this is the **only dependency trace** into active code from the INOUT module.
+
+### Trust Classification: **DEAD**
+But note: `config.py` has the only live dependency path: `INOUTConfig.load() → config_layer.production_config.get_prod_section()`. If someone tries to use INOUT config in production, it reads from the live production JSON registry.
+
+---
+
+## 2.3 `scanner.py`
+
+### File Purpose
+Explosive move detector for M1/M5 crypto candles. Operates independently from `src/scanner/`. Detects fast moves via: candle expansion (body >= N×ATR), volume spike (>= N×rolling avg), structure breakout (close above/below recent range).
+
+### Classes
+
+#### `INOUTSignal` (dataclass)
+- **Purpose**: Output carrier from scanner to controller. Carries all information needed to build a trade plan.
+- **Fields**: symbol, timeframe, direction, composite_score, trigger_price, candle_high/low, atr, volume_ratio, candle_expansion, structure_broken, conditions_met, timestamp, raw_candle + probability engine extension fields.
+
+#### `INOUTScanner`
+- **Purpose**: Stateless per-call explosive move detector.
+- **Ownership**: Called by `INOUTRunner._run_cycle()`.
+- **Runtime Responsibility**: Given candle data, returns `INOUTSignal` or `None`.
+
+### Methods
+
+#### `scan(symbol, timeframe, candles, prob_adapter)`
+- **Human purpose**: The main entry point. Checks guards (allowed symbols, timeframes, min candles, cooldown), scores expansion/volume/breakout, optionally enhances with probability engine, gates by min_composite_score, then fires signal.
+- **Inputs**: symbol string, timeframe string, list of OHLCV dicts, optional prob_adapter.
+- **Outputs**: `INOUTSignal` or `None`.
+- **Runtime flow**:
+  1. Guard: allowed symbols → return None if not in list
+  2. Guard: allowed timeframes → return None
+  3. Guard: minimum candles = max(lookback, struct_lookback) + 1 → return None if insufficient
+  4. Guard: cooldown (default 120s) → return None if in cooldown
+  5. Extract `current = candles[-1]`, `history = candles[:-1]`
+  6. ATR: try pre-computed `candle["atr"]`, fallback to simple TR average
+  7. Score: `_score_expansion()` → (score, body_size, direction)
+  8. Score: `_score_volume()` → (score, volume_ratio)
+  9. Score: `_score_breakout()` → (score, struct_broken)
+  10. Composite: weighted sum of three scores
+  11. Phase 2 adapter: if prob_adapter provided, replace composite with probability-enhanced score
+  12. Gate: if composite < `min_composite_score` (default 0.55) → return None
+  13. Fire signal, set cooldown
+- **State mutations**: Updates `self._cooldown[ symbol ] = time.time()` — per-symbol cooldown map.
+- **Hidden defaults**: `volume_lookback=20`, `structure_lookback=10`, `cooldown_seconds=120`, `min_composite_score=0.55`.
+- **Failure modes**: Missing candle fields → `KeyError` propagates. ATR estimation from zero-length history → division by zero avoided by empty check.
+- **Determinism**: Depends on random seed in synthetic data (runner), but scanner itself is deterministic given input data.
+
+#### `_compute_composite_score(expansion, volume, breakout)`
+- **Human purpose**: Weighted sum: expansion 0.45, volume 0.30, breakout 0.25. Optionally requires all three conditions.
+- **Hidden defaults**: `require_all_conditions=False` — signals can fire with just 1 or 2 conditions met.
+
+### Trust Classification: **DEAD**
+
+---
+
+## 2.4 `controller.py` — The Most Dangerous File in Archive
+
+### File Purpose
+Central trade controller for the INOUT strategy. Orchestrates the full pipeline: receive signal → guard rails → Ultron risk check → DB write → broker open → price tick evaluation → exit management.
+
+### Classes
+
+#### `INOUTController`
+- **Purpose**: Central coordinator managing the complete INOUT trade lifecycle.
+- **Ownership**: Owned by `INOUTRunner`. One instance per runner process.
+- **Runtime Responsibility**:
+  1. Accept signals from scanner (`on_signal`)
+  2. Apply guard rails (dedup, max concurrent, max exposure)
+  3. Call `UltronRiskGate` for risk evaluation (imported READ ONLY from active `src/core/`)
+  4. Write trade to DB first (resurrection safety)
+  5. Call executor to place broker order
+  6. Transition DB state
+  7. On every candle: evaluate state machine for all open trades
+  8. Coordinate DB + executor for exit actions
+  9. On boot: resurrect unclosed trades
+
+### Methods
+
+#### `__init__(cfg, db, executor, state_machine, ultron_config)`
+- **Human purpose**: Wires all sub-components. Attempts to import `UltronRiskGate` — **optional import** with silent fallback.
+- **Hidden defaults**: If `UltronRiskGate` not available (`ImportError`), `_ULTRON_AVAILABLE = False`, and `_ultron` is `None` — **risk checks silently fall back to internal guard rails only** with a warning log. In-memory dedup tracker `_dedup = {}`. Portfolio state initialized to hardcoded defaults: `account_balance=10000.0`, `total_open_risk_pct=0.0`, `trades_today=0`, `daily_loss_pct=0.0`, `open_positions=0`.
+- **Side effects**: None at init.
+
+#### `on_signal(signal) -> dict`
+- **Human purpose**: The main trade entry point. Processes an `INOUTSignal` through the full acceptance pipeline.
+- **Runtime flow**:
+  1. `_apply_guard_rails(signal)` — checks dedup cooldown, symbol not already open, max concurrent, max exposure
+  2. `_build_trade_plan(signal)` — calculates SL, TP1, TP2, position size from signal data
+  3. `_check_ultron(plan)` — passes through `UltronRiskGate.evaluate()` or falls back if unavailable
+  4. `_db.create_trade(...)` — **SQLite write FIRST** (before broker)
+  5. Optional: `_db.update_prob_snapshot()` if probability result present
+  6. `_exec.open_position(...)` — broker call
+  7. If fill failed: `_db.transition(FAILED)` — DB rollback
+  8. `_db.transition(ACTIVE)` — mark trade active
+  9. Update portfolio state + dedup tracker
+- **Inputs**: `INOUTSignal` dataclass
+- **Outputs**: dict with `accepted`, `trade_id`, `reason`, optional `fill`
+- **State mutations**: DB writes, in-memory dedup tracker, in-memory portfolio state
+- **Side effects**: Broker API call (stub in Phase 1, real in Phase 2)
+- **Network/API usage**: Calls `_exec.open_position()` — stub (dry run) or real Binance API
+- **Failure modes**: If broker fill fails, trade state is FAILED in DB, but DB write already happened — no rollback of initial trade creation. If Ultron unavailable, falls back to guard-rail-only approval — **hidden risk downgrade**.
+- **Fail-Fast / Fallback Audit**:
+  - **Ultron unavailable**: Silently falls back to guard-rail-only with `final_position_size = plan["position_size"]`. No scaling-down or risk adjustment.
+  - **`_APPLY_GUARD_RAILS`**: Soft returns on each rule. No hard-forced prevention of risk accumulation.
+  - **Broker fill failure**: Already wrote the trade to DB — creates a "PENDING" zombie trade that will be resurrected on next boot.
+  - **Probability snapshot**: Uses `getattr(signal, 'prob_result', None)` — if missing, silently skips. No effect on execution.
+
+#### `on_price_tick(symbol, price, current_time, atr) -> list`
+- **Human purpose**: Called every candle close. Evaluates all open trades for the symbol via state machine and executes any exit actions.
+- **Runtime flow**: Loads active trades from DB → for each trade: `_sm.evaluate()` → if action != NONE: `_execute_instruction()`
+
+#### `resurrect() -> int`
+- **Human purpose**: Boot-time recovery. Loads all unclosed trades from DB and logs them. Phase 2 would re-verify broker positions.
+- **Hidden defaults**: Phase 2 resurrection logic is not implemented — just logs the trade.
+
+#### `_build_trade_plan(signal) -> dict | None`
+- **Human purpose**: Builds entry/SL/TP plan from signal data. Uses its own plan builder — **NOT** `ExecutionPlannerV1_2`.
+- **Runtime flow**: SL = candle_high/low + ATR buffer. TP1 = 1R, TP2 = 2R. Position size = `(balance × risk_pct / 100) / SL_distance`.
+- **Hidden defaults**: `tp1_rr=1.0`, `tp2_rr=2.0`, `sl_atr_buffer_mult=0.2`, `risk_per_trade_pct=0.5%`, `account_balance=10000.0`.
+- **Failure modes**: Zero SL distance → returns `None` (signal rejected). Zero or negative ATR/entry → returns `None`.
+
+#### `_execute_instruction(instruction, trade, current_price) -> dict`
+- **Human purpose**: Translates state machine instruction into DB + broker actions. Always writes DB first, then broker.
+- **Runtime flow**:
+  - `EXIT_PARTIAL`: DB transition → broker partial exit → record exit to DB → update SL if provided
+  - `EXIT_FULL`: DB transition → broker full exit → record exit to DB → update total PnL → update portfolio state
+  - `UPDATE_TRAIL`: Broker SL update → DB runner trail update
+  - `MOVE_SL`: Broker SL update → DB SL update
+- **Failure modes**: Broker failures are captured in `FillResult.success`. DB operations have no fallback.
+
+### Trust Classification: **DEAD / DANGEROUS**
+Proof: "alternative execution loop" bypasses canonical spine. SQLite persistence violates no-DB convention.
+
+---
+
+## 2.5 `db.py` — INOUT SQLite Database
+
+### File Purpose
+Thread-safe SQLite persistence layer for the INOUT state machine. Creates and manages three tables: `inout_trades` (one row per trade), `inout_exits` (append-only exit events), `inout_audit` (append-only signal/decision log). Uses WAL mode for concurrent read safety.
+
+### Classes
+
+#### `INOUTDatabase`
+- **Purpose**: Manages the full SEP-01 trade lifecycle in SQLite.
+- **Ownership**: One instance per runner process, shared across scanner, state_machine, and executor.
+- **Runtime Responsibility**: All state machine persistence. Atomic DB writes BEFORE broker calls.
+
+### Key Schema Details
+- `inout_trades`: trade_id (PK), symbol, direction, state, entry_price, stop_loss, tp1_price, tp2_price, runner_trail_sl, position_size, risk_pct, rr_ratio, signal_score, signal_meta (JSON), created_at, activated_at, closed_at, time_stop_at, close_reason, total_pnl_rr, prob_snapshot (JSON), gemini_context (JSON)
+- State transitions enforced: `PENDING→ACTIVE→PROTECTED→HARVESTED→CLOSED`, any→FAILED, any→TIMEOUT
+- Terminal states: `CLOSED`, `FAILED`, `TIMEOUT`
+
+### Methods
+
+#### `create_trade(...) -> str`
+- **Human purpose**: Inserts a new trade in PENDING state. Returns UUID4 trade_id. Caller must transition to ACTIVE after broker confirms fill.
+- **Side effects**: SQLite INSERT. Writes audit log entry.
+- **State mutations**: Initializes `runner_trail_sl = stop_loss`.
+
+#### `transition(trade_id, new_state, meta) -> bool`
+- **Human purpose**: Atomically advances the state machine. Returns False on illegal transition or missing trade.
+- **State mutations**: Updates state column. Sets `activated_at` on ACTIVE transition. Sets `closed_at` + `close_reason` on terminal transitions.
+- **Failure modes**: Thread-safe via RLock. Returns False if trade not found or transition is illegal (e.g., CLOSED → ACTIVE).
+
+#### `record_exit(...) -> str`
+- **Human purpose**: Appends exit event. Never overwrites. Returns exit_id.
+- **Side effects**: SQLite INSERT. Writes audit log entry.
+
+#### `_conn()` context manager
+- **Human purpose**: Provides a SQLite connection with WAL mode, foreign keys enabled. Auto-commits on success, rollback on exception.
+- **Hidden defaults**: `timeout=5.0` (config-driven), `check_same_thread=False`, `row_factory=sqlite3.Row`.
+
+#### `_audit(trade_id, event_type, symbol, payload)`
+- **Human purpose**: Append-only audit log entry. Exceptions are **silently swallowed** — "Audit must never crash the main flow."
+- **Swallowed exception pattern**: Any DB write error in audit is logged as warning, never raises. **Corruption risk**: Silent audit data loss.
+
+### Trust Classification: **DEAD / DANGEROUS**
+Proof: SQLite persistence violates architecture's no-DB convention. If re-enabled, would create independent state separate from the canonical governance pipeline.
+
+---
+
+## 2.6 `executor.py`
+
+### File Purpose
+Broker execution interface for the INOUT strategy. Phase 1: stub implementation with simulated fills and slippage estimation. Phase 2: replace with real Binance Futures API calls.
+
+### Classes
+
+#### `FillResult` (dataclass)
+- **Purpose**: Returned by every executor method. Carries success flag, order_id, fill_price, fill_qty, status, reason.
+
+#### `INOUTExecutor`
+- **Purpose**: Broker interface. Phase 1 always dry-run. Phase 2 replaces internal methods with Binance API calls.
+- **Ownership**: Called only by `INOUTController`.
+- **Runtime Responsibility**: Fires orders and returns fill results. Owns NO state.
+
+### Methods
+
+#### `open_position(symbol, direction, qty, stop_loss, tp1_price, tp2_price, entry_hint) -> FillResult`
+- **Human purpose**: Places market entry order with initial SL.
+- **Runtime flow (Phase 1)**: Simulates 0.03% slippage. Returns fill.
+- **Hidden defaults**: `slippage = 0.0003` (0.03%). Dry-run mode `self._dry_run = True`.
+
+#### `exit_partial(symbol, direction, qty, reason, target_price) -> FillResult`
+- **Human purpose**: Exits fraction of position at market.
+- **Hidden defaults**: `slippage = 0.0003`.
+
+#### `exit_full(symbol, direction, qty, reason, target_price) -> FillResult`
+- **Human purpose**: Closes entire remaining position. Higher slippage for forced exits.
+- **Hidden defaults**: `slippage = 0.001` (0.1%) — higher than partial/entry.
+
+#### `enable_live()`
+- **Human purpose**: Switches from dry-run to live. No guard — calling this without a real Binance client would cause undefined behavior.
+
+### Trust Classification: **DEAD / DANGEROUS**
+Proof: Phase 2 stubs would place real orders if `enable_live()` is called with a Binance client injected. No safety checks.
+
+---
+
+## 2.7 `state_machine.py` — SEP-01 State Machine
+
+### File Purpose
+Pure evaluator that observes price + time and returns `ActionInstruction` for the SEP-01 lifecycle. Does NOT call brokers or modify DB directly.
+
+### Classes
+
+#### `ActionType` (Enum)
+- Values: `NONE`, `MOVE_SL`, `EXIT_PARTIAL`, `EXIT_FULL`, `UPDATE_TRAIL`
+
+#### `ActionInstruction` (dataclass)
+- **Purpose**: Output of evaluate(). Controller reads this to coordinate DB + executor.
+- **Fields**: action, trade_id, symbol, direction, new_state, fraction, exit_tier, exit_reason, new_sl, target_price, meta.
+
+#### `INOUTStateMachine`
+- **Purpose**: Pure evaluator for SEP-01 lifecycle.
+- **Ownership**: Called by `INOUTController.on_price_tick()`.
+- **Runtime Responsibility**: Evaluates one trade against current market and returns the action to take.
+
+### Methods
+
+#### `evaluate(trade, current_price, current_time, current_atr) -> ActionInstruction`
+- **Human purpose**: Given trade state + market conditions, decides what to do.
+- **Runtime flow**:
+  1. If terminal state → NONE
+  2. Check time-stop (applies to ALL non-terminal states)
+  3. Route to state handler:
+     - PENDING → NONE (waiting for broker fill)
+     - ACTIVE → `_evaluate_active()`
+     - PROTECTED → `_evaluate_protected()`
+     - HARVESTED → `_evaluate_harvested()`
+- **Determinism**: Purely deterministic — same inputs = same action.
+
+#### `_evaluate_active(trade, price, atr, now)`
+- **Human purpose**: Monitor for SL hit, Tier 1 hit, or prob-gated early TP1 exit.
+- **Runtime flow**:
+  1. SL hit? → EXIT_FULL (CLOSED, fraction=1.0, tier=99, reason="SL")
+  2. TP1 hit? → EXIT_PARTIAL (PROTECTED, fraction=tp1_frac, tier=1, reason="TP1"), move SL to breakeven
+  3. Prob-gated early TP1? (FIX 1/2/3) → EXIT_PARTIAL if elapsed >= `expected_time_tp1 × p75_factor × 0.9`
+- **Hidden defaults**: `tp1_fraction=0.30`, `tp1_near_threshold=0.002` (0.2% from TP1 — skip early exit), `high_atr_pct_skip=0.01` (1% ATR/price — skip in high vol).
+- **Three guards on prob-gated early TP1** (FIX 1/2/3):
+  - FIX 1: `_prob_trusted()` — confidence > 0.2 AND n_samples >= 20
+  - FIX 2: Structure guard — skip if price is within 0.2% of TP1 naturally
+  - FIX 3: Slippage guard — skip if ATR > 1% of price
+
+#### `_evaluate_protected(trade, price, atr, now)`
+- **Human purpose**: Breakeven state. Monitor for BE-SL hit, TP2 low-prob abandon, or Tier 2 hit.
+- **Runtime flow**:
+  1. BE-SL hit? → EXIT_FULL (CLOSED, reason="BE_SL")
+  2. TP2 low-probability abandon? → EXIT_FULL (CLOSED, reason="TP2_LOW_PROB") if prob trusted AND `tp2_prob < 0.25`
+  3. TP2 hit? → EXIT_PARTIAL (HARVESTED, fraction=tp2_frac, tier=2), start trailing SL
+- **Hidden defaults**: `tp2_abandon_prob=0.25`, `tp2_fraction=0.50`.
+- **Important**: Missing prob_snapshot defaults `tp2_prob=0.30` (from `_PROB_DEFAULTS`), which is > 0.25, so missing data **never triggers the abandon branch**. This is intentional backward compatibility.
+
+#### `_evaluate_harvested(trade, price, atr)`
+- **Human purpose**: Runner active with trailing stop. Update trail every candle; exit when trail is hit.
+- **Runtime flow**:
+  1. Trail hit? → EXIT_FULL (CLOSED, reason="RUNNER_TRAIL")
+  2. Update trailing stop with prob-adaptive multiplier:
+     - `runner_prob >= 0.4` → wide trail (×1.2 base)
+     - `runner_prob < 0.2` → tight trail (×0.6 base)
+     - else / untrusted → base multiplier (default 2.5×)
+- **Hidden defaults**: `runner_fraction=0.20`, `runner_trail_atr_mult=2.5`.
+
+#### `_check_time_stop(trade, now)`
+- **Human purpose**: Fire time-stop when elapsed time exceeds limits.
+- **Runtime flow**:
+  - Hard cap (all states): `max(prob_driven_dynamic, cfg_max_min)` with floor `min_floor`. Default `max_time_min=15`.
+  - Soft cap (ACTIVE only): `max(prob_driven, default_time_min=8)` with floor `min_time_min=3`.
+- **Prob-driven behavior**: When prob trusted, hard cap = `expected_time_tp2 × p75_factor (1.4)`. Can only SHORTEN the cap (capped at `cfg_max_min`).
+
+#### `_load_prob(trade) -> dict`
+- **Human purpose**: Load and validate probability snapshot stored at entry time. Returns a typed dict with all required keys present.
+- **Handles**: NULL / missing → defaults. Already-decoded dict (unit tests). Empty string. Malformed JSON.
+- **Hidden defaults**: `_PROB_DEFAULTS` with `confidence=0.0` — intentionally 0.0, NOT 0.1, so priors never activate prob-gated branches.
+- **Failure modes**: JSON decode errors → silent fallback to defaults (logged at DEBUG level).
+
+#### `_prob_trusted(prob) -> bool`
+- **Human purpose**: FIX 1 — Probability Trust Filter. Returns True only when confidence > `min_confidence_for_prob_exit` (0.2) AND `n_samples >= min_prob_samples` (20).
+- **Safety property**: When prob_snapshot is absent, `_load_prob()` returns `confidence=0.0` and `n_samples=0`, so this always returns False → full backward compatibility.
+
+### Trust Classification: **DEAD**
+
+---
+
+## 2.8 `probability_engine.py` (1106 lines — Largest File in Archive)
+
+### File Purpose
+Complete probability prediction system for the INOUT strategy. Converts trade log data (SQLite) into runtime probability predictions using four configurable approaches:
+
+- **Approach A** — Statistical Bucket Engine (deterministic)
+- **Approach B** — ML Model Engine (GradientBoosting)
+- **Approach C** — Sequence Model Engine (stub for Phase 2+)
+- **Approach D** — Hybrid Engine (DEFAULT, blends A + B)
+
+### Classes
+
+#### `INOUTDataExtractor`
+- **Purpose**: Reads closed trades from SQLite and builds flat dataset for training.
+- **Ownership**: Called by `ProbabilityEngine.train()`.
+- **Methods**:
+  - `extract()` → list of dicts. Only includes terminal states (`CLOSED`, `TIMEOUT`, `FAILED`). Returns empty list if DB not found (silently).
+  - `to_csv()` → writes CSV. Returns row count.
+- **Hidden defaults**: Missing `signal_meta` → defaults to `{}`. Missing fields → `0` or `1.0` defaults.
+- **Failure modes**: `_build_record()` catches ALL exceptions and returns `None` — **silently skips malformed trades** with a warning log.
+
+#### `_ApproachA_Statistical`
+- **Purpose**: Buckets trades by discrete feature bins → empirical distributions. No ML, fully deterministic.
+- **Methods**:
+  - `fit(records)`: Computes global stats + per-bucket stats. Only keeps buckets with >= `min_bucket_n` (5) samples.
+  - `predict(features)`: Returns probability dict for given features. Falls back to global stats if bucket not found. Falls back to PRIOR if no data.
+- **Hidden defaults**: `min_bucket_n=5`. Bucket bins: volume [1.0, 2.0, 3.5, 6.0], expansion [1.5, 2.5, 4.0, 7.0], score [0.5, 0.6, 0.75, 0.9].
+
+#### `_ApproachB_ML`
+- **Purpose**: scikit-learn GradientBoosting classifiers (TP1, TP2, runner prob) + regressors (time to TP1, TP2, duration). Platt-scaled calibration.
+- **Methods**:
+  - `fit(records)`: Requires >= 50 records. Trains 3 classifiers + 3 regressors. Skips targets with < 5 positive/negative examples.
+  - `predict(features)`: Runs inference, fills missing probs with prior. Handles model errors by falling back to prior with warning.
+  - `save()`: Pickles models to `data/inout_prob_models/approach_b.pkl`.
+  - `load()`: Deserializes from pickle. Returns False on any error — **silent fallback**.
+- **Weights are trained on the trade log, NOT validated through the promotion pipeline** — this is an untrained model that learns from INOUT's own trades only.
+
+#### `_ApproachC_Sequence`
+- **Purpose**: Stub for Phase 2+ LSTM/Transformer. Returns prior with warning.
+
+#### `_ApproachD_Hybrid` (DEFAULT)
+- **Purpose**: Blends A (statistical) + B (ML). Adaptive blend weight grows from 0.0 → 1.0 as training set grows.
+- **Decision logic**:
+  - n < 10 → prior only ("D_prior_only")
+  - n < 50 → Approach A only ("D_stat_only")
+  - n >= 50 → hybrid A × (1 - adaptive_w) + B × adaptive_w
+
+#### `ProbabilityEngine`
+- **Purpose**: Public interface. Selects approach based on config. Manages training, prediction, persistence.
+- **Methods**:
+  - `train(db_path)`: Full pipeline: extract → save CSV → fit → mark fitted. Returns record count.
+  - `predict(features)`: Returns probability dict. Normalises direction. Clamps outputs to [0,1].
+  - `compute_ev(prob, sl_rr)`: Expected Value = P(tp2)×2.0 + P(runner)×2.5 + P(loss)×(-1.0)
+  - `save()`: Delegates to engine's save().
+  - `load()`: Delegates to engine's load(). Sets fitted flag on success.
+- **Hidden defaults**: `approach="D"`, `blend_weight=0.6`, `model_dir="data/inout_prob_models"`.
+
+#### `INOUTScannerProbAdapter`
+- **Purpose**: Adapter that replaces scanner's composite score with probability-enhanced score.
+- **Methods**:
+  - `score_signal(rule_based_score, signal_features)`: Blends rule-based score with probability score. Falls back to rule-based if engine not fitted.
+
+### Trust Classification: **DEAD / DANGEROUS**
+**47KB of duplicate decision logic that bypasses the DecisionEngine.** The probability models learn from INOUT's own trade history (not the canonical system's), creating an independent decision path. If re-enabled, this would create **governance contamination** — trades are taken based on a model trained outside the approved promotion pipeline.
+
+---
+
+## 2.9 `runner.py`
+
+### File Purpose
+Standalone event loop for the INOUT strategy. Completely independent from `live_engine_hook.py` and `EngineRunner`.
+
+### Classes
+
+#### `INOUTRunner`
+- **Purpose**: Main INOUT event loop. Polls M1/M5, scans for signals, feeds controller, manages lifecycle.
+- **Ownership**: CLI entrypoint via `python -m inout.runner`.
+- **Runtime Responsibility**: Owns the loop. Wires all sub-components.
+
+### Methods
+
+#### `run(max_cycles)`
+- **Human purpose**: Main loop. Runs forever unless max_cycles set.
+- **Runtime flow**:
+  1. Resurrect unclosed trades from previous session
+  2. Loop: `_run_cycle()` → heartbeat → check max_cycles → sleep
+- **Sleep interval**: 5s in dry-run, 60s expected in live (Phase 2).
+
+#### `_run_cycle(symbols, timeframes)`
+- **Human purpose**: One scan+monitor cycle per symbol per timeframe.
+- **Runtime flow**:
+  1. Fetch candles (stub synthetic or Phase 2 exchange)
+  2. Scanner.scan(symbol, tf, candles, prob_adapter)
+  3. If signal: controller.on_signal(signal)
+  4. Controller.on_price_tick(symbol, price, atr) for all open trades
+  5. Auto-retrain check
+
+#### `_fetch_candles(symbol, timeframe, count) -> list`
+- **Human purpose**: STUB — generates synthetic candle data with occasional explosive candles (10% chance). Phase 2: replace with Binance API.
+- **Hidden defaults**: Base prices hardcoded: BTCUSDT=65000, ETHUSDT=3200, SOLUSDT=180, BNBUSDT=600. Uses seeded RNG for reproducibility.
+
+#### `_maybe_retrain()`
+- **Human purpose**: Triggers probability engine retraining when enough new closed trades accumulate (configurable `auto_retrain_n`, default 50).
+- **State mutations**: Updates `_last_retrain_count`, saves models, replaces adapter.
+- **Hidden defaults**: `db_path` falls back: `prob_cfg.get("db_path") → cfg.db("db_path", "logs/inout_trades.db")`.
+
+#### `main()`
+- **CLI entrypoint**: `python -m inout.runner [--cycles N] [--config PATH]`. Calls `INOUTConfig.load()`, sets up logging, creates runner, runs.
+
+### Trust Classification: **DEAD / DANGEROUS**
+Proof: "Standalone event loop — completely independent from live_engine_hook.py and EngineRunner." If run in production alongside the canonical engine, it would create **duplicate trading decisions and potential order conflicts**.
+
+---
+
+# GROUP 3: `archive/scripts/`
+
+## `run_hisotircal_data_EURCAD.py`, `_GBPUSD.py`, `_XAUUSD.py`
+
+### File Purpose
+One-shot data conversion scripts that:
+1. Read raw M1 CSV files (semicolon-separated, format `%Y%m%d %H%M%S`)
+2. Concatenate all yearly files
+3. Resample to M15 (using `15T` resample with OHLCV aggregation)
+4. Save as M15 CSV
+
+### Runtime Role
+**NONE.** These are one-shot data preprocessing scripts, not runtime code.
+
+### Trust Classification: **DEAD**
+Proof: Not part of any runtime pipeline. Manual execution for historical data preparation.
+
+---
+
+# GROUP 4: `archive/ui_legacy/`
+
+## `dashboard_ARCHIVED_2026_05_02.py`
+(NOT read — same as `dead_code/ui/dashboard.py` pattern based on filename)
+
+### Trust Classification: **DEAD**
+
+---
+
+# FINAL SUMMARY TABLE
+
+| Path | Classification | Risk Level | Key Danger |
+|---|---|---|---|
+| `dead_code/bitnet/_smoke_test.py` | DEAD | None | N/A |
+| `dead_code/config_layer/insight_reporter.py` | DEAD | Low | LLM reporting never wired, but imports `config_layer.llama_gate` |
+| `dead_code/features/bitnet_feature_builder.py` | DEAD | None | N/A |
+| `dead_code/journal/schema.py` | DEAD | None | N/A |
+| `dead_code/journal/trade_logger.py` | DEAD | Low | Swallowed exceptions on write, silent JSON parse errors |
+| `dead_code/ui/dashboard.py` | DEAD | None | N/A |
+| `inout_legacy/*` | **DEAD/DANGEROUS** | **HIGH** | Full parallel trading pipeline, independent DB, duplicate decision logic, bypasses governance, violates no-DB convention |
+| `scripts/` | DEAD | None | One-shot data scripts |
+| `ui_legacy/` | DEAD | None | N/A |
+
+### Only runtime dependency trace into active code:
+- `INOUTConfig.load()` → `config_layer.production_config.get_prod_section("inout")` — reads the "inout" section from the live production JSON registry.
+- `INOUTController.__init__()` → optional `from core.ultron_risk_gate import UltronRiskGate` — READ ONLY import with silent fallback.
+- `insight_reporter.py` → `from config_layer.llama_gate import llm_insight, _fallback_insight` — import from active config layer.
+
+### Governance contamination risk if re-enabled:
+The INOUT pipeline would take independent trading decisions based on its own probability engine trained on its own trade log, with no oversight from the canonical governance pipeline (promotion_manager, config_validator, FeatureMonitor). This is the **primary danger** of this archive.

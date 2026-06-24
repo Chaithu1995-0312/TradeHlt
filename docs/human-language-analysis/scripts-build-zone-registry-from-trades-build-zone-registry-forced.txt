@@ -1,0 +1,404 @@
+# Execution Cognition Analysis: `build_zone_registry_from_trades.py` and `build_zone_registry_forced.py`
+
+---
+
+## 1. FILE PURPOSE
+
+### `build_zone_registry_from_trades.py`
+
+**Human-language explanation:**
+This file exists to construct a **zone registry** — a statistical model of what "winning trades look like" — by clustering profitable historical trades in 38-dimensional canonical feature space. The output is a JSON file containing cluster centroids (mu), standard deviations (sigma), and per-cluster weights. This registry is then consumed downstream by the **zone gate engine** (`zone_gate_engine.py`) to score live trade signals: if a current feature vector falls within a known "profitable zone" (by some distance metric), the trade is more likely to be approved.
+
+It sits between **backtest results** (the `*_trades.csv` files) and **live inference**. It is a build-time / training-time script, not a runtime daemon.
+
+### `build_zone_registry_forced.py`
+
+**Human-language explanation:**
+Same conceptual job — cluster profitable trades into zones — but with a **developer override** twist. Instead of auto-selecting the cluster count via data-driven heuristic, this script hardcodes `--n-clusters` (default 3) and a lower `--min-points` floor (default 3). It also uses a **fixed output path** (`models/zone_registry.json`) with no instrument-specific routing.
+
+It exists as a **debug/forced-injection tool**: when the heuristic in `build_zone_registry_from_trades.py` produces too few zones, insufficient samples, or you want to force a specific cluster topology during experimentation, this is the bypass.
+
+---
+
+## 2. RUNTIME ROLE
+
+### `build_zone_registry_from_trades.py`
+
+**Where it sits in execution flow:**
+```
+Backtest runs → *_trades.csv files written to results/ trees
+                     ↓
+        build_zone_registry_from_trades.py  (manual CLI invocation)
+                     ↓
+        models/zone_registry.json  (global)
+          or
+        models/bitnet/<INSTRUMENT>_M15/zone_registry.json  (per-instrument)
+                     ↓
+        zone_gate_engine.py reads registry at inference time
+```
+
+This is **NOT** part of any live pipeline. It is a **manually triggered** build step. It is invoked by a human (or possibly a CI script) via `python scripts/build_zone_registry_from_trades.py --instrument EURUSD`.
+
+The output path for per-instrument mode (`models/bitnet/<INSTRUMENT>_M15/zone_registry.json`) is explicitly designed to match the path expected by `live_engine.py`'s `get_zone_registry_path("EURUSD_M15")` — meaning the downstream consumer expects exactly this layout.
+
+### `build_zone_registry_forced.py`
+
+**Where it sits in execution flow:**
+```
+Same input (results/**/*_trades.csv)
+         ↓
+manually invoked with --n-clusters 5 --min-points 2
+         ↓
+overwrites models/zone_registry.json (fixed path)
+         ↓
+zone_gate_engine.py reads same file path
+```
+
+This is a **developer-only override tool**. It does NOT support per-instrument output. It always writes to the global path. It has no integration into any automated pipeline — purely ad-hoc usage.
+
+---
+
+## 3. CLASSES
+
+**Neither file defines any classes.** Both are flat-script, function-only modules with a `main()` CLI entry point. Zero class definitions.
+
+The shared dependency import `CANONICAL_FEATURES` comes from `features.feature_schema`, which does define `SchemaObject`, `FeatureSchemaRegistry`, `SchemaVersionError` — but those are in the dependency boundary, not in these two files themselves. Per dependency rules, I stop here.
+
+---
+
+## 4. METHODS / FUNCTIONS
+
+### `build_zone_registry_from_trades.py`
+
+#### `load_trade_csvs(root_dir="results")` (Line 16)
+
+| Aspect | Detail |
+|---|---|
+| **Human purpose** | Walks the `results/` directory tree and finds every `*_trades.csv` file. No filtering, no content inspection — pure filesystem glob. |
+| **Invocation sources** | Called from `main()` line 168. |
+| **Downstream calls** | `glob.glob(os.path.join(root_dir, "**", "*_trades.csv"), recursive=True)` |
+| **Runtime flow** | Constructs `results/**/*_trades.csv` pattern → calls `glob.glob(recursive=True)` → returns list of paths. Returns empty list if none found. Takes ~O(n) where n = number of files in results tree. |
+| **Inputs** | `root_dir`: string, defaults to `"results"`. |
+| **Outputs** | `List[str]` — absolute or relative paths matching the glob. |
+| **State mutations** | None. |
+| **Side effects** | None. |
+| **File writes** | None. |
+| **Network/API** | None. |
+| **Subprocess** | None. |
+| **Fallbacks** | Empty list (no exception, continues silently). |
+| **Hidden defaults** | `root_dir="results"` — hardcoded, no way to override from caller except via argument. |
+| **Failure modes** | NO failure mode for missing `root_dir`. If `root_dir` doesn't exist, `glob.glob` returns empty list — script continues to `collect_profitable_vectors()` which then raises `ValueError` ("No profitable trades found"). Silent downstream failure. |
+| **Determinism** | Deterministic given same filesystem state. |
+| **Corruption risks** | None directly. |
+| **Trust level** | **CANONICAL** — simple filesystem glob, well-defined, no mutation. |
+
+#### `collect_profitable_vectors(trade_csv_paths, instrument=None)` (Line 22)
+
+| Aspect | Detail |
+|---|---|
+| **Human purpose** | Reads every trade CSV, keeps only rows where `pnl_rr_net > 0` (profitable trades), verifies that all 38 canonical feature columns are present, then stacks them into a single 2D numpy array. Also collects metadata for traceability. |
+| **Invocation sources** | Called from `main()` line 172. |
+| **Downstream calls** | `pd.read_csv(path)`, `np.vstack(all_vectors)`. |
+| **Runtime flow** | 1. Iterate over each CSV path. 2. `pd.read_csv` the entire file into memory. 3. If `instrument` is specified and column exists, filter rows to that instrument (case-insensitive). 4. If `instrument` specified but column missing, fallback: check if instrument name appears in filename. 5. Filter to `pnl_rr_net > 0`. 6. Check which of `CANONICAL_FEATURES` exist in columns. 7. If ANY of the 38 canonical features are missing, `print warning` and **skip the entire file**. 8. Extract the present feature columns as `np.float64`. 9. Append to list. 10. Collect metadata (file basename, instrument, trade_id, pnl, opened_at). 11. After loop: if `all_vectors` empty, **raise ValueError** and die. 12. Else `np.vstack` everything into one big matrix `X`. |
+| **Inputs** | `trade_csv_paths`: `List[str]` — file paths to CSVs. `instrument`: `Optional[str]` — filter to specific instrument or None for global. |
+| **Outputs** | `(X, metadata)` where `X` is `np.ndarray` shape `(n_profitable_trades, 38)` and `metadata` is `List[dict]`. |
+| **State mutations** | None. |
+| **Side effects** | Prints warnings to stdout for missing PNL column or missing canonical columns. |
+| **File writes** | None. |
+| **Network/API** | None. |
+| **Subprocess** | None. |
+| **Fallbacks** | If `instrument` specified but `"instrument"` column not in CSV: **falls back to filename-based matching** (checks if `instr_upper` appears in `os.path.basename(path).upper()`). This is fragile: a file named `EURUSD_v2_backtest_trades.csv` passes for `--instrument EURUSD`, but `EURUSD_CHF_cross_trades.csv` would also pass for `EURUSD` because Python's `in` operator matches substrings. **This is a contamination risk.** |
+| **Hidden defaults** | `PNL_COL = "pnl_rr_net"` — hardcoded string constant on line 15. |
+| **Failure modes** | 1. **CSV empty after instrument filter** → silently skips. 2. **Missing canonical features** → prints warning, skips entire file, no partial feature usage. 3. **All files fail** → `ValueError("No profitable trades...")` which `main()` catches and calls `sys.exit(1)`. 4. **CSV parse error** → unhandled `pd.read_csv` exception propagates up, crashes the script. |
+| **Determinism** | Deterministic given same CSV files. |
+| **Corruption risks** | The filename-based fallback for instrument filtering is a **subtle contamination vector**: a file named `EURUSD_CHF_cross_trades.csv` would be incorrectly included when filtering for `EURUSD` because `"EURUSD" in "EURUSD_CHF_CROSS_TRADES.CSV"` evaluates to True. This means **cross-pair trades leak into single-instrument zone registries**. |
+| **Trust level** | **DANGEROUS** — filename-based instrument fallback can silently contaminate per-instrument zone registries with cross-pair or similarly-named instrument data. |
+
+#### `cluster_zones(X, n_clusters=None)` (Line 90)
+
+| Aspect | Detail |
+|---|---|
+| **Human purpose** | Runs K-Means clustering on the profitable feature matrix. If `n_clusters` not provided, calculates it via a heuristic: at least 2, at most 15, equal to `n_samples // 5`. |
+| **Invocation sources** | Called from `main()` line 187. |
+| **Downstream calls** | `KMeans(n_clusters=..., random_state=42, n_init=10).fit(X)` from `sklearn.cluster`. |
+| **Runtime flow** | 1. If `n_clusters is None`: compute `n_clusters = max(2, min(15, n_samples // 5))`. 2. Print number of samples and clusters. 3. Instantiate `KMeans` with `random_state=42` (fixed seed → deterministic). 4. `fit(X)`. 5. Return fitted `KMeans` object. |
+| **Inputs** | `X`: `np.ndarray` shape `(n_samples, 38)`. `n_clusters`: `Optional[int]` — if None, auto-computed. |
+| **Outputs** | Fitted `sklearn.cluster.KMeans` object. |
+| **State mutations** | None (no side effects beyond `fit` which is local). |
+| **Side effects** | Prints diagnostic line. |
+| **File writes** | None. |
+| **Network/API** | None. |
+| **Subprocess** | None. |
+| **Fallbacks** | `n_clusters=None` → heuristic computes from data. |
+| **Hidden defaults** | `random_state=42` (deterministic), `n_init=10`. The heuristic `n_samples // 5` means a dataset with 7 samples gives `max(2, min(15, 1)) = 2` clusters — which is fine, but a dataset with 3 samples would give `max(2, min(15, 0)) = 2` clusters, meaning K-Means would try to partition 3 points into 2 clusters (degenerate but not an error). |
+| **Failure modes** | 1. `n_clusters > n_samples` → sklearn raises `ValueError` (unhandled, crashes script). Happens if `n_samples < 5` because `n_samples // 5 = 0` → `max(2, 0) = 2` but `n_samples` could be 1. However, `main()` line 180 exits early if `X.shape[0] < 10`, so this is guarded in practice. But if someone calls `cluster_zones(X, n_clusters=20)` directly, it would crash on small datasets. |
+| **Determinism** | **Deterministic** — `random_state=42` ensures same centroids on same data + same sklearn version. |
+| **Corruption risks** | None (in-memory computation). |
+| **Trust level** | **CANONICAL** — standard sklearn K-Means, fixed seed, well-bounded heuristic. |
+
+#### `build_zones(kmeans, X, min_points=5)` (Line 101)
+
+| Aspect | Detail |
+|---|---|
+| **Human purpose** | Converts the K-Means result into the zone registry JSON schema. For each cluster with at least `min_points` members, it computes the center (mu), per-feature standard deviation (sigma), equal weights within the cluster, a fixed threshold of 0.5, and the cluster's point count as its weight. |
+| **Invocation sources** | Called from `main()` line 188. |
+| **Downstream calls** | None — pure Python/numpy. |
+| **Runtime flow** | 1. Iterate over `range(kmeans.n_clusters)`. 2. Boolean-index `X[labels == i]` to get points in cluster `i`. 3. If count < `min_points`, **skip cluster entirely** (cluster is dropped, not merged). 4. Get `kmeans.cluster_centers_[i]` as `mu`. 5. Compute `np.std(cluster_points, axis=0)` as `sigma`. 6. Create zone dict: `mu`, `sigma`, `weights` (uniform `1.0 / len(cluster_points)` per feature), `"threshold": 0.5`, `"weight": len(cluster_points)`. 7. Append. 8. Return list of zones. |
+| **Inputs** | `kmeans`: fitted `KMeans` object. `X`: `np.ndarray`. `min_points`: `int`, default 5. |
+| **Outputs** | `List[dict]` — zone registry entries. |
+| **State mutations** | None. |
+| **Side effects** | None. |
+| **File writes** | None. |
+| **Network/API** | None. |
+| **Subprocess** | None. |
+| **Fallbacks** | Clusters with insufficient points are silently dropped (no warning). |
+| **Hidden defaults** | `min_points=5`. `"threshold": 0.5` is a **hardcoded magic number** — this threshold is sent downstream to the zone gate engine. There is no data-driven calibration of this value. |
+| **Failure modes** | 1. If ALL clusters are dropped due to `min_points`, returns empty list. Caller (`main()`) does NOT check for empty zones before calling `save_zones()`. An empty zone list would be written to disk as `{"zones": [], "schema_version": "v2", "migrated": true}`. This would cause the zone gate engine to **bypass** (no zones to match against), meaning ALL trades would pass or fail depending on the gate logic. **Silent bypass.** |
+| **Determinism** | Deterministic — same kmeans + same X → same zones. |
+| **Corruption risks** | The `"threshold": 0.5` is embedded in every zone and never calibrated. If the zone gate engine uses this threshold for distance-based rejection, a fixed 0.5 means it's equally strict regardless of market regime — **replay/live drift can occur** as market regimes shift and the 0.5 threshold becomes inappropriate. Additionally, `"weights"` is set to uniform `1.0 / len(cluster_points)` for each feature dimension independently (same vector repeated), which means **weight information is structurally meaningless** — it's identical for all features within a cluster. |
+| **Trust level** | **PARTIAL** — simple logic, but the fixed 0.5 threshold and silent cluster dropping are liabilities. |
+
+#### `save_zones(zones, output_path="models/zone_registry.json")` (Line 120)
+
+| Aspect | Detail |
+|---|---|
+| **Human purpose** | Serializes the zone list to JSON and writes to disk, wrapped in a versioned container with `schema_version` and `migrated` flags. |
+| **Invocation sources** | Called from `main()` line 189. |
+| **Downstream calls** | `json.dump(...)`, `open(...)`. |
+| **Runtime flow** | 1. Open file at `output_path` with `encoding="utf-8"`. 2. `json.dump` with `indent=2`. 3. Print success message. |
+| **Inputs** | `zones`: `List[dict]` — zone entries. `output_path`: `str`. |
+| **Outputs** | None returns. Side effect: writes JSON file to disk. |
+| **State mutations** | None. |
+| **Side effects** | Prints number of zones saved. |
+| **File writes** | **YES** — writes `output_path` (default `models/zone_registry.json`). |
+| **Network/API** | None. |
+| **Subprocess** | None. |
+| **Fallbacks** | `os.makedirs` call is in `main()` before calling this function, so directory exists. |
+| **Hidden defaults** | `schema_version: "v2"`, `migrated: true` are hardcoded constants — they do NOT come from any central version tracking. |
+| **Failure modes** | 1. Write permission error → unhandled `PermissionError` crashes script. 2. Disk full → same. |
+| **Determinism** | Deterministic for same input. |
+| **Corruption risks** | If `zones` is empty, writes `{"zones": [], "schema_version": "v2", "migrated": true}` — a valid JSON file with zero zones. Downstream zone gate would have no zones to match. |
+| **Trust level** | **CANONICAL** — standard file write. |
+
+#### `main()` (Line 129)
+
+| Aspect | Detail |
+|---|---|
+| **Human purpose** | CLI entry point: parses arguments, orchestrates the full pipeline from CSV scanning → clustering → zone writing. Also computes a "total training samples" metric and warns if <50 (which triggers auto-bypass in zone gate). |
+| **Invocation sources** | CLI invocation via `if __name__ == "__main__": main()`. |
+| **Downstream calls** | `load_trade_csvs`, `collect_profitable_vectors`, `cluster_zones`, `build_zones`, `save_zones`. |
+| **Runtime flow** | 1. Parse `--instrument`, `--output`, `--min-points`, `--results-dir`. 2. Resolve output path: if `--output` given → use it; else if `--instrument` given → `models/bitnet/<INSTR>_M15/zone_registry.json`; else → `models/zone_registry.json`. 3. `os.makedirs` on output dir. 4. `load_trade_csvs(args.results_dir)`. 5. `collect_profitable_vectors(trade_files, instrument=args.instrument)` — if ValueError, print and `sys.exit(1)`. 6. Print collected stats. 7. If `X.shape[0] < 10` → print warning and `return` (does NOT exit 1, just returns). 8. `cluster_zones(X)`. 9. `build_zones(kmeans, X, min_points=args.min_points)`. 10. `save_zones(zones, output_path)`. 11. Compute total samples. 12. If total_samples < 50 → print bypass warning. |
+| **Inputs** | CLI args: `--instrument`, `--output`, `--min-points` (default 5), `--results-dir` (default "results"). |
+| **Outputs** | JSON file written to resolved output path. |
+| **State mutations** | None. |
+| **Side effects** | Prints diagnostics. Creates directories via `os.makedirs`. |
+| **File writes** | Writes zone registry JSON. |
+| **Network/API** | None. |
+| **Subprocess** | None. |
+| **Fallbacks** | 1. If `collect_profitable_vectors` raises ValueError (no data) → print error, `sys.exit(1)` — clean fail. 2. If X.shape[0] < 10 → print warning and **return without writing anything** — no zone file is written, but pre-existing file is NOT deleted. This means a STALE zone registry could persist on disk from a previous run. **This is a corruption risk: a partial dataset produces `return` instead of error exit, leaving old data untouched.** |
+| **Hidden defaults** | `results_dir="results"`, `min_points=5`, `output=None`. |
+| **Failure modes** | 1. **Stale file risk**: if you previously ran with large dataset (generated zone_registry.json) and then run with insufficient data (<10 samples), the script prints a warning and **returns without touching the old file**. The old zone_registry.json remains on disk. If someone then deploys thinking the build succeeded (they may miss the warning in log noise), **stale clusters guide live trading decisions**. |
+| **Determinism** | Deterministic given same inputs and filesystem state. |
+| **Corruption risks** | **YES** — stale zone file persistence: line 181-185: if `X.shape[0] < 10`, the script prints a warning and returns without deleting or even checking the existing output file. The zone gate downstream would load the OLD registry. |
+| **Trust level** | **PARTIAL** — stale-file risk and incomplete error handling on low-sample datasets. |
+
+---
+
+### `build_zone_registry_forced.py`
+
+#### `load_trade_csvs(root_dir="results")` (Line 16)
+
+| Aspect | Detail |
+|---|---|
+| **Human purpose** | Identical to the version in `from_trades.py` — glob walk for `*_trades.csv`. |
+| **Invocation sources** | `main()` line 91. |
+| **Downstream calls** | Same `glob.glob`. |
+| **Runtime flow** | Same as `from_trades` version. |
+| **Inputs** | `root_dir`: str, default `"results"`. |
+| **Outputs** | `List[str]`. |
+| **State mutations** | None. |
+| **Side effects** | None. |
+| **File writes** | None. |
+| **Network/API** | None. |
+| **Subprocess** | None. |
+| **Fallbacks** | Empty list — no exception. |
+| **Hidden defaults** | Same `root_dir="results"`. |
+| **Failure modes** | Same — silent empty list, downstream fails with ValueError. |
+| **Determinism** | Deterministic. |
+| **Corruption risks** | None directly. |
+| **Trust level** | **CANONICAL** — identical to `from_trades` version. |
+
+#### `collect_profitable_vectors(trade_csv_paths)` (Line 20)
+
+| Aspect | Detail |
+|---|---|
+| **Human purpose** | Reads all trade CSVs, keeps `pnl_rr_net > 0` rows, checks canonical features are present, stacks into matrix. **Notable difference from `from_trades` version: NO instrument parameter and NO instrument filtering.** |
+| **Invocation sources** | `main()` line 94. |
+| **Downstream calls** | `pd.read_csv`, `np.vstack`. |
+| **Runtime flow** | Same iteration as `from_trades` version but: 1. No instrument column check or filtering. 2. Always global (all instruments combined). 3. No filename-based fallback. 4. Metadata does NOT include `"instrument"` key. |
+| **Inputs** | `trade_csv_paths`: `List[str]`. |
+| **Outputs** | `(X, metadata)`. |
+| **State mutations** | None. |
+| **Side effects** | Prints warnings for missing columns. |
+| **File writes** | None. |
+| **Network/API** | None. |
+| **Subprocess** | None. |
+| **Fallbacks** | Same as `from_trades` — skip files with missing PNL or missing canonical features. |
+| **Hidden defaults** | Same `PNL_COL = "pnl_rr_net"`. |
+| **Failure modes** | Same: all-fail → `ValueError`, CSV parse crash unhandled. |
+| **Determinism** | Deterministic. |
+| **Corruption risks** | **LOWER than `from_trades`** because there's NO filename-based instrument fallback — but this function also does NOT verify the `instrument` column exists or that data is single-instrument. If the user intends global registry, this is correct. |
+| **Trust level** | **CANONICAL** — simpler than `from_trades` because it lacks the dangerous fallback. BUT only if the intent is truly global registry. |
+
+#### `cluster_zones_forced(X, n_clusters=3)` (Line 50)
+
+| Aspect | Detail |
+|---|---|
+| **Human purpose** | K-Means with a **forced** cluster count. No heuristic. No auto-detection. |
+| **Invocation sources** | `main()` line 103. |
+| **Downstream calls** | `KMeans(n_clusters=n_clusters, random_state=42, n_init=10).fit(X)`. |
+| **Runtime flow** | 1. Print clustering info. 2. Instantiate KMeans with given `n_clusters`. 3. `fit(X)`. 4. Return fitted model. |
+| **Inputs** | `X`: `np.ndarray`. `n_clusters`: `int`, default 3. |
+| **Outputs** | Fitted `KMeans`. |
+| **State mutations** | None. |
+| **Side effects** | Print diagnostic. |
+| **File writes** | None. |
+| **Network/API** | None. |
+| **Subprocess** | None. |
+| **Fallbacks** | None. |
+| **Hidden defaults** | `n_clusters=3`, `random_state=42`, `n_init=10`. |
+| **Failure modes** | If `n_clusters > X.shape[0]` → sklearn raises ValueError (unhandled). `main()` line 99-100 checks `X.shape[0] < args.n_clusters` and exits, so this is guarded at CLI level. But if called directly, no guard. |
+| **Determinism** | Deterministic (fixed seed). |
+| **Corruption risks** | None. |
+| **Trust level** | **CANONICAL** — simple, deterministic, no magic. |
+
+#### `build_zones(kmeans, X, min_points=3)` (Line 56)
+
+| Aspect | Detail |
+|---|---|
+| **Human purpose** | Same as `from_trades` version but with **default `min_points=3`** (vs 5 in the other script). Also prints a diagnostic when skipping a cluster. |
+| **Invocation sources** | `main()` line 104. |
+| **Downstream calls** | None — pure numpy. |
+| **Runtime flow** | Same iteration logic as `from_trades.build_zones`. Difference: 1. Default `min_points=3`. 2. **Prints a message** when a cluster is skipped (the `from_trades` version silently drops clusters). |
+| **Inputs** | `kmeans`, `X`, `min_points` default 3. |
+| **Outputs** | `List[dict]`. |
+| **State mutations** | None. |
+| **Side effects** | **Prints skip message** — the `from_trades` version does NOT print this, making silent cluster dropping worse. |
+| **File writes** | None. |
+| **Network/API** | None. |
+| **Subprocess** | None. |
+| **Fallbacks** | Silently drops clusters below `min_points` (but at least prints a message). |
+| **Hidden defaults** | `min_points=3` (lower than `from_trades`'s 5). `"threshold": 0.5` (same hardcoded value). `"weights": [1.0 / len(cluster_points)] * len(center)` (same uniform weights). |
+| **Failure modes** | Same: empty zone list possible, written to disk. |
+| **Determinism** | Deterministic. |
+| **Corruption risks** | Same threshold/weight issues as `from_trades`. The lower `min_points=3` makes it more likely to accept small clusters, which may be noise rather than signal. |
+| **Trust level** | **PARTIAL** — better logging than `from_trades` (prints skip), but same threshold/weight concerns. |
+
+#### `save_zones(zones, output_path="models/zone_registry.json")` (Line 75)
+
+| Aspect | Detail |
+|---|---|
+| **Human purpose** | Same as `from_trades.save_zones`. Writes zone registry JSON. |
+| **Invocation sources** | `main()` line 109. |
+| **Downstream calls** | `json.dump`, `open`. |
+| **Runtime flow** | Same serialization. **Difference**: NO `encoding="utf-8"` parameter on `open()`. On Windows, this means it uses system default encoding (likely cp1252), which could cause encoding issues if any feature values contain non-ASCII characters. The `from_trades` version explicitly uses `encoding="utf-8"`. |
+| **Inputs** | `zones`, `output_path`. |
+| **Outputs** | Writes file. |
+| **State mutations** | None. |
+| **Side effects** | Print diagnostic. |
+| **File writes** | **YES** — overwrites output path. |
+| **Network/API** | None. |
+| **Subprocess** | None. |
+| **Fallbacks** | None. |
+| **Hidden defaults** | `schema_version: "v2"`, `migrated: true`. |
+| **Failure modes** | **Encoding mismatch on Windows**: On a non-UTF-8 system locale, writing to this file without `encoding="utf-8"` could cause `UnicodeEncodeError` or silently mangle characters. The `from_trades` version correctly uses `encoding="utf-8"`. This is a bug. |
+| **Determinism** | Deterministic. |
+| **Corruption risks** | **Encoding corruption on Windows** — missing `encoding="utf-8"` parameter. If any zone data (feature names, metadata) contains non-ASCII characters, the write could fail or produce garbage bytes. |
+| **Trust level** | **DANGEROUS** — missing UTF-8 encoding on Windows causes silent encoding corruption. |
+
+#### `main()` (Line 84)
+
+| Aspect | Detail |
+|---|---|
+| **Human purpose** | CLI entry point for forced clustering. Hardcoded to `results/` directory. Always writes to global zone_registry.json. |
+| **Invocation sources** | CLI: `python build_zone_registry_forced.py --n-clusters 5 --min-points 4`. |
+| **Downstream calls** | `load_trade_csvs`, `collect_profitable_vectors`, `cluster_zones_forced`, `build_zones`, `save_zones`. |
+| **Runtime flow** | 1. Parse `--n-clusters` (default 3), `--min-points` (default 3), `--output` (default `models/zone_registry.json`). 2. `load_trade_csvs("results")` — hardcoded to "results", NO `--results-dir` argument. 3. `collect_profitable_vectors(trade_files)` — NO instrument filter, always global. 4. Print diagnostics. 5. If `X.shape[0] < args.min_points * 2`: print warning (but **continues**). 6. If `X.shape[0] < args.n_clusters`: print error and **return** (no file written, but pre-existing file NOT deleted — same stale-file risk as `from_trades`). 7. `cluster_zones_forced(X, n_clusters)`. 8. `build_zones(kmeans, X, min_points)`. 9. If `len(zones) < 2`: print warning (continues). 10. `save_zones(zones, args.output)`. |
+| **Inputs** | CLI args. |
+| **Outputs** | JSON zone registry. |
+| **State mutations** | None. |
+| **Side effects** | Prints diagnostics. Warning for low samples but **continues anyway** (unlike `from_trades` which exits). |
+| **File writes** | Yes — overwrites `args.output` (default `models/zone_registry.json`). |
+| **Network/API** | None. |
+| **Subprocess** | None. |
+| **Fallbacks** | 1. If `X.shape[0] < args.n_clusters`: print error, return without writing, stale file remains. 2. If `len(zones) < 2`: prints warning but **writes file anyway** — meaning a registry with 1 or 0 zones is written to disk. This is a significantly different behavior from `from_trades` which only writes if it had enough data to create zones. |
+| **Hidden defaults** | `results_dir="results"` hardcoded (NO CLI override), `n_clusters=3`, `min_points=3`, `output="models/zone_registry.json"`. |
+| **Failure modes** | 1. **Stale file risk** — same as `from_trades`: insufficient clusters → return without deleting existing file. 2. **Single-zone registry** — `len(zones) < 2` only prints a warning but writes the file. A single zone means the zone gate has only one "profile" to match against, which is effectively a degenerate classifier. 3. **Hardcoded results dir** — no `--results-dir` flag means users cannot point to a different results directory. |
+| **Determinism** | Deterministic given same inputs. |
+| **Corruption risks** | **Writing degenerate zone registry** — 1-zone or 0-zone registries are written to disk without full validation. Downstream zone gate loads this and may exhibit degenerate behavior (matching everything to one cluster or matching nothing). |
+| **Trust level** | **DANGEROUS** — writes degenerate zones, missing UTF-8 encoding, stale-file risk, hardcoded results path. |
+
+---
+
+## 5. TRUST CLASSIFICATION SUMMARY
+
+| Component | Trust Level | Source Proof |
+|---|---|---|
+| `from_trades.load_trade_csvs` | **CANONICAL** | Line 16-20: simple `glob.glob` wrapper, no mutations |
+| `from_trades.collect_profitable_vectors` | **DANGEROUS** | Line 46-53: `instr_upper not in basename` — filename substring match contaminates per-instrument registries |
+| `from_trades.cluster_zones` | **CANONICAL** | Line 90-99: standard sklearn KMeans with fixed seed, bounded heuristic |
+| `from_trades.build_zones` | **PARTIAL** | Line 101-118: silent cluster dropping (line 107-108 no print), fixed 0.5 threshold, meaningless uniform weights |
+| `from_trades.save_zones` | **CANONICAL** | Line 120-127: standard file write with correct UTF-8 encoding |
+| `from_trades.main` | **PARTIAL** | Line 180-185: stale-file persistence on insufficient data — `return` instead of error exit |
+| `forced.load_trade_csvs` | **CANONICAL** | Same as above |
+| `forced.collect_profitable_vectors` | **CANONICAL** | Line 20-48: simpler, no instrument fallback |
+| `forced.cluster_zones_forced` | **CANONICAL** | Line 50-54: deterministic, no heuristic |
+| `forced.build_zones` | **PARTIAL** | Line 56-73: better logging (prints skip), but same threshold/weight issues |
+| `forced.save_zones` | **DANGEROUS** | Line 75-82: missing `encoding="utf-8"` → encoding corruption on Windows |
+| `forced.main` | **DANGEROUS** | Line 84-112: writes degenerate 1-zone registries, stale-file risk, hardcoded results dir |
+
+---
+
+## 6. FAIL-FAST / FALLBACK AUDIT
+
+| Risk | File | Details |
+|---|---|---|
+| **Silent fallback** | `from_trades` line 46-53 | When `--instrument` given but CSV lacks `instrument` column: filename substring match — `"EURUSD" in "EURUSD_CHF_trades.csv"` gives True. Cross-instrument contamination. |
+| **Silent cluster drop** | `from_trades` line 107-108 | Clusters below `min_points` are dropped with NO print/warning. |
+| **Empty zone write** | both | If all clusters dropped, empty `[]` zones written to JSON. No validation. |
+| **Stale file persistence** | both `main()` | On insufficient data, script returns without deleting existing zone_registry.json. Old file remains. |
+| **Hardcoded 0.5 threshold** | both `build_zones()` | A magic number embedded in every zone, never calibrated to market regime. |
+| **Uniform weights** | both `build_zones()` | `"weights": [1.0 / len(cluster_points)] * len(center)` — every feature dimension gets the same weight within a cluster, making the `weights` array structurally meaningless. |
+| **Missing UTF-8 encoding** | `forced.save_zones()` line 76 | `open(output_path, "w")` without `encoding="utf-8"` — on Windows, uses cp1252 by default. |
+| **Hardcoded results dir** | `forced.main()` line 91 | `load_trade_csvs("results")` — no CLI flag to override. |
+| **Degenerate zone count** | `forced.main()` line 106-107 | `len(zones) < 2` prints warning but **writes file anyway**. |
+| **Empty vector ValueError** | both `collect_profitable_vectors()` | Caught by `main()` → `sys.exit(1)` — clean failure, but error message does NOT suggest recovery steps. |
+| **CSV parse crash** | both `collect_profitable_vectors()` | `pd.read_csv(path)` exception propagates unhandled — corrupt CSV crashes the entire script. |
+
+---
+
+## 7. KEY RUNTIME INSIGHT
+
+## What ACTUALLY happens when you run `build_zone_registry_from_trades.py --instrument EURUSD`?
+
+1. It globs `results/**/*_trades.csv` — every trade CSV under the results directory.
+2. For each CSV, it opens the file. If the file has an `instrument` column, it filters rows where `instrument == "EURUSD"`. **But if the CSV lacks an `instrument` column**, it falls back to checking if `"EURUSD"` appears anywhere in the filename. A file named `EURUSD_GBP_cross_trades.csv` passes this check, injecting GBPUSD trades into the EURUSD zone registry.
+3. After filtering, it keeps only rows where `pnl_rr_net > 0`.
+4. It verifies that **all 38 canonical features exist as columns**. If even one is missing, the entire file is skipped.
+5. It stacks surviving rows into a 38-column NumPy matrix.
+6. If fewer than 10 profitable trades survive: **script prints a warning and returns without writing any file**, but the previous zone registry (from a prior successful run) remains on disk untouched.
+7. If ≥10 trades: K-Means runs with `n_clusters = max(2, min(15, n // 5))` — for example, 50 trades → 10 clusters.
+8. For each cluster with ≥5 members, it records the centroid (mu), standard deviation per feature (sigma), and cluster weight (point count). Every zone gets `threshold: 0.5` hardcoded.
+9. The output is written to `models/bitnet/EURUSD_M15/zone_registry.json`.
+
+## What ACTUALLY happens when you run `build_zone_registry_forced.py --n-clusters 5`?
+
+1. It globs the same `results/**/*_trades.csv`. **No instrument filtering.**
+2. It collects all profitable trades from all instruments into one global pool.
+3. It forces exactly 5 clusters via K-Means.
+4. Clusters with ≥3 points are kept (lower threshold than the 5 in `from_trades`).
+5. Zones with `threshold: 0.5` and uniform weights are written.
+6. If the resulting zone count is 0 or 1, it writes the file anyway — just a warning.
+7. **On Windows, the JSON file may have encoding issues** because `open()` lacks `encoding="utf-8"`.
+
+**The forced script is substantially more dangerous** than the heuristic script due to missing encoding, hardcoded results dir, degenerate zone writes, and the stale-file risk shared by both.

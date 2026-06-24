@@ -1,0 +1,840 @@
+# COMPLETE RUNTIME EXECUTION COGNITION ANALYSIS
+
+## Domain: `src/portfolio`, `src/regime`, `src/replay`, `results/`
+
+---
+
+# 1. src/portfolio — Portfolio Capital Allocator
+
+## FILE: allocator.py
+
+### File Purpose
+Orchestrates per-trade allocation decisions by combining three sub-components (exposure tracker, correlation engine, capital policy) into a single gate that decides whether to accept or reject a trade signal and how much risk to assign.
+
+### Runtime Role
+Sits between the signal generation layer (engine runners, strategy outputs) and the final risk gate (UltronRiskGate). Called when a signal has been produced but before trade execution. Acts as a portfolio-level risk gate: prevents over-concentration, enforces diversification, caps total deployed risk.
+
+**# human execution explanation**  
+When a trading engine produces a signal dict (symbol, confidence, optional rr/regime), the caller invokes `allocate(signal)`. PortfolioAllocator first checks if total portfolio risk has already hit the max cap — if so, REJECT immediately. Then it computes max correlation between the new symbol and all currently open positions. Then it calls `CapitalPolicy.compute_risk()` with current exposure, max correlation, and the signal's confidence to produce a risk fraction. If adding that risk would breach the portfolio cap, it trims. If trimmed risk ≤ 0, REJECT. Otherwise ALLOCATE with the risk amount.
+
+### Classes
+
+| Class | Purpose | Ownership | Runtime Responsibility |
+|-------|---------|-----------|----------------------|
+| `PortfolioAllocator` | Orchestration layer combining ExposureTracker, CorrelationEngine, CapitalPolicy | Portfolio subsystem | On every incoming trade signal, decide ALLOCATE/REJECT. Track opened/closed positions by delegating to ExposureTracker. |
+
+### Methods / Functions
+
+#### `__init__(self, exposure_tracker, correlation_engine, capital_policy)`
+- **Human purpose**: Wire together the three sub-components. If not provided, create fresh defaults.
+- **Invocation**: Called once at system startup or when a PortfolioAllocator is constructed.
+- **Inputs**: Optional pre-configured ExposureTracker, CorrelationEngine, CapitalPolicy instances.
+- **Outputs**: None. Mutates `self.tracker`, `self.corr`, `self.policy`.
+- **State mutations**: Assigns instance attributes.
+- **Hidden defaults**: `ExposureTracker()`, `CorrelationEngine()`, `CapitalPolicy()` — all created with default parameter values (2% max portfolio risk, 1% max per trade, 0.5% base risk, etc.)
+- **Trust level**: CANONICAL
+
+#### `allocate(self, signal: dict) -> dict`
+- **Human purpose**: Gate decision: should we take this trade and how much capital to risk?
+- **Invocation sources**: Engine runners, strategy orchestrator, any code path producing a trade signal.
+- **Downstream calls**: `self.tracker.total_risk()`, `self.policy.portfolio_at_capacity()`, `self.tracker.positions()`, `self.corr.max_correlation_with_existing()`, `self.policy.compute_risk()`.
+- **Inputs**: `signal` dict with at minimum `'symbol': str`, `'confidence': float 0-1`. Optional: `'rr'`, `'regime'` etc.
+- **Outputs**: `{"action": "ALLOCATE"|"REJECT", "risk": float, "reason": str}`.
+- **State mutations**: None (pure query + decision).
+- **Side effects**: Logs at INFO level.
+- **Fallbacks**: If correlation yields nothing (empty existing positions), max_corr = 0.0.
+- **Failure modes**:
+  - Missing `'symbol'` in signal → defaults to "UNKNOWN".
+  - Missing `'confidence'` → CapitalPolicy reads it as 0.0 (via `.get("confidence", 0.0)`).
+  - **Silent**: `CapitalPolicy.compute_risk()` uses `signal.get("confidence", 0.0)` — if signal has no confidence key, it silently defaults to 0.0, never getting the boost factor. Trade may be incorrectly rejected or under-allocated.
+- **Determinism**: Purely deterministic. Same inputs → same output.
+- **Corruption risks**: None in isolation. But if `capital_policy` is shared across threads without locking, concurrent allocation calls could race on `self.policy` reads. However, CapitalPolicy has no instance state mutated during compute_risk(), so this is safe.
+- **Trust level**: CANONICAL
+
+#### `open_position(self, position: dict) -> None`
+- **Human purpose**: Register a newly opened trade in the tracker so future allocations see it as existing exposure.
+- **Invocation sources**: Called by trade execution layer after a trade is actually opened.
+- **Downstream calls**: `self.tracker.add_position(position)`.
+- **Inputs**: Position dict with `trade_id`, `symbol`, `risk`.
+- **State mutations**: Adds position to ExposureTracker's internal `_positions` dict.
+- **Failure modes**: Raises `ValueError` if position has no `trade_id`.
+- **Trust level**: CANONICAL
+
+#### `close_position(self, trade_id: str) -> None`
+- **Human purpose**: Remove a closed trade from the tracker, freeing up risk capacity.
+- **Invocation sources**: Trade execution layer after trade closes.
+- **Downstream calls**: `self.tracker.remove_position(trade_id)`.
+- **Inputs**: Trade ID string.
+- **Outputs**: None (discards the removed position dict).
+- **Trust level**: CANONICAL
+
+#### `current_exposure(self) -> float`
+- **Human purpose**: Return total deployed risk fraction.
+- **Trust level**: CANONICAL
+
+#### `exposure_by_symbol(self) -> dict`
+- **Human purpose**: Return risk breakdown per symbol.
+- **Trust level**: CANONICAL
+
+---
+
+## FILE: capital_policy.py
+
+### File Purpose
+Deterministic risk sizing engine. Computes per-trade risk fraction as a percentage of capital using rule-based multipliers. No randomness, no LLM.
+
+### Runtime Role
+Called by PortfolioAllocator.allocate() for every incoming signal. Produces the raw risk amount before capping.
+
+### Classes
+
+| Class | Purpose | Ownership | Runtime Responsibility |
+|-------|---------|-----------|----------------------|
+| `CapitalPolicy` | Risk sizing rule engine | Portfolio subsystem | Compute risk fraction from signal confidence, current portfolio exposure, and max correlation with existing positions. |
+
+### Methods
+
+#### `__init__(self, max_portfolio_risk, max_per_trade, base_risk, ...)`
+- **Human purpose**: Configure risk parameters. All default values are conservative.
+- **Hidden defaults**: 
+  - `max_portfolio_risk = 0.02` (2% of capital total)
+  - `max_per_trade = 0.01` (1% per trade hard cap)
+  - `base_risk = 0.005` (0.5% starting point)
+  - `high_exposure_threshold = 0.015` (>1.5% deployed → halve risk)
+  - `high_exposure_factor = 0.5`
+  - `high_correlation_threshold = 0.7`
+  - `high_correlation_factor = 0.6`
+  - `confidence_boost_threshold = 0.75`
+  - `confidence_boost_factor = 1.3`
+- **Trust level**: CANONICAL
+
+#### `compute_risk(self, signal, current_exposure, max_correlation) -> float`
+- **Human purpose**: Apply three multiplicative adjustments to base_risk sequentially, then hard-cap at max_per_trade.
+- **Invocation sources**: PortfolioAllocator.allocate().
+- **Inputs**: `signal` (dict with 'confidence'), `current_exposure` (float 0-1), `max_correlation` (float 0-1).
+- **Outputs**: Risk fraction (e.g. 0.005 = 0.5%).
+- **Runtime flow**: 
+  1. Start with base_risk (0.005 = 0.5%).
+  2. If current_exposure > 1.5% → multiply by 0.5.
+  3. If max_correlation > 0.7 → multiply by 0.6.
+  4. If confidence > 0.75 → multiply by 1.3.
+  5. Cap at max_per_trade (1%).
+  6. Return.
+- **Hidden defaults**: If signal has no 'confidence' key → `float(signal.get("confidence", 0.0))` → confidence = 0.0 → no boost.
+- **Determinism**: Fully deterministic.
+- **Failure modes**: None. Non-positive risk cannot occur because base_risk > 0 and multipliers ≥ 0.5 × 0.6 = 0.3, so min risk before cap = 0.005 × 0.3 = 0.0015.
+- **Trust level**: CANONICAL
+
+#### `portfolio_at_capacity(self, current_exposure: float) -> bool`
+- **Human purpose**: Quick check if total deployed risk has reached the portfolio cap.
+- **Trust level**: CANONICAL
+
+---
+
+## FILE: correlation_engine.py
+
+### File Purpose
+Estimate correlation between symbol pairs using static, group-based heuristics. Phase 1 placeholder — no real price-data correlation.
+
+### Runtime Role
+Called by PortfolioAllocator during `allocate()` to determine if a new trade symbol is correlated with existing positions.
+
+### Classes
+
+| Class | Purpose | Ownership | Runtime Responsibility |
+|-------|---------|-----------|----------------------|
+| `CorrelationEngine` | Heuristic correlation estimator | Portfolio subsystem | Given two symbols, return a static correlation coefficient in [0,1]. |
+
+### Methods
+
+#### `correlation(self, sym1: str, sym2: str) -> float`
+- **Human purpose**: Return estimated correlation between two symbols.
+- **Invocation sources**: `max_correlation_with_existing()`.
+- **Runtime flow**:
+  1. If either symbol is None/empty → 0.0.
+  2. If sym1 == sym2 → 1.0.
+  3. Uppercase both → pass to `_heuristic_correlation()`.
+- **Trust level**: CANONICAL (but placeholder)
+
+#### `max_correlation_with_existing(self, symbol, existing_symbols) -> float`
+- **Human purpose**: Find the highest correlation between a candidate symbol and any currently open position.
+- **Invocation sources**: PortfolioAllocator.allocate().
+- **Inputs**: Symbol string, list of existing symbol strings.
+- **Outputs**: float in [0,1].
+- **Fallbacks**: Returns 0.0 if existing_symbols is empty.
+- **Trust level**: CANONICAL (but placeholder)
+
+#### `_heuristic_correlation(self, s1, s2) -> float`
+- **Human purpose**: Hardcoded asset-class group matching.
+- **Runtime flow**:
+  - Same 3-letter prefix (e.g., EURUSD vs EURGBP) → 0.8.
+  - Both in `_CRYPTO_SYMBOLS` → 0.8. Crypto set: BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT, ADAUSDT.
+  - Both in `_FX_MAJORS` → 0.8. Major FX: EURUSD, GBPUSD, AUDUSD, NZDUSD.
+  - Both in `_USD_SHORTS` → 0.8. USD pairs: USDJPY, USDCHF, USDCAD.
+  - FX major + USD short → 0.4 (related).
+  - Otherwise → 0.2.
+- **Hidden danger**: This is purely static. It does not reflect actual real-time market correlation. In a crisis, all assets may correlate > 0.9, but this engine will still report 0.2 for e.g. BTCUSDT vs EURUSD. **This is the most dangerous simplification in the portfolio module.** The docstring says "Phase 2: plug in real rolling correlation" — this is not implemented.
+- **Corruption risk**: Cannot cause data corruption, but can cause incorrect allocation decisions (accepting trades that are actually heavily correlated, leading to concentrated drawdown).
+- **Trust level**: PARTIAL (placeholder Phase 1 — needs upgrade to live correlation data)
+
+---
+
+## FILE: exposure_tracker.py
+
+### File Purpose
+In-memory registry of currently open positions with their risk allocations.
+
+### Runtime Role
+Holds the live state of all open trades. Queried by PortfolioAllocator to compute current exposure; mutated by open_position()/close_position() calls.
+
+### Classes
+
+| Class | Purpose | Ownership | Runtime Responsibility |
+|-------|---------|-----------|----------------------|
+| `ExposureTracker` | Open position registry | Portfolio subsystem | Store, retrieve, and aggregate open positions. Provide total risk and per-symbol exposure. |
+
+### Methods
+
+#### `add_position(self, position: dict) -> None`
+- **Human purpose**: Register a newly opened trade.
+- **Inputs**: Position dict with `trade_id`, `symbol`, `risk`.
+- **State mutations**: Stores a copy of the dict in `self._positions[trade_id]`.
+- **Failure modes**: Raises `ValueError` if no `trade_id`.
+- **Trust level**: CANONICAL
+
+#### `remove_position(self, trade_id: str) -> Optional[dict]`
+- **Human purpose**: Remove a closed trade from the registry.
+- **Trust level**: CANONICAL
+
+#### `total_risk(self) -> float`
+- **Human purpose**: Sum of all open position risks.
+- **Trust level**: CANONICAL
+
+#### `exposure_by_symbol(self) -> dict`
+- **Human purpose**: Aggregate risk by symbol.
+- **Trust level**: CANONICAL
+
+#### `positions(self) -> list`
+- **Human purpose**: Return copies of all open positions.
+- **Trust level**: CANONICAL
+
+#### `clear(self) -> None`
+- **Human purpose**: Reset all positions (e.g., session end or emergency).
+- **Trust level**: CANONICAL
+
+### Trust Classification for src/portfolio: **LIVE** (all 4 files are actively wired into execution flow)
+
+### Fail-Fast / Fallback Audit for src/portfolio
+| Issue | Location | Runtime Impact |
+|-------|----------|---------------|
+| **Missing confidence defaults to 0** | `capital_policy.py:96` — `signal.get("confidence", 0.0)` | Trade with no confidence field never gets boost → under-allocated. Not a crash, but silent. |
+| **Static correlation only** | `correlation_engine.py:73-96` | All correlation estimates are heuristic placeholders. Actual correlation drift goes undetected. |
+| **No position persistence** | `exposure_tracker.py` | All positions are in-memory only. Process restart = total loss of position tracking. |
+| **No position validation** | `exposure_tracker.py:30-34` | Only validates `trade_id` exists. No validation on `risk` being positive/numeric, no check for duplicate trade_id. |
+
+---
+
+# 2. src/regime — Regime Switching Layer
+
+## FILE: regime_classifier.py
+
+### File Purpose
+Deterministic market regime detection using ATR and trend_score thresholds. Returns one of three regimes: TRENDING, RANGING, HIGH_VOLATILITY.
+
+### Runtime Role
+Called on each bar/candle to classify current market conditions. The regime output feeds into ConfigRouter for config selection, and can influence signal generation and risk parameters upstream.
+
+### Classes
+
+| Class | Purpose | Ownership | Runtime Responsibility |
+|-------|---------|-----------|----------------------|
+| `RegimeClassifier` | Threshold-based regime detection | Regime subsystem | On each `classify(features)` call, return market regime string with cooldown guard. |
+
+### Methods
+
+#### `__init__(self, atr_high_threshold, trend_threshold, cooldown_candles)`
+- **Hidden defaults**: `atr_high_threshold=0.8`, `trend_threshold=0.7`, `cooldown_candles=5`.
+- **State mutations**: Initializes `_last_regime=None`, `_candles_since_switch=0`.
+- **Trust level**: CANONICAL
+
+#### `classify(self, features: dict) -> str`
+- **Human purpose**: Given a feature vector, determine if the market is trending, ranging, or highly volatile.
+- **Invocation sources**: Called by engine runners, backtest loops, live trading loop — any code path that processes bars.
+- **Downstream calls**: `_classify_raw(features)`.
+- **Inputs**: `features` dict with at minimum `'atr'` and `'trend_score'` as floats.
+- **Outputs**: One of `"TRENDING"`, `"RANGING"`, `"HIGH_VOLATILITY"`.
+- **Runtime flow**:
+  1. Try: call `_classify_raw(features)`.
+  2. Catch any Exception → log warning, return `"RANGING"` (safe fallback).
+  3. If `_last_regime` exists and differs from new_regime → increment cooldown counter.
+  4. If cooldown < 5 → return `_last_regime` (suppress the switch).
+  5. If cooldown ≥ 5 → reset cooldown, allow the switch.
+  6. Update `_last_regime`, return.
+- **State mutations**: Mutates `_last_regime`, `_candles_since_switch`.
+- **Side effects**: Logs at INFO on regime switch, DEBUG on cooldown.
+- **Fallbacks**:
+  - Any exception → returns "RANGING" (safe).
+  - Missing `'atr'` or `'trend_score'` → defaults to 0.5 for both.
+- **Hidden defaults**: `features.get("atr", 0.5)` — if feature extraction fails to provide ATR, silently defaults to 0.5, which is below the HIGH_VOLATILITY threshold of 0.8, so high-volatility regime is never triggered just because ATR is missing.
+- **Determinism**: Fully deterministic given same feature dict and same state.
+- **Failure modes**: None in production path (everything is caught). But note: `_classify_raw()` does `float(features.get(...))` — if features dict has garbage non-float values, `float()` will raise ValueError, which is caught by `classify()`.
+- **Corruption risks**: None. The regime has no write-side effects on trading/replay state.
+- **Trust level**: CANONICAL
+
+#### `_classify_raw(self, features: dict) -> str`
+- **Human purpose**: Pure threshold logic: HIGH_VOLATILITY if ATR > threshold, else TRENDING if trend_score > threshold, else RANGING.
+- **Priority**: HIGH_VOLATILITY always overrides TRENDING (line 101-103: `if atr > threshold → return HIGH_VOLATILITY` BEFORE trend check).
+- **Trust level**: CANONICAL
+
+#### `reset_cooldown(self) -> None`
+- **Human purpose**: Reset internal state (testing or session restart).
+- **Trust level**: CANONICAL
+
+---
+
+## FILE: config_router.py
+
+### File Purpose
+Maps regime string to a config profile name (SAFE, BALANCED, AGGRESSIVE) and optionally loads the actual config JSON from disk. Also manages regime-optimized fusion weights and BitNet thresholds.
+
+### Runtime Role
+Called after regime classification to select which strategy config to use. Also called by the tuner/promotion pipeline to update regime-specific weights. Can write the regime map back to disk via `save_map()`.
+
+### Classes
+
+| Class | Purpose | Ownership | Runtime Responsibility |
+|-------|---------|-----------|----------------------|
+| `ConfigRouter` | Regime→config mapping | Regime subsystem | On each regime output, return profile name or loaded config dict. Optionally persist optimized weights. |
+
+### Methods
+
+#### `__init__(self, regime_map, map_path)`
+- **Human purpose**: Load regime→profile mapping from disk or use defaults.
+- **Runtime flow**:
+  1. If `regime_map` dict provided → use it directly.
+  2. Else try loading from `map_path` (default: `configs/production/regime_map.json`).
+  3. If file missing or parse error → fall back to hardcoded `_DEFAULT_REGIME_MAP`.
+  4. Ensure "DEFAULT" key exists → if not, set to "SAFE".
+- **Fallbacks**: Missing file → default map. Parse error → default map. Missing DEFAULT key → injected as "SAFE".
+- **Hidden defaults**: 
+  - Default mapping: `TRENDING→BALANCED`, `RANGING→SAFE`, `HIGH_VOLATILITY→AGGRESSIVE`, `DEFAULT→SAFE`.
+  - `DEFAULT_FUSION_WEIGHTS = {"crt": 0.40, "gaussian": 0.30, "zone": 0.20, "rr": 0.10}`.
+  - `DEFAULT_BITNET_THRESHOLD = 0.50`.
+- **File writes**: None at construction.
+- **Trust level**: CANONICAL
+
+#### `select_profile(self, regime: str) -> str`
+- **Human purpose**: Map regime name to config profile name.
+- **Invocation sources**: Any code path needing a config profile for a regime.
+- **Inputs**: Regime string (e.g., "TRENDING").
+- **Outputs**: Profile name string ("SAFE", "BALANCED", "AGGRESSIVE").
+- **Fallbacks**: Unknown regime → `self._map.get("DEFAULT", "SAFE")`.
+- **Trust level**: CANONICAL
+
+#### `select_config(self, regime: str, config_dir: str) -> Optional[dict]`
+- **Human purpose**: Load the actual config JSON file matching the regime's profile from a directory on disk.
+- **Invocation sources**: System startup, regime switch events.
+- **Downstream calls**: `_find_config_file()`, `json.load()`.
+- **Inputs**: Regime string, config directory path.
+- **Outputs**: Config dict or None.
+- **Runtime flow**:
+  1. Get profile name via `select_profile()`.
+  2. Find matching JSON file in config_dir via `_find_config_file()` (substring match on profile name, case-insensitive).
+  3. If not found → log warning, return None.
+  4. Load and parse JSON → return dict.
+  5. On any file error → log warning, return None.
+- **File reads**: Reads the matched config JSON file from disk.
+- **State mutations**: None.
+- **Fallbacks**: Missing file → returns None (caller must handle). Parsing error → returns None.
+- **Failure modes**: Returns None silently for missing files — caller must check for None or risk `AttributeError` on `NoneType`.
+- **Hidden danger**: `_find_config_file()` uses `sorted(base.glob("*.json"))` — if multiple files match the profile (e.g., `v1_balanced.json` and `v2_balanced.json`), it picks the first alphabetically. **Non-deterministic if new files are added after sorting.**
+- **Corruption risks**: None in read path. But `save_map()` writes JSON to `configs/production/regime_map.json` — if called concurrently with a read, could get partial write. Also, a crash mid-write could corrupt the file.
+- **Trust level**: CANONICAL
+
+#### `get_map(self) -> dict`
+- **Human purpose**: Return copy of current regime mapping.
+- **Trust level**: CANONICAL
+
+#### `_load_map(self, map_path: str) -> dict`
+- **Human purpose**: Load regime map from JSON file, merge with defaults.
+- **Runtime flow**: Missing file → log, return defaults. Parse error → log warning, return defaults. Success → merge: `{**_DEFAULT_REGIME_MAP, **loaded}` — loaded values override defaults.
+- **Side effects**: Logs at INFO.
+- **Trust level**: CANONICAL
+
+#### `get_fusion_weights(self, regime: str) -> Dict[str, float]`
+- **Human purpose**: Return fusion weight dict optimized for the given regime.
+- **Fallbacks**: If `"fusion_weights"` key not in map → returns hardcoded `DEFAULT_FUSION_WEIGHTS`. If regime not found → same fallback.
+- **Trust level**: CANONICAL
+
+#### `get_bitnet_threshold(self, regime: str) -> float`
+- **Human purpose**: Return BitNet threshold for the given regime.
+- **Fallbacks**: If `"bitnet_thresholds"` not in map → returns 0.50. If regime not found → same fallback.
+- **Trust level**: CANONICAL
+
+#### `update_regime_weights(self, search_results: list) -> None`
+- **Human purpose**: Update in-memory regime map with optimized weights from a weight search run.
+- **Invocation sources**: Weight searcher / tuner pipeline.
+- **Inputs**: List of `RegimeSearchResult` objects (external dependency).
+- **State mutations**: Modifies `self._map["fusion_weights"][res.regime]` and `self._map["bitnet_thresholds"][res.regime]`.
+- **Failure modes**: Assumes each `res` has `.regime`, `.best_candidate.fusion_weights`, `.best_candidate.bitnet_threshold`, `.improvement_pct`. If any are missing → AttributeError. **Not caught.** This method has no try/except.
+- **Corruption risk**: Mutates `self._map` in-place. If called with malformed data, the map enters an inconsistent state.
+- **Trust level**: EXPERIMENTAL (weight optimization pipeline is not yet production-hardened)
+
+#### `save_map(self, map_path: Optional[str] = None) -> None`
+- **Human purpose**: Persist the current regime map (including optimized weights) to disk as JSON.
+- **Invocation sources**: After `update_regime_weights()`, likely called by the tuner to persist learned weights.
+- **File writes**: Writes to `configs/production/regime_map.json` (or provided path).
+- **Side effects**: Overwrites the regime map file. Could corrupt if mid-write crash.
+- **Failure modes**: File write errors → logs at WARNING but **exception re-raised?** No, `json.dump` exceptions are NOT caught here. If the directory is read-only or disk full, it will raise. **⚠️ Missing try/except.**
+- **Trust level**: EXPERIMENTAL (no write protection)
+
+#### `_find_config_file(self, config_dir, profile) -> Optional[Path]`
+- **Human purpose**: Search a directory for a JSON file whose name contains the profile name.
+- **Runtime flow**: Glob `*.json`, sort alphabetically, return first match with profile name as case-insensitive substring.
+- **Fallbacks**: Directory not found → None. No match → None.
+- **Hidden danger**: Profile name matching is a simple substring check. If a file is named `safe_deprecated.json`, it will match "safe". Files should be explicitly named to avoid accidental matches.
+- **Trust level**: PARTIAL (fragile matching)
+
+---
+
+## FILE: market_state_cluster_engine.py
+
+### File Purpose
+Cluster-native market state classifier that derives 6 emergent regimes from cluster statistics and structural indicators. Replaces threshold-based regime detection with a statistical/scoring approach. No EMA thresholds, no hardcoded indicator rules.
+
+### Runtime Role
+Alternative/upgrade to `RegimeClassifier`. Uses cluster statistics from `ReplayMemoryEngine` and current bar features to score 6 regime candidates, picking the highest. Used by `CognitiveBus._process()` and other advanced execution paths.
+
+### Data Classes
+
+#### `MarketStateOutput`
+- **Purpose**: Full classification result container.
+- **Fields**: `market_state` (str), `cluster_id` (int), `cluster_confidence` (float 0-1), `state_persistence` (float 0-1), `volatility_profile` (str: low/medium/high), `liquidity_profile` (str: compressed/normal/swept), `trap_probability` (float), `compression_score` (float 0-1).
+- **Trust level**: CANONICAL
+
+### Classes
+
+| Class | Purpose | Ownership | Runtime Responsibility |
+|-------|---------|-----------|----------------------|
+| `MarketStateClusterEngine` | Cluster-statistics-driven regime classifier | Regime subsystem (advanced) | On each `classify()` call, compute 6 regime scores, pick best, enforce cooldown. |
+
+### Methods
+
+#### `__init__(self, min_cluster_samples, cooldown_bars)`
+- **Hidden defaults**: `min_cluster_samples=5`, `cooldown_bars=5`.
+- **State mutations**: `_last_regime=TRANSITIONAL_CHAOS`, `_bars_since_change=0`, `_persistence_count=0`.
+- **Trust level**: CANONICAL
+
+#### `classify(self, features, cluster_stats, replay_features) -> MarketStateOutput`
+- **Human purpose**: Given bar features and optional cluster/replay statistics, classify the current market state into one of 6 emergent regimes.
+- **Invocation sources**: `CognitiveBus._process()` (async), advanced execution paths.
+- **Downstream calls**: `_classify_inner()`, then 6 `_score_*()` functions.
+- **Inputs**: 
+  - `features`: dict with ~15 canonical keys (volatility_ratio, sweep_detected, double_sweep, break_of_structure, disp_strength, liquidity_distance, liquidity_pressure_score, volume_spike, atr, retest_depth, candles_since_retest).
+  - `cluster_stats`: Optional ClusterStats object from ReplayMemoryEngine.
+  - `replay_features`: Optional dict from `ReplayMemoryEngine.get_replay_features()`.
+- **Outputs**: Always valid `MarketStateOutput`. Never raises.
+- **Runtime flow**:
+  1. Try: `_classify_inner()`.
+  2. Catch ANY Exception → return `MarketStateOutput(market_state=TRANSITIONAL_CHAOS, cluster_id=-1, confidence=0.0, ...)`.
+  3. Inside `_classify_inner()`:
+     a. Extract structural signals from features dict with defaults.
+     b. If cluster_stats available and n_samples ≥ min → use real stats; else use neutral defaults.
+     c. Determine volatility profile (high/medium/low) from volatility_ratio thresholds.
+     d. Determine liquidity profile from double_sweep/sweep_detected/liquidity_pressure.
+     e. Compute compression_score = geometric mean of (liquidity proximity) × (1 - ATR scaled).
+     f. Score all 6 regimes via weighted linear equations.
+     g. Pick regime with highest score.
+     h. Apply cooldown logic with persistence tracking.
+     i. Build and return MarketStateOutput.
+- **State mutations**: Mutates `_last_regime`, `_bars_since_change`, `_persistence_count`.
+- **Side effects**: Logs via `get_flow_logger("MARKET_STATE_CLUSTER")`.
+- **Fallbacks**: Any exception → safe fail-open with TRANSITIONAL_CHAOS. Missing features → defaults (e.g., `volatility_ratio=1.0`, `sweep_detected=0.0`, `liquidity_distance=5.0`, `atr=0.001`).
+- **Hidden defaults for missing features**:
+  - `volatility_ratio` defaults to 1.0 → "medium" volatility.
+  - `sweep_detected` defaults to 0.0 → no sweep.
+  - `liquidity_distance` defaults to 5.0 → very far from liquidity, compression score near 0.
+  - `atr` defaults to 0.001 → tiny ATR, compression score inflated for liquidity proximity term.
+  - `liquidity_pressure_score` defaults to 0.3 → "normal" profile (not compressed).
+- **Failure modes**: None in production. All code paths produce output.
+- **Determinism**: Fully deterministic given same inputs and same internal state.
+- **Corruption risks**: None directly. The cooldown counter is the only mutable state that affects future outputs — this is intentional anti-chatter behavior.
+- **Trust level**: LIVE (actively used in CognitiveBus path)
+
+#### `_score_*()` methods (6 private scoring functions)
+- **Human purpose**: Each computes a weighted linear score for one regime type. All are pure functions — no state mutation.
+- **Runtime flow**: Each takes 4-6 parameters, multiplies each by a weight coefficient, sums, clips to [0,1].
+- **Scoring weights per regime**:
+  - TREND_EXPANSION: 35% mean_RR, 25% win_rate, 20% BOS, 10% displacement, -10% trap_freq.
+  - RANGE_TRAP: 40% trap_freq, 25% sweep, 20% swept profile, 15% near-zero mean_RR.
+  - LIQUIDITY_COMPRESSION: 50% compression_score, 25% low volatility, 15% no BOS, 10% no sweep.
+  - BREAKOUT_CONTINUATION: 35% win_rate, 25% mean_RR, 20% BOS, 20% displacement, +10% bonus if retest ≤10 bars.
+  - VOLATILE_REVERSAL: 35% RR variance (std_rr), 25% sweep, 25% double_sweep, 15% vol_spike.
+  - TRANSITIONAL_CHAOS: 40% entropy, 30% transition_prob, 20% (1 - cluster_conf), 10% staleness/30.
+- **Failure modes**: None (pure math with no external dependencies).
+- **Trust level**: CANONICAL
+
+### Trust Classification: src/regime
+
+| File | Classification | Proof |
+|------|---------------|-------|
+| `regime_classifier.py` | **LIVE** | Used in engine runners and backtest. Deterministic, fail-safe. |
+| `config_router.py` | **CANONICAL** | Core routing. But `save_map()` and `update_regime_weights()` are EXPERIMENTAL due to missing error handling. |
+| `market_state_cluster_engine.py` | **LIVE** | Wired into CognitiveBus. Production-hardened with fail-open. |
+
+### Fail-Fast / Fallback Audit for src/regime
+| Issue | Location | Runtime Impact |
+|-------|----------|---------------|
+| **`_find_config_file` substring matching** | `config_router.py:215` | "safe" matches "safe_deprecated.json" — could load wrong config |
+| **`save_map()` no exception handling** | `config_router.py:195` | File write failure raises unhandled exception |
+| **`update_regime_weights()` no validation** | `config_router.py:170-186` | Malformed search_results causes AttributeError |
+| **RegimeClassifier: missing ATR → 0.5 default** | `regime_classifier.py:98` | HIGH_VOLATILITY never triggered if ATR signal missing — silent |
+| **MarketStateClusterEngine: all features have silent defaults** | `market_state_cluster_engine.py:150-159` | Missing features just use fallback values — caller never knows the data is incomplete |
+
+---
+
+# 3. src/replay — Replay Memory System
+
+## FILE: replay_memory_engine.py
+
+### File Purpose
+Persistent institutional memory layer. Loads historical opportunity JSONL files, indexes by cluster assignment, and answers similarity queries about past market states with temporal decay weighting.
+
+### Runtime Role
+Lazy-loaded read-only data store queried by `CognitiveBus._process()` after every EngineRunner decision and by `ReplayDriftGovernor.audit()` periodically. All disk I/O happens lazily on first `query()` call, then results are cached in memory.
+
+### Data Classes
+
+#### `ReplayRecord`
+- **Purpose**: Immutable record of a single historical trade opportunity.
+- **Fields**: timestamp, instrument, direction, outcome, rr_achieved, cluster_id, features (list), age_days.
+- **Slots-based** for memory efficiency.
+- **Trust level**: CANONICAL
+
+#### `ClusterStats`
+- **Purpose**: Aggregated statistics for one zone cluster.
+- **Fields**: cluster_id, n_samples, win_rate, mean_rr, std_rr, failure_modes (dict), trap_frequency, staleness_days, centroid (list).
+- **Trust level**: CANONICAL
+
+### Classes
+
+| Class | Purpose | Ownership | Runtime Responsibility |
+|-------|---------|-----------|----------------------|
+| `ReplayMemoryEngine` | Historical memory + cluster statistics | Replay subsystem | On first query(), discover and load all opportunities.jsonl files, parse into ReplayRecords, assign cluster IDs via nearest-centroid, build cluster statistics. On subsequent queries, return decay-weighted intelligence summaries. |
+
+### Methods
+
+#### `__init__(self, ...)`
+- **Hidden defaults**:
+  - `opportunities_dir = "logs"` — scans logs/ recursively for `opportunities.jsonl` files.
+  - `zone_registry_path = "models/zone_registry.json"` — zone registry for cluster assignment.
+  - `max_records = 50_000` — hard cap.
+  - `decay_half_life_days = 30.0`.
+  - `min_cluster_samples = 5`.
+  - `staleness_threshold_days = 90.0`.
+- **State mutations**: Sets instance attrs. All loading state is lazy (`_loaded=False`).
+- **Trust level**: CANONICAL
+
+#### `query(self, feature_vector, cluster_id) -> dict`
+- **Human purpose**: Get a cluster-conditioned intelligence summary for a given bar's feature vector and its assigned cluster.
+- **Invocation sources**: `CognitiveBus._process()`, `get_replay_features()`, any code needing replay memory intelligence.
+- **Downstream calls**: `_load()` (if not loaded), then cluster stats lookup, decay-weighted win rate computation, centroid similarity, density/stability/confidence metrics.
+- **Inputs**: `feature_vector` (list of floats, 35-38 dim), `cluster_id` (int from zone registry assignment).
+- **Outputs**: Dict with 9 keys: similarity_score, matched_cluster, historical_winrate, historical_rr, failure_modes, sample_size, replay_density, cluster_stability, temporal_confidence. Plus internal `_reason` key.
+- **Runtime flow**:
+  1. Lazy-load if not loaded.
+  2. Look up ClusterStats for cluster_id.
+  3. If stats missing or n_samples < min → return `_empty_result()` with `reason="insufficient_samples"`.
+  4. Filter records matching cluster_id.
+  5. Compute decay-weighted win rate: for each record, weight = exp(-lambda × age_days), accumulate weights for wins (rr ≥ 1.0) and total.
+  6. If no decay weight → fall back to raw stats.win_rate.
+  7. Compute freshness density: count records within staleness threshold / (max_records/20).
+  8. Compute cluster stability: 1 - std_rr / (|mean_rr| + 1), clipped [0,1].
+  9. Compute temporal confidence: fresh / n_samples.
+  10. Return result dict.
+- **State mutations**: None (after initial lazy load).
+- **Determinism**: Deterministic. Same input + same loaded state → same output.
+- **Corruption risks**: None. Read-only after load.
+- **Trust level**: LIVE
+
+#### `get_replay_features(self, cluster_id) -> dict`
+- **Human purpose**: Return replay-derived feature dict for meta-cognition input (TradeNet).
+- **Invocation sources**: `MarketStateClusterEngine.classify()`.
+- **Downstream calls**: `query([], cluster_id)` then 5 private helper methods: `_cluster_drawdown`, `_failure_frequency`, `_trap_frequency`, `_transition_probability`, `_market_state_entropy`.
+- **Inputs**: cluster_id int.
+- **Outputs**: Dict with 8 keys: historical_winrate, historical_rr, historical_drawdown, cluster_stability, replay_density, failure_frequency, trap_frequency, transition_probability, market_state_entropy.
+- **⚠️ Hidden danger**: Calls `query([], cluster_id)` with an EMPTY feature vector — the centroid similarity is computed against an empty vector → `_centroid_similarity([], centroid)` returns 0.5 because both `vec` and `centroid` have length mismatch but the code handles this by returning 0.5 when either is empty. So `similarity_score` in the result is meaningless (always 0.5), but it's not returned anyway. The call is used only for the other metrics. This is inefficient but not incorrect.
+- **Fallbacks**: All values default to neutral (0.5 winrate, 0.0 rr, etc.) on failure.
+- **Trust level**: LIVE
+
+#### `load(self) -> ReplayMemoryEngine`
+- **Human purpose**: Explicitly trigger lazy loading. Returns self for chaining.
+- **Trust level**: CANONICAL
+
+#### `_load(self) -> None`
+- **Human purpose**: Load all JSONL replay artifacts and build cluster statistics. Fail-open.
+- **Runtime flow**:
+  1. Guard: if already loaded → return.
+  2. Load zone registry from disk.
+  3. Discover opportunities.jsonl files (max 200).
+  4. Parse each file into ReplayRecords.
+  5. Cap records at max_records (keep most recent by age_days).
+  6. Build cluster statistics.
+  7. Set _loaded = True.
+  8. On ANY exception → log warning, set _records=[], _cluster_stats={}, _loaded=True (prevent retry loop).
+- **File reads**: Reads zone_registry.json, then all discovered opportunities.jsonl files.
+- **Failure modes**: If any individual JSONL file is corrupt → it's skipped, not fatal. If ALL files fail → empty memory. If zone registry missing → null zone_registry, all clusters assigned to 0.
+- **⚠️ Swallowed exception detail**: If JSONL parsing fails in `_parse_jsonl`, the exception is caught silently and the record skipped. No per-line logging of parse failures. Silent data loss.
+- **Trust level**: CANONICAL
+
+#### `_parse_jsonl(self, path, now_ts) -> List[ReplayRecord]`
+- **Human purpose**: Parse a single JSONL file into ReplayRecords.
+- **Runtime flow**:
+  1. Open file, iterate lines.
+  2. Skip empty lines.
+  3. If `rec.get("type") == "run_header"` → skip (non-opportunity metadata line).
+  4. Extract `features` dict — if empty → skip.
+  5. Compute age_days from timestamp. If older than 2× staleness threshold (180 days) → skip entirely.
+  6. Assign cluster_id via nearest-centroid.
+  7. Convert features dict values to float list.
+  8. Build and append ReplayRecord.
+  9. On JSONDecodeError, KeyError, ValueError → silently continue.
+- **Silent swallowing**: All parse errors are caught with bare `except: continue` at line 302-303. No logging of how many records were skipped or why. This is a **monitoring blind spot**.
+- **Trust level**: CANONICAL
+
+#### `_assign_cluster(self, features_dict) -> int`
+- **Human purpose**: Assign feature vector to nearest zone centroid. Falls back to cluster 0.
+- **Runtime flow**: If no zone_registry → return 0. If no zones → return 0. Compute squared Euclidean distance to each zone centroid. Return zone_id of nearest.
+- **Trust level**: CANONICAL
+
+#### `_build_cluster_stats(self) -> None`
+- **Human purpose**: From all loaded records, compute per-cluster aggregated statistics.
+- **Runtime flow**: Groups records by cluster_id, computes mean_rr, std_rr, win_rate, failure_modes distribution, trap_frequency, staleness_days, centroid (from zone registry if available, otherwise computed from record features).
+- **Trust level**: CANONICAL
+
+#### `_centroid_similarity(self, vec, centroid) -> float`
+- **Human purpose**: Cosine similarity between feature vector and cluster centroid.
+- **Fallbacks**: Empty vec or centroid → 0.5.
+- **Trust level**: CANONICAL
+
+#### Helper methods (`_cluster_drawdown`, `_failure_frequency`, `_trap_frequency`, `_transition_probability`, `_market_state_entropy`)
+- **Trust level**: CANONICAL
+
+---
+
+## FILE: replay_drift_governor.py
+
+### File Purpose
+Monitor replay memory for contamination, staleness, cluster drift, and anti-collapse signals. The anti-collapse design specifically guards against self-reinforcing feedback loops where the system learns "sweeps fail" → takes fewer trades → dataset shifts → collapse into defensive paralysis.
+
+### Runtime Role
+Called periodically (after scanner runs) via `ReplayDriftGovernor.audit(replay_engine)`. Produces a DriftReport with alerts. The governor NEVER hard-rejects — it only reports. Callers decide whether to act on alerts.
+
+### Data Classes
+
+#### `DriftReport`
+- **Purpose**: Full audit result container.
+- **Fields**: clean (bool), alerts (list[str]), cluster_entropy, mean_rr_drift, staleness_ratio, concentration_ratio, contamination_score, outcome_entropy, exploration_deficit (bool), novelty_score.
+- **Trust level**: CANONICAL
+
+### Classes
+
+| Class | Purpose | Ownership | Runtime Responsibility |
+|-------|---------|-----------|----------------------|
+| `ReplayDriftGovernor` | Replay memory quality auditor | Replay subsystem | On each `audit()` call, run 7 checks, produce report, write audit event to logs/drift_audit.jsonl. |
+
+### Methods
+
+#### `__init__(self, max_staleness_days, staleness_pct_threshold, concentration_threshold, contamination_threshold)`
+- **Hidden defaults**: `max_staleness_days=60`, `staleness_pct_threshold=0.70`, `concentration_threshold=0.80`, `contamination_threshold=0.90`.
+- **Trust level**: CANONICAL
+
+#### `audit(self, replay_engine) -> DriftReport`
+- **Human purpose**: Run all 7 drift checks on replay memory, return report, write audit event.
+- **Invocation sources**: Called periodically after scanner runs. Also callable on demand.
+- **Downstream calls**: `_audit_inner()`.
+- **Inputs**: ReplayMemoryEngine instance (already loaded or empty-safe).
+- **Outputs**: Always valid DriftReport. Never raises.
+- **Runtime flow**:
+  1. Try: `_audit_inner()`.
+  2. Catch ANY Exception → return `DriftReport(clean=True, alerts=["audit_error"])`.
+- **Trust level**: LIVE
+
+#### `_audit_inner(self, replay_engine) -> DriftReport`
+- **Human purpose**: Run 7 specific drift checks against replay memory records.
+- **Runtime flow** (7 checks in order):
+  1. **Cluster entropy drift**: Compute Shannon entropy of cluster distribution. Alert if < 0.20 (one cluster dominating).
+  2. **Sample concentration**: Fraction of records in the single largest cluster. Alert if > 0.80.
+  3. **Staleness ratio**: Fraction of records older than 60 days. Alert if > 0.70.
+  4. **Mean-RR extremes**: Global mean RR. Alert if > 1.8 or < -1.5.
+  5. **Outcome contamination**: Fraction of SL_HIT outcomes. Alert if > 0.90. Compute linear contamination score (0 at 70% SL, 1.0 at 100%).
+  6. **Anti-collapse: outcome entropy floor**: Shannon entropy of SL_HIT/TP_HIT/TIMEOUT distribution. If < 0.30 → alert, set `exploration_deficit=True` (one outcome dominates → exploration collapse risk).
+  7. **Novelty score**: Fraction of records where rr_achieved is in [0.2, 1.8] (meaningful but not extreme). Alert if < 0.10 (system only sees catastrophic or perfect trades).
+  
+  After checks: determine `clean = (len(alerts) == 0)`. Log warning if alerts present. Build DriftReport. Write audit event. Return.
+- **State mutations**: None (pure read + report).
+- **Side effects**: Writes to `logs/drift_audit.jsonl` via `_write_audit_event()`.
+- **File writes**: `_write_audit_event()` → appends JSONL record to `logs/drift_audit.jsonl`.
+- **Failure modes**: If `make_event_envelope` import fails (line 252), falls back to plain dict record without generation counter. If file write fails → logged at DEBUG, silently skipped. **The audit itself never fails**, but audit events may be silently lost.
+- **Corruption risks**: None. Append-only JSONL write, no existing data modified.
+- **Determinism**: Deterministic given same replay_engine state.
+- **Trust level**: LIVE
+
+#### `_write_audit_event(self, report, n_records, n_clusters) -> None`
+- **Human purpose**: Append a DRIFT_AUDIT event to the audit log.
+- **Runtime flow**:
+  1. Try import `make_event_envelope` from `events.event_fabric`.
+  2. If import succeeds → use canonical event schema.
+  3. If import fails → fallback to plain dict.
+  4. Create parent dirs for `logs/drift_audit.jsonl`.
+  5. Append JSON line.
+  6. On ANY exception → caught and logged at DEBUG (non-blocking).
+- **Side effects**: File append.
+- **Trust level**: CANONICAL
+
+### Trust Classification for replay_drift_governor.py: **LIVE**
+
+---
+
+## FILE: replay_similarity_index.py
+
+### File Purpose
+Nearest-neighbour similarity search index for replay feature vectors. Supports FAISS acceleration (optional) with NumPy/Python fallback.
+
+### Runtime Role
+Alternative/higher-performance query layer on top of or alongside ReplayMemoryEngine. Not used by ReplayMemoryEngine directly — this is a standalone index that can be built, queried, and aggregated independently.
+
+### Classes
+
+| Class | Purpose | Ownership | Runtime Responsibility |
+|-------|---------|-----------|----------------------|
+| `ReplaySimilarityIndex` | NN similarity search | Replay subsystem | Build index from feature vectors, search for top-k neighbours with temporal decay, aggregate stats from results. |
+
+### Methods
+
+#### `__init__(self, n_features, decay_lambda, top_k, use_faiss)`
+- **Hidden defaults**: `n_features` (required), `decay_lambda=0.023` (~30-day half-life), `top_k=10`, `use_faiss=True`.
+- **Trust level**: CANONICAL
+
+#### `add_record(self, vector, metadata) -> None`
+- **Human purpose**: Add one feature vector + metadata to the index.
+- **Hidden behavior**: Silently truncates or pads vector to n_features — "for schema migration safety" (line 91-92). This means if the vector dimension changes, old records get silently padded/truncated without warning.
+- **State mutations**: Appends to `_vectors` and `_metadata`, resets `_built=False`.
+- **Trust level**: CANONICAL
+
+#### `set_precision_matrix(self, P) -> None`
+- **Human purpose**: Set inverse covariance matrix for Mahalanobis similarity.
+- **Trust level**: CANONICAL
+
+#### `build_index(self) -> None`
+- **Human purpose**: Build FAISS inner-product index or mark as built for linear scan.
+- **Runtime flow**: If vectors exist and FAISS available → build IndexFlatIP. If FAISS build fails → log warning, fall back to linear scan (no index). If no vectors → no-op.
+- **Failure modes**: FAISS build failure → caught and logged, falls back to linear scan.
+- **Trust level**: CANONICAL
+
+#### `search(self, query, method, cluster_filter) -> List[Tuple[float, dict]]`
+- **Human purpose**: Find top-k nearest neighbours with temporal decay.
+- **Runtime flow**:
+  1. Build index if not built.
+  2. If no vectors → return [].
+  3. Normalise query to n_features (pad/truncate).
+  4. FAISS fast path: only for "cosine" method, when FAISS index available, NO cluster_filter.
+  5. Otherwise: linear scan (NumPy or pure-Python).
+  6. For each candidate, compute similarity (cosine or Mahalanobis), multiply by exp(-lambda × age_days), filter by cluster_id if specified.
+  7. Sort by weighted score descending, return top_k.
+- **Inputs**: `query` (list of floats), `method` ("cosine" or "mahalanobis"), `cluster_filter` (optional int).
+- **Outputs**: List of (weighted_score, metadata_dict) tuples.
+- **⚠️ FAISS fast path bypass**: When `cluster_filter` is set, the FAISS fast path is disabled and linear scan is used. This is correct behavior but a performance trap for callers who don't realize filtering disables acceleration.
+- **Trust level**: CANONICAL
+
+#### `aggregate_top_k_stats(self, results) -> dict`
+- **Human purpose**: Compute decay-weighted win_rate and mean_rr from top-k search results.
+- **Runtime flow**: Sum weights, compute weighted win fraction (rr ≥ 1.0) and weighted mean rr.
+- **Fallbacks**: Empty results → 0.5 winrate, 0.0 rr, confidence 0.0. Zero total_weight → same.
+- **Trust level**: CANONICAL
+
+#### `_faiss_search(self, query) -> List[Tuple[float, dict]]`
+- **Human purpose**: FAISS inner-product cosine search with temporal decay.
+- **Trust level**: CANONICAL
+
+#### `_linear_search(self, query, method, cluster_filter) -> List[Tuple[float, dict]]`
+- **Human purpose**: Linear scan with optional cluster filter.
+- **Trust level**: CANONICAL
+
+#### `_mahalanobis_sim(self, a, b) -> float`
+- **Human purpose**: Mahalanobis-based similarity: exp(-0.5 × (a-b)ᵀ P (a-b)).
+- **Clipping**: d² clipped to max 500 to prevent overflow (exp(-250) ≈ 0).
+- **Trust level**: CANONICAL
+
+### Trust Classification for replay_similarity_index.py: **EXPERIMENTAL** (standalone utility, not yet wired into production path)
+
+---
+
+# 4. results/ — Output Artifacts Directory
+
+### File Purpose
+Runtime output storage for backtest results, calibration runs, trade logs, promotion records, and portfolio aggregates.
+
+### Runtime Role
+NOT source code. This is a data output directory consumed by:
+- Analysts reviewing backtest reports.
+- The promotion pipeline reading `tuner/checkpoint_multi.json`.
+- Monitoring/visualization tools reading portfolio aggregates.
+
+### Structure Breakdown
+
+| Path | Content | Role |
+|------|---------|------|
+| `results/tuner/checkpoint_multi.json` | Multi-instrument tuner checkpoint | Used by `promotion_manager.promote_from_tuner_checkpoint()` |
+| `results/tuner_recalib/` | Recalibrated tuner runs | Post-phase5 calibration checkpoints |
+| `results/portfolio_raw/` | Per-symbol raw trade data + aggregate summary | Portfolio performance aggregation |
+| `results/PROMOTION/` | Promotion event records | Governance audit trail |
+| `results/AGENT/`, `results/DATA/`, `results/LIVE/`, `results/TRAINING/` | Event-type-specific JSON dumps | Audit/logging |
+| `results/p5_calibration_*.json` | Phase 5 calibration test outputs | Validation and comparison |
+| `results/run_*/` | Per-backtest-run output (events, report, summary, trades CSV) | Backtest result inspection |
+| `results/validation_tmp/` | Validation run outputs | Pre-promotion validation |
+| `results/sl_tp_comparison.json` | SL/TP parameter comparison results | Strategy optimization reference |
+
+### Trust Classification: **LIVE** OUTPUT. No code to classify.
+
+---
+
+# CROSS-CUTTING: FAIL-FAST / FALLBACK AUDIT SUMMARY
+
+## Silent fallbacks that can cause runtime drift:
+
+| # | Component | Issue | Severity |
+|---|-----------|-------|----------|
+| 1 | `CorrelationEngine._heuristic_correlation` | Static group-based correlation. Real market correlation drift is undetected. Allocation decisions use stale assumptions. | **HIGH** — can cause concentrated drawdown under crisis correlation |
+| 2 | `ConfigRouter._find_config_file` | Substring match on profile name. "safe_deprecated.json" matches "SAFE". | **MEDIUM** — could load wrong config silently |
+| 3 | `ConfigRouter.save_map()` | No exception handling on write | **MEDIUM** — crash mid-save corrupts regime_map.json |
+| 4 | `ReplayMemoryEngine._parse_jsonl` | All parse errors swallowed silently (`except: continue`). No per-line failure logging. | **LOW** — data loss goes unmonitored |
+| 5 | `RegimeClassifier._classify_raw` | Missing ATR defaults to 0.5 → HIGH_VOLATILITY never triggerable | **MEDIUM** — regime miss on partial data |
+| 6 | `CapitalPolicy.compute_risk` | Missing confidence defaults to 0.0 → no boost | **LOW** — under-allocation but not dangerous |
+| 7 | `ReplayMemoryEngine.get_replay_features` | Calls `query([], cluster_id)` with empty vector → meaningless similarity_score (always 0.5) but not returned | **LOW** — wasted computation only |
+
+## Governance contamination risk:
+
+**NOT VERIFIED IN SOURCE**: There is no evidence of governance contamination in any of the analyzed modules. The replay system is read-only after construction. The regime system is deterministic. The portfolio system is rule-based. None of these modules write to governance config files except `ConfigRouter.save_map()` which is explicitly for regime weight persistence.
+
+## Replay/live drift risk:
+
+The `ReplayDriftGovernor` was explicitly designed to detect this. The 7 checks specifically guard against:
+- Self-reinforcing feedback loops (anti-collapse)
+- Outcome distribution collapse (exploration deficit)
+- Stale data dominance
+- Single-cluster concentration
+
+These are all **WARNING-ONLY** — the governor never blocks execution. Drift decisions are delegated to callers.
+
+---
+
+# IMMEDIATE RUNTIME BOUNDARY
+
+Further tracing into dependency calls from these modules would enter:
+- `CognitiveBus._process()` → exceeds replay module boundary
+- `events.event_fabric.make_event_envelope()` → event system boundary
+- `utils.logging_config.get_flow_logger()` → logging utility boundary
+- `UltronRiskGate` → execution/risk boundary
+
+These are outside the `ssrc-portfolio,regime,replay,results` scope and are NOT traced further per the dependency rule.

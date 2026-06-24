@@ -1,0 +1,277 @@
+# MODELS FOLDER — Complete Runtime Execution Analysis
+
+---
+
+## 0. WHAT THIS FOLDER ACTUALLY IS AT RUNTIME
+
+The `models/` directory is **not** a code module — it is a **versioned, registry-driven model artifact store**. Every model in this system is identified by a registry entry (JSON file at the top level) that points to a versioned serialized artifact (`.json` weights, `.pth` PyTorch state dict, or `.json` cluster centers). The runtime never hardcodes a model path; it loads by reading the registry, finding the entry with `active: true`, and resolving the `model_file` path.
+
+**There are 5 registry files, each governing a separate model family:**
+
+| Registry File | Model Family | Persistence Format | Active Version |
+|---|---|---|---|
+| `gaussian_registry.json` | Gaussian Naive Bayes (4-class) | `.json` (means, vars, priors, scaler) | `v5_auto_2026_06_eth` (ETHUSDT) |
+| `rr_registry.json` | Ridge Regression / Pattern Miner | `.json` (ridge_weights, GNB coefs) | `v5_auto_2026_06_eth2_ethusdt` |
+| `tradenet_registry.json` | PyTorch TradeNet (binary) | `.pth` (state_dict) + optional `_scaler.json` | `v5_auto_2026_06_eth` |
+| `zone_gate_registry.json` | K-Means Cluster Zones | `.json` (cluster centers, sample counts) | `202605_v1_ethusdt` |
+| `bitnet/bitnet_registry.json` | BitNet (empty) | N/A | **DEAD** |
+
+---
+
+## 1. gaussian_registry.json — File Purpose
+
+### File Purpose
+This file is the **versioned index** of all Gaussian Naive Bayes models ever trained. It exists so the runtime can find the current active model without hardcoding a path. Each entry maps a version string → metadata (metrics, file path, schema version, active flag).
+
+### Runtime Role
+At inference time, `model_registry.py:load_active_gaussian_scorer()` (line 655) is the entry point. What actually happens:
+
+1. `get_active_gaussian()` scans `gaussian_registry.json` for the first entry where `active=true` → finds `v5_auto_2026_06_eth`.
+2. Reads `entry["model_file"]` → `models/ETHUSDT/20260519_113806/gaussian_v5_auto_2026_06_eth.json`.
+3. If the file does not exist, tries a convention fallback: `models/gaussian_{version}.json`.
+4. If neither exists → returns `NoOpScorer` which returns `None` from `.compute()` → Gaussian gating silently disabled.
+5. On load → `GaussianScorer.from_json()` parses the nested `{"model":..., "scaler":...}` structure.
+
+### Trust Classification: **LIVE — CANONICAL**
+Source proof: `_gaussian_registry` singleton is created at line 1009 of `model_registry.py` and consumed by `load_active_gaussian_scorer()`. The registry is used by backtest, live engine, and control plane.
+
+---
+
+## 2. rr_registry.json — File Purpose
+
+### File Purpose
+Stores entries for RR (Ridge Regression / Pattern Miner) dataset + model pairs. Dataset and model can be registered separately (different CLI commands), and the registry entry grows from `{dataset_file}` → `{dataset_file, model_file}`.
+
+### Runtime Role
+Contrary to the other registries, the **RR model is NOT loaded by reading this registry at inference time**. Instead:
+- `RRFusionLayer` (in `rr_fusion.py`) loads its model from a **config-driven path** (`model_path` from `production_config.json` section `rr_model.model_path`).
+- The default path is `models/rr_model.json` — but no file with that name exists. The actual active model is `models/ETHUSDT/20260519_134711/rr_model_v5_auto_2026_06_eth2.json`.
+- This means the runtime RR model path may not match the registry's `active` version unless the production config is manually kept in sync.
+
+The registry is used by:
+- `dashboard_api.py` to display version info.
+- `registry.py` CLI commands for train/validate workflows.
+- `get_active_rr_entry()` (line 898-906) — note the Gap-7 fix: **skips entries where `model_file` is None**. This prevents `TypeError` when a dataset was built but training never completed.
+
+### Trust Classification: **LIVE — PARTIAL**
+Source proof: The runtime load path (`rr_fusion.py:DEFAULT_MODEL_PATH`) is decoupled from the registry's active flag. The registry tracks all trained versions but the runtime uses a separate config pointer. This is a **governance gap** — the registry can claim `v5_auto_2026_06_eth2_ethusdt` is active while the runtime silently uses an older model file.
+
+---
+
+## 3. tradenet_registry.json — File Purpose
+
+### File Purpose
+Versioned registry for TradeNet PyTorch `.pth` model files. Each entry stores the file path, accuracy/composite metrics, and active flag.
+
+### Runtime Role
+The `TradeNetRegistry` is consumed completely within `model_registry.py`. The runtime loads the active TradeNet via `get_active_tradenet_entry()` which scans for `active=true`. Usage:
+- `FusionEngine` in `src/engines/` calls `make_neural_fn()` from `trainer.py`.
+- `make_neural_fn()` calls `load_model()` which uses `torch.load()` on the `.pth` file.
+- The `.pth` file is a PyTorch `state_dict` of `nn.Sequential(Linear(35,32)→ReLU→Dropout→Linear(32,16)→ReLU→Linear(16,1)→Sigmoid)`.
+
+**Critical side effect at save time** (line 711-735 of `trainer.py`):
+```
+save_model() always registers the model and auto-promotes if no active exists.
+```
+This means the first model trained for an instrument becomes active automatically.
+
+### Trust Classification: **LIVE — CANONICAL**
+Source proof: `model_registry.py` lines 1125-1130 expose `get_active_tradenet()` and `get_active_tradenet_entry()`. Runtime engine imports these.
+
+---
+
+## 4. zone_gate_registry.json — File Purpose
+
+### File Purpose
+Versioned registry for Zone Gate models — K-Means cluster centers that represent market microstructure states (zones). Each cluster is an 8-dimensional center point with `n_samples`, `mean_rr`, `tp_hit_rate`, `sl_hit_rate`.
+
+### Runtime Role
+The active zone gate entry is resolved by `get_active_zone_gate_entry()` (line 776-781 of `model_registry.py`). The engine runner (in `src/engines/engine_runner.py`) loads the zone file to classify the current candle into a zone and use that zone's historical statistics for gating.
+
+The zone files have `feature_weights` array (all 1.0 — effectively unused) and `feature_order` (identical 35-feature canonical order).
+
+# human execution explanation
+When the engine runner processes a trade signal:
+1. It builds a 35-dim feature vector from the current candle.
+2. Computes Euclidean distance to each of the 8 zone centers.
+3. The nearest zone's `mean_rr` and `tp_hit_rate` are used as gating thresholds.
+4. If the predicted RR from the Gaussian model doesn't exceed the zone's `mean_rr`, the trade is rejected.
+
+Zone 7 (the last zone, `n_samples=242`) has `sl_hit_rate=1.0` — meaning **100% of samples in this zone hit stop-loss**. This zone exists in the active model.
+
+### Trust Classification: **LIVE — CANONICAL**
+
+---
+
+## 5. bitnet/ — Folder Purpose
+
+### File
+`bitnet/bitnet_registry.json` — empty `{}`.
+
+### Trust Classification: **DEAD**
+Source proof: The registry is empty, no model files exist in the directory. The empty dict means no inference path consumes this. No source code references `bitnet_registry.json` in any runtime path found.
+
+---
+
+## 6. SUBDIRECTORY STRUCTURE (per-instrument run folders)
+
+Both `ETHUSDT/` and `EURUSD/` contain timestamped `run_id` subdirectories. Each run folder stores:
+- Gaussian model JSON
+- RR dataset JSON + RR model JSON
+- TradeNet `.pth` + scaler JSON
+- Zone registry JSON
+
+### Why two run folders for ETHUSDT?
+- `20260519_113806` — Contains the active Gaussian, active TradeNet, active Zone Gate.
+- `20260519_134711` — Contains the active RR model.
+
+This means the RR model for ETHUSDT was trained in a **separate training run** from the Gaussian/TradeNet/Zone models. All four models are active but they came from two different training sessions with potentially different training data splits.
+
+### Trust Classification: **LIVE — PARTIAL (dangling risk)**
+The `rr_dataset.json` in `20260519_113806` and `20260519_134711/rr_dataset.json` could be different. If the RR was trained on newer data than the Gaussian, they encode different market regimes — a **cross-model temporal drift risk**.
+
+---
+
+## 7. REGISTRY ARCHITECTURE PATTERNS
+
+### Common Structure (all 5 registries)
+
+Every registry class inherits the same pattern:
+```
+_load()          → reads JSON file, returns dict or {} on failure
+_save()          → _assert_single_active() guard, then atomic write via .tmp + os.replace()
+_assert_single_active() → RuntimeError if >1 entry has active=True
+```
+
+Atomicity guarantees:
+- In-process: `threading.RLock()` (`_PROMOTE_LOCK`)
+- Cross-process: `os.open(..., O_CREAT | O_EXCL)` lock file
+- Write: `.tmp` + `os.replace()` (atomic rename on both POSIX and Windows)
+
+### Silent Fallback Chain (HeuristicGaussianEngine only)
+
+Lines 111-135 of `heuristic_gaussian_engine.py`:
+```
+_requested_version = active_versions[0]
+If artifact missing → try _FALLBACK_PRIORITY = ["v1", "import_fix_v1"]
+If all fallbacks missing → RuntimeError("FAIL CLOSED")
+```
+
+**What this does at runtime:**
+If the active Gaussian model file was deleted or corrupted, this fallback tries v1/import_fix_v1 — which are hardcoded strings that may refer to models that never existed. The engine will throw a RuntimeError rather than silently degrading.
+
+### Config Override Priority (HeuristicGaussianEngine)
+
+Lines 207-220:
+```
+mu/sigma resolution:
+  1. config["gaussian_mu"] / config["gaussian_sigma"] (explicit override)
+  2. GaussianRegistry.active_entry.mu / .sigma (registry-driven)
+  3. Default: mu=0.0, sigma=1.0
+```
+
+If the registry path config key is wrong or the registry file is missing, **mu/sigma silently default to 0.0/1.0**. The Gaussian kernel `exp(-(x-0)²/(2*1²))` still produces scores, but they are meaningless — the engine has no information about whether this is the right center for the current market.
+
+---
+
+## 8. FAIL-FAST / FALLBACK / CORRUPTION AUDIT
+
+### Silent Fallbacks Found
+
+| Location | Fallback | Runtime Impact |
+|---|---|---|
+| `GaussianScorer.from_json()` lines 588-596 | If JSON lacks `{model, scaler}` keys, tries legacy flat format | Breaks silently if format is unexpected — returns garbled scorer |
+| `load_active_gaussian_scorer()` line 682 | File not found → `NoOpScorer` | Gaussian gating disabled with no warning to downstream |
+| `HeuristicGaussianEngine` line 254-258 | `ema_fast == ema_slow AND momentum == 0.0` → returns score 0.5 | Trade passes through with neutral score — **synthetic neutral condition** |
+| `GaussianScorer.compute()` line 636-637 | Any exception → returns `None` | Downstream treats as neutral score |
+| `RRFusionLayer` line 105-106 | Model not loaded → passthrough with reason "model_not_loaded" | RR fusion disabled, Gaussian score used directly |
+| `RRFusionLayer` line 127-128 | Any inference exception → passthrough "inference_error" | Same — silent degradation |
+| `save_model()` line 733-734 | Registry update fails → logged as non-fatal warning | Model saved to disk but NOT registered — can't be promoted |
+| `get_active_rr_entry()` line 904 | Skip entries where `model_file is None` | Prevents crash on orphan entries |
+
+### Swallowed Exceptions
+
+1. **`model_registry.py` lines 147-149**: `_load()` catches all exceptions, logs warning, returns empty dict. Any JSON parsing error → **registry reset to empty**.
+2. **`save_model()` line 733**: `except Exception as _reg_err` — swallows ALL registry update failures.
+3. **`load_tradenet_scaler()` line 772**: `except Exception: pass` — FeatureSchemaRegistry registration silently skipped.
+4. **`FeatureSchemaRegistry.register()`** (in trainer.py): `except Exception: pass` — hash registration silently skipped.
+
+### Corruption Risks
+
+1. **Dual-active registry state**: `_assert_single_active()` prevents writing >1 active entry, but if two processes write concurrently, the lock file + atomic write should prevent this. The `print_gaussian_leaderboard()` method has a known issue (line 95-98: multiple active found → uses first).
+2. **Partial registry write**: Prevented by atomic `.tmp` + `os.replace()` pattern.
+3. **Gaussian + RR registry mismatch**: Active Gaussian was trained on `101794` samples (index `20260519_113806`), active RR on `101794` samples (index `20260519_134711`). Same count but potentially different data splits.
+4. **TradeNet scaler may not exist**: `load_tradenet_scaler()` returns `None` if the `_scaler.json` file is absent. `make_neural_fn()` uses raw unscaled features → produces garbage probabilities for models trained with scaling.
+
+### Hidden Defaults
+
+| Default | Value | Where |
+|---|---|---|
+| Gaussian `var_smoothing` | 1e-9 | `GaussianNBModel.VAR_SMOOTHING` |
+| RR `ridge_alpha` | 10.0 | Stored in registry metrics |
+| Min train samples | 20 | `MIN_GAUSSIAN_SAMPLES` |
+| Promotion margin | 0.02 (2%) | `PROMOTION_MARGIN` |
+| Gaussian corr regression guard | 0.01 (1%) | `max_regression` in `promote_gaussian()` |
+| RR drift threshold | 1.5 | `_DRIFT_THRESHOLD` |
+| Gaussian `sigma` if <= 0 | 1.0 | `sigma if sigma > 0 else 1.0` in heuristic engine |
+| Heuristic Engine mu | 0.0 | Fallback when no registry |
+| Heuristic Engine sigma | 1.0 | Fallback when no registry |
+| GAP-3 absolute floor | corr < 0.0 → BLOCK | `promote_gaussian()` line 444 |
+
+---
+
+## 9. DETERMINISM ANALYSIS
+
+| Component | Deterministic? | Why |
+|---|---|---|
+| `GaussianNBModel.predict_proba()` | **Yes** | Pure math: `log_prior + log_likelihood`, softmax stable |
+| `GaussianScorer.compute()` | **Yes** | Math only (`_predict_proba`, `_scale`, `_mirror_features_for_short`) |
+| `HeuristicGaussianEngine.compute()` | **Yes** | Math only (`tanh`, `gaussian kernel exp()`) |
+| `make_neural_fn()` inference | **No** | Depends on PyTorch model state, dropout layers in eval mode |
+| `Zone Gate` nearest-center match | **Yes** | Euclidean distance to fixed cluster centers |
+| `RRFusionLayer.score()` | **Depends** | `NanoInferenceEngine.predict()` may contain non-deterministic Ridge path |
+| `load_active_gaussian_scorer()` | **No** | Depends on filesystem state (registry file, model file existence) |
+| `HeuristicGaussianEngine.compute()` `neutral_synthetic_condition` | **Non-deterministic edge** | Score 0.5 returned instead of computed value when condition met |
+
+---
+
+## 10. ACTIVE STATE SUMMARY (snapshot from registry files)
+
+| Model Family | Active Version | File Location | Trained At |
+|---|---|---|---|
+| Gaussian | `v5_auto_2026_06_eth` | `models/ETHUSDT/20260519_113806/gaussian_v5_auto_2026_06_eth.json` | 2026-05-19 07:49 |
+| RR | `v5_auto_2026_06_eth2_ethusdt` | `models/ETHUSDT/20260519_134711/rr_model_v5_auto_2026_06_eth2.json` | 2026-05-19 08:32 |
+| TradeNet | `v5_auto_2026_06_eth` | `models/ETHUSDT/20260519_113806/tradenet_v5_auto_2026_06_eth.pth` | 2026-05-19 07:54 |
+| Zone Gate | `202605_v1_ethusdt` | `models/ETHUSDT/20260519_113806/zone_registry_ETHUSDT_202605_v1.json` | 2026-05-19 08:01 |
+| BitNet | N/A | empty | N/A |
+
+**Critical observation**: All 4 active models target ETHUSDT. The EURUSD model (`v6_2026_05_eur`) and BTC model (`v6_2026_05_btc`) are registered but NOT active. This means the system currently runs only on ETHUSDT with all four model gates engaged.
+
+---
+
+## 11. REACHABLE DEPENDENCIES BOUNDARY
+
+The immediate runtime dependency chain for each model type (not tracing further):
+
+```
+Gaussian: gaussian_registry.json
+  → model_registry.load_active_gaussian_scorer()
+    → GaussianScorer.from_json()
+      → features.feature_pipeline.build_feature_vector()  [STOP — enters feature extraction subsystem]
+
+TradeNet: tradenet_registry.json
+  → model_registry.get_active_tradenet_entry()
+    → trainer.load_model() + trainer.make_neural_fn()
+      → features.dataset_builder.extract_feature_vector()  [STOP — enters feature extraction subsystem]
+
+Zone Gate: zone_gate_registry.json
+  → model_registry.get_active_zone_gate_entry()
+    → engine_runner.py zone classification  [STOP — enters execution engine]
+
+RR: rr_registry.json (for version tracking only)
+  → rr_fusion.py (config-driven model_path)  [STOP — enters RR inference subsystem]
+
+BitNet: NOT REACHABLE — dead registry
+```
+
+Further tracing enters the feature extraction pipeline, which is outside the models folder scope.

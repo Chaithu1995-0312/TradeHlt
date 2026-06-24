@@ -1,0 +1,889 @@
+# HUMAN-READABLE EXECUTION COGNITION
+## src/agent · src/analytics · src/bitnet · src/cognitive
+
+---
+
+==================================================
+## PART 1: `src/agent/` — CRT Trading Agent (LLM-Fronted Orchestration)
+==================================================
+
+### 1. `cli.py` — Interactive REPL entry point
+
+**File Purpose:**  
+The terminal-level user interface. When you run `python -m src.agent.cli`, this is what starts. It loads config from `configs/production/v1_multi_2026_03.json` under the `"agent"` key, constructs an `AgentCore` instance, and presents a prompt loop: `>`. If config says `agent.enabled=false`, it exits immediately.
+
+**Runtime Role:**  
+Entry point. The very first thing that runs is `import agent` which triggers `modes/__init__.py` which imports all four mode modules. Each mode module has `@register_tool` decorators that execute at import-time, populating the global `REGISTRY` dict in `tool_registry.py`. So before the user types anything, all ~20 tools are already registered and available for dispatch.
+
+**Trust Classification: CANONICAL** — This is the designed user-facing entry point. No fallbacks, no hidden behavior.
+
+---
+
+### 2. `agent_core.py` — AgentCore class (the main turn loop)
+
+**What ACTUALLY happens when `core.turn(user_input)` runs:**
+
+1. **IntentRouter.classify()** is called with the user's natural language input. Two-layer classification:
+   - First: regex patterns from `src/agent/prompts/intent_patterns.json` are matched against lowercase input. If a match is found with confidence >= 0.6 (configurable), the intent_key is returned immediately. Regex confidence is hardcoded to 0.85 for any match.
+   - Second: if regex fails or confidence < floor, an LLM call is made via `config_layer.llm_inference_client.llm_chat` with temperature=0.0, max_tokens=64. The LLM is instructed to pick exactly one intent_key from a fixed list. The system prompt lists all valid intent keys directly in the prompt.
+   - If both fail: returns `intent_key="ask_user"` which triggers the "I need more detail" reply.
+   
+2. **PlanCompiler.build(intent_key)** is called — a pure Python dict lookup in `PLAN_REGISTRY`. NO LLM involvement. The registry maps each intent_key to an ordered list of `ToolStep` objects. For example `"full_pipeline"` maps to `[tuner.run_multi, validator.validate, promotion.promote_from_checkpoint, backtest.run_v2, live_hook.dry_run]`.
+
+3. **Skip parsing** from NL: the user can say "skip tuning" or "no backtest" and the `_SKIP_RULES` list filters out matching steps. This is simple substring matching against a predefined list of 5 rules.
+
+4. **Step execution loop** (max 6 iterations by default):
+   - For each step, look up the tool in `REGISTRY` (global dict in `tool_registry.py`).
+   - **ArgFiller** is called: if any required args are missing, an LLM call (temperature=0.0, max_tokens=128) extracts values from conversation history. If the LLM can't infer a value, it returns a `"clarify"` message that surfaces to the user.
+   - **Executor.dispatch()** is called. This applies three safety layers (see executor.py).
+   - If a `PendingConfirmation` is returned (for write=True tools), the CLI pauses and asks `Confirm? y/N:` via `input()` — a blocking stdin read.
+   
+5. **After execution**: Session summary is written to `logs/agent_audit.jsonl` and `logs/agent_intent_log.jsonl`. State is saved to `logs/agent_sessions/<session_id>.json`.
+
+**Classes:**
+
+| Class | Purpose | Runtime Responsibility |
+|-------|---------|----------------------|
+| `AgentCore` | Orchestrates one user turn | Classifies intent, builds plan, dispatches tools, writes audit trail. Owns all sub-components. |
+
+**Methods:**
+
+- `turn(user_input)` → str: The main turn. Invocation source: `cli.py` REPL loop. Downstream calls: IntentRouter.classify, PlanCompiler.build, ArgFiller.fill, Executor.dispatch. State mutations: appends to `self.state.messages`, appends `ToolCall` records to `self.state.tool_calls`. Side effects: writes session summary JSONL, saves state JSON. File writes: `logs/agent_audit.jsonl`, `logs/agent_intent_log.jsonl`, `logs/agent_sessions/<session_id>.json`.
+
+- `_parse_skip(text)` → set: Substring matching against 5 rule groups. Hidden default: no skip rules fire if text doesn't contain trigger phrases.
+
+- `_reply(msg)` → str: Prints to stdout AND appends to state AND saves state to disk. THREE side effects per reply.
+
+- `_extract_metrics(results)` → dict: Silently scans result dicts for known metric keys. Missing keys are simply absent from returned dict — no error.
+
+- `_derive_outcome(steps)` → str: Looks at the last N tool call outcomes. If any were "denied", outcome is "denied". If all were "success", outcome is "success". Mixed → "partial". Empty → "success" (hidden default: empty tool_call list = success).
+
+**Failure Modes:**
+- If `_llm_chat` import fails (config_layer.llm_inference_client not installed), the static method will raise ImportError at method-call time.
+- If IntentRouter patterns file can't be loaded, regex classification is silently disabled (warning logged, continues with LLM-only).
+- If Executor encounters an unknown tool, it logs and continues to next step (not a hard stop).
+- If a tool handler throws, the exception is caught by Executor, outcome="fail", and the step loop continues with the next step.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 3. `executor.py` — Executor class
+
+**File Purpose:**  
+The safety gate between the agent's abstract plan and actual system calls. Every tool dispatch goes through here.
+
+**What ACTUALLY happens when `dispatch(tool_name, args, confirmed=False)` runs:**
+
+1. **Tool existence check:** If `tool_name` not in `REGISTRY`, returns `"REFUSED: unknown tool '{tool_name}'"`.
+2. **Allowlist check:** If the tool's `ToolSpec.allowlist` is False AND the tool_name is not in the `write_tools_enabled` config list, it's refused. This is the gate for dangerous tools like `live_hook.enable` which has `allowlist=False`.
+3. **Path guard:** For write=True tools, every string arg that contains "/" or "\" is checked against three allowed regex roots: `configs/production/`, `logs/`, `results/`. Any other path is refused.
+4. **Confirm gate:** If write=True and confirmed=False, returns a `PendingConfirmation` dataclass with a human-readable preview. The caller (AgentCore.turn) is expected to show this and ask y/N.
+5. **Execution:** Calls `spec.handler(**args)` — the actual Python function that was registered via `@register_tool`. Wrapped in try/except. If it throws, outcome="fail", error=str(exc), but the tool result is None and execution continues.
+6. **Audit:** Every dispatch — success, fail, refused, or denied — writes a step record to `logs/agent_audit.jsonl`.
+
+**Key observation about confirmed tools:** If the user types "y" in response to the PendingConfirmation prompt, `dispatch()` is called AGAIN with `confirmed=True`. This means the tool handler runs twice: first time returning PendingConfirmation, second time actually executing. For tools with side effects (e.g., launching subprocesses), the first call has no side effects because the handler is never reached — the confirm gate returns before execution. But the audit log will show two entries: first with outcome="pending" (implicitly, since PendingConfirmation is returned and audited as? Actually, looking at the code: the PendingConfirmation is returned by dispatch() WITHOUT calling audit.write_step. The FIRST call to dispatch returns PendingConfirmation BEFORE reaching the audit code. So only the confirmed call creates an audit record. This is correct — no double-audit.)
+
+Wait, let me re-read: On the first dispatch(confirmed=False), the write=True check returns `PendingConfirmation` at line 96 — before the audit write at line 111. So NO audit record is written for the pending confirmation. The audit record is only written on the second dispatch(confirmed=True). This is correct behavior.
+
+**Class: `PendingConfirmation`** — Just a dataclass holding tool, args, preview string. Not a real class with logic.
+
+**Class: `Executor`** — Ownership: AgentCore. Runtime responsibility: execute tool handlers with three safety gates.
+
+**Methods:**
+
+- `dispatch(tool_name, args, confirmed)` → Any: The core dispatch. Invocation: AgentCore.turn step loop. Downstream: `spec.handler(**args)` (the actual tool function). Side effects: audit log write, state mutation (appends ToolCall). Failure modes: handler exception caught → outcome "fail", returns None. No corruption risk — tool handlers may mutate state externally but Executor itself is deterministic.
+
+- `dispatch_denied(tool_name, args)` → None: Records a denied confirmation. Invocation: AgentCore when user says "n". Side effects: audit write, state append.
+
+- `_refuse(tool_name, args, reason)` → str: Refuses a tool call. Returns "REFUSED: {reason}". Always write=True, confirmed=False, outcome="refused" in audit.
+
+**Hidden Defaults:**
+- `write_tools_enabled` defaults to empty set → all allowlist=False tools are refused by default.
+- `_WRITE_ROOTS` is hardcoded to three paths, NOT configurable.
+- The path guard checks ANY string arg containing "/" or "\" — even if the value is not a file path. E.g., if a tool has a description arg that contains "config/production", it would trigger the path guard and potentially be refused even if it's not a path. This is a design concern.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 4. `state.py` — AgentState and ToolCall dataclasses
+
+**File Purpose:**  
+In-memory conversation state + tool call history, persisted to disk as JSON after every turn.
+
+**What ACTUALLY happens:**  
+AgentState holds: session_id (auto-generated from timestamp), mode, intent_key, plan_id, message history, tool call records, pending confirmations, and mode-specific context. Every `_reply()` call in AgentCore triggers `state.save()` which writes the entire state to `logs/agent_sessions/<session_id>.json`. Session can be resumed via `cli.py --resume <session_id>`.
+
+**Class: `AgentState`** — Plain data holder with serialization. Runtime responsibility: persist conversation context across agent turns.
+
+**Class: `ToolCall`** — Dataclass: tool name, args, result, outcome (pending|success|fail|denied|refused), latency, error.
+
+**Security concern:** The `save()` method writes tool_calls including full `args` dictionaries — which may contain API keys if any tool handler receives them as arguments. There's no redaction in state persistence. Redaction only exists in the GroqClient layer.
+
+**State mutations:** `add_message()` appends to messages list (unbounded growth — no pruning). `confirmed()` checks pending_confirmations list.
+
+**Hidden Default:** `mode` is Optional Literal — can be None if intent router returns mode=None (which happens for "cross" intents or unknown classifications). Downstream code must handle None mode.
+
+**Trust Classification: CANONICAL** but with the above security caveat.
+
+---
+
+### 5. `intent_router.py` — IntentRouter class
+
+**File Purpose:**  
+Classifies natural language input into one of 14 intent keys (plus "ask_user" for unclassifiable).
+
+**What ACTUALLY happens when `classify(user_input, conversation)` runs:**
+
+1. Regex matching against `intent_patterns.json`. Each intent_key has 1+ regex patterns. If any pattern matches, returns `{mode, intent_key, confidence=0.85}`. The confidence 0.85 is HARDCODED, not configurable.
+2. If regex confidence (0.85) >= floor (default 0.6), the regex result is returned immediately — LLM is NEVER called if regex matches.
+3. If regex fails or confidence < floor, LLM call is made with temperature=0.0, max_tokens=64.
+4. LLM response is JSON-parsed. If parsing fails OR unknown intent_key is returned, it falls back to "ask_user".
+5. If LLM is disabled (`use_llm=False`) and regex fails, returns `{"mode": None, "intent_key": "ask_user", "confidence": 0.0}`.
+
+**Classes:**
+
+`IntentRouter(llm_chat_fn, patterns_path, use_llm, confidence_floor)` — Owned by AgentCore.
+
+**Methods:**
+
+- `_load_patterns(path)` → None: Silently fails if file missing or JSON invalid — patterns dict stays empty, regex disabled. WARNING logged.
+
+- `classify(user_input, conversation)` → dict: Invocation: AgentCore.turn. Downstream: _regex_classify, _llm_classify. State mutations: None (pure function). Side effects: LLM API call (if enabled and needed).
+
+- `_regex_classify(text)` → Optional[dict]: Case-insensitive regex search. Returns confidence 0.85 always.
+
+- `_llm_classify(user_input, conversation)` → Optional[dict]: Builds system prompt with intent list embedded. Calls `config_layer.llm_inference_client.llm_chat` directly (line 111) — NOT through self._llm_chat. This is a hardcoded import bypassing the configured chat function.
+
+**Critical finding:** On line 110-111, `_llm_classify` imports `from config_layer.llm_inference_client import llm_chat` and calls it directly, instead of using `self._llm_chat`. This means the LLM chat function configured via the constructor parameter is IGNORED for the LLM classification path. The constructor parameter `llm_chat_fn` is only used by `ArgFiller` and the outer `classify()` method structure. This is either a bug or an intentional design choice to always route classification through the low-latency BitNet-local inference rather than the Groq client. Either way, it's a hidden override.
+
+**Hidden Defaults:**
+- `_PATTERNS_PATH` hardcoded to `"src/agent/prompts/intent_patterns.json"`.
+- `_MODE_INTENTS` hardcoded dict — all 14 intent keys defined here; unknown keys from LLM are rejected.
+- Confidence floor default 0.6.
+- LLM temperature 0.0, max_tokens 64 — fixed.
+
+**Failure Modes:**
+- Patterns file missing: regex disabled silently.
+- LLM returns non-JSON: silently falls to "ask_user".
+- LLM returns unknown key: warning logged, coerced to "ask_user".
+- `cross` mode intent: mode is explicitly set to None (line 130).
+
+**Trust Classification: CANONICAL** but with the above critical finding about bypassing configured llm_chat_fn.
+
+---
+
+### 6. `plan_compiler.py` — PlanCompiler class + PLAN_REGISTRY
+
+**File Purpose:**  
+Deterministic intent_key → ordered tool list mapping. The LLM has NO role here.
+
+**What ACTUALLY happens:**  
+`PLAN_REGISTRY` is a hardcoded dict mapping 14 intent keys to tool step sequences. `PlanCompiler.build(intent_key)` does a dict lookup and returns a fresh copy of the steps. `PlanCompiler.filter(plan, skip_set)` removes steps whose tool name is in the skip set.
+
+**Critical observation about the tool names in PLAN_REGISTRY:**
+The registered tools in the mode files use names like `"tuner.run_multi"`, `"validator.validate"`, etc. Any mismatch between PLAN_REGISTRY keys and REGISTRY keys would cause the step to print "UNKNOWN TOOL, skipping". There's no validation at import time that all referenced tools exist.
+
+**Tools referenced in PLAN_REGISTRY:**
+Pipeline: tuner.run_multi, validator.validate, promotion.promote_from_checkpoint, backtest.run_v2, live_hook.dry_run
+Copilot: engine.run, fusion.explain, planner.plan, risk.check, advise.veto, advise.resize
+Governance: reflection.load_merge, reflection.generate_prompt, meta_governor.dry_run, shadow.stage_candidate, governance.run_loop
+Cross: audit.tail
+Findings: findings.synthesize, findings.list_recent, findings.explain
+
+All these must be registered via @register_tool decorators in the mode modules. The decorator runs at import time and raises ValueError if a name is already registered.
+
+**Classes:**
+
+`ToolStep(tool, default_args)` — dataclass. `Plan(intent_key, steps, filter)` — dataclass with filter method.
+
+`PlanCompiler` — static methods only. `build(intent_key)` → Plan, `filter(plan, skip)` → Plan.
+
+**Hidden Defaults:** Unknown intent_key → returns a Plan with intent_key="ask_user" and empty steps (no error thrown).
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 7. `tool_registry.py` — ToolSpec, REGISTRY, register_tool
+
+**File Purpose:**  
+Central global registry where all tool handlers are registered. Imported by executor, modes, and any code that needs tool metadata.
+
+**What ACTUALLY happens at module import:**  
+The `REGISTRY` dict is created empty. When mode modules are imported, each `@register_tool(...)` decorator executes, calling the `decorator` inner function which adds a `ToolSpec` to `REGISTRY`. If a tool name is already registered, `ValueError` is raised (fail-fast on duplicate registration).
+
+**Classes:**
+
+`ToolSpec(name, description, args_schema, handler, write, allowlist)` — Metadata for one tool.
+
+**Functions:**
+
+- `register_tool(name, description, write, args_schema, allowlist)` → decorator function. The decorator: validates name not already in REGISTRY, creates ToolSpec, adds to REGISTRY, returns the original handler function unchanged.
+
+- `get_tool(name)` → ToolSpec: Raises KeyError if not found.
+
+- `get_schema_text(mode)` → str: Generates the `{TOOL_SCHEMA}` text injected into LLM prompts. Lists all tools or mode-filtered subset.
+
+**Arguments to get_tool, get_schema_text, REGISTRY dict — all use string keys. The mode parameter in `get_schema_text` is Optional — if None, ALL tools are included in the schema text.**
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 8. `tool_planner.py` — ArgFiller class + _extract_json helper
+
+**File Purpose:**  
+Given a tool's args_schema and the conversation context, uses one LLM call to fill missing required arguments.
+
+**What ACTUALLY happens when `fill(tool_name, args_schema, current_args, conversation)` runs:**
+
+1. Compares required args in args_schema against current_args.
+2. If none missing, returns immediately with `{"args": current_args, "clarify": None}` — NO LLM call.
+3. If args are missing, builds a prompt describing the tool and missing params, sends to LLM (temperature=0.0, max_tokens=128).
+4. LLM response is JSON-parsed via `_extract_json()` helper.
+5. If parsing fails OR empty response: returns current_args unchanged with NO clarify message. Llm error is silently swallowed (warning logged).
+6. Merges LLM-supplied args over current_args (LLM values override defaults).
+
+**Critical observation about merging:**
+Line 109: `merged = {**current_args, **parsed.get("args", {})}` — The LLM's returned args OVERRIDE any existing current_args values. This means if the LLM decides to change an already-provided value, it can. This is a potential LLM injection path if the prompt is not carefully constrained.
+
+**Hidden Defaults:**
+- If parsed JSON has no "args" key: merged = current_args (unchanged).
+- If clarify is None: returns {"args": merged, "clarify": None}.
+- If LLM response can't be parsed: returns current_args with NO clarify — the agent proceeds with possibly missing args, and the tool handler will likely fail.
+
+**Failure Modes:**
+- Empty LLM response: returns current_args unchanged, no clarify question.
+- JSON parse failure: returns current_args unchanged, no clarify question.
+- LLM returns invalid values (wrong types, out-of-range): NO validation is done — raw values are passed through to the tool handler.
+
+**Trust Classification: EXPERIMENTAL** — The lack of validation on LLM return values and the silent swallow of parse failures make this a weak link.
+
+---
+
+### 9. `audit.py` — AuditLogger class
+
+**File Purpose:**  
+Append-only JSONL audit logging for every tool dispatch and session summary.
+
+**What ACTUALLY happens:**  
+`write_step()` writes a record with: ts, session_id, plan_id, mode, tool, args_hash (SHA256 first 16 chars), result_hash, write, confirmed, outcome, latency_ms, error. `write_session_summary()` writes to BOTH `logs/agent_audit.jsonl` AND `logs/agent_intent_log.jsonl`.
+
+**NOTE:** `args_hash` is a SHA256 hash of the serialized args, NOT the actual args. This means the audit log does NOT contain the actual arguments passed to tools — only hashes. This is a privacy/security property but means the audit log cannot be used to replay or inspect actual tool calls without the original args from AgentState.
+
+**Hidden Defaults:**
+- `_DEFAULT_AUDIT_LOG` = "logs/agent_audit.jsonl"
+- `_DEFAULT_INTENT_LOG` = "logs/agent_intent_log.jsonl"
+- `_sha256_short` hash truncates to 16 hex chars (64 bits of entropy) — collision risk is low but not zero.
+
+**File writes:** Always append to JSONL (no truncation, ever). Creates parent directories if missing.
+
+**Failure Modes:** I/O errors on append (disk full, permissions) are logged as debug messages and otherwise silent — the system continues without audit.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 10. `modes/pipeline_mode.py` — Pipeline tool handlers
+
+**File Purpose:**  
+Registers 6 pipeline tools: tuner.run_multi, validator.validate, promotion.promote_from_checkpoint, backtest.run_v2, live_hook.dry_run, live_hook.enable.
+
+**What ACTUALLY happens when each tool is dispatched:**
+
+#### `_tuner_run_multi(data_dir, instruments, n_iter)` — write=True
+Launches `scripts/training/auto_tuner_multi.py` as a SUBPROCESS with `subprocess.run()`, timeout=3600s (1 hour). Captures stdout/stderr. If returncode != 0, raises RuntimeError with last 500 chars of stderr. On success, reads results from `results/tuner/checkpoint_multi.json` and returns its contents.
+
+**Subprocess usage: YES** — spawns a child Python process.
+**File writes: YES** — the subprocess writes to results/tuner/checkpoint_multi.json (not the handler directly).
+**Network/API: NO** — unless the subprocess does.
+**Failure mode:** 1-hour timeout. Subprocess can hang for an hour before raising.
+**Corruption risk:** If the subprocess is killed mid-write, checkpoint_multi.json could be truncated. The handler assumes it's valid JSON.
+
+#### `_validator_validate(checkpoint_path, data_dir, config_id)` — write=False
+Loads a tuner checkpoint JSON, constructs ConfigValidator, calls validate(params, csv_paths, config_id). Scans data_dir for `*_M15.csv` files to build instrument→csv_path mapping. Returns the validation report dict.
+
+**Failure mode:** If checkpoint file missing, returns `{"status": "error", "error": "Checkpoint not found"}` — soft error, not an exception.
+
+#### `_promotion_promote(checkpoint_path, version, data_dir)` — write=True
+Version is required — raises ValueError if empty. Creates `PromotionManager`, calls `promote_from_tuner_checkpoint()`.
+
+**Corruption risk:** This writes to `configs/production/` — one of the three allowed write roots. If the promotion succeeds, it overwrites production config.
+
+#### `_backtest_run(csv_path, instrument)` — write=False
+Instrument is inferred from CSV filename if not provided (splits on "_M15"). Loads production config for that instrument, creates BacktestRunner, calls run().
+
+#### `_live_dry_run(instrument, tick_json)` — write=False
+Loads production config, creates LiveEngineHook, calls simulate_one(). If the hook doesn't have simulate_one attribute, returns `{"status": "dry_run_ok"}` instead of failing — hidden fallback.
+
+#### `_live_enable(enable)` — write=True, allowlist=False
+Writes `{"live_toggle": enable}` to `configs/production/live_toggle.json`. This is the ONLY tool with allowlist=False, meaning it MUST be explicitly added to write_tools_enabled config to work.
+
+**Trust Classification: CANONICAL** for all pipeline tools.
+
+---
+
+### 11. `modes/copilot_mode.py` — Copilot tool handlers
+
+**File Purpose:**  
+Registers 7 read-only copilot tools: engine.run, fusion.explain, planner.plan, risk.check, advise.veto, advise.resize, collector.tail.
+
+All tools are read-only (write=False). None place or cancel trades.
+
+#### `_engine_run(instrument, features)` — write=False
+Creates EngineRunner, calls run() with feature dict and context. If features empty, passes empty dict.
+
+#### `_fusion_explain(instrument, engine_result)` — write=False
+Creates FusionEngine, calls compute(). If the engine doesn't have compute() method, returns empty dict.
+
+#### `_planner_plan(instrument, decision_json, features_json)` — write=False
+Creates ExecutionPlannerV1_2, calls plan(). 
+
+#### `_risk_check(instrument, trade_json)` — write=False
+Creates UltronRiskGate, calls check_trade(). If gate doesn't have check_trade method, returns empty dict.
+
+#### `_advise_veto(scores_json, instrument)` — write=False
+**CRITICAL:** This calls `config_layer.llm_inference_client.llm_chat` directly (NOT GroqClient, NOT the configured chat function). It sends component scores to the LLM with temperature=0.3 and asks for TAKE/VETO/RESIZE advice.
+
+**Hidden Default:** If LLM returns non-JSON or empty, returns `{"action": "TAKE", "factor": 1.0, "why": "LLM unavailable — defaulting to TAKE"}`. This means if the LLM is down, the advice defaults to FULL APPROVAL — a live-trading risk.
+
+#### `_advise_resize(scores_json)` — write=False
+Pure heuristic — no LLM. Uses hardcoded thresholds: fusion >= 0.75 → factor 1.0, >= 0.6 → 0.75, >= 0.5 → 0.5, else → 0.0.
+
+**Hidden Default:** JSON parse failure → returns factor 0.5 with error in the response.
+
+#### `_collector_tail(n)` — write=False
+Reads `logs/collector.jsonl` file. If file missing, returns empty lines with a note.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 12. `modes/governance_mode.py` — Governance tool handlers
+
+**File Purpose:**  
+Registers 6 governance tools: reflection.load_merge, reflection.generate_prompt, meta_governor.dry_run, shadow.stage_candidate, governance.run_loop, audit.tail.
+
+#### `_reflection_load_merge(collector_log, trades_csv)` — write=False
+Creates ReflectionBuffer, calls load_and_merge(). Returns row count.
+
+#### `_reflection_generate_prompt(collector_log, trades_csv)` — write=False
+Writes generated prompt to `logs/meta_prompt.txt` (scratch file in allowed root). Despite write=False (no confirmation gate), it writes to disk — the file path is within `logs/` which is a write-allowed root in executor.py's path guard. BUT the write=False means the confirmation gate is skipped. This is a minor inconsistency: the tool writes a file but isn't classified as a write tool.
+
+#### `_meta_governor_dry_run(collector_log, trades_csv)` — write=False
+Runs MetaGovernorExecutor inference. Returns proposed config patch and raw preview.
+
+#### `_shadow_stage(patch_json)` — write=False
+Stages a config patch in ShadowPromotionGate.
+
+#### `_governance_run_loop(collector_log, trades_csv, baseline_pnl)` — write=True
+Calls GovernanceOrchestrator.run(). This IS write=True, meaning it goes through the confirmation gate before execution.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 13. `modes/findings_mode.py` — Findings tool handlers
+
+**File Purpose:**  
+Registers 3 findings tools: findings.synthesize, findings.list_recent, findings.explain.
+
+#### `_findings_synthesize(run_id)` — write=True
+Calls `agent.findings_synthesizer.synthesize_finding()`. Even though it's write=True (requires confirmation), the actual writing behavior depends on the synthesizer.
+
+#### `_findings_list_recent(n)` — write=False
+Returns findings from `logs/agent_findings.jsonl`. N is clamped to [1, 200].
+
+#### `_findings_explain(run_id)` — write=False
+Looks up a finding by run_id prefix (≥8 chars).
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 14. `findings_synthesizer.py` — synthesize_finding and helpers
+
+**File Purpose:**  
+Post-run diagnostic via Groq Llama-3.1-70B. Reads a run record + log tails + source code, sends to GroqClient, writes structured finding to JSONL.
+
+**What ACTUALLY happens when `synthesize_finding(run_id)` runs:**
+
+1. Validates run_id is non-empty string. If not: writes `status="invalid_input"` finding.
+2. Loads run record from `results/{INSTRUMENT}/*.json` or legacy `logs/control_plane/runs/{run_id}.json`. If not found: writes `status="run_not_found"` finding.
+3. Loads config section "agent.findings". If not enabled: writes `status="disabled_in_config"` finding.
+4. Reads log tails (stdout/stderr) from paths in the run record. Silently handles missing files.
+5. Reads source script head (first 200 lines) and tail (last 100 lines). Resolution logic: tries the path as-is, then tries prepending `D:/Tradelatest/`. Falls back to `control_plane.registry` if command_line parsing fails.
+6. Builds a diagnostic prompt with all above context.
+7. Calls `GroqClient.chat()` with prompt + system instruction. If response empty: writes `status="synthesis_unavailable"` finding.
+8. Parses JSON from LLM response. If non-JSON: stores error but still writes the finding with whatever was extracted.
+9. Appends finding to `logs/agent_findings.jsonl`. Always appends — never mutates.
+
+**Never raises.** Every failure path produces a finding with an explanatory `error` field and appends it to the log.
+
+**Network/API usage: YES** — calls Groq API via GroqClient.
+
+**Hidden Defaults:**
+- `_DEFAULT_LOG_TAIL = 200` lines
+- `_DEFAULT_MAX_SOURCE_CHARS = 8000`
+- Script resolution: if command_line list has <2 elements or doesn't end with .py, falls back to registry lookup, which may fail silently → returns None.
+
+**Trust Classification: EXEPERIMENTAL** — The `_resolve_script_path` function has a fallback chain that may silently return None. The Groq API call has circuit-breaker behavior.
+
+---
+
+### 15. `groq_client.py` — GroqClient class
+
+**File Purpose:**  
+Stdlib-only Groq chat client for the agent's findings layer. Has circuit-breaker, redaction, JSONL request logging.
+
+**What ACTUALLY happens when `chat(prompt, system, max_tokens)` runs:**
+
+1. Checks circuit breaker: if `fail_count >= 5`, logs and returns "" immediately.
+2. Checks API key from env var (GROQ_API_KEY by default). If missing: returns "" after logging a warning (once).
+3. Redacts secrets from system and prompt using regex patterns (default: "api_key", "secret", "password", "token", "AV_API_KEY", "GROQ_API_KEY").
+4. Builds HTTP request to `https://api.groq.com/openai/v1/chat/completions` with stdlib `urllib.request`.
+5. If HTTPError: increments fail_count, records error. If connection/network error: increments fail_count.
+6. On success: resets fail_count to 0.
+7. Logs EVERY request (redacted) to `logs/agent_llm_requests.jsonl` — including failures.
+8. Returns assistant content string, or "" on any failure.
+
+**Circuit breaker:** Opens after 5 consecutive failures. Stays open until process restart (fail_count is NOT persisted, so restart resets it). While open, all calls return "" immediately.
+
+**Redaction:** Uses regex to match key patterns like `"api_key": "..."` and `KEY=value` lines. Replaces values with `***REDACTED***`. Redaction happens BEFORE the request is sent (defense in depth).
+
+**Hidden Defaults:**
+- `_DEFAULTS`: model=llama-3.1-70b-versatile, endpoint=groq API, timeout=8s, max_tokens=1024, fail_count_disable=5.
+- `.env loading:` Walks up from the module's directory looking for .env. Only loads keys NOT already in os.environ.
+- `_REDACT_PATTERNS`: tuple of 6 strings (api_key, secret, password, token, AV_API_KEY, GROQ_API_KEY).
+- Temperature default: 0.1 (configurable via cfg).
+
+**Failure Modes:**
+- Circuit open: silent return of "" (caller should handle).
+- Missing API key: one WARNING log, then silent return of "" for subsequent calls.
+- HTTP/network errors: silently counts failures, no alert to operator.
+- Redaction: if a pattern doesn't match, no error — the value passes through unredacted.
+
+**Trust Classification: CANONICAL**
+
+---
+
+==================================================
+## PART 2: `src/analytics/`
+==================================================
+
+### 16. `clustering.py` — TradeClustering class
+
+**File Purpose:**  
+Groups losing trades by condition to surface pattern failures. Four conditions: low zone score, low RR, low confidence, ranging regime.
+
+**What ACTUALLY happens when `cluster_losses(trades)` runs:**
+1. Filters trades to only LOSS results.
+2. Groups losses into four buckets based on thresholds.
+3. Filters out clusters with < 3 trades (hardcoded: `_MIN_CLUSTER_SIZE = 3`).
+4. Returns dict of condition→trade list.
+
+**`loss_rate_by_condition(trades)`** computes loss rate per condition (losses in condition / all trades in that condition).
+
+**Hidden Defaults:**
+- zone_threshold=0.55, rr_threshold=2.0, confidence_threshold=0.60, min_cluster_size=3.
+
+**Failure Modes:**
+- Missing keys (e.g., trade dict without "result"): `t.get("result")` returns None, comparison `"LOSS" == None` is False so trade is ignored. Silent.
+- Missing numeric keys (e.g., no "zone"): `float(t.get("zone", 1.0))` defaults to 1.0 — may not match low_zone condition. For "rr": default 99.0 ensures it never matches low_rr. For "confidence": default 1.0 ensures it never matches low_confidence.
+- Empty trades list: returns empty dict.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 17. `performance.py` — PerformanceAnalyzer class
+
+**File Purpose:**  
+Computes performance metrics from trade dicts: win rate, expectancy, drawdown, profit factor. Also supports breakdown by regime and config profile.
+
+**What ACTUALLY happens when `compute(trades)` runs:**
+1. Separates trades into WIN/LOSS by checking `t.get("result")`. Any trade not matching "WIN" or "LOSS" is silently excluded.
+2. Computes: win_rate, avg_win, avg_loss, expectancy, total_pnl, profit_factor, max_drawdown.
+3. Max drawdown: peak-to-trough of cumulative PnL series. Returns 0.0 if no trades.
+
+**`_compute_drawdown(trades)`:** Runs peak-to-trough calculation. If peak never goes above 0, drawdown is always 0.0 (division by abs(peak) protected by `if peak > 0`).
+
+**`_empty_metrics()`:** Returns all zeros — used when trades list is empty.
+
+**Hidden Default:** `_MIN_TRADES_FOR_ANALYSIS = 5` is defined but NEVER USED in the code. It's a dead constant.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 18. `sl_tp_comparator.py` — SLTPComparator class + pure functions
+
+**File Purpose:**  
+Compares CRT SL/TP (current production method) vs Legacy ATR-based SL/TP on the same trade entries from a completed backtest. Determines which method produces better outcomes.
+
+**File size:** 670 lines — the largest file across all four directories.
+
+**What ACTUALLY happens when `compare(trade_records, candles)` runs:**
+
+For EACH trade record:
+1. **CRT method**: Reads SL/TP and exit metrics directly from the TradeRecord. NO re-simulation. The existing backtest result is taken as-is.
+2. **Legacy method**: Re-computes SL/TP from features using old ATR-based formula, then forward-simulates the trade through the same candle sequence.
+3. Exit simulation: Walks forward candles in order. Priority: TP2 hit → SL hit → TP1 hit → TIMEOUT (after max_candles). This matches BacktestRunner's optimism characteristic for fair comparison.
+4. Both results are aggregated via `_aggregate_variant_results()`.
+5. Winner is determined by comparing primary_metric (default: expectancy_rr). Tie if delta < 0.0001.
+
+**Pure functions (no class dependency):**
+- `derive_intent_from_features(features, direction)` → str: Re-derives trade intent from feature snapshot.
+- `compute_legacy_levels(entry, direction, features, cfg)` → dict: Legacy SL/TP formula using intent-specific ATR multipliers.
+- `simulate_exit(entry_fill, direction, sl, tp1, tp2, forward_candles, max_candles)` → dict: Forward candle walk. Returns exit_reason, exit_price, realized_rr, candles_held.
+
+**`ComparisonReport`** dataclass: Holds full results, has print_summary() for CLI display and save_json() for file output.
+
+**`run_comparison_from_backtest(csv_path, instrument, cfg_override, output_path)`:** Convenience wrapper that runs BacktestRunner, loads trade results, runs comparison, optionally saves to JSON. Uses a temp directory `results/sl_tp_comparison_tmp`.
+
+**Hidden Defaults:**
+- max_candles_per_trade = 100
+- primary_metric = "expectancy_rr"
+- Legacy defaults: sl_atr_mult=1.0, tp_atr_mult_breakout=2.0, pullback=1.5, reversal=1.0, sweep=1.2
+- _load_trades_from_csv: exit reason "STOPPED" → "SL", "RESET_CLOSE" → "TIMEOUT"
+
+**Failure Modes:**
+- No trade records: returns empty ComparisonReport with trades_compared=0.
+- Candle index out of range: forward candlestick slicing `candles[candle_open + 1 : ...]` may produce empty list if candle_open is the last candle → TIMEOUT at entry price.
+- BacktestRunner import: wrapped in local import to avoid circular deps.
+
+**Trust Classification: CANONICAL**
+
+---
+
+==================================================
+## PART 3: `src/bitnet/`
+==================================================
+
+### 19. `__init__.py` — Package exports
+
+**File Purpose:**  
+Exports the public API. Re-exports `BitNetZoneGate` and `get_zone_gate` from `engines.live_engine` with a try/except that sets `_ZONE_GATE_AVAILABLE = False` if the import fails.
+
+**Critical finding:** If `engines.live_engine` is not importable (e.g., when running from bitnet directory without the full project), the re-export silently fails and `BitNetZoneGate` is NOT included in `__all__`. `__all__` statically lists them regardless, so accessing `bitnet.BitNetZoneGate` would raise AttributeError at runtime if the import failed.
+
+**Trust Classification: EXPERIMENTAL** — Conditional import of external module is fragile.
+
+---
+
+### 20. `bitnet_inference.py` — BitNetModel class + legacy bitnet_score function
+
+**File Purpose:**  
+Two-schema BitNet inference engine. Schema 1: legacy `model.json` (6-input feed-forward). Schema 2: export format `model_export_format.json` (24-input with binary weights + scale).
+
+**What ACTUALLY happens when `predict(x)` runs:**
+1. Validates input shape matches `self.input_dim` (auto-detected from model schema).
+2. Checks for NaN — raises ValueError if found.
+3. If export schema: runs `_forward_export()` — binary weights quantized from {0,1} to {-1,+1}, per-layer computation with clamp activation, final layer tanh to (-1, 1).
+4. If legacy schema: maps 24-vector to 6-feature subset via `forward()` — pure Python loops (no numpy) with sigmoid output.
+
+**Export schema forward pass (`_forward_export`):**
+```
+h = input vector
+for each layer:
+  W_ternary = 2 * W_binary - 1    # {0,1} → {-1,+1}
+  z = (W_ternary @ h) * scale     # scaled linear transform
+  if last layer: h = tanh(z[0])   # output scalar in (-1, 1)
+  else: h = clip(z, -1, 1)        # hidden activation
+```
+Final clamp: `max(-1.0 + 1e-7, min(1.0 - 1e-7, h))` to avoid floating-point saturation.
+
+**Legacy `bitnet_score(features)` function:**
+- Takes a features dict, HARD-ACCESSES 6 specific keys: body_ratio, retest_depth, disp_strength, atr, candles_since_retest, double_sweep.
+- Raises KeyError if any key is missing — production behavior is to crash, not silently default.
+
+**Legacy global instance:**
+`_bitnet_instance` is lazily loaded on first call to `_get_bitnet()` or `bitnet_score()`. If `model.json` doesn't exist, `FileNotFoundError` surfaces at call-time (not import time).
+
+**Trust Classification: CANONICAL** for both schemas. Legacy schema is clearly marked as legacy and properly wrapped.
+
+---
+
+### 21. `bitnet_runner.py` — BitNetRunner class
+
+**File Purpose:**  
+Production wrapper around BitNetModel with schema validation and fallback behavior.
+
+**What ACTUALLY happens when `predict(features)` runs:**
+1. Builds feature vector from CANONICAL_FEATURES in strict order.
+2. Validates vector length matches expected.
+3. **Critical truncation:** slices to `self.expected_input_dim` — if model is smaller than canonical feature count, excess features are silently discarded. A WARNING is logged once at init.
+4. Runs inference via BitNetModel.predict().
+5. Decision threshold: > 0.5 → ACCEPT, else REJECT.
+6. If any exception occurs:
+   - DEBUG_MODE=True (HARDCODED): returns `{"score": 0.5, "decision": "ACCEPT", "error": error_msg}` — ACCEPTS on error, which could let unvalidated trades through.
+   - DEBUG_MODE=False: returns `{"score": 0.0, "decision": "REJECT", "error": error_msg}` — safe default reject.
+
+**CRITICAL FINDING:** `DEBUG_MODE = True` is hardcoded on line 13. This means the runner CURRENTLY ALWAYS ACCEPTS ON ERROR. This is a production risk — any inference failure (NaN, model misload, dimension mismatch) results in ACCEPT with score 0.5, which would allow all trades through.
+
+**Hidden Defaults:**
+- model_path defaults to "model_export_format.json" (not "model.json").
+- Feature truncation: if CANONICAL_FEATURES > model.input_dim, extra features silently dropped.
+- ACCEPT on error (DEBUG_MODE=True).
+
+**Trust Classification: DANGEROUS** — DEBUG_MODE=True hardcoded means the runner currently fails open (accepts all) on any error.
+
+---
+
+### 22. `zone_cosine_searcher.py` — BitNetSearchEngine, ZoneCandidate, ZoneResult, Gaussian scoring
+
+**File Purpose:**  
+Core zone discovery engine. Searches feature space for stable Gaussian filter parameters. Also provides the scoring functions used by the live gate during runtime.
+
+**Key components:**
+
+**`ZoneCandidate`** — Immutable container for a Gaussian zone's parameters (mu, sigma, weights, threshold). Sigma values are clamped to >= 1e-9 to prevent div-by-zero. Constructor validates that mu, sigma, weights have identical key sets.
+
+**`ZoneResult`** — Pairs a ZoneCandidate with train-time metrics and a zone_id.
+
+**`compute_gaussian_score_from_candidate(features, candidate)`** — Weighted product of per-feature Gaussian terms:
+```
+g_k = exp(-0.5 * ((x_k - mu_k) / sigma_k)^2)
+score = sum(w_k * g_k) / sum(w_k)
+```
+Returns 0.0 if total_weight is 0. Guarded: returns min(1.0, max(0.0, score)).
+
+**`compute_gaussian_score(features, zone_dict)`** — Same computation but accepts a zone dict (from registry.json) instead of a ZoneCandidate. Handles both list-form and dict-form mu/sigma/weights. Falls back to empty list if dict-form. Returns 0.0 if n==0 or features too short.
+
+**`_evaluate_subset(X, y_rr, y_win, candidate)`** — Scores each sample against the candidate, counts matched trades, returns metrics: trade_count, avg_rr, winrate, max_drawdown.
+
+**`BitNetSearchEngine(index_path)`** — Cosine similarity search engine. Loads a vector index from JSON on init, validates every entry's feature dimension against CANONICAL_FEATURE_DIM (fail-fast on corrupt index). `search(features, top_k)` extracts feature vector from raw dict, computes cosine similarity against all stored vectors, returns top-k.
+
+**Grid search note:** Despite the module docstring mentioning "evolutionary parameter search", the actual search logic is NOT in this file. `BitNetSearchEngine` is a cosine similarity searcher, not an evolutionary searcher. The search pipeline is in `train_pipeline.py` (external to these four directories).
+
+**Hidden Defaults:**
+- ZoneCandidate threshold default: 0.7
+- `compute_gaussian_score` legacy dict handling: if mu_raw is a dict, keys are extracted for all lists. If mu_raw is empty list, returns 0.0.
+- `load_zone_registry`: returns empty list on any I/O or parse error — fail-open behavior.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 23. `zone_validator.py` — ZoneValidator class
+
+**File Purpose:**  
+Rejects weak/unprofitable zones. Four criteria: min 100 trades, avg_rr > 0.30, drawdown < 25%, winrate >= 40%.
+
+**What ACTUALLY happens when `check(metrics)` runs:**
+1. Checks trade_count >= 100. If not: rejected "insufficient_trades".
+2. Checks avg_rr > 0.30. If not: rejected "low_avg_rr".
+3. Checks max_drawdown <= 0.25. If over: rejected "high_drawdown".
+4. Checks winrate >= 0.40. If under: rejected "low_winrate".
+5. If all pass: accepted.
+
+**`with_thresholds()`** factory creates a subclass with custom thresholds at runtime.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 24. `stability_checker.py` — StabilityChecker class
+
+**File Purpose:**  
+Checks zone stability across temporal splits. A zone that only works in one time period is overfit.
+
+**What ACTUALLY happens when `check(X, y_rr, y_win, candidate, n_splits)` runs:**
+
+1. Splits dataset into N=5 temporal chunks.
+2. Evaluates zone on each chunk independently via `_evaluate_subset`.
+3. Collects avg_rr from chunks with >= 10 trades.
+4. If < 2 valid chunks: neutral pass with stability_score=0.40.
+5. Rejects if: std_rr > 0.80 OR fewer than 3 chunks have positive avg_rr.
+6. Computes stability_score (0-1): consistency × variance_score.
+
+**Hidden Defaults:**
+- N_SPLITS=5, MIN_TRADES_PER_SPLIT=10, MAX_RR_STD=0.80, MIN_POSITIVE_SPLITS=3.
+- Dataset too small: `n < n_splits * MIN_TRADES_PER_SPLIT` → neutral pass with score 0.50.
+- `stability_score_only`: convenience that returns only the score.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 25. `forward_tester.py` — ForwardTester class + run_forward_test convenience
+
+**File Purpose:**  
+Out-of-sample validation. Compares zone performance on training vs. test data (temporal split).
+
+**What ACTUALLY happens when `validate(zones, X, y_rr, y_win)` runs:**
+
+1. Splits data temporally at train_split (default 70%).
+2. For each zone: evaluates on train set, evaluates on test set.
+3. Status determination:
+   - test_m["trade_count"] < 20 → "insufficient_test_data"
+   - train_m["avg_rr"] <= 0 → "train_not_profitable"
+   - test_m["avg_rr"] < train_m["avg_rr"] * 0.60 → "degraded"
+   - else → "passed"
+
+**`run_forward_test()`** convenience: creates ForwardTester, runs validate, saves results JSON.
+
+**Hidden Defaults:**
+- train_split=0.70, degradation_threshold=0.60, min_test_trades=20.
+- Constructor validates train_split in [0.5, 0.9] — raises ValueError if outside.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 26. `_smoke_test.py` — Module smoke tests
+
+**File Purpose:**  
+Quick smoke tests for BitNet module. Executed via `py bitnet/_smoke_test.py`.
+
+**Tests include:** ZoneValidator, Gaussian scoring, evaluate_subset, StabilityChecker, BitNetZoneGate, scoring_engine API, train_pipeline presence.
+
+**Crucially:** Tests the disabled gate (`BitNetZoneGate.disabled()`) and missing registry behavior (fail-open allowed). These are explicit assertions that the system fails open safely.
+
+**Trust Classification: TEST** — Not production code.
+
+---
+
+==================================================
+## PART 4: `src/cognitive/`
+==================================================
+
+### 27. `cognitive_bus.py` — CognitiveBus class + DecisionSnapshot dataclass
+
+**File Purpose:**  
+Asynchronous post-processing pipeline for trading decisions. Consumes DecisionSnapshot events emitted by EngineRunner and routes them through four cognitive engines on a background daemon thread. All output is write-only telemetry to `logs/cognitive_telemetry.jsonl`.
+
+**What ACTUALLY happens at runtime:**
+
+1. **At EngineRunner startup**, a `CognitiveBus` is instantiated with the production config.
+2. **`start()`** is called, spawning a daemon thread that runs `_consume_loop()`.
+3. **For each trading decision**, EngineRunner creates a `DecisionSnapshot` (immutable dataclass) and calls `emit(snapshot)`.
+4. `emit()` is non-blocking: tries `queue.put_nowait()`. If queue is full (maxsize=500), the snapshot is silently dropped and `_dropped_events` is incremented. If drop_rate exceeds 5%, a WARNING is logged.
+5. **Background consumer thread** (`_consume_loop`): blocks on `queue.get(timeout=1.0)`, processes each snapshot via `_process()`.
+
+**`_process(snapshot)` pipeline (same order every time):**
+
+1. **Lazy engine init** (`_ensure_engines`): On first event, initializes all 4 engines. If init fails, increments failure counter. After 3 failures, stops retrying permanently (for the lifetime of the process).
+2. **Feature extraction**: Takes first 35 feature values from the snapshot's features dict (hardcoded slice — NOT configurable).
+3. **ReplayMemoryEngine.query()**: Cluster lookup with feature_vector and cluster_id.
+4. **MarketStateClusterEngine.classify()**: Market state classification.
+5. **TradeNetMetaEngine.compute()**: Meta cognition across all results.
+6. **HierarchicalMetaFusion.compute()**: Final fusion of all cognitive signals.
+7. **Telemetry writing**: Constructs `COGNITIVE_TELEMETRY` event via `EventFabric.make_event_envelope()`. If EventFabric fails, falls back to a manually constructed dict (without generation counter).
+8. **Appends to** `logs/cognitive_telemetry.jsonl`.
+
+**HARD RULES (enforced by design):**
+1. Never touches EngineRunner.run() internals.
+2. Never returns anything to the execution plane.
+3. All output is write-only telemetry.
+4. The "cognitive" key is NOT in the EngineRunner return dict.
+
+**Hidden Defaults & Fallbacks:**
+- `_QUEUE_MAXSIZE = 500`, `_BACKPRESSURE_ALERT_THRESHOLD = 0.05`, `_MAX_ENGINE_INIT_FAILURES = 3`.
+- Feature vector: first 35 values from snapshot.features. If snapshot has < 35 features, the list may be shorter.
+- EventFabric fallback: if `make_event_envelope` import or call fails, a plain dict is constructed manually. This means the telemetry record won't have a proper event_id, schema_hash, or generation counter, but it still gets written.
+- Engine init failures: after 3 consecutive failures, `_ensure_engines()` returns False forever → `_process()` silently returns without processing any event.
+- `stop()` sentinel: enqueues `None` to unblock the consumer thread.
+
+**Determinism:** NOT deterministic. Results depend on the state of four external engines (ReplayMemoryEngine, MarketStateClusterEngine, TradeNetMetaEngine, HierarchicalMetaFusion) which accumulate state over time.
+
+**Failure Modes:**
+- Any exception inside `_process()`: caught, logged as WARNING, skip. The snapshot is lost.
+- Queue full: snapshot silently dropped (increments counter). No retry.
+- Engine init failures: permanent disable after 3 attempts.
+- EventFabric import failure: fallback to plain dict, but the telemetry is still written.
+
+**Corruption Risks:**
+- The `_process` method accesses `self._replay_memory._cluster_stats` directly (line 268) — accessing a private attribute. If the ReplayMemoryEngine implementation changes, this will break silently (AttributeError → caught by outer exception → snapshot skipped).
+- Market state result: `ms_output.__dict__` is accessed for serialization. If ms_output doesn't have __dict__ (e.g., it's a namedtuple or has __slots__), `hasattr(ms_output, "__dict__")` returns the empty dict fallback, silently losing data.
+
+**Live/Replay Drift Risk:** 
+- The cognitive pipeline runs in a background thread with its own state. If replay is used to replay historical decisions, the cognitive bus will process them asynchronously and write telemetry — potentially to the same telemetry file that live data is being written to, interleaving live and replay records.
+
+**Governance Contamination Risk:**
+- The cognitive telemetry is write-only and the cognitive bus never feeds back into the execution plane. However, if any downstream system reads `logs/cognitive_telemetry.jsonl` and uses it for decision-making, governance contamination could occur. This is outside the scope of this file's design.
+
+**Trust Classification: LIVE** — This runs in production as a daemon thread alongside live trading. The design prevents it from affecting trading decisions, but its telemetry output could be consumed by other systems.
+
+---
+
+==================================================
+## CROSS-CUTTING ANALYSIS
+==================================================
+
+### Trust Classification Summary
+
+| Component | Classification | Rationale |
+|-----------|---------------|-----------|
+| `src/agent/cli.py` | CANONICAL | Production entry point, no hidden behavior |
+| `src/agent/agent_core.py` | CANONICAL | Core turn loop, clean design |
+| `src/agent/executor.py` | CANONICAL | Three safety gates, audit trail |
+| `src/agent/state.py` | CANONICAL | Clean state management, security concern with unredacted args |
+| `src/agent/intent_router.py` | CANONICAL | Hidden bypass of configured llm_chat_fn (line 111) |
+| `src/agent/plan_compiler.py` | CANONICAL | Pure deterministic mapping |
+| `src/agent/tool_registry.py` | CANONICAL | Clean registry pattern |
+| `src/agent/tool_planner.py` | EXPERIMENTAL | No validation on LLM return values, silent failures |
+| `src/agent/audit.py` | CANONICAL | Append-only, no mutation |
+| `src/agent/findings_synthesizer.py` | EXPERIMENTAL | Complex fallback chain, Groq dependency |
+| `src/agent/groq_client.py` | CANONICAL | Circuit breaker, redaction, clean design |
+| `src/agent/modes/pipeline_mode.py` | CANONICAL | Well-structured tool handlers |
+| `src/agent/modes/copilot_mode.py` | CANONICAL | LLM advice defaults to TAKE (design choice) |
+| `src/agent/modes/governance_mode.py` | CANONICAL | Clean governance tool handlers |
+| `src/agent/modes/findings_mode.py` | CANONICAL | Thin wrappers over findings_synthesizer |
+| `src/analytics/clustering.py` | CANONICAL | Simple filtering logic |
+| `src/analytics/performance.py` | CANONICAL | Dead constant, otherwise clean |
+| `src/analytics/sl_tp_comparator.py` | CANONICAL | Well-designed comparison engine |
+| `src/bitnet/__init__.py` | EXPERIMENTAL | Conditional import fragile |
+| `src/bitnet/bitnet_inference.py` | CANONICAL | Two schemas, well-documented |
+| `src/bitnet/bitnet_runner.py` | **DANGEROUS** | `DEBUG_MODE=True` hardcoded → accepts on error |
+| `src/bitnet/zone_cosine_searcher.py` | CANONICAL | Solid zone discovery and scoring |
+| `src/bitnet/zone_validator.py` | CANONICAL | Clean validation criteria |
+| `src/bitnet/stability_checker.py` | CANONICAL | Solid temporal stability checks |
+| `src/bitnet/forward_tester.py` | CANONICAL | Clean OOS validation |
+| `src/cognitive/cognitive_bus.py` | LIVE | Active production daemon, fail-open design |
+
+### Fail-Fast / Fallback Audit
+
+| Location | Fallback | Runtime Impact |
+|----------|----------|----------------|
+| `intent_router._load_patterns` | Silently disables regex if file missing | LLM-only classification |
+| `intent_router._llm_classify` | Falls to "ask_user" if LLM returns non-JSON | Agent asks clarifying question |
+| `tool_planner.fill` | Returns current_args if LLM fails | Tool may fail with missing args |
+| `executor.dispatch` | Returns "REFUSED:" string if path/allowlist fails | Step skipped, agent continues |
+| `agent_core._derive_outcome` | Empty tool_calls → "success" | False positive outcome |
+| `bitnet_runner.predict` | ACCEPT on error (DEBUG_MODE=True) | **Trade could be allowed despite inference failure** |
+| `zone_cosine_searcher.load_zone_registry` | Returns empty list on any error | No zones available → fail-open |
+| `cognitive_bus.emit` | Silently drops snapshot if queue full | Cognitive telemetry loss |
+| `cognitive_bus._ensure_engines` | After 3 failures, permanently disabled | No cognitive telemetry for rest of process |
+| `cognitive_bus._process` | If EventFabric fails, writes plain dict | Telemetry still written, but no event ID/generation |
+| `pipeline_mode._validator_validate` | Missing checkpoint → returns `{"status": "error"}` | Soft error, agent handles |
+| `copilot_mode._advise_veto` | LLM fails → default TAKE | Trade advised without LLM review |
+
+### Critical Runtime Concerns
+
+**1. BitNetRunner.DEBUG_MODE hardcoded True (src/bitnet/bitnet_runner.py:13)**
+The runner currently accepts all trades on any inference error. In production, this should be False. The DEBUG_MODE flag is not configurable — it's a module-level constant.
+
+**2. ArgFiller LLM can override existing args (tool_planner.py:109)**
+The merge `{**current_args, **parsed.get("args", {})}` allows the LLM to override values that were already provided. No validation is performed on LLM output values.
+
+**3. IntentRouter bypasses configured chat function (intent_router.py:110-111)**
+`_llm_classify` imports and calls `config_layer.llm_inference_client.llm_chat` directly instead of using `self._llm_chat`. This means the configured chat function is only used by ArgFiller, not by classification.
+
+**4. Cognitive bus private attribute access (cognitive_bus.py:268)**
+`self._replay_memory._cluster_stats` accesses a private attribute directly. Implementation change in ReplayMemoryEngine would cause silent data loss.
+
+**5. No argument size bounds in audit.log**
+`AuditLogger` writes args_hash but not actual args. While this is a privacy feature, it means the audit log cannot be used to reconstruct what actually happened — only that something happened.
+
+**6. Unredacted state persistence (state.py)**
+`AgentState.save()` writes full args dictionaries to disk without redaction. If any tool handler receives API keys or secrets as arguments, they are persisted in plain text to `logs/agent_sessions/<session_id>.json`.
+
+**7. Pipeline subprocess timeout (pipeline_mode.py:44)**
+Tuner subprocess has a 3600s timeout. During that hour, the agent CLI is blocked waiting for the subprocess to complete. No progress indication is provided.
+
+---
+
+**END OF ANALYSIS** — 27 source files analyzed across 4 directories. All claims sourced directly from code. No architecture inferred outside immediate runtime scope.

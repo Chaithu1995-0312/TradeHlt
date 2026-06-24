@@ -1,0 +1,930 @@
+# COMPREHENSIVE RUNTIME EXECUTION COGNITION ANALYSIS
+
+## src/config_layer
+
+---
+
+### 1. `market_router.py` — 72 lines
+
+**File Purpose:**
+Contains only two market profiles (FOREX vs CRYPTO) as hardcoded dicts, a classifier, and a router function that returns a populated `CRTConfig` dataclass. This is the market-type branching point: every config that enters the system goes through here first.
+
+**Runtime Role:**
+Called exclusively by `ConfigBuilder.build()`. The router performs a stack-inspection guard (`traceback.extract_stack()`) that raises `RuntimeError` if any caller outside `config_builder.py` tries to call it directly. This is an enforcement mechanism — not a security boundary.
+
+**Trust Classification: CANONICAL**
+Source proof: `get_crt_config()` is the sole producer of `CRTConfig` instances. The stack guard at line 57-62 is in production.
+
+**Failure Modes:**
+- Unknown instruments silently default to FOREX (line 40). This is intentional per docstring but means a typo like "BTCUSDT_" would get FOREX parameters and not CRYPTO ones — silently different behavior with no log warning.
+- Stack guard can be bypassed by any file whose path contains "config_builder" as a substring. A file named `evil_config_builder.py` would pass the guard.
+
+---
+
+### 2. `config_builder.py` — 234 lines
+
+**File Purpose:**
+Central factory for `CRTConfig`. Enforces the architecture rule that ALL config creation must go through `ConfigBuilder.build()`. No other code path may construct a `CRTConfig` directly.
+
+**Runtime Role:**
+Entry point for every component that needs a CRTConfig. Called by `production_config.py::load_prod_config_from_registry()` and by any integration code that builds a config for a specific instrument.
+
+**Key Methods:**
+
+**`ConfigBuilder.build(instrument, overrides=None)` → CRTConfig**
+- **Invocation sources:** `production_config.load_prod_config_from_registry()`, test code, scripts
+- **Downstream calls:** `get_crt_config(instrument)` → returns a frozen CRTConfig, then `dataclasses.replace(base, **overrides)` if overrides provided
+- **Runtime flow:** Gets base config from router → validates override keys → applies via `replace()` → returns immutable frozen dataclass
+- **Side effects:** None. Pure function.
+- **Failure mode:** `ValueError` if unknown override key. No silent fallback.
+
+**`ConfigBuilder.from_existing(instrument, existing, extra_overrides=None)` → CRTConfig**
+- **Purpose:** Reconstruct a config from a previously-used CRTConfig (backtest replay pattern). Carries forward ALL fields from existing as overrides on top of fresh router base.
+- **Runtime flow:** `dataclasses.asdict(existing)` → merge extra_overrides → re-root through router → apply merged
+- **Downstream calls:** `get_crt_config(instrument)` → `dataclasses.replace()`
+- **Failure mode:** If `existing` has fields that no longer exist in CRTConfig (schema drift), `replace()` will raise `TypeError` because `_validate_override_keys` only checks user-provided overrides, not the existing config fields. This is a corruption risk during schema migration.
+
+**`_validate_override_keys(overrides)` → None**
+- Hidden default: Uses `frozenset` of CRTConfig field names at module load time. If CRTConfig fields are added/removed between deployments, this set is stale until restart. No dynamic re-computation.
+
+**Trust Classification: CANONICAL**
+Source proof: Enforced stack guard, frozen config, key validation.
+
+---
+
+### 3. `crt_engine_v2.py` — 1727 lines
+
+**File Purpose:**
+The entire Candle Range Theory (CRT) deterministic state machine trading engine. Contains 5 modules: RangeDetector, StateMachine, UltronRiskEngine, ExecutionEngine, ResetLogic, and the CRTEngine orchestrator. This is the core trading logic.
+
+**Runtime Role:**
+Processes candles one-at-a-time through a deterministic state machine: RANGE → SWEEP → DISPLACEMENT → EXPANSION → RETEST → EXECUTION → RESOLUTION. Decisions are rule-based, no ML. Called by `BacktestRunner` (in `runtime/backtest_v2.py`) for backtesting, and by `live_engine_hook` for live trading.
+
+**Key Classes:**
+
+**`CRTConfig` (frozen dataclass, 3538-353)**
+- **Purpose:** All CRT engine tunable parameters. Frozen after creation.
+- **Ownership:** Created exclusively through ConfigBuilder.
+- **Hidden defaults:** `sizing_bands` default `[(0.75, 0.010), (0.55, 0.005)]` means 1.0% risk at tier 1, 0.5% at tier 2. `allowed_sessions` default `("LONDON", "NEWYORK", "OVERLAP")`. `retest_depth_max` default 0.25.
+
+**`Candle` (dataclass)**
+- **Purpose:** Single OHLCV candle with computed properties (body_ratio, midpoint, is_bullish).
+- **Runtime role:** Every engine state transition is driven by a Candle.
+
+**`EngineState` (dataclass)**
+- **Purpose:** Mutable runtime state for the CRT state machine. Holds current_state, active_range, sweep_event, risk_score, active_trade, cached_features, EMAs.
+- **State mutations:** Every `process_candle()` call mutates this. `reset_to_range()` clears most fields but preserves `active_trade` (via guard in `should_reset`).
+- **Corruption risk:** `cached_features` is set at RETEST_CONFIRMED time (line 725-744) but consumed at EXECUTION time (line 1641). If state resets between retest and execution (HTF change, sweep expiry), `cached_features` becomes None and `build_trade()` will crash at line 1246 with `KeyError: 'double_sweep'` or silently produce wrong intent.
+
+**`RangeDetector`**
+- **`detect_htf_range(candles, htf_candle_id, session)` → Range:** Determines HTF range from high/low extremes of a candle list. Pure function.
+- **`compute_atr(candles, period=14)` → float:** Standard ATR computation from last `period` candles (default 14).
+- **`detect_sweep(candle, active_range, prev_sweep, current_index)` → Optional[SweepEvent]:** Checks if candle high exceeds range high (SHORT sweep) or candle low breaches range low (LONG sweep). Also classifies geometric archetype via `crt_sweep_taxonomy.classify_sweep()` — **diagnostic only, does NOT influence scoring.**
+
+**`StateMachine`**
+- **Runtime flow (state transitions):**
+  1. `try_range_to_sweep`: Detected sweep → sets direction, enters SWEEP
+  2. `try_sweep_to_displacement`: Candle body_ratio > min AND wick_size > ATR_multiplier × ATR AND sweep not expired → enters DISPLACEMENT. **Expiry guard at line 576-588**: if `current_candle_index - sweep.candle_index > max_sweep_age_candles` (default 20), resets to RANGE.
+  3. `try_displacement_to_expansion`: Directional close + close > displacement_close + expansion_atr_min_distance × ATR → enters EXPANSION
+  4. `try_expansion_to_retest`: Price retraces to range boundary within adaptive ceiling (max of retest_depth_max × range_size, retest_atr_depth_fraction × ATR) AND [PATCH 7] disp_strength ≤ max_displacement_strength (default 2.0) → enters RETEST, computes cached_features
+  5. `try_retest_to_execution`: Called after soft-confirmation manifold approves
+
+- **`reset_to_range(state, reason, candle, ev_logger)` → None:** Clears sweep_event, displacement_candle, retest_candle, risk_score, direction, cached_features, evaluating_soft_conf flags. State mutation: sets current_state=RANGE.
+
+**`UltronRiskEngine`**
+- **`compute_score(state)` → RiskScore:** Weighted fusion of sweep_score (0.35), breakout_score (0.25), retest_score (0.20), time_score (0.20) × decay_factor (exponential based on candles since retest).
+- **`approve_with_soft_conf(state, conf_candle)` → (bool, reason, S):** Replaces the original `approve()`. Computes structural score G (from `compute_score`), then confirmation score C (from `compute_soft_confirmation`), then geometric fusion S = G^α × C^β. Tier 1: S ≥ 0.75 (full risk). Tier 2: S ≥ 0.30 (half risk).
+- **`compute_soft_confirmation(candle, state)` → float:** Continuous score ∈ [0.20, 1.0] from body_ratio, EMA momentum, Gaussian distance decay, displacement strength. Weak-link penalty = min(body, mom).
+- **`approve(state)` → (bool, reason):** Legacy binary approve (still used? Dead code analysis needed — `approve_with_soft_conf` appears to be the active path).
+
+**`ExecutionEngine`**
+- **`build_trade(state, risk_engine)` → Optional[Trade]:** Computes SL anchored to displacement candle extreme + ATR buffer. TP1/TP2 anchored to risk distance (R-multiples). Intent-derived TP multipliers via `_derive_trade_intent(cached_features)`. Risk_pct from sizing_bands.
+- **`update_trade(trade, current_price)` → str:** TP1 hits → 50% partial close + trail-SL to 0.5R (Phase-A.2). TP2 hits → close runner. SL hits → full loss or breakeven if TP1 already hit.
+- **`generate_trade_id(instrument, opened_at, direction, entry)` → str:** MD5 hash of normalized fields → 16 hex chars.
+- **Failures:**
+  - Line 1230-1241: Inverted SL guard — rejects trades where SL is on wrong side of entry. Logs warning, returns None.
+  - Line 1192-1195: Missing range or sweep → returns None with log error.
+  - Line 1208-1210: No displacement candle → returns None with log error.
+
+**`CRTEngine` (orchestrator)**
+- **`process_candle(candle, htf_candle_id)` → dict:** Main entry point. Auto-assigns candle index, updates bounded ATR buffer, updates EMAs, checks reset, manages active trades, runs state machine, handles soft-confirmation manifold.
+
+**# human execution explanation**
+What ACTUALLY happens when you call `process_candle()`:
+1. The engine stamps the candle with a monotonically increasing index.
+2. It appends the candle to a bounded buffer (atr_period × 3 = 42 candles max).
+3. It recomputes ATR from the buffer.
+4. It updates EMA-2 and EMA-5 (continuous momentum smoothing).
+5. It checks `ResetLogic.should_reset()` — if an active trade is in OPEN or TP1 state, reset is suppressed. If HTF changed mid-setup (EXPANSION or RETEST), reset is also suppressed. Otherwise retrace > 50% or 1.618 extension triggers reset.
+6. If reset fires and there's an active OPEN trade, it's STOPPED (not TP1-protected).
+7. If no active trade, it drives the state machine forward on the current candle.
+8. When RETEST is confirmed, `cached_features` (retest_depth, body_ratio, disp_strength, session, double_sweep) are computed and stored with hard assertions.
+9. `evaluating_soft_conf` flag is set, and up to `soft_conf_max_candles` (default 3) candles are evaluated via `approve_with_soft_conf`.
+10. If approved, session filter and discount/premium zone filter are checked, then the trade is built, opened, and the action dict is returned with `TRADE_OPENED`.
+
+**Failure Modes & Corruption Risks:**
+- **BitNet dependency**: If `use_bitnet=True` but BitNet is unavailable, `bitnet_score()` will crash (import is at top of file: `from bitnet.bitnet_inference import bitnet_score`). No try/except.
+- **`cached_features` assertion crash**: Lines 746-747 have hard `assert` statements. If `disp_strength` or `body_ratio` missing from cached_features dict (e.g. due to schema mismatch), the engine crashes with `AssertionError` during RETEST_CONFIRMED.
+- **`validate_features` swallow**: Lines 748-761 have a try/except that silently swallows schema validation errors. Bad features proceed with a debug log.
+- **EMA seed**: Line 254-255 seeds both EMAs to first close value. Until both have diverged (which takes ~5-10 candles), momentum scores are noisy.
+- **Floating point**: No decimal.Decimal used. Float comparisons at line 1230-1241 (SL vs entry) can produce edge cases near zero.
+
+**Trust Classification: LIVE** (actively used in backtest and live execution paths)
+
+---
+
+### 4. `crt_sweep_taxonomy.py` — 133 lines
+
+**File Purpose:**
+Pure-function geometric classifier for sweep candles. Classifies into 4 archetypes: TYPE-A (PINBAR BEAR), TYPE-B (SHOOTING STAR), TYPE-C (HAMMER), TYPE-D (PINBAR BULL). Diagnostic metadata only — does not influence sweep detection or scoring.
+
+**Runtime Role:**
+Called by `RangeDetector.detect_sweep()` to annotate `SweepEvent.sweep_type` and `sweep_label` fields. These fields are explicitly documented as "informational only, never consumed by FusionEngine / EngineRunner / UltronRiskGate."
+
+**Trust Classification: CANONICAL** (pure, deterministic, side-effect-free)
+**Determinism:** Complete — no random, no external state, same inputs always produce same outputs.
+
+---
+
+### 5. `crt_gaussian_scorer.py` — 192 lines
+
+**File Purpose:**
+Gaussian (bell-curve) proximity scoring for CRT setups. Uses empirically-calibrated means and variances from backtest observations (EURCAD M15, 200 retest observations 2024-2025). The formula is a weighted geometric mean: final = (s_retest^0.35) × (s_body^0.30) × (s_disp^0.20) × (s_time^0.15).
+
+**Runtime Role:**
+Called by the scoring pipeline (via `ScoringEngine`). Provides a second opinion alongside the CRT engine's own scoring.
+
+**Key Methods:**
+
+**`compute(features, candle_idx, current_index)` → dict:**
+- **Inputs:** `features` dict with `retest_depth`, `body_ratio`, `disp_str`, `retest_index` keys
+- **Hard filters:** retest_depth < 0.025 or > 1.0 → reject. disp_str > 3.670 → reject (95th percentile — 1.80 rejected 100% of real trades)
+- **Output:** dict with `score`, `p_win`, `components`, `decision` (always "advisory"), `reject_reason`
+
+**`extract_features(state, candle_idx)` → Optional[dict]:**
+- Primary: uses `state.cached_features` (set at RETEST_CONFIRMED in crt_engine_v2.py)
+- Fallback: live extraction from state fields (less reliable through confirmation window)
+- Returns None if features cannot be computed (safe no-op)
+
+**Hidden defaults:**
+- `RETEST_MU = 0.237`, `RETEST_S2 = 0.040` — real EURCAD M15 mean/variance
+- `BODY_MU = 0.847`, `BODY_S2 = 0.021` — real mean/variance
+- `DISP_MU = 2.177`, `DISP_S2 = 1.196` — real mean/variance
+- `SIGMOID_K = 4.5`, `SIGMOID_X0 = 0.50` — sigmoid calibration
+- Config loaded from production JSON `gaussian_scorer` section at module init; if section missing, falls back to hardcoded defaults silently (try/except at line 14-18).
+
+**Failure modes:**
+- `_reject()` returns score=0.0, p_win=0.0, decision="reject" — downstream caller must check `reject_reason` field. If caller doesn't check, a rejection looks like a neutral score.
+- Floating point at edge of _gaussian: if x is far from mu relative to sigma2, exp() underflows to 0.0, making final_score = 0, p_win → 0.5.
+
+**Trust Classification: LIVE** (empirically calibrated, actively used)
+
+---
+
+### 6. `config_validator.py` — 559 lines
+
+**File Purpose:**
+Config Validation Gate — runs per-instrument backtests and applies quality gates (HARD and SOFT). Only approved `ValidationReport` dicts can be promoted via `promotion_manager.py`.
+
+**Runtime Role:**
+Called by `promotion_manager.py` as part of the promotion pipeline. Also runnable as CLI (`validate-prod` or `validate-params` subcommands). Invocation chain: `tuner → checkpoint → ConfigValidator.validate() → quality gates → APPROVE/REJECT`.
+
+**Key Methods:**
+
+**`ConfigValidator.validate(params, csv_paths, config_id, use_llm, warmup_candles)` → dict:**
+- **Runtime flow:**
+  1. Validates csv_paths not empty
+  2. Builds CRTConfig from params (unknown keys silently ignored via `_params_to_crt_config`)
+  3. For each instrument: checks CSV exists → runs `_run_instrument()` (which calls `runtime.backtest_v2.BacktestRunner`)
+  4. Aggregates per-instrument metrics
+  5. Runs quality gates
+  6. Returns ValidationReport dict with decision, metrics, per_instrument, hard_failures, warnings
+- **Downstream calls:** `runtime.backtest_v2.BacktestRunner.run()` — THIS IS A FULL BACKTEST. Not a lightweight validation.
+- **State mutations:** Writes to `results/validation_tmp/` (backtest output) — file write side effect.
+
+**Quality Gates (loaded from production JSON):**
+- HARD: min_trades >= 10, max_drawdown <= 35%, final_score >= 0.15
+- SOFT: win_rate >= 35%, expectancy >= -0.5R, cross-instrument std_dev <= 0.30
+
+**`_params_to_crt_config(params)`:** Silently ignores unknown keys (line 110). If a critical parameter is misspelled, it falls back to the CRTConfig default silently — no validation failure, no warning.
+
+**`_fitness_score(win_rate, expectancy_rr, trade_count, max_drawdown_pct)`:** Weighted sum. Default weights from _FITNESS_WEIGHTS: expectancy=0.5, win_rate=0.2, trade_count_norm=0.2, drawdown=0.1.
+
+**Trust Classification: CANONICAL** (explicitly referenced in architecture docs as Phase 1 + Phase 5 quality enforcement)
+
+**Fallback Audit:**
+- `_safe(v, default=0.0)`: Silently converts non-float values to 0.0. If max_drawdown is a string or None, it becomes 0.0 — which would PASS the drawdown gate falsely.
+- `_params_to_crt_config`: Unknown keys silently dropped. No warning. If a critical param is misspelled, defaults apply silently.
+
+---
+
+### 7. `execution_planner.py` — 506 lines
+
+**File Purpose:**
+Execution Planner v1.2 — pure intent classifier + gate. Classifies trade intent (BREAKOUT / PULLBACK / LIQ_SWEEP / REVERSAL / UNKNOWN), computes entry price, delegates signal approval to `GateIntelligence`. Does NOT compute SL/TP/RR — that is CRT engine's sole responsibility.
+
+**Runtime Role:**
+Layer 2 in the 5-layer execution pipeline (after EngineRunner decision, before CRT levels computation).
+
+**Key Methods:**
+
+**`ExecutionPlannerV1_2.plan(engine_result, features, context)` → dict:**
+- **Runtime flow:**
+  1. Validate required feature keys (13 required fields: close, high, low, atr, body_ratio, disp_strength, sweep_detected, double_sweep, retest_depth, candles_since_retest, ema_fast, ema_slow, momentum_score)
+  2. Validate price sanity (close > 0, atr > 0, high > low)
+  3. Check engine decision == "execute"
+  4. Derive intent (LIQ_SWEEP > PULLBACK > BREAKOUT > REVERSAL > UNKNOWN)
+  5. Compute entry (LIMIT for PULLBACK/LIQ_SWEEP, MARKET for BREAKOUT/REVERSAL/UNKNOWN)
+  6. Gate via `GateIntelligence.decide()` — configurable weights
+  7. Compute TTL, precision, execution_id (MD5 hash)
+- **Output keys:** decision, execution_id, trade_intent, direction, entry_type, entry_price, gate, validity_ttl_sec, created_at, expires_at, confidence, regime, symbol, signal, score, trace
+
+**Intent Derivation (line 324-371):**
+- LIQ_SWEEP: sweep_detected or double_sweep
+- PULLBACK: retest_depth in [0.3, 0.7] AND candles_since_retest <= 5 AND momentum > 0
+- BREAKOUT: body_ratio > 0.6 AND disp_strength > 1.5
+- REVERSAL: EMA fast/slow crossed vs direction (counter-trend)
+- UNKNOWN: no match → rejected if `reject_unknown_intent=True` (default)
+
+**Hidden defaults:**
+- TTL: BREAKOUT=180s, PULLBACK=300s, REVERSAL=120s, LIQ_SWEEP=240s, UNKNOWN=180s
+- risk_percent=0.5, precision_default=8, default_account_balance=10000.0
+- gate_approval_threshold=0.55
+
+**Trust Classification: LIVE**
+
+---
+
+### 8. `llm_inference_client.py` — 341 lines
+
+**File Purpose:**
+LLM HTTP transport layer — endpoint management, Groq cloud fallback, audit logging, multi-turn chat. Infrastructure base for the 3-file split (llm_inference_client.py, llm_scorer.py, llm_narrative.py).
+
+**Runtime Role:**
+Provides `llm_chat()` for multi-turn inference with the local llama.cpp server + Groq fallback. Config loaded from production JSON `llama_gate` section. Module-level `.env` loader walks up directories.
+
+**Key Behaviors:**
+
+**`llm_chat(messages, max_tokens, stop, temperature, endpoint)` → str:**
+- Runtime flow:
+  1. Flattens message list to BitNet-compatible prompt format
+  2. **Prints full prompt to stdout** (line 226-229) — security concern if prompts contain sensitive data
+  3. POST to primary endpoint (urllib, not requests)
+  4. On failure → try Groq cloud (requires GROQ_API_KEY in .env)
+  5. On all failure → increment FAIL_COUNT, return "" (empty string)
+  6. Circuit breaker: after fail_count_disable (default from config), suppresses future warnings
+
+**`_groq_request(messages, max_tokens, temperature, stop)` → str:**
+- Uses stdlib urllib (no openai package dependency)
+- Custom User-Agent "groq-python/0.9.0" to bypass Cloudflare 1010 blocks (line 156)
+- Returns "" on all errors — callers must handle empty string
+
+**`_append_llm_audit(record)`:** Fire-and-forget JSONL append to `logs/llm_audit.jsonl`. Never raises.
+
+**Hidden defaults:**
+- SERVER_URL, request_timeout, fail_count_disable from `llama_gate` config section
+- groq_fallback_enabled=True (default if missing from config)
+- groq_model="llama3-70b-8192" (default)
+- chat_max_tokens=512, chat_temperature=0.2, chat_stop_sequences=["<|user|>", "</s>"]
+
+**Side effects:**
+- Writes to `logs/llm_audit.jsonl` on every call
+- Prints full prompt to stdout
+- Module-level FAIL_COUNT mutates on every failure
+
+**Trust Classification: LIVE** (actively used, but fail-open design)
+
+**Fallback Audit:**
+- All-backend failure returns "" — callers must handle empty string. If not checked, downstream code receives empty string from an LLM call and may crash.
+- Circuit breaker: after fail_count_disable failures, warnings are suppressed but empty strings still returned.
+
+---
+
+### 9. `llm_scorer.py` — 305 lines
+
+**File Purpose:**
+LLM score-computation layer. Builds prompts for numeric scoring (outputs float in [0.0, 1.0]), routes through local llama.cpp (primary) → Groq (fallback) → fail-open 1.0.
+
+**Runtime Role:**
+Called by scoring pipeline when LLM gate is active. Provides `llm_score_safe()` with circuit-breaker (returns 1.0 neutral when circuit is open).
+
+**Key Methods:**
+
+**`llm_score(metrics, endpoint)` → float:**
+- Runtime flow:
+  1. Builds prompt from metrics (win_rate, expectancy, trades, max_drawdown, expansions/retests ratio)
+  2. POST to local llama.cpp server
+  3. Parse response with regex for float pattern `\b(0\.\d+|1\.0|0\.0)\b`
+  4. If parse fails → try Groq fallback
+  5. If all fail → return 1.0 (fail-open)
+  6. Every call writes to `logs/llm_audit.jsonl`
+
+**`llm_score_safe(metrics)` → float:** Circuit-breaker wrapper. After `_FAIL_COUNT_DISABLE` failures, sets `CIRCUIT_OPEN=True` and permanently returns 1.0.
+
+**`cached_llm_score(metrics_key)` → float:** LRU-cached (maxsize=5000). Key is JSON string of metrics.
+
+**Hidden defaults:**
+- Fail-open returns 1.0 — this means "LLM says trade is perfect" when the endpoint is down
+- `CIRCUIT_OPEN` is module-level global — once tripped, never resets until process restart
+- Prompt forces a single float output, but regex matches the FIRST float in the response, not the intended score
+- `_groq_score` returns (1.0, "") on failure — same fail-open value
+
+**Trust Classification: DANGEROUS** — fail-open design means "perfect score" on all failures, which is the opposite of what a risk gate should do. This is intentional per docstring ("fail-open") but classified as dangerous because it silently approves trades when the LLM backend is down.
+
+---
+
+### 10. `llm_narrative.py` — 257 lines
+
+**File Purpose:**
+LLM narrative-generation layer — produces prose reports for trade decisions, session summaries, model evaluations, backtest results, and regime alerts. Used by `InsightReporter`.
+
+**Runtime Role:**
+Called by `InsightReporter._generate()` when `enabled=True`. Falls back to static formatted strings when LLM server is unavailable (degradation, not failure).
+
+**Key Methods:**
+
+**`llm_insight(context, report_type, endpoint, max_tokens, timeout)` → str:**
+- Builds prompt from template → POST to local llama.cpp → on failure returns `_fallback_insight()` (static string)
+- Timeout: 8 seconds (hardcoded default overrides config for this function)
+- Stop sequences: ["\n\n", "---"] — stops at double newline or ---
+
+**`_fallback_insight(context, report_type)` → str:** Static fallback that mirrors what old logger produced. Pipeline is NEVER blocked by this module.
+
+**Hidden defaults:**
+- `build_insight_prompt()` fills missing template keys with "N/A" — silently
+- `_fallback_insight` is always a valid string — never empty
+
+**Trust Classification: LIVE**
+
+---
+
+### 11. `insight_reporter.py` — 467 lines
+
+**File Purpose:**
+LLM-powered narrative report generator. Replaces static log lines with natural-language narratives.
+
+**Runtime Role:**
+Called after trade decisions, session completions, model evaluations, backtest runs, and regime changes. Writes Markdown report files to disk.
+
+**Key Methods:**
+
+**`trade_decision(score_result, sub_scores)` → str:** Generates narrative for single trade decision.
+**`session_summary(session_name, trades, metrics)` → str:** Session performance narrative.
+**`eval_report(eval_result, model_type)` → str:** Model evaluation narrative.
+**`backtest_summary(metrics)` → str:** Backtest result narrative.
+**`regime_alert(prev_regime, curr_regime, volatility, session)` → str:** Regime change narrative.
+**`save(filename)` → str:** Writes accumulated entries to Markdown file.
+
+**Side effects:**
+- Writes Markdown file to `output_dir` (default "reports")
+- Prints to stdout if `verbose=True` (default)
+- `os.makedirs(output_dir, exist_ok=True)` on init
+
+**Trust Classification: EXPERIMENTAL** (decorative — never blocks pipeline, always falls back)
+
+---
+
+### 12. `production_config.py` — 421 lines
+
+**File Purpose:**
+PRODUCTION CONFIG — Registry-driven, hash-verified, auditable config loader. Resolves version from `configs/production/ACTIVE_VERSION` pointer file. Loads params from JSON registry, verifies SHA-256 hash against stored hash to detect tampering.
+
+**Runtime Role:**
+Called by every component that needs production config: `get_prod_config(instrument)` → loads from registry → verifies hash → builds config via ConfigBuilder. Also provides `get_prod_section(section)` for subsystems to load their own config blocks (rr_model, gaussian_scorer, llama_gate, etc.).
+
+**Key Behaviors:**
+
+**`PROD_VERSION` (module-level, line 82):** Resolved at import time from `configs/production/ACTIVE_VERSION` file. If file missing → `RuntimeError` at import. This means importing this module fails hard if the pointer file doesn't exist.
+
+**`load_prod_config_from_registry(version, instrument, registry_dir, verify_hash)` → CRTConfig:**
+- Runtime flow:
+  1. Assert registry JSON exists (fail fast — never run with engine defaults)
+  2. Load JSON
+  3. Verify SHA-256 hash if verify_hash=True (default) and stored_hash exists
+  4. Merge `crt_engine` section with `params` (params wins)
+  5. Coerce JSON types (lists → tuples, strings → datetime.time, etc.)
+  6. Pull `allowed_sessions` from `engine_runner` section
+  7. Call `ConfigBuilder.build(instrument, overrides=merged)` to produce CRTConfig
+- **Hash verification:** If stored hash missing, only emits a `warnings.warn()` — does NOT raise. Production runs with a missing hash proceed silently.
+
+**`get_prod_metadata()` → dict:** Returns full production registry JSON.
+**`get_prod_section(section, version)` → dict:** Returns raw dict section for subsystems. Raises RuntimeError if section missing.
+
+**Failure modes:**
+- Missing ACTIVE_VERSION file → RuntimeError at MODULE IMPORT time. This breaks any code that imports production_config when the file doesn't exist.
+- Missing registry JSON → RuntimeError with detailed message about available versions.
+- Hash mismatch → RuntimeError (tampering protection).
+- Hash missing → only warning, not error. This is a TOCTOU risk: if the hash was removed, tampering is not detected.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 13. `rr/rr_pattern_miner.py` (first 150 lines read)
+
+**File Purpose:**
+Feature → RR Pattern Miner — pure-Python inference engine (no scikit-learn at inference time, only numpy). Trains Ridge regression (RR prediction) + Gaussian Naive Bayes (win classification) + Mahalanobis confidence.
+
+**Runtime Role:**
+Called by `RRFusionLayer` for inference. The `NanoInferenceEngine` (later in file) provides the pure-Python predict() without sklearn dependency.
+
+**Hidden defaults:**
+- `ridge_alpha=10.0`, `gnb_var_smoothing=1e-9`
+- `_DRIFT_THRESHOLD=1.5` (from production config `rr_model` section, fallback 1.5)
+- `_W_GAUSSIAN=0.5`, `_W_ML=0.3`, `_W_CONFIDENCE=0.2` (score weights)
+- Model path: DEFAULT_MODEL_PATH = "models/rr_model.json"
+
+**Failure modes:**
+- `train()` requires numpy and scikit-learn. Raises `ImportError` with install instructions.
+- Old models with n_features=24 or n_features=11 will fail shape check on purpose — intentional guard against stale models.
+- LedoitWolf fallback: if covariance estimation fails, falls back to diagonal precision (line 128-132). This produces less accurate confidence scores.
+
+**Trust Classification: LIVE**
+
+---
+
+### 14. `rr/rr_fusion.py` — 197 lines
+
+**File Purpose:**
+Advisory RR fusion layer. Wraps `NanoInferenceEngine` with Gaussian score passthrough when RR model unavailable or feature drift detected.
+
+**Runtime Role:**
+Called by `RRFusionLayer.score()` during trade evaluation. Provides final_score, expected_rr, probability_of_win.
+
+**Key Behaviors:**
+
+**`score(trade, threshold)` → dict:**
+- Runtime flow:
+  1. Extract Gaussian fields from trade record
+  2. If disabled or model not loaded → passthrough (return Gaussian score unchanged)
+  3. Extract canonical features, validate schema
+  4. Feature drift check: if depth > 1.5, body > 1.5, or disp > 1.5 → passthrough with "drift_detected" status
+  5. Build feature vector → run NanoInferenceEngine.predict()
+  6. On any exception → passthrough with "inference_error"
+
+**Silent fallback behaviors:**
+- Model not found → logs warning, runs passthrough (no error raised)
+- Model load fails → logs warning, runs passthrough
+- Feature drift → passthrough (no alert)
+- Inference error → passthrough
+
+**Trust Classification: LIVE** (advisory — never blocks, always falls back to Gaussian)
+
+---
+
+### 15. `rr/rr_dataset_builder.py` — 393 lines
+
+**File Purpose:**
+Builds RR training datasets from FeaturePipeline-enriched trading data. Extracts features (32-width canonical vector), targets (RR + win classification), validates integrity.
+
+**Runtime Role:**
+Called by training pipeline scripts (`build_rr_dataset`, `train_rr_model`). Produces JSON dataset files with schema hash for versioning.
+
+**Key Methods:**
+
+**`build_dataset(trades, df)` → (X, y_rr, y_win):**
+- Runtime flow:
+  1. Build canonical features DF via FeaturePipeline.run()
+  2. Align trades with pipeline output rows (takes last N trades matching pipeline rows)
+  3. For each aligned row: extract features + extract RR/win targets
+  4. Skip rows where extraction fails (logged as warning)
+  5. Validate min samples (20), non-degenerate labels
+- **Side effects:** None (pure function)
+
+**`save_dataset(X, y_rr, y_win, path)` → None:** Writes JSON file with schema hash.
+**`load_dataset(path)` → (X, y_rr, y_win):** Loads with schema hash validation.
+
+**Determinism:** Deterministic given same trades input. FeaturePipeline may introduce non-determinism if it uses rolling windows.
+
+**Trust Classification: LIVE**
+
+---
+
+## src/control_plane
+
+---
+
+### 1. `cp_types.py` — 60 lines
+
+**File Purpose:**
+Type definitions for the Control Plane — dataclasses for `ArgSpec`, `CommandSpec`, `RunRecord`, and type aliases for `CommandMode`, `RunStatus`, `ArgKind`.
+
+**Runtime Role:**
+Shared data contracts used by registry, jobs, server, and API modules. No logic — pure types.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 2. `registry.py` — 1141 lines
+
+**File Purpose:**
+Central registry of ALL executable commands in the CRT system. Contains `core_command_specs()` which returns ~30 `CommandSpec` dataclass instances. Each spec defines name, category, script path, argument schema, required artifacts, workflow stage, quickstart notes, and recommended next commands.
+
+**Runtime Role:**
+Called by `ControlPlaneAPI.commands_payload()` to generate the command catalog served to the Web UI. Also provides `merge_command_args()` for building CLI command lines from user-submitted arguments.
+
+**Key Data:**
+- `REPO_ROOT = Path(__file__).resolve().parents[2]` — resolves to repo root from any depth
+- 8 known instruments: EURUSD, GBPUSD, AUDUSD, USDJPY, USDCAD, USDCHF, NZDUSD, EURGBP
+- 6 workflow stages: Data Prep → Tuning → Model Training → Validation & Promotion → Replay & Backtest → Live Runner
+- `_WORKFLOW_STAGE_BY_COMMAND`: maps 32 command IDs to stages
+- `_RECOMMENDED_NEXT_BY_COMMAND`: maps command IDs to next-step commands
+- `_KNOWN_INSTRUMENTS`: tuple of 8 FX pairs (NO crypto!). BTCUSDT/ETHUSDT not in standard instrument dropdown.
+
+**Hidden default:**
+- Instruments list does NOT include BTCUSDT, ETHUSDT, XAUUSD, US30, NAS100 — but production_config.py and market_router.py reference all of these. The Web UI will not offer crypto instruments in dropdowns.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 3. `jobs.py` (not fully read — but referenced)
+
+**File Purpose:** Job execution manager — creates, tracks, stops, and monitors command runs.
+
+**Runtime Role:** Bridges CLI command execution with the Web Control Plane's run lifecycle.
+
+---
+
+### 4. `server.py` — 2059 lines (1300+ lines of embedded HTML/JS)
+
+**File Purpose:**
+HTTP server for the CRT Web Control Plane. Contains:
+1. `ControlPlaneAPI` — REST API handler (command listing, run CRUD, logs, artifacts, monitors, file browser)
+2. Embedded SPA UI (1300+ lines of HTML/CSS/JS with Chart.js trading dashboard)
+3. ThreadingHTTPServer backing
+
+**Runtime Role:**
+When `run_server()` is called, it starts a threaded HTTP server serving:
+- `/commands` — command catalog
+- `/runs` — run history, CRUD per run
+- `/runs/{id}/logs`, `/runs/{id}/artifacts`, `/runs/{id}/monitors` — per-run data
+- `/monitors/*` — live monitoring dashboard
+- `/runs/{id}/report/excel` — Excel download
+- `/runs/{id}/report/llm` — LLM analysis via API POST
+- `GET /` — the SPA HTML
+
+**Key Behaviors:**
+
+**`_tail_jsonl_lines(path, limit)` → list[dict]:** Reads last N valid JSON lines from a JSONL file, newest-first. Malformed lines silently skipped. Used by agent API endpoints.
+
+**`ControlPlaneAPI.ui_html()` → str:** Returns the 951-line SPA. The SPA has:
+- Tour/playbook system (13-step tutorial stored in localStorage)
+- Command launcher with argument forms
+- Run history with search
+- Run inspector with stdout/stderr, monitors, artifacts
+- Dashboard with auto-refresh (2s)
+- Report modal with Excel download and LLM analysis (calls Groq API)
+
+**`trading_dashboard_html()` → str:** Returns separate 1000+ line trading dashboard SPA with Chart.js integration.
+
+**Hidden defaults:**
+- Tour progress and completion state stored in localStorage (LS_TUTORIAL_SEEN, LS_PLAYBOOK_COMPLETED, LS_TOUR_PROGRESS)
+- Dashboard auto-refresh interval: 2000ms
+- LLM analysis timeout: 30s (hardcoded in UI text)
+
+**Side effects:**
+- Starts HTTP server on configurable port
+- Server is threaded (ThreadingHTTPServer) — concurrent requests are possible
+
+**Trust Classification: LIVE** (actively serving the Web UI)
+
+---
+
+### 5. `dashboard_api.py` (referenced, not fully read), `report_api.py`, `context_report.py`, `code_context_extractor.py`
+
+Registered as API handlers on the ControlPlaneServer:
+- `TradingDashboardAPI` — dashboard endpoints
+- `RunReportAPI` — run report endpoints (Excel, LLM analysis)
+- `ContextReportAPI` — code context reports
+- `extract_code_context` — source extraction for context
+
+---
+
+### 6. `monitors.py` (referenced, not fully read)
+
+**Runtime Role:** Defines live monitoring fields per command — what values to track during execution.
+
+---
+
+## src/core
+
+---
+
+### 1. `types.py` — 131 lines
+
+**File Purpose:**
+Canonical TypedDict contracts for the execution spine: `EngineContext` (input), `EngineRunnerOutput` (output), `TradePlan` (from ExecutionPlanner), `GateResult` (from UltronRiskGate). Defines the authoritative interface shapes.
+
+**Runtime Role:**
+Every module that produces or consumes spine data MUST conform to these shapes. Provides `SpineContractError`, `assert_approve_before_order()`, and `assert_engine_runner_output()` for runtime enforcement.
+
+**`assert_approve_before_order(gate_result)`:** Called just before `MT5Bridge.place_order()`. Raises `SpineContractError` if gate_result decision is not "APPROVE". This is a safety net — prevents order placement without gate approval.
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 2. `engine_runner.py` — 921 lines
+
+**File Purpose:**
+Orchestrates the full 6-step pipeline: Adapter gating → All 4 engines (CRT, Gaussian, Zone Gate, RR) → Engine completeness check → Fusion → Decision → Collector logging.
+
+**Runtime Role:**
+THIS IS THE MAIN EXECUTION LOOP ENTRY POINT. Called by `BacktestRunner.run()` for backtesting and by live engine hook for live trading. Every trade decision passes through here.
+
+**Pipeline (strict order):**
+1. Adapter gating (TrapValidatorEngine) — HARD reject if score <= 0.0
+2. All 4 engines run unconditionally (CRT, Gaussian, Zone Gate, RR)
+3. Engine completeness check — if ANY of the 4 expected engines is absent, HARD reject
+4. Fusion (FusionEngine) — weighted combination of engine scores
+5. Decision (DecisionEngine) — threshold applied to fusion score
+6. Collector — structured logging of every decision path
+
+**Key Config (loaded from production JSON `engine_runner` section):**
+- `gaussian_impl`: "heuristic" or "ml" — which Gaussian engine to use
+- `zone_mode`: "hard" or "soft" — zone gate enforcement
+- `rr_fusion.enabled`: default False — RR fusion is OFF by default
+- `fusion_engine.weights`: default CRT=0.4, Gaussian=0.3, ZoneGate=0.2, RR=0.1
+- `convergence_window`=500, `min_atr`=0.0003
+
+**Failure modes:**
+- `_cfg_require()` raises KeyError if config key missing — NO silent fallbacks
+- RR fusion import guarded by try/except (line 43-46), sets RRFusionLayer=None
+- Engine completeness check (line ~50): hard rejects if any of {"crt", "gaussian", "zone_gate", "rr"} missing from engine_results
+
+**Trust Classification: CANONICAL** (absolute center of the execution spine)
+
+---
+
+### 3. `decision_engine.py` — 225 lines
+
+**File Purpose:**
+Central execution authority — the ONLY module that decides execute vs reject. Uses dynamic threshold calibration (percentile-based, clamped [0.45, 0.65]).
+
+**Runtime Role:**
+Called by EngineRunner after fusion. Provides `DecisionResult` dataclass (frozen).
+
+**Hidden defaults:**
+- `_FALLBACK_TOP_N = 3` — batch mode promotes top 3 signals when zero pass
+- Dynamic threshold: starts at 0.55 until history is available, then percentile(scores, 85) clamped [0.45, 0.65]
+- Dead engine neutralization: zone_gate_invalid check bypassed when zone_gate is detected dead across scoring window
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 4. `fusion_engine.py` — 694 lines
+
+**File Purpose:**
+Unified multi-layer scoring engine. Layer stack: Gaussian scorer (primary) → Neural model (stubbed) → LLM gate (tie-breaker in uncertainty zone [0.45, 0.65]).
+
+**Runtime Role:**
+Called by EngineRunner after individual engine scores are collected. Produces final fused score.
+
+**Key Components:**
+- **ScoreNormalizer:** Rolling min-max normalization (window=1000) — expands Gaussian output ~0.33-0.55 to full [0,1] range. Handles constant input by returning 0.5.
+- **EngineHealthTracker:** Detects dead (always-zero) sub-engines via rolling variance check (window=1000). Dead engines excluded from weighted fusion.
+
+**LLM gate design:** LLM is NOT a replacement for Gaussian — tie-breaker only in [0.45, 0.65] uncertainty band. Clear signals (< 0.45 or > 0.65) never touch the LLM.
+
+**Trust Classification: LIVE**
+
+---
+
+### 5. `collector.py` — 193 lines
+
+**File Purpose:**
+Stores structured records to `logs/collector.jsonl`. Each record captures trade_id, features, engine_outputs, outcome, fusion_output.
+
+**Runtime Role:**
+Called by EngineRunner after every decision (line 6 of pipeline). Appends one JSONL line per decision.
+
+**Side effects:**
+- Creates `logs/` directory on import (line 11: `Path("logs").mkdir(exist_ok=True)`)
+- Appends to `logs/collector.jsonl` on every `collect()` call
+- Uses numpy for JSON serialization (imported at line 58, used at line 60-71)
+
+**Hidden defaults:**
+- `COLLECTOR_ZONEGATE_SCORE_KEY` from environment — controls which key is used for zone gate score
+- `PROD_VERSION` from production_config imported at module level — breaks if production_config module init fails
+
+**Trust Classification: LIVE**
+
+---
+
+### 6. `acceptance_controller.py` — 172 lines
+
+**File Purpose:**
+Adaptive Acceptance Control — maintains trade acceptance rate in 5%-15% band using integral control on dynamic thresholds.
+
+**Runtime Role:**
+Called by EngineRunner before and after decision:
+- `get_thresholds()` → merge into DecisionEngine config
+- `update_metrics(engine_scores, fusion_score, accepted)` → record decision outcome
+- `adjust_thresholds()` → apply integral control
+
+**Integral control rule:**
+- error = acceptance_rate - target_mid (12.5%)
+- theta_new = clamp(theta_old + 0.01 × error, 0.50, 0.95)
+- engine_threshold = mean(engine_scores) + 1.0 × std(engine_scores)
+- fusion_threshold = np.percentile(fusion_scores, 85)
+
+**Constraints:**
+- Only engages after 10 samples (min_history)
+- Thresholds bounded [0.50, 0.95]
+- Returns config defaults unchanged until sufficient history
+- MUST NOT modify UltronRiskGate or bypass ZoneGate
+
+**Trust Classification: CANONICAL**
+
+---
+
+### 7. `convergence_controller.py` (referenced, not fully read)
+
+**Runtime Role:** Ensures multi-engine outputs converge before fusion. Detects divergence between heuristic and ML Gaussian implementations.
+
+---
+
+### 8. `signal_audit.py` (referenced)
+
+**Runtime Role:** Structured logging of every signal decision path. Used by Collector for persistent storage.
+
+---
+
+### 9. `gate_intelligence.py` (referenced from execution_planner.py)
+
+Used by `ExecutionPlannerV1_2.plan()` as the signal approval gate. Weighted decision: intent (0.35), vol (0.20), liquidity (0.20), structure (0.25). Threshold configurable (default 0.55).
+
+---
+
+### 10. `feature_store.py`, `dynamic_threshold.py`, `hierarchical_meta_fusion.py`, `model_registry.py`, `regime_governor.py`, `ultron_risk_gate.py`, `ultron_risk_gate_wrapper.py`
+
+These are referenced/called by the execution spine but detailed analysis would exceed immediate runtime boundary.
+
+---
+
+## src/data_ingestion
+
+---
+
+### 1. `historical_fetcher.py` — 599 lines
+
+**File Purpose:**
+Multi-pair OHLCV data ingestion into TimescaleDB with fallback chain: TimescaleDB (primary) → MT5 Python API (secondary) → CSV files (fallback). Incremental fetch — only fetches missing date ranges.
+
+**Runtime Role:**
+Called by data preparation scripts and optionally by live runner for data loading. Config section: `data_ingestion` in production JSON.
+
+**Key Data Flow:**
+
+**`HistoricalFetcher.fetch_and_store(pair, timeframe, start, end)` → int:**
+1. Parse dates
+2. Query DB for stored range (min_ts, max_ts)
+3. Compute missing ranges (before stored, after stored)
+4. For each missing range: `_fetch_rows()` → MT5 (if enabled) → CSV fallback
+5. Batch-insert into TimescaleDB with ON CONFLICT DO NOTHING (idempotent)
+6. Returns count of inserted rows
+
+**`HistoricalFetcher.load(pair, timeframe, start, end)` → List[OHLCVRow]:**
+1. Try DB query
+2. On failure → fall back to CSV file (`{pair}_{timeframe}.csv`)
+3. Validates CSVs with common timestamp column names (`time`, `timestamp`, `datetime`, `date`)
+
+**`HistoricalFetcher.detect_gaps(pair, timeframe, start, end)` → List[gap_tuples]:**
+- Detects gaps > 1.5x expected candle interval
+- Logs WARNING per gap — does not raise
+
+**Priority chain:**
+1. TimescaleDB (local) — serve existing rows, fetch only missing
+2. MT5 Python API — fetch if `mt5_enabled=true` and MT5 initialized
+3. CSV fallback — read `{pair}_{timeframe}.csv` from `csv_fallback_dir`
+
+**Hidden defaults (from config `data_ingestion` section):**
+- `batch_size` (default from config), `connection_timeout_sec` (default from config)
+- `pairs` and `timeframes` — entire list from config, fetched in `load_pairs()`
+- MT5 timeframe mapping: M1, M5, M15, H1, H4, D1 only
+
+**Side effects:**
+- Creates TimescaleDB hypertable (designed for, but CREATE TABLE is manual setup, not automatic)
+- Writes to DB on `fetch_and_store()`
+- Reads CSV files from disk
+
+**Failure modes:**
+- mt5.initialize() failure → logs warning, falls back to CSV
+- CSV file not found → logs warning, returns empty list
+- psycopg2 not installed → TimescaleDB unavailable, falls to CSV
+- pandas not available → limits data loading (used in other methods, not in hot path)
+- Malformed CSV rows → logged at DEBUG, silently skipped
+- `_MT5_TF_MAP` only has M1, M5, M15, H1, H4, D1 — any other timeframe returns empty
+
+**Trust Classification: LIVE** (active data ingestion path)
+
+**Fallback Audit:**
+- DB load fails → falls to CSV with WARNING (never raises)
+- MT5 returns 0 rows → tries CSV with WARNING
+- CSV not found → returns empty list with WARNING
+- Malformed CSV row → DEBUG-level skip, no error
+- All paths degrade gracefully — no hard failures during data ingestion
+
+---
+
+## CROSS-CUTTING ANALYSIS
+
+### Execution Flow Map (runtime trace)
+
+```
+historical_fetcher.py → load CSVs
+    ↓
+BacktestRunner (runtime/backtest_v2.py)
+    ↓
+CRTEngine.process_candle() [crt_engine_v2.py]
+    → RangeDetector, StateMachine, UltronRiskEngine, ExecutionEngine
+    ↓
+EngineRunner.run() [core/engine_runner.py]
+    → TrapValidatorEngine (adapter gate)
+    → CRT engine, Gaussian engine, ZoneGate engine, RR engine
+    → Engine completeness check
+    → FusionEngine (weighted fusion)
+    → DecisionEngine (threshold)
+    → Collector (JSONL log)
+    ↓
+ExecutionPlannerV1_2.plan() [execution_planner.py]
+    → Intent classification (LIQ_SWEEP, PULLBACK, BREAKOUT, REVERSAL)
+    → GateIntelligence approval
+    → Entry price + TTL
+    ↓
+UltronRiskGate.evaluate() [core/ultron_risk_gate.py]
+    → Final approval + risk sizing
+    ↓
+MT5Bridge.place_order() — guarded by assert_approve_before_order()
+```
+
+### Config Flow Map
+
+```
+production_config.py::get_prod_config(instrument)
+    → load_prod_config_from_registry()
+        → Read configs/production/{version}.json
+        → SHA-256 hash verification
+        → Coerce JSON types → merge sections
+    → ConfigBuilder.build(instrument, overrides=merged)
+        → market_router.get_crt_config(instrument)
+            → classify_market(instrument) → FOREX/CRYPTO profile
+            → CRTConfig(frozen dataclass)
+        → Validate & apply overrides
+    → Return frozen CRTConfig
+```
+
+### Trust Classification Summary
+
+| Component | Classification | Reason |
+|---|---|---|
+| market_router.py | **CANONICAL** | Sole CRTConfig producer with stack guard |
+| config_builder.py | **CANONICAL** | Single source of truth, key validation |
+| crt_engine_v2.py | **LIVE** | Active state machine, backtest + live |
+| crt_sweep_taxonomy.py | **CANONICAL** | Pure function, deterministic |
+| crt_gaussian_scorer.py | **LIVE** | Empirical calibration, actively used |
+| config_validator.py | **CANONICAL** | Phase 1 + 5 quality gates |
+| execution_planner.py | **LIVE** | Active execution layer |
+| llm_inference_client.py | **LIVE** | Active transport, fail-open |
+| llm_scorer.py | **DANGEROUS** | Fail-open returns 1.0 on ALL failures |
+| llm_narrative.py | **LIVE** | Graceful degradation |
+| insight_reporter.py | **EXPERIMENTAL** | Decorative, never blocks |
+| production_config.py | **CANONICAL** | Hash-verified, registry-driven |
+| rr_pattern_miner.py | **LIVE** | Active inference |
+| rr_fusion.py | **LIVE** | Advisory passthrough |
+| rr_dataset_builder.py | **LIVE** | Active dataset builder |
+| control_plane (all) | **LIVE** | Active Web UI + API |
+| engine_runner.py | **CANONICAL** | Absolute execution spine |
+| decision_engine.py | **CANONICAL** | Sole execution authority |
+| fusion_engine.py | **LIVE** | Active fusion layer |
+| collector.py | **LIVE** | Active JSONL logging |
+| acceptance_controller.py | **CANONICAL** | Adaptive control, bounded |
+| types.py | **CANONICAL** | Spine contracts |
+| historical_fetcher.py | **LIVE** | Active data ingestion pipeline |
+
+### Critical Failure / Fallback Summary
+
+| Component | Failure Mode | Consequence |
+|---|---|---|
+| `llm_scorer.py` | All backends fail | Returns 1.0 ("perfect score") silently |
+| `rr_fusion.py` | Model not loaded | Passthrough (Gaussian only) silently |
+| `rr_fusion.py` | Feature drift > 1.5 | Silently reverts to Gaussian |
+| `crt_engine_v2.py` | BitNet import failure | Crash (no try/except) |
+| `crt_engine_v2.py` | cached_features assertion | Crash (hard assert) |
+| `production_config.py` | ACTIVE_VERSION missing | RuntimeError at MODULE IMPORT TIME |
+| `market_router.py` | Unknown instrument | SILENTLY defaults to FOREX profile |
+| `config_validator.py` | Unknown params key | SILENTLY uses CRTConfig default |
+| `config_validator.py` | _safe() on invalid value | Returns 0.0 (may PASS gates falsely) |
+| `llm_inference_client.py` | All endpoints down | Returns "" — caller must handle |
+| `historical_fetcher.py` | Malformed CSV row | DEBUG-logged, silently skipped |
+| `decision_engine.py` | No history | Falls back to 0.55 threshold |
+
+### Replay/Governance Contamination Risks
+
+1. **Live → Backtest contamination**: `cached_features` computed at RETEST time persist through state resets. If the backtest engine processes live data and then receives test data without re-initialization, stale features could cross contamination boundaries.
+2. **LLM audit log contamination**: `logs/llm_audit.jsonl` stores every LLM scoring request including full input metrics and prompts. This file grows unboundedly.
+3. **Feature drift threshold (1.5)**: Hardcoded fallback. If features genuinely drift beyond 1.5 and no production config override exists, the RR fusion silently reverts to Gaussian — the operator would not know the RR model is not being consulted.
+4. **Config hash missing**: Only a warning, not an error. A registry file without hash can be promoted and run in production without tampering detection.

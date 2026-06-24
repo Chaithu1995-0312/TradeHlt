@@ -1,0 +1,651 @@
+# HUMAN-READABLE EXECUTION COGNITION: src-runtime, scanner, search, strategies
+
+---
+
+## 1. RUNTIME (`src/runtime/`)
+
+### 1.1 `analyze_fusion_shadow.py`
+
+**File Purpose:**
+Post-hoc diagnostic tool. Reads a collector log file, finds JSON payloads containing fusion engine scores, and compares the compute-path final_score vs. the evaluate_shadow final_score. Writes a delta report.
+
+**Runtime Role:**
+Never in the hot path. Called explicitly by a developer or CI after a run to audit whether the shadow evaluation (what *would* have been chosen) diverges from what *was* chosen.
+
+**Classes:** None — standalone functions.
+
+**Functions:**
+
+| Function | What ACTUALLY happens when this runs |
+|---|---|
+| `_safe_float(v)` | Tries to cast any value to float. Returns `None` for NaN/inf/TypeError. Silent conversion failure → None. |
+| `_extract_json_payload(line)` | Scans each log line for the first `{` character, treats everything from there as JSON. If the log has non-JSON garbage before the `{`, it's ignored. If json.loads fails, returns None. |
+| `analyze_log(log_path)` | Opens the file, splits on newlines, attempts `_extract_json_payload` on each. For lines that have `payload["fusion"]["final_score"]` and `payload["fusion"]["evaluate_shadow"]["final_score"]`, computes delta = shadow - compute. Stores first 10 matching IDs. Returns avg_delta, abs_avg_delta, max/min delta. |
+| `main()` | CLI. Default log path `logs/flow_collector.log`. Default output `results/validation/automation/fusion_shadow_<timestamp>.json`. Creates output dir. Writes JSON. Returns 1 if log not found. |
+
+**Trust:** **LIVE** — used for audit, but not in trading path.
+
+**Fail-fast/Fallbacks:** 
+- `log_path.exists()` check → return 1 if missing
+- `_safe_float` returns None for non-finite → record skipped
+- `_extract_json_payload` returns None for bad JSON → line skipped silently (no warning log)
+
+**Hidden defaults:** none visible
+
+**File writes:** `results/validation/automation/fusion_shadow_<timestamp>.json`
+
+---
+
+### 1.2 `backtest_bitnet.py`
+
+**File Purpose:**
+Row-by-row backtest that uses BitNet as a HARD GATEKEEPER before EngineRunner. FeaturePipeline runs once at the start over the entire CSV. Then each row: extract 35 canonical features → BitNetRunner.predict() → if REJECT, log and continue (EngineRunner NEVER runs). If ACCEPT, EngineRunner.run() executes.
+
+**Runtime Role:**
+Offline backtest harness. Called by `unified_replay_harness.py` for gate-mode comparisons, or standalone via CLI.
+
+**Classes:** None — standalone functions.
+
+**Functions:**
+
+| Function | What ACTUALLY happens when this runs |
+|---|---|
+| `_derive_symbol_from_data_path(path)` | Extracts uppercase stem from filename, splits on `_`, takes first part. `AUDUSD_M15.csv` → `AUDUSD`. |
+| `_to_serializable(obj)` | Recursively converts numpy types → Python native for JSON output. Misses `np.bool_` — could silently fail to serialize. |
+| `_build_engine_runner_config(config)` | Requires exactly 5 sections from production config: `engine_runner`, `decision_engine`, `fusion_engine`, `execution_planner`, `ultron_risk_gate`. Merges flat keys from first two, nests the rest. Raises RuntimeError if any missing. Falls forward: if `rr_threshold` in config and `min_rr` not, copies it. |
+| `_resolve_timestamp_series(df)` | Tries common column names: "timestamp", "datetime", "date time", "open time". Falls back to merging "date" + "time" columns. Raises ValueError if nothing works. |
+| `_apply_month_filter(df, months)` | Keeps only last N months relative to max timestamp in the file. Coerces timestamps via `pd.to_datetime`. Raises ValueError if all NaN or months ≤ 0. |
+| `run_backtest(config, data_path, gate_mode, months)` | **This is where the actual execution happens.** Opens a `logs/backtest_decisions_{symbol}_{timestamp}.jsonl` file. Loads CSV → applies month filter → runs FeaturePipeline on entire dataframe → validates CANONICAL_FEATURES exist → loads BitNetRunner from `config["engine_runner"]["model_path"]` → iterates rows. Each row: extracts 35 features from enriched row (NOT from FeaturePipeline vectors), checks NaN, calls BitNetRunner.predict(). Three gate modes: `hard_gate` (reject rows with decision != ACCEPT), `score_only_audit` (always run EngineRunner, BitNet is metadata), `force_accept_baseline` (override decision to ACCEPT, track overrides). On hard reject: saves reject_record with confidence bucket. On accept: calls `runner.run(features, {})`, attaches BitNet metadata, saves result. Flushes every 1000 rows and on completion. Logs summary. Returns list of result dicts. |
+
+**Fail-fast/Fallbacks:**
+- FeaturePipeline failure is **fatal** — raises RuntimeError
+- Missing canonical features per row → raises ValueError (row-level)
+- NaN per row → raises ValueError (row-level)
+- Missing `model_path` in config `engine_runner` → raises KeyError
+- BitNet model file not found → raises FileNotFoundError
+- Row-level exceptions → caught, logged as ERROR, record added with `decision: "ERROR"`, **continues processing** — this is the only non-fatal row error
+- `_to_serializable` does NOT handle `np.bool_` — could cause JSON serialization failure later
+
+**Hidden defaults:**
+- `MAX_DEBUG_ROWS = 10` — first 10 rows printed to console
+- `PROGRESS_INTERVAL = 1000` — flush + log every 1000 rows
+- `decision_log` opened with `'w'` mode — previous runs with same symbol+timestamp overwritten
+
+**State mutations:** None (pure function per call)
+
+**File writes:**
+- `logs/backtest_decisions_{symbol}_{timestamp}.jsonl` — every row produces one JSON line
+- Output CSV if `--output` flag provided (when run as `__main__`)
+
+**Corruption risk:** LOW. Each row is independently processed. A crash mid-run loses only the unflushed buffer.
+
+**Trust:** **LIVE**
+
+---
+
+### 1.3 `backtest_v2.py` (2089 lines — the largest and most complex file)
+
+**File Purpose:**
+CRT Engine backtesting harness v2 — candle-by-candle replay with zero lookahead, multi-instrument support, G1-G5 patches (slippage, spread, capital curve, session gap reset, trade distribution analysis). This is the execution-truth harness.
+
+**Runtime Role:**
+The canonical offline backtest. Called by `MultiInstrumentRunner.run_all()` and `unified_replay_harness.py`. Also has a simplified entry `run_backtest(config, csv_path)` for BitNet model test runs.
+
+**Classes:**
+
+| Class | What ACTUALLY happens |
+|---|---|
+| `BacktestConfig` | Dataclass holding ALL config parameters (HTF, slippage, spread, capital, gap, warmup, instrument metadata, scorer mode). Built via `from_prod_config()` which reads `configs/production/v1_multi_2026_03.json["backtest"]` section — raises KeyError if any required key missing. |
+| `TradeRecord` | Holds full trade lifecycle data: raw/fill prices, slippage/spread costs, capital before/after, position size, live audit fields (ATR, EMA, retest_depth, etc.). Has `is_winner` property (pnl_rr_net > 0). |
+| `RejectionRecord` | Tracks why a candle was rejected. |
+| `CapitalCurve` | Tracks equity tick-by-tick. `current_risk_amount` respects compounding flag. `position_size()` uses risk_distance = abs(entry - sl). `apply_trade()` adds dollar PnL to capital. Tracks peak equity, max drawdown. |
+| `SlippageModel` | Simulates adverse slippage: uniform(0, atr_fraction × ATR). Entry slip = + for long, - for short. Exit slip = - for long, + for short. `compute_fill_prices()` adds spread_half to entry, subtracts from exit. |
+| `GapDetector` | Compares consecutive candle timestamps. If gap > threshold, returns (True, reason_string) — triggers force-reset. |
+| `DistributionAnalyser` | Post-run analysis: session breakdown, day-of-week, hour-of-day, rolling win rate, loss clustering score (0=perfectly spread, 1.0=all clustered), Pearson correlation between risk_score and pnl_rr_net, best/worst trade, cost analysis. |
+| `CandleLoader` | CSV reader with flexible column aliases (e.g. "o" maps to "open"). `stream()` yields `Candle` objects one at a time. Skips rows where high < max(open, close) or low > min(open, close) or high == low — silently skips invalid candles. Supports combined timestamp or split date+time columns. |
+| `HTFBuilder` | Buffers candles into HTF windows. `push()` returns True when a window completes. |
+| `TradeJournal` | Manages open/closed trades, cost tracking, capital curve updates. `on_trade_opened()` computes fill prices, applies SL adjustment if slippage eats SL distance below 20% ATR, calculates position size, stores live_metrics. `on_trade_closed()` computes exit fill, PnL raw/net, slippage/spread costs, updates capital curve. |
+| `BacktestMetrics` | Dataclass: total_candles, gap_resets, approved/rejected, wins/losses, TP hit counts, PnL raw/net, max drawdown, streaks, rejection reasons, state distribution, monthly PnL, capital curve, G5 distribution. |
+| `MetricsEngine` | `compute()` takes journal + capital + state_counts → BacktestMetrics. Calls `DistributionAnalyser.analyse()`. |
+| `ReportWriter` | Writes summary JSON, trades CSV, events JSONL, report TXT to `{output_dir}/{run_id}_{instrument}/`. |
+| `CRTCalibratedScorer` | Backwards-compat shim wrapping `core.model_registry.load_active_gaussian_scorer()`. |
+| `CRTGaussianScorer` | No-op scorer (returns None from compute). |
+| `BacktestRunner` | **Main execution engine.** |
+
+**BacktestRunner.run() — What ACTUALLY happens when this runs:**
+
+1. **Config dump**: Tries to dump full config (BacktestConfig + CRTConfig + production sections) to `results/config_dumps/`. If it fails, logs warning and continues.
+
+2. **Init components**: `CRTEngine`, `HTFBuilder`, `SlippageModel`, `CapitalCurve`, `TradeJournal`, `GapDetector`, `MetricsEngine`, `ReportWriter`.
+
+3. **Phase 3/4 config load**: `get_prod_section("execution_planner")`, `get_prod_section("feature_monitor")` for partial_tp, drift_pause settings.
+
+4. **EngineRunner gate**: If `BACKTEST_ENGINE_GATE=1` env var, instantiates `EngineRunner` from production config as an additional veto layer.
+
+5. **Main loop (per candle)**:
+   - Push to HTF builder
+   - Warmup: skip first `warmup_candles` candles
+   - Initialization: once HTF has seeded candles, call `engine.initialise_range(seed_candles, htf_id, session)`
+   - **Gap detection**: If gap detected, force-close open trade at candle open, call `engine.sm.reset_to_range()`
+   - Spread: `engine.set_spread(bid, ask)`
+   - **`engine.process_candle(candle, htf_id)`** → returns result dict with action
+   - If `TRADE_OPENED`:
+     - Timestamp-keyed feature lookup (fixes off-by-one warmup bug)
+     - **Phase-5 scorer gate**: If CRTCalibratedScorer is active and `p_win < 0.35`, reject
+     - **Drift cooldown gate**: If `_drift_pause_remaining > 0`, reject
+     - **FeatureMonitor drift check**: Updates retest_depth/body_ratio/disp_strength. If HARD drift (Z>3.0) and drift_pause_enabled, veto for `drift_cooldown` candles
+     - **EngineRunner gate**: If BACKTEST_ENGINE_GATE=1, runs EngineRunner with CRT direction injected. If REJECT/HOLD, veto. Bypasses `zone_gate_invalid` if `BACKTEST_BYPASS_ZONE_INVALID=1` (default)
+     - If all gates pass: `journal.on_trade_opened()` with live_metrics from result
+     - **Fusion JSONL log**: Logs ENTRY if feature vector is non-zero (skips if zero — protects training data integrity)
+   - If `TRADE_STOPPED/TP1/TP2`: Handles partial TP blending (Post-TP1: blend = 50%@TP1 + 50%@SL/TP2). Closes trade via journal.
+   - If `RISK_REJECTED`: journal.on_rejected()
+   - If `RESET` with open trade: blend exit or close at candle.close
+   - Event flush every `event_flush_every` entries
+
+6. **Post-loop**: Force-close any remaining open trade at last close price. Compute metrics. Write reports.
+
+**FAIL-FAST / FALLBACK AUDIT:**
+
+| Issue | What happens |
+|---|---|
+| FeaturePipeline init fails | `RuntimeError` raised — entire run aborted. Cannot proceed without features. |
+| FeatureMonitor init fails | Logged as error. `_monitor = None`, `_monitor_available = False`. Drift detection DISABLED. Silent degradation — no warning on each candle. |
+| Config dump fails | `log.warning("Config dump skipped: %s", _dump_err)` — silently proceeds |
+| Feature timestamp lookup MISS | First 3 misses logged. If miss: feature_vector = `[0.0] * len(CANONICAL_FEATURES)`. Trade proceeds with ALL-ZERO features. ENTRY log is SKIPPED (protects training data). But the trade still executes with zero features. **This silently corrupts the trade record** — zero features flow into journal as `TradeRecord.features`. |
+| FeatureMonitor update/detect exception | `except Exception: pass` — **silently swallowed.** No drift check for that candle. |
+| EngineRunner gate exception | `log.debug(f"EngineRunner gate exception (allow): {_er_exc}")` — trade proceeds! The gate fails open. **If EngineRunner is broken, trades still pass through.** |
+| Candle validation: high < max(open, close) or low > min(open, close) | Silently skipped by CandleLoader. Rows omitted from stream. No log. |
+| _to_serializable numpy bool issue | Same pattern as backtest_bitnet.py |
+
+**Hidden defaults:**
+- `_partial_tp_enabled` = False (from config)
+- `_drift_pause_enabled` = False (from config)
+- `scorer_mode` = "calibrated" (uses CRTCalibratedScorer which loads Gaussian NB)
+- `BACKTEST_ENGINE_GATE` = "0" (EngineRunner not wired in backtest by default)
+- `BACKTEST_BYPASS_ZONE_INVALID` = "1" (zone gate bypassed in backtest)
+- FeatureMonitor `window_size` = 500 (default in constructor)
+- `_MAX_K` in SignalPool = 3, `_DEFAULT_K` = 3
+
+**Corruption risks:**
+1. **Zero-feature trades**: When timestamp lookup misses, trade records get all-zero feature dicts. These trades survive to the CSV output and trade distribution analysis with corrupted data. This IS detected (WARNING log "ZERO FEATURES | trade=..." with zero_count > 50% of features), but the data is already wrong.
+2. **Silent gate failure**: EngineRunner gate fails open on exception — bad EngineRunner config leads to trades executing without proper validation.
+3. **Drift detection silently disabled**: If FeatureMonitor init fails, the entire drift defense layer is gone with only one ERROR log at startup.
+
+**Trust:** **LIVE** (primary backtest path). **DANGEROUS** for the silent fallbacks noted above.
+
+---
+
+### 1.4 `baseline_capture.py`
+
+**File Purpose:**
+Captures a reproducible baseline manifest: schema hash, production config SHA-256, active model versions, registry sizes.
+
+**Runtime Role:**
+Developer/CI tool. Not in trading path.
+
+**Classes:** None.
+
+**Functions:**
+
+| Function | What ACTUALLY happens |
+|---|---|
+| `_sha256_file(path)` | Returns hex digest or None if file doesn't exist. Chunked read (1MB). |
+| `_read_json(path)` | Returns parsed JSON or None if file doesn't exist or parse fails. |
+| `_count_entries(path)` | Counts keys in a JSON dict file, or 0 if missing/unreadable. |
+| `build_manifest(root, label)` | Reads schema version/hash from `features.feature_schema`, active models from `core.model_registry`, production metadata from `config_layer.production_config`. SHA-256 hashes production config, registry.json, gaussian_registry.json, zone_registry.json. Wraps production metadata fetch in try/except so baseline capture always completes. |
+| `main()` | CLI. Default label "phase0". Writes to `results/baseline/{timestamp}_{label}/manifest.json` |
+
+**Fail-fast/Fallbacks:**
+- Production metadata fetch exception → `{"_error": str(exc)}` — baseline still completes
+- File not found for SHA-256 → None
+- JSON parse failure → None
+- JSON not a dict → 0 entries
+
+**Trust:** **LIVE** (utility, not in trading path)
+
+---
+
+### 1.5 `live_engine_hook.py` (873 lines)
+
+**File Purpose:**
+Subclass wrapper around `LiveEngine`. Runs EngineRunner → ExecutionPlannerV1_2 → UltronRiskGate after LiveEngine.process() returns. Sprint 6 additions: StrategyOrchestrator (all 10 strategies), KillSwitch, TelegramBridge, MT5Bridge.
+
+**Runtime Role:**
+**CRITICAL — the LIVE trading path.** This is what ACTUALLY runs when the system is in production. HookedLiveEngine.process() overrides LiveEngine.process() and adds all downstream validation.
+
+**Classes:**
+
+| Class | What ACTUALLY happens |
+|---|---|
+| `_DailyResetTracker` | Forces `trades_today=0` and `daily_loss_pct=0.0` on UTC day rollover. |
+| `HookedLiveEngine(LiveEngine)` | Subclass of LiveEngine. **This is the live execution entry point.** |
+
+**HookedLiveEngine.process() — What ACTUALLY happens when this runs:**
+
+1. **`super().process()`** — runs the base LiveEngine, gets base result with confidence/probabilities
+
+2. **Build engine_input** via `_build_engine_input(trade_data)` — extracts close/open/high/low/ATR/EMA/session/trend/sweep/body_ratio/retest_depth etc.
+
+3. **FeatureStore path**: If FeatureStore available, splits trade_data into OHLCV + auxiliary (30 remaining features), calls FeatureStore.process(). On success: replaces engine_input with validated FeatureFrame (35 canonical features + `_data_integrity="real"`). On failure: logs WARNING, uses raw dict fallback.
+
+4. **Regime injection**: Classifies market regime (RANGING/TRENDING/HIGH_VOLATILITY), injects regime label + fusion weights into context.
+
+5. **Drift detection**: Updates FeatureMonitor with body_ratio/retest_depth/disp_strength. HARD drift → ERROR log. SOFT drift → WARNING log. Exception → silently ignored.
+
+6. **StrategyOrchestrator pre-run**: Runs all 10 strategies on the candle. Injects `strategy_consensus_score` and `strategy_consensus_direction` into context so FusionEngine uses it as 5th input.
+
+7. **Thread direction**: Injects direction/signal_dir/trade_direction into engine_input (mirrors backtest_v2.py).
+
+8. **`EngineRunner.run(engine_input, context)`** — main decision pipeline
+
+9. **ExecutionPlannerV1_2**: If results are "execute", calculates CRT levels (SL/TP from ATR), runs compute_crt_levels(). GAP-006 fix: rejects if SL or TP is 0.0 (naked order guard).
+
+10. **UltronRiskGate**: If SL/TP valid, builds portfolio_state from trade_data (requires: account_balance, total_open_risk_pct, trades_today, daily_loss_pct, open_positions — raises KeyError if missing). Applies daily reset. Wraps with UltronRiskGateWrapper (regime-aware pre-scaling). Evaluates. Logs decision/reason/size/regime.
+
+11. **Collector**: calls `collector.collect(trade_id, engine_input, engine_outputs, outcome, context)`
+
+12. **KillSwitch pre-check**: If KillSwitch is tripped, returns result with `ks_blocked=True` — blocks MT5/Telegram.
+
+13. **Telegram signal alert**: If ultron APPROVED and not kill-switch blocked, sends signal alert with strategy scores.
+
+14. **MT5 order**: If ultron APPROVED and not kill-switch blocked, places order via MT5Bridge.
+
+**FAIL-FAST / FALLBACK AUDIT:**
+
+| Issue | What happens |
+|---|---|
+| FeatureStore validation fails | WARNING logged, raw dict fallback used. Trade proceeds without canonical validation. |
+| FeatureStore not available | Not initialized — _STORE_AVAILABLE=False, raw dict always used. Silent. |
+| RegimeClassifier init fails | WARNING logged, `_regime_classifier` stays None. No regime injection. |
+| RegimeClassifier.classify() exception | DEBUG log "ignored" — regime injection silently skipped for that candle. |
+| FeatureMonitor update/detect exception | DEBUG log "ignored" — drift check silently skipped. |
+| StrategyOrchestrator pre-run exception | WARNING logged, strategy consensus not injected. FusionEngine runs without 5th input. |
+| EngineRunner.run() exception | Propagates — not caught. **This would crash the live system.** |
+| ExecutionPlanner.plan() exception | Propagates — would crash live system. |
+| CRT levels fail (SL/TP=0.0) | ERROR log + ultron_result = reject with "MISSING_SL_TP". Trade blocked. **Safe failure.** |
+| Portfolio state keys missing | **KeyError raised** — caller must fix. Deliberately loud failure. |
+| UltronRiskGate config missing | **RuntimeError raised** — deliberately loud. |
+| MT5Bridge.send_order() exception | WARNING logged, ignored. Trade was already validated — MT5 failure is operational, not signal. |
+| Telegram send fails | WARNING logged, ignored. |
+| KillSwitch init fails | WARNING logged, `_kill_switch` stays None. KillSwitch disabled. |
+| MT5Bridge init fails | WARNING logged, ignored. |
+
+**Hidden defaults:**
+- Session resolution: if "session" field missing, falls back to session one-hot flags (is_asia/is_london/is_newyork). If those missing too → defaults to "london"
+- `_safe_float` default = 0.0 for ALL features
+- `_normalize_session(None)` → "london"
+- `precision_default` = 8 if not in config
+- `telegram` / `mt5` singletons initialized lazily on first use
+
+**Corruption risks:**
+1. **Raw dict fallback not validated**: When FeatureStore fails, `_build_engine_input()` returns a partial dict that may have missing keys or defaults. This feeds into EngineRunner untested.
+2. **Silent kill switch**: If KillSwitch init fails, the entire kill switch defense layer is absent. No warning on each trade.
+3. **Silent drift skip**: Exception in drift detection is swallowed at DEBUG level.
+4. **FeatureStore silent missing**: If `core.feature_store` not importable, `_STORE_AVAILABLE = False`. The entire canonical validation layer is absent. The `_build_engine_input` raw dict is used for all trades — only ~20 of the 35 canonical features are populated; the rest default to 0.0. **This would silently corrupt every trade's feature dict in production.**
+
+**Trust:** **LIVE** (primary production path). **DANGEROUS** for silent fallbacks and swallowed exceptions.
+
+---
+
+### 1.6 `unified_replay_harness.py`
+
+**File Purpose:**
+Runs both backtest_v2 (execution-truth) and backtest_bitnet (3 gate modes) on the same dataset, emits one normalized comparison JSON report.
+
+**Runtime Role:**
+Developer/CI orchestration tool. Not in live path.
+
+**Classes:** None — standalone functions.
+
+**Functions:**
+
+| Function | What ACTUALLY happens |
+|---|---|
+| `_materialize_month_window_csv(data_path, months, output_dir)` | Reads CSV, applies month filter, writes filtered CSV to `{output_dir}/filtered_inputs/{stem}_last_{months}m.csv`. Returns new CSV path. |
+| `_build_backtest_v2_config(config, instrument)` | Builds CRTConfig via ConfigBuilder with optional params override, then BacktestConfig.from_prod_config(). |
+| `_summarize_bitnet_results(results)` | Counts BITNET_REJECT, ERROR, EXECUTE, REJECT, adapter_reject, accepted_by_score/fallback/override. |
+| `run_unified_replay(config, data_path, output_dir, months)` | Runs backtest_v2 + 3 BitNet gate modes. Writes combined report JSON. |
+| `main()` | CLI. --config (default production JSON), --data (CSV or directory), --months, --output-dir. Directory mode: runs on all CSVs. |
+
+**Trust:** **LIVE** (orchestration tool)
+
+---
+
+## 2. SCANNER (`src/scanner/`)
+
+### 2.1 `universe.py`
+
+**File Purpose:**
+Defines which symbols to scan. Static list with 3 crypto, 4 FX, 2 stock symbols.
+
+**Runtime Role:**
+Data source for `MultiSymbolScanner`. Supplies symbol lists.
+
+**Class: `Universe`**
+
+| Aspect | What ACTUALLY happens |
+|---|---|
+| Purpose | Holds a `{asset_class: [symbols]}` dict. Default: crypto=["BTCUSDT","ETHUSDT","SOLUSDT"], fx=["EURUSD","GBPUSD","USDJPY","AUDUSD"], stocks=["AAPL","TSLA"]. |
+| `symbols(asset_class)` | Returns list for that class, or all symbols. Unknown class → log warning + empty list. |
+| `add_symbol()` | Adds to map, creates class list if needed. |
+| `remove_symbol()` | Linear search across all classes. Returns True/False. |
+
+**Trust:** **LIVE**
+
+### 2.2 `scanner.py`
+
+**File Purpose:**
+Scans all symbols in a Universe and generates signals using an injected engine_runner callable.
+
+**Runtime Role:**
+The scan orchestration layer. Called by `StrategyOrchestrator` or other upstream logic.
+
+**Class: `MultiSymbolScanner`**
+
+| Aspect | What ACTUALLY happens |
+|---|---|
+| `scan(asset_class)` | Gets symbols from Universe. For each symbol: calls `data_fetcher(symbol)` (or passes symbol directly if no fetcher), calls `engine_runner(symbol, data)`, filters by `filter_action` (default "BUY"). Collects signals with symbol injected. Continues on exception per symbol. |
+
+**Fail-fast/Fallbacks:**
+- If engine_runner returns None → skip
+- If action != filter_action → skip
+- Exception per symbol → log.warning + continue
+
+**Trust:** **PARTIAL**
+
+### 2.3 `spine_adapter.py`
+
+**File Purpose:**
+The ONLY legal path from scanner signals to a trade decision. Wraps `EngineRunner.run()` as the callable `MultiSymbolScanner.engine_runner` expects.
+
+**Runtime Role:**
+Adapter between scanner output and core decision pipeline. Called by `MultiSymbolScanner.scan()` for each symbol.
+
+**Class: `SpineAdapter`**
+
+| Aspect | What ACTUALLY happens |
+|---|---|
+| `evaluate(symbol, data)` | Builds context (symbol, timeframe, session, candle_idx). Calls `self._runner.run(input_data=data, context=context)`. If EngineRunner returns "execute" with direction ≥ 0 → action="BUY", else "SELL". Extracts RR from engine_scores. Returns full signal dict. |
+
+**Fail-fast/Fallbacks:**
+- EngineRunner exception → returns `{"action": "NO_SIGNAL", "reason": str(exc)}`. The exception is caught but the ENTIRE symbol is skipped for that candle.
+- Default session: "london", default timeframe: "M15"
+
+**Trust:** **LIVE** (enforced single path)
+
+### 2.4 `rankery.py` (OpportunityRanker)
+
+**File Purpose:**
+Scores signals and returns them ranked best-first. Weighted formula: `confidence × w_conf + rr_normalized × w_rr + zone × w_zone`.
+
+**Runtime Role:**
+Post-scan ranking. Run on MultiSymbolScanner output before SignalPool selection.
+
+**Class: `OpportunityRanker`**
+
+| Aspect | What ACTUALLY happens |
+|---|---|
+| `score_signal(signal)` | Extracts confidence/rr/zone from signal dict. Normalizes RR: `min(rr / rr_normalizer, 1.0)`. Returns weighted sum. |
+| `rank(signals, min_score)` | Scores each signal, filters by threshold, adds `_score` key, sorts descending. Returns scored+filtered list. |
+| Default weights | confidence=0.5, rr=0.3, zone=0.2, min_score=0.60 |
+
+**Fail-fast/Fallbacks:**
+- Missing fields → default to 0.0 via `float(signal.get(key, 0.0))`
+- rr_normalizer ≤ 0 → 0.0 (safe)
+
+**Trust:** **LIVE**
+
+### 2.5 `signal_pool.py`
+
+**File Purpose:**
+Selects top-K signals from a pre-ranked list. Hard cap at 3. Optional correlation deduplication.
+
+**Runtime Role:**
+Final selection gate before execution.
+
+**Class: `SignalPool`**
+
+| Aspect | What ACTUALLY happens |
+|---|---|
+| `top_k(signals, k)` | Caps k at 3 (hard ceiling). If correlation_engine provided: iterates signals, skips any whose correlation with already-selected exceeds threshold (0.7 default). Otherwise: takes first k. |
+
+**Fail-fast/Fallbacks:**
+- If `_MAX_K` > k → uses min
+- No correlation engine → simple slice
+
+**Trust:** **LIVE**
+
+---
+
+## 3. SEARCH (`src/search/`)
+
+### 3.1 `regime_weight_searcher.py`
+
+**File Purpose:**
+Regime-aware fusion weight + BitNet threshold search using LLM-guided optimization. Orchestrates search loop: load trades → compute baseline → get LLM candidate suggestions → test each candidate → guardrail check → LLM analysis → select best.
+
+**Runtime Role:**
+Offline tuning tool. NOT in trading path.
+
+**Class: `RegimeWeightSearcher`**
+
+| Aspect | What ACTUALLY happens |
+|---|---|
+| `run(regimes)` | For each regime (RANGING/TRENDING/HIGH_VOLATILITY): calls `_search_regime()` which loads trades filtered by regime, builds trade summary, calls LLM for candidate suggestions, runs baseline backtest, tests each candidate, applies PnL/drawdown guardrails, gets LLM analysis, selects best candidate or falls back to baseline weights. |
+
+**FAIL-FAST / FALLBACK AUDIT:**
+
+| Issue | What happens |
+|---|---|
+| LLM call fails | `log.warning` + returns fallback candidate with equal weights (0.25 each) and threshold 0.50 |
+| No trades for regime | Returns baseline with 0.40/0.30/0.20/0.10 weights, 0.50 threshold. `improvement_pct = 0.0`. |
+| No candidates pass guardrails | Falls back to baseline weights with rationale "No candidates passed guardrails" |
+| Candidate backtest exception | `log.error` + `continue` — skips that candidate silently |
+| LLM analysis call fails | Returns `{"pattern": "insufficient data", ...}` |
+| JSON parse of LLM response fails | Falls back to equal-weight candidate |
+| Empty LLM response | Falls back to equal-weight candidate |
+
+**Hidden defaults:**
+- `regimes = ["RANGING", "TRENDING", "HIGH_VOLATILITY"]`
+- Default fusion weights: crt=0.40, gaussian=0.30, zone=0.20, rr=0.10
+- Default bitnet_threshold = 0.50
+- `MIN_PNL_RATIO` from policy_schema (not visible in source)
+- `MAX_DRAWDOWN_RATIO` from policy_schema
+- LLM temperature = 0.1, max_tokens = 512 (suggest) / 256 (analysis)
+- LOG_PATH = `logs/regime_search.jsonl`
+
+**Corruption risks:**
+- `_mutate_config()` creates `copy.deepcopy` — safe
+- Candidate weights are clamped to PARAM_BOUNDS and renormalized — safe
+- Pipeline writes to JSONL audit log — append mode
+
+**Network/API usage:**
+- `llm_chat()` — calls LLM inference for candidate suggestions and result analysis
+
+**Trust:** **EXPERIMENTAL** (LLM-guided search, not in trading path)
+
+---
+
+## 4. STRATEGIES (`src/strategies/`)
+
+### 4.1 `base_strategy.py`
+
+**File Purpose:**
+Abstract base class for all 10 strategies (S1-S10). Loads capital management config from production JSON. Provides shared helpers for INR risk math.
+
+**Runtime Role:**
+Inherited by every concrete strategy. Provides `_get_lot_size()`, `_calc_sl_inr()`, `_calc_tp_inr()`, `_calc_roi()`, `_no_trade()`.
+
+**Config:** Reads `capital_management` section from production JSON. Required keys: `total_capital_inr`, `max_risk_per_trade_inr`, `pip_value_per_lot`, `usd_to_inr_rate`. Module-level loading — fails at import time if section missing.
+
+**Hidden defaults:**
+- pip_value for unknown pair → 10.0 USD (warning logged)
+- JPY pip multiplier = 100, all others = 10,000
+- Max lot size cap = 100.0
+- Pair normalization: removes "/" and uppercase
+
+**Trust:** **LIVE**
+
+### 4.2 `strategy_result.py`
+
+**File Purpose:**
+Universal output contract for all strategies. Dataclass with validation.
+
+**Runtime Role:**
+Returned by every `BaseStrategy.compute()`. Consumed by `StrategyOrchestrator._aggregate()`.
+
+**Key details:**
+- Validates: score/confidence in [0,1], intent/signal/regime/strategy_id against allowed sets, BUY/SELL price geometry, sl_inr ≤ 25,000 INR, roi_min ≤ roi_max
+- `is_actionable()`: signal in (BUY, SELL) AND confidence > 0.0
+- `no_trade()` classmethod: all zeros, NO_TRADE intent/signal
+- Sl_inr hard ceiling of 25,000 INR (matches UltronRiskGate)
+
+**Trust:** **LIVE**
+
+### 4.3 `s01_crt_wrapper.py` (S1 — CRT Strategy Wrapper)
+
+**File Purpose:**
+Adapter wrapping the existing deterministic CRT engine into the strategy framework.
+
+**Runtime Role:**
+Called by StrategyOrchestrator for each candle. Delegates to `engines.crt_engine.compute()`.
+
+**What ACTUALLY happens when compute() runs:**
+1. Loads config from `strategy_engine.s01_crt` (default min_score=0.65, sl_atr_mult=1.5, tp_rr_ratio=2.0, confidence_scale=1.0)
+2. Calls `crt_engine.compute(trade_id, features, {})`
+3. If score < min_score → NO_TRADE
+4. Determines signal from trend_bias + break_of_structure/sweep_detected. If insufficient → NO_TRADE
+5. Calculates SL/TP from close ± ATR×sl_mult, extended by tp_rr_ratio
+6. `lot = _get_lot_size(sl_pips)`. If lot ≤ 0 → NO_TRADE
+7. Validates via `result_obj.validate()`
+8. Returns StrategyResult
+
+**Fail-fast/Fallbacks:**
+- CRT engine exception → NO_TRADE with UNKNOWN regime
+- close ≤ 0 or atr ≤ 0 → NO_TRADE
+- lot ≤ 0 → NO_TRADE
+- Validation failure → raises ValueError (propagates)
+
+**Trust:** **LIVE**
+
+### 4.4 `strategy_orchestrator.py`
+
+**File Purpose:**
+Runs all enabled strategies per candle, aggregates signals via completeness gate → consensus gate → weighted score.
+
+**Runtime Role:**
+Called by `live_engine_hook.HookedLiveEngine.process()` as the 5th engine pre-run. Also callable standalone.
+
+**Class: `StrategyOrchestrator`**
+
+| Aspect | What ACTUALLY happens |
+|---|---|
+| `compute(features, candle)` | Iterates all enabled strategies. Each caught individually — one broken strategy cannot block others (fail_open=True). Collects results. Calls `_aggregate()`. |
+
+**Aggregation flow:**
+1. **Completeness gate**: Require `min_signal_strategies` (default 2) actionable results
+2. **Consensus gate**: Require `min_agreement_ratio` (default 0.60) agreement on one direction
+3. **Weighted score/confidence**: Weighted average over agreeing results (per-strategy weights from config, default equal)
+4. Best result = max confidence among agree results
+5. **Audit**: Appends to `logs/strategy_audit.jsonl` (append mode, exceptions swallowed)
+
+**FAIL-FAST / FALLBACK AUDIT:**
+
+| Issue | What happens |
+|---|---|
+| Strategy compute exception + fail_open=True | Substitutes NO_TRADE for that strategy. Continues. |
+| Strategy compute exception + fail_open=False | Propagates the exception (would crash orchestrator) |
+| Strategy class not in registry | WARNING "Unknown strategy ID" — skipped |
+| Strategy instantiation fails + fail_open=True | ERROR logged, strategy not added. Continues with fewer strategies. |
+| Strategy instantiation fails + fail_open=False | Propagates |
+| strategy_orchestrator config section missing | WARNING "using defaults" — continues with hardcoded defaults |
+| Audit JSONL write fails | DEBUG log "ignored" — audit trail silently lost |
+| `min_signal_strategies` not in config | Defaults to 2 |
+| `min_agreement_ratio` not in config | Defaults to 0.60 |
+| Weights per strategy not in config | Equal weight: `1.0 / len(agree_results)` |
+
+**Trust:** **LIVE** (wired into live_engine_hook). **DANGEROUS** for swallowed audit failures.
+
+---
+
+## DEPENDENCY BOUNDARY REPORT
+
+Tracing beyond the four scoped directories enters:
+
+- **gen_core**: `EngineRunner`, `FusionEngine`, `UltronRiskGate`, `UltronRiskGateWrapper`, `collector`
+- **gen_features**: `FeaturePipeline`, `FeatureMonitor`, `FeatureStore`, `feature_schema`
+- **gen_config_layer**: `ConfigBuilder`, `CRTConfig`, `CRTEngine`, `CRTState`, `production_config`
+- **gen_engines**: `crt_engine`, `live_engine.LiveEngine`
+- **gen_bitnet**: `BitNetRunner`, `BitNetModel`
+- **gen_core/model_registry**: `load_active_gaussian_scorer`
+- **gen_expansion/policy_schema**: `RegimeWeightCandidate`, `RegimeSearchResult`, `PARAM_BOUNDS`
+- **gen_config_layer/llm_inference_client**: `llm_chat`
+- **gen_journal/trade_logger**: `TradeLogger`
+- **gen_live**: `TelegramBridge`, `MT5Bridge`
+- **gen_uat**: `KillSwitch`
+- **gen_regime**: `RegimeClassifier`, `ConfigRouter`
+- **gen_utils**: `console_safe`, `config_dumper`, `trade_logger`, `logging_config`
+
+Further tracing into these subsystems exceeds the immediate runtime relevance boundary.
+
+---
+
+## TRUST CLASSIFICATION SUMMARY
+
+| Component | Trust | Why |
+|---|---|---|
+| `runtime/analyze_fusion_shadow.py` | LIVE | Post-hoc audit tool, not in trading path |
+| `runtime/backtest_bitnet.py` | LIVE | Primary BitNet-gated backtest harness |
+| `runtime/backtest_v2.py` | **DANGEROUS** | Silent zero-feature trades, drift detection fallback to None, EngineRunner gate fails open |
+| `runtime/baseline_capture.py` | LIVE | Developer tool, not in trading path |
+| `runtime/live_engine_hook.py` | **DANGEROUS** | Silent FeatureStore fallback, swallowed drift exceptions, KillSwitch silently absent, swallowed audit writes |
+| `runtime/unified_replay_harness.py` | LIVE | Orchestration tool |
+| `scanner/universe.py` | LIVE | Static data, no fallbacks needed |
+| `scanner/scanner.py` | PARTIAL | Symbol-level exception handling is good, but engine_runner injected — trust depends on caller |
+| `scanner/spine_adapter.py` | LIVE | Enforced single path with clean fallback |
+| `scanner/ranker.py` | LIVE | Simple weighted scoring, clean field defaults |
+| `scanner/signal_pool.py` | LIVE | Hard cap at 3, simple selection |
+| `search/regime_weight_searcher.py` | EXPERIMENTAL | LLM-guided offline search, not in trading path |
+| `strategies/base_strategy.py` | LIVE | Inherited by all strategies, config-loaded |
+| `strategies/strategy_result.py` | LIVE | Validated dataclass, hard INR ceiling |
+| `strategies/s01_crt_wrapper.py` | LIVE | Clean adapter pattern, explicit gate checks |
+| `strategies/strategy_orchestrator.py` | **DANGEROUS** | Swallowed audit failures, fail_open by default, silent strategy drops |
+
+---
+
+## CRITICAL FAIL-FAST / FALLBACK ISSUES
+
+### Silent zero-feature trades (backtest_v2.py lines 1501-1528)
+When the timestamp-keyed feature lookup misses (CSV timestamp format mismatch), trade records get all-zero feature dicts. The WARNING log exists but the data is already wrong by the time it fires. These all-zero features flow into:
+- `TradeRecord.features` (used for training data)
+- Fusion JSONL log (skipped for zero vectors — good)
+- Trade CSV output (bad — zero features appear in export)
+
+### Silent drift detection failure (backtest_v2.py line 1293-1298)
+FeatureMonitor init failure sets `_monitor = None` and `_monitor_available = False` with one ERROR log. The entire drift defense layer (HARD drift pause, soft drift warning) is absent for the entire run. No per-candle warning.
+
+### EngineRunner gate fails open (backtest_v2.py lines 1657-1659)
+Exception in EngineRunner gate → `log.debug(f"EngineRunner gate exception (allow): {_er_exc}")` → trade proceeds. The gate is ineffective if EngineRunner throws. This is intentional ("fail-soft") but means the gate provides no safety if EngineRunner is misconfigured.
+
+### FeatureStore silent absence (live_engine_hook.py)
+If `core.feature_store` is not importable, `_STORE_AVAILABLE = False` — this is checked ONCE at module import time. If FeatureStore is missing due to deployment issue, every trade uses the raw `_build_engine_input()` dict which has ~20 of 35 canonical features, the rest defaulting to 0.0. No per-trade warning.
+
+### KillSwitch silent absence (live_engine_hook.py)
+If KillSwitch init fails (exception caught), `_kill_switch` stays None. `_get_kill_switch()` returns None. `is_tripped()` guard becomes `False`. Kill switch defense layer is absent with one WARNING log at init.
+
+### Strategy orchestrator audit failures silently lost (strategy_orchestrator.py line 92)
+`_append_audit()` catches all exceptions at DEBUG level. If the JSONL file is unwritable, the entire per-candle audit trail is silently discarded.
+
+---
+
+## NETWORK / API / SUBPROCESS USAGE
+
+| Component | Usage |
+|---|---|
+| `regime_weight_searcher.py` | `llm_chat()` — LLM API calls for candidate generation and analysis |
+| `live_engine_hook.py` | `TelegramBridge.send_signal_alert()` — HTTP API to Telegram |
+| `live_engine_hook.py` | `TelegramBridge.send_kill_switch()` — HTTP API to Telegram |
+| `live_engine_hook.py` | `MT5Bridge.connect()` — MetaTrader 5 terminal IPC |
+| `live_engine_hook.py` | `MT5Bridge.send_order()` — MetaTrader 5 order placement |
+
+No subprocess usage in these four directories.

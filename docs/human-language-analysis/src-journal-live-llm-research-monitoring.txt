@@ -1,0 +1,677 @@
+# Human-Readable Execution Cognition
+
+## src/journal — Trade Journal and Schema
+
+### 1. File Purpose
+
+**schema.py**: Defines the data shape for every trade record that flows through the system. Not a database schema — it's a dataclass that holds everything: who decided, what was traded, what happened.
+
+**trade_logger.py**: The append-only writer that persists trade outcomes to disk and routes them into the unified audit trail.
+
+### 2. Runtime Role
+
+Trade logging sits at the END of every trade lifecycle. When a trade is opened and closed somewhere in the execution pipeline, some caller constructs a `TradeRecord` and calls `TradeLogger.log()` to persist it. The system does NOT read these records to make trading decisions — it's purely post-hoc audit.
+
+### 3. Classes
+
+**`TradeRecord`** (schema.py, line 8)
+- **Purpose**: Structured envelope for one completed trade's full context + outcome
+- **Ownership**: Created by callers in the execution/engine layers (who populate identity, symbol, decision context, portfolio context)
+- **Runtime responsibility**: Carries data from decision through close; after close, `result`, `pnl`, `duration_candles`, `drawdown_at_entry` get filled
+- **Trust**: CANONICAL — pure dataclass, no logic, no side effects, no failure modes
+
+**`TradeLogger`** (trade_logger.py, line 25)
+- **Purpose**: Double-writes every trade record to two destinations
+- **Ownership**: Central logging service; callers instantiate or reuse it
+- **Runtime responsibility**: Guarantee trade outcome data survives process restart
+
+### 4. Methods / Functions
+
+#### TradeRecord.to_dict() (schema.py:38)
+- **Human purpose**: Turn the record into a plain dict for JSON serialization
+- **Invocation**: Called by `to_json()` internally; also usable externally
+- **Downstream calls**: `dataclasses.asdict()`
+- **Inputs**: `self` — the 15 dataclass fields
+- **Outputs**: `dict` with all fields
+- **State mutations**: None
+- **Side effects**: None
+- **Failure modes**: None unless a field is of an unhashable type (impossible here since all are primitives)
+- **Determinism**: YES — pure function
+- **Trust**: CANONICAL
+
+#### TradeRecord.to_json() (schema.py:41)
+- **Human purpose**: Serialize to a JSON string for file writing
+- **Runtime flow**: `to_dict()` → `json.dumps()` → string
+- **Failure modes**: None
+- **Trust**: CANONICAL
+
+#### TradeRecord.from_dict() (schema.py:44)
+- **Human purpose**: Reconstruct a TradeRecord from a dict (e.g., loaded from JSONL)
+- **Runtime flow**: Filters unknown keys via `__dataclass_fields__`, then constructs via `cls(**filtered_dict)`
+- **Failure modes**: Silent key filtering — if a dict has extra fields, they're dropped with zero warning
+- **Hidden default**: Unknown fields are silently discarded
+- **Trust**: CANONICAL but WARNING: silent field drop is a data integrity risk
+
+#### TradeLogger.__init__() (trade_logger.py:33)
+- **Human purpose**: Set the output path for the journal JSONL file
+- **Hidden default**: If no `log_path` passed, writes to `logs/trade_journal.jsonl`
+- **State mutations**: Sets `self._path`
+- **Trust**: CANONICAL
+
+#### TradeLogger.log() (trade_logger.py:36)
+- **What ACTUALLY happens when this runs**:
+  1. Creates parent directory for the journal file if it doesn't exist
+  2. Appends one JSON line to `logs/trade_journal.jsonl` (or custom path)
+  3. If the import `core.collector` is available, constructs a separate dict mapping TradeRecord fields to Collector's expected format, then calls `Collector().log()` — route to unified audit trail
+  4. Both writes are wrapped in exception handlers that log WARNING/DEBUG and continue
+
+- **Human purpose**: Persist trade outcome PLUS ensure the collector audit trail stays in sync
+- **Invocation sources**: Called by engine/execution code after a trade closes
+- **Downstream calls**:
+  - Primary: `open()` → `f.write()` (filesystem write to `trade_journal.jsonl`)
+  - Secondary: `Collector().log()` (write to `logs/collector.jsonl`)
+- **Inputs**: One `TradeRecord` object
+- **Outputs**: None (void)
+- **State mutations**: Append to JSONL file on disk
+- **Side effects**: File I/O for two separate log files
+- **File writes**: 
+  - `logs/trade_journal.jsonl` (always)
+  - `logs/collector.jsonl` (if Collector available)
+- **Network/API**: None
+- **Subprocess**: None
+- **Fallbacks**:
+  - If collector import fails at module level → `_COLLECTOR_AVAILABLE = False`, secondary write is skipped silently
+  - If log file write fails → logged as WARNING, trade record lost silently
+  - If collector route fails → logged as DEBUG, swallowed silently
+- **Hidden defaults**: 
+  - Collector is silently disabled if `core.collector` can't be imported (line 20-22: bare `except Exception` catches ANYTHING, not just ImportError — even syntax errors in collector would disable it)
+  - `_DEFAULT_LOG = Path("logs/trade_journal.jsonl")` — hardcoded relative path
+- **Failure modes**:
+  - PRIMARY WRITE FAILURE: If file can't be opened (permissions, disk full, path invalid), the trade record is LOST — logged only as WARNING, no retry, no alternative path
+  - SECONDARY WRITE FAILURE: Silent — DEBUG log only, collector audit trail goes stale
+- **Determinism**: YES — same record always produces same append
+- **Corruption risks**:
+  - Partial writes: If process crashes between line write and collector write, collector trail has a gap but primary journal is intact
+  - If another process reads the journal while writing, it could see partial lines (no locking)
+- **Governance contamination**: Collector record is a RECONSTRUCTED dict, not the original TradeRecord. The mapping at line 49-59 drops fields like `allocated_risk`, `portfolio_exposure_before`, `override_action`, `confidence`, `zone`, `drawdown_at_entry`, `duration_candles`. If someone later queries the collector trail for these fields, they get nothing. This is a silent schema degradation.
+- **Trust**: LIVE — actively used, but has silent data loss paths
+
+#### TradeLogger.load_all() (trade_logger.py:64)
+- **Human purpose**: Read all trade records back from the JSONL file (e.g., for reporting)
+- **Runtime flow**: 
+  1. Check if file exists — if not, return empty list (silent)
+  2. Open file, iterate lines, skip empty lines
+  3. `json.loads()` each non-empty line; if JSON parse fails, `pass` (line dropped silently)
+- **Inputs**: None (reads from `self._path`)
+- **Outputs**: `list[dict]` — raw dicts, NOT TradeRecord objects
+- **State mutations**: None
+- **Hidden defaults**: Returns empty list if file doesn't exist — no WARNING
+- **Failure modes**: Lines with malformed JSON are silently dropped — corruption in the journal propagates as missing records with zero indication
+- **Trust**: LIVE — functionally correct but silent on corruption
+
+---
+
+## src/live — Execution Bridges (MT5 + Telegram)
+
+### 1. File Purpose
+
+**mt5_bridge.py**: The real-money gateway to MetaTrader 5. Sends market orders, closes positions, reads account state. Designed as a "fail-open" wrapper — if MT5 is unavailable, it logs and returns sentinel values rather than crashing.
+
+**telegram_bridge.py**: Notification-only channel. Sends formatted trade signals, kill-switch alerts, and daily P&L summaries to a Telegram bot chat. Never blocks trading.
+
+### 2. Runtime Role
+
+Both bridges are called BY the live trading loop (not during backtesting). They're the output periphery — decisions already made by the engine get executed (MT5) and announced (Telegram). They sit at the end of the decision pipeline.
+
+### 3. Classes
+
+**`MT5Bridge`** (mt5_bridge.py:53)
+- **Purpose**: Submit/cancel orders on MetaTrader 5 terminal via the MetaTrader5 Python package
+- **Ownership**: Created by live engine hook code, or standalone via `from_prod_config()`
+- **Runtime responsibility**: Map trading decisions to MT5 trade actions; survive MT5 terminal outages
+
+**`TelegramBridge`** (telegram_bridge.py:51)
+- **Purpose**: Send human-readable alert messages to a Telegram channel
+- **Ownership**: Created by live engine hook code, or standalone via `from_prod_config()`
+- **Runtime responsibility**: Format and deliver notifications; never block the decision loop
+
+### 4. Methods / Functions — MT5Bridge
+
+#### MT5Bridge.__init__() (mt5_bridge.py:76)
+- **Human purpose**: Configure order execution parameters
+- **Hidden defaults**:
+  - `dry_run=True` — by default, NO real orders are placed (even if config says otherwise, if MetaTrader5 isn't installed, dry_run is forced at line 87)
+  - `enabled=True`, `magic=20260501`, `deviation=20`, `slippage=3`, `lot_min=0.01`, `lot_max=5.0`
+  - If MetaTrader5 import fails at top level, `dry_run` is forced to True regardless of constructor argument (line 87)
+- **Trust**: CANONICAL
+
+#### MT5Bridge.from_prod_config() (mt5_bridge.py:100)
+- **Human purpose**: Factory that reads production config and instantiates with correct settings
+- **Runtime flow**: Calls `get_prod_section("live_integration")` → reads `.mt5` sub-dict → maps to constructor args
+- **Downstream calls**: `get_prod_section()` from `config_layer.production_config`
+- **Fallbacks**: If section missing, `cfg` becomes `{}`, all defaults apply silently
+- **Hidden defaults**: If the config file is missing or malformed, the bridge falls back to ALL defaults including `dry_run=True` — you could think MT5 is live but it's actually not executing anything
+- **Trust**: CANONICAL but dangerous — config errors are invisible
+
+#### MT5Bridge.connect() (mt5_bridge.py:116)
+- **What ACTUALLY happens when this runs**:
+  1. If `enabled=False`, set `_connected=False`, return False
+  2. If `dry_run=True`, set `_connected=True`, return True (pretends to connect)
+  3. If MetaTrader5 not available, return False
+  4. Call `_mt5.initialize()` — if it succeeds, set `_connected=True`, log success, return True
+  5. If initialize fails or throws, log WARNING, return False
+- **Human purpose**: Establish connection to MT5 terminal
+- **Invocation sources**: Called by live engine hook at startup
+- **Failure modes**: If MT5 terminal is not running, returns False silently (WARNING log), bridge enters disconnected state — `send_order()` and `close_position()` will still attempt to execute and fail
+- **Trust**: CANONICAL — fail-open is explicit
+
+#### MT5Bridge.disconnect() (mt5_bridge.py:137)
+- **Human purpose**: Shut down MT5 connection
+- **Runtime flow**: If MetaTrader5 available and not dry_run, call `_mt5.shutdown()` — exception swallowed. Always set `_connected=False`
+- **Trust**: CANONICAL
+
+#### MT5Bridge.send_order() (mt5_bridge.py:150)
+- **What ACTUALLY happens when this runs**:
+  1. If not enabled: log DEBUG, return None
+  2. Clamp lot_size to [lot_min, lot_max], round to 2 decimals
+  3. Determine order type (BUY→0, SELL→1)
+  4. If dry_run or MetaTrader5 missing: log the intended order, return -1 (sentinel ticket — NOT None!)
+  5. Otherwise: get current tick price, build MT5 request dict with action=TRADE_ACTION_DEAL, SL, TP, deviation, magic, comment, GTC, IOC filling
+  6. Call `_mt5.order_send(request)` — if result is None or retcode != TRADE_RETCODE_DONE, log WARNING, return None
+  7. On success: log ticket number, return ticket
+
+- **Human purpose**: Execute a live market order with SL and TP
+- **Invocation sources**: Called by live engine hook when a trade decision is made
+- **Downstream calls**: `_mt5.symbol_info_tick()`, `_mt5.order_send()`
+- **Inputs**: symbol, action ("BUY"/"SELL"), lot_size, sl_price, tp_price, comment (default "tradelatest")
+- **Outputs**: `Optional[int]` — ticket or None on failure; -1 on dry-run
+- **Side effects**: Real money order on MT5 (unless dry-run)
+- **Failure modes**:
+  - Symbol tick unavailable → return None (trade not placed)
+  - MT5 order rejected → log WARNING with retcode, return None (trade not placed)
+  - Exception → log WARNING, return None
+- **Hidden defaults**: 
+  - `comment="tradelatest"` — hardcoded default
+  - The mapping between `action` parameter and MT5 order type is case-insensitive (`.upper()` at line 180)
+- **Corruption risk**: Dry-run returns -1 as sentinel. If caller checks `if order_ticket:` in Python, -1 is truthy→might treat -1 as a real ticket. This is a latent bug pattern.
+- **Trust**: LIVE — real-money execution path
+
+#### MT5Bridge.close_position() (mt5_bridge.py:227)
+- **Human purpose**: Close an open MT5 position by ticket number
+- **Runtime flow**: Similar to send_order but with opposite order type, uses `_mt5.positions_get(ticket=ticket)` to find the position first
+- **Failure modes**: Position not found → log WARNING, return False; MT5 close fails → log WARNING, return False
+- **Trust**: LIVE
+
+#### MT5Bridge.get_account_info() (mt5_bridge.py:282)
+- **Human purpose**: Get account balance, equity, margin snapshot
+- **Hidden defaults**: On dry-run returns `{"balance": 0.0, "equity": 0.0, "margin": 0.0, "dry_run": True}` — these are FAKE values. If any caller uses these for position sizing decisions during dry-run, they'd get zeros
+- **Failure modes**: Returns empty dict `{}` on error — caller must handle empty dict as "unknown"
+- **Trust**: LIVE
+
+### 4. Methods / Functions — TelegramBridge
+
+#### TelegramBridge.__init__() (telegram_bridge.py:69)
+- **Human purpose**: Configure Telegram bot credentials
+- **Hidden defaults**:
+  - `bot_token=""`, `chat_id=""` — empty strings disable the bridge (line 79: `self._enabled = enabled and bool(bot_token) and bool(chat_id)`)
+  - Even if `enabled=True`, if token or chat_id is empty string, the bridge is disabled
+  - If `requests` package not installed: WARNING logged at init, all sends are no-ops
+- **Trust**: CANONICAL
+
+#### TelegramBridge.from_prod_config() (telegram_bridge.py:88)
+- **Human purpose**: Factory from production config
+- **Hidden defaults**: Same invisible-fallback risk as MT5 — if config section is missing, token/chat_id default to "" → bridge silently disabled
+- **Trust**: CANONICAL
+
+#### TelegramBridge.send_signal_alert() (telegram_bridge.py:102)
+- **Human purpose**: Send a formatted BUY/SELL signal notification to Telegram
+- **Runtime flow**: Build multi-line string with signal details → call `_send()` which POSTs to Telegram API
+- **Inputs**: pair, timeframe, signal, confidence, entry_price, sl_inr, tp_inr, rr_ratio, strategy_scores (optional)
+- **Downstream calls**: `_send()` → `requests.post()` to `https://api.telegram.org/bot{token}/sendMessage`
+- **Network/API**: HTTP POST to Telegram Bot API
+- **Failure modes**: If `_send()` fails, caller gets `False` return — but trading continues, only notification lost
+- **Trust**: LIVE
+
+#### TelegramBridge.send_kill_switch() (telegram_bridge.py:131)
+- **Human purpose**: Urgent notification that trading has been halted
+- **Inputs**: reason, daily_loss_inr, weekly_loss_inr, pair (optional, defaults to "ALL")
+- **Trust**: LIVE
+
+#### TelegramBridge.send_daily_summary() (telegram_bridge.py:150)
+- **Human purpose**: End-of-day P&L report to Telegram channel
+- **Runtime flow**: Compute win_rate (safe divide by zero handled), format string, send
+- **Note**: If `trades=0`, win_rate is 0.0% — correct behavior
+- **Trust**: LIVE
+
+#### TelegramBridge.is_configured() (telegram_bridge.py:170)
+- **Human purpose**: Check if bridge can actually send messages
+- **Runtime flow**: Returns `self._enabled AND requests available`
+- **Trust**: CANONICAL
+
+#### TelegramBridge._send() (telegram_bridge.py:175)
+- **What ACTUALLY happens when this runs**:
+  1. If not enabled: log DEBUG, return False
+  2. If dry_run or requests not available: log the message at INFO level (with newlines replaced by pipes), return True
+  3. Build URL from token template, POST JSON payload (chat_id, text, parse_mode="HTML") with timeout
+  4. On HTTP 200: log success, return True
+  5. On non-200: log WARNING with status code and response snippet, return False
+  6. On exception (network timeout, DNS failure): log WARNING, return False
+- **Failure modes**: Network timeout (5s default) → exception caught, WARNING logged, False returned
+- **Trust**: LIVE
+
+---
+
+## src/llm_research — LLM Research Pipeline
+
+### 1. File Purpose
+
+**__init__.py**: Architecture documentation — describes the pipeline from historical data → LLM pattern extraction → deterministic policy → forward test → evaluation.
+
+**pattern_extractor.py**: The ONLY file that touches an LLM. Loads historical trade data, sends summaries to an LLM, parses the response into a structured policy (rules, filters, boosters, weights, tier rules). Falls back to a hardcoded deterministic policy if LLM is unavailable.
+
+**policy_builder.py**: Converts the frozen ExtractedPolicy into a callable `PolicyEngine` — deterministic evaluation of feature vectors against the policy. Uses `eval()` for condition evaluation.
+
+**forward_tester.py**: Runs three parallel forward tests on unseen data: baseline (engine-only), policy (LLM-rules-only), hybrid (engine AND policy must agree). Records trade outcomes per mode.
+
+**evaluator.py**: Post-forward-test analysis — determines if the LLM policy generalizes, detects overfitting, measures contribution quality, and recommends whether to deploy.
+
+### 2. Runtime Role
+
+This is an **offline research pipeline**. Nothing in it runs during live trading. The flow is:
+1. Historical data CSV → `extract_patterns()` → LLM produces policy → `save_policy()` freezes to disk
+2. Frozen policy → `PolicyEngine.from_policy()` → deterministic engine
+3. PolicyEngine + data → `run_forward_test()` → `ForwardTestReport`
+4. Report → `ResearchEvaluator.evaluate()` → deployment recommendation
+
+### 3. Classes
+
+**`ExtractedPolicy`** (pattern_extractor.py:49)
+- **Purpose**: Container for the structured output from LLM analysis — rules, filters, boosters, weights, confidence formula, tier rules
+- **Ownership**: Created by `extract_patterns()` or `_fallback_policy()`
+- **Runtime responsibility**: Held in memory, then serialized to JSON. Never used dynamically during trading.
+- **Trust**: CANONICAL
+
+**`ModeResult`** (forward_tester.py:17)
+- **Purpose**: Accumulator for one test mode's results (trades, wins, PnL, drawdown, etc.)
+- **Ownership**: Instantiated inside `run_forward_test()` for each mode (baseline, policy, hybrid)
+- **Runtime responsibility**: As `run_forward_test()` iterates forward data rows, this dataclass is mutated per trade
+- **Computed properties**: `win_rate`, `expectancy`, `profit_density`
+- **Trust**: CANONICAL
+
+**`ForwardTestReport`** (forward_tester.py:44)
+- **Purpose**: Complete 3-mode comparison result
+- **Ownership**: Created by `run_forward_test()`
+- **Runtime responsibility**: Carry results to `ResearchEvaluator.evaluate()` and `save_report()`
+- **Trust**: CANONICAL
+
+**`PolicyEngine`** (policy_builder.py:11)
+- **Purpose**: Deterministic filter/booster that evaluates feature vectors against a frozen policy
+- **Ownership**: Instantiated by `PolicyEngine.from_policy()` with a frozen ExtractedPolicy
+- **Runtime responsibility**: Called inside `run_forward_test()` per data row to determine if a trade should be taken, at what tier, and at what size factor
+- **Key constraint**: LLM is NOT involved at this stage — this is pure deterministic Python
+
+### 4. Methods / Functions — Pattern Extractor
+
+#### extract_patterns() (pattern_extractor.py:62)
+- **What ACTUALLY happens when this runs**:
+  1. Load up to 500 rows from CSV (capped at `max_trades=500`)
+  2. Try to import `llm_chat` from `src.config_layer.llm_inference_client`
+  3. If import succeeds: call `_llm_extract(trades, llm_chat)` which sends a summarized trade history to the LLM and parses the JSON response
+  4. If import fails OR any exception occurs during LLM call: log WARNING, return `_fallback_policy(trades)` — a hardcoded deterministic policy
+  5. Set `trade_count_analyzed` on the returned policy
+- **Invocation sources**: Called by research scripts during offline analysis
+- **Downstream calls**:
+  - `_load_trades()` → CSV file read
+  - `_llm_extract()` → `llm_chat()` → LLM inference
+  - `_fallback_policy()` → return hardcoded policy
+- **Inputs**: `trades_csv` (path), `config` (unused), `max_trades` (default 500)
+- **Outputs**: `ExtractedPolicy`
+- **State mutations**: None (pure function)
+- **Side effects**: CSV file read, LLM API call
+- **File writes**: None (save_policy is separate)
+- **Network/API**: LLM inference API call via `llm_chat()`
+- **Fallbacks**:
+  - If `llm_chat` can't be imported: silently falls to `_fallback_policy()` — the _only_ indication is a WARNING log
+  - If LLM returns empty response: raises RuntimeError caught by outer try/except → falls to `_fallback_policy()`
+  - If LLM response has no JSON block or malformed JSON: caught → falls to `_fallback_policy()`
+- **Hidden defaults**:
+  - `max_trades=500` — hardcoded, silently truncates larger datasets
+  - The fallback policy is COMPLETELY deterministic with hardcoded threshold values
+- **Failure modes**: CSV file not found → empty trades list → LLM receives no data → likely produces garbage policy or falls to fallback
+- **Determinism**: NO — LLM calls are non-deterministic. Fallback path IS deterministic
+- **Corruption risks**:
+  - Fallback policy has NO connection to actual data — it's a generic template. If LLM fails silently, you'd get a policy that doesn't reflect your trading data without realizing it
+  - `max_trades=500` means only the FIRST 500 rows are analyzed — if the CSV has 10,000 rows with different patterns in later rows, they're invisible
+- **Trust**: EXPERIMENTAL — LLM path is non-deterministic, fallback is generic
+
+#### _summarize_trades() (pattern_extractor.py:126)
+- **Human purpose**: Aggregate trade data into averages so the LLM gets compressed statistical context instead of raw rows
+- **Runtime flow**: Split trades into wins/losses by PnL sign, compute per-group averages for numeric keys
+- **Feature columns**: Fusion_score, zone_gate, rr, body_ratio, retest_depth, disp_strength, pnl_rr_net
+- **Hidden default**: Uses `pnl_rr_net` as win/loss separator, falls back to `pnl`
+- **Trust**: CANONICAL
+
+#### _llm_extract() (pattern_extractor.py:105)
+- **What ACTUALLY happens when this runs**:
+  1. Calls `_summarize_trades(trades)` to get aggregate stats
+  2. Builds user message: "Historical trade data summary: {json} \n\nExtract pattern rules."
+  3. Calls `llm_chat()` with system prompt + user message, max_tokens=1024, temperature=0.1
+  4. If response is empty/falsy: raises RuntimeError
+  5. Calls `_parse_policy(resp)` to extract JSON and build ExtractedPolicy
+- **Trust**: EXPERIMENTAL — depends on external LLM
+
+#### _parse_policy() (pattern_extractor.py:150)
+- **Human purpose**: Extract JSON block from LLM response text and map to ExtractedPolicy fields
+- **Runtime flow**: Regex `{.*}` to find first JSON block → `json.loads()` → map fields with defaults
+- **Failure modes**: No JSON match → ValueError; malformed JSON → json.loads exception
+- **Hidden defaults**: Response is capped at 5 filters, 3 boosters (`.get("filters", [])[:5]` etc.)
+- **Trust**: PARTIAL — regex-based JSON extraction is fragile
+
+#### _fallback_policy() (pattern_extractor.py:169)
+- **Human purpose**: Provide a hardcoded generic policy when LLM is unavailable
+- **Content**: Two rules, one filter (zone_gate < 0.5 → BLOCK), one booster (fusion > 0.75 AND rr > 2.5 → 1.2x), hardcoded weights and tier rules
+- **Source**: Sets `source="fallback"` — the ONLY way a downstream component can detect fallback vs real LLM
+- **Trust**: CANONICAL but GENERIC — thresholds are arbitrary
+
+#### save_policy() / load_policy() (pattern_extractor.py:199-211)
+- **Human purpose**: Serialize/deserialize ExtractedPolicy to/from JSON file
+- **Default path**: `results/llm_research/policy.json`
+- **File writes**: Overwrites existing file without backup
+- **Trust**: CANONICAL
+
+### 4. Methods / Functions — Policy Builder
+
+#### PolicyEngine.__init__() (policy_builder.py:21)
+- **Human purpose**: Store frozen policy components
+- **Trust**: CANONICAL
+
+#### PolicyEngine.from_policy() (policy_builder.py:27)
+- **Human purpose**: Factory from ExtractedPolicy
+- **Trust**: CANONICAL
+
+#### PolicyEngine.evaluate() (policy_builder.py:36)
+- **What ACTUALLY happens when this runs**:
+  1. Compute confidence score from the LLM-provided formula (e.g., `0.4 * fusion_score + 0.3 * zone_gate + 0.3 * rr`)
+  2. Check all filter conditions — if ANY condition evaluates to True, return BLOCK with blocked_by = that condition's expression
+  3. Classify tier using tier_rules (TIER_1/TIER_2 conditions from policy) OR confidence fallback thresholds
+  4. If tier is TIER_3: return BLOCK, blocked_by="tier_3"
+  5. Check all booster conditions — apply the MAX factor (capped at 1.5x)
+  6. Return TRADE with tier, factor, confidence
+- **Invocation sources**: Called by `run_forward_test()` for each data row
+- **Downstream calls**: `_compute_confidence()` → `eval()`; `_classify_tier()` → `_eval_condition()` → `eval()`
+- **Inputs**: `features: dict` (feature name → float value)
+- **Outputs**: `dict` with tier, action, factor, confidence, blocked_by
+- **State mutations**: None
+- **Side effects**: None
+- **Network/API**: None
+- **Subprocess**: None
+- **Fallbacks**: If confidence formula eval fails → return 0.5; if condition eval fails → return False (safe default)
+- **Hidden defaults**: 
+  - Factor capped at 1.5x (hardcoded at line 77)
+  - Fallback tier classification: confidence >= 0.75 → TIER_1, >= 0.55 → TIER_2, else TIER_3 (hardcoded at lines 107-111)
+  - `_eval_condition("everything else")` returns False (line 121) — so TIER_3's "everything else" condition correctly doesn't match as a filter but falls through to the tier logic
+- **Failure modes**: 
+  - `eval()` on confidence formula (line 91) uses `eval()` with `S307` silenced — if feature names happen to match Python built-in names, unexpected behavior
+  - `eval()` on conditions (line 131) — same risk
+- **Determinism**: YES — given same features and same policy, output is identical
+- **Corruption risks**: 
+  - `eval()` on arbitrary strings from LLM output is a code injection vector (theoretically). In practice, feature names and values are numeric, but if an LLM-generated condition contains malicious Python code, it could execute
+  - The confidence formula string replacement (lines 88-90) replaces feature names with values naively — if one feature name is a substring of another, replacement order matters. Using `sorted(features.keys(), key=len, reverse=True)` mitigates but doesn't eliminate this
+- **Trust**: EXPERIMENTAL — eval() usage is a security concern even if "sandboxed numeric"
+
+#### PolicyEngine._compute_confidence() (policy_builder.py:82)
+- **Human purpose**: Evaluate the confidence formula string against feature values
+- **Runtime flow**: String replace each feature name with its float value → `eval()` → clamp to [0.0, 1.0]
+- **Fallback**: If eval fails → 0.5
+- **Trust**: EXPERIMENTAL (same eval concerns)
+
+#### PolicyEngine._classify_tier() (policy_builder.py:95)
+- **Human purpose**: Map feature vector to confidence tier
+- **Runtime flow**: First try tier_rules conditions, fall back to confidence thresholds
+- **Trust**: EXPERIMENTAL
+
+#### _eval_condition() (policy_builder.py:114)
+- **Human purpose**: Safely evaluate a condition string against feature values
+- **Runtime flow**: Replace ` AND ` with ` and `, ` OR ` with ` or ` → replace feature names with float values → `eval()` → bool
+- **Return on error**: False (safe default for BLOCK logic)
+- **Hidden default**: `"everything else"` and empty string return False — meaning TIER_3's "everything else" condition doesn't trigger a filter, it's handled by the fallthrough in `_classify_tier`
+- **Trust**: EXPERIMENTAL
+
+### 4. Methods / Functions — Forward Tester
+
+#### run_forward_test() (forward_tester.py:86)
+- **What ACTUALLY happens when this runs**:
+  1. Load data — either auto-split 70/30 or use explicit train/forward CSVs
+  2. Create `EngineRunner(config)` and `ExecutionPlannerV1_2(config)`
+  3. Initialize three `ModeResult` accumulators (baseline, policy, hybrid)
+  4. For each row in forward set:
+     a. Convert feature values to float (skip rows with no numeric features)
+     b. Call `engine.run(features, {})` → get engine decision
+     c. Call `policy.evaluate(features)` → get policy decision (tier, action, factor)
+     d. If either engine or policy fires, call `planner.plan()` to get expected PnL
+     e. Record trade in BASELINE if engine fired
+     f. Record trade in POLICY if policy fired (with factor adjustment)
+     g. Record trade in HYBRID if BOTH fire (with factor adjustment)
+     h. Track peak & drawdown for each mode
+  5. Return ForwardTestReport with all three modes
+- **Invocation sources**: Called by research/analysis scripts
+- **Downstream calls**:
+  - `_auto_split()` / `_load_explicit_split()` → CSV read
+  - `EngineRunner.run()` → engine inference
+  - `PolicyEngine.evaluate()` → policy evaluation
+  - `ExecutionPlannerV1_2.plan()` → computes expected PnL
+  - `_record_trade()` → mutate ModeResult accumulator
+- **Inputs**: `data_csv`, `config`, `policy` (PolicyEngine instance), optional `forward_csv`
+- **Outputs**: `ForwardTestReport`
+- **State mutations**: Mutates ModeResult accumulators in loop
+- **Side effects**: None (pure computation, no I/O)
+- **File writes**: None (save_report is separate)
+- **Failure modes**:
+  - If CSV files don't exist: `_read_csv()` returns empty list → zero rows → ForwardTestReport with zeros
+  - If `EngineRunner()` constructor fails (bad config): propagates up
+  - If `planner.plan()` throws: PnL defaults to 0.0 (line 147-149)
+  - If feature conversion fails (non-numeric column): row skipped silently (line 129)
+- **Hidden defaults**:
+  - `TRAIN_SPLIT = 0.70` — hardcoded auto-split ratio
+  - Expected PnL from planner defaults to 0.0 on error — this silently deflates all mode results
+  - Factor from policy is applied to PnL in POLICY and HYBRID modes but NOT in BASELINE — this is correct by design but means factor-aware comparisons are only between POLICY and HYBRID
+- **Determinism**: YES — given same data, config, policy, output is deterministic (no randomness in engine or policy)
+- **Corruption risks**: 
+  - If `PolicyEngine.evaluate()` returns TRADE but `engine.run()` doesn't fire, the POLICY mode still records the trade — this creates "exploratory" trades that the engine wouldn't have taken. The PnL for these trades comes from `planner.plan()` which expects an engine_result dict — if passed a synthetic `{"event": "TRADE_OPENED", **features}`, the planner may produce unrealistic PnL estimates
+- **Trust**: EXPERIMENTAL — depends on Planner producing realistic PnL for synthetic engine results
+
+#### _read_csv() (forward_tester.py:219)
+- **Human purpose**: Load CSV as list of dicts
+- **Failure modes**: FileNotFound → log ERROR, return empty list (no exception)
+- **Trust**: CANONICAL
+
+#### _record_trade() (forward_tester.py:239)
+- **Human purpose**: Increment trade counters and PnL on a ModeResult
+- **Runtime flow**: trades++, total_pnl += pnl, wins++ if pnl>0 else losses++
+- **Determinism**: YES
+- **Trust**: CANONICAL
+
+### 4. Methods / Functions — Evaluator
+
+#### ResearchEvaluator.evaluate() (evaluator.py:21)
+- **What ACTUALLY happens when this runs**:
+  1. Compute generalization: compare hybrid vs baseline PnL and win rate
+  2. If train_metrics provided: compute win-rate drop (train → forward); if drop > 10pp, flag as OVERFIT
+  3. Compute contribution analysis: estimate bad trades removed by filter, calculate filter quality score (0-1), check exploratory trades added, check sizing boost usage
+  4. Compute overall recommendation: keep_policy = GENERALIZES AND NOT OVERFIT
+  5. Return dict with summary, generalization, overfitting, contribution, recommendation
+- **Human purpose**: Decide if the LLM-extracted policy should be deployed to shadow testing
+- **Invocation sources**: Called after run_forward_test() completes
+- **Inputs**: `ForwardTestReport`, optional `train_metrics: dict`
+- **Outputs**: dict with verdicts and breakdown
+- **State mutations**: None
+- **Failure modes**:
+  - If train_metrics is None: overfitting verdict = "UNKNOWN"
+  - If baseline or hybrid ModeResult has zero trades: division by zero avoided by `max(baseline.win_rate, 0.01)` in _filter_quality_score
+- **Hidden defaults**:
+  - Overfitting threshold: 10pp win-rate drop (hardcoded at line 51)
+  - Filter quality score uses heuristic formula — assumes filtered-out trades have baseline win rate (line 138), which is conservative but may not reflect reality
+  - Contribution "POSITIVE" verdict for frequency contribution requires exploratory_trades > 0 AND policy total PnL > 0 (line 73)
+- **Determinism**: YES
+- **Corruption risks**: 
+  - The `_estimate_wins_in_filtered` function assumes filtered trades have baseline win rate — this is a statistical assumption that may be wrong
+  - The filter quality score is an approximation, not a precise measurement
+- **Trust**: EXPERIMENTAL — heuristic-based analysis
+
+#### save_evaluation() (evaluator.py:113)
+- **Human purpose**: Persist evaluation result to JSON + print summary to log
+- **File writes**: `results/llm_research/evaluation.json`
+- **Trust**: CANONICAL
+
+#### _filter_quality_score() (evaluator.py:121)
+- **Human purpose**: Score 0-1 how well the filter removes losers
+- **Algorithm**: If hybrid win rate >= baseline win rate → 1.0 (perfect). Otherwise → hybrid_winrate / baseline_winrate (ratio capped at 0.0 min)
+- **Trust**: PARTIAL — heuristic
+
+#### _best_mode() (evaluator.py:141)
+- **Human purpose**: Determine which mode (baseline/policy/hybrid) had highest PnL
+- **Trust**: CANONICAL
+
+---
+
+## src/monitoring — Health Checker
+
+### 1. File Purpose
+
+**health_checker.py**: A minimal HTTP server (stdlib only) exposing `/health` and `/status` endpoints on port 8788. Designed for Docker/Kubernetes liveness/readiness probes.
+
+### 2. Runtime Role
+
+Runs as a background daemon thread (or standalone process). It's a passive observation point — never initiates trades or modifies state. The live engine starts it at boot time. Kubernetes hits `/health` every N seconds to ensure the pod is alive.
+
+### 3. Classes
+
+**`_Handler`** (health_checker.py:125)
+- **Purpose**: HTTP request handler for the health endpoints
+- **Ownership**: Created by HTTPServer per request
+- **Runtime responsibility**: Respond to GET requests with JSON status payloads
+
+**`HealthChecker`** (health_checker.py:146)
+- **Purpose**: Lifecycle manager for the health HTTP server
+- **Ownership**: Created by live engine hook at startup
+- **Runtime responsibility**: Start/stop the daemon thread; provide public access to status payload
+
+### 4. Methods / Functions
+
+#### _collect_status() (health_checker.py:53)
+- **What ACTUALLY happens when this runs**:
+  1. Build initial dict with timestamp, service name, overall="ok", empty components
+  2. Try to import and call `get_prod_metadata()` — if fails, set config component to "error", overall to "degraded"
+  3. Try to import and call `KillSwitch.from_prod_config().is_tripped()` — if tripped, set overall to "halted". If import/call fails, set kill_switch component to "unavailable"
+  4. Try to import `StrategyOrchestrator` — if fails, set orchestrator to "unavailable", overall to "degraded"
+  5. Try to import `TelegramBridge.from_prod_config().is_configured()` — if fails, set telegram to "unavailable"
+  6. Try to import `MT5Bridge.from_prod_config()` — if fails, set mt5 to "unavailable"
+  7. Return final dict (NEVER raises — all try/except blocks catch and degrade gracefully)
+- **Human purpose**: Check all major system components and report aggregate health status
+- **Invocation sources**: Called by `_Handler` for GET /status; called directly in tests via `HealthChecker.collect_status()`
+- **Downstream calls**:
+  - `get_prod_metadata()` → config version/hash
+  - `KillSwitch.from_prod_config().is_tripped()` → kill switch state
+  - `KillSwitch.trip_reason()`, `.daily_loss_inr()`, `.weekly_loss_inr()`
+  - `TelegramBridge.from_prod_config().is_configured()`
+  - `MT5Bridge.from_prod_config()`
+- **Failure modes**: Every component import/call is wrapped in try/except — any failure degrades that component's status but doesn't crash the endpoint
+- **Hidden defaults**: 
+  - Overall starts as "ok" and can only be "degraded" or "halted" — never "error"
+  - `StrategyOrchestrator` reports `"strategies": 10` hardcoded (line 95) — this is a fake number, NOT dynamically counted
+  - `MT5Bridge` accesses `_dry_run` (private attribute, line 116) — relies on implementation detail
+- **Determinism**: Mostly deterministic, but depends on config and kill switch state
+- **Trust**: LIVE — actively used for monitoring
+
+#### HealthChecker.start_background() (health_checker.py:156)
+- **What ACTUALLY happens when this runs**:
+  1. Create HTTPServer on 0.0.0.0:{port} with _Handler
+  2. Create a daemon thread targeting server.serve_forever()
+  3. Start thread, log port info
+- **Invocation sources**: Called by live engine hook at startup
+- **Failure modes**: Port already in use → raises OSError (uncaught — caller must handle)
+- **Trust**: CANONICAL
+
+#### HealthChecker.stop() (health_checker.py:169)
+- **Human purpose**: Gracefully shut down the HTTP server
+- **Trust**: CANONICAL
+
+#### main() (health_checker.py:179)
+- **Human purpose**: Run health checker as standalone process
+- **Runtime flow**: argparse → HTTPServer on specified port → serve_forever until Ctrl-C
+- **Trust**: CANONICAL
+
+---
+
+## Dependency Boundary Report
+
+| Source File | Immediate Dependencies | Exceeds Immediate Scope? |
+|---|---|---|
+| `journal/schema.py` | `dataclasses`, `json`, `typing` | No |
+| `journal/trade_logger.py` | `json`, `logging`, `pathlib`, `typing`, `journal.schema`, `core.collector` | `core.collector` — Collector class / audit trail. STOP. Further tracing enters replay/cognitive subsystem. |
+| `live/mt5_bridge.py` | `sys`, `datetime`, `pathlib`, `typing`, `config_layer.production_config`, `utils.logging_config`, `MetaTrader5` | `config_layer.production_config` — config reader. STOP — beyond immediate runtime relevance boundary. |
+| `live/telegram_bridge.py` | `json`, `sys`, `datetime`, `pathlib`, `typing`, `config_layer.production_config`, `utils.logging_config`, `requests` | Same boundary. |
+| `monitoring/health_checker.py` | `json`, `sys`, `threading`, `datetime`, `http.server`, `pathlib`, `typing`, `utils.logging_config`, `config_layer.production_config`, `uat.kill_switch`, `strategies.strategy_orchestrator`, `live.telegram_bridge`, `live.mt5_bridge` | `uat.kill_switch`, `strategies.strategy_orchestrator` — crosses into UAT and strategy subsystems. These are status checks only (import-and-call, no data flow). Further tracing into kill_switch internals exceeds immediate relevance. |
+| `llm_research/pattern_extractor.py` | `csv`, `json`, `logging`, `pathlib`, `dataclasses`, `config_layer.llm_inference_client` | `llm_inference_client` — the actual LLM API caller. STOP — beyond immediate relevance. |
+| `llm_research/policy_builder.py` | `logging`, `pattern_extractor` | No — only uses ExtractedPolicy dataclass. |
+| `llm_research/forward_tester.py` | `csv`, `json`, `logging`, `dataclasses`, `pathlib`, `core.engine_runner`, `config_layer.execution_planner` | `core.engine_runner` (EngineRunner) and `execution_planner` (ExecutionPlannerV1_2) — core engine/planner. Further tracing enters execution subsystem beyond immediate relevance. |
+| `llm_research/evaluator.py` | `json`, `logging`, `pathlib`, `forward_tester` | No — only uses ForwardTestReport and ModeResult dataclasses. |
+
+## Trust Classification Summary
+
+| Component | Trust Level | Source Proof |
+|---|---|---|
+| `TradeRecord` | CANONICAL | Pure dataclass, no logic, no I/O |
+| `TradeLogger.log()` | LIVE | Actively used for audit trail; silent failure on file write (WARNING only, no retry) |
+| `TradeLogger.load_all()` | LIVE | Silently drops malformed JSON lines |
+| `MT5Bridge` | LIVE | Real-money execution path; well-structured fail-open design |
+| `MT5Bridge.from_prod_config()` | DANGEROUS | Silent config failure → dry_run without indication |
+| `TelegramBridge` | LIVE | Notification-only; correctly fail-open |
+| `HealthChecker` | LIVE | Actively used for K8s probes |
+| `HealthChecker._collect_status()` | PARTIAL | Hardcoded `"strategies": 10` is a lie |
+| `PatternExtractor.extract_patterns()` | EXPERIMENTAL | Non-deterministic due to LLM; silent fallback is a data quality risk |
+| `_fallback_policy()` | PARTIAL | Deterministic but generic — thresholds have no relation to data |
+| `PolicyEngine.evaluate()` | EXPERIMENTAL | Uses `eval()` on LLM-generated strings — code injection vector |
+| `run_forward_test()` | EXPERIMENTAL | Depends on Planner producing realistic PnL for synthetic engine results |
+| `ResearchEvaluator.evaluate()` | EXPERIMENTAL | Heuristic-based — filter quality is a statistical approximation |
+
+## Fail-Fast / Fallback Audit
+
+### Silent Fallbacks Identified
+
+1. **TradeLogger.log()**: If `core.collector` import fails at MODULE LEVEL (bare `except Exception`), collector routing is silently disabled for the entire process lifetime. No indication to caller.
+
+2. **TradeLogger.log()**: If primary file write fails → WARNING log, record lost. No retry, no fallback path.
+
+3. **TradeRecord.from_dict()**: Unknown dict keys silently dropped — no warning.
+
+4. **MT5Bridge.from_prod_config()**: If `get_prod_section("live_integration")` returns `None`, the `.get("mt5", {})` returns `{}`, all defaults apply. System runs in dry_run mode without the caller knowing.
+
+5. **TelegramBridge.from_prod_config()**: Same pattern — missing config → token/chat_id empty → bridge disabled silently.
+
+6. **PatternExtractor.extract_patterns()**: LLM failure → silent fallback to generic hardcoded policy. Only a WARNING log differentiates LLM-derived policy from generic template.
+
+7. **PolicyEngine.evaluate()**: `eval()` on confidence formula or condition → exception caught → returns 0.5 confidence or False (safe default). The caller has no indication that the policy evaluation silently degraded.
+
+8. **run_forward_test()**: `planner.plan()` exception → PnL silently set to 0.0. All three mode results are silently deflated.
+
+### `eval()` Usage — Code Injection Concern
+
+Two files use `eval()`:
+
+- `policy_builder.py:91` — `eval(expr)` on confidence formula (S307 silenced)
+- `policy_builder.py:131` — `eval(expr)` on filter/booster/tier conditions (S307 silenced)
+
+Mitigation: Feature names are replaced with float values via string replace before eval. But if an LLM-generated policy contains Python code in conditions, it would execute. In practice, the LLM is supposed to output only numeric conditions, but this is an unenforced contract.
+
+### Replay/Live Drift
+
+- **TradeLogger silent collector routing failure**: If collector is unavailable, trade outcomes don't reach the unified audit trail. If someone later replays from collector.jsonl, they'll miss trades logged during this period. This is replay/live drift by design — the comment at line 3-5 explicitly warns about it.
+
+- **`from_prod_config()` silent defaults**: If production config is missing sections, bridges enter safe defaults. If a replay system later loads the SAME config, it would replay with different settings than the live system had (because live silently fell back). This is a governance contamination vector.
+
+### Governance Contamination
+
+- **`TradeLogger.log()` collector field mapping**: The reconstructed collector record drops 6 fields from the original TradeRecord. Any governance audit querying collector.jsonl for `allocated_risk`, `portfolio_exposure_before`, `override_action`, `confidence`, `zone`, or `duration_candles` will get silent missing data.
+
+- **`HealthChecker._collect_status()` hardcoded value**: Reports `"strategies": 10` regardless of actual strategy count. A governance probe relying on `/status` for strategy count gets a fake number.

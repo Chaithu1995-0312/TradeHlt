@@ -1,0 +1,816 @@
+# Complete Analysis: scripts/export, scripts/governance, scripts/groq_bridge, scripts/maintenance
+
+## Trust Classification Summary (Top-Level)
+
+| File | Trust | Reason |
+|------|-------|--------|
+| `export_bitnet_model.py` | **DEAD** | Produces 35-input model.json with structure incompatible with any runtime loader found in the bridge scripts |
+| `generate_bootstrap_model.py` | **LEGACY** | 6-input architecture, `legacy_6input` schema; docstring says S8 blends at 0.40 weight — vestigial from prior architecture |
+| `regen_bitnet_35.py` | **EXPERIMENTAL** | Writes `model_export_format.json` (schema `bitnet_export_v1`); no runtime consumer exists in analyzed scripts |
+| `promote_v2.py` | **LIVE** | Active CLI entry point wired to `MultiStrategyValidator` + `PromotionManager` |
+| `apply_llm_suggestions.py` | **LIVE** | Subprocess dispatcher used by `ingest_response.py --apply-to-training` |
+| `ingest_response.py` | **LIVE** | Central Groq bridge orchestration; writes to production config |
+| `prepare_retrospective.py` | **LIVE** | Prepares LLM prompts from backtest output; creates session registry |
+| `_compute_hash.py` | **PARTIAL** | Hardcoded parameter hash — not a dynamic computation of actual config |
+| `fix_bom.py` | **DEAD** | One-shot BOM cleanup utility; zero runtime relevance |
+
+---
+
+# 1. scripts/export/export_bitnet_model.py
+
+## File Purpose
+Generates a random-weight binary neural network with architecture 35→32→16→1, using ±1 weights (BitNet-style) and uniform bias. Writes to `model.json` in CWD.
+
+## Runtime Role
+Standalone generation script. Not imported by any analyzed script. Produces a model file that **no analyzed runtime path consumes**.
+
+## Classes
+NONE.
+
+## Functions
+
+### `main()`
+
+**human purpose**: Create a synthetic BitNet model with random ternary weights so the pipeline has *something* to load before real training occurs.
+
+**invocation sources**: `python scripts/export/export_bitnet_model.py` (CLI only)
+
+**downstream calls**: None to analyzed scripts. Imports `CANONICAL_FEATURE_DIM` from `src.features.feature_schema` (immediate dependency, boundary stop).
+
+**runtime flow**:
+1. Seeds RNG at 42 (deterministic for each run)
+2. Gets `CANONICAL_FEATURE_DIM` (=35) from `feature_schema`
+3. Builds layer list: 35→32, 32→16, 16→1
+4. For each layer: generates `weights` as list of lists of random ±1, `bias` as list of floats in [-1,1], `scale` = 1.0
+5. Writes to `model.json` with indent=2
+
+**inputs**: None (all random)
+
+**outputs**: `model.json` — dict with keys: `layers`, `weights`, `bias`, `scales`
+
+**state mutations**: Creates/overwrites `model.json` in CWD
+
+**side effects**: File write to `model.json`
+
+**network/API usage**: NONE
+
+**subprocess usage**: NONE
+
+**fallbacks**: NONE
+
+**hidden defaults**: NONE
+
+**failure modes**: 
+- File write permission failure on `model.json`
+- `CANONICAL_FEATURE_DIM` import failure if `src/` not in path (sys.path.insert is in line 6)
+
+**determinism**: DETERMINISTIC — `random.seed(42)`
+
+**corruption risks**: Overwrites `model.json` without backup. But this file is not consumed by any analyzed runtime path.
+
+**trust**: **DEAD** — No analyzed script ever reads `model.json` produced by this format. The generated schema (`layers`/`weights`/`bias`/`scales`) does not match what `generate_bootstrap_model.py` or `regen_bitnet_35.py` produces. This is orphan code.
+
+---
+
+# 2. scripts/export/generate_bootstrap_model.py
+
+## File Purpose
+Generates a random-weight neural network model with architecture 6→16→8→1 for the "legacy BitNet score path." Schema is `legacy_6input`. Docstring explicitly states weights are random and S8 blends BitNet at 0.40 weight.
+
+## Runtime Role
+Bootstrap model generator. Produces a model that, per docstring, will contribute noise until retrained.
+
+## Classes
+NONE.
+
+## Functions
+
+### `_layer(in_d, out_d)`
+
+**human purpose**: Generate a single layer's weights and biases with uniform random values.
+
+**invocation sources**: Called 3 times at module level (line 34-36)
+
+**inputs**: `in_d` (int), `out_d` (int)
+
+**outputs**: Tuple `(weights, biases)` where weights are `out_d x in_d` matrix of floats in [-0.5, 0.5], biases are list of floats in [-0.1, 0.1], all rounded to 6 decimal places
+
+**determinism**: DETERMINISTIC (global seed 42)
+
+### Module-level code (lines 20-52)
+
+**human purpose**: Construct the full model dict with schema marker, feature order, and layer weights, then write to `model.json`.
+
+**runtime flow**:
+1. Seeds RNG at 42
+2. Calls `_layer(6,16)`, `_layer(16,8)`, `_layer(8,1)`
+3. Builds model dict with schema `legacy_6input`, feature_order `[body_ratio, retest_depth, disp_strength, atr, candles_since_retest, double_sweep]`
+4. Stores weights as `layer1_w`, `layer1_b`, `layer2_w`, `layer2_b`, `out_w`, `out_b`
+5. Writes to `model.json` with indent=2
+
+**inputs**: NONE
+
+**outputs**: `model.json` — dict with keys: `schema`, `architecture`, `feature_order`, `layer1_w/b`, `layer2_w/b`, `out_w/b`
+
+**state mutations**: Creates/overwrites `model.json` in CWD
+
+**side effects**: File write + print statements
+
+**subprocess usage**: NONE
+
+**fallbacks**: NONE
+
+**failure modes**: File write failure
+
+**determinism**: DETERMINISTIC — `random.seed(42)`
+
+**hidden defaults**: Feature order is hardcoded to 6 specific feature names. If the actual runtime feature pipeline changed to 35 canonical features, this model would silently load with dimension mismatch.
+
+**corruption risks**:
+- Overwrites `model.json` silently.
+- Docstring warns: "weights are random — retrain with: python scripts/training/train_bitnet.py". Running without retraining injects noise-level predictions.
+
+**trust**: **LEGACY** — 6-input architecture predates the 35-canonical-feature standard. The docstring confirms S8 uses reduced weight (0.40). This path is vestigial.
+
+---
+
+# 3. scripts/export/regen_bitnet_35.py
+
+## File Purpose
+Generate a model export file (`model_export_format.json`) with 35-input architecture, matching the current `CANONICAL_FEATURES` schema. Writes binary (0/1) weights with learned scale per neuron.
+
+## Runtime Role
+Standalone export generator. Not imported by any analyzed script.
+
+## Classes
+NONE.
+
+## Functions
+
+### `make_layer(in_dim, out_dim, name)`
+
+**human purpose**: Generate a single BitNet layer with random binary weights (0/1) and calibrated scale factors in [0.8, 1.2].
+
+**invocation sources**: Called 3 times at module level (lines 58-60)
+
+**inputs**: `in_dim` (int), `out_dim` (int), `name` (str)
+
+**outputs**: Dict with keys: `name`, `weights` (list of lists of 0/1), `scale` (list of floats)
+
+**determinism**: DETERMINISTIC (global seed 42)
+
+### Module-level code (lines 11-75)
+
+**human purpose**: Assemble the full model with hardcoded `FEATURE_ORDER` (all 35 canonical features), write to `model_export_format.json`.
+
+**runtime flow**:
+1. Seeds RNG at 42
+2. Hardcodes `INPUT_DIM=35`, `HIDDEN1=32`, `HIDDEN2=16`, `OUTPUT=1`
+3. Hardcodes `FEATURE_ORDER` as a 35-element list matching canonical feature schema
+4. Asserts `len(FEATURE_ORDER) == INPUT_DIM` — will crash if mismatch
+5. Builds 3 layers via `make_layer`
+6. Writes to `model_export_format.json`
+
+**inputs**: NONE
+
+**outputs**: `model_export_format.json` — schema `bitnet_export_v1`, schema_version `v5`, architecture string, feature_order array, layers array
+
+**state mutations**: Creates/overwrites `model_export_format.json`
+
+**side effects**: File write
+
+**subprocess usage**: NONE
+
+## Fail-Fast / Fallback Audit
+
+**silent fallbacks**: NONE
+
+**hidden defaults**: 
+- `random.seed(42)` is deterministic but weights are 0/1 (not ±1 like `export_bitnet_model.py`) — inconsistency between the two export scripts' weight conventions
+- Scale defaults to random in [0.8, 1.2], which means an uncalibrated model
+
+**corruption risks**: None — this is a generation script with no runtime consumer in the analyzed set
+
+**trust**: **EXPERIMENTAL** — Schema `bitnet_export_v1` creator, but no analyzed script reads `model_export_format.json`. The file may be consumed outside the analyzed scope (e.g. by `src/bitnet/`), but that's unverified.
+
+---
+
+# 4. scripts/governance/promote_v2.py
+
+## File Purpose
+Thin CLI wrapper that orchestrates multi-strategy governance: validates across 10 strategies (3 instruments), writes a validation report, and promotes to production config registry if approved.
+
+## Runtime Role
+Active CLI entry point for the governance pipeline. This is **how configs get promoted to production**.
+
+## Classes
+NONE.
+
+## Functions
+
+### `main()`
+
+**human purpose**: Run the full governance promotion pipeline: validate all strategies, write report, and conditionally promote to production.
+
+**invocation sources**: `python scripts/governance/promote_v2.py [--dry-run] [--version V] [--config-id ID]`
+
+**downstream calls** (immediate):
+- `MultiStrategyValidator().validate(csv_paths, config_id)` from `src.governance.multi_strategy_validator`
+- `PromotionManager.promote_from_report(report_path, version, notes)` from `src.governance.promotion_manager`
+- File writes to `results/validation/{approved|rejected}/`
+
+**runtime flow**:
+# human execution explanation
+1. Parses CLI args: `--version` (default `v2_multi_2026_04`), `--dry-run`, `--config-id` (default `multi_strategy_v2_2026_05`)
+2. Instantiates `MultiStrategyValidator` and calls `.validate(csv_paths, config_id)`
+   - `csv_paths` is hardcoded dict: EURUSD→`data/EURUSD_M15.csv`, GBPUSD→`data/GBPUSD_M15.csv`, AUDUSD→`data/AUDUSD_M15.csv`
+3. Extracts from report: `decision`, `hard_failures`, `warnings`, `metrics`
+4. Determines output directory: `results/validation/approved/` or `results/validation/rejected/`
+5. Creates timestamped report filename: `{config_id}_{YYYYMMDD_HHMMSS}.json`
+6. Writes the validation report as JSON
+7. **If decision != "APPROVE": calls `sys.exit(1)`** — blocks promotion
+8. **If --dry-run: calls `sys.exit(0)`** — skips promotion
+9. Calls `PromotionManager.promote_from_report(report_path, version, notes)` to push to `configs/production/`
+10. Prints registry path and config hash (truncated to 16 chars)
+
+**inputs**:
+- CLI args: `version`, `dry_run`, `config_id`
+- Hardcoded CSV paths for 3 instruments
+- Imports: `MultiStrategyValidator`, `PromotionManager`
+
+**outputs**:
+- Validation report JSON → `results/validation/{approved|rejected}/{config_id}_{ts}.json`
+- Promotion registry entry (via `PromotionManager`)
+- Prints to stdout
+
+**state mutations**:
+- Creates `results/validation/` directory structure
+- Writes validation report
+- Via `PromotionManager`: writes to production config registry
+
+**side effects**: 
+- sys.exit(1) if validation fails
+- sys.exit(0) if dry-run
+
+**network/API usage**: NOT VERIFIED IN SOURCE (depends on `MultiStrategyValidator` and `PromotionManager` — immediate boundary stop)
+
+**subprocess usage**: NONE
+
+**fallbacks**: NONE visible at this layer
+
+**hidden defaults**:
+- `CSV_PATHS` is hardcoded — only EURUSD, GBPUSD, AUDUSD. If other instruments need validation, this file must be edited
+- Default version `v2_multi_2026_04` is a hardcoded string
+- Default config ID `multi_strategy_v2_2026_05` is a hardcoded string
+
+**failure modes**:
+- Missing CSV files at the hardcoded paths
+- `MultiStrategyValidator.validate()` throws (import error, data error)
+- `PromotionManager.promote_from_report()` fails
+- If decision != "APPROVE", exits with code 1 — no partial promotion
+
+**determinism**: Deterministic given same input CSVs and validator/promoter code
+
+**corruption risks**:
+- Writes to `results/validation/approved/` even if `--dry-run` is not set but decision is APPROVE — the report is written BEFORE the dry-run check on line 89. This means a dry run still creates a report file in the approved directory. The promotion itself is skipped, but the approval artifact exists on disk.
+- Config hash is truncated to 16 chars in display — this is a display-only risk, not a data integrity risk
+
+**trust**: **LIVE** — Active, documented CLI entry point. Uses two governance modules from `src/governance/`.
+
+---
+
+# 5. scripts/groq_bridge/apply_llm_suggestions.py
+
+## File Purpose
+Reads LLM hyperparameter suggestions (JSON from a file), dispatches them to the appropriate training script via subprocess. Does NOT execute training — it is a dispatcher.
+
+## Runtime Role
+Called by `ingest_response.py --apply-to-training`. Bridges LLM output into the training pipeline.
+
+## Classes
+NONE.
+
+## Functions
+
+### `_load_suggestions(path: Path) -> dict`
+
+**human purpose**: Parse JSON from an LLM response file. Handles raw JSON, markdown code-fenced JSON, and brace-extracted JSON.
+
+**invocation sources**: `main()` line 143
+
+**runtime flow**:
+1. Reads file, strips whitespace
+2. Tries `json.loads(raw)` — fastest path
+3. If fails: regex search for `` ```json ... ``` `` or `` ``` ... ``` ``
+4. If that fails: regex search for first `{...}` brace pair
+5. If all fail: raises `ValueError`
+
+**inputs**: Path to response file
+
+**outputs**: Parsed dict
+
+**failure modes**: Raises `ValueError` if no JSON found in any format
+
+**determinism**: Deterministic parsing
+
+**hidden defaults**: None — fails explicitly if unparseable
+
+**corruption risks**: 
+- If the LLM returns malformed JSON with extra text outside braces, step 3 (`re.search(r"\{[\s\S]+\}", raw)`) will match the FIRST `{...}` region, which could be partial or incorrect content when multiple brace pairs exist. This is a silent extraction fallback.
+
+### `_csv(values) -> str`
+
+Trivial: joins values with comma. Not interesting.
+
+### `_dispatch_gaussian(sugg, opportunities, version) -> int`
+
+**human purpose**: Build and execute a subprocess call to `phase5_calibration.py` with LLM-suggested hyperparameters for Gaussian retraining.
+
+**invocation sources**: `main()` line 146
+
+**downstream calls**: `scripts/training/phase5_calibration.py` via subprocess
+
+**runtime flow**:
+1. Extracts optional keys: `feature_subset`, `class_weights`, `rr_buckets`
+2. Builds command: `python scripts/training/phase5_calibration.py --opportunities X --version Y --train`
+3. Conditionally adds `--feature-subset`, `--class-weights`, `--rr-buckets` (comma-separated)
+4. Calls `subprocess.call()` with `cwd=_REPO_ROOT`
+
+**inputs**: `sugg` dict, opportunities path, version string
+
+**outputs**: Return code of subprocess
+
+**subprocess usage**: YES — calls `phase5_calibration.py`
+
+**failure modes**: 
+- Missing `scripts/training/phase5_calibration.py`
+- Subprocess returns non-zero
+
+**hidden defaults**: None visible
+
+### `_dispatch_zone(sugg, opportunities, version) -> int`
+
+**human purpose**: Execute zone-discovery subprocess with LLM-suggested clustering parameters.
+
+**invocation sources**: `main()` line 147
+
+**downstream calls**: `scripts/research/discover_zones.py` via subprocess
+
+**runtime flow**:
+1. Checks if script exists — returns 1 if not found
+2. Extracts optional keys: `n_clusters`, `min_samples`, `feature_weights`
+3. Builds command: `python scripts/research/discover_zones.py --opportunities X --output Y`
+4. Conditionally adds clustering params
+
+**inputs**: `sugg` dict, opportunities path, version string
+
+**outputs**: Return code of subprocess
+
+**subprocess usage**: YES
+
+**failure modes**: Script not found → returns 1 with stderr message
+
+**hidden defaults**: Output path hardcoded as `models/zone_registry_{version}.json`
+
+### `_dispatch_rr(sugg, opportunities, version) -> int`
+
+**human purpose**: Execute RR pattern miner with LLM-suggested Ridge regression and drift parameters.
+
+**invocation sources**: `main()` line 148
+
+**downstream calls**: `src/training/rr_pattern_miner.py` or `scripts/training/rr_pattern_miner.py` (first that exists)
+
+**runtime flow**:
+1. Checks 2 candidate script paths (`src/training/rr_pattern_miner.py`, `scripts/training/rr_pattern_miner.py`)
+2. Uses the first one that exists
+3. If neither exists → returns 1
+4. Extracts `ridge_alpha`, `confidence_bypass_threshold`, `drift_threshold` (all optional)
+5. Conditionally adds `--ridge-alpha`, `--confidence-bypass`, `--drift-threshold`
+
+**subprocess usage**: YES
+
+**failure modes**: Neither candidate script found → returns 1
+
+### `main(argv) -> int`
+
+**human purpose**: CLI entry point. Validates args, loads suggestions, dispatches to the correct training target.
+
+**runtime flow**:
+1. `--target-model` required (gaussian/zone/rr)
+2. `--suggestions-file` required (must exist)
+3. `--opportunities` required
+4. `--version` required
+5. Loads suggestions via `_load_suggestions()`
+6. Dispatches to appropriate `_dispatch_*` function
+
+## Fail-Fast / Fallback Audit
+
+**silent fallbacks**: 
+- `_dispatch_rr` silently uses the first script path that exists. If both exist, `src/training/` takes precedence over `scripts/training/`. No log or warning about which was chosen.
+- `_dispatch_zone` silently fails with print+return 1 if script missing — caller does NOT check return code (see `ingest_response.py` line 503: `subprocess.call(...)` return code is ignored for all branches except the status update)
+
+**corruption risks**: 
+- The `apply_llm_suggestions.py` scripts are **not tracked for return codes** by the caller (`ingest_response.py` line 503 just passes the rc to `sys.exit(rc)` and updates session status as "TRAINING_TRIGGERED" vs "TRAINING_FAILED"). But the training scripts themselves could silently produce bad models.
+- LLM hyperparameter suggestions are applied blindly — no validation that the suggested values are within expected ranges
+
+**trust**: **LIVE** — Actively used as dispatcher, called from `ingest_response.py`
+
+---
+
+# 6. scripts/groq_bridge/ingest_response.py
+
+## File Purpose
+Central orchestration for the Groq LLM bridge: ingests LLM responses, manages session registry, applies config changes to production, records validation scores, and forwards hypertuning suggestions to training scripts.
+
+## Runtime Role
+Phase 1 Groq Bridge — after a retrospective prompt has been sent to Groq and a response received, this script processes the response and mutates production state.
+
+## Classes
+NONE.
+
+## Functions — Grouped by Responsibility
+
+### Registry Layer: `_load_registry`, `_save_registry`, `_get_session`, `_update_session`
+
+**human purpose**: Read/write a JSONL session registry at `logs/groq_bridge/session_registry.jsonl`. Each line is one session record.
+
+**runtime flow**:
+- `_load_registry()`: Opens file, reads all lines, tries `json.loads` per line, **silently skips corrupt lines** (bare `except` on JSONDecodeError)
+- `_save_registry()`: Truncates and rewrites entire registry file
+- `_get_session(session_id)`: Scans registry for matching session_id
+- `_update_session(session_id, updates)`: Finds first matching record, merges updates, rewrites entire file
+
+**invocation sources**: Called from `main()` in various modes
+
+**side effects**: 
+- `_save_registry` overwrites the registry file entirely
+- `_update_session` loads ALL records, mutates one, writes ALL back — not safe for concurrent use
+
+**failure modes**: 
+- If `_load_registry` encounters a corrupt JSON line, it **silently ignores it** (bare `except: pass` on line 71). This means registry corruption is silently tolerated but also silently loses data.
+- `_save_registry` truncation + rewrite means if the process crashes mid-write, the entire registry is lost.
+
+### Response Parsing: `_extract_json(raw)`, `_validate_response(parsed)`
+
+**human purpose**: Parse Groq's response text into a JSON dict, then validate required keys are present.
+
+**runtime flow** (same pattern as `_load_suggestions`):
+1. Try `json.loads(raw)`
+2. Try markdown code fence extraction
+3. Try regex `{...}` brace extraction
+4. All fail → `ValueError`
+
+`_validate_response` returns list of missing keys from: `top_engine_signal`, `sessions_to_avoid`, `recommended_fusion_min`, `bitnet_disagreement_verdict`, `config_changes`, `trap_pattern`.
+
+**failure modes**: 
+- If JSON extraction fails (line 476-480): prints error and `sys.exit(1)`
+- **If validation finds missing keys (line 511-514): prints WARNING but CONTINUES**. This is a `warning+continue` pattern — the code proceeds with partial insights.
+
+**hidden defaults**: Required keys are hardcoded in `_REQUIRED_KEYS` set (line 106-113)
+
+### Insights Logging: `_append_insight(session_id, parsed, session, groq_model)`
+
+**human purpose**: Append one insight record to `logs/groq_bridge/insights.jsonl` with parsed Groq analysis and session metadata.
+
+**invocation sources**: `main()` line 527
+
+**side effects**: Appends one JSON line to insights file
+
+### Trace Index: `_update_trace_row(session_id, updates)`
+
+**human purpose**: Update the markdown trace index table (`trace_index.md`) with the session's latest status, score, and ROI delta.
+
+**runtime flow**:
+1. Reads entire `trace_index.md`
+2. Scans for line containing `session_id`
+3. Replaces the status/score/delta fields via regex
+4. Writes entire file back
+
+**failure modes**: 
+- If session_id not found in any line: silently does nothing
+- Regex replacement is fragile — uses `re.sub(r"\|\s*\w+\s*\|?\s*$", ...)` which expects the status column to be at end-of-line. If the table format changes, the regex will silently fail to match.
+
+**corruption risks**: Writes entire file on each update
+
+### Config Application: `_apply_config_changes(config_changes, session_id)`
+
+**human purpose**: Apply LLM-recommended config parameter changes directly to the production config JSON (`configs/production/v1_multi_2026_03.json`).
+
+# human execution explanation
+This is the most dangerous function in the bridge. Here's what actually happens:
+
+1. Loads the production config JSON from `configs/production/v1_multi_2026_03.json` (hardcoded path)
+2. Iterates over each `config_changes` entry from the LLM
+3. For each change: iterates over ALL top-level keys of the config, looking for the `param` name inside any section dictionary
+4. If found: directly mutates `section[param] = to_val`, logs the change
+5. If not found: adds to `skipped` list
+6. **Archives** the current config: copies current file to `{config_stem}_retro_{session_id}.json` in the same directory
+7. **Overwrites** the production config with the mutated version
+8. Calls `_compute_hash.py` via subprocess to recompute config hash
+9. Prints applied/skipped changes
+
+**inputs**: `config_changes` list from LLM (each element: `{param, from, to, rationale}`), `session_id` for archive naming
+
+**state mutations**: 
+- Archives current production config
+- **Overwrites production config JSON** with LLM-suggested values
+- Recomputes config hash
+
+**subprocess usage**: YES — calls `scripts/maintenance/_compute_hash.py` (line 247)
+
+**hidden defaults**: 
+- Production config path hardcoded to `configs/production/v1_multi_2026_03.json` — this is a specific version that must exist
+- Hash script path hardcoded to `scripts/maintenance/_compute_hash.py`
+- **No validation that `to_val` is the same type/range as the original `from` value** — if LLM recommends `to: "high"` for a float param, it gets written as a string
+
+**failure modes**:
+- If production config doesn't exist: prints error and returns early (no crash)
+- If hash recomputation fails: prints WARNING but continues (line 251-256)
+- If a param is matched in multiple sections, only the FIRST section's match is applied (because `break` on line 216)
+
+**corruption risks**:
+- **LIVE CONFIG CORRUPTION**: The production config file is overwritten with LLM-suggested values with zero validation. If the LLM hallucinates parameter names or values, the config becomes corrupt.
+- **The archive is in the SAME directory** as the production config, not in a separate backup directory. If `promote_v2.py` iterates over `configs/production/` and picks up the archive file as a valid config, this could cause confusion.
+- **No rollback mechanism** in this script. You'd need to manually rename the archive file back.
+- **Governance contamination**: The LLM response that triggered the change comes from a retrospective analysis session — it may be looking at outdated or non-representative trade data, yet its suggestions get applied directly to live production config.
+
+### Display Helpers: `_print_action_items`, `_print_session_list`
+
+Display/logging — no production side effects.
+
+### `main()`
+
+**human purpose**: CLI dispatcher that handles 6 operation modes based on args.
+
+**runtime flow by mode**:
+
+1. **`--list-sessions`**: Loads registry, prints table, returns
+2. **`--show`**: Requires `--session`. Loads session, reads insights file, prints matching insight
+3. **`--record-score SCORE`**: Requires `--session`. Updates session with score_after, computes roi_delta vs baseline, updates trace index. Status is "VALIDATED" if roi_delta > 0 else "REJECTED"
+4. **`--apply-config`**: Requires `--session`. Loads insights for session, calls `_apply_config_changes`, updates session status to "INSIGHTS_APPLIED"
+5. **`--apply-to-training`**: Requires `--session`, `--response-file`, `--opportunities`. Forwards to `apply_llm_suggestions.py` via subprocess. Updates session status to "TRAINING_TRIGGERED" or "TRAINING_FAILED"
+6. **`--response-file` (default ingesting mode)**: Requires `--session`, `--response-file`. Parses response JSON, validates, saves raw response to `logs/groq_bridge/response_{session_id}.txt`, appends insight, updates session registry, prints action items
+
+## Fail-Fast / Fallback Audit
+
+**silent fallbacks**:
+- Registry load silently skips corrupt lines (line 70-72: `except: pass`)
+- Missing required keys in LLM response: WARNING printed but execution continues (line 511-514)
+- Config hash recomputation failure: WARNING printed but overall operation continues (line 251-256)
+- Archive write: `archive_path.parent.write_text(...)` — no checksum verification that archive matches original
+
+**hidden defaults**:
+- Production config path: hardcoded to `v1_multi_2026_03.json`
+- Groq model name default: `llama-3.3-70b-versatile` (for logging only)
+- Config version after apply: hardcoded to `v1_multi_2026_03_retro_{session_id}`
+
+**failure modes**:
+- `--response-file` mode: if `_extract_json` fails → sys.exit(1)
+- `--apply-config` mode: if insights file doesn't exist → sys.exit(1); if no insight for session → sys.exit(1)
+- `--show` mode: if insights file exists but no insight for session → prints message, returns (no error)
+- `--record-score` mode: if session not in registry → sys.exit(1) on line 401 (shared with all session-requiring modes)
+
+**determinism**: Non-deterministic — outcome depends on LLM response content
+
+**corruption risks**:
+- **GOVERNANCE CONTAMINATION**: The LLM analysis is based on backtest trades from a single session. Config changes derived from this analysis are applied to the production config with NO cross-validation, no backtest re-run before apply, and no approval gate. This is a direct path from LLM output to production state mutation.
+- **REPLAY/DRIFT CORRUPTION**: If config changes affect feature thresholds (body_ratio_min, retest_depth_max, etc.), all future backtests and live trades will use different criteria. Historical replay comparisons become invalid because the config has drifted.
+- **The `--apply-config` path does NOT re-run validation** before promotion. Contrast with `promote_v2.py` which has a validate-before-promote gate. This script has NO such gate.
+
+**trust**: **LIVE** — actively used. Also **DANGEROUS** due to automatic production config mutation from LLM content.
+
+---
+
+# 7. scripts/groq_bridge/prepare_retrospective.py
+
+## File Purpose
+The first phase of the Groq bridge: reads backtest output files (trades CSV, summary JSON, events JSONL, or legacy results.csv), computes statistical summaries, builds a structured LLM prompt, registers a session, and writes the prompt for the user to relay to Groq.
+
+## Runtime Role
+Prompt preparation and session registration. Creates the input for the human→Groq→ingest_response pipeline.
+
+## Classes
+NONE.
+
+## Functions
+
+### Data Loading: `_is_trades_csv`, `_load_trades_csv`, `_load_legacy_csv`, `_load_events_jsonl`, `_load_summary_json`
+
+**human purpose**: Auto-detect and load 4 different source file formats, each into a standardized list-of-dicts.
+
+**runtime details**:
+- `_is_trades_csv`: Reads first line, checks for `pnl_rr_net` column
+- `_load_trades_csv`: Reads all rows, converts `pnl_rr_net` to float `_pnl`, computes `_win = _pnl > 0`. **Silently coerces missing/non-numeric PnL to 0.0 and marks as loss** (line 155-158)
+- `_load_legacy_csv`: Filters out rows where `reason == "data_integrity_failed"` — silently discards integrity failures
+- `_load_events_jsonl`: Skips empty lines and JSON decode errors silently
+- `_load_summary_json`: Direct JSON load
+
+### Statistics: `_compute_trades_stats`, `_compute_legacy_stats`
+
+**human purpose**: Compute win/loss statistics, feature comparisons, session/direction distributions, exit reason analysis from trade data.
+
+**runtime details for `_compute_trades_stats`**:
+1. Splits rows into wins/losses by `_win`
+2. Computes average feature values for 10 feature keys (`body_ratio`, `disp_strength`, `retest_depth`, `momentum_score`, `risk_score`, `volatility_ratio`, `atr`, `rsi_14`, `trend_bias`, `trend_strength`)
+3. Computes feature delta (win_avg - loss_avg)
+4. Counts session distribution using hardcoded mappings
+5. Counts direction split, exit reasons
+6. Computes PnL stats, duration, risk score correlation
+7. Extracts top 5 wins and top 5 losses by absolute PnL
+
+**failure modes**: 
+- `mean()` on empty list returns `statistics.StatisticsError` — but `_avg` has a `return 0.0 if vals else 0.0` guard (line 219)
+- `stdev()` in legacy stats (line 349) is called with `if len(scores_hq) > 1` guard — safe
+
+### Prompt Builders: `_build_trades_prompt`, `_build_legacy_prompt`, `_build_target_model_prompt`
+
+**human purpose**: Build structured, detailed LLM prompts that instruct Groq to analyze trading data and return JSON config recommendations.
+
+**runtime details for `_build_trades_prompt`**:
+1. Formats feature delta table with directional indicators (WINS higher / LOSSES higher / similar)
+2. Includes session breakdown, direction breakdown, exit reasons
+3. Optionally includes aggregate metrics from summary.json
+4. Hardcodes the exact JSON output schema Groq must respond with
+5. Includes specific instructions about parameter names (`retest_depth_max`, `body_ratio_min`, etc.)
+
+**note**: The prompt tells Groq "Respond ONLY in valid JSON" and provides the exact schema. This is why `ingest_response.py` expects those specific keys.
+
+### Session Registry: `_make_session_id`, `_register_session`, `_update_trace_index`
+
+**human purpose**: Create a unique session ID, persist the session metadata to the JSONL registry, and append a row to the markdown trace index.
+
+**session ID format**: `RETRO_{YYYYMMDD}_{HHMMSS}_{instrument}_{n_trades}`
+
+### `main()`
+
+**human purpose**: CLI entry point. Detects source format, computes stats, builds prompt, writes to disk, registers session.
+
+**runtime flow (two branches)**:
+
+**Branch A: `--compressed-summary`** (hypertuning mode)
+1. Loads pre-computed summary JSON
+2. Calls `_build_target_model_prompt()` which generates a short prompt asking Groq for hyperparameters
+3. Session ID uses the summary's n_total as trade count
+4. Writes prompt to `logs/groq_bridge/pending_{session_id}.txt`
+
+**Branch B: `--source`** (normal retrospective mode)
+1. Auto-detects file type by suffix and trades CSV marker
+2. Loads optional `--summary` JSON for enrichment
+3. Routes to `_load_trades_csv` / `_load_legacy_csv` / `_load_events_jsonl` / `_load_summary_json`
+4. Routes to `_compute_trades_stats` / `_compute_legacy_stats`
+5. Routes to `_build_trades_prompt` / `_build_legacy_prompt`
+6. If no rows loaded and mode is NOT summary/summary_only: `sys.exit(1)` (line 804)
+7. Writes prompt to `logs/groq_bridge/pending_{session_id}.txt`
+8. Registers session: appends to `session_registry.jsonl`
+9. Updates trace index: creates or appends to `trace_index.md`
+
+## Fail-Fast / Fallback Audit
+
+**silent fallbacks**:
+- `_load_trades_csv`: Non-numeric PnL coerced to 0.0 and marked as loss silently (line 155-158)
+- `_load_legacy_csv`: Data integrity failures silently filtered out (line 170)
+- `_load_events_jsonl`: JSON decode failures silently skipped (line 186)
+- `_register_session`: If `stats` doesn't have `win_rate` or `accept_rate`, `get()` returns 0.0 — silent fallback
+- `--summary` file not found: WARNING printed but execution continues without summary (line 744)
+
+**hidden defaults**:
+- `--last-n` default: 200 — only analyzes the most recent 200 trades
+- `--instrument` default: "UNKNOWN"
+- Session label maps (`_SESSION_MAP`, `_VOL_MAP`) are hardcoded for specific numeric session encodings
+
+**failure modes**:
+- `--compressed-summary` and `--source` are mutually exclusive — error if both provided
+- Source file not found → sys.exit(1)
+- Unsupported file type (not .csv, .jsonl, .json) → sys.exit(1) at line 801
+- JSONL mode: creates a generic prompt with only first 30 events serialized — the prompt is truncated and may miss important patterns
+
+**determinism**: Deterministic given same input files
+
+**corruption risks**:
+- **REPLAY CORRUPTION**: The prompt includes only the most recent 200 trades (--last-n default). If the session has more trades, the earlier ones are invisible to Groq. Groq's recommendations will only reflect recent performance, potentially overfitting to short-term patterns.
+- **SILENT COERCION**: Non-numeric PnL values are silently set to 0.0 (line 157). If there's a data integrity issue causing PnL to be missing, the analysis treats those trades as losses with 0.0R, skewing stats toward higher loss counts and lower expectancy.
+
+**trust**: **LIVE** — actively used as the pipeline's first phase
+
+---
+
+# 8. scripts/maintenance/_compute_hash.py
+
+## File Purpose
+Compute a SHA-256 hash of 5 hardcoded CRT parameter values. Prints the hash and the canonical JSON string.
+
+## Runtime Role
+Config hash computation utility — called from `ingest_response.py` after production config mutation.
+
+## Classes
+NONE.
+
+## Functions
+Module-level code (lines 1-12):
+
+**human purpose**: Compute a deterministic hash of a hardcoded parameter set so config changes can be detected by the caller.
+
+**runtime flow**:
+1. Defines 5 hardcoded params: `retest_depth_max=0.30`, `retest_atr_depth_fraction=0.50`, `body_ratio_min=0.65`, `atr_multiplier_min=1.50`, `expansion_atr_min_distance=0.20`
+2. JSON-serializes with `sort_keys=True`
+3. Computes SHA-256 of the canonical string
+4. Prints hash then repr of canonical string
+
+**inputs**: NONE — completely hardcoded
+
+**outputs**: SHA-256 hex digest + canonical JSON string to stdout
+
+**subprocess usage**: NONE (is called as a subprocess by `ingest_response.py`)
+
+## Fail-Fast / Fallback Audit
+
+**critical issue: THIS IS A FAKE HASH**
+# human execution explanation
+This script does NOT hash the actual production config. It hashes 5 hardcoded parameter values that may or may not match what's actually in the config file. When `ingest_response.py` calls `_compute_hash.py` after mutating the production config, it gets a hash of hardcoded constants, NOT the mutated config's content.
+
+The 5 hardcoded values don't even match their own defaults used elsewhere:
+- `retest_depth_max: 0.30` — may differ from real config
+- `retest_atr_depth_fraction: 0.50` — may differ from real config
+- `body_ratio_min: 0.65` — may differ from real config
+- `atr_multiplier_min: 1.50` — may differ from real config
+- `expansion_atr_min_distance: 0.20` — may differ from real config
+
+**determinism**: DETERMINISTIC
+
+**trust**: **PARTIAL** — The script works correctly as a hash computation, but it hashes HARDCODED CONSTANTS, not the actual config. This is not a hash of the config at all. It provides false confidence.
+
+---
+
+# 9. scripts/maintenance/fix_bom.py
+
+## File Purpose
+Recursively find all `.py` files in the repo, detect UTF-8 BOM (`\xef\xbb\xbf`) at the start, and remove it.
+
+## Runtime Role
+One-shot cleanup utility. Not called by any runtime path.
+
+## Classes
+NONE.
+
+## Functions
+Module-level code (lines 1-19):
+
+**runtime flow**:
+1. Recursively globs `**/*.py`
+2. For each file: reads as binary, checks for BOM prefix
+3. If BOM found: rewrites file without BOM prefix
+4. Counts and prints fixes
+
+**failure modes**: Bare `except Exception as e:` catches everything but prints and continues
+
+**trust**: **DEAD** — one-shot utility, no runtime relevance
+
+---
+
+# Dependency Boundary Report
+
+## Immediate Runtime Dependencies (traced, boundary respected)
+
+| Analyzed Script | Depends On | Type | Boundary |
+|---|---|---|---|
+| `export_bitnet_model.py` | `src.features.feature_schema.CANONICAL_FEATURE_DIM` | Import | Stop — enters `src/features/` |
+| `promote_v2.py` | `src.governance.MultiStrategyValidator` | Import | Stop — enters `src/governance/` |
+| `promote_v2.py` | `src.governance.PromotionManager` | Import | Stop — enters `src/governance/` |
+| `apply_llm_suggestions.py` | `scripts/training/phase5_calibration.py` | Subprocess | Stop — enters `scripts/training/` |
+| `apply_llm_suggestions.py` | `scripts/research/discover_zones.py` | Subprocess | Stop — enters `scripts/research/` |
+| `apply_llm_suggestions.py` | `src/training/rr_pattern_miner.py` | Subprocess | Stop — enters `src/training/` |
+| `ingest_response.py` | `scripts/maintenance/_compute_hash.py` | Subprocess | Stop — enters `scripts/maintenance/` |
+| `ingest_response.py` | `scripts/groq_bridge/apply_llm_suggestions.py` | Subprocess | Stop — but analyzed in same scope ✓ |
+
+**No dependency tracing exceeded immediate runtime relevance boundary.**
+
+---
+
+# Critical Findings Summary
+
+## Most Dangerous Runtime Path
+```
+prepare_retrospective.py  →  (human sends prompt to Groq)  →  ingest_response.py --apply-config
+                                                                     ↓
+                                     Production config (configs/production/v1_multi_2026_03.json)
+                                     OVERWRITTEN with LLM-suggested values
+                                     Archive created (no backup directory)
+                                     Hash recomputed (but _compute_hash.py hashes hardcoded constants, not actual config)
+```
+No validation gate. No re-run of `promote_v2.py`. No human approval step in the script.
+
+## Dead Code Detection
+- `export_bitnet_model.py` (35→32→16→1 weights format) — zero consumers in analyzed scripts
+- `generate_bootstrap_model.py` (6→16→8→1 legacy_6input format) — legacy, kept per docstring for S8 blend
+- `fix_bom.py` — one-shot utility
+
+## Silent Failure / Data Loss Risks
+1. **Registry corruption** in `ingest_response.py`: `_save_registry` overwrites entire file; crash during write loses all records
+2. **Silent PnL coercion** in `prepare_retrospective.py`: missing/non-numeric PnL → 0.0R, counted as loss
+3. **LLM JSON extraction fallback** in both `_extract_json` and `_load_suggestions`: first `{...}` brace match may be wrong if multiple JSON objects exist
+4. **Fake config hash**: `_compute_hash.py` hashes hardcoded constants, not actual config
+
+## Governance / Replay Drift Risks
+1. **LLM → production config mutation bypasses all governance gates** (no `MultiStrategyValidator` call, no `PromotionManager`)
+2. **Config drift from retrospectives**: Each `--apply-config` permanently changes production config based on one session's analysis
+3. **History incompatibility**: After config mutation, historical backtest comparisons are invalidated (different thresholds)

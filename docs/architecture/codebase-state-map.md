@@ -45,6 +45,8 @@ state is files (JSON configs + JSONL event logs).
 | `src/governance/` | Promotion + portfolio validation | `promotion_manager.py` (only path to prod), `orchestrator.py`, `portfolio_validation.py`, `shadow_promotion_gate.py`, `multi_strategy_validator.py` |
 | `src/features/` | Feature engineering + drift | `feature_pipeline.py`, `feature_schema.py` (`CANONICAL_FEATURES`, `FEATURE_ORDER_HASH`), `feature_monitor.py` (`FeatureMonitor` drift), `dataset_validator.py` |
 | `src/events/` | **Canonical event fabric** | `event_fabric.py` (`make_event_envelope`, `EventType`, generation counter, schema-hash) |
+| `src/multi_llm/` | Multi-LLM coordination (off-spine) | `turn_ledger.py` (verbatim no-loss turn ledger), `discussion.py` (view-only rewind), `context_pack.py` (bounded per-story packs), `tokens.py`; see `multi_llm/` + CLAUDE.md §13 |
+| `src/interpreters/` | Interpreter Contract Layer (Level-4 event producers) | `contract.py` (pure/deterministic/no-lookahead interpreter contract), `adapter.py` (bridge to `forward_walk` + QualificationGate), `reference.py`, `point_and_figure.py` (P&F, F-028 — measured REJECT) |
 | `src/cognitive/` | Cognitive bus / meta-fusion | `cognitive_bus.py` (`CognitiveBus`, emits `COGNITIVE_TELEMETRY`) |
 | `src/replay/` | Replay memory + drift audit | `replay_drift_governor.py` (`ReplayDriftGovernor`, emits `DRIFT_AUDIT`) |
 | `src/utils/` | Telemetry + logging | `engine_telemetry.py` (`ENGINE_TELEMETRY`/`DECISION_LINEAGE`), `integrity_events.py` (lightweight integrity spine), `trade_logger.py` (`fusion_trades.jsonl`), `sweep_trace_logger.py` |

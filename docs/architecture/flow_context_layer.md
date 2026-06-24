@@ -78,6 +78,16 @@ python scripts/analysis/gen_flow_graphs.py --flow runtime   # print one slice, w
   `GET /workflow/nodes/<command_id>/context` → `{flow, doc, architecture (export-first), latest_run}`.
   Clicking a Workflow node opens a drawer (code/architecture + run details + flow doc). Unmapped nodes
   (`data.*`) fail open to run-only.
+- **M6 — Flow/Module Explorer (done).** An "Explore" tab lists all flows + their modules start→end;
+  selecting a flow or a module shows its **docs + code + input/output** (flow `inputs`/`outputs`, or a
+  module's `depends_on`/`imported_by`) inline + a $0 Copy/Export bundle. Routes: `GET /flows` +
+  `GET /flows/<flow>/context?module=<opt>`. Reuses `build_flow_code_context` / `extract_graph_context` /
+  `module_neighbors` / `context_analysis`.
+- **M7 — Workflow DAG completeness (done).** The Workflow-tab Mermaid is now faithful to
+  `registry.WORKFLOW_STAGE_ORDER` (restored the eliminated **Replay & Backtest** stage + a
+  `config_validator` node), shows orthogonal subsystems (Research / Agent / Telemetry → click into the
+  Explore tab), and a coverage test (`test_workflow_dag_coverage.py`) fails if any pipeline stage is
+  silently dropped. Added the **`telemetry`** flow manifest (S7), closing the long-open gap.
 - **M3 — manual multi-LLM hook (optional).** `pack_story --flow` bounds a transfer pack to one flow.
 - **M4 — automated merge engine (deferred).**
 

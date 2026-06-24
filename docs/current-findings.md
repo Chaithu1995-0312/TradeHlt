@@ -1,6 +1,6 @@
 # Current Findings — Repository Truths (living)
 
-> Created: 2026-06-03 · Updated: 2026-06-03
+> Created: 2026-06-03 · Updated: 2026-06-24
 >
 > **What this is.** The repo's *current validated conclusions* — the verdicts that change roadmap
 > and funding decisions — each dated, evidence-linked, and confidence-rated. This is the **living
@@ -95,7 +95,7 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 - Confidence:    Certain
 - Validated:     2026-06-03
 - Revalidate-by: 2026-09-01
-- Evidence:      src/config_layer/crt_engine_v2.py:1749 · bitnet_main_score<0.55 (`if bitnet_main_score < 0.55: return False, RejectReason.LOW_SCORE, 0.0`; threshold default at :363 · bitnet_main_threshold); src/runtime/backtest_v2.py:276 · bitnet_score_at_entry (persisted to TradeRecord)
+- Evidence:      src/config_layer/crt_engine_v2.py:1804 · bitnet_main_score gate (`if bitnet_main_score < self.config.bitnet_main_threshold: return False, RejectReason.LOW_SCORE, 0.0`; threshold default at :363 · bitnet_main_threshold); src/runtime/backtest_v2.py:320 · bitnet_score_at_entry (persisted to TradeRecord)
 - Supersedes:    —
 - Reversal:      "BitNet score is built but not consumed / not persisted (dead-dormant-inventory.md:26)" -> "BitNet hard-gates entries at score<0.55 on the live/backtest CRT path and the score is persisted. What IS dormant is only the ADAPTIVE threshold (hardcoded 0.55; get_bitnet_threshold(regime) never called)."
 - Owner:         claude
@@ -141,7 +141,7 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 - Confidence:    Certain
 - Validated:     2026-06-02
 - Revalidate-by: 2026-08-31
-- Evidence:      src/inout/live_engine_hook.py:676 (HARD drift -> logger "Trade signal unreliable", trade proceeds; no block/size-down/gate)
+- Evidence:      src/runtime/live_engine_hook.py:615 (HARD drift -> logger.error "Trade signal unreliable", trade proceeds; no block/size-down/gate)
 - Supersedes:    —
 - Reversal:      —
 - Owner:         claude
@@ -268,6 +268,234 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ---
 
+### F-019 · No existing hypothesis qualifies (M4) across the crypto majors under honest exits + cost
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-12
+- Revalidate-by: 2026-09-10
+- Evidence:      results/research/qualification/qualify_majors.json + docs/analysis/qualify-majors-2026-06-12.md (intrabar_fixed + 12bps; per-instrument then pooled over BNB/ETH/BTC/SOL). Zero PROMOTE. Toy detectors REJECT on all 4 majors + pooled with baseline_delta vs random_uniform ≈0 (−0.076…+0.033) — entries statistically indistinguishable from random. Spine throughput-starved: 5–13 entries/instrument → INSUFFICIENT (n<30); pooled n=30 E=−0.399 REJECT (gate-2). Sole positive cell spine/SOLUSDT n=7 E=+0.45 PF=2.45 unusable (INSUFFICIENT).
+- Supersedes:    —
+- Reversal:      "We may already possess a qualifiable edge somewhere in the built pool and simply never measured it broadly" -> "We do not: under the unified intrabar+cost truth standard, every existing hypothesis fails on every major and pooled. The toy entry-edge null (≈random) now holds across all four crypto majors (extends F-001/F-002 beyond BNBUSDT); the spine cannot reach statistical power at its selectivity (ties F-003/F-015 throughput)."
+- Owner:         claude
+- Note:          A clean falsification, not a tooling failure — it forecloses 'reuse existing ideas' and selects the next phase. Implication: invent-new-entries (Phase C) is NOT yet justified (more geometry-shaped detectors would likely reproduce ≈random); the experiment points to process characterization (Phase B) — find where/whether direction is CONDITIONALLY predictable — before committing to a new entry family. The spine/SOL n=7 cell + the spine's own-backtest BTC +0.62R (positive only under scale-out tp1/tp2, negative under the single-TP research lens) are F-010 leads (live exec PnL unverified), not edges.
+
+---
+
+### F-020 · No candle-conditional directional pocket on the crypto majors (entropy "significance" ≠ exploitable)
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-12
+- Revalidate-by: 2026-09-10
+- Evidence:      results/research/phase_b/phase_b_conditional_entropy.json + docs/analysis/conditional-entropy-majors-2026-06-12.md (paired entropy+economic grid, candle-only, intrabar_fixed+12bps; partition = session×vol-tercile×momentum-regime, horizons 1–20). 25/25 partitions BH-significant (Family A 20/20, Family B pooled 5/5) BUT at the 0.0020 permutation floor with IG≈0.001–0.0036 bits, H(dir|partition)≈0.995–0.999, p_up 0.50–0.52; Stage-3 economics on 74 candidate cells → **0 pockets** (VERDICT ENTROPY_LEAD_NO_ECON). Sanity: BNB@1 H_uncond≈0.9995 reproduces process_diagnostics global ≈0.999.
+- Supersedes:    —
+- Reversal:      "Direction may become predictable under the right regime/session/vol conditioning" -> "Not on crypto-major M15: no candle-derivable partition (session×vol×momentum, h=1..20, per-instrument or pooled) yields an exploitable directional pocket. Partition permutation-significance SATURATES at large N (25/25 trip; necessary-not-sufficient) — the binding filter is the economic stage, which finds zero pockets. Extends F-001/F-002/F-019 from 'no global edge' to 'no local candle-conditional edge.'"
+- Owner:         claude
+- Note:          The paired design earned its keep: an entropy-only screen would have reported 25/25 'significant' leads (false, N-driven); requiring BOTH a significant entropy dip AND a cost-aware economic edge filtered all 74 candidate cells to zero. B2 (CRT-event labels) is NOT entered — the advance gate was a genuine lead (entropy pocket AND economic pocket); zero economic pockets = no lead. Redirect off next-bar direction toward non-directional levers: spine selection/throughput (F-015) and exit/cost structure (the 88% plain_stop_loss forensic).
+
+---
+
+### F-021 · The spine's RETEST selection IS the session filter — no score/zone skill under intrabar truth
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-13
+- Revalidate-by: 2026-09-11
+- Evidence:      results/research/phase_s/phase_s_selection_effect.json + docs/analysis/selection-effect-crypto6-2026-06-13.md (intrabar_fixed+12bps, pooled-by-effect crypto-6, ΔE=selected−rejected retests decomposed by reject-reason). Selected−rejected ΔE=+1.171R p=0.0005 OOS+1.212 4/4 — but SESSION≡ALL (110/112 rejects off-session); genuine skill classes null: ZONE 0/110 rejects (never binds), SCORE 2/110 → p=0.327 OOS−0.291. Trust gate: selected==approved_trades all 6. S0 wired the dormant RETEST_REPLAY emitter (zero callers; behavior-neutral — BNB ledger 0fd8ee6a byte-identical pre/post, records 0→44).
+- Supersedes:    — (updates F-002 under the governing exit model)
+- Reversal:      "Selection adds +0.145R at the RETEST→EXECUTION gate (F-002)" -> "Under the governing intrabar+12bps standard the selected−rejected effect is large (+1.17R) but ENTIRELY the SESSION filter (SESSION class ≡ ALL class); the score/zone selection-skill classes are non-binding (ZONE 0 rejects) or noise (SCORE n=2, p=0.33, OOS−0.29). The spine's RETEST selection IS the incumbent, F-017-non-improvable session filter — there is no score/zone selection skill. F-002 does not survive as NEW skill; sparse-selection-beyond-session is falsified."
+- Owner:         claude
+- Note:          The reject-reason decomposition was decisive: the ALL class alone would have FALSELY shown "selection skill" (+1.17R / p<0.001 / 4-of-4 / OOS +1.21); decomposing localizes 100% to SESSION. Structural facts (ZONE 0/110, SCORE 2/110, SESSION 110/112) are power-independent (F-006b: retest score gate non-binding, 134/135 pass), even though N is thin (4 usable instruments; SCORE rests on 2 samples). Three falsifications now stand under intrabar truth — direction (F-019), conditional direction (F-020), selection-beyond-session (F-021); the only working in-spine lever (session) is incumbent + F-017-non-improvable. Remaining unfalsified thread = exit/cost structure (Phase D, the 88% plain_stop_loss).
+
+---
+
+### F-022 · opportunities.jsonl is a DETECTION STREAM, not a trade ledger (its outcome/rr are internally inconsistent)
+- Type:          GOVERNANCE
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-06-13
+- Revalidate-by: 2026-09-11
+- Evidence:      results/research/bnbusdt_trade_anatomy/anatomy_summary.json (artifact_consistency_rate 0.368; outcome_distribution_artifact 138,091 SL / 1,830 TP / 21 TIMEOUT vs outcome_distribution_governing 91,914 SL / 46,580 TP / 1,448 TIMEOUT) + docs/analysis/BNBUSDT_TRADE_ANATOMY_2026_06_13.md §1 (91,126 SL_HIT rows whose own mae never reaches the stop; consistency check `art_outcome==SL_HIT and art_mae > -risk`); scripts/analysis/bnbusdt_trade_anatomy.py (realized layer DERIVED via governing forward_walk(intrabar_fixed), artifact kept as flagged art_* x-ref)
+- Supersedes:    —
+- Reversal:      "opportunities.jsonl outcome/rr_achieved are realized trade results" -> "they are detection-time labels, only 36.8% self-consistent (SL_HIT logged on paths that never touch the stop). The file is a DETECTION STREAM, not a trade ledger — realized truth must be DERIVED via the governing intrabar exit; the artifact's outcome/rr/mfe/mae are unreliable and retained only as flagged x-ref. Corollary FREQUENCY ILLUSION: 139,942 detections ≠ trades; the governed spine takes 13."
+- Owner:         claude
+- Note:          Same governance-integrity family as F-006 (orphaned check) / F-018 (config↔code split-brain) — a truth-layer defect caught BEFORE it could inflate any downstream study (the recovered-first sanity check earned its keep).
+- Update:        2026-06-13 (cross-instrument) — **REPOSITORY-WIDE + mechanism named.** BTC/ETH/SOL regenerated and run through the same pipeline: artifact_consistency_rate 0.372 / 0.370 / 0.358 (≈ BNB 0.368); artifact ~98–99% SL_HIT vs governing ~66% SL / ~33% TP on all four. MECHANISM: scripts/research/opportunity_scanner.py (`_simulate` :53) labels outcome/rr under a **0.5R TRAILING stop** — a trailing SL_HIT legitimately has rr>0 / mae>-risk, so the artifact is internally consistent with its OWN trailing model but mismatches the governing intrabar_fixed exit. So this is **NOT corruption**: "trailing-stop ground-truth ≠ governing fixed-stop realized; reading its labels as fixed-stop results is the error." The earlier OPEN follow-up is RESOLVED — the defect DOES broaden to all scanner-generated opportunities.*. Evidence: docs/analysis/cross-instrument-anatomy-2026-06-13.md; results/research/{btcusdt,ethusdt,solusdt}_trade_anatomy/anatomy_summary.json.
+
+### F-023 · Feature morphology separates SHAPE, not expectancy
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-13
+- Revalidate-by: 2026-09-11
+- Evidence:      results/research/bnbusdt_trade_anatomy/anatomy_summary.json (morphology_clusters: KMeans k=4 on standardized ema_spread/volume_ratio/volatility_ratio/body_ratio/momentum_score/trend_strength/disp_strength/retest_depth/atr over 139,942 opportunities; clusters differ in anatomy/duration but win_rate ≈ 0.334–0.343 and mean_R ≈ −0.000…+0.023 in ALL four) + docs/analysis/BNBUSDT_TRADE_ANATOMY_2026_06_13.md §2 Q5
+- Supersedes:    — (updates F-002 under the governing exit; consistent with F-011 "features barely separate")
+- Reversal:      "Cluster the feature space harder and a winning morphology will appear" -> "Feature morphology separates trade SHAPE (fast winner / slow grinder / immediate loser / late failure) but NOT economics — every cluster has the same ~34% win-rate and ~0 mean_R. Descriptive, not predictive; this forecloses the 'just cluster harder' class of entry research on BNBUSDT."
+- Owner:         claude
+- Note:          Descriptive morphology only — no 'cluster N = edge' claim. Scores were NOT available at this grain (spine-only, N=13), so this is a FEATURE-morphology result, not a score-morphology one.
+
+### F-024 · Continuation timing asymmetry — losers resolve almost immediately; winners mature over ~90 min (NOT 5.5 h)
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-13
+- Revalidate-by: 2026-09-11
+- Evidence:      results/research/bnbusdt_trade_anatomy/anatomy_summary.json (peak_timing, de-censored PEAK_HORIZON=96 while realized layer held at MAX_FORWARD=40 byte-stable). bars_to_peak_within_trade (bounded by realized exit): LOSERS p50=1 / p90=6 bars; WINNERS p50=6 / p90=18 bars (~90 min median, ~4.5 h p90). survival_P_not_stopped ½-stopped by ~bar 6 (90 min). Path metric is uninformative: bars_to_peak_path p50 winners 46 ≈ losers 43, p90 pinned at 92/96 (random-walk, still censored). docs/analysis/BNBUSDT_TRADE_ANATOMY_2026_06_13.md §2 Q4/Q1
+- Supersedes:    —
+- Reversal:      "Winners peak late, ~22 bars / 5.5 h (Phase-1 censored median)" -> "That was a 40-bar-window artifact. De-censored, the EXIT-AGNOSTIC path peak is a random walk (winners≈losers, p90 pinned at the cap) and carries no information; the honest signal is the WITHIN-TRADE peak: losers resolve almost immediately (median 1 bar, then stop out) while winners mature over a median 6 bars (~90 min, p90 18). The asymmetry is early-resolution of losers, not slow 5.5 h maturation of winners."
+- Owner:         claude
+- Note:          DESCRIPTIVE, not predictive — and partly MECHANICAL: within-trade peak is coupled to duration/survival (a 1-bar SL-hit necessarily peaks by bar 1), so F-024 largely restates F-024's own survival curve from the peak side, not an independent edge. Gated on measurement per the freeze-order discipline: the block was withheld until the de-censored run (PEAK_HORIZON=96) replaced the censored median-22; the de-censoring actively corrected the number (the reason for the gate). No entry/exit lever is claimed.
+- Update:        2026-06-13 (cross-instrument) — **REPLICATES near-identically** on BTC/ETH/SOL: within-trade peak winners p50=6 / p90≈18–19, losers p50=1 / p90=6 on all four coins; the exit-agnostic path peak stays random-walk/uninformative everywhere. Confidence held at Likely (descriptive, partly mechanical) but now cross-instrument-robust. docs/analysis/cross-instrument-anatomy-2026-06-13.md.
+
+### F-025 · Exit/cost is a risk/cost lever, NOT an expectancy lever — the fourth falsification
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-13
+- Revalidate-by: 2026-09-11
+- Evidence:      results/research/phase_d/phase_d_exit_grid.json + docs/analysis/exit-grid-crypto6-2026-06-13.md (42-cell SL{0.5..3.0}×TP{1.0..5.0} grid, intrabar_fixed+12bps, IS+OOS, entries FIXED). UNIVERSE (n=53,629, decisive): REGIME ENGINEERING (structural_upper_bound −0.175R); every cell E_oos<0 (incumbent 1.0x2.0 −0.569, best 3.0x5.0 −0.271, max_recoverable_E +0.299 = cost recovery only, still negative); loss plain_stop_loss 90.55% + same_bar 9.25%; reality_gap +4.16R, ceiling_utilization −4% (104% of lost value is entries, not exits). SPINE (n=30, relevance): nominal leads (0.75x4.0 E_oos +0.327) but only 2/4 instruments + ~9 OOS trades = tiny-N artifact, NOT promoted, D4 NOT entered.
+- Supersedes:    — (confirms/extends F-002's "SL/TP is risk-shaping not alpha" cross-instrument under intrabar)
+- Reversal:      "Exit/cost geometry might recover positive expectancy (the last unfalsified branch)" -> "It does not: on the powered universe no SL/TP cell yields E>0 OOS; max recoverable +0.30R is cost/risk shaping, still net-negative. Exits are a risk/cost-management lever, not an expectancy lever. The bottleneck is ENTRY INFORMATION (reality_gap +4.16R; 90.55% plain_stop_loss; gross E≈0 — favorable excursions exist but are uncapturable without foresight). FOURTH falsification: entry (F-019) / conditional (F-020) / selection (F-021) / exit (F-025) are ALL null under the governing truth standard — the first full research-program sweep is closed."
+- Owner:         claude
+- Note:          The ceiling gate worked as designed: structural ≤0 → ENGINEERING banner printed above the grid, so the +0.30R cost-recovery + lower-MaxDD wide-stop cells read as engineering, never alpha. The spine arm's ALPHA banner/nominal lead correctly surfaced because its 30 entries are gross-positive (+0.5) under a 1:2 geometry — then the strict bar + N-scrutiny (n=30, 2/4 instruments, ~9 OOS trades) correctly demoted it to the named failure mode ("mistaking a tiny better cell for alpha"). D4 deliberately NOT entered (would be the optimization spiral the gate prevents). Open question shifts from "which lever" to "is the next-bar-direction ontology wrong" — a deeper redirect (instrument class / timeframe / target), not another grid. Engineering value (cost/MaxDD reduction via wider stops at flat-negative E) remains for portfolio hygiene, not alpha.
+- Update:        2026-06-13 (cross-instrument anatomy corroboration) — the BNB/BTC/ETH/SOL trade-anatomy independently reproduces cost-domination via a SECOND measurement path (detection-stream fixed-time exits, not the exit grid): gross mean_R ≈ 0.000 at EVERY coin × horizon {15,30,45,60,90m}, net (12bps) < 0 everywhere — BNB −0.43 / BTC −0.52 / ETH −0.33 / SOL −0.25 (per-coin magnitude = 0.0012·entry/ATR, so BTC's low ATR/price ratio costs most R). Confirms "signal-neutral, cost makes it negative." docs/analysis/cross-instrument-anatomy-2026-06-13.md. NOTE: the Phase-2 BNBUSDT anatomy work labelled this observation an "F-025 candidate / watch (cost destroys neutrality)" — that was an **id collision**; it is the SAME conclusion as this existing F-025 and is hereby folded in as corroboration (no new finding minted).
+
+### F-026 · Completed sweep→displacement→retest adds NO forward asymmetry beyond sweep alone (BNBUSDT; negative + underpowered)
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-13
+- Revalidate-by: 2026-09-11
+- Evidence:      results/research/phase_e/phase_e_structural_asymmetry.json + docs/analysis/structural-asymmetry-bnbusdt-2026-06-13.md (Program 2 Phase E1; PURE asymmetry, NO profitability — multi-horizon MFE/MAE + symmetric first-hit, 4 controls, permutation + OOS + in-pipeline calibration). VERDICT INSUFFICIENT_POWER · POWER INADEQUATE. Funnel: sweep 4529 → disp 391 (P(disp|sweep)=8.6%) → exp 85 → retest 47 (P(retest|disp)=12%) → exec 16 (~1% sweep→retest completion). Test (n=47): excursion_asym(h8)=−0.319, first_hit_delta(L0.5)=−0.106 — NEGATIVE and LOSES to all four controls incl. sweep-only D (every permutation Δ<0, p>0.6). Calibration PASSED (planted 0.55→recovered 0.55 → instrument valid). OOS n=14, CI±0.23.
+- Supersedes:    —
+- Reversal:      "Maybe completing the trap structure (sweep→displacement→retest) creates forward continuation asymmetry the candle/executed tests missed (the Program-2 thesis)" -> "Not on BNBUSDT M15: the completed-retest population (n=47) shows LESS forward asymmetry than sweep alone and than every control — a NEGATIVE point estimate. N=47 (14 OOS) is too small to PROVE 'no asymmetry' (verdict INSUFFICIENT_POWER, not NULL — the absence-of-evidence guard), but the direction is wrong and the funnel shows ~1% sweep→retest completion (throughput-starved). Calibration passed → trustworthy. Program 2 / E1 does NOT advance to E2."
+- Owner:         claude
+- Note:          The frozen protocol worked as designed: calibration proved the instrument (the result is real, not broken measurement); the four-way verdict returned INSUFFICIENT_POWER (never a false NULL); the funnel/attrition (P(disp|sweep)=8.6%) is the most valuable output. Per pre-registration, only ASYMMETRY_SURVIVES advances — this does not, so NO E2/conditioning/entry/exit work (the named failure mode avoided). With F-019/020/021/025, the weight of evidence is against the trap-continuation thesis. Reopen only via a NEW structural ontology or a cross-instrument POOLED retest population showing a non-negative, adequately-powered signal — never a threshold tweak.
+
+### F-027 · Coarser timeframes (H1/H4) do NOT rescue the directional edge — the M15 null replicates
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-13
+- Revalidate-by: 2026-09-11
+- Evidence:      results/research/qualification_htf/qualify_htf_H1.json + qualify_htf_H4.json (Program 3A = BAR_COUNT_CONSTANT; intrabar_fixed+12bps, per-instrument then pooled crypto-majors, IS+70/30 OOS+BH; H4 body byte-identical re-run 0317fc878d6a…). Drivers scripts/research/qualify_htf.py + scripts/research/build_resampled_data.py; deterministic resampler src/research/resample.py (tests/research/test_resample.py — associativity + SHA-256). Toy directional pool: **0 PROMOTE at H1 AND H4.** H1 every cell REJECT, E_oos −0.136..−0.266. H4 expansion_breakout creeps to gross ≈0 (BNB +0.014 / SOL +0.035 / ETH +0.022) but POOLED −0.0009 and NONE clears BH + beats-control + OOS (SOL p=0.0575); mean_reversion solidly negative (E −0.12..−0.18). Spine arm NON-DECISIVE: H1 pooled n=10 INSUFFICIENT (5/1/2/2 per inst); H4 NOT_MEASURABLE (the spine adapter's INDEX CONTRACT `candle_idx-1 == stream pos`, src/research/adapters/spine_signal_source.py:203, assumes M15-native candle_open and is invalid for resampled candles).
+- Supersedes:    —
+- Reversal:      "The directional null (F-019/020/021/025) may be an artifact of M15's signal-to-noise; a coarser bar (H1/H4) could rescue the edge" -> "It does not. On crypto-major H1 and H4 the toy directional pool is still REJECT (no qualified edge); H4 expansion_breakout reaches only cost-recovery gross-≈0 (ties F-025: max recoverable = cost recovery, still not edge). Program 3A extends the four-falsification sweep from M15 to the H1/H4 horizon — coarser timeframes are not the missing lever."
+- Owner:         claude
+- Note:          DECISIVE only for the POWERED toy arm (n=2.7k-22k). The spine arm is NOT a falsification — it is throughput-starved/non-measurable at HTF (recorded NOT_MEASURABLE, never REJECT; fixing the adapter's M15-native index contract would still leave n<30 INSUFFICIENT). OPEN CONTINGENCY: Program 3B (WALL_CLOCK_CONSTANT) was pre-defined NOT built — a null at 3A's bar-count horizon (40 bars = 40h H1 / 160h H4) does not strictly rule out a wall-clock-matched forward horizon, though the directional-null family makes it a low prior. Reopen only via 3B or a NEW ontology (non-directional target / non-crypto universe), never a Program-1 parameter pass.
+
+### F-028 · P&F (PNF-v1) double-top/bottom carries NO standalone edge on crypto majors — first interpreter, REJECTED
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-14
+- Revalidate-by: 2026-09-12
+- Evidence:      The FIRST real interpreter, run shadow-only through the UNCHANGED chain (InterpreterHypothesis → HypothesisRunner → forward_walk → M4 QualificationGate), intrabar_fixed+12bps, BNBUSDT. PNF-v1 (box=0.5×ATR(20), 3-box reversal, double-top→LONG / double-bottom→SHORT): n=8554, PF=0.528, E[R]=−0.4538, win_rate=0.327 → VERDICT **REJECT** (gate2 expectancy<0, p=0.991). LOSES to the winning control random_uniform (E[R]=−0.4147) on every Δ: Δexpectancy=−0.039, ΔPF=−0.031, Δcapture=−0.064. Consistent with the directional-null family F-019→F-027 (no directional pocket on crypto majors under realistic exits+cost). Interpreter src/interpreters/point_and_figure.py; driver scripts/research/qualify_interpreter.py; e2e tests/interpreters/test_pnf_shadow_e2e.py; topic docs/topics/interpreter-contract.md. FROZEN in the Funding Ledger.
+- Supersedes:    —
+- Reversal:      "a classic chart pattern (P&F double-top) might add a directional edge" -> "PNF-v1 is worse than random on BNBUSDT; the contract+chain measured it honestly (REJECT) and it is FROZEN — reopen only via a NEW ontology, never a box/reversal sweep"
+- Owner:         claude
+
+### F-029 · Feature-pipeline `center=True` swing lookahead is benign for trade generation — the adversarial "FATAL leakage / kill the model" verdict is DOC_DRIFT vs measured evidence
+- Type:          OPERATIONAL
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-15
+- Revalidate-by: 2026-09-13
+- Evidence:      A 2026-06-15 adversarial design session escalated `center=True` swing detection (src/features/feature_pipeline.py:343) to "FATAL label leakage" and demanded a repo-wide pipeline rewrite + model deletion. Verification against code reconciles it to the already-validated trust-layer **F1** (docs/analysis/backtest-trust-audit-2026-06-10.md §4d): with TRUST_SWING_CAUSAL=1 (src/features/feature_pipeline.py:366), 974/3000 swing flags shift yet the BNBUSDT ledger is byte-identical (0 trades added/removed, edge inflation ≈ 0) because the CRT entry path does not consume swing columns. Two further adversarial premises are FALSE in code: the claimed training-contamination chain `TradeRecord.features → dataset builder → tensor` does not exist (training reads opportunities_*.jsonl via scripts/training/train_trade_net_v2.py), and the proposed "execution-quality successor" already exists as TradeNet v2 (src/training/trade_net_v2.py; wired as a soft neural_fn via src/training/trainer.py make_neural_fn_v2 — see F-005). Program B (measure-only, RESOLVED): `volatility_regime` uses a GLOBAL `rank(pct=True)` (src/features/feature_pipeline.py:306) that IS decision-reachable (src/strategies/s05_grid.py:120 blocks LONG in TRENDING). The TRUST_VOLREGIME_CAUSAL A/B/C hook (global vs expanding vs rolling) was run on v2_multi_2026_04/BNBUSDT via the production spine: all three are byte-identical (13 trades, WR 0.3077, PF 0.5233, ROI −4.63%; 100% decision overlap, 0 added/removed) → `A≈B≈C` ⇒ benign on this config (same class as F1; the governing CRT spine, not s05_grid, drives this config). Recorded in docs/analysis/backtest-trust-audit-2026-06-10.md §4f; driver results/trust/volregime_measure.py. CROSS-UNIVERSE (§4g): the A/B/C/S sweep (+ TRUST_SWING_CAUSAL for F1) across BTC/ETH/SOL + AUDUSD/GBPUSD/USDJPY/XAUUSD is byte-identical (100% decision overlap) on every instrument → both F1 (swing center=True) and F-029 (volregime global-rank) GRADUATE from "BNBUSDT benign" to "CRYPTO-MAJORS benign" (BNB+BTC+ETH+SOL, real trade counts 5/5/7). HONEST CAVEAT: the 4 FX/metals rows are NOT INFORMATIVE — the active multi config approves 0 trades on them (no FX tuning), so their "benign" is vacuous; the cross-asset-class claim stays OPEN pending an FX-trading config. The global→causal conversion (Option 2) stays gated on a future config/instrument showing material divergence.
+- Supersedes:    —
+- Reversal:      "center=True swing detection is FATAL label leakage that contaminates the model and forces a pipeline rewrite" -> "F1 already measured it byte-identical-benign for trade generation on BNBUSDT; the FATAL framing is DOC_DRIFT, the alleged training-contamination path does not exist, and the proposed successor model is already built — the LIVE-UNSAFE flag stands but no backtest edge depends on it"
+- Owner:         claude
+
+### F-031 · Governance caught an overclaim before repository contamination (Program-4 rollup E-001E)
+- Type:          GOVERNANCE
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-06-17
+- Revalidate-by: 2026-09-15
+- Evidence:      src/research/regime_conditioning.py (the pure `_consumer_verdict` rollup helper; `all_insufficient` guard precedes the n_harmful check); docs/governance/EPISTEMIC_INTEGRITY.md (E-001E invariant, sanctioned-precedence clause, mandatory phrase, pre-registration ritual, self-audit §9); tests/governance/test_epistemic_invariants.py (TestEpistemicInvariantE001E::test_red_green_guard_proof — behavioral red→green proof)
+- Supersedes:    —
+- Reversal:      —
+- Owner:         claude
+- Note:          Program 4 (regime_conditioning v1.1) originally emitted REGIME_HARMFUL for all-underpowered spine cells (all gate verdicts = INSUFFICIENT, n<30). A human reviewer caught the semantic inflation. The rollup was corrected (v1.1→v1.2): all_insufficient guard added before the n_harmful check. A correction that occurs BEFORE registration is evidence the governance system succeeded — not a failure. The E-001E rollup invariant, the mandatory phrase ("Caught me overclaiming; I owe you a correction."), and the pre-registration ritual were formalized as Program E-001 in response. RECURSIVE SELF-CORRECTION (2026-06-18): the FIRST generation of E-001's own invariant tests were themselves found to overclaim — E-001A/E-001E were substring-grep (not behavioral) and two advisory tests could never fail yet were tabled as "Test asserts" (E-001A + E-001F by the program's own taxonomy). Corrected: the per-consumer rollup was extracted to the pure `_consumer_verdict` helper and the A/E tests rewritten as behavioral with a permanent red→green proof (removing the guard turns the suite red); advisory tests relabeled honestly. The loop: governance caught an overclaim → the governance tests later overclaimed → the tests audited themselves → behavioral enforcement was added. E-001 became subject to E-001. The realistic claim is that the program creates SHORTER CORRECTION LOOPS, not total prevention. The program stays OPEN, not "finished."
+
+### F-030 · Contemporaneous volatility-regime LEVEL conditioning is economically non-consumable in spot directional architectures
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-17
+- Revalidate-by: 2026-09-15
+- Evidence:      results/research/regime/regime_conditioning.json + docs/research-readiness/program-4-nondirectional-preregistration.md (Program 4 = regime-conditioned consumption; 3×3 cross-matrix {expansion_breakout,mean_reversion,spine}×{C,N,E} over crypto-majors, intrabar_fixed+12bps, IS+70/30 OOS + cohort BH + a label-permutation null + a lagged-regime persistence control). Calibration PASSED (BNBUSDT H_atr=0.885027, H_ret=0.526847 — reproduces the vol-memory prior). **0 REGIME_EXPLOITABLE** cells anywhere. WELL-POWERED toy arm (cells n=3.7k–35k): best regime always 'E' beats random/shuffled nulls (p_label≈0.0025) yet expectancy stays NEGATIVE everywhere (E[R]≈−0.14…−0.35, every cell REJECT gate2); mean_reversion ETH/SOL = REGIME_REDUNDANT (S_lagged≈/≥S_real → persistence, not skill). Spine arm INSUFFICIENT (all cells n=1–11 < 30; throughput-starved per F-019/F-022) — no spine conclusion. Code: src/interpreters/regime_observer.py (trailing-window labeler, NOT global-rank — guards F-029), src/research/regime_conditioning.py (reuses forward_walk + QualificationGate verbatim); tests tests/test_regime_observer.py + tests/test_regime_conditioning.py (15 green). DETERMINISM: byte-identical replay 2026-06-17 — `regime_conditioning.json` reproduces sha256=288abd6c3e36e38b3edeeaa9091f16e4d633f53f4eff6c8c664bdab5d8386fc6 across two independent runs (deterministic body, no wall-clock).
+- Supersedes:    —
+- Reversal:      "Volatility memory (H_atr=0.885) is the highest-prior non-directional edge — conditioning a directional strategy on the vol regime should improve it" -> "It does not. Contemporaneous regime-LEVEL conditioning is statistically informative (best regime beats nulls, p≈0.0025) but economically worthless — the best regime's expectancy never crosses 0 (Authority-Ladder Level 1, not Level 2); 2 cells are pure persistence (REDUNDANT). The spine arm is underpowered, not harmful (no conclusion). Vol is predictable but not consumable in a spot long/short architecture — the binding constraint is the EXECUTION MODEL / entry information, not regime predictability."
+- Owner:         claude
+- Note:          FIRST falsification in the NON-DIRECTIONAL ontology (Program 1 was directional). SCOPE = the regime-LEVEL channel; it is conclusive on the powered toys (contemporaneous regime = best-case predictor under H=0.885, so a noisier P^H forecast cannot rescue it). The TRANSITION-forecast channel (forward Markov P^H — anticipating a regime CHANGE) is a genuinely different information channel and is UNTESTED → Program 4b (separate pre-registration), NOT a parameter pass on Program 4. Self-review correction baked in: the run's rollup originally printed the spine as REGIME_HARMFUL, but all spine cells are gate-INSUFFICIENT (n<30) so that was a noise artifact — the harness was fixed (conditioning v1.2: all-underpowered consumer → REGIME_INSUFFICIENT) and re-run; "spine is harmed" is NOT claimed.
+
+### F-032 · Cross-sectional dispersion (relative-value, market-neutral) on crypto majors is NOT monetizable net of costs
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-18
+- Revalidate-by: 2026-09-16
+- Evidence:      results/research/cross_sectional_report.json + docs/research-readiness/program-5-cross-sectional-preregistration.md (Program 5 = cross-sectional relative-value; rank 6 crypto majors {BNB,BTC,DOGE,ETH,SOL,XRP} each rebalance, long top-2 / short bottom-2 equal-weight market-neutral, hold H bars, net of 12bps/leg; M15 close-to-close, IS+70/30 OOS + cohort BH + 5 controls incl. equal_weight_market & reversed & shuffled). **0 PROMOTE / 0 REDUNDANT — all 5 interpreters REJECT, WELL-POWERED** (n=722–8,758 non-overlapping rebalances; not INSUFFICIENT). Cross-sectional MOMENTUM actively *loses* (xs_mom_96_16 E=−0.00509, PF=0.335, p=1.0; the `reversed` control is the lone positive E=+0.00031 → a faint short-horizon cross-sectional REVERSAL tilt). The single positive interpreter (xs_rev_32_32: E=+0.000637, PF=1.111, OOS=+0.00164>IS) FAILS gate-4 because its own LONG LEG beats the market-neutral spread (long_only E=+0.000756, baseline_delta=−0.000119) and is statistically insignificant (p=0.569) → the faint sign is a long-leg/beta artifact, NOT dispersion alpha. Code src/research/cross_sectional.py (panel inner-join + 5 weight formers + qualify; reuses qualification.permutation_p_value + benjamini_hochberg + costs.DEFAULT_ROUND_TRIP_BPS VERBATIM — no trade geometry); driver scripts/research/qualify_cross_sectional.py; config configs/research/research_config_cross_sectional.json; tests tests/research/test_cross_sectional.py (9 green: no-lookahead, alignment fail-fast, control sanity, cost monotonicity, verdict ladder, determinism). DETERMINISM: byte-identical replay 2026-06-18 (config_sha256=00687f8b…; deterministic body, no wall-clock).
+- Supersedes:    —
+- Reversal:      "Every prior null (F-019…F-031) was per-instrument DIRECTIONAL; maybe a market-neutral cross-sectional spread (relative strength between coins) monetizes the dispersion" -> "It does not on crypto majors net of costs. Cross-sectional momentum loses outright (PF 0.335); the only positive cell is a faint reversal tilt that is a long-leg/beta artifact (loses to long_only) and insignificant (p=0.57). Market-neutral dispersion carries no monetizable, beta-orthogonal edge — first falsification on the PANEL (cross-sectional) axis, extending the sweep beyond the per-instrument frame."
+- Owner:         claude
+- Note:          FIRST cross-sectional (panel) falsification — distinct from F-019…F-031 (all single-name). The object tested was DISPERSION (momentum/reversal/inverse-vol are interpreters of it), so this kills the dispersion-monetizability question for these interpreters, not one indicator. The economic signature mirrors F-030's Authority-Ladder Level-1-not-2: a statistically-detectable cross-sectional reversal sign exists but is economically worthless after costs and is beta-redundant. Per the §6.5 Authority Ladder this earns research authority only; NO `CrossSectional` style layer is built on a single null. Scope = M15 spot crypto majors; the FX/metals + perps/funding/carry axes stay UNTOUCHED-FRONTIER (perps data-blocked).
+- 2026-06-18 input-availability update (NOT a finding change; no edge claim): the carry/basis axis is **partially un-blocked** — `scripts/data/fetch_perp_funding.py` + `src/inout/perp_funding_fetcher.py` now acquire Binance perp **funding-rate** (8h) and **premium-index/basis** (M15) full history into `data/perp/`, byte-identical to spot timestamps (verified 100% basis↔spot overlap on BNBUSDT). **Funding history: UNBLOCKED · Basis history: UNBLOCKED · Open interest: STILL BLOCKED** (`openInterestHist` ~30-day retention). This changes INPUT AVAILABILITY only; per the §6.5 Authority Ladder no carry/basis edge is asserted until a carry/basis interpreter runs through the M4 gate. **Resolved 2026-06-18 by F-033** (the interpreter ran → null).
+
+### F-033 · Carry/basis is NOT an informative signal for cross-sectional spot dispersion on crypto majors
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-18
+- Revalidate-by: 2026-09-16
+- Evidence:      results/research/carry_report.json + docs/research-readiness/program-6-carry-basis-preregistration.md (Program 6 = carry/basis as a SIGNAL on cross-sectional SPOT dispersion: rank 6 crypto majors {BNB,BTC,DOGE,ETH,SOL,XRP} by trailing-mean perp funding-rate / premium-index at rebalance t, long bottom-2 / short top-2 equal-weight market-neutral, hold H, measure the long-short SPOT close-to-close spread net of 12bps/leg; funding forward-filled 8h→M15 (last settlement ≤ t, no-lookahead), basis native M15; IS+70/30 OOS + cohort BH + the 5 Program-5 controls). **0 PROMOTE / 0 REDUNDANT — all 8 interpreters REJECT, WELL-POWERED** (n=722–4,373 non-overlapping rebalances; not INSUFFICIENT). Every cell is *economically* negative AND *statistically* insignificant: E(net) ∈ [−0.00319, −0.00158], PF ∈ [0.55, 0.82], p ∈ [0.76, 1.00] — both signs of both signals (carry/carry_inv/basis/basis_inv) at L∈{96,672}/H∈{16,96}. Every interpreter loses to a control (`equal_weight_market` or `long_only`) at gate-4 — the carry/basis-sorted spread is *worse* than just holding the basket, so it does not even reach Authority-Ladder Level-1 *information* (unlike F-032's xs_rev which at least had a positive-but-beta-redundant cell). Reuses the Program-5 kernel VERBATIM (`research.cross_sectional` Panel+funding/basis side-channels + `scores` carry/basis kinds; `qualify` / `permutation_p_value` / `benjamini_hochberg` / `DEFAULT_ROUND_TRIP_BPS` UNCHANGED — Program 5 stays byte-identical, 9 tests green). Driver scripts/research/qualify_carry.py; config configs/research/research_config_carry.json; tests tests/research/test_carry.py (6 green: ffill no-lookahead, basis alignment, score signs, Panel backward-compat, missing-corpus fail-fast, determinism). DETERMINISM: byte-identical replay 2026-06-18 (config_sha256=00687f8b…; deterministic body, no wall-clock; 70,080 rebalance bars).
+- Supersedes:    —
+- Reversal:      "Perps were the advisors' highest-rated untested axis; now that funding/basis are acquired (the F-032 input-availability unblock), maybe a coin's funding/basis rank predicts its forward cross-sectional spot return" -> "It does not on crypto majors net of costs. All 8 carry/basis interpreters (both signs) are net-negative, sub-1 PF, insignificant, and each loses to the market-basket / long-only control. Carry/basis is not an informative cross-sectional SPOT-dispersion signal — the first non-null-data axis to be tested and falsified, extending F-019…F-032 onto the carry/basis information source."
+- Owner:         claude
+- Note:          SCOPE — this falsifies carry/basis as a *ranking signal for the spot-dispersion payoff*; it does NOT test the literal carry-HARVEST payoff (holding the perp to earn funding ± basis convergence), which is a DIFFERENT return construction (Program 6b — built + run, see F-034). Open interest remains data-blocked (Program 7, deferred). Acquisition layer (the data) stays a permanent asset regardless — the null is about the signal's economic content, not the corpus (which is complete: 6×{2,190 funding / 70,080 basis}, coverage 1.0000, frozen). Per §6.5 this earns research authority only. The pre-registered prior (REJECT/REDUNDANT expected) was recorded BEFORE the run — a clean confirmation, not a rationalized null.
+
+### F-034 · Carry HARVEST does not clear costs on crypto majors — funding income is real but economically negligible vs turnover
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-18
+- Revalidate-by: 2026-09-16
+- Evidence:      results/research/harvest_report.json + docs/research-readiness/program-6b-carry-harvest-preregistration.md (Program 6b = the carry CASHFLOW payoff, distinct from F-033's signal: long low-funding / short high-funding equal-weight market-neutral PERP basket, hold H, return = perp price move [≈ spot + premium-index change ⇒ basis convergence] + funding accrued over (t,t+H] − 12bps/leg; funding accrued from DISCRETE 8h settlements, no-lookahead). **0 PROMOTE — all 4 tradeable `harvest_full` REJECT** (n=104–729, WELL-POWERED), each losing to the `cash` or `reversed` control: E(net) ∈ [−0.00845, −0.00260], PF 0.56–0.83, p 0.84–1.00. The diagnostic appendix is the key economic content: **funding income is structurally POSITIVE but tiny** (pre-cost +0.000125…+0.000608 per rebalance ≈ +1…+6 bps) — *smaller than the ~24 bps/rebalance round-trip cost* — so all 4 funding-only twins are `DIAGNOSTIC_NEGATIVE` (the cashflow does not even cover its own turnover), and adding the price/basis term makes the full trade more negative still. The lowest-turnover cell tested (H=672/1w, the largest pre-cost income) still REJECTs (PF 0.83) — the low-turnover end is inside the frozen grid and does not rescue it. AUTHORITY SEPARATION held: funding-only (a PnL decomposition, not a trade) could ONLY receive DIAGNOSTIC_* and was excluded from the BH cohort + the promotion surface (Refinement 1). Reuses the Program-5/6 kernel VERBATIM (`harvest_net_series` + `qualify_harvest` add the `cash` benchmark via a defaulted `_evaluate(control_names, market_key)`; `_finalize` / permutation / BH UNCHANGED — Programs 5 & 6 stay byte-identical, 15 tests green). Driver scripts/research/qualify_harvest.py; config configs/research/research_config_harvest.json; tests tests/research/test_harvest.py (7 green: discrete settle, accrual no-lookahead boundary, positive income, decomposition identity, cash control, diagnostic-only authority, determinism). DETERMINISM: byte-identical replay 2026-06-18 (config_sha256=00687f8b…).
+- Supersedes:    —
+- Reversal:      "F-033 killed carry as a SIGNAL but not as a CASHFLOW — maybe the funding stream a market-neutral perp basket accrues (± basis convergence) exceeds costs" -> "It does not on crypto majors. The funding income is real and positive but economically negligible — smaller than the round-trip cost — so the harvest is net-negative even before the price/basis drag, across 1d/3d/1w holds. Carry harvest as constructed does not clear costs."
+- Owner:         claude
+- Note:          SCOPE — the kill is for the harvest *as tested* (rebalanced long-low/short-high perp basket, flat 12bps/leg, H∈{96,288,672}); the diagnostic shows funding income EXISTS but is ~1–6 bps vs ~24 bps turnover. This does NOT claim funding is worthless in the abstract; a lower-turnover / netting cash-and-carry construction is a DIFFERENT trade — but pursuing it now is forbidden parameter archaeology under the F-033/F-034 STOP discipline (any reopen needs a fresh structural thesis + pre-registration, not an H/cost tweak). Open interest (Program 7) and FX/metals stay deferred — NOT automatic. The perp data corpus remains a permanent asset. Per §6.5 research authority only. The pre-registered prior ("funding income positive, overwhelmed by cost/price drag") was recorded BEFORE the run — confirmed (and sharpened: it fails to clear cost even before the price drag).
+
+### F-035 · The entry-information null generalizes from crypto to FX majors — first non-crypto asset-class test
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-19
+- Revalidate-by: 2026-09-17
+- Evidence:      results/research/qualification_fx_metals/qualify_fx_metals.json (DETERMINISTIC body sha256=48a0193c…, byte-identical 2-run replay 2026-06-19). First cross-ASSET-CLASS run of the existing hypothesis pool through the M4 gate — the same VERBATIM machinery as qualify_majors (intrabar_fixed, 12bps round-trip, alpha=0.05, n_perm=2000), re-scoped to **5 FX majors** [EURUSD, AUDUSD, EURCAD, GBPUSD, USDJPY], 2yr M15 freshly fetched via MT5 (49.5k bars each, dataset_integrity APPROVE/WARN 0.00% missing). **0 PROMOTE.** Toy family WELL-POWERED and decisively negative: `expansion_breakout` ALL REJECT (per-inst n=7,711–8,915, PF 0.015–0.076, E(net) −1.73…−2.80R, p 0.59–1.00); `mean_reversion` ALL REJECT (n=13,710–17,103, PF 0.024–0.102, E(net) −1.52…−2.53R, p=0.0005 = significantly NEGATIVE, i.e. reliably worse than control). Spine arm INSUFFICIENT per-instrument (n=2–8 trades — corroborates F-029: the spine barely fires on FX), POOLED n=30 REJECT (E −5.99R). So no toy, conditional, or spine signal earns promotion on FX — the F-019…F-028 entry-information null (built on crypto-directional) holds on a NEW asset class. Driver scripts/research/qualify_fx_metals.py; configs configs/research/research_config_fx_metals.json + research_config_spine_fx_metals.json (clones of the *_majors pair, universe re-scoped); fetch layer src/inout/mt5_candle_fetcher.py + scripts/data/fetch_candles_mt5.py.
+- Supersedes:    —
+- Reversal:      "The directional/entry-info null (F-019…F-028) might be a crypto-specific artifact — a different asset class (FX) could carry the edge the crypto majors lack" -> "It is not crypto-specific. On 5 FX majors (2yr M15), the same toy pool + spine through the same M4 gate produces 0 PROMOTE, well-powered — the entry-information bottleneck generalizes across asset classes."
+- Owner:         claude
+- Note:          COST CAVEAT (E-001 honesty) — the 12bps round-trip was kept identical to the crypto run for comparability, but it is UNREALISTICALLY HARSH for FX: it equals 1.8–2.5× the median FX M15 bar range (EURUSD 0.048%, USDJPY 0.066%), versus a tiny fraction of a crypto bar. So the −1.5…−2.8R magnitude is COST-DOMINATED, not a measure of raw signal — this extends F-025's cost-domination theme to FX, where it is even more acute (tiny ATR). The DIRECTION null is nonetheless robust to the cost choice: PF 0.02–0.10 is so far below 1.0 that even a 0bps rerun would not cross the gate, and mean_reversion is significantly negative — a realistic-FX-cost rerun (≈1bps) would lift expectancy toward −1R but not into promotion, so the "asset-appropriate cost" follow-up is NOT a near-miss and was not run. SCOPE — FX majors only (one MT5 broker, one timeframe); XAUUSD/metals EXCLUDED this pass (its 26h holiday gap REJECTs the FX-tuned dataset_integrity gap gate — the Stage-2 metals/holiday calendar, not corrupt data). Per §6.5 research authority only. Pre-registration = the two fixed research configs written before the run; existing hypotheses reused, NO new ones.
+
+---
+
+### F-036 · zone_gate top_k / cluster knobs are TUNABLE but INERT — ΔG001 ≡ 0 on crypto majors
+- Type:          ECONOMIC
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-06-24
+- Revalidate-by: 2026-09-22
+- Evidence:      scripts/research/qualify_zone_topk.py (driver; results/research/zone_topk_sweep/zone_topk_sweep.json, DETERMINISTIC body sha256=0e8221da…). Measures ΔG001 of the just-shipped `engine_runner.zone_gate` config knobs (see [[project_zone_gate_topk_config]]). The zone registry is LIVE (`models/zone_registry.json`, 8 zones, total_weight 139,942 ≫ underpowered floor 50), so the knob is NOT dormant-by-emptiness. Sweep `top_k ∈ {1,2,3,5,8}` (cluster_min_n=2, cluster_spread_max=0.15) × BNB/ETH/BTC/SOL, governing intrabar_touch (Layer 1 = the spine's own goal_report) + the VERBATIM M4 gate (Layer 2, intrabar_fixed/12bps/2000perm/alpha 0.05 vs always_long+random controls). RESULT: spine entry sets are **byte-identical at every top_k** ⇒ **ΔG001 ≡ 0 exactly** (Δexpectancy_r = +0.0000 for every cell × instrument; identical trade counts BNB 13 / ETH 5 / BTC 5 / SOL 7). The zone cluster score enters Fusion at `weight_zone_gate=0.2` and flips ZERO decisions across the decision threshold — the same "perfect backtest no-op" mechanism as the EMA gate ([[project_ema_gate_inert]]). M4: **0 PROMOTE** — per-instrument INSUFFICIENT (n<30); POOLED n=30, E(net)=−0.399, REJECT — identical to F-019's spine arm, confirming the harness reproduces the spine exactly. V0 self-check byte-identical (the get_prod_section injection is neutral at defaults). Stage B (cluster_min_n × cluster_spread_max grid) NOT entered: no Stage-A lead, and since top_k itself is inert the cluster aggregation is non-binding.
+- Supersedes:    —
+- Reversal:      "Making the zone top-k tunable might let a non-default value improve the goal (G001)" -> "On the live spine the zone cluster score is non-binding (fusion weight 0.2 flips no decision); top_k is config-TUNABLE but economically INERT (ΔG001≡0). The migration grants tunability, never authority (§6.5) — default top_k=3 stays."
+- Owner:         claude
+- Note:          Extends F-021 (zone-selection-beyond-session null: ZONE produced 0 rejects) and F-019 (spine INSUFFICIENT, pooled n=30 REJECT) to the explicit config-knob level. This is the §6.5 Authority-Ladder discipline closing the loop on a config migration: a BEHAVIORAL knob earned CONFIG_DRIVEN tunability, then was measured against G001 and earned NO authority. A clean 0-PROMOTE / ΔG001≡0 is a successful experiment (high knowledge-ROI null, §6.1), not a failure. Research authority only.
+
+---
+
 ## Funding Ledger (initiative-level capital allocation)
 
 > A **finding** is an observation; **funding** is a capital-allocation decision derived from
@@ -276,6 +504,11 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 > `Reopen Conditions` must be met *and* a SESSION LOG entry filed (per `CLAUDE.md §6.2`).
 > Status vocab: `FUNDED · FROZEN · KILLED · RESEARCH · UNFUNDED`. `Evidence` cites finding IDs
 > (CI checks they resolve); `FROZEN`/`KILLED` require non-empty `Reopen Conditions`.
+
+### Interpreter: P&F (PNF-v1) — FROZEN
+- Date:    2026-06-14
+- Evidence: F-028 (first real interpreter; shadow-measured REJECT, worse than random controls on BNBUSDT)
+- Reopen Conditions: a NEW P&F **ontology** (different target / horizon / signal-set, or a non-crypto universe) earning a non-negative shadow Δ vs controls — **NEVER a parameter pass** (box size / reversal count / signal-threshold sweep is forbidden archaeology, per the Plan-5 scope guard). A `PNF-v2` is a distinct decision, not a rescue of PNF-v1. This is the falsified-interpreters ledger: a rejected interpreter is preserved knowledge so future sessions do not rebuild it.
 
 ### Liquidity V2 — KILLED
 - Date:    2026-06-03
@@ -322,8 +555,85 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 - Evidence: F-010, F-002
 - Reopen Conditions: —
 
+### Program 1: Next-Bar Directional Ontology (M15 crypto majors, intrabar_fixed+12bps) — KILLED
+- Date:    2026-06-13
+- Evidence: F-019, F-020, F-021, F-025
+- Reopen Conditions: ONLY a genuinely NEW ontology with a pre-registered hypothesis — a different target (vol/range/persistence), horizon (H1/H4/D), asset class (FX/equities/commodities), objective (market-making/carry/relative-value), or label space (event/structural regimes) = a SEPARATE Program 2 decision. NOT reopenable by any parameter pass (no further SL/TP grids, TP ratios, trailing, entropy partitions, score thresholds, or session sweeps; no re-running F-019/020/021/025 with tweaked knobs) — that is archaeology, explicitly out-of-bounds. Closure synthesis: docs/analysis/program-1-closure-2026-06-13.md. Decisive: reality_gap +4.16R (value is upstream/informational; exits reshape risk not expectancy).
+
+### Program 2: Structural Asymmetry (trap/sweep continuation) — FROZEN
+- Date:    2026-06-13
+- Evidence: F-026
+- Reopen Conditions: E1 (the single decisive measure-only experiment) returned INSUFFICIENT_POWER with a NEGATIVE point estimate (completed sweep→displacement→retest loses to sweep-only on BNBUSDT M15, n=47, ~1% funnel completion; calibration passed so the result is trustworthy). FROZEN after one experiment per the pre-registered protocol (only ASYMMETRY_SURVIVES advances to E2). Reopen ONLY if a cross-instrument POOLED retest population reaches adequate power (CI ≤ power_ci_max) AND shows a NON-NEGATIVE, control-beating asymmetry — OR a genuinely NEW structural ontology is pre-registered. NOT reopenable by threshold search (no changing h/L sets, no E2/conditioning on this result) — that is the named failure mode. Synthesis: docs/analysis/structural-asymmetry-bnbusdt-2026-06-13.md.
+
+### Program 3: Higher-Timeframe Directional Ontology (H1/H4 crypto majors) — FROZEN
+- Date:    2026-06-13
+- Program State: FALSIFIED (3A)   (state machine: PRE_REGISTERED → RUNNING → {ADVANCED | FALSIFIED | EXHAUSTED}; 3A reached FALSIFIED, decisive toy arm; 3B not run)
+- Evidence: F-027 (3A verdict: 0 PROMOTE at H1 and H4); F-019, F-020, F-021, F-025 (Program 1's four-falsification closure scoped the kill to *next-bar · M15 · crypto-majors* and recorded an UNTOUCHED FRONTIER — H1/H4/D horizons among it — as the sanctioned reopen path; docs/analysis/program-1-closure-2026-06-13.md §"EXHAUSTED ≠ WRONG")
+- Hypothesis (pre-registered, BEFORE running): the directional null (F-019/020/021/025) is specific to the M15 horizon's signal-to-noise; on a coarser bar the SAME hypothesis pool (toy expansion_breakout/mean_reversion + the production spine) may clear the M4 gate. NONE was implied to contain edge.
+- Design: deterministic M15→{H1,H4} resampler (src/research/resample.py, calendar-boundary, causal trailing-drop, byte-identical/SHA-stable — tests/research/test_resample.py) feeds the EXISTING audited spine VERBATIM (forward_walk intrabar_fixed + CostModel 12bps + IS/70-30 OOS + BH; research.qualification). Drivers: scripts/research/build_resampled_data.py + scripts/research/qualify_htf.py. Configs: configs/research/research_config_htf_majors.json + research_config_spine_htf_majors.json.
+- Horizon split (avoids the two-questions trap): 3A = BAR_COUNT_CONSTANT (PRIMARY, RUN — FALSIFIED) — harness bar-counts held constant (max_forward=40 = 10h M15 / 40h H1 / 160h H4); the null reads as "this bar-relative ontology failed." 3B = WALL_CLOCK_CONSTANT (CONTINGENT, pre-defined NOT built) — disambiguates horizon length from timeframe structure if ever warranted.
+- Verdict (3A): toy directional pool 0 PROMOTE at H1 and H4 (F-027); spine arm non-decisive (H1 n≤10 INSUFFICIENT; H4 NOT_MEASURABLE — adapter index contract). Coarser timeframes are not the missing lever.
+- Reopen Conditions: ONLY (a) Program 3B (WALL_CLOCK_CONSTANT) showing a candidate clear the M4 gate IS&OOS at a wall-clock-matched horizon, OR (b) a genuinely NEW ontology (non-directional target — vol/range/persistence — or a non-crypto universe — FX/metals/equities; data present in data/) with a pre-registered hypothesis. NOT reopenable by any Program-1 parameter pass (no SL/TP/session/entropy/score tweaks, no re-running 3A with tuned knobs) — that is archaeology.
+
+### Program 4: Non-Directional Target — Regime LEVEL Conditioning (crypto majors, intrabar_fixed+12bps) — KILLED
+- Date:    2026-06-17
+- Evidence: F-030 (0 REGIME_EXPLOITABLE; powered toys statistically-informative-but-economically-worthless + 2 REDUNDANT; spine INSUFFICIENT)
+- Reopen Conditions: ONLY a genuinely NEW ontology with a pre-registered hypothesis — NOT a parameter pass. The pre-registration's §5 fixed parameters (tercile_window=480, lag_k=50, atr_period=14, min_cell_samples=30, harmful_margin, redundant_tol, null_relabelings) are explicitly forbidden reopen routes ("Program 4 with a bigger window / more regimes / extra consumers" is mechanically out-of-bounds archaeology). The TRANSITION channel is NOT a reopen of Program 4 — it is the separately pre-registered Program 4b below. Synthesis: docs/research-readiness/program-4-nondirectional-preregistration.md.
+
+### Program 4b: Non-Directional Target — Regime TRANSITION Forecast (forward Markov P^H) — RESEARCH (pre-registration pending)
+- Date:    2026-06-17
+- Evidence: F-030 (the regime-LEVEL channel is closed; the TRANSITION channel — anticipating a regime CHANGE, e.g. compression→expansion, which a contemporaneous label cannot express — is a genuinely different information channel and is untested)
+- Reopen Conditions: — (this is a NEW ontology, not a reopen; it inherits Program 4's full governance: single pass, hypothesis-free 3×3, four+ controls incl. a within-tercile-shuffle that isolates transition dynamics from vol level, label-permutation null, cohort BH, anti-archaeology, a HARD calibration gate (H_atr 0.885±0.03), and lag_k = forecast horizon H. Pre-registration: docs/research-readiness/program-4b-transition-preregistration.md. ONE shot — no Program 4b.1/4b.2.)
+
+### Program 5: Cross-Sectional Relative-Value (dispersion, market-neutral; crypto majors, intrabar close-to-close+12bps) — KILLED
+- Date:    2026-06-18
+- Evidence: F-032 (0 PROMOTE / 0 REDUNDANT; all 5 interpreters REJECT, well-powered n=722–8,758; cross-sectional momentum loses, the lone positive cell is a long-leg/beta artifact and insignificant)
+- Reopen Conditions: ONLY a genuinely NEW axis with a pre-registered hypothesis — NOT a parameter pass. The §8 fixed parameters (the 5-interpreter grid, k=2, the 5-control set, oos_split=0.30, n_permutations=2000, 12bps, close-to-close, the 6-coin universe) are explicitly forbidden reopen routes ("Program 5 with k=3 / more lookbacks / longer holds" is mechanically out-of-bounds archaeology). Distinct NEW axes (each a separate decision): cross-sectional on a DIFFERENT asset class (FX/metals — data thin; equities — no data), or a DIFFERENT payoff structure entirely (carry / funding / basis / volatility / market-making — most currently data-blocked). Pre-registration + synthesis: docs/research-readiness/program-5-cross-sectional-preregistration.md.
+
+### Program 6: Carry/Basis Signal on Cross-Sectional Spot Dispersion (crypto majors, close-to-close+12bps) — KILLED
+- Date:    2026-06-18
+- Evidence: F-033 (0 PROMOTE / 0 REDUNDANT; all 8 carry/basis interpreters REJECT, well-powered n=722–4,373; both signs net-negative E∈[−0.0032,−0.0016], PF 0.55–0.82, p 0.76–1.0, each loses to market/long_only control — below Authority-Level-1). First axis tested on the newly-acquired perp corpus.
+- Reopen Conditions: ONLY a genuinely NEW axis with a pre-registered hypothesis — NOT a parameter pass. The pre-registration's fixed parameters (the 8-interpreter carry/basis grid, k=2, L∈{96,672}, H∈{16,96}, the 5-control set, 12bps, close-to-close, the 6-coin universe, signal-on-spot-dispersion payoff) are forbidden reopen routes ("Program 6 with more lookbacks / k=3 / longer holds" is archaeology). Distinct NEW axes (each a separate decision): the **carry-HARVEST payoff** (Program 6b — now run, F-034), open-interest as a signal (Program 7, data-blocked ~30d), or carry/basis on a DIFFERENT asset class. The frozen data corpus (Program Carry Acquisition) is a permanent asset and is NOT part of this kill. Pre-registration: docs/research-readiness/program-6-carry-basis-preregistration.md.
+
+### Program 6b: Carry HARVEST — funding cashflow + price/basis (crypto majors, 12bps) — KILLED
+- Date:    2026-06-18
+- Evidence: F-034 (0 PROMOTE; all 4 tradeable harvest_full REJECT, n=104–729; funding income real but ~1–6 bps < ~24 bps turnover cost ⇒ all 4 funding-only twins DIAGNOSTIC_NEGATIVE; lowest-turnover H=672 still REJECTs PF 0.83; loses to cash/reversed). Carry harvest as constructed does not clear costs.
+- Reopen Conditions: ONLY a genuinely NEW structural thesis with a fresh pre-registration — NOT a parameter pass. The pre-registration's fixed parameters (long-low/short-high perp basket, k=2, L∈{1,96}, H∈{96,288,672}, the 6 controls incl. cash, 12bps/leg, the 6-coin universe) are forbidden reopen routes ("6b with more holds / lower cost / netting / different rebalance" is archaeology). A genuinely different LOW-TURNOVER cash-and-carry construction (position-netting to slash the cost drag) would be a new program with its own thesis + pre-registration, not an H/cost tweak here. STOP discipline (F-033/F-034): pause after this; Program 7 (OI) / FX-metals are NOT automatic. Pre-registration: docs/research-readiness/program-6b-carry-harvest-preregistration.md.
+
 ---
 
 ## Terminal (SUPERSEDED / RETIRED) — kept for replay
 
 _(none yet — when a finding above is overturned, flip its Status here and add the superseding F-id.)_
+
+---
+
+## Research Envelope / Scope Matrix
+
+> **What this is.** The scannable answer to "is the paradigm dead, or was the experiment too
+> narrow?" Each falsification (F-019…F-026) is a verdict *within a measured envelope*; this matrix
+> makes the envelope — and the **untouched frontier** — explicit so a null is never over-read as a
+> global claim. Authoritative on conflict = the finding rows above + the Program-1 closure
+> (docs/analysis/program-1-closure-2026-06-13.md). `Updated: 2026-06-13`.
+>
+> Status vocab: `FALSIFIED-IN-SCOPE` (null under the governing truth standard, scope stated) ·
+> `ALREADY-ANSWERED` (a frequently-proposed "unknown" that the repo has in fact measured) ·
+> `UNTOUCHED-FRONTIER` (not yet tested; a legitimate reopen axis — a NEW program, not archaeology).
+
+| Axis | Tested envelope | Status | Evidence / note |
+|---|---|---|---|
+| Entry edge (next-bar direction) | crypto-majors · **M15** · intrabar_fixed+12bps · IS+70/30 OOS | FALSIFIED-IN-SCOPE | F-019 (toys ≈ random on all 4 majors + pooled; spine throughput-starved) |
+| Conditional direction (session×vol×momentum) | crypto-majors · M15 · h≤20 · paired entropy+economics | FALSIFIED-IN-SCOPE | F-020 (25/25 entropy-"significant" at N but 0 economic pockets) |
+| Selection skill (RETEST selected−rejected) | crypto-6 · M15 · decomposed by reject-reason | FALSIFIED-IN-SCOPE | F-021 (the +1.17R ΔE is ENTIRELY the incumbent SESSION filter; ZONE/SCORE null) |
+| Exit/cost geometry | crypto-6 · M15 · **42-cell SL{0.5–3.0}×TP{1.0–5.0}** grid, entries fixed | ALREADY-ANSWERED | F-025 (every cell E_oos<0 incl. 3.0×5.0; "widen the stop to 2.5 ATR" is *inside* this grid — re-running is Program-1 archaeology, out-of-bounds) |
+| Structural asymmetry (sweep→disp→retest) | BNBUSDT · M15 · multi-horizon, 4 controls | FALSIFIED-IN-SCOPE | F-026 (negative + INSUFFICIENT_POWER, ~1% funnel completion) |
+| Process memory (Hurst / autocorrelation / vol-clustering) | crypto-majors · M15 · N≈70k | ALREADY-ANSWERED | F-020 / process_diagnostics.py (H_atr=0.885 vs H_returns=0.527; ARCH-LM reject; "vol has memory, direction doesn't") — NOT an open unknown |
+| Session policy as a promotable lever | BNBUSDT · M15 · intrabar_touch + 70/30 OOS | ALREADY-ANSWERED | F-017 (the in-sample/close-only "+ASIA" gains decay/flip OOS; failed *statistically*, not merely on a governance threshold) |
+| **Timeframe horizon (H1/H4)** | crypto-majors · **H1 + H4** · intrabar_fixed+12bps · IS+70/30 OOS+BH (Program 3A) | FALSIFIED-IN-SCOPE | F-027 (0 PROMOTE at H1/H4; H4 expansion_breakout only reaches cost-recovery gross≈0; spine non-decisive). Daily (D) + Program 3B WALL_CLOCK_CONSTANT remain untouched |
+| Non-crypto universe (FX/metals/equities) | — (crypto-majors only) | UNTOUCHED-FRONTIER (deferred) | data present (AUDUSD/GBPUSD/USDJPY/XAUUSD/EURCAD M15); a separate future program after the HTF verdict |
+| Non-directional target — regime LEVEL conditioning | crypto-majors · M15 · intrabar_fixed+12bps · IS+70/30 OOS+BH + label-permutation null + lagged control | FALSIFIED-IN-SCOPE | F-030 (0 exploitable; powered toys significant-but-economically-worthless, best regime never E>0; 2 REDUNDANT; spine INSUFFICIENT) |
+| Non-directional target — regime TRANSITION forecast (Markov P^H) | — | UNTOUCHED-FRONTIER (Program 4b, pre-registration pending) | a genuinely different information channel (anticipating a regime CHANGE); separate pre-registration, not a Program-4 reopen |
+| **Cross-sectional relative-value (dispersion, market-neutral)** | crypto-6 · **M15** · close-to-close+12bps/leg · IS+70/30 OOS+BH · 5 controls (Program 5) | FALSIFIED-IN-SCOPE | F-032 (0 PROMOTE; momentum loses PF 0.335, lone positive cell is a long-leg/beta artifact, insignificant p=0.57). FIRST panel-axis null; cross-sectional on FX/perps/other payoff structures stays untouched |
+| **Carry/basis as a cross-sectional signal** | crypto-6 · **M15** · close-to-close+12bps/leg · perp funding(8h ffill)+basis(M15) · IS+70/30 OOS+BH · 5 controls (Program 6) | FALSIFIED-IN-SCOPE | F-033 (0 PROMOTE; all 8 cells both signs E(net)<0, PF 0.55–0.82, p 0.76–1.0, each loses to market/long_only — below even Authority-Level-1). FIRST axis tested on NEWLY-ACQUIRED data. Does NOT test the funding-PnL carry-HARVEST payoff (Program 6b) or OI (Program 7) |
+| **Carry-HARVEST payoff (hold perp to earn funding ± basis convergence)** | crypto-6 · perp basket · 12bps/leg · H∈{1d,3d,1w} · cash+5 controls (Program 6b) | FALSIFIED-IN-SCOPE | F-034 (0 PROMOTE; funding income real but ~1–6 bps < ~24 bps turnover ⇒ net-negative before price drag; lowest-turnover H=672 still REJECTs). Distinct from F-033 (cashflow not signal). A low-turnover/netting cash-and-carry is a separate untested construction (new thesis, not a tweak) |
+| Non-directional targets (range/persistence, other) | — | UNTOUCHED-FRONTIER (deferred) | per Program-1 closure §"EXHAUSTED ≠ WRONG"; objective ≠ directional speculation |

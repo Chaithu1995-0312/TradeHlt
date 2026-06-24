@@ -1,0 +1,867 @@
+# HUMAN-READABLE EXECUTION COGNITION
+
+## Analysis of 3 Scripts
+
+### 1. `scripts/auto_train_from_opportunities.py`
+
+---
+
+#### FILE PURPOSE
+
+This is the nightly unattended training orchestrator. It fires up opportunity scanning, model training, optional LLM round-trip (currently stubbed), and optional model promotion — all in one command, designed to run from Task Scheduler/cron with zero interactive input. It exists so that the system can retrain itself overnight without a human sitting at the terminal.
+
+#### RUNTIME ROLE
+
+Pipeline-B entry point. It sits at the top of the training flow:
+```
+cron/Task Scheduler
+  → auto_train_from_opportunities.py  (← we are here)
+    → opportunity_scanner.py           (per instrument)
+    → compress_logs_for_llm.py         (per instrument)
+    → phase5_calibration.py --train    (per instrument)
+    → model_registry.promote_gaussian()(optional)
+```
+
+It is NOT called from any other Python module — it's a standalone CLI script invoked from the shell.
+
+#### CLASSES
+
+**None.** This file contains only module-level functions. There are no classes.
+
+---
+
+#### FUNCTIONS
+
+##### `_run(cmd: list[str]) -> int`
+
+- **Human purpose**: Wrapper over `subprocess.call` that logs the command then executes it. Every subprocess invocation in this file uses this wrapper.
+- **Invocation sources**: Called by _scan_instrument, _compress, _train_instrument, _train_merged.
+- **Downstream calls**: `subprocess.call(cmd, cwd=_REPO_ROOT)` — the actual OS-level process spawn.
+- **Runtime flow**:
+  1. Logs `→ <command string>` to logger
+  2. Calls `subprocess.call()` with the command list, setting cwd to repo root
+  3. Returns exit code
+- **Inputs**: `cmd` — list of strings forming the CLI command
+- **Outputs**: integer exit code (0 = success, non-zero = failure)
+- **State mutations**: None (pure function)
+- **Side effects**: Logs to logger; spawns a child process
+- **File writes**: Depends entirely on what the child process writes — `_run()` itself writes nothing
+- **Network/API**: Not directly. Child processes may use network.
+- **Subprocess usage**: YES — this IS the subprocess wrapper
+- **Fallbacks**: None. If subprocess raised an exception it would propagate uncaught to caller.
+- **Hidden defaults**: cwd is always `_REPO_ROOT` (one level above `scripts/`)
+- **Failure modes**: subprocess can raise `OSError`, `subprocess.CalledProcessError` — NOT caught here
+- **Determinism**: Deterministic. Same command list → same exit code.
+- **Corruption risks**: None from this function itself
+- **Trust level**: CANONICAL — simple, transparent, no surprises
+
+---
+
+##### `_scan_instrument(data_dir, instrument, output_dir, max_forward_candles, warmup_candles, trail_mult=0.5, run_id="") -> Path | None`
+
+- **Human purpose**: Given an instrument name, finds its M15 CSV in the data directory, then spawns `opportunity_scanner.py` as a subprocess. Returns the path to the produced `opportunities.jsonl` file, or `None` if the CSV is missing or the scanner fails.
+
+- **Invocation sources**: Called from `main()` in the scanning loop (line 183).
+
+- **Downstream calls**:
+  - `_run()` → `subprocess.call()` → spawns `opportunity_scanner.py`
+  - If CSV missing: logs warning, returns None. No subprocess spawned.
+
+- **Runtime flow**:
+  1. Constructs CSV path: `{data_dir}/{instrument}_M15.csv`
+  2. If CSV does not exist: log WARNING, return None
+  3. Builds command list: `python scripts/research/opportunity_scanner.py --csv <path> --instrument <name> --max-forward-candles <n> --warmup-candles <n> --output-dir <dir> --trail-mult <n> --run-id <id>`
+  4. Calls `_run(cmd)` → spawns child process
+  5. If exit code != 0: log ERROR, return None
+  6. Returns `{output_dir}/{instrument}/{run_id}/opportunities.jsonl` — assumes this file exists
+
+- **Inputs**: instrument name string, data_dir Path, output_dir Path, max_forward_candles int, warmup_candles int, trail_mult float (default 0.5), run_id string (default "")
+
+- **Outputs**: Path to opportunities.jsonl or None
+
+- **State mutations**: None in-process. Child process writes files.
+
+- **Side effects**: Spawns child process; logs WARNING or ERROR on failure
+
+- **File writes**: Only via child process
+
+- **Network/API**: Only via child process
+
+- **Subprocess usage**: YES — spawns opportunity_scanner.py
+
+- **Fallbacks**: If CSV missing → return None (caller handles). If scanner fails → return None.
+
+- **Hidden defaults**: `trail_mult=0.5` — this is forwarded to the scanner. Docstring comment says "0.5R trail populates all 4 Gaussian classes"
+
+- **Failure modes**:
+  - Assumes `{output_dir}/{instrument}/{run_id}/opportunities.jsonl` exists after successful scanner — if scanner exits 0 but doesn't produce the expected file, caller gets a Path that doesn't exist (handled in main with `.exists()` check at line 189)
+  - No timeout on subprocess — if opportunity_scanner.py hangs, this hangs too
+
+- **Determinism**: Deterministic given same CSV and parameters (scanner is deterministic if no randomness in its logic)
+
+- **Corruption risks**: None from this function
+
+- **Trust level**: CANONICAL
+
+---
+
+##### `_merge_logs(paths: list[Path], merged_path: Path) -> Path`
+
+- **Human purpose**: Concatenates multiple JSONL files into one merged file. Used to produce an all-instrument log for retrospective analysis. Each instrument's opportunities.jsonl content is simply copied sequentially into one file.
+
+- **Invocation sources**: Called from `main()` at line 234 (per-instrument path) and line 239 (legacy path).
+
+- **Downstream calls**: `shutil.copyfileobj()` — standard library file copy
+
+- **Runtime flow**:
+  1. Creates parent directory of merged_path
+  2. Opens merged_path for writing
+  3. For each path in input list: opens it for reading, copies content to output
+  4. Returns merged_path
+
+- **Inputs**: `paths` — list of Path objects to concatenate; `merged_path` — destination Path
+
+- **Outputs**: The merged_path that was written to
+
+- **State mutations**: Creates directory and writes file
+
+- **Side effects**: File system writes; if output file already exists, it's overwritten
+
+- **File writes**: Writes merged_path with concatenated content of all input files
+
+- **Network/API**: None
+
+- **Subprocess usage**: None
+
+- **Fallbacks**: None — if any input file can't be opened, the exception propagates
+
+- **Hidden defaults**: Creates parent directory with `parents=True, exist_ok=True` — silently allows preexisting directories
+
+- **Failure modes**: If any input path doesn't exist or is not readable, `open()` will raise `FileNotFoundError` or `PermissionError`
+
+- **Determinism**: Deterministic. Same input paths → same output bytes.
+
+- **Corruption risks**: If an input JSONL file doesn't end with a newline, records from the next file will be appended on the same line, creating a malformed JSONL. This is a corruption risk.
+
+- **Trust level**: CANONICAL but with the JSONL-corruption edge case noted
+
+---
+
+##### `_compress(opp_path: Path, summary_path: Path | None, instrument: str = "") -> int`
+
+- **Human purpose**: Spawns `compress_logs_for_llm.py` as a subprocess to compress a JSONL opportunity log into an LLM-ready summary. Optionally specifies output path and instrument name.
+
+- **Invocation sources**: Called from `main()` at line 206 (per-instrument path) and line 243 (legacy path).
+
+- **Downstream calls**: `_run()` → `subprocess.call()` → spawns `scripts/analysis/compress_logs_for_llm.py`
+
+- **Runtime flow**:
+  1. Builds command: `python scripts/analysis/compress_logs_for_llm.py --logs <opp_path>`
+  2. If summary_path provided: adds `--output <summary_path>`
+  3. If instrument provided: adds `--instrument <instrument>`
+  4. Calls `_run(cmd)` → spawns child process
+  5. Returns exit code
+
+- **Inputs**: opp_path Path, summary_path Optional[Path] (default None), instrument string (default "")
+
+- **Outputs**: integer exit code from child process
+
+- **State mutations**: None in-process
+
+- **Side effects**: Spawns child process that writes compressed summary file
+
+- **File writes**: Via child process only
+
+- **Network/API**: Via child process only
+
+- **Subprocess usage**: YES — spawns compress_logs_for_llm.py
+
+- **Fallbacks**: summary_path=None → child process auto-resolves output path from JSONL run_header (per the comment at line 205). If instrument="" → no `--instrument` flag passed.
+
+- **Hidden defaults**: None
+
+- **Failure modes**: No timeout on subprocess
+
+- **Determinism**: Depends on child process
+
+- **Corruption risks**: None from this function
+
+- **Trust level**: CANONICAL
+
+---
+
+##### `_train_instrument(opp_path, instrument, version, results_dir, base_dir, extra_args) -> int`
+
+- **Human purpose**: Spawns `phase5_calibration.py --train` for a single instrument's opportunity log. The calibration report is written to `results_dir/{instrument}/p5_calibration_{version}.json`. Each instrument gets its own model file.
+
+- **Invocation sources**: Called from `main()` at line 210 (per-instrument path)
+
+- **Downstream calls**: `_run()` → `subprocess.call()` → spawns `scripts/training/phase5_calibration.py`
+
+- **Runtime flow**:
+  1. Creates `{results_dir}/{instrument}` directory (with parents)
+  2. Builds command: `python scripts/training/phase5_calibration.py --opportunities <opp_path> --version <version> --instrument <instrument> --base <base_dir> --train [extra_args]`
+  3. Calls `_run(cmd)` → spawns child process
+  4. Returns exit code
+
+- **Inputs**: opp_path Path, instrument string, version string, results_dir Path, base_dir Path, extra_args list of strings
+
+- **Outputs**: integer exit code
+
+- **State mutations**: Creates directory
+
+- **Side effects**: Creates directory; spawns child process that writes model files and calibration report
+
+- **File writes**: Via child process. Directory creation is the only direct file system mutation.
+
+- **Network/API**: Via child process only
+
+- **Subprocess usage**: YES — spawns phase5_calibration.py
+
+- **Fallbacks**: None. If directory creation fails, exception propagates.
+
+- **Hidden defaults**: base_dir = _REPO_ROOT (repo root) — phase5 uses it as root for both models/ and results/
+
+- **Failure modes**: No timeout on subprocess. If phase5_calibration.py hangs, this hangs.
+
+- **Determinism**: Depends on child process
+
+- **Corruption risks**: None from this function
+
+-
+
+ **Trust level**: CANONICAL
+
+---
+
+##### `_train_merged(merged_path, version, base_dir, extra_args) -> int`
+
+- **Human purpose**: Legacy path — spawns `phase5_calibration.py --train` on the merged (all-instrument) JSONL log. Trains ONE model for ALL instruments combined. Same as _train_instrument but without `--instrument` flag.
+
+- **Invocation sources**: Called from `main()` at line 246 (legacy/merged path)
+
+- **Downstream calls**: `_run()` → `subprocess.call()` → spawns `scripts/training/phase5_calibration.py`
+
+- **Runtime flow**:
+  1. Builds command: `python scripts/training/phase5_calibration.py --opportunities <merged_path> --version <version> --base <base_dir> --train [extra_args]`
+  2. Calls `_run(cmd)` → spawns child process
+  3. Returns exit code
+
+- **Inputs**: merged_path Path, version string, base_dir Path, extra_args list of strings
+
+- **Outputs**: integer exit code
+
+- **State mutations**: None
+
+- **Side effects**: Spawns child process that writes model files and calibration report
+
+- **File writes**: Via child process only
+
+- **Network/API**: Via child process only
+
+- **Subprocess usage**: YES — spawns phase5_calibration.py
+
+- **Fallbacks**: None
+
+- **Hidden defaults**: No `--instrument` flag — merged training has no per-instrument model
+
+- **Failure modes**: No timeout on subprocess
+
+- **Determinism**: Depends on child process
+
+- **Corruption risks**: None from this function
+
+- **Trust level**: LEGACY — explicitly marked as legacy in docstring and comments
+
+---
+
+##### `_maybe_promote(version: str) -> None`
+
+- **Human purpose**: Late-imports `core.model_registry.promote_gaussian()` and calls it with the given version string. If promotion succeeds or fails, the result is logged. If the import itself fails, the exception propagates to the caller (caught in main at line 269).
+
+- **Invocation sources**: Called from `main()` at line 268 inside the promotion loop
+
+- **Downstream calls**: `core.model_registry.promote_gaussian(version)` — module-level function that delegates to `GaussianModelRegistry.promote_gaussian(version, force=False, max_regression=0.02)`
+
+- **Runtime flow**:
+  1. Late import: `from core.model_registry import promote_gaussian`
+  2. Calls `promote_gaussian(version)` — returns `(ok: bool, reason: str)`
+  3. Logs result
+  4. If exception occurs during import or call, it propagates
+
+- **Inputs**: version string
+
+- **Outputs**: None (void function)
+
+- **State mutations**: Via model_registry — may mutate `models/registry.json` and `models/active.txt` on disk
+
+- **Side effects**: Logs to logger. May overwrite production registry files (see corruption risks below).
+
+- **File writes**: Via model_registry only — writes `models/registry.json` and potentially `models/active.txt`
+
+- **Network/API**: None
+
+- **Subprocess usage**: None
+
+- **Fallbacks**:
+  - Import failure → exception propagates (caught in main at line 269 with generic `except Exception`)
+  - The main loop at line 262-270 catches ANY exception from `_maybe_promote()` with a generic `except Exception as exc:` and logs it without aborting the pipeline. This means if `core.model_registry` import fails (wrong PYTHONPATH, missing module), the error is swallowed silently.
+
+- **Hidden defaults**: `force=False` and `max_regression=0.02` are the defaults in `promote_gaussian()`. This means:
+  - The new model's corr must be >= current_active.corr - 0.02
+  - Schema version must match
+  - corr must be >= 0.0 (GAP-3 absolute floor)
+  - None of these can be overridden since this function passes only `version`
+
+- **Failure modes**:
+  - ImportError: `src/core/` must be on `sys.path` (added at line 169 via `sys.path.insert(0, ...)`). If this fails, the exception is caught silently.
+  - Registry file not found or corrupted — handled inside model_registry
+  - No version found in registry — returns `(False, "Version {version} not in Gaussian registry")`
+
+- **Determinism**: Deterministic given same registry state and version
+
+- **Corruption risks**: 
+  - `model_registry.promote_gaussian()` writes to `models/registry.json` with atomic file-write helpers (per the source at line 420+). Risk is low.
+  - If registry.json is corrupted (manual edit, disk error), the promote will fail gracefully with False + reason.
+  - **Late import risk**: `sys.path.insert(0, str(_REPO_ROOT / "src"))` is done at line 169 — this runs BEFORE the scan loop but the import in `_maybe_promote` runs at the end. If any code between lines 169 and 262 mutates sys.path (unlikely but possible), the import silently fails and exception is caught silently.
+
+- **Trust level**: CANONICAL — wraps a well-guarded promotion function, but the silent catch-all at line 269 is a concern
+
+---
+
+##### `main(argv=None) -> int`
+
+- **Human purpose**: The pipeline entry point. Orchestrates the full train-from-opportunities workflow: parse args, scan instruments, compress logs, train per-instrument (or merged), merge logs for analysis, and optionally promote.
+
+- **Invocation sources**: Called from `if __name__ == "__main__":` at line 286-287, or imported and called programmatically
+
+- **Downstream calls**: All functions above + logging setup + sys.path modification
+
+- **Runtime flow**:
+  1. Parse command-line arguments (lines 130-162)
+  2. Set up logging (163-167)
+  3. Add `src/` to sys.path (169) — **critical for subsequent imports**
+  4. Generate run_id and version strings (171-172)
+  5. Create output directories (174-176)
+  6. **Phase 1: Scan** — iterate instruments, call `_scan_instrument()`, collect results (181-190)
+  7. If no instruments scanned → return 1 (194)
+  8. **Phase 2a (per-instrument)**: For each instrument:
+     - Compress logs via `_compress()` (line 205-207)
+     - Train via `_train_instrument()` (line 209-213)
+     - Print report path to stdout (line 226)
+     - Collect results entry (215-223)
+     - Log success/failure (224-229)
+  9. **Phase 2b**: Merge all instrument logs (232-234)
+  10. **OR Phase 2 (legacy-merged)**: Merge → compress → train once (238-256)
+  11. **Phase 3**: LLM hypertuning round-trip — STUB only, documented as manual trigger (line 259)
+  12. **Phase 4**: Optionally promote each successful result (262-270)
+  13. Print JSON summary to stdout (282)
+  14. Return 0 if all succeed, 1 if any failure (283)
+
+- **Inputs**: argv (list of strings or None for sys.argv)
+
+- **Outputs**: Exit code (0 = success, 1 = any failure)
+
+- **State mutations via subprocesses**:
+  - `opportunity_scanner.py` → writes `{output_dir}/{instrument}/{run_id}/opportunities.jsonl`
+  - `compress_logs_for_llm.py` → writes compressed summary JSON
+  - `phase5_calibration.py` → writes model files and calibration reports
+  - `model_registry.promote_gaussian()` → may write `models/registry.json` and `models/active.txt`
+  - `_merge_logs()` → writes merged JSONL
+
+- **Side effects**: 
+  - Logs to console via logging
+  - Prints report paths to stdout (line 226)
+  - Prints final JSON summary to stdout (line 282)
+  - Modifies sys.path (line 169)
+
+- **File writes**: Direct: merged JSONL. Indirect: via all subprocesses.
+
+- **Network/API**: Via subprocesses only (scanner may fetch data)
+
+- **Subprocess usage**: YES — multiple subprocess invocations per instrument
+
+- **Fallbacks**:
+  - If compression fails: `_LOG.warning("... — continuing.")` — warning only, continues to train
+  - If training fails for one instrument: logs error, continues to next instrument (line 228-229)
+  - If promotion raises exception: caught and logged (line 269-270)
+  - **Silent fallback for missing CSV**: `_scan_instrument` returns None, main checks `.exists()` on line 189
+
+- **Hidden defaults**:
+  - Default instruments: EURUSD, GBPUSD, AUDUSD, USDJPY, EURCAD, XAUUSD, BTCUSDT, ETHUSDT (line 133-134)
+  - Default model version: `v5_auto_<YYYYMMDD>` (line 172)
+  - Default run_id: `<YYYYMMDD_HHMMSS>` (line 171)
+  - Default per-instrument: True (line 147)
+  - Default trail_mult: 0.5 (line 143)
+  - Default max_forward_candles: 40 (line 141)
+  - Default warmup_candles: 30 (line 142)
+
+- **Failure modes**:
+  - **No opportunities found** → return 1 (line 193-194)
+  - **Individual instrument failure is non-fatal** — pipeline continues with remaining instruments
+  - **sys.path modification is irreversible** — if main() is called programmatically, it pollutes the caller's import path
+  - **Print-based output** — report paths are printed to stdout at line 226, but there's no structured way to capture them other than parsing stdout
+
+- **Determinism**: Non-deterministic due to time-based run_id generation (line 171) and potential randomness in subprocesses
+
+- **Corruption risks**:
+  - **JSONL merge corruption**: If an input JSONL doesn't end with newline, the merge produces malformed JSONL (see _merge_logs)
+  - **sys.path pollution**: Permanently adds src/ to path — if caller has a different `core` module, this would shadow it
+  - **Concurrent runs**: No PID-based run isolation. Two concurrent runs with the same run_id would overwrite each other's files.
+  - **Promotion race**: If two pipeline runs complete simultaneously and both attempt promotion, `model_registry` has a threading.RLock but it's per-process — no inter-process locking on registry.json
+
+- **Trust level**: CANONICAL — production orchestrator with reasonable error handling, but notable risks in concurrent execution and JSONL merge
+
+---
+
+### 2. `scripts/update_config_hash.py`
+
+---
+
+#### FILE PURPOSE
+
+A utility script that either updates or verifies the `config_hash` field inside a production config JSON file. The hash is a SHA-256 of the `params` sub-dictionary (sorted by key). This allows detecting tampering or drift in production config parameters.
+
+#### RUNTIME ROLE
+
+Standalone CLI utility. Not imported by other modules during normal execution. Called manually or as a pre-deployment validation step:
+```
+python scripts/update_config_hash.py configs/production/v5_tuned.json          # update hash
+python scripts/update_config_hash.py configs/production/v5_tuned.json --check  # verify
+```
+
+#### CLASSES
+
+**None.**
+
+---
+
+#### FUNCTIONS
+
+##### `compute_hash(config_path: Path) -> tuple[str, dict]`
+
+- **Human purpose**: Loads a JSON config file, extracts the `params` sub-dict, serializes it sorted by key, and computes SHA-256 hex digest. Returns the hash and the full loaded data dict.
+
+- **Invocation sources**: Called by `update_hash()` and `check_hash()`
+
+- **Downstream calls**: `json.load()`, `json.dumps()`, `hashlib.sha256()`
+
+- **Runtime flow**:
+  1. Open and parse JSON file
+  2. Extract `data["params"]` — if key missing, `.get()` returns `{}` (empty dict)
+  3. Serialize params with `sort_keys=True` (canonical JSON)
+  4. Compute SHA-256 hex digest
+  5. Return (hash_string, full_data_dict)
+
+- **Inputs**: config_path (Path)
+
+- **Outputs**: (hash_string, data_dict) tuple
+
+- **State mutations**: None (read-only)
+
+- **Side effects**: None
+
+- **File writes**: None
+
+- **Network/API**: None
+
+- **Subprocess usage**: None
+
+- **Fallbacks**: If `params` key doesn't exist, `.get("params", {})` returns empty dict. The hash of an empty JSON object `{}` is a valid, reproducible hash.
+
+- **Hidden defaults**: None
+
+- **Failure modes**: 
+  - File not found → caller handles
+  - Invalid JSON → `json.load()` raises `json.JSONDecodeError`
+  - If `params` contains non-serializable values (unlikely for JSON), `json.dumps()` raises
+
+- **Determinism**: Deterministic — sorted keys guarantee identical output for identical input
+
+- **Corruption risks**: None
+
+- **Trust level**: CANONICAL
+
+---
+
+##### `update_hash(config_path: Path, dry_run: bool = False) -> bool`
+
+- **Human purpose**: Computes the expected hash for a config file. If the stored hash matches, reports success. If not, either updates the file in-place (writing the new hash) or (with --dry-run) reports what would change.
+
+- **Invocation sources**: Called from `if __name__ == "__main__":` at line 61
+
+- **Downstream calls**: `compute_hash()` → `json.load/json.dumps/hashlib`
+
+- **Runtime flow**:
+  1. Call `compute_hash()` → get new_hash + data
+  2. Get old_hash from `data.get("config_hash")` — returns None if key missing
+  3. If old_hash == new_hash → print ✅, return True (no-op)
+  4. If dry_run → print what would change, return False
+  5. Set `data["config_hash"] = new_hash`
+  6. Write entire JSON back to file with `indent=2`
+  7. Print ✅ with old and new hashes
+  8. Return True
+
+- **Inputs**: config_path (Path), dry_run (bool, default False)
+
+- **Outputs**: bool (True = hash matches or updated, False = dry_run and would change)
+
+- **State mutations**: Overwrites the config JSON file with updated config_hash field
+
+- **Side effects**: Prints to stdout; overwrites file in-place
+
+- **File writes**: YES — overwrites the config file with `json.dump(data, f, indent=2)`
+
+- **Network/API**: None
+
+- **Subprocess usage**: None
+
+- **Fallbacks**: If `config_hash` key was missing from JSON, `data.get("config_hash")` returns None. Comparison `old_hash == new_hash` will be `None == "<hex>"` which is False, so it always updates.
+
+- **Hidden defaults**: `indent=2` on JSON dump — changes file formatting if original used different indentation
+
+- **Failure modes**:
+  - File write may fail due to permissions → `OSError`
+  - **Overwrite is non-atomic** — if the write is interrupted (crash, power loss), the config file may be truncated or contain partial data. Config corruption risk.
+  - If `params` key was missing, `compute_hash` hashes `{}` and writes that hash. Next time `params` is added, the hash won't match until re-computed.
+  - **Format destruction**: Read-modify-write uses Python's `json.dump` with `indent=2`. If the original file had custom formatting (different indentation, trailing commas, comments — though JSON doesn't support comments), the formatting is destroyed.
+
+- **Determinism**: Deterministic given same file content
+
+- **Corruption risks**:
+  - **HIGH**: Non-atomic write to config file. If power loss occurs between opening for write and completing the write, the config file is corrupted. This could deploy a corrupted config to production.
+  - **MODERATE**: Formatting change may cause diffs in version control, triggering false-positive change detection in CI/CD.
+  - **LOW**: Writing config_hash changes the file content, which changes the hash of the file itself (but the hash covers only `params`, not the top-level `config_hash` field). This is correct behavior.
+
+- **Trust level**: DANGEROUS (for production use) — non-atomic write to production config files. Should use atomic write (write to temp file, then os.rename).
+
+---
+
+##### `check_hash(config_path: Path) -> bool`
+
+- **Human purpose**: Read-only verification. Computes the expected hash and compares to stored hash. Prints ✅ or ❌ accordingly. Returns True if hash matches, False if not.
+
+- **Invocation sources**: Called from `if __name__ == "__main__":` at line 59
+
+- **Downstream calls**: `compute_hash()` → `json.load/json.dumps/hashlib`
+
+- **Runtime flow**:
+  1. Call `compute_hash()` → get new_hash + data
+  2. Get stored hash from `data.get("config_hash")` — returns None if key missing
+  3. Compare. Print result. Return bool.
+
+- **Inputs**: config_path (Path)
+
+- **Outputs**: bool
+
+- **State mutations**: None (read-only)
+
+- **Side effects**: Prints to stdout
+
+- **File writes**: None
+
+- **Network/API**: None
+
+- **Subprocess usage**: None
+
+- **Fallbacks**: If `config_hash` key missing → old_hash = None → comparison fails with ❌
+
+- **Hidden defaults**: None
+
+- **Failure modes**: Only file-not-found and JSON parse errors
+
+- **Determinism**: Deterministic
+
+- **Corruption risks**: None
+
+- **Trust level**: CANONICAL
+
+---
+
+### 3. `scripts/validate_integration.py`
+
+---
+
+#### FILE PURPOSE
+
+A validation harness for the "Unified Execution Spine" migration. It programmatically checks that every integration point between the key subsystems still works after refactoring. It does NOT run actual trading logic — it imports modules, runs contract validators against mock/dummy data, and reports PASS/FAIL/SKIP for each check.
+
+It exists because there's no CI pipeline (or the CI doesn't catch architectural regressions). This file is the safety net for manual pre-deployment verification.
+
+#### RUNTIME ROLE
+
+Standalone diagnostic tool. Not imported during normal execution. Manually invoked:
+```
+python scripts/validate_integration.py
+```
+
+Exit code 0 = all checks pass/skip. Exit code 1 = at least one FAIL.
+
+#### CLASSES
+
+**None.** Helper functions only.
+
+---
+
+#### FUNCTIONS
+
+##### `_pass(name, detail="")`, `_fail(name, detail="")`, `_skip(name, detail="")`
+
+- **Human purpose**: Print a structured result line (PASS/FAIL/SKIP) and append to `_results` list for summary.
+- **Invocation sources**: Called throughout the file after each check
+- **Downstream calls**: `print()`, `_results.append()`
+- **Runtime flow**: Format: `  PASS  <name> -- <detail>` or similar. Appends (status, name, detail) tuple to `_results`.
+- **Inputs**: name string, detail string (default "")
+- **Outputs**: None (void functions)
+- **State mutations**: Appends to module-global `_results` list
+- **Side effects**: Prints to stdout
+- **File writes**: None
+- **Trust level**: CANONICAL — trivially correct
+
+---
+
+##### `_section(title)`
+
+- **Human purpose**: Print a formatted section header with dashes
+- **Trust level**: CANONICAL
+
+---
+
+#### RUNTIME FLOW OF MAIN (complete execution trace)
+
+**What actually happens when this runs:**
+
+1. **Imports** (lines 16-18): `sys`, `os`, `importlib`, `traceback`, `unittest.mock`
+2. **Path setup** (lines 21-24): Resolves repo root, adds `src/` to sys.path
+3. **Section 1: Contract Layer** (lines 50-98)
+   - Imports from `core.types`: `assert_approve_before_order`, `assert_engine_runner_output`, `SpineContractError`, typed dicts
+   - **1a**: Calls `assert_approve_before_order({"decision": "REJECT"})` — expects `SpineContractError` to be raised. If not raised → FAIL.
+   - **1b**: Calls same with "APPROVE" — expects no exception. If raised → FAIL.
+   - **1c**: Calls `assert_engine_runner_output({"decision": "yes"})` — expects `SpineContractError` (invalid decision).
+   - **1d**: Calls same with "execute" and "reject" — expects no exception.
+   - **1e**: Creates a dummy `EngineRunnerOutput` typed dict — verifies imports are usable.
+   - If ANY import fails, entire section is FAIL (line 96-97).
+
+4. **Section 2: Feature Boundary** (lines 102-133)
+   - Imports `FeatureStore`, `FeatureValidationError`, `CANONICAL_FEATURES`
+   - **2a**: Calls `validate_or_raise({"body_ratio": 0.5, "atr": 0.001})` — expects `FeatureValidationError` (too few keys)
+   - **2b**: Calls with full canonical dict (all keys = 0.5, atr = 0.0005) — expects OK
+   - **2c**: Verifies `FeatureValidationError` is a subclass of `ValueError`
+   - If import fails → entire section FAIL.
+
+5. **Section 3: SpineAdapter** (lines 140-195)
+   - Defines `_MockRunner`, `_MockRunnerReject`, `_MockRunnerCrash`, `_MockRunnerCtx`
+   - **3a**: SpineAdapter with execute-mock + full features → `evaluate("EURUSD", ...)` → expects `action == "BUY"`, `decision == "execute"`, `"confidence" in result`
+   - **3b**: SpineAdapter with reject-mock → expects `action == "NO_SIGNAL"`
+   - **3c**: SpineAdapter with crash-mock (RuntimeError in run()) → expects `action == "NO_SIGNAL"` — **this verifies the EngineRunner crash is caught and converted to safe NO_SIGNAL**
+   - **3d**: SpineAdapter with context-capture mock → expects context dict contains `symbol`, `timeframe`, `session`
+   - If ANY exception (including import), section FAIL with traceback
+
+6. **Section 4: 5th Engine — Strategy Consensus** (lines 200-300)
+   - Imports `FusionEngine`, `EngineRunner`, many more
+   - **4a**: FusionEngine.compute() with 5-engine payload (crt, gaussian, zone_gate, rr, strategy_consensus) → expects `final_score` in output
+   - **4b**: Same without strategy_consensus → still produces score (disabled path)
+   - **4c**: Build a fully mocked `EngineRunner` (no actual engines, all mocked/stubbed):
+     - `_DummyEngine.compute()` returns `{"score": 0.5, "reason": "ok"}`
+     - Bitnet mock returns `{"zone": 0.5}`
+     - RR mock returns `{"score": 0.5}`
+     - Decision mock returns `{"decision": "Approved", "confidence": 0.8, "reason": "ok"}`
+     - Fusion spy captures payload
+     - Mock `crt_compute` and `run_zone_gate_engine` using `unittest.mock.patch`
+     - Calls `runner.run(features, context)` where context has `strategy_consensus_score=0.72`, `strategy_consensus_direction=1`
+     - Asserts `"strategy_consensus"` key in fusion payload with matching score/direction
+   - **This is the most complex check** — it validates that EngineRunner correctly reads strategy_consensus from context and passes it to FusionEngine
+
+7. **Section 5: Regime Injection** (lines 306-339)
+   - Imports `runtime.live_engine_hook`
+   - **5a**: Checks module-level flags `_REGIME_AVAILABLE` and `_get_regime_classifier` exist
+   - **5b**: If available, instantiates singleton via `_get_regime_classifier()`. If not, SKIP.
+   - **5c**: Reads source of `live_engine_hook` via `inspect.getsource()`, checks for `context["regime"]` and `context["fusion_weights"]` string
+   - **5d**: Checks for `context["strategy_consensus_score"]` and `context["strategy_consensus_direction"]` strings in source
+   - All checks are source-code string matching — NOT execution
+
+8. **Section 6: Journal → Collector Delegation** (lines 347-400)
+   - Imports `journal.trade_logger`
+   - **6a**: Checks `_COLLECTOR_AVAILABLE` flag exists
+   - If collector is available:
+     - Monkey-patches `Collector.log` with a spy
+     - Creates a TradeRecord with mock data
+     - Calls `TradeLogger.log(rec)`
+     - Verifies Collector.log() was called with:
+       - `kind == "trade_outcome"`
+       - `features.id == "VAL001"`
+     - Verifies primary JSONL was still written (opens temp file, checks content)
+     - Cleans up temp file
+   - If collector NOT available → SKIP
+
+9. **Section 7: Archive Integrity** (lines 408-450)
+   - Defines `ARCHIVE_MODULES` (8 deprecated modules in `src.inout.*` and `src.ui.dashboard`)
+   - Defines `GREP_TARGETS` — 5 search patterns like `"from inout"`, `"import inout"`, etc.
+   - Recursively globs all `*.py` in `src/`
+   - For each file, scans line-by-line for import patterns
+   - If any match found (and not commented out) → report LEAK + FAIL
+   - If zero matches → PASS
+
+10. **Section 8: Governance Backtest CANONICAL_FEATURES** (lines 458-480)
+    - Imports `governance.strategy_backtest` (may fail → SKIP)
+    - Reads source code via `inspect.getsource()`
+    - Checks for `"CANONICAL_FEATURES"` string, `"_row_to_features"` string, canonical-first build pattern
+    - All string matching — NOT execution
+
+11. **Section 9: pytest Test Suite** (lines 488-523)
+    - Runs actual subprocess: `pytest tests/ --ignore=tests/inout -q --tb=line --no-header`
+    - Captures output
+    - Parses summary line for pass/fail/error counts
+    - Compares against pre-existing known failures: 2 failed + 5 errors
+    - If new failures found → report FAIL and print failing test names
+    - **This is the only section that actually runs real tests**
+
+12. **Summary** (lines 529-537)
+    - Counts PASS/FAIL/SKIP
+    - Prints formatted summary
+    - `sys.exit(0)` if fails == 0, else `sys.exit(1)`
+
+#### SIDE EFFECTS
+
+- **Subprocess usage**: YES — Section 9 runs `pytest` as a subprocess (line 489-493)
+- **File writes**: Section 6 writes to a temp file (then deletes it)
+- **Network/API**: None
+- **State mutations**: Section 6 monkey-patches `Collector.log` — but only during that check, patches are not restored (each check block has try/except but no teardown)
+- **sys.path mutated**: Adds `src/` to path at import time (line 23-24)
+
+#### HIDDEN DEFAULTS
+
+- Section 9 hardcodes `PREEXISTING_FAIL = 2` and `PREEXISTING_ERR = 5`. These numbers will drift as the test suite changes. If someone fixes the 2 pre-existing failures, this check will start reporting "NEW regressions detected" until these constants are updated.
+- Section 9 regex `r"(\d+) failed"` will match "0 failed" but also match "10 failed" — the regex matches all contiguous digits, so `n_fail` is correct. But if the summary line contains a number in a different context (e.g., test file line number), it could be misread.
+
+#### FAILURE MODES
+
+- **False positives**: Section 5c/5d/8 check for string presence in source code. If the relevant code is refactored to use a different variable name or structure, these checks will FAIL even if the logic is correct.
+- **Section 6**: No mock teardown. The monkey-patch of `Collector.log` persists after the check. If other code runs later (it doesn't in this script, but if imported), the patch would leak.
+- **Section 9**: Subprocess runs `pytest` with no timeout (`~20s` estimate in comment). If a test hangs, this script hangs.
+- **Section 9**: `capture_output=True` captures all output. If pytest produces more output than memory, this could fail (unlikely for typical test suites).
+- **Section 7**: File scanning with `errors="ignore"` — if a file has encoding issues, those lines are silently skipped. A skipped line might have contained an archived import.
+
+#### DETERMINISM
+
+Depends on test suite state and module presence:
+- Section 1, 2, 3, 4: Deterministic (pure mock tests)
+- Section 5: Depends on whether `regime` module is installed
+- Section 6: Deterministic given collector module presence
+- Section 7: Deterministic given current file contents
+- Section 8: Depends on whether strategy_backtest module exists
+- Section 9: Non-deterministic — depends on test suite state and any randomness in tests
+
+#### CORRUPTION RISKS
+
+- **None** — this script is read-only except for Section 6's temp file (which is cleaned up)
+- **BUT** Section 9 runs the full pytest suite, which may itself have side effects (writing to disk, network calls, etc.)
+
+#### TRUST LEVEL: CANONICAL
+
+---
+
+## DEPENDENCY TRACE — Boundary Report
+
+Per the dependency rule, I traced:
+- `auto_train_from_opportunities._maybe_promote()` → `core.model_registry.promote_gaussian(version)`
+  - This takes `version` only (no override params). Further tracing into `GaussianModelRegistry.promote_gaussian()` would show schema-version check, GAP-3 absolute floor (corr >= 0.0), regression guard (max 0.02 drop), and atomic file writes to `models/registry.json`. These are the immediate runtime limits.
+- `validate_integration.py` → imports `core.types`, `core.feature_store`, `scanner.spine_adapter`, `core.fusion_engine`, `core.engine_runner`, `runtime.live_engine_hook`, `journal.trade_logger`, `governance.strategy_backtest`
+  - Further tracing into any of these would exceed the immediate execution relevance boundary. Each is verified to be importable and pass contract checks at the interface level.
+
+**Further tracing enters the core governance/replay subsystem and exceeds immediate runtime relevance boundary.**
+
+---
+
+## TRUST CLASSIFICATION
+
+| Component | Classification | Source Proof |
+|-----------|---------------|-------------|
+| `auto_train_from_opportunities.py` (entire file) | **LIVE** | Acts as nightly training orchestrator. Docstring says "Nightly Pipeline-B orchestrator" and "Designed to be called from Task Scheduler / cron". `--promote-if-approved` flag indicates active production use. |
+| `_maybe_promote()` | **LIVE** | Wired to `--promote-if-approved` flag. Actively mutates `models/registry.json` and `models/active.txt`. |
+| `_train_instrument()` / `_train_merged()` | **LIVE** (per-instrument path), **LEGACY** (merged path) | Per-instrument is default (`--per-instrument` default True). Merged path explicitly marked as "legacy behaviour" in help text. |
+| `update_config_hash.py` (entire file) | **LIVE** | Config hash verification is a production integrity check. The `update_hash()` function is a one-time fix tool; `check_hash()` is used for validation. |
+| `update_hash()` | **DANGEROUS** | Non-atomic write to production config file. If interrupted, config is corrupted. Should use atomic write pattern. |
+| `validate_integration.py` (entire file) | **EXPERIMENTAL** | It's a manual post-migration validation script, not part of any automated pipeline. Docstring says "Validates every integration point introduced in the Unified Execution Spine migration." — a one-time or occasional use. |
+| Section 9 of validate_integration | **PARTIAL** | Hardcodes `PREEXISTING_FAIL=2` and `PREEXISTING_ERR=5` — these will produce false-positive regressions as soon as those pre-existing failures are fixed. Requires manual maintenance. |
+
+---
+
+## FAIL-FAST / FALLBACK AUDIT
+
+| Location | Type | What Happens | Corruption Risk |
+|----------|------|-------------|-----------------|
+| auto_train, line 207 | **Warning+Continue** | `_LOG.warning("Log compression failed for %s — continuing.", instr)` — compression failure is silently skipped | None. The training step still runs on the raw (uncompressed) JSONL. If phase5 needs the compressed summary, it might get stale or missing data → governance contamination possible if phase5 reads the wrong file. |
+| auto_train, line 207 | **Optional Coercion** | `_compress(opp_path, None, ...)` — summary_path=None, docstring says "output auto-resolves from JSONL run_header" | If the child process can't auto-resolve, it may fail silently or write to an unexpected path. |
+| auto_train, line 244 | **Warning+Continue** | `_LOG.warning("Log compression failed — continuing without summary.")` — same pattern in merged path | Same risk |
+| auto_train, line 269 | **Swallowed Exception** | `except Exception as exc: _LOG.error(...)` — ANY exception from `_maybe_promote()` is caught and logged | **IMPORT: If `core.model_registry.promote_gaussian` can't import (e.g., bad PYTHONPATH), the error is silently swallowed and promotion doesn't happen. No one notices.** |
+| auto_train, line 169 | **Side Effect** | `sys.path.insert(0, ...)` — permanent sys.path mutation | If called programmatically from a different context, this shadows other modules. |
+| auto_train, line 194 | **Fail-Fast** | Returns 1 if no instruments scanned | Correct fail-fast behavior |
+| auto_train, line 228 | **Warning+Continue** | `_LOG.error("✗ %s: phase5 failed... continuing other instruments")` — single instrument training failure continues pipeline | Intentional: other instruments still get trained. But results summary will show the failure. |
+| update_hash, line 33-35 | **Non-Atomic Write** | Writes directly to config file with `json.dump(data, f, indent=2)` | **HIGH**: Production config corruption if write is interrupted. Use temp-file + rename pattern. |
+| update_hash, line 20 | **Silent Fallback** | `params = data.get("params", {})` — if no `params` key in config, hashes empty dict | Low: hash of `{}` is valid but may produce false mismatch if config is later updated. |
+| validate_integration, line 178 | **Warning+Continue** | EngineRunner crash is caught and returns NO_SIGNAL — this is the INTENDED behavior (graceful degradation) | Low: this is the designed fallback, not a bug. |
+| validate_integration, line 506 | **Hardcoded Constants** | `PREEXISTING_FAIL = 2`, `PREEXISTING_ERR = 5` | **MEDIUM**: These numbers must be manually updated when test suite maintenance happens. If someone fixes 2 failures, the checker reports false-positive regressions. |
+| validate_integration, line 437 | **Silent Skip** | `with open(pyfile, ..., errors="ignore")` — files with encoding issues get silently truncated lines | **LOW**: An archived import on a garbled line would be missed. |
+| validate_integration, line 439 | **Swallowed Exception** | `except Exception: pass` — any error during file scanning in Section 7 is silently swallowed | **LOW**: Failed file reads are skipped, reducing scan coverage. |
+| validate_integration, line 286-289 | **Mock Patch Without Teardown** | `mock.patch.object` used as context manager → properly torn down | None (correctly scoped) |
+| validate_integration, line 347-399 | **Mock Patch Side Effects Leak** | Monkey-patches `Collector.log` inside try/except but uses `side_effect` which is scoped to the patch object | Low: `with mock.patch.object` is scoped correctly here. |
+
+---
+
+## SUMMARY OF "WHAT ACTUALLY HAPPENS WHEN THIS RUNS"
+
+### `auto_train_from_opportunities.py`
+
+**Nightly, via cron/Task Scheduler:**
+1. The script figures out repo root and adds `src/` to import path
+2. Generates a timestamp-based run ID and version string
+3. For each of 8 default instruments (EURUSD, GBPUSD, AUDUSD, USDJPY, EURCAD, XAUUSD, BTCUSDT, ETHUSDT):
+   - Looks for `{data_dir}/{instrument}_M15.csv`
+   - If found: spawns `opportunity_scanner.py` as a subprocess, waiting for it to complete
+   - If scanner exits with error → skip this instrument, log error, continue to next
+   - If scanner succeeds: compresses logs via `compress_logs_for_llm.py` subprocess
+   - If compression fails → log warning, continue anyway
+   - Then spawns `phase5_calibration.py --train` subprocess for this instrument
+   - Training produces a per-instrument model file and calibration report
+   - Prints the report path to stdout
+4. Merges all per-instrument JSONL logs into one `opportunities_merged_{version}.jsonl` — for retrospective analysis only
+5. If `--promote-if-approved` is set (and `--no-promote` is not set):
+   - For each successful training result: calls `promote_gaussian(version)` which checks schema version, GAP-3 quality floor (corr >= 0), regression margin (max -0.02)
+   - If promotion is blocked (any guard fails), logs the reason and continues
+   - If promotion exception (ImportError etc.), it's silently caught and logged — promotion silently skipped
+6. Prints final JSON summary to stdout with all results
+7. Exits 0 if all succeeded, 1 if any failed
+
+**Runtime risk**: The non-atomic sys.path mutation, silent catch on promotion failure, and JSONL merge without newline check are the main concerns.
+
+### `update_config_hash.py`
+
+**On-demand, manually:**
+1. Loads a JSON config file
+2. Extracts the `params` sub-dictionary
+3. Computes SHA-256 of canonical JSON (sorted keys)
+4. In `--check` mode: compares to stored `config_hash`, prints PASS/FAIL, exits 0/1
+5. In update mode: writes the new hash back to the same file using `json.dump` with indent=2
+
+**Runtime risk**: The write is non-atomic. If power loss or crash occurs between truncation and write completion, the config file is destroyed. This is a production-critical file. Should use write-to-temp-then-rename pattern.
+
+### `validate_integration.py`
+
+**On-demand, manually (post-migration or pre-deployment):**
+1. Runs 9 sections of checks against mocked/dummy data:
+   - Contract validators reject bad decisions (REJECT, "yes") and accept good ones (APPROVE, execute, reject)
+   - FeatureStore validates or rejects sparse vs full feature dicts
+   - SpineAdapter correctly maps execute→BUY, reject→NO_SIGNAL, and survives engine crashes
+   - FusionEngine handles 5-engine payload (including strategy_consensus) and falls back gracefully when absent
+   - EngineRunner correctly injects strategy_consensus from context into FusionEngine payload
+   - Regime injection flags and context keys exist in live_engine_hook source code
+   - Journal → Collector delegation works end-to-end (monkey-patched)
+   - No archived modules (inout, ui.dashboard) are imported in src/
+   - Governance backtest references CANONICAL_FEATURES (string matching)
+   - Existing pytest suite runs with no new regressions beyond hardcoded known failures
+2. Prints PASS/FAIL/SKIP for each check
+3. Prints summary
+4. Exits 0 if no failures, 1 if any
+
+**Runtime risk**: The hardcoded `PREEXISTING_FAIL=2` and `PREEXISTING_ERR=5` will produce false positives when the pre-existing test issues are fixed. Section 9 also runs the full test suite as a subprocess with no timeout.
