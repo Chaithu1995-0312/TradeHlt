@@ -40,6 +40,28 @@ REACHABLE_UNSEEN / N_A. `deal_coverage.json` / `coverage_gaps.json` gained `acco
 `reachable`, `classification`, `reachable_unseen`, `n_a`. Report-format change only; the
 account-agnostic functions stay backward-compatible (`reachable=None`).
 
+## 2026-06-25 — Broker Semantics Verified: netting reality validation (v0.4.0, ZERO kernel change)
+**What:** Placed tiny demo trades on a second MT5 demo account — **NETTING** (`108830159`,
+`margin_mode=0`), the first non-hedging broker the kernel has seen — exercising normal / partial /
+pyramid / **INOUT reversal** / reopen, then rebuilt + verified + scored coverage in an **isolated
+netting root** (`mt5_analytics/{artifacts,reports,audit}/netting/`, gitignored). **Finding: the
+FROZEN reconstruction kernel is broker-independent — `verify` PASS with ZERO kernel change.**
+- INOUT keystone: `BUY 0.01 → SELL 0.02 → BUY 0.01` netted to **`position_id=9270517338` → 2
+  episodes** (long 0.01 then flipped short 0.01) at the `DEAL_ENTRY_INOUT` boundary — same
+  position_id, distinct episode_ids, correct directions/VWAP/net_pnl. `verify`: 6 position_ids → 7
+  episodes (the +1 is the INOUT split), `net_pnl_diff=0.0`, `volume_diff=0.0`, manifests OK.
+- Coverage: `inout_reversals` + `pyramids` + `partial_closes` → **OBSERVED** (netting Silver 3/5);
+  `reopens` → **REACHABLE_UNSEEN** — MT5 netting assigns a **fresh `position_id` on re-open** (each
+  reopen leg got a new id 9270518727 / 9270519445), so a reused-id "reopen" never materialized. An
+  honest reality finding, not a defect.
+
+**One coverage-layer fix (NOT the kernel):** `broker_semantics.json` `broker_key` now includes
+`|mm{margin_mode}` (was `company|server` only). Both demo accounts share
+`MetaQuotes Ltd.|MetaQuotes-Demo`, so in a shared root the monotonic OR-merge would have falsely
+attributed netting-only INOUT/pyramid capability to the hedging account. Keying by margin_mode keeps
+mm2 (hedging) and mm0 (netting) as distinct capability rows. No stored-artifact *meaning* change for
+existing hedging runs (new key path) — but a fresh broker_semantics.json is written going forward.
+
 ## 2026-06-24 — Phase 9A: post-close swap captured; swap is FOLDED (coverage-layer only)
 Held a 0.01 EURUSD demo position ~51.6h across rollovers (swap accrued −0.02). **Finding:**
 MetaQuotes-Demo **folds swap into the close deal** (the OUT deal has `volume>0` AND `swap≠0`) — NOT

@@ -144,6 +144,18 @@ def _pyramid(symbol, lot, hold):
         _close_position(pos)
 
 
+def _inout(symbol, lot, hold):
+    # netting reversal: BUY lot, then SELL 2*lot -> nets to SHORT lot via a single
+    # DEAL_ENTRY_INOUT (close long + open short); then close the resulting short.
+    if not _send(symbol, mt5.ORDER_TYPE_BUY, lot):
+        return
+    time.sleep(hold)
+    _send(symbol, mt5.ORDER_TYPE_SELL, lot * 2)
+    time.sleep(hold)
+    for pos in [p for p in (mt5.positions_get(symbol=symbol) or []) if p.magic == MAGIC]:
+        _close_position(pos)
+
+
 def _close_all_by_magic(symbol) -> int:
     """L4 cleanup — close every still-open MAGIC position. Returns remaining count (L5)."""
     for pos in [p for p in (mt5.positions_get(symbol=symbol) or []) if p.magic == MAGIC]:
@@ -156,7 +168,8 @@ def _close_all_by_magic(symbol) -> int:
 _PLAN = {
     "normal": "N x open->close round-trips",
     "partial": "open 2*lot -> close lot -> close lot (partial scale-out)",
-    "pyramid": "open lot -> open lot -> close all (scale-in)",
+    "pyramid": "open lot -> open lot -> close all (scale-in; netting aggregates to one position)",
+    "inout": "BUY lot -> SELL 2*lot (netting reversal -> DEAL_ENTRY_INOUT) -> close short",
     "reopen": "open->close, then open->close again (same symbol)",
     "hold": "open ONE lot and LEAVE IT OPEN (overnight swap capture; no cleanup)",
     "close": "close all MAGIC-tagged positions (run after an overnight 'hold')",
@@ -173,7 +186,8 @@ def main(argv=None) -> int:
     ap.add_argument("--patterns", default="normal,partial,pyramid,reopen")
     ap.add_argument("--max-trades", type=int, default=MAX_TRADES_DEFAULT)
     ap.add_argument("--account-hash", default=None, help="required with --confirm (L2 pin)")
-    ap.add_argument("--require-hedging", action="store_true")
+    ap.add_argument("--require-margin", choices=["hedging", "netting"], default=None,
+                    help="abort unless the account's margin mode matches (L2)")
     ap.add_argument("--confirm", action="store_true", help="REQUIRED to place real orders")
     args = ap.parse_args(argv)
     _MAX_TRADES = args.max_trades
@@ -213,19 +227,21 @@ def main(argv=None) -> int:
            f"DEMO margin_mode={info.margin_mode}")
         _p(f"account_fingerprint(sha256 company|server|login)= {fp}")
 
+        _margin_name = {0: "netting", 1: "exchange", 2: "hedging"}.get(info.margin_mode, "?")
         if not args.confirm:
             _p("\nDRY-RUN (no --confirm): no orders sent. To trade, re-run with:")
-            _p(f"  --confirm --account-hash {fp}"
-               + (" --require-hedging" if info.margin_mode == 2 else ""))
+            _p(f"  --confirm --account-hash {fp} --require-margin {_margin_name}")
             return 0
 
-        # L2 — fingerprint pin + hedging gate (only when actually trading)
+        # L2 — fingerprint pin + margin gate (only when actually trading)
         if args.account_hash != fp:
             _p(f"REFUSED (L2 fingerprint): live={fp} != --account-hash={args.account_hash}")
             return 2
-        if args.require_hedging and info.margin_mode != mt5.ACCOUNT_MARGIN_MODE_RETAIL_HEDGING:
-            _p(f"REFUSED (L2 hedging): margin_mode={info.margin_mode} != "
-               f"HEDGING({mt5.ACCOUNT_MARGIN_MODE_RETAIL_HEDGING})")
+        _want = {"hedging": mt5.ACCOUNT_MARGIN_MODE_RETAIL_HEDGING,
+                 "netting": mt5.ACCOUNT_MARGIN_MODE_RETAIL_NETTING}
+        if args.require_margin and info.margin_mode != _want[args.require_margin]:
+            _p(f"REFUSED (L2 margin): margin_mode={info.margin_mode} ({_margin_name}) != "
+               f"--require-margin {args.require_margin}")
             return 2
         if mt5.symbol_info(args.symbol) is None:
             _p(f"REFUSED: unknown symbol {args.symbol}")
@@ -242,6 +258,8 @@ def main(argv=None) -> int:
                 _partial_close(args.symbol, args.lot, args.hold_seconds)
             elif pat == "pyramid":
                 _pyramid(args.symbol, args.lot, args.hold_seconds)
+            elif pat == "inout":
+                _inout(args.symbol, args.lot, args.hold_seconds)
             elif pat == "reopen":
                 _open_and_close(args.symbol, "buy", args.lot, args.hold_seconds)
                 _open_and_close(args.symbol, "buy", args.lot, args.hold_seconds)

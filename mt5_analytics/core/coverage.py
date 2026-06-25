@@ -96,7 +96,10 @@ def run(date_from: _dt.datetime, date_to: _dt.datetime, *, cfg: "dict | None" = 
     (reality / "deal_coverage.md").write_text(
         to_markdown(counts, reachable), encoding="utf-8")
 
-    broker_key = f"{info.get('company', '?')}|{info.get('server', '?')}"
+    # Key by margin_mode too: a single broker (same company|server) exposes DIFFERENT
+    # reachable semantics per account type (netting mm0 unlocks pyramid/INOUT/reopen that
+    # hedging mm2 cannot emit). Merging them would falsely claim hedging observed INOUT.
+    broker_key = f"{info.get('company', '?')}|{info.get('server', '?')}|mm{margin_mode}"
     bs_path = reality / "broker_semantics.json"
     merged = _merge_broker_semantics(bs_path, broker_key, counts)
     merged[broker_key]["_margin_mode"] = margin_mode   # account context (not a pattern)
