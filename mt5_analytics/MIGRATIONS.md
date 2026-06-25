@@ -44,8 +44,13 @@ account-agnostic functions stay backward-compatible (`reachable=None`).
 **What:** Placed tiny demo trades on a second MT5 demo account — **NETTING** (`108830159`,
 `margin_mode=0`), the first non-hedging broker the kernel has seen — exercising normal / partial /
 pyramid / **INOUT reversal** / reopen, then rebuilt + verified + scored coverage in an **isolated
-netting root** (`mt5_analytics/{artifacts,reports,audit}/netting/`, gitignored). **Finding: the
-FROZEN reconstruction kernel is broker-independent — `verify` PASS with ZERO kernel change.**
+netting root** (`mt5_analytics/{artifacts,reports,audit}/netting/`, gitignored).
+**Finding (SCOPED — do NOT over-generalize): the FROZEN reconstruction kernel is broker-independent
+ACROSS MT5 hedging↔netting margin modes — `verify` PASS with ZERO kernel change.** First non-hedging
+broker observed, `MetaQuotes-Demo` only. NOT "broker-independent forever": commission-bearing deals,
+a swap+partial COMBINED lifecycle, exchange-margin (mm1), and non-MetaQuotes brokers remain
+**UNVALIDATED**. Evidence ordering = real broker events > synthetic fixtures > unit tests > static
+reasoning; this advances the margin_mode axis only.
 - INOUT keystone: `BUY 0.01 → SELL 0.02 → BUY 0.01` netted to **`position_id=9270517338` → 2
   episodes** (long 0.01 then flipped short 0.01) at the `DEAL_ENTRY_INOUT` boundary — same
   position_id, distinct episode_ids, correct directions/VWAP/net_pnl. `verify`: 6 position_ids → 7
