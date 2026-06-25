@@ -188,6 +188,10 @@ def main(argv=None) -> int:
     ap.add_argument("--account-hash", default=None, help="required with --confirm (L2 pin)")
     ap.add_argument("--require-margin", choices=["hedging", "netting"], default=None,
                     help="abort unless the account's margin mode matches (L2)")
+    ap.add_argument("--extra-allow-symbol", action="append", default=[],
+                    help="explicitly opt in a symbol outside the base allowlist (e.g. an "
+                         "ECN-suffixed EURUSD.r); repeatable or comma-separated. Fails closed: "
+                         "only opted-in symbols are added; DEMO/lot-cap/fingerprint gates unchanged")
     ap.add_argument("--confirm", action="store_true", help="REQUIRED to place real orders")
     args = ap.parse_args(argv)
     _MAX_TRADES = args.max_trades
@@ -196,8 +200,12 @@ def main(argv=None) -> int:
     if args.lot > LOT_CAP:
         _p(f"REFUSED: --lot {args.lot} exceeds hard cap {LOT_CAP}")
         return 2
-    if args.symbol not in SYMBOL_ALLOWLIST:
-        _p(f"REFUSED: symbol {args.symbol} not in allowlist {sorted(SYMBOL_ALLOWLIST)}")
+    extra = {s.strip() for item in args.extra_allow_symbol
+             for s in item.split(",") if s.strip()}
+    allowlist = SYMBOL_ALLOWLIST | extra   # base set intact; only explicit opt-ins added
+    if args.symbol not in allowlist:
+        _p(f"REFUSED: symbol {args.symbol} not in allowlist {sorted(allowlist)} "
+           f"(opt in explicitly with: --extra-allow-symbol {args.symbol})")
         return 2
     patterns = [p.strip() for p in args.patterns.split(",") if p.strip()]
 
