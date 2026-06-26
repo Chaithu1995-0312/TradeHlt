@@ -40,6 +40,29 @@ REACHABLE_UNSEEN / N_A. `deal_coverage.json` / `coverage_gaps.json` gained `acco
 `reachable`, `classification`, `reachable_unseen`, `n_a`. Report-format change only; the
 account-agnostic functions stay backward-compatible (`reachable=None`).
 
+## 2026-06-26 — Commission Semantics Verified: IC Markets Raw (v0.5.0, ZERO kernel change)
+**What:** First **commission-charging** and first **non-MetaQuotes** broker — IC Markets
+(`Raw Trading Ltd` / `ICMarketsSC-Demo` / login `52935582`, margin_mode=2 hedging). Placed tiny demo
+`normal`+`partial` trades; rebuilt+verified+scored coverage in an isolated `ecn/` root.
+**Gate 0 PASS — `commission_charged=True`** (Σ commission −0.23 across 5 deals). **`verify` PASS,
+ZERO kernel change.**
+- **Form = Case C (split entry+exit, folded onto `volume>0` trade deals)** — every trade deal carries
+  commission (BUY entry −0.04, SELL exit −0.04; the 0.02 entry −0.07 + two 0.01 exits −0.04 each).
+  **NOT a separate zero-volume commission deal (Case B).** The kernel's per-deal
+  `net_pnl = Σ(profit+swap+commission)` summed it correctly: episodes `pid 1730353606 net_pnl −0.08`
+  (=−0.04−0.04) and `pid 1730353681 net_pnl −0.15` (=−0.07−0.04−0.04); `verify` `net_pnl_diff ≈ 2.8e-17`
+  (≈0), `volume_diff 0.0`, manifests OK, 2 positions → 2 episodes. The deposit deal (type=2, pid=0,
+  +200) correctly skipped by `is_position_deal`.
+- **Coverage:** `partial_closes` OBSERVED; **`separate_commission_deals` REACHABLE_UNSEEN** — commission
+  is real but *folded/split onto trade deals*, so the SEPARATE-deal reconstruction path stays
+  UNVALIDATED (honest scope: "commission folded — separate-deal form still unobserved"). Bronze 1/3.
+- **Server offset:** ICMarketsSC-Demo is also **+3** (server tick 14:33 vs UTC 11:33), so the pinned
+  `server_utc_offset_hours=3` is correct here too — no rebuild/offset change. (Process note: the only
+  hitch was a too-narrow query window — deals at 06-26 09:45 UTC fell past a 06-26 00:00 upper bound;
+  widened to 06-27. No code defect.)
+- **Gate-2 NOT triggered.** Kernel unchanged; Case B (separate commission deal) remains the only
+  unobserved commission form and the standing reopen condition for this axis.
+
 ## 2026-06-25 — Broker Semantics Verified: netting reality validation (v0.4.0, ZERO kernel change)
 **What:** Placed tiny demo trades on a second MT5 demo account — **NETTING** (`108830159`,
 `margin_mode=0`), the first non-hedging broker the kernel has seen — exercising normal / partial /
