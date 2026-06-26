@@ -108,3 +108,14 @@ def mfe_mae_points(features) -> list[tuple[float, float]]:
 def durations_minutes(features) -> list[float]:
     return [float(f["duration_minutes"]) for f in features
             if f.get("duration_minutes") is not None]
+
+
+# ── intelligence read model (v0.6.0) ────────────────────────────────────────────
+def insight_summary(features, episodes, *, min_n: int = 30):
+    """Delegate to the post-trade intelligence read model (info, not authority).
+
+    Returns the immutable `InsightReport` (exit efficiency / cost drag / risk-adjusted /
+    sufficiency-gated attribution / concentration). Imported lazily so the basic display
+    loaders above stay dependency-light."""
+    from ..analytics.insight_report import build_insight
+    return build_insight(episodes, features, min_n=min_n)

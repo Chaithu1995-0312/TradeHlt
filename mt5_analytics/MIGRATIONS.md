@@ -40,6 +40,22 @@ REACHABLE_UNSEEN / N_A. `deal_coverage.json` / `coverage_gaps.json` gained `acco
 `reachable`, `classification`, `reachable_unseen`, `n_a`. Report-format change only; the
 account-agnostic functions stay backward-compatible (`reachable=None`).
 
+## 2026-06-26 — Post-Trade Intelligence Layer (v0.6.0, NO rebuild / NO schema change)
+**What:** First economically-meaningful *consumer* of the validated truth engine — a new
+`mt5_analytics/analytics/` pure READ MODEL (`insight_report.py`) composing
+`src/analytics/metrics_oracle` primitives over persisted episodes+features into an immutable
+`InsightReport`: exit efficiency (capture/giveback), adverse efficiency, **cost drag**
+(Σcommission/Σswap, gross vs net expectancy — straight off `PositionEpisode.{gross_profit,commission,
+swap,net_pnl}`, no schema bump), risk-adjusted (sharpe/recovery/DD/percentiles), **sufficiency-gated**
+attribution (`session×regime×duration`, each a self-describing `AttributionBucket(n,min_n,status,
+expectancy,capture_ratio)` — below `min_n=30` it makes NO claim, `expectancy=None`), and concentration
+incl. **Herfindahl `effective_n=1/Σpᵢ²`**. Wired via `ui/dashboard_data.insight_summary`. 11 tests
+(85 total). **Read-only: alters NO stored artifact, requires NO rebuild, bumps NO schema.** Doctrine:
+information-NOT-authority (§6.5) — `MT5→truth→features→insight→HUMAN`, never `insight→decisions`;
+`analytics/` may NOT grow a recommendation/optimization module. First real-data run (ecn/, n=2):
+correctly INSUFFICIENT, but surfaced the real cost-drag fact (commission −0.23 → net expectancy
+−0.115/trade vs gross 0.0).
+
 ## 2026-06-26 — Commission Semantics Verified: IC Markets Raw (v0.5.0, ZERO kernel change)
 **What:** First **commission-charging** and first **non-MetaQuotes** broker — IC Markets
 (`Raw Trading Ltd` / `ICMarketsSC-Demo` / login `52935582`, margin_mode=2 hedging). Placed tiny demo
