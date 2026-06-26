@@ -383,3 +383,13 @@ Belief Update / ROI / Goal: Goal: convert validated execution truth into economi
 Open Questions: Will future ML/clustering need realized_r_net as a first-class feature (v0.7+ schema bump)? Optional Streamlit card not built.
 Next Step: None required — v0.6.0 capability-complete. Optional: Streamlit card (aggressive INSUFFICIENT rendering); or pay down the due consolidation debt (session-log/findings/memory). Real insight accrues when real (non-demo) trade history exists.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-06-26
+Topic: v0.6.0 marked SHIPPED/AT-REST; architectural transition recorded; bottleneck reframed to N (real volume)
+Decision/Output: Recorded v0.6.0 (commit 2ae1244) as capability-complete/at-rest in both plan copies (working + tracked docs/implementation_plan). Captured the architectural transition (v0.1–v0.5 = truthfulness "was reality reconstructed correctly?"; v0.6 = economic meaning "what does reality imply?") and the demonstrating result (gross 0.0 + commission −0.23 → net expectancy −0.115/trade — a statement only the intelligence layer can make). Locked the read-model boundary as a PERMANENT structural invariant (MT5→truth→features→insight→HUMAN, never insight→decisions; no recommendation/optimization module). Listed the optional non-foundational v0.7 menu (Streamlit cards / JSON export / markdown report / realized_r_net feature only if ML needs it). Doc-hygiene commit only; no code.
+Belief Update / ROI / Goal: Goal: keep the resting state honest and the doctrine enforced. Belief: the mt5_analytics subsystem is capability-complete end-to-end (truth engine + intelligence layer); the limiting reagent is now N (real, commission-bearing, non-demo trade volume), not software — the sufficiency gates correctly stay shut on demo-N. Knowledge ROI: low (hygiene/closeout), but the permanent read-model invariant is the highest-value durable guard against future doctrine drift. Action: stop building; accumulate real executed reality before the gates open.
+Open Questions: When will real non-demo volume accrue to open the sufficiency gates? Will ML ever need realized_r_net?
+Next Step: None software-side. User accumulates real commission-bearing trade volume; the intelligence layer then produces actual (SUFFICIENT) insight. Optional v0.7 items build only on concrete need.
+---

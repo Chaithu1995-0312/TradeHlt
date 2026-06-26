@@ -1,162 +1,106 @@
-# Level-3 commission-broker validation → v0.5.0 "Commission Semantics Verified"
+# mt5_analytics v0.6.0 — Post-Trade Intelligence Layer ("insight, not authority")
 
-## STATUS: ✅ COMPLETE — AT REST (2026-06-26, commit `59773f7`)
-Executed end-to-end on IC Markets Raw (`Raw Trading Ltd`/`ICMarketsSC-Demo`/`52935582`, hedging mm2).
-**Gate 0 PASS** (`commission_charged=True`, Σ −0.23) · **verify PASS** (`net_pnl_diff ≈2.8e-17`) ·
-**74 green** · **ZERO kernel change**. **Form = Case C** (commission split entry+exit, folded onto
-`volume>0` trade deals — episodes net_pnl −0.08/−0.15 carry it). NOT Case B.
+## STATUS: ✅ SHIPPED — AT REST (2026-06-26, commit `2ae1244`, 85 tests)
+Built end-to-end: `mt5_analytics/analytics/insight_report.py` (frozen `InsightReport` —
+exit-efficiency / adverse-efficiency / cost-drag / risk-adjusted / sufficiency-gated attribution /
+Herfindahl `effective_n`), `SufficiencyStatus` Enum, self-describing `AttributionBucket`, wired via
+`ui/dashboard_data.insight_summary`. Real-data smoke (ecn/, n=2): correctly INSUFFICIENT yet surfaced
+the genuine economic fact — gross expectancy 0.0, commission −0.23 → **net expectancy −0.115/trade**
+(a statement the truth engine alone could never make).
 
-**Earned scope (preserve exactly — do not over-generalize):** the reconstruction kernel is validated
-across **MetaQuotes-Demo** {hedging, netting, INOUT, folded-swap} **+ IC Markets Raw** {commission
-Case C}, two broker families, **no kernel changes**. **NOT** "broker-independent" unqualified.
+**Capability-complete within scope.** The architectural transition is done: v0.1–v0.5 answered *"was
+reality reconstructed correctly?"* (truthfulness); v0.6 answers *"what does reality imply?"* (economic
+meaning), without adding any execution authority.
 
-**Still UNVALIDATED (no code until observed — evidence-first):**
-- **Case B** — a *separate* `volume=0` commission deal. IC Markets folds commission, so this stays
-  `REACHABLE_UNSEEN`. Needs a broker that emits it.
-- **Level 4 — exchange-margin (mm1).** Unobserved + unbuilt; the `reachable_patterns` mm1 branch is
-  written only against real mm1 data.
+**PERMANENT INVARIANT (enforce aggressively):** `MT5 → truth → features → insight → HUMAN`, **never
+`insight → decisions`**. The moment an `if session_expectancy > 0: trade()` appears, analytics stops
+being *information* and becomes *authority* — a doctrine violation. `analytics/` may NOT grow a
+`recommendation_engine` / `optimization` / `auto_tuning` module. The boundary is now structural.
 
-**Reopen conditions (any one):** (1) a broker emitting Case-B separate commission; (2) an mm1
-exchange-margin account; (3) a real `verify` FAIL. Until then the highest-leverage action is to keep
-the scope as earned — the plan below is the executed record, retained for replay.
+**The bottleneck is no longer software — it is N (real, commission-bearing, NON-demo trade volume).**
+On demo-N the sufficiency gates correctly stay shut (expectancy=None). Everything interesting now
+depends on accumulating enough executed reality for those gates to open. That is the user's to supply.
+
+**Optional, non-foundational v0.7 menu (build only on a concrete need — none are blocking):**
+Streamlit insight cards (with aggressive `⚠ INSUFFICIENT (n/min_n)` rendering) · JSON export ·
+Markdown/weekly intelligence report · `realized_r_net` feature (schema bump + migration — ONLY if an
+ML/clustering consumer genuinely needs per-episode net R; evidence-driven, not speculative).
 
 ---
 
 ## Context
-v0.4.0 (commits `e4e02f3`/`6f0681e`/`4d4a937`) proved — and **scoped** — the frozen reconstruction
-kernel as broker-independent *across MT5 hedging↔netting margin modes, on MetaQuotes-Demo only*.
-The next milestone is **not** "prove broker independence" — it is **disprove the strongest remaining
-assumption**, which is:
+The truth engine (v0.1.0→v0.5.0) is validated across two broker families with zero kernel changes —
+but it has only ever been proven *correct*, never *used*. Per §6.1, validated plumbing is noise until
+it produces **economic meaning**: the `FeatureRecord` schema itself says "expectancy/PF/win-rate belong
+to the later analytics layer" — and that layer does not exist. Today the only rollups are 4 display
+stats in [`ui/dashboard_data.py`](../../mt5_analytics/ui/dashboard_data.py) (`summary_stats`,
+`session_breakdown`, `regime_breakdown`). This sprint builds the **decision-relevant** intelligence
+the engine was built for, as **information-not-authority** (§6.5): it describes the trader's executed
+reality and never feeds the spine.
 
-> `commission` is always carried on the trade deal's own `commission` field (i.e. MetaQuotes-Demo's
-> zero-commission world generalizes to commission-charging brokers).
+**Reuse finding (do NOT reinvent):** `src/analytics/metrics_oracle.py` already ships the primitives —
+`capture_ratio` / `giveback` / `adverse_efficiency` / `time_efficiency` (exit-quality),
+`sharpe` / `recovery_factor` / `max_drawdown_rr` (risk-adjusted), `top_n_contribution` /
+`largest_winner` / `largest_loser` / `symbol_attribution` (concentration), `median` / `percentile`
+(distribution). The analytics layer only has to *compose* them per-episode → portfolio, not implement them.
 
-MetaQuotes-Demo charges **zero** commission, so `separate_commission_deals` is structurally `N_A`
-there — it cannot be manufactured. This sprint exercises it for real on a **commission-charging
-ECN/Raw MT5 demo** and runs the netting-validation workflow *unchanged*. Map +
-gotchas already written: [`mt5_analytics/BROKER_VALIDATION.md`](../../mt5_analytics/BROKER_VALIDATION.md).
+**Honest-scope guardrail (built in, not bolted on):** the only executed history so far is a handful of
+demo episodes. So every insight carries **N + a SUFFICIENT/INSUFFICIENT verdict** (E-001 / F-019
+discipline): below `min_n` (default 30) the report states INSUFFICIENT and makes **no claim**. On
+current demo data almost everything will correctly read INSUFFICIENT — this builds the *capability* and
+proves it on fixtures; it does not fabricate conclusions from demo noise.
 
-**Gating prerequisite (USER action — I cannot do this):** acquire a commission-charging ECN/Raw
-**MT5** demo (IC Markets *Raw* > Pepperstone *Razor* > Tickmill *Pro* > RoboForex *ECN* > FBS —
-**confirm the demo actually posts commission**, many zero it out), and log the terminal into it.
+## Build — one new pure module + a thin dashboard hook
+**New: `mt5_analytics/analytics/insight_report.py`** (new `analytics/` subpackage, sibling of
+`engines/`). Pure, read-only, no MT5/Streamlit/writes — same purity contract as `dashboard_data`.
+`build_insight(episodes, features, *, min_n=30) -> dict` (or a small `@dataclass InsightReport`),
+composing the oracle primitives into:
 
-## Gate 0: validate the BROKER first (the real gating uncertainty)
-The biggest risk is not the kernel — it is **assuming a "commission-charging" demo actually charges
-commission**. Many ECN/Raw *demos* silently set `commission=0` even when the live product charges it.
-If so: `commission_charged=False` → `separate_commission_deals=N_A` → **NO NEW EVIDENCE** (the run
-tells us nothing about the kernel). So the first assertion, made at dry-run and again post-trade, is
-`commission_charged == True`. If it is False, **abort and acquire a different broker** — do **not**
-draw any kernel conclusion from a zeroed-commission account. The broker is validated before the kernel.
+1. **Exit efficiency** — per-episode `capture_ratio(realized_r, mfe_r)` + `giveback`; portfolio
+   median capture ratio + total R given back. ("Are exits leaving R on the table?" — the F-002
+   decision-process lens, the highest-value post-trade question.)
+2. **Adverse efficiency** — `adverse_efficiency(mae_r, mfe_r)` distribution (heat taken before the move).
+3. **Cost drag (v0.5.0 tie-in, schema-free)** — `realized_r` is GROSS (price ÷ risk); the episode's
+   `net_pnl` includes commission+swap. Report Σcommission, Σswap, commission as a fraction of gross
+   PnL, and gross-vs-net expectancy — computed at the analytics layer from `episode.net_pnl` vs the
+   price-derived gross (no `FeatureRecord` schema bump). Newly meaningful now that commission is real.
+4. **Risk-adjusted** — `sharpe`, `recovery_factor`, `max_drawdown_rr`, R-percentiles over the
+   `realized_r` series.
+5. **Conditional attribution WITH sufficiency** — expectancy + capture by `session` × `regime` ×
+   duration-bucket, each tagged `n` + `SUFFICIENT/INSUFFICIENT` (reuse/extend `symbol_attribution`);
+   a 3-trade "edge" is flagged INSUFFICIENT, never celebrated.
+6. **Concentration** — `top_n_contribution`, `largest_winner/loser` (is the edge a few outliers?).
 
-## The science: three realities, one decision tree (don't force a binary)
-Commission is charged **immediately per deal** (no overnight wait, unlike swap). The verify P/L
-oracle (`Σ profit+swap+commission` per `position_id` vs `Σ` artifact `net_pnl`) is the **primary**
-gate; coverage tells us *which form* commission takes. Reality may be any of three forms — classify
-by inspecting the real deals, never by forcing A-vs-B:
+**Wire-in:** add `insight_summary(features, episodes, min_n=30)` to
+[`ui/dashboard_data.py`](../../mt5_analytics/ui/dashboard_data.py) delegating to the new module (keep
+the "info, not authority" docstring discipline); optionally surface a compact panel in
+[`ui/streamlit_dashboard.py`](../../mt5_analytics/ui/streamlit_dashboard.py) (light, last — the module
++ data hook are the substance).
 
-- **Case A — folded onto one deal (likely; mirrors the v0.3.1 swap finding).** A trade deal carries
-  `volume>0` AND `commission≠0` (e.g. all commission on the close). Kernel already sums
-  `profit+swap+commission` per deal ⇒ **`verify` PASS, net_pnl_diff 0, ZERO kernel change.**
-  Coverage: `separate_commission_deals` stays **REACHABLE_UNSEEN** (no *separate* deal exists).
-- **Case C — split across entry+exit deals (also benign).** Commission spread over both trade deals
-  (e.g. entry `−0.35`, exit `−0.35`), each on a `volume>0` deal. Still summed per `position_id` by the
-  oracle ⇒ **`verify` PASS, ZERO kernel change**; still **not** a separate-commission deal
-  (`separate_commission_deals` REACHABLE_UNSEEN). Documented explicitly so a 2-deal commission split
-  is *not* misread as Case B.
-- **Case B — a SEPARATE commission deal (the legitimate Gate-2 risk).** A distinct (often
-  `volume=0`) commission deal record alongside the trade deals, retaining `position_id`. Coverage:
-  `separate_commission_deals` → **OBSERVED**. `verify` PASS *only if* the reconstructor handles the
-  separate deal (it claims to via the zero-volume commission/swap path + `is_position_deal` keeping
-  the pid). If `verify` **FAIL** → capture the real deal shape → torture fixture → minimal kernel
-  patch → re-verify. **This is the earned mutation the architecture exists for.**
-
-The discriminator between A/C (benign) and B is purely *structural*: is commission on a `volume>0`
-trade deal (A/C) or on its own record (B)? Either way, success is decided by the oracle, not the form.
-
-## Generator change — DONE (committed `8e9acf9`, the only non-gated piece)
-- **`--extra-allow-symbol`** (append/comma-list) merges into the effective allowlist for the run, so a
-  suffixed ECN symbol (`EURUSD.r` / `.raw` / `.ecn`) is accepted **explicitly, fails-closed** (no
-  `startswith` guessing). Base `SYMBOL_ALLOWLIST` intact; every existing gate preserved (L1 DEMO-only,
-  L2 fingerprint pin + `--require-margin`, lot cap, `mt5.symbol_info` validity, `symbol_select`).
-  Verified by dry-run: suffixed symbol refuses without the flag, passes with it, base EURUSD
-  unaffected. No test file (manual_tools is deliberately outside `tests/`). 74 mt5_analytics green.
-- `--require-margin {hedging,netting}` + the `inout` pattern from v0.4.0 reused as-is (commission is
-  orthogonal to margin mode). **Nothing else to build before the broker exists.**
-
-## Coverage/kernel: nothing to pre-build (evidence-first)
-`reachable_patterns(margin_mode, commission_charged)` already adds `separate_commission_deals` when
-`commission_charged=True`, and `coverage.run` already derives `commission_charged` from the deals
-(`any(commission≠0)`). So the **coverage layer handles a commission account with zero changes**. The
-only thing that may change is the **kernel**, and only on a real Case-B `verify` FAIL. Per the v0.4.0
-discipline (and the user's mm1 ruling), **do not pre-build** anything for a shape not yet observed.
-
-## Execution (fast — commission is immediate; tiny demo lots, demo-gated)
-0. **Gate 0 — broker pre-flight.** Dry-run: `python manual_tools/trade_generator.py
-   --symbol <EURUSD.suffix> --extra-allow-symbol <EURUSD.suffix>` → confirm `trade_mode==DEMO`, read
-   `margin_mode`, capture the new **fingerprint** (`sha256 company|server|login`). After the first
-   round-trip (step 2), **assert `commission_charged==True`** in the coverage output. If False →
-   **STOP, acquire a different broker** (no kernel conclusion from a zeroed-commission demo).
-1. **(merged into Gate 0 — fingerprint capture.)**
-2. **Place trades:** `--confirm --account-hash <ecn fp> --require-margin {hedging|netting}
-   --extra-allow-symbol <sym> --symbol <sym> --patterns normal,partial --count 1 --max-trades 12`.
-   `normal`+`partial` emits commission-bearing deals immediately. (Optional swap+partial add-on:
-   `--patterns hold` today → `close` after the daily rollover — secondary, not required for commission.)
-3. **Rebuild + verify + coverage into an ISOLATED commission root** via inline cfg override
-   (`artifact_root`/`report_root`/`audit_root` → `mt5_analytics/{artifacts,reports,audit}/ecn/`),
-   exactly as the netting sprint did (so `verify` reconciles only this broker's deals). The driver is
-   a throwaway repo-root script (gitignored artifact roots; delete the script after — as before).
-4. **Read against the three-case tree:** confirm `commission_charged==True` (Gate 0), then inspect a
-   deal — commission on a `volume>0` trade deal (**A** all-on-close / **C** split entry+exit, both
-   benign, verify PASS, zero kernel change) vs on its own record (**B**). Only **B + verify FAIL** ⇒
-   Gate-2 (fixture → minimal kernel patch → re-verify; default `account` path stays byte-identical).
-
-## v0.5.0 success criteria (everything else is explanatory metadata)
-```
-commission_charged == True   (Gate 0 — the broker is real)
-AND  verify PASS  (net_pnl_diff 0.0, volume_diff 0.0, manifests OK)
-AND  default mt5_analytics suite unchanged (74 green)
-```
-The Case A/B/C label and the `separate_commission_deals` OBSERVED/REACHABLE_UNSEEN value are
-*explanatory metadata* about commission's form — not the pass/fail signal. The oracle decides.
-
-**Gates and authority are orthogonal — keep them as two lists, never one numbered ladder.**
-
-*Temporal gates — "can we proceed?" Failure at any ⇒ **STOP**: no interpretation, no conclusion, no kernel claim.*
-```
-Gate 0:  commission_charged == True   (the broker actually charges — else NO EVIDENCE)
-Gate 1:  trade_mode == DEMO            (generator L1)
-Gate 2:  account fingerprint matches   (generator L2 pin)
-Gate 3:  verify executed               (a report exists to interpret)
-```
-*Interpretive authority — "how do we read VALID data?" Only after every gate passes.*
-```
-1. verify PASS            — financial truth; the P/L oracle; SUPREME
-2. coverage classification — structural description (Case A/C/B, OBSERVED/REACHABLE_UNSEEN)
-3. MIGRATIONS.md          — human narrative
-4. BROKER_VALIDATION.md   — planning / documentation
-```
-Both truths preserved: `commission_charged==True` is **temporally** supreme (nothing happens without
-it); `verify PASS` is **interpretively** supreme (nothing outranks the oracle once data is valid). So
-`commission_charged=True` + `verify PASS` + `Case=C` ⇒ **v0.5.0 succeeds**, regardless of whether
-`separate_commission_deals` is OBSERVED. The orthogonality also names the weird-but-valid state
-`verify PASS ∧ commission_charged==False` — financially correct yet scientifically irrelevant
-(commission was never exercised) — which a single numbered list would hide.
+## Critical files
+- **New** `mt5_analytics/analytics/__init__.py`, `mt5_analytics/analytics/insight_report.py`
+- **Edit** `mt5_analytics/ui/dashboard_data.py` (add `insight_summary` delegating hook)
+- **Reuse** `src/analytics/metrics_oracle.py` (all primitives above — import, don't reimplement)
+- **New** `tests/mt5_analytics/test_insight_report.py`
+- **No change** to the kernel, the `FeatureRecord` schema, or any engine (purity preserved)
 
 ## Verification
-- **Live:** `verify` **PASS** (net_pnl_diff 0.0, volume_diff 0.0, manifests OK) in the ecn root on an
-  account where `commission≠0`; coverage records `account_type` + `commission_charged=True` and the
-  Case-A/B/C classification of `separate_commission_deals`.
-- **Unit:** existing **74 stay green** (default path untouched) + the `--extra-allow-symbol` flag
-  behavior (accepts an opted-in symbol, still refuses a non-opted one) + any **real-shape** commission
-  torture fixture only if Case B forces a kernel patch (derived from the captured deal, never assumed).
-- **Record** in `MIGRATIONS.md` the observed form (Case A folded-on-close / Case C split entry+exit /
-  Case B separate deal — whichever reality gives) and update the `separate_commission_deals` row in
-  `BROKER_VALIDATION.md`'s matrix (OBSERVED only under Case B; REACHABLE_UNSEEN under A/C). Commit
-  **v0.5.0 "Commission Semantics Verified"** with the broker family named and the scope held to what
-  was observed (e.g. "commission folded — separate-deal form still unobserved" if A/C).
+- **Unit (`tests/mt5_analytics/test_insight_report.py`):** fixtures with hand-computed episodes →
+  assert capture_ratio/giveback/cost-drag/sharpe/attribution values; assert **sufficiency gating** (a
+  bucket with `n < min_n` ⇒ `INSUFFICIENT`, no expectancy claim; `n ≥ min_n` ⇒ a verdict). Determinism
+  (same input → byte-identical report). Existing **74 stay green** (kernel/feature paths untouched).
+- **Live smoke (read-only):** run `build_insight` over the real `ecn/` + default artifact roots →
+  confirm it produces a well-formed report and that low-N buckets honestly read INSUFFICIENT (the
+  guardrail working on real demo data). No trades, no writes.
+- **Commit `v0.6.0 "Post-Trade Intelligence Layer"`** once green; MIGRATIONS note (analytics layer is
+  information-not-authority, schema-free, sufficiency-gated).
+
+## Open sub-decision (recommend default; not blocking)
+Cost-drag is done **at the analytics layer** from `episode.net_pnl` (no schema change) — recommended
+for v0.6.0. A dedicated net-of-cost `realized_r_net` *feature* (schema bump + migration) is deferred
+unless cost analysis needs per-episode net R downstream.
 
 ## NOT doing
-No `.env` programmatic account switching (still deferred; terminal logged in manually). No mm1/exchange
-work (separate future Level 4 — write its branch only against observed data). No kernel change unless a
-real Case-B `verify` FAIL earns it. No pre-building of commission/exchange semantics. Demo-only,
-hard-gated, tiny lots; hedging+netting MetaQuotes results left untouched.
+No kernel/schema/engine change. No feedback into the trading spine (information-not-authority). No
+fabricated conclusions on demo-N data (sufficiency-gated). No new broker validation (that track is
+external-evidence-gated — Case-B / mm1 / verify-FAIL). Streamlit rendering is optional/last.
