@@ -26,6 +26,54 @@ Streamlit insight cards (with aggressive `⚠ INSUFFICIENT (n/min_n)` rendering)
 Markdown/weekly intelligence report · `realized_r_net` feature (schema bump + migration — ONLY if an
 ML/clustering consumer genuinely needs per-episode net R; evidence-driven, not speculative).
 
+## Software-complete ≠ project-complete — Phase C is DATA, not code
+~90–95% **software** maturity, ~5–10% **data** maturity. `Capability ≫ Data`. The three phases:
+
+| Phase | Question | Output | State |
+|---|---|---|---|
+| A (v0.1–0.5) | Was reality reconstructed correctly? | Truth | ✅ |
+| B (v0.6) | Can we extract economic meaning? | Insight | ✅ |
+| **C (v0.7+)** | **Do live outcomes match research expectations?** | **Belief calibration** | **NOT STARTED — data-gated** |
+
+**The real v0.7 is a campaign, not a release: "Reality Accumulation."** Goal = **50–100
+commission-bearing, *qualified-strategy-driven*, human-in-loop MT5 trades.** Demo/random trades only
+validate infrastructure (DONE); they can never calibrate belief. Until N accrues, the sufficiency gates
+correctly stay shut — and that's the system working, not a gap to code around.
+
+**F-010 bridge (the cross-subsystem reason this matters).** The findings ledger still carries **F-010
+(OPEN/Likely): "Headline ROI is BACKTEST-only; live PnL (ExecutionPlanner + UltronRiskGate)
+UNVERIFIED."** mt5_analytics is the instrument that can *close* it — but **v0.6 supplies only the
+live-actual HALF.** Closing F-010 also needs (a) trades actually driven by the *qualified spine
+strategy* (not discretionary/random), and (b) a **Reality-vs-Research Comparator** joining
+backtest-expected distribution ↔ live-actual insight. Both are **data-gated and unbuilt** — do NOT
+build the comparator before strategy-driven N exists (it would have nothing to compare). Target
+architecture: `Backtests → Expected Distribution → Live Trades → Truth Engine → Insight → Reality-vs-
+Research Comparator → Human`.
+
+**Explicitly DO NOT build (all require N you don't have):** `realized_r_net`, recommendation/
+optimization/auto-tuning engines, ML feedback loops, DuckDB, clustering, Monte Carlo, drift detection,
+the Reality-vs-Research Comparator. *The system no longer needs architecture; it needs evidence.* The
+likeliest failure mode is building more software because software is easier than generating reality.
+
+**Three (and only three) reopen conditions:**
+1. **Data** — `N ≥ 30` real, commission-bearing, strategy-driven trades ⇒ sufficiency gates unlock,
+   Phase C begins (build the comparator THEN, against real expected-vs-actual data).
+2. **Semantic** — a Case-B (separate commission deal) or mm1 (exchange-margin) account ⇒ truth-engine
+   validation resumes (Level 3 remainder / Level 4).
+3. **Failure** — a real `verify` FAIL ⇒ everything stops, kernel investigation begins.
+
+**Bookkeeping ≠ Progress ≠ Learning (they compound differently).** Code = new capability (compounds
+*sometimes*); docs = lower entropy (*weakly*); **reality accumulation = new evidence (*strongly*);
+research-vs-reality calibration = belief updates (*extremely strongly*).** The project now lives in the
+last two — `N: 0→30` changes it more than `85→86 tests` ever could. Do not mistake repository
+cleanliness for belief calibration.
+
+**Phase C operating loop (no software enters until the evidence demands it):**
+`execute qualified strategy → MT5 truth engine → insight → human review → belief update → execute
+again`. Not `build → ship → repeat`. The terminal state: **Software COMPLETE (within earned scope) ·
+Data INSUFFICIENT (by design) · Next = Reality Accumulation · Success = N ≥ 30 qualified
+commission-bearing trades.**
+
 ---
 
 ## Context
