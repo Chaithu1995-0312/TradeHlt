@@ -18,3 +18,5 @@ mt5_analytics/artifacts/
 mt5_analytics/reports/
 mt5_analytics/state/
 mt5_analytics/audit/
+# Execution Quality Observatory telemetry (runtime artifact, re-captured by --exec-log)
+runtime/exec_telemetry/

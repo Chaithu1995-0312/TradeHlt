@@ -24,8 +24,12 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
+import re
 import sys
 import time
+from datetime import datetime, timezone
+from pathlib import Path
 
 try:
     import MetaTrader5 as mt5  # type: ignore
@@ -34,6 +38,13 @@ except Exception:
     mt5 = None  # type: ignore
     _MT5 = False
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # repo root (run as a script)
+try:  # Execution Quality Observatory (Phase C-op) — optional; generator works without it.
+    from exec_telemetry.schemas.execution_event_v1 import ExecutionEvent, retcode_name
+    _EXEC_TELEMETRY = True
+except Exception:
+    _EXEC_TELEMETRY = False
+
 LOT_CAP = 0.10
 MAGIC = 520626
 SYMBOL_ALLOWLIST = {"EURUSD", "GBPUSD", "USDJPY", "XAUUSD"}
@@ -41,6 +52,8 @@ MAX_TRADES_DEFAULT = 12
 
 _counter = {"sent": 0, "opened": 0, "closed": 0}
 _MAX_TRADES = MAX_TRADES_DEFAULT
+# Execution-telemetry sink (None = off). Set in main() only under --confirm --exec-log.
+_EXEC_LOG: "dict | None" = None
 
 
 def _p(*a):
@@ -75,6 +88,35 @@ def _filling(symbol):
     return mt5.ORDER_FILLING_RETURN
 
 
+def _fill_name(fill) -> str:
+    return {getattr(mt5, "ORDER_FILLING_FOK", 0): "FOK",
+            getattr(mt5, "ORDER_FILLING_IOC", 1): "IOC",
+            getattr(mt5, "ORDER_FILLING_RETURN", 2): "RETURN"}.get(fill, str(fill))
+
+
+def _capture_exec_event(symbol, order_type, lot, requested, res, latency_ms, fill_mode):
+    """Append one ExecutionEvent to the per-broker telemetry log (no-op unless --exec-log)."""
+    if _EXEC_LOG is None or not _EXEC_TELEMETRY:
+        return
+    point = getattr(mt5.symbol_info(symbol), "point", 0.0) or 0.0
+    code = getattr(res, "retcode", None)
+    filled = float(getattr(res, "price", 0.0) or 0.0)
+    slip = ((filled - requested) / point) if (point and filled) else 0.0
+    ev = ExecutionEvent(
+        ts=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        broker_fingerprint=_EXEC_LOG["fingerprint"], company=_EXEC_LOG["company"],
+        server=_EXEC_LOG["server"], login=_EXEC_LOG["login"], margin_mode=_EXEC_LOG["margin_mode"],
+        symbol=symbol, side="buy" if order_type == mt5.ORDER_TYPE_BUY else "sell",
+        requested_price=float(requested), filled_price=filled, slippage_points=round(slip, 6),
+        latency_ms=round(latency_ms, 3), retcode=int(code) if code is not None else -1,
+        retcode_name=retcode_name(code), filling_mode=_fill_name(fill_mode), volume=float(lot),
+    )
+    path = _EXEC_LOG["dir"] / "orders.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(ev.to_dict(), sort_keys=True) + "\n")
+
+
 def _send(symbol, order_type, lot, position=None, deviation=20):
     if _counter["sent"] >= _MAX_TRADES:
         _p(f"    max-trades {_MAX_TRADES} reached; skipping")
@@ -82,19 +124,23 @@ def _send(symbol, order_type, lot, position=None, deviation=20):
     _assert_demo()  # L1 before EVERY order
     tick = mt5.symbol_info_tick(symbol)
     price = tick.ask if order_type == mt5.ORDER_TYPE_BUY else tick.bid
+    fill_mode = _filling(symbol)
     req = {
         "action": mt5.TRADE_ACTION_DEAL, "symbol": symbol, "volume": float(lot),
         "type": order_type, "price": price, "deviation": deviation, "magic": MAGIC,
         "comment": "mt5a_validation", "type_time": mt5.ORDER_TIME_GTC,
-        "type_filling": _filling(symbol),
+        "type_filling": fill_mode,
     }
     if position is not None:
         req["position"] = position
+    _t0 = time.perf_counter()
     res = mt5.order_send(req)
+    latency_ms = (time.perf_counter() - _t0) * 1000.0
     ok = res is not None and res.retcode == mt5.TRADE_RETCODE_DONE
     _counter["sent"] += 1
     if ok:
         _counter["closed" if position is not None else "opened"] += 1
+    _capture_exec_event(symbol, order_type, lot, price, res, latency_ms, fill_mode)
     _p(f"    {'BUY' if order_type == mt5.ORDER_TYPE_BUY else 'SELL'} {lot} {symbol} -> "
        f"retcode={getattr(res, 'retcode', None)} deal={getattr(res, 'deal', None)} "
        f"{'OK' if ok else 'FAIL'}")
@@ -192,8 +238,12 @@ def main(argv=None) -> int:
                     help="explicitly opt in a symbol outside the base allowlist (e.g. an "
                          "ECN-suffixed EURUSD.r); repeatable or comma-separated. Fails closed: "
                          "only opted-in symbols are added; DEMO/lot-cap/fingerprint gates unchanged")
+    ap.add_argument("--exec-log", action="store_true",
+                    help="capture execution telemetry (slippage/latency/retcode) per order to "
+                         "runtime/exec_telemetry/<broker>/orders.jsonl (Execution Quality Observatory)")
     ap.add_argument("--confirm", action="store_true", help="REQUIRED to place real orders")
     args = ap.parse_args(argv)
+    global _EXEC_LOG
     _MAX_TRADES = args.max_trades
 
     # L2 — static bounds
@@ -251,6 +301,19 @@ def main(argv=None) -> int:
             _p(f"REFUSED (L2 margin): margin_mode={info.margin_mode} ({_margin_name}) != "
                f"--require-margin {args.require_margin}")
             return 2
+
+        # Execution Quality Observatory: arm the telemetry sink (post-gate, demo-confirmed only).
+        if args.exec_log:
+            if not _EXEC_TELEMETRY:
+                _p("WARN: --exec-log requested but exec_telemetry not importable; skipping telemetry.")
+            else:
+                key = re.sub(r"[^A-Za-z0-9._-]+", "_",
+                             f"{info.company}_{info.server}_mm{info.margin_mode}").strip("_")
+                _EXEC_LOG = {"dir": Path("runtime/exec_telemetry") / key, "fingerprint": fp,
+                             "company": info.company, "server": info.server,
+                             "login": int(info.login), "margin_mode": int(info.margin_mode)}
+                _p(f"exec-telemetry: ON -> runtime/exec_telemetry/{key}/orders.jsonl")
+
         if mt5.symbol_info(args.symbol) is None:
             _p(f"REFUSED: unknown symbol {args.symbol}")
             return 2
