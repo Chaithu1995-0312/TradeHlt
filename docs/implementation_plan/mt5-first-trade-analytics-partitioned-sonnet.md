@@ -1,5 +1,27 @@
 # Level-3 commission-broker validation → v0.5.0 "Commission Semantics Verified"
 
+## STATUS: ✅ COMPLETE — AT REST (2026-06-26, commit `59773f7`)
+Executed end-to-end on IC Markets Raw (`Raw Trading Ltd`/`ICMarketsSC-Demo`/`52935582`, hedging mm2).
+**Gate 0 PASS** (`commission_charged=True`, Σ −0.23) · **verify PASS** (`net_pnl_diff ≈2.8e-17`) ·
+**74 green** · **ZERO kernel change**. **Form = Case C** (commission split entry+exit, folded onto
+`volume>0` trade deals — episodes net_pnl −0.08/−0.15 carry it). NOT Case B.
+
+**Earned scope (preserve exactly — do not over-generalize):** the reconstruction kernel is validated
+across **MetaQuotes-Demo** {hedging, netting, INOUT, folded-swap} **+ IC Markets Raw** {commission
+Case C}, two broker families, **no kernel changes**. **NOT** "broker-independent" unqualified.
+
+**Still UNVALIDATED (no code until observed — evidence-first):**
+- **Case B** — a *separate* `volume=0` commission deal. IC Markets folds commission, so this stays
+  `REACHABLE_UNSEEN`. Needs a broker that emits it.
+- **Level 4 — exchange-margin (mm1).** Unobserved + unbuilt; the `reachable_patterns` mm1 branch is
+  written only against real mm1 data.
+
+**Reopen conditions (any one):** (1) a broker emitting Case-B separate commission; (2) an mm1
+exchange-margin account; (3) a real `verify` FAIL. Until then the highest-leverage action is to keep
+the scope as earned — the plan below is the executed record, retained for replay.
+
+---
+
 ## Context
 v0.4.0 (commits `e4e02f3`/`6f0681e`/`4d4a937`) proved — and **scoped** — the frozen reconstruction
 kernel as broker-independent *across MT5 hedging↔netting margin modes, on MetaQuotes-Demo only*.
