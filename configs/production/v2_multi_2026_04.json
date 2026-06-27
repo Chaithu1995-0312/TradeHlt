@@ -22,13 +22,19 @@
     "zone_registry_path": "models/zone_registry.json",
     "zone_gate_execution_mode": "normal",
     "zone_mode": "hard",
+    "zone_gate": {
+      "top_k": 3,
+      "cluster_min_n": 2,
+      "cluster_spread_max": 0.15
+    },
     "debug_mode": false,
     "gaussian_impl": "heuristic",
     "convergence_window": 500,
     "rr_fusion": {
-      "enabled": true,
+      "enabled": false,
       "model_path": "models/rr_model.json",
-      "threshold": 0.5
+      "threshold": 0.5,
+      "full_feature_vector": false
     },
     "dual_engine": {
       "trend_strength_threshold": 0.15,
@@ -99,7 +105,8 @@
   "governance": {
     "min_shadow_trades": 30,
     "shadow_data_csv": "data/AUDUSD_M15.csv",
-    "shadow_output_csv": "results/shadow_trades.csv"
+    "shadow_output_csv": "results/shadow_trades.csv",
+    "promotion_margin": 0.02
   },
   "fusion_engine": {
     "weight_crt": 0.4,
@@ -122,7 +129,38 @@
     "p_win_threshold": 0.4,
     "rr_threshold": 1.5,
     "weak_component_threshold": 0.4,
-    "weak_link_weight": 0.3
+    "weak_link_weight": 0.3,
+    "threshold_percentile": 85,
+    "threshold_min": 0.45,
+    "threshold_max": 0.65
+  },
+  "regime_governor": {
+    "max_trades_per_batch": 3,
+    "regime_penalty": { "trend": 0.0, "range": 0.15, "neutral": 0.15 },
+    "regime_accept_percentile": { "trend": 0.75, "range": 0.9, "neutral": 0.92 },
+    "direction_penalty": 0.1,
+    "fallback_threshold": 0.45,
+    "window_min_samples": 10,
+    "window_maxlen": 100
+  },
+  "convergence_controller": {
+    "warmup_bars": 10,
+    "thresh_min": 0.3,
+    "thresh_max": 0.9,
+    "thresh_step": 0.02,
+    "accept_rate_high": 0.3,
+    "accept_rate_low": 0.1,
+    "abs_quality_floor": 0.3,
+    "sig_k": 8.0,
+    "sig_t": 0.6,
+    "penalty_sig_k": 8.0,
+    "penalty_sig_t": 0.5
+  },
+  "acceptance_controller": {
+    "theta_min": 0.5,
+    "theta_max": 0.95,
+    "min_history": 10,
+    "fusion_percentile": 85
   },
   "validation_summary": {
     "config_id": "v2_multi_2026_04_candidate_1",
@@ -207,7 +245,19 @@
         "03:00"
       ]
     },
-    "max_displacement_strength": 2.0
+    "max_displacement_strength": 2.0,
+    "breakout_disp_threshold": 1.5,
+    "exit_model": "intrabar_touch",
+    "score_threshold": 0.45,
+    "use_bitnet": false,
+    "extension_reset_fib": 1.618,
+    "pending_displacement_ttl_candles": 4,
+    "max_expansion_age_candles": 495,
+    "max_expansion_age_hours": 124,
+    "expansion_age_warn_candles": 342,
+    "shadow_advisory_only": false,
+    "shadow_age_norm_candles": 0,
+    "shadow_age_penalty_lambda": 0.0
   },
   "rr_model": {
     "ridge_alpha": 10.0,
@@ -306,6 +356,19 @@
       "trade_count_norm": 0.2,
       "drawdown": 0.1
     }
+  },
+  "goal": {
+    "goal_id": "G001",
+    "enforce": false,
+    "trades_per_month": {"min": 20, "target": 40, "max": 80},
+    "avg_rr": {"min": 2.0},
+    "win_rate": {"min": 0.35},
+    "max_drawdown_pct": {"max": 0.10},
+    "risk_per_trade": {"target": 0.005},
+    "expectancy_r": {"min": 0.20},
+    "timeframe": {"execution": "M15", "structure": "H1"},
+    "instruments": ["BTCUSDT", "ETHUSDT", "BNBUSDT"],
+    "constraints": {"reaction_only": true, "human_execution": true, "no_prediction": true}
   },
   "backtest": {
     "htf_candles_per_range": 4,
@@ -543,6 +606,14 @@
     "future_ts_tolerance_minutes": 0,
     "write_fingerprint_report": true,
     "duplicate_resolution_mode": "reject_all",
+    "strict_fetch": {
+      "_doc": "Zero-tolerance override (passed as cfg_override to validate_dataset by scripts/data/fetch_and_verify_mt5.py). Any TRADABLE missing bar (session-aware: weekends/rollover/holidays excluded) hard-stops the freshly-fetched file. Genuine mid-session holes are corruption and abort; legitimate closures are non-tradable and pass. tradability_mode=autoderive LEARNS each provider's real session from the data's modal weekly presence (so any broker's no-Sunday/no-break/shifted-open calendar self-calibrates); holidays still need the reviewed session_calendar.holidays list.",
+      "max_missing_pct": 0.0,
+      "max_single_gap_candles": 0,
+      "max_gap_span_minutes": 0,
+      "tradability_mode": "autoderive",
+      "autoderive_presence_min": 0.5
+    },
     "session_calendar": {
       "crypto_quote_suffixes": ["USDT", "USDC", "BUSD"],
       "metals_prefixes": ["XAU", "XAG", "XPT", "XPD"],
@@ -550,7 +621,15 @@
       "weekday_open_weekday": 6,
       "weekday_close_hour": 21,
       "weekday_close_weekday": 4,
-      "weekday_daily_break_hours": [21]
+      "weekday_daily_break_hours": [21],
+      "_holidays_doc": "Reviewed market-closure dates (UTC) surfaced by the strict autoderive gate on IC-Markets FX+metals data 2026-06-26. Union of FX (Christmas/New Year) + XAUUSD US-market calendar (Memorial/Juneteenth/Jul4/Labor/Thanksgiving/MLK/Presidents/Good-Friday/Christmas-Eve). Applied to ALL symbols (over-marking a date a symbol DID trade is harmless: present bars on a holiday are extra, never 'missing'). DELIBERATELY EXCLUDES intraday micro-gaps (e.g. 2026-03-25, 2026-04-01, 2025-06-02, 2025-07-30) which are genuine 5-7 bar feed holes, NOT closures, and must keep hard-stopping per the zero-tolerance rule.",
+      "holidays": [
+        "2024-05-27", "2024-06-19", "2024-07-04", "2024-09-02", "2024-11-28", "2024-11-29",
+        "2024-12-24", "2024-12-25",
+        "2025-01-01", "2025-01-20", "2025-02-17", "2025-04-18", "2025-05-26", "2025-06-19",
+        "2025-07-04", "2025-09-01", "2025-11-27", "2025-11-28", "2025-12-24", "2025-12-25",
+        "2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03"
+      ]
     }
   },
   "live_integration": {
@@ -584,6 +663,17 @@
       "ruin_threshold_pct": 0.5,
       "random_seed": 42
     }
+  },
+  "perp_funding_data": {
+    "base_url": "https://fapi.binance.com",
+    "instruments": ["BNBUSDT", "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT"],
+    "funding_path": "/fapi/v1/fundingRate",
+    "basis_path": "/fapi/v1/premiumIndexKlines",
+    "interval": "15m",
+    "request_timeout_s": 30,
+    "request_delay_s": 0.2,
+    "max_limit": 1000,
+    "out_dir": "data/perp"
   },
   "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613"
 }
