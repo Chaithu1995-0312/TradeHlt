@@ -273,12 +273,13 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-12
-- Revalidate-by: 2026-09-10
+- Revalidate-by: 2026-09-25
 - Evidence:      results/research/qualification/qualify_majors.json + docs/analysis/qualify-majors-2026-06-12.md (intrabar_fixed + 12bps; per-instrument then pooled over BNB/ETH/BTC/SOL). Zero PROMOTE. Toy detectors REJECT on all 4 majors + pooled with baseline_delta vs random_uniform ≈0 (−0.076…+0.033) — entries statistically indistinguishable from random. Spine throughput-starved: 5–13 entries/instrument → INSUFFICIENT (n<30); pooled n=30 E=−0.399 REJECT (gate-2). Sole positive cell spine/SOLUSDT n=7 E=+0.45 PF=2.45 unusable (INSUFFICIENT).
 - Supersedes:    —
 - Reversal:      "We may already possess a qualifiable edge somewhere in the built pool and simply never measured it broadly" -> "We do not: under the unified intrabar+cost truth standard, every existing hypothesis fails on every major and pooled. The toy entry-edge null (≈random) now holds across all four crypto majors (extends F-001/F-002 beyond BNBUSDT); the spine cannot reach statistical power at its selectivity (ties F-003/F-015 throughput)."
 - Owner:         claude
 - Note:          A clean falsification, not a tooling failure — it forecloses 'reuse existing ideas' and selects the next phase. Implication: invent-new-entries (Phase C) is NOT yet justified (more geometry-shaped detectors would likely reproduce ≈random); the experiment points to process characterization (Phase B) — find where/whether direction is CONDITIONALLY predictable — before committing to a new entry family. The spine/SOL n=7 cell + the spine's own-backtest BTC +0.62R (positive only under scale-out tp1/tp2, negative under the single-TP research lens) are F-010 leads (live exec PnL unverified), not edges.
+- Update:        2026-06-27 (E3 revalidation — finding_dependency_audit Phase B/B2) — re-ran qualify_majors on stabilized HEAD (post 38-feature integration / fusion cleanup / F-038 rr_fusion disable). UNCHANGED: 0 PROMOTE; toy AND spine arms BYTE-IDENTICAL to the 2026-06-12 baseline (verdicts {11 REJECT, 4 INSUFFICIENT}). The spine byte-identity corroborates F-037 (backtest gate is OFF → CRT-only spine; the F-038 rr_fusion disable never reaches research-spine entries). Conclusion: Epoch-3 = stabilized Epoch-2 (stabilization created NO new economic universe). Evidence: results/research/qualification_2026_06_27/qualify_majors.json.
 
 ---
 
@@ -301,12 +302,13 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-13
-- Revalidate-by: 2026-09-11
+- Revalidate-by: 2026-09-25
 - Evidence:      results/research/phase_s/phase_s_selection_effect.json + docs/analysis/selection-effect-crypto6-2026-06-13.md (intrabar_fixed+12bps, pooled-by-effect crypto-6, ΔE=selected−rejected retests decomposed by reject-reason). Selected−rejected ΔE=+1.171R p=0.0005 OOS+1.212 4/4 — but SESSION≡ALL (110/112 rejects off-session); genuine skill classes null: ZONE 0/110 rejects (never binds), SCORE 2/110 → p=0.327 OOS−0.291. Trust gate: selected==approved_trades all 6. S0 wired the dormant RETEST_REPLAY emitter (zero callers; behavior-neutral — BNB ledger 0fd8ee6a byte-identical pre/post, records 0→44).
 - Supersedes:    — (updates F-002 under the governing exit model)
 - Reversal:      "Selection adds +0.145R at the RETEST→EXECUTION gate (F-002)" -> "Under the governing intrabar+12bps standard the selected−rejected effect is large (+1.17R) but ENTIRELY the SESSION filter (SESSION class ≡ ALL class); the score/zone selection-skill classes are non-binding (ZONE 0 rejects) or noise (SCORE n=2, p=0.33, OOS−0.29). The spine's RETEST selection IS the incumbent, F-017-non-improvable session filter — there is no score/zone selection skill. F-002 does not survive as NEW skill; sparse-selection-beyond-session is falsified."
 - Owner:         claude
 - Note:          The reject-reason decomposition was decisive: the ALL class alone would have FALSELY shown "selection skill" (+1.17R / p<0.001 / 4-of-4 / OOS +1.21); decomposing localizes 100% to SESSION. Structural facts (ZONE 0/110, SCORE 2/110, SESSION 110/112) are power-independent (F-006b: retest score gate non-binding, 134/135 pass), even though N is thin (4 usable instruments; SCORE rests on 2 samples). Three falsifications now stand under intrabar truth — direction (F-019), conditional direction (F-020), selection-beyond-session (F-021); the only working in-spine lever (session) is incumbent + F-017-non-improvable. Remaining unfalsified thread = exit/cost structure (Phase D, the 88% plain_stop_loss).
+- Update:        2026-06-27 (E3 revalidation — finding_dependency_audit Phase B/B3) — re-ran phase_s on the stabilized spine: verdict SELECTION_IS_SESSION_ONLY UNCHANGED. SESSION 112 rejects (ΔE +1.171R, p=0.0005, OOS +1.212, sign 4/4); ZONE 0 rejects (never binds); SCORE 2 rejects (OOS ΔE −0.291, p=0.327). Decomposition essentially identical to 2026-06-13; no score/zone skill emerged from stabilization. Evidence: results/research/phase_s_2026_06_27/phase_s_selection_effect.json.
 
 ---
 
@@ -328,12 +330,13 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-13
-- Revalidate-by: 2026-09-11
+- Revalidate-by: 2026-09-25
 - Evidence:      results/research/bnbusdt_trade_anatomy/anatomy_summary.json (morphology_clusters: KMeans k=4 on standardized ema_spread/volume_ratio/volatility_ratio/body_ratio/momentum_score/trend_strength/disp_strength/retest_depth/atr over 139,942 opportunities; clusters differ in anatomy/duration but win_rate ≈ 0.334–0.343 and mean_R ≈ −0.000…+0.023 in ALL four) + docs/analysis/BNBUSDT_TRADE_ANATOMY_2026_06_13.md §2 Q5
 - Supersedes:    — (updates F-002 under the governing exit; consistent with F-011 "features barely separate")
 - Reversal:      "Cluster the feature space harder and a winning morphology will appear" -> "Feature morphology separates trade SHAPE (fast winner / slow grinder / immediate loser / late failure) but NOT economics — every cluster has the same ~34% win-rate and ~0 mean_R. Descriptive, not predictive; this forecloses the 'just cluster harder' class of entry research on BNBUSDT."
 - Owner:         claude
 - Note:          Descriptive morphology only — no 'cluster N = edge' claim. Scores were NOT available at this grain (spine-only, N=13), so this is a FEATURE-morphology result, not a score-morphology one.
+- Update:        2026-06-27 (E3 revalidation — finding_dependency_audit Phase B/B1) — re-ran trade_anatomy clustering with governing forward_walk(intrabar_fixed) labels (NOT the F-022-unreliable artifact outcome/rr). UNCHANGED: all 4 KMeans k=4 clusters win_rate 0.3345–0.3428 (≈0.34±0.01), mean_R −0.0001…+0.0228 (within ±0.023), n=139,942 (dataset_sha256 f8bdabbe…). Morphology = SHAPE not expectancy holds; the "cluster harder" class stays foreclosed. Evidence: results/research/bnbusdt_trade_anatomy_2026_06_27/anatomy_summary.json.
 
 ### F-024 · Continuation timing asymmetry — losers resolve almost immediately; winners mature over ~90 min (NOT 5.5 h)
 - Type:          ECONOMIC
