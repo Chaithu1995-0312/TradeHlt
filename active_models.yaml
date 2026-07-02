@@ -1,0 +1,494 @@
+# ═══════════════════════════════════════════════════════════════════
+# ACTIVE MODEL REGISTRY — Machine-readable model metadata for Claude
+# ═══════════════════════════════════════════════════════════════════
+#
+# Every Claude session begins by loading this file.
+# Source of truth: extracted directly from src/ source code.
+#
+# ─── SCHEMA v2.0 — THREE TRUTH LAYERS ──────────────────────────────
+# Each model/engine entry separates three DISTINCT kinds of truth
+# (mirrors CLAUDE.md §4.0 Runtime Truth Precedence). Never collapse
+# them into one field — that conflation was the v1 drift this schema
+# exists to prevent.
+#
+#   intent   → Architectural truth: what it was DESIGNED to answer.
+#              Preserved forever; never deleted (only annotated).
+#   runtime  → Executing truth: what actually RUNS today (engine,
+#              features, file:line, active flag). Code is authority.
+#   evidence → Research truth: what SURVIVES evidence (findings,
+#              validated:true/false). Authority earned only by ΔG001.
+#   status   → Operational rollup: active | orphaned | experimental |
+#              dormant | architectural_intent.
+#
+# The top-level `status:` rollup is retained ALONGSIDE nested
+# `runtime.active:` for backward readability — old readers still resolve.
+# ───────────────────────────────────────────────────────────────────
+
+meta:
+  schema_version: 2.0
+  migration:
+    previous_schema: 1.0
+    compatibility: backward_readable    # top-level `status:` retained alongside nested `runtime.active:`
+    breaking_changes: false             # additive semantic refactor, not a breaking operational change
+  truth_schema:
+    version: 2.0
+    canonical_layers: [intent, runtime, evidence, status]
+    applies_to: knowledge_and_registry_artifacts   # see docs/reference/conventions.md — Truth-Layer Standard
+  truth_model:
+    intent:   "Architectural truth — what it was DESIGNED to answer"
+    runtime:  "Executing truth — what actually runs today (code is authority)"
+    evidence: "Research truth — what survives evidence (findings)"
+    status:   "Operational rollup"
+  last_verified_against:
+    - src/config_layer/crt_engine_v2.py       # CRT enum :63, VALID_TRANSITIONS :1073, transitions :985-:2578
+    - src/engines/heuristic_gaussian_engine.py # class :187, compute :271
+    - src/engines/zone_gate_engine.py          # filter_canonical_inputs :163
+    - src/engines/rr_engine.py                 # class :37, compute :45
+    - src/engines/live_engine.py               # BitNetZoneGate.check :202
+  related_docs:
+    - docs/topics/model-intent-and-feature-ownership.md   # per-model feature ownership (Question A verified)
+    - docs/current-findings.md                            # F-ids cited in evidence layers below
+  verified_on: 2026-07-02
+
+# ───────────────────────────────────────────────────────────────────
+# 1. CRT ENGINE — Deterministic Market-Structure State Machine
+# ───────────────────────────────────────────────────────────────────
+crt:
+  intent:
+    question: "Is the market structure valid? (institutional liquidity events)"
+    description: >
+      Candle Range Theory engine. Detects liquidity sweeps, displacement,
+      expansion and retest from OHLCV via a deterministic state machine —
+      no prediction, no ML. Rule-based transitions; thresholds are config.
+
+  runtime:
+    engine: CRTEngine
+    file: src/config_layer/crt_engine_v2.py
+    architecture: "RangeDetector → StateMachine → UltronRiskEngine → ExecutionEngine"
+    active: true
+    states: 9              # CORRECTED from 10 — matches state_list + VALID_TRANSITIONS + CLAUDE.md §4
+    state_list:            # enum order — crt_engine_v2.py:63 (no CANCELLED state exists)
+      - RANGE
+      - SHADOW_PENDING
+      - SWEEP
+      - DISPLACEMENT
+      - EXPANSION
+      - EXPIRED
+      - RETEST
+      - EXECUTION
+      - RESOLUTION
+    valid_transitions:     # crt_engine_v2.py:1073 — mirrors code VALID_TRANSITIONS
+      RANGE:          [SWEEP, SHADOW_PENDING]
+      SHADOW_PENDING: [SWEEP, RANGE]
+      SWEEP:          [DISPLACEMENT, EXPANSION, RANGE]
+      DISPLACEMENT:   [EXPANSION, RANGE]
+      EXPANSION:      [RETEST, EXPIRED, RANGE]
+      EXPIRED:        [RANGE]
+      RETEST:         [EXECUTION, RANGE]
+      EXECUTION:      [RESOLUTION]
+      RESOLUTION:     [RANGE]   # cycle-reset (NOT a dead-end); terminality expressed in lifecycle.resolution
+
+    # ── Detection states — rules that CLASSIFY a candle into a state ──
+    detection:
+      range:
+        method: pure_geometric
+        file_line: src/config_layer/crt_engine_v2.py:985   # detect_htf_range
+        logic: "h_ref = max(c.high); l_ref = min(c.low) over HTF window"
+        ohlcv_inputs: [high, low]
+        config_keys: []
+        defaults: {}
+
+      sweep:
+        method: boundary_breach_with_rejection
+        file_line: src/config_layer/crt_engine_v2.py:1017  # detect_sweep (+ try_range_to_sweep :1150)
+        logic_long:  "candle.high > range.h_ref AND candle.close < range.h_ref"
+        logic_short: "candle.low  < range.l_ref AND candle.close > range.l_ref"
+        ohlcv_inputs: [high, low, close]
+        config_keys: []
+        defaults: {}
+        double_confirmed: "prev_sweep exists AND direction differs"
+        sweep_types: [TYPE-A, TYPE-B, TYPE-C, TYPE-D]   # diagnostic only; crt_sweep_taxonomy.classify_sweep()
+
+      displacement:
+        method: multi_gate
+        file_line: src/config_layer/crt_engine_v2.py:1201  # try_sweep_to_displacement
+        logic:
+          all_gates_must_pass: true
+          gate_1: "abs(close-open) >= atr_min_displacement × ATR"
+          gate_2: "body_ratio >= body_ratio_min"
+          gate_3: "wick_size >= atr_multiplier_min × ATR"
+          gate_4: "sweep age <= max_sweep_age_candles"
+        ohlcv_inputs: [open, high, low, close]
+        config_keys: [atr_min_displacement, body_ratio_min, atr_multiplier_min, max_sweep_age_candles]
+        defaults:
+          atr_min_displacement: 1.2
+          body_ratio_min: 0.70
+          atr_multiplier_min: 1.50
+          max_sweep_age_candles: 20
+
+      expansion:
+        method: single_candle_extension
+        file_line: src/config_layer/crt_engine_v2.py:1250  # try_displacement_to_expansion (+ shadow resume :1175)
+        logic:
+          - "close > displacement_candle.close (long) / close < disp.close (short)"
+          - "abs(close - disp_close) >= expansion_atr_min_distance × ATR"
+        ohlcv_inputs: [close]
+        config_keys: [expansion_atr_min_distance]
+        defaults:
+          expansion_atr_min_distance: 0.20
+
+      retest:
+        method: adaptive_depth_ceiling
+        file_line: src/config_layer/crt_engine_v2.py:1302  # try_expansion_to_retest
+        logic: "depth = close - range.l_ref (long); must be < adaptive_ceiling"
+        adaptive_ceiling: "max(0.25×range_size, 0.50×ATR)"
+        min_depth: "0.1 × ATR"
+        ohlcv_inputs: [close]
+        config_keys: [retest_depth_max, retest_atr_depth_fraction]
+        defaults:
+          retest_depth_max: 0.25
+          retest_atr_depth_fraction: 0.50
+
+      expired:
+        method: ttl_guard
+        file_line: src/config_layer/crt_engine_v2.py:2578  # EXPANSION→EXPIRED TTL branch (emit :2554)
+        logic: "age_candles > max_expansion_age_candles OR age_hours > max_expansion_age_hours"
+        ohlcv_inputs: []                                    # time-based, not price-based
+        config_keys: [max_expansion_age_candles, max_expansion_age_hours]
+        defaults:
+          max_expansion_age_candles: 495
+          max_expansion_age_hours: 124
+
+    # ── Lifecycle states — NOT detection rules; modelled honestly as such ──
+    lifecycle:
+      shadow_pending:
+        type: lifecycle_state       # cross-window displacement memory active; awaiting sweep confirmation
+        entered_by: [RANGE]
+        file_line: src/config_layer/crt_engine_v2.py:1162  # try_range_to_shadow_pending
+      execution:
+        type: terminal_execution_state   # trade emitted; no detection — RETEST→EXECUTION on gate pass
+        entered_by: [RETEST]
+        file_line: src/config_layer/crt_engine_v2.py:1420  # try_retest_to_execution
+      resolution:
+        type: post_trade_state       # terminal; EXECUTION→RESOLUTION then reset to RANGE
+        entered_by: [EXECUTION]
+        file_line: src/config_layer/crt_engine_v2.py:1435  # _transition(..., RESOLUTION, ...)
+
+    cached_features_at_retest:
+      - {feature: retest_depth,  description: "How far price moved back toward disp.open from disp.close"}
+      - {feature: body_ratio,    description: "Displacement candle body/wick ratio"}
+      - {feature: disp_strength, description: "Displacement wick_size / ATR"}
+      - {feature: retest_index,  description: "Candle index when retest confirmed"}
+      - {feature: session,       description: "Session name from active_range"}
+      - {feature: double_sweep,  description: "Double sweep confirmed boolean"}
+
+    scoring:
+      raw_formula: "0.35×sweep + 0.25×breakout + 0.20×retest + 0.20×time"   # score_sweep :1548 / score_breakout :1556 / score_retest :1562
+      decay: "exp(-0.05 × candles_since_retest)"
+      soft_conf_fusion: "S = G^0.70 × C^0.30"
+      gates:
+        - news_blackout (hard, 15min)
+        - max_spread (hard, 0.05)
+        - bitnet (hard when enabled, threshold=0.55)
+        - session_filter (hard: LONDON/NEWYORK/OVERLAP)
+        - score_threshold (soft, 0.45)
+        - shadow_advisory (hard when enabled, default=false)
+
+    thresholds:
+      body_ratio_min:              { type: float,  default: 0.70 }
+      atr_multiplier_min:          { type: float,  default: 1.50 }
+      atr_min_displacement:        { type: float,  default: 1.20 }
+      confirmation_body_min:       { type: float,  default: 0.60 }
+      retest_depth_max:            { type: float,  default: 0.25 }
+      retest_atr_depth_fraction:   { type: float,  default: 0.50 }
+      max_displacement_strength:   { type: float,  default: 2.00 }
+      atr_period:                  { type: int,    default: 14  }
+      atr_buffer_multiplier:       { type: int,    default: 3   }
+      max_sweep_age_candles:       { type: int,    default: 20  }
+      max_expansion_age_candles:   { type: int,    default: 495 }
+      max_expansion_age_hours:     { type: int,    default: 124 }
+      expansion_age_warn_candles:  { type: int,    default: 342 }
+      pending_displacement_ttl_candles: { type: int, default: 4  }
+      shadow_age_penalty_lambda:   { type: float,  default: 0.0 }
+      shadow_age_norm_candles:     { type: int,    default: 0   }
+      expansion_atr_min_distance:  { type: float,  default: 0.20 }
+      score_decay_lambda:          { type: float,  default: 0.05 }
+      score_threshold:             { type: float,  default: 0.45 }
+      tier_1_threshold:            { type: float,  default: 0.75 }
+      tier_2_threshold:            { type: float,  default: 0.30 }
+      conf_alpha:                  { type: float,  default: 0.70 }
+      conf_beta:                   { type: float,  default: 0.30 }
+      conf_weights:                { type: list,   default: [0.35, 0.35, 0.15, 0.15] }
+      conf_floor:                  { type: float,  default: 0.20 }
+      weak_link_weight:            { type: float,  default: 0.30 }
+      soft_conf_max_candles:       { type: int,    default: 3   }
+      bitnet_main_threshold:       { type: float,  default: 0.55 }
+      use_bitnet:                  { type: bool,   default: false }
+      allowed_sessions:            { type: list,   default: [LONDON, NEWYORK, OVERLAP] }
+      retrace_reset_pct:           { type: float,  default: 0.50 }
+      extension_reset_fib:         { type: float,  default: 1.618 }
+      sizing_bands:                { type: list,   default: [[0.75, 0.010], [0.55, 0.005]] }
+      sl_atr_buffer:               { type: float,  default: 0.20 }
+      tp1_atr_multiplier:          { type: float,  default: 1.00 }
+      tp2_atr_multiplier:          { type: float,  default: 2.00 }
+      tp1_atr_multiplier_breakout: { type: float,  default: 1.50 }
+      tp1_atr_multiplier_pullback: { type: float,  default: 0.80 }
+      tp1_atr_multiplier_liq_sweep: { type: float, default: 1.20 }
+      tp1_atr_multiplier_reversal: { type: float,  default: 1.00 }
+      breakout_disp_threshold:     { type: float,  default: 1.50 }
+      exit_model:                  { type: str,    default: intrabar_touch }
+      news_blackout_minutes:       { type: int,    default: 15  }
+      max_spread_pct:              { type: float,  default: 0.05 }
+      shadow_advisory_only:        { type: bool,   default: false }
+      ema_fast:                    { type: int,    default: 2   }
+      ema_slow:                    { type: int,    default: 5   }
+      session_windows:
+        LONDON:  [07:00, 10:00]
+        NEWYORK: [13:00, 16:00]
+        ASIA:    [00:00, 03:00]
+
+  evidence:
+    findings: [F-021, F-037]
+    validated: partial
+    notes: >
+      CRT-state entry selection = the (incumbent) SESSION filter under intrabar+12bps;
+      no score/zone skill beyond session (F-021). The research "spine" is CRT-ONLY —
+      the 4-engine fusion gate is OFF in backtests (F-037). CRT structure is real; a
+      standalone directional EDGE is not demonstrated.
+
+  status: active
+
+# ───────────────────────────────────────────────────────────────────
+# 2. GAUSSIAN — Directional-Momentum Scorer  (⚠ runtime ≠ trained model)
+# ───────────────────────────────────────────────────────────────────
+gaussian:
+  intent:
+    question: "Is this historically profitable? (probability-of-success match)"
+    description: >
+      Designed as a Gaussian probability match over CRT-labelled OHLCV states.
+      NOTE: the LIVE scorer is a compact 3-feature heuristic, NOT the 38-dim
+      trained NB model — see runtime vs trained_registry below.
+
+  runtime:                       # what actually executes in the fusion path today
+    engine: HeuristicGaussianEngine
+    file: src/engines/heuristic_gaussian_engine.py:271   # class :187, def compute :271
+    active: true
+    features: [ema_fast, ema_slow, momentum_score]        # 3 features — a narrow momentum vote
+    target: directional_momentum_score
+    note: >
+      A directional-momentum Gaussian on 3 canonical features. It is NOT the
+      "v4_mirrored 38-feature Naive Bayes" model — that is a separate, unwired
+      artifact recorded under trained_registry.
+
+  trained_registry:             # historical / experimental artifacts — NOT the live scorer
+    file: models/gaussian_registry.json
+    per_instrument: true
+    governance:
+      - "GOV-3: At most one active version per instrument"
+      - "GAP-3: Never promote if corr < 0.0 (even force=True)"
+      - "PATCH v3: Block promotion if schema version mismatch"
+      - "Max allowed regression: 0.01"
+    entries:
+      v4_mirrored:
+        active: false           # NOT the runtime scorer
+        status: experimental
+        target: corr_expected_rr   # corr(expected_rr, actual_pnl_rr), not binary win/loss
+        samples: 242000
+        correlation: 0.2066
+        cv_std: 0.0072
+        direction_aware: true
+        feature_dimension: 38
+        schema_version: v2
+        evidence: [CURRENT_STATE.md, phase5_calibration.py]
+
+  evidence:
+    findings: [F-005]
+    validated: false
+    notes: "Live Gaussian is a 3-feature momentum vote; the 38-dim trained model is not wired."
+
+  status: active   # (the 3-feature heuristic is active; v4_mirrored trained model is experimental)
+
+# ───────────────────────────────────────────────────────────────────
+# 3. BITNET — Market-State Hard-Reject Gate
+# ───────────────────────────────────────────────────────────────────
+bitnet:
+  intent:
+    question: "Is this market state acceptable?"
+    description: >
+      6-feature hard-reject gate (score < 0.55 rejects). Classifies market
+      states from cached features; acts as a hard gate in the approval chain.
+
+  runtime:
+    file: src/bitnet/bitnet_inference.py:317               # bitnet_score (per related topic doc)
+    integration: "UltronRiskEngine.approve() / approve_with_soft_conf(); live check via BitNetZoneGate.check (live_engine.py:202)"
+    input_source: "cached_features at RETEST + state.atr"
+    features: [body_ratio, retest_depth, disp_strength, atr, candles_since_retest, double_sweep]
+    threshold: 0.55
+    enabled: false                                          # gated by CRT threshold use_bitnet (default false)
+    active: false
+
+  evidence:
+    findings: [F-004]
+    validated: true
+    notes: >
+      When ENABLED it is a genuine LIVE hard-reject gate and the score is persisted
+      (F-004). Only the *adaptive* threshold is dormant. Off by default in the active config.
+
+  status: dormant   # off by default; becomes a live hard gate when use_bitnet=true
+
+# ───────────────────────────────────────────────────────────────────
+# 4. ZONE GATE — Historical Feature-Space Quality Estimator
+# ───────────────────────────────────────────────────────────────────
+zone_gate:
+  intent:
+    question: "Is this feature-space neighbourhood historically good?"
+    description: >
+      Weighted-Gaussian / nearest-neighbour similarity over historical zones.
+      Learns which regions of feature space historically worked.
+
+  runtime:
+    file: src/engines/zone_gate_engine.py:163              # filter_canonical_inputs (+ compute_weighted_cluster_score :106)
+    input_contract: canonical_38_vector                    # CORRECTED: requires all 38 canonical keys (not [atr,rsi,volume,trend])
+    per_zone_active: "~25 of 38 active per zone; ~13 zero_indices (learned mask, not designed)"
+    fail_open: 0.5                                         # returns 0.5/pass on registry error
+    registry_file: models/zone_registry.json
+    zone_mode: hard
+    output: "market state quality score [0, 1]"
+    active: true
+
+  evidence:
+    findings: [F-036, F-041]
+    validated: false
+    notes: >
+      ΔG001 ≡ 0 — zone is non-pivotal on gate-ON fusion (redundant/decision-dominated,
+      not weak/underweighted); tunable NOT authority (F-036). Runtime scores through
+      models/zone_registry.json (8 zones); the zone_gate_registry.json manifest points
+      to a DIFFERENT file (hash mismatch) — TruthConflict, surfaced not reconciled (F-041).
+      Stored labels ~98% SL-hit / 6-of-8 negative mean_RR (observation; Phase-5 gate).
+
+  status: active
+
+# ───────────────────────────────────────────────────────────────────
+# 5. RR — Reward-Risk / Candle-Polarity Structural Filter
+# ───────────────────────────────────────────────────────────────────
+rr_model:
+  intent:
+    question: "Is the reward-risk economically viable?"
+    description: >
+      Designed to gauge whether OHLC structure can produce sufficient movement
+      relative to required stop size.
+
+  runtime:
+    engine: RREngine
+    file: src/engines/rr_engine.py:45                      # class :37, def compute :45
+    type: geometric_filter                                 # NOT a learned predictor
+    learning: false
+    inputs: [close, high, low]                             # candle-polarity (directional commitment) index
+    min_rr: retained_but_unused                            # rr_engine.py:43
+    output: "candle-polarity / structural-commitment index"
+    active: true
+
+  evidence:
+    findings: [F-038]
+    validated: false
+    notes: >
+      The rr_fusion layer was a GAUSSIAN DUPLICATE (Mahalanobis conf ≪ 0.3 → 100% bypass);
+      rr_fusion is DISABLED in the active config so base RREngine.compute() flows through
+      unmutated (F-038). Not a movement-potential learner — a geometric filter.
+
+  status: active   # base RR active; rr_fusion disabled
+
+# ───────────────────────────────────────────────────────────────────
+# 6. STRATEGY MODULES (S1–S10) — ⚠ ORPHANED SIDECAR, NOT THE LIVE SPINE
+# ───────────────────────────────────────────────────────────────────
+strategies:
+  intent:
+    description: >
+      Ten pluggable strategies aggregated by StrategyOrchestrator into a
+      consensus signal. Designed as an ensemble/consensus layer.
+
+  runtime:
+    orchestrator: src/strategies/strategy_orchestrator.py   # StrategyOrchestrator
+    participates_in_live_spine: false                       # ⚠ does NOT feed the production decision path
+    wiring: sidecar
+    output_sink: "FusionEngine.fuse_strategy_results()"     # dormant fuse path — not consumed live
+    active: false
+
+  evidence:
+    validated: false
+    notes: >
+      fuse_strategy_results is DORMANT on live; the live gate is tier_* / session.
+      S8 'ML Ensemble' etc. exist as code but are NOT a production alpha engine —
+      do not infer live participation from their presence. min_consensus_signals NULL.
+
+  status: orphaned
+
+  modules:   # descriptions preserved (architectural intent) — presence ≠ production use
+    s1_crt_wrapper:      { description: "Wraps the CRT engine as a strategy" }
+    s2_mean_reversion:   { description: "Mean-reversion signal" }
+    s3_breakout:         { description: "Breakout signal" }
+    s4_stat_arb:         { description: "EMA spread Z-score mean reversion", question: "Has price moved too far from equilibrium?" }
+    s5_grid:             { description: "Grid strategy" }
+    s6_scalping:         { description: "Scalping signal" }
+    s7_news_sentiment:   { description: "News/sentiment signal" }
+    s8_ml_ensemble:      { description: "Multi-indicator consensus: trend + momentum + volume + structure", philosophy: "No single indicator matters. Agreement matters." }
+    s9_pattern_recognition: { description: "Candle geometry: Hammer, Shooting Star, Engulfing, Marubozu", assumption: "Candle geometries imply exhaustion / reversal / continuation" }
+    s10_trap:            { description: "Fake-breakout detector (bull/bear traps)", confidence_boosters: [liquidity_sweep, displacement, double_sweep, volume_spikes] }
+
+# ───────────────────────────────────────────────────────────────────
+# 7. ENGINE RUNNER — Runtime Orchestration
+# ───────────────────────────────────────────────────────────────────
+engine_runner:
+  intent:
+    description: "Four mandatory engines run per candle, fused, then a single decision authority emits execute/reject."
+
+  runtime:
+    file: src/core/engine_runner.py:144                     # detect_regime / breakout :159 / trap :183
+    engines: [crt, gaussian, zone_gate, rr]
+    decision_authority: "DecisionEngine (sole emitter of 'execute' or 'reject')"
+    pipeline: "EngineRunner → FusionEngine → DecisionEngine → ExecutionPlanner → UltronRiskGate"
+    fusion_gate:
+      backtest: OFF        # .env BACKTEST_ENGINE_GATE=0 — research spine is CRT-only (F-037)
+      live: ON             # live path always runs the 4-engine fusion gate
+    active: true
+
+  evidence:
+    findings: [F-037, F-038]
+    validated: true
+    notes: "Gate OFF in backtests / ON live (F-037). Fusion runs CRT+Gaussian+ZoneGate+base-RR after F-038 disable."
+
+  status: active
+
+# ───────────────────────────────────────────────────────────────────
+# 8. MODEL PHILOSOPHY — Edge-Hypothesis Decomposition
+# ───────────────────────────────────────────────────────────────────
+# PRESERVED as architectural intent. These are DESIGN questions, NOT
+# proven edges — see authority block. (§6.5 Authority Ladder: information
+# and intent have NO authority; only demonstrated ΔG001 earns authority.)
+philosophy:
+  intent:
+    description: >
+      Each engine represents a distinct hypothesis about where trading edge
+      originates. They decompose OHLCV into different questions.
+    decomposition:
+      crt:        "Is the market structure valid?"
+      gaussian:   "Is this historically profitable?"
+      zone_gate:  "Is this feature-space neighbourhood good?"
+      rr:         "Is the reward-risk economically viable?"
+      bitnet:     "Is this market state acceptable?"
+      trap:       "Is this a deception pattern?"
+    composite_question: >
+      "Is this OHLCV configuration structurally valid, historically
+      successful, economically attractive, and in a favourable state?"
+
+  authority:
+    level: architectural_intent
+    validated: false
+    findings: [F-019, F-020, F-021, F-025, F-035, F-037, F-040]
+    note: >
+      The directional edge these hypotheses assume is NOT demonstrated: the
+      entry-information null holds across crypto majors and FX (F-019/020/021/025/035)
+      and across the candle-state transition frontier (F-040). Binding constraint =
+      execution model, not predictability. Intent ≠ evidence.
+
+  status: architectural_intent

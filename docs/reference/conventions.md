@@ -41,7 +41,7 @@ Decide where a new file goes by asking "what is it?" then matching against this 
 | New decision / risk / fusion logic              | `src/core/`                              | Core owns the decision kernel; do not scatter across engines  |
 | New validator or config transform               | `src/config_layer/`                      | Builders, validators, decision rules, `llm_inference_client`, planner |
 | RR-specific fusion / dataset code               | `src/config_layer/rr/`                   | RR layer kept isolated for independent re-training            |
-| Feature extraction or drift code                | `src/features/`                          | Canonical 35-dim schema lives in `feature_schema.py`          |
+| Feature extraction or drift code                | `src/features/`                          | Canonical 38-dim schema lives in `feature_schema.py`          |
 | Governance / promotion / shadow logic           | `src/governance/`                        | All pre-prod gates live here                                  |
 | Live execution (state machine, executor)        | `src/inout/`                             | Strictly live-mode; no backtest logic                         |
 | Execution harness (replay, baseline, backtest)  | `src/runtime/`                           | Drives engines over data; no decision logic of its own        |
@@ -270,3 +270,59 @@ Levels used by this codebase:
 | **Hidden randomness in decision paths** | Deterministic inputs → deterministic outputs; randomness confined to training only  | Codebase-wide                                                      |
 | **Unicode-unsafe console output**      | Windows cp1252 fallback for non-ASCII; no raw `print` of arbitrary strings           | `src/utils/console_safe.py`                                        |
 | **Re-explaining context mid-session**  | Agent sessions reference session-log entries instead of repeating                    | Per `CLAUDE.md` token control rules                                |
+
+---
+
+## 9. Truth-Layer Standard (schema v2.0)
+
+**Canonical shape for *knowledge / registry / mixed-truth* artifacts** — files that must simultaneously
+record what something was *designed* to do, what it *actually runs*, and what the *evidence* says.
+Adopt these four layers verbatim (do not invent near-equivalents like `purpose / implementation /
+research / state`) so the repository grows one convention, not many — preventing *truth-layer drift*.
+
+| Layer | Meaning | Authority |
+| ----- | ------- | --------- |
+| `intent`   | Why it was designed | Architectural |
+| `runtime`  | What executes today (code is authority) | Tier-0 (§4.0) |
+| `evidence` | Findings supporting/refuting it | Research (§6.2 findings) |
+| `status`   | Operational rollup (`active`/`orphaned`/`experimental`/`dormant`) | Governance |
+
+**Scope (deliberately narrow):** applies to registries, model catalogs, feature-ownership docs, and
+research/runtime hybrid artifacts — **NOT** every markdown file (prose docs, plans, findings keep
+their own shapes). Avoids documentation bureaucracy.
+
+**Reference implementation:** [`active_models.yaml`](../../active_models.yaml) (`meta.truth_schema`,
+`canonical_layers: [intent, runtime, evidence, status]`). **Backward readability:** a top-level
+`status:` rollup may be retained alongside nested `runtime.active:`. New knowledge artifacts should
+declare `meta.truth_schema.version` and cite this section.
+
+### Executable-Invariant Scope Policy
+
+Executable YAML↔code (or doc↔code) invariants are justified only when
+ALL of the following hold:
+
+1. Demonstrated historical drift
+2. Architectural-contract status
+3. Low expected churn (stable semantics)
+4. High cost of misunderstanding
+
+Current approved scope:
+- CRT State Machine (`tests/test_crt_state_invariants.py`)
+
+Why CRT qualifies:
+- D1 (`states: 10 → 9`) and D9 (`RESOLUTION` transition) demonstrate
+  historical drift.
+- `VALID_TRANSITIONS` is an architectural contract.
+- State semantics are stable and intentionally low-churn.
+- Misunderstanding the state machine has high downstream cost.
+
+Do NOT add executable invariants for:
+- Intentionally evolving implementations
+- Engine composition lists
+- Experimental models
+- Runtime heuristics
+
+New executable invariants require:
+- Evidence of historical drift OR explicit architectural-contract status
+- SESSION LOG justification
+- Review under the Truth-Layer Standard
