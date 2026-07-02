@@ -1,3 +1,5 @@
+"""Control-plane dashboard monitor specs (jsonl-tail/json/regex/file-stat sources)."""
+
 from __future__ import annotations
 
 import glob

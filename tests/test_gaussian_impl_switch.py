@@ -135,25 +135,20 @@ def test_engine_runner_default_is_heuristic():
 
 
 def test_engine_runner_ml_impl():
-    os.environ["GAUSSIAN_IMPL"] = "ml"
-    try:
-        from engines.ml_gaussian_engine import MLGaussianEngine
-        from core.engine_runner import EngineRunner
-        engine = EngineRunner._get_gaussian_engine({})
-        assert isinstance(engine, MLGaussianEngine)
-    finally:
-        del os.environ["GAUSSIAN_IMPL"]
+    # Config-first (§6.5): selection is driven by config["gaussian_impl"];
+    # the GAUSSIAN_IMPL env var was removed (config is the single source of truth).
+    from engines.ml_gaussian_engine import MLGaussianEngine
+    from core.engine_runner import EngineRunner
+    engine = EngineRunner._get_gaussian_engine({"gaussian_impl": "ml"})
+    assert isinstance(engine, MLGaussianEngine)
 
 
 def test_engine_runner_heuristic_explicit():
-    os.environ["GAUSSIAN_IMPL"] = "heuristic"
-    try:
-        from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
-        from core.engine_runner import EngineRunner
-        engine = EngineRunner._get_gaussian_engine({})
-        assert isinstance(engine, HeuristicGaussianEngine)
-    finally:
-        del os.environ["GAUSSIAN_IMPL"]
+    # Config-first (§6.5): explicit "heuristic" via config, not env var.
+    from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
+    from core.engine_runner import EngineRunner
+    engine = EngineRunner._get_gaussian_engine({"gaussian_impl": "heuristic"})
+    assert isinstance(engine, HeuristicGaussianEngine)
 
 
 def test_engine_runner_config_override():

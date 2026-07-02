@@ -44,6 +44,9 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from config_layer.production_config import get_prod_section  # type: ignore
+from data_ingestion.ohlcv_schema import (  # type: ignore
+    require_ohlcv_columns, resolve_ohlcv_headers, validate_ohlcv_row,
+)
 from utils.logging_config import get_flow_logger             # type: ignore
 
 logger = get_flow_logger("DATA_INGESTION")
@@ -503,23 +506,33 @@ class HistoricalFetcher:
         rows: List[OHLCVRow] = []
         with open(csv_path, newline="", encoding="utf-8") as fh:
             reader = csv.DictReader(fh)
+            # Phase 1 — resolve each mandatory column to an actual header (case +
+            # known synonyms permitted). volume must be present (no auto-create).
+            resolved = resolve_ohlcv_headers(reader.fieldnames or [])
+            require_ohlcv_columns(
+                resolved.keys(), source=f"Historical dataset {csv_path}"
+            )
+            o_key, h_key, l_key, c_key, v_key = (
+                resolved["open"], resolved["high"], resolved["low"],
+                resolved["close"], resolved["volume"],
+            )
             for line in reader:
                 ts = _parse_csv_ts(line)
                 if ts is None:
                     continue
                 if not (start_dt <= ts < end_dt):
                     continue
-                try:
-                    rows.append(OHLCVRow(
-                        ts=ts, pair=pair, timeframe=timeframe,
-                        open=float(line.get("open", line.get("Open", 0))),
-                        high=float(line.get("high", line.get("High", 0))),
-                        low=float(line.get("low",  line.get("Low",  0))),
-                        close=float(line.get("close", line.get("Close", 0))),
-                        volume=float(line.get("volume", line.get("Volume", line.get("tick_volume", 0)))),
-                    ))
-                except (ValueError, KeyError) as exc:
-                    logger.debug("Skipping malformed CSV row: %s", exc)
+                # Strict numeric access (no .get default) + value-integrity gate.
+                o = float(line[o_key]); h = float(line[h_key])
+                l = float(line[l_key]); c = float(line[c_key])
+                vol = float(line[v_key])
+                validate_ohlcv_row(
+                    o, h, l, c, vol, source=f"Historical dataset {csv_path}"
+                )
+                rows.append(OHLCVRow(
+                    ts=ts, pair=pair, timeframe=timeframe,
+                    open=o, high=h, low=l, close=c, volume=vol,
+                ))
 
         return rows
 

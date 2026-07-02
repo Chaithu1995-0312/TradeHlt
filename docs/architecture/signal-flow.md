@@ -29,19 +29,47 @@ mode (per [`CONVENTIONS.md`](CONVENTIONS.md) §3), and cross-references.
 ### Step 1 — DATA INGEST
 
 - **Module:**      `src/runtime/backtest_v2.py` (backtest) / `src/inout/scanner.py` (live)
-- **Entry point:** `BacktestRunner.run()` / live feed loop
+- **Entry point:** `CandleLoader.stream()` (the CSV reader lives in `backtest_v2.py`, not the
+                   data layer) / live feed loop
 - **Reads from:**  raw OHLCV M15 CSV in `data/<INSTRUMENT>.csv`, or live tick adapter
 - **Emits:**       `Candle` dataclass (see `SCHEMAS.md §2`)
+- **Validates:**   two-tier — (a) always-on inline backstop in `stream()`: L1 duplicate-header
+                   reject + L2 duplicate/out-of-order timestamp + Phase-1 column / Phase-2 value
+                   checks (all raise, no silent skip), delegating per-field helpers to
+                   `data_ingestion/ohlcv_schema.py`; (b) optional pre-flight gate
+                   `dataset_integrity.validate_dataset()` → `APPROVE/WARN/REJECT`, run by
+                   `MultiInstrumentRunner` (a standalone `BacktestRunner` relies on the backstop).
 - **Failure mode:** fail-fast on missing/empty CSV, malformed timestamps, lookahead
-- **Cross-ref:**   `SCHEMAS.md §2` (`Candle`), `CONFIG_REFERENCE.md` → `backtest`
+- **Cross-ref:**   `SCHEMAS.md §2` (`Candle`), `CONFIG_REFERENCE.md` → `backtest`,
+                   [`topics/feature-schema.md`](../topics/feature-schema.md) ("Why `stream()` is
+                   more than CSV parsing"), `current-findings.md` F-039
+
+**Integrity layers & which paths run them** (no-lookahead is the *conjunction* of all of these,
+not any single gate — F-039):
+
+| Layer | What it enforces | Where | Coverage |
+|---|---|---|---|
+| **L1 schema** | unique headers, six required columns, parseable timestamps | inline in `CandleLoader.stream()` | **every** stream consumer |
+| **L2 temporal** | strictly-increasing timestamps (no dup / no out-of-order), per-row value sanity (high≥low, vol≥0, no NaN) | inline in `CandleLoader.stream()` | **every** stream consumer |
+| **L3 dataset** | gap analysis, session-calendar expectations, cross-file (`validate_dataset`/`validate_universe`) | pre-flight, separate pass | **`backtest_v2` only** |
+| **RT generator** | causal ordering — engine can't touch candle N+1 until N is consumed | `stream()` is a generator | **every** stream consumer |
+
+The `src/research/` qualification pipeline, `analytics/sl_tp_comparator`,
+`governance/portfolio_validation`, `runtime/exit_model_band`, `runtime/unified_replay_harness`,
+and `config_layer/config_validator` run **L1/L2 + RT only** — the inline backstop is their sole
+integrity net (F-039). Making `stream()` permissive removes that net on those paths.
 
 ### Step 2 — FEATURE PIPELINE
 
 - **Module:**      `src/features/feature_pipeline.py`
-- **Entry point:** `FeaturePipeline.transform(candle, history)`
-- **Reads from:**  `CANONICAL_FEATURES` (35-dim) + `FEATURE_SCHEMA` hash baseline
+- **Entry point:** `FeaturePipeline.run()` → `(enriched_df, vectors)` (batch enrich over the
+                   whole frame up-front; `finalize()` drops NaN warmup rows). The per-bar unit
+                   of the spine is the *candle stream* (`CandleLoader.stream()`), not a
+                   per-candle feature call.
+- **Reads from:**  `CANONICAL_FEATURES` (38-dim) + `FEATURE_SCHEMA` hash baseline
                    from `results/baseline/`
-- **Emits:**       feature vector → `FeatureStore` (in-memory, per-instrument window)
+- **Emits:**       38-dim feature vectors (indices 0–4 = raw OHLCV) consumed candle-by-candle
+                   by the engine loop
 - **Failure mode:** fail-fast on schema-hash mismatch (see `runtime/baseline_capture.py`)
 - **Cross-ref:**   `SCHEMAS.md §3` (canonical features), `ARCHITECTURE.md §3.1`
 

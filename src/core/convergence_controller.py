@@ -78,15 +78,69 @@ class ConvergenceController:
     returns raw average with variance=0, entropy=0, threshold=initial_threshold.
     """
 
+    @classmethod
+    def from_prod_config(cls, window_size: int) -> "ConvergenceController":
+        """Production constructor — fail-fast. Strict-reads the ``convergence_controller``
+        section (no silent defaults); a missing section or key raises. The BEHAVIORAL knobs
+        below were formerly module-level constants."""
+        from config_layer.production_config import get_prod_section
+        s = get_prod_section("convergence_controller")
+
+        def _req(key: str):
+            if key not in s:
+                raise KeyError(
+                    f"Required config key '{key}' missing from 'convergence_controller' section. "
+                    f"Add it to the production config (config-first doctrine: no silent defaults)."
+                )
+            return s[key]
+
+        return cls(
+            window_size=window_size,
+            warmup_bars=int(_req("warmup_bars")),
+            thresh_min=float(_req("thresh_min")),
+            thresh_max=float(_req("thresh_max")),
+            thresh_step=float(_req("thresh_step")),
+            accept_rate_high=float(_req("accept_rate_high")),
+            accept_rate_low=float(_req("accept_rate_low")),
+            abs_quality_floor=float(_req("abs_quality_floor")),
+            sig_k=float(_req("sig_k")),
+            sig_t=float(_req("sig_t")),
+            penalty_sig_k=float(_req("penalty_sig_k")),
+            penalty_sig_t=float(_req("penalty_sig_t")),
+        )
+
     def __init__(
         self,
         window_size:        int   = 500,
         initial_threshold:  float = 0.50,
         abs_quality_floor:  float = _ABS_QUALITY_FLOOR,
+        *,
+        # BEHAVIORAL knobs — canonical defaults (module constants) for unit-test / standalone
+        # construction; the live path always supplies these via from_prod_config (fail-fast).
+        warmup_bars:        int   = _WARMUP_BARS,
+        thresh_min:         float = _THRESH_MIN,
+        thresh_max:         float = _THRESH_MAX,
+        thresh_step:        float = _THRESH_STEP,
+        accept_rate_high:   float = _ACCEPT_RATE_HIGH,
+        accept_rate_low:    float = _ACCEPT_RATE_LOW,
+        sig_k:              float = _SIG_K,
+        sig_t:              float = _SIG_T,
+        penalty_sig_k:      float = 8.0,
+        penalty_sig_t:      float = 0.5,
     ) -> None:
         self._window_size      = window_size
-        self._threshold        = _clamp(initial_threshold, _THRESH_MIN, _THRESH_MAX)
-        self._abs_quality_floor = _clamp(abs_quality_floor, 0.0, _THRESH_MAX)
+        self._warmup_bars      = int(warmup_bars)
+        self._thresh_min       = float(thresh_min)
+        self._thresh_max       = float(thresh_max)
+        self._thresh_step      = float(thresh_step)
+        self._accept_rate_high = float(accept_rate_high)
+        self._accept_rate_low  = float(accept_rate_low)
+        self._sig_k            = float(sig_k)
+        self._sig_t            = float(sig_t)
+        self._penalty_sig_k    = float(penalty_sig_k)
+        self._penalty_sig_t    = float(penalty_sig_t)
+        self._threshold        = _clamp(initial_threshold, self._thresh_min, self._thresh_max)
+        self._abs_quality_floor = _clamp(abs_quality_floor, 0.0, self._thresh_max)
         # Rolling window of bool outcomes for accept_rate computation
         self._outcome_window: deque[bool] = deque(maxlen=window_size)
 
@@ -97,14 +151,17 @@ class ConvergenceController:
     @property
     def is_warm(self) -> bool:
         """True once enough outcomes have been recorded for stable statistics."""
-        return len(self._outcome_window) >= _WARMUP_BARS
+        return len(self._outcome_window) >= self._warmup_bars
 
     @property
     def threshold(self) -> float:
         return self._threshold
 
-    def calibrate_score(self, s: float, k: float = _SIG_K, t: float = _SIG_T) -> float:
-        """Sigmoid calibration: 1/(1+exp(-k*(s-t))). Output clamped to [0,1]."""
+    def calibrate_score(self, s: float, k: Optional[float] = None, t: Optional[float] = None) -> float:
+        """Sigmoid calibration: 1/(1+exp(-k*(s-t))). Output clamped to [0,1].
+        k/t default to the configured score-calibration knobs when omitted."""
+        k = self._sig_k if k is None else k
+        t = self._sig_t if t is None else t
         try:
             return _clamp(1.0 / (1.0 + math.exp(-k * (s - t))))
         except OverflowError:
@@ -180,8 +237,8 @@ class ConvergenceController:
 
         # --- Step 3: Disagreement penalty ---
         variance = float(np.var(cal_values))
-        # Penalty = sigmoid(variance) — reuse calibrate with k=8, t=0.5
-        penalty  = self.calibrate_score(variance, k=8.0, t=0.5)
+        # Penalty = sigmoid(variance) — reuse calibrate with the configured penalty knobs.
+        penalty  = self.calibrate_score(variance, k=self._penalty_sig_k, t=self._penalty_sig_t)
         # Layered mode: use pre-weighted fusion score as base instead of re-averaging.
         # Falls back to flat average of calibrated scores when no weighted_score supplied.
         base_avg = (
@@ -199,10 +256,10 @@ class ConvergenceController:
         # --- Step 5: Adaptive threshold update ---
         if len(self._outcome_window) > 0:
             accept_rate = sum(self._outcome_window) / len(self._outcome_window)
-            if accept_rate > _ACCEPT_RATE_HIGH:
-                self._threshold = _clamp(self._threshold + _THRESH_STEP, _THRESH_MIN, _THRESH_MAX)
-            elif accept_rate < _ACCEPT_RATE_LOW:
-                self._threshold = _clamp(self._threshold - _THRESH_STEP, _THRESH_MIN, _THRESH_MAX)
+            if accept_rate > self._accept_rate_high:
+                self._threshold = _clamp(self._threshold + self._thresh_step, self._thresh_min, self._thresh_max)
+            elif accept_rate < self._accept_rate_low:
+                self._threshold = _clamp(self._threshold - self._thresh_step, self._thresh_min, self._thresh_max)
 
         # --- Step 6: Accept decision — enforce absolute quality floor ---
         # The adaptive threshold can drift down to _THRESH_MIN (0.30) when the

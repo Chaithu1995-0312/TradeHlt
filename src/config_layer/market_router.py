@@ -1,3 +1,5 @@
+"""Market-type CRT config profiles (crypto/forex) and the profile router."""
+
 from dataclasses import dataclass
 from typing import Dict
 from config_layer.crt_engine_v2 import CRTConfig

@@ -121,8 +121,38 @@ class UltronGovernor:
 
     # ── Construction ──────────────────────────────────────────────────────────
 
-    def __init__(self) -> None:
+    @classmethod
+    def from_prod_config(cls) -> "UltronGovernor":
+        """Production constructor — fail-fast. Strict-reads the ``regime_governor``
+        section (no silent defaults); a missing section or key raises. This is the
+        config boundary; the BEHAVIORAL knobs below were formerly hardcoded class
+        constants."""
+        from config_layer.production_config import get_prod_section
+        return cls(config=get_prod_section("regime_governor"))
+
+    def __init__(self, config: Optional[dict] = None) -> None:
         self._log: logging.Logger = logging.getLogger("ULTRON_GATE")
+
+        # BEHAVIORAL knobs. config=None → canonical class-constant defaults (unit-test /
+        # standalone path). config=dict (from from_prod_config) → STRICT read: every key
+        # must be present or we fail fast — no silent substitution.
+        def _req(key: str, default):
+            if config is None:
+                return default
+            if key not in config:
+                raise KeyError(
+                    f"Required config key '{key}' missing from 'regime_governor' section. "
+                    f"Add it to the production config (config-first doctrine: no silent defaults)."
+                )
+            return config[key]
+
+        self.MAX_TRADES_PER_BATCH = int(_req("max_trades_per_batch", UltronGovernor.MAX_TRADES_PER_BATCH))
+        self.REGIME_PENALTY = dict(_req("regime_penalty", UltronGovernor.REGIME_PENALTY))
+        self.REGIME_ACCEPT_PERCENTILE = dict(_req("regime_accept_percentile", UltronGovernor.REGIME_ACCEPT_PERCENTILE))
+        self.DIRECTION_PENALTY = float(_req("direction_penalty", UltronGovernor.DIRECTION_PENALTY))
+        self.FALLBACK_THRESHOLD = float(_req("fallback_threshold", UltronGovernor.FALLBACK_THRESHOLD))
+        self.WINDOW_MIN_SAMPLES = int(_req("window_min_samples", UltronGovernor.WINDOW_MIN_SAMPLES))
+        self.WINDOW_MAXLEN = int(_req("window_maxlen", UltronGovernor.WINDOW_MAXLEN))
 
         # Rolling score windows keyed by regime
         self._windows: Dict[str, Deque[float]] = {

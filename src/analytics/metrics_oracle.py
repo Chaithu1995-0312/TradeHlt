@@ -209,3 +209,105 @@ def recompute(
         sharpe=sharpe(rr),
         recovery_factor=recovery_factor(rr),
     )
+
+
+# ── Metrics Oracle V2 (RR distribution / concentration / planned-RR) ──────────
+# Independent recompute for the Metrics-Layer-V2 ledger families. Same math as the
+# production metrics block, written here with NO import from the production metrics
+# path (the oracle invariant), so the parity test cannot self-certify. Survival /
+# efficiency metrics are path-derived and verified separately by the forward_walk
+# cross-check (tests/test_metrics_v2.py), not here.
+
+def median(xs: list[float]):
+    """Median via the same linear-interpolation rule as `percentile(xs, 50)`."""
+    return percentile(xs, 50.0)
+
+
+def percentile(xs: list[float], p: float):
+    """Linear-interpolated percentile on the sorted sample (numpy-style):
+    position = p/100*(N-1), interpolate between the bracketing order statistics.
+    Empty → None. Independent of the production `_v2_percentile`."""
+    if not xs:
+        return None
+    ordered = sorted(xs)
+    n = len(ordered)
+    if n == 1:
+        return float(ordered[0])
+    pos = (p / 100.0) * (n - 1)
+    base = int(pos)               # floor
+    rem = pos - base
+    if base + 1 >= n:
+        return float(ordered[-1])
+    return float(ordered[base] * (1.0 - rem) + ordered[base + 1] * rem)
+
+
+def planned_rr(entry: float, sl: float, tp: float):
+    """Planned reward:risk = |tp-entry| / |entry-sl| (direction-agnostic). Degenerate
+    risk leg → None."""
+    risk = abs(entry - sl)
+    return abs(tp - entry) / risk if risk > 0 else None
+
+
+def avg_planned_rr(geometry: list[tuple]):
+    """Mean planned RR over (entry, sl, tp) triples, skipping degenerate ones."""
+    vals = [v for v in (planned_rr(e, s, t) for (e, s, t) in geometry) if v is not None]
+    return (sum(vals) / len(vals)) if vals else None
+
+
+def top_n_contribution(rr: list[float], n: int = 5):
+    """Share of gross winning R from the top-n winners. No winners → None."""
+    wins = sorted((r for r in rr if r > 0), reverse=True)
+    gross = sum(wins)
+    return (sum(wins[:n]) / gross) if gross > 0 else None
+
+
+# ── Metrics Oracle V3 (efficiency / symbol-attribution / concentration extras) ─
+# Independent recompute for the path-efficiency and attribution families. Same
+# formulas as the production close-time derivation and aggregate block, coded here
+# with no production import. Path inputs (mfe/mae/realized) come from the ledger or
+# the forward_walk oracle; this module only recomputes the ratios from them.
+
+def capture_ratio(realized: float, mfe: float):
+    """Fraction of the favorable excursion actually captured = realized / mfe.
+    Non-positive MFE → None (no favorable move to capture)."""
+    return (realized / mfe) if mfe > 0 else None
+
+
+def giveback(realized: float, mfe: float):
+    """Fraction of the favorable excursion handed back = (mfe - realized) / mfe.
+    Non-positive MFE → None."""
+    return ((mfe - realized) / mfe) if mfe > 0 else None
+
+
+def time_efficiency(bars_to_peak: int, duration: int):
+    """How early the peak arrived = bars_to_peak / duration. Zero duration → None."""
+    return (bars_to_peak / duration) if duration > 0 else None
+
+
+def adverse_efficiency(mae_rr: float, mfe_rr: float):
+    """Heat per unit favorable move = |mae_rr| / mfe_rr. Non-positive MFE(R) → None."""
+    return (abs(mae_rr) / mfe_rr) if mfe_rr > 0 else None
+
+
+def largest_winner(rr: list[float]):
+    """Largest single winning R (0.0 if no winners)."""
+    return max((r for r in rr if r > 0), default=0.0)
+
+
+def largest_loser(rr: list[float]):
+    """Largest single losing R, i.e. min over r<=0 (0.0 if no losers)."""
+    return min((r for r in rr if r <= 0), default=0.0)
+
+
+def symbol_attribution(by_symbol_rr: "dict[str, list[float]]") -> dict:
+    """Per-symbol expectancy / PF / win-rate / trades from a {symbol: [rr,...]} map.
+    Reuses the headline metric fns above so attribution is the same math, per group."""
+    out: dict = {}
+    for sym, rr in by_symbol_rr.items():
+        out[sym] = {
+            "trades":        len(rr),
+            "expectancy_rr": expectancy_mean(rr),
+            "profit_factor": profit_factor(rr),
+            "win_rate":      win_rate(rr),
+        }
+    return out

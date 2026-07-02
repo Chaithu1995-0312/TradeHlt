@@ -41,6 +41,8 @@
 8. [Current State](#current-state-of-the-project)
 9. [Config Illusions Register](#config-illusions-register)
 10. [Missing Information](#missing-information)
+11. [Worldview Evolution — Five Eras](#worldview-evolution--five-eras-aprjun-2026)
+12. [The Next Question (Era 6)](#the-next-question--era-6-open-hypotheses-not-promises)
 
 ---
 
@@ -914,3 +916,93 @@ Every claim in this document can be traced to one of these sources:
 ---
 
 *Generated from source: `assistant_project.md` (1946 lines), `reports/hidden_wiring_audit.md` (20 findings), `reports/runtime_config_reachability.md` (Tier A classifications), `CLAUDE.md`, `README.md`, and all companion docs created April 25, 2026. Last event captured: June 10, 2026, 12:45 AM IST. Timestamps derived from session log entries; file metadata used only where explicitly noted.*
+
+---
+
+## Worldview Evolution — Five Eras (Apr–Jun 2026)
+
+> **Added 2026-06-26.** The sections above were last captured 2026-06-10; this chapter extends the
+> narrative through the Era-5 falsification sweep. It is *intellectual history* — **belief held →
+> what we built → what reality said → how the worldview changed** — not operational truth. Current
+> validated conclusions live in [`current-findings.md`](current-findings.md) (authoritative on
+> conflict); the dated record is [`timeline.md`](timeline.md). Findings are cited by `F-id`.
+
+The deepest change across these eras is not any single result — it is *what question the repository
+asks*. It evolved from **"build a trading system"** into **"build a machine that discovers whether
+its own beliefs are false."**
+
+### Era 1 — Foundation & Enhancement (Apr 10–16)
+- **Belief:** we have a promising CRT system; we just need better engineering.
+- **Built:** JSON-as-single-source-of-truth, enhancement plans, pytest suites, stronger architecture, docs.
+- **Reality:** not yet interrogated. The question was *"how do we improve the machine?"* — never *"is the machine solving the right problem?"*
+- **Worldview shift:** none. The market assumptions were unexamined.
+
+### Era 2 — Agents, Sprints, Integration (Apr 17–May 2)
+- **Belief:** the edge exists; we merely need to extract it. *More intelligence → better decisions → more profit.*
+- **Built:** AI Automation Agent, multiple strategy layers, Docker, the unified execution spine, runtime↔research separation.
+- **Reality:** still unmeasured — capacity grew, the core assumption was untouched.
+- **Worldview shift:** "scale the architecture."
+
+### Era 3 — CRT Optimization (May 12–30)
+- **Belief:** *market structure → CRT patterns → predicted direction → profit.* Maybe **this** tweak improves the edge.
+- **Built:** shadow displacement (`SHADOW_PENDING`), expansion TTL, shadow age-decay, ROI baselines, funnel diagnostics.
+- **Reality:** the machine got better-tuned; the directional assumption was still never attacked head-on.
+- **Worldview shift:** peak optimization — the belief stayed implicit.
+
+### Era 4 — Governance Revolution + first shocks (May 28–Jun 5)
+- **Belief shift begins:** the repository grows a *scientific immune system* — it stops asking *"can we build this?"* and starts asking *"should we believe this?"*
+- **Built:** Repository Truths (`F-001…F-012`), the Funding Ledger, governance/promotion gates, reality audits.
+- **Reality — the first two shocks:**
+  - **F-001:** intelligence is **NOT** the binding constraint — governance / throughput / consumption are. (More features / nets / indicators ≠ more alpha.)
+  - **F-002:** the edge is in the decision *process* (selection), not a static feature→outcome map — *at the time.* **This did not survive as new skill** (see Era 5: F-021 localized "selection" to the session filter; F-017 showed even session isn't promotable OOS). The honest arc is **F-002 → F-021 → F-017.**
+- **Worldview shift:** the most important intellectual transition — belief became something to be *earned against reality*, not assumed.
+
+### Era 5 — The Great Falsification (Jun 6–26)
+The timeline names this era literally. Under a newly-honest measurement standard, hypothesis after
+hypothesis was killed — and *that became the value*, because a null with a clear conclusion is high
+knowledge-ROI (§6.1), not a failure.
+
+- **The 06-06 hinge:** **F-014** (time-to-first-move is a real, feature-orthogonal **POST-entry** discriminator — distinct from *entry* information) + **F-015** (cheap throughput is exhausted; relaxing detection is not quality-preserving).
+- **The Trust-Layer revolution (06-10):** close-only exits manufacture optimism; **intrabar-touch is reality**. The governing standard became **`intrabar_fixed` + 12 bps**. Under it, BNB's headline edge collapses (band PF 0.94 → 0.46). This re-grounded everything measured afterward.
+- **The four falsifications → Program 1 KILLED (06-13):**
+  - **F-019** — entry edge: **NO.** 0 PROMOTE across BNB/ETH/BTC/SOL; toys ≈ random; the spine is throughput-starved (pooled n=30 REJECT).
+  - **F-020** — conditional direction: **NO.** Session×vol×momentum at multiple horizons → entropy-significant but **0 economic pockets** (significance ≠ exploitability at large N).
+  - **F-021** — selection skill: it is the **SESSION filter**, not score/zone. Reject-reason decomposition: **ZONE 0/110** (never binds), **SCORE 2/110** (noise, p=0.327, OOS −0.291), **SESSION 110/112 ≡ ALL.** The "intelligence" wasn't selecting; and F-017 shows the session lever itself isn't promotable OOS.
+  - **F-025** — exit geometry: **NO.** A 42-cell SL×TP grid with entries fixed → every E_oos < 0; **reality_gap +4.16R** ⇒ the bottleneck is **entry information**, not exit engineering.
+- **Program 2 — structural asymmetry (F-026):** sweep→displacement→retest — point-estimate negative *and* **INSUFFICIENT_POWER** (n=47). The governance win: *no evidence ≠ evidence of absence* — FROZEN, not "proven absent."
+- **Program 3 — higher timeframes (F-027):** H1/H4 do **not** rescue the edge; the M15 null generalizes to the HTF horizon.
+- **First real interpreter (F-028):** P&F (`PNF-v1`) double-top/bottom is **worse than random** controls — FROZEN; reopen only via a *new ontology*.
+- **The trust layer defends itself (F-029):** the "`center=True` lookahead — FATAL, kill the model" alarm was **DOC_DRIFT, not leakage** — byte-identical ledgers across crypto majors. The integrity layer held under adversarial review.
+- **Governance turns inward (E-001 / F-031):** overclaims became *first-class defects*. The Program-4 rollup's `REGIME_HARMFUL`-on-underpowered-cells overclaim was caught **before registration** → formalized as the E-001E invariant + the pre-registration ritual. The scientific method auditing *itself* is rare in software.
+- **First non-directional falsification (F-030):** contemporaneous vol-regime **LEVEL** conditioning is statistically informative but economically worthless — the binding constraint is the **execution model**, not predictability.
+- **The panel/carry axes (F-032 / F-033 / F-034):** cross-sectional dispersion, carry/basis as a signal, and carry **harvest** are each null on crypto majors net of costs — the first falsifications beyond the per-instrument directional frame.
+- **Cross-asset generalization (F-035):** the entry-information null **generalizes to FX majors** — the first non-crypto asset class; not a crypto artifact.
+- **The fusion-engine mystery (F-036 / F-037 / F-038):** the supposed four-engine fusion is smaller than believed — the gate is **OFF in research by design** (CRT-only spine, F-037), the zone engine is non-pivotal (F-036), and the **"RR" engine is a gaussian duplicate** (F-038, an rr_fusion feature-starvation defect) → ≤ 2.5 independent signals, not 4.
+- **The integrity epoch (F-039):** `CandleLoader.stream()` is re-understood as the **truth-enforcement boundary** between raw market data and any reasoning about markets — the L3 dataset-intelligence pre-flight runs only in `backtest_v2`, while the inline **L1 (schema) / L2 (temporal) + the generator's causal ordering** are the universal net.
+
+**The whole arc:** *We have an edge → optimize it → govern it → falsify it → the directional ontology
+appears wrong → now: trust, measurement, integrity, and new ontologies.*
+
+## The Next Question — Era 6 (open hypotheses, not promises)
+
+> Framed strictly as **open questions tied to evidence**, with the §6.5 Authority-Ladder caveat:
+> nothing here is a promised edge or a roadmap commitment. A thread earns authority **only** by a
+> demonstrated G001 improvement — evidence has no authority by itself.
+
+What the falsification sweep *establishes* (the constraints any next program must respect):
+- **Entry information is the bottleneck** (F-025: reality_gap +4.16R; ~90% `plain_stop_loss`), not exit geometry.
+- **The binding constraint is the execution model, not predictability** (F-030) — vol is predictable (H_atr≈0.885) but not consumable in a spot long/short architecture.
+- **Intelligence is not the scarce resource** (F-001) — throughput / consumption / governance are.
+- **Program 1 reopens only via a *new ontology*, never a parameter pass** (re-running box sizes / horizons is archaeology, not science).
+
+Candidate **untested** threads (each a hypothesis to be pre-registered, not a prediction of success):
+1. **A non-next-bar / event-driven or structural ontology** — is there asymmetry the *next-bar directional* frame structurally cannot see (e.g. regime-*transition* forecasting, the Markov P^H channel deferred as Program 4b)?
+2. **Execution-microstructure** — if the edge (if any) lives in *how* you transact rather than *whether you predict direction*, the architecture, not the predictor, is the lever.
+3. **The perp Open-Interest axis (Program 7)** — currently data-blocked (~30-day `openInterestHist` retention); the only major information source not yet tested.
+4. **Metals / Stage-2 calendar** — XAUUSD was excluded by the FX-tuned gap gate (a holiday-calendar gap, not corrupt data); a metals-aware calendar would let the cross-asset sweep continue.
+5. **The one concrete *defect* worth fixing regardless of any edge:** F-038's rr_fusion feature-starvation — feed the full canonical vector or disable rr_fusion to restore an independent RR signal.
+
+And the honest **null hypothesis to keep open:** these instruments may simply be efficient at M15
+under realistic costs — in which case the compounding asset the repository has actually built is the
+**falsification machine itself** (zero intelligence loss, §6.1), and its value is the speed and
+rigor with which it can kill a false belief, not a discovered edge.

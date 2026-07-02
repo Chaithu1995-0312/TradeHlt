@@ -28,13 +28,16 @@ Run:
 from __future__ import annotations
 import sys
 import traceback
+import pytest
 
 from config_layer.execution_planner import ExecutionPlannerV1_2, DEFAULT_CONFIG
 
 # ── Shared fixtures ───────────────────────────────────────────────────────────
 
 def _engine(direction: int = 1, decision: str = "execute", confidence: float = 0.8) -> dict:
-    return {"decision": decision, "direction": direction,
+    # RR-002: engine_result carries the canonical `selected_direction` field (not the dropped
+    # `direction` alias). The param name stays `direction` for caller convenience.
+    return {"decision": decision, "selected_direction": direction,
             "confidence": confidence, "regime": "trend"}
 
 def _base_features(**overrides) -> dict:
@@ -211,7 +214,7 @@ def test_reject_engine_decision_not_execute():
 
 def test_reject_engine_decision_hold():
     p = _planner()
-    r = p.plan({"decision": "hold", "direction": 1}, _base_features(), _context())
+    r = p.plan({"decision": "hold", "selected_direction": 1}, _base_features(), _context())
     assert r["decision"] == "reject_engine"
 
 def test_reject_missing_required_feature():
@@ -255,15 +258,24 @@ def test_reject_high_not_above_low():
 
 def test_reject_invalid_direction_zero():
     p = _planner()
-    er = {"decision": "execute", "direction": 0, "confidence": 0.8, "regime": "trend"}
+    er = {"decision": "execute", "selected_direction": 0, "confidence": 0.8, "regime": "trend"}
     r = p.plan(er, _base_features(), _context())
     assert r["decision"] == "reject_invalid"
 
 def test_reject_invalid_direction_value():
     p = _planner()
-    er = {"decision": "execute", "direction": 2, "confidence": 0.8, "regime": "trend"}
+    er = {"decision": "execute", "selected_direction": 2, "confidence": 0.8, "regime": "trend"}
     r = p.plan(er, _base_features(), _context())
     assert r["decision"] == "reject_invalid"
+
+def test_missing_selected_direction_fails_loud():
+    # RR-003: absence of the canonical engine-output field is corruption, not a 0=NONE state.
+    # It must raise (fail loud), NOT silently default to 0 / reject. A modeled 0=NONE is still a
+    # graceful reject_invalid (covered by test_reject_invalid_direction_zero) — absence is different.
+    p = _planner()
+    er = {"decision": "execute", "confidence": 0.8, "regime": "trend"}  # no selected_direction
+    with pytest.raises(KeyError):
+        p.plan(er, _base_features(), _context())
 
 def test_reject_unknown_intent_by_default():
     p = _planner()

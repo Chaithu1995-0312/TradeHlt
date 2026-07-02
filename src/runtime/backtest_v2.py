@@ -218,6 +218,50 @@ class BacktestConfig:
 # ─────────────────────────────────────────────────────────────────
 
 @dataclass
+class TradePathStats:
+    """[Metrics V2 — Layer A] Raw per-trade PATH observations (within-trade).
+
+    MFE/MAE are entry-relative price excursions tracked over bars strictly AFTER
+    entry (including the exit bar), updated from each streaming bar's high/low —
+    deliberately identical to `research.measurement.forward_walk` so that the
+    frozen forward_walk is the verifying ORACLE for this hot-loop tracking.
+
+    OBSERVATION-ONLY: nothing here feeds the exit/SL/TP decision. Derived fields
+    (capture / giveback / efficiency) are filled once at close from the realized
+    RAW move (same entry_raw basis as MFE). Kept on its own dataclass (decision 5)
+    so TradeRecord — the hot-loop object — does not become a field dump.
+    """
+    # ── observed during the trade (raw, entry-relative; price units) ──
+    mfe_price:      float = 0.0   # max favorable excursion vs entry_raw (>= 0)
+    mae_price:      float = 0.0   # max adverse excursion  vs entry_raw (<= 0)
+    bars_to_peak:   int   = 0     # 1-based post-entry bar at which MFE was set
+    bars_to_trough: int   = 0     # 1-based post-entry bar at which MAE was set
+    bars_observed:  int   = 0     # post-entry bars seen (duration sanity check)
+    # ── derived at close (raw basis: same entry_raw the MFE uses) ──
+    mfe_rr:             float = 0.0
+    mae_rr:             float = 0.0   # <= 0
+    capture_ratio:      Optional[float] = None  # realized_raw / mfe  (None if mfe<=0)
+    giveback:           Optional[float] = None  # (mfe - realized_raw)/mfe (None if mfe<=0)
+    time_efficiency:    Optional[float] = None  # bars_to_peak / duration  (None if dur<=0)
+    adverse_efficiency: Optional[float] = None  # |mae_rr| / mfe_rr (None if mfe_rr<=0)
+
+    def to_dict(self) -> dict:
+        return {
+            "mfe_price":      round(self.mfe_price, 8),
+            "mae_price":      round(self.mae_price, 8),
+            "bars_to_peak":   self.bars_to_peak,
+            "bars_to_trough": self.bars_to_trough,
+            "bars_observed":  self.bars_observed,
+            "mfe_rr":         round(self.mfe_rr, 6),
+            "mae_rr":         round(self.mae_rr, 6),
+            "capture_ratio":      None if self.capture_ratio is None else round(self.capture_ratio, 6),
+            "giveback":           None if self.giveback is None else round(self.giveback, 6),
+            "time_efficiency":    None if self.time_efficiency is None else round(self.time_efficiency, 6),
+            "adverse_efficiency": None if self.adverse_efficiency is None else round(self.adverse_efficiency, 6),
+        }
+
+
+@dataclass
 class TradeRecord:
     trade_id:          str
     instrument:        str
@@ -286,6 +330,9 @@ class TradeRecord:
     pattern_hash:        str       = ""
     # [Phase 2b] Shadow displacement flag — True if trade entered via SHADOW_PENDING path
     shadow_used:         bool      = False
+    # [Metrics V2 — Layer A] within-trade path observations (MFE/MAE/efficiency).
+    # Default factory keeps old-record loads valid; populated by TradeJournal.
+    path:                TradePathStats = field(default_factory=TradePathStats)
 
     @property
     def is_winner(self) -> bool:
@@ -779,6 +826,35 @@ class TradeJournal:
         self.rejections:   list[RejectionRecord] = []
         self.log = logging.getLogger("CRT.Journal")
 
+    def observe_open_bar(self, candle: "Candle") -> None:
+        """[Metrics V2 — Layer A] Update the open trade's path stats from ONE bar.
+
+        OBSERVATION-ONLY — must never read or alter exit/SL/TP state (the engine
+        owns the governing intrabar_fixed exit). No-lookahead: uses only this bar's
+        high/low. The caller invokes it once per candle for bars strictly after
+        entry (the entry bar opens later in its own iteration) and including the
+        exit bar (which closes later in its iteration) — so MFE/MAE span the exact
+        same bar range as research.measurement.forward_walk (the oracle).
+        """
+        rec = self.open_trade
+        if rec is None:
+            return
+        p = rec.path
+        p.bars_observed += 1
+        entry = rec.entry_price_raw
+        if rec.direction == "LONG":
+            fav = candle.high - entry
+            adv = candle.low - entry
+        else:
+            fav = entry - candle.low
+            adv = entry - candle.high
+        if fav > p.mfe_price:               # floored at 0 (mfe_price starts 0.0)
+            p.mfe_price = fav
+            p.bars_to_peak = p.bars_observed
+        if adv < p.mae_price:               # capped at 0 (mae_price starts 0.0)
+            p.mae_price = adv
+            p.bars_to_trough = p.bars_observed
+
     def on_trade_opened(
         self, trade: Trade, candle: Candle, candle_index: int,
         risk_score: float, state_path: list, htf_id: str,
@@ -896,6 +972,24 @@ class TradeJournal:
         rec.slippage_pips = abs(rec.entry_price_fill - rec.entry_price_raw - spread_half) / self.pip_size \
                             + abs(x_slip) / self.pip_size
         rec.spread_pips   = (spread_half * 2) / self.pip_size
+
+        # [Metrics V2 — Layer A→close] derive path efficiency from observed MFE/MAE.
+        # Everything stays on the RAW (entry_price_raw) basis the MFE was tracked on,
+        # so capture/giveback are consistent with the observed excursion and the
+        # forward_walk oracle. realized_raw = price_move_raw (entry_raw-relative).
+        p = rec.path
+        risk_price_raw = abs(rec.entry_price_raw - rec.sl_price)
+        if risk_price_raw > 0:
+            p.mfe_rr = p.mfe_price / risk_price_raw
+            p.mae_rr = p.mae_price / risk_price_raw
+        if p.mfe_price > 0:
+            p.capture_ratio = price_move_raw / p.mfe_price
+            p.giveback      = (p.mfe_price - price_move_raw) / p.mfe_price
+        _dur = rec.duration_candles
+        if _dur > 0:
+            p.time_efficiency = p.bars_to_peak / _dur
+        if p.mfe_rr > 0:
+            p.adverse_efficiency = abs(p.mae_rr) / p.mfe_rr
 
         # [G3] Apply to capital curve
         pnl_per_unit = (exit_fill - rec.entry_price_fill) if direction == Direction.LONG \
@@ -1031,6 +1125,7 @@ class BacktestMetrics:
     total_return_pct:      float = 0.0
     annualized_return_pct: float = 0.0
     return_to_max_dd:      float = 0.0
+    trades_per_month:      float = 0.0   # span-derived frequency (Goal Layer)
     funnel_counts:         dict  = field(default_factory=dict)   # CRT-state funnel
 
     @property
@@ -1078,11 +1173,51 @@ class BacktestMetrics:
             "annualized_return_pct": round(self.annualized_return_pct, 6),
             "profit_factor":         round(self.profit_factor, 4),
             "return_to_max_dd":      round(self.return_to_max_dd, 4),
+            "trades_per_month":      round(self.trades_per_month, 4),
             "gross_win_rr":          round(self.gross_win_rr, 4),
             "gross_loss_rr":         round(self.gross_loss_rr, 4),
             "funnel_counts":         dict(self.funnel_counts),
             "config_version":      PROD_VERSION,
         }
+
+
+# ── [Metrics V2 — Layer B] pure aggregation helpers (mirrored by metrics_oracle) ──
+# These define the EXACT math the independent oracle must reproduce for parity, so
+# keep them simple and dependency-free. _v2_percentile uses numpy-style linear
+# interpolation on the sorted sample (rank = p/100*(n-1)).
+def _v2_mean(xs: list[float]) -> Optional[float]:
+    return sum(xs) / len(xs) if xs else None
+
+
+def _v2_percentile(xs: list[float], p: float) -> Optional[float]:
+    if not xs:
+        return None
+    s = sorted(xs)
+    if len(s) == 1:
+        return float(s[0])
+    rank = (p / 100.0) * (len(s) - 1)
+    lo = int(rank)
+    hi = min(lo + 1, len(s) - 1)
+    frac = rank - lo
+    return float(s[lo] + (s[hi] - s[lo]) * frac)
+
+
+def _planned_rr(t) -> Optional[float]:
+    """Planned reward:risk from the entry/SL/TP1 geometry (direction-agnostic via
+    abs). None when the risk leg is degenerate."""
+    risk = abs(t.entry_price_raw - t.sl_price)
+    if risk <= 0:
+        return None
+    return abs(t.tp1_price - t.entry_price_raw) / risk
+
+
+def _top_n_contribution_pct(rrs: list[float], n: int = 5) -> Optional[float]:
+    """Share of GROSS winning R contributed by the top-n winners (concentration)."""
+    wins = sorted((r for r in rrs if r > 0), reverse=True)
+    gross = sum(wins)
+    if gross <= 0:
+        return None
+    return sum(wins[:n]) / gross
 
 
 class MetricsEngine:
@@ -1128,6 +1263,7 @@ class MetricsEngine:
 
         m.distribution = self.dist.analyse(trades)  # [G5]
         self._roi_block(m, trades, capital, total_candles)   # ROI / returns telemetry
+        self._metrics_v2_block(m, trades)                    # [Metrics V2 — Layer B]
         return m
 
     def _roi_block(self, m: BacktestMetrics, trades: list,
@@ -1155,6 +1291,99 @@ class MetricsEngine:
             m.annualized_return_pct = (1.0 + m.total_return_pct) ** (1.0 / years) - 1.0
         else:
             m.annualized_return_pct = 0.0
+
+        # span-derived trade frequency (Goal Layer): trades / calendar-month & week
+        months = years * 12.0
+        weeks  = (total_candles * 15) / (7 * 24 * 60) if total_candles > 0 else 0.0
+        m.trades_per_month = round(m.approved_trades / months, 6) if months > 0 else 0.0
+        m.trades_per_week  = round(m.approved_trades / weeks, 6) if weeks > 0 else 0.0
+
+        # ── Goal Layer telemetry (additive, measure-only — never gates here) ──────
+        self._attach_goal_report(m)
+
+    def _metrics_v2_block(self, m: BacktestMetrics, trades: list) -> None:
+        """[Metrics V2 — Layer B] Aggregate RR / concentration / distribution /
+        survival / efficiency telemetry from the closed-trade ledger. Additive,
+        measure-only (mirrors _roi_block). Stored at m.distribution['metrics_v2']
+        so the hot-loop dataclass stays lean (decision 5). Reproduced independently
+        by metrics_oracle.metrics_v2_block for the parity gate."""
+        if not trades:
+            return
+        rrs       = [t.pnl_rr_net for t in trades]
+        planned   = [v for v in (_planned_rr(t) for t in trades) if v is not None]
+        durations = [t.duration_candles for t in trades]
+        # per-session counts (group by the trade's recorded session label)
+        sessions: dict = defaultdict(int)
+        for t in trades:
+            sessions[t.session or "UNKNOWN"] += 1
+        # survival / efficiency from the Layer-A path stats
+        captures  = [t.path.capture_ratio for t in trades if t.path.capture_ratio is not None]
+        givebacks = [t.path.giveback for t in trades if t.path.giveback is not None]
+        time_eff  = [t.path.time_efficiency for t in trades if t.path.time_efficiency is not None]
+        adv_eff   = [t.path.adverse_efficiency for t in trades if t.path.adverse_efficiency is not None]
+        btp       = [t.path.bars_to_peak for t in trades]
+        mfe_rrs   = [t.path.mfe_rr for t in trades]
+        mae_rrs   = [t.path.mae_rr for t in trades]
+
+        def _r(x):
+            return None if x is None else round(x, 6)
+
+        m.distribution["metrics_v2"] = {
+            "rr": {
+                "avg_realized_rr": _r(_v2_mean(rrs)),
+                "avg_planned_rr":  _r(_v2_mean(planned)),
+                "median_rr":       _r(_v2_percentile(rrs, 50)),
+                "rr_p10":          _r(_v2_percentile(rrs, 10)),
+                "rr_p50":          _r(_v2_percentile(rrs, 50)),
+                "rr_p90":          _r(_v2_percentile(rrs, 90)),
+            },
+            "concentration": {
+                "largest_winner_rr": _r(max((r for r in rrs if r > 0), default=0.0)),
+                "largest_loser_rr":  _r(min((r for r in rrs if r <= 0), default=0.0)),
+                "top5_win_contribution_pct": _r(_top_n_contribution_pct(rrs, 5)),
+            },
+            "distribution": {
+                "trades_per_week":    m.trades_per_week,
+                "trades_per_month":   m.trades_per_month,
+                "trades_per_session": dict(sessions),
+                "median_duration":    _r(_v2_percentile(durations, 50)),
+            },
+            "survival": {
+                "median_capture_ratio": _r(_v2_percentile(captures, 50)),
+                "median_giveback":      _r(_v2_percentile(givebacks, 50)),
+                "median_bars_to_peak":  _r(_v2_percentile(btp, 50)),
+                "mfe_rr_p50": _r(_v2_percentile(mfe_rrs, 50)),
+                "mfe_rr_p90": _r(_v2_percentile(mfe_rrs, 90)),
+                "mae_rr_p50": _r(_v2_percentile(mae_rrs, 50)),
+                "mae_rr_p90": _r(_v2_percentile(mae_rrs, 90)),
+            },
+            "efficiency": {
+                "median_time_efficiency":    _r(_v2_percentile(time_eff, 50)),
+                "time_efficiency_p90":       _r(_v2_percentile(time_eff, 90)),
+                "median_adverse_efficiency": _r(_v2_percentile(adv_eff, 50)),
+            },
+        }
+
+    def _attach_goal_report(self, m: BacktestMetrics) -> None:
+        """Compare measured metrics against the active GoalSpec and attach the
+        report to `m.distribution["goal_report"]`. Measure-only: enforcement (if
+        ever) lives in the promotion authority, never in this hot path. Failure to
+        load/evaluate is non-blocking — telemetry must never break a backtest."""
+        try:
+            from config_layer.goal_validator import GoalValidator
+            report = GoalValidator.evaluate({
+                "trades_per_month": m.trades_per_month,
+                "win_rate":         m.win_rate,
+                "max_drawdown_pct": m.max_drawdown_pct,
+                "expectancy_r":     m.avg_rr_net,   # realized E[R] in R units
+                # [Metrics V2 — Phase 5] avg_rr bound = REALIZED avg RR (avg_rr_net),
+                # the meaningful outcome. avg_planned_rr is emitted as advisory
+                # telemetry in distribution['metrics_v2'].rr, NOT a goal bound.
+                "avg_rr":           m.avg_rr_net,
+            })
+            m.distribution["goal_report"] = report.to_dict()
+        except Exception as exc:   # pragma: no cover - telemetry must never block
+            bt_log.warning("Goal report attach failed (non-blocking): %s", exc)
 
     def _max_dd_rr(self, pnl: list[float]) -> float:
         eq = peak = dd = 0.0
@@ -1672,6 +1901,15 @@ class BacktestRunner:
                     self.log.info(f"  Engine init @ candle {candle_idx} | HTF={htf.current_htf_id}")
                 prev_candle = candle
                 continue
+
+            # ── [Metrics V2 — Layer A] within-trade path observation ──
+            # Observation-only: update MFE/MAE/bars-to-peak for the open trade from
+            # THIS streaming bar. Placed at the top of the iteration so it runs for
+            # bars strictly after entry (the entry bar opens later, below) and
+            # includes the exit bar (which closes later this iteration) — matching
+            # forward_walk's bar range. Never touches exit/SL/TP.
+            if journal.open_trade is not None:
+                journal.observe_open_bar(candle)
 
             # ── [G4] Gap detection ─────────────────────────────────
             gap_fired, gap_reason = gap_det.check(candle)
@@ -2394,11 +2632,31 @@ class MultiInstrumentRunner:
     def _write_aggregate(self, results: list[BacktestMetrics]) -> None:
         p = self.output_dir / "aggregate_summary.json"
         p.parent.mkdir(parents=True, exist_ok=True)
+        # [Metrics V2 — Phase 3] per-symbol attribution. Each result is ONE symbol,
+        # so attribution is a direct projection. Surfaces hidden concentration —
+        # "30 trades" can be 29 on one symbol and 0 on the rest. trades_per_symbol
+        # makes that visible; symbols are the proto-interpreters judged on this.
+        total_trades = sum(r.approved_trades for r in results)
+        symbol_attribution = {
+            r.instrument: {
+                "trades":           r.approved_trades,
+                "trades_pct":       round(r.approved_trades / total_trades, 4) if total_trades else 0.0,
+                "expectancy_rr":    round(r.avg_rr_net, 6),     # realized E[R]
+                "avg_rr":           round(r.avg_rr_net, 6),
+                "profit_factor":    round(r.profit_factor, 4),
+                "win_rate":         round(r.win_rate, 4),
+                "max_drawdown_pct": round(r.max_drawdown_pct, 4),
+                "total_pnl_rr_net": round(r.total_pnl_rr_net, 4),
+            }
+            for r in results
+        }
         agg = {
             "instruments":   len(results),
-            "total_trades":  sum(r.approved_trades for r in results),
+            "total_trades":  total_trades,
             "total_pnl_net": round(sum(r.total_pnl_rr_net for r in results), 4),
             "avg_win_rate":  round(sum(r.win_rate for r in results) / max(len(results), 1), 4),
+            "trades_per_symbol":   {r.instrument: r.approved_trades for r in results},
+            "symbol_attribution":  symbol_attribution,
             "per_instrument": [r.to_dict() for r in results],
         }
         with open(p, "w") as f:

@@ -70,6 +70,7 @@ class AuditLogger:
         outcome: str,
         latency_ms: int,
         error: Optional[str] = None,
+        _ctx: Optional[dict] = None,
     ) -> None:
         record = {
             "ts": _now_iso(),
@@ -87,6 +88,10 @@ class AuditLogger:
             "latency_ms": latency_ms,
             "error": error,
         }
+        # Phase M: optional execution-memory envelope. Callers that don't pass
+        # _ctx continue to work identically — the key is simply absent.
+        if _ctx is not None:
+            record["_ctx"] = _ctx
         _append(self.audit_path, record)
 
     def write_session_summary(
@@ -102,6 +107,7 @@ class AuditLogger:
         metrics: dict,
         write_confirmed: bool,
         total_latency_ms: int,
+        _ctx: Optional[dict] = None,
     ) -> None:
         record = {
             "ts": _now_iso(),
@@ -116,6 +122,8 @@ class AuditLogger:
             "write_confirmed": write_confirmed,
             "total_latency_ms": total_latency_ms,
         }
+        if _ctx is not None:
+            record["_ctx"] = _ctx
         _append(self.audit_path, record)
         _append(self.intent_path, record)
         logger.debug("Session summary: %s → %s (%dms)", session_id, outcome, total_latency_ms)

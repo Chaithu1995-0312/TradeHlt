@@ -65,11 +65,26 @@ def test_register_mismatch(caplog):
     )
 
 
-# ── Test 4: Unregistered version → True (fail-open) ──────────────────────────
+# ── Test 4: Unregistered version → False (fail-closed, the safe default) ─────
 
-def test_unregistered_fail_open():
-    result = FeatureSchemaRegistry.check_compatibility("_never_registered_xyz_")
-    assert result is True, "Expected True (fail-open) for unregistered version"
+def test_unregistered_fail_closed(caplog):
+    # Safety default: an unknown schema version is rejected so a mislabeled model
+    # cannot score on a feature ordering it was not trained on (silent corruption).
+    with caplog.at_level(logging.WARNING, logger="FeatureSchemaRegistry"):
+        result = FeatureSchemaRegistry.check_compatibility("_never_registered_xyz_")
+    assert result is False, "Expected False (fail-closed) for unregistered version"
+    assert any("no registered schema hash" in msg.lower() or "register" in msg.lower()
+               for msg in caplog.messages), (
+        "Expected a WARNING that the version has no registered schema hash"
+    )
+
+
+def test_unregistered_fail_open_opt_in():
+    # Legacy callers may explicitly opt into fail-open.
+    result = FeatureSchemaRegistry.check_compatibility(
+        "_never_registered_xyz_", fail_closed=False
+    )
+    assert result is True, "Expected True when fail_closed=False is explicitly requested"
 
 
 # ── Test 5: Hash changes when feature order changes ───────────────────────────

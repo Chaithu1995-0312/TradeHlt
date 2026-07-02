@@ -1,3 +1,17 @@
+"""PerformanceAnalyzer: win rate, expectancy, drawdown, and breakdown metrics.
+
+QUARANTINE NOTE (trust-layer WS2B, 2026-06-10)
+    This analyzer operates on a DIFFERENT data domain from the backtest metric path:
+    it consumes live-feedback trade *dicts* with `result` (WIN/LOSS) and `pnl` in
+    CURRENCY units — not the R-multiple `TradeRecord` ledger. Its `expectancy` /
+    `profit_factor` are therefore currency-based and are NOT comparable to, and NOT a
+    substitute for, the canonical R-multiple metrics in `runtime/backtest_v2.py`
+    (`BacktestMetrics` / `MetricsEngine`). It is wired only into the AI feedback loop
+    (`src/feedback/ai_feedback.py`) and MUST NOT feed promotion/validation decisions —
+    the only promotion authority is `ConfigValidator` over `BacktestMetrics`.
+    See docs/analysis/backtest-trust-audit-2026-06-10.md §3.
+"""
+
 # performance.py — PerformanceAnalyzer: win rate, expectancy, drawdown, breakdown
 import logging
 from typing import Optional

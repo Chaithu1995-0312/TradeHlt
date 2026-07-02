@@ -10,6 +10,27 @@
     "atr_multiplier_min": 0.6,
     "expansion_atr_min_distance": 0.3
   },
+  "dataset_integrity": {
+    "canonical_data_roots": ["data"],
+    "path_pattern": "{symbol}_{timeframe}.csv",
+    "enforce_path_consistency": true,
+    "max_missing_pct": 0.02,
+    "max_single_gap_candles": 100,
+    "max_gap_span_minutes": 1440,
+    "default_bar_minutes": 15,
+    "future_ts_tolerance_minutes": 0,
+    "write_fingerprint_report": true,
+    "duplicate_resolution_mode": "reject_all",
+    "session_calendar": {
+      "crypto_quote_suffixes": ["USDT", "USDC", "BUSD"],
+      "metals_prefixes": ["XAU", "XAG", "XPT", "XPD"],
+      "weekday_open_hour": 22,
+      "weekday_open_weekday": 6,
+      "weekday_close_hour": 21,
+      "weekday_close_weekday": 4,
+      "weekday_daily_break_hours": [21]
+    }
+  },
   "engine_runner": {
     "model_path": "results/model_export_format.json",
     "min_atr": 0.0003,
@@ -181,6 +202,7 @@
     ]
   },
   "crt_engine": {
+    "exit_model": "intrabar_touch",
     "score_decay_lambda": 0.05,
     "max_spread_pct": 0.05,
     "atr_period": 14,

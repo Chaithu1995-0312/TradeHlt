@@ -1,154 +1,105 @@
-# mt5_analytics v0.6.0 — Post-Trade Intelligence Layer ("insight, not authority")
-
-## STATUS: ✅ SHIPPED — AT REST (2026-06-26, commit `2ae1244`, 85 tests)
-Built end-to-end: `mt5_analytics/analytics/insight_report.py` (frozen `InsightReport` —
-exit-efficiency / adverse-efficiency / cost-drag / risk-adjusted / sufficiency-gated attribution /
-Herfindahl `effective_n`), `SufficiencyStatus` Enum, self-describing `AttributionBucket`, wired via
-`ui/dashboard_data.insight_summary`. Real-data smoke (ecn/, n=2): correctly INSUFFICIENT yet surfaced
-the genuine economic fact — gross expectancy 0.0, commission −0.23 → **net expectancy −0.115/trade**
-(a statement the truth engine alone could never make).
-
-**Capability-complete within scope.** The architectural transition is done: v0.1–v0.5 answered *"was
-reality reconstructed correctly?"* (truthfulness); v0.6 answers *"what does reality imply?"* (economic
-meaning), without adding any execution authority.
-
-**PERMANENT INVARIANT (enforce aggressively):** `MT5 → truth → features → insight → HUMAN`, **never
-`insight → decisions`**. The moment an `if session_expectancy > 0: trade()` appears, analytics stops
-being *information* and becomes *authority* — a doctrine violation. `analytics/` may NOT grow a
-`recommendation_engine` / `optimization` / `auto_tuning` module. The boundary is now structural.
-
-**The bottleneck is no longer software — it is N (real, commission-bearing, NON-demo trade volume).**
-On demo-N the sufficiency gates correctly stay shut (expectancy=None). Everything interesting now
-depends on accumulating enough executed reality for those gates to open. That is the user's to supply.
-
-**Optional, non-foundational v0.7 menu (build only on a concrete need — none are blocking):**
-Streamlit insight cards (with aggressive `⚠ INSUFFICIENT (n/min_n)` rendering) · JSON export ·
-Markdown/weekly intelligence report · `realized_r_net` feature (schema bump + migration — ONLY if an
-ML/clustering consumer genuinely needs per-episode net R; evidence-driven, not speculative).
-
-## Software-complete ≠ project-complete — Phase C is DATA, not code
-~90–95% **software** maturity, ~5–10% **data** maturity. `Capability ≫ Data`. The three phases:
-
-| Phase | Question | Output | State |
-|---|---|---|---|
-| A (v0.1–0.5) | Was reality reconstructed correctly? | Truth | ✅ |
-| B (v0.6) | Can we extract economic meaning? | Insight | ✅ |
-| **C (v0.7+)** | **Do live outcomes match research expectations?** | **Belief calibration** | **NOT STARTED — data-gated** |
-
-**The real v0.7 is a campaign, not a release: "Reality Accumulation."** Goal = **50–100
-commission-bearing, *qualified-strategy-driven*, human-in-loop MT5 trades.** Demo/random trades only
-validate infrastructure (DONE); they can never calibrate belief. Until N accrues, the sufficiency gates
-correctly stay shut — and that's the system working, not a gap to code around.
-
-**F-010 bridge (the cross-subsystem reason this matters).** The findings ledger still carries **F-010
-(OPEN/Likely): "Headline ROI is BACKTEST-only; live PnL (ExecutionPlanner + UltronRiskGate)
-UNVERIFIED."** mt5_analytics is the instrument that can *close* it — but **v0.6 supplies only the
-live-actual HALF.** Closing F-010 also needs (a) trades actually driven by the *qualified spine
-strategy* (not discretionary/random), and (b) a **Reality-vs-Research Comparator** joining
-backtest-expected distribution ↔ live-actual insight. Both are **data-gated and unbuilt** — do NOT
-build the comparator before strategy-driven N exists (it would have nothing to compare). Target
-architecture: `Backtests → Expected Distribution → Live Trades → Truth Engine → Insight → Reality-vs-
-Research Comparator → Human`.
-
-**Explicitly DO NOT build (all require N you don't have):** `realized_r_net`, recommendation/
-optimization/auto-tuning engines, ML feedback loops, DuckDB, clustering, Monte Carlo, drift detection,
-the Reality-vs-Research Comparator. *The system no longer needs architecture; it needs evidence.* The
-likeliest failure mode is building more software because software is easier than generating reality.
-
-**Three (and only three) reopen conditions:**
-1. **Data** — `N ≥ 30` real, commission-bearing, strategy-driven trades ⇒ sufficiency gates unlock,
-   Phase C begins (build the comparator THEN, against real expected-vs-actual data).
-2. **Semantic** — a Case-B (separate commission deal) or mm1 (exchange-margin) account ⇒ truth-engine
-   validation resumes (Level 3 remainder / Level 4).
-3. **Failure** — a real `verify` FAIL ⇒ everything stops, kernel investigation begins.
-
-**Bookkeeping ≠ Progress ≠ Learning (they compound differently).** Code = new capability (compounds
-*sometimes*); docs = lower entropy (*weakly*); **reality accumulation = new evidence (*strongly*);
-research-vs-reality calibration = belief updates (*extremely strongly*).** The project now lives in the
-last two — `N: 0→30` changes it more than `85→86 tests` ever could. Do not mistake repository
-cleanliness for belief calibration.
-
-**Phase C operating loop (no software enters until the evidence demands it):**
-`execute qualified strategy → MT5 truth engine → insight → human review → belief update → execute
-again`. Not `build → ship → repeat`. The terminal state: **Software COMPLETE (within earned scope) ·
-Data INSUFFICIENT (by design) · Next = Reality Accumulation · Success = N ≥ 30 qualified
-commission-bearing trades.**
-
----
+# Execution Quality Observatory (Phase C-op) — execution science, NOT edge validation
 
 ## Context
-The truth engine (v0.1.0→v0.5.0) is validated across two broker families with zero kernel changes —
-but it has only ever been proven *correct*, never *used*. Per §6.1, validated plumbing is noise until
-it produces **economic meaning**: the `FeatureRecord` schema itself says "expectancy/PF/win-rate belong
-to the later analytics layer" — and that layer does not exist. Today the only rollups are 4 display
-stats in [`ui/dashboard_data.py`](../../mt5_analytics/ui/dashboard_data.py) (`summary_stats`,
-`session_breakdown`, `regime_breakdown`). This sprint builds the **decision-relevant** intelligence
-the engine was built for, as **information-not-authority** (§6.5): it describes the trader's executed
-reality and never feeds the spine.
+Decision (user, Option 2, scope-reduced): a small **execution-telemetry extension** to the
+already-complete system — capture what `order_send` knows and the deal history never will. **NOT**
+strategy/edge validation, **NOT** F-010, **NOT** a router. The spine is research-null (F-019…F-039);
+this layer characterizes *execution risk* (slippage / latency / retcodes / fill behavior) now, on
+demo, at zero capital, so when a qualified strategy eventually exists only *strategy* risk is new.
 
-**Reuse finding (do NOT reinvent):** `src/analytics/metrics_oracle.py` already ships the primitives —
-`capture_ratio` / `giveback` / `adverse_efficiency` / `time_efficiency` (exit-quality),
-`sharpe` / `recovery_factor` / `max_drawdown_rr` (risk-adjusted), `top_n_contribution` /
-`largest_winner` / `largest_loser` / `symbol_attribution` (concentration), `median` / `percentile`
-(distribution). The analytics layer only has to *compose* them per-episode → portfolio, not implement them.
+**Two independent truths (keep them separate):**
+```
+Financial truth → mt5_analytics   (deals, commission, swap, margin, INOUT, partials — ALREADY DONE)
+Execution truth → exec_telemetry  (requested vs filled price, send→fill latency, retcode/failure)
+```
+**Execution-time facts disappear forever after `order_send`** — pre-send price, send/fill timestamps,
+retcode, fill price, failure reason are *permanently unknowable* unless captured at execution time.
+That, and only that, is what this layer adds. Commission/swap/margin/symbol are already captured per
+broker (v0.3–v0.5) — **do not re-measure them here.**
 
-**Honest-scope guardrail (built in, not bolted on):** the only executed history so far is a handful of
-demo episodes. So every insight carries **N + a SUFFICIENT/INSUFFICIENT verdict** (E-001 / F-019
-discipline): below `min_n` (default 30) the report states INSUFFICIENT and makes **no claim**. On
-current demo data almost everything will correctly read INSUFFICIENT — this builds the *capability* and
-proves it on fixtures; it does not fabricate conclusions from demo noise.
+**Doctrine guards (non-negotiable):**
+- **OPERATIONAL-ONLY.** This harness measures latency / slippage / retcodes / fills — **never** profit,
+  expectancy, win-rate, or R (those belong to the truth + insight engines). Conflating execution
+  robustness with strategy robustness is the prohibited error; every output carries that header.
+- **Read-model invariant (structural):** `execution telemetry → HUMAN`, **never**
+  `execution telemetry → execution decisions`. No router/planner/recommender ever consumes it.
+- **Demo-gated, fingerprint-pinned, lot-capped** (inherited from `trade_generator`). First *repeated
+  autonomous* order-placer ⇒ hard gate stays: refuse any non-DEMO account; **no real capital; no
+  concurrent multi-terminal router / trade-copier / capital allocator (Phase D+, real-money — NOT
+  built).** "Can ≠ should."
 
-## Build — one new pure module + a thin dashboard hook
-**New: `mt5_analytics/analytics/insight_report.py`** (new `analytics/` subpackage, sibling of
-`engines/`). Pure, read-only, no MT5/Streamlit/writes — same purity contract as `dashboard_data`.
-`build_insight(episodes, features, *, min_n=30) -> dict` (or a small `@dataclass InsightReport`),
-composing the oracle primitives into:
+## Architecture (minimal; reuse-heavy)
+```
+MT5 Terminal → manual_tools/trade_generator.py → order_send()
+                         ├── Deal History → mt5_analytics      (financial truth — exists)
+                         └── ExecutionEvent → runtime/exec_telemetry/<broker>/orders.jsonl   (M1)
+                                              → exec_telemetry/report.py  (M2, read-only) → HUMAN
+```
+"Multi-broker" = run the pattern set **per connected demo terminal** (MT5 Python attaches to one
+terminal at a time — sequential-per-terminal is the correct model, matching today's manual flow); each
+`ExecutionEvent` is self-describing (carries its broker fingerprint + margin_mode), so per-broker logs
+aggregate in M2. **No concurrent N-terminal copier.**
 
-1. **Exit efficiency** — per-episode `capture_ratio(realized_r, mfe_r)` + `giveback`; portfolio
-   median capture ratio + total R given back. ("Are exits leaving R on the table?" — the F-002
-   decision-process lens, the highest-value post-trade question.)
-2. **Adverse efficiency** — `adverse_efficiency(mae_r, mfe_r)` distribution (heat taken before the move).
-3. **Cost drag (v0.5.0 tie-in, schema-free)** — `realized_r` is GROSS (price ÷ risk); the episode's
-   `net_pnl` includes commission+swap. Report Σcommission, Σswap, commission as a fraction of gross
-   PnL, and gross-vs-net expectancy — computed at the analytics layer from `episode.net_pnl` vs the
-   price-derived gross (no `FeatureRecord` schema bump). Newly meaningful now that commission is real.
-4. **Risk-adjusted** — `sharpe`, `recovery_factor`, `max_drawdown_rr`, R-percentiles over the
-   `realized_r` series.
-5. **Conditional attribution WITH sufficiency** — expectancy + capture by `session` × `regime` ×
-   duration-bucket, each tagged `n` + `SUFFICIENT/INSUFFICIENT` (reuse/extend `symbol_attribution`);
-   a 3-trade "edge" is flagged INSUFFICIENT, never celebrated.
-6. **Concentration** — `top_n_contribution`, `largest_winner/loser` (is the edge a few outliers?).
+## M0 — `ExecutionEvent` schema (frozen; same discipline as DealRecord/PositionEpisode/FeatureRecord)
+**New `exec_telemetry/schemas/execution_event_v1.py`** — without a schema, JSONL → ad-hoc dicts →
+silent drift → broken reports (a lesson already paid for in the truth engine).
+```python
+@dataclass(frozen=True)
+class ExecutionEvent:
+    ts: str                 # ISO-8601 UTC (str, JSONL-safe — mirrors PositionEpisode.entry_time)
+    broker_fingerprint: str; company: str; server: str; login: int; margin_mode: int
+    symbol: str; side: str
+    requested_price: float; filled_price: float; slippage_points: float
+    latency_ms: float
+    retcode: int; retcode_name: str
+    filling_mode: str; volume: float
+    schema_version: str = "1.0"
+```
+`margin_mode` is on the row (not just the dir) so a row is fully self-describing outside its partition.
 
-**Wire-in:** add `insight_summary(features, episodes, min_n=30)` to
-[`ui/dashboard_data.py`](../../mt5_analytics/ui/dashboard_data.py) delegating to the new module (keep
-the "info, not authority" docstring discipline); optionally surface a compact panel in
-[`ui/streamlit_dashboard.py`](../../mt5_analytics/ui/streamlit_dashboard.py) (light, last — the module
-+ data hook are the substance).
+## M1 — telemetry capture (extend the generator; additive, gates unchanged)
+In `manual_tools/trade_generator.py` `_send()`, around the existing `mt5.order_send(request)`:
+capture pre-send tick (`symbol_info_tick` ask/bid for the side) = requested; time `order_send`
+(`time.perf_counter()`) → latency_ms; read `result.{retcode,price,volume,deal}`; slippage_points =
+signed `(filled − requested)/point`; build an `ExecutionEvent` and append it to
+**`runtime/exec_telemetry/<company>_<server>_mm<margin_mode>/orders.jsonl`** (gitignored; keyed by
+margin_mode so MetaQuotes-Demo *hedging* ≠ *netting* never collide — the v0.4.0 lesson). Opt-in via
+**`--exec-log`** (absent ⇒ byte-identical to today). DEMO/L1 + fingerprint/L2 + lot-cap unchanged;
+dry-run sends + logs nothing.
+
+## M2 — Operational report (new, read-only, testable)
+**New `exec_telemetry/report.py`** — `build_exec_report(events, *, min_n=30) -> ExecReport` (frozen),
+per broker key: **fill-success rate** + **retcode histogram** (DONE / REQUOTE / MARKET_CLOSED /
+CLIENT_DISABLES_AT / INVALID_FILL / …) · **slippage** median/p90/worst (signed) · **latency**
+median/p90/worst · **filling-mode used** + **symbol accepted**. Reuse `analytics.metrics_oracle.median`
+/`percentile` (no new math). Same **sufficiency discipline** as v0.6 (`n` + SUFFICIENT/INSUFFICIENT;
+below `min_n`, counts only, no distributional claim). OPERATIONAL-ONLY header. **No profit/expectancy/R.**
 
 ## Critical files
-- **New** `mt5_analytics/analytics/__init__.py`, `mt5_analytics/analytics/insight_report.py`
-- **Edit** `mt5_analytics/ui/dashboard_data.py` (add `insight_summary` delegating hook)
-- **Reuse** `src/analytics/metrics_oracle.py` (all primitives above — import, don't reimplement)
-- **New** `tests/mt5_analytics/test_insight_report.py`
-- **No change** to the kernel, the `FeatureRecord` schema, or any engine (purity preserved)
+- **New** `exec_telemetry/__init__.py`, `exec_telemetry/schemas/execution_event_v1.py`,
+  `exec_telemetry/report.py`, `tests/exec_telemetry/test_report.py`
+- **Edit** `manual_tools/trade_generator.py` (M1 capture + `--exec-log`)
+- **Edit** `.gitignore` (add `runtime/exec_telemetry/`)
+- **Reuse** `analytics.metrics_oracle` (`median`/`percentile`)
+- **No change** to `mt5_analytics/` kernel/schema/insight, `src/live/mt5_bridge.py`, or any spine code
 
 ## Verification
-- **Unit (`tests/mt5_analytics/test_insight_report.py`):** fixtures with hand-computed episodes →
-  assert capture_ratio/giveback/cost-drag/sharpe/attribution values; assert **sufficiency gating** (a
-  bucket with `n < min_n` ⇒ `INSUFFICIENT`, no expectancy claim; `n ≥ min_n` ⇒ a verdict). Determinism
-  (same input → byte-identical report). Existing **74 stay green** (kernel/feature paths untouched).
-- **Live smoke (read-only):** run `build_insight` over the real `ecn/` + default artifact roots →
-  confirm it produces a well-formed report and that low-N buckets honestly read INSUFFICIENT (the
-  guardrail working on real demo data). No trades, no writes.
-- **Commit `v0.6.0 "Post-Trade Intelligence Layer"`** once green; MIGRATIONS note (analytics layer is
-  information-not-authority, schema-free, sufficiency-gated).
-
-## Open sub-decision (recommend default; not blocking)
-Cost-drag is done **at the analytics layer** from `episode.net_pnl` (no schema change) — recommended
-for v0.6.0. A dedicated net-of-cost `realized_r_net` *feature* (schema bump + migration) is deferred
-unless cost analysis needs per-episode net R downstream.
+- **Unit (`tests/exec_telemetry/test_report.py`):** fixtures of `ExecutionEvent`s → assert
+  slippage/latency percentiles, retcode histogram, fill-rate, sufficiency gating (n<min_n ⇒
+  INSUFFICIENT), determinism. (Note: like `manual_tools`, no `tests/exec_telemetry/__init__.py` — avoid
+  the sys.path-shadow gotcha.)
+- **M1 live:** dry-run logs nothing; a tiny `--confirm --exec-log` run on the IC Markets demo appends
+  real `ExecutionEvent`s (non-null slippage/latency/retcode). Demo-gated, lot-capped.
+- **Regression:** existing **85 mt5_analytics tests stay green**; generator without `--exec-log`
+  byte-identical to today.
 
 ## NOT doing
-No kernel/schema/engine change. No feedback into the trading spine (information-not-authority). No
-fabricated conclusions on demo-N data (sufficiency-gated). No new broker validation (that track is
-external-evidence-gated — Case-B / mm1 / verify-FAIL). Streamlit rendering is optional/last.
+No edge/expectancy/strategy/F-010 claim (OPERATIONAL-ONLY). **No router, trade-copier, capital
+allocator, execution planner, or anything strategy-aware** (Phase D+, deferred). No real-capital
+execution. No kernel/insight/spine change. No re-capture of commission/swap/margin/symbol (already
+owned by the truth engine + coverage). Telemetry never feeds decisions — HUMAN only.
+
+## Later (only when a qualified strategy exists — not now)
+`Qualified strategy → existing hardened execution infra → F-010 comparator (backtest vs live)`. This
+observatory de-risks the execution half in advance, so eventual F-010 closure carries only *strategy*
+risk, not strategy+execution risk.

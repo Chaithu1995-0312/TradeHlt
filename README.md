@@ -6,7 +6,7 @@ scores into one decision, plans the trade (entry / stop / target), and lets a ri
 approve or reject it. Nothing reaches production without passing governance (validation,
 SHA-256 hashing, an append-only audit trail). No database, no message broker, no cloud
 dependency. The system is being migrated toward an event-driven, replay-governed,
-explainable, advisory-AI architecture — see [`docs/architecture/GOAL.md`](docs/architecture/GOAL.md).
+explainable, advisory-AI architecture — see [`docs/architecture/goal.md`](docs/architecture/goal.md).
 
 > **Priorities (profit is *not* the top goal):**
 > replay correctness > explainability > telemetry continuity > advisory-AI > (structure validity ≠ execution validity).
@@ -48,7 +48,7 @@ pytest -k engine_runner           # one area
 ```
 
 **The full command catalog** (data prep → tuning → validation → promotion → backtest → live
-→ training) is auto-generated in [`docs/CLI_MATRIX.md`](docs/CLI_MATRIX.md).
+→ training) is auto-generated in [`docs/reference/cli-matrix.md`](docs/reference/cli-matrix.md).
 
 ---
 
@@ -56,7 +56,7 @@ pytest -k engine_runner           # one area
 
 - **If you're an LLM / agent:** the authoritative operating manual is
   [`CLAUDE.md`](CLAUDE.md). Begin with the **cold-start recipe** in
-  [`docs/architecture/TRIGGER_VOCABULARY.md`](docs/architecture/TRIGGER_VOCABULARY.md), then
+  [`docs/architecture/trigger-vocabulary.md`](docs/architecture/trigger-vocabulary.md), then
   use the trigger vocabulary (`Orient`, `Map`, `Continue`, …).
 - **If you're a human:** read the one-paragraph goal above, run the Quick Start, then use the
   docs map below to find what you need.
@@ -79,26 +79,27 @@ Docs live in four tiers. **Each doc owns one thing** — when two sources seem t
 ### Tier 2 — Reference (`docs/`)
 | Doc | Owns |
 |---|---|
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Tech stack, directory tree, data flow, CLI entry points. |
-| [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md) | Naming, folder placement, error-handling modes, anti-patterns. |
-| [`docs/SCHEMAS.md`](docs/SCHEMAS.md) | Dataclasses, enums, the canonical feature schema, JSONL line schemas. |
-| [`docs/CONFIG_REFERENCE.md`](docs/CONFIG_REFERENCE.md) | Every key in the production config + rehash rules. |
-| [`docs/TESTING.md`](docs/TESTING.md) | pytest layout, how to run, coverage expectations. |
-| [`docs/GOVERNANCE.md`](docs/GOVERNANCE.md) | Promotion workflow, the APPROVE gate, rollback. |
-| [`docs/SIGNAL_FLOW.md`](docs/SIGNAL_FLOW.md) | **Authoritative** candle→order step-by-step flow. |
-| [`docs/AGENT_REFERENCE.md`](docs/AGENT_REFERENCE.md) | The AI automation agent (intents, tools, plan registry). |
-| [`docs/CLI_MATRIX.md`](docs/CLI_MATRIX.md) | **Authoritative** generated command catalog. |
+| [`docs/reference/architecture.md`](docs/reference/architecture.md) | Tech stack, directory tree, data flow, CLI entry points. |
+| [`docs/reference/conventions.md`](docs/reference/conventions.md) | Naming, folder placement, error-handling modes, anti-patterns. |
+| [`docs/reference/schemas.md`](docs/reference/schemas.md) | Dataclasses, enums, the canonical feature schema, JSONL line schemas. |
+| [`docs/reference/config-reference.md`](docs/reference/config-reference.md) | Every key in the production config + rehash rules. |
+| [`docs/reference/testing.md`](docs/reference/testing.md) | pytest layout, how to run, coverage expectations. |
+| [`docs/reference/governance.md`](docs/reference/governance.md) | Promotion workflow, the APPROVE gate, rollback. |
+| [`docs/architecture/signal-flow.md`](docs/architecture/signal-flow.md) | **Authoritative** candle→order step-by-step flow. |
+| [`docs/reference/agent-reference.md`](docs/reference/agent-reference.md) | The AI automation agent (intents, tools, plan registry). |
+| [`docs/reference/cli-matrix.md`](docs/reference/cli-matrix.md) | **Authoritative** generated command catalog. |
 
 ### Tier 3 — Architecture / migration (`docs/architecture/`)
 | Doc | Owns |
 |---|---|
-| [`GOAL.md`](docs/architecture/GOAL.md) | **Authoritative north-star** — purpose, happy flow, invariants, deviation policy. |
-| [`EVENT_TAXONOMY.md`](docs/architecture/EVENT_TAXONOMY.md) | **Authoritative** event catalogue + CRT state graph (9 states). |
-| [`CODEBASE_STATE_MAP.md`](docs/architecture/CODEBASE_STATE_MAP.md) | Module map + hidden-coupling inventory. |
-| [`SERVICE_BOUNDARY_MAP.md`](docs/architecture/SERVICE_BOUNDARY_MAP.md) | Candidate services (ins → flow → outs). |
-| [`REPLAY_GOVERNANCE.md`](docs/architecture/REPLAY_GOVERNANCE.md) | Determinism / replay-comparability contract. |
-| [`LLM_GOVERNANCE_LAYER.md`](docs/architecture/LLM_GOVERNANCE_LAYER.md) | LLM-is-advisory isolation evidence + hardening. |
-| [`TRIGGER_VOCABULARY.md`](docs/architecture/TRIGGER_VOCABULARY.md) | LLM ownership commands + cold-start recipe. |
+| [`GOAL.md`](docs/architecture/goal.md) | **Authoritative north-star** — purpose, happy flow, invariants, deviation policy. |
+| [`intelligence-compounding.md`](docs/architecture/intelligence-compounding.md) | **Doctrine** (CLAUDE.md §6.1 long-form) — repository as intelligence substrate: utility function, entropy principle, goal-first ROI chain, checklists, evolution path. |
+| [`event-taxonomy.md`](docs/architecture/event-taxonomy.md) | **Authoritative** event catalogue + CRT state graph (9 states). |
+| [`CODEBASE_STATE_MAP.md`](docs/architecture/codebase-state-map.md) | Module map + hidden-coupling inventory. |
+| [`service-boundary-map.md`](docs/architecture/service-boundary-map.md) | Candidate services (ins → flow → outs). |
+| [`REPLAY_GOVERNANCE.md`](docs/architecture/replay-governance.md) | Determinism / replay-comparability contract. |
+| [`LLM_GOVERNANCE_LAYER.md`](docs/architecture/llm-governance-layer.md) | LLM-is-advisory isolation evidence + hardening. |
+| [`TRIGGER_VOCABULARY.md`](docs/architecture/trigger-vocabulary.md) | LLM ownership commands + cold-start recipe. |
 | `docs/architecture/services/` · `docs/implementation_plan/` | Per-service docs · session plans. |
 
 ### Tier 4 — Historical analyses (`docs/analysis/`)
@@ -108,5 +109,5 @@ Point-in-time snapshots and audits — **not living docs**. See
 ---
 
 **Authoritative-source quick rule:** config truth = `configs/production/*.json` · flow =
-`SIGNAL_FLOW.md` · events + CRT states = `EVENT_TAXONOMY.md` · goal/invariants = `GOAL.md` ·
+`SIGNAL_FLOW.md` · events + CRT states = `event-taxonomy.md` · goal/invariants = `GOAL.md` ·
 operating rules = `CLAUDE.md` · commands = `CLI_MATRIX.md`.

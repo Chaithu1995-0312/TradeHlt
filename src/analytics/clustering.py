@@ -1,3 +1,5 @@
+"""TradeClustering: groups losing trades by condition to surface patterns."""
+
 # clustering.py — TradeClustering: group losses by condition
 import logging
 

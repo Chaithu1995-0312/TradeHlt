@@ -103,39 +103,46 @@ def _compute_soft_zone_score(
     return max(0.0, min(1.0, Z))
 
 
-def compute_weighted_cluster_score(similarity_scores: List[float]) -> float:
+def compute_weighted_cluster_score(
+    similarity_scores: List[float],
+    spread_max: float = 0.15,
+) -> float:
     """
-    Nearest-neighbour interpolation for zone gate: weighted cluster score using top 3 nearest zones.
-    
+    Nearest-neighbour interpolation for zone gate: weighted cluster score using the
+    top nearest zones.
+
     Logic:
     - If less than 2 valid neighbours → fallback to max score
-    - If spread between max and min > 0.15 → reject cluster (return 0.0)
+    - If spread between max and min > ``spread_max`` → reject cluster (return 0.0)
     - Otherwise compute weighted score: sum( (s_i / total) * s_i )
     - Output is always clamped to [0.0, 1.0]
-    
+
     Args:
         similarity_scores: List of similarity scores from nearest neighbours (0.0 - 1.0)
-        
+        spread_max: Max max-min spread before the cluster is rejected. Config-driven via
+                    ``engine_runner.zone_gate.cluster_spread_max``; default 0.15 preserves
+                    the historical behaviour for standalone callers.
+
     Returns:
         float: Final cluster score, 0.0 = rejected
     """
     EPS = 1e-12
-    
+
     # Filter valid scores
     valid = [max(0.0, min(1.0, float(s))) for s in similarity_scores if math.isfinite(s)]
-    
+
     # Empty input
     if not valid:
         return 0.0
-    
+
     # Fallback path: < 2 neighbours
     if len(valid) < 2:
         return max(valid)
-    
+
     # Spread filter: reject unstable clusters
     min_s = min(valid)
     max_s = max(valid)
-    if (max_s - min_s) > 0.15:
+    if (max_s - min_s) > spread_max:
         return 0.0
     
     # Weighted calculation

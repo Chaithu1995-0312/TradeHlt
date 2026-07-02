@@ -202,4 +202,15 @@ const mockApi = {
   nodeContext(commandId) {
     return fetch(BASE + `/workflow/nodes/${commandId}/context`).then(r => r.json());
   },
+
+  /** Flow/Module Explorer (M6): list all flows (+ ordered modules + I/O + doc). */
+  flows() {
+    return fetch(BASE + `/flows`).then(r => r.json());
+  },
+
+  /** Explorer detail: docs + code + input/output for a flow, or a single module within it. */
+  flowContext(flow, module) {
+    const q = module ? `?module=${encodeURIComponent(module)}` : "";
+    return fetch(BASE + `/flows/${flow}/context${q}`).then(r => r.json());
+  },
 };

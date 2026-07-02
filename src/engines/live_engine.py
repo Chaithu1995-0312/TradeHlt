@@ -110,6 +110,11 @@ class BitNetZoneGate:
         self._zone_path = zone_path
         self._zones: list = []
         self._underpowered: bool = False
+        # Number of top zone scores surfaced as ``top_scores`` for cluster weighting.
+        # The live spine enforces this fail-fast at the engine_runner config boundary
+        # (engine_runner.zone_gate.top_k); the soft default here serves only standalone /
+        # manual callers (direct instantiation, _smoke_test.py). Default 3 = historical.
+        self._top_n: int = int((config or {}).get("zone_gate_top_k", 3))
         # Hot-reload watcher: detects discover_zones promotion mid-session.
         self._watcher = RegistryWatcher(zone_path)
 
@@ -270,6 +275,12 @@ class BitNetZoneGate:
         allowed       = False
         all_scores: list = []
 
+        # NOTE: the per-zone `allowed`/`reason` decision computed below is part of this
+        # method's standalone return contract, but it is BYPASSED by the live spine. The
+        # real gate decision is made in engine_runner._zone_model_fn:
+        #   compute_weighted_cluster_score(top_scores) >= bitnet_zone_threshold.
+        # `top_scores` (length = self._top_n, config: engine_runner.zone_gate.top_k) is the
+        # only field the live path consumes from this result.
         for zone in self._zones:
             try:
                 score  = _cgs(features, zone)
@@ -288,8 +299,8 @@ class BitNetZoneGate:
             except Exception as e:
                 log.debug(f"Zone scoring error for {zone.get('id', '?')}: {e}")
 
-        # Return top-3 scores for nearest-neighbour cluster weighting
-        top_scores = sorted(all_scores, reverse=True)[:3]
+        # Return top-k scores for nearest-neighbour cluster weighting (k = self._top_n)
+        top_scores = sorted(all_scores, reverse=True)[: self._top_n]
 
         reason = "zone_passed" if allowed else "zone_rejected"
         return {
@@ -315,6 +326,7 @@ _ZONE_GATE: Optional["BitNetZoneGate"] = None
 def get_zone_gate(
     path: str = ZONE_REGISTRY_PATH,
     min_samples: int = 50,
+    top_n: int = 3,
 ) -> "BitNetZoneGate":
     """
     Get (or create) the singleton BitNetZoneGate.
@@ -328,12 +340,17 @@ def get_zone_gate(
     min_samples : Minimum total training samples required before the gate is
                   active.  Registries with fewer samples auto-bypass.
                   Mirrors ``engine_runner.zone_min_samples`` in the prod config.
+    top_n       : Number of top-scoring zones returned as ``top_scores`` for the
+                  downstream cluster-weighting step.  Mirrors
+                  ``engine_runner.zone_gate.top_k`` in the prod config; the spine
+                  always supplies it via fail-fast _cfg_require (default 3 here
+                  preserves the historical behaviour for standalone callers).
     """
     global _ZONE_GATE
     if _ZONE_GATE is None:
         _ZONE_GATE = BitNetZoneGate(
             zone_path=path,
-            config={"zone_min_samples": min_samples},
+            config={"zone_min_samples": min_samples, "zone_gate_top_k": top_n},
         )
     return _ZONE_GATE
 

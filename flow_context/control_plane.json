@@ -16,5 +16,7 @@
     "control_plane.dot_graph_context"
   ],
   "keywords": ["control_plane", "server", "jobs", "registry", "command", "http"],
-  "command_ids": []
+  "command_ids": [],
+  "inputs": ["HTTP requests (browser UI / localhost:8787)"],
+  "outputs": ["command runs + artifacts", "run records / monitors / Excel + Context reports"]
 }

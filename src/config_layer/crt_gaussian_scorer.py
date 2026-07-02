@@ -10,12 +10,16 @@ import logging
 import math
 from typing import Optional
 
-# ── Load gaussian_scorer section from production config; fall back to defaults ──
+# ── Load gaussian_scorer section from production config (strict — section is governed) ──
+# Fallback sweep / fail-fast: the `except → {}` config mask was removed. The `gaussian_scorer`
+# section is present in the active config; a missing section is now a load-time error, not a
+# silent empty-dict that would let the scorer degrade to defaults. The ImportError dual-path
+# (package vs standalone-script import) is preserved as legitimate optional-import resilience.
 try:
     from config_layer.production_config import get_prod_section as _get_section
-    _GS_CFG = _get_section("gaussian_scorer")
-except Exception:
-    _GS_CFG = {}
+except ImportError:
+    from production_config import get_prod_section as _get_section  # standalone script path
+_GS_CFG = _get_section("gaussian_scorer")
 
 
 class CRTGaussianScorer:

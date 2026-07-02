@@ -43,11 +43,11 @@ def build_bitnet_features(trade: dict, candle: dict, state: dict) -> dict:
     # --------------------------
     # OHLCV (MANDATORY)
     # --------------------------
-    features["open"]     = float(candle.get("open", 0.0))
-    features["high"]     = float(candle.get("high", 0.0))
-    features["low"]      = float(candle.get("low", 0.0))
-    features["close"]    = float(candle.get("close", 0.0))
-    features["volume"]   = float(candle.get("volume", 0.0))
+    features["open"]     = float(candle["open"])
+    features["high"]     = float(candle["high"])
+    features["low"]      = float(candle["low"])
+    features["close"]    = float(candle["close"])
+    features["volume"]   = float(candle["volume"])
 
     # --------------------------
     # Volume / Flow

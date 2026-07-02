@@ -13,5 +13,8 @@
     "core.model_registry"
   ],
   "keywords": ["promotion", "validation", "shadow", "governance", "config_validator"],
-  "command_ids": ["promotion.manager", "promotion.promote_v2", "governance.orchestrator"]
+  "command_ids": ["promotion.manager", "promotion.promote_v2", "governance.orchestrator"],
+  "inputs": ["candidate config / tuner checkpoint + ValidationReport"],
+  "outputs": ["promoted production config (or PROMOTION_FAILED)",
+              "configs/promotion_log.jsonl append (SHA-256 hashed, immutable)"]
 }

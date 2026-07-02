@@ -343,3 +343,13 @@ Belief Update / ROI / Goal: Goal: prevent the failure mode where one successful 
 Open Questions: None outstanding on this arc. (Standing: extend guard pattern only if a NEW drift class earns it per the policy.)
 Next Step: Resume data/research (M5-base multi-TF, new ontology) — the active_models.yaml governance arc is complete.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-07-03
+Topic: feature/truth-registry-v2 branch + deferred-push resolution (scrub caution retired)
+Decision/Output: Resolved the deferred "pushing this branch is a separate, weightier decision given its scrubbed history" note as STALE — verified the scrubbed line was ALREADY pushed 2026-07-02 (ls-remote: origin has only clean main+patch; `git log origin/{patch,main} -- .env` empty), so pushing 0c378a9 is a routine fast-forward. Old secret survives ONLY in two LOCAL refs (backup/pre-env-scrub-20260702, claude/elegant-dubinsky-a2b441 worktree) — user chose KEEP for now (key rotation pending; no publication risk). Created feature/truth-registry-v2 from patch@0c378a9, committed the ~95-file tracked WIP (F-042/F-043 finding rows + doc sync, flow_context/*.json, ui_kits/control_plane, src edits, scheduled_tasks.lock deletion) via `git add -u` (tracked-only; 234 untracked untouched; staged set grep-verified secret-free). Pushed patch (FF to 0c378a9) + the new branch. patch stays clean at 0c378a9.
+Belief Update / ROI / Goal: Goal: publish accumulated work without re-litigating the scrub. Belief: the "weighty push" caution referred to a decision already executed on 2026-07-02 — remote history is clean; the remaining risk lives only in local refs + the unrotated Groq key. Knowledge ROI: medium — converts a standing ambiguous caution into a verified, closed state (remote=scrubbed, local=two known refs, action=key rotation). Action: push both branches; keep local secret refs until rotation.
+Open Questions: Groq key rotation (user, out-of-band) → then delete backup/pre-env-scrub-20260702 + claude/elegant-dubinsky-a2b441 worktree. 234 untracked files (incl. configs/production/v3/v4, docs zips, stray "FOUND..." file) remain unsorted — owner's scope.
+Next Step: User rotates Groq key; then delete the two local secret-bearing refs. Sort/triage the 234 untracked files in a later pass.
+---

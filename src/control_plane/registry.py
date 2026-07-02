@@ -1,3 +1,5 @@
+"""CommandSpec registry: the catalog of control-plane commands."""
+
 from __future__ import annotations
 
 from dataclasses import replace

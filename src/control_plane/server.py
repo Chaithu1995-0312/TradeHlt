@@ -20,6 +20,7 @@ from src.control_plane.context_report import ContextReportAPI
 from src.control_plane.code_context_extractor import extract_code_context
 from src.control_plane.dot_graph_context import (
     extract_graph_context, resolve_flow_for_command, build_flow_code_context,
+    list_flows, get_flow, build_module_code_context, module_role, module_neighbors,
 )
 
 
@@ -1916,6 +1917,70 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                         "architecture": architecture,
                         "latest_run":   latest_run,
                     })
+                    return
+                # ── Flow/Module Explorer (M6): browse flows + modules → docs/code/I-O ──
+                if path == "/flows":
+                    from pathlib import Path as _Path
+                    self._send_json(HTTPStatus.OK,
+                                    {"flows": list_flows(_Path(__file__).resolve().parents[2])})
+                    return
+                if path.startswith("/flows/") and path.endswith("/context"):
+                    flow_name = path[len("/flows/"):-len("/context")]
+                    module    = query.get("module", [""])[0].strip()
+                    from pathlib import Path as _Path
+                    _repo_root = _Path(__file__).resolve().parents[2]
+                    flow_man = get_flow(flow_name, _repo_root)
+                    if flow_man is None:
+                        self._send_json(HTTPStatus.NOT_FOUND, {"error": f"unknown flow: {flow_name}"})
+                        return
+                    provider = _resolve_context_provider()
+                    out: dict[str, Any] = {
+                        "flow":    flow_name,
+                        "title":   flow_man.get("title"),
+                        "doc":     flow_man.get("doc"),
+                        "inputs":  flow_man.get("inputs", []),
+                        "outputs": flow_man.get("outputs", []),
+                        "modules": flow_man.get("modules", []),
+                    }
+                    if module:
+                        # Module-scoped: that module's code + architectural I/O + role.
+                        code_ctx = build_module_code_context(module, _repo_root)
+                        nbrs     = module_neighbors(module, _repo_root)
+                        out.update({
+                            "scope":       "module",
+                            "module":      module,
+                            "role":        module_role(module, _repo_root),
+                            "depends_on":  nbrs.get("depends_on", []),
+                            "imported_by": nbrs.get("imported_by", []),
+                        })
+                    else:
+                        # Flow-scoped: the flow's representative code.
+                        code_ctx = build_flow_code_context(flow_man, _repo_root)
+                        out["scope"] = "flow"
+                    out["code"] = code_ctx                     # inline "Code" view (capped blocks)
+                    out["code_context_count"] = len(code_ctx)
+                    if context_api is not None:
+                        graph_ctx = extract_graph_context(code_ctx, _repo_root)
+                        synth_run = {"command_id": module or flow_name, "status": "explorer"}
+                        out["architecture"] = context_api.context_analysis(
+                            synth_run, {"stdout": "", "stderr": ""}, [], code_ctx, graph_ctx,
+                            provider=provider, llm_caller=_make_llm_caller(provider),
+                        )
+                        arch = out["architecture"]
+                        if arch.get("source") == "export" and arch.get("prompt"):
+                            try:
+                                out_dir = _repo_root / "logs" / "context_prompts"
+                                out_dir.mkdir(parents=True, exist_ok=True)
+                                tag = (module or flow_name).replace(".", "_")
+                                out_file = out_dir / f"explorer_{tag}.md"
+                                out_file.write_text(
+                                    f"<!-- system -->\n{arch.get('system','')}\n\n"
+                                    f"<!-- prompt -->\n{arch['prompt']}\n", encoding="utf-8")
+                                arch["prompt_file"] = str(
+                                    out_file.relative_to(_repo_root)).replace("\\", "/")
+                            except OSError:
+                                pass
+                    self._send_json(HTTPStatus.OK, out)
                     return
                 if path.startswith("/runs/"):
                     run_id = path.split("/")[2]

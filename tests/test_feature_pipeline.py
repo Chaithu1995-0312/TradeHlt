@@ -196,10 +196,14 @@ def test_zero_volume_no_spike():
 
 
 def test_missing_volume_column():
-    """DataFrame without a 'volume' column must not raise — pipeline adds it."""
+    """DataFrame without a 'volume' column is a fatal schema violation.
+
+    Strict-schema enforcement (no silent auto-fill): the pipeline must raise
+    rather than synthesize the missing column.
+    """
     df = _make_synthetic_ohlcv(500).drop(columns=["volume"])
-    enriched_df, vectors = FeaturePipeline(df).run()
-    assert vectors.shape[1] == len(CANONICAL_FEATURES)
+    with pytest.raises(ValueError, match="missing required columns: volume"):
+        FeaturePipeline(df).run()
 
 
 # ---------------------------------------------------------------------------

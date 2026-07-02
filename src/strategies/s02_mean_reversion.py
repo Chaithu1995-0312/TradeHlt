@@ -95,7 +95,7 @@ class S02MeanReversion(BaseStrategy):
         volume_ratio = float(features.get("volume_ratio", 1.0))
         is_inside_bar = bool(features.get("is_inside_bar", False))
 
-        close = float(candle.get("close", 0.0))
+        close = float(candle["close"])
         atr = float(features.get("atr", 0.0))
         if close <= 0.0 or atr <= 0.0:
             return self._no_trade("UNKNOWN")

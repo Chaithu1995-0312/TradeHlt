@@ -104,7 +104,7 @@ class S08MLEnsemble(BaseStrategy):
         bn_weight: float = float(cfg.get("bitnet_weight", 0.40))
         feat_weight: float = float(cfg.get("feature_weight", 0.60))
 
-        close = float(candle.get("close", 0.0))
+        close = float(candle["close"])
         atr = float(features.get("atr", 0.0))
         if close <= 0.0 or atr <= 0.0:
             return self._no_trade("UNKNOWN")

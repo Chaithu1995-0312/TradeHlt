@@ -1,3 +1,5 @@
+"""JobManager: queues and runs control-plane commands as subprocesses."""
+
 from __future__ import annotations
 
 import dataclasses

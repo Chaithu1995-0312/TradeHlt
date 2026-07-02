@@ -53,8 +53,14 @@ def _make_runner():
     runner.dual_cfg = dict(engine_runner.DUAL_ENGINE_DEFAULTS)
     runner._audit = SignalAuditRecorder(debug_mode=False)
     runner.decision = DummyDecision()
+    runner.gaussian_shadow = None
     runner.rr_fusion = None
     runner._rr_fusion_enabled = False
+    runner._last_regime = None
+    runner._belief_enabled = False
+    runner._regime_governor_enabled = False
+    from core.regime_governor import RegimeGovernor
+    runner._regime_governor = RegimeGovernor()
     runner._fusion_use_evaluate = False
     runner._fusion_compare_evaluate = False
     from core.acceptance_controller import AcceptanceController

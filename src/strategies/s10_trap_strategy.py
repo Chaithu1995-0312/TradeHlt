@@ -110,7 +110,7 @@ class S10TrapStrategy(BaseStrategy):
 
         swing_high = float(features.get("swing_high", 0.0))
         swing_low = float(features.get("swing_low", 0.0))
-        close = float(candle.get("close", 0.0))
+        close = float(candle["close"])
         atr = float(features.get("atr", 0.0))
 
         if close <= 0.0 or atr <= 0.0:

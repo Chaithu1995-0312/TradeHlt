@@ -118,7 +118,7 @@ class S09PatternRecog(BaseStrategy):
         if confidence < min_conf:
             return self._no_trade("UNKNOWN")
 
-        close = float(candle.get("close", 0.0))
+        close = float(candle["close"])
         atr = float(features.get("atr", 0.0))
         if close <= 0.0 or atr <= 0.0:
             return self._no_trade("UNKNOWN")
@@ -193,10 +193,10 @@ class S09PatternRecog(BaseStrategy):
         curr: dict,
         engulf_mult: float,
     ) -> Tuple[Optional[str], Optional[str], float]:
-        p_open = float(prev.get("open", 0.0))
-        p_close = float(prev.get("close", 0.0))
-        c_open = float(curr.get("open", 0.0))
-        c_close = float(curr.get("close", 0.0))
+        p_open = float(prev["open"])
+        p_close = float(prev["close"])
+        c_open = float(curr["open"])
+        c_close = float(curr["close"])
 
         if any(v <= 0.0 for v in [p_open, p_close, c_open, c_close]):
             return None, None, 0.0
@@ -231,10 +231,10 @@ class S09PatternRecog(BaseStrategy):
         features: dict,
         wick_mult: float,
     ) -> Tuple[Optional[str], Optional[str], float]:
-        o = float(candle.get("open", 0.0))
-        h = float(candle.get("high", 0.0))
-        l = float(candle.get("low", 0.0))
-        c = float(candle.get("close", 0.0))
+        o = float(candle["open"])
+        h = float(candle["high"])
+        l = float(candle["low"])
+        c = float(candle["close"])
 
         if any(v <= 0.0 for v in [o, h, l, c]) or h <= l:
             return None, None, 0.0

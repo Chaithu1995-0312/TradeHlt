@@ -376,6 +376,11 @@ class PromotionManager:
             v.get("score", -999.0) for v in per_inst.values()
             if v.get("score", -999.0) > -999.0
         ]
+        # [trust-layer F5, 2026-06-10] This is the FULL std-dev of cross-instrument
+        # fitness scores, logged as promotion telemetry (`validation_summary`). It is
+        # distinct from ConfigValidator's `consistency_penalty` (= half this std, folded
+        # into final_score as a penalty) — different role, not a duplicate computation.
+        # Field name kept as-is: promotion_log.jsonl schema is load-bearing.
         if len(inst_scores) > 1:
             mean_s = sum(inst_scores) / len(inst_scores)
             variance = sum((s - mean_s) ** 2 for s in inst_scores) / len(inst_scores)

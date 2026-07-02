@@ -27,6 +27,7 @@ from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
 from engines.ml_gaussian_engine import MLGaussianEngine
 from engines.zone_gate_engine import run_zone_gate_engine, _compute_soft_zone_score, compute_weighted_cluster_score
 from engines.rr_engine import RREngine
+from features.feature_schema import CANONICAL_FEATURES
 from core.fusion_engine import FusionEngine, GaussianAdapter
 from core.decision_engine import DecisionEngine
 from core.signal_audit import SignalAuditRecorder
@@ -95,13 +96,14 @@ ENGINE_RUNNER_DEFAULTS: dict = {
     "zone_gate_execution_mode": "normal",
     "zone_mode":                "hard",
     "zone_min_samples":         50,
+    "zone_gate":                {"top_k": 3, "cluster_min_n": 2, "cluster_spread_max": 0.15},
     "debug_mode":               False,
     "gaussian_impl":            "heuristic",
     "convergence_window":       500,
     "fusion_compare_evaluate":  True,
     "fusion_use_evaluate":      False,
     "dual_engine":              DUAL_ENGINE_DEFAULTS,
-    "rr_fusion":                {"enabled": False, "model_path": "", "threshold": 0.5},
+    "rr_fusion":                {"enabled": False, "model_path": "", "threshold": 0.5, "full_feature_vector": False},
     "fusion_engine": {
         "weight_crt": 0.4, "weight_gaussian": 0.3,
         "weight_zone_gate": 0.2, "weight_rr": 0.1,
@@ -340,6 +342,10 @@ class EngineRunner:
         self._rr_fusion_enabled = False
 
         rr_fusion_cfg = _cfg_require(config, "rr_fusion", "engine_runner")
+        # F-038 Fix A (configurable): when true, feed rr_fusion the FULL canonical feature vector
+        # (via RRFusionLayer.score) instead of the 3-feature score_dict stub that starves the model
+        # (→ confidence≈1e-88 → 100% gaussian bypass). Soft default False = byte-identical legacy path.
+        self._rr_fusion_full_vector = bool(rr_fusion_cfg.get("full_feature_vector", False))
         if bool(_cfg_require(rr_fusion_cfg, "enabled", "engine_runner.rr_fusion")):
             if RRFusionLayer is None:
                 logger.warning("EngineRunner: rr_fusion requested but import failed: %s", _RR_FUSION_IMPORT_ERROR)
@@ -366,9 +372,11 @@ class EngineRunner:
         # uses a real scorer instead of a neutral 0.5 stub.
         self._gaussian_adapter = GaussianAdapter(self.gaussian)
 
-        # Convergence layer — injected into FusionEngine.compute()
+        # Convergence layer — injected into FusionEngine.compute().
+        # Config-first: stability/threshold BEHAVIORAL knobs read fail-fast from the
+        # convergence_controller section (window_size stays an engine_runner knob).
         convergence_window = int(_cfg_require(config, "convergence_window", "engine_runner"))
-        self._convergence = ConvergenceController(window_size=convergence_window)
+        self._convergence = ConvergenceController.from_prod_config(window_size=convergence_window)
 
         _fusion_cfg_dict = _cfg_require(config, "fusion_engine", "engine_runner")
         from core.fusion_engine import FusionConfig
@@ -387,6 +395,8 @@ class EngineRunner:
             tier_full=float(_cfg_require(_fusion_cfg_dict, "tier_full", "fusion_engine")),
             tier_half=float(_cfg_require(_fusion_cfg_dict, "tier_half", "fusion_engine")),
             tier_quarter=float(_cfg_require(_fusion_cfg_dict, "tier_quarter", "fusion_engine")),
+            min_consensus_signals=int(_fusion_cfg_dict.get("min_consensus_signals", 2)),
+            min_consensus_agreement=float(_fusion_cfg_dict.get("min_consensus_agreement", 0.60)),
         )
         self.fusion = FusionEngine(
             gaussian_adapter=self._gaussian_adapter,
@@ -406,18 +416,27 @@ class EngineRunner:
         self._fusion_use_evaluate = bool(_cfg_require(config, "fusion_use_evaluate", "engine_runner"))
         self._fusion_compare_evaluate = bool(_cfg_require(config, "fusion_compare_evaluate", "engine_runner"))
 
-        # BitNet zone gate — lazy-loaded singleton; fail-open if registry missing
+        # BitNet zone gate — lazy-loaded singleton; fail-open if registry missing.
+        # zone_gate BEHAVIORAL knobs (top_k / cluster_min_n / cluster_spread_max) are
+        # read fail-fast from the nested engine_runner.zone_gate section (§6.5 A1 rule).
         zone_registry_path = str(_cfg_require(config, "zone_registry_path", "engine_runner"))
         _zone_min_samples  = int(config.get("zone_min_samples", 50))
-        self._zone_gate = get_zone_gate(zone_registry_path, min_samples=_zone_min_samples)
+        _zone_gate_cfg     = _cfg_require(config, "zone_gate", "engine_runner")
+        _zone_top_k        = int(_cfg_require(_zone_gate_cfg, "top_k", "engine_runner.zone_gate"))
+        self._zone_gate = get_zone_gate(
+            zone_registry_path, min_samples=_zone_min_samples, top_n=_zone_top_k,
+        )
 
         # Observability + adaptive control
         debug_mode = bool(_cfg_require(config, "debug_mode", "engine_runner"))
         self._audit      = SignalAuditRecorder(debug_mode=debug_mode)
-        self._acceptance = AcceptanceController(config)
+        # Config-first: theta bounds / min-history / fusion-percentile read fail-fast from the
+        # acceptance_controller section (merged into the base engine config).
+        self._acceptance = AcceptanceController.from_prod_config(config)
         # RegimeGovernor = Step-6 signal-quality filter (canonical name; class is UltronGovernor).
         # ultron_gate_enabled controls RegimeGovernor, NOT UltronRiskGate (capital protection layer).
-        self._regime_governor = RegimeGovernor()
+        # Config-first: BEHAVIORAL knobs read fail-fast from the regime_governor section.
+        self._regime_governor = RegimeGovernor.from_prod_config()
         self._regime_governor_enabled = bool(_cfg_require(config, "ultron_gate_enabled", "engine_runner"))
 
         # SignalBeliefTracker gate — accumulates post-fusion conviction over consecutive candles.
@@ -578,6 +597,10 @@ class EngineRunner:
         _zone_threshold = float(_cfg_require(self.config, "bitnet_zone_threshold", "engine_runner"))
         _exec_mode = str(_cfg_require(self.config, "zone_gate_execution_mode", "engine_runner"))
         _debug_mode = bool(_cfg_require(self.config, "debug_mode", "engine_runner"))
+        # zone_gate cluster-aggregation knobs (fail-fast nested read — §6.5 A1 rule)
+        _zone_gate_cfg = _cfg_require(self.config, "zone_gate", "engine_runner")
+        _cluster_min_n = int(_cfg_require(_zone_gate_cfg, "cluster_min_n", "engine_runner.zone_gate"))
+        _cluster_spread_max = float(_cfg_require(_zone_gate_cfg, "cluster_spread_max", "engine_runner.zone_gate"))
         _zone_debug_config = {
             "zones_loaded_count": len(getattr(self._zone_gate, "_zones", []) or []),
             "inside_zone":        False,
@@ -587,13 +610,14 @@ class EngineRunner:
         } if _debug_mode else None
 
         def _zone_model_fn(vector: list) -> float:
-            """Score via BitNetZoneGate using weighted cluster score (top-3 zones).
+            """Score via BitNetZoneGate using weighted cluster score (top-k zones).
+            top_k / cluster_min_n / cluster_spread_max are config-driven (zone_gate block).
             Returns 0.5 on any error (neutral, non-blocking)."""
             try:
                 result = self._zone_gate.check(vector)
                 top_scores = result.get("top_scores")
-                if top_scores and len(top_scores) >= 2:
-                    return compute_weighted_cluster_score(top_scores)
+                if top_scores and len(top_scores) >= _cluster_min_n:
+                    return compute_weighted_cluster_score(top_scores, spread_max=_cluster_spread_max)
                 return float(result.get("score", 0.5))
             except Exception as _e:
                 logger.debug(f"ZoneGate scoring fallback (0.5): {_e}")
@@ -657,21 +681,32 @@ class EngineRunner:
         # Optional RR enhancement layer: after RREngine, before FusionEngine.
         if self.rr_fusion and self.rr_fusion.is_loaded:
             try:
-                rr_fusion_result = self.rr_fusion.score_dict(
-                    depth=_safe_float(input_data.get("retest_depth"), 0.0),
-                    body=_safe_float(input_data.get("body_ratio"), 0.0),
-                    disp=_safe_float(input_data.get("disp_strength"), 0.0),
-                    gaussian_score=_safe_float(gaussian_result.get("score"), 0.5),
-                    gaussian_p_win=_safe_float(gaussian_result.get("score"), 0.5),
-                    is_asia=_safe_float(input_data.get("is_asia"), 0.0),
-                    is_london=_safe_float(input_data.get("is_london"), 0.0),
-                    is_newyork=_safe_float(input_data.get("is_newyork"), 0.0),
-                    hour=int(_safe_float(input_data.get("hour"), _safe_float((context or {}).get("hour"), 0.0))),
-                    threshold=float(_cfg_require(
-                        _cfg_require(self.config, "rr_fusion", "engine_runner"),
-                        "threshold", "engine_runner.rr_fusion"
-                    )),
-                )
+                _rr_thr = float(_cfg_require(
+                    _cfg_require(self.config, "rr_fusion", "engine_runner"),
+                    "threshold", "engine_runner.rr_fusion"
+                ))
+                if self._rr_fusion_full_vector:
+                    # F-038 Fix A: feed the FULL canonical vector so the model evaluates real inputs
+                    # (RRFusionLayer.score → build_feature_vector → predict), instead of the 3-feature
+                    # score_dict stub that forces a ~100% low-confidence gaussian bypass.
+                    _g = _safe_float(gaussian_result.get("score"), 0.5)
+                    _rr_trade = {k: _safe_float(input_data.get(k), 0.0) for k in CANONICAL_FEATURES}
+                    _rr_trade["gaussian_score"] = _g
+                    _rr_trade["gaussian_p_win"] = _g
+                    rr_fusion_result = self.rr_fusion.score(_rr_trade, threshold=_rr_thr)
+                else:
+                    rr_fusion_result = self.rr_fusion.score_dict(
+                        depth=_safe_float(input_data.get("retest_depth"), 0.0),
+                        body=_safe_float(input_data.get("body_ratio"), 0.0),
+                        disp=_safe_float(input_data.get("disp_strength"), 0.0),
+                        gaussian_score=_safe_float(gaussian_result.get("score"), 0.5),
+                        gaussian_p_win=_safe_float(gaussian_result.get("score"), 0.5),
+                        is_asia=_safe_float(input_data.get("is_asia"), 0.0),
+                        is_london=_safe_float(input_data.get("is_london"), 0.0),
+                        is_newyork=_safe_float(input_data.get("is_newyork"), 0.0),
+                        hour=int(_safe_float(input_data.get("hour"), _safe_float((context or {}).get("hour"), 0.0))),
+                        threshold=_rr_thr,
+                    )
                 fused_rr_score = float(rr_fusion_result.get("final_score", rr_result.get("score", 0.0)))
                 if not math.isfinite(fused_rr_score):
                     raise ValueError("rr_fusion produced non-finite final_score")

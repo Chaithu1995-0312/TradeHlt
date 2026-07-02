@@ -104,7 +104,7 @@ tests/
 │
 ├── test_signal_audit.py                     # Audit: signal-level JSONL shape
 ├── test_collector_fusion_persistence.py     # Collector: fusion persistence
-├── test_feature_pipeline.py                 # Features: 35-dim pipeline
+├── test_feature_pipeline.py                 # Features: 38-dim pipeline
 ├── test_analyze_fusion_shadow.py            # Fusion A/B analysis helper
 ├── test_convergence_controller.py           # Convergence tracking
 │

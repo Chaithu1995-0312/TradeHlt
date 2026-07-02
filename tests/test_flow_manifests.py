@@ -31,7 +31,7 @@ from gen_code_map import build_graph  # noqa: E402
 
 _MANIFESTS = sorted(_FLOW_CONTEXT.glob("*.json"))
 _REQUIRED_KEYS = ("flow", "title", "doc", "service_ids", "entrypoint", "modules", "keywords",
-                  "command_ids")
+                  "command_ids", "inputs", "outputs")
 
 
 @pytest.fixture(scope="module")
@@ -60,6 +60,10 @@ def test_manifest_shape(path):
     cmds = data["command_ids"]
     assert isinstance(cmds, list) and all(isinstance(c, str) for c in cmds), \
         f"{path.name}: 'command_ids' must be a list of strings"
+    for io in ("inputs", "outputs"):
+        vals = data.get(io, [])
+        assert isinstance(vals, list) and all(isinstance(v, str) for v in vals), \
+            f"{path.name}: '{io}' must be a list of strings"
 
 
 @pytest.mark.parametrize("path", _MANIFESTS, ids=lambda p: p.stem)

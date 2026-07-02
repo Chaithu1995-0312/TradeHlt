@@ -5,7 +5,7 @@
 > code on **every working response** (`CLAUDE.md §6.4 Topic Sync Mandate`). This is the
 > concept↔code↔tests↔validations index; the rest of `docs/` owns flow, schemas, and history.
 >
-> Created: 2026-06-01 · Updated: 2026-06-14
+> Created: 2026-06-01 · Updated: 2026-06-27
 >
 > **See also:** [`../knowledge-map.md`](../knowledge-map.md) — how the topics layer connects to the other record systems (SESSION LOG, plans, analysis, findings, structure maps).
 
@@ -52,6 +52,7 @@ by *comparing which set drifts* against code — the drift signal decides whethe
 | Execution loop (multi-signal) | execution | `src/execution/loop.py:31`, `alert_manager.py:15`, `override_handler.py:13` | _scaffolding — no caller yet_ | `test_execution_loop` | living | [execution-loop.md](execution-loop.md) |
 | Feature schema, pipeline & drift | features | `src/features/feature_schema.py:46`, `feature_pipeline.py:135`, `feature_monitor.py:63` | built in `backtest_v2` / live hook | `test_feature_pipeline`, `test_schema_contracts` | living | [feature-schema.md](feature-schema.md) |
 | Scoring engines (Gaussian/Zone-Gate/RR) | engines | `src/engines/{heuristic_gaussian,ml_gaussian,zone_gate,rr}_engine.py` | via `engine_runner` | `test_gaussian_impl_switch`, `test_zone_gate`, `test_engine_runner_rr_fusion` | living | [scoring-engines.md](scoring-engines.md) |
+| Model intent & feature ownership | engines / features | `src/engines/*`, `bitnet/*`, `core/engine_runner.py:144`, `features/feature_schema.py:46` | live spine + research measurement | `test_topic_docs`, `test_current_findings` (F-041) | living | [model-intent-and-feature-ownership.md](model-intent-and-feature-ownership.md) |
 | BitNet gate | bitnet / crt | `src/bitnet/bitnet_inference.py:317`, `crt_engine_v2.py:1805` | inside CRT (pre-fusion gate) | `test_bitnet_inference`, `test_bitnet_parity` | living | [bitnet-gate.md](bitnet-gate.md) |
 | Event fabric | events | `src/events/event_fabric.py:119` (`make_event_envelope`) | library call (all JSONL writes) | `tests/events/test_event_fabric` | living | [event-fabric.md](event-fabric.md) |
 | Live execution (order/data path) | live / inout / execution | `src/runtime/live_engine_hook.py:582`, `src/live/`, `src/inout/`, `src/execution/loop.py` | `HookedLiveEngine.process` (live tick) | `test_live_integration`, `test_execution_loop` | living | [live-execution.md](live-execution.md) |

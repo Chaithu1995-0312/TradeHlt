@@ -16,6 +16,8 @@ _log.propagate = False
 
 def compute(trade_id: str, features: dict, context: dict) -> dict:
     try:
+        _raw_weights = context.get("score_component_weights")
+        _score_weights = tuple(_raw_weights) if _raw_weights else (0.35, 0.25, 0.20, 0.20)
         result = compute_scores(
             body_ratio=float(features["body_ratio"]),
             move=float(features["disp_strength"]),
@@ -24,6 +26,7 @@ def compute(trade_id: str, features: dict, context: dict) -> dict:
             candles_since_retest=int(features.get("candles_since_retest", context.get("candles_since_retest", 0))),
             sweep_detected=bool(features.get("sweep_detected", context.get("sweep_detected", False))),
             double_sweep=bool(features["double_sweep"]),
+            score_weights=_score_weights,
         )
         out = {"score": result.get("final", result.get("score", 0.0))}
     except Exception as e:

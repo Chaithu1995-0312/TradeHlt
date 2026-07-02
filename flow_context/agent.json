@@ -15,5 +15,8 @@
     "agent.state"
   ],
   "keywords": ["agent", "intent", "plan", "executor", "tool", "repl"],
-  "command_ids": []
+  "command_ids": [],
+  "inputs": ["user intents (CLI / localhost HTTP)"],
+  "outputs": ["tool results (deterministic PLAN_REGISTRY execution under path-guard + y/N confirm)",
+              "logs/agent_audit.jsonl audit lines"]
 }

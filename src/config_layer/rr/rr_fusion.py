@@ -20,14 +20,16 @@ from features.feature_schema import (
     validate_vector,
 )
 
+# Strict (fallback sweep / fail-fast): the outer `except → 1.5` config mask and the soft
+# `.get("drift_threshold", 1.5)` were removed. `rr_model.drift_threshold` is present in the
+# governed active config; a missing section/key is now a load-time error, not a silent default.
+# The inner ImportError dual-path (package vs standalone-script) is preserved as legitimate
+# optional-import resilience.
 try:
-    try:
-        from config_layer.production_config import get_prod_section as _get_section
-    except ImportError:
-        from production_config import get_prod_section as _get_section  # standalone script path
-    _DRIFT_THRESHOLD: float = _get_section("rr_model").get("drift_threshold", 1.5)
-except Exception:
-    _DRIFT_THRESHOLD: float = 1.5
+    from config_layer.production_config import get_prod_section as _get_section
+except ImportError:
+    from production_config import get_prod_section as _get_section  # standalone script path
+_DRIFT_THRESHOLD: float = _get_section("rr_model")["drift_threshold"]
 
 
 def _passthrough(gaussian_score: float, gaussian_p_win: float, reason: str) -> Dict[str, Any]:

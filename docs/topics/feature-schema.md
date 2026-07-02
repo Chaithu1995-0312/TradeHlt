@@ -3,7 +3,7 @@
 > **Topic-visibility unit.** The canonical feature contract every engine consumes, the pipeline that
 > builds it candle-by-candle, and the drift monitor that watches it. (Promoted from a stub row.)
 >
-> Created: 2026-06-05 · Updated: 2026-06-16 (STORY-1.6: `check_compatibility` wired into ML inference) · Status: living
+> Created: 2026-06-05 · Updated: 2026-06-26 (added "Why `stream()` is more than CSV parsing"; F-039 L3-coverage) · Status: living
 
 ## In plain language
 Every engine scores the same fixed, ordered list of numbers per candle — the **canonical feature
@@ -12,6 +12,42 @@ another. The schema is currently **38-dimensional** (schema v3.0: the 35 v2.0 fe
 liquidity/volume features). A pipeline turns raw OHLCV into that vector with no lookahead; a monitor
 watches a few features for distribution **drift** and logs it — but (per F-008) drift is **logged,
 not acted on** (it doesn't yet gate or size down).
+
+### Why `stream()` is more than CSV parsing
+`CandleLoader.stream()` ([`backtest_v2.py:704`](../../src/runtime/backtest_v2.py)) is not a file
+reader — it is the **truth-enforcement boundary** between raw price files and any code that reasons
+about prices. Think of it as **double-entry bookkeeping for market data**: just as an accounting
+ledger refuses to record transactions that violate its invariants, `stream()` refuses to emit a
+candle unless it is real, complete, uniquely-timed, and in chronological order. Only then does the
+engine get permission to reason about prices. The economic stake is a chain reaction —
+`bad candle → bad ATR → bad SL distance → bad R → fake expectancy → false edge` — so **fail-fast is
+cheaper than discovering corruption six months after deploying on a fake edge.**
+
+**No-lookahead is a *composition* of layers, not a single gate** (F-039). Each is an independent
+defense; the guarantee is their conjunction:
+
+- **L1 — schema correctness:** unique headers, the six required columns, parseable timestamps.
+- **L2 — temporal integrity:** strictly-increasing timestamps (no duplicate, no out-of-order bar)
+  + per-row value sanity (`high ≥ low/open/close`, `volume ≥ 0`, no NaN/inf). An "impossible candle"
+  (high below open) is treated like a violated foreign-key: immediate stop, not silent repair.
+- **L3 — dataset intelligence:** gap analysis, session-calendar expectations, cross-file checks
+  (`dataset_integrity.validate_dataset`). **Path-specific** — see below.
+- **RT — generator semantics:** `for candle in stream(): engine.process(candle)` makes future-bar
+  access *structurally impossible* — the engine cannot touch candle N+1 until N is consumed. This is
+  a **causal constraint**, not (primarily) a memory optimization.
+
+**L3 is not universal (F-039).** Only `backtest_v2` runs the L3 pre-flight. The entire `src/research/`
+qualification pipeline, the analytics/governance tools, and the replay harnesses stream with only
+the **always-on inline L1/L2 backstop + RT generator** as their integrity net. That makes the inline
+backstop load-bearing: if `stream()` were ever made "user-friendly" (silent row-skips, auto-sorting
+timestamps, inferring missing fields), those paths would lose their *only* safety net and could
+quietly produce optimistic, corrupted backtests. The fail-fast, no-silent-skip design is the point.
+
+**Why `volume` is required** flows from the contract direction `feature schema → required columns`
+(`REQUIRED_OHLCV_COLUMNS`, [`ohlcv_schema.py:46`](../../src/data_ingestion/ohlcv_schema.py)), **not**
+`loader → volume must exist`. The loader is downstream of the canonical feature contract; if the
+schema ever dropped its volume-derived features, the requirement would follow from the contract, not
+from a hard-coded loader assumption.
 
 ## Code covered
 - [`src/features/feature_schema.py:46`](../../src/features/feature_schema.py) — `CANONICAL_FEATURES` — the frozen ordered tuple (38 entries; v2.0 indices 0–34 + v3.0 indices 35–37).
@@ -43,6 +79,7 @@ the drift monitor is the (currently advisory) early-warning sensor — see F-008
 ## Discussion (filled in-session)
 - **Ambiguities:** 2026-06-05 — **dimension drift in the docs:** code is 38-dim (`CANONICAL_FEATURE_DIM=38`), but CLAUDE.md / `schemas.md` say "35-dim", and the source's own line-45 comment still says "= 32". Authoritative = `:76`. CLAUDE.md/schemas.md should be corrected to 38 (v2.0 was 35).
   - **RESOLVED 2026-06-11:** CLAUDE.md, `schemas.md` (§4.1, incl. the full 38-name tuple), and `architecture.md` corrected to 38-dim (Truth Maintenance pass, F-016 session). Remaining: the source's stale `:45` inline comment `= 32` is a *code* comment (out of scope for the doc-only pass) — a future code-touch should fix it.
+  - **FULLY CLOSED 2026-06-25:** the deferred code comment is fixed (`feature_schema.py:45` `= 32` → `= 38`), and two living docs the 2026-06-11 pass missed are now corrected to 38-dim: `conventions.md:44` and `signal-flow.md` Step 2 (which also cited a non-existent `FeaturePipeline.transform(candle, history)` → corrected to `FeaturePipeline.run()`, batch enrich). `testing.md:107` label updated too. Historical/point-in-time docs (`docs/analysis/`, `docs/plans/`, archives, `human-language-analysis/`) deliberately left at "35-dim" per §6.2 rule 4 (preserve history). Note: many remaining "35-dim" hits are *correct* — they refer to the v2.0 model dim (`SCHEMA_V2_FEATURE_DIM=35`), not the current canonical schema.
 - **Risks:** 2026-06-05 — F-008: drift is detected but not acted on (no gate/size-down); a regime shift can degrade silently.
 - **Blockers:** 2026-06-05 — any schema change is load-bearing: it invalidates the baseline and all trained models keyed to `FEATURE_ORDER_HASH`.
 - **Wiring note:** 2026-06-16 (STORY-1.6) — `check_compatibility` kept its `fail_closed=True` safety default (a TruthConflict resolved toward safety, not the test's old fail-open expectation; test updated to `test_unregistered_fail_closed`). Live caller is `MLGaussianEngine` only; **spine-neutral on the active config** (`gaussian_impl=heuristic`, so the ML path is not exercised by the governing backtest — golden ledgers byte-identical, 180 passed).

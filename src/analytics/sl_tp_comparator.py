@@ -42,6 +42,12 @@ from typing import Any, Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+# [trust-layer WS2B, 2026-06-10] R-multiple metric formulas are sourced from the
+# independent oracle so this comparator and the backtest path cannot drift. The
+# oracle is the shared authority for win-rate / expectancy / drawdown in R.
+from analytics import metrics_oracle as mo
+from data_ingestion.ohlcv_schema import require_ohlcv_columns, resolve_ohlcv_headers
+
 log = logging.getLogger("SLTPComparator")
 
 # -- Intent derivation constants (mirrors ExecutionPlannerV1_2._derive_intent) --
@@ -207,23 +213,16 @@ def _aggregate_variant_results(results: list[dict]) -> dict[str, Any]:
         }
 
     total = len(results)
-    wins  = [r for r in results if r["realized_rr"] > 0]
-    losses= [r for r in results if r["realized_rr"] <= 0]
-
-    win_rate      = len(wins) / total
-    avg_rr        = sum(r["realized_rr"] for r in results) / total
-    avg_win_rr    = sum(r["realized_rr"] for r in wins)   / len(wins)   if wins   else 0.0
-    avg_loss_rr   = sum(r["realized_rr"] for r in losses) / len(losses) if losses else 0.0
-    expectancy_rr = win_rate * avg_win_rr + (1 - win_rate) * avg_loss_rr
+    # [WS2B] R-metrics via the shared oracle (same win/loss convention: r>0 win).
+    # expectancy_mean ≡ the prior classical form win_rate·avg_win + (1−win_rate)·avg_loss
+    # (algebraically the signed mean); max_drawdown_rr ≡ the prior R-equity walk.
+    rr            = [r["realized_rr"] for r in results]
+    win_rate      = mo.win_rate(rr)
+    avg_rr        = mo.expectancy_mean(rr)
+    expectancy_rr = mo.expectancy_mean(rr)
+    max_dd        = mo.max_drawdown_rr(rr)
     avg_candles   = sum(r["candles_held"] for r in results) / total
     avg_sl_atr    = sum(r.get("sl_dist_atr", 0.0) for r in results) / total
-
-    # Running drawdown (in R units)
-    peak = 0.0; equity = 0.0; max_dd = 0.0
-    for r in results:
-        equity += r["realized_rr"]
-        peak = max(peak, equity)
-        max_dd = max(max_dd, peak - equity)
 
     reasons = [r["exit_reason"] for r in results]
     return {
@@ -489,17 +488,24 @@ class SLTPComparator:
         candles = []
         with open(csv_path, newline="", encoding="utf-8") as f:
             reader = _csv.DictReader(f)
+            # Enforce the full six-column dataset contract even though this
+            # comparator only consumes timestamp + OHLC.
+            resolved = resolve_ohlcv_headers(reader.fieldnames or [])
+            require_ohlcv_columns(
+                resolved.keys(), source=f"Historical dataset {csv_path}"
+            )
+            ts_key, o_key, h_key, l_key, c_key = (
+                resolved["timestamp"], resolved["open"], resolved["high"],
+                resolved["low"], resolved["close"],
+            )
             for row in reader:
-                try:
-                    candles.append({
-                        "timestamp": row.get("timestamp") or row.get("datetime") or row.get("Date", ""),
-                        "open":  float(row.get("open") or row.get("Open", 0)),
-                        "high":  float(row.get("high") or row.get("High", 0)),
-                        "low":   float(row.get("low")  or row.get("Low",  0)),
-                        "close": float(row.get("close") or row.get("Close", 0)),
-                    })
-                except (ValueError, KeyError):
-                    continue
+                candles.append({
+                    "timestamp": row[ts_key],
+                    "open":  float(row[o_key]),
+                    "high":  float(row[h_key]),
+                    "low":   float(row[l_key]),
+                    "close": float(row[c_key]),
+                })
         log.info("Loaded %d candles from %s", len(candles), csv_path)
         return candles
 

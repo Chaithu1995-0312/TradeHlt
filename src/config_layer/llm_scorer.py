@@ -82,7 +82,7 @@ def _groq_score(prompt: str) -> tuple[float, str]:
     Raises nothing.
     """
     if not _groq_available():
-        return 0.5, ""
+        return 1.0, ""  # fail-open neutral (see docstring; CLAUDE.md §4)
 
     # Late-bind _groq_request through the parent module so that monkeypatch
     # on llm_inference_client._groq_request (the standard test pattern) is
@@ -98,15 +98,15 @@ def _groq_score(prompt: str) -> tuple[float, str]:
     logger.debug("_groq_score raw output: '%s'", raw)
 
     if not raw:
-        return 0.5, ""
+        return 1.0, ""  # fail-open neutral
 
     match = re.search(r"\b(0\.\d+|1\.0|0\.0)\b", raw)
     if match:
         score = max(0.0, min(1.0, float(match.group(1))))
         logger.info("_groq_score → %.4f  (model=%s  raw='%s')", score, _GROQ_MODEL, raw)
         return score, raw
-    logger.warning("_groq_score: could not parse float from '%s'. Returning 0.5 (neutral abstention).", raw)
-    return 0.5, raw
+    logger.warning("_groq_score: could not parse float from '%s'. Returning 1.0 (fail-open neutral).", raw)
+    return 1.0, raw
 
 
 def llm_score(metrics: dict, endpoint: str = SERVER_URL) -> float:
@@ -198,10 +198,13 @@ def llm_score(metrics: dict, endpoint: str = SERVER_URL) -> float:
             return groq_score_val
         logger.warning("llm_score: Groq also failed — falling to fail-open.")
 
-    # ── 3. neutral abstention ──────────────────────────────────────────────
+    # ── 3. fail-open neutral ────────────────────────────────────────────────
+    # Neutral = 1.0 (multiplier no-op), not 0.5 — the documented contract
+    # (module docstring, CLAUDE.md §4, tests/test_llm_connectivity.py). The LLM is an
+    # advisory tie-breaker; a failed backend must NOT pull the fused score toward 0.
     logger.warning(
         "llm_score: all backends failed (local=%s, groq_enabled=%s, groq_key_set=%s). "
-        "Returning 0.5 (neutral abstention).",
+        "Returning 1.0 (fail-open neutral).",
         _local_error, _GROQ_FALLBACK_ENABLED, bool(_GROQ_API_KEY),
     )
     _append_llm_audit({
@@ -214,10 +217,10 @@ def llm_score(metrics: dict, endpoint: str = SERVER_URL) -> float:
         "input_metrics": metrics,
         "prompt":        prompt,
         "raw_output":    None,
-        "parsed_score":  0.5,
+        "parsed_score":  1.0,
         "local_error":   _local_error,
     })
-    return 0.5
+    return 1.0
 
 
 def llm_score_batch(
@@ -241,7 +244,7 @@ def llm_score_batch(
             scores.append(llm_score(metrics, endpoint=endpoint))
         except Exception as exc:
             logger.error("llm_score_batch: unexpected error scoring item: %s", exc)
-            scores.append(0.5)
+            scores.append(1.0)  # fail-open neutral
 
     if fail_on_unavailable and scores:
         probe_payload = json.dumps(

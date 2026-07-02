@@ -3,9 +3,10 @@ ml_gaussian_engine.py
 =====================
 ML-based Gaussian engine using a trained GaussianNBModel (32-dim).
 
-Selected via environment variable:
-  GAUSSIAN_IMPL=ml        → MLGaussianEngine (this file)
-  GAUSSIAN_IMPL=heuristic → HeuristicGaussianEngine (default)
+Selected via config["gaussian_impl"] (Config-First §6.5 — config is the single
+source of truth; the GAUSSIAN_IMPL env var was removed):
+  gaussian_impl=ml        → MLGaussianEngine (this file)
+  gaussian_impl=heuristic → HeuristicGaussianEngine (default)
 
 Fail-open doctrine:
   Any exception during model load or inference returns
@@ -96,6 +97,15 @@ class MLGaussianEngine:
             self._model_version = active_version
             self._load_failed = False
 
+            # STORY-1.6: register the model's stored feature ordering so the
+            # inference-time check_compatibility() guard has a hash to compare.
+            # Otherwise the in-memory registry is empty at live inference (it is
+            # only populated by trainer.py at train time) and every model would
+            # be treated as unregistered.
+            if isinstance(_meta, dict) and _meta.get("feature_order_hash"):
+                from features.feature_schema import FeatureSchemaRegistry
+                FeatureSchemaRegistry.register(active_version, _meta["feature_order_hash"])
+
             logger.info(
                 "MLGaussianEngine: loaded model version='%s' n_features=%d",
                 active_version, model.n_features,
@@ -147,6 +157,22 @@ class MLGaussianEngine:
                     vec = _mirror_features_for_short(vec, CANONICAL_FEATURE_ORDER)
                 except Exception as _me:
                     logger.debug("MLGaussianEngine: short mirroring skipped — %s", _me)
+
+            # STORY-1.6 schema-corruption guard: when the registry reports the
+            # model's stored feature ordering differs from the runtime ordering
+            # AND the lengths are equal, truncation cannot fix it (same shape,
+            # different meaning) — fall back to neutral rather than scoring on
+            # misaligned features. The len>n_features case below is a legitimate
+            # v3.0→v2.0 migration and is handled by truncation as before.
+            from features.feature_schema import FeatureSchemaRegistry
+            if (len(vec) == self._model.n_features
+                    and not FeatureSchemaRegistry.check_compatibility(self._model_version)):
+                logger.warning(
+                    "MLGaussianEngine: schema incompatibility for model_version=%s "
+                    "(equal length, order mismatch / unregistered) — returning 0.5 fallback.",
+                    self._model_version,
+                )
+                return _fallback
 
             if len(vec) > self._model.n_features:
                 # Schema migration: pipeline produces v3.0 (38-dim) but model was

@@ -168,6 +168,10 @@ class FusionConfig:
         "UNKNOWN":  {"crt": 0.30, "gaussian": 0.25, "zone_gate": 0.25, "rr": 0.20, "strategy_consensus": 0.00},
     })
 
+    # Consensus gates for fuse_strategy_results()
+    min_consensus_signals:   int   = 2     # completeness gate: minimum actionable strategies
+    min_consensus_agreement: float = 0.60  # fraction of actionable that must agree
+
     # Conflict resolution policy — "conservative" or "majority"
     conflict_resolution_policy: str = "conservative"
 

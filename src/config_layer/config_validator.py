@@ -159,6 +159,7 @@ def _run_instrument(
     exp_rr    = _safe(m.avg_rr_net)
     max_dd    = _safe(m.max_drawdown_pct)
     total_pnl = _safe(m.total_pnl_rr_net)
+    total_ret = _safe(m.total_return_pct)
     score     = _fitness_score(win_rate, exp_rr, n_trades, max_dd)
 
     return {
@@ -168,6 +169,10 @@ def _run_instrument(
         "expectancy_rr": round(exp_rr, 4),
         "max_drawdown":  round(max_dd, 4),
         "total_pnl_rr":  round(total_pnl, 4),
+        # [trust-layer F6, 2026-06-10] Thread ROI out so _aggregate_metrics can surface
+        # total_return_pct_across (it read this key but it was never produced → dead 0.0).
+        # ROI stays additive/measure-only — never folded into final_score.
+        "total_return_pct": round(total_ret, 4),
         "error":         None,
     }
 
@@ -194,10 +199,17 @@ def _aggregate_metrics(per_instrument: dict) -> dict:
     else:
         std = 0.0
 
+    # [trust-layer F5, 2026-06-10] HALF the cross-instrument score std-dev, used here as
+    # a penalty folded into final_score. Distinct from PromotionManager's `score_std_dev`
+    # (the FULL std, logged as telemetry) — different role, not a duplicate metric.
     consistency_penalty = round(std * 0.5, 4)   # half std-dev as penalty
     final_score         = round(max(0.0, mean_s - consistency_penalty), 4)
     total_trades        = sum(v["trades"] for v in valid.values())
     max_dd              = max(v["max_drawdown"] for v in valid.values())
+
+    # ROI is additive/measure-only — surfaced here but NEVER folded into final_score.
+    roi_vals = [v["total_return_pct"] for v in valid.values() if "total_return_pct" in v]
+    total_return_pct_across = round(sum(roi_vals) / len(roi_vals), 4) if roi_vals else 0.0
 
     return {
         "final_score":         final_score,
@@ -205,6 +217,7 @@ def _aggregate_metrics(per_instrument: dict) -> dict:
         "consistency_penalty": consistency_penalty,
         "total_trades":        total_trades,
         "max_drawdown_across": round(max_dd, 4),
+        "total_return_pct_across": total_return_pct_across,
     }
 
 
@@ -276,6 +289,33 @@ def _run_quality_gates(
             "Fitness may be instrument-specific, not general."
         )
 
+    # -- Goal Layer enforcement (DORMANT — only when goal.enforce=True) ------
+    # The Goal Layer is advisory-by-default; its report is emitted as backtest
+    # telemetry (see backtest_v2._attach_goal_report). Promotion only HARD-blocks
+    # on goal failure when the active config sets goal.enforce=True. Default
+    # enforce=False ⇒ this block is inert (zero behaviour change). config_validator
+    # has only the per-instrument subset of metrics, so trades_per_month / avg_rr
+    # report SKIP here (not counted as FAIL).
+    try:
+        from config_layer.goal_schema import load_goal_spec
+        from config_layer.goal_validator import GoalValidator
+        goal = load_goal_spec()
+        if goal.enabled and goal.enforce:
+            for inst, res in per_instrument.items():
+                if res.get("error"):
+                    continue
+                rpt = GoalValidator.evaluate({
+                    "win_rate":         _safe(res.get("win_rate")),
+                    "expectancy_r":     _safe(res.get("expectancy_rr")),
+                    "max_drawdown_pct": _safe(res.get("max_drawdown")),
+                }, spec=goal)
+                for fc in rpt.failed_criteria:
+                    hard_failures.append(f"{inst}: goal '{goal.goal_id}' FAIL -- {fc}")
+    except Exception as exc:
+        # Fail-OPEN on the enforcement path: a goal-load error must never silently
+        # REJECT a config. The advisory report still surfaces the gap in telemetry.
+        warnings.append(f"goal enforcement skipped (load error): {exc}")
+
     decision = "REJECT" if hard_failures else "APPROVE"
     return decision, hard_failures, warnings
 
@@ -299,6 +339,7 @@ class ConfigValidator:
         config_id: str = "unnamed",
         use_llm: bool = False,
         warmup_candles: int = 30,
+        engine_runner: dict | None = None,
     ) -> dict:
         """
         Validate a params dict against all provided instrument CSVs.
@@ -362,9 +403,20 @@ class ConfigValidator:
                     hard_failures=[f"CSV not found for {inst}: {csv_path}"],
                 )
 
+            # Apply per-instrument session override so an ROI gain that comes
+            # from allowed_sessions_overrides is scored on the SAME set the live
+            # runtime uses (production_config is the single source of truth).
+            inst_cfg = crt_config
+            if engine_runner is not None:
+                import dataclasses
+                from config_layer.production_config import resolve_allowed_sessions
+                _sessions = resolve_allowed_sessions(engine_runner, inst)
+                if _sessions is not None:
+                    inst_cfg = dataclasses.replace(crt_config, allowed_sessions=_sessions)
+
             print(f"  Running {inst} ...")
             try:
-                result = _run_instrument(inst, csv_path, crt_config, warmup=warmup_candles)
+                result = _run_instrument(inst, csv_path, inst_cfg, warmup=warmup_candles)
             except Exception as exc:
                 return ConfigValidator._reject(
                     config_id, params,

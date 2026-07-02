@@ -131,11 +131,27 @@ class ModelEntry:
 
 class ModelRegistry:
 
-    def __init__(self, models_dir: Path = MODELS_DIR) -> None:
-        self.dir      = models_dir
-        self.reg_path = models_dir / "registry.json"
-        self.act_path = models_dir / "active.txt"
+    def __init__(self, models_dir: Path = MODELS_DIR, promotion_margin: float = PROMOTION_MARGIN) -> None:
+        self.dir               = models_dir
+        self.reg_path          = models_dir / "registry.json"
+        self.act_path          = models_dir / "active.txt"
+        self._promotion_margin = promotion_margin
         self.dir.mkdir(parents=True, exist_ok=True)
+
+    @classmethod
+    def from_prod_config(cls, models_dir: Path = MODELS_DIR) -> "ModelRegistry":
+        """Production constructor — fail-fast. Strict-reads the GOV-3 promotion margin from the
+        ``governance`` section (no silent default); a missing section/key raises. The
+        ``PROMOTION_MARGIN`` module constant remains the canonical default for unit-test /
+        standalone construction only (config-first doctrine §6.5)."""
+        from config_layer.production_config import get_prod_section
+        section = get_prod_section("governance")
+        if "promotion_margin" not in section:
+            raise KeyError(
+                "Required config key 'promotion_margin' missing from 'governance' section. "
+                "Add it to the production config (config-first doctrine: no silent defaults)."
+            )
+        return cls(models_dir=models_dir, promotion_margin=float(section["promotion_margin"]))
 
     # ── Load / Save ───────────────────────────────────────────────────────────
 
@@ -208,7 +224,7 @@ class ModelRegistry:
             current_name   = promoted_names[0] if promoted_names else None
             current_score  = reg[current_name]["composite_score"] if current_name else 0.0
 
-            if new_score > current_score + PROMOTION_MARGIN:
+            if new_score > current_score + self._promotion_margin:
                 # Demote old, promote new — all in-memory before any write
                 if current_name and current_name in reg:
                     reg[current_name]["promoted"] = False
@@ -239,7 +255,7 @@ class ModelRegistry:
                 reason = (
                     f"not promoted: {model_name} score={new_score:.4f} "
                     f"vs active={current_score:.4f} "
-                    f"Δ={new_score - current_score:+.4f} < margin={PROMOTION_MARGIN}"
+                    f"Δ={new_score - current_score:+.4f} < margin={self._promotion_margin}"
                 )
                 log.info(reason)
                 print(f"\n  ⚠  NOT PROMOTED: {reason}\n")
@@ -1319,7 +1335,7 @@ class TradeNetRegistry:
 # MODULE-LEVEL SINGLETON
 # ─────────────────────────────────────────────────────────────────────────────
 
-_registry          = ModelRegistry()
+_registry          = ModelRegistry.from_prod_config()  # GOV-3 margin read fail-fast from config
 _gaussian_registry = GaussianModelRegistry()
 _zone_gate_registry = ZoneGateRegistry()
 _rr_registry        = RRModelRegistry()

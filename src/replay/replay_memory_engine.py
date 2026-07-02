@@ -391,8 +391,37 @@ class ReplayMemoryEngine:
                 continue
         return 0.0
 
+    @staticmethod
+    def _zone_cluster_id(zone: dict, schema_version: str) -> int:
+        """
+        Integer cluster id for a zone, dispatched by schema_version (explicit, fail-fast).
+
+        Two registry schemas are officially in use and intentionally coexist:
+          schema_version="zone_v1"     → zone["zone_id"] is already an int
+                                          (RME per-instrument / models/replay/*.json)
+          schema_version="v2_gaussian" → zone["id"] is a "zone_N" string; the cluster id
+                                          is the trailing int (default models/zone_registry.json)
+
+        Per §6.5 (no silent defaults), an unknown schema raises rather than guessing —
+        the caller's fail-open wrapper logs it as a load failure instead of corrupting
+        cluster ids with a hidden 0.
+        """
+        if schema_version == "zone_v1":
+            return int(zone["zone_id"])
+        if schema_version == "v2_gaussian":
+            return int(str(zone["id"]).rsplit("_", 1)[-1])
+        raise ValueError(f"ReplayMemory: unknown zone registry schema_version={schema_version!r}")
+
     def _assign_cluster(self, features_dict: dict) -> int:
-        """Assign cluster ID via nearest centroid. Falls back to 0."""
+        """
+        Assign cluster ID via nearest zone center. Falls back to 0.
+
+        Centers are written by the producer (scripts/research/discover_zones.py)
+        in *weighted* feature space (each feature scaled by feature_weights before
+        K-Means), so the query vector must be weighted the same way before the
+        distance — otherwise raw OHLCV scale dominates and every record collapses
+        to cluster 0 (the 2026-06-02 RME repair; see docs/topics/replay-memory.md).
+        """
         if self._zone_registry is None:
             return 0
         zones = self._zone_registry.get("zones", [])
@@ -402,15 +431,19 @@ class ReplayMemoryEngine:
         feature_order = self._zone_registry.get(
             "feature_order", list(features_dict.keys())
         )
-        vec = [float(features_dict.get(k, 0.0)) for k in feature_order]
+        weights = self._zone_registry.get("feature_weights", [])
+        vec = [
+            float(features_dict.get(k, 0.0)) * (weights[i] if i < len(weights) else 1.0)
+            for i, k in enumerate(feature_order)
+        ]
 
         best_id, best_dist = 0, float("inf")
         for zone in zones:
-            centroid = zone.get("centroid", [])
-            if not centroid:
+            center = zone.get("center", zone.get("centroid", []))
+            if not center:
                 continue
-            n = min(len(vec), len(centroid))
-            d = sum((vec[i] - centroid[i]) ** 2 for i in range(n))
+            n = min(len(vec), len(center))
+            d = sum((vec[i] - center[i]) ** 2 for i in range(n))
             if d < best_dist:
                 best_dist = d
                 best_id   = int(zone.get("zone_id", 0))
@@ -421,8 +454,9 @@ class ReplayMemoryEngine:
         for rec in self._records:
             cluster_records[rec.cluster_id].append(rec)
 
-        zone_reg = self._zone_registry or {}
-        zones    = {int(z["zone_id"]): z for z in zone_reg.get("zones", [])}
+        zone_reg  = self._zone_registry or {}
+        sv        = zone_reg.get("schema_version", "")
+        zones     = {self._zone_cluster_id(z, sv): z for z in zone_reg.get("zones", [])}
 
         for cid, recs in cluster_records.items():
             cs           = ClusterStats(cid)

@@ -40,6 +40,7 @@ import pandas as pd
 
 from features.feature_pipeline import FeaturePipeline          # type: ignore
 from features.feature_schema import CANONICAL_FEATURES          # type: ignore
+from data_ingestion.ohlcv_schema import validate_ohlcv_frame    # type: ignore
 from strategies.strategy_orchestrator import _STRATEGY_CLASSES  # type: ignore
 from utils.logging_config import get_flow_logger                # type: ignore
 
@@ -158,6 +159,10 @@ class StrategyBacktester:
             "StrategyBacktester: loaded %d candles from %s", len(df), csv_path
         )
 
+        # Strict schema gate — fail fast on a malformed source (raises, never
+        # swallowed by the FeaturePipeline try-block below).
+        validate_ohlcv_frame(df, source=f"Historical dataset {csv_path}")
+
         pipeline = FeaturePipeline(df)
         try:
             features_df, _ = pipeline.run()
@@ -189,11 +194,11 @@ class StrategyBacktester:
             feat = {f: float(row.get(f, 0.0)) for f in CANONICAL_FEATURES}
             feat.update(self._row_to_features(row))
             candle = {
-                "open":   float(row.get("open",  0.0)),
-                "high":   float(row.get("high",  0.0)),
-                "low":    float(row.get("low",   0.0)),
-                "close":  float(row.get("close", 0.0)),
-                "volume": float(row.get("volume", 1.0)),
+                "open":   float(row["open"]),
+                "high":   float(row["high"]),
+                "low":    float(row["low"]),
+                "close":  float(row["close"]),
+                "volume": float(row["volume"]),
             }
 
             for sid, strategy in strategies.items():
@@ -278,9 +283,11 @@ class StrategyBacktester:
             vol_regime = "RANGING"
 
         return {
-            "open":   _f("open"),   "high":  _f("high"),
-            "low":    _f("low"),    "close": _f("close"),
-            "volume": _f("volume"),
+            # Six OHLCV fields are guaranteed present + numeric by the upstream
+            # validate_ohlcv_frame() gate — strict access, no default.
+            "open":   float(row["open"]),   "high":  float(row["high"]),
+            "low":    float(row["low"]),    "close": float(row["close"]),
+            "volume": float(row["volume"]),
             "atr":    _f("atr"),
             "rsi_14": _f("rsi_14"),
             "trend_bias":   str(

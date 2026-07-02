@@ -106,7 +106,7 @@ class S03Breakout(BaseStrategy):
         ema_fast = float(features.get("ema_fast", 0.0))
         ema_slow = float(features.get("ema_slow", 0.0))
 
-        close = float(candle.get("close", 0.0))
+        close = float(candle["close"])
         atr = float(features.get("atr", 0.0))
         if close <= 0.0 or atr <= 0.0:
             return self._no_trade("UNKNOWN")

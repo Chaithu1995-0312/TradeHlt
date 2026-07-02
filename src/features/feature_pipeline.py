@@ -50,6 +50,7 @@ import numpy as np
 from features.feature_schema import CANONICAL_FEATURES
 from features.schema_validator import validate_features, validate_feature_values, validate_vector
 from features.feature_monitor import FeatureMonitor
+from data_ingestion.ohlcv_schema import require_ohlcv_columns, validate_ohlcv_frame
 from utils.logging_config import get_flow_logger
 
 logger = get_flow_logger("FEATURE_PIPELINE")
@@ -159,17 +160,18 @@ class FeaturePipeline:
     # VALIDATION
     # ------------------------------------------------------------------
     def _validate_input(self) -> None:
-        required = ["timestamp", "open", "high", "low", "close"]
-        missing = [c for c in required if c not in self.df.columns]
-        if missing:
-            raise ValueError(f"FeaturePipeline: missing required columns: {missing}")
+        # Phase 1 — all six OHLCV columns must physically exist. No defaults,
+        # no auto-generated volume column.
+        require_ohlcv_columns(self.df.columns, source="FeaturePipeline")
 
-        if "volume" not in self.df.columns:
-            self.df["volume"] = 0.0  # Forex safe fallback
-
-        # Coerce numeric columns
+        # Coerce numeric columns (unparseable cells become NaN, caught below).
         for col in ["open", "high", "low", "close", "volume"]:
             self.df[col] = pd.to_numeric(self.df[col], errors="coerce")
+
+        # Phase 2 — value integrity: no NaN/non-numeric, volume >= 0, candles
+        # high/low-consistent. An all-zero (but numeric) volume column is valid
+        # data and is later handled by compute_volume_features()'s proxy.
+        validate_ohlcv_frame(self.df, source="FeaturePipeline")
 
     # ------------------------------------------------------------------
     # PRICE FEATURES
@@ -301,7 +303,22 @@ class FeaturePipeline:
     def compute_volatility_regime(self) -> None:
         df = self.df
 
-        atr_pct = df["atr_14"].rank(pct=True, method="average")
+        # [F-029 / Program B measurement hook, 2026-06-15] volatility_regime buckets ATR by its
+        # GLOBAL percentile rank — a whole-column statistic, so the same bar's regime depends on the
+        # slice length (a cross-length / walk-forward inconsistency). Unlike F1's swing lookahead
+        # (already measured byte-identical-benign), this column IS decision-reachable (s05_grid.py
+        # blocks LONG in the TRENDING regime). MEASURE-ONLY A/B/C hook: default (env unset) keeps the
+        # current GLOBAL rank (production behavior, no hash change); TRUST_VOLREGIME_CAUSAL selects a
+        # causal variant for comparison. See docs/analysis/backtest-trust-audit-2026-06-10 §4f /
+        # docs/current-findings.md F-029.
+        import os as _os
+        _vr_mode = _os.environ.get("TRUST_VOLREGIME_CAUSAL", "").strip().lower()
+        if _vr_mode == "expanding":        # B — time-causal expanding percentile (no future leak)
+            atr_pct = df["atr_14"].expanding(min_periods=1).rank(pct=True)
+        elif _vr_mode == "rolling":        # C — trailing-window percentile (regime-adaptive)
+            atr_pct = df["atr_14"].rolling(200, min_periods=1).rank(pct=True)
+        else:                              # A — current GLOBAL rank (default; production behavior)
+            atr_pct = df["atr_14"].rank(pct=True, method="average")
 
         df["volatility_regime"] = np.select(
             [atr_pct < 0.33, atr_pct < 0.66],
@@ -355,6 +372,19 @@ class FeaturePipeline:
 
         df["last_swing_high_price"] = df["high"].where(df["swing_high"] == 1).ffill()
         df["last_swing_low_price"]  = df["low"].where(df["swing_low"]  == 1).ffill()
+
+        # [trust-layer F1/WS4A measurement hook, 2026-06-10] center=True swing detection
+        # confirms a pivot at bar t using bars up to t+SWING_WINDOW (a future-bar peek).
+        # When TRUST_SWING_CAUSAL=1, delay pivot availability by SWING_WINDOW bars so the
+        # decision-bar reference is causal (no lookahead). MEASURE-ONLY: default off, no
+        # production-config/hash change. See docs/analysis/backtest-trust-audit-2026-06-10.
+        import os as _os
+        if _os.environ.get("TRUST_SWING_CAUSAL") == "1":
+            _s = SWING_WINDOW
+            df["swing_high"] = df["swing_high"].shift(_s).fillna(0).astype(np.int8)
+            df["swing_low"]  = df["swing_low"].shift(_s).fillna(0).astype(np.int8)
+            df["last_swing_high_price"] = df["last_swing_high_price"].shift(_s)
+            df["last_swing_low_price"]  = df["last_swing_low_price"].shift(_s)
 
         ref_high = df["last_swing_high_price"].shift(1)
         ref_low  = df["last_swing_low_price"].shift(1)

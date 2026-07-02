@@ -40,7 +40,7 @@ from typing import Optional
 
 import logging as _logging
 
-from config_layer.config_builder import ConfigBuilder
+from config_layer.config_builder import ConfigBuilder, _validate_override_keys
 from config_layer.crt_engine_v2 import CRTConfig
 
 _log = _logging.getLogger(__name__)
@@ -134,6 +134,117 @@ def _assert_registry_exists(path: Path) -> None:
             f"  Available versions: {available_versions or 'none'}\n"
             f"{'═'*60}\n"
         )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SESSION-OVERRIDE RESOLVERS  (single source of truth — shared by the registry
+# loader, ConfigValidator, and the analysis sweeps)
+#
+# Instrument-scoped session expansion lets BNBUSDT run +ASIA +OFF_SESSION without
+# touching ETH/BTC. See plan: trd-m6-stays-downstream.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _canon_session(raw: str) -> str:
+    """
+    Canonicalize a session label to the engine-facing form.
+
+    The engine compares against `session_windows` keys ("LONDON"/"NEWYORK"/
+    "ASIA"/"OVERLAP") which strip underscores, BUT the off-session sentinel must
+    stay "OFF_SESSION" — "OFFSESSION" would never match and off-session trades
+    would be silently rejected.
+    """
+    s = str(raw).upper()
+    if s.replace("_", "") == "OFFSESSION":
+        return "OFF_SESSION"
+    return s.replace("_", "")
+
+
+def resolve_allowed_sessions(
+    engine_runner_cfg: Optional[dict], instrument: str
+) -> Optional[tuple[str, ...]]:
+    """
+    Resolve the canonical allowed-session tuple for an instrument.
+
+    A per-instrument entry in `engine_runner.allowed_sessions_overrides` (matched
+    case-insensitively) wins over the global `engine_runner.allowed_sessions`.
+
+    Returns None when nothing applies (no override match AND no global key) so the
+    caller leaves the config's existing sessions untouched.
+    """
+    if not isinstance(engine_runner_cfg, dict):
+        return None
+
+    overrides = engine_runner_cfg.get("allowed_sessions_overrides") or {}
+    if isinstance(overrides, dict) and overrides:
+        lut = {str(k).upper(): v for k, v in overrides.items()}
+        hit = lut.get(str(instrument).upper())
+        if hit is not None:
+            return tuple(_canon_session(s) for s in hit)
+
+    if "allowed_sessions" in engine_runner_cfg:
+        return tuple(_canon_session(s) for s in engine_runner_cfg["allowed_sessions"])
+
+    return None
+
+
+def resolve_breakout_disp_threshold(
+    crt_engine_cfg: Optional[dict], instrument: str
+) -> Optional[float]:
+    """
+    Resolve the per-symbol BREAKOUT displacement threshold.
+
+    A per-instrument entry in `crt_engine.breakout_disp_threshold_overrides`
+    (case-insensitive) wins over the global `crt_engine.breakout_disp_threshold`.
+    Returns None when neither is present so the caller keeps its own default
+    (historical 1.5). Shared by the CRT engine and ExecutionPlanner so backtest
+    and live can never diverge on intent classification.
+    """
+    if not isinstance(crt_engine_cfg, dict):
+        return None
+
+    overrides = crt_engine_cfg.get("breakout_disp_threshold_overrides") or {}
+    if isinstance(overrides, dict) and overrides:
+        lut = {str(k).upper(): v for k, v in overrides.items()}
+        hit = lut.get(str(instrument).upper())
+        if hit is not None:
+            return float(hit)
+
+    if "breakout_disp_threshold" in crt_engine_cfg:
+        return float(crt_engine_cfg["breakout_disp_threshold"])
+
+    return None
+
+
+def resolve_instrument_overrides(
+    crt_engine_cfg: Optional[dict], instrument: str
+) -> dict:
+    """
+    Resolve per-instrument CRTConfig field overrides.
+
+    A per-instrument entry in `crt_engine.instrument_overrides` (matched
+    case-insensitively) supplies CRTConfig field values that win over the global
+    `params`/`crt_engine` config for that instrument ONLY. Keys are validated
+    against the CRTConfig schema (fail-fast on typos); values are coerced to
+    CRTConfig types (e.g. conf_weights list → tuple) via `_coerce_crt_engine`.
+
+    Returns {} when no override applies, so the caller leaves config untouched.
+
+    This is the governed per-instrument deployment vehicle — the SAME pattern as
+    `resolve_allowed_sessions`, and the ONLY supported place for instrument-scoped
+    CRT param divergence. Never hardcode per-instrument params in market_router.
+    """
+    if not isinstance(crt_engine_cfg, dict):
+        return {}
+    overrides = crt_engine_cfg.get("instrument_overrides") or {}
+    if not isinstance(overrides, dict) or not overrides:
+        return {}
+    lut = {str(k).upper(): v for k, v in overrides.items()}
+    hit = lut.get(str(instrument).upper())
+    if not isinstance(hit, dict) or not hit:
+        return {}
+    coerced = _coerce_crt_engine(hit)
+    _validate_override_keys(coerced)  # ValueError on unknown CRTConfig field
+    return coerced
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -248,20 +359,30 @@ def load_prod_config_from_registry(
     crt_engine = data.get("crt_engine", {})
     if crt_engine:
         coerced = _coerce_crt_engine(crt_engine)
+        # `instrument_overrides` is a meta sub-dict (handled by
+        # resolve_instrument_overrides below from the raw crt_engine), NOT a
+        # CRTConfig field — strip it so ConfigBuilder key-validation doesn't reject.
+        coerced.pop("instrument_overrides", None)
         merged = {**coerced, **params}   # params (tuned) wins over crt_engine defaults
     else:
         merged = dict(params)
 
-    # ── Pull allowed_sessions from engine_runner section ───────────────────
-    # JSON stores lowercase ("london", "new_york"); CRTConfig.session_windows
-    # uses uppercase keys without underscores ("LONDON", "NEWYORK"), so we
-    # normalize on load.
+    # ── Resolve allowed_sessions (global + per-instrument override) ─────────
+    # JSON stores lowercase ("london", "new_york"); the engine wants canonical
+    # keys ("LONDON", "NEWYORK", "OFF_SESSION"). resolve_allowed_sessions is the
+    # single source of truth shared with ConfigValidator and the sweeps.
     _er = data.get("engine_runner", {})
-    if isinstance(_er, dict) and "allowed_sessions" in _er:
-        merged["allowed_sessions"] = tuple(
-            str(s).upper().replace("_", "")
-            for s in _er["allowed_sessions"]
-        )
+    _sessions = resolve_allowed_sessions(_er, instrument)
+    if _sessions is not None:
+        merged["allowed_sessions"] = _sessions
+
+    # ── Per-instrument CRT overrides (governed; applied LAST so they win) ────
+    # The ONLY supported place for instrument-scoped CRT param divergence.
+    # Merged after params/crt_engine/allowed_sessions so they are never
+    # silently overwritten (the failure mode of hardcoding in market_router).
+    _inst_over = resolve_instrument_overrides(crt_engine, instrument)
+    if _inst_over:
+        merged.update(_inst_over)
 
     return ConfigBuilder.build(instrument, overrides=merged)
 

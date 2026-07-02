@@ -21,25 +21,30 @@ from features.feature_schema import CANONICAL_FEATURE_DIM
 # those models were trained on stale data and must be retrained.
 N_FEATURES = CANONICAL_FEATURE_DIM
 
-# ── Load from production config; fall back to coded defaults if unavailable ──
+# ── Load from production config (strict — the rr_model section + keys are governed) ──
+# Fallback sweep RR-001/fail-fast: the outer `except → {}` config mask was removed. The
+# `rr_model` section and these keys are present in the active config; a missing section/key is
+# now a load-time error, not a silent default. The inner ImportError dual-path (package vs
+# standalone-script import) is legitimate optional-import resilience and is preserved.
 try:
-    try:
-        from config_layer.production_config import get_prod_section as _get_section
-    except ImportError:
-        from production_config import get_prod_section as _get_section  # standalone script path
-    _RR_CFG = _get_section("rr_model")
-except Exception:
-    _RR_CFG = {}
+    from config_layer.production_config import get_prod_section as _get_section
+except ImportError:
+    from production_config import get_prod_section as _get_section  # standalone script path
+_RR_CFG = _get_section("rr_model")
 
-MIN_SAMPLES:          int   = _RR_CFG.get("min_samples", 20)
-DEFAULT_MODEL_PATH:   str   = _RR_CFG.get("model_path", "models/rr_model.json")
-_MAHAL_CLIP:          float = _RR_CFG.get("mahal_clip", 500.0)
-_CONF_BYPASS:         float = _RR_CFG.get("confidence_bypass_threshold", 0.3)
-_RR_MIN:              float = _RR_CFG.get("score_weights", {}).get("_rr_min", -3.0)
-_RR_MAX:              float = _RR_CFG.get("score_weights", {}).get("_rr_max", 5.0)
-_W_GAUSSIAN:          float = _RR_CFG.get("score_weights", {}).get("gaussian", 0.5)
-_W_ML:                float = _RR_CFG.get("score_weights", {}).get("ml", 0.3)
-_W_CONFIDENCE:        float = _RR_CFG.get("score_weights", {}).get("confidence", 0.2)
+# RR raw-score clamp bounds: STRUCTURAL algorithm constants, not config knobs (RR-001).
+# Algorithm boundaries belong in code, not config — no fallback, no degrees of freedom.
+RR_SCORE_MIN: float = -3.0
+RR_SCORE_MAX: float = 5.0
+
+MIN_SAMPLES:          int   = _RR_CFG["min_samples"]
+DEFAULT_MODEL_PATH:   str   = _RR_CFG["model_path"]
+_MAHAL_CLIP:          float = _RR_CFG["mahal_clip"]
+_CONF_BYPASS:         float = _RR_CFG["confidence_bypass_threshold"]
+_SCORE_WEIGHTS:       dict  = _RR_CFG["score_weights"]
+_W_GAUSSIAN:          float = _SCORE_WEIGHTS["gaussian"]
+_W_ML:                float = _SCORE_WEIGHTS["ml"]
+_W_CONFIDENCE:        float = _SCORE_WEIGHTS["confidence"]
 
 
 def _sigmoid(x: float) -> float:
@@ -344,7 +349,7 @@ class NanoInferenceEngine:
             }
 
         expected_rr = sum(X[i] * self.W[i] for i in range(n)) + self.b
-        expected_rr = min(_RR_MAX, max(_RR_MIN, expected_rr))
+        expected_rr = min(RR_SCORE_MAX, max(RR_SCORE_MIN, expected_rr))
 
         ll_loss = 0.0
         ll_win = 0.0

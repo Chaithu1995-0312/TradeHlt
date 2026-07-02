@@ -63,8 +63,33 @@ class AcceptanceController:
         fusion_threshold = np.percentile(fusion_scores, 85)
     """
 
+    @classmethod
+    def from_prod_config(cls, base_config: Optional[dict] = None) -> "AcceptanceController":
+        """Production constructor — fail-fast. Strict-reads the ``acceptance_controller``
+        section (no silent defaults) and injects the BEHAVIORAL knobs (formerly the module
+        constants _THETA_MIN/_THETA_MAX/_MIN_HISTORY + the hardcoded percentile) into the
+        base config. A missing section or key raises."""
+        from config_layer.production_config import get_prod_section
+        s = get_prod_section("acceptance_controller")
+        merged = dict(base_config or {})
+        for key in ("theta_min", "theta_max", "min_history", "fusion_percentile"):
+            if key not in s:
+                raise KeyError(
+                    f"Required config key '{key}' missing from 'acceptance_controller' section. "
+                    f"Add it to the production config (config-first doctrine: no silent defaults)."
+                )
+            merged[key] = s[key]
+        return cls(merged)
+
     def __init__(self, config: Optional[dict] = None) -> None:
         cfg = config or {}
+
+        # BEHAVIORAL bounds/knobs — canonical defaults for unit-test / standalone construction;
+        # the live path supplies them via from_prod_config (fail-fast, no silent config default).
+        self._theta_min         = float(cfg.get("theta_min", _THETA_MIN))
+        self._theta_max         = float(cfg.get("theta_max", _THETA_MAX))
+        self._min_history       = int(cfg.get("min_history", _MIN_HISTORY))
+        self._fusion_percentile = float(cfg.get("fusion_percentile", 85))
 
         # Integral control parameters
         self._alpha        = float(cfg.get("acceptance_alpha", 0.01))
@@ -76,7 +101,7 @@ class AcceptanceController:
         # Current theta (score_threshold fed to DecisionEngine)
         # Store raw config value separately so cold-path returns it unchanged
         self._cold_score_threshold = float(cfg.get("score_threshold", _DEFAULTS["score_threshold"]))
-        self._theta = _clamp(self._cold_score_threshold)
+        self._theta = _clamp(self._cold_score_threshold, self._theta_min, self._theta_max)
 
         # Rolling history windows
         self._engine_scores:  deque[float] = deque(maxlen=self._window_size)
@@ -118,14 +143,14 @@ class AcceptanceController:
         Compute statistically-derived thresholds from current history.
         Falls back to config defaults when history < _MIN_HISTORY.
         """
-        if len(self._engine_scores) < _MIN_HISTORY:
+        if len(self._engine_scores) < self._min_history:
             return dict(self._cfg_defaults)
 
         eng_arr    = np.array(self._engine_scores)
         fus_arr    = np.array(self._fusion_scores)
 
-        engine_thr = _clamp(float(np.mean(eng_arr) + self._k_sigma * np.std(eng_arr)))
-        fusion_thr = _clamp(float(np.percentile(fus_arr, 85)))
+        engine_thr = _clamp(float(np.mean(eng_arr) + self._k_sigma * np.std(eng_arr)), self._theta_min, self._theta_max)
+        fusion_thr = _clamp(float(np.percentile(fus_arr, self._fusion_percentile)), self._theta_min, self._theta_max)
 
         return {
             "score_threshold":  round(self._theta,   4),
@@ -139,14 +164,14 @@ class AcceptanceController:
         Called once per bar, AFTER update_metrics().
         No-op if insufficient history.
         """
-        if len(self._accepted_flags) < _MIN_HISTORY:
+        if len(self._accepted_flags) < self._min_history:
             return
 
         accept_rate = sum(self._accepted_flags) / len(self._accepted_flags)
         target_mid  = (self._target_low + self._target_high) / 2.0
         error       = accept_rate - target_mid
 
-        self._theta = _clamp(self._theta + self._alpha * error)
+        self._theta = _clamp(self._theta + self._alpha * error, self._theta_min, self._theta_max)
 
     def get_thresholds(self) -> dict:
         """

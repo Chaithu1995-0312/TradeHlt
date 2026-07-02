@@ -32,8 +32,8 @@ class Candle:
     high:      float
     low:       float
     close:     float
-    volume:    float
-    index:     int         # position in the source series
+    volume:    float = 0.0
+    index:     int   = 0   # candle position in the source series; [PATCH 4] time-based rules
 
 @dataclass
 class Range:

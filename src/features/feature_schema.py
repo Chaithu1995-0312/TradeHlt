@@ -42,7 +42,7 @@ FEATURE_SCHEMA = {
 }
 
 # Canonical feature order for vector construction.
-# Total vector dimension = 32.
+# Total vector dimension = 38 (== CANONICAL_FEATURE_DIM below; hard-asserted at import).
 CANONICAL_FEATURES = tuple([
     # ── indices 0-34 (v2.0, preserved unchanged) ─────────────────────────────
     "open", "high", "low", "close", "volume",

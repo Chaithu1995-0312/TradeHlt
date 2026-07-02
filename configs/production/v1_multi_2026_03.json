@@ -361,6 +361,19 @@
       "drawdown": 0.1
     }
   },
+  "goal": {
+    "goal_id": "G001",
+    "enforce": false,
+    "trades_per_month": {"min": 20, "target": 40, "max": 80},
+    "avg_rr": {"min": 2.0},
+    "win_rate": {"min": 0.35},
+    "max_drawdown_pct": {"max": 0.10},
+    "risk_per_trade": {"target": 0.005},
+    "expectancy_r": {"min": 0.20},
+    "timeframe": {"execution": "M15", "structure": "H1"},
+    "instruments": ["BTCUSDT", "ETHUSDT", "BNBUSDT"],
+    "constraints": {"reaction_only": true, "human_execution": true, "no_prediction": true}
+  },
   "backtest": {
     "htf_candles_per_range": 4,
     "warmup_candles": 30,

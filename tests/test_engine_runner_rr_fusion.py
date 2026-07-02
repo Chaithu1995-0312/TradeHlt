@@ -124,6 +124,7 @@ def _build_runner(rr_fusion, fusion_compare=False, fusion_use=False, eval_score=
     runner.gaussian = _DummyGaussian()
     runner.rr = _DummyRR()
     runner.rr_fusion = rr_fusion
+    runner._rr_fusion_full_vector = False
     runner.fusion = _DummyFusion(eval_score=eval_score)
     runner.decision = _DummyDecision()
     runner.collector = _DummyCollector()
@@ -133,6 +134,12 @@ def _build_runner(rr_fusion, fusion_compare=False, fusion_use=False, eval_score=
     runner._convergence = _DummyConvergence()
     runner._fusion_compare_evaluate = fusion_compare
     runner._fusion_use_evaluate = fusion_use
+    runner.gaussian_shadow = None
+    runner._last_regime = None
+    runner._belief_enabled = False
+    runner._regime_governor_enabled = False
+    from core.regime_governor import RegimeGovernor
+    runner._regime_governor = RegimeGovernor()
     runner.dual_cfg = {
         **er.DUAL_ENGINE_DEFAULTS,
         "fusion_min_score": 0.0,
@@ -205,6 +212,29 @@ def test_rr_fusion_failure_falls_back_to_base_rr(monkeypatch):
     assert result["decision"] == "execute"
     assert runner.fusion.last["rr"]["score"] == 0.3
     assert runner.fusion.last["rr"]["rr_ratio"] == 1.8
+
+
+def test_rr_fusion_disabled_is_base_rr_identity(monkeypatch):
+    """F-038: rr_fusion.enabled=false (self.rr_fusion is None) must leave the `rr` engine
+    result byte-identical to the base RREngine output — no score mutation, no metadata
+    injection (e.g. an `rr_fusion` key), so a disabled layer can never reintroduce the
+    Gaussian-duplicate behavior via a partial mutation."""
+    monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
+    monkeypatch.setattr(
+        er,
+        "run_zone_gate_engine",
+        lambda **_kwargs: {"score": 0.8, "passed": True},
+    )
+
+    runner = _build_runner(rr_fusion=None)
+    base_rr = runner.rr.compute(_input_data())
+
+    result = runner.run(_input_data(), {"symbol": "AUDUSD"})
+
+    assert result["decision"] == "execute"
+    assert runner.rr_fusion is None
+    assert runner.fusion.last["rr"] == base_rr
+    assert "rr_fusion" not in runner.fusion.last["rr"]
 
 
 def test_weighted_vote_falls_back_when_fusion_cfg_missing():

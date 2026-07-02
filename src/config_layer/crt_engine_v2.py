@@ -2222,6 +2222,36 @@ class CRTEngine:
         """Return all Phase-0 telemetry records. Call once at end-of-run."""
         return self.telemetry.flush()
 
+    def _emit_retest_replay(self, candle: "Candle", score: float, *,
+                            accepted: bool, reject_reason: Optional[str]) -> None:
+        """[S0 telemetry, emit-only] Record a TERMINAL RETEST->EXECUTION decision (selected or
+        rejected) so the offline selection-effect study (scripts/research/phase_s_selection_effect.py)
+        can compare selected vs rejected retests. Behavior-neutral: appends ONLY to the off-spine
+        RETEST_REPLAY telemetry (never the trades ledger, never a decision/state change). Defensive —
+        any field error is swallowed so telemetry can never affect the trading path."""
+        try:
+            st = self.state
+            disp = getattr(st, "displacement_candle", None)
+            rt = getattr(st, "retest_candle", None)
+            self.telemetry.on_retest_replay(
+                candle_index=candle.index,
+                timestamp=str(candle.timestamp),
+                direction=(1 if st.direction == Direction.LONG else -1),
+                entry=float(rt.close) if rt is not None else 0.0,
+                disp_low=float(disp.low) if disp is not None else 0.0,
+                disp_high=float(disp.high) if disp is not None else 0.0,
+                atr=float(getattr(st, "atr", 0.0) or 0.0),
+                sl_atr_buffer=float(self.config.sl_atr_buffer),
+                tp1_mult=float(self.config.tp1_atr_multiplier),
+                tp2_mult=float(self.config.tp2_atr_multiplier),
+                intent=str(getattr(st, "intent", "") or ""),
+                score=float(score),
+                accepted=accepted,
+                reject_reason=reject_reason,
+            )
+        except Exception:
+            pass
+
     def process_candle(self, candle: Candle, htf_candle_id: str) -> dict:
         # [PATCH 4] Auto-assign candle index
         self.state.current_candle_index += 1
@@ -2638,11 +2668,13 @@ class CRTEngine:
                     self.ev_log.record("FILTER_REJECTED", candle, reason="Not in discount zone")
                     self.sm.reset_to_range(self.state, "Not in discount zone", candle, self.ev_log)
                     action["action"] = "FILTER_REJECTED"
+                    self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="ZONE")
 
                 elif self.state.direction == Direction.SHORT and entry_price < mid:
                     self.ev_log.record("FILTER_REJECTED", candle, reason="Not in premium zone")
                     self.sm.reset_to_range(self.state, "Not in premium zone", candle, self.ev_log)
                     action["action"] = "FILTER_REJECTED"
+                    self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="ZONE")
 
                 else:
                     # ── Override final score with fusion S for downstream sizing ──
@@ -2671,6 +2703,8 @@ class CRTEngine:
                         )
                         action["action"] = "FILTER_REJECTED"
                         action["state_after"] = self.state.current_state.name
+                        self._emit_retest_replay(candle, _effective_S, accepted=False,
+                                                 reject_reason="OFF_SESSION")
                         return action
 
                     # ── Phase 4b: shadow_advisory_only hard block ─────────────
@@ -2688,6 +2722,8 @@ class CRTEngine:
                             self.state, "shadow_advisory_only", candle, self.ev_log
                         )
                         action["action"] = "SHADOW_ADVISORY_BLOCK"
+                        self._emit_retest_replay(candle, _effective_S, accepted=False,
+                                                 reject_reason="SHADOW_ADVISORY")
                         return action
                     # ─────────────────────────────────────────────────────────
 
@@ -2724,6 +2760,8 @@ class CRTEngine:
                             shadow_context=_shadow_ctx if self.state._came_from_shadow else {},
                             shadow_displacement_br=_shadow_disp_br,
                         )
+                        self._emit_retest_replay(candle, _effective_S, accepted=True,
+                                                 reject_reason=None)
 
                         # ── Phase 3b: Temporal integrity events ───────────────────
                         _struct_age = candle.index - self.state._expansion_entry_idx
@@ -2773,6 +2811,8 @@ class CRTEngine:
                     self.state, "Soft confirmation timeout", candle, self.ev_log
                 )
                 action["action"] = "CONFIRMATION_FAILED"
+                self._emit_retest_replay(candle, _effective_S, accepted=False,
+                                         reject_reason="LOW_SCORE")
 
             else:
                 # Still within window — continue evaluating

@@ -65,6 +65,7 @@ class EventType(str, Enum):
     QUEUE_HEALTH            = "QUEUE_HEALTH"   # CognitiveBus health snapshots
     TRADE_LIFECYCLE         = "TRADE_LIFECYCLE"  # M1: trade ENTRY/EXIT/REJECT (enveloped dual-write)
     STATE_TRANSITION        = "STATE_TRANSITION"  # M2: CRT state-machine transitions (enveloped dual-write)
+    LLM_TURN                = "LLM_TURN"  # multi-LLM coordination: one model turn in a handoff cycle
 
 
 # ── Thread-safe generation counter ───────────────────────────────────────────

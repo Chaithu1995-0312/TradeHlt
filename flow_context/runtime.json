@@ -15,5 +15,8 @@
     "core.collector"
   ],
   "keywords": ["signal", "fusion", "decision_engine", "ultron", "execution", "candle"],
-  "command_ids": ["live.inout_runner", "backtest.v2", "backtest.bitnet", "replay.unified"]
+  "command_ids": ["live.inout_runner", "backtest.v2", "backtest.bitnet", "replay.unified"],
+  "inputs": ["M15 OHLCV CSV — data/<INSTRUMENT>.csv (candle-by-candle)"],
+  "outputs": ["GateResult APPROVE/REJECT + execution plan (entry/SL/TP)",
+              "{instrument}_summary.json / _trades.csv / run record (ROI·PF·DD·funnel)"]
 }

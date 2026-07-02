@@ -264,3 +264,56 @@ def build_flow_code_context(flow_manifest: dict[str, Any], repo_root: Path) -> l
             continue
         out.extend(_top_level_symbols(path)[:_MAX_SYMS_PER_MODULE])
     return out
+
+
+# ── flow/module explorer support (M6) ──────────────────────────────────────────
+_FLOW_LIST_KEYS = ("flow", "title", "doc", "service_ids", "modules",
+                   "inputs", "outputs", "command_ids")
+
+
+def list_flows(repo_root: Path) -> list[dict[str, Any]]:
+    """All flows (manifest subset) for the explorer list. Modules stay start→end ordered."""
+    out: list[dict[str, Any]] = []
+    for man in _load_manifests(repo_root):
+        out.append({k: man.get(k) for k in _FLOW_LIST_KEYS})
+    return sorted(out, key=lambda m: m.get("flow") or "")
+
+
+def get_flow(flow_name: str, repo_root: Path) -> dict[str, Any] | None:
+    for man in _load_manifests(repo_root):
+        if man.get("flow") == flow_name:
+            return man
+    return None
+
+
+def build_module_code_context(module: str, repo_root: Path) -> list[dict[str, Any]]:
+    """code_context (extract_code_context shape) for ONE module's top-level symbols."""
+    path = _module_to_path(module, repo_root)
+    return _top_level_symbols(path) if path else []
+
+
+def module_role(module: str, repo_root: Path) -> str | None:
+    """First non-empty line of a module's docstring (mirrors gen_code_map._module_role)."""
+    path = _module_to_path(module, repo_root)
+    if not path:
+        return None
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, SyntaxError):
+        return None
+    doc = ast.get_docstring(tree)
+    if not doc:
+        return None
+    for line in doc.splitlines():
+        if line.strip():
+            return line.strip()
+    return None
+
+
+def module_neighbors(module: str, repo_root: Path) -> dict[str, list[str]]:
+    """Module's architectural I/O from the GLOBAL graph: depends_on + imported_by. Fail-open."""
+    try:
+        edges = _parse_edges((repo_root / "graph.dot").read_text(encoding="utf-8"))
+    except OSError:
+        return {"module": module, "depends_on": [], "imported_by": []}
+    return _neighbors(module, edges)

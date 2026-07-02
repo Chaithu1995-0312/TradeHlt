@@ -21,10 +21,23 @@ from decision_engine import (
     DecisionEngine,
     DecisionResult,
     DynamicThreshold,
-    _THRESHOLD_MIN,
-    _THRESHOLD_MAX,
 )
 from fusion_engine import EngineHealthTracker, FusionResult, ScoreNormalizer
+
+# Canonical DynamicThreshold knobs (formerly module constants in dynamic_threshold.py;
+# now config-first BEHAVIORAL knobs read fail-fast from decision_engine.threshold_*).
+# Tests pass them explicitly — there are intentionally no silent defaults.
+_TEST_PERCENTILE = 85
+_TEST_T_MIN      = 0.45
+_TEST_T_MAX      = 0.65
+
+
+def _make_dyn_threshold(**kw) -> DynamicThreshold:
+    """Construct a DynamicThreshold with the canonical knobs (fail-fast: required)."""
+    return DynamicThreshold(
+        percentile=_TEST_PERCENTILE, t_min=_TEST_T_MIN, t_max=_TEST_T_MAX, **kw
+    )
+
 
 # ─── minimal config so DecisionEngine doesn't raise ──────────────────────────
 _CFG = {
@@ -33,6 +46,9 @@ _CFG = {
     "rr_threshold":             1.20,
     "weak_link_weight":         0.30,
     "weak_component_threshold": 0.55,
+    "threshold_percentile":     _TEST_PERCENTILE,
+    "threshold_min":            _TEST_T_MIN,
+    "threshold_max":            _TEST_T_MAX,
 }
 
 
@@ -119,29 +135,29 @@ class TestEngineHealthTracker:
 
 class TestDynamicThreshold:
     def test_cold_start_returns_midpoint(self):
-        dt = DynamicThreshold()
-        assert dt.compute() == (_THRESHOLD_MIN + _THRESHOLD_MAX) / 2.0
+        dt = _make_dyn_threshold()
+        assert dt.compute() == (_TEST_T_MIN + _TEST_T_MAX) / 2.0
 
     def test_threshold_within_clamp(self):
-        dt = DynamicThreshold()
+        dt = _make_dyn_threshold()
         for s in [i / 10.0 for i in range(1, 11)]:
             dt.update(s)
-        assert _THRESHOLD_MIN <= dt.compute() <= _THRESHOLD_MAX
+        assert _TEST_T_MIN <= dt.compute() <= _TEST_T_MAX
 
     def test_all_low_scores_clamp_to_min(self):
-        dt = DynamicThreshold()
+        dt = _make_dyn_threshold()
         for _ in range(100):
             dt.update(0.10)
-        assert dt.compute() == _THRESHOLD_MIN
+        assert dt.compute() == _TEST_T_MIN
 
     def test_all_high_scores_clamp_to_max(self):
-        dt = DynamicThreshold()
+        dt = _make_dyn_threshold()
         for _ in range(100):
             dt.update(0.95)
-        assert dt.compute() == _THRESHOLD_MAX
+        assert dt.compute() == _TEST_T_MAX
 
     def test_n_samples_tracks_updates(self):
-        dt = DynamicThreshold(window=50)
+        dt = _make_dyn_threshold(window=50)
         for i in range(30):
             dt.update(float(i) / 100)
         assert dt.n_samples == 30

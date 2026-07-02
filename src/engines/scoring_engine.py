@@ -20,11 +20,13 @@ def compute_scores(
     sweep_detected: bool,
     double_sweep: bool,
     lambda_decay: float = 0.05,
+    score_weights: tuple = (0.35, 0.25, 0.20, 0.20),
 ) -> dict:
     """
     Canonical CRT scoring function.
 
     All sub-scores are bounded to [0, 1]. Decay is applied once.
+    score_weights: (sweep, breakout, retest, time) — configurable via crt_engine.score_component_weights.
     """
     disp_strength = move / atr if atr > 0 else 0.0
 
@@ -39,7 +41,8 @@ def compute_scores(
     s_retest = math.exp(-((retest_depth - 0.5) ** 2) / 0.04)
     s_time = math.exp(-lambda_decay * max(0, candles_since_retest))
 
-    s_final = 0.35 * s_sweep + 0.25 * s_breakout + 0.20 * s_retest + 0.20 * s_time
+    w_sweep, w_breakout, w_retest, w_time = score_weights
+    s_final = w_sweep * s_sweep + w_breakout * s_breakout + w_retest * s_retest + w_time * s_time
 
     return {
         "sweep": round(s_sweep, 4),

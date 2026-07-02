@@ -107,6 +107,9 @@ DEFAULT_CONFIG: dict = {
     "precision_overrides":     {"XAUUSD": 2, "BTCUSDT": 2, "ETHUSDT": 2},
     "default_account_balance": 10_000.0,
     "reject_unknown_intent":   True,
+    # BREAKOUT-vs-REVERSAL intent boundary; must match the CRT engine's resolved
+    # value for a symbol (production_config.resolve_breakout_disp_threshold).
+    "breakout_disp_threshold": 1.5,
     # Gate intelligence defaults
     "gate_weight_intent":      0.35,
     "gate_weight_vol":         0.20,
@@ -166,7 +169,7 @@ class ExecutionPlannerV1_2:
         ----------
         engine_result : dict
             Output from EngineRunner.run().
-            Required keys: "decision", "direction" (1/-1), "confidence", "regime".
+            Required keys: "decision", "selected_direction" (1/-1; 0=NONE→reject), "confidence", "regime".
         features : dict
             Canonical feature dict (must contain at minimum _REQUIRED_FEATURE_KEYS).
         context : dict
@@ -209,7 +212,11 @@ class ExecutionPlannerV1_2:
                 "trace": {"engine_decision": engine_result.get("decision")},
             }
 
-        direction = int(engine_result.get("direction", engine_result.get("selected_direction", 0)))
+        # RR-002/003: `selected_direction` is the canonical typed engine-output field
+        # (core/types.py:60 `selected_direction: int  # 1=BUY,-1=SELL,0=none`). The `direction`
+        # alias (schema drift) and the silent `0` default are removed: a MISSING field now fails
+        # loud (KeyError), while a modeled `0`=NONE is still gracefully rejected by the gate below.
+        direction = int(engine_result["selected_direction"])
         if direction not in (1, -1):
             return {
                 "decision": "reject_invalid",
@@ -336,9 +343,7 @@ class ExecutionPlannerV1_2:
             4. REVERSAL   — counter-trend (EMA vs direction)
             5. UNKNOWN    — no clear pattern
         """
-        direction = int(
-            engine_result.get("direction", engine_result.get("selected_direction", 0))
-        )
+        direction = int(engine_result["selected_direction"])  # RR-002/003: canonical field, fail-loud on absence
 
         sweep_detected = bool(features.get("sweep_detected", False))
         double_sweep = bool(features.get("double_sweep", False))
@@ -360,7 +365,7 @@ class ExecutionPlannerV1_2:
         ):
             return "PULLBACK", "retest depth within 0.3-0.7, recent, positive momentum"
 
-        if body_ratio > 0.6 and disp_strength > 1.5:
+        if body_ratio > 0.6 and disp_strength > float(self.config["breakout_disp_threshold"]):
             return "BREAKOUT", "strong body and displacement"
 
         if (ema_fast > ema_slow and direction == -1) or (
@@ -419,7 +424,7 @@ if __name__ == "__main__":
     # ── Test 1: Happy path — BREAKOUT ────────────────────────────────────────
     engine_result = {
         "decision": "execute",
-        "direction": 1,
+        "selected_direction": 1,
         "confidence": 0.82,
         "regime": "trend",
     }
@@ -463,7 +468,7 @@ if __name__ == "__main__":
     print("  ✅ PASS")
 
     # ── Test 2: Reject — engine decision != execute ───────────────────────────
-    engine_result_reject = {"decision": "REJECT", "direction": 1, "confidence": 0.3, "regime": "neutral"}
+    engine_result_reject = {"decision": "REJECT", "selected_direction": 1, "confidence": 0.3, "regime": "neutral"}
     result2 = planner.plan(engine_result_reject, features, context)
     print("\n=== Test 2: Engine reject ===")
     assert result2["decision"] == "reject_engine", f"Got {result2['decision']}"

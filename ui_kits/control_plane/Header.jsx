@@ -14,6 +14,7 @@ function Header({ view, setView, onHelp }) {
         {btn("Runs", "runs")}
         {btn("Dashboard", "dashboard")}
         {btn("Workflow", "workflow")}
+        {btn("Explore", "explore")}
         {btn("Agent", "agent")}
         <Button autoWidth onClick={onHelp}>Help / Start Tour</Button>
       </div>

@@ -22,12 +22,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from core.dynamic_threshold import (        # noqa: F401 — re-exports for backward compat
-    DynamicThreshold,
-    _THRESHOLD_MIN,
-    _THRESHOLD_MAX,
-    _THRESHOLD_PERCENTILE,
-)
+from core.dynamic_threshold import DynamicThreshold  # noqa: F401 — re-export for backward compat
 
 log = logging.getLogger("DecisionEngine")
 
@@ -35,7 +30,7 @@ log = logging.getLogger("DecisionEngine")
 # FIX 1 — DYNAMIC THRESHOLD (implementation lives in core/dynamic_threshold.py)
 # ─────────────────────────────────────────────────────────────────────────────
 
-_FALLBACK_TOP_N = 3
+_FALLBACK_TOP_N = 3  # default; overridden by decision_engine.fallback_top_n in production config
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -83,7 +78,7 @@ def _require_decision_cfg(config: Any, key: str) -> float:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class DecisionEngine:
-    def __init__(self, config=None, threshold_window: int = 1000, fallback_n: int = _FALLBACK_TOP_N):
+    def __init__(self, config=None, threshold_window: int = 1000, fallback_n: int | None = None):
         if config is None:
             raise ValueError(
                 "DecisionEngine requires a config dict. "
@@ -95,9 +90,18 @@ class DecisionEngine:
         self.rr_threshold             = _require_decision_cfg(config, "rr_threshold")
         self.weak_link_weight         = _require_decision_cfg(config, "weak_link_weight")
         self.weak_component_threshold = _require_decision_cfg(config, "weak_component_threshold")
-        # FIX 1 — dynamic threshold replaces static score_threshold for score check
-        self._dynamic_threshold = DynamicThreshold(threshold_window)
-        self._fallback_n        = fallback_n
+        # FIX 1 — dynamic threshold replaces static score_threshold for score check.
+        # BEHAVIORAL knobs read fail-fast from config (no silent defaults): the percentile
+        # + clamp bounds were previously hardcoded module constants in dynamic_threshold.py.
+        self._dynamic_threshold = DynamicThreshold(
+            threshold_window,
+            percentile=int(_require_decision_cfg(config, "threshold_percentile")),
+            t_min=_require_decision_cfg(config, "threshold_min"),
+            t_max=_require_decision_cfg(config, "threshold_max"),
+        )
+        # FIX 4 — fallback_top_n: prefer config key, then explicit arg, then module default
+        _cfg_fallback_n = int(config.get("fallback_top_n", _FALLBACK_TOP_N)) if isinstance(config, dict) else _FALLBACK_TOP_N
+        self._fallback_n = fallback_n if fallback_n is not None else _cfg_fallback_n
 
     # ── Single-signal evaluation ──────────────────────────────────────────────
 

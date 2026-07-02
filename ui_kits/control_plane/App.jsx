@@ -10,6 +10,7 @@ function App() {
   const [completed, setCompleted] = useState({});
   const [contextRunId, setContextRunId] = useState(null);
   const [contextCommandId, setContextCommandId] = useState(null);
+  const [exploreFlow, setExploreFlow] = useState(null);
 
   const data = mockApi.commands();
   const runs = mockApi.listRuns(search).runs;
@@ -67,7 +68,12 @@ function App() {
           <DashboardView entries={dashEntries} commands={data.commands} />
         </main>
       ) : view === "workflow" ? (
-        <WorkflowPanel onNode={setContextCommandId} />
+        <WorkflowPanel
+          onNode={setContextCommandId}
+          onFlow={(flow) => { setExploreFlow(flow); setView("explore"); }}
+        />
+      ) : view === "explore" ? (
+        <ExplorerPanel initialFlow={exploreFlow} />
       ) : (
         <AgentPanel />
       )}

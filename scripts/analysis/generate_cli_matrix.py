@@ -12,7 +12,7 @@ from control_plane.registry import generate_cli_matrix_markdown
 
 
 def main() -> None:
-    out_path = Path("docs/CLI_MATRIX.md")
+    out_path = Path("docs/reference/cli-matrix.md")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(generate_cli_matrix_markdown(), encoding="utf-8")
     print(f"Wrote {out_path}")

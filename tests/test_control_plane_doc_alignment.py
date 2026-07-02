@@ -14,7 +14,7 @@ def test_agents_path_alignment() -> None:
 
 
 def test_cli_matrix_contains_all_core_command_ids() -> None:
-    cli_matrix = Path("docs/CLI_MATRIX.md").read_text(encoding="utf-8")
+    cli_matrix = Path("docs/reference/cli-matrix.md").read_text(encoding="utf-8")
     assert "Suggested Next" in cli_matrix
     for spec in core_command_specs():
         assert f"`{spec.id}`" in cli_matrix
