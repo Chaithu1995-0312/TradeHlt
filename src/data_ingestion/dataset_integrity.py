@@ -122,6 +122,31 @@ def classify_market(symbol: Optional[str], cfg: dict) -> MarketType:
     return MarketType.WEEKDAY
 
 
+def _parse_known_gaps(entries, symbol: Optional[str]) -> list:
+    """Parse `session_calendar.known_gaps` entries applicable to `symbol` into (lo, hi) naive-UTC
+    datetime ranges. Each entry: {symbol?(omit=all), from, to, reason?}. Malformed entries are
+    skipped (never a hard failure — the gate must not crash on a bad accept-list row)."""
+    out: list = []
+    sym = (symbol or "").upper()
+    for e in entries or []:
+        if not isinstance(e, dict):
+            continue
+        esym = (e.get("symbol") or "").upper()
+        if esym and sym and esym != sym:
+            continue
+        try:
+            lo = datetime.fromisoformat(str(e["from"]))
+            hi = datetime.fromisoformat(str(e["to"]))
+        except (KeyError, ValueError, TypeError):
+            continue
+        # Compare against naive-UTC candle timestamps.
+        lo = lo.replace(tzinfo=None)
+        hi = hi.replace(tzinfo=None)
+        if hi > lo:
+            out.append((lo, hi))
+    return out
+
+
 def _is_tradable(dt: datetime, market: MarketType, sc: dict) -> bool:
     """Is `dt` inside a tradable session for `market`? CRYPTO → always. WEEKDAY →
     the FX week: open Sun >= open_hour, all of Mon-Thu, Fri < close_hour, Sat never,
@@ -134,10 +159,20 @@ def _is_tradable(dt: datetime, market: MarketType, sc: dict) -> bool:
     zero-tolerance fetch gate from false-stopping on legitimate holiday closures while still
     hard-stopping on real mid-session corruption.
 
+    A reviewed, timestamp-RANGE `sc["_known_gaps"]` accept-list (parsed from
+    `session_calendar.known_gaps`) marks specific confirmed broker-outage windows non-tradable for
+    ANY mode/market — this is how a genuine intraday micro-gap is accepted without whole-day
+    holiday marking (keeps the day's other bars). Empty default ⇒ parity.
+
     If `sc["_weekly_mask"]` is present (autoderive mode — see session_autoderive), tradability is
     the LEARNED provider mask instead of the hardcoded FX hours; this self-calibrates to any
     broker's real session (no Sunday / no daily break / shifted open) so weekend/overnight closures
     aren't false-flagged. Holidays still apply on top."""
+    known_gaps = sc.get("_known_gaps")
+    if known_gaps:
+        for lo, hi in known_gaps:
+            if lo <= dt < hi:
+                return False   # reviewed broker-outage window → accepted (non-tradable)
     holidays = sc.get("holidays")
     mask = sc.get("_weekly_mask")
     if mask is not None:
@@ -264,7 +299,8 @@ def validate_dataset(
     sc = cfg.get("session_calendar", {})
     # Normalize the (reviewed) holiday list to a set once → O(1) membership across the
     # whole-grid tradable-slot count (parity: empty list ⇒ empty set ⇒ no behavior change).
-    sc = {**sc, "holidays": set(sc.get("holidays", []))}
+    sc = {**sc, "holidays": set(sc.get("holidays", [])),
+          "_known_gaps": _parse_known_gaps(sc.get("known_gaps", []), symbol)}
     market = classify_market(symbol, cfg)
     report["timeframe"] = tf
     report["market_type"] = market.value

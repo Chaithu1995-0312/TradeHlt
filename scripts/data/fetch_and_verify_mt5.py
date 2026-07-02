@@ -42,7 +42,8 @@ if str(_ROOT / "src") not in sys.path:
 
 from config_layer.production_config import get_prod_section          # noqa: E402
 from data_ingestion.dataset_integrity import (                        # noqa: E402
-    _TF_MINUTES, _is_tradable, _stream_candles, classify_market, validate_dataset,
+    _TF_MINUTES, _is_tradable, _parse_known_gaps, _stream_candles, classify_market,
+    validate_dataset,
 )
 from data_ingestion.session_autoderive import (                       # noqa: E402
     derive_weekly_mask, is_tradable_by_mask,
@@ -84,13 +85,18 @@ def _missing_tradable(path: Path, symbol: str, tf: str, cfg: dict, override: dic
     bar = _TF_MINUTES.get((tf or "").upper()) or int(cfg.get("default_bar_minutes", 15))
     step = timedelta(minutes=bar)
 
+    known_gaps = _parse_known_gaps(cfg.get("session_calendar", {}).get("known_gaps", []), symbol)
+
+    def _accepted(t):   # reviewed broker-outage window → not "missing"
+        return any(lo <= t < hi for lo, hi in known_gaps)
+
     if override.get("tradability_mode") == "autoderive":
         mask = derive_weekly_mask(ts_all, presence_min=float(override.get("autoderive_presence_min", 0.5)))
-        tradable = lambda t: is_tradable_by_mask(t, mask, holidays)   # noqa: E731
+        tradable = lambda t: (not _accepted(t)) and is_tradable_by_mask(t, mask, holidays)  # noqa: E731
     else:
         sc = {**cfg.get("session_calendar", {}), "holidays": holidays}
         market = classify_market(symbol, cfg)
-        tradable = lambda t: _is_tradable(t, market, sc)              # noqa: E731
+        tradable = lambda t: (not _accepted(t)) and _is_tradable(t, market, sc)             # noqa: E731
 
     out: list[str] = []
     prev = None

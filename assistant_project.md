@@ -266,3 +266,22 @@ Belief Update / ROI / Goal: Goal: enable consistent M5 (+native ladder) data wit
 Open Questions: Which surfaced gaps are genuine holidays (→ add to session_calendar.holidays) vs broker corruption (→ data unusable)? Does the broker emit hour-21 rollover M5 bars (extra, harmless) or omit them (could matter for FX)? Re-fetched FX M15 overwrites the F-035/F-040 corpus (git-recoverable).
 Next Step: Review full-fetch output; curate holidays with the user; re-run until ALL CLEAN; only then is the M5 ladder trainable. Commit when the user asks.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-07-01
+Topic: F-038 deploy committed (670a860) — wrap-up
+Decision/Output: Commit 670a860 landed on `patch` (5 files: ACTIVE_VERSION flip, finding_dependency_audit.md, current-findings.md, rotated assistant_project.md + new session-log archive). Pre-commit hook green (71 passed/1 skipped). Fixed a stray-`@` commit subject (PowerShell here-string `@'...'@` is invalid in the Bash tool — used `git commit --amend -F msgfile`). Not pushed. Advisory consolidation signals: findings 39/30 DUE, memory 55/45 DUE (non-blocking).
+Belief Update / ROI / Goal: none (mechanics — deploy + commit hygiene).
+Open Questions: ~80 unrelated working-tree files + .env still uncommitted (owner's scope). Push not requested.
+Next Step: optional — push patch; or run consolidate-memory / retire settled findings per advisory signals.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-07-02
+Topic: Ordered ops 1-3 — secret-scrub + push, track fetch CLI, known_gaps accept-list
+Decision/Output: Executed the approved ordered plan. STEP 1 (push): `git push origin patch` was REJECTED by GitHub push-protection — a live Groq API key is in `.env` at commits 278d993/eb64269 (PRE-EXISTING, from prior sessions; both unpushed). Halted (did NOT bypass — publishing a live secret is an irreversible leak). User chose "scrub + push". Correction: I'd earlier called .env "git-tracked, recoverable" — it IS tracked but GITIGNORED (line 9); tracked before the ignore rule. Scrubbed SAFELY without touching the 332 uncommitted working files: backup branch (backup/pre-env-scrub-20260702=670a860) → isolated `git clone` of committed history → `git filter-branch --index-filter "git rm --cached --ignore-unmatch .env" --prune-empty` (60→59 commits, .env fully removed, verified) → verified FF (GitHub tip is ancestor) → `git push gh patch` SUCCEEDED (5897209..05d4ad0; secret gone, only LFS size warnings) → realigned main working-tree-safe `git reset --mixed origin/patch` (331 files preserved, .env now untracked+on-disk) → deleted the clone (held secret). My F-040 work preserved as f0ce74b. STEP 2: `git add -f scripts/data/fetch_and_verify_mt5.py` (over the collateral bare-`data` ignore), commit 8bff9e3, pushed. STEP 3: known_gaps accept-list — session_calendar.known_gaps [{symbol?,from,to,reason}] timestamp-RANGE allowlist so a reviewed few-bar broker outage is accepted WITHOUT whole-day holiday marking; _is_tradable checks it first (all modes), validate_dataset parses per-symbol via new _parse_known_gaps, CLI diagnostic honors it; empty=parity. +2 tests; 71 data_ingestion+integrity green. USER MUST ROTATE the Groq key (compromised — in local history + GitHub-scanned; out-of-band, only they can).
+Belief Update / ROI / Goal: Goal: publish the work + a clean, trainable corpus without leaking secrets or losing uncommitted work. Belief: the repo carried a live secret in unpushed history (prior sessions) — GitHub push-protection caught it; scrubbing via an isolated clone kept the 332-file working tree untouched (reset --mixed is the safe realign). Knowledge ROI: high — turned a blocked push into a clean history + a reusable precise accept-list, with zero work lost. Action: STEP 4 next (full bulk fetch + review loop); user rotates the Groq key; optionally delete backup branch (holds the old secret locally) once satisfied.
+Open Questions: Which residual micro-gaps after re-fetch are genuine broker outages (→ known_gaps) vs corruption (→ stay blocked)? Delete backup/pre-env-scrub-20260702 (contains the old secret in history)?
+Next Step: Run STEP 4: `fetch_and_verify_mt5.py --discover-crypto`; review quarantine; propose known_gaps entries for approval; re-verify.

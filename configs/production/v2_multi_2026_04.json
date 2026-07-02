@@ -629,7 +629,9 @@
         "2025-01-01", "2025-01-20", "2025-02-17", "2025-04-18", "2025-05-26", "2025-06-19",
         "2025-07-04", "2025-09-01", "2025-11-27", "2025-11-28", "2025-12-24", "2025-12-25",
         "2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03"
-      ]
+      ],
+      "_known_gaps_doc": "Reviewed, timestamp-RANGE accept-list for genuine intraday broker feed outages (a few bars) that are NOT full-day closures — so the ~89 good bars that day are kept (unlike whole-day holidays). Each entry: {symbol?(optional; omit=all), from, to (half-open UTC ISO), reason}. A bar inside any applicable range is treated as non-tradable (accepted). EMPTY DEFAULT = byte-parity; entries are added ONLY by reviewed decision after the strict gate surfaces a hole confirmed to be a broker outage (not corruption).",
+      "known_gaps": []
     }
   },
   "live_integration": {

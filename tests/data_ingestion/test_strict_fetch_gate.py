@@ -158,6 +158,48 @@ def test_config_mode_crypto_ignores_holidays(tmp_path):
                             cfg_override=ov)["decision"] == DatasetDecision.REJECT.value
 
 
+def test_known_gaps_accepts_specific_range_only(tmp_path):
+    """A reviewed known_gaps range accepts a genuine intraday hole WITHOUT whole-day marking; a
+    DIFFERENT hole still hard-stops; a symbol-scoped entry does not accept another symbol."""
+    full = _grid(datetime(2024, 5, 21, 0, 0), datetime(2024, 5, 21, 12, 0), MarketType.WEEKDAY, 15)
+    hole = datetime(2024, 5, 21, 3, 0)                       # drop 03:00 & 03:15 (2 bars)
+    kept = [t for t in full if t not in (hole, hole.replace(minute=15))]
+    p = tmp_path / "EURUSD_M15.csv"
+    _write(p, kept)
+
+    kg = [{"symbol": "EURUSD", "from": "2024-05-21T03:00:00", "to": "2024-05-21T03:30:00",
+           "reason": "reviewed broker outage"}]
+    ov = _override()
+    ov["session_calendar"] = {**_SC, "known_gaps": kg}
+    assert validate_dataset(str(p), instrument="EURUSD", raise_on_fail=False, write_report=False,
+                            cfg_override=ov)["decision"] == DatasetDecision.APPROVE.value
+
+    # a DIFFERENT hole (not covered by known_gaps) still REJECTS
+    kept2 = [t for t in kept if t != datetime(2024, 5, 21, 8, 0)]
+    _write(p, kept2)
+    assert validate_dataset(str(p), instrument="EURUSD", raise_on_fail=False, write_report=False,
+                            cfg_override=ov)["decision"] == DatasetDecision.REJECT.value
+
+    # symbol-scoped to EURUSD → does NOT accept the same clock-time hole on GBPUSD
+    pg = tmp_path / "GBPUSD_M15.csv"
+    _write(pg, kept)
+    assert validate_dataset(str(pg), instrument="GBPUSD", raise_on_fail=False, write_report=False,
+                            cfg_override=ov)["decision"] == DatasetDecision.REJECT.value
+
+
+def test_known_gaps_empty_is_parity(tmp_path):
+    """Empty known_gaps ⇒ identical decision to not specifying it (byte-parity)."""
+    full = _grid(datetime(2024, 5, 21, 0, 0), datetime(2024, 5, 21, 12, 0), MarketType.WEEKDAY, 15)
+    p = tmp_path / "EURUSD_M15.csv"
+    _write(p, full)
+    a = validate_dataset(str(p), instrument="EURUSD", raise_on_fail=False, write_report=False,
+                         cfg_override=_override())
+    ov = _override(); ov["session_calendar"] = {**_SC, "known_gaps": []}
+    b = validate_dataset(str(p), instrument="EURUSD", raise_on_fail=False, write_report=False,
+                         cfg_override=ov)
+    assert a["decision"] == b["decision"] == DatasetDecision.APPROVE.value
+
+
 def test_cfg_override_none_is_parity(tmp_path):
     """cfg_override=None must be byte-identical to passing the loaded config's own values."""
     ts = _grid(datetime(2024, 5, 21, 0, 0), datetime(2024, 5, 21, 4, 0), MarketType.CRYPTO, 5)
