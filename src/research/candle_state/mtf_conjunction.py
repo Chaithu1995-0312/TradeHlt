@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from research.candle_state.encoder import CandleState, CandleStateEncoder
-from research.resample import _RULE_HOURS, _bucket_start, resample
+from research.resample import bucket_floor, resample
 
 _MISSING = "NA"   # token used when a timeframe has no closed candle yet (warmup)
 
@@ -50,10 +50,14 @@ class MultiTFConjunctionBuilder:
         *,
         rules: Sequence[str] = ("H1", "H4"),
         htf_window: int = 60,
+        base_label: str = "M15",
     ):
         self.encoder = encoder or CandleStateEncoder()
         self.rules = tuple(rules)
         self.htf_window = htf_window
+        # Label of the BASE timeframe in the conjunction key. Default "M15" keeps every
+        # Program-4 key byte-identical; Program 9 passes "M5" with rules ("M15","H1","H4").
+        self.base_label = base_label
 
     def _htf_state(self, m15_window: list, rule: str) -> CandleState | None:
         htf = resample(m15_window, rule)        # CLOSED buckets only (trailing dropped)
@@ -70,7 +74,7 @@ class MultiTFConjunctionBuilder:
         for rule in self.rules:
             states[rule] = self._htf_state(bars, rule)
 
-        parts = [f"M15={m15_state.token()}"]
+        parts = [f"{self.base_label}={m15_state.token()}"]
         for rule in self.rules:
             st = states.get(rule)
             parts.append(f"{rule}={st.token() if st is not None else _MISSING}")
@@ -116,14 +120,14 @@ class MultiTFConjunctionBuilder:
                       for i in range(len(htf))]
             col: list[str] = []
             for t in range(n):
-                floor_t = _bucket_start(bars[t].timestamp, _RULE_HOURS[rule])
+                floor_t = bucket_floor(bars[t].timestamp, rule)
                 j = bisect.bisect_left(starts, floor_t) - 1   # last start strictly < floor_t
                 col.append(states[j] if j >= 0 else _MISSING)
             htf_tokens[rule] = col
 
         keys: list[str] = []
         for t in range(n):
-            parts = [f"M15={m15_tokens[t]}"]
+            parts = [f"{self.base_label}={m15_tokens[t]}"]
             for rule in self.rules:
                 parts.append(f"{rule}={htf_tokens[rule][t]}")
             keys.append("|".join(parts))

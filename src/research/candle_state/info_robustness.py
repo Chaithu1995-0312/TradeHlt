@@ -63,9 +63,10 @@ def mi_stability(
     }
 
 
-def info_half_life(ig_by_horizon: dict[int, float]) -> dict:
+def info_half_life(ig_by_horizon: dict[int, float], *, min_bars: int = HALF_LIFE_MIN_BARS) -> dict:
     """Decay curve of IG across horizons. half_life = largest horizon h with IG(h) ≥ 0.5·IG(h0)
-    where h0 is the smallest horizon. PASS iff half_life ≥ HALF_LIFE_MIN_BARS."""
+    where h0 is the smallest horizon. PASS iff half_life ≥ `min_bars` (default = the frozen
+    Program-4 M15 threshold; Program 9 passes its wall-clock-matched M5 rescale, 12 bars)."""
     if not ig_by_horizon:
         return {"curve": {}, "half_life_bars": 0, "passed": False}
     horizons = sorted(ig_by_horizon)
@@ -81,7 +82,7 @@ def info_half_life(ig_by_horizon: dict[int, float]) -> dict:
     return {
         "curve": {str(h): round(ig_by_horizon[h], 6) for h in horizons},
         "half_life_bars": half,
-        "passed": bool(base > 0.0 and half >= HALF_LIFE_MIN_BARS),
+        "passed": bool(base > 0.0 and half >= min_bars),
     }
 
 
