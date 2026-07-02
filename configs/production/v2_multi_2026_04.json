@@ -630,8 +630,26 @@
         "2025-07-04", "2025-09-01", "2025-11-27", "2025-11-28", "2025-12-24", "2025-12-25",
         "2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03"
       ],
-      "_known_gaps_doc": "Reviewed, timestamp-RANGE accept-list for genuine intraday broker feed outages (a few bars) that are NOT full-day closures — so the ~89 good bars that day are kept (unlike whole-day holidays). Each entry: {symbol?(optional; omit=all), from, to (half-open UTC ISO), reason}. A bar inside any applicable range is treated as non-tradable (accepted). EMPTY DEFAULT = byte-parity; entries are added ONLY by reviewed decision after the strict gate surfaces a hole confirmed to be a broker outage (not corruption).",
-      "known_gaps": []
+      "_known_gaps_doc": "Reviewed, timestamp-RANGE accept-list for genuine intraday broker feed outages (a few bars) that are NOT full-day closures — so the good bars that day are kept (unlike whole-day holidays). Each entry: {symbol?(optional; omit=all), from, to (half-open UTC ISO), reason}. A bar inside any applicable range is treated as non-tradable (accepted). EMPTY DEFAULT = byte-parity; entries are added ONLY by reviewed decision after the strict gate surfaces a hole confirmed to be a broker outage (not corruption). Populated 2026-07-02 from the IC-Markets bulk-fetch review: broker-wide multi-symbol windows are global; single-symbol holes are scoped; XAUUSD 2026-05-25/06-19 are US-holiday early-closes (gold) not yet in the holidays list.",
+      "known_gaps": [
+        {"symbol": "EURCAD", "from": "2025-06-02T00:00:00", "to": "2025-06-02T00:05:00", "reason": "broker feed outage 2025-06-02 (EURCAD), reviewed 2026-07-02"},
+        {"symbol": "AUDUSD", "from": "2025-07-30T20:15:00", "to": "2025-07-30T21:20:00", "reason": "broker feed outage 2025-07-30 (AUDUSD), reviewed 2026-07-02"},
+        {"symbol": "EURCAD", "from": "2025-11-10T00:00:00", "to": "2025-11-10T00:05:00", "reason": "broker feed outage 2025-11-10 (EURCAD), reviewed 2026-07-02"},
+        {"symbol": "AUDUSD", "from": "2025-11-12T17:15:00", "to": "2025-11-12T17:25:00", "reason": "broker feed outage 2025-11-12 (AUDUSD), reviewed 2026-07-02"},
+        {"symbol": "EURCAD", "from": "2025-11-17T00:00:00", "to": "2025-11-17T00:05:00", "reason": "broker feed outage 2025-11-17 (EURCAD), reviewed 2026-07-02"},
+        {"symbol": "GBPUSD", "from": "2025-12-22T00:00:00", "to": "2025-12-22T00:05:00", "reason": "broker feed outage 2025-12-22 (GBPUSD), reviewed 2026-07-02"},
+        {"symbol": "EURCAD", "from": "2025-12-29T00:00:00", "to": "2025-12-29T00:05:00", "reason": "broker feed outage 2025-12-29 (EURCAD), reviewed 2026-07-02"},
+        {"from": "2026-03-25T16:10:00", "to": "2026-03-25T17:35:00", "reason": "broker-wide feed outage 2026-03-25 (4 syms), reviewed 2026-07-02"},
+        {"from": "2026-04-01T00:00:00", "to": "2026-04-01T08:35:00", "reason": "broker-wide feed outage 2026-04-01 (5 syms), reviewed 2026-07-02"},
+        {"from": "2026-04-22T09:55:00", "to": "2026-04-22T10:05:00", "reason": "broker-wide feed outage 2026-04-22 (5 syms), reviewed 2026-07-02"},
+        {"from": "2026-05-01T00:35:00", "to": "2026-05-01T00:40:00", "reason": "broker-wide feed outage 2026-05-01 (4 syms), reviewed 2026-07-02"},
+        {"symbol": "XAUUSD", "from": "2026-05-25T21:30:00", "to": "2026-05-26T00:00:00", "reason": "XAUUSD US-holiday early-close 2026-05-25 (Memorial Day), reviewed 2026-07-02"},
+        {"from": "2026-05-26T19:45:00", "to": "2026-05-26T19:50:00", "reason": "broker-wide feed outage 2026-05-26 (5 syms), reviewed 2026-07-02"},
+        {"from": "2026-06-15T12:15:00", "to": "2026-06-15T12:35:00", "reason": "broker-wide feed outage 2026-06-15 (6 syms), reviewed 2026-07-02"},
+        {"symbol": "XAUUSD", "from": "2026-06-19T20:00:00", "to": "2026-06-20T00:00:00", "reason": "XAUUSD US-holiday early-close 2026-06-19 (Juneteenth), reviewed 2026-07-02"},
+        {"from": "2026-06-29T08:05:00", "to": "2026-06-29T10:05:00", "reason": "broker-wide feed outage 2026-06-29 (6 syms), reviewed 2026-07-02"},
+        {"from": "2026-07-01T00:35:00", "to": "2026-07-01T00:40:00", "reason": "broker-wide feed outage 2026-07-01 (5 syms), reviewed 2026-07-02"}
+      ]
     }
   },
   "live_integration": {
