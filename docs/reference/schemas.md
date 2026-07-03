@@ -455,7 +455,10 @@ ProductionConfig = {
 
 ## 9. JSONL Audit Line Schemas
 
-Every JSONL line is self-contained and must include `timestamp` + `kind`.
+Every JSONL line is self-contained. The `timestamp` + `kind` rule applies to **audit/event
+streams** (§9.1–9.4); **registry-class** JSONL (§9.5–9.6 and `data/framework_registry.jsonl`,
+see `framework_registry_schema.md`) carries `created` / `last_validated` (or a static meta
+line) instead — registries are id-keyed truth projections, not time-ordered event logs.
 
 ### 9.1 `configs/promotion_log.jsonl`
 
@@ -502,6 +505,99 @@ ExpansionLogLine = {
     "reason":         str,                      # bounds | regression | hard_gate | accepted
 }
 ```
+
+### 9.4 Event-fabric streams (uniform envelope)
+
+Cross-component telemetry uses one canonical envelope (`make_event_envelope`,
+`src/events/event_fabric.py:119`); `payload` is event-specific:
+
+```python
+EventEnvelope = {
+    "event_id":        str,     # 8-char hex UUID fragment — correlation
+    "generation":      int,     # monotonic per-process counter — ordering within session
+    "event_type":      str,     # EventType member (src/events/event_fabric.py:56)
+    "instrument":      str,     # "" for system-level events
+    "source":          str,     # originating component ("CRTEngine", "CognitiveBus", …)
+    "timestamp":       str,     # ISO-8601 UTC
+    "schema_hash":     str,     # FEATURE_ORDER_HASH at emission — passive drift detector
+    "parent_event_id": str,     # causal chain ("" = root)
+    "payload":         dict,
+}
+```
+
+Stream directory (`EventType` → file → emitter; the per-model consumers are indexed in
+`active_models.yaml` `reachability.telemetry`):
+
+| EventType | Stream | Emitter |
+|---|---|---|
+| `ENGINE_TELEMETRY` | `logs/engine_telemetry.jsonl` | `src/utils/engine_telemetry.py` |
+| `DECISION_LINEAGE` | `logs/decision_lineage.jsonl` | `src/utils/engine_telemetry.py` |
+| `DRIFT_AUDIT` | `logs/drift_audit.jsonl` | `src/replay/replay_drift_governor.py` |
+| `TRADE_LIFECYCLE` | `logs/trade_lifecycle.jsonl` | `src/utils/trade_logger.py` |
+| `STATE_TRANSITION` | `logs/crt_transitions.jsonl` | `src/config_layer/crt_engine_v2.py` |
+| `LLM_TURN` | `multi_llm/turn_ledger.jsonl` | `src/multi_llm/turn_ledger.py` |
+
+### 9.5 `data/findings.jsonl` (GENERATED — never hand-edit)
+
+Machine-readable derived view of `docs/current-findings.md` (the authoritative store, §6.2).
+Regenerate: `python scripts/governance/export_findings.py`. Generator:
+`src/governance/findings_export.py`; guard: `tests/test_findings_export.py` (determinism +
+hand-edit detection). Line 0 is a static meta record (`kind: "meta"`, `schema:
+"findings_export/1"`, `source`, `generated_by` — no timestamp, so reruns are byte-identical);
+then one line per finding in doc order:
+
+```python
+FindingLine = {
+    "kind":           "finding",
+    "id":             str,          # F-NNN
+    "title":          str,          # header text after "F-NNN · "
+    "type":           str,          # ARCHITECTURE | ECONOMIC | GOVERNANCE | OPERATIONAL | RISK
+    "status":         str,          # VALIDATED | OPEN | DURABLE | SUPERSEDED | RETIRED
+    "confidence":     str,          # Certain | Likely | Possible
+    "validated":      str,          # YYYY-MM-DD
+    "revalidate_by":  str | None,
+    "evidence":       str | None,   # verbatim from the doc
+    "evidence_paths": list[str],    # committed docs/src/tests/scripts paths cited in the block
+    "supersedes":     str | None,
+    "superseded_by":  str | None,
+    "reversal":       str | None,
+    "owner":          str | None,
+    "note":           str | None,
+    "terminal":       bool,         # SUPERSEDED/RETIRED status or ## Terminal section
+}
+```
+
+### 9.6 `data/hypothesis_registry.jsonl` (seeded — edit the seed, not the file)
+
+Research-hypothesis registry (H-ids ↔ findings ↔ models). Committed truth =
+`scripts/governance/seed_hypothesis_registry.py` (the framework-registry precedent); the JSONL
+is its deterministic projection. Module: `src/governance/hypothesis_registry.py`; guard:
+`tests/test_hypothesis_registry.py`; query/CI gate:
+`python scripts/governance/query_hypotheses.py --validate`.
+
+```python
+HypothesisLine = {
+    "id":              str,          # H-NNN
+    "statement":       str,          # one falsifiable sentence
+    "family":          str | None,   # aligns with research Hypothesis.family where a code twin exists
+    "status":          str,          # open | validated | falsified | frozen | superseded
+    "authority":       "research",   # PINNED — the registry can never grant more (§6.5)
+    "findings":        list[str],    # F-ids; must resolve in docs/current-findings.md
+    "models":          list[str],    # top-level active_models.yaml keys (minus meta/philosophy)
+    "code_hypotheses": list[str],    # names registered in research HYPOTHESIS_REGISTRY (may be [])
+    "programs":        list[str],    # pre-registration doc paths
+    "evidence":        list[dict],   # {path, line, symbol, type} — framework-registry evidence shape
+    "created":         str,          # pinned ISO-8601 (byte-stable reruns)
+    "last_validated":  str,
+    "notes":           str,
+}
+```
+
+**Authority note (§6.5).** `status: validated` is a *research* verdict only. The registry
+defines **no** promotion thresholds; the only promotion path remains the M4
+`QualificationGate` (`src/research/qualification.py`) → `ConfigValidator` →
+`PromotionManager`. Enforced by a negative-guard test (no `promotion_requirements` /
+`min_delta*` / threshold keys can enter the schema).
 
 ---
 

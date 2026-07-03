@@ -6,7 +6,7 @@
 > This is the **canonical authority** the feature-expansion program (plan
 > `d-tradelatest-reports-ohlcv-lineage…`) defers to. Link, don't inline.
 >
-> Created: 2026-06-27 · Updated: 2026-07-02 · Status: living
+> Created: 2026-06-27 · Updated: 2026-07-03 · Status: living
 
 ## In plain language
 
@@ -167,3 +167,4 @@ Sits at the engine-scoring layer of [`docs/architecture/signal-flow.md`](../arch
 - **Need more info:** 2026-06-27 — which exact label/exit scheme produced the stored zone meta (Phase 5).
 - **Enhancements:** 2026-07-02 — reconciled [`active_models.yaml`](../../active_models.yaml) (the session-load registry) to this doc's verified engine truth and restructured it into a 3-truth-layer schema (v2.0: `intent | runtime | evidence | status`). Key corrections propagated: live Gaussian = `HeuristicGaussianEngine` (3 feats) not the 38-dim `v4_mirrored` trained model (now under `trained_registry`, active:false); RR = geometric candle-polarity filter (`learning:false`); ZoneGate = full 38-vector contract (not `[atr,rsi,volume,trend]`); S1–S10 flagged orphaned/sidecar; CRT `states: 10→9`; philosophy preserved with `authority:{validated:false}`. All DOC_DRIFT (code-authority); no finding reversed.
 - **Enhancements:** 2026-07-02 (batch A1–A3) — added the **Demonstrated-Edge Matrix** section above (designed vs implemented vs measured alpha, controlled edge-state vocabulary, E-001 guards: `corr 0.2066`=L1 info not alpha, BitNet labels `UNKNOWN`). Formalized the four layers as the **Truth-Layer Standard** in [`docs/reference/conventions.md`](../reference/conventions.md) §9 (scoped to knowledge/registry artifacts) + self-declared `meta.truth_schema` in the registry. Grants no authority; every measured row is `NONE`/`UNMEASURED` per the F-019…F-040 entry-null.
+- **Enhancements:** 2026-07-03 — [`active_models.yaml`](../../active_models.yaml) file-format **v2.1** (additive; truth-layer schema stays 2.0): each model entry now carries a `reachability` block (config sections, telemetry streams with descriptive `schema`/`purpose`/`llm_questions` semantic contract, tests, topics, framework-registry ids), a **descriptive-only** `optimization` block (`authority: none` — §6.5, promotion stays M4 gate + PromotionManager), and `evidence.conflicts`/`evidence.hypotheses` F-id/H-id reference lists. New sibling registries: `data/hypothesis_registry.jsonl` (H-001…H-016, seed-script pattern, schemas.md §9.6) + generated `data/findings.jsonl` (derived view of current-findings.md, §9.5). Guard: `tests/test_active_models_registry.py` (citation-class). Grants no authority; no finding changed.

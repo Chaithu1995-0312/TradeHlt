@@ -36,8 +36,19 @@
 | [`docs/architecture/intelligence-compounding.md`](docs/architecture/intelligence-compounding.md) | Long-form of CLAUDE.md §6.1: the repository as a self-compounding **intelligence substrate** (zero intelligence loss). Repository utility function, entropy principle, the goal-first chain, modules-as-frozen-thoughts, the three permanent checklists (User/Claude/System), 7-level intelligence ladder, strengthened Memory Rule, and the Stage 1→7 evolution path (with the "no premature framework" guardrail). |
 | [`docs/reference/cli-matrix.md`](docs/reference/cli-matrix.md) | Auto-generated command catalog (from `control_plane/registry.py`): every CLI invocation, artifacts, suggested next step. Authoritative for "how do I run X." |
 | [`assistant_project.md`](assistant_project.md) | Persistent session log — every LLM response since April 2026 is timestamped and archived here. Contains the architecture migration doctrine, all past decisions, the five governance questions, and a complete audit trail. Always check before re-opening a resolved thread (§3.4 item 7). Governed by CLAUDE.md §6 (Persistent Logging Mandate). |
-| | [`active_models.yaml`](active_models.yaml) | **Loaded first in every Claude session.** Machine-readable model registry: CRT engine (10 states, 81 thresholds, exact detection logic), Gaussian model (v4_mirrored metadata, 38-feature schema, governance rules), BitNet config, zone gate, RR model, strategy modules, engine runner orchestration. Source-verified against `crt_engine_v2.py`, `feature_schema.py`, `model_registry.py`. |
+| [`active_models.yaml`](active_models.yaml) | **Loaded first in every Claude session.** Machine-readable model registry (schema v2.1, four truth layers `intent`/`runtime`/`evidence`/`status`): CRT engine (9 states, exact detection logic), Gaussian (live 3-feature heuristic; v4_mirrored 38-dim NB is experimental/unwired), BitNet config, zone gate, RR model, strategy modules, engine-runner orchestration. Each model also carries v2.1 `reachability` (telemetry/tests/topics/framework-ids) + descriptive-only `optimization` + `evidence.conflicts`/`hypotheses`. Source-verified against `crt_engine_v2.py`, `feature_schema.py`, `model_registry.py`. |
 
+**Machine-readable truth sources** (reachable from `active_models.yaml` `meta.machine_readable_sources`; artifacts are GENERATED/seeded — edit the source/seed, never the artifact under gitignored `data/`):
+
+| Artifact | Source of truth | Regenerate | Guard |
+|---|---|---|---|
+| `data/findings.jsonl` | [`docs/current-findings.md`](docs/current-findings.md) | `python scripts/governance/export_findings.py` | `tests/test_findings_export.py` |
+| `data/hypothesis_registry.jsonl` | `scripts/governance/seed_hypothesis_registry.py` | run the seed | `tests/test_hypothesis_registry.py` |
+| `data/framework_registry.jsonl` | `scripts/governance/seed_framework_registry.py` | run the seed | `tests/test_framework_registry.py` |
+| `active_models.yaml` (v2.1) | hand-maintained, source-verified | — | `tests/test_active_models_registry.py` + `tests/test_crt_state_invariants.py` |
+| `context/*.md` (Portable Mind) | canonical docs (the `Compile` trigger) | `python scripts/context/build_context.py` | `tests/test_context_compiler.py` |
+
+Schemas: [`docs/reference/schemas.md §9.4–9.6`](docs/reference/schemas.md). Tier separation: PRIMARY (findings doc, seed scripts, `active_models.yaml`) → GENERATED (`data/*.jsonl`) → RUNTIME (`logs/*.jsonl` event streams). Never hand-edit a GENERATED artifact.
 
 ---
 

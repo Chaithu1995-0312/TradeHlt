@@ -8,6 +8,9 @@
 >
 > **Append-only (CLAUDE.md §6.2 rule 4).** A status change is a *new* line with a new
 > `last_validated`; prior lines are never mutated or deleted. `load()` keeps the latest line per `id`.
+>
+> **Sibling registry:** `data/hypothesis_registry.jsonl` (research H-ids ↔ findings ↔ models) —
+> same seed-script pattern; schema in [`schemas.md §9.6`](schemas.md).
 
 ---
 

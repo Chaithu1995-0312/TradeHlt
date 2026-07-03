@@ -25,13 +25,15 @@
 # ───────────────────────────────────────────────────────────────────
 
 meta:
-  schema_version: 2.0
+  schema_version: 2.1                   # file-format version — v2.1 adds reachability/optimization/
+                                        # evidence.conflicts/evidence.hypotheses SUB-BLOCKS (additive)
   migration:
-    previous_schema: 1.0
+    previous_schema: 2.0
     compatibility: backward_readable    # top-level `status:` retained alongside nested `runtime.active:`
-    breaking_changes: false             # additive semantic refactor, not a breaking operational change
+    breaking_changes: false             # v2.1 is purely additive; no v2.0 key renamed/removed/reshaped
   truth_schema:
-    version: 2.0
+    version: 2.0                        # the LAYER schema is unchanged — reachability/optimization are
+                                        # sub-blocks inside existing entries, not new truth layers
     canonical_layers: [intent, runtime, evidence, status]
     applies_to: knowledge_and_registry_artifacts   # see docs/reference/conventions.md — Truth-Layer Standard
   truth_model:
@@ -48,7 +50,22 @@ meta:
   related_docs:
     - docs/topics/model-intent-and-feature-ownership.md   # per-model feature ownership (Question A verified)
     - docs/current-findings.md                            # F-ids cited in evidence layers below
-  verified_on: 2026-07-02
+  machine_readable_sources:   # v2.1 reachability — where machine truth lives + how to rebuild it.
+                              # Artifacts are GENERATED/seeded (data/ is gitignored): edit the
+                              # source/seed, never the artifact (§6.2 derived-view rule).
+    findings_export:
+      path: data/findings.jsonl
+      generator: scripts/governance/export_findings.py
+      guard: tests/test_findings_export.py
+    hypothesis_registry:
+      path: data/hypothesis_registry.jsonl
+      generator: scripts/governance/seed_hypothesis_registry.py
+      guard: tests/test_hypothesis_registry.py
+    framework_registry:
+      path: data/framework_registry.jsonl
+      generator: scripts/governance/seed_framework_registry.py
+      guard: tests/test_framework_registry.py
+  verified_on: 2026-07-03
 
 # ───────────────────────────────────────────────────────────────────
 # 1. CRT ENGINE — Deterministic Market-Structure State Machine
@@ -249,12 +266,40 @@ crt:
 
   evidence:
     findings: [F-021, F-037]
+    conflicts: []               # F-id references only — docs/current-findings.md owns conflict truth
+    hypotheses: [H-001, H-002, H-004, H-012, H-013]   # data/hypothesis_registry.jsonl
     validated: partial
     notes: >
       CRT-state entry selection = the (incumbent) SESSION filter under intrabar+12bps;
       no score/zone skill beyond session (F-021). The research "spine" is CRT-ONLY —
       the 4-engine fusion gate is OFF in backtests (F-037). CRT structure is real; a
       standalone directional EDGE is not demonstrated.
+
+  reachability:                 # v2.1 — where this model's truth artifacts live (pointers only)
+    config_sections: [crt_engine, params]   # params = the known CRTConfig split-brain surface (§6.5)
+    telemetry:
+      - event_type: STATE_TRANSITION
+        stream: logs/crt_transitions.jsonl
+        emitter: src/config_layer/crt_engine_v2.py
+        schema: docs/reference/schemas.md#94-event-fabric-streams-uniform-envelope
+        purpose: "Track CRT state-machine evolution (per-transition envelope with candle ts/index)"
+        llm_questions:
+          - "Which transitions fail or reset most often?"
+          - "Which states precede accepted trades?"
+          - "How long do candidates dwell in EXPANSION before EXPIRED?"
+    tests: [tests/test_crt_state_invariants.py]
+    topics: [docs/topics/model-intent-and-feature-ownership.md]
+    framework_ids: [IMPL-001, STRAT-001]
+
+  optimization:                 # v2.1 — DESCRIPTIVE only; grants nothing
+    authority: "none — descriptive; see CLAUDE.md §6.5 (tunability ≠ authority; promotion only via M4 QualificationGate + PromotionManager)"
+    tunable_class: BEHAVIORAL
+    config_sections: [crt_engine, params]   # caveat: the CRTConfig `params` split-brain (~30 knobs) is the known-remaining §6.5 batch
+    frozen_structural: "CRTState members, VALID_TRANSITIONS, ATR/EMA kernel periods — code-frozen (§6.5 STRUCTURAL)"
+    census: docs/research-readiness/behavior-census-report.md
+    promotion_standard:
+      research: src/research/qualification.py
+      production: src/governance/promotion_manager.py
 
   status: active
 
@@ -303,8 +348,27 @@ gaussian:
 
   evidence:
     findings: [F-005]
+    conflicts: []
+    hypotheses: [H-014]
     validated: false
     notes: "Live Gaussian is a 3-feature momentum vote; the 38-dim trained model is not wired."
+
+  reachability:
+    config_sections: [gaussian_scorer]
+    telemetry: []               # no dedicated stream; scored inside the fusion path (see engine_runner)
+    tests: [tests/test_gaussian_impl_switch.py, tests/test_gaussian_update_pipeline.py]
+    topics: [docs/topics/model-intent-and-feature-ownership.md]
+    framework_ids: [IMPL-002, IMPL-003]   # heuristic runtime + trained ML artifact
+
+  optimization:
+    authority: "none — descriptive; see CLAUDE.md §6.5 (tunability ≠ authority; promotion only via M4 QualificationGate + PromotionManager)"
+    tunable_class: BEHAVIORAL
+    config_sections: [gaussian_scorer]
+    frozen_structural: "38-dim CANONICAL_FEATURES schema, feature-vector dims — code-frozen (§6.5 STRUCTURAL)"
+    census: docs/research-readiness/behavior-census-report.md
+    promotion_standard:
+      research: src/research/qualification.py
+      production: src/governance/promotion_manager.py
 
   status: active   # (the 3-feature heuristic is active; v4_mirrored trained model is experimental)
 
@@ -329,10 +393,29 @@ bitnet:
 
   evidence:
     findings: [F-004]
+    conflicts: []
+    hypotheses: []
     validated: true
     notes: >
       When ENABLED it is a genuine LIVE hard-reject gate and the score is persisted
       (F-004). Only the *adaptive* threshold is dormant. Off by default in the active config.
+
+  reachability:
+    config_sections: [crt_engine, engine_runner]   # use_bitnet + bitnet_main_threshold / bitnet_zone_threshold
+    telemetry: []
+    tests: [tests/test_bitnet_inference.py, tests/test_bitnet_parity.py]
+    topics: [docs/topics/model-intent-and-feature-ownership.md]
+    framework_ids: [IMPL-007]
+
+  optimization:
+    authority: "none — descriptive; see CLAUDE.md §6.5 (tunability ≠ authority; promotion only via M4 QualificationGate + PromotionManager)"
+    tunable_class: BEHAVIORAL
+    config_sections: [crt_engine]                  # use_bitnet gate + main threshold
+    frozen_structural: "6-feature input contract — code-frozen (§6.5 STRUCTURAL)"
+    census: docs/research-readiness/behavior-census-report.md
+    promotion_standard:
+      research: src/research/qualification.py
+      production: src/governance/promotion_manager.py
 
   status: dormant   # off by default; becomes a live hard gate when use_bitnet=true
 
@@ -358,6 +441,8 @@ zone_gate:
 
   evidence:
     findings: [F-036, F-041]
+    conflicts: [F-041]          # registry-vs-manifest split — surfaced, not reconciled; findings own it
+    hypotheses: [H-015]
     validated: false
     notes: >
       ΔG001 ≡ 0 — zone is non-pivotal on gate-ON fusion (redundant/decision-dominated,
@@ -365,6 +450,23 @@ zone_gate:
       models/zone_registry.json (8 zones); the zone_gate_registry.json manifest points
       to a DIFFERENT file (hash mismatch) — TruthConflict, surfaced not reconciled (F-041).
       Stored labels ~98% SL-hit / 6-of-8 negative mean_RR (observation; Phase-5 gate).
+
+  reachability:
+    config_sections: [engine_runner]               # engine_runner.zone_gate nested knobs + zone_registry_path
+    telemetry: []
+    tests: [tests/test_zone_gate.py, tests/test_zone_gate_top_k.py]
+    topics: [docs/topics/model-intent-and-feature-ownership.md]
+    framework_ids: [IMPL-004]
+
+  optimization:
+    authority: "none — descriptive; see CLAUDE.md §6.5 (tunability ≠ authority; promotion only via M4 QualificationGate + PromotionManager)"
+    tunable_class: BEHAVIORAL
+    config_sections: [engine_runner]               # top_k/cluster_min_n/cluster_spread_max — tunable but INERT (F-036, ΔG001≡0)
+    frozen_structural: "canonical 38-vector input contract — code-frozen (§6.5 STRUCTURAL)"
+    census: docs/research-readiness/behavior-census-report.md
+    promotion_standard:
+      research: src/research/qualification.py
+      production: src/governance/promotion_manager.py
 
   status: active
 
@@ -390,11 +492,30 @@ rr_model:
 
   evidence:
     findings: [F-038]
+    conflicts: []
+    hypotheses: [H-003]
     validated: false
     notes: >
       The rr_fusion layer was a GAUSSIAN DUPLICATE (Mahalanobis conf ≪ 0.3 → 100% bypass);
       rr_fusion is DISABLED in the active config so base RREngine.compute() flows through
       unmutated (F-038). Not a movement-potential learner — a geometric filter.
+
+  reachability:
+    config_sections: [rr_model, engine_runner]     # engine_runner.rr_fusion holds the F-038 disable flag
+    telemetry: []
+    tests: [tests/test_engine_runner_rr_fusion.py, tests/test_rr_fusion_full_vector.py]
+    topics: [docs/topics/model-intent-and-feature-ownership.md]
+    framework_ids: [IMPL-005]
+
+  optimization:
+    authority: "none — descriptive; see CLAUDE.md §6.5 (tunability ≠ authority; promotion only via M4 QualificationGate + PromotionManager)"
+    tunable_class: BEHAVIORAL
+    config_sections: [rr_model]
+    frozen_structural: "geometric close/high/low input contract — code-frozen (§6.5 STRUCTURAL)"
+    census: docs/research-readiness/behavior-census-report.md
+    promotion_standard:
+      research: src/research/qualification.py
+      production: src/governance/promotion_manager.py
 
   status: active   # base RR active; rr_fusion disabled
 
@@ -415,11 +536,31 @@ strategies:
     active: false
 
   evidence:
+    conflicts: []
+    hypotheses: []
     validated: false
     notes: >
       fuse_strategy_results is DORMANT on live; the live gate is tier_* / session.
       S8 'ML Ensemble' etc. exist as code but are NOT a production alpha engine —
       do not infer live participation from their presence. min_consensus_signals NULL.
+
+  reachability:
+    config_sections: [strategy_engine]
+    telemetry: []
+    tests: [tests/test_strategy_orchestrator.py]
+    topics: [docs/topics/model-intent-and-feature-ownership.md]
+    framework_ids: [STRAT-001, STRAT-002, STRAT-003, STRAT-004, STRAT-005,
+                    STRAT-006, STRAT-007, STRAT-008, STRAT-009, STRAT-010]
+
+  optimization:
+    authority: "none — descriptive; see CLAUDE.md §6.5 (tunability ≠ authority; promotion only via M4 QualificationGate + PromotionManager)"
+    tunable_class: BEHAVIORAL
+    config_sections: [strategy_engine]             # orphaned sidecar — tuning it moves nothing live (F-013 class)
+    frozen_structural: "StrategyOrchestrator aggregation interface — code-frozen (§6.5 STRUCTURAL)"
+    census: docs/research-readiness/behavior-census-report.md
+    promotion_standard:
+      research: src/research/qualification.py
+      production: src/governance/promotion_manager.py
 
   status: orphaned
 
@@ -454,8 +595,51 @@ engine_runner:
 
   evidence:
     findings: [F-037, F-038]
+    conflicts: []
+    hypotheses: [H-001]
     validated: true
     notes: "Gate OFF in backtests / ON live (F-037). Fusion runs CRT+Gaussian+ZoneGate+base-RR after F-038 disable."
+
+  reachability:
+    config_sections: [engine_runner, fusion_engine, decision_engine]
+    telemetry:
+      - event_type: ENGINE_TELEMETRY
+        stream: logs/engine_telemetry.jsonl
+        emitter: src/utils/engine_telemetry.py
+        schema: docs/reference/schemas.md#94-event-fabric-streams-uniform-envelope
+        purpose: "Per-engine latency + decision snapshot on each fusion evaluation"
+        llm_questions:
+          - "Which engine dominates evaluation latency?"
+          - "How often does each engine score above its gate threshold?"
+      - event_type: DECISION_LINEAGE
+        stream: logs/decision_lineage.jsonl
+        emitter: src/utils/engine_telemetry.py
+        schema: docs/reference/schemas.md#94-event-fabric-streams-uniform-envelope
+        purpose: "Causal chain feature→engine→risk→decision for each emitted decision"
+        llm_questions:
+          - "Which gate vetoed a candidate, and with what inputs?"
+          - "What did the fusion see when it approved a losing trade?"
+      - event_type: TRADE_LIFECYCLE
+        stream: logs/trade_lifecycle.jsonl
+        emitter: src/utils/trade_logger.py
+        schema: docs/reference/schemas.md#94-event-fabric-streams-uniform-envelope
+        purpose: "Enveloped ENTRY/EXIT/REJECT events for fusion-path trades"
+        llm_questions:
+          - "What is the reject-reason distribution over time?"
+          - "How do entries cluster by session/instrument?"
+    tests: [tests/test_engine_runner_dual_gate.py]
+    topics: [docs/topics/model-intent-and-feature-ownership.md]
+    framework_ids: [KERNEL-001, KERNEL-002, KERNEL-003]
+
+  optimization:
+    authority: "none — descriptive; see CLAUDE.md §6.5 (tunability ≠ authority; promotion only via M4 QualificationGate + PromotionManager)"
+    tunable_class: BEHAVIORAL
+    config_sections: [engine_runner, fusion_engine]
+    frozen_structural: "EXPECTED_ENGINES set, execution order, decision authority — code-frozen (§6.5 STRUCTURAL)"
+    census: docs/research-readiness/behavior-census-report.md
+    promotion_standard:
+      research: src/research/qualification.py
+      production: src/governance/promotion_manager.py
 
   status: active
 

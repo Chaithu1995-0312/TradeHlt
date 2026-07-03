@@ -296,6 +296,15 @@ their own shapes). Avoids documentation bureaucracy.
 `status:` rollup may be retained alongside nested `runtime.active:`. New knowledge artifacts should
 declare `meta.truth_schema.version` and cite this section.
 
+**v2.1 sub-blocks (additive; layer set unchanged).** `active_models.yaml` file-format v2.1 adds
+`reachability` (per-model pointers: config sections, telemetry streams with a descriptive
+`schema`/`purpose`/`llm_questions` semantic contract, tests, topics, framework-registry ids),
+`optimization` (descriptive tunability only — `authority: none`, §6.5; never promotion thresholds),
+and `evidence.conflicts` / `evidence.hypotheses` (F-id / H-id **reference lists** — conflict truth
+stays in `docs/current-findings.md`, hypothesis truth in `data/hypothesis_registry.jsonl`, schemas.md
+§9.5–9.6). These are sub-blocks *inside* existing entries, so `meta.truth_schema.version` stays
+**2.0** while `meta.schema_version` (the file format) tracks 2.1 — do not conflate the two versions.
+
 ### Executable-Invariant Scope Policy
 
 Executable YAML↔code (or doc↔code) invariants are justified only when
@@ -308,6 +317,10 @@ ALL of the following hold:
 
 Current approved scope:
 - CRT State Machine (`tests/test_crt_state_invariants.py`)
+- v2.1 reachability references (`tests/test_active_models_registry.py`) — **citation-class
+  reference resolution only** (paths exist, F-/H-/framework-ids registered, EventType members
+  real, §6.5 negative guard on `optimization`); sibling of `tests/test_doc_citations.py`, NOT a
+  semantic YAML↔code invariant. Drift evidence: F-041 (pointer/registry rot).
 
 Why CRT qualifies:
 - D1 (`states: 10 → 9`) and D9 (`RESOLUTION` transition) demonstrate
