@@ -1,0 +1,28 @@
+{
+  "change_id": "CH-001-f050-register",
+  "objective": "F-050 remediation phase A: REGISTER the two colliding quantities under their own feature identities (displacement_retrace FM-027 cross-candle retracement; displacement_atr_ratio FM-028 range-ATR multiple) in the market ontology + derived_math + derived registry. ZERO behavior change: no emission-key rename (deferred to CH-002 — a MODEL_INPUT_CHANGE requiring consumer migration: stage1_dataset_builder, trainer.py:807, rr_fusion.py:120/177, historical opportunities/master_*_training.jsonl artifacts retain the old key).",
+  "change_classes": ["FEATURE_IDENTITY_CHANGE", "DERIVED_METRIC_CHANGE"],
+  "affected_files": [
+    "configs/formulas/market_ontology.yaml",
+    "src/features/derived_math.py",
+    "src/features/registry/derived_registry.py",
+    "docs/current-findings.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": ["FM-027 (new)", "FM-028 (new)", "FM-021 (collision documented, unchanged)", "FM-020 (collision documented, unchanged)"],
+  "affected_models": "none (registration only; no training/serving change)",
+  "affected_production_config": "none (hash-neutral; WHAT layer)",
+  "required_checks_ack": [
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_candle_math.py",
+    "tests/test_derived_math.py",
+    "tests/test_feature_math_lint.py"
+  ],
+  "unknowns": [
+    {"question": "emission-key rename consumer-migration strategy (historical artifacts carry old keys)", "blocking": false, "deferred_to": "CH-002"}
+  ],
+  "rollback_boundary": "single commit: revert ontology + derived_math + derived_registry entries together"
+}

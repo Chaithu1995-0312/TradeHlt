@@ -79,9 +79,11 @@ class CRTGaussianScorer:
     ) -> dict:
         """
         features = {
-            retest_depth:  float  - fraction of displacement retraced (0-1)
-            body_ratio:    float  - body / wick of displacement candle (0-1)
-            disp_str:      float  - displacement size in ATR multiples
+            displacement_retrace (FM-027) or legacy retest_depth:
+                float — fraction of displacement body retraced (0-1)
+            body_ratio:    float  - body / range of displacement candle (0-1)
+            displacement_atr_ratio (FM-028) or legacy disp_str/disp_strength:
+                float — displacement range in ATR multiples
             retest_index:  int    - candle index when retest was confirmed (cached)
         }
         candle_idx/current_index: current candle index for time-decay computation.
@@ -89,9 +91,16 @@ class CRTGaussianScorer:
         """
         if current_index is not None:
             candle_idx = current_index
-        r = features.get("retest_depth", 0.0)
+        # CH-002 / F-050: prefer governed CRT emission keys; accept legacy aliases
+        r = features.get(
+            "displacement_retrace",
+            features.get("retest_depth", 0.0),
+        )
         b = features.get("body_ratio", 0.0)
-        d = features.get("disp_str", 0.0)
+        d = features.get(
+            "displacement_atr_ratio",
+            features.get("disp_str", features.get("disp_strength", 0.0)),
+        )
         print(f"[DEBUG] r={r:.3f}, b={b:.3f}, d={d:.3f}")
         # Use retest_index from cached features; fall back to candles_since_retest
         retest_idx = features.get("retest_index", 0)
@@ -187,10 +196,18 @@ class CRTGaussianScorer:
         disp_move = abs(disp.close - disp.open)
         if disp_move == 0 or state.atr == 0:
             return None
-        retest_retrace = abs(retest.close - disp.open) / disp_move
+        # CH-002 / F-050: emit FM-027 / FM-028 identities (match crt_engine_v2 cache)
+        from features import derived_math as _dm
         return {
-            "retest_depth": min(max(retest_retrace, 0.0), 1.0),
+            "displacement_retrace": _dm.displacement_retrace(
+                retest_close=float(retest.close),
+                disp_open=float(disp.open),
+                disp_close=float(disp.close),
+            ),
             "body_ratio": disp.body_ratio,
-            "disp_str": disp.wick_size / state.atr,
+            "displacement_atr_ratio": _dm.displacement_atr_ratio(
+                candle_range=float(disp.wick_size),
+                atr=float(state.atr),
+            ),
             "retest_index": state.retest_candle_index,
         }

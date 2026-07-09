@@ -28,6 +28,8 @@ from types import MappingProxyType
 from typing import Any, List, Mapping, Optional
 from features.feature_schema import CANONICAL_FEATURES
 from features.schema_validator import validate_features
+from features import candle_math as _cm  # single source of truth for candle geometry
+from features import derived_math as _dm  # FM-027/FM-028 CRT emission identities (CH-002 / F-050)
 from config_layer.crt_sweep_taxonomy import classify_sweep as _classify_sweep_geometry
 from utils.sweep_trace_logger import SweepTraceLogger
 from utils.integrity_events import emit_integrity_event
@@ -103,15 +105,16 @@ class Candle:
 
     @property
     def body_size(self) -> float:
-        return abs(self.close - self.open)
+        return _cm.body_size(self.open, self.close)
 
     @property
     def wick_size(self) -> float:
-        return self.high - self.low
+        # NOTE: historically named `wick_size` but is the full candle range (high - low).
+        return _cm.candle_range(self.high, self.low)
 
     @property
     def body_ratio(self) -> float:
-        return self.body_size / self.wick_size if self.wick_size > 0 else 0.0
+        return _cm.body_ratio(self.open, self.high, self.low, self.close)
 
     @property
     def is_bullish(self) -> bool:
@@ -1120,7 +1123,11 @@ class StateMachine:
                 # if the caller later mutates state.cached_features this snapshot stays stable.
                 metadata={
                     "sweep_type":    state.sweep_event.sweep_type if state.sweep_event else None,
-                    "disp_strength": state.cached_features.get("disp_strength") if state.cached_features else None,
+                    # CH-002 / F-050: FM-028 identity (was mis-emitted as "disp_strength")
+                    "displacement_atr_ratio": (
+                        state.cached_features.get("displacement_atr_ratio")
+                        if state.cached_features else None
+                    ),
                     "atr":           state.atr,
                     "features":      dict(state.cached_features) if state.cached_features else {},
                 },
@@ -1362,48 +1369,49 @@ class StateMachine:
         state.retest_candle       = candle
         state.retest_candle_index = state.current_candle_index  # [PATCH 6]
 
-        # ── [CACHE] Compute and store features at the moment retest is confirmed.
-        # Uses displacement-retrace definition (retest.close vs disp.close / disp_move)
-        # to match the empirical calibration in CRTGaussianScorer.
+        # ── [CACHE] Features at RETEST confirmation (CH-002 / F-050).
+        # Canonical identities:
+        #   displacement_retrace   FM-027 — cross-candle retrace (NOT pipeline FM-021 retest_depth)
+        #   displacement_atr_ratio FM-028 — range/ATR multiple  (NOT pipeline FM-020 disp_strength)
+        # Math owned by derived_math; emission keys match Formula Registry.
         disp = state.displacement_candle
         _atr = state.atr
         state.cached_features = {
-            "retest_depth": 0.0,
+            "displacement_retrace": 0.0,
             "body_ratio": 0.0,
-            "disp_str": 0.0,
+            "displacement_atr_ratio": 0.0,
         }
         if disp is not None and _atr > 0 and abs(disp.close - disp.open) > 0:
-            _disp_move = abs(disp.close - disp.open)
-            # retrace = how far candle.close moved back toward disp.open from disp.close
-            _retrace   = abs(candle.close - disp.open) / _disp_move
-            # [Phase-6] session + double_confirmed stamped here so
-            # Phase5ExecutionGate.evaluate() can apply regime-based risk tiers
-            # without needing live engine state at fill time.
+            _retrace = _dm.displacement_retrace(
+                retest_close=float(candle.close),
+                disp_open=float(disp.open),
+                disp_close=float(disp.close),
+            )
+            _disp_atr = _dm.displacement_atr_ratio(
+                candle_range=float(disp.wick_size),  # wick_size property == candle_range (FM-002)
+                atr=float(_atr),
+            )
+            # session + double_confirmed stamped for downstream risk tiers without live state
             state.cached_features = {
-                "retest_depth":     _retrace,
-                "body_ratio":       disp.body_ratio,
-                "disp_strength":    disp.wick_size / _atr,
-                "retest_index":     state.current_candle_index,
-                "session":          state.active_range.session if state.active_range else "UNKNOWN",
-                "double_sweep":     state.sweep_event.double_confirmed if state.sweep_event else False,
+                "displacement_retrace":   _retrace,
+                "body_ratio":             disp.body_ratio,
+                "displacement_atr_ratio": _disp_atr,
+                "retest_index":           state.current_candle_index,
+                "session":                state.active_range.session if state.active_range else "UNKNOWN",
+                "double_sweep":           state.sweep_event.double_confirmed if state.sweep_event else False,
             }
-            # Hard assertion — production behavior
-            assert "disp_strength" in state.cached_features, "Missing canonical: disp_strength"
+            assert "displacement_atr_ratio" in state.cached_features, "Missing FM-028: displacement_atr_ratio"
+            assert "displacement_retrace" in state.cached_features, "Missing FM-027: displacement_retrace"
             assert "body_ratio" in state.cached_features, "Missing canonical: body_ratio"
+            # Soft schema probe is advisory-only (partial dict ≠ CANONICAL_FEATURES).
             try:
-                validate_features(
-                    {
-                        "body_ratio": float(state.cached_features.get("body_ratio", 0.0)),
-                        "atr": float(_atr),
-                        "displacement": float(state.cached_features.get("disp_str", 0.0)),
-                        "retest_depth": float(state.cached_features.get("retest_depth", 0.0)),
-                        "session": str(state.cached_features.get("session", "UNKNOWN")),
-                        "spread": 0.0,
-                    },
-                    context="crt_engine_v2.cached_features",
+                _ = (
+                    float(state.cached_features["body_ratio"]),
+                    float(state.cached_features["displacement_retrace"]),
+                    float(state.cached_features["displacement_atr_ratio"]),
                 )
             except Exception as _schema_err:
-                self.log.debug(f"[FSUL] cached feature schema check skipped: {_schema_err}")
+                self.log.debug(f"[FSUL] cached feature check skipped: {_schema_err}")
             print(
                     f"[CRT DEBUG] disp_open={disp.open:.5f} "
                     f"disp_close={disp.close:.5f} "
@@ -1719,7 +1727,10 @@ class UltronRiskEngine:
         # -----------------------------
         # BitNet Validation Layer
         # -----------------------------
-        required = ["body_ratio", "retest_depth", "disp_strength"]
+        # CH-002: CRT cache uses FM-027/028 keys; BitNet model input schema still
+        # expects legacy training names (retest_depth/disp_strength). Map only at
+        # the BitNet call boundary — do not re-emit collision keys on the cache.
+        required = ["body_ratio", "displacement_retrace", "displacement_atr_ratio"]
 
         if state.cached_features and all(k in state.cached_features for k in required):
             features = state.cached_features.copy()
@@ -1729,7 +1740,10 @@ class UltronRiskEngine:
             )
 
             if self.config.use_bitnet:
-                bn_score = bitnet_score(features)
+                _bn_in = dict(features)
+                _bn_in["retest_depth"] = float(features["displacement_retrace"])
+                _bn_in["disp_strength"] = float(features["displacement_atr_ratio"])
+                bn_score = bitnet_score(_bn_in)
                 self.log.info(f"BitNetMain Score: {bn_score:.4f}")
                 if bn_score < self.config.bitnet_main_threshold:
                     self.log.warning(f"REJECTED BY BITNET MAIN (score={bn_score:.3f})")
@@ -1785,7 +1799,7 @@ class UltronRiskEngine:
         # -----------------------------
         # BitNet Validation Layer
         # -----------------------------
-        required = ["body_ratio", "retest_depth", "disp_strength"]
+        required = ["body_ratio", "displacement_retrace", "displacement_atr_ratio"]
 
         if state.cached_features and all(k in state.cached_features for k in required):
             features = state.cached_features.copy()
@@ -1795,7 +1809,10 @@ class UltronRiskEngine:
             )
 
             if not hasattr(state, "bitnet_main_score"):
-                state.bitnet_main_score = bitnet_score(features)
+                _bn_in = dict(features)
+                _bn_in["retest_depth"] = float(features["displacement_retrace"])
+                _bn_in["disp_strength"] = float(features["displacement_atr_ratio"])
+                state.bitnet_main_score = bitnet_score(_bn_in)
 
             bitnet_main_score = state.bitnet_main_score
 
@@ -1882,13 +1899,24 @@ class ExecutionEngine:
         """
         if features.get("sweep_detected") or features.get("double_sweep"):
             return "liq_sweep"
-        rd  = float(features.get("retest_depth",         0.0))
-        csr = int(  features.get("candles_since_retest", 99))
-        mom = float(features.get("momentum_score",       0.0))
+        # CH-002: prefer FM-027/028 keys; accept legacy aliases for historical caches
+        rd = float(
+            features.get(
+                "displacement_retrace",
+                features.get("retest_depth", 0.0),
+            )
+        )
+        csr = int(features.get("candles_since_retest", 99))
+        mom = float(features.get("momentum_score", 0.0))
         if 0.3 <= rd <= 0.7 and csr <= 5 and mom > 0:
             return "pullback"
-        body = float(features.get("body_ratio",    0.0))
-        disp = float(features.get("disp_strength", 0.0))
+        body = float(features.get("body_ratio", 0.0))
+        disp = float(
+            features.get(
+                "displacement_atr_ratio",
+                features.get("disp_strength", features.get("disp_str", 0.0)),
+            )
+        )
         if body > 0.6 and disp > breakout_disp_threshold:
             return "breakout"
         return "reversal"
@@ -2533,8 +2561,9 @@ class CRTEngine:
                     _would_trade = False
                     _body_ratio  = 0.0
                     if _dc is not None:
-                        _rng2 = _dc.high - _dc.low
-                        _body_ratio  = abs(_dc.close - _dc.open) / _rng2 if _rng2 > 0 else 0.0
+                        # Route through the canonical primitive (byte-identical to the prior inline
+                        # body/(high-low) with the rng>0 guard) — single source of truth, no re-derivation.
+                        _body_ratio  = _cm.body_ratio(_dc.open, _dc.high, _dc.low, _dc.close)
                         _would_trade = _body_ratio >= self.config.body_ratio_min
 
                     # freshness_ratio = age/ttl (0.20=fresh, 0.80=aging, >1.0=stale)
@@ -2847,15 +2876,24 @@ class CRTEngine:
         Safe to call at any time; returns zeroed/empty values if state is pre-init.
         """
         cf: dict = self.state.cached_features or {}
+        _retrace = float(
+            cf.get("displacement_retrace", cf.get("retest_depth", 0.0))
+        )
+        _disp_atr = float(
+            cf.get("displacement_atr_ratio", cf.get("disp_strength", cf.get("disp_str", 0.0)))
+        )
         return {
             # ── Universe-B raw execution indicators ──────────────────────────
             "live_atr":              self.state.atr,
             "live_ema_fast":         self.state.ema_fast_val,
             "live_ema_slow":         self.state.ema_slow_val,
-            # ── Decision features (computed at RETEST, not at TRADE_OPENED) ──
-            "cached_retest_depth":   float(cf.get("retest_depth",  0.0)),
-            "cached_body_ratio":     float(cf.get("body_ratio",    0.0)),
-            "cached_disp_strength":  float(cf.get("disp_strength", 0.0)),
+            # ── Decision features at RETEST (CH-002 / F-050 identities) ──────
+            "cached_displacement_retrace":   _retrace,   # FM-027
+            "cached_body_ratio":             float(cf.get("body_ratio", 0.0)),
+            "cached_displacement_atr_ratio": _disp_atr,  # FM-028
+            # Legacy journal aliases (same values) — prefer FM names above
+            "cached_retest_depth":   _retrace,
+            "cached_disp_strength":  _disp_atr,
             "cached_session":        str(cf.get("session",         "")),
             "cached_double_sweep":   bool(cf.get("double_sweep",   False)),
         }
@@ -2887,7 +2925,7 @@ class CRTTransitionEvent:
     to_state:         str                 # e.g. "DISPLACEMENT"
     trigger_reason:   str                 # copied from EngineEvent.reason
     sweep_type:       Optional[str]       # from metadata["sweep_type"]
-    disp_strength:    Optional[float]     # from metadata["disp_strength"]
+    disp_strength:    Optional[float]     # FM-028 value; field name retained for path API compat
     atr:              float               # from metadata["atr"]
     feature_snapshot: Mapping[str, Any]   # READ-ONLY — MappingProxyType at construction
 
@@ -2925,7 +2963,11 @@ def recent_transition_path(
             to_state        = ev.state_to or "",
             trigger_reason  = ev.reason or "",
             sweep_type      = meta.get("sweep_type"),
-            disp_strength   = meta.get("disp_strength"),
+            # CH-002: prefer FM-028 metadata key; legacy "disp_strength" accepted
+            disp_strength   = meta.get(
+                "displacement_atr_ratio",
+                meta.get("disp_strength"),
+            ),
             atr             = float(meta.get("atr", state.atr)),
             # dict() copy THEN MappingProxyType:
             # - dict() prevents ev.metadata["features"]["x"]=y from silently

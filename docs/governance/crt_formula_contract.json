@@ -1,0 +1,801 @@
+{
+  "schema": "crt_formula_contract.v1",
+  "phase": 2,
+  "program": "CRT_CLOSURE",
+  "generated_at_utc": "2026-07-09T08:30:00Z",
+  "commit": "ed1e418e47489dc8d76a2f7cc4e0cd340348b661",
+  "active_config_version": "v2_multi_2026_04",
+  "authority_sm": "src/config_layer/crt_engine_v2.py :: CRTEngine",
+  "denominators_reused": [
+    "configs/formulas/market_ontology.yaml",
+    "src/features/formula_registry.py",
+    "src/features/candle_math.py",
+    "src/features/derived_math.py",
+    "docs/governance/geometry_census_summary.json",
+    "docs/governance/geometry_family_registry.json",
+    "F-046 (body_ratio canonical)",
+    "F-050 (retest_depth name collision)",
+    "F-047 (GD ledger / feature math)"
+  ],
+  "status": "ACCOUNTED_EMISSION_REMEDIATED_CH002",
+  "status_note": "CH-002 remediated CRT emission keys to FM-027/FM-028; pipeline names unchanged.",
+  "f050_boundary": {
+    "status": "REMEDIATED_CH002",
+    "summary": "CH-002 (2026-07-09): CRT cached_features emit FM-027/FM-028 keys. Pipeline FM-021/FM-020 names unchanged.",
+    "displacement_retrace": {
+      "crt_emission_key": "displacement_retrace",
+      "true_registry_id": "FM-027",
+      "true_name": "displacement_retrace",
+      "true_impl": "derived_math.displacement_retrace",
+      "math": "clip(|retest.close-disp.open|/|disp.close-disp.open|,0,1)",
+      "crt_sites": [
+        "src/config_layer/crt_engine_v2.py try_expansion_to_retest cache",
+        "crt_gaussian_scorer.extract_features"
+      ],
+      "legacy_aliases_not_emitted": [
+        "retest_depth"
+      ],
+      "collides_with_pipeline": {
+        "id": "FM-021",
+        "name": "retest_depth",
+        "note": "pipeline only; no longer CRT emission key"
+      },
+      "finding": "F-050",
+      "remediation": "CH-002 emission rename COMPLETE"
+    },
+    "displacement_atr_ratio": {
+      "crt_emission_key": "displacement_atr_ratio",
+      "true_registry_id": "FM-028",
+      "true_name": "displacement_atr_ratio",
+      "true_impl": "derived_math.displacement_atr_ratio",
+      "math": "candle_range/atr",
+      "crt_sites": [
+        "src/config_layer/crt_engine_v2.py try_expansion_to_retest cache",
+        "crt_gaussian_scorer.extract_features"
+      ],
+      "legacy_aliases_not_emitted": [
+        "disp_strength",
+        "disp_str"
+      ],
+      "collides_with_pipeline": {
+        "id": "FM-020",
+        "name": "disp_strength",
+        "note": "pipeline only; no longer CRT emission key"
+      },
+      "finding": "F-050",
+      "remediation": "CH-002 emission rename COMPLETE"
+    },
+    "body_ratio": {
+      "crt_path": "Candle.body_ratio \u2192 candle_math",
+      "registry_id": "FM-010",
+      "status": "ALIGNED",
+      "finding": "F-046"
+    },
+    "candidate_payload_names": {
+      "cached_features_keys": [
+        "displacement_retrace",
+        "body_ratio",
+        "displacement_atr_ratio",
+        "retest_index",
+        "session",
+        "double_sweep"
+      ],
+      "note": "CH-002: keys match Formula Registry FM-027/FM-028/FM-010"
+    },
+    "bitnet_serve_adapter": "approve_with_soft_conf maps FM-027/028 \u2192 legacy retest_depth/disp_strength at BitNet call only (use_bitnet=false on active config)"
+  },
+  "values": [
+    {
+      "id": "CRT-IN-001",
+      "semantic_identity": "raw_ohlcv",
+      "feature_id_or_policy_id": "BASE-OHLCV",
+      "exact_formula": "passthrough open/high/low/close/volume/timestamp",
+      "units": "price units / volume / wall-clock",
+      "timeframe_semantics": "M15 candle bar as fed by caller",
+      "timestamp_semantics": "candle open/close time as provided by Candle.timestamp",
+      "zero_denominator_behavior": "n/a",
+      "missing_data_behavior": "caller-defined; CRT does not impute OHLCV",
+      "source_producer": "CandleLoader / CSV / MT5 stream via backtest_v2",
+      "canonical_authority": "data layer (not Formula Registry)",
+      "crt_consumption_sites": [
+        "CRTEngine.process_candle",
+        "RangeDetector",
+        "StateMachine guards",
+        "ExecutionEngine"
+      ],
+      "locally_recomputed": false,
+      "can_be_overwritten": false,
+      "aliases": [],
+      "geometry_census": "input (not a derivation)",
+      "formula_registry": "base_inputs",
+      "market_ontology": "base_inputs",
+      "classification": "RAW_INPUT"
+    },
+    {
+      "id": "CRT-IN-002",
+      "semantic_identity": "htf_range_window_candles",
+      "feature_id_or_policy_id": "CRT-POLICY-HTF-RANGE",
+      "exact_formula": "h_ref=max(highs); l_ref=min(lows); equilibrium=(h_ref+l_ref)/2 over seed/window candles",
+      "units": "price",
+      "timeframe_semantics": "HTF window = htf_candles_per_range M15 bars (backtest config, default 4)",
+      "timestamp_semantics": "formed_at = last candle in window",
+      "zero_denominator_behavior": "size=0 if h_ref==l_ref; retrace_depth returns 0",
+      "missing_data_behavior": "requires non-empty candle list",
+      "source_producer": "RangeDetector.detect_htf_range",
+      "canonical_authority": "CRT-local structural policy (not FM-id)",
+      "crt_consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:987-1002",
+        "sweep detection",
+        "retest depth_abs",
+        "zone filter mid"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": true,
+      "aliases": [
+        "active_range",
+        "Range"
+      ],
+      "geometry_census": "structural range \u2014 CRT policy",
+      "formula_registry": "NONE \u2014 CRT-local policy",
+      "market_ontology": "NONE as feature; structure object",
+      "classification": "CRT_LOCAL_POLICY"
+    },
+    {
+      "id": "CRT-DER-001",
+      "semantic_identity": "body_size",
+      "feature_id_or_policy_id": "FM-001",
+      "exact_formula": "abs(close - open)",
+      "units": "price",
+      "timeframe_semantics": "same-candle",
+      "timestamp_semantics": "bar timestamp",
+      "zero_denominator_behavior": "n/a",
+      "missing_data_behavior": "n/a",
+      "source_producer": "candle_math.body_size via Candle.body_size",
+      "canonical_authority": "src/features/candle_math.py:25",
+      "crt_consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:106-107"
+      ],
+      "locally_recomputed": false,
+      "can_be_overwritten": false,
+      "aliases": [],
+      "geometry_census": "FAM-01 body",
+      "formula_registry": "candle_math.body_size",
+      "market_ontology": "primitives.body_size",
+      "classification": "CANONICAL_ROUTED"
+    },
+    {
+      "id": "CRT-DER-002",
+      "semantic_identity": "candle_range_misnamed_wick_size",
+      "feature_id_or_policy_id": "FM-002",
+      "exact_formula": "high - low",
+      "units": "price",
+      "timeframe_semantics": "same-candle",
+      "timestamp_semantics": "bar timestamp",
+      "zero_denominator_behavior": "body_ratio returns 0 when range<=0",
+      "missing_data_behavior": "n/a",
+      "source_producer": "candle_math.candle_range via Candle.wick_size property",
+      "canonical_authority": "src/features/candle_math.py:30",
+      "crt_consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:110-112",
+        "displacement wick gate L1238",
+        "disp_strength check L1355",
+        "score_breakout L1560"
+      ],
+      "locally_recomputed": false,
+      "can_be_overwritten": false,
+      "aliases": [
+        "wick_size (property name)",
+        "full candle range"
+      ],
+      "geometry_census": "FAM-12 range",
+      "formula_registry": "candle_math.candle_range",
+      "market_ontology": "primitives.candle_range",
+      "classification": "CANONICAL_ROUTED",
+      "name_note": "Property is historically named wick_size but is full range (F-046 note)"
+    },
+    {
+      "id": "CRT-DER-003",
+      "semantic_identity": "body_ratio",
+      "feature_id_or_policy_id": "FM-010",
+      "exact_formula": "body_size / candle_range if range>0 else 0.0; bounded [0,1]",
+      "units": "unitless ratio",
+      "timeframe_semantics": "same-candle",
+      "timestamp_semantics": "bar timestamp",
+      "zero_denominator_behavior": "0.0 when range<=0",
+      "missing_data_behavior": "n/a",
+      "source_producer": "candle_math.body_ratio via Candle.body_ratio",
+      "canonical_authority": "src/features/candle_math.py:50",
+      "crt_consumption_sites": [
+        "displacement gate body_ratio_min L1231",
+        "sweep taxonomy L1050",
+        "cached_features body_ratio L1386 (from disp candle)",
+        "soft conf f_body L1658",
+        "score_breakout L1559"
+      ],
+      "locally_recomputed": false,
+      "can_be_overwritten": false,
+      "aliases": [],
+      "geometry_census": "FAM-16 body_ratio",
+      "formula_registry": "composition body_ratio",
+      "market_ontology": "feature_compositions.body_ratio",
+      "classification": "CANONICAL_ROUTED",
+      "finding": "F-046"
+    },
+    {
+      "id": "CRT-DER-004",
+      "semantic_identity": "true_range_atr",
+      "feature_id_or_policy_id": "CRT-POLICY-ATR",
+      "exact_formula": "mean of last min(period,n) true ranges; TR=max(H-L, |H-prevC|, |L-prevC|)",
+      "units": "price",
+      "timeframe_semantics": "rolling over M15 buffer atr_period (default 14)",
+      "timestamp_semantics": "updates every process_candle",
+      "zero_denominator_behavior": "returns 0.0 if <2 candles; guards skip ATR multiples when atr==0",
+      "missing_data_behavior": "short window uses available TRs",
+      "source_producer": "RangeDetector.compute_atr L1004-1018",
+      "canonical_authority": "CRT-local (not Wilder RMA; simple mean of TR)",
+      "crt_consumption_sites": [
+        "EngineState.atr",
+        "all atr_* gates",
+        "SL buffer",
+        "soft conf"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": true,
+      "aliases": [
+        "state.atr",
+        "live_atr"
+      ],
+      "geometry_census": "producer \u2014 CRT ATR not FM-registered as feature",
+      "formula_registry": "NONE \u2014 CRT-local ATR kernel",
+      "market_ontology": "base atr is a feature input elsewhere; CRT computes own",
+      "classification": "CRT_LOCAL_POLICY",
+      "note": "STRUCTURAL kernel period in code; atr_period config-wired"
+    },
+    {
+      "id": "CRT-DER-005",
+      "semantic_identity": "sweep_upper_lower_wick_ratios",
+      "feature_id_or_policy_id": "FM-011/FM-012-VARIANT",
+      "exact_formula": "upper_wick=(H-max(O,C))/full_range; lower_wick=(min(O,C)-L)/full_range; full_range=max(H-L, 0.001)",
+      "units": "unitless ratio",
+      "timeframe_semantics": "same-candle",
+      "timestamp_semantics": "sweep candle",
+      "zero_denominator_behavior": "eps floor 0.001 on full_range",
+      "missing_data_behavior": "n/a",
+      "source_producer": "RangeDetector.detect_sweep L1044-1047 then crt_sweep_taxonomy.classify_sweep",
+      "canonical_authority": "DOMAIN_POLICY_VARIANT vs FM-003/004/011/012 (floored denom)",
+      "crt_consumption_sites": [
+        "SweepEvent.sweep_type/label diagnostic only"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": false,
+      "aliases": [],
+      "geometry_census": "GD-008/009 family in feature-math lint",
+      "formula_registry": "related FM-003/004 but not identity (eps floor)",
+      "market_ontology": "variant of wick ratios",
+      "classification": "DOMAIN_POLICY_VARIANT",
+      "note": "Diagnostic metadata only \u2014 production sweep decision is range-boundary cross-back rule L1026-1027"
+    },
+    {
+      "id": "CRT-DER-006",
+      "semantic_identity": "sweep_boundary_cross",
+      "feature_id_or_policy_id": "CRT-POLICY-SWEEP",
+      "exact_formula": "swept_high: high>h_ref AND close<h_ref; swept_low: low<l_ref AND close>l_ref",
+      "units": "boolean geometry",
+      "timeframe_semantics": "same-candle vs active HTF range",
+      "timestamp_semantics": "sweep candle index stamped",
+      "zero_denominator_behavior": "n/a",
+      "missing_data_behavior": "requires active_range",
+      "source_producer": "RangeDetector.detect_sweep L1026-1027",
+      "canonical_authority": "CRT-local structural policy",
+      "crt_consumption_sites": [
+        "RANGE\u2192SWEEP",
+        "double_confirmed opposite sweep"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": true,
+      "aliases": [
+        "SweepEvent"
+      ],
+      "geometry_census": "CRT sweep geometry (not weekly_sweep)",
+      "formula_registry": "NONE",
+      "market_ontology": "NONE as FM",
+      "classification": "CRT_LOCAL_POLICY"
+    },
+    {
+      "id": "CRT-DER-007",
+      "semantic_identity": "displacement_body_move",
+      "feature_id_or_policy_id": "CRT-POLICY-DISP-MOVE",
+      "exact_formula": "move = abs(close - open); require move >= atr_min_displacement * atr",
+      "units": "price vs ATR-scaled threshold",
+      "timeframe_semantics": "displacement candidate candle",
+      "timestamp_semantics": "bar timestamp",
+      "zero_denominator_behavior": "if atr==0 threshold is 0 \u2192 any move passes size check",
+      "missing_data_behavior": "n/a",
+      "source_producer": "StateMachine.try_sweep_to_displacement L1211-1215",
+      "canonical_authority": "CRT-local gate policy",
+      "crt_consumption_sites": [
+        "SWEEP\u2192DISPLACEMENT guard"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": false,
+      "aliases": [
+        "move"
+      ],
+      "geometry_census": "body magnitude vs ATR",
+      "formula_registry": "related to body_size/ATR but not FM-020",
+      "market_ontology": "policy gate",
+      "classification": "CRT_LOCAL_POLICY"
+    },
+    {
+      "id": "CRT-DER-008",
+      "semantic_identity": "displacement_range_atr_gate",
+      "feature_id_or_policy_id": "FM-028-CONSUMED-AS-GATE",
+      "exact_formula": "candle.wick_size < atr_multiplier_min * atr \u2192 reject (wick_size = candle_range)",
+      "units": "ATR multiples",
+      "timeframe_semantics": "displacement candle",
+      "timestamp_semantics": "bar timestamp",
+      "zero_denominator_behavior": "gate skipped when atr==0 (condition false)",
+      "missing_data_behavior": "n/a",
+      "source_producer": "StateMachine.try_sweep_to_displacement L1238",
+      "canonical_authority": "uses FM-002 candle_range; threshold is config atr_multiplier_min",
+      "crt_consumption_sites": [
+        "SWEEP\u2192DISPLACEMENT"
+      ],
+      "locally_recomputed": false,
+      "can_be_overwritten": false,
+      "aliases": [],
+      "geometry_census": "FAM-06 range/ATR",
+      "formula_registry": "FM-028 family (ratio form)",
+      "market_ontology": "displacement_atr_ratio related",
+      "classification": "CANONICAL_PRIMITIVE_PLUS_POLICY_THRESHOLD"
+    },
+    {
+      "id": "CRT-DER-009",
+      "semantic_identity": "range_boundary_retest_depth_abs",
+      "feature_id_or_policy_id": "CRT-POLICY-RETEST-ABS",
+      "exact_formula": "LONG: close - l_ref; SHORT: h_ref - close; compare to adaptive_ceiling = max(retest_depth_max*range.size, retest_atr_depth_fraction*atr); require depth_abs >= 0.1*atr",
+      "units": "price distance",
+      "timeframe_semantics": "retest candidate vs active range",
+      "timestamp_semantics": "retest candle",
+      "zero_denominator_behavior": "adaptive_ceiling=0 \u2192 reject path",
+      "missing_data_behavior": "requires active_range + atr",
+      "source_producer": "StateMachine.try_expansion_to_retest L1324-1346; UltronRiskEngine.score_retest L1564-1579",
+      "canonical_authority": "CRT-local structural policy \u2014 NOT FM-021",
+      "crt_consumption_sites": [
+        "EXPANSION\u2192RETEST guard",
+        "score_retest",
+        "soft conf f_dist"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": false,
+      "aliases": [
+        "depth_abs",
+        "retest from range boundary"
+      ],
+      "geometry_census": "CRT retest geometry vs range",
+      "formula_registry": "NONE (distinct from FM-021 and FM-027)",
+      "market_ontology": "NONE as named FM",
+      "classification": "CRT_LOCAL_POLICY",
+      "note": "Third 'retest depth' concept: range-boundary distance. Do not confuse with FM-021 or FM-027."
+    },
+    {
+      "id": "CRT-DER-010",
+      "semantic_identity": "displacement_retrace",
+      "feature_id_or_policy_id": "FM-027",
+      "exact_formula": "abs(candle.close - disp.open) / abs(disp.close - disp.open); skip/0 if disp body 0",
+      "units": "unitless [0,1] clip at scorer",
+      "timeframe_semantics": "CROSS-CANDLE: retest close vs displacement open/close",
+      "timestamp_semantics": "stamped at RETEST confirmation",
+      "zero_denominator_behavior": "disp body 0 \u2192 leave defaults / scorer returns None",
+      "missing_data_behavior": "requires displacement_candle",
+      "source_producer": "StateMachine.try_expansion_to_retest L1378-1385; crt_gaussian_scorer L190",
+      "canonical_authority": "derived_math.displacement_retrace (registry); CRT emits under wrong key name",
+      "crt_consumption_sites": [
+        "state.cached_features['retest_depth']",
+        "BitNet required keys",
+        "Trade.cached_features",
+        "intent derive pullback band"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": true,
+      "aliases": [
+        "displacement_retrace (PRIMARY)",
+        "retest_depth (LEGACY not emitted)"
+      ],
+      "geometry_census": "F-050 source collision",
+      "formula_registry": "FM-027 displacement_retrace",
+      "market_ontology": "derived_metrics.displacement_retrace",
+      "classification": "CANONICAL_ROUTED_CH002",
+      "finding": "F-050 REMEDIATED CH-002"
+    },
+    {
+      "id": "CRT-DER-011",
+      "semantic_identity": "displacement_atr_ratio",
+      "feature_id_or_policy_id": "FM-028",
+      "exact_formula": "disp.wick_size / atr  (= candle_range/atr)",
+      "units": "ATR multiples",
+      "timeframe_semantics": "displacement candle range / state.atr",
+      "timestamp_semantics": "RETEST stamp",
+      "zero_denominator_behavior": "atr<=0 \u2192 not written / 0 path",
+      "missing_data_behavior": "requires disp + atr",
+      "source_producer": "L1355 gate + L1387 cache; scorer L194 as disp_str",
+      "canonical_authority": "derived_math.displacement_atr_ratio",
+      "crt_consumption_sites": [
+        "max_displacement_strength gate L1356",
+        "cached_features disp_strength",
+        "intent breakout vs threshold"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": true,
+      "aliases": [
+        "displacement_atr_ratio (PRIMARY)",
+        "disp_strength/disp_str (LEGACY not emitted)"
+      ],
+      "geometry_census": "F-050 sibling",
+      "formula_registry": "FM-028",
+      "market_ontology": "derived_metrics.displacement_atr_ratio",
+      "classification": "CANONICAL_ROUTED_CH002",
+      "finding": "F-050 REMEDIATED CH-002"
+    },
+    {
+      "id": "CRT-DER-012",
+      "semantic_identity": "ema_fast_slow_state",
+      "feature_id_or_policy_id": "CRT-POLICY-EMA",
+      "exact_formula": "alpha=2/(N+1); ema = close*alpha + ema*(1-alpha); seed first close; periods ema_fast/ema_slow config",
+      "units": "price",
+      "timeframe_semantics": "updated every process_candle",
+      "timestamp_semantics": "bar close",
+      "zero_denominator_behavior": "n/a",
+      "missing_data_behavior": "seeds from first close",
+      "source_producer": "EngineState.update_emas L294-302",
+      "canonical_authority": "CRT-local EMA (periods config-wired)",
+      "crt_consumption_sites": [
+        "soft conf f_mom L1662-1663"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": true,
+      "aliases": [
+        "ema_fast_val",
+        "ema_slow_val",
+        "live_ema_fast/slow"
+      ],
+      "geometry_census": "transport to soft conf",
+      "formula_registry": "NONE (kernel); FM-022 uses EMA values as inputs when from pipeline",
+      "market_ontology": "depends_on for ema_spread",
+      "classification": "CRT_LOCAL_POLICY"
+    },
+    {
+      "id": "CRT-DER-013",
+      "semantic_identity": "soft_conf_momentum_component",
+      "feature_id_or_policy_id": "CRT-POLICY-F-MOM",
+      "exact_formula": "dir_mult*(ema_fast-ema_slow)/atr clipped [0,1]",
+      "units": "unitless",
+      "timeframe_semantics": "soft-conf evaluation candle",
+      "timestamp_semantics": "bar",
+      "zero_denominator_behavior": "atr<=0 \u2192 0.0",
+      "missing_data_behavior": "n/a",
+      "source_producer": "UltronRiskEngine.compute_soft_confirmation L1661-1663",
+      "canonical_authority": "related to FM-022 ema_spread but direction-signed + clipped differently",
+      "crt_consumption_sites": [
+        "soft conf C"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": false,
+      "aliases": [
+        "f_mom"
+      ],
+      "geometry_census": "CRT soft-conf policy",
+      "formula_registry": "NOT identity to FM-022",
+      "market_ontology": "related ema_spread",
+      "classification": "CRT_LOCAL_POLICY_VARIANT_OF_FM022"
+    },
+    {
+      "id": "CRT-DER-014",
+      "semantic_identity": "soft_conf_C_and_S",
+      "feature_id_or_policy_id": "CRT-POLICY-SOFT-CONF",
+      "exact_formula": "C = (1-w)*linear + w*min(f_body,f_mom) clamped conf_floor; S = G^alpha * C^beta (see approve_with_soft_conf)",
+      "units": "unitless [conf_floor,1] / [0,1]",
+      "timeframe_semantics": "soft conf window soft_conf_max_candles",
+      "timestamp_semantics": "each evaluation candle",
+      "zero_denominator_behavior": "components zero-safe",
+      "missing_data_behavior": "hard reject news/spread first",
+      "source_producer": "UltronRiskEngine.compute_soft_confirmation L1641-1694; approve_with_soft_conf L1697+",
+      "canonical_authority": "CRT-local policy; weights conf_weights/alpha/beta config-wired",
+      "crt_consumption_sites": [
+        "TRADE_OPENED path",
+        "tier thresholds",
+        "S_score metadata"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": true,
+      "aliases": [
+        "final_S",
+        "effective_S with shadow decay"
+      ],
+      "geometry_census": "CRT scoring policy",
+      "formula_registry": "NONE",
+      "market_ontology": "NONE",
+      "classification": "CRT_LOCAL_POLICY"
+    },
+    {
+      "id": "CRT-DER-015",
+      "semantic_identity": "ultron_structural_G_score",
+      "feature_id_or_policy_id": "CRT-POLICY-G-SCORE",
+      "exact_formula": "raw = 0.35*sweep + 0.25*breakout + 0.20*retest + 0.20*time; final = raw * exp(-lambda * candles_since_retest); overrideable by score_override",
+      "units": "unitless",
+      "timeframe_semantics": "at retest/soft-conf evaluation",
+      "timestamp_semantics": "ref candle timestamp for time_score",
+      "zero_denominator_behavior": "components clamped",
+      "missing_data_behavior": "missing components stay 0",
+      "source_producer": "RiskScore.final L211-221; compute_score L1606",
+      "canonical_authority": "CRT-local; WEIGHTS HARDCODED (not conf_weights)",
+      "crt_consumption_sites": [
+        "soft conf G",
+        "resolve_risk_pct"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": true,
+      "aliases": [
+        "RiskScore",
+        "G"
+      ],
+      "geometry_census": "CRT scoring",
+      "formula_registry": "NONE",
+      "market_ontology": "NONE",
+      "classification": "CRT_LOCAL_POLICY",
+      "hardcoded_weights": [
+        0.35,
+        0.25,
+        0.2,
+        0.2
+      ],
+      "config_gap_note": "Phase 5: weights not in CRTConfig / prod JSON \u2014 shadow vs conf_weights which ARE config"
+    },
+    {
+      "id": "CRT-DER-016",
+      "semantic_identity": "score_breakout_components",
+      "feature_id_or_policy_id": "CRT-POLICY-BREAKOUT-SCORE",
+      "exact_formula": "0.5*min(body_ratio,1) + 0.5*min((wick_size/atr)/3, 1)",
+      "units": "unitless",
+      "timeframe_semantics": "displacement candle",
+      "timestamp_semantics": "displacement bar",
+      "zero_denominator_behavior": "atr<=0 \u2192 atr_multiple 0",
+      "missing_data_behavior": "n/a",
+      "source_producer": "UltronRiskEngine.score_breakout L1558-1562",
+      "canonical_authority": "uses FM-010 + FM-028-like ratio; blend is CRT policy",
+      "crt_consumption_sites": [
+        "RiskScore.breakout_score"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": false,
+      "aliases": [],
+      "geometry_census": "CRT scoring",
+      "formula_registry": "consumes FM-010 + range/ATR",
+      "market_ontology": "composition",
+      "classification": "CRT_LOCAL_POLICY"
+    },
+    {
+      "id": "CRT-DER-017",
+      "semantic_identity": "expansion_extension_guard",
+      "feature_id_or_policy_id": "CRT-POLICY-EXPANSION",
+      "exact_formula": "directional body + close beyond disp_close by >= expansion_atr_min_distance * atr",
+      "units": "price vs ATR",
+      "timeframe_semantics": "post-displacement candles",
+      "timestamp_semantics": "expansion candle",
+      "zero_denominator_behavior": "atr scaling",
+      "missing_data_behavior": "requires displacement_candle",
+      "source_producer": "StateMachine.try_displacement_to_expansion L1252+",
+      "canonical_authority": "CRT-local policy",
+      "crt_consumption_sites": [
+        "DISPLACEMENT\u2192EXPANSION"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": false,
+      "aliases": [],
+      "geometry_census": "CRT expansion guard",
+      "formula_registry": "NONE",
+      "market_ontology": "NONE",
+      "classification": "CRT_LOCAL_POLICY"
+    },
+    {
+      "id": "CRT-DER-018",
+      "semantic_identity": "reset_retrace_and_fib_extension",
+      "feature_id_or_policy_id": "CRT-POLICY-RESET",
+      "exact_formula": "retrace=|price-disp.close|/|disp.body| >= retrace_reset_pct; extension = |disp.close-sweep|*extension_reset_fib beyond sweep",
+      "units": "ratio / price",
+      "timeframe_semantics": "mid-episode",
+      "timestamp_semantics": "current candle",
+      "zero_denominator_behavior": "move==0 \u2192 retrace 0",
+      "missing_data_behavior": "requires displacement / sweep",
+      "source_producer": "ResetLogic.should_reset L2102-2120",
+      "canonical_authority": "CRT-local policy",
+      "crt_consumption_sites": [
+        "process_candle reset branch"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": false,
+      "aliases": [],
+      "geometry_census": "CRT reset geometry",
+      "formula_registry": "NONE",
+      "market_ontology": "NONE",
+      "classification": "CRT_LOCAL_POLICY"
+    },
+    {
+      "id": "CRT-DER-019",
+      "semantic_identity": "sl_tp_from_risk_distance",
+      "feature_id_or_policy_id": "CRT-POLICY-SLTP",
+      "exact_formula": "SL = disp.low/high \u00b1 sl_atr_buffer*atr; risk_dist=|entry-sl|; TP1/TP2 = entry \u00b1 mult*risk_dist (intent-specific tp1 mult)",
+      "units": "price",
+      "timeframe_semantics": "entry at retest close",
+      "timestamp_semantics": "trade open",
+      "zero_denominator_behavior": "inverted SL rejected L1938-1948",
+      "missing_data_behavior": "no trade if missing disp/range/sweep",
+      "source_producer": "ExecutionEngine.build_trade L1898-1965",
+      "canonical_authority": "CRT-local execution policy (config multipliers)",
+      "crt_consumption_sites": [
+        "TRADE_OPENED payload",
+        "exit model"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": false,
+      "aliases": [],
+      "geometry_census": "execution geometry",
+      "formula_registry": "NONE",
+      "market_ontology": "NONE",
+      "classification": "CRT_LOCAL_POLICY"
+    },
+    {
+      "id": "CRT-DER-020",
+      "semantic_identity": "spread_pct",
+      "feature_id_or_policy_id": "CRT-POLICY-SPREAD",
+      "exact_formula": "(ask-bid)/mid",
+      "units": "fraction of mid",
+      "timeframe_semantics": "as set via set_spread",
+      "timestamp_semantics": "external",
+      "zero_denominator_behavior": "mid<=0 \u2192 0",
+      "missing_data_behavior": "default 0 until set",
+      "source_producer": "UltronRiskEngine.set_spread L1544-1546",
+      "canonical_authority": "CRT-local risk input",
+      "crt_consumption_sites": [
+        "approve_with_soft_conf HIGH_SPREAD gate"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": true,
+      "aliases": [],
+      "geometry_census": "n/a",
+      "formula_registry": "NONE",
+      "market_ontology": "NONE",
+      "classification": "CRT_LOCAL_POLICY"
+    },
+    {
+      "id": "CRT-DER-021",
+      "semantic_identity": "shadow_age_decay",
+      "feature_id_or_policy_id": "CRT-POLICY-SHADOW-DECAY",
+      "exact_formula": "effective_S = final_S * exp(-lambda * age_input); age_input = age/norm or raw age",
+      "units": "unitless",
+      "timeframe_semantics": "shadow candidates only",
+      "timestamp_semantics": "soft conf approval",
+      "zero_denominator_behavior": "lambda=0 \u2192 no decay (prod default)",
+      "missing_data_behavior": "n/a",
+      "source_producer": "process_candle soft conf Phase 4b L2615-2630",
+      "canonical_authority": "CRT-local; config shadow_age_penalty_lambda / shadow_age_norm_candles",
+      "crt_consumption_sites": [
+        "approval override",
+        "S_score log"
+      ],
+      "locally_recomputed": true,
+      "can_be_overwritten": false,
+      "aliases": [
+        "freshness_mult"
+      ],
+      "geometry_census": "n/a",
+      "formula_registry": "NONE",
+      "market_ontology": "NONE",
+      "classification": "CRT_LOCAL_POLICY"
+    },
+    {
+      "id": "CRT-EXT-001",
+      "semantic_identity": "bitnet_score_hook",
+      "feature_id_or_policy_id": "CRT-BOUNDARY-BITNET",
+      "exact_formula": "bitnet_score(features) when use_bitnet and cached_features has body_ratio, retest_depth, disp_strength",
+      "units": "model score",
+      "timeframe_semantics": "at soft conf approval",
+      "timestamp_semantics": "entry decision candle",
+      "zero_denominator_behavior": "n/a",
+      "missing_data_behavior": "features missing \u2192 BitNet not evaluated",
+      "source_producer": "bitnet.bitnet_inference.bitnet_score (import L20)",
+      "canonical_authority": "EXTERNAL \u2014 CRT-side contract only",
+      "crt_consumption_sites": [
+        "UltronRiskEngine.approve_with_soft_conf BitNet block L1724+"
+      ],
+      "locally_recomputed": false,
+      "can_be_overwritten": false,
+      "aliases": [
+        "bitnet_main_score"
+      ],
+      "geometry_census": "consumer of cached_features (F-050 names)",
+      "formula_registry": "consumes aliased FM-010/027/028",
+      "market_ontology": "downstream boundary",
+      "classification": "EXTERNAL_BOUNDARY",
+      "active_on_prod": false,
+      "note": "use_bitnet=false on active config; inputs use F-050 alias names"
+    },
+    {
+      "id": "CRT-IN-003",
+      "semantic_identity": "pipeline_canonical_features_not_crt_owned",
+      "feature_id_or_policy_id": "CANONICAL_FEATURES_38",
+      "exact_formula": "produced by FeaturePipeline; backtest joins by timestamp for EngineRunner \u2014 CRT SM does not own them",
+      "units": "mixed",
+      "timeframe_semantics": "M15 point-in-time",
+      "timestamp_semantics": "bar key",
+      "zero_denominator_behavior": "pipeline-defined",
+      "missing_data_behavior": "backtest zeros on miss",
+      "source_producer": "src/features/feature_pipeline.py",
+      "canonical_authority": "feature_pipeline + Formula Registry for derived",
+      "crt_consumption_sites": [
+        "NOT inside CRTEngine SM; adjacent backtest only"
+      ],
+      "locally_recomputed": false,
+      "can_be_overwritten": false,
+      "aliases": [],
+      "geometry_census": "pipeline producers",
+      "formula_registry": "FM-020/021 etc for pipeline names",
+      "market_ontology": "derived_metrics",
+      "classification": "BOUNDARY_NON_CRT",
+      "note": "Important: FM-021 retest_depth in pipeline \u2260 CRT cached retest_depth"
+    }
+  ],
+  "classification_histogram": {
+    "RAW_INPUT": 1,
+    "CRT_LOCAL_POLICY": 14,
+    "CANONICAL_ROUTED": 3,
+    "DOMAIN_POLICY_VARIANT": 1,
+    "CANONICAL_PRIMITIVE_PLUS_POLICY_THRESHOLD": 1,
+    "CANONICAL_ROUTED_CH002": 2,
+    "CRT_LOCAL_POLICY_VARIANT_OF_FM022": 1,
+    "EXTERNAL_BOUNDARY": 1,
+    "BOUNDARY_NON_CRT": 1
+  },
+  "contradictions": [
+    {
+      "id": "CX-F050-RETEST",
+      "severity": "REMEDIATED",
+      "summary": "CRT emits FM-027 math under key retest_depth (FM-021 name)",
+      "finding": "F-050",
+      "remediate_in_phase2": false,
+      "remediation": "CH-002"
+    },
+    {
+      "id": "CX-F050-DISP",
+      "severity": "REMEDIATED",
+      "summary": "CRT emits FM-028 math under key disp_strength (FM-020 name)",
+      "finding": "F-050 sibling",
+      "remediate_in_phase2": false,
+      "remediation": "CH-002"
+    },
+    {
+      "id": "CX-THREE-RETEST-CONCEPTS",
+      "severity": "DOCUMENTED",
+      "summary": "Three distinct retest concepts: (1) FM-021 pipeline EMA-distance, (2) FM-027 displacement_retrace, (3) CRT range-boundary depth_abs policy",
+      "finding": "extends F-050 clarity; not a new F-id",
+      "remediate_in_phase2": false
+    },
+    {
+      "id": "CX-G-WEIGHTS-HARDCODED",
+      "severity": "CONFIG_HYGIENE",
+      "summary": "RiskScore structural weights 0.35/0.25/0.20/0.20 hardcoded while conf_weights are config-driven",
+      "finding": "defer Phase 5 config reachability; no F-id this turn",
+      "remediate_in_phase2": false
+    }
+  ],
+  "unaccounted_derivations": [],
+  "confirmed_findings": [
+    "F-046",
+    "F-047",
+    "F-050"
+  ],
+  "new_findings": [],
+  "phase2_status": "PASS",
+  "blockers": [],
+  "next_phase": "Phase 3 \u2014 complete 9-state executable graph"
+}

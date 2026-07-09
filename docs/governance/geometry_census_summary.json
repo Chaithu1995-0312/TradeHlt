@@ -1,0 +1,59 @@
+{
+  "census_version": 3,
+  "universe_manifest": {
+    "primary_universe": "git-tracked *.py files (git ls-files)",
+    "secondary_universe": "untracked repo-local *.py under execution-capable roots ('src', 'scripts', 'tests', 'tools', 'mt5_analytics', 'exec_telemetry', 'H-SECONDLOW-002_Complete_Package') (git ls-files --others --exclude-standard)",
+    "excluded_roots": [
+      ".claude",
+      "venv",
+      ".venv",
+      "node_modules",
+      "__pycache__",
+      "archive",
+      "context",
+      "data",
+      "logs",
+      "results",
+      "bundles",
+      "flow_graphs"
+    ],
+    "excluded_file_types": "everything except *.py (YAML ontology handled by test_formula_registry; no governed *.ipynb present)",
+    "generated_code_policy": "generated dirs (context/, flow_graphs/, data/, results/, logs/) excluded",
+    "vendor_dependency_policy": "venv/.venv/node_modules excluded",
+    "notebook_policy": "no repository-governed notebooks found; none scanned",
+    "test_policy": "tests/ INCLUDED (occurrences tagged test context; independent impls = TEST_ORACLE candidates)",
+    "symlink_policy": "not followed (none expected on Windows checkout)",
+    "gitignored_policy": "gitignored files excluded from both universes",
+    "worktree_policy": ".claude/worktrees are COPIES of this repo \u2014 excluded to avoid census inflation",
+    "archive_policy": "archive/ = historical copies \u2014 excluded, disclosed here",
+    "tracked_py_files": 477,
+    "untracked_exec_py_files": 274,
+    "untracked_other_py_files_disclosed_not_scanned": 0
+  },
+  "counts": {
+    "TOTAL_OCCURRENCES": 412,
+    "TOTAL_DERIVATIONS": 109,
+    "TOTAL_PRODUCERS": 106,
+    "TOTAL_TRANSPORT_SITES": 92,
+    "TOTAL_CONSUMERS": 211,
+    "TOTAL_TEST_ORACLES": 3,
+    "TOTAL_UNKNOWN": 0,
+    "MANUALLY_ADMITTED_EXECUTORS": 2
+  },
+  "role_histogram": {
+    "derivation": 104,
+    "transport": 92,
+    "consumer_read": 211,
+    "test_oracle": 3,
+    "executor_dispatch": 2
+  },
+  "reconciliation": {
+    "NAME_ONLY": 211,
+    "EXPRESSION_ONLY": 75,
+    "SINK_ONLY": 86,
+    "NAME_AND_EXPRESSION": 0,
+    "NAME_AND_SINK": 20,
+    "EXPRESSION_AND_SINK": 0,
+    "ALL_THREE": 18
+  }
+}

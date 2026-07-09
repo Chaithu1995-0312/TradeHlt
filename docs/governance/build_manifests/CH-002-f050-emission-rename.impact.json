@@ -1,0 +1,59 @@
+{
+  "change_id": "CH-002-f050-emission-rename",
+  "objective": "F-050 remediation phase B: RENAME CRT cached_features emission keys from colliding names retest_depth/disp_strength/disp_str to governed identities displacement_retrace (FM-027) and displacement_atr_ratio (FM-028). Math already registered in CH-001; this change migrates CRT-side emission + CRT-internal consumers. Pipeline CANONICAL_FEATURES FM-021/FM-020 names unchanged. BitNet call-site maps new CRT keys → legacy model input schema (use_bitnet=false on active config; skew documented).",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE",
+    "MODEL_INPUT_CHANGE",
+    "RUNTIME_DECISION_PATH_CHANGE"
+  ],
+  "affected_files": [
+    "src/config_layer/crt_engine_v2.py",
+    "src/config_layer/crt_gaussian_scorer.py",
+    "docs/current-findings.md",
+    "docs/governance/crt_formula_contract.json",
+    "docs/governance/crt_formula_contract.md",
+    "docs/governance/crt_closure_report.md",
+    "docs/governance/crt_adversarial_validation.md",
+    "tests/test_crt_adversarial_closure.py",
+    "tests/test_crt_closure_report.py",
+    "assistant_project.md",
+    "docs/governance/build_manifests/CH-002-f050-emission-rename.impact.json",
+    "docs/governance/geometry_census.jsonl",
+    "docs/governance/geometry_census_summary.json",
+    "docs/governance/geometry_semantic_adjudication.jsonl",
+    "docs/governance/geometry_family_registry.json",
+    "scripts/analysis/gate2b_adjudication.py",
+    "Claude.md"
+  ],
+  "affected_feature_ids": [
+    "FM-027 displacement_retrace (emission key authority)",
+    "FM-028 displacement_atr_ratio (emission key authority)",
+    "FM-021 retest_depth (pipeline only; unchanged)",
+    "FM-020 disp_strength (pipeline only; unchanged)"
+  ],
+  "affected_models": "BitNet serve path maps CRT cache → legacy input keys if ever enabled; training artifacts retain old keys until retrain (F-004 inert on active config)",
+  "affected_production_config": "none (hash-neutral)",
+  "required_checks_ack": [
+    "tests/test_crt_adversarial_closure.py",
+    "tests/test_crt_closure_report.py",
+    "tests/test_derived_math.py",
+    "tests/test_formula_registry.py",
+    "tests/test_crt_executable_state_graph.py",
+    "tests/test_crt_state_invariants.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_current_findings.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_geometry_census.py"
+  ],
+  "unknowns": [],
+  "train_serve_skew": {
+    "documented": true,
+    "serve_crt_cache_keys": ["displacement_retrace", "displacement_atr_ratio", "body_ratio"],
+    "bitnet_model_input_keys": ["retest_depth", "disp_strength", "body_ratio"],
+    "adapter": "crt_engine_v2 BitNet block maps FM-027/028 → legacy BitNet input names at call site only",
+    "historical_artifacts": "opportunities/master_*_training.jsonl retain pre-CH-002 keys until rebuild"
+  },
+  "rollback_boundary": "single commit: revert crt_engine_v2 + crt_gaussian_scorer + docs/tests together"
+}
