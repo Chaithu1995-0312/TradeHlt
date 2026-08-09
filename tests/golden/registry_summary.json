@@ -1,0 +1,20 @@
+{
+  "active_version": "v2_multi_2026_04",
+  "model_count": 7,
+  "model_names": [
+    "bitnet",
+    "crt",
+    "engine_runner",
+    "gaussian",
+    "rr_model",
+    "strategies",
+    "zone_gate"
+  ],
+  "runtime_flags": {
+    "bitnet_enabled": false,
+    "zone_mode": "hard",
+    "registry_file": "models/zone_registry.json",
+    "gaussian_impl": "heuristic",
+    "rr_fusion_active": false
+  }
+}
