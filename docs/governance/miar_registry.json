@@ -1,0 +1,1000 @@
+{
+  "schema": "miar_registry_v1.1",
+  "authority": "MODEL_INTENT_AUTHORITY_REGISTER",
+  "charter": "docs/governance/MODEL_INTENT_AUTHORITY_REGISTER.md",
+  "updated": "2026-07-28",
+  "hierarchy": [
+    "market_ontology",
+    "feature_pipeline",
+    "miar",
+    "implementations",
+    "backtest_research"
+  ],
+  "alignment_tokens": [
+    "ALIGNED",
+    "SEMANTIC_DRIFT",
+    "INTENT_MISSING",
+    "DESIGN_ONLY"
+  ],
+  "alignment_glyphs": {
+    "ALIGNED": "GREEN",
+    "SEMANTIC_DRIFT": "YELLOW",
+    "INTENT_MISSING": "RED",
+    "DESIGN_ONLY": "BLACK"
+  },
+  "required_fields": [
+    "id",
+    "stage",
+    "stage_order",
+    "intent",
+    "hypothesis",
+    "inputs",
+    "outputs",
+    "semantic_meaning",
+    "consumer",
+    "authority_boundary",
+    "explicit_non_goals",
+    "dependencies",
+    "falsification",
+    "implementation_status",
+    "alignment",
+    "primary_code"
+  ],
+  "entries": [
+    {
+      "id": "market_ontology",
+      "intent": "What market concepts and formulas exist, with lineage?",
+      "hypothesis": "A single semantic graph prevents formula re-derivation and silent meaning drift.",
+      "inputs": [
+        "research discoveries",
+        "governance adjudication"
+      ],
+      "outputs": [
+        "ontology nodes",
+        "FM-ids",
+        "formula registry"
+      ],
+      "semantic_meaning": "Permanent semantic authority for market quantities",
+      "consumer": [
+        "feature_registry",
+        "all feature producers",
+        "MIAR"
+      ],
+      "authority_boundary": "Definition of meaning of features/states/formulas",
+      "explicit_non_goals": [
+        "never compute live scores",
+        "never promote configs",
+        "never own fusion weights"
+      ],
+      "dependencies": [],
+      "falsification": "Two contradictory formulas for the same FM-id in production without adjudication",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "ALIGNED",
+      "primary_code": [
+        "configs/formulas/market_ontology.yaml",
+        "src/features/registry/"
+      ],
+      "stage": "substrate",
+      "stage_order": 0
+    },
+    {
+      "id": "feature_pipeline",
+      "intent": "How is OHLCV transformed into the single canonical feature representation?",
+      "hypothesis": "One ordered vector keeps all models comparable and PIT-governable.",
+      "inputs": [
+        "OHLCV",
+        "feature_pipeline config"
+      ],
+      "outputs": [
+        "CANONICAL_FEATURES vector",
+        "SCHEMA_HASH"
+      ],
+      "semantic_meaning": "Feature state of the market at bar t",
+      "consumer": [
+        "all feature-consuming engines",
+        "training datasets"
+      ],
+      "authority_boundary": "Layout, names, compute path",
+      "explicit_non_goals": [
+        "never decide trades",
+        "never redefine FM identities",
+        "never own model intent"
+      ],
+      "dependencies": [
+        "market_ontology"
+      ],
+      "falsification": "Dual live vectors with different dim/order without schema version bump",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "ALIGNED",
+      "primary_code": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_schema.py"
+      ],
+      "stage": "substrate",
+      "stage_order": 0
+    },
+    {
+      "id": "crt",
+      "intent": "What structural state is the market in?",
+      "hypothesis": "Sweep to displacement to expansion to retest sequences mark actionable structure.",
+      "inputs": [
+        "OHLCV",
+        "structure features for score path"
+      ],
+      "outputs": [
+        "FSM state/actions",
+        "structure_rule_score"
+      ],
+      "semantic_meaning": "Structural classification / structure-rule score, not p(win)",
+      "consumer": [
+        "backtest/live TRADE_OPENED",
+        "fusion crt slot",
+        "bitnet approve path"
+      ],
+      "authority_boundary": "Structure detection and structure-rule scoring; may open structural path to risk",
+      "explicit_non_goals": [
+        "never estimate win probability",
+        "never own economic RR",
+        "never classify statistical neighbourhood (zone_gate)",
+        "never decide whether to trade"
+      ],
+      "dependencies": [
+        "feature_pipeline",
+        "market_ontology"
+      ],
+      "falsification": "Structure completion adds no path asymmetry (F-026 class)",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "SEMANTIC_DRIFT",
+      "primary_code": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/engines/crt_engine.py",
+        "src/engines/scoring_engine.py"
+      ],
+      "stage": "market_understanding",
+      "stage_order": 1
+    },
+    {
+      "id": "gaussian",
+      "intent": "How statistically conformant is this market state to previously observed market states (EMA/momentum axis)?",
+      "hypothesis": "EMA-spread and momentum composite proximity tracks historical success.",
+      "inputs": [
+        "ema_fast",
+        "ema_slow",
+        "momentum_score"
+      ],
+      "outputs": [
+        "ema_momentum_kernel_score"
+      ],
+      "semantic_meaning": "Statistical conformity score (not calibrated probability; not entry permission)",
+      "consumer": [
+        "fusion weight_gaussian",
+        "DecisionEngine p_win (reinterpretation)"
+      ],
+      "authority_boundary": "Advisory fusion vote only",
+      "explicit_non_goals": [
+        "never decide whether to trade",
+        "never determine entries alone",
+        "never classify CRT structure",
+        "never claim probability without calibration"
+      ],
+      "dependencies": [
+        "feature_pipeline"
+      ],
+      "falsification": "Kernel information-inert / non-pivotal (F-060)",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "SEMANTIC_DRIFT",
+      "primary_code": [
+        "src/engines/heuristic_gaussian_engine.py",
+        "src/engines/ml_gaussian_engine.py"
+      ],
+      "stage": "market_understanding",
+      "stage_order": 2
+    },
+    {
+      "id": "zone_gate",
+      "intent": "Is this state occurring in a structurally valid location (zone neighbourhood)?",
+      "hypothesis": "Feature-space zones encode past good/bad regions.",
+      "inputs": [
+        "full canonical vector",
+        "zone registry"
+      ],
+      "outputs": [
+        "neighbourhood_quality_score",
+        "passed"
+      ],
+      "semantic_meaning": "Geometric neighbourhood quality",
+      "consumer": [
+        "fusion",
+        "DecisionEngine zone validity"
+      ],
+      "authority_boundary": "Gate vote; F-036 non-pivotal on active fusion",
+      "explicit_non_goals": [
+        "never run CRT transitions",
+        "never estimate TP probabilities",
+        "never set SL/TP"
+      ],
+      "dependencies": [
+        "feature_pipeline"
+      ],
+      "falsification": "DeltaG001=0 / no honest zone edge (F-036, F-041B)",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "SEMANTIC_DRIFT",
+      "primary_code": [
+        "src/engines/zone_cluster_score.py",
+        "src/engines/live_engine.py"
+      ],
+      "stage": "market_understanding",
+      "stage_order": 3
+    },
+    {
+      "id": "tradenet",
+      "intent": "What expected trading outcomes (discrete milestones) follow from the current semantic market state?",
+      "hypothesis": "Canonical morphology predicts p_tp1/p_tp2/p_survives_be.",
+      "inputs": [
+        "full canonical vector"
+      ],
+      "outputs": [
+        "p_tp1",
+        "p_tp2",
+        "p_survives_be",
+        "tradenet_score"
+      ],
+      "semantic_meaning": "Expected trading outcomes / milestone estimates, not structural quality",
+      "consumer": [
+        "designed Fusion neural_fn",
+        "actual offline only"
+      ],
+      "authority_boundary": "None on live spine until TN_QUAL_V1 and DeltaG001",
+      "explicit_non_goals": [
+        "never classify market structure",
+        "never produce continuous MFE/MAE bands",
+        "never hard-reject alone",
+        "never use bare word quality without a qualifier"
+      ],
+      "dependencies": [
+        "feature_pipeline"
+      ],
+      "falsification": "No discrimination under clean labels / TN_QUAL fail",
+      "implementation_status": "PARTIAL",
+      "alignment": "SEMANTIC_DRIFT",
+      "primary_code": [
+        "src/training/trade_net_v2.py"
+      ],
+      "stage": "opportunity_understanding",
+      "stage_order": 6
+    },
+    {
+      "id": "rr_engine",
+      "intent": "How strong is the candle commitment and geometric quality?",
+      "hypothesis": "Extreme closes signal commitment useful as a structural quality vote.",
+      "inputs": [
+        "high",
+        "low",
+        "close"
+      ],
+      "outputs": [
+        "candle_polarity",
+        "candle_structure_quality"
+      ],
+      "semantic_meaning": "Geometric commitment score, not economic reward:risk, not probability",
+      "consumer": [
+        "fusion rr slot"
+      ],
+      "authority_boundary": "Fusion vote only; economic RR owned by Ultron after planner",
+      "explicit_non_goals": [
+        "never identify breakouts",
+        "never compute forward RR from SL/TP",
+        "never replace Ultron min_rr"
+      ],
+      "dependencies": [
+        "feature_pipeline"
+      ],
+      "falsification": "Polarity non-informative for selection",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "SEMANTIC_DRIFT",
+      "primary_code": [
+        "src/engines/rr_engine.py"
+      ],
+      "stage": "market_understanding",
+      "stage_order": 4
+    },
+    {
+      "id": "rr_trained",
+      "intent": "What learned reward behavior is associated with this semantic market state, distinct from deterministic candle commitment?",
+      "hypothesis": "Ridge+GNB improves on Gaussian when in-distribution.",
+      "inputs": [
+        "canonical feature vector",
+        "gaussian_score",
+        "gaussian_p_win"
+      ],
+      "outputs": [
+        "final_score",
+        "expected_rr",
+        "probability_of_win",
+        "confidence",
+        "status"
+      ],
+      "semantic_meaning": "Learned reward behavior plus model confidence; not candle commitment; not neighbour retrieval",
+      "consumer": [
+        "RRFusionLayer when enabled",
+        "offline rr_trained"
+      ],
+      "authority_boundary": "None live while rr_fusion.enabled=false",
+      "explicit_non_goals": [
+        "never claim KNN historical pattern mining",
+        "never set economic SL/TP alone",
+        "never replace deterministic RR Engine commitment semantics"
+      ],
+      "dependencies": [
+        "feature_pipeline",
+        "gaussian"
+      ],
+      "falsification": "Gate always bypasses / no DeltaG001 (F-038, F-044)",
+      "implementation_status": "PARTIAL",
+      "alignment": "SEMANTIC_DRIFT",
+      "primary_code": [
+        "src/config_layer/rr/rr_pattern_miner.py",
+        "src/config_layer/rr/rr_fusion.py"
+      ],
+      "notes": "RRPatternMiner-as-historical-retrieval is DESIGN_ONLY (no class, no retrieval).",
+      "stage": "opportunity_understanding",
+      "stage_order": 7
+    },
+    {
+      "id": "bitnet",
+      "intent": "Should this opportunity be rejected because the semantic state is unsafe?",
+      "hypothesis": "Compact 6-feature gate separates toxic vs acceptable approve states.",
+      "inputs": [
+        "body_ratio",
+        "retest_depth",
+        "disp_strength",
+        "atr",
+        "candles_since_retest",
+        "double_sweep"
+      ],
+      "outputs": [
+        "state_acceptability_score"
+      ],
+      "semantic_meaning": "Safety veto score (reject unsafe states); not positive entry optimization",
+      "consumer": [
+        "UltronRiskEngine.approve when use_bitnet=true"
+      ],
+      "authority_boundary": "Veto on approve path only when enabled",
+      "explicit_non_goals": [
+        "never optimize entries",
+        "never replace fusion",
+        "never estimate continuous envelopes"
+      ],
+      "dependencies": [
+        "crt",
+        "feature_pipeline"
+      ],
+      "falsification": "Enable harms book without filter benefit (F-055)",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "ALIGNED",
+      "primary_code": [
+        "src/bitnet/bitnet_inference.py"
+      ],
+      "stage": "safety",
+      "stage_order": 8
+    },
+    {
+      "id": "trap",
+      "intent": "Is this a deception / trap pattern under dual-engine rules?",
+      "hypothesis": "Sweep+displacement+trend flags trap risk.",
+      "inputs": [
+        "sweep_detected",
+        "disp_strength",
+        "trend_bias"
+      ],
+      "outputs": [
+        "trap score"
+      ],
+      "semantic_meaning": "Deception-pattern vote",
+      "consumer": [
+        "EngineRunner dual-engine path"
+      ],
+      "authority_boundary": "Dual-engine gating only",
+      "explicit_non_goals": [
+        "never own CRT FSM",
+        "never estimate p_tp1"
+      ],
+      "dependencies": [
+        "feature_pipeline"
+      ],
+      "falsification": "Trap score never flips decisions",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "ALIGNED",
+      "primary_code": [
+        "src/core/engine_runner.py:trap_engine",
+        "src/engines/trap_validator_engine.py"
+      ],
+      "stage": "market_understanding",
+      "stage_order": null
+    },
+    {
+      "id": "breakout",
+      "intent": "Is breakout-style pressure present under dual-engine rules?",
+      "hypothesis": "Trend/momentum/spread thresholds identify breakout regime votes.",
+      "inputs": [
+        "trend_bias",
+        "momentum_score",
+        "ema_spread"
+      ],
+      "outputs": [
+        "breakout score"
+      ],
+      "semantic_meaning": "Breakout-pressure vote",
+      "consumer": [
+        "EngineRunner dual-engine"
+      ],
+      "authority_boundary": "Dual-engine only",
+      "explicit_non_goals": [
+        "never replace CRT expansion detection",
+        "never set RR"
+      ],
+      "dependencies": [
+        "feature_pipeline"
+      ],
+      "falsification": "Always pinned score under feature defects",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "SEMANTIC_DRIFT",
+      "primary_code": [
+        "src/core/engine_runner.py:breakout_engine"
+      ],
+      "stage": "market_understanding",
+      "stage_order": null
+    },
+    {
+      "id": "regime",
+      "intent": "What market regime currently exists?",
+      "hypothesis": "Regime modulates fusion weights and policy.",
+      "inputs": [
+        "ema_spread",
+        "momentum_score",
+        "volatility_ratio"
+      ],
+      "outputs": [
+        "regime label"
+      ],
+      "semantic_meaning": "Coarse regime label",
+      "consumer": [
+        "fusion regime weights",
+        "governors"
+      ],
+      "authority_boundary": "Weight selection, not entry ontology",
+      "explicit_non_goals": [
+        "never open trades",
+        "never compute structure states"
+      ],
+      "dependencies": [
+        "feature_pipeline"
+      ],
+      "falsification": "Regime always trend due to feature defects",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "SEMANTIC_DRIFT",
+      "primary_code": [
+        "src/core/engine_runner.py:detect_regime",
+        "src/regime/regime_classifier.py"
+      ],
+      "stage": "market_understanding",
+      "stage_order": 5
+    },
+    {
+      "id": "execution_intent",
+      "intent": "How should the already-approved trade be executed and tracked (plan and intent lifecycle)?",
+      "hypothesis": "Explicit intent FSM prevents ambiguous order lifecycle.",
+      "inputs": [
+        "decision/plan events"
+      ],
+      "outputs": [
+        "ExecutionIntentV1 states"
+      ],
+      "semantic_meaning": "Execution lifecycle, not market structure",
+      "consumer": [
+        "live/journal paths"
+      ],
+      "authority_boundary": "Post-decision execution bookkeeping",
+      "explicit_non_goals": [
+        "never rescore market features",
+        "never re-run fusion"
+      ],
+      "dependencies": [
+        "decision_fusion"
+      ],
+      "falsification": "Intent states unused on live path",
+      "implementation_status": "PARTIAL",
+      "alignment": "SEMANTIC_DRIFT",
+      "primary_code": [
+        "src/execution/execution_intent_v1_0.py",
+        "src/config_layer/execution_planner.py"
+      ],
+      "stage": "execution",
+      "stage_order": 10
+    },
+    {
+      "id": "decision_fusion",
+      "intent": "Given all evidence, should this trade be approved (resolve potentially conflicting evidence into a single trade-approval decision)?",
+      "hypothesis": "Explicit conflict resolution over specialized upstream evidence improves selection vs any single engine.",
+      "inputs": [
+        "crt",
+        "gaussian",
+        "zone_gate",
+        "rr scores"
+      ],
+      "outputs": [
+        "final_score",
+        "decision approve/reject"
+      ],
+      "semantic_meaning": "Trade-approval adjudication (conflict resolution), not rediscovery of structure",
+      "consumer": [
+        "ExecutionPlanner",
+        "UltronRiskGate"
+      ],
+      "authority_boundary": "Semantic approval and score gates; not economic min_rr",
+      "explicit_non_goals": [
+        "never rediscover market structure",
+        "never invent features",
+        "never own economic RR threshold",
+        "never reinterpret Gaussian score as probability"
+      ],
+      "dependencies": [
+        "crt",
+        "gaussian",
+        "zone_gate",
+        "rr_engine"
+      ],
+      "falsification": "Fusion non-pivotal or engines information-inert",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "SEMANTIC_DRIFT",
+      "primary_code": [
+        "src/core/fusion_engine.py",
+        "src/core/decision_engine.py",
+        "src/core/engine_runner.py"
+      ],
+      "stage": "decision",
+      "stage_order": 9
+    },
+    {
+      "id": "qualification_gate",
+      "intent": "Does a candidate edge survive pre-registered statistical and economic gates?",
+      "hypothesis": "Formal gates prevent false promote.",
+      "inputs": [
+        "outcomes",
+        "cost model",
+        "QualConfig"
+      ],
+      "outputs": [
+        "EdgeReport",
+        "promote-style statuses"
+      ],
+      "semantic_meaning": "Research qualification, not live bar score",
+      "consumer": [
+        "research pipelines",
+        "promotion managers"
+      ],
+      "authority_boundary": "Research promotion recommendations only",
+      "explicit_non_goals": [
+        "never score live candles",
+        "never replace DecisionEngine"
+      ],
+      "dependencies": [
+        "research_runner",
+        "backtest"
+      ],
+      "falsification": "Gate always INSUFFICIENT or always PASS without power",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "ALIGNED",
+      "primary_code": [
+        "src/research/qualification.py"
+      ],
+      "stage": "measurement",
+      "stage_order": null
+    },
+    {
+      "id": "backtest",
+      "intent": "What ledger results from applying the spine to historical OHLCV under declared exits and costs?",
+      "hypothesis": "Deterministic replay measures whether intents achieve objectives.",
+      "inputs": [
+        "OHLCV",
+        "production config",
+        "exit/cost model"
+      ],
+      "outputs": [
+        "trades",
+        "metrics",
+        "events"
+      ],
+      "semantic_meaning": "Measurement of behaviour",
+      "consumer": [
+        "research",
+        "ConfigValidator",
+        "promotion evidence"
+      ],
+      "authority_boundary": "Measurement only",
+      "explicit_non_goals": [
+        "never change ontology meaning mid-run",
+        "never invent a second feature schema"
+      ],
+      "dependencies": [
+        "decision_fusion",
+        "crt",
+        "feature_pipeline"
+      ],
+      "falsification": "Non-determinism or lookahead",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "ALIGNED",
+      "primary_code": [
+        "src/runtime/backtest_v2.py"
+      ],
+      "stage": "measurement",
+      "stage_order": null
+    },
+    {
+      "id": "research_runner",
+      "intent": "Do pre-registered hypotheses survive qualification under honest measurement?",
+      "hypothesis": "Structured research compounds knowledge without contaminating production intent.",
+      "inputs": [
+        "protocols",
+        "candles",
+        "MIAR questions"
+      ],
+      "outputs": [
+        "findings",
+        "edge reports",
+        "nulls"
+      ],
+      "semantic_meaning": "Epistemic updates, not production scores",
+      "consumer": [
+        "findings ledger",
+        "funding decisions"
+      ],
+      "authority_boundary": "Research authority only until promotion",
+      "explicit_non_goals": [
+        "never hot-patch production intent without MIAR edit",
+        "never silently enable fusion models"
+      ],
+      "dependencies": [
+        "qualification_gate",
+        "backtest",
+        "market_ontology"
+      ],
+      "falsification": "Research pipeline cannot reproduce null/positive under protocol",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "ALIGNED",
+      "primary_code": [
+        "src/research/runner.py",
+        "src/research/qualification.py"
+      ],
+      "stage": "measurement",
+      "stage_order": null
+    }
+  ],
+  "sidecar_authority": {
+    "registered": "2026-07-29",
+    "rule": "A sidecar entry has ZERO spine authority BY CONTRACT. It may observe any stage output and may write telemetry; it may never appear in EXPECTED_ENGINES, never be returned by EngineRunner.run(), never gate, size, veto, or modify a decision, and never own a market_question_matrix row.",
+    "why_separate_from_entries": "The 17-entry spine register is reserved for engines that own a production market question (see design_only_concepts/envelope_post_entry_continuous_bounds for the precedent that protects that count). Sidecar models are EXECUTABLE and DO consume specialist evidence, so they are not DESIGN_ONLY either - they need real contracts, in particular explicit_non_goals, precisely because their output is decision-SHAPED while carrying no authority. This register is where that contract lives.",
+    "promotion_path": "A sidecar may only become a spine entry via a qualification protocol plus measured deltaG001 (the TN_QUAL_V1 precedent). Registration here grants nothing.",
+    "finding": "F-012 - ReplayMemory / CognitiveBus / Cluster / HMF are sidecar-only (zero spine consumption)."
+  },
+  "sidecar_entries": [
+    {
+      "id": "hierarchical_meta_fusion",
+      "intent": "How much capital would this opportunity deserve if every intelligence layer were weighed together?",
+      "hypothesis": "A weighted blend of zone, liquidity, RR, replay, market-state and TradeNet-meta evidence separates high- from low-allocation-quality opportunities.",
+      "inputs": [
+        "zone_gate score + passed flag",
+        "liquidity_pressure_score",
+        "liquidity_distance",
+        "rr_engine score",
+        "expected_rr",
+        "replay historical_winrate / cluster_stability / replay_density",
+        "market-state cluster_confidence / state_persistence / trap_probability",
+        "tradenet_meta capital_quality_score / allocation_confidence"
+      ],
+      "outputs": [
+        "opportunity_score",
+        "decision (ALLOW | REDUCE | REJECT)",
+        "per-layer breakdown"
+      ],
+      "semantic_meaning": "Advisory capital-allocation quality score - decision-SHAPED telemetry, never a decision",
+      "consumer": [
+        "CognitiveBus._process",
+        "logs/cognitive_telemetry.jsonl"
+      ],
+      "authority_boundary": "NONE. Advisory telemetry only; never returned by EngineRunner.run().",
+      "explicit_non_goals": [
+        "never enter EXPECTED_ENGINES",
+        "never gate, size, veto or modify a live decision",
+        "never be read as a calibrated probability (opportunity_score is ordinal)",
+        "never re-derive market structure - it consumes specialist outputs only",
+        "never become the sole consumer path for specialist evidence without a qualification protocol"
+      ],
+      "dependencies": [
+        "zone_gate",
+        "rr_engine",
+        "replay_memory",
+        "tradenet_meta"
+      ],
+      "falsification": "Layer weights never separate outcomes, or the blend tracks a single dominant layer (redundant meta-layer).",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "ALIGNED",
+      "primary_code": [
+        "src/core/hierarchical_meta_fusion.py"
+      ],
+      "stage": "measurement",
+      "stage_order": null,
+      "notes": "ARCHITECTURALLY LOAD-BEARING FOR DESIGN REVIEW: this is already a meta-model that consumes specialist evidence rather than raw features - the exact shape proposed for the BitNet redesign (see docs/architecture/bitnet-design-specification.md). Any new evidence-consumer layer must state whether it absorbs, replaces, or is scoped against HMF, or the repository ships two dormant meta-layers doing the same job."
+    },
+    {
+      "id": "tradenet_meta",
+      "intent": "What capital quality does the composite of prior engine outputs imply for this opportunity?",
+      "hypothesis": "TradeNet's p_win, combined with replay, regime and liquidity meta-context, estimates allocation quality better than p_win alone.",
+      "inputs": [
+        "TradeNet base p_win (35-dim model)",
+        "gaussian score",
+        "rr_engine score",
+        "zone_gate score",
+        "replay meta-context",
+        "regime",
+        "liquidity"
+      ],
+      "outputs": [
+        "capital_quality_score",
+        "allocation_confidence",
+        "authority tier (FULL | HALF | QUARTER)"
+      ],
+      "semantic_meaning": "Meta-cognition over engine outputs; an allocation-quality score, not a win probability",
+      "consumer": [
+        "HierarchicalMetaFusion layer 6"
+      ],
+      "authority_boundary": "NONE. Feeds an advisory sidecar only.",
+      "explicit_non_goals": [
+        "never enter EXPECTED_ENGINES",
+        "never size a real position despite emitting an authority tier",
+        "never be read as p_win (it consumes p_win, it does not restate it)",
+        "never classify market structure"
+      ],
+      "dependencies": [
+        "tradenet",
+        "replay_memory"
+      ],
+      "falsification": "capital_quality_score adds nothing over the base p_win it wraps.",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "ALIGNED",
+      "primary_code": [
+        "src/engines/tradenet_meta_engine.py"
+      ],
+      "stage": "measurement",
+      "stage_order": null,
+      "notes": "Wraps the same TradeNet artifact that is UNWIRED on the spine (F-005). Fail-safe contract: any exception or 100ms timeout returns allocation_confidence=0.0 / QUARTER authority; torch absent or no active model => base p_win = 0.5."
+    },
+    {
+      "id": "replay_memory",
+      "intent": "What happened historically in market states similar to the current one?",
+      "hypothesis": "Cluster-indexed historical opportunities, temporally decayed, provide a usable base rate for the current state.",
+      "inputs": [
+        "historical opportunity JSONL records",
+        "cluster assignment",
+        "current semantic state"
+      ],
+      "outputs": [
+        "historical_winrate",
+        "cluster_stability",
+        "replay_density"
+      ],
+      "semantic_meaning": "Historical base rate over similar states - institutional memory, not a forecast",
+      "consumer": [
+        "CognitiveBus._process",
+        "ReplayDriftGovernor.audit"
+      ],
+      "authority_boundary": "NONE. Read-only memory; advisory telemetry and drift audit only.",
+      "explicit_non_goals": [
+        "never enter EXPECTED_ENGINES",
+        "never be read as a forward probability",
+        "never mutate state after construction (deterministic, read-only after _load)",
+        "never source its base rate from an unvalidated outcome field"
+      ],
+      "dependencies": [
+        "feature_pipeline"
+      ],
+      "falsification": "Historical winrate over a cluster does not predict forward winrate for that cluster.",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "SEMANTIC_DRIFT",
+      "primary_code": [
+        "src/replay/replay_memory_engine.py"
+      ],
+      "stage": "measurement",
+      "stage_order": null,
+      "notes": "SEMANTIC_DRIFT because its source is the opportunity JSONL stream, which F-022 established is a DETECTION stream, not a trade ledger (outcome/rr only 36.8% self-consistent). historical_winrate is therefore computed over contaminated labels. Harmless while sidecar-only; blocking for any promotion path."
+    },
+    {
+      "id": "cognitive_bus",
+      "intent": "What advisory intelligence can be derived asynchronously without ever touching the execution plane?",
+      "hypothesis": "A decision snapshot can be enriched off the hot path with zero risk to determinism or latency.",
+      "inputs": [
+        "DecisionSnapshot events emitted by EngineRunner"
+      ],
+      "outputs": [
+        "logs/cognitive_telemetry.jsonl",
+        "logs/replay_queries.jsonl"
+      ],
+      "semantic_meaning": "Asynchronous transport and orchestration for the advisory sidecar pipeline",
+      "consumer": [
+        "telemetry files only"
+      ],
+      "authority_boundary": "NONE. Write-only telemetry; the 'cognitive' key is deliberately absent from the EngineRunner return dict.",
+      "explicit_non_goals": [
+        "never enter EXPECTED_ENGINES",
+        "never touch EngineRunner.run() internals",
+        "never return anything to the execution plane",
+        "never block the hot path (non-blocking emit; drops silently when the queue is full)",
+        "never let a sidecar exception propagate into a decision"
+      ],
+      "dependencies": [
+        "replay_memory",
+        "tradenet_meta",
+        "hierarchical_meta_fusion"
+      ],
+      "falsification": "Sidecar latency or exceptions observably perturb the spine ledger.",
+      "implementation_status": "EXECUTABLE",
+      "alignment": "ALIGNED",
+      "primary_code": [
+        "src/cognitive/cognitive_bus.py"
+      ],
+      "stage": "measurement",
+      "stage_order": null,
+      "notes": "Gated by config cognitive_layer.enabled. Single background daemon thread, queue maxsize 500, WARNING above a 5% drop rate. Backpressure drops are silent by design - telemetry loss is preferred over spine interference."
+    }
+  ],
+  "market_question_matrix": [
+    {
+      "question": "What structural state is the market in?",
+      "owner": "crt",
+      "secondary_consumers": [
+        "gaussian",
+        "tradenet",
+        "decision_fusion"
+      ]
+    },
+    {
+      "question": "How statistically conformant is this state to previously observed states?",
+      "owner": "gaussian",
+      "secondary_consumers": [
+        "decision_fusion"
+      ]
+    },
+    {
+      "question": "Is this inside a valid structural zone?",
+      "owner": "zone_gate",
+      "secondary_consumers": [
+        "decision_fusion"
+      ]
+    },
+    {
+      "question": "What is the candle commitment geometry?",
+      "owner": "rr_engine",
+      "secondary_consumers": [
+        "decision_fusion"
+      ]
+    },
+    {
+      "question": "Is this state semantically unsafe?",
+      "owner": "bitnet",
+      "secondary_consumers": [
+        "crt"
+      ]
+    },
+    {
+      "question": "What expected trading outcomes follow from this semantic state?",
+      "owner": "tradenet",
+      "secondary_consumers": []
+    },
+    {
+      "question": "What market regime exists?",
+      "owner": "regime",
+      "secondary_consumers": [
+        "crt",
+        "decision_fusion"
+      ]
+    },
+    {
+      "question": "Given all evidence, should this trade be approved?",
+      "owner": "decision_fusion",
+      "secondary_consumers": [
+        "execution_intent",
+        "backtest"
+      ]
+    }
+  ],
+  "design_only_concepts": [
+    {
+      "name": "RRPatternMiner_historical_evidence_retrieval",
+      "alignment": "DESIGN_ONLY",
+      "note": "No class RRPatternMiner; no neighbour retrieval. Module rr_pattern_miner.py is the parametric rr_trained stack only."
+    },
+    {
+      "name": "envelope_post_entry_continuous_bounds",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-07-28",
+      "market_question": "What post-entry continuous bounds (MFE/MAE-style) follow from an entry?",
+      "note": "EnvelopeNet has an EXECUTABLE OFFLINE path (research.envelope_offline.shadow.predict_heads; four independent joblib heads y_mfe_r / y_mae_r_heat / y_holding_bars / y_time_to_mfe over a 38-dim legacy vector) and is runnable via the model_runners harness as model_id 'envelope'. It is DESIGN_ONLY with respect to its PRODUCTION intent: no wired consumer, decision_weight conceptually 0, no MIAR owner row, no measured G001. Registered here rather than as an 18th engine entry because it owns no production market question; the 17-entry spine register is unchanged. Distinct from the RRPatternMiner case above, which has NO executable path at all. Reopen as a full entry only via a qualification protocol + measured deltaG001 (the TN_QUAL_V1 precedent for tradenet).",
+      "primary_code": [
+        "src/research/envelope_offline/shadow.py",
+        "src/research/model_runners/adapters/envelope_net.py"
+      ],
+      "explicit_non_goals": [
+        "Never influence live entry/exit decisions",
+        "Never be read as a calibrated probability (heads are regression outputs)",
+        "Never synthesise a composite score across heads"
+      ],
+      "authority_boundary": "research/observation only; grants no fusion, sizing, or production authority (CLAUDE.md 6.5)"
+    }
+  ],
+  "stages": [
+    "substrate",
+    "market_understanding",
+    "opportunity_understanding",
+    "safety",
+    "decision",
+    "execution",
+    "measurement"
+  ],
+  "locked_vocabulary": {
+    "structure": "Current market organization inferred from OHLCV",
+    "regime": "Persistent market behavior over time",
+    "familiarity_conformity": "Statistical conformity to historical states (not profitability)",
+    "similarity": "Distance between semantic market states",
+    "zone": "Structural price or feature neighbourhood, not profitability",
+    "commitment": "Strength of directional candle behavior",
+    "quality": "Must always be qualified (structural, execution, trade-outcome)",
+    "probability": "Calibrated chance an event occurs",
+    "score": "Ordinal value without probabilistic interpretation",
+    "confidence": "Reliability of the models own output, not chance of trade success",
+    "expectancy": "Expected future outcome under the models assumptions",
+    "pattern": "Defined semantic configuration of OHLCV-derived features"
+  },
+  "pipeline_sequence": {
+    "stage_1_market_understanding": [
+      "crt",
+      "gaussian",
+      "zone_gate",
+      "rr_engine",
+      "regime"
+    ],
+    "stage_2_opportunity_understanding": [
+      "tradenet",
+      "rr_trained"
+    ],
+    "stage_3_safety": [
+      "bitnet"
+    ],
+    "stage_4_decision": [
+      "decision_fusion"
+    ],
+    "stage_5_execution": [
+      "execution_intent"
+    ]
+  },
+  "alignment_workflow": {
+    "start_with": "crt",
+    "steps": [
+      "freeze semantic contract",
+      "agree intent and non-goals",
+      "audit implementation",
+      "resolve drift",
+      "lock and advance"
+    ],
+    "recommended_order_after_crt": [
+      "gaussian",
+      "zone_gate",
+      "rr_engine",
+      "regime",
+      "tradenet",
+      "rr_trained",
+      "bitnet",
+      "decision_fusion",
+      "execution_intent"
+    ]
+  }
+}

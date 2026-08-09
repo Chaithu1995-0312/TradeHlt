@@ -1,0 +1,126 @@
+{
+  "_doc": "Gate-6 Repository Construction Contract — machine-readable change-class registry. Every repository change declares its classes in a BUILD_IMPACT_MANIFEST; scripts/governance/construction_protocol.py validates manifests and RUNS the required checks (results are never log-trusted). Checks are pytest node paths or scripts. Extend classes here + tests/test_construction_protocol.py together.",
+  "version": 1,
+  "manifest_dir": "docs/governance/build_manifests",
+  "change_classes": {
+    "FEATURE_IDENTITY_CHANGE": {
+      "description": "Add/rename/retire a governed feature identity (FM-id, lifecycle, name).",
+      "authorities_to_inspect": ["configs/formulas/market_ontology.yaml", "src/features/registry/", "docs/governance/geometry_census.jsonl", "active_models.yaml"],
+      "artifacts_to_update": ["configs/formulas/market_ontology.yaml", "docs/governance/geometry_census.jsonl", "docs/governance/geometry_semantic_adjudication.jsonl"],
+      "required_checks": ["tests/test_formula_registry.py", "tests/test_feature_lineage.py", "tests/test_geometry_census.py", "tests/test_gate2b_closure.py"],
+      "rollback_boundary": "revert ontology + registry + regenerated artifacts in one commit",
+      "completion_criteria": "all required checks green; census fresh; lineage exhaustive"
+    },
+    "FORMULA_CHANGE": {
+      "description": "Change the mathematics of a registered formula or add a new one.",
+      "authorities_to_inspect": ["configs/formulas/market_ontology.yaml", "src/features/candle_math.py", "src/features/derived_math.py", "docs/governance/geometry_census.jsonl"],
+      "artifacts_to_update": ["configs/formulas/market_ontology.yaml", "docs/governance/geometry_census.jsonl", "docs/governance/geometry_semantic_adjudication.jsonl"],
+      "required_checks": ["tests/test_candle_math.py", "tests/test_derived_math.py", "tests/test_formula_registry.py", "tests/test_feature_math_lint.py", "tests/test_geometry_census.py", "tests/test_gate2b_closure.py"],
+      "rollback_boundary": "single commit; parity floors define byte-equivalence evidence",
+      "completion_criteria": "parity + lint + census-fresh green; threshold recalibration flagged if active denominator changed"
+    },
+    "DERIVED_METRIC_CHANGE": {
+      "description": "Add/change a deterministic derived metric (ATR/price-relative).",
+      "authorities_to_inspect": ["configs/formulas/market_ontology.yaml", "src/features/derived_math.py", "src/features/feature_pipeline.py"],
+      "artifacts_to_update": ["configs/formulas/market_ontology.yaml", "docs/governance/geometry_census.jsonl"],
+      "required_checks": ["tests/test_derived_math.py", "tests/test_formula_registry.py", "tests/test_feature_lineage.py", "tests/test_geometry_census.py"],
+      "rollback_boundary": "single commit",
+      "completion_criteria": "pipeline<->scalar parity green; lifecycle set; census fresh"
+    },
+    "DATASET_SCHEMA_CHANGE": {
+      "description": "Change CANONICAL_FEATURES / feature vector schema / dataset builders.",
+      "authorities_to_inspect": ["src/features/feature_schema.py", "src/training/stage1_dataset_builder.py", "docs/reference/schemas.md"],
+      "artifacts_to_update": ["docs/reference/schemas.md", "results/baseline (baseline_capture rerun)"],
+      "required_checks": ["tests/test_feature_pipeline.py", "tests/test_feature_lineage.py", "tests/test_active_models_registry.py"],
+      "rollback_boundary": "schema hash is load-bearing — baseline_capture required before training",
+      "completion_criteria": "schema hash re-baselined; lineage green"
+    },
+    "MODEL_INPUT_CHANGE": {
+      "description": "Change which features/values feed a model at train or serve time.",
+      "authorities_to_inspect": ["active_models.yaml", "docs/governance/geometry_semantic_adjudication.jsonl", "src/features/feature_schema.py"],
+      "artifacts_to_update": ["active_models.yaml"],
+      "required_checks": ["tests/test_active_models_registry.py", "tests/test_feature_lineage.py", "tests/test_geometry_census.py"],
+      "rollback_boundary": "single commit; train/serve-skew check mandatory (F-050 lesson)",
+      "completion_criteria": "lineage updated; train-time and serve-time sources named + identical or skew documented"
+    },
+    "MODEL_TRAINING_CHANGE": {
+      "description": "Change training pipelines/datasets/labels.",
+      "authorities_to_inspect": ["src/training/", "docs/reference/schemas.md", "docs/current-findings.md (F-022 label contamination)"],
+      "artifacts_to_update": ["active_models.yaml (evidence block)"],
+      "required_checks": ["tests/test_active_models_registry.py", "tests/test_current_findings.py"],
+      "rollback_boundary": "training artifacts versioned via model_registry GOV-3 atomic promotion",
+      "completion_criteria": "label provenance documented (forward_walk vs F-022 stream); no silent label reuse"
+    },
+    "MODEL_ARTIFACT_CHANGE": {
+      "description": "Add/replace a serialized model artifact.",
+      "authorities_to_inspect": ["active_models.yaml", "models/", "src/models/model_registry.py"],
+      "artifacts_to_update": ["active_models.yaml", "models/ registry manifests"],
+      "required_checks": ["tests/test_active_models_registry.py", "tests/test_zone_manifest_runtime_parity.py"],
+      "rollback_boundary": "model_registry atomic promotion + archived predecessor",
+      "completion_criteria": "manifest<->runtime parity green (F-041 invariant)"
+    },
+    "ACTIVE_MODEL_CHANGE": {
+      "description": "Activate/deactivate/rewire a model in the live/backtest spine.",
+      "authorities_to_inspect": ["active_models.yaml", "configs/production/ACTIVE_VERSION + active config", "docs/current-findings.md"],
+      "artifacts_to_update": ["active_models.yaml", "docs/current-findings.md if a finding changes"],
+      "required_checks": ["tests/test_active_models_registry.py", "tests/test_current_findings.py", "tests/test_config_reachability.py"],
+      "rollback_boundary": "config-first: activation via config keys, never code branches (§6.5)",
+      "completion_criteria": "registry + config + findings consistent; §6.5 authority ladder respected"
+    },
+    "PRODUCTION_CONFIG_CHANGE": {
+      "description": "Change configs/production/* or ACTIVE_VERSION.",
+      "authorities_to_inspect": ["configs/production/ACTIVE_VERSION", "src/config_layer/config_builder.py schema", "docs/reference/config-reference.md"],
+      "artifacts_to_update": ["config hash via scripts/maintenance/_compute_hash.py (params changes)", "docs/reference/config-reference.md"],
+      "required_checks": ["tests/test_config_reachability.py", "tests/test_reachability_golden.py", "tests/test_active_models_registry.py"],
+      "rollback_boundary": "archived {version}_archived_{ts}.json + promotion_log.jsonl",
+      "completion_criteria": "USER APPROVAL required (active-config edits are always user-gated); reachability green; hash valid"
+    },
+    "RUNTIME_DECISION_PATH_CHANGE": {
+      "description": "Change gates/engines/fusion/decision/planner/risk behavior.",
+      "authorities_to_inspect": ["docs/architecture/signal-flow.md", "docs/current-findings.md (F-036/F-037/F-048)", "docs/governance/geometry_semantic_adjudication.jsonl"],
+      "artifacts_to_update": ["docs/architecture/signal-flow.md if flow changes", "docs/current-findings.md"],
+      "required_checks": ["tests/test_feature_math_lint.py", "tests/test_geometry_census.py", "tests/test_current_findings.py"],
+      "rollback_boundary": "determinism gate: 2-instrument byte-identical ledger unless behavior change is the declared intent",
+      "completion_criteria": "behavior-change declared + finding filed OR parity proof (byte-identical)"
+    },
+    "DEAD_CODE_REMOVAL": {
+      "description": "Delete code proven unreachable.",
+      "authorities_to_inspect": ["docs/governance/geometry_semantic_adjudication.jsonl (reachability)", "grep call sites"],
+      "artifacts_to_update": ["docs/governance/geometry_census.jsonl (regenerate)", "grandfather retirement manifest if a GD site"],
+      "required_checks": ["tests/test_geometry_census.py", "tests/test_feature_math_lint.py"],
+      "rollback_boundary": "single commit; §6.2 rule 4 (preserve history in git, mark superseded in docs)",
+      "completion_criteria": "0-caller evidence cited; census fresh after removal"
+    },
+    "DOCUMENTATION_ONLY": {
+      "description": "Docs/comments/findings text only — no behavior surface.",
+      "authorities_to_inspect": ["docs/knowledge-map.md (owning doc first, §6.2 rule 1)"],
+      "artifacts_to_update": ["the owning doc; citations"],
+      "required_checks": ["tests/test_current_findings.py", "tests/test_doc_citations.py", "tests/test_topic_docs.py"],
+      "rollback_boundary": "single commit",
+      "completion_criteria": "doc floors green; no src/config diff (validator enforces)"
+    },
+    "SCRIPT_LIFECYCLE_CHANGE": {
+      "description": "Add/move/classify/retire a script registry record or related SITS artifacts; register new scripts under scripts/** or repo-root *.py.",
+      "authorities_to_inspect": [
+        "src/governance/script_registry.py",
+        "scripts/governance/seed_script_registry.py",
+        "docs/governance/script_registry_stubs.jsonl",
+        "docs/governance/script_registry_grandfather.json",
+        "docs/reference/conventions.md",
+        "src/control_plane/registry.py"
+      ],
+      "artifacts_to_update": [
+        "docs/governance/script_registry_stubs.jsonl and/or seed overlays",
+        "docs/reference/script-matrix.md (regenerate)",
+        "docs/reference/schemas.md §9.8 if schema changes"
+      ],
+      "required_checks": [
+        "tests/test_script_registry.py",
+        "tests/test_script_matrix_sync.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "rollback_boundary": "single commit; stubs + overlays + grandfather pin are PRIMARY",
+      "completion_criteria": "tests/test_script_registry.py green (coverage + grandfather ratchet); seed dump deterministic; every declared new scripts/**/*.py or root *.py path present in registry non-terminal records with purpose != GRANDFATHER_UNCLASSIFIED"
+    }
+  }
+}

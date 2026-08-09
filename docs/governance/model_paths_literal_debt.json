@@ -1,0 +1,251 @@
+{
+  "version": 1,
+  "description": "Grandfathered models/ path-literal debt outside ModelPaths. Ratchet: unauthorized hits must match this set; shrink only (never grow) without an explicit debt-file edit under review.",
+  "scan_roots": [
+    "src"
+  ],
+  "approved_modules": [
+    "src/config_layer/model_paths.py",
+    "src/config_layer/model_resolver.py",
+    "src/utils/zone_schema_migrator.py",
+    "tests/**",
+    "scripts/**/*migrat*",
+    "scripts/**/convert_zones*",
+    "**/zone_schema_migrator.py"
+  ],
+  "match_rule": "AST string Constant containing models/ (backslash normalized to /)",
+  "debt": [
+    {
+      "file": "src/bitnet/_smoke_test.py",
+      "literal": "models/zone_registry_nonexistent.json",
+      "count": 1
+    },
+    {
+      "file": "src/bitnet/bitnet_registry.py",
+      "literal": "...elected \u2260 Enabled).\n\nCatalog lives at ``models/bitnet/bitnet_registry.json`` (ModelPaths.BITNET_REGISTRY).\n\nContracts\n---------\n* **Exists** \u2014 entry prese...",
+      "count": 1
+    },
+    {
+      "file": "src/bitnet/bitnet_registry.py",
+      "literal": "models/bitnet/bitnet_registry.json",
+      "count": 1
+    },
+    {
+      "file": "src/bitnet/composition.py",
+      "literal": "...l_path`` argument wins.\n      2. Else ``models/bitnet/bitnet_registry.json`` composition_default / selection.\n      3. Else historical ``model.json``.\n   ...",
+      "count": 1
+    },
+    {
+      "file": "src/bitnet/forward_tester.py",
+      "literal": "...ter.validate(zones, X, y_rr, y_win)\n\n    # One-shot convenience\n    results = run_forward_test(zones, X, y_rr, y_win, output_path=\"models/fwd_test.json\")\n",
+      "count": 1
+    },
+    {
+      "file": "src/bitnet/forward_tester.py",
+      "literal": "models/forward_test_results.json",
+      "count": 1
+    },
+    {
+      "file": "src/cognitive/cognitive_bus.py",
+      "literal": "models/zone_registry.json",
+      "count": 1
+    },
+    {
+      "file": "src/config_layer/rr/rr_dataset_builder.py",
+      "literal": "models/rr_dataset.json",
+      "count": 2
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "./models/bitnet_b1_58_70b.gguf",
+      "count": 1
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "Each run saves a versioned models/rr_dataset_{version}.json + updates rr_registry.json.",
+      "count": 1
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "Each run saves a versioned models/rr_model_{version}.json + updates rr_registry.json.",
+      "count": 1
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "Output model path (default: models/rr_model_{version}.json)",
+      "count": 1
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "Output: models/zone_registry_kmeans.json \u2014 loaded by the Zone Gate engine at runtime.",
+      "count": 1
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "Use --promote to set as active and update canonical models/rr_model.json for the runtime.",
+      "count": 1
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "Write to models/zone_registry.json",
+      "count": 1
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "models/bitnet",
+      "count": 1
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "models/bitnet/**/*.json",
+      "count": 2
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "models/gaussian_*.json",
+      "count": 4
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "models/rr_dataset.json",
+      "count": 1
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "models/rr_dataset_*.json",
+      "count": 2
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "models/rr_model_*.json",
+      "count": 1
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "models/rr_registry.json",
+      "count": 2
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "models/zone_gate_registry.json",
+      "count": 1
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "models/zone_registry.json",
+      "count": 2
+    },
+    {
+      "file": "src/control_plane/registry.py",
+      "literal": "models/zone_registry_*.json",
+      "count": 2
+    },
+    {
+      "file": "src/core/engine_runner.py",
+      "literal": "models/zone_registry.json",
+      "count": 1
+    },
+    {
+      "file": "src/core/model_registry.py",
+      "literal": "... order for the model file:\n      1. registry entry's `model_file` field (if present and exists)\n      2. convention: `models/gaussian_{version}.json`\n    ",
+      "count": 1
+    },
+    {
+      "file": "src/core/model_registry.py",
+      "literal": "...hat phase5_calibration.py emits in\n    `models/gaussian_{version}.json`:\n      {schema_version, schema_checksum, feature_names, n_features, n_classes,\n   ...",
+      "count": 1
+    },
+    {
+      "file": "src/core/model_registry.py",
+      "literal": "...oying a worse model.\n\nRegistry lives at models/registry.json.\nActive model name lives at models/active.txt.\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550...",
+      "count": 1
+    },
+    {
+      "file": "src/engines/heuristic_gaussian_engine.py",
+      "literal": "models/gaussian_registry.json",
+      "count": 1
+    },
+    {
+      "file": "src/engines/live_engine.py",
+      "literal": "...\n        WHY THIS EXISTS (2026-07-22). `models/zone_registry.json` has always stored a\n        `feature_order` name list alongside the zone vectors, but N...",
+      "count": 1
+    },
+    {
+      "file": "src/engines/live_engine.py",
+      "literal": "...       gate = BitNetZoneGate.from_path(\"models/zone_registry.json\")\n\n        decision = gate.check(features)\n        # {\"allowed\": True/False, \"score\": 0....",
+      "count": 1
+    },
+    {
+      "file": "src/engines/live_engine.py",
+      "literal": "models/bitnet",
+      "count": 1
+    },
+    {
+      "file": "src/engines/live_engine.py",
+      "literal": "models/zone_registry.json",
+      "count": 2
+    },
+    {
+      "file": "src/engines/zone_gate_engine.py",
+      "literal": "...he registry's own top-level name list (`models/zone_registry.json`\n    -> `feature_order`). When supplied it is AUTHORITATIVE: the vector is assembled by ...",
+      "count": 1
+    },
+    {
+      "file": "src/governance/bitnet_governance_executor.py",
+      "literal": "./models/bitnet_b1_58_70b.gguf",
+      "count": 1
+    },
+    {
+      "file": "src/governance/orchestrator.py",
+      "literal": "...tnet/bin/main\n      --model-path      ./models/bitnet_b1_58_70b.gguf\n      --audit-log       logs/governance_audit.jsonl\n      --prompt-path     logs/meta...",
+      "count": 1
+    },
+    {
+      "file": "src/governance/orchestrator.py",
+      "literal": "./models/bitnet_b1_58_70b.gguf",
+      "count": 2
+    },
+    {
+      "file": "src/replay/replay_memory_engine.py",
+      "literal": "...                  (RME per-instrument / models/replay/*.json)\n          schema_version=\"v2_gaussian\" \u2192 zone[\"id\"] is a \"zone_N\" string; the cluster id\n   ...",
+      "count": 1
+    },
+    {
+      "file": "src/replay/replay_memory_engine.py",
+      "literal": "models/zone_registry.json",
+      "count": 1
+    },
+    {
+      "file": "src/research/model_runners/adapters/__init__.py",
+      "literal": "gaussian_ml requires --artifact (trained GaussianNB json under models/)",
+      "count": 1
+    },
+    {
+      "file": "src/research/model_runners/adapters/gaussian_ml.py",
+      "literal": "...n_impl``.\nThis offline model_id **never reads that flag**. Scoring requires an explicit\n``--artifact`` path to a trained GaussianNB bundle under models/.\n",
+      "count": 1
+    },
+    {
+      "file": "src/research/zone_label_audit.py",
+      "literal": "...eferred F-041 Go/No-Go: are the stored `models/zone_registry.json` zone labels\n(~98% SL-hit / 6-of-8 negative mean_rr) HONEST intrabar_fixed outcomes, or ...",
+      "count": 1
+    },
+    {
+      "file": "src/training/train_pipeline.py",
+      "literal": "...e, schema, metrics)\n         Persist to models/gaussian_registry.json.\n    8. model_registry.promote_gaussian(version)  (if promote=True)\n         Promote...",
+      "count": 1
+    },
+    {
+      "file": "src/training/trainer.py",
+      "literal": "\n    Load a Gaussian model bundle from models/<name>.\n\n    Schema contract (P0 2026-07-22 \u2014 ``features.gaussian_schema_contract``):\n      * saved ``featur...",
+      "count": 1
+    },
+    {
+      "file": "src/training/trainer.py",
+      "literal": "...gside a TradeNet model.\n\n    Looks for  models/{stem}_scaler.json  next to the .pth file.\n    Returns None if no scaler file exists (backward-compatible: ...",
+      "count": 1
+    }
+  ],
+  "debt_pair_count": 46,
+  "debt_occurrence_count": 57
+}

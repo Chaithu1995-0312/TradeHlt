@@ -1,0 +1,339 @@
+{
+  "_doc": "Closure & Authority Index — machine-readable navigation registry. CLAUDE.md §6.2b is the always-loaded human index; detailed proof stays in each surface's authoritative artifact. This file is NOT itself a closure proof: only the named authoritative_artifact establishes closure for the declared boundary. Index schema version is independent of any economic finding.",
+  "schema_version": "1.0.0",
+  "generated_at_utc": "2026-07-11T00:00:00Z",
+  "invariant": "CLOSURE IS BOUNDARY-SCOPED AND NON-TRANSITIVE.",
+  "distinctions": [
+    "AUDITED != CLOSED",
+    "LINEAGE CLOSED != ECONOMICALLY VALIDATED",
+    "UPSTREAM CLOSED != DOWNSTREAM CLOSED"
+  ],
+  "non_transitivity": {
+    "rule": "A CLOSED upstream subsystem does not make a downstream join, query surface, model, artifact, or decision path CLOSED. Only the named authoritative_artifact establishes closure for the declared boundary.",
+    "examples": [
+      "CRT CLOSED does not close Gaussian, ZoneGate, RR, BitNet, or TradeNet lineage",
+      "CANONICAL_FEATURE_CODE_SURFACE CLOSED does not authorize RR/Zone economic reuse or model enablement",
+      "Geometry Gate-5 COMPLETE does not close Feature Query Surface or model lineages",
+      "Feature Query Surface authority does not close any producer, consumer, or model path"
+    ]
+  },
+  "allowed_status": [
+    "CLOSED",
+    "COMPLETE",
+    "AUDITED",
+    "AUTHORITY_ACTIVE",
+    "BLOCKED",
+    "OPEN"
+  ],
+  "reopen_policy_default_closed": {
+    "frozen": true,
+    "policy": "A CLOSED surface may be reopened only when one of reopen_conditions fires; residual non-blockers listed in the authoritative artifact do not reopen closure.",
+    "conditions": [
+      "governed code/config/artifact dependencies inside the declared boundary change",
+      "a closure invariant or mechanical check fails",
+      "new contradictory evidence invalidates the closure claim",
+      "the authoritative closure artifact defines an explicit revalidation condition that fires"
+    ]
+  },
+  "surfaces": [
+    {
+      "surface_id": "CRT",
+      "surface_name": "CRT closure",
+      "status": "CLOSED",
+      "status_detail": "CRT_CLOSURE_STATUS=CLOSED (Phase 8 post CH-002)",
+      "scope_boundary": "OHLCV → CRT TRADE_OPENED only (executable CRT surface, formulas, state graph, diversions, config reachability, candidate provenance, adversarial suite). Does NOT include EngineRunner admission, DecisionEngine low_rr, live SM wiring, or model training lineages.",
+      "authoritative_artifact": "docs/governance/crt_closure_report.md",
+      "status_token": "CRT_CLOSURE_STATUS = CLOSED",
+      "frozen": true,
+      "reopen_policy": "boundary_scoped_default",
+      "reopen_conditions": [
+        "governed CRT code/config/formula dependencies inside OHLCV→TRADE_OPENED change",
+        "CRT adversarial/closure/formula mechanical checks fail",
+        "new contradictory evidence invalidates CRT_CLOSURE_STATUS=CLOSED",
+        "construction-protocol change explicitly requires re-running CRT Phases 1–8"
+      ],
+      "upstream_surfaces": [],
+      "downstream_not_implied_closed": [
+        "GAUSSIAN_LINEAGE",
+        "ZONEGATE_LINEAGE",
+        "RR_LINEAGE",
+        "BITNET_LINEAGE",
+        "TRADENET_LINEAGE",
+        "FEATURE_QUERY_SURFACE"
+      ],
+      "economically_validated": false,
+      "notes": "Residual non-blockers (OI-ER-001, OI-F048-E2E, live SM, historical JSONL keys) do not reopen CRT CLOSED."
+    },
+    {
+      "surface_id": "GEOMETRY_STATIC_LINEAGE",
+      "surface_name": "Geometry static lineage (Gate 5)",
+      "status": "COMPLETE",
+      "status_detail": "Gate 5 static lineage evidence packaged; decision_reachable UNKNOWNs pinned to 3 (F-048-blocked). Not boundary CLOSED.",
+      "scope_boundary": "Static geometry derivation-site lineage packaging: adjudication matrix reachability (training/artifact/score/decision), Gate-5 UNKNOWN collapse evidence, F-050/CS-3/model-artifact/live-hook/aux-column chains. Does NOT close model training lineages, DecisionEngine F-048, economic edge, or feature-code identity beyond cited geometry sites.",
+      "authoritative_artifact": "docs/governance/geometry_static_lineage_report.md",
+      "status_token": "Gate 5 was declared complete",
+      "frozen": false,
+      "reopen_policy": "not_closed_advancement",
+      "reopen_conditions": [
+        "not CLOSED — further Gate-5 work is advancement/re-packaging, not reopening a CLOSED boundary",
+        "governed derivation-surface count changes require census/adjudication + Gate-5 report addendum (see 2026-07-11 110→115 addendum)",
+        "mechanical Gate-5 validator failures (tests/test_gate5_lineage_report.py)"
+      ],
+      "upstream_surfaces": [],
+      "downstream_not_implied_closed": [
+        "CANONICAL_FEATURE_CODE_SURFACE",
+        "FEATURE_QUERY_SURFACE",
+        "GAUSSIAN_LINEAGE",
+        "ZONEGATE_LINEAGE",
+        "RR_LINEAGE",
+        "BITNET_LINEAGE",
+        "TRADENET_LINEAGE"
+      ],
+      "economically_validated": false,
+      "notes": "AUDITED/COMPLETE != CLOSED. Supporting matrix: geometry_semantic_adjudication.jsonl; floor tests/test_gate5_lineage_report.py."
+    },
+    {
+      "surface_id": "CANONICAL_FEATURE_CODE_SURFACE",
+      "surface_name": "Canonical Feature Code Surface",
+      "status": "CLOSED",
+      "status_detail": "CANONICAL_FEATURE_CODE_SURFACE_STATUS=CLOSED (38/0/0/0)",
+      "scope_boundary": "The 38-dim CANONICAL_FEATURES code surface: formula/PIT/producer write-sites/doc alignment/ontology aliases for vector members after FC1-A+FC1-D. Does NOT close economic admissibility of existing RR/Zone artifacts, model enablement, ΔG001 claims, or Feature Query Surface as a product boundary.",
+      "authoritative_artifact": "docs/governance/canonical_feature_code_surface_closure-2026-07-11.md",
+      "status_token": "CANONICAL_FEATURE_CODE_SURFACE_STATUS = CLOSED",
+      "supporting_artifacts": [
+        "docs/governance/feature_surface_closure_audit-2026-07-11.json",
+        "docs/governance/feature_surface_closure_audit-2026-07-11.md"
+      ],
+      "frozen": true,
+      "reopen_policy": "boundary_scoped_default",
+      "reopen_conditions": [
+        "governed feature-pipeline / ontology / identity-registry / FC1 contract code inside the 38-dim boundary changes",
+        "feature_surface_closure_audit or related mechanical floors fail",
+        "new contradictory evidence invalidates CANONICAL_FEATURE_CODE_SURFACE_STATUS=CLOSED",
+        "authoritative gate note defines an explicit revalidation that fires"
+      ],
+      "upstream_surfaces": [
+        "GEOMETRY_STATIC_LINEAGE"
+      ],
+      "downstream_not_implied_closed": [
+        "FEATURE_QUERY_SURFACE",
+        "FEATURE_LAYER_MUTATION_FREEZE",
+        "GAUSSIAN_LINEAGE",
+        "ZONEGATE_LINEAGE",
+        "RR_LINEAGE",
+        "BITNET_LINEAGE",
+        "TRADENET_LINEAGE"
+      ],
+      "economically_validated": false,
+      "notes": "LINEAGE/CODE CLOSED != ECONOMICALLY VALIDATED. RR/Zone remain PIT_UNCLEAN_CENTERED_SWINGS (separate state machine)."
+    },
+    {
+      "surface_id": "FEATURE_LAYER_MUTATION_FREEZE",
+      "surface_name": "Feature layer mutation freeze",
+      "status": "COMPLETE",
+      "status_detail": "FEATURE_LAYER_MUTATION_FREEZE=ACTIVE (2026-07-20); identity exhausted + mutation freeze + vector regression pin; FEATURE_PROGRAM_CLOSED remains NO",
+      "scope_boundary": "Mutation freeze over feature math/ontology/38-dim emission/source pins after the 2026-07-18/19 feature-governance queue. Mechanical regression: XAUUSD window + BNB head-2000 float32 vector SHAs. Does NOT close L6 activation, does NOT clear M16 BLOCKS_ACTIVATION debts, does NOT grant economic authority. Explicit accepted future programs may waive under named plans only.",
+      "authoritative_artifact": "docs/governance/feature-layer-mutation-freeze-2026-07-20.md",
+      "status_token": "FEATURE_LAYER_MUTATION_FREEZE = ACTIVE",
+      "supporting_artifacts": [
+        "docs/governance/feature-layer-freeze-pin-2026-07-20.json",
+        "tests/test_feature_layer_freeze.py",
+        "docs/implementation_plan/backtest-runtime-roadmap-2026-07-20.md"
+      ],
+      "frozen": true,
+      "reopen_policy": "accepted_future_program_or_user_waiver",
+      "reopen_conditions": [
+        "an accepted future program listed in the freeze pin is opened under construction protocol",
+        "user approves adding a new future-program id to the freeze pin",
+        "mechanical freeze floor fails and requires intentional pin update in the same change set",
+        "new contradictory evidence shows the freeze pin no longer represents runtime feature emission"
+      ],
+      "upstream_surfaces": [
+        "CANONICAL_FEATURE_CODE_SURFACE"
+      ],
+      "downstream_not_implied_closed": [
+        "FEATURE_QUERY_SURFACE",
+        "GAUSSIAN_LINEAGE",
+        "ZONEGATE_LINEAGE",
+        "RR_LINEAGE",
+        "BITNET_LINEAGE",
+        "TRADENET_LINEAGE"
+      ],
+      "economically_validated": false,
+      "notes": "COMPLETE + frozen mutation guard != FEATURE_PROGRAM_CLOSED and != L6 ACTIVATION. Engineering focus shifts to backtest/runtime roadmap."
+    },
+    {
+      "surface_id": "FEATURE_QUERY_SURFACE",
+      "surface_name": "Feature Query Surface",
+      "status": "AUTHORITY_ACTIVE",
+      "status_detail": "Read-only join API over existing governance artifacts; surface_status reflects CANONICAL closed rollup but query surface itself is not a CLOSED domain.",
+      "scope_boundary": "LLM/agent read-model: FEATURE_ID ↔ formula ↔ producers/consumers ↔ config tokens ↔ PIT ↔ closure status via scripts/governance/feature_surface_query.py. Authority for joined *presentation* of existing artifacts only. Does NOT produce new census truth, does NOT close producers/consumers/models, does NOT grant economic authority.",
+      "authoritative_artifact": "scripts/governance/feature_surface_query.py",
+      "status_token": "LLM-facing read-only query API over the feature surface",
+      "supporting_artifacts": [
+        "tests/test_feature_surface_query.py"
+      ],
+      "frozen": false,
+      "reopen_policy": "not_closed_advancement",
+      "reopen_conditions": [
+        "not CLOSED — query-tool changes are governance tooling, not reopen of a CLOSED boundary",
+        "joined artifact paths missing or surface_status drift vs canonical gate require query/tool fix, not domain re-closure"
+      ],
+      "upstream_surfaces": [
+        "CANONICAL_FEATURE_CODE_SURFACE"
+      ],
+      "downstream_not_implied_closed": [
+        "GAUSSIAN_LINEAGE",
+        "ZONEGATE_LINEAGE",
+        "RR_LINEAGE",
+        "BITNET_LINEAGE",
+        "TRADENET_LINEAGE"
+      ],
+      "economically_validated": false,
+      "notes": "UPSTREAM CLOSED != DOWNSTREAM CLOSED: query may report surface CLOSED without being CLOSED itself."
+    },
+    {
+      "surface_id": "GAUSSIAN_LINEAGE",
+      "surface_name": "Gaussian lineage audit",
+      "status": "AUDITED",
+      "status_detail": "GAUSSIAN_LINEAGE_VERDICT=DUAL_TRACK (live heuristic ALIGNED; trained ML INERT on active config)",
+      "scope_boundary": "Post-CH-002 observational audit of Gaussian training→artifact→inference→runtime tracks (heuristic live vs ML registry). Does NOT close Gaussian as a production authority surface; grants NO retrain/promote authority.",
+      "authoritative_artifact": "docs/governance/gaussian_lineage_audit.md",
+      "status_token": "GAUSSIAN_LINEAGE_VERDICT = DUAL_TRACK",
+      "frozen": false,
+      "reopen_policy": "not_closed_audited",
+      "reopen_conditions": [
+        "not CLOSED — AUDITED != CLOSED; further work advances lineage/remediation, does not reopen a CLOSED surface",
+        "re-audit if gaussian_impl wiring, train pipeline, or registry contract changes"
+      ],
+      "upstream_surfaces": [
+        "CRT"
+      ],
+      "downstream_not_implied_closed": [],
+      "economically_validated": false,
+      "notes": "Prerequisite CRT CLOSED is non-transitive. NO_AUTHORITY for retrain/promote."
+    },
+    {
+      "surface_id": "ZONEGATE_LINEAGE",
+      "surface_name": "ZoneGate lineage audit",
+      "status": "AUDITED",
+      "status_detail": "ZONEGATE_LINEAGE_STATUS=ACTIVE_GEOMETRIC + NO_MARGINAL_VALUE",
+      "scope_boundary": "Post-CH-002 observational audit of ZoneGate train→registry→HARD-gate runtime path and marginal-value claims (F-036/F-041B). Does NOT close ZoneGate; does NOT authorize retrain or fusion weight changes.",
+      "authoritative_artifact": "docs/governance/zonegate_lineage_audit.md",
+      "status_token": "ZONEGATE_LINEAGE_STATUS  = ACTIVE_GEOMETRIC + NO_MARGINAL_VALUE",
+      "frozen": false,
+      "reopen_policy": "not_closed_audited",
+      "reopen_conditions": [
+        "not CLOSED — AUDITED != CLOSED",
+        "re-audit if zone_registry path/mode, zone scorer, or fusion zone weight path changes",
+        "economic revalidation still required before any promote (PIT_UNCLEAN_CENTERED_SWINGS)"
+      ],
+      "upstream_surfaces": [
+        "CRT"
+      ],
+      "downstream_not_implied_closed": [],
+      "economically_validated": false,
+      "notes": "LINEAGE AUDITED != ECONOMICALLY VALIDATED. Artifacts remain PIT_UNCLEAN for economic use."
+    },
+    {
+      "surface_id": "RR_LINEAGE",
+      "surface_name": "RR lineage audit",
+      "status": "AUDITED",
+      "status_detail": "RR_LINEAGE_STATUS=THREE_CONTRACTS (A ALIGNED / B INERT+SKEW / C MISMATCH)",
+      "scope_boundary": "Post-CH-002 observational audit of RREngine polarity, rr_fusion (disabled), DecisionEngine RR-gate mismatch (F-048), and Ultron true-RR separation. Does NOT close RR; does NOT remediate F-048; does NOT re-enable rr_fusion.",
+      "authoritative_artifact": "docs/governance/rr_lineage_audit.md",
+      "status_token": "RR_LINEAGE_STATUS        = THREE_CONTRACTS",
+      "frozen": false,
+      "reopen_policy": "not_closed_audited",
+      "reopen_conditions": [
+        "not CLOSED — AUDITED != CLOSED",
+        "re-audit if RREngine/rr_fusion/DecisionEngine RR wiring changes",
+        "F-048 intent adjudication is separate open work (does not reopen CRT)"
+      ],
+      "upstream_surfaces": [
+        "CRT"
+      ],
+      "downstream_not_implied_closed": [],
+      "economically_validated": false,
+      "notes": "rr_fusion remains enabled:false. Labels/risk F-045/F-022 remain open for economic claims."
+    },
+    {
+      "surface_id": "BITNET_LINEAGE",
+      "surface_name": "BitNet lineage audit",
+      "status": "AUDITED",
+      "status_detail": "BITNET_LINEAGE_STATUS=INERT + CONDITIONAL_SKEW (use_bitnet=false on active patch)",
+      "scope_boundary": "Post-CH-002 observational audit of BitNet train/serve path, CRT call-site map, and inertness under active config (F-004). Does NOT close BitNet; does NOT authorize enable or retrain.",
+      "authoritative_artifact": "docs/governance/bitnet_lineage_audit.md",
+      "status_token": "BITNET_LINEAGE_STATUS  = INERT + CONDITIONAL_SKEW",
+      "frozen": false,
+      "reopen_policy": "not_closed_audited",
+      "reopen_conditions": [
+        "not CLOSED — AUDITED != CLOSED",
+        "re-audit before any use_bitnet=true flip (REBUILD_BEFORE_ENABLE=YES)",
+        "re-audit if bitnet_score/call-site map or training feature keys change"
+      ],
+      "upstream_surfaces": [
+        "CRT"
+      ],
+      "downstream_not_implied_closed": [],
+      "economically_validated": false,
+      "notes": "INERT on active patch. Conditional train≠serve skew if wrongly enabled."
+    },
+    {
+      "surface_id": "TRADENET_LINEAGE",
+      "surface_name": "TradeNet lineage audit",
+      "status": "AUDITED",
+      "status_detail": "TRADENET_LINEAGE_STATUS=INERT; TRADENET_SPINE_STATUS=UNWIRED (F-005); qualification protocol TN_QUAL_V1 documented (gates OPEN)",
+      "scope_boundary": "Post-CH-002 observational audit of TradeNet v2 build/train artifacts and fusion neural slot unwired state. Does NOT close TradeNet; does NOT authorize wiring neural_fn or promote.",
+      "authoritative_artifact": "docs/governance/tradenet_lineage_audit.md",
+      "status_token": "TRADENET_LINEAGE_STATUS  = INERT",
+      "supporting_artifacts": [
+        "docs/governance/tradenet_qualification_protocol.md"
+      ],
+      "frozen": false,
+      "reopen_policy": "not_closed_audited",
+      "reopen_conditions": [
+        "not CLOSED — AUDITED != CLOSED",
+        "re-audit if fusion neural_fn wiring, TradeNet train path, or model registry promotion changes",
+        "GATE-P wire-up requires TN_QUAL_V1 (tradenet_qualification_protocol.md) L→O→S→P — protocol is not lineage closure"
+      ],
+      "upstream_surfaces": [
+        "CRT"
+      ],
+      "downstream_not_implied_closed": [],
+      "economically_validated": false,
+      "notes": "F-005 permanent stub on fusion neural slot. Lowest leverage for retrain-on-rename. TN_QUAL_V1 defines GATE-0 feasibility → L labels → O offline → S shadow → P promote; grants no production authority until GATE-P; GATE-L blocked until FEASIBLE_GO."
+    },
+    {
+      "surface_id": "RESEARCH_MEASUREMENT_CONTRACT",
+      "surface_name": "Research Measurement Contract layer",
+      "status": "OPEN",
+      "status_detail": "MEASUREMENT_LAYER_STATUS=OPEN — schema (frozen v1.0.0, 2026-07-10) + family registry + 3 asset-class profiles exist; ZERO sealed MC-* instances; ZERO of 27 E-MT-01 probes implemented; all 3 profiles DRAFT (unresolved_terms non-empty); all 67 non-terminal findings carry Contract:UNKNOWN.",
+      "scope_boundary": "Whether ANY research claim in this repo currently carries measurement-contract admissibility (economic_admissible=true, requires E-MT-00 PASS + E-MT-01 COMPLETE per the frozen schema's own E4 rule). Does NOT close or audit any individual finding's economic conclusion, does NOT grant retroactive admissibility to F-001..F-070, does NOT imply the family registry's atlas coverage is complete, does NOT alter §4.0 runtime precedence or the §6.5 Authority Ladder.",
+      "authoritative_artifact": "docs/governance/MEASUREMENT_CONTRACT.md",
+      "status_token": "MEASUREMENT_LAYER_STATUS = OPEN",
+      "supporting_artifacts": [
+        "docs/governance/measurement_contract.schema.json",
+        "docs/governance/e_mt_01_adversarial_mutation_matrix.json",
+        "docs/governance/research_family_registry.json",
+        "configs/research/measurement_contracts/crypto_majors.v1.json",
+        "configs/research/measurement_contracts/fx_majors.v1.json",
+        "configs/research/measurement_contracts/metals_mt5.v1.json",
+        "tests/test_measurement_contract.py",
+        "tests/test_research_family_registry.py"
+      ],
+      "frozen": false,
+      "reopen_policy": "not_closed_open_program",
+      "reopen_conditions": [
+        "not CLOSED — OPEN is the honest current state; there is nothing to reopen",
+        "status advances toward AUTHORITY_ACTIVE only once at least one MC-* instance passes E-MT-00 PASS + E-MT-01 COMPLETE",
+        "re-evaluate if the frozen schema (measurement_contract.schema.json) changes schema_version",
+        "re-evaluate if a profile reaches FROZEN lifecycle (configs/research/measurement_contracts/*.v1.json)"
+      ],
+      "upstream_surfaces": [],
+      "downstream_not_implied_closed": [],
+      "economically_validated": false,
+      "notes": "Subordination is mechanical: tests/test_measurement_contract.py asserts every profile enum value is a member of the frozen schema's own enums, so the profile layer cannot drift from the charter's vocabulary. F-070 (2026-08-06, M-GATE-01) is the layer's first real measurement output; authority NONE per §6.5. See docs/governance/research_family_registry.json for the object×layer atlas this contract binds claims through, and docs/topics/research-measurement-contract.md for the human-language picture."
+    }
+  ]
+}
