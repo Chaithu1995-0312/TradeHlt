@@ -1,0 +1,10 @@
+#!/bin/sh
+# CLAUDE.md §6 commit-linkage guard (commit-msg stage — earliest point the message exists).
+# A commit touching governed code (src/** or configs/production/**) must ship a same-day
+# SESSION LOG entry in assistant_project.md, or carry [nolog] in the message.
+# Logic + tests: scripts/maintenance/check_session_log_commit.py · tests/test_session_log_commit_check.py
+python scripts/maintenance/check_session_log_commit.py "$1" || exit 1
+
+# Non-blocking consolidation advisory (CLAUDE.md #3 context-ceiling) — prints a nudge when the
+# findings/memory/log/archive substrate grows past a soft threshold; NEVER aborts the commit.
+python scripts/maintenance/check_consolidation_due.py || true

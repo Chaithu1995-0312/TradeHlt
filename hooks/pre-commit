@@ -1,0 +1,9 @@
+#!/bin/sh
+# Program E-001 governance-invariant gate (pre-commit stage).
+# Runs the curated green floor (behavioral epistemic invariants + coupled tests) when a
+# commit touches governed paths (src/research/**, docs/governance/**, tests/governance/**,
+# docs/current-findings.md, docs/operations/KNOWN_ILLUSIONS.md). Path-scoped so a docs-only
+# edit does NOT pay the pytest cost. Bypass a trivial change with: git commit --no-verify
+# Logic + the GREEN_FLOOR single-source-of-truth: scripts/maintenance/check_governance_invariants.py
+# (CI calls the SAME script with --all, so hook == CI by construction).
+python scripts/maintenance/check_governance_invariants.py || exit 1
