@@ -1,0 +1,39 @@
+{
+  "change_id": "CH-plan002-dual-weights-how",
+  "objective": "IC-007 PLAN-002: the legacy score-weight tuple 0.35/0.25/0.20/0.20 appeared on TWO semantically different paths and is externalized as TWO DISTINCT HOW keys (user-approved identity discipline 2026-07-11): CRTConfig.risk_score_weights -> RiskScore.final (sole-constructor injection in UltronRiskEngine.compute_score) and CRTConfig.score_component_weights -> engines path (EngineRunner strict-reads the crt_engine section and injects crt_compute context, closing the context={} gap where the CODE default always won). Both default to the legacy tuple (default-parity); fail-closed 4x finite>=0 validation with list->tuple coercion; conf_weights NOT aliased (PROVEN_DIFFERENT_SEMANTIC). Config keys live in the unhashed crt_engine defaults layer (hash-neutral, params untouched). WHO carries key NAMES only.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE"
+  ],
+  "affected_files": [
+    "src/config_layer/crt_engine_v2.py",
+    "src/core/engine_runner.py",
+    "configs/production/v2_multi_2026_04.json",
+    "active_models.yaml",
+    "docs/governance/crt_config_reachability.json",
+    "docs/governance/behavioral_constant_authority_trace-2026-07-11.json",
+    "docs/governance/behavioral_constant_authority_trace-2026-07-11.md",
+    "scripts/governance/behavioral_constant_authority_trace.py",
+    "tests/test_plan002_dual_weights_how.py",
+    "tests/test_behavioral_constant_authority_trace.py",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none enabled/changed; RiskScore.final default-parity proven (golden ledger suite green)",
+  "affected_production_config": "crt_engine section only (unhashed defaults layer) — params hash unchanged",
+  "required_checks_ack": [
+    "tests/test_plan002_dual_weights_how.py",
+    "tests/test_plan001_retest_min_depth_how.py",
+    "tests/test_crt_fixes.py",
+    "tests/test_crt_state_invariants.py",
+    "tests/test_crt_config_reachability.py",
+    "tests/test_behavioral_constant_authority_trace.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_state_contracts.py",
+    "tests/analytics/test_golden_ledgers.py",
+    "tests/test_current_findings.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit: CRTConfig fields + RiskScore.weights + engine_runner injection + config keys + WHO names + reachability rows + trace regen + tests together"
+}

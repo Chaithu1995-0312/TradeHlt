@@ -1,0 +1,53 @@
+{
+  "package": "msip_shadow_implementation_plan_v1",
+  "plan_version": "1.1.0",
+  "G-IMPL-01": "OPEN_EXECUTED_NARROW_SHADOW",
+  "G-SHADOW-01": "PASSED",
+  "G-PARITY-01": "NOT_PASSED",
+  "implementation_authorized": "NARROW_SHADOW_ONLY",
+  "stop_for_owner_review": true,
+  "generated_at_utc": "2026-07-14T11:11:16.790077+00:00",
+  "files": [
+    {
+      "path": "G_IMPL_01_EVIDENCE_PACKAGE_V1.json",
+      "sha256": "5c0003a26749c2121de6f5dc4595cbfe0656504fabd38b3c9516ce7684272301",
+      "bytes": 3673
+    },
+    {
+      "path": "G_IMPL_01_EVIDENCE_PACKAGE_V1.md",
+      "sha256": "f26e2880ef5e8afd628e03d2eabcb8471affd2e0ac05f6da8cd99cae94cfbe74",
+      "bytes": 2099
+    },
+    {
+      "path": "G_PLAN_01_REVIEW_V1.json",
+      "sha256": "a6dbe9931205730e9dd9535d097f393f7d3e46807ccfde10706fd34d076aa1ac",
+      "bytes": 4789
+    },
+    {
+      "path": "G_PLAN_01_REVIEW_V1.md",
+      "sha256": "612d74bae8447828f3fd697580285e8fc199e6cb1cd90192b4e73042431ebcf5",
+      "bytes": 2280
+    },
+    {
+      "path": "MSIP_SHADOW_IMPLEMENTATION_PLAN_V1.json",
+      "sha256": "406897cb30530891dd410f7929f29bfca4c5644f32d05221eff620f11d0fe002",
+      "bytes": 11838
+    },
+    {
+      "path": "MSIP_SHADOW_IMPLEMENTATION_PLAN_V1.md",
+      "sha256": "65f81779029b435d54f6ef82a1357ef3d1004a611f05392330f954cccb9bff1b",
+      "bytes": 8461
+    },
+    {
+      "path": "OWNER_G_IMPL_01_AUTHORIZATION_V1.json",
+      "sha256": "ff93a3b878a0a834a722552172e9e5b9e155b7a67f5a4ab1b3ad8a9e4ba7b15c",
+      "bytes": 2101
+    },
+    {
+      "path": "OWNER_PLAN_ACCEPTANCE_STUB_V1.json",
+      "sha256": "674982f252748abc9b35a913754af5138052b0bd95a7d5ebbe36bb1ac465a095",
+      "bytes": 1449
+    }
+  ],
+  "package_aggregate_sha256": "a650e65b016b25fe32d93b78a7baded03c6225bd6e559c8db1c17c8e599f9d3e"
+}

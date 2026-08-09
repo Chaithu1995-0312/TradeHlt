@@ -1,0 +1,431 @@
+{
+  "schema": "three_authority_drift_adjudication.v1",
+  "adjudication_id": "three_authority_drift_adjudication",
+  "date": "2026-07-11",
+  "status": "COMPLETE",
+  "ic": "IC-008",
+  "authority": "observational adjudication — grants no enablement, cleanup, promotion, or topology change",
+  "taxonomy_note": "Classifications use the proof-only vocabulary. Intent labels (stale/default/tuned override) are forbidden without mechanical proof. UNPROVEN is the default when proof is incomplete.",
+  "census_source": "docs/governance/three_authority_declaration_surplus_census-2026-07-11.json",
+  "census_record": "SUR-003",
+  "census_class": "HOW_ACTIVE_VS_WHO_DEFAULT_DRIFT",
+  "active_version": "v2_multi_2026_04",
+  "non_effects": [
+    "no runtime code change",
+    "no active_models.yaml mutation",
+    "no production JSON/YAML/config value mutation",
+    "no CRTConfig seed mutation",
+    "no state_contracts mutation",
+    "no fourth YAML introduced",
+    "no IC-001 / IC-002 execution"
+  ],
+  "authority_model": {
+    "WHAT": "configs/formulas/market_ontology.yaml",
+    "WHO": "active_models.yaml",
+    "HOW": "configs/production/v2_multi_2026_04.json + CRTConfig",
+    "CODE": "src/config_layer/crt_engine_v2.py (+ features/*)"
+  },
+  "summary": {
+    "total_drifts": 6,
+    "PROVEN_SAME_SEMANTIC": 0,
+    "PROVEN_DIFFERENT_SEMANTIC": 0,
+    "PROVEN_WHO_RUNTIME_AUTHORITY": 0,
+    "PROVEN_HOW_RUNTIME_AUTHORITY": 6,
+    "PROVEN_DUAL_RUNTIME_AUTHORITY": 0,
+    "UNPROVEN": 0,
+    "ELIGIBLE_FOR_FUTURE_WHO_CLEANUP": 0,
+    "KEEP_DISTINCT": 0,
+    "REQUIRES_REMEDIATION": 0,
+    "PRESERVE_NO_ACTION": 6,
+    "WHO_RUNTIME_NUMERIC_AUTHORITY_FOUND": "NO",
+    "HOW_RUNTIME_AUTHORITY_CONFIRMED": "YES",
+    "IC001_READY": "NO",
+    "IC002_READY": "NO",
+    "STATE_CONTRACTS_UNCHANGED": true,
+    "NO_FOURTH_YAML": true,
+    "RUNTIME_BEHAVIOR_UNCHANGED": true,
+    "CENSUS_COUNTS_UNCHANGED": true
+  },
+  "method": {
+    "who_runtime_probe": "AST/text search of src/**/*.py for thresholds/defaults path reads under active_models consumers; result count=0",
+    "who_runtime_loaders_observed": [
+      "src/config_layer/state_contract_loader.py — loads state_contracts + valid_transitions only",
+      "src/config_layer/state_topology.py — transition graph only",
+      "src/governance/hypothesis_registry.py — model id surface only"
+    ],
+    "how_runtime_loader": "src/config_layer/production_config.py::load_prod_config_from_registry → merge crt_engine+params → ConfigBuilder.build",
+    "live_probe_instrument": "BNBUSDT via get_prod_config"
+  },
+  "drifts": [
+    {
+      "drift_id": "DRIFT-001",
+      "census_key": "body_ratio_min",
+      "who_path": "active_models.yaml crt.runtime.thresholds.body_ratio_min.default (+ detection.displacement.defaults.body_ratio_min)",
+      "who_value": 0.7,
+      "how_path": "configs/production/v2_multi_2026_04.json params.body_ratio_min",
+      "active_how_value": 0.65,
+      "how_value": 0.65,
+      "crtconfig_path": "src/config_layer/crt_engine_v2.py CRTConfig.body_ratio_min",
+      "crtconfig_path_or_seed": "src/config_layer/crt_engine_v2.py:318",
+      "crtconfig_value": 0.7,
+      "runtime_loader": "production_config.load_prod_config_from_registry → ConfigBuilder.build(instrument, overrides=merged)",
+      "runtime_consumer_files": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/production_config.py",
+        "src/config_layer/config_builder.py"
+      ],
+      "runtime_consumer_lines": [
+        "crt_engine_v2.py:1257",
+        "crt_engine_v2.py:1260",
+        "crt_engine_v2.py:2609",
+        "production_config.py:337-366",
+        "production_config.py:387"
+      ],
+      "runtime_consumer": "CRTEngine displacement body_ratio gate via self.config.body_ratio_min",
+      "runtime_effect": "DIRECT",
+      "who_runtime_consumed": "NO",
+      "how_runtime_consumed": "YES",
+      "git_history_evidence": [
+        "git show 5897209:configs/production/v2_multi_2026_04.json params.body_ratio_min=0.75",
+        "git show b34d6a8:configs/production/v2_multi_2026_04.json params.body_ratio_min=0.65 (current)",
+        "values differ across commits; no commit message proves tuning intent for this key alone"
+      ],
+      "repository_record_evidence": [
+        "census SUR-003 details body_ratio_min am_default=0.7 active_how=0.65",
+        "docs/governance/config_authority_matrix.md R25 notes prod 0.65 vs 0.70 note (descriptive)",
+        "tests/test_active_models_registry.py:235-238 explicitly does NOT pin numeric threshold value-equality"
+      ],
+      "historical_provenance": "HOW value present in production params since early tracked commits; value changed 0.75→0.65 between 5897209 and b34d6a8. WHO/CRTConfig seed remain 0.70. Intent of change not mechanically proven.",
+      "proven_relationship": "WHO declares 0.7; CRTConfig seed is 0.7; active params load 0.65 into CRTConfig at runtime; engine gates on self.config.body_ratio_min; no src path reads WHO numeric default.",
+      "semantic_equivalence": "UNKNOWN",
+      "classification": "PROVEN_HOW_RUNTIME_AUTHORITY",
+      "disposition": "PRESERVE_NO_ACTION",
+      "evidence": [
+        "get_prod_config('BNBUSDT').body_ratio_min == 0.65",
+        "CRTConfig().body_ratio_min == 0.7",
+        "src/** thresholds/defaults path-read hits == 0",
+        "state_contract_loader loads only state_contracts/valid_transitions"
+      ],
+      "confidence": "Certain",
+      "answers": {
+        "who_numeric_runtime_read": false,
+        "how_runtime_read": true,
+        "who_is_executable_dependency": false,
+        "same_semantic_proven": false,
+        "how_intent_proven": false,
+        "delete_who_today_safe_proven": false,
+        "future_removal_requires": "separate IC-001/IC-002 navigation+contract safety proof; value-intent not required for PROVEN_HOW_RUNTIME_AUTHORITY but cleanup needs ELIGIBLE criteria"
+      }
+    },
+    {
+      "drift_id": "DRIFT-002",
+      "census_key": "atr_multiplier_min",
+      "who_path": "active_models.yaml crt.runtime.thresholds.atr_multiplier_min.default (+ detection.displacement.defaults.atr_multiplier_min)",
+      "who_value": 1.5,
+      "how_path": "configs/production/v2_multi_2026_04.json params.atr_multiplier_min",
+      "active_how_value": 1.0,
+      "how_value": 1.0,
+      "crtconfig_path": "src/config_layer/crt_engine_v2.py CRTConfig.atr_multiplier_min",
+      "crtconfig_path_or_seed": "src/config_layer/crt_engine_v2.py:319",
+      "crtconfig_value": 1.5,
+      "runtime_loader": "production_config.load_prod_config_from_registry → ConfigBuilder.build(instrument, overrides=merged)",
+      "runtime_consumer_files": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/production_config.py",
+        "src/config_layer/config_builder.py"
+      ],
+      "runtime_consumer_lines": [
+        "crt_engine_v2.py:1264",
+        "crt_engine_v2.py:1267",
+        "production_config.py:337-366",
+        "production_config.py:387"
+      ],
+      "runtime_consumer": "CRTEngine displacement wick_size >= atr_multiplier_min * ATR gate",
+      "runtime_effect": "DIRECT",
+      "who_runtime_consumed": "NO",
+      "how_runtime_consumed": "YES",
+      "git_history_evidence": [
+        "git show 5897209 params.atr_multiplier_min=1.0",
+        "git show b34d6a8 params.atr_multiplier_min=1.0 (unchanged across those commits)"
+      ],
+      "repository_record_evidence": [
+        "census SUR-003 details atr_multiplier_min am_default=1.5 active_how=1.0"
+      ],
+      "historical_provenance": "HOW params value 1.0 present in earliest tracked production config; WHO/CRTConfig seed 1.5. Divergence is stable in tracked history; intent not proven.",
+      "proven_relationship": "WHO declares 1.5; CRTConfig seed is 1.5; active params load 1.0; engine uses self.config.atr_multiplier_min; WHO numeric not runtime-read.",
+      "semantic_equivalence": "UNKNOWN",
+      "classification": "PROVEN_HOW_RUNTIME_AUTHORITY",
+      "disposition": "PRESERVE_NO_ACTION",
+      "evidence": [
+        "get_prod_config('BNBUSDT').atr_multiplier_min == 1.0",
+        "CRTConfig().atr_multiplier_min == 1.5",
+        "src/** thresholds/defaults path-read hits == 0"
+      ],
+      "confidence": "Certain",
+      "answers": {
+        "who_numeric_runtime_read": false,
+        "how_runtime_read": true,
+        "who_is_executable_dependency": false,
+        "same_semantic_proven": false,
+        "how_intent_proven": false,
+        "delete_who_today_safe_proven": false,
+        "future_removal_requires": "IC-001/IC-002 eligibility proof beyond non-consumption"
+      }
+    },
+    {
+      "drift_id": "DRIFT-003",
+      "census_key": "retest_depth_max",
+      "who_path": "active_models.yaml crt.runtime.thresholds.retest_depth_max.default (+ detection.retest.defaults.retest_depth_max)",
+      "who_value": 0.25,
+      "how_path": "configs/production/v2_multi_2026_04.json params.retest_depth_max",
+      "active_how_value": 0.15,
+      "how_value": 0.15,
+      "crtconfig_path": "src/config_layer/crt_engine_v2.py CRTConfig.retest_depth_max",
+      "crtconfig_path_or_seed": "src/config_layer/crt_engine_v2.py:320",
+      "crtconfig_value": 0.25,
+      "runtime_loader": "production_config.load_prod_config_from_registry → ConfigBuilder.build(instrument, overrides=merged)",
+      "runtime_consumer_files": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/production_config.py",
+        "src/config_layer/config_builder.py"
+      ],
+      "runtime_consumer_lines": [
+        "crt_engine_v2.py:1345",
+        "crt_engine_v2.py:1603",
+        "crt_engine_v2.py:1696",
+        "crt_engine_v2.py:2618",
+        "production_config.py:337-366"
+      ],
+      "runtime_consumer": "CRTEngine retest static ceiling fraction self.config.retest_depth_max",
+      "runtime_effect": "DIRECT",
+      "who_runtime_consumed": "NO",
+      "how_runtime_consumed": "YES",
+      "git_history_evidence": [
+        "git show 5897209 params.retest_depth_max=0.25",
+        "git show b34d6a8 params.retest_depth_max=0.15 (current)"
+      ],
+      "repository_record_evidence": [
+        "census SUR-003 details retest_depth_max am_default=0.25 active_how=0.15",
+        "tests/test_active_models_registry.py comment cites 0.25 vs 0.15 as example — comment is not proof of tuning intent"
+      ],
+      "historical_provenance": "HOW params changed 0.25→0.15 between tracked commits; WHO remains 0.25 matching CRTConfig seed. Intent not proven.",
+      "proven_relationship": "WHO/CRTConfig seed 0.25; active HOW 0.15 drives runtime ceiling; WHO numeric not runtime-read.",
+      "semantic_equivalence": "UNKNOWN",
+      "classification": "PROVEN_HOW_RUNTIME_AUTHORITY",
+      "disposition": "PRESERVE_NO_ACTION",
+      "evidence": [
+        "get_prod_config('BNBUSDT').retest_depth_max == 0.15",
+        "CRTConfig().retest_depth_max == 0.25",
+        "src/** thresholds/defaults path-read hits == 0"
+      ],
+      "confidence": "Certain",
+      "answers": {
+        "who_numeric_runtime_read": false,
+        "how_runtime_read": true,
+        "who_is_executable_dependency": false,
+        "same_semantic_proven": false,
+        "how_intent_proven": false,
+        "delete_who_today_safe_proven": false,
+        "future_removal_requires": "IC-001/IC-002 eligibility proof beyond non-consumption"
+      }
+    },
+    {
+      "drift_id": "DRIFT-004",
+      "census_key": "retest_atr_depth_fraction",
+      "who_path": "active_models.yaml crt.runtime.thresholds.retest_atr_depth_fraction.default (+ detection.retest.defaults.retest_atr_depth_fraction)",
+      "who_value": 0.5,
+      "how_path": "configs/production/v2_multi_2026_04.json params.retest_atr_depth_fraction",
+      "active_how_value": 0.3,
+      "how_value": 0.3,
+      "crtconfig_path": "src/config_layer/crt_engine_v2.py CRTConfig.retest_atr_depth_fraction",
+      "crtconfig_path_or_seed": "src/config_layer/crt_engine_v2.py:333",
+      "crtconfig_value": 0.5,
+      "runtime_loader": "production_config.load_prod_config_from_registry → ConfigBuilder.build(instrument, overrides=merged)",
+      "runtime_consumer_files": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/production_config.py",
+        "src/config_layer/config_builder.py"
+      ],
+      "runtime_consumer_lines": [
+        "crt_engine_v2.py:1346",
+        "crt_engine_v2.py:1604",
+        "crt_engine_v2.py:1697",
+        "production_config.py:337-366"
+      ],
+      "runtime_consumer": "CRTEngine retest ATR adaptive ceiling self.config.retest_atr_depth_fraction",
+      "runtime_effect": "DIRECT",
+      "who_runtime_consumed": "NO",
+      "how_runtime_consumed": "YES",
+      "git_history_evidence": [
+        "git show 5897209 params.retest_atr_depth_fraction=0.4",
+        "git show b34d6a8 params.retest_atr_depth_fraction=0.3 (current)"
+      ],
+      "repository_record_evidence": [
+        "census SUR-003 details retest_atr_depth_fraction am_default=0.5 active_how=0.3"
+      ],
+      "historical_provenance": "HOW params changed 0.4→0.3 across tracked commits; WHO/CRTConfig seed remain 0.5. Intent not proven.",
+      "proven_relationship": "WHO/CRTConfig seed 0.5; active HOW 0.3 drives runtime ATR ceiling; WHO numeric not runtime-read.",
+      "semantic_equivalence": "UNKNOWN",
+      "classification": "PROVEN_HOW_RUNTIME_AUTHORITY",
+      "disposition": "PRESERVE_NO_ACTION",
+      "evidence": [
+        "get_prod_config('BNBUSDT').retest_atr_depth_fraction == 0.3",
+        "CRTConfig().retest_atr_depth_fraction == 0.5",
+        "src/** thresholds/defaults path-read hits == 0"
+      ],
+      "confidence": "Certain",
+      "answers": {
+        "who_numeric_runtime_read": false,
+        "how_runtime_read": true,
+        "who_is_executable_dependency": false,
+        "same_semantic_proven": false,
+        "how_intent_proven": false,
+        "delete_who_today_safe_proven": false,
+        "future_removal_requires": "IC-001/IC-002 eligibility proof beyond non-consumption"
+      }
+    },
+    {
+      "drift_id": "DRIFT-005",
+      "census_key": "expansion_atr_min_distance",
+      "who_path": "active_models.yaml crt.runtime.thresholds.expansion_atr_min_distance.default (+ detection.expansion.defaults.expansion_atr_min_distance)",
+      "who_value": 0.2,
+      "how_path": "configs/production/v2_multi_2026_04.json params.expansion_atr_min_distance",
+      "active_how_value": 0.3,
+      "how_value": 0.3,
+      "crtconfig_path": "src/config_layer/crt_engine_v2.py CRTConfig.expansion_atr_min_distance",
+      "crtconfig_path_or_seed": "src/config_layer/crt_engine_v2.py:330",
+      "crtconfig_value": 0.2,
+      "runtime_loader": "production_config.load_prod_config_from_registry → ConfigBuilder.build(instrument, overrides=merged)",
+      "runtime_consumer_files": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/production_config.py",
+        "src/config_layer/config_builder.py"
+      ],
+      "runtime_consumer_lines": [
+        "crt_engine_v2.py:1315",
+        "crt_engine_v2.py:1319",
+        "production_config.py:337-366"
+      ],
+      "runtime_consumer": "CRTEngine expansion min distance self.config.expansion_atr_min_distance * ATR",
+      "runtime_effect": "DIRECT",
+      "who_runtime_consumed": "NO",
+      "how_runtime_consumed": "YES",
+      "git_history_evidence": [
+        "git show 5897209 params.expansion_atr_min_distance=0.3",
+        "git show b34d6a8 params.expansion_atr_min_distance=0.3 (stable)"
+      ],
+      "repository_record_evidence": [
+        "census SUR-003 details expansion_atr_min_distance am_default=0.2 active_how=0.3"
+      ],
+      "historical_provenance": "HOW params 0.3 present in earliest tracked production config; WHO/CRTConfig seed 0.2. Intent not proven.",
+      "proven_relationship": "WHO/CRTConfig seed 0.2; active HOW 0.3 drives expansion distance gate; WHO numeric not runtime-read.",
+      "semantic_equivalence": "UNKNOWN",
+      "classification": "PROVEN_HOW_RUNTIME_AUTHORITY",
+      "disposition": "PRESERVE_NO_ACTION",
+      "evidence": [
+        "get_prod_config('BNBUSDT').expansion_atr_min_distance == 0.3",
+        "CRTConfig().expansion_atr_min_distance == 0.2",
+        "src/** thresholds/defaults path-read hits == 0"
+      ],
+      "confidence": "Certain",
+      "answers": {
+        "who_numeric_runtime_read": false,
+        "how_runtime_read": true,
+        "who_is_executable_dependency": false,
+        "same_semantic_proven": false,
+        "how_intent_proven": false,
+        "delete_who_today_safe_proven": false,
+        "future_removal_requires": "IC-001/IC-002 eligibility proof beyond non-consumption"
+      }
+    },
+    {
+      "drift_id": "DRIFT-006",
+      "census_key": "session_windows",
+      "who_path": "active_models.yaml crt.runtime.thresholds.session_windows",
+      "who_value": null,
+      "who_value_note": "Census extracts am_default via spec.get('default'); session_windows is a bare session→bounds map (not {type,default}), so am_default is null. Raw YAML text uses HH:MM pairs; PyYAML 1.1 sexagesimal parses some bounds to ints (e.g. NEWYORK [780,960]).",
+      "who_raw_parsed": {
+        "LONDON": ["07:00", 600],
+        "NEWYORK": [780, 960],
+        "ASIA": ["00:00", "03:00"]
+      },
+      "how_path": "configs/production/v2_multi_2026_04.json crt_engine.session_windows",
+      "active_how_value": {
+        "LONDON": ["07:00", "10:00"],
+        "NEWYORK": ["13:00", "16:00"],
+        "ASIA": ["00:00", "03:00"]
+      },
+      "how_value": {
+        "LONDON": ["07:00", "10:00"],
+        "NEWYORK": ["13:00", "16:00"],
+        "ASIA": ["00:00", "03:00"]
+      },
+      "crtconfig_path": "src/config_layer/crt_engine_v2.py CRTConfig.session_windows",
+      "crtconfig_path_or_seed": "src/config_layer/crt_engine_v2.py:374-378",
+      "crtconfig_value": {
+        "LONDON": ["07:00:00", "10:00:00"],
+        "NEWYORK": ["13:00:00", "16:00:00"],
+        "ASIA": ["00:00:00", "03:00:00"]
+      },
+      "runtime_loader": "production_config._coerce_crt_engine session_windows HH:MM→datetime.time; merged via load_prod_config_from_registry",
+      "runtime_consumer_files": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/production_config.py",
+        "src/runtime/backtest_v2.py"
+      ],
+      "runtime_consumer_lines": [
+        "crt_engine_v2.py:1612",
+        "crt_engine_v2.py:2761",
+        "production_config.py:407-414",
+        "backtest_v2.py:2536"
+      ],
+      "runtime_consumer": "session membership via self.config.session_windows time bounds",
+      "runtime_effect": "DIRECT",
+      "who_runtime_consumed": "NO",
+      "how_runtime_consumed": "YES",
+      "git_history_evidence": [
+        "git show 5897209 crt_engine.session_windows == current HH:MM map",
+        "git show b34d6a8 crt_engine.session_windows unchanged"
+      ],
+      "repository_record_evidence": [
+        "census SUR-003 session_windows am_default=null active_how=HH:MM map",
+        "production_config.py:407 documents JSON HH:MM coercion path"
+      ],
+      "historical_provenance": "HOW crt_engine.session_windows HH:MM map stable across tracked production commits. Census drift is driven by WHO schema shape (no nested default) + YAML parse artifacts, not a proven different operational window design.",
+      "proven_relationship": "Runtime session windows come from HOW crt_engine (coerced to time objects). Live get_prod_config session times equal CRTConfig seed times for LONDON/NEWYORK/ASIA. WHO thresholds.session_windows is never read by src runtime. Census am_default is null by extraction rule.",
+      "semantic_equivalence": "UNKNOWN",
+      "classification": "PROVEN_HOW_RUNTIME_AUTHORITY",
+      "disposition": "PRESERVE_NO_ACTION",
+      "evidence": [
+        "get_prod_config('BNBUSDT').session_windows times == CRTConfig().session_windows times",
+        "params.session_windows missing; crt_engine.session_windows present",
+        "src/** thresholds/defaults path-read hits == 0",
+        "census am_default is null because thresholds.session_windows lacks nested default key"
+      ],
+      "confidence": "Certain",
+      "answers": {
+        "who_numeric_runtime_read": false,
+        "how_runtime_read": true,
+        "who_is_executable_dependency": false,
+        "same_semantic_proven": false,
+        "how_intent_proven": false,
+        "delete_who_today_safe_proven": false,
+        "future_removal_requires": "IC-002 shape decision (bare map vs type/default schema) + navigation safety; do not treat YAML sexagesimal parse as economic intent"
+      }
+    }
+  ],
+  "readiness_rationale": {
+    "IC001_READY": "NO — detection.defaults numeric strip not proven ELIGIBLE_FOR_FUTURE_WHO_CLEANUP (non-consumption alone is insufficient; navigation/key inventory/tests/census coupling not fully proven safe)",
+    "IC002_READY": "NO — thresholds numeric strip not proven ELIGIBLE_FOR_FUTURE_WHO_CLEANUP for the same reason; session_windows shape is structural",
+    "WHO_RUNTIME_NUMERIC_AUTHORITY_FOUND": "NO — zero src consumers of WHO thresholds/defaults numeric paths",
+    "HOW_RUNTIME_AUTHORITY_CONFIRMED": "YES — all six keys resolve through production loader into CRTConfig and are consumed by engine guards"
+  },
+  "stop_conditions_checked": {
+    "all_drifts_mapped_to_how_owner": true,
+    "who_numeric_runtime_consumed": false,
+    "unresolved_count": 0,
+    "fourth_yaml_needed": false,
+    "state_contracts_would_need_modification": false,
+    "runtime_modification_required_to_resolve": false
+  }
+}

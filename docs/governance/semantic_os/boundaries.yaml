@@ -1,0 +1,779 @@
+# Semantic OS — Boundary registry (HAND-AUTHORED)
+#
+# Charter: docs/governance/SEMANTIC_OS_CONTRACT.md
+# Schema:  docs/reference/schemas.md §9.11 · validator: src/governance/semantic_os.py
+# Guard:   tests/test_semantic_os.py
+#
+# A Boundary is an ARCHITECTURAL SEAM, not a file list. You maintain the GLOB and the INVARIANT;
+# membership is recomputed from disk on every seed. Renaming a module inside a claimed tree changes
+# nothing here. A glob that matches zero files is a validation error (validator 7), and no file may
+# be claimed by two boundaries (single ownership).
+#
+# invariant_protected is REQUIRED and non-empty: a boundary that protects nothing is not a boundary.
+#
+# STATUS: PR-5 wave 1 SHIPPED — 10 seams (BD-001..BD-010; BD-002 = Capital Risk Gate only).
+# Spine SPINE_FILES remain 100% claimed (~94 member files total). Advisory only; no production
+# behavior change.
+
+boundaries:
+
+  # ── Substrate: features / ontology / clock ─────────────────────────────────
+
+  - id: BD-001
+    kind: boundary
+    name: Feature Vector Emission
+    boundary_kind: PRODUCTION
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHAT
+
+    owner: src/features/feature_pipeline.py
+    owner_symbol: FeaturePipeline
+    members:
+      - src/features/feature_pipeline.py
+      - src/features/feature_schema.py
+      - src/features/feature_builder.py
+      - src/features/feature_identity.py
+      - src/features/feature_monitor.py
+      - src/features/schema_validator.py
+      - src/features/dataset_builder.py
+      - src/features/dataset_validator.py
+      - src/features/feature_states.py
+      - src/features/__init__.py
+    members_exclude: []
+    consumers:
+      - BD-006
+      - BD-007
+      - BD-008
+
+    invariant_protected: >-
+      Everything crossing this seam is a fixed-width, declared-order, point-in-time feature vector
+      whose order hash matches the captured baseline. No consumer downstream re-derives a governed
+      market quantity for itself.
+    invariant_violation_symptom: >-
+      A downstream engine computes its own version of a named feature, or the emitted width/order
+      silently stops matching FEATURE_ORDER_HASH, so two consumers disagree about the same slot
+      without any check failing.
+
+    contract_ids:
+      - CT-001
+    contract:
+      inputs:
+        - Chronologically ordered OHLCV frame with configured warmup rows.
+        - feature_pipeline config section (strictly required, no silent defaults).
+      outputs:
+        - Fixed-width numeric vector in CANONICAL_FEATURES order.
+        - SCHEMA_HASH and FEATURE_ORDER_HASH identity.
+      guarantees:
+        - Emitted order equals the declared CANONICAL_FEATURES order.
+        - Feature mathematics originates from registered formula authorities, never inline.
+      non_guarantees:
+        - Does NOT guarantee every emitted feature is point-in-time (F-051 records a live exception).
+        - Does NOT guarantee any feature carries economic value.
+        - Does NOT guarantee consumers interpret the slots correctly.
+      enforced_by_tests:
+        - tests/test_feature_lineage.py
+        - tests/test_feature_math_lint.py
+        - tests/test_formula_registry.py
+
+    concepts:
+      - CN-001
+    closure_surface_id: CANONICAL_FEATURE_CODE_SURFACE
+    miar_stage: substrate
+    change_classes:
+      - FORMULA_CHANGE
+      - DERIVED_METRIC_CHANGE
+      - DATASET_SCHEMA_CHANGE
+      - FEATURE_IDENTITY_CHANGE
+    evidence:
+      - path: src/features/feature_schema.py
+        symbol: CANONICAL_FEATURES
+        line: 71
+        type: code
+      - path: src/features/feature_pipeline.py
+        symbol: FeaturePipeline
+        line: 423
+        type: code
+    findings:
+      - F-046
+      - F-047
+      - F-051
+      - F-054
+    why_this_boundary: >-
+      The seam is placed at vector EMISSION rather than at each formula because that is the only
+      point where a single artifact — the ordered vector plus its hash — can be compared against a
+      baseline. Ontology math (BD-003) and session labeling (BD-004) feed this seam but are not it.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: BD-003
+    kind: boundary
+    name: Market Ontology Math
+    boundary_kind: AUTHORITY
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHAT
+
+    owner: src/features/formula_registry.py
+    owner_symbol: FORMULA_REGISTRY
+    members:
+      - src/features/formula_registry.py
+      - src/features/derived_math.py
+      - src/features/candle_math.py
+      - src/features/fm_resolve.py
+      - src/features/registry/**/*.py
+      - configs/formulas/market_ontology.yaml
+    members_exclude: []
+    consumers:
+      - BD-001
+
+    invariant_protected: >-
+      Market quantities used in production have a registered FM identity and a single callable
+      implementation path — never silent local re-derivation of the same named quantity.
+    invariant_violation_symptom: >-
+      Two call sites emit different values for the same named feature, or a new formula lands
+      without an ontology registration and ownership lint failure is ignored.
+
+    contract_ids:
+      - CT-003
+    contract:
+      inputs:
+        - Ontology YAML declarations (FM/SEM identities, dependencies, lifecycle).
+        - Registered callables in the formula registry package.
+      outputs:
+        - Deterministic scalar/vector formula results for declared names.
+        - Lineage / validation reports for registry health.
+      guarantees:
+        - Formula implementations are named callables (never eval of ontology strings).
+        - New governed quantities are registered before production use.
+      non_guarantees:
+        - Does NOT guarantee economic usefulness of any formula (§6.5).
+        - Does NOT emit the assembled canonical vector (BD-001).
+      enforced_by_tests:
+        - tests/test_formula_registry.py
+        - tests/test_feature_math_lint.py
+        - tests/test_candle_math.py
+
+    concepts:
+      - CN-007
+    closure_surface_id: CANONICAL_FEATURE_CODE_SURFACE
+    miar_stage: market_understanding
+    change_classes:
+      - FORMULA_CHANGE
+      - DERIVED_METRIC_CHANGE
+    evidence:
+      - path: configs/formulas/market_ontology.yaml
+        symbol: null
+        line: null
+        type: config
+      - path: src/features/formula_registry.py
+        symbol: FORMULA_REGISTRY
+        line: 19
+        type: code
+    findings:
+      - F-047
+      - F-046
+      - F-054
+    why_this_boundary: >-
+      Meaning (WHAT) must be enforceable separately from emission (BD-001). Collapsing them hid
+      divergent definitions until the GD ledger forced unification.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: BD-004
+    kind: boundary
+    name: Session and Broker Clock
+    boundary_kind: PRODUCTION
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHAT
+
+    owner: src/features/session_classifier.py
+    owner_symbol: classify_session_feature
+    members:
+      - src/features/session_classifier.py
+      - src/features/broker_clock.py
+    members_exclude: []
+    consumers:
+      - BD-001
+
+    invariant_protected: >-
+      Session feature labels have a single module owner and an explicit clock basis
+      (broker_local vs utc_corrected); live filter windows are a separate policy surface.
+    invariant_violation_symptom: >-
+      Feature session labels and CRT session_windows are silently treated as one enum, so a clock
+      correction retunes live economics without an explicit decision.
+
+    contract_ids: []
+    contract:
+      inputs:
+        - Bar timestamp (broker or UTC basis per config).
+        - feature_pipeline session configuration when features are emitted.
+      outputs:
+        - Session label / ordinal features consistent with the declared basis.
+      guarantees:
+        - Clock basis is config-declared, not ambient.
+        - Session feature emission routes through session_classifier (single owner).
+      non_guarantees:
+        - Does NOT claim session policy is an economic lever (F-017).
+        - Does NOT auto-retune historically broker-tuned live filters when features correct to UTC.
+      enforced_by_tests:
+        - tests/test_feature_pipeline.py
+
+    concepts:
+      - CN-008
+    closure_surface_id: null
+    miar_stage: market_understanding
+    change_classes:
+      - FEATURE_IDENTITY_CHANGE
+      - PRODUCTION_CONFIG_CHANGE
+    evidence:
+      - path: src/features/session_classifier.py
+        symbol: classify_session_feature
+        line: null
+        type: code
+      - path: src/features/broker_clock.py
+        symbol: null
+        line: null
+        type: code
+    findings:
+      - F-066
+      - F-017
+    why_this_boundary: >-
+      Session meaning was dual-homed (feature vs filter) and clock-wrong on MT5 corpora. A dedicated
+      seam makes the dual-surface design enforceable.
+
+    supersedes: null
+    superseded_by: null
+
+  # ── Runtime spine ──────────────────────────────────────────────────────────
+
+  - id: BD-005
+    kind: boundary
+    name: Runtime Candle Paths
+    boundary_kind: TRANSPORT
+    status: ACTIVE
+    authority: advisory
+    authority_layer: HOW
+
+    owner: src/runtime/backtest_v2.py
+    owner_symbol: BacktestRunner
+    members:
+      - src/runtime/backtest_v2.py
+      - src/runtime/live_engine_hook.py
+      - src/runtime/baseline_capture.py
+      - src/runtime/unified_replay_harness.py
+    members_exclude: []
+    consumers:
+      - BD-001
+      - BD-007
+
+    invariant_protected: >-
+      Closed bars are consumed causally (stream/generator discipline). No-lookahead integrity is
+      the conjunction of L1/L2/L3 + feature PIT, not a single flag.
+    invariant_violation_symptom: >-
+      A path scores bar t using information from bars after t, or assumes L3 preflight ran when only
+      L1/L2 did (F-039 class).
+
+    contract_ids:
+      - CT-005
+    contract:
+      inputs:
+        - Configured instrument data path or live feed adapter.
+        - Active production / backtest sections for the runner.
+      outputs:
+        - Chronological Candle stream (backtest) or live bar hook invocations.
+        - Trade ledger / metrics artifacts under declared exit models.
+      guarantees:
+        - Stream consumption is chronological; schema/time backstops fire on corrupt input.
+        - Live and backtest share EngineRunner join when engine_gate is enabled.
+      non_guarantees:
+        - Does NOT guarantee L3 dataset preflight on every research stream (F-039).
+        - Does NOT guarantee live PnL matches backtest (F-010 OPEN).
+      enforced_by_tests:
+        - tests/runtime/test_replay_determinism.py
+        - tests/test_backtest_declared_constants.py
+
+    concepts:
+      - CN-003
+      - CN-015
+    closure_surface_id: null
+    miar_stage: substrate
+    change_classes:
+      - RUNTIME_DECISION_PATH_CHANGE
+      - DATASET_SCHEMA_CHANGE
+    evidence:
+      - path: src/runtime/backtest_v2.py
+        symbol: BacktestRunner
+        line: null
+        type: code
+      - path: src/runtime/live_engine_hook.py
+        symbol: null
+        line: null
+        type: code
+    findings:
+      - F-039
+      - F-051
+      - F-058
+    why_this_boundary: >-
+      Ingest and replay are the causal envelope of the spine. Separating them from scoring makes
+      integrity failures diagnosable without conflating engine defects.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: BD-006
+    kind: boundary
+    name: CRT Structural Engine
+    boundary_kind: PRODUCTION
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHAT
+
+    owner: src/config_layer/crt_engine_v2.py
+    owner_symbol: CRTEngine
+    members:
+      - src/config_layer/crt_engine_v2.py
+      - src/config_layer/state_identity.py
+      - src/config_layer/state_topology.py
+      - src/config_layer/state_contract.py
+      - src/config_layer/state_contract_loader.py
+      - src/config_layer/crt_config_provenance.py
+      - src/config_layer/crt_sweep_taxonomy.py
+      - src/features/crt_feature_builder.py
+      - src/features/crt_state_resolver.py
+      - src/engines/crt_engine.py
+    members_exclude: []
+    consumers:
+      - BD-007
+
+    invariant_protected: >-
+      Only VALID_TRANSITIONS among the nine CRT states are legal. Structural meaning is shared —
+      consumers may score differently but must not invent alternate state semantics for the same bar.
+    invariant_violation_symptom: >-
+      Illegal state jumps, or programmatic CRTConfig paths that diverge from production structural
+      knobs (F-057 class), or strategy-local geometry forks of sweep/displacement.
+
+    contract_ids:
+      - CT-004
+    contract:
+      inputs:
+        - Canonical features / OHLCV for the bar.
+        - CRTConfig / production crt_engine section for the instrument path.
+      outputs:
+        - CRT state and optional TRADE_OPENED structural commitment.
+      guarantees:
+        - Transitions obey VALID_TRANSITIONS topology.
+        - Engine is the trade-path structural authority over resolver parity (F-069).
+      non_guarantees:
+        - Does NOT claim economic edge (mechanism CLOSED ≠ expectancy).
+        - Does NOT own fusion weights or capital RR.
+      enforced_by_tests:
+        - tests/test_crt_state_invariants.py
+        - tests/test_crt_adversarial_closure.py
+
+    concepts:
+      - CN-004
+    closure_surface_id: CRT
+    miar_stage: opportunity_understanding
+    change_classes:
+      - RUNTIME_DECISION_PATH_CHANGE
+      - PRODUCTION_CONFIG_CHANGE
+    evidence:
+      - path: src/config_layer/crt_engine_v2.py
+        symbol: CRTEngine
+        line: null
+        type: code
+      - path: src/config_layer/state_identity.py
+        symbol: VALID_TRANSITIONS
+        line: null
+        type: code
+    findings:
+      - F-019
+      - F-057
+      - F-069
+    why_this_boundary: >-
+      CRT is the structural language of the market for this system. Isolating it prevents scoring
+      and risk seams from rewriting state meaning.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: BD-007
+    kind: boundary
+    name: Multi-Engine Scoring
+    boundary_kind: PRODUCTION
+    status: ACTIVE
+    authority: advisory
+    authority_layer: HOW
+
+    owner: src/core/engine_runner.py
+    owner_symbol: EngineRunner
+    members:
+      - src/core/engine_runner.py
+      - src/engines/*.py
+    members_exclude:
+      - src/engines/crt_engine.py
+    consumers:
+      - BD-008
+
+    invariant_protected: >-
+      EXPECTED_ENGINES completeness is structural: crt, gaussian, zone_gate, and rr each produce a
+      result (or fail-fast) before fusion. Channel defects remain diagnosable per engine.
+    invariant_violation_symptom: >-
+      Silent partial fusion, missing engine keys, or a collapsed channel (e.g. near-constant
+      Gaussian) treated as informative without measurement.
+
+    contract_ids: []
+    contract:
+      inputs:
+        - Canonical feature vector and CRT structure for the bar.
+        - Engine configs and model artifacts under declared fail policies.
+      outputs:
+        - Per-engine score map for fusion.
+      guarantees:
+        - EXPECTED_ENGINES set is mandatory when completeness rules apply.
+        - Engines are invoked independently (no single opaque mega-score before fusion).
+      non_guarantees:
+        - Does NOT guarantee every channel is informative (F-060/F-036 class).
+        - Does NOT enable BitNet/TradeNet by presence alone.
+      enforced_by_tests:
+        - tests/test_engine_runner_dual_gate.py
+        - tests/test_engine_runner_rr_fusion.py
+        - tests/test_zone_gate.py
+
+    concepts:
+      - CN-005
+    closure_surface_id: null
+    miar_stage: decision
+    change_classes:
+      - RUNTIME_DECISION_PATH_CHANGE
+      - MODEL_ARTIFACT_CHANGE
+      - MODEL_INPUT_CHANGE
+    evidence:
+      - path: src/core/engine_runner.py
+        symbol: EngineRunner
+        line: 298
+        type: code
+    findings:
+      - F-060
+      - F-036
+      - F-038
+      - F-004
+    why_this_boundary: >-
+      Orchestration is distinct from structure (BD-006), fusion (BD-008), and capital (BD-002).
+      Keeping engines together preserves completeness without swallowing risk authority.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: BD-008
+    kind: boundary
+    name: Fusion Decision and Geometry
+    boundary_kind: POLICY
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHO
+
+    owner: src/core/fusion_engine.py
+    owner_symbol: FusionEngine
+    members:
+      - src/core/fusion_engine.py
+      - src/core/decision_engine.py
+      - src/config_layer/execution_planner.py
+    members_exclude: []
+    consumers:
+      - BD-002
+
+    invariant_protected: >-
+      Semantic approval is separate from economic RR. Geometry (entry/SL/TP) is planned only after
+      semantic GO and before capital approval — never economic RR before levels exist (F-048).
+    invariant_violation_symptom: >-
+      DecisionEngine applies a reward:risk threshold against non-economic quantities, or planner
+      runs before semantic GO / after capital math.
+
+    contract_ids:
+      - CT-006
+    contract:
+      inputs:
+        - Per-engine scores from BD-007.
+        - Production fusion/decision/planner sections.
+      outputs:
+        - Semantic DecisionResult (GO/PASS/REJECT).
+        - On GO: ExecutionPlan with concrete entry, stop, target, TTL intent.
+      guarantees:
+        - DecisionEngine is semantic-only (no economic min RR).
+        - Planner runs after semantic GO and before Ultron.
+      non_guarantees:
+        - Does NOT own cost-taxed min RR (BD-002 / CN-002).
+        - Does NOT guarantee fusion is pivotal on every config epoch (F-070).
+      enforced_by_tests:
+        - tests/test_engine_runner_dual_gate.py
+        - tests/test_execution_contract_v1.py
+
+    concepts:
+      - CN-006
+    closure_surface_id: null
+    miar_stage: decision
+    change_classes:
+      - RUNTIME_DECISION_PATH_CHANGE
+    evidence:
+      - path: src/core/fusion_engine.py
+        symbol: FusionEngine
+        line: null
+        type: code
+      - path: src/core/decision_engine.py
+        symbol: DecisionEngine
+        line: null
+        type: code
+      - path: src/config_layer/execution_planner.py
+        symbol: null
+        line: null
+        type: code
+    findings:
+      - F-048
+      - F-070
+      - F-038
+    why_this_boundary: >-
+      Fusion, semantic decision, and geometry share one order-of-operations invariant. Splitting
+      them across unrelated seams would hide F-048-class defects.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: BD-002
+    kind: boundary
+    name: Capital Risk Gate
+    boundary_kind: POLICY
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHO
+
+    owner: src/core/ultron_risk_gate.py
+    owner_symbol: UltronRiskGate
+    members:
+      - src/core/ultron_risk_gate.py
+    members_exclude: []
+    consumers: []
+
+    invariant_protected: >-
+      Economic reward:risk is evaluated in exactly ONE place, after entry/stop/target are planned,
+      and no position reaches order placement without an explicit APPROVE from that single
+      authority.
+    invariant_violation_symptom: >-
+      A second component upstream applies its own reward:risk threshold, so approval depends on
+      whichever gate happens to be stricter — or an upstream gate compares a non-economic quantity
+      against an economic threshold and silently rejects everything.
+
+    contract_ids:
+      - CT-002
+    contract:
+      inputs:
+        - ExecutionPlan geometry (entry / SL / TP) for a proposed trade.
+        - Active production ultron_risk_gate / exposure constraints.
+      outputs:
+        - Structured capital APPROVE/REJECT with machine-readable reason.
+      guarantees:
+        - Economic reward:risk authority is sole and terminal (post-planner).
+        - Cost model is applied before the RR comparison.
+      non_guarantees:
+        - Does NOT guarantee positive expectancy of approved trades.
+        - Does NOT guarantee backtest approval equals live (F-010 OPEN).
+      enforced_by_tests:
+        - tests/test_execution_contract_v1.py
+        - tests/test_backtest_declared_constants.py
+
+    concepts:
+      - CN-002
+    closure_surface_id: CRT
+    miar_stage: safety
+    change_classes:
+      - RUNTIME_DECISION_PATH_CHANGE
+      - PRODUCTION_CONFIG_CHANGE
+    evidence:
+      - path: src/core/ultron_risk_gate.py
+        symbol: UltronRiskGate
+        line: 69
+        type: code
+    findings:
+      - F-048
+      - F-070
+    why_this_boundary: >-
+      PR-5 narrows the former monolithic "Decision and Risk Spine" so capital economics is a
+      single-file, single-invariant seam. Semantic fusion/geometry live in BD-008.
+
+    supersedes: null
+    superseded_by: null
+
+  # ── Config / governance / ops ──────────────────────────────────────────────
+
+  - id: BD-009
+    kind: boundary
+    name: Production Config and Promotion
+    boundary_kind: AUTHORITY
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHO
+
+    owner: src/config_layer/production_config.py
+    owner_symbol: get_active_version
+    members:
+      - src/config_layer/production_config.py
+      - src/config_layer/config_builder.py
+      - src/config_layer/config_validator.py
+      - src/config_layer/market_router.py
+      - src/config_layer/production_bundle.py
+      - src/config_layer/stack_version.py
+      - src/governance/promotion_manager.py
+      - src/governance/config_integrity.py
+      - src/governance/shadow_promotion_gate.py
+      - src/governance/findings_export.py
+    members_exclude: []
+    consumers:
+      - BD-001
+      - BD-002
+      - BD-005
+      - BD-006
+      - BD-007
+      - BD-008
+
+    invariant_protected: >-
+      Exactly one ACTIVE_VERSION is Tier-0 runtime truth. Production identity changes only through
+      the promotion path (APPROVE report + hash + append-only log). Missing required keys fail-fast.
+    invariant_violation_symptom: >-
+      Split-brain version inference, silent defaults for new knobs, or production JSON edits outside
+      PromotionManager without audit.
+
+    contract_ids:
+      - CT-007
+    contract:
+      inputs:
+        - configs/production/ACTIVE_VERSION and candidate configs/checkpoints.
+      outputs:
+        - Loaded production JSON identity for the active version.
+        - Promotion archives + promotion_log lines on success/failure.
+      guarantees:
+        - get_active_version is fail-fast when unresolved.
+        - Promotion requires ValidationReport.decision == APPROVE when the manager path is used.
+      non_guarantees:
+        - Does NOT prove the active config has economic edge.
+        - Does NOT auto-heal F-057 programmatic CRTConfig bypass alone.
+      enforced_by_tests:
+        - tests/test_active_models_registry.py
+        - tests/test_schema_contracts.py
+
+    concepts:
+      - CN-009
+      - CN-010
+      - CN-012
+    closure_surface_id: null
+    miar_stage: safety
+    change_classes:
+      - PRODUCTION_CONFIG_CHANGE
+      - DOCUMENTATION_ONLY
+    evidence:
+      - path: src/config_layer/production_config.py
+        symbol: get_active_version
+        line: null
+        type: code
+      - path: src/governance/promotion_manager.py
+        symbol: PromotionManager
+        line: null
+        type: code
+      - path: docs/current-findings.md
+        symbol: null
+        line: null
+        type: doc
+    findings:
+      - F-016
+      - F-018
+      - F-006
+      - F-031
+      - F-057
+    why_this_boundary: >-
+      Config identity and promotion are one mutability authority. Findings export rides here because
+      conclusions that justify promotions must share the same governance surface.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: BD-010
+    kind: boundary
+    name: Research Agent and Control Plane
+    boundary_kind: OBSERVATION
+    status: ACTIVE
+    authority: advisory
+    authority_layer: RESEARCH
+
+    owner: src/agent/plan_compiler.py
+    owner_symbol: PlanCompiler
+    members:
+      - src/agent/*.py
+      - src/control_plane/*.py
+      - src/research/qualification.py
+      - src/research/config.py
+      - src/research/contracts.py
+      - src/research/costs.py
+    members_exclude: []
+    consumers: []
+
+    invariant_protected: >-
+      Research PROMOTE never auto-grants production/fusion weight. Agent tool sequences for known
+      intents come from PLAN_REGISTRY (not freeform LLM graphs). Control plane remains localhost-only.
+    invariant_violation_symptom: >-
+      Research significance treated as production authority, freeform tool graphs, or :8787 exposed
+      beyond trusted localhost.
+
+    contract_ids: []
+    contract:
+      inputs:
+        - Pre-registered experiment configs / measurement profiles (research).
+        - NL intents and tool registry (agent).
+        - CommandSpec catalog (control plane).
+      outputs:
+        - Research gate artifacts (PROMOTE/REJECT/INSUFFICIENT).
+        - Ordered ToolSteps under confirm/path-guard.
+        - commands_payload for the localhost dashboard.
+      guarantees:
+        - Absolute expectancy under honest costs is the research economic bar (M4 class).
+        - Known agent intents resolve through PLAN_REGISTRY.
+      non_guarantees:
+        - Does NOT seal Measurement Contract MC-* instances (still OPEN).
+        - Does NOT provide multi-tenant remote API security.
+      enforced_by_tests:
+        - tests/test_schema_contracts.py
+
+    concepts:
+      - CN-011
+      - CN-013
+      - CN-014
+    closure_surface_id: RESEARCH_MEASUREMENT_CONTRACT
+    miar_stage: measurement
+    change_classes:
+      - DOCUMENTATION_ONLY
+      - SCRIPT_LIFECYCLE_CHANGE
+    evidence:
+      - path: src/research/qualification.py
+        symbol: QualificationGate
+        line: null
+        type: code
+      - path: src/agent/plan_compiler.py
+        symbol: PlanCompiler
+        line: null
+        type: code
+      - path: src/control_plane/registry.py
+        symbol: null
+        line: null
+        type: code
+    findings:
+      - F-019
+      - F-022
+      - F-025
+    why_this_boundary: >-
+      Wave-1 groups non-spine observation/ops surfaces that must never silently become production
+      authority. PR-5+ may split research vs agent vs control plane once journeys JN-002/005 exist.
+
+    supersedes: null
+    superseded_by: null

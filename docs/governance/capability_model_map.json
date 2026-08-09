@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "created": "2026-07-29",
+  "authority": "NONE - informational only (CLAUDE.md 6.5 Authority Ladder rung 1: information). Grants no model any spine authority, fusion weight, or enable flag. Never read on the runtime binding path.",
+  "scope": "M1 pilot - the familiarity cluster (RC-001) only. Every other model is accounted for via no_capability_reason, not mapped to a placeholder capability. Milestone 2+ (regime/structure/trap-breakout/outcome/meta-judgment clusters) is contingent on M1's method holding and is NOT authorized by this file.",
+  "method": "Bottom-up extraction per docs/governance/REASONING_CAPABILITY_REGISTRY.md - capabilities are extracted from evidence of what existing models already do (docs/architecture/model-design-intent.md Part VII), never invented ahead of an implementation. Overlap (>1 model per capability) is REPORTED with a rationale, never silently resolved and never forbidden.",
+  "capability_model_map": [
+    {
+      "capability_id": "RC-001",
+      "capability_name": "statistical_structural_familiarity",
+      "model_ids": ["gaussian", "zone_gate"],
+      "overlap_declared": true,
+      "overlap_rationale": "Both models' MIAR-declared market questions ('How statistically conformant is this state to previously observed states?' / 'Is this inside a valid structural zone?') are grouped under one informal 'familiarity' framing by model-design-intent.md Part VII (Authority: NONE, narrative). Whether this is a genuine shared capability or a coincidental vocabulary overlap between two structurally different mechanisms (global parametric vs local geometric) is the open question recorded in market_ontology.yaml RC-001's epistemic.unknown_mechanism - reported here, not resolved."
+    }
+  ],
+  "no_capability_reason": {
+    "market_ontology": "Substrate (Stage 0, per MIAR) - not a reasoning model; defines meaning, not a market question.",
+    "feature_pipeline": "Substrate (Stage 0, per MIAR) - not a reasoning model; builds the vector, does not reason over it.",
+    "crt": "Out of M1 pilot scope. NOTE: RC-001 cites CRT's internal distance-decay soft-confirmation as OBSERVED evidence (a familiarity-shaped mechanism exists inside crt_engine_v2.py), but crt's MIAR-declared PRIMARY market question is structural eligibility ('What structural state is the market in?') - a distinct, not-yet-registered capability. Mapping crt to RC-001 here would conflate its primary capability with an embedded secondary mechanism, repeating the exact models-first conflation this exercise exists to avoid.",
+    "rr_engine": "Out of M1 pilot scope - a distinct capability (candle commitment geometry) per model-design-intent.md Part VII, not part of the familiarity cluster.",
+    "rr_trained": "Out of M1 pilot scope.",
+    "bitnet": "Out of M1 pilot scope - a distinct capability (safety veto) per MIAR stage taxonomy.",
+    "tradenet": "Out of M1 pilot scope - a distinct capability (post-entry trajectory expectation), explicitly the 'healthy, complementary' pair with rr_trained per Part VII, not a familiarity surface.",
+    "trap": "Out of M1 pilot scope - part of a different redundant pair (trap/breakout) named in Part VII, deferred to Milestone 2+.",
+    "breakout": "Out of M1 pilot scope - see trap.",
+    "regime": "Out of M1 pilot scope - explicitly named as a DIFFERENT redundant cluster (four regime vocabularies) in Part VII, deferred to Milestone 2+, not conflated with familiarity here.",
+    "execution_intent": "Out of M1 pilot scope - an execution-stage capability, not a market-reasoning capability.",
+    "decision_fusion": "Out of M1 pilot scope - the decision/arbitration stage, not itself a reasoning-about-the-market capability.",
+    "qualification_gate": "Out of M1 pilot scope - measurement stage.",
+    "backtest": "Out of M1 pilot scope - measurement stage.",
+    "research_runner": "Out of M1 pilot scope - measurement stage.",
+    "hierarchical_meta_fusion": "Out of M1 pilot scope - explicitly named as a DIFFERENT redundant cluster (meta-fusion, three overlapping surfaces) in Part VII, deferred to Milestone 2+.",
+    "tradenet_meta": "Out of M1 pilot scope - see hierarchical_meta_fusion.",
+    "replay_memory": "Out of M1 pilot scope - a distinct capability (historical precedent), not a familiarity surface.",
+    "cognitive_bus": "Out of M1 pilot scope - transport/orchestration infrastructure, not itself a reasoning capability."
+  }
+}

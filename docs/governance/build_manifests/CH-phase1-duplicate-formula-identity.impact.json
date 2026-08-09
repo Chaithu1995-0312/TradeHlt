@@ -1,0 +1,63 @@
+{
+  "change_id": "CH-phase1-duplicate-formula-identity",
+  "objective": "Phase-1: close known duplicate implementations and same-name/multi-formula conflicts for five families (volume proxy, swings, vol regime, body_ratio, FM-020/021/027/028). Identity registry + fail-closed lookup + explicit consumer bindings. No PIT remediation, no retrain, no model enablement.",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE",
+    "FORMULA_CHANGE"
+  ],
+  "affected_files": [
+    "src/features/feature_pipeline.py",
+    "src/features/candle_math.py",
+    "src/features/feature_identity.py",
+    "src/runtime/live_engine_hook.py",
+    "configs/formulas/market_ontology.yaml",
+    "scripts/analysis/phase1_duplicate_formula_identity_closure.py",
+    "tests/test_phase1_duplicate_formula_identity_closure.py",
+    "tests/test_feature_pipeline.py",
+    "docs/governance/phase1_feature_identity_registry-2026-07-10.json",
+    "docs/governance/phase1_duplicate_formula_identity_closure-2026-07-10.json",
+    "docs/governance/phase1_duplicate_formula_identity_closure-2026-07-10.md",
+    "docs/governance/phase1_duplicate_implementation_authority_decisions-2026-07-10.json",
+    "docs/governance/phase1_consumer_identity_bindings-2026-07-10.json",
+    "docs/governance/phase1_duplicate_formula_follow_up_backlog-2026-07-10.json",
+    "docs/governance/phase1_duplicate_formula_identity_manifest-2026-07-10.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [
+    "FEAT-VOLUME",
+    "FEAT-VOLUME_RANGE_PROXY",
+    "FEAT-VOLUME_RATIO",
+    "FEAT-SWING_HIGH_CENTERED_BATCH",
+    "FEAT-SWING_LOW_CENTERED_BATCH",
+    "FEAT-SWING_HIGH_CAUSAL_CONFIRMED",
+    "FEAT-SWING_LOW_CAUSAL_CONFIRMED",
+    "FEAT-VOLATILITY_REGIME_GLOBAL_BATCH_RANK",
+    "FEAT-VOLATILITY_REGIME_EXPANDING_CAUSAL_RANK",
+    "FEAT-VOLATILITY_REGIME_ROLLING_CAUSAL_RANK",
+    "FEAT-BODY_TO_RANGE_RATIO",
+    "FEAT-BODY_TO_TOTAL_WICK_RATIO",
+    "FEAT-DISP_STRENGTH",
+    "FEAT-RETEST_DEPTH",
+    "FEAT-DISPLACEMENT_RETRACE",
+    "FEAT-DISPLACEMENT_ATR_RATIO",
+    "FM-010",
+    "FM-013",
+    "FM-020",
+    "FM-021",
+    "FM-027",
+    "FM-028"
+  ],
+  "affected_models": "none enabled/changed",
+  "affected_production_config": "none (hash-neutral)",
+  "required_checks_ack": [
+    "tests/test_phase1_duplicate_formula_identity_closure.py",
+    "tests/test_feature_pipeline.py",
+    "tests/test_candle_math.py",
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_derived_math.py",
+    "tests/test_live_integration.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit: revert pipeline/candle_math/identity/live/ontology/artifacts/tests together"
+}

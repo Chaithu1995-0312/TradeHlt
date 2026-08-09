@@ -1,0 +1,114 @@
+{
+  "_doc": "FROZEN implementation-validation record for program FM-030-031-DIMENSIONAL-MIX-MIGRATION. Dated + immutable (the b2a_feature_candidate_certification-*.json precedent). This validates that the CONFIG-GATED IDENTITY WORKS AS BUILT — it is NOT an economic result and confers NO activation authority (CLAUDE.md 6.5). Evidence lives in run artifacts under results/research/_spine_entries/, which rotate; this file is the durable record.",
+  "schema_version": "1.0.0",
+  "program_id": "FM-030-031-DIMENSIONAL-MIX-MIGRATION",
+  "validated_at_utc": "2026-07-22",
+  "instrument": "BNBUSDT",
+  "instrument_rationale": "Single-coin by design. The question is MECHANISM, not economics: spine throughput is 5-13 entries/instrument, far below the 30-sample floor, so extra instruments buy no economic authority. BNBUSDT is the reference instrument carrying the parity proof (gate-ON approved_trades=11) and shows the saturation most clearly.",
+  "engine_gate": "BACKTEST_ENGINE_GATE=1 (forced pre-import). detect_regime/breakout_engine execute only inside EngineRunner.run(), which the gate-OFF research path never calls (F-037/F-058); gate-OFF would make this A/B vacuous.",
+  "configs": {
+    "legacy": "configs/production/v2_multi_2026_04.json (feature_pipeline.normalization_basis = atr_relative)",
+    "corrected": "configs/production/v2_multi_dimfix_shadow_2026_07.json (= atr_absolute)",
+    "behavioral_key_diff": ["feature_pipeline.normalization_basis"],
+    "_diff_note": "Flatten-and-compare over both configs yields exactly one differing behavioral key (plus one _comment_ field). The dual_engine thresholds are deliberately NOT recalibrated in the corrected arm — doing so would confound 'the identity changed' with 'the thresholds changed'."
+  },
+
+  "questions": {
+    "Q1_config_gated_path_executes": {
+      "answer": "YES",
+      "method": "Behavioral positive control, not a code read. The corrected arm emits four rejection reasons that ONLY the dual_engine/RegimeGovernor layer can produce.",
+      "evidence": {
+        "new_rejection_reasons": {
+          "engine_runner:ultron:ultron_gate:regime_trend_no_direction": 1,
+          "engine_runner:ultron:ultron_gate:regime_range_no_direction": 2,
+          "engine_runner:ultron:ultron_gate:neutral_low_confidence": 1
+        },
+        "legacy_rejection_reasons": {"engine_runner:adapter:invalid_session:0.0": 2},
+        "why_decisive": "These reasons are unreachable unless the corrected FM-030/031 values reached detect_regime through the production PROD_VERSION resolution path (not merely through an injected cfg dict, which the unit floor covers separately)."
+      }
+    },
+    "Q2_legacy_path_byte_identical": {
+      "answer": "YES",
+      "method": "SHA-256 of the trade ledger, compared across the code change and reproduced.",
+      "evidence": {
+        "ledger_sha256": "9bcba138775d41091fa7a04c2f2c0315dd55c7e6f7e8843dd6c3181ca9b7f8df",
+        "pre_change_runs": ["run_20260718_014332", "run_20260718_015407", "run_20260718_021319", "run_20260718_023442", "run_20260718_025658"],
+        "post_change_runs": ["run_20260722_181458", "run_20260722_183311", "run_20260722_184342", "run_20260722_191344"],
+        "identical_across_all_9_runs": true,
+        "summary_metrics": {"total_setups": 13, "approved_trades": 11, "pnl_rr_net": -4.251, "win_rate": 0.2727, "profit_factor": 0.509},
+        "corroborating": "Same SHA recorded independently by the F-060 Gaussian-pivotality artifact. XAUUSD feature-matrix vector SHA also unchanged (tests/test_feature_layer_freeze.py)."
+      }
+    },
+    "Q3_decision_surface_changes_as_expected": {
+      "answer": "YES",
+      "method": "Count REGIME_CLASSIFICATION events in logs/regime_classifications.jsonl per run window. engine_runner emits this stream ON CHANGE ONLY (:843-849), so the event count IS the discrimination measure.",
+      "evidence": {
+        "candles_per_run": 70080,
+        "legacy_regime_change_events": 1,
+        "legacy_by_regime": {"trend": 1},
+        "legacy_interpretation": "ONE event over 70,080 candles = the initial null->trend transition and nothing after. The regime label is a literal constant for the entire backtest; the dual_engine thresholds (0.15/0.3) never bind on crypto.",
+        "corrected_regime_change_events": 7,
+        "corrected_by_regime": {"trend": 2, "neutral": 3, "range": 2},
+        "corrected_interpretation": "The layer discriminates across all three regimes — inert -> active, exactly the predicted mechanism.",
+        "reproduced": "Legacy count of 1 observed in both legacy runs measured."
+      }
+    },
+    "Q4_ledger_differs_only_from_the_identity_change": {
+      "answer": "YES",
+      "method": "Entry-set algebra + geometry comparison + run-to-run determinism + config key-diff.",
+      "evidence": {
+        "n_legacy": 11,
+        "n_corrected": 7,
+        "kept": 7,
+        "removed": 4,
+        "added": 0,
+        "nested_corrected_subset_of_legacy": true,
+        "dropped_trade_ids": ["CRT-0004", "CRT-0006", "CRT-0007", "CRT-0013"],
+        "dropped_equals_new_regime_rejections": true,
+        "surviving_trades_geometry_identical": true,
+        "total_setups_both_arms": 13,
+        "crt_trajectory_invariant": "total_setups is identical in both arms, so the CRT state machine never diverged — CRT does not consume FM-022/023.",
+        "corrected_ledger_sha256": "9e28abef0176175868fa1d729d1e9a82238385d04661ebbc8a10599d0e69e63d",
+        "corrected_runs": ["run_20260722_182345", "run_20260722_185553", "run_20260722_192646"],
+        "corrected_deterministic_across_3_runs": true
+      }
+    }
+  },
+
+  "falsified_design_assumption": {
+    "claim": "Entry sets are NOT nested; a reject resets the CRT state machine so the trajectory diverges in both directions (removed != added).",
+    "origin": "Inherited verbatim from scripts/research/bitnet_shadow_diagnostic.py, whose shape this driver reused.",
+    "status": "FALSIFIED for this change, and CORRECTED in the driver (docstring + report note), with the original retained per CLAUDE.md 6.2 rule 4.",
+    "why_it_differed": "BitNet vetoes INSIDE UltronRiskEngine.approve_with_soft_conf (crt_engine_v2.py:1960) and therefore perturbs the CRT state machine. The normalization basis is consumed only DOWNSTREAM of CRT, so the regime layer is a pure veto and the entry sets nest cleanly.",
+    "consequence": "The experiment is better controlled than designed for — a clean subset with zero confounding divergence. The driver now reports `nested` per instrument; False would mean this structural assumption broke."
+  },
+
+  "NON_AUTHORITATIVE_ECONOMICS": {
+    "_doc": "Quarantined per the F-053 NON_AUTHORITATIVE_DOWNSTREAM_DIAGNOSTICS discipline. Recorded for completeness; MUST NOT gate any decision.",
+    "legacy": {"expectancy_rr": -0.3865, "profit_factor": 0.509, "win_rate": 0.2727, "n": 11},
+    "corrected": {"expectancy_rr": -0.3864, "profit_factor": 0.5108, "win_rate": 0.2857, "n": 7},
+    "book_delta_expectancy": 0.0001,
+    "power": "INSUFFICIENT",
+    "verdict": "INSUFFICIENT",
+    "interpretation": "Both arms are net-negative and n=7 is far below the 30-sample floor. The delta (+0.0001R) is indistinguishable from zero and carries NO economic meaning either way. Consistent with the F-019...F-043 entry-information null and with F-060's own GAUSSIAN_INFORMATION_INERT result: a degenerate scoring layer is not automatically a costly one."
+  },
+
+  "conclusion": {
+    "implementation_validated": true,
+    "all_four_questions_yes": true,
+    "PRODUCTION_BEHAVIOR_CHANGED": "NO",
+    "ACTIVE_VERSION": "v2_multi_2026_04 (unchanged)",
+    "active_config_basis": "atr_relative (legacy, unchanged)",
+    "ontology_state": "FM-030/031 registered, active: false",
+    "ACTIVATION_AUTHORITY": "NONE",
+    "what_would_be_required_to_activate": [
+      "demonstrated G001 improvement (not available: n=7, INSUFFICIENT)",
+      "recalibration of engine_runner.dual_engine thresholds, which are tuned to the legacy price-scaled magnitudes"
+    ],
+    "scope_caveat": "Validated on the BATCH pipeline path (backtest_v2 constructs FeaturePipeline). The LIVE ingress (live_engine_hook / FeatureStore) is a separate surface NOT covered by this knob — M16 consumer-alignment work."
+  },
+
+  "related_findings": ["F-061", "F-060", "F-041", "F-037", "F-058", "F-036"],
+  "driver": "scripts/research/dimensional_mix_shadow_diagnostic.py",
+  "floor": "tests/test_fm030_031_implementation_validation.py"
+}

@@ -1,0 +1,22 @@
+{
+  "_doc": "Immutable freeze pointer for XAUUSD CRT baseline trace V1. Do not overwrite the dated JSONL; later runs are new artifacts.",
+  "artifact_id": "XAUUSD_CRT_BASELINE_TRACE_V1",
+  "status": "FROZEN_SUCCESS",
+  "selection_rule": "FIRST_16_FINALIZED_BARS",
+  "trace_path": "docs/governance/xauusd_crt_baseline_trace/xauusd_crt_baseline_trace_v1.jsonl",
+  "manifest_path": "docs/governance/xauusd_crt_baseline_trace/xauusd_crt_baseline_trace_v1.manifest.json",
+  "summary_path": "docs/governance/xauusd_crt_baseline_trace/xauusd_crt_baseline_trace_v1.summary.md",
+  "trace_sha256": "26e185b943ec5caeee31d32a0b598b543f00a48f953d9fefc9a272eb77ea72d7",
+  "corpus_path": "data/mt5/XAUUSD_M15.csv",
+  "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "target_start_timestamp": "2024-05-22 20:30:00",
+  "target_end_timestamp": "2024-05-23 01:15:00",
+  "target_bar_count": 16,
+  "architectural_finding": "CRT process_candle transition guards do not consume the 38-dim FeaturePipeline vector; vector is journal-attached at TRADE_OPENED.",
+  "overwrite_policy": "FORBIDDEN — create new dated artifacts; do not mutate this freeze pointer's identity fields",
+  "frozen_at_utc": "2026-07-14T07:30:00Z",
+  "acceptance_role": "HISTORICAL_COMPARISON_EVIDENCE_NOT_GOLDEN_FUTURE_OUTPUT",
+  "policy_ref": "docs/governance/TASK_CLASSIFICATION_BEHAVIOR_POLICY.md",
+  "baseline_hash_parity_general_requirement": "SUPERSEDED",
+  "note": "Future authorized behavior changes need not match this trace's transition/event/trade hashes. OBSERVATION_ONLY work must still preserve current-path neutrality when hooks are off."
+}

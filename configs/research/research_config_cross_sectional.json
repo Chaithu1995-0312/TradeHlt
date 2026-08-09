@@ -1,0 +1,45 @@
+{
+  "_doc": "Program 5 — cross-sectional relative-value (dispersion). Drives scripts/research/qualify_cross_sectional.py. Reuses the standard research sections (costs/qualification/universe) so ResearchConfig.from_file parses it; the cross_sectional block carries the panel/interpreter params. PRE-REGISTERED, frozen: docs/research-readiness/program-5-cross-sectional-preregistration.md.",
+  "harness": {
+    "warmup": 0,
+    "window_size": 64,
+    "min_samples": 30
+  },
+  "forward_walk": {
+    "max_forward": 96,
+    "trail_mult": 0.5,
+    "exit_model": "intrabar_fixed"
+  },
+  "signal": {
+    "apply_signal_defaults": false,
+    "sl_atr_mult": 1.0,
+    "tp_atr_mult": 2.0
+  },
+  "costs": {
+    "round_trip_bps": 12.0
+  },
+  "qualification": {
+    "min_samples": 30,
+    "expectancy_min": 0.0,
+    "pf_min": 1.0,
+    "oos_split": 0.3,
+    "oos_retention_min": 0.5,
+    "n_permutations": 2000,
+    "significance_alpha": 0.05
+  },
+  "universe": {
+    "data_dir": "data",
+    "pattern": "*_M15.csv",
+    "instruments": ["BNBUSDT", "BTCUSDT", "DOGEUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT"]
+  },
+  "cross_sectional": {
+    "k": 2,
+    "interpreters": [
+      {"name": "xs_mom_96_16",  "kind": "momentum", "L": 96,  "H": 16},
+      {"name": "xs_mom_672_96", "kind": "momentum", "L": 672, "H": 96},
+      {"name": "xs_rev_8_8",    "kind": "reversal", "L": 8,   "H": 8},
+      {"name": "xs_rev_32_32",  "kind": "reversal", "L": 32,  "H": 32},
+      {"name": "xs_vol_96_16",  "kind": "vol",      "L": 96,  "H": 16}
+    ]
+  }
+}

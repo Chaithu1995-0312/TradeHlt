@@ -1,0 +1,674 @@
+{
+  "_doc": "E-MT-01 adversarial mutation matrix (frozen 2026-07-10). Before E-MT-00 code is accepted, every failure_class must have >=1 seeded_defect that turns a clean MeasurementContract probe RED when the mutation is active and GREEN when clean. Historical F-xxx anchors are evidence of discovered failure modes — not economic closures.",
+  "schema_version": "1.0.0",
+  "matrix_id": "E-MT-01-MATRIX-v1",
+  "created_utc": "2026-07-10",
+  "authority": "docs/governance/MEASUREMENT_CONTRACT.md",
+  "coverage_rule": "COMPLETE iff every failure_class has at least one seeded_defect with status PLANNED|IMPLEMENTED and detector_probe non-empty.",
+  "surfaces": [
+    "population",
+    "features",
+    "labels",
+    "costs",
+    "exits",
+    "splits",
+    "metrics",
+    "pipeline"
+  ],
+  "failure_classes": [
+    {
+      "id": "FC-POP-DETECTION-AS-TRADE",
+      "surface": "population",
+      "title": "Detection stream counted as trade population",
+      "historical_anchors": ["F-022"],
+      "semantic_substitution": "n_detections → n_trades; opportunity rows treated as executed trades",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-POP-001",
+          "mutation": "Replace trade_decision population with opportunities.jsonl rows without execution filter; keep metric n_trades label",
+          "inject": "fixture: swap population loader to detection stream; leave contract.unit_of_analysis=trade_decision",
+          "detector_probe": "PROBE-POP-UNIT-MATCH",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-LABEL-STREAM-INCONSISTENT",
+      "surface": "labels",
+      "title": "Stream outcome/rr used as economic truth without re-derive",
+      "historical_anchors": ["F-022"],
+      "semantic_substitution": "opportunities.outcome / rr_achieved → realized trade R",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-LBL-001",
+          "mutation": "Set y from stream outcome while contract.derivation_authority=forward_walk.intrabar_fixed; inject inconsistent SL_HIT on paths that never touch SL",
+          "inject": "fixture rows with outcome=SL_HIT and path min>stop; label builder trusts outcome field",
+          "detector_probe": "PROBE-LBL-REDERIVE-AGREE",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-LABEL-ZONE-ARTIFACT",
+      "surface": "labels",
+      "title": "Zone registry economic labels from contaminated stream",
+      "historical_anchors": ["F-041B", "F-022"],
+      "semantic_substitution": "stored zone mean_RR/SL-hit → honest forward_walk labels",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-LBL-002",
+          "mutation": "Use zone_registry stored SL-hit ≈0.98 as y_win proxy instead of re-derived forward_walk",
+          "inject": "label path reads models/zone_registry.json meta labels",
+          "detector_probe": "PROBE-LBL-REDERIVE-AGREE",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-LABEL-RR-TRAINING",
+      "surface": "labels",
+      "title": "RR model training labels from contaminated stream",
+      "historical_anchors": ["F-045", "F-022"],
+      "semantic_substitution": "rr_dataset_builder y_win/y_rr from stream outcome → forward economic R",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-LBL-003",
+          "mutation": "Train/eval metric uses y_rr from stream while contract bans stream fields",
+          "inject": "fixture: y_rr copied from outcome without forward_walk",
+          "detector_probe": "PROBE-LBL-AUTHORITY",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-LABEL-DEGENERATE-Y",
+      "surface": "labels",
+      "title": "Degenerate dual labels (y_rr ≈ y_win)",
+      "historical_anchors": ["F-045"],
+      "semantic_substitution": "two named targets that are algebraically almost identical presented as independent",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-LBL-004",
+          "mutation": "Define y_rr = 1.0 if win else -1.0 while reporting separate IC for y_rr and y_win",
+          "inject": "label builder forces y_rr∈{+1,-1} from y_win",
+          "detector_probe": "PROBE-LBL-DEGENERACY",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-FEATURE-NAME-COLLISION",
+      "surface": "features",
+      "title": "Same feature name, different quantity (train/serve or pipeline/CRT)",
+      "historical_anchors": ["F-050", "CH-002"],
+      "semantic_substitution": "pipeline retest_depth/disp_strength ↔ CRT displacement_retrace/displacement_atr_ratio under shared keys",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-FEAT-001",
+          "mutation": "Emit FM-021 value under key expected to be FM-027 (or reverse)",
+          "inject": "feature map alias retest_depth → displacement_retrace without formula change",
+          "detector_probe": "PROBE-FEAT-NAME-BINDING",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-FEATURE-FORMULA-DIVERGENCE",
+      "surface": "features",
+      "title": "Divergent formula under shared semantic name",
+      "historical_anchors": ["F-046", "F-047", "GD-001"],
+      "semantic_substitution": "body_ratio = body/total_wick vs body/range",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-FEAT-002",
+          "mutation": "Compute body_ratio as body/total_wick while contract binds FM-010 body/range",
+          "inject": "swap candle_math call to wick denominator path",
+          "detector_probe": "PROBE-FEAT-FORMULA-PARITY",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-FEATURE-LOOKAHEAD-CENTER",
+      "surface": "features",
+      "title": "Centered window / future bar leakage in feature builder",
+      "historical_anchors": ["F-029"],
+      "semantic_substitution": "causal trailing feature → center=True swing using future bars",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-FEAT-003",
+          "mutation": "Enable center=True (or equivalent) so feature at t uses t+k",
+          "inject": "builder flag center=True on swing/ATR window",
+          "detector_probe": "PROBE-FEAT-PIT-CAUSAL",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-FEATURE-GLOBAL-RANK",
+      "surface": "features",
+      "title": "Full-sample rank/percentile as if point-in-time",
+      "historical_anchors": ["F-029"],
+      "semantic_substitution": "expanding/trailing rank → global rank over entire series",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-FEAT-004",
+          "mutation": "volatility_regime = percentile rank over full sample instead of trailing window",
+          "inject": "rank(pct) without time-causal mask",
+          "detector_probe": "PROBE-FEAT-PIT-CAUSAL",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-ENGINE-GATE-OFF-SUBSTITUTION",
+      "surface": "pipeline",
+      "title": "Research path gate-OFF claimed as full fusion spine",
+      "historical_anchors": ["F-037"],
+      "semantic_substitution": "CRT-only backtest entries → EngineRunner 4-engine fusion results",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-PIPE-001",
+          "mutation": "Set engine_gate_mode=gate_on_fusion in contract while BACKTEST_ENGINE_GATE=0 / EngineRunner.run never called",
+          "inject": "env BACKTEST_ENGINE_GATE=0; contract claims fusion",
+          "detector_probe": "PROBE-PIPE-ENGINE-IDENTITY",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-ENGINE-RR-GAUSSIAN-DUPLICATE",
+      "surface": "pipeline",
+      "title": "RR fusion path doubles Gaussian under another name",
+      "historical_anchors": ["F-038"],
+      "semantic_substitution": "base RREngine → rr_fusion gaussian bypass as 'rr' score",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-PIPE-002",
+          "mutation": "Enable rr_fusion while contract.expected_engines lists base rr only; scores correlate ~1 with gaussian",
+          "inject": "rr_fusion.enabled=true with bypass-dominant confidence",
+          "detector_probe": "PROBE-PIPE-ENGINE-IDENTITY",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-ENGINE-CONFIDENCE-MISSCALE",
+      "surface": "pipeline",
+      "title": "Confidence gate mis-scaled for feature dimension (always bypass)",
+      "historical_anchors": ["F-044"],
+      "semantic_substitution": "Mahalanobis confidence as calibrated P(in-dist) when floor is ~exp(-0.5*dof)",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-PIPE-003",
+          "mutation": "Use legacy_scalar confidence_bypass_threshold that rejects 100% in-sample as if selective",
+          "inject": "threshold=0.3 with exp(-0.5*d_sq) on dof~27",
+          "detector_probe": "PROBE-PIPE-GATE-CALIBRATION",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-ENGINE-SEMANTIC-MISWIRE-RR",
+      "surface": "pipeline",
+      "title": "Polarity score wired into true-RR threshold gate",
+      "historical_anchors": ["F-048"],
+      "semantic_substitution": "RREngine polarity∈[0.5,1] → DecisionEngine rr_threshold (e.g. 1.5) as reward/risk",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-PIPE-004",
+          "mutation": "Gate requires fusion.rr >= 1.5 while rr feature is polarity in [0,1]",
+          "inject": "decision gate threshold 1.5 on polarity field",
+          "detector_probe": "PROBE-PIPE-SEMANTIC-RANGE",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-ENGINE-ORPHAN-SIDECAR",
+      "surface": "pipeline",
+      "title": "Built-but-unwired module counted as measured path",
+      "historical_anchors": ["F-012", "F-013", "F-005"],
+      "semantic_substitution": "sidecar/orphan component → live spine consumer",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-PIPE-005",
+          "mutation": "List TradeNet/PortfolioAllocator/CognitiveBus in modules_in_path while call count=0 on research path",
+          "inject": "contract modules_in_path includes orphan; probe call graph shows 0",
+          "detector_probe": "PROBE-PIPE-CALL-REACHABILITY",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-ENGINE-INERT-FLAG",
+      "surface": "pipeline",
+      "title": "Feature flag off but experiment claims component active",
+      "historical_anchors": ["F-004"],
+      "semantic_substitution": "use_bitnet:false path → BitNet-gated decisions",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-PIPE-006",
+          "mutation": "feature_flags.use_bitnet=true in claims while config false / client not invoked",
+          "inject": "mismatch flag claim vs runtime",
+          "detector_probe": "PROBE-PIPE-FLAG-RUNTIME",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-CONFIG-VERSION-SPLIT",
+      "surface": "pipeline",
+      "title": "Active config version ≠ schema/code line under test",
+      "historical_anchors": ["F-016", "F-018"],
+      "semantic_substitution": "documented v4 behavior → v2 active file; missing sections use silent defaults",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-PIPE-007",
+          "mutation": "contract.config_version_source claims keys absent from CRTConfig / ACTIVE_VERSION file",
+          "inject": "point to wrong production JSON or inject unknown override keys",
+          "detector_probe": "PROBE-PIPE-ACTIVE-VERSION",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-CONFIG-ORPHAN-INTEGRITY",
+      "surface": "pipeline",
+      "title": "Integrity check exists but does not gate the path",
+      "historical_anchors": ["F-006"],
+      "semantic_substitution": "config_integrity report present → enforced preflight",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-PIPE-008",
+          "mutation": "Skip integrity gate while evidence_artifacts claims integrity ran",
+          "inject": "stub report file without call-site invocation",
+          "detector_probe": "PROBE-PIPE-INTEGRITY-CALLSITE",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-MANIFEST-RUNTIME-MISMATCH",
+      "surface": "pipeline",
+      "title": "Registry manifest active artifact ≠ runtime-loaded file",
+      "historical_anchors": ["F-041A"],
+      "semantic_substitution": "manifest active sha → config path sha",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-PIPE-009",
+          "mutation": "Point zone_gate_registry active to different sha than engine_runner.zone_registry_path",
+          "inject": "manifest active:true on file A; runtime loads file B",
+          "detector_probe": "PROBE-PIPE-MANIFEST-RUNTIME",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-L3-INTEGRITY-CALLSITE",
+      "surface": "pipeline",
+      "title": "L3 dataset integrity claimed but not called on research stream",
+      "historical_anchors": ["F-039"],
+      "semantic_substitution": "inline L1/L2 only → full validate_dataset L3",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-PIPE-010",
+          "mutation": "dataset_integrity_level=L1_L2_L3 while stream path never calls validate_dataset",
+          "inject": "research loader without L3; contract claims L3",
+          "detector_probe": "PROBE-PIPE-L3-CALLSITE",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-COST-MODEL-SUBSTITUTION",
+      "surface": "costs",
+      "title": "Gross or wrong bps presented as net success",
+      "historical_anchors": ["F-025", "prereg common standards"],
+      "semantic_substitution": "gross PnL / 0 bps → net with declared taker+slippage+funding",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-COST-001",
+          "mutation": "success_gate computed on gross while contract.success_gate_uses=net; or zero costs despite components declared",
+          "inject": "cost function returns 0; metrics use gross for gate",
+          "detector_probe": "PROBE-COST-NET-GATE",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-EXIT-PROXY-NOT-GOVERNING",
+      "surface": "exits",
+      "title": "Stream/proxy exit substituted for declared forward_walk exit",
+      "historical_anchors": ["F-022", "F-025", "F-010"],
+      "semantic_substitution": "stream outcome path → intrabar_fixed SL/TP under contract params",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-EXIT-001",
+          "mutation": "Take exit from stream outcome field while contract.exit_family=intrabar_fixed_sl_tp",
+          "inject": "bypass forward_walk; copy outcome",
+          "detector_probe": "PROBE-EXIT-AUTHORITY",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-SPLIT-OVERLAP-LEAKAGE",
+      "surface": "splits",
+      "title": "Overlapping labels / no embargo across train-test",
+      "historical_anchors": ["Lopez de Prado purged CV", "prereg common standards"],
+      "semantic_substitution": "random or chronological split without purge → purged+embargoed WF",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-SPLIT-001",
+          "mutation": "Allow label horizons to overlap train and test; embargo=0 while contract.purge requires purge",
+          "inject": "kfold without purge on multi-bar labels",
+          "detector_probe": "PROBE-SPLIT-PURGE-EMBARGO",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-SESSION-SILENT-DEFAULT",
+      "surface": "features",
+      "title": "Unknown categorical mapped to silent default class",
+      "historical_anchors": ["phase-integrity session→london 0.0", "E-001D"],
+      "semantic_substitution": "unknown session → london index without error",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-FEAT-005",
+          "mutation": "Map unknown session string to 0.0 (london) instead of fail/NaN per contract",
+          "inject": "session encoder default 0",
+          "detector_probe": "PROBE-FEAT-NO-SILENT-DEFAULT",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-METRIC-STAT-AS-ECON",
+      "surface": "metrics",
+      "title": "Statistical significance reported as economic success",
+      "historical_anchors": ["E-001B", "F-020", "F-030"],
+      "semantic_substitution": "p<0.05 / AUC / IC → success_gate without net expectancy",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-MET-001",
+          "mutation": "Mark SUPPORTED because permutation p<0.05 while net E<0 and success_gate requires net",
+          "inject": "verdict writer ignores economic_metrics",
+          "detector_probe": "PROBE-MET-AUTHORITY-LADDER",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-METRIC-OVERCLAIM-INSUFFICIENT",
+      "surface": "metrics",
+      "title": "INSUFFICIENT power labeled HARMFUL / strong conclusion",
+      "historical_anchors": ["E-001A", "E-001E", "F-031"],
+      "semantic_substitution": "n<min cells → REGIME_HARMFUL / HARMFUL",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-MET-002",
+          "mutation": "Aggregate underpowered negative cells into HARMFUL",
+          "inject": "rollup without n guard",
+          "detector_probe": "PROBE-MET-INSUFFICIENT-GUARD",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-METRIC-DECORATIVE-WIRING",
+      "surface": "metrics",
+      "title": "Config/metric metadata decorative — not consumed",
+      "historical_anchors": ["E-001F", "F-006", "F-036 tunability"],
+      "semantic_substitution": "knob present in config → knob affects measurement",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-MET-003",
+          "mutation": "Vary declared behavioral knob with byte-identical ledger while claiming sensitivity",
+          "inject": "parameter sweep with no consumer",
+          "detector_probe": "PROBE-MET-KNOB-REACHABILITY",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "FC-METRIC-N-SUBSTITUTION",
+      "surface": "metrics",
+      "title": "Overlapping or detection n used as independent decision n",
+      "historical_anchors": ["F-022", "prereg power standards"],
+      "semantic_substitution": "overlapping label count / detections → independent trade decisions",
+      "seeded_defects": [
+        {
+          "seed_id": "SEED-MET-004",
+          "mutation": "Report n=100 from overlapping 1-bar-shifted events while contract.overlap_policy=forbid_overlapping_labels",
+          "inject": "count rows not independent decisions",
+          "detector_probe": "PROBE-MET-INDEPENDENCE-N",
+          "expected_clean": "PASS",
+          "expected_mutant": "FAIL",
+          "status": "PLANNED"
+        }
+      ]
+    }
+  ],
+  "probes": {
+    "PROBE-POP-UNIT-MATCH": {
+      "surface": "population",
+      "checks": [
+        "unit_of_analysis consistent with row constructor",
+        "detection_vs_trade matches data source",
+        "population fingerprint excludes pure detections when unit=trade_decision"
+      ]
+    },
+    "PROBE-LBL-REDERIVE-AGREE": {
+      "surface": "labels",
+      "checks": [
+        "re-derive y via forward_walk under contract exits+costs",
+        "agreement >= min_agreement on critical fields",
+        "sign-flip rate and expectancy delta reported"
+      ]
+    },
+    "PROBE-LBL-AUTHORITY": {
+      "surface": "labels",
+      "checks": [
+        "derivation_authority != forbidden_stream_outcome for economic label_family",
+        "stream_fields_banned not present in y path"
+      ]
+    },
+    "PROBE-LBL-DEGENERACY": {
+      "surface": "labels",
+      "checks": [
+        "corr(|y_a|,|y_b|) or equality rate below degeneracy threshold if both claimed independent"
+      ]
+    },
+    "PROBE-FEAT-NAME-BINDING": {
+      "surface": "features",
+      "checks": [
+        "each output key maps to declared fm_id/formula_ref",
+        "not_equal_to collisions fail if equal within tolerance"
+      ]
+    },
+    "PROBE-FEAT-FORMULA-PARITY": {
+      "surface": "features",
+      "checks": [
+        "scalar registry formula matches builder output on golden candles"
+      ]
+    },
+    "PROBE-FEAT-PIT-CAUSAL": {
+      "surface": "features",
+      "checks": [
+        "zero sensitivity to future-bar perturbation beyond t",
+        "no full-sample rank when trailing required"
+      ]
+    },
+    "PROBE-FEAT-NO-SILENT-DEFAULT": {
+      "surface": "features",
+      "checks": [
+        "unknown categoricals raise or NA; never map to a valid class index"
+      ]
+    },
+    "PROBE-COST-NET-GATE": {
+      "surface": "costs",
+      "checks": [
+        "success metric uses net when success_gate_uses=net",
+        "declared cost components nonzero on fixture round-trip"
+      ]
+    },
+    "PROBE-EXIT-AUTHORITY": {
+      "surface": "exits",
+      "checks": [
+        "exit path is contract.code_entrypoint",
+        "not_equal_to sources not used"
+      ]
+    },
+    "PROBE-SPLIT-PURGE-EMBARGO": {
+      "surface": "splits",
+      "checks": [
+        "no train/test label horizon overlap under purge rule",
+        "embargo bars empty of samples"
+      ]
+    },
+    "PROBE-MET-AUTHORITY-LADDER": {
+      "surface": "metrics",
+      "checks": [
+        "economic success_gate not satisfiable by p-value/IC alone",
+        "info metrics cannot set SUPPORTED for economic experiments"
+      ]
+    },
+    "PROBE-MET-INSUFFICIENT-GUARD": {
+      "surface": "metrics",
+      "checks": [
+        "n < n_declared_min → INSUFFICIENT not HARMFUL"
+      ]
+    },
+    "PROBE-MET-KNOB-REACHABILITY": {
+      "surface": "metrics",
+      "checks": [
+        "declared knobs change ledger or are marked decorative"
+      ]
+    },
+    "PROBE-MET-INDEPENDENCE-N": {
+      "surface": "metrics",
+      "checks": [
+        "reported n equals independent unit count under overlap_policy"
+      ]
+    },
+    "PROBE-PIPE-ENGINE-IDENTITY": {
+      "surface": "pipeline",
+      "checks": [
+        "engine_gate_mode matches runtime",
+        "expected_engines actually constructed/called",
+        "no silent gaussian duplicate under rr name"
+      ]
+    },
+    "PROBE-PIPE-GATE-CALIBRATION": {
+      "surface": "pipeline",
+      "checks": [
+        "confidence gate not 100% constant bypass on training distribution when claimed selective"
+      ]
+    },
+    "PROBE-PIPE-SEMANTIC-RANGE": {
+      "surface": "pipeline",
+      "checks": [
+        "score domain compatible with threshold domain"
+      ]
+    },
+    "PROBE-PIPE-CALL-REACHABILITY": {
+      "surface": "pipeline",
+      "checks": [
+        "modules_in_path have call count >0 on fixture path",
+        "modules_explicitly_out_of_path have call count 0"
+      ]
+    },
+    "PROBE-PIPE-FLAG-RUNTIME": {
+      "surface": "pipeline",
+      "checks": [
+        "feature_flags match loaded config and invocation"
+      ]
+    },
+    "PROBE-PIPE-ACTIVE-VERSION": {
+      "surface": "pipeline",
+      "checks": [
+        "ACTIVE_VERSION resolves",
+        "required keys load without silent defaults for declared sections"
+      ]
+    },
+    "PROBE-PIPE-INTEGRITY-CALLSITE": {
+      "surface": "pipeline",
+      "checks": [
+        "integrity function invoked on path, not only report file present"
+      ]
+    },
+    "PROBE-PIPE-MANIFEST-RUNTIME": {
+      "surface": "pipeline",
+      "checks": [
+        "manifest active sha == runtime loaded artifact sha"
+      ]
+    },
+    "PROBE-PIPE-L3-CALLSITE": {
+      "surface": "pipeline",
+      "checks": [
+        "if level L1_L2_L3 then validate_dataset (or declared L3) called"
+      ]
+    }
+  },
+  "coverage_summary": {
+    "n_failure_classes": 27,
+    "n_seeded_defects": 27,
+    "min_seeds_per_class": 1,
+    "all_classes_have_seed": true,
+    "implementation_status": "PLANNED_MATRIX_FROZEN — no E-MT-00 code until this matrix is referenced by tests"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "_doc": "XAUUSD M15 Phase-1 frozen candidate binding. SCOPE FREEZE only — not AUTHORITATIVE, not VALIDATED, not ECONOMICALLY_ADMISSIBLE. All remaining OHLCV Phase-1 validation for XAUUSD must target this exact immutable object. Fail-closed verification: src/data_ingestion/xauusd_phase1_candidate.py + tests/test_xauusd_phase1_frozen_candidate.py.",
+  "schema_version": "1.0.0",
+  "binding_id": "XAUUSD_CANDIDATE_CORPUS",
+  "logical_corpus_id": "XAUUSD_M15",
+  "status": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION",
+  "frozen_at_utc": "2026-07-10T17:00:00Z",
+  "decided_by": "user",
+  "physical_path": "data/mt5/XAUUSD_M15.csv",
+  "content_hash_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "rows": 47275,
+  "allowed_time_range": {
+    "start": "2024-05-22T01:00:00",
+    "end": "2026-05-21T23:45:00"
+  },
+  "policy": {
+    "exclude_all_timestamps_after": "2026-05-21T23:45:00",
+    "exclude_other_physical_paths": true,
+    "notes": [
+      "Do not use data/XAUUSD_M15.csv (486cf361… extended root) for Phase-1 XAUUSD validation.",
+      "Do not use data/mt5/_rejected/XAUUSD_M15.csv (byte-identical to extended root).",
+      "Do not silently extend, replace, or re-pin this hash without a new authority decision.",
+      "This is NOT AUTHORITATIVE / NOT VALIDATED / NOT ECONOMICALLY_ADMISSIBLE."
+    ]
+  },
+  "explicitly_not": [
+    "AUTHORITATIVE",
+    "VALIDATED",
+    "ECONOMICALLY_ADMISSIBLE",
+    "APPROVED"
+  ],
+  "evidence": [
+    "reports/xauusd_m15_corpus_timestamp_gap_report.json",
+    "docs/governance/xauusd_m15_strict_reject_forensic-2026-07-10.md",
+    "docs/governance/corpus_authority_XAUUSD_M15_adjudication-2026-07-10.md"
+  ],
+  "remaining_phase1_validation": [],
+  "phase1_validation_report": "docs/governance/xauusd_phase1_validation_report-2026-07-10.json",
+  "phase1_validation_status": "PASS_CONTENT_ADDRESSED",
+  "phase1_validation_residuals": [
+    "no per-fetch session log",
+    "open-time label not dual-fetch proven",
+    "independent broker calendar UNPROVEN",
+    "E-MT-01 full mutation score not complete (8 FC detector gaps)"
+  ],
+  "phase1_validation_completed_utc": "2026-07-10T20:43:49Z",
+  "promotion_rule": "Only after remaining_phase1_validation pass: record APPROVED for this exact hash+path+range; never a different file under the same logical id without a new decision.",
+  "runtime_enforcement": {
+    "guard": "src/data_ingestion/xauusd_phase1_candidate.guard_xauusd_csv_path",
+    "wired_into": [
+      "src/runtime/backtest_v2.CandleLoader.__init__",
+      "src/runtime/backtest_v2.BacktestRunner.__init__",
+      "src/runtime/backtest_v2._preflight_dataset",
+      "src/runtime/backtest_v2.run_backtest",
+      "src/research/secondlow_v1/corpus.py"
+    ],
+    "behavior": "XAUUSD M15 loads rewrite to physical_path and fail closed on hash/range drift; other instruments unchanged"
+  }
+}
+

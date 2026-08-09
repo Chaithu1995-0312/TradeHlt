@@ -1,0 +1,228 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-07-14T04:20:56.688589+00:00",
+  "repo_state_hash": "b48d4d9a7abfb429f2a17c790d4b32083da5dd92",
+  "family": "MACD",
+  "session": "M8",
+  "feature_list": [
+    "macd_line",
+    "macd_signal",
+    "macd_hist"
+  ],
+  "fm_ids": {
+    "macd_line": null,
+    "macd_signal": null,
+    "macd_hist": null
+  },
+  "intended_quantities": {
+    "macd_line": "EWM(close, span=12, adjust=False).mean() - EWM(close, span=26, adjust=False).mean()",
+    "macd_signal": "EWM(macd_line, span=9, adjust=False).mean()",
+    "macd_hist": "macd_line - macd_signal"
+  },
+  "parameter_authority": {
+    "fast_period": 12,
+    "slow_period": 26,
+    "signal_period": 9,
+    "ema_convention": "pandas EWM(span=N, adjust=False).mean()",
+    "alpha_fast": 0.15384615384615385,
+    "alpha_slow": 0.07407407407407407,
+    "alpha_signal": 0.2,
+    "ema_init": "first observation (standard adjust=False)",
+    "authority_source": "src/features/feature_pipeline.py:290-295",
+    "drift_risk": "NONE (hardcoded in pipeline)"
+  },
+  "dependency_contracts": {
+    "macd_line": [
+      "close"
+    ],
+    "macd_signal": [
+      "macd_line"
+    ],
+    "macd_hist": [
+      "macd_line",
+      "macd_signal"
+    ]
+  },
+  "oracle_design": {
+    "algorithm": "explicit recursive EMA (no pandas ewm)",
+    "formula": "EMA[0] = values[0]; EMA[t] = alpha * values[t] + (1-alpha) * EMA[t-1]",
+    "alpha": "2/(span+1)",
+    "independence_statement": "Oracle uses pure numpy recursion; pipeline uses pandas EWM. Different code paths, same math."
+  },
+  "test_arms": {
+    "n_synthetic": 1000,
+    "degenerate_cases": [
+      "constant_100",
+      "increasing",
+      "decreasing",
+      "single_row",
+      "shorter_than_fast",
+      "exact_slow_boundary",
+      "changing_then_constant"
+    ],
+    "pit_cut_points": [
+      50,
+      100,
+      200,
+      300,
+      400
+    ],
+    "future_mutation_point": 300,
+    "determinism_runs": 3
+  },
+  "warmup_semantics": "No explicit warmup; EWM produces values from first observation. First (span-1) values use progressively less data.",
+  "nan_semantics": "No NaN input tested; pipeline does not produce NaN for MACD (no ATR dependency). NaN input would propagate.",
+  "per_feature_results": {
+    "macd_line": {
+      "parity": {
+        "max_abs_error": 0.0,
+        "max_rel_error": 0.0,
+        "nan_mask_equal": true,
+        "finite_rows": 1000
+      },
+      "pit": {
+        "cut_50": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        },
+        "cut_100": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        },
+        "cut_200": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        },
+        "cut_300": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        },
+        "cut_400": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        }
+      },
+      "future_mutation": {
+        "max_abs_error": 0.0,
+        "pass": true
+      },
+      "determinism": {
+        "pass": true
+      },
+      "verdict": {
+        "parity": "PASS",
+        "pit": "PASS",
+        "future_mutation": "PASS",
+        "determinism": "PASS",
+        "algebraic_identity": "PASS",
+        "verdict": "CERTIFIED"
+      }
+    },
+    "macd_signal": {
+      "parity": {
+        "max_abs_error": 0.0,
+        "max_rel_error": 0.0,
+        "nan_mask_equal": true,
+        "finite_rows": 1000
+      },
+      "pit": {
+        "cut_50": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        },
+        "cut_100": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        },
+        "cut_200": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        },
+        "cut_300": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        },
+        "cut_400": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        }
+      },
+      "future_mutation": {
+        "max_abs_error": 0.0,
+        "pass": true
+      },
+      "determinism": {
+        "pass": true
+      },
+      "verdict": {
+        "parity": "PASS",
+        "pit": "PASS",
+        "future_mutation": "PASS",
+        "determinism": "PASS",
+        "algebraic_identity": "PASS",
+        "verdict": "CERTIFIED"
+      }
+    },
+    "macd_hist": {
+      "parity": {
+        "max_abs_error": 0.0,
+        "max_rel_error": 0.0,
+        "nan_mask_equal": true,
+        "finite_rows": 1000
+      },
+      "pit": {
+        "cut_50": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        },
+        "cut_100": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        },
+        "cut_200": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        },
+        "cut_300": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        },
+        "cut_400": {
+          "pipeline_mae": 0.0,
+          "oracle_mae": 0.0,
+          "pit_pass": true
+        }
+      },
+      "future_mutation": {
+        "max_abs_error": 0.0,
+        "pass": true
+      },
+      "determinism": {
+        "pass": true
+      },
+      "verdict": {
+        "parity": "PASS",
+        "pit": "PASS",
+        "future_mutation": "PASS",
+        "determinism": "PASS",
+        "algebraic_identity": "PASS",
+        "verdict": "CERTIFIED"
+      }
+    }
+  },
+  "overall_verdict": "CERTIFIED"
+}

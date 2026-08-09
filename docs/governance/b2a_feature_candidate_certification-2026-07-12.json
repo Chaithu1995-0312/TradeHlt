@@ -1,0 +1,442 @@
+{
+  "probe": "b2a_feature_candidate_certification",
+  "phase": "B2A \u2014 candidate-formula certification only",
+  "generated_at": "2026-07-12T09:14:16.158257+00:00",
+  "b2a_cert_version": "1.0.0",
+  "recon_method_version": "1.0.0",
+  "authority": "research/governance only \u2014 PROMOTE = B2B-eligibility for candidate math ONLY; decision impact UNKNOWN; economic value UNKNOWN; activation authority NONE",
+  "scope_boundary": "observe-only; touches no registered impl, engine, config, or model; canonical vector stays 38-dim; PRODUCTION_BEHAVIOR_CHANGED = NO. After B2A, stop \u2014 B2B regenerates all downstream-impact evidence.",
+  "corpus_arms": [
+    "synthetic_1200",
+    "BNBUSDT_M15",
+    "BTCUSDT_M15",
+    "ETHUSDT_M15",
+    "SOLUSDT_M15"
+  ],
+  "provenance": {
+    "ema_spread_atr": {
+      "candidate_id": "FM-030",
+      "replaces": "FM-022",
+      "semantic_version": "2.0-atr-absolute",
+      "units": "dimensionless",
+      "normalization_basis": "atr_absolute",
+      "formula": "(ema_fast - ema_slow) / (atr * close)",
+      "guard": "atr>0 and close>0 else nan",
+      "linked_formula_dag": {
+        "ema_fast": "close.ewm(span=9, adjust=False).mean()",
+        "ema_slow": "close.ewm(span=21, adjust=False).mean()",
+        "TR_abs": "max(high-low, |high-prev_close|, |low-prev_close|)",
+        "ATR_abs": "SMA14(TR_abs)  (== feature_pipeline atr_14_raw)",
+        "atr_relative": "atr_14_raw / close  (pipeline `atr` column)",
+        "atr_absolute_reconstructed": "atr_relative * close  (== ATR_abs)",
+        "ema_spread_atr": "(ema_fast - ema_slow) / ATR_abs"
+      },
+      "raw_inputs": [
+        "high",
+        "low",
+        "close"
+      ],
+      "lookback": {
+        "ema_fast": 9,
+        "ema_slow": 21,
+        "atr": 14
+      },
+      "warmup": "first ATR_LOOKBACK-1 bars have NaN ATR_abs \u2192 candidate NaN (dropped by pipeline finalize)",
+      "availability": "bar t uses OHLC \u2264 t only (trailing SMA/EWM); no lookahead",
+      "pit_semantics": "same-bar / backward-looking; prefix-invariant"
+    },
+    "momentum_score_atr": {
+      "candidate_id": "FM-031",
+      "replaces": "FM-023",
+      "semantic_version": "2.0-atr-absolute",
+      "units": "dimensionless",
+      "normalization_basis": "atr_absolute",
+      "formula": "close_delta / (atr * close)",
+      "guard": "atr>0 and close>0 else nan",
+      "linked_formula_dag": {
+        "close_delta": "close.diff()  (one-bar change)",
+        "TR_abs": "max(high-low, |high-prev_close|, |low-prev_close|)",
+        "ATR_abs": "SMA14(TR_abs)  (== feature_pipeline atr_14_raw)",
+        "momentum_score_atr": "close_delta / ATR_abs"
+      },
+      "raw_inputs": [
+        "high",
+        "low",
+        "close"
+      ],
+      "lookback": {
+        "close_delta": 1,
+        "atr": 14
+      },
+      "warmup": "row 0 close_delta NaN + first ATR_LOOKBACK-1 bars NaN ATR_abs \u2192 candidate NaN",
+      "availability": "bar t uses OHLC \u2264 t only; no lookahead",
+      "pit_semantics": "same-bar delta / backward-looking; prefix-invariant"
+    }
+  },
+  "certification": {
+    "per_feature": {
+      "ema_spread_atr": {
+        "evaluable": true,
+        "three_path_agree": true,
+        "scalar_vector_parity": true,
+        "nan_discipline_ok": true,
+        "inf_count": 0,
+        "scale_invariant": true,
+        "scale_invariance_error": 9.664491429361988e-14,
+        "pit_invariant": true,
+        "per_arm": {
+          "synthetic_1200": {
+            "n_shared_rows": 1122,
+            "three_path_agree": true,
+            "agree_A_vs_B_linked_tight": true,
+            "agree_A_vs_C_legacy_identity_f32": true,
+            "max_resid_A_vs_B": 6.791331896849329e-08,
+            "max_resid_A_vs_C": 7.629983520662798e-06,
+            "scalar_vector_parity": true,
+            "inf_count": 0,
+            "nan_discipline_ok": true,
+            "scalar_parity_rows": 1122
+          },
+          "BNBUSDT_M15": {
+            "n_shared_rows": 7922,
+            "three_path_agree": true,
+            "agree_A_vs_B_linked_tight": true,
+            "agree_A_vs_C_legacy_identity_f32": true,
+            "max_resid_A_vs_B": 1.0937989580739327e-07,
+            "max_resid_A_vs_C": 0.00010782571913792172,
+            "scalar_vector_parity": true,
+            "inf_count": 0,
+            "nan_discipline_ok": true,
+            "scalar_parity_rows": 3000
+          },
+          "BTCUSDT_M15": {
+            "n_shared_rows": 7922,
+            "three_path_agree": true,
+            "agree_A_vs_B_linked_tight": true,
+            "agree_A_vs_C_legacy_identity_f32": true,
+            "max_resid_A_vs_B": 9.080882490408726e-08,
+            "max_resid_A_vs_C": 0.0002847541214701099,
+            "scalar_vector_parity": true,
+            "inf_count": 0,
+            "nan_discipline_ok": true,
+            "scalar_parity_rows": 3000
+          },
+          "ETHUSDT_M15": {
+            "n_shared_rows": 7922,
+            "three_path_agree": true,
+            "agree_A_vs_B_linked_tight": true,
+            "agree_A_vs_C_legacy_identity_f32": true,
+            "max_resid_A_vs_B": 8.967571929474616e-08,
+            "max_resid_A_vs_C": 6.090458694019141e-05,
+            "scalar_vector_parity": true,
+            "inf_count": 0,
+            "nan_discipline_ok": true,
+            "scalar_parity_rows": 3000
+          },
+          "SOLUSDT_M15": {
+            "n_shared_rows": 7922,
+            "three_path_agree": true,
+            "agree_A_vs_B_linked_tight": true,
+            "agree_A_vs_C_legacy_identity_f32": true,
+            "max_resid_A_vs_B": 7.568547699676742e-08,
+            "max_resid_A_vs_C": 5.785939394205471e-05,
+            "scalar_vector_parity": true,
+            "inf_count": 0,
+            "nan_discipline_ok": true,
+            "scalar_parity_rows": 3000
+          }
+        },
+        "verdict": "PROMOTE"
+      },
+      "momentum_score_atr": {
+        "evaluable": true,
+        "three_path_agree": true,
+        "scalar_vector_parity": true,
+        "nan_discipline_ok": true,
+        "inf_count": 0,
+        "scale_invariant": true,
+        "scale_invariance_error": 1.9761969838327786e-14,
+        "pit_invariant": true,
+        "per_arm": {
+          "synthetic_1200": {
+            "n_shared_rows": 1122,
+            "three_path_agree": true,
+            "agree_A_vs_B_linked_tight": true,
+            "agree_A_vs_C_legacy_identity_f32": true,
+            "max_resid_A_vs_B": 5.540634662182242e-08,
+            "max_resid_A_vs_C": 9.446290372139288e-08,
+            "scalar_vector_parity": true,
+            "inf_count": 0,
+            "nan_discipline_ok": true,
+            "scalar_parity_rows": 1122
+          },
+          "BNBUSDT_M15": {
+            "n_shared_rows": 7922,
+            "three_path_agree": true,
+            "agree_A_vs_B_linked_tight": true,
+            "agree_A_vs_C_legacy_identity_f32": true,
+            "max_resid_A_vs_B": 1.626660841580474e-07,
+            "max_resid_A_vs_C": 2.3039164487315134e-07,
+            "scalar_vector_parity": true,
+            "inf_count": 0,
+            "nan_discipline_ok": true,
+            "scalar_parity_rows": 3000
+          },
+          "BTCUSDT_M15": {
+            "n_shared_rows": 7922,
+            "three_path_agree": true,
+            "agree_A_vs_B_linked_tight": true,
+            "agree_A_vs_C_legacy_identity_f32": true,
+            "max_resid_A_vs_B": 2.266080318946706e-07,
+            "max_resid_A_vs_C": 2.3648825253630434e-07,
+            "scalar_vector_parity": true,
+            "inf_count": 0,
+            "nan_discipline_ok": true,
+            "scalar_parity_rows": 3000
+          },
+          "ETHUSDT_M15": {
+            "n_shared_rows": 7922,
+            "three_path_agree": true,
+            "agree_A_vs_B_linked_tight": true,
+            "agree_A_vs_C_legacy_identity_f32": true,
+            "max_resid_A_vs_B": 1.5191946278747537e-07,
+            "max_resid_A_vs_C": 2.803000813678125e-07,
+            "scalar_vector_parity": true,
+            "inf_count": 0,
+            "nan_discipline_ok": true,
+            "scalar_parity_rows": 3000
+          },
+          "SOLUSDT_M15": {
+            "n_shared_rows": 7922,
+            "three_path_agree": true,
+            "agree_A_vs_B_linked_tight": true,
+            "agree_A_vs_C_legacy_identity_f32": true,
+            "max_resid_A_vs_B": 1.34731418022227e-07,
+            "max_resid_A_vs_C": 2.863229804361822e-07,
+            "scalar_vector_parity": true,
+            "inf_count": 0,
+            "nan_discipline_ok": true,
+            "scalar_parity_rows": 3000
+          }
+        },
+        "verdict": "PROMOTE"
+      }
+    },
+    "overall_verdict": "PROMOTE",
+    "arms": [
+      {
+        "corpus": "synthetic_1200",
+        "n_shared_rows": 1122,
+        "evaluable": true,
+        "atr_abs_independent_matches_pipeline_atr_14_raw": true,
+        "ema_spread": {
+          "n_shared_rows": 1122,
+          "three_path_agree": true,
+          "agree_A_vs_B_linked_tight": true,
+          "agree_A_vs_C_legacy_identity_f32": true,
+          "max_resid_A_vs_B": 6.791331896849329e-08,
+          "max_resid_A_vs_C": 7.629983520662798e-06,
+          "scalar_vector_parity": true,
+          "inf_count": 0,
+          "nan_discipline_ok": true,
+          "scalar_parity_rows": 1122
+        },
+        "momentum_score": {
+          "n_shared_rows": 1122,
+          "three_path_agree": true,
+          "agree_A_vs_B_linked_tight": true,
+          "agree_A_vs_C_legacy_identity_f32": true,
+          "max_resid_A_vs_B": 5.540634662182242e-08,
+          "max_resid_A_vs_C": 9.446290372139288e-08,
+          "scalar_vector_parity": true,
+          "inf_count": 0,
+          "nan_discipline_ok": true,
+          "scalar_parity_rows": 1122
+        }
+      },
+      {
+        "corpus": "BNBUSDT_M15",
+        "n_shared_rows": 7922,
+        "evaluable": true,
+        "atr_abs_independent_matches_pipeline_atr_14_raw": true,
+        "ema_spread": {
+          "n_shared_rows": 7922,
+          "three_path_agree": true,
+          "agree_A_vs_B_linked_tight": true,
+          "agree_A_vs_C_legacy_identity_f32": true,
+          "max_resid_A_vs_B": 1.0937989580739327e-07,
+          "max_resid_A_vs_C": 0.00010782571913792172,
+          "scalar_vector_parity": true,
+          "inf_count": 0,
+          "nan_discipline_ok": true,
+          "scalar_parity_rows": 3000
+        },
+        "momentum_score": {
+          "n_shared_rows": 7922,
+          "three_path_agree": true,
+          "agree_A_vs_B_linked_tight": true,
+          "agree_A_vs_C_legacy_identity_f32": true,
+          "max_resid_A_vs_B": 1.626660841580474e-07,
+          "max_resid_A_vs_C": 2.3039164487315134e-07,
+          "scalar_vector_parity": true,
+          "inf_count": 0,
+          "nan_discipline_ok": true,
+          "scalar_parity_rows": 3000
+        }
+      },
+      {
+        "corpus": "BTCUSDT_M15",
+        "n_shared_rows": 7922,
+        "evaluable": true,
+        "atr_abs_independent_matches_pipeline_atr_14_raw": true,
+        "ema_spread": {
+          "n_shared_rows": 7922,
+          "three_path_agree": true,
+          "agree_A_vs_B_linked_tight": true,
+          "agree_A_vs_C_legacy_identity_f32": true,
+          "max_resid_A_vs_B": 9.080882490408726e-08,
+          "max_resid_A_vs_C": 0.0002847541214701099,
+          "scalar_vector_parity": true,
+          "inf_count": 0,
+          "nan_discipline_ok": true,
+          "scalar_parity_rows": 3000
+        },
+        "momentum_score": {
+          "n_shared_rows": 7922,
+          "three_path_agree": true,
+          "agree_A_vs_B_linked_tight": true,
+          "agree_A_vs_C_legacy_identity_f32": true,
+          "max_resid_A_vs_B": 2.266080318946706e-07,
+          "max_resid_A_vs_C": 2.3648825253630434e-07,
+          "scalar_vector_parity": true,
+          "inf_count": 0,
+          "nan_discipline_ok": true,
+          "scalar_parity_rows": 3000
+        }
+      },
+      {
+        "corpus": "ETHUSDT_M15",
+        "n_shared_rows": 7922,
+        "evaluable": true,
+        "atr_abs_independent_matches_pipeline_atr_14_raw": true,
+        "ema_spread": {
+          "n_shared_rows": 7922,
+          "three_path_agree": true,
+          "agree_A_vs_B_linked_tight": true,
+          "agree_A_vs_C_legacy_identity_f32": true,
+          "max_resid_A_vs_B": 8.967571929474616e-08,
+          "max_resid_A_vs_C": 6.090458694019141e-05,
+          "scalar_vector_parity": true,
+          "inf_count": 0,
+          "nan_discipline_ok": true,
+          "scalar_parity_rows": 3000
+        },
+        "momentum_score": {
+          "n_shared_rows": 7922,
+          "three_path_agree": true,
+          "agree_A_vs_B_linked_tight": true,
+          "agree_A_vs_C_legacy_identity_f32": true,
+          "max_resid_A_vs_B": 1.5191946278747537e-07,
+          "max_resid_A_vs_C": 2.803000813678125e-07,
+          "scalar_vector_parity": true,
+          "inf_count": 0,
+          "nan_discipline_ok": true,
+          "scalar_parity_rows": 3000
+        }
+      },
+      {
+        "corpus": "SOLUSDT_M15",
+        "n_shared_rows": 7922,
+        "evaluable": true,
+        "atr_abs_independent_matches_pipeline_atr_14_raw": true,
+        "ema_spread": {
+          "n_shared_rows": 7922,
+          "three_path_agree": true,
+          "agree_A_vs_B_linked_tight": true,
+          "agree_A_vs_C_legacy_identity_f32": true,
+          "max_resid_A_vs_B": 7.568547699676742e-08,
+          "max_resid_A_vs_C": 5.785939394205471e-05,
+          "scalar_vector_parity": true,
+          "inf_count": 0,
+          "nan_discipline_ok": true,
+          "scalar_parity_rows": 3000
+        },
+        "momentum_score": {
+          "n_shared_rows": 7922,
+          "three_path_agree": true,
+          "agree_A_vs_B_linked_tight": true,
+          "agree_A_vs_C_legacy_identity_f32": true,
+          "max_resid_A_vs_B": 1.34731418022227e-07,
+          "max_resid_A_vs_C": 2.863229804361822e-07,
+          "scalar_vector_parity": true,
+          "inf_count": 0,
+          "nan_discipline_ok": true,
+          "scalar_parity_rows": 3000
+        }
+      }
+    ],
+    "scale_invariance": {
+      "cand_es": {
+        "scale_invariance_error": 9.664491429361988e-14,
+        "scale_invariant": true
+      },
+      "cand_ms": {
+        "scale_invariance_error": 1.9761969838327786e-14,
+        "scale_invariant": true
+      }
+    },
+    "prefix_invariance": {
+      "corpus": "synthetic_1200",
+      "cuts": [
+        {
+          "cut_fraction": 0.5,
+          "cut_bars": 600,
+          "shared_rows": 600
+        },
+        {
+          "cut_fraction": 0.8,
+          "cut_bars": 960,
+          "shared_rows": 960
+        }
+      ],
+      "per_feature": {
+        "cand_es": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2
+        },
+        "cand_ms": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2
+        }
+      },
+      "all_prefix_invariant": true
+    },
+    "deterministic_recompute": true
+  },
+  "NON_AUTHORITATIVE_DOWNSTREAM_DIAGNOSTICS": {
+    "_authority": "none \u2014 NEVER an input to the certification verdict",
+    "ema_spread": {
+      "spearman_rank_correlation_legacy_vs_candidate": 0.9998082928291226,
+      "sign_disagreement_fraction": 0.0,
+      "note": "monotone within-instrument by construction; kept for context only"
+    },
+    "momentum_score": {
+      "spearman_rank_correlation_legacy_vs_candidate": 0.9998295322675093,
+      "sign_disagreement_fraction": 0.0,
+      "note": "monotone within-instrument by construction; kept for context only"
+    },
+    "legacy_scale_defect": {
+      "ema_spread": {
+        "median_ratio_x100_over_x1": 100.00000231058789,
+        "interpretation": "legacy scales with price (~100x) \u2014 the defect; candidate is scale-invariant"
+      },
+      "momentum_score": {
+        "median_ratio_x100_over_x1": 100.0,
+        "interpretation": "legacy scales with price (~100x) \u2014 the defect; candidate is scale-invariant"
+      }
+    }
+  },
+  "permanent_floor": "tests/test_b2a_feature_candidate_certification.py"
+}

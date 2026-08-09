@@ -1,0 +1,225 @@
+{
+  "_doc": "PRE-REGISTERED 2026-07-23. Frozen BEFORE any re-measurement under this protocol. Do not edit thresholds after seeing OOS. Bump protocol_id to change.",
+  "protocol_id": "xau_metals_protocol_v1",
+  "registered_at_utc": "2026-07-23T00:00:00Z",
+  "instrument": "XAUUSD",
+  "timeframe": "M15",
+  "status": "PRE_REGISTERED_NOT_EXECUTED",
+  "supersedes": {
+    "label_protocol": "crt_sweep_1R1R_12bps_v0 (conversation train/E0-E2)",
+    "reason_supersede": [
+      "12bps flat cost on gold M15 often yields cost_R>1 (45%+ of TP paths net-negative)",
+      "SWEEP entry is detection-not-execution ontology",
+      "E2 random control membership inflated (duplicate arm tags)"
+    ]
+  },
+  "authority": {
+    "grants_economic_authority": false,
+    "grants_live_wire": false,
+    "grants_gaussian_impl_change": false,
+    "registry_promote_independent": true,
+    "note": "Even a future M4 PROMOTE under this protocol is research-only until separate E3 + human gate + ΔG001 on live path."
+  },
+
+  "corpus": {
+    "path": "data/mt5/XAUUSD_M15.csv",
+    "resolver": "guard_xauusd_csv_path",
+    "phase1_pin_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "holdout": {
+      "mode": "trailing_calendar_months",
+      "months": 2,
+      "from": "corpus_max_timestamp",
+      "split_field": "train|oos",
+      "rule": "timestamp < holdout_start → train; else oos"
+    }
+  },
+
+  "model": {
+    "family": "gaussian_nb",
+    "version": "xauusd_nb_20260722T194904Z",
+    "path": "models/XAUUSD/20260722T194904Z/gaussian_xauusd_nb_20260722T194904Z.json",
+    "feature_dim_required": 39,
+    "extract": "name_anchored",
+    "retrain_under_this_protocol": false,
+    "note": "v1 measures the EXISTING weights under new cost/entry/control. Retrain is a NEW protocol_id."
+  },
+
+  "entry_ontology": {
+    "id": "XAU_ENTRY_V2_RETEST_EDGE",
+    "primary": {
+      "kind": "CRT_STATE_EDGE",
+      "state": "RETEST",
+      "edge": "enter",
+      "require_direction": ["long", "short"],
+      "definition": "First bar where CRT current_state becomes RETEST (prev_state != RETEST), with resolvable direction.",
+      "entry_price": "bar.close",
+      "bar_index_source": "stream_ordinal_or_candle.index_if_positive",
+      "exclude_if": ["no_direction", "atr_abs<=0", "idx_oob_for_forward_walk"]
+    },
+    "forbidden_without_new_protocol_id": [
+      "SWEEP as primary entry (v0)",
+      "all_bars / every candle",
+      "TRADE_OPENED-only as sole set without declaring underpowered",
+      "post-hoc state shopping after OOS"
+    ],
+    "diagnostics_only": {
+      "TRADE_OPENED": "report n only; never primary gate if n < qualification.min_samples",
+      "SWEEP": "shadow comparison table only; not primary arm universe"
+    },
+    "journal_kinds_v1_1": [
+      "RETEST_CANDIDATE",
+      "RETEST_ACCEPTED",
+      "RETEST_SKIPPED",
+      "HOLDOUT",
+      "ECON_UNIT_SCORED",
+      "ECON_ARM_MEMBER",
+      "ECON_OUTCOME"
+    ]
+  },
+
+  "exit_geometry": {
+    "id": "XAU_EXIT_V1_FIXED_1R",
+    "exit_model": "intrabar_fixed",
+    "max_forward": 40,
+    "sl_atr_mult": 1.0,
+    "tp_atr_mult": 1.0,
+    "atr_definition": "absolute_price_atr",
+    "atr_source_priority": [
+      "feature_pipeline.atr * close if atr appears relative (0<atr<1 and close>1)",
+      "else feature_pipeline.atr if already absolute",
+      "else max(high-low, 1e-8) on entry bar"
+    ],
+    "note": "Same 1R/1R as v0 so cost model is the isolated change vs v0; planner-true SL/TP is protocol_id bump."
+  },
+
+  "cost_model": {
+    "id": "XAU_COST_V1_FIXED_USD",
+    "primary": {
+      "mode": "fixed_usd_round_trip",
+      "usd_round_trip": 0.40,
+      "definition": "cost_R = usd_round_trip / risk_distance; risk_distance = sl_atr_mult * atr_abs",
+      "rationale_pre_registered": "Flat 12bps on XAU M15 produced cost_R>1 on ~45% of TP paths (falsification). Fixed USD spread is a standard metals research alternative. 0.40 USD RT is a declared prior (approx 0.20/side), NOT fit to maximize E[R].",
+      "not_optimized_on": "y_rr, corr, OOS, M4 verdict"
+    },
+    "sensitivity_pre_registered": {
+      "mode": "fixed_usd_round_trip",
+      "usd_round_trip_grid": [0.20, 0.40, 0.80],
+      "role": "DIAGNOSTIC_ONLY — primary gate uses 0.40 only; grid cannot promote"
+    },
+    "legacy_diagnostic": {
+      "mode": "flat_bps",
+      "round_trip_bps": 12.0,
+      "role": "DIAGNOSTIC_COMPARE_TO_V0_ONLY — never primary under xau_metals_protocol_v1"
+    },
+    "forbidden": [
+      "Choosing usd_round_trip after seeing OOS E[R]",
+      "Per-bar adaptive spread fit on the same corpus used for OOS"
+    ]
+  },
+
+  "scoring_arms": {
+    "id": "XAU_ARMS_V1",
+    "quantiles": {
+      "low_pct": 10,
+      "high_pct": 90,
+      "fit_on": "train_split_only",
+      "apply_to": "all_units"
+    },
+    "arms": {
+      "all_units": "all candidates in entry ontology",
+      "nb_top_decile": "score >= train p90",
+      "nb_bottom_decile": "score <= train p10",
+      "random_match_n": "see control_arm",
+      "long_only": "direction==long",
+      "short_only": "direction==short"
+    },
+    "primary_hypothesis_for_M4": "nb_top_decile",
+    "forbidden": [
+      "Re-picking percentile after OOS",
+      "Adding arms after seeing results without protocol_id bump"
+    ]
+  },
+
+  "control_arm": {
+    "id": "XAU_CTRL_V1_RANDOM_MATCH",
+    "name": "random_match_n",
+    "size_rule": "per_split_size_match_to_nb_top_decile",
+    "definition": [
+      "Let T = {i in train : score_i >= p90_train}",
+      "Let O = {i in oos : score_i >= p90_train}",
+      "Draw |T| indices uniformly without replacement from train candidates; seed S_train",
+      "Draw |O| indices uniformly without replacement from oos candidates; seed S_oos",
+      "Union is random_match_n; each unit tagged ONLY with arm id 'random_match_n' (single tag, no _train/_oos duplicates in membership list used by M4)"
+    ],
+    "seeds": {
+      "material": "xau_metals_protocol_v1|random_match_n",
+      "S_train": "sha256(material|train) first 8 hex as uint32",
+      "S_oos": "sha256(material|oos) first 8 hex as uint32"
+    },
+    "dedupe_key": ["timestamp", "direction"],
+    "m4_control": "random_match_n only (this set)",
+    "forbidden": [
+      "Union of random_match_n + random_match_n_train + random_match_n_oos as separate inclusive filters",
+      "Size-matching to full sample",
+      "Resampling after seeing permutation p-values"
+    ],
+    "acceptance_test": "len(random_match_n) == len(nb_top_decile) AND len(random_train)==len(top_train) AND len(random_oos)==len(top_oos)"
+  },
+
+  "m4": {
+    "id": "XAU_M4_V1",
+    "source_defaults": "configs/research/research_config_majors.json#qualification",
+    "min_samples": 30,
+    "expectancy_min": 0.0,
+    "pf_min": 1.0,
+    "oos_split_policy": "chronological_suffix_matching_holdout (n_oos/n_arm per arm)",
+    "oos_retention_min": 0.5,
+    "n_permutations": 2000,
+    "significance_alpha": 0.05,
+    "hypotheses": [
+      "nb_top_decile",
+      "nb_bottom_decile",
+      "all_units",
+      "long_only",
+      "short_only"
+    ],
+    "control": "random_match_n",
+    "primary_gate_cost": "XAU_COST_V1_FIXED_USD.primary",
+    "sensitivity_costs_not_gates": true,
+    "promote_unsafe_if": [
+      "pooled IS+OOS expectancy used without reporting OOS-only E",
+      "control arm fails acceptance_test"
+    ]
+  },
+
+  "kill_criteria": {
+    "pre_registered": true,
+    "E1_relative": "If OOS top E[R] <= OOS all AND <= OOS random → NO_RELATIVE_SKILL",
+    "E1_absolute": "If OOS top E[R] < 0 → NO_ABSOLUTE_EDGE (still run M4 for formal record)",
+    "E2_m4": "If primary nb_top_decile verdict != PROMOTE → no E3",
+    "stop": "Do not invent entries/costs after kill; bump protocol_id for any change"
+  },
+
+  "execution_order": [
+    "P0 freeze this file in git / record sha256",
+    "P1 stream RETEST_EDGE candidates + journal v1.1",
+    "P2 score with frozen model (no retrain)",
+    "P3 label net R with XAU_COST_V1 primary + sensitivity grid diagnostic",
+    "P4 arms + XAU_CTRL_V1 acceptance_test",
+    "P5 E1 tables + kill_criteria",
+    "P6 M4 evaluate_pre_bh/finalize/BH",
+    "P7 write manifests; economic_authority_granted=false unless human E3 later"
+  ],
+
+  "outputs": {
+    "dir": "results/gaussian_xauusd_econ/xau_metals_protocol_v1/",
+    "required": [
+      "candidates.jsonl",
+      "units_scored.jsonl",
+      "ledger.jsonl",
+      "e1_manifest.json",
+      "e2_m4_manifest.json",
+      "protocol_sha256.txt"
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "_doc": "Stable pointer to the freshest B2A candidate-formula certification. Dated artifacts are immutable; resolve via this pointer (verify sha256) or embedded generated_at \u2014 never by filename date.",
+  "path": "docs/governance/b2a_feature_candidate_certification-2026-07-12.json",
+  "generated_at": "2026-07-12T09:14:16.158257+00:00",
+  "schema_hash": "c6c8b420b1014c43",
+  "sha256": "ae30e396c9bafc78d62f9668e6005bc36b1cbf62424f55a048ec7a13fd97db3e",
+  "overall_verdict": "PROMOTE"
+}

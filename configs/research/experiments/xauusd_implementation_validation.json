@@ -1,0 +1,27 @@
+{
+  "experiment_id": "xauusd_implementation_validation",
+  "kind": "implementation_validation",
+  "notes": "Generalizes scripts/analysis/implementation_model_validation_xauusd.py. The corpus pin, instrument and model matrix live HERE as data - the whole point is that the next instrument is a new spec file, not a forked driver.",
+  "corpus": [
+    {
+      "path": "data/mt5/XAUUSD_M15.csv",
+      "instrument": "XAUUSD",
+      "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "rows": 47275
+    }
+  ],
+  "model_selection": {
+    "mode": "all",
+    "families": [],
+    "include_missing_artifacts": true,
+    "hypotheses": []
+  },
+  "production_config_ref": null,
+  "measurement_config": null,
+  "output": {
+    "out_dir": "results/implementation_validation",
+    "artifact_name": "xauusd_model_validation",
+    "write_latest": true
+  },
+  "authority": "NONE"
+}

@@ -1,0 +1,65 @@
+{
+  "generated_at": "2026-07-11T05:53:33.407209+00:00",
+  "symbol": "BNBUSDT",
+  "bars": 29922,
+  "gd_id": "GD-004",
+  "site": "scoring_engine.py:31 disp_strength = move/atr; caller crt_engine.py:23 move=features['disp_strength']",
+  "atr_unit_verification": {
+    "assumption": "pipeline atr column is close-relative (atr_14_raw / close), feature_pipeline.py:511-515",
+    "bars_checked": 29909,
+    "bars_matching": 29909,
+    "match_rate": 1.0,
+    "atr_column_distribution": {
+      "n": 29922,
+      "min": 0.0008504827274009585,
+      "p05": 0.001684693736024201,
+      "median": 0.0035905850818380713,
+      "mean": 0.00415237703088997,
+      "p95": 0.008451476693153381,
+      "max": 0.03416435793042183
+    }
+  },
+  "as_wired_quantity": {
+    "formula": "FM-020 / atr_rel  ==  body_size * close / atr_14_raw^2",
+    "distribution": {
+      "n": 29922,
+      "min": 0.0,
+      "p05": 8.317101040884177,
+      "median": 110.37318012976004,
+      "mean": 160.35303145255284,
+      "p95": 488.08743662731496,
+      "max": 2601.686096502464
+    },
+    "s_breakout_saturation": {
+      "cap": 2.0,
+      "bars_saturated": 29171,
+      "saturation_rate": 0.9749014103335338,
+      "note": "fraction of bars where min(x/2,1)=1.0 \u2014 above this the term carries zero information"
+    },
+    "atr_zero_gate_bars": 0
+  },
+  "identity_adjudication": {
+    "fm020_distribution": {
+      "n": 29922,
+      "min": 0.0,
+      "p05": 0.041065752506256104,
+      "median": 0.4165745824575424,
+      "mean": 0.518264326832622,
+      "p95": 1.3376237154006958,
+      "max": 3.0
+    },
+    "fm028_distribution": {
+      "n": 29922,
+      "min": 0.08222103244378823,
+      "p05": 0.4625550699174832,
+      "median": 0.9072769914781817,
+      "mean": 1.0133482515539252,
+      "p95": 1.9195047031388803,
+      "max": 7.538947477626468
+    },
+    "equals_fm020_rate": 0.020753960296771606,
+    "equals_fm028_rate": 0.0,
+    "verdict_criterion": "both rates ~0 \u21d2 genuinely new quantity (register FM-029); either ~1 \u21d2 STOP, adjudication wrong"
+  },
+  "scope_caveat": "Characterization only \u2014 feeds the FM-029 ontology note and the GD-004 retirement fields. Backtests run gate-OFF (F-037) and run() never executes (F-048), so no production-loss claim."
+}

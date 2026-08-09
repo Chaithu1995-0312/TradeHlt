@@ -1,0 +1,25 @@
+{
+  "change_id": "CH-crt-config-construction-p0p1",
+  "objective": "P0 design freeze CRT config construction protocol (F-057 class) + P1 observe provenance stamps and census. No fail-closed product enforcement (P2 not authorized).",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+    "src/config_layer/crt_config_provenance.py",
+    "src/config_layer/config_builder.py",
+    "src/config_layer/production_config.py",
+    "scripts/governance/crt_config_construction_census.py",
+    "tests/test_crt_config_provenance.py",
+    "docs/governance/build_manifests/CH-crt-config-construction-p0p1.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none — observe only; thresholds unchanged",
+  "required_checks_ack": [
+    "tests/test_crt_config_provenance.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "revert provenance module + builder/prod stamps + census + protocol doc; no JSON threshold change to roll back"
+}

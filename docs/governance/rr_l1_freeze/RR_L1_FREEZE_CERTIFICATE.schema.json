@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "RR_L1_FREEZE_CERTIFICATE_V1",
+  "title": "RR L1 Freeze Certificate",
+  "type": "object",
+  "required": [
+    "schema_id",
+    "certificate_id",
+    "status",
+    "checklist_ref",
+    "rc_ids_closed_by_this_certificate",
+    "contract",
+    "protocol_hash",
+    "signature",
+    "consumption"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "RR_L1_FREEZE_CERTIFICATE_V1"
+    },
+    "certificate_id": {
+      "type": "string",
+      "minLength": 8
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "UNSIGNED_DRAFT",
+        "READY_FOR_SIGNATURE",
+        "SIGNED",
+        "SUPERSEDED"
+      ]
+    },
+    "checklist_ref": {
+      "type": "string"
+    },
+    "package_dir": {
+      "type": "string"
+    },
+    "rc_ids_closed_by_this_certificate": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 4
+    },
+    "contract": {
+      "type": "object",
+      "required": [
+        "meta",
+        "instrument_universe",
+        "sampling",
+        "measure_regime",
+        "target_definition",
+        "structure_mask_policy",
+        "feature_list",
+        "governing_exit",
+        "success_failure_rules",
+        "hard_flags"
+      ]
+    },
+    "protocol_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "signature": {
+      "type": "object",
+      "required": [
+        "signed",
+        "signed_by",
+        "signed_at_utc",
+        "statement"
+      ]
+    },
+    "consumption": {
+      "type": "object"
+    },
+    "superseded_by": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,62 @@
+{
+  "change_id": "CH-semantic-file-identity",
+  "objective": "Add a rename-stable Semantic File Identity layer inside the existing Semantic OS: a new hand-authored record kind (kind=file_identity, dotted-slug id) mapping semantic_id -> semantic_name -> physical_path, plus a filename_semantic_status classification (ALIGNED/HISTORICAL/MISLEADING/COMPATIBILITY/SPLIT/UNKNOWN). Tier 1/2 curated in YAML (~50-60 load-bearing modules incl. confirmed-misleading src/engines/rr_engine.py, compatibility shim src/engines/gaussian_engine.py, historically-named src/config_layer/crt_engine_v2.py); Tier 3 machine-derived at seed time from a deterministic path-slug function over the remaining code universe. Joined onto OBJ: records in semantic_objects.py and onto the three existing business-functionality Excel workbooks (append-only new columns). No Python file renamed, no import modified, no runtime behavior, formula, threshold, or config changed. Layer is authority=advisory (grants no promotion/production authority per Sec 6.5).",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "src/governance/semantic_os.py",
+    "src/governance/semantic_identity.py",
+    "src/governance/semantic_objects.py",
+    "scripts/governance/seed_semantic_os.py",
+    "scripts/governance/enrich_workbooks_with_semantic_identity.py",
+    "docs/governance/semantic_os/file_identities.yaml",
+    "docs/governance/SEMANTIC_OS_V1_DESIGN.md",
+    "docs/governance/SEMANTIC_OS_CONTRACT.md",
+    "docs/reference/schemas.md",
+    "docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/governance/script_registry_grandfather.json",
+    "scripts/governance/seed_script_registry.py",
+    "docs/reference/script-matrix.md",
+    "tests/test_semantic_identity.py",
+    "tests/test_semantic_identity_workbooks.py",
+    "tests/test_semantic_os_objects.py",
+    "scripts_business_functionality.xlsx",
+    "results/analysis/src_business_functionality.xlsx",
+    "docs/analysis/tests_functionality_inventory.xlsx",
+    "docs/governance/build_manifests/CH-semantic-file-identity.impact.json",
+    "docs/governance/build_manifests/CH-semantic-file-identity.completion.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — advisory metadata layer only, no model input/training/artifact touched",
+  "affected_production_config": "none (hash-neutral; no configs/production/* file touched)",
+  "required_checks_ack": [
+    "tests/test_semantic_os.py",
+    "tests/test_semantic_os_objects.py",
+    "tests/test_semantic_identity.py",
+    "tests/test_semantic_identity_workbooks.py",
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_miar_registry.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "runtime_impact": {
+    "python_files_renamed": 0,
+    "import_statements_modified": 0,
+    "src_modules_outside_governance_touched": 0,
+    "note": "governance.semantic_identity is imported only by governance.semantic_objects and governance.semantic_os (permanent invariant enforced by test_identity_layer_touches_no_runtime_module); the identity layer is never on the crt/engine_runner/backtest/live spine import path"
+  },
+  "pre_existing_baseline_residuals": [
+    "tests/test_active_models_registry.py::test_identity_r2_how_path_ref_parity — RED before this change, not caused by it",
+    "tests/test_session_log.py::test_session_log_entry_count_is_bounded — RED before this change, not caused by it",
+    "tests/test_semantic_os_objects.py::test_coverage_gaps_are_published_not_hidden and test_graph_dot_disagreement_is_recorded_not_silently_dropped — RED before this change; graph.dot is itself stale/absent (independent of the file_identity layer being added)"
+  ],
+  "rollback_boundary": "three independently revertable commits (schema+code / curation / workbooks+SITS); data/semantic_os/** is gitignored-regenerable and all three .xlsx workbooks are untracked-regenerable from their existing generator scripts"
+}

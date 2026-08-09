@@ -1,0 +1,38 @@
+{
+  "change_id": "CH-fc1d-volregime-causal",
+  "objective": "FC1-D: production volatility_regime binds to ROLLING_CAUSAL ATR-percentile terciles (N=200) per the FC-0.5 adjudication (SEPARATE_LOCAL_VOLATILITY_CONTEXT_FEATURE); GLOBAL_BATCH rank demoted to research/legacy column volatility_regime_global_batch; expanding stays a distinct causal column; TRUST_VOLREGIME_CAUSAL env dual-emits research_view only (never mutates identities). Identity registry bare-name alias moved to the rolling-causal identity. Executed 2026-07-11 in the same session as FC1-A; this manifest pair was written retroactively 2026-07-11 during the post-session audit (A2) — the implementation itself predates it.",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE"
+  ],
+  "affected_files": [
+    "src/features/feature_pipeline.py",
+    "docs/governance/phase1_feature_identity_registry-2026-07-10.json",
+    "docs/governance/feature_pipeline_change_contracts/FC1-D-VOLREGIME-CAUSAL.json",
+    "docs/governance/volatility_regime_semantic_adjudication_fc05-2026-07-10.md",
+    "docs/governance/canonical_feature_code_surface_closure-2026-07-11.md",
+    "docs/governance/feature_38_lineage_census-2026-07-10.json",
+    "configs/formulas/market_ontology.yaml",
+    "tests/test_fc1d_volregime_causal.py",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [
+    "FEAT-VOLATILITY_REGIME",
+    "FEAT-VOLATILITY_REGIME_GLOBAL_BATCH_RANK",
+    "FEAT-VOLATILITY_REGIME_EXPANDING_CAUSAL_RANK",
+    "FEAT-VOLATILITY_REGIME_ROLLING_CAUSAL_RANK"
+  ],
+  "affected_models": "none enabled/changed; models conditioned on regime labels flagged migration_retraining_required in the change contract (provenance-only for now — rr/zone already PIT_UNCLEAN)",
+  "affected_production_config": "none (hash-neutral; no config keys added)",
+  "required_checks_ack": [
+    "tests/test_fc1d_volregime_causal.py",
+    "tests/test_feature_pipeline.py",
+    "tests/test_phase1_duplicate_formula_identity_closure.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_formula_registry.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit: restore global-rank production bind (LEGACY freeze for shadow only per contract rollback_path) + identity-registry alias + tests together"
+}

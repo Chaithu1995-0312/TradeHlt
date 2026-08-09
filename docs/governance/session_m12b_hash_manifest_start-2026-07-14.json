@@ -1,0 +1,174 @@
+{
+  "phase": "SESSION_START",
+  "files": {
+    "configs/formulas/market_ontology.yaml": {
+      "bytes": 29556,
+      "sha256": "ddf53562bf98175b70c1e44c221165330b8122d1beee9046919fe865197be3d5"
+    },
+    "src/features/derived_math.py": {
+      "bytes": 6915,
+      "sha256": "c88e62ab458317ae8b3454444fb583de815c9b2e6c1730a00538039822952605"
+    },
+    "src/features/candle_math.py": {
+      "bytes": 3347,
+      "sha256": "912ff1b41dd7f175eb76d6740dca64a9bc48339fb5b3d41a1b933e94dfde729c"
+    },
+    "src/features/feature_pipeline.py": {
+      "bytes": 42938,
+      "sha256": "7188051e3beeab6ae731b5bb99e4d1af53a130ce3a26f1d12ba446e01315c5dc"
+    },
+    "src/features/feature_schema.py": {
+      "bytes": 14121,
+      "sha256": "b4bfa6810ac0eb8a37e93d80217a1221b768a30ccdf6a1c213736342e12f521b"
+    },
+    "src/features/registry/derived_registry.py": {
+      "bytes": 2388,
+      "sha256": "c1d951681a68b25fd7c64e44f03d85fc50ffa936289702ecb38782bb7de333d7"
+    },
+    "src/features/formula_registry.py": {
+      "bytes": 1398,
+      "sha256": "9f46c9d70a6f7b82ad0df949419193b6736d1cb199a5a7c0b20416275474628a"
+    },
+    "active_models.yaml": {
+      "bytes": 57445,
+      "sha256": "76f9ee6930ca305e652552877684425e60f8318af77313fb8641f7104bc47b9c"
+    },
+    "configs/production/v2_multi_2026_04.json": {
+      "bytes": 25058,
+      "sha256": "03a3b8aa497d116a3bb32620253a2d1b6ce53737ec10e837d4bc83334f194990"
+    },
+    "configs/production/ACTIVE_VERSION": {
+      "bytes": 18,
+      "sha256": "4bd5912b8195855d0ccc346938ca90a376b617a1f7d639259f233ee348fb3acb"
+    },
+    "scripts/analysis/feature_dag_layers.py": {
+      "bytes": 15230,
+      "sha256": "878fa3c395d6ef512f30a110f13c55ec8734354d7a191dfa2b5f842ecbc613e0"
+    },
+    "src\\engines\\crt_engine.py": {
+      "bytes": 2446,
+      "sha256": "412014d064f50a06b24861ee7d721a3b34ec4657d23b9d9dd2939acd8d82b65d"
+    },
+    "src\\engines\\gaussian_engine.py": {
+      "bytes": 943,
+      "sha256": "023a6b35fb0424655c493c87b66ac7c0c3b2fe9f5e48acce01abca95da74bab5"
+    },
+    "src\\engines\\heuristic_gaussian_engine.py": {
+      "bytes": 14681,
+      "sha256": "476297305d8ad2711ec57bc23b9334090ea791bd8b5137d3509efc74cdaca81b"
+    },
+    "src\\engines\\live_engine.py": {
+      "bytes": 47997,
+      "sha256": "7b2e4f43378672b5fb6b028b98af1c1dd259e6a8ce525fa7f46f771452a9d308"
+    },
+    "src\\engines\\llm_engine.py": {
+      "bytes": 1025,
+      "sha256": "7f76f129f9268db70c6274a0fd5323b5cc778a32887d91b8c8f34607c7210eb4"
+    },
+    "src\\engines\\ml_gaussian_engine.py": {
+      "bytes": 9052,
+      "sha256": "6959d8a7708e97683f07abc5d0c6f11fed19622d5f7a8428d6bb9ab4565660f8"
+    },
+    "src\\engines\\rr_engine.py": {
+      "bytes": 4015,
+      "sha256": "894d59ba1aca0dd693a1741c6e5302aa6e0eafc06cfec9c88dd78efe9fe21eec"
+    },
+    "src\\engines\\scoring_engine.py": {
+      "bytes": 7915,
+      "sha256": "52232e9562605439e3e9dd92756c6abb7a45ce5be3d074f4365968754b35ea35"
+    },
+    "src\\engines\\tradenet_meta_engine.py": {
+      "bytes": 12409,
+      "sha256": "7f9c0f3fa49b3b97379a05272751a2850f66299973ddc9a8e0ba4053435ab1dc"
+    },
+    "src\\engines\\trap_validator_engine.py": {
+      "bytes": 3172,
+      "sha256": "53e09bf464c19c1f11fc8ec1f05d682f523e2c2ff8d630f3330a91b1262a94d0"
+    },
+    "src\\engines\\zone_gate_engine.py": {
+      "bytes": 11056,
+      "sha256": "7e31f99834a19e24f8b1bcbd833f8cd9ca68b3796a54d7ce357708b1eedf14fb"
+    },
+    "src\\engines\\__init__.py": {
+      "bytes": 85,
+      "sha256": "93205e647e0b71cbfece5db3f4817e68d125b1f75ffc013d5c6a57f0da17966a"
+    },
+    "src\\config_layer\\config_builder.py": {
+      "bytes": 10533,
+      "sha256": "6abf14170d2848bb6d02e1f7f190814fb950cbee706e9228cd9d74ac5a2aa742"
+    },
+    "src\\config_layer\\config_validator.py": {
+      "bytes": 24533,
+      "sha256": "4cec5f74dceff23a2f6d4d77797476a559acf910db497047ed85676589c41c5e"
+    },
+    "src\\config_layer\\crt_engine_v2.py": {
+      "bytes": 157392,
+      "sha256": "b5a00dfe4e9b91130e2011ba1d450ae49aec4c7e74d96df431b605c730afb5c1"
+    },
+    "src\\config_layer\\crt_gaussian_scorer.py": {
+      "bytes": 8724,
+      "sha256": "767195ad492e8cfa09de0645107ca3fd7574039393488bec86b904011ab22429"
+    },
+    "src\\config_layer\\crt_sweep_taxonomy.py": {
+      "bytes": 5559,
+      "sha256": "7774bc1bcc899724728bdd4a3c4266e80ca66b76ada967ad9fbd0525c062572c"
+    },
+    "src\\config_layer\\execution_planner.py": {
+      "bytes": 20877,
+      "sha256": "9592bc9c114361e8db64f08767e408e4e57f3a7219e53e42ed3a5d09395ff810"
+    },
+    "src\\config_layer\\goal_schema.py": {
+      "bytes": 7301,
+      "sha256": "eaff838ce8ed6377c5208c247d6f7e85cc5a31ac1d15f6421abdb2d73a864824"
+    },
+    "src\\config_layer\\goal_validator.py": {
+      "bytes": 5893,
+      "sha256": "f7e54d61ebb2511b10b6b14957dc8742551e97369537d4543d5ab6931210d70d"
+    },
+    "src\\config_layer\\insight_reporter.py": {
+      "bytes": 19081,
+      "sha256": "bf0c0733342a1f424a293f68334da891b7a3e3718f98d00f81583fb42c470f69"
+    },
+    "src\\config_layer\\llm_inference_client.py": {
+      "bytes": 14556,
+      "sha256": "d8ed6e0a0d5e6467d3eaac25539d1d5884b8b765db0211298f791be6b7be0562"
+    },
+    "src\\config_layer\\llm_narrative.py": {
+      "bytes": 10922,
+      "sha256": "e471e0b0ca4732f7d3c55a324563ad5efd497e8001a9495c6875d9526340eed6"
+    },
+    "src\\config_layer\\llm_scorer.py": {
+      "bytes": 12567,
+      "sha256": "d032e30d9ccb0def05004829a07d962f2cb3b397745d8e096963bb0beb9b1138"
+    },
+    "src\\config_layer\\market_router.py": {
+      "bytes": 2710,
+      "sha256": "9c6497e20b5c0b7db3b61103ecaa781a8b7c4fb33433c9dca1d40feacdf3c990"
+    },
+    "src\\config_layer\\production_config.py": {
+      "bytes": 23527,
+      "sha256": "4d84494ee64f5711dfe4b320f85982224778b100ffdbe2fc92ff738205e754df"
+    },
+    "src\\config_layer\\state_contract.py": {
+      "bytes": 5957,
+      "sha256": "02c4dff0e7e18ebe7e2913c5c085242ac4ce9217370fd120089447388e4579a0"
+    },
+    "src\\config_layer\\state_contract_loader.py": {
+      "bytes": 12659,
+      "sha256": "883f67cc0f0728af63e0824701631a6b07675a23479d80c630845e76042ca99e"
+    },
+    "src\\config_layer\\state_topology.py": {
+      "bytes": 4774,
+      "sha256": "40d48c37f420363a152f970dd3f0f9f10a7b6ed6921ba0735a0f923079c792c7"
+    },
+    "src\\config_layer\\__init__.py": {
+      "bytes": 97,
+      "sha256": "56c9b24000a194f558a583482827d9b11690dc8c1d765083ad80ada4f6eb3900"
+    },
+    "docs/governance/feature_certification_ledger.jsonl": {
+      "bytes": 86331,
+      "sha256": "614bc2d9f223191933090df21cf6742d260ca51aa7ab30a7c5fe0b6a08a5547b",
+      "lines": 0
+    }
+  }
+}\n

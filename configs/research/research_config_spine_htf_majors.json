@@ -1,0 +1,42 @@
+{
+  "_doc": "Program 3 (Higher-Timeframe Directional Ontology) — SPINE family x CRYPTO-MAJORS on RESAMPLED H1/H4 data. Identical to research_config_spine_majors.json except the universe is repointed at data/resampled with a {TF} template pattern (qualify_htf substitutes H1/H4 per --tf). apply_signal_defaults MUST be false so the spine keeps its own SL/TP geometry. A NEW horizon ontology, NOT a Program-1 parameter pass.",
+  "_horizon_doc": "Program 3A = BAR_COUNT_CONSTANT (PRIMARY): harness warmup/window_size/max_forward stay in BARS (max_forward=40 = 10h M15 / 40h H1 / 160h H4). Program 3B (WALL_CLOCK_CONSTANT) is pre-defined but NOT implemented. See research_config_htf_majors.json _horizon_doc.",
+  "harness": {
+    "warmup": 30,
+    "window_size": 64,
+    "min_samples": 30
+  },
+  "forward_walk": {
+    "max_forward": 40,
+    "trail_mult": 0.5,
+    "exit_model": "intrabar_fixed"
+  },
+  "signal": {
+    "apply_signal_defaults": false,
+    "sl_atr_mult": 1.0,
+    "tp_atr_mult": 2.0
+  },
+  "costs": {
+    "round_trip_bps": 12.0
+  },
+  "qualification": {
+    "min_samples": 30,
+    "expectancy_min": 0.0,
+    "pf_min": 1.0,
+    "oos_split": 0.3,
+    "oos_retention_min": 0.5,
+    "n_permutations": 2000,
+    "significance_alpha": 0.05
+  },
+  "universe": {
+    "data_dir": "data/resampled",
+    "pattern": "*_{TF}.csv",
+    "instruments": ["BNBUSDT", "ETHUSDT", "BTCUSDT", "SOLUSDT"]
+  },
+  "spine": {
+    "prod_version": "v2_multi_2026_04",
+    "_prod_version_note": "Canonical R1/R2-governed v2 (matches configs/production/ACTIVE_VERSION). v4_multi_2026_06 is NOT loadable on the patch branch (pre-TP3 CRTConfig). The spine measured here is the SAME production composite as research_config_spine_majors.json — only the input timeframe differs.",
+    "scorer_mode": "calibrated",
+    "tp_target": "tp2"
+  }
+}

@@ -1,0 +1,504 @@
+{
+  "created_utc": "2026-07-21T22:33:30.428452+00:00",
+  "dataset": "D:\\Tradelatest\\results\\clean_labels\\BNBUSDT\\20260721T223243Z\\clean_labels.jsonl",
+  "n_rows_used": 60000,
+  "n_folds": 3,
+  "models": {
+    "linear_clf": "LogisticRegression+StandardScaler",
+    "linear_reg": "Ridge+StandardScaler",
+    "nonlinear": "HistGradientBoosting (sklearn)"
+  },
+  "authority": "GATE-O research only \u2014 no promote/wire",
+  "binary": {
+    "y_tp1": {
+      "n_pos": 20103,
+      "base_rate": 0.33505,
+      "linear": {
+        "auc": {
+          "mean": 0.5015,
+          "std": 0.0017,
+          "per_fold": [
+            0.503,
+            0.4991,
+            0.5024
+          ]
+        },
+        "brier": {
+          "mean": 0.2491,
+          "std": 0.0017,
+          "per_fold": [
+            0.2507,
+            0.2467,
+            0.2499
+          ]
+        }
+      },
+      "nonlinear": {
+        "model": "HistGradientBoostingClassifier",
+        "auc": {
+          "mean": 0.5078,
+          "std": 0.0045,
+          "per_fold": [
+            0.5077,
+            0.5024,
+            0.5135
+          ]
+        },
+        "brier": {
+          "mean": 0.2228,
+          "std": 0.0013,
+          "per_fold": [
+            0.2219,
+            0.2247,
+            0.222
+          ]
+        },
+        "ece": {
+          "mean": 0.0062,
+          "std": 0.0048,
+          "per_fold": [
+            0.0045,
+            0.0127,
+            0.0014
+          ]
+        }
+      },
+      "top_features_nonlinear": [],
+      "learnability": "NOISY",
+      "regime_auc_insample": {
+        "low_vol": 0.5731,
+        "mid_vol": 0.5612,
+        "high_vol": 0.5448,
+        "long": 0.5558,
+        "short": 0.5641
+      }
+    },
+    "y_tp2": {
+      "n_pos": 14509,
+      "base_rate": 0.241817,
+      "linear": {
+        "auc": {
+          "mean": 0.5146,
+          "std": 0.0029,
+          "per_fold": [
+            0.518,
+            0.5109,
+            0.515
+          ]
+        },
+        "brier": {
+          "mean": 0.2461,
+          "std": 0.0054,
+          "per_fold": [
+            0.2508,
+            0.2385,
+            0.2491
+          ]
+        }
+      },
+      "nonlinear": {
+        "model": "HistGradientBoostingClassifier",
+        "auc": {
+          "mean": 0.5181,
+          "std": 0.0083,
+          "per_fold": [
+            0.5229,
+            0.5249,
+            0.5064
+          ]
+        },
+        "brier": {
+          "mean": 0.1847,
+          "std": 0.0031,
+          "per_fold": [
+            0.1807,
+            0.1883,
+            0.1851
+          ]
+        },
+        "ece": {
+          "mean": 0.017,
+          "std": 0.0079,
+          "per_fold": [
+            0.0114,
+            0.0282,
+            0.0114
+          ]
+        }
+      },
+      "top_features_nonlinear": [],
+      "learnability": "NOISY",
+      "regime_auc_insample": {
+        "low_vol": 0.6628,
+        "mid_vol": 0.6404,
+        "high_vol": 0.6227,
+        "long": 0.636,
+        "short": 0.6484
+      }
+    },
+    "y_survives_be": {
+      "n_pos": 30132,
+      "base_rate": 0.5022,
+      "linear": {
+        "auc": {
+          "mean": 0.5023,
+          "std": 0.0008,
+          "per_fold": [
+            0.502,
+            0.5015,
+            0.5035
+          ]
+        },
+        "brier": {
+          "mean": 0.25,
+          "std": 0.0,
+          "per_fold": [
+            0.25,
+            0.25,
+            0.25
+          ]
+        }
+      },
+      "nonlinear": {
+        "model": "HistGradientBoostingClassifier",
+        "auc": {
+          "mean": 0.5006,
+          "std": 0.0007,
+          "per_fold": [
+            0.4997,
+            0.5008,
+            0.5015
+          ]
+        },
+        "brier": {
+          "mean": 0.25,
+          "std": 0.0,
+          "per_fold": [
+            0.25,
+            0.25,
+            0.25
+          ]
+        },
+        "ece": {
+          "mean": 0.0028,
+          "std": 0.0017,
+          "per_fold": [
+            0.0044,
+            0.0035,
+            0.0004
+          ]
+        }
+      },
+      "top_features_nonlinear": [],
+      "learnability": "NOISY",
+      "regime_auc_insample": {
+        "low_vol": 0.5021,
+        "mid_vol": 0.5019,
+        "high_vol": 0.5051,
+        "long": 0.5231,
+        "short": 0.4833
+      }
+    }
+  },
+  "regression": {
+    "y_mfe_r": {
+      "n_finite": 60000,
+      "missing_rate": 0.0,
+      "y_mean": 3.849953,
+      "y_std": 3.963669,
+      "linear": {
+        "r2": {
+          "mean": 0.0161,
+          "std": 0.0211,
+          "per_fold": [
+            0.0332,
+            -0.0136,
+            0.0287
+          ]
+        },
+        "rmse": {
+          "mean": 3.7783,
+          "std": 0.4598,
+          "per_fold": [
+            3.3664,
+            3.5484,
+            4.42
+          ]
+        }
+      },
+      "nonlinear": {
+        "model": "HistGradientBoostingRegressor",
+        "r2": {
+          "mean": -0.0251,
+          "std": 0.022,
+          "per_fold": [
+            -0.0393,
+            -0.042,
+            0.0059
+          ]
+        },
+        "rmse": {
+          "mean": 3.8532,
+          "std": 0.4393,
+          "per_fold": [
+            3.4905,
+            3.5977,
+            4.4714
+          ]
+        },
+        "spearman_ic": {
+          "mean": 0.1635,
+          "std": 0.0174,
+          "per_fold": [
+            0.168,
+            0.1822,
+            0.1404
+          ]
+        }
+      },
+      "top_features_nonlinear": [],
+      "learnability": "CANDIDATE_LEARNABLE"
+    },
+    "y_mae_r_heat": {
+      "n_finite": 60000,
+      "missing_rate": 0.0,
+      "y_mean": 3.849953,
+      "y_std": 3.963669,
+      "linear": {
+        "r2": {
+          "mean": 0.0161,
+          "std": 0.0211,
+          "per_fold": [
+            0.0332,
+            -0.0136,
+            0.0287
+          ]
+        },
+        "rmse": {
+          "mean": 3.7783,
+          "std": 0.4598,
+          "per_fold": [
+            3.3664,
+            3.5484,
+            4.42
+          ]
+        }
+      },
+      "nonlinear": {
+        "model": "HistGradientBoostingRegressor",
+        "r2": {
+          "mean": -0.0432,
+          "std": 0.0294,
+          "per_fold": [
+            -0.0541,
+            -0.0724,
+            -0.0029
+          ]
+        },
+        "rmse": {
+          "mean": 3.8855,
+          "std": 0.4319,
+          "per_fold": [
+            3.5152,
+            3.65,
+            4.4913
+          ]
+        },
+        "spearman_ic": {
+          "mean": 0.1597,
+          "std": 0.0172,
+          "per_fold": [
+            0.1603,
+            0.1805,
+            0.1383
+          ]
+        }
+      },
+      "top_features_nonlinear": [],
+      "learnability": "CANDIDATE_LEARNABLE"
+    },
+    "y_holding_bars": {
+      "n_finite": 60000,
+      "missing_rate": 0.0,
+      "y_mean": 6.70155,
+      "y_std": 7.169496,
+      "linear": {
+        "r2": {
+          "mean": 0.0532,
+          "std": 0.0319,
+          "per_fold": [
+            0.0741,
+            0.0081,
+            0.0774
+          ]
+        },
+        "rmse": {
+          "mean": 6.8473,
+          "std": 0.092,
+          "per_fold": [
+            6.8386,
+            6.964,
+            6.7392
+          ]
+        }
+      },
+      "nonlinear": {
+        "model": "HistGradientBoostingRegressor",
+        "r2": {
+          "mean": 0.0371,
+          "std": 0.0423,
+          "per_fold": [
+            0.0776,
+            -0.0212,
+            0.0548
+          ]
+        },
+        "rmse": {
+          "mean": 6.9043,
+          "std": 0.1145,
+          "per_fold": [
+            6.8257,
+            7.0662,
+            6.821
+          ]
+        },
+        "spearman_ic": {
+          "mean": 0.2682,
+          "std": 0.0079,
+          "per_fold": [
+            0.2792,
+            0.2608,
+            0.2646
+          ]
+        }
+      },
+      "top_features_nonlinear": [],
+      "learnability": "CANDIDATE_LEARNABLE"
+    },
+    "y_time_to_mfe": {
+      "n_finite": 58034,
+      "missing_rate": 0.032767,
+      "y_mean": 4.722749,
+      "y_std": 5.889031,
+      "linear": {
+        "r2": {
+          "mean": 0.033,
+          "std": 0.0182,
+          "per_fold": [
+            0.0377,
+            0.0086,
+            0.0526
+          ]
+        },
+        "rmse": {
+          "mean": 5.6996,
+          "std": 0.0718,
+          "per_fold": [
+            5.7695,
+            5.7284,
+            5.6009
+          ]
+        }
+      },
+      "nonlinear": {
+        "model": "HistGradientBoostingRegressor",
+        "r2": {
+          "mean": 0.0378,
+          "std": 0.0111,
+          "per_fold": [
+            0.0494,
+            0.0229,
+            0.0411
+          ]
+        },
+        "rmse": {
+          "mean": 5.6852,
+          "std": 0.0407,
+          "per_fold": [
+            5.7342,
+            5.687,
+            5.6345
+          ]
+        },
+        "spearman_ic": {
+          "mean": 0.1872,
+          "std": 0.0012,
+          "per_fold": [
+            0.1861,
+            0.1866,
+            0.1888
+          ]
+        }
+      },
+      "top_features_nonlinear": [],
+      "learnability": "CANDIDATE_LEARNABLE"
+    }
+  },
+  "architecture": {
+    "tradenet_tags": {
+      "y_tp1": "NOISY",
+      "y_tp2": "NOISY",
+      "y_survives_be": "NOISY"
+    },
+    "envelope_tags": {
+      "y_mfe_r": "CANDIDATE_LEARNABLE",
+      "y_mae_r_heat": "CANDIDATE_LEARNABLE",
+      "y_holding_bars": "CANDIDATE_LEARNABLE",
+      "y_time_to_mfe": "CANDIDATE_LEARNABLE"
+    },
+    "linear_vs_nonlinear_lift": {
+      "y_tp1": {
+        "linear_auc": 0.5015,
+        "nonlinear_auc": 0.5078,
+        "lift": 0.0063
+      },
+      "y_tp2": {
+        "linear_auc": 0.5146,
+        "nonlinear_auc": 0.5181,
+        "lift": 0.0035
+      },
+      "y_survives_be": {
+        "linear_auc": 0.5023,
+        "nonlinear_auc": 0.5006,
+        "lift": -0.0017
+      },
+      "y_mfe_r": {
+        "linear_r2": 0.0161,
+        "nonlinear_r2": -0.0251,
+        "lift": -0.0412
+      },
+      "y_mae_r_heat": {
+        "linear_r2": 0.0161,
+        "nonlinear_r2": -0.0432,
+        "lift": -0.0593
+      },
+      "y_holding_bars": {
+        "linear_r2": 0.0532,
+        "nonlinear_r2": 0.0371,
+        "lift": -0.0161
+      },
+      "y_time_to_mfe": {
+        "linear_r2": 0.033,
+        "nonlinear_r2": 0.0378,
+        "lift": 0.0048
+      }
+    },
+    "q1_envelope_more_learnable_than_outcome": true,
+    "q2_nonlinear_changes_prior": false,
+    "fundamentally_noisy": [
+      "y_tp1",
+      "y_tp2",
+      "y_survives_be"
+    ],
+    "deserve_production_models": "NONE yet \u2014 GATE-O is learnability only; production needs GATE-S/P + \u0394G001",
+    "diagnostic_only": [
+      "y_tp1",
+      "y_tp2",
+      "y_survives_be"
+    ],
+    "tradenet_go_nogo": "NO_GO \u2014 all outcome heads noisy under nonlinear probe",
+    "envelope_go_nogo": "GO_RESEARCH \u2014 multi-head EnvelopeNet offline training eligible",
+    "multi_head_envelope_still_justified": true
+  },
+  "dataset_sha256": "0ad3d5502bbe256afe42cbe8af0cd9559681cf1078de4ec4b2c266ad1c722d3a"
+}

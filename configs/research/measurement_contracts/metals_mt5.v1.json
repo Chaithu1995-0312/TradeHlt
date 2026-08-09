@@ -1,0 +1,116 @@
+{
+  "_doc": "Measurement PROFILE — metals (MT5). A reusable per-asset-class set of DEFAULTS for the surface fields of a sealed MC-* MeasurementContract instance. NOT a contract instance and NOT an admissibility seal. Charter: docs/governance/MEASUREMENT_CONTRACT.md section 9.",
+  "schema_version": "1.0.0",
+  "profile_id": "MP-METALS-MT5",
+  "version": "v1",
+  "lifecycle": "DRAFT",
+  "profile_hash": null,
+  "created_utc": "2026-08-06T00:00:00Z",
+  "subordinate_to": {
+    "charter": "docs/governance/MEASUREMENT_CONTRACT.md",
+    "schema": "docs/governance/measurement_contract.schema.json",
+    "schema_version": "1.0.0",
+    "relationship": "Profiles supply reusable per-asset-class DEFAULTS that a sealed MC-* instance inherits. Every enumerated value below is drawn from the frozen schema's own enums so that subordination is mechanically checkable. A profile never overrides the charter, never relaxes the E0-E4 bar, and never sets trust_status. OVERRIDE PRECEDENCE (2026-08-06, engine_gate discussion): an MC-* instance ALWAYS WINS on any field the frozen schema scopes per-experiment rather than per-asset-class -- concretely pipeline_identity.engine_gate_mode, pipeline_identity.dataset_integrity_level, splits.*, and metrics.multiplicity/control-protocol. This profile's surface_defaults for those fields are non-binding suggestions only, retained for convenience; the sealed instance's own declared value is authoritative. This was made explicit after F-058 showed gate mode is pipeline IDENTITY (which object was measured), not an asset-class property -- a profile default must never be mistaken for that identity."
+  },
+  "profile": {
+    "asset_class": "metals_mt5",
+    "provider": "mt5",
+    "rationale": "The repo's second active laboratory (XAUUSD/MT5) alongside crypto majors. Separated from fx_majors for two concrete reasons: XAUUSD REJECTs the FX holiday-gap gate (F-035), and the broker-clock defect measurably mislabels 53.36% of its bars (F-066) — the profile where the timestamp term is most load-bearing."
+  },
+  "surface_defaults": {
+    "population": {
+      "instruments": ["XAUUSD"],
+      "timeframe": "M15",
+      "unit_of_analysis": "trade_decision",
+      "detection_vs_trade": "trade_ledger",
+      "n_declared_min": 30,
+      "gap_policy": null,
+      "gap_policy_note": "REQUIRES_DECISION. F-035 excluded XAUUSD from the FX program because the holiday gap REJECTs the FX gap gate. This profile must state its own gap policy rather than inherit one that already rejected it."
+    },
+    "features": {
+      "formula_authority": "market_ontology",
+      "normalization_basis": "atr_relative",
+      "normalization_note": "F-064: on XAUUSD the legacy basis degenerates hard — |tanh(momentum_score)| > 0.999 on 99.70% of bars and an exact 100.000x scale ratio under a synthetic price shift. Measured and deliberately NOT activated. Choosing atr_relative here is choosing a knowingly degenerate channel; that must be a decision, not an accident.",
+      "session_timestamp_basis": null,
+      "session_note": "REQUIRES_DECISION and the most consequential term in this profile. F-066: 53.36% of XAUUSD bars carry the wrong session label under broker_local, confirmed by two independent tests (BTCUSDT cross-correlation showing an exact on-the-hour shift; NFP-release alignment at a season-invariant 15:30 server time). The broker tracks US DST, not EU. broker_local is byte-identical to all historical work but knowingly mislabelled; utc_corrected is correct but severs comparability with every prior XAU claim. Exactly the choice a contract exists to make explicit.",
+      "point_in_time_rule": null,
+      "point_in_time_note": "REQUIRES_DECISION per F-051."
+    },
+    "labels": {
+      "label_family": "forward_walk_economic",
+      "derivation_authority": "forward_walk.intrabar_fixed",
+      "stream_fields_banned_for_economic_claims": [
+        "opportunities.outcome",
+        "opportunities.rr",
+        "trade.rr_achieved"
+      ],
+      "note": "Byte-identical across all three profiles by design."
+    },
+    "costs": {
+      "cost_model_id": "derived_per_instrument.v1",
+      "components": [
+        {
+          "name": "round_trip",
+          "bps_or_formula": "DERIVED: k * median(bar_range_pct) computed per instrument from its own M15 corpus; k pending calibration",
+          "applied_on": "round_trip"
+        }
+      ],
+      "gross_vs_net": {
+        "report_gross": true,
+        "report_net": true,
+        "promotable": "net_only"
+      },
+      "success_gate_uses": "net",
+      "legacy_constant_bps": 12,
+      "legacy_note": "Retained as provenance only.",
+      "calibration": {
+        "status": "PENDING_CALIBRATION",
+        "k": null,
+        "values": null
+      }
+    },
+    "exits": {
+      "exit_family": "intrabar_fixed_sl_tp",
+      "intrabar_rule": null,
+      "intrabar_note": "REQUIRES_DECISION per the crypto profile."
+    },
+    "splits": {
+      "scheme": null,
+      "overlap_policy": "forbid_overlapping_labels",
+      "note": "REQUIRES_DECISION."
+    },
+    "metrics": {
+      "authority_ladder": {
+        "info_not_value": true,
+        "value_not_authority": true,
+        "insufficient_not_harmful": true
+      },
+      "multiplicity": {
+        "n_permutations": 2000,
+        "control_set": ["random_entry", "long_only", "market"]
+      },
+      "forbidden_metric_substitutions": [
+        "p_value_as_edge",
+        "gross_as_success",
+        "n_detections_as_n_trades"
+      ],
+      "provenance": "Inherited from the historical M4 gate, UNVERIFIED."
+    },
+    "pipeline_identity": {
+      "engine_gate_mode": null,
+      "engine_gate_note": "REQUIRES_DECISION per F-037/F-058.",
+      "dataset_integrity_level": null,
+      "dataset_integrity_note": "REQUIRES_DECISION per F-039."
+    }
+  },
+  "unresolved_terms": [
+    { "term": "population.gap_policy", "blocks_freeze": true, "refs": ["F-035"] },
+    { "term": "features.session_timestamp_basis", "blocks_freeze": true, "refs": ["F-066"] },
+    { "term": "features.point_in_time_rule", "blocks_freeze": true, "refs": ["F-051"] },
+    { "term": "costs.calibration", "blocks_freeze": true, "refs": ["F-025", "F-035"] },
+    { "term": "exits.intrabar_rule", "blocks_freeze": true, "refs": ["F-025"] },
+    { "term": "splits.scheme", "blocks_freeze": true, "refs": [] },
+    { "term": "pipeline_identity.engine_gate_mode", "blocks_freeze": true, "refs": ["F-037", "F-058"] },
+    { "term": "pipeline_identity.dataset_integrity_level", "blocks_freeze": true, "refs": ["F-039"] }
+  ]
+}

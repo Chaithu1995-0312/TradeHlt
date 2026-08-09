@@ -1,0 +1,1614 @@
+# Semantic OS — Concept registry (HAND-AUTHORED)
+#
+# Charter: docs/governance/SEMANTIC_OS_CONTRACT.md
+# Design:  docs/governance/SEMANTIC_OS_V1_DESIGN.md  (FM-first stack L0–L6; CN/BD/JN/CT/OBJ)
+# Schema:  docs/reference/schemas.md §9.10 · validator: src/governance/semantic_os.py
+# Guard:   tests/test_semantic_os.py
+# Scoreboard: docs/governance/REPOSITORY_COVERAGE_DASHBOARD.md
+#
+# HAND-AUTHOR ONLY what code cannot answer: why it exists, what invariant must never break,
+# why this design, why the alternative was rejected, which finding justifies it.
+# Imports / consumers / package / ownership / tests / reachability are DERIVED — writing any of
+# them here is a schema violation (see _FORBIDDEN_HAND_FIELDS + validate_no_derived_in_source).
+#
+# Concepts REFERENCE other authorities by validated foreign key; they never redefine them.
+# A concept may CITE an FM-*/SEM-* ontology id but may NEVER carry a formula (§6.6).
+#
+# Append-discipline (§6.2 rule 4): never delete a record. Mark it SUPERSEDED / RETIRED and set
+# superseded_by.
+#
+# STATUS: PR-4 wave 1 complete — CN-001..CN-015 (spine + gov/research/agent inventory).
+# Target remains ~50 concepts (design §10). Remaining seed names wait for PR-5+ boundaries/journeys.
+
+concepts:
+
+  - id: CN-001
+    kind: concept
+    name: Canonical Feature Vector
+    aliases:
+      - canonical features
+      - feature vector
+      - CANONICAL_FEATURES
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      Every scoring engine, model, and research probe needs ONE agreed numeric representation of a
+      candle's market context. Without a single owned schema each consumer derives its own version
+      of the same quantity, and the system silently disagrees with itself about what "the features"
+      even are.
+    problem_it_solves: >-
+      Eliminates per-consumer re-derivation of governed market mathematics — the defect class that
+      produced divergent wick_size/body_ratio definitions (F-046) and the ten pinned geometry
+      divergences adjudicated into the GD-001..GD-010 ledger (F-047).
+    explicit_non_goals:
+      - Does not decide whether a feature is economically useful — that is the Authority Ladder (§6.5).
+      - Does not own feature MATHEMATICS — the market ontology does (§6.6); this concept owns the
+        vector's identity, order, and point-in-time contract.
+      - Does not guarantee any consumer actually reads the vector correctly.
+
+    miar_stage: substrate
+    miar_entry: feature_pipeline
+    closure_surface_id: CANONICAL_FEATURE_CODE_SURFACE
+    ontology_ids:
+      - FM-001
+      - FM-002
+    owner_boundary: BD-001
+    related_boundaries:
+      - BD-003
+      - BD-004
+      - BD-005
+    canonical_source: src/features/feature_schema.py
+
+    invariants:
+      - The emitted vector is exactly the CANONICAL_FEATURES tuple, in declared order.
+      - No feature may be computed from a bar later than the bar being scored (point-in-time).
+      - Any change to CANONICAL_FEATURES or FEATURE_SCHEMA invalidates the baseline and requires
+        a fresh baseline capture before training.
+    preconditions:
+      - A chronologically ordered OHLCV frame with the configured warmup rows available.
+      - feature_pipeline config section present and strictly readable (no silent defaults, §6.5).
+    postconditions:
+      - A fixed-width numeric vector whose order hash matches FEATURE_ORDER_HASH.
+      - Warmup rows are dropped, so the emitted index is not the input index.
+    assumptions:
+      - assumption: >-
+          Every emitted feature is point-in-time — no value depends on a future bar.
+        falsified_by: F-051
+        status: FALSIFIED
+      - assumption: >-
+          Each canonical slot has exactly one registered ontology identity that owns its math.
+        falsified_by: null
+        status: HOLDS
+
+    behavior: >-
+      The pipeline consumes a raw OHLCV frame, computes rolling indicators and derived metrics
+      through the registered formula authorities, drops the warmup prefix, and emits a fixed-width
+      vector plus a schema hash. Consumers bind to the schema, never to positional indices they
+      compute themselves.
+    failure_modes:
+      - mode: SCHEMA_DRIFT
+        symptom: A consumer's expected width or order no longer matches the emitted vector.
+        detection: FEATURE_ORDER_HASH / SCHEMA_HASH comparison against the captured baseline.
+        finding: null
+      - mode: LOOKAHEAD_CONTAMINATION
+        symptom: A feature's value at bar t changes when bars after t are appended.
+        detection: Prefix-invariance probe — recompute on a truncated frame and diff.
+        finding: F-051
+      - mode: DIMENSIONAL_MIX
+        symptom: >-
+          A slot emits a price-level quantity where a ratio is intended, so downstream thresholds
+          saturate on nearly every bar.
+        detection: Scale-invariance probe under a synthetic price multiplier.
+        finding: F-047
+
+    why_this_design: >-
+      A single frozen tuple with an order hash makes disagreement detectable rather than silent.
+      The alternative — letting each engine ask for the features it wants — is exactly what produced
+      the divergence ledger, because two call sites can compute "the same" quantity differently and
+      nothing compares them.
+    alternatives_rejected:
+      - alternative: Per-engine feature derivation (each engine computes what it needs inline).
+        why_rejected: >-
+          Produced genuinely divergent definitions of the same named quantity with zero mechanical
+          detection; remediated by unifying behind an immutable module and an ownership lint.
+        evidence: docs/current-findings.md
+      - alternative: A variable-width feature dict keyed by name instead of a fixed ordered tuple.
+        why_rejected: >-
+          Removes the order hash, so schema drift stops being mechanically detectable and the
+          baseline-invalidation invariant becomes unenforceable.
+        evidence: null
+    research_findings:
+      - F-046
+      - F-047
+      - F-051
+      - F-054
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      The one fixed-width, ordered, point-in-time numeric representation of a candle's context that
+      every engine and model binds to.
+    summary_200: >-
+      The canonical feature vector is the substrate contract of the whole system: a fixed-width
+      tuple, in a declared order, hashed so drift is detectable, computed point-in-time from an
+      OHLCV frame through registered formula authorities rather than inline per-consumer math. It
+      exists because the alternative — each engine deriving its own version of the same quantity —
+      produced real divergent definitions that nothing could mechanically compare. It owns the
+      vector's identity, order, and PIT contract; it does NOT own the mathematics (the market
+      ontology does) and it does NOT claim any feature is economically useful.
+    retrieval_keywords:
+      - canonical features
+      - feature vector
+      - schema hash
+      - feature order hash
+      - point in time
+      - lookahead
+      - warmup
+    semantic_tags:
+      - substrate
+      - feature
+      - no_lookahead
+      - schema_identity
+
+    book_chapter: docs/book/07-feature-pipeline.md
+    topic_doc: docs/topics/feature-schema.md
+    intent_chain: docs/intent_graph.md#chain-3-deterministic-replay-the-same-inputs-same-outputs-thought
+    intent_domain_doc: null
+    related_concepts:
+      - CN-002
+    orphan_justification: null
+
+  - id: CN-002
+    kind: concept
+    name: Trade Approval
+    aliases:
+      - trade approval
+      - risk approval
+      - position approval
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      A scored signal is not a trade. Something must own the final economic yes/no — does this
+      proposed position clear its reward:risk after costs, within the account's exposure limits —
+      and that authority must live in exactly one place.
+    problem_it_solves: >-
+      Prevents a second, competing economic gate from forming upstream. When the DecisionEngine
+      also carried a reward:risk threshold it silently rejected every candle, because it was fed
+      candle polarity rather than economic RR (F-048).
+    explicit_non_goals:
+      - Does not score market structure or assign semantic approval — that is the DecisionEngine.
+      - Does not compute entry/stop/target geometry — that is the ExecutionPlanner; this concept
+        consumes the resulting levels.
+      - Does not decide position sizing policy independently of the configured risk percent.
+
+    miar_stage: safety
+    miar_entry: null
+    closure_surface_id: null
+    ontology_ids: []
+    owner_boundary: BD-002
+    related_boundaries:
+      - BD-008
+    canonical_source: src/core/ultron_risk_gate.py
+
+    invariants:
+      - Economic reward:risk is evaluated in exactly ONE place, after entry/stop/target are planned.
+      - No position is opened without an explicit APPROVE result.
+      - The cost model is applied before the reward:risk comparison, never after.
+    preconditions:
+      - An ExecutionPlan carrying concrete entry, stop, and target levels.
+      - ultron_risk_gate config section present and strictly readable.
+    postconditions:
+      - A structured APPROVE/REJECT with a machine-readable reject reason.
+      - A rejected signal never reaches order placement on any path.
+    assumptions:
+      - assumption: >-
+          Only one component applies an economic reward:risk threshold on the decision path.
+        falsified_by: F-048
+        status: HOLDS
+      - assumption: >-
+          Backtest approval behaviour is representative of live approval behaviour.
+        falsified_by: F-010
+        status: UNTESTED
+
+    behavior: >-
+      Receives a planned position with concrete levels, taxes it with the configured cost model,
+      compares the resulting reward:risk against the configured minimum, checks exposure and
+      account-level limits, and returns a structured approve/reject. A reject is terminal for that
+      candle.
+    failure_modes:
+      - mode: DOUBLE_AUTHORITY
+        symptom: >-
+          A second component upstream also applies an economic threshold, so approvals depend on
+          which gate happens to be stricter.
+        detection: Grep the decision path for reward:risk comparisons outside the gate.
+        finding: F-048
+      - mode: STRUCTURALLY_INERT
+        symptom: A gate that never rejects, or rejects everything, regardless of input.
+        detection: Ledger differential with the gate forced on and off.
+        finding: F-070
+
+    why_this_design: >-
+      Economic approval was made a single, terminal, post-planning authority because reward:risk is
+      only meaningful once entry, stop, and target are concrete. Evaluating it earlier means
+      comparing a threshold against something that is not economic RR at all — which is exactly the
+      defect that made the upstream gate reject every candle.
+    alternatives_rejected:
+      - alternative: Keep a reward:risk threshold inside the DecisionEngine as a pre-filter.
+        why_rejected: >-
+          The DecisionEngine sees no economic RR (levels are not planned yet); it was fed candle
+          polarity against an RR threshold and rejected 100% of candles. The gate was removed and
+          the economics left solely to the risk gate.
+        evidence: docs/current-findings.md
+      - alternative: Let the ExecutionPlanner self-approve since it already computes the levels.
+        why_rejected: >-
+          Collapses planning and approval into one component, so there is no independent authority
+          able to veto a plan, and account-level exposure limits would have no owner.
+        evidence: null
+    research_findings:
+      - F-048
+      - F-070
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      The single, terminal economic authority that decides whether a planned position clears
+      reward:risk after costs and within exposure limits.
+    summary_200: >-
+      Trade approval is the last gate before an order exists. It takes a planned position with
+      concrete entry, stop, and target levels, applies the configured cost model, and checks the
+      resulting reward:risk plus account exposure limits, returning a structured approve/reject
+      with a machine-readable reason. It is deliberately the ONLY economic authority on the path:
+      an earlier reward:risk threshold in the DecisionEngine was removed after it was found to be
+      comparing candle polarity against an economic threshold and rejecting every candle. It owns
+      economics, not semantics and not geometry.
+    retrieval_keywords:
+      - trade approval
+      - risk gate
+      - reward risk
+      - min_rr_ratio
+      - reject reason
+      - exposure limit
+    semantic_tags:
+      - safety
+      - decision
+      - economic_authority
+
+    book_chapter: docs/book/14-ultron-risk-gate.md
+    topic_doc: docs/topics/ultron-risk-gate.md
+    intent_chain: docs/intent_graph.md#chain-1-capital-preservation-the-dont-blow-up-thought
+    intent_domain_doc: docs/intent/200_risk.md
+    related_concepts:
+      - CN-001
+      - CN-005
+      - CN-006
+    orphan_justification: null
+
+  # ── PR-3 intermediate concepts for full candle journey (JN-001 Steps 1,3–6) ─────────────
+
+  - id: CN-003
+    kind: concept
+    name: Candle Ingest
+    aliases:
+      - data ingest
+      - candle stream
+      - OHLCV load
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      Every downstream decision assumes a closed, ordered M15 candle. Without a single ingest
+      contract, streams can admit duplicates, out-of-order bars, or schema-broken rows that make
+      every later "edge" uninterpretable.
+    problem_it_solves: >-
+      Establishes L1/L2 stream integrity (headers, chronology, value sanity) as the universal
+      backstop for all consumers — including research paths that never run L3 (F-039).
+    explicit_non_goals:
+      - Does not score or trade — only produces Candle units.
+      - Does not replace L3 dataset preflight on every path (only backtest MultiInstrumentRunner).
+      - Does not own MT5/broker clock semantics (feature session basis is separate, F-066).
+
+    miar_stage: substrate
+    miar_entry: null
+    closure_surface_id: null
+    ontology_ids: []
+    owner_boundary: BD-005
+    related_boundaries:
+      - BD-001
+    canonical_source: src/runtime/backtest_v2.py
+
+    invariants:
+      - Streamed candles are strictly chronological (no duplicates / no out-of-order timestamps).
+      - Required OHLCV columns are present and parseable before any engine runs.
+      - No-lookahead is the conjunction of L1/L2/L3 + generator consumption order (F-039).
+    preconditions:
+      - Configured instrument CSV path or live feed adapter.
+      - Warmup policy understood by the consumer frame builder.
+    postconditions:
+      - A Candle (or enriched bar) available for the feature pipeline.
+    assumptions:
+      - assumption: >-
+          Inline L1/L2 backstop is sufficient integrity for research streams that skip L3.
+        falsified_by: F-039
+        status: HOLDS
+
+    behavior: >-
+      Loads or streams closed M15 bars, rejects malformed schema/time, and yields Candle units
+      to the spine generator without peeking at future bars.
+    failure_modes:
+      - mode: DATA_CORRUPT
+        symptom: Missing CSV, bad headers, NaN OHLC, high < low.
+        detection: stream() raises; schema validators fire.
+        finding: null
+      - mode: TEMPORAL_VIOLATION
+        symptom: Duplicate or out-of-order timestamps in the stream.
+        detection: L2 inline checks in CandleLoader.stream().
+        finding: null
+      - mode: LOOKAHEAD_STREAM
+        symptom: Consumer can access bar N+1 before N is fully processed.
+        detection: Generator discipline / audit of non-stream access patterns.
+        finding: F-039
+
+    why_this_design: >-
+      A generator stream forces causal consumption. Optional L3 adds confidence without being the
+      sole integrity net for every research caller.
+    alternatives_rejected:
+      - alternative: Load full frames with random-access indexing as the only path.
+        why_rejected: Makes accidental lookahead easy and removes a structural no-peek force.
+        evidence: docs/current-findings.md
+    research_findings:
+      - F-039
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      Closed, chronological M15 candle stream with L1/L2 integrity before any scoring runs.
+    summary_200: >-
+      Candle ingest is the first hop of the synchronous spine: raw OHLCV becomes Candle units
+      under strict chronology and schema checks. Research may skip L3 preflight, so L1/L2 remain
+      the universal backstop. It does not trade; it only guarantees the market time series is
+      well-formed and causal for everything that follows.
+    retrieval_keywords:
+      - candle
+      - OHLCV
+      - stream
+      - no lookahead
+      - dataset integrity
+    semantic_tags:
+      - substrate
+      - data
+      - no_lookahead
+
+    book_chapter: docs/book/05-data-ingestion-no-lookahead.md
+    topic_doc: docs/topics/feature-schema.md
+    intent_chain: docs/intent_graph.md#chain-3-deterministic-replay-the-same-inputs-same-outputs-thought
+    intent_domain_doc: null
+    related_concepts:
+      - CN-001
+    orphan_justification: null
+
+  - id: CN-004
+    kind: concept
+    name: CRT Market Structure
+    aliases:
+      - CRT state machine
+      - structural language
+      - CRT spine structure
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      The market needs a shared structural language — range, sweep, displacement, expansion,
+      retest, execution — so fusion, research, and execution consume ONE narrative per candle,
+      not consumer-specific reinterpretations (Semantic OS CRT philosophy).
+    problem_it_solves: >-
+      Separates structural interpretation (what the market is doing) from consumer decisions
+      (whether to trade it). Prevents strategy-branded forks of the same geometry.
+    explicit_non_goals:
+      - Does not own fusion weights or risk economics.
+      - Does not claim economic edge (CRT mechanism CLOSED ≠ expectancy proven).
+      - Does not replace the feature vector (structure uses features; it is not the vector).
+
+    miar_stage: opportunity_understanding
+    miar_entry: crt
+    closure_surface_id: CRT
+    ontology_ids: []
+    owner_boundary: BD-006
+    related_boundaries:
+      - BD-001
+      - BD-007
+    canonical_source: src/config_layer/crt_engine_v2.py
+
+    invariants:
+      - Only VALID_TRANSITIONS among the 9 CRT states are legal.
+      - Structural config defines the narrative; consumer config must not rewrite state meaning.
+      - Resolver parity with the engine may be incomplete by construction (F-069) — engine is authority for trades.
+    preconditions:
+      - Canonical features available for the bar.
+      - CRTConfig resolved for the instrument path.
+    postconditions:
+      - A CRT state (and optional TRADE_OPENED commitment) consistent with the engine topology.
+    assumptions:
+      - assumption: >-
+          Structural detection is economically informative under realistic costs.
+        falsified_by: F-019
+        status: FALSIFIED
+
+    behavior: >-
+      Advances the CRT state machine on each closed bar using registered geometry and config
+      thresholds; may emit a structural setup that later steps score and plan.
+    failure_modes:
+      - mode: INVALID_TRANSITION
+        symptom: State jump outside VALID_TRANSITIONS.
+        detection: State topology tests / engine asserts.
+        finding: null
+      - mode: STRUCTURAL_CONFIG_SPLIT
+        symptom: Programmatic CRTConfig path diverges from production JSON (F-057 class).
+        detection: Config construction census / fingerprint.
+        finding: F-057
+      - mode: NO_SETUP
+        symptom: Bar stays RANGE or never reaches EXECUTION — no trade path.
+        detection: Funnel counters / state occupancy.
+        finding: null
+
+    why_this_design: >-
+      One structural language for many consumers. Mechanism can be CLOSED while economics remain
+      open — that distinction is intentional (crt_closure_report).
+    alternatives_rejected:
+      - alternative: Let each strategy redefine sweep/disp geometry.
+        why_rejected: Produces incompatible narratives for the same candle; research becomes non-comparable.
+        evidence: docs/governance/SEMANTIC_OS_V1_DESIGN.md
+    research_findings:
+      - F-019
+      - F-057
+      - F-069
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      Shared CRT structural narrative of the market — not a strategy, not an economic claim.
+    summary_200: >-
+      CRT market structure is the structural language used by the spine: nine states and legal
+      transitions describing accumulation, sweep, displacement, and execution setup. Consumers
+      (fusion, research, risk) may score or gate differently but must not invent alternate
+      structural meanings for the same candle. Economic nulls under research do not reopen the
+      mechanism boundary without new evidence.
+    retrieval_keywords:
+      - CRT
+      - state machine
+      - sweep
+      - displacement
+      - retest
+      - structural language
+    semantic_tags:
+      - structure
+      - crt
+      - domain
+
+    book_chapter: docs/book/08-crt-state-machine.md
+    topic_doc: docs/topics/crt-spine.md
+    intent_chain: null
+    intent_domain_doc: null
+    related_concepts:
+      - CN-001
+      - CN-005
+    orphan_justification: null
+
+  - id: CN-005
+    kind: concept
+    name: Four Engine Scoring
+    aliases:
+      - EXPECTED_ENGINES
+      - multi-engine scores
+      - CRT Gaussian Zone RR
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      Independent scoring channels (CRT, Gaussian, Zone Gate, RR) keep structural, statistical,
+      geometric, and polarity signals from collapsing into a single opaque score before fusion.
+    problem_it_solves: >-
+      Forces completeness of the four EXPECTED_ENGINES and makes channel-level defects diagnosable
+      (e.g. Gaussian near-constant F-060) instead of silent fusion mystery.
+    explicit_non_goals:
+      - Does not fuse or approve trades.
+      - Does not require every channel to be informative (inert channels are findings, not silent success).
+      - Does not enable BitNet/TradeNet by mere presence (config authority).
+
+    miar_stage: decision
+    miar_entry: null
+    closure_surface_id: null
+    ontology_ids: []
+    owner_boundary: BD-007
+    related_boundaries:
+      - BD-001
+      - BD-006
+      - BD-008
+    canonical_source: src/core/engine_runner.py
+
+    invariants:
+      - EXPECTED_ENGINES = {crt, gaussian, zone_gate, rr} must all produce results or fail-fast on missing keys.
+      - Each engine score is in a declared numeric range consumed by fusion.
+    preconditions:
+      - Features and CRT structure available for the bar.
+      - Engine configs and model artifacts loadable under fail policies.
+    postconditions:
+      - Per-engine score map for fusion.
+    assumptions:
+      - assumption: >-
+          All four channels carry decision-relevant information under the active config.
+        falsified_by: F-060
+        status: FALSIFIED
+
+    behavior: >-
+      EngineRunner invokes each expected engine and collects scores; missing engines are hard errors
+      when completeness is required.
+    failure_modes:
+      - mode: MISSING_ENGINE
+        symptom: expected engine key absent from results.
+        detection: EXPECTED_ENGINES - results.keys() non-empty.
+        finding: null
+      - mode: CHANNEL_COLLAPSE
+        symptom: Engine output near-constant or OOD (e.g. Gaussian ~0.88).
+        detection: Ablation / distribution audit.
+        finding: F-060
+      - mode: OPTIONAL_DEP_DEGRADE
+        symptom: BitNet/LLM optional path fails open or disables.
+        detection: fail_count_disable / import guards.
+        finding: F-004
+
+    why_this_design: >-
+      Independent engines preserve diagnosability. Completeness is structural; informativeness is
+      evidence-driven per channel.
+    alternatives_rejected:
+      - alternative: Single monolithic scorer.
+        why_rejected: Hides channel-level collapse and blocks lineage audits per model family.
+        evidence: docs/governance/*_lineage_audit.md
+    research_findings:
+      - F-060
+      - F-036
+      - F-038
+      - F-004
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      Four independent engine scores (CRT, Gaussian, Zone, RR) before fusion.
+    summary_200: >-
+      Four-engine scoring is the multi-channel measurement step of the spine. Completeness of the
+      expected set is mandatory; whether each channel is informative is a separate evidence
+      question (several channels are AUDITED as weak or inert). Fusion and risk come later.
+    retrieval_keywords:
+      - engine runner
+      - gaussian
+      - zone gate
+      - rr engine
+      - scoring
+    semantic_tags:
+      - decision
+      - engines
+      - scoring
+
+    book_chapter: docs/book/10-four-scoring-engines.md
+    topic_doc: docs/topics/scoring-engines.md
+    intent_chain: null
+    intent_domain_doc: null
+    related_concepts:
+      - CN-001
+      - CN-004
+      - CN-006
+    orphan_justification: null
+
+  - id: CN-006
+    kind: concept
+    name: Fusion Decision and Geometry
+    aliases:
+      - fusion and decision
+      - execution plan
+      - semantic approval
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      Independent scores must become one semantic go/pass/reject, and an accepted signal must
+      become concrete entry/SL/TP geometry before any capital check (order forced by F-048 lesson).
+    problem_it_solves: >-
+      Separates semantic approval (DecisionEngine) from economic RR (Ultron) and from structural
+      scoring; ensures planning happens before capital math.
+    explicit_non_goals:
+      - Does not own cost-taxed min RR (Ultron / CN-002).
+      - Does not redefine CRT structure (CN-004).
+      - Does not invent SL/TP outside CRT/planner geometry contracts.
+
+    miar_stage: decision
+    miar_entry: null
+    closure_surface_id: null
+    ontology_ids: []
+    owner_boundary: BD-008
+    related_boundaries:
+      - BD-002
+      - BD-007
+    canonical_source: src/core/fusion_engine.py
+
+    invariants:
+      - Fusion completeness respects expected engines when the gate is enabled.
+      - DecisionEngine is semantic-only after F-048 (no economic RR threshold).
+      - ExecutionPlanner runs only after semantic GO and before Ultron.
+    preconditions:
+      - Per-engine scores available.
+      - Production fusion/decision/planner config present.
+    postconditions:
+      - DecisionResult and, on GO, an ExecutionPlan with concrete levels.
+    assumptions:
+      - assumption: >-
+          Fusion gate materially changes the trade set on the active config.
+        falsified_by: F-070
+        status: UNTESTED
+
+    behavior: >-
+      Fuses engine scores, applies semantic DecisionEngine gates, and on GO derives entry/SL/TP/TTL
+      intent geometry for the risk gate.
+    failure_modes:
+      - mode: FUSION_INCOMPLETE
+        symptom: Missing engine weights/scores under completeness rules.
+        detection: FusionEngine completeness check / fail-fast weight sum.
+        finding: null
+      - mode: SEMANTIC_REJECT
+        symptom: DecisionEngine REJECT (score/zone/weak component) without capital evaluation.
+        detection: RejectReason ledger.
+        finding: null
+      - mode: INVALID_GEOMETRY
+        symptom: Planner cannot form valid SL/TP for intent (or ATR unit defect).
+        detection: Planner rejects; geometry audits (Ch.13 ATR mismatch).
+        finding: null
+      - mode: ECONOMIC_THRESHOLD_TOO_EARLY
+        symptom: RR-like threshold applied before levels exist.
+        detection: Path audit of DecisionEngine vs Ultron ownership.
+        finding: F-048
+
+    why_this_design: >-
+      Semantic fusion/decision before geometry, geometry before capital — the only order in which
+      each quantity is well-defined.
+    alternatives_rejected:
+      - alternative: Economic RR inside DecisionEngine before planner.
+        why_rejected: Compared non-economic polarity to RR threshold; zeroed the path (F-048).
+        evidence: docs/current-findings.md
+    research_findings:
+      - F-048
+      - F-070
+      - F-038
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      Fuse scores, semantic GO/PASS/REJECT, then plan entry/SL/TP before capital check.
+    summary_200: >-
+      Fusion decision and geometry convert four engine scores into a semantic decision and, on GO,
+      concrete order geometry. Economic reward:risk remains Ultron-only. This concept owns the
+      middle of the spine between scoring and capital approval.
+    retrieval_keywords:
+      - fusion
+      - decision engine
+      - execution planner
+      - entry stop target
+    semantic_tags:
+      - decision
+      - fusion
+      - geometry
+
+    book_chapter: docs/book/11-fusion.md
+    topic_doc: docs/topics/fusion-decision.md
+    intent_chain: null
+    intent_domain_doc: null
+    related_concepts:
+      - CN-002
+      - CN-005
+      - CN-007
+    orphan_justification: null
+
+  # ── PR-4 concept inventory wave 1 (target ~15 spine/gov/research/agent concepts) ──────────
+
+  - id: CN-007
+    kind: concept
+    name: Market Ontology Authority
+    aliases:
+      - market ontology
+      - formula registry
+      - FM identities
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      Market mathematics must have one declared meaning (FM-*) and one registered implementation
+      path. Without ontology authority, each consumer re-derives "the same" quantity differently.
+    problem_it_solves: >-
+      Prevents ungoverned local formula math and documents the WHAT-layer of every feature
+      (F-047). Separates meaning (ontology) from emission (feature vector, CN-001).
+    explicit_non_goals:
+      - Does not emit the 39-dim vector (CN-001 / pipeline does).
+      - Does not decide economic usefulness of a feature (§6.5 Authority Ladder).
+      - Does not own CRT structural state transitions (CN-004).
+
+    miar_stage: market_understanding
+    miar_entry: market_ontology
+    closure_surface_id: CANONICAL_FEATURE_CODE_SURFACE
+    ontology_ids:
+      - FM-001
+    owner_boundary: BD-003
+    related_boundaries:
+      - BD-001
+    canonical_source: configs/formulas/market_ontology.yaml
+
+    invariants:
+      - New market quantities are registered in the ontology before production use.
+      - Implementations route through formula_registry / derived_math — never silent local re-derivation.
+      - Ontology meaning is authority #1 for feature mathematics (§6.6).
+    preconditions:
+      - Ontology YAML loadable; registry validates.
+    postconditions:
+      - Every emitted feature slot can name its FM identity or an explicit exception.
+    assumptions:
+      - assumption: >-
+          The ownership lint prevents new ungoverned re-derivations from landing.
+        falsified_by: null
+        status: HOLDS
+
+    behavior: >-
+      Declares FM/SEM identities, dependencies, and lifecycle; registry implements callables;
+      lint and certification enforce the join.
+    failure_modes:
+      - mode: UNGOVERNED_MATH
+        symptom: Production code re-derives a named quantity outside the registry.
+        detection: feature_math_lint / ownership census.
+        finding: F-047
+      - mode: ONTOLOGY_CODE_DRIFT
+        symptom: Declared FM identity disagrees with live implementation.
+        detection: Parity / certification ledger STALE cascade.
+        finding: F-054
+
+    why_this_design: >-
+      Meaning must be first-class and versioned separately from any one pipeline emission path.
+    alternatives_rejected:
+      - alternative: Inline comments as the only formula documentation.
+        why_rejected: Not enforceable; produced GD-001..010 class divergences.
+        evidence: docs/current-findings.md
+    research_findings:
+      - F-047
+      - F-046
+      - F-054
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      Authoritative market-math meaning (ontology + formula registry), not the emitted vector.
+    summary_200: >-
+      Market ontology authority is the WHAT layer for every governed feature: stable FM ids,
+      declared dependencies, and registered implementations. The feature vector (CN-001) is the
+      emission contract; the ontology is the meaning contract. Together they stop silent
+      re-derivation of market quantities across engines and scripts.
+    retrieval_keywords:
+      - market ontology
+      - formula registry
+      - FM-id
+      - feature math lint
+    semantic_tags:
+      - ontology
+      - what_layer
+      - substrate
+
+    book_chapter: docs/book/06-market-ontology.md
+    topic_doc: docs/topics/model-intent-and-feature-ownership.md
+    intent_chain: null
+    intent_domain_doc: null
+    related_concepts:
+      - CN-001
+    orphan_justification: >-
+      PR-4 inventory — ontology authority is boundary-owned (BD-001) but not a distinct JN-001
+      step; journey participation deferred until a dedicated ontology/cert journey is authored.
+
+  - id: CN-008
+    kind: concept
+    name: Session and Broker Clock
+    aliases:
+      - session label
+      - broker clock
+      - session filter
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      "Session" named two incompatible things — a feature label and a trading filter — and MT5
+      timestamps may not be true UTC (F-066). The system needs one owner of session meaning and
+      an explicit clock basis.
+    problem_it_solves: >-
+      Separates feature session labels from CRT session_windows filter policy; offers config-gated
+      UTC correction without forcing a silent economic retune of the filter.
+    explicit_non_goals:
+      - Does not itself open/close trades.
+      - Does not claim session policy is a proven BNB lever (F-017 null under realistic exits).
+      - Does not auto-relabel historically tuned live filters.
+
+    miar_stage: market_understanding
+    miar_entry: null
+    closure_surface_id: null
+    ontology_ids: []
+    owner_boundary: BD-004
+    related_boundaries:
+      - BD-001
+    canonical_source: src/features/session_classifier.py
+
+    invariants:
+      - Session feature emission has a single module owner (session_classifier).
+      - Clock basis is config-declared (broker_local vs utc_corrected), not ambient.
+      - Filter windows and feature labels may use different bases only if explicitly intentional.
+    preconditions:
+      - Timestamp available on the bar; feature_pipeline session config present when used.
+    postconditions:
+      - Session label (and optional hour features) consistent with chosen basis.
+    assumptions:
+      - assumption: >-
+          Broker-local session labels match true UTC session on MT5-sourced corpora.
+        falsified_by: F-066
+        status: FALSIFIED
+
+    behavior: >-
+      Classifies bars into sessions; optional broker_clock converts server time to UTC when
+      configured; CRT filter windows remain a separate economic policy surface.
+    failure_modes:
+      - mode: SESSION_MISLABEL
+        symptom: Feature session disagrees with true market session under UTC truth.
+        detection: Cross-correlation / event alignment probes (F-066 method).
+        finding: F-066
+      - mode: FILTER_FEATURE_CONFUSION
+        symptom: Relabeling features silently changes live filter economics.
+        detection: A/B of session_timestamp_basis vs crt session_windows.
+        finding: F-017
+
+    why_this_design: >-
+      Explicit dual surfaces prevent treating a feature fix as an automatic live-policy change.
+    alternatives_rejected:
+      - alternative: One global session enum for both features and filters.
+        why_rejected: Couples representation hygiene to economic policy; blocks safe clock fixes.
+        evidence: docs/current-findings.md
+    research_findings:
+      - F-066
+      - F-017
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      Owned session labeling and explicit broker-clock basis, separate from live filter policy.
+    summary_200: >-
+      Session and broker clock own how bars are labeled in time. Feature labels and trading filters
+      are deliberately separable so UTC correction of features need not silently retune live
+      session gates. F-066 documents MT5 mislabel risk; F-017 documents session-as-lever nulls
+      under realistic costs.
+    retrieval_keywords:
+      - session
+      - broker clock
+      - UTC
+      - session_windows
+    semantic_tags:
+      - session
+      - clock
+      - market_understanding
+
+    book_chapter: docs/book/07-feature-pipeline.md
+    topic_doc: null
+    intent_chain: null
+    intent_domain_doc: null
+    related_concepts:
+      - CN-001
+      - CN-003
+    orphan_justification: >-
+      PR-4 inventory — session/clock is feature-boundary meaning (BD-001); not a separate spine
+      step in JN-001 (candle ingest uses stream integrity only). JN expansion deferred.
+
+  - id: CN-009
+    kind: concept
+    name: Config-First Active Version
+    aliases:
+      - ACTIVE_VERSION
+      - production config
+      - config-first
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      Runtime behavior must bind to exactly one active production config (Tier-0 truth), with
+      behavioral knobs externalized and strictly read — not ambient .env or silent code defaults.
+    problem_it_solves: >-
+      Prevents split-brain version inference (F-016/F-007 class) and silent defaults (F-018 class);
+      makes promotion a file+hash event, not a memory event.
+    explicit_non_goals:
+      - Does not prove the active config is economically good.
+      - Does not replace CRT structural meaning (ontology/CRT concepts).
+      - Does not auto-migrate schema-missing keys (fail-fast instead).
+
+    miar_stage: execution
+    miar_entry: null
+    closure_surface_id: null
+    ontology_ids: []
+    owner_boundary: BD-009
+    related_boundaries: []
+    canonical_source: src/config_layer/production_config.py
+
+    invariants:
+      - Exactly one ACTIVE_VERSION file is Tier-0 runtime truth.
+      - Missing required keys raise; they do not silently default for new knobs (§6.5).
+      - params-block changes rehash; promotion is the only production path.
+    preconditions:
+      - configs/production/ACTIVE_VERSION present and resolvable.
+    postconditions:
+      - Loaded production JSON matches the active version identity.
+    assumptions:
+      - assumption: >-
+          Programmatic BacktestRunner always sees the same CRTConfig as CLI production load.
+        falsified_by: F-057
+        status: FALSIFIED
+
+    behavior: >-
+      Resolves active version, loads production JSON, and supplies sections to engines via strict
+      accessors and ConfigBuilder.
+    failure_modes:
+      - mode: VERSION_SPLIT_BRAIN
+        symptom: Reasoning or code path uses a non-active config as if it were live.
+        detection: get_active_version fail-fast; ORIENT_RUNTIME discipline.
+        finding: F-016
+      - mode: SILENT_DEFAULT
+        symptom: Missing key uses a code literal without error.
+        detection: behavior census / strict _require audits.
+        finding: F-018
+      - mode: PROGRAMMATIC_PROFILE_BYPASS
+        symptom: ConfigBuilder builds router defaults without opening production JSON.
+        detection: F-057 construction census.
+        finding: F-057
+
+    why_this_design: >-
+      File-driven version truth beats session memory; strict reads beat silent defaults.
+    alternatives_rejected:
+      - alternative: Infer active version from promotion_log latest entry alone.
+        why_rejected: Log is history (Tier-2); runtime is ACTIVE_VERSION (Tier-0).
+        evidence: CLAUDE.md
+    research_findings:
+      - F-016
+      - F-018
+      - F-057
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      Tier-0 ACTIVE_VERSION + strict config reads; the config-first runtime identity.
+    summary_200: >-
+      Config-first active version is the runtime identity of the system: one active production
+      JSON, strict section access, promotion-gated evolution. It exists to eliminate split-brain
+      version stories and silent defaults. Economic quality of that config is a separate
+      authority question.
+    retrieval_keywords:
+      - ACTIVE_VERSION
+      - production config
+      - config-first
+      - get_prod_config
+    semantic_tags:
+      - config
+      - governance
+      - execution
+
+    book_chapter: docs/book/16-config-first-and-promotion.md
+    topic_doc: null
+    intent_chain: null
+    intent_domain_doc: null
+    related_concepts:
+      - CN-010
+    orphan_justification: >-
+      PR-4 inventory — ACTIVE_VERSION is ambient on every path; JN-004 config-load journey not yet
+      authored. Owned by BD-002 until dedicated config journey exists.
+
+  - id: CN-010
+    kind: concept
+    name: Promotion Gate
+    aliases:
+      - PromotionManager
+      - config promotion
+      - ValidationReport APPROVE
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      No config should become production without an explicit APPROVE ValidationReport, hash, and
+      append-only audit trail — humans and agents must share one promotion gate.
+    problem_it_solves: >-
+      Prevents "works on my machine" production edits and unlogged hot-swaps; ties promotion to
+      quality gates and immutable history.
+    explicit_non_goals:
+      - Does not invent economic edge; only enforces the declared gates.
+      - Does not replace research falsification (CN-011).
+      - Does not grant Semantic OS production authority.
+
+    miar_stage: safety
+    miar_entry: null
+    closure_surface_id: null
+    ontology_ids: []
+    owner_boundary: BD-009
+    related_boundaries: []
+    canonical_source: src/governance/promotion_manager.py
+
+    invariants:
+      - Promotion requires ValidationReport.decision == APPROVE (hard gates).
+      - SHA-256 identity of promoted config is recorded.
+      - promotion_log.jsonl is append-only.
+    preconditions:
+      - Candidate config + checkpoint/report artifacts.
+      - data-dir and validator path available.
+    postconditions:
+      - Active production pointer updated only through the manager path.
+      - Audit line written on success or structured failure.
+    assumptions:
+      - assumption: >-
+          config_integrity checks are on the hot promotion path.
+        falsified_by: F-006
+        status: FALSIFIED
+
+    behavior: >-
+      Validates candidate configs, enforces hard/soft gates, writes archives and promotion log,
+      updates ACTIVE_VERSION only on success.
+    failure_modes:
+      - mode: PROMOTE_WITHOUT_APPROVE
+        symptom: Config reaches production without APPROVE report.
+        detection: PromotionManager path audit / log absence.
+        finding: null
+      - mode: ORPHANED_INTEGRITY_CHECK
+        symptom: Integrity check exists but gates nothing at runtime.
+        detection: Call-graph / F-006 class audit.
+        finding: F-006
+
+    why_this_design: >-
+      Single write authority for production config identity with mandatory quality gate.
+    alternatives_rejected:
+      - alternative: Manual copy of JSON into production folder.
+        why_rejected: No gate, no hash discipline, no audit trail.
+        evidence: docs/reference/governance.md
+    research_findings:
+      - F-006
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      Only APPROVE + hash + audit may promote a config to ACTIVE_VERSION.
+    summary_200: >-
+      The promotion gate is the sole path for production config evolution: validate, APPROVE,
+      hash, archive, log, point ACTIVE_VERSION. It is governance of mutability, not a claim that
+      the promoted config has edge.
+    retrieval_keywords:
+      - promotion
+      - ValidationReport
+      - ACTIVE_VERSION
+      - promotion_log
+    semantic_tags:
+      - governance
+      - promotion
+      - safety
+
+    book_chapter: docs/book/16-config-first-and-promotion.md
+    topic_doc: null
+    intent_chain: null
+    intent_domain_doc: null
+    related_concepts:
+      - CN-009
+      - CN-012
+    orphan_justification: >-
+      PR-4 inventory — full JN-003 governance journey deferred; owned by BD-002 for spine
+      config/promotion touchpoints until PR-5 adds a dedicated governance boundary.
+
+  - id: CN-011
+    kind: concept
+    name: Research Falsification Gate
+    aliases:
+      - M4 qualification
+      - research programs
+      - absolute expectancy gate
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      Research claims must clear a pre-registered, cost-honest, absolute-expectancy bar — not
+      narrative plausibility — or remain RESEARCH-only.
+    problem_it_solves: >-
+      Makes "0 PROMOTE" a credible discipline outcome (Programs 1–8) and blocks parameter
+      archaeology from self-promoting into production authority (§6.5).
+    explicit_non_goals:
+      - Does not replace production promotion (CN-010).
+      - Does not seal Measurement Contract instances (still OPEN).
+      - Does not assert that nulls mean "markets are random" beyond stated scopes.
+
+    miar_stage: measurement
+    miar_entry: qualification_gate
+    closure_surface_id: RESEARCH_MEASUREMENT_CONTRACT
+    ontology_ids: []
+    owner_boundary: BD-010
+    related_boundaries: []
+    canonical_source: src/research/qualification.py
+
+    invariants:
+      - Economic PROMOTE requires absolute expectancy > 0 under the frozen cost/exit model.
+      - Pre-registration precedes runs; threshold edits require a new pre-registration.
+      - Research authority ≠ production authority.
+    preconditions:
+      - Frozen pre-registration and measurement profile for the experiment.
+      - Honest labels (forward_walk class when stream labels are contaminated).
+    postconditions:
+      - PROMOTE / REJECT / INSUFFICIENT / REDUNDANT with artifact paths.
+    assumptions:
+      - assumption: >-
+          Cross-program results are comparable without sealed MC-* instances.
+        falsified_by: null
+        status: UNTESTED
+
+    behavior: >-
+      Runs pre-registered consumers through M4 QualificationGate with costs, controls, and
+      permutations; emits research artifacts only.
+    failure_modes:
+      - mode: LABEL_CONTAMINATION
+        symptom: Outcomes from inconsistent detection streams treated as trade truth.
+        detection: Self-consistency audits (F-022 class).
+        finding: F-022
+      - mode: THRESHOLD_SHOPPING
+        symptom: Post-hoc threshold edits without new pre-registration.
+        detection: Pre-reg hash / protocol review.
+        finding: null
+      - mode: AUTHORITY_LEAK
+        symptom: Research PROMOTE treated as fusion/production weight.
+        detection: §6.5 review; rr_fusion/bitnet enablement audits.
+        finding: null
+
+    why_this_design: >-
+      Absolute expectancy under honest costs is the only economic bar that matches the Authority
+      Ladder; relative-only wins are not production.
+    alternatives_rejected:
+      - alternative: Promote on permutation significance alone.
+        why_rejected: Information ≠ value (F-020 entropy without economics).
+        evidence: docs/current-findings.md
+    research_findings:
+      - F-019
+      - F-020
+      - F-022
+      - F-025
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      Pre-registered, cost-honest absolute expectancy gate for research claims only.
+    summary_200: >-
+      Research falsification gate is the M4-class discipline that turns experiments into PROMOTE
+      or honest nulls. It protects the Authority Ladder: statistical interest never auto-grants
+      fusion or production weight. Measurement Contract seals remain a separate hygiene layer.
+    retrieval_keywords:
+      - M4
+      - qualification gate
+      - expectancy
+      - research program
+      - PROMOTE
+    semantic_tags:
+      - research
+      - measurement
+      - falsification
+
+    book_chapter: docs/book/19-research-programs.md
+    topic_doc: null
+    intent_chain: null
+    intent_domain_doc: null
+    related_concepts:
+      - CN-012
+    orphan_justification: >-
+      PR-4 inventory — JN-002 research journey not yet authored; concept is active meaning for
+      research gate without full journey membership.
+
+  - id: CN-012
+    kind: concept
+    name: Findings and Epistemic Integrity
+    aliases:
+      - current-findings
+      - F-ids
+      - epistemic integrity
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      Validated conclusions must live in one living ledger with confidence, evidence, and
+      supersession — and overclaims must be catchable before they contaminate the repository.
+    problem_it_solves: >-
+      Prevents silent deletion of history, uncited conclusions, and confidence inflation
+      (E-001 / F-031 class governance success stories).
+    explicit_non_goals:
+      - Does not auto-implement fixes.
+      - Does not replace code as runtime truth.
+      - Does not grant production authority to a finding alone.
+
+    miar_stage: measurement
+    miar_entry: null
+    closure_surface_id: null
+    ontology_ids: []
+    owner_boundary: BD-009
+    related_boundaries: []
+    canonical_source: docs/current-findings.md
+
+    invariants:
+      - Findings are never deleted; status becomes SUPERSEDED/RETIRED with history preserved.
+      - Every non-terminal finding cites non-empty evidence.
+      - Confidence is Certain / Likely / Possible only.
+    preconditions:
+      - Epistemic integrity pre-registration ritual before new findings when required.
+    postconditions:
+      - Living conclusions index consistent with findings tests.
+    assumptions:
+      - assumption: >-
+          Pre-registration corrections are treated as governance success, not failure.
+        falsified_by: null
+        status: HOLDS
+
+    behavior: >-
+      Authors append or flip findings with evidence; exporters generate machine JSONL; tests enforce
+      index consistency and terminal-state rules.
+    failure_modes:
+      - mode: OVERCLAIM
+        symptom: Sign noise or underpowered cells upgraded to meaning.
+        detection: E-001 ritual / mandatory phrase on discovery.
+        finding: F-031
+      - mode: SILENT_DELETE
+        symptom: Finding removed instead of SUPERSEDED.
+        detection: test_current_findings / export guards.
+        finding: null
+      - mode: EVIDENCE_FREE
+        symptom: Conclusion without artifact path.
+        detection: Findings schema tests.
+        finding: null
+
+    why_this_design: >-
+      Append-only living conclusions with mechanical guards beat chat-only truth.
+    alternatives_rejected:
+      - alternative: Scatter conclusions only in session logs.
+        why_rejected: Not queryable; re-propagates false claims; no confidence grammar.
+        evidence: CLAUDE.md
+    research_findings:
+      - F-031
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      Living findings ledger with evidence, confidence, and supersession discipline.
+    summary_200: >-
+      Findings and epistemic integrity are how the repository remembers what was proven or killed.
+      They are documentation-and-evidence authority for conclusions, never a bypass of code or
+      promotion gates. Overclaim detection is part of the system, not optional etiquette.
+    retrieval_keywords:
+      - findings
+      - F-id
+      - epistemic integrity
+      - SUPERSEDED
+    semantic_tags:
+      - evidence
+      - governance
+      - measurement
+
+    book_chapter: docs/book/17-truth-maintenance.md
+    topic_doc: null
+    intent_chain: null
+    intent_domain_doc: null
+    related_concepts:
+      - CN-011
+    orphan_justification: >-
+      PR-4 inventory — governance/evidence journey not yet authored; meaning is active for
+      findings discipline.
+
+  - id: CN-013
+    kind: concept
+    name: Deterministic Agent Plans
+    aliases:
+      - PLAN_REGISTRY
+      - agent intents
+      - tool plans
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      Natural language must not improvise tool sequences. Intents map to fixed plans so the agent
+      remains auditable and cannot invent write paths.
+    problem_it_solves: >-
+      LLM classifies intent; PLAN_REGISTRY owns the step sequence — same safety invariant as
+      "LLM is advice, never a trigger" on the trade path.
+    explicit_non_goals:
+      - Does not let the LLM generate arbitrary tool graphs.
+      - Does not bypass promotion or path-guard.
+      - Does not replace multi-LLM human workflow (CN-014 is control plane; multi-LLM is protocol).
+
+    miar_stage: decision
+    miar_entry: null
+    closure_surface_id: null
+    ontology_ids: []
+    owner_boundary: BD-010
+    related_boundaries: []
+    canonical_source: src/agent/plan_compiler.py
+
+    invariants:
+      - Tool sequences for known intents come from PLAN_REGISTRY, not model freeform.
+      - Write tools remain behind confirm-gate and path-guard.
+      - Dual audit logs capture intent and per-step execution.
+    preconditions:
+      - IntentRouter classification to a known intent key.
+    postconditions:
+      - Ordered ToolSteps executed under AgentState.
+    assumptions:
+      - assumption: >-
+          All documented agent tools are reachable end-to-end.
+        falsified_by: null
+        status: UNTESTED
+
+    behavior: >-
+      IntentRouter → PlanCompiler.build(intent) → Executor with confirm/path-guard → audit JSONL.
+    failure_modes:
+      - mode: FREEFORM_PLAN
+        symptom: LLM emits tool sequence outside PLAN_REGISTRY.
+        detection: Architecture review / plan_compiler is sole builder.
+        finding: null
+      - mode: PATH_GUARD_BYPASS
+        symptom: Write outside authorized surface.
+        detection: Executor path-guard tests.
+        finding: null
+
+    why_this_design: >-
+      Deterministic plans keep agent power inside a reviewed automaton.
+    alternatives_rejected:
+      - alternative: Full agentic tool-calling with open function set.
+        why_rejected: Unauditable; violates path-guard and promotion discipline by construction.
+        evidence: docs/book/21-ai-automation-agent.md
+    research_findings: []
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      NL → intent → hardcoded PLAN_REGISTRY tool sequence; never freeform tool graphs.
+    summary_200: >-
+      Deterministic agent plans are the safety core of the in-repo agent: classification may use an
+      LLM, but execution plans are registry-owned, confirm-gated, path-guarded, and dual-logged.
+    retrieval_keywords:
+      - PLAN_REGISTRY
+      - IntentRouter
+      - agent tools
+      - path guard
+    semantic_tags:
+      - agent
+      - safety
+      - decision
+
+    book_chapter: docs/book/21-ai-automation-agent.md
+    topic_doc: docs/topics/ai-automation-agent.md
+    intent_chain: null
+    intent_domain_doc: null
+    related_concepts:
+      - CN-014
+    orphan_justification: >-
+      PR-4 inventory — JN-005 agent journey deferred; concept documents active agent safety meaning.
+
+  - id: CN-014
+    kind: concept
+    name: Control Plane Catalog
+    aliases:
+      - CommandSpec
+      - localhost control plane
+      - command registry
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      Operators need one discoverable catalog of runnable commands without grepping scripts/, and
+      a localhost UI surface that cannot pretend to be a public API.
+    problem_it_solves: >-
+      Declares CommandSpec entries for HTTP control plane and keeps the surface localhost-only
+      without auth by design.
+    explicit_non_goals:
+      - Does not provide remote multi-tenant API security.
+      - Does not replace Semantic OS query for meaning.
+      - Does not auto-promote configs.
+
+    miar_stage: execution
+    miar_entry: null
+    closure_surface_id: null
+    ontology_ids: []
+    owner_boundary: BD-010
+    related_boundaries: []
+    canonical_source: src/control_plane/registry.py
+
+    invariants:
+      - Control plane binds localhost only (no external expose by default).
+      - Commands are declared as CommandSpec, not ad-hoc argv only in UI.
+    preconditions:
+      - Registry populated; server started intentionally.
+    postconditions:
+      - commands_payload available to the dashboard.
+    assumptions:
+      - assumption: >-
+          Operators never expose :8787 beyond trusted localhost.
+        falsified_by: null
+        status: UNTESTED
+
+    behavior: >-
+      Registers CommandSpec catalog; stdlib HTTP server serves dashboard and job runner on
+      localhost.
+    failure_modes:
+      - mode: EXTERNAL_EXPOSE
+        symptom: Control plane reachable beyond localhost.
+        detection: Ops review / bind address audit.
+        finding: null
+      - mode: UNDECLARED_COMMAND
+        symptom: UI runs argv not in registry.
+        detection: Registry exhaustiveness tests.
+        finding: null
+
+    why_this_design: >-
+      Declarative catalog + localhost-only is the minimal safe operator surface for a file-backed
+      system.
+    alternatives_rejected:
+      - alternative: Full authenticated multi-user REST API.
+        why_rejected: Out of scope; increases attack surface without research need.
+        evidence: CLAUDE.md
+    research_findings: []
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      Localhost CommandSpec catalog and dashboard — discoverability without a public API.
+    summary_200: >-
+      Control plane catalog is the operator index of runnable work: declared commands, localhost
+      HTTP, job runner. It is not a semantic layer and not a remote service.
+    retrieval_keywords:
+      - control plane
+      - CommandSpec
+      - localhost 8787
+    semantic_tags:
+      - platform
+      - ops
+      - control_plane
+
+    book_chapter: docs/book/22-control-plane.md
+    topic_doc: null
+    intent_chain: null
+    intent_domain_doc: null
+    related_concepts:
+      - CN-013
+    orphan_justification: >-
+      PR-4 inventory — no dedicated control-plane journey yet; meaning is active for ops catalog.
+
+  - id: CN-015
+    kind: concept
+    name: No-Lookahead Integrity
+    aliases:
+      - no lookahead
+      - PIT integrity
+      - stream causality
+    status: ACTIVE
+    supersedes: null
+    superseded_by: null
+    authority: advisory
+
+    why_it_exists: >-
+      Deterministic replay and honest research require that bar-t features and decisions never
+      depend on bar>t information — integrity is a conjunction of layers, not a single flag.
+    problem_it_solves: >-
+      Makes lookahead a named, multi-layer integrity contract (L1/L2/L3 + generator + feature PIT)
+      so "we streamed CSV" is never mistaken for full integrity (F-039).
+    explicit_non_goals:
+      - Does not by itself create edge.
+      - Does not claim all historical features were PIT-clean (F-051).
+      - Does not force L3 on every research caller without migration.
+
+    miar_stage: substrate
+    miar_entry: backtest
+    closure_surface_id: null
+    ontology_ids: []
+    owner_boundary: BD-005
+    related_boundaries:
+      - BD-001
+    canonical_source: src/runtime/backtest_v2.py
+
+    invariants:
+      - Stream consumption is causal (generator discipline).
+      - Feature emission must be point-in-time for production-claimed cleanliness.
+      - L3 preflight is additional confidence, not the sole integrity story.
+    preconditions:
+      - Ordered OHLCV source.
+    postconditions:
+      - Decisions for bar t use only information available at t under the declared stack.
+    assumptions:
+      - assumption: >-
+          Centered swings in production were point-in-time.
+        falsified_by: F-051
+        status: FALSIFIED
+
+    behavior: >-
+      Enforces chronological streaming, optional dataset integrity preflight, and PIT feature
+      construction rules across the spine.
+    failure_modes:
+      - mode: FEATURE_LOOKAHEAD
+        symptom: Feature at t changes when future bars are appended.
+        detection: Prefix-invariance probes.
+        finding: F-051
+      - mode: INTEGRITY_LAYER_GAP
+        symptom: Path assumes L3 but only L1/L2 ran (or vice versa).
+        detection: Call-site census (F-039).
+        finding: F-039
+      - mode: TEMPORAL_VIOLATION
+        symptom: Out-of-order bars admitted to scoring.
+        detection: L2 stream checks.
+        finding: null
+
+    why_this_design: >-
+      No-lookahead is a stack property; naming it as a concept prevents single-gate complacency.
+    alternatives_rejected:
+      - alternative: "CSV is chronological so we are fine."
+        why_rejected: Ignores feature construction and L3 scope gaps.
+        evidence: docs/current-findings.md
+    research_findings:
+      - F-039
+      - F-051
+      - F-029
+    hypotheses: []
+    framework_ids: []
+
+    summary_50: >-
+      Multi-layer no-lookahead integrity — stream, features, and preflight as a conjunction.
+    summary_200: >-
+      No-lookahead integrity is the causal contract of the system: chronological streams, PIT
+      features, and optional dataset preflight. Failures are structural contamination, not mere
+      performance bugs. F-051 records that some production feature constructions violated PIT;
+      the concept exists to keep that class visible.
+    retrieval_keywords:
+      - no lookahead
+      - point in time
+      - dataset integrity
+      - prefix invariance
+    semantic_tags:
+      - substrate
+      - integrity
+      - no_lookahead
+
+    book_chapter: docs/book/05-data-ingestion-no-lookahead.md
+    topic_doc: null
+    intent_chain: docs/intent_graph.md#chain-3-deterministic-replay-the-same-inputs-same-outputs-thought
+    intent_domain_doc: null
+    related_concepts:
+      - CN-001
+      - CN-003
+    orphan_justification: >-
+      PR-4 inventory — no-lookahead is a cross-cutting integrity concept spanning BD-001/BD-002;
+      not a single JN-001 step id (steps 1 and 2 already encode parts of it). Full integrity
+      journey deferred.
+

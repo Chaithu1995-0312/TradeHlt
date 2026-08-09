@@ -1,0 +1,131 @@
+{
+  "program": "FEATURE_PIPELINE_CLOSURE",
+  "phase": "FC-0.5",
+  "FEATURE_PIPELINE_FC05_STATUS": "COMPLETE_WITH_BLOCKERS",
+  "repository_commit": "b48d4d9a7abfb429f2a17c790d4b32083da5dd92",
+  "worktree_status": "DIRTY",
+  "frozen_corpus_binding": {
+    "path": "data/mt5/XAUUSD_M15.csv",
+    "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "rows": 47275,
+    "status": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION"
+  },
+  "feature_contract_hash_before": "b13c74b4c8229e675f659e4b08fb271dc678c418d672c23804a44c1e0dc80c5c",
+  "feature_contract_hash_after": "b13c74b4c8229e675f659e4b08fb271dc678c418d672c23804a44c1e0dc80c5c",
+  "production_feature_code_changed": false,
+  "model_enablement_changed": false,
+  "model_artifacts_changed": false,
+  "dependency_graph_status": "COMPLETE_CODE_DERIVED",
+  "formula_collision_status": "KNOWN_COLLISIONS_IDENTIFIED",
+  "collision_exhaustiveness_status": "UNPROVEN",
+  "consumer_binding_status": "PARTIAL_WITH_UNKNOWNS",
+  "trained_artifact_binding_status": "INCOMPLETE_UNKNOWN_TRAINING_SEMANTICS",
+  "volatility_regime_adjudication_status": "RESOLVED_INTENT_NOT_IMPLEMENTED",
+  "volatility_regime_verdict": "SEPARATE_LOCAL_VOLATILITY_CONTEXT_FEATURE",
+  "unresolved_unknowns": [
+    "Multiple trained artifacts have ARTIFACT_BINDING_UNKNOWN (BitNet, Gaussian 38-dim, rr_fusion, TradeNet)",
+    "ALL_COLLISIONS_EXHAUSTED = unproven (cannot claim collision census complete)",
+    "live_engine_hook migration BLOCKED_PENDING_EVIDENCE (batch/live parity not fully proven)",
+    "volatility_regime FC-1 math intent resolved as rename+rolling, but consumer s05_grid reachability still soft",
+    "scoring_engine local disp_strength=move/atr not fully call-site traced",
+    "historical training code versions for each artifact",
+    "all research scripts recomputing indicators outside FeaturePipeline",
+    "exact s05_grid production reachability today",
+    "optimal N beyond 200 not exhaustively searched (not optimization for PnL)"
+  ],
+  "blockers": [
+    "Multiple trained artifacts have ARTIFACT_BINDING_UNKNOWN (BitNet, Gaussian 38-dim, rr_fusion, TradeNet)",
+    "ALL_COLLISIONS_EXHAUSTED = unproven (cannot claim collision census complete)",
+    "live_engine_hook migration BLOCKED_PENDING_EVIDENCE (batch/live parity not fully proven)",
+    "volatility_regime FC-1 math intent resolved as rename+rolling, but consumer s05_grid reachability still soft"
+  ],
+  "tests_run": [
+    {
+      "command": "venv/Scripts/python.exe -m pytest tests/test_feature_dependency_graph_fc05.py tests/test_feature_contract_v1.py tests/test_xauusd_phase1_frozen_candidate.py -v",
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0,
+      "xfailed": 0
+    },
+    {
+      "command": "venv/Scripts/python.exe -m pytest tests/test_feature_dependency_graph_fc05.py tests/test_feature_contract_v1.py tests/test_feature_lineage.py tests/test_feature_math_lint.py tests/test_xauusd_phase1_frozen_candidate.py tests/test_ohlcv_corpus_freeze.py tests/test_ohlcv_output_contract.py tests/test_corpus_authority_decisions.py tests/test_active_models_registry.py tests/test_zone_manifest_runtime_parity.py tests/test_behavior_census.py tests/test_dataset_integrity.py tests/governance -q",
+      "passed": 142,
+      "failed": 0,
+      "skipped": 1,
+      "xfailed": 0
+    },
+    {
+      "command": "venv/Scripts/python.exe -m pytest tests/test_crt_state_invariants.py tests/test_rr_fusion_full_vector.py tests/test_rr_confidence_gate.py tests/test_breakout_disp_threshold.py tests/test_zone_gate_top_k.py tests/test_regime_conditioning.py tests/test_regime_observer.py tests/test_markov_regime_forecaster.py tests/data_ingestion tests/config_layer -q",
+      "passed": 138,
+      "failed": 0,
+      "skipped": 0,
+      "xfailed": 0
+    }
+  ],
+  "mutation_tests_run": [
+    "test_mutation_missing_dependency_fails_check",
+    "test_mutation_false_pit_safe_detectable",
+    "test_mutation_contract_feature_id_dangle_detectable"
+  ],
+  "artifacts_created": [
+    "docs/governance/feature_dependency_graph_fc05-2026-07-10.json",
+    "docs/governance/feature_dependency_graph_fc05-2026-07-10.md",
+    "docs/governance/feature_formula_identity_census_fc05-2026-07-10.json",
+    "docs/governance/feature_formula_identity_census_fc05-2026-07-10.md",
+    "docs/governance/feature_collision_report_fc05-2026-07-10.json",
+    "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+    "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.md",
+    "docs/governance/volatility_regime_semantic_adjudication_fc05-2026-07-10.json",
+    "docs/governance/volatility_regime_semantic_adjudication_fc05-2026-07-10.md",
+    "docs/governance/feature_pipeline_fc05_search_coverage-2026-07-10.json",
+    "docs/governance/feature_pipeline_fc05_closure_manifest-2026-07-10.json",
+    "scripts/analysis/feature_pipeline_fc05_closure.py",
+    "tests/test_feature_dependency_graph_fc05.py"
+  ],
+  "artifacts_modified": [],
+  "evidence_refs": [
+    "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+    "docs/governance/feature_contract_v1-2026-07-10.json",
+    "docs/governance/legacy_feature_semantics_v1-2026-07-10.json"
+  ],
+  "fc1_authorization_verdict": "NOT_AUTHORIZED",
+  "FC1_AUTHORIZATION": "NOT_AUTHORIZED",
+  "PRODUCTION_FEATURE_CODE_CHANGED": false,
+  "MODEL_ENABLEMENT_CHANGED": false,
+  "ECONOMIC_CLAIMS_ALLOWED": false,
+  "program_counts": {
+    "dependency": {
+      "contract_entries": 41,
+      "complete_direct_bindings": 41,
+      "with_nonempty_direct_deps": 21,
+      "with_nonempty_transitive_deps": 21,
+      "pit_local_causal_or_raw": 27,
+      "pit_transitive": {
+        "PIT_LOCAL_OK": 25,
+        "SEMANTIC_RISK": 3,
+        "LEAKING": 12,
+        "GLOBAL_FIT_DEPENDENCE": 1
+      },
+      "leaking": 12,
+      "global_fit_dependent": 1,
+      "semantic_risk": 3,
+      "pit_safe_transitive": 25,
+      "unknown_or_unproven": 0
+    },
+    "formula": {
+      "UNIQUE_CANONICAL_IDENTITY": 3,
+      "FORMULA_COLLISION": 3,
+      "INTENTIONAL_ALIAS": 1,
+      "TEMPORAL_SEMANTIC_COLLISION": 2,
+      "CONFIG_DEPENDENT_IDENTITY": 3,
+      "MODEL_LOCAL_DUPLICATE": 1,
+      "UNKNOWN": 1,
+      "UNINTENTIONAL_ALIAS": 1
+    },
+    "consumers": {
+      "n_consumers": 13,
+      "retrain_required_true": 4,
+      "artifact_binding_unknown": 4
+    }
+  }
+}

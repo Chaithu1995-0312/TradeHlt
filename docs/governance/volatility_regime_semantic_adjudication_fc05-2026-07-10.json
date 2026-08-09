@@ -1,0 +1,74 @@
+{
+  "_doc": "FC-0.5 volatility_regime semantic adjudication \u2014 no production change",
+  "generated_at_utc": "2026-07-10T15:48:18Z",
+  "candidates": {
+    "VR-A_EXPANDING": {
+      "stats": {
+        "class_balance": {
+          "0": 6823,
+          "1": 10793,
+          "2": 29659
+        },
+        "transitions": 2433,
+        "mean": 1.4830460074034901
+      },
+      "corr_with_atr": 0.4551857257420232,
+      "vs_global_diff_rate": 0.4584241142252776
+    },
+    "VR-B_ROLLING_200": {
+      "stats": {
+        "class_balance": {
+          "0": 15931,
+          "1": 14674,
+          "2": 16670
+        },
+        "transitions": 4750,
+        "mean": 1.0156319407720782
+      },
+      "corr_with_atr": 0.28301039617819634,
+      "vs_global_diff_rate": 0.5521523003701745,
+      "N_justification": "existing TRUST_VOLREGIME_CAUSAL=rolling uses 200; ~2 trading days M15*96\u2248192"
+    },
+    "VR-C_SEPARATE_LOCAL_CONTEXT": {
+      "rationale": "Regime Detection subsystem owns latent regime; this feature is ATR tercile context",
+      "recommended_math": "causal rolling percentile of ATR"
+    },
+    "VR-GLOBAL_LEGACY": {
+      "stats": {
+        "class_balance": {
+          "0": 15595,
+          "1": 15597,
+          "2": 16083
+        },
+        "transitions": 2064,
+        "mean": 1.0103225806451612
+      },
+      "corr_with_atr": 0.639284230976501,
+      "pit": "GLOBAL_FIT_DEPENDENCE proven PASS-A"
+    }
+  },
+  "consumers": {
+    "FeaturePipeline vector": true,
+    "s05_grid TRENDING block": "documented in pipeline comment F-029",
+    "Regime Detection subsystem": "separate architecture \u2014 do not conflate without proof"
+  },
+  "selected_semantic": "SEPARATE_LOCAL_VOLATILITY_CONTEXT_FEATURE",
+  "selected_implementation_intent_for_FC1": {
+    "feature_rename_candidate": "volatility_context or atr_percentile_tercile",
+    "math": "rolling causal ATR percentile rank, N=200 unless FC-1 design revises N",
+    "legacy_global_rank": "preserve under LEGACY only"
+  },
+  "rejected": {
+    "GLOBAL": "non-causal; fails prefix invariance",
+    "EXPANDING_as_named_regime": "causal but long-memory / early unstable; still not latent Regime Detection",
+    "ROLLING_keeping_name_regime": "math OK but ontology collision with Regime Detection"
+  },
+  "verdict": "SEPARATE_LOCAL_VOLATILITY_CONTEXT_FEATURE",
+  "consumer_impact": "FeaturePipeline vector index changes meaning; any s05_grid path needs shadow",
+  "retraining_consequences": "models trained on global rank labels need retrain if they used this feature",
+  "remaining_unknowns": [
+    "exact s05_grid production reachability today",
+    "optimal N beyond 200 not exhaustively searched (not optimization for PnL)"
+  ],
+  "evidence_type": "STATIC_AND_EXECUTED"
+}

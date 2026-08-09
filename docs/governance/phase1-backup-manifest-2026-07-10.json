@@ -1,0 +1,675 @@
+{
+  "_doc": "PHASE 1 (OHLCV Truth Closure) PASS-A preservation manifest. Append-only inventory of pre-existing documents overlapping OHLCV ingestion/lineage/integrity, frozen BEFORE any Phase-1 artifact landed. No file listed here was modified, renamed, moved, or deleted by Phase 1. Git history is the byte-level backup for tracked files; this manifest pins the exact pre-Phase-1 state.",
+  "schema_version": "1.0.0",
+  "phase": "PHASE_1_OHLCV_TRUTH_CLOSURE",
+  "pass": "PASS_A_EVIDENCE_FREEZE",
+  "generated_at_utc": "2026-07-10T13:09:06Z",
+  "repository_commit": "b48d4d9a7abfb429f2a17c790d4b32083da5dd92",
+  "branch": "feature/truth-registry-v2",
+  "worktree_dirty": true,
+  "worktree_dirty_note": "Worktree carries substantial uncommitted state (pre-existing, unrelated threads). Hashes below pin the on-disk bytes at freeze time, which for dirty files may differ from HEAD.",
+  "files": [
+    {
+      "path": "HANDOFF.md",
+      "sha256": "3404ddb0d06b76020263f404e401597f02a75878fef64641b280f26756931890",
+      "size_bytes": 3485
+    },
+    {
+      "path": "docs/analysis/knowledge-graph-first-principles-audit-2026-07-10.md",
+      "sha256": "58378b5566ab1e99ec92f95147d49a3788d7786a9bacb6875d06f4f2d7764d52",
+      "size_bytes": 12246
+    },
+    {
+      "path": "docs/current-findings.md",
+      "sha256": "312df4d03021b12a1b15c30761615b2c0ed4c992c6b6b4a76c8f06daa89644c1",
+      "size_bytes": 157127
+    },
+    {
+      "path": "docs/governance/MEASUREMENT_CONTRACT.md",
+      "sha256": "f276ff87ea3dce9b2a2df528915ac75434eb3c673a6660a19284cabf513d0ca4",
+      "size_bytes": 9851
+    },
+    {
+      "path": "docs/governance/crt_closure_report.md",
+      "sha256": "d28096be3ca14529b43b83374b9a0705f5f556963fa6ec31d272597512767b71",
+      "size_bytes": 5445
+    },
+    {
+      "path": "docs/governance/e_mt_01_adversarial_mutation_matrix.json",
+      "sha256": "1a3294ff946eb22ddd107d5718b6cd47238f120fbdbeedd7a37ea590b5ebda6c",
+      "size_bytes": 25743
+    },
+    {
+      "path": "docs/governance/finding_dependency_audit.md",
+      "sha256": "d3a2faab5bd230079797ebf4149e3f01e0f72c8245707dc3e506434ed69f325f",
+      "size_bytes": 17138
+    },
+    {
+      "path": "docs/governance/geometry_contradiction_report.md",
+      "sha256": "bd68496925eb48644ab58cce908972ea763f8478e7faef1a0874cd6913540334",
+      "size_bytes": 5164
+    },
+    {
+      "path": "docs/governance/geometry_static_lineage_report.md",
+      "sha256": "201bf48e0918d41e12d898a1cb0af56f8e3e424989d331a048aba0c3f94c5c1a",
+      "size_bytes": 24695
+    },
+    {
+      "path": "docs/governance/measurement_contract.schema.json",
+      "sha256": "b6f39020a3e06a719126b6adb2a02dfe484a9681557e0d32246988e4f35561c0",
+      "size_bytes": 19189
+    },
+    {
+      "path": "docs/implementation_plan/d-tradelatest-reports-ohlcv-lineage-for-glistening-wilkinson.md",
+      "sha256": "3e7dd882596823321ab2ea3adc59207e8118c1671b6b5dbf56b886b26cea5d84",
+      "size_bytes": 13270
+    },
+    {
+      "path": "docs/topics/feature-schema.md",
+      "sha256": "2294a10a0ae8630f54beabd610301a57287072348ec3e2783308eb7c72749b8c",
+      "size_bytes": 9428
+    },
+    {
+      "path": "preregistered_experiments.md",
+      "sha256": "e20ff4d9182216ef2e97153c3c0c05de9a97ca9c2960f1646767d03bb600f6df",
+      "size_bytes": 18163
+    },
+    {
+      "path": "reports/FEATURE_REACHABILITY_AUDIT.md",
+      "sha256": "79e16d0ab3d0eead2c6bc8a34ca6e35a28c498c3d0e41ef3ead2f2fb8b7007eb",
+      "size_bytes": 34596
+    },
+    {
+      "path": "reports/OHLCV_LINEAGE_FORENSICS.md",
+      "sha256": "8906922fbafde188040275c5e229f4fae218f3b0f852a878e93e51789b49d4b6",
+      "size_bytes": 49452
+    },
+    {
+      "path": "reports/dataset_integrity/ADAUSD_H1.json",
+      "sha256": "c3d45a2a4b49175745af06c7e8144b442853b9e3fc055b2023983a8a4477b1c1",
+      "size_bytes": 1243
+    },
+    {
+      "path": "reports/dataset_integrity/ADAUSD_H4.json",
+      "sha256": "3c49181d84aa2e0706f9b34c6d40febdd2112b27c06862328f5a4d3cea15e946",
+      "size_bytes": 1239
+    },
+    {
+      "path": "reports/dataset_integrity/ADAUSD_M15.json",
+      "sha256": "9e334c5db3cddd8d77f09a92d76135110f5be055d67845569f49667469fe374a",
+      "size_bytes": 1244
+    },
+    {
+      "path": "reports/dataset_integrity/ADAUSD_M5.json",
+      "sha256": "507c81392a6a971ddb9542d90f583282ff5e0c565a0a646e274fb8d4d5a902e4",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/AUDUSD_H1.json",
+      "sha256": "57584e36f041465bf2bcad35b9690a1354f0e19d25f228c525f0e902373fa697",
+      "size_bytes": 1129
+    },
+    {
+      "path": "reports/dataset_integrity/AUDUSD_H4.json",
+      "sha256": "ae24886b1db9de66e066a2d9440163b53f9c06ec2a882db76b9dad40df6035c6",
+      "size_bytes": 1129
+    },
+    {
+      "path": "reports/dataset_integrity/AUDUSD_M15.json",
+      "sha256": "55067fa051756ae73ae223bcd10fe903c98ed5e375097171f7c13402847f161d",
+      "size_bytes": 1239
+    },
+    {
+      "path": "reports/dataset_integrity/AUDUSD_M5.json",
+      "sha256": "37ee612e1973b5bab0210f8f761fefec214a54e652724a3b94e7a6a57587a601",
+      "size_bytes": 1238
+    },
+    {
+      "path": "reports/dataset_integrity/AVXUSD_H1.json",
+      "sha256": "ee60d3d8e87565ed160849e9dabba48536b5ca6d4bc41e8545015dc303c78de2",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/AVXUSD_H4.json",
+      "sha256": "6eb0b1950108fed298b745a7c3175f581c0e82712db11e78348d629ea8b86dcc",
+      "size_bytes": 1238
+    },
+    {
+      "path": "reports/dataset_integrity/AVXUSD_M15.json",
+      "sha256": "3048cce7ea707c770aa1f9259524c1dd2e28143540d41e4b23e3dbc791804518",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/AVXUSD_M5.json",
+      "sha256": "61e9a8b8bfaab13059fda2b61c3cc44daa3f8ed7e975dc7be3b1047a17c7624f",
+      "size_bytes": 1238
+    },
+    {
+      "path": "reports/dataset_integrity/BCHUSD_H1.json",
+      "sha256": "d889496420e7ee6e0f22d29e44e809ed7782555128200e2d35225ec389916ff6",
+      "size_bytes": 1237
+    },
+    {
+      "path": "reports/dataset_integrity/BCHUSD_H4.json",
+      "sha256": "79c50173fda2835cbc51e60f8a3a40dc2b4425a72343683f2d7fdfda4fb72be1",
+      "size_bytes": 1236
+    },
+    {
+      "path": "reports/dataset_integrity/BCHUSD_M15.json",
+      "sha256": "3c24a4ecf9614421b8b4677afa55e798ebb667316054b79e3050dad18b24835f",
+      "size_bytes": 1237
+    },
+    {
+      "path": "reports/dataset_integrity/BCHUSD_M5.json",
+      "sha256": "b8960b5698739debe31ebdf0a77993e5543759395bd7f0fe652935d05a18b1ea",
+      "size_bytes": 1236
+    },
+    {
+      "path": "reports/dataset_integrity/BNBUSDT_H1.json",
+      "sha256": "efb7f1f54592a67d2e06cfce0621b6fcf64241a138fec7c64d215869dc0fe3d7",
+      "size_bytes": 1115
+    },
+    {
+      "path": "reports/dataset_integrity/BNBUSDT_H4.json",
+      "sha256": "41b5139c38180d38e5c2c831fdb31cdaeca71b3a678aea93c660a1e39a509248",
+      "size_bytes": 1116
+    },
+    {
+      "path": "reports/dataset_integrity/BNBUSDT_M15.json",
+      "sha256": "4508957bf9e48faea607d1f781d47cf93081f786ca9a004261ba01d08b697fb1",
+      "size_bytes": 1037
+    },
+    {
+      "path": "reports/dataset_integrity/BNBUSDT_M5.json",
+      "sha256": "2103b37128a10aae7f3a64f479219244d7eca7642f698c342263b2d2e2276366",
+      "size_bytes": 1111
+    },
+    {
+      "path": "reports/dataset_integrity/BNBUSD_H1.json",
+      "sha256": "1a9984ec5d3204db7cd81b0fbb38f1b0a742c57582c50f0354c9ad0fd9afc491",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/BNBUSD_H4.json",
+      "sha256": "699f17b12edd9f2fcca76a9ae9382a4164ba9715200d9f7887343aeeb5e1959b",
+      "size_bytes": 1237
+    },
+    {
+      "path": "reports/dataset_integrity/BNBUSD_M15.json",
+      "sha256": "bae6e4fca1fc553336d9c08b1d8fa5e92753d19a75f3f8fd07f024429919dfa5",
+      "size_bytes": 1242
+    },
+    {
+      "path": "reports/dataset_integrity/BNBUSD_M5.json",
+      "sha256": "b69897335b58826d099fc6683fcd0ca0d783f22de53c4ebe119d44fd369c1b29",
+      "size_bytes": 1236
+    },
+    {
+      "path": "reports/dataset_integrity/BTCUSDT_H1.json",
+      "sha256": "c5a94084867339910121aafe306e74a02f1530c954fcefba986b154626b889ae",
+      "size_bytes": 1121
+    },
+    {
+      "path": "reports/dataset_integrity/BTCUSDT_H4.json",
+      "sha256": "ccb5a3ebf64c18c178a9d8a8202bd2bd8e4fa3c35b7e7e52cafb9dd1e6033296",
+      "size_bytes": 1123
+    },
+    {
+      "path": "reports/dataset_integrity/BTCUSDT_M15.json",
+      "sha256": "802b3a4534a34afd6e0a2382bb5b6accd0ddb37b107284e21fe285115439f93c",
+      "size_bytes": 1122
+    },
+    {
+      "path": "reports/dataset_integrity/BTCUSDT_M5.json",
+      "sha256": "c5db2116dfa889a07bc23a92341c5f62c485d6c6255218ce196fa21b65fbcf1d",
+      "size_bytes": 1120
+    },
+    {
+      "path": "reports/dataset_integrity/BTCUSD_H1.json",
+      "sha256": "50e832ea3b04926bb2349e4ff70b4beffe8230064d78c0e3bdf099409beedc0f",
+      "size_bytes": 1246
+    },
+    {
+      "path": "reports/dataset_integrity/BTCUSD_H4.json",
+      "sha256": "0d90ad85c4a74badf6a9cbdcbba0fe01dbb23d7948137b27f98c3cc408c31eb8",
+      "size_bytes": 1242
+    },
+    {
+      "path": "reports/dataset_integrity/BTCUSD_M15.json",
+      "sha256": "5b8de2ccd5d36937bbe6a1d52d1ee0479179d7ba41fba011ab6caed28c7b4952",
+      "size_bytes": 1247
+    },
+    {
+      "path": "reports/dataset_integrity/BTCUSD_M5.json",
+      "sha256": "8acf9d80e886663abe08a6888595268811aefc313b31fe3953e7f0b5a4b2e282",
+      "size_bytes": 1250
+    },
+    {
+      "path": "reports/dataset_integrity/DOGEUSDT_H1.json",
+      "sha256": "c53966a14ae8443822594a265c442c800b55fe7df2976cde3b90caebae8cb9e1",
+      "size_bytes": 1120
+    },
+    {
+      "path": "reports/dataset_integrity/DOGEUSDT_H4.json",
+      "sha256": "a935a49badf9fc7317c8c5f71553f94eb387d17ab562e8041f89e887fadc9df2",
+      "size_bytes": 1120
+    },
+    {
+      "path": "reports/dataset_integrity/DOGEUSDT_M15.json",
+      "sha256": "e1f208dd7974e8961e9d684d0219af5f3453be767b0d02f940b5494de3e58b13",
+      "size_bytes": 1120
+    },
+    {
+      "path": "reports/dataset_integrity/DOGEUSDT_M5.json",
+      "sha256": "1de2a460bdf629bbc458830ab2c6d835bd85fa49af6bfca389ba2888d3e41d56",
+      "size_bytes": 1120
+    },
+    {
+      "path": "reports/dataset_integrity/DOGUSD_H1.json",
+      "sha256": "fbc8f2a52392fb1da0d352433f4383c382e6741d1fe21a0fe1639e450abb24dd",
+      "size_bytes": 1240
+    },
+    {
+      "path": "reports/dataset_integrity/DOGUSD_H4.json",
+      "sha256": "2fddcc8b88366c8b5683f1746a0c9c2398f1b7b124f3d061a10663933659e0a9",
+      "size_bytes": 1239
+    },
+    {
+      "path": "reports/dataset_integrity/DOGUSD_M15.json",
+      "sha256": "212f015887696ab3af5f64bdff225637124e376b64b73cced8800d7101835db0",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/DOGUSD_M5.json",
+      "sha256": "19fc613da8ef1624f9e15b6e3411420255c6726e7cbeac39817070c7603da5f4",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/DOTUSD_H1.json",
+      "sha256": "b19c736d378f4e0a4d3ac940038ce074f14f8642c829540870591e7a13a7dd39",
+      "size_bytes": 1233
+    },
+    {
+      "path": "reports/dataset_integrity/DOTUSD_H4.json",
+      "sha256": "3d5ea738f7c440f9046a07f19cf114a5a7e926fbc3ad25243f8adbb1a1c2406f",
+      "size_bytes": 1236
+    },
+    {
+      "path": "reports/dataset_integrity/DOTUSD_M15.json",
+      "sha256": "30d10925535b4ab26d4c500ffd99094887cf42510a27787ee27cc6fad81855be",
+      "size_bytes": 1238
+    },
+    {
+      "path": "reports/dataset_integrity/DOTUSD_M5.json",
+      "sha256": "739853bb417453141be8857e8fcfbfe986c32972e0fb85e70eb928149dbf9dfa",
+      "size_bytes": 1232
+    },
+    {
+      "path": "reports/dataset_integrity/ETHUSDT_H1.json",
+      "sha256": "16e7aab284c08da4c3606cfbb2fe4d2ce031af8526ce92b270b533aee8c8b2f7",
+      "size_bytes": 1116
+    },
+    {
+      "path": "reports/dataset_integrity/ETHUSDT_H4.json",
+      "sha256": "54b3ac054ae40d738bae975f235f84b875353310265445a8ad1d35d1487d18d0",
+      "size_bytes": 1117
+    },
+    {
+      "path": "reports/dataset_integrity/ETHUSDT_M15.json",
+      "sha256": "149cfc16977680dcc2acc9aa01bd3b593df7645009d1c006358ea5710f867f8e",
+      "size_bytes": 1120
+    },
+    {
+      "path": "reports/dataset_integrity/ETHUSDT_M5.json",
+      "sha256": "48e7670134bd1daabebf27f6e676e38402c50a0a01ed0f351b5169151066bc5c",
+      "size_bytes": 1116
+    },
+    {
+      "path": "reports/dataset_integrity/ETHUSD_H1.json",
+      "sha256": "ae82004cc77091292eb5c3c34bf0226da306ad54d94400a959acf93d74d0789e",
+      "size_bytes": 1240
+    },
+    {
+      "path": "reports/dataset_integrity/ETHUSD_H4.json",
+      "sha256": "b4f82ee87ba353b4055951ec1300960f5755c3f201696bd6e1f7e8ed2a783807",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/ETHUSD_M15.json",
+      "sha256": "3ea309f6f670cede6a54ea81946af378779425d8aa3fb1c31397ec128117c9e2",
+      "size_bytes": 1244
+    },
+    {
+      "path": "reports/dataset_integrity/ETHUSD_M5.json",
+      "sha256": "3c5b5e0448c9bc25e655cc8faab46052f59bcf1997713459a2c27193414dad7c",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/EURCAD_H1.json",
+      "sha256": "7b60471487842bfa340a8f7615666b50cd567a6b1dd5fd983539c3968d293ff1",
+      "size_bytes": 1237
+    },
+    {
+      "path": "reports/dataset_integrity/EURCAD_H4.json",
+      "sha256": "529b3b290a7fe46363f875c4b1cc20f26a19f9676ee96b345031b30da738a8f3",
+      "size_bytes": 1127
+    },
+    {
+      "path": "reports/dataset_integrity/EURCAD_M15.json",
+      "sha256": "7397b5343e3b6d1515af491964a1e90eea44f658771577637b597fa049a61ce4",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/EURCAD_M5.json",
+      "sha256": "f22512ff200c7f7b27453179e2ebdd93aadc61a0297e0a8da507938110078aa8",
+      "size_bytes": 1239
+    },
+    {
+      "path": "reports/dataset_integrity/EURUSD_H1.json",
+      "sha256": "fa88d2647ecb0fb7fb0b7b43ae338dbc787965b21f2ccd8f340ce4a7c185aef4",
+      "size_bytes": 1235
+    },
+    {
+      "path": "reports/dataset_integrity/EURUSD_H4.json",
+      "sha256": "db298737e00dd4f5f349b35c6843128ba0e84ccd26900451daaff99757a3d010",
+      "size_bytes": 1129
+    },
+    {
+      "path": "reports/dataset_integrity/EURUSD_M15.json",
+      "sha256": "f4ab3e5c2a2a6bb117c693ad3f8ebd387a7b14c83c21118096102945a87f8804",
+      "size_bytes": 1244
+    },
+    {
+      "path": "reports/dataset_integrity/EURUSD_M5.json",
+      "sha256": "49f9a4a767a5fa65d89491762a50207567874103b6394c722582f171d4e52cc3",
+      "size_bytes": 1244
+    },
+    {
+      "path": "reports/dataset_integrity/GBPUSD_H1.json",
+      "sha256": "a387acb6946ab28c0f7c1cbe5b741ae4ad7d79405c3eab67e9e97535f1980cda",
+      "size_bytes": 1238
+    },
+    {
+      "path": "reports/dataset_integrity/GBPUSD_H4.json",
+      "sha256": "5860fdf8d75b80609cc02a5ae6fdebee4f761f5fb14c0a14f84a12e329a4e185",
+      "size_bytes": 1130
+    },
+    {
+      "path": "reports/dataset_integrity/GBPUSD_M15.json",
+      "sha256": "b98b55c763e5bd6f5e0cddc887885d99f371ffb52d03780c98542d6f59404930",
+      "size_bytes": 1242
+    },
+    {
+      "path": "reports/dataset_integrity/GBPUSD_M5.json",
+      "sha256": "8f35c836dd7bfca82325aec441d70cb30cd8c22549b7fc17ec91adb52fbb8bee",
+      "size_bytes": 1240
+    },
+    {
+      "path": "reports/dataset_integrity/KSMUSD_H1.json",
+      "sha256": "1825b52ec698766d06d3556ddb63b36e248c87ff2880ef36ee745f8e3cebaf12",
+      "size_bytes": 1236
+    },
+    {
+      "path": "reports/dataset_integrity/KSMUSD_H4.json",
+      "sha256": "9960baed2a85a032009201f8241f513d414938598cf6c4d8f969e34f308b520a",
+      "size_bytes": 1235
+    },
+    {
+      "path": "reports/dataset_integrity/KSMUSD_M15.json",
+      "sha256": "47a96df7b7371c9784ccf97036e79ba3d56826506c0f8ecb49be61524f63dde8",
+      "size_bytes": 1238
+    },
+    {
+      "path": "reports/dataset_integrity/KSMUSD_M5.json",
+      "sha256": "d4fe9df102a744878be3ac341999b10591af99bd4d3863b1d5e532b3437219a1",
+      "size_bytes": 1235
+    },
+    {
+      "path": "reports/dataset_integrity/LNKUSD_H1.json",
+      "sha256": "3616834cf606b55369f47bda5ca2271395ed58ffaf04eb034230408deb22f185",
+      "size_bytes": 1236
+    },
+    {
+      "path": "reports/dataset_integrity/LNKUSD_H4.json",
+      "sha256": "56b2facab21538fa34eb078e6090384a3c7ab089a0f35720aa9d3d5881760597",
+      "size_bytes": 1236
+    },
+    {
+      "path": "reports/dataset_integrity/LNKUSD_M15.json",
+      "sha256": "9bce142a737a7d7f8f0718e7b1711d47b65b03334f985874006816ab6eada2fb",
+      "size_bytes": 1239
+    },
+    {
+      "path": "reports/dataset_integrity/LNKUSD_M5.json",
+      "sha256": "5583edfbbf45bb2c46bb6ee5706bbbfac02d4849f59cb1a6b1a1152fda7b39ce",
+      "size_bytes": 1237
+    },
+    {
+      "path": "reports/dataset_integrity/LTCUSD_H1.json",
+      "sha256": "82c152f571871fe4c902761fe8474227db900c75061aa9881d3ed013be50c719",
+      "size_bytes": 1234
+    },
+    {
+      "path": "reports/dataset_integrity/LTCUSD_H4.json",
+      "sha256": "7610e1d3e5aef6b956834fb5c06de1cae36657aaf506dfcfd420a9e69c0b44d3",
+      "size_bytes": 1235
+    },
+    {
+      "path": "reports/dataset_integrity/LTCUSD_M15.json",
+      "sha256": "b75d99f00e2302e8ca10e86d7b8119c251313ca582a0c3e077d062a7ba433211",
+      "size_bytes": 1238
+    },
+    {
+      "path": "reports/dataset_integrity/LTCUSD_M5.json",
+      "sha256": "aca5cf4fd7fc06dd358b6558622c2f76efc72d842ad158d5f07832379e160cae",
+      "size_bytes": 1236
+    },
+    {
+      "path": "reports/dataset_integrity/POLUSD_H1.json",
+      "sha256": "9d6eac338773b40ec6f692e0071fbd646124fa2b99d8605477fbc81c7e075f75",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/POLUSD_H4.json",
+      "sha256": "b0a5d880c8c725e872cbb53704deac939c30053f04aabd93764f5365af986c9d",
+      "size_bytes": 1239
+    },
+    {
+      "path": "reports/dataset_integrity/POLUSD_M15.json",
+      "sha256": "12eeb4f96c05d84b6c492dfc2ba5cc4a841199d96a210f4c54ed0e6333579392",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/POLUSD_M5.json",
+      "sha256": "8b8d88dd246f6fa7e685210ed77799780151b03fb09bfdf4e7ef9152bd208851",
+      "size_bytes": 1238
+    },
+    {
+      "path": "reports/dataset_integrity/SOLUSDT_H1.json",
+      "sha256": "1b663cf98ef75a2af4db11ba7f09a542469d630b6d1408ad28c0ce4429102f1c",
+      "size_bytes": 1115
+    },
+    {
+      "path": "reports/dataset_integrity/SOLUSDT_H4.json",
+      "sha256": "116890c3f8ed3a572f3e192e1152484311e373c49469832a47396c6af38e012b",
+      "size_bytes": 1115
+    },
+    {
+      "path": "reports/dataset_integrity/SOLUSDT_M15.json",
+      "sha256": "fb52360e0477cb2b959b5aad634a3330887a3be40d6b69dc4a4e51d229f9ed22",
+      "size_bytes": 1115
+    },
+    {
+      "path": "reports/dataset_integrity/SOLUSDT_M5.json",
+      "sha256": "18dff04cddac63470d43bf4bfc7b6e1ef76fea184748762b5736b0097bf5981d",
+      "size_bytes": 1111
+    },
+    {
+      "path": "reports/dataset_integrity/SOLUSD_H1.json",
+      "sha256": "b32ceec5cb45542d5106d2807c3710c71f101711ccb9c51e976926444d4190cc",
+      "size_bytes": 1243
+    },
+    {
+      "path": "reports/dataset_integrity/SOLUSD_H4.json",
+      "sha256": "63010c7361420c83bcabb7b9087a140e220a8d9c5427507833ba0ab684423db3",
+      "size_bytes": 1243
+    },
+    {
+      "path": "reports/dataset_integrity/SOLUSD_M15.json",
+      "sha256": "d2978528f69cf13d91f3513f24a5b98022fa2d045cad28b50e19ed1e02952713",
+      "size_bytes": 1247
+    },
+    {
+      "path": "reports/dataset_integrity/SOLUSD_M5.json",
+      "sha256": "7bfdfdd303814c6ea0cdbffbe5f4b23d7a0708a17b2eaca5e01acb64683092b1",
+      "size_bytes": 1239
+    },
+    {
+      "path": "reports/dataset_integrity/UNIUSD_H1.json",
+      "sha256": "07cdc66efe8130e2e3f4b2ba732584e9fe493efcfb009308abbeab3a64798a8c",
+      "size_bytes": 1242
+    },
+    {
+      "path": "reports/dataset_integrity/UNIUSD_H4.json",
+      "sha256": "70bdfec6dda75ea8561c88951584a6f0ec3db92977b924bc845241f6c0ef4015",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/UNIUSD_M15.json",
+      "sha256": "9737e1d73118476e1bd3f51edb3ca0abaf6db7f9b4b11f1f8f5d31ea014b878b",
+      "size_bytes": 1246
+    },
+    {
+      "path": "reports/dataset_integrity/UNIUSD_M5.json",
+      "sha256": "e34a264e74c3206db40634e035a2e8b5a6702e014695e5031fcf23b246a39023",
+      "size_bytes": 1240
+    },
+    {
+      "path": "reports/dataset_integrity/USDJPY_H1.json",
+      "sha256": "ac282595858fec83098eded922647ef15b27b4487430aedc432742b961141f31",
+      "size_bytes": 1235
+    },
+    {
+      "path": "reports/dataset_integrity/USDJPY_H4.json",
+      "sha256": "28531a812417b5508619621cfe6c527b3169ec3e97a91e1f4708f6f78f1fa2b4",
+      "size_bytes": 1129
+    },
+    {
+      "path": "reports/dataset_integrity/USDJPY_M15.json",
+      "sha256": "ed237f6cb4758ec846d2be79ffc7a35ee767941ac1494c2a88e9f7a44f802d92",
+      "size_bytes": 1240
+    },
+    {
+      "path": "reports/dataset_integrity/USDJPY_M5.json",
+      "sha256": "02e2783169ffeef3c0dc38c3d1a8cb7946bfadab73fa20d49b793f460ee92472",
+      "size_bytes": 1240
+    },
+    {
+      "path": "reports/dataset_integrity/XAUUSD_H1.json",
+      "sha256": "b4dbd0cfc2d582c08d71a9ee80a0d5abe3899a236a3663dc2a10b6065580629a",
+      "size_bytes": 1128
+    },
+    {
+      "path": "reports/dataset_integrity/XAUUSD_H4.json",
+      "sha256": "706b06c521b4495a5e003942dcf0ba9ef7f009a94294a2e9dedeefa3ef67136e",
+      "size_bytes": 1129
+    },
+    {
+      "path": "reports/dataset_integrity/XAUUSD_M15.json",
+      "sha256": "37f900ef7716e3a7ebe700ba36008c58a081390c30b9b4389a49d3236e1c6345",
+      "size_bytes": 1125
+    },
+    {
+      "path": "reports/dataset_integrity/XAUUSD_M5.json",
+      "sha256": "2dfb13e023041714cd11c11360b9bdb4e155309cdd45972b49e72a20c6c36c15",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/XLMUSD_H1.json",
+      "sha256": "c8db8cd882dc662d95d092f1553efbfed802d490bc763b5f3bb589391590e6d8",
+      "size_bytes": 1242
+    },
+    {
+      "path": "reports/dataset_integrity/XLMUSD_H4.json",
+      "sha256": "c8d2362bff6d97814ec479dd687073f6d2be419834186881570a59492d154c58",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/XLMUSD_M15.json",
+      "sha256": "867317ba0658170077aa6df55699fc1d37e46ae4bb8fb0743e546b2b557dd9d6",
+      "size_bytes": 1245
+    },
+    {
+      "path": "reports/dataset_integrity/XLMUSD_M5.json",
+      "sha256": "98b3031d8ce3d2f695d8d5b8c404e86841960af148263f9f71237506864c11c1",
+      "size_bytes": 1244
+    },
+    {
+      "path": "reports/dataset_integrity/XRPUSDT_H1.json",
+      "sha256": "dd5049d150c6d7aea282db789a7212754ccc6a0a286c93ccc80c31ef1dfb9770",
+      "size_bytes": 1116
+    },
+    {
+      "path": "reports/dataset_integrity/XRPUSDT_H4.json",
+      "sha256": "e1c2d39e67e3bda2e9c88ed79e07882c4af3aa206052132be46cee3f39128f9e",
+      "size_bytes": 1115
+    },
+    {
+      "path": "reports/dataset_integrity/XRPUSDT_M15.json",
+      "sha256": "2723db0e1e7279d6f2283997902ed26a54e12a22383a50327f30836bc6d55632",
+      "size_bytes": 1116
+    },
+    {
+      "path": "reports/dataset_integrity/XRPUSDT_M5.json",
+      "sha256": "991b0e360918a81978eceb9784e11f0a5326a540387763279bda3c473a87f13c",
+      "size_bytes": 1113
+    },
+    {
+      "path": "reports/dataset_integrity/XRPUSD_H1.json",
+      "sha256": "d58992040b0069faf5913ac9f13d29aca8fe30b19bcc173a108504a382df513a",
+      "size_bytes": 1239
+    },
+    {
+      "path": "reports/dataset_integrity/XRPUSD_H4.json",
+      "sha256": "7c3d131f5c4eb9088dd80288dbfeb51d8192f5729d97b721044d0e9f2d62155b",
+      "size_bytes": 1236
+    },
+    {
+      "path": "reports/dataset_integrity/XRPUSD_M15.json",
+      "sha256": "bedd720f56372e9165077a0b5e54c99b437bd6dc8123b6ae7b04aa11ea3cde9f",
+      "size_bytes": 1239
+    },
+    {
+      "path": "reports/dataset_integrity/XRPUSD_M5.json",
+      "sha256": "3777facc1e7cf2755aac7014a86e8718e858d4915713bae1178275ba85a0a5df",
+      "size_bytes": 1239
+    },
+    {
+      "path": "reports/dataset_integrity/XTZUSD_H1.json",
+      "sha256": "10070a669b455925d6671066360fbda247e42dce8056af54c37188b35f04ae70",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/XTZUSD_H4.json",
+      "sha256": "fde7456da7487ed1070664dbd490a1669849566e891ef2f5412354fe1d3edc15",
+      "size_bytes": 1241
+    },
+    {
+      "path": "reports/dataset_integrity/XTZUSD_M15.json",
+      "sha256": "990cb0a0ff9f86c64d7483296ab53134c9cc5c8f2ed0a8c5c198a92f6c337e71",
+      "size_bytes": 1247
+    },
+    {
+      "path": "reports/dataset_integrity/XTZUSD_M5.json",
+      "sha256": "0b628429a2c24bdfd9f2005da4ba28ab33192ac7a64204f7e1850280f8542ef8",
+      "size_bytes": 1239
+    },
+    {
+      "path": "reports/dataset_integrity/universe.json",
+      "sha256": "bd180b852c872c7febaefc4d59d2ef25af6ec28ca98737115d5754af01cad4e8",
+      "size_bytes": 7270
+    }
+  ],
+  "missing_paths": [],
+  "n_files": 132
+}

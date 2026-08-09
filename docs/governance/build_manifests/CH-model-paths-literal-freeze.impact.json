@@ -1,0 +1,28 @@
+{
+  "change_id": "CH-model-paths-literal-freeze",
+  "objective": "Governance freeze: AST scan for unauthorized models/ path literals outside ModelPaths/approved modules; debt ratchet (shrink-only) without migrating loaders.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "scripts/governance/scan_model_paths_literals.py",
+    "docs/governance/model_paths_literal_debt.json",
+    "tests/test_model_paths_literals.py",
+    "scripts/maintenance/check_governance_invariants.py",
+    "docs/topics/model-intent-and-feature-ownership.md",
+    "docs/governance/build_manifests/CH-model-paths-literal-freeze.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — governance only",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_model_paths_literals.py",
+    "tests/test_governance_invariant_check.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit; delete scanner/debt/test; revert GREEN_FLOOR entry"
+}

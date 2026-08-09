@@ -1,0 +1,472 @@
+{
+  "_doc": "Research Family Registry — machine-readable atlas of WHAT market objects have been researched and WHICH questions were asked of each. Rows are objects (families); columns are layers L0-L5 (questions); cells are claim slots. This file is NOT evidence and NOT a closure proof: it records that work happened and what it was aimed at, never that a conclusion is true. Seeded from a user-authored semantic atlas (2026-08-06) built from approximate name-based script buckets; NOTHING here is verified against the filesystem. Companion: docs/governance/MEASUREMENT_CONTRACT.md (Phase B) binds families to contract profiles and runners.",
+  "schema_version": "1.0.0",
+  "generated_at_utc": "2026-08-06T00:00:00Z",
+  "invariant": "A FAMILY IS AN OBJECT; A LAYER IS A QUESTION ASKED OF IT. EVIDENCE MASS IS NOT AN ANSWER.",
+  "distinctions": [
+    "OBJECT != QUESTION",
+    "SCOPE != FAMILY",
+    "EVIDENCE MASS != ANSWERED",
+    "ANSWERED != ANSWERED UNDER A CONTRACT"
+  ],
+  "provenance": {
+    "source": "user_semantic_atlas_2026-08-06 (conversation input)",
+    "source_stance": "Author's own qualifier: counts are approximate name-based buckets of scripts/research + scripts/analysis, 'enough to see mass, not a formal registry'.",
+    "verified_against_filesystem": false,
+    "verification_blocked_by": "The family <-> script join against data/script_registry.jsonl requires reading scripts, explicitly out of scope for the seeding session.",
+    "cell_values_derived_from": "The atlas's object x question matrix (its dot-density notation), NOT its flat family list. The flat list conflated objects, questions, and scopes; the matrix did not.",
+    "claim_bindings_derived_from": "CLAUDE.md 6.2 Repository Truths Index (always-loaded). Finding IDs are verified against that index; the assignment of a finding to a family/layer is AUTHORED JUDGEMENT, not machine-derived.",
+    "unpartitioned_bundles": [
+      "The atlas matrix row 'Carry/panel/HTF/weekly' is a single bundled row covering four distinct objects. All four inherit the bundle's cell values verbatim; per-object mass is UNPARTITIONED and must not be read as measured per object."
+    ]
+  },
+  "data_model": {
+    "rows": "objects — the semantic things studied",
+    "columns": "layers L0-L5 — the questions asked of an object",
+    "cells": "claim slots — evidence mass + status + bound claims",
+    "not_a_row_scope": "Instrument / asset class (crypto majors, FX majors, XAU-MT5) is a SCOPE DIMENSION, not an object. The atlas's 'XAUUSD/MT5 reality campaign' family was a cross-cutting scope masquerading as an object; it dissolves into a contract_profile binding (Phase B).",
+    "not_a_row_domain": "System/governance research (config reachability, behavior census, script census, code maps, wiring analysis) is a different domain — research on the instrument, not on a market object. Excluded; see excluded_domains."
+  },
+  "layers": {
+    "L0": {
+      "name": "Measurement hygiene",
+      "question": "Can we trust data, features, labels, timestamps, costs?",
+      "is_not": "edge",
+      "atlas_matrix_column": "Labels"
+    },
+    "L1": {
+      "name": "Structure / detection",
+      "question": "Does the market machine fire? Funnel, states, geometry.",
+      "is_not": "profit",
+      "atlas_matrix_column": "Structure"
+    },
+    "L2": {
+      "name": "Selection / filters",
+      "question": "Who gets through? Session, zone, score, guards.",
+      "is_not": "full economics",
+      "atlas_matrix_column": "Selection"
+    },
+    "L3": {
+      "name": "Discrimination",
+      "question": "Do scores/shapes separate winners offline?",
+      "is_not": "live authority",
+      "atlas_matrix_column": "Discrimination"
+    },
+    "L4": {
+      "name": "Economic qualification",
+      "question": "Under cost + exit + OOS, is E>0 and does it beat controls?",
+      "is_not": "architecture proof",
+      "atlas_matrix_column": "Economic qualify"
+    },
+    "L5": {
+      "name": "Authority / wiring",
+      "question": "Does this touch the live decision path? Pivotality, fusion.",
+      "is_not": "market law",
+      "atlas_matrix_column": "Pivotality"
+    }
+  },
+  "execution_order": {
+    "rule": "STRICT L0 -> L1 -> L2 -> L3 -> L4 -> L5, per family.",
+    "decided": "2026-08-06",
+    "rejected_alternative": "Pivotality-first as a cheap kill-filter for already-wired channels. REJECTED: an ablation measured under an unverified contract carries no more authority than any other result.",
+    "consequence": "The L0 sufficiency criterion (MEASUREMENT_CONTRACT.md, Phase B) is the ONLY bound on hygiene spend. Without it this ordering does not terminate."
+  },
+  "allowed_cell_status": [
+    "UNTESTED",
+    "UNVERIFIED_HISTORICAL",
+    "IN_PROGRESS",
+    "ANSWERED_UNDER_CONTRACT",
+    "GAP"
+  ],
+  "cell_status_semantics": {
+    "UNTESTED": "The source atlas records no value for this cell. Work may or may not exist; we cannot say.",
+    "UNVERIFIED_HISTORICAL": "Work exists, produced under an unrecorded measurement basis. Carries NO current authority.",
+    "IN_PROGRESS": "Being re-answered now under a named contract.",
+    "ANSWERED_UNDER_CONTRACT": "Answered under a contract whose hash is recorded on the cell. The ONLY status that carries authority.",
+    "GAP": "The source atlas explicitly shows no work here (matrix zero)."
+  },
+  "allowed_evidence_mass": [
+    "high",
+    "med",
+    "low",
+    "none",
+    "unknown"
+  ],
+  "evidence_mass_semantics": {
+    "_warning": "Evidence mass measures SCRIPT VOLUME AIMED AT A CELL. It is not a measure of how well the cell is answered, and a 'high' cell is not more trustworthy than a 'none' cell.",
+    "high": "atlas matrix triple-dot",
+    "med": "atlas matrix double-dot",
+    "low": "atlas matrix single-dot",
+    "none": "atlas matrix open-circle (explicit thin/absent)",
+    "unknown": "no matrix row existed for this object; the atlas listed it as a family without layer decomposition"
+  },
+  "excluded_domains": [
+    {
+      "domain": "System / governance research",
+      "reason": "Research on the measuring instrument, not on a market object. Already covered by the script-census / behavior-census / config-reachability line.",
+      "atlas_family": "14. System/governance research (~26+ scripts)"
+    },
+    {
+      "domain": "Instrument / asset-class campaigns",
+      "reason": "A scope dimension, not an object. Becomes a contract_profile binding in Phase B.",
+      "atlas_family": "13. XAUUSD / MT5 reality campaign (~15+ cross-tagged)"
+    },
+    {
+      "domain": "Economic qualification as a family",
+      "reason": "This is layer L4 — a question asked of every object — not an object itself. The atlas's family #1 sub-axes are distributed into their owning objects.",
+      "atlas_family": "1. Economic qualification of 'is there an edge?' (~19 qualify_* scripts)"
+    }
+  ],
+  "excluded_claims": [
+    {
+      "claim": "F-001",
+      "reason": "Meta-economic claim about the repository's binding constraint; not scoped to a market object."
+    },
+    {
+      "claim": "F-006",
+      "reason": "Governance — config_integrity orphaned check."
+    },
+    {
+      "claim": "F-008",
+      "reason": "Governance/risk — drift detected but not acted on; instrument behaviour, not a market object."
+    },
+    {
+      "claim": "F-009",
+      "reason": "Config-scope doctrine (per-instrument vs multi); instrument governance."
+    },
+    {
+      "claim": "F-012",
+      "reason": "Architecture — sidecar modules with zero spine consumption."
+    },
+    {
+      "claim": "F-013",
+      "reason": "Architecture — orphaned allocator/ExecutionLoop path."
+    },
+    {
+      "claim": "F-016",
+      "reason": "Version-truth governance (ACTIVE_VERSION on branch patch)."
+    },
+    {
+      "claim": "F-018",
+      "reason": "Version-truth governance — active config lags HEAD."
+    },
+    {
+      "claim": "F-031",
+      "reason": "Epistemic-governance claim (an overclaim was caught pre-registration); about the process, not a market object."
+    },
+    {
+      "claim": "F-039",
+      "reason": "Instrument hygiene — L3 dataset-integrity call-site census. Becomes a MEASUREMENT_CONTRACT term in Phase B rather than a family claim."
+    },
+    {
+      "claim": "F-052",
+      "reason": "Governance/hygiene — removal of a second code authority for score weights."
+    },
+    {
+      "claim": "F-056",
+      "reason": "Instrument hygiene — undeclared backtest constants. Becomes a contract term in Phase B."
+    },
+    {
+      "claim": "F-057",
+      "reason": "Instrument hygiene — CRTConfig resolution split-brain on the programmatic path. Becomes a contract term in Phase B."
+    },
+    {
+      "claim": "F-058",
+      "reason": "Instrument hygiene — BACKTEST_ENGINE_GATE code default vs docs. Becomes the contract's decision-path-mode term in Phase B."
+    },
+    {
+      "claim": "F-062",
+      "reason": "Governance/hygiene — stale feature-DAG spine vs schema v4.0."
+    }
+  ],
+  "families": [
+    {
+      "family_id": "RF-CRT-STRUCTURE",
+      "object": "CRT funnel / state machine",
+      "question": "Does the CRT state machine fire often enough to trade, and where in the funnel do candidates die?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L1": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-067", "F-068"] },
+        "L2": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-002", "F-015"] },
+        "L3": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L4": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-011", "F-019", "F-026", "F-035"] },
+        "L5": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-037", "F-070"] }
+      },
+      "script_evidence": ["crt_funnel_*", "funnel_*", "crt_fail_reason_*", "crt_predicate_failure_*", "crt_guard_ablation_*", "p3b_session_relax", "p3c_zone_relax", "detection_sweep", "opportunity_scanner", "qualify_majors", "gate_measurement_m_gate_01"],
+      "notes": "Heaviest structural mass in the repo. L3 is an explicit matrix zero: the funnel was never asked to discriminate, only to fire. F-019/F-026/F-035 are the same L4 question at different scopes (crypto majors / structural completion / FX majors), which is why scope must be a contract binding rather than a family. L5 (2026-08-06, F-070): re-measured F-037's gate-OFF-vs-gate-ON delta under the CURRENT active config epoch (post F-038/F-048) and it did not reproduce -- 0/30 vetoed vs F-037's recorded 14% reduction. Concrete evidence for why engine_gate_mode belongs on the CLAIM (pipeline identity), not the profile: the same family+layer now holds two claims that both remain individually true because they are epoch-scoped, not contradictory."
+    },
+    {
+      "family_id": "RF-CRT-PARITY",
+      "object": "CRT semantic parity / dual representation",
+      "question": "Does the declared CRT story (resolver / shadow / MSIP) match the engine's story on the same OHLCV?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "unknown", "status": "UNTESTED", "claims": ["F-069"] },
+        "L1": { "evidence_mass": "unknown", "status": "UNTESTED", "claims": [] },
+        "L2": { "evidence_mass": "unknown", "status": "UNTESTED", "claims": [] },
+        "L3": { "evidence_mass": "unknown", "status": "UNTESTED", "claims": [] },
+        "L4": { "evidence_mass": "unknown", "status": "UNTESTED", "claims": [] },
+        "L5": { "evidence_mass": "unknown", "status": "UNTESTED", "claims": [] }
+      },
+      "script_evidence": ["crt_state_confusion_matrix", "crt_parity_*", "validate_crt_state_resolver", "crt_resolver_economic_comparison", "run_msip_shadow", "run_h_msip_*", "trace_geometry", "trace_sweep_geometry"],
+      "notes": "Atlas family with ~17 scripts but NO matrix row, so every cell is UNTESTED (unknown mass) rather than GAP — we cannot say which layer the mass sits in. This is an ontology-fidelity family: it asks whether the market language is consistent with itself, which is L0-adjacent for every other family. F-069 determined the residual is a divergent construction, not a mistuned threshold."
+    },
+    {
+      "family_id": "RF-SESSION-TIME",
+      "object": "Session / clock / time-of-day",
+      "question": "Is the clock a real economic lever, and is time even labelled correctly?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-066"] },
+        "L1": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L2": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-021"] },
+        "L3": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L4": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-017"] },
+        "L5": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] }
+      },
+      "script_evidence": ["session_sweep", "session_cost_audit", "session_override_scoping", "hour_of_day_certification", "session_certification", "p3b_session_relax"],
+      "notes": "The only object where L2 selection mass is high AND an L4 claim exists — historically the repo's single most-cited lever (F-021 reduced spine selection to the session filter). F-066 makes its L0 term load-bearing: the FEATURE was relabelled, the live FILTER was deliberately left on broker time, so the two surfaces disagree by construction."
+    },
+    {
+      "family_id": "RF-ZONE-GEOMETRY",
+      "object": "Zone geometry / local membership",
+      "question": "Are zones real market structure, are their labels honest, and do they change any decision?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L1": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L2": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L3": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L4": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L5": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-036", "F-041"] }
+      },
+      "script_evidence": ["discover_zones", "build_zone_census", "zone_registry_*", "zone_label_audit", "diagnose_zone_inertness", "zone_gate_threshold_sweep", "ablate_zone_thr_*", "qualify_zone_topk", "build_rare_zone_*", "zone_x_o4_gap_study"],
+      "notes": "The most fully-swept object: mass in five of six layers, and the only family whose L0 (label honesty) and L5 (pivotality) are BOTH high. Also the object where label contamination was first proven to flip a conclusion (F-041B), which is the strongest single argument for a shared L0 label term."
+    },
+    {
+      "family_id": "RF-GAUSSIAN",
+      "object": "Gaussian familiarity / statistical typicality",
+      "question": "Does statistical typicality carry information, and does it move any decision?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L1": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L2": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L3": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L4": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L5": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-060"] }
+      },
+      "script_evidence": ["gaussian_xau_economic_ledger", "gaussian_m4_qualify", "gaussian_pivotality_diagnosis", "gaussian_family_shadow_eval", "gaussian_delta_gap_eval", "gaussian_scatter_rr"],
+      "notes": "L0 is an explicit GAP and F-060 shows why that matters: the registry entries lack mu/sigma, so a SUCCESSFUL load still degenerates to a near-constant. The channel was measured at L3/L5 for years without its L0 term ever being checked — the clearest instance in the repo of the strict-ordering rationale."
+    },
+    {
+      "family_id": "RF-RR",
+      "object": "Reward:risk geometry / RR model",
+      "question": "Does RR rank forward outcomes, and is its gate and label stack honest?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-045"] },
+        "L1": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L2": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-048"] },
+        "L3": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-059"] },
+        "L4": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L5": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-038", "F-044"] }
+      },
+      "script_evidence": ["rr_shadow_value", "rr_kill_test_clean_l3", "rr_confidence_probe", "build_rr_dataset_from_clean_labels", "h_rr_threshold_001"],
+      "notes": "The only object whose L0 and L3 are both high — because its L3 result was twice invalidated by its L0 term (F-045 indeterminate on contaminated labels, then F-059 on clean labels). The cleanest worked example of contract-bound claims: same question, two label definitions, two different answers."
+    },
+    {
+      "family_id": "RF-NEURAL-CONSUMERS",
+      "object": "Learned veto / envelope (BitNet, TradeNet)",
+      "question": "Can a learned gate or envelope improve the spine without destroying the state machine?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L1": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L2": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-004"] },
+        "L3": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L4": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-055"] },
+        "L5": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-005"] }
+      },
+      "script_evidence": ["bitnet_kill_test", "bitnet_shadow", "bitnet_population_label_audit", "tradenet_envelope_feasibility", "tradenet_offline_train", "tradenet_shadow_weight_0", "phase_shadow_ab"],
+      "notes": "F-055 records a mechanism that breaks a common assumption: the BitNet veto RESETS the CRT state machine, so it is not a filter — removed is not the complement of added, and trade counts can be unchanged while trajectories diverge. Any L5 measurement on this object must account for that."
+    },
+    {
+      "family_id": "RF-SHAPES-TRAJECTORIES",
+      "object": "Multi-bar shape / trajectory / path",
+      "question": "Do multi-bar shapes carry information beyond single-bar features?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L1": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L2": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L3": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-023"] },
+        "L4": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-028"] },
+        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+      },
+      "script_evidence": ["ic002_trajectories_build", "ic002_trajectories_eval", "ic003_shape_library", "ic003b_shape_information", "story_library", "candle_state_report", "path_ambiguity_census", "momentum_continuation_bnb", "m5_mtf_information"],
+      "notes": "High L1 with a GAP at both L0 and L5 — the sequence layer was built and characterised but never grounded in a label contract nor tested for decision reach. The atlas calls this the closest thing to 'ontology still incomplete'."
+    },
+    {
+      "family_id": "RF-REGIME-DYNAMICS",
+      "object": "Regime / volatility dynamics",
+      "question": "Does volatility regime — level, transition, or forecast — condition a consumable edge?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L1": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L2": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L3": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-020"] },
+        "L4": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-030", "F-040", "F-043"] },
+        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+      },
+      "script_evidence": ["qualify_regime_conditioning", "qualify_regime_transition", "qualify_transitions", "transition_information", "regime_observer"],
+      "notes": "Three L4 claims (level / transition / Markov forecast) all landing on the same shape: statistically informative, economically non-consumable. Worth re-asking under a contract precisely because the repeated pattern is suspicious of a shared measurement term rather than three independent market facts."
+    },
+    {
+      "family_id": "RF-CARRY-BASIS",
+      "object": "Carry / basis / funding",
+      "question": "Is carry an informative signal, and separately, is the funding cashflow harvestable?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L1": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L2": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L3": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L4": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-033", "F-034"] },
+        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+      },
+      "script_evidence": ["qualify_carry", "qualify_harvest"],
+      "notes": "UNPARTITIONED — inherits the bundled atlas matrix row 'Carry/panel/HTF/weekly'. Two distinct payoffs share this object (signal-on-dispersion F-033 vs cashflow harvest F-034) and may deserve splitting once mass is verified against the filesystem. The perp corpus acquired for it is a permanent asset regardless of the claims' status."
+    },
+    {
+      "family_id": "RF-CROSS-SECTIONAL-PANEL",
+      "object": "Cross-sectional dispersion / relative value",
+      "question": "Is cross-sectional dispersion across instruments monetizable net of costs?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L1": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L2": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L3": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L4": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-032"] },
+        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+      },
+      "script_evidence": ["qualify_cross_sectional"],
+      "notes": "UNPARTITIONED — inherits the bundled atlas matrix row. The only object on the PANEL axis rather than the per-instrument axis; its kernel was reused verbatim by RF-CARRY-BASIS, which means the two families share a measurement basis and a contract bump would invalidate both together."
+    },
+    {
+      "family_id": "RF-HTF",
+      "object": "Higher timeframe (H1/H4)",
+      "question": "Do coarser timeframes rescue a directional edge that M15 does not carry?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L1": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L2": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L3": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L4": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-027"] },
+        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+      },
+      "script_evidence": ["qualify_htf"],
+      "notes": "UNPARTITIONED — inherits the bundled atlas matrix row. Timeframe is arguably a scope dimension like instrument rather than an object; flagged for reconsideration in Phase B when contract profiles are defined."
+    },
+    {
+      "family_id": "RF-WEEKLY-CALENDAR",
+      "object": "Weekly calendar liquidity ontology",
+      "question": "Does a calendar-locked weekly sweep-and-reversal ontology carry a tradeable edge?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L1": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L2": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L3": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L4": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-042"] },
+        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+      },
+      "script_evidence": ["qualify_weekly_sweep"],
+      "notes": "UNPARTITIONED — inherits the bundled atlas matrix row. The only genuinely NEW geometry built in the falsification era (weekly calendar range vs CRT's local structural frame), so its L1 is under-measured relative to how novel the construction is."
+    },
+    {
+      "family_id": "RF-EXIT-COST-PATH",
+      "object": "Exit model / cost / post-entry path",
+      "question": "Is the bottleneck entry information, selection, or the exit and cost design?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L1": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L2": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L3": { "evidence_mass": "none", "status": "GAP", "claims": ["F-014"] },
+        "L4": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-010", "F-024", "F-025"] },
+        "L5": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] }
+      },
+      "script_evidence": ["phase_d_exit_grid", "exit_model_band", "phase_s_selection_effect", "phase_e_structural_asymmetry", "early_invalidation_ab", "purge_delay", "purge_slice"],
+      "notes": "F-014 sits in a cell whose matrix mass is 'none' — a post-entry discriminator was found and then FROZEN pending throughput, so the claim exists without a body of work behind it. This object is also where the exit model itself is decided, which makes it partly a CONTRACT TERM rather than a family; Phase B must resolve that overlap explicitly."
+    },
+    {
+      "family_id": "RF-FEATURE-ONTOLOGY",
+      "object": "Feature ontology / formula identity / PIT",
+      "question": "What do our features mean, are they point-in-time causal, and who owns the math?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-029", "F-051", "F-065"] },
+        "L1": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-046", "F-047", "F-050", "F-053", "F-054", "F-063"] },
+        "L2": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L3": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L4": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L5": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-061", "F-064"] }
+      },
+      "script_evidence": ["feature_*", "feature_dag_*", "pit_*", "geometry_census", "dimensional_mix_shadow_diagnostic", "session_certification", "hour_of_day_certification", "soft_conf_ema_double_update_probe", "ohlcv_census"],
+      "notes": "The largest ARCH claim mass in the repo and a total GAP at L2/L3/L4 — by design: this object is the OBSERVATION LANGUAGE, prerequisite to every other family's L0. It is the family most at risk of unbounded spend, which is exactly what the L0 sufficiency criterion must bound. Every claim here is explicitly recorded as granting no activation authority."
+    },
+    {
+      "family_id": "RF-LABEL-TRUTH",
+      "object": "Outcome labels / opportunity stream honesty",
+      "question": "Are stored outcomes a valid truth source, and what does 'win' actually mean?",
+      "canonical_instrument": null,
+      "contract_profile": null,
+      "runner": null,
+      "cells": {
+        "L0": { "evidence_mass": "unknown", "status": "UNTESTED", "claims": ["F-022"] },
+        "L1": { "evidence_mass": "unknown", "status": "UNTESTED", "claims": [] },
+        "L2": { "evidence_mass": "unknown", "status": "UNTESTED", "claims": [] },
+        "L3": { "evidence_mass": "unknown", "status": "UNTESTED", "claims": [] },
+        "L4": { "evidence_mass": "unknown", "status": "UNTESTED", "claims": [] },
+        "L5": { "evidence_mass": "unknown", "status": "UNTESTED", "claims": [] }
+      },
+      "script_evidence": ["opportunity_stream_vs_trades", "build_rr_dataset_from_clean_labels", "bitnet_population_label_audit", "ingest_live_outcomes"],
+      "notes": "Atlas family with NO matrix row, so all cells are UNTESTED. This is the load-bearing family: F-022's contamination re-surfaced independently in RF-ZONE-GEOMETRY (F-041B) and RF-RR (F-045 then F-059). In Phase B its answer becomes a CONTRACT TERM (one label derivation via forward_walk) rather than a per-family result — which is the single highest-leverage consequence of this registry."
+    }
+  ]
+}

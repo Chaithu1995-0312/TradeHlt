@@ -1,0 +1,37 @@
+{
+  "change_id": "CH-phase1-duplicate-formula-identity",
+  "completed_utc": "2026-07-10T16:45:00Z",
+  "DUPLICATE_FORMULA_IDENTITY_PHASE_STATUS": "COMPLETE",
+  "checks_run": [
+    "tests/test_phase1_duplicate_formula_identity_closure.py",
+    "tests/test_feature_pipeline.py",
+    "tests/test_candle_math.py",
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_derived_math.py",
+    "tests/test_live_integration.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_xauusd_phase1_frozen_candidate.py",
+    "tests/test_feature_contract_v1.py"
+  ],
+  "checks_result": "PASS",
+  "flags": {
+    "PIT_REMEDIATION_STARTED": false,
+    "MODEL_LINEAGE_STARTED": false,
+    "MODEL_COMPATIBILITY_EVALUATED": false,
+    "RETRAINING_PERFORMED": false,
+    "ECONOMIC_CLAIMS_ALLOWED": false,
+    "MODEL_ENABLEMENT_CHANGED": false,
+    "MODEL_ARTIFACTS_CHANGED": false
+  },
+  "gd_retirements": ["GD-001", "GD-002", "GD-003"],
+  "artifacts": [
+    "docs/governance/phase1_feature_identity_registry-2026-07-10.json",
+    "docs/governance/phase1_duplicate_formula_identity_closure-2026-07-10.json",
+    "docs/governance/phase1_duplicate_formula_identity_closure-2026-07-10.md",
+    "docs/governance/phase1_duplicate_implementation_authority_decisions-2026-07-10.json",
+    "docs/governance/phase1_consumer_identity_bindings-2026-07-10.json",
+    "docs/governance/phase1_duplicate_formula_follow_up_backlog-2026-07-10.json",
+    "docs/governance/phase1_duplicate_formula_identity_manifest-2026-07-10.json"
+  ]
+}

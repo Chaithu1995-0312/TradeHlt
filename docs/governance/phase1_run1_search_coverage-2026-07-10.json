@@ -1,0 +1,108 @@
+{
+  "_doc": "Phase 1B search coverage. Numerators/denominators explicit. Shallow hits \u2260 semantic coverage.",
+  "generated_at_utc": "2026-07-10T16:07:38Z",
+  "directories": {
+    "src/features": {
+      "py_files_found": 17,
+      "py_files_ast_scanned": 17,
+      "scan_mode": "full",
+      "numerator_scanned": 17,
+      "denominator_found": 17
+    },
+    "src/engines": {
+      "py_files_found": 12,
+      "py_files_ast_scanned": 12,
+      "scan_mode": "full",
+      "numerator_scanned": 12,
+      "denominator_found": 12
+    },
+    "src/config_layer": {
+      "py_files_found": 19,
+      "py_files_ast_scanned": 19,
+      "scan_mode": "full",
+      "numerator_scanned": 19,
+      "denominator_found": 19
+    },
+    "src/core": {
+      "py_files_found": 20,
+      "py_files_ast_scanned": 20,
+      "scan_mode": "full",
+      "numerator_scanned": 20,
+      "denominator_found": 20
+    },
+    "src/runtime": {
+      "py_files_found": 8,
+      "py_files_ast_scanned": 8,
+      "scan_mode": "full",
+      "numerator_scanned": 8,
+      "denominator_found": 8
+    },
+    "src/research": {
+      "py_files_found": 51,
+      "py_files_ast_scanned": 51,
+      "scan_mode": "capped_80",
+      "numerator_scanned": 51,
+      "denominator_found": 51
+    },
+    "src/interpreters": {
+      "py_files_found": 6,
+      "py_files_ast_scanned": 6,
+      "scan_mode": "capped_80",
+      "numerator_scanned": 6,
+      "denominator_found": 6
+    },
+    "scripts/research": {
+      "py_files_found": 43,
+      "py_files_ast_scanned": 43,
+      "scan_mode": "capped_80",
+      "numerator_scanned": 43,
+      "denominator_found": 43
+    },
+    "scripts/analysis": {
+      "py_files_found": 56,
+      "py_files_ast_scanned": 56,
+      "scan_mode": "capped_80",
+      "numerator_scanned": 56,
+      "denominator_found": 56
+    },
+    "tests": {
+      "py_files_found": 234,
+      "py_files_ast_scanned": 80,
+      "scan_mode": "capped_80",
+      "numerator_scanned": 80,
+      "denominator_found": 234
+    }
+  },
+  "methods": [
+    "AST FunctionDef + df['col'] assignment scan",
+    "hand-curated semantic quantity table from executable authorities",
+    "prior FC-0/FC-0.5 evidence cross-walk",
+    "import/path inventory of producers/consumers",
+    "FEATUREISH name set intersection"
+  ],
+  "excluded": [
+    {
+      "path": "venv/",
+      "reason": "third-party"
+    },
+    {
+      "path": "data/",
+      "reason": "corpus only via phase1 bind"
+    },
+    {
+      "path": "**/__pycache__/**",
+      "reason": "bytecode"
+    }
+  ],
+  "limitations": [
+    "Not every scripts/research file executed at runtime",
+    "Dynamic getattr/config-selected paths may be undercounted",
+    "Historical git revisions of training code not fully recovered (deferred to RUN 6 for models)",
+    "Text featureish hits are discovery signals, not semantic proof"
+  ],
+  "totals": {
+    "py_files_found_sum": 466,
+    "py_files_ast_scanned_sum": 312,
+    "definition": "found = rglob *.py under listed roots excluding __pycache__; scanned = AST-parsed subset"
+  }
+}

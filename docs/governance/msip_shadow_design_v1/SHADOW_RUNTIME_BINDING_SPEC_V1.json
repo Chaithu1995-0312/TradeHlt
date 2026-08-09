@@ -1,0 +1,43 @@
+{
+  "schema_id": "SHADOW_RUNTIME_BINDING_SPEC_V1",
+  "generated_at_utc": "2026-07-14T10:26:18.740565+00:00",
+  "execution_model": {
+    "stream": "same OHLCV candle stream as backtest/live",
+    "order": [
+      "1. Load OHLCV bar",
+      "2. FeaturePipeline already-built series lookup OR incremental if live (design allows either; must be PIT)",
+      "3. Optionally run CRT process_candle for comparison observation only",
+      "4. Compute MarketStateVector from feature surface + interpretation config",
+      "5. Emit vector + provenance",
+      "6. Optionally record disagreement vs CRT observations"
+    ],
+    "hard_invariants": [
+      "shadow_flags.affects_crt == false always",
+      "shadow_flags.affects_execution == false always",
+      "shadow must not call StateMachine.try_* or mutate EngineState",
+      "shadow must not open/close trades",
+      "shadow must not write production ACTIVE_VERSION configs"
+    ]
+  },
+  "inputs": {
+    "feature_surface": "FeaturePipeline vectors / columns (authoritative WHAT for MSIP)",
+    "crt_observation": "optional read-only snapshot of CRT state name after process_candle",
+    "interpretation_config": "msip_shadow section"
+  },
+  "outputs": {
+    "market_state_jsonl": "one object per bar",
+    "disagreement_jsonl": "optional",
+    "run_manifest": "hashes of config, schema, corpus, commit"
+  },
+  "co_run_with_crt": {
+    "allowed": true,
+    "purpose": "comparison only",
+    "crt_remains_authoritative_for": "opportunity lifecycle and trades"
+  },
+  "not_authorized": [
+    "MarketStateVector class implementation in this design task",
+    "dynamic loader coding",
+    "CRT consumer migration",
+    "threshold selection for CRTConfig"
+  ]
+}

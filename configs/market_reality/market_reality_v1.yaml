@@ -1,0 +1,344 @@
+# ============================================================================
+# Market Reality — Configuration Contract v1  (CONTRACT ONLY — no runtime)
+# ============================================================================
+# Purpose: declare the configuration surface for the future Market Reality layer
+#   (Raw OHLCV -> canonical 38 -> MarketRealityHistoryBuffer -> configured causal
+#    temporal derivations -> configured dimensions -> MarketRealitySnapshot).
+#
+# STATUS: fail-closed. enabled=false, mode=observe_only, all authority denied.
+#   This file defines WHAT the layer may be configured with. It does NOT enable
+#   any dimension, does NOT grant decision authority, and contains NO executable
+#   formulas. Formulas remain code-owned and identity-governed (see
+#   configs/formulas/market_ontology.yaml + src/features/registry/).
+#
+# BOUNDARY RULE (enforced by review, not by this file):
+#   Config MAY own: feature/derivation *references*, history windows, thresholds,
+#     min-evidence, persistence, hysteresis, confidence thresholds, conflict
+#     policy, warmup policy, enabled flags, observe-only output policy.
+#   Config MUST NOT own: executable formulas, Python expressions, feature
+#     implementation code, hidden fallback formulas, model decision authority,
+#     execution authority.
+#
+# EVIDENCE BASIS (fresh probes, contamination rule — no prior verdict trusted):
+#   reports/analysis/market-reality-fresh-probes-2026-07-12.md      (WP1+WP2)
+#   reports/analysis/market-reality-repository-search-2026-07-12.md (WP3)
+# ============================================================================
+
+schema_version: "market_reality/v1"
+authority: user_approved            # WHO-layer convention (mirrors market_ontology.yaml)
+enabled: false                      # HARD fail-closed master switch
+mode: observe_only                  # observe_only | (future) shadow | (future) active
+
+# ---------------------------------------------------------------------------
+# SOURCE CONTRACT — the canonical 38-feature observation surface.
+# Reference only; the authoritative list is features.feature_schema.CANONICAL_FEATURES
+# (CANONICAL_FEATURE_DIM == 38, hard-asserted at import). Do not redefine here.
+# ---------------------------------------------------------------------------
+source_contract:
+  authority_symbol: "features.feature_schema.CANONICAL_FEATURES"
+  expected_dim: 38
+  producer: "features.feature_pipeline.FeaturePipeline.run"
+  # Names are listed for readability ONLY; the code symbol is authoritative.
+  features:
+    - open
+    - high
+    - low
+    - close
+    - volume
+    - volume_ratio        # NOTE: rolling(20) baseline INCLUDES current bar (probes §9)
+    - double_sweep
+    - ema_fast
+    - ema_slow
+    - ema_spread          # NOTE: scales with price level — dimensional mix (probes §6)
+    - trend_bias
+    - trend_strength
+    - momentum_score      # NOTE: scales with price level — dimensional mix (probes §6)
+    - atr                 # close-relative (atr_14_raw / close)
+    - volatility_ratio
+    - rsi_14              # SMA gains/losses, NOT Wilder (probes §8)
+    - macd_line
+    - macd_signal
+    - macd_hist
+    - sweep_detected      # NOTE: unsigned — sweep DIRECTION lost (probes §12)
+    - liquidity_sweep     # signed {-1,0,+1}
+    - break_of_structure  # signed {-1,0,+1}
+    - swing_high          # causal, publication delay k=2 (probes §14)
+    - swing_low
+    - higher_high
+    - lower_low
+    - body_size
+    - wick_size           # NOTE: == full range (high-low), NOT wick magnitude (probes §5/#14)
+    - body_ratio
+    - volatility_regime   # ATR-LEVEL trailing-rank tercile, NOT vol dynamics (probes §10)
+    - session             # naive .dt.hour, NO timezone contract (probes §15)
+    - hour_of_day
+    - disp_strength
+    - retest_depth        # EMA9 proximity; NAME COLLISION w/ crt_engine_v2 (search §11)
+    - candles_since_retest # resets on SWEEP event, not retest (probes §8)
+    - liquidity_distance
+    - liquidity_pressure_score  # monotonic transform of liquidity_distance; missing->10.0
+    - volume_spike        # adaptive q75 threshold INCLUDES current obs (probes §9)
+
+# ---------------------------------------------------------------------------
+# HISTORY RETENTION — configurable/tunable, NOT immutable truth.
+# ---------------------------------------------------------------------------
+history:
+  retention_bars: 1024              # initial direction; empirically tunable
+  min_retention_bars: 256           # floor below which no dimension may emit
+  tunable: true
+
+# ---------------------------------------------------------------------------
+# NAMED HORIZONS — initial direction, tunable. Not immutable.
+# ---------------------------------------------------------------------------
+horizons:
+  FAST: 16
+  SHORT: 64
+  MEDIUM: 256
+  LONG: 1024
+  tunable: true
+
+# ---------------------------------------------------------------------------
+# WARMUP POLICY — no dimension emits until sufficient causal history exists.
+# ---------------------------------------------------------------------------
+warmup:
+  require_bars: 1024                 # >= LONG; align with retention
+  on_insufficient: emit_nothing      # emit_nothing | emit_insufficient_marker
+  # Rationale: the batch pipeline itself drops ~300 warmup rows; structure
+  # publication has a k=2 delay and normalization needs >=50 bars (probes §13).
+
+# ---------------------------------------------------------------------------
+# TEMPORAL DERIVATIONS — DECLARATIONS ONLY. No math in YAML.
+# Every entry below is an UNRESOLVED, DISABLED placeholder: NO Market Reality
+# derivation identity is registered in the code yet (formula_registry has none).
+# Each references only verified canonical source features + carries a blocker.
+# Do NOT enable any until a registered, parity-tested derivation identity exists.
+# ---------------------------------------------------------------------------
+temporal_derivations:
+  atr_slope:
+    enabled: false
+    source_features: [atr]
+    horizon: SHORT
+    status: unresolved_placeholder
+    blockers:
+      - "No registered derivation identity (FM-id) for ATR slope/acceleration."
+      - "DERIVABLE_FROM_38_HISTORY (search §8) but no producer exists; formula must be code-owned."
+  volatility_shock:
+    enabled: false
+    source_features: [atr]
+    horizon: FAST
+    status: unresolved_placeholder
+    blockers:
+      - "No registered derivation identity; DERIVABLE from atr history (search §8)."
+  range_location:
+    enabled: false
+    source_features: [high, low, close]
+    horizon: MEDIUM
+    status: unresolved_placeholder
+    blockers:
+      - "No canonical range-location feature (range_size/bb_position are noncanonical)."
+      - "DERIVABLE_FROM_38_HISTORY; needs a registered derivation identity."
+  directional_run_length:
+    enabled: false
+    source_features: [open, close]
+    horizon: SHORT
+    status: unresolved_placeholder
+    blockers:
+      - "No registered identity; DERIVABLE from sign(close-open) history (search §8)."
+  bars_since_swing:
+    enabled: false
+    source_features: [swing_high, swing_low]
+    horizon: MEDIUM
+    status: unresolved_placeholder
+    blockers:
+      - "No registered identity; DERIVABLE from swing event history (search §8)."
+  fair_value_gap:
+    enabled: false
+    source_features: [high, low]
+    horizon: FAST
+    status: unresolved_placeholder
+    blockers:
+      - "GENUINELY_ABSENT producer; DERIVABLE from 3-bar OHLC (search §8/§9)."
+
+# ---------------------------------------------------------------------------
+# DIMENSIONS — all 17. Fail-closed: every dimension enabled=false initially.
+#   evidence:  canonical source features that CURRENTLY support the dimension.
+#   blockers:  explicit reasons observability is unresolved (where applicable).
+#   State labels are intentionally NOT defined (evidence insufficient to fix them).
+#   Thresholds/hysteresis/persistence are declared as tunable keys with NO
+#   invented numeric values (null == unset, to be tuned empirically).
+# ---------------------------------------------------------------------------
+_dimension_defaults: &dimension_defaults
+  enabled: false
+  min_evidence: null
+  thresholds: null            # tunable; no invented values
+  hysteresis: null            # tunable
+  persistence: null           # tunable (bars a state must hold)
+  confidence_policy: min_evidence_gated
+  insufficient_evidence_behavior: emit_insufficient   # never fabricate a state
+  state_labels: null          # deferred — evidence insufficient (task constraint)
+
+dimensions:
+
+  direction:
+    <<: *dimension_defaults
+    evidence: [trend_bias, momentum_score, break_of_structure, macd_line]
+
+  structure:
+    <<: *dimension_defaults
+    evidence: [swing_high, swing_low, higher_high, lower_low, break_of_structure]
+    notes: "swing_* carry k=2 publication delay; break_of_structure is a per-bar event, not latched."
+
+  volatility_level:
+    <<: *dimension_defaults
+    evidence: [atr, volatility_ratio, volatility_regime]
+
+  volatility_dynamics:
+    <<: *dimension_defaults
+    evidence: []
+    blockers:
+      - "No canonical feature encodes ATR slope/acceleration/expansion-contraction (probes §10)."
+      - "Depends on temporal_derivations.atr_slope / volatility_shock (both unresolved)."
+
+  liquidity:
+    <<: *dimension_defaults
+    evidence: [liquidity_sweep, liquidity_distance, liquidity_pressure_score, sweep_detected, double_sweep]
+    notes: "liquidity_sweep is signed; sweep_detected loses direction. liquidity_pressure_score is a monotonic transform of liquidity_distance."
+
+  auction_balance:
+    <<: *dimension_defaults
+    evidence: []
+    blockers:
+      - "No canonical premium/discount or range-location feature (engine-internal only, search §5/§11)."
+      - "Depends on temporal_derivations.range_location (unresolved)."
+
+  impulse:
+    <<: *dimension_defaults
+    evidence: [disp_strength, body_ratio]
+    blockers:
+      - "Impulse PERSISTENCE requires a derivation over disp_strength history (unresolved)."
+
+  pullback_retest:
+    <<: *dimension_defaults
+    evidence: [retest_depth, candles_since_retest]
+    blockers:
+      - "retest_depth measures EMA9 proximity, NOT a structural retest level (probes §9)."
+      - "candles_since_retest counts since SWEEP, not retest (probes §8)."
+      - "retest OUTCOME (hold/fail) needs a retained non-canonical level (search §10) — REQUIRES_NONCANONICAL_STATE."
+      - "IDENTITY COLLISION: bind explicitly to pipeline FM-021, not crt_engine_v2 FM-027 (search §11)."
+
+  participation:
+    <<: *dimension_defaults
+    evidence: [volume_ratio, volume_spike]
+    blockers:
+      - "volume_ratio baseline and volume_spike threshold both INCLUDE the current bar (probes §9)."
+      - "Dead-volume (FX) instruments collapse volume_ratio to 1.0 — decide source vs range-proxy."
+
+  momentum:
+    <<: *dimension_defaults
+    evidence: [momentum_score, macd_line, macd_signal, macd_hist, rsi_14]
+    notes: "momentum_score scales with price level (probes §6); rsi_14 is SMA-based (probes §8)."
+
+  range_location:
+    <<: *dimension_defaults
+    evidence: []
+    blockers:
+      - "No canonical range-location/premium-discount feature (range_size/bb_position noncanonical)."
+      - "Depends on temporal_derivations.range_location (unresolved)."
+
+  breakout:
+    <<: *dimension_defaults
+    evidence: [break_of_structure]
+    blockers:
+      - "Breakout PERSISTENCE / acceptance-beyond-level / failure need a retained non-canonical level (search §10) — REQUIRES_NONCANONICAL_STATE."
+
+  exhaustion:
+    <<: *dimension_defaults
+    evidence: [rsi_14]
+    blockers:
+      - "No dedicated exhaustion observable; wick asymmetry (upper_wick/lower_wick) is noncanonical (search §5)."
+
+  imbalance:
+    <<: *dimension_defaults
+    evidence: []
+    blockers:
+      - "No FVG/imbalance producer anywhere (GENUINELY_ABSENT, search §9)."
+      - "Depends on temporal_derivations.fair_value_gap (unresolved)."
+
+  temporal_session:
+    <<: *dimension_defaults
+    evidence: [session, hour_of_day]
+    blockers:
+      - "session derives from NAIVE timestamp hour — no timezone contract (probes §15)."
+
+  multi_timeframe:
+    <<: *dimension_defaults
+    evidence: []
+    blockers:
+      - "HTF/MTF alignment exists ONLY in research (candle_state/mtf_conjunction.py), outside the 38-source contract (search §6)."
+
+  quality_uncertainty:
+    <<: *dimension_defaults
+    evidence: []
+    blockers:
+      - "Cross-evidence conflict/quality needs ENGINE outputs (CRT/Gaussian/ZoneGate/RR), not the 38 features — outside source_contract (search §9)."
+
+  # ── Layer-5 CRT state dimension (2026-07-24) ──────────────────────────
+  # Resolved from feature states via configs/formulas/market_crt_states.yaml.
+  # The resolver evaluates predicates over structural feature states to
+  # determine which of the 9 CRT states the current bar belongs to.
+  # This is a MARKET REALITY dimension — it interprets what the feature states
+  # mean in terms of the CRT state machine, without running the engine itself.
+  crt_state:
+    <<: *dimension_defaults
+    enabled: false                      # fail-closed: shadow-only until validated
+    evidence: [liquidity_sweep, sweep_detected, double_sweep, break_of_structure,
+               higher_high, lower_low, retest_flag, displacement_flag,
+               volatility_regime, trend_bias, rsi_state, swing_high, swing_low,
+               session, volume_spike]
+    resolver: crt_state_resolver.CRTStateResolver
+    config_source: configs/formulas/market_crt_states.yaml
+    notes: >
+      RESOLVED dimension, not a raw feature. The CRT state machine has 9 states:
+      RANGE, SHADOW_PENDING, SWEEP, DISPLACEMENT, EXPANSION, EXPIRED, RETEST,
+      EXECUTION, RESOLUTION. Resolution is config-driven: change the predicates
+      in market_crt_states.yaml to tune which feature-state combinations map to
+      which CRT states. Engine reference dwell counts (XAUUSD M15, 47k bars):
+      RANGE 35,159 | SWEEP 6,995 | EXPANSION 4,605 | DISPLACEMENT 373 |
+      SHADOW_PENDING 43 | RETEST 17 | EXECUTION 5 | RESOLUTION 5 | EXPIRED 0.
+      Validation 2026-07-24 (reports/crt_state_resolver_validation.md): SWEEP can
+      approach parity under sticky dwell + funnel-entry; full funnel parity is
+      BLOCKED without HTF-reset memory and engine-grade retest/displacement
+      detectors (pipeline retest_flag ~27k bars vs engine RETEST=17). EXECUTION
+      requires session∈{LONDON,NEWYORK,OVERLAP} and fails closed without score.
+      Transition-parity (2026-07-24): crt_state_confusion_matrix.py. Lifecycle+phase-lock
+      + EXPANSION entry semantics SHIPPED: agreement 35.5%→67.8%; eng RANGE→res EXPANSION
+      11627→323. Entry funnel=DISPLACEMENT|shadow only + ATR extension (engine
+      try_displacement_to_expansion). Residual: SWEEP↔RANGE dominant; EXPANSION under-fire.
+      Stay enabled:false.
+
+# ---------------------------------------------------------------------------
+# CONFLICT / CONFIDENCE / OUTPUT POLICY
+# ---------------------------------------------------------------------------
+conflict_policy:
+  on_dimension_conflict: record_both      # never silently resolve; snapshot both
+  resolution: none                        # observe_only: no arbitration authority
+
+confidence_policy:
+  method: evidence_count_gated
+  min_confidence_to_emit: null            # tunable; unset
+  downgrade_on_insufficient: true
+
+output_policy:
+  emit: snapshot_only                     # MarketRealitySnapshot only
+  sink: log_observe_only                  # write to an observation log; no engine wiring
+  may_write_features: false
+  may_write_engine_inputs: false
+
+# ---------------------------------------------------------------------------
+# AUTHORITY — fail-closed. Market Reality is NOT an engine or decision authority.
+# ---------------------------------------------------------------------------
+authority:
+  may_emit_trade_decision: false
+  may_modify_engine_outputs: false
+  may_modify_fusion: false
+  may_modify_execution: false

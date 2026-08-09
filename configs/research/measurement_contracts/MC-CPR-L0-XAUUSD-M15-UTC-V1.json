@@ -1,0 +1,298 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "MC-CPR-L0-XAUUSD-M15-UTC-V1",
+  "experiment_id": "E-CPR-L0-XAUUSD-M15",
+  "created_utc": "2026-08-08T00:00:00Z",
+  "authority": {
+    "economic_admissible": false,
+    "requires_mt00_pass": true,
+    "note": "PREREGISTERED only. Historical F-xxx and UNK-005 registration are not economic closure. economic_claims_allowed remains false until mt00==PASS and mt01_matrix_coverage==COMPLETE for this contract's pipeline_identity. No fusion weight, risk table, EngineRunner, DecisionEngine, or Ultron mutation is authorized by sealing this instance."
+  },
+  "population": {
+    "unit_of_analysis": "candle",
+    "instruments": ["XAUUSD"],
+    "timeframe": "M15",
+    "calendar_window": {
+      "start": "CORPUS_DECLARED_AT_RUN",
+      "end": "CORPUS_DECLARED_AT_RUN",
+      "timezone": "UTC"
+    },
+    "inclusion_rule": "XAUUSD M15 OHLCV bars only; timestamps interpreted on declared clock_basis=UTC for session conditioning (F-066: research uses UTC-corrected labels; does not mutate production crt_engine.session_windows). Corpus path and SHA-256 locked at run into population fingerprint.",
+    "exclusion_rule": "Bars with E_event=1 (scheduled high-impact release windows tagged at 12:30/13:30 UTC, e.g. NFP/CPI slots) excluded from CPR z-score baseline fitting (mu/sigma of CPR_Raw). Excluded bars may still appear in diagnostic counts but not in residual predictive tests. Holiday/gap policy: drop bars with missing prior bar > 1 M15 interval for rolling sums; document drop count in fingerprint.",
+    "n_declared_min": 0,
+    "detection_vs_trade": "not_applicable",
+    "population_hash_inputs": [
+      "instrument",
+      "timestamp_utc",
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "corpus_path",
+      "corpus_sha256",
+      "clock_basis"
+    ]
+  },
+  "features": {
+    "feature_set_id": "FS-CPR-L0-XAUUSD-M15-V1",
+    "feature_ids": [
+      "METHOD-CPR-BUY-PRESSURE",
+      "METHOD-CPR-SELL-PRESSURE",
+      "METHOD-CPR-RAW-N4",
+      "METHOD-CPR-RAW-N16",
+      "METHOD-CPR-RAW-N96",
+      "METHOD-CPR-Z-M672",
+      "METHOD-CPR-ETA-RESIDUAL"
+    ],
+    "formula_authority": "experiment_local_declared",
+    "point_in_time_rule": "At decision bar t, all CPR rolling sums and z-score stats use bars with index <= t only (strict F_t). For targets defined on next-open execution, features may use bars <= t-1 only — declared per target at run. No centered swings, no global full-sample rank, no future volume. Residualization regressors F^(1..39) must be the same PIT feature frame as production v4.0 schema when residualizing against residualization_baseline.",
+    "name_binding": {
+      "buy_pressure": {
+        "fm_id": "METHOD-CPR-BUY-PRESSURE",
+        "formula_ref": "docs/research-readiness/mc-cpr-l0-xauusd-m15-preregistration.md#synthetic-directional-pressure",
+        "units": "volume_weighted_close_location",
+        "not_equal_to": ["volume", "body_ratio", "disp_strength", "BI_true_capital"]
+      },
+      "sell_pressure": {
+        "fm_id": "METHOD-CPR-SELL-PRESSURE",
+        "formula_ref": "docs/research-readiness/mc-cpr-l0-xauusd-m15-preregistration.md#synthetic-directional-pressure",
+        "units": "volume_weighted_close_location",
+        "not_equal_to": ["volume", "body_ratio", "SI_true_capital"]
+      },
+      "cpr_raw": {
+        "fm_id": "METHOD-CPR-RAW",
+        "formula_ref": "docs/research-readiness/mc-cpr-l0-xauusd-m15-preregistration.md#cpr-raw",
+        "units": "dimensionless_fraction_0_1",
+        "not_equal_to": ["UNK-005_true_latent_cpr", "session", "trend_bias"]
+      },
+      "cpr_z": {
+        "fm_id": "METHOD-CPR-Z-M672",
+        "formula_ref": "docs/research-readiness/mc-cpr-l0-xauusd-m15-preregistration.md#cpr-z",
+        "units": "z_score",
+        "not_equal_to": ["atr", "volatility_regime"]
+      },
+      "cpr_eta": {
+        "fm_id": "METHOD-CPR-ETA-RESIDUAL",
+        "formula_ref": "docs/research-readiness/mc-cpr-l0-xauusd-m15-preregistration.md#residualization",
+        "units": "regression_residual",
+        "not_equal_to": ["cpr_raw", "CANONICAL_FEATURES"]
+      }
+    },
+    "forbidden_aliases": [
+      "cpr",
+      "capital_pressure",
+      "global_capital",
+      "buy_investment",
+      "sell_investment",
+      "BI",
+      "SI"
+    ],
+    "builder_entrypoints": [
+      "NOT_IMPLEMENTED_PREREG_ONLY — observe-only; builder lands only after E-MT-00 probe harness exists for this contract"
+    ]
+  },
+  "labels": {
+    "label_family": "information_only",
+    "y_definition": "Primary L1 targets (information only, not economic authority): (1) fwd_return_1b = (close_{t+1}-close_t)/close_t; (2) fwd_return_4b = (close_{t+4}-close_t)/close_t; (3) displacement_continuation = 1 if sign(close_t-open_t)==sign(close_{t+h}-close_t) for h in {4,16} else 0. Optional diagnostic morphology labels may be listed in the prereg doc but cannot promote economic claims. Economic R-multiple under forward_walk is DIAGNOSTIC_ONLY under this contract until a superseding MC with label_family=forward_walk_economic and economic_admissible path is sealed.",
+    "derivation_authority": "information_target",
+    "stream_fields_banned_for_economic_claims": [
+      "opportunities.outcome",
+      "opportunities.rr",
+      "opportunities.rr_achieved",
+      "trade.rr_achieved",
+      "trade.outcome"
+    ],
+    "rederive_protocol": {
+      "enabled": false,
+      "matcher": "not_applicable_info_stage",
+      "min_agreement": 0.0,
+      "on_fail": "DIAGNOSTIC_ONLY"
+    },
+    "horizon_bars": 4,
+    "sign_convention": "positive_fwd_return_is_up_move_in_price; not a trade long/short PnL"
+  },
+  "costs": {
+    "cost_model_id": "none_info_stage.v1",
+    "components": [
+      {
+        "name": "none_info_stage",
+        "bps_or_formula": "0 — information-stage contract; costs not applied to L1 residual MI/IC gates",
+        "applied_on": "round_trip"
+      }
+    ],
+    "gross_vs_net": {
+      "report_gross": true,
+      "report_net": false,
+      "promotable": "none_info_stage"
+    },
+    "success_gate_uses": "none_info_stage"
+  },
+  "exits": {
+    "exit_model_id": "info_only_no_exit.v1",
+    "exit_family": "info_only_no_exit",
+    "parameters": {
+      "note": "No SL/TP path under L0; forward returns are path observations only"
+    },
+    "intrabar_rule": "not_applicable — no trade exit simulated under info_only_no_exit",
+    "not_equal_to": [
+      "crt_engine_v2.build_trade",
+      "compute_crt_levels",
+      "opportunities.outcome",
+      "ExecutionPlannerV1_2"
+    ]
+  },
+  "splits": {
+    "scheme": "single_holdout_chronologic",
+    "embargo": "96 M15 bars (24h) between train end and test start",
+    "purge": "drop train labels whose horizon overlaps test start (max horizon 16 bars + embargo)",
+    "n_folds_or_windows": 1,
+    "overlap_policy": "forbid_overlapping_labels",
+    "seed": 20260808,
+    "oos_fraction_or_dates": "last 20% of eligible bars by UTC timestamp after event exclusion; exact dates locked in split_manifest at run"
+  },
+  "metrics": {
+    "information_metrics": [
+      "mutual_information_eta_fwd_return",
+      "spearman_ic_eta_fwd_return",
+      "auc_eta_displacement_continuation",
+      "residual_r2_vs_39dim_baseline"
+    ],
+    "economic_metrics": [
+      "diagnostic_only_net_expectancy_if_computed_must_not_promote"
+    ],
+    "success_gate": "L1 ONLY: on OOS, residual eta (after OLS residualization of cpr_raw or cpr_z on the 39-dim v4.0 feature vector) shows BH-FDR q<0.01 for pre-registered information tests (MI or Spearman IC vs fwd_return_1b/4b, or AUC vs displacement_continuation) AND residual R2 vs 39-dim baseline > 0 on OOS. Mutual information null is not required to be exactly 0.0000; use permutation null under seed 20260808. Economic E_OOS>0 is NOT a pass gate under this contract (info_not_value).",
+    "kill_criteria": "KILL OHLCV-proxy claim if: (1) residual eta has no BH-significant association with any pre-registered target after multiplicity control; OR (2) residual R2 <= 0 vs 39-dim baseline (CPR is rename of existing features); OR (3) any required PIT/circularity probe fails (lookahead, same-bar outcome in F_t, event-baseline contamination). Do not reopen with N/cost tweaks — new thesis + new MC id required.",
+    "multiplicity": {
+      "n_variants_preregistered": 9,
+      "control": "bh_fdr"
+    },
+    "authority_ladder": {
+      "info_not_value": true,
+      "value_not_authority": true,
+      "insufficient_not_harmful": true
+    },
+    "forbidden_metric_substitutions": [
+      "p_value_as_edge",
+      "gross_as_success",
+      "n_detections_as_n_trades",
+      "in_sample_mi_as_oos",
+      "raw_cpr_as_residual_eta",
+      "e_oos_as_l1_pass"
+    ]
+  },
+  "pipeline_identity": {
+    "config_version_source": "research_observe_only — ACTIVE_VERSION read for ambient production identity reference only; CPR path does not execute EngineRunner or CRT trade journal",
+    "active_version_file": "configs/production/ACTIVE_VERSION",
+    "engine_gate_mode": "info_only",
+    "expected_engines": [],
+    "modules_in_path": [
+      "OHLCV corpus loader (research)",
+      "experiment_local CPR proxy formulas (prereg)",
+      "feature residualization against CANONICAL_FEATURES v4.0",
+      "information metrics (MI/IC/AUC)"
+    ],
+    "modules_explicitly_out_of_path": [
+      "src/core/engine_runner.py",
+      "src/core/decision_engine.py",
+      "src/core/fusion_engine.py",
+      "src/core/ultron_risk_gate.py",
+      "src/config_layer/crt_engine_v2.py TRADE_OPENED path",
+      "src/config_layer/execution_planner.py",
+      "src/training/trade_net_v2.py",
+      "src/bitnet/*",
+      "portfolio allocator",
+      "OI/tape feeds"
+    ],
+    "dataset_integrity_level": "L1_L2_only",
+    "feature_flags": {
+      "use_bitnet": false,
+      "rr_fusion.enabled": false,
+      "cpr_runtime_fusion": false,
+      "cpr_risk_table": false,
+      "session_timestamp_basis_research": "utc_corrected",
+      "data_source": "OHLCV_ONLY",
+      "program_binding": "Program_CPR_L0",
+      "not_program_6_carry": true,
+      "ontology_nodes": "UNK-002,UNK-003,UNK-004,UNK-005"
+    }
+  },
+  "prohibited_substitutions": [
+    {
+      "surface": "population",
+      "forbidden": "Count CRT detections or TRADE_OPENED as CPR sample units",
+      "historical_class": "FC-POP-DETECTION-AS-TRADE"
+    },
+    {
+      "surface": "features",
+      "forbidden": "Treat body_ratio/disp_strength/session as CPR without residualization; map account equity to global capital",
+      "historical_class": "FC-FEAT-NAME-COLLISION"
+    },
+    {
+      "surface": "features",
+      "forbidden": "Use same-bar close direction or fwd_return as a CPR input feature (circular cause)",
+      "historical_class": "FC-FEAT-LOOKAHEAD"
+    },
+    {
+      "surface": "labels",
+      "forbidden": "opportunities.outcome / rr_achieved as economic y under this info contract",
+      "historical_class": "FC-LABEL-STREAM-OUTCOME"
+    },
+    {
+      "surface": "costs",
+      "forbidden": "Claim net expectancy authority while success_gate_uses=none_info_stage",
+      "historical_class": "FC-COST-SILENCE"
+    },
+    {
+      "surface": "exits",
+      "forbidden": "Substitute CRT build_trade / compute_crt_levels exits for info_only labels without new MC",
+      "historical_class": "FC-EXIT-SUBSTITUTION"
+    },
+    {
+      "surface": "splits",
+      "forbidden": "Random shuffle split that breaks time order for OOS CPR claims",
+      "historical_class": "FC-SPLIT-LEAKAGE"
+    },
+    {
+      "surface": "metrics",
+      "forbidden": "Promote raw CPR association without residual eta; use E_OOS>0 as L1 pass",
+      "historical_class": "FC-METRIC-SUBSTITUTION"
+    },
+    {
+      "surface": "pipeline",
+      "forbidden": "Claim fusion-gate or live spine measurement when engine_gate_mode=info_only",
+      "historical_class": "FC-PIPELINE-GATE-MISCLAIM"
+    }
+  ],
+  "evidence_artifacts": {
+    "contract_path": "configs/research/measurement_contracts/MC-CPR-L0-XAUUSD-M15-UTC-V1.json",
+    "population_fingerprint_path": "results/research/mc_cpr_l0/population_fingerprint.json",
+    "feature_parity_path": null,
+    "label_rederive_path": null,
+    "cost_exit_fixture_path": null,
+    "split_manifest_path": "results/research/mc_cpr_l0/split_manifest.json",
+    "metric_compute_path": "results/research/mc_cpr_l0/metrics.json",
+    "mt00_report_path": "results/research/mc_cpr_l0/mt00_report.json",
+    "mt01_mutation_coverage_path": "results/research/mc_cpr_l0/mt01_coverage.json",
+    "code_commit": null,
+    "data_snapshot_ids": [
+      "data/mt5/XAUUSD_M15.csv"
+    ]
+  },
+  "trust_status": {
+    "mt00": "PARTIAL",
+    "mt01_matrix_coverage": "INCOMPLETE",
+    "economic_claims_allowed": false,
+    "failing_probes": [
+      "L1-SUCCESS-GATE: no BH-FDR hit; no positive OOS delta R2(eta|39dim) for N=16 primary"
+    ],
+    "open_risks_non_blocking": [
+      "BuyPressure/SellPressure are synthetic close-location volume weights, not true BI/SI capital (UNK-004 identification bound)",
+      "Event calendar for E_event is first-Friday 12:30/13:30 UTC only (incomplete)",
+      "Residualization is linear OLS; nonlinear dependence on 39-dim may remain in eta",
+      "E-MT-01 adversarial mutants NOT_RUN (coverage incomplete)",
+      "UTC research clock via mt5_server_to_utc; production crt_engine.session_windows untouched",
+      "First harness run 2026-08-08: L1_FAIL — residual eta has no OOS information beyond 39-dim under prereg gates"
+    ]
+  }
+}

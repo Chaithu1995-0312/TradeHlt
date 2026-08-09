@@ -1,0 +1,229 @@
+{
+  "input_usage": [
+    {
+      "input": "high",
+      "source_class": "RAW_OHLC",
+      "source_name": "candle.high",
+      "formula_id": null,
+      "feature_id": "high",
+      "canonical_feature": true,
+      "bars_read": 22,
+      "guards_affected": [
+        "G_RANGE_SWEEP_DETECT"
+      ],
+      "provenance_status": "PROVEN"
+    },
+    {
+      "input": "low",
+      "source_class": "RAW_OHLC",
+      "source_name": "candle.low",
+      "formula_id": null,
+      "feature_id": "low",
+      "canonical_feature": true,
+      "bars_read": 22,
+      "guards_affected": [
+        "G_RANGE_SWEEP_DETECT"
+      ],
+      "provenance_status": "PROVEN"
+    },
+    {
+      "input": "close",
+      "source_class": "RAW_OHLC",
+      "source_name": "candle.close",
+      "formula_id": null,
+      "feature_id": "close",
+      "canonical_feature": true,
+      "bars_read": 22,
+      "guards_affected": [
+        "G_RANGE_SWEEP_DETECT"
+      ],
+      "provenance_status": "PROVEN"
+    },
+    {
+      "input": "h_ref",
+      "source_class": "STATE_MEMORY",
+      "source_name": "active_range.h_ref",
+      "formula_id": null,
+      "feature_id": null,
+      "canonical_feature": false,
+      "bars_read": 22,
+      "guards_affected": [
+        "G_RANGE_SWEEP_DETECT"
+      ],
+      "provenance_status": "PROVEN"
+    },
+    {
+      "input": "l_ref",
+      "source_class": "STATE_MEMORY",
+      "source_name": "active_range.l_ref",
+      "formula_id": null,
+      "feature_id": null,
+      "canonical_feature": false,
+      "bars_read": 22,
+      "guards_affected": [
+        "G_RANGE_SWEEP_DETECT"
+      ],
+      "provenance_status": "PROVEN"
+    },
+    {
+      "input": "move",
+      "source_class": "CRT_LOCAL_DERIVED",
+      "source_name": "abs(close-open)",
+      "formula_id": null,
+      "feature_id": null,
+      "canonical_feature": false,
+      "bars_read": 2,
+      "guards_affected": [
+        "G_SWEEP_DISP_MOVE"
+      ],
+      "provenance_status": "PROVEN"
+    },
+    {
+      "input": "atr",
+      "source_class": "CRT_LOCAL_DERIVED",
+      "source_name": "RangeDetector.compute_atr",
+      "formula_id": "FM-041",
+      "feature_id": null,
+      "canonical_feature": false,
+      "bars_read": 2,
+      "guards_affected": [
+        "G_SWEEP_DISP_MOVE"
+      ],
+      "provenance_status": "PROVEN"
+    }
+  ],
+  "config_usage": [
+    {
+      "config_key": "atr_min_displacement",
+      "effective_value": 2.252571428571407,
+      "bars_read": 2,
+      "guards_affected": [
+        "G_SWEEP_DISP_MOVE"
+      ],
+      "provenance_status": "PROVEN"
+    }
+  ],
+  "first_family_hits": {
+    "RANGE_TO_SWEEP": {
+      "family_id": "RANGE_TO_SWEEP",
+      "first_candle_idx": 31,
+      "timestamp": "2024-05-22 08:30:00",
+      "state_before": "RANGE",
+      "state_after": "SWEEP",
+      "action": "SWEEP_DETECTED",
+      "status": "OBSERVED_TRUE",
+      "feature_ready": false
+    },
+    "RESET_TO_RANGE": {
+      "family_id": "RESET_TO_RANGE",
+      "first_candle_idx": 32,
+      "timestamp": "2024-05-22 08:45:00",
+      "state_before": "SWEEP",
+      "state_after": "RANGE",
+      "action": "RESET",
+      "status": "OBSERVED_TRUE",
+      "feature_ready": false
+    },
+    "SWEEP_TO_DISPLACEMENT": {
+      "family_id": "SWEEP_TO_DISPLACEMENT",
+      "first_candle_idx": 126,
+      "timestamp": "2024-05-23 09:15:00",
+      "state_before": "SWEEP",
+      "state_after": "DISPLACEMENT",
+      "action": "DISPLACEMENT_CONFIRMED",
+      "status": "OBSERVED_TRUE",
+      "feature_ready": true
+    },
+    "RANGE_TO_SHADOW": {
+      "family_id": "RANGE_TO_SHADOW",
+      "first_candle_idx": 393,
+      "timestamp": "2024-05-28 09:30:00",
+      "state_before": "RANGE",
+      "state_after": "SHADOW_PENDING",
+      "action": "SHADOW_SWEEP_DETECTED",
+      "status": "OBSERVED_TRUE",
+      "feature_ready": true
+    },
+    "SHADOW_TO_EXPANSION": {
+      "family_id": "SHADOW_TO_EXPANSION",
+      "first_candle_idx": 394,
+      "timestamp": "2024-05-28 09:45:00",
+      "state_before": "SHADOW_PENDING",
+      "state_after": "EXPANSION",
+      "action": "SHADOW_EXPANSION_CONFIRMED",
+      "status": "OBSERVED_TRUE",
+      "feature_ready": true
+    },
+    "EXPANSION_TO_RETEST": {
+      "family_id": "EXPANSION_TO_RETEST",
+      "first_candle_idx": 1141,
+      "timestamp": "2024-06-07 12:30:00",
+      "state_before": "EXPANSION",
+      "state_after": "RETEST",
+      "action": "RETEST_CONFIRMED",
+      "status": "OBSERVED_TRUE",
+      "feature_ready": true
+    },
+    "RETEST_TO_EXECUTION": {
+      "family_id": "RETEST_TO_EXECUTION",
+      "first_candle_idx": 1703,
+      "timestamp": "2024-06-17 15:00:00",
+      "state_before": "RETEST",
+      "state_after": "EXECUTION",
+      "action": "TRADE_OPENED",
+      "status": "OBSERVED_TRUE",
+      "feature_ready": true
+    },
+    "TRADE_OPENED": {
+      "family_id": "TRADE_OPENED",
+      "first_candle_idx": 1703,
+      "timestamp": "2024-06-17 15:00:00",
+      "state_before": "RETEST",
+      "state_after": "EXECUTION",
+      "action": "TRADE_OPENED",
+      "status": "OBSERVED_TRUE",
+      "feature_ready": true
+    },
+    "TRADE_EXIT": {
+      "family_id": "TRADE_EXIT",
+      "first_candle_idx": 1704,
+      "timestamp": "2024-06-17 15:15:00",
+      "state_before": "EXECUTION",
+      "state_after": "RANGE",
+      "action": "TRADE_TP1",
+      "status": "OBSERVED_TRUE",
+      "feature_ready": true
+    },
+    "DISPLACEMENT_TO_EXPANSION": {
+      "family_id": "DISPLACEMENT_TO_EXPANSION",
+      "first_candle_idx": 4787,
+      "timestamp": "2024-08-02 09:00:00",
+      "state_before": "DISPLACEMENT",
+      "state_after": "EXPANSION",
+      "action": "EXPANSION_CONFIRMED",
+      "status": "OBSERVED_TRUE",
+      "feature_ready": true
+    },
+    "EXPANSION_TO_EXPIRED": {
+      "family_id": "EXPANSION_TO_EXPIRED",
+      "first_candle_idx": 5080,
+      "timestamp": "2024-08-07 13:15:00",
+      "state_before": "EXPANSION",
+      "state_after": "EXPIRED",
+      "action": "EXPANSION_EXPIRED",
+      "status": "OBSERVED_TRUE",
+      "feature_ready": true
+    },
+    "EXPIRED_TO_RANGE": {
+      "family_id": "EXPIRED_TO_RANGE",
+      "first_candle_idx": 5081,
+      "timestamp": "2024-08-07 13:30:00",
+      "state_before": "EXPIRED",
+      "state_after": "RANGE",
+      "action": "RESET",
+      "status": "OBSERVED_TRUE",
+      "feature_ready": true
+    }
+  },
+  "records": 24
+}

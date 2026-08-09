@@ -1,0 +1,87 @@
+{
+  "artifact": "pit_phaseA_centered_swing_decision_record",
+  "date": "2026-07-11",
+  "corrected_at": "2026-07-11",
+  "active_version": "v2_multi_2026_04",
+  "phase": "PIT-A-investigation-CLOSED",
+  "behavior_changed": false,
+  "production_changes": false,
+  "findings_registered": true,
+  "finding_id": "F-051",
+  "fc1a_contract": "docs/governance/FC1-A-SWING-CAUSAL-implementation-contract-2026-07-11.md",
+  "fc1a_contract_status": "CONTRACT_FROZEN_READY_TO_IMPLEMENT",
+  "evidence_artifacts": [
+    "docs/governance/pit_phaseA_swing_blast_radius-2026-07-11.json",
+    "docs/governance/pit_phaseA_gateon_ab-2026-07-11.json"
+  ],
+  "proved_certain": "Centered swing semantics are non-PIT, materially alter canonical feature values, propagate into CRT/ZoneGate/model inputs, and differ from the default-absent live path.",
+  "ledger_null_wording_corrected": "Under the tested BNB/SOL corpora, active config, and observed decision population, neither the causal 10-feature intervention nor the stronger zero-all-10 intervention changed the final ledger; however, end-to-end sensitivity to this feature family was not demonstrated (PC-2 failed), so the null ledger result is inconclusive about structural importance.",
+  "forbidden_overclaim": "The current spine trade ledger is structure-vector-insensitive",
+  "channel_verdicts": {
+    "value_level": {"verdict": "EXPOSED", "bnb_any_of_10_differ_rate": 0.6347},
+    "leakage_prefix_invariance": {"verdict": "PROVED", "centered_leaks": true, "causal_prefix_invariant": true},
+    "gate_off_ledger": {"verdict": "NO_CHANGE_OBSERVED_F029_STANDS", "f029_confirmed": true, "bnb_trades": "13->13 identical"},
+    "gate_on_ledger": {
+      "verdict": "NO_CHANGE_OBSERVED_STRUCTURAL_IMPORTANCE_INCONCLUSIVE",
+      "bnb_trades": "11->11 identical",
+      "sol_trades": "6->6 identical",
+      "pc2_sensitivity": false,
+      "pc2_interpretation": "sensitivity not demonstrated; null is inconclusive about structural importance"
+    },
+    "crt_score_channel": {"verdict": "EXPOSED_LOCAL", "final_score_differ_rate": 0.0707},
+    "zone_value_exposure": {"verdict": "EXPOSED", "mean_contaminated_weight_fraction": 0.4},
+    "zone_score_exposure": {"verdict": "EXPOSED", "centered_vs_causal_score_differ_rate": 0.6334},
+    "zone_gate_hard": {"verdict": "NEAR_NULL_ON_SAMPLE", "flip_rate": 0.0001},
+    "final_ledger_exposure": {
+      "verdict": "NO_CHANGE_OBSERVED",
+      "not": "structure_irrelevant",
+      "source": "pit_swing_gateon_ab only"
+    },
+    "live_contract": {
+      "verdict": "LIVE_ZERO_DEFAULT_ABSENT_PATH",
+      "hypothesis_status": "CONDITIONAL_PROVEN",
+      "may_call_live_zero": true
+    },
+    "rr_model_artifact": {
+      "verdict": "PIT_UNCLEAN_CENTERED_SWINGS",
+      "contaminated_active": "10/10",
+      "path_active": false,
+      "retrain_recommended_now": false,
+      "operational_rule": "must not promote/re-enable/use as economic evidence without causal re-dataset/retrain/revalidation; no retrain now != artifact remains valid"
+    },
+    "zone_registry_artifact": {
+      "verdict": "PIT_UNCLEAN_CENTERED_SWINGS",
+      "retrain_recommended_now": false,
+      "action": "provenance_annotation"
+    },
+    "datasets": {"verdict": "EMBEDDED_PIT_UNCLEAN_ERA", "action": "annotate_corpus_era"}
+  },
+  "harness": {
+    "corpus_parity": "PASS",
+    "intervention_isolation": "PASS",
+    "pc1": "PASS",
+    "pc2_sensitivity": "FAIL",
+    "pc2_interpretation": "end-to-end sensitivity not demonstrated; ledger-null inconclusive about structural importance"
+  },
+  "remediation_recommendation": {
+    "production_vector_binding": "causal_publication_FC1_A_under_frozen_contract",
+    "preserve_centered_identities": true,
+    "no_hybrid_graph": true,
+    "artifact_retrain": false,
+    "artifact_status_tag": "PIT_UNCLEAN_CENTERED_SWINGS",
+    "artifact_operational_rule": "no promote/re-enable/economic-evidence without causal revalidation",
+    "further_phase_a_investigation": false
+  },
+  "candidate_finding": {
+    "status": "REGISTERED",
+    "finding_id": "F-051",
+    "registered_in_current_findings": true,
+    "relation_to_f029": "REFINEMENT_NOT_REVERSAL",
+    "confidence": "Likely",
+    "type": "ARCHITECTURE"
+  },
+  "backlog_pointers": {
+    "FU-FC1-A-PIT": "READY for implementation under frozen contract",
+    "FU-STRUCTURE-CAUSAL-GRAPH": "coupled to FC1-A (no hybrid graph)"
+  }
+}

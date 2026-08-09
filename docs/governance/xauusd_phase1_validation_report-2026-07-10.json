@@ -1,0 +1,154 @@
+{
+  "_doc": "XAUUSD M15 Phase-1 validation report on frozen candidate. Not economic.",
+  "generated_at_utc": "2026-07-10T15:13:47Z",
+  "binding_status_before": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION",
+  "gates": {
+    "G0_BINDING": {
+      "status": "PASS",
+      "path": "data/mt5/XAUUSD_M15.csv",
+      "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "rows": 47275,
+      "range": [
+        "2024-05-22T01:00:00",
+        "2026-05-21T23:45:00"
+      ],
+      "explicitly_not": [
+        "AUTHORITATIVE",
+        "VALIDATED",
+        "ECONOMICALLY_ADMISSIBLE",
+        "APPROVED"
+      ]
+    },
+    "G0b_L1_FULL_STREAM": {
+      "status": "PASS",
+      "rows_validated": 47275,
+      "first": "2024-05-22T01:00:00",
+      "last": "2026-05-21T23:45:00"
+    },
+    "G1_SOURCE_PROVENANCE": {
+      "status": "PASS_WITH_RESIDUAL",
+      "family": "mt5",
+      "physical_path_under_mt5_tree": true,
+      "acquisition_code_present": true,
+      "lineage_map_family_mt5": true,
+      "byte_identical_to_yfinance": false,
+      "per_file_fetch_session_log": "ABSENT",
+      "confidence": "LIKELY",
+      "note": "PROVEN write path: MT5 copy_rates \u2192 data/mt5 + strict gate. Per-instance acquisition session not logged \u2192 residual UNKNOWN on exact fetch wall-clock; content-addressed pin still holds.",
+      "evidence": [
+        "docs/governance/ohlcv-source-lineage-map-2026-07-10.md \u00a71",
+        "src/inout/mt5_candle_fetcher.py",
+        "scripts/data/fetch_and_verify_mt5.py"
+      ]
+    },
+    "G2_TIMESTAMP_OPEN_TIME": {
+      "status": "PASS_CONSISTENT_UNPROVEN_LABEL",
+      "modal_delta_minutes": 15,
+      "expected_bar_minutes": 15,
+      "duplicates": 0,
+      "out_of_order": 0,
+      "static_claim_mt5_open_time": "mt5_candle_fetcher uses rates['time'] as bar open epoch \u2192 UTC naive string (lineage map PROVEN static)",
+      "executable_open_vs_close_label_proof": "ABSENT (BC-2)",
+      "note": "Grid is 15m-monotonic with 0 dups/OOO. Open-time labeling for MT5 is STATIC/NARRATIVE-supported in code; independent mid-interval re-fetch proof not available in this pass \u2192 label convention remains CONSISTENT_WITH_OPEN_TIME but not EXECUTABLE-PROVEN."
+    },
+    "G3_BROKER_SESSION_HOLIDAY": {
+      "status": "PASS_OBSERVED_PATTERN",
+      "l3_decision": "WARN",
+      "l3_hard_failures": [],
+      "saturday_bars": 0,
+      "sunday_bars": 0,
+      "n_75m_midnight_rollover_gaps": 393,
+      "config_weekday_open": "wd=6 hour=22",
+      "config_daily_break_hours": [
+        21
+      ],
+      "config_holidays_count": 25,
+      "session_calendar_consistency": "FAIL_VS_CONFIG",
+      "note": "Observed broker pattern on frozen bytes: 0 weekend bars; daily 23:45\u219201:00 (75m) rollover; Mon open ~01:00 \u2014 disagrees with config daily_break_hours=[21] and Sunday 22:00 open. Session semantics are OBSERVED+CONTENT-STABLE, not independent broker-calendar certified. L3 default gate: WARN.",
+      "independent_broker_calendar": "UNPROVEN"
+    },
+    "G4_VOLUME_SEMANTICS": {
+      "status": "PASS_DECLARED",
+      "volume_semantic": "TICK_VOLUME",
+      "rationale": "MT5 FX/metals rates tick_volume field written as 'volume' column (broker tick count, not base/quote asset volume)",
+      "is_synthetic": false,
+      "zero_volume_rows": 0,
+      "zero_volume_rate": 0.0,
+      "negative_volume_rows": 0,
+      "min_volume": 2.0,
+      "median_volume": 2001.0,
+      "max_volume": 31468.0,
+      "feature_pipeline_proxy_branch_would_fire": false,
+      "note": "Semantic is DECLARED for Phase-1 on this corpus (tick volume). Not base/quote asset volume. T-003 proxy does not fire (volume not all-zero)."
+    },
+    "G5_ADVERSARIAL_APPLICABLE": {
+      "status": "PASS",
+      "probes_run": [
+        "PROBE_LOADER_CLEAN",
+        "PROBE_L3_CLEAN",
+        "PROBE_LOADER_DUP_MUTANT",
+        "PROBE_LOADER_GEOM_MUTANT",
+        "PROBE_IDENTITY_GUARD",
+        "PROBE_FC23_PIN"
+      ],
+      "note": "Applicable detectors that exist today: loader L1/L2, L3 hard-fail, geometry, identity guard, pin hash. FC-04/05/06/08 (temporal label) remain NO_CURRENT_DETECTOR \u2014 do not claim E-MT-01 complete.",
+      "e_mt_01_complete": false
+    }
+  },
+  "adversarial_clean_path": {
+    "PROBE_LOADER_CLEAN": {
+      "status": "PASS",
+      "rows": 47275
+    },
+    "PROBE_L3_CLEAN": {
+      "status": "PASS",
+      "decision": "WARN",
+      "hard_failures": []
+    },
+    "PROBE_LOADER_DUP_MUTANT": {
+      "status": "PASS",
+      "raised": "DatasetIntegrityError",
+      "message": "Duplicate timestamp 2025-05-21T22:15:00 (line 23640) in C:\\Users\\Hi\\AppData\\Local\\Temp\\tmp1bco5ur_\\MUTANT_DUP_M15.csv"
+    },
+    "PROBE_LOADER_GEOM_MUTANT": {
+      "status": "PASS",
+      "raised": "ValueError",
+      "message": "Historical dataset C:\\Users\\Hi\\AppData\\Local\\Temp\\tmp66m9y908\\MUTANT_GEOM_M15.csv contains inconsistent candle (high/low vs open/close) (line 101)"
+    },
+    "PROBE_IDENTITY_GUARD": {
+      "status": "PASS",
+      "rewritten_to": "D:\\Tradelatest\\data\\mt5\\XAUUSD_M15.csv"
+    },
+    "PROBE_FC23_PIN": {
+      "status": "PASS",
+      "on_disk_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "bound_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "match": true
+    }
+  },
+  "verdict": {
+    "XAUUSD_PHASE1_VALIDATION_STATUS": "PASS_CONTENT_ADDRESSED",
+    "promotable_to_authoritative": false,
+    "reason_not_promoted": "Phase-1 content-addressed validation can PASS while remaining NOT AUTHORITATIVE / NOT VALIDATED / NOT ECONOMICALLY_ADMISSIBLE until independent open-time proof + broker calendar certification + full E-MT-01 mutation score. User promotion decision still required.",
+    "gate_statuses": {
+      "G0_BINDING": "PASS",
+      "G0b_L1_FULL_STREAM": "PASS",
+      "G1_SOURCE_PROVENANCE": "PASS_WITH_RESIDUAL",
+      "G2_TIMESTAMP_OPEN_TIME": "PASS_CONSISTENT_UNPROVEN_LABEL",
+      "G3_BROKER_SESSION_HOLIDAY": "PASS_OBSERVED_PATTERN",
+      "G4_VOLUME_SEMANTICS": "PASS_DECLARED",
+      "G5_ADVERSARIAL_APPLICABLE": "PASS"
+    },
+    "residuals": [
+      "G1: no per-fetch session log",
+      "G2: open-time label not dual-fetch proven",
+      "G3: independent broker calendar UNPROVEN; config session mismatch",
+      "G5: 8 FC classes still detector-less (temporal/identity contract)"
+    ],
+    "binding_unchanged": {
+      "path": "data/mt5/XAUUSD_M15.csv",
+      "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "status_remains": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION"
+    }
+  }
+}

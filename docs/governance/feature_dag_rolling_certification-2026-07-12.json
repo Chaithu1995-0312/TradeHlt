@@ -1,0 +1,185 @@
+{
+  "probe": "feature_dag_rolling_certification",
+  "generated_at": "2026-07-12T14:17:57.967689+00:00",
+  "authority": "research/governance only \u2014 SERIES-parity + PIT certification of windowed rolling indicators; grants no activation authority (\u00a76.5).",
+  "formula_id_map": {
+    "true_range": "FM-040",
+    "atr": "FM-041",
+    "rsi_14": "FM-042",
+    "ema_fast": "FM-043",
+    "ema_slow": "FM-044",
+    "swing_high": "FM-045",
+    "swing_low": "FM-046"
+  },
+  "arms": [
+    {
+      "corpus": "synthetic_1200",
+      "per_indicator": {
+        "true_range": {
+          "parity": true,
+          "max_resid": 0.0,
+          "rows": 1122
+        },
+        "atr": {
+          "parity": true,
+          "max_resid": 4.6539206689788504e-10,
+          "rows": 1122
+        },
+        "ema_fast": {
+          "parity": true,
+          "max_resid": 3.809004596178056e-06,
+          "rows": 1122
+        },
+        "ema_slow": {
+          "parity": true,
+          "max_resid": 3.8143500944443076e-06,
+          "rows": 1122
+        },
+        "rsi_14": {
+          "parity": true,
+          "max_resid": 0.0,
+          "rows": 1122
+        }
+      }
+    },
+    {
+      "corpus": "BNBUSDT_M15",
+      "per_indicator": {
+        "true_range": {
+          "parity": true,
+          "max_resid": 0.0,
+          "rows": 7922
+        },
+        "atr": {
+          "parity": true,
+          "max_resid": 8.627730058163863e-10,
+          "rows": 7922
+        },
+        "ema_fast": {
+          "parity": true,
+          "max_resid": 3.0515935122821247e-05,
+          "rows": 7922
+        },
+        "ema_slow": {
+          "parity": true,
+          "max_resid": 3.051402939036052e-05,
+          "rows": 7922
+        },
+        "rsi_14": {
+          "parity": true,
+          "max_resid": 0.0,
+          "rows": 7922
+        }
+      }
+    },
+    {
+      "corpus": "BTCUSDT_M15",
+      "per_indicator": {
+        "true_range": {
+          "parity": true,
+          "max_resid": 0.0,
+          "rows": 7922
+        },
+        "atr": {
+          "parity": true,
+          "max_resid": 9.159664554614366e-10,
+          "rows": 7922
+        },
+        "ema_fast": {
+          "parity": true,
+          "max_resid": 0.0039057437097653747,
+          "rows": 7922
+        },
+        "ema_slow": {
+          "parity": true,
+          "max_resid": 0.0039029476029099897,
+          "rows": 7922
+        },
+        "rsi_14": {
+          "parity": true,
+          "max_resid": 0.0,
+          "rows": 7922
+        }
+      }
+    },
+    {
+      "corpus": "ETHUSDT_M15",
+      "per_indicator": {
+        "true_range": {
+          "parity": true,
+          "max_resid": 0.0,
+          "rows": 7922
+        },
+        "atr": {
+          "parity": true,
+          "max_resid": 1.7726345946655897e-09,
+          "rows": 7922
+        },
+        "ema_fast": {
+          "parity": true,
+          "max_resid": 0.00012206418614368886,
+          "rows": 7922
+        },
+        "ema_slow": {
+          "parity": true,
+          "max_resid": 0.00012206417886773124,
+          "rows": 7922
+        },
+        "rsi_14": {
+          "parity": true,
+          "max_resid": 0.0,
+          "rows": 7922
+        }
+      }
+    },
+    {
+      "corpus": "SOLUSDT_M15",
+      "per_indicator": {
+        "true_range": {
+          "parity": true,
+          "max_resid": 0.0,
+          "rows": 7922
+        },
+        "atr": {
+          "parity": true,
+          "max_resid": 1.7323879414332666e-09,
+          "rows": 7922
+        },
+        "ema_fast": {
+          "parity": true,
+          "max_resid": 7.628640361190264e-06,
+          "rows": 7922
+        },
+        "ema_slow": {
+          "parity": true,
+          "max_resid": 7.6285105592432956e-06,
+          "rows": 7922
+        },
+        "rsi_14": {
+          "parity": true,
+          "max_resid": 0.0,
+          "rows": 7922
+        }
+      }
+    }
+  ],
+  "prefix_invariance": {
+    "true_range": true,
+    "atr": true,
+    "ema_fast": true,
+    "ema_slow": true,
+    "rsi_14": true
+  },
+  "swing_certification": "by reference to tests/test_pit_prefix_invariance.py (FC1-A causal delayed publication \u2014 swing_high/swing_low prefix-invariant in the 38-vector)",
+  "verdicts": {
+    "true_range": "CERTIFIED",
+    "atr": "CERTIFIED",
+    "ema_fast": "CERTIFIED",
+    "ema_slow": "CERTIFIED",
+    "rsi_14": "CERTIFIED",
+    "swing_high": "CERTIFIED_BY_REFERENCE",
+    "swing_low": "CERTIFIED_BY_REFERENCE"
+  },
+  "overall": "CERTIFIED",
+  "permanent_floor": "tests/test_feature_dag_rolling_certification.py"
+}

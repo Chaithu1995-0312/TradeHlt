@@ -1,0 +1,20 @@
+{
+  "change_id": "CH-model-paths-phase0",
+  "status": "COMPLETE",
+  "completed_at": "2026-07-22",
+  "summary": "ModelPaths + ModelResolver Phase 0: single CODE layout; resolve_zone_gate_runtime fail-closed (registry+identity+HOW); EngineRunner ZoneGate via resolver; live_engine/heuristic defaults import ModelPaths. RR/bitnet/tradenet resolvable; no models/ reorg; no production JSON edit.",
+  "checks_run": {
+    "tests/test_model_paths_resolver.py": "PASS (9)",
+    "tests/test_active_models_registry.py": "PASS",
+    "tests/test_zone_manifest_runtime_parity.py": "PASS",
+    "tests/test_config_reachability.py": "PASS (with suite)",
+    "tests/test_current_findings.py": "PREEXISTING residual risk (F-059 RESEARCH enum) — not re-broken by this change"
+  },
+  "production_behavior_changed": false,
+  "authority_granted": false,
+  "notes": [
+    "HOW zone_registry_path still required in config but must match registry-active artifact",
+    "rr_fusion when enabled still loads HOW path; warns if registry artifact differs"
+  ],
+  "rollback": "revert model_paths.py, model_resolver.py, engine_runner/live_engine/heuristic wires, tests, topic line"
+}

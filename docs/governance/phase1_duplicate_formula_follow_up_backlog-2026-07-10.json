@@ -1,0 +1,44 @@
+{
+  "DIRECTLY_CONNECTED_NEW_RECORDS": [
+    "live_engine_hook wick_size = total_wick vs pipeline wick_size = candle_range",
+    "volume_range_proxy_ratio explicit column",
+    "structure features inherit centered swing temporal semantics"
+  ],
+  "FOLLOW_UP_BACKLOG": [
+    {
+      "id": "FU-WICK-SIZE-NAME",
+      "item": "wick_size pipeline range vs live total_wick name collision"
+    },
+    {
+      "id": "FU-SCORING-DISP",
+      "item": "scoring_engine local disp_strength=move/atr third quantity"
+    },
+    {
+      "id": "FU-STRUCTURE-CAUSAL-GRAPH",
+      "item": "re-id higher_high/BOS/sweep under causal swing publication"
+    },
+    {
+      "id": "FU-FC1-A-PIT",
+      "item": "centered-swing leakage remediation (FC1-A)"
+    },
+    {
+      "id": "FU-FC1-D-VR-SELECT",
+      "item": "select final volatility regime causal formula + freeze N"
+    },
+    {
+      "id": "FU-BITNET-RETRAIN",
+      "item": "BitNet retrain on non-aliased FM keys"
+    },
+    {
+      "id": "FU-PROXY-VECTOR",
+      "item": "whether volume_range_proxy joins default 38-vector"
+    }
+  ],
+  "IN_SCOPE_ADDITIONS": [
+    "volume_ratio/spike bind to source volume only",
+    "live dual-emit body_to_range_ratio + body_to_total_wick_ratio",
+    "research_view columns for env (non-mutating)"
+  ],
+  "artifact": "phase1_duplicate_formula_follow_up_backlog",
+  "date": "2026-07-10"
+}

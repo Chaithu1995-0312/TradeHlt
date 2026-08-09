@@ -1,0 +1,135 @@
+{
+  "_doc": "MSIP_SHADOW design package \u2014 Decision C FROZEN posture; NEXT=research control plane",
+  "package_path": "docs/governance/msip_shadow_design_v1",
+  "program_status": "FROZEN_POSTURE_MSIP_DECISION_C",
+  "G-SHADOW-01": "PASSED_FOR_DECLARED_XAUUSD_POPULATION",
+  "G-PARITY-01": "PARTIAL",
+  "G-MIG-01": "CLOSED",
+  "NEXT_ACTION": "RETURN_TO_RESEARCH_CONTROL_PLANE",
+  "implementation_authorized": false,
+  "migration_authorized": false,
+  "generated_at_utc": "2026-07-14T11:28:04.619163+00:00",
+  "files": [
+    {
+      "path": "CRT_LOCAL_MATH_PARITY_AUDIT_RESULT_V1.json",
+      "sha256": "674b4e0d48314b4a5f03a15667fd29123c91b1de9e2d61efe34f768f0af54be2",
+      "bytes": 1968
+    },
+    {
+      "path": "CRT_LOCAL_MATH_PARITY_AUDIT_V1.json",
+      "sha256": "d647156a59e681f83daca1be5d8918eaf45f3a11c70c4fc62b1565ee167e7fa9",
+      "bytes": 1996
+    },
+    {
+      "path": "CRT_LOCAL_MATH_PARITY_AUDIT_V1.md",
+      "sha256": "c87b10d37a144da2005435e4eb8add6234b3347eb67e084ca9043eeb8d3f7f37",
+      "bytes": 2053
+    },
+    {
+      "path": "DESIGN_CONTRACT_CONSISTENCY_REVIEW_V1.json",
+      "sha256": "cb19dcafffbf3ab4d838368fe0726afeab86818cc7de17dd1d2435bebdb569a1",
+      "bytes": 2389
+    },
+    {
+      "path": "DESIGN_CONTRACT_CONSISTENCY_REVIEW_V1.md",
+      "sha256": "d28ee1ab84799209897e7e8a4e5a331d963a0016db97cca157062098fe3a30e6",
+      "bytes": 1270
+    },
+    {
+      "path": "INTERPRETATION_CONFIG_SCHEMA_V1.json",
+      "sha256": "550eddbd63cad89002ac9bdbe90c940e99f11337e0ee77505218d56face91cc5",
+      "bytes": 2825
+    },
+    {
+      "path": "INTERPRETATION_CONFIG_SCHEMA_V1.md",
+      "sha256": "9c63a13008843b046cd7fcb08827431e359949bb1acb501b364347a05c8d7037",
+      "bytes": 207
+    },
+    {
+      "path": "MARKET_STATE_DIMENSION_AUTHORITY_MATRIX_V1.json",
+      "sha256": "f5c6e7fa00d9a8a3713bcae2f087713685e7f4ce420234b8319eabd25b59c71e",
+      "bytes": 30210
+    },
+    {
+      "path": "MARKET_STATE_DIMENSION_AUTHORITY_MATRIX_V1.md",
+      "sha256": "cee685c0f4d0bf6350d861d601116fadb16fde8f4d2ddbbbc971351c3170eacb",
+      "bytes": 1816
+    },
+    {
+      "path": "MARKET_STATE_VECTOR_SCHEMA_V1.json",
+      "sha256": "c038ebfc679bf42debc8abb8803ae4ed9b450b0f4fdc16c131d4a0de86087a07",
+      "bytes": 20413
+    },
+    {
+      "path": "MARKET_STATE_VECTOR_SCHEMA_V1.md",
+      "sha256": "b6b92b1046af7af67e48913e238f4f1fd7af689f360398b93c77ef334e1abf40",
+      "bytes": 2459
+    },
+    {
+      "path": "MSIP_DECISION_C_FROZEN_POSTURE_V1.json",
+      "sha256": "7de324b4093ec6038f6ed6434c594ab4d6f39b3f311b52bd22066de4bd918bd1",
+      "bytes": 4141
+    },
+    {
+      "path": "MSIP_DECISION_C_FROZEN_POSTURE_V1.md",
+      "sha256": "d1214c8e25a5dc38738d05f318ebcd4183e5cae10ed32b4e72c1955bc7643d70",
+      "bytes": 3290
+    },
+    {
+      "path": "MSIP_SHADOW_DESIGN_CONTRACT_V1.md",
+      "sha256": "557ade2b225a242599617a8540c300871e80e0af872f2b89b7610213d0906220",
+      "bytes": 4044
+    },
+    {
+      "path": "MSIP_SHADOW_PROMOTION_GATES_V1.json",
+      "sha256": "8252e3e4a405ee91ebd3a570eba7cf6027b0d2c5b0e289bdb49aa7456148a8b2",
+      "bytes": 1987
+    },
+    {
+      "path": "MSIP_SHADOW_PROMOTION_GATES_V1.md",
+      "sha256": "18ba3f5d3b43a3a772aac8551b58ddea512933720b2efd60013982394ed18403",
+      "bytes": 803
+    },
+    {
+      "path": "OWNER_ACCEPTANCE_STUB_V1.json",
+      "sha256": "713a7cec5bd52b4bd8dd8023b92c951e88581ba563c590dd2a2edbb827923537",
+      "bytes": 1939
+    },
+    {
+      "path": "README.md",
+      "sha256": "5c8deaa0fff454ee3e6fa14f67c4b3de2f86455b7e1327a4e07640bf4a025a73",
+      "bytes": 1764
+    },
+    {
+      "path": "SHADOW_COMPARISON_AND_DISAGREEMENT_SPEC_V1.json",
+      "sha256": "a0d3842540f0bb091f2efe8cd2507d7d352c6ceeb4bf87f054a3a1d1b0ec034b",
+      "bytes": 3000
+    },
+    {
+      "path": "SHADOW_COMPARISON_AND_DISAGREEMENT_SPEC_V1.md",
+      "sha256": "8fa1a42043a6ea579e1941bc89a1d03b28d8f64d9dadc458af7df4be809c6864",
+      "bytes": 3060
+    },
+    {
+      "path": "SHADOW_PROVENANCE_CONTRACT_V1.json",
+      "sha256": "9562096642be47ad5baaa42e47398cd6acac0d02a4faa2d15efb437642c02ed4",
+      "bytes": 1574
+    },
+    {
+      "path": "SHADOW_PROVENANCE_CONTRACT_V1.md",
+      "sha256": "e7cef4be01e555fc2201cb6866c519cd63dfe04732a8760e9bbdf8858b236f78",
+      "bytes": 950
+    },
+    {
+      "path": "SHADOW_RUNTIME_BINDING_SPEC_V1.json",
+      "sha256": "f1a6f8fdea2889305249c41b72267ac81da67907297098bf3f1e63bc04f889f1",
+      "bytes": 1748
+    },
+    {
+      "path": "SHADOW_RUNTIME_BINDING_SPEC_V1.md",
+      "sha256": "49d6a9a5130e2e95f09bf1713f9f9746b071b6d004b3488c781b58832a9847f3",
+      "bytes": 694
+    }
+  ],
+  "package_aggregate_sha256": "7942b07897e8ec71541a85da4ceffbf42e8d9bf8108482c6d4edb1e5ef512001"
+}

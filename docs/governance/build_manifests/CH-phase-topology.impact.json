@@ -1,0 +1,27 @@
+{
+  "change_id": "CH-phase-topology",
+  "objective": "Phase-Topology: load legal CRT transition graph from active_models.yaml via StateContractBundle into StateMachine instance graph; CRTState remains structural identity set; module VALID_TRANSITIONS remains seed+parity baseline; try_* guards unchanged; no model dispatch; hash-neutral HOW.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE"
+  ],
+  "affected_files": [
+    "src/config_layer/state_topology.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/config_layer/state_contract.py",
+    "tests/test_state_topology_phase.py",
+    "docs/governance/config_authority_matrix.md",
+    "docs/implementation_plan/phase1-state-contract-review-phase2-fm-resolution.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": "none",
+  "affected_models": "none",
+  "affected_production_config": "none (hash-neutral)",
+  "required_checks_ack": [
+    "tests/test_state_topology_phase.py",
+    "tests/test_state_contracts.py",
+    "tests/test_crt_state_invariants.py",
+    "tests/test_crt_executable_state_graph.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit: remove state_topology.py; restore SM to module VALID_TRANSITIONS only; reverse matrix §13"
+}

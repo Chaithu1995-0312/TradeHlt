@@ -1,0 +1,55 @@
+{
+  "change_id": "CH-opportunity-episodes",
+  "objective": "Build the Opportunity Episode research substrate (protocol OE_L1): a canonical policy-independent post-entry observation timeline, with labels/events/queries/tensors derived from it. Research infrastructure only — no model promotion, no fusion, no spine wiring, no production config or behavior change. PolicyEvaluator wraps research.measurement.forward_walk exclusively; no second exit kernel is introduced.",
+  "change_classes": [
+    "MODEL_TRAINING_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "src/research/episodes/__init__.py",
+    "src/research/episodes/protocol.py",
+    "src/research/episodes/schema.py",
+    "src/research/episodes/builder.py",
+    "src/research/episodes/policy.py",
+    "src/research/episodes/events.py",
+    "src/research/episodes/query.py",
+    "src/research/episodes/store.py",
+    "src/research/episodes/flat.py",
+    "src/research/episodes/tensors.py",
+    "src/research/episodes/projectors/__init__.py",
+    "src/research/episodes/projectors/detection.py",
+    "src/research/episodes/projectors/hypothesis.py",
+    "src/research/episodes/projectors/spine.py",
+    "scripts/research/build_episodes.py",
+    "scripts/training/train_from_episodes.py",
+    "tests/research/episodes/",
+    "docs/research-readiness/opportunity-episode-prereg.md",
+    "docs/architecture/opportunity-episode-platform-design.md",
+    "docs/architecture/opportunity-episode-research-substrate.md",
+    "docs/governance/build_manifests/CH-opportunity-episodes.impact.json",
+    "docs/governance/build_manifests/CH-opportunity-episodes.completion.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — no model is trained, retrained, promoted, activated or rewired. TradeNet stays UNWIRED (F-005), rr_fusion stays disabled (F-038), use_bitnet stays false (F-004). P8 sequence training is opt-in research code behind an optional torch import guard, with no promotion path.",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_active_models_registry.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "delete src/research/episodes/ + scripts/research/build_episodes.py + scripts/training/train_from_episodes.py + tests/research/episodes/ + the prereg doc; revert the platform-design doc-drift edits. No production surface is touched, so rollback is a single commit revert with zero behavior consequence.",
+  "notes": {
+    "classification_precedent": "CH-tn-env-gate-l classified src/research/clean_labels/ (a research-only labeling package) as MODEL_TRAINING_CHANGE + DOCUMENTATION_ONLY. Same shape, same classes.",
+    "storage_decision": "pyarrow and duckdb are NOT installed (pyproject.toml lists them only under the mt5_analytics extra). Canonical v1 storage is stdlib gzipped JSONL + numpy .npz behind a format-agnostic store API; a Parquet backend drops in later with no schema change.",
+    "doc_drift_fixed": [
+      "platform-design 38-dim -> 39 (feature_schema.py:114 CANONICAL_FEATURE_DIM = 39)",
+      "platform-design EpisodeProvenance.exit_policy_hash removed (contradicted its own Principle 3; substrate section 12 wins)",
+      "platform-design EpisodeDerived.stop/.tp removed (policy state, not derived state)",
+      "platform-design section 1 five-walker list marked superseded by substrate section 5 (ten walkers)"
+    ],
+    "truth_conflict_reported_not_resolved": "clean_labels/protocol.py:35 FEATURE_DIM = 38 vs feature_schema.py:114 CANONICAL_FEATURE_DIM = 39 — stale metadata inside the frozen TN_ENV_CLEAN_L2 hash; surfaced per CLAUDE.md 6.2 rule 3, not edited."
+  }
+}

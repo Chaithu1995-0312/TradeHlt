@@ -1,0 +1,116 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# MARKET SHAPES — Layer 5 of the semantic pipeline (roadmap Phase 5, 2026-07-24)
+# ═══════════════════════════════════════════════════════════════════════════
+# WHAT layer, declarative only (CLAUDE.md §6.5: authority user_approved, grants NO runtime
+# authority — shadow layer, nothing on the decision spine consumes it).
+#
+# A MARKET SHAPE is a recurring bar-level structure, identified two ways:
+#
+#   FINE identity  — content-addressed: "MS-" + sha256[:16] of the Market Context PROJECTED onto
+#                    the `projection` dimensions below. Total function: every bar has one. No
+#                    clustering heuristics, no k to pick, no fitted artifact — two bars share a
+#                    shape id iff their projected semantic descriptions are IDENTICAL.
+#   COARSE label   — the ordered `shapes` predicates below. First match names the bar; a bar
+#                    matching nothing keeps its fine id with name UNNAMED (an explicit identity,
+#                    not a fallback). Predicates are AND across features, OR within a state list,
+#                    and may ONLY reference declared states of vector-bound stateful identities
+#                    whose category is inside the projection — the loader REJECTS anything else,
+#                    so a typo'd state name is a load error, never a silently-dead predicate.
+#
+# SCOPE HONESTY (single-bar): these are BAR-level structures readable from one bar's states.
+# Multi-bar sequence shapes (rotation legs, exhaustion sequences) are a different construction —
+# see `blocked_shapes`. NOTE the IC-003B finding killed *fitted* sequence-shape libraries
+# (k* unstable); this layer is deliberately the opposite construction: exact discrete recurrence
+# over declared semantics, with zero fitted parameters.
+version: 1
+authority: user_approved
+
+# Context dimensions that DEFINE shape identity. Time and Volume are deliberately EXCLUDED:
+# they are conditioning variables for the statistics layer ("how does LiquidityGrab behave BY
+# session / BY participation"), which is only possible if they stay OUTSIDE the shape identity.
+# Momentum is excluded because its only stateful identity (rsi_state) has no vector slot.
+projection:
+  - Trend
+  - Volatility
+  - Liquidity
+  - MarketStructure
+
+# First-match precedence, most specific first. Family groups directional variants for
+# coarse-grained statistics.
+shapes:
+  - name:   DoubleSweepTrap
+    family: LiquidityTrap
+    when:
+      double_sweep: [DoubleSweep]
+    description: "Both sides swept in quick succession — a two-sided stop-run; neither side in control."
+
+  - name:   BuySideLiquidityGrab
+    family: LiquidityGrab
+    when:
+      liquidity_sweep: [BuySideSweep]
+    description: "Stops above the prior swing high taken and rejected — the CRT founding event, bearish-leaning."
+
+  - name:   SellSideLiquidityGrab
+    family: LiquidityGrab
+    when:
+      liquidity_sweep: [SellSideSweep]
+    description: "Stops below the prior swing low taken and rejected — bullish-leaning."
+
+  - name:   BullishBreakoutExpansion
+    family: BreakoutExpansion
+    when:
+      break_of_structure: [BullishBreak]
+      volatility_regime:  [HighVolatility]
+    description: "Accepted close above structure while volatility is in its top tercile — breakout with energy."
+
+  - name:   BearishBreakoutExpansion
+    family: BreakoutExpansion
+    when:
+      break_of_structure: [BearishBreak]
+      volatility_regime:  [HighVolatility]
+    description: "Accepted close below structure in a high-volatility regime."
+
+  - name:   BullishStructuralBreak
+    family: StructuralBreak
+    when:
+      break_of_structure: [BullishBreak]
+    description: "Accepted close above the prior swing high without the volatility-expansion qualifier."
+
+  - name:   BearishStructuralBreak
+    family: StructuralBreak
+    when:
+      break_of_structure: [BearishBreak]
+    description: "Accepted close below the prior swing low without the volatility-expansion qualifier."
+
+  - name:   Compression
+    family: Compression
+    when:
+      volatility_regime:  [LowVolatility]
+      liquidity_sweep:    [NoSweep]
+      break_of_structure: [NoBreak]
+      higher_high:        [NoHigherHigh]
+      lower_low:          [NoLowerLow]
+      double_sweep:       [NoDoubleSweep]
+    description: "Bottom-tercile volatility and zero structural events — coiling; the pre-expansion condition."
+
+# Roadmap shapes that CANNOT be declared honestly from the current state vocabulary. Listed so the
+# gap is explicit and greppable instead of approximated away. Do not implement these as predicates
+# until their blockers clear.
+blocked_shapes:
+  - name:    TrendContinuation
+    blocker: >
+      UNSATISFIABLE as a single-bar predicate — proven by the Layer-6 statistics run (0 matches
+      in 3,871 bars) and then derived: higher_high, break_of_structure and liquidity_sweep all
+      compare against the SAME reference (prev last_swing_high_price), so HigherHigh (high>ref)
+      forces EITHER close>ref (BullishBreak) OR close<=ref (BuySideSweep) — exhaustively. The
+      v1 predicate {Bullish, HigherHigh, NoSweep, NoBreak} is therefore a logical contradiction
+      (mirror argument for the bearish side). Continuation-with-extension is a SEQUENCE property
+      (an extension bar FOLLOWED by holding bars) — same multi-bar blocker class as RangeRotation.
+      Removed in spec v1 rather than redefined: weakening the predicate to "aligned trend, no
+      events" would absorb most of the residual and mean something different.
+  - name:    MeanReversion
+    blocker: "needs momentum MAGNITUDE states; FM-022/023 magnitudes are price-level-scaled (F-061) — banding is blocked on FM-030/031 activation"
+  - name:    TrendExhaustion
+    blocker: "same momentum-magnitude blocker as MeanReversion"
+  - name:    RangeRotation
+    blocker: "a MULTI-BAR sequence property (legs between bounds); not readable from one bar's states — Phase-5+ sequence construction"

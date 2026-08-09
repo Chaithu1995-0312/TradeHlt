@@ -1,0 +1,155 @@
+# Semantic OS — Journey registry (HAND-AUTHORED)
+#
+# Charter: docs/governance/SEMANTIC_OS_CONTRACT.md
+# Design:  docs/governance/SEMANTIC_OS_V1_DESIGN.md
+# Schema:  docs/reference/schemas.md §9.12 · validator: src/governance/semantic_os.py
+# Guard:   tests/test_semantic_os.py
+#
+# A Journey is an ORDERED SEMANTIC PATH across concepts — the machine twin of the prose walk in
+# docs/architecture/signal-flow.md. Steps are a DAG: order is contiguous 1..N, every edge is
+# strictly forward, every step is reachable from order 1, and at least one step is terminal.
+#
+# The anti-narrative constraint: a step's failure_mode must be one of the modes its own concept
+# DECLARES. That is what stops journeys degenerating into free text — you cannot invent a failure
+# here, you can only reference one the concept already owns.
+#
+# STATUS: PR-3 journey + PR-5 BD rewiring — JN-001 steps point at refined seams
+# (BD-005 ingest, BD-001 features, BD-006 CRT, BD-007 engines, BD-008 fusion/geometry, BD-002 capital).
+
+journeys:
+
+  - id: JN-001
+    kind: journey
+    name: One Candle Journey
+    journey_kind: RUNTIME
+    status: ACTIVE
+    authority: advisory
+    source_doc: docs/architecture/signal-flow.md
+
+    trigger: >-
+      A closed M15 candle arrives for a configured instrument, either streamed by the backtest
+      runner or delivered to the live engine hook.
+    terminal_outcomes:
+      - APPROVED — a position is opened with concrete entry, stop, and target levels.
+      - REJECTED — the risk gate (or an earlier semantic gate) declines; the candle produces no order.
+      - NO_SIGNAL — the CRT state machine never commits an entry on this candle.
+      - HALTED — data/schema integrity failure aborts the bar path.
+    why_this_path: >-
+      The order is forced by what each stage needs from the one before it: features cannot be scored
+      before they are emitted, structure before multi-engine scores, fusion before geometry, and
+      reward:risk only after entry/stop/target are concrete (F-048). Reordering the last two steps
+      is exactly the defect that silent-zeroed the DecisionEngine path.
+
+    steps:
+      # signal-flow Step 1 — DATA INGEST
+      - step_id: JN-001.S01
+        order: 1
+        name: Ingest the closed M15 candle
+        concept: CN-003
+        boundary: BD-005
+        failure_mode: DATA_CORRUPT
+        on_failure: HALT
+        next:
+          - JN-001.S02
+        evidence:
+          path: docs/architecture/signal-flow.md
+          anchor: "### Step 1 — DATA INGEST"
+
+      # signal-flow Step 2 — FEATURE PIPELINE
+      - step_id: JN-001.S02
+        order: 2
+        name: Emit the canonical feature vector
+        concept: CN-001
+        boundary: BD-001
+        failure_mode: SCHEMA_DRIFT
+        on_failure: HALT
+        next:
+          - JN-001.S03
+        evidence:
+          path: docs/architecture/signal-flow.md
+          anchor: "### Step 2 — FEATURE PIPELINE"
+
+      # signal-flow Step 3 — SCORING ENGINES (CRT structure is first among engines)
+      - step_id: JN-001.S03
+        order: 3
+        name: Advance CRT market structure
+        concept: CN-004
+        boundary: BD-006
+        failure_mode: NO_SETUP
+        on_failure: SKIP
+        next:
+          - JN-001.S04
+        evidence:
+          path: docs/architecture/signal-flow.md
+          anchor: "### Step 3 — SCORING ENGINES"
+
+      - step_id: JN-001.S04
+        order: 4
+        name: Score through the four expected engines
+        concept: CN-005
+        boundary: BD-007
+        failure_mode: MISSING_ENGINE
+        on_failure: HALT
+        next:
+          - JN-001.S05
+        evidence:
+          path: docs/architecture/signal-flow.md
+          anchor: "### Step 3 — SCORING ENGINES"
+
+      # signal-flow Step 4 — FUSION & DECISION
+      - step_id: JN-001.S05
+        order: 5
+        name: Fuse scores and apply semantic decision
+        concept: CN-006
+        boundary: BD-008
+        failure_mode: SEMANTIC_REJECT
+        on_failure: REJECT
+        next:
+          - JN-001.S06
+        evidence:
+          path: docs/architecture/signal-flow.md
+          anchor: "### Step 4 — FUSION & DECISION"
+
+      # signal-flow Step 5 — EXECUTION PLANNER
+      - step_id: JN-001.S06
+        order: 6
+        name: Plan entry stop and target geometry
+        concept: CN-006
+        boundary: BD-008
+        failure_mode: INVALID_GEOMETRY
+        on_failure: REJECT
+        next:
+          - JN-001.S07
+        evidence:
+          path: docs/architecture/signal-flow.md
+          anchor: "### Step 5 — EXECUTION PLANNER"
+
+      # signal-flow Step 6 — ULTRON RISK GATE (doc step 6; terminal capital authority)
+      - step_id: JN-001.S07
+        order: 7
+        name: Capital-approve or reject the planned position
+        concept: CN-002
+        boundary: BD-002
+        failure_mode: DOUBLE_AUTHORITY
+        on_failure: REJECT
+        next: []
+        evidence:
+          path: docs/architecture/signal-flow.md
+          anchor: "### Step 6 — ULTRON RISK GATE"
+
+    async_feeders:
+      - name: Governance Kitchen
+        joins_at_step: JN-001.S07
+        kind: CONFIG
+      - name: Training Kitchen
+        joins_at_step: JN-001.S04
+        kind: ARTIFACT
+      - name: AI Agent Copilot Tap
+        joins_at_step: JN-001.S05
+        kind: TAP
+      - name: INOUT Parallel Rail
+        joins_at_step: JN-001.S07
+        kind: PARALLEL_RAIL
+
+    supersedes: null
+    superseded_by: null

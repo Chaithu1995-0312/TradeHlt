@@ -1,0 +1,131 @@
+{
+  "_doc": "LEGACY feature-output fingerprint on frozen XAUUSD. Not VALIDATED/APPROVED. Deterministic compare baseline for FC-1 shadow.",
+  "fingerprint_id": "LEGACY_FEATURE_OUTPUT_FP_XAUUSD_2026_07_10",
+  "generated_at_utc": "2026-07-10T15:35:53Z",
+  "corpus": {
+    "path": "data/mt5/XAUUSD_M15.csv",
+    "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "rows_input": 47275,
+    "status": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION"
+  },
+  "pipeline": {
+    "class": "FeaturePipeline.run",
+    "env_flags_at_run": {
+      "TRUST_SWING_CAUSAL": "",
+      "TRUST_VOLREGIME_CAUSAL": ""
+    },
+    "swing_window": 2
+  },
+  "output": {
+    "rows_after_finalize": 47197,
+    "vector_rows": 47197,
+    "first_timestamp": "2024-05-22 20:30:00",
+    "last_timestamp": "2026-05-21 23:45:00",
+    "feature_order": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "volume_ratio",
+      "double_sweep",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "trend_bias",
+      "trend_strength",
+      "momentum_score",
+      "atr",
+      "volatility_ratio",
+      "rsi_14",
+      "macd_line",
+      "macd_signal",
+      "macd_hist",
+      "sweep_detected",
+      "liquidity_sweep",
+      "break_of_structure",
+      "swing_high",
+      "swing_low",
+      "higher_high",
+      "lower_low",
+      "body_size",
+      "wick_size",
+      "body_ratio",
+      "volatility_regime",
+      "session",
+      "hour_of_day",
+      "disp_strength",
+      "retest_depth",
+      "candles_since_retest",
+      "liquidity_distance",
+      "liquidity_pressure_score",
+      "volume_spike"
+    ],
+    "n_features": 38,
+    "joint_float32_sha256": "af4fb27af60b24d197d567229ccf51a3df505ad491c028a9c3ad254544531616",
+    "per_column_float32_sha256": {
+      "open": "366343d3a2950666af1eb69bcb6a5ce595062e441897d6a299c740d8472aa6d5",
+      "high": "81b7ba6838795672715e75bc5163e4b723894dfa3f2dc9f5aed2feec859ac6c9",
+      "low": "9b3e679d2d7790c6b87745cea072fa117b351a91cc231c2d2598c099e3a40ba0",
+      "close": "71a2ed4b26ef5c910b4dde23eeb15170f5fbe9012984ed636a925414e49f8bca",
+      "volume": "1d27ff6a6dc868e7cc7f0633ba343c81d961a47908af7c39c01f11519e13ce37",
+      "volume_ratio": "39761c74b3e3b6f849b1a10a3776c874d61969be37656ecb5c03a5a4509a740f",
+      "double_sweep": "97ef8dc2c502c0dc613eea90ae8c7846f77618b296fffd2352bec881657f3d8c",
+      "ema_fast": "4a2b9b890aac1e38dba8ec90e0958d68548945a7f1a537f39b653c603ada7b00",
+      "ema_slow": "3496b44046fb2f91902357498acd9c6d36288ec3af5f97b85b422fca1b6ecb7b",
+      "ema_spread": "622362ce9c6be81f363ebdc0b6420c6bf8919734c9f2c4c7255356af1c7c0cf8",
+      "trend_bias": "fd1fedcc35f259eff45bc4c1a107a8a96ebe01e81850d0852388ac6acc5e7249",
+      "trend_strength": "1a415e0294b08ac05561e0d6a3a94bbf662e627b71fb1d1c961f4e8e8516ea10",
+      "momentum_score": "07843cc2cf645d1a8914af9b4512c071cf93ad8c00a5234643835d343e2fbf11",
+      "atr": "39349a1002b0d5f22bfaa31ba68f7eb456157fe890723b7750adc88bbc59dd0b",
+      "volatility_ratio": "44e9c2083178fdec82d4095775043e39e872ccbfcf96deaa7dbf272793cb547e",
+      "rsi_14": "0bfcf250ca4bc75b51428f1953f5ace440866baff85bee78bd7c0ec221b61e68",
+      "macd_line": "150188549b3fcca92062dd2265e19d78b5f50ebd1ba599217717d635fbfda91c",
+      "macd_signal": "2b70a6f608476c4e420ac847e92751c07628915bbfb770d868d164a2ca64ec73",
+      "macd_hist": "9383d0d75bbeebb4c59e33e765de61f5a2b70a58cfc2ea6de44a8745a367fed1",
+      "sweep_detected": "4040a2e90293c5af8c10db8e4bddf458c3032e42efa3b6cc517ae93152954979",
+      "liquidity_sweep": "9905581f76433c22d000ceb5e60bf17b6252919ac56ae188dc7b98a6cd1015ac",
+      "break_of_structure": "52fc89633b9d200b46be5d50799d083886da2f8953f09c6edb7ad5f5cf3ff799",
+      "swing_high": "4b18e0fd735cea2accae83ead85766d4983083f11ffd22e51abf2b7fada9e7c4",
+      "swing_low": "69d48c9e0d012154d45bffffb543daf0b16ce7cdc14034b30a1a356b911b1ac4",
+      "higher_high": "510fd56fb28871450d94d58d2d3fb9e95849033b6f09cd5883d0aeed1610d209",
+      "lower_low": "e42e320594c158e2b0d9fe35ce15548f2ed6553481b7ef0d97d966c9dfde8ef7",
+      "body_size": "02f76dc3000cf66483041adde0a62f6117c27bff0441f3af6e9a539e2a35ff84",
+      "wick_size": "ef76f00fb6c18c6b436bfc9ec576c7caf7f59a200720f07b9614482c89fbf57a",
+      "body_ratio": "1d4feedcd520d89ec12e988882585adfe7bd5a15890ad050553fb9cab70b934a",
+      "volatility_regime": "413dc18666caced7b3cf9a55258ed8194dad155a8cf71aaeebb330d736f6cfd5",
+      "session": "d6ca29466559be0c414602eeb8514c4abea863e59a544b65a29a50ebe28ac655",
+      "hour_of_day": "8b1eb70c4a1830caa2e553ad9694189d9397941ba527a992836425e27e411031",
+      "disp_strength": "8b0fc95fdd0b8deb88e0aec6a4b13c2be8787a927dab6843ca4e7d452eebcf47",
+      "retest_depth": "49e87da8450ea4d7f364e9d2d3f7a2a60c4b9502caeeb57504e915f2dcd6b0e9",
+      "candles_since_retest": "0f625ec43340eb72f81d2d154b86030c28b36471c1960d49f6f19b1ef157524f",
+      "liquidity_distance": "378336a5d534956b9c6e042758d0b96973ed9551409eff787d7abfc467983fd4",
+      "liquidity_pressure_score": "38fb8419b49777d354a0d20f62fe35e3adea2fee68f0269966dced4aedd67913",
+      "volume_spike": "b0c1d14fc9a5701e326e4571a5fd221cdb73e71a3eaeffdf6e20037fde99d8c2"
+    }
+  },
+  "implementation_hashes": {
+    "src/features/feature_pipeline.py": {
+      "sha256": "1247800fd60a3e6470b9106f43322f344c6d9ea021aaf067a80b08d07f986d4f",
+      "size_bytes": 39689
+    },
+    "src/features/candle_math.py": {
+      "sha256": "8e7dc9ace6e3bb784b8549f7d6b830f7d74b48769a99b20cbdbbfac352d450c4",
+      "size_bytes": 2611
+    },
+    "src/features/derived_math.py": {
+      "sha256": "02fe1ce93735e44054156a3bdb4de047df16ddc604c96b5d6097cebfbe1b0cf0",
+      "size_bytes": 5991
+    },
+    "src/features/feature_schema.py": {
+      "sha256": "b4bfa6810ac0eb8a37e93d80217a1221b768a30ccdf6a1c213736342e12f521b",
+      "size_bytes": 14121
+    },
+    "configs/formulas/market_ontology.yaml": {
+      "sha256": "81e1a6eb11bce45c80163ce4c3fd316807e76f1ec268593b498df7a4a924c394",
+      "size_bytes": 12720
+    }
+  },
+  "schema_hash_md5": "1ba02abbafdd0786831181677de547c1",
+  "feature_order_hash": "235553310100a340"
+}

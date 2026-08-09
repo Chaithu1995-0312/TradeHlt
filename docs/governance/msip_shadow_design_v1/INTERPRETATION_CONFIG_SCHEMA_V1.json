@@ -1,0 +1,66 @@
+{
+  "schema_id": "INTERPRETATION_CONFIG_SCHEMA_V1",
+  "generated_at_utc": "2026-07-14T10:30:03.791230+00:00",
+  "config_section_name": "msip_shadow",
+  "load_policy": "strict _require when section present; absent section = shadow disabled",
+  "dynamic_loading": {
+    "allowed": true,
+    "semantics": "reload interpretation config between runs only unless explicit hot-reload plan; no silent mid-bar mutation",
+    "not_authorized_now": "hot-reload implementation code"
+  },
+  "fields": {
+    "enabled": {
+      "type": "bool",
+      "default_when_absent": false,
+      "class": "HOW"
+    },
+    "schema_version_required": {
+      "type": "string",
+      "example": "1.0.0"
+    },
+    "dimensions": {
+      "type": "object",
+      "per_dimension": {
+        "enabled": "bool",
+        "source_features": "list[str] subset of WHAT feeds",
+        "label_bands": "optional ordered thresholds for categorical labels ONLY (HOW)",
+        "instrument_overrides": "optional map instrument \u2192 band overrides",
+        "timeframe_overrides": "optional map timeframe \u2192 band overrides"
+      }
+    },
+    "comparison": {
+      "emit_disagreement_events": "bool default true",
+      "crt_phase_observation_enabled": "bool default true"
+    },
+    "output": {
+      "path_template": "results/msip_shadow/{run_id}/market_state.jsonl",
+      "include_provenance": "bool default true"
+    }
+  },
+  "validation_rules": [
+    "enabled true requires non-empty dimensions with at least one enabled",
+    "source_features must exist in FeaturePipeline / CANONICAL or registered non-vector WHAT",
+    "label_bands must be monotonic finite",
+    "no field may authorize CRT mutation",
+    "no field may set trade thresholds for CRTConfig",
+    "instrument_overrides and timeframe_overrides may only modify label_bands / enables \u2014 never source feature identities or encodings",
+    "optional HOW labels require continuous twin values emitted alongside",
+    "crt_phase_observation_enabled cannot make crt_state a required identity field of other dimensions",
+    "CRT-local atr/ema/body/wick must not be listed as source_features until parity audit PASS/TRANSFORM registered"
+  ],
+  "ownership": {
+    "WHAT": "ontology + feature_pipeline + formula_registry",
+    "HOW": "msip_shadow config section only",
+    "WHO": "shadow emitter / research consumers \u2014 not CRTEngine until BEHAVIOR_CHANGE_AUTHORIZED migration"
+  },
+  "explicitly_out_of_scope": [
+    "CRTConfig body_ratio_min / retest_* / TTL knobs",
+    "concurrent candidate policy",
+    "EngineRunner fusion weights"
+  ],
+  "what_how_boundary": {
+    "WHAT_owned_by": "ontology + feature_pipeline + formula_registry",
+    "HOW_owned_by": "msip_shadow config only",
+    "overrides_scope": "HOW_ONLY"
+  }
+}

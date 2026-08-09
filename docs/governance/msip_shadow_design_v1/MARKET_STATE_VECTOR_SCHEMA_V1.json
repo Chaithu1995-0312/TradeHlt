@@ -1,0 +1,512 @@
+{
+  "schema_id": "MARKET_STATE_VECTOR_SCHEMA_V1",
+  "schema_version": "1.0.0",
+  "generated_at_utc": "2026-07-14T10:30:03.791230+00:00",
+  "vector_name": "MarketStateVector",
+  "authority": "research/governance design only \u2014 not implemented",
+  "task_class": "OBSERVATION_ONLY",
+  "architecture_decision": "C",
+  "architecture_ref": "docs/governance/crt_architecture_adjudication_v1/ARCHITECTURE_DECISION_RECORD_V1.json",
+  "top_level_fields": {
+    "schema_version": "string semver",
+    "symbol": "string",
+    "timeframe": "string",
+    "bar_timestamp": "ISO-8601 or pipeline timestamp string",
+    "bar_index": "int optional",
+    "dimensions": "object map dimension_id \u2192 dimension payload",
+    "provenance": "see SHADOW_PROVENANCE_CONTRACT_V1",
+    "shadow_flags": {
+      "affects_crt": "MUST_BE_FALSE",
+      "affects_execution": "MUST_BE_FALSE",
+      "affects_events": "MUST_BE_FALSE"
+    }
+  },
+  "dimensions": [
+    {
+      "dimension_id": "MSD-STRUCTURE",
+      "name": "structure_state",
+      "semantic": "Causal swing/structure regime snapshot (HH/LL/BOS/sweep presence)",
+      "dtype": "object",
+      "encoding": {
+        "higher_high": "int8_0_1",
+        "lower_low": "int8_0_1",
+        "break_of_structure": "int8_neg1_0_1",
+        "liquidity_sweep": "int8_neg1_0_1",
+        "sweep_detected": "int8_0_1",
+        "structure_label": "optional_how_label"
+      },
+      "nullability": "NaN/missing only if source feature missing; production pipeline assumes valid bars",
+      "temporal": "same_bar continuous; causal publication delay on swings (FC1-A)",
+      "confidence_representation": "optional float32 confidence \u2208[0,1] per subfield; default 1.0 when exact",
+      "what_feed_candidates": [
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "break_of_structure",
+        "liquidity_sweep",
+        "sweep_detected",
+        "double_sweep"
+      ],
+      "not_in_vector": [
+        "CRT active_range refs",
+        "CRT sweep_event object",
+        "candidate_id"
+      ],
+      "dimension_authority_class": "MIXED_WHAT_FIELDS",
+      "field_authority": {
+        "higher_high": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "higher_high",
+          "value_kind": "CONTINUOUS_OR_DISCRETE_MARKET_FACT",
+          "how_provenance_required": false,
+          "continuous_twin_required": false
+        },
+        "lower_low": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "lower_low",
+          "value_kind": "CONTINUOUS_OR_DISCRETE_MARKET_FACT",
+          "how_provenance_required": false
+        },
+        "break_of_structure": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "break_of_structure",
+          "value_kind": "CONTINUOUS_OR_DISCRETE_MARKET_FACT",
+          "how_provenance_required": false
+        },
+        "liquidity_sweep": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "liquidity_sweep",
+          "value_kind": "CONTINUOUS_OR_DISCRETE_MARKET_FACT",
+          "how_provenance_required": false,
+          "note": "Pipeline geometry; NOT CRT detect_sweep identity"
+        },
+        "sweep_detected": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "sweep_detected",
+          "value_kind": "CONTINUOUS_OR_DISCRETE_MARKET_FACT",
+          "how_provenance_required": false
+        },
+        "structure_label": {
+          "authority_class": "INTERPRETED_STATE_LABEL_HOW",
+          "source_feature": null,
+          "value_kind": "CATEGORICAL_LABEL",
+          "how_provenance_required": true,
+          "continuous_twins_required": [
+            "higher_high",
+            "lower_low",
+            "break_of_structure",
+            "liquidity_sweep",
+            "sweep_detected"
+          ],
+          "optional": true,
+          "note": "Optional HOW label over structure facts; must not replace continuous/discrete facts",
+          "how_config_keys": [
+            "msip_shadow.dimensions.structure_state.label_bands",
+            "msip_shadow.config_id",
+            "msip_shadow.schema_version_required"
+          ]
+        }
+      }
+    },
+    {
+      "dimension_id": "MSD-LIQUIDITY",
+      "name": "liquidity_state",
+      "semantic": "ATR-normalized distance/pressure to structural levels",
+      "dtype": "object",
+      "encoding": {
+        "liquidity_distance": "float32_ge0",
+        "liquidity_pressure_score": "float32",
+        "liquidity_band_label": "optional_how_label"
+      },
+      "nullability": "NaN when atr*close<=0 or no finite level (FM-025 policy)",
+      "temporal": "same_bar continuous; depends on causal swings/BOS",
+      "confidence_representation": "1.0 if finite; 0.0 if NaN source",
+      "what_feed_candidates": [
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "atr",
+        "close"
+      ],
+      "not_in_vector": [
+        "CRT range h_ref/l_ref as private levels unless published as WHAT"
+      ],
+      "parity_notes": "FM-025 provenance residual (UNRESOLVED_REMEDIATED) does not block shadow observation",
+      "dimension_authority_class": "DETERMINISTIC_DERIVED_WHAT",
+      "field_authority": {
+        "liquidity_distance": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "liquidity_distance",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-025"
+        },
+        "liquidity_pressure_score": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "liquidity_pressure_score",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-026"
+        },
+        "liquidity_band_label": {
+          "authority_class": "INTERPRETED_STATE_LABEL_HOW",
+          "optional": true,
+          "value_kind": "CATEGORICAL_LABEL",
+          "how_provenance_required": true,
+          "continuous_twins_required": [
+            "liquidity_distance",
+            "liquidity_pressure_score"
+          ],
+          "how_config_keys": [
+            "msip_shadow.dimensions.liquidity_state.label_bands",
+            "msip_shadow.config_id",
+            "msip_shadow.schema_version_required"
+          ]
+        }
+      }
+    },
+    {
+      "dimension_id": "MSD-VOLATILITY",
+      "name": "volatility_state",
+      "semantic": "Canonical volatility regime + supporting ATR/vol ratio",
+      "dtype": "object",
+      "encoding": {
+        "volatility_regime": "int8_0_1_2",
+        "atr": "float32",
+        "volatility_ratio": "float32",
+        "volatility_band_label": "optional_how_label"
+      },
+      "nullability": "warmup NaN for atr/ratio; regime may default per pipeline NaN\u21922 policy",
+      "temporal": "rolling causal (ATR14, rank200 for regime)",
+      "confidence_representation": "1.0 finite; 0.5 during warmup",
+      "what_feed_candidates": [
+        "volatility_regime",
+        "atr",
+        "true_range",
+        "volatility_ratio"
+      ],
+      "not_in_vector": [
+        "CRT-local atr until parity audit PASS"
+      ],
+      "parity_gate": "CRT_LOCAL_MATH_PARITY_AUDIT_V1 must pass before deprecating CRT-local atr",
+      "dimension_authority_class": "MIXED_WHAT_FIELDS",
+      "field_authority": {
+        "atr": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "atr",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-041",
+          "crt_local_replacement": "FORBIDDEN_UNTIL_PARITY_AUDIT_PASS"
+        },
+        "volatility_ratio": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "volatility_ratio",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-024"
+        },
+        "volatility_regime": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "volatility_regime",
+          "value_kind": "DISCRETE_MARKET_FACT",
+          "how_provenance_required": false,
+          "note": "Pipeline int8 tercile is governed executable identity (M14B), not free HOW label",
+          "continuous_twins_required": [
+            "atr",
+            "volatility_ratio"
+          ]
+        },
+        "volatility_band_label": {
+          "authority_class": "INTERPRETED_STATE_LABEL_HOW",
+          "optional": true,
+          "value_kind": "CATEGORICAL_LABEL",
+          "how_provenance_required": true,
+          "continuous_twins_required": [
+            "atr",
+            "volatility_ratio",
+            "volatility_regime"
+          ],
+          "note": "Optional research label; must not redefine volatility_regime identity",
+          "how_config_keys": [
+            "msip_shadow.dimensions.volatility_state.label_bands",
+            "msip_shadow.config_id",
+            "msip_shadow.schema_version_required"
+          ]
+        }
+      }
+    },
+    {
+      "dimension_id": "MSD-SESSION",
+      "name": "session_state",
+      "semantic": "Canonical pipeline session code + hour",
+      "dtype": "object",
+      "encoding": {
+        "session": "int8_0_1_2",
+        "hour_of_day": "int8_0_23",
+        "session_policy_label": "optional_how_label"
+      },
+      "nullability": "invalid timestamps fail upstream (no soft NaT)",
+      "temporal": "same_bar pure transform of timestamp",
+      "confidence_representation": "1.0",
+      "what_feed_candidates": [
+        "session",
+        "hour_of_day",
+        "timestamp"
+      ],
+      "not_in_vector": [
+        "SESSION_MAP permutations",
+        "dashboard 1-based labels",
+        "CRT allowed_sessions policy decisions"
+      ],
+      "encoding_debt": "consumer encoding mismatches remain non-blocking for shadow emission",
+      "dimension_authority_class": "DETERMINISTIC_DERIVED_WHAT",
+      "field_authority": {
+        "hour_of_day": {
+          "authority_class": "GOVERNED_OBSERVABLE",
+          "source_feature": "hour_of_day",
+          "value_kind": "CONTINUOUS_OR_DISCRETE_MARKET_FACT",
+          "how_provenance_required": false
+        },
+        "session": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "session",
+          "value_kind": "DISCRETE_MARKET_FACT",
+          "how_provenance_required": false,
+          "note": "Canonical pipeline 0/1/2 identity; instrument overrides must not redefine encoding",
+          "continuous_twins_required": [
+            "hour_of_day"
+          ]
+        },
+        "session_policy_label": {
+          "authority_class": "INTERPRETED_STATE_LABEL_HOW",
+          "optional": true,
+          "value_kind": "CATEGORICAL_LABEL",
+          "how_provenance_required": true,
+          "continuous_twins_required": [
+            "session",
+            "hour_of_day"
+          ],
+          "note": "e.g. tradeable/non-tradeable under a policy \u2014 NOT session identity",
+          "how_config_keys": [
+            "msip_shadow.dimensions.session_state.label_bands",
+            "msip_shadow.config_id",
+            "msip_shadow.schema_version_required"
+          ]
+        }
+      }
+    },
+    {
+      "dimension_id": "MSD-TREND",
+      "name": "trend_state",
+      "semantic": "Canonical trend strength + bias; not dual_engine abs(ema_spread)",
+      "dtype": "object",
+      "encoding": {
+        "trend_strength": "float32_signed",
+        "trend_bias": "int8_neg1_0_1",
+        "ema_fast": "float32",
+        "ema_slow": "float32",
+        "trend_band_label": "optional_how_label"
+      },
+      "nullability": "warmup NaN for nested rolling strength",
+      "temporal": "rolling causal",
+      "confidence_representation": "1.0 finite; 0.5 warmup",
+      "what_feed_candidates": [
+        "trend_strength",
+        "trend_bias",
+        "ema_fast",
+        "ema_slow"
+      ],
+      "not_in_vector": [
+        "dual_engine local trend_strength",
+        "CRT EMA until parity PASS"
+      ],
+      "parity_gate": "CRT_LOCAL_MATH_PARITY_AUDIT_V1 for ema_fast/ema_slow",
+      "dimension_authority_class": "MIXED_WHAT_FIELDS",
+      "field_authority": {
+        "trend_strength": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "trend_strength",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false
+        },
+        "trend_bias": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "trend_bias",
+          "value_kind": "DISCRETE_MARKET_FACT",
+          "how_provenance_required": false
+        },
+        "ema_fast": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "ema_fast",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-043",
+          "crt_local_replacement": "FORBIDDEN_UNTIL_PARITY_AUDIT_PASS"
+        },
+        "ema_slow": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "ema_slow",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-044",
+          "crt_local_replacement": "FORBIDDEN_UNTIL_PARITY_AUDIT_PASS"
+        },
+        "trend_band_label": {
+          "authority_class": "INTERPRETED_STATE_LABEL_HOW",
+          "optional": true,
+          "value_kind": "CATEGORICAL_LABEL",
+          "how_provenance_required": true,
+          "continuous_twins_required": [
+            "trend_strength",
+            "trend_bias"
+          ],
+          "how_config_keys": [
+            "msip_shadow.dimensions.trend_state.label_bands",
+            "msip_shadow.config_id",
+            "msip_shadow.schema_version_required"
+          ]
+        }
+      }
+    },
+    {
+      "dimension_id": "MSD-CANDLE_QUALITY",
+      "name": "candle_quality_state",
+      "semantic": "Body/range geometry quality (FM-010 body_ratio and related)",
+      "dtype": "object",
+      "encoding": {
+        "body_ratio": "float32_0_1",
+        "body_size": "float32",
+        "wick_size": "float32",
+        "candle_quality_label": "optional_how_label"
+      },
+      "nullability": "finite under production OHLC",
+      "temporal": "same_bar",
+      "confidence_representation": "1.0",
+      "what_feed_candidates": [
+        "body_ratio",
+        "body_size",
+        "wick_size",
+        "upper_wick",
+        "lower_wick"
+      ],
+      "not_in_vector": [
+        "CRT displacement gate decision (HOW)"
+      ],
+      "parity_gate": "body_ratio CRT Candle property vs pipeline FM-010 parity",
+      "dimension_authority_class": "DETERMINISTIC_DERIVED_WHAT",
+      "field_authority": {
+        "body_ratio": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "body_ratio",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-010",
+          "crt_local_replacement": "FORBIDDEN_UNTIL_PARITY_AUDIT_PASS"
+        },
+        "body_size": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "body_size",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-001"
+        },
+        "wick_size": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "wick_size",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-002",
+          "crt_local_replacement": "FORBIDDEN_UNTIL_PARITY_AUDIT_PASS"
+        },
+        "candle_quality_label": {
+          "authority_class": "INTERPRETED_STATE_LABEL_HOW",
+          "optional": true,
+          "value_kind": "CATEGORICAL_LABEL",
+          "how_provenance_required": true,
+          "continuous_twins_required": [
+            "body_ratio",
+            "wick_size"
+          ],
+          "how_config_keys": [
+            "msip_shadow.dimensions.candle_quality_state.label_bands",
+            "msip_shadow.config_id",
+            "msip_shadow.schema_version_required"
+          ]
+        }
+      }
+    },
+    {
+      "dimension_id": "MSD-CRT_PHASE_OBS",
+      "name": "crt_phase_observation",
+      "semantic": "READ-ONLY observation of current CRT state name if available to shadow runner",
+      "dtype": "object",
+      "encoding": {
+        "crt_state": "enum_string_or_null",
+        "observed": "bool"
+      },
+      "nullability": "null when CRT not running / not bound for observation",
+      "temporal": "same_bar after CRT process when co-running; optional",
+      "confidence_representation": "1.0 when observed else 0.0",
+      "what_feed_candidates": [],
+      "not_in_vector": [
+        "ability to mutate CRT",
+        "candidate private memory dump"
+      ],
+      "role": "comparison join key only \u2014 NOT a MarketState driver of CRT",
+      "dimension_authority_class": "OBSERVATIONAL_JOIN_ONLY",
+      "field_authority": {
+        "crt_state": {
+          "authority_class": "OBSERVATIONAL_JOIN_ONLY",
+          "value_kind": "OBSERVATION",
+          "how_provenance_required": false,
+          "must_not_feed_other_dimensions": true,
+          "must_not_define_market_state_identity": true
+        },
+        "observed": {
+          "authority_class": "OBSERVATIONAL_JOIN_ONLY",
+          "value_kind": "OBSERVATION",
+          "how_provenance_required": false,
+          "must_not_define_market_state_identity": true
+        }
+      },
+      "identity_dependency_allowed": false,
+      "observational_only": true,
+      "must_not_become_market_state_identity": true
+    }
+  ],
+  "explicitly_not_in_market_state_vector": [
+    "CRT EngineState private fields (sweep_event, displacement_candle, pending_*, active_trade)",
+    "candidate_id / death_reason / single-candidate ownership",
+    "entry/SL/TP/order intents",
+    "EngineRunner fusion scores as market state",
+    "economic expectancy / PnL",
+    "session admission decisions (HOW)",
+    "thresholds themselves (HOW lives in interpretation config)",
+    "SUPERSEDED vector slots as authority (ema_spread/momentum_score are historical 38-dim, not MSIP authority)"
+  ],
+  "versioning_rules": {
+    "schema_version_bump": "breaking dimension remove/rename/type change",
+    "additive_dimension": "minor bump allowed if null-safe for old readers",
+    "config_version": "independent of schema_version; recorded in provenance"
+  },
+  "canonical_feature_context": {
+    "canonical_feature_dim": 38,
+    "schema_hash": "1ba02abbafdd0786831181677de547c1",
+    "feature_order_hash": "235553310100a340",
+    "note": "MSIP prefers pipeline-emitted governed features; does not require CRT to consume all 38"
+  },
+  "what_how_separation_rules": {
+    "rule_1": "Every field must declare authority_class in {GOVERNED_OBSERVABLE, DETERMINISTIC_DERIVED_WHAT, INTERPRETED_STATE_LABEL_HOW, OBSERVATIONAL_JOIN_ONLY}",
+    "rule_2": "INTERPRETED_STATE_LABEL_HOW fields MUST retain how_config_id + config_version in provenance and MUST preserve continuous_twins_required values on the same bar",
+    "rule_3": "Instrument/timeframe overrides may change HOW bands only; they MUST NOT redefine canonical WHAT feature identities or encodings",
+    "rule_4": "crt_phase_observation is OBSERVATIONAL_JOIN_ONLY and MUST NOT be a dependency of any other dimension identity",
+    "rule_5": "CRT-local atr/ema/body/wick remain unresolved for replacement until CRT_LOCAL_MATH_PARITY_AUDIT_V1 PASS/TRANSFORM; silent replacement FORBIDDEN",
+    "rule_6": "Raw/continuous WHAT values remain authoritative even when optional HOW labels are present"
+  },
+  "consistency_review": {
+    "reviewed_at_utc": "2026-07-14T10:30:03.791230+00:00",
+    "status": "PASS",
+    "risk_addressed": "interpreted dimensions must not mix WHAT/HOW without provenance"
+  }
+}

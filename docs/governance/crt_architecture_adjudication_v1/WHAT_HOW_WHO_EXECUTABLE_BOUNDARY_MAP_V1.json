@@ -1,0 +1,119 @@
+{
+  "_doc": "WHAT_HOW_WHO_EXECUTABLE_BOUNDARY_MAP_V1",
+  "generated_at_utc": "2026-07-14T08:12:37.280834+00:00",
+  "definitions": {
+    "WHAT": "Governed market mathematics and market observables",
+    "HOW": "Interpretation policy and behavior-selection semantics",
+    "WHO": "Executable consumers and decision owners"
+  },
+  "boundaries": [
+    {
+      "producer": "FeaturePipeline",
+      "produced_quantity": "CANONICAL_FEATURES[38]",
+      "authority_layer": "WHAT",
+      "consumer": "BacktestRunner journal @ TRADE_OPENED",
+      "consumer_role": "WHO (ledger/features attach)",
+      "actual_binding": "timestamp lookup into feature_vectors",
+      "expected_governed_binding": "canonical vector for models/research",
+      "status": "ALIGNED",
+      "architectural_consequence": "38-vector is real WHAT; not CRT transition surface",
+      "evidence": "backtest_v2.py TRADE_OPENED path; baseline path verification"
+    },
+    {
+      "producer": "FeaturePipeline",
+      "produced_quantity": "CANONICAL_FEATURES[38]",
+      "authority_layer": "WHAT",
+      "consumer": "CRTEngine.process_candle",
+      "consumer_role": "WHO (opportunity lifecycle)",
+      "actual_binding": "NONE for transition guards",
+      "expected_governed_binding": "often assumed full-vector consumer \u2014 FALSE",
+      "status": "MISSING_BINDING",
+      "architectural_consequence": "Split authority: continuous WHAT vs CRT-local math",
+      "evidence": "XAUUSD baseline trace; process_candle(candle, htf_id)"
+    },
+    {
+      "producer": "CRTEngine local (Candle props / ATR / EMA)",
+      "produced_quantity": "body_ratio, wick_size, atr, emas, move",
+      "authority_layer": "WHAT (market math) implemented inside WHO",
+      "consumer": "StateMachine.try_*",
+      "consumer_role": "WHO",
+      "actual_binding": "CRT-local recompute",
+      "expected_governed_binding": "ontology FM-010/002/041/043/044 where applicable",
+      "status": "DUPLICATED_AUTHORITY",
+      "architectural_consequence": "MARKET_MATH_LEAK_INTO_WHO; parity unproven vs pipeline",
+      "evidence": "crt_engine_v2 try_sweep_to_displacement; CRT_INPUT_AUTHORITY_MATRIX"
+    },
+    {
+      "producer": "CRT EngineState",
+      "produced_quantity": "active_range, sweep_event, displacement_candle, candidate memory",
+      "authority_layer": "WHO private lifecycle state (not WHAT)",
+      "consumer": "CRTEngine",
+      "consumer_role": "WHO",
+      "actual_binding": "EngineState fields",
+      "expected_governed_binding": "remain private opportunity state",
+      "status": "LEGITIMATE_PRIVATE_STATE",
+      "architectural_consequence": "Must not force into MarketStateVector",
+      "evidence": "TelemetryCollector._active_candidate; EngineState"
+    },
+    {
+      "producer": "CRTConfig / production JSON",
+      "produced_quantity": "thresholds, TTL, sessions, conf weights",
+      "authority_layer": "HOW",
+      "consumer": "CRTEngine",
+      "consumer_role": "WHO",
+      "actual_binding": "CRTConfig fields",
+      "expected_governed_binding": "config-first HOW",
+      "status": "ALIGNED",
+      "architectural_consequence": "Policy recalibration is HOW, not architecture replacement",
+      "evidence": "v2_multi_2026_04; fail-reason active geometry"
+    },
+    {
+      "producer": "session_windows / allowed_sessions",
+      "produced_quantity": "session admission",
+      "authority_layer": "HOW",
+      "consumer": "CRT soft-conf / FILTER_REJECTED",
+      "consumer_role": "WHO",
+      "actual_binding": "CRTConfig session policy",
+      "expected_governed_binding": "policy filter after pattern qualification",
+      "status": "ALIGNED",
+      "architectural_consequence": "Tertiary funnel residual OFF_SESSION (12/17)",
+      "evidence": "funnel diagnostic FILTER_REJECTED"
+    },
+    {
+      "producer": "HTFBuilder + reset_lg",
+      "produced_quantity": "HTF range lifecycle / reset",
+      "authority_layer": "HOW + WHO coupling",
+      "consumer": "CRTEngine",
+      "consumer_role": "WHO",
+      "actual_binding": "reset_to_range force",
+      "expected_governed_binding": "explicit lifecycle policy",
+      "status": "POLICY_LEAK_INTO_WHAT",
+      "architectural_consequence": "HTF reset dominates candidate death (3323/3433)",
+      "evidence": "funnel diagnostic RESET_HTF"
+    },
+    {
+      "producer": "EngineRunner fusion stack",
+      "produced_quantity": "downstream admission",
+      "authority_layer": "WHO",
+      "consumer": "trade journal",
+      "consumer_role": "WHO",
+      "actual_binding": "optional BACKTEST_ENGINE_GATE",
+      "expected_governed_binding": "post-CRT admission",
+      "status": "ALIGNED",
+      "architectural_consequence": "Not primary collapse surface on measured run",
+      "evidence": "rejected_trades=0"
+    }
+  ],
+  "answers": {
+    "where_WHAT_computed": "FeaturePipeline + candle_math/derived_math/ontology; also CRT-local parallel math",
+    "where_WHAT_duplicated": "CRT body_ratio/wick/atr/ema paths vs pipeline FM identities",
+    "where_HOW_encoded": "CRTConfig + reset/TTL/session/soft-conf policy in crt_engine_v2",
+    "HOW_config_driven": "most thresholds via prod config merge",
+    "HOW_hardcoded": "some control-flow structure / VALID_TRANSITIONS graph (STRUCTURAL)",
+    "WHO_reads_governed_WHAT": "Backtest journal, models (when enabled), research \u2014 not CRT transitions",
+    "WHO_bypasses_governed_WHAT": "CRT transition guards (local math)",
+    "bypass_legitimate": "partial \u2014 private lifecycle state YES; market math parallel recomputation is split authority",
+    "candidate_lifecycle_belongs": "WHO/CRT EngineState \u2014 not MarketStateVector",
+    "continuous_market_state_belongs": "WHAT + interpretation layer (MSIP shadow), independent of opportunity ownership"
+  }
+}

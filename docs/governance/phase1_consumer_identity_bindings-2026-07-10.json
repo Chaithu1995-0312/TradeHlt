@@ -1,0 +1,313 @@
+{
+  "artifact": "phase1_consumer_identity_bindings",
+  "bindings": [
+    {
+      "consumer": "FeaturePipeline",
+      "family": "VOLUME",
+      "feature_id": "FEAT-VOLUME",
+      "formula_id": "FORMULA-SOURCE-TICK-VOLUME",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "BacktestRunner",
+      "family": "VOLUME",
+      "feature_id": "FEAT-VOLUME",
+      "formula_id": "FORMULA-SOURCE-TICK-VOLUME",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "live_engine_hook.ohlcv",
+      "family": "VOLUME",
+      "feature_id": "FEAT-VOLUME",
+      "formula_id": "FORMULA-SOURCE-TICK-VOLUME",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "FeaturePipeline (explicit proxy column)",
+      "family": "VOLUME",
+      "feature_id": "FEAT-VOLUME_RANGE_PROXY",
+      "formula_id": "FORMULA-PRICE-RANGE-PROXY-HL",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "IDENTITY_CLOSED"
+    },
+    {
+      "consumer": "FeaturePipeline",
+      "family": "VOLUME",
+      "feature_id": "FEAT-VOLUME_RATIO",
+      "formula_id": "FORMULA-VOLUME-RATIO-SOURCE",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "IDENTITY_CLOSED"
+    },
+    {
+      "consumer": "BacktestRunner",
+      "family": "VOLUME",
+      "feature_id": "FEAT-VOLUME_RATIO",
+      "formula_id": "FORMULA-VOLUME-RATIO-SOURCE",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "IDENTITY_CLOSED"
+    },
+    {
+      "consumer": "FeaturePipeline (research *_centered_batch only)",
+      "family": "SWING",
+      "feature_id": "FEAT-SWING_HIGH_CENTERED_BATCH",
+      "formula_id": "FORMULA-SWING-HIGH-CENTERED-BATCH",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "DISTINCT_SEMANTIC_PRESERVED"
+    },
+    {
+      "consumer": "FeaturePipeline (research *_centered_batch only)",
+      "family": "SWING",
+      "feature_id": "FEAT-SWING_LOW_CENTERED_BATCH",
+      "formula_id": "FORMULA-SWING-LOW-CENTERED-BATCH",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "DISTINCT_SEMANTIC_PRESERVED"
+    },
+    {
+      "consumer": "FeaturePipeline",
+      "family": "SWING",
+      "feature_id": "FEAT-SWING_HIGH_CAUSAL_CONFIRMED",
+      "formula_id": "FORMULA-SWING-HIGH-CAUSAL-CONFIRMED",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "BacktestRunner",
+      "family": "SWING",
+      "feature_id": "FEAT-SWING_HIGH_CAUSAL_CONFIRMED",
+      "formula_id": "FORMULA-SWING-HIGH-CAUSAL-CONFIRMED",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "FeatureStore (live causal structure)",
+      "family": "SWING",
+      "feature_id": "FEAT-SWING_HIGH_CAUSAL_CONFIRMED",
+      "formula_id": "FORMULA-SWING-HIGH-CAUSAL-CONFIRMED",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "FeaturePipeline",
+      "family": "SWING",
+      "feature_id": "FEAT-SWING_LOW_CAUSAL_CONFIRMED",
+      "formula_id": "FORMULA-SWING-LOW-CAUSAL-CONFIRMED",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "BacktestRunner",
+      "family": "SWING",
+      "feature_id": "FEAT-SWING_LOW_CAUSAL_CONFIRMED",
+      "formula_id": "FORMULA-SWING-LOW-CAUSAL-CONFIRMED",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "FeatureStore (live causal structure)",
+      "family": "SWING",
+      "feature_id": "FEAT-SWING_LOW_CAUSAL_CONFIRMED",
+      "formula_id": "FORMULA-SWING-LOW-CAUSAL-CONFIRMED",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "FeaturePipeline (research volatility_regime_global_batch only)",
+      "family": "VOLATILITY_REGIME",
+      "feature_id": "FEAT-VOLATILITY_REGIME_GLOBAL_BATCH_RANK",
+      "formula_id": "FORMULA-VR-GLOBAL-BATCH",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "LEGACY_IMPLEMENTATION_SHADOW_ONLY"
+    },
+    {
+      "consumer": "FeaturePipeline (research expanding column only)",
+      "family": "VOLATILITY_REGIME",
+      "feature_id": "FEAT-VOLATILITY_REGIME_EXPANDING_CAUSAL_RANK",
+      "formula_id": "FORMULA-VR-EXPANDING",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "DISTINCT_SEMANTIC_PRESERVED"
+    },
+    {
+      "consumer": "FeaturePipeline",
+      "family": "VOLATILITY_REGIME",
+      "feature_id": "FEAT-VOLATILITY_REGIME_ROLLING_CAUSAL_RANK",
+      "formula_id": "FORMULA-VR-ROLLING",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "BacktestRunner",
+      "family": "VOLATILITY_REGIME",
+      "feature_id": "FEAT-VOLATILITY_REGIME_ROLLING_CAUSAL_RANK",
+      "formula_id": "FORMULA-VR-ROLLING",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "s05_grid",
+      "family": "VOLATILITY_REGIME",
+      "feature_id": "FEAT-VOLATILITY_REGIME_ROLLING_CAUSAL_RANK",
+      "formula_id": "FORMULA-VR-ROLLING",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "FeaturePipeline",
+      "family": "BODY_RATIO",
+      "feature_id": "FEAT-BODY_TO_RANGE_RATIO",
+      "formula_id": "FORMULA-BODY-TO-RANGE",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "BacktestRunner",
+      "family": "BODY_RATIO",
+      "feature_id": "FEAT-BODY_TO_RANGE_RATIO",
+      "formula_id": "FORMULA-BODY-TO-RANGE",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "CRTEngine",
+      "family": "BODY_RATIO",
+      "feature_id": "FEAT-BODY_TO_RANGE_RATIO",
+      "formula_id": "FORMULA-BODY-TO-RANGE",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "FeatureMonitor",
+      "family": "BODY_RATIO",
+      "feature_id": "FEAT-BODY_TO_RANGE_RATIO",
+      "formula_id": "FORMULA-BODY-TO-RANGE",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "consumer": "live_engine_hook",
+      "family": "BODY_RATIO",
+      "feature_id": "FEAT-BODY_TO_TOTAL_WICK_RATIO",
+      "formula_id": "FORMULA-BODY-TO-TOTAL-WICK",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "DISTINCT_SEMANTIC_PRESERVED"
+    },
+    {
+      "consumer": "FeaturePipeline",
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-DISP_STRENGTH",
+      "formula_id": "FORMULA-FM-020",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "IDENTITY_CLOSED"
+    },
+    {
+      "consumer": "BacktestRunner",
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-DISP_STRENGTH",
+      "formula_id": "FORMULA-FM-020",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "IDENTITY_CLOSED"
+    },
+    {
+      "consumer": "FeatureMonitor",
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-DISP_STRENGTH",
+      "formula_id": "FORMULA-FM-020",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "IDENTITY_CLOSED"
+    },
+    {
+      "consumer": "FeaturePipeline",
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-RETEST_DEPTH",
+      "formula_id": "FORMULA-FM-021",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "IDENTITY_CLOSED"
+    },
+    {
+      "consumer": "BacktestRunner",
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-RETEST_DEPTH",
+      "formula_id": "FORMULA-FM-021",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "IDENTITY_CLOSED"
+    },
+    {
+      "consumer": "FeatureMonitor",
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-RETEST_DEPTH",
+      "formula_id": "FORMULA-FM-021",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "IDENTITY_CLOSED"
+    },
+    {
+      "consumer": "CRTEngine",
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-DISPLACEMENT_RETRACE",
+      "formula_id": "FORMULA-FM-027",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "IDENTITY_CLOSED"
+    },
+    {
+      "consumer": "BitNet (alias map if enabled — maps to legacy retest_depth input key)",
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-DISPLACEMENT_RETRACE",
+      "formula_id": "FORMULA-FM-027",
+      "formula_version": "v1",
+      "resolution_mode": "legacy_alias_to_id",
+      "status": "IDENTITY_CLOSED"
+    },
+    {
+      "consumer": "CRTEngine",
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-DISPLACEMENT_ATR_RATIO",
+      "formula_id": "FORMULA-FM-028",
+      "formula_version": "v1",
+      "resolution_mode": "explicit_id",
+      "status": "IDENTITY_CLOSED"
+    },
+    {
+      "consumer": "BitNet (alias map if enabled — maps to legacy disp_strength input key)",
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-DISPLACEMENT_ATR_RATIO",
+      "formula_id": "FORMULA-FM-028",
+      "formula_version": "v1",
+      "resolution_mode": "legacy_alias_to_id",
+      "status": "IDENTITY_CLOSED"
+    }
+  ],
+  "blocked": [],
+  "date": "2026-07-10"
+}

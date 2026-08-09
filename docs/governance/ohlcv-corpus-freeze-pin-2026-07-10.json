@@ -1,0 +1,102 @@
+{
+  "_doc": "OHLCV canonical corpus mutation freeze pin (R0). Mechanical snapshot of frozen bytes. Do not hand-edit; regenerate from fingerprint + live hash of extras. Mutation without a recorded corpus authority decision is forbidden.",
+  "schema_version": "1.0.0",
+  "freeze_id": "OHLCV-CORPUS-FREEZE-2026-07-10",
+  "frozen_at_utc": "2026-07-10T15:00:00Z",
+  "policy_path": "docs/governance/ohlcv-corpus-mutation-freeze-2026-07-10.md",
+  "fingerprint_manifest": "docs/governance/ohlcv-corpus-fingerprint-manifest-2026-07-10.json",
+  "fingerprint_manifest_sha256": "5f80af49d28af5cbcdb4d43015732147d16dc6e0e635e9c4eb75d4277415c500",
+  "n_pins": 15,
+  "pins": [
+    {
+      "path": "data/AUDUSD_M15.csv",
+      "sha256": "f43812ca3d801de396ff37b6571b1c2fc4571681cfecd6ffbfce84a59f086d55",
+      "logical_corpus_id": "AUDUSD_M15",
+      "source": "fingerprint_manifest"
+    },
+    {
+      "path": "data/BNBUSDT_M15.csv",
+      "sha256": "083f2bdf32b917648f36bd7596c97c0b5702c06aebef7b80df80219618bcddce",
+      "logical_corpus_id": "BNBUSDT_M15",
+      "source": "fingerprint_manifest"
+    },
+    {
+      "path": "data/BTCUSDT_M15.csv",
+      "sha256": "e175fa7c3bffacea017428eb1624683d0ce1bcbdbc4f5e4e447451adfd8d62a4",
+      "logical_corpus_id": "BTCUSDT_M15",
+      "source": "fingerprint_manifest"
+    },
+    {
+      "path": "data/DOGEUSDT_M15.csv",
+      "sha256": "594aa7f5d0e22e7c28b4629705901174bd7910df461202779bd88046d42a7877",
+      "logical_corpus_id": "DOGEUSDT_M15",
+      "source": "fingerprint_manifest"
+    },
+    {
+      "path": "data/ETHUSDT_M15.csv",
+      "sha256": "e9a5776e4dd4fae0352c2c4ad081ea4189f78fd5fa7dc540894cb238d282269e",
+      "logical_corpus_id": "ETHUSDT_M15",
+      "source": "fingerprint_manifest"
+    },
+    {
+      "path": "data/EURCAD_M15.csv",
+      "sha256": "070dc561d645eda0445218038fd08580cfaa6e2cea5af8b37abad3fb8a4e40d1",
+      "logical_corpus_id": "EURCAD_M15",
+      "source": "fingerprint_manifest"
+    },
+    {
+      "path": "data/EURUSD_M15.csv",
+      "sha256": "583f5b9f89f86ec837c61d1f9cc7cade17a89d703e275c02ad75337d4995d5fe",
+      "logical_corpus_id": "EURUSD_M15",
+      "source": "fingerprint_manifest"
+    },
+    {
+      "path": "data/GBPUSD_M15.csv",
+      "sha256": "b55d7fbcf1e5d20536a920d8629c3bb8ec4b2fb82d8619f49805592494f26c6c",
+      "logical_corpus_id": "GBPUSD_M15",
+      "source": "fingerprint_manifest"
+    },
+    {
+      "path": "data/SOLUSDT_M15.csv",
+      "sha256": "ce595bd202eec9e9f0ecbed4898d51a407d7b363c81aad5c7cab93287e4fb695",
+      "logical_corpus_id": "SOLUSDT_M15",
+      "source": "fingerprint_manifest"
+    },
+    {
+      "path": "data/USDJPY_M15.csv",
+      "sha256": "3ce517973e380e048f5a2f91031f219ceb77434d3cbe3a6b1dc4b937c0102f0a",
+      "logical_corpus_id": "USDJPY_M15",
+      "source": "fingerprint_manifest"
+    },
+    {
+      "path": "data/XAUUSD_M15.csv",
+      "sha256": "486cf3616415ff86f7647e23bec1043b50ff24a08f85898b9d79d1103a8a42af",
+      "logical_corpus_id": "XAUUSD_M15",
+      "source": "fingerprint_manifest"
+    },
+    {
+      "path": "data/XAUUSD_M15_1year.xlsx",
+      "sha256": "e0bb97d9a5f3bea9a30447919b123b9c2ff08d50f53d6e40b54d0e05557b6547",
+      "logical_corpus_id": "XAUUSD_M15",
+      "source": "REGRESSION_FIXTURE"
+    },
+    {
+      "path": "data/XRPUSDT_M15.csv",
+      "sha256": "f9ce0ca4efc431c58156a71dace82281528968844d3d92703111022786b74794",
+      "logical_corpus_id": "XRPUSDT_M15",
+      "source": "fingerprint_manifest"
+    },
+    {
+      "path": "data/mt5/XAUUSD_M15.csv",
+      "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "logical_corpus_id": "XAUUSD_M15",
+      "source": "XAUUSD_LEGACY_PIN_BYTES"
+    },
+    {
+      "path": "data/mt5/_rejected/XAUUSD_M15.csv",
+      "sha256": "486cf3616415ff86f7647e23bec1043b50ff24a08f85898b9d79d1103a8a42af",
+      "logical_corpus_id": "XAUUSD_M15",
+      "source": "XAUUSD_QUARANTINE_TWIN"
+    }
+  ]
+}

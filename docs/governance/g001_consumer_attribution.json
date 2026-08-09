@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-07-26T08:51:59Z",
+  "purpose": "Distinguish semantic correctness (FM parity / resolve_fm / audits) from economic contribution (\u00ce\u201dG001). Authority ladder is explicit and non-automatic.",
+  "goal_id": "G001",
+  "goal_doc": "docs/architecture/goal.md",
+  "authority_ladder": {
+    "0": "INFORMATION_ONLY",
+    "1": "ECONOMIC_USEFULNESS_MEASURED",
+    "2": "AUTHORITY_EARNED",
+    "3": "ARCHITECTURE_JUSTIFIED"
+  },
+  "invariants": [
+    "new_authority_from_parity is always false",
+    "ladder level >= 2 requires economic_status MEASURED_POSITIVE (none today)",
+    "incumbent production_influence_allowed does not imply new authority earned",
+    "feature-layer parity is tracked in fm_ownership_consumer_matrix.json only"
+  ],
+  "summary": {
+    "consumer_count": 10,
+    "ladder_gt0_count": 0,
+    "semantic_validated_count": 4,
+    "economic_positive_delta_count": 0
+  },
+  "consumers": [
+    {
+      "consumer_id": "crt_spine_state_machine",
+      "path": "src/config_layer/crt_engine_v2.py",
+      "description": "CRT state machine \u00e2\u2020\u2019 TRADE_OPENED path (primary research spine)",
+      "features_or_signals": [
+        "FM-002",
+        "FM-010",
+        "FM-027",
+        "FM-028",
+        "structural states via pipeline"
+      ],
+      "semantic_status": "VALIDATED",
+      "semantic_evidence": [
+        "tests/test_fm_resolution_phase2.py",
+        "tests/test_fc1a_swing_oracle_parity.py",
+        "docs/governance/crt_closure_report.md"
+      ],
+      "economic_status": "MEASURED_NO_STANDALONE_EDGE",
+      "economic_evidence": [
+        "F-019",
+        "F-021",
+        "F-025",
+        "F-026",
+        "F-027",
+        "docs/current-findings.md"
+      ],
+      "economic_notes": "Multiple M4-style studies under realistic exits: entry-information null on crypto majors; spine throughput-starved; not a G001-clearing edge.",
+      "authority_ladder_level": 0,
+      "production_influence_allowed": true,
+      "production_influence_scope": "incumbent_crt_path_only",
+      "new_authority_from_parity": false
+    },
+    {
+      "consumer_id": "scoring_engine_crt_composite",
+      "path": "src/engines/scoring_engine.py",
+      "description": "CRT composite score (sweep/breakout/retest/time); FM-029 rescale",
+      "features_or_signals": [
+        "FM-029",
+        "body_ratio",
+        "retest_depth",
+        "sweep flags"
+      ],
+      "semantic_status": "VALIDATED",
+      "semantic_evidence": [
+        "tests/test_gd004_gd005_identity_closure.py",
+        "tests/test_fm_resolution_phase3.py"
+      ],
+      "economic_status": "NOT_ISOLATED",
+      "economic_evidence": [
+        "F-021"
+      ],
+      "economic_notes": "Score/zone selection skill not demonstrated under intrabar+12bps (F-021). No isolated \u00ce\u201dG001 study for FM-029 alone.",
+      "authority_ladder_level": 0,
+      "production_influence_allowed": true,
+      "production_influence_scope": "incumbent_scoring_only",
+      "new_authority_from_parity": false
+    },
+    {
+      "consumer_id": "engine_runner_fusion",
+      "path": "src/core/engine_runner.py",
+      "description": "Four-engine fusion gate (CRT/Gaussian/Zone/RR)",
+      "features_or_signals": [
+        "engine scores",
+        "zone_gate",
+        "rr",
+        "gaussian"
+      ],
+      "semantic_status": "PARTIAL",
+      "semantic_evidence": [
+        "F-037",
+        "F-038",
+        "F-060",
+        "docs/governance/gaussian_lineage_audit.md",
+        "docs/governance/rr_lineage_audit.md"
+      ],
+      "economic_status": "MEASURED_NON_PIVOTAL_OR_INERT_CHANNELS",
+      "economic_evidence": [
+        "F-036",
+        "F-037",
+        "F-060",
+        "F-038"
+      ],
+      "economic_notes": "Zone non-pivotal (F-036); Gaussian near-constant inert (F-060); rr_fusion disabled (F-038). Gate-ON modest N change only (F-037).",
+      "authority_ladder_level": 0,
+      "production_influence_allowed": true,
+      "production_influence_scope": "incumbent_fusion_when_enabled",
+      "new_authority_from_parity": false
+    },
+    {
+      "consumer_id": "zone_gate",
+      "path": "src/engines/zone_gate_engine.py",
+      "description": "Geometric HARD zone gate",
+      "features_or_signals": [
+        "zone registry geometry",
+        "feature vectors for membership"
+      ],
+      "semantic_status": "AUDITED",
+      "semantic_evidence": [
+        "docs/governance/zonegate_lineage_audit.md",
+        "F-041"
+      ],
+      "economic_status": "MEASURED_NO_MARGINAL_VALUE",
+      "economic_evidence": [
+        "F-036",
+        "F-041B"
+      ],
+      "economic_notes": "Non-pivotal; honest labels show no zone with E>0.",
+      "authority_ladder_level": 0,
+      "production_influence_allowed": true,
+      "production_influence_scope": "incumbent_hard_gate_geometry",
+      "new_authority_from_parity": false
+    },
+    {
+      "consumer_id": "bitnet_gate",
+      "path": "src/bitnet/bitnet_inference.py",
+      "description": "BitNet hard-reject gate when use_bitnet enabled",
+      "features_or_signals": [
+        "38/39-dim canonical vector"
+      ],
+      "semantic_status": "AUDITED_CONDITIONAL_SKEW",
+      "semantic_evidence": [
+        "docs/governance/bitnet_lineage_audit.md",
+        "F-004",
+        "F-050",
+        "F-055"
+      ],
+      "economic_status": "MEASURED_NO_IMPROVEMENT",
+      "economic_evidence": [
+        "F-055"
+      ],
+      "economic_notes": "Shadow A/B: gate-ON does not improve CRT spine; use_bitnet stays false on active.",
+      "authority_ladder_level": 0,
+      "production_influence_allowed": false,
+      "production_influence_scope": "inert_on_active_config",
+      "new_authority_from_parity": false
+    },
+    {
+      "consumer_id": "rr_fusion",
+      "path": "src/config_layer/rr/rr_fusion.py",
+      "description": "RR fusion confidence gate over RR engine",
+      "features_or_signals": [
+        "rr_model",
+        "gaussian fallback historically"
+      ],
+      "semantic_status": "AUDITED_GATE_MISSPEC",
+      "semantic_evidence": [
+        "F-038",
+        "F-044",
+        "F-045",
+        "F-059"
+      ],
+      "economic_status": "DISABLED_NO_AUTHORITY",
+      "economic_evidence": [
+        "F-038",
+        "F-059"
+      ],
+      "economic_notes": "rr_fusion enabled:false on active; clean-label KEEP_CANDIDATE research-only.",
+      "authority_ladder_level": 0,
+      "production_influence_allowed": false,
+      "production_influence_scope": "disabled",
+      "new_authority_from_parity": false
+    },
+    {
+      "consumer_id": "session_filter",
+      "path": "src/features/session_classifier.py + engine allowed_sessions",
+      "description": "Session FEATURE (FM-052) vs session FILTER policy (distinct)",
+      "features_or_signals": [
+        "FM-051",
+        "FM-052"
+      ],
+      "semantic_status": "VALIDATED",
+      "semantic_evidence": [
+        "tests/test_feature_temporal_context.py",
+        "tests/test_session_classifier.py"
+      ],
+      "economic_status": "MEASURED_NOT_PROMOTABLE_BNB",
+      "economic_evidence": [
+        "F-017",
+        "F-021"
+      ],
+      "economic_notes": "Session policy not a promotable BNB lever under realistic exits + OOS.",
+      "authority_ladder_level": 0,
+      "production_influence_allowed": true,
+      "production_influence_scope": "filter_policy_config",
+      "new_authority_from_parity": false
+    },
+    {
+      "consumer_id": "ultron_risk_gate",
+      "path": "src/core/ultron_risk_gate.py",
+      "description": "Final risk / min_rr economic gate (owns RR economics post F-048)",
+      "features_or_signals": [
+        "execution plan RR",
+        "risk params"
+      ],
+      "semantic_status": "CONTRACT_DEFINED",
+      "semantic_evidence": [
+        "F-048",
+        "tests/test_ultron_risk_gate.py"
+      ],
+      "economic_status": "LIVE_UNVERIFIED_HEADLINE",
+      "economic_evidence": [
+        "F-010"
+      ],
+      "economic_notes": "Headline ROI backtest-only; live PnL through ExecutionPlanner+Ultron UNVERIFIED (F-010).",
+      "authority_ladder_level": 0,
+      "production_influence_allowed": true,
+      "production_influence_scope": "incumbent_risk_gate",
+      "new_authority_from_parity": false
+    },
+    {
+      "consumer_id": "feature_state_encoder_shadow",
+      "path": "src/features/feature_states.py + crt_state_resolver",
+      "description": "Shadow state naming / CRTStateResolver research path",
+      "features_or_signals": [
+        "states blocks for vector-bound FMs"
+      ],
+      "semantic_status": "VALIDATED_MAPPING",
+      "semantic_evidence": [
+        "tests/test_feature_states.py"
+      ],
+      "economic_status": "NOT_ON_TRADING_PATH",
+      "economic_evidence": [],
+      "economic_notes": "Research/shadow only; cannot earn G001 by definition until wired.",
+      "authority_ladder_level": 0,
+      "production_influence_allowed": false,
+      "production_influence_scope": "shadow_only",
+      "new_authority_from_parity": false
+    },
+    {
+      "consumer_id": "liquidity_sweep_veto",
+      "path": "research/H-G001-001 + research/H-G001-001b (post-entry filter on spine)",
+      "description": "H-G001-001/H-G001-001b: veto production CRT spine entries when FM-058 liquidity_sweep != 0 on entry bar (XAUUSD M15, M4 intrabar+12bps; fusion gate ON and CRT-only lenses measured separately)",
+      "features_or_signals": [
+        "FM-058"
+      ],
+      "semantic_status": "VALIDATED",
+      "semantic_evidence": [
+        "tests/test_fc1a_swing_oracle_parity.py",
+        "tests/test_feature_structural_states_complex.py"
+      ],
+      "economic_status": "MEASURED_INSUFFICIENT",
+      "economic_evidence": [
+        "research/H-G001-001/promotion_decision.md",
+        "research/H-G001-001/baseline_results.json",
+        "research/H-G001-001/treatment_results.json",
+        "research/H-G001-001b/promotion_decision.md",
+        "research/H-G001-001b/baseline_results.json",
+        "research/H-G001-001b/treatment_results.json",
+        "F-029",
+        "F-035"
+      ],
+      "economic_notes": "2026-07-26 H-G001-001: production spine on frozen XAUUSD candidate yielded n=1 entry (fusion gate ON); treatment identical (0 vetoes on that entry). REJECT_INSUFFICIENT; no delta_G001 claim. 2026-07-26 H-G001-001b: CRT-only lens also yielded n=1; treatment identical (0 vetoes). REJECT_INSUFFICIENT. Reopen only with a powered entry set (n>=30) or alternate instrument/corpus under a new H-id.",
+      "authority_ladder_level": 0,
+      "production_influence_allowed": false,
+      "production_influence_scope": "research_only_rejected_insufficient",
+      "new_authority_from_parity": false
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "_doc": "Edge Discovery — SPINE x XAUUSD variant (ERP T1). Measures the full production decision spine (CRT/Gaussian/ZoneGate/RR -> Fusion -> RegimeGovernor -> Decision -> ExecutionPlanner -> UltronRiskGate) as the 'spine' hypothesis on the ONLY approved XAUUSD load — the Phase-1 frozen candidate data/mt5/XAUUSD_M15.csv (resolved via guard_xauusd_csv_path inside CandleLoader/BacktestRunner, NOT the root file). apply_signal_defaults MUST be false so the runner keeps the spine's own SL/TP geometry. Qualification knobs identical to research_config_fx_metals.json so the spine verdict is comparable to the XAUUSD toy family. The `spine` block is read by ProductionSpineSource (not by ResearchConfig). NON-PROMOTABLE / UNTRUSTED_RAW: the corpus is FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION and the lens is CRT-only (F-037, .env BACKTEST_ENGINE_GATE=0). Expectation: the spine produces few/0 trades on XAUUSD (F-029/F-035) -> INSUFFICIENT; no edge claim.",
+  "harness": {
+    "warmup": 30,
+    "window_size": 64,
+    "min_samples": 30
+  },
+  "forward_walk": {
+    "max_forward": 40,
+    "trail_mult": 0.5,
+    "exit_model": "intrabar_fixed"
+  },
+  "signal": {
+    "apply_signal_defaults": false,
+    "sl_atr_mult": 1.0,
+    "tp_atr_mult": 2.0
+  },
+  "costs": {
+    "round_trip_bps": 12.0
+  },
+  "qualification": {
+    "min_samples": 30,
+    "expectancy_min": 0.0,
+    "pf_min": 1.0,
+    "oos_split": 0.3,
+    "oos_retention_min": 0.5,
+    "n_permutations": 2000,
+    "significance_alpha": 0.05
+  },
+  "universe": {
+    "data_dir": "data",
+    "pattern": "*_M15.csv",
+    "instruments": ["XAUUSD"]
+  },
+  "spine": {
+    "prod_version": "v2_multi_2026_04",
+    "_prod_version_note": "Canonical, R1/R2-governed v2 (matches configs/production/ACTIVE_VERSION). v4_multi_2026_06 is NOT loadable on the `patch` branch.",
+    "scorer_mode": "calibrated",
+    "tp_target": "tp2"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "_doc": "NEW_DISCOVERY_BACKLOG \u2014 not adjudicated in RUN 1.5A; not part of 142 denominator",
+  "generated_at_utc": "2026-07-10T16:18:42Z",
+  "count": 2,
+  "items": [
+    {
+      "discovery_id": "NDB-001",
+      "path": "src/features/feature_pipeline.py",
+      "line_function": "compute_price_features / indicators",
+      "discovery_reason": "Pipeline writes many intermediate columns (prev_close, ma_*, bb_*, volume_ma20, day_of_week, etc.) not all present as curated RUN-1 quantities",
+      "parent_quantity_id": "Q-ATR",
+      "potential_role": "IMPLEMENTATION_INTERMEDIATE",
+      "evidence": "feature_pipeline df column writes; some appear only as AST subset"
+    },
+    {
+      "discovery_id": "NDB-002",
+      "path": "src/features/feature_pipeline.py",
+      "line_function": "compute_structure_liquidity",
+      "discovery_reason": "last_swing_* intermediates already curated; true_range/atr_14_raw may be partial",
+      "parent_quantity_id": "Q-INTER-LAST-SWING-H",
+      "potential_role": "IMPLEMENTATION_INTERMEDIATE",
+      "evidence": "pipeline structure block"
+    }
+  ]
+}

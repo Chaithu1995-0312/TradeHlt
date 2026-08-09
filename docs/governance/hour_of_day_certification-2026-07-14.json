@@ -1,0 +1,79 @@
+{
+  "_doc": "M11 hour_of_day certification \u2014 pure timestamp wall-clock hour.",
+  "schema_version": "1.0",
+  "generated_at": "2026-07-14T06:15:48.602261+00:00",
+  "session": "M11",
+  "TARGET_FEATURE": "hour_of_day",
+  "TARGET_IDENTITY": "TIMESTAMP_WALL_CLOCK_HOUR",
+  "formula_id": null,
+  "canonical_index": 31,
+  "FULL_DEPENDENCIES": [
+    "timestamp"
+  ],
+  "TIMEZONE_POLICY": "NO conversion: pd.to_datetime(timestamp) then .dt.hour of the resulting datetime as stored (naive wall hour if naive)",
+  "DOMAIN": [
+    0,
+    23
+  ],
+  "CANONICAL_DTYPE": "int8",
+  "NAT_POLICY": "NaT \u2192 .dt.hour NaN \u2192 astype(int8) FAILS; no soft sentinel; production assumes valid timestamps",
+  "source_of_truth": "src/features/feature_pipeline.py:378-379",
+  "semantic_class": "pure_same_bar_transform",
+  "dag_consumers": [],
+  "session_note": {
+    "dag_session_deps": [
+      "timestamp"
+    ],
+    "code": "compute_context derives session from hour_of_day intermediate",
+    "m12_guidance": "session DAG deps=[timestamp] only \u2014 not hour_of_day; inspect before M12 whether to treat hour as intermediate like retest_flag"
+  },
+  "checkpoint_start": {
+    "frontier": {
+      "PROMOTED_PRODUCTION": 42,
+      "READY_TO_CERTIFY": 4,
+      "SUPERSEDED": 2
+    },
+    "hour_of_day": {
+      "effective_state": "READY_TO_CERTIFY",
+      "deps": [
+        "timestamp"
+      ]
+    },
+    "ledger_bytes": 84105,
+    "ledger_sha256": "b970d57d8d423900862db308235d9531cc852ea6d9230fb65b43c57eecffbbe8"
+  },
+  "oracle_design": {
+    "algorithm": "pd.Timestamp(t).to_pydatetime().hour \u2192 int8 (per element)",
+    "independence": "does not call Series.dt.hour (production vector path)"
+  },
+  "probes": {
+    "basic": {
+      "oracle_pipeline_parity": "PASS",
+      "domain_0_23": "PASS",
+      "dtype_int8": "PASS",
+      "hand_boundaries": "PASS",
+      "nat_oracle_raises": "PASS",
+      "nat_pipeline_raises": "PASS",
+      "tz_aware_utc_index_wall_hour": "PASS",
+      "naive_no_tz_conversion": "PASS"
+    },
+    "temporal": {
+      "series_parity": "PASS",
+      "24h_cycle": "PASS",
+      "prefix_invariance": "PASS",
+      "future_mutation": "PASS",
+      "determinism": "PASS"
+    },
+    "pipeline": {
+      "compute_context_parity": "PASS",
+      "pipeline_dtype_int8": "PASS",
+      "session_uses_hour_intermediate_in_code": "PASS"
+    },
+    "overall_verdict": "CERTIFIED",
+    "all_probes_pass": true
+  },
+  "PER_NODE_VERDICT": "CERTIFIED",
+  "PRODUCTION_BEHAVIOR_CHANGED": "NO",
+  "authority": "research/governance only \u2014 descriptive certification; grants no runtime authority (\u00a76.5)",
+  "scope_boundary": "hour_of_day only. session/trend_strength/volatility_regime untouched."
+}

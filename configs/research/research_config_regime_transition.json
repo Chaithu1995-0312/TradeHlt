@@ -1,0 +1,51 @@
+{
+  "_doc": "Program 4b -- Forward Markov P^H regime-TRANSITION forecast (toy family). Identical harness/forward_walk/signal/cost/qualification/universe/regime blocks to research_config_regime.json (Program 4's toy config) so the toy consumers (expansion_breakout, mean_reversion) are measured in the IDENTICAL court -- the only change is which label series conditions them (predicted Sh_{t+H} via MarkovRegimeForecaster, not the contemporaneous S_t via RegimeLabeler). lag_k is set to 8 (= H, per the pre-registration's explicit hardening: 'lag_k = forecast horizon H', NOT Program 4's lag_k=50) so the lagged-regime control tests the forward forecast against a naive same-horizon-stale one. The spine consumer is measured via the EXISTING, unmodified research_config_spine_majors.json (apply_signal_defaults=false), exactly as Program 4 does. The new top-level 'markov' block is read directly by the driver (scripts/research/qualify_regime_transition.py), NOT by ResearchConfig/RegimeConfig -- same pattern as the existing 'regime' block. FROZEN parameters per docs/research-readiness/program-4b-transition-preregistration.md section 5 -- do NOT grid these after a null (anti-archaeology, ONE shot).",
+  "harness": {
+    "warmup": 30,
+    "window_size": 64,
+    "min_samples": 30
+  },
+  "forward_walk": {
+    "max_forward": 40,
+    "trail_mult": 0.5,
+    "exit_model": "intrabar_fixed"
+  },
+  "signal": {
+    "apply_signal_defaults": true,
+    "sl_atr_mult": 1.0,
+    "tp_atr_mult": 2.0
+  },
+  "costs": {
+    "round_trip_bps": 12.0
+  },
+  "qualification": {
+    "min_samples": 30,
+    "expectancy_min": 0.0,
+    "pf_min": 1.0,
+    "oos_split": 0.3,
+    "oos_retention_min": 0.5,
+    "n_permutations": 2000,
+    "significance_alpha": 0.05
+  },
+  "universe": {
+    "data_dir": "data",
+    "pattern": "*_M15.csv",
+    "instruments": ["BNBUSDT", "ETHUSDT", "BTCUSDT", "SOLUSDT"]
+  },
+  "regime": {
+    "atr_period": 14,
+    "tercile_window": 480,
+    "lag_k": 8,
+    "min_cell_samples": 30,
+    "harmful_margin": 0.05,
+    "redundant_tol": 0.05,
+    "null_relabelings": 200
+  },
+  "markov": {
+    "_doc": "The forward Markov P^H forecast mechanism (MarkovRegimeForecaster). w_markov = trailing transition-count window (completed transitions only). h = forecast horizon in bars, also used as regime.lag_k above. hurst_atr_center/tolerance define the HARD calibration gate (raises, does not just advise) on BNBUSDT's process_characterization.hurst_atr before any economic claim runs.",
+    "w_markov": 480,
+    "h": 8,
+    "hurst_atr_center": 0.885,
+    "hurst_atr_tolerance": 0.03
+  }
+}

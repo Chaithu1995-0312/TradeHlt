@@ -1,0 +1,33 @@
+{
+  "run_id": "xauusd-crt-trace-20260731T184653Z-1f028143",
+  "generated_at_utc": "2026-07-31T18:47:16.897496+00:00",
+  "repository_commit": "b48d4d9a7abfb429f2a17c790d4b32083da5dd92",
+  "dirty_worktree_status": "DIRTY",
+  "corpus_path": "data/mt5/XAUUSD_M15.csv",
+  "corpus_hash": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "corpus_rows": 47275,
+  "config_path": "configs/production/v2_multi_2026_04.json",
+  "config_hash": "9f8cb382b28cbd969e0a774e1381aa1e115326421729ca9810dd6772f311d8b4",
+  "config_id": "v2_multi_2026_04",
+  "prod_version": "v2_multi_2026_04",
+  "feature_schema_hash": "c87a1aba7bc79803d04c680e0232389e",
+  "feature_order_hash": "0edda573414f0a64",
+  "canonical_feature_count": 39,
+  "selection_rule": "After FeaturePipeline finalize, take first finalized timestamp and the next 15 consecutive finalized timestamps (16 total). Prefix: full CRT replay from stream start with warmup+init; trace disabled until first target bar.",
+  "prefix_bars_processed": 0,
+  "target_start_timestamp": "2024-05-22 20:30:00",
+  "target_end_timestamp": "2024-05-23 01:15:00",
+  "target_bar_count": 16,
+  "CRT_initial_reset_boundary": "initialise_range after warmup_candles + HTF seed",
+  "CRT_state_at_target_start": "RANGE",
+  "CRT_state_at_target_end": "RANGE",
+  "trace_file_path": "docs/governance/xauusd_crt_baseline_trace/xauusd_crt_baseline_trace_v1.jsonl",
+  "trace_sha256": "90d699a3d230b61ffc23187d8af09653c8b8f33c3a51724bc69f42c602dda00a",
+  "behavior_parity_verdict": "SEE_TESTS",
+  "trace_completeness_verdict": "PARTIAL",
+  "notes": [
+    "CRT process_candle does not consume the 38-dim FeaturePipeline vector for transition guards.",
+    "Canonical features captured by timestamp lookup into batch FeaturePipeline output.",
+    "Guard instrumentation covers principal try_sweep_to_displacement / try_displacement_to_expansion / try_expansion_to_retest decision points; RANGE sweep detection and soft-confirmation manifold may show fewer guard rows if those paths were not entered."
+  ]
+}

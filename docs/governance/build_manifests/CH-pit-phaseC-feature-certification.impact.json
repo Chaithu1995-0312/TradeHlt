@@ -1,0 +1,33 @@
+{
+  "change_id": "CH-pit-phaseC-feature-certification",
+  "objective": "PIT Phase C: empirical prefix-invariance certification of all 38 production FeaturePipeline columns + permanent pytest floor. No new formula math. Grants no economic authority.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "scripts/analysis/pit_phaseC_feature_certification.py",
+    "tests/test_pit_prefix_invariance.py",
+    "docs/governance/pit_phaseC_feature_certification-2026-07-11.json",
+    "docs/governance/pit_phaseC_feature_certification-2026-07-11.md",
+    "docs/governance/pit_phaseC_certification-2026-07-11.md",
+    "docs/governance/build_manifests/CH-pit-phaseC-feature-certification.impact.json",
+    "docs/governance/build_manifests/CH-pit-phaseC-feature-certification.completion.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": "all 38 CANONICAL_FEATURES (measurement only)",
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_pit_prefix_invariance.py",
+    "tests/test_feature_surface_query.py",
+    "tests/test_fc1d_volregime_causal.py",
+    "tests/test_fc1a_swing_causal.py",
+    "tests/test_session_log.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "behavior_changed": false,
+  "rollback_boundary": "delete Phase-C probe/artifacts/tests; feature code unchanged by this change_id"
+}

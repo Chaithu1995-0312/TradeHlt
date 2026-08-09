@@ -1,0 +1,116 @@
+{
+  "_doc": "M13B trend_strength nested rolling certification.",
+  "schema_version": "1.0",
+  "generated_at": "2026-07-14T06:30:17.664505+00:00",
+  "session_program": "M13B",
+  "TARGET_FEATURE": "trend_strength",
+  "TARGET_IDENTITY": "NESTED_ROLLING_CAUSAL_METRIC",
+  "FORMULA": "SMA10(diff(SMA20(close)))",
+  "ROOT_DEPENDENCY": "close",
+  "CURRENT_DAG_DEPS": [
+    "close"
+  ],
+  "WINDOWS": {
+    "SMA20": {
+      "window": 20,
+      "min_periods": 20
+    },
+    "diff_lag": 1,
+    "SMA10_slopes": {
+      "window": 10,
+      "min_periods": 10
+    }
+  },
+  "FIRST_FINITE_INDEX_FINITE_INPUT": 29,
+  "NORMALIZATION": "NONE",
+  "CLIPPING": "NONE",
+  "COLUMN_DTYPE": "float64",
+  "VECTOR_DTYPE": "float32",
+  "UNITS": "signed price-scale smoothed MA change",
+  "INDEPENDENT_ORACLE": "explicit trailing-window recurrences from raw close",
+  "ORACLE_INDEPENDENCE": "no pandas rolling/diff; no pipeline intermediates",
+  "IMPLEMENTATION_INTERMEDIATES": [
+    "ma_20",
+    "ma_slope_20"
+  ],
+  "INTERMEDIATES_PUBLISHED_AS_DAG_NODES": "NO",
+  "CERTIFICATION_AUTHORITY_DEPENDENCY": "close only",
+  "checkpoint": {
+    "PROMOTED_PRODUCTION": 44,
+    "READY_TO_CERTIFY": 2,
+    "SUPERSEDED": 2
+  },
+  "probes": {
+    "clean_finite": {
+      "1_constant_zero": "PASS",
+      "2_linear_up_positive_constant": "PASS",
+      "3_linear_down_negative_constant": "PASS",
+      "4_first_finite_index_29": "PASS",
+      "5_len29_no_finite": "PASS",
+      "6_len30_one_finite": "PASS",
+      "7_signed_symmetry": "PASS",
+      "8_translation_invariance": "PASS",
+      "9_positive_scale_equivariance": "PASS",
+      "pipeline_parity_clean_up": "PASS",
+      "pipeline_parity_clean_const": "PASS",
+      "column_dtype_float64": "PASS",
+      "oracle_dtype_float64": "PASS"
+    },
+    "window_impulse": {
+      "10_11_impulse_parity": "PASS",
+      "14_15_16_no_partial_before_29": "PASS",
+      "impulse_nonzero_while_in_windows": "PASS",
+      "impulse_returns_near_zero_late": "PASS"
+    },
+    "nan_inf": {
+      "17_leading_nan_before_29": "PASS",
+      "18_19_nan_injection_mask_parity": "PASS",
+      "20_consecutive_nans_mask_parity": "PASS",
+      "21_pos_inf_mask_parity": "PASS",
+      "22_neg_inf_mask_parity": "PASS",
+      "23_24_no_fill_mask_exact": "PASS"
+    },
+    "dtype_publication": {
+      "25_pipeline_column_float64": "PASS",
+      "26_oracle_float64": "PASS",
+      "27_28_float32_cast_parity": "PASS",
+      "float32_tolerance_basis": "float64 oracle\u2194pipeline within 1e-12 (SMA accumulation); float32 cast compared with atol=1e-6"
+    },
+    "pit": {
+      "29_30_prefix_invariance": "PASS",
+      "31_future_mutation": "PASS",
+      "32_same_bar_sensitivity": "PASS",
+      "33_determinism": "PASS"
+    },
+    "pipeline_parity": {
+      "34_synthetic": "PASS",
+      "35_boundary_heavy": "PASS",
+      "36_nan_injection": "PASS",
+      "37_representative_irregular": "PASS"
+    },
+    "telescoping": {
+      "secondary_max_abs_residual": 0.0,
+      "secondary_pass": "PASS"
+    },
+    "name_collision": {
+      "oracle_independent": "PASS",
+      "forbidden_hits": [],
+      "canonical_ne_abs_ema_spread": "PASS",
+      "const_series_strength_zero": "PASS",
+      "deferred_debt": "dual_engine detect_regime uses abs(ema_spread) under local name trend_strength"
+    },
+    "overall_verdict": "CERTIFIED",
+    "all_probes_pass": true,
+    "oracle_source_sha256": "258996cbeb4198768e9f653ef2769f674ab5d66a06545e390228a08787714a0b"
+  },
+  "KNOWN_DEBT": [
+    "dual_engine local variable trend_strength derives from abs(ema_spread)",
+    "scale-dependent consumer thresholds (s07/s08)",
+    "no ontology/FM registration"
+  ],
+  "PER_NODE_VERDICT": "CERTIFIED",
+  "PRODUCTION_BEHAVIOR_CHANGED": "NO",
+  "CANONICAL_VECTOR_DIMENSION": 38,
+  "authority": "research/governance only \u2014 descriptive certification; grants no runtime authority (\u00a76.5)",
+  "scope_boundary": "trend_strength only; volatility_regime untouched"
+}

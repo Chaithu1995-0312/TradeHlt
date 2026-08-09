@@ -1,0 +1,27 @@
+{
+  "change_id": "CH-tradenet-qualification-protocol",
+  "objective": "DOCUMENTATION_ONLY: publish TradeNet Qualification Protocol TN_QUAL_V1 defining authoritative label generation, retrain criteria, offline acceptance metrics, shadow-mode evaluation, and production promotion gates. Grants no neural_fn wire, no retrain authority, no economic claim.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "docs/governance/tradenet_qualification_protocol.md",
+    "docs/governance/tradenet_lineage_audit.md",
+    "docs/governance/closure_authority_index.json",
+    "docs/topics/training-calibration.md",
+    "docs/governance/build_manifests/CH-tradenet-qualification-protocol.impact.json",
+    "CLAUDE.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — protocol only; TradeNet remains UNWIRED (F-005)",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_closure_authority_index.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit; delete protocol file and revert cross-links"
+}

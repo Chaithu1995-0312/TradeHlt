@@ -1,0 +1,3439 @@
+{
+  "artifact": "feature_surface_closure_audit",
+  "generated_at": "2026-07-11T11:50:25.541324+00:00",
+  "date": "2026-07-11",
+  "active_version": "v2_multi_2026_04",
+  "schema": {
+    "canonical_feature_dim": 38,
+    "n_features": 38,
+    "schema_hash_md5": "1ba02abbafdd0786831181677de547c1",
+    "feature_order_hash": "235553310100a340",
+    "order": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "volume_ratio",
+      "double_sweep",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "trend_bias",
+      "trend_strength",
+      "momentum_score",
+      "atr",
+      "volatility_ratio",
+      "rsi_14",
+      "macd_line",
+      "macd_signal",
+      "macd_hist",
+      "sweep_detected",
+      "liquidity_sweep",
+      "break_of_structure",
+      "swing_high",
+      "swing_low",
+      "higher_high",
+      "lower_low",
+      "body_size",
+      "wick_size",
+      "body_ratio",
+      "volatility_regime",
+      "session",
+      "hour_of_day",
+      "disp_strength",
+      "retest_depth",
+      "candles_since_retest",
+      "liquidity_distance",
+      "liquidity_pressure_score",
+      "volume_spike"
+    ]
+  },
+  "sources": {
+    "lineage_census": "docs/governance/feature_38_lineage_census-2026-07-11.json",
+    "producer_consumer_graph": "docs/governance/phase1_run1_feature_producer_consumer_graph-2026-07-10.json",
+    "consumer_binding_manifest": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+    "dependency_graph": "docs/governance/feature_dependency_graph_fc05-2026-07-10.json",
+    "feature_contract_v1": "docs/governance/feature_contract_v1-2026-07-10.json",
+    "identity_registry": "docs/governance/phase1_feature_identity_registry-2026-07-10.json",
+    "universe_census": "docs/governance/phase1_run1_feature_universe_census-2026-07-10.json",
+    "ontology": "configs/formulas/market_ontology.yaml",
+    "fc05_closure_manifest": "docs/governance/feature_pipeline_fc05_closure_manifest-2026-07-10.json",
+    "fc1a_contract": "docs/governance/feature_pipeline_change_contracts/FC1-A-SWING-CAUSAL.json",
+    "fc1a_impl": "docs/governance/fc1a_post_implementation_measurement-2026-07-11.md",
+    "pit_decision": "docs/governance/pit_phaseA_centered_swing_decision_record-2026-07-11.json",
+    "geometry_census_summary": "docs/governance/geometry_census_summary.json",
+    "rr_provenance": "models/rr_model.provenance.json",
+    "zone_provenance": "models/zone_registry.provenance.json"
+  },
+  "fc05_prior_status": {
+    "FEATURE_PIPELINE_FC05_STATUS": "COMPLETE_WITH_BLOCKERS",
+    "dependency_graph_status": "COMPLETE_CODE_DERIVED",
+    "formula_collision_status": "KNOWN_COLLISIONS_IDENTIFIED",
+    "consumer_binding_status": "PARTIAL_WITH_UNKNOWNS",
+    "volatility_regime_verdict": "SEPARATE_LOCAL_VOLATILITY_CONTEXT_FEATURE",
+    "unresolved_unknowns": [
+      "Multiple trained artifacts have ARTIFACT_BINDING_UNKNOWN (BitNet, Gaussian 38-dim, rr_fusion, TradeNet)",
+      "ALL_COLLISIONS_EXHAUSTED = unproven (cannot claim collision census complete)",
+      "live_engine_hook migration BLOCKED_PENDING_EVIDENCE (batch/live parity not fully proven)",
+      "volatility_regime FC-1 math intent resolved as rename+rolling, but consumer s05_grid reachability still soft",
+      "scoring_engine local disp_strength=move/atr not fully call-site traced",
+      "historical training code versions for each artifact",
+      "all research scripts recomputing indicators outside FeaturePipeline",
+      "exact s05_grid production reachability today",
+      "optimal N beyond 200 not exhaustively searched (not optimization for PnL)"
+    ]
+  },
+  "fc1a_status": {
+    "contract_status": "IMPLEMENTED",
+    "implementation_change_id": "CH-fc1a-swing-causal",
+    "finding": "F-051",
+    "structure_features_remapped": [
+      "break_of_structure",
+      "double_sweep",
+      "higher_high",
+      "liquidity_distance",
+      "liquidity_pressure_score",
+      "liquidity_sweep",
+      "lower_low",
+      "sweep_detected",
+      "swing_high",
+      "swing_low"
+    ],
+    "ledger_importance": "INCONCLUSIVE (PC-2 failed) \u2014 see F-051"
+  },
+  "model_artifact_exposure": {
+    "rr": {
+      "path": "models/rr_model.json",
+      "zero_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        7,
+        8,
+        16,
+        17,
+        26,
+        27
+      ],
+      "provenance": "models/rr_model.provenance.json",
+      "pit_status": "PIT_UNCLEAN_CENTERED_SWINGS"
+    },
+    "zone": {
+      "path": "models/zone_registry.json",
+      "n_zones": 8,
+      "feature_order": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "volume_ratio",
+        "double_sweep",
+        "ema_fast",
+        "ema_slow",
+        "ema_spread",
+        "trend_bias",
+        "trend_strength",
+        "momentum_score",
+        "atr",
+        "volatility_ratio",
+        "rsi_14",
+        "macd_line",
+        "macd_signal",
+        "macd_hist",
+        "sweep_detected",
+        "liquidity_sweep",
+        "break_of_structure",
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "body_size",
+        "wick_size",
+        "body_ratio",
+        "volatility_regime",
+        "session",
+        "hour_of_day",
+        "disp_strength",
+        "retest_depth",
+        "candles_since_retest",
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "volume_spike"
+      ],
+      "provenance": "models/zone_registry.provenance.json",
+      "pit_status": "PIT_UNCLEAN_CENTERED_SWINGS"
+    }
+  },
+  "geometry_census_summary": {
+    "TOTAL_OCCURRENCES": 447,
+    "TOTAL_DERIVATIONS": 117,
+    "TOTAL_PRODUCERS": 113,
+    "TOTAL_TRANSPORT_SITES": 102,
+    "TOTAL_CONSUMERS": 228,
+    "TOTAL_TEST_ORACLES": 4,
+    "TOTAL_UNKNOWN": 0,
+    "MANUALLY_ADMITTED_EXECUTORS": 2
+  },
+  "rollup": {
+    "closure_status_counts": {
+      "CLOSED": 38
+    },
+    "doc_alignment_counts": {
+      "ALIGNED": 38
+    },
+    "pit_class_census_counts": {
+      "RAW_CONTEMPORANEOUS": 7,
+      "RAW_OR_SYNTHETIC_SAME_BAR": 1,
+      "CAUSAL_ROLLING": 5,
+      "STRUCTURE_WITH_CAUSAL_SWING": 8,
+      "CAUSAL_EWM": 4,
+      "CAUSAL_DERIVED": 8,
+      "CAUSAL_DELAYED_PUBLICATION": 2,
+      "CALENDAR_SAME_BAR": 2,
+      "CAUSAL_COUNTER": 1
+    },
+    "pit_class_effective_counts": {
+      "RAW_CONTEMPORANEOUS": 7,
+      "RAW_OR_SYNTHETIC_SAME_BAR": 1,
+      "CAUSAL_ROLLING": 5,
+      "STRUCTURE_WITH_CAUSAL_SWING": 8,
+      "CAUSAL_EWM": 4,
+      "CAUSAL_DERIVED": 8,
+      "CAUSAL_DELAYED_PUBLICATION": 2,
+      "CALENDAR_SAME_BAR": 2,
+      "CAUSAL_COUNTER": 1
+    },
+    "n_ontology_hits": 10,
+    "n_identity_registry_hits": 8,
+    "n_with_write_sites": 38,
+    "n_rr_active_dims": 27,
+    "n_doc_stale_pit_after_fc1a": 0,
+    "n_with_artifact_flags": 27
+  },
+  "families": {
+    "ohlcv_raw": {
+      "n": 5,
+      "status_counts": {
+        "CLOSED": 5
+      },
+      "doc_alignment": {
+        "ALIGNED": 5
+      },
+      "members": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume"
+      ]
+    },
+    "volume_derived": {
+      "n": 2,
+      "status_counts": {
+        "CLOSED": 2
+      },
+      "doc_alignment": {
+        "ALIGNED": 2
+      },
+      "members": [
+        "volume_ratio",
+        "volume_spike"
+      ]
+    },
+    "ema_trend": {
+      "n": 6,
+      "status_counts": {
+        "CLOSED": 6
+      },
+      "doc_alignment": {
+        "ALIGNED": 6
+      },
+      "members": [
+        "ema_fast",
+        "ema_slow",
+        "ema_spread",
+        "trend_bias",
+        "trend_strength",
+        "momentum_score"
+      ]
+    },
+    "volatility": {
+      "n": 3,
+      "status_counts": {
+        "CLOSED": 3
+      },
+      "doc_alignment": {
+        "ALIGNED": 3
+      },
+      "members": [
+        "atr",
+        "volatility_ratio",
+        "volatility_regime"
+      ]
+    },
+    "momentum_indicators": {
+      "n": 4,
+      "status_counts": {
+        "CLOSED": 4
+      },
+      "doc_alignment": {
+        "ALIGNED": 4
+      },
+      "members": [
+        "rsi_14",
+        "macd_line",
+        "macd_signal",
+        "macd_hist"
+      ]
+    },
+    "structure_fc1a": {
+      "n": 10,
+      "status_counts": {
+        "CLOSED": 10
+      },
+      "doc_alignment": {
+        "ALIGNED": 10
+      },
+      "members": [
+        "double_sweep",
+        "sweep_detected",
+        "liquidity_sweep",
+        "break_of_structure",
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "liquidity_distance",
+        "liquidity_pressure_score"
+      ]
+    },
+    "retest_secondaries": {
+      "n": 2,
+      "status_counts": {
+        "CLOSED": 2
+      },
+      "doc_alignment": {
+        "ALIGNED": 2
+      },
+      "members": [
+        "retest_depth",
+        "candles_since_retest"
+      ]
+    },
+    "candle_anatomy": {
+      "n": 4,
+      "status_counts": {
+        "CLOSED": 4
+      },
+      "doc_alignment": {
+        "ALIGNED": 4
+      },
+      "members": [
+        "body_size",
+        "wick_size",
+        "body_ratio",
+        "disp_strength"
+      ]
+    },
+    "calendar": {
+      "n": 2,
+      "status_counts": {
+        "CLOSED": 2
+      },
+      "doc_alignment": {
+        "ALIGNED": 2
+      },
+      "members": [
+        "session",
+        "hour_of_day"
+      ]
+    }
+  },
+  "open_remediations": {
+    "FC1-A": {
+      "status": "IMPLEMENTED",
+      "change_id": "CH-fc1a-swing-causal",
+      "affects": [
+        "break_of_structure",
+        "candles_since_retest",
+        "double_sweep",
+        "higher_high",
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "liquidity_sweep",
+        "lower_low",
+        "retest_depth",
+        "sweep_detected",
+        "swing_high",
+        "swing_low"
+      ]
+    },
+    "FC1-B-VOLUME": {
+      "status": "DRAFTED_FC0_NOT_IMPLEMENTED",
+      "title": "Separate T-003 volume proxy identity from source volume",
+      "change_id": "FC1-B-VOLUME-SEMANTIC-SPLIT"
+    },
+    "FC1-C-FM-IDENTITY": {
+      "status": "DRAFTED_FC0_NOT_IMPLEMENTED",
+      "title": "Separate FM-020/021 pipeline identities from FM-027/028 CRT identities",
+      "change_id": "FC1-C-FM-IDENTITY-SEPARATION"
+    },
+    "FC1-D-VOLREGIME": {
+      "status": "IMPLEMENTED",
+      "title": "volatility_regime global rank \u2192 causal regime semantic",
+      "change_id": "FC1-D-VOLREGIME-CAUSAL"
+    },
+    "F-051": "registered; FC1-A implemented",
+    "rr_zone_provenance": {
+      "rr": "PIT_UNCLEAN_CENTERED_SWINGS",
+      "zone": "PIT_UNCLEAN_CENTERED_SWINGS",
+      "rule": "no promote/re-enable/economic evidence without causal revalidation"
+    }
+  },
+  "features": [
+    {
+      "index": 0,
+      "name": "open",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "RAW_CONTEMPORANEOUS",
+      "pit_class_effective": "RAW_CONTEMPORANEOUS",
+      "formula_id": "RAW-OHLCV",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector",
+        "CandleLoader.Candle",
+        "CRTEngine"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "CandleLoader.Candle",
+        "CRTEngine",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 54
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 153
+        },
+        {
+          "file": "scripts/research/gaussian_rr_scatter.py",
+          "lineno": 49
+        },
+        {
+          "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+          "lineno": 86
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": false,
+        "rr_zeroed": true,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.0,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 1,
+      "name": "high",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "RAW_CONTEMPORANEOUS",
+      "pit_class_effective": "RAW_CONTEMPORANEOUS",
+      "formula_id": "RAW-OHLCV",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "Candle",
+        "CRT",
+        "candle_math"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "Candle",
+        "CRT",
+        "candle_math",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 55
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 154
+        },
+        {
+          "file": "scripts/research/gaussian_rr_scatter.py",
+          "lineno": 50
+        },
+        {
+          "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+          "lineno": 85
+        },
+        {
+          "file": "scripts/analysis/feature_semantic_adjudication_pass_a.py",
+          "lineno": 157
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": false,
+        "rr_zeroed": true,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.0,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 2,
+      "name": "low",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "RAW_CONTEMPORANEOUS",
+      "pit_class_effective": "RAW_CONTEMPORANEOUS",
+      "formula_id": "RAW-OHLCV",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "Candle",
+        "CRT",
+        "candle_math"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "Candle",
+        "CRT",
+        "candle_math",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 56
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 155
+        },
+        {
+          "file": "scripts/research/gaussian_rr_scatter.py",
+          "lineno": 51
+        },
+        {
+          "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+          "lineno": 86
+        },
+        {
+          "file": "scripts/analysis/feature_semantic_adjudication_pass_a.py",
+          "lineno": 158
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": false,
+        "rr_zeroed": true,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.0,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 3,
+      "name": "close",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "RAW_CONTEMPORANEOUS",
+      "pit_class_effective": "RAW_CONTEMPORANEOUS",
+      "formula_id": "RAW-OHLCV",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "Candle",
+        "indicators",
+        "CRT"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "Candle",
+        "indicators",
+        "CRT",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 57
+        },
+        {
+          "file": "src/runtime/backtest_v2.py",
+          "lineno": 2171
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 156
+        },
+        {
+          "file": "scripts/research/gaussian_rr_scatter.py",
+          "lineno": 52
+        },
+        {
+          "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+          "lineno": 85
+        },
+        {
+          "file": "tests/test_backtest_payload_integrity.py",
+          "lineno": 10
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": false,
+        "rr_zeroed": true,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.0,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 4,
+      "name": "volume",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "RAW_OR_SYNTHETIC_SAME_BAR",
+      "pit_class_effective": "RAW_OR_SYNTHETIC_SAME_BAR",
+      "formula_id": "RAW-OHLCV / T-003",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:203-233"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "volume_ratio",
+        "volume_spike"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "volume_ratio",
+        "volume_spike",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 58
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 216
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 157
+        },
+        {
+          "file": "scripts/research/gaussian_rr_scatter.py",
+          "lineno": 53
+        },
+        {
+          "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+          "lineno": 87
+        },
+        {
+          "file": "scripts/analysis/feature_semantic_adjudication_pass_a.py",
+          "lineno": 312
+        },
+        {
+          "file": "scripts/analysis/purge_delay_scan.py",
+          "lineno": 63
+        },
+        {
+          "file": "tests/test_backtest_payload_integrity.py",
+          "lineno": 11
+        },
+        {
+          "file": "tests/test_feature_pipeline.py",
+          "lineno": 60
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [
+        {
+          "feature_id": "FEAT-VOLUME",
+          "status": "CANONICAL_IMPLEMENTATION_SELECTED",
+          "temporal": "value_timestamp=t; available_at=t; bar-local"
+        },
+        {
+          "feature_id": "FEAT-VOLUME",
+          "status": "CANONICAL_IMPLEMENTATION_SELECTED",
+          "temporal": "value_timestamp=t; available_at=t; bar-local"
+        }
+      ],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": false,
+        "rr_zeroed": true,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.0,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 5,
+      "name": "volume_ratio",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_ROLLING",
+      "pit_class_effective": "CAUSAL_ROLLING",
+      "formula_id": "DERIVED-VOL",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:219-228"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector",
+        "volume_spike"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "volume_spike",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 63
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 218
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 225
+        },
+        {
+          "file": "src/core/feature_store.py",
+          "lineno": 81
+        },
+        {
+          "file": "src/core/feature_store.py",
+          "lineno": 135
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 158
+        },
+        {
+          "file": "scripts/research/momentum_continuation_bnbusdt.py",
+          "lineno": 173
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [
+        {
+          "feature_id": "FEAT-VOLUME_RATIO",
+          "status": "IDENTITY_CLOSED",
+          "temporal": "value_timestamp=t; lookback=20"
+        },
+        {
+          "feature_id": "FEAT-VOLUME_RATIO",
+          "status": "IDENTITY_CLOSED",
+          "temporal": "value_timestamp=t; lookback=20"
+        }
+      ],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 6,
+      "name": "double_sweep",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "STRUCTURE_WITH_CAUSAL_SWING",
+      "pit_class_effective": "STRUCTURE_WITH_CAUSAL_SWING",
+      "formula_id": "STRUCT-SWEEP",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector",
+        "CRT-related features",
+        "FeatureStore live"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "CRTEngine[active]",
+        "BitNet[inactive]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "CRT-related features",
+        "FeatureStore live",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "CRTEngine[active]",
+        "BitNet[inactive]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 64
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 557
+        },
+        {
+          "file": "src/core/feature_store.py",
+          "lineno": 83
+        },
+        {
+          "file": "src/core/feature_store.py",
+          "lineno": 129
+        },
+        {
+          "file": "src/core/feature_store.py",
+          "lineno": 131
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 177
+        },
+        {
+          "file": "scripts/research/live_path_replay.py",
+          "lineno": 141
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": true,
+        "pre_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "post_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "production_bind": "causal_confirmed (available_at=t+k, k=SWING_WINDOW)",
+        "research_bind": "derived from causal refs",
+        "evidence": "CH-fc1a-swing-causal / F-051",
+        "doc_stale": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 7,
+      "name": "ema_fast",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_EWM",
+      "pit_class_effective": "CAUSAL_EWM",
+      "formula_id": "FM-EMA-FAST",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:238-284"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "ema_spread",
+        "CRT cached"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_live_heuristic[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "ema_spread",
+        "CRT cached",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_live_heuristic[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 69
+        },
+        {
+          "file": "src/features/feature_builder.py",
+          "lineno": 65
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 492
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 159
+        },
+        {
+          "file": "scripts/research/gaussian_rr_scatter.py",
+          "lineno": 54
+        },
+        {
+          "file": "scripts/research/live_path_replay.py",
+          "lineno": 134
+        },
+        {
+          "file": "tests/test_gaussian_impl_switch.py",
+          "lineno": 21
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": false,
+        "rr_zeroed": true,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.0,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 8,
+      "name": "ema_slow",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_EWM",
+      "pit_class_effective": "CAUSAL_EWM",
+      "formula_id": "FM-EMA-SLOW",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:238-284"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "ema_spread"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_live_heuristic[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "ema_spread",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_live_heuristic[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 70
+        },
+        {
+          "file": "src/features/feature_builder.py",
+          "lineno": 66
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 493
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 160
+        },
+        {
+          "file": "scripts/research/gaussian_rr_scatter.py",
+          "lineno": 55
+        },
+        {
+          "file": "scripts/research/live_path_replay.py",
+          "lineno": 135
+        },
+        {
+          "file": "tests/test_gaussian_impl_switch.py",
+          "lineno": 22
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": false,
+        "rr_zeroed": true,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.0,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 9,
+      "name": "ema_spread",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_DERIVED",
+      "pit_class_effective": "CAUSAL_DERIVED",
+      "formula_id": "FM-022-ish / pipeline trend",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/derived_math.py",
+        "configs/formulas/market_ontology.yaml"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector",
+        "CRT cached_features"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "CRT cached_features",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 71
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 497
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 161
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": {
+        "key": "ema_spread",
+        "section": "derived_metrics",
+        "id": "FM-022"
+      },
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.0,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "IN_SCOPE_HIT",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 10,
+      "name": "trend_bias",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_DERIVED",
+      "pit_class_effective": "CAUSAL_DERIVED",
+      "formula_id": "DERIVED-TREND",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:290-298"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector",
+        "Gaussian/BitNet inputs"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "Gaussian/BitNet inputs",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 77
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 512
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 162
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 11,
+      "name": "trend_strength",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_ROLLING",
+      "pit_class_effective": "CAUSAL_ROLLING",
+      "formula_id": "DERIVED-TREND",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:295-296"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 78
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 296
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 163
+        },
+        {
+          "file": "scripts/research/momentum_continuation_bnbusdt.py",
+          "lineno": 188
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 12,
+      "name": "momentum_score",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_DERIVED",
+      "pit_class_effective": "CAUSAL_DERIVED",
+      "formula_id": "FM-023",
+      "impl_refs": [
+        "src/features/derived_math.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector",
+        "CRT telemetry"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_live_heuristic[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "CRT telemetry",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_live_heuristic[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 83
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 503
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 164
+        },
+        {
+          "file": "scripts/research/gaussian_rr_scatter.py",
+          "lineno": 56
+        },
+        {
+          "file": "tests/test_gaussian_impl_switch.py",
+          "lineno": 23
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": {
+        "key": "momentum_score",
+        "section": "derived_metrics",
+        "id": "FM-023"
+      },
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.0,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "IN_SCOPE_HIT",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 13,
+      "name": "atr",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_ROLLING",
+      "pit_class_effective": "CAUSAL_ROLLING",
+      "formula_id": "FM-ATR",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:262-268"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "disp_strength",
+        "retest_depth",
+        "liquidity_*"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "BitNet[inactive]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "disp_strength",
+        "retest_depth",
+        "liquidity_*",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "BitNet[inactive]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 88
+        },
+        {
+          "file": "src/features/feature_builder.py",
+          "lineno": 64
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 468
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lineno": 1737
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lineno": 1806
+        },
+        {
+          "file": "src/runtime/backtest_v2.py",
+          "lineno": 2172
+        },
+        {
+          "file": "src/research/secondlow_v1/detector.py",
+          "lineno": 136
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 165
+        },
+        {
+          "file": "scripts/research/gaussian_rr_scatter.py",
+          "lineno": 57
+        },
+        {
+          "file": "scripts/research/live_path_replay.py",
+          "lineno": 133
+        },
+        {
+          "file": "scripts/research/momentum_continuation_bnbusdt.py",
+          "lineno": 168
+        },
+        {
+          "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+          "lineno": 87
+        },
+        {
+          "file": "scripts/analysis/purge_delay_scan.py",
+          "lineno": 122
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 14,
+      "name": "volatility_ratio",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_DERIVED",
+      "pit_class_effective": "CAUSAL_DERIVED",
+      "formula_id": "FM-024",
+      "impl_refs": [
+        "src/features/derived_math.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 89
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 482
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 166
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": {
+        "key": "volatility_ratio",
+        "section": "derived_metrics",
+        "id": "FM-024"
+      },
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "IN_SCOPE_HIT",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 15,
+      "name": "rsi_14",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_ROLLING",
+      "pit_class_effective": "CAUSAL_ROLLING",
+      "formula_id": "RSI-14",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:246-255"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 94
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 255
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 167
+        },
+        {
+          "file": "scripts/research/momentum_continuation_bnbusdt.py",
+          "lineno": 185
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 16,
+      "name": "macd_line",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_EWM",
+      "pit_class_effective": "CAUSAL_EWM",
+      "formula_id": "MACD",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:278-283"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "macd_hist"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "macd_hist",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 95
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 281
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": false,
+        "rr_zeroed": true,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.0,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 17,
+      "name": "macd_signal",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_EWM",
+      "pit_class_effective": "CAUSAL_EWM",
+      "formula_id": "MACD",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:282"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "macd_hist"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "macd_hist",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 96
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 282
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": false,
+        "rr_zeroed": true,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.0,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 18,
+      "name": "macd_hist",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_DERIVED",
+      "pit_class_effective": "CAUSAL_DERIVED",
+      "formula_id": "MACD",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:283"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector",
+        "NORMALIZE_COLS"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "NORMALIZE_COLS",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 97
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 283
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 19,
+      "name": "sweep_detected",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "STRUCTURE_WITH_CAUSAL_SWING",
+      "pit_class_effective": "STRUCTURE_WITH_CAUSAL_SWING",
+      "formula_id": "STRUCT-SWEEP",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector",
+        "CRT score channel"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "CRT score channel",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 102
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 521
+        },
+        {
+          "file": "scripts/research/live_path_replay.py",
+          "lineno": 140
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": true,
+        "pre_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "post_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "production_bind": "causal_confirmed (available_at=t+k, k=SWING_WINDOW)",
+        "research_bind": "derived from causal refs",
+        "evidence": "CH-fc1a-swing-causal / F-051",
+        "doc_stale": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 20,
+      "name": "liquidity_sweep",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "STRUCTURE_WITH_CAUSAL_SWING",
+      "pit_class_effective": "STRUCTURE_WITH_CAUSAL_SWING",
+      "formula_id": "STRUCT-LIQ",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector",
+        "FeatureStore live"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "FeatureStore live",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 103
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 412
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": true,
+        "pre_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "post_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "production_bind": "causal_confirmed (available_at=t+k, k=SWING_WINDOW)",
+        "research_bind": "derived from causal refs",
+        "evidence": "CH-fc1a-swing-causal / F-051",
+        "doc_stale": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 21,
+      "name": "break_of_structure",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "STRUCTURE_WITH_CAUSAL_SWING",
+      "pit_class_effective": "STRUCTURE_WITH_CAUSAL_SWING",
+      "formula_id": "STRUCT-BOS",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 104
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 404
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": true,
+        "pre_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "post_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "production_bind": "causal_confirmed (available_at=t+k, k=SWING_WINDOW)",
+        "research_bind": "derived from causal refs",
+        "evidence": "CH-fc1a-swing-causal / F-051",
+        "doc_stale": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 22,
+      "name": "swing_high",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_DELAYED_PUBLICATION",
+      "pit_class_effective": "CAUSAL_DELAYED_PUBLICATION",
+      "formula_id": "STRUCT-SWING",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/causal_structure.py",
+        "SWING_WINDOW=2"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "BOS/sweep features",
+        "FeatureStore live"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "BOS/sweep features",
+        "FeatureStore live",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 109
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 362
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 384
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [
+        {
+          "feature_id": "FEAT-SWING_HIGH_CAUSAL_CONFIRMED",
+          "status": "CANONICAL_IMPLEMENTATION_SELECTED",
+          "temporal": "event_time=t; confirmation_at=t+k; available_at=t+k; publication_delay=k"
+        }
+      ],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": true,
+        "pre_fc1a_pit_class": "CAUSAL_DELAYED_PUBLICATION",
+        "post_fc1a_pit_class": "CAUSAL_DELAYED_PUBLICATION",
+        "production_bind": "causal_confirmed (available_at=t+k, k=SWING_WINDOW)",
+        "research_bind": "*_centered_batch preserved",
+        "evidence": "CH-fc1a-swing-causal / F-051",
+        "doc_stale": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 23,
+      "name": "swing_low",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_DELAYED_PUBLICATION",
+      "pit_class_effective": "CAUSAL_DELAYED_PUBLICATION",
+      "formula_id": "STRUCT-SWING",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/causal_structure.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "BOS/sweep features",
+        "FeatureStore live"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "BOS/sweep features",
+        "FeatureStore live",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 110
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 364
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 385
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [
+        {
+          "feature_id": "FEAT-SWING_LOW_CAUSAL_CONFIRMED",
+          "status": "CANONICAL_IMPLEMENTATION_SELECTED",
+          "temporal": "event_time=t; confirmation_at=t+k; available_at=t+k; publication_delay=k"
+        }
+      ],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": true,
+        "pre_fc1a_pit_class": "CAUSAL_DELAYED_PUBLICATION",
+        "post_fc1a_pit_class": "CAUSAL_DELAYED_PUBLICATION",
+        "production_bind": "causal_confirmed (available_at=t+k, k=SWING_WINDOW)",
+        "research_bind": "*_centered_batch preserved",
+        "evidence": "CH-fc1a-swing-causal / F-051",
+        "doc_stale": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 24,
+      "name": "higher_high",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "STRUCTURE_WITH_CAUSAL_SWING",
+      "pit_class_effective": "STRUCTURE_WITH_CAUSAL_SWING",
+      "formula_id": "STRUCT-HH",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 111
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 393
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": true,
+        "pre_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "post_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "production_bind": "causal_confirmed (available_at=t+k, k=SWING_WINDOW)",
+        "research_bind": "derived from causal refs",
+        "evidence": "CH-fc1a-swing-causal / F-051",
+        "doc_stale": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 25,
+      "name": "lower_low",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "STRUCTURE_WITH_CAUSAL_SWING",
+      "pit_class_effective": "STRUCTURE_WITH_CAUSAL_SWING",
+      "formula_id": "STRUCT-LL",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 112
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 395
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": true,
+        "pre_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "post_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "production_bind": "causal_confirmed (available_at=t+k, k=SWING_WINDOW)",
+        "research_bind": "derived from causal refs",
+        "evidence": "CH-fc1a-swing-causal / F-051",
+        "doc_stale": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 26,
+      "name": "body_size",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "RAW_CONTEMPORANEOUS",
+      "pit_class_effective": "RAW_CONTEMPORANEOUS",
+      "formula_id": "FM-001-ish / candle_math.body_size",
+      "impl_refs": [
+        "src/features/candle_math.py:25-27",
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "body_ratio",
+        "CRT"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "body_ratio",
+        "CRT",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 123
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 449
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 168
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": {
+        "key": "body_size",
+        "section": "primitives",
+        "id": "FM-001"
+      },
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": false,
+        "rr_zeroed": true,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.0,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "IN_SCOPE_HIT",
+        "artifact_flags": [],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 27,
+      "name": "wick_size",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "RAW_CONTEMPORANEOUS",
+      "pit_class_effective": "RAW_CONTEMPORANEOUS",
+      "formula_id": "FM-002",
+      "impl_refs": [
+        "src/features/candle_math.py:30-32",
+        "configs/formulas/market_ontology.yaml primitives.candle_range"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "body_ratio"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "body_ratio",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 124
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 450
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 169
+        },
+        {
+          "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+          "lineno": 84
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": {
+        "key": "wick_size",
+        "section": "primitives",
+        "id": "FM-002"
+      },
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": false,
+        "rr_zeroed": true,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.0,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "IN_SCOPE_HIT",
+        "artifact_flags": [],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 28,
+      "name": "body_ratio",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "RAW_CONTEMPORANEOUS",
+      "pit_class_effective": "RAW_CONTEMPORANEOUS",
+      "formula_id": "FM-010",
+      "impl_refs": [
+        "src/features/candle_math.py:50-59",
+        "configs/formulas/market_ontology.yaml body_ratio"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "CRT displacement gate body_ratio>=0.70",
+        "FeatureMonitor"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "CRTEngine[active]",
+        "BitNet[inactive]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "CRT displacement gate body_ratio>=0.70",
+        "FeatureMonitor",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "CRTEngine[active]",
+        "BitNet[inactive]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 125
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 452
+        },
+        {
+          "file": "src/config_layer/rr/rr_fusion.py",
+          "lineno": 178
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 170
+        },
+        {
+          "file": "scripts/research/live_path_replay.py",
+          "lineno": 137
+        },
+        {
+          "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+          "lineno": 83
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": {
+        "key": "body_ratio",
+        "section": "feature_compositions",
+        "id": "FM-010"
+      },
+      "identity_registry": [
+        {
+          "feature_id": "FEAT-BODY_TO_RANGE_RATIO",
+          "status": "CANONICAL_IMPLEMENTATION_SELECTED",
+          "temporal": "bar-local t"
+        }
+      ],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "IN_SCOPE_HIT",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 29,
+      "name": "volatility_regime",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_ROLLING",
+      "pit_class_effective": "CAUSAL_ROLLING",
+      "formula_id": "REGIME-VOL-ROLLING-CAUSAL",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "SWING-adjacent: rolling window 200"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector",
+        "s05_grid",
+        "live_engine_hook pass-through"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "s05_grid",
+        "live_engine_hook pass-through",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 130
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 323
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 171
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [
+        {
+          "feature_id": "FEAT-VOLATILITY_REGIME_ROLLING_CAUSAL_RANK",
+          "status": "CANONICAL_IMPLEMENTATION_SELECTED",
+          "temporal": "ranking_population=rolling_window_N; causal within window"
+        }
+      ],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false,
+        "fc1d_applies": true,
+        "pre_fc1d_pit_class": "CAUSAL_ROLLING",
+        "post_fc1a_pit_class": "CAUSAL_ROLLING",
+        "production_bind": "rolling ATR percentile tercile N=200 (FC1-D)",
+        "evidence": "CH-fc1d-volregime-causal / FC-0.5 adjudication",
+        "doc_stale": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 30,
+      "name": "session",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CALENDAR_SAME_BAR",
+      "pit_class_effective": "CALENDAR_SAME_BAR",
+      "formula_id": "CAL-SESSION",
+      "impl_refs": [
+        "src/features/feature_schema.py:91-100",
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector",
+        "session filters"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "CRTEngine[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "session filters",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "CRTEngine[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 138
+        },
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 141
+        },
+        {
+          "file": "src/features/feature_builder.py",
+          "lineno": 72
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 343
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 695
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 140
+        },
+        {
+          "file": "scripts/research/momentum_continuation_bnbusdt.py",
+          "lineno": 205
+        },
+        {
+          "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+          "lineno": 89
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 31,
+      "name": "hour_of_day",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CALENDAR_SAME_BAR",
+      "pit_class_effective": "CALENDAR_SAME_BAR",
+      "formula_id": "CAL-HOUR",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 154
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 338
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 142
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 32,
+      "name": "disp_strength",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_DERIVED",
+      "pit_class_effective": "CAUSAL_DERIVED",
+      "formula_id": "FM-020",
+      "impl_refs": [
+        "src/features/derived_math.py",
+        "configs/formulas/market_ontology.yaml FM-020",
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "CRT cached_features",
+        "FeatureMonitor"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "BitNet[inactive]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "CRT cached_features",
+        "FeatureMonitor",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "BitNet[inactive]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 159
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 565
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 570
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lineno": 1745
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lineno": 1814
+        },
+        {
+          "file": "src/config_layer/rr/rr_fusion.py",
+          "lineno": 179
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 172
+        },
+        {
+          "file": "scripts/research/live_path_replay.py",
+          "lineno": 138
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": {
+        "key": "disp_strength",
+        "section": "derived_metrics",
+        "id": "FM-020"
+      },
+      "identity_registry": [
+        {
+          "feature_id": "FEAT-DISP_STRENGTH",
+          "status": "IDENTITY_CLOSED",
+          "temporal": "bar-local; depends ATR warmup"
+        },
+        {
+          "feature_id": "FEAT-DISP_STRENGTH",
+          "status": "IDENTITY_CLOSED",
+          "temporal": "bar-local; depends ATR warmup"
+        }
+      ],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "IN_SCOPE_HIT",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 33,
+      "name": "retest_depth",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_DERIVED",
+      "pit_class_effective": "CAUSAL_DERIVED",
+      "formula_id": "FM-021 / FM-027 split (F-050)",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/derived_math.py",
+        "configs/formulas/market_ontology.yaml"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline",
+        "CRT",
+        "FeatureMonitor"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "BitNet[inactive]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline",
+        "CRT",
+        "FeatureMonitor",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "BitNet[inactive]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 160
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 579
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 584
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lineno": 1744
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lineno": 1813
+        },
+        {
+          "file": "src/config_layer/rr/rr_fusion.py",
+          "lineno": 177
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 173
+        },
+        {
+          "file": "scripts/research/live_path_replay.py",
+          "lineno": 136
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": {
+        "key": "retest_depth",
+        "section": "derived_metrics",
+        "id": "FM-021"
+      },
+      "identity_registry": [
+        {
+          "feature_id": "FEAT-RETEST_DEPTH",
+          "status": "IDENTITY_CLOSED",
+          "temporal": "bar-local; gated on retest_flag"
+        },
+        {
+          "feature_id": "FEAT-RETEST_DEPTH",
+          "status": "IDENTITY_CLOSED",
+          "temporal": "bar-local; gated on retest_flag"
+        }
+      ],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": true,
+        "role": "coherent_secondary",
+        "note": "retest_* derives from liquidity_sweep; must follow causal sweep (no hybrid)",
+        "post_fc1a_pit_class": "CAUSAL_DERIVED",
+        "evidence": "FC1-A contract \u00a72",
+        "doc_stale": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "IN_SCOPE_HIT",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 34,
+      "name": "candles_since_retest",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_COUNTER",
+      "pit_class_effective": "CAUSAL_COUNTER",
+      "formula_id": "STRUCT-COUNT",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "BitNet[inactive]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "BitNet[inactive]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 161
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 599
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lineno": 1738
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lineno": 1807
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 174
+        },
+        {
+          "file": "scripts/research/live_path_replay.py",
+          "lineno": 142
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": true,
+        "role": "coherent_secondary",
+        "note": "retest_* derives from liquidity_sweep; must follow causal sweep (no hybrid)",
+        "post_fc1a_pit_class": "CAUSAL_COUNTER",
+        "evidence": "FC1-A contract \u00a72",
+        "doc_stale": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 35,
+      "name": "liquidity_distance",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "STRUCTURE_WITH_CAUSAL_SWING",
+      "pit_class_effective": "STRUCTURE_WITH_CAUSAL_SWING",
+      "formula_id": "FM-025/LIQ",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/derived_math.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector index 35"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector index 35",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 651
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 175
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": {
+        "key": "liquidity_distance",
+        "section": "derived_metrics",
+        "id": "FM-025"
+      },
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": true,
+        "pre_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "post_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "production_bind": "causal_confirmed (available_at=t+k, k=SWING_WINDOW)",
+        "research_bind": "derived from causal refs",
+        "evidence": "CH-fc1a-swing-causal / F-051",
+        "doc_stale": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "IN_SCOPE_HIT",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 36,
+      "name": "liquidity_pressure_score",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "STRUCTURE_WITH_CAUSAL_SWING",
+      "pit_class_effective": "STRUCTURE_WITH_CAUSAL_SWING",
+      "formula_id": "FM-026/LIQ",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/derived_math.py"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector index 36"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector index 36",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 654
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 176
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": {
+        "key": "liquidity_pressure_score",
+        "section": "derived_metrics",
+        "id": "FM-026"
+      },
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": true,
+        "pre_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "post_fc1a_pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "production_bind": "causal_confirmed (available_at=t+k, k=SWING_WINDOW)",
+        "research_bind": "derived from causal refs",
+        "evidence": "CH-fc1a-swing-causal / F-051",
+        "doc_stale": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "IN_SCOPE_HIT",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    },
+    {
+      "index": 37,
+      "name": "volume_spike",
+      "in_schema": true,
+      "lineage": true,
+      "pit_class_census": "CAUSAL_DERIVED",
+      "pit_class_effective": "CAUSAL_DERIVED",
+      "formula_id": "VOL-SPIKE",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:231"
+      ],
+      "lineage_consumers": [
+        "FeaturePipeline vector index 37"
+      ],
+      "binding_consumers": [
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "consumers": [
+        "FeaturePipeline vector index 37",
+        "FeaturePipeline[active]",
+        "BacktestRunner[active]",
+        "Gaussian_v4_mirrored_38dim[inactive]"
+      ],
+      "has_producer": true,
+      "write_sites": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 231
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 688
+        }
+      ],
+      "dependency_node": false,
+      "ontology_hit": null,
+      "identity_registry": [],
+      "contract_v1": false,
+      "fc1a_overlay": {
+        "fc1a_applies": false
+      },
+      "model_exposure": {
+        "rr_active": true,
+        "rr_zeroed": false,
+        "rr_pit_unclean": true,
+        "zone_weight_mass_sum": 0.32,
+        "zone_pit_unclean": true
+      },
+      "closure": {
+        "code_status": "CLOSED",
+        "doc_alignment": "ALIGNED",
+        "ontology": "N_A",
+        "artifact_flags": [
+          "RR_DIM_ACTIVE_ON_PIT_UNCLEAN_MODEL",
+          "ZONE_WEIGHT_ON_PIT_UNCLEAN_MODEL"
+        ],
+        "issues": []
+      },
+      "closure_status": "CLOSED"
+    }
+  ],
+  "closure_verdict": {
+    "surface": "38_canonical_features",
+    "n": 38,
+    "closed": 38,
+    "partial": 0,
+    "open": 0,
+    "doc_stale_census_labels": 0,
+    "summary": "Code surface: 38/38 CLOSED \u00b7 0/38 PARTIAL \u00b7 0/38 OPEN. Doc alignment: 0/38 STALE_CENSUS labels. FC1-A structure + FC1-D rolling volregime production binds applied. RR/Zone remain PIT_UNCLEAN (separate economic-admissibility machine). No economic authority claimed.",
+    "CANONICAL_FEATURE_CODE_SURFACE_STATUS": "CLOSED",
+    "blocked_for_canonical_feature_surface_closure": [],
+    "blocked_for_economic_use_of_existing_artifacts": [
+      "RR PIT_UNCLEAN_CENTERED_SWINGS \u2014 no promote/re-enable without causal revalidation",
+      "Zone PIT_UNCLEAN_CENTERED_SWINGS \u2014 same provenance rule",
+      "Causal dataset regeneration / revalidation before promotion of structure-sensitive models",
+      "Existing model-specific lineage defects and \u00a76.5 marginal-value requirements"
+    ],
+    "ready_for": [
+      "PIT-correct batch production structure vectors (FC1-A)",
+      "PIT-correct production volatility_regime rolling causal (FC1-D)",
+      "Live delayed-confirmed structure via FeatureStore",
+      "Research use of *_centered_batch / volatility_regime_global_batch",
+      "wick_size as exact FM-002 candle_range alias (ontology)"
+    ],
+    "note_separation": "Feature-surface closure and artifact economic admissibility are separate. Closing the 38-feature code surface does NOT authorize RR/Zone reuse or imply edge."
+  }
+}

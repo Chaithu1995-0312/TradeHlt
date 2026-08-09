@@ -1,0 +1,585 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tradelatest://governance/measurement_contract.schema.json",
+  "title": "MeasurementContract",
+  "description": "Frozen schema for E-MT-00. Declares the intended measurement identity of a Tier-1 (or any) experiment: population, features, labels, costs, exits, splits, metrics. Executable evidence is a sealed instance of this contract plus E-MT-00 probe results that would FAIL under the E-MT-01 adversarial mutation matrix. Version is load-bearing — bump only with a schema-compatible migration note.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "experiment_id",
+    "created_utc",
+    "authority",
+    "population",
+    "features",
+    "labels",
+    "costs",
+    "exits",
+    "splits",
+    "metrics",
+    "pipeline_identity",
+    "prohibited_substitutions",
+    "evidence_artifacts",
+    "trust_status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "MeasurementContract schema version. Must match this file."
+    },
+    "contract_id": {
+      "type": "string",
+      "pattern": "^MC-[A-Z0-9][A-Z0-9_-]+$",
+      "description": "Stable id for this sealed contract instance (e.g. MC-E-BASE-01-v1)."
+    },
+    "experiment_id": {
+      "type": "string",
+      "description": "Prereg experiment id (e.g. E-BASE-01, E-VOL-00, E-P2-05)."
+    },
+    "created_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["economic_admissible", "requires_mt00_pass", "note"],
+      "properties": {
+        "economic_admissible": {
+          "type": "boolean",
+          "description": "False until E-MT-00 PASS for this contract's pipeline_identity."
+        },
+        "requires_mt00_pass": { "type": "boolean", "const": true },
+        "note": {
+          "type": "string",
+          "description": "Must restate that historical F-xxx are not economic closure."
+        }
+      }
+    },
+    "population": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit_of_analysis",
+        "instruments",
+        "timeframe",
+        "calendar_window",
+        "inclusion_rule",
+        "exclusion_rule",
+        "n_declared_min",
+        "detection_vs_trade",
+        "population_hash_inputs"
+      ],
+      "properties": {
+        "unit_of_analysis": {
+          "type": "string",
+          "enum": [
+            "candle",
+            "signal_event",
+            "trade_decision",
+            "settlement_event",
+            "panel_row",
+            "rebalance"
+          ],
+          "description": "Atomic independent unit for counting n and for independence claims."
+        },
+        "instruments": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "timeframe": {
+          "type": "string",
+          "description": "Bar resolution (e.g. M15, H1, 8H funding)."
+        },
+        "calendar_window": {
+          "type": "object",
+          "required": ["start", "end", "timezone"],
+          "properties": {
+            "start": { "type": "string" },
+            "end": { "type": "string" },
+            "timezone": { "type": "string" }
+          }
+        },
+        "inclusion_rule": {
+          "type": "string",
+          "description": "Human + machine-readable inclusion (code path or pure function id)."
+        },
+        "exclusion_rule": { "type": "string" },
+        "n_declared_min": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Minimum OOS independent units claimed for power; 0 only for pure info-stage with separate power note."
+        },
+        "detection_vs_trade": {
+          "type": "string",
+          "enum": ["detection_stream", "trade_ledger", "hybrid_explicit", "not_applicable"],
+          "description": "Prevents F-022 population substitution: detections must not be counted as trades."
+        },
+        "population_hash_inputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Field names hashed into population fingerprint (instrument, ts, side, setup_id, ...)."
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "feature_set_id",
+        "feature_ids",
+        "formula_authority",
+        "point_in_time_rule",
+        "name_binding",
+        "forbidden_aliases"
+      ],
+      "properties": {
+        "feature_set_id": { "type": "string" },
+        "feature_ids": {
+          "type": "array",
+          "minItems": 0,
+          "items": { "type": "string" },
+          "description": "Stable FM-* or METHOD feature ids. Empty only if pure price-path experiment with explicit bare OHLCV."
+        },
+        "formula_authority": {
+          "type": "string",
+          "enum": [
+            "market_ontology",
+            "candle_math",
+            "derived_math",
+            "experiment_local_declared",
+            "external_feed"
+          ]
+        },
+        "point_in_time_rule": {
+          "type": "string",
+          "description": "What is known at decision timestamp t (no future bars, no global-rank over full sample unless declared)."
+        },
+        "name_binding": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["fm_id", "formula_ref", "units"],
+            "properties": {
+              "fm_id": { "type": "string" },
+              "formula_ref": { "type": "string" },
+              "units": { "type": "string" },
+              "not_equal_to": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Names that must NOT be treated as this quantity (F-050 collisions)."
+              }
+            }
+          },
+          "description": "Map output key → intended formula. Prevents silent name→wrong-math substitution."
+        },
+        "forbidden_aliases": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Legacy keys that must not silently map into this set without explicit remap block."
+        },
+        "builder_entrypoints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "module:qualname paths that produce features for this experiment."
+        }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label_family",
+        "y_definition",
+        "derivation_authority",
+        "stream_fields_banned_for_economic_claims",
+        "rederive_protocol"
+      ],
+      "properties": {
+        "label_family": {
+          "type": "string",
+          "enum": [
+            "forward_walk_economic",
+            "information_only",
+            "event_study",
+            "cashflow",
+            "none"
+          ]
+        },
+        "y_definition": {
+          "type": "string",
+          "description": "Exact mathematical definition of y (e.g. R multiple under exit X net of cost C)."
+        },
+        "derivation_authority": {
+          "type": "string",
+          "enum": [
+            "forward_walk.intrabar_fixed",
+            "forward_walk.other",
+            "cashflow_ledger",
+            "event_indicator",
+            "information_target",
+            "forbidden_stream_outcome"
+          ],
+          "description": "forbidden_stream_outcome is never economic-admissible (F-022 class)."
+        },
+        "stream_fields_banned_for_economic_claims": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "e.g. opportunities.outcome, opportunities.rr_achieved unless re-derived and matched."
+        },
+        "rederive_protocol": {
+          "type": "object",
+          "required": ["enabled", "matcher", "min_agreement", "on_fail"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "matcher": {
+              "type": "string",
+              "description": "How stream vs re-derived rows are joined (e.g. setup_id+entry_ts)."
+            },
+            "min_agreement": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Critical field agreement floor for economic use."
+            },
+            "on_fail": {
+              "type": "string",
+              "enum": ["BAN_FIELDS", "BLOCK_EXPERIMENT", "DIAGNOSTIC_ONLY"]
+            }
+          }
+        },
+        "horizon_bars": { "type": ["integer", "null"] },
+        "sign_convention": { "type": "string" }
+      }
+    },
+    "costs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cost_model_id",
+        "components",
+        "gross_vs_net",
+        "success_gate_uses"
+      ],
+      "properties": {
+        "cost_model_id": { "type": "string" },
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["name", "bps_or_formula", "applied_on"],
+            "properties": {
+              "name": { "type": "string" },
+              "bps_or_formula": { "type": "string" },
+              "applied_on": {
+                "type": "string",
+                "enum": ["entry", "exit", "round_trip", "funding_interval", "rebalance"]
+              }
+            }
+          }
+        },
+        "gross_vs_net": {
+          "type": "object",
+          "required": ["report_gross", "report_net", "promotable"],
+          "properties": {
+            "report_gross": { "type": "boolean" },
+            "report_net": { "type": "boolean" },
+            "promotable": {
+              "type": "string",
+              "enum": ["net_only", "none_info_stage"],
+              "description": "gross is diagnostic non-promotable."
+            }
+          }
+        },
+        "success_gate_uses": {
+          "type": "string",
+          "enum": ["net", "none_info_stage"]
+        },
+        "code_entrypoint": { "type": "string" }
+      }
+    },
+    "exits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exit_model_id",
+        "exit_family",
+        "parameters",
+        "intrabar_rule",
+        "not_equal_to"
+      ],
+      "properties": {
+        "exit_model_id": { "type": "string" },
+        "exit_family": {
+          "type": "string",
+          "enum": [
+            "intrabar_fixed_sl_tp",
+            "time_stop",
+            "trailing",
+            "funding_hold",
+            "event_horizon",
+            "info_only_no_exit",
+            "cashflow_mark"
+          ]
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Numeric params (sl_atr, tp_atr, max_bars, ...)."
+        },
+        "intrabar_rule": {
+          "type": "string",
+          "description": "e.g. OHLC path assumption; fixed priority SL-before-TP etc."
+        },
+        "not_equal_to": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Exit systems that must not be silently substituted (e.g. stream outcome, live ExecutionPlanner without declaration)."
+        },
+        "code_entrypoint": { "type": "string" }
+      }
+    },
+    "splits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scheme",
+        "embargo",
+        "purge",
+        "n_folds_or_windows",
+        "overlap_policy",
+        "seed"
+      ],
+      "properties": {
+        "scheme": {
+          "type": "string",
+          "enum": [
+            "walk_forward",
+            "purged_kfold",
+            "single_holdout_chronologic",
+            "event_study_matched",
+            "none_full_sample_info"
+          ]
+        },
+        "embargo": {
+          "type": "string",
+          "description": "Embargo duration or bar count between train and test."
+        },
+        "purge": {
+          "type": "string",
+          "description": "Purge rule for overlapping label horizons."
+        },
+        "n_folds_or_windows": { "type": "integer", "minimum": 1 },
+        "overlap_policy": {
+          "type": "string",
+          "enum": [
+            "forbid_overlapping_labels",
+            "allow_with_block_bootstrap",
+            "event_nonoverlap"
+          ]
+        },
+        "seed": { "type": "integer" },
+        "oos_fraction_or_dates": { "type": "string" }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "information_metrics",
+        "economic_metrics",
+        "success_gate",
+        "kill_criteria",
+        "multiplicity",
+        "authority_ladder",
+        "forbidden_metric_substitutions"
+      ],
+      "properties": {
+        "information_metrics": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "IC, AUC, MSE, mutual information, etc."
+        },
+        "economic_metrics": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "net expectancy, deflated Sharpe, maxDD, ..."
+        },
+        "success_gate": { "type": "string" },
+        "kill_criteria": { "type": "string" },
+        "multiplicity": {
+          "type": "object",
+          "required": ["n_variants_preregistered", "control"],
+          "properties": {
+            "n_variants_preregistered": { "type": "integer", "minimum": 1 },
+            "control": {
+              "type": "string",
+              "enum": [
+                "deflated_sharpe",
+                "bonferroni",
+                "bh_fdr",
+                "hierarchical_stage_gate",
+                "none_single_test"
+              ]
+            }
+          }
+        },
+        "authority_ladder": {
+          "type": "object",
+          "required": [
+            "info_not_value",
+            "value_not_authority",
+            "insufficient_not_harmful"
+          ],
+          "properties": {
+            "info_not_value": { "type": "boolean", "const": true },
+            "value_not_authority": { "type": "boolean", "const": true },
+            "insufficient_not_harmful": { "type": "boolean", "const": true }
+          }
+        },
+        "forbidden_metric_substitutions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "e.g. p_value_as_edge, gross_as_success, n_detections_as_n_trades."
+        }
+      }
+    },
+    "pipeline_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "config_version_source",
+        "active_version_file",
+        "engine_gate_mode",
+        "expected_engines",
+        "modules_in_path",
+        "modules_explicitly_out_of_path",
+        "dataset_integrity_level"
+      ],
+      "properties": {
+        "config_version_source": {
+          "type": "string",
+          "description": "Must resolve via ACTIVE_VERSION / get_prod_config path or declared research config."
+        },
+        "active_version_file": { "type": "string" },
+        "engine_gate_mode": {
+          "type": "string",
+          "enum": ["gate_on_fusion", "gate_off_crt_only", "research_custom", "info_only"],
+          "description": "F-037 class: research must not silently claim fusion when gate-off."
+        },
+        "expected_engines": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "modules_in_path": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "modules_explicitly_out_of_path": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Sidecars/orphans that must not be counted as measured (F-012/F-013/F-005)."
+        },
+        "dataset_integrity_level": {
+          "type": "string",
+          "enum": ["L1_L2_only", "L1_L2_L3", "custom"],
+          "description": "F-039: L3 must be declared if claimed."
+        },
+        "feature_flags": {
+          "type": "object",
+          "additionalProperties": { "type": ["boolean", "string", "number", "null"] },
+          "description": "e.g. use_bitnet, rr_fusion.enabled — inert flags must be false if claimed unused."
+        }
+      }
+    },
+    "prohibited_substitutions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["surface", "forbidden", "historical_class"],
+        "properties": {
+          "surface": {
+            "type": "string",
+            "enum": [
+              "population",
+              "features",
+              "labels",
+              "costs",
+              "exits",
+              "splits",
+              "metrics",
+              "pipeline"
+            ]
+          },
+          "forbidden": { "type": "string" },
+          "historical_class": {
+            "type": "string",
+            "description": "FC-* id from e_mt_01_adversarial_mutation_matrix.json"
+          }
+        }
+      },
+      "description": "Explicit anti-substitution list for this experiment; must cover all surfaces relevant to the experiment."
+    },
+    "evidence_artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_path",
+        "population_fingerprint_path",
+        "mt00_report_path",
+        "mt01_mutation_coverage_path"
+      ],
+      "properties": {
+        "contract_path": { "type": "string" },
+        "population_fingerprint_path": { "type": "string" },
+        "feature_parity_path": { "type": ["string", "null"] },
+        "label_rederive_path": { "type": ["string", "null"] },
+        "cost_exit_fixture_path": { "type": ["string", "null"] },
+        "split_manifest_path": { "type": ["string", "null"] },
+        "metric_compute_path": { "type": ["string", "null"] },
+        "mt00_report_path": { "type": "string" },
+        "mt01_mutation_coverage_path": {
+          "type": "string",
+          "description": "Must show every FC-* class has >=1 seeded defect red on mutant, green on clean."
+        },
+        "code_commit": { "type": ["string", "null"] },
+        "data_snapshot_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "trust_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mt00", "mt01_matrix_coverage", "economic_claims_allowed"],
+      "properties": {
+        "mt00": {
+          "type": "string",
+          "enum": ["UNRUN", "PASS", "FAIL", "PARTIAL"]
+        },
+        "mt01_matrix_coverage": {
+          "type": "string",
+          "enum": ["UNRUN", "COMPLETE", "INCOMPLETE"]
+        },
+        "economic_claims_allowed": {
+          "type": "boolean",
+          "description": "True only if mt00==PASS and mt01_matrix_coverage==COMPLETE."
+        },
+        "failing_probes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "open_risks_non_blocking": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

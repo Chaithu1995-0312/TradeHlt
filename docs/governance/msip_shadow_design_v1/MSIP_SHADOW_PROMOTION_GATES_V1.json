@@ -1,0 +1,59 @@
+{
+  "schema_id": "MSIP_SHADOW_PROMOTION_GATES_V1",
+  "generated_at_utc": "2026-07-14T10:30:03.791230+00:00",
+  "updated_at_utc": "2026-07-14T13:00:00Z",
+  "note": "These gates promote *design readiness* and *shadow run quality*, not production CRT authority",
+  "program_status": "FROZEN_POSTURE_MSIP_DECISION_C",
+  "frozen_posture_ref": "MSIP_DECISION_C_FROZEN_POSTURE_V1.json",
+  "gates": [
+    {
+      "id": "G-DESIGN-01",
+      "name": "design_contract_frozen",
+      "status": "PASSED"
+    },
+    {
+      "id": "G-PLAN-01",
+      "name": "implementation_plan_reviewed",
+      "status": "PASSED"
+    },
+    {
+      "id": "G-IMPL-01",
+      "name": "implementation_may_start",
+      "status": "OPEN_EXECUTED_NARROW_SHADOW",
+      "note": "Narrow shadow complete; no further MSIP implementation boundary open"
+    },
+    {
+      "id": "G-SHADOW-01",
+      "name": "shadow_run_quality",
+      "status": "PASSED_FOR_DECLARED_XAUUSD_POPULATION",
+      "owner": "ACCEPTED"
+    },
+    {
+      "id": "G-PARITY-01",
+      "name": "crt_local_math_parity",
+      "status": "PARTIAL",
+      "rationale": "Three distinct authority relationships; forcing PASS would imply false 1:1 CRT→canonical mapping",
+      "authority_resolution_ref": "docs/governance/crt_local_math_authority_resolution_v1/CRT_LOCAL_MATH_AUTHORITY_RESOLUTION_V1.json",
+      "blocks": "CRT-local deprecation / CRT input migration claims",
+      "not_blocking": "MSIP shadow layer; research use of shadow observations"
+    },
+    {
+      "id": "G-MIG-01",
+      "name": "crt_consumer_migration",
+      "status": "CLOSED"
+    }
+  ],
+  "deferred": {
+    "BODY_WICK_HYGIENE": "DEFERRED",
+    "NEW_FM_IDENTITIES": "DEFERRED_UNTIL_CONSUMER_NEED"
+  },
+  "not_authorized": {
+    "THRESHOLD_RESEARCH": true,
+    "CONCURRENT_CANDIDATES": true,
+    "CRT_MIGRATION": true,
+    "PRODUCTION_CUTOVER": true
+  },
+  "NEXT_ACTION": "RETURN_TO_RESEARCH_CONTROL_PLANE",
+  "implementation_authorized": false,
+  "migration_authorized": false
+}

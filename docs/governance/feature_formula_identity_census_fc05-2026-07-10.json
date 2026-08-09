@@ -1,0 +1,485 @@
+{
+  "_doc": "FC-0.5 formula identity census",
+  "generated_at_utc": "2026-07-10T15:48:17Z",
+  "quantities": [
+    {
+      "id": "Q-VOL-TICK",
+      "names": [
+        "volume"
+      ],
+      "formula": "source tick_volume",
+      "params": {},
+      "temporal": "t",
+      "norm": null,
+      "fallback": null,
+      "impl": [
+        "mt5_candle_fetcher",
+        "FeaturePipeline passthrough"
+      ],
+      "class": "UNIQUE_CANONICAL_IDENTITY"
+    },
+    {
+      "id": "Q-VOL-PROXY-T003",
+      "names": [
+        "volume"
+      ],
+      "formula": "high-low when all-zero",
+      "params": {},
+      "temporal": "t",
+      "norm": null,
+      "fallback": "same column",
+      "impl": [
+        "feature_pipeline.compute_volume_features"
+      ],
+      "class": "FORMULA_COLLISION"
+    },
+    {
+      "id": "Q-FM020",
+      "names": [
+        "disp_strength"
+      ],
+      "formula": "body/(atr*close) clip 0..3",
+      "params": {
+        "atr": "relative"
+      },
+      "temporal": "t",
+      "norm": null,
+      "fallback": "NaN",
+      "impl": [
+        "feature_pipeline",
+        "derived_math.disp_strength"
+      ],
+      "class": "UNIQUE_CANONICAL_IDENTITY"
+    },
+    {
+      "id": "Q-FM028",
+      "names": [
+        "disp_strength",
+        "disp_str",
+        "displacement_atr_ratio"
+      ],
+      "formula": "candle_range/atr",
+      "params": {
+        "atr": "absolute"
+      },
+      "temporal": "CRT retest",
+      "norm": null,
+      "fallback": "0",
+      "impl": [
+        "derived_math.displacement_atr_ratio",
+        "crt_engine_v2"
+      ],
+      "class": "FORMULA_COLLISION"
+    },
+    {
+      "id": "Q-FM021",
+      "names": [
+        "retest_depth"
+      ],
+      "formula": "|close-ema_fast|/(atr*close) if retest else 0",
+      "params": {},
+      "temporal": "t",
+      "norm": null,
+      "fallback": "0",
+      "impl": [
+        "feature_pipeline",
+        "derived_math.retest_depth"
+      ],
+      "class": "UNIQUE_CANONICAL_IDENTITY"
+    },
+    {
+      "id": "Q-FM027",
+      "names": [
+        "retest_depth",
+        "displacement_retrace"
+      ],
+      "formula": "cross-candle retrace to disp open",
+      "params": {},
+      "temporal": "CRT retest",
+      "norm": null,
+      "fallback": "0",
+      "impl": [
+        "derived_math.displacement_retrace",
+        "crt_engine_v2"
+      ],
+      "class": "FORMULA_COLLISION"
+    },
+    {
+      "id": "Q-BODY-RATIO",
+      "names": [
+        "body_ratio"
+      ],
+      "formula": "body/range",
+      "params": {},
+      "temporal": "t",
+      "norm": null,
+      "fallback": "0",
+      "impl": [
+        "candle_math",
+        "feature_pipeline",
+        "crt"
+      ],
+      "class": "INTENTIONAL_ALIAS"
+    },
+    {
+      "id": "Q-SWING-CENTER",
+      "names": [
+        "swing_high",
+        "swing_low"
+      ],
+      "formula": "center rolling extremum",
+      "params": {
+        "k": 2
+      },
+      "temporal": "t with future k",
+      "norm": null,
+      "fallback": "0",
+      "impl": [
+        "feature_pipeline"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-SWING-CAUSAL",
+      "names": [
+        "swing_high",
+        "swing_low"
+      ],
+      "formula": "center + shift(k)",
+      "params": {
+        "k": 2,
+        "env": "TRUST_SWING_CAUSAL"
+      },
+      "temporal": "t delayed",
+      "norm": null,
+      "fallback": "0",
+      "impl": [
+        "feature_pipeline env branch"
+      ],
+      "class": "CONFIG_DEPENDENT_IDENTITY"
+    },
+    {
+      "id": "Q-VR-GLOBAL",
+      "names": [
+        "volatility_regime"
+      ],
+      "formula": "global atr rank tercile",
+      "params": {},
+      "temporal": "full batch",
+      "norm": null,
+      "fallback": null,
+      "impl": [
+        "feature_pipeline default"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-VR-EXPAND",
+      "names": [
+        "volatility_regime"
+      ],
+      "formula": "expanding atr rank",
+      "params": {
+        "env": "expanding"
+      },
+      "temporal": "causal expanding",
+      "norm": null,
+      "fallback": null,
+      "impl": [
+        "feature_pipeline env"
+      ],
+      "class": "CONFIG_DEPENDENT_IDENTITY"
+    },
+    {
+      "id": "Q-VR-ROLL",
+      "names": [
+        "volatility_regime"
+      ],
+      "formula": "rolling(200) atr rank",
+      "params": {
+        "env": "rolling",
+        "N": 200
+      },
+      "temporal": "causal rolling",
+      "norm": null,
+      "fallback": null,
+      "impl": [
+        "feature_pipeline env"
+      ],
+      "class": "CONFIG_DEPENDENT_IDENTITY"
+    },
+    {
+      "id": "Q-GAUSS-3",
+      "names": [
+        "ema_fast",
+        "ema_slow",
+        "momentum_score"
+      ],
+      "formula": "live heuristic 3-feature",
+      "params": {},
+      "temporal": "t",
+      "norm": null,
+      "fallback": null,
+      "impl": [
+        "heuristic_gaussian_engine"
+      ],
+      "class": "MODEL_LOCAL_DUPLICATE"
+    },
+    {
+      "id": "Q-GAUSS-38",
+      "names": [
+        "CANONICAL_FEATURES"
+      ],
+      "formula": "38-dim NB v4_mirrored unwired",
+      "params": {},
+      "temporal": "unknown train",
+      "norm": "scaler in artifact",
+      "fallback": null,
+      "impl": [
+        "models/gaussian_registry"
+      ],
+      "class": "UNKNOWN"
+    },
+    {
+      "id": "Q-BITNET-6",
+      "names": [
+        "body_ratio",
+        "retest_depth",
+        "disp_strength",
+        "atr",
+        "candles_since_retest",
+        "double_sweep"
+      ],
+      "formula": "BitNet hard-reject; CRT may alias FM-027/028 into names",
+      "params": {},
+      "temporal": "CRT retest",
+      "norm": null,
+      "fallback": null,
+      "impl": [
+        "live_engine BitNetZoneGate",
+        "crt bitnet map"
+      ],
+      "class": "UNINTENTIONAL_ALIAS"
+    }
+  ],
+  "ast_function_defs_sample": [
+    {
+      "file": "src/features/candle_math.py",
+      "function": "body_size",
+      "lineno": 25
+    },
+    {
+      "file": "src/features/candle_math.py",
+      "function": "candle_range",
+      "lineno": 30
+    },
+    {
+      "file": "src/features/candle_math.py",
+      "function": "upper_wick",
+      "lineno": 35
+    },
+    {
+      "file": "src/features/candle_math.py",
+      "function": "lower_wick",
+      "lineno": 40
+    },
+    {
+      "file": "src/features/candle_math.py",
+      "function": "total_wick",
+      "lineno": 45
+    },
+    {
+      "file": "src/features/candle_math.py",
+      "function": "body_ratio",
+      "lineno": 50
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "disp_strength",
+      "lineno": 31
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "retest_depth",
+      "lineno": 45
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "ema_spread",
+      "lineno": 58
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "momentum_score",
+      "lineno": 65
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "volatility_ratio",
+      "lineno": 76
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "liquidity_distance",
+      "lineno": 88
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "displacement_retrace",
+      "lineno": 106
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "displacement_atr_ratio",
+      "lineno": 123
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "liquidity_pressure_score",
+      "lineno": 134
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "build_features",
+      "lineno": 75
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "build_feature_vector",
+      "lineno": 116
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_price_features",
+      "lineno": 179
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_volume_features",
+      "lineno": 202
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_indicators",
+      "lineno": 238
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_trend_features",
+      "lineno": 290
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_volatility_regime",
+      "lineno": 303
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_context",
+      "lineno": 334
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_structure_liquidity",
+      "lineno": 353
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_normalization",
+      "lineno": 422
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_canonical_price_features",
+      "lineno": 439
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_canonical_volatility_features",
+      "lineno": 464
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_canonical_ema_features",
+      "lineno": 488
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_canonical_trend_features",
+      "lineno": 509
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_canonical_structure_features",
+      "lineno": 517
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_canonical_temporal_features",
+      "lineno": 559
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_liquidity_distance",
+      "lineno": 605
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "promote_volume_spike",
+      "lineno": 660
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_canonical_session",
+      "lineno": 692
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "finalize",
+      "lineno": 700
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "log_critical_feature_health",
+      "lineno": 739
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "build_feature_vector",
+      "lineno": 773
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "run",
+      "lineno": 811
+    }
+  ],
+  "n_ast_defs": 38,
+  "counts": {
+    "UNIQUE_CANONICAL_IDENTITY": 3,
+    "FORMULA_COLLISION": 3,
+    "INTENTIONAL_ALIAS": 1,
+    "TEMPORAL_SEMANTIC_COLLISION": 2,
+    "CONFIG_DEPENDENT_IDENTITY": 3,
+    "MODEL_LOCAL_DUPLICATE": 1,
+    "UNKNOWN": 1,
+    "UNINTENTIONAL_ALIAS": 1
+  },
+  "n_quantities": 15,
+  "KNOWN_COLLISIONS_SEPARATED": true,
+  "ALL_COLLISIONS_EXHAUSTED": "unproven",
+  "collision_report_highlights": [
+    "volume name \u2192 tick vs T-003 proxy (FORMULA_COLLISION)",
+    "disp_strength name \u2192 FM-020 vs FM-028 (FORMULA_COLLISION)",
+    "retest_depth name \u2192 FM-021 vs FM-027 (FORMULA_COLLISION)",
+    "swing_* \u2192 center vs causal env (CONFIG_DEPENDENT + TEMPORAL)",
+    "volatility_regime \u2192 global vs expanding vs rolling (CONFIG_DEPENDENT + TEMPORAL)",
+    "BitNet aliases CRT FM into pipeline names (UNINTENTIONAL_ALIAS)",
+    "Gaussian 38-dim train path UNKNOWN vs live 3-feature"
+  ],
+  "unknowns": [
+    "scoring_engine local disp_strength=move/atr not fully call-site traced",
+    "historical training code versions for each artifact",
+    "all research scripts recomputing indicators outside FeaturePipeline"
+  ]
+}

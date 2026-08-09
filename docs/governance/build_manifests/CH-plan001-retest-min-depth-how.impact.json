@@ -1,0 +1,40 @@
+{
+  "change_id": "CH-plan001-retest-min-depth-how",
+  "objective": "IC-007 PLAN-001 only: externalize CRT retest min_depth floor (legacy 0.1*ATR) to HOW key retest_min_depth_atr_fraction via CRTConfig + production crt_engine; default 0.10 preserves prior behavior; fail-closed finite/>=0 validation; no PLAN-002/003; no fourth YAML; no WHO numeric defaults.",
+  "change_classes": [
+    "PRODUCTION_CONFIG_CHANGE",
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "ACTIVE_MODEL_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "src/config_layer/crt_engine_v2.py",
+    "configs/production/v2_multi_2026_04.json",
+    "active_models.yaml",
+    "docs/governance/crt_config_reachability.json",
+    "tests/test_plan001_retest_min_depth_how.py",
+    "tests/test_crt_config_reachability.py",
+    "tests/test_crt_adversarial_closure.py",
+    "docs/governance/build_manifests/CH-plan001-retest-min-depth-how.impact.json"
+  ],
+  "authorities_touched": [
+    "HOW: CRTConfig.retest_min_depth_atr_fraction + production crt_engine",
+    "CODE: try_expansion_to_retest floor formula",
+    "WHO: config_keys name only (no numeric default)"
+  ],
+  "non_goals": [
+    "PLAN-002 RiskScore / scoring_engine weights",
+    "PLAN-003 residual HOW cohort mass externalization",
+    "WHO numeric threshold/default blocks",
+    "fourth YAML"
+  ],
+  "required_checks": [
+    "tests/test_plan001_retest_min_depth_how.py",
+    "tests/test_crt_config_reachability.py",
+    "tests/test_crt_adversarial_closure.py",
+    "tests/test_state_contracts.py",
+    "tests/test_active_models_registry.py"
+  ],
+  "rollback_boundary": "revert CRTConfig field + try_expansion_to_retest wire + production key + reachability row + WHO config_keys name in one commit",
+  "completion_criteria": "default-parity + dynamism tests green; production load exposes 0.10; HC-RETEST-MIN-DEPTH severity REMEDIATED; no PLAN-002/003 execution"
+}

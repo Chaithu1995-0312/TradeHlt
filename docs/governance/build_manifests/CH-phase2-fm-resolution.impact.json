@@ -1,0 +1,33 @@
+{
+  "change_id": "CH-phase2-fm-resolution",
+  "objective": "Phase-2 Option A: resolve FM-002/010/027/028 through features.fm_resolve (ontology + FORMULA_REGISTRY / composition) at four CRT call sites with registry identity + composition float parity; no auto-run of required_fm; no topology/model dispatch; hash-neutral HOW.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE"
+  ],
+  "affected_files": [
+    "src/features/fm_resolve.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/config_layer/state_contract_loader.py",
+    "tests/test_fm_resolution_phase2.py",
+    "docs/governance/config_authority_matrix.md",
+    "docs/governance/phase_2_fm_resolution_design.md",
+    "docs/implementation_plan/phase1-state-contract-review-phase2-fm-resolution.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [
+    "FM-002",
+    "FM-010",
+    "FM-027",
+    "FM-028"
+  ],
+  "affected_models": "none (no dispatch; BitNet remains HOW-gated)",
+  "affected_production_config": "none (hash-neutral)",
+  "required_checks_ack": [
+    "tests/test_fm_resolution_phase2.py",
+    "tests/test_state_contracts.py",
+    "tests/test_candle_math.py",
+    "tests/test_formula_registry.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit: remove fm_resolve + restore _cm/_dm direct calls at four sites + loader private resolve; docs §12 reverse"
+}

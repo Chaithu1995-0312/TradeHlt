@@ -1,0 +1,18 @@
+{
+  "KNOWN_COLLISIONS_SEPARATED": true,
+  "ALL_COLLISIONS_EXHAUSTED": "unproven",
+  "highlights": [
+    "volume name \u2192 tick vs T-003 proxy (FORMULA_COLLISION)",
+    "disp_strength name \u2192 FM-020 vs FM-028 (FORMULA_COLLISION)",
+    "retest_depth name \u2192 FM-021 vs FM-027 (FORMULA_COLLISION)",
+    "swing_* \u2192 center vs causal env (CONFIG_DEPENDENT + TEMPORAL)",
+    "volatility_regime \u2192 global vs expanding vs rolling (CONFIG_DEPENDENT + TEMPORAL)",
+    "BitNet aliases CRT FM into pipeline names (UNINTENTIONAL_ALIAS)",
+    "Gaussian 38-dim train path UNKNOWN vs live 3-feature"
+  ],
+  "unknowns": [
+    "scoring_engine local disp_strength=move/atr not fully call-site traced",
+    "historical training code versions for each artifact",
+    "all research scripts recomputing indicators outside FeaturePipeline"
+  ]
+}

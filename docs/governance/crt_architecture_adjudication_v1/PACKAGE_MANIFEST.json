@@ -1,0 +1,78 @@
+{
+  "_doc": "CRT Architecture Adjudication V1 frozen package manifest",
+  "generated_at_utc": "2026-07-14T08:12:37.280834+00:00",
+  "package_path": "docs/governance/crt_architecture_adjudication_v1",
+  "task_class": "OBSERVATION_ONLY",
+  "ARCHITECTURE_DECISION": "C",
+  "files": [
+    {
+      "path": "ARCHITECTURE_DECISION_RECORD_V1.json",
+      "sha256": "764dd35316190973699632ffcae465afb829c385b24749ebcb609cb029492df5",
+      "bytes": 7781
+    },
+    {
+      "path": "ARCHITECTURE_DECISION_RECORD_V1.md",
+      "sha256": "3da99fc0ad7e54090aef9b5a6bd0b1676c060eb42d79cbd00c2794fe962897ae",
+      "bytes": 2314
+    },
+    {
+      "path": "CRT_9_STATE_EXECUTABLE_GRAPH_V1.json",
+      "sha256": "d813f62061f673a9e0fcf483cf6ff723b88106ab7dfe5f5ad4643c9239dccf9f",
+      "bytes": 14477
+    },
+    {
+      "path": "CRT_INPUT_AUTHORITY_MATRIX_V1.json",
+      "sha256": "af0c35b50d5b22f2e4a8d96d15e64fbcd13127455f842ae55975838b01514ef7",
+      "bytes": 45733
+    },
+    {
+      "path": "CRT_INPUT_AUTHORITY_MATRIX_V1.md",
+      "sha256": "32221b8b128a242311ca8be77e51e9b14ce65d7486a4e7805ea89dd67a08d57b",
+      "bytes": 4315
+    },
+    {
+      "path": "EVIDENCE_PACKAGE_INDEX.json",
+      "sha256": "dc501f489a6f7dee5475279d52a44044732f120831f0190360955e8a8f060723",
+      "bytes": 9133
+    },
+    {
+      "path": "FROZEN_EVIDENCE_SUMMARY_V1.md",
+      "sha256": "e0f55f10277bc65901afa8d2132f484ceab992c3dcfee0f0c54df4feae7b84f9",
+      "bytes": 1057
+    },
+    {
+      "path": "MSIP_ARCHITECTURE_CORRECTION_V1.md",
+      "sha256": "a2e1ece552730328fc878fc8173a140bbc21814988170457816d91f0d8416fc7",
+      "bytes": 3070
+    },
+    {
+      "path": "NEXT_PHASE_BOUNDARY_V1.md",
+      "sha256": "6731756c09bcc1ee15ede92c4ea0255fbb3ac6bcc9192e3ad5cf4d2a394af9d7",
+      "bytes": 942
+    },
+    {
+      "path": "OPTIONS_EVALUATION_V1.json",
+      "sha256": "ebd6c0143a931fd4768f46d2fd512ff8fc0ca3188b8ff478866b9ea374d946fc",
+      "bytes": 3298
+    },
+    {
+      "path": "PROBLEM_STATEMENT_V1.md",
+      "sha256": "f03cf1dc3c2e376b4d53f5bae4f3db755dac7c9c6712f68ab8885a89c9ed6f8d",
+      "bytes": 2573
+    },
+    {
+      "path": "WHAT_HOW_WHO_EXECUTABLE_BOUNDARY_MAP_V1.json",
+      "sha256": "0537058ac6f300bd9ba5d271670bd89f506ed4e63e18dd1ad0571570a8f98b3e",
+      "bytes": 5860
+    },
+    {
+      "path": "WHAT_HOW_WHO_EXECUTABLE_BOUNDARY_MAP_V1.md",
+      "sha256": "04e4dd51bd842db3796fa6fdb31b135ec14ad0ca72864a6b486d7aecb7cc838b",
+      "bytes": 3514
+    }
+  ],
+  "package_aggregate_sha256_over_files": null,
+  "implementation_authorized": false,
+  "threshold_tuning_authorized": false,
+  "package_aggregate_sha256": "03df20e4048056c4822d452a9796f73d0c487477a724cc0d3fcd880c0e8e9498"
+}

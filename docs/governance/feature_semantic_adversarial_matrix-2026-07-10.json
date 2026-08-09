@@ -1,0 +1,240 @@
+{
+  "_doc": "PASS-A adversarial matrix for four feature-semantic targets",
+  "failure_classes": [
+    {
+      "id": "FC-SWING-CENTER",
+      "title": "Centered swing published at t before t+k confirmation",
+      "seed": "prefix invariance / future high mutation",
+      "detector": "prefix vs full batch compare",
+      "status": "DETECTED"
+    },
+    {
+      "id": "FC-VOL-T003",
+      "title": "Volume column semantic substitution high-low proxy",
+      "seed": "all-zero volume frame",
+      "detector": "none production; probe only",
+      "status": "DETECTED_NO_PROD_GUARD"
+    },
+    {
+      "id": "FC-FORMULA-DISP",
+      "title": "disp_strength name binds FM-020 vs FM-028 by call site",
+      "seed": "cross-formula recompute",
+      "detector": "none on artifacts",
+      "status": "DETECTED_NO_PROD_GUARD"
+    },
+    {
+      "id": "FC-FORMULA-RETEST",
+      "title": "retest_depth name binds FM-021 vs FM-027 by call site",
+      "seed": "cross-formula / CRT map",
+      "detector": "none on artifacts",
+      "status": "DETECTED_NO_PROD_GUARD"
+    },
+    {
+      "id": "FC-VOLREGIME-GLOBAL",
+      "title": "volatility_regime global rank uses future bars",
+      "seed": "prefix invariance / future mutation",
+      "detector": "prefix probe; env causal variants exist but default off",
+      "status": "DETECTED"
+    }
+  ],
+  "coverage": {
+    "failure_classes_registered": 8,
+    "canonical_seeds_defined": 8,
+    "detectors_implemented": 4,
+    "clean_path_probes_run": 4,
+    "clean_path_probes_green": 4,
+    "mutants_run": 6,
+    "mutants_killed": 4,
+    "mutation_score": "NOT_COMPLETE",
+    "detector_gaps": [
+      "no runtime volume_semantic contract detector",
+      "no formula-id binding on model artifacts for FM-020 vs FM-028",
+      "no default production guard for centered-swing lookahead",
+      "no default production guard for global vol regime rank",
+      "E-MT-01 OHLCV temporal classes still open"
+    ],
+    "probes": [
+      {
+        "id": "A_PREFIX",
+        "clean": "prefix==full on causal features",
+        "mutant": "center swing fails prefix invariance",
+        "result": "MIXED_BY_CALL_SITE"
+      },
+      {
+        "id": "A_FUTURE_MUT",
+        "mutant": "mutate high after t changes swing at t",
+        "result": {
+          "swing_high": {
+            "equal_at_t": false,
+            "base": 1.0,
+            "mutated": 0.0
+          },
+          "swing_low": {
+            "equal_at_t": true,
+            "base": 0.0,
+            "mutated": 0.0
+          },
+          "higher_high": {
+            "equal_at_t": true,
+            "base": 1.0,
+            "mutated": 1.0
+          },
+          "lower_low": {
+            "equal_at_t": true,
+            "base": 0.0,
+            "mutated": 0.0
+          },
+          "break_of_structure": {
+            "equal_at_t": true,
+            "base": 0.0,
+            "mutated": 0.0
+          },
+          "liquidity_sweep": {
+            "equal_at_t": true,
+            "base": 1.0,
+            "mutated": 1.0
+          },
+          "sweep_detected": {
+            "equal_at_t": true,
+            "base": 1.0,
+            "mutated": 1.0
+          },
+          "double_sweep": {
+            "equal_at_t": true,
+            "base": 0.0,
+            "mutated": 0.0
+          },
+          "liquidity_distance": {
+            "equal_at_t": true,
+            "base": 0.11650023609399796,
+            "mutated": 0.11650023609399796
+          },
+          "liquidity_pressure_score": {
+            "equal_at_t": true,
+            "base": 0.943414032459259,
+            "mutated": 0.943414032459259
+          },
+          "retest_depth": {
+            "equal_at_t": true,
+            "base": 0.8362272381782532,
+            "mutated": 0.8362272381782532
+          },
+          "candles_since_retest": {
+            "equal_at_t": true,
+            "base": 0.0,
+            "mutated": 0.0
+          }
+        }
+      },
+      {
+        "id": "B_T003",
+        "clean": "XAU tick volume unchanged",
+        "mutant": "all-zero volume \u2192 high-low proxy in same column",
+        "result": true
+      },
+      {
+        "id": "C_FM_CROSS",
+        "clean": "pipeline==derived_math FM-020/021",
+        "mutant": "FM-020 vs FM-028 differ on same row",
+        "result": {
+          "n_different": 5,
+          "samples": [
+            {
+              "i": 1000,
+              "fm020_body_over_atr_close": 0.42862610925146377,
+              "fm028_range_over_atr_raw": 0.7286643704552495,
+              "different": true
+            },
+            {
+              "i": 5000,
+              "fm020_body_over_atr_close": 0.3077553245971798,
+              "fm028_range_over_atr_raw": 1.3648279628617868,
+              "different": true
+            },
+            {
+              "i": 10000,
+              "fm020_body_over_atr_close": 0.2161354576349419,
+              "fm028_range_over_atr_raw": 1.2968127490037016,
+              "different": true
+            },
+            {
+              "i": 20000,
+              "fm020_body_over_atr_close": 0.1518616277829516,
+              "fm028_range_over_atr_raw": 1.0589270008794878,
+              "different": true
+            },
+            {
+              "i": 30000,
+              "fm020_body_over_atr_close": 0.03994293834697335,
+              "fm028_range_over_atr_raw": 0.5691868758914572,
+              "different": true
+            }
+          ],
+          "note": "Different mathematics under historically colliding names"
+        }
+      },
+      {
+        "id": "D_PREFIX_GLOBAL",
+        "mutant": "global rank fails prefix invariance",
+        "result": {
+          "volatility_regime": {
+            "n": 91,
+            "mismatch": 39,
+            "samples": [
+              {
+                "t": 3000,
+                "ts": "2024-07-05 22:30:00",
+                "full": 0.0,
+                "prefix": 1.0
+              },
+              {
+                "t": 4000,
+                "ts": "2024-07-22 19:30:00",
+                "full": 1.0,
+                "prefix": 2.0
+              },
+              {
+                "t": 4500,
+                "ts": "2024-07-30 06:30:00",
+                "full": 0.0,
+                "prefix": 1.0
+              },
+              {
+                "t": 5000,
+                "ts": "2024-08-06 16:30:00",
+                "full": 1.0,
+                "prefix": 2.0
+              },
+              {
+                "t": 6000,
+                "ts": "2024-08-21 13:30:00",
+                "full": 0.0,
+                "prefix": 1.0
+              },
+              {
+                "t": 7000,
+                "ts": "2024-09-05 13:00:00",
+                "full": 0.0,
+                "prefix": 1.0
+              },
+              {
+                "t": 7500,
+                "ts": "2024-09-12 23:00:00",
+                "full": 0.0,
+                "prefix": 1.0
+              },
+              {
+                "t": 8000,
+                "ts": "2024-09-20 10:00:00",
+                "full": 0.0,
+                "prefix": 1.0
+              }
+            ],
+            "mismatch_rate": 0.42857142857142855,
+            "verdict_hint": "LEAKING"
+          }
+        }
+      }
+    ]
+  }
+}

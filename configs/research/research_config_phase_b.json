@@ -1,0 +1,39 @@
+{
+  "_doc": "Edge Discovery — Phase B (B1) conditional-entropy map. Measure-only, candle-only (no CRT/spine labels). Drives scripts/research/phase_b_conditional_entropy.py: where (if anywhere) does next-direction become conditionally predictable across the crypto majors? No magic numbers in Python.",
+  "universe": {
+    "data_dir": "data",
+    "pattern": "*_M15.csv",
+    "instruments": ["BNBUSDT", "ETHUSDT", "BTCUSDT", "SOLUSDT"]
+  },
+  "grid": {
+    "horizons": [1, 3, 5, 10, 20],
+    "atr_period": 14,
+    "momentum_lookback": 3,
+    "momentum_eps": 0.1,
+    "_session_note": "Research session partition (half-open [start,end) UTC hours covering 0..23 once) — NOT the spine's narrow execution windows. Candle-derivable.",
+    "session_windows": {
+      "ASIA": [0, 7],
+      "LONDON": [7, 13],
+      "NEWYORK": [13, 21],
+      "OFF": [21, 24]
+    }
+  },
+  "significance": {
+    "n_permutations": 500,
+    "alpha": 0.05
+  },
+  "stage2": {
+    "min_cell_n": 200,
+    "direction_floor": 0.05
+  },
+  "stage3": {
+    "sl_atr_mult": 1.0,
+    "tp_atr_mult": 2.0,
+    "max_forward": 40,
+    "exit_model": "intrabar_fixed",
+    "round_trip_bps": 12.0,
+    "n_permutations": 2000,
+    "effect_floor_r": 0.05,
+    "min_cell_n": 50
+  }
+}

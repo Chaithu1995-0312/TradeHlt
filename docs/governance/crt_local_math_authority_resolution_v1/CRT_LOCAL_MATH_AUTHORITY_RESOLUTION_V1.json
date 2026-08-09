@@ -1,0 +1,233 @@
+{
+  "schema_id": "CRT_LOCAL_MATH_AUTHORITY_RESOLUTION_V1",
+  "generated_at_utc": "2026-07-14T12:55:00Z",
+  "task_class": "OBSERVATION_ONLY",
+  "implementation_authorized": false,
+  "migration_authorized": false,
+  "architecture_decision": "C",
+  "governing_context": {
+    "G-SHADOW-01": "ACCEPTED_AS_PASSED",
+    "G-SHADOW-01_SCOPE": "DECLARED_XAUUSD_POPULATION_ONLY",
+    "G-PARITY-01_prior": "ACCEPTED_AS_NOT_PASSED",
+    "G-MIG-01": "CLOSED",
+    "MSIP_SHADOW_OUTPUT_AUTHORITY": "OBSERVATIONAL_ONLY",
+    "CRT_AUTHORITATIVE_OPPORTUNITY_LIFECYCLE": "UNCHANGED",
+    "note": "G-PARITY-01 is NOT a prerequisite for the shadow layer; it gates only CRT-local deprecation / input migration claims"
+  },
+  "classification_vocabulary": [
+    "EXACT_CANONICAL_IDENTITY",
+    "GOVERNED_TRANSFORM_OF_CANONICAL_QUANTITY",
+    "DISTINCT_GOVERNED_MARKET_QUANTITY",
+    "LEGITIMATE_CRT_PRIVATE_QUANTITY",
+    "DUPLICATE_UNGOVERNED_MARKET_MATH",
+    "UNKNOWN"
+  ],
+  "rule": "Do not invent an ATR/EMA transform registry merely to make G-PARITY-01 pass. Classify first; register transforms only if mathematically valid, temporally identical, causally equivalent, AND architecturally desirable under separate authority.",
+  "evidence_refs": [
+    "docs/governance/crt_local_math_authority_resolution_v1/CRT_LOCAL_MATH_AUTHORITY_PROBE_V1.json",
+    "docs/governance/msip_shadow_design_v1/CRT_LOCAL_MATH_PARITY_AUDIT_RESULT_V1.json",
+    "src/features/candle_math.py",
+    "src/features/feature_pipeline.py (compute_canonical_price_features / volatility / ema)",
+    "src/config_layer/crt_engine_v2.py (Candle.body_ratio/wick_size, RangeDetector.compute_atr, EngineState.update_emas)",
+    "configs/formulas/market_ontology.yaml (FM-002, FM-010, FM-041, FM-043, FM-044)"
+  ],
+  "classifications": {
+    "body_ratio": {
+      "classification": "EXACT_CANONICAL_IDENTITY",
+      "canonical_id": "FM-010",
+      "canonical_impl": "candle_math.body_ratio = body_size / candle_range",
+      "crt_source": "Candle.body_ratio → _FM_CRT['FM-010'] (already registry-bound)",
+      "pipeline_source": "FeaturePipeline.compute_canonical_price_features body_ratio",
+      "probe": {
+        "crt_vs_candle_math_max_abs_err": 0.0,
+        "sample_bars": 2000
+      },
+      "architecturally_desirable_to_equal": true,
+      "equality_required_for_shadow": false,
+      "notes": [
+        "Already bound at CRT property layer to FM-010; not a free local re-derivation",
+        "Further work is hygiene (single call path), not discovery of identity"
+      ]
+    },
+    "wick_size": {
+      "classification": "EXACT_CANONICAL_IDENTITY",
+      "canonical_id": "FM-002",
+      "canonical_impl": "candle_math.candle_range = high - low (alias historically named wick_size)",
+      "crt_source": "Candle.wick_size → _FM_CRT['FM-002']",
+      "pipeline_source": "FeaturePipeline wick_size = high - low",
+      "probe": {
+        "crt_vs_candle_math_max_abs_err": 0.0,
+        "sample_bars": 2000
+      },
+      "architecturally_desirable_to_equal": true,
+      "equality_required_for_shadow": false,
+      "naming_debt": "token wick_size denotes full candle range, not upper+lower wick sum (FM-005)",
+      "notes": [
+        "Exact identity holds; naming is historical debt only"
+      ]
+    },
+    "atr": {
+      "classification": "GOVERNED_TRANSFORM_OF_CANONICAL_QUANTITY",
+      "secondary_classification": "LEGITIMATE_CRT_PRIVATE_QUANTITY",
+      "decomposition": {
+        "true_range": "shared identity (max of HL, |H-prevC|, |L-prevC|)",
+        "absolute_sma14": {
+          "pipeline_internal": "atr_14_raw = true_range.rolling(14).mean()",
+          "crt_formula": "mean of last atr_period TRs (default 14)",
+          "fullseries_parity_max_abs_err": 0.0,
+          "status": "EXACT under full-series window alignment"
+        },
+        "canonical_feature_atr_FM041": {
+          "formula": "atr_14_raw / close (close-relative)",
+          "value_kind": "dimensionless_relative",
+          "relationship_to_absolute": "relative = absolute / close ; absolute = relative * close",
+          "probe_max_abs_err_relative_vs_crt_abs_over_close": 1.1539986284267445e-10,
+          "probe_max_abs_err_pipe_atr_times_close_vs_crt_abs": 2.710142323891773e-07
+        },
+        "crt_state_atr": {
+          "value_kind": "absolute_price_units",
+          "window": "engine candle_buffer (bounded atr_period × buffer_multiplier), not necessarily full series",
+          "consumers": "displacement/expansion/retest/SL multipliers calibrated in absolute units",
+          "status": "LEGITIMATE_CRT_PRIVATE_QUANTITY for threshold scaling even when absolute SMA substrate matches atr_14_raw"
+        }
+      },
+      "not_classification": [
+        "NOT EXACT_CANONICAL_IDENTITY with FM-041 relative atr (scale differs by design)",
+        "NOT DUPLICATE_UNGOVERNED_MARKET_MATH (TR+SMA14 is shared; CRT absolute form is intentional for HOW knobs)"
+      ],
+      "transform_validity": {
+        "mathematical": true,
+        "temporal_fullseries": true,
+        "causal": true,
+        "architecturally_desirable_as_silent_replacement_of_crt_state_atr_by_FM041_relative": false,
+        "reason_not_to_register_for_parity_pass": "Registering relative atr as CRT atr would retune every absolute ATR threshold; a transform registry is only justified if CRT is explicitly migrated to relative units OR binds to atr_14_raw absolute with buffer-parity proof — both require BEHAVIOR_CHANGE_AUTHORIZED, not a G-PARITY cosmetic pass"
+      },
+      "equality_required_for_shadow": false,
+      "notes": [
+        "Name collision: token atr means relative in 38-dim feature schema and absolute in CRT EngineState",
+        "Shadow must continue reading pipeline relative atr as WHAT; must not feed CRT-local absolute as MSIP source until explicit IDs exist"
+      ]
+    },
+    "ema_fast": {
+      "classification": "DISTINCT_GOVERNED_MARKET_QUANTITY",
+      "crt": {
+        "periods": 2,
+        "alpha": "2/(N+1)",
+        "config_key": "CRTConfig.ema_fast default 2",
+        "role": "soft-confirmation / micro-momentum manifold (live_ema_fast)"
+      },
+      "canonical_pipeline": {
+        "id": "FM-043",
+        "span": 9,
+        "formula": "close.ewm(span=9, adjust=False).mean()"
+      },
+      "probe": {
+        "pipe_vs_ewm9_max_abs_err": 0.00012202678499306785,
+        "pipe_vs_crt_ema2_max_abs_err": 13.650698258905322
+      },
+      "architecturally_desirable_to_force_equal": false,
+      "equality_required_for_shadow": false,
+      "notes": [
+        "Not a failed parity of one quantity — two intentional periods",
+        "Do not invent a transform mapping EMA-2 ↔ EMA-9; they answer different questions"
+      ]
+    },
+    "ema_slow": {
+      "classification": "DISTINCT_GOVERNED_MARKET_QUANTITY",
+      "crt": {
+        "periods": 5,
+        "alpha": "2/(N+1)",
+        "config_key": "CRTConfig.ema_slow default 5",
+        "role": "soft-confirmation counterpart to ema_fast=2"
+      },
+      "canonical_pipeline": {
+        "id": "FM-044",
+        "span": 21,
+        "formula": "close.ewm(span=21, adjust=False).mean()"
+      },
+      "probe": {
+        "pipe_vs_ewm21_max_abs_err": 0.00012205722168801003,
+        "pipe_vs_crt_ema5_max_abs_err": 16.93828362479917
+      },
+      "architecturally_desirable_to_force_equal": false,
+      "equality_required_for_shadow": false,
+      "notes": [
+        "Same as ema_fast: distinct governed quantity, not transform of FM-044"
+      ]
+    }
+  },
+  "summary_table": {
+    "body_ratio": "EXACT_CANONICAL_IDENTITY",
+    "wick_size": "EXACT_CANONICAL_IDENTITY",
+    "atr": "GOVERNED_TRANSFORM_OF_CANONICAL_QUANTITY (+ LEGITIMATE_CRT_PRIVATE absolute runtime form)",
+    "ema_fast": "DISTINCT_GOVERNED_MARKET_QUANTITY",
+    "ema_slow": "DISTINCT_GOVERNED_MARKET_QUANTITY"
+  },
+  "G-PARITY-01": {
+    "status": "PARTIAL",
+    "meaning": "Identity/authority resolved for all four surfaces without authorizing CRT math deprecation or input migration",
+    "closed": [
+      "body_ratio exact identity",
+      "wick_size exact identity",
+      "atr absolute↔relative relationship validity (full-series)",
+      "ema 2/5 vs 9/21 distinctness (equality not the objective)"
+    ],
+    "not_closed_for_migration": [
+      "CRT buffer-local absolute atr vs full-series atr_14_raw under live buffer caps",
+      "any CRT threshold retargeting to relative atr",
+      "any replacement of CRT EMA-2/5 by pipeline EMA-9/21"
+    ],
+    "reopen_for_deprecation_only_when": [
+      "BEHAVIOR_CHANGE_AUTHORIZED plan exists",
+      "for atr: either bind CRT to atr_14_raw absolute with buffer-parity proof OR explicitly migrate thresholds to relative units",
+      "for ema: either register CRT EMA-2/5 as new FM ids and keep them, or redesign soft-confirm manifold (not force equal to 9/21)"
+    ]
+  },
+  "CRT_LOCAL_DEPRECATION_CANDIDATES": [
+    {
+      "quantity": "body_ratio",
+      "scope": "code-path hygiene only — property already FM-010 bound; no threshold change",
+      "migration_authorized": false
+    },
+    {
+      "quantity": "wick_size",
+      "scope": "code-path hygiene only — property already FM-002 bound; no threshold change",
+      "migration_authorized": false
+    }
+  ],
+  "NEW_GOVERNED_QUANTITIES_REQUIRED": [
+    {
+      "proposed_id_hint": "crt_ema_fast_2 / FM-TBD",
+      "reason": "if continuous observation of CRT soft-confirm EMA is desired without conflating FM-043"
+    },
+    {
+      "proposed_id_hint": "crt_ema_slow_5 / FM-TBD",
+      "reason": "pair of CRT soft-confirm slow EMA"
+    },
+    {
+      "proposed_id_hint": "atr_absolute_sma14 / atr_14_raw promotion",
+      "reason": "if absolute ATR must be a first-class WHAT for MSIP/CRT binding without overloading relative atr"
+    }
+  ],
+  "MIGRATION_CANDIDATES": [],
+  "MIGRATION_AUTHORIZED": false,
+  "PRODUCTION_CUTOVER_AUTHORIZED": false,
+  "CRT_INPUT_MIGRATION_AUTHORIZED": false,
+  "THRESHOLD_SELECTION_AUTHORIZED": false,
+  "CONCURRENT_CANDIDATES_AUTHORIZED": false,
+  "shadow_layer_impact": {
+    "G-SHADOW-01": "unaffected — remains ACCEPTED_AS_PASSED on declared population",
+    "msip_source_policy": "continue FeaturePipeline WHAT only; CRT-local absolute atr and CRT EMA-2/5 not silent MSIP sources",
+    "no_transform_registry_required_for_shadow": true
+  },
+  "project_posture": {
+    "architecture": "Decision C preserved",
+    "working_shadow_layer": "preserve",
+    "next_code_work": "NOT AUTHORIZED by this artifact",
+    "next_optional_owner_boundaries": [
+      "hygiene-only body_ratio/wick_size call-path consolidation (still OBSERVATION or narrow impl if owner opens)",
+      "register NEW FM ids for CRT EMA-2/5 and/or absolute ATR if observation of those surfaces is desired",
+      "BEHAVIOR_CHANGE_AUTHORIZED CRT atr/EMA migration plan — separate and currently CLOSED"
+    ]
+  }
+}

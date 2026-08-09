@@ -1,0 +1,108 @@
+{
+  "schema_id": "PROTOCOL_REVIEW_EXECUTABLE_TRACE_V1",
+  "created_at_utc": "2026-07-14T13:12:00Z",
+  "active_version": "v2_multi_2026_04",
+  "protocol": "MSIP_WHOLE_REPRESENTATION_PREREGISTRATION_V1",
+  "protocol_md_sha256_prefix": "0fb3dfef87b3981c",
+  "protocol_json_sha256_prefix": "2314baf07271b4be",
+  "hard_flags": {
+    "CRT_BEHAVIOR_CHANGE": false,
+    "MSIP_AUTHORITY_CHANGE": false,
+    "PRODUCTION_BEHAVIOR_CHANGE": false,
+    "IMPLEMENTATION_AUTHORIZED": false,
+    "RUN_AUTHORIZED": false
+  },
+  "traces": [
+    {
+      "capability": "R8_OUTCOME_DEFINITION",
+      "exists": true,
+      "authority": "protocol §5 + H-MSIP-001 executable precedent",
+      "locations": [
+        "docs/research-readiness/MSIP_WHOLE_REPRESENTATION_PREREGISTRATION_V1.md§5",
+        "scripts/research/run_h_msip_001.py:329 (closes[i+PRIMARY_H]/closes[i]-1, PRIMARY_H=8)"
+      ],
+      "semantics": "R_h(t)=close[t+h]/close[t]-1; dependency end bar index = t+h",
+      "implication_for_RF_GEM_001": "Under contiguous train end L = F-1, require L+h < F ⇒ purge gap of h bars between last train and first eval index (not h-1)."
+    },
+    {
+      "capability": "PURGED_TEMPORAL_NESTED_SPLITTER",
+      "exists": false,
+      "related_exists": [
+        "scripts/research/run_h_msip_001.py equal-count fold assignment (no purge, not nested train/test expanding)",
+        "preregistered_experiments.md mentions embargoed purged splits as doctrine only"
+      ],
+      "gap": "No generic PurgedTemporalSplit / OutcomeOverlapAudit in src/research/",
+      "primary_change_class_if_built": "C2_RESEARCH_INFRASTRUCTURE",
+      "rf_ids": ["RF-GEM-001"]
+    },
+    {
+      "capability": "GLOBAL_NULL_GENERATORS_FOR_NESTED_OOS",
+      "exists": false,
+      "related_exists": [
+        "src/research/conditional_entropy_grid.py label-permutation p-values",
+        "src/research/candle_state/m5_incremental.py within-cell permutation",
+        "scripts/research/run_h_msip_001.py within-block treatment-label permutation (not R8 circular shift / block preserve)"
+      ],
+      "gap": "No CircularShiftNull / ContiguousBlockNull / EpisodeBlockNull interface for full nested recomputation",
+      "primary_change_class_if_built": "C2_RESEARCH_INFRASTRUCTURE",
+      "rf_ids": ["RF-GEM-002", "RF-DS-005", "RF-DS-009"]
+    },
+    {
+      "capability": "BARS_SINCE_RANGE_ENTRY_FIELD",
+      "exists": false,
+      "related_exists": [
+        "src/config_layer/crt_engine_v2.py Range.formed_at (datetime on active_range)",
+        "src/config_layer/crt_engine_v2.py state.active_range",
+        "scripts/research/run_h_msip_001.py candidate episode occupancy tracking (episode_ids), not bars_since_range_entry"
+      ],
+      "gap": "String only in prereg MD; not emitted by MarketStateVector or feature pipeline under that name",
+      "authority_class": "WHO_READ_ONLY_DERIVABLE_CANDIDATE — deriving from Range.formed_at is observational, not CRT behavior change",
+      "primary_change_class_for_protocol_rule": "C0_GOVERNANCE_ONLY",
+      "primary_change_class_if_research_emitter_added": "C2_RESEARCH_INFRASTRUCTURE",
+      "market_who_change": false,
+      "rf_ids": ["RF-GEM-003", "RF-DS-004"],
+      "forbidden": "Do not change CRT transition logic to create this field; research panel may compute observationally from formed_at + bar clock"
+    },
+    {
+      "capability": "INDEPENDENT_PER_M_HYPERPARAMETER_SELECTION",
+      "exists": false,
+      "related_exists": [],
+      "gap": "Whole-representation harness not implemented; H-MSIP-001 uses association contrasts not nested Ridge/ENet/Tree selection",
+      "primary_change_class_if_built": "C2_RESEARCH_INFRASTRUCTURE",
+      "rf_ids": ["RF-DS-001", "RF-GEM-NB-02"]
+    },
+    {
+      "capability": "INFORMATION_SET_RESOLVER_M0_M1_M2",
+      "exists": false,
+      "related_exists": [
+        "docs/governance/msip_shadow_design_v1/MARKET_STATE_VECTOR_SCHEMA_V1.json",
+        "src/msip/market_state_vector.py shadow emitter"
+      ],
+      "gap": "No frozen column enumerator enforcing dedupe + missingness + nest identity",
+      "primary_change_class_if_built": "C2_RESEARCH_INFRASTRUCTURE",
+      "rf_ids": ["RF-DS-010", "RF-GEM-003", "RF-DS-008"]
+    },
+    {
+      "capability": "MSV_COVERAGE_AUDITOR",
+      "exists": false,
+      "related_exists": ["scripts/research/run_h_msip_001.py population census fields"],
+      "primary_change_class_if_built": "C2_RESEARCH_INFRASTRUCTURE",
+      "protocol_only_path": "C0 — require coverage report + floor in prereg without new module",
+      "rf_ids": ["RF-DS-008"]
+    },
+    {
+      "capability": "METRIC_SIGN_AND_GS2_AND_MULTIPLICITY_TEXT",
+      "exists": true,
+      "authority": "protocol documents only (no code yet)",
+      "primary_change_class": "C0_GOVERNANCE_ONLY",
+      "rf_ids": ["RF-DS-002", "RF-DS-006", "RF-DS-007", "RF-DS-003"]
+    }
+  ],
+  "summary": {
+    "c0_claims": ["RF-DS-002", "RF-DS-003", "RF-DS-005_spec_half", "RF-DS-006", "RF-DS-007", "RF-DS-008_policy", "RF-DS-010", "RF-GEM-003_rule", "RF-GEM-NB-01"],
+    "c1_claims": [],
+    "c2_claims": ["RF-GEM-001", "RF-GEM-002", "RF-DS-001", "RF-DS-009", "optional_enumerators"],
+    "c3_c6_claims": [],
+    "c3_c6_blockers": "NONE for registered Gemini/DeepSeek findings — all stay in Research Control Plane"
+  }
+}

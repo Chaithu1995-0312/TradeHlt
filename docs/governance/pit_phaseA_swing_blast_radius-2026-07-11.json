@@ -1,0 +1,1028 @@
+{
+  "generated_at": "2026-07-11T07:22:25.941471+00:00",
+  "active_version": "v2_multi_2026_04",
+  "probe": "pit_swing_blast_radius",
+  "phase": "PIT-A-investigation",
+  "behavior_changed": false,
+  "contaminated_10": [
+    "double_sweep",
+    "sweep_detected",
+    "liquidity_sweep",
+    "break_of_structure",
+    "swing_high",
+    "swing_low",
+    "higher_high",
+    "lower_low",
+    "liquidity_distance",
+    "liquidity_pressure_score"
+  ],
+  "contaminated_indices": [
+    6,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    35,
+    36
+  ],
+  "A_value_level": {
+    "crypto": {
+      "symbol": "BNBUSDT",
+      "bars": 29922,
+      "swing_window": 2,
+      "contaminated_features": [
+        "double_sweep",
+        "sweep_detected",
+        "liquidity_sweep",
+        "break_of_structure",
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "liquidity_distance",
+        "liquidity_pressure_score"
+      ],
+      "per_feature": {
+        "double_sweep": {
+          "bars_differ": 869,
+          "differ_rate": 0.029042176325111958,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.029042176325111958,
+            "median": 0.0,
+            "p95": 0.0,
+            "max": 1.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.026669340284740325,
+          "causal_nonzero_rate": 0.05383998395829156
+        },
+        "sweep_detected": {
+          "bars_differ": 1866,
+          "differ_rate": 0.062362141568077,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.062362141568077,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 1.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.09361005280395696,
+          "causal_nonzero_rate": 0.15597219437203397
+        },
+        "liquidity_sweep": {
+          "bars_differ": 1891,
+          "differ_rate": 0.06319764721609518,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.06403315286411336,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 2.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.09361005280395696,
+          "causal_nonzero_rate": 0.15597219437203397
+        },
+        "break_of_structure": {
+          "bars_differ": 3476,
+          "differ_rate": 0.11616870530044783,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.11620212552636856,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 2.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.27274246373905486,
+          "causal_nonzero_rate": 0.388877748813582
+        },
+        "swing_high": {
+          "bars_differ": 8848,
+          "differ_rate": 0.29570215894659446,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.29570215894659446,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 1.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.14972261212485796,
+          "causal_nonzero_rate": 0.14972261212485796
+        },
+        "swing_low": {
+          "bars_differ": 8684,
+          "differ_rate": 0.29022124189559523,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.29022124189559523,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 1.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.14661453111423034,
+          "causal_nonzero_rate": 0.14661453111423034
+        },
+        "higher_high": {
+          "bars_differ": 2784,
+          "differ_rate": 0.0930419089633046,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.0930419089633046,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 1.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.19343626762916918,
+          "causal_nonzero_rate": 0.28647817659247377
+        },
+        "lower_low": {
+          "bars_differ": 2607,
+          "differ_rate": 0.08712652897533588,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.08712652897533588,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 1.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.17361807365817794,
+          "causal_nonzero_rate": 0.2607446026335138
+        },
+        "liquidity_distance": {
+          "bars_differ": 4866,
+          "differ_rate": 0.16262281933025868,
+          "abs_delta": {
+            "n": 29921,
+            "mean": 0.1009343023314186,
+            "median": 0.0,
+            "p95": 0.6570397168397903,
+            "max": 6.005224764347076,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.9829556847804292,
+          "causal_nonzero_rate": 0.9823207004879353
+        },
+        "liquidity_pressure_score": {
+          "bars_differ": 4866,
+          "differ_rate": 0.16262281933025868,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.027746330673561914,
+            "median": 0.0,
+            "p95": 0.2098492980003357,
+            "max": 0.8109323345124722,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 1.0,
+          "causal_nonzero_rate": 1.0
+        }
+      },
+      "bars_any_of_10_differ": 18992,
+      "any_of_10_differ_rate": 0.6347169306864514,
+      "max_differ_rate": 0.29570215894659446
+    },
+    "fx": {
+      "symbol": "EURUSD",
+      "bars": 29922,
+      "swing_window": 2,
+      "contaminated_features": [
+        "double_sweep",
+        "sweep_detected",
+        "liquidity_sweep",
+        "break_of_structure",
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "liquidity_distance",
+        "liquidity_pressure_score"
+      ],
+      "per_feature": {
+        "double_sweep": {
+          "bars_differ": 1146,
+          "differ_rate": 0.0382995789051534,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.0382995789051534,
+            "median": 0.0,
+            "p95": 0.0,
+            "max": 1.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.029643740391685047,
+          "causal_nonzero_rate": 0.06446761580108282
+        },
+        "sweep_detected": {
+          "bars_differ": 1853,
+          "differ_rate": 0.06192767863110755,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.06192767863110755,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 1.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.10330191832096786,
+          "causal_nonzero_rate": 0.1652295969520754
+        },
+        "liquidity_sweep": {
+          "bars_differ": 1890,
+          "differ_rate": 0.06316422699017446,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.06440077534924137,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 2.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.10330191832096786,
+          "causal_nonzero_rate": 0.1652295969520754
+        },
+        "break_of_structure": {
+          "bars_differ": 3416,
+          "differ_rate": 0.1141634917452042,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.11423033219704565,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 2.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.28474032484459594,
+          "causal_nonzero_rate": 0.3988369761379587
+        },
+        "swing_high": {
+          "bars_differ": 8391,
+          "differ_rate": 0.28042911570082213,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.28042911570082213,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 1.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.14110019383731034,
+          "causal_nonzero_rate": 0.14113361406323108
+        },
+        "swing_low": {
+          "bars_differ": 8422,
+          "differ_rate": 0.2814651427043647,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.2814651427043647,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 1.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.1413007151928347,
+          "causal_nonzero_rate": 0.1413007151928347
+        },
+        "higher_high": {
+          "bars_differ": 2729,
+          "differ_rate": 0.0912037965376646,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.0912037965376646,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 1.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.2032952342757837,
+          "causal_nonzero_rate": 0.2944990308134483
+        },
+        "lower_low": {
+          "bars_differ": 2601,
+          "differ_rate": 0.08692600761981151,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.08692600761981151,
+            "median": 0.0,
+            "p95": 1.0,
+            "max": 1.0,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.18611723815252992,
+          "causal_nonzero_rate": 0.2730432457723414
+        },
+        "liquidity_distance": {
+          "bars_differ": 4931,
+          "differ_rate": 0.16479513401510595,
+          "abs_delta": {
+            "n": 29921,
+            "mean": 0.10921629989048903,
+            "median": 0.0,
+            "p95": 0.6979472637176514,
+            "max": 6.52804559469223,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 0.9905420760644342,
+          "causal_nonzero_rate": 0.9902412940311477
+        },
+        "liquidity_pressure_score": {
+          "bars_differ": 4931,
+          "differ_rate": 0.16479513401510595,
+          "abs_delta": {
+            "n": 29922,
+            "mean": 0.028781622868946588,
+            "median": 0.0,
+            "p95": 0.21859651803970337,
+            "max": 0.8946866244077682,
+            "min": 0.0
+          },
+          "centered_nonzero_rate": 1.0,
+          "causal_nonzero_rate": 1.0
+        }
+      },
+      "bars_any_of_10_differ": 18696,
+      "any_of_10_differ_rate": 0.6248245438139162,
+      "max_differ_rate": 0.2814651427043647
+    }
+  },
+  "B1_prefix_invariance": {
+    "crypto": {
+      "symbol": "BNBUSDT",
+      "prefix_n_raw": 874,
+      "requested_prefix_n": 5000,
+      "full_n_raw": 30000,
+      "cuts_scanned": 4,
+      "prefix_feat_rows": 796,
+      "full_feat_rows": 29922,
+      "common_timestamps": 796,
+      "common_tail_compared": 20,
+      "common_interior_compared": 794,
+      "centered_production_cols": {
+        "bars_checked": 796,
+        "bars_differ": 1,
+        "differ_rate": 0.001256281407035176,
+        "first_diff_ts": "2024-05-31 02:15:00",
+        "prefix_invariant": false,
+        "window": "all_common"
+      },
+      "centered_interior_diagnostic": {
+        "bars_checked": 794,
+        "bars_differ": 0,
+        "differ_rate": 0.0,
+        "first_diff_ts": null,
+        "prefix_invariant": true,
+        "window": "prefix_interior"
+      },
+      "causal_confirmed_cols": {
+        "bars_checked": 794,
+        "bars_differ": 0,
+        "differ_rate": 0.0,
+        "first_diff_ts": null,
+        "prefix_invariant": true,
+        "window": "prefix_interior"
+      },
+      "leakage_example": {
+        "raw_index": 873,
+        "prefix_n": 874,
+        "feature": "swing_high",
+        "flag_on_prefix": 0,
+        "flag_on_full": 1,
+        "mechanism": "rolling(w=5, center=True, min_periods=5) at bar t uses bars t-2..t+2. On a prefix cut the future half is missing (NaN roll) so a true swing can be missed (flag 0\u21921 when future bars arrive). Causal = centered.shift(2) only needs data through t.",
+        "pipeline_first_diff_ts": "2024-05-31 02:15:00"
+      },
+      "verdict": {
+        "centered_leaks": true,
+        "causal_prefix_invariant": true,
+        "leakage_proved": true
+      }
+    }
+  },
+  "B3_live_contract": {
+    "defaults_in_build_ohlcv_and_auxiliary": {
+      "sweep_detected": {
+        "file": "src/runtime/live_engine_hook.py",
+        "line": 394,
+        "default": 0.0,
+        "snippet": "\"sweep_detected\":       _safe_float(trade_data.get(\"sweep_detected\"), 0.0),"
+      },
+      "double_sweep": {
+        "file": "src/runtime/live_engine_hook.py",
+        "line": 395,
+        "default": 0.0,
+        "snippet": "\"double_sweep\":         0.0,  # overwritten by FeatureStore._compute_derived()",
+        "note": "hardcoded 0.0 then FeatureStore._compute_derived may overwrite"
+      },
+      "liquidity_sweep": {
+        "file": "src/runtime/live_engine_hook.py",
+        "line": 396,
+        "default": 0.0,
+        "snippet": "\"liquidity_sweep\":      _safe_float(trade_data.get(\"liquidity_sweep\"), 0.0),"
+      },
+      "break_of_structure": {
+        "file": "src/runtime/live_engine_hook.py",
+        "line": 397,
+        "default": 0.0,
+        "snippet": "\"break_of_structure\":   _safe_float(trade_data.get(\"break_of_structure\"), 0.0),"
+      },
+      "swing_high": {
+        "file": "src/runtime/live_engine_hook.py",
+        "line": 399,
+        "default": 0.0,
+        "snippet": "\"swing_high\":           _safe_float(trade_data.get(\"swing_high\"), 0.0),"
+      },
+      "swing_low": {
+        "file": "src/runtime/live_engine_hook.py",
+        "line": 400,
+        "default": 0.0,
+        "snippet": "\"swing_low\":            _safe_float(trade_data.get(\"swing_low\"), 0.0),"
+      },
+      "higher_high": {
+        "file": "src/runtime/live_engine_hook.py",
+        "line": 401,
+        "default": 0.0,
+        "snippet": "\"higher_high\":          _safe_float(trade_data.get(\"higher_high\"), 0.0),"
+      },
+      "lower_low": {
+        "file": "src/runtime/live_engine_hook.py",
+        "line": 402,
+        "default": 0.0,
+        "snippet": "\"lower_low\":            _safe_float(trade_data.get(\"lower_low\"), 0.0),"
+      }
+    },
+    "feature_store_derived": {
+      "rewrites": [
+        "double_sweep"
+      ],
+      "inputs": [
+        "liquidity_sweep"
+      ],
+      "file": "src/core/feature_store.py",
+      "method": "_compute_derived",
+      "does_NOT_compute": [
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "break_of_structure",
+        "sweep_detected",
+        "liquidity_distance",
+        "liquidity_pressure_score"
+      ],
+      "snippet_lines": [
+        {
+          "line": 117,
+          "text": "# double_sweep: both positive and negative liquidity_sweep in recent history"
+        },
+        {
+          "line": 118,
+          "text": "if \"liquidity_sweep\" in d:"
+        },
+        {
+          "line": 120,
+          "text": "val = int(d[\"liquidity_sweep\"])"
+        },
+        {
+          "line": 121,
+          "text": "self._liquidity_sweep_history.append(val)"
+        },
+        {
+          "line": 126,
+          "text": "if self._liquidity_sweep_history:"
+        },
+        {
+          "line": 127,
+          "text": "has_pos = any(v > 0 for v in self._liquidity_sweep_history if isinstance(v, (int, float)))"
+        },
+        {
+          "line": 128,
+          "text": "has_neg = any(v < 0 for v in self._liquidity_sweep_history if isinstance(v, (int, float)))"
+        },
+        {
+          "line": 129,
+          "text": "d[\"double_sweep\"] = 1 if (has_pos and has_neg) else 0"
+        },
+        {
+          "line": 131,
+          "text": "d[\"double_sweep\"] = 0"
+        }
+      ]
+    },
+    "production_feeder_hits": [],
+    "research_only_hits": [],
+    "n_production_feeder_hits": 0,
+    "conclusion": {
+      "live_zero_hypothesis": "CONDITIONAL_PROVEN",
+      "meaning": "When trade_data omits structure/sweep keys, live_engine_hook defaults them to 0.0 (citations below). FeatureStore only rewrites double_sweep from liquidity_sweep history; if liquidity_sweep is also defaulted 0, double_sweep stays 0. No production inout feeder was found that runs FeaturePipeline or otherwise populates centered swing structure into trade_data. Therefore the observed-live-contract variant IS live-zero on the default-absent path. If an external feeder injects non-zero structure keys, that path is unobserved in-repo.",
+      "observed_live_contract_name": "observed-live-contract",
+      "may_call_live_zero": true,
+      "scope": "default-absent path through HookedLiveEngine._build_ohlcv_and_auxiliary",
+      "liquidity_distance_in_auxiliary": false
+    },
+    "citations": {
+      "hook_defaults": "src/runtime/live_engine_hook.py:394-402",
+      "feature_store_double_sweep": "src/core/feature_store.py:115-131",
+      "hook_process_path": "src/runtime/live_engine_hook.py:562-571"
+    }
+  },
+  "B2a_crt_channel": {
+    "symbol": "BNBUSDT",
+    "bars": 29922,
+    "channel": "crt_engine.compute / scoring_engine.compute_scores",
+    "intervention": "only sweep_detected + double_sweep swapped to causal; all else fixed",
+    "s_sweep_differ_rate": 0.07071719804825881,
+    "final_score_differ_rate": 0.07071719804825881,
+    "abs_s_sweep_delta": {
+      "n": 29922,
+      "mean": 0.048726689392420294,
+      "median": 0.0,
+      "p95": 0.7,
+      "max": 1.0,
+      "min": 0.0
+    },
+    "abs_final_score_delta": {
+      "n": 29922,
+      "mean": 0.0170543412873471,
+      "median": 0.0,
+      "p95": 0.245,
+      "max": 0.3500000000000001,
+      "min": 0.0
+    },
+    "note": "CRT-score delta is a NECESSARY channel to fusion impact, not a production-loss claim (F-037 gate-OFF research spine; live always gate-ON)."
+  },
+  "B2b_zone_channel": {
+    "symbol": "BNBUSDT",
+    "bars_total": 29922,
+    "bars_scored": 9974,
+    "stride": 3,
+    "threshold": 0.25,
+    "zone_mode": "hard",
+    "n_zones": 8,
+    "ZONE_VALUE_EXPOSURE": {
+      "definition": "per-zone feature_weights L1 mass on the 10 contaminated dims",
+      "zones": [
+        {
+          "id": "zone_0",
+          "contaminated_L1_mass": 0.4,
+          "contaminated_fraction": 0.4
+        },
+        {
+          "id": "zone_1",
+          "contaminated_L1_mass": 0.4,
+          "contaminated_fraction": 0.4
+        },
+        {
+          "id": "zone_2",
+          "contaminated_L1_mass": 0.4,
+          "contaminated_fraction": 0.4
+        },
+        {
+          "id": "zone_3",
+          "contaminated_L1_mass": 0.4,
+          "contaminated_fraction": 0.4
+        },
+        {
+          "id": "zone_4",
+          "contaminated_L1_mass": 0.4,
+          "contaminated_fraction": 0.4
+        },
+        {
+          "id": "zone_5",
+          "contaminated_L1_mass": 0.4,
+          "contaminated_fraction": 0.4
+        },
+        {
+          "id": "zone_6",
+          "contaminated_L1_mass": 0.4,
+          "contaminated_fraction": 0.4
+        },
+        {
+          "id": "zone_7",
+          "contaminated_L1_mass": 0.4,
+          "contaminated_fraction": 0.4
+        }
+      ],
+      "mean_contaminated_fraction": 0.4
+    },
+    "ZONE_SCORE_EXPOSURE": {
+      "definition": "centered vs causal vs observed-live-contract max-zone Gaussian score delta (real compute_gaussian_score vs models/zone_registry.json)",
+      "centered_vs_causal": {
+        "score_differ_rate": 0.6334469621014638,
+        "abs_score_delta": {
+          "n": 9974,
+          "mean": 0.032025036018108924,
+          "median": 0.03241148069014321,
+          "p95": 0.11810190354153305,
+          "max": 0.840337087189952,
+          "min": 0.0
+        }
+      },
+      "centered_vs_observed_live_contract": {
+        "live_zero_proven": true,
+        "variant": "observed-live-contract (=live-zero)",
+        "score_differ_rate": 1.0,
+        "abs_score_delta": {
+          "n": 9974,
+          "mean": 0.04015132705993983,
+          "median": 0.039535943505626114,
+          "p95": 0.097078792601474,
+          "max": 0.21348849253270474,
+          "min": 3.5092411210246865e-07
+        }
+      }
+    },
+    "ZONE_GATE_EXPOSURE": {
+      "definition": "HARD pass/fail flip rate (score >= zone_cluster_threshold)",
+      "centered_vs_causal_flip_rate": 0.00010026067776218167,
+      "centered_vs_causal_flips": 1,
+      "centered_vs_live_flip_rate": 0.0,
+      "centered_vs_live_flips": 0
+    },
+    "FINAL_LEDGER_EXPOSURE": {
+      "status": "NOT_INFERRED_HERE",
+      "note": "FINAL_LEDGER_EXPOSURE comes ONLY from pit_swing_gateon_ab.py (gate-ON execution). Never inferred from value/score/gate rates above."
+    }
+  },
+  "C_artifact_dataset": {
+    "rr_model": {
+      "path": "models/rr_model.json",
+      "zero_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        7,
+        8,
+        16,
+        17,
+        26,
+        27
+      ],
+      "contaminated_dim_status": {
+        "double_sweep": {
+          "index": 6,
+          "zeroed": false,
+          "status": "ACTIVE_IN_MODEL"
+        },
+        "sweep_detected": {
+          "index": 19,
+          "zeroed": false,
+          "status": "ACTIVE_IN_MODEL"
+        },
+        "liquidity_sweep": {
+          "index": 20,
+          "zeroed": false,
+          "status": "ACTIVE_IN_MODEL"
+        },
+        "break_of_structure": {
+          "index": 21,
+          "zeroed": false,
+          "status": "ACTIVE_IN_MODEL"
+        },
+        "swing_high": {
+          "index": 22,
+          "zeroed": false,
+          "status": "ACTIVE_IN_MODEL"
+        },
+        "swing_low": {
+          "index": 23,
+          "zeroed": false,
+          "status": "ACTIVE_IN_MODEL"
+        },
+        "higher_high": {
+          "index": 24,
+          "zeroed": false,
+          "status": "ACTIVE_IN_MODEL"
+        },
+        "lower_low": {
+          "index": 25,
+          "zeroed": false,
+          "status": "ACTIVE_IN_MODEL"
+        },
+        "liquidity_distance": {
+          "index": 35,
+          "zeroed": false,
+          "status": "ACTIVE_IN_MODEL"
+        },
+        "liquidity_pressure_score": {
+          "index": 36,
+          "zeroed": false,
+          "status": "ACTIVE_IN_MODEL"
+        }
+      },
+      "n_contaminated_active": 10,
+      "n_contaminated_zeroed": 0,
+      "verdict": "ALL_10_ACTIVE"
+    },
+    "zone_registry_static_mass": {
+      "path": "models/zone_registry.json",
+      "zones": [
+        {
+          "id": "zone_0",
+          "contaminated_L1_mass": 0.4,
+          "total_L1_mass": 1.0,
+          "contaminated_fraction": 0.4,
+          "threshold": 0.3
+        },
+        {
+          "id": "zone_1",
+          "contaminated_L1_mass": 0.4,
+          "total_L1_mass": 1.0,
+          "contaminated_fraction": 0.4,
+          "threshold": 0.3
+        },
+        {
+          "id": "zone_2",
+          "contaminated_L1_mass": 0.4,
+          "total_L1_mass": 1.0,
+          "contaminated_fraction": 0.4,
+          "threshold": 0.3
+        },
+        {
+          "id": "zone_3",
+          "contaminated_L1_mass": 0.4,
+          "total_L1_mass": 1.0,
+          "contaminated_fraction": 0.4,
+          "threshold": 0.3
+        },
+        {
+          "id": "zone_4",
+          "contaminated_L1_mass": 0.4,
+          "total_L1_mass": 1.0,
+          "contaminated_fraction": 0.4,
+          "threshold": 0.3
+        },
+        {
+          "id": "zone_5",
+          "contaminated_L1_mass": 0.4,
+          "total_L1_mass": 1.0,
+          "contaminated_fraction": 0.4,
+          "threshold": 0.3
+        },
+        {
+          "id": "zone_6",
+          "contaminated_L1_mass": 0.4,
+          "total_L1_mass": 1.0,
+          "contaminated_fraction": 0.4,
+          "threshold": 0.3
+        },
+        {
+          "id": "zone_7",
+          "contaminated_L1_mass": 0.4,
+          "total_L1_mass": 1.0,
+          "contaminated_fraction": 0.4,
+          "threshold": 0.3
+        }
+      ],
+      "mean_contaminated_fraction": 0.4
+    },
+    "dataset_embeddings": [
+      {
+        "artifact": "CRT cached_features.double_sweep",
+        "path": "src/config_layer/crt_engine_v2.py",
+        "note": "cached_features embeds double_sweep at RETEST (state.sweep_event.double_confirmed)",
+        "grep_anchor": "double_sweep"
+      },
+      {
+        "artifact": "opportunities.jsonl features{}",
+        "path": "src/runtime/backtest_v2.py",
+        "note": "trade ledger rows carry cached_double_sweep + 38-dim features from pipeline",
+        "grep_anchor": "cached_double_sweep"
+      },
+      {
+        "artifact": "stage1 training JSONL",
+        "path": "src/training/stage1_dataset_builder.py",
+        "line_hints": [
+          6,
+          183,
+          360,
+          433
+        ],
+        "note": "reads opportunities.jsonl; requires all 38 CANONICAL_FEATURES"
+      },
+      {
+        "artifact": "rr_dataset (49k\u00d738)",
+        "path": "src/config_layer/rr/rr_dataset_builder.py",
+        "line_hints": [
+          28,
+          35,
+          103,
+          291
+        ],
+        "note": "FeaturePipeline \u2192 CANONICAL_FEATURES vectors; models/*/rr_dataset.json",
+        "on_disk_examples": [
+          "models/BNBUSDT/bnbusdt_balanced_20260524/rr_dataset.json",
+          "models/BNBUSDT/bnbusdt_training_20260524/rr_dataset.json",
+          "models/ETHUSDT/20260519_113806/rr_dataset.json",
+          "models/ETHUSDT/20260519_134711/rr_dataset.json"
+        ]
+      },
+      {
+        "artifact": "rr_model.json",
+        "path": "models/rr_model.json",
+        "zero_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          8,
+          16,
+          17,
+          26,
+          27
+        ],
+        "contaminated_active_count": 10,
+        "note": "zero_indices zeroes NONE of the 10 contaminated dims"
+      },
+      {
+        "artifact": "zone_registry.json",
+        "path": "models/zone_registry.json",
+        "n_zones": 8,
+        "note": "live HARD gate (F-041); per-zone weights mass on contaminated dims measured in B2b"
+      }
+    ],
+    "phase1_known_consumers": [
+      {
+        "path": "src/core/engine_runner.py",
+        "role": "FUSION_ORCHESTRATOR",
+        "status": "REACHABLE"
+      },
+      {
+        "path": "src/runtime/backtest_v2.py",
+        "role": "BACKTEST",
+        "status": "REACHABLE"
+      },
+      {
+        "path": "src/engines/crt_engine.py",
+        "role": "CRT_SCORE_WRAPPER",
+        "status": "REACHABLE"
+      },
+      {
+        "path": "src/engines/live_engine.py",
+        "role": "BITNET_GATE_CONSUMER",
+        "status": "REACHABLE_INACTIVE_BITNET"
+      },
+      {
+        "path": "src/features/feature_monitor.py",
+        "role": "DRIFT_MONITOR",
+        "status": "REACHABLE"
+      },
+      {
+        "path": "scripts/research/*",
+        "role": "RESEARCH_SCRIPTS",
+        "status": "MANY_PATHS"
+      },
+      {
+        "path": "models/*",
+        "role": "TRAINED_ARTIFACTS",
+        "status": "ARTIFACT_BINDING_UNKNOWN_RUN1"
+      }
+    ],
+    "phase1_write_sites_for_contaminated": {
+      "double_sweep": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 64
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 557
+        },
+        {
+          "file": "src/core/feature_store.py",
+          "lineno": 83
+        },
+        {
+          "file": "src/core/feature_store.py",
+          "lineno": 129
+        },
+        {
+          "file": "src/core/feature_store.py",
+          "lineno": 131
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 177
+        },
+        {
+          "file": "scripts/research/live_path_replay.py",
+          "lineno": 141
+        }
+      ],
+      "sweep_detected": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 102
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 521
+        },
+        {
+          "file": "scripts/research/live_path_replay.py",
+          "lineno": 140
+        }
+      ],
+      "liquidity_sweep": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 103
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 412
+        }
+      ],
+      "break_of_structure": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 104
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 404
+        }
+      ],
+      "swing_high": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 109
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 362
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 384
+        }
+      ],
+      "swing_low": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 110
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 364
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 385
+        }
+      ],
+      "higher_high": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 111
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 393
+        }
+      ],
+      "lower_low": [
+        {
+          "file": "src/features/crt_feature_builder.py",
+          "lineno": 112
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 395
+        }
+      ],
+      "liquidity_distance": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 651
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 175
+        }
+      ],
+      "liquidity_pressure_score": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lineno": 654
+        },
+        {
+          "file": "scripts/research/bnbusdt_enrich_trades.py",
+          "lineno": 176
+        }
+      ]
+    },
+    "exposure_vs_consequence_note": "Exposure \u2260 consequence. Active dims / weight mass prove the model SEES the contaminated channels; they do NOT prove a decision flip. Decision consequence requires gate-ON ledger A/B (deliverable 2). Where only exposure is shown, the decision record may recommend provenance annotation rather than retrain."
+  }
+}

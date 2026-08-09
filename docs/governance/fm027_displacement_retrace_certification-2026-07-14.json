@@ -1,0 +1,208 @@
+{
+  "_doc": "M9 / F-054-DR FM-027 displacement_retrace certification \u2014 immutable dated record.",
+  "schema_version": "1.0",
+  "generated_at": "2026-07-14T05:47:34.851083+00:00",
+  "session": "M9",
+  "program": "F-054-DR",
+  "feature": "displacement_retrace",
+  "formula_id": "FM-027",
+  "entry_status": "READY_TO_CERTIFY",
+  "in_canonical_vector": false,
+  "checkpoint_start": {
+    "frontier": {
+      "PROMOTED_PRODUCTION": 40,
+      "READY_TO_CERTIFY": 6,
+      "SUPERSEDED": 2
+    },
+    "ready": [
+      "displacement_retrace",
+      "hour_of_day",
+      "retest_depth",
+      "session",
+      "trend_strength",
+      "volatility_regime"
+    ],
+    "displacement_retrace": {
+      "effective_state": "READY_TO_CERTIFY",
+      "deps": [
+        "close",
+        "open"
+      ],
+      "blocking_dependencies": []
+    },
+    "ledger_bytes": 80261,
+    "ledger_sha256": "49406b99f7dace97fe10f8ca85fa8b5c4227dd158fcfd30dfb62d4df4165d039",
+    "ledger_lines": 119
+  },
+  "intended_quantity": {
+    "semantic_meaning": "Cross-candle retracement: how far the retest close moved back toward the displacement open, normalized by the displacement body.",
+    "formula": "clip(|retest_close - disp_open| / |disp_close - disp_open|, 0.0, 1.0); disp body 0 -> 0.0",
+    "units": "dimensionless",
+    "bounds": [
+      0.0,
+      1.0
+    ],
+    "parameters": {},
+    "dtype": "python float (CRT cache); not in float32 38-vector",
+    "nan_policy": "AS-WIRED: min/max clip collapses NaN intermediates to finite values (typically 0.0); oracle \u2261 derived_math",
+    "zero_body_policy": "scalar returns 0.0; engine skips cache math when body==0",
+    "temporal_semantics": "event-gated at RETEST confirmation; cross-candle (disp fully in past); zero lookahead",
+    "identity_alignment": "ALIGNED"
+  },
+  "dependency_contract": {
+    "executable_math_roles": [
+      "retest_close",
+      "disp_open",
+      "disp_close"
+    ],
+    "dag_declared_deps": [
+      "close",
+      "open"
+    ],
+    "ontology_depends_on": [
+      "retest_close",
+      "disp_open",
+      "disp_close"
+    ],
+    "classification": "ROLE_LABEL_GROUNDING_ALIGNED",
+    "match_note": "Ontology role labels map onto raw open/close of displacement + retest candles. Same allowlisted abstraction as liquidity_distance / momentum_score.",
+    "hidden_deps_found": [],
+    "activation_only_guards": [
+      "displacement_candle present",
+      "atr > 0",
+      "nonzero body"
+    ],
+    "dag_consumers": [],
+    "raw_deps_promoted": true
+  },
+  "semantic_class": {
+    "math_kernel": "pure_algebraic_transform",
+    "publication": "event_gated_structural_state_derivative",
+    "not": [
+      "rolling_windowed",
+      "stateful_recurrence",
+      "pipeline_series"
+    ]
+  },
+  "oracle_design": {
+    "algorithm": "disp_move=abs(disp_close-disp_open); if disp_move<=0 return 0.0; else clip(abs(retest_close-disp_open)/disp_move, 0, 1)",
+    "independence_statement": "Oracle is pure Python arithmetic with no import of derived_math, registry, CRT engine, or feature_pipeline as the implementation path. Parity is proven against those surfaces separately."
+  },
+  "implementation_surfaces": [
+    {
+      "surface": "ontology",
+      "path": "configs/formulas/market_ontology.yaml:285-300",
+      "classification": "AUTHORITATIVE"
+    },
+    {
+      "surface": "derived_math_scalar",
+      "path": "src/features/derived_math.py:107-121",
+      "classification": "AUTHORITATIVE_PRODUCTION"
+    },
+    {
+      "surface": "registry",
+      "path": "src/features/registry/derived_registry.py:22",
+      "classification": "AUTHORITATIVE_PRODUCTION"
+    },
+    {
+      "surface": "crt_emission",
+      "path": "src/config_layer/crt_engine_v2.py:1468-1481",
+      "classification": "AUTHORITATIVE_PRODUCTION"
+    },
+    {
+      "surface": "feature_pipeline",
+      "path": "NONE",
+      "classification": "NOT_APPLICABLE (CRT-only; not in 38-vector)"
+    }
+  ],
+  "probes": {
+    "formula_parity": {
+      "status": "PASS",
+      "vectors": 11,
+      "mismatches": 0,
+      "max_abs_error": 0.0
+    },
+    "bounds": {
+      "status": "PASS",
+      "interval": [
+        0.0,
+        1.0
+      ]
+    },
+    "zero_body": {
+      "status": "PASS",
+      "value": 0.0
+    },
+    "clip_high": {
+      "status": "PASS",
+      "value": 1.0
+    },
+    "scale_invariance": {
+      "status": "PASS"
+    },
+    "sign_symmetry": {
+      "status": "PASS",
+      "bull": 0.5,
+      "bear": 0.5
+    },
+    "nan_policy": {
+      "status": "PASS",
+      "policy": "AS-WIRED: min/max clip collapses NaN intermediates to a finite sentinel (typically 0.0); oracle \u2261 derived_math on NaN/Inf inputs (not pure IEEE propagate)",
+      "nan_parity": true,
+      "inf_parity": true,
+      "sample_nan_oracle": 0.0,
+      "sample_nan_derived_math": 0.0
+    },
+    "determinism": {
+      "status": "PASS",
+      "runs": 3
+    },
+    "prefix_invariance": {
+      "status": "PASS",
+      "full_length": 100,
+      "prefix_length": 60,
+      "mismatches": 0
+    },
+    "future_mutation": {
+      "status": "PASS",
+      "cut": 40
+    },
+    "distinct_from_fm021": {
+      "status": "PASS",
+      "fm027": 0.5,
+      "fm021": 1.0
+    },
+    "crt_emission_parity": {
+      "status": "PASS",
+      "accepted": true,
+      "cached": 0.1,
+      "oracle": 0.1,
+      "keys_ok": true
+    },
+    "activation_gate": {
+      "status": "PASS",
+      "engine_guards": [
+        "disp is not None",
+        "atr > 0",
+        "abs(disp.close - disp.open) > 0"
+      ],
+      "scalar_zero_body": "returns 0.0",
+      "note": "ATR is activation-only, not a formula dependency of FM-027 math kernel"
+    },
+    "monotonicity": {
+      "status": "PASS"
+    },
+    "overall_verdict": "CERTIFIED",
+    "all_probes_pass": true
+  },
+  "verdict": "CERTIFIED",
+  "production_behavior_changed": "NO",
+  "scope_boundary": "FM-027 only. No model retrain, no config change, no 38-dim activation, no BitNet enable, no other READY feature certified.",
+  "authority": "research/governance only \u2014 descriptive certification record; grants no runtime/production authority (\u00a76.5)",
+  "limitations": [
+    "Not in CANONICAL_FEATURES (38-dim); certification is CRT identity only.",
+    "Ontology lifecycle remains 'registered' (no pipeline column for parity_verified).",
+    "Engine ATR guard is activation-only, not a formula dependency.",
+    "No economic/edge claim."
+  ]
+}

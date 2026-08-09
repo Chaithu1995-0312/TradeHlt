@@ -1,0 +1,95 @@
+{
+  "_doc": "Append-only retirement ledger for the feature-math grandfather pins (GD-001..GD-010) established by F-047's ownership-lint census and adjudicated in Matrix v1 (docs/analysis/feature-math-divergence-adjudication.md). A pin is retired ONLY in the same change that resolves / renames / deletes its site (its durable_key must then be gone from the code). DELETING an entry here is an auditable governance violation: it breaks the invariant CURRENT_pins UNION RETIRED == ORIGINAL_BASELINE (tests/test_feature_math_lint.py::test_grandfather_set_monotonic). Each retirement must cite finding_id + retired_commit + evidence_artifact.",
+  "original_baseline_ids": ["GD-001", "GD-002", "GD-003", "GD-004", "GD-005", "GD-006", "GD-007", "GD-008", "GD-009", "GD-010"],
+  "retirements": [
+    {
+      "gd_id": "GD-001",
+      "retired_at": "2026-07-10",
+      "retired_commit": "pending_phase1_identity_closure",
+      "finding_id": "F-047/Phase-1-IDENTITY",
+      "evidence_artifact": "docs/governance/phase1_duplicate_formula_identity_closure-2026-07-10.json",
+      "resolution": "live_engine_hook body_ratio math routed via candle_math.body_to_total_wick_ratio (FEAT-BODY_TO_TOTAL_WICK_RATIO / FM-013); bare re-derivation durable_key b592f21c28cfe194 no longer present. Distinct identity preserved — not forced onto body/range.",
+      "notes": "Runtime schema key body_ratio on live path still carries total_wick semantic via explicit identity binding; FEAT-BODY_TO_RANGE remains candle_math.body_ratio.",
+      "semantic_followup": {
+        "resolved_at": "2026-07-23",
+        "unit": "T-16",
+        "change": "The runtime KEY `body_ratio` on the live path was rebound from FEAT-BODY_TO_TOTAL_WICK_RATIO (FM-013) to the canonical FEAT-BODY_TO_RANGE_RATIO (FM-010), matching the batch pipeline, crt_engine_v2's Candle.body_ratio property, and the body_ratio>=0.70 gate. One line: live_engine_hook `_build_ohlcv_and_auxiliary` now assigns body_to_range_ratio (already computed at that site) instead of body_to_total_wick_ratio. Both identities remain dual-emitted under their own explicit names (body_to_total_wick_ratio / body_to_range_ratio), so neither is lost.",
+        "scope": "The GD-001 PIN ITSELF REMAINS RETIRED and this is NOT a re-retirement — the 2026-07-10 closure removed the bare re-derivation (an OWNERSHIP fact); this resolves which registered identity the key carries (a SEMANTIC fact). The lint durable_key set is unchanged, so the CURRENT_pins UNION RETIRED == ORIGINAL_BASELINE invariant is untouched.",
+        "behavior": "BEHAVIOR-CHANGING on the live path by construction. Decision-inert at EngineRunner.run() BY STRUCTURE per F-047 V1-V10 + F-048 (the DecisionEngine RR gate compares RREngine candle polarity in [0.5,1] against rr_threshold=1.5, so run() executes 0/70,002) — recorded as a behavior change with no measurable production effect, NOT claimed as a no-op. Backtests are unaffected: they build features from the canonical pipeline, not this hook.",
+        "residual": "GD-002's semantic residual is untouched — live `wick_size` still means total_wick while the v4.0 canonical slot is `candle_range`. Tracked as FU-WICK-SIZE-NAME."
+      }
+    },
+    {
+      "gd_id": "GD-002",
+      "retired_at": "2026-07-10",
+      "retired_commit": "pending_phase1_identity_closure",
+      "finding_id": "F-047/Phase-1-IDENTITY",
+      "evidence_artifact": "docs/governance/phase1_duplicate_formula_identity_closure-2026-07-10.json",
+      "resolution": "live wick_size assignment now uses candle_math.total_wick (registry call); durable_key 3e7ead326e1b9bdd gone. Residual: live wick_size semantic remains total_wick vs pipeline candle_range — FOLLOW_UP_BACKLOG FU-WICK-SIZE-NAME (not an ownership re-derivation).",
+      "notes": "Semantic name collision for wick_size tracked in phase1 follow-up backlog; not a lint re-derive."
+    },
+    {
+      "gd_id": "GD-003",
+      "retired_at": "2026-07-10",
+      "retired_commit": "pending_phase1_identity_closure",
+      "finding_id": "F-047/Phase-1-IDENTITY",
+      "evidence_artifact": "docs/governance/phase1_duplicate_formula_identity_closure-2026-07-10.json",
+      "resolution": "live body_size routed through candle_math.body_size; durable_key 0ca579d0c569dd26 gone (parity-neutral).",
+      "notes": "Phase-B hygiene completed as part of Phase-1 identity closure."
+    },
+    {
+      "gd_id": "GD-004",
+      "retired_at": "2026-07-11",
+      "retired_commit": "pending_gd004_gd005_disp_strength_closure",
+      "finding_id": "F-047/GD-004-CLOSURE (FU-SCORING-DISP)",
+      "evidence_artifact": "docs/governance/gd004_gd005_disp_strength_closure-2026-07-11.json",
+      "resolution": "scoring_engine.py compute_scores local disp_strength adjudicated as a THIRD identity (equals FM-028 on 0.00% of bars, FM-020 on 2.08% zero-disp bars only — probe gd004_disp_rescale_probe-2026-07-11.json); registered FM-029 disp_strength_atr_rescale, routed through derived_math.disp_strength_atr_rescale, local renamed (byte-identical). durable_key 1405f7559de41144 gone.",
+      "notes": "observed_value_drift: characterized (as-wired = FM-020/atr_rel, saturates s_breakout min(x/2,1) on 97.5% of BNBUSDT bars). Suspected caller mis-wire (crt_engine.py:23 passes FM-020 where raw move plausibly intended) NOT fixed — deferred as FU-CRT-MOVE-MISWIRE (gate-ON behavior change, out of identity scope; impact bounded per F-037/F-048)."
+    },
+    {
+      "gd_id": "GD-005",
+      "retired_at": "2026-07-11",
+      "retired_commit": "pending_gd004_gd005_disp_strength_closure",
+      "finding_id": "F-047/GD-005-CLOSURE",
+      "evidence_artifact": "docs/governance/gd004_gd005_disp_strength_closure-2026-07-11.json",
+      "resolution": "crt_engine_v2.py [PATCH 7] _disp_strength = wick_size/atr adjudicated as EXACTLY FM-028 (Candle.wick_size == candle_range per F-046; FM-028 source_of_truth already cites this site family); routed through derived_math.displacement_atr_ratio, local renamed _displacement_atr_ratio (byte-identical — site only computes when atr>0, matching the impl's atr<=0->0.0 convention). durable_key 206cdd6e726430d1 gone.",
+      "notes": "With GD-004 also retired, no disp_strength pin remains: bare disp_strength derivation in _SCAN_DIRS is now a hard lint failure."
+    },
+    {
+      "gd_id": "GD-006",
+      "retired_at": "2026-07-20",
+      "retired_commit": "pending_t15_wick_ratio_rename",
+      "finding_id": "T-15/feature-layer-tracker",
+      "evidence_artifact": "docs/implementation_plan/feature-layer-tracking-2026-07-19.md",
+      "resolution": "RangeDetector.detect_sweep locals renamed upper_wick -> sweep_uw_frac (and lower_wick -> sweep_lw_frac). Values remain full_range-normalized fractions for sweep-archetype metadata only. Not named upper_wick_ratio because FM-011 is itself a registered identity (would re-trip the lint). durable_key 3b8d9dd8531f07c7 (and post-stale 189e05e650c9f2b7) gone from scan.",
+      "notes": "Behaviour-neutral rename. classify_sweep still receives the fraction via keyword upper_wick= (API param name is the historical handover-doc label for the ratio input)."
+    },
+    {
+      "gd_id": "GD-007",
+      "retired_at": "2026-07-20",
+      "retired_commit": "pending_t15_wick_ratio_rename",
+      "finding_id": "T-15/feature-layer-tracker",
+      "evidence_artifact": "docs/implementation_plan/feature-layer-tracking-2026-07-19.md",
+      "resolution": "Paired with GD-006: lower_wick -> sweep_lw_frac in RangeDetector.detect_sweep. durable_key b4984ebec8afa74a (and post-stale a92de432ea0dece8) gone from scan.",
+      "notes": "Behaviour-neutral rename. Distinct from FM-004 candle_math.lower_wick and FM-012 lower_wick_ratio."
+    },
+    {
+      "gd_id": "GD-008",
+      "retired_at": "2026-07-20",
+      "retired_commit": "pending_t15_wick_ratio_rename",
+      "finding_id": "T-15/feature-layer-tracker",
+      "evidence_artifact": "docs/implementation_plan/feature-layer-tracking-2026-07-19.md",
+      "resolution": "candle_geometry local upper_wick -> sweep_uw_frac; return-dict KEY 'upper_wick' kept for API stability (tools/btcusdt_crt_v3_replay). durable_key 92c4fa2aab87f87d (and post-stale 7e38ba33afcd5681) gone from scan.",
+      "notes": "Module still diagnostic; no production decision path. Function not deleted (still used by tools replay harness) — rename closed ownership debt without a §6.2 deletion fight."
+    },
+    {
+      "gd_id": "GD-009",
+      "retired_at": "2026-07-20",
+      "retired_commit": "pending_t15_wick_ratio_rename",
+      "finding_id": "T-15/feature-layer-tracker",
+      "evidence_artifact": "docs/implementation_plan/feature-layer-tracking-2026-07-19.md",
+      "resolution": "Paired with GD-008: lower_wick -> sweep_lw_frac in candle_geometry. durable_key 60f849e3ee157734 (and post-stale 4104e9d770e7517a) gone from scan.",
+      "notes": "Return-dict KEY 'lower_wick' retained for API stability."
+    }
+  ]
+}

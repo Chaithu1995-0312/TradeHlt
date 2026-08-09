@@ -1,0 +1,28 @@
+{
+  "protocol_id": "TN_ENV_CLEAN_L2",
+  "protocol_hash": "09beb48635248dd077a7fc9b96b8ec30b9b7e10b67ac9c7b051de8799f1a0ec8",
+  "agreement": {
+    "n": 139942,
+    "agree_tp1_rate": 0.679639,
+    "agree_survives_be_rate": 0.706964,
+    "n_survives_comparable": 139942,
+    "clean_base_rates": {
+      "y_tp1": 0.332852,
+      "y_tp2": 0.241028,
+      "y_survives_be": 0.503158,
+      "y_expired_timeout": 0.010347
+    },
+    "note": "Stream agreement is diagnostic (F-022). Primary y is path-derived."
+  },
+  "skips": {
+    "not_opportunity": 1
+  },
+  "n_clean": 139942,
+  "n_raw": 139943,
+  "forbidden_as_primary": [
+    "stream.outcome",
+    "stream.rr_achieved",
+    "stream.mfe as sole survives_be"
+  ],
+  "stream_y_used_as_primary": false
+}

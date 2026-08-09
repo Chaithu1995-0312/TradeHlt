@@ -1,0 +1,35 @@
+{
+  "_doc": "Edge Discovery — CRYPTO-MAJORS variant of research_config.json. Toy/behavior hypotheses + falsification controls (apply_signal_defaults=true so the runner owns SL/TP geometry). Universe pinned to the four crypto majors for the 'Run the Gate First' cross-instrument qualification (per-instrument then pooled). Spine is NOT measured here — it needs apply_signal_defaults=false; see research_config_spine_majors.json.",
+  "harness": {
+    "warmup": 30,
+    "window_size": 64,
+    "min_samples": 30
+  },
+  "forward_walk": {
+    "max_forward": 40,
+    "trail_mult": 0.5,
+    "exit_model": "intrabar_fixed"
+  },
+  "signal": {
+    "apply_signal_defaults": true,
+    "sl_atr_mult": 1.0,
+    "tp_atr_mult": 2.0
+  },
+  "costs": {
+    "round_trip_bps": 12.0
+  },
+  "qualification": {
+    "min_samples": 30,
+    "expectancy_min": 0.0,
+    "pf_min": 1.0,
+    "oos_split": 0.3,
+    "oos_retention_min": 0.5,
+    "n_permutations": 2000,
+    "significance_alpha": 0.05
+  },
+  "universe": {
+    "data_dir": "data",
+    "pattern": "*_M15.csv",
+    "instruments": ["BNBUSDT", "ETHUSDT", "BTCUSDT", "SOLUSDT"]
+  }
+}

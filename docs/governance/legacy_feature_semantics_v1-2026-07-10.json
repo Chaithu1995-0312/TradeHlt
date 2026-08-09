@@ -1,0 +1,122 @@
+{
+  "_doc": "LEGACY_FEATURE_SEMANTICS_V1 freeze. Descriptive only \u2014 NOT VALIDATED, NOT APPROVED, NOT AUTHORITATIVE.",
+  "freeze_id": "LEGACY_FEATURE_SEMANTICS_V1",
+  "frozen_at_utc": "2026-07-10T15:35:53Z",
+  "repository_commit": "b48d4d9a7abfb429f2a17c790d4b32083da5dd92",
+  "worktree_dirty": true,
+  "corpus_binding": {
+    "path": "data/mt5/XAUUSD_M15.csv",
+    "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "rows": 47275,
+    "range": [
+      "2024-05-22T01:00:00",
+      "2026-05-21T23:45:00"
+    ],
+    "status": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION"
+  },
+  "implementation_hashes": {
+    "src/features/feature_pipeline.py": {
+      "sha256": "1247800fd60a3e6470b9106f43322f344c6d9ea021aaf067a80b08d07f986d4f",
+      "size_bytes": 39689
+    },
+    "src/features/candle_math.py": {
+      "sha256": "8e7dc9ace6e3bb784b8549f7d6b830f7d74b48769a99b20cbdbbfac352d450c4",
+      "size_bytes": 2611
+    },
+    "src/features/derived_math.py": {
+      "sha256": "02fe1ce93735e44054156a3bdb4de047df16ddc604c96b5d6097cebfbe1b0cf0",
+      "size_bytes": 5991
+    },
+    "src/features/feature_schema.py": {
+      "sha256": "b4bfa6810ac0eb8a37e93d80217a1221b768a30ccdf6a1c213736342e12f521b",
+      "size_bytes": 14121
+    },
+    "configs/formulas/market_ontology.yaml": {
+      "sha256": "81e1a6eb11bce45c80163ce4c3fd316807e76f1ec268593b498df7a4a924c394",
+      "size_bytes": 12720
+    }
+  },
+  "ordered_features": [
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "volume_ratio",
+    "double_sweep",
+    "ema_fast",
+    "ema_slow",
+    "ema_spread",
+    "trend_bias",
+    "trend_strength",
+    "momentum_score",
+    "atr",
+    "volatility_ratio",
+    "rsi_14",
+    "macd_line",
+    "macd_signal",
+    "macd_hist",
+    "sweep_detected",
+    "liquidity_sweep",
+    "break_of_structure",
+    "swing_high",
+    "swing_low",
+    "higher_high",
+    "lower_low",
+    "body_size",
+    "wick_size",
+    "body_ratio",
+    "volatility_regime",
+    "session",
+    "hour_of_day",
+    "disp_strength",
+    "retest_depth",
+    "candles_since_retest",
+    "liquidity_distance",
+    "liquidity_pressure_score",
+    "volume_spike"
+  ],
+  "canonical_feature_dim": 38,
+  "schema_hash_md5": "1ba02abbafdd0786831181677de547c1",
+  "feature_order_hash": "235553310100a340",
+  "default_env_semantic_flags": {
+    "TRUST_SWING_CAUSAL": {
+      "default": "unset/off",
+      "effect_when_1": "shift swing flags by SWING_WINDOW"
+    },
+    "TRUST_VOLREGIME_CAUSAL": {
+      "default": "unset=global rank",
+      "values": [
+        "",
+        "expanding",
+        "rolling"
+      ]
+    }
+  },
+  "swing_window": 2,
+  "known_defects_pass_a": {
+    "A": "MIXED_BY_CALL_SITE",
+    "B": "MIXED_BY_CORPUS",
+    "C": "FORMULA_IDENTITY_DIVERGENT",
+    "D": "GLOBAL_FIT_DEPENDENCE"
+  },
+  "known_formula_collisions": [
+    "pipeline disp_strength FM-020 vs CRT/BitNet alias FM-028",
+    "pipeline retest_depth FM-021 vs CRT/BitNet alias FM-027"
+  ],
+  "known_pit_defects": [
+    "centered swing center=True publish at t",
+    "volatility_regime global rank"
+  ],
+  "known_semantic_substitutions": [
+    "T-003 volume all-zero -> high-low same column"
+  ],
+  "fingerprint_ref": "docs/governance/legacy_feature_output_fingerprint_xauusd-2026-07-10.json",
+  "pass_a_ref": "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+  "explicitly_not": [
+    "VALIDATED",
+    "APPROVED",
+    "AUTHORITATIVE",
+    "ECONOMICALLY_ADMISSIBLE"
+  ]
+}

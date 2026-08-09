@@ -1,0 +1,113 @@
+{
+  "change_id": "FC1-A-SWING-CAUSAL",
+  "phase": "FC-1",
+  "title": "Centered swing → causal delayed publication",
+  "status": "IMPLEMENTED",
+  "frozen_at": "2026-07-11",
+  "implemented_at": "2026-07-11",
+  "implementation_change_id": "CH-fc1a-swing-causal",
+  "implementation_contract_md": "docs/governance/FC1-A-SWING-CAUSAL-implementation-contract-2026-07-11.md",
+  "decision_record": "docs/governance/pit_phaseA_centered_swing_decision_record-2026-07-11.md",
+  "finding_id": "F-051",
+  "active_version_at_freeze": "v2_multi_2026_04",
+  "behavior_changed_when_implemented": true,
+  "affected_feature_ids": [
+    "FEAT-SWING_HIGH",
+    "FEAT-SWING_LOW",
+    "FEAT-HIGHER_HIGH",
+    "FEAT-LOWER_LOW",
+    "FEAT-BREAK_OF_STRUCTURE",
+    "FEAT-LIQUIDITY_SWEEP",
+    "FEAT-SWEEP_DETECTED",
+    "FEAT-DOUBLE_SWEEP",
+    "FEAT-LIQUIDITY_DISTANCE",
+    "FEAT-LIQUIDITY_PRESSURE_SCORE"
+  ],
+  "coherent_secondaries": [
+    "FEAT-RETEST_DEPTH",
+    "FEAT-CANDLES_SINCE_RETEST"
+  ],
+  "production_canonical_columns": [
+    "swing_high",
+    "swing_low",
+    "higher_high",
+    "lower_low",
+    "break_of_structure",
+    "liquidity_sweep",
+    "sweep_detected",
+    "double_sweep",
+    "liquidity_distance",
+    "liquidity_pressure_score"
+  ],
+  "legacy_semantics": {
+    "algorithm": "rolling(w=5, center=True) pivot flags written at row t",
+    "future_bars": 2,
+    "publication": "retrospective at t before confirmation",
+    "env_escape": "TRUST_SWING_CAUSAL=1 dual-emits research_view only (Phase-1); must NOT mutate production columns"
+  },
+  "new_semantics": {
+    "algorithm": "same mathematical pivot definition (local max/min of high/low)",
+    "publication": "available_at = t+k only (k=SWING_WINDOW=2); production swing_* bind to causal_confirmed",
+    "structure_graph": "last_swing_*_price and all downstream structure/sweep/liquidity/retest secondaries use causal refs only (NO hybrid graph)",
+    "env_escape": "none for production path — single production publication semantic"
+  },
+  "research_preservation": {
+    "columns": ["swing_high_centered_batch", "swing_low_centered_batch"],
+    "requirement": "remain available and unchanged (centered math identity preserved)"
+  },
+  "no_hybrid_graph": true,
+  "reason": "PIT Phase A: leakage PROVED; 10-dim value exposure ~63.5% bars; CRT/Zone score channels exposed; live default-absent path live-zero; F-051",
+  "evidence": [
+    "docs/governance/pit_phaseA_swing_blast_radius-2026-07-11.json",
+    "docs/governance/pit_phaseA_gateon_ab-2026-07-11.json",
+    "docs/governance/pit_phaseA_centered_swing_decision_record-2026-07-11.md",
+    "docs/current-findings.md#F-051",
+    "src/features/feature_pipeline.py compute_structure_liquidity"
+  ],
+  "expected_population_impact": "UNKNOWN / INCONCLUSIVE economically — Phase A PC-2 failed so ledger-null is not structural-irrelevance; post-change gate-ON/OFF differentials required but byte-identity NOT required",
+  "required_tests": [
+    "prefix invariance under delayed production semantic (10-feature closure + retest secondaries)",
+    "future-tail mutation at t does not change production features available at t",
+    "centered_batch columns still match legacy centered math",
+    "no hybrid: production structure columns equal causal re-derivation from causal last prices"
+  ],
+  "behavior_measurement": {
+    "gate_off_differential": "required report; byte-identical NOT required",
+    "gate_on_differential": "required report; byte-identical NOT required",
+    "forbid_economic_irrelevance_from_identical_ledger": true
+  },
+  "artifact_policy": {
+    "status_tag": "PIT_UNCLEAN_CENTERED_SWINGS",
+    "rr_model": "tag only; must not promote/re-enable/use as economic evidence without causal re-dataset/retrain/revalidation; no automatic retrain (path inactive)",
+    "zone_registry": "tag only; no automatic retrain",
+    "migration_retraining_required": false,
+    "migration_retraining_note": "Retrain is a SEPARATE authorized decision under Authority Ladder — not part of FC1-A"
+  },
+  "live_contract": {
+    "publication": "delayed confirmed swings (same as batch production)",
+    "confirmation_latency_bars": 2,
+    "swing_window": 2,
+    "stop_if_cannot_align": true
+  },
+  "affected_consumers": [
+    "FeaturePipeline production vector",
+    "BacktestRunner feature index",
+    "structure/sweep/retest chain",
+    "CRT score channel (sweep_detected/double_sweep)",
+    "ZoneGate vector dims",
+    "models consuming structure features (inactive RR path remains PIT-unclean)"
+  ],
+  "affected_artifacts": [
+    "models/rr_model.json → PIT_UNCLEAN_CENTERED_SWINGS",
+    "models/zone_registry.json → PIT_UNCLEAN_CENTERED_SWINGS",
+    "historical opportunities/stage1/rr_dataset embeddings → centered-era provenance"
+  ],
+  "stop_conditions": [
+    "consumer requires mixed centered/causal structure semantics",
+    "live path cannot share delayed-confirmed publication",
+    "production columns still prefix-unstable after change",
+    "would promote/re-enable PIT_UNCLEAN artifact without revalidation"
+  ],
+  "rollback_path": "single construction change: restore centered production binding + tests; provenance tags remain historically true",
+  "rollback_boundary": "one change_id / commit stack with BUILD_IMPACT_MANIFEST + construction_protocol validate-completion"
+}

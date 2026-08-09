@@ -1,0 +1,32 @@
+{
+  "_doc": "Edge Discovery — Program 2 / Phase E1: trap-continuation structural asymmetry (BNBUSDT, measure-only). Pure forward asymmetry (multi-horizon MFE/MAE + symmetric first-hit) of the completed sweep→displacement→retest population vs four controls (A random / B session-matched / C vol-matched / D sweep-only). NO profitability. Pre-registered, frozen sets. No magic numbers in Python.",
+  "instrument": "BNBUSDT",
+  "data_dir": "data",
+  "prod_version": "v2_multi_2026_04",
+  "atr_period": 14,
+  "measure": {
+    "horizons": [1, 2, 4, 8, 16],
+    "levels": [0.25, 0.5, 1.0],
+    "primary_horizon": 8,
+    "primary_level": 0.5
+  },
+  "significance": {
+    "n_permutations": 2000,
+    "alpha": 0.05
+  },
+  "oos": {
+    "split": 0.3
+  },
+  "power": {
+    "ci_max": 0.07
+  },
+  "calibration": {
+    "planted_p_plus": 0.55,
+    "n": 4000,
+    "tolerance": 0.03
+  },
+  "controls": {
+    "seed": 1337,
+    "vol_terciles": true
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "schema_id": "H_MSIP_001_EXPERIMENT_DEFINITION_V1",
+  "program_alias": "H-MSIP-001",
+  "registry_id": "H-017",
+  "title": "CONTINUOUS_MARKET_STATE_INFORMATION_DURING_CRT_CANDIDATE_OCCUPANCY",
+  "status": "RUN_COMPLETE_AWAITING_OWNER_REVIEW",
+  "run_verdict": "RESEARCH_SUPPORTIVE",
+  "run_artifacts": "results/research/h_msip_001/",
+  "task_class": "EXPLORATORY_RESEARCH",
+  "authority": "research",
+  "created_at_utc": "2026-07-14T13:10:00Z",
+  "pre_registered_before_outcome_measurement": true,
+  "hard_flags": {
+    "CRT_BEHAVIOR_CHANGE": false,
+    "MSIP_SHADOW_AUTHORITY_CHANGE": false,
+    "THRESHOLD_TUNING": false,
+    "MIGRATION_AUTHORIZED": false,
+    "PRODUCTION_CUTOVER": false
+  },
+  "hypothesis": {
+    "H": "During CRT active SWEEP/DISPLACEMENT/EXPANSION/RETEST/EXECUTION occupancy, MarketStateVector partitions identify independent market-state conditions associated with materially different forward price distributions not represented by the active CRT candidate.",
+    "H0": "After matching and multiple-testing control, MSV partitions during active CRT candidate lifecycles do not produce reproducible OOS differences in forward market behavior relative to controls."
+  },
+  "population": {
+    "instrument": "XAUUSD",
+    "timeframe": "M15",
+    "corpus_path": "data/mt5/XAUUSD_M15.csv",
+    "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "eligibility": [
+      "market_state_vector.status == COMPLETE",
+      "valid_forward_horizon_for_max_h",
+      "crt_phase_observation.observed == true",
+      "no_lookahead_contamination"
+    ]
+  },
+  "treatment": {
+    "active_crt_states": ["SWEEP", "DISPLACEMENT", "EXPANSION", "RETEST", "EXECUTION"],
+    "partitions_pre_registered": [
+      {
+        "id": "P-SWEEP",
+        "field": "structure_state.liquidity_sweep",
+        "levels": [-1, 0, 1]
+      },
+      {
+        "id": "P-STRUCT-HHLL",
+        "fields": ["structure_state.higher_high", "structure_state.lower_low"],
+        "levels": [[0, 0], [1, 0], [0, 1], [1, 1]]
+      },
+      {
+        "id": "P-VOL",
+        "field": "volatility_state.volatility_regime",
+        "levels": [0, 1, 2]
+      },
+      {
+        "id": "P-SESSION",
+        "field": "session_state.session",
+        "levels": [0, 1, 2]
+      },
+      {
+        "id": "P-TREND",
+        "field": "trend_state.trend_bias",
+        "levels": [-1, 0, 1]
+      },
+      {
+        "id": "P-BOS",
+        "field": "structure_state.break_of_structure",
+        "levels": [-1, 0, 1]
+      }
+    ],
+    "analysis_mode": "each_partition_family_separately",
+    "forbidden_without_new_prereg": [
+      "continuous_cutpoints_on_body_ratio_liquidity_distance_trend_strength_atr",
+      "HOW_label_bands",
+      "full_cartesian_multiway_fishing"
+    ]
+  },
+  "controls": {
+    "primary_match": {
+      "crt_state": "RANGE",
+      "block_keys": [
+        "session_state.session",
+        "volatility_state.volatility_regime",
+        "trend_state.trend_bias"
+      ],
+      "method": "exact_block_then_nearest_bar_index",
+      "max_bar_distance": 32
+    },
+    "secondary_permutation": {
+      "universe": "active_candidate_only",
+      "shuffle_within_blocks": [
+        "session_state.session",
+        "volatility_state.volatility_regime",
+        "trend_state.trend_bias"
+      ],
+      "n_perm": 2000,
+      "rng_seed": 20260714
+    }
+  },
+  "outcomes": {
+    "primary": {"id": "R_h", "horizon": 8},
+    "forward_return_horizons": [1, 4, 8, 16, 32],
+    "mfe_mae_horizons": [4, 8, 16, 32],
+    "continuation_reversal_horizons": [4, 8, 16],
+    "tte": "NOT_IN_SCOPE_V1_unless_authoritative_helper_exists"
+  },
+  "statistics": {
+    "primary_contrast": "mean_Y_treatment_level_minus_mean_Y_matched_RANGE",
+    "walk_forward_folds": 4,
+    "walk_forward_rule": "sign_stable_in_at_least_3_of_4_and_held_out_last_fold",
+    "bh_fdr_q": 0.10,
+    "min_n_per_cell": 80,
+    "calendar_spike_max_month_share": 0.5,
+    "crt_state_only_guard": true
+  },
+  "success_criteria": [
+    "pre_registered_effect_direction_primary_R8",
+    "min_support",
+    "walk_forward_stability",
+    "survives_matched_control",
+    "exceeds_permutation_null",
+    "not_calendar_spike",
+    "survives_BH",
+    "not_crt_state_only"
+  ],
+  "failure_criteria": [
+    "INSUFFICIENT",
+    "NO_OOS",
+    "MATCH_KILL",
+    "PERM_KILL",
+    "REGIME_LOCAL",
+    "CALENDAR_SPIKE",
+    "CRT_STATE_ONLY",
+    "POSTHOC"
+  ],
+  "verdict_classes": [
+    "RESEARCH_SUPPORTIVE",
+    "RESEARCH_NULL",
+    "RESEARCH_INCONCLUSIVE",
+    "PROTOCOL_VIOLATION"
+  ],
+  "authority_ladder": {
+    "on_supportive": "research information only; no fusion/threshold/production authority",
+    "promotion_path": "none via this experiment; M4 QualificationGate remains sole economic promotion path if later consumer proposed"
+  },
+  "execution_status": "NOT_RUN",
+  "results_path_when_run": "results/research/h_msip_001/",
+  "preregistration_doc": "docs/research-readiness/h-msip-001-continuous-market-state-preregistration.md"
+}

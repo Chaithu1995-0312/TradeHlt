@@ -1,0 +1,48 @@
+{
+  "charter_id": "ENV_SHADOW_W0_V1",
+  "created_utc": "2026-07-21T23:01:08.555531+00:00",
+  "status": "SHADOW_COMPLETE",
+  "calibration_ok": true,
+  "instrument": "BNBUSDT",
+  "bundle_dir": "D:\\Tradelatest\\results\\envelope_offline\\BNBUSDT\\20260721T224101Z",
+  "dataset_path": "D:\\Tradelatest\\results\\clean_labels\\BNBUSDT\\20260721T223243Z\\clean_labels.jsonl",
+  "shadow_path": "D:\\Tradelatest\\results\\envelope_shadow\\BNBUSDT\\20260721T224520Z\\shadow.jsonl",
+  "n_ok": 139942,
+  "n_err": 0,
+  "weight_violations": 0,
+  "train_signal_rollup": "SIGNAL_RETAINED",
+  "dataset_protocol_hash": "09beb48635248dd077a7fc9b96b8ec30b9b7e10b67ac9c7b051de8799f1a0ec8",
+  "calibration": {
+    "mfe_r": {
+      "n_pred": 139942,
+      "spearman_ic_vs_actual": 0.2157,
+      "pred_mean": 4.255213,
+      "actual_mean": 3.879448
+    },
+    "mae_r_heat": {
+      "n_pred": 139942,
+      "spearman_ic_vs_actual": 0.2178,
+      "pred_mean": 4.219125,
+      "actual_mean": 3.879448
+    },
+    "holding_bars": {
+      "n_pred": 139942,
+      "spearman_ic_vs_actual": 0.3443,
+      "pred_mean": 6.431142,
+      "actual_mean": 6.520916
+    },
+    "time_to_mfe": {
+      "n_pred": 139942,
+      "spearman_ic_vs_actual": 0.2158,
+      "pred_mean": 4.640761,
+      "actual_mean": 4.598813
+    }
+  },
+  "authority": {
+    "decision_weight": 0.0,
+    "fusion_weight": 0.0,
+    "planner_influence": false,
+    "spine_consumed": false,
+    "production": false
+  }
+}

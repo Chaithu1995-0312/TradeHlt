@@ -1,0 +1,1145 @@
+{
+  "_doc": "FEATURE SEMANTIC ADJUDICATION PASS A \u2014 evidence only, no remediation.",
+  "generated_at_utc": "2026-07-10T15:22:57Z",
+  "binding": {
+    "require_phase1_frozen_candidate": "PASS",
+    "path": "data/mt5/XAUUSD_M15.csv",
+    "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "rows": 47275,
+    "range": [
+      "2024-05-22T01:00:00",
+      "2026-05-21T23:45:00"
+    ],
+    "status": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION"
+  },
+  "targets": {
+    "A": {
+      "target": "A_CENTERED_SWING",
+      "swing_window_param": 2,
+      "rolling_width": 5,
+      "future_bars_required": 2,
+      "algorithm": "swing_high[t]=1 iff high[t]==max(high[t-k:t+k+1]) with center=True, min_periods=5; swing_low analogous on low",
+      "mathematical_identification_time": "t+k (after future window closes)",
+      "publication_time_default": "written at row index t in batch (retrospective)",
+      "publication_time_causal_env": "flags/last_swing prices shifted by +k when TRUST_SWING_CAUSAL=1",
+      "confirmation_delay_enforced_default": false,
+      "confirmation_delay_enforced_when_env": true,
+      "direct_features": [
+        "swing_high",
+        "swing_low"
+      ],
+      "transitive_structure_features": [
+        "higher_high",
+        "lower_low",
+        "break_of_structure",
+        "liquidity_sweep",
+        "sweep_detected",
+        "double_sweep",
+        "liquidity_distance",
+        "liquidity_pressure_score"
+      ],
+      "transitive_retest_chain": [
+        "retest_depth",
+        "candles_since_retest"
+      ],
+      "membership_count": 12,
+      "prefix_invariance": {
+        "swing_high": {
+          "n": 130,
+          "mismatch": 23,
+          "samples": [
+            {
+              "t": 3200,
+              "ts": "2024-07-10 03:30:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 8000,
+              "ts": "2024-09-20 10:00:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 8800,
+              "ts": "2024-10-03 03:00:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 14400,
+              "ts": "2024-12-30 08:00:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 15200,
+              "ts": "2025-01-13 01:00:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 15600,
+              "ts": "2025-01-17 09:00:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 16800,
+              "ts": "2025-02-05 12:30:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 18000,
+              "ts": "2025-02-24 16:00:00",
+              "full": 1.0,
+              "prefix": 0.0
+            }
+          ],
+          "mismatch_rate": 0.17692307692307693,
+          "verdict_hint": "LEAKING"
+        },
+        "swing_low": {
+          "n": 130,
+          "mismatch": 21,
+          "samples": [
+            {
+              "t": 2000,
+              "ts": "2024-06-20 23:00:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 2800,
+              "ts": "2024-07-03 16:00:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 8400,
+              "ts": "2024-09-26 18:00:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 9200,
+              "ts": "2024-10-09 11:00:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 12400,
+              "ts": "2024-11-27 06:00:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 13600,
+              "ts": "2024-12-16 11:45:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 15200,
+              "ts": "2025-01-13 01:00:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 16400,
+              "ts": "2025-01-30 04:30:00",
+              "full": 1.0,
+              "prefix": 0.0
+            }
+          ],
+          "mismatch_rate": 0.16153846153846155,
+          "verdict_hint": "LEAKING"
+        },
+        "higher_high": {
+          "n": 130,
+          "mismatch": 3,
+          "samples": [
+            {
+              "t": 22000,
+              "ts": "2025-04-28 04:00:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 28800,
+              "ts": "2025-08-08 11:00:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 36000,
+              "ts": "2025-11-26 19:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            }
+          ],
+          "mismatch_rate": 0.023076923076923078,
+          "verdict_hint": "LEAKING"
+        },
+        "lower_low": {
+          "n": 130,
+          "mismatch": 6,
+          "samples": [
+            {
+              "t": 6800,
+              "ts": "2024-09-03 09:00:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 24800,
+              "ts": "2025-06-09 16:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 31200,
+              "ts": "2025-09-15 15:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 34400,
+              "ts": "2025-11-03 10:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 38800,
+              "ts": "2026-01-12 14:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 44088,
+              "ts": "2026-04-02 09:15:00",
+              "full": 0.0,
+              "prefix": 1.0
+            }
+          ],
+          "mismatch_rate": 0.046153846153846156,
+          "verdict_hint": "LEAKING"
+        },
+        "break_of_structure": {
+          "n": 130,
+          "mismatch": 3,
+          "samples": [
+            {
+              "t": 28800,
+              "ts": "2025-08-08 11:00:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 36000,
+              "ts": "2025-11-26 19:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 44088,
+              "ts": "2026-04-02 09:15:00",
+              "full": 0.0,
+              "prefix": -1.0
+            }
+          ],
+          "mismatch_rate": 0.023076923076923078,
+          "verdict_hint": "LEAKING"
+        },
+        "liquidity_sweep": {
+          "n": 130,
+          "mismatch": 6,
+          "samples": [
+            {
+              "t": 6800,
+              "ts": "2024-09-03 09:00:00",
+              "full": 0.0,
+              "prefix": -1.0
+            },
+            {
+              "t": 22000,
+              "ts": "2025-04-28 04:00:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 24800,
+              "ts": "2025-06-09 16:30:00",
+              "full": 0.0,
+              "prefix": -1.0
+            },
+            {
+              "t": 31200,
+              "ts": "2025-09-15 15:30:00",
+              "full": 0.0,
+              "prefix": -1.0
+            },
+            {
+              "t": 34400,
+              "ts": "2025-11-03 10:30:00",
+              "full": 0.0,
+              "prefix": -1.0
+            },
+            {
+              "t": 38800,
+              "ts": "2026-01-12 14:30:00",
+              "full": 0.0,
+              "prefix": -1.0
+            }
+          ],
+          "mismatch_rate": 0.046153846153846156,
+          "verdict_hint": "LEAKING"
+        },
+        "sweep_detected": {
+          "n": 130,
+          "mismatch": 6,
+          "samples": [
+            {
+              "t": 6800,
+              "ts": "2024-09-03 09:00:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 22000,
+              "ts": "2025-04-28 04:00:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 24800,
+              "ts": "2025-06-09 16:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 31200,
+              "ts": "2025-09-15 15:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 34400,
+              "ts": "2025-11-03 10:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 38800,
+              "ts": "2026-01-12 14:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            }
+          ],
+          "mismatch_rate": 0.046153846153846156,
+          "verdict_hint": "LEAKING"
+        },
+        "double_sweep": {
+          "n": 130,
+          "mismatch": 1,
+          "samples": [
+            {
+              "t": 31200,
+              "ts": "2025-09-15 15:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            }
+          ],
+          "mismatch_rate": 0.007692307692307693,
+          "verdict_hint": "LEAKING"
+        },
+        "liquidity_distance": {
+          "n": 130,
+          "mismatch": 10,
+          "samples": [
+            {
+              "t": 4800,
+              "ts": "2024-08-02 12:30:00",
+              "full": 0.4366036653518677,
+              "prefix": 0.7807875871658325
+            },
+            {
+              "t": 6800,
+              "ts": "2024-09-03 09:00:00",
+              "full": 1.0557377338409424,
+              "prefix": 0.9333332777023315
+            },
+            {
+              "t": 7600,
+              "ts": "2024-09-16 02:00:00",
+              "full": 0.12406948208808899,
+              "prefix": 0.7444168925285339
+            },
+            {
+              "t": 19600,
+              "ts": "2025-03-20 02:00:00",
+              "full": 0.2759488523006439,
+              "prefix": 0.3053050935268402
+            },
+            {
+              "t": 24800,
+              "ts": "2025-06-09 16:30:00",
+              "full": 0.5431917905807495,
+              "prefix": 0.22957541048526764
+            },
+            {
+              "t": 28000,
+              "ts": "2025-07-28 18:00:00",
+              "full": 0.613955557346344,
+              "prefix": 1.2294232845306396
+            },
+            {
+              "t": 34400,
+              "ts": "2025-11-03 10:30:00",
+              "full": 0.8444821834564209,
+              "prefix": 0.4778967499732971
+            },
+            {
+              "t": 36000,
+              "ts": "2025-11-26 19:30:00",
+              "full": 0.1476074606180191,
+              "prefix": 0.051094889640808105
+            }
+          ],
+          "mismatch_rate": 0.07692307692307693,
+          "verdict_hint": "LEAKING"
+        },
+        "liquidity_pressure_score": {
+          "n": 130,
+          "mismatch": 10,
+          "samples": [
+            {
+              "t": 4800,
+              "ts": "2024-08-02 12:30:00",
+              "full": 0.8038827180862427,
+              "prefix": 0.6767903566360474
+            },
+            {
+              "t": 6800,
+              "ts": "2024-09-03 09:00:00",
+              "full": 0.589860737323761,
+              "prefix": 0.6270891427993774
+            },
+            {
+              "t": 7600,
+              "ts": "2024-09-16 02:00:00",
+              "full": 0.9398502111434937,
+              "prefix": 0.6892105937004089
+            },
+            {
+              "t": 19600,
+              "ts": "2025-03-20 02:00:00",
+              "full": 0.8711209893226624,
+              "prefix": 0.8584279417991638
+            },
+            {
+              "t": 24800,
+              "ts": "2025-06-09 16:30:00",
+              "full": 0.7621621489524841,
+              "prefix": 0.8915553689002991
+            },
+            {
+              "t": 28000,
+              "ts": "2025-07-28 18:00:00",
+              "full": 0.7356669306755066,
+              "prefix": 0.5407968163490295
+            },
+            {
+              "t": 34400,
+              "ts": "2025-11-03 10:30:00",
+              "full": 0.6555759310722351,
+              "prefix": 0.7874554991722107
+            },
+            {
+              "t": 36000,
+              "ts": "2025-11-26 19:30:00",
+              "full": 0.9288539290428162,
+              "prefix": 0.9747760891914368
+            }
+          ],
+          "mismatch_rate": 0.07692307692307693,
+          "verdict_hint": "LEAKING"
+        },
+        "retest_depth": {
+          "n": 130,
+          "mismatch": 1,
+          "samples": [
+            {
+              "t": 22000,
+              "ts": "2025-04-28 04:00:00",
+              "full": 0.0,
+              "prefix": 0.2387893795967102
+            }
+          ],
+          "mismatch_rate": 0.007692307692307693,
+          "verdict_hint": "LEAKING"
+        },
+        "candles_since_retest": {
+          "n": 130,
+          "mismatch": 6,
+          "samples": [
+            {
+              "t": 6800,
+              "ts": "2024-09-03 09:00:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 22000,
+              "ts": "2025-04-28 04:00:00",
+              "full": 29.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 24800,
+              "ts": "2025-06-09 16:30:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 31200,
+              "ts": "2025-09-15 15:30:00",
+              "full": 3.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 34400,
+              "ts": "2025-11-03 10:30:00",
+              "full": 1.0,
+              "prefix": 0.0
+            },
+            {
+              "t": 38800,
+              "ts": "2026-01-12 14:30:00",
+              "full": 4.0,
+              "prefix": 0.0
+            }
+          ],
+          "mismatch_rate": 0.046153846153846156,
+          "verdict_hint": "LEAKING"
+        }
+      },
+      "confirmation_shift": {
+        "k": 2,
+        "window": 5,
+        "n": 40,
+        "match_at_t_plus_k": 40,
+        "samples": []
+      },
+      "future_mutation_at_t": {
+        "swing_high": {
+          "equal_at_t": false,
+          "base": 1.0,
+          "mutated": 0.0
+        },
+        "swing_low": {
+          "equal_at_t": true,
+          "base": 0.0,
+          "mutated": 0.0
+        },
+        "higher_high": {
+          "equal_at_t": true,
+          "base": 1.0,
+          "mutated": 1.0
+        },
+        "lower_low": {
+          "equal_at_t": true,
+          "base": 0.0,
+          "mutated": 0.0
+        },
+        "break_of_structure": {
+          "equal_at_t": true,
+          "base": 0.0,
+          "mutated": 0.0
+        },
+        "liquidity_sweep": {
+          "equal_at_t": true,
+          "base": 1.0,
+          "mutated": 1.0
+        },
+        "sweep_detected": {
+          "equal_at_t": true,
+          "base": 1.0,
+          "mutated": 1.0
+        },
+        "double_sweep": {
+          "equal_at_t": true,
+          "base": 0.0,
+          "mutated": 0.0
+        },
+        "liquidity_distance": {
+          "equal_at_t": true,
+          "base": 0.11650023609399796,
+          "mutated": 0.11650023609399796
+        },
+        "liquidity_pressure_score": {
+          "equal_at_t": true,
+          "base": 0.943414032459259,
+          "mutated": 0.943414032459259
+        },
+        "retest_depth": {
+          "equal_at_t": true,
+          "base": 0.8362272381782532,
+          "mutated": 0.8362272381782532
+        },
+        "candles_since_retest": {
+          "equal_at_t": true,
+          "base": 0.0,
+          "mutated": 0.0
+        }
+      },
+      "causal_env_probe": {
+        "swing_high_match": true,
+        "note": "causal shift path only when TRUST_SWING_CAUSAL=1; production default OFF"
+      },
+      "consumers": [
+        "FeaturePipeline vector \u2192 BacktestRunner feature index",
+        "FeatureMonitor (retest_depth/disp_strength/body_ratio)",
+        "liquidity_distance uses last_swing_* .shift(1)",
+        "BOS/sweep/double_sweep structure",
+        "retest_flag/retest_depth/candles_since_retest via liquidity_sweep"
+      ],
+      "verdict": "MIXED_BY_CALL_SITE",
+      "evidence_type": "STATIC_AND_EXECUTED"
+    },
+    "B": {
+      "target": "B_VOLUME_SEMANTIC",
+      "upstream_mt5_field": "tick_volume \u2192 CSV column 'volume' (mt5_candle_fetcher.py:195)",
+      "transform_before_pipeline": "int(tick_volume) only; no other transform in fetcher",
+      "frozen_declared": "TICK_VOLUME",
+      "xau_all_zero": false,
+      "volume_unchanged_through_pipeline_on_xau": true,
+      "t003_activates_on_all_zero_mutant": true,
+      "t003_impl": "feature_pipeline.compute_volume_features lines 207-222",
+      "t003_writes_same_column": "volume",
+      "semantic_substitution_detector_exists": false,
+      "downstream_sensitivity": [
+        {
+          "feature": "volume",
+          "equal": 0,
+          "different": 47275
+        },
+        {
+          "feature": "volume_ratio",
+          "equal": 19,
+          "different": 47256
+        },
+        {
+          "feature": "volume_spike",
+          "equal": 41253,
+          "different": 6022
+        },
+        {
+          "feature": "disp_strength",
+          "equal": 47275,
+          "different": 0
+        },
+        {
+          "feature": "retest_depth",
+          "equal": 47275,
+          "different": 0
+        },
+        {
+          "feature": "body_ratio",
+          "equal": 47275,
+          "different": 0
+        },
+        {
+          "feature": "atr",
+          "equal": 47275,
+          "different": 0
+        }
+      ],
+      "consumers_assuming_volume": [
+        "volume_ratio",
+        "volume_spike",
+        "FeaturePipeline vector[volume]",
+        "models consuming volume_ratio/volume_spike"
+      ],
+      "verdict": "MIXED_BY_CORPUS",
+      "evidence_type": "STATIC_AND_EXECUTED"
+    },
+    "C": {
+      "target": "C_DISP_RETEST_FORMULA",
+      "pipeline_disp_strength": {
+        "formula": "clip(body_size / (atr * close), 0, 3)",
+        "atr_meaning": "close-relative atr_14_raw/close",
+        "authority": "FM-020 / derived_math.disp_strength / feature_pipeline:565-570",
+        "parity_with_derived_math": {
+          "equal": 6,
+          "n": 6,
+          "samples": [
+            {
+              "i": 1000,
+              "pipeline": 0.4286261200904846,
+              "derived_math_fm020": 0.42862610925146377,
+              "equal": true
+            },
+            {
+              "i": 5000,
+              "pipeline": 0.30775532126426697,
+              "derived_math_fm020": 0.3077553245971798,
+              "equal": true
+            },
+            {
+              "i": 10000,
+              "pipeline": 0.21613545715808868,
+              "derived_math_fm020": 0.2161354576349419,
+              "equal": true
+            },
+            {
+              "i": 20000,
+              "pipeline": 0.15186162292957306,
+              "derived_math_fm020": 0.1518616277829516,
+              "equal": true
+            },
+            {
+              "i": 30000,
+              "pipeline": 0.03994293883442879,
+              "derived_math_fm020": 0.03994293834697335,
+              "equal": true
+            },
+            {
+              "i": 40000,
+              "pipeline": 1.284562110900879,
+              "derived_math_fm020": 1.2845620641441964,
+              "equal": true
+            }
+          ]
+        }
+      },
+      "pipeline_retest_depth": {
+        "formula": "if retest_flag: clip(|close-ema_fast|/(atr*close),0,1) else 0.0",
+        "authority": "FM-021 / derived_math.retest_depth + pipeline gate",
+        "parity": {
+          "equal_when_flag_or_zero": 6,
+          "n": 6,
+          "samples": [
+            {
+              "i": 1000,
+              "pipeline": 0.03303644061088562,
+              "derived_math_fm021": 0.033036441086654246,
+              "retest_flag": 1,
+              "equal_when_flag_or_zero": true
+            },
+            {
+              "i": 5000,
+              "pipeline": 0.4823479950428009,
+              "derived_math_fm021": 0.4823480055601005,
+              "retest_flag": 1,
+              "equal_when_flag_or_zero": true
+            },
+            {
+              "i": 10000,
+              "pipeline": 0.0,
+              "derived_math_fm021": 1.0,
+              "retest_flag": 0,
+              "equal_when_flag_or_zero": true
+            },
+            {
+              "i": 20000,
+              "pipeline": 0.0,
+              "derived_math_fm021": 1.0,
+              "retest_flag": 0,
+              "equal_when_flag_or_zero": true
+            },
+            {
+              "i": 30000,
+              "pipeline": 0.8362272381782532,
+              "derived_math_fm021": 0.8362272580890743,
+              "retest_flag": 1,
+              "equal_when_flag_or_zero": true
+            },
+            {
+              "i": 40000,
+              "pipeline": 0.0,
+              "derived_math_fm021": 0.6755897317901555,
+              "retest_flag": 0,
+              "equal_when_flag_or_zero": true
+            }
+          ]
+        }
+      },
+      "crt_cached_features": {
+        "displacement_retrace": "FM-027 cross-candle retrace",
+        "displacement_atr_ratio": "FM-028 range/atr",
+        "bitnet_alias_map": {
+          "retest_depth": "displacement_retrace",
+          "disp_strength": "displacement_atr_ratio"
+        },
+        "code": "crt_engine_v2.py:1374-1745"
+      },
+      "cross_fm020_vs_fm028": {
+        "n_different": 5,
+        "samples": [
+          {
+            "i": 1000,
+            "fm020_body_over_atr_close": 0.42862610925146377,
+            "fm028_range_over_atr_raw": 0.7286643704552495,
+            "different": true
+          },
+          {
+            "i": 5000,
+            "fm020_body_over_atr_close": 0.3077553245971798,
+            "fm028_range_over_atr_raw": 1.3648279628617868,
+            "different": true
+          },
+          {
+            "i": 10000,
+            "fm020_body_over_atr_close": 0.2161354576349419,
+            "fm028_range_over_atr_raw": 1.2968127490037016,
+            "different": true
+          },
+          {
+            "i": 20000,
+            "fm020_body_over_atr_close": 0.1518616277829516,
+            "fm028_range_over_atr_raw": 1.0589270008794878,
+            "different": true
+          },
+          {
+            "i": 30000,
+            "fm020_body_over_atr_close": 0.03994293834697335,
+            "fm028_range_over_atr_raw": 0.5691868758914572,
+            "different": true
+          }
+        ],
+        "note": "Different mathematics under historically colliding names"
+      },
+      "scoring_engine_collision": "docs note scoring_engine local disp_strength=move/atr (Phase B)",
+      "persisted_formula_id_binding": false,
+      "call_site_binding": [
+        {
+          "consumer": "FeaturePipeline / BacktestRunner features",
+          "name": "disp_strength",
+          "formula": "FM-020 body/(atr*close)"
+        },
+        {
+          "consumer": "FeaturePipeline / BacktestRunner features",
+          "name": "retest_depth",
+          "formula": "FM-021 |close-ema|/(atr*close) gated"
+        },
+        {
+          "consumer": "CRTEngine.cached_features",
+          "name": "displacement_atr_ratio / displacement_retrace",
+          "formula": "FM-028 / FM-027"
+        },
+        {
+          "consumer": "BitNet input map at CRT execute",
+          "name": "disp_strength / retest_depth keys",
+          "formula": "aliases of FM-028 / FM-027 \u2014 NOT pipeline FM-020/021"
+        }
+      ],
+      "verdict": "FORMULA_IDENTITY_DIVERGENT",
+      "secondary_flags": [
+        "ARTIFACT_BINDING_MISSING"
+      ],
+      "evidence_type": "STATIC_AND_EXECUTED"
+    },
+    "D": {
+      "target": "D_VOLATILITY_REGIME",
+      "formula_default": "atr_pct = atr_14.rank(pct=True) GLOBAL over full DataFrame; regime = 0 if pct<0.33 else 1 if pct<0.66 else 2",
+      "impl": "feature_pipeline.compute_volatility_regime lines 303-328",
+      "reference_population_default": "ALL rows in batch DataFrame",
+      "includes_current_row": true,
+      "includes_future_rows": true,
+      "env_variants": {
+        "TRUST_VOLREGIME_CAUSAL=expanding": "expanding rank pct",
+        "TRUST_VOLREGIME_CAUSAL=rolling": "rolling(200) rank pct",
+        "default": "global rank"
+      },
+      "prefix_invariance": {
+        "volatility_regime": {
+          "n": 91,
+          "mismatch": 39,
+          "samples": [
+            {
+              "t": 3000,
+              "ts": "2024-07-05 22:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 4000,
+              "ts": "2024-07-22 19:30:00",
+              "full": 1.0,
+              "prefix": 2.0
+            },
+            {
+              "t": 4500,
+              "ts": "2024-07-30 06:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 5000,
+              "ts": "2024-08-06 16:30:00",
+              "full": 1.0,
+              "prefix": 2.0
+            },
+            {
+              "t": 6000,
+              "ts": "2024-08-21 13:30:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 7000,
+              "ts": "2024-09-05 13:00:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 7500,
+              "ts": "2024-09-12 23:00:00",
+              "full": 0.0,
+              "prefix": 1.0
+            },
+            {
+              "t": 8000,
+              "ts": "2024-09-20 10:00:00",
+              "full": 0.0,
+              "prefix": 1.0
+            }
+          ],
+          "mismatch_rate": 0.42857142857142855,
+          "verdict_hint": "LEAKING"
+        }
+      },
+      "future_mutation": {
+        "volatility_regime": {
+          "equal_at_t": true,
+          "base": 1.0,
+          "mutated": 1.0
+        }
+      },
+      "default_vs_expanding_disagreement": {
+        "different": 21672,
+        "n": 47275
+      },
+      "default_vs_rolling_disagreement": {
+        "different": 26103,
+        "n": 47275
+      },
+      "consumers": [
+        "FeaturePipeline vector[volatility_regime]",
+        "s05_grid / strategies (documented decision-reachable in pipeline comment)"
+      ],
+      "verdict": "GLOBAL_FIT_DEPENDENCE",
+      "evidence_type": "STATIC_AND_EXECUTED"
+    }
+  },
+  "adversarial": {
+    "failure_classes_registered": 8,
+    "canonical_seeds_defined": 8,
+    "detectors_implemented": 4,
+    "clean_path_probes_run": 4,
+    "clean_path_probes_green": 4,
+    "mutants_run": 6,
+    "mutants_killed": 4,
+    "mutation_score": "NOT_COMPLETE",
+    "detector_gaps": [
+      "no runtime volume_semantic contract detector",
+      "no formula-id binding on model artifacts for FM-020 vs FM-028",
+      "no default production guard for centered-swing lookahead",
+      "no default production guard for global vol regime rank",
+      "E-MT-01 OHLCV temporal classes still open"
+    ],
+    "probes": [
+      {
+        "id": "A_PREFIX",
+        "clean": "prefix==full on causal features",
+        "mutant": "center swing fails prefix invariance",
+        "result": "MIXED_BY_CALL_SITE"
+      },
+      {
+        "id": "A_FUTURE_MUT",
+        "mutant": "mutate high after t changes swing at t",
+        "result": {
+          "swing_high": {
+            "equal_at_t": false,
+            "base": 1.0,
+            "mutated": 0.0
+          },
+          "swing_low": {
+            "equal_at_t": true,
+            "base": 0.0,
+            "mutated": 0.0
+          },
+          "higher_high": {
+            "equal_at_t": true,
+            "base": 1.0,
+            "mutated": 1.0
+          },
+          "lower_low": {
+            "equal_at_t": true,
+            "base": 0.0,
+            "mutated": 0.0
+          },
+          "break_of_structure": {
+            "equal_at_t": true,
+            "base": 0.0,
+            "mutated": 0.0
+          },
+          "liquidity_sweep": {
+            "equal_at_t": true,
+            "base": 1.0,
+            "mutated": 1.0
+          },
+          "sweep_detected": {
+            "equal_at_t": true,
+            "base": 1.0,
+            "mutated": 1.0
+          },
+          "double_sweep": {
+            "equal_at_t": true,
+            "base": 0.0,
+            "mutated": 0.0
+          },
+          "liquidity_distance": {
+            "equal_at_t": true,
+            "base": 0.11650023609399796,
+            "mutated": 0.11650023609399796
+          },
+          "liquidity_pressure_score": {
+            "equal_at_t": true,
+            "base": 0.943414032459259,
+            "mutated": 0.943414032459259
+          },
+          "retest_depth": {
+            "equal_at_t": true,
+            "base": 0.8362272381782532,
+            "mutated": 0.8362272381782532
+          },
+          "candles_since_retest": {
+            "equal_at_t": true,
+            "base": 0.0,
+            "mutated": 0.0
+          }
+        }
+      },
+      {
+        "id": "B_T003",
+        "clean": "XAU tick volume unchanged",
+        "mutant": "all-zero volume \u2192 high-low proxy in same column",
+        "result": true
+      },
+      {
+        "id": "C_FM_CROSS",
+        "clean": "pipeline==derived_math FM-020/021",
+        "mutant": "FM-020 vs FM-028 differ on same row",
+        "result": {
+          "n_different": 5,
+          "samples": [
+            {
+              "i": 1000,
+              "fm020_body_over_atr_close": 0.42862610925146377,
+              "fm028_range_over_atr_raw": 0.7286643704552495,
+              "different": true
+            },
+            {
+              "i": 5000,
+              "fm020_body_over_atr_close": 0.3077553245971798,
+              "fm028_range_over_atr_raw": 1.3648279628617868,
+              "different": true
+            },
+            {
+              "i": 10000,
+              "fm020_body_over_atr_close": 0.2161354576349419,
+              "fm028_range_over_atr_raw": 1.2968127490037016,
+              "different": true
+            },
+            {
+              "i": 20000,
+              "fm020_body_over_atr_close": 0.1518616277829516,
+              "fm028_range_over_atr_raw": 1.0589270008794878,
+              "different": true
+            },
+            {
+              "i": 30000,
+              "fm020_body_over_atr_close": 0.03994293834697335,
+              "fm028_range_over_atr_raw": 0.5691868758914572,
+              "different": true
+            }
+          ],
+          "note": "Different mathematics under historically colliding names"
+        }
+      },
+      {
+        "id": "D_PREFIX_GLOBAL",
+        "mutant": "global rank fails prefix invariance",
+        "result": {
+          "volatility_regime": {
+            "n": 91,
+            "mismatch": 39,
+            "samples": [
+              {
+                "t": 3000,
+                "ts": "2024-07-05 22:30:00",
+                "full": 0.0,
+                "prefix": 1.0
+              },
+              {
+                "t": 4000,
+                "ts": "2024-07-22 19:30:00",
+                "full": 1.0,
+                "prefix": 2.0
+              },
+              {
+                "t": 4500,
+                "ts": "2024-07-30 06:30:00",
+                "full": 0.0,
+                "prefix": 1.0
+              },
+              {
+                "t": 5000,
+                "ts": "2024-08-06 16:30:00",
+                "full": 1.0,
+                "prefix": 2.0
+              },
+              {
+                "t": 6000,
+                "ts": "2024-08-21 13:30:00",
+                "full": 0.0,
+                "prefix": 1.0
+              },
+              {
+                "t": 7000,
+                "ts": "2024-09-05 13:00:00",
+                "full": 0.0,
+                "prefix": 1.0
+              },
+              {
+                "t": 7500,
+                "ts": "2024-09-12 23:00:00",
+                "full": 0.0,
+                "prefix": 1.0
+              },
+              {
+                "t": 8000,
+                "ts": "2024-09-20 10:00:00",
+                "full": 0.0,
+                "prefix": 1.0
+              }
+            ],
+            "mismatch_rate": 0.42857142857142855,
+            "verdict_hint": "LEAKING"
+          }
+        }
+      }
+    ]
+  },
+  "verdicts": {
+    "TARGET_A_SWING_PIT_STATUS": "MIXED_BY_CALL_SITE",
+    "TARGET_B_VOLUME_SEMANTIC_STATUS": "MIXED_BY_CORPUS",
+    "TARGET_C_FORMULA_AUTHORITY_STATUS": "FORMULA_IDENTITY_DIVERGENT",
+    "TARGET_D_VOLATILITY_REGIME_PIT_STATUS": "GLOBAL_FIT_DEPENDENCE",
+    "FEATURE_SEMANTIC_ADJUDICATION_PASS_A_STATUS": "COMPLETE"
+  },
+  "authority": "Governance/architecture only. No economic claims. No promotion."
+}

@@ -1,0 +1,74 @@
+{
+  "schema_id": "SHADOW_COMPARISON_AND_DISAGREEMENT_SPEC_V1",
+  "generated_at_utc": "2026-07-14T10:26:18.740565+00:00",
+  "purpose": "Define what evidence permits later A/B/consumer-migration decisions",
+  "comparison_unit": "bar (timestamp, symbol, timeframe)",
+  "metrics": [
+    {
+      "id": "COV-01",
+      "name": "shadow_emission_coverage",
+      "definition": "fraction of bars with COMPLETE provenance MarketStateVector",
+      "gate_for_next": "\u2265 0.99 on declared population after warmup"
+    },
+    {
+      "id": "DET-01",
+      "name": "determinism",
+      "definition": "byte-identical shadow JSONL on same inputs/config/commit",
+      "gate_for_next": "PASS two-run equality"
+    },
+    {
+      "id": "PROV-01",
+      "name": "provenance_completeness",
+      "definition": "required provenance fields present",
+      "gate_for_next": "100% COMPLETE or explicit PARTIAL taxonomy"
+    },
+    {
+      "id": "CMP-01",
+      "name": "crt_state_join_rate",
+      "definition": "fraction of bars with crt_phase_observation when co-running",
+      "gate_for_next": "\u2265 0.99 when CRT co-run enabled"
+    },
+    {
+      "id": "DIS-01",
+      "name": "disagreement_rate_by_taxonomy",
+      "definition": "counts of disagreement classes below",
+      "gate_for_next": "reported; no automatic fail threshold (architecture not trade-count)"
+    }
+  ],
+  "disagreement_taxonomy": [
+    {
+      "class": "D-OBS-ABSENT",
+      "meaning": "shadow dimension null while CRT used related local math"
+    },
+    {
+      "class": "D-SCALE-MISMATCH",
+      "meaning": "parity audit TRANSFORM not applied; values disagree in scale"
+    },
+    {
+      "class": "D-LABEL-POLICY",
+      "meaning": "HOW label bands differ from CRT threshold decisions (expected; not a bug)"
+    },
+    {
+      "class": "D-STRUCTURE-VS-SWEEP",
+      "meaning": "pipeline liquidity_sweep vs CRT detect_sweep geometry diverge"
+    },
+    {
+      "class": "D-SESSION-ENCODING",
+      "meaning": "canonical session vs CRT session policy path diverge"
+    },
+    {
+      "class": "D-LIFECYCLE-ONLY",
+      "meaning": "CRT private lifecycle event with no continuous-state analogue (expected)"
+    }
+  ],
+  "market_regime_coverage": {
+    "requirement": "document coverage across high/low vol regimes and sessions on frozen corpus",
+    "not_required_for_design_freeze": "full multi-year multi-instrument before design contract",
+    "required_before_consumer_migration": true
+  },
+  "criteria_for_later_options": {
+    "A_policy_research": "shadow coverage+determinism PASS; then instrument-specific HOW experiments EXPLORATORY",
+    "B_concurrent_candidates": "evidence that single-candidate suppression is binding after continuous-state measurement exists",
+    "CRT_consumer_migration": "parity audits PASS; BEHAVIOR_CHANGE_AUTHORIZED plan; shadow comparison shows stable intended coupling; CRT reopen conditions evaluated if lifecycle changes"
+  }
+}

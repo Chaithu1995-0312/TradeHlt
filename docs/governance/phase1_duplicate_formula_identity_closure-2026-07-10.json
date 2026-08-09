@@ -1,0 +1,58 @@
+{
+  "DUPLICATE_FORMULA_IDENTITY_PHASE_STATUS": "COMPLETE",
+  "ambiguous_names_eliminated_from_governed_lookup": [
+    "volume (proxy no longer shares identity)",
+    "swing_high / swing_low (bare name → legacy alias CENTERED only; causal has distinct names)",
+    "volatility_regime (bare → legacy alias GLOBAL only; expanding/rolling distinct names)",
+    "body_ratio (canonical is body_to_range_ratio; total_wick has distinct name)",
+    "disp_strength / retest_depth historical CRT alias collisions (CH-002 emission + registry)"
+  ],
+  "artifact": "phase1_duplicate_formula_identity_closure",
+  "corpus": {
+    "physical_path": "data/mt5/XAUUSD_M15.csv",
+    "promoted": false,
+    "rows": 47275,
+    "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
+  },
+  "date": "2026-07-10",
+  "exact_duplicates_removed_from_governed_authority": [
+    "T-003 volume column overwrite",
+    "TRUST_SWING_CAUSAL in-place mutation of centered swing columns",
+    "TRUST_VOLREGIME_CAUSAL in-place mutation of volatility_regime column"
+  ],
+  "families_closed": [
+    "BODY_RATIO",
+    "DISPLACEMENT_RETEST",
+    "SWING",
+    "VOLATILITY_REGIME",
+    "VOLUME"
+  ],
+  "flags": {
+    "ECONOMIC_CLAIMS_ALLOWED": false,
+    "MODEL_ARTIFACTS_CHANGED": false,
+    "MODEL_COMPATIBILITY_EVALUATED": false,
+    "MODEL_ENABLEMENT_CHANGED": false,
+    "MODEL_LINEAGE_STARTED": false,
+    "PIT_REMEDIATION_STARTED": false,
+    "RETRAINING_PERFORMED": false
+  },
+  "identity_count": 16,
+  "oracle_checks": {
+    "body_to_range": 0.5333333333333333,
+    "body_to_total_wick": 1.1428571428571428,
+    "fm020_disp_strength": 3.0,
+    "fm021_retest_depth": 1.0,
+    "fm027_displacement_retrace": 0.5,
+    "fm028_displacement_atr_ratio": 3.0,
+    "price_range_proxy": 15.0
+  },
+  "pairwise_fm": {
+    "FM-020_vs_FM-021": "DIFFERENT_SEMANTICS",
+    "FM-020_vs_FM-027": "DIFFERENT_SEMANTICS",
+    "FM-020_vs_FM-028": "DIFFERENT_SEMANTICS",
+    "FM-021_vs_FM-027": "DIFFERENT_SEMANTICS",
+    "FM-021_vs_FM-028": "DIFFERENT_SEMANTICS",
+    "FM-027_vs_FM-028": "DIFFERENT_SEMANTICS"
+  },
+  "require_phase1_frozen_candidate": "PASS"
+}

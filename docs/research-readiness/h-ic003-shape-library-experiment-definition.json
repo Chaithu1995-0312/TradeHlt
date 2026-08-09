@@ -1,0 +1,139 @@
+{
+  "schema_id": "H_IC003_SHAPE_LIBRARY_EXPERIMENT_DEFINITION_V1",
+  "program_alias": "H-IC003-001",
+  "ic_alias": "IC-003",
+  "depends_on": [
+    "RC-005",
+    "H-IC002-001"
+  ],
+  "title": "TRAJECTORY_SHAPE_LIBRARY_FROM_IC002_PATHS",
+  "status": "ARCHIVED_LIBRARY_FAIL_V1",
+  "task_class": "EXPLORATORY_RESEARCH",
+  "authority": "research",
+  "created_at_utc": "2026-07-17T00:00:00Z",
+  "pre_registered_before_outcome_measurement": true,
+  "human_doc": "docs/research-readiness/h-ic003-shape-library-preregistration.md",
+  "parent_docs": [
+    "docs/research-readiness/h-ic002-entry-evolution-preregistration.md",
+    "docs/research-readiness/ic-001-xauusd-static-entry-closure.md"
+  ],
+  "hard_flags": {
+    "PRODUCTION_BEHAVIOR_CHANGED": false,
+    "NEW_ENGINES": false,
+    "IC001_REOPEN": false,
+    "ENTRY_TIME_SHAPE_FILTERS": false,
+    "EXPECTANCY_PROMOTE_FROM_PURITY": false,
+    "FREE_K_OUTSIDE_GRID": false,
+    "AUTO_PROMOTE_CONFIG": false,
+    "RR_FUSION_REENABLE": false
+  },
+  "hypothesis": {
+    "H_G": "Pre-registered clustering on IC-002 path tensors yields compact, stable, inspectable trajectory prototypes (shape library).",
+    "H_G0": "No compact/stable prototype set under frozen k-grid and G1-G5.",
+    "H_O_secondary": "Some shapes show OOS outcome mix away from global base rate (diagnostic only; never production authority)."
+  },
+  "inputs": {
+    "trajectory_root": "results/research/ic_002/",
+    "primary_N": [
+      4,
+      16
+    ],
+    "diagnostic_N": [
+      8
+    ],
+    "vectorization": "M-FLAT",
+    "feature_ids": "same_as_IC002_TRAJECTORY_FEATURE_IDS",
+    "path_relative": true
+  },
+  "clustering": {
+    "algorithm": "MiniBatchKMeans_or_KMeans",
+    "k_grid": [
+      4,
+      6,
+      8,
+      12
+    ],
+    "k_selection": "max_IS_silhouette_subsample_8000_seed_42",
+    "scaler": "StandardScaler_fit_IS_only",
+    "random_state": 42,
+    "n_init": 10,
+    "prototype": [
+      "centroid",
+      "medoid_IS"
+    ],
+    "assignment": "nearest_centroid_IS_fit_only"
+  },
+  "validation": {
+    "oos_split": 0.3,
+    "oos_mode": "time_ordered_by_entry_meta",
+    "gates_primary": {
+      "G1_compactness_sse_ratio_max": 0.85,
+      "G2_silhouette_min": 0.05,
+      "G3_oos_distance_stability": true,
+      "G4_min_n_is": 50,
+      "G4_min_n_oos": 20,
+      "G5_inspectability_docs": true,
+      "G1_note": "v1 authoritative 0.85; A1 0.90 SUPERSEDED as authority"
+    },
+    "purity_note": {
+      "enabled": true,
+      "oos_tp_rate_delta_pp": 10,
+      "min_n_oos": 50,
+      "authority": "diagnostic_only"
+    }
+  },
+  "verdicts": [
+    "INSUFFICIENT",
+    "LIBRARY_FAIL",
+    "LIBRARY_OK",
+    "PURITY_NOTE"
+  ],
+  "forbidden_without_new_prereg": [
+    "entry_bar_only_clustering_called_ic003",
+    "live_filters_on_shape_id",
+    "expectancy_promote_from_shape_purity",
+    "free_k_search",
+    "new_path_formula",
+    "narratives_before_shapes",
+    "new_engines"
+  ],
+  "priors": [
+    "F023_morphology_not_expectancy",
+    "IC002_path_concurrent_with_outcome",
+    "dual_read_bar78_direction_not_in_snapshot"
+  ],
+  "artifacts_on_run": {
+    "root": "results/research/ic_003/",
+    "manifest": "results/research/ic_003/manifest.json",
+    "library_md": "results/research/ic_003/SHAPE_LIBRARY.md",
+    "representatives": "results/research/ic_003/representative_shapes.jsonl",
+    "report_md": "results/research/ic_003/REPORT.md"
+  },
+  "stories": {
+    "allowed_after_library": true,
+    "path": "docs/research-readiness/ic-003-shape-narratives.md",
+    "rule": "narratives_document_shapes_never_create_membership"
+  },
+  "stop_rule": "one_full_pass_primary_N_4_and_16_then_stop",
+  "implementation_map": {
+    "package": "src/research/ic003_shapes/",
+    "script": "scripts/research/ic003_build_shape_library.py"
+  },
+  "run_artifacts": "results/research/ic_003/",
+  "run_summary": "A1 G1=0.90: N=4 LIBRARY_OK (sse 0.873); N=16 LIBRARY_FAIL G2 sil 0.020; partial multi-N; purity diagnostic only",
+  "amendments": {
+    "A1": {
+      "date": "2026-07-17",
+      "change": "G1 0.85->0.90 temporary",
+      "status": "SUPERSEDED_AS_AUTHORITY",
+      "reason": "post-hoc gate move after near-miss violates prereg integrity; archive remains v1 LIBRARY_FAIL",
+      "sensitivity_only": true
+    }
+  },
+  "authoritative_result": {
+    "verdict": "LIBRARY_FAIL",
+    "g1_max": 0.85,
+    "run": "v1",
+    "lessons": "docs/research-readiness/ic-003-lessons-learned.md"
+  }
+}

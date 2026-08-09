@@ -1,0 +1,44 @@
+{
+  "_doc": "Edge Discovery — Program 8 (Weekly CRT Sweep) variant of research_config_fx_metals.json. Tests the ICT/CRT weekly liquidity-sweep ontology (weekly_sweep_reversal) + falsification controls, on the same 5 FX majors as F-035 (XAUUSD deferred, same holiday-gap-gate rationale). window_size/warmup are widened to 2200 (vs. the FX toy default of 64) because detect() needs to see BOTH a full current ISO week (Mon+Tue accumulation, ~2 days of M15 bars) AND the regime_tercile_window (2000) trailing ATR history for the macro Direction x Vol diagnostic's volatility axis (RegimeLabeler, reconstructed with a WIDENED tercile_window rather than its own 480-bar default -- see weekly_sweep_reversal.py). This only affects trailing-history visibility per detect() call, not per-bar compute cost: the expensive regime lookup runs only on the rare bars where a sweep signal is about to fire. apply_signal_defaults is FALSE (diverging from the FX toy-family pattern) because the hypothesis computes its OWN range-width-derived sl_atr_mult/tp_atr_mult (target the opposite boundary of the swept weekly range) -- leaving this true would let HypothesisRunner.run_instrument() silently overwrite that geometry with the flat signal-block defaults below, which exist only for JSON-schema completeness and are otherwise inert. round_trip_bps/qualification/universe are copied verbatim from research_config_fx_metals.json for direct comparability to F-035.",
+  "harness": {
+    "warmup": 2200,
+    "window_size": 2200,
+    "min_samples": 30
+  },
+  "forward_walk": {
+    "max_forward": 200,
+    "trail_mult": 0.5,
+    "exit_model": "intrabar_fixed"
+  },
+  "signal": {
+    "apply_signal_defaults": false,
+    "sl_atr_mult": 1.0,
+    "tp_atr_mult": 2.0
+  },
+  "costs": {
+    "round_trip_bps": 12.0
+  },
+  "qualification": {
+    "min_samples": 30,
+    "expectancy_min": 0.0,
+    "pf_min": 1.0,
+    "oos_split": 0.3,
+    "oos_retention_min": 0.5,
+    "n_permutations": 2000,
+    "significance_alpha": 0.05
+  },
+  "universe": {
+    "data_dir": "data",
+    "pattern": "*_M15.csv",
+    "instruments": ["EURUSD", "AUDUSD", "EURCAD", "GBPUSD", "USDJPY"]
+  },
+  "weekly_sweep": {
+    "_doc": "Genuinely new BEHAVIORAL knobs (CLAUDE.md section 6.5), read directly by the driver/hypothesis constructor, NOT by ResearchConfig.from_dict (same pattern as the existing 'spine' block) -- _require()'d at construction, no soft defaults.",
+    "min_accumulation_bars": 40,
+    "sl_range_frac": 0.25,
+    "atr_period": 14,
+    "check_week_validity": true,
+    "max_intraweek_gap_minutes": 30,
+    "regime_tercile_window": 2000
+  }
+}

@@ -1,0 +1,764 @@
+{
+  "schema_id": "MARKET_STATE_DIMENSION_AUTHORITY_MATRIX_V1",
+  "generated_at_utc": "2026-07-14T10:30:03.791230+00:00",
+  "rows": [
+    {
+      "dimension_id": "MSD-STRUCTURE",
+      "dimension_name": "structure_state",
+      "what_quantity": "swing_high",
+      "in_canonical_38": true,
+      "fm_id_hint": "FM-045",
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT active_range refs",
+        "CRT sweep_event object",
+        "candidate_id"
+      ]
+    },
+    {
+      "dimension_id": "MSD-STRUCTURE",
+      "dimension_name": "structure_state",
+      "what_quantity": "swing_low",
+      "in_canonical_38": true,
+      "fm_id_hint": "FM-046",
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT active_range refs",
+        "CRT sweep_event object",
+        "candidate_id"
+      ]
+    },
+    {
+      "dimension_id": "MSD-STRUCTURE",
+      "dimension_name": "structure_state",
+      "what_quantity": "higher_high",
+      "in_canonical_38": true,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT active_range refs",
+        "CRT sweep_event object",
+        "candidate_id"
+      ]
+    },
+    {
+      "dimension_id": "MSD-STRUCTURE",
+      "dimension_name": "structure_state",
+      "what_quantity": "lower_low",
+      "in_canonical_38": true,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT active_range refs",
+        "CRT sweep_event object",
+        "candidate_id"
+      ]
+    },
+    {
+      "dimension_id": "MSD-STRUCTURE",
+      "dimension_name": "structure_state",
+      "what_quantity": "break_of_structure",
+      "in_canonical_38": true,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT active_range refs",
+        "CRT sweep_event object",
+        "candidate_id"
+      ]
+    },
+    {
+      "dimension_id": "MSD-STRUCTURE",
+      "dimension_name": "structure_state",
+      "what_quantity": "liquidity_sweep",
+      "in_canonical_38": true,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT active_range refs",
+        "CRT sweep_event object",
+        "candidate_id"
+      ]
+    },
+    {
+      "dimension_id": "MSD-STRUCTURE",
+      "dimension_name": "structure_state",
+      "what_quantity": "sweep_detected",
+      "in_canonical_38": true,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT active_range refs",
+        "CRT sweep_event object",
+        "candidate_id"
+      ]
+    },
+    {
+      "dimension_id": "MSD-STRUCTURE",
+      "dimension_name": "structure_state",
+      "what_quantity": "double_sweep",
+      "in_canonical_38": true,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT active_range refs",
+        "CRT sweep_event object",
+        "candidate_id"
+      ]
+    },
+    {
+      "dimension_id": "MSD-LIQUIDITY",
+      "dimension_name": "liquidity_state",
+      "what_quantity": "liquidity_distance",
+      "in_canonical_38": true,
+      "fm_id_hint": "FM-025",
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT range h_ref/l_ref as private levels unless published as WHAT"
+      ]
+    },
+    {
+      "dimension_id": "MSD-LIQUIDITY",
+      "dimension_name": "liquidity_state",
+      "what_quantity": "liquidity_pressure_score",
+      "in_canonical_38": true,
+      "fm_id_hint": "FM-026",
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT range h_ref/l_ref as private levels unless published as WHAT"
+      ]
+    },
+    {
+      "dimension_id": "MSD-LIQUIDITY",
+      "dimension_name": "liquidity_state",
+      "what_quantity": "atr",
+      "in_canonical_38": true,
+      "fm_id_hint": "FM-041",
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": true,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT range h_ref/l_ref as private levels unless published as WHAT"
+      ]
+    },
+    {
+      "dimension_id": "MSD-LIQUIDITY",
+      "dimension_name": "liquidity_state",
+      "what_quantity": "close",
+      "in_canonical_38": true,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT range h_ref/l_ref as private levels unless published as WHAT"
+      ]
+    },
+    {
+      "dimension_id": "MSD-VOLATILITY",
+      "dimension_name": "volatility_state",
+      "what_quantity": "volatility_regime",
+      "in_canonical_38": true,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT-local atr until parity audit PASS"
+      ]
+    },
+    {
+      "dimension_id": "MSD-VOLATILITY",
+      "dimension_name": "volatility_state",
+      "what_quantity": "atr",
+      "in_canonical_38": true,
+      "fm_id_hint": "FM-041",
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": true,
+      "parity_audit_required_before_deprecating_crt_local": true,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT-local atr until parity audit PASS"
+      ]
+    },
+    {
+      "dimension_id": "MSD-VOLATILITY",
+      "dimension_name": "volatility_state",
+      "what_quantity": "true_range",
+      "in_canonical_38": false,
+      "fm_id_hint": "FM-040",
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT-local atr until parity audit PASS"
+      ]
+    },
+    {
+      "dimension_id": "MSD-VOLATILITY",
+      "dimension_name": "volatility_state",
+      "what_quantity": "volatility_ratio",
+      "in_canonical_38": true,
+      "fm_id_hint": "FM-024",
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT-local atr until parity audit PASS"
+      ]
+    },
+    {
+      "dimension_id": "MSD-SESSION",
+      "dimension_name": "session_state",
+      "what_quantity": "session",
+      "in_canonical_38": true,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "SESSION_MAP permutations",
+        "dashboard 1-based labels",
+        "CRT allowed_sessions policy decisions"
+      ]
+    },
+    {
+      "dimension_id": "MSD-SESSION",
+      "dimension_name": "session_state",
+      "what_quantity": "hour_of_day",
+      "in_canonical_38": true,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "SESSION_MAP permutations",
+        "dashboard 1-based labels",
+        "CRT allowed_sessions policy decisions"
+      ]
+    },
+    {
+      "dimension_id": "MSD-SESSION",
+      "dimension_name": "session_state",
+      "what_quantity": "timestamp",
+      "in_canonical_38": false,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "SESSION_MAP permutations",
+        "dashboard 1-based labels",
+        "CRT allowed_sessions policy decisions"
+      ]
+    },
+    {
+      "dimension_id": "MSD-TREND",
+      "dimension_name": "trend_state",
+      "what_quantity": "trend_strength",
+      "in_canonical_38": true,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "dual_engine local trend_strength",
+        "CRT EMA until parity PASS"
+      ]
+    },
+    {
+      "dimension_id": "MSD-TREND",
+      "dimension_name": "trend_state",
+      "what_quantity": "trend_bias",
+      "in_canonical_38": true,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "dual_engine local trend_strength",
+        "CRT EMA until parity PASS"
+      ]
+    },
+    {
+      "dimension_id": "MSD-TREND",
+      "dimension_name": "trend_state",
+      "what_quantity": "ema_fast",
+      "in_canonical_38": true,
+      "fm_id_hint": "FM-043",
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": true,
+      "parity_audit_required_before_deprecating_crt_local": true,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "dual_engine local trend_strength",
+        "CRT EMA until parity PASS"
+      ]
+    },
+    {
+      "dimension_id": "MSD-TREND",
+      "dimension_name": "trend_state",
+      "what_quantity": "ema_slow",
+      "in_canonical_38": true,
+      "fm_id_hint": "FM-044",
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": true,
+      "parity_audit_required_before_deprecating_crt_local": true,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "dual_engine local trend_strength",
+        "CRT EMA until parity PASS"
+      ]
+    },
+    {
+      "dimension_id": "MSD-CANDLE_QUALITY",
+      "dimension_name": "candle_quality_state",
+      "what_quantity": "body_ratio",
+      "in_canonical_38": true,
+      "fm_id_hint": "FM-010",
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": true,
+      "parity_audit_required_before_deprecating_crt_local": true,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT displacement gate decision (HOW)"
+      ]
+    },
+    {
+      "dimension_id": "MSD-CANDLE_QUALITY",
+      "dimension_name": "candle_quality_state",
+      "what_quantity": "body_size",
+      "in_canonical_38": true,
+      "fm_id_hint": "FM-001",
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT displacement gate decision (HOW)"
+      ]
+    },
+    {
+      "dimension_id": "MSD-CANDLE_QUALITY",
+      "dimension_name": "candle_quality_state",
+      "what_quantity": "wick_size",
+      "in_canonical_38": true,
+      "fm_id_hint": "FM-002",
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": true,
+      "parity_audit_required_before_deprecating_crt_local": true,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT displacement gate decision (HOW)"
+      ]
+    },
+    {
+      "dimension_id": "MSD-CANDLE_QUALITY",
+      "dimension_name": "candle_quality_state",
+      "what_quantity": "upper_wick",
+      "in_canonical_38": false,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT displacement gate decision (HOW)"
+      ]
+    },
+    {
+      "dimension_id": "MSD-CANDLE_QUALITY",
+      "dimension_name": "candle_quality_state",
+      "what_quantity": "lower_wick",
+      "in_canonical_38": false,
+      "fm_id_hint": null,
+      "producer_authority": "FeaturePipeline / registry",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "CRT displacement gate decision (HOW)"
+      ]
+    },
+    {
+      "dimension_id": "MSD-CRT_PHASE_OBS",
+      "dimension_name": "crt_phase_observation",
+      "what_quantity": "(none)",
+      "in_canonical_38": false,
+      "fm_id_hint": null,
+      "producer_authority": "CRT observation optional",
+      "shadow_binding": "READ_ONLY_FROM_FEATURE_SURFACE",
+      "crt_local_duplicate": false,
+      "parity_audit_required_before_deprecating_crt_local": false,
+      "how_policy_allowed": "interpretation bands/labels only; not dimension raw identity",
+      "must_not_include": [
+        "ability to mutate CRT",
+        "candidate private memory dump"
+      ]
+    }
+  ],
+  "field_authority_index": {
+    "MSD-STRUCTURE": {
+      "dimension_authority_class": "MIXED_WHAT_FIELDS",
+      "fields": {
+        "higher_high": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "higher_high",
+          "value_kind": "CONTINUOUS_OR_DISCRETE_MARKET_FACT",
+          "how_provenance_required": false,
+          "continuous_twin_required": false
+        },
+        "lower_low": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "lower_low",
+          "value_kind": "CONTINUOUS_OR_DISCRETE_MARKET_FACT",
+          "how_provenance_required": false
+        },
+        "break_of_structure": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "break_of_structure",
+          "value_kind": "CONTINUOUS_OR_DISCRETE_MARKET_FACT",
+          "how_provenance_required": false
+        },
+        "liquidity_sweep": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "liquidity_sweep",
+          "value_kind": "CONTINUOUS_OR_DISCRETE_MARKET_FACT",
+          "how_provenance_required": false,
+          "note": "Pipeline geometry; NOT CRT detect_sweep identity"
+        },
+        "sweep_detected": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "sweep_detected",
+          "value_kind": "CONTINUOUS_OR_DISCRETE_MARKET_FACT",
+          "how_provenance_required": false
+        },
+        "structure_label": {
+          "authority_class": "INTERPRETED_STATE_LABEL_HOW",
+          "source_feature": null,
+          "value_kind": "CATEGORICAL_LABEL",
+          "how_provenance_required": true,
+          "continuous_twins_required": [
+            "higher_high",
+            "lower_low",
+            "break_of_structure",
+            "liquidity_sweep",
+            "sweep_detected"
+          ],
+          "optional": true,
+          "note": "Optional HOW label over structure facts; must not replace continuous/discrete facts",
+          "how_config_keys": [
+            "msip_shadow.dimensions.structure_state.label_bands",
+            "msip_shadow.config_id",
+            "msip_shadow.schema_version_required"
+          ]
+        }
+      }
+    },
+    "MSD-LIQUIDITY": {
+      "dimension_authority_class": "DETERMINISTIC_DERIVED_WHAT",
+      "fields": {
+        "liquidity_distance": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "liquidity_distance",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-025"
+        },
+        "liquidity_pressure_score": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "liquidity_pressure_score",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-026"
+        },
+        "liquidity_band_label": {
+          "authority_class": "INTERPRETED_STATE_LABEL_HOW",
+          "optional": true,
+          "value_kind": "CATEGORICAL_LABEL",
+          "how_provenance_required": true,
+          "continuous_twins_required": [
+            "liquidity_distance",
+            "liquidity_pressure_score"
+          ],
+          "how_config_keys": [
+            "msip_shadow.dimensions.liquidity_state.label_bands",
+            "msip_shadow.config_id",
+            "msip_shadow.schema_version_required"
+          ]
+        }
+      }
+    },
+    "MSD-VOLATILITY": {
+      "dimension_authority_class": "MIXED_WHAT_FIELDS",
+      "fields": {
+        "atr": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "atr",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-041",
+          "crt_local_replacement": "FORBIDDEN_UNTIL_PARITY_AUDIT_PASS"
+        },
+        "volatility_ratio": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "volatility_ratio",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-024"
+        },
+        "volatility_regime": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "volatility_regime",
+          "value_kind": "DISCRETE_MARKET_FACT",
+          "how_provenance_required": false,
+          "note": "Pipeline int8 tercile is governed executable identity (M14B), not free HOW label",
+          "continuous_twins_required": [
+            "atr",
+            "volatility_ratio"
+          ]
+        },
+        "volatility_band_label": {
+          "authority_class": "INTERPRETED_STATE_LABEL_HOW",
+          "optional": true,
+          "value_kind": "CATEGORICAL_LABEL",
+          "how_provenance_required": true,
+          "continuous_twins_required": [
+            "atr",
+            "volatility_ratio",
+            "volatility_regime"
+          ],
+          "note": "Optional research label; must not redefine volatility_regime identity",
+          "how_config_keys": [
+            "msip_shadow.dimensions.volatility_state.label_bands",
+            "msip_shadow.config_id",
+            "msip_shadow.schema_version_required"
+          ]
+        }
+      }
+    },
+    "MSD-SESSION": {
+      "dimension_authority_class": "DETERMINISTIC_DERIVED_WHAT",
+      "fields": {
+        "hour_of_day": {
+          "authority_class": "GOVERNED_OBSERVABLE",
+          "source_feature": "hour_of_day",
+          "value_kind": "CONTINUOUS_OR_DISCRETE_MARKET_FACT",
+          "how_provenance_required": false
+        },
+        "session": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "session",
+          "value_kind": "DISCRETE_MARKET_FACT",
+          "how_provenance_required": false,
+          "note": "Canonical pipeline 0/1/2 identity; instrument overrides must not redefine encoding",
+          "continuous_twins_required": [
+            "hour_of_day"
+          ]
+        },
+        "session_policy_label": {
+          "authority_class": "INTERPRETED_STATE_LABEL_HOW",
+          "optional": true,
+          "value_kind": "CATEGORICAL_LABEL",
+          "how_provenance_required": true,
+          "continuous_twins_required": [
+            "session",
+            "hour_of_day"
+          ],
+          "note": "e.g. tradeable/non-tradeable under a policy \u2014 NOT session identity",
+          "how_config_keys": [
+            "msip_shadow.dimensions.session_state.label_bands",
+            "msip_shadow.config_id",
+            "msip_shadow.schema_version_required"
+          ]
+        }
+      }
+    },
+    "MSD-TREND": {
+      "dimension_authority_class": "MIXED_WHAT_FIELDS",
+      "fields": {
+        "trend_strength": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "trend_strength",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false
+        },
+        "trend_bias": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "trend_bias",
+          "value_kind": "DISCRETE_MARKET_FACT",
+          "how_provenance_required": false
+        },
+        "ema_fast": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "ema_fast",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-043",
+          "crt_local_replacement": "FORBIDDEN_UNTIL_PARITY_AUDIT_PASS"
+        },
+        "ema_slow": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "ema_slow",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-044",
+          "crt_local_replacement": "FORBIDDEN_UNTIL_PARITY_AUDIT_PASS"
+        },
+        "trend_band_label": {
+          "authority_class": "INTERPRETED_STATE_LABEL_HOW",
+          "optional": true,
+          "value_kind": "CATEGORICAL_LABEL",
+          "how_provenance_required": true,
+          "continuous_twins_required": [
+            "trend_strength",
+            "trend_bias"
+          ],
+          "how_config_keys": [
+            "msip_shadow.dimensions.trend_state.label_bands",
+            "msip_shadow.config_id",
+            "msip_shadow.schema_version_required"
+          ]
+        }
+      }
+    },
+    "MSD-CANDLE_QUALITY": {
+      "dimension_authority_class": "DETERMINISTIC_DERIVED_WHAT",
+      "fields": {
+        "body_ratio": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "body_ratio",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-010",
+          "crt_local_replacement": "FORBIDDEN_UNTIL_PARITY_AUDIT_PASS"
+        },
+        "body_size": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "body_size",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-001"
+        },
+        "wick_size": {
+          "authority_class": "DETERMINISTIC_DERIVED_WHAT",
+          "source_feature": "wick_size",
+          "value_kind": "CONTINUOUS_VALUE",
+          "how_provenance_required": false,
+          "fm_id": "FM-002",
+          "crt_local_replacement": "FORBIDDEN_UNTIL_PARITY_AUDIT_PASS"
+        },
+        "candle_quality_label": {
+          "authority_class": "INTERPRETED_STATE_LABEL_HOW",
+          "optional": true,
+          "value_kind": "CATEGORICAL_LABEL",
+          "how_provenance_required": true,
+          "continuous_twins_required": [
+            "body_ratio",
+            "wick_size"
+          ],
+          "how_config_keys": [
+            "msip_shadow.dimensions.candle_quality_state.label_bands",
+            "msip_shadow.config_id",
+            "msip_shadow.schema_version_required"
+          ]
+        }
+      }
+    },
+    "MSD-CRT_PHASE_OBS": {
+      "dimension_authority_class": "OBSERVATIONAL_JOIN_ONLY",
+      "identity_dependency_allowed": false,
+      "fields": {
+        "crt_state": {
+          "authority_class": "OBSERVATIONAL_JOIN_ONLY",
+          "value_kind": "OBSERVATION",
+          "how_provenance_required": false,
+          "must_not_feed_other_dimensions": true,
+          "must_not_define_market_state_identity": true
+        },
+        "observed": {
+          "authority_class": "OBSERVATIONAL_JOIN_ONLY",
+          "value_kind": "OBSERVATION",
+          "how_provenance_required": false,
+          "must_not_define_market_state_identity": true
+        }
+      }
+    }
+  },
+  "what_how_separation_rules": {
+    "rule_1": "Every field must declare authority_class in {GOVERNED_OBSERVABLE, DETERMINISTIC_DERIVED_WHAT, INTERPRETED_STATE_LABEL_HOW, OBSERVATIONAL_JOIN_ONLY}",
+    "rule_2": "INTERPRETED_STATE_LABEL_HOW fields MUST retain how_config_id + config_version in provenance and MUST preserve continuous_twins_required values on the same bar",
+    "rule_3": "Instrument/timeframe overrides may change HOW bands only; they MUST NOT redefine canonical WHAT feature identities or encodings",
+    "rule_4": "crt_phase_observation is OBSERVATIONAL_JOIN_ONLY and MUST NOT be a dependency of any other dimension identity",
+    "rule_5": "CRT-local atr/ema/body/wick remain unresolved for replacement until CRT_LOCAL_MATH_PARITY_AUDIT_V1 PASS/TRANSFORM; silent replacement FORBIDDEN",
+    "rule_6": "Raw/continuous WHAT values remain authoritative even when optional HOW labels are present"
+  }
+}

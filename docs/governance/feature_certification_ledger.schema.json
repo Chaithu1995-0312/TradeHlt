@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tradelatest://governance/feature_certification_ledger.schema.json",
+  "title": "FeatureCertificationLedgerEvent",
+  "contract_id": "FEATURE-CERT-LEDGER-V1",
+  "description": "One append-only event of the bottom-up feature-certification ledger. DESCRIPTIVE ONLY (CLAUDE.md §6.5): records certification outcomes; grants no runtime/production authority. The authority to promote a config/model stays in src/governance/promotion_manager.py / src/research/qualification.py — a PROMOTED event MUST attribute its authority there via promotion_authority. No event may set a runtime threshold/config value. Seeds/resolves via scripts/governance/feature_certification_state.py; mutation events appended by scripts/governance/feature_dag_certify.py. It is a LEAN certification-state layer that REFERENCES (not duplicates) feature_contract.schema.json and phase1_feature_identity_registry.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["event", "feature_name", "timestamp", "authority", "frontier_state"],
+  "properties": {
+    "event": {
+      "type": "string",
+      "enum": ["SEEDED", "CERTIFIED", "PROMOTED", "BLOCKED", "INVALIDATED_STALE", "SUPERSEDED"]
+    },
+    "feature_name": { "type": "string" },
+    "formula_id": { "type": ["string", "null"] },
+    "layer": { "type": "integer", "minimum": -1, "maximum": 6 },
+    "layer_name": { "type": "string" },
+    "deps": { "type": "array", "items": { "type": "string" } },
+    "in_canonical_vector": { "type": "boolean" },
+    "intended_quantity": { "type": "string" },
+    "frontier_state": {
+      "type": "string",
+      "enum": ["UNKNOWN", "HYPOTHESIS", "CERTIFIED", "PROMOTED_PRODUCTION", "BLOCKED", "STALE", "SUPERSEDED"]
+    },
+    "formula_hash": { "type": "string", "description": "sha256(json.dumps({formula,impl,deps},sort_keys=True)) — witness of the frozen callable" },
+    "dependency_contract_hash": { "type": "string", "description": "sha256 over {own formula_hash} + {promoted formula_hash of each direct dependency}" },
+    "certified_at": { "type": "string" },
+    "certification_evidence": {
+      "type": "object",
+      "description": "pointer to the executable certification artifact",
+      "properties": {
+        "artifact": { "type": "string" },
+        "sha256": { "type": "string" },
+        "verdict": { "type": "string", "enum": ["PROMOTE", "REJECT", "INCONCLUSIVE", "CERTIFIED"] }
+      }
+    },
+    "promotion_authority": {
+      "type": "string",
+      "description": "REQUIRED on PROMOTED — must cite the code authority that grants promotion (never the ledger itself)",
+      "enum": ["src/governance/promotion_manager.py", "src/research/qualification.py"]
+    },
+    "blocking_dependencies": { "type": "array", "items": { "type": "string" } },
+    "invalidates": {
+      "type": "object",
+      "description": "REFERENCES to existing invalidation records (change_ids / FM-ids / artifact provenance) — never a fork of them",
+      "properties": {
+        "downstream_evidence": { "type": "array", "items": { "type": "string" } },
+        "model_artifacts": { "type": "array", "items": { "type": "string" } },
+        "threshold_calibrations": { "type": "array", "items": { "type": "string" } },
+        "references": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "superseded_by": { "type": "string" },
+    "stale_reason": { "type": "string" },
+    "upstream_trigger": { "type": "string" },
+    "timestamp": { "type": "string" },
+    "authority": { "type": "string", "pattern": "research/governance only" },
+    "reason": { "type": "string" },
+    "evidence_finding": { "type": "string" }
+  },
+  "$comment": "Per-event required extras (validated in Python by tests/test_feature_certification_ledger.py, stdlib-only): CERTIFIED requires formula_hash+dependency_contract_hash+certified_at+certification_evidence; PROMOTED requires formula_hash+dependency_contract_hash+promotion_authority; BLOCKED requires non-empty blocking_dependencies; INVALIDATED_STALE requires stale_reason+upstream_trigger; SUPERSEDED requires superseded_by. FORBIDDEN authority-creep keys (mirrors test_active_models_registry): no event may carry a numeric key matching promotion_requirements|min_delta or set a live *_threshold value."
+}

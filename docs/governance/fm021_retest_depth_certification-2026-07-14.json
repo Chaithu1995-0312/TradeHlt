@@ -1,0 +1,121 @@
+{
+  "_doc": "M10 / F-054-RD retest_depth GATED production composition certification.",
+  "schema_version": "1.0",
+  "generated_at": "2026-07-14T06:12:20.016543+00:00",
+  "session": "M10",
+  "program": "F-054-RD",
+  "TARGET_FEATURE": "retest_depth",
+  "TARGET_IDENTITY": "GATED_PRODUCTION_COMPOSITION",
+  "COMPONENT_FORMULA_IDENTITY": "FM-021",
+  "FORMULA_IDENTITY": "canonical retest_depth has no standalone FM scalar identity for its full gated composition",
+  "COMPOSITION_RELATION": "canonical retest_depth uses FM-021 as its on-gate mathematical kernel only; FM-021 != full canonical series",
+  "FULL_DEPENDENCIES": [
+    "atr",
+    "close",
+    "ema_fast",
+    "liquidity_sweep"
+  ],
+  "GATE_WINDOW": 10,
+  "GATE_WINDOW_SEMANTICS": "trailing causal, current bar included, min_periods=1",
+  "NEAR_BAND": "abs(close-ema_fast) <= 1.0 * atr * close (INCLUSIVE)",
+  "OFF_GATE_VALUE": 0.0,
+  "CANONICAL_DTYPE": "float32",
+  "CANONICAL_INDEX": 33,
+  "EXACT_EMISSION_ORDERING": [
+    "where(retest_flag==1 & atr>0 & close>0, abs(close-ema_fast)/(atr*close), 0.0)",
+    "astype(float32)",
+    "clip(0.0, 1.0)",
+    "astype(float32)"
+  ],
+  "source_of_truth": "src/features/feature_pipeline.py:599-610,648-653",
+  "checkpoint_start": {
+    "frontier": {
+      "PROMOTED_PRODUCTION": 41,
+      "READY_TO_CERTIFY": 5,
+      "SUPERSEDED": 2
+    },
+    "retest_depth": {
+      "effective_state": "READY_TO_CERTIFY",
+      "deps": [
+        "atr",
+        "close",
+        "ema_fast",
+        "liquidity_sweep"
+      ],
+      "blocking": []
+    },
+    "ledger_bytes": 81897,
+    "ledger_sha256": "44ea8727ef501aabb7c9dc339087090e834f5d71b67b1f2d96ee417668c34140"
+  },
+  "dag_correction": {
+    "before": [
+      "atr",
+      "ema_fast",
+      "liquidity_sweep"
+    ],
+    "after": [
+      "atr",
+      "close",
+      "ema_fast",
+      "liquidity_sweep"
+    ],
+    "mechanism": "Authoritative _NODES in scripts/analysis/feature_dag_layers.py updated; live build_dag() supplies deps to resolver; historical SEEDED line NOT rewritten",
+    "LEDGER_HISTORY_REWRITTEN": "NO"
+  },
+  "probes": {
+    "gate_semantics": {
+      "1_no_sweep_zero": "PASS",
+      "2_sweep_current_near_active": "PASS",
+      "3_sweep_lag9_active": "PASS",
+      "4_sweep_lag10_inactive": "PASS",
+      "5_recent_outside_inactive": "PASS",
+      "6_no_recent_inside_inactive": "PASS",
+      "7_8_recon_match_pipeline_flag": "PASS",
+      "9_exact_boundary_inclusive": "PASS",
+      "10_outside_boundary_inactive": "PASS"
+    },
+    "kernel_semantics": {
+      "11_exact_ema_touch_zero": "PASS",
+      "12_kernel_exactly_1": "PASS",
+      "13_kernel_gt1_clips_to_1": "PASS",
+      "14_atr_eq_0": "PASS",
+      "15_atr_lt_0": "PASS",
+      "16_close_eq_0": "PASS",
+      "17_close_lt_0": "PASS",
+      "18_19_20_nan_as_wired_parity": "PASS",
+      "component_vs_derived_math_active": "PASS"
+    },
+    "full_emission": {
+      "21_off_gate_zero_despite_kernel": "PASS",
+      "22_on_gate_fm021_parity": "PASS",
+      "23_off_gate_zero_contract": "PASS",
+      "24_domain_01": "PASS",
+      "25_float32": "PASS",
+      "26_finite": "PASS",
+      "32_gate_parity_pipeline": "PASS",
+      "33_full_series_parity_pipeline_arrays": "PASS"
+    },
+    "temporal": {
+      "27_28_29_prefix_invariance": "PASS",
+      "30_future_mutation": "PASS",
+      "31_determinism": "PASS"
+    },
+    "pipeline_corpus": {
+      "35_synthetic_boundary_parity": "PASS",
+      "36_representative_corpus_series_parity": "PASS",
+      "32_corpus_gate_parity": "PASS",
+      "34_active_row_derived_math": "PASS",
+      "21_corpus_off_gate_zero": "PASS",
+      "23_off_gate_zero_no_nan": "PASS",
+      "n_rows": 586,
+      "flag_rate": 0.5563139931740614,
+      "max_abs_err": 0.0
+    },
+    "overall_verdict": "CERTIFIED",
+    "all_probes_pass": true
+  },
+  "PER_NODE_VERDICT": "CERTIFIED",
+  "PRODUCTION_BEHAVIOR_CHANGED": "NO",
+  "authority": "research/governance only \u2014 descriptive certification; grants no runtime/production authority (\u00a76.5)",
+  "scope_boundary": "retest_depth only. FM-021 formula/derived_math unchanged. No new FM-ID. No L4. No production math change."
+}

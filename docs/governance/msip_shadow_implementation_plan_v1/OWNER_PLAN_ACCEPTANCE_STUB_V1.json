@@ -1,0 +1,36 @@
+{
+  "schema_id": "OWNER_PLAN_ACCEPTANCE_MSIP_SHADOW_IMPLEMENTATION_PLAN_V1",
+  "generated_at_utc": "2026-07-14T12:30:00Z",
+  "plan_ref": "MSIP_SHADOW_IMPLEMENTATION_PLAN_V1.json",
+  "plan_version": "1.1.0",
+  "g_plan_01_review_ref": "G_PLAN_01_REVIEW_V1.json",
+  "g_plan_01_review_status": "PASS",
+  "owner_stamp_status": "SUPERSEDED_BY_G_IMPL_01_OPEN",
+  "note": "Owner opened G-IMPL-01 for narrow shadow implementation; plan treated as governing plan v1.1.0",
+  "recommended_owner_stamp": {
+    "MSIP_SHADOW_IMPLEMENTATION_PLAN_V1": "ACCEPTED",
+    "G-PLAN-01": "PASSED",
+    "G-IMPL-01": "OPEN",
+    "IMPLEMENTATION_AUTHORIZED": "YES — NARROW SHADOW IMPLEMENTATION ONLY"
+  },
+  "g_impl_01_auth_ref": "OWNER_G_IMPL_01_AUTHORIZATION_V1.json",
+  "evidence_ref": "G_IMPL_01_EVIDENCE_PACKAGE_V1.json",
+  "if_owner_confirms_plan_only": {
+    "MSIP_SHADOW_IMPLEMENTATION_PLAN_V1": "ACCEPTED",
+    "G-PLAN-01": "PASSED",
+    "G-IMPL-01": "READY_FOR_EXPLICIT_OWNER_AUTHORIZATION",
+    "IMPLEMENTATION_AUTHORIZED": "NO",
+    "note": "Coding still blocked until a further explicit G-IMPL-01 OPEN decision"
+  },
+  "explicitly_not_authorized_by_plan_acceptance": [
+    "opening G-IMPL-01",
+    "IMPLEMENTATION_AUTHORIZED=YES",
+    "MarketStateVector coding",
+    "dynamic-loader implementation",
+    "CRT input migration",
+    "threshold selection",
+    "concurrent candidates",
+    "production behavior changes"
+  ],
+  "implementation_authorized": false
+}

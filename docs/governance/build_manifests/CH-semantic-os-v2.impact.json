@@ -1,0 +1,70 @@
+{
+  "change_id": "CH-semantic-os-v2",
+  "objective": "Semantic OS v2 build 1 (L1+L5+L6): add an ADVISORY semantic layer that joins existing authorities into a queryable reasoning surface. Four entities — ~50 hand-authored Concepts (CN-*), ~40 hand-authored architectural Boundaries (BD-*), 4-8 hand-authored Journeys (JN-*), and ~844 fully GENERATED Objects (OBJ:<path>). Adds a Semantic Query Engine (L5, generalizing feature_surface_query.py beyond the feature surface) and a COMPUTED change-impact engine (L6) that derives blast radius from graph.dot + config-consumer-graph + FM lineage + citation map + findings evidence, and can emit a draft BUILD_IMPACT_MANIFEST. Purely additive: no src/ runtime path, no configs/, no models/, no active_models.yaml. PRODUCTION_BEHAVIOR_CHANGED=NO.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "docs/governance/semantic_os/concepts.yaml",
+    "docs/governance/semantic_os/boundaries.yaml",
+    "docs/governance/semantic_os/journeys.yaml",
+    "docs/governance/SEMANTIC_OS_CONTRACT.md",
+    "src/governance/semantic_os.py",
+    "src/governance/semantic_objects.py",
+    "src/governance/semantic_query.py",
+    "src/governance/semantic_impact.py",
+    "scripts/governance/seed_semantic_os.py",
+    "scripts/governance/query_semantic_os.py",
+    "tests/test_semantic_os.py",
+    "tests/test_semantic_os_objects.py",
+    "tests/test_semantic_query.py",
+    "tests/test_semantic_impact.py",
+    "scripts/maintenance/check_governance_invariants.py",
+    "tests/test_governance_invariant_check.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "docs/reference/schemas.md",
+    "docs/book/encyclopedia/encyclopedia_rows.jsonl",
+    "docs/governance/module_attribution_stubs.jsonl",
+    "docs/architecture/config-consumer-graph.generated.json",
+    "docs/governance/miar_registry.json",
+    "docs/governance/closure_authority_index.json",
+    "docs/governance/change_contracts.json",
+    "docs/governance/build_manifests/CH-semantic-os-v2.impact.json",
+    "docs/governance/build_manifests/CH-semantic-os-v2.completion.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — no model artifact, registry entry, or training path is read or written. active_models.yaml untouched.",
+  "affected_production_config": "none — no configs/production/* file is read for mutation or written. configs/formulas/market_ontology.yaml is READ-ONLY (FK target for Concept.ontology_ids) and is not modified.",
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_semantic_os.py",
+    "tests/test_semantic_os_objects.py",
+    "tests/test_semantic_query.py",
+    "tests/test_semantic_impact.py",
+    "tests/test_governance_invariant_check.py"
+  ],
+  "unknowns": [
+    {
+      "question": "No change class in change_contracts.json covers 'new advisory governance subsystem' — the 13 existing classes are all feature/model/config/script/doc-scoped. This build is classified SCRIPT_LIFECYCLE_CHANGE + DOCUMENTATION_ONLY, which covers the scripts/ and docs/ surfaces genuinely but under-describes the four new src/governance/semantic_*.py modules.",
+      "blocking": false,
+      "resolution": "User decision 2026-08-08: reuse the existing classes for build 1; file GOVERNANCE_REGISTRY_ADDITION as a tracked follow-up change rather than widening this build's blast radius. The under-described src/ files are still individually declared in affected_files, so the validate-completion undeclared-surface guard remains fully effective.",
+      "followup": "GOVERNANCE_REGISTRY_ADDITION change class + paired case in tests/test_construction_protocol.py"
+    },
+    {
+      "question": "6 FK-input artifacts were untracked by git (not ignored): encyclopedia_rows.jsonl, module_attribution_stubs.jsonl, config-consumer-graph.generated.json, miar_registry.json, closure_authority_index.json, change_contracts.json. Every foreign-key validator depends on them, so on a fresh clone CI would go red once the new tests join GREEN_FLOOR.",
+      "blocking": false,
+      "resolution": "User decision 2026-08-08: targeted 6-file `git add` performed in Phase 0 (NEVER `git add -A` — standing blocker: 836 untracked / 68 in src/, a partial commit breaks the build). Verified `git diff --cached --name-only` returns exactly these 6 paths and nothing else."
+    }
+  ],
+  "rollback_boundary": "Single commit, fully additive. Revert = delete docs/governance/semantic_os/, docs/governance/SEMANTIC_OS_CONTRACT.md, the 4 src/governance/semantic_*.py, the 2 scripts/governance/*_semantic_os.py, the 4 tests/test_semantic_*.py, the 2 build manifests, and data/semantic_os/ (gitignored, disposable); then revert the GREEN_FLOOR + test_governance_invariant_check.py pins, the 2 seed_script_registry.py overlays, the regenerated stubs/script-matrix, and the schemas.md §9.10-9.13 block. No runtime, config, or model surface is touched, so no behavioral rollback is possible or required. Un-staging the 6 tracked inputs is `git restore --staged <paths>`.",
+  "authority_granted": "NONE. Every record carries a pinned `authority: \"advisory\"` literal with a negative test rejecting \"production\". Per CLAUDE.md §6.5 Authority Ladder, boundary membership and concept ownership grant tunability/navigability, never production authority — only demonstrated G001 improvement does. This layer may justify docs, research, and retrieval; it may not influence sizing, fusion, promotion, or any production weight."
+}

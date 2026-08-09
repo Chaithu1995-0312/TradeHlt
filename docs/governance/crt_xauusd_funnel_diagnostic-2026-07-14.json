@@ -1,0 +1,458 @@
+{
+  "_doc": "CRT funnel diagnostic \u2014 MEASURE ONLY; no threshold changes authorized",
+  "generated_at_utc": "2026-07-14T07:57:38.230949+00:00",
+  "run_dir": "results/cert_xau_phase2/run_20260711_202626_XAUUSD",
+  "artifacts": {
+    "summary": "results/cert_xau_phase2/run_20260711_202626_XAUUSD/XAUUSD_summary.json",
+    "telemetry": "results/cert_xau_phase2/run_20260711_202626_XAUUSD/XAUUSD_crt_telemetry.jsonl",
+    "events": "results/cert_xau_phase2/run_20260711_202626_XAUUSD/XAUUSD_events.jsonl"
+  },
+  "run_headline": {
+    "instrument": "XAUUSD",
+    "total_candles": 47275,
+    "gap_resets": 121,
+    "total_setups": 1,
+    "approved_trades": 1,
+    "rejected_trades": 0,
+    "rejection_reasons": {},
+    "config_version": "v2_multi_2026_04"
+  },
+  "CAUTION": {
+    "state_distribution_is": "CANDLE_OCCUPANCY_not_transition_counts",
+    "state_entry_counts_are": "TRANSITION_ENTRY_counts_from_TelemetryCollector",
+    "edges_are": "STATE_TRANSITION events from events.jsonl"
+  },
+  "occupancy_state_distribution": {
+    "RANGE": 35197,
+    "SWEEP": 7005,
+    "DISPLACEMENT": 373,
+    "SHADOW_PENDING": 43,
+    "EXPANSION": 4605,
+    "RETEST": 17,
+    "EXECUTION": 5
+  },
+  "occupancy_vs_entries": {
+    "note": "Occupancy >> entries for long-dwell states (esp. EXPANSION)",
+    "SWEEP": {
+      "occupancy": 7005,
+      "entries": 3433
+    },
+    "DISPLACEMENT": {
+      "occupancy": 373,
+      "entries": 315
+    },
+    "EXPANSION": {
+      "occupancy": 4605,
+      "entries": 60,
+      "unique_episodes_telemetry": 60,
+      "unique_episode_starts_from_edges": 60
+    },
+    "RETEST": {
+      "occupancy": 17,
+      "entries": 17
+    },
+    "EXECUTION": {
+      "occupancy": 5,
+      "entries": 5
+    }
+  },
+  "funnel_transitions_exact": {
+    "RANGE_TO_SWEEP": 3390,
+    "RANGE_TO_SHADOW_PENDING": 43,
+    "SHADOW_PENDING_TO_SWEEP": 43,
+    "SWEEP_TO_DISPLACEMENT": 315,
+    "SWEEP_TO_EXPANSION_SHADOW": 43,
+    "DISPLACEMENT_TO_EXPANSION": 17,
+    "EXPANSION_TO_RETEST": 17,
+    "RETEST_TO_EXECUTION": 5,
+    "EXECUTION_TO_RESOLUTION": 1
+  },
+  "funnel_conversion": {
+    "RANGE_TO_SWEEP": 3390,
+    "SWEEP_TO_DISPLACEMENT": 315,
+    "SWEEP_TO_DISP_rate_pct": 9.292,
+    "DISPLACEMENT_TO_EXPANSION": 17,
+    "DISP_TO_EXP_rate_pct": 5.397,
+    "shadow_SWEEP_TO_EXPANSION": 43,
+    "unique_EXPANSION_episodes": 60,
+    "EXPANSION_TO_RETEST": 17,
+    "EXP_TO_RETEST_rate_pct_of_episodes": 28.333,
+    "RETEST_TO_EXECUTION": 5,
+    "RETEST_TO_EXEC_rate_pct": 29.412,
+    "EXECUTION_TO_RESOLUTION": 1,
+    "TRADE_OPENED_events": 1,
+    "summary_total_setups": 1
+  },
+  "SWEEP_TO_DISPLACEMENT_outcome": {
+    "qualified_transitions": 315,
+    "candidates_ending_SWEEP_only": 3075,
+    "candidates_ending_after_DISPLACEMENT_only": 298,
+    "fail_by_geometry_reason": {
+      "SWEEP_TO_DISPLACEMENT_fail_by_body_ratio": "NOT_INSTRUMENTED",
+      "SWEEP_TO_DISPLACEMENT_fail_by_atr_move": "NOT_INSTRUMENTED",
+      "SWEEP_TO_DISPLACEMENT_fail_by_wick_atr": "NOT_INSTRUMENTED",
+      "SWEEP_TO_DISPLACEMENT_fail_by_sweep_age": "NOT_INSTRUMENTED",
+      "DISPLACEMENT_TO_EXPANSION_fail_by_direction": "NOT_INSTRUMENTED",
+      "DISPLACEMENT_TO_EXPANSION_fail_by_extension": "NOT_INSTRUMENTED",
+      "DISPLACEMENT_TO_EXPANSION_fail_by_atr_distance": "NOT_INSTRUMENTED",
+      "EXPANSION_TO_RETEST_fail_by_min_depth": "NOT_INSTRUMENTED_PER_BAR",
+      "EXPANSION_TO_RETEST_fail_by_ceiling": "NOT_INSTRUMENTED_PER_BAR",
+      "note": "Per-bar fail-reason counters require optional diagnostic hooks on try_* (similar to baseline trace). Existing telemetry records successful transitions, resets, expansion episode outcomes, and candidate deaths."
+    },
+    "primary_observable_death_class_for_sweep_only": "RESET (mostly HTF) \u2014 see reset/candidate death tables"
+  },
+  "DISPLACEMENT_TO_EXPANSION_outcome": {
+    "qualified_transitions": 17,
+    "displacement_entries": 315,
+    "implied_non_expansion": 298,
+    "resets_from_DISPLACEMENT": 298,
+    "fail_by_geometry_reason": {
+      "SWEEP_TO_DISPLACEMENT_fail_by_body_ratio": "NOT_INSTRUMENTED",
+      "SWEEP_TO_DISPLACEMENT_fail_by_atr_move": "NOT_INSTRUMENTED",
+      "SWEEP_TO_DISPLACEMENT_fail_by_wick_atr": "NOT_INSTRUMENTED",
+      "SWEEP_TO_DISPLACEMENT_fail_by_sweep_age": "NOT_INSTRUMENTED",
+      "DISPLACEMENT_TO_EXPANSION_fail_by_direction": "NOT_INSTRUMENTED",
+      "DISPLACEMENT_TO_EXPANSION_fail_by_extension": "NOT_INSTRUMENTED",
+      "DISPLACEMENT_TO_EXPANSION_fail_by_atr_distance": "NOT_INSTRUMENTED",
+      "EXPANSION_TO_RETEST_fail_by_min_depth": "NOT_INSTRUMENTED_PER_BAR",
+      "EXPANSION_TO_RETEST_fail_by_ceiling": "NOT_INSTRUMENTED_PER_BAR",
+      "note": "Per-bar fail-reason counters require optional diagnostic hooks on try_* (similar to baseline trace). Existing telemetry records successful transitions, resets, expansion episode outcomes, and candidate deaths."
+    }
+  },
+  "unique_EXPANSION_episodes": {
+    "count": 60,
+    "ended_by": {
+      "reset": 43,
+      "retest": 17
+    },
+    "qualified_retest": {
+      "false": 43,
+      "true": 17
+    },
+    "ended_by_retest": 17,
+    "ended_by_reset": 43,
+    "ended_by_expired": 0,
+    "ended_by_eof": 0,
+    "dwell_candles_sane": {
+      "count": 40,
+      "min": 1.0,
+      "p25": 1.0,
+      "median": 1.0,
+      "p75": 2.0,
+      "p90": 11.0,
+      "p99": 212.0,
+      "max": 346.0,
+      "mean": 18.5
+    },
+    "dwell_stats_from_counter": {
+      "count": 60,
+      "mean": -7850.9,
+      "median": 1.0,
+      "p90": 8,
+      "p99": 346,
+      "max": 346,
+      "ended_by_counts": {
+        "retest": 17,
+        "reset": 43,
+        "eof": 0,
+        "expired": 0
+      }
+    },
+    "max_retrace_depth_abs": {
+      "count": 60,
+      "min": 0.0,
+      "p25": 0.0,
+      "median": 0.8550000000000182,
+      "p75": 16.059999999999945,
+      "p90": 49.69999999999982,
+      "p99": 205.20000000000027,
+      "max": 225.5599999999995,
+      "mean": 19.667333
+    },
+    "ceiling_at_max": {
+      "count": 60,
+      "min": 0.0,
+      "p25": 0.0,
+      "median": 0.8887499999999932,
+      "p75": 2.384999999999945,
+      "p90": 3.6720000000000024,
+      "p99": 7.438714285714331,
+      "max": 8.413500000000022,
+      "mean": 1.572889
+    },
+    "distance_to_ceiling_ceiling_minus_depth": {
+      "count": 60,
+      "min": -217.14649999999946,
+      "p25": -20.466999999999985,
+      "median": 0.0,
+      "p75": 0.0,
+      "p90": 0.23200000000031196,
+      "p99": 1.3345000000003435,
+      "max": 1.4240000000000463,
+      "mean": -18.094444
+    },
+    "interpretation": "Of 60 expansion episodes, 17 qualified retest, 43 ended by reset, 0 by TTL EXPIRED. Zero TTL expiry implies candidates die by HTF/retrace reset or qualify before TTL."
+  },
+  "candidate_lifecycles": {
+    "count": 3433,
+    "death_reasons": {
+      "RESET_HTF": 3323,
+      "RESET_RETRACE": 66,
+      "FILTER_REJECTED": 12,
+      "ACCEPTED": 1,
+      "RESET_OTHER": 29,
+      "RESET_EXTENSION": 2
+    },
+    "path_prefix_counts_top": [
+      {
+        "entered_states": [
+          "SWEEP"
+        ],
+        "count": 3075
+      },
+      {
+        "entered_states": [
+          "SWEEP",
+          "DISPLACEMENT"
+        ],
+        "count": 298
+      },
+      {
+        "entered_states": [
+          "SWEEP",
+          "EXPANSION"
+        ],
+        "count": 31
+      },
+      {
+        "entered_states": [
+          "SWEEP",
+          "DISPLACEMENT",
+          "EXPANSION"
+        ],
+        "count": 12
+      },
+      {
+        "entered_states": [
+          "SWEEP",
+          "EXPANSION",
+          "RETEST"
+        ],
+        "count": 7
+      },
+      {
+        "entered_states": [
+          "SWEEP",
+          "EXPANSION",
+          "RETEST",
+          "EXECUTION"
+        ],
+        "count": 5
+      },
+      {
+        "entered_states": [
+          "SWEEP",
+          "DISPLACEMENT",
+          "EXPANSION",
+          "RETEST"
+        ],
+        "count": 5
+      }
+    ],
+    "age_candles": {
+      "count": 3433,
+      "min": -46579.0,
+      "p25": 1.0,
+      "median": 2.0,
+      "p75": 3.0,
+      "p90": 3.0,
+      "p99": 3.0,
+      "max": 348.0,
+      "mean": -212.613166
+    },
+    "single_active_candidate": true,
+    "evidence": "TelemetryCollector._active_candidate is singular"
+  },
+  "RETEST_TO_EXECUTION": {
+    "BEGIN_SOFT_CONF_events": 17,
+    "RETEST_entries": 17,
+    "RETEST_TO_EXECUTION_transitions": 5,
+    "soft_conf_decision_records": 17,
+    "soft_conf_decision_breakdown": {
+      "(True, 'APPROVED')": 17
+    },
+    "soft_conf_score_actual": {
+      "count": 17,
+      "min": 0.30823385563542227,
+      "p25": 0.3570244875739808,
+      "median": 0.39384555264789006,
+      "p75": 0.44142440723509224,
+      "p90": 0.46732940532391953,
+      "p99": 0.49140039079980136,
+      "max": 0.5294899994224699,
+      "mean": 0.400311
+    },
+    "retest_replay_breakdown": {
+      "(False, 'OFF_SESSION')": 12,
+      "(True, None)": 1
+    },
+    "FILTER_REJECTED": {
+      "off_session:OFF_SESSION": 12
+    },
+    "resets_from_RETEST": 12,
+    "resets_from_EXECUTION": 4,
+    "interpretation": "17 RETEST entries and 17 soft-conf decision records (all APPROVED at score gate) but only 5 RETEST\u2192EXECUTION transitions and 1 TRADE_OPENED. 12 FILTER_REJECTED off_session + retest_replay OFF_SESSION explain most non-trades; 4 EXECUTION resets without RESOLUTION remain secondary residual."
+  },
+  "EXECUTION_episodes": {
+    "EXECUTION_entries": 5,
+    "EXECUTION_occupancy_candles": 5,
+    "EXECUTION_TO_RESOLUTION": 1,
+    "TRADE_events": {
+      "TRADE_OPENED": 1,
+      "TRADE_TP1": 1,
+      "TRADE_STOPPED": 1
+    },
+    "unique_setups_summary": 1,
+    "gap": "5 EXECUTION state entries vs 1 RESOLUTION/TRADE_OPENED \u2014 execution occupancy includes failed/aborted execution episodes; not 5 independent counted setups."
+  },
+  "resets": {
+    "total_RESET_events": 10881,
+    "from_state": {
+      "SWEEP": 3075,
+      "RANGE": 7448,
+      "DISPLACEMENT": 298,
+      "EXPANSION": 43,
+      "RETEST": 12,
+      "RESOLUTION": 1,
+      "EXECUTION": 4
+    },
+    "reason_classes": {
+      "HTF": 10678,
+      "OTHER": 121,
+      "RETRACE": 66,
+      "OFF_SESSION": 12,
+      "POST_RESOLUTION": 2,
+      "EXTENSION": 2
+    },
+    "reason_top": [
+      {
+        "reason": "off_session_filter",
+        "count": 12
+      },
+      {
+        "reason": "Post-resolution reset",
+        "count": 2
+      },
+      {
+        "reason": "50% retrace hit (retrace=0.617)",
+        "count": 2
+      },
+      {
+        "reason": "50% retrace hit (retrace=0.636)",
+        "count": 2
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000007 \u2192 XAUUSD-HTF-000008",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000008 \u2192 XAUUSD-HTF-000009",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000009 \u2192 XAUUSD-HTF-000010",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000010 \u2192 XAUUSD-HTF-000011",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000011 \u2192 XAUUSD-HTF-000012",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000012 \u2192 XAUUSD-HTF-000013",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000013 \u2192 XAUUSD-HTF-000014",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000014 \u2192 XAUUSD-HTF-000015",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000015 \u2192 XAUUSD-HTF-000016",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000016 \u2192 XAUUSD-HTF-000017",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000017 \u2192 XAUUSD-HTF-000018",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000018 \u2192 XAUUSD-HTF-000019",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000019 \u2192 XAUUSD-HTF-000020",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000020 \u2192 XAUUSD-HTF-000021",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000021 \u2192 XAUUSD-HTF-000022",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000022 \u2192 XAUUSD-HTF-000023",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000023 \u2192 XAUUSD-HTF-000024",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000024 \u2192 XAUUSD-HTF-000025",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000025 \u2192 XAUUSD-HTF-000026",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000026 \u2192 XAUUSD-HTF-000027",
+        "count": 1
+      },
+      {
+        "reason": "HTF changed: XAUUSD-HTF-000027 \u2192 XAUUSD-HTF-000028",
+        "count": 1
+      }
+    ],
+    "gap_resets_summary": 121
+  },
+  "downstream_engine_rejection": {
+    "rejected_trades": 0,
+    "rejection_reasons": {},
+    "verdict": "NOT_PRIMARY",
+    "evidence": "summary rejected_trades=0 and empty rejection_reasons; collapse is upstream"
+  },
+  "closure_statement": {
+    "ROOT_CAUSE_CLASS": "UPSTREAM_CRT_CANDIDATE_COLLAPSE",
+    "PRIMARY_VISIBLE_BOUNDARY": "EXPANSION_TO_RETEST",
+    "SECONDARY_VISIBLE_BOUNDARY": "SWEEP_TO_DISPLACEMENT",
+    "TERTIARY_VISIBLE_BOUNDARY": "RETEST_SOFTCONF_TO_TRADE_OPENED_SESSION_FILTER",
+    "DOWNSTREAM_ENGINE_REJECTION": "NOT_PRIMARY",
+    "ARCHITECTURAL_SUPPRESSION_RISK": "SINGLE_ACTIVE_CANDIDATE + LONG_EXPANSION_DWELL + HTF_RESET",
+    "THRESHOLD_CHANGE_AUTHORIZED": "NO \u2014 MEASURE COMPLETE; geometry fail-reasons still NOT_INSTRUMENTED",
+    "NEXT_AUTHORIZED_MEASUREMENT": "Optional diagnostic hooks on try_sweep_to_displacement / try_displacement_to_expansion / try_expansion_to_retest fail branches for per-reason counts (behavior-preserving, default off)"
+  },
+  "authority": "research/governance diagnostic only \u2014 no production authority; no threshold change"
+}

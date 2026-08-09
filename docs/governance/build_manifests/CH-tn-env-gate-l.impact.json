@@ -1,0 +1,28 @@
+{
+  "change_id": "CH-tn-env-gate-l",
+  "objective": "Implement shared GATE-L / ENV-L clean-label builder (TradeNet Bernoulli heads + Envelope continuous targets) via forward_walk/horizon_excursion. Research tooling only — no train promote, no neural_fn, no spine wire.",
+  "change_classes": [
+    "MODEL_TRAINING_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "src/research/clean_labels/__init__.py",
+    "src/research/clean_labels/protocol.py",
+    "src/research/clean_labels/builder.py",
+    "scripts/research/build_clean_labels_tn_env.py",
+    "tests/research/test_clean_labels_tn_env.py",
+    "docs/research-readiness/tn_env_clean_label_prereg.md",
+    "docs/governance/tradenet_qualification_protocol.md",
+    "docs/architecture/envelope-layer-design.md",
+    "docs/governance/build_manifests/CH-tn-env-gate-l.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none activated — TradeNet remains UNWIRED; EnvelopeNet not built as model",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/research/test_clean_labels_tn_env.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "delete src/research/clean_labels + CLI + tests + prereg; revert protocol status lines"
+}

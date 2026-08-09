@@ -1,0 +1,50 @@
+{
+  "change_id": "FC1-C-FM-IDENTITY-SEPARATION",
+  "phase": "FC-1",
+  "title": "Separate FM-020/021 pipeline identities from FM-027/028 CRT identities",
+  "status": "DRAFTED_FC0_NOT_IMPLEMENTED",
+  "affected_feature_ids": [
+    "FEAT-DISP_STRENGTH",
+    "FEAT-RETEST_DEPTH",
+    "FEAT-DISPLACEMENT_RETRACE",
+    "FEAT-DISPLACEMENT_ATR_RATIO"
+  ],
+  "legacy_semantics": {
+    "pipeline": "disp_strength=FM-020 body/(atr*close); retest_depth=FM-021 gated |close-ema|/(atr*close)",
+    "crt": "displacement_retrace=FM-027; displacement_atr_ratio=FM-028",
+    "bitnet_map": "aliases retest_depth<-FM-027, disp_strength<-FM-028 at execute (use_bitnet often false)"
+  },
+  "new_semantics": {
+    "rule": "one feature_id per mathematics; no alias hiding formula divergence",
+    "pipeline_vector": "FM-020/021 under FEAT-DISP_STRENGTH / FEAT-RETEST_DEPTH",
+    "crt_vector": "FM-027/028 under FEAT-DISPLACEMENT_* only",
+    "models": "bind ordered feature_ids + formula_ids; substitution fails closed"
+  },
+  "reason": "PASS-A TARGET_C FORMULA_IDENTITY_DIVERGENT; ARTIFACT_BINDING_MISSING",
+  "evidence": [
+    "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+    "src/features/derived_math.py",
+    "src/config_layer/crt_engine_v2.py cached_features / BitNet map",
+    "CH-001/CH-002 F-050 manifests"
+  ],
+  "expected_population_impact": "pipeline vector may be stable if only CRT paths change; BitNet inputs change if enabled",
+  "required_tests": [
+    "pipeline == derived_math FM-020/021",
+    "FM-020 != FM-028 on sample rows",
+    "no call site maps wrong formula under old names"
+  ],
+  "required_mutants": [
+    "FM-020 <-> FM-028 substitution",
+    "FM-021 <-> FM-027 substitution",
+    "formula-id mismatch on artifact load"
+  ],
+  "affected_consumers": [
+    "FeaturePipeline",
+    "CRTEngine",
+    "BitNet",
+    "FeatureMonitor drift columns"
+  ],
+  "affected_artifacts": ["BitNet and any model trained on aliased CRT features → retrain FC-6"],
+  "migration_retraining_required": true,
+  "rollback_path": "CH-002 emission + alias map restore for shadow compare only"
+}

@@ -1,0 +1,382 @@
+{
+  "_doc": "FC-0.5 consumer + model artifact formula binding (no retrain, no enablement change)",
+  "generated_at_utc": "2026-07-10T15:48:17Z",
+  "consumers": [
+    {
+      "consumer": "FeaturePipeline",
+      "type": "authority_batch",
+      "active": true,
+      "entrypoint": "src/features/feature_pipeline.py:FeaturePipeline.run",
+      "features": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "volume_ratio",
+        "double_sweep",
+        "ema_fast",
+        "ema_slow",
+        "ema_spread",
+        "trend_bias",
+        "trend_strength",
+        "momentum_score",
+        "atr",
+        "volatility_ratio",
+        "rsi_14",
+        "macd_line",
+        "macd_signal",
+        "macd_hist",
+        "sweep_detected",
+        "liquidity_sweep",
+        "break_of_structure",
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "body_size",
+        "wick_size",
+        "body_ratio",
+        "volatility_regime",
+        "session",
+        "hour_of_day",
+        "disp_strength",
+        "retest_depth",
+        "candles_since_retest",
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "volume_spike"
+      ],
+      "current_formula_binding": "LEGACY_FEATURE_SEMANTICS_V1 / default env",
+      "training_semantic_binding": "same as current for research train paths using pipeline",
+      "compatibility_verdict": "FORMULA_CHANGE",
+      "migration_action": "SHADOW_REPLAY_REQUIRED",
+      "retrain_required": false,
+      "evidence": [
+        "feature_pipeline.py"
+      ],
+      "unknowns": []
+    },
+    {
+      "consumer": "BacktestRunner",
+      "type": "backtest",
+      "active": true,
+      "entrypoint": "src/runtime/backtest_v2.py:BacktestRunner",
+      "features": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "volume_ratio",
+        "double_sweep",
+        "ema_fast",
+        "ema_slow",
+        "ema_spread",
+        "trend_bias",
+        "trend_strength",
+        "momentum_score",
+        "atr",
+        "volatility_ratio",
+        "rsi_14",
+        "macd_line",
+        "macd_signal",
+        "macd_hist",
+        "sweep_detected",
+        "liquidity_sweep",
+        "break_of_structure",
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "body_size",
+        "wick_size",
+        "body_ratio",
+        "volatility_regime",
+        "session",
+        "hour_of_day",
+        "disp_strength",
+        "retest_depth",
+        "candles_since_retest",
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "volume_spike"
+      ],
+      "current_formula_binding": "FeaturePipeline dual pd.read_csv",
+      "compatibility_verdict": "MULTIPLE_CHANGES",
+      "migration_action": "SHADOW_REPLAY_REQUIRED",
+      "retrain_required": false,
+      "evidence": [
+        "backtest_v2.py"
+      ],
+      "unknowns": []
+    },
+    {
+      "consumer": "CRTEngine",
+      "type": "structure_sm",
+      "active": true,
+      "entrypoint": "src/config_layer/crt_engine_v2.py",
+      "features": [
+        "body_ratio",
+        "displacement_retrace",
+        "displacement_atr_ratio",
+        "session",
+        "double_sweep"
+      ],
+      "current_formula_binding": "FM-027/028 + candle_math; CH-002 emission",
+      "compatibility_verdict": "VALUE_COMPATIBLE_IDENTITY_RENAME",
+      "migration_action": "METADATA_BINDING_ONLY",
+      "retrain_required": false,
+      "evidence": [
+        "crt_engine_v2.py cached_features",
+        "CH-002"
+      ],
+      "unknowns": [
+        "BitNet alias map if use_bitnet true"
+      ]
+    },
+    {
+      "consumer": "BitNet",
+      "type": "trained_model",
+      "active": false,
+      "entrypoint": "src/engines/live_engine.py BitNetZoneGate",
+      "features": [
+        "body_ratio",
+        "retest_depth",
+        "disp_strength",
+        "atr",
+        "candles_since_retest",
+        "double_sweep"
+      ],
+      "artifact": "models/bitnet/",
+      "current_formula_binding": "ARTIFACT_BINDING_UNKNOWN for train-time; CRT maps FM-027/028 to retest_depth/disp_strength names at execute",
+      "compatibility_verdict": "ARTIFACT_BINDING_UNKNOWN",
+      "migration_action": "RETRAIN_REQUIRED",
+      "retrain_required": true,
+      "evidence": [
+        "active_models.yaml bitnet",
+        "crt_engine_v2 BitNet map",
+        "use_bitnet:false"
+      ],
+      "unknowns": [
+        "exact training corpus/code for each bitnet artifact"
+      ],
+      "enablement_unchanged": true
+    },
+    {
+      "consumer": "Gaussian_live_heuristic",
+      "type": "engine",
+      "active": true,
+      "entrypoint": "src/engines/heuristic_gaussian_engine.py",
+      "features": [
+        "ema_fast",
+        "ema_slow",
+        "momentum_score"
+      ],
+      "current_formula_binding": "3-feature momentum vote; not 38-dim",
+      "compatibility_verdict": "EXACT_COMPATIBLE",
+      "migration_action": "NONE",
+      "retrain_required": false,
+      "evidence": [
+        "active_models.yaml gaussian"
+      ],
+      "unknowns": []
+    },
+    {
+      "consumer": "Gaussian_v4_mirrored_38dim",
+      "type": "trained_model",
+      "active": false,
+      "entrypoint": "models/gaussian_registry.json",
+      "features": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "volume_ratio",
+        "double_sweep",
+        "ema_fast",
+        "ema_slow",
+        "ema_spread",
+        "trend_bias",
+        "trend_strength",
+        "momentum_score",
+        "atr",
+        "volatility_ratio",
+        "rsi_14",
+        "macd_line",
+        "macd_signal",
+        "macd_hist",
+        "sweep_detected",
+        "liquidity_sweep",
+        "break_of_structure",
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "body_size",
+        "wick_size",
+        "body_ratio",
+        "volatility_regime",
+        "session",
+        "hour_of_day",
+        "disp_strength",
+        "retest_depth",
+        "candles_since_retest",
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "volume_spike"
+      ],
+      "current_formula_binding": "ARTIFACT_BINDING_UNKNOWN",
+      "compatibility_verdict": "ARTIFACT_BINDING_UNKNOWN",
+      "migration_action": "RETRAIN_REQUIRED",
+      "retrain_required": true,
+      "evidence": [
+        "active_models.yaml experimental 38-dim"
+      ],
+      "unknowns": [
+        "train script/version/corpus"
+      ],
+      "enablement_unchanged": true
+    },
+    {
+      "consumer": "ZoneGate",
+      "type": "engine",
+      "active": true,
+      "entrypoint": "src/engines/zone_gate_engine.py",
+      "features": [
+        "zone geometry from registry; not full 38"
+      ],
+      "current_formula_binding": "zone_registry.json membership",
+      "compatibility_verdict": "NOT_APPLICABLE",
+      "migration_action": "NONE",
+      "retrain_required": false,
+      "evidence": [
+        "zone_gate_engine",
+        "F-041"
+      ],
+      "unknowns": [
+        "whether any zone path uses swing features"
+      ]
+    },
+    {
+      "consumer": "RR_Engine",
+      "type": "engine",
+      "active": true,
+      "entrypoint": "src/engines/rr_engine.py",
+      "features": [
+        "candle polarity / structure quality \u2014 not full pipeline vector"
+      ],
+      "current_formula_binding": "RREngine.compute local",
+      "compatibility_verdict": "NOT_APPLICABLE",
+      "migration_action": "NONE",
+      "retrain_required": false,
+      "evidence": [
+        "rr_engine.py",
+        "F-048"
+      ],
+      "unknowns": []
+    },
+    {
+      "consumer": "rr_fusion",
+      "type": "trained_model_layer",
+      "active": false,
+      "entrypoint": "rr_fusion enabled:false",
+      "features": [
+        "38-dim Mahalanobis path historically"
+      ],
+      "current_formula_binding": "ARTIFACT_BINDING_UNKNOWN + F-044/F-045",
+      "compatibility_verdict": "ARTIFACT_BINDING_UNKNOWN",
+      "migration_action": "REMAIN_UNWIRED",
+      "retrain_required": true,
+      "evidence": [
+        "F-038/044/045",
+        "rr_fusion.enabled false"
+      ],
+      "unknowns": [
+        "label provenance F-022"
+      ],
+      "enablement_unchanged": true
+    },
+    {
+      "consumer": "TradeNet",
+      "type": "trained_model",
+      "active": false,
+      "entrypoint": "models/tradenet_registry.json",
+      "features": [
+        "CANONICAL_FEATURES intended"
+      ],
+      "current_formula_binding": "ARTIFACT_BINDING_UNKNOWN",
+      "compatibility_verdict": "ARTIFACT_BINDING_UNKNOWN",
+      "migration_action": "REMAIN_UNWIRED",
+      "retrain_required": true,
+      "evidence": [
+        "F-005 unwired"
+      ],
+      "unknowns": [
+        "training lineage"
+      ],
+      "enablement_unchanged": true
+    },
+    {
+      "consumer": "secondlow",
+      "type": "research",
+      "active": true,
+      "entrypoint": "src/research/secondlow_v1",
+      "features": [
+        "raw OHLCV only"
+      ],
+      "current_formula_binding": "N/A FeaturePipeline",
+      "compatibility_verdict": "NOT_APPLICABLE",
+      "migration_action": "NONE",
+      "retrain_required": false,
+      "evidence": [
+        "detector uses load_ohlcv"
+      ],
+      "unknowns": []
+    },
+    {
+      "consumer": "HypothesisRunner",
+      "type": "research",
+      "active": true,
+      "entrypoint": "src/research/runner.py",
+      "features": [
+        "OHLCV candles; some paths FeaturePipeline"
+      ],
+      "compatibility_verdict": "MULTIPLE_CHANGES",
+      "migration_action": "SHADOW_REPLAY_REQUIRED",
+      "retrain_required": false,
+      "evidence": [
+        "research runner"
+      ],
+      "unknowns": [
+        "per-hypothesis feature use"
+      ]
+    },
+    {
+      "consumer": "live_engine_hook",
+      "type": "live",
+      "active": true,
+      "entrypoint": "src/runtime/live_engine_hook.py",
+      "features": [
+        "live feature construction + engines"
+      ],
+      "current_formula_binding": "must align with FeaturePipeline if used; CRT/BitNet paths separate",
+      "compatibility_verdict": "MULTIPLE_CHANGES",
+      "migration_action": "BLOCKED_PENDING_EVIDENCE",
+      "retrain_required": false,
+      "evidence": [
+        "live_engine_hook",
+        "active_models"
+      ],
+      "unknowns": [
+        "exact live feature builder path parity vs batch"
+      ]
+    }
+  ],
+  "counts": {
+    "n_consumers": 13,
+    "retrain_required_true": 4,
+    "artifact_binding_unknown": 4
+  }
+}

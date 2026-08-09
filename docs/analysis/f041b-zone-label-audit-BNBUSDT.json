@@ -1,0 +1,250 @@
+{
+  "audit": "F-041B ZoneGate label-provenance (Phase-5)",
+  "authority": "research/docs + governance-hygiene only (CLAUDE.md \u00a76.5); grants no G001 authority",
+  "instrument": "BNBUSDT",
+  "source_opportunities": "logs/BNBUSDT/bnbusdt_training_20260524/opportunities.jsonl",
+  "registry_path": "models/zone_registry.json",
+  "n_records": 139942,
+  "skips": {
+    "no_candle_or_future": 0
+  },
+  "exit_model": "intrabar_fixed",
+  "cost_round_trip": 0.0012,
+  "min_n": 30,
+  "membership_verification": {
+    "counts_match": true,
+    "stats_reproduced": true,
+    "hash_available": false,
+    "hash_match": null,
+    "status": "VERIFIED",
+    "mapping": {
+      "5": 5,
+      "6": 6,
+      "4": 4,
+      "1": 1,
+      "0": 0,
+      "7": 7,
+      "3": 3,
+      "2": 2
+    },
+    "detail": [
+      {
+        "stored_zone": "zone_5",
+        "stored_n": 172,
+        "recon_n": 172,
+        "stored_mean_rr": 0.1163,
+        "recon_mean_rr": 0.1163,
+        "stored_sl": 0.9593,
+        "recon_sl": 0.9593,
+        "n_ok": true,
+        "mean_ok": true,
+        "sl_ok": true
+      },
+      {
+        "stored_zone": "zone_6",
+        "stored_n": 1162,
+        "recon_n": 1162,
+        "stored_mean_rr": 0.0897,
+        "recon_mean_rr": 0.0897,
+        "stored_sl": 0.9656,
+        "recon_sl": 0.9656,
+        "n_ok": true,
+        "mean_ok": true,
+        "sl_ok": true
+      },
+      {
+        "stored_zone": "zone_4",
+        "stored_n": 3872,
+        "recon_n": 3872,
+        "stored_mean_rr": 0.0124,
+        "recon_mean_rr": 0.0124,
+        "stored_sl": 0.9801,
+        "recon_sl": 0.9801,
+        "n_ok": true,
+        "mean_ok": true,
+        "sl_ok": true
+      },
+      {
+        "stored_zone": "zone_1",
+        "stored_n": 10100,
+        "recon_n": 10100,
+        "stored_mean_rr": -0.018,
+        "recon_mean_rr": -0.018,
+        "stored_sl": 0.9825,
+        "recon_sl": 0.9825,
+        "n_ok": true,
+        "mean_ok": true,
+        "sl_ok": true
+      },
+      {
+        "stored_zone": "zone_0",
+        "stored_n": 20708,
+        "recon_n": 20708,
+        "stored_mean_rr": -0.0292,
+        "recon_mean_rr": -0.0292,
+        "stored_sl": 0.9865,
+        "recon_sl": 0.9865,
+        "n_ok": true,
+        "mean_ok": true,
+        "sl_ok": true
+      },
+      {
+        "stored_zone": "zone_7",
+        "stored_n": 26714,
+        "recon_n": 26714,
+        "stored_mean_rr": -0.05,
+        "recon_mean_rr": -0.05,
+        "stored_sl": 0.9875,
+        "recon_sl": 0.9875,
+        "n_ok": true,
+        "mean_ok": true,
+        "sl_ok": true
+      },
+      {
+        "stored_zone": "zone_3",
+        "stored_n": 31540,
+        "recon_n": 31540,
+        "stored_mean_rr": -0.0448,
+        "recon_mean_rr": -0.0448,
+        "stored_sl": 0.9887,
+        "recon_sl": 0.9887,
+        "n_ok": true,
+        "mean_ok": true,
+        "sl_ok": true
+      },
+      {
+        "stored_zone": "zone_2",
+        "stored_n": 45674,
+        "recon_n": 45674,
+        "stored_mean_rr": -0.0519,
+        "recon_mean_rr": -0.0519,
+        "stored_sl": 0.9873,
+        "recon_sl": 0.9873,
+        "n_ok": true,
+        "mean_ok": true,
+        "sl_ok": true
+      }
+    ]
+  },
+  "assignment_parity": {
+    "overall": 0.414,
+    "per_zone": {
+      "0": 0.0592,
+      "1": 0.1234,
+      "2": 0.7013,
+      "3": 0.1313,
+      "4": 0.1927,
+      "5": 0.3721,
+      "6": 0.2599,
+      "7": 0.6805
+    },
+    "n": 139942
+  },
+  "zones": [
+    {
+      "zone_id": "zone_0",
+      "n": 20708,
+      "stored_sl_rate": 0.9865,
+      "honest_sl_rate": 0.657,
+      "sl_delta": -0.3295,
+      "stored_mean_rr": -0.0292,
+      "honest_expectancy": -0.29282,
+      "ci_low": -0.312407,
+      "ci_high": -0.273996,
+      "sufficiency": "SUFFICIENT"
+    },
+    {
+      "zone_id": "zone_1",
+      "n": 10100,
+      "stored_sl_rate": 0.9825,
+      "honest_sl_rate": 0.6539,
+      "sl_delta": -0.3286,
+      "stored_mean_rr": -0.018,
+      "honest_expectancy": -0.225628,
+      "ci_low": -0.251968,
+      "ci_high": -0.198699,
+      "sufficiency": "SUFFICIENT"
+    },
+    {
+      "zone_id": "zone_2",
+      "n": 45674,
+      "stored_sl_rate": 0.9873,
+      "honest_sl_rate": 0.6584,
+      "sl_delta": -0.3289,
+      "stored_mean_rr": -0.0519,
+      "honest_expectancy": -0.556224,
+      "ci_low": -0.569113,
+      "ci_high": -0.542417,
+      "sufficiency": "SUFFICIENT"
+    },
+    {
+      "zone_id": "zone_3",
+      "n": 31540,
+      "stored_sl_rate": 0.9887,
+      "honest_sl_rate": 0.657,
+      "sl_delta": -0.3317,
+      "stored_mean_rr": -0.0448,
+      "honest_expectancy": -0.35476,
+      "ci_low": -0.370065,
+      "ci_high": -0.338185,
+      "sufficiency": "SUFFICIENT"
+    },
+    {
+      "zone_id": "zone_4",
+      "n": 3872,
+      "stored_sl_rate": 0.9801,
+      "honest_sl_rate": 0.649,
+      "sl_delta": -0.3311,
+      "stored_mean_rr": 0.0124,
+      "honest_expectancy": -0.173091,
+      "ci_low": -0.219332,
+      "ci_high": -0.128861,
+      "sufficiency": "SUFFICIENT"
+    },
+    {
+      "zone_id": "zone_5",
+      "n": 172,
+      "stored_sl_rate": 0.9593,
+      "honest_sl_rate": 0.6628,
+      "sl_delta": -0.2965,
+      "stored_mean_rr": 0.1163,
+      "honest_expectancy": -0.239321,
+      "ci_low": -0.433375,
+      "ci_high": -0.035913,
+      "sufficiency": "SUFFICIENT"
+    },
+    {
+      "zone_id": "zone_6",
+      "n": 1162,
+      "stored_sl_rate": 0.9656,
+      "honest_sl_rate": 0.6558,
+      "sl_delta": -0.3098,
+      "stored_mean_rr": 0.0897,
+      "honest_expectancy": -0.181899,
+      "ci_low": -0.260005,
+      "ci_high": -0.106882,
+      "sufficiency": "SUFFICIENT"
+    },
+    {
+      "zone_id": "zone_7",
+      "n": 26714,
+      "stored_sl_rate": 0.9875,
+      "honest_sl_rate": 0.6558,
+      "sl_delta": -0.3317,
+      "stored_mean_rr": -0.05,
+      "honest_expectancy": -0.453521,
+      "ci_low": -0.470606,
+      "ci_high": -0.437618,
+      "sufficiency": "SUFFICIENT"
+    }
+  ],
+  "verdict": {
+    "verdict": "CONTAMINATED",
+    "membership_status": "VERIFIED",
+    "contaminated_by_sl_delta": true,
+    "contaminated_by_sign_flip": true,
+    "edge_zones": [],
+    "n_powered_zones": 8,
+    "n_insufficient_zones": 0
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "probe": "zone-registry-provenance (converter reconstruction)",
+  "authority": "research/governance only; no G001 authority (CLAUDE.md 6.5)",
+  "source": "logs/BNBUSDT/bnbusdt_training_20260524/opportunities.jsonl",
+  "registry": "models/zone_registry.json",
+  "hypothesis": {
+    "mu": "kmeans centroid (k=8, seed=1337), round 6dp",
+    "sigma": "round(max(GLOBAL per-dim std ddof=0, 0.01), 6) \u2014 one vector, all zones",
+    "weights": "uniform 1/n_active over non-zero_indices dims",
+    "threshold": "constant 0.3"
+  },
+  "prior_work_reused": "F-041B membership_verification=VERIFIED",
+  "weights_check": {
+    "n_active": 25,
+    "expected_uniform_weight": 0.04,
+    "identical_mask_across_zones": true,
+    "all_zones_match_hypothesis": true,
+    "zeroed_features": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "momentum_score",
+      "macd_line",
+      "macd_signal",
+      "body_size",
+      "wick_size"
+    ]
+  },
+  "threshold_check": {
+    "distinct_values": [
+      0.3
+    ],
+    "is_constant": true,
+    "derivation": "UNKNOWN \u2014 not emitted by discover_zones; no source found in repo"
+  },
+  "kmeans_equivalence": {
+    "rows": 3000,
+    "identical_assignments": true
+  },
+  "n_vectors": 139942,
+  "n_records_expected": 139942,
+  "membership_check": {
+    "reconstructed_counts": [
+      20708,
+      10100,
+      45674,
+      31540,
+      3872,
+      172,
+      1162,
+      26714
+    ],
+    "stored_counts": [
+      20708,
+      10100,
+      45674,
+      31540,
+      3872,
+      172,
+      1162,
+      26714
+    ],
+    "counts_match_exactly": true,
+    "identity_order_match": true
+  },
+  "mu_check": {
+    "max_abs_delta_per_zone": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "worst": 0.0,
+    "matches_hypothesis": true
+  },
+  "sigma_check": {
+    "identical_across_zones": true,
+    "per_cluster_std_max_delta_per_zone": [
+      4215.446143,
+      3473.4452760000004,
+      4674.5168220000005,
+      4538.723234,
+      1758.5285960000006,
+      25271.207187,
+      2514.894942,
+      4653.784334
+    ],
+    "per_cluster_std_matches": false,
+    "global_std_max_delta": 0.007626000000000001,
+    "global_std_matches": false,
+    "global_std_floored_max_delta": 0.0,
+    "global_std_floored_matches": true,
+    "floor": 0.01,
+    "dims_below_floor": [
+      {
+        "index": 13,
+        "feature": "atr",
+        "raw_std": 0.0023739083382548457,
+        "stored": 0.01
+      }
+    ],
+    "which": "global_ddof0_floored",
+    "note": "sigma is a single GLOBAL vector replicated on every zone, not a per-cluster dispersion \u2014 the per-cluster hypothesis is refuted above."
+  },
+  "verdict": "RECONSTRUCTED_EXACT"
+}

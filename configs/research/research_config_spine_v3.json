@@ -1,0 +1,41 @@
+{
+  "_doc": "Edge Discovery — SPINE variant pinned to v3_multi_2026_06. Same as research_config_spine.json but measures the v3 production config (which LOADS on the patch engine; v4 does not). v3 is itself UNTRACKED + UNGOVERNED (never in promotion_log) — this is a research measurement, not a governance statement.",
+  "harness": {
+    "warmup": 30,
+    "window_size": 64,
+    "min_samples": 30
+  },
+  "forward_walk": {
+    "max_forward": 40,
+    "trail_mult": 0.5,
+    "exit_model": "intrabar_fixed"
+  },
+  "signal": {
+    "apply_signal_defaults": false,
+    "sl_atr_mult": 1.0,
+    "tp_atr_mult": 2.0
+  },
+  "costs": {
+    "round_trip_bps": 12.0
+  },
+  "qualification": {
+    "min_samples": 30,
+    "expectancy_min": 0.0,
+    "pf_min": 1.0,
+    "oos_split": 0.3,
+    "oos_retention_min": 0.5,
+    "n_permutations": 2000,
+    "significance_alpha": 0.05
+  },
+  "universe": {
+    "data_dir": "data",
+    "pattern": "*_M15.csv",
+    "instruments": ["BNBUSDT"]
+  },
+  "spine": {
+    "prod_version": "v3_multi_2026_06",
+    "_prod_version_note": "v3 is untracked/ungoverned (never promoted; only v2_multi_2026_04 is in promotion_log). It loads on the patch engine because it has no TP3/score_component_weights keys, unlike v4. Used here for a v2-vs-v3 spine comparison only.",
+    "scorer_mode": "calibrated",
+    "tp_target": "tp2"
+  }
+}

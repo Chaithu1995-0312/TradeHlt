@@ -1,0 +1,989 @@
+{
+  "version": "v2_multi_2026_04",
+  "config_id": "v2_multi_2026_04_candidate_1",
+  "created_at": "2026-05-06T19:34:01.007073+00:00",
+  "promoted_at": "2026-05-06T19:34:01.007073+00:00",
+  "params": {
+    "retest_depth_max": 0.15,
+    "retest_atr_depth_fraction": 0.3,
+    "body_ratio_min": 0.65,
+    "atr_multiplier_min": 1.0,
+    "expansion_atr_min_distance": 0.3
+  },
+  "engine_runner": {
+    "model_path": "results/model_export_format.json",
+    "min_atr": 0.0003,
+    "allowed_sessions": [
+      "london",
+      "new_york",
+      "overlap"
+    ],
+    "zone_cluster_threshold": 0.25,
+    "zone_registry_path": "models/zone_registry_v4_2026_07.json",
+    "zone_gate_execution_mode": "normal",
+    "zone_mode": "hard",
+    "zone_gate": {
+      "top_k": 3,
+      "cluster_min_n": 2,
+      "cluster_spread_max": 0.15
+    },
+    "debug_mode": false,
+    "gaussian_impl": "heuristic",
+    "convergence_window": 500,
+    "rr_fusion": {
+      "enabled": false,
+      "model_path": "models/rr_model.json",
+      "threshold": 0.5,
+      "full_feature_vector": false
+    },
+    "dual_engine": {
+      "trend_strength_threshold": 0.15,
+      "momentum_threshold": 0.3,
+      "range_volatility_threshold": 0.8,
+      "breakout_min_score": 0.3,
+      "trap_min_score": 0.32,
+      "neutral_min_score": 0.45,
+      "fusion_min_score": 0.25
+    },
+    "fusion_compare_evaluate": true,
+    "fusion_use_evaluate": false,
+    "ultron_gate_enabled": false,
+    "zone_min_samples": 50
+  },
+  "execution_planner": {
+    "ttl_breakout_sec": 300,
+    "ttl_pullback_sec": 420,
+    "ttl_reversal_sec": 180,
+    "ttl_liq_sweep_sec": 300,
+    "risk_percent": 0.5,
+    "reject_unknown_intent": true,
+    "partial_tp_breakeven_enabled": true,
+    "partial_tp_fraction": 0.5,
+    "precision_default": 8,
+    "default_account_balance": 10000.0,
+    "ttl_unknown_sec": 180,
+    "precision_overrides": {
+      "XAUUSD": 2,
+      "BTCUSDT": 2,
+      "ETHUSDT": 2,
+      "BTCUSD": 2,
+      "ETHUSD": 2
+    }
+  },
+  "sl_tp_comparison": {
+    "_comment": "Reference params for legacy SL/TP method â€” used ONLY by SLTPComparator, never in live path",
+    "legacy_sl_atr_mult": 1.0,
+    "legacy_tp_atr_mult_breakout": 2.0,
+    "legacy_tp_atr_mult_pullback": 1.5,
+    "legacy_tp_atr_mult_reversal": 1.0,
+    "legacy_tp_atr_mult_sweep": 1.2,
+    "primary_metric": "expectancy_rr",
+    "max_candles_per_trade": 100,
+    "output_path": "results/sl_tp_comparison.json"
+  },
+  "gate_intelligence": {
+    "gate_weight_intent": 0.35,
+    "gate_weight_vol": 0.2,
+    "gate_weight_liquidity": 0.2,
+    "gate_weight_structure": 0.25,
+    "gate_approval_threshold": 0.55
+  },
+  "ultron_risk_gate": {
+    "disabled": false,
+    "max_risk_per_trade_pct": 1.0,
+    "max_portfolio_risk_pct": 5.0,
+    "max_trades_per_day": 10,
+    "max_daily_loss_pct": 3.0,
+    "min_rr_ratio": 1.5,
+    "regime_factors": {
+      "trend": 1.0,
+      "range": 0.8,
+      "neutral": 0.6,
+      "uncertain": 0.5
+    }
+  },
+  "governance": {
+    "min_shadow_trades": 30,
+    "shadow_data_csv": "data/AUDUSD_M15.csv",
+    "shadow_output_csv": "results/shadow_trades.csv",
+    "promotion_margin": 0.02
+  },
+  "fusion_engine": {
+    "weight_crt": 0.4,
+    "weight_gaussian": 0.2,
+    "weight_zone_gate": 0.2,
+    "weight_rr": 0.2,
+    "conflict_resolution_policy": "conservative",
+    "gaussian_weight": 0.6,
+    "neural_weight": 0.4,
+    "llm_weight": 0.2,
+    "llm_lower_band": 0.45,
+    "llm_upper_band": 0.65,
+    "enable_llm": true,
+    "tier_full": 0.75,
+    "tier_half": 0.6,
+    "tier_quarter": 0.5,
+    "_comment_consensus": "T-22 (2026-07-19): declared because engine_runner previously read these via .get(key, literal) while its six neighbouring fusion keys used the strict _cfg_require -- an inconsistency in a single constructor call. Values equal the prior code defaults AND the FusionConfig dataclass defaults (fusion_engine.py:172-173) AND the consensus_sweep baseline, so declaring them is behaviour-neutral. NOTE the consensus gate itself is dormant on the decision path; scripts/analysis/consensus_sweep.py injects these via a get_prod_section monkeypatch, so they are NOT dead keys.",
+    "min_consensus_signals": 2,
+    "min_consensus_agreement": 0.6
+  },
+  "decision_engine": {
+    "score_threshold": 0.45,
+    "p_win_threshold": 0.4,
+    "rr_threshold": 1.5,
+    "weak_component_threshold": 0.4,
+    "weak_link_weight": 0.3,
+    "threshold_percentile": 85,
+    "threshold_min": 0.45,
+    "threshold_max": 0.65
+  },
+  "regime_governor": {
+    "max_trades_per_batch": 3,
+    "regime_penalty": {
+      "trend": 0.0,
+      "range": 0.15,
+      "neutral": 0.15
+    },
+    "regime_accept_percentile": {
+      "trend": 0.75,
+      "range": 0.9,
+      "neutral": 0.92
+    },
+    "direction_penalty": 0.1,
+    "fallback_threshold": 0.45,
+    "window_min_samples": 10,
+    "window_maxlen": 100
+  },
+  "convergence_controller": {
+    "warmup_bars": 10,
+    "thresh_min": 0.3,
+    "thresh_max": 0.9,
+    "thresh_step": 0.02,
+    "accept_rate_high": 0.3,
+    "accept_rate_low": 0.1,
+    "abs_quality_floor": 0.3,
+    "sig_k": 8.0,
+    "sig_t": 0.6,
+    "penalty_sig_k": 8.0,
+    "penalty_sig_t": 0.5
+  },
+  "acceptance_controller": {
+    "theta_min": 0.5,
+    "theta_max": 0.95,
+    "min_history": 10,
+    "fusion_percentile": 85,
+    "_comment_integral": "T-22 (2026-07-19): the five integral-control params below were LIVE but UNDECLARED -- AcceptanceController.from_prod_config enforced only the four keys above, so __init__ fell back to code literals for these and the adaptive acceptance threshold ran on numbers absent from this config (invisible to config_reachability and to the config hash). Values here EQUAL the prior code defaults exactly, so declaring them is behaviour-neutral.",
+    "acceptance_alpha": 0.01,
+    "acceptance_target_low": 0.05,
+    "acceptance_target_high": 0.15,
+    "acceptance_k_sigma": 1.0,
+    "acceptance_window": 200
+  },
+  "validation_summary": {
+    "config_id": "v2_multi_2026_04_candidate_1",
+    "final_score": 0.5966,
+    "mean_score": 0.5966,
+    "consistency_penalty": 0.0,
+    "score_std_dev": 0.0,
+    "total_trades": 36,
+    "max_drawdown": 0.0806,
+    "instruments": [
+      "EURUSD"
+    ],
+    "per_instrument": {
+      "EURUSD": {
+        "score": 0.5966,
+        "trades": 36,
+        "win_rate": 0.5556,
+        "expectancy_rr": -0.0034,
+        "max_drawdown": 0.0806,
+        "total_pnl_rr": -0.1218,
+        "error": null
+      }
+    },
+    "warnings": [
+      "EURUSD: low trade count (36) -- sample may be marginal."
+    ]
+  },
+  "crt_engine": {
+    "score_decay_lambda": 0.05,
+    "max_spread_pct": 0.05,
+    "atr_period": 14,
+    "atr_buffer_multiplier": 3,
+    "max_sweep_age_candles": 20,
+    "atr_min_displacement": 1.2,
+    "confirmation_body_min": 0.6,
+    "sl_atr_buffer": 0.2,
+    "tp1_atr_multiplier": 1.0,
+    "tp2_atr_multiplier": 2.0,
+    "tp1_atr_multiplier_breakout": 1.5,
+    "tp1_atr_multiplier_pullback": 0.8,
+    "tp1_atr_multiplier_liq_sweep": 1.2,
+    "tp1_atr_multiplier_reversal": 1.0,
+    "bitnet_main_threshold": 0.55,
+    "news_blackout_minutes": 15,
+    "retrace_reset_pct": 0.5,
+    "conf_alpha": 0.7,
+    "conf_beta": 0.3,
+    "conf_weights": [
+      0.35,
+      0.35,
+      0.15,
+      0.15
+    ],
+    "conf_floor": 0.2,
+    "weak_link_weight": 0.3,
+    "ema_fast": 2,
+    "ema_slow": 5,
+    "tier_1_threshold": 0.75,
+    "tier_2_threshold": 0.3,
+    "soft_conf_max_candles": 3,
+    "sizing_bands": [
+      [
+        0.75,
+        0.01
+      ],
+      [
+        0.55,
+        0.005
+      ]
+    ],
+    "session_windows": {
+      "LONDON": [
+        "07:00",
+        "10:00"
+      ],
+      "NEWYORK": [
+        "13:00",
+        "16:00"
+      ],
+      "ASIA": [
+        "00:00",
+        "03:00"
+      ]
+    },
+    "max_displacement_strength": 2.0,
+    "breakout_disp_threshold": 1.5,
+    "exit_model": "intrabar_touch",
+    "score_threshold": 0.45,
+    "use_bitnet": false,
+    "extension_reset_fib": 1.618,
+    "pending_displacement_ttl_candles": 4,
+    "max_expansion_age_candles": 495,
+    "max_expansion_age_hours": 124,
+    "expansion_age_warn_candles": 342,
+    "shadow_advisory_only": false,
+    "shadow_age_norm_candles": 0,
+    "shadow_age_penalty_lambda": 0.0,
+    "retest_min_depth_atr_fraction": 0.1,
+    "risk_score_weights": [
+      0.35,
+      0.25,
+      0.2,
+      0.2
+    ],
+    "score_component_weights": [
+      0.35,
+      0.25,
+      0.2,
+      0.2
+    ]
+  },
+  "rr_model": {
+    "ridge_alpha": 10.0,
+    "gnb_var_smoothing": 1e-09,
+    "drift_threshold": 1.5,
+    "mahal_clip": 500.0,
+    "confidence_bypass_threshold": 0.3,
+    "min_samples": 20,
+    "dataset_min_samples": 20,
+    "score_weights": {
+      "gaussian": 0.5,
+      "ml": 0.3,
+      "confidence": 0.2
+    },
+    "model_path": "models/rr_model.json",
+    "dataset_path": "models/rr_dataset.json",
+    "confidence_gate": {
+      "mode": "legacy_scalar",
+      "p_threshold": 0.01,
+      "dof_scaled_max": 3.0
+    }
+  },
+  "gaussian_scorer": {
+    "retest_mu": 0.237,
+    "retest_s2": 0.04,
+    "body_mu": 0.847,
+    "body_s2": 0.021,
+    "disp_mu": 2.177,
+    "disp_s2": 1.196,
+    "sigmoid_k": 4.5,
+    "sigmoid_x0": 0.5,
+    "execute_p": 0.5,
+    "decay_lambda": 0.0
+  },
+  "training": {
+    "min_records_to_train": 10,
+    "min_records_recommend": 10
+  },
+  "phase5_calibration": {
+    "val_ratio": 0.3,
+    "min_val_samples": 5,
+    "min_corr": -1.0,
+    "max_cal_error": 0.25,
+    "cv_corr_std_max": 0.05,
+    "cv_n_folds": 2,
+    "require_cv_stable": false,
+    "min_p_win": 0.35
+  },
+  "tuner": {
+    "trade_count_floor": 3,
+    "trade_count_target": 50,
+    "consistency_alpha": 0.1,
+    "fitness_weights": {
+      "expectancy_rr": 0.5,
+      "win_rate": 0.2,
+      "trade_count_norm": 0.2,
+      "drawdown": 0.1
+    },
+    "llm_gate": {
+      "base_score_trigger": 0.1,
+      "hard_reject_threshold": 0.2,
+      "blend_weights": [
+        0.7,
+        0.3
+      ]
+    },
+    "phase2_min_iter": 20
+  },
+  "portfolio": {
+    "initial_capital": 100000.0,
+    "risk_pct": 0.01,
+    "slippage_atr_fraction": 0.08,
+    "warmup_candles": 100,
+    "output_dir": "results/portfolio"
+  },
+  "llama_gate": {
+    "server_url": "http://127.0.0.1:8080/completion",
+    "request_timeout": 2.0,
+    "probe_timeout": 1.0,
+    "fail_count_disable": 10,
+    "score_n_predict": 4,
+    "score_temperature": 0.0,
+    "insight_max_tokens": 300,
+    "insight_temperature": 0.3,
+    "groq_fallback_enabled": true,
+    "groq_model": "llama-3.3-70b-versatile",
+    "groq_score_max_tokens": 8,
+    "groq_score_temperature": 0.0
+  },
+  "config_validator": {
+    "min_trades_per_instrument": 10,
+    "max_drawdown_pct": 0.35,
+    "min_win_rate": 0.35,
+    "min_expectancy": -0.5,
+    "score_threshold": 0.15,
+    "max_score_std_dev": 0.3,
+    "trade_count_target": 50,
+    "warmup_candles": 30,
+    "fitness_weights": {
+      "expectancy_rr": 0.5,
+      "win_rate": 0.2,
+      "trade_count_norm": 0.2,
+      "drawdown": 0.1
+    }
+  },
+  "goal": {
+    "goal_id": "G001",
+    "enforce": false,
+    "trades_per_month": {
+      "min": 20,
+      "target": 40,
+      "max": 80
+    },
+    "avg_rr": {
+      "min": 2.0
+    },
+    "win_rate": {
+      "min": 0.35
+    },
+    "max_drawdown_pct": {
+      "max": 0.1
+    },
+    "risk_per_trade": {
+      "target": 0.005
+    },
+    "expectancy_r": {
+      "min": 0.2
+    },
+    "timeframe": {
+      "execution": "M15",
+      "structure": "H1"
+    },
+    "instruments": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "BNBUSDT"
+    ],
+    "constraints": {
+      "reaction_only": true,
+      "human_execution": true,
+      "no_prediction": true
+    }
+  },
+  "backtest": {
+    "htf_candles_per_range": 4,
+    "_comment_warmup_candles": "T-16 (2026-07-23): raised 30 -> 78 to match the feature pipeline CANONICAL warmup that FeaturePipeline.finalize() drops. DERIVED, not chosen: feature_pipeline.ma_periods[0](20) + trend_strength_window(10) - 1 + zscore_window(50) - 1, resolved by features.feature_pipeline.required_warmup_rows(). BacktestRunner refuses to start below the derived value, so this key must accompany any change to those three windows.",
+    "warmup_candles": 78,
+    "_comment_engine_gate_enabled": "F-058 resolution (2026-07-23). Declares the 4-engine fusion gate inside EngineRunner.run(). Previously read only as os.getenv(BACKTEST_ENGINE_GATE, 1) and declared nowhere, so behavior depended on an untracked .env. Config is now the authority; the env var is an explicit override that logs at WARNING on disagreement.",
+    "engine_gate_enabled": true,
+    "slippage_enabled": true,
+    "slippage_atr_fraction": 0.1,
+    "slippage_seed": 42,
+    "simulated_spread_pct": 0.0002,
+    "initial_capital": 100000.0,
+    "risk_pct_per_trade": 0.01,
+    "use_compounding": true,
+    "gap_reset_enabled": true,
+    "gap_reset_minutes": 120,
+    "event_flush_every": 100,
+    "bypass_zone_invalid": true
+  },
+  "feature_monitor": {
+    "window_size": 500,
+    "hard_drift_z": 3.0,
+    "soft_drift_z": 2.5,
+    "drift_regime_pause_enabled": true,
+    "drift_cooldown_candles": 10
+  },
+  "feature_store": {
+    "max_history": 1000
+  },
+  "feature_pipeline": {
+    "_comment": "src/features/feature_pipeline.py indicator periods. CLAUDE.md Section 6.5 exception 2026-07-18 (BEHAVIORAL, config-driven) -- scoped to rolling-window/span PERIOD NUMBERS only; geometric primitives (body_size/wick_size/body_ratio/candle_body/upper_wick/lower_wick) remain STRUCTURAL/immutable. Values below equal the prior hardcoded literals byte-for-byte (parity-proven migration).",
+    "rsi_period": 14,
+    "atr_period": 14,
+    "ma_periods": [
+      20,
+      50,
+      200
+    ],
+    "bb_period": 20,
+    "bb_std": 2.0,
+    "macd_fast": 12,
+    "macd_slow": 26,
+    "macd_signal": 9,
+    "trend_strength_window": 10,
+    "ema_fast_span": 9,
+    "ema_slow_span": 21,
+    "_comment_tier3": "TIER 3 BEHAVIORAL (2026-07-19 Phase A) -- tunable without redefining any registered identity; every target feature below has NO FM id. Values equal the prior hardcoded literals byte-for-byte.",
+    "volume_ma_window": 20,
+    "volume_spike_fixed_fallback": 1.5,
+    "rsi_overbought": 70,
+    "rsi_oversold": 30,
+    "range_size_window": 20,
+    "displacement_strong_body_mult": 0.6,
+    "retest_lookback": 10,
+    "retest_atr_band_mult": 1.0,
+    "double_sweep_window": 5,
+    "volume_spike_adaptive_window": 50,
+    "volume_spike_min_samples": 20,
+    "volume_spike_percentile": 75,
+    "_comment_tier2": "TIER 2 TUNABLE STRUCTURAL (2026-07-19 Phase A) -- config-driven, BUT each shapes a REGISTERED identity: changing one redefines that feature, requires the ontology formula to be re-synced, and invalidates trained artifacts. Not a free sweep knob. swing_window is deliberately EXCLUDED from Phase A (see Phase B).",
+    "disp_strength_clip_low": 0.0,
+    "disp_strength_clip_high": 3.0,
+    "retest_depth_clip_low": 0.0,
+    "retest_depth_clip_high": 1.0,
+    "liquidity_decay_coeff": -0.5,
+    "liquidity_nan_sentinel": 10.0,
+    "volatility_percentile_window": 200,
+    "volatility_tercile_low": 0.33,
+    "volatility_tercile_high": 0.66,
+    "zscore_window": 50,
+    "_comment_session_windows": "FM-052 v4.0 (2026-07-22, SCHEMA-V4-VECTOR-MIGRATION). REPLACES session_asia_end_hour/session_london_end_hour, which defined a 3-value hour PARTITION (0 if h<8 else 1 if h<16 else 2). Those keys are REMOVED rather than reused: silently redefining a key's meaning is the config-illusion class F-056 closed. Half-open [start, end) UTC hours, matching the old `hour < end` convention. OVERLAP (=LONDON n NEWYORK) and CLOSED (=no window) are DERIVED and deliberately NOT configurable. These are the FEATURE's windows (real market sessions); the FILTER's narrow trading bands live in CRTConfig.session_windows and are a different concept - see src/features/session_classifier.py.",
+    "_comment_v3session_probe": "ATTRIBUTION PROBE ONLY (2026-07-22) — never promoted, never referenced by ACTIVE_VERSION. Windows chosen to reproduce the v3.0 session PARTITION exactly: ASIA [0,8) LONDON [8,16) NEWYORK [16,24) leaves no hour uncovered (so CLOSED never fires) and LONDON n NEWYORK is empty (so OVERLAP never fires), making classify_session_feature identical to the retired v3 formula `0 if h<8 else (1 if h<16 else 2)`. Purpose: isolate how much of the schema-v4 ledger delta is the SESSION re-encoding versus the MACD split / candle_range rename / ZoneGate renormalization. If the spine reproduces the v3 ledger SHA under this config, the session re-encoding accounts for 100% of the delta and the other sub-changes are inert.",
+    "session_windows_utc": {
+      "ASIA": [
+        0,
+        8
+      ],
+      "LONDON": [
+        8,
+        16
+      ],
+      "NEWYORK": [
+        16,
+        24
+      ]
+    },
+    "_comment_swing": "PHASE B (2026-07-19) TUNABLE STRUCTURAL, HIGHEST BLAST RADIUS. swing_window sets BOTH the pivot half-window (rolling width 2k+1) AND the FC1-A causal publication delay (available_at = t+k) -- it determines WHEN a feature becomes knowable, not just how it is sized. It defines lookback on FM-045/046, and 6 governance/certification scripts record it as a provenance fact. Changing it invalidates every artifact certified against the old value and requires re-certification, not just a re-run.",
+    "swing_window": 2,
+    "_comment_normalization_basis": "FM-030/031 IDENTITY SELECTOR (2026-07-22, program FM-030-031-DIMENSIONAL-MIX-MIGRATION). Not a period -- it chooses WHICH registered identity ema_spread/momentum_score emit. 'atr_relative' = FM-022/FM-023, numerator / atr; because atr is close-relative (atr_14_raw/close) and the numerator is absolute price, the emitted value scales with price level (legacy == corrected * close). This is the DEFAULT and is byte-identical to the pre-2026-07-22 pipeline -- the XAUUSD freeze-pin vector SHA is its parity proof. 'atr_absolute' = FM-030/FM-031, numerator / (atr * close), scale-invariant. F-061 measured the legacy arm's decision-surface cost on crypto (detect_regime ~constant 'trend', breakout score pinned at 1.0, tanh(momentum) saturated); the corrected arm is measured via configs/production/v2_multi_dimfix_shadow_2026_07.json and carries NO production authority (CLAUDE.md 6.5).",
+    "normalization_basis": "atr_relative",
+    "_comment_session_timestamp_basis": "F-066 (2026-08-01). Selects which clock hour_of_day/session (FM-052) derive from. 'broker_local' = DEFAULT, byte-identical to every pipeline run before this key existed. See configs/production/v2_multi_2026_04.json's fuller comment for the evidence; unchanged here.",
+    "session_timestamp_basis": "broker_local"
+  },
+  "notes": "April tuner run, 3-month window",
+  "schema_version": "1.3",
+  "inout": {
+    "scanner": {
+      "allowed_symbols": [
+        "BTCUSDT",
+        "ETHUSDT"
+      ],
+      "scan_timeframes": [
+        "M1",
+        "M5"
+      ],
+      "candle_expansion_atr_mult": 1.8,
+      "volume_spike_mult": 2.0,
+      "volume_lookback": 20,
+      "min_atr_threshold": 0.0003,
+      "structure_lookback": 10,
+      "require_all_conditions": false,
+      "min_composite_score": 0.55,
+      "cooldown_seconds": 120
+    },
+    "exit": {
+      "tp1_fraction": 0.3,
+      "tp2_fraction": 0.5,
+      "runner_fraction": 0.2,
+      "tp1_rr": 1.0,
+      "tp2_rr": 2.0,
+      "sl_structure_lookback": 5,
+      "sl_atr_buffer_mult": 0.2,
+      "runner_trail_atr_mult": 2.5,
+      "p75_factor": 1.4,
+      "min_confidence_for_prob_exit": 0.2,
+      "min_prob_samples": 20,
+      "tp2_abandon_prob": 0.25,
+      "runner_extend_prob_threshold": 0.4,
+      "runner_tight_prob_threshold": 0.2,
+      "tp1_near_threshold": 0.002,
+      "high_atr_pct_skip": 0.01
+    },
+    "time": {
+      "min_time_min": 3,
+      "default_time_min": 8,
+      "max_time_min": 15
+    },
+    "risk": {
+      "max_concurrent_trades": 3,
+      "max_total_exposure_pct": 3.0,
+      "risk_per_trade_pct": 0.5,
+      "dedup_window_seconds": 300
+    },
+    "probability": {
+      "approach": "D",
+      "model_dir": "data/inout_prob_models",
+      "blend_weight": 0.6,
+      "tp1_min_prob": 0.35,
+      "tp2_min_prob": 0.3,
+      "min_confidence": 0.1,
+      "prob_blend_alpha": 0.7,
+      "auto_retrain_n": 50,
+      "min_train_records": 10
+    },
+    "db": {
+      "path": "logs/inout_trades.db",
+      "wal_mode": true,
+      "timeout": 5.0
+    },
+    "logging": {
+      "audit_log_path": "logs/inout_audit.jsonl",
+      "log_level": "INFO"
+    }
+  },
+  "capital_management": {
+    "total_capital_inr": 100000,
+    "max_risk_per_trade_pct": 0.25,
+    "max_risk_per_trade_inr": 25000,
+    "max_monthly_drawdown_pct": 0.25,
+    "max_monthly_drawdown_inr": 25000,
+    "monthly_drawdown_warn_inr": 20000,
+    "kill_switch_daily_loss_inr": 10000,
+    "usd_to_inr_rate": 84.0,
+    "pip_value_per_lot": {
+      "EURUSD": 10.0,
+      "GBPUSD": 10.0,
+      "USDJPY": 9.1,
+      "USDCHF": 10.0,
+      "AUDUSD": 10.0,
+      "USDCAD": 7.7,
+      "NZDUSD": 10.0
+    }
+  },
+  "data_ingestion": {
+    "db_url": "postgresql://localhost/tradelatest",
+    "schema": "public",
+    "ohlcv_table": "ohlcv_data",
+    "pairs": [
+      "EURUSD",
+      "GBPUSD",
+      "USDJPY",
+      "USDCHF",
+      "AUDUSD",
+      "USDCAD",
+      "NZDUSD"
+    ],
+    "timeframes": [
+      "M1",
+      "M5",
+      "M15",
+      "H1",
+      "H4",
+      "D1"
+    ],
+    "mt5_enabled": false,
+    "csv_fallback_dir": "data",
+    "batch_size": 1000,
+    "connection_timeout_sec": 10
+  },
+  "strategy_engine": {
+    "s01_crt": {
+      "min_score": 0.65,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 2.0,
+      "confidence_scale": 1.0
+    },
+    "s02_mean_reversion": {
+      "rsi_oversold": 30.0,
+      "rsi_overbought": 70.0,
+      "bb_proximity_pct": 0.002,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 1.5,
+      "min_confidence": 0.55
+    },
+    "s03_breakout": {
+      "breakout_atr_mult": 0.5,
+      "min_volume_ratio": 1.3,
+      "sl_atr_mult": 1.0,
+      "tp_rr_ratio": 2.5,
+      "min_confidence": 0.55
+    },
+    "s09_pattern_recog": {
+      "hammer_wick_mult": 2.0,
+      "engulf_body_mult": 1.1,
+      "sl_atr_mult": 1.2,
+      "tp_rr_ratio": 1.8,
+      "min_confidence": 0.5
+    },
+    "s10_trap": {
+      "trap_min_disp_strength": 0.6,
+      "reversal_body_ratio": 0.5,
+      "sl_atr_mult": 1.0,
+      "tp_rr_ratio": 2.0,
+      "min_confidence": 0.6,
+      "max_candles_since_sweep": 3
+    },
+    "s04_stat_arb": {
+      "z_entry_threshold": 1.5,
+      "z_exit_threshold": 0.5,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 1.5,
+      "min_confidence": 0.55,
+      "trend_filter": true
+    },
+    "s05_grid": {
+      "n_levels": 5,
+      "proximity_atr_mult": 0.4,
+      "sl_atr_mult": 0.8,
+      "tp_rr_ratio": 1.2,
+      "min_confidence": 0.5,
+      "min_range_atr": 3.0
+    },
+    "s06_scalping": {
+      "macd_hist_min": 2e-05,
+      "momentum_min": 0.3,
+      "sl_atr_mult": 0.5,
+      "tp_rr_ratio": 1.5,
+      "min_confidence": 0.55,
+      "session_hours_start": 7,
+      "session_hours_end": 17,
+      "max_spread_pct": 0.0003
+    },
+    "s07_news_sentiment": {
+      "news_volatility_ratio": 2.0,
+      "max_spread_pct": 0.0005,
+      "zone_strength_min": 0.55,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 1.5,
+      "min_confidence": 0.55
+    },
+    "s08_ml_ensemble": {
+      "rsi_weight": 0.2,
+      "momentum_weight": 0.25,
+      "macd_weight": 0.2,
+      "volume_weight": 0.15,
+      "trend_weight": 0.2,
+      "min_score": 0.45,
+      "sl_atr_mult": 1.5,
+      "tp_rr_ratio": 2.0,
+      "min_confidence": 0.58,
+      "bitnet_weight": 0.4,
+      "feature_weight": 0.6
+    }
+  },
+  "dataset_integrity": {
+    "canonical_data_roots": [
+      "data"
+    ],
+    "path_pattern": "{symbol}_{timeframe}.csv",
+    "enforce_path_consistency": true,
+    "max_missing_pct": 0.02,
+    "max_single_gap_candles": 100,
+    "max_gap_span_minutes": 1440,
+    "default_bar_minutes": 15,
+    "future_ts_tolerance_minutes": 0,
+    "write_fingerprint_report": true,
+    "duplicate_resolution_mode": "reject_all",
+    "strict_fetch": {
+      "_doc": "Zero-tolerance override (passed as cfg_override to validate_dataset by scripts/data/fetch_and_verify_mt5.py). Any TRADABLE missing bar (session-aware: weekends/rollover/holidays excluded) hard-stops the freshly-fetched file. Genuine mid-session holes are corruption and abort; legitimate closures are non-tradable and pass. tradability_mode=autoderive LEARNS each provider's real session from the data's modal weekly presence (so any broker's no-Sunday/no-break/shifted-open calendar self-calibrates); holidays still need the reviewed session_calendar.holidays list.",
+      "max_missing_pct": 0.0,
+      "max_single_gap_candles": 0,
+      "max_gap_span_minutes": 0,
+      "tradability_mode": "autoderive",
+      "autoderive_presence_min": 0.5
+    },
+    "session_calendar": {
+      "crypto_quote_suffixes": [
+        "USDT",
+        "USDC",
+        "BUSD"
+      ],
+      "metals_prefixes": [
+        "XAU",
+        "XAG",
+        "XPT",
+        "XPD"
+      ],
+      "weekday_open_hour": 22,
+      "weekday_open_weekday": 6,
+      "weekday_close_hour": 21,
+      "weekday_close_weekday": 4,
+      "weekday_daily_break_hours": [
+        21
+      ],
+      "_holidays_doc": "Reviewed market-closure dates (UTC) surfaced by the strict autoderive gate on IC-Markets FX+metals data 2026-06-26. Union of FX (Christmas/New Year) + XAUUSD US-market calendar (Memorial/Juneteenth/Jul4/Labor/Thanksgiving/MLK/Presidents/Good-Friday/Christmas-Eve). Applied to ALL symbols (over-marking a date a symbol DID trade is harmless: present bars on a holiday are extra, never 'missing'). DELIBERATELY EXCLUDES intraday micro-gaps (e.g. 2026-03-25, 2026-04-01, 2025-06-02, 2025-07-30) which are genuine 5-7 bar feed holes, NOT closures, and must keep hard-stopping per the zero-tolerance rule.",
+      "holidays": [
+        "2024-05-27",
+        "2024-06-19",
+        "2024-07-04",
+        "2024-09-02",
+        "2024-11-28",
+        "2024-11-29",
+        "2024-12-24",
+        "2024-12-25",
+        "2025-01-01",
+        "2025-01-20",
+        "2025-02-17",
+        "2025-04-18",
+        "2025-05-26",
+        "2025-06-19",
+        "2025-07-04",
+        "2025-09-01",
+        "2025-11-27",
+        "2025-11-28",
+        "2025-12-24",
+        "2025-12-25",
+        "2026-01-01",
+        "2026-01-19",
+        "2026-02-16",
+        "2026-04-03",
+        "2026-07-04"
+      ],
+      "_known_gaps_doc": "Reviewed, timestamp-RANGE accept-list for genuine intraday broker feed outages (a few bars) that are NOT full-day closures — so the good bars that day are kept (unlike whole-day holidays). Each entry: {symbol?(optional; omit=all), from, to (half-open UTC ISO), reason}. A bar inside any applicable range is treated as non-tradable (accepted). EMPTY DEFAULT = byte-parity; entries are added ONLY by reviewed decision after the strict gate surfaces a hole confirmed to be a broker outage (not corruption). Populated 2026-07-02 from the IC-Markets bulk-fetch review: broker-wide multi-symbol windows are global; single-symbol holes are scoped; XAUUSD 2026-05-25/06-19 are US-holiday early-closes (gold) not yet in the holidays list.",
+      "known_gaps": [
+        {
+          "symbol": "EURCAD",
+          "from": "2025-06-02T00:00:00",
+          "to": "2025-06-02T00:05:00",
+          "reason": "broker feed outage 2025-06-02 (EURCAD), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "AUDUSD",
+          "from": "2025-07-30T20:15:00",
+          "to": "2025-07-30T21:20:00",
+          "reason": "broker feed outage 2025-07-30 (AUDUSD), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "EURCAD",
+          "from": "2025-11-10T00:00:00",
+          "to": "2025-11-10T00:05:00",
+          "reason": "broker feed outage 2025-11-10 (EURCAD), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "AUDUSD",
+          "from": "2025-11-12T17:15:00",
+          "to": "2025-11-12T17:25:00",
+          "reason": "broker feed outage 2025-11-12 (AUDUSD), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "EURCAD",
+          "from": "2025-11-17T00:00:00",
+          "to": "2025-11-17T00:05:00",
+          "reason": "broker feed outage 2025-11-17 (EURCAD), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "GBPUSD",
+          "from": "2025-12-22T00:00:00",
+          "to": "2025-12-22T00:05:00",
+          "reason": "broker feed outage 2025-12-22 (GBPUSD), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "EURCAD",
+          "from": "2025-12-29T00:00:00",
+          "to": "2025-12-29T00:05:00",
+          "reason": "broker feed outage 2025-12-29 (EURCAD), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-03-25T16:10:00",
+          "to": "2026-03-25T17:35:00",
+          "reason": "broker-wide feed outage 2026-03-25 (4 syms), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-04-01T00:00:00",
+          "to": "2026-04-01T08:35:00",
+          "reason": "broker-wide feed outage 2026-04-01 (5 syms), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-04-22T09:55:00",
+          "to": "2026-04-22T10:05:00",
+          "reason": "broker-wide feed outage 2026-04-22 (5 syms), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-05-01T00:35:00",
+          "to": "2026-05-01T00:40:00",
+          "reason": "broker-wide feed outage 2026-05-01 (4 syms), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "XAUUSD",
+          "from": "2026-05-25T21:30:00",
+          "to": "2026-05-26T00:00:00",
+          "reason": "XAUUSD US-holiday early-close 2026-05-25 (Memorial Day), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-05-26T19:45:00",
+          "to": "2026-05-26T19:50:00",
+          "reason": "broker-wide feed outage 2026-05-26 (5 syms), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-06-15T12:15:00",
+          "to": "2026-06-15T12:35:00",
+          "reason": "broker-wide feed outage 2026-06-15 (6 syms), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "XAUUSD",
+          "from": "2026-06-19T20:00:00",
+          "to": "2026-06-20T00:00:00",
+          "reason": "XAUUSD US-holiday early-close 2026-06-19 (Juneteenth), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-06-29T08:05:00",
+          "to": "2026-06-29T10:05:00",
+          "reason": "broker-wide feed outage 2026-06-29 (6 syms), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-07-01T00:35:00",
+          "to": "2026-07-01T00:40:00",
+          "reason": "broker-wide feed outage 2026-07-01 (5 syms), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "XAUUSD",
+          "from": "2026-07-03T20:00:00",
+          "to": "2026-07-06T01:00:00",
+          "reason": "XAUUSD Jul-4-holiday early-close through weekend reopen, reviewed 2026-07-07"
+        }
+      ]
+    }
+  },
+  "live_integration": {
+    "telegram": {
+      "enabled": false,
+      "bot_token": "",
+      "chat_id": "",
+      "timeout_s": 5,
+      "dry_run": true
+    },
+    "mt5": {
+      "enabled": false,
+      "server": "",
+      "login": 0,
+      "password": "",
+      "lot_min": 0.01,
+      "lot_max": 10.0,
+      "dry_run": true
+    }
+  },
+  "uat": {
+    "kill_switch": {
+      "loss_threshold_r": 5.0,
+      "window_trades": 10,
+      "enabled": true,
+      "persist_path": "logs/kill_switch_state.json"
+    },
+    "monte_carlo": {
+      "n_simulations": 1000,
+      "initial_capital_inr": 100000.0,
+      "ruin_threshold_pct": 0.5,
+      "random_seed": 42
+    }
+  },
+  "perp_funding_data": {
+    "base_url": "https://fapi.binance.com",
+    "instruments": [
+      "BNBUSDT",
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT",
+      "XRPUSDT",
+      "DOGEUSDT"
+    ],
+    "funding_path": "/fapi/v1/fundingRate",
+    "basis_path": "/fapi/v1/premiumIndexKlines",
+    "interval": "15m",
+    "request_timeout_s": 30,
+    "request_delay_s": 0.2,
+    "max_limit": 1000,
+    "out_dir": "data/perp"
+  },
+  "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613",
+  "market_router": {
+    "_comment": "Config-driven market_router (target-strategy-architecture.md sec13 item1 / F-057, 2026-07-29). classes = the 5-key CRT profile per market class (byte-identical seed from the prior market_router.py FOREX_CONFIG/CRYPTO_CONFIG literals). symbol_map = instrument -> class, consulted by classify_market()/get_crt_config() with a leading-symbol-token fallback for filename-derived instrument hints (e.g. XAUUSD_M15). Unmapped instruments raise UnknownInstrumentError -- no safe default.",
+    "classes": {
+      "CRYPTO": {
+        "retest_depth_max": 0.25,
+        "retest_atr_depth_fraction": 0.3,
+        "body_ratio_min": 0.5,
+        "atr_multiplier_min": 1.0,
+        "expansion_atr_min_distance": 0.15
+      },
+      "FOREX": {
+        "retest_depth_max": 0.35,
+        "retest_atr_depth_fraction": 0.5,
+        "body_ratio_min": 0.6,
+        "atr_multiplier_min": 1.5,
+        "expansion_atr_min_distance": 0.08
+      }
+    },
+    "symbol_map": {
+      "EURUSD": "FOREX",
+      "GBPUSD": "FOREX",
+      "USDJPY": "FOREX",
+      "AUDUSD": "FOREX",
+      "NZDUSD": "FOREX",
+      "USDCHF": "FOREX",
+      "XAUUSD": "FOREX",
+      "BTCUSDT": "CRYPTO",
+      "ETHUSDT": "CRYPTO",
+      "BNBUSDT": "CRYPTO",
+      "SOLUSDT": "CRYPTO",
+      "ADAUSDT": "CRYPTO",
+      "EURCAD": "FOREX",
+      "EURGBP": "FOREX",
+      "USDCAD": "FOREX",
+      "DOGEUSDT": "CRYPTO",
+      "XRPUSDT": "CRYPTO"
+    }
+  }
+}

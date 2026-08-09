@@ -1,0 +1,81 @@
+{
+  "A": {
+    "name": "PRESERVE_CURRENT_CRT_AND_RECALIBRATE_POLICY",
+    "verdict": "REJECT_AS_PRIMARY",
+    "benefits": [
+      "low migration cost",
+      "uses existing HOW config surface",
+      "reversible knobs"
+    ],
+    "costs": [
+      "leaves dual WHAT implementation",
+      "single-candidate monopolization intact",
+      "does not create continuous state observation"
+    ],
+    "authority_consistency": "HOW-only; does not resolve MARKET_MATH_LEAK_INTO_WHO",
+    "evidence_for": "geometry fails active; instrument transfer EURUSD\u2192XAUUSD possible",
+    "evidence_against": "HTF reset 3323/3433; 0 TTL expiry; architectural not only parametric collapse",
+    "reversibility": "HIGH for knobs",
+    "score_summary": "Valid later HOW workstream; insufficient as architecture-governing next phase"
+  },
+  "B": {
+    "name": "PRESERVE_CRT_LIFECYCLE_AND_ADD_CONCURRENT_CANDIDATES",
+    "verdict": "REJECT_AS_PRIMARY",
+    "benefits": [
+      "attacks single-candidate suppression directly",
+      "may raise opportunity throughput"
+    ],
+    "costs": [
+      "BEHAVIOR_CHANGE on CRT CLOSED surface",
+      "complexity explosion",
+      "still leaves CRT-local WHAT split"
+    ],
+    "authority_consistency": "requires CRT reopen/careful lifecycle redesign",
+    "evidence_for": "singular _active_candidate; long expansion dwell",
+    "evidence_against": "does not create governed continuous market state; premature without shadow observation layer",
+    "reversibility": "MEDIUM-LOW",
+    "score_summary": "Conditional future after C shadow proves measurement need"
+  },
+  "C": {
+    "name": "SEPARATE_CONTINUOUS_MARKET_STATE_OBSERVATION_FROM_CRT_OPPORTUNITY_LIFECYCLE",
+    "verdict": "SELECT",
+    "benefits": [
+      "matches proven dual-path executable reality",
+      "preserves CRT CLOSED as opportunity lifecycle",
+      "enables governed WHAT \u2192 interpretation without forcing CRT cutover",
+      "supports shadow comparison",
+      "aligns MSIP correction"
+    ],
+    "costs": [
+      "no immediate trade-count lift",
+      "design work before behavior change"
+    ],
+    "authority_consistency": "respects non-transitive closure; no silent production authority",
+    "evidence_for": "baseline CRT\u226038-vector; funnel ownership collapse; WHAT/HOW/WHO map",
+    "evidence_against": "none decisive; residual parity questions are implementation details",
+    "reversibility": "HIGH (shadow first)",
+    "score_summary": "Best next governing architecture"
+  },
+  "D": {
+    "name": "REPLACE_CRT_STATE_MACHINE_ARCHITECTURE",
+    "verdict": "REJECT",
+    "benefits": [
+      "clean slate"
+    ],
+    "costs": [
+      "reopens CRT CLOSED",
+      "destroys lifecycle evidence base",
+      "highest risk"
+    ],
+    "authority_consistency": "D requires explicit CRT-boundary reopen authority and new evidence; CLOSED does not make replacement permanently impossible",
+    "evidence_for": "none requiring replacement",
+    "evidence_against": "CRT valid as opportunity SM; problem is boundary separation not SM existence",
+    "reversibility": "LOW",
+    "score_summary": "Unjustified now; not permanently forbidden"
+  },
+  "E": {
+    "name": "HYBRID",
+    "verdict": "NOT_REQUIRED_AS_PRIMARY_LABEL",
+    "note": "C may later sequence A/B as conditional phases; primary decision remains C"
+  }
+}

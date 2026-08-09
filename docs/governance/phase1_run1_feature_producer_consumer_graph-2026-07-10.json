@@ -1,0 +1,1100 @@
+{
+  "known_producers": [
+    {
+      "path": "src/features/feature_pipeline.py",
+      "role": "PRIMARY_BATCH_PRODUCER",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "src/features/candle_math.py",
+      "role": "PRIMITIVE_MATH",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "src/features/derived_math.py",
+      "role": "DERIVED_MATH",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "src/features/dataset_builder.py",
+      "role": "TRADE_EVENT_VECTOR",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "src/features/crt_feature_builder.py",
+      "role": "CRT_FEATURE_BUILDER",
+      "status": "PARTIAL_UNKNOWN_CALLSITES"
+    },
+    {
+      "path": "src/config_layer/crt_engine_v2.py",
+      "role": "CRT_STATE_CACHED_FEATURES",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "src/engines/heuristic_gaussian_engine.py",
+      "role": "GAUSSIAN_LIVE_3",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "src/engines/zone_gate_engine.py",
+      "role": "ZONE_SCORE",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "src/engines/rr_engine.py",
+      "role": "RR_POLARITY",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "src/runtime/backtest_v2.py",
+      "role": "BACKTEST_PIPELINE_CONSUMER_PRODUCER",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "src/runtime/live_engine_hook.py",
+      "role": "LIVE_HOOK",
+      "status": "REACHABLE_PARITY_UNKNOWN"
+    },
+    {
+      "path": "src/engines/live_engine.py",
+      "role": "LIVE_ENGINE",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "src/research/indicators.py",
+      "role": "RESEARCH_INDICATORS",
+      "status": "RESEARCH"
+    },
+    {
+      "path": "src/research/secondlow_v1",
+      "role": "SECONDLOW",
+      "status": "RESEARCH"
+    },
+    {
+      "path": "src/interpreters",
+      "role": "REGIME_INTERPRETERS",
+      "status": "RESEARCH"
+    }
+  ],
+  "known_consumers": [
+    {
+      "path": "src/core/engine_runner.py",
+      "role": "FUSION_ORCHESTRATOR",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "src/runtime/backtest_v2.py",
+      "role": "BACKTEST",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "src/engines/crt_engine.py",
+      "role": "CRT_SCORE_WRAPPER",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "src/engines/live_engine.py",
+      "role": "BITNET_GATE_CONSUMER",
+      "status": "REACHABLE_INACTIVE_BITNET"
+    },
+    {
+      "path": "src/features/feature_monitor.py",
+      "role": "DRIFT_MONITOR",
+      "status": "REACHABLE"
+    },
+    {
+      "path": "scripts/research/*",
+      "role": "RESEARCH_SCRIPTS",
+      "status": "MANY_PATHS"
+    },
+    {
+      "path": "models/*",
+      "role": "TRAINED_ARTIFACTS",
+      "status": "ARTIFACT_BINDING_UNKNOWN_RUN1"
+    }
+  ],
+  "column_write_sites": {
+    "atr": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 88
+      },
+      {
+        "file": "src/features/feature_builder.py",
+        "lineno": 64
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 468
+      },
+      {
+        "file": "src/config_layer/crt_engine_v2.py",
+        "lineno": 1737
+      },
+      {
+        "file": "src/config_layer/crt_engine_v2.py",
+        "lineno": 1806
+      },
+      {
+        "file": "src/runtime/backtest_v2.py",
+        "lineno": 2172
+      },
+      {
+        "file": "src/research/secondlow_v1/detector.py",
+        "lineno": 136
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 165
+      },
+      {
+        "file": "scripts/research/gaussian_rr_scatter.py",
+        "lineno": 57
+      },
+      {
+        "file": "scripts/research/live_path_replay.py",
+        "lineno": 133
+      },
+      {
+        "file": "scripts/research/momentum_continuation_bnbusdt.py",
+        "lineno": 168
+      },
+      {
+        "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+        "lineno": 87
+      },
+      {
+        "file": "scripts/analysis/purge_delay_scan.py",
+        "lineno": 122
+      }
+    ],
+    "atr_100": [
+      {
+        "file": "src/research/secondlow_v1/depth_metrics.py",
+        "lineno": 50
+      },
+      {
+        "file": "src/research/secondlow_v1/regime_metrics.py",
+        "lineno": 38
+      }
+    ],
+    "atr_14": [
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 268
+      },
+      {
+        "file": "src/research/secondlow_v1/depth_metrics.py",
+        "lineno": 49
+      },
+      {
+        "file": "src/research/secondlow_v1/regime_metrics.py",
+        "lineno": 37
+      }
+    ],
+    "atr_14_raw": [
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 267
+      },
+      {
+        "file": "tests/test_derived_math.py",
+        "lineno": 45
+      }
+    ],
+    "atr_200": [
+      {
+        "file": "src/research/secondlow_v1/regime_metrics.py",
+        "lineno": 39
+      }
+    ],
+    "atr_p70_threshold_200": [
+      {
+        "file": "src/research/secondlow_v1/regime_metrics.py",
+        "lineno": 44
+      }
+    ],
+    "atr_pct": [
+      {
+        "file": "scripts/research/momentum_continuation_bnbusdt.py",
+        "lineno": 169
+      }
+    ],
+    "atr_pctile": [
+      {
+        "file": "scripts/analysis/purge_delay_scan.py",
+        "lineno": 124
+      },
+      {
+        "file": "scripts/analysis/purge_delay_scan.py",
+        "lineno": 639
+      }
+    ],
+    "atr_percentile_proxy": [
+      {
+        "file": "src/research/secondlow_v1/regime_metrics.py",
+        "lineno": 45
+      }
+    ],
+    "atr_t__sign_next": [
+      {
+        "file": "src/research/process_diagnostics.py",
+        "lineno": 295
+      }
+    ],
+    "atr_tercile": [
+      {
+        "file": "scripts/analysis/purge_slice.py",
+        "lineno": 66
+      }
+    ],
+    "body_ratio": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 125
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 452
+      },
+      {
+        "file": "src/config_layer/rr/rr_fusion.py",
+        "lineno": 178
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 170
+      },
+      {
+        "file": "scripts/research/live_path_replay.py",
+        "lineno": 137
+      },
+      {
+        "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+        "lineno": 83
+      }
+    ],
+    "body_size": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 123
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 449
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 168
+      }
+    ],
+    "break_of_structure": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 104
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 404
+      }
+    ],
+    "candles_since_retest": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 161
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 599
+      },
+      {
+        "file": "src/config_layer/crt_engine_v2.py",
+        "lineno": 1738
+      },
+      {
+        "file": "src/config_layer/crt_engine_v2.py",
+        "lineno": 1807
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 174
+      },
+      {
+        "file": "scripts/research/live_path_replay.py",
+        "lineno": 142
+      }
+    ],
+    "close": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 57
+      },
+      {
+        "file": "src/runtime/backtest_v2.py",
+        "lineno": 2171
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 156
+      },
+      {
+        "file": "scripts/research/gaussian_rr_scatter.py",
+        "lineno": 52
+      },
+      {
+        "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+        "lineno": 85
+      },
+      {
+        "file": "tests/test_backtest_payload_integrity.py",
+        "lineno": 10
+      }
+    ],
+    "confidence": [
+      {
+        "file": "src/engines/live_engine.py",
+        "lineno": 812
+      }
+    ],
+    "disp_htf_pos": [
+      {
+        "file": "src/config_layer/crt_engine_v2.py",
+        "lineno": 802
+      }
+    ],
+    "disp_htf_remaining": [
+      {
+        "file": "src/config_layer/crt_engine_v2.py",
+        "lineno": 803
+      }
+    ],
+    "disp_strength": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 159
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 565
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 570
+      },
+      {
+        "file": "src/config_layer/crt_engine_v2.py",
+        "lineno": 1745
+      },
+      {
+        "file": "src/config_layer/crt_engine_v2.py",
+        "lineno": 1814
+      },
+      {
+        "file": "src/config_layer/rr/rr_fusion.py",
+        "lineno": 179
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 172
+      },
+      {
+        "file": "scripts/research/live_path_replay.py",
+        "lineno": 138
+      }
+    ],
+    "displacement_flag": [
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 524
+      }
+    ],
+    "double_sweep": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 64
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 557
+      },
+      {
+        "file": "src/core/feature_store.py",
+        "lineno": 83
+      },
+      {
+        "file": "src/core/feature_store.py",
+        "lineno": 129
+      },
+      {
+        "file": "src/core/feature_store.py",
+        "lineno": 131
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 177
+      },
+      {
+        "file": "scripts/research/live_path_replay.py",
+        "lineno": 141
+      }
+    ],
+    "ema20": [
+      {
+        "file": "scripts/research/momentum_continuation_bnbusdt.py",
+        "lineno": 145
+      }
+    ],
+    "ema20_slope": [
+      {
+        "file": "scripts/research/momentum_continuation_bnbusdt.py",
+        "lineno": 151
+      }
+    ],
+    "ema20_slope_pct": [
+      {
+        "file": "scripts/research/momentum_continuation_bnbusdt.py",
+        "lineno": 152
+      }
+    ],
+    "ema_fast": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 69
+      },
+      {
+        "file": "src/features/feature_builder.py",
+        "lineno": 65
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 492
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 159
+      },
+      {
+        "file": "scripts/research/gaussian_rr_scatter.py",
+        "lineno": 54
+      },
+      {
+        "file": "scripts/research/live_path_replay.py",
+        "lineno": 134
+      },
+      {
+        "file": "tests/test_gaussian_impl_switch.py",
+        "lineno": 21
+      }
+    ],
+    "ema_slow": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 70
+      },
+      {
+        "file": "src/features/feature_builder.py",
+        "lineno": 66
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 493
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 160
+      },
+      {
+        "file": "scripts/research/gaussian_rr_scatter.py",
+        "lineno": 55
+      },
+      {
+        "file": "scripts/research/live_path_replay.py",
+        "lineno": 135
+      },
+      {
+        "file": "tests/test_gaussian_impl_switch.py",
+        "lineno": 22
+      }
+    ],
+    "ema_spread": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 71
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 497
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 161
+      }
+    ],
+    "gaussian_score": [
+      {
+        "file": "src/engines/live_engine.py",
+        "lineno": 833
+      },
+      {
+        "file": "src/core/engine_runner.py",
+        "lineno": 699
+      }
+    ],
+    "high": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 55
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 154
+      },
+      {
+        "file": "scripts/research/gaussian_rr_scatter.py",
+        "lineno": 50
+      },
+      {
+        "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+        "lineno": 85
+      },
+      {
+        "file": "scripts/analysis/feature_semantic_adjudication_pass_a.py",
+        "lineno": 157
+      }
+    ],
+    "higher_high": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 111
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 393
+      }
+    ],
+    "hour_of_day": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 154
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 338
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 142
+      }
+    ],
+    "last_swing_high_price": [
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 373
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 386
+      }
+    ],
+    "last_swing_low_price": [
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 374
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 387
+      }
+    ],
+    "liquidity_distance": [
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 651
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 175
+      }
+    ],
+    "liquidity_pressure_score": [
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 654
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 176
+      }
+    ],
+    "liquidity_sweep": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 103
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 412
+      }
+    ],
+    "low": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 56
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 155
+      },
+      {
+        "file": "scripts/research/gaussian_rr_scatter.py",
+        "lineno": 51
+      },
+      {
+        "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+        "lineno": 86
+      },
+      {
+        "file": "scripts/analysis/feature_semantic_adjudication_pass_a.py",
+        "lineno": 158
+      }
+    ],
+    "lower_low": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 112
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 395
+      }
+    ],
+    "lower_wick": [
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 187
+      }
+    ],
+    "macd_hist": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 97
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 283
+      }
+    ],
+    "macd_line": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 95
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 281
+      }
+    ],
+    "macd_signal": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 96
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 282
+      }
+    ],
+    "momentum_score": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 83
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 503
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 164
+      },
+      {
+        "file": "scripts/research/gaussian_rr_scatter.py",
+        "lineno": 56
+      },
+      {
+        "file": "tests/test_gaussian_impl_switch.py",
+        "lineno": 23
+      }
+    ],
+    "open": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 54
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 153
+      },
+      {
+        "file": "scripts/research/gaussian_rr_scatter.py",
+        "lineno": 49
+      },
+      {
+        "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+        "lineno": 86
+      }
+    ],
+    "retest_depth": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 160
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 579
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 584
+      },
+      {
+        "file": "src/config_layer/crt_engine_v2.py",
+        "lineno": 1744
+      },
+      {
+        "file": "src/config_layer/crt_engine_v2.py",
+        "lineno": 1813
+      },
+      {
+        "file": "src/config_layer/rr/rr_fusion.py",
+        "lineno": 177
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 173
+      },
+      {
+        "file": "scripts/research/live_path_replay.py",
+        "lineno": 136
+      }
+    ],
+    "retest_flag": [
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 541
+      },
+      {
+        "file": "tests/test_derived_math.py",
+        "lineno": 48
+      }
+    ],
+    "rr_ratio": [
+      {
+        "file": "src/runtime/live_engine_hook.py",
+        "lineno": 738
+      },
+      {
+        "file": "scripts/research/live_path_replay.py",
+        "lineno": 543
+      }
+    ],
+    "rsi_14": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 94
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 255
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 167
+      },
+      {
+        "file": "scripts/research/momentum_continuation_bnbusdt.py",
+        "lineno": 185
+      }
+    ],
+    "session": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 138
+      },
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 141
+      },
+      {
+        "file": "src/features/feature_builder.py",
+        "lineno": 72
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 343
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 695
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 140
+      },
+      {
+        "file": "scripts/research/momentum_continuation_bnbusdt.py",
+        "lineno": 205
+      },
+      {
+        "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+        "lineno": 89
+      }
+    ],
+    "sweep_detected": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 102
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 521
+      },
+      {
+        "file": "scripts/research/live_path_replay.py",
+        "lineno": 140
+      }
+    ],
+    "swing_high": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 109
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 362
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 384
+      }
+    ],
+    "swing_low": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 110
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 364
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 385
+      }
+    ],
+    "trend_bias": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 77
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 512
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 162
+      }
+    ],
+    "trend_strength": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 78
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 296
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 163
+      },
+      {
+        "file": "scripts/research/momentum_continuation_bnbusdt.py",
+        "lineno": 188
+      }
+    ],
+    "true_range": [
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 266
+      }
+    ],
+    "upper_wick": [
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 186
+      }
+    ],
+    "volatility_ratio": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 89
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 482
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 166
+      }
+    ],
+    "volatility_regime": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 130
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 323
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 171
+      }
+    ],
+    "volume": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 58
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 216
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 157
+      },
+      {
+        "file": "scripts/research/gaussian_rr_scatter.py",
+        "lineno": 53
+      },
+      {
+        "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+        "lineno": 87
+      },
+      {
+        "file": "scripts/analysis/feature_semantic_adjudication_pass_a.py",
+        "lineno": 312
+      },
+      {
+        "file": "scripts/analysis/purge_delay_scan.py",
+        "lineno": 63
+      },
+      {
+        "file": "tests/test_backtest_payload_integrity.py",
+        "lineno": 11
+      },
+      {
+        "file": "tests/test_feature_pipeline.py",
+        "lineno": 60
+      }
+    ],
+    "volume_ema20": [
+      {
+        "file": "scripts/research/momentum_continuation_bnbusdt.py",
+        "lineno": 172
+      }
+    ],
+    "volume_ma20": [
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 217
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 224
+      },
+      {
+        "file": "scripts/research/live_path_replay.py",
+        "lineno": 151
+      }
+    ],
+    "volume_ratio": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 63
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 218
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 225
+      },
+      {
+        "file": "src/core/feature_store.py",
+        "lineno": 81
+      },
+      {
+        "file": "src/core/feature_store.py",
+        "lineno": 135
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 158
+      },
+      {
+        "file": "scripts/research/momentum_continuation_bnbusdt.py",
+        "lineno": 173
+      }
+    ],
+    "volume_spike": [
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 231
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 688
+      }
+    ],
+    "wick_size": [
+      {
+        "file": "src/features/crt_feature_builder.py",
+        "lineno": 124
+      },
+      {
+        "file": "src/features/feature_pipeline.py",
+        "lineno": 450
+      },
+      {
+        "file": "scripts/research/bnbusdt_enrich_trades.py",
+        "lineno": 169
+      },
+      {
+        "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+        "lineno": 84
+      }
+    ]
+  },
+  "n_featureish_column_keys": 429,
+  "_doc": "Phase 1B producer/consumer graph (discovery).",
+  "generated_at_utc": "2026-07-10T16:07:40Z",
+  "unresolved_dynamic_paths": [
+    "optional imports in live_engine_hook",
+    "config-driven strategy modules",
+    "getattr/feature dict consumers without schema verify",
+    "historical training scripts not bit-identical to HEAD",
+    "BitNet feature map only if use_bitnet true"
+  ],
+  "counts": {
+    "FEATURE_PRODUCING_PATHS_DISCOVERED": 15,
+    "FEATURE_CONSUMING_PATHS_DISCOVERED": 7,
+    "UNRESOLVED_DYNAMIC_PATHS": 5,
+    "column_keys_tracked": 65
+  }
+}

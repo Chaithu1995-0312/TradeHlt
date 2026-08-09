@@ -1,0 +1,15 @@
+{
+  "change_id": "CH-active-models-identity",
+  "status": "COMPLETE_WITH_KNOWN_RESIDUAL",
+  "completed_at": "2026-07-22",
+  "summary": "WHO identity version-binding (active_models.yaml schema 2.2) for gaussian, zone_gate, rr_model, bitnet, tradenet. CI R1–R4 in test_active_models_registry.py. No production config or EngineRunner behavior change.",
+  "checks_run": {
+    "tests/test_active_models_registry.py": "PASS (22)",
+    "tests/test_config_reachability.py": "PASS",
+    "tests/test_topic_docs.py": "PASS",
+    "tests/test_current_findings.py": "PREEXISTING_FAIL — F-059 Type 'RESEARCH' not in allowed enum; unrelated to this change (no findings/docs/current-findings.md edit)"
+  },
+  "production_behavior_changed": false,
+  "authority_granted": false,
+  "rollback": "revert active_models identity blocks + test extensions + topic Discussion line + this manifest pair"
+}

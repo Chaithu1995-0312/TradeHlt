@@ -1,0 +1,142 @@
+{
+  "_doc": "Layer-by-layer audit program manifest (Phase 1 = OHLCV Truth). Authoritative discovery of each layer's current audit artifacts and status. A layer's closure_verdict may be set to CLOSED only by a PASS-B closure report containing the literal token 'OHLCV_CLOSURE_STATUS = CLOSED' (guarded by tests/test_layer_audit_manifest.py). Do not guess latest artifacts by filename sorting - read this manifest.",
+  "schema_version": "1.0.0",
+  "generated_at_utc": "2026-07-10T15:00:00Z",
+  "layers": [
+    {
+      "layer_id": "OHLCV",
+      "layer_name": "OHLCV Truth (raw market data -> loader handoff)",
+      "phase": 1,
+      "phase_status": "PASS_B_ADJUDICATED_BLOCKED",
+      "audit_started_utc": "2026-07-10T13:09:06Z",
+      "repository_commit": "b48d4d9a7abfb429f2a17c790d4b32083da5dd92",
+      "branch": "feature/truth-registry-v2",
+      "worktree_dirty_at_freeze": true,
+      "closure_verdict": "BLOCKED:BC-1,BC-2[mt5|binance|yfinance],BC-3,BC-4,BC-5,BC-6[yfinance]",
+      "closure_report": "docs/governance/ohlcv-closure-report-2026-07-10.md",
+      "closure_timestamp_utc": "2026-07-10T13:09:06Z",
+      "output_contract": "docs/governance/ohlcv-output-contract-2026-07-10.json",
+      "remediation_slice": "R0-R2 (freeze + authority schema + XAUUSD adjudication package; no admission gate)",
+      "active_artifacts": [
+        {
+          "path": "docs/governance/phase1-backup-manifest-2026-07-10.json",
+          "sha256": "218db2a757bc013b48c52ddeca43a8428154ba50d1d3fa3d43433bfd1e6b90b9",
+          "size_bytes": 25479
+        },
+        {
+          "path": "docs/governance/ohlcv-census-2026-07-10.md",
+          "sha256": "aa672493e1da379d4376b72902c5bcb257522f25d3cde221b937d35692b70d82",
+          "size_bytes": 46807
+        },
+        {
+          "path": "docs/governance/ohlcv-corpus-fingerprint-manifest-2026-07-10.json",
+          "sha256": "5f80af49d28af5cbcdb4d43015732147d16dc6e0e635e9c4eb75d4277415c500",
+          "size_bytes": 413166
+        },
+        {
+          "path": "docs/governance/ohlcv-source-lineage-map-2026-07-10.md",
+          "sha256": "9aeba5b0e63d0cd9f0a7da7534d0925a68de96204ccebc15f7721b19756ee6be",
+          "size_bytes": 9899
+        },
+        {
+          "path": "docs/governance/ohlcv-loader-transformation-graph-2026-07-10.md",
+          "sha256": "2694552202c04c1260cf55903dbccb0801684c0a286ec1e923cbe4d8aeb1c99d",
+          "size_bytes": 9995
+        },
+        {
+          "path": "docs/governance/ohlcv-temporal-semantics-report-2026-07-10.md",
+          "sha256": "74282f0bbb3fe3ae3fd99f328cc7f9b3c3b666cb064c17123fb29e6dae131984",
+          "size_bytes": 9896
+        },
+        {
+          "path": "docs/governance/ohlcv-contradiction-report-2026-07-10.md",
+          "sha256": "a37d7547f035720fc6d33d686e52fbb52647697405fedbb38392bef5d0c33008",
+          "size_bytes": 11742
+        },
+        {
+          "path": "docs/governance/ohlcv-adversarial-test-matrix-2026-07-10.json",
+          "sha256": "a630d4bdb428d8b1f527cadfb59dbfa6c7813b86d8a9a4d39f799fcb8d5f1b63",
+          "size_bytes": 17412
+        },
+        {
+          "path": "scripts/analysis/ohlcv_census.py",
+          "sha256": "fcece7256885985c28d2e4bf9be7efabb7231eadf3a78d1de0124b79636b8b5f",
+          "size_bytes": 27219
+        },
+        {
+          "path": "docs/governance/ohlcv-closure-report-2026-07-10.md",
+          "sha256": "9bc0d0e86767101e86c9ceed3438b0b998d152133788c5cc46132188ddd144c5",
+          "size_bytes": 12023
+        },
+        {
+          "path": "docs/governance/ohlcv-output-contract-2026-07-10.json",
+          "sha256": "354270a7dca9eafe6ef152da6fe0a0a5734990c9d0f030a50a208f290b3a6683",
+          "size_bytes": 17331
+        },
+        {
+          "path": "docs/governance/ohlcv-corpus-mutation-freeze-2026-07-10.md",
+          "sha256": "ba343e6a0cbde993f455f3d6b2b04163a2007b18b1709a45544124a27d36c9bc",
+          "size_bytes": 3793
+        },
+        {
+          "path": "docs/governance/ohlcv-corpus-freeze-pin-2026-07-10.json",
+          "sha256": "d34ba0a121aad88dac5aa9419927ef21dbb68bb5234908b6792f25f45eb11c84",
+          "size_bytes": 4021
+        },
+        {
+          "path": "docs/governance/corpus_authority_decision.schema.json",
+          "sha256": "e77e00ac4848531a583899a98d4a7d7aa5d0ec94b720ce565e4e66c67a3d49ec",
+          "size_bytes": 5503
+        },
+        {
+          "path": "docs/governance/corpus_authority_decisions.jsonl",
+          "sha256": "1cdf61597599b90fd1cee9276a69ea8b52fc503294d1d0574dab34c1bafff1fd",
+          "size_bytes": 71099
+        },
+        {
+          "path": "docs/governance/CORPUS_AUTHORITY.md",
+          "sha256": "0491acf4d26e04a2c8fbb75b35510d750acbcff1c96b79437bc8144a3c4e62db",
+          "size_bytes": 3740
+        },
+        {
+          "path": "docs/governance/corpus_authority_XAUUSD_M15_adjudication-2026-07-10.md",
+          "sha256": "cd24f7cb65451cd7c68422b1970c5efac88537d77d2b261495aa63956612978c",
+          "size_bytes": 8141
+        }
+      ],
+      "unresolved_blocker_candidates": [
+        {
+          "id": "BC-1",
+          "source": "CX-OHLCV-001",
+          "summary": "9 logical corpora resolve to different bytes across families; no logical->physical resolver exists"
+        },
+        {
+          "id": "BC-2",
+          "source": "T-SEM-3",
+          "summary": "open-time labeling UNPROVEN (NARRATIVE-ONLY) for mt5/binance/yfinance acquisition families"
+        },
+        {
+          "id": "BC-3",
+          "source": "CX-OHLCV-002",
+          "summary": "canonical root crypto majors descend from the ungated yfinance family, not the strict-gated binance fetch"
+        },
+        {
+          "id": "BC-4",
+          "source": "CX-OHLCV-003",
+          "summary": "volume means 5 different quantities under one undeclared column name"
+        },
+        {
+          "id": "BC-5",
+          "source": "CX-OHLCV-004",
+          "summary": "HANDOFF-canonical data/XAUUSD_M15.csv is byte-identical to a quarantined artifact (DUP-008); silent replacement; authority decision UNRESOLVED (R2 package)"
+        },
+        {
+          "id": "BC-6",
+          "source": "T-SEM-2/T-SEM-4",
+          "summary": "yfinance timezone truth UNPROVEN; acquisition-time incomplete-bar protection UNKNOWN"
+        }
+      ],
+      "notes": "PASS A evidence frozen; PASS B adjudicated BLOCKED (see closure report + output contract). R0 freeze + R1 authority schema + R2 XAUUSD adjudication package landed; XAUUSD decision_status remains UNRESOLVED pending user Option A/B/C/D. No R3 admission gate. No economic claims."
+    }
+  ]
+}

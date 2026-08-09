@@ -1,0 +1,154 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# MARKET STORY ONTOLOGY — the semantic story layer (descriptive-only)
+# ═══════════════════════════════════════════════════════════════════════════
+# A SEPARATE authority from the feature-math WHAT layer (configs/formulas/market_ontology.yaml).
+# This file names market STORIES, FAMILIES, and semantic MARKET STATES, and maps them ONTO the
+# existing executable substrate. It NEVER modifies that substrate:
+#
+#   9 CRT runtime states  — src/config_layer/crt_engine_v2.py (CRTState + VALID_TRANSITIONS)  [UNCHANGED]
+#   38 canonical features — src/features/feature_schema.py     (CANONICAL_FEATURES)           [UNCHANGED]
+#   feature mathematics   — configs/formulas/market_ontology.yaml                             [UNCHANGED]
+#
+# AUTHORITY MODEL (§6.5 Authority Ladder): DESCRIPTIVE / VALIDATION ONLY. This ontology grants NO
+# runtime, fusion, sizing, or promotion authority. It is consumed only by the research synthetic
+# story library (src/research/synthetic/) to validate deterministic fixtures at six layers:
+#
+#   Family -> Story -> Market States -> CRT States -> Feature Signature -> Engine Signature -> Outcome
+#
+# A semantic layer may become an EXECUTABLE layer only via evidence-first promotion (demonstrated
+# G001 improvement) — never by existing in this file. Adding a story does NOT touch this ontology:
+# story geometry lives in CODE (Decision D-23), so this file changes only when the vocabulary grows.
+#
+# CRT BRIDGE RULE (mechanical invariant, enforced by tests/research/test_story_ontology.py):
+#   ONLY `structure`-layer states carry a `crt_state_map` (the CRT skeleton). Every state in every
+#   other layer is semantic-only (`crt_state_map: null`). A story's CRT path is therefore derived
+#   purely from its structure-layer phase tags — other layers enrich the description without runtime
+#   coupling. This is the seam for a future parallel-layer model (Phase B/C) with zero runtime change.
+#
+# FEATURE-NAME DISCIPLINE (enforced): every name under `feature_signature` / `key_features` MUST be a
+# member of CANONICAL_FEATURES. This mechanically rejects the historical drift names
+# `ema_long` (use ema_fast/ema_slow/ema_spread), `displacement_strength` (use disp_strength), and
+# bare `volatility` (use volatility_ratio / volatility_regime).
+
+version: 0.1                       # Phase A — 4 active families, ~12 stories, 8-layer / 38-state vocabulary
+authority: user_approved           # descriptive/validation only; grants NO runtime or promotion authority
+roadmap:
+  phase_a: "4 active families · ~12 stories · ~15 states exercised (this increment)"
+  phase_b: "8 active families · ~40 stories · deeper per-layer coverage"
+  phase_c: "12 active families · 80–120 stories · full 38-state active use; consider layer promotion (evidence-first)"
+
+# ── Engine-signature bands ──────────────────────────────────────────────────────────────────────
+# Qualitative band a produced numeric engine score must fall in. Config, not magic numbers.
+#   score engines (crt/gaussian/zone): >=high => "high"; <low => "low"; else "neutral".
+#   rr: candle POLARITY / structure-quality in [0.5, 1] — NOT trade direction (F-048).
+#        >=strong => "strong"; <weak => "weak"; else "moderate".
+engine_signature_bands:
+  crt:      {high: 0.60, low: 0.40}
+  gaussian: {high: 0.60, low: 0.40}
+  zone:     {high: 0.60, low: 0.40}
+  rr:       {strong: 0.70, weak: 0.55}
+  _semantics:
+    rr: "candle polarity / structure-quality in [0.5,1] — NOT trade direction (F-048)"
+
+# ── 8 semantic layers ───────────────────────────────────────────────────────────────────────────
+# Each market state belongs to exactly ONE layer. A story embodies a bundle of states across layers.
+layers:
+  - {id: trend,      description: "directional regime of the mean (up/down/ranging/pullback/exhaustion)"}
+  - {id: liquidity,  description: "resting-liquidity events (build-up, sweeps, stop hunts)"}
+  - {id: structure,  description: "the CRT skeleton — the ONLY layer that maps to CRT runtime states"}
+  - {id: volatility, description: "range regime (compression / expansion / spike)"}
+  - {id: pattern,    description: "classical chart patterns (flags, triangles, tops/bottoms, failed break)"}
+  - {id: momentum,   description: "rate-of-change regime (increasing / decreasing)"}
+  - {id: session,    description: "time-of-day context (london / newyork / asian / overlap)"}
+  - {id: outcome,    description: "terminal result label (target / stop / timeout)"}
+
+# ── Market states (38) — id · layer · crt_state_map · feature_signature (real 38 names only) ──────
+market_states:
+  # structure layer — the CRT skeleton (the ONLY layer with non-null crt_state_map)
+  - {id: range,               layer: structure, crt_state_map: RANGE,          feature_signature: [swing_high, swing_low, atr, volatility_regime]}
+  - {id: shadow_pending,      layer: structure, crt_state_map: SHADOW_PENDING, feature_signature: [sweep_detected, disp_strength]}
+  - {id: sweep,               layer: structure, crt_state_map: SWEEP,          feature_signature: [sweep_detected, liquidity_sweep, wick_size, body_ratio]}
+  - {id: displacement,        layer: structure, crt_state_map: DISPLACEMENT,   feature_signature: [disp_strength, body_ratio, body_size, atr, momentum_score]}
+  - {id: break_of_structure,  layer: structure, crt_state_map: DISPLACEMENT,   feature_signature: [break_of_structure, higher_high, lower_low, disp_strength]}
+  - {id: expansion,           layer: structure, crt_state_map: EXPANSION,      feature_signature: [disp_strength, atr, volatility_ratio, body_ratio]}
+  - {id: retest,              layer: structure, crt_state_map: RETEST,         feature_signature: [retest_depth, candles_since_retest, body_ratio, ema_fast]}
+  - {id: execution,           layer: structure, crt_state_map: EXECUTION,      feature_signature: [retest_depth, candles_since_retest, body_ratio, momentum_score]}
+  - {id: resolution,          layer: structure, crt_state_map: RESOLUTION,     feature_signature: [close, atr, disp_strength]}
+  - {id: expired,             layer: structure, crt_state_map: EXPIRED,        feature_signature: [candles_since_retest, atr]}
+  # trend layer (semantic-only)
+  - {id: uptrend,             layer: trend,     crt_state_map: null, feature_signature: [ema_fast, ema_slow, ema_spread, trend_strength, trend_bias, higher_high]}
+  - {id: downtrend,           layer: trend,     crt_state_map: null, feature_signature: [ema_fast, ema_slow, ema_spread, trend_strength, trend_bias, lower_low]}
+  - {id: ranging_trend,       layer: trend,     crt_state_map: null, feature_signature: [ema_spread, trend_strength, atr]}
+  - {id: trend_pullback,      layer: trend,     crt_state_map: null, feature_signature: [ema_fast, ema_slow, retest_depth, body_ratio, momentum_score]}
+  - {id: trend_exhaustion,    layer: trend,     crt_state_map: null, feature_signature: [rsi_14, momentum_score, macd_hist, trend_strength]}
+  # liquidity layer (semantic-only)
+  - {id: liquidity_buildup,   layer: liquidity, crt_state_map: null, feature_signature: [swing_high, swing_low, liquidity_pressure_score, volume_ratio]}
+  - {id: sweep_low,           layer: liquidity, crt_state_map: null, feature_signature: [liquidity_sweep, sweep_detected, swing_low, liquidity_distance, wick_size]}
+  - {id: sweep_high,          layer: liquidity, crt_state_map: null, feature_signature: [liquidity_sweep, sweep_detected, swing_high, liquidity_distance, wick_size]}
+  - {id: double_sweep,        layer: liquidity, crt_state_map: null, feature_signature: [double_sweep, liquidity_sweep, sweep_detected]}
+  - {id: stop_hunt,           layer: liquidity, crt_state_map: null, feature_signature: [liquidity_sweep, sweep_detected, wick_size, volume_spike]}
+  # volatility layer (semantic-only)
+  - {id: compression,         layer: volatility, crt_state_map: null, feature_signature: [volatility_ratio, volatility_regime, atr, body_ratio]}
+  - {id: expansion_vol,       layer: volatility, crt_state_map: null, feature_signature: [volatility_ratio, atr, disp_strength, body_size]}
+  - {id: volatility_spike,    layer: volatility, crt_state_map: null, feature_signature: [volatility_ratio, volume_spike, atr]}
+  # pattern layer (semantic-only)
+  - {id: bull_flag,           layer: pattern,   crt_state_map: null, feature_signature: [ema_fast, ema_slow, body_ratio, retest_depth, trend_strength]}
+  - {id: bear_flag,           layer: pattern,   crt_state_map: null, feature_signature: [ema_fast, ema_slow, body_ratio, retest_depth, trend_strength]}
+  - {id: ascending_triangle,  layer: pattern,   crt_state_map: null, feature_signature: [swing_high, higher_high, break_of_structure, atr]}
+  - {id: double_top,          layer: pattern,   crt_state_map: null, feature_signature: [swing_high, higher_high, rsi_14]}
+  - {id: double_bottom,       layer: pattern,   crt_state_map: null, feature_signature: [swing_low, lower_low, rsi_14]}
+  - {id: failed_breakout,     layer: pattern,   crt_state_map: null, feature_signature: [break_of_structure, liquidity_sweep, sweep_detected, retest_depth]}
+  # momentum layer (semantic-only)
+  - {id: momentum_increasing, layer: momentum,  crt_state_map: null, feature_signature: [momentum_score, macd_line, macd_hist, rsi_14]}
+  - {id: momentum_decreasing, layer: momentum,  crt_state_map: null, feature_signature: [momentum_score, macd_hist, rsi_14]}
+  # session layer (semantic-only)
+  - {id: session_london,      layer: session,   crt_state_map: null, feature_signature: [session, hour_of_day]}
+  - {id: session_newyork,     layer: session,   crt_state_map: null, feature_signature: [session, hour_of_day]}
+  - {id: session_asian,       layer: session,   crt_state_map: null, feature_signature: [session, hour_of_day]}
+  - {id: session_overlap,     layer: session,   crt_state_map: null, feature_signature: [session, hour_of_day]}
+  # outcome layer (semantic-only result labels)
+  - {id: target_hit,          layer: outcome,   crt_state_map: null, feature_signature: [close, high, low]}
+  - {id: stop_hit,            layer: outcome,   crt_state_map: null, feature_signature: [close, low, high]}
+  - {id: timeout_exit,        layer: outcome,   crt_state_map: null, feature_signature: [close, atr]}
+
+# ── Story families (12 defined; 4 active) ────────────────────────────────────────────────────────
+# `canonical_state_sequence` lists STRUCTURE-layer states in order; a story's ordered distinct
+# structure states must be a SUBSEQUENCE of this (a valid CRT walk under VALID_TRANSITIONS).
+families:
+  - id: liquidity_reversal
+    status: active
+    description: "Resting liquidity is swept, price reverses and reclaims — the CRT golden path."
+    outcome_bias: either
+    canonical_state_sequence: [range, sweep, displacement, expansion, retest, execution, resolution]
+    key_features: [liquidity_sweep, sweep_detected, disp_strength, retest_depth, body_ratio, atr]
+
+  - id: trend_continuation
+    status: active
+    description: "Established trend pulls back to a retest of prior structure, then continues."
+    outcome_bias: either
+    canonical_state_sequence: [range, sweep, displacement, expansion, retest, execution, resolution]
+    key_features: [ema_fast, ema_slow, ema_spread, trend_strength, disp_strength, retest_depth, momentum_score]
+
+  - id: range_rotation
+    status: active
+    description: "Balanced range; edges fade back to the mean. CRT-quiescent (a family the skeleton does not deeply model), except a failed-break sweep that returns to range."
+    outcome_bias: either
+    canonical_state_sequence: [range, sweep, range]
+    key_features: [swing_high, swing_low, atr, volatility_regime, rsi_14]
+
+  - id: breakout
+    status: active
+    description: "Compression resolves; range boundary breaks and expands, then retests and continues."
+    outcome_bias: either
+    canonical_state_sequence: [range, sweep, expansion, retest, execution, resolution]
+    key_features: [break_of_structure, disp_strength, body_ratio, atr, volume_spike]
+
+  # planned (metadata-only; no stories in Phase A)
+  - {id: trend_reversal,        status: planned, description: "trend exhaustion into structural reversal"}
+  - {id: pattern_formation,     status: planned, description: "double tops/bottoms, head & shoulders, triangles"}
+  - {id: wyckoff,               status: planned, description: "accumulation/distribution: spring, upthrust"}
+  - {id: volatility_expansion,  status: planned, description: "compression -> impulsive expansion"}
+  - {id: volatility_contraction,status: planned, description: "wide swings -> tightening balance"}
+  - {id: failed_breakout,       status: planned, description: "break then reject / return inside"}
+  - {id: event_driven,          status: planned, description: "gap / news spike / fade"}
+  - {id: hybrid_multileg,       status: planned, description: "composite of multiple families"}

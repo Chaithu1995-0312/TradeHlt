@@ -1,0 +1,309 @@
+{
+  "meta": {
+    "created_utc": "2026-07-21T22:24:51.523738+00:00",
+    "dataset": "D:\\Tradelatest\\results\\clean_labels\\BNBUSDT\\20260721T221711Z\\clean_labels.jsonl",
+    "n_rows": 139942,
+    "out_dir": "D:\\Tradelatest\\results\\clean_labels\\BNBUSDT\\20260721T221711Z\\analysis_20260721T222431Z"
+  },
+  "stage5": {
+    "envelope_structure_recommendation": "MULTI_HEAD_ENVELOPE_JUSTIFIED",
+    "rationale": "3 envelope targets show candidate linear association; keep multi-head EnvelopeNet (excursion + risk + timing) rather than collapse.",
+    "learnability_tags": {
+      "y_mfe_r": "CANDIDATE_LEARNABLE",
+      "y_mae_r_heat": "CANDIDATE_LEARNABLE",
+      "y_holding_bars": "CANDIDATE_LEARNABLE",
+      "y_time_to_mfe": "WEAK_SIGNAL"
+    },
+    "fusion_consumption": {
+      "direct_candidates": [
+        {
+          "label": "y_tp1",
+          "consumer": "TradeNet \u2192 Fusion neural (after GATE-O/S/P)",
+          "probe": "NOISY_OR_UNINFORMATIVE_LINEAR"
+        },
+        {
+          "label": "y_tp2",
+          "consumer": "TradeNet \u2192 Fusion neural (after GATE-O/S/P)",
+          "probe": "NOISY_OR_UNINFORMATIVE_LINEAR"
+        },
+        {
+          "label": "y_survives_be",
+          "consumer": "TradeNet \u2192 Fusion neural (after GATE-O/S/P)",
+          "probe": "NOISY_OR_UNINFORMATIVE_LINEAR"
+        },
+        {
+          "label": "y_mfe_r",
+          "consumer": "Envelope coherence / risk_mult (ENV soft channels)",
+          "probe": "CANDIDATE_LEARNABLE"
+        },
+        {
+          "label": "y_mae_r_heat",
+          "consumer": "Envelope coherence / risk_mult (ENV soft channels)",
+          "probe": "CANDIDATE_LEARNABLE"
+        }
+      ],
+      "diagnostic_only": [
+        {
+          "label": "y_time_to_mfe",
+          "reason": "WEAK_SIGNAL"
+        },
+        {
+          "label": "y_R_net",
+          "reason": "diagnostic by design"
+        },
+        {
+          "label": "y_expired_timeout",
+          "reason": "diagnostic by design"
+        }
+      ],
+      "planner_candidates": [
+        {
+          "label": "y_mfe_r",
+          "consumer": "TP band / SL heat room"
+        },
+        {
+          "label": "y_mae_r_heat",
+          "consumer": "TP band / SL heat room"
+        },
+        {
+          "label": "y_holding_bars",
+          "consumer": "TTL / time management"
+        },
+        {
+          "label": "y_time_to_mfe",
+          "consumer": "TTL / time management"
+        }
+      ]
+    },
+    "ownership_matrix": [
+      {
+        "label": "y_tp1",
+        "market_question": "Will the first target be reached before SL?",
+        "existing_model": "TradeNet",
+        "candidate_owner": "TradeNet",
+        "overlap_risk": "low",
+        "evidence_note": "Bernoulli path milestone"
+      },
+      {
+        "label": "y_tp2",
+        "market_question": "Will +2R be reached before SL?",
+        "existing_model": "TradeNet (surrogate policy)",
+        "candidate_owner": "TradeNet",
+        "overlap_risk": "medium with y_reached_2r_horizon",
+        "evidence_note": "agree_horizon=0.7134598619428049"
+      },
+      {
+        "label": "y_survives_be",
+        "market_question": "Does path achieve \u22651R MFE (BE room)?",
+        "existing_model": "TradeNet",
+        "candidate_owner": "TradeNet",
+        "overlap_risk": "medium with y_reached_1r_horizon",
+        "evidence_note": "agree_horizon=0.7048348601563504"
+      },
+      {
+        "label": "y_R_net",
+        "market_question": "What net R is realized under walk+cost?",
+        "existing_model": "RR-B intent (payoff); unused",
+        "candidate_owner": "Diagnostic / GATE-O",
+        "overlap_risk": "do not train as TradeNet head",
+        "evidence_note": "continuous economic diagnostic"
+      },
+      {
+        "label": "y_mfe_r",
+        "market_question": "How far can price realistically run (horizon)?",
+        "existing_model": "No",
+        "candidate_owner": "EnvelopeNet (excursion)",
+        "overlap_risk": "related to TP heads but continuous support",
+        "evidence_note": "rho(tp1)=0.4007"
+      },
+      {
+        "label": "y_mae_r_heat",
+        "market_question": "How much adverse heat is likely?",
+        "existing_model": "No",
+        "candidate_owner": "EnvelopeNet (risk)",
+        "overlap_risk": "not the same as survives_be",
+        "evidence_note": "rho(survives_be)=-0.3344"
+      },
+      {
+        "label": "y_holding_bars",
+        "market_question": "How long until hard exit?",
+        "existing_model": "Planner TTL (policy, not learned)",
+        "candidate_owner": "EnvelopeNet (timing)",
+        "overlap_risk": "low with outcome heads",
+        "evidence_note": "ordinal time"
+      },
+      {
+        "label": "y_time_to_mfe",
+        "market_question": "When does maximum opportunity occur?",
+        "existing_model": "No",
+        "candidate_owner": "EnvelopeNet (timing)",
+        "overlap_risk": "low\u2013medium with holding",
+        "evidence_note": "rho(tp2)=0.446"
+      },
+      {
+        "label": "y_time_to_1r",
+        "market_question": "When is +1R first seen?",
+        "existing_model": "No",
+        "candidate_owner": "EnvelopeNet (timing) or diagnostic",
+        "overlap_risk": "linked to survives_be timing",
+        "evidence_note": "nullable censored"
+      },
+      {
+        "label": "y_expired_timeout",
+        "market_question": "Does opportunity expire without TP/SL?",
+        "existing_model": "No",
+        "candidate_owner": "Diagnostic (rare event)",
+        "overlap_risk": "low",
+        "evidence_note": "check imbalance in Stage 1"
+      },
+      {
+        "label": "path_mfe_r / path_mae_r_heat",
+        "market_question": "Walk-bounded excursions under SL/TP",
+        "existing_model": "No",
+        "candidate_owner": "Diagnostic twin of horizon envelope",
+        "overlap_risk": "high with horizon if path rarely times out",
+        "evidence_note": "rho_mfe=0.4611"
+      },
+      {
+        "label": "risk_distance",
+        "market_question": "What SL distance was set?",
+        "existing_model": "CRT / Planner geometry",
+        "candidate_owner": "Context feature \u2014 NOT a label",
+        "overlap_risk": "n/a",
+        "evidence_note": "input geometry, not prediction target"
+      }
+    ],
+    "do_not_train_yet": [
+      "Any head with learnability_tag NOISY_OR_UNINFORMATIVE_LINEAR until nonlinear GATE-O",
+      "y_expired_timeout if severe class imbalance",
+      "path_* as primary heads if highly redundant with horizon y_*"
+    ],
+    "authority": "ANALYSIS_ONLY \u2014 no train/wire; informs ENV_ARCH_V1 refinement"
+  },
+  "stage4_summary": {
+    "y_tp1": {
+      "learnability_tag": "NOISY_OR_UNINFORMATIVE_LINEAR",
+      "max_abs_feature_spearman": 0.0549,
+      "best_feature": {
+        "feature": "retest_depth",
+        "spearman": 0.0549
+      }
+    },
+    "y_tp2": {
+      "learnability_tag": "NOISY_OR_UNINFORMATIVE_LINEAR",
+      "max_abs_feature_spearman": 0.0548,
+      "best_feature": {
+        "feature": "retest_depth",
+        "spearman": 0.0548
+      }
+    },
+    "y_survives_be": {
+      "learnability_tag": "NOISY_OR_UNINFORMATIVE_LINEAR",
+      "max_abs_feature_spearman": 0.0038,
+      "best_feature": {
+        "feature": "volatility_ratio",
+        "spearman": 0.0038
+      }
+    },
+    "y_mfe_r": {
+      "learnability_tag": "CANDIDATE_LEARNABLE",
+      "max_abs_feature_spearman": 0.1602,
+      "best_feature": {
+        "feature": "atr",
+        "spearman": -0.1602
+      }
+    },
+    "y_mae_r_heat": {
+      "learnability_tag": "CANDIDATE_LEARNABLE",
+      "max_abs_feature_spearman": 0.1602,
+      "best_feature": {
+        "feature": "atr",
+        "spearman": -0.1602
+      }
+    },
+    "y_holding_bars": {
+      "learnability_tag": "CANDIDATE_LEARNABLE",
+      "max_abs_feature_spearman": 0.1944,
+      "best_feature": {
+        "feature": "volatility_ratio",
+        "spearman": -0.1944
+      }
+    },
+    "y_time_to_mfe": {
+      "learnability_tag": "WEAK_SIGNAL",
+      "max_abs_feature_spearman": 0.1329,
+      "best_feature": {
+        "feature": "volatility_ratio",
+        "spearman": -0.1329
+      }
+    },
+    "y_R_net": {
+      "learnability_tag": "CANDIDATE_LEARNABLE",
+      "max_abs_feature_spearman": 0.5446,
+      "best_feature": {
+        "feature": "atr",
+        "spearman": 0.5446
+      }
+    },
+    "y_expired_timeout": {
+      "learnability_tag": "WEAK_SIGNAL",
+      "max_abs_feature_spearman": 0.1322,
+      "best_feature": {
+        "feature": "atr",
+        "spearman": -0.1322
+      }
+    }
+  },
+  "stage2_classification": {
+    "redundant": [],
+    "related": [
+      {
+        "pair": "path_mae\u2194horizon_mae",
+        "spearman": 0.511,
+        "note": "walk-bounded vs exit-agnostic MAE"
+      },
+      {
+        "pair": "y_tp2\u2194y_reached_2r_horizon",
+        "agreement": 0.7134598619428049,
+        "note": "related; SL-gating differs from pure horizon"
+      },
+      {
+        "pair": "y_survives_be\u2194y_reached_1r_horizon",
+        "agreement": 0.7048348601563504,
+        "note": "walk MFE@exit vs full-horizon 1R"
+      }
+    ],
+    "independent": [
+      {
+        "pair": "y_mfe_r\u2194y_tp1",
+        "spearman": 0.4007,
+        "note": "excursion vs discrete TP1"
+      },
+      {
+        "pair": "y_mfe_r\u2194y_tp2",
+        "spearman": 0.4007,
+        "note": "excursion vs discrete TP2"
+      },
+      {
+        "pair": "y_mae_r_heat\u2194y_survives_be",
+        "spearman": -0.3344,
+        "note": "heat vs BE survival"
+      },
+      {
+        "pair": "y_time_to_mfe\u2194y_tp2",
+        "spearman": 0.446,
+        "note": "timing vs TP2"
+      },
+      {
+        "pair": "y_holding_bars\u2194y_mfe_r",
+        "spearman": 0.039,
+        "note": "duration vs MFE"
+      },
+      {
+        "pair": "path_mfe_r\u2194y_mfe_r",
+        "spearman": 0.4611,
+        "note": "walk-bounded vs exit-agnostic MFE"
+      }
+    ]
+  }
+}

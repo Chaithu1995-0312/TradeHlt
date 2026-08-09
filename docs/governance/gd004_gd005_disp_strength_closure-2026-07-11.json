@@ -1,0 +1,53 @@
+{
+  "change_id": "CH-gd004-gd005-disp-strength-closure",
+  "date": "2026-07-11",
+  "scope": "identity-only closure of the last two disp_strength grandfather pins (FU-SCORING-DISP)",
+  "behavior_change": "none (byte-identical routing; parity tests freeze old-formula outputs)",
+  "adjudications": [
+    {
+      "gd_id": "GD-004",
+      "site": "src/engines/scoring_engine.py::compute_scores (local disp_strength = move/atr)",
+      "caller": "src/engines/crt_engine.py:23 (move = features['disp_strength'] = FM-020; atr = pipeline close-relative)",
+      "verdict": "NEW_IDENTITY",
+      "registered_as": "FM-029 disp_strength_atr_rescale",
+      "as_wired_formula": "FM-020 / atr_rel == body_size*close/atr_14_raw^2",
+      "probe": {
+        "artifact": "docs/governance/gd004_disp_rescale_probe-2026-07-11.json",
+        "symbol": "BNBUSDT",
+        "bars": 29922,
+        "atr_unit_match_rate": 1.0,
+        "equals_fm020_rate": 0.0208,
+        "equals_fm028_rate": 0.0,
+        "s_breakout_saturation_rate": 0.975
+      },
+      "deferred": {
+        "id": "FU-CRT-MOVE-MISWIRE",
+        "hypothesis": "compute_scores signature (move, atr) suggests a raw-move/FM-028-like input was intended; crt_engine.py:23 feeds FM-020 instead",
+        "why_deferred": "fixing the call site changes gate-ON fusion behavior — out of identity scope (user decision 2026-07-11); impact bounded per F-037 (backtests gate-OFF) + F-048 (run() never executes)"
+      },
+      "durable_key_retired": "1405f7559de41144"
+    },
+    {
+      "gd_id": "GD-005",
+      "site": "src/config_layer/crt_engine_v2.py::StateMachine.try_expansion_to_retest ([PATCH 7] wick_size/atr)",
+      "verdict": "EXISTING_IDENTITY",
+      "bound_to": "FM-028 displacement_atr_ratio",
+      "basis": "Candle.wick_size == candle_range (F-046); FM-028 source_of_truth already cites crt_engine_v2.py:1355; guard convention identical (site computes only when atr>0)",
+      "durable_key_retired": "206cdd6e726430d1"
+    }
+  ],
+  "prohibition": "no disp_strength pin remains in feature_math_lint _KNOWN_DIVERGENCES; bare disp_strength derivation in _SCAN_DIRS is a hard --check failure",
+  "census_sync": {
+    "governed_surface": "110 -> 117",
+    "regenerated": ["docs/governance/geometry_census.jsonl", "docs/governance/geometry_semantic_adjudication.jsonl", "docs/governance/geometry_family_registry.json"],
+    "note": "absorbs pre-existing Phase-1 staleness (volume-proxy split, live-hook routed calls, FM-013 impl, probe/test sites) + this change's delta; 117 adjudicated / 0 missing"
+  },
+  "tests": [
+    "tests/test_gd004_gd005_identity_closure.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_gate5_lineage_report.py"
+  ],
+  "authority": "architecture/governance only; grants no model/promotion authority"
+}

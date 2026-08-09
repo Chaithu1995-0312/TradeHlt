@@ -1,0 +1,19 @@
+{
+  "change_id": "CH-identity-v23-vocabulary",
+  "status": "COMPLETE",
+  "completed_at": "2026-07-22",
+  "summary": "identity v2.3: selection / execution.runtime_enabled / identity_status. Resolver + tests updated. No model enablement changes; no HOW edits.",
+  "checks_run": {
+    "tests/test_active_models_registry.py": "PASS",
+    "tests/test_model_paths_resolver.py": "PASS (combined 31)"
+  },
+  "production_behavior_changed": false,
+  "authority_granted": false,
+  "identity_status_examples": {
+    "zone_gate": "selected_and_enabled",
+    "gaussian": "enabled_without_checkpoint",
+    "rr_model": "selected_not_enabled",
+    "tradenet": "selected_not_enabled",
+    "bitnet": "absent"
+  }
+}

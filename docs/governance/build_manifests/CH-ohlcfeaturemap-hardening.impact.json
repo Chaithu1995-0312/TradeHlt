@@ -1,0 +1,49 @@
+{
+  "change_id": "CH-ohlcfeaturemap-hardening",
+  "objective": "OHLCFeatureMap correctness hardening per the 2026-07-11 user code review (9 findings): feature_surface_query gets consumer dedup, canonical-identity metadata, fail-closed ambiguous aliases, PROVEN/HEURISTIC/TEXT_REFERENCE evidence classes, token-segment config joins, TESTS->TEST_REFERENCE_HITS, freshness by embedded generated_at + schema validation + root fix; lineage census stops rewriting dated artifacts (immutable dates + LATEST pointer) and splits the disp_strength row into one canonical identity (FM-020) + related FM-028/FM-029; feature_math_lint registry authority becomes provenance-verified from per-module imports (evil_module.body_ratio no longer authoritative) and assignment/sink coverage extends to AugAssign/walrus/for/with/attribute+subscript sinks/dict.update, with a declared universe delta + mechanical census reconciliation test. Two src sites surfaced by the extended lint were fixed at source (dead crt_feature_builder ema_spread routed through derived_math; feature_monitor demo fixture noise bound to intermediates). Census/adjudication resynced 117->115.",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE"
+  ],
+  "affected_files": [
+    "scripts/governance/feature_surface_query.py",
+    "scripts/analysis/feature_38_lineage_census.py",
+    "scripts/analysis/feature_surface_closure_audit.py",
+    "scripts/analysis/feature_math_lint.py",
+    "scripts/analysis/gate2b_adjudication.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_monitor.py",
+    "tests/test_feature_surface_query.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_gate5_lineage_report.py",
+    "docs/governance/feature_38_lineage_census-2026-07-11.json",
+    "docs/governance/feature_38_lineage_census-2026-07-11.md",
+    "docs/governance/feature_38_lineage_census.LATEST.json",
+    "docs/governance/feature_surface_closure_audit-2026-07-11.json",
+    "docs/governance/feature_surface_closure_audit-2026-07-11.md",
+    "docs/governance/geometry_census.jsonl",
+    "docs/governance/geometry_semantic_adjudication.jsonl",
+    "docs/governance/geometry_family_registry.json",
+    "docs/governance/geometry_static_lineage_report.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [
+    "FM-020",
+    "FM-022",
+    "FM-028",
+    "FM-029"
+  ],
+  "affected_models": "none",
+  "affected_production_config": "none (hash-neutral)",
+  "required_checks_ack": [
+    "tests/test_feature_surface_query.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_gate5_lineage_report.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_formula_registry.py",
+    "tests/test_feature_pipeline.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit: query surface + census writer + lint + adjudication rekeys + two src routing fixes + tests + regenerated artifacts together"
+}

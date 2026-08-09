@@ -1,0 +1,323 @@
+{
+  "_doc": "Feature-layer GOVERNANCE freeze pin + XAUUSD-only regression benchmark (2026-07-20, scoped 2026-07-20b). Not a scientific claim that feature research is complete. Do not hand-edit vector hashes \u2014 regenerate with FeaturePipeline on the pinned CSV. BNB and multi-instrument runtime benchmarks are deferred to R-1/R-2 runtime suite, not this pin. Mutation of frozen surfaces requires an accepted future-program waiver.",
+  "schema_version": "1.1.0",
+  "freeze_id": "FEATURE-LAYER-MUTATION-FREEZE-2026-07-20",
+  "status_token": "FEATURE_LAYER_MUTATION_FREEZE = ACTIVE",
+  "frozen_at_utc": "2026-07-19T20:16:08Z",
+  "policy_path": "docs/governance/feature-layer-mutation-freeze-2026-07-20.md",
+  "active_config_version": "v2_multi_2026_04",
+  "prod_version_constant": "v2_multi_2026_04",
+  "schema": {
+    "schema_version": "4.0",
+    "schema_hash": "c87a1aba7bc79803d04c680e0232389e",
+    "feature_dim": 39,
+    "feature_count": 39,
+    "canonical_features": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "volume_ratio",
+      "double_sweep",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "trend_bias",
+      "trend_strength",
+      "momentum_score",
+      "atr",
+      "volatility_ratio",
+      "rsi_14",
+      "macd_line",
+      "macd_signal",
+      "macd_hist_raw",
+      "macd_hist_z",
+      "sweep_detected",
+      "liquidity_sweep",
+      "break_of_structure",
+      "swing_high",
+      "swing_low",
+      "higher_high",
+      "lower_low",
+      "body_size",
+      "candle_range",
+      "body_ratio",
+      "volatility_regime",
+      "session",
+      "hour_of_day",
+      "disp_strength",
+      "retest_depth",
+      "candles_since_retest",
+      "liquidity_distance",
+      "liquidity_pressure_score",
+      "volume_spike"
+    ]
+  },
+  "source_file_pins": {
+    "market_ontology.yaml": {
+      "path": "configs/formulas/market_ontology.yaml",
+      "sha256": "fb783d71157508275af1fa966bf9bbb67028e14673dde16fac6fe02d26c2f99a"
+    },
+    "active_config": {
+      "path": "configs/production/v2_multi_2026_04.json",
+      "sha256": "9f8cb382b28cbd969e0a774e1381aa1e115326421729ca9810dd6772f311d8b4"
+    },
+    "ACTIVE_VERSION": {
+      "path": "configs/production/ACTIVE_VERSION",
+      "sha256": "4bd5912b8195855d0ccc346938ca90a376b617a1f7d639259f233ee348fb3acb"
+    },
+    "feature_pipeline.py": {
+      "path": "src/features/feature_pipeline.py",
+      "sha256": "06c971e0ade75b2cf6241f168cdb00b91a28ea053ce2b46e2ef42f0017c26c9d"
+    },
+    "feature_schema.py": {
+      "path": "src/features/feature_schema.py",
+      "sha256": "61477205087f9a60f31be14f75dd13033eb0ba33d1484fa62f94173af8de5ad2"
+    },
+    "candle_math.py": {
+      "path": "src/features/candle_math.py",
+      "sha256": "5f577d1b7b571c9923d1fa36978b6bbe42cb05ed78cb085745f06f269d262de1"
+    },
+    "derived_math.py": {
+      "path": "src/features/derived_math.py",
+      "sha256": "55a8dd08f94600e3b93e0ced66f862ab795ab7cf823282f651a1d37b557c84d6"
+    },
+    "causal_structure.py": {
+      "path": "src/features/causal_structure.py",
+      "sha256": "2574f189cc4c08470d9c39a6e3f612e4f271dbef75ec7f7e0bb260c05b00d155"
+    },
+    "registry_init.py": {
+      "path": "src/features/registry/__init__.py",
+      "sha256": "daf5142ebcdb864c93546fbb0a3618c37a45c65647817a1ff1a26a414ee6084e"
+    }
+  },
+  "regression_benchmarks": {
+    "XAUUSD_W2026-03-23-to-2026-05-21": {
+      "input_path": "data/XAUUSD_W2026-03-23-to-2026-05-21.csv",
+      "input_sha256": "131647bae4a3235ac8f5df0bc86a50cafcd315c2d2bfc9ad60d6b91679d3d25d",
+      "input_rows": 3949,
+      "output_rows": 3871,
+      "drop": 78,
+      "vector_shape": [
+        3871,
+        39
+      ],
+      "vector_dtype": "float32",
+      "vector_sha256": "37f43f449af0720ff547dcb9cd0c45243f0e6c421e1f9475e9c9d75517601ef5",
+      "vector_nansum": 130762304.0,
+      "coverage": {
+        "benchmark_class": "FEATURE_MATRIX",
+        "contract": "full CSV -> FeaturePipeline.run() -> float32 (N, 39) SHA-256",
+        "exercises": {
+          "feature_pipeline_batch_run": true,
+          "canonical_38_vector_emission": false,
+          "warmup_dropna_finalize": true,
+          "schema_v3_dim38": false,
+          "canonical_39_vector_emission": true,
+          "schema_v4_dim39": true
+        },
+        "does_not_exercise": {
+          "note": "Matching this vector SHA does NOT imply full trading-path behavioral equivalence. Runtime/filter/planner/partial-TP coverage belongs in the runtime benchmark suite (R-1/R-2).",
+          "backtest_v2": false,
+          "crt_state_machine": false,
+          "session_filter": false,
+          "zone_gate": false,
+          "fusion_gate": false,
+          "decision_engine": false,
+          "execution_planner": false,
+          "ultron_risk_gate": false,
+          "partial_tp": false,
+          "trade_ledger": false
+        },
+        "feature_rows_in": 3949,
+        "feature_rows_out": 3871,
+        "warmup_drop": 78,
+        "trade_count": null,
+        "trade_count_note": "Not part of this benchmark. Related XAUUSD 2-month BACKTEST (separate artifact) had 0 trades / 3 session-filtered retests \u2014 see results/XAUUSD/backtests/run_20260719_021925_XAUUSD/ and tracker section 13. That is runtime evidence, not a feature-matrix pin field.",
+        "related_runtime_artifact": "results/XAUUSD/backtests/run_20260719_021925_XAUUSD/"
+      }
+    }
+  },
+  "accepted_future_programs": [
+    {
+      "id": "M16-WU-SESSION-ENCODING",
+      "phase": "live_engine_hook consumer-alignment",
+      "note": "user-deferred 2026-07-19; still BLOCKS_ACTIVATION"
+    },
+    {
+      "id": "M16-WU-TREND-STRENGTH-COLLISION",
+      "phase": "live_engine_hook consumer-alignment",
+      "note": "user-deferred 2026-07-19"
+    },
+    {
+      "id": "M16-WU-VOLREGIME-S05",
+      "phase": "live_engine_hook consumer-alignment",
+      "note": "user-deferred 2026-07-19"
+    },
+    {
+      "id": "M16-WU-SUPERSEDED-VECTOR-MIGRATION",
+      "phase": "explicit migration plan + retrain gates",
+      "note": "no silent dim swap"
+    },
+    {
+      "id": "M16-WU-FM025-PROVENANCE",
+      "phase": "ledger provenance only"
+    },
+    {
+      "id": "M16-WU-EMPTY-SHA-FAMILY",
+      "phase": "ledger hygiene"
+    },
+    {
+      "id": "M16-WU-ONTOLOGY-REGISTRATION",
+      "phase": "descriptive registration only; no formula change"
+    },
+    {
+      "id": "M16-WU-L6-PREP",
+      "phase": "activation readiness; requires P1-P5"
+    },
+    {
+      "id": "T-5/T-6",
+      "phase": "warmup/finalize guards",
+      "note": "user-deferred"
+    },
+    {
+      "id": "T-11-FEEDER-HANDSHAKE",
+      "phase": "external EA feed_schema_version + period symmetry"
+    },
+    {
+      "id": "T-17",
+      "phase": "macd_hist z-score semantics revisit"
+    },
+    {
+      "id": "T-18",
+      "phase": "volatility_regime knobs + sibling identities"
+    },
+    {
+      "id": "T-19",
+      "phase": "candles_since_retest rename or ontology note"
+    },
+    {
+      "id": "STATEFUL-6",
+      "phase": "future; user-excluded until pipeline stable"
+    },
+    {
+      "id": "FM-030-031-DIMENSIONAL-MIX-MIGRATION",
+      "phase": "config-gated identity, legacy default; shadow measurement only",
+      "note": "user-authorized 2026-07-22. The freeze POLICY prose already named 'FM-030/031 migration' as a legitimate future program; this entry closes the doc-vs-pin gap by declaring it machine-readably. Scope: additive derived_math.ema_spread_atr/momentum_score_atr + feature_pipeline.normalization_basis knob (default 'atr_relative' == prior literal math, byte-identical) + ontology promotion to active:false + a hash-neutral shadow config. NOT in scope: promotion, ACTIVE_VERSION change, dual_engine threshold recalibration, retrain, dim change, or edits to the four magnitude-sensitive consumers. Evidence: F-061.",
+      "parity_contract": "XAUUSD vector SHA MUST be unchanged; a moved vector SHA means the legacy arm was not transcribed verbatim."
+    },
+    {
+      "id": "SCHEMA-V4-VECTOR-MIGRATION",
+      "phase": "canonical vector v3.0(38) -> v4.0(39); DECLARED BEHAVIOR CHANGE, not a parity migration",
+      "note": "user-authorized 2026-07-22. Three changes to CANONICAL_FEATURES: (1) macd_hist -> macd_hist_raw + macd_hist_z, ending the in-place z-score overwrite that made the emitted value differ from the declared formula (FM-049's own note warned of this); (2) wick_size -> candle_range, the honest name for high-low, which the ontology already declares as FM-002's semantic_quantity with wick_size as misnomer_alias; (3) FM-052 session domain {0,1,2} hour-partition -> {0..4} window model incl. OVERLAP and CLOSED. SCHEMA_HASH and FEATURE_ORDER_HASH are computed over feature NAMES (feature_schema.py:111,122), so (1) and (2) invalidate every stored schema hash with zero math change; (3) changes emitted values on slot 30. Requires baseline recapture and per-artifact reconciliation.",
+      "supersedes_or_absorbs": [
+        "M16-WU-SUPERSEDED-VECTOR-MIGRATION (this IS the explicit migration plan + retrain gates it required; still no silent dim swap)",
+        "M16-WU-SESSION-ENCODING (P1, BLOCKS_ACTIVATION \u2014 the canonical-vs-consumer session encoding permutation is resolved by the single owning module)",
+        "T-17 (macd_hist z-score semantics revisit \u2014 resolved by splitting raw from normalized)",
+        "T-19 (naming revisit \u2014 same class of fix as the candle_range rename)"
+      ],
+      "_supersession_note": "The absorbed ids are RETAINED in this list above, not deleted (CLAUDE.md 6.2 rule 4). They record what was planned and when; this entry records how it was discharged.",
+      "parity_contract": "NONE \u2014 PRODUCTION_BEHAVIOR_CHANGED = YES. The XAUUSD vector SHA, schema hash, feature_dim and canonical_features WILL move and must be regenerated by running the pipeline, never hand-edited. The binding requirement is instead ATTRIBUTION: the gate-ON BNBUSDT ledger delta must be fully explained by the three sub-changes measured independently. An unattributed delta means stop.",
+      "prerequisite": "ZONEGATE-ALIGNMENT-SAFETY-NET must be green FIRST (tests/test_zone_gate_alignment.py). ZoneGate is the only live hard gate (F-041) and consumed the vector POSITIONALLY while silently truncating over-length vectors; migrating the schema before closing that path would have mis-scored silently."
+    },
+    {
+      "id": "ZONEGATE-ALIGNMENT-SAFETY-NET",
+      "phase": "fail-closed vector alignment; prerequisite of SCHEMA-V4-VECTOR-MIGRATION",
+      "note": "2026-07-22. models/zone_registry.json always stored a top-level `feature_order` and nothing read it; zone_gate_engine._extract_vector built from the ambient CANONICAL_FEATURE_ORDER and silently truncated over-length vectors (a v2.0(35)->v3.0(38) back-compat path). Fixed: scoring is now name-anchored to the registry's own feature_order, truncation raises, and a registry naming a feature absent from the live schema raises ZoneFeatureOrderError at LOAD (never fail-open \u2014 a hard gate scoring a misaligned vector is worse than no gate).",
+      "parity_contract": "MUST be a no-op at v3.0: name-anchored extraction == positional extraction while feature_order == CANONICAL_FEATURE_ORDER, and the gate-ON BNBUSDT ledger stays 9bcba138775d4109."
+    }
+  ],
+  "engineering_focus_after_freeze": "docs/implementation_plan/backtest-runtime-roadmap-2026-07-20.md",
+  "freeze_class": "GOVERNANCE_FREEZE",
+  "freeze_class_note": "Changes require evidence + waiver. Does NOT mean never revisit the feature layer. Accepted future programs remain valid scientific work outside routine engineering.",
+  "scoped_at_utc": "2026-07-19T20:22:58Z",
+  "scope_revision": "2026-07-20b: removed BNB head from feature freeze pin per user directive; feature regression = XAUUSD matrix + schema + source SHAs only. Runtime benchmarks (BNB gate ON/OFF, multi-instrument, ledger parity) open with R-1/R-2.",
+  "waiver_log": [
+    {
+      "date_utc": "2026-07-22",
+      "program_id": "FM-030-031-DIMENSIONAL-MIX-MIGRATION",
+      "source_sha_refresh": "market_ontology.yaml, active_config, feature_pipeline.py",
+      "pre_existing_drift_declared": {
+        "_doc": "NOT laundering: three pinned sources were ALREADY drifted from the 2026-07-20 pin when this session opened, BEFORE any edit by this change set. Provenance of that drift is unidentified (the working tree has been uncommitted since 2026-07-09; the drift is not a line-ending artifact - verified). The refresh below therefore absorbs both the pre-existing drift and this program's intended edits. Bounding evidence: test_xauusd_window_vector_regression PASSED at session open, so whatever the pre-existing drift was, it did NOT change emitted feature values. Recorded per CLAUDE.md 6.2 rule 4 (preserve history, never silently resolve).",
+        "market_ontology.yaml": {
+          "pinned_2026_07_20": "e2dbaa491aa9c7937b92700b6d66089e2fc04c82063ae3c854300eb36b66bf0c",
+          "live_pre_session_2026_07_22": "ae1c2e96c8f01283e026c2f70ec926afe03d3e3a249d16f6e7833a9a132d51ac"
+        },
+        "active_config": {
+          "pinned_2026_07_20": "dfa0fa7bf4ad0f17",
+          "live_pre_session_2026_07_22": "eb9d0a659563771a",
+          "_note": "prefixes only; full live value is recorded in source_file_pins after this change set"
+        },
+        "feature_pipeline.py": {
+          "pinned_2026_07_20": "9c050a0a3681cf87",
+          "live_pre_session_2026_07_22": "7a32b14d7b328183",
+          "_note": "prefixes only"
+        },
+        "unchanged_at_session_open": [
+          "ACTIVE_VERSION",
+          "feature_schema.py",
+          "candle_math.py",
+          "derived_math.py",
+          "causal_structure.py",
+          "registry_init.py"
+        ]
+      }
+    },
+    {
+      "date_utc": "2026-08-01",
+      "program_id": "SEMANTIC-LAYER-CERTIFICATION-AUDIT-TIER1",
+      "source_sha_refresh": [
+        "ACTIVE_VERSION",
+        "active_config",
+        "candle_math.py",
+        "causal_structure.py",
+        "derived_math.py",
+        "feature_pipeline.py",
+        "feature_schema.py",
+        "market_ontology.yaml",
+        "registry_init.py"
+      ],
+      "pre_existing_drift_declared": {
+        "_doc": "Executing the pin-regeneration step the ALREADY-ACCEPTED SCHEMA-V4-VECTOR-MIGRATION program (accepted_future_programs, user-authorized 2026-07-22) explicitly requires and explicitly authorizes ('the pin ... must be regenerated by running the pipeline, never hand-edited') but which was never carried out -- this pin had been stale against schema v4.0 since 2026-07-22, independent of anything in this session. This refresh discharges that already-authorized obligation. On TOP of that pre-existing gap, this session's own additive ontology work (FM-064/FM-065/FM-070, SEM-004; semantic layer audit, Tier 1) further changed market_ontology.yaml's SHA -- captured in the same refresh.",
+        "market_ontology.yaml": {
+          "old": "354dfbfa9e8967776a9e91103135caf461bbb1e6799b18d48c88b607dd903c30",
+          "new": "fb783d71157508275af1fa966bf9bbb67028e14673dde16fac6fe02d26c2f99a"
+        },
+        "feature_schema.py": {
+          "old": "5f3aa984ff5feca1889170b3914bb7df800bc78f1ff57e38555c39aca3436dd1",
+          "new": "61477205087f9a60f31be14f75dd13033eb0ba33d1484fa62f94173af8de5ad2"
+        },
+        "schema_version_before_after": {
+          "before": "3.0",
+          "after": "4.0"
+        },
+        "vector_shape_before_after": {
+          "before": [
+            3871,
+            38
+          ],
+          "after": [
+            3871,
+            39
+          ]
+        },
+        "vector_sha256_before_after": {
+          "before": "adad1a0ba6b42c4549c85f8152e4bcb560c07d7e94f8e910ec6622003d484c0b",
+          "after": "37f43f449af0720ff547dcb9cd0c45243f0e6c421e1f9475e9c9d75517601ef5"
+        },
+        "note": "PRODUCTION_BEHAVIOR_CHANGED=YES was already declared by the SCHEMA-V4-VECTOR-MIGRATION entry itself -- this vector SHA move is the EXPECTED, already-accepted consequence of that migration (MACD split + candle_range rename + FM-052 window model), not a new undocumented change. No feature MATH changed in this Tier-1 session: verified separately by an independent pre/post byte-identity check on data/mt5/XAUUSD_M15.csv (untouched by this refresh, a different corpus) showing the SAME vector SHA before and after every Tier-1 edit."
+      }
+    }
+  ],
+  "runtime_benchmarks": {
+    "status": "NOT_YET_OPENED",
+    "opens_with": "docs/implementation_plan/backtest-runtime-roadmap-2026-07-20.md R-1/R-2",
+    "planned_examples": [
+      "Runtime Benchmark 1 \u2014 BNB Gate ON/OFF",
+      "Runtime Benchmark 2 \u2014 Multi-instrument execution",
+      "Runtime Benchmark 3 \u2014 Trade ledger parity"
+    ],
+    "note": "Deliberately separate from feature freeze pin so feature parity is not confused with execution-path coverage."
+  }
+}

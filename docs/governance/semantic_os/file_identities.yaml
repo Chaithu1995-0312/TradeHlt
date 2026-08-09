@@ -1,0 +1,2901 @@
+# Semantic OS — File Identity registry (HAND-AUTHORED) — Semantic File Identity Layer
+#
+# Charter: docs/governance/SEMANTIC_OS_CONTRACT.md
+# Design:  docs/governance/SEMANTIC_OS_V1_DESIGN.md
+# Schema:  semantic_os/1.1 · validator: src/governance/semantic_os.py (_validate_file_identity)
+# Guard:   tests/test_semantic_identity.py
+# Report:  docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md
+#
+# A FileIdentity gives one Python module a rename-stable identity:
+#     semantic_id (this record'''s id, a dotted slug) -> semantic_name -> physical_path
+# plus a filename_semantic_status classification (ALIGNED/HISTORICAL/MISLEADING/COMPATIBILITY/
+# SPLIT/UNKNOWN) that names when a physical filename no longer matches what the module does.
+#
+# Physical filenames are NEVER renamed by this layer. authority is always advisory (§6.5) — a
+# curated identity here grants no rename/promotion/production authority, only a name to reason
+# and communicate with.
+#
+# TIER 1 (HIGH confidence) = hand-verified from source. TIER 2 (MEDIUM confidence) = curated but
+# boundary-claimed / not independently source-read (filename_status_reason says so explicitly).
+# TIER 3 (LOW confidence, filename_semantic_status UNKNOWN) is NEVER written here — it is
+# generated at seed time by governance.semantic_identity.derive_tier3_identities for every
+# remaining code-universe path. See docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md §3 for why.
+#
+# HAND-AUTHOR only meaning. Never write owner_boundary/encyclopedia_id/script_registry_id/
+# imports/tests/package/bytes — those are DERIVED exact-path joins computed in
+# src/governance/semantic_objects.py. miar_entry is the only hand-authored cross-link.
+# authority is always advisory.
+
+file_identities:
+- id: agent.agent_core
+  kind: file_identity
+  semantic_name: Agent Core
+  physical_path: src/agent/agent_core.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.audit
+  kind: file_identity
+  semantic_name: Audit
+  physical_path: src/agent/audit.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.cli
+  kind: file_identity
+  semantic_name: Cli
+  physical_path: src/agent/cli.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.executor
+  kind: file_identity
+  semantic_name: Executor
+  physical_path: src/agent/executor.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.findings_synthesizer
+  kind: file_identity
+  semantic_name: Findings Synthesizer
+  physical_path: src/agent/findings_synthesizer.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.goal
+  kind: file_identity
+  semantic_name: Goal
+  physical_path: src/agent/goal.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.goal_loop
+  kind: file_identity
+  semantic_name: Goal Loop
+  physical_path: src/agent/goal_loop.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.grok_agentic
+  kind: file_identity
+  semantic_name: Grok Agentic
+  physical_path: src/agent/grok_agentic.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.groq_client
+  kind: file_identity
+  semantic_name: Groq Client
+  physical_path: src/agent/groq_client.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.intent_router
+  kind: file_identity
+  semantic_name: Intent Router
+  physical_path: src/agent/intent_router.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.log_query
+  kind: file_identity
+  semantic_name: Log Query
+  physical_path: src/agent/log_query.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.plan_compiler
+  kind: file_identity
+  semantic_name: Plan Compiler
+  physical_path: src/agent/plan_compiler.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.state
+  kind: file_identity
+  semantic_name: State
+  physical_path: src/agent/state.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.tool_planner
+  kind: file_identity
+  semantic_name: Tool Planner
+  physical_path: src/agent/tool_planner.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: agent.tool_registry
+  kind: file_identity
+  semantic_name: Tool Registry
+  physical_path: src/agent/tool_registry.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: config.active_version_authority
+  kind: file_identity
+  semantic_name: Active Version Authority
+  physical_path: src/config_layer/production_config.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: CONFIG
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: fail-fast get_active_version()/get_prod_config()
+    — Tier 0 runtime truth per CLAUDE.md §4.0.'
+  aliases:
+  - production_config
+  concept_ids:
+  - CN-009
+  miar_entry: backtest
+  summary_50: 'Tier-0 runtime truth: which production config version is active, loaded fail-fast.'
+  why_this_identity: A SPINE_FILES module; anchoring the ORIENT_RUNTIME precedence rule to a concrete
+    identity.
+  evidence:
+  - path: src/config_layer/production_config.py
+    symbol: get_active_version
+    line: 60
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: config_layer.config_builder
+  kind: file_identity
+  semantic_name: Config Builder
+  physical_path: src/config_layer/config_builder.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: CONFIG
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-009 (Production Config and Promotion); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-009
+  - CN-010
+  - CN-012
+  miar_entry: null
+  summary_50: Member of BD-009 (Production Config and Promotion); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-009 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: config_layer.config_validator
+  kind: file_identity
+  semantic_name: Config Validator
+  physical_path: src/config_layer/config_validator.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: CONFIG
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-009 (Production Config and Promotion); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-009
+  - CN-010
+  - CN-012
+  miar_entry: null
+  summary_50: Member of BD-009 (Production Config and Promotion); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-009 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: config_layer.crt_config_provenance
+  kind: file_identity
+  semantic_name: Crt Config Provenance
+  physical_path: src/config_layer/crt_config_provenance.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-006 (CRT Structural Engine); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-004
+  miar_entry: null
+  summary_50: Member of BD-006 (CRT Structural Engine); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-006 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: config_layer.crt_sweep_taxonomy
+  kind: file_identity
+  semantic_name: Crt Sweep Taxonomy
+  physical_path: src/config_layer/crt_sweep_taxonomy.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-006 (CRT Structural Engine); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-004
+  miar_entry: null
+  summary_50: Member of BD-006 (CRT Structural Engine); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-006 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: config_layer.market_router
+  kind: file_identity
+  semantic_name: Market Router
+  physical_path: src/config_layer/market_router.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: CONFIG
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-009 (Production Config and Promotion); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-009
+  - CN-010
+  - CN-012
+  miar_entry: null
+  summary_50: Member of BD-009 (Production Config and Promotion); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-009 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: config_layer.production_bundle
+  kind: file_identity
+  semantic_name: Production Bundle
+  physical_path: src/config_layer/production_bundle.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: CONFIG
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-009 (Production Config and Promotion); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-009
+  - CN-010
+  - CN-012
+  miar_entry: null
+  summary_50: Member of BD-009 (Production Config and Promotion); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-009 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: config_layer.stack_version
+  kind: file_identity
+  semantic_name: Stack Version
+  physical_path: src/config_layer/stack_version.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: CONFIG
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-009 (Production Config and Promotion); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-009
+  - CN-010
+  - CN-012
+  miar_entry: null
+  summary_50: Member of BD-009 (Production Config and Promotion); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-009 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: config_layer.state_contract
+  kind: file_identity
+  semantic_name: State Contract
+  physical_path: src/config_layer/state_contract.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-006 (CRT Structural Engine); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-004
+  miar_entry: null
+  summary_50: Member of BD-006 (CRT Structural Engine); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-006 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: config_layer.state_contract_loader
+  kind: file_identity
+  semantic_name: State Contract Loader
+  physical_path: src/config_layer/state_contract_loader.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-006 (CRT Structural Engine); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-004
+  miar_entry: null
+  summary_50: Member of BD-006 (CRT Structural Engine); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-006 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: config_layer.state_topology
+  kind: file_identity
+  semantic_name: State Topology
+  physical_path: src/config_layer/state_topology.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-006 (CRT Structural Engine); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-004
+  miar_entry: null
+  summary_50: Member of BD-006 (CRT Structural Engine); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-006 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: control_plane.code_context_extractor
+  kind: file_identity
+  semantic_name: Code Context Extractor
+  physical_path: src/control_plane/code_context_extractor.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: INTEGRATION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: control_plane.context_report
+  kind: file_identity
+  semantic_name: Context Report
+  physical_path: src/control_plane/context_report.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: INTEGRATION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: control_plane.cp_types
+  kind: file_identity
+  semantic_name: Cp Types
+  physical_path: src/control_plane/cp_types.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: INTEGRATION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: control_plane.dashboard_api
+  kind: file_identity
+  semantic_name: Dashboard Api
+  physical_path: src/control_plane/dashboard_api.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: INTEGRATION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: control_plane.dot_graph_context
+  kind: file_identity
+  semantic_name: Dot Graph Context
+  physical_path: src/control_plane/dot_graph_context.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: INTEGRATION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: control_plane.jobs
+  kind: file_identity
+  semantic_name: Jobs
+  physical_path: src/control_plane/jobs.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: INTEGRATION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: control_plane.monitors
+  kind: file_identity
+  semantic_name: Monitors
+  physical_path: src/control_plane/monitors.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: INTEGRATION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: control_plane.registry
+  kind: file_identity
+  semantic_name: Control Plane Command Registry
+  physical_path: src/control_plane/registry.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: INTEGRATION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: control_plane.report_api
+  kind: file_identity
+  semantic_name: Report Api
+  physical_path: src/control_plane/report_api.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: INTEGRATION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: control_plane.server
+  kind: file_identity
+  semantic_name: Server
+  physical_path: src/control_plane/server.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: INTEGRATION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: crt.state_machine
+  kind: file_identity
+  semantic_name: CRT Lifecycle Engine
+  physical_path: src/config_layer/crt_engine_v2.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: HISTORICAL
+  filename_status_reason: '"_v2" is a repo-history artifact, not a semantic distinction. There is no crt_engine_v1.py,
+    and src/engines/crt_engine.py is an UNRELATED 64-line scoring wrapper, not an earlier version of this
+    module. The suffix encodes when the file was written, not what it means.'
+  aliases:
+  - crt_engine_v2
+  - CRT lifecycle engine
+  - CRT runtime state machine
+  concept_ids:
+  - CN-004
+  miar_entry: crt
+  summary_50: 'Deterministic CRT lifecycle: advances one candle at a time through the CRT state graph
+    and enforces the legal-transition rule.'
+  why_this_identity: This module ENFORCES transitions; it does not define them. StateMachine._transition
+    rejects any move absent from VALID_TRANSITIONS, which it IMPORTS from state_identity.py. Naming it
+    "state machine" (enforcement) and state_identity.py "state topology" (the graph) keeps the two separable.
+  evidence:
+  - path: src/config_layer/crt_engine_v2.py
+    symbol: StateMachine
+    line: 947
+    type: code
+  - path: src/config_layer/crt_engine_v2.py
+    symbol: _transition
+    line: 980
+    type: code
+  - path: src/config_layer/crt_engine_v2.py
+    symbol: process_candle
+    line: 2607
+    type: code
+  - path: src/config_layer/crt_engine_v2.py
+    symbol: CRTEngine
+    line: 2422
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: crt.state_topology
+  kind: file_identity
+  semantic_name: CRT State Topology
+  physical_path: src/config_layer/state_identity.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: owns CRTState, Direction, RejectReason, CRTConfig,
+    and the VALID_TRANSITIONS graph — the legal CRT state topology, distinct from the engine that enforces
+    it (crt.state_machine).'
+  aliases:
+  - state_identity
+  concept_ids:
+  - CN-004
+  miar_entry: crt
+  summary_50: Owns the 9-state CRT transition graph and the CRTState/Direction/RejectReason/CRTConfig
+    identities.
+  why_this_identity: Extracted from crt_engine_v2 to break a state-loader import cycle; it is the single
+    source of truth for which CRT state transitions are legal, consumed by the engine but not owned by
+    it.
+  evidence:
+  - path: src/config_layer/state_identity.py
+    symbol: VALID_TRANSITIONS
+    line: 69
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: decision.central_authority
+  kind: file_identity
+  semantic_name: Decision Central Authority
+  physical_path: src/core/decision_engine.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: DECISION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: "Only this module decides execute vs reject" (module
+    docstring), a semantic judgment only — no fees/RR/portfolio.'
+  aliases:
+  - decision_engine
+  - DecisionEngine
+  concept_ids:
+  - CN-006
+  miar_entry: decision_fusion
+  summary_50: Central execute-vs-reject authority over fused score / p_win / zone validity / weak components.
+    Not RR (F-048 resolved).
+  why_this_identity: A SPINE_FILES module; the identity records the F-048 RR-gate removal so a reader
+    does not reintroduce economic RR here.
+  evidence:
+  - path: src/core/decision_engine.py
+    symbol: DecisionEngine
+    line: 91
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: decision.fusion_geometry
+  kind: file_identity
+  semantic_name: Fusion Decision Geometry
+  physical_path: src/core/fusion_engine.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: DECISION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: weighted fusion of the 4 engine scores into a
+    single decision-surface geometry.'
+  aliases:
+  - fusion_engine
+  - FusionEngine
+  concept_ids:
+  - CN-006
+  miar_entry: decision_fusion
+  summary_50: Weighted fusion of CRT/Gaussian/ZoneGate/RR scores into the decision surface (F-038 double-weighting
+    fixed here).
+  why_this_identity: A SPINE_FILES module; the identity is the anchor for the F-038 rr_fusion-disabled
+    finding.
+  evidence:
+  - path: src/core/fusion_engine.py
+    symbol: FusionEngine
+    line: 257
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: decision.multi_engine_orchestrator
+  kind: file_identity
+  semantic_name: Multi-Engine Orchestrator
+  physical_path: src/core/engine_runner.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: DECISION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: strict 6-step pipeline (adapter gate -> 4 engines
+    -> completeness check -> fusion -> decision -> collector).'
+  aliases:
+  - engine_runner
+  - EngineRunner
+  concept_ids:
+  - CN-005
+  miar_entry: decision_fusion
+  summary_50: Orchestrates CRT/Gaussian/ZoneGate/RR engines under a completeness gate, then fusion and
+    decision.
+  why_this_identity: A SPINE_FILES module and the pipeline's single entry point; EXPECTED_ENGINES hard-rejects
+    on a missing engine, worth naming explicitly.
+  evidence:
+  - path: src/core/engine_runner.py
+    symbol: EngineRunner
+    line: 298
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: engines.candle_polarity_scorer
+  kind: file_identity
+  semantic_name: Candle Polarity Scorer
+  physical_path: src/engines/rr_engine.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: SCORING
+  filename_semantic_status: MISLEADING
+  filename_status_reason: '"rr" reads as risk:reward, which this module does not compute. rr_engine.py:69-73
+    sets polarity = max((high-close)/range, (close-low)/range); the two terms sum to 1, so the output
+    is bounded [0.5, 1.0], and a degenerate/zero-range candle returns 0.0. That is a candle-shape score,
+    not a forward reward ratio. The module says so itself at :81 ("semantic": "candle_structure_quality").
+    Economic RR lives in src/core/ultron_risk_gate.py:230-245.'
+  aliases:
+  - rr_engine
+  - candle structure quality
+  - rr_ratio
+  concept_ids:
+  - CN-005
+  miar_entry: crt
+  summary_50: Scores how close a candle's close sits to either extreme of its own range. Bounded [0.5,
+    1.0]. Not risk:reward.
+  why_this_identity: The identity must state the quantity, because the filename states a different one
+    and src/features/model_evidence.py already enforces producer-declared semantics against active_models.yaml
+    for exactly this defect class.
+  evidence:
+  - path: src/engines/rr_engine.py
+    symbol: candle_polarity
+    line: 73
+    type: code
+  - path: src/engines/rr_engine.py
+    symbol: rr_ratio
+    line: 79
+    type: code
+  - path: src/core/ultron_risk_gate.py
+    symbol: rr_ratio
+    line: 230
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: engines.crt_score_adapter
+  kind: file_identity
+  semantic_name: CRT Score Adapter
+  physical_path: src/engines/crt_engine.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: ADAPTER
+  semantic_layer: SCORING
+  filename_semantic_status: SPLIT
+  filename_status_reason: 'Shares a stem with src/config_layer/crt_engine_v2.py but is an UNRELATED 64-line
+    wrapper — it has no classes and returns only {"score": float} by delegating to engines/scoring_engine.py::compute_scores.
+    Reading this as "CRT engine, an earlier or lighter version of crt_engine_v2" is the exact wrong inference
+    the shared name invites.'
+  aliases:
+  - crt_engine (engines package)
+  concept_ids:
+  - CN-005
+  miar_entry: crt
+  summary_50: Thin wrapper around scoring_engine.compute_scores; not the CRT lifecycle engine.
+  why_this_identity: Naming it an adapter (not "the CRT engine") stops the stem collision with crt.state_machine
+    from being read as versioning.
+  evidence:
+  - path: src/engines/crt_engine.py
+    symbol: compute
+    line: 17
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: engines.crt_scorer
+  kind: file_identity
+  semantic_name: CRT Weighted Scorer
+  physical_path: src/engines/scoring_engine.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: SCORING
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: the real weighted 4-component (sweep/breakout/retest/time)
+    CRT scoring math lives here.'
+  aliases:
+  - scoring_engine
+  - compute_scores
+  concept_ids:
+  - CN-005
+  miar_entry: crt
+  summary_50: Weighted blend of sweep/breakout/retest/time sub-scores into the CRT engine's final score.
+  why_this_identity: This is the module engines.crt_score_adapter (crt_engine.py) delegates to — the actual
+    math, not the wrapper.
+  evidence:
+  - path: src/engines/scoring_engine.py
+    symbol: compute_scores
+    line: 19
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: engines.gaussian_compat_shim
+  kind: file_identity
+  semantic_name: Gaussian Compatibility Shim
+  physical_path: src/engines/gaussian_engine.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: SHIM
+  semantic_layer: SCORING
+  filename_semantic_status: COMPATIBILITY
+  filename_status_reason: Self-labeled BACKWARD-COMPATIBILITY SHIM (33 lines); re-exports HeuristicGaussianEngine/GaussianRegistry
+    from heuristic_gaussian_engine.py and aliases GaussianEngine = HeuristicGaussianEngine. Its only importer
+    is a test — production code already imports the canonical module directly.
+  aliases:
+  - gaussian_engine
+  concept_ids:
+  - CN-005
+  miar_entry: gaussian
+  summary_50: Import-compatibility re-export; carries no logic of its own.
+  why_this_identity: Naming it a shim stops a reader from assuming this file holds the Gaussian scoring
+    implementation.
+  evidence:
+  - path: src/engines/gaussian_engine.py
+    symbol: GaussianEngine
+    line: 26
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: engines.heuristic_gaussian_scorer
+  kind: file_identity
+  semantic_name: Heuristic Gaussian Scorer
+  physical_path: src/engines/heuristic_gaussian_engine.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: SCORING
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: the live 3-feature Gaussian heuristic scorer,
+    the canonical implementation gaussian_engine.py re-exports.'
+  aliases:
+  - heuristic_gaussian_engine
+  concept_ids:
+  - CN-005
+  miar_entry: gaussian
+  summary_50: Canonical Gaussian heuristic scoring engine (registry-backed, live).
+  why_this_identity: Distinguishing this from engines.gaussian_compat_shim and engines.ml_gaussian_scorer
+    keeps the three Gaussian-named files from being read as one.
+  evidence:
+  - path: src/engines/heuristic_gaussian_engine.py
+    symbol: HeuristicGaussianEngine
+    line: 191
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: engines.live_engine
+  kind: file_identity
+  semantic_name: Live Engine
+  physical_path: src/engines/live_engine.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: SCORING
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-007 (Multi-Engine Scoring); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-005
+  miar_entry: null
+  summary_50: Member of BD-007 (Multi-Engine Scoring); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-007 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: engines.llm_engine
+  kind: file_identity
+  semantic_name: Llm Engine
+  physical_path: src/engines/llm_engine.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: SCORING
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-007 (Multi-Engine Scoring); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-005
+  miar_entry: null
+  summary_50: Member of BD-007 (Multi-Engine Scoring); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-007 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: engines.ml_gaussian_scorer
+  kind: file_identity
+  semantic_name: ML Gaussian Scorer
+  physical_path: src/engines/ml_gaussian_engine.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: SCORING
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: the ML-trained Gaussian variant, imported alongside
+    the heuristic engine by engine_runner.'
+  aliases:
+  - ml_gaussian_engine
+  concept_ids:
+  - CN-005
+  miar_entry: gaussian
+  summary_50: ML-trained Gaussian scoring engine, imported alongside the heuristic scorer by engine_runner.
+  why_this_identity: Keeps the ML variant distinct from the heuristic canonical scorer and the compatibility
+    shim.
+  evidence:
+  - path: src/engines/ml_gaussian_engine.py
+    symbol: MLGaussianEngine
+    line: 25
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: engines.tradenet_meta_engine
+  kind: file_identity
+  semantic_name: Tradenet Meta Engine
+  physical_path: src/engines/tradenet_meta_engine.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: SCORING
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-007 (Multi-Engine Scoring); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-005
+  miar_entry: null
+  summary_50: Member of BD-007 (Multi-Engine Scoring); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-007 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: engines.trap_validator_engine
+  kind: file_identity
+  semantic_name: Trap Validator Engine
+  physical_path: src/engines/trap_validator_engine.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: SCORING
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-007 (Multi-Engine Scoring); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-005
+  miar_entry: null
+  summary_50: Member of BD-007 (Multi-Engine Scoring); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-007 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: engines.zone_cluster_score
+  kind: file_identity
+  semantic_name: Zone Cluster Score
+  physical_path: src/engines/zone_cluster_score.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: SCORING
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-007 (Multi-Engine Scoring); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-005
+  miar_entry: null
+  summary_50: Member of BD-007 (Multi-Engine Scoring); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-007 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: engines.zone_gate_engine
+  kind: file_identity
+  semantic_name: Zone Gate Engine
+  physical_path: src/engines/zone_gate_engine.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: SCORING
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-007 (Multi-Engine Scoring); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-005
+  miar_entry: null
+  summary_50: Member of BD-007 (Multi-Engine Scoring); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-007 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: execution.planner_intent_classifier
+  kind: file_identity
+  semantic_name: Execution Planner Intent Classifier
+  physical_path: src/config_layer/execution_planner.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: EXECUTION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name is broadly accurate but the module''s own docstring narrows it: a pure
+    intent classifier + entry-price deriver + approval gate. SL/TP/RR are explicitly NOT computed here
+    — that is CRT engine''s compute_crt_levels via gate_intelligence.'
+  aliases:
+  - execution_planner
+  - ExecutionPlannerV1_2
+  concept_ids:
+  - CN-006
+  miar_entry: execution_intent
+  summary_50: Classifies BREAKOUT/PULLBACK/LIQ_SWEEP/REVERSAL intent, derives entry price, delegates approval
+    to GateIntelligence. Not SL/TP/RR.
+  why_this_identity: The identity's scope note prevents the common misreading that this module owns the
+    full trade plan geometry.
+  evidence:
+  - path: src/config_layer/execution_planner.py
+    symbol: ExecutionPlannerV1_2
+    line: 132
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: features.broker_clock
+  kind: file_identity
+  semantic_name: Broker Clock Module
+  physical_path: src/features/broker_clock.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: DATA
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-004 (Session and Broker Clock); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-008
+  miar_entry: null
+  summary_50: Member of BD-004 (Session and Broker Clock); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-004 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.candle_math
+  kind: file_identity
+  semantic_name: Candle Math
+  physical_path: src/features/candle_math.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-003 (Market Ontology Math); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-007
+  miar_entry: null
+  summary_50: Member of BD-003 (Market Ontology Math); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-003 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.canonical_feature_contract
+  kind: file_identity
+  semantic_name: Canonical Feature Contract
+  physical_path: src/features/feature_schema.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: FEATURE_SURFACE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: the single source of truth for CANONICAL_FEATURES
+    / schema versioning; nothing else may redefine them.'
+  aliases:
+  - feature_schema
+  concept_ids:
+  - CN-001
+  miar_entry: feature_pipeline
+  summary_50: 'The 39-dim canonical feature vector contract: names, order, dimension, schema versioning.'
+  why_this_identity: The most-depended-on module in the repo (182 importers) deserves an identity that
+    survives any future rename.
+  evidence:
+  - path: src/features/feature_schema.py
+    symbol: CANONICAL_FEATURES
+    line: 71
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: features.crt_feature_transcriber
+  kind: file_identity
+  semantic_name: CRT Feature Transcriber
+  physical_path: src/features/crt_feature_builder.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: DEAD
+  semantic_layer: FEATURE_SURFACE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: The filename itself is accurate (it transcribes trade/candle/state dicts onto
+    canonical feature keys); the finding is about LIFECYCLE not naming — the module self-admits zero production
+    call sites (build_bitnet_features has 2 test importers only; the live BitNet path reads geometry from
+    CRT engine's cached_features instead).
+  aliases:
+  - crt_feature_builder
+  - build_bitnet_features
+  concept_ids:
+  - CN-004
+  miar_entry: crt
+  summary_50: Transcribes trade/candle/state dicts to canonical feature keys. Zero production call sites
+    (F-046).
+  why_this_identity: role=DEAD makes the lifecycle finding visible in the identity itself, not just in
+    a comment a reader might miss.
+  evidence:
+  - path: src/features/crt_feature_builder.py
+    symbol: build_bitnet_features
+    line: 72
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: features.crt_state_resolver
+  kind: file_identity
+  semantic_name: Crt State Resolver
+  physical_path: src/features/crt_state_resolver.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-006 (CRT Structural Engine); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-004
+  miar_entry: null
+  summary_50: Member of BD-006 (CRT Structural Engine); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-006 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.dataset_builder
+  kind: file_identity
+  semantic_name: Dataset Builder
+  physical_path: src/features/dataset_builder.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: FEATURE_SURFACE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-001 (Feature Vector Emission); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-001
+  miar_entry: null
+  summary_50: Member of BD-001 (Feature Vector Emission); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-001 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.dataset_validator
+  kind: file_identity
+  semantic_name: Dataset Validator
+  physical_path: src/features/dataset_validator.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: FEATURE_SURFACE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-001 (Feature Vector Emission); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-001
+  miar_entry: null
+  summary_50: Member of BD-001 (Feature Vector Emission); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-001 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.derived_math
+  kind: file_identity
+  semantic_name: Derived Math
+  physical_path: src/features/derived_math.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-003 (Market Ontology Math); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-007
+  miar_entry: null
+  summary_50: Member of BD-003 (Market Ontology Math); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-003 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.feature_builder
+  kind: file_identity
+  semantic_name: Feature Builder
+  physical_path: src/features/feature_builder.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: FEATURE_SURFACE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-001 (Feature Vector Emission); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-001
+  miar_entry: null
+  summary_50: Member of BD-001 (Feature Vector Emission); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-001 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.feature_identity
+  kind: file_identity
+  semantic_name: Feature Identity
+  physical_path: src/features/feature_identity.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: FEATURE_SURFACE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-001 (Feature Vector Emission); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-001
+  miar_entry: null
+  summary_50: Member of BD-001 (Feature Vector Emission); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-001 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.feature_monitor
+  kind: file_identity
+  semantic_name: Feature Monitor
+  physical_path: src/features/feature_monitor.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: FEATURE_SURFACE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-001 (Feature Vector Emission); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-001
+  miar_entry: null
+  summary_50: Member of BD-001 (Feature Vector Emission); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-001 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.feature_state_encoder
+  kind: file_identity
+  semantic_name: Feature State Encoder
+  physical_path: src/features/feature_states.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: FEATURE_SURFACE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: pure interpreter mapping computed feature values
+    to declared semantic state names via the market ontology.'
+  aliases:
+  - feature_states
+  - FeatureStateEncoder
+  concept_ids:
+  - CN-001
+  miar_entry: feature_pipeline
+  summary_50: Maps feature values to ontology-declared semantic state names. Computes nothing; owns zero
+    thresholds.
+  why_this_identity: Shadow-only (nothing on the decision spine consumes this output) — the identity records
+    that scope honestly.
+  evidence:
+  - path: src/features/feature_states.py
+    symbol: FeatureStateEncoder
+    line: 57
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: features.fm_resolve
+  kind: file_identity
+  semantic_name: Fm Resolve
+  physical_path: src/features/fm_resolve.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-003 (Market Ontology Math); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-007
+  miar_entry: null
+  summary_50: Member of BD-003 (Market Ontology Math); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-003 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.formula_registry
+  kind: file_identity
+  semantic_name: Formula Registry Facade
+  physical_path: src/features/formula_registry.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-003 (Market Ontology Math); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-007
+  miar_entry: null
+  summary_50: Member of BD-003 (Market Ontology Math); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-003 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.market_context_builder
+  kind: file_identity
+  semantic_name: Market Context Builder
+  physical_path: src/features/market_context.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: FEATURE_SURFACE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: groups one bar''s feature-state vector into ontology-declared
+    taxonomy categories.'
+  aliases:
+  - market_context
+  - MarketContextBuilder
+  concept_ids:
+  - CN-001
+  miar_entry: feature_pipeline
+  summary_50: Groups a bar's feature states into taxonomy dimensions (Trend/Momentum/Volatility/...).
+    Shadow-only.
+  why_this_identity: Near-dead in production (only market_shape.py imports it in src/) — the identity
+    should not overstate its reach.
+  evidence:
+  - path: src/features/market_context.py
+    symbol: MarketContextBuilder
+    line: 58
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: features.market_shape_classifier
+  kind: file_identity
+  semantic_name: Market Shape Classifier
+  physical_path: src/features/market_shape.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: FEATURE_SURFACE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: assigns each bar a content-addressed recurring-structure
+    identity, zero fitted parameters.'
+  aliases:
+  - market_shape
+  - MarketShapeClassifier
+  concept_ids:
+  - CN-001
+  miar_entry: feature_pipeline
+  summary_50: Content-addressed shape id per bar (MS-<hash>) plus an optional coarse label. Research-only,
+    zero fitted parameters.
+  why_this_identity: Explicitly the anti-thesis to the killed IC-003B fitted shape libraries — the identity
+    should carry that lineage.
+  evidence:
+  - path: src/features/market_shape.py
+    symbol: MarketShapeClassifier
+    line: 72
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: features.model_evidence_builder
+  kind: file_identity
+  semantic_name: Model Evidence Builder
+  physical_path: src/features/model_evidence.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: GOVERNANCE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: runtime reader of active_models.yaml''s four-truth
+    block, enforcing producer-declared output semantics.'
+  aliases:
+  - model_evidence
+  - ModelEvidenceBuilder
+  concept_ids:
+  - CN-001
+  miar_entry: feature_pipeline
+  summary_50: Enforces that a model's declared output semantic matches what a consumer expects — the mechanism
+    designed to prevent the rr_engine defect class.
+  why_this_identity: Directly documents (and would have caught) the engines.candle_polarity_scorer / rr_engine
+    naming defect this whole layer is built to make explicit elsewhere too.
+  evidence:
+  - path: src/features/model_evidence.py
+    symbol: ModelEvidenceBuilder
+    line: 145
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: features.production_feature_pipeline
+  kind: file_identity
+  semantic_name: Production Feature Pipeline
+  physical_path: src/features/feature_pipeline.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: FEATURE_SURFACE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: production feature engineering for M15 OHLCV,
+    computing the canonical feature vector.'
+  aliases:
+  - feature_pipeline
+  - FeaturePipeline
+  concept_ids:
+  - CN-001
+  miar_entry: feature_pipeline
+  summary_50: Computes the deterministic 39-dim canonical feature vector from OHLCV, PIT-disciplined.
+  why_this_identity: 102 importers; the production feature-engineering workhorse, distinguished from the
+    shadow-only feature_states/market_context/market_shape layers.
+  evidence:
+  - path: src/features/feature_pipeline.py
+    symbol: FeaturePipeline
+    line: 423
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: features.registry
+  kind: file_identity
+  semantic_name: Feature Registry Package
+  physical_path: src/features/registry/__init__.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-003 (Market Ontology Math); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-007
+  miar_entry: null
+  summary_50: Member of BD-003 (Market Ontology Math); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-003 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.registry.composition_registry
+  kind: file_identity
+  semantic_name: Composition Registry
+  physical_path: src/features/registry/composition_registry.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-003 (Market Ontology Math); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-007
+  miar_entry: null
+  summary_50: Member of BD-003 (Market Ontology Math); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-003 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.registry.derived_registry
+  kind: file_identity
+  semantic_name: Derived Registry
+  physical_path: src/features/registry/derived_registry.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-003 (Market Ontology Math); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-007
+  miar_entry: null
+  summary_50: Member of BD-003 (Market Ontology Math); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-003 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.registry.loader
+  kind: file_identity
+  semantic_name: Loader
+  physical_path: src/features/registry/_loader.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-003 (Market Ontology Math); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-007
+  miar_entry: null
+  summary_50: Member of BD-003 (Market Ontology Math); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-003 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.registry.primitive_registry
+  kind: file_identity
+  semantic_name: Primitive Registry
+  physical_path: src/features/registry/primitive_registry.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: MARKET_STRUCTURE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-003 (Market Ontology Math); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-007
+  miar_entry: null
+  summary_50: Member of BD-003 (Market Ontology Math); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-003 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.schema_validator
+  kind: file_identity
+  semantic_name: Schema Validator
+  physical_path: src/features/schema_validator.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: FEATURE_SURFACE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-001 (Feature Vector Emission); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-001
+  miar_entry: null
+  summary_50: Member of BD-001 (Feature Vector Emission); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-001 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: features.session_classifier
+  kind: file_identity
+  semantic_name: Session Classifier
+  physical_path: src/features/session_classifier.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: DATA
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-004 (Session and Broker Clock); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-008
+  miar_entry: null
+  summary_50: Member of BD-004 (Session and Broker Clock); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-004 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: governance.config_integrity
+  kind: file_identity
+  semantic_name: Config Integrity
+  physical_path: src/governance/config_integrity.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: GOVERNANCE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-009 (Production Config and Promotion); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-009
+  - CN-010
+  - CN-012
+  miar_entry: null
+  summary_50: Member of BD-009 (Production Config and Promotion); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-009 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: governance.findings_export
+  kind: file_identity
+  semantic_name: Findings Export
+  physical_path: src/governance/findings_export.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: GOVERNANCE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-009 (Production Config and Promotion); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-009
+  - CN-010
+  - CN-012
+  miar_entry: null
+  summary_50: Member of BD-009 (Production Config and Promotion); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-009 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: governance.promotion_manager
+  kind: file_identity
+  semantic_name: Promotion Manager
+  physical_path: src/governance/promotion_manager.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: GOVERNANCE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-009 (Production Config and Promotion); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-009
+  - CN-010
+  - CN-012
+  miar_entry: null
+  summary_50: Member of BD-009 (Production Config and Promotion); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-009 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: governance.risk_gate_regime_wrapper
+  kind: file_identity
+  semantic_name: Risk Gate Regime Wrapper
+  physical_path: src/core/ultron_risk_gate_wrapper.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: ADAPTER
+  semantic_layer: RISK
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: pre-scales risk_percent by a regime factor and
+    ALWAYS delegates to UltronRiskGate.evaluate() (SR-1) — never bypasses it.'
+  aliases:
+  - ultron_risk_gate_wrapper
+  concept_ids:
+  - CN-002
+  miar_entry: execution_intent
+  summary_50: Regime-aware risk_percent pre-scaler that always delegates to risk.capital_gate; never bypasses
+    it.
+  why_this_identity: Naming it a wrapper/adapter (not a second gate) makes the always-delegates invariant
+    visible in the identity.
+  evidence:
+  - path: src/core/ultron_risk_gate_wrapper.py
+    symbol: UltronRiskGateWrapper
+    line: 19
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: governance.shadow_promotion_gate
+  kind: file_identity
+  semantic_name: Shadow Promotion Gate
+  physical_path: src/governance/shadow_promotion_gate.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: GOVERNANCE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-009 (Production Config and Promotion); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-009
+  - CN-010
+  - CN-012
+  miar_entry: null
+  summary_50: Member of BD-009 (Production Config and Promotion); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-009 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: research.config
+  kind: file_identity
+  semantic_name: Config
+  physical_path: src/research/config.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: RESEARCH
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: research.contracts
+  kind: file_identity
+  semantic_name: Contracts
+  physical_path: src/research/contracts.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: RESEARCH
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: research.costs
+  kind: file_identity
+  semantic_name: Costs
+  physical_path: src/research/costs.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: RESEARCH
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: research.qualification
+  kind: file_identity
+  semantic_name: Qualification
+  physical_path: src/research/qualification.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: RESEARCH
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: risk.capital_gate
+  kind: file_identity
+  semantic_name: Capital Risk Gate
+  physical_path: src/core/ultron_risk_gate.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: RISK
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: capital protection layer (position sizing / drawdown
+    / exposure), the true owner of economic RR.'
+  aliases:
+  - ultron_risk_gate
+  - UltronRiskGate
+  concept_ids:
+  - CN-002
+  miar_entry: execution_intent
+  summary_50: 'Final capital-protection gate: position sizing, drawdown/exposure limits, and the real
+    cost-taxed RR floor.'
+  why_this_identity: Must be kept distinct from risk.signal_quality_governor (regime_governor.py, a quality
+    FILTER inside engine_runner, not a capital gate) and from crt_engine_v2.py::UltronRiskEngine (a fourth,
+    internal-to-CRT class) — all three share the Ultron/RiskGate naming pattern but are different objects.
+  evidence:
+  - path: src/core/ultron_risk_gate.py
+    symbol: UltronRiskGate
+    line: 69
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: risk.signal_quality_governor
+  kind: file_identity
+  semantic_name: Signal Quality Governor
+  physical_path: src/core/regime_governor.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: DECISION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: a signal-quality filter (alias UltronGovernor)
+    run as engine_runner Step 6 — NOT a capital gate.'
+  aliases:
+  - regime_governor
+  - UltronGovernor
+  concept_ids:
+  - CN-005
+  miar_entry: decision_fusion
+  summary_50: Signal-quality filter inside EngineRunner's pipeline (alias UltronGovernor). Not risk.capital_gate.
+  why_this_identity: The UltronGovernor alias makes this easy to conflate with risk.capital_gate; the
+    identity exists specifically to disclaim that.
+  evidence:
+  - path: src/core/regime_governor.py
+    symbol: RegimeGovernor
+    line: 1
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: runtime.backtest_spine
+  kind: file_identity
+  semantic_name: Backtest Spine Runner
+  physical_path: src/runtime/backtest_v2.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: RUNTIME
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: candle-by-candle backtest runner, no-lookahead
+    by construction.'
+  aliases:
+  - backtest_v2
+  - BacktestRunner
+  concept_ids:
+  - CN-003
+  - CN-015
+  miar_entry: backtest
+  summary_50: Streams candles one at a time through the spine; the no-lookahead integrity boundary.
+  why_this_identity: A SPINE_FILES module and the largest file in the repo by size; the anchor for the
+    No-Lookahead Integrity concept.
+  evidence:
+  - path: src/runtime/backtest_v2.py
+    symbol: BacktestRunner
+    line: 1717
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: runtime.baseline_capture
+  kind: file_identity
+  semantic_name: Baseline Capture
+  physical_path: src/runtime/baseline_capture.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: RUNTIME
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-005 (Runtime Candle Paths); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-003
+  - CN-015
+  miar_entry: null
+  summary_50: Member of BD-005 (Runtime Candle Paths); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-005 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: runtime.live_spine_hook
+  kind: file_identity
+  semantic_name: Live Spine Hook
+  physical_path: src/runtime/live_engine_hook.py
+  status: ACTIVE
+  authority: advisory
+  tier: 1
+  confidence: HIGH
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: RUNTIME
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Name matches responsibility: implements the EngineRunner API contract for the
+    live path (session normalization, drift detection, UltronRiskGate integration).'
+  aliases:
+  - live_engine_hook
+  concept_ids:
+  - CN-003
+  miar_entry: backtest
+  summary_50: 'Live-path implementation of the EngineRunner API contract: session normalization, drift
+    detection, risk-gate wiring.'
+  why_this_identity: A SPINE_FILES module; the live counterpart to runtime.backtest_spine.
+  evidence:
+  - path: src/runtime/live_engine_hook.py
+    symbol: EngineRunner
+    line: 1
+    type: code
+  supersedes: null
+  superseded_by: null
+- id: runtime.unified_replay_harness
+  kind: file_identity
+  semantic_name: Unified Replay Harness
+  physical_path: src/runtime/unified_replay_harness.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: RUNTIME
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-005 (Runtime Candle Paths); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-003
+  - CN-015
+  miar_entry: null
+  summary_50: Member of BD-005 (Runtime Candle Paths); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-005 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: src.agent
+  kind: file_identity
+  semantic_name: Agent
+  physical_path: src/agent/__init__.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: AGENT
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: src.control_plane
+  kind: file_identity
+  semantic_name: Control Plane
+  physical_path: src/control_plane/__init__.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: INTEGRATION
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-010 (Research Agent and Control Plane); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-011
+  - CN-013
+  - CN-014
+  miar_entry: null
+  summary_50: Member of BD-010 (Research Agent and Control Plane); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-010 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: src.engines
+  kind: file_identity
+  semantic_name: Engines
+  physical_path: src/engines/__init__.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: SCORING
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-007 (Multi-Engine Scoring); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-005
+  miar_entry: null
+  summary_50: Member of BD-007 (Multi-Engine Scoring); role within that boundary not independently source-verified.
+  why_this_identity: Curated from BD-007 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null
+- id: src.features
+  kind: file_identity
+  semantic_name: Features
+  physical_path: src/features/__init__.py
+  status: ACTIVE
+  authority: advisory
+  tier: 2
+  confidence: MEDIUM
+  provenance: CURATED
+  derivation: null
+  canonical: true
+  role: CANONICAL
+  semantic_layer: FEATURE_SURFACE
+  filename_semantic_status: ALIGNED
+  filename_status_reason: Boundary-claimed by BD-001 (Feature Vector Emission); accepted at boundary-membership
+    level, not independently source-read (Tier 2 — see docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md).
+  aliases: []
+  concept_ids:
+  - CN-001
+  miar_entry: null
+  summary_50: Member of BD-001 (Feature Vector Emission); role within that boundary not independently
+    source-verified.
+  why_this_identity: Curated from BD-001 membership so this path has SOME reviewed identity rather than
+    only a Tier-3 slug.
+  evidence: []
+  supersedes: null
+  superseded_by: null

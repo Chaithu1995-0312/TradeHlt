@@ -1,0 +1,1125 @@
+{
+  "schema_version": "1.0",
+  "program_id": "EDGE_RESEARCH_PLATFORM",
+  "title": "Edge Research Platform Program",
+  "created_at": "2026-07-14",
+  "updated_at": "2026-07-17",
+  "status": "ACTIVE",
+  "read_order_for_planning": [
+    "trust_policy",
+    "unknowns",
+    "assumptions",
+    "tool_output_hallucination_policy",
+    "priority_stack"
+  ],
+  "branch_scope": "feature/truth-registry-v2",
+  "active_version_at_open": "v2_multi_2026_04",
+  "authority": {
+    "production_authority": "NONE",
+    "research_authority": "PROGRAM_TRACKING_ONLY",
+    "grants_promotion": false,
+    "grants_capital_risk": false,
+    "note": "This program tracks design/implementation/review/test/validation. It does not grant model or trading authority."
+  },
+  "goal": {
+    "primary": "Maximize P(find a small number of cost-surviving, deployable edges OR cleanly prove the current information set cannot produce them) per unit calendar time and capital risk.",
+    "not_goals": [
+      "Maximize architecture elegance",
+      "Maximize number of models or features",
+      "Treat existence of CRT/Gaussian/Zone/RR/BitNet/TradeNet as proof of edge",
+      "Trust backtest numbers before validation-flow review"
+    ]
+  },
+  "trust_policy": {
+    "id": "TP-BACKTEST-VALIDATION-GATE",
+    "rule": "Do NOT trust backtest data, ledgers, PF/E/WR numbers, or qualification verdicts until the validation flow that consumed them has been reviewed and confirmed to match the intended implementation.",
+    "severity": "HARD",
+    "applies_to": [
+      "backtest_v2 outputs",
+      "spine/research qualification results",
+      "opportunity-stream derived labels",
+      "M4 / forward_walk results",
+      "any PF, expectancy, win-rate, or trade-count claims used for decisions"
+    ],
+    "required_before_trust": [
+      "Identify which validation/entry path was consumed (gate-ON vs gate-OFF, CRT-only vs fusion, label source)",
+      "Review that path against intended implementation (code + config + ACTIVE_VERSION)",
+      "Confirm no lookahead / contaminated labels / wrong exit model / wrong cost model for the claim being made",
+      "Record validation_flow_review status on the work item before treating results as evidence"
+    ],
+    "status_tokens": {
+      "UNTRUSTED_RAW": "Artifacts exist; validation flow not reviewed",
+      "FLOW_REVIEWED": "Consumed validation path inspected and documented",
+      "FLOW_MATCHES_INTENT": "Path matches intended implementation; numbers may be used as research evidence only",
+      "AUTHORITY_ELIGIBLE": "Survived qualification gates + Authority Ladder; still not automatic production authority"
+    },
+    "default_result_trust": "UNTRUSTED_RAW"
+  },
+  "lifecycle_phases": [
+    {
+      "id": "DESIGN",
+      "order": 1,
+      "description": "Pre-register hypotheses, populations, targets, controls, kill criteria. No RUN authority by default."
+    },
+    {
+      "id": "IMPLEMENTATION",
+      "order": 2,
+      "description": "Surgical code/config/data plumbing only after design freeze or explicit owner grant."
+    },
+    {
+      "id": "REVIEW",
+      "order": 3,
+      "description": "Independent technical review of design and/or implementation vs intent (including validation flow)."
+    },
+    {
+      "id": "TESTING",
+      "order": 4,
+      "description": "Unit/integration/regression floors; determinism; parity. Not economic truth."
+    },
+    {
+      "id": "VALIDATION",
+      "order": 5,
+      "description": "Economic/scientific validation under frozen protocol. Results stay UNTRUSTED_RAW until trust_policy satisfied."
+    }
+  ],
+  "unknowns_discussion": "PARKED_UNTIL_FULL_IMPLEMENTATION_PLAN",
+  "io_map": {
+    "status": "DESIGN",
+    "path_md": "docs/research-readiness/edge-research-platform-io-map.md"
+  },
+  "synthetic_4h_trace": {
+    "status": "GENERATED",
+    "script": "scripts/research/erp_synth_4h_trace.py",
+    "data_dir": "data/synthetic/erp_4h_m15",
+    "doc_md": "docs/research-readiness/erp-synthetic-4h-trace.md",
+    "critical_compare": "PASS",
+    "engines": {
+      "status": "DESIGNED_AND_RUN",
+      "crt": 0.8227,
+      "gaussian": 0.9432,
+      "zone_gate_soft": 0.882419,
+      "rr_polarity": 0.6429,
+      "all_match_intended": true
+    },
+    "note": "Design-injected Signal + engine feature contract; CRT state-machine detect not claimed; fusion NOT_RUN"
+  },
+  "story_library": {
+    "status": "GENERATED",
+    "program_slot": "P1.1_golden + P1.2_story_externalization (owner-granted plan slice)",
+    "ontology": "configs/research/market_story_ontology.yaml",
+    "ontology_authority": "descriptive/validation only; grants NO runtime or promotion authority (section 6.5)",
+    "engine": "src/research/synthetic/ (story_spec, story_builder, ontology, story_registry, stories/)",
+    "driver": "scripts/research/story_library_build.py",
+    "data_dir": "data/synthetic/stories",
+    "tests": ["tests/research/test_story_library_golden.py", "tests/research/test_story_ontology.py"],
+    "n_stories": 12,
+    "active_families": ["liquidity_reversal", "trend_continuation", "range_rotation", "breakout"],
+    "families_defined": 12,
+    "market_states_defined": 38,
+    "semantic_layers": 8,
+    "six_layer_validation": ["family", "market_states", "crt_states", "feature_signature", "engine_signature", "outcome"],
+    "outcome_coverage": ["TP_HIT", "SL_HIT", "TIMEOUT"],
+    "parity_anchor": "liq_sweep_reversal_long reproduces data/synthetic/erp_4h_m15 engine scores",
+    "library_all_pass": true,
+    "substrate_unchanged": ["9 CRT states (crt_engine_v2)", "38-dim vector (feature_schema)", "configs/formulas/market_ontology.yaml"],
+    "roadmap": {"phase_a": "4 families / ~12 stories (done)", "phase_b": "8 families / ~40 stories", "phase_c": "12 families / 80-120 stories"},
+    "trust": "UNTRUSTED_RAW research fixtures; no edge/economic claim",
+    "note": "Story geometry stays in CODE (D-23). Semantic ontology is a NEW descriptive authority — pending owner Decision-Board note (D-2N) before it is treated as a locked decision."
+  },
+  "test_harness": {
+    "status": "T0_IMPLEMENTED",
+    "phase": "T0_scaffold",
+    "since": "2026-07-16",
+    "helpers": ["src/utils/run_manifest.py", "src/utils/validation_contract.py"],
+    "tests": ["tests/harness/test_run_manifest.py", "tests/harness/test_anti_hallucination.py", "tests/harness/test_validation_path.py"],
+    "intent_contract_fixture": "tests/harness/fixtures/intent_WI-002.json",
+    "ci_workflow": ".github/workflows/erp-test-harness.yml",
+    "ci_scope": "path-scoped green subset (tests/harness + story goldens); NOT the whole suite (F-018 reds); governance.yml untouched",
+    "first_real_producer": "scripts/research/story_library_build.py emits data/synthetic/stories/run_manifest.json + RUN_SHA256.txt",
+    "threats_covered": {"H1": "require_manifest + build_manifest fail-closed", "H2": "assert_summary_matches_manifest + summary_from_assertions", "H3": "validate_manifest_against_intent (VP-*)"},
+    "green_subset_tests": 58,
+    "markers_added": ["unit", "contract", "research_integrity", "market_network", "broker_mt5_ro", "exec_dry_run", "ui_playwright", "shadow_economic", "capital_micro", "slow"],
+    "t1_offline_xauusd": {
+      "status": "DELIVERED",
+      "since": "2026-07-16",
+      "mode": "OFFLINE_LOCAL_CORPUS (owner redirect from Binance network)",
+      "corpus": "data/mt5/XAUUSD_M15.csv (Phase-1 frozen candidate, sha256 4d73f5ce…, 47275 rows) via guard_xauusd_csv_path",
+      "corpus_status": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION (NOT authoritative/validated/economically_admissible)",
+      "certify": {"driver": "scripts/research/certify_xauusd_corpus.py", "integrity_decision": "WARN", "schema_ok": true, "test": "tests/research/test_xauusd_corpus_certification.py"},
+      "research": {"driver": "scripts/research/qualify_xauusd.py", "families": {"toy": {"expansion_breakout": {"verdict": "REJECT", "n": 8063, "pf": 0.271}, "mean_reversion": {"verdict": "REJECT", "n": 15383, "pf": 0.278}}, "spine": {"spine": {"verdict": "INSUFFICIENT", "n": 1, "pf": 0.0, "e_net": -1.6923, "prod_version": "v2_multi_2026_04"}}}, "non_promotable": true, "validation_lens_recorded": "spine ran fusion_gate_on (runtime .env), NOT the F-037 CRT-only lens — recorded truthfully, not misstated", "tests": ["tests/research/test_xauusd_qualification_smoke.py (slow)", "tests/research/test_xauusd_spine_smoke.py (slow)"], "spine_config": "configs/research/research_config_spine_xauusd.json", "note": "toy well-powered REJECT (F-035-consistent); spine throughput-starved n=1 INSUFFICIENT (F-029/F-035); no edge claim; ACTIVE_VERSION unchanged"},
+      "ci_dep_fix": "erp-test-harness.yml install now adds pandas/pyyaml/numpy (project declares no base deps)",
+      "deferred": "live Binance market_network variant (BN-SCHEMA/PIT/GAP/FAIL)"
+    },
+    "not_done_next": "T1 live Binance (market_network) variant; T2 MT5 RO, T3 Playwright; retro-marking existing suite",
+    "note": "T0 + T1-offline grant no runtime/promotion/capital authority; XAUUSD corpus unchanged (FROZEN_CANDIDATE); no network"
+  },
+  "testing_plan": {
+    "status": "T0_IMPLEMENTED",
+    "path_md": "docs/research-readiness/edge-research-platform-testing-plan.md",
+    "implementation_started": true,
+    "layers": ["L0_unit", "L1_contract", "L2_research_integrity", "L3_market_network", "L4_broker_mt5_ro", "L5_exec_dry_run", "L6_ui_playwright", "L7_shadow_economic", "L8_capital_micro"],
+    "outlets": ["binance_public_rest", "mt5_read_only", "mt5_dry_run", "control_plane_playwright"],
+    "phases": ["T0_scaffold", "T1_binance", "T2_mt5", "T3_playwright", "T4_shadow", "T5_capital_checklist"],
+    "h1_h2_h3": {
+      "H1": "run_manifest + artifact hash required for economic claims",
+      "H2": "assert_summary_matches_manifest + UI argv vs display",
+      "H3": "validation-path identity VP-* intent contracts"
+    }
+  },
+  "priority_stack": [
+    {
+      "rank": 0,
+      "workstream_id": "WS-TEST-HARNESS",
+      "title": "H1-H3 + real-market test pyramid (Binance/MT5/Playwright)",
+      "status": "PLANNED",
+      "phase": "DESIGN",
+      "why": "Without harness, later validation is chat-vulnerable; design in edge-research-platform-testing-plan.md"
+    },
+    {
+      "rank": 0.5,
+      "workstream_id": "WS-MLLM-RCP",
+      "title": "Thin Multi-LLM Research Control Plane (4 artifact kinds + cycle scorecard)",
+      "status": "PLANNED",
+      "phase": "DESIGN",
+      "why": "Anti echo-chamber; parallel thin protocol only; see edge-research-platform-multi-llm-design.md; resolve AMB-01..12 before role-card rewrite"
+    },
+    {
+      "rank": 1,
+      "workstream_id": "WS-OUTCOME-FACTORY",
+      "title": "Honest opportunity population + outcome factory",
+      "status": "PLANNED",
+      "phase": "DESIGN",
+      "why": "Contaminated labels (F-022 class) poison all downstream learning and qualification."
+    },
+    {
+      "rank": 2,
+      "workstream_id": "WS-OI-PATH-ABSTAIN",
+      "title": "OI / positioning / liquidation as incremental path + abstain evidence",
+      "status": "PLANNED",
+      "phase": "DESIGN",
+      "why": "OHLCV directional search heavily exhausted; OI still open/deferred (Program 7 class), not falsified."
+    },
+    {
+      "rank": 3,
+      "workstream_id": "WS-ENGINE-DEMOTION",
+      "title": "Incremental-value audit and demotion of zero-delta engines",
+      "status": "PLANNED",
+      "phase": "DESIGN",
+      "why": "Existence ≠ authority; formalize kill/demote list under Authority Ladder."
+    },
+    {
+      "rank": 4,
+      "workstream_id": "WS-NEW-INFO-SEARCH",
+      "title": "Automated hypothesis search only over non-dead information families",
+      "status": "BLOCKED",
+      "phase": "DESIGN",
+      "blocked_by": ["WS-OUTCOME-FACTORY"],
+      "why": "Search requires clean factory + non-exhausted search space."
+    },
+    {
+      "rank": 5,
+      "workstream_id": "WS-SHADOW-LIVE",
+      "title": "Shadow / small capital only for survivors",
+      "status": "BLOCKED",
+      "phase": "VALIDATION",
+      "blocked_by": ["WS-OUTCOME-FACTORY", "survivor_stage3"],
+      "why": "F-010 live PnL unverified; F-048 structural live-path issues."
+    }
+  ],
+  "do_not_fund_first": [
+    "CRT geometry/threshold archaeology",
+    "Session as new alpha (F-017)",
+    "Zone knobs as edge (F-036/F-041B)",
+    "Same M15 OHLCV directional toys (F-019 family)",
+    "Carry spot-dispersion / simple harvest reopen without new thesis (F-033/F-034)",
+    "Wire TradeNet/BitNet because they exist (F-005/F-004)"
+  ],
+  "evidence_anchors": [
+    "F-001",
+    "F-005",
+    "F-010",
+    "F-019",
+    "F-022",
+    "F-025",
+    "F-036",
+    "F-037",
+    "F-038",
+    "F-040",
+    "F-048"
+  ],
+  "findings_anchor_status": {
+    "state": "PROVISIONAL_PENDING_E4",
+    "since": "2026-07-16",
+    "why": "evidence_anchors, do_not_fund_first, and known_not_unknown lean on findings F-019..F-035 computed before the F-051 (centered-swing PIT-leak) and F-054 (feature-DAG re-cert) feature-layer fixes; last revalidation was E3 (2026-06-27), which predates both. Treat these anchors as provisional until the Findings-Revalidation Gate (E4) runs.",
+    "gate": "docs/research-readiness/findings-revalidation-gate-e4-preregistration.md",
+    "scope_note": "RVG-U2 (2026-07-16) narrowed the suspect set: the F-019-family TOY arms run on the isolated src/research/ stack (feature-pipeline-independent) -> expected byte-identical; genuine feature risk is confined to Class C (morphology F-023 / zone F-036/F-041B / RR F-045 / gaussian)."
+  },
+  "unknowns": [
+    {
+      "id": "U-001",
+      "category": "economic",
+      "statement": "Does any durable edge exist in reachable data after costs and realistic execution?",
+      "status": "OPEN",
+      "blocks": ["program_outcome"],
+      "resolution_path": "Stage-3 survivor under trust_policy or multi-axis clean null"
+    },
+    {
+      "id": "U-002",
+      "category": "engineering",
+      "statement": "Canonical honest opportunity + outcome definition not frozen",
+      "status": "OPEN",
+      "blocks": ["WS-OUTCOME-FACTORY"],
+      "resolution_path": "DESIGN freeze: seeds, join keys, forward_walk params, cost model"
+    },
+    {
+      "id": "U-003",
+      "category": "engineering",
+      "statement": "Extent of opportunity-stream label contamination on paths we might reuse (F-022 class)",
+      "status": "OPEN",
+      "blocks": ["label_reuse"],
+      "resolution_path": "Label-source census + re-derive sample vs stream"
+    },
+    {
+      "id": "U-004",
+      "category": "data",
+      "statement": "OI/positioning/liquidation history depth and PIT quality for incremental tests",
+      "status": "OPEN",
+      "blocks": ["WS-OI-PATH-ABSTAIN"],
+      "resolution_path": "Data acquisition spike + coverage/PIT audit"
+    },
+    {
+      "id": "U-005",
+      "category": "economic",
+      "statement": "Whether any expressible instrument/payoff exists if vol info is not spot-consumable (F-040 class)",
+      "status": "OPEN",
+      "blocks": ["vol_monetization"],
+      "resolution_path": "Owner scope options/perp/vol product or accept abstain-only"
+    },
+    {
+      "id": "U-006",
+      "category": "economic",
+      "statement": "Whether incremental model value ever clears costs vs Level-1 information only",
+      "status": "OPEN",
+      "blocks": ["WS-ENGINE-DEMOTION"],
+      "resolution_path": "Incremental-value protocol after outcome factory"
+    },
+    {
+      "id": "U-007",
+      "category": "engineering",
+      "statement": "Whether live path can admit and measure trades as research intends (F-010/F-048 class)",
+      "status": "OPEN",
+      "blocks": ["WS-SHADOW-LIVE"],
+      "resolution_path": "Structural DecisionEngine/planner/risk review before capital"
+    },
+    {
+      "id": "U-008",
+      "category": "economic",
+      "statement": "Binding constraint: missing information vs wrong execution model vs efficient markets at horizon",
+      "status": "OPEN",
+      "blocks": ["strategy_direction"],
+      "resolution_path": "Sequence of nulls + one new-info family; do not decide early",
+      "refined_by": "docs/research-readiness/erp-information-class-boundary.md — measured boundary (static entry-state OHLCV morphology non-discriminating on XAUUSD) + RC-005..RC-010 open information classes (temporal/HTF/execution/order-flow/macro/alt-data), opened one at a time (P4)"
+    },
+    {
+      "id": "U-009",
+      "category": "engineering",
+      "statement": "Exact validation path map per workstream (scripts, flags, exit, cost, labels)",
+      "status": "OPEN",
+      "blocks": ["TP-BACKTEST-VALIDATION-GATE"],
+      "resolution_path": "Per-WI validation_path_consumed at DESIGN freeze"
+    },
+    {
+      "id": "U-010",
+      "category": "engineering",
+      "statement": "Parity policy between research spine and live-equivalent measurement (F-037 class)",
+      "status": "OPEN",
+      "blocks": ["claim_labeling"],
+      "resolution_path": "Dual-lens policy or single declared lens per claim"
+    },
+    {
+      "id": "U-011",
+      "category": "engineering",
+      "statement": "Feature/formula identity completeness for features used in new tests",
+      "status": "OPEN",
+      "blocks": ["feature_consumers"],
+      "resolution_path": "Certified/promoted or explicitly scoped experimental only"
+    },
+    {
+      "id": "U-012",
+      "category": "scientific",
+      "statement": "Multiplicity / repeated-experiment debt on shared opportunity set",
+      "status": "OPEN",
+      "blocks": ["WS-NEW-INFO-SEARCH"],
+      "resolution_path": "Pre-registration + family-wise controls in DESIGN"
+    },
+    {
+      "id": "U-013",
+      "category": "process",
+      "statement": "Who signs FLOW_MATCHES_INTENT",
+      "status": "OPEN",
+      "blocks": ["trust_tokens"],
+      "resolution_path": "Owner names reviewer role"
+    },
+    {
+      "id": "U-014",
+      "category": "process",
+      "statement": "Trader-friend objections content",
+      "status": "OPEN",
+      "blocks": ["priority_reorder_risk"],
+      "resolution_path": "Collect verbatim; classify"
+    },
+    {
+      "id": "U-015",
+      "category": "process",
+      "statement": "Time/capital budget for infrastructure vs discovery",
+      "status": "OPEN",
+      "blocks": ["resource_allocation"],
+      "resolution_path": "Owner budget rule"
+    },
+    {
+      "id": "U-016",
+      "category": "process",
+      "statement": "Whether LLM agents accelerate falsification more than they inject false claims",
+      "status": "OPEN",
+      "blocks": ["multi_llm_roi"],
+      "resolution_path": "Hallucination policy + mechanical floors; track correction rate"
+    }
+  ],
+  "known_not_unknown": [
+    "F-019 family OHLCV directional nulls under stated scopes",
+    "F-017 session non-improvable under tested conditions",
+    "F-036 zone knob delta G001 ~ 0 under tested conditions",
+    "F-033/F-034 carry constructions as tested",
+    "F-005 TradeNet unwired; F-004 BitNet inert on active patch"
+  ],
+  "assumptions": [
+    {
+      "id": "A-001",
+      "class": "ECONOMIC_OPERATIONAL",
+      "statement": "Rigorous research process raises P(find or cleanly reject edge) vs unaudited backtest-fitting",
+      "confidence": "Likely",
+      "if_false": "Program ROI thesis fails",
+      "disposition": "working_thesis"
+    },
+    {
+      "id": "A-002",
+      "class": "STRUCTURAL",
+      "statement": "Honest opportunity+outcome factory buildable from existing stack without full rewrite",
+      "confidence": "Likely",
+      "if_false": "WS-1 scope explosion",
+      "disposition": "test_in_design_spike"
+    },
+    {
+      "id": "A-003",
+      "class": "STRUCTURAL",
+      "statement": "Contaminated/stream labels are first-order risk for learning/retrain",
+      "confidence": "Certain_mechanism_extent_open",
+      "if_false": "Factory priority overstated if never reusing stream labels",
+      "disposition": "keep_factory_first"
+    },
+    {
+      "id": "A-004",
+      "class": "ECONOMIC",
+      "statement": "New information families higher EV than more OHLCV directional geometry",
+      "confidence": "Likely",
+      "if_false": "Priority stack wrong",
+      "disposition": "default_until_evidence_or_trader_objection"
+    },
+    {
+      "id": "A-005",
+      "class": "ECONOMIC",
+      "statement": "Path/abstain/P(hit TP before SL) more decision-relevant than raw up/down after prior nulls",
+      "confidence": "Possible_to_Likely",
+      "if_false": "Wrong prediction targets",
+      "disposition": "freeze_in_ws_design"
+    },
+    {
+      "id": "A-006",
+      "class": "STRUCTURAL",
+      "statement": "Models earn incremental authority only; code presence grants none",
+      "confidence": "Certain_doctrine",
+      "if_false": "Sophisticated-system-equals-edge fallacy",
+      "disposition": "enforce_demotion"
+    },
+    {
+      "id": "A-007",
+      "class": "STRUCTURAL",
+      "statement": "Research CRT-only spine is an isolation lens, not automatically live decision lens (F-037)",
+      "confidence": "Certain_mechanism",
+      "if_false": "Claims mislabeled as full system",
+      "disposition": "every_claim_names_lens"
+    },
+    {
+      "id": "A-008",
+      "class": "DATA_ECONOMIC",
+      "statement": "Declared research cost prior (e.g. 12bps crypto majors) acceptable for qualification",
+      "confidence": "Possible",
+      "if_false": "Cost-dominated nulls or false promotes",
+      "disposition": "sensitivity_after_stage1_not_first_knob"
+    },
+    {
+      "id": "A-009",
+      "class": "OPERATIONAL",
+      "statement": "Feature/formula governance reduces false results enough to sequence integrity before discovery",
+      "confidence": "Likely",
+      "if_false": "Over-invest lab under-invest info",
+      "disposition": "cap_integrity_work"
+    },
+    {
+      "id": "A-010",
+      "class": "OPERATIONAL",
+      "statement": "Owner will not risk meaningful capital until shadow + flow review",
+      "confidence": "Likely",
+      "if_false": "Live loss on unmeasured path",
+      "disposition": "hard_gate_shadow_live"
+    },
+    {
+      "id": "A-011",
+      "class": "OPERATIONAL",
+      "statement": "LLM/tool outputs are advisory and can be wrong even when fluent",
+      "confidence": "Certain",
+      "if_false": "N/A — assumption is conservative",
+      "disposition": "tool_hallucination_policy"
+    },
+    {
+      "id": "A-012",
+      "class": "ECONOMIC",
+      "statement": "Kill failed hypotheses and keep infrastructure better than forcing models into production",
+      "confidence": "Likely",
+      "if_false": "Capital and reputation risk if inverted",
+      "disposition": "explicit_non_goal_force_crt_profitable"
+    }
+  ],
+  "tool_output_hallucination_policy": {
+    "id": "TP-TOOL-HALLUCINATION",
+    "modes": {
+      "H1_LLM_INVENTS_RESULT": "Model states numbers/paths/pass without real tool return",
+      "H2_LLM_MISREADS_RESULT": "Tool returned truth; model wrong summary or wrong flags/instrument",
+      "H3_REAL_BUT_MISSPECIFIED": "Command ran; wrong flow/labels/config so artifact is not intended experiment"
+    },
+    "default_trust": {
+      "llm_chat_prose": "NON_EVIDENCE",
+      "llm_remembered_past_run": "NON_EVIDENCE",
+      "shell_pytest_stdout_in_session": "UNTRUSTED_RAW",
+      "on_disk_results": "UNTRUSTED_RAW",
+      "current_findings_record": "RESEARCH_RECORD_SCOPE_BOUND",
+      "active_version_config": "RUNTIME_TIER0"
+    },
+    "mandatory_checks_before_using_number": [
+      "provenance_command_flags_active_version_instrument_date",
+      "artifact_path_when_claim_matters",
+      "validation_lens_named",
+      "intent_match_section2",
+      "no_silent_fill_on_tool_failure",
+      "UNKNOWN_tag_if_unsure",
+      "correct_source_same_turn_if_false_claim"
+    ],
+    "red_flag_phrases": [
+      "tests all passed without command citation",
+      "backtest shows edge without artifact",
+      "live would do X without live-path evidence",
+      "all engines agree without per-engine scores on opportunity id",
+      "nice rounded metrics with no path",
+      "cross-session ledger memory without file re-read"
+    ],
+    "relation_to_section2": "H3 primarily caught by TP-BACKTEST-VALIDATION-GATE; H1/H2 caught here; both required before FLOW_MATCHES_INTENT"
+  },
+  "conversation_log": [
+    {
+      "id": "CL-001",
+      "date": "2026-07-14",
+      "topic": "Trader-friend project narrative",
+      "summary": "Project is a research/verification platform, not a proven money printer. Bet is process quality vs manual backtest optimization. Risk: years of infrastructure without alpha.",
+      "artifacts": [],
+      "decisions": [
+        "Explain project as systematic edge discovery/falsification, not guaranteed profitability",
+        "Invite trader objections; classify as already-falsified / unresolved / testable"
+      ]
+    },
+    {
+      "id": "CL-002",
+      "date": "2026-07-14",
+      "topic": "What to test first + goal",
+      "summary": "Goal = max P(edge or clean null). First: outcome factory integrity; then OI/path/abstain incremental tests; parallel engine demotion. Do not re-fund killed OHLCV directional families.",
+      "artifacts": [],
+      "decisions": [
+        "Priority stack locked as program default until owner revises",
+        "Backtest trust deferred until validation-flow review (formalized as TP-BACKTEST-VALIDATION-GATE)"
+      ]
+    },
+    {
+      "id": "CL-003",
+      "date": "2026-07-14",
+      "topic": "Program tracker created",
+      "summary": "Owner requested durable MD+JSON tracking for design/implementation/review/testing/validation; explicit do-not-trust-backtest-until-validation-flow-reviewed rule.",
+      "artifacts": [
+        "docs/research-readiness/edge-research-platform-program.md",
+        "docs/research-readiness/edge-research-platform-program.json"
+      ],
+      "decisions": [
+        "These two files are the living program control surface going forward",
+        "Update both files same turn when program state changes"
+      ]
+    },
+    {
+      "id": "CL-004",
+      "date": "2026-07-14",
+      "topic": "Unknowns, assumptions, tool-hallucination policy",
+      "summary": "Defined U-001..U-016, A-001..A-012, H1/H2/H3 tool-output hallucination policy with default trust ladder and mandatory checks.",
+      "artifacts": [
+        "docs/research-readiness/edge-research-platform-program.md",
+        "docs/research-readiness/edge-research-platform-program.json"
+      ],
+      "decisions": [
+        "Planning turns read trust then unknowns then assumptions then hallucination policy",
+        "LLM prose is NON_EVIDENCE; tool numbers stay UNTRUSTED_RAW until flow+quote checks"
+      ]
+    },
+    {
+      "id": "CL-005",
+      "date": "2026-07-14",
+      "topic": "Strong testing plan H1-H3 + real market outlets",
+      "summary": "DESIGN testing plan: L0-L8 pyramid, pytest markers, run_manifest, Binance public L3, MT5 RO/dry-run L4-L5, Playwright control-plane L6, shadow L7, capital micro L8 owner-only. Reuses mt5_analytics live_smoke and dry_run bridges. No implement yet.",
+      "artifacts": [
+        "docs/research-readiness/edge-research-platform-testing-plan.md"
+      ],
+      "decisions": [
+        "WS-TEST-HARNESS rank 0 PLANNED DESIGN",
+        "First implement grant target = Phase T0 scaffold only",
+        "No live orders in CI; public Binance only for network CI"
+      ]
+    },
+    {
+      "id": "CL-006",
+      "date": "2026-07-14",
+      "topic": "I/O map; unknowns parked",
+      "summary": "Published edge-research-platform-io-map.md (topic inputs/outputs vs plan+codebase). Unknowns discussion PARKED until full implementation plan.",
+      "artifacts": [
+        "docs/research-readiness/edge-research-platform-io-map.md"
+      ],
+      "decisions": [
+        "Do not workshop U-001..U-016 until implementation plan complete",
+        "Full implementation plan must cite I/O map rows"
+      ]
+    },
+    {
+      "id": "CL-007",
+      "date": "2026-07-14",
+      "topic": "Synthetic 4h OHLCV intentional pack + topic trace",
+      "summary": "Scripted M15 warmup+4h event geometry; forward_walk TP_HIT rr=2.0; intended_spec vs produced_compare CRITICAL PASS.",
+      "artifacts": [
+        "data/synthetic/erp_4h_m15/SYNTH_4H_M15.csv",
+        "data/synthetic/erp_4h_m15/intended_spec.json",
+        "data/synthetic/erp_4h_m15/produced_compare.json",
+        "docs/research-readiness/erp-synthetic-4h-trace.md"
+      ],
+      "decisions": [
+        "Synthetic seed is design-injected for outcome-factory path proof",
+        "Reproduce via PYTHONPATH=src python scripts/research/erp_synth_4h_trace.py"
+      ]
+    },
+    {
+      "id": "CL-008",
+      "date": "2026-07-14",
+      "topic": "Engines designed for synth pack (intended vs produced)",
+      "summary": "Geometry-derived feature contract → real CRT/Gaussian/Zone-soft/RR. Intended scores match produced: crt=0.8227 gaussian=0.9432 zone=0.882419 rr=0.6429. Fusion still NOT_RUN.",
+      "artifacts": [
+        "data/synthetic/erp_4h_m15/intended_spec.json",
+        "data/synthetic/erp_4h_m15/produced_compare.json"
+      ],
+      "decisions": [
+        "Engine scores must come from real callables + design features, never free invention",
+        "Zone path = soft_designed (not zone_registry hard gate)"
+      ]
+    },
+    {
+      "id": "CL-009",
+      "date": "2026-07-14",
+      "topic": "Utilizing models for tool-output hypotheses",
+      "summary": "Program §16: market engines (A) vs LLM agents (B); H_tool claims; propose→bind→run→compare→review loop; no authority from model fluency. Synth pack is worked example.",
+      "artifacts": [
+        "docs/research-readiness/edge-research-platform-program.md"
+      ],
+      "decisions": [
+        "LLM proposes H_tool only as PROPOSED/NON_EVIDENCE until artifact+review",
+        "Engines are evidence channels on fixed populations, not production authority"
+      ]
+    },
+    {
+      "id": "CL-010",
+      "date": "2026-07-14",
+      "topic": "Research loop + multi-LLM RCP design incorporated; ambiguities listed",
+      "summary": "Merged steps 1-13 research platform narrative and multi-LLM control plane into edge-research-platform-multi-llm-design.md. WS-MLLM-RCP thin. AMB-01 role conflict with multi_llm/. Four kinds PROPOSAL/CRITIQUE/EXECUTION_EVIDENCE/DECISION. Owner must resolve AMB checklist.",
+      "artifacts": [
+        "docs/research-readiness/edge-research-platform-multi-llm-design.md"
+      ],
+      "decisions": [
+        "Dual-lane recommended until AMB-01 frozen: research lane vs multi_llm implementation lane",
+        "Thin RCP protocol parallel to factory; no LLM theater on dirty labels",
+        "No multi-model voting; measure Grok/DeepSeek marginal value over 10 cycles"
+      ]
+    },
+    {
+      "id": "CL-011",
+      "date": "2026-07-14",
+      "topic": "Decision board + story authority D-23",
+      "summary": "erp-decision-board-and-story-authority.md; story CODE-owned.",
+      "artifacts": ["docs/research-readiness/erp-decision-board-and-story-authority.md"],
+      "decisions": ["D-23 story is CODE; decision board read-first"]
+    },
+    {
+      "id": "CL-012",
+      "date": "2026-07-14",
+      "topic": "Phased design plan P0-P7",
+      "summary": "edge-research-platform-phased-plan.md ACTIVE. Next: P0 freeze then Implement P1.",
+      "artifacts": ["docs/research-readiness/edge-research-platform-phased-plan.md"],
+      "decisions": ["D-24 phased plan active", "P7 blocked without survivor"]
+    },
+    {
+      "id": "CL-013",
+      "date": "2026-07-14",
+      "topic": "Before/after full design implementation narrative",
+      "summary": "edge-research-platform-before-after.md: before=capable lab weak clamps; after=closed-loop research org still no guaranteed edge.",
+      "artifacts": ["docs/research-readiness/edge-research-platform-before-after.md"],
+      "decisions": ["Success can be survivor edge OR honest multi-axis null"]
+    },
+    {
+      "id": "CL-014",
+      "date": "2026-07-14",
+      "topic": "Promise ladder — design moves toward earned wealth promise",
+      "summary": "Track I integrity || Track II path-to-promise; PL-0..PL-5; D-25/D-26; no false promise but no lab-forever without search. Current rung PL-0.",
+      "artifacts": ["docs/research-readiness/edge-research-platform-promise-ladder.md"],
+      "decisions": [
+        "D-25 parallel promise track",
+        "D-26 P4 within window after P2",
+        "Wealth language only at earned PL rung"
+      ]
+    },
+    {
+      "id": "CL-015",
+      "date": "2026-07-14",
+      "topic": "Multi-LLM HOW design + Research Lane initiated",
+      "summary": "Dual-lane: multi_llm/research_lane/ with schema, ledger RC-000, templates, roles, scorecard. Lane I unchanged. D-27. Ready for P1 grant.",
+      "artifacts": [
+        "docs/research-readiness/edge-research-platform-mllm-how.md",
+        "multi_llm/research_lane/README.md",
+        "multi_llm/research_lane/research_cycle_ledger.jsonl"
+      ],
+      "decisions": [
+        "D-27 Research Lane INITIATED thin",
+        "No auto multi-agent mesh",
+        "No Lane I protocol rewrite"
+      ]
+    },
+    {
+      "id": "CL-016",
+      "date": "2026-07-14",
+      "topic": "initiate_plan commands (model-separated PROPOSAL)",
+      "summary": "scripts/multi_llm/initiate_plan.py + ps1 shortcuts + control-plane research.initiate_plan; per-model proposals/<model>/<cycle>/ with curated CONTEXT_BUNDLE manifest; master prompt PLAN_DESIGN_PROMPT.md.",
+      "artifacts": [
+        "scripts/multi_llm/initiate_plan.py",
+        "multi_llm/research_lane/prompts/PLAN_DESIGN_PROMPT.md",
+        "multi_llm/research_lane/INITIATE_PLAN_COMMANDS.md"
+      ],
+      "decisions": [
+        "Per-model proposal dirs with curated bundle (manifest, not full repo crawl)"
+      ]
+    },
+    {
+      "id": "CL-017",
+      "date": "2026-07-16",
+      "topic": "Findings-Revalidation Gate (E4) designed, frozen, and registered; RVG-U1/U2 resolved",
+      "summary": "Whole-folder analysis found the ERP findings anchors (D-16/section-12.4/evidence_anchors, F-019..F-035) rest on a feature layer since bug-fixed (F-051 centered-swing PIT-leak; F-054 feature-DAG re-cert); last revalidation E3 predates both -> epoch E4 untested. Designed + FROZEN a targeted revalidation prereg (WS-OUTCOME-FACTORY P2.0). RVG-U1: E3 baselines on disk (no re-run needed). RVG-U2: Class B toys are feature-pipeline-independent (isolated src/research/ stack) -> suspect set narrows to Class C.",
+      "artifacts": [
+        "docs/research-readiness/findings-revalidation-gate-e4-preregistration.md",
+        "docs/research-readiness/findings-revalidation-gate-e4-preregistration.json"
+      ],
+      "decisions": [
+        "Findings anchors tagged PROVISIONAL_PENDING_E4 (annotation only; no finding flipped)",
+        "Prereg FROZEN 2026-07-16 (owner-accepted); protocol_hash recorded; RVG-1..5 still require explicit grants",
+        "Class B reclassified feature-pipeline-independent (RVG-U2): drift-check + determinism, not feature re-derive"
+      ]
+    },
+    {
+      "id": "CL-018",
+      "date": "2026-07-16",
+      "topic": "P1 slice — market-story ontology + multi-story golden library + six-layer harness",
+      "summary": "Owner-granted plan slice of P1: built a descriptive-only semantic story ontology (8 layers, 12 families with 4 active, 38 market states) mapping onto the UNCHANGED 9 CRT states + 38 canonical features; generalized the single erp_synth pack into a reusable story engine (src/research/synthetic/) + 12 deterministic stories across 4 families; and a golden harness validating SIX layers per story (family/states/CRT-path/feature-signature/engine-signature/outcome). 12/12 pass; anchor reproduces the erp_4h_m15 engine scores; outcome coverage TP_HIT/SL_HIT/TIMEOUT. Corrected 3 owner-supplied drift feature names (ema_long/displacement_strength/volatility) to canonical; a test now mechanically forbids them.",
+      "artifacts": [
+        "configs/research/market_story_ontology.yaml",
+        "src/research/synthetic/",
+        "scripts/research/story_library_build.py",
+        "data/synthetic/stories/INDEX.json",
+        "tests/research/test_story_library_golden.py",
+        "tests/research/test_story_ontology.py"
+      ],
+      "decisions": [
+        "Story geometry stays in CODE (D-23 preserved); the semantic ontology is a NEW descriptive-only authority (grants no runtime/promotion authority)",
+        "Executable substrate untouched: 9 CRT states, 38-dim vector, and configs/formulas/market_ontology.yaml unchanged",
+        "PENDING owner Decision-Board note (proposed D-2N) to lock 'semantic story ontology = descriptive/validation only'",
+        "Full P1 (pytest markers + run_manifest + AH/VP fixtures) remains PLANNED — this is the golden-library slice only"
+      ]
+    },
+    {
+      "id": "CL-019",
+      "date": "2026-07-16",
+      "topic": "P1 / T0 — anti-hallucination test harness (markers + run_manifest + AH/VP + green CI)",
+      "summary": "Implemented testing-plan T0: 10 pytest markers (additive, no strict); src/utils/run_manifest.py (fail-closed provenance manifest) + src/utils/validation_contract.py (H1 require_manifest, H2 assert_summary_matches_manifest/summary_from_assertions, H3 validate_manifest_against_intent); tests/harness AH-01..05 + VP-01..05 + round-trip (18 tests); wired scripts/research/story_library_build.py as the FIRST real run_manifest producer (AH-05 = real golden via subprocess); .github/workflows/erp-test-harness.yml runs a path-scoped green subset (56 tests) instead of the intentionally-red full suite. governance.yml untouched.",
+      "artifacts": [
+        "pyproject.toml",
+        "src/utils/run_manifest.py",
+        "src/utils/validation_contract.py",
+        "tests/harness/",
+        "scripts/research/story_library_build.py",
+        ".github/workflows/erp-test-harness.yml",
+        "data/synthetic/stories/run_manifest.json"
+      ],
+      "decisions": [
+        "run_manifest helper home = src/utils/ (reusable by producers + tests), not tests/support/ per the doc sketch",
+        "CI runs a PATH-SCOPED green subset (harness + story goldens); the full pytest suite stays out of CI (F-018 reds)",
+        "No --strict-markers (would break F-018 reds); markers are additive vocabulary only",
+        "T1 (Binance public market_network) is the next real market-out; retro-marking the existing suite deferred to Phase B"
+      ]
+    },
+    {
+      "id": "CL-020",
+      "date": "2026-07-16",
+      "topic": "T1 (offline) — XAUUSD local-corpus certification + thin non-promotable research pass",
+      "summary": "Owner redirected T1 from live Binance to local OHLCV, XAUUSD, both certify+research; and corrected the canonical path — XAUUSD M15 is the governance-frozen candidate data/mt5/XAUUSD_M15.csv (guard_xauusd_csv_path + CORPUS_AUTHORITY.md), NOT the root data/XAUUSD_M15.csv. Built certify_xauusd_corpus.py (guard->verify_phase1_frozen_candidate->validate_dataset[WARN]->schema->run_manifest network=none) and qualify_xauusd.py (thin non-promotable M4 toy pass via HypothesisRunner+forward_walk on the frozen candidate; expansion_breakout+mean_reversion both REJECT, PF~0.18-0.20, consistent with F-035). Tests: certify (fast, in CI subset=58) + research smoke (slow, opt-in); both SKIP-if-corpus-absent. Fixed the T0 CI dep gap (install pandas/pyyaml/numpy — project declares no base deps).",
+      "artifacts": [
+        "scripts/research/certify_xauusd_corpus.py",
+        "scripts/research/qualify_xauusd.py",
+        "tests/research/test_xauusd_corpus_certification.py",
+        "tests/research/test_xauusd_qualification_smoke.py",
+        ".github/workflows/erp-test-harness.yml",
+        "results/test_runs/ (per-run manifests, gitignored)"
+      ],
+      "decisions": [
+        "XAUUSD loads ONLY via guard_xauusd_csv_path -> data/mt5/XAUUSD_M15.csv; corpus stays FROZEN_CANDIDATE (no promotion, no authority-status edit)",
+        "Research output is UNTRUSTED_RAW / non-promotable; WARN integrity + REJECT verdicts recorded honestly; no edge claim (D-04, §6.5)",
+        "Offline only (no network); live Binance market_network variant deferred",
+        "CI runs the fast certify test; the research smoke is slow/opt-in (forward_walk is O(bars)); CI install now includes pandas/pyyaml/numpy"
+      ]
+    },
+    {
+      "id": "CL-021",
+      "date": "2026-07-16",
+      "topic": "T1 (cont.) — SPINE-family XAUUSD pass added to the research driver",
+      "summary": "Extended qualify_xauusd.py with the production decision spine (v2_multi_2026_04) as the `spine` hypothesis, run through the same M4 gate on the certified XAUUSD frozen candidate (new configs/research/research_config_spine_xauusd.json; RESEARCH_SPINE_CONFIG pin). Report now has families:{toy,spine}. Governance held automatically: the spine source globs the root path but CandleLoader/BacktestRunner guard-rewrite it to data/mt5/XAUUSD_M15.csv; PROD_VERSION set locally+restored (ACTIVE_VERSION untouched). Result: spine n=1, PF=0.0, E=-1.69R, INSUFFICIENT (throughput-starved on gold, F-029/F-035). Lens recorded TRUTHFULLY as fusion_gate_on (runtime .env has BACKTEST_ENGINE_GATE on) — NOT misstated as CRT-only. Tests: updated toy smoke (families shape) + new spine smoke (slow, collect-level to avoid the 47k control sweep). Non-promotable; no edge claim.",
+      "artifacts": [
+        "configs/research/research_config_spine_xauusd.json",
+        "scripts/research/qualify_xauusd.py",
+        "tests/research/test_xauusd_spine_smoke.py",
+        "results/research/qualification_xauusd/qualify_xauusd.json"
+      ],
+      "decisions": [
+        "Spine XAUUSD verdict INSUFFICIENT (n=1) recorded as-is; corpus stays FROZEN_CANDIDATE; no promotion",
+        "validation_lens is recorded from the runtime BACKTEST_ENGINE_GATE (fusion_gate_on here), never assumed CRT-only",
+        "Spine smoke tests collect('spine',…) directly (one backtest) to stay ~30-60s; full families comparison is the driver's job (slow)",
+        "CI green subset unchanged (58); both research smokes are slow/opt-in"
+      ]
+    },
+    {
+      "id": "CL-022",
+      "date": "2026-07-16",
+      "topic": "Mathematical Trace Corpus — reframe toy families as a descriptive laboratory",
+      "summary": "Owner reframe: parked throughput; since all toy/spine verdicts are null there is NO positive target, so instead of 'find profitable mathematics' extract a DESCRIPTIVE trace corpus and ask 'what mathematical structures repeatedly FAIL?'. Built build_trace_corpus.py (join the 38 canonical PIT features at the entry bar to the forward outcome per execution) + analyze_trace_corpus.py (per-feature distributions overall + by outcome/timing/MFE segments + family comparison). 23,447 traces on the certified XAUUSD frozen candidate (expansion_breakout 8063, mean_reversion 15383, spine 1); outcomes SL_HIT 15640 / TP_HIT 7444 / TIMEOUT 363. GOTCHA caught: FeaturePipeline drops a 78-row warmup head + resets index, so features are keyed by a carried stream position (_pos), not iloc — PIT-alignment test proves the join is index-correct. DESCRIPTIVE / non-promotable; information not authority (§6.5); no edge claim. LLM hypothesis layer deferred.",
+      "artifacts": [
+        "scripts/research/build_trace_corpus.py",
+        "scripts/research/analyze_trace_corpus.py",
+        "tests/research/test_trace_corpus.py",
+        "results/research/trace_corpus/xauusd/ (jsonl + distributions, gitignored)"
+      ],
+      "decisions": [
+        "First deliverable is the CORPUS itself, not an edge claim — distributions describe failure structure, grant no authority (§6.5)",
+        "Features join to Signal.entry_index by carried stream position (_pos), not iloc (FeaturePipeline drops a warmup head)",
+        "LLM hypothesis generation / story labels / paper trading deferred to later phases",
+        "Corpus stays FROZEN_CANDIDATE; ACTIVE_VERSION unchanged; CI green subset unchanged (58); new tests slow/opt-in"
+      ]
+    },
+    {
+      "id": "CL-023",
+      "date": "2026-07-16",
+      "topic": "Trace Geometry — organize the population by shape (clusters), and parallelize the build",
+      "summary": "Owner's next milestone: organize the 23k-trace population into mathematically-similar REGIONS before any LLM interpretation. Built trace_geometry.py (StandardScaler + KMeans, k chosen by subsampled silhouette over {4,6,8,10,12}; cluster library = size/family/centroid/outcome-distribution/feature-signature/representatives) extending the F-023 cluster_morphology pattern. Switched clustering to a dimensionless MORPHOLOGY feature set (excluded 15 absolute price-level features: raw OHLC/EMA/MACD/swing/body/wick) because raw price variance over gold's 2400->4500 trajectory otherwise splits on price regime, not shape. Result: k=4, clusters = bearish-structure / mild-bullish / strong-momentum / a distinct liquidity-sweep region (liquidity_sweep z=+3.75) — but outcome distributions are ~UNIFORM across all (SL 66-68% / TP 31-33%): a clean descriptive re-confirmation of F-023 (morphology separates SHAPE, not expectancy; no cluster is a signal). Also parallelized build_trace_corpus.py (--jobs: parallel forward_walk; detection stays in-order; --jobs 1 = run_instrument reference), PROVEN byte-identical (--jobs 1 == --jobs 4, 23,446 toy traces). No GPU (research ETL, not matmul).",
+      "artifacts": [
+        "scripts/research/trace_geometry.py",
+        "scripts/research/build_trace_corpus.py",
+        "tests/research/test_trace_geometry.py",
+        "results/research/trace_corpus/xauusd/geometry/ (cluster_library.json, CLUSTERS.md, geometry.npz, gitignored)"
+      ],
+      "decisions": [
+        "Clusters are NOT edges (F-023); cluster outcome distributions are descriptive population structure, never promotable signals (§6.5)",
+        "Cluster on dimensionless SHAPE features by default (price-level features excluded; --features all opt-in) so geometry = morphology, not price regime",
+        "Parallelism MUST be byte-identical to sequential (determinism gate) — the F-series findings depend on deterministic corpora; proven --jobs 1 == --jobs 4",
+        "No GPU now (occasional CPU research ETL); no pyarrow (npz/JSONL); LLM interpretation of clusters deferred (proposals only, ERP-validated)"
+      ]
+    },
+    {
+      "id": "CL-024",
+      "date": "2026-07-16",
+      "topic": "Trace k-NN similarity graph — the sharpest F-023 confirmation (no LOCAL outcome structure)",
+      "summary": "Built trace_knn.py (descriptive per-trace k-NN graph in the same standardized morphology space as the clusters, reusing geometry.npz Xs + cluster_assignments + ReplaySimilarityIndex.aggregate_top_k_stats; batch graph via sklearn NearestNeighbors because the replay index's per-query scan doesn't scale to 23k^2). k=10, cosine: neighbourhood same-outcome concordance mean 0.5498 vs random baseline 0.5459; neighbourhood TP-rate 0.3149 vs global 0.3176 — a trace's 10 nearest morphological neighbours share its outcome at the RANDOM rate. Finest-resolution re-confirmation of F-023. SCOPE (E-001 correction 2026-07-16): the measured null is 'static entry-state OHLCV morphology did not discriminate outcomes on this corpus' — NOT a claim about UNMEASURED information classes (temporal/HTF/execution/order-flow/macro/alt-data; see erp-information-class-boundary.md, RC-005..010 OPEN). Also fixed the flaky determinism test (was a ~10-min subprocess full-build that timed out) -> fast in-process kernel-equivalence check (_fw_worker == forward_walk on sampled real signals); full byte-identity kept as a documented manual command.",
+      "artifacts": [
+        "scripts/research/trace_knn.py",
+        "tests/research/test_trace_knn.py",
+        "tests/research/test_trace_corpus.py",
+        "results/research/trace_corpus/xauusd/knn/ (knn_graph.jsonl, knn_summary.json, KNN.md, gitignored)"
+      ],
+      "decisions": [
+        "Neighbourhoods are NOT edges (F-023); local outcome-concordance ≈ random baseline = no local structure; descriptive only (§6.5)",
+        "Reuse replay_similarity_index aggregation + cosine concept; use sklearn NearestNeighbors for the scalable batch graph (per-query scan / 2GB cosine matrix don't scale)",
+        "Determinism regression = fast in-process kernel-equivalence (not a 10-min full-corpus subprocess); byte-identity proven manually + documented command",
+        "LLM interpretation of cluster/neighbourhood summaries deferred (proposals only, ERP-validated, never promoted)"
+      ]
+    },
+    {
+      "id": "CL-025",
+      "date": "2026-07-16",
+      "topic": "E-001 scope-correction of the descriptive null + Open-Information-Class boundary registry",
+      "summary": "Owner corrected an overclaim: 'shape carries no outcome information at any resolution' over-generalized the measured null. CORRECTED to the scoped boundary: static entry-state morphology derived from OHLCV did not discriminate outcomes on the XAUUSD frozen-candidate corpus. 'Not measured' != 'uninformative' — temporal/HTF/execution/order-flow/macro/alt-data are DISTINCT information classes this program has not measured (open questions, not leads). Fixed the SOURCE (program tracker CL-024/WI-007, memory, scripts/research/trace_knn.py read text + regenerated KNN.md, SESSION LOG correction entry) and registered the boundary + open classes as a durable twin docs/research-readiness/erp-information-class-boundary.{md,json} (refines U-008, phased-plan P4). NOTE: that registry has since been evolved by subsequent work to v1.1 (IC-001 COMPLETE with extended surfaces; IC-002/RC-005 MEASURED 2026-07-17; IC-003 ARCHIVED LIBRARY_FAIL; IC-003B prereg frozen = NEXT) — the registry twin is the authoritative machine record. DECISION: did NOT seed RC-005..010 as PROPOSED packages in the multi-LLM research_cycle_ledger.jsonl because that would now be stale/contradictory vs the registry's MEASURED/ARCHIVED states (§6.2 no silent divergence).",
+      "artifacts": [
+        "docs/research-readiness/erp-information-class-boundary.md",
+        "docs/research-readiness/erp-information-class-boundary.json",
+        "tests/research/test_information_class_registry.py",
+        "scripts/research/trace_knn.py"
+      ],
+      "decisions": [
+        "The measured null is SCOPED to static entry-state OHLCV morphology on this corpus (IC-001) — not a universal 'features don't matter' claim",
+        "'Not measured' != 'likely to work'; the six open information classes are distinct research questions, opened one at a time on explicit grant (P4, PL-0)",
+        "Registry twin (md+json) is the authoritative record; RC-ledger seeding SKIPPED to avoid stale/contradictory PROPOSED stubs vs the evolved v1.1 states",
+        "A pre-registration correction is governance succeeding (E-001)"
+      ]
+    },
+    {
+      "id": "CL-026",
+      "date": "2026-07-17",
+      "topic": "IC-003B sequence-geometry — resume + validation + robustness; verdict IC003B_PARTIAL recorded",
+      "summary": "Resumed the parallel-session (Grok) frozen IC-003B run from its checkpoint (executor role, not designer). VALIDATED the four completed units (S_N4/T_N4/C_N4/S_N16) against the frozen prereg + code: arms/gates/seed-42 determinism/IS-only Arm-C fit/resume-safe verdict persistence all faithful; INDEPENDENTLY re-derived the gates from raw data (G2 silhouette reproduced EXACTLY 0.0561; G1 sse_ratio to ~0.003; n_is/n_oos exact; input contract clean; floors 7/7). Program verdict LOCKED to IC003B_PARTIAL by the completed primary units (Arm S OK at N=4 marginal [G1 0.8216, G2 0.0561] but FAIL at N=16 [G1 0.8863>0.85] => one-N only; Arm T FAIL at N=4 [DTW sil 0.019<0.05] => not both-N). Ran an 8-seed robustness sweep (read-only, no gate/verdict change): verdicts are SEED-ROBUST (S_N4 OK 8/8, S_N16 FAIL 8/8 => PARTIAL is stable), but the library STRUCTURE is under-determined (k* seed-unstable) and near-noise (G1 0.80-0.90 => 10-20% variance captured; silhouette 0.06-0.12 just above a permissive 0.05 floor); Arm C DISCRETE_HINT is a dimensionality artifact (PC-space silhouette 0.54 on 4 PCs explaining only 32% variance; full-space 0.056) => weak continuum, not clean prototypes. Run subsequently reached RUN_COMPLETE (checkpoint 2026-07-17T06:49Z, all 9 units; report.json program_verdict.label==IC003B_PARTIAL) — confirming the verdict I'd independently locked from the completed primary units, and adding Arm T N=16 FAIL + N=8 diagnostics FAIL. Doc-sync only: no code/config/gate/ACTIVE_VERSION change; corpus stays FROZEN_CANDIDATE.",
+      "artifacts": [
+        "results/research/ic_003b/ (arm_S_N4/T_N4/C_N4/S_N16 shapes.json + arm_C_N4.json + checkpoint.json)",
+        "docs/research-readiness/h-ic003b-sequence-geometry-preregistration.md",
+        "docs/research-readiness/erp-information-class-boundary.json (IC-003B MEASURED_PARTIAL)",
+        "docs/research-readiness/erp-information-class-boundary.md (v1.2)"
+      ],
+      "decisions": [
+        "Verdict IC003B_PARTIAL recorded as-is; G1 stays 0.85 (no gate move to force LIBRARY_OK); LIBRARY_OK/PARTIAL grant NO authority (§6.5)",
+        "Trust = FLOW_MATCHES_INTENT for the completed units (validation flow reviewed + gates independently re-derived), research evidence only",
+        "Sequence geometry gives a robustly-WEAK, structurally under-determined library — consistent with archived IC-003 + F-019..F-041; stop chasing a shape library from path summaries (intrinsic weakness, not a tuning problem)",
+        "discipline.next -> OWNER_TO_GRANT: IC-003B measured; next information class is an explicit owner grant, one at a time (P4)"
+      ]
+    }
+  ],
+  "multi_llm_rcp_design": {
+    "path_md": "docs/research-readiness/edge-research-platform-multi-llm-design.md",
+    "status": "DESIGN",
+    "artifact_kinds": ["PROPOSAL", "CRITIQUE", "EXECUTION_EVIDENCE", "DECISION"],
+    "ambiguities_open": ["AMB-01", "AMB-02", "AMB-03", "AMB-04", "AMB-05", "AMB-06", "AMB-07", "AMB-08", "AMB-09", "AMB-10", "AMB-11", "AMB-12"],
+    "recommendation_summary": "dual_lane_research_vs_implement; thin_rcp_plus_factory; measure_model_marginal_value"
+  },
+  "decision_board_md": "docs/research-readiness/erp-decision-board-and-story-authority.md",
+  "phased_plan_md": "docs/research-readiness/edge-research-platform-phased-plan.md",
+  "phased_plan_status": "DESIGN_ACTIVE",
+  "phased_plan_phases": ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"],
+  "next_grant": "P0_freeze_then_Implement_P1",
+  "before_after_md": "docs/research-readiness/edge-research-platform-before-after.md",
+  "promise_ladder_md": "docs/research-readiness/edge-research-platform-promise-ladder.md",
+  "promise_ladder": {
+    "rungs": ["PL-0", "PL-1", "PL-2", "PL-3", "PL-4", "PL-5", "PL-5+"],
+    "current_rung": "PL-0",
+    "law": "Never promise wealth without evidence; never design so wealth cannot be promised when evidence arrives",
+    "decisions": ["D-25", "D-26"]
+  },
+  "mllm_how": {
+    "status": "INITIATED",
+    "design_md": "docs/research-readiness/edge-research-platform-mllm-how.md",
+    "research_lane_dir": "multi_llm/research_lane",
+    "ledger": "multi_llm/research_lane/research_cycle_ledger.jsonl",
+    "schema": "multi_llm/research_lane/package_schema.json",
+    "cycle_seed": "RC-000",
+    "lane_i_rewritten": false,
+    "decision_id": "D-27"
+  },
+  "synth_story_authority": {
+    "story_layer_today": "CODE",
+    "script": "scripts/research/erp_synth_4h_trace.py",
+    "what_who_how_alone_can_retarget_story": false,
+    "decision_id": "D-23",
+    "entry_index": 41,
+    "design_levels": {"atr": 1.0, "sl": 101.0, "tp": 104.0, "entry": 102.0, "sweep_low": 98.5}
+  },
+  "model_tool_hypothesis_policy": {
+    "section": "program_md_section_16",
+    "market_engines_role": "structured_evidence_on_opportunity",
+    "llm_role": "propose_attack_design_tests_never_sole_validator",
+    "claim_form": "H_tool",
+    "authority": "none_from_model_output_alone"
+  },
+  "work_items": [
+    {
+      "id": "WI-001",
+      "workstream": "WS-OUTCOME-FACTORY",
+      "title": "Findings-Revalidation Gate (Epoch E4)",
+      "phase": "DESIGN",
+      "status": "FROZEN",
+      "program_slot": "P2.0",
+      "validation_flow_review": "UNTRUSTED_RAW",
+      "validation_path_consumed": "existing scripts/research/qualify_*/phase_* drivers + forward_walk(intrabar_fixed), CRT-only gate-OFF (F-037); E3 baselines under results/research/*_2026_06_27",
+      "intent_match_evidence": "prereg frozen 2026-07-16 protocol_hash sha256:454b2351...; RVG-U1/U2 resolved",
+      "owner_grant": "freeze RVG (2026-07-16)",
+      "prereg": "docs/research-readiness/findings-revalidation-gate-e4-preregistration.md",
+      "next": "RVG-1 epoch-pinning harness (needs 'Implement RVG-1' grant)",
+      "notes": "Targeted re-derive by feature-dependency class A/B/C/D; grants no run/production/capital authority"
+    },
+    {
+      "id": "WI-002",
+      "workstream": "WS-TEST-HARNESS",
+      "title": "Market-story ontology + multi-story golden library (P1 slice)",
+      "phase": "TESTING",
+      "status": "IMPLEMENTED",
+      "program_slot": "P1.1_golden + P1.2_story_externalization",
+      "validation_flow_review": "FLOW_MATCHES_INTENT",
+      "validation_path_consumed": "src/research/synthetic/story_builder -> real engines.* + research.measurement.forward_walk(intrabar_fixed); six-layer ontology binding",
+      "intent_match_evidence": "12/12 stories PASS six-layer binding + critical compare; anchor reproduces erp_4h_m15 engine scores; tests/research/test_story_library_golden.py + test_story_ontology.py green (38 tests); full research suite 318 passed",
+      "owner_grant": "approved plan (2026-07-16): market-story ontology + library + six-layer harness",
+      "next": "Owner Decision-Board note (D-2N) for the semantic ontology; then Phase-B story expansion (8 families)",
+      "notes": "Descriptive-only; executable substrate (9 CRT states, 38-dim vector, market_ontology.yaml) unchanged; UNTRUSTED_RAW fixtures; no edge claim"
+    },
+    {
+      "id": "WI-003",
+      "workstream": "WS-TEST-HARNESS",
+      "title": "T0 anti-hallucination scaffold (markers + run_manifest + AH/VP + green CI)",
+      "phase": "TESTING",
+      "status": "IMPLEMENTED",
+      "program_slot": "P1 / testing-plan T0",
+      "validation_flow_review": "FLOW_MATCHES_INTENT",
+      "validation_path_consumed": "pytest tests/harness + story goldens (pure CI, no network); AH-05 subprocess-invokes scripts/research/story_library_build.py",
+      "intent_match_evidence": "56 green in the path-scoped CI subset; markers register with no unknown-mark warnings; build_manifest fail-closed + require_manifest/assert_summary_matches_manifest guards; governance.yml unchanged",
+      "owner_grant": "approved plan (2026-07-16): markers + run_manifest + AH/VP + green subset CI + wire story driver as producer",
+      "next": "T1 Binance public (market_network) as first real market-out; retro-mark existing suite (Phase B)",
+      "notes": "Helpers in src/utils/ (reusable) not tests/support/; H1/H2/H3 guards; no network/broker/UI; grants no runtime/promotion/capital authority"
+    },
+    {
+      "id": "WI-004",
+      "workstream": "WS-TEST-HARNESS",
+      "title": "T1 (offline) — XAUUSD local-corpus certification + thin non-promotable research pass",
+      "phase": "TESTING",
+      "status": "IMPLEMENTED",
+      "program_slot": "P1 / testing-plan T1 (offline local-corpus variant; owner redirect from Binance)",
+      "validation_flow_review": "FLOW_MATCHES_INTENT",
+      "validation_path_consumed": "guard_xauusd_csv_path -> data/mt5/XAUUSD_M15.csv (frozen candidate); validate_dataset (WARN); HypothesisRunner + forward_walk(intrabar_fixed), CRT-only gate-OFF (F-037); toy family",
+      "intent_match_evidence": "certify: guard resolves to mt5 frozen candidate, sha256 4d73f5ce match, schema OK, WARN recorded, run_manifest network=none; research: toy pool REJECT (PF~0.18-0.20, E~-1.1R) consistent with F-035; certify test green in CI subset (58 total); smoke green (slow)",
+      "owner_grant": "approved plan (2026-07-16): use local OHLCV, XAUUSD, both certify+research; corrected canonical path to data/mt5/XAUUSD_M15.csv",
+      "next": "Phase-1 XAUUSD validation is a separate governance track (corpus stays FROZEN_CANDIDATE); optional spine-family pass; live Binance market_network variant",
+      "notes": "Corpus authority UNCHANGED (no promotion); research output UNTRUSTED_RAW / non-promotable; offline, no network; no economic/edge claim"
+    },
+    {
+      "id": "WI-005",
+      "workstream": "WS-OUTCOME-FACTORY",
+      "title": "Mathematical Trace Corpus (descriptive) from toy+spine executions",
+      "phase": "TESTING",
+      "status": "IMPLEMENTED",
+      "program_slot": "descriptive measurement layer (reframe: 'why do these fail mathematically?', not discovery)",
+      "validation_flow_review": "FLOW_MATCHES_INTENT",
+      "validation_path_consumed": "guard_xauusd_csv_path -> data/mt5/XAUUSD_M15.csv; FeaturePipeline (causal PIT, F-051/FC1-A) 38-feature matrix keyed by stream _pos; HypothesisRunner.run_instrument + forward_walk(intrabar_fixed) per family",
+      "intent_match_evidence": "23,447 traces (expansion_breakout 8063, mean_reversion 15383, spine 1); outcomes SL_HIT 15640 / TP_HIT 7444 / TIMEOUT 363; PIT-alignment test proves feature<->entry_index join is index-correct; distributions.json + DISTRIBUTIONS.md descriptive-only; tests/research/test_trace_corpus.py 3 green (slow)",
+      "owner_grant": "approved plan (2026-07-16): extract a Mathematical Trace Corpus + descriptive distributions; toys+spine; LLM layer deferred",
+      "artifacts": ["scripts/research/build_trace_corpus.py", "scripts/research/analyze_trace_corpus.py", "results/research/trace_corpus/xauusd/ (gitignored)", "tests/research/test_trace_corpus.py"],
+      "next": "(deferred) LLM hypothesis generation over the distributions -> falsifiable H-ids; story labels; paper trading",
+      "notes": "DESCRIPTIVE / UNTRUSTED_RAW / non-promotable; distributions are INFORMATION not authority (§6.5); no edge/profit claim; describes failure STRUCTURE; corpus stays FROZEN_CANDIDATE; ACTIVE_VERSION unchanged; throughput investigation PARKED"
+    },
+    {
+      "id": "WI-006",
+      "workstream": "WS-OUTCOME-FACTORY",
+      "title": "Trace Geometry (descriptive clustering) + determinism-gated parallel corpus build",
+      "phase": "TESTING",
+      "status": "IMPLEMENTED",
+      "program_slot": "descriptive geometry layer BEFORE LLM interpretation (organize the population by shape)",
+      "validation_flow_review": "FLOW_MATCHES_INTENT",
+      "validation_path_consumed": "trace_geometry.py: StandardScaler + KMeans (k-sweep {4,6,8,10,12} by subsampled silhouette) on the MORPHOLOGY feature set (dimensionless; 15 absolute price-level features excluded); build_trace_corpus.py --jobs parallel forward_walk (detection in-order; forward_walk parallel-mapped; --jobs 1 = run_instrument reference)",
+      "intent_match_evidence": "k=4 selected (silhouette); 23,428 kept (19 NaN rows dropped); 4 clusters (bearish-structure / mild-bullish / strong-momentum / liquidity-sweep z=+3.75); outcome distributions ~UNIFORM across all clusters (SL 66-68% / TP 31-33%) = descriptive re-confirmation of F-023 (morphology separates SHAPE not expectancy; no cluster is a signal). DETERMINISM GATE: --jobs 1 == --jobs 4 BYTE-IDENTICAL (23,446 toy traces); geometry test 2 green; determinism pytest (subprocess, single family); CI subset unchanged (58)",
+      "owner_grant": "approved plan (2026-07-16): geometry + full parallelism (with determinism gate); k by silhouette auto-sweep",
+      "artifacts": ["scripts/research/trace_geometry.py", "scripts/research/build_trace_corpus.py (--jobs/--out-dir/--only)", "results/research/trace_corpus/xauusd/geometry/ (cluster_library.json, CLUSTERS.md, geometry.npz, gitignored)", "tests/research/test_trace_geometry.py", "tests/research/test_trace_corpus.py (determinism gate)"],
+      "next": "(deferred) LLM interpretation of cluster/neighbourhood summaries -> falsifiable H-ids (proposals only, ERP-validated, never promoted from this artifact)",
+      "notes": "DESCRIPTIVE — clusters are NOT edges (F-023); outcome distributions are population structure not signals; information not authority (§6.5). Parallelism proven byte-identical to sequential (F-series determinism preserved). No GPU. No pyarrow (npz/JSONL). Corpus stays FROZEN_CANDIDATE; ACTIVE_VERSION unchanged"
+    },
+    {
+      "id": "WI-007",
+      "workstream": "WS-OUTCOME-FACTORY",
+      "title": "Trace k-NN similarity graph (descriptive) + determinism-test fix",
+      "phase": "TESTING",
+      "status": "IMPLEMENTED",
+      "program_slot": "finest-resolution descriptive layer: local neighbourhood outcome structure",
+      "validation_flow_review": "FLOW_MATCHES_INTENT",
+      "validation_path_consumed": "trace_knn.py: sklearn NearestNeighbors (cosine) over geometry.npz Xs (same morphology space as clusters) + reused ReplaySimilarityIndex.aggregate_top_k_stats; per-trace neighbourhood outcome-concordance / tp-rate / density / cross-cluster vs random baseline",
+      "intent_match_evidence": "k=10 over 23,428 traces: neighbourhood same-outcome concordance mean 0.5498 vs random baseline 0.5459; neighbourhood TP-rate mean 0.3149 vs global 0.3176 -> local outcome structure ≈ random = finest-resolution F-023 re-confirmation (SCOPE: static entry-state OHLCV morphology on this corpus; other information classes UNMEASURED — erp-information-class-boundary.md). test_trace_knn.py green; determinism test replaced with a fast in-process kernel-equivalence check (was a ~10-min subprocess full-build timeout); CI subset unchanged (58)",
+      "owner_grant": "approved plan (2026-07-16): k-NN similarity graph reusing replay_similarity_index",
+      "artifacts": ["scripts/research/trace_knn.py", "results/research/trace_corpus/xauusd/knn/ (knn_graph.jsonl, knn_summary.json, KNN.md, gitignored)", "tests/research/test_trace_knn.py", "tests/research/test_trace_corpus.py (determinism kernel test)"],
+      "next": "(deferred) LLM interpretation of cluster/neighbourhood summaries (proposals only, ERP-validated)",
+      "notes": "DESCRIPTIVE — neighbourhoods are NOT edges (F-023); neighbourhood outcome stats are population structure not signals (§6.5). Built ON geometry.npz. replay_similarity_index reused for aggregation (its per-query search doesn't scale to 23k^2 -> sklearn for the batch graph). No GPU/FAISS. Corpus stays FROZEN_CANDIDATE; ACTIVE_VERSION unchanged"
+    }
+  ],
+  "open_questions": [
+    "Trader friend strongest 5-10 objections (pending)",
+    "Is OI history acquisition feasible for Program-7-class tests?",
+    "Is a non-spot instrument available if vol-info requires long-vol expression (F-040)?",
+    "Owner authorize WS-OUTCOME-FACTORY design package next?",
+    "Canonical code paths for intended outcome factory (U-002)",
+    "Who signs FLOW_MATCHES_INTENT (U-013)",
+    "Nightly runner Windows+MT5 vs Linux public-only",
+    "Owner authorize Phase T0 testing scaffold implement?"
+  ],
+  "next_actions": [
+    {
+      "id": "NA-001",
+      "action": "Owner: treat this program pair as the continue-from surface",
+      "status": "DONE"
+    },
+    {
+      "id": "NA-002",
+      "action": "Draft WS-OUTCOME-FACTORY design (population, outcome re-derive, trust gate checklist) — design only unless owner grants implement",
+      "status": "ADVANCED",
+      "note": "P2.0 Findings-Revalidation Gate frozen as WI-001; full population/label factory still to design"
+    },
+    {
+      "id": "NA-009",
+      "action": "Grant Implement RVG-1 (epoch-pinning harness scripts/research/revalidate_findings_e4.py), then Run RVG Class A/B/C",
+      "status": "PENDING"
+    },
+    {
+      "id": "NA-003",
+      "action": "Ingest trader objections when available; classify each",
+      "status": "PENDING"
+    },
+    {
+      "id": "NA-004",
+      "action": "Keep unknowns/assumptions/hallucination sections current when a workstream design freezes",
+      "status": "PENDING"
+    },
+    {
+      "id": "NA-005",
+      "action": "Testing plan DESIGN published; await owner grant for Phase T0 (markers + run_manifest + AH/VP fixtures)",
+      "status": "PENDING"
+    },
+    {
+      "id": "NA-006",
+      "action": "I/O map published; unknowns parked until full implementation plan",
+      "status": "DONE"
+    },
+    {
+      "id": "NA-007",
+      "action": "Write full implementation plan (work packages citing I/O map rows)",
+      "status": "DONE"
+    },
+    {
+      "id": "NA-008",
+      "action": "Owner freeze P0 + grant Implement P1 (default next)",
+      "status": "PENDING"
+    }
+  ],
+  "companion_md": "docs/research-readiness/edge-research-platform-program.md",
+  "companion_testing_plan_md": "docs/research-readiness/edge-research-platform-testing-plan.md",
+  "companion_io_map_md": "docs/research-readiness/edge-research-platform-io-map.md",
+  "companion_information_class_boundary_md": "docs/research-readiness/erp-information-class-boundary.md",
+  "companion_information_class_boundary_json": "docs/research-readiness/erp-information-class-boundary.json"
+}

@@ -1,0 +1,135 @@
+{
+  "_doc": "FM-026 (liquidity_pressure_score) certification artifact — immutable dated record.",
+  "generated_at_utc": "2026-07-12T21:15:00Z",
+  "probe": "fm026_certification",
+  "session_type": "CERTIFICATION",
+  "feature": "liquidity_pressure_score",
+  "formula_id": "FM-026",
+  "entry_status": "READY",
+  "canonical_index": 36,
+  "runtime_schema": {
+    "canonical_feature_dim": 38,
+    "schema_hash": "1ba02abbafdd0786831181677de547c1",
+    "feature_order_hash": "235553310100a340"
+  },
+  "gate_0": {
+    "count_reconciliation": "PASS",
+    "runtime_schema_authority": "PASS",
+    "dag_runtime_bijection": "PASS",
+    "hash_provenance": "PASS",
+    "ledger_dag_coverage": "PASS",
+    "frontier_recomputation": "PASS",
+    "overall": "PASS"
+  },
+  "intended_quantity": {
+    "semantic_meaning": "Proximity score indicating how close price is to a liquidity sweep zone. Higher values = closer proximity.",
+    "formula": "clip(exp(-0.5 * liquidity_distance), 0.0, 1.0)",
+    "nan_distance_policy": "treated as 10.0 -> exp(-5.0) ~ 0.0067",
+    "units": "dimensionless",
+    "bounds": [0.0, 1.0],
+    "monotonicity": "strictly decreasing in liquidity_distance",
+    "sign_semantics": "always non-negative; high=close, low=far",
+    "parameters": {"gamma": 0.5},
+    "dtype_pipeline": "float32",
+    "dtype_scalar": "float64"
+  },
+  "dependency_contract": {
+    "declared_direct_deps": ["liquidity_distance"],
+    "executable_direct_deps": ["liquidity_distance"],
+    "match": "YES",
+    "hidden_deps_found": [],
+    "fm025_dependency_status": "PROMOTED_PRODUCTION",
+    "fm025_evidence_reference": "docs/governance/feature_certification_ledger.jsonl (event line 110: PROMOTED at 2026-07-12T20:47:03)"
+  },
+  "implementation_surfaces": [
+    {"surface": "ontology_formula", "path": "configs/formulas/market_ontology.yaml:275-284", "classification": "AUTHORITATIVE_PRODUCTION"},
+    {"surface": "derived_math_scalar", "path": "src/features/derived_math.py:150-157", "classification": "AUTHORITATIVE_PRODUCTION"},
+    {"surface": "registry_binding", "path": "src/features/registry/derived_registry.py:20", "classification": "AUTHORITATIVE_PRODUCTION"},
+    {"surface": "feature_pipeline_vectorized", "path": "src/features/feature_pipeline.py:721-723", "classification": "AUTHORITATIVE_PRODUCTION"},
+    {"surface": "causal_structure_live", "path": "src/features/causal_structure.py:19 (import)", "classification": "LIVE_RUNTIME"},
+    {"surface": "direct_tests", "path": "NONE FOUND", "classification": "TEST_ONLY — no explicit FM-026 test file exists"}
+  ],
+  "dependency_level_oracle": {
+    "construction": "Authoritative FM-026 scalar applied to independently reconstructed FM-025 values",
+    "fm025_evidence_binding": "PROMOTED_PRODUCTION (ledger event 2026-07-12T20:47:03)",
+    "fm025_hash": null
+  },
+  "probes": {
+    "hand_calculated_semantic": {
+      "status": "PASS",
+      "cases_tested": 12,
+      "cases_passed": 12,
+      "cases_failed": 0
+    },
+    "scalar_pipeline_parity": {
+      "status": "PASS",
+      "test_vectors": 11,
+      "max_abs_error": 0.0,
+      "mismatches_above_1e10": 0,
+      "numeric_policy": {"dtype_expectation": "float64 (scalar) vs float32 (pipeline rounded to float64 for comparison)", "rtol": null, "atol": "1e-10", "equal_nan": false}
+    },
+    "monotonicity": {
+      "status": "PASS",
+      "pairs_tested": 4,
+      "strictly_decreasing": true
+    },
+    "bounds": {
+      "status": "PASS",
+      "interval": [0.0, 1.0],
+      "values_tested": 9,
+      "all_within_bounds": true
+    },
+    "prefix_invariance": {
+      "status": "PASS",
+      "full_length": 100,
+      "prefix_length": 60,
+      "mismatches": 0
+    },
+    "future_mutation": {
+      "status": "PASS",
+      "mutation_cut": 50,
+      "outputs_unchanged_through_cut": true
+    },
+    "determinism": {
+      "status": "PASS",
+      "runs_compared": 2,
+      "exact_equality": true
+    },
+    "degenerate_input": {
+      "status": "PASS",
+      "empty_input": "PASS",
+      "all_nan_dependency": "PASS",
+      "single_element": "PASS",
+      "dtype_coercion": "PASS"
+    },
+    "batch_live_parity": {
+      "status": "PASS",
+      "live_implementation": "PRESENT (causal_structure.py imports same authoritative scalar)",
+      "parity_basis": "Same formula authority — batch and live use identical math by construction"
+    }
+  },
+  "consumer_bindings": {
+    "hierarchical_meta_fusion": {"binding": "SCHEMA_ONLY", "runtime_reachable": true},
+    "tradenet_meta_engine": {"binding": "SCHEMA_ONLY", "runtime_reachable": true},
+    "causal_structure": {"binding": "PROVEN (direct import of derived_math)", "runtime_reachable": true},
+    "market_state_cluster_engine": {"binding": "SCHEMA_ONLY", "runtime_reachable": true},
+    "feature_pipeline_vector": {"binding": "PROVEN (direct computation at index 36)", "runtime_reachable": true},
+    "trained_artifacts": {"binding": "ARTIFACT_BINDING_UNKNOWN", "note": "gaussian_registry.json and zone_gate_registry.json reference this feature name; formula version provenance NOT tracked. Feature schema version alone ensures vector alignment; formula identity is asserted at schema level, not individual feature level."}
+  },
+  "evidence_artifact": {
+    "path": "docs/governance/fm026_certification-2026-07-13.json",
+    "probe_script": "_fm026_cert_probe.py",
+    "probe_output": "ALL PROBES PASS: True — FM-026 IS CERTIFIABLE FOR PROMOTED_PRODUCTION"
+  },
+  "terminal_disposition": "PROMOTED_PRODUCTION",
+  "promoting_authority": "docs/governance/REPOSITORY_CONSTRUCTION_PROTOCOL.md certification program — research/governance only §6.5; grants no runtime/production authority.",
+  "limitations": [
+    "No explicit FM-026 unit test file exists. The probe covers this gap.",
+    "Trained artifact bindings are NAME_ONLY/ARTIFACT_BINDING_UNKNOWN — no formula provenance in model registries.",
+    "Scalar/pipeline parity tested against numpy re-implementation, not the actual FeaturePipeline class (requires full pipeline setup). The numpy form is byte-identical to the pipeline expression (feature_pipeline.py:721-723).",
+    "Consumer analysis limited to static import inspection; no runtime call-graph verification was performed.",
+    "No economic/edge claim is made by this certification."
+  ],
+  "production_behavior_changed": "NO",
+  "scope_boundary": "FM-026 only. No model retrained, no config changed, no activation state modified."
+}

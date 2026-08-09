@@ -1,0 +1,46 @@
+{
+  "schema_id": "OWNER_ACCEPTANCE_DECISION_C_AND_SHADOW_DESIGN",
+  "generated_at_utc": "2026-07-14T10:30:03.791230+00:00",
+  "confirmed_at_utc": "2026-07-14T12:30:00Z",
+  "architecture_decision": "C",
+  "consistency_review_status": "PASS",
+  "consistency_review_ref": "DESIGN_CONTRACT_CONSISTENCY_REVIEW_V1.json",
+  "acceptance_conditions": {
+    "C-1_through_C-7": "PASS",
+    "mechanical_representation": true
+  },
+  "owner_stamp_status": "CONFIRMED",
+  "owner_stamps": {
+    "DECISION_C": "ACCEPTED",
+    "MSIP_SHADOW_DESIGN_CONTRACT_V1": "ACCEPTED",
+    "AUTHORIZED_NEXT_BOUNDARY": "MSIP_SHADOW_IMPLEMENTATION_PLAN_V1",
+    "NEXT_TASK_CLASS": "OBSERVATION_ONLY",
+    "IMPLEMENTATION_AUTHORIZED": "NO",
+    "G-DESIGN-01": "PASSED",
+    "G-PLAN-01": "AUTHORIZED_FOR_REVIEW_AT_CONFIRM_THEN_PASSED_BY_REVIEW",
+    "G-IMPL-01": "NOT_PASSED",
+    "G-MIG-01": "CLOSED"
+  },
+  "accepted_architecture_stack": [
+    "GOVERNED WHAT",
+    "CONTINUOUS SHADOW INTERPRETATION",
+    "MARKET STATE OBSERVATION",
+    "PROVENANCE + COMPARISON + DISAGREEMENT EVIDENCE"
+  ],
+  "crt_authority": "CURRENT CRT REMAINS AUTHORITATIVE OPPORTUNITY LIFECYCLE",
+  "explicitly_not_authorized_by_acceptance": [
+    "MarketStateVector coding",
+    "dynamic-loader implementation",
+    "CRT input migration",
+    "threshold selection",
+    "concurrent candidates",
+    "production behavior changes",
+    "opening G-IMPL-01 (separate explicit decision after plan acceptance)"
+  ],
+  "next_operation_at_confirm": "G-PLAN-01 review of MSIP_SHADOW_IMPLEMENTATION_PLAN_V1",
+  "g_plan_01_review_ref": "docs/governance/msip_shadow_implementation_plan_v1/G_PLAN_01_REVIEW_V1.json",
+  "d_wording_correction": "D requires explicit CRT-boundary reopen authority and is unsupported by current evidence; CLOSED does not make replacement permanently impossible",
+  "implementation_authorized": false,
+  "threshold_selection_authorized": false,
+  "crt_migration_authorized": false
+}

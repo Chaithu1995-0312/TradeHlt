@@ -1,0 +1,45 @@
+{
+  "schema_id": "MSIP_WHOLE_REPRESENTATION_OWNER_FREEZE_STUB_V1",
+  "status": "FREEZE_BLOCKED_PARKED_CONTINUE_LATER",
+  "protocol_ref": "MSIP_WHOLE_REPRESENTATION_PREREGISTRATION_V1.md",
+  "protocol_json_ref": "MSIP_WHOLE_REPRESENTATION_PREREGISTRATION_V1.json",
+  "technical_review_checklist": "MSIP_WHOLE_REPRESENTATION_TECHNICAL_REVIEW_CHECKLIST_V1.md",
+  "protocol_review_experiment_plane": "docs/governance/protocol_review_experiment_plane/",
+  "independent_reviews": {
+    "gemini": {
+      "status": "FAIL",
+      "freeze_recommendation": "FREEZE_BLOCKED",
+      "archive": "docs/governance/protocol_review_experiment_plane/raw_reviews/GEMINI_REVIEW_V1.md",
+      "blocking_rf_ids": ["RF-GEM-001", "RF-GEM-002", "RF-GEM-003"]
+    },
+    "deepseek": {
+      "status": "FAIL",
+      "freeze_recommendation": "FREEZE_BLOCKED",
+      "archive": "docs/governance/protocol_review_experiment_plane/raw_reviews/DEEPSEEK_REVIEW_V1.md",
+      "blocking_rf_ids": ["RF-DS-001", "RF-DS-002", "RF-DS-003", "RF-DS-004", "RF-DS-005", "RF-DS-006", "RF-DS-007", "RF-DS-008", "RF-DS-009", "RF-DS-010"]
+    }
+  },
+  "owner_freeze_status": "NOT_YET",
+  "protocol_hash_when_frozen": null,
+  "hypothesis_id": "NOT_ASSIGNED_UNTIL_PROTOCOL_IS_REVIEW_COMPLETE",
+  "execution_authorized": false,
+  "implementation_authorized": false,
+  "prep_status": {
+    "claims_registered": true,
+    "validation_run": false,
+    "decision_ledger_complete": false,
+    "processing_order": "GEMINI_WAVE_THEN_DEEPSEEK_WAVE",
+    "parked": true,
+    "parked_at": "2026-07-14",
+    "parked_reason": "owner defer — continue later; Wave A not started",
+    "resume_trigger": "Continue PREP | Wave A | resume MSIP whole prereg review validation",
+    "claude_memory": "project_prep_msip_whole_prereg_parked.md"
+  },
+  "if_owner_accepts_freeze_only": {
+    "PROTOCOL_STATUS": "FROZEN",
+    "EXECUTION_AUTHORIZED": "NO",
+    "IMPLEMENTATION_AUTHORIZED": "NO",
+    "HYPOTHESIS_ID": "still_not_assigned_until_review_complete_or_explicitly_at_freeze",
+    "NEXT": "STOP — RUN requires separate later owner grant"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "change_id": "CH-identity-v23-vocabulary",
+  "objective": "active_models.yaml identity v2.3 vocabulary: Exists/Selected/Enabled separation — rename active→selection, spine_binding→execution.runtime_enabled, add identity_status rollup. Update model_resolver + tests. No enablement of disabled models; no HOW/EngineRunner behavior change.",
+  "change_classes": [
+    "ACTIVE_MODEL_CHANGE"
+  ],
+  "affected_files": [
+    "active_models.yaml",
+    "src/config_layer/model_resolver.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_model_paths_resolver.py",
+    "docs/topics/model-intent-and-feature-ownership.md",
+    "docs/governance/build_manifests/CH-identity-v23-vocabulary.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "identity vocabulary only — zone_gate/rr/gaussian/bitnet/tradenet",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_active_models_registry.py",
+    "tests/test_model_paths_resolver.py",
+    "tests/test_config_reachability.py",
+    "tests/test_current_findings.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit; revert identity blocks + resolver + tests to v2.2 field names"
+}

@@ -1,0 +1,32 @@
+{
+  "change_id": "CH-model-paths-phase0",
+  "objective": "Phase 0 Model Artifact Contract: single CODE layout (ModelPaths) + ModelResolver that resolves family→registry→active version→artifact, cross-checks WHO identity blocks in active_models.yaml, and wires ZoneGate load through the resolver with HOW path parity. No models/ tree reorg; no threshold changes; rr_fusion/bitnet/tradenet remain inert.",
+  "change_classes": [
+    "ACTIVE_MODEL_CHANGE"
+  ],
+  "affected_files": [
+    "src/config_layer/model_paths.py",
+    "src/config_layer/model_resolver.py",
+    "src/core/engine_runner.py",
+    "src/engines/live_engine.py",
+    "src/engines/heuristic_gaussian_engine.py",
+    "tests/test_model_paths_resolver.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_engine_runner_rr_fusion.py",
+    "docs/topics/model-intent-and-feature-ownership.md",
+    "docs/governance/build_manifests/CH-model-paths-phase0.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "zone_gate load path centralized via resolver; identity parity enforced at resolve time for wired families",
+  "affected_production_config": "none — HOW paths remain keys; resolver requires parity with registry-active artifact for zone_gate",
+  "required_checks_ack": [
+    "tests/test_model_paths_resolver.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_zone_manifest_runtime_parity.py",
+    "tests/test_config_reachability.py",
+    "tests/test_current_findings.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit; delete model_paths/model_resolver; restore live_engine/engine_runner defaults"
+}

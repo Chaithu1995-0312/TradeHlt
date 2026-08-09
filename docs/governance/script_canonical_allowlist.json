@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "description": "SITS Phase-3: ACTIVE CANONICAL_CLI paths allowed without control_plane_id in CommandSpec catalog. Prefer linking control_plane_id via seed reverse-map; use this allowlist only for intentional exceptions (temporary or non-control-plane operator CLIs). Never auto-populate from path heuristics.",
+  "paths": []
+}

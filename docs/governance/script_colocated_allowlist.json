@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "description": "Paths allowed to use implementation_status=ACCEPTED_COLOCATED (non-thin governance tooling intentionally under scripts/).",
+  "paths": [
+    "scripts/governance/construction_protocol.py"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "change_id": "CH-va-xauusd-m15",
+  "objective": "Freeze and implement VA-XAUUSD-M15 dual-surface validation access (CLI + evidence pack, separated) with sequential rungs S→I→F→E over existing tools. Access/packaging only — no runtime or promotion authority.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "docs/governance/VALIDATION_ACCESS_VA_XAUUSD_M15.md",
+    "src/validation_access/__init__.py",
+    "src/validation_access/ladder.py",
+    "src/validation_access/surfaces.py",
+    "scripts/governance/validation_access_cli.py",
+    "tests/test_validation_access.py",
+    "docs/governance/build_manifests/CH-va-xauusd-m15.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — reuses existing story library, IMPLEMENTATION_VALIDATION_V1 freeze, feature_surface_query, measurement profiles",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_validation_access.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "delete src/validation_access + validation_access_cli.py + tests + design freeze doc; remove packs under results/validation_access/"
+}

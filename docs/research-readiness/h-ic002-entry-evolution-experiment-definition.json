@@ -1,0 +1,167 @@
+{
+  "schema_id": "H_IC002_ENTRY_EVOLUTION_EXPERIMENT_DEFINITION_V1",
+  "program_alias": "H-IC002-001",
+  "registry_id": "RC-005",
+  "ic_alias": "IC-002",
+  "title": "ENTRY_EVOLUTION_POST_ENTRY_OHLCV_TRAJECTORY",
+  "status": "RUN_COMPLETE",
+  "task_class": "EXPLORATORY_RESEARCH",
+  "authority": "research",
+  "created_at_utc": "2026-07-17T00:00:00Z",
+  "pre_registered_before_outcome_measurement": true,
+  "human_doc": "docs/research-readiness/h-ic002-entry-evolution-preregistration.md",
+  "parent_ic001_closure": "docs/research-readiness/ic-001-xauusd-static-entry-closure.md",
+  "hard_flags": {
+    "PRODUCTION_BEHAVIOR_CHANGED": false,
+    "NEW_ENGINES": false,
+    "IC001_REOPEN_STATIC_ENTRY_ML": false,
+    "THRESHOLD_TUNING": false,
+    "FEATURE_SEARCH": false,
+    "FREE_N_SEARCH": false,
+    "AUTO_PROMOTE_CONFIG": false,
+    "RR_FUSION_REENABLE": false
+  },
+  "hypothesis": {
+    "H": "Post-entry OHLCV-derived feature trajectories of length N identify outcome-associated structure not available from the static entry snapshot alone.",
+    "H0": "Trajectory separation does not beat the static baseline (and/or remains at chance) under time-ordered OOS and pre-registered controls.",
+    "H_S_secondary": "Trajectory clusters form morphological path families even if outcome mix is near-global (descriptive only)."
+  },
+  "population": {
+    "instrument": "XAUUSD",
+    "timeframe": "M15",
+    "entries_source": "results/research/trace_corpus/xauusd/trace_corpus_enriched.jsonl",
+    "exclude": "warmup_null_feature_rows",
+    "ohlcv_candidates": [
+      "data/mt5/XAUUSD_M15.csv",
+      "data/XAUUSD_M15.csv"
+    ],
+    "pin_at_run": [
+      "entry_id_list_sha256",
+      "ohlcv_sha256",
+      "git_commit"
+    ]
+  },
+  "trajectory": {
+    "N_grid": [
+      4,
+      8,
+      16
+    ],
+    "bars": "entry_index+1 .. entry_index+N",
+    "feature_ids": [
+      "body_ratio",
+      "disp_strength",
+      "retest_depth",
+      "rsi_14",
+      "atr",
+      "volatility_ratio",
+      "volume_ratio",
+      "trend_bias",
+      "momentum_score",
+      "break_of_structure",
+      "higher_high",
+      "lower_low",
+      "sweep_detected",
+      "liquidity_distance",
+      "candles_since_retest"
+    ],
+    "D": 15,
+    "excluded_level_features": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "macd_line",
+      "macd_signal",
+      "macd_hist",
+      "body_size",
+      "wick_size"
+    ],
+    "path_relative": {
+      "formula": "z_k_d = (x_k_d - x_0_d) / max(|x_0_d|, 1e-9)",
+      "x0": "entry bar features"
+    },
+    "pipeline_rule": "FeaturePipeline.run once per series then slice; never per-trade fit"
+  },
+  "controls": {
+    "C-STATIC": "entry snapshot only (static baseline)",
+    "C-SHUFFLE-PATH": "permute time order of N steps within trade",
+    "C-GLOBAL": "chance / base rate"
+  },
+  "methods": {
+    "primary_representation": "M-FLAT",
+    "primary_model": "logistic_l2",
+    "logistic_C_is_grid": [
+      0.1,
+      1.0,
+      10.0
+    ],
+    "secondary_model": "sklearn_gbt_depth3_n80",
+    "clustering_k_is_grid": [
+      4,
+      6,
+      8
+    ],
+    "clustering_authority": "secondary_H_S_only"
+  },
+  "validation": {
+    "oos_split": 0.3,
+    "oos_mode": "time_ordered_by_entry",
+    "min_n_oos": 500,
+    "n_perm": 500,
+    "primary_metric": "AUC_path_OOS",
+    "delta_metric": "AUC_path - AUC_static",
+    "success_requires": [
+      "n_oos >= 500",
+      "AUC_path_OOS >= 0.55",
+      "delta_AUC >= 0.03",
+      "IS_retention",
+      "perm_p <= 0.05",
+      "shuffle_path_AUC_gap >= 0.02"
+    ]
+  },
+  "verdicts": [
+    "INSUFFICIENT",
+    "REJECT",
+    "RESEARCH_SUPPORTIVE",
+    "SHAPE_ONLY"
+  ],
+  "forbidden_without_new_prereg": [
+    "static_entry_only_ml_called_ic002",
+    "new_engines",
+    "trailing_partial_time_exits_as_treatment",
+    "raw_ohlc_level_path_features",
+    "free_N_or_feature_search",
+    "direction_as_primary_feature",
+    "order_flow_htf_macro"
+  ],
+  "priors": [
+    "IC001_static_null_strong",
+    "near_miss_path_geometry_may_not_rank_expectancy",
+    "dual_read_direction_not_in_features"
+  ],
+  "artifacts_on_run": {
+    "root": "results/research/ic_002/",
+    "manifest": "results/research/ic_002/manifest.json",
+    "report_md": "results/research/ic_002/REPORT.md",
+    "report_json": "results/research/ic_002/report.json"
+  },
+  "stop_rule": "one_full_pass_N_in_4_8_16_on_XAUUSD_then_stop",
+  "implementation_map": {
+    "package": "src/research/ic002_entry_evolution/",
+    "scripts": [
+      "scripts/research/ic002_build_trajectories.py",
+      "scripts/research/ic002_evaluate.py"
+    ]
+  },
+  "run_artifacts": "D:\\Tradelatest\\results\\research\\ic_002",
+  "run_verdict": {
+    "any_RESEARCH_SUPPORTIVE": true,
+    "all_reject_or_insufficient": false,
+    "recommendation": "IC-002 shows path information beyond static snapshot (research only; no prod)."
+  }
+}

@@ -1,0 +1,298 @@
+{
+  "probe": "feature_dag_structural_certification",
+  "generated_at": "2026-07-12T20:45:23.984471+00:00",
+  "authority": "research/governance only \u2014 SERIES parity (formula) + CAUSAL online (causality) certification of L3 swing-structural flags; ledger-only, grants no activation authority (\u00a76.5).",
+  "swing_window": 2,
+  "pinned_semantics": {
+    "source": "src/features/feature_pipeline.py:462-484",
+    "higher_high": "high > ref_high (strict)",
+    "lower_low": "low < ref_low (strict)",
+    "break_of_structure": "+1 close>ref_high / -1 close<ref_low / 0 (strict)",
+    "liquidity_sweep": "+1 (high>ref_high & close<=ref_high) / -1 (low<ref_low & close>=ref_low) / 0 (INCLUSIVE close-return)",
+    "sweep_detected": "int8 {0,1}: (liquidity_sweep != 0) \u2014 direction-agnostic sweep presence (feature_pipeline.py:590)",
+    "double_sweep": "int8 {0,1}: seen_up(rolling5 liq>0) AND seen_down(rolling5 liq<0) \u2014 trailing 5-bar directional conjunction, NOT a count (feature_pipeline.py:612-626)",
+    "candles_since_retest": "int16 >=0: bars since last liquidity_sweep!=0 (grouped cumcount; sweep bar=0, +1 per non-sweep bar, 0 pre-first-sweep). MISNOMER: resets on SWEEP not retest_flag (feature_pipeline.py:655-672)",
+    "liquidity_distance": "FM-025 float32 >=0: min_k |close-level_k|/(atr*close) over {ref_high, ref_low, bos_level}, clipped >=0; NaN if atr*close<=0 or no finite level. Certified via derived_math.liquidity_distance (registry authority) + oracle-reconstructed levels (feature_pipeline.py:692-718)"
+  },
+  "candles_since_retest_fallback": {
+    "classification": "B_TEST_ONLY_COMPATIBILITY_SHIM",
+    "authority": "non_authoritative",
+    "reason": "the retest_flag branch (feature_pipeline.py:665-666) is reached only when the liquidity_sweep column is ABSENT; run() computes liquidity_sweep (:896) before candles_since_retest (:905), so it is unreachable in production. Certified contract = the liquidity_sweep branch ONLY. Fenced by runtime + branch-discrimination tests."
+  },
+  "pit_evidence": {
+    "referenced_artifact": "docs/governance/pit_phaseC_feature_certification.LATEST.json",
+    "referenced_floor": "tests/test_pit_prefix_invariance.py",
+    "repo_state_hash": "b48d4d9a7abf+ae2a77273223",
+    "causal_online_oracle": "matched",
+    "note": "PIT is dependency-bound: the causal ONLINE oracle is the primary causality proof; the pit_phaseC 38-vector prefix floor is the corroborating reference at this repo state."
+  },
+  "arms": [
+    {
+      "corpus": "causal_online",
+      "per_flag": {
+        "higher_high": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 1322
+        },
+        "lower_low": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 1322
+        },
+        "break_of_structure": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 1322
+        },
+        "liquidity_sweep": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 1322
+        },
+        "sweep_detected": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 1322
+        },
+        "double_sweep": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 1322
+        },
+        "candles_since_retest": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 1322
+        },
+        "liquidity_distance": {
+          "rows": 1322,
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true
+        }
+      },
+      "equality_boundary_counts": {
+        "close_eq_ref_high": 0,
+        "close_eq_ref_low": 0,
+        "high_eq_ref_high": 0,
+        "low_eq_ref_low": 0
+      }
+    },
+    {
+      "corpus": "causal_online",
+      "per_flag": {
+        "higher_high": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "lower_low": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "break_of_structure": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "liquidity_sweep": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "sweep_detected": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "double_sweep": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "candles_since_retest": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "liquidity_distance": {
+          "rows": 7922,
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true
+        }
+      },
+      "equality_boundary_counts": {
+        "close_eq_ref_high": 79,
+        "close_eq_ref_low": 74,
+        "high_eq_ref_high": 135,
+        "low_eq_ref_low": 105
+      }
+    },
+    {
+      "corpus": "causal_online",
+      "per_flag": {
+        "higher_high": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "lower_low": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "break_of_structure": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "liquidity_sweep": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "sweep_detected": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "double_sweep": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "candles_since_retest": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "liquidity_distance": {
+          "rows": 7922,
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true
+        }
+      },
+      "equality_boundary_counts": {
+        "close_eq_ref_high": 1,
+        "close_eq_ref_low": 1,
+        "high_eq_ref_high": 7,
+        "low_eq_ref_low": 4
+      }
+    },
+    {
+      "corpus": "causal_online",
+      "per_flag": {
+        "higher_high": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "lower_low": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "break_of_structure": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "liquidity_sweep": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "sweep_detected": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "double_sweep": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "candles_since_retest": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "liquidity_distance": {
+          "rows": 7922,
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true
+        }
+      },
+      "equality_boundary_counts": {
+        "close_eq_ref_high": 2,
+        "close_eq_ref_low": 3,
+        "high_eq_ref_high": 3,
+        "low_eq_ref_low": 2
+      }
+    },
+    {
+      "corpus": "causal_online",
+      "per_flag": {
+        "higher_high": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "lower_low": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "break_of_structure": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "liquidity_sweep": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "sweep_detected": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "double_sweep": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "candles_since_retest": {
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true,
+          "rows": 7922
+        },
+        "liquidity_distance": {
+          "rows": 7922,
+          "formula_parity_centered": true,
+          "causal_online_matches_pipeline": true
+        }
+      },
+      "equality_boundary_counts": {
+        "close_eq_ref_high": 19,
+        "close_eq_ref_low": 18,
+        "high_eq_ref_high": 34,
+        "low_eq_ref_low": 28
+      }
+    }
+  ],
+  "verdicts": {
+    "higher_high": "CERTIFIED",
+    "lower_low": "CERTIFIED",
+    "break_of_structure": "CERTIFIED",
+    "liquidity_sweep": "CERTIFIED",
+    "sweep_detected": "CERTIFIED",
+    "double_sweep": "CERTIFIED",
+    "candles_since_retest": "CERTIFIED",
+    "liquidity_distance": "CERTIFIED"
+  },
+  "overall": "CERTIFIED",
+  "permanent_floor": "tests/test_feature_dag_structural_certification.py"
+}

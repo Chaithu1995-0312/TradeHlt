@@ -1,0 +1,286 @@
+# Semantic OS — Contract registry (HAND-AUTHORED) — first-class CT-* (PR-2 / PR-5)
+#
+# Charter: docs/governance/SEMANTIC_OS_CONTRACT.md
+# Design:  docs/governance/SEMANTIC_OS_V1_DESIGN.md
+# Schema:  semantic_os/1.1 · validator: src/governance/semantic_os.py
+# Guard:   tests/test_semantic_os.py
+#
+# A Contract is a constraint on behavior: inputs, outputs, guarantees, non-guarantees, tests.
+# It may govern Concepts and/or Boundaries. Boundaries may reference CT ids via contract_ids
+# while still carrying an inline contract: block (backward compatible).
+#
+# HAND-AUTHOR only meaning. Never write imports/members_resolved/consumers_resolved.
+# authority is always advisory.
+
+contracts:
+
+  - id: CT-001
+    kind: contract
+    name: Canonical Feature Vector Emission
+    contract_kind: EMISSION
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHAT
+
+    governs_concepts:
+      - CN-001
+    governs_boundaries:
+      - BD-001
+
+    inputs:
+      - Chronologically ordered OHLCV frame with configured warmup rows.
+      - feature_pipeline config section (strictly required, no silent defaults).
+    outputs:
+      - Fixed-width numeric vector in CANONICAL_FEATURES order.
+      - SCHEMA_HASH and FEATURE_ORDER_HASH identity.
+    guarantees:
+      - Emitted order equals the declared CANONICAL_FEATURES order.
+      - Feature mathematics originates from registered formula authorities, never inline re-derivation.
+    non_guarantees:
+      - Does NOT guarantee every emitted feature is point-in-time (F-051 records a live exception).
+      - Does NOT guarantee any feature carries economic value.
+      - Does NOT guarantee consumers interpret the slots correctly.
+    enforced_by_tests:
+      - tests/test_feature_lineage.py
+      - tests/test_feature_math_lint.py
+      - tests/test_formula_registry.py
+
+    findings:
+      - F-046
+      - F-047
+      - F-051
+      - F-054
+    closure_surface_id: CANONICAL_FEATURE_CODE_SURFACE
+    why_this_contract: >-
+      Emission is the only seam where a single ordered vector plus hashes can detect silent
+      slot/order drift. Per-formula contracts alone cannot detect assembled-vector drift.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: CT-002
+    kind: contract
+    name: Capital Risk Approval
+    contract_kind: RISK
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHO
+
+    governs_concepts:
+      - CN-002
+    governs_boundaries:
+      - BD-002
+
+    inputs:
+      - Execution plan geometry (entry / SL / TP) when a trade is proposed.
+      - Active production config risk and session constraints.
+    outputs:
+      - UltronRiskGate capital APPROVE/REJECT with cost-taxed RR when applicable.
+    guarantees:
+      - Economic reward:risk authority is owned solely by UltronRiskGate (F-048).
+      - Cost model is applied before the reward:risk comparison.
+    non_guarantees:
+      - Does NOT guarantee positive expectancy of approved trades (research findings).
+      - Does NOT guarantee backtest approval behaviour matches live (F-010 OPEN).
+    enforced_by_tests:
+      - tests/test_execution_contract_v1.py
+      - tests/test_backtest_declared_constants.py
+
+    findings:
+      - F-048
+      - F-070
+    closure_surface_id: CRT
+    why_this_contract: >-
+      Capital economics is a single terminal seam after geometry. PR-5 narrowed BD-002 to this
+      risk gate so semantic fusion cannot re-absorb economic authority.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: CT-003
+    kind: contract
+    name: Market Ontology Formula Authority
+    contract_kind: SCHEMA
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHAT
+
+    governs_concepts:
+      - CN-007
+    governs_boundaries:
+      - BD-003
+
+    inputs:
+      - Ontology YAML FM/SEM declarations.
+      - Registry callables for each declared quantity.
+    outputs:
+      - Deterministic formula results and registry validation status.
+    guarantees:
+      - Implementations are named callables (never eval).
+      - Ownership lint forbids new ungoverned re-derivations of governed names.
+    non_guarantees:
+      - Does NOT emit the canonical feature vector.
+      - Does NOT grant economic authority to any feature.
+    enforced_by_tests:
+      - tests/test_formula_registry.py
+      - tests/test_feature_math_lint.py
+      - tests/test_candle_math.py
+
+    findings:
+      - F-047
+      - F-046
+      - F-054
+    closure_surface_id: CANONICAL_FEATURE_CODE_SURFACE
+    why_this_contract: >-
+      Separates meaning (ontology/registry) from emission so GD-class divergences cannot hide
+      inside the pipeline alone.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: CT-004
+    kind: contract
+    name: CRT Structural Transitions
+    contract_kind: DECISION
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHAT
+
+    governs_concepts:
+      - CN-004
+    governs_boundaries:
+      - BD-006
+
+    inputs:
+      - Features/OHLCV for the bar and CRTConfig for the path.
+    outputs:
+      - CRT state and optional structural trade commitment.
+    guarantees:
+      - Only VALID_TRANSITIONS are legal among the nine states.
+      - Engine is structural authority for trade-path state (over resolver parity).
+    non_guarantees:
+      - Does NOT claim expectancy or fusion weight.
+    enforced_by_tests:
+      - tests/test_crt_state_invariants.py
+      - tests/test_crt_adversarial_closure.py
+
+    findings:
+      - F-057
+      - F-069
+      - F-019
+    closure_surface_id: CRT
+    why_this_contract: >-
+      Structural language must stay a single seam so strategies cannot fork geometry meaning.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: CT-005
+    kind: contract
+    name: Causal Runtime Candle Consumption
+    contract_kind: TRANSPORT
+    status: ACTIVE
+    authority: advisory
+    authority_layer: HOW
+
+    governs_concepts:
+      - CN-003
+      - CN-015
+    governs_boundaries:
+      - BD-005
+
+    inputs:
+      - Instrument data path or live feed; runner config.
+    outputs:
+      - Chronological candle stream / live bar invocations.
+    guarantees:
+      - Consumption is causal; corrupt schema/time fails closed at L1/L2.
+    non_guarantees:
+      - Does NOT imply L3 on every research path (F-039).
+      - Does NOT imply live equals backtest (F-010).
+    enforced_by_tests:
+      - tests/runtime/test_replay_determinism.py
+      - tests/test_backtest_declared_constants.py
+
+    findings:
+      - F-039
+      - F-051
+    closure_surface_id: null
+    why_this_contract: >-
+      No-lookahead is a stack property owned at the runtime envelope, not a single feature flag.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: CT-006
+    kind: contract
+    name: Fusion Semantic Decision and Geometry
+    contract_kind: DECISION
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHO
+
+    governs_concepts:
+      - CN-006
+    governs_boundaries:
+      - BD-008
+
+    inputs:
+      - Per-engine scores; fusion/decision/planner config.
+    outputs:
+      - Semantic decision; on GO an ExecutionPlan with concrete levels.
+    guarantees:
+      - DecisionEngine is semantic-only; planner before capital; no economic RR in DecisionEngine.
+    non_guarantees:
+      - Does NOT own cost-taxed min RR (CT-002).
+      - Does NOT guarantee fusion pivotality (F-070).
+    enforced_by_tests:
+      - tests/test_engine_runner_dual_gate.py
+      - tests/test_execution_contract_v1.py
+
+    findings:
+      - F-048
+      - F-070
+    closure_surface_id: null
+    why_this_contract: >-
+      Freezes the order semantic GO → geometry → capital so F-048 cannot recur by structure.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: CT-007
+    kind: contract
+    name: Active Version and Promotion
+    contract_kind: GOVERNANCE
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHO
+
+    governs_concepts:
+      - CN-009
+      - CN-010
+    governs_boundaries:
+      - BD-009
+
+    inputs:
+      - ACTIVE_VERSION pointer; candidate configs and validation reports.
+    outputs:
+      - Loaded production identity; promotion log/archives on success.
+    guarantees:
+      - Tier-0 version is file-driven; promotion requires APPROVE when using the manager path.
+    non_guarantees:
+      - Does NOT certify economic quality of the active config.
+    enforced_by_tests:
+      - tests/test_active_models_registry.py
+      - tests/test_schema_contracts.py
+
+    findings:
+      - F-016
+      - F-018
+      - F-006
+    closure_surface_id: null
+    why_this_contract: >-
+      Mutability of production identity is a governance seam, not an ambient environment variable.
+
+    supersedes: null
+    superseded_by: null

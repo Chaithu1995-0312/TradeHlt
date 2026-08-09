@@ -1,0 +1,121 @@
+{
+  "schema_id": "PROTOCOL_REVIEW_DEDUPE_MAP_V1",
+  "protocol": "MSIP_WHOLE_REPRESENTATION_PREREGISTRATION_V1",
+  "created_at_utc": "2026-07-14T13:12:00Z",
+  "rule": "One cluster primary owns validation sequencing; secondary findings inherit decision or require additive evidence only",
+  "clusters": [
+    {
+      "cluster_id": "CLUSTER_TEMPORAL_PURGE",
+      "primary_rf_id": "RF-GEM-001",
+      "members": ["RF-GEM-001"],
+      "related_optional": ["RF-DS-NB-02"],
+      "finding_type": "MECHANICAL_DEFECT",
+      "freeze_blocking": true,
+      "processing_wave": "GEMINI_FIRST",
+      "notes": "DeepSeek did not elevate outcome-horizon purge to a numbered BF; treat Gemini as sole CRITICAL owner."
+    },
+    {
+      "cluster_id": "CLUSTER_GLOBAL_NULL",
+      "primary_rf_id": "RF-GEM-002",
+      "members": ["RF-GEM-002", "RF-DS-005"],
+      "finding_type": "STATISTICAL_DESIGN_UNCERTAINTY + SPECIFICATION_AMBIGUITY",
+      "freeze_blocking": true,
+      "processing_wave": "GEMINI_FIRST",
+      "split_work": {
+        "RF-GEM-002": "select dependence-preserving generator via synthetic calibration (design hypothesis)",
+        "RF-DS-005": "freeze exact math/pseudocode/edge cases after generator identity chosen"
+      }
+    },
+    {
+      "cluster_id": "CLUSTER_M1_BARS_SINCE_RANGE",
+      "primary_rf_id": "RF-GEM-003",
+      "members": ["RF-GEM-003", "RF-DS-004"],
+      "finding_type": "SPECIFICATION_AMBIGUITY",
+      "freeze_blocking": true,
+      "processing_wave": "GEMINI_FIRST",
+      "notes": "Same field; DeepSeek CRITICAL + re-review; close both with one authority resolution."
+    },
+    {
+      "cluster_id": "CLUSTER_HP_SELECTION",
+      "primary_rf_id": "RF-DS-001",
+      "members": ["RF-DS-001", "RF-GEM-NB-02"],
+      "finding_type": "STATISTICAL_DESIGN_UNCERTAINTY",
+      "freeze_blocking": true,
+      "processing_wave": "AFTER_GEMINI_BLOCKERS",
+      "notes": "Gemini non-blocking; DeepSeek blocking. Severity for freeze = CRITICAL."
+    },
+    {
+      "cluster_id": "CLUSTER_METRIC_SIGN",
+      "primary_rf_id": "RF-DS-002",
+      "members": ["RF-DS-002"],
+      "freeze_blocking": true,
+      "processing_wave": "AFTER_GEMINI_BLOCKERS"
+    },
+    {
+      "cluster_id": "CLUSTER_FTREE_CAPACITY",
+      "primary_rf_id": "RF-DS-003",
+      "members": ["RF-DS-003"],
+      "freeze_blocking": true,
+      "processing_wave": "AFTER_GEMINI_BLOCKERS"
+    },
+    {
+      "cluster_id": "CLUSTER_MULTIPLICITY",
+      "primary_rf_id": "RF-DS-006",
+      "members": ["RF-DS-006"],
+      "freeze_blocking": true,
+      "processing_wave": "AFTER_GEMINI_BLOCKERS"
+    },
+    {
+      "cluster_id": "CLUSTER_GS2",
+      "primary_rf_id": "RF-DS-007",
+      "members": ["RF-DS-007"],
+      "freeze_blocking": true,
+      "processing_wave": "AFTER_GEMINI_BLOCKERS"
+    },
+    {
+      "cluster_id": "CLUSTER_M2_COVERAGE",
+      "primary_rf_id": "RF-DS-008",
+      "members": ["RF-DS-008"],
+      "freeze_blocking": true,
+      "processing_wave": "AFTER_GEMINI_BLOCKERS"
+    },
+    {
+      "cluster_id": "CLUSTER_EPISODE_DEPENDENCE",
+      "primary_rf_id": "RF-DS-009",
+      "members": ["RF-DS-009", "RF-DS-NB-05"],
+      "freeze_blocking": true,
+      "processing_wave": "AFTER_GEMINI_BLOCKERS",
+      "notes": "May couple to CLUSTER_GLOBAL_NULL generator choice."
+    },
+    {
+      "cluster_id": "CLUSTER_DEDUPE",
+      "primary_rf_id": "RF-DS-010",
+      "members": ["RF-DS-010"],
+      "freeze_blocking": true,
+      "processing_wave": "AFTER_GEMINI_BLOCKERS"
+    },
+    {
+      "cluster_id": "CLUSTER_CATEGORICAL_ENCODING",
+      "primary_rf_id": "RF-GEM-NB-01",
+      "members": ["RF-GEM-NB-01"],
+      "freeze_blocking": false,
+      "processing_wave": "OPTIONAL_AFTER_BLOCKERS"
+    }
+  ],
+  "unique_blocking_clusters": 11,
+  "gemini_wave_blocking_clusters": [
+    "CLUSTER_TEMPORAL_PURGE",
+    "CLUSTER_GLOBAL_NULL",
+    "CLUSTER_M1_BARS_SINCE_RANGE"
+  ],
+  "deepseek_wave_blocking_clusters": [
+    "CLUSTER_HP_SELECTION",
+    "CLUSTER_METRIC_SIGN",
+    "CLUSTER_FTREE_CAPACITY",
+    "CLUSTER_MULTIPLICITY",
+    "CLUSTER_GS2",
+    "CLUSTER_M2_COVERAGE",
+    "CLUSTER_EPISODE_DEPENDENCE",
+    "CLUSTER_DEDUPE"
+  ]
+}
