@@ -29,8 +29,8 @@ identical, so live decisions do not change until evidence justifies a different 
   `allowed`/`reason`. It feeds `top_scores` into `compute_weighted_cluster_score()`
   (`src/engines/zone_gate_engine.py:106`, which itself applies a `>0.15` spread-rejection) and
   then `run_zone_gate_engine()` gates on the single global
-  `engine_runner.bitnet_zone_threshold` (= `0.25` in the active `v2_multi_2026_04.json`).
-- **Net live decision = `weighted_top-3_cluster_score ≥ bitnet_zone_threshold`.** The per-zone
+  `engine_runner.zone_cluster_threshold` (= `0.25` in the active `v2_multi_2026_04.json`).
+- **Net live decision = `weighted_top-3_cluster_score ≥ zone_cluster_threshold`.** The per-zone
   threshold path is computed-but-dead on the live spine.
 
 The only hard-coded `k` is `[:3]` at `src/engines/live_engine.py:292`. A related magic number
@@ -48,7 +48,7 @@ the `engine_runner` aggregation math — it already consumes whatever `top_score
 ### 1. Config: add the BEHAVIORAL knob (hash-neutral — `engine_runner` is not the `params` block)
 
 `configs/production/v2_multi_2026_04.json` → `engine_runner` section (next to
-`bitnet_zone_threshold`, `zone_gate_execution_mode`, `zone_mode`):
+`zone_cluster_threshold`, `zone_gate_execution_mode`, `zone_mode`):
 
 ```json
 "zone_gate_top_k": 3
@@ -74,7 +74,7 @@ covers the `params` block only; `engine_runner` edits are hash-neutral — confi
     `config={"zone_min_samples": ..., "zone_gate_top_k": top_n}` dict.
 - `src/core/engine_runner.py:416`: pass
   `top_n=_cfg_require(self.config, "zone_gate_top_k", "engine_runner")` into `get_zone_gate(...)`,
-  using the strict `_cfg_require` accessor already used for `bitnet_zone_threshold` (raises on a
+  using the strict `_cfg_require` accessor already used for `zone_cluster_threshold` (raises on a
   missing key — no `.get(key, literal)` soft default).
 
 ### 3. Dead-code cleanup — conservative, FLAGGED (do **not** mass-delete)
@@ -88,7 +88,7 @@ this path; `tests/test_zone_gate_instrumentation.py` only covers the module coun
 Recommended cleanup (truth-preserving, §6.2):
 - **Keep** the `allowed`/`reason`/`zone_id`/`threshold` return fields (standalone-API contract).
 - Add a short comment at the scoring loop documenting that the live spine bypasses per-zone
-  `allowed` — the live decision is the cluster score vs the global `bitnet_zone_threshold`. This
+  `allowed` — the live decision is the cluster score vs the global `zone_cluster_threshold`. This
   removes the *confusion* (the actual "dead code" smell) without breaking the contract.
 - Name the `>= 2` magic via the optional `zone_cluster_min_n` knob above (if folded in).
 

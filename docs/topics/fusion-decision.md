@@ -20,7 +20,7 @@ relative to what the market has been offering.
 - Orchestrated by [`src/core/engine_runner.py`](../../src/core/engine_runner.py) (`FusionEngine` imported at [`:30`](../../src/core/engine_runner.py)); `EXPECTED_ENGINES` completeness check at [`:718`](../../src/core/engine_runner.py).
 
 ## Ins / Outs
-- **Ins:** `engine_results` dict (`crt/gaussian/zone_gate/rr` scores), optional `weights`/`regime`; config sections `fusion_engine` and `decision_engine` (`score_threshold`, `p_win_threshold`, `rr_threshold`, `weak_link_weight`, `weak_component_threshold`).
+- **Ins:** `engine_results` dict (`crt/gaussian/zone_gate/rr` scores), optional `weights`/`regime`; config sections `fusion_engine` and `decision_engine` (`score_threshold`, `p_win_threshold`, `weak_link_weight`, `weak_component_threshold`). *DecisionEngine reads no RR knob — `rr_threshold` RETIRED, F-048 resolved 2026-07-24; economic reward:risk is owned by `ultron_risk_gate.min_rr_ratio`, not by the decision surface.*
 - **Outs:** fusion → `{final_score, scores{}, normalized_score, missing_engines?, reason?}`; decision → `{decision: APPROVE|REJECT, reject_reason?, threshold, ...}`.
 
 ## Entry points & validations

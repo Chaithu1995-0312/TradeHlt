@@ -76,12 +76,20 @@ INSTRUMENTS = [
 def make_crt_config(instrument: str) -> "CRTConfig":
     """
     Instrument-aware config factory.
-    Delegates entirely to ConfigBuilder so Forex and Crypto profiles diverge correctly.
-    Shared overrides (non-market-specific tuning) are applied on top of the router base.
+
+    F-057 fix (2026-07-29): bases on the governed production-JSON load
+    (load_prod_config_from_registry) instead of the bare router profile, so
+    this programmatic path matches what the CLI would build for the same
+    instrument. The 5 explicit overrides below are this script's deliberate
+    "no instrument-specific tuning — that would be curve-fitting" universality
+    test and are still applied last, on top of the governed base.
     """
-    return ConfigBuilder.build(
+    from config_layer.production_config import load_prod_config_from_registry, PROD_VERSION
+    base = load_prod_config_from_registry(PROD_VERSION, instrument)
+    return ConfigBuilder.from_existing(
         instrument,
-        overrides={
+        base,
+        extra_overrides={
             "score_threshold":        0.70,
             "max_sweep_age_candles":  30,
             "score_decay_lambda":     0.05,
@@ -485,7 +493,7 @@ def _patch_runner_for_journal_access():
                 reader = _csv.DictReader(f)
                 for row in reader:
                     from datetime import datetime
-                    from config_layer.crt_engine_v2 import Direction
+                    from config_layer.state_identity import Direction
                     tr = _build_trade_record(row)
                     self._last_journal_trades.append(tr)
         return result

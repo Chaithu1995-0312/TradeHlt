@@ -706,7 +706,7 @@ import math as _math
 # Applied at inference time for short trades when the model was trained in long perspective.
 _GMIRROR_NEGATE: frozenset = frozenset({
     "ema_spread", "trend_bias", "trend_strength", "momentum_score",
-    "rsi_14", "macd_line", "macd_signal", "macd_hist",
+    "rsi_14", "macd_line", "macd_signal", "macd_hist_raw", "macd_hist_z",
     "break_of_structure", "liquidity_sweep",
 })
 _GMIRROR_SWAP: list = [("higher_high", "lower_low"), ("swing_high", "swing_low")]

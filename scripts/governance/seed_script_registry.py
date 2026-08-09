@@ -26,6 +26,66 @@ OUT = _ROOT / "data" / "script_registry.jsonl"
 
 # PRIMARY curated refinements (K11). Match by path or id. Overlay fields win.
 OVERLAYS: list[dict[str, Any]] = [
+    # CH-semantic-os-v2: Semantic OS build 1 (L1 concept/boundary/journey registry).
+    {
+        "path": "scripts/governance/seed_semantic_os.py",
+        "category": "GOVERNANCE",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "EXTRACTED_TO_SRC",
+        "logic_in_script": False,
+        "dest_modules": ["src/governance/semantic_os.py"],
+        "purpose": (
+            "Compile the hand-authored Semantic OS YAMLs (docs/governance/semantic_os/"
+            "concepts|boundaries|journeys.yaml — the PRIMARY truth) into the gitignored "
+            "data/semantic_os/*.jsonl projection. Validates all 14 graph-integrity "
+            "checks first and refuses to write on any error. Pinned timestamps make "
+            "reruns byte-identical (pinned by tests/test_semantic_os.py)."
+        ),
+        "task_refs": ["CH-semantic-os-v2", "SITS"],
+        "notes": (
+            "Thin wrapper — registry/validator logic lives in src/governance/semantic_os.py "
+            "(PR-6 pattern). ADVISORY authority only (CLAUDE.md §6.5): grants no production "
+            "authority."
+        ),
+    },
+    {
+        "path": "scripts/governance/enrich_workbooks_with_semantic_identity.py",
+        "category": "GOVERNANCE",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": (
+            "Append Semantic File Identity columns (Semantic ID / Semantic Name / Filename "
+            "Semantic Status / Identity Tier / Identity Provenance) to scripts_business_"
+            "functionality.xlsx and results/analysis/src_business_functionality.xlsx, and a "
+            "Covers-Semantic-ID coverage pointer (derived from Referred files) to docs/analysis/"
+            "tests_functionality_inventory.xlsx. Reads the GENERATED data/semantic_os/"
+            "file_identities.jsonl projection (fails loudly if absent). Additive-only: never "
+            "renames a file, never touches columns A-C/A-F, idempotent column reuse on rerun."
+        ),
+        "task_refs": ["CH-semantic-file-identity", "SITS"],
+        "notes": (
+            "Part of the Semantic File Identity Layer — see docs/governance/"
+            "SEMANTIC_FILE_IDENTITY_REPORT.md. ADVISORY authority only (CLAUDE.md §6.5): "
+            "grants no rename/promotion/production authority."
+        ),
+    },
+    {
+        "path": "scripts/research/crt_resolver_economic_comparison.py",
+        "category": "RESEARCH_RUNNER",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "ttl_days": 90,
+        "purpose": (
+            "One-off economic comparison: CRTStateResolver (EXPANSION-entry, "
+            "relaxed trigger, no execution authority) vs BacktestRunner's real "
+            "ExecutionEngine.build_trade() trades. Descriptive only — see F-069 "
+            "for why resolver EXECUTION-rule trades are structurally impossible; "
+            "both arms report INSUFFICIENT (n<15) for any economic conclusion."
+        ),
+        "task_refs": ["F-069", "SITS"],
+        "notes": "wontfix:reason=research economic comparison, no promotion authority, n expected tiny",
+    },
     {
         "path": "scripts/governance/construction_protocol.py",
         "implementation_status": "ACCEPTED_COLOCATED",
@@ -163,6 +223,156 @@ OVERLAYS: list[dict[str, Any]] = [
         ),
     },
     {
+        "path": "scripts/research/crt_range_rebuild_probe.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "ttl_days": 90,
+        "purpose": (
+            "OBSERVATION_ONLY probe: classifies residual SWEEP<->RANGE disagreement after B1 "
+            "by comparing an engine-like reconstructed active_range against CRTStateResolver's "
+            "range memory. Does not modify production spine or defaults."
+        ),
+        "task_refs": ["SITS"],
+        "notes": (
+            "wontfix:reason=pre-existing untracked one-shot probe, incidentally swept in by a "
+            "later --write-stubs census; not authored in this session, purpose restated from "
+            "its own docstring"
+        ),
+    },
+    {
+        "path": "scripts/research/xauusd_mt5_cost_calibration.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "ttl_days": 90,
+        "purpose": (
+            "ZONE-X O-1 diagnostic: extracts real spread/commission/slippage/swap for XAUUSD "
+            "from a locally running MT5 terminal. READ-ONLY, never places or modifies an order."
+        ),
+        "task_refs": ["SITS"],
+        "notes": (
+            "wontfix:reason=pre-existing untracked research diagnostic, incidentally swept in "
+            "by a later --write-stubs census; not authored in this session; requires a local "
+            "MT5 desktop terminal, not CI-runnable"
+        ),
+    },
+    {
+        "path": "scripts/research/xauusd_mt5_cost_seed_stops.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "ttl_days": 90,
+        "purpose": (
+            "ZONE-X O-1 DEMO-ONLY helper: places near-market STOP orders on XAUUSD so a "
+            "companion script can measure stop-order fill vs requested price. Multi-layer "
+            "demo-account safety gate (trade_mode re-check, account-hash pin, lot cap, "
+            "symbol allowlist, cleanup of MAGIC-tagged orders/positions)."
+        ),
+        "task_refs": ["SITS"],
+        "notes": (
+            "wontfix:reason=pre-existing untracked demo-only helper, incidentally swept in by "
+            "a later --write-stubs census; not authored in this session; never runs on real "
+            "accounts, not CI-runnable"
+        ),
+    },
+    {
+        "path": "scripts/research/zone_x_o4_gap_study.py",
+        "category": "RESEARCH_RUNNER",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "ttl_days": 90,
+        "purpose": (
+            "ZONE-X O-4 DESCRIPTIVE gap-penalty study: on XAUUSD M15, how realized adverse "
+            "excursion compares to nominal stop distance when a stop resolves on a bar that "
+            "gaps from the prior close. Does not seek region class X, unseal the test year, "
+            "or grant production/ontology authority."
+        ),
+        "task_refs": ["SITS"],
+        "notes": (
+            "wontfix:reason=pre-existing untracked descriptive study, incidentally swept in "
+            "by a later --write-stubs census; not authored in this session, purpose restated "
+            "from its own docstring"
+        ),
+    },
+    {
+        "path": "scripts/research/gate_measurement_m_gate_01.py",
+        "category": "RESEARCH_RUNNER",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "ttl_days": 180,
+        "purpose": (
+            "M-GATE-01 SCOPE measurement (authority: NONE): two-arm gate-OFF vs gate-ON "
+            "re-measurement of the CRT spine via ProductionSpineSource, quantifying the "
+            "F-037 (pre-2026-07-23, gate-OFF) vs F-058 (active config, gate-ON) epoch delta "
+            "across crypto majors, with a hard non-vacuity guard on EngineRunner.run() call "
+            "count and reconciliation against F-037's recorded 13->11 / 7->6 figures."
+        ),
+        "task_refs": ["F-037", "F-058", "RF-CRT-STRUCTURE", "SITS"],
+        "notes": (
+            "wontfix:reason=research measurement runner, no extract; reuses "
+            "ProductionSpineSource unmodified, writes results/research/"
+            "gate_measurement_2026_08_06/summary.json"
+        ),
+    },
+    {
+        "path": "scripts/governance/crt_config_construction_census.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "ttl_days": 180,
+        "purpose": (
+            "P1 OBSERVE census of CRTConfig construction: static AST scan for "
+            "ConfigBuilder.build / load_prod_config_from_registry / CRTConfig( call sites, "
+            "plus an optional live three-way SCHEMA / ROUTER_BASE / PRODUCTION_MERGED "
+            "fingerprint demonstrating the F-057 programmatic split-brain. Does not "
+            "fail-closed. Protocol: docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md"
+        ),
+        "task_refs": ["F-057", "SITS"],
+        "notes": (
+            "wontfix:reason=pre-existing untracked governance census, appeared on disk "
+            "mid-session 2026-08-06 and was incidentally swept in by a --write-stubs run; "
+            "NOT authored by that session, purpose restated verbatim from its own docstring"
+        ),
+    },
+    {
+        "path": "scripts/governance/validation_access_cli.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "ttl_days": 180,
+        "purpose": (
+            "VA-XAUUSD-M15 dual-surface validation access: Surface A human CLI ladder "
+            "(stdout + ladder_cli.md), Surface B LLM evidence pack under "
+            "results/validation_access/xauusd_m15/<run_id>/, gated in S -> I -> F -> E "
+            "sequence. Authority: access/packaging only — no promotion. Design freeze: "
+            "docs/governance/VALIDATION_ACCESS_VA_XAUUSD_M15.md"
+        ),
+        "task_refs": ["SITS"],
+        "notes": (
+            "wontfix:reason=pre-existing untracked governance access CLI, appeared on disk "
+            "mid-session 2026-08-06 and was incidentally swept in by a --write-stubs run; "
+            "NOT authored by that session, purpose restated verbatim from its own docstring"
+        ),
+    },
+    {
+        "path": "scripts/governance/_build_doc_tracking_index.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "ttl_days": 180,
+        "purpose": (
+            "Build DOC_TRACKING_INDEX.xlsx — a metadata-only inventory of docs/ (path, "
+            "topic bucket, mtime), explicitly performing no content reads."
+        ),
+        "task_refs": ["SITS"],
+        "notes": (
+            "wontfix:reason=pre-existing untracked doc-inventory generator, appeared on disk "
+            "mid-session 2026-08-06 and was incidentally swept in by a --write-stubs run; "
+            "NOT authored by that session, purpose restated verbatim from its own docstring"
+        ),
+    },
+    {
         "path": "scripts/analysis/feature_math_lint.py",
         "category": "DIAGNOSTIC",
         "lifecycle": "ACTIVE",
@@ -230,6 +440,27 @@ OVERLAYS: list[dict[str, Any]] = [
         "notes": (
             "PR-6 extract: discover_paths/write_stubs moved to src/governance/script_census.py; "
             "this file is thin argparse only."
+        ),
+    },
+    {
+        "path": "scripts/analysis/module_census.py",
+        "category": "GOVERNANCE",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "TESTED",
+        "logic_in_script": False,
+        "purpose": (
+            "Module attribution census: enumerate src/**/*.py and report closure-surface "
+            "coverage; core in src/governance/module_census.py."
+        ),
+        "dest_modules": [
+            "src/governance/module_census.py",
+            "src/governance/module_attribution.py",
+        ],
+        "tests": ["tests/test_module_attribution.py"],
+        "task_refs": ["SITS", "CLOSURE-100"],
+        "notes": (
+            "Phase 1 of the module attribution ledger. Enumeration is enforced hard; "
+            "attribution is a monotonic ratchet (see tests/test_module_attribution.py)."
         ),
     },
     {

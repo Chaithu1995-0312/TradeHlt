@@ -82,6 +82,7 @@ You are now warm. Proceed with the issued trigger.
 | **Sync** | Reconcile the affected `docs/topics/<topic>.md` against the current code: read → surgical edit (**only that topic file** — token-aware), bump `Updated:`, append dated entries to its Discussion block. **Also update any `path:line · Symbol` citations that point at code you moved** (`CLAUDE.md §6.3` Citation Sync Mandate) — use `docs/architecture/citation-map.generated.md` to find them. The `CLAUDE.md §6.4`/§6.3 mandates, named explicitly. Additive doc-only. | the touched `docs/topics/<topic>.md`; the cited source files; `docs/architecture/citation-map.generated.md`; `docs/topics/_template.md` (if promoting a stub) | topic doc + citations match code + dated Discussion + SESSION LOG |
 | **Plan** | Enter plan mode; Phase-1 Explore → Phase-2 design → write the plan to `docs/plans/` (persisted by the Workstream-A hook); end with `ExitPlanMode`. Every plan opens with a `> Created: YYYY-MM-DD · Updated: YYYY-MM-DD · Milestone: M<n>` header — dated like the SESSION LOG (`CLAUDE.md §6`). **No code change in plan mode.** | relevant architecture docs; `CLAUDE.md §3` patterns | an approved, dated plan file |
 | **Log** | Append the `📝 SESSION LOG ENTRY` block — names the `CLAUDE.md §6` mandate explicitly so it is never skipped. | `assistant_project.md` | block shown + persisted |
+| **Register scripts** | Inventory hygiene for new/moved scripts (SITS): run `--write-stubs`, add a **seed overlay** with `purpose ≠ GRANDFATHER_UNCLASSIFIED`, seed + regenerate matrix. Prefer change class `SCRIPT_LIFECYCLE_CHANGE`. Grants **no** promote authority. | `docs/reference/conventions.md` §2.1; `docs/governance/change_contracts.json` (`SCRIPT_LIFECYCLE_CHANGE`); design `script-implementation-traceability-sits-design.md` | stubs + overlay + matrix green (`tests/test_script_registry.py`) + SESSION LOG with SCR-ids |
 
 ---
 
@@ -101,6 +102,7 @@ Sync       = read touched code → update only that docs/topics/<topic>.md → b
 Orient     = read findings + plan + SESSION LOG + MEMORY → one-screen report               [read-only]
 Map        = read CODEBASE_STATE_MAP + SERVICE_BOUNDARY_MAP + EVENT_TAXONOMY + SIGNAL_FLOW [read-only]
 Log        = append 📝 SESSION LOG ENTRY to assistant_project.md
+Register scripts = write-stubs → seed overlay → seed → matrix → Validate(SITS floors) → Log
 ```
 
 **Read-only triggers** (`Orient`, `Status`, `Map`, `Validate`) never modify code or

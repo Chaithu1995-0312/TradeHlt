@@ -45,13 +45,27 @@ class FeatureStore:
     """
     Validates and stores canonical feature frames.
     Injects the data integrity sentinel at the pipeline boundary.
-    Computes derived features that depend on history (e.g., double_sweep).
+    Computes derived features that depend on history.
+
+    FC1-A: structure/sweep/liquidity dims are re-derived from OHLCV history
+    via delayed-confirmed (causal) publication so live matches batch production
+    semantics (available_at=t+k). Feeder zeros or centered values are overwritten.
     """
 
     def __init__(self, max_history: int = 1000):
         self.max_history = max_history
         self._history: Deque[FeatureFrame] = deque(maxlen=max_history)
-        self._liquidity_sweep_history: Deque[int] = deque(maxlen=10)
+        # T-7 (2026-07-19): this ring feeds causal_structure_at_bar's double_sweep window, so it
+        # must never be SHORTER than that window or live would silently truncate a lookback the
+        # batch path honors — the same split-brain T-7 closed one level up. Floor of 10 keeps
+        # today's behavior byte-identical (config value is 5).
+        # Function-local import: same deferred-edge convention as the causal_structure_at_bar
+        # call site below (avoids a module-level core -> features -> config_layer chain).
+        from features.feature_pipeline import resolve_double_sweep_window
+        _ds_window = resolve_double_sweep_window()
+        self._liquidity_sweep_history: Deque[int] = deque(maxlen=max(10, _ds_window))
+        # OHLCV(+atr) ring for causal structure (FC1-A live contract)
+        self._ohlcv_hist: Deque[Dict[str, float]] = deque(maxlen=max_history)
 
     def process(
         self,
@@ -70,10 +84,14 @@ class FeatureStore:
             auxiliary: any pre‑computed features (e.g., atr, ema_fast, etc.).
 
         Returns:
-            FeatureFrame with all 33 canonical features and integrity sentinel.
+            FeatureFrame with every CANONICAL_FEATURES key and the integrity sentinel.
+            (39 names under schema v4.0 — `_validate_schema` checks against the constant,
+            never a literal; this docstring said "33" from the v2.0 era.)
         """
         raw = self._merge_inputs(ohlcv, auxiliary or {})
         self._ensure_required(raw)
+        # FC1-A: publish delayed-confirmed structure from history (same as batch)
+        self._apply_causal_structure(raw, ohlcv)
         self._compute_derived(raw, candle_idx)
         self._validate_schema(raw)
         raw["_data_integrity"] = "real"
@@ -112,9 +130,39 @@ class FeatureStore:
         if missing:
             raise ValueError(f"FeatureStore: missing required fields: {missing}")
 
+    def _apply_causal_structure(self, d: Dict, ohlcv: Dict[str, float]) -> None:
+        """Overwrite structure dims with FC1-A delayed-confirmed values from OHLCV history."""
+        atr = float(d.get("atr", 0.0) or 0.0)
+        self._ohlcv_hist.append(
+            {
+                "high": float(ohlcv["high"]),
+                "low": float(ohlcv["low"]),
+                "close": float(ohlcv["close"]),
+                "atr": atr,
+            }
+        )
+        try:
+            from features.causal_structure import causal_structure_at_bar
+
+            highs = [r["high"] for r in self._ohlcv_hist]
+            lows = [r["low"] for r in self._ohlcv_hist]
+            closes = [r["close"] for r in self._ohlcv_hist]
+            atrs = [r["atr"] for r in self._ohlcv_hist]
+            struct = causal_structure_at_bar(
+                highs, lows, closes, atrs,
+                liquidity_sweep_history=list(self._liquidity_sweep_history),
+            )
+            # Only CANONICAL structure keys — skip internal _last_swing_* helpers
+            for key, val in struct.items():
+                if key.startswith("_"):
+                    continue
+                d[key] = val
+        except Exception as exc:
+            logger.warning("FeatureStore: causal structure failed (%s); leaving feeder values", exc)
+
     def _compute_derived(self, d: Dict, candle_idx: int) -> None:
         """Compute derived canonical features that are not supplied directly."""
-        # double_sweep: both positive and negative liquidity_sweep in recent history
+        # double_sweep: prefer causal_structure result; still track history for callers
         if "liquidity_sweep" in d:
             try:
                 val = int(d["liquidity_sweep"])
@@ -122,15 +170,16 @@ class FeatureStore:
             except (TypeError, ValueError):
                 pass  # ignore non-numeric
 
-        # Only compute if we have at least one numeric value
-        if self._liquidity_sweep_history:
-            has_pos = any(v > 0 for v in self._liquidity_sweep_history if isinstance(v, (int, float)))
-            has_neg = any(v < 0 for v in self._liquidity_sweep_history if isinstance(v, (int, float)))
-            d["double_sweep"] = 1 if (has_pos and has_neg) else 0
-        else:
-            d["double_sweep"] = 0
+        # If causal_structure already set double_sweep, keep it; else derive from history
+        if "double_sweep" not in d or d.get("double_sweep") is None:
+            if self._liquidity_sweep_history:
+                has_pos = any(v > 0 for v in self._liquidity_sweep_history if isinstance(v, (int, float)))
+                has_neg = any(v < 0 for v in self._liquidity_sweep_history if isinstance(v, (int, float)))
+                d["double_sweep"] = 1 if (has_pos and has_neg) else 0
+            else:
+                d["double_sweep"] = 0
 
-    # Ensure volume_ratio is present
+        # Ensure volume_ratio is present
         if "volume_ratio" not in d:
             d["volume_ratio"] = 1.0
             logger.warning("volume_ratio missing, set to 1.0")

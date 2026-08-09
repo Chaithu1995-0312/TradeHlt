@@ -14,7 +14,7 @@
       "new_york",
       "overlap"
     ],
-    "bitnet_zone_threshold": 0.25,
+    "zone_cluster_threshold": 0.25,
     "zone_registry_path": "models/zone_registry.json",
     "zone_gate_execution_mode": "normal",
     "zone_mode": "hard",
@@ -41,14 +41,14 @@
   },
   "sl_tp_comparison": {
     "_comment": "Reference params for legacy SL/TP method — used ONLY by SLTPComparator, never in live path",
-    "legacy_sl_atr_mult":          1.0,
+    "legacy_sl_atr_mult": 1.0,
     "legacy_tp_atr_mult_breakout": 2.0,
     "legacy_tp_atr_mult_pullback": 1.5,
     "legacy_tp_atr_mult_reversal": 1.0,
-    "legacy_tp_atr_mult_sweep":    1.2,
-    "primary_metric":              "expectancy_rr",
-    "max_candles_per_trade":       100,
-    "output_path":                 "results/sl_tp_comparison.json"
+    "legacy_tp_atr_mult_sweep": 1.2,
+    "primary_metric": "expectancy_rr",
+    "max_candles_per_trade": 100,
+    "output_path": "results/sl_tp_comparison.json"
   },
   "execution_planner": {
     "min_rr_ratio": 1.5,
@@ -732,7 +732,7 @@
   "feature_store": {
     "max_history": 1000
   },
-  "notes": "Automated 10-strategy promotion \u2014 20260501_183742",
+  "notes": "Automated 10-strategy promotion — 20260501_183742",
   "schema_version": "1.3",
   "inout": {
     "scanner": {
@@ -933,5 +933,43 @@
       "feature_weight": 0.6
     }
   },
-  "config_hash": "37a62e091ece30cf8dd5b535c14a4a6a09ef03fb9610bde3a2530cd3e42be1ff"
+  "config_hash": "37a62e091ece30cf8dd5b535c14a4a6a09ef03fb9610bde3a2530cd3e42be1ff",
+  "market_router": {
+    "_comment": "Config-driven market_router (target-strategy-architecture.md sec13 item1 / F-057, 2026-07-29). classes = the 5-key CRT profile per market class (byte-identical seed from the prior market_router.py FOREX_CONFIG/CRYPTO_CONFIG literals). symbol_map = instrument -> class, consulted by classify_market()/get_crt_config() with a leading-symbol-token fallback for filename-derived instrument hints (e.g. XAUUSD_M15). Unmapped instruments raise UnknownInstrumentError -- no safe default.",
+    "classes": {
+      "CRYPTO": {
+        "retest_depth_max": 0.25,
+        "retest_atr_depth_fraction": 0.3,
+        "body_ratio_min": 0.5,
+        "atr_multiplier_min": 1.0,
+        "expansion_atr_min_distance": 0.15
+      },
+      "FOREX": {
+        "retest_depth_max": 0.35,
+        "retest_atr_depth_fraction": 0.5,
+        "body_ratio_min": 0.6,
+        "atr_multiplier_min": 1.5,
+        "expansion_atr_min_distance": 0.08
+      }
+    },
+    "symbol_map": {
+      "EURUSD": "FOREX",
+      "GBPUSD": "FOREX",
+      "USDJPY": "FOREX",
+      "AUDUSD": "FOREX",
+      "NZDUSD": "FOREX",
+      "USDCHF": "FOREX",
+      "XAUUSD": "FOREX",
+      "BTCUSDT": "CRYPTO",
+      "ETHUSDT": "CRYPTO",
+      "BNBUSDT": "CRYPTO",
+      "SOLUSDT": "CRYPTO",
+      "ADAUSDT": "CRYPTO",
+      "EURCAD": "FOREX",
+      "EURGBP": "FOREX",
+      "USDCAD": "FOREX",
+      "DOGEUSDT": "CRYPTO",
+      "XRPUSDT": "CRYPTO"
+    }
+  }
 }

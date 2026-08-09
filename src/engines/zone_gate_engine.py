@@ -167,27 +167,43 @@ def filter_canonical_inputs(raw: dict) -> dict:
     return {k: raw[k] for k in CANONICAL_KEYS}
 
 
-def _extract_vector(features: dict) -> list:
+def _extract_vector(features: dict, feature_order: list | None = None) -> list:
+    """Build the scoring vector in the order the ZONE MODEL was trained on.
+
+    `feature_order` is the registry's own top-level name list (`models/zone_registry.json`
+    -> `feature_order`). When supplied it is AUTHORITATIVE: the vector is assembled by NAME, so a
+    schema that reorders or extends `CANONICAL_FEATURE_ORDER` cannot silently misalign the model's
+    `mu`/`sigma`. When absent (legacy registries) the ambient canonical order is used, which is only
+    safe while the schema is unchanged since training.
+
+    SILENT TRUNCATION REMOVED (2026-07-22, schema-v4 safety net). This function used to do:
+
+        if len(vector) > CANONICAL_FEATURE_DIM:   # v2.0(35) -> v3.0(38) back-compat
+            vector = vector[:CANONICAL_FEATURE_DIM]
+
+    i.e. it quietly dropped trailing features and kept scoring. That is a mis-scoring path, not a
+    compatibility path: ZoneGate is the only LIVE hard gate (F-041), so on the next schema change it
+    would have decided confidently against a misaligned vector with no error and no log at INFO.
+    Length mismatch is now a hard ValueError, which `run_zone_gate_engine` converts to a BLOCK
+    (fail-closed) rather than a pass.
+    """
+    keys = list(feature_order) if feature_order else CANONICAL_KEYS
     try:
-        vector = [float(features[k]) for k in CANONICAL_KEYS]
+        vector = [float(features[k]) for k in keys]
+    except KeyError as exc:
+        raise ValueError(
+            f"Feature {exc} required by the zone model's feature_order is absent from the "
+            f"feature dict — the registry must be remapped or retrained."
+        ) from exc
     except (TypeError, ValueError) as exc:
         raise ValueError(f"Feature value coercion failed: {exc}") from exc
 
-    # Backward compat: if the pipeline produces a v3.0 vector (38 features) but
-    # the zone model was trained on v2.0 (35 features), silently truncate.
-    # CANONICAL_KEYS is already updated for v3.0, so the vector may be longer
-    # than the centroid vectors stored in an older zone registry.
-    if len(vector) > CANONICAL_FEATURE_DIM:
-        logger.debug(
-            "_extract_vector: truncating vector from %d to %d (schema migration).",
-            len(vector), CANONICAL_FEATURE_DIM,
+    expected = len(keys)
+    if len(vector) != expected:
+        raise ValueError(
+            f"Vector length mismatch: expected {expected}, got {len(vector)}. "
+            f"Refusing to truncate or pad — a resized vector must be remapped, not trimmed."
         )
-        vector = vector[:CANONICAL_FEATURE_DIM]
-
-    # Only assert on under-length (broken pipeline), not over-length (migration).
-    assert len(vector) == CANONICAL_FEATURE_DIM, (
-        f"Vector length mismatch: expected {CANONICAL_FEATURE_DIM}, got {len(vector)}"
-    )
     return vector
 
 
@@ -202,6 +218,7 @@ def run_zone_gate_engine(
     zone_registry: dict | None = None,
     execution_mode: str = "normal",
     zone_debug_config: Optional[dict] = None,
+    feature_order: list | None = None,
 ) -> dict:
     """
     Parameters
@@ -217,6 +234,9 @@ def run_zone_gate_engine(
                         {zones_loaded_count, distance_to_nearest,
                          inside_zone, zone_strength, zone_freshness}
                         Pass None to disable all debug logging.
+    feature_order     : the zone model's trained feature-name order (registry `feature_order`).
+                        Authoritative when supplied — see _extract_vector. None = ambient
+                        canonical order (legacy registries only).
 
     Returns
     -------
@@ -242,7 +262,7 @@ def run_zone_gate_engine(
 
     # Step 3: Extract vector and score – fail closed on extraction errors
     try:
-        vector = _extract_vector(features)
+        vector = _extract_vector(features, feature_order)
         score  = float(model_fn(vector))
         passed = score >= threshold
     except (ValueError, TypeError, AssertionError) as e:

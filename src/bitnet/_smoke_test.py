@@ -97,8 +97,13 @@ def test_zone_gate():
 
     g2 = BitNetZoneGate(zone_path='models/zone_registry_nonexistent.json')
     r2 = g2.check([0.5]*11)
-    assert r2['allowed'] == True, "Missing registry must fail-open"
-    print(f"  PASS BitNetZoneGate missing registry: allowed={r2['allowed']}")
+    # Fail-CLOSED: an unloadable registry blocks. This assertion previously read
+    # "Missing registry must fail-open" — that was never the behaviour (score 0.0
+    # fails the cluster threshold downstream); the name and the assertion had drifted
+    # from the code together.
+    assert r2['allowed'] == False, "Missing registry must fail-closed (blocks)"
+    assert r2['score'] == 0.0, "Missing registry must score 0.0"
+    print(f"  PASS BitNetZoneGate missing registry: allowed={r2['allowed']} reason={r2['reason']}")
 
 
 def test_scoring_engine_api():

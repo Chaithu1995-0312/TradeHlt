@@ -12,3 +12,14 @@ drifted out of date).
 - New to the repo? → [`README.md`](README.md) (Quick Start + docs map).
 - Operating rules / how to work → [`CLAUDE.md`](CLAUDE.md).
 - LLM cold-start recipe → [`docs/architecture/TRIGGER_VOCABULARY.md`](docs/architecture/TRIGGER_VOCABULARY.md).
+
+**Before MODIFYING the repository (non-optional):**
+- [`docs/governance/REPOSITORY_CONSTRUCTION_PROTOCOL.md`](docs/governance/REPOSITORY_CONSTRUCTION_PROTOCOL.md)
+  — the mandatory change lifecycle. Classify the change against
+  [`docs/governance/change_contracts.json`](docs/governance/change_contracts.json), produce a
+  BUILD_IMPACT_MANIFEST (STOP on blocking UNKNOWN), implement through the canonical authorities
+  (ontology → registry → implementations — never local formula math), then validate completion:
+  `python scripts/governance/construction_protocol.py validate-completion <manifest>`.
+  One-command floor: `python scripts/governance/construction_protocol.py check`.
+  Completion claims are mechanically constrained — the census freshness floor and the CI GREEN_FLOOR
+  fail on ungoverned feature math whether or not this file was read.

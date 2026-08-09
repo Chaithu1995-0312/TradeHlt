@@ -3,6 +3,17 @@ Central execution authority.
 
 Only this module decides execute vs reject.
 
+OWNERSHIP BOUNDARY (F-048 resolved 2026-07-24)
+----------------------------------------------
+DecisionEngine answers ONE question: "is this a valid market opportunity?" — a SEMANTIC judgment
+over market evidence (fused score, p_win, zone validity, weak-component). It does NOT know about,
+and MUST NOT gate on, economics: fees / taxes / slippage / brokerage / portfolio / capital, or
+reward:risk. Economic reward:risk is owned solely by ``UltronRiskGate`` (Check 2, cost-taxed
+``min_rr_ratio``, after ``ExecutionPlanner`` derives SL/TP); concrete SL/TP + sizing by
+``ExecutionPlanner``. The prior RR gate here consumed RREngine candle polarity (∈[0.5,1]) against
+a reward:risk threshold — a producer/consumer contract mismatch (F-048) that has been REMOVED, not
+shimmed. There is no RR term in ``evaluate`` anymore.
+
 FIX 1 — Dynamic Threshold Calibration: threshold = percentile(scores, 85),
          clamped [0.45, 0.65]. Falls back to 0.55 until history is available.
 FIX 3 — Dead Engine Neutralization: zone_gate_invalid check is bypassed when
@@ -87,7 +98,8 @@ class DecisionEngine:
         self.config = config
         self.score_threshold          = _require_decision_cfg(config, "score_threshold")
         self.p_win_threshold          = _require_decision_cfg(config, "p_win_threshold")
-        self.rr_threshold             = _require_decision_cfg(config, "rr_threshold")
+        # rr_threshold intentionally NOT read (F-048 resolved): DecisionEngine owns no economic
+        # RR gate. The config key is retained-but-RETIRED; economic RR = ultron_risk_gate.min_rr_ratio.
         self.weak_link_weight         = _require_decision_cfg(config, "weak_link_weight")
         self.weak_component_threshold = _require_decision_cfg(config, "weak_component_threshold")
         # FIX 1 — dynamic threshold replaces static score_threshold for score check.
@@ -115,7 +127,6 @@ class DecisionEngine:
     ) -> dict:
         weak_component_threshold = _require_decision_cfg(config, "weak_component_threshold")
         p_win_threshold          = _require_decision_cfg(config, "p_win_threshold")
-        rr_threshold             = _require_decision_cfg(config, "rr_threshold")
 
         # Use the normalised score from fusion if present (FIX 2 output)
         effective_score = float(fusion.get("normalized_score", score))
@@ -141,10 +152,10 @@ class DecisionEngine:
             self._dynamic_threshold.update(effective_score)
             return result
 
-        if float(fusion.get("rr", 0.0)) < float(rr_threshold):
-            result = self._reject("low_rr", threshold)
-            self._dynamic_threshold.update(effective_score)
-            return result
+        # NO economic RR gate here (F-048 resolved 2026-07-24). Reward:risk — polarity (contract
+        # A, fused elsewhere) and true SL/TP RR (contract D) — is NOT a DecisionEngine concern.
+        # Economic RR is enforced downstream by UltronRiskGate.evaluate (cost-taxed min_rr_ratio),
+        # after ExecutionPlanner has built SL/TP. DecisionEngine stays purely semantic.
 
         if float(fusion.get("weak_component", 0.0)) > float(weak_component_threshold):
             result = self._reject("weak_setup", threshold)

@@ -13,7 +13,7 @@ from pathlib import Path
 
 import yaml
 
-from config_layer.crt_engine_v2 import CRTState, VALID_TRANSITIONS
+from config_layer.state_identity import CRTState, VALID_TRANSITIONS
 
 _ROOT = Path(__file__).resolve().parents[1]
 

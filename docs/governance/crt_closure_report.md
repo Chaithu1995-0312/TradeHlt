@@ -77,6 +77,24 @@ Finding: **F-050 → REMEDIATED**
 
 ---
 
+## POST-CH-002 PARITY (empirical freeze, 2026-07-09)
+
+**Authority:** [`reports/POST_CH002_BASELINE_DIFFERENTIAL.md`](../../reports/POST_CH002_BASELINE_DIFFERENTIAL.md)
+
+| Item | Result |
+|---|---|
+| Gate-ON BNBUSDT full corpus | **PASS** — byte-identical `BNBUSDT_summary.json` vs `results/baseline/run1/` |
+| Candidates / journal / metrics | 13 / 11 / E=−0.3865R / PF=0.509 / WR=27.3% / MaxDD=5.63% |
+| Trade identity | 11/11 trade_id + pnl_rr_net identical |
+| Behavior change | **NO** (CH-002 semantic-only claim confirmed) |
+| Telemetry note | 2/11 trades: journal alias `cached_retest_depth` clipped to 1.0 (FM-027); non-trading |
+
+**CRT rediscovery is permanently frozen.** Future CRT changes enter only through the construction protocol + existing CI adversarial/closure/formula tests. Do not re-run Phases 1–8 unless a new construction change requires them.
+
+**Highest-leverage next step (post-freeze):** model/training lineage audits — Gaussian → ZoneGate → RR → BitNet → TradeNet. Do **not** mass-retrain on the rename alone.
+
+---
+
 ## Artifacts
 
 | Path | Role |
@@ -90,6 +108,7 @@ Finding: **F-050 → REMEDIATED**
 | `docs/governance/crt_adversarial_validation.md` | Phase 7 |
 | `docs/governance/crt_closure_report.md` | Phase 8 (this file) |
 | `docs/governance/build_manifests/CH-002-f050-emission-rename.impact.json` | Construction protocol |
+| `reports/POST_CH002_BASELINE_DIFFERENTIAL.md` | Empirical parity proof |
 
 ---
 
@@ -113,6 +132,8 @@ pytest tests/test_crt_adversarial_closure.py \
 CRT_ACTIVE_AUTHORITY = crt_engine_v2.CRTEngine
 CRT_CLOSURE_STATUS = CLOSED
 F050_STATUS = REMEDIATED (CH-002)
-NEW_FINDINGS = none (F-050 flipped REMEDIATED)
-HIGHEST_LEVERAGE_NEXT_STEP = OI-ER-001 admission provenance OR config-first HC backlog (optional)
+POST_CH002_BASELINE_DIFFERENTIAL = PASS
+BEHAVIOR_CHANGE = NO
+NEW_FINDINGS = none
+HIGHEST_LEVERAGE_NEXT_STEP = Gaussian training→artifact→inference→runtime lineage audit
 ```

@@ -1,7 +1,9 @@
 """
 rr_pattern_miner.py
 Feature -> RR Pattern Miner trainer and pure-Python inference.
-Canonical contract: 24-feature vectors from CANONICAL_FEATURES.
+Canonical contract: feature vectors matching the model’s trained n_features and
+the live CANONICAL_FEATURE_DIM (schema v4.0 = 39). Dimension mismatch is
+fail-closed — never silently truncated (P0 2026-07-22).
 """
 
 from __future__ import annotations
@@ -15,11 +17,18 @@ from typing import Any, Dict, List, Optional
 from features.feature_schema import CANONICAL_FEATURE_DIM
 
 # RR_SCHEMA was removed — use the single source of truth for feature dimensionality.
-# CANONICAL_FEATURE_DIM tracks the live canonical schema width (currently 35).
-# Older saved models with n_features=24 or n_features=11 will fail the shape
-# check in train() and in NanoInferenceEngine.predict() — this is intentional:
-# those models were trained on stale data and must be retrained.
+# CANONICAL_FEATURE_DIM tracks the live canonical schema width (schema v4.0 = 39).
+# Older saved models with n_features=35/38/24/11 fail the shape check in train() and
+# in NanoInferenceEngine.predict() — intentional: remap or retrain, never silent-slice.
 N_FEATURES = CANONICAL_FEATURE_DIM
+
+
+class FeatureDimensionError(ValueError):
+    """Feature vector width does not match the loaded RR model.
+
+    Raised instead of silent index truncation. Callers must remap/retrain;
+    swallowing this into a plausible score is a fail-open defect (P0).
+    """
 
 # ── Load from production config (strict — the rr_model section + keys are governed) ──
 # Fallback sweep RR-001/fail-fast: the outer `except → {}` config mask was removed. The
@@ -45,6 +54,111 @@ _SCORE_WEIGHTS:       dict  = _RR_CFG["score_weights"]
 _W_GAUSSIAN:          float = _SCORE_WEIGHTS["gaussian"]
 _W_ML:                float = _SCORE_WEIGHTS["ml"]
 _W_CONFIDENCE:        float = _SCORE_WEIGHTS["confidence"]
+
+# ── Confidence-gate mode (F-044) ────────────────────────────────────────────────────────────
+# The legacy gate `confidence = exp(-0.5·d_sq) < confidence_bypass_threshold` is mis-specified for
+# its dimensionality: `d_sq` is a Mahalanobis distance over a rank-`dof` form (n_features minus the
+# zeroed indices), whose in-distribution E[d_sq]=dof, so confidence ≈ exp(-0.5·dof) ≪ threshold for
+# ~every input — including the model's own training data (100% in-sample bypass; F-044). This adds a
+# dof-AWARE gate behind `rr_model.confidence_gate.mode`.
+#
+# Parity: default `legacy_scalar` reproduces `confidence < _CONF_BYPASS` byte-for-byte (mirrors the
+# parity-preserving default of the existing `engine_runner.rr_fusion.full_feature_vector` knob — a
+# missing subsection maps to the IDENTITY behavior, not a new/possibly-wrong default). The dof-aware
+# modes are validated capability for a future, ΔG001-gated re-enable of rr_fusion:
+#   • `chi2_tail`   — bypass iff Q(dof/2, d_sq/2) < p_threshold (the χ²-tail the Mahalanobis implies);
+#   • `dof_scaled`  — bypass iff d_sq/dof > dof_scaled_max (pragmatic normalization);
+#   • `percentile`  — bypass iff d_sq > d_sq_cut, the cut calibrated from the EMPIRICAL training-d_sq
+#                     CDF (most robust; the empirical d_sq is heavy-tailed vs χ²(dof), so theory
+#                     p-values mis-estimate real bypass — F-044 refinement 2026-07-05).
+# In all modes the operating point is chosen via `target_bypass_fraction → empirical threshold`
+# (rr_confidence_probe.py emits the calibration table). They grant NO authority (§6.5); rr_fusion
+# stays `enabled:false` and the gate is inert until a measured ΔG001 re-enable.
+_GATE_CFG: dict = dict(_RR_CFG.get("confidence_gate") or {})
+_GATE_MODE: str = str(_GATE_CFG.get("mode", "legacy_scalar"))
+_GATE_P_THRESHOLD: float = float(_GATE_CFG.get("p_threshold", 0.01))    # for chi2_tail
+_GATE_DOF_SCALED_MAX: float = float(_GATE_CFG.get("dof_scaled_max", 3.0))  # for dof_scaled
+# `percentile` mode (most robust to the heavy-tailed / mis-conditioned empirical d_sq — F-044
+# refinement 2026-07-05): bypass iff d_sq > a cut calibrated from the training-d_sq empirical CDF.
+# The cut is NOT theory-derived; it is chosen via `target_bypass_fraction → empirical threshold`
+# (scripts/analysis/rr_confidence_probe.py emits the calibration table). `d_sq_cut` is model-specific.
+_GATE_DSQ_CUT_RAW = _GATE_CFG.get("d_sq_cut", None)
+_GATE_MODES = ("legacy_scalar", "chi2_tail", "dof_scaled", "percentile")
+if _GATE_MODE not in _GATE_MODES:
+    raise ValueError(
+        f"rr_model.confidence_gate.mode must be one of {_GATE_MODES}, got {_GATE_MODE!r}"
+    )
+if _GATE_MODE == "percentile" and _GATE_DSQ_CUT_RAW is None:
+    raise ValueError("rr_model.confidence_gate.mode='percentile' requires 'd_sq_cut' (calibrated cut)")
+_GATE_DSQ_CUT: float = float(_GATE_DSQ_CUT_RAW) if _GATE_DSQ_CUT_RAW is not None else float("inf")
+
+
+def _chi2_sf(x: float, dof: int) -> float:
+    """Survival function P(χ²_dof > x) = Q(dof/2, x/2), regularized upper incomplete gamma.
+    Pure-Python (Numerical Recipes gammq); the inference hot-path stays numpy-free."""
+    if dof <= 0:
+        return 1.0
+    return _gammq(dof / 2.0, x / 2.0)
+
+
+def _gammq(s: float, x: float) -> float:
+    if x < 0.0 or s <= 0.0:
+        raise ValueError("_gammq: require x>=0, s>0")
+    if x == 0.0:
+        return 1.0
+    if x < s + 1.0:
+        return 1.0 - _gser(s, x)          # series gives P; Q = 1 - P
+    return _gcf(s, x)                       # continued fraction gives Q directly
+
+
+def _gser(s: float, x: float) -> float:
+    ap = s
+    total = 1.0 / s
+    delta = total
+    for _ in range(1000):
+        ap += 1.0
+        delta *= x / ap
+        total += delta
+        if abs(delta) < abs(total) * 1e-15:
+            break
+    return total * math.exp(-x + s * math.log(x) - math.lgamma(s))
+
+
+def _gcf(s: float, x: float) -> float:
+    tiny = 1e-300
+    b = x + 1.0 - s
+    c = 1.0 / tiny
+    d = 1.0 / b
+    h = d
+    for i in range(1, 1000):
+        an = -i * (i - s)
+        b += 2.0
+        d = an * d + b
+        if abs(d) < tiny:
+            d = tiny
+        c = b + an / c
+        if abs(c) < tiny:
+            c = tiny
+        d = 1.0 / d
+        delta = d * c
+        h *= delta
+        if abs(delta - 1.0) < 1e-15:
+            break
+    return math.exp(-x + s * math.log(x) - math.lgamma(s)) * h
+
+
+def _confidence_bypass(d_sq_raw: float, dof: int, confidence: float) -> bool:
+    """True → bypass rr_fusion to the Gaussian score. Dispatches on `_GATE_MODE`.
+    `d_sq_raw` is the UN-clipped Mahalanobis distance; `confidence` is exp(-0.5·clipped d_sq)."""
+    if _GATE_MODE == "legacy_scalar":
+        return confidence < _CONF_BYPASS                       # byte-identical to the historical gate
+    if _GATE_MODE == "chi2_tail":
+        return _chi2_sf(d_sq_raw, dof) < _GATE_P_THRESHOLD     # bypass only genuine upper-tail outliers
+    if _GATE_MODE == "dof_scaled":
+        return (d_sq_raw / dof) > _GATE_DOF_SCALED_MAX if dof > 0 else True
+    if _GATE_MODE == "percentile":
+        return d_sq_raw > _GATE_DSQ_CUT                         # cut calibrated from training-d_sq CDF
+    raise ValueError(f"unknown _GATE_MODE {_GATE_MODE!r}")      # unreachable (validated at import)
 
 
 def _sigmoid(x: float) -> float:
@@ -139,6 +253,22 @@ class RRPatternTrainer:
             var_all = Xs.var(axis=0) + eps
             conf_P = np.diag(1.0 / var_all).tolist()
 
+        # Training-distribution metadata (F-044 percentile-gate provenance): per-row Mahalanobis d_sq
+        # (SAME definition as predict()) → percentiles. Makes `confidence_gate.mode=percentile`
+        # d_sq_cut a reproducible contract instead of an implicit assumption. effective_dof accounts
+        # for constant-zero (price-anchored) columns, which contribute 0 to d_sq.
+        _delta = Xs - np.asarray(conf_mu)
+        _d_sq = np.einsum("ij,jk,ik->i", _delta, np.asarray(conf_P), _delta)
+        _n_const_zero = int(np.sum(scale_std == 1.0))  # cols the trainer forced to unit std (const)
+        training_distribution = {
+            "n": int(n),
+            "effective_dof": int(N_FEATURES - _n_const_zero),
+            "d_sq_p50": float(np.percentile(_d_sq, 50)),
+            "d_sq_p90": float(np.percentile(_d_sq, 90)),
+            "d_sq_p95": float(np.percentile(_d_sq, 95)),
+            "d_sq_p99": float(np.percentile(_d_sq, 99)),
+        }
+
         self.state = {
             "ridge_w": ridge_w,
             "ridge_b": ridge_b,
@@ -153,6 +283,7 @@ class RRPatternTrainer:
             "n_train": n,
             "ridge_alpha": self.ridge_alpha,
             "feature_schema": f"canonical_{N_FEATURES}",
+            "training_distribution": training_distribution,
         }
         return self.state
 
@@ -252,7 +383,12 @@ class RRPatternTrainer:
 
 
 class NanoInferenceEngine:
-    """Pure-Python inference engine for canonical 24-feature vectors."""
+    """Pure-Python inference engine for RR fusion feature vectors.
+
+    Contract: ``len(features)`` must equal ``len(self.W)`` (the model's trained
+    width). Longer or shorter vectors raise ``FeatureDimensionError`` — never
+    silently truncated or padded (P0 2026-07-22; closes FAIL_OPEN under schema v4).
+    """
 
     __slots__ = (
         "W",
@@ -268,11 +404,13 @@ class NanoInferenceEngine:
         "scale_mu",
         "scale_sigma",
         "zero_indices",   # tuple[int] — features zeroed at train-time; same mask applied at predict-time
+        "n_features",
     )
 
     def __init__(self, state_dict: Dict[str, Any]) -> None:
         self.W = tuple(float(x) for x in state_dict["ridge_w"])
         self.b = float(state_dict["ridge_b"])
+        self.n_features = len(self.W)
 
         self.scale_mu = tuple(float(x) for x in state_dict["scale_mu"])
         self.scale_sigma = tuple(float(x) for x in state_dict["scale_sigma"])
@@ -304,12 +442,18 @@ class NanoInferenceEngine:
         threshold: float = 0.5,
     ) -> Dict[str, Any]:
         n = len(self.W)
-        # Backward compat: if caller provides more features than the model expects
-        # (schema v3.0 → 38 features, model trained on v2.0 → 35), silently truncate.
-        if len(features) > n:
-            features = list(features)[:n]
-        if len(features) != n:
-            raise ValueError(f"NanoInferenceEngine.predict: expected {n} features, got {len(features)}.")
+        # P0 FAIL-CLOSED (2026-07-22): never silently truncate longer vectors.
+        # Schema v4 (39-dim) vs v3 models (38-dim) would misalign every trailing
+        # feature under index truncation — that is a fail-open scoring path.
+        # Exact width only; remap or retrain to change width.
+        got = len(features)
+        if got != n:
+            raise FeatureDimensionError(
+                f"NanoInferenceEngine.predict: expected exactly {n} features "
+                f"(model n_features={n}), got {got}. "
+                f"Refusing silent truncate/pad — remap or retrain for the live "
+                f"schema (CANONICAL_FEATURE_DIM={CANONICAL_FEATURE_DIM})."
+            )
 
         # Apply same feature zeroing used at train-time (price-level de-anchoring).
         # Mutating caller data is unexpected; always work on a copy when zeroing.
@@ -333,13 +477,15 @@ class NanoInferenceEngine:
                 row_dot += Pi[j] * delta[j]
             d_sq += delta[i] * row_dot
 
+        d_sq_raw = d_sq                        # F-044: keep pre-clip distance for the dof-aware gate
         if d_sq > _MAHAL_CLIP:
             d_sq = _MAHAL_CLIP
 
         confidence = math.exp(-0.5 * d_sq)
         confidence = min(1.0, max(0.0, confidence))
 
-        if confidence < _CONF_BYPASS:
+        dof = n - len(self.zero_indices)       # rank of the Mahalanobis form (zeroed dims contribute 0)
+        if _confidence_bypass(d_sq_raw, dof, confidence):
             return {
                 "final_score": float(gaussian_score),
                 "expected_rr": 0.0,

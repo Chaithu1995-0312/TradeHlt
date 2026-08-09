@@ -55,29 +55,35 @@ class TrapValidatorEngine:
             return {"score": 0.0, "reason": f"low_atr:{atr}"}
 
         # --- Gate 3: Session whitelist (accept both int and string) ---
-        # Canonical: 0=ASIA, 1=LONDON, 2=NEWYORK
-        # Legacy: "asia", "london", "new_york"
-        session_map = {
-            0: "asia",
-            1: "london",
-            2: "new_york",
-            "asia": "asia",
-            "london": "london",
-            "new_york": "new_york",
-            "newyork": "new_york",
-        }
+        # Routed through features.session_classifier — the single owner of session semantics.
+        #
+        # v4.0 FIX (2026-07-22). This gate carried its own private map:
+        #     {0: "asia", 1: "london", 2: "new_york", "newyork": "new_york", ...}
+        # which knew only the three v3.0 ordinals. When FM-052 gained OVERLAP(3) and CLOSED(4),
+        # `session_map.get(3, 3)` fell through to the raw `3`, which is not in `allowed_sessions`,
+        # so every OVERLAP bar was rejected as `invalid_session:3.0` — even though "overlap" IS an
+        # allowed session. That silently cost 6 of 13 BNBUSDT setups before a ledger diff caught it.
+        #
+        # Comparing CANONICAL NAMES on both sides also removes the spelling trap this map encoded:
+        # the config says "new_york", the enum says NEWYORK, and older records say "newyork".
+        # Normalising both sides means a spelling can never again decide a trade.
+        from features.session_classifier import canonical_session_name, decode_session_ordinal
 
-        # Handle numeric session values that may arrive as floats (e.g. 0.0).
-        if isinstance(session, (int, float)):
+        if isinstance(session, (int, float)) and not isinstance(session, bool):
             try:
-                s_int = int(session)
-                session_key = session_map.get(s_int, session)
-            except Exception:
-                session_key = session
+                session_key = decode_session_ordinal(session)
+            except ValueError:
+                # Out-of-domain ordinal (a v3 record replayed under v4, or a future value).
+                # Reject loudly rather than guess, and say WHY — this is a schema problem, not a
+                # session-policy block, and the two must not look alike in the rejection stream.
+                return {"score": 0.0, "reason": f"unknown_session_ordinal:{session}"}
         else:
-            session_key = session_map.get(session, str(session).strip().lower())
-        
-        if session_key not in self.allowed_sessions:
+            session_key = canonical_session_name(session)
+
+        allowed = {canonical_session_name(s) for s in self.allowed_sessions}
+        allowed.discard(None)
+
+        if session_key is None or session_key not in allowed:
             return {"score": 0.0, "reason": f"invalid_session:{session}"}
 
         return {"score": 1.0, "reason": "pass"}

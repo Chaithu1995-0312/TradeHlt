@@ -1,6 +1,6 @@
 # Current Findings — Repository Truths (living)
 
-> Created: 2026-06-03 · Updated: 2026-07-05
+> Created: 2026-06-03 · Updated: 2026-08-06
 >
 > **What this is.** The repo's *current validated conclusions* — the verdicts that change roadmap
 > and funding decisions — each dated, evidence-linked, and confidence-rated. This is the **living
@@ -19,6 +19,14 @@
 > `Evidence`, and fill `Reversal` if it overturns a prior belief. **Never delete** a finding —
 > mark it `SUPERSEDED`/`RETIRED` and keep the row (append-discipline). `Confidence` vocab matches
 > `MEMORY.md`: `Certain` · `Likely` · `Possible`.
+>
+> **Measurement identity (added 2026-08-06).** Every non-terminal finding carries `Family` (which
+> research object it is about — an `RF-*` id from
+> [`governance/research_family_registry.json`](governance/research_family_registry.json)) and
+> `Contract` (the measurement basis it was produced under). `Contract: UNKNOWN` is permitted and
+> honest, but a claim with an unknown contract **is not comparable to any other claim and settles
+> nothing**. All 66 non-terminal findings seed as `UNKNOWN` — that is the recorded state of the
+> evidence, not a defect. See [`governance/MEASUREMENT_CONTRACT.md`](governance/MEASUREMENT_CONTRACT.md) §9–§10.
 
 ---
 
@@ -27,6 +35,8 @@
 ```
 ### F-NNN · <one-line conclusion>
 - Type:          ARCHITECTURE | ECONOMIC | GOVERNANCE | OPERATIONAL | RISK
+- Family:        RF-* id from docs/governance/research_family_registry.json | — (not a market object)
+- Contract:      <measurement identity> | UNKNOWN     (non-terminal findings only)
 - Status:        VALIDATED | OPEN | DURABLE | SUPERSEDED | RETIRED
 - Confidence:    Certain | Likely | Possible
 - Validated:     YYYY-MM-DD
@@ -56,6 +66,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-001 · Intelligence is NOT the binding constraint
 - Type:          ECONOMIC
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-03
@@ -67,6 +79,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-002 · The edge is in the decision PROCESS, not a static feature->outcome map
 - Type:          ECONOMIC
+- Family:        RF-CRT-STRUCTURE
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-03
@@ -91,6 +105,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-004 · BitNet is a hard rejection gate WHEN ENABLED (`use_bitnet`); inert on the active config
 - Type:          ARCHITECTURE
+- Family:        RF-NEURAL-CONSUMERS
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-03
@@ -103,6 +119,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-005 · TradeNet v2 is BUILT but unwired (fusion neural slot is a stub)
 - Type:          ARCHITECTURE
+- Family:        RF-NEURAL-CONSUMERS
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-03
@@ -114,6 +132,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-006 · config_integrity is a REAL check but ORPHANED (not enforced at runtime)
 - Type:          GOVERNANCE
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-03
@@ -138,6 +158,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-008 · Concept drift is detected but NOT acted on
 - Type:          RISK
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-02
@@ -149,6 +171,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-009 · Per-instrument doctrine validated; global/multi configs underperform
 - Type:          GOVERNANCE
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-02
@@ -160,6 +184,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-010 · Headline ROI is BACKTEST-only; live PnL is UNVERIFIED
 - Type:          RISK
+- Family:        RF-EXIT-COST-PATH
+- Contract:      UNKNOWN
 - Status:        OPEN
 - Confidence:    Likely
 - Validated:     2026-06-03
@@ -171,6 +197,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-011 · OOS persistence is real but small; persistence != discrimination
 - Type:          ECONOMIC
+- Family:        RF-CRT-STRUCTURE
+- Contract:      UNKNOWN
 - Status:        DURABLE
 - Confidence:    Likely
 - Validated:     2026-06-01
@@ -182,6 +210,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-012 · ReplayMemory / CognitiveBus / Cluster / HMF are sidecar-only (zero spine consumption)
 - Type:          ARCHITECTURE
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-02
@@ -193,6 +223,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-013 · The multi-signal scan→allocate→ExecutionLoop path is BUILT but ORPHANED (live runs the single-candle spine)
 - Type:          ARCHITECTURE
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-05
@@ -204,6 +236,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-014 · Time-to-first-move is a real, feature-orthogonal POST-ENTRY discriminator
 - Type:          ECONOMIC
+- Family:        RF-EXIT-COST-PATH
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-06
@@ -218,6 +252,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-015 · Detection-gate relaxation is NOT a quality-preserving throughput lever; cheap throughput is exhausted
 - Type:          ECONOMIC
+- Family:        RF-CRT-STRUCTURE
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-06
@@ -230,6 +266,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-016 · On the `patch` branch the active production config is v2_multi_2026_04 (pre-TP3 engine); v4 applies only to the TP3 code line
 - Type:          GOVERNANCE
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-11
@@ -242,6 +280,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-017 · Session policy is NOT a promotable BNBUSDT lever under realistic exits + OOS
 - Type:          ECONOMIC
+- Family:        RF-SESSION-TIME
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-11
@@ -256,6 +296,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-018 · Active config (patch) lags HEAD code — config↔code split-brain blocks data-gate governance
 - Type:          GOVERNANCE
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-12
@@ -271,6 +313,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-019 · No existing hypothesis qualifies (M4) across the crypto majors under honest exits + cost
 - Type:          ECONOMIC
+- Family:        RF-CRT-STRUCTURE
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-12
@@ -286,6 +330,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-020 · No candle-conditional directional pocket on the crypto majors (entropy "significance" ≠ exploitable)
 - Type:          ECONOMIC
+- Family:        RF-REGIME-DYNAMICS
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-12
@@ -300,6 +346,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-021 · The spine's RETEST selection IS the session filter — no score/zone skill under intrabar truth
 - Type:          ECONOMIC
+- Family:        RF-SESSION-TIME
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-13
@@ -315,6 +363,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-022 · opportunities.jsonl is a DETECTION STREAM, not a trade ledger (its outcome/rr are internally inconsistent)
 - Type:          GOVERNANCE
+- Family:        RF-LABEL-TRUTH
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-13
@@ -328,6 +378,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-023 · Feature morphology separates SHAPE, not expectancy
 - Type:          ECONOMIC
+- Family:        RF-SHAPES-TRAJECTORIES
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-13
@@ -341,6 +393,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-024 · Continuation timing asymmetry — losers resolve almost immediately; winners mature over ~90 min (NOT 5.5 h)
 - Type:          ECONOMIC
+- Family:        RF-EXIT-COST-PATH
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-13
@@ -354,6 +408,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-025 · Exit/cost is a risk/cost lever, NOT an expectancy lever — the fourth falsification
 - Type:          ECONOMIC
+- Family:        RF-EXIT-COST-PATH
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-13
@@ -367,6 +423,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-026 · Completed sweep→displacement→retest adds NO forward asymmetry beyond sweep alone (BNBUSDT; negative + underpowered)
 - Type:          ECONOMIC
+- Family:        RF-CRT-STRUCTURE
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-13
@@ -379,6 +437,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-027 · Coarser timeframes (H1/H4) do NOT rescue the directional edge — the M15 null replicates
 - Type:          ECONOMIC
+- Family:        RF-HTF
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-13
@@ -391,6 +451,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-028 · P&F (PNF-v1) double-top/bottom carries NO standalone edge on crypto majors — first interpreter, REJECTED
 - Type:          ECONOMIC
+- Family:        RF-SHAPES-TRAJECTORIES
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-14
@@ -402,6 +464,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-029 · Feature-pipeline `center=True` swing lookahead is benign for trade generation — the adversarial "FATAL leakage / kill the model" verdict is DOC_DRIFT vs measured evidence
 - Type:          OPERATIONAL
+- Family:        RF-FEATURE-ONTOLOGY
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-15
@@ -410,9 +474,12 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 - Supersedes:    —
 - Reversal:      "center=True swing detection is FATAL label leakage that contaminates the model and forces a pipeline rewrite" -> "F1 already measured it byte-identical-benign for trade generation on BNBUSDT; the FATAL framing is DOC_DRIFT, the alleged training-contamination path does not exist, and the proposed successor model is already built — the LIVE-UNSAFE flag stands but no backtest edge depends on it"
 - Owner:         claude
+- Note:          **Scope refinement 2026-07-11 (F-051):** F-029's claim is **trade-generation ledger identity under TRUST_SWING_CAUSAL / causal structure intervention on gate-OFF** — reconfirmed (BNB 13≡13). It does **not** authorize keeping centered publication as production PIT-clean semantics: Phase A proved value-level contamination of the 10-dim structure closure, CRT/Zone input exposure, and live default-absent zeros. Structural importance for gate-ON ledgers remains INCONCLUSIVE (PC-2 failed). Do not read F-029 as "lookahead is free."
 
 ### F-031 · Governance caught an overclaim before repository contamination (Program-4 rollup E-001E)
 - Type:          GOVERNANCE
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-17
@@ -425,6 +492,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-030 · Contemporaneous volatility-regime LEVEL conditioning is economically non-consumable in spot directional architectures
 - Type:          ECONOMIC
+- Family:        RF-REGIME-DYNAMICS
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-17
@@ -437,6 +506,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-032 · Cross-sectional dispersion (relative-value, market-neutral) on crypto majors is NOT monetizable net of costs
 - Type:          ECONOMIC
+- Family:        RF-CROSS-SECTIONAL-PANEL
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-18
@@ -450,6 +521,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-033 · Carry/basis is NOT an informative signal for cross-sectional spot dispersion on crypto majors
 - Type:          ECONOMIC
+- Family:        RF-CARRY-BASIS
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-18
@@ -462,6 +535,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-034 · Carry HARVEST does not clear costs on crypto majors — funding income is real but economically negligible vs turnover
 - Type:          ECONOMIC
+- Family:        RF-CARRY-BASIS
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-18
@@ -474,6 +549,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-035 · The entry-information null generalizes from crypto to FX majors — first non-crypto asset-class test
 - Type:          ECONOMIC
+- Family:        RF-CRT-STRUCTURE
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-19
@@ -488,6 +565,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-036 · zone_gate top_k / cluster knobs are TUNABLE but INERT — ΔG001 ≡ 0 (mechanism CORRECTED; live-path now tested)
 - Type:          ECONOMIC
+- Family:        RF-ZONE-GEOMETRY
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-24
@@ -496,7 +575,7 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
   **CORRECTION (2026-06-25, E-001 — "caught me overclaiming"):** the original mechanism claim here — *"the zone cluster score enters Fusion at weight 0.2 and flips ZERO decisions … the same perfect-no-op as the EMA gate"* — is **WITHDRAWN as an overclaim**. The follow-up diagnosis (`scripts/research/diagnose_zone_inertness.py`) found the engine_runner **FUSION GATE is DISABLED in the backtest harness**: `.env` sets `BACKTEST_ENGINE_GATE=0`, and only `backtest_v2.py` honors that flag (the live path does **not**). So in this entire research corpus the 4-engine fusion (CRT/Gaussian/zone/RR) + DecisionEngine veto **never runs** — backtest entries are produced by the **CRT state machine alone**. `top_k` is therefore inert in the backtest **trivially** (nothing in fusion executes), **NOT** because zone is non-pivotal in a live-equivalent fusion. Probe (12k BNB candles): gate-ON → the lone CRT candidate is REJECTed (0 trades); gate-OFF → 1 trade — i.e. the gate is highly consequential when on. The **ΔG001≡0-in-backtest headline and the tunability-not-authority verdict still stand**, but the fusion-mechanism attribution does not, and **live-path zone pivotality is UNTESTED**. Stage B not entered (moot under the corpus correction). See F-037 for the corpus-scope finding.
 
-  **UPDATE (2026-06-25) — live-path pivotality now TESTED (gate-ON ablation), confidence restored Possible→Likely:** re-ran the ablation with `BACKTEST_ENGINE_GATE=1` (`results/research/zone_inertness_gateon/`, body sha in manifest) so the 4-engine fusion actually runs (live-equivalent spine: BNB 11 / ETH 4 / BTC 5 / SOL 6). Sweeping `weight_zone_gate ∈ {0.0,0.2,0.4,0.6}` × `bitnet_zone_threshold ∈ {0.0,0.25,0.5}` → **every cell byte-identical** ⇒ **zone is non-pivotal on the REAL fusion spine** (removing it, tripling its weight, or forcing its vote on/off changes zero entries). MECHANISM (Phase-2 audit, 13 bars, real scores): zone is **NOT weak** (mean 0.608, median 0.718, **+0.358 above** the 0.25 threshold, ≥0.25 on 85% of bars) and **NOT under-weighted** (3× weight = no change) → the cause is **redundancy / decision-domination** — zone is a near-constant strong "yes" vote that never moves the fused score across the DecisionEngine cut; the real fusion vetoes (CRT 13→11 etc.) are **zone-independent** (CRT/Gaussian/RR/decision drive them). Non-pivotality is byte-exact/deterministic (robust to tiny N) → Likely. Side flag (untested): `gaussian`≡`rr` audit mean 0.7468 — possible rr_fusion coupling, separate question.
+  **UPDATE (2026-06-25) — live-path pivotality now TESTED (gate-ON ablation), confidence restored Possible→Likely:** re-ran the ablation with `BACKTEST_ENGINE_GATE=1` (`results/research/zone_inertness_gateon/`, body sha in manifest) so the 4-engine fusion actually runs (live-equivalent spine: BNB 11 / ETH 4 / BTC 5 / SOL 6). Sweeping `weight_zone_gate ∈ {0.0,0.2,0.4,0.6}` × `zone_cluster_threshold ∈ {0.0,0.25,0.5}` → **every cell byte-identical** ⇒ **zone is non-pivotal on the REAL fusion spine** (removing it, tripling its weight, or forcing its vote on/off changes zero entries). MECHANISM (Phase-2 audit, 13 bars, real scores): zone is **NOT weak** (mean 0.608, median 0.718, **+0.358 above** the 0.25 threshold, ≥0.25 on 85% of bars) and **NOT under-weighted** (3× weight = no change) → the cause is **redundancy / decision-domination** — zone is a near-constant strong "yes" vote that never moves the fused score across the DecisionEngine cut; the real fusion vetoes (CRT 13→11 etc.) are **zone-independent** (CRT/Gaussian/RR/decision drive them). Non-pivotality is byte-exact/deterministic (robust to tiny N) → Likely. Side flag (untested): `gaussian`≡`rr` audit mean 0.7468 — possible rr_fusion coupling, separate question.
 - Supersedes:    —
 - Reversal:      "Making the zone top-k tunable might let a non-default value improve the goal (G001)" -> "top_k is config-TUNABLE but economically INERT. In the CRT-only backtest corpus ΔG001≡0 trivially (fusion gate off); and on the REAL gate-ON fusion spine zone is MEASURED non-pivotal (redundant/decision-dominated, not weak, not under-weighted — UPDATE above). The migration grants tunability, never authority (§6.5) — default top_k=3 stays; a non-default value is unjustified. The interim 'fusion weight 0.2 flips no decision' claim was an overclaim while the gate was off, since re-measured gate-ON and now SUPPORTED."
 - Owner:         claude
@@ -506,6 +585,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-037 · The research "spine" is CRT-only by design — the 4-engine fusion gate is OFF in backtests
 - Type:          ARCHITECTURE
+- Family:        RF-CRT-STRUCTURE
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-25
@@ -514,12 +595,14 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 - Supersedes:    —
 - Reversal:      "The research spine (spine_signal_source.py / SpineHypothesis) measures the full production CRT→Fusion→RegimeGovernor→Decision→Ultron stack, as its docstring claimed" -> "It measures the CRT state machine only; the 4-engine fusion veto is gated OFF in backtest by .env (BACKTEST_ENGINE_GATE=0), by design. The full-fusion spine is a separate gate-ON object (~14% fewer trades)."
 - Owner:         claude
-- Note:          Scope-correction, NOT a conclusion reversal: the fusion gate REMOVES trades (more restrictive), so the gate-ON spine is even smaller-N → the F-019…F-036 entry-information null is unaffected in direction (still INSUFFICIENT/REJECT). What changes is the SCOPE LABEL on the corpus: "the spine" = CRT-only. This corrected F-036's withdrawn fusion-mechanism overclaim (E-001). The one-off gate-ON zone ablation WAS run (`results/research/zone_inertness_gateon/`): the gate runs (audit non-empty, EngineRunner.run called) and vetoes 2/1 CRT entries, but those vetoes are **zone-independent** (removing/tripling zone weight + threshold sweeps all byte-identical) → see F-036 UPDATE. The research default is UNCHANGED (CRT-only by design); gate-ON is a separate live-equivalent lens, not the corpus default.
+- Note:          Scope-correction, NOT a conclusion reversal: the fusion gate REMOVES trades (more restrictive), so the gate-ON spine is even smaller-N → the F-019…F-036 entry-information null is unaffected in direction (still INSUFFICIENT/REJECT). What changes is the SCOPE LABEL on the corpus: "the spine" = CRT-only. This corrected F-036's withdrawn fusion-mechanism overclaim (E-001). The one-off gate-ON zone ablation WAS run (`results/research/zone_inertness_gateon/`): the gate runs (audit non-empty, EngineRunner.run called) and vetoes 2/1 CRT entries, but those vetoes are **zone-independent** (removing/tripling zone weight + threshold sweeps all byte-identical) → see F-036 UPDATE. The research default is UNCHANGED (CRT-only by design); gate-ON is a separate live-equivalent lens, not the corpus default. **EPOCH-QUALIFIED 2026-08-06 (F-058):** the "research default" described here is the pre-2026-07-23 epoch. Since 2026-07-23 the active config declares `engine_gate_enabled:true`; `.env` is now an explicit override (WARNs if it disagrees, F-058). Whether the *current* default epoch still reproduces this gate-OFF CRT-only corpus, or requires an override to do so, is unverified — `src/research/adapters/spine_signal_source.py`'s docstring is stale on this point and needs a matching fix. `RF-CRT-STRUCTURE.L5` queues a gate-ON re-measurement (M-GATE-01) to reconcile against the 13→11 / 7→6 figures recorded above under the current config epoch, not merely re-cite them.
 
 ---
 
 ### F-038 · In the gate-ON fusion the "RR" engine is a GAUSSIAN DUPLICATE — rr_fusion degrades to gaussian on ~all candidate bars [FIX SHIPPED — rr_fusion disabled 2026-06-26]
 - Type:          ARCHITECTURE
+- Family:        RF-RR
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-25
@@ -542,6 +625,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-039 · The L3 dataset-integrity pre-flight is `backtest_v2`-only; every other CandleLoader path relies solely on the inline L1/L2 backstop
 - Type:          ARCHITECTURE
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-06-26
@@ -556,6 +641,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-040 · The volatility-EXPANSION / compression→expansion TRANSITION channel (F-030's untested successor) is INFORMATIVE but NOT economically consumable in the spot directional architecture — Program 4 CLOSED
 - Type:          ECONOMIC
+- Family:        RF-REGIME-DYNAMICS
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-06-26
@@ -570,20 +657,24 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-041 · ZoneGate runtime scores through `models/zone_registry.json` (8 zones, HARD gate); stored zone labels ~98% SL-hit are an F-022 labeling ARTIFACT (Phase-5/F-041B RESOLVED 2026-07-05: honest SL≈0.66, 0/8 zones honest-positive → label-quality NOT the rescuable defect) + manifest divergence RECONCILED (F-041A, B1 2026-07-05)
 - Type:          GOVERNANCE
+- Family:        RF-ZONE-GEOMETRY
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
-- Validated:     2026-06-27
+- Validated:     2026-07-22
 - Revalidate-by: 2026-09-25
-- Evidence:      Active config `configs/production/v2_multi_2026_04.json` → `engine_runner.zone_registry_path = "models/zone_registry.json"`, `zone_mode = "hard"` (config-verified); `BitNetZoneGate` loads that path ([`src/engines/live_engine.py:202`](../src/engines/live_engine.py), [`src/engines/zone_gate_engine.py:230`](../src/engines/zone_gate_engine.py) fail-open 0.5/pass on error). That file (`schema_version=v2_gaussian`, `source=discover_zones_v1_converted_to_gaussian`, 38-dim, 8 zones) has 6/8 zones with negative `mean_rr` and `sl_hit_rate` 0.959–0.989 (zone_0 n=20,708, tp=0.0132, sl=0.9865, mean_rr=−0.029) in stored meta. `models/zone_gate_registry.json` is a **version manifest** (version-key→`model_file`); its `active:true`→`models/BNBUSDT/.../zone_registry_BNBUSDT_202605_bnb_v1.json` sha256[:16]=`aade29c4f8c5ac9c` ≠ the config-loaded file's `e73e08934add02c9` → manifest ≠ scoring path. **Phase-5 (F-041B) RESOLVED 2026-07-05** — driver [`scripts/research/zone_label_audit.py`](../scripts/research/zone_label_audit.py) + logic [`src/research/zone_label_audit.py`](../src/research/zone_label_audit.py) re-derived ALL 139,942 source opportunities (`logs/BNBUSDT/bnbusdt_training_20260524/opportunities.jsonl`) through the governing `forward_walk(intrabar_fixed)` over the ORIGINAL seeded-KMeans membership. `membership_verification = VERIFIED` (all 8 zones reproduce stored n+mean_rr+sl_hit_rate to 4dp, ruling out a permuted partition — the label-honesty delta is contamination, not re-clustering). Artifact [`docs/analysis/f041b-zone-label-audit-BNBUSDT.json`](analysis/f041b-zone-label-audit-BNBUSDT.json): stored `sl_hit_rate` 0.959–0.989 vs **honest 0.649–0.663** (Δ≈−0.33 every zone) → **CONTAMINATED** — the ~98% SL-hit is an F-022 stream artifact (also sign-flipped: zones 4/5/6 stored `mean_rr`>0 but honest E_net<0). AND no zone clears honest E>0: net-of-cost expectancy −0.17…−0.56R, bootstrap CI entirely <0 ∀8 zones → underlying **HONEST_NO_EDGE** (honest win≈0.34 re-confirms F-023; extends F-025). Separately, runtime 38-dim Gaussian assignment agrees with the label partition only **41.4%** (per-zone 0.06–0.70) — the live gate partitions differently than the labels describe (governance sub-finding, distinct from contamination).
+- Evidence:      Active config `configs/production/v2_multi_2026_04.json` → `engine_runner.zone_registry_path = "models/zone_registry.json"`, `zone_mode = "hard"` (config-verified); `BitNetZoneGate` loads that path ([`src/engines/live_engine.py:202`](../src/engines/live_engine.py), [`src/engines/zone_gate_engine.py:230`](../src/engines/zone_gate_engine.py) fail-open 0.5/pass on error). That file (`schema_version=v2_gaussian`, `source=discover_zones_v1_converted_to_gaussian`, 38-dim, 8 zones) has 6/8 zones with negative `mean_rr` and `sl_hit_rate` 0.959–0.989 (zone_0 n=20,708, tp=0.0132, sl=0.9865, mean_rr=−0.029) in stored meta. `models/zone_gate_registry.json` is a **version manifest** (version-key→`model_file`); its `active:true`→`models/BNBUSDT/.../zone_registry_BNBUSDT_202605_bnb_v1.json` sha256[:16]=`aade29c4f8c5ac9c` ≠ the config-loaded file's `e73e08934add02c9` → manifest ≠ scoring path. **Phase-5 (F-041B) RESOLVED 2026-07-05** — driver [`scripts/research/zone_label_audit.py`](../scripts/research/zone_label_audit.py) + logic [`src/research/zone_label_audit.py`](../src/research/zone_label_audit.py) re-derived ALL 139,942 source opportunities (`logs/BNBUSDT/bnbusdt_training_20260524/opportunities.jsonl`) through the governing `forward_walk(intrabar_fixed)` over the ORIGINAL seeded-KMeans membership. `membership_verification = VERIFIED` (all 8 zones reproduce stored n+mean_rr+sl_hit_rate to 4dp, ruling out a permuted partition — the label-honesty delta is contamination, not re-clustering). Artifact [`docs/analysis/f041b-zone-label-audit-BNBUSDT.json`](analysis/f041b-zone-label-audit-BNBUSDT.json): stored `sl_hit_rate` 0.959–0.989 vs **honest 0.649–0.663** (Δ≈−0.33 every zone) → **CONTAMINATED** — the ~98% SL-hit is an F-022 stream artifact (also sign-flipped: zones 4/5/6 stored `mean_rr`>0 but honest E_net<0). AND no zone clears honest E>0: net-of-cost expectancy −0.17…−0.56R, bootstrap CI entirely <0 ∀8 zones → underlying **HONEST_NO_EDGE** (honest win≈0.34 re-confirms F-023; extends F-025). Separately, runtime Gaussian *argmax* assignment agrees with the label partition only **41.4%** (per-zone 0.06–0.70) (governance sub-finding, distinct from contamination). **RESOLVED 2026-07-22 — see the Note's item (3); the earlier gloss "the live gate partitions differently than the labels describe" is CORRECTED: the live gate does not partition at all.**
 - Supersedes:    —
 - Reversal:      (intra-session, E-001) "zone_gate_registry.json is empty (0 zones) → ZoneGate may be silently fail-open in production" -> "CORRECTED: zone_gate_registry.json is a *populated version manifest* keyed by version (the 0-zones read was a parse artifact looking for a `zones` list); the scored centroid file is `models/zone_registry.json` (8 zones), loaded as the config directs."
 - Owner:         claude
-- Note:          TWO distinct facts, do not conflate. (1) CERTAIN now: the SCORING path is `models/zone_registry.json` as a HARD gate, and the version manifest's `active` flag points to a different file (bookkeeping `TruthConflict` per §6.2 — surfaced, NOT auto-reconciled; user decides). (2) RESOLVED 2026-07-05 (Phase-5, F-041B): the stored labels ARE a labeling artifact — honest intrabar_fixed SL≈0.66 ≪ stored ≈0.98 on VERIFIED-identical membership — so label-quality is NOT the dominant/rescuable ZoneGate defect: even honestly relabeled, 0/8 zones carry positive expectancy, so re-training the labels creates no edge. The binding constraint remains the entry-information null (F-019…F-040, F-025), consistent with F-036 (ZoneGate NON_PIVOTAL, ΔG001≡0). Note the live gate never reads these labels (purely geometric) → no runtime/execution risk today; contamination affects research/interpretability/promotion/docs only. Governance sub-finding: manifest↔runtime assignment parity is only 0.414. **F-041A RECONCILED 2026-07-05 (B1, user-approved §6.2):** registered+promoted `v2_gaussian_runtime_2026_07` via `core.model_registry.{register,promote}_zone_gate` so `zone_gate_registry.json` active `model_file = models/zone_registry.json` (sha `e73e0893` == config-loaded) — single-source-of-truth restored, behavior-neutral (manifest is orphaned bookkeeping; production config untouched → hash-neutral). New permanent invariant `tests/test_zone_manifest_runtime_parity.py::test_active_zone_manifest_matches_runtime` (red pre-B1, green post-B1) machine-enforces manifest.active-sha == runtime-sha so this drift class cannot recur. Both halves now resolved → Status VALIDATED. Authority: research/docs + governance-hygiene only (§6.5). Plan: `docs/topics/model-intent-and-feature-ownership.md`.
+- Note:          TWO distinct facts, do not conflate. (1) CERTAIN now: the SCORING path is `models/zone_registry.json` as a HARD gate, and the version manifest's `active` flag points to a different file (bookkeeping `TruthConflict` per §6.2 — surfaced, NOT auto-reconciled; user decides). (2) RESOLVED 2026-07-05 (Phase-5, F-041B): the stored labels ARE a labeling artifact — honest intrabar_fixed SL≈0.66 ≪ stored ≈0.98 on VERIFIED-identical membership — so label-quality is NOT the dominant/rescuable ZoneGate defect: even honestly relabeled, 0/8 zones carry positive expectancy, so re-training the labels creates no edge. The binding constraint remains the entry-information null (F-019…F-040, F-025), consistent with F-036 (ZoneGate NON_PIVOTAL, ΔG001≡0). Note the live gate never reads these labels (purely geometric) → no runtime/execution risk today; contamination affects research/interpretability/promotion/docs only. (3) **Assignment-parity sub-finding RESOLVED 2026-07-22** (probe `scripts/analysis/zone_assignment_parity_probe.py`, artifact [`docs/analysis/zone-assignment-parity.LATEST.json`](analysis/zone-assignment-parity.LATEST.json); recorded 0.4140 reproduced EXACTLY, delta 0.0 on all 8 per-zone values, so the pipeline is validated before extending it). **The core category error: the runtime SCORES, it never PARTITIONS.** The live decision is `top_scores` → `compute_weighted_cluster_score` → `>= zone_cluster_threshold` → pass/block — a continuous top-k aggregate against a threshold. No record is ever assigned to a zone; `best_zone_id` is telemetry with no downstream consumer (`live_engine.check()` states this in-code). "Assignment parity" therefore measures a partitioning the runtime does not perform, which is why a low value implies nothing about gate behaviour. **Why it is low is now mechanical:** KMeans minimises unnormalised squared-Euclidean over all 38 RAW dims while the Gaussian divides by a global sigma and zero-weights 13 dims — and those 13 zeroed dims carry **99.9983%** of the variance driving the KMeans objective (`volume` alone 97.58%), so KMeans partitioned by volume/price level while the runtime scores candle shape. Judge against the majority-class baseline **0.3264** (not 1/8): 41.4% is ~9pp above trivial, κ=0.238. Measured structure (information only, no authority): all 8 zones show POSITIVE lift over their runtime marginal (so the agreement is weak but real everywhere); the runtime argmax concentrates **77.7%** on zones 2+7 vs their 51.8% label share; margins are tiny corpus-wide (~95% of records have top1−top2 < 0.05), and the per-zone margin gradient is **BIMODAL** — attractor zones 2/7 agree MORE when confident (near-tie instability) while disfavoured zones 0/1/3 fall to ≈0.000 agreement at high margin (systematic re-routing). Two mechanisms operate at once, so no single scalar describes the 41.4%. Anomaly criterion (pre-declared, measured against the RUNTIME marginal — not the label share) selects zones 5/6/7; **zone_3 is NOT anomalous** (lift +0.0495, 2nd smallest — its low parity is explained by the runtime seldom picking it, correcting an earlier "2nd-largest zone yet 0.13" framing that wrongly used label share as the baseline). **F-041A RECONCILED 2026-07-05 (B1, user-approved §6.2):** registered+promoted `v2_gaussian_runtime_2026_07` via `core.model_registry.{register,promote}_zone_gate` so `zone_gate_registry.json` active `model_file = models/zone_registry.json` (sha `e73e0893` == config-loaded) — single-source-of-truth restored, behavior-neutral (manifest is orphaned bookkeeping; production config untouched → hash-neutral). New permanent invariant `tests/test_zone_manifest_runtime_parity.py::test_active_zone_manifest_matches_runtime` (red pre-B1, green post-B1) machine-enforces manifest.active-sha == runtime-sha so this drift class cannot recur. Both halves now resolved → Status VALIDATED. Authority: research/docs + governance-hygiene only (§6.5). Plan: `docs/topics/model-intent-and-feature-ownership.md`.
 
 ---
 
 ### F-042 · The weekly liquidity-sweep ontology (ICT/CRT Mon+Tue accumulation -> Wed-Fri sweep -> reversal) does NOT clear the M4 gate on FX majors — Program 8 CLOSED
 - Type:          ECONOMIC
+- Family:        RF-WEEKLY-CALENDAR
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-07-01
@@ -598,6 +689,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-043 · A forward Markov P^H regime-transition forecast is REDUNDANT with the current vol level and persistence — Program 4b CLOSED
 - Type:          ECONOMIC
+- Family:        RF-REGIME-DYNAMICS
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Likely
 - Validated:     2026-07-01
@@ -612,6 +705,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-044 · The RR-fusion confidence gate is MIS-SPECIFIED for its dimensionality — it bypasses to Gaussian on 100% of inputs including in-sample (refines F-038's mechanism)
 - Type:          ARCHITECTURE
+- Family:        RF-RR
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-07-04
@@ -626,6 +721,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-045 · The RR-model economic kill-test is INDETERMINATE — apparent OOS discrimination is measured against F-022-contaminated labels
 - Type:          GOVERNANCE
+- Family:        RF-RR
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-07-05
@@ -635,9 +732,180 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 - Reversal:      Prior expectation "a correctly-fed, correctly-gated RR is a clean RETIRE (per F-001/F-002/F-023/F-025)" -> "kill-test is INDETERMINATE, not RETIRE: RR shows apparent (weak) OOS discrimination, but on a contaminated label, so no Keep/Retire verdict is defensible yet."
 - Owner:         claude
 - Note:          **REQUIRED next step for any Keep/Retire:** re-derive `y` via `forward_walk(intrabar_fixed)` on the source opportunities+candles (the F-041B remedy) and re-run the kill-test. **Two E-001 pre-registration corrections (governance succeeded):** (1) the pre-registered Tier-3 rule had a logic bug — it auto-RETIREd when the heavy-tail filter didn't *improve* signal, even though Tiers 1-2 already showed signal WITHOUT the filter ("filter doesn't add" ≠ "no signal"); corrected to a diagnostic. (2) The pre-registration lacked a LABEL-VALIDITY gate (Tier 0), which is the actual binding constraint. Caught before registering a false RETIRE. This finding grants NO authority; `rr_fusion` stays `enabled:false`. Authority: research/governance only (§6.5).
+- Update:        **2026-07-21 — REQUIRED next step COMPLETED.** Clean L3 labels (`forward_walk(intrabar_fixed)` net 12bps) + preregistered 5-fold kill-test under `RR_L1_FREEZE_2026_07_21_V1` → see **F-059**. F-045's original claim remains VALIDATED: the 2026-07-05 contaminated-label kill-test was INDETERMINATE and must not be cited as Keep/Retire. Contaminated AUC≈0.605 does **not** transfer to clean labels (clean AUC≈0.51). This update grants **no** production authority.
+
+### F-059 · Clean-label RR kill-test (L1 freeze protocol) classifies KEEP_CANDIDATE research-only — modest OOS discrimination, still negative mean R; no fusion authority
+- Type:          ARCHITECTURE
+- Family:        RF-RR
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-07-21
+- Revalidate-by: 2026-10-31
+- Evidence:      Epoch kill-test `results/rr_research/epoch/RR_L1_FREEZE_2026_07_21_V1/kill_test/report.json` (`scripts/research/rr_kill_test_clean_l3.py`). Protocol: signed L1 `RR_L1_FREEZE_2026_07_21_V1` (`protocol_hash=521fc88f…`), L3 clean dataset n=**139,942** (features L2 PIT-clean production pipeline; y = `forward_walk(intrabar_fixed)` net 12bps; entry stream geometry-only). 5-fold CV trains ridge+GNB on train folds; OOS heads **confidence-gate bypassed** (F-044). Tier0 label_validity **PASS** (frac win∧y_rr≈1.0 = 0.0). Tier1: rr_corr=**0.167** (>0.03), PR-AUC=0.490 vs shuffle 0.482 (margin +0.02 alone fails; disc_pass via rr_corr OR), AUC=0.512 vs shuffle 0.498. Tier2: top-decile mean y_rr=**−0.154** > random-decile **−0.434** (still negative absolute). Classification under prereg: **KEEP_CANDIDATE**. Overall mean y_rr=**−0.436**. Hard flags: RR_FUSION_REENABLE false.
+- Supersedes:    Completes F-045's required clean re-test; does **not** delete F-045 (contaminated-test history preserved)
+- Reversal:      F-045 "no Keep/Retire yet" (on clean path) -> "KEEP_CANDIDATE research-only on clean labels under frozen protocol"; contaminated F-045 AUC~0.60 is **not** confirmed economic discrimination
+- Owner:         grok
+- Note:          **§6.5:** KEEP_CANDIDATE ≠ production weight ≠ architecture. Mean R and top-decile R remain **negative** — ranking skill vs random is not expectancy. `rr_fusion` stays `enabled:false`. No promote. Authority: research/docs only.
+
+### F-060 · The live Gaussian channel is an UNPARAMETERIZED kernel that degenerates to a near-CONSTANT — the deferred FM-031 scale defect, consumed
+- Type:          ARCHITECTURE
+- Family:        RF-GAUSSIAN
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-07-22
+- Revalidate-by: 2026-12-31
+- Evidence:      Three source-verified claims, each independently checkable. **(1) ZERO LEARNED PARAMETERS.** `HeuristicGaussianEngine.compute` (`src/engines/heuristic_gaussian_engine.py:325-333`) computes `exp(-(x-mu)^2/2sigma^2)`, `x=(ema_diff+tanh(momentum_score))/2`. `mu`/`sigma` resolve through `_normalize_registry_entry` (`:42-53`), which defaults `mu=0.0, sigma=1.0` (`:49-50`). All 11 entries of `models/gaussian_registry.json` were dumped: **none carries a `mu` or `sigma` key** (they carry version/model_file/feature_schema/schema_version/metrics/trained_at/active). The defaults therefore fire on a SUCCESSFUL load — live score is `exp(-x^2/2)`, byte-identical to the no-registry path; the trained `.json` bundles are never opened by the live engine. **(2) DEGENERATE TO A CONSTANT.** Measured over the full corpus (70,002 bars x 4 majors = 280,008): score mean 0.8825-0.8838, std 2.9e-03…1.24e-02, min 0.870, and `|tanh(momentum_score)|>0.999999` on **93.42% (SOL) / 98.12% (BNB) / 99.64% (ETH) / 99.90% (BTC)** of bars. Mechanism: `momentum_score = close.diff()/atr` (`feature_pipeline.py:765`) divides an ABSOLUTE price change by a RELATIVE atr (`atr = atr_14_raw/close`, `:718-721`), giving range +/-4622…+5766 (FeatureHealth log) so `tanh` saturates to exactly +/-1; with `ema_diff` ~1e-3, `x` pins at +/-0.5 and — since `mu=0` makes the kernel SYMMETRIC, discarding the sign — the score is `exp(-0.125)=0.8825` almost always. Live-run confirmation (gate-ON BNBUSDT): every emitted `gaussian_score` in the FLOW:COLLECTOR stream is 0.8824-0.8842 with `meta.x` in [-0.5003,+0.4999]. **(3) WRONG TRAINER AUDITED + F-022 CONFIRMED.** `docs/governance/gaussian_lineage_audit.md:68,185` names `train_pipeline.run_gaussian_update`, which produced NONE of the 4 artifacts on disk; the builder of record is `scripts/training/phase5_calibration.py` (`run_calibration:623` -> `train_gaussian:642`, dataset `from_opportunities:382`), whose labels are `float(rec.get("rr_achieved", 0.0))` (`:434`) read raw from the F-022 stream (36.8% self-consistent) with no `forward_walk` re-derivation anywhere in the Gaussian training path — upgrading the audit's "may inherit contamination" (`:45`) to CONFIRMED. Its docstrings at `:387`/`:391` ("unbiased ground-truth labels", "this is the unbiased training path") are contradicted by F-022/F-041B. Floor: `tests/test_gaussian_live_parameterization.py` (6 tests; fails if `mu`/`sigma` are ever added, which would be a live-behavior change).
+- Supersedes:    Refines `gaussian_lineage_audit.md`'s `TRAINED_ARTIFACT = INERT` and F-005's "trained model unwired"; does not reverse either
+- Reversal:      "Registry active entries supply mu/sigma to the heuristic" (`gaussian_lineage_audit.md:76,160`) -> **CORRECTED**: the registry read is a NO-OP, supplying nothing at any fidelity. The distinction matters — "INERT" reads as "trained weights unused at reduced fidelity"; the truth is that no learned parameter reaches the scoring path at all.
+- Owner:         claude
+- Note:          **SCOPE / E-001 CALIBRATION.** This finding does NOT discover the dimensional defect behind claim (2) — `market_ontology.yaml:253-257` already registers it (`known_issue: close_delta (absolute price) / dimensionless atr -> SCALES with price level`, `replacement_identity: FM-031`, `migration_class: FORMULA_CORRECTION_DEFERRED`), and F-053 certified the corrected FM-030/FM-031 variants while deliberately leaving them inactive. What is new is the **CONSUMPTION CONSEQUENCE**, which nobody had connected: the deferred correction does not merely make a feature scale-dependent, it collapses a live fusion channel into a constant. `tanh` is the amplifier — any input of magnitude >~10 saturates, and the legacy identity guarantees magnitudes in the thousands. This is the first demonstrated case of `FORMULA_CORRECTION_DEFERRED` having a *decision-surface* cost rather than a representational one, and it raises the priority of the FM-030/031 activation question (which remains gated and is NOT authorized here). **Claim (2) is a DESCRIPTIVE measurement, not an economic claim** — that the channel is near-constant does not by itself establish it is harmful, worthless, or removable (a constant at weight 0.2 still shifts the fused score against `tier_*` thresholds, i.e. it acts as a calibration bias). Pivotality is measured separately by `scripts/research/diagnose_gaussian_pivotality.py` (F-036 ledger-sha method, seam `HeuristicGaussianEngine.compute`, gate forced ON; injection neutrality self-check PASSED byte-identical on BNBUSDT). **RESULT (2026-07-22, `results/research/gaussian_pivotality/gaussian_pivotality.json`, body_sha256 `8b3613b5…`): `GAUSSIAN_INFORMATION_INERT` — and stronger than pre-registered.** All THREE cells (baseline / pinned-at-saturation 0.8825 / pinned-0.5) produce byte-identical trade ledgers on every instrument (BNB 11/11/11 sha `9bcba138`, ETH 4/4/4 `25a7e34f`, BTC 5/5/5 `6326e7fc`, SOL 6/6/6 `f6ba7dd2`); baseline counts reproduce F-037's gate-ON 11/4/5/6 exactly, confirming the fusion gate really ran. So not only does the channel's VARIATION move no trade (information test), even a 0.38 LEVEL shift to the neutral vote moves no trade (level test) — the channel is non-pivotal on BOTH axes, consistent with F-036 (fusion decisions are CRT-dominated / veto-independent). This is a proof (exact zero, no bootstrap needed), NOT an expectancy claim: pooled gate-ON n=26 is below the `min_samples: 30` floor, so the ablation establishes non-pivotality but grants no economic verdict on the channel. Grants **NO** authority (§6.5): no re-weight, no removal, no `gaussian_impl=ml` switch, no retrain, no promote. Residual (recorded, NOT fixed): 7 of 11 registry entries dangle; `v4_mirrored` has no artifact yet `ui_kits/crt_dashboard/data.js:4,145,324` shows it ACTIVE; `auto_train_from_opportunities.py:98` omits `--gaussian` so the nightly trainer hard-exits rc=1; `get_active_gaussian()` is hardcoded to EURUSD (`model_registry.py:637-640`) which has no `__active__` key, forcing the Phase-5 `NoOpScorer`; the `gaussian_scorer` config block's only consumer (`crt_gaussian_scorer.py`) has zero production importers. Authority: architecture/governance only.
+
+### F-061 · The FM-022/023 dimensional mix is a DECISION-surface defect on crypto, not a representational one — four consumers degenerate to constants and the `dual_engine` thresholds are inert; correction is now config-gated (inactive)
+- Type:          ARCHITECTURE
+- Family:        RF-FEATURE-ONTOLOGY
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-07-22
+- Revalidate-by: 2026-12-31
+- Evidence:      **THE ARITHMETIC.** `FM-022 ema_spread = (ema_fast-ema_slow)/atr` and `FM-023 momentum_score = close_delta/atr` (`feature_pipeline.py` `compute_canonical_ema_features`) divide an ABSOLUTE-price numerator by the close-relative `atr` (`atr_14_raw/close`). Therefore `legacy == corrected * close` exactly — the defect's magnitude IS the instrument's price level. Verified as a closed form to float32 precision (max rel err 9.9e-08 over 3,000 BNBUSDT bars) in `tests/test_fm030_031_normalization_basis.py`. **THE CONSEQUENCE (read-only probe, full corpora via `FeaturePipeline.run()`).** Median `|ema_spread|`: BNBUSDT 320.3 (close≈647), BTCUSDT 38,110 (close≈88,480), EURUSD 0.528 (close≈1.14); corrected: 0.471 / 0.457 / 0.471 — i.e. the corrected identity is instrument-scale invariant and the legacy one is not. Against the ACTIVE config's `engine_runner.dual_engine` thresholds (`trend_strength_threshold=0.15`, `momentum_threshold=0.3`, `v2_multi_2026_04.json`), FOUR consumers degenerate on crypto: **(1)** `detect_regime` (`src/core/engine_runner.py:150`) returns `"trend"` on **98.86% (BNB) / 99.94% (BTC)** of bars vs 54.57% on EURUSD — under the corrected identity 52.70% / 52.75% / 50.11%, i.e. it discriminates and is instrument-invariant; **(2)** `breakout_engine` (`:165`) `score = clip((|spread|+|momentum|)/2, 0, 1)` is pinned at exactly 1.0 on **99.99% / 100.00%** of bars (corrected: 6.75% / 6.78%); **(3)** `heuristic_gaussian_engine.py:329` `tanh(momentum_score)` saturates on **98.78% / 99.94%** (this is F-060's mechanism, here shown to be one instance of a general pattern); **(4)** `gate_intelligence.py:237` REVERSAL intent scores `1 - min(1, |mom|)` → constant **0.0** on crypto. So the thresholds are TUNABLE but INERT on crypto and binding only where `close ≈ 1` (FX) — a threshold sweep on crypto could never have moved anything. THREE other consumers read only the SIGN (`momentum_score > 0`) and are invariant to the correction: `execution_planner.py:364`, `crt_engine_v2.py:2138`, `sl_tp_comparator.py:83`. **THE REMEDIATION (this session).** FM-030/031 promoted from ontology `migration_candidates:` prose to first-class registered identities (`derived_math.ema_spread_atr` / `momentum_score_atr`, registry-dispatched, never `eval`'d), selected by a new strict config key `feature_pipeline.normalization_basis` ∈ {`atr_relative`, `atr_absolute`}. Default is `atr_relative` = the legacy math verbatim; parity proof = the XAUUSD freeze-pin vector SHA is UNCHANGED (`tests/test_feature_layer_freeze.py` green) plus a 12-assertion floor (`tests/test_fm030_031_normalization_basis.py`) pinning the closed form, scale invariance (100x price leaves FM-030/031 unchanged and multiplies FM-022/023 by 100), scalar↔pipeline parity, and fail-closed config discipline (missing key → KeyError, unknown value → ValueError, no silent fall-through). Corrected arm is reachable ONLY via the non-promoted shadow config `v2_multi_dimfix_shadow_2026_07.json` (differs from active in exactly one value; key-diff verified). Freeze waiver: `FM-030-031-DIMENSIONAL-MIX-MIGRATION` in `feature-layer-freeze-pin-2026-07-20.json`.
+- Supersedes:    Generalizes F-060 (Gaussian saturation) from one channel to the whole dimensional-mix consumer set; extends F-053's certification of FM-030/031 from "mathematically sound" to "measurably consequential". Reverses neither.
+- Reversal:      The ontology's `migration_class: FORMULA_CORRECTION_DEFERRED` (2026-07-12) framed the defect as representational — a feature that "SCALES with price level". **CORRECTED → `FORMULA_CORRECTION_CONFIG_GATED`**: it also silently disables four live scoring consumers on crypto. The 2026-07-12 record is preserved in place (the `migration_candidates:` block is retained and marked `SUPERSEDED_BY`, per §6.2 rule 4), not deleted.
+- Owner:         claude
+- Note:          **DESCRIPTIVE / MECHANISM ONLY — grants NO authority (§6.5).** The saturation percentages are arithmetic facts about the feature distribution, NOT a claim that the correction earns money, that the legacy arm costs money, or that FM-030/031 may be activated. Activation would additionally require (a) demonstrated ΔG001 improvement and (b) recalibration of the `dual_engine` thresholds, which are tuned to the legacy magnitudes and are deliberately NOT recalibrated in the shadow arm (recalibrating them would confound the A/B). `ACTIVE_VERSION` unchanged; FM-030/031 stay `active: false`; no retrain of `rr_model` / gaussian-38 / BitNet (all inactive or INERT on the active patch per F-004/F-005/F-038/F-060, so none blocks and none is disturbed); the four magnitude-sensitive consumers are untouched. **E-001 calibration:** a "constant regime label" is not automatically harmful — F-060's own ablation found the Gaussian channel non-pivotal (`GAUSSIAN_INFORMATION_INERT`, byte-identical ledgers), and F-036 found the fusion path CRT-dominated, so the prior is that these degeneracies may cost nothing economically. That is exactly why the economic question is routed to a shadow measurement rather than asserted here. Shadow driver: `scripts/research/dimensional_mix_shadow_diagnostic.py` (forces `BACKTEST_ENGINE_GATE=1` — the affected consumers live inside `EngineRunner.run()`, which the gate-OFF research path never calls, F-037/F-058; the F-036 method). **MEASURED 2026-07-22 (BNBUSDT, gate-ON; frozen record `docs/governance/fm030_031_implementation_validation-2026-07-22.json`, floor `tests/test_fm030_031_implementation_validation.py`):** the implementation is VALIDATED on all four questions. **(1) The gated path executes** — the corrected arm emits four rejection reasons only the RegimeGovernor can produce (`regime_trend_no_direction` ×1, `regime_range_no_direction` ×2, `neutral_low_confidence` ×1), unreachable unless FM-030/031 reached `detect_regime` through the production `PROD_VERSION` path. **(2) The legacy arm is byte-identical across the change** — trade-ledger SHA `9bcba138775d4109` on all NINE runs (5 pre-change 2026-07-18, 4 post-change 2026-07-22), the same SHA F-060's pivotality artifact recorded; XAUUSD feature-matrix SHA also unchanged. **(3) The decision surface changes exactly as predicted** — `REGIME_CLASSIFICATION` is emitted on *change only*, and over 70,080 candles the legacy arm emits **1** event (the initial `null→trend`, i.e. the regime label is a literal constant and the 0.15/0.3 thresholds never bind) while the corrected arm emits **7** across trend/neutral/range. **(4) The ledger delta is attributable to the identity alone** — corrected is a strict SUBSET (11→7, **zero** additions), the 4 dropped trades (`CRT-0004/0006/0007/0013`) equal the 4 new regime rejections, surviving trades keep byte-identical geometry, `total_setups`=13 in *both* arms (so the CRT state machine never diverged), the two configs differ in exactly one behavioral key, and the corrected ledger `9e28abef01761758` reproduced on 3 independent runs. **ECONOMICS: INSUFFICIENT, no claim** — legacy E −0.3865 (n=11, PF 0.509) vs corrected E −0.3864 (n=7, PF 0.5108), Δ +0.0001R; both net-negative, n ≪ 30, quarantined under `NON_AUTHORITATIVE_ECONOMICS`. Consistent with F-019…F-043 and with F-060's own `GAUSSIAN_INFORMATION_INERT`: a degenerate scoring layer is not automatically a costly one. **A DESIGN ASSUMPTION WAS FALSIFIED (and corrected before it propagated):** the driver inherited BitNet's caveat "entry sets are NOT nested — a reject resets the CRT state machine". True for BitNet, which vetoes *inside* `UltronRiskEngine.approve_with_soft_conf`; **false here**, because the basis is consumed only downstream of CRT, so the regime layer is a pure veto and the sets nest cleanly. The driver's docstring/report now state the corrected claim with the original retained (§6.2 rule 4), and `nested` is reported per run so a future break is visible. **Scope caveat:** measured on the BATCH pipeline path (`backtest_v2` constructs `FeaturePipeline`). The LIVE ingress (`live_engine_hook` / `FeatureStore`) is a separate surface and is NOT covered by this knob — that is consumer-alignment work under M16, not this program. Authority: architecture/governance only.
+
+### F-062 · [FIX SHIPPED 2026-07-31] The feature-DAG spine was stale against schema v4.0, so `feature_surface_query --summary` reported `surface_status: CLOSED` while 3 of 39 canonical slots had no certification-ledger row
+- Type:          GOVERNANCE
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-07-31
+- Revalidate-by: 2026-12-31
+- Evidence:      `scripts/analysis/feature_dag_layers.py`'s hand-maintained `_NODES` dict still declared the v3.0 names `wick_size`/`macd_hist` after schema v4.0 (2026-07-22, SCHEMA-V4-VECTOR-MIGRATION) renamed the canonical slot to `candle_range` and split `macd_hist` into `macd_hist_raw`/`macd_hist_z`. Recomputing `build_dag()` before the fix gave `missing_canonical=['candle_range','macd_hist_raw','macd_hist_z']`, `n_canonical_covered=36/39` — yet the stale artifact `docs/governance/feature_dag_layers.LATEST.json` (dated 2026-07-14) still claimed `[]`/38, and `scripts/governance/feature_surface_query.py --summary` printed `surface_status: CLOSED` with `closure: {CLOSED: 36, None: 3}` in the same breath — a self-contradictory report. Consequence: those 3 slots had no DAG node and therefore no certification-ledger row (`scripts/governance/feature_certification_state.py status` showed `{PROMOTED_PRODUCTION: 46, SUPERSEDED: 2}` = 48, reading fully closed while 3 shipping vector dims were uncertified). FIX: renamed the three `_NODES` entries to the v4.0 names with correct deps/layers (`feature_dag_layers.py:79-116`), which certified all three (`candle_range`/`macd_hist_raw`/`macd_hist_z` now `PROMOTED_PRODUCTION`). Post-fix: `feature_dag_layers.py` reports `is_dag=True nodes=49 canonical=39/39 missing_canonical=[]`; `feature_surface_query --summary` reports `closure: {'CLOSED': 39}`, no `None` rows. Byte-identity preserved: XAUUSD (`n=19,922`) 39-dim vector SHA-256 unchanged before/after (`4cd69d921e69303576291a70bbccec6b43d0992fa8c2d19f654733ba215a2343`), `SCHEMA_HASH`/`FEATURE_ORDER_HASH` unchanged, `config_hash` untouched. Also de-literalized the `== 38` assertion in `tests/test_feature_dag_layers.py` and the residual `/38` text in `feature_dag_layers.py`'s own report strings.
+- Supersedes:    —
+- Reversal:      "`feature_surface_query --summary`'s `surface_status: CLOSED` means the canonical feature surface is fully certified" -> "That claim was FALSE for 3/39 dims since 2026-07-22 (the report's own `closure` breakdown already showed `None: 3` alongside the `CLOSED` headline — the inconsistency was visible, just unexamined). A `CLOSED` headline is only trustworthy when its own `closure` breakdown carries zero `None` rows."
+- Owner:         claude
+- Note:          Declaration+fix only (Semantic Layer Certification Audit, 2026-07-31, Tier 1 — hash-neutral). Grants no new authority; does not reopen or alter any other CLOSED surface in the `CLAUDE.md` Closure & Authority Index. Authority: governance/hygiene only.
+
+### F-063 · [FIX SHIPPED 2026-07-31] Two canonical vector slots (`trend_strength`, `candles_since_retest`) had no ontology identity because a same-name execution-code collision blocked registration; both now registered, the CRT engine's distinct quantity separated under a new FM id
+- Type:          ARCHITECTURE
+- Family:        RF-FEATURE-ONTOLOGY
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-07-31
+- Revalidate-by: 2026-12-31
+- Evidence:      `market_ontology.yaml` reserved FM-064 (`trend_strength`) and attempted-then-withdrew FM-065 (`candles_since_retest`) on 2026-07-24 because registering either name tripped `tests/test_feature_math_lint.py`'s ownership floor red on an unrelated same-named local: `src/core/engine_runner.py:151` computed `abs(ema_spread)` into a local literally named `trend_strength` (an unrelated regime-detection quantity, `dual_engine.detect_regime`'s threshold input — nothing to do with the ontology's rolling-z-score `trend_strength`); `src/config_layer/crt_engine_v2.py`'s `approve()`/`approve_with_soft_conf()` wrote `state.current_candle_index - state.retest_candle_index` (bars since the RETEST CANDLE, feeding the transient BitNet input dict) into a local dict key also named `candles_since_retest` — a DIFFERENT quantity from the pipeline's canonical vector column of the same name (bars since the last SWEEP, `feature_pipeline.py:988-997`), the exact FM-027/FM-028 (F-050) collision pattern. `tests/test_feature_lineage.py`'s `_UNREGISTERED_VECTOR_SLOTS` ratchet recorded both as the ONLY two of 39 canonical slots with no ontology identity. FIX: renamed the `engine_runner.py:151` local to `ema_spread_abs` (pure rename, zero behavior change) and registered FM-064 `trend_strength`; registered the CRT engine's distinct quantity as a NEW identity, FM-070 `candles_since_retest_state` (`src/features/derived_math.py::candles_since_retest_state`, dispatched via `src/features/registry/derived_registry.py` and `src/features/fm_resolve.py`'s Phase-2 CRT slice), renamed `crt_engine_v2.py`'s two emission sites to write `candles_since_retest_state` internally with an explicit legacy-name alias (`_bn_in["candles_since_retest"] = ...`) added ONLY at the BitNet call boundary — the same CH-002 pattern already used for FM-027/FM-028's `retest_depth`/`disp_strength` aliases. `_UNREGISTERED_VECTOR_SLOTS` is now empty; `tests/test_feature_lineage.py`, `tests/test_feature_math_lint.py`, `tests/test_semantic_registry.py` all pass; XAUUSD 39-dim vector SHA-256 unchanged (byte-identical — the BitNet input dict's legacy-key value is numerically unchanged, and `use_bitnet=false` on the active config regardless, F-004).
+- Supersedes:    —
+- Reversal:      "Resolving the `candles_since_retest` collision requires renaming one emission, which is a MODEL_INPUT_CHANGE and out of scope for a declarative-only change set" (2026-07-24 withdrawal note) -> "The rename is local to two transient dict-construction sites inside `crt_engine_v2.py`'s approve* methods, never escapes those functions except via an explicit legacy-aliased BitNet input that is numerically unchanged — a zero-behavior-change refactor, not a MODEL_INPUT_CHANGE. `_ORIGINAL_BASELINE_IDS` (the frozen GD-pin ledger) did not need to change; the correct resolution is a new registered identity (FM-070) plus a rename, not a lint allowlist."
+- Owner:         claude
+- Note:          Declaration+fix only (Semantic Layer Certification Audit, 2026-07-31, Tier 1 — hash-neutral). Authority: architecture/governance only.
+
+### F-064 · The FM-022/023 dimensional-mix decision-surface defect (F-061) generalizes from crypto to XAUUSD — measured, not activated
+- Type:          ARCHITECTURE
+- Family:        RF-FEATURE-ONTOLOGY
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-07-31
+- Revalidate-by: 2026-12-31
+- Evidence:      F-061 measured FM-022 `ema_spread`/FM-023 `momentum_score`'s price-scaling defect on BNBUSDT/BTCUSDT/EURUSD. Re-measured on XAUUSD (`data/mt5/XAUUSD_M15.csv`, `FeaturePipeline.run()`, n=19,922 bars post-warmup): `momentum_score` ranges [-13,515.8, +16,595.0] and `ema_spread` ranges [-6,657.5, +5,856.6] (both should be O(1) under the corrected FM-030/FM-031 identity). `|tanh(momentum_score)| > 0.999` on **99.70%** of bars (the `heuristic_gaussian_engine.py` saturation mechanism F-060/F-061 already characterized on crypto). `|ema_spread| > 0.15` (the active `engine_runner.dual_engine.trend_strength_threshold`) on **99.99%** of bars. A synthetic ×100 price-shift probe confirms the mechanism directly: `ema_spread`/`momentum_score` scale by **exactly 100.000×**, while every other ATR-normalized canonical dim (`disp_strength`, `volatility_ratio`, `retest_depth`, `liquidity_distance`, `body_ratio`, `atr`) scales by **1.000×** (unchanged) — the closed-form relation `legacy == corrected * close` (F-061) confirmed on a fourth, non-crypto instrument.
+- Supersedes:    Generalizes F-061 (measured on BNBUSDT/BTCUSDT/EURUSD) to XAUUSD; does not reverse or narrow it.
+- Reversal:      — (extension, not a reversal)
+- Owner:         claude
+- Note:          **DESCRIPTIVE / MECHANISM ONLY — grants NO authority (§6.5), same discipline as F-061.** `normalization_basis` stays `atr_relative` (the SUPERSEDED-in-the-certification-ledger identity remains ACTIVE by explicit decision); FM-030/FM-031 stay `active: false`. This session added a one-time startup log warning (`src/features/feature_pipeline.py::_warn_once_if_superseded_basis`, fires once per process when `normalization_basis == "atr_relative"`) — log-only, changes no emitted feature value, no config, no decision path; XAUUSD 39-dim vector SHA-256 unchanged. Activation would additionally require demonstrated ΔG001 improvement plus `dual_engine` threshold recalibration, per F-061's own Note. Authority: architecture/governance only.
+
+### F-065 · The participation (volume) channel is declared in two places on the live decision path and consumed by neither — `gate_intelligence`'s liquidity vol_score is a structural constant zero, and `volume_spike` is declared in the CRT state resolver's predicate vocabulary but referenced by no state
+- Type:          ARCHITECTURE
+- Family:        RF-FEATURE-ONTOLOGY
+- Contract:      UNKNOWN
+- Status:        OPEN
+- Confidence:    Certain
+- Validated:     2026-07-31
+- Revalidate-by: 2026-12-31
+- Evidence:      **(H7)** `src/core/gate_intelligence.py::GateIntelligence._liquidity_score` computes `vol_score = min(1.0, max(0.0, (vol/vm20)/2.0)) if vm20 > 0 else 0.0`, documented as a 50% component of the returned liquidity score (the other 50% is sweep-extent). `vm20 = features.get("volume_ma20", 0.0)` — grep-confirmed absent from both `src/runtime/live_engine_hook.py` and `src/runtime/backtest_v2.py`, the only two production feature builders; `volume_ma20` exists only as a non-canonical intermediate pipeline column (`src/features/feature_pipeline.py:432`, no vector slot) and a hardcoded test fixture (`src/config_layer/execution_planner.py:502`). Consequence: `vm20` defaults to `0.0` on every real bar, so `vol_score` is a structural constant `0.0` and `_liquidity_score` always resolves to exactly `0.5 * sweep_score` — never the documented blend. This feeds `GateIntelligence.decide` at `gate_weight_liquidity=0.20`. **(H8)** `configs/formulas/market_crt_states.yaml`'s `feature_states:` block declares `volume_spike: [NoSpike, VolumeSpike]` (line 81) for the CRT state resolver's predicate vocabulary; grep-confirmed this is the ONLY occurrence of `volume_spike` in that file — no CRT state's `when:` block references it, so the resolver's predicate set never actually gates on participation.
+- Supersedes:    —
+- Reversal:      — (newly discovered gap, not an overturned prior claim)
+- Owner:         claude
+- Note:          **Declaration only — no code behavior changed.** Registered as `configs/formulas/market_ontology.yaml` semantic-registry node `SEM-004` (`execution_behaviours`, `knowledge_status: CHARACTERIZED`) plus an inline pointer comment at `gate_intelligence.py`'s `vm20` assignment, and an inline annotation on `market_crt_states.yaml`'s `volume_spike` line. Fixing H7 (emitting `volume_ma20` from a production feature builder) changes live decision-path scores on every bar — explicitly OUT of scope for a hash-neutral documentation/declaration pass; it requires a separately authorized behavior-change program (§6.5: tunability/reachability is not authority). Authority: architecture/governance only.
+
+### F-066 · MT5-sourced `session`/`hour_of_day` (FM-052) are derived from broker-server time labeled as UTC — 53.36% of XAUUSD bars carry the wrong session label; config-gated correction shipped, inactive by default
+- Type:          ARCHITECTURE
+- Family:        RF-SESSION-TIME
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-08-01
+- Revalidate-by: 2026-12-31
+- Evidence:      Investigation opened from a blind-labeling descriptive-fidelity program (`docs/research/preregistration-blind-label-descriptive-fidelity.md`) preparing a Comet chart-comparison prompt; a 516-day boundary census on `data/mt5/XAUUSD_M15.csv` (every day `01:00→23:45`, zero Sunday bars, DST-invariant) showed the timestamp column cannot be UTC. TWO independent tests, pre-registered, both CONFIRMED: **(A, assumption-free)** cross-correlating XAUUSD's 15-min realized-range profile against Binance BTCUSDT (genuinely UTC-epoch klines) finds the best alignment shift is exactly `-3h00m` Apr-Sep (r=0.675) and exactly `-2h00m` Nov-Feb (r=0.709) — on-the-hour, differing by precisely the DST step. **(B, event-based)** NFP release (08:30 America/New_York, first Friday/month) lands at the SAME server-clock time (15:30) in BOTH seasons (8/11 summer, 4/12+2-adjacent winter) — season-invariance is exactly what an EET/EEST-tracking server predicts; true-UTC stamps would alternate 12:30↔13:30. **New sub-finding: the DST rule is US, not EU** — the daily `01:00→23:45` boundary holds through the 2025-03-10…27, 2025-10-27…31, and 2024-10-28…11-01 US/EU DST-mismatch windows; under EU (Europe/Athens) rules the boundary would shift during those weeks, and it doesn't. Mechanism: `src/inout/mt5_candle_fetcher.py:186` calls `datetime.fromtimestamp(r["time"], tz=timezone.utc)` on MT5's `copy_rates` `time` field, which is a documented broker-server epoch, not UTC. Measured impact: **25,225/47,275 bars (53.36%)** change `session` label under the correction (ASIA 12,381→14,448; CLOSED 6,008→4,085; systematic flows, not noise — e.g. 5,488 CLOSED bars are actually NEWYORK).
+- Supersedes:    —
+- Reversal:      — (newly discovered defect, not an overturned prior claim)
+- Owner:         claude
+- Note:          **Scope-bounded — affects MT5-sourced corpora ONLY.** Every Binance-sourced corpus (`data/binance/*.csv`) uses genuinely UTC epochs and is unaffected; F-017 (session policy not a promotable lever) and F-021 (`SELECTION_IS_SESSION_ONLY`) were measured on BNBUSDT = Binance data and are UNTOUCHED by this finding. Only MT5-derived session work (XAUUSD, the F-035 FX arm) is in scope. **Two surfaces, deliberately treated differently:** the FEATURE (`session`/`hour_of_day`, `feature_pipeline.session_windows_utc`) is a mislabel — fixed. The FILTER (`crt_engine.session_windows`, the live trading-eligibility gate) was empirically tuned ON broker-time data; converting its timestamps while keeping its band numbers would silently move the actually-traded hours by 2-3h and cannot be compensated by a static band (the required correction is seasonal). The filter is therefore left untouched — a live-vs-broker-time relabeling of it is a separate, evidence-gated economic decision, not a bug fix. **Shipped, config-gated, INACTIVE by default** — new strict-read key `feature_pipeline.session_timestamp_basis` (`src/features/feature_pipeline.py`, `_FP_CFG_KEYS`), mirrors the `normalization_basis`/F-061 pattern exactly: `"broker_local"` (DEFAULT on all 3 configs carrying a `feature_pipeline` section — byte-identical to every pipeline run before this key existed, proven by `tests/test_session_timestamp_basis.py::test_broker_local_is_byte_identical_to_raw_timestamp_hour`) vs `"utc_corrected"` (derives from the new `src/features/broker_clock.py::mt5_server_to_utc`, an NY-DST-aware conversion — NOT Europe/Athens). Hash-neutral: `feature_pipeline` is a top-level config section, not `params` (`config_hash` verifies `params` only, confirmed via `production_config.py:346-348`); raw `timestamp` column itself is never mutated by either arm (only `hour_of_day`/`session` derivation reads through the selector). **Scope warning caught same-session (E-001):** an initial code-comment draft claimed `utc_corrected` was "a no-op on Binance data" — false; the conversion has no provenance detection and would wrongly shift already-true-UTC timestamps if misapplied. Corrected before landing; regression `test_utc_corrected_is_not_a_noop_on_true_utc_timestamps` pins the correct (dangerous) behavior instead of a false safety claim. Activating `utc_corrected` on the ACTIVE config is a separate, explicitly-gated decision (feature-vector SHA changes on ~53% of bars ⇒ `feature-layer-freeze-pin-2026-07-20.json` re-pin + revalidation of anything trained on `session`/`hour_of_day` required) — NOT made by this session. Authority: architecture/governance only (§6.5) — grants no promotion, no fusion weight, no live-filter change.
+
+### F-067 · Soft-confirmation `update_emas` fires twice per candle during the RETEST window — compresses the fast/slow spread in a trend (α_eff=2α−α²), NOT the "overly sensitive" inflation an earlier bug-trace claimed; measured, not fixed
+- Type:          ARCHITECTURE
+- Family:        RF-CRT-STRUCTURE
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-08-04
+- Revalidate-by: 2026-12-31
+- Evidence:      A multi-model bug trace flagged a double `EngineState.update_emas` call during soft confirmation and characterized it as `EMA(EMA(close))` making momentum "overly sensitive" (more false approvals). Source-verified the call sites are real but the mechanism is backwards: `crt_engine_v2.py:2629` fires unconditionally at the top of `process_candle`, every candle, before the state-machine chain; `crt_engine_v2.py:2998` fires again inside `elif self.state.evaluating_soft_conf:` — there is **no `RETEST` state branch** in `process_candle`, so every RETEST-state candle falls through to this `elif`, and the second update lands before `approve_with_soft_conf` (`:1953`) reads the EMAs inside `compute_soft_confirmation` (`:1898`, reads at `:1919`). Re-applying the same update is NOT nested composition — it is equivalent to one update at effective α_eff = 2α−α² (closed form, `tests/test_soft_conf_ema_probe.py::test_double_update_equals_closed_form_alpha`, exact to 1e-12): for the production `ema_fast=2`/`ema_slow=5`, α_eff_fast=8/9 (span 1.25, not 2) and α_eff_slow=5/9 (span 2.6, not 5). Both EMAs hug price harder; `f_mom` reads the SPREAD, so the spread COMPRESSES in a trend and the term systematically UNDER-states directional momentum in exactly the setups it exists to reward — approval gets HARDER, not easier. It bites twice (weight in `C_linear` and again via `min(f_body,f_mom)` weak-link, `crt_engine_v2.py:1939,1942`). EMAs seed once and are never cleared by `reset_to_range`, so the perturbation is path-dependent for the life of a run. OBSERVATION_ONLY probe `scripts/analysis/soft_conf_ema_double_update_probe.py` (monkeypatches `EngineState.update_emas` in-process only, no `src/` edit) ran the full XAUUSD corpus (`data/mt5/XAUUSD_M15.csv`, 47,275 bars): n=17 soft-conf evaluations (matches the RETEST=17 state-distribution count exactly — internal consistency check), trend-only mean spread ratio (double/single) = 0.4673 (10 evaluations) vs the closed-form prediction of ~0.457–0.467 — CONFIRMED. The chop leg of the pre-registered prediction (toy alternating-series inflation ~1.34x) did NOT replicate on real data (chop-only ratio 0.9698, 7 evaluations) — real market "chop" includes near-zero EMA crossings that can sign-flip between arms (e.g. candle_index=37273) rather than scale like a clean alternating synthetic series; reported as observed, not forced to fit. 0/17 tier-bucket flips (`first_divergence_idx=null`) — the fix is ledger-neutral on available XAUUSD evidence. Self-consistency: the probe's pure reimplementation of `compute_soft_confirmation`'s arithmetic (`crt_engine_v2.py:1898-1951`) reproduces the real function's output with `max_c_self_consistency_err=0.0` (bit-exact) across all 17 real evaluations plus 5 synthetic parametrized cases in the test floor. Artifact: `results/analysis/soft_conf_ema_double_update.LATEST.json`. Floor: `tests/test_soft_conf_ema_probe.py` (12 tests, all pass).
+- Supersedes:    —
+- Reversal:      "Double EMA update = `EMA(EMA(close))`, makes momentum overly sensitive, causes MORE false approvals (Medium odds)" -> "Double application = effective α=2α−α² (a DIFFERENT closed-form quantity, not nested composition), COMPRESSES the trend spread, makes `f_mom` UNDER-state momentum, making approval HARDER, not easier — the received characterization had the mechanism and the direction both backwards."
+- Owner:         claude
+- Note:          **No code fix in this pass — OBSERVATION_ONLY by user decision ("measure first, fix after").** The finding validates the mechanism and measures its magnitude on the only available XAUUSD evidence; it does NOT decide whether to remove the duplicate call at `crt_engine_v2.py:2998` — that is a separate BEHAVIOR_CHANGE_AUTHORIZED turn, gated the same way F-068 below was. n=17 is thin (XAUUSD is throughput-starved, F-035/F-045-class corpus limits apply) — the 0-flip / ledger-neutral result is a property of THIS corpus and this config's tier thresholds, not a general economic claim; a different instrument or a threshold near one of the observed S-values could flip. Authority: research/architecture only (§6.5) — grants no fix authority, no activation, no production-behavior claim.
+
+### F-068 · Shadow-memory TTL off-by-one — the `[DEADLOCK FIX]` reset fall-through meant a configured TTL of N yielded only N−1 usable bars; fixed
+- Type:          ARCHITECTURE
+- Family:        RF-CRT-STRUCTURE
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-08-04
+- Revalidate-by: 2026-12-31
+- Evidence:      `reset_to_range`'s `[DEADLOCK FIX]` fall-through (`crt_engine_v2.py:2655`, deliberate — lets a sweep fire on the freshly-seeded range on the SAME candle rather than losing a bar) means that when an HTF-triggered reset creates shadow memory (`_create_shadow` at `crt_engine_v2.py:1734`, sets `pending_displacement_ttl = config.pending_displacement_ttl_candles`), the RANGE branch of `process_candle` runs on that SAME candle, immediately after creation — and, pre-fix, unconditionally decremented `pending_displacement_ttl` there too. A configured TTL of N therefore yielded only N−1 usable subsequent bars. Fixed by adding `EngineState.pending_displacement_created_idx` (set once at creation to `candle.index`) and guarding the RANGE-branch decrement (`crt_engine_v2.py:2700-2701`) to skip when `candle.index == pending_displacement_created_idx`. The new field is cleared on all four existing teardown paths (consumed at `:2856`, `SHADOW_LEAK` at `:2820`, TTL-exhaustion at `:2709`, non-HTF-reset expiry at `:1762`) — verified by grep, no fifth stale field introduced. Regression floor `tests/test_shadow_ttl_lifecycle.py` (6 tests) drives a real `CRTEngine.process_candle()` through the actual `ResetLogic.should_reset` → `reset_to_range` → RANGE-branch fall-through path (not a reimplementation of the guard). `test_shadow_survives_configured_ttl_then_expires` was verified to FAIL against the pre-fix guard by temporarily reverting it, running the test (observed sequence `[2,1,0,0]` instead of the expected `[3,2,1,0]` — exactly the predicted one-bar-short pattern), then restoring the fix and re-confirming green. XAUUSD full-corpus before/after (`results/ttl_before` vs `results/ttl_after`, identical config/corpus otherwise): `SHADOW_PENDING` 43→51 (+8), `SWEEP` 6995→6987 (−8), `DISPLACEMENT`/`EXPANSION`/`RETEST`/`EXECUTION`/`RANGE`/`total_setups` byte-identical — a bounded, contained delta consistent with the wider shadow-resumption window and nothing else.
+- Supersedes:    —
+- Reversal:      A separate bug-trace rated this "Low — clearly documented in the code with the comment 'same bar burns 1'." That comment does NOT exist in `crt_engine_v2.py` (grep-verified) — it appears only in a prior session's `assistant_project.md` entry, never in source. CORRECTED: the mitigating rationale was fabricated; the defect was real and unmitigated. The fix adds the comment the claim assumed already existed.
+- Owner:         claude
+- Note:          Correctness-only; no economic claim. `total_setups` is unchanged at 1 on the full 47,275-bar XAUUSD corpus — at that N, no economic conclusion (positive or negative) is derivable from this fix; report the state-distribution delta, not an implied backtest-quality improvement. Authority: architecture/governance only (§6.5).
+
+### F-069 · CRTStateResolver cannot reach engine parity through configuration alone — EXPANSION entry uses a structurally different construction, not a mistuned threshold
+- Type:          ARCHITECTURE
+- Family:        RF-CRT-PARITY
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-08-05
+- Revalidate-by: 2026-11-03
+- Evidence:      CRT Semantic Parity Report (`reports/crt_semantic_parity_report.md`), machine-readable `results/analysis/crt_semantic_parity.classified.json`, pre-registration `docs/research/preregistration-crt-semantic-parity.md`, ledger `results/analysis/crt_parity_sweep/ledger.jsonl` (33 candidates). Config-only (`--injection none`, `engine_mode=exit`) baseline over the full 47,197-bar aligned XAUUSD M15 corpus: 88.1560% (41,607/47,197); RANGE/SWEEP/DISPLACEMENT already 96.4–97.6% recall, EXPANSION only 10.77% (498/4,625). A full coordinate-descent sweep (6 parameter groups, 32 non-baseline candidates covering every resolver-side threshold with an engine-side counterpart) found the best anti-Simpson-safe candidate at 88.4590% (`thresholds.body_ratio_min=0.55` + `thresholds.max_expansion_age_candles=250`, +0.30pp) — EXPANSION recall barely moved (10.16%). Several higher-raw-agreement candidates (up to 89.77%) were found and correctly REJECTED by the anti-Simpson guard because they achieved the gain by zeroing EXPANSION recall to 0.00% entirely (Simpson's-paradox trade). Mechanism (source-verified, `src/features/crt_state_resolver.py`): with the settled `thresholds.continuous_disp_to_expansion: false`, `_resolve_from_features` skips `_expansion_entry_allowed()` — the resolver's analogue of the engine's ATR-extension gate — entirely for DISPLACEMENT/SWEEP→EXPANSION; the resolver can only reach EXPANSION via the declarative `when: {displacement_flag:[Displacement]}` predicate or sticky-dwell carry-over, a different construction from the engine's `try_displacement_to_expansion()` state machine (`src/config_layer/crt_engine_v2.py`). Volume-weighted classification of the 22 residual confusion-matrix cells: Category C (`C-GEOMETRY`, divergent construction) = 96.1% of mismatched bars (6 EXPANSION-involving cells, dominated by EXPANSION→RANGE 3,374 and RANGE→EXPANSION 870), Category D (`D-UNKNOWN`, uninvestigated) = 3.8% (14 cells, each ≤50 bars), Category B (`B-UNREACHABLE-STATE`) = 0.1%. Unweighted cell-count aggregation is separately reported as Inconclusive (14/22 cells unclassified) — both views are stated in the report; the volume view is load-bearing for this finding because cell magnitudes span 3 orders of magnitude (1 to 3,374 bars).
+- Supersedes:    —
+- Reversal:      Corrects two stale/contaminated in-session estimates before this finding's own measurement: the historical instrument (`scripts/research/crt_state_confusion_matrix.py`) ran with the resolver's `engine_reset`/`engine_state_to` oracle-assist parameters UNCONDITIONALLY enabled, producing 64–99% figures that do not answer "configuration alone" (the resolver was fed the engine's own transitions). The script's injection axis was made explicit (`INJECTION_MODES = (none, reset, state_to, full)`); `none` is the only mode measuring the stated question and is now this program's primary metric.
+- Owner:         claude
+- Note:          Two structurally unreachable states (EXECUTION: `_continuous_gates_pass` requires a `score`/`risk_score`/`crt_score` feature absent from `CANONICAL_FEATURES`; RESOLUTION/EXPIRED: declared `when: {}` in `configs/formulas/market_crt_states.yaml`) are Category B by deductive code fact, not a statistical claim, so classified even at low n (EXECUTION n=5). RETEST (17/17 mismatched, n at the `MIN_CELL_N=15` power floor) is a downstream cascade of the same EXPANSION defect — `_continuous_gates_pass` requires memory state EXPANSION/RETEST to enter RETEST — not an independent finding. Determination: **structurally config-unreachable** — no threshold value in `market_crt_states.yaml` bridges a different construction; closing it requires a resolver code change, which is out of this program's repository freeze. Grants no authority to modify the resolver or engine (§6.5); an optional gated `--promote` write-back of the +0.30pp winning threshold values into the tracked `market_crt_states.yaml` was deferred pending explicit user confirmation. Stage B (engine-side `CRTConfig` sensitivity, one-way diagnostic, promotion forbidden) run separately; see the report for its results.
+
+### F-070 · M-GATE-01: on the active config epoch, the 4-engine fusion gate vetoes 0/30 CRT-committed entries across crypto majors — F-037's recorded 14% gate-ON reduction (BNB 13→11, SOL 7→6) does not reproduce today
+- Type:          ARCHITECTURE
+- Family:        RF-CRT-STRUCTURE
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-08-06
+- Revalidate-by: 2026-11-04
+- Evidence:      `scripts/research/gate_measurement_m_gate_01.py` (SITS-registered, SCOPE measurement, authority NONE per §6.5) — two-arm A/B via unmodified `ProductionSpineSource`, same corpus, same `spine.prod_version=v2_multi_2026_04` (active config): OFF arm forces `BACKTEST_ENGINE_GATE=0` (the pre-2026-07-23 F-037 object), ON arm leaves the env var unset so `backtest.engine_gate_enabled:true` governs (the current F-058 object). Non-vacuity guard PASSED: `EngineRunner.run()` call count == entry count on every instrument (BNB 13, ETH 5, BTC 5, SOL 7 — not the 0-call failure mode F-037's original probe hit). Result, all 4 crypto majors, full historical window: ON entry set == OFF entry set BYTE-IDENTICAL (same indices, same timestamps; `removed_by_gate_indices: []` and `added_by_gate_indices: []` on every instrument). Cross-checked against the run's OWN native artifact, not just the adapter's parsing: `BNBUSDT_summary.json` reports `rejected_trades: 0`, `rejection_reasons: {}`, report.txt "Approved / Rejected: 13 / 0" — confirms the zero-veto result independently. F-037's recorded gate-ON figures (BNB 13→11, SOL 7→6, measured 2026-06-25) do NOT reproduce: measured today is 13→13 and 7→7. Artifact: `results/research/gate_measurement_2026_08_06/summary.json`.
+- Supersedes:    —
+- Reversal:      Does NOT reverse F-037's own historical measurement (that 2026-06-25 run is presumably accurate for its own config/code state, per §6.2 rule 4 — history is preserved). What changes: "the gate-ON epoch removes ~14% of gate-OFF entries" is no longer descriptive of the ACTIVE config today. "The fusion gate is a real, if modest, veto" -> "under the active config, on this historical corpus, the fusion gate is currently a complete pass-through (0/30 vetoed)."
+- Owner:         claude
+- Note:          CONFIDENCE=Likely, not Certain, because the CAUSAL MECHANISM is a plausible, dated, well-grounded hypothesis, not independently isolated in this run (E-001 discipline — do not upgrade a timing correlation into a proven mechanism). Between F-037's measurement (2026-06-25) and this one, at least two ARCH remediations targeting exactly this veto path shipped and are independently VALIDATED in this same index: F-038 (rr_fusion disabled 2026-06-26 — the day after F-037 — because it degraded to a gaussian duplicate whose confidence gate drove spurious low-confidence rejections) and F-048 (the DecisionEngine RR gate REMOVED 2026-07-24 — economic reward:risk moved solely to UltronRiskGate, downstream of this measurement point). Confirmed in the active config: `engine_runner.fusion_engine.rr_fusion.enabled = false`. Either or both plausibly explain the vanished veto pressure; this run does not isolate which. Grants NO authority (§6.5) — does not re-enable rr_fusion, does not claim the fusion gate is "inert" in general (only that it is a pass-through on THIS specific 30-entry historical corpus under the active config), and does not economically qualify anything. Registers `RF-CRT-STRUCTURE.L5` in `docs/governance/research_family_registry.json` (cell moves from bare F-037 to F-037+F-070, still `UNVERIFIED_HISTORICAL` pending a sealed `MC-*` instance). Closes the F-058 residue for this run specifically: `resolved_engine_gate_mode` is written into `summary.json` per arm, not merely WARNed. Open: isolate F-038 vs F-048 as the driver (a third arm with rr_fusion forced back on, pre-F-048 DecisionEngine config, would disambiguate) — not done here, out of this measurement's scope. Authority: architecture/research only.
 
 ### F-046 · `wick_size`/`body_ratio` had a divergent (dead) definition; canonical = body/candle_range, now unified behind one primitive
 - Type:          ARCHITECTURE
+- Family:        RF-FEATURE-ONTOLOGY
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-07-05
@@ -650,6 +918,8 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ### F-047 · The market ontology is now the AUTHORITATIVE source for feature mathematics (geometry + deterministic derived metrics), mechanically enforced; the live path re-derives a NON-CANONICAL `body_ratio` [flagged, Phase-B deferred]
 - Type:          ARCHITECTURE
+- Family:        RF-FEATURE-ONTOLOGY
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-07-07
@@ -662,20 +932,25 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 
 ---
 
-### F-048 · The DecisionEngine RR gate consumes a candle-polarity score against a reward/risk threshold — a producer-consumer contract mismatch that makes `EngineRunner.run()` structurally unable to `execute` [CONFIRMED 2026-07-08 — current-state mismatch; remediation gated]
+### F-048 · The DecisionEngine RR gate consumed candle polarity against a reward/risk threshold — RESOLVED by removing the gate: DecisionEngine is now semantic-approval only; economic RR is owned solely by UltronRiskGate [RESOLVED 2026-07-24]
 - Type:          ARCHITECTURE
+- Family:        RF-RR
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-07-08
-- Revalidate-by: 2026-09-30
+- Revalidate-by: 2026-12-31
+- Resolution:    [SHIPPED 2026-07-24] The ownership question ("who owns RR?") was decided by the user: DecisionEngine answers ONLY "is this a valid market opportunity?" (semantic evidence — score / p_win / zone validity / weak-component) and knows nothing of fees / slippage / capital / reward:risk. The RR gate was **removed** from `DecisionEngine.evaluate` (not shimmed): `_economic_rr_from_fusion` deleted, both `rr_threshold` reads deleted, the `low_rr` reject path deleted — `src/core/decision_engine.py`. `engine_runner.py` fusion_ctx no longer stamps `rr`/`rr_semantic` (the dead shim keys); `candle_polarity` is retained on the ctx for the collector audit record only (non-decision). Economic reward:risk is owned SOLELY by `UltronRiskGate.evaluate` Check 2 (cost-taxed `min_rr_ratio`, `ultron_risk_gate.py:228`), after `ExecutionPlanner` derives SL/TP (contract D) — this was already the real economic gate; the DecisionEngine duplicate is gone. Config: `decision_engine.rr_threshold` retained-but-RETIRED (sibling marker `rr_threshold__retired`; hash-neutral — the key is in `decision_engine`, not `params`; no strict read remains). PARITY: no production/backtest path ever supplied an economic RR to DecisionEngine (`engine_runner` omits `true_rr`, only test injectors set it) ⇒ removal is definitional, not behavioral; on the sole XAUUSD gate-ON candidate in 47,275 bars the reject fires at `zone_gate_invalid` three gates BEFORE the (now-removed) RR gate, so the ledger is byte-identical. Tests: `tests/test_rr_contract_wiring.py` rewritten (contract C = DecisionEngine owns no RR; contract D = UltronRiskGate owns economic RR); `tests/test_crt_fixes.py` unchanged and green (its injected `rr:2.0` was above the old threshold ⇒ inert either way). UNBLOCKS: the GD-001/GD-002 body_ratio remediation and instrument selection that this finding's Note said were "BLOCKED behind this" are now unblocked (not acted on here).
 - Evidence:      RREngine (`src/engines/rr_engine.py:2,79,81`) is the "Candle Polarity Index (formerly misnamed RR Engine)": `rr_ratio = round(polarity,4)` with `polarity = max(upper_body,lower_body) ∈ [0.5,1]` — a **legacy field name** (`semantic:"candle_structure_quality"`, docstring "not forward RR"; git `b34d6a8 stable before rename`). `engine_runner.py:957-960` wires `fusion_ctx["rr"] = engine_results["rr"]["rr_ratio"]` (the polarity) into `DecisionEngine.evaluate`, which rejects `low_rr` when `fusion["rr"] < rr_threshold=1.5` (`decision_engine.py:144`; config `v2_multi_2026_04.json:130`). Since polarity ≤ 1 < 1.5, `low_rr` fires on EVERY candle after the score gate → `run()` can never `execute` (empirical: **0/70,002** executes). The consumer's INTENDED contract is a TRUE RR ratio: `tests/test_crt_fixes.py:224` gets `execute` only by injecting `fusion={"rr":2.0}`. The REAL RR check is elsewhere — `UltronRiskGate` reads the ExecutionPlanner SL/TP-derived trade `rr_ratio` (genuine reward/risk, can be ≥1.5) at `ultron_risk_gate.py:230-245`, SEPARATE from RREngine exactly as its docstring states. DOWNSTREAM: `ExecutionPlanner.plan` hard-gates on `run()=="execute"` (`execution_planner.py:208-213`) → the live path `live_engine_hook` (`run→ExecutionPlanner→UltronRiskGate→alert`, `:682/708/717/863`) can structurally **never admit a trade** (consistent with F-010 live-PnL-unverified; live_engine_hook's only caller is `agent/modes/pipeline_mode.py:160`, not a verified production loop). NOT a research/backtest defect: gate-OFF backtests + qualification never call `run()` (F-037) — the CRT state machine is the trade admitter there; gate-ON backtests use `run()` only as a VETO (`backtest_v2.py:2182`).
 - Supersedes:    —
-- Reversal:      —
+- Reversal:      "CANDIDATE mismatch — remediation gated on intent adjudication (mis-wire vs dormant-by-design)" -> "RESOLVED as an OWNERSHIP decision: the intent question is moot because the gate does not belong in DecisionEngine at all. Removed, not adjudicated-then-shimmed. DecisionEngine = semantic approval; economic RR = UltronRiskGate. The earlier working-tree shim (`_economic_rr_from_fusion`, skip-if-polarity) was a half-measure that left DecisionEngine holding economics; it is deleted."
 - Owner:         claude
-- Note:          CANDIDATE — the contract MISMATCH is source-confirmed (Certain); whether it is an unintended mis-wire (the RREngine rename left a dangling consumer) or an intentionally-dormant live path (F-010) requires intent adjudication (design docs / deeper git history) — NOT labelled BUG pending that. Discovered while validating the RETRACTED F-047 Step-7c harness: it is WHY `run()` cannot measure body_ratio decision-flips. Body_ratio (GD-001/002) remediation + instrument selection stay BLOCKED behind this. Refines the F-038/F-044 RR-engine thread (a distinct, deeper defect than rr_fusion). Read-only; grants NO authority; no production change. Sibling candidates (separate findings, not filed here): session-encoding mismatch (pipeline 0=london vs adapter 0=asia); `zone_gate_invalid` always-rejects in `run()`; `rotate_session_log.py` same-date-archive overwrite. Authority: architecture/governance only.
+- Note:          RESOLVED 2026-07-24 by removing the gate (see Resolution above). The original source-confirmed MISMATCH stands as historical evidence (kept below), but the "remediation gated / BLOCKED behind this" framing is superseded — the resolution did not require deciding mis-wire-vs-dormant because the correct architecture removes the gate regardless. The pre-shim mechanism the Evidence paragraph describes (`engine_runner.py:957-960` wiring polarity into a `rr_threshold=1.5` gate) is the state as of 2026-07-08; current code no longer wires it. Sibling candidates still open (separate findings, not filed here): session-encoding mismatch (pipeline 0=london vs adapter 0=asia); `zone_gate_invalid` always-rejects in `run()` (surfaced again by the F-048/Layer-7 XAUUSD survey — zone score 0.77 yet `valid`=False); `rotate_session_log.py` same-date-archive overwrite. Authority: architecture/governance only.
 
 ### F-050 · `retest_depth` had TWO mathematical definitions under one name — CRT emission renamed to FM-027/FM-028 [REMEDIATED CH-002]
 - Type:          ARCHITECTURE
+- Family:        RF-FEATURE-ONTOLOGY
+- Contract:      UNKNOWN
 - Status:        VALIDATED
 - Confidence:    Certain
 - Validated:     2026-07-09
@@ -684,7 +959,118 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 - Supersedes:    —
 - Reversal:      CORRECTED 2026-07-09: emission-key collision REMEDIATED by CH-002 (old claim "remediation deferred" → keys renamed). Math was never wrong — name was.
 - Owner:         grok
-- Note:          Pre-remediation evidence: Gate-5 lineage (`crt_engine_v2` cache → opportunities → stage1 → trainer BitNet). CRT Closure Program Phase 8 blocked on this; CH-002 re-opens CLOSED path. Authority: architecture/governance; grants no model promotion.
+- Note:          Pre-remediation evidence: Gate-5 lineage report (`docs/governance/geometry_static_lineage_report.md`: `crt_engine_v2` cache → opportunities → stage1 → trainer BitNet). CRT Closure Program Phase 8 blocked on this; CH-002 re-opens CLOSED path. Authority: architecture/governance; grants no model promotion.
+
+### F-051 · Centered-swing production binding is non-PIT and contaminates 10 canonical dims + model inputs; final-ledger structural importance remains INCONCLUSIVE (PC-2 failed) — F-029 scope refined, not reversed
+- Type:          ARCHITECTURE
+- Family:        RF-FEATURE-ONTOLOGY
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-07-11
+- Revalidate-by: 2026-10-09
+- Evidence:      docs/governance/pit_phaseA_swing_blast_radius-2026-07-11.json (A: BNB any-of-10 differ_rate≈0.635; B1 leakage PROVED — centered swing_high flips 0→1 when future bars arrive; B2a CRT final differ_rate≈0.071; B2b Zone VALUE mass 40%, SCORE differ≈0.63, HARD flip≈0.0001; B3 live default-absent path live-zero CONDITIONAL_PROVEN at live_engine_hook.py:394-402; C: rr_model zero_indices leaves 10/10 contaminated dims ACTIVE); docs/governance/pit_phaseA_gateon_ab-2026-07-11.json (isolation PASS; PC-1 PASS; PC-2 FAIL — zero-all-10 also 11≡11; gate-ON BNB 11≡11 + SOL 6≡6; gate-OFF F-029 replay 13≡13); feature_pipeline.py:391-460 (center=True production bind + structure graph); docs/governance/pit_phaseA_centered_swing_decision_record-2026-07-11.md; FC1-A contract docs/governance/FC1-A-SWING-CAUSAL-implementation-contract-2026-07-11.md
+- Supersedes:    —
+- Reversal:      "center=True is only a trade-generation non-issue (F-029) so production can keep centered swings" -> "F-029 still stands for gate-OFF trade-generation identity under causal intervention, but centered publication is non-PIT, materially changes ~63% of bars on the 10-dim structure closure, exposes CRT/ZoneGate/model inputs, and creates train/serve skew vs live default-absent zeros; final-ledger structural importance is INCONCLUSIVE because end-to-end PC-2 sensitivity was not demonstrated — null ledger ≠ structure-vector-insensitive"
+- Owner:         grok
+- Note:          Scope discipline (binding): proved = non-PIT + value/channel exposure + live-zero default path + RR/Zone artifact PIT-unclean provenance. **Not** proved = "spine is structure-vector-insensitive." Defensible ledger sentence: under tested BNB/SOL × v2_multi_2026_04, causal 10-feature and zero-all-10 interventions did not change final ledgers, but PC-2 failed so structural importance remains inconclusive. RR operational rule: artifacts tagged PIT_UNCLEAN_CENTERED_SWINGS — must not promote/re-enable/use as economic evidence without causal re-dataset/retrain/revalidation; no immediate retrain (rr_fusion disabled F-038; F-044/F-045). Authority: architecture/governance only; grants no ΔG001 / fusion weight. **FC1-A IMPLEMENTED 2026-07-11 (CH-fc1a-swing-causal).** **FC1-D IMPLEMENTED 2026-07-11:** production `volatility_regime` → rolling causal N=200. **Surface gate 2026-07-11:** `CANONICAL_FEATURE_CODE_SURFACE_STATUS=CLOSED` (38/0/0/0) after census re-export + wick_size↔candle_range alias — does **not** imply artifact economic admissibility.
+
+### F-052 · PLAN-002 closure — second engines-path CODE authority for `score_component_weights` removed; both score-weight identities now HOW-owned
+- Type:          GOVERNANCE
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-07-11
+- Revalidate-by: 2026-10-09
+- Evidence:      Call-site census (18 matches across codebase; 0 legitimate callers relied on implicit CODE defaulting); `src/engines/crt_engine.py` — `compute()` now fails closed: missing `context["score_component_weights"]` returns `{"score": 0.0, "reason": "score_component_weights missing from context..."}` instead of silently using `(0.35, 0.25, 0.20, 0.20)` CODE literal; `src/core/engine_runner.py:680` injects `self._score_component_weights` from production config `crt_engine.score_component_weights`; `src/strategies/s01_crt_wrapper.py` loads weights via `_load_score_component_weights()`; research callers (`scripts/analysis/feature_math_drift_probe.py`, `scripts/analysis/pit_swing_blast_radius.py`) updated to pass explicit legacy vector; test files (`tests/test_plan002_dual_weights_how.py`, `tests/test_engine_runner_dual_gate.py`, `tests/test_engine_runner_rr_fusion.py`) updated for fail-closed assertion and `_score_component_weights` attribute. Regression suite: 38/38 passed (PLAN-002 identity tests + EngineRunner dual-gate + RR-fusion). Files changed: 7 (`src/engines/crt_engine.py`, `src/strategies/s01_crt_wrapper.py`, `scripts/analysis/feature_math_drift_probe.py`, `scripts/analysis/pit_swing_blast_radius.py`, `tests/test_plan002_dual_weights_how.py`, `tests/test_engine_runner_dual_gate.py`, `tests/test_engine_runner_rr_fusion.py`).
+- Supersedes:    —
+- Reversal:      "PLAN-002's second behavioral authority (the CODE fallback tuple in `engines.crt_engine.compute`) was an open defect" -> "Removed: missing `score_component_weights` now fails closed; both production paths (EngineRunner, S01CRTWrapper) inject the HOW-owned key; `conf_weights` untouched; `risk_score_weights` (Ultron path) unchanged; the two weight identities remain separate and distinct."
+- Owner:         claude
+- Note:          PLAN-002 and IC-007 are now CLOSED at implementation + focused-regression level. The "raises KeyError" wording in the closure result is corrected here: `crt_engine.compute()` does NOT propagate an exception — its broad `except Exception` catches the `KeyError` and returns `{"score": 0.0, "reason": "..."}`. This is fail-closed behavior (no silent CODE literal), not an externally propagated exception. PLAN-001 remains separately closed. No additional implementation work is justified for IC-007. A broader test suite beyond the 38 focused tests was not run; the survival of those broader tests is unknown. Authority: governance/hygiene only — records a completed governance closure, not an economic claim.
+
+### F-053 · B2A — the FM-030/FM-031 candidate formulas (`ema_spread_atr`/`momentum_score_atr`) are CERTIFIED mathematically/temporally sound (PROMOTE = B2B-eligible only)
+- Type:          ARCHITECTURE
+- Family:        RF-FEATURE-ONTOLOGY
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-07-12
+- Revalidate-by: 2027-01-05
+- Evidence:      Observe-only certification probe `scripts/analysis/b2a_feature_candidate_certification.py` (READ-ONLY) + permanent floor `tests/test_b2a_feature_candidate_certification.py` (8/8) + immutable artifact `docs/governance/b2a_feature_candidate_certification-2026-07-12.md` (resolve via `b2a_feature_candidate_certification.LATEST.json`, sha256-pinned). Both candidates PROMOTE across the synthetic + BNB/BTC/ETH/SOL arms on ALL certification invariants: (1) THREE-path reconstruction — independent raw-OHLC float64 (`TR_abs → SMA14 = ATR_abs`; `(EMA9−EMA21)/ATR_abs`, `close.diff()/ATR_abs`) ≡ linked `atr_relative*close` (tight, max resid ~1e-7; independent SMA14(TR) == pipeline `atr_14_raw`) ≡ emitted legacy-column identity `legacy/close` (float32 band, resid ≤3e-4 = pipeline float32 `ema_fast−ema_slow` cancellation, price-scaled, NOT a formula error); (2) scale-invariance (independent float64 ×1 vs ×100, err ~1e-14 < 1e-6) while the LEGACY defect reproduces at ~100× (non-authoritative diagnostic); (3) NaN/Inf discipline (finite ⇔ atr>0 & close>0, 0 Inf); (4) deterministic recompute; (5) scalar↔vector parity; (6) PIT/prefix invariance both variants.
+- Supersedes:    —
+- Reversal:      —
+- Owner:         claude
+- Note:          Certification is candidate-FORMULA only. All prior behavioral/decision-impact/threshold-crossing/economic/model-performance/cross-instrument evidence for these formulas is treated as UNKNOWN for certification; any such metric computed here lives under `NON_AUTHORITATIVE_DOWNSTREAM_DIAGNOSTICS` (authority: none) and never gates the verdict. PROMOTE makes the candidate math ELIGIBLE for fresh B2B downstream-impact evaluation ONLY. **Decision impact: UNKNOWN · Economic value: UNKNOWN · Activation authority: NONE.** No registered impl, engine, config, or model was touched; ontology FM-030/FM-031 remain inactive `proposed_correction`; canonical vector stays 38-dim; `PRODUCTION_BEHAVIOR_CHANGED = NO`. After B2A, stop — B2B must regenerate all downstream evidence from the certified semantics (retrain inactive artifacts + recalibrate `dual_engine` thresholds remain the deferred B2 gate per the B0/B1 STOP boundary). Extends the B0/B1 semantic-migration governance. Authority: research/governance only. **[CONDITION RESOLVED 2026-07-12 by F-054]** the B2A certification was conditional on the (then-uncertified) ATR/EMA semantics. The bottom-up program independently certified + promoted ATR/EMA as first-class `rolling_indicators` (FM-041/043/044), so FM-030/031 were re-certified against promoted dependencies and PROMOTED as the production-intended identity in the certification ledger — legacy FM-022/023 SUPERSEDED, downstream (rr_model idx9/12, gaussian-38, `dual_engine` thresholds, pre-correction backtests) marked STALE. Still NOT ACTIVATED: no live pipeline math swap / retrain / recalibration (L6, gated on a fully clean DAG). B2B (consumer/economic impact) STOPPED, replaced by the bottom-up program.
+
+### F-054 · Bottom-up feature-DAG certification: L0→L2 frontier PROMOTED with mechanical transitive invalidation; B2A conditionality resolved; B2B STOPPED
+- Type:          ARCHITECTURE
+- Family:        RF-FEATURE-ONTOLOGY
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-07-12
+- Revalidate-by: 2027-01-05
+- Evidence:      Built the missing certification spine: topological DAG + L0–L6 semantic layering `scripts/analysis/feature_dag_layers.py` (48 nodes, 38/38 canonical, acyclic, layer-monotone; fixed two fc05-DEPS bugs — `disp_strength`→body_size edge, duplicate `double_sweep`) + floor `tests/test_feature_dag_layers.py`; append-only certification ledger `docs/governance/feature_certification_ledger.jsonl` (schema `feature_certification_ledger.schema.json`, resolver `scripts/governance/feature_certification_state.py`) + descriptive-only floor `tests/test_feature_certification_ledger.py`; transitive-invalidation engine `scripts/governance/feature_dag_certify.py` (`formula_hash`/`dependency_contract_hash` = canonical `sha256(json.dumps sort_keys)`; ordering gate refuses certify while any dep unpromoted; STALE cascade) + floor `tests/test_feature_dag_invalidation.py`; series-parity + PIT rolling-indicator certification `scripts/analysis/feature_dag_rolling_certification.py` (7/7 CERTIFIED) + floor `tests/test_feature_dag_rolling_certification.py`. Executed frontier: raw+L0(candle primitives)+L1(ATR/RSI/EMA/true_range/swings promoted to first-class `rolling_indicators` FM-040..046, lifting the B3 boundary freeze — `market_ontology.yaml` v1.3, `registry/__init__.py` windowed-impl exemption; `validate_registry()==[]`)+L2(derived) = 28 PROMOTED_PRODUCTION. FM-030/031 re-certified against PROMOTED ATR and PROMOTED as the production-intended identity; legacy FM-022/023 (`ema_spread`/`momentum_score`) SUPERSEDED (2 nodes). All 54 new floors + registry/lineage/lint/derived/pipeline suite (84) green.
+- Supersedes:    —
+- Reversal:      "preserve a legacy formula because consumers bind to it (B2B-first)" -> "correct upstream mathematics/semantics FIRST in topological order; consumers/models/thresholds/evidence migrate afterward — consumer compatibility earns no authority (invariant: a dependent cannot be certified until every upstream dependency is independently certified + promoted)."
+- Owner:         claude
+- Note:          Milestone 1 (L0→L2) reaches PROMOTED_PRODUCTION (formula-IDENTITY decided), NOT ACTIVATED. **No live `feature_pipeline.py` math swapped, no model retrained, no `dual_engine` threshold recalibrated; canonical vector stays 38-dim; `PRODUCTION_BEHAVIOR_CHANGED = NO`.** Promotion = ledger event + descriptive ontology registration (rolling indicators byte-identical wrappers of existing pipeline math) + a mechanical STALE cascade over downstream *evidence records* (rr_model idx9/12, gaussian-38, `dual_engine` thresholds, pre-correction backtests, the B2A F-053 cert). Certification is DESCRIPTIVE (§6.5) — promotion authority stays in `src/governance/promotion_manager.py` / `src/research/qualification.py` (every PROMOTED event attributes it there). **Decision impact: UNKNOWN · Economic value: UNKNOWN · Activation authority: NONE.** L3 structural / L4 composite / L5 temporal deferred; L6 ACTIVATION (live surface swap + retrain + recalibrate + downstream economic re-eval = the former "B2B") is gated on a fully clean DAG. Scoping notes: the dependencies-before-dependents ordering gate lives in the certify tool + `tests/test_feature_dag_invalidation.py` (not a `construction_protocol.py` edit, to avoid destabilizing that gate); pre-existing unrelated red `test_change_contracts_drafted` (FC1-A/D status drift) untouched. Authority: research/governance only. **[Milestone 2 — L3 swing-structural family, 2026-07-12]** ATOMICALLY certified + promoted the strongly-coupled family `higher_high`/`lower_low`/`break_of_structure`/`liquidity_sweep` (all-or-none family transaction: `certify-family`/`promote-family`, single-block writes). LEDGER-ONLY (no ontology/registry edit — stateful structural detection stays out of the WHAT layer). Certified by TWO oracles both == pipeline int8 exactly across synthetic+4 majors: a formula-parity centered reconstruction AND an independent CAUSAL online oracle (sequential, bar t publishes pivot t−k from bars ≤t — the causality proof, re-proving FC1-A for these flags); inclusive sweep boundary (`close<=ref_high`/`close>=ref_low`, pinned from feature_pipeline.py:478-479) exercised on ~275 real BNB boundary rows; PIT dependency-bound to `pit_phaseC` + a fresh `repo_state_hash`. Evidence `scripts/analysis/feature_dag_structural_certification.py` + floor `tests/test_feature_dag_structural_certification.py` (4, incl. online-oracle prefix-invariance) + artifact `feature_dag_structural_certification.LATEST.json`. Frontier advanced 28→**32 PROMOTED** (2 SUPERSEDED · 11 READY · 3 BLOCKED); the promotion mechanically flipped `sweep_detected`/`double_sweep`/`candles_since_retest`/`retest_depth`/`liquidity_distance` BLOCKED→READY. Still ledger-only / not activated; STOPPED before derivatives. `PRODUCTION_BEHAVIOR_CHANGED=NO`. **[Milestone 3 — L3 `sweep_detected`, 2026-07-12]** Certified + promoted the single node `sweep_detected` = `(liquidity_sweep != 0).astype(int8)` (feature_pipeline.py:590 — direction-agnostic sweep-presence flag over the promoted `liquidity_sweep`). Independently certified by extending the structural probe: both oracles derive `sweep_detected` from their OHLC-grounded `liquidity_sweep` and match the pipeline int8 exactly (synthetic+4 majors); causality + prefix-invariance inherited from `liquidity_sweep`. Zero feature-DAG consumers → promotion staled nothing (no `invalidates`); the ~52 code references are transport-only value-readers, unaffected (formula certified as-is, not corrected). Frontier 32→**33 PROMOTED** (2 SUPERSEDED · 10 READY · 3 BLOCKED). Ledger-only, not activated. `PRODUCTION_BEHAVIOR_CHANGED=NO`. **[Milestone 4 — L3 `double_sweep`, 2026-07-12]** Mandatory DAG-vs-code gate PASSED: `feature_pipeline.py:612-626` confirms `double_sweep` deps = `liquidity_sweep` ONLY (directional >0/<0 conjunction over a TRAILING 5-bar window, `rolling(5,min_periods=1)`, int8) — NOT `sweep_detected`, NOT a count threshold (`>=2`/`==2`); DAG contract matched reality, no correction needed. Certified + promoted `double_sweep` via the structural probe extended with a `_double_sweep` windowed helper computed in both oracles from their OHLC-grounded `liquidity_sweep` (both == pipeline int8, synthetic+4 majors); floor adds an exact-window-boundary property test (up@t+down@t+4→1, up@t+down@t+5→0, two ups→0) + an EXPLICIT `double_sweep` prefix-invariance test (not inherited). Provenance-safe: certified against the DATED immutable artifact; the M2/M3 ledger lines verified BYTE-UNCHANGED (no rebinding). Zero DAG consumers → staled nothing. Frontier 33→**34 PROMOTED** (2 SUPERSEDED · 9 READY · 3 BLOCKED). Ledger-only, not activated. `PRODUCTION_BEHAVIOR_CHANGED=NO`. **[Milestone 5 — L3 `candles_since_retest`, 2026-07-12]** Gate PASS: `feature_pipeline.py:655-672` resets on `liquidity_sweep != 0` (grouped cumcount; SWEEP bar=0, +1/non-sweep bar, 0 pre-first-sweep, int16) — DAG contract `deps=[liquidity_sweep]` matched. TWO findings: (1) **NAME MISNOMER** — despite "retest" it counts bars since the last SWEEP, not since `retest_flag` (so NO shared state with `retest_depth`, which resets on `retest_flag`; coupled-family assumption rejected); (2) **input-schema-dependent formula** — the col-absent `retest_flag` fallback branch classified **B (test-only shim), non-authoritative**, mechanically proven unreachable in production (`run()` computes `liquidity_sweep` @:896 before `candles_since_retest` @:905). Certified the PRODUCTION `liquidity_sweep` branch via an independent ONLINE state-machine recurrence (both oracles == pipeline int16); floor adds the counter battery (before/after-sweep split, event-bar=0, first-after=1, consecutive=0, separated resets, prefix-invariance, int16 dtype) + the class-B fence (runtime spy asserting `liquidity_sweep` present at temporal-feature entry; source-order secondary; deterministic synthetic branch-discrimination liq{3,8}≠rf{5}). Provenance-safe (dated artifact; prior 106 ledger lines byte-unchanged). Zero DAG consumers → staled nothing. Frontier 34→**35 PROMOTED** (2 SUPERSEDED · 8 READY · 3 BLOCKED). Ledger-only, not activated. `PRODUCTION_BEHAVIOR_CHANGED=NO`. **[Milestone 6 — L3 `liquidity_distance` FM-025, 2026-07-12]** Gate PASS: `feature_pipeline.py:692-718` consumes swings (ref_high/ref_low), break_of_structure (bos_level), atr, close — NOTHING else; DAG contract `[atr,break_of_structure,close,swing_high,swing_low]` COMPLETE + EXACT. First ontology-REGISTERED node certified (FM-025, `derived_math.liquidity_distance`, lifecycle registered — scalar↔pipeline parity was DEFERRED; this cert supplies it, ontology lifecycle field unchanged). Certified via the REGISTRY-AUTHORITATIVE scalar `derived_math.liquidity_distance` (not a copy of the pipeline vectorized min) fed with independently-reconstructed levels (ref_high/ref_low/bos_level from promoted swings+BOS via the M2 oracle) + independent close-relative atr; float32 parity vs pipeline on both oracles. Floor adds the FM-025 property battery: pos/neg/no-BOS, distance-exactly-zero, ATR-zero→NaN, ATR-warmup→NaN, scale-invariance (×1 vs ×100), always≥0, no-Inf/NaN-policy, bos_level-ffill prefix-invariance, float parity. GOTCHA fixed: bos_level ffill + atr must be computed over the FULL frame (not the idx subset) or the ffill loses contiguity. Provenance-safe (dated artifact; prior 108 ledger lines byte-unchanged). Frontier 35→**36 PROMOTED** (2 SUPERSEDED · 8 READY · 2 BLOCKED); the promotion mechanically flipped `liquidity_pressure_score` (FM-026, its only dep) BLOCKED→READY. Ledger-only, not activated. `PRODUCTION_BEHAVIOR_CHANGED=NO`. **[M9 / F-054-DR — FM-027 displacement_retrace, 2026-07-14]** Single-node CERTIFY+PROMOTE of CRT-only cross-candle retrace (FM-027). Intended quantity ALIGNED: clip(|retest_close-disp_open|/|disp_close-disp_open|,0,1); zero body→0.0. Gate-2 ROLE_LABEL_GROUNDING_ALIGNED (ontology roles vs DAG open/close; allowlisted). Semantic class: pure algebraic kernel + event-gated CRT emission. Independent oracle + property battery + CRT emission parity → CERTIFIED. Evidence docs/governance/fm027_displacement_retrace_certification-2026-07-14.json sha256=6dabf84b4be5feded29c2891eba2c93c0add59aba473c75b181711bc5f29c821 (non-empty). Ledger CERTIFIED+PROMOTED (authority src/research/qualification.py); 0 STALE downstream. Frontier 40→41 PROMOTED · 2 SUPERSEDED · 5 READY · 0 BLOCKED. Resolver fix: accept M6R PROVENANCE_REMEDIATION (target_feature). PRODUCTION_BEHAVIOR_CHANGED=NO; not in 38-vector; L6 unchanged. Floor 	ests/test_fm027_displacement_retrace_certification.py (12). STOP. **[M10 / F-054-RD — retest_depth gated composition, 2026-07-14]** IDENTITY_SPLIT_REQUIRED resolved: FM-021 remains kernel-only (derived_math/ontology formula unchanged); canonical retest_depth = GATED_PRODUCTION_COMPOSITION where(retest_flag==1 & atr>0 & close>0, kernel, 0.0)→float32→clip→float32 (feature_pipeline.py:599-610,648-653). DAG deps corrected live _NODES → [atr,close,ema_fast,liquidity_sweep] (no SEEDED rewrite; retest_flag not a node). Independent online oracle (no pandas rolling) + component/gate/full-series parity. Evidence docs/governance/fm021_retest_depth_certification-2026-07-14.json sha256=da916a77f3b0f5c78fcdd69b1e6d5269fc675d022acecf4d3313ad71524861fd. CERTIFY+PROMOTE; 0 STALE. Frontier 41→42 PROMOTED · 2 SUPERSEDED · 4 READY. PRODUCTION_BEHAVIOR_CHANGED=NO. STOP. **[M11 — hour_of_day, 2026-07-14]** Pure timestamp wall-clock hour: pd.to_datetime→.dt.hour.astype(int8); deps=[timestamp]; domain 0..23 int8; no TZ conversion; NaT fails cast (no soft sentinel). Independent oracle (per-element pydatetime.hour) CERTIFIED. Evidence hour_of_day_certification-2026-07-14.json sha256=dec24c8b16a59bb9b29494ad60b5ab58478022b43ce3bba6bb2b11d4a3a54212. CERTIFY+PROMOTE; 0 STALE; session NOT coupled (DAG session deps=[timestamp] though code uses hour intermediate). Frontier 42→43 PROMOTED · 3 READY remain. PRODUCTION_BEHAVIOR_CHANGED=NO. STOP. **[M12B — session CERTIFY+PROMOTE, 2026-07-14]** Canonical FeaturePipeline session PROMOTED: int8 0=Asia(h00-07)/1=London(h08-15)/2=NY(h16-23) from pd.to_datetime wall-clock hour, no TZ conversion; DAG deps=[timestamp] (EXECUTABLE_REUSE_BUT_TIMESTAMP_IDENTITY). Independent branch oracle; encoding isolation vs SESSION_MAP asian=2. Evidence session_certification-2026-07-14.json sha256=27fd76eef09784270035136ee21b7df34aed7c8b0b7c24a3088ce7368de73e10. Frontier 43→44 PROMOTED; READY left: trend_strength, volatility_regime. Multi-surface session encoding debt STILL_DEFERRED. PRODUCTION_BEHAVIOR_CHANGED=NO. STOP. **[M13B — trend_strength CERTIFY+PROMOTE, 2026-07-14]** Nested rolling SMA10(diff(SMA20(close))) PROMOTED; first finite index 29; deps=[close]; independent deque SMA oracle; float64 column / float32 vector; dual_engine ema_spread name collision deferred. Evidence trend_strength_certification-2026-07-14.json sha256=823ac058ea56e65c6c24cba19831bd1e529a25ba2ad24a3db5a40284ec75a74e. Frontier 44→45 PROMOTED; READY left: volatility_regime. PRODUCTION_BEHAVIOR_CHANGED=NO. STOP. **[M14B — volatility_regime CERTIFY+PROMOTE, 2026-07-14]** DAG deps corrected atr→[high,low,close] (absolute atr_14, not relative atr). Identity: TR→SMA14→rolling(200,min_periods=1).rank(pct=True,average)→tercile 0.33/0.66; NaN→2; int8. Independent oracle CERTIFIED. Evidence volatility_regime_certification-2026-07-14.json sha256=8543bc5b82bd032426b4bd695dd9ab128f7b1c23af2ad06446fd184275d5a1b8. Frontier 45→46 PROMOTED · 0 READY (identity-certification frontier exhausted; FEATURE_PROGRAM_CLOSED=NO). PRODUCTION_BEHAVIOR_CHANGED=NO. STOP.
+
+### F-055 · Enabling the EXISTING BitNet gate does NOT improve the CRT spine — book expectancy degrades or is inert; enablement stays unjustified (§6.5)
+- Type:          ARCHITECTURE
+- Family:        RF-NEURAL-CONSUMERS
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Likely
+- Validated:     2026-07-18
+- Revalidate-by: 2026-10-16
+- Evidence:      Shadow A/B via `scripts/research/bitnet_shadow_diagnostic.py`: the CRT spine run gate-OFF (active `v2_multi_2026_04`, `use_bitnet:false`) vs gate-ON (non-active clone `v2_multi_bitnet_shadow_2026_07`, `use_bitnet:true`, the SAME `model.json`) across BNB/ETH/BTC/SOL, expectancy from the spine's own governed ledger (`SpineEntry.meta.backtest_pnl_rr_net`). POOLED book-level: E_off=+0.156R (PF 1.29, n=26) → E_on=+0.023R (PF 1.04, n=24), ΔE=−0.133R; **0/4 instruments improve** (BNB ΔE=0 NEUTRAL; ETH/BTC INERT, 0 rejects; SOL HARMFUL ΔE=−0.35R). MECHANISM: the gate is a state-machine-perturbing VETO, not a filter — on BNB it fired 50 `LOW_SCORE` rejects yet net trades stayed 11→11 because a reject RESETS the CRT state machine (`src/config_layer/crt_engine_v2.py:1960`, `bitnet_score` `src/bitnet/bitnet_inference.py:317`), so gate-ON is a DIVERGENT trajectory (removed≠added). SCOPE/E-001: (1) underpowered — pooled n<30 min-samples floor, so the −0.13R magnitude is NOT a hard economic claim, but the direction has 0 positive instruments and is consistent with the entry-information null F-019…F-041 (binding constraint = execution model, not predictability); (2) measures the EXISTING model, which carries the F-050 train/serve skew (trained pipeline FM-020/021, served CRT FM-027/028 under the same legacy names) + a raw unnormalized `atr` input (not scale-invariant across instruments) — so this is "what flipping the flag does today", not a governed retrain; (3) a faithful retrain is not even trainable (spine commits ~5-13 entries/instrument, F-019). Authority: research/governance only (§6.5) — no ΔG001 improvement ⇒ no authority earned; `use_bitnet` stays false on the active config; the shadow config is neither active nor promoted. Extends F-004/F-050; quantifies the F-050 conditional-skew as economically negative. Detail audit: `docs/governance/bitnet_lineage_audit.md`.
+- Supersedes:    —
+- Reversal:      —
+- Owner:         claude
+
+### F-056 · `backtest_v2` had three trade-affecting constants declared in NO config — one was a config illusion (read-then-discarded); all three now declared + strictly read (REMEDIATED)
+- Type:          ARCHITECTURE
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-07-20
+- Revalidate-by: 2026-10-16
+- Evidence:      Three constants on the backtest decision path were declared in no config file: (1) `execution_planner.partial_tp_fraction` was strict-read at `src/runtime/backtest_v2.py` and then DISCARDED while hardcoded `0.5/0.5` blend literals executed at THREE sites (`:2347`,`:2354`, and a third at `:2426` — `TP1_BE_RESET` — missed by the initial audit, caught only by a source-grep assertion) — a config illusion: editing the key had zero effect on output; (2) the SL-distance floor was a `0.2 * atr` literal whose comment claimed to match `crt_engine.sl_atr_buffer` but never read it; (3) the Phase-5 veto `p_win < 0.35` was a bare literal gating every trade under the default `scorer_mode="calibrated"`. REMEDIATED 2026-07-19: `partial_tp_fraction` wired at all three blend sites, `sl_atr_buffer` threaded via a required `TradeJournal` param, `phase5_calibration.min_p_win` added and read strictly. Parity: BNBUSDT `events.jsonl`/`crt_telemetry.jsonl`/`trades.csv` BYTE-IDENTICAL before/after (11 trades both), `params` hash unchanged. Floor: `tests/test_backtest_declared_constants.py` (10 tests). Same class as F-018 (hardcoded knobs override config) but distinct mechanism (read-then-discard illusion).
+- Supersedes:    —
+- Reversal:      "A config key that is present and strict-read is governed" -> "Presence + a strict read is NOT sufficient — `partial_tp_fraction` was read then discarded while a literal executed; a config key is only governed once the read VALUE actually reaches the behavior. Byte-identity only proves neutrality on paths the corpus exercises (this corpus fired 0 partial-TP exits), so a source-grep assertion is required alongside it."
+- Owner:         claude
+- Note:          Discovered while auditing the backtest layer for config-vs-code. Authority: architecture/governance only — records a completed remediation + a governance lesson, not an economic claim.
+
+### F-057 · CRTConfig resolution is split-brain on the programmatic entry path — `market_router`'s hardcoded profiles win when `crt_config is None`, so the production JSON is never opened (OPEN)
+- Type:          ARCHITECTURE
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
+- Status:        OPEN
+- Confidence:    Certain
+- Validated:     2026-07-20
+- Revalidate-by: 2026-10-16
+- Evidence:      Which CRT geometry numbers win depends on the entry point. CLI (`python backtest_v2.py`) merges `{**crt_engine, **params}` so JSON wins. But the programmatic path — `BacktestRunner(cfg)` with `cfg.crt_config is None` (tuner workers, tests, embedding harnesses) at `src/runtime/backtest_v2.py:1633` — calls `ConfigBuilder.build(instrument)` with NO overrides, so `src/config_layer/market_router.py:12-27`'s hardcoded FOREX/CRYPTO profiles win and the production JSON is never opened. Divergence is large and gold classifies FOREX: `expansion_atr_min_distance` 0.08 (market_router FOREX) vs 0.30 (JSON `params`) = 3.75× on the DISPLACEMENT→EXPANSION gate; `retest_depth_max` 0.35 vs 0.15; `atr_multiplier_min` 1.5 vs 1.0. `src/config_layer/production_config.py:382` explicitly names hardcoding in market_router "the failure mode" — and `:1633` routes straight into it. Also a `"EURUSD"` fallback literal on the same line silently mis-classifies an unknown instrument.
+- Supersedes:    —
+- Reversal:      "The production config governs CRT geometry for every backtest" -> "Only on the CLI path; the programmatic `crt_config is None` path silently uses market_router's hardcoded market profiles, so tuner/test/embedded runs measure DIFFERENT entry-geometry knobs than production."
+- Owner:         claude
+- Note:          Fix is backtest Phase 2 (make JSON authoritative on the `crt_config is None` path + raise on unknown instrument); recorded here per the §6.2 Findings Mandate, remediation tracked separately. Authority: architecture/governance only.
+
+### F-058 · `BACKTEST_ENGINE_GATE` code default is ON ("1"), contradicting F-037/`active_models.yaml` which document OFF — RESOLVED: config now declares the gate, active config sets it ON (epoch change)
+- Type:          GOVERNANCE
+- Family:        — (not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-07-23
+- Revalidate-by: 2026-10-21
+- Evidence:      Originally `src/runtime/backtest_v2.py:1884` read `os.getenv("BACKTEST_ENGINE_GATE", "1")` — effective default ON but declared nowhere, so behavior depended on an untracked `.env`. **SHIPPED 2026-07-23 (T-16):** `backtest.engine_gate_enabled` is now a strictly-required config key (`_require_bt_cfg(...)`, `backtest_v2.py:2050-2053`), present and `true` on `v1_multi_2026_03.json`, `v2_multi_2026_04.json` (active), `v2_multi_2026_04_v3session_probe.json`, `v4_multi_2026_06.json`. The env var is now an explicit OVERRIDE only — if set, it wins, but logs a WARNING when it disagrees with config (`backtest_v2.py:2054-2063`), so silent divergence can no longer happen. Pinned by `tests/test_feature_warmup_coupling.py:161` (required bool, raises at construction if absent). `active_models.yaml:1082-1085` mirrors the resolution. Empirically confirmed pre-fix: a plain BNBUSDT run produced 11 trades = F-037's recorded GATE-ON figure (13 gate-OFF → 11 gate-ON) — i.e. the silent default was already what executed, config declaration made it honest rather than changing behavior. A second undeclared env switch, `BACKTEST_BYPASS_ZONE_INVALID`, was fixed the same way (`backtest_v2.py:2065-2067`, F-058-class fix, 2026-07-29).
+- Supersedes:    —
+- Reversal:      "Backtests run CRT-only (gate OFF), as F-037 documents" -> "The active config declares the gate ON since 2026-07-23; the gate-OFF corpus behind F-019/F-036/F-037 is valid for its pre-2026-07-23 epoch only, not for the current config."
+- Owner:         claude
+- Note:          RESOLVED — `backtest.engine_gate_enabled` shipped 2026-07-23 across all 4 configs carrying a `backtest` section; env-var silent-default dependency removed (override-with-WARNING only). CORRECTED 2026-08-06 (E-001): this row was left `Status: OPEN` / "Implementation = backtest Phase 3" after the fix shipped — a session repeated the stale status without checking source, which the fix itself was designed to make impossible for the *runtime* (WARNING on env/config disagreement) but did not prevent for *documentation*. Residue not yet closed: the resolved gate mode is logged (WARNING) but not written onto any run's output artifact, so a run's actual gate state still is not recoverable from the artifact alone — tracked as the concrete first consumer of the measurement-contract layer (`docs/governance/MEASUREMENT_CONTRACT.md` §9/§10, `docs/governance/research_family_registry.json` RF-CRT-STRUCTURE.L5). Remaining open item: the entire gate-OFF research corpus (F-019…F-042, the `qualify_*` fleet) has not been re-measured gate-ON since the 2026-07-23 config declaration — see M-GATE-01 (queued). `src/research/adapters/spine_signal_source.py`'s docstring still describes the pre-fix `.env`-authority world and needs a matching update. Authority: governance only.
 
 ---
 
@@ -696,6 +1082,16 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 > `Reopen Conditions` must be met *and* a SESSION LOG entry filed (per `CLAUDE.md §6.2`).
 > Status vocab: `FUNDED · FROZEN · KILLED · RESEARCH · UNFUNDED`. `Evidence` cites finding IDs
 > (CI checks they resolve); `FROZEN`/`KILLED` require non-empty `Reopen Conditions`.
+
+### Bottom-up Feature-DAG Certification (L0→L6) — RESEARCH
+- Date:    2026-07-12
+- Evidence: F-054 (Milestone 1 L0→L2 executed: DAG spine + certification ledger + transitive-invalidation engine + rolling-indicator first-class registration + FM-030/031 adjudication), F-053, F-046, F-047
+- Reopen Conditions: n/a — active. Next: certify L3 structural / L4 composite / L5 temporal in topological order; L6 ACTIVATION (live surface swap + retrain inactive artifacts + `dual_engine` recalibration) is a separate authorized gate on a fully clean DAG.
+
+### B2B Consumer / Economic Impact Evaluation — FROZEN
+- Date:    2026-07-12
+- Evidence: F-054 (bottom-up certification replaces the B2B-first direction), F-053, F-025 (entry-info null bounds expected downstream value)
+- Reopen Conditions: the full feature DAG is certified + promoted clean AND L6 activation (live corrected-surface swap + retrain of the inactive rr_model/gaussian-38 + `dual_engine` recalibration) is authorized — only then may downstream consumer/economic evidence be regenerated, and ONLY from the corrected promoted identities, NEVER the superseded legacy `ema_spread`/`momentum_score` (FM-022/023).
 
 ### Program 4 — Candle-State Transition Frontier (4b/4c/4d) — KILLED
 - Date:    2026-06-26

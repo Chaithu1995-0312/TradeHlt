@@ -59,6 +59,78 @@ Decide where a new file goes by asking "what is it?" then matching against this 
 
 **Never place runtime logic in `scripts/`** — scripts are thin CLI wrappers that import from `src/`.
 
+### 2.1 Script inventory (SITS) — phased enforcement
+
+Every runnable path under `scripts/**` and repo-root `*.py` is inventoried by the **Script &
+Implementation Traceability System (SITS)**. Inventory authority only — no promote power.
+
+| Artifact | Role |
+|---|---|
+| `docs/governance/script_registry_stubs.jsonl` | Machine bulk PRIMARY (path-stable `SCR-NNN`) |
+| `scripts/governance/seed_script_registry.py` | Curated overlays (purpose / status refinements) |
+| `docs/governance/script_registry_grandfather.json` | Phase-1 path freeze pin |
+| `data/script_registry.jsonl` | GENERATED projection (gitignored) |
+| `docs/reference/script-matrix.md` | Human index (regenerate + sync test) |
+
+**Register a new script (commit path):**
+
+```text
+python scripts/analysis/script_census.py --write-stubs docs/governance/script_registry_stubs.jsonl
+# update grandfather pin path list if freezing a new epoch (or wait for PR-3 ratchet)
+python scripts/governance/seed_script_registry.py
+python scripts/analysis/generate_script_matrix.py
+```
+
+**Phased enforcement (v1):**
+
+- **PR-2:** 100% path coverage — unregistered disk paths fail `tests/test_script_registry.py`.
+- **PR-3:** grandfather **ratchet** — paths *outside*
+  `docs/governance/script_registry_grandfather.json` must have
+  `purpose ≠ GRANDFATHER_UNCLASSIFIED` (overlay required; `--write-stubs` alone is not enough).
+  Change class: `SCRIPT_LIFECYCLE_CHANGE` in `docs/governance/change_contracts.json`.
+- **PR-4:** **CANONICAL_CLI ↔ CommandSpec parity** — seed reverse-maps
+  `CommandSpec.script` → `category=CANONICAL_CLI` + `control_plane_id` (intentional catalog
+  only; **not** a directory heuristic). ACTIVE CANONICAL_CLI without a CP id must be on
+  `docs/governance/script_canonical_allowlist.json`. Query: `query_scripts.py --canonical-gap`.
+- **PR-5 (now):** **TTL promotion debt** — `ttl_days=null` (default) never fails CI. Curated
+  rows with `ttl_days` set + expired age + no valid promotion plan fail the floor and
+  `query_scripts --validate`. Valid plan = non-empty `notes` AND (`dest_modules` non-empty OR
+  `wontfix:reason=…`). `--missing-impl --jsonl` is **visibility only** (not CI). Report:
+  `query_scripts.py --export-debt-report`.
+- **PR-6 (optional extract waves):** move product logic into `src/` with thin `scripts/` CLIs.
+  First wave (SITS cores): `src/governance/script_census.py` + `script_seed.py` + existing
+  `script_registry.py`. **Spine ban:** must not be imported by `engine_runner` /
+  `live_engine_hook` / `backtest_v2` (completion criterion a). Prefer new one-shots under
+  `scripts/probes/` or `scripts/tmp/`, not repo-root `_*.py`.
+
+#### Fail matrix (what actually fails)
+
+| # | Surface | When | Failure |
+|---|---|---|---|
+| F1 | CI (`governance.yml --all`) | every push/PR | coverage + grandfather ratchet |
+| F2 | Pre-commit GREEN_FLOOR | staged path under governed prefixes/files | same tests when gate fires |
+| F3 | Construction `validate-completion` | manifest declares scripts or class `SCRIPT_LIFECYCLE_CHANGE` | missing SITS floor / required checks |
+| F4 | SESSION LOG / HANDOFF | habit | **none** (advisory only) |
+
+**Residuals (honest):** mid-session uncommitted probes can skip registration until the next floor
+(same residual as Gate-6). Full `scripts/research/` is **not** a pre-commit `GOVERNED_PREFIX` —
+CI `--all` is the backstop. `scripts/probes/` and `scripts/tmp/` **are** governed prefixes.
+
+#### Agent checklist when **committing** a new script (Phase 2+)
+
+1. Place under `scripts/<role>/` (probes → `scripts/probes/`, not repo root).
+2. `python scripts/analysis/script_census.py --write-stubs docs/governance/script_registry_stubs.jsonl`
+3. **Required:** add a Python **overlay** in `seed_script_registry.py` with
+   `purpose ≠ GRANDFATHER_UNCLASSIFIED` (or intentional `CLOSED_EPHEMERAL` probe with a real purpose).
+4. `python scripts/governance/seed_script_registry.py`
+5. `python scripts/analysis/generate_script_matrix.py`
+6. Prefer change class `SCRIPT_LIFECYCLE_CHANGE` on the construction manifest.
+7. SESSION LOG SCR-ids (advisory).
+
+Do **not** hand-edit stubs for purpose/category — overlays only.
+
+Design: `docs/implementation_plan/script-implementation-traceability-sits-design.md`.
+
 ---
 
 ## 3. Error Handling Patterns

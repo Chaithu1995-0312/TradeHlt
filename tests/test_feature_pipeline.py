@@ -158,28 +158,37 @@ def test_deterministic_feature_order():
 # ---------------------------------------------------------------------------
 
 def test_zero_volume_ratio():
-    """When all volume == 0, the pipeline substitutes intrabar range (high-low)
-    as a Forex tick-activity proxy.  volume_ratio will vary (proxy / rolling mean)
-    rather than being 1.0; assert it is all positive and contains no NaN/inf.
+    """Phase-1 identity: all-zero source volume is preserved (FEAT-VOLUME).
+
+    volume_ratio binds to source volume → sentinel 1.0 when ma20 is 0.
+    Price-range proxy is emitted under volume_range_proxy (not under volume).
     """
     df = _make_zero_volume_ohlcv(500)
     pipeline = FeaturePipeline(df)
     enriched_df, _vectors = pipeline.run()
 
-    ratio_col = enriched_df["volume_ratio"].dropna()
-    assert len(ratio_col) > 0, "Expected non-empty volume_ratio after proxy substitution"
-    assert (ratio_col > 0).all(), (
-        f"volume_ratio must be positive after intrabar-range proxy substitution "
-        f"(min={ratio_col.min():.4f})"
-    )
     import numpy as np
-    assert not np.isinf(ratio_col).any(), "volume_ratio contains inf after proxy substitution"
+    # Source volume identity preserved
+    assert (enriched_df["volume"].fillna(0.0) == 0.0).all()
+    # Explicit proxy identity
+    assert "volume_range_proxy" in enriched_df.columns
+    proxy = enriched_df["volume_range_proxy"]
+    assert (proxy == (enriched_df["high"] - enriched_df["low"])).all()
+    assert (proxy > 0).any(), "expected non-zero price-range proxy on synthetic data"
+    # volume_ratio stays on source path
+    ratio_col = enriched_df["volume_ratio"].dropna()
+    assert len(ratio_col) > 0
+    assert (ratio_col == 1.0).all(), "source-volume ratio sentinel must be 1.0 when volume dead"
+    assert not np.isinf(ratio_col).any()
+    # Proxy ratio under distinct name
+    assert "volume_range_proxy_ratio" in enriched_df.columns
+    pr = enriched_df["volume_range_proxy_ratio"].dropna()
+    assert (pr > 0).all()
 
 
 def test_zero_volume_no_spike():
-    """When all volume == 0, the pipeline uses an adaptive 75th-percentile spike
-    threshold over the intrabar-range proxy.  volume_spike must be binary {0,1}
-    and the column must have no NaN values (dtype int8).
+    """All-zero source volume: volume_spike remains binary {0,1} on source ratio path.
+
     Schema v3.0: volume_spike is a canonical feature (Part 2 — promote_volume_spike).
     """
     df = _make_zero_volume_ohlcv(500)
@@ -193,6 +202,8 @@ def test_zero_volume_no_spike():
     assert unique_vals.issubset({0, 1}), (
         f"volume_spike must be binary {{0,1}}, got {unique_vals}"
     )
+    # No same-name proxy substitution
+    assert (enriched_df["volume"].fillna(0.0) == 0.0).all()
 
 
 def test_missing_volume_column():
@@ -257,7 +268,7 @@ def test_retest_flag_uses_recent_sweep_not_bos():
         "liquidity_sweep": [0, 1, 0],
         "break_of_structure": [0, 0, 0],
         "body_size": [0.8, 0.8, 0.8],
-        "wick_size": [1.0, 1.0, 1.0],
+        "candle_range": [1.0, 1.0, 1.0],
         "atr": [0.01, 0.01, 0.01],
         "close": [100.0, 100.0, 100.0],
         "ema_fast": [100.0, 100.0, 100.0],
@@ -342,12 +353,26 @@ def test_volatility_regime_values(enriched_output):
 # ---------------------------------------------------------------------------
 
 def test_session_encoding(enriched_output):
-    """session must be in {0, 1, 2}."""
+    """FM-052 v4.0: session is a 5-value WINDOW classification, and the pipeline must agree with
+    `session_classifier` — the single owner — rather than re-deriving the table here.
+
+    v3.0 asserted `issubset({0, 1, 2})` against a 3-value hour partition. The hour->session table
+    itself is pinned once, in tests/test_session_classifier.py; duplicating it here is how the
+    encodings drifted apart in the first place (feature_schema.SESSION_MAP vs the pipeline).
+    """
+    from features.session_classifier import SessionOrdinal, classify_session_feature
+
     df, _ = enriched_output
-    unique = set(df["session"].unique())
-    assert unique.issubset({0, 1, 2}), (
-        f"session contains unexpected values: {unique}"
+    unique = set(int(v) for v in df["session"].unique())
+    assert unique.issubset({int(s) for s in SessionOrdinal}), (
+        f"session contains values outside the FM-052 domain: {unique}"
     )
+    # every emitted value must equal what the owning classifier says for that bar's hour
+    sample = df[["hour_of_day", "session"]].drop_duplicates().head(50)
+    for _, row in sample.iterrows():
+        assert int(row["session"]) == classify_session_feature(int(row["hour_of_day"])), (
+            f"pipeline disagrees with session_classifier at hour {int(row['hour_of_day'])}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -363,7 +388,10 @@ def test_normalized_features_mean_std():
         "price_vs_ma20",
         "price_vs_ma50",
         "bb_width",
-        "macd_hist",
+        # v4.0: `macd_hist_z` is the normalized column. `macd_hist_raw` is deliberately NOT here —
+        # it is the un-normalized macd_line - macd_signal, and asserting z-score properties on it
+        # would re-assert the exact conflation the split removed.
+        "macd_hist_z",
         "trend_strength",
     ]
 

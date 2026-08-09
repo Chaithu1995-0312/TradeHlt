@@ -85,8 +85,11 @@ def _mse_grad(pred: float, label: float) -> float:
 # ── Dataset builder ────────────────────────────────────────────────────────────
 
 def build_dataset(csv_paths: list[str]) -> tuple[list[list[float]], list[float]]:
+    from data_ingestion.xauusd_phase1_candidate import guard_xauusd_csv_path
+
     X, y = [], []
     for csv_path in csv_paths:
+        csv_path = guard_xauusd_csv_path(csv_path)
         if not Path(csv_path).exists():
             print(f"  [SKIP] {csv_path} not found")
             continue

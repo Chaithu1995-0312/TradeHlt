@@ -34,9 +34,37 @@ CANONICAL_MODEL_SCHEMA_VERSION: str = "bitnet_v3"
 # Re-exported from features.feature_schema so any future change to the
 # canonical schema flows through automatically (and the assert fires).
 CANONICAL_FEATURE_DIM: int = _SCHEMA_FEATURE_DIM
-assert CANONICAL_FEATURE_DIM == 38, (
-    f"BitNet v3 contract expects 38-feature canonical schema; got {CANONICAL_FEATURE_DIM}."
-)
+
+# The dimension the `bitnet_v3` CANONICAL envelope format was defined against. Any 38-dim
+# canonical BitNet artifact is aligned to the v3.0 name order.
+BITNET_V3_FEATURE_DIM: int = 38
+
+# SCHEMA-V4 RECONCILIATION (2026-07-22). This was a module-level
+#     assert CANONICAL_FEATURE_DIM == 38
+# which fired at IMPORT and took the entire spine down with it (crt_engine_v2 imports
+# bitnet_inference imports this module), because the canonical schema moved to 39.
+#
+# The guard itself was right — a v3 canonical envelope genuinely cannot be served against a v4
+# vector — but its BLAST RADIUS was wrong: refusing to import is not the same as refusing to
+# score. BitNet is inert on the active patch (`use_bitnet: false`, F-004) and maps its 6 inputs
+# by NAME (F-050 CH-002), so nothing needs it to serve today; what nothing can tolerate is the
+# import failing. The check is therefore demoted to a served-model guard: `assert_canonical_dim`
+# is called where a CANONICAL envelope is actually loaded, and fails closed there.
+CANONICAL_ENVELOPE_SUPPORTED: bool = (CANONICAL_FEATURE_DIM == BITNET_V3_FEATURE_DIM)
+
+
+def assert_canonical_dim() -> None:
+    """Fail closed when a `bitnet_v3` CANONICAL envelope is served under a different schema dim.
+
+    Call this at model-load / scoring time, never at import time.
+    """
+    if not CANONICAL_ENVELOPE_SUPPORTED:
+        raise RuntimeError(
+            f"BitNet v3 CANONICAL envelopes are aligned to a {BITNET_V3_FEATURE_DIM}-feature "
+            f"schema, but the live canonical schema is {CANONICAL_FEATURE_DIM}-dim. The artifact "
+            f"must be retrained or remapped before it can score. (Legacy 6-input models are "
+            f"unaffected — they map by name, not position.)"
+        )
 
 # Schemas accepted via the legacy bridge. Any other schema string fails loud.
 LEGACY_SCHEMAS = frozenset({"legacy_6input", "bitnet_export_v1"})

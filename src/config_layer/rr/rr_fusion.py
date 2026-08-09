@@ -10,9 +10,13 @@ from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
-from config_layer.rr.rr_pattern_miner import NanoInferenceEngine, DEFAULT_MODEL_PATH
+from config_layer.rr.rr_pattern_miner import (
+    NanoInferenceEngine,
+    DEFAULT_MODEL_PATH,
+    FeatureDimensionError,
+)
 from features.feature_pipeline import build_feature_vector
-from features.feature_schema import CANONICAL_FEATURES
+from features.feature_schema import CANONICAL_FEATURES, CANONICAL_FEATURE_DIM
 from features.schema_validator import validate_features, validate_feature_values
 
 from features.feature_schema import (
@@ -69,7 +73,41 @@ class RRFusionLayer:
             warnings.warn(f"[RRFusionLayer] {self._load_error}. Running in passthrough mode.")
             return
         try:
-            self._engine = NanoInferenceEngine.load(path)
+            engine = NanoInferenceEngine.load(path)
+            # P0 FAIL-CLOSED (2026-07-22): refuse to mark the layer loaded when the
+            # checkpoint width ≠ live canonical width. The spine always feeds
+            # build_feature_vector() → CANONICAL_FEATURE_DIM floats; a narrower
+            # model would previously silent-truncate (FAIL_OPEN). Keep the engine
+            # reference for diagnostics but is_loaded stays False so score() never
+            # runs predict on a misaligned contract.
+            model_n = int(getattr(engine, "n_features", len(engine.W)))
+            if model_n != CANONICAL_FEATURE_DIM:
+                self._engine = engine
+                self._loaded = False
+                self._load_error = (
+                    f"FeatureDimensionError: rr model n_features={model_n} != "
+                    f"CANONICAL_FEATURE_DIM={CANONICAL_FEATURE_DIM}. "
+                    f"Remap or retrain before enabling rr_fusion — refusing load "
+                    f"(fail-closed; no silent truncate)."
+                )
+                warnings.warn(f"[RRFusionLayer] {self._load_error}")
+                try:
+                    from utils.integrity_events import emit_integrity_event
+                    emit_integrity_event(
+                        "RR_FEATURE_DIM_MISMATCH",
+                        "ERROR",
+                        "rr_fusion",
+                        {
+                            "model_n_features": model_n,
+                            "canonical_feature_dim": CANONICAL_FEATURE_DIM,
+                            "model_path": path,
+                            "action": "load_refused",
+                        },
+                    )
+                except Exception:
+                    pass
+                return
+            self._engine = engine
             self._loaded = True
         except Exception as exc:
             self._load_error = str(exc)
@@ -148,6 +186,20 @@ class RRFusionLayer:
                 gaussian_p_win=g_pwin,
                 threshold=thr,
             )
+        except FeatureDimensionError as exc:
+            # Spine-safe refuse: do not score with a misaligned vector.
+            warnings.warn(f"[RRFusionLayer] {exc}")
+            try:
+                from utils.integrity_events import emit_integrity_event
+                emit_integrity_event(
+                    "RR_FEATURE_DIM_MISMATCH",
+                    "ERROR",
+                    "rr_fusion",
+                    {"error": str(exc), "action": "predict_refused"},
+                )
+            except Exception:
+                pass
+            return _passthrough(g_score, g_pwin, "feature_dimension_mismatch")
         except Exception as exc:
             warnings.warn(f"[RRFusionLayer] Inference error: {exc}")
             return _passthrough(g_score, g_pwin, "inference_error")
@@ -187,6 +239,19 @@ class RRFusionLayer:
                 gaussian_p_win=float(gaussian_p_win),
                 threshold=thr,
             )
+        except FeatureDimensionError as exc:
+            warnings.warn(f"[RRFusionLayer] {exc}")
+            try:
+                from utils.integrity_events import emit_integrity_event
+                emit_integrity_event(
+                    "RR_FEATURE_DIM_MISMATCH",
+                    "ERROR",
+                    "rr_fusion",
+                    {"error": str(exc), "action": "predict_refused"},
+                )
+            except Exception:
+                pass
+            return _passthrough(gaussian_score, gaussian_p_win, "feature_dimension_mismatch")
         except Exception as exc:
             warnings.warn(f"[RRFusionLayer] Inference error: {exc}")
             return _passthrough(gaussian_score, gaussian_p_win, "inference_error")

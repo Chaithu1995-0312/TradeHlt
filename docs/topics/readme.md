@@ -5,7 +5,7 @@
 > code on **every working response** (`CLAUDE.md §6.4 Topic Sync Mandate`). This is the
 > concept↔code↔tests↔validations index; the rest of `docs/` owns flow, schemas, and history.
 >
-> Created: 2026-06-01 · Updated: 2026-06-27
+> Created: 2026-06-01 · Updated: 2026-08-08
 >
 > **See also:** [`../knowledge-map.md`](../knowledge-map.md) — how the topics layer connects to the other record systems (SESSION LOG, plans, analysis, findings, structure maps).
 
@@ -33,6 +33,7 @@ by *comparing which set drifts* against code — the drift signal decides whethe
 | Topic | Domain | Source files (anchor) | Entry points | Tests | Status | Doc |
 |---|---|---|---|---|---|---|
 | Context Report | control-plane / LLM-advisory | `src/control_plane/context_report.py`, `code_context_extractor.py` | 🧠 button → `POST /runs/{id}/context/report` | — | living | [context-report.md](context-report.md) |
+| Capital Pressure Ratio (CPR) | research / ontology (latent pre-OHLC) | `market_ontology.yaml` UNK-002…UNK-005 | ontology only (no runtime) | `test_semantic_registry` | living | [capital-pressure-ratio.md](capital-pressure-ratio.md) |
 | CRT spine (candle→order) | core decision flow | `src/config_layer/crt_engine_v2.py`, `core/engine_runner.py` | `backtest_v2` CLI; control-plane backtest | `tests/` (crt / engine_runner) | living | [crt-spine.md](crt-spine.md) |
 | Fusion + decision | core | `core/fusion_engine.py:253`, `core/decision_engine.py:85` | via engine_runner | `test_engine_runner_rr_fusion`, `test_fusion_and_validator_regression` | living | [fusion-decision.md](fusion-decision.md) |
 | Execution planning | config_layer | `config_layer/execution_planner.py:129` (`ExecutionPlannerV1_2`) | via decision surface | `test_execution_planner`, `test_execution_contract_v1` | living | [execution-planning.md](execution-planning.md) |
@@ -58,6 +59,7 @@ by *comparing which set drifts* against code — the drift signal decides whethe
 | Live execution (order/data path) | live / inout / execution | `src/runtime/live_engine_hook.py:582`, `src/live/`, `src/inout/`, `src/execution/loop.py` | `HookedLiveEngine.process` (live tick) | `test_live_integration`, `test_execution_loop` | living | [live-execution.md](live-execution.md) |
 | Replay memory / Probability Surface | replay / cognitive | `src/replay/replay_memory_engine.py:394`, `src/cognitive/cognitive_bus.py:217` | `discover_zones.py --normalize` (registry) | `test_assign_cluster`, `test_replay_memory_engine` | living | [replay-memory.md](replay-memory.md) |
 | Replay / determinism | replay | `src/replay/` | `trade_replay_validator.py` | — | stub | _todo_ |
+| Research Measurement Contract | governance / research | `docs/governance/MEASUREMENT_CONTRACT.md`, `research_family_registry.json`, `configs/research/measurement_contracts/*.v1.json` | none yet — per-family runner specified (§6), not built; `gate_measurement_m_gate_01.py` is the one hand-written measurement | `test_measurement_contract`, `test_research_family_registry`, `test_current_findings` (Family/Contract), `test_closure_authority_index` | living | [research-measurement-contract.md](research-measurement-contract.md) |
 
 ### Dormant / sidecar subsystems (no deep-dive by design)
 

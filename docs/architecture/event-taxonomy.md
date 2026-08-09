@@ -69,7 +69,7 @@ the **threaded `CognitiveBus`** and is therefore **monitoring-only / non-replay-
 
 ## 3. CRT state lifecycle (the episode grammar)
 
-`CRTState` enum (`config_layer/crt_engine_v2.py:63-72`):
+`CRTState` enum (`config_layer/state_identity.py:35-45`; re-exported by `crt_engine_v2`):
 `RANGE(64)`, `SHADOW_PENDING(65)`, `SWEEP(66)`, `DISPLACEMENT(67)`, `EXPANSION(68)`,
 `EXPIRED(69)`, `RETEST(70)`, `EXECUTION(71)`, `RESOLUTION(72)`.
 

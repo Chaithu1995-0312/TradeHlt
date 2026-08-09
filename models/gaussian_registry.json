@@ -47,7 +47,8 @@
       "n_val": 0
     },
     "trained_at": "2026-05-18T06:34:20Z",
-    "active": false
+    "active": false,
+    "canonical_schema_version_at_stamp": "4.0"
   },
   "v6_2026_05_btc": {
     "version": "v6_2026_05_btc",
@@ -97,7 +98,8 @@
       "n_val": 0
     },
     "trained_at": "2026-05-18T06:34:20Z",
-    "active": false
+    "active": false,
+    "canonical_schema_version_at_stamp": "4.0"
   },
   "v6_2026_05_eur": {
     "version": "v6_2026_05_eur",
@@ -149,7 +151,8 @@
     "trained_at": "2026-05-18T19:15:51Z",
     "active": false,
     "instrument": "EURUSD",
-    "run_id": "20260519_002117"
+    "run_id": "20260519_002117",
+    "canonical_schema_version_at_stamp": "4.0"
   },
   "p5_20260519T122310": {
     "version": "p5_20260519T122310",
@@ -201,7 +204,8 @@
     "trained_at": "2026-05-19T06:53:58Z",
     "active": false,
     "instrument": "ETHUSDT",
-    "run_id": "20260519_113806"
+    "run_id": "20260519_113806",
+    "canonical_schema_version_at_stamp": "4.0"
   },
   "p5_20260519T131248": {
     "version": "p5_20260519T131248",
@@ -252,7 +256,8 @@
     },
     "trained_at": "2026-05-19T07:42:49Z",
     "active": false,
-    "run_id": "20260519_131248"
+    "run_id": "20260519_131248",
+    "canonical_schema_version_at_stamp": "4.0"
   },
   "p5_20260519T131251": {
     "version": "p5_20260519T131251",
@@ -303,7 +308,8 @@
     },
     "trained_at": "2026-05-19T07:42:51Z",
     "active": false,
-    "run_id": "20260519_131251"
+    "run_id": "20260519_131251",
+    "canonical_schema_version_at_stamp": "4.0"
   },
   "p5_20260519T131319": {
     "version": "p5_20260519T131319",
@@ -354,7 +360,8 @@
     },
     "trained_at": "2026-05-19T07:43:19Z",
     "active": false,
-    "run_id": "20260519_131319"
+    "run_id": "20260519_131319",
+    "canonical_schema_version_at_stamp": "4.0"
   },
   "p5_20260519T131350": {
     "version": "p5_20260519T131350",
@@ -405,7 +412,8 @@
     },
     "trained_at": "2026-05-19T07:43:50Z",
     "active": false,
-    "run_id": "20260519_131350"
+    "run_id": "20260519_131350",
+    "canonical_schema_version_at_stamp": "4.0"
   },
   "p5_20260519T131351": {
     "version": "p5_20260519T131351",
@@ -456,7 +464,8 @@
     },
     "trained_at": "2026-05-19T07:43:51Z",
     "active": false,
-    "run_id": "20260519_131351"
+    "run_id": "20260519_131351",
+    "canonical_schema_version_at_stamp": "4.0"
   },
   "v5_auto_2026_06_eth": {
     "version": "v5_auto_2026_06_eth",
@@ -508,11 +517,14 @@
     "trained_at": "2026-05-19T07:49:05Z",
     "active": true,
     "instrument": "ETHUSDT",
-    "run_id": "20260519_113806"
+    "run_id": "20260519_113806",
+    "canonical_schema_version_at_stamp": "4.0"
   },
   "__active__": {
     "ETHUSDT": "v5_auto_2026_06_eth",
-    "BNBUSDT": "p5_20260524T120449"
+    "BNBUSDT": "p5_20260524T120449",
+    "canonical_schema_version_at_stamp": "4.0",
+    "XAUUSD": "xauusd_nb_20260722T194904Z"
   },
   "p5_20260524T120449": {
     "version": "p5_20260524T120449",
@@ -567,6 +579,120 @@
     "trained_at": "2026-05-24T06:35:48Z",
     "active": true,
     "instrument": "BNBUSDT",
-    "run_id": "bnbusdt_balanced_20260524"
+    "run_id": "bnbusdt_balanced_20260524",
+    "canonical_schema_version_at_stamp": "4.0"
+  },
+  "_schema_v4_note": "Stamped 2026-07-22 (SCHEMA-V4-VECTOR-MIGRATION). Entries are POINTERS (version/model_file/feature_schema/metrics/...) with no positional vectors, so the 38->39 change cannot misalign them. The LIVE kernel (HeuristicGaussianEngine.compute) reads exactly three features BY NAME \u2014 ema_fast, ema_slow, momentum_score \u2014 all unchanged in v4. F-060 further established that no mu/sigma from this registry reach the live score at all. No behavior change expected. P0-2026-07-22: ML path uses features.gaussian_schema_contract (name-anchored extract; no ambient truncate). Checkpoints with v3 names load when aliases resolve; model.n_features subset of live 39-dim. Live spine still heuristic (F-060).",
+  "xauusd_nb_20260722T193342Z": {
+    "version": "xauusd_nb_20260722T193342Z",
+    "model_file": "models/XAUUSD/20260722T193342Z/gaussian_xauusd_nb_20260722T193342Z.json",
+    "feature_schema": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "volume_ratio",
+      "double_sweep",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "trend_bias",
+      "trend_strength",
+      "momentum_score",
+      "atr",
+      "volatility_ratio",
+      "rsi_14",
+      "macd_line",
+      "macd_signal",
+      "macd_hist_raw",
+      "macd_hist_z",
+      "sweep_detected",
+      "liquidity_sweep",
+      "break_of_structure",
+      "swing_high",
+      "swing_low",
+      "higher_high",
+      "lower_low",
+      "body_size",
+      "candle_range",
+      "body_ratio",
+      "volatility_regime",
+      "session",
+      "hour_of_day",
+      "disp_strength",
+      "retest_depth",
+      "candles_since_retest",
+      "liquidity_distance",
+      "liquidity_pressure_score",
+      "volume_spike"
+    ],
+    "schema_version": "3.0",
+    "metrics": {
+      "corr_expected_rr": 0.2267,
+      "calibration_error": 0.0,
+      "n_train": 2086,
+      "n_val": 894
+    },
+    "trained_at": "2026-07-22T19:45:58Z",
+    "active": false,
+    "instrument": "XAUUSD",
+    "note": "XAUUSD research train; NOT promoted; gaussian_impl stays heuristic"
+  },
+  "xauusd_nb_20260722T194904Z": {
+    "version": "xauusd_nb_20260722T194904Z",
+    "model_file": "models/XAUUSD/20260722T194904Z/gaussian_xauusd_nb_20260722T194904Z.json",
+    "feature_schema": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "volume_ratio",
+      "double_sweep",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "trend_bias",
+      "trend_strength",
+      "momentum_score",
+      "atr",
+      "volatility_ratio",
+      "rsi_14",
+      "macd_line",
+      "macd_signal",
+      "macd_hist_raw",
+      "macd_hist_z",
+      "sweep_detected",
+      "liquidity_sweep",
+      "break_of_structure",
+      "swing_high",
+      "swing_low",
+      "higher_high",
+      "lower_low",
+      "body_size",
+      "candle_range",
+      "body_ratio",
+      "volatility_regime",
+      "session",
+      "hour_of_day",
+      "disp_strength",
+      "retest_depth",
+      "candles_since_retest",
+      "liquidity_distance",
+      "liquidity_pressure_score",
+      "volume_spike"
+    ],
+    "schema_version": "3.0",
+    "metrics": {
+      "corr_expected_rr": 0.2267,
+      "calibration_error": 0.0,
+      "n_train": 2086,
+      "n_val": 894
+    },
+    "trained_at": "2026-07-22T19:59:58Z",
+    "active": true,
+    "instrument": "XAUUSD",
+    "note": "XAUUSD research train; NOT promoted; gaussian_impl stays heuristic"
   }
 }

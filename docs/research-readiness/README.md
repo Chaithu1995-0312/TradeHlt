@@ -9,6 +9,14 @@
 **Branch-scoped truth (CLAUDE.md §4.0):** all statements below are for branch `patch`,
 `ACTIVE_VERSION = v2_multi_2026_04` (F-016). v4/TP3 applies only to the post-TP3 code line.
 
+## Active program (living)
+
+| Program | Files | Role |
+|---|---|---|
+| **Edge Research Platform** (`EDGE_RESEARCH_PLATFORM`) | **[Decision board](erp-decision-board-and-story-authority.md)** · **[Phased plan](edge-research-platform-phased-plan.md)** · **[Promise ladder](edge-research-platform-promise-ladder.md)** · **[MLLM HOW](edge-research-platform-mllm-how.md)** · **[Research lane](../../multi_llm/research_lane/README.md)** · **[Before/after](edge-research-platform-before-after.md)** · [program](edge-research-platform-program.md) | Multi-LLM Research Lane **initiated**. PL-0. Next: Implement P1. |
+
+Update the MD+JSON pair in the same turn when program state changes. Grants no production authority.
+
 ## Deliverables
 
 | # | Deliverable | File | Kind |
@@ -25,11 +33,33 @@
 ## Verification gates built this engagement (additive, audit/test-only)
 
 - **`scripts/analysis/config_reachability.py`** + `tests/test_config_reachability.py` — classifies
-  every active-config key READ_AND_USED / READ_BUT_INERT / SHADOW_ONLY / HARDCODED_OVERRIDE / DEAD.
+  every active-config key READ_AND_USED / TOOLING_ONLY / READ_BUT_INERT / SHADOW_ONLY /
+  HARDCODED_OVERRIDE / DEAD (corpus = `src/` live spine + `scripts/` tooling; `tests/` excluded).
 - **`src/analytics/metrics_oracle.py`** extended with independent `sharpe()` + `recovery_factor()`,
   parity-checked against production `PortfolioAnalytics` Sharpe + invariant-tested.
 - **`tests/runtime/test_replay_determinism.py`** extended to assert telemetry-artifact identity
   across runs and to cover a second instrument.
+
+## Test-Authority Ladder (reachability validation) — 2026-07-04
+
+The reachability validators form an explicit authority ladder. **Higher tiers are truth; lower
+tiers only observe or alarm.** A golden changing does **not** mean behavior changed — treating it as
+truth is the trap this ladder exists to prevent. Ties to CLAUDE.md §6.5 (evidence has no authority;
+only demonstrated behavior does).
+
+| Level | Instrument | Authority |
+|---|---|---|
+| **L1** Behavioral invariants | `tests/test_config_reachability.py::test_no_dead_config_keys`, `tests/test_crt_state_invariants.py` | **CAN FAIL BUILDS** |
+| **L2** Generated evidence | `reports/reachability_validation.{json,md}`, `docs/research-readiness/config-reachability-report.{json,md}` | **OBSERVATIONAL** (records what is; no `guards_passed` — CI runs the guards) |
+| **L3** Semantic goldens | `tests/test_reachability_golden.py` (config + registry) | **DRIFT DETECTION ONLY** |
+| — Human prose | this README, report narratives | lowest |
+
+> **Golden Rule.** *Semantic goldens may DETECT truth changes; they never DEFINE truth. Truth comes
+> from code + generators + behavioral invariants.* On an intentional change, accept it explicitly:
+> `python scripts/analysis/update_reachability_golden.py` then commit — never edit a golden by hand.
+
+**Enforce this for every new validator added to the repo:** invariant (L1) > generated evidence
+(L2) > semantic golden (L3) > prose. New goldens are drift alarms, not truth sources.
 
 ## Headline
 

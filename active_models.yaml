@@ -25,15 +25,22 @@
 # ───────────────────────────────────────────────────────────────────
 
 meta:
-  schema_version: 2.1                   # file-format version — v2.1 adds reachability/optimization/
-                                        # evidence.conflicts/evidence.hypotheses SUB-BLOCKS (additive)
+  schema_version: 2.3                   # file-format — v2.3 renames identity Exists/Selected/Enabled vocabulary:
+                                        #   selection (was active) / execution.runtime_enabled (was spine_binding.wired)
+                                        #   + identity_status rollup. v2.2 added identity; v2.1 reachability/optimization.
   migration:
-    previous_schema: 2.0
-    compatibility: backward_readable    # top-level `status:` retained alongside nested `runtime.active:`
-    breaking_changes: false             # v2.1 is purely additive; no v2.0 key renamed/removed/reshaped
+    previous_schema: 2.2
+    compatibility: backward_readable    # top-level status + truth layers unchanged; identity field renames only
+    breaking_changes: false             # readers of spine_binding/active must migrate to execution/selection
+    identity_contract: >
+      identity is a WHO declared mirror of registry selection (promote_* remains operational
+      authority). Exists ≠ Selected ≠ Enabled: selection.version mirrors registry active;
+      execution.runtime_enabled mirrors HOW execute flags (never auto-set from artifact existence).
+      identity_status is a derived rollup (absent | selected_not_enabled | selected_and_enabled |
+      enabled_without_checkpoint). how_path_ref is a parity pin only. EngineRunner must not
+      read identity for load (ModelResolver may parity-check). No thresholds/formula math.
   truth_schema:
-    version: 2.0                        # the LAYER schema is unchanged — reachability/optimization are
-                                        # sub-blocks inside existing entries, not new truth layers
+    version: 2.0                        # the LAYER schema is unchanged — identity is a sub-block, not a layer
     canonical_layers: [intent, runtime, evidence, status]
     applies_to: knowledge_and_registry_artifacts   # see docs/reference/conventions.md — Truth-Layer Standard
   truth_model:
@@ -41,12 +48,15 @@ meta:
     runtime:  "Executing truth — what actually runs today (code is authority)"
     evidence: "Research truth — what survives evidence (findings)"
     status:   "Operational rollup"
-  last_verified_against:
-    - src/config_layer/crt_engine_v2.py       # CRT enum :63, VALID_TRANSITIONS :1073, transitions :985-:2578
-    - src/engines/heuristic_gaussian_engine.py # class :187, compute :271
-    - src/engines/zone_gate_engine.py          # filter_canonical_inputs :163
-    - src/engines/rr_engine.py                 # class :37, compute :45
-    - src/engines/live_engine.py               # BitNetZoneGate.check :202
+    identity: "WHO — selected version mirror + runtime_enabled (Exists≠Selected≠Enabled; not promote, not load)"
+  last_verified_against:                       # dual-form `path:line · Symbol` — enforced by tests/test_doc_citations.py
+    - src/config_layer/state_identity.py:35 · CRTState              # enum + transitions extracted here 2026-07-18
+    - src/config_layer/state_identity.py:69 · VALID_TRANSITIONS     # re-exported by crt_engine_v2 for back-compat
+    - src/config_layer/crt_engine_v2.py:2554 · process_candle       # SM entry point (transition defs span :847-:2927)
+    - src/engines/heuristic_gaussian_engine.py:316 · compute
+    - src/engines/zone_gate_engine.py:163 · filter_canonical_inputs
+    - src/engines/rr_engine.py:45 · compute
+    - src/engines/live_engine.py:278 · check
   related_docs:
     - docs/topics/model-intent-and-feature-ownership.md   # per-model feature ownership (Question A verified)
     - docs/current-findings.md                            # F-ids cited in evidence layers below
@@ -65,7 +75,7 @@ meta:
       path: data/framework_registry.jsonl
       generator: scripts/governance/seed_framework_registry.py
       guard: tests/test_framework_registry.py
-  verified_on: 2026-07-03
+  verified_on: 2026-07-22
 
 # ───────────────────────────────────────────────────────────────────
 # 1. CRT ENGINE — Deterministic Market-Structure State Machine
@@ -83,8 +93,20 @@ crt:
     file: src/config_layer/crt_engine_v2.py
     architecture: "RangeDetector → StateMachine → UltronRiskEngine → ExecutionEngine"
     active: true
+    # ── Layer-7 evidence binding (WHO produces what, and what the number MEANS) ──
+    # engine_key      = slot in EngineRunner.engine_results (null = produces no engine_result)
+    # output_field    = key WITHIN that result dict carrying the primary value
+    # output_semantic = what the value means; consumers may not reinterpret it
+    # Read by src/features/model_evidence.py — never hardcoded there.
+    # NOTE: this binds the FUSION "crt" score (engines/crt_engine.compute → scoring_engine),
+    # NOT the CRTState machine above. Source-verified 2026-07-24 (scoring_engine.py:36-48):
+    # s_final = w·(sweep, breakout, retest, time), each sub-score bounded [0,1] — a weighted
+    # RULE score over pipeline features, with no state-machine term in it.
+    engine_key: crt
+    output_field: score
+    output_semantic: structure_rule_score
     states: 9              # CORRECTED from 10 — matches state_list + VALID_TRANSITIONS + CLAUDE.md §4
-    state_list:            # enum order — crt_engine_v2.py:63 (no CANCELLED state exists)
+    state_list:            # enum order — src/config_layer/state_identity.py:35 · CRTState (no CANCELLED state exists)
       - RANGE
       - SHADOW_PENDING
       - SWEEP
@@ -94,7 +116,7 @@ crt:
       - RETEST
       - EXECUTION
       - RESOLUTION
-    valid_transitions:     # crt_engine_v2.py:1073 — mirrors code VALID_TRANSITIONS
+    valid_transitions:     # src/config_layer/state_identity.py:69 · VALID_TRANSITIONS — re-exported by crt_engine_v2
       RANGE:          [SWEEP, SHADOW_PENDING]
       SHADOW_PENDING: [SWEEP, RANGE]
       SWEEP:          [DISPLACEMENT, EXPANSION, RANGE]
@@ -105,11 +127,111 @@ crt:
       EXECUTION:      [RESOLUTION]
       RESOLUTION:     [RANGE]   # cycle-reset (NOT a dead-end); terminality expressed in lifecycle.resolution
 
+    # ── Phase-1 state contracts (WHO — ids/refs only; no formulas, no numbers) ──
+    # Loaded by config_layer.state_contract_loader → immutable StateContractBundle.
+    # Executable authority remains Python (VALID_TRANSITIONS, CRTConfig, SM).
+    # eligible_models = semantic eligibility ONLY — does NOT load/enable/run models.
+    # required_fm derived from config_authority_matrix.md §10 executable census.
+    state_contract_schema_version: "1.0"
+    state_contracts:
+      RANGE:
+        required_fm: []
+        config_keys:
+          - atr_period
+          - atr_buffer_multiplier
+          - ema_fast
+          - ema_slow
+          - pending_displacement_ttl_candles
+          - retrace_reset_pct
+          - extension_reset_fib
+        eligible_models: []
+      SHADOW_PENDING:
+        required_fm: []
+        config_keys: []
+        eligible_models: []
+      SWEEP:
+        required_fm:
+          - FM-002
+          - FM-010
+        config_keys:
+          - atr_min_displacement
+          - body_ratio_min
+          - atr_multiplier_min
+          - max_sweep_age_candles
+        eligible_models: []
+      DISPLACEMENT:
+        required_fm: []
+        config_keys:
+          - expansion_atr_min_distance
+          - retrace_reset_pct
+          - extension_reset_fib
+        eligible_models: []
+      EXPANSION:
+        required_fm:
+          - FM-010
+          - FM-028
+        config_keys:
+          - retest_depth_max
+          - retest_atr_depth_fraction
+          - max_displacement_strength
+          - max_expansion_age_candles
+          - max_expansion_age_hours
+          - body_ratio_min
+        eligible_models: []
+      RETEST:
+        required_fm:
+          - FM-010
+          - FM-027
+          - FM-028
+        config_keys:
+          - conf_alpha
+          - conf_beta
+          - conf_weights
+          - conf_floor
+          - weak_link_weight
+          - confirmation_body_min
+          - retest_depth_max
+          - retest_atr_depth_fraction
+          - retest_min_depth_atr_fraction
+          - risk_score_weights          # PLAN-002: RiskScore.final (sweep,breakout,retest,time) — distinct from score_component_weights + conf_weights
+          - ema_fast
+          - ema_slow
+          - tier_1_threshold
+          - tier_2_threshold
+          - soft_conf_max_candles
+          - score_decay_lambda
+          - use_bitnet
+          - bitnet_main_threshold
+          - shadow_age_penalty_lambda
+          - shadow_age_norm_candles
+          - shadow_advisory_only
+          - allowed_sessions
+          - session_windows
+          - sizing_bands
+          - sl_atr_buffer
+          - tp1_atr_multiplier
+          - tp2_atr_multiplier
+        eligible_models:
+          - bitnet
+      EXECUTION:
+        required_fm: []
+        config_keys:
+          - exit_model
+        eligible_models: []
+      RESOLUTION:
+        required_fm: []
+        config_keys: []
+        eligible_models: []
+      EXPIRED:
+        required_fm: []
+        config_keys: []
+        eligible_models: []
+
     # ── Detection states — rules that CLASSIFY a candle into a state ──
     detection:
       range:
         method: pure_geometric
-        file_line: src/config_layer/crt_engine_v2.py:985   # detect_htf_range
+        file_line: src/config_layer/crt_engine_v2.py:847 · detect_htf_range
         logic: "h_ref = max(c.high); l_ref = min(c.low) over HTF window"
         ohlcv_inputs: [high, low]
         config_keys: []
@@ -117,7 +239,7 @@ crt:
 
       sweep:
         method: boundary_breach_with_rejection
-        file_line: src/config_layer/crt_engine_v2.py:1017  # detect_sweep (+ try_range_to_sweep :1150)
+        file_line: src/config_layer/crt_engine_v2.py:879 · detect_sweep   # + try_range_to_sweep :1036
         logic_long:  "candle.high > range.h_ref AND candle.close < range.h_ref"
         logic_short: "candle.low  < range.l_ref AND candle.close > range.l_ref"
         ohlcv_inputs: [high, low, close]
@@ -128,7 +250,7 @@ crt:
 
       displacement:
         method: multi_gate
-        file_line: src/config_layer/crt_engine_v2.py:1201  # try_sweep_to_displacement
+        file_line: src/config_layer/crt_engine_v2.py:1087 · try_sweep_to_displacement
         logic:
           all_gates_must_pass: true
           gate_1: "abs(close-open) >= atr_min_displacement × ATR"
@@ -145,7 +267,7 @@ crt:
 
       expansion:
         method: single_candle_extension
-        file_line: src/config_layer/crt_engine_v2.py:1250  # try_displacement_to_expansion (+ shadow resume :1175)
+        file_line: src/config_layer/crt_engine_v2.py:1263 · try_displacement_to_expansion   # also the SHADOW_PENDING resume path
         logic:
           - "close > displacement_candle.close (long) / close < disp.close (short)"
           - "abs(close - disp_close) >= expansion_atr_min_distance × ATR"
@@ -156,19 +278,19 @@ crt:
 
       retest:
         method: adaptive_depth_ceiling
-        file_line: src/config_layer/crt_engine_v2.py:1302  # try_expansion_to_retest
+        file_line: src/config_layer/crt_engine_v2.py:1433 · try_expansion_to_retest
         logic: "depth = close - range.l_ref (long); must be < adaptive_ceiling"
         adaptive_ceiling: "max(0.25×range_size, 0.50×ATR)"
         min_depth: "0.1 × ATR"
         ohlcv_inputs: [close]
-        config_keys: [retest_depth_max, retest_atr_depth_fraction]
+        config_keys: [retest_depth_max, retest_atr_depth_fraction, retest_min_depth_atr_fraction]
         defaults:
           retest_depth_max: 0.25
           retest_atr_depth_fraction: 0.50
 
       expired:
         method: ttl_guard
-        file_line: src/config_layer/crt_engine_v2.py:2578  # EXPANSION→EXPIRED TTL branch (emit :2554)
+        file_line: src/config_layer/crt_engine_v2.py:2983 · expansion_ttl_exceeded   # EXPANSION→EXPIRED TTL branch (emitted from process_candle :2929)
         logic: "age_candles > max_expansion_age_candles OR age_hours > max_expansion_age_hours"
         ohlcv_inputs: []                                    # time-based, not price-based
         config_keys: [max_expansion_age_candles, max_expansion_age_hours]
@@ -181,20 +303,20 @@ crt:
       shadow_pending:
         type: lifecycle_state       # cross-window displacement memory active; awaiting sweep confirmation
         entered_by: [RANGE]
-        file_line: src/config_layer/crt_engine_v2.py:1162  # try_range_to_shadow_pending
+        file_line: src/config_layer/crt_engine_v2.py:1048 · try_range_to_shadow_pending
       execution:
         type: terminal_execution_state   # trade emitted; no detection — RETEST→EXECUTION on gate pass
         entered_by: [RETEST]
-        file_line: src/config_layer/crt_engine_v2.py:1420  # try_retest_to_execution
+        file_line: src/config_layer/crt_engine_v2.py:1655 · try_retest_to_execution
       resolution:
         type: post_trade_state       # terminal; EXECUTION→RESOLUTION then reset to RANGE
         entered_by: [EXECUTION]
-        file_line: src/config_layer/crt_engine_v2.py:1435  # _transition(..., RESOLUTION, ...)
+        file_line: src/config_layer/crt_engine_v2.py:1670 · RESOLUTION   # _transition(state, CRTState.RESOLUTION, ...)
 
-    cached_features_at_retest:
-      - {feature: retest_depth,  description: "How far price moved back toward disp.open from disp.close"}
-      - {feature: body_ratio,    description: "Displacement candle body/wick ratio"}
-      - {feature: disp_strength, description: "Displacement wick_size / ATR"}
+    cached_features_at_retest:   # CH-002 / F-050 identities — authoritative emission keys
+      - {feature: displacement_retrace,   fm_id: FM-027, description: "Cross-candle retrace toward disp.open (NOT pipeline FM-021 retest_depth)"}
+      - {feature: body_ratio,             fm_id: FM-010, description: "Displacement candle body/range ratio"}
+      - {feature: displacement_atr_ratio, fm_id: FM-028, description: "Displacement candle_range/ATR (NOT pipeline FM-020 disp_strength)"}
       - {feature: retest_index,  description: "Candle index when retest confirmed"}
       - {feature: session,       description: "Session name from active_range"}
       - {feature: double_sweep,  description: "Double sweep confirmed boolean"}
@@ -277,6 +399,7 @@ crt:
 
   reachability:                 # v2.1 — where this model's truth artifacts live (pointers only)
     config_sections: [crt_engine, params]   # params = the known CRTConfig split-brain surface (§6.5)
+    engines_path_keys: [score_component_weights]   # PLAN-002: EngineRunner→engines.crt_engine→compute_scores context injection — DISTINCT identity from risk_score_weights (spine RiskScore.final) and conf_weights; key names only, no numeric WHO defaults
     telemetry:
       - event_type: STATE_TRANSITION
         stream: logs/crt_transitions.jsonl
@@ -316,14 +439,38 @@ gaussian:
 
   runtime:                       # what actually executes in the fusion path today
     engine: HeuristicGaussianEngine
-    file: src/engines/heuristic_gaussian_engine.py:271   # class :187, def compute :271
+    file: src/engines/heuristic_gaussian_engine.py:316 · compute   # class HeuristicGaussianEngine :191
     active: true
+    engine_key: gaussian
+    output_field: score
+    # Semantic read off the source, not off a finding (heuristic_gaussian_engine.py:358-366):
+    #   x = ((ema_fast-ema_slow)/ema_slow + tanh(momentum_score)) / 2
+    #   score = exp(-(x-mu)^2 / (2*sigma^2))
+    # A Gaussian kernel over an EMA-spread + momentum composite. NOT a calibrated probability,
+    # despite EngineRunner feeding it to DecisionEngine as p_win. Kernel is symmetric about mu,
+    # and mu/sigma fall back to 0.0/1.0 (:51-52) — re-verified 2026-07-24 against
+    # models/gaussian_registry.json: 0 of 13 entries carry mu or sigma, the promoted XAUUSD
+    # entry included, so the defaults do fire.
+    output_semantic: ema_momentum_kernel_score
     features: [ema_fast, ema_slow, momentum_score]        # 3 features — a narrow momentum vote
     target: directional_momentum_score
+    parameterized: false          # F-060 — mu=0.0/sigma=1.0 ALWAYS; zero learned params
+    live_identity: "score = exp(-x^2 / 2), x = (ema_diff + tanh(momentum_score)) / 2"
     note: >
-      A directional-momentum Gaussian on 3 canonical features. It is NOT the
-      "v4_mirrored 38-feature Naive Bayes" model — that is a separate, unwired
-      artifact recorded under trained_registry.
+      A Gaussian kernel on 3 canonical features. It is NOT the "v4_mirrored 38-feature
+      Naive Bayes" model — that is a separate, unwired artifact recorded under
+      trained_registry.
+      CORRECTED 2026-07-22 (F-060): it is also not parameterized by ANY artifact.
+      mu/sigma resolve through GaussianRegistry._normalize_registry_entry
+      (src/engines/heuristic_gaussian_engine.py:46 · _normalize_registry_entry, whose mu/sigma
+      defaults sit at :53-54), which defaults mu=0.0/sigma=1.0 — and no
+      entry in models/gaussian_registry.json carries either key (11/11 verified). The
+      defaults therefore fire on a SUCCESSFUL load: the live score is byte-identical to
+      the no-registry-at-all path. Floor: tests/test_gaussian_live_parameterization.py.
+      Consequence of mu=0: the kernel is SYMMETRIC — it peaks when the market is flat and
+      decays equally for moves in either direction — so calling it "directional" is a
+      misnomer, despite it entering fusion at weight_gaussian 0.2 beside directional
+      channels.
 
   trained_registry:             # historical / experimental artifacts — NOT the live scorer
     file: models/gaussian_registry.json
@@ -345,18 +492,34 @@ gaussian:
         feature_dimension: 38
         schema_version: v2
         evidence: [CURRENT_STATE.md, phase5_calibration.py]
+        artifact_exists: false    # F-060 — no such file on disk and no registry entry;
+                                  # ui_kits/crt_dashboard/data.js nonetheless shows it ACTIVE
+    integrity:                    # F-060 audit of models/gaussian_registry.json
+      entries_total: 11
+      artifacts_on_disk: 4
+      dangling_entries: 7         # model_file paths that do not exist (all active:false)
+      carries_kernel_params: false  # no entry has mu/sigma -> runtime reads nothing from here
+      builder_of_record: scripts/training/phase5_calibration.py   # NOT train_pipeline.py
+      label_integrity: F022_CONTAMINATED_CONFIRMED   # rr_achieved read raw at :434, no forward_walk
 
   evidence:
-    findings: [F-005]
+    findings: [F-005, F-060]
     conflicts: []
     hypotheses: [H-014]
     validated: false
-    notes: "Live Gaussian is a 3-feature momentum vote; the 38-dim trained model is not wired."
+    notes: >
+      Live Gaussian is a 3-feature SYMMETRIC kernel with zero learned parameters (F-060);
+      the 38-dim trained model is not wired, and the registry it does read supplies nothing.
 
   reachability:
-    config_sections: [gaussian_scorer]
+    config_sections: [gaussian_scorer]   # NOTE (F-060): the `gaussian_scorer` block's only
+                                         # consumer is src/config_layer/crt_gaussian_scorer.py,
+                                         # which has ZERO production importers (grep-verified) —
+                                         # the live knobs are engine_runner.gaussian_impl and
+                                         # fusion_engine.weight_gaussian
     telemetry: []               # no dedicated stream; scored inside the fusion path (see engine_runner)
-    tests: [tests/test_gaussian_impl_switch.py, tests/test_gaussian_update_pipeline.py]
+    tests: [tests/test_gaussian_impl_switch.py, tests/test_gaussian_update_pipeline.py,
+            tests/test_gaussian_live_parameterization.py]
     topics: [docs/topics/model-intent-and-feature-ownership.md]
     framework_ids: [IMPL-002, IMPL-003]   # heuristic runtime + trained ML artifact
 
@@ -372,6 +535,39 @@ gaussian:
 
   status: active   # (the 3-feature heuristic is active; v4_mirrored trained model is experimental)
 
+  # WHO v2.3 — selected NB versions exist; execute path is heuristic (not the checkpoint)
+  identity:
+    authority: mirror_of_registry
+    family: gaussian
+    registry: models/gaussian_registry.json
+    selection:
+      by_instrument:
+        ETHUSDT:
+          version: v5_auto_2026_06_eth
+          registry_id: gaussian:v5_auto_2026_06_eth
+          feature_schema_dim: 35
+          trained_on: [ETHUSDT]
+          trainer: phase5_calibration
+          trained_at: "2026-05-19T07:49:05Z"
+        BNBUSDT:
+          version: p5_20260524T120449
+          registry_id: gaussian:p5_20260524T120449
+          feature_schema_dim: 38
+          trained_on: [BNBUSDT]
+          trainer: phase5_calibration
+          trained_at: "2026-05-24T06:35:48Z"
+    execution:
+      runtime_enabled: true              # fusion gaussian slot is live
+      uses_trained_checkpoint: false     # F-060 — μ/σ defaults; NB artifact not the live score
+      live_impl: heuristic               # == engine_runner.gaussian_impl
+      decision_reachable: true
+    identity_status: enabled_without_checkpoint
+    how_path_ref: null                   # live heuristic has no HOW model_path
+    runtime_binding:
+      config_version: v2_multi_2026_04
+      compatibility:
+        feature_schema_dim: 38           # pipeline emits 38; trained actives may be 35/38
+
 # ───────────────────────────────────────────────────────────────────
 # 3. BITNET — Market-State Hard-Reject Gate
 # ───────────────────────────────────────────────────────────────────
@@ -383,25 +579,35 @@ bitnet:
       states from cached features; acts as a hard gate in the approval chain.
 
   runtime:
-    file: src/bitnet/bitnet_inference.py:317               # bitnet_score (per related topic doc)
-    integration: "UltronRiskEngine.approve() / approve_with_soft_conf(); live check via BitNetZoneGate.check (live_engine.py:202)"
+    file: src/bitnet/bitnet_inference.py:317 · bitnet_score
+    integration: "UltronRiskEngine.approve() / approve_with_soft_conf(); live check via BitNetZoneGate — src/engines/live_engine.py:278 · check"
     input_source: "cached_features at RETEST + state.atr"
     features: [body_ratio, retest_depth, disp_strength, atr, candles_since_retest, double_sweep]
     threshold: 0.55
     enabled: false                                          # gated by CRT threshold use_bitnet (default false)
     active: false
+    # Not an EXPECTED_ENGINES producer: it gates inside UltronRiskEngine.approve(), it does
+    # not occupy a slot in engine_results. Declared-absent at Layer 7, never silently dropped.
+    engine_key: null
+    output_field: null
+    output_semantic: state_acceptability_score
 
   evidence:
-    findings: [F-004]
+    findings: [F-004, F-050, F-055]
     conflicts: []
     hypotheses: []
     validated: true
     notes: >
       When ENABLED it is a genuine LIVE hard-reject gate and the score is persisted
       (F-004). Only the *adaptive* threshold is dormant. Off by default in the active config.
+      SHADOW-MEASURED 2026-07-18 (F-055): enabling the existing model gate-ON vs OFF across
+      BNB/ETH/BTC/SOL degrades the book (pooled ΔE=-0.13R, 0/4 instruments improve, underpowered
+      n<30) — it acts as a state-machine-perturbing VETO, not a filter (a reject resets the CRT
+      state machine). No ΔG001 ⇒ no authority (§6.5); use_bitnet stays false; retrain NOT warranted.
+      Carries the F-050 train/serve skew + a raw/unnormalized `atr` input (not scale-invariant).
 
   reachability:
-    config_sections: [crt_engine, engine_runner]   # use_bitnet + bitnet_main_threshold / bitnet_zone_threshold
+    config_sections: [crt_engine, engine_runner]   # use_bitnet + bitnet_main_threshold / zone_cluster_threshold
     telemetry: []
     tests: [tests/test_bitnet_inference.py, tests/test_bitnet_parity.py]
     topics: [docs/topics/model-intent-and-feature-ownership.md]
@@ -419,6 +625,34 @@ bitnet:
 
   status: dormant   # off by default; becomes a live hard gate when use_bitnet=true
 
+  # WHO v2.3 — catalog EXISTS; selection null; not enabled (Exists≠Selected≠Enabled)
+  # Registry governance 2026-07-22: dual-schema fork catalogued (legacy_6 vs export_35);
+  # use_bitnet=true requires active selection (fail-closed). Composition default = legacy_6.
+  identity:
+    authority: mirror_of_registry
+    family: bitnet
+    registry: models/bitnet/bitnet_registry.json
+    selection:
+      version: null                      # no active:true entry — intentional
+      catalog:
+        - legacy_6_root_model_json       # composition_default (6-dim serve)
+        - export_v5_35_results           # HOW pin only (35-dim export)
+    execution:
+      runtime_enabled: false             # == crt_engine.use_bitnet
+      uses_trained_checkpoint: false
+      decision_reachable: false
+    identity_status: absent              # no selection + not enabled (catalog may still exist)
+    how_path_ref:
+      config_section: engine_runner
+      config_key: model_path
+      expected_value: results/model_export_format.json   # HOW claim ≠ composition_default
+    runtime_binding:
+      config_version: v2_multi_2026_04
+      compatibility:
+        feature_schema_dim: 6            # legacy 6-feature gate contract when enabled
+        dual_schema_fork: true
+        composition_default_version: legacy_6_root_model_json
+
 # ───────────────────────────────────────────────────────────────────
 # 4. ZONE GATE — Historical Feature-Space Quality Estimator
 # ───────────────────────────────────────────────────────────────────
@@ -430,14 +664,23 @@ zone_gate:
       Learns which regions of feature space historically worked.
 
   runtime:
-    file: src/engines/zone_gate_engine.py:163              # filter_canonical_inputs (+ compute_weighted_cluster_score :106)
+    file: src/engines/zone_gate_engine.py:163 · filter_canonical_inputs   # + compute_weighted_cluster_score :106
     input_contract: canonical_38_vector                    # CORRECTED: requires all 38 canonical keys (not [atr,rsi,volume,trend])
-    per_zone_active: "~25 of 38 active per zone; ~13 zero_indices (learned mask, not designed)"
+    # CORRECTED 2026-07-22: the mask is NOT learned. Every zone carries exactly 25 weights of 0.04
+    # (uniform 1/25) with an IDENTICAL zero-set across all 8 zones — a hand-specified mask dropping
+    # the 13 price-level dims, not a trained importance vector. v4 zeroes `session` too (24 active).
+    per_zone_active: "24 of 38 scored dims active per zone (v4); uniform weight 0.04 each, identical mask in all 8 zones — hand-specified, NOT learned"
     fail_open: 0.5                                         # returns 0.5/pass on registry error
-    registry_file: models/zone_registry.json
+    # FAIL-CLOSED at load on vector misalignment (ZoneFeatureOrderError) — distinct from the
+    # fail_open above, which covers registry read/parse errors only.
+    registry_file: models/zone_registry_v4_2026_07.json
     zone_mode: hard
     output: "market state quality score [0, 1]"
     active: true
+    engine_key: zone_gate
+    output_field: score
+    output_semantic: neighbourhood_quality_score
+    pit_provenance: "models/zone_registry_v4_2026_07.provenance.json — PIT_UNCLEAN (centered_swings + global_batch_volatility_regime training era; F-051/FC1-A/FC1-D) CARRIED FORWARD: the v4 alignment remap relabels and zeroes one weight, it does NOT retrain, so it cannot clean PIT status; no promote/re-enable/economic use without causal revalidation"
 
   evidence:
     findings: [F-036, F-041]
@@ -447,14 +690,21 @@ zone_gate:
     notes: >
       ΔG001 ≡ 0 — zone is non-pivotal on gate-ON fusion (redundant/decision-dominated,
       not weak/underweighted); tunable NOT authority (F-036). Runtime scores through
-      models/zone_registry.json (8 zones); the zone_gate_registry.json manifest points
-      to a DIFFERENT file (hash mismatch) — TruthConflict, surfaced not reconciled (F-041).
-      Stored labels ~98% SL-hit / 6-of-8 negative mean_RR (observation; Phase-5 gate).
+      models/zone_registry_v4_2026_07.json (8 zones); the zone_gate_registry.json manifest divergence is
+      RECONCILED 2026-07-05 (F-041A/B1: active=v2_gaussian_runtime_2026_07 -> models/zone_registry.json,
+      sha e73e0893 == config-loaded; invariant tests/test_zone_manifest_runtime_parity.py enforces it).
+      SUPERSEDED 2026-07-22 (SCHEMA-V4-VECTOR-MIGRATION): active=v4_gaussian_runtime_2026_07 ->
+      models/zone_registry_v4_2026_07.json. The v3 entry is retained (active:false) for rollback and
+      would now FAIL CLOSED, since its feature_order names macd_hist/wick_size (F-062).
+      Phase-5/F-041B RESOLVED 2026-07-05: stored ~98% SL-hit labels are an F-022 ARTIFACT
+      (honest intrabar_fixed SL≈0.66 on VERIFIED-identical KMeans membership) AND 0/8 zones
+      clear honest E>0 → label-quality NOT the rescuable defect (entry-info null stands).
+      Runtime↔label assignment parity only 0.414. Gate is geometric (labels unread) → no live risk.
 
   reachability:
     config_sections: [engine_runner]               # engine_runner.zone_gate nested knobs + zone_registry_path
     telemetry: []
-    tests: [tests/test_zone_gate.py, tests/test_zone_gate_top_k.py]
+    tests: [tests/test_zone_gate.py, tests/test_zone_gate_top_k.py, tests/test_zone_label_audit.py]
     topics: [docs/topics/model-intent-and-feature-ownership.md]
     framework_ids: [IMPL-004]
 
@@ -470,6 +720,42 @@ zone_gate:
 
   status: active
 
+  # WHO v2.3 — selected + enabled (Exists≠Selected≠Enabled: here all three true)
+  identity:
+    authority: mirror_of_registry
+    family: zone_gate
+    registry: models/zone_gate_registry.json   # version selection (NOT the runtime file)
+    selection:
+      version: v4_gaussian_runtime_2026_07
+      registry_id: zone_gate:v4_gaussian_runtime_2026_07
+      # SCHEMA COMPATIBILITY, not the scored width. The artifact scores a 38-name SUBSET of the
+      # 39-dim v4 vector (macd_hist_raw is deliberately absent — no trained statistics exist for
+      # it). The name-anchored extractor supports any subset, so the two numbers legitimately
+      # differ; stating both stops the subset relationship from being inferred wrongly.
+      feature_schema_dim: 39
+      scored_dims: 38
+      trained_on: []
+      trainer: discover_zones
+      trained_at: "2026-07-04T20:06:14Z"
+      remapped_at: "2026-07-22"
+      remap_class: ALIGNMENT_REMAP             # relabel + one zeroed weight; NOT a retrain
+      derived_from: v2_gaussian_runtime_2026_07
+      selected_at: null                        # fill when promote writes selection timestamp
+    execution:
+      runtime_enabled: true
+      uses_trained_checkpoint: true
+      decision_reachable: true
+    identity_status: selected_and_enabled
+    how_path_ref:                              # parity pin only — HOW owns the real path
+      config_section: engine_runner
+      config_key: zone_registry_path
+      expected_value: models/zone_registry_v4_2026_07.json
+    runtime_binding:
+      config_version: v2_multi_2026_04
+      compatibility:
+        feature_schema_dim: 39
+        scored_dims: 38
+
 # ───────────────────────────────────────────────────────────────────
 # 5. RR — Reward-Risk / Candle-Polarity Structural Filter
 # ───────────────────────────────────────────────────────────────────
@@ -482,13 +768,27 @@ rr_model:
 
   runtime:
     engine: RREngine
-    file: src/engines/rr_engine.py:45                      # class :37, def compute :45
+    file: src/engines/rr_engine.py:45 · compute            # class RREngine :37
     type: geometric_filter                                 # NOT a learned predictor
     learning: false
     inputs: [close, high, low]                             # candle-polarity (directional commitment) index
-    min_rr: retained_but_unused                            # rr_engine.py:43
+    min_rr: retained_but_unused                            # src/engines/rr_engine.py:43 · min_rr
     output: "candle-polarity / structural-commitment index"
     active: true
+    # Source-verified 2026-07-24 (rr_engine.py:68-82), NOT taken from a finding:
+    #   polarity = max((high-close)/range, (close-low)/range)
+    # The two fractions sum to 1, so the max is >= 0.5 => domain is {0.0} U [0.5, 1]
+    # (0.0 only on the doji/missing-key/value-error paths, :60-66 and :84-89).
+    # It is never economic reward:risk — true RR is SL/TP-derived and owned by UltronRiskGate.
+    # `rr_ratio` is a legacy field NAME carrying the same value; output_field names the honest one.
+    # output_semantic MIRRORS the engine's own self-declared `semantic` field (:81) — the
+    # Layer-7 build cross-checks the two and raises if they ever drift apart.
+    engine_key: rr
+    output_field: candle_polarity
+    output_semantic: candle_structure_quality
+    rr_fusion_active: false      # machine-readable twin of the F-038 prose below;
+                                 # == engine_runner.rr_fusion.enabled in the ACTIVE_VERSION config
+    pit_provenance: "models/rr_model.provenance.json — PIT_UNCLEAN (centered_swings + global_batch_volatility_regime training era; F-051/FC1-A/FC1-D); base RREngine geometry unaffected (close/high/low only)"
 
   evidence:
     findings: [F-038]
@@ -518,6 +818,196 @@ rr_model:
       production: src/governance/promotion_manager.py
 
   status: active   # base RR active; rr_fusion disabled
+
+  # WHO v2.3 — selected trained rr_fusion, NOT enabled (F-038); polarity engine is separate
+  identity:
+    authority: mirror_of_registry
+    family: rr_fusion
+    registry: models/rr_registry.json
+    selection:
+      version: 202605_bnb_v2_bnbusdt
+      registry_id: rr:202605_bnb_v2_bnbusdt
+      feature_schema_dim: 38          # CORRECTED 2026-07-23 (CH-rr-registry-dim-38): mirrors the
+                                      # registry, which was realigned to the artifact's own
+                                      # n_features:38 / feature_schema:"canonical_38".
+      trained_on: [BNBUSDT]
+      trainer: rr_pattern_miner
+      trained_at: "2026-05-24T06:34:26Z"
+      selected_at: null
+    execution:
+      runtime_enabled: false             # == engine_runner.rr_fusion.enabled (F-038)
+      uses_trained_checkpoint: false     # not loaded on spine when disabled
+      polarity_engine_wired: true        # geometric RREngine still fusion-weighted
+      decision_reachable: false
+    identity_status: selected_not_enabled
+    how_path_ref:
+      config_section: engine_runner
+      config_key: rr_fusion.model_path
+      expected_value: models/rr_model.json
+    runtime_binding:
+      config_version: v2_multi_2026_04
+      compatibility:
+        feature_schema_dim: 38         # CORRECTED 2026-07-23 (CH-rr-registry-dim-38)
+
+# ───────────────────────────────────────────────────────────────────
+# 5b. TRADENET — Fusion neural slot (UNWIRED; F-005)
+# ───────────────────────────────────────────────────────────────────
+tradenet:
+  intent:
+    question: "What is the capital quality of this setup?"
+    description: >
+      TradeNet binary / multi-head classifier over canonical features. Built and
+      registered, but not injected as FusionEngine.neural_fn on the live spine (F-005).
+
+  runtime:
+    engine: TradeNetMetaEngine / TradeNetV2
+    file: src/engines/tradenet_meta_engine.py
+    active: false
+    participates_in_live_spine: false
+    wiring: unwired
+    engine_key: null                   # F-005 — unwired fusion neural slot
+    output_field: null
+    output_semantic: capital_quality_score
+
+  evidence:
+    findings: [F-005]
+    conflicts: []
+    hypotheses: []
+    validated: false
+    notes: "AUDITED lineage; wire-up only via TN_QUAL_V1 — no authority today."
+
+  reachability:
+    config_sections: [engine_runner]
+    telemetry: []
+    tests: [tests/test_active_models_registry.py]
+    topics: [docs/topics/model-intent-and-feature-ownership.md]
+    framework_ids: []
+
+  optimization:
+    authority: "none — descriptive; see CLAUDE.md §6.5 (tunability ≠ authority; promotion only via M4 QualificationGate + PromotionManager)"
+    tunable_class: BEHAVIORAL
+    config_sections: [engine_runner]
+    frozen_structural: "neural_fn injection point on FusionEngine — unwired (§6.5 STRUCTURAL until TN_QUAL_V1)"
+    census: docs/research-readiness/behavior-census-report.md
+    promotion_standard:
+      research: src/research/qualification.py
+      production: src/governance/promotion_manager.py
+
+  status: orphaned
+
+  identity:
+    authority: mirror_of_registry
+    family: tradenet
+    registry: models/tradenet_registry.json
+    selection:
+      version: v5_auto_2026_06_eth
+      registry_id: tradenet:v5_auto_2026_06_eth
+      feature_schema_dim: 35
+      trained_on: [ETHUSDT]
+      trainer: train_pipeline
+      trained_at: "2026-05-19T07:54:18Z"
+      selected_at: null
+    execution:
+      runtime_enabled: false
+      uses_trained_checkpoint: false
+      decision_reachable: false
+    identity_status: selected_not_enabled
+    how_path_ref: null
+    runtime_binding:
+      config_version: v2_multi_2026_04
+      compatibility:
+        feature_schema_dim: 35
+
+# ───────────────────────────────────────────────────────────────────
+# 5c. ENVELOPE (EnvelopeNet) — post-entry price–time operating envelope
+#     TRAINED but UNWIRED / RESEARCH-ONLY. No registry, no config section,
+#     no identity block (models/envelope_registry.json does not exist).
+# ───────────────────────────────────────────────────────────────────
+envelope:
+  intent:
+    question: "What price–time operating envelope does this trade live in after entry?"
+    description: >
+      EnvelopeNet forecasts the realistic post-entry operating BOX — excursion (MFE/MAE),
+      holding duration, time-to-MFE — so Fusion / Decision / Planner can reason about
+      BOUNDARIES rather than outcomes. Non-duplication contract vs TradeNet is part of the
+      design: TradeNet owns discrete milestone PROBABILITIES, EnvelopeNet owns continuous
+      BOUNDS — no p_win / p_tp1 / p_tp2 head may ever appear on this surface. Design
+      authority: docs/architecture/envelope-layer-design.md (ENV_ARCH_V1); narrative entry
+      docs/architecture/model-design-intent.md §8b.
+
+  runtime:
+    engine: null                       # no runtime class — nothing constructs it
+    active: false
+    participates_in_live_spine: false
+    wiring: unwired
+    engine_key: null                   # no runtime class exists to produce a result
+    output_field: null
+    output_semantic: post_entry_envelope_bounds
+    instrument_scope: [BNBUSDT]
+    feature_contract: canonical_38_vector
+    heads: [mfe_r, mae_r_heat, holding_bars, time_to_mfe]
+    head_form: point_estimates         # 4 POINT heads — NO q50/q80 quantiles were trained, so the
+                                       # design's tp_band_r / sl_band_r / ttl_bars derivations are
+                                       # NOT constructible from this artifact (ENV_ARCH_V1 §4.3-4.4)
+    artifact: results/envelope_offline/BNBUSDT/20260721T224101Z/envelope_bundle.json
+    charter_id: ENV_OFFLINE_TRAIN_V1
+    dataset_protocol: TN_ENV_CLEAN_L2
+    label_authority: "forward_walk / horizon_excursion (never the F-022 opportunity stream)"
+    pit_status: PIT_UNCLEAN_STORED_FEATURES   # bundle-declared; GATE-P FORBIDDEN until a causal re-dataset
+    code:
+      - src/research/clean_labels/builder.py:52 · BuildResult
+      - src/research/envelope_offline/train.py:109 · load_l2_matrix
+      - src/research/envelope_offline/shadow.py:90 · predict_heads
+
+  evidence:
+    findings: [F-005, F-022, F-024]
+    conflicts: []
+    hypotheses: []
+    validated: false
+    notes: >
+      TRAINED ≠ VALIDATED ≠ AUTHORIZED. The offline run reports SIGNAL_RETAINED on Spearman IC
+      (retain floor 0.1): holding_bars 0.306 · time_to_mfe 0.203 · mfe_r 0.186 · mae_r_heat 0.184.
+      A read-only audit of that evidence (2026-07-22) found FOUR unresolved defects, recorded here
+      so this row cannot be read as validation:
+      (1) MIRRORED POPULATION — the dataset emits every bar TWICE (69,971 bars → 139,942 rows, one
+      long + one short) with a BYTE-IDENTICAL feature_vector and mirrored targets, and `side` is
+      NOT a model input (loaded at train.py:163 but used only to slice test metrics; feature_names
+      == CANONICAL_FEATURES). 66.9% of mfe_r/mae_r_heat variance is therefore within-pair and
+      structurally unlearnable (max R² ceiling 0.331); observed test R² is NEGATIVE (−0.124 /
+      −0.065). The two heads with positive R² (holding_bars +0.082, time_to_mfe +0.047) are the
+      direction-INVARIANT ones.
+      (2) METRIC/PRODUCT MISMATCH — acceptance is rank-only (IC), but the product is LEVELS in R;
+      a rank cannot place a stop or a target.
+      (3) NO NULL CONTROL — single-feature volatility baselines recover most of the reported skill
+      (atr |IC| 0.160 vs model 0.186 on mfe_r; volatility_ratio 0.194 vs 0.306 on holding_bars).
+      GATE-O compared linear vs nonlinear but never against a volatility control, so the signal is
+      not separated from the vol-memory axis already ruled non-consumable by F-030/F-043.
+      (4) WRONG GROUND TRUTH FOR A STOP — mae_r_heat derives from EXIT-AGNOSTIC horizon_excursion
+      (mean ≈3.85R against a 1R stop distance), so it cannot source sl_band_r; the governed-exit
+      column (path_mae_r_heat) exists in every row but is unused as a label.
+      Consequently: no fusion weight, no planner consumption, no registry promote, no spine wire.
+
+  reachability:
+    config_sections: []         # no envelope_net key on the ACTIVE_VERSION config — by design (ENV-P gate)
+    telemetry: []               # shadow writes results/envelope_shadow/, not a logs/ EventType stream
+    tests:
+      - tests/research/test_clean_labels_tn_env.py
+      - tests/research/test_envelope_offline_train.py
+      - tests/research/test_envelope_shadow_w0.py
+    topics: []                  # no dedicated topic doc; narrative in docs/architecture/model-design-intent.md §8b
+    framework_ids: []
+
+  optimization:
+    authority: "none — descriptive; see CLAUDE.md §6.5 (tunability ≠ authority; promotion only via M4 QualificationGate + PromotionManager)"
+    tunable_class: BEHAVIORAL
+    config_sections: []
+    frozen_structural: "38-dim canonical input contract + 4-head output shape — frozen until ENV_QUAL_V1"
+    census: docs/research-readiness/behavior-census-report.md
+    promotion_standard:
+      research: src/research/qualification.py
+      production: src/governance/promotion_manager.py
+
+  status: experimental
 
 # ───────────────────────────────────────────────────────────────────
 # 6. STRATEGY MODULES (S1–S10) — ⚠ ORPHANED SIDECAR, NOT THE LIVE SPINE
@@ -584,21 +1074,36 @@ engine_runner:
     description: "Four mandatory engines run per candle, fused, then a single decision authority emits execute/reject."
 
   runtime:
-    file: src/core/engine_runner.py:144                     # detect_regime / breakout :159 / trap :183
+    file: src/core/engine_runner.py:150 · detect_regime      # breakout_engine :165 / trap_engine :189
     engines: [crt, gaussian, zone_gate, rr]
     decision_authority: "DecisionEngine (sole emitter of 'execute' or 'reject')"
     pipeline: "EngineRunner → FusionEngine → DecisionEngine → ExecutionPlanner → UltronRiskGate"
     fusion_gate:
-      backtest: OFF        # .env BACKTEST_ENGINE_GATE=0 — research spine is CRT-only (F-037)
+      backtest: ON         # config-declared backtest.engine_gate_enabled=true (F-058, 2026-07-23);
+                            # F-037's gate-OFF corpus (research spine CRT-only) stays valid for its
+                            # own epoch. Env BACKTEST_ENGINE_GATE, if set, is an explicit override
+                            # only — the config value above is the epoch of record.
       live: ON             # live path always runs the 4-engine fusion gate
+    dual_engine_thresholds:
+      # F-061: TUNABLE but INERT on crypto. detect_regime compares |ema_spread| / |momentum_score|
+      # (FM-022/FM-023) against these, but those identities are price-scaled (legacy == corrected
+      # * close), so on BNB/BTC the emitted magnitudes are 10^2-10^4 and both comparisons are
+      # trivially satisfied: regime == "trend" on 98.86% / 99.94% of bars and breakout_engine's
+      # score is pinned at 1.0 on ~100%. Binding only where close ~ 1 (FX). Sweeping these on
+      # crypto could not have moved anything. Corrected identities FM-030/031 exist and are
+      # config-selectable (feature_pipeline.normalization_basis) but stay active: false.
+      trend_strength_threshold: 0.15
+      momentum_threshold: 0.3
+      binding_on: [FX]
+      inert_on: [CRYPTO]
     active: true
 
   evidence:
-    findings: [F-037, F-038]
+    findings: [F-037, F-038, F-061]
     conflicts: []
     hypotheses: [H-001]
     validated: true
-    notes: "Gate OFF in backtests / ON live (F-037). Fusion runs CRT+Gaussian+ZoneGate+base-RR after F-038 disable."
+    notes: "Gate OFF in backtests / ON live (F-037). Fusion runs CRT+Gaussian+ZoneGate+base-RR after F-038 disable. F-061: the dual_engine regime/breakout layer is DEGENERATE on crypto (constant regime label, saturated breakout score) because its two inputs carry the FM-022/023 dimensional mix; descriptive only, no authority."
 
   reachability:
     config_sections: [engine_runner, fusion_engine, decision_engine]
@@ -676,3 +1181,72 @@ philosophy:
       execution model, not predictability. Intent ≠ evidence.
 
   status: architectural_intent
+
+# ───────────────────────────────────────────────────────────────────
+# FEATURE LINEAGE — OHLCV -> formula -> CRT-state -> consumer -> fusion weight
+# ───────────────────────────────────────────────────────────────────
+# Machine-readable companion to docs/topics/model-intent-and-feature-ownership.md
+# ("Feature Lineage Matrix"). Branch-scoped to configs/production/ACTIVE_VERSION
+# (v2_multi_2026_04, §4.0). authority: none (§6.5) — descriptive lineage, never a
+# promotion/authority signal. `role` = structural (drives a CRT hard gate) | advisory
+# (soft/regime/gaussian contribution) | unused (reaches the decision only via the
+# non-pivotal ZoneGate full-vector contract or is inert on the active config).
+# Provenance lines index src/features/feature_pipeline.py unless noted. Guard:
+# tests/test_active_models_registry.py (feature_lineage block). Code is authority.
+feature_lineage:
+  config: v2_multi_2026_04
+  authority: none
+  human_source: docs/topics/model-intent-and-feature-ownership.md
+  canonical_schema: src/features/feature_schema.py   # CANONICAL_FEATURES order
+  candle_geometry_primitive: src/features/candle_math.py
+  fusion_weights: {crt: 0.4, gaussian: 0.2, zone_gate: 0.2, rr: 0.2}   # active fusion_engine; LIVE-path only (fusion OFF in backtests, F-037)
+  role_counts: {structural: 11, unused: 20, advisory: 8}
+  pit_note: >
+    2026-07-11 (F-051 / FC1-A / FC1-D): production publication for the 10-dim structure closure
+    (double_sweep, sweep_detected, liquidity_sweep, break_of_structure, swing_high, swing_low,
+    higher_high, lower_low, liquidity_distance, liquidity_pressure_score) is CAUSAL DELAYED
+    (centered pivot shifted k=SWING_WINDOW=2; batch=src/features/feature_pipeline.py
+    compute_structure_liquidity, live=src/features/causal_structure.py via FeatureStore) —
+    centered identities remain research-only *_centered_batch columns. volatility_regime is
+    ROLLING_CAUSAL N=200 (FC1-D); global rank is research-only volatility_regime_global_batch.
+    rr_model/zone_registry were TRAINED pre-change: PIT_UNCLEAN (models/*.provenance.json).
+  features:
+  - {index: 0, name: open, ohlcv: "o", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: "body_size geometry", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 1, name: high, ohlcv: "h", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: "sweep/wick geometry", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: "polarity"}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 2, name: low, ohlcv: "l", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: "sweep/wick geometry", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: "polarity"}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 3, name: close, ohlcv: "c", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: "sweep/retest/disp", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: "polarity"}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 4, name: volume, ohlcv: "v", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 5, name: volume_ratio, ohlcv: "v", formula: "vol/vol_ma20 (FX range proxy)", provenance: {file: src/features/feature_pipeline.py, line: 202}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 6, name: double_sweep, ohlcv: "h,l,c", formula: "both +/- liquidity_sweep in 5-bar window", provenance: {file: src/features/feature_pipeline.py, line: 537}, crt_state: "RETEST", consumers: {crt: "soft sweep-bonus", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: advisory}
+  - {index: 7, name: ema_fast, ohlcv: "c", formula: "EWM(close, span=9)", provenance: {file: src/features/feature_pipeline.py, line: 486}, crt_state: null, consumers: {crt: "CRT uses own EMA(2,5)", gaussian: "momentum vote", zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "gaussian:0.2", role: advisory}
+  - {index: 8, name: ema_slow, ohlcv: "c", formula: "EWM(close, span=21)", provenance: {file: src/features/feature_pipeline.py, line: 487}, crt_state: null, consumers: {crt: false, gaussian: "momentum vote", zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "gaussian:0.2", role: advisory}
+  - {index: 9, name: ema_spread, ohlcv: "c", formula: "(ema_fast-ema_slow)/atr", provenance: {file: src/features/feature_pipeline.py, line: 491}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "regime_routing", role: advisory}
+  - {index: 10, name: trend_bias, ohlcv: "c", formula: "sign(ema_fast-ema_slow)", provenance: {file: src/features/feature_pipeline.py, line: 506}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "regime_routing", role: advisory}
+  - {index: 11, name: trend_strength, ohlcv: "c", formula: "rollmean(slope(ma20),10)", provenance: {file: src/features/feature_pipeline.py, line: 296}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 12, name: momentum_score, ohlcv: "c", formula: "close.diff()/atr", provenance: {file: src/features/feature_pipeline.py, line: 497}, crt_state: null, consumers: {crt: "intent-classification", gaussian: "momentum vote", zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "gaussian:0.2", role: advisory}
+  - {index: 13, name: atr, ohlcv: "h,l,c", formula: "ATR(14)/close", provenance: {file: src/features/feature_pipeline.py, line: 462}, crt_state: "+BitNet(off)", consumers: {crt: "disp/retest/SL-TP", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 14, name: volatility_ratio, ohlcv: "h,l,c", formula: "(high-low)/(atr*close)", provenance: {file: src/features/feature_pipeline.py, line: 476}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "regime_routing", role: advisory}
+  - {index: 15, name: rsi_14, ohlcv: "c", formula: "Wilder 100-100/(1+RS)", provenance: {file: src/features/feature_pipeline.py, line: 251}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 16, name: macd_line, ohlcv: "c", formula: "EMA12(close)-EMA26(close)", provenance: {file: src/features/feature_pipeline.py, line: 281}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 17, name: macd_signal, ohlcv: "c", formula: "EMA9(macd_line)", provenance: {file: src/features/feature_pipeline.py, line: 282}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 18, name: macd_hist_raw, ohlcv: "c", formula: "macd_line-macd_signal (v4.0: RAW, no longer overwritten in place)", provenance: {file: src/features/feature_pipeline.py, line: 283}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 19, name: macd_hist_z, ohlcv: "c", formula: "rolling(zscore_window) z-score of macd_hist_raw — the value v3.0 emitted under the name macd_hist", provenance: {file: src/features/feature_pipeline.py, line: 283}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 20, name: sweep_detected, ohlcv: "h,l,c", formula: "1 if liquidity_sweep != 0", provenance: {file: src/features/feature_pipeline.py, line: 515}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "regime_routing", role: advisory}
+  - {index: 21, name: liquidity_sweep, ohlcv: "h,l,c", formula: "+/-1 close vs ref swing (->double_sweep)", provenance: {file: src/features/feature_pipeline.py, line: 409}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 22, name: break_of_structure, ohlcv: "c", formula: "+/-1 close vs ref swing (->liq_distance)", provenance: {file: src/features/feature_pipeline.py, line: 404}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 23, name: swing_high, ohlcv: "h", formula: "CAUSAL DELAYED pivot flag (centered rollmax(5) shifted k=2; FC1-A/F-051 — F-029 gate-OFF ledger unchanged)", provenance: {file: src/features/feature_pipeline.py, line: 441}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 24, name: swing_low, ohlcv: "l", formula: "CAUSAL DELAYED pivot flag (centered rollmin(5) shifted k=2; FC1-A)", provenance: {file: src/features/feature_pipeline.py, line: 442}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 25, name: higher_high, ohlcv: "h", formula: "high>last_swing_high.shift(1)", provenance: {file: src/features/feature_pipeline.py, line: 393}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 26, name: lower_low, ohlcv: "l", formula: "low<last_swing_low.shift(1)", provenance: {file: src/features/feature_pipeline.py, line: 395}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 27, name: body_size, ohlcv: "o,c", formula: "abs(close-open) == candle_math.body_size", provenance: {file: src/features/feature_pipeline.py, line: 443}, crt_state: null, consumers: {crt: "->body_ratio", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 28, name: candle_range, ohlcv: "h,l", formula: "high-low == candle_math.candle_range (v4.0 rename of wick_size — always was the range, never a wick)", provenance: {file: src/features/feature_pipeline.py, line: 444}, crt_state: null, consumers: {crt: "->body_ratio/disp", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 29, name: body_ratio, ohlcv: "o,h,l,c", formula: "body_size/candle_range == candle_math.body_ratio", provenance: {file: src/features/feature_pipeline.py, line: 446}, crt_state: "RETEST", consumers: {crt: "displacement gate >=0.70", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 30, name: volatility_regime, ohlcv: "h,l,c", formula: "ROLLING_CAUSAL ATR-percentile terciles {0,1,2}, N=200 (FC1-D; global rank research-only)", provenance: {file: src/features/feature_pipeline.py, line: 343}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 31, name: session, ohlcv: "ts", formula: "v4.0 window model {ASIA,LONDON,NEWYORK,OVERLAP,CLOSED} — features/session_classifier.py", provenance: {file: src/features/feature_pipeline.py, line: 341}, crt_state: "RETEST", consumers: {crt: "session filter (binding lever)", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 32, name: hour_of_day, ohlcv: "ts", formula: "timestamp.hour", provenance: {file: src/features/feature_pipeline.py, line: 338}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 33, name: disp_strength, ohlcv: "h,l,c", formula: "body_size/(atr*close) clip[0,3]", provenance: {file: src/features/feature_pipeline.py, line: 559}, crt_state: "RETEST", consumers: {crt: "displacement ceiling", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 34, name: retest_depth, ohlcv: "c", formula: "abs(close-ema_fast)/(atr*close) clip[0,1]", provenance: {file: src/features/feature_pipeline.py, line: 573}, crt_state: "RETEST", consumers: {crt: "retest gate (min/ceiling)", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 35, name: candles_since_retest, ohlcv: "-", formula: "bars since last sweep", provenance: {file: src/features/feature_pipeline.py, line: 588}, crt_state: "+BitNet(off)", consumers: {crt: "BitNet-only -> OFF", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 36, name: liquidity_distance, ohlcv: "h,l,c", formula: "min dist to ref/BOS / atr", provenance: {file: src/features/feature_pipeline.py, line: 599}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 37, name: liquidity_pressure_score, ohlcv: "h,l,c", formula: "exp(-0.5*liquidity_distance)", provenance: {file: src/features/feature_pipeline.py, line: 648}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 38, name: volume_spike, ohlcv: "v", formula: "vol_ratio>rolling-75pctile(50)", provenance: {file: src/features/feature_pipeline.py, line: 654}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}

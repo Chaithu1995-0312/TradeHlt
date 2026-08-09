@@ -69,7 +69,7 @@ def _make_full_state() -> EngineState:
         close=2020.0, open=2025.0, high=2030.0, low=2018.0
     )
     state.direction = Direction.LONG
-    state.atr       = 15.0
+    state.atr_abs       = 15.0
     state.risk_score = None          # → risk_pct fallback path (0.005)
     state.cached_features = {
         # Intent routing via _derive_trade_intent → "reversal"
@@ -162,7 +162,7 @@ class TestBuildTradeGuards:
         Documents that atr = 0.0 is not a safe default for execution.
         """
         state = _make_full_state()
-        state.atr = 0.0
+        state.atr_abs = 0.0
         # sl = 2000.0 - 0.2 * 0.0 = 2000.0, entry = 2020.0 → sl < entry → valid LONG
         # This may or may not reject depending on geometry; assert no crash.
         result = _make_engine().build_trade(state)

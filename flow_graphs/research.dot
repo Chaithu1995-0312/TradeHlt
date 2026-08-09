@@ -24,13 +24,18 @@ digraph flow_research {
     "research.exit_grid" [style="dashed", fontcolor="#888888"];
     "research.forensics" [style="dashed", fontcolor="#888888"];
     "research.hypotheses" [style="dashed", fontcolor="#888888"];
+    "research.hypotheses.compression_box_straddle" [style="dashed", fontcolor="#888888"];
+    "research.hypotheses.compression_breakout" [style="dashed", fontcolor="#888888"];
     "research.hypotheses.expansion_breakout" [style="dashed", fontcolor="#888888"];
     "research.hypotheses.mean_reversion" [style="dashed", fontcolor="#888888"];
     "research.hypotheses.spine_hypothesis" [style="dashed", fontcolor="#888888"];
+    "research.hypotheses.weekly_sweep_reversal" [style="dashed", fontcolor="#888888"];
     "research.measurement" [style="dashed", fontcolor="#888888"];
     "research.measurement.metrics" [style="dashed", fontcolor="#888888"];
     "research.provenance" [style="dashed", fontcolor="#888888"];
     "research.regime_conditioning" [style="dashed", fontcolor="#888888"];
+    "research.synthetic.story_builder" [style="dashed", fontcolor="#888888"];
+    "research.zone_label_audit" [style="dashed", fontcolor="#888888"];
     "runtime.backtest_v2" [style="dashed", fontcolor="#888888"];
 
     // member -> member (intra-flow dependencies)
@@ -68,12 +73,18 @@ digraph flow_research {
     "research.forensics" -> "research.costs";
     "research.forensics" -> "research.measurement.forward_walk";
     "research.forensics" -> "research.registry";
+    "research.hypotheses.compression_box_straddle" -> "research.contracts";
+    "research.hypotheses.compression_box_straddle" -> "research.registry";
+    "research.hypotheses.compression_breakout" -> "research.contracts";
+    "research.hypotheses.compression_breakout" -> "research.registry";
     "research.hypotheses.expansion_breakout" -> "research.contracts";
     "research.hypotheses.expansion_breakout" -> "research.registry";
     "research.hypotheses.mean_reversion" -> "research.contracts";
     "research.hypotheses.mean_reversion" -> "research.registry";
     "research.hypotheses.spine_hypothesis" -> "research.contracts";
     "research.hypotheses.spine_hypothesis" -> "research.registry";
+    "research.hypotheses.weekly_sweep_reversal" -> "research.contracts";
+    "research.hypotheses.weekly_sweep_reversal" -> "research.registry";
     "research.measurement" -> "research.measurement.forward_walk";
     "research.measurement.metrics" -> "research.contracts";
     "research.measurement.metrics" -> "research.costs";
@@ -85,4 +96,8 @@ digraph flow_research {
     "research.runner" -> "research.measurement.metrics";
     "research.runner" -> "research.provenance";
     "research.runner" -> "runtime.backtest_v2";
+    "research.synthetic.story_builder" -> "research.contracts";
+    "research.synthetic.story_builder" -> "research.measurement.forward_walk";
+    "research.zone_label_audit" -> "research.contracts";
+    "research.zone_label_audit" -> "research.measurement.forward_walk";
 }

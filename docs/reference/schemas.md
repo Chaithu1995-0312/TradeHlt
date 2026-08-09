@@ -231,37 +231,44 @@ EXPECTED_ENGINES: set[str] = {"crt", "gaussian", "zone_gate", "rr"}
 
 ## 4. Feature Schema
 
-### 4.1 Canonical 38-dim vector — `src/features/feature_schema.py`
+### 4.1 Canonical 39-dim vector — `src/features/feature_schema.py`
 
-> Schema v3.0 = **38** features (the v2.0 core 35 at indices 0–34, preserved unchanged, plus three
-> v3.0 additions at indices 35–37). `SCHEMA_V2_FEATURE_DIM = 35` is the backward-compat sentinel
-> that models storing 35 features slice to. `feature_schema.py` is authoritative.
+> Schema v4.0 = **39** features. Corrected 2026-08-07 (was documented here as 38-dim/v3.0; code
+> moved to 39-dim/v4.0 in F-062, 2026-07-31 — this table had drifted, not the code). `feature_schema.py`
+> is authoritative; quote `CANONICAL_FEATURE_DIM` from the module, not a number from this doc.
+> `SCHEMA_V2_FEATURE_DIM = 35` and `SCHEMA_V3_FEATURE_DIM = 38` remain as backward-compat sentinels
+> for models storing an earlier layout.
 
 ```python
-CANONICAL_FEATURE_DIM = 38   # == len(CANONICAL_FEATURES); hard-asserted at import
+CANONICAL_FEATURE_DIM = 39   # == len(CANONICAL_FEATURES); hard-asserted at import
 
 CANONICAL_FEATURES: tuple[str, ...] = (
-    # ── indices 0–34 (v2.0, preserved unchanged) ─────────────────
-    "open", "high", "low", "close", "volume",
-    "volume_ratio",
-    "double_sweep",
-    "ema_fast", "ema_slow", "ema_spread",
-    "trend_bias", "trend_strength",
-    "momentum_score",
-    "atr", "volatility_ratio",
-    "rsi_14",
-    "macd_line", "macd_signal", "macd_hist",
-    "sweep_detected", "liquidity_sweep", "break_of_structure",
-    "swing_high", "swing_low", "higher_high", "lower_low",
-    "body_size", "wick_size", "body_ratio",
-    "volatility_regime",
-    "session", "hour_of_day",
-    "disp_strength", "retest_depth", "candles_since_retest",
-    # ── indices 35–37 (v3.0, NEW) ────────────────────────────────
-    "liquidity_distance", "liquidity_pressure_score", "volume_spike",
+    "open", "high", "low", "close", "volume",             # 0-4
+    "volume_ratio",                                        # 5
+    "double_sweep",                                         # 6
+    "ema_fast", "ema_slow", "ema_spread",                  # 7-9
+    "trend_bias", "trend_strength",                        # 10-11
+    "momentum_score",                                       # 12
+    "atr", "volatility_ratio",                             # 13-14
+    "rsi_14",                                               # 15
+    "macd_line", "macd_signal",                            # 16-17
+    "macd_hist_raw", "macd_hist_z",                        # 18-19 (v4.0: split from v3.0 "macd_hist")
+    "sweep_detected", "liquidity_sweep", "break_of_structure",  # 20-22
+    "swing_high", "swing_low", "higher_high", "lower_low", # 23-26
+    "body_size", "candle_range", "body_ratio",             # 27-29 (v4.0: "candle_range" renamed from v3.0 "wick_size")
+    "volatility_regime",                                    # 30
+    "session", "hour_of_day",                              # 31-32
+    "disp_strength", "retest_depth", "candles_since_retest",  # 33-35
+    "liquidity_distance", "liquidity_pressure_score", "volume_spike",  # 36-38
 )
 
 FEATURE_SCHEMA: dict[str, type]   # name → type (float | int | str | bool | dict)
+
+# Read-side only — decodes historical v3.0 records; never emitted by new code:
+SCHEMA_V3_ALIASES: dict[str, str] = {
+    "wick_size": "candle_range",
+    "macd_hist": "macd_hist_z",   # v3.0's single field was the z-scored value, not the raw diff
+}
 ```
 
 Changes to `CANONICAL_FEATURES` or `FEATURE_SCHEMA` **break backward compatibility** — baseline must be re-captured.
@@ -456,7 +463,7 @@ ProductionConfig = {
 ## 9. JSONL Audit Line Schemas
 
 Every JSONL line is self-contained. The `timestamp` + `kind` rule applies to **audit/event
-streams** (§9.1–9.4); **registry-class** JSONL (§9.5–9.6 and `data/framework_registry.jsonl`,
+streams** (§9.1–9.4); **registry-class** JSONL (§9.5–9.8 and `data/framework_registry.jsonl`,
 see `framework_registry_schema.md`) carries `created` / `last_validated` (or a static meta
 line) instead — registries are id-keyed truth projections, not time-ordered event logs.
 
@@ -598,6 +605,219 @@ defines **no** promotion thresholds; the only promotion path remains the M4
 `QualificationGate` (`src/research/qualification.py`) → `ConfigValidator` →
 `PromotionManager`. Enforced by a negative-guard test (no `promotion_requirements` /
 `min_delta*` / threshold keys can enter the schema).
+
+### 9.7 `configs/stack_epoch_log.jsonl` (Research Provenance Spine, Phase 0)
+
+Append-only, same discipline as `configs/promotion_log.jsonl` (§9.1) — never rewrite a line.
+Module: `src/config_layer/stack_version.py` (`compute_stack_version()` / `resolve_epoch()` /
+`append_epoch_record()`). Read-only; `authority: "NONE"` on every line — a `stack_epoch`
+changing is a fact about what ran, not permission to run it (§6.5).
+
+Names one composite identity over the four authorities (WHAT `market_ontology.yaml` / HOW
+`configs/production/*.json` / WHO `active_models.yaml` / EXECUTION `candle_math.py` +
+`derived_math.py` + `feature_schema.py`), so a result can cite *which stack produced it*.
+Two hashes, not one — `behavior_hash` covers only inputs that can move a trade ledger
+(active formulas via the ontology's `frozen_runtime_keys`, the whole production config file,
+schema/execution identity, and only *executing* model checkpoints per
+`production_bundle.load_production_bundle().executing_families()`); `provenance_hash` adds
+everything else worth auditing (all families regardless of execution status, full-file
+ontology/WHO hashes, `ProductionBundle.divergences`). Editing a `notes:`/`taxonomy:` block or
+swapping a disabled model's artifact moves `provenance_hash` only — `behavior_hash` stays
+byte-identical, which is what makes it safe to cite from a finding.
+
+```python
+StackEpochLine = {
+    "timestamp":            str,        # ISO-8601 UTC
+    "kind":                 str,        # "STACK_EPOCH" | "STACK_PROVENANCE"
+    "stack_epoch":          int,        # monotonic; increments ONLY on unseen behavior_hash
+    "behavior_hash":        str,        # sha256 hex
+    "provenance_hash":      str,        # sha256 hex
+    "active_version":       str,        # configs/production/ACTIVE_VERSION at capture time
+    "executing_families":   list[str],  # families with executes_checkpoint==True
+    "divergences":          list[str],  # ProductionBundle.divergences, reported not resolved
+    "authority":            "NONE",     # PINNED
+}
+```
+
+A `STACK_EPOCH` line mints a new `stack_epoch` (previously-unseen `behavior_hash`); a
+`STACK_PROVENANCE` line references the current epoch when only `provenance_hash` moved.
+`src/runtime/baseline_capture.py` embeds the same two hashes in its `stack_version` manifest
+block, and now resolves all 6 model families' artifact hashes through
+`load_production_bundle()` rather than 3 hardcoded registry paths — this fixed a real bug
+where it pinned `models/zone_registry.json` (the v3 rollback artifact) instead of the
+config-declared `zone_registry_path` (`models/zone_registry_v4_2026_07.json`), and a second
+where its `ROOT_DIR` (needed as `src/` for imports) was reused as the repo-root for file
+paths, silently nulling `config_sha256` and the registry counts. Guard: `tests/test_stack_version.py`.
+
+### 9.8 `data/script_registry.jsonl` (SITS — seeded; edit stubs/overlays, not the file)
+
+Script & Implementation Traceability System inventory. **PRIMARY** truth is hybrid:
+
+1. `docs/governance/script_registry_stubs.jsonl` — machine-owned bulk rows
+   (`python scripts/analysis/script_census.py --write-stubs …`; path-stable SCR ids).
+2. `scripts/governance/seed_script_registry.py` — curated **overlays** only (purpose /
+   category / status refinements).
+
+Generated projection: `data/script_registry.jsonl` (gitignored). Module:
+`src/governance/script_registry.py`; guard: `tests/test_script_registry.py`; query:
+`python scripts/governance/query_scripts.py --validate`. Design:
+`docs/implementation_plan/script-implementation-traceability-sits-design.md`.
+
+**Authority pinned:** `"authority": "inventory"` on every line — no promote / economic power
+(§6.5). **Lifecycle** is the sole terminal axis (`SUPERSEDED` / `DEAD` / `ARCHIVED`);
+`category` is role-only (no DEAD/SUPERSEDED categories).
+
+```python
+ScriptRecord = {
+    "id":                     str,   # SCR-NNN (zero-padded; never reuse)
+    "path":                   str,   # POSIX repo-relative
+    "category":               str,   # PROBE|DIAGNOSTIC|RESEARCH_RUNNER|CANONICAL_CLI|
+                                     # TRAINING|GOVERNANCE|DATA|MAINTENANCE|ORPHAN
+    "lifecycle":              str,   # ACTIVE|EPHEMERAL|SUPERSEDED|DEAD|ARCHIVED
+    "implementation_status":  str,   # LOGIC_IN_SCRIPT|EXTRACTED_TO_SRC|WIRED|REGISTERED|
+                                     # TESTED|CLOSED_EPHEMERAL|N_A|ACCEPTED_COLOCATED
+    "owner_kind":             str,   # HUMAN|AGENT|MIXED|UNKNOWN
+    "owner_ref":              str,
+    "purpose":                str,
+    "task_refs":              list[str],
+    "dest_modules":           list[str],
+    "tests":                  list[str],
+    "config_keys":            list[str],
+    "control_plane_id":       str | None,
+    "agent_tool_id":          None,  # reserved v1.1; non-null rejected in v1
+    "has_main":               bool,
+    "superseded_by":          str | None,  # required when lifecycle=SUPERSEDED
+    "created":                str,   # ISO-8601 UTC
+    "last_validated":         str,
+    "ttl_days":               int | None,  # null until Phase-4 debt curation
+    "logic_in_script":        bool,
+    "notes":                  str,   # DEAD requires non-empty; valid plan: dest_modules or
+                                     # wontfix:reason=…
+    "authority":              "inventory",  # PINNED
+}
+```
+
+PR-2 (Phase 1): full-universe stubs + grandfather pin + `script-matrix.md` + **path-coverage
+assert on GREEN_FLOOR** (`tests/test_script_registry.py`, `tests/test_script_matrix_sync.py`).
+PR-3 (Phase 2): **grandfather ratchet** — paths outside the pin need overlay classification
+(`purpose ≠ GRANDFATHER_UNCLASSIFIED`); change class `SCRIPT_LIFECYCLE_CHANGE`; construction
+completion fails if declared scripts omit the SITS floor.
+PR-4 (Phase 3): **CANONICAL_CLI ↔ CommandSpec** — seed reverse-maps curated control-plane
+scripts; parity floor + `script_canonical_allowlist.json` exceptions; no mass CommandSpec dump.
+PR-5 (Phase 4): **TTL debt gate** — calendar age vs `ttl_days`; only curated TTLs bind CI;
+`--missing-impl --jsonl` queue-shaped export; debt markdown via `--export-debt-report`.
+PR-6 (optional extract): SITS cores under `src/governance/script_{registry,census,seed}.py`;
+CLI wrappers thin; `implementation_status` TESTED/WIRED; spine non-import floor.
+Empty registry is only valid for offline unit fixtures — production inventory is the committed
+stubs set.
+
+### 9.9 `data/module_attribution.jsonl` (seeded; edit stubs/overlays, not the file)
+
+Governance-surface ownership for every `src/**/*.py`. Sibling of §9.8 — same enumerate →
+per-item status → ratchet shape, different denominator. Supports exactly one claim:
+
+> **100% ATTRIBUTED** = every `src/` module is claimed by exactly one surface.
+
+That is **not** "every surface is CLOSED". Statuses stay honestly mixed and advance only in
+`docs/governance/closure_authority_index.json`, never in this ledger.
+
+1. `docs/governance/module_attribution_stubs.jsonl` — machine-owned bulk rows
+   (`python scripts/analysis/module_census.py --write-stubs …`; path-stable MOD ids).
+2. Curated **overlays** supply `owner_surface` and any grade advance.
+
+Modules: `src/governance/module_attribution.py` (registry) + `src/governance/module_census.py`
+(discovery/merge); guard: `tests/test_module_attribution.py`.
+
+**Authority pinned:** `"authority": "inventory"` on every line (§6.5). `owner_surface` must
+resolve to a `surface_id` in the Closure & Authority Index, or be the `UNATTRIBUTED` sentinel.
+`participates_in` is **informational only** and never confers ownership — `CLOSURE IS
+BOUNDARY-SCOPED AND NON-TRANSITIVE`.
+
+```python
+ModuleAttributionRecord = {
+    "id":                     str,   # MOD-NNNN (zero-padded; never reuse)
+    "module_path":            str,   # POSIX repo-relative; unique across the ledger
+    "owner_surface":          str,   # surface_id | "UNATTRIBUTED"  (exactly one)
+    "participates_in":        list[str],  # surface_ids; informational, never ownership
+    "regime":                 str,   # DECISION|RESEARCH|PLATFORM|SUBSTRATE|
+                                     # MODEL_LINEAGE|TERMINAL|UNKNOWN
+    "grade":                  str,   # G0_ATTRIBUTED|G1_DECLARED|G2_AUDITED|G3_CLOSED
+    "reachability":           str,   # LIVE_DECISION|BACKTEST_ONLY|TOOLING|
+                                     # RESEARCH_ONLY|ORPHANED|UNKNOWN
+    "economically_validated": bool,  # per-module; requires grade G2/G3 to be true
+    "evidence":               list[dict],  # {path, symbol, type}
+    "created":                str,   # ISO-8601 UTC
+    "last_validated":         str,
+    "notes":                  str,
+    "authority":              "inventory",  # PINNED
+}
+```
+
+Two enforcement axes, deliberately separated. **Enumeration** (every module present exactly
+once) is HARD from Phase 1 — a drifting denominator makes any percentage meaningless.
+**Attribution** is a monotonic ratchet (`_ATTRIBUTED_FLOOR` in the guard test) so progress
+cannot regress; Phase 4 raises the floor to the full module count and the 100% claim becomes
+permanent. Only the `DECISION` regime is expected to pursue G2/G3 — a floor asserts that set
+stays a small minority of `src/`.
+
+### 9.10 `data/semantic_os/file_identities.jsonl` (Semantic File Identity Layer)
+
+Rename-stable identity for one Python module: `semantic_id (this line's "id") -> semantic_name ->
+physical_path`, plus a `filename_semantic_status` classification of whether the physical filename
+still matches what the module does. Sixth first-class Semantic OS record kind (`kind:
+"file_identity"`) — see `docs/governance/SEMANTIC_OS_V1_DESIGN.md` §3.1 and
+`docs/governance/SEMANTIC_FILE_IDENTITY_REPORT.md`.
+
+Tier 1/2 (`provenance: "CURATED"`) are hand-authored in `docs/governance/semantic_os/
+file_identities.yaml`; Tier 3 (`provenance: "DERIVED"`) is generated at seed time by
+`governance.semantic_identity.derive_tier3_identities` for every remaining code-universe path and
+is **never** written to the YAML. Both land in this one GENERATED projection, produced by
+`scripts/governance/seed_semantic_os.py`; validator: `src/governance/semantic_os.py
+::_validate_file_identity`; guard: `tests/test_semantic_identity.py`.
+
+**Authority pinned:** `"authority": "advisory"` on every line (§6.5) — grants no rename or
+production authority. `physical_path` is never renamed by this layer.
+
+```python
+FileIdentityRecord = {
+    "id":                        str,   # dotted lowercase slug, e.g. "engines.candle_polarity_scorer"
+    "kind":                      "file_identity",  # PINNED
+    "semantic_name":             str,   # human display name, e.g. "Candle Polarity Scorer"
+    "physical_path":             str,   # POSIX repo-relative .py path; not under tests/
+    "status":                    str,   # ACTIVE|PROPOSED|SUPERSEDED|RETIRED
+    "authority":                 "advisory",  # PINNED
+    "tier":                      int,   # 1=hand-verified HIGH | 2=boundary-backed MEDIUM | 3=derived LOW
+    "confidence":                str,   # HIGH|MEDIUM|LOW (moves with tier)
+    "provenance":                str,   # CURATED|DERIVED (moves with tier)
+    "derivation":                str | None,  # null if CURATED; "path_slug/v1[#dedupN]" if DERIVED
+    "canonical":                 bool,  # exactly one true per physical_path
+    "role":                      str,   # CANONICAL|ADAPTER|SHIM|SPLIT_PART|DEAD|UNKNOWN
+    "semantic_layer":            str,   # MARKET_STRUCTURE|FEATURE_SURFACE|SCORING|DECISION|RISK|
+                                        # EXECUTION|RUNTIME|DATA|CONFIG|GOVERNANCE|RESEARCH|AGENT|
+                                        # INTEGRATION|UTILITY|UNCLASSIFIED
+    "filename_semantic_status":  str,   # ALIGNED|HISTORICAL|MISLEADING|COMPATIBILITY|SPLIT|UNKNOWN
+    "filename_status_reason":    str,   # non-empty for CURATED rows
+    "aliases":                   list[str],  # empty for Tier 3 (no reviewed alias claim)
+    "concept_ids":               list[str],  # CN-NNN FK, optional
+    "miar_entry":                str | None,  # the only hand-authored cross-link
+    "summary_50":                str,   # <= SUMMARY_50_MAX chars; empty allowed only if DERIVED
+    "why_this_identity":         str,   # empty REQUIRED if DERIVED (unreviewed)
+    "evidence":                  list[dict],  # {path, symbol, line, type}; ±30-line drift checked
+    "supersedes":                str | None,
+    "superseded_by":             str | None,
+    "created":                   str,   # ISO-8601 UTC, pinned at seed time
+    "last_validated":            str,
+    "schema_version":            "semantic_os/1.1",
+}
+```
+
+Deliberately **excluded** (DERIVED exact-path joins computed in `src/governance/
+semantic_objects.py`, never hand-authored on this kind): `owner_boundary`, `encyclopedia_id`,
+`script_registry_id`, `imports`, `imported_by`, `tests_importing`. The same five joins are
+attached to `OBJ:<path>` records as `semantic_id` / `semantic_name` /
+`filename_semantic_status` / `identity_tier` / `identity_provenance` (evidence class `HEURISTIC`
+for the first three, `PROVEN` for the last two — see `FIELD_EVIDENCE_CLASS` in
+`semantic_objects.py`).
 
 ---
 

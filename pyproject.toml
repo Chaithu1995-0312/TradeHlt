@@ -28,3 +28,17 @@ mt5_analytics = [
 [tool.pytest.ini_options]
 pythonpath = ["src", "scripts", "."]
 testpaths = ["tests"]
+# ERP testing-plan markers (§3.1). Additive vocabulary only — NO --strict-markers
+# (the full suite carries known F-018 reds; strict mode would break collection).
+markers = [
+  "unit: pure logic, no network",
+  "contract: golden/schema/determinism",
+  "research_integrity: validation-path and label integrity",
+  "market_network: read-only live market HTTP",
+  "broker_mt5_ro: requires running MT5 terminal, read-only",
+  "exec_dry_run: MT5/Telegram dry_run paths",
+  "ui_playwright: control plane browser E2E",
+  "shadow_economic: owner-gated shadow measurement",
+  "capital_micro: owner-gated real capital — never default",
+  "slow: long-running",
+]

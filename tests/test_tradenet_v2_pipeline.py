@@ -164,7 +164,8 @@ def test_input_matrix_is_38_dim():
     recs = [{"features": dict(feats)} for _ in range(5)]
     X = build_input_matrix(recs)
     assert X.shape == (5, INPUT_DIM)
-    assert INPUT_DIM == 38
+    # 39 under schema v4.0 (was 38 pre-2026-07-22 SCHEMA-V4-VECTOR-MIGRATION).
+    assert INPUT_DIM == 39
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -176,8 +177,12 @@ def test_v2_envelope_predict_composite_formula(tmp_path):
     from features.feature_schema import CANONICAL_FEATURES
     from training.trade_net_v2 import TradeNetV2, COMPOSITE_WEIGHTS
 
+    # Dimension is derived from CANONICAL_FEATURES (39 under schema v4.0), not a hardcoded
+    # literal -- a hardcoded "38" here would silently desync from feature_names below the
+    # moment the schema migrates again (as it already did once, 2026-07-22).
+    n_feat = len(CANONICAL_FEATURES)
     np.random.seed(0)
-    W1 = (np.random.randn(32, 38) * 0.1).astype(np.float32)
+    W1 = (np.random.randn(32, n_feat) * 0.1).astype(np.float32)
     W2 = (np.random.randn(16, 32) * 0.1).astype(np.float32)
     Wt1 = (np.random.randn(1, 16) * 0.1).astype(np.float32)
     Wt2 = (np.random.randn(1, 16) * 0.1).astype(np.float32)
@@ -185,13 +190,13 @@ def test_v2_envelope_predict_composite_formula(tmp_path):
 
     envelope = {
         "schema_version": "tradenet_v2",
-        "feature_dim": 38,
+        "feature_dim": n_feat,
         "feature_order_hash": hashlib.sha256(
             json.dumps(list(CANONICAL_FEATURES)).encode()
         ).hexdigest()[:16],
         "feature_names": list(CANONICAL_FEATURES),
         "trunk": [
-            {"type": "linear", "in": 38, "out": 32,
+            {"type": "linear", "in": n_feat, "out": 32,
              "weight": W1.tolist(), "bias": [0.0] * 32},
             {"type": "relu"},
             {"type": "linear", "in": 32, "out": 16,
@@ -203,7 +208,7 @@ def test_v2_envelope_predict_composite_formula(tmp_path):
             "p_tp2":         {"weight": Wt2.tolist(), "bias": [0.0]},
             "p_survives_be": {"weight": Wbe.tolist(), "bias": [0.0]},
         },
-        "scaler": {"mean": [0.0] * 38, "std": [1.0] * 38},
+        "scaler": {"mean": [0.0] * n_feat, "std": [1.0] * n_feat},
         "metadata": {"instrument": "TEST", "version": "v2_test"},
     }
     p = tmp_path / "v2.json"

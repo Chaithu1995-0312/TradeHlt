@@ -1,18 +1,23 @@
 {
  "_doc": "F-049 Gate-2B FAMILY + IMPLEMENTATION_VARIANT registries (derived from the adjudication artifact).",
  "family_count": 22,
- "variant_count": 55,
+ "variant_count": 61,
  "families": {
   "FAM-12-F2-RANGE": {
    "family_id": "FAM-12-F2-RANGE",
    "member_site_ids": [
     "GEO-D-8a09b98126",
     "GEO-D-11d525bf85",
+    "GEO-D-40f9d890da",
+    "GEO-D-77f3562935",
+    "GEO-D-6e883742d7",
     "GEO-D-04c39c21b8",
     "GEO-D-94e9f2e210",
+    "GEO-D-0d8ab24cb2",
     "GEO-D-8563f0c6b3",
     "GEO-D-8b76a85166",
     "GEO-D-05b0146bf1",
+    "GEO-D-d29ce158c8",
     "GEO-D-1c579312c3",
     "GEO-D-5db26218e2",
     "GEO-D-c870a80178",
@@ -20,17 +25,30 @@
     "GEO-D-ba2ff1bf63",
     "GEO-D-ad53ad5697",
     "GEO-D-d711a57aa8",
+    "GEO-D-872d20a75e",
+    "GEO-D-f80cc5f083",
     "GEO-D-ca7b9aad4e",
     "GEO-D-b097d7e4ec",
     "GEO-D-ce0288a17a",
     "GEO-D-cff53a8f24",
     "GEO-D-e169fbf3cf",
+    "GEO-D-ffc903aa56",
     "GEO-D-a4c94fbb85"
    ],
    "variants": {
     "V-window-mean": [
      "GEO-D-8a09b98126",
-     "GEO-D-11d525bf85"
+     "GEO-D-11d525bf85",
+     "GEO-D-f80cc5f083"
+    ],
+    "V-routed-call": [
+     "GEO-D-40f9d890da",
+     "GEO-D-77f3562935",
+     "GEO-D-ad53ad5697"
+    ],
+    "V-probe-replica": [
+     "GEO-D-6e883742d7",
+     "GEO-D-0d8ab24cb2"
     ],
     "V-probe": [
      "GEO-D-04c39c21b8",
@@ -40,23 +58,23 @@
      "GEO-D-8563f0c6b3",
      "GEO-D-8b76a85166",
      "GEO-D-05b0146bf1",
+     "GEO-D-d29ce158c8",
      "GEO-D-c870a80178",
      "GEO-D-402781bb97",
      "GEO-D-ba2ff1bf63",
      "GEO-D-b097d7e4ec",
      "GEO-D-ce0288a17a",
      "GEO-D-cff53a8f24",
-     "GEO-D-e169fbf3cf"
+     "GEO-D-e169fbf3cf",
+     "GEO-D-ffc903aa56"
     ],
     "V-floor0.001-table3": [
      "GEO-D-1c579312c3",
      "GEO-D-5db26218e2"
     ],
-    "V-routed-call": [
-     "GEO-D-ad53ad5697"
-    ],
     "V-vectorized": [
      "GEO-D-d711a57aa8",
+     "GEO-D-872d20a75e",
      "GEO-D-ca7b9aad4e"
     ],
     "V-orphan": [
@@ -70,8 +88,16 @@
     "GEO-D-edfd1258e4",
     "GEO-D-d53e285e15",
     "GEO-D-a67d5bf33b",
+    "GEO-D-83ddb8a117",
+    "GEO-D-3402da1970",
+    "GEO-D-e544008ffd",
+    "GEO-D-c1cbd287a6",
+    "GEO-D-875c03e798",
+    "GEO-D-761de6121f",
+    "GEO-D-004d3e320d",
     "GEO-D-420c6bc369",
     "GEO-D-a52a975155",
+    "GEO-D-0839452638",
     "GEO-D-a5c7a69990",
     "GEO-D-ae4a3d7fba",
     "GEO-D-f8ab4a6163",
@@ -83,6 +109,12 @@
      "GEO-D-edfd1258e4",
      "GEO-D-d53e285e15",
      "GEO-D-a67d5bf33b",
+     "GEO-D-83ddb8a117",
+     "GEO-D-3402da1970",
+     "GEO-D-e544008ffd",
+     "GEO-D-c1cbd287a6",
+     "GEO-D-875c03e798",
+     "GEO-D-761de6121f",
      "GEO-D-420c6bc369",
      "GEO-D-a52a975155",
      "GEO-D-a5c7a69990",
@@ -90,7 +122,11 @@
      "GEO-D-d5c0d9c5aa",
      "GEO-D-bca6a9a3e1"
     ],
+    "V-wilder-mean": [
+     "GEO-D-004d3e320d"
+    ],
     "V-wilder-scalar": [
+     "GEO-D-0839452638",
      "GEO-D-ae4a3d7fba"
     ]
    }
@@ -98,9 +134,13 @@
   "FAM-01-F1-BODY": {
    "family_id": "FAM-01-F1-BODY",
    "member_site_ids": [
+    "GEO-D-2ad0775164",
+    "GEO-D-5b8c005365",
     "GEO-D-1afa288d92",
     "GEO-D-679019d5ae",
+    "GEO-D-31528e0085",
     "GEO-D-037fa62f2f",
+    "GEO-D-40bbbd8d24",
     "GEO-D-0b15c210a1",
     "GEO-D-cd057d99b7",
     "GEO-D-d6f8d7c230",
@@ -109,7 +149,7 @@
     "GEO-D-960dda70e0",
     "GEO-D-7ee394c4e0",
     "GEO-D-929c4fca3f",
-    "GEO-D-92654d8160",
+    "GEO-D-8f3aea000d",
     "GEO-D-f1040d8d17",
     "GEO-D-dd9a79df47",
     "GEO-D-3ca89e4db5",
@@ -117,23 +157,27 @@
     "GEO-D-ed66212642"
    ],
    "variants": {
+    "V-routed-call": [
+     "GEO-D-2ad0775164",
+     "GEO-D-7ee394c4e0",
+     "GEO-D-8f3aea000d"
+    ],
     "V-probe-replica": [
+     "GEO-D-5b8c005365",
      "GEO-D-1afa288d92",
-     "GEO-D-679019d5ae"
+     "GEO-D-679019d5ae",
+     "GEO-D-31528e0085"
     ],
     "V-exact": [
      "GEO-D-037fa62f2f",
+     "GEO-D-40bbbd8d24",
      "GEO-D-0b15c210a1",
      "GEO-D-cd057d99b7",
      "GEO-D-d6f8d7c230",
      "GEO-D-db6351fa92",
      "GEO-D-92a1389d0b",
      "GEO-D-960dda70e0",
-     "GEO-D-92654d8160",
      "GEO-D-ed66212642"
-    ],
-    "V-routed-call": [
-     "GEO-D-7ee394c4e0"
     ],
     "V-vectorized-methodabs": [
      "GEO-D-929c4fca3f"
@@ -148,66 +192,41 @@
     ]
    }
   },
-  "FAM-15-F5-TOTALW": {
-   "family_id": "FAM-15-F5-TOTALW",
-   "member_site_ids": [
-    "GEO-D-ed1543cd29",
-    "GEO-D-b835c51454",
-    "GEO-D-9fd8587764",
-    "GEO-D-6dcd764b65"
-   ],
-   "variants": {
-    "V-probe-replica-clip0": [
-     "GEO-D-ed1543cd29",
-     "GEO-D-b835c51454"
-    ],
-    "V-exact": [
-     "GEO-D-9fd8587764"
-    ],
-    "V-clip0": [
-     "GEO-D-6dcd764b65"
-    ]
-   }
-  },
-  "FAM-02-GD001-BODY-OVER-TOTALW": {
-   "family_id": "FAM-02-GD001-BODY-OVER-TOTALW",
-   "member_site_ids": [
-    "GEO-D-bfe47ca6d7",
-    "GEO-D-e96bf892ce",
-    "GEO-D-5c38c00d67"
-   ],
-   "variants": {
-    "V-probe-replica": [
-     "GEO-D-bfe47ca6d7",
-     "GEO-D-e96bf892ce"
-    ],
-    "V-guard1e8": [
-     "GEO-D-5c38c00d67"
-    ]
-   }
-  },
   "FAM-16-F6-BODY-RATIO": {
    "family_id": "FAM-16-F6-BODY-RATIO",
    "member_site_ids": [
+    "GEO-D-801a4e8d0b",
+    "GEO-D-3361e3b2f8",
     "GEO-D-407bdf299a",
     "GEO-D-9cfdebb29f",
     "GEO-D-d2bf99b3d6",
+    "GEO-D-9c07b7f3d8",
     "GEO-D-7a90754ac8",
     "GEO-D-01b4a1fe17",
     "GEO-D-c75f80bb69",
     "GEO-D-861238e0d6",
     "GEO-D-46ef6b3690",
-    "GEO-D-ee943c55cb"
+    "GEO-D-ee943c55cb",
+    "GEO-D-ce54387905"
    ],
    "variants": {
+    "V-routed-call": [
+     "GEO-D-801a4e8d0b",
+     "GEO-D-7a90754ac8",
+     "GEO-D-861238e0d6",
+     "GEO-D-ce54387905"
+    ],
+    "V-probe-replica-guard0": [
+     "GEO-D-3361e3b2f8"
+    ],
     "V-guard0-script": [
      "GEO-D-407bdf299a",
      "GEO-D-9cfdebb29f",
      "GEO-D-d2bf99b3d6"
     ],
-    "V-routed-call": [
-     "GEO-D-7a90754ac8",
-     "GEO-D-861238e0d6"
+    "V-guard0-research": [
+     "GEO-D-9c07b7f3d8",
+     "GEO-D-ee943c55cb"
     ],
     "V-floored-denom": [
      "GEO-D-01b4a1fe17"
@@ -217,9 +236,77 @@
     ],
     "V-guard0-vectorized": [
      "GEO-D-46ef6b3690"
+    ]
+   }
+  },
+  "FAM-15-F5-TOTALW": {
+   "family_id": "FAM-15-F5-TOTALW",
+   "member_site_ids": [
+    "GEO-D-ed1543cd29",
+    "GEO-D-b835c51454",
+    "GEO-D-9fd8587764",
+    "GEO-D-8587152f8e"
+   ],
+   "variants": {
+    "V-probe-replica-clip0": [
+     "GEO-D-ed1543cd29",
+     "GEO-D-b835c51454"
     ],
-    "V-guard0-research": [
-     "GEO-D-ee943c55cb"
+    "V-exact": [
+     "GEO-D-9fd8587764"
+    ],
+    "V-routed-call": [
+     "GEO-D-8587152f8e"
+    ]
+   }
+  },
+  "FAM-02-GD001-BODY-OVER-TOTALW": {
+   "family_id": "FAM-02-GD001-BODY-OVER-TOTALW",
+   "member_site_ids": [
+    "GEO-D-bfe47ca6d7",
+    "GEO-D-e96bf892ce",
+    "GEO-D-a4c49a20c5"
+   ],
+   "variants": {
+    "V-probe-replica": [
+     "GEO-D-bfe47ca6d7",
+     "GEO-D-e96bf892ce"
+    ],
+    "V-registered-impl-FM013": [
+     "GEO-D-a4c49a20c5"
+    ]
+   }
+  },
+  "FAM-06-RANGE-ATR-MULTIPLE": {
+   "family_id": "FAM-06-RANGE-ATR-MULTIPLE",
+   "member_site_ids": [
+    "GEO-D-28e1cb2108",
+    "GEO-D-debb0a6283",
+    "GEO-D-a28413e2ca",
+    "GEO-D-505dd25eec",
+    "GEO-D-4cc99bf89d",
+    "GEO-D-db0e1218ce",
+    "GEO-D-8353bf67fa"
+   ],
+   "variants": {
+    "V-probe": [
+     "GEO-D-28e1cb2108"
+    ],
+    "V-plain": [
+     "GEO-D-debb0a6283",
+     "GEO-D-505dd25eec"
+    ],
+    "V-div3-cap1": [
+     "GEO-D-a28413e2ca"
+    ],
+    "V-tent": [
+     "GEO-D-4cc99bf89d"
+    ],
+    "V-registered-impl-FM028": [
+     "GEO-D-db0e1218ce"
+    ],
+    "V-research": [
+     "GEO-D-8353bf67fa"
     ]
    }
   },
@@ -240,6 +327,25 @@
     ]
    }
   },
+  "FAM-21-POLARITY-FRACTIONS": {
+   "family_id": "FAM-21-POLARITY-FRACTIONS",
+   "member_site_ids": [
+    "GEO-D-b5af1359d7",
+    "GEO-D-3ccf38d6af",
+    "GEO-D-1f583119bc",
+    "GEO-D-bac280b6be"
+   ],
+   "variants": {
+    "V-exact": [
+     "GEO-D-b5af1359d7",
+     "GEO-D-bac280b6be"
+    ],
+    "V-plain": [
+     "GEO-D-3ccf38d6af",
+     "GEO-D-1f583119bc"
+    ]
+   }
+  },
   "FAM-24-BODY-PCT-OF-PRICE": {
    "family_id": "FAM-24-BODY-PCT-OF-PRICE",
    "member_site_ids": [
@@ -254,72 +360,28 @@
   "FAM-04-TABLE3-FLOORED-WICK": {
    "family_id": "FAM-04-TABLE3-FLOORED-WICK",
    "member_site_ids": [
-    "GEO-D-14711bea9c",
-    "GEO-D-ff39a757e1",
-    "GEO-D-0a80dd4dcf",
-    "GEO-D-2e638f98e6"
+    "GEO-D-2cba327f94",
+    "GEO-D-933fffa7c4",
+    "GEO-D-d463035ce7",
+    "GEO-D-af3b0f42b1"
    ],
    "variants": {
     "V-floored-ratio": [
-     "GEO-D-14711bea9c",
-     "GEO-D-ff39a757e1",
-     "GEO-D-0a80dd4dcf",
-     "GEO-D-2e638f98e6"
-    ]
-   }
-  },
-  "FAM-06-RANGE-ATR-MULTIPLE": {
-   "family_id": "FAM-06-RANGE-ATR-MULTIPLE",
-   "member_site_ids": [
-    "GEO-D-0494ade555",
-    "GEO-D-debb0a6283",
-    "GEO-D-a28413e2ca",
-    "GEO-D-505dd25eec",
-    "GEO-D-4cc99bf89d",
-    "GEO-D-db0e1218ce",
-    "GEO-D-8353bf67fa"
-   ],
-   "variants": {
-    "V-plain": [
-     "GEO-D-0494ade555",
-     "GEO-D-debb0a6283",
-     "GEO-D-505dd25eec"
-    ],
-    "V-div3-cap1": [
-     "GEO-D-a28413e2ca"
-    ],
-    "V-tent": [
-     "GEO-D-4cc99bf89d"
-    ],
-    "V-registered-impl-FM028": [
-     "GEO-D-db0e1218ce"
-    ],
-    "V-research": [
-     "GEO-D-8353bf67fa"
+     "GEO-D-2cba327f94",
+     "GEO-D-933fffa7c4",
+     "GEO-D-d463035ce7",
+     "GEO-D-af3b0f42b1"
     ]
    }
   },
   "FAM-10-BODY-ATR-MULTIPLE": {
    "family_id": "FAM-10-BODY-ATR-MULTIPLE",
    "member_site_ids": [
-    "GEO-D-d1b4f0d545"
+    "GEO-D-bc29e58710"
    ],
    "variants": {
     "V-1.5atr-cap1": [
-     "GEO-D-d1b4f0d545"
-    ]
-   }
-  },
-  "FAM-21-POLARITY-FRACTIONS": {
-   "family_id": "FAM-21-POLARITY-FRACTIONS",
-   "member_site_ids": [
-    "GEO-D-3ccf38d6af",
-    "GEO-D-1f583119bc"
-   ],
-   "variants": {
-    "V-plain": [
-     "GEO-D-3ccf38d6af",
-     "GEO-D-1f583119bc"
+     "GEO-D-bc29e58710"
     ]
    }
   },
@@ -391,6 +453,27 @@
     ]
    }
   },
+  "FAM-11-RANGE-EXPANSION": {
+   "family_id": "FAM-11-RANGE-EXPANSION",
+   "member_site_ids": [
+    "GEO-D-4b2c09e3fb",
+    "GEO-D-8bc78794f3",
+    "GEO-D-084ee14cf0",
+    "GEO-D-9a24cb83ec"
+   ],
+   "variants": {
+    "V-proxy-ratio-fallback1": [
+     "GEO-D-4b2c09e3fb"
+    ],
+    "V-mean-prior": [
+     "GEO-D-8bc78794f3"
+    ],
+    "V-avg-range": [
+     "GEO-D-084ee14cf0",
+     "GEO-D-9a24cb83ec"
+    ]
+   }
+  },
   "FAM-19-PRICE-POSITION": {
    "family_id": "FAM-19-PRICE-POSITION",
    "member_site_ids": [
@@ -436,23 +519,6 @@
    "variants": {
     "V-guard0-research": [
      "GEO-D-be276363fc"
-    ]
-   }
-  },
-  "FAM-11-RANGE-EXPANSION": {
-   "family_id": "FAM-11-RANGE-EXPANSION",
-   "member_site_ids": [
-    "GEO-D-8bc78794f3",
-    "GEO-D-084ee14cf0",
-    "GEO-D-9a24cb83ec"
-   ],
-   "variants": {
-    "V-mean-prior": [
-     "GEO-D-8bc78794f3"
-    ],
-    "V-avg-range": [
-     "GEO-D-084ee14cf0",
-     "GEO-D-9a24cb83ec"
     ]
    }
   },

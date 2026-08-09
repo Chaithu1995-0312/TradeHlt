@@ -4,30 +4,35 @@
   "created_at": "2026-04-07T00:00:00",
   "promoted_at": "2026-04-07T00:00:00",
   "params": {
-    "retest_depth_max": 0.30,
-    "retest_atr_depth_fraction": 0.50,
+    "retest_depth_max": 0.3,
+    "retest_atr_depth_fraction": 0.5,
     "body_ratio_min": 0.65,
-    "atr_multiplier_min": 1.50,
-    "expansion_atr_min_distance": 0.20
+    "atr_multiplier_min": 1.5,
+    "expansion_atr_min_distance": 0.2
   },
   "engine_runner": {
     "min_atr": 0.0001,
-    "allowed_sessions": ["asia", "london", "new_york", "overlap"],
-    "bitnet_zone_threshold": 0.0,
-      "zone_registry_path": "models/zone_registry.json",
-      "rr_fusion": {
-        "enabled": false,
-        "model_path": "models/rr_model.json",
-        "threshold": 0.5
-      },
-      "dual_engine": {
+    "allowed_sessions": [
+      "asia",
+      "london",
+      "new_york",
+      "overlap"
+    ],
+    "zone_cluster_threshold": 0.0,
+    "zone_registry_path": "models/zone_registry.json",
+    "rr_fusion": {
+      "enabled": false,
+      "model_path": "models/rr_model.json",
+      "threshold": 0.5
+    },
+    "dual_engine": {
       "trend_strength_threshold": 0.15,
-      "momentum_threshold": 0.30,
-      "range_volatility_threshold": 0.80,
-      "breakout_min_score": 0.10,
-      "trap_min_score": 0.10,
+      "momentum_threshold": 0.3,
+      "range_volatility_threshold": 0.8,
+      "breakout_min_score": 0.1,
+      "trap_min_score": 0.1,
       "neutral_min_score": 0.25,
-      "fusion_min_score": 0.10
+      "fusion_min_score": 0.1
     }
   },
   "execution_planner": {
@@ -60,9 +65,9 @@
     "max_daily_loss_pct": 10.0,
     "min_rr_ratio": 1.0,
     "regime_factors": {
-      "trend":     1.0,
-      "range":     0.8,
-      "neutral":   0.6,
+      "trend": 1.0,
+      "range": 0.8,
+      "neutral": 0.6,
       "uncertain": 0.5
     }
   },
@@ -79,7 +84,13 @@
     "consistency_penalty": null,
     "total_trades": null,
     "max_drawdown": null,
-    "instruments": ["EURUSD", "GBPUSD", "BTCUSDT", "XAUUSD", "AUDUSD"],
+    "instruments": [
+      "EURUSD",
+      "GBPUSD",
+      "BTCUSDT",
+      "XAUUSD",
+      "AUDUSD"
+    ],
     "per_instrument": {},
     "warnings": [
       "FORCE ACCEPT CONFIG – for reflection buffer only. Not for live trading."
@@ -89,5 +100,43 @@
     "max_history": 1000
   },
   "notes": "Temporary config to force ACCEPT decisions. All thresholds lowered. Zone gate will be neutral (0.5) because registry may be missing.",
-  "schema_version": "1.2"
+  "schema_version": "1.2",
+  "market_router": {
+    "_comment": "Config-driven market_router (target-strategy-architecture.md sec13 item1 / F-057, 2026-07-29). classes = the 5-key CRT profile per market class (byte-identical seed from the prior market_router.py FOREX_CONFIG/CRYPTO_CONFIG literals). symbol_map = instrument -> class, consulted by classify_market()/get_crt_config() with a leading-symbol-token fallback for filename-derived instrument hints (e.g. XAUUSD_M15). Unmapped instruments raise UnknownInstrumentError -- no safe default.",
+    "classes": {
+      "CRYPTO": {
+        "retest_depth_max": 0.25,
+        "retest_atr_depth_fraction": 0.3,
+        "body_ratio_min": 0.5,
+        "atr_multiplier_min": 1.0,
+        "expansion_atr_min_distance": 0.15
+      },
+      "FOREX": {
+        "retest_depth_max": 0.35,
+        "retest_atr_depth_fraction": 0.5,
+        "body_ratio_min": 0.6,
+        "atr_multiplier_min": 1.5,
+        "expansion_atr_min_distance": 0.08
+      }
+    },
+    "symbol_map": {
+      "EURUSD": "FOREX",
+      "GBPUSD": "FOREX",
+      "USDJPY": "FOREX",
+      "AUDUSD": "FOREX",
+      "NZDUSD": "FOREX",
+      "USDCHF": "FOREX",
+      "XAUUSD": "FOREX",
+      "BTCUSDT": "CRYPTO",
+      "ETHUSDT": "CRYPTO",
+      "BNBUSDT": "CRYPTO",
+      "SOLUSDT": "CRYPTO",
+      "ADAUSDT": "CRYPTO",
+      "EURCAD": "FOREX",
+      "EURGBP": "FOREX",
+      "USDCAD": "FOREX",
+      "DOGEUSDT": "CRYPTO",
+      "XRPUSDT": "CRYPTO"
+    }
+  }
 }

@@ -457,15 +457,16 @@ class TestSaveLoadGaussian:
         )
 
     def test_load_mismatched_schema_raises_value_error(self, tmp_path):
-        """Loading a model saved with a different feature list must raise ValueError."""
+        """Loading a model saved with unresolvable feature names must raise (fail-closed)."""
         from training.trainer import save_gaussian_model, load_gaussian_model
+        from features.gaussian_schema_contract import GaussianSchemaError
         model, scaler, metrics, _ = self._trained()
         # Save with a deliberately wrong feature schema
         with patch("training.trainer.MODELS_DIR", tmp_path):
             save_gaussian_model(model, scaler, metrics, name="bad.json",
                                 feature_schema=["wrong_feat_1", "wrong_feat_2"])
         with patch("training.trainer.MODELS_DIR", tmp_path):
-            with pytest.raises(ValueError, match="schema mismatch"):
+            with pytest.raises(GaussianSchemaError, match="schema contract failed"):
                 load_gaussian_model("bad.json")
 
     def test_load_missing_file_raises_file_not_found(self, tmp_path):

@@ -40,11 +40,20 @@ import pandas as pd  # top-level so tests can monkeypatch backtest_v2.pd
 from features.feature_schema import CANONICAL_FEATURES
 from data_ingestion.ohlcv_schema import (
     DatasetIntegrityError,
+    FeatureAlignmentError,
     OHLCV_DATE_FORMATS,
+    OHLCV_HEADER_ALIASES,
+    OHLCV_TIMESTAMP_SINGLE_ALIASES,
+    OHLCV_TIMESTAMP_SPLIT_ALIASES,
     parse_ohlcv_timestamp,
     require_ohlcv_columns,
     require_unique_ohlcv_headers,
+    resolve_ohlcv_column_indices,
     validate_ohlcv_row,
+)
+from data_ingestion.xauusd_phase1_candidate import (
+    Phase1CandidateError,
+    guard_xauusd_csv_path,
 )
 from data_ingestion.dataset_integrity import (
     DatasetDecision,
@@ -120,6 +129,18 @@ _ROI_DEFAULTS = {
 # CONFIG
 # ─────────────────────────────────────────────────────────────────
 
+def _require_bt_cfg(cfg: dict, key: str, section: str) -> object:
+    """Strict CONFIG accessor — raises if absent (T-22, CLAUDE.md Section 6.5: no silent
+    config defaults). Sibling of core.engine_runner._cfg_require and the other per-module
+    `_require` helpers; kept local to match the repo's established per-module convention."""
+    if not isinstance(cfg, dict) or key not in cfg:
+        raise KeyError(
+            f"Required config key '{key}' missing from section '{section}'. "
+            "Add it to the active production config (no silent config defaults)."
+        )
+    return cfg[key]
+
+
 @dataclass
 class BacktestConfig:
     # ── HTF ──────────────────────────────────────────────────────
@@ -155,8 +176,18 @@ class BacktestConfig:
     # ── Engine config override (instance-specific) ────────────────
     crt_config: Optional[CRTConfig] = None
 
+    # P2 F-057: allow ROUTER_BASE crt_config on product path (default refuse).
+    # Use only for intentional router-profile experiments — not production claims.
+    allow_router_crt_config: bool = False
+
     # ── Scorer mode ───────────────────────────────────────────────
     scorer_mode: str = "calibrated"   # "calibrated" | "static"
+
+    # ── Strategy Registry pin (instance-specific; §13.5/§8) ────────
+    # Names WHICH StrategyPackage this run claims to execute (strategies.
+    # strategy_registry). "" = unresolved — TradeProvenanceV1 falls back to
+    # a live from_active_config() projection rather than leaving it blank.
+    strategy_id: str = ""
 
     @classmethod
     def from_prod_config(
@@ -674,21 +705,41 @@ class CandleLoader:
     # Single source of truth lives in ohlcv_schema.OHLCV_DATE_FORMATS; kept as a
     # class attribute for backward compatibility with callers/tests.
     DATE_FORMATS = list(OHLCV_DATE_FORMATS)
+    # B1 (2026-07-24): header resolution is delegated to
+    # ohlcv_schema.resolve_ohlcv_column_indices (the SSOT). This local table used to be a THIRD,
+    # independently-maintained alias map that had already drifted (missing `tick_volume`), gating
+    # every load against a table the schema layer didn't know about. It is now DERIVED from the
+    # schema tables purely so any external caller/test that still reads `CandleLoader.COLUMN_ALIASES`
+    # sees the canonical aliases — it is no longer consulted by `stream()`.
     COLUMN_ALIASES = {
-        "timestamp": ["timestamp", "datetime", "date time", "open time"],
-        "date":      ["date"],
-        "time_col":  ["time"],
-        "open":      ["open", "o"],
-        "high":      ["high", "h"],
-        "low":       ["low", "l"],
-        "close":     ["close", "c", "adj close"],
-        "volume":    ["volume", "vol", "tickvol", "tick volume"],
+        "timestamp": list(OHLCV_TIMESTAMP_SINGLE_ALIASES),
+        "date":      list(OHLCV_TIMESTAMP_SPLIT_ALIASES["date"]),
+        "time_col":  list(OHLCV_TIMESTAMP_SPLIT_ALIASES["time"]),
+        "open":      list(OHLCV_HEADER_ALIASES["open"]),
+        "high":      list(OHLCV_HEADER_ALIASES["high"]),
+        "low":       list(OHLCV_HEADER_ALIASES["low"]),
+        "close":     list(OHLCV_HEADER_ALIASES["close"]),
+        "volume":    list(OHLCV_HEADER_ALIASES["volume"]),
     }
 
     def __init__(self, filepath: str, instrument: str = "UNKNOWN"):
-        self.filepath   = filepath
+        # XAUUSD M15: only the Phase-1 frozen candidate path+hash+range is loadable.
+        # Fail closed on drift; not AUTHORITATIVE/VALIDATED/APPROVED/ECONOMICALLY_ADMISSIBLE.
+        try:
+            guarded = guard_xauusd_csv_path(filepath, instrument)
+        except Phase1CandidateError as exc:
+            raise DatasetIntegrityError(
+                f"XAUUSD M15 corpus binding failed (fail-closed): {exc}"
+            ) from exc
+        self.filepath   = guarded
         self.instrument = instrument
         self.log        = logging.getLogger("CRT.CandleLoader")
+        if guarded != str(filepath):
+            self.log.info(
+                "XAUUSD M15 load rewritten to Phase-1 frozen candidate: %s -> %s "
+                "(NOT AUTHORITATIVE until Phase-1 validation closes)",
+                filepath, guarded,
+            )
 
     def _detect_column(self, headers: list[str], field: str) -> Optional[int]:
         for alias in self.COLUMN_ALIASES.get(field, [field]):
@@ -705,38 +756,64 @@ class CandleLoader:
         with open(self.filepath, newline="", encoding="utf-8-sig") as f:
             reader = csv.reader(f)
             headers = [h.strip() for h in next(reader)]
-            # L1 — reject duplicate column headers (e.g. "... volume volume"),
-            # which would silently shadow the real column under set-based checks.
-            require_unique_ohlcv_headers(
+            # B1 (2026-07-24): delegate ALL header resolution to the schema SSOT. This one call
+            # replaces the former local `_detect_column` ×8 + `use_split` logic AND folds in the
+            # L1 uniqueness + mandatory-presence checks. It raises on a duplicate header or a
+            # missing mandatory column, so nothing here becomes a silent skip.
+            cols = resolve_ohlcv_column_indices(
                 headers, source=f"Historical dataset {self.filepath}"
             )
-            ts_col   = self._detect_column(headers, "timestamp")
-            date_col = self._detect_column(headers, "date")
-            time_col = self._detect_column(headers, "time_col")
-            o_col = self._detect_column(headers, "open")
-            h_col = self._detect_column(headers, "high")
-            l_col = self._detect_column(headers, "low")
-            c_col = self._detect_column(headers, "close")
-            v_col = self._detect_column(headers, "volume")
-
-            use_split = (ts_col is None and date_col is not None and time_col is not None)
-            # Phase 1 — all six mandatory columns must resolve to a header (a
-            # split date+time pair satisfies "timestamp"). volume is mandatory.
-            resolved = set()
-            if ts_col is not None or use_split:
-                resolved.add("timestamp")
-            for field_name, col in (("open", o_col), ("high", h_col),
-                                    ("low", l_col), ("close", c_col), ("volume", v_col)):
-                if col is not None:
-                    resolved.add(field_name)
-            require_ohlcv_columns(resolved, source=f"Historical dataset {self.filepath}")
+            use_split = "date" in cols and "time" in cols
+            date_col = cols.get("date")
+            time_col = cols.get("time")
+            ts_col   = cols.get("timestamp")
+            o_col, h_col = cols["open"], cols["high"]
+            l_col, c_col = cols["low"], cols["close"]
+            v_col = cols["volume"]
 
             prev_ts: Optional[datetime] = None
+            # B2 (2026-07-24): stamp a 0-based global candle position. The loader is now the
+            # single INGESTION-stamp authority — `initialise_range` no longer re-stamps seed
+            # candles off a `== 0` sentinel (which depended on this field being left at 0).
+            # The CRT engine remains the SPINE authority: `process_candle` overwrites this with
+            # its own `state.current_candle_index` on every bar, so spine reads are unchanged.
+            # This stamp is what OFF-spine consumers (research scripts, telemetry on raw candles)
+            # and the one-time seed window see. Counts YIELDED candles, not CSV lines, so a
+            # skipped blank row does not create an index gap.
+            _candle_pos = 0
+            # B5 (2026-07-24): a trailing blank line at EOF is benign, but a blank line BETWEEN
+            # data rows is corruption and must not be silently swallowed (the loader otherwise
+            # never silent-skips). A streaming loop can't look ahead, so detect it RETROACTIVELY:
+            # remember a skipped blank; if a real data row appears after it, that blank was
+            # mid-file → raise.
+            _pending_blank_line: Optional[int] = None
             for line_num, row in enumerate(reader, start=2):
                 if not row or all(not cell.strip() for cell in row):
-                    continue  # skip blank/EOF lines (not a data fallback)
-                raw_ts = (row[date_col].strip() + " " + row[time_col].strip()
-                          if use_split else row[ts_col].strip())
+                    _pending_blank_line = line_num   # tolerate iff nothing follows (trailing)
+                    continue
+                if _pending_blank_line is not None:
+                    raise DatasetIntegrityError(
+                        f"Blank line {_pending_blank_line} inside data (a data row follows at "
+                        f"line {line_num}) in {self.filepath} — a mid-file blank is corruption, "
+                        "not a tolerable trailing newline."
+                    )
+                # B4 (2026-07-24): coerce OHLCV with source/line context. `float()` used to run
+                # bare below, so a non-numeric cell (or a short row) raised a contextless
+                # ValueError/IndexError; validate_ohlcv_row's informative message never fired
+                # because coercion failed first. Coerce here, attributing the failure.
+                try:
+                    if use_split:
+                        raw_ts = row[date_col].strip() + " " + row[time_col].strip()
+                    else:
+                        raw_ts = row[ts_col].strip()
+                    o   = float(row[o_col]); h = float(row[h_col])
+                    l   = float(row[l_col]); c = float(row[c_col])
+                    vol = float(row[v_col])
+                except (ValueError, IndexError) as exc:
+                    raise ValueError(
+                        f"Historical dataset {self.filepath} (line {line_num}): "
+                        f"non-numeric or missing OHLCV cell: {exc}"
+                    ) from exc
                 ts  = self._parse_timestamp(raw_ts)
                 # L2 inline backstop — sequence integrity. The full pre-flight
                 # gate (dataset_integrity.validate_dataset) does the complete
@@ -754,9 +831,7 @@ class CandleLoader:
                             f"{prev_ts.isoformat()} (line {line_num}) in {self.filepath}"
                         )
                 prev_ts = ts
-                o   = float(row[o_col]); h = float(row[h_col])
-                l   = float(row[l_col]); c = float(row[c_col])
-                vol = float(row[v_col])
+                # o/h/l/c/vol already coerced above (B4) with source/line context.
                 # Phase 2 — value integrity: non-negative volume, candle
                 # consistency. Malformed rows now RAISE (no silent skip) so a
                 # corrupt dataset fails fast instead of yielding a truncated
@@ -766,7 +841,9 @@ class CandleLoader:
                     source=f"Historical dataset {self.filepath}",
                     line=line_num,
                 )
-                yield Candle(timestamp=ts, open=o, high=h, low=l, close=c, volume=vol)
+                yield Candle(timestamp=ts, open=o, high=h, low=l, close=c,
+                             volume=vol, index=_candle_pos)
+                _candle_pos += 1
 
     def count(self) -> int:
         with open(self.filepath, "r", encoding="utf-8-sig") as f:
@@ -816,11 +893,17 @@ class TradeJournal:
     def __init__(
         self, instrument: str, pip_size: float,
         slippage: SlippageModel, capital_curve: CapitalCurve,
+        sl_atr_buffer: float,
     ):
         self.instrument    = instrument
         self.pip_size      = pip_size
         self.slip          = slippage
         self.cap           = capital_curve
+        # REQUIRED (no default): the SL-distance floor used by the [FIX-SL] guard in
+        # on_trade_opened. Previously a hardcoded `0.2 * atr` whose comment claimed to
+        # match crt_engine.sl_atr_buffer but did not READ it — editing the config key
+        # silently desynchronized the two. Now threaded from the resolved CRTConfig.
+        self.sl_atr_buffer = float(sl_atr_buffer)
         self.open_trade:   Optional[TradeRecord] = None
         self.closed:       list[TradeRecord] = []
         self.rejections:   list[RejectionRecord] = []
@@ -877,10 +960,11 @@ class TradeJournal:
         entry_fill = trade.entry_price + e_slip + spread_half
 
         # [FIX-SL] Dynamic SL: if slippage eats into the SL distance so that
-        # abs(entry_fill - sl_price) < 20% ATR (matching sl_atr_buffer in CRT
-        # engine config), extend the SL outward from entry_fill to restore the
-        # minimum distance.  This prevents near-zero SL → runaway position size.
-        _min_sl_dist = 0.2 * atr
+        # abs(entry_fill - sl_price) < sl_atr_buffer * ATR, extend the SL outward from
+        # entry_fill to restore the minimum distance.  Prevents near-zero SL → runaway
+        # position size.  The buffer now READS crt_engine.sl_atr_buffer (threaded via
+        # the resolved CRTConfig) instead of duplicating it as a 0.2 literal.
+        _min_sl_dist = self.sl_atr_buffer * atr
         _raw_sl_dist = abs(entry_fill - trade.sl_price)
         if atr > 0 and _raw_sl_dist < _min_sl_dist:
             effective_sl = (
@@ -1571,9 +1655,59 @@ class CRTCalibratedScorer:
 
 
 class CRTGaussianScorer:
-    """Default no-op scorer. Replaced by CRTCalibratedScorer after phase5 --integrate."""
-    def compute(self, features: dict, candle_idx: int):
+    """Default no-op scorer. Replaced by CRTCalibratedScorer after phase5 --integrate.
+
+    Signature matches CRTCalibratedScorer / HeuristicGaussianEngine duck-type:
+    ``compute(features, candle_idx, direction=...)`` so the Phase-5 call site
+    (``direction=_p5_dir``) never TypeErrors. direction is intentionally ignored —
+    this scorer always returns None (no gate).
+    """
+    def compute(self, features: dict, candle_idx: int, direction: str = "long"):
         return None
+
+
+# ─────────────────────────────────────────────────────────────────
+# LEDGER PROVENANCE (§13 item8 / §9 — closes TradeProvenanceV1's zero-consumer gap)
+# ─────────────────────────────────────────────────────────────────
+
+def _model_version_string(pkg) -> str:
+    """Compact single-string join of a StrategyPackage's model pins — fits
+    TradeProvenanceV1.model_version (Optional[str]) without widening its schema."""
+    if pkg is None:
+        return ""
+    parts = [f"{k}={v}" for k, v in pkg.model.items() if v is not None]
+    return ";".join(parts)
+
+
+def _build_provenance_base(instrument: str, strategy_id: str) -> dict:
+    """Resolve the run-level provenance fields once (config version/hash, model
+    pins, strategy id). Best-effort — never raises; a resolution failure just
+    means those fields stay None on every trade this run opens."""
+    from config_layer.production_config import get_prod_metadata
+
+    base = {
+        "config_version":    PROD_VERSION,
+        "config_hash":       None,
+        "promotion_version": PROD_VERSION,
+        "model_version":     None,
+        "strategy_id":       strategy_id or None,
+    }
+    try:
+        meta = get_prod_metadata()
+        base["config_hash"] = meta.get("config_hash")
+    except Exception as _meta_exc:  # noqa: BLE001
+        bt_log.debug("Provenance: get_prod_metadata failed: %s", _meta_exc)
+
+    try:
+        from strategies.strategy_registry import StrategyRegistry
+        pkg = StrategyRegistry().resolve_for_instrument(instrument, name=(strategy_id or None))
+        base["model_version"] = _model_version_string(pkg)
+        if not strategy_id:
+            base["strategy_id"] = pkg.name
+    except Exception as _pkg_exc:  # noqa: BLE001
+        bt_log.debug("Provenance: StrategyPackage resolution failed: %s", _pkg_exc)
+
+    return base
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -1594,9 +1728,53 @@ class BacktestRunner:
         """
         self.cfg      = bt_config
         self.log      = bt_log
-        self.crt_cfg  = bt_config.crt_config or ConfigBuilder.build(
-            bt_config.instrument or "EURUSD"
+        # F-057 fix (2026-07-29, target-strategy-architecture.md sec13 item1): a caller
+        # that constructs BacktestConfig without an explicit crt_config used to fall back
+        # to the bare router profile (ConfigBuilder.build — 5 hardcoded keys, no params/
+        # crt_engine merge), silently diverging from the CLI path's governed
+        # load_prod_config_from_registry(). That fallback is now the SAME governed loader,
+        # so every programmatic caller (tuner workers, diagnostics, portfolio_validation,
+        # research adapters) gets the identical CRTConfig the CLI would build for the same
+        # instrument. instrument is required — no silent "EURUSD" default (F-057 sec14.A).
+        if bt_config.crt_config is not None:
+            self.crt_cfg = bt_config.crt_config
+        else:
+            if not bt_config.instrument or bt_config.instrument == "UNKNOWN":
+                raise ValueError(
+                    "BacktestRunner: bt_config.crt_config is None and bt_config.instrument "
+                    f"is unset ({bt_config.instrument!r}) — cannot resolve a governed CRTConfig. "
+                    "Pass an explicit instrument or crt_config (F-057: no silent EURUSD default)."
+                )
+            self.crt_cfg = load_prod_config_from_registry(PROD_VERSION, bt_config.instrument)
+
+        # P2 F-057: product path refuses ROUTER_BASE / SCHEMA / UNKNOWN unless escape hatch.
+        from config_layer.crt_config_provenance import assert_product_crt_config
+
+        assert_product_crt_config(
+            self.crt_cfg,
+            context="BacktestRunner",
+            allow_router_base=bool(
+                getattr(bt_config, "allow_router_crt_config", False)
+            ),
         )
+
+        # ── Ledger provenance base (§13 item8 / §9 — TradeProvenanceV1) ────────
+        # Resolved once per run (strategy/model pins don't change mid-backtest).
+        # Best-effort: a resolution failure degrades to None fields rather than
+        # aborting the run — provenance is captured best-effort, never blocking
+        # (see journal.trade_provenance_v1_0 module docstring).
+        self._provenance_base = _build_provenance_base(bt_config.instrument, bt_config.strategy_id)
+
+        # XAUUSD M15 → Phase-1 frozen candidate only (fail-closed rewrite + hash/range).
+        if csv_path:
+            try:
+                csv_path = guard_xauusd_csv_path(
+                    csv_path, bt_config.instrument or "UNKNOWN"
+                )
+            except Phase1CandidateError as exc:
+                raise DatasetIntegrityError(
+                    f"XAUUSD M15 corpus binding failed (fail-closed): {exc}"
+                ) from exc
         self.csv_path = csv_path
         self._overrides: dict = overrides or {}
 
@@ -1611,6 +1789,16 @@ class BacktestRunner:
 
         self.feature_vectors = None
         self.feature_ts_to_idx: dict = {}  # timestamp → row-index in feature_vectors
+        # T-16: recorded so the replay loop can tell "no features by construction" from
+        # "features expected but absent" — only the latter is a contract failure.
+        # TWO legitimate no-feature modes, both of which must keep zero-filling:
+        #   * skip_features=True      — tuner workers that never read feature columns
+        #   * no csv_path at all      — the programmatic BacktestRunner(cfg) path used by the
+        #                               tuner / embedders / tests (F-057), which streams candles
+        #                               from a caller-supplied iterator and never builds a frame
+        # The __init__ warmup assert below is likewise scoped to the expected case, so the
+        # replay-loop predicate must match it exactly or the two disagree.
+        self._features_expected = bool(self.csv_path) and not skip_features
         if self.csv_path and not skip_features:
             try:
                 from features.feature_pipeline import FeaturePipeline
@@ -1644,6 +1832,27 @@ class BacktestRunner:
                     "FeaturePipeline built: %d rows | first 3 ts keys: %s",
                     len(self.feature_ts_to_idx), _sample_keys,
                 )
+                # ── T-16: warmup coupling (closes the two-declarations split-brain) ──
+                # finalize() dropped `required_warmup_rows()` leading rows; any candle the
+                # replay loop processes before that index has NO feature row behind it. The
+                # loop's own skip is `cfg.warmup_candles`, which was an unrelated literal.
+                # Resolve the true value and refuse to start if the configured skip is shorter,
+                # rather than discovering it as a lookup miss 30 bars later.
+                from features.feature_pipeline import required_warmup_rows
+                _pipeline_warmup = required_warmup_rows()
+                if int(self.cfg.warmup_candles) < _pipeline_warmup:
+                    raise FeatureAlignmentError(
+                        f"backtest.warmup_candles={self.cfg.warmup_candles} is shorter than the "
+                        f"feature pipeline's canonical warmup ({_pipeline_warmup} rows dropped by "
+                        f"FeaturePipeline.finalize()). Candles "
+                        f"{self.cfg.warmup_candles}..{_pipeline_warmup - 1} would run through the "
+                        f"CRT state machine with no feature row behind them. The pipeline warmup is "
+                        f"derived from feature_pipeline.ma_periods[0] + "
+                        f"(trend_strength_window - 1) + (zscore_window - 1). Raise "
+                        f"backtest.warmup_candles to >= {_pipeline_warmup}, or shorten those windows."
+                    )
+            except FeatureAlignmentError:
+                raise   # a governed contract failure — never repackaged as a generic RuntimeError
             except Exception as _fp_err:
                 raise RuntimeError(
                     f"FeaturePipeline init FAILED for {self.csv_path} — "
@@ -1663,9 +1872,9 @@ class BacktestRunner:
             # Governed drift thresholds (config: feature_monitor.soft_drift_z /
             # hard_drift_z); defaults equal the historical hardcoded literals.
             self._monitor = FeatureMonitor(
-                window_size=int(_fm_cfg.get("window_size", 500)),
-                soft_threshold=float(_fm_cfg.get("soft_drift_z", 2.5)),
-                hard_threshold=float(_fm_cfg.get("hard_drift_z", 3.0)),
+                window_size=int(_require_bt_cfg(_fm_cfg, "window_size", "feature_monitor")),
+                soft_threshold=float(_require_bt_cfg(_fm_cfg, "soft_drift_z", "feature_monitor")),
+                hard_threshold=float(_require_bt_cfg(_fm_cfg, "hard_drift_z", "feature_monitor")),
             )
             self._monitor_available = True
         except Exception as _fm_err:
@@ -1784,7 +1993,10 @@ class BacktestRunner:
             self.cfg.risk_pct_per_trade,
             self.cfg.use_compounding,
         )
-        journal = TradeJournal(self.cfg.instrument, self.cfg.pip_size, slip, cap)
+        journal = TradeJournal(
+            self.cfg.instrument, self.cfg.pip_size, slip, cap,
+            sl_atr_buffer=self.crt_cfg.sl_atr_buffer,
+        )
         gap_det = GapDetector(self.cfg.gap_reset_minutes, self.cfg.gap_reset_enabled)
         met_eng = MetricsEngine(self.cfg.instrument)
         writer  = ReportWriter(output_dir, self.cfg.instrument)
@@ -1804,10 +2016,21 @@ class BacktestRunner:
         from config_layer.production_config import get_prod_section as _gps_bt
         _ep_cfg_bt = _gps_bt("execution_planner")
         _fm_cfg_bt = _gps_bt("feature_monitor")
-        _partial_tp_enabled  = bool(_ep_cfg_bt.get("partial_tp_breakeven_enabled", False))
-        _partial_tp_fraction = float(_ep_cfg_bt.get("partial_tp_fraction", 0.5))
-        _drift_pause_enabled = bool(_fm_cfg_bt.get("drift_regime_pause_enabled", False))
-        _drift_cooldown      = int(_fm_cfg_bt.get("drift_cooldown_candles", 10))
+        # T-16 (2026-07-23): the two ENABLE flags were still soft (`.get(..., False)`) while the
+        # magnitudes beside them were made strict by the F-056 remediation — the fractions were
+        # fixed and the flags in the same block were missed. Both are declared `true` in config
+        # while the code default was `False`, so an absent key silently FLIPPED the feature off
+        # while the config claimed it was on: the F-056 "config illusion" class exactly. Strict
+        # now; parity-safe because the declared values are what the runtime was already using.
+        _partial_tp_enabled  = bool(_require_bt_cfg(_ep_cfg_bt, "partial_tp_breakeven_enabled", "execution_planner"))
+        _partial_tp_fraction = float(_require_bt_cfg(_ep_cfg_bt, "partial_tp_fraction", "execution_planner"))
+        _drift_pause_enabled = bool(_require_bt_cfg(_fm_cfg_bt, "drift_regime_pause_enabled", "feature_monitor"))
+        _drift_cooldown      = int(_require_bt_cfg(_fm_cfg_bt, "drift_cooldown_candles", "feature_monitor"))
+        # Phase-5 calibrated-scorer veto floor. Was a bare `0.35` literal at the compare
+        # site, declared in NO config section despite phase5_calibration existing — and it
+        # gates every trade under the default scorer_mode="calibrated".
+        _p5_cfg_bt   = _gps_bt("phase5_calibration")
+        _p5_min_pwin = float(_require_bt_cfg(_p5_cfg_bt, "min_p_win", "phase5_calibration"))
 
         _drift_pause_remaining = 0
         _hard_drift_pauses     = 0
@@ -1831,11 +2054,53 @@ class BacktestRunner:
             _phase_d_available = False
 
         # ── EngineRunner gate (live-mode pipeline wired into backtest) ────────
-        # Runs adapter → fusion → dual-engine → decision_engine on each candidate
-        # trade. Enabled by default; set BACKTEST_ENGINE_GATE=0 to disable.
+        # Runs adapter → fusion → dual-engine → decision_engine on each candidate trade.
+        #
+        # F-058 resolution (T-16, 2026-07-23): CONFIG is the authority. This was read only as
+        # os.getenv("BACKTEST_ENGINE_GATE", "1"), declared in no config, so the documented
+        # behavior depended on an untracked `.env` — F-037 and active_models.yaml say OFF, the
+        # code default is ON, and CI/scrubbed environments silently produced a different ledger.
+        # The env var is now an EXPLICIT override that logs at WARNING when it disagrees with
+        # config, so the divergence can never again be silent.
+        _bt_gate_cfg = _require_bt_cfg(
+            _gps_bt("backtest"), "engine_gate_enabled", "backtest"
+        )
+        _gate_enabled = bool(_bt_gate_cfg)
+        _gate_env = os.getenv("BACKTEST_ENGINE_GATE")
+        if _gate_env is not None:
+            _env_enabled = _gate_env == "1"
+            if _env_enabled != _gate_enabled:
+                self.log.warning(
+                    "BACKTEST_ENGINE_GATE=%r OVERRIDES backtest.engine_gate_enabled=%s — "
+                    "this run's ledger is NOT the config-declared epoch (F-058).",
+                    _gate_env, _gate_enabled,
+                )
+            _gate_enabled = _env_enabled
+
+        # F-058-class fix (2026-07-29, target-strategy-architecture.md sec13 item2): the
+        # zone_gate_invalid backtest-mode bypass was read only as
+        # os.getenv("BACKTEST_BYPASS_ZONE_INVALID", "1"), declared in no config — the same
+        # undeclared-env-truth class as engine_gate_enabled above. CONFIG is now the
+        # authority; the env var stays an explicit override that logs at WARNING on
+        # disagreement, mirroring the engine_gate_enabled pattern exactly.
+        _bypass_zone_cfg = bool(_require_bt_cfg(
+            _gps_bt("backtest"), "bypass_zone_invalid", "backtest"
+        ))
+        _bypass_zone_enabled = _bypass_zone_cfg
+        _bypass_zone_env = os.getenv("BACKTEST_BYPASS_ZONE_INVALID")
+        if _bypass_zone_env is not None:
+            _bypass_zone_env_enabled = _bypass_zone_env == "1"
+            if _bypass_zone_env_enabled != _bypass_zone_cfg:
+                self.log.warning(
+                    "BACKTEST_BYPASS_ZONE_INVALID=%r OVERRIDES backtest.bypass_zone_invalid=%s "
+                    "— this run's ledger is NOT the config-declared epoch (F-058-class).",
+                    _bypass_zone_env, _bypass_zone_cfg,
+                )
+            _bypass_zone_enabled = _bypass_zone_env_enabled
+
         _engine_runner = None
         _engine_rejected_count = 0
-        if os.getenv("BACKTEST_ENGINE_GATE", "1") == "1":
+        if _gate_enabled:
             from config_layer.production_config import get_prod_section as _gps_er
             from core.engine_runner import EngineRunner as _ER
             _er_cfg = dict(_gps_er("engine_runner"))
@@ -1895,8 +2160,12 @@ class BacktestRunner:
             # ── Initialise ─────────────────────────────────────────
             if not initialised:
                 if htf.seed_candles():
-                    session = self._session(candle.timestamp)
-                    engine.initialise_range(htf.seed_candles(), htf.current_htf_id, session)
+                    # Named `session_label` (not `session`) to avoid colliding with the canonical
+                    # feature `session` (FM-052, int8 {0,1,2} from hour cutoffs 8/16). THIS is the
+                    # CRT-engine session LABEL: a string name resolved from crt_cfg.session_windows,
+                    # defaulting to "OFF_SESSION". Distinct quantity, distinct type.
+                    session_label = self._session(candle.timestamp)
+                    engine.initialise_range(htf.seed_candles(), htf.current_htf_id, session_label)
                     initialised = True
                     self.log.info(f"  Engine init @ candle {candle_idx} | HTF={htf.current_htf_id}")
                 prev_candle = candle
@@ -1920,7 +2189,7 @@ class BacktestRunner:
                     _gap_closed = journal.on_trade_closed(
                         engine.state.active_trade, candle.open,
                         "GAP_RESET_CLOSE", candle, candle_idx,
-                        engine.state.atr, spread_half,
+                        engine.state.atr_abs, spread_half,
                     )
                     # Phase D: attach strategy memory fields
                     if _gap_closed is not None and _phase_d_available:
@@ -1991,34 +2260,50 @@ class BacktestRunner:
                             len(self.feature_ts_to_idx), _sample_dict_keys,
                             _ts_key, _fv_idx, _fv_shape,
                         )
+                    # ── T-16: FAIL CLOSED on a lookup miss ─────────────────────
+                    # This used to substitute [0.0] * len(CANONICAL_FEATURES) and warn at most
+                    # three times, so a mid-file NaN drop (finalize() tolerates up to
+                    # max(300, 2%)) or a timestamp-format break produced a confidently-scored
+                    # ZERO vector that flowed on into fusion, BitNet, the orchestrator and the
+                    # trade ledger. The leading-warmup cause is now structurally impossible
+                    # (the __init__ assert), so a miss here is real corruption.
                     if _fv_idx < 0:
-                        if not hasattr(self, "_ts_miss_count"):
-                            self._ts_miss_count = 0
-                        self._ts_miss_count += 1
-                        if self._ts_miss_count <= 3:
-                            _sample = list(self.feature_ts_to_idx.keys())[:1]
-                            self.log.warning(
-                                "Feature lookup MISS #%d: candle_ts=%r not in dict "
-                                "(dict sample key=%r) — check CSV timestamp format.",
-                                self._ts_miss_count, _ts_key,
-                                _sample[0] if _sample else "empty",
-                            )
-                    feature_vector = (
-                        self.feature_vectors[_fv_idx].tolist()
-                        if _fv_idx >= 0
-                        else [0.0] * len(CANONICAL_FEATURES)
-                    )
-                else:
-                    # No pipeline data — log once so we know which branch we're in
+                        _sample = list(self.feature_ts_to_idx.keys())[:1]
+                        raise FeatureAlignmentError(
+                            f"Feature-vector lookup MISS at candle_idx={candle_idx}: "
+                            f"candle timestamp {_ts_key!r} is absent from the feature frame "
+                            f"({len(self.feature_ts_to_idx)} rows, sample key "
+                            f"{(_sample[0] if _sample else 'empty')!r}). Refusing to substitute a "
+                            "zero vector: a zero-filled feature row is not a neutral input, it is "
+                            "a fabricated observation that scores through fusion as if measured. "
+                            "Causes: a CSV timestamp format the pipeline and loader parse "
+                            "differently, or a row dropped mid-file by FeaturePipeline.finalize() "
+                            "(NaN in a canonical column)."
+                        )
+                    feature_vector = self.feature_vectors[_fv_idx].tolist()
+                elif not self._features_expected:
+                    # No features BY CONSTRUCTION (skip_features=True, or no csv_path — the
+                    # programmatic tuner/embedder/test path). Zero vector is the documented
+                    # contract for those modes, unchanged by T-16.
                     if not hasattr(self, "_fv_none_logged"):
                         self._fv_none_logged = True
-                        self.log.warning(
-                            "FEATURE DIAG | feature_vectors=%s ts_to_idx_len=%d — "
-                            "batch features will be all 0.0 for all trades.",
-                            self.feature_vectors is not None,
-                            len(self.feature_ts_to_idx),
+                        self.log.info(
+                            "FEATURE DIAG | no feature frame by construction "
+                            "(skip_features or no csv_path): batch feature columns are "
+                            "zero-filled by contract for this run."
                         )
                     feature_vector = [0.0] * len(CANONICAL_FEATURES)
+                else:
+                    # Features WERE expected (csv_path set, skip_features=False) but the frame is
+                    # absent. __init__ raises before reaching here, so this is a defensive floor
+                    # against a future construction path that bypasses it — never a silent zero-fill.
+                    raise FeatureAlignmentError(
+                        f"Feature vectors are absent although a feature frame was expected "
+                        f"(csv_path={self.csv_path!r}, "
+                        f"feature_vectors={self.feature_vectors is not None}, "
+                        f"ts_to_idx_len={len(self.feature_ts_to_idx)}). The pipeline must have "
+                        "been built in __init__; refusing to score trades on zero-filled features."
+                    )
 
                 # ── Phase-5 scorer gate ────────────────────────────────────
                 # Rejects trades whose predicted win-probability is below 0.35.
@@ -2042,7 +2327,7 @@ class BacktestRunner:
                     }
                     _p5_dir = getattr(engine.state.direction, "value", "LONG").lower()
                     _p5 = self._scorer.compute(_feat_map_p5, candle_idx, direction=_p5_dir)
-                    if _p5 is not None and _p5["p_win"] < 0.35:
+                    if _p5 is not None and _p5["p_win"] < _p5_min_pwin:
                         journal.on_rejected(
                             f"P5_SCORE_LOW:{_p5['p_win']:.3f}",
                             candle_idx, candle.timestamp,
@@ -2110,7 +2395,7 @@ class BacktestRunner:
                         _feat_map_er.setdefault("low",       candle.low)
                         _feat_map_er.setdefault("open",      candle.open)
                         _feat_map_er.setdefault("volume",    candle.volume)
-                        _feat_map_er.setdefault("atr",       engine.state.atr)
+                        _feat_map_er.setdefault("atr",       engine.state.atr_abs)
                         _feat_map_er.setdefault("timestamp", str(candle.timestamp))
                         # Map feature_vector's numeric session (0/1/2) → adapter's expected
                         # string ("asia"/"london"/"new_york"). FeaturePipeline encodes it
@@ -2141,7 +2426,7 @@ class BacktestRunner:
                                     if i < len(feature_vector)
                                 }
                                 _feat_dict["close"] = candle.close
-                                _feat_dict["atr"] = engine.state.atr
+                                _feat_dict["atr"] = engine.state.atr_abs
                                 # Phase A/B: inject CRT transition path so StrategyIntentBuilder
                                 # can use CRT-enriched evidence for S01/S10 (capabilities={"transition_path"}).
                                 # Guarded by _phase_d_available — same import block as _recent_path (line ~1473).
@@ -2174,9 +2459,10 @@ class BacktestRunner:
                         # Backtest-mode bypass: zone_gate_invalid is a production-only
                         # rule that requires a populated zone_registry.json. With ≤5
                         # zones loaded (treated as "no zones") we can't fairly enforce
-                        # it in backtest. Live behavior unchanged.
+                        # it in backtest. Live behavior unchanged. Config-declared —
+                        # see _bypass_zone_enabled above (F-058-class fix).
                         _bypass_zone = (
-                            os.getenv("BACKTEST_BYPASS_ZONE_INVALID", "1") == "1"
+                            _bypass_zone_enabled
                             and "zone_gate_invalid" in str(_reason)
                         )
                         if str(_decision).upper() in ("REJECT", "REJECTED", "HOLD") and not _bypass_zone:
@@ -2221,7 +2507,7 @@ class BacktestRunner:
                         state_path     = state_path,
                         htf_id         = htf.current_htf_id,
                         session        = last_session,
-                        atr            = engine.state.atr,
+                        atr            = engine.state.atr_abs,
                         spread_half    = spread_half,
                         feature_vector = feature_vector,
                         # Universe-B live metrics injected from the result dict —
@@ -2251,6 +2537,34 @@ class BacktestRunner:
                             candle.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
                         )
                     if _orec is not None and _fv_valid:
+                        # §13 item8 / §9 — ledger completeness. TradeProvenanceV1 had zero
+                        # consumers before this; stamped here so every ENTRY line carries the
+                        # config version+hash, model pins, and strategy id it was opened under,
+                        # plus a feature-vector fingerprint and the CRTConfig threshold snapshot
+                        # ("gates_fired") that let this trade through. Best-effort — a failure
+                        # here must never block trade logging.
+                        _provenance_dict = {}
+                        _fv_sha = ""
+                        _gates_fired = {}
+                        try:
+                            import hashlib as _hashlib
+                            import json as _json_prov
+                            import dataclasses as _dc_prov
+                            from journal.trade_provenance_v1_0 import TradeProvenanceV1
+                            _provenance_dict = TradeProvenanceV1(
+                                trade_id=_orec.trade_id, **self._provenance_base,
+                            ).to_dict()
+                            _fv_sha = _hashlib.sha256(
+                                repr([round(float(v), 8) for v in feature_vector]).encode("utf-8")
+                            ).hexdigest()
+                            # CRTConfig carries datetime.time (session_windows) — not natively
+                            # JSON-serializable. Round-trip through json.dumps(default=str) so
+                            # this is a JSON-safe snapshot, not a live CRTConfig object.
+                            _gates_fired = _json_prov.loads(
+                                _json_prov.dumps(_dc_prov.asdict(self.crt_cfg), default=str)
+                            )
+                        except Exception as _prov_exc:  # noqa: BLE001
+                            self.log.debug("Provenance stamping failed for %s: %s", _orec.trade_id, _prov_exc)
                         self._trade_logger.log_entry(
                             trade_id      = _orec.trade_id,
                             instrument    = _orec.instrument,
@@ -2265,6 +2579,9 @@ class BacktestRunner:
                             tp1_price     = _orec.tp1_price,
                             tp2_price     = _orec.tp2_price,
                             opened_at     = _orec.opened_at,
+                            provenance         = _provenance_dict,
+                            feature_vector_sha = _fv_sha,
+                            gates_fired        = _gates_fired,
                         )
                         # M1 — episode summarizer: trade opened
                         self._episode_summarizer.on_trade_opened(
@@ -2293,15 +2610,24 @@ class BacktestRunner:
                     else:
                         if "STOPPED" in action:
                             if _trade_status == "TP1" and _partial_tp_enabled:
-                                # Runner stopped at breakeven; blend exit = 50%@TP1 + 50%@entry
-                                exit_raw = 0.5 * t.tp1_price + 0.5 * t.sl_price
+                                # Runner stopped at breakeven; blend exit = f@TP1 + (1-f)@entry.
+                                # f is execution_planner.partial_tp_fraction (was a hardcoded 0.5
+                                # while the config key was strict-read at :1854 and then discarded —
+                                # a config illusion: editing the key had zero effect on output).
+                                exit_raw = (
+                                    _partial_tp_fraction * t.tp1_price
+                                    + (1.0 - _partial_tp_fraction) * t.sl_price
+                                )
                                 reason = "TP1_BE_STOP"
                             else:
                                 exit_raw, reason = t.sl_price, "STOPPED"
                         elif "TP2" in action:
                             if _trade_status == "TP1" and _partial_tp_enabled:
-                                # Runner reached TP2; blend exit = 50%@TP1 + 50%@TP2
-                                exit_raw = 0.5 * t.tp1_price + 0.5 * t.tp2_price
+                                # Runner reached TP2; blend exit = f@TP1 + (1-f)@TP2 (same key as above)
+                                exit_raw = (
+                                    _partial_tp_fraction * t.tp1_price
+                                    + (1.0 - _partial_tp_fraction) * t.tp2_price
+                                )
                                 reason = "TP1_TP2"
                             else:
                                 exit_raw, reason = t.tp2_price, "TP2"
@@ -2309,7 +2635,7 @@ class BacktestRunner:
                             exit_raw, reason = t.tp1_price, "TP1"
                         _closed = journal.on_trade_closed(
                             t, exit_raw, reason,
-                            candle, candle_idx, engine.state.atr, spread_half,
+                            candle, candle_idx, engine.state.atr_abs, spread_half,
                         )
                     if _closed is not None:
                         # Phase D: attach strategy memory fields before any downstream read
@@ -2348,15 +2674,21 @@ class BacktestRunner:
                 t = engine.state.active_trade
                 _t_status = getattr(t, "status", "OPEN")
                 if _t_status == "TP1" and _partial_tp_enabled:
-                    # Runner alive at RESET: blend exit = 50%@TP1 + 50%@SL (already at trail/BE)
-                    _exit_raw = 0.5 * t.tp1_price + 0.5 * t.sl_price
+                    # Runner alive at RESET: blend exit = f@TP1 + (1-f)@SL (already at
+                    # trail/BE). Same execution_planner.partial_tp_fraction as the two
+                    # blend sites in on_candle — this THIRD site was missed in the first
+                    # pass and only surfaced because the floor test greps the source.
+                    _exit_raw = (
+                        _partial_tp_fraction * t.tp1_price
+                        + (1.0 - _partial_tp_fraction) * t.sl_price
+                    )
                     _reset_reason = "TP1_BE_RESET"
                 else:
                     _exit_raw = candle.close
                     _reset_reason = "RESET_CLOSE"
                 _closed = journal.on_trade_closed(
                     t, _exit_raw, _reset_reason, candle, candle_idx,
-                    engine.state.atr, spread_half,
+                    engine.state.atr_abs, spread_half,
                 )
                 if _closed is not None:
                     # Phase D: attach strategy memory fields
@@ -2400,7 +2732,7 @@ class BacktestRunner:
             _closed = journal.on_trade_closed(
                 engine.state.active_trade, last.close,
                 "BACKTEST_END", last, candle_idx,
-                engine.state.atr, spread_half,
+                engine.state.atr_abs, spread_half,
             )
             if _closed is not None:
                 self._trade_logger.log_exit(
@@ -2539,6 +2871,14 @@ def _preflight_dataset(csv_path: str, instrument: str, log: logging.Logger) -> b
     file is streamed. Returns True if the file may proceed (APPROVE/WARN),
     False if it must be skipped (REJECT). Never aborts a batch — a rejected
     instrument is logged and skipped. A WARN runs but is logged with its report."""
+    try:
+        csv_path = guard_xauusd_csv_path(csv_path, instrument)
+    except Phase1CandidateError as exc:
+        log.error(
+            "[dataset_integrity] XAUUSD M15 binding REJECT %s (%s): %s — skipping.",
+            csv_path, instrument, exc,
+        )
+        return False
     rep = validate_dataset(csv_path, instrument=instrument, raise_on_fail=False)
     decision = rep.get("decision")
     if decision == DatasetDecision.REJECT.value:
@@ -2798,6 +3138,14 @@ def run_backtest(config: dict, csv_path: str) -> list:
     list[dict]
         One decision dict per row returned by ``EngineRunner.run()``.
     """
+    # XAUUSD M15 → Phase-1 frozen candidate only (fail-closed).
+    symbol_hint = os.path.basename(csv_path).split("_")[0]
+    try:
+        csv_path = guard_xauusd_csv_path(csv_path, symbol_hint)
+    except Phase1CandidateError as exc:
+        raise DatasetIntegrityError(
+            f"XAUUSD M15 corpus binding failed (fail-closed): {exc}"
+        ) from exc
     raw_df  = pd.read_csv(csv_path)
     pipeline = FeaturePipeline(raw_df)
     enriched_df, vectors = pipeline.run()

@@ -23,13 +23,16 @@ import logging
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, time
-from enum import Enum, auto
 from types import MappingProxyType
-from typing import Any, List, Mapping, Optional
+from typing import Any, List, Mapping, Optional, Sequence
 from features.feature_schema import CANONICAL_FEATURES
 from features.schema_validator import validate_features
 from features import candle_math as _cm  # single source of truth for candle geometry
-from features import derived_math as _dm  # FM-027/FM-028 CRT emission identities (CH-002 / F-050)
+# Phase-2 Option A: FM id → registry/composition binding (identity-preserving; no auto-run required_fm).
+# FM-027/028 CRT emission identities (CH-002 / F-050) resolve through FORMULA_REGISTRY here.
+from features.fm_resolve import bind_phase2_crt_callables
+_FM_CRT: dict = bind_phase2_crt_callables()  # FM-002/010/027/028 callables
+from config_layer.state_identity import CRTState, Direction, RejectReason, VALID_TRANSITIONS, CRTConfig
 from config_layer.crt_sweep_taxonomy import classify_sweep as _classify_sweep_geometry
 from utils.sweep_trace_logger import SweepTraceLogger
 from utils.integrity_events import emit_integrity_event
@@ -62,31 +65,6 @@ logger = logging.getLogger("CRT_ENGINE_V2")
 # ENUMS
 # ─────────────────────────────────────────────────────────────────
 
-class CRTState(Enum):
-    RANGE          = auto()
-    SHADOW_PENDING = auto()   # Cross-window displacement memory active; awaiting sweep confirmation
-    SWEEP          = auto()
-    DISPLACEMENT   = auto()
-    EXPANSION      = auto()
-    EXPIRED        = auto()   # Phase 3b — soft archive: TTL exceeded, one-candle pause before RANGE reset
-    RETEST         = auto()
-    EXECUTION      = auto()
-    RESOLUTION     = auto()
-
-
-class Direction(Enum):
-    LONG  = "LONG"
-    SHORT = "SHORT"
-    NONE  = "NONE"
-
-
-class RejectReason(Enum):
-    LOW_SCORE       = "score_below_threshold"
-    OUTSIDE_SESSION = "outside_session_window"
-    NO_DOUBLE_SWEEP = "no_double_sweep_confirmed"
-    NEWS_FILTER     = "news_filter_active"
-    HIGH_SPREAD     = "spread_too_high"
-    INVALID_STATE   = "invalid_state_for_execution"
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -110,11 +88,13 @@ class Candle:
     @property
     def wick_size(self) -> float:
         # NOTE: historically named `wick_size` but is the full candle range (high - low).
-        return _cm.candle_range(self.high, self.low)
+        # Phase-2: FM-002 via FORMULA_REGISTRY (identity == candle_math.candle_range).
+        return _FM_CRT["FM-002"](self.high, self.low)
 
     @property
     def body_ratio(self) -> float:
-        return _cm.body_ratio(self.open, self.high, self.low, self.close)
+        # Phase-2: FM-010 composition path (float-parity with candle_math.body_ratio).
+        return _FM_CRT["FM-010"](self.open, self.high, self.low, self.close)
 
     @property
     def is_bullish(self) -> bool:
@@ -208,16 +188,22 @@ class RiskScore:
     time_score:     float = 0.0
     decay_factor:   float = 1.0          # [PATCH 6] applied before final
     score_override: Optional[float] = None  # set by soft-conf fusion to override computed final
+    # [IC-007 / PLAN-002] (sweep, breakout, retest, time) weights. Default = legacy literals
+    # (parity for direct constructions); production injects CRTConfig.risk_score_weights
+    # at the sole constructor (UltronRiskEngine.compute_score). DISTINCT identity from the
+    # engines-path score_component_weights and from conf_weights — never alias.
+    weights: tuple = (0.35, 0.25, 0.20, 0.20)
 
     @property
     def final(self) -> float:
         if self.score_override is not None:
             return self.score_override
+        w_sweep, w_breakout, w_retest, w_time = self.weights
         raw = (
-            0.35 * self.sweep_score +
-            0.25 * self.breakout_score +
-            0.20 * self.retest_score +
-            0.20 * self.time_score
+            w_sweep * self.sweep_score +
+            w_breakout * self.breakout_score +
+            w_retest * self.retest_score +
+            w_time * self.time_score
         )
         return raw * self.decay_factor
 
@@ -255,7 +241,12 @@ class EngineState:
     risk_score:          Optional[RiskScore] = None
     active_trade:        Optional[Trade] = None
     direction:           Direction = Direction.NONE
-    atr:                 float = 0.0
+    # ABSOLUTE ATR in price units (SMA of true_range over crt_engine.atr_period).
+    # DELIBERATELY NOT named `atr`: the canonical feature FM-041 `atr` is CLOSE-RELATIVE
+    # (atr_14_raw / close). Different quantities; the bare name has already caused two
+    # misreadings (FM-050's depends_on, and a T-20 mis-diagnosis). Consumers compare this
+    # against PRICE moves (atr_min_displacement * atr_abs, wick_size < mult * atr_abs).
+    atr_abs:             float = 0.0
     displacement_candle: Optional[Candle] = None
     retest_candle:       Optional[Candle] = None
     retest_candle_index: int = 0       # [PATCH 6] for decay calculation
@@ -280,6 +271,11 @@ class EngineState:
     pending_displacement_formed_idx:   int                 = 0
     pending_displacement_age_at_reset: int                 = 0
     pending_displacement_reason_created: str               = ""
+    # candle.index of the bar that CREATED this shadow memory (set alongside ttl above).
+    # Lets the RANGE-branch TTL countdown skip the creating bar itself — see the
+    # [DEADLOCK FIX] fall-through note at process_candle:RANGE for why the creating bar
+    # already runs the RANGE branch, and why decrementing there was an off-by-one.
+    pending_displacement_created_idx:  int                 = 0
     # Phase 2b — Persists True from SHADOW_EXPANSION_CONFIRMED until reset, so TRADE_OPENED
     # can read it even though the shadow action fired on an earlier candle.
     _came_from_shadow:                 bool                = False
@@ -304,138 +300,6 @@ class EngineState:
 
 
 # ─────────────────────────────────────────────────────────────────
-# CONFIG
-# ─────────────────────────────────────────────────────────────────
-
-@dataclass(frozen=True)
-class CRTConfig:
-    # State machine thresholds
-    body_ratio_min:        float = 0.70
-    atr_multiplier_min:    float = 1.50
-    retest_depth_max:      float = 0.25    # [PATCH 5] now used as ceiling only
-
-    # [PATCH 1] Bounded ATR buffer
-    atr_period:            int   = 14
-    atr_buffer_multiplier: int   = 3       # buffer = atr_period * this
-
-    # [PATCH 2] Sweep age constraint
-    max_sweep_age_candles: int   = 20      # sweep invalidated after N candles
-
-    # [PATCH 3] Expansion quality
-    expansion_atr_min_distance: float = 0.20   # close must be > disp_close + 0.2 * ATR
-
-    # [PATCH 5] Adaptive retest depth
-    retest_atr_depth_fraction: float = 0.50   # adaptive ceiling = 0.5 * ATR
-
-    # [PATCH 7] Displacement strength ceiling
-    # Displacement is measured as wick_size / ATR at the displacement candle.
-    # High values (>2.0) indicate an overextended impulse move — the market has
-    # already exhausted momentum, so a subsequent retest is unlikely to have
-    # enough fuel to continue.  Empirical finding from EURUSD M15 backtest:
-    # winners had cached_disp ≤ 1.95, losers ranged 1.33–6.10.
-    max_displacement_strength: float = 2.0
-
-    # [PATCH 6] Time-decay scoring
-    score_decay_lambda:    float = 0.05    # decay rate per candle since retest
-
-    # Ultron risk thresholds
-    score_threshold:       float = 0.45
-    max_spread_pct:        float = 0.05
-    # ── DATA-DRIVEN CONSTANTS (AUTO-DERIVED) ──
-    atr_min_displacement: float = 1.2     # displacement >= 1.2 * ATR
-    confirmation_body_min: float = 0.6    # strong candle
-    sl_atr_buffer: float = 0.2           # SL buffer
-    tp1_atr_multiplier: float = 1.0
-    tp2_atr_multiplier: float = 2.0
-    # [trust-layer F2, 2026-06-10] Exit-trigger model (GOVERNED). "intrabar_touch"
-    # (default) fires SL/TP on a high/low wick touch with conservative SL-before-TP
-    # same-bar ordering (see CRTEngine._intrabar_trigger_price); "close_only" is the
-    # legacy optimistic bound (close-crossing only). Adopting intrabar makes backtest
-    # metrics realistic for an SL-based strategy. See
-    # docs/analysis/exit-model-adoption-2026-06-10.md.
-    exit_model: str = "intrabar_touch"
-    # BREAKOUT-vs-REVERSAL intent boundary (displacement strength). Per-symbol
-    # overrides resolve via production_config.resolve_breakout_disp_threshold.
-    breakout_disp_threshold: float = 1.5
-    # Per-intent TP1 multipliers (override tp1_atr_multiplier when intent is known)
-    tp1_atr_multiplier_breakout:  float = 1.5
-    tp1_atr_multiplier_pullback:  float = 0.8
-    tp1_atr_multiplier_liq_sweep: float = 1.2
-    tp1_atr_multiplier_reversal:  float = 1.0
-    bitnet_main_threshold: float = 0.55
-    use_bitnet: bool = False
-
-    # Session windows (UTC)
-    session_windows: dict = field(default_factory=lambda: {
-        "LONDON":  (time(7,  0), time(10, 0)),
-        "NEWYORK": (time(13, 0), time(16, 0)),
-        "ASIA":    (time(0,  0), time(3,  0)),
-    })
-
-    # Sessions in which trade signals are allowed to fire.
-    # Mirrors engine_runner.allowed_sessions; populated from JSON via config_builder.
-    # UPPERCASE to match session_windows keys.
-    allowed_sessions: tuple = ("LONDON", "NEWYORK", "OVERLAP")
-
-    # Reset triggers
-    retrace_reset_pct:   float = 0.50
-    extension_reset_fib: float = 1.618
-
-    # News blackout (minutes before/after)
-    news_blackout_minutes: int = 15
-
-    # ── Soft Confirmation Manifold (replaces binary 5-candle gate) ──
-    conf_alpha:         float = 0.70   # structural (Gaussian) weight in fusion
-    conf_beta:          float = 0.30   # confirmation weight in fusion
-    conf_weights:       tuple = (0.35, 0.35, 0.15, 0.15)  # body, mom, dist, disp
-    conf_floor:         float = 0.20   # C is clamped to [floor, 1.0]
-    weak_link_weight:   float = 0.30   # penalty for weakest of body/mom
-    ema_fast:           int   = 2      # EMA period for fast momentum
-    ema_slow:           int   = 5      # EMA period for slow momentum
-
-    # ── Tiered execution thresholds ──────────────────────────────
-    tier_1_threshold:   float = 0.75   # full risk
-    tier_2_threshold:   float = 0.30   # half risk
-    soft_conf_max_candles: int = 3     # evaluation window (was 5-candle binary gate)
-
-    # ── Shadow displacement protection (Phase 1) ──────────────────
-    # Candles a pending_displacement memory survives after an HTF reset.
-    # TTL = 4 = one HTF window (4 × M15 = 1 h).  Set to 0 to disable.
-    pending_displacement_ttl_candles: int = 4
-
-    # ── Expansion TTL guard (Phase 3b) ────────────────────────────
-    # Expire if EITHER candle OR hour limit is exceeded. Set 0 to disable either.
-    # Derived from Phase 3a: min(P99_non_outlier=495 candles, 7d=672 candles) = 495 candles.
-    # 495 M15 candles = 123.75 hours → max_expansion_age_hours = 124 (ceiling).
-    # P95 (342 candles) used as TEMPORAL_STALE_WIN warn threshold.
-    max_expansion_age_candles: int   = 495   # expire after this many candles (≈5.2 days)
-    max_expansion_age_hours:   int   = 124   # expire after this many hours (timestamp-based)
-    expansion_age_warn_candles: int  = 342   # TEMPORAL_STALE_WIN warning if trade opened above P95
-
-    # ── Shadow age-decay gate (Phase 4b) ─────────────────────────
-    # Exponential decay applied to the S-score of shadow candidates at soft-conf approval.
-    # effective_score = final_S × exp(−λ × candidate_age_at_entry)
-    # 0.0 = OFF (no decay, Phase 3b behavior).  Experiment levels: 0.00 | 0.10 | 0.20 | 0.35
-    # At shadow age=4 (invariant): λ=0.10 → ×0.670 | λ=0.20 → ×0.449 | λ=0.35 → ×0.247
-    shadow_age_penalty_lambda: float = 0.0
-
-    # Normalisation denominator for the shadow age-decay (Phase 4b Variant B).
-    # 0 = Variant A (raw): exp(-λ × age)        — λ not interpretable when age is constant.
-    # N = Variant B (normalised): exp(-λ × age/N) — λ=1.0 means "at max age (N), score → 1/e".
-    # Recommended for Variant B: set to pending_displacement_ttl_candles (= 4).
-    # A/B parity check: Variant A λ=0.20 ≡ Variant B λ=0.80, norm=4 (same penalty at age=4).
-    shadow_age_norm_candles: int = 0
-
-    # Advisory-only shadow: if True, shadow expansions never produce trades.
-    # Shadow still tracks telemetry through EXPANSION→RETEST; EXECUTION is blocked.
-    # Fallback when no λ satisfies the composite shadow governance gate.
-    shadow_advisory_only: bool = False
-
-    # ── Proportional sizing bands (score → risk_pct) ─────────────
-    sizing_bands: list = field(default_factory=lambda: [
-        (0.75, 0.010),   # Tier 1 → 1.0%
-        (0.55, 0.005),   # Tier 2 → 0.5%
-    ])
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -1043,11 +907,16 @@ class RangeDetector:
         # diagnostic metadata only — sweep detection above (range-boundary rule)
         # is the production decision; downstream scoring ignores these fields.
         full_range = max(candle.high - candle.low, 0.001)
-        upper_wick = (candle.high - max(candle.open, candle.close)) / full_range
-        lower_wick = (min(candle.open, candle.close) - candle.low) / full_range
+        # T-15 / GD-006/007 (2026-07-20): diagnostic sweep-geometry fractions of
+        # full_range. NOT FM-003/FM-004 (raw upper_wick/lower_wick) and NOT
+        # FM-011/FM-012 (canonical upper_wick_ratio/lower_wick_ratio — those are
+        # registered names that the ownership lint would re-flag). Local names
+        # deliberately off the ontology. Behaviour-neutral rename.
+        sweep_uw_frac = (candle.high - max(candle.open, candle.close)) / full_range
+        sweep_lw_frac = (min(candle.open, candle.close) - candle.low) / full_range
         sweep_type, sweep_label = _classify_sweep_geometry(
-            upper_wick=upper_wick,
-            lower_wick=lower_wick,
+            upper_wick=sweep_uw_frac,
+            lower_wick=sweep_lw_frac,
             body_ratio=candle.body_ratio,
             bearish=(candle.close < candle.open),
         )
@@ -1073,32 +942,47 @@ class RangeDetector:
 # MODULE 2 — STATE MACHINE
 # ─────────────────────────────────────────────────────────────────
 
-VALID_TRANSITIONS: dict[CRTState, list[CRTState]] = {
-    CRTState.RANGE:          [CRTState.SWEEP, CRTState.SHADOW_PENDING],
-    CRTState.SHADOW_PENDING: [CRTState.SWEEP, CRTState.RANGE],
-    CRTState.SWEEP:          [CRTState.DISPLACEMENT, CRTState.EXPANSION, CRTState.RANGE],
-    CRTState.DISPLACEMENT:   [CRTState.EXPANSION, CRTState.RANGE],
-    CRTState.EXPANSION:      [CRTState.RETEST, CRTState.EXPIRED, CRTState.RANGE],  # Phase 3b: EXPIRED added
-    CRTState.EXPIRED:        [CRTState.RANGE],   # Phase 3b — one-candle soft archive then RANGE
-    CRTState.RETEST:         [CRTState.EXECUTION, CRTState.RANGE],
-    CRTState.EXECUTION:      [CRTState.RESOLUTION],
-    CRTState.RESOLUTION:     [CRTState.RANGE],
-}
 
 
 class StateMachine:
 
-    def __init__(self, config: CRTConfig, telemetry: Optional["TelemetryCollector"] = None):
+    def __init__(
+        self,
+        config: CRTConfig,
+        telemetry: Optional["TelemetryCollector"] = None,
+        valid_transitions: Optional[Mapping[CRTState, Sequence[CRTState]]] = None,
+    ):
         self.config = config
         self.telemetry = telemetry
         self.log = logging.getLogger("CRT.StateMachine")
+        # Optional CRT baseline trace hooks (default None — zero behavior change).
+        self.trace_hooks = None
+        # Phase-Topology: instance graph (WHO-loaded when provided; else module seed).
+        if valid_transitions is None:
+            from config_layer.state_topology import module_seed_transition_graph
+            self.valid_transitions: Mapping[CRTState, Sequence[CRTState]] = (
+                module_seed_transition_graph()
+            )
+        else:
+            self.valid_transitions = valid_transitions
+
+    def _trace_guard(self, **kwargs) -> None:
+        """Observation-only; never alters control flow. No-op when hooks inactive."""
+        h = self.trace_hooks
+        if h is None:
+            return
+        try:
+            h.record_guard(**kwargs)
+        except Exception:
+            # Serialization/observer failure must not change engine behavior.
+            pass
 
     def _transition(
         self, state: EngineState, target: CRTState,
         reason: str, candle: Optional[Candle] = None,
         ev_logger: Optional[EventLogger] = None,
     ) -> bool:
-        allowed = VALID_TRANSITIONS.get(state.current_state, [])
+        allowed = self.valid_transitions.get(state.current_state, ())
         if target not in allowed:
             self.log.warning(
                 f"ILLEGAL {state.current_state.name} → {target.name} | {reason}"
@@ -1128,7 +1012,7 @@ class StateMachine:
                         state.cached_features.get("displacement_atr_ratio")
                         if state.cached_features else None
                     ),
-                    "atr":           state.atr,
+                    "atr":           state.atr_abs,
                     "features":      dict(state.cached_features) if state.cached_features else {},
                 },
             )
@@ -1214,14 +1098,70 @@ class StateMachine:
         [PATCH 3] Displacement requires body_ratio AND ATR size.
         """
         move = abs(candle.close - candle.open)
+        thr_move = self.config.atr_min_displacement * state.atr_abs
+        _loc = "crt_engine_v2.StateMachine.try_sweep_to_displacement"
 
-        if move < self.config.atr_min_displacement * state.atr:
+        if move < thr_move:
+            self._trace_guard(
+                guard_id="G_SWEEP_DISP_MOVE",
+                guard_name="displacement_min_body_move",
+                source_location=_loc,
+                from_state="SWEEP",
+                candidate_to_state="DISPLACEMENT",
+                result=False,
+                operator="move >= atr_min_displacement * atr",
+                operands=[
+                    {"name": "move", "runtime_value": move, "source_class": "CRT_LOCAL_DERIVED",
+                     "source_name": "abs(close-open)", "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                    {"name": "atr", "runtime_value": state.atr_abs, "source_class": "CRT_LOCAL_DERIVED",
+                     # NOT FM-041: FM-041 `atr` is CLOSE-RELATIVE (atr_14_raw/close); state.atr_abs
+                     # is the ABSOLUTE-price SMA(period) of true_range (FM-040) with no first-class
+                     # FM id of its own. Mislabeled FM-041 here until 2026-07-31 (Semantic Layer
+                     # Certification Audit, Tier 1 item 5) -- same bug class FM-050 fixed 2026-07-19.
+                     "source_name": "RangeDetector.compute_atr (absolute ATR, SMA of FM-040 true_range)",
+                     "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                ],
+                thresholds=[{
+                    "name": "atr_min_displacement * atr",
+                    "runtime_value": thr_move,
+                    "config_key": "atr_min_displacement",
+                    "config_source": "CRTConfig",
+                    "read_location": _loc,
+                }],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="move_below_atr_min_displacement",
+            )
             self.log.debug(f"Displacement REJECTED: move={move:.5f} < threshold")
             return False
         # [PATCH 2] Stale sweep guard
         if state.sweep_event is not None:
             age = state.current_candle_index - state.sweep_event.candle_index
             if age > self.config.max_sweep_age_candles:
+                self._trace_guard(
+                    guard_id="G_SWEEP_DISP_AGE",
+                    guard_name="sweep_max_age",
+                    source_location=_loc,
+                    from_state="SWEEP",
+                    candidate_to_state="DISPLACEMENT",
+                    result=False,
+                    operator="age <= max_sweep_age_candles",
+                    operands=[
+                        {"name": "age", "runtime_value": age, "source_class": "STATE_MEMORY",
+                         "source_name": "current_candle_index - sweep_event.candle_index",
+                         "source_location": _loc, "formula_id": None, "feature_id": None, "config_key": None},
+                    ],
+                    thresholds=[{
+                        "name": "max_sweep_age_candles",
+                        "runtime_value": self.config.max_sweep_age_candles,
+                        "config_key": "max_sweep_age_candles",
+                        "config_source": "CRTConfig",
+                        "read_location": _loc,
+                    }],
+                    short_circuit_status="FAIL_RETURN",
+                    failure_reason="sweep_expired",
+                )
                 self.log.info(
                     f"Sweep invalidated: age={age} > max={self.config.max_sweep_age_candles}. "
                     f"Resetting to RANGE."
@@ -1234,19 +1174,97 @@ class StateMachine:
                 return False
 
         if candle.body_ratio < self.config.body_ratio_min:
+            self._trace_guard(
+                guard_id="G_SWEEP_DISP_BODY",
+                guard_name="body_ratio_min",
+                source_location=_loc,
+                from_state="SWEEP",
+                candidate_to_state="DISPLACEMENT",
+                result=False,
+                operator="body_ratio >= body_ratio_min",
+                operands=[{
+                    "name": "body_ratio", "runtime_value": candle.body_ratio,
+                    "source_class": "CRT_LOCAL_DERIVED",
+                    "source_name": "Candle.body_ratio (FM-010 path)",
+                    "source_location": _loc, "formula_id": "FM-010",
+                    "feature_id": "body_ratio", "config_key": None,
+                }],
+                thresholds=[{
+                    "name": "body_ratio_min",
+                    "runtime_value": self.config.body_ratio_min,
+                    "config_key": "body_ratio_min",
+                    "config_source": "CRTConfig",
+                    "read_location": _loc,
+                }],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="body_ratio_below_min",
+            )
             self.log.debug(
                 f"Displacement REJECTED: body_ratio={candle.body_ratio:.3f} "
                 f"< {self.config.body_ratio_min}"
             )
             return False
 
-        if state.atr > 0 and candle.wick_size < self.config.atr_multiplier_min * state.atr:
+        if state.atr_abs > 0 and candle.wick_size < self.config.atr_multiplier_min * state.atr_abs:
+            self._trace_guard(
+                guard_id="G_SWEEP_DISP_WICK",
+                guard_name="wick_atr_multiplier_min",
+                source_location=_loc,
+                from_state="SWEEP",
+                candidate_to_state="DISPLACEMENT",
+                result=False,
+                operator="wick_size >= atr_multiplier_min * atr",
+                operands=[
+                    {"name": "wick_size", "runtime_value": candle.wick_size,
+                     "source_class": "CRT_LOCAL_DERIVED",
+                     "source_name": "Candle.wick_size (FM-002 candle_range)",
+                     "source_location": _loc, "formula_id": "FM-002",
+                     "feature_id": "wick_size", "config_key": None},
+                    {"name": "atr", "runtime_value": state.atr_abs,
+                     "source_class": "CRT_LOCAL_DERIVED",
+                     # NOT FM-041 (close-relative) -- see the comment at the sibling site above
+                     # (Semantic Layer Certification Audit, Tier 1 item 5).
+                     "source_name": "RangeDetector.compute_atr (absolute ATR, SMA of FM-040 true_range)",
+                     "source_location": _loc, "formula_id": None,
+                     "feature_id": None, "config_key": None},
+                ],
+                thresholds=[{
+                    "name": "atr_multiplier_min * atr",
+                    "runtime_value": self.config.atr_multiplier_min * state.atr_abs,
+                    "config_key": "atr_multiplier_min",
+                    "config_source": "CRTConfig",
+                    "read_location": _loc,
+                }],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="wick_below_atr_multiplier",
+            )
             self.log.debug(
                 f"Displacement REJECTED: wick={candle.wick_size:.5f} "
                 f"< {self.config.atr_multiplier_min}×ATR"
             )
             return False
 
+        self._trace_guard(
+            guard_id="G_SWEEP_DISP_PASS",
+            guard_name="sweep_to_displacement_all_pass",
+            source_location=_loc,
+            from_state="SWEEP",
+            candidate_to_state="DISPLACEMENT",
+            result=True,
+            operator="ALL_PRIOR_GUARDS_PASS",
+            operands=[
+                {"name": "move", "runtime_value": move, "source_class": "CRT_LOCAL_DERIVED",
+                 "source_name": "abs(close-open)", "source_location": _loc,
+                 "formula_id": None, "feature_id": None, "config_key": None},
+                {"name": "body_ratio", "runtime_value": candle.body_ratio,
+                 "source_class": "CRT_LOCAL_DERIVED",
+                 "source_name": "Candle.body_ratio", "source_location": _loc,
+                 "formula_id": "FM-010", "feature_id": "body_ratio", "config_key": None},
+            ],
+            thresholds=[],
+            short_circuit_status="NONE",
+            failure_reason=None,
+        )
         state.displacement_candle = candle
         return self._transition(
             state, CRTState.DISPLACEMENT,
@@ -1263,7 +1281,23 @@ class StateMachine:
         Requires: close > displacement_close AND close_distance ≥ 0.2 × ATR
         (in addition to directional close > open check).
         """
+        _loc = "crt_engine_v2.StateMachine.try_displacement_to_expansion"
         if state.displacement_candle is None:
+            self._trace_guard(
+                guard_id="G_DISP_EXP_NO_DISP",
+                guard_name="displacement_candle_present",
+                source_location=_loc,
+                from_state="DISPLACEMENT",
+                candidate_to_state="EXPANSION",
+                result=False,
+                operator="displacement_candle is not None",
+                operands=[{"name": "displacement_candle", "runtime_value": None,
+                           "source_class": "STATE_MEMORY", "source_name": "state.displacement_candle",
+                           "source_location": _loc, "formula_id": None, "feature_id": None, "config_key": None}],
+                thresholds=[],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="no_displacement_candle",
+            )
             return False
 
         disp_close = state.displacement_candle.close
@@ -1272,33 +1306,137 @@ class StateMachine:
 
         # Basic directional check
         if is_long and not (candle.close > candle.open):
+            self._trace_guard(
+                guard_id="G_DISP_EXP_DIR_LONG",
+                guard_name="long_requires_bullish_close",
+                source_location=_loc, from_state="DISPLACEMENT", candidate_to_state="EXPANSION",
+                result=False, operator="close > open when LONG",
+                operands=[
+                    {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                     "source_name": "candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": "close", "config_key": None},
+                    {"name": "open", "runtime_value": candle.open, "source_class": "RAW_OHLC",
+                     "source_name": "candle.open", "source_location": _loc,
+                     "formula_id": None, "feature_id": "open", "config_key": None},
+                ],
+                thresholds=[], short_circuit_status="FAIL_RETURN",
+                failure_reason="long_not_bullish_bar",
+            )
             return False
         if is_short and not (candle.close < candle.open):
+            self._trace_guard(
+                guard_id="G_DISP_EXP_DIR_SHORT",
+                guard_name="short_requires_bearish_close",
+                source_location=_loc, from_state="DISPLACEMENT", candidate_to_state="EXPANSION",
+                result=False, operator="close < open when SHORT",
+                operands=[
+                    {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                     "source_name": "candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": "close", "config_key": None},
+                    {"name": "open", "runtime_value": candle.open, "source_class": "RAW_OHLC",
+                     "source_name": "candle.open", "source_location": _loc,
+                     "formula_id": None, "feature_id": "open", "config_key": None},
+                ],
+                thresholds=[], short_circuit_status="FAIL_RETURN",
+                failure_reason="short_not_bearish_bar",
+            )
             return False
 
         # [PATCH 3] close must extend beyond displacement close
         if is_long and candle.close <= disp_close:
+            self._trace_guard(
+                guard_id="G_DISP_EXP_EXT_LONG",
+                guard_name="long_extends_beyond_disp_close",
+                source_location=_loc, from_state="DISPLACEMENT", candidate_to_state="EXPANSION",
+                result=False, operator="close > disp_close",
+                operands=[
+                    {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                     "source_name": "candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": "close", "config_key": None},
+                    {"name": "disp_close", "runtime_value": disp_close, "source_class": "STATE_MEMORY",
+                     "source_name": "displacement_candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                ],
+                thresholds=[], short_circuit_status="FAIL_RETURN",
+                failure_reason="close_not_beyond_disp_close",
+            )
             self.log.debug(
                 f"Expansion REJECTED: close={candle.close:.5f} ≤ disp_close={disp_close:.5f}"
             )
             return False
         if is_short and candle.close >= disp_close:
+            self._trace_guard(
+                guard_id="G_DISP_EXP_EXT_SHORT",
+                guard_name="short_extends_beyond_disp_close",
+                source_location=_loc, from_state="DISPLACEMENT", candidate_to_state="EXPANSION",
+                result=False, operator="close < disp_close",
+                operands=[
+                    {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                     "source_name": "candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": "close", "config_key": None},
+                    {"name": "disp_close", "runtime_value": disp_close, "source_class": "STATE_MEMORY",
+                     "source_name": "displacement_candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                ],
+                thresholds=[], short_circuit_status="FAIL_RETURN",
+                failure_reason="close_not_beyond_disp_close",
+            )
             self.log.debug(
                 f"Expansion REJECTED: close={candle.close:.5f} ≥ disp_close={disp_close:.5f}"
             )
             return False
 
         # [PATCH 3] ATR-distance guard
-        if state.atr > 0:
+        if state.atr_abs > 0:
             distance = abs(candle.close - disp_close)
-            min_distance = self.config.expansion_atr_min_distance * state.atr
+            min_distance = self.config.expansion_atr_min_distance * state.atr_abs
             if distance < min_distance:
+                self._trace_guard(
+                    guard_id="G_DISP_EXP_ATR_DIST",
+                    guard_name="expansion_atr_min_distance",
+                    source_location=_loc, from_state="DISPLACEMENT", candidate_to_state="EXPANSION",
+                    result=False, operator="abs(close-disp_close) >= expansion_atr_min_distance * atr",
+                    operands=[
+                        {"name": "distance", "runtime_value": distance, "source_class": "CRT_LOCAL_DERIVED",
+                         "source_name": "abs(close-disp_close)", "source_location": _loc,
+                         "formula_id": None, "feature_id": None, "config_key": None},
+                        {"name": "atr", "runtime_value": state.atr_abs, "source_class": "CRT_LOCAL_DERIVED",
+                         # NOT FM-041 (close-relative) -- Semantic Layer Certification Audit, Tier 1 item 5.
+                         "source_name": "state.atr_abs (absolute ATR, SMA of FM-040 true_range)",
+                         "source_location": _loc,
+                         "formula_id": None, "feature_id": None, "config_key": None},
+                    ],
+                    thresholds=[{
+                        "name": "expansion_atr_min_distance * atr",
+                        "runtime_value": min_distance,
+                        "config_key": "expansion_atr_min_distance",
+                        "config_source": "CRTConfig",
+                        "read_location": _loc,
+                    }],
+                    short_circuit_status="FAIL_RETURN",
+                    failure_reason="distance_below_atr_min",
+                )
                 self.log.debug(
                     f"Expansion REJECTED: distance={distance:.5f} "
                     f"< {self.config.expansion_atr_min_distance}×ATR={min_distance:.5f}"
                 )
                 return False
 
+        self._trace_guard(
+            guard_id="G_DISP_EXP_PASS",
+            guard_name="displacement_to_expansion_all_pass",
+            source_location=_loc, from_state="DISPLACEMENT", candidate_to_state="EXPANSION",
+            result=True, operator="ALL_PRIOR_GUARDS_PASS",
+            operands=[
+                {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                 "source_name": "candle.close", "source_location": _loc,
+                 "formula_id": None, "feature_id": "close", "config_key": None},
+                {"name": "disp_close", "runtime_value": disp_close, "source_class": "STATE_MEMORY",
+                 "source_name": "displacement_candle.close", "source_location": _loc,
+                 "formula_id": None, "feature_id": None, "config_key": None},
+            ],
+            thresholds=[], short_circuit_status="NONE", failure_reason=None,
+        )
         label = "Bullish" if is_long else "Bearish"
         return self._transition(
             state, CRTState.EXPANSION,
@@ -1315,7 +1453,19 @@ class StateMachine:
         Ceiling = max(range-based, ATR-based)
         This prevents over-filtering in low-vol and under-filtering in high-vol.
         """
+        _loc = "crt_engine_v2.StateMachine.try_expansion_to_retest"
         if state.active_range is None:
+            self._trace_guard(
+                guard_id="G_EXP_RET_NO_RANGE",
+                guard_name="active_range_present",
+                source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
+                result=False, operator="active_range is not None",
+                operands=[{"name": "active_range", "runtime_value": None, "source_class": "STATE_MEMORY",
+                           "source_name": "state.active_range", "source_location": _loc,
+                           "formula_id": None, "feature_id": None, "config_key": None}],
+                thresholds=[], short_circuit_status="FAIL_RETURN",
+                failure_reason="no_active_range",
+            )
             return False
 
         rng = state.active_range
@@ -1331,7 +1481,10 @@ class StateMachine:
         else:
             depth_abs = rng.h_ref - candle.close
         
-        min_depth = 0.1 * atr if atr > 0 else 0.0
+        # IC-007 PLAN-001: HOW-owned floor (default 0.10 preserves legacy 0.1 * ATR)
+        min_depth = (
+            self.config.retest_min_depth_atr_fraction * atr if atr > 0 else 0.0
+        )
         # [TELEMETRY] Track every retrace attempt regardless of outcome (RC1: pass candle_ts)
         if self.telemetry:
             self.telemetry.on_expansion_retrace_check(
@@ -1339,10 +1492,60 @@ class StateMachine:
                 candle_ts=candle.timestamp,
             )
         if depth_abs < min_depth:
+            self._trace_guard(
+                guard_id="G_EXP_RET_MIN_DEPTH",
+                guard_name="retest_min_depth_floor",
+                source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
+                result=False, operator="depth_abs >= retest_min_depth_atr_fraction * atr",
+                operands=[
+                    {"name": "depth_abs", "runtime_value": depth_abs, "source_class": "CRT_LOCAL_DERIVED",
+                     "source_name": "close - range boundary", "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                    {"name": "atr", "runtime_value": atr, "source_class": "CRT_LOCAL_DERIVED",
+                     # NOT FM-041 (close-relative) -- Semantic Layer Certification Audit, Tier 1 item 5.
+                     "source_name": "state.atr_abs / arg (absolute ATR, SMA of FM-040 true_range)",
+                     "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                ],
+                thresholds=[{
+                    "name": "min_depth",
+                    "runtime_value": min_depth,
+                    "config_key": "retest_min_depth_atr_fraction",
+                    "config_source": "CRTConfig",
+                    "read_location": _loc,
+                }],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="depth_below_min",
+            )
             return False
 
         # Existing ceiling check
         if depth_abs > adaptive_ceiling:
+            self._trace_guard(
+                guard_id="G_EXP_RET_CEILING",
+                guard_name="retest_adaptive_ceiling",
+                source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
+                result=False, operator="depth_abs <= adaptive_ceiling",
+                operands=[
+                    {"name": "depth_abs", "runtime_value": depth_abs, "source_class": "CRT_LOCAL_DERIVED",
+                     "source_name": "close - range boundary", "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                    {"name": "adaptive_ceiling", "runtime_value": adaptive_ceiling,
+                     "source_class": "CRT_LOCAL_DERIVED",
+                     "source_name": "max(static_ceiling, atr_ceiling)", "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                ],
+                thresholds=[
+                    {"name": "retest_depth_max", "runtime_value": self.config.retest_depth_max,
+                     "config_key": "retest_depth_max", "config_source": "CRTConfig",
+                     "read_location": _loc},
+                    {"name": "retest_atr_depth_fraction", "runtime_value": self.config.retest_atr_depth_fraction,
+                     "config_key": "retest_atr_depth_fraction", "config_source": "CRTConfig",
+                     "read_location": _loc},
+                ],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="depth_above_ceiling",
+            )
             self.log.debug(
                 f"Retest REJECTED: depth_abs={depth_abs:.5f} > "
                 f"adaptive_ceiling={adaptive_ceiling:.5f} "
@@ -1352,15 +1555,38 @@ class StateMachine:
 
         # ── [PATCH 7] Displacement strength ceiling ───────────────────────────
         # Check BEFORE committing retest state (cheap early exit).
-        # disp.wick_size / ATR > max_displacement_strength → overextended move.
-        # Cache the value so it's available even if the guard fires.
+        # displacement_atr_ratio (FM-028: wick_size ≡ candle_range per F-046, / ATR) >
+        # max_displacement_strength → overextended move. GD-005 closure: math owned by derived_math.
         _disp_check = state.displacement_candle
-        _atr_check  = state.atr
+        _atr_check  = state.atr_abs
         if _disp_check is not None and _atr_check > 0:
-            _disp_strength = _disp_check.wick_size / _atr_check
-            if _disp_strength > self.config.max_displacement_strength:
+            # Phase-2: FM-028 via FORMULA_REGISTRY (identity == derived_math.displacement_atr_ratio).
+            _displacement_atr_ratio = _FM_CRT["FM-028"](_disp_check.wick_size, _atr_check)
+            if _displacement_atr_ratio > self.config.max_displacement_strength:
+                self._trace_guard(
+                    guard_id="G_EXP_RET_DISP_STRENGTH",
+                    guard_name="max_displacement_strength",
+                    source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
+                    result=False, operator="displacement_atr_ratio <= max_displacement_strength",
+                    operands=[{
+                        "name": "displacement_atr_ratio", "runtime_value": _displacement_atr_ratio,
+                        "source_class": "CRT_LOCAL_DERIVED",
+                        "source_name": "FM-028(disp.wick_size, atr)",
+                        "source_location": _loc, "formula_id": "FM-028",
+                        "feature_id": "displacement_atr_ratio", "config_key": None,
+                    }],
+                    thresholds=[{
+                        "name": "max_displacement_strength",
+                        "runtime_value": self.config.max_displacement_strength,
+                        "config_key": "max_displacement_strength",
+                        "config_source": "CRTConfig",
+                        "read_location": _loc,
+                    }],
+                    short_circuit_status="FAIL_RETURN",
+                    failure_reason="overextended_displacement",
+                )
                 self.log.debug(
-                    f"Retest REJECTED [PATCH 7]: disp_strength={_disp_strength:.3f} > "
+                    f"Retest REJECTED [PATCH 7]: displacement_atr_ratio={_displacement_atr_ratio:.3f} > "
                     f"max_displacement_strength={self.config.max_displacement_strength:.3f} "
                     f"— overextended impulse, retest unlikely to sustain"
                 )
@@ -1375,19 +1601,20 @@ class StateMachine:
         #   displacement_atr_ratio FM-028 — range/ATR multiple  (NOT pipeline FM-020 disp_strength)
         # Math owned by derived_math; emission keys match Formula Registry.
         disp = state.displacement_candle
-        _atr = state.atr
+        _atr = state.atr_abs
         state.cached_features = {
             "displacement_retrace": 0.0,
             "body_ratio": 0.0,
             "displacement_atr_ratio": 0.0,
         }
         if disp is not None and _atr > 0 and abs(disp.close - disp.open) > 0:
-            _retrace = _dm.displacement_retrace(
+            # Phase-2: FM-027/FM-028 via FORMULA_REGISTRY (identity-preserving).
+            _retrace = _FM_CRT["FM-027"](
                 retest_close=float(candle.close),
                 disp_open=float(disp.open),
                 disp_close=float(disp.close),
             )
-            _disp_atr = _dm.displacement_atr_ratio(
+            _disp_atr = _FM_CRT["FM-028"](
                 candle_range=float(disp.wick_size),  # wick_size property == candle_range (FM-002)
                 atr=float(_atr),
             )
@@ -1419,6 +1646,22 @@ class StateMachine:
                     f"r={_retrace:.3f}"
                 )
 
+        self._trace_guard(
+            guard_id="G_EXP_RET_PASS",
+            guard_name="expansion_to_retest_all_pass",
+            source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
+            result=True, operator="ALL_PRIOR_GUARDS_PASS",
+            operands=[
+                {"name": "depth_abs", "runtime_value": depth_abs, "source_class": "CRT_LOCAL_DERIVED",
+                 "source_name": "close - range boundary", "source_location": _loc,
+                 "formula_id": None, "feature_id": None, "config_key": None},
+                {"name": "adaptive_ceiling", "runtime_value": adaptive_ceiling,
+                 "source_class": "CRT_LOCAL_DERIVED",
+                 "source_name": "max(static, atr ceiling)", "source_location": _loc,
+                 "formula_id": None, "feature_id": None, "config_key": None},
+            ],
+            thresholds=[], short_circuit_status="NONE", failure_reason=None,
+        )
         return self._transition(
             state, CRTState.RETEST,
             f"Retest | depth_abs={depth_abs:.5f} ceiling={adaptive_ceiling:.5f}",
@@ -1505,11 +1748,18 @@ class StateMachine:
                 candle.index - state._displacement_entry_idx if candle else 0
             )
             state.pending_displacement_reason_created = reason
+            # Record the creating bar so the RANGE-branch countdown (process_candle) can
+            # skip it — the [DEADLOCK FIX] fall-through means that branch runs THIS same
+            # candle, right after this assignment.
+            state.pending_displacement_created_idx = (
+                candle.index if candle else state.current_candle_index
+            )
         elif state.pending_displacement_ttl > 0 and not _create_shadow:
             # Non-HTF reset (retrace, extension, session) expires any existing shadow memory
             state.pending_displacement_candle  = None
             state.pending_displacement_ttl     = 0
             state.pending_displacement_dir     = Direction.NONE
+            state.pending_displacement_created_idx = 0
 
         state.current_state        = CRTState.RANGE
         state.sweep_event          = None
@@ -1610,14 +1860,15 @@ class UltronRiskEngine:
         return factor
 
     def compute_score(self, state: EngineState) -> RiskScore:
-        rs = RiskScore()
+        # [PLAN-002] HOW-owned weights (default tuple == legacy literals → parity)
+        rs = RiskScore(weights=tuple(self.config.risk_score_weights))
         if state.sweep_event and state.active_range:
             rs.sweep_score = self.score_sweep(state.sweep_event, state.active_range)
         if state.displacement_candle:
-            rs.breakout_score = self.score_breakout(state.displacement_candle, state.atr)
+            rs.breakout_score = self.score_breakout(state.displacement_candle, state.atr_abs)
         if state.retest_candle and state.active_range:
             rs.retest_score = self.score_retest(
-                state.retest_candle, state.active_range, state.direction, state.atr
+                state.retest_candle, state.active_range, state.direction, state.atr_abs
             )
         ref_candle = state.retest_candle or state.displacement_candle
         if ref_candle:
@@ -1666,12 +1917,12 @@ class UltronRiskEngine:
         # 2. Smoothed momentum — EMA fast/slow spread normalised by ATR
         dir_mult = 1.0 if state.direction == Direction.LONG else -1.0
         mom_delta = (state.ema_fast_val - state.ema_slow_val) * dir_mult
-        f_mom = max(0.0, min(1.0, mom_delta / state.atr)) if state.atr > 0 else 0.0
+        f_mom = max(0.0, min(1.0, mom_delta / state.atr_abs)) if state.atr_abs > 0 else 0.0
 
         # 3. Non-linear distance decay — Gaussian penalty for late entries
         rng = state.active_range
         static_ceiling  = self.config.retest_depth_max * rng.size
-        atr_ceiling     = self.config.retest_atr_depth_fraction * state.atr if state.atr > 0 else static_ceiling
+        atr_ceiling     = self.config.retest_atr_depth_fraction * state.atr_abs if state.atr_abs > 0 else static_ceiling
         adaptive_ceiling = max(static_ceiling, atr_ceiling)
         if state.direction == Direction.LONG:
             depth = abs(candle.close - rng.l_ref)
@@ -1682,7 +1933,7 @@ class UltronRiskEngine:
         # 4. Displacement strength — structural inheritance
         disp      = state.displacement_candle
         disp_move = abs(disp.close - disp.open) if disp else 0.0
-        f_disp    = min(1.0, disp_move / (1.5 * state.atr)) if state.atr > 0 else 0.0
+        f_disp    = min(1.0, disp_move / (1.5 * state.atr_abs)) if state.atr_abs > 0 else 0.0
 
         # Linear blend
         C_linear = (w_body * f_body) + (w_mom * f_mom) + (w_dist * f_dist) + (w_disp * f_disp)
@@ -1730,19 +1981,32 @@ class UltronRiskEngine:
         # CH-002: CRT cache uses FM-027/028 keys; BitNet model input schema still
         # expects legacy training names (retest_depth/disp_strength). Map only at
         # the BitNet call boundary — do not re-emit collision keys on the cache.
+        # FM-070 (2026-07-31): same pattern for candles_since_retest_state, which resolves the
+        # candles_since_retest name collision with the pipeline's FM-065 (bars-since-SWEEP).
         required = ["body_ratio", "displacement_retrace", "displacement_atr_ratio"]
 
         if state.cached_features and all(k in state.cached_features for k in required):
             features = state.cached_features.copy()
-            features["atr"] = state.atr
-            features["candles_since_retest"] = (
-                state.current_candle_index - state.retest_candle_index
+            features["atr"] = state.atr_abs
+            features["candles_since_retest_state"] = _FM_CRT["FM-070"](
+                state.current_candle_index, state.retest_candle_index
             )
 
             if self.config.use_bitnet:
+                # P1 BitNet registry governance: fail-closed when enabled without
+                # an active selection (Exists≠Selected≠Enabled).
+                try:
+                    from bitnet.bitnet_registry import assert_serve_allowed
+                    assert_serve_allowed(use_bitnet=True)
+                except Exception as _bn_reg_exc:
+                    self.log.error(
+                        "BitNet registry serve contract failed: %s", _bn_reg_exc
+                    )
+                    raise
                 _bn_in = dict(features)
                 _bn_in["retest_depth"] = float(features["displacement_retrace"])
                 _bn_in["disp_strength"] = float(features["displacement_atr_ratio"])
+                _bn_in["candles_since_retest"] = float(features["candles_since_retest_state"])
                 bn_score = bitnet_score(_bn_in)
                 self.log.info(f"BitNetMain Score: {bn_score:.4f}")
                 if bn_score < self.config.bitnet_main_threshold:
@@ -1799,19 +2063,22 @@ class UltronRiskEngine:
         # -----------------------------
         # BitNet Validation Layer
         # -----------------------------
+        # FM-070 (2026-07-31): candles_since_retest_state resolves the candles_since_retest name
+        # collision with the pipeline's FM-065 (bars-since-SWEEP) — same CH-002 alias pattern.
         required = ["body_ratio", "displacement_retrace", "displacement_atr_ratio"]
 
         if state.cached_features and all(k in state.cached_features for k in required):
             features = state.cached_features.copy()
-            features["atr"] = state.atr
-            features["candles_since_retest"] = (
-                state.current_candle_index - state.retest_candle_index
+            features["atr"] = state.atr_abs
+            features["candles_since_retest_state"] = _FM_CRT["FM-070"](
+                state.current_candle_index, state.retest_candle_index
             )
 
             if not hasattr(state, "bitnet_main_score"):
                 _bn_in = dict(features)
                 _bn_in["retest_depth"] = float(features["displacement_retrace"])
                 _bn_in["disp_strength"] = float(features["displacement_atr_ratio"])
+                _bn_in["candles_since_retest"] = float(features["candles_since_retest_state"])
                 state.bitnet_main_score = bitnet_score(_bn_in)
 
             bitnet_main_score = state.bitnet_main_score
@@ -1931,7 +2198,7 @@ class ExecutionEngine:
         rng       = state.active_range
         direction = state.direction
 
-        atr = state.atr
+        atr = state.atr_abs
         entry = state.retest_candle.close
 
         # ── SL anchored to displacement candle extreme ────────────────────────
@@ -2183,9 +2450,20 @@ class CRTEngine:
             self._intrabar_exits = (
                 str(getattr(self.config, "exit_model", "intrabar_touch")) == "intrabar_touch"
             )
+        # Phase-1 state contracts: load + validate once at construction (WHO declarations).
+        # Phase-Topology: legal transition graph is built from the loaded WHO bundle and
+        # injected into StateMachine (Python try_* guards unchanged; no model dispatch).
+        from config_layer.state_contract_loader import load_and_validate_state_contracts
+        from config_layer.state_topology import build_runtime_transition_graph_from_bundle
+        self.state_contracts = load_and_validate_state_contracts()
+        self.runtime_transitions = build_runtime_transition_graph_from_bundle(
+            self.state_contracts
+        )
         self.detector  = RangeDetector(self.config)
         self.telemetry = TelemetryCollector()
-        self.sm        = StateMachine(self.config, self.telemetry)
+        self.sm        = StateMachine(
+            self.config, self.telemetry, valid_transitions=self.runtime_transitions
+        )
         self.risk      = UltronRiskEngine(self.config)
         self.executor = ExecutionEngine(self.config)
         self.reset_lg = ResetLogic(self.config)
@@ -2194,8 +2472,39 @@ class CRTEngine:
         self.candle_buffer: list[Candle] = []
         self._sweep_tracer = sweep_tracer           # Layer 0 sweep trace (optional)
         self.log = logging.getLogger("CRT.Orchestrator")
+        # Optional baseline bar-trace hooks (default None — production behavior unchanged).
+        self.baseline_trace = None
+        # F-066 session-filter fix: resolve ONCE (not per-candle — this is a 47k+ candle hot
+        # loop), reusing the existing feature_pipeline key rather than introducing a duplicate.
+        # "broker_local" (default) preserves prior behavior byte-for-byte; "utc_corrected"
+        # converts the candle timestamp before the session-window comparison (see
+        # process_candle's session-filter block).
+        from config_layer.production_config import get_prod_section
+        self._session_ts_basis = get_prod_section("feature_pipeline")["session_timestamp_basis"]
 
     # ── Public API ────────────────────────────────────────────
+
+    def get_state_contract(self, state_id: Optional[str] = None):
+        """Return the Phase-1 StateContract for ``state_id`` or the current SM state.
+
+        Inspection only — does not resolve features or dispatch models.
+        """
+        sid = state_id or self.state.current_state.name
+        return self.state_contracts.get(sid)
+
+    def _baseline_trace_finish(self, action: dict) -> dict:
+        """Finalize optional baseline bar trace. Never mutates action semantics."""
+        _bt = self.baseline_trace
+        if _bt is not None and getattr(_bt, "enabled", False):
+            try:
+                from runtime.crt_baseline_trace import snapshot_engine_state
+                _bt.state_after = self.state.current_state.name
+                _bt.snapshot_after = snapshot_engine_state(self.state)
+                _bt.action = dict(action) if action else {}
+            except Exception:
+                pass
+        self.sm.trace_hooks = None
+        return action
 
     @staticmethod
     def _intrabar_trigger_price(trade: Trade, candle: Candle) -> float:
@@ -2225,12 +2534,19 @@ class CRTEngine:
     def initialise_range(
         self, candles: list[Candle], htf_candle_id: str, session: str = "UNKNOWN"
     ) -> None:
-        # [PATCH 4] Stamp candle indices if missing
-        for i, c in enumerate(candles):
-            if c.index == 0:
+        # B2 (2026-07-24): seed-candle indices come from the loader's ingestion stamp (the single
+        # ingestion authority). The former `if c.index == 0: c.index = i` re-stamp is REMOVED — it
+        # depended on the loader leaving `index` at 0 as an "unstamped" sentinel, a fragile cross-
+        # module coupling. For the one-time seed window (initialise_range runs exactly once, first
+        # HTF range) the loader's global 0-based index equals the old enumerate position, so this
+        # is behaviour-preserving; the spine still re-stamps via process_candle.
+        # A defensive fallback covers callers that build Candles WITHOUT the loader (research
+        # scripts, tests) and leave the default index=0 across the whole list.
+        if all(c.index == 0 for c in candles):
+            for i, c in enumerate(candles):
                 c.index = i
         self.state.active_range = self.detector.detect_htf_range(candles, htf_candle_id, session)
-        self.state.atr = self.detector.compute_atr(candles, self.config.atr_period)
+        self.state.atr_abs = self.detector.compute_atr(candles, self.config.atr_period)
         # [PATCH 1] Bounded buffer
         cap = self.config.atr_period * self.config.atr_buffer_multiplier
         self.candle_buffer = candles[-cap:]
@@ -2268,7 +2584,15 @@ class CRTEngine:
                 entry=float(rt.close) if rt is not None else 0.0,
                 disp_low=float(disp.low) if disp is not None else 0.0,
                 disp_high=float(disp.high) if disp is not None else 0.0,
-                atr=float(getattr(st, "atr", 0.0) or 0.0),
+                # NOTE the attribute is `atr_abs` (absolute price units), not `atr` — the
+                # canonical FM-041 `atr` is close-relative. A string-based getattr with a 0.0
+                # default silently returned 0.0 here after the rename; kept explicit so a future
+                # rename fails loudly at the attribute rather than degrading telemetry to zero.
+                # Direct attribute access — no `or` default. `atr_abs` is a non-optional
+                # EngineState float field, so a fallback here could only ever MASK a rename
+                # (which is exactly how the old getattr(st, "atr", 0.0) silently zeroed this
+                # telemetry). No silent fallback.
+                atr=float(st.atr_abs),
                 sl_atr_buffer=float(self.config.sl_atr_buffer),
                 tp1_mult=float(self.config.tp1_atr_multiplier),
                 tp2_mult=float(self.config.tp2_atr_multiplier),
@@ -2281,6 +2605,21 @@ class CRTEngine:
             pass
 
     def process_candle(self, candle: Candle, htf_candle_id: str) -> dict:
+        # Optional baseline trace: capture state_before (no behavior change when None/disabled).
+        _bt = self.baseline_trace
+        if _bt is not None and getattr(_bt, "enabled", False):
+            try:
+                from runtime.crt_baseline_trace import snapshot_engine_state
+                _bt.reset_bar()
+                _bt.state_before = self.state.current_state.name
+                _bt.snapshot_before = snapshot_engine_state(self.state)
+                _bt.events_at_start = len(getattr(self.state, "event_log", None) or [])
+                self.sm.trace_hooks = _bt
+            except Exception:
+                pass
+        else:
+            self.sm.trace_hooks = None
+
         # [PATCH 4] Auto-assign candle index
         self.state.current_candle_index += 1
         candle.index = self.state.current_candle_index
@@ -2291,7 +2630,7 @@ class CRTEngine:
         if len(self.candle_buffer) > cap:
             self.candle_buffer = self.candle_buffer[-cap:]
 
-        self.state.atr = self.detector.compute_atr(self.candle_buffer, self.config.atr_period)
+        self.state.atr_abs = self.detector.compute_atr(self.candle_buffer, self.config.atr_period)
 
         # Keep EMA state warm every candle — ready when confirmation window opens
         self.state.update_emas(
@@ -2352,14 +2691,21 @@ class CRTEngine:
                 self.sm.reset_to_range(self.state, "Post-resolution reset", candle, self.ev_log)
                 action["action"] = f"TRADE_{result}"
                 action["state_after"] = self.state.current_state.name
-                return action
+                return self._baseline_trace_finish(action)
 
         # ── State machine processing ──────────────────────────
         s = self.state.current_state
 
         if s == CRTState.RANGE:
             # ── Pending displacement TTL countdown ─────────────────────
-            if self.state.pending_displacement_ttl > 0:
+            # Skip the creating bar: reset_to_range's [DEADLOCK FIX] fall-through
+            # (see the comment above the reset-check block) means a shadow created on
+            # this same candle already reaches this RANGE branch before any new sweep
+            # can be detected. Decrementing here too was an off-by-one — a configured
+            # TTL of N used to yield only N-1 usable bars. pending_displacement_created_idx
+            # is set once, on creation, so this only ever suppresses the very first tick.
+            if (self.state.pending_displacement_ttl > 0
+                    and candle.index != self.state.pending_displacement_created_idx):
                 self.state.pending_displacement_ttl -= 1
                 if self.state.pending_displacement_ttl == 0:
                     self.log.debug(
@@ -2367,11 +2713,46 @@ class CRTEngine:
                     )
                     self.state.pending_displacement_candle = None
                     self.state.pending_displacement_dir    = Direction.NONE
+                    self.state.pending_displacement_created_idx = 0
 
             sweep = self.detector.detect_sweep(
                 candle, self.state.active_range,
                 self.state.sweep_event, self.state.current_candle_index,  # [PATCH 2]
             )
+            # Baseline trace: record that sweep detection was evaluated (even if None).
+            if self.sm.trace_hooks is not None:
+                _rng = self.state.active_range
+                self.sm._trace_guard(
+                    guard_id="G_RANGE_SWEEP_DETECT",
+                    guard_name="detect_sweep",
+                    source_location="crt_engine_v2.CRTEngine.process_candle:RANGE",
+                    from_state="RANGE",
+                    candidate_to_state="SWEEP",
+                    result=bool(sweep),
+                    operator="RangeDetector.detect_sweep(...)",
+                    operands=[
+                        {"name": "high", "runtime_value": candle.high, "source_class": "RAW_OHLC",
+                         "source_name": "candle.high", "source_location": "process_candle:RANGE",
+                         "formula_id": None, "feature_id": "high", "config_key": None},
+                        {"name": "low", "runtime_value": candle.low, "source_class": "RAW_OHLC",
+                         "source_name": "candle.low", "source_location": "process_candle:RANGE",
+                         "formula_id": None, "feature_id": "low", "config_key": None},
+                        {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                         "source_name": "candle.close", "source_location": "process_candle:RANGE",
+                         "formula_id": None, "feature_id": "close", "config_key": None},
+                        {"name": "h_ref", "runtime_value": getattr(_rng, "h_ref", None),
+                         "source_class": "STATE_MEMORY", "source_name": "active_range.h_ref",
+                         "source_location": "process_candle:RANGE",
+                         "formula_id": None, "feature_id": None, "config_key": None},
+                        {"name": "l_ref", "runtime_value": getattr(_rng, "l_ref", None),
+                         "source_class": "STATE_MEMORY", "source_name": "active_range.l_ref",
+                         "source_location": "process_candle:RANGE",
+                         "formula_id": None, "feature_id": None, "config_key": None},
+                    ],
+                    thresholds=[],
+                    short_circuit_status="NONE" if sweep else "NO_SWEEP",
+                    failure_reason=None if sweep else "no_sweep_detected",
+                )
             if sweep:
                 # ── Shadow resume path: sweep matches pending displacement ──
                 if (self.state.pending_displacement_candle is not None
@@ -2402,7 +2783,7 @@ class CRTEngine:
                         _cross_low  = candle.low  < rng.l_ref and candle.close > rng.l_ref
                         _ref        = rng.h_ref if _cross_high else rng.l_ref
                         _pen_pts    = abs(sweep.price - _ref)
-                        _pen_atr    = _pen_pts / self.state.atr if self.state.atr > 0 else 0.0
+                        _pen_atr    = _pen_pts / self.state.atr_abs if self.state.atr_abs > 0 else 0.0
                         self._sweep_tracer.emit(
                             candle_index      = candle.index,
                             range_high        = rng.h_ref,
@@ -2443,6 +2824,7 @@ class CRTEngine:
                 self.state.pending_displacement_ttl    = 0
                 self.state.pending_displacement_candle = None
                 self.state.pending_displacement_dir    = Direction.NONE
+                self.state.pending_displacement_created_idx = 0
                 self.sm.reset_to_range(
                     self.state, "SHADOW_LEAK: sweep invalid or direction mismatch",
                     candle, self.ev_log,
@@ -2478,6 +2860,7 @@ class CRTEngine:
                     self.state.pending_displacement_formed_idx     = 0
                     self.state.pending_displacement_age_at_reset   = 0
                     self.state.pending_displacement_reason_created = ""
+                    self.state.pending_displacement_created_idx    = 0
 
         elif s == CRTState.SWEEP:
             # [PATCH 2] Age check happens inside try_sweep_to_displacement
@@ -2495,7 +2878,7 @@ class CRTEngine:
                     _cross_low  = candle.low  < rng.l_ref and candle.close > rng.l_ref
                     _ref        = rng.h_ref if _cross_high else rng.l_ref
                     _pen_pts    = abs(candle.high - _ref) if _cross_high else abs(candle.low - _ref)
-                    _pen_atr    = _pen_pts / self.state.atr if self.state.atr > 0 else 0.0
+                    _pen_atr    = _pen_pts / self.state.atr_abs if self.state.atr_abs > 0 else 0.0
                     self._sweep_tracer.emit(
                         candle_index      = candle.index,
                         range_high        = rng.h_ref,
@@ -2527,7 +2910,7 @@ class CRTEngine:
             # ── RC-Closure: RETEST has priority=4 > EXPIRED priority=3.
             # Try retest FIRST so a qualifying retest always wins over TTL expiry
             # on the same candle. If retest fires, we return before the TTL check runs.
-            if self.sm.try_expansion_to_retest(self.state, candle, self.state.atr, self.ev_log):
+            if self.sm.try_expansion_to_retest(self.state, candle, self.state.atr_abs, self.ev_log):
                 action["action"] = "RETEST_CONFIRMED"
                 # Begin soft confirmation window (replaces binary 5-candle gate)
                 self.state.evaluating_soft_conf = True
@@ -2714,7 +3097,17 @@ class CRTEngine:
                     # Skip trade open if candle's session is not in the allowed set.
                     # Live mode would reject anyway via adapter_engine; doing it here
                     # avoids burning a CRT setup on a session that won't trade.
-                    _ts_time = candle.timestamp.time()
+                    # F-066: self.config.session_windows is authored in UTC (see
+                    # CRTConfig.session_windows's own "(UTC)" comment), but candle.timestamp on
+                    # every MT5-sourced corpus is broker-server time, not UTC. Compare against
+                    # the UTC-converted timestamp when the operator has opted in via the same
+                    # feature_pipeline.session_timestamp_basis key the FM-052 feature already
+                    # uses (default "broker_local" = byte-identical prior behavior).
+                    if self._session_ts_basis == "utc_corrected":
+                        from features import broker_clock as _bc
+                        _ts_time = _bc.mt5_server_to_utc_scalar(candle.timestamp).time()
+                    else:
+                        _ts_time = candle.timestamp.time()
                     _sess_name = "OFF_SESSION"
                     for _name, (_start, _end) in self.config.session_windows.items():
                         if _start <= _ts_time <= _end:
@@ -2734,7 +3127,7 @@ class CRTEngine:
                         action["state_after"] = self.state.current_state.name
                         self._emit_retest_replay(candle, _effective_S, accepted=False,
                                                  reject_reason="OFF_SESSION")
-                        return action
+                        return self._baseline_trace_finish(action)
 
                     # ── Phase 4b: shadow_advisory_only hard block ─────────────
                     # Shadow still tracks telemetry; EXECUTION is suppressed.
@@ -2753,7 +3146,7 @@ class CRTEngine:
                         action["action"] = "SHADOW_ADVISORY_BLOCK"
                         self._emit_retest_replay(candle, _effective_S, accepted=False,
                                                  reject_reason="SHADOW_ADVISORY")
-                        return action
+                        return self._baseline_trace_finish(action)
                     # ─────────────────────────────────────────────────────────
 
                     self.sm.try_retest_to_execution(self.state, candle, self.ev_log)
@@ -2849,7 +3242,7 @@ class CRTEngine:
             
 
         action["state_after"] = self.state.current_state.name
-        return action
+        return self._baseline_trace_finish(action)
 
     # ── Live metrics API ──────────────────────────────────────────
 
@@ -2875,16 +3268,23 @@ class CRTEngine:
         Called immediately after TRADE_OPENED so state reflects entry-candle values.
         Safe to call at any time; returns zeroed/empty values if state is pre-init.
         """
+        # H6 (2026-07-31): read the canonical FM-027/FM-028 keys ONLY. `cached_features` is
+        # populated exclusively under these names (see :1600-1624 -- both the zeroed pre-RETEST
+        # dict and the populated post-RETEST dict always carry displacement_retrace/
+        # displacement_atr_ratio, never the legacy retest_depth/disp_strength/disp_str names), so
+        # the previous cross-collision fallback chain (`cf.get("displacement_retrace",
+        # cf.get("retest_depth", 0.0))`) could never actually resolve through its inner branch --
+        # it just re-opened the FM-027/FM-021 and FM-028/FM-020 name collision CH-002 closed on
+        # the cache, for a journal reader who might reasonably (but wrongly) infer that a
+        # cached_retest_depth value could sometimes mean the pipeline's FM-021 quantity. A `0.0`
+        # fallback still covers the one real case (cache absent / pre-init), matching this
+        # method's own documented "zeroed/empty values" contract.
         cf: dict = self.state.cached_features or {}
-        _retrace = float(
-            cf.get("displacement_retrace", cf.get("retest_depth", 0.0))
-        )
-        _disp_atr = float(
-            cf.get("displacement_atr_ratio", cf.get("disp_strength", cf.get("disp_str", 0.0)))
-        )
+        _retrace = float(cf.get("displacement_retrace", 0.0))
+        _disp_atr = float(cf.get("displacement_atr_ratio", 0.0))
         return {
             # ── Universe-B raw execution indicators ──────────────────────────
-            "live_atr":              self.state.atr,
+            "live_atr":              self.state.atr_abs,
             "live_ema_fast":         self.state.ema_fast_val,
             "live_ema_slow":         self.state.ema_slow_val,
             # ── Decision features at RETEST (CH-002 / F-050 identities) ──────
@@ -2968,7 +3368,7 @@ def recent_transition_path(
                 "displacement_atr_ratio",
                 meta.get("disp_strength"),
             ),
-            atr             = float(meta.get("atr", state.atr)),
+            atr             = float(meta.get("atr", state.atr_abs)),
             # dict() copy THEN MappingProxyType:
             # - dict() prevents ev.metadata["features"]["x"]=y from silently
             #   reflecting through the proxy after construction.

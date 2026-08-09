@@ -104,7 +104,7 @@ def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
 
 def _params_to_crt_config(params: dict):
     """Map a flat params dict to CRTConfig, ignoring unknown keys."""
-    from config_layer.crt_engine_v2 import CRTConfig
+    from config_layer.state_identity import CRTConfig
     known = {f.name for f in CRTConfig.__dataclass_fields__.values()
              if f.name not in ("session_windows", "conf_weights", "sizing_bands")}
     kwargs = {k: v for k, v in params.items() if k in known}

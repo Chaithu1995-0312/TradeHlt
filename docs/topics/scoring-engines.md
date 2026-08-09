@@ -28,7 +28,7 @@ the runner rejects** rather than fusing a partial set.
 
 ## Entry points & validations
 - **Reached via:** `EngineRunner.run()` on the candle→order spine — invoked by `runtime.backtest_v2` (replay) and `runtime.live_engine_hook` (live). Not called directly.
-- **Validated by:** the four-engine completeness guard (`engine_runner.py:748 · missing_engines`); per-engine fail-fast (heuristic Gaussian) / fail-open (ML Gaussian, Zone-Gate) doctrine; signal-audit records every engine score.
+- **Validated by:** the four-engine completeness guard (`engine_runner.py:822 · missing_engines`); per-engine fail-fast (heuristic Gaussian) / fail-open (ML Gaussian, Zone-Gate) doctrine; signal-audit records every engine score.
 
 ## Tests
 - [`tests/test_gaussian_impl_switch.py`](../../tests/test_gaussian_impl_switch.py) — heuristic↔ML selector, 38-dim schema contract, direction mirroring for shorts.

@@ -41,7 +41,7 @@ from typing import Optional
 import logging as _logging
 
 from config_layer.config_builder import ConfigBuilder, _validate_override_keys
-from config_layer.crt_engine_v2 import CRTConfig
+from config_layer.state_identity import CRTConfig
 
 _log = _logging.getLogger(__name__)
 
@@ -384,7 +384,19 @@ def load_prod_config_from_registry(
     if _inst_over:
         merged.update(_inst_over)
 
-    return ConfigBuilder.build(instrument, overrides=merged)
+    from config_layer.crt_config_provenance import ConstructionMode
+
+    # P1 observe: stamp PRODUCTION_MERGED directly (no intermediate ROUTER_BASE warning).
+    return ConfigBuilder.build(
+        instrument,
+        overrides=merged,
+        stamp_mode=ConstructionMode.PRODUCTION_MERGED,
+        stamp_version=version,
+        stamp_note=(
+            "load_prod_config_from_registry — crt_engine∪params (params win)"
+            "∪instrument_overrides"
+        ),
+    )
 
 
 def _coerce_crt_engine(raw: dict) -> dict:

@@ -118,6 +118,30 @@ PLAN_REGISTRY: Dict[str, List[ToolStep]] = {
     "findings_explain": [
         _s("findings.explain"),
     ],
+    # ── GrokAgenticAI specialists (executed via GoalLoop; seeds for docs/tests) ─
+    "ops_diagnose": [
+        _s("ops.throughput_snapshot"),
+        _s("ops.funnel_diagnose"),
+        _s("ops.fail_reasons"),
+        _s("collector.tail"),
+        _s("ops.incident_pack"),
+    ],
+    "campaign_run": [
+        _s("tuner.run_multi"),
+        _s("validator.validate"),
+        _s("backtest.run_v2"),
+    ],
+    "campaign_tune_validate": [
+        _s("tuner.run_multi"),
+        _s("validator.validate"),
+    ],
+    "truth_janitor": [
+        _s("truth.construction_check"),
+        _s("truth.feature_math_lint"),
+        _s("truth.script_census"),
+        _s("truth.citation_floor"),
+        _s("truth.hygiene_pack"),
+    ],
 }
 
 _ASK_PLAN = Plan(intent_key="ask_user", steps=[])

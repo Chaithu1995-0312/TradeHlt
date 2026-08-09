@@ -24,11 +24,11 @@ if str(_ROOT) not in sys.path:
 if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
-from config_layer.production_config import get_prod_section   # type: ignore
-from engines import crt_engine                                 # type: ignore
-from strategies.base_strategy import BaseStrategy              # type: ignore
-from strategies.strategy_result import StrategyResult          # type: ignore
-from utils.logging_config import get_flow_logger               # type: ignore
+from config_layer.production_config import get_prod_section, get_prod_config   # type: ignore
+from engines import crt_engine                                                  # type: ignore
+from strategies.base_strategy import BaseStrategy                               # type: ignore
+from strategies.strategy_result import StrategyResult                           # type: ignore
+from utils.logging_config import get_flow_logger                                # type: ignore
 
 logger = get_flow_logger("STRATEGY_ENGINE")
 
@@ -39,6 +39,18 @@ def _load_s1_cfg() -> dict:
     if not cfg:
         logger.warning("strategy_engine.s01_crt missing — using defaults")
     return cfg
+
+
+def _load_score_component_weights() -> tuple:
+    """PLAN-002: read the HOW-owned engines-path weights from production config.
+    Raises KeyError if missing — no CODE defaults permitted."""
+    try:
+        crt_sec = get_prod_section("crt_engine")
+        raw = crt_sec["score_component_weights"]
+        return tuple(float(c) for c in raw)
+    except Exception as exc:
+        logger.error("PLAN-002: score_component_weights not loadable from prod config: %s", exc)
+        raise
 
 
 class S01CRTWrapper(BaseStrategy):
@@ -54,6 +66,7 @@ class S01CRTWrapper(BaseStrategy):
     """
 
     _cfg_s1: dict = {}
+    _score_component_weights: tuple = ()
 
     def __init__(
         self,
@@ -64,6 +77,8 @@ class S01CRTWrapper(BaseStrategy):
         super().__init__(pair, timeframe, config)
         if not S01CRTWrapper._cfg_s1:
             S01CRTWrapper._cfg_s1 = _load_s1_cfg()
+        if not S01CRTWrapper._score_component_weights:
+            S01CRTWrapper._score_component_weights = _load_score_component_weights()
 
     @property
     def strategy_id(self) -> str:
@@ -78,7 +93,10 @@ class S01CRTWrapper(BaseStrategy):
 
         trade_id = f"S1_{self.pair}_{features.get('session', 'UNK')}"
         try:
-            result = crt_engine.compute(trade_id, features, {})
+            result = crt_engine.compute(
+                trade_id, features,
+                {"score_component_weights": list(self._score_component_weights)},
+            )
         except Exception as exc:
             logger.warning("S1 CRT engine error: %s", exc)
             return self._no_trade("UNKNOWN")

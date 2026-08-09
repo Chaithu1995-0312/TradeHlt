@@ -26,34 +26,35 @@
     "gitignored_policy": "gitignored files excluded from both universes",
     "worktree_policy": ".claude/worktrees are COPIES of this repo \u2014 excluded to avoid census inflation",
     "archive_policy": "archive/ = historical copies \u2014 excluded, disclosed here",
-    "tracked_py_files": 477,
-    "untracked_exec_py_files": 274,
-    "untracked_other_py_files_disclosed_not_scanned": 0
+    "tracked_py_files": 494,
+    "untracked_exec_py_files": 565,
+    "untracked_other_py_files_disclosed_not_scanned": 31
   },
   "counts": {
-    "TOTAL_OCCURRENCES": 412,
-    "TOTAL_DERIVATIONS": 109,
-    "TOTAL_PRODUCERS": 106,
-    "TOTAL_TRANSPORT_SITES": 92,
-    "TOTAL_CONSUMERS": 211,
-    "TOTAL_TEST_ORACLES": 3,
-    "TOTAL_UNKNOWN": 0,
+    "TOTAL_OCCURRENCES": 591,
+    "TOTAL_DERIVATIONS": 139,
+    "TOTAL_PRODUCERS": 132,
+    "TOTAL_TRANSPORT_SITES": 160,
+    "TOTAL_CONSUMERS": 286,
+    "TOTAL_TEST_ORACLES": 7,
+    "TOTAL_UNKNOWN": 6,
     "MANUALLY_ADMITTED_EXECUTORS": 2
   },
   "role_histogram": {
-    "derivation": 104,
-    "transport": 92,
-    "consumer_read": 211,
-    "test_oracle": 3,
+    "derivation": 130,
+    "transport": 160,
+    "consumer_read": 286,
+    "test_oracle": 7,
+    "unknown_write": 6,
     "executor_dispatch": 2
   },
   "reconciliation": {
-    "NAME_ONLY": 211,
-    "EXPRESSION_ONLY": 75,
-    "SINK_ONLY": 86,
+    "NAME_ONLY": 286,
+    "EXPRESSION_ONLY": 102,
+    "SINK_ONLY": 160,
     "NAME_AND_EXPRESSION": 0,
-    "NAME_AND_SINK": 20,
+    "NAME_AND_SINK": 27,
     "EXPRESSION_AND_SINK": 0,
-    "ALL_THREE": 18
+    "ALL_THREE": 14
   }
 }

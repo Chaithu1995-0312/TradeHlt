@@ -190,6 +190,90 @@ def build_records() -> list[dict]:
         notes="Pre-registered before any run; reopens Program 4 via both legal keys (new M5 "
               "corpus + new non-directional ontology). No findings yet.",
     ))
+    R.append(_rec(
+        "H-017",
+        "During CRT active-candidate occupancy (SWEEP/DISPLACEMENT/EXPANSION/RETEST/EXECUTION), "
+        "shadow MarketStateVector partitions identify independent market-state conditions "
+        "associated with materially different forward price distributions not represented by "
+        "the active CRT candidate (Phase-1 XAUUSD M15).",
+        family="msip_shadow", status="validated",
+        findings=[], models=["crt"],
+        code_hypotheses=[],
+        programs=[
+            "docs/research-readiness/h-msip-001-continuous-market-state-preregistration.md",
+            "docs/research-readiness/h-msip-001-experiment-definition.json",
+            "docs/research-readiness/h-msip-001-run-findings.md",
+        ],
+        evidence=[
+            {
+                "type": "doc",
+                "path": "docs/governance/msip_shadow_design_v1/MSIP_DECISION_C_FROZEN_POSTURE_V1.md",
+            },
+            {
+                "type": "doc",
+                "path": "docs/governance/msip_shadow_implementation_plan_v1/G_IMPL_01_EVIDENCE_PACKAGE_V1.md",
+            },
+            {
+                "type": "doc",
+                "path": "docs/governance/crt_local_math_authority_resolution_v1/"
+                        "CRT_LOCAL_MATH_AUTHORITY_RESOLUTION_V1.md",
+            },
+            {
+                "type": "doc",
+                "path": "docs/research-readiness/h-msip-001-run-findings.md",
+            },
+            {
+                "type": "doc",
+                "path": "results/research/h_msip_001/H_017_EXPERIMENT_EVIDENCE_V1.json",
+            },
+        ],
+        notes="Alias H-MSIP-001. PRESERVED under ORIGINAL_±32_BAR_MATCHED_ESTIMAND_ONLY "
+              "(P-BOS=+1 micro residual). GENERALIZATION NOT_SUPPORTED (H-018). "
+              "THREAD SCOPE_CLOSED. Occupancy-wide P-BOS=+1 NOT_SUPPORTED. No economic/"
+              "trading/MSIP/CRT/threshold/migration/production authority. "
+              "See h-msip-001-h018-thread-closure.md.",
+    ))
+    R.append(_rec(
+        "H-018",
+        "The H-017 P-BOS=+1 residual on R_8 remains directionally and statistically stable "
+        "under alternative pre-registered control constructions (overlap-weighted broader "
+        "treatment; time-blocked stratification) that reduce dependence on ±32-bar exact "
+        "matching (Phase-1 XAUUSD M15).",
+        family="msip_shadow", status="falsified",
+        findings=[], models=["crt"],
+        code_hypotheses=[],
+        programs=[
+            "docs/research-readiness/h-msip-002-match-attrition-preregistration.md",
+            "docs/research-readiness/h-msip-002-experiment-definition.json",
+            "docs/research-readiness/h-msip-002-run-findings.md",
+            "docs/research-readiness/h-msip-001-h018-thread-closure.md",
+        ],
+        evidence=[
+            {
+                "type": "doc",
+                "path": "docs/research-readiness/h-msip-001-run-findings.md",
+            },
+            {
+                "type": "doc",
+                "path": "results/research/h_msip_001/H_017_OWNER_ACCEPTANCE_V1.json",
+            },
+            {
+                "type": "doc",
+                "path": "results/research/h_msip_002/H_018_EXPERIMENT_EVIDENCE_V1.json",
+            },
+            {
+                "type": "doc",
+                "path": "results/research/h_msip_002/H_018_OWNER_ACCEPTANCE_V1.json",
+            },
+            {
+                "type": "doc",
+                "path": "docs/research-readiness/h-msip-002-run-findings.md",
+            },
+        ],
+        notes="Alias H-MSIP-002. Owner-accepted MATCHING_DEPENDENT. E0 rep H-017; E1/E2 "
+              "sign reverse with adequate E1 overlap. Closes H-017/H-018 thread "
+              "(H-017 preserved matched-scope only). No rescue of P-BOS=+1. RESEARCH_ONLY.",
+    ))
     return R
 
 

@@ -199,7 +199,7 @@ class S08MLEnsemble(BaseStrategy):
 
         rsi = float(features.get("rsi_14", 50.0))
         momentum = float(features.get("momentum_score", 0.0))
-        macd_hist = float(features.get("macd_hist", 0.0))
+        macd_hist = float(features.get("macd_hist_z", 0.0))   # v4.0: v3.0 emitted the z-score under `macd_hist`
         volume_ratio = float(features.get("volume_ratio", 1.0))
         trend_strength = float(features.get("trend_strength", 0.0))
 
@@ -217,7 +217,7 @@ class S08MLEnsemble(BaseStrategy):
         """Majority vote across four directional indicators."""
         trend = str(features.get("trend_bias", "neutral")).lower()
         rsi = float(features.get("rsi_14", 50.0))
-        macd_hist = float(features.get("macd_hist", 0.0))
+        macd_hist = float(features.get("macd_hist_z", 0.0))   # v4.0: v3.0 emitted the z-score under `macd_hist`
         momentum = float(features.get("momentum_score", 0.0))
 
         votes = 0

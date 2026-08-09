@@ -119,11 +119,66 @@ def _require_ohlcv_value(data: dict, field: str, *, source: str = "Live trade_da
     return v
 
 
+def _require_feature_value(data: dict, field: str, *, source: str = "Live trade_data") -> float:
+    """Strict accessor for a mandatory DERIVED feature — no default, no substitution.
+
+    T-11 (2026-07-19), user rule: **no silent fallback**. Sibling of `_require_ohlcv_value`; the
+    OHLCV six were already strict while every derived feature went through
+    `_safe_float(get(x), <default>)`. Those defaults were not neutral:
+
+      * `ema_fast`/`ema_slow` defaulted to `close` — a PRICE substituted for a moving average,
+        which also drove `ema_spread`->0 and `trend_bias`->0. Three canonical features became
+        plausible, wrong and mutually consistent — undetectable by any range check.
+      * `atr` defaulted to 0.0, silently disabling every `if state.atr_abs > 0` CRT guard: the
+        engine did not error, it quietly stopped applying its own logic.
+      * `0.0` is a LEGITIMATE value for most structure flags, so a defaulted field was
+        indistinguishable from a real one.
+
+    Raises ValueError if the field is absent, None, non-numeric, or NaN/inf.
+    """
+    if field not in data or data[field] is None:
+        raise ValueError(
+            f"{source} missing required feature field: {field!r}. "
+            "No default is substituted (T-11 no-silent-fallback rule) — the producer must "
+            "supply every field in _REQUIRED_FEATURE_FIELDS."
+        )
+    try:
+        v = float(data[field])
+    except (TypeError, ValueError):
+        raise ValueError(f"{source} feature field {field!r} is not numeric: {data[field]!r}")
+    if v != v or v in (float("inf"), float("-inf")):
+        raise ValueError(f"{source} feature field {field!r} is NaN/inf")
+    return v
+
+
+def _require_cfg(cfg: dict, key: str, section: str) -> object:
+    """Strict CONFIG accessor — raises if the key is absent (T-22, CLAUDE.md Section 6.5).
+
+    Section 6.5 hard rule: *"A missing key/section is an error (raise) — never
+    `get_prod_section(...).get(key, literal)`."* Mirrors the ten sibling `_require`-style
+    accessors already in this repo (`core/engine_runner._cfg_require`,
+    `config_layer/config_validator._validator_require`, `features/feature_pipeline._require_fp_cfg`,
+    the three `inout` fetchers, ...). A soft default here is worse than a missing key: it lets a
+    silently-undeclared literal govern live behaviour while looking configured.
+    """
+    if not isinstance(cfg, dict) or key not in cfg:
+        raise KeyError(
+            f"Required config key '{key}' missing from section '{section}'. "
+            "Add it to the active production config (no silent config defaults)."
+        )
+    return cfg[key]
+
+
 def _precision(symbol: str, exec_cfg: dict) -> int:
-    """Return decimal precision for rounding prices for a given symbol."""
+    """Return decimal precision for rounding prices for a given symbol.
+
+    `precision_overrides` is an optional per-symbol MAP (absence means "no override for this
+    symbol", not a missing value), so `.get(symbol, <default>)` is correct there — but the
+    fallback itself is now a strict config read.
+    """
     return int(
         exec_cfg.get("precision_overrides", {}).get(
-            symbol, exec_cfg.get("precision_default", 8)
+            symbol, _require_cfg(exec_cfg, "precision_default", "execution_planner")
         )
     )
 
@@ -146,22 +201,67 @@ def _normalize_session(value) -> str:
         "ny": "new_york",
         "overlap": "overlap",
     }
+    # T-11: no silent fallback. `None` previously became "london" — fabricating a specific
+    # trading session. Callers must not pass None (_derive_session already guards this).
     if value is None:
-        return "london"
+        raise ValueError(
+            "_normalize_session received None — session cannot be defaulted "
+            "(T-11 no-silent-fallback rule); it gates trade admission."
+        )
     key = str(value).strip().lower()
-    return session_map.get(key, session_map.get(value, key))
+    normalized = session_map.get(key, session_map.get(value))
+    if normalized is None:
+        raise ValueError(
+            f"Unrecognised session value {value!r}. Expected one of "
+            f"{sorted(set(session_map.values()))} or a known alias — not silently passed through."
+        )
+    return normalized
+
+
+def _require_symbol(data: dict, *, source: str = "Live trade_data") -> str:
+    """Strict accessor for the instrument symbol — no fabricated default (T-11).
+
+    Two call sites previously defaulted to ``"EURUSD"``, which invents a specific instrument:
+    orchestrator routing and downstream logging would then attribute a decision to the wrong
+    market. ``"UNKNOWN"`` (used for pure log strings elsewhere) is at least honest; a concrete
+    ticker is not.
+    """
+    v = data.get("symbol")
+    if v is None or not str(v).strip():
+        raise ValueError(
+            f"{source} missing required field: 'symbol'. No default is substituted "
+            "(T-11 no-silent-fallback rule) — a fabricated ticker misattributes the decision."
+        )
+    return str(v)
 
 
 def _derive_session(trade_data: dict) -> str:
+    """Resolve the session label. RAISES if the feeder supplies none (T-11).
+
+    Previously this returned ``"london"`` when nothing was supplied — fabricating a specific
+    trading session. That is a substantive claim about the world, not a neutral default, and
+    session is decision-critical: it gates trade admission (the 2026-07-19 XAUUSD run had 100%
+    of its candidates rejected by the session filter, `off_session:*`). A silently-invented
+    "london" could therefore both admit and reject trades on fiction.
+
+    The `is_asia`/`is_london`/`is_newyork` flags remain an accepted ALTERNATIVE encoding, not a
+    fallback chain: one of them, or an explicit `session`, must be present.
+    """
     if "session" in trade_data and trade_data.get("session") is not None:
         return _normalize_session(trade_data.get("session"))
+    # Alternative boolean-flag encoding. Absent flags are treated as 0 ONLY to test which flag is
+    # set — if none is set we raise rather than choosing a session.
     if _safe_float(trade_data.get("is_asia"), 0.0) > 0.5:
         return "asia"
     if _safe_float(trade_data.get("is_london"), 0.0) > 0.5:
         return "london"
     if _safe_float(trade_data.get("is_newyork"), 0.0) > 0.5:
         return "new_york"
-    return "london"
+    raise ValueError(
+        "Live trade_data missing session: supply 'session', or exactly one of "
+        "'is_asia'/'is_london'/'is_newyork'. No default is substituted "
+        "(T-11 no-silent-fallback rule) — session gates trade admission."
+    )
 
 
 def _load_engine_config() -> dict:
@@ -223,6 +323,22 @@ def _load_engine_config() -> dict:
             "Add it to configs/production/v1_multi_2026_03.json."
         )
 
+    # C3 (2026-07-29): crt_engine was ABSENT from this merge, so the SL/TP block in
+    # process() read `engine_config.get("crt_engine", {})` -> always {}. Its strict
+    # `_require_cfg(_crt_cfg, "sl_atr_buffer", "crt_engine")` therefore raised
+    # KeyError on EVERY execute decision (before SL/TP/RR/size were set, with no
+    # wrapping try), and the per-intent TP1 multipliers silently collapsed to the
+    # 1.0 literal. Carried as a NESTED key deliberately: crt_engine shares key names
+    # with the flattened engine_runner/decision_engine dicts above, so a flat
+    # merge would silently overwrite unrelated live behaviour.
+    crt_cfg = metadata.get("crt_engine")
+    if not isinstance(crt_cfg, dict):
+        raise RuntimeError(
+            "LIVE_HOOK: 'crt_engine' section missing from production config. "
+            "It supplies sl_atr_buffer and the per-intent TP multipliers to the "
+            "live SL/TP block. Add it to the active production config."
+        )
+
     # Merged flat config: engine_runner + decision_engine + nested sections
     # fusion_engine is kept as nested key so EngineRunner can access it correctly
     merged = {}
@@ -231,6 +347,7 @@ def _load_engine_config() -> dict:
     merged["fusion_engine"] = fusion_cfg
     merged["ultron_risk_gate"] = ultron_cfg
     merged["execution_planner"] = exec_planner_cfg
+    merged["crt_engine"] = crt_cfg
 
     # Initialize FeatureMonitor from config
     if _MONITOR_AVAILABLE and FeatureMonitor is not None:
@@ -248,12 +365,13 @@ def _load_engine_config() -> dict:
             )
         _feature_monitor = FeatureMonitor(
             window_size=int(window_size),
-            soft_threshold=float(fm_cfg.get("soft_drift_z", 2.5)),
-            hard_threshold=float(fm_cfg.get("hard_drift_z", 3.0)),
+            soft_threshold=float(_require_cfg(fm_cfg, "soft_drift_z", "feature_monitor")),
+            hard_threshold=float(_require_cfg(fm_cfg, "hard_drift_z", "feature_monitor")),
         )
 
     # Initialize FeatureStore as canonical ingestion boundary.
-    # Validates all 35 CANONICAL_FEATURES, computes history-derived double_sweep,
+    # Validates all CANONICAL_FEATURES (39 under schema v4.0), computes history-derived
+    # double_sweep,
     # and injects _data_integrity="real" sentinel before EngineRunner receives the dict.
     if _STORE_AVAILABLE and FeatureStore is not None:
         fs_cfg = metadata.get("feature_store")
@@ -299,17 +417,20 @@ def _load_engine_config() -> dict:
 
 
 def _build_engine_input(trade_data: dict) -> dict:
+    """Strict engine input — every consumed field is mandatory (T-11).
+
+    ONE uniform rule: no tiering, no "acceptable" silent default. A missing field raises rather
+    than resolving to a plausible-looking number.
+    """
     # Six OHLCV fields are mandatory — strict access, no cascade/default.
     close = _require_ohlcv_value(trade_data, "close")
     open_ = _require_ohlcv_value(trade_data, "open")
     high = _require_ohlcv_value(trade_data, "high")
     low = _require_ohlcv_value(trade_data, "low")
-    ema_fast = _safe_float(trade_data.get("ema_fast"), close)
-    ema_slow = _safe_float(trade_data.get("ema_slow"), close)
-    disp_strength = _safe_float(
-        trade_data.get("disp_strength", trade_data.get("disp_str")),
-        0.0,
-    )
+    # `disp_str` remains an accepted ALIAS for disp_strength (a naming variant, not a default):
+    # if neither spelling is present the strict accessor still raises.
+    if "disp_strength" not in trade_data and "disp_str" in trade_data:
+        trade_data = {**trade_data, "disp_strength": trade_data["disp_str"]}
 
     return {
         "_data_integrity": "real",
@@ -318,20 +439,20 @@ def _build_engine_input(trade_data: dict) -> dict:
         "low": low,
         "close": close,
         "volume": _require_ohlcv_value(trade_data, "volume"),
-        "atr": max(0.0, _safe_float(trade_data.get("atr"), 0.0)),
-        "ema_fast": ema_fast,
-        "ema_slow": ema_slow,
+        "atr": _require_feature_value(trade_data, "atr"),
+        "ema_fast": _require_feature_value(trade_data, "ema_fast"),
+        "ema_slow": _require_feature_value(trade_data, "ema_slow"),
         "session": _derive_session(trade_data),
-        "trend_bias": _safe_float(trade_data.get("trend_bias"), 0.0),
-        "ema_spread": _safe_float(trade_data.get("ema_spread"), ema_fast - ema_slow),
-        "momentum_score": _safe_float(trade_data.get("momentum_score"), 0.0),
-        "volatility_ratio": max(0.0, _safe_float(trade_data.get("volatility_ratio"), 1.0)),
-        "sweep_detected": _safe_float(trade_data.get("sweep_detected"), 0.0),
-        "double_sweep": _safe_float(trade_data.get("double_sweep"), 0.0),
-        "body_ratio": _safe_float(trade_data.get("body_ratio"), 0.0),
-        "disp_strength": disp_strength,
-        "retest_depth": _safe_float(trade_data.get("retest_depth"), 0.0),
-        "candles_since_retest": int(_safe_float(trade_data.get("candles_since_retest"), 0.0)),
+        "trend_bias": _require_feature_value(trade_data, "trend_bias"),
+        "ema_spread": _require_feature_value(trade_data, "ema_spread"),
+        "momentum_score": _require_feature_value(trade_data, "momentum_score"),
+        "volatility_ratio": _require_feature_value(trade_data, "volatility_ratio"),
+        "sweep_detected": _require_feature_value(trade_data, "sweep_detected"),
+        "double_sweep": _require_feature_value(trade_data, "double_sweep"),
+        "body_ratio": _require_feature_value(trade_data, "body_ratio"),
+        "disp_strength": _require_feature_value(trade_data, "disp_strength"),
+        "retest_depth": _require_feature_value(trade_data, "retest_depth"),
+        "candles_since_retest": int(_require_feature_value(trade_data, "candles_since_retest")),
     }
 
 
@@ -340,9 +461,10 @@ def _build_ohlcv_and_auxiliary(trade_data: dict) -> tuple[dict, dict]:
     Split trade_data into (ohlcv, auxiliary) for FeatureStore.process().
 
     ohlcv     — 5 core OHLCV fields required by FeatureStore._ensure_required().
-    auxiliary — all remaining 30 CANONICAL_FEATURES (unknowns default to 0.0).
-                double_sweep is passed as 0.0 — FeatureStore._compute_derived()
-                overwrites it with the history-correct value.
+    auxiliary — all remaining CANONICAL_FEATURES. T-11 (2026-07-19): every one is MANDATORY;
+                a missing field raises rather than defaulting to 0.0/1.0/close. The sole
+                exception is double_sweep, which is a placeholder overwritten by
+                FeatureStore._compute_derived() with the history-correct value.
                 _data_integrity is NOT included — FeatureStore adds it post-validation.
 
     Returns (ohlcv: dict, auxiliary: dict).
@@ -356,57 +478,97 @@ def _build_ohlcv_and_auxiliary(trade_data: dict) -> tuple[dict, dict]:
 
     ohlcv = {"open": open_, "high": high, "low": low, "close": close, "volume": volume}
 
-    # Derived candle anatomy (computed here; FeatureStore does not derive these)
-    body_size = abs(close - open_)
-    wick_size = max(0.0, (high - low) - body_size)
-    body_ratio = body_size / wick_size if wick_size > 1e-8 else 0.0
+    # Derived candle anatomy (computed here; FeatureStore does not derive these).
+    # Phase-1 identity closure (2026-07-10, GD-001) bound the live math to
+    # FEAT-BODY_TO_TOTAL_WICK_RATIO explicitly and dual-emitted both keys — lint-clean, but it
+    # left the runtime KEY `body_ratio` carrying body/total_wick while the pipeline, the CRT
+    # `Candle` property and the `body_ratio >= 0.70` gate all mean body/range.
+    #
+    # T-16 (2026-07-23): the runtime key now carries the CANONICAL identity
+    # (FEAT-BODY_TO_RANGE_RATIO / FM-010), closing the last live-vs-batch formula divergence for
+    # a real feature. Both identities stay dual-emitted under their own explicit names, so
+    # nothing loses access to either. Behavior-changing on the live path by construction; per
+    # F-047 V1-V10 the body_ratio flip reaches only the fused SCORE (reject-REASON), not the
+    # execute/veto boundary. NOTE (F-048 RESOLVED 2026-07-24): the old "run() executes 0/70,002
+    # because the RR gate compares polarity∈[0.5,1] vs rr_threshold=1.5" reasoning is SUPERSEDED —
+    # that RR gate has been removed (DecisionEngine is semantic-only; economic RR = UltronRiskGate).
+    # run() can now reach execute when the semantic gates pass, so the structural-inertness claim
+    # for body_ratio must be re-derived, not assumed — this comment no longer asserts it.
+    from features import candle_math as _cm
+    body_size = _cm.body_size(open_, close)
+    # Live legacy wick_size = total_wick (not pipeline candle_range) — FOLLOW_UP identity
+    wick_size = max(0.0, _cm.total_wick(open_, high, low, close))
+    # v4.0: the CANONICAL slot is `candle_range` = high - low, bound to the registered FM-002
+    # identity. This is a DIFFERENT quantity from the live `wick_size` above (total_wick); the
+    # rename made that distinction visible rather than creating it (GD-001/GD-002, F-047).
+    candle_range = _cm.candle_range(high, low)
+    body_to_total_wick_ratio = _cm.body_to_total_wick_ratio(open_, high, low, close)
+    body_to_range_ratio = _cm.body_ratio(open_, high, low, close)
+    # The runtime schema key `body_ratio` carries the CANONICAL body/range identity (FM-010),
+    # matching the batch pipeline and crt_engine_v2's Candle.body_ratio property. The total_wick
+    # quantity remains available under its own unambiguous name below.
+    body_ratio = body_to_range_ratio
 
-    ema_fast = _safe_float(trade_data.get("ema_fast"), close)
-    ema_slow = _safe_float(trade_data.get("ema_slow"), close)
-    disp_strength = _safe_float(
-        trade_data.get("disp_strength", trade_data.get("disp_str")), 0.0
-    )
+    # `disp_str` is an accepted ALIAS (naming variant), not a default — if neither spelling is
+    # present the strict accessor below still raises.
+    if "disp_strength" not in trade_data and "disp_str" in trade_data:
+        trade_data = {**trade_data, "disp_strength": trade_data["disp_str"]}
 
+    _req = _require_feature_value  # every field below is mandatory (T-11, one uniform rule)
     auxiliary = {
         # EMA / trend
-        "atr":                  max(0.0, _safe_float(trade_data.get("atr"), 0.0)),
-        "ema_fast":             ema_fast,
-        "ema_slow":             ema_slow,
-        "ema_spread":           _safe_float(trade_data.get("ema_spread"), ema_fast - ema_slow),
+        "atr":                  _req(trade_data, "atr"),
+        "ema_fast":             _req(trade_data, "ema_fast"),
+        "ema_slow":             _req(trade_data, "ema_slow"),
+        "ema_spread":           _req(trade_data, "ema_spread"),
         "session":              _derive_session(trade_data),
-        "trend_bias":           _safe_float(trade_data.get("trend_bias"), 0.0),
-        "trend_strength":       _safe_float(trade_data.get("trend_strength"), 0.0),
-        "momentum_score":       _safe_float(trade_data.get("momentum_score"), 0.0),
-        "volatility_ratio":     max(0.0, _safe_float(trade_data.get("volatility_ratio"), 1.0)),
+        "trend_bias":           _req(trade_data, "trend_bias"),
+        "trend_strength":       _req(trade_data, "trend_strength"),
+        "momentum_score":       _req(trade_data, "momentum_score"),
+        "volatility_ratio":     _req(trade_data, "volatility_ratio"),
         # Volume
-        "volume_ratio":         max(0.0, _safe_float(trade_data.get("volume_ratio"), 1.0)),
+        "volume_ratio":         _req(trade_data, "volume_ratio"),
         # Structure / sweep
-        "sweep_detected":       _safe_float(trade_data.get("sweep_detected"), 0.0),
-        "double_sweep":         0.0,  # overwritten by FeatureStore._compute_derived()
-        "liquidity_sweep":      _safe_float(trade_data.get("liquidity_sweep"), 0.0),
-        "break_of_structure":   _safe_float(trade_data.get("break_of_structure"), 0.0),
+        "sweep_detected":       _req(trade_data, "sweep_detected"),
+        # NOT a default: FeatureStore._compute_derived() overwrites this with the
+        # history-correct value, so the placeholder is never read as data.
+        "double_sweep":         0.0,
+        "liquidity_sweep":      _req(trade_data, "liquidity_sweep"),
+        "break_of_structure":   _req(trade_data, "break_of_structure"),
         # Swing levels
-        "swing_high":           _safe_float(trade_data.get("swing_high"), 0.0),
-        "swing_low":            _safe_float(trade_data.get("swing_low"), 0.0),
-        "higher_high":          _safe_float(trade_data.get("higher_high"), 0.0),
-        "lower_low":            _safe_float(trade_data.get("lower_low"), 0.0),
-        # Candle anatomy
+        "swing_high":           _req(trade_data, "swing_high"),
+        "swing_low":            _req(trade_data, "swing_low"),
+        "higher_high":          _req(trade_data, "higher_high"),
+        "lower_low":            _req(trade_data, "lower_low"),
+        # Candle anatomy — identity-bound (Phase-1), computed here from strict OHLCV
         "body_size":            body_size,
-        "wick_size":            wick_size,
-        "body_ratio":           body_ratio,
+        # v4.0 rename: the canonical slot is `candle_range` (high - low). NOTE the live path's
+        # local `wick_size` variable is total_wick, NOT the range — the pre-existing GD-001/GD-002
+        # divergence (F-047), unchanged here and still tracked separately. The canonical key now
+        # carries the canonical quantity; the divergent live value keeps its own name.
+        "candle_range":         candle_range,
+        "wick_size":            wick_size,  # live total_wick — NON-canonical, GD-002 (F-047)
+        "body_ratio":           body_ratio,  # CANONICAL body/range (FM-010) since T-16
+        "body_to_total_wick_ratio": body_to_total_wick_ratio,
+        "body_to_range_ratio":  body_to_range_ratio,
         # Regime / volatility
-        "volatility_regime":    _safe_float(trade_data.get("volatility_regime"), 0.0),
-        # Indicators — passed through if supplied by upstream, otherwise 0.0
-        "rsi_14":               _safe_float(trade_data.get("rsi_14"), 0.0),
-        "macd_line":            _safe_float(trade_data.get("macd_line"), 0.0),
-        "macd_signal":          _safe_float(trade_data.get("macd_signal"), 0.0),
-        "macd_hist":            _safe_float(trade_data.get("macd_hist"), 0.0),
+        "volatility_regime":    _req(trade_data, "volatility_regime"),
+        # Indicators — MANDATORY. Previously "passed through if supplied, otherwise 0.0", which
+        # made a defaulted indicator indistinguishable from a real zero reading.
+        "rsi_14":               _req(trade_data, "rsi_14"),
+        "macd_line":            _req(trade_data, "macd_line"),
+        "macd_signal":          _req(trade_data, "macd_signal"),
+        # v4.0 MACD split. The feeder supplies the value v3.0 called `macd_hist`, which was the
+        # Z-SCORED one (compute_normalization overwrote it in place), so it maps to macd_hist_z.
+        # macd_hist_raw is derived here from the two MACD legs — the declared FM-049 formula.
+        "macd_hist_z":          _req(trade_data, "macd_hist"),
+        "macd_hist_raw":        float(_req(trade_data, "macd_line")) - float(_req(trade_data, "macd_signal")),
         # Time
-        "hour_of_day":          _safe_float(trade_data.get("hour_of_day"), 0.0),
+        "hour_of_day":          _req(trade_data, "hour_of_day"),
         # CRT trade-specific
-        "disp_strength":        disp_strength,
-        "retest_depth":         _safe_float(trade_data.get("retest_depth"), 0.0),
-        "candles_since_retest": int(_safe_float(trade_data.get("candles_since_retest"), 0.0)),
+        "disp_strength":        _req(trade_data, "disp_strength"),
+        "retest_depth":         _req(trade_data, "retest_depth"),
+        "candles_since_retest": int(_req(trade_data, "candles_since_retest")),
     }
     return ohlcv, auxiliary
 
@@ -548,33 +710,36 @@ class HookedLiveEngine(LiveEngine):
             raise ValueError("Live trade_data missing required field: timestamp")
 
         # FeatureStore path — canonical ingestion boundary.
-        # On success: engine_input is replaced by a validated FeatureFrame dict
-        #   containing all 35 CANONICAL_FEATURES + _data_integrity="real".
-        #   history-derived double_sweep is computed from the rolling sweep window.
-        # On failure: WARNING logged; raw dict from _build_engine_input is used as-is.
+        # On success: engine_input is replaced by a validated FeatureFrame dict containing all
+        #   CANONICAL_FEATURES + _data_integrity="real"; history-derived double_sweep is computed
+        #   from the rolling sweep window.
+        #
+        # T-11 (2026-07-19) — FAIL CLOSED. This block previously caught every exception, logged a
+        # WARNING and CONTINUED with the un-validated `_build_engine_input` dict. Because
+        # FeatureStore._ensure_required() is the ONLY thing enforcing the canonical field
+        # contract, catching its failure meant the validation failure was itself what disabled
+        # the validation — the engine then scored a real decision on defaulted data with nothing
+        # but a warning line. A validation failure must REJECT the tick, never downgrade it.
+        # No kill-switch flag by deliberate decision: such a flag gets switched on under pressure
+        # and left on.
         if _STORE_AVAILABLE and _feature_store is not None:
-            try:
-                _ohlcv, _auxiliary = _build_ohlcv_and_auxiliary(trade_data)
-                _timestamp = trade_data["timestamp"]  # guaranteed present (checked above)
-                _frame = _feature_store.process(candle_idx, _timestamp, _ohlcv, _auxiliary)
-                engine_input = _frame.features  # dict: 35 canonical keys + _data_integrity
-                logger.debug(
-                    "FeatureStore: validated frame idx=%d sym=%s",
-                    candle_idx, trade_data.get("symbol", "UNKNOWN"),
-                )
-            except Exception as _fs_err:
-                logger.warning(
-                    "FeatureStore: validation failed for %s candle %d — "
-                    "using raw dict fallback: %s",
-                    trade_data.get("symbol", "UNKNOWN"), candle_idx, _fs_err,
-                )
+            _ohlcv, _auxiliary = _build_ohlcv_and_auxiliary(trade_data)
+            _timestamp = trade_data["timestamp"]  # guaranteed present (checked above)
+            _frame = _feature_store.process(candle_idx, _timestamp, _ohlcv, _auxiliary)
+            engine_input = _frame.features  # dict: canonical keys + _data_integrity
+            logger.debug(
+                "FeatureStore: validated frame idx=%d sym=%s",
+                candle_idx, trade_data.get("symbol", "UNKNOWN"),
+            )
 
         _get_regime_classifier()  # ensure singleton initialised before context block
 
+        # Direct indexing, no defaults: engine_input is now the STRICT/validated frame, so these
+        # keys are guaranteed present. A `.get(k, 0.0)` here could only mask a contract break.
         drift_features = {
-            "body_ratio": float(engine_input.get("body_ratio", 0.0)),
-            "retest_depth": float(engine_input.get("retest_depth", 0.0)),
-            "disp_strength": float(engine_input.get("disp_strength", 0.0)),
+            "body_ratio": float(engine_input["body_ratio"]),
+            "retest_depth": float(engine_input["retest_depth"]),
+            "disp_strength": float(engine_input["disp_strength"]),
         }
 
         context = {
@@ -582,9 +747,14 @@ class HookedLiveEngine(LiveEngine):
             "gaussian_p_win": float(
                 max(result.get("probabilities") or [0.5]) if result.get("probabilities") else 0.5
             ),
-            "candles_since_retest": int(trade_data.get("candles_since_retest", 0)),
-            "sweep_detected": bool(trade_data.get("sweep_detected", False)),
-            "double_sweep": bool(trade_data.get("double_sweep", False)),
+            # Read from the VALIDATED engine_input, not raw trade_data. These three were
+            # re-read from the feeder with defaults while the same fields were strict in
+            # engine_input — the same value could be real in one path and defaulted in the
+            # other. double_sweep in particular is history-derived by FeatureStore, so the
+            # feeder's raw value was the wrong source regardless.
+            "candles_since_retest": int(engine_input["candles_since_retest"]),
+            "sweep_detected": bool(engine_input["sweep_detected"]),
+            "double_sweep": bool(engine_input["double_sweep"]),
             "symbol": str(trade_data.get("symbol", "UNKNOWN")),
             "timeframe": str(trade_data.get("timeframe", timeframe)),
         }
@@ -634,7 +804,7 @@ class HookedLiveEngine(LiveEngine):
         # Must run BEFORE EngineRunner.run() so the score can be injected into
         # the context dict and picked up by FusionEngine.compute() as a 5th
         # weighted input.  The parallel post-hoc call in Sprint 6 is removed.
-        _orch_pair = str(trade_data.get("symbol", "EURUSD"))
+        _orch_pair = _require_symbol(trade_data)
         _orch_tf   = str(trade_data.get("timeframe", timeframe))
         _orch_pre  = _get_orchestrator(pair=_orch_pair, timeframe=_orch_tf)
         _orch_result = None
@@ -719,6 +889,23 @@ class HookedLiveEngine(LiveEngine):
             _crt_cfg  = engine_config.get("crt_engine", {})
             _intent   = trade_plan.get("trade_intent", "UNKNOWN").upper()
             _tp1_key  = f"tp1_atr_multiplier_{_intent.lower()}"
+            # ── T-16 (2026-07-23) RESOLVED by C3 (2026-07-29). The config illusion this
+            # block used to document is CLOSED: `_load_engine_config()` now carries the
+            # `crt_engine` section (nested), so `_crt_cfg` is the real section rather than
+            # an always-empty dict.
+            #
+            # What that changed, stated plainly (this was a LIVE BEHAVIOUR CHANGE, made by
+            # explicit user decision, not a parity-safe refactor):
+            #   * `sl_atr_buffer` below used to raise KeyError on EVERY execute — the strict
+            #     read hit the empty dict — so the live path could never reach SL/TP at all.
+            #   * the per-intent TP1 multipliers now GOVERN instead of collapsing to 1.0:
+            #     breakout 1.0->1.5, liq_sweep 1.0->1.2, pullback 1.0->0.8
+            #     (reversal 1.0 and tp2 2.0 are unchanged in value).
+            #
+            # The `.get(..., <literal>)` fallbacks are retained ONLY as a last-resort guard for
+            # a config that omits an optional per-intent key; the section's presence is now
+            # enforced upstream in _load_engine_config(). Floor:
+            # tests/test_live_hook_crt_config_plumbing.py.
             _tp1_mult = float(_crt_cfg.get(_tp1_key, _crt_cfg.get("tp1_atr_multiplier", 1.0)))
             _tp2_mult = float(_crt_cfg.get("tp2_atr_multiplier", 2.0))
             _crt = compute_crt_levels(
@@ -727,7 +914,7 @@ class HookedLiveEngine(LiveEngine):
                 low          = float(engine_input["low"]),
                 high         = float(engine_input["high"]),
                 atr          = float(engine_input["atr"]),
-                sl_atr_buffer= float(_crt_cfg.get("sl_atr_buffer", 0.2)),
+                sl_atr_buffer= float(_require_cfg(_crt_cfg, "sl_atr_buffer", "crt_engine")),
                 tp1_mult     = _tp1_mult,
                 tp2_mult     = _tp2_mult,
             )
@@ -735,8 +922,22 @@ class HookedLiveEngine(LiveEngine):
             trade_plan["stop_loss"]        = round(_crt["sl"],  _prec)
             trade_plan["take_profit_1"]    = round(_crt["tp1"], _prec)
             trade_plan["take_profit_2"]    = round(_crt["tp2"], _prec)
-            trade_plan["rr_ratio"]         = 1.0   # always 1R by CRT construction
-            trade_plan["risk_percent"]     = float(exec_planner_cfg.get("risk_percent", 0.5))
+            # Contract D — true economic RR from SL/TP geometry (not RREngine polarity).
+            # Primary target = TP1; TP2 R stored for audit. UltronRiskGate.min_rr_ratio
+            # consumes trade_plan["rr_ratio"] (post cost tax when configured).
+            _entry_px = float(trade_plan["entry_price"])
+            _sl_px = float(trade_plan["stop_loss"])
+            _tp1_px = float(trade_plan["take_profit_1"])
+            _tp2_px = float(trade_plan["take_profit_2"])
+            _risk_px = abs(_entry_px - _sl_px)
+            if _risk_px > 0:
+                trade_plan["rr_ratio"] = round(abs(_tp1_px - _entry_px) / _risk_px, 6)
+                trade_plan["rr_ratio_tp2"] = round(abs(_tp2_px - _entry_px) / _risk_px, 6)
+            else:
+                trade_plan["rr_ratio"] = 0.0
+                trade_plan["rr_ratio_tp2"] = 0.0
+            trade_plan["rr_source"] = "sl_tp_geometry"
+            trade_plan["risk_percent"]     = float(_require_cfg(exec_planner_cfg, "risk_percent", "execution_planner"))
             _risk_dist = _crt["risk_dist"]
             _balance   = float(trade_data["account_balance"])
             trade_plan["position_size_hint"] = (
@@ -744,11 +945,13 @@ class HookedLiveEngine(LiveEngine):
                 if _risk_dist > 0 else None
             )
             logger.info(
-                "CRT levels: sl=%.5f tp1=%.5f tp2=%.5f risk_dist=%.5f",
+                "CRT levels: sl=%.5f tp1=%.5f tp2=%.5f risk_dist=%.5f rr_tp1=%.4f rr_tp2=%.4f (D/SL-TP)",
                 trade_plan["stop_loss"],
                 trade_plan["take_profit_1"],
                 trade_plan["take_profit_2"],
                 _risk_dist,
+                float(trade_plan.get("rr_ratio", 0.0)),
+                float(trade_plan.get("rr_ratio_tp2", 0.0)),
             )
 
             # ── GAP-6 fix: Naked-order guard ──────────────────────────────────
@@ -806,7 +1009,10 @@ class HookedLiveEngine(LiveEngine):
                 wrapper = UltronRiskGateWrapper(
                     gate,
                     regime_factors=ultron_cfg.get("regime_factors"),  # from ultron_risk_gate config
-                    debug_mode=bool(engine_config.get("debug_mode", False)),
+                    # T-16: strict — `debug_mode` is declared in the engine_runner section and
+                    # IS present in the merged engine_config (verified), so the literal fallback
+                    # was dead weight that would have masked a future config regression.
+                    debug_mode=bool(_require_cfg(engine_config, "debug_mode", "engine_runner")),
                 )
                 ultron_result = wrapper.evaluate(trade_plan, portfolio_state, regime=_regime)
                 logger.info(
@@ -837,8 +1043,8 @@ class HookedLiveEngine(LiveEngine):
 
         # ── Sprint 6: StrategyOrchestrator + KillSwitch + Telegram + MT5 ───────
 
-        _pair = str(trade_data.get("symbol", "EURUSD"))
-        _tf   = str(trade_data.get("timeframe", "M15"))
+        _pair = _require_symbol(trade_data)
+        _tf   = str(trade_data.get("timeframe", timeframe))
 
         # 1. Kill switch pre-check — block if already tripped
         _ks = _get_kill_switch()
@@ -910,4 +1116,18 @@ class HookedLiveEngine(LiveEngine):
         result["ks_reason"]    = _ks.trip_reason() if _ks is not None else ""
         result["mt5_ticket"]   = _mt5_ticket
         result["drift_severity"] = _drift_severity
+
+        # §13 item8 / §9 — ledger completeness, additive-only. Mirrors the backtest
+        # path's TradeProvenanceV1 stamping (config version/hash, model pins,
+        # strategy id) without touching trade_id generation or the collector.collect
+        # call above: trade_id/TradeIdentityV1 canonicalization is a separate,
+        # already-tracked initiative (journal.trade_identity_v1_0) and out of scope
+        # for a config-authority change. Best-effort — never blocks the live result.
+        try:
+            from runtime.backtest_v2 import _build_provenance_base
+            result["provenance"] = _build_provenance_base(_pair, "")
+        except Exception as _prov_exc:  # noqa: BLE001
+            logger.debug("LIVE_HOOK: provenance stamping failed: %s", _prov_exc)
+            result["provenance"] = {}
+
         return result

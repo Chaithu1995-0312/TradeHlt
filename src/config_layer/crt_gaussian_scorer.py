@@ -194,7 +194,7 @@ class CRTGaussianScorer:
         disp = state.displacement_candle
         retest = state.retest_candle
         disp_move = abs(disp.close - disp.open)
-        if disp_move == 0 or state.atr == 0:
+        if disp_move == 0 or state.atr_abs == 0:
             return None
         # CH-002 / F-050: emit FM-027 / FM-028 identities (match crt_engine_v2 cache)
         from features import derived_math as _dm
@@ -207,7 +207,7 @@ class CRTGaussianScorer:
             "body_ratio": disp.body_ratio,
             "displacement_atr_ratio": _dm.displacement_atr_ratio(
                 candle_range=float(disp.wick_size),
-                atr=float(state.atr),
+                atr=float(state.atr_abs),
             ),
             "retest_index": state.retest_candle_index,
         }

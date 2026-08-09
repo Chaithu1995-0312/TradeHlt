@@ -9,7 +9,7 @@ Covers:
     2. liquidity_distance >= 0 always
     3. liquidity_pressure_score ∈ [0, 1] always
     4. NaN when atr=0 (dropped by finalize())
-    5. CANONICAL_FEATURE_DIM == 38 after schema change
+    5. CANONICAL_FEATURE_DIM == 39 after schema change (v4.0; 38 at v3.0)
     6. volume_spike uses rolling percentile threshold (adaptive, not fixed 1.5)
 """
 from __future__ import annotations
@@ -153,15 +153,15 @@ def test_zero_atr_handled():
     )
 
 
-# ── Test 5: CANONICAL_FEATURE_DIM == 38 ──────────────────────────────────────
+# ── Test 5: CANONICAL_FEATURE_DIM == 39 (schema v4.0; was 38 at v3.0) ────────
 
 def test_canonical_dim():
     from features.feature_schema import CANONICAL_FEATURE_DIM, CANONICAL_FEATURES
-    assert CANONICAL_FEATURE_DIM == 38, (
-        f"Expected CANONICAL_FEATURE_DIM=38, got {CANONICAL_FEATURE_DIM}"
+    assert CANONICAL_FEATURE_DIM == 39, (
+        f"Expected CANONICAL_FEATURE_DIM=39, got {CANONICAL_FEATURE_DIM}"
     )
-    assert len(CANONICAL_FEATURES) == 38, (
-        f"Expected len(CANONICAL_FEATURES)=38, got {len(CANONICAL_FEATURES)}"
+    assert len(CANONICAL_FEATURES) == 39, (
+        f"Expected len(CANONICAL_FEATURES)=39, got {len(CANONICAL_FEATURES)}"
     )
     # Check the three new features are present
     for feat in ("liquidity_distance", "liquidity_pressure_score", "volume_spike"):

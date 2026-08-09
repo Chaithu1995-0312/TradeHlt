@@ -18,7 +18,7 @@
       "new_york",
       "overlap"
     ],
-    "bitnet_zone_threshold": 0.25,
+    "zone_cluster_threshold": 0.25,
     "zone_registry_path": "models/zone_registry.json",
     "zone_gate_execution_mode": "normal",
     "zone_mode": "hard",
@@ -44,7 +44,7 @@
     "ultron_gate_enabled": false,
     "signal_belief": {
       "enabled": false,
-      "decay": 0.70,
+      "decay": 0.7,
       "high_conviction_threshold": 0.65,
       "min_confirmations": 2
     }
@@ -364,19 +364,47 @@
   "goal": {
     "goal_id": "G001",
     "enforce": false,
-    "trades_per_month": {"min": 20, "target": 40, "max": 80},
-    "avg_rr": {"min": 2.0},
-    "win_rate": {"min": 0.35},
-    "max_drawdown_pct": {"max": 0.10},
-    "risk_per_trade": {"target": 0.005},
-    "expectancy_r": {"min": 0.20},
-    "timeframe": {"execution": "M15", "structure": "H1"},
-    "instruments": ["BTCUSDT", "ETHUSDT", "BNBUSDT"],
-    "constraints": {"reaction_only": true, "human_execution": true, "no_prediction": true}
+    "trades_per_month": {
+      "min": 20,
+      "target": 40,
+      "max": 80
+    },
+    "avg_rr": {
+      "min": 2.0
+    },
+    "win_rate": {
+      "min": 0.35
+    },
+    "max_drawdown_pct": {
+      "max": 0.1
+    },
+    "risk_per_trade": {
+      "target": 0.005
+    },
+    "expectancy_r": {
+      "min": 0.2
+    },
+    "timeframe": {
+      "execution": "M15",
+      "structure": "H1"
+    },
+    "instruments": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "BNBUSDT"
+    ],
+    "constraints": {
+      "reaction_only": true,
+      "human_execution": true,
+      "no_prediction": true
+    }
   },
   "backtest": {
     "htf_candles_per_range": 4,
-    "warmup_candles": 30,
+    "_comment_warmup_candles": "T-16 (2026-07-23): raised 30 -> 78 to match the feature pipeline CANONICAL warmup that FeaturePipeline.finalize() drops. DERIVED, not chosen: feature_pipeline.ma_periods[0](20) + trend_strength_window(10) - 1 + zscore_window(50) - 1, resolved by features.feature_pipeline.required_warmup_rows(). BacktestRunner refuses to start below the derived value, so this key must accompany any change to those three windows.",
+    "warmup_candles": 78,
+    "_comment_engine_gate_enabled": "F-058 resolution (2026-07-23). Declares the 4-engine fusion gate inside EngineRunner.run(). Previously read only as os.getenv(BACKTEST_ENGINE_GATE, 1) and declared nowhere, so behavior depended on an untracked .env. Config is now the authority; the env var is an explicit override that logs at WARNING on disagreement.",
+    "engine_gate_enabled": true,
     "slippage_enabled": true,
     "slippage_atr_fraction": 0.1,
     "slippage_seed": 42,
@@ -386,7 +414,8 @@
     "use_compounding": true,
     "gap_reset_enabled": true,
     "gap_reset_minutes": 120,
-    "event_flush_every": 100
+    "event_flush_every": 100,
+    "bypass_zone_invalid": true
   },
   "feature_monitor": {
     "window_size": 500,
@@ -748,5 +777,43 @@
   "bitnet": {
     "bitnet_thresholds_path": "src/bitnet/bitnet_thresholds.json"
   },
-  "config_hash": "2b40c55adb9f077986818eabf5f99407c8e98dd28fd0913b2c675518f52a4d09"
+  "config_hash": "2b40c55adb9f077986818eabf5f99407c8e98dd28fd0913b2c675518f52a4d09",
+  "market_router": {
+    "_comment": "Config-driven market_router (target-strategy-architecture.md sec13 item1 / F-057, 2026-07-29). classes = the 5-key CRT profile per market class (byte-identical seed from the prior market_router.py FOREX_CONFIG/CRYPTO_CONFIG literals). symbol_map = instrument -> class, consulted by classify_market()/get_crt_config() with a leading-symbol-token fallback for filename-derived instrument hints (e.g. XAUUSD_M15). Unmapped instruments raise UnknownInstrumentError -- no safe default.",
+    "classes": {
+      "CRYPTO": {
+        "retest_depth_max": 0.25,
+        "retest_atr_depth_fraction": 0.3,
+        "body_ratio_min": 0.5,
+        "atr_multiplier_min": 1.0,
+        "expansion_atr_min_distance": 0.15
+      },
+      "FOREX": {
+        "retest_depth_max": 0.35,
+        "retest_atr_depth_fraction": 0.5,
+        "body_ratio_min": 0.6,
+        "atr_multiplier_min": 1.5,
+        "expansion_atr_min_distance": 0.08
+      }
+    },
+    "symbol_map": {
+      "EURUSD": "FOREX",
+      "GBPUSD": "FOREX",
+      "USDJPY": "FOREX",
+      "AUDUSD": "FOREX",
+      "NZDUSD": "FOREX",
+      "USDCHF": "FOREX",
+      "XAUUSD": "FOREX",
+      "BTCUSDT": "CRYPTO",
+      "ETHUSDT": "CRYPTO",
+      "BNBUSDT": "CRYPTO",
+      "SOLUSDT": "CRYPTO",
+      "ADAUSDT": "CRYPTO",
+      "EURCAD": "FOREX",
+      "EURGBP": "FOREX",
+      "USDCAD": "FOREX",
+      "DOGEUSDT": "CRYPTO",
+      "XRPUSDT": "CRYPTO"
+    }
+  }
 }

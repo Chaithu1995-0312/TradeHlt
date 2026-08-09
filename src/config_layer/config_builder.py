@@ -38,8 +38,9 @@ import dataclasses
 from dataclasses import replace
 from typing import Optional
 
-from config_layer.crt_engine_v2 import CRTConfig
+from config_layer.state_identity import CRTConfig
 from config_layer.market_router import get_crt_config, classify_market
+from config_layer.crt_config_provenance import ConstructionMode, stamp
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -64,6 +65,10 @@ class ConfigBuilder:
     def build(
         instrument: str,
         overrides: Optional[dict] = None,
+        *,
+        stamp_mode: ConstructionMode = ConstructionMode.ROUTER_BASE,
+        stamp_version: Optional[str] = None,
+        stamp_note: str = "ConfigBuilder.build → market_router class profile ± overrides",
     ) -> CRTConfig:
         """
         Build a validated, immutable CRTConfig for the given instrument.
@@ -76,6 +81,9 @@ class ConfigBuilder:
         overrides : dict | None
             Optional field overrides applied on top of the router base config.
             Keys must be valid CRTConfig field names — unknown keys raise ValueError.
+        stamp_mode : ConstructionMode
+            P1 observe provenance (default ROUTER_BASE). Production loader passes
+            PRODUCTION_MERGED so there is no intermediate false ROUTER warning.
 
         Returns
         -------
@@ -91,11 +99,21 @@ class ConfigBuilder:
         base: CRTConfig = get_crt_config(instrument)
 
         # Step 2 — Validate and apply overrides
+        okeys: list[str] = []
         if overrides:
             _validate_override_keys(overrides)
+            okeys = list(overrides.keys())
             base = replace(base, **overrides)
 
-        # Step 3 — Return frozen config (already frozen by @dataclass(frozen=True))
+        # Step 3 — P1 observe stamp (see CRT_CONFIG_CONSTRUCTION_PROTOCOL.md)
+        stamp(
+            base,
+            stamp_mode,
+            instrument=instrument,
+            version=stamp_version,
+            override_keys=okeys,
+            note=stamp_note,
+        )
         return base
 
     @staticmethod
@@ -136,7 +154,15 @@ class ConfigBuilder:
 
         # Re-root through router base, apply merged overrides
         base: CRTConfig = get_crt_config(instrument)
-        return replace(base, **existing_overrides)
+        out = replace(base, **existing_overrides)
+        stamp(
+            out,
+            ConstructionMode.EXPLICIT,
+            instrument=instrument,
+            override_keys=list(existing_overrides.keys()),
+            note="ConfigBuilder.from_existing — caller-owned field set re-rooted on router",
+        )
+        return out
 
     @staticmethod
     def market_type(instrument: str) -> str:

@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def feature_dict_to_vector(features: dict) -> list:
     """
-    Convert a canonical feature dict to a 32-float vector.
+    Convert a canonical feature dict to a CANONICAL_FEATURE_DIM-length float vector.
 
     COMPATIBILITY SHIM — the canonical implementation lives in
     dataset_builder.extract_feature_vector(). Use that directly for new code.
@@ -29,7 +29,9 @@ def feature_dict_to_vector(features: dict) -> list:
 
     Returns
     -------
-    list of 32 floats in CANONICAL_FEATURE_ORDER
+    list of CANONICAL_FEATURE_DIM floats in CANONICAL_FEATURE_ORDER
+    (39 under schema v4.0; this docstring said "32" from the v2.0 era — the length is
+    whatever the schema declares, never a literal in a caller.)
     """
     from features.dataset_builder import extract_feature_vector
     return extract_feature_vector(features)
@@ -42,8 +44,16 @@ REQUIRED_DERIVED_FIELDS = ["atr", "ema_fast", "ema_slow", "rsi"]
 class FeatureBuilder:
     def __init__(self, config: dict):
         self.config = config
-        self.ema_fast_period = config.get("ema_fast_period", 9)
-        self.ema_slow_period = config.get("ema_slow_period", 21)
+        # T-8 (2026-07-20): removed dead soft-default attrs
+        #   self.ema_fast_period = config.get("ema_fast_period", 9)
+        #   self.ema_slow_period = config.get("ema_slow_period", 21)
+        # Those attributes were NEVER read by build() or any caller (module is a
+        # validation shim only — it accepts pre-computed ema_fast/ema_slow values).
+        # Soft defaults under the non-canonical key names `ema_fast_period` /
+        # `ema_slow_period` were a latent trap next to the live HOW keys
+        # feature_pipeline.ema_fast_span / ema_slow_span (T-1). Period authority
+        # lives only in configs/production feature_pipeline.*; this builder must
+        # not invent a second source.
 
     def build(self, raw: dict) -> dict:
         # --- Step 1: Validate raw OHLCV fields ---

@@ -53,6 +53,22 @@ def body_ratio(open_: float, high: float, low: float, close: float) -> float:
 
     Returns 0.0 when the candle range is non-positive (degenerate flat bar), matching the
     legacy guard in both the CRT `Candle` property and the batch pipeline.
+
+    Identity: FEAT-BODY_TO_RANGE_RATIO / FORMULA-BODY-TO-RANGE (FM-010).
+    Distinct from body_to_total_wick_ratio (FEAT-BODY_TO_TOTAL_WICK_RATIO).
     """
     rng = candle_range(high, low)
     return body_size(open_, close) / rng if rng > 0 else 0.0
+
+
+def body_to_total_wick_ratio(open_: float, high: float, low: float, close: float) -> float:
+    """
+    Distinct semantic: body_size / total_wick (unbounded above 1 when body > wicks).
+
+    Identity: FEAT-BODY_TO_TOTAL_WICK_RATIO / FORMULA-BODY-TO-TOTAL-WICK.
+    Historically emitted under the bare name ``body_ratio`` by live_engine_hook
+    (GD-001 / Q-BODY-RATIO-NONCANON-LIVE). Not interchangeable with body_ratio.
+    Returns 0.0 when total_wick is non-positive.
+    """
+    tw = total_wick(open_, high, low, close)
+    return body_size(open_, close) / tw if tw > 1e-8 else 0.0

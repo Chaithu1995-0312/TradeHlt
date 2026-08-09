@@ -12,7 +12,7 @@ python scripts/analysis/generate_script_matrix.py
 Authority: **inventory only** (no promote power). Thin-wrapper purity is **not**
 CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` only.
 
-**Records:** 363
+**Records:** 378
 
 | ID | Category | Lifecycle | Impl status | Path | Purpose |
 |---|---|---|---|---|---|
@@ -378,7 +378,22 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-360` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/crt_parity_classifier.py` | Pure mismatch classifier (A/B/C/D taxonomy) for CRT semantic parity confusion... |
 | `SCR-361` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/crt_parity_report.py` | Generates reports/crt_semantic_parity_report.md from the Stage-A sweep ledger... |
 | `SCR-362` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/crt_parity_sweep.py` | Stage A/B sweep driver for CRT semantic parity: coordinate-descent over resol... |
-| `SCR-363` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/crt_range_rebuild_probe.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-363` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/crt_range_rebuild_probe.py` | OBSERVATION_ONLY probe: classifies residual SWEEP<->RANGE disagreement after ... |
+| `SCR-364` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/crt_resolver_economic_comparison.py` | One-off economic comparison: CRTStateResolver (EXPANSION-entry, relaxed trigg... |
+| `SCR-365` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xauusd_mt5_cost_calibration.py` | ZONE-X O-1 diagnostic: extracts real spread/commission/slippage/swap for XAUU... |
+| `SCR-366` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xauusd_mt5_cost_seed_stops.py` | ZONE-X O-1 DEMO-ONLY helper: places near-market STOP orders on XAUUSD so a co... |
+| `SCR-367` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/zone_x_o4_gap_study.py` | ZONE-X O-4 DESCRIPTIVE gap-penalty study: on XAUUSD M15, how realized adverse... |
+| `SCR-368` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/gate_measurement_m_gate_01.py` | M-GATE-01 SCOPE measurement (authority: NONE): two-arm gate-OFF vs gate-ON re... |
+| `SCR-369` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/_build_doc_tracking_index.py` | Build DOC_TRACKING_INDEX.xlsx — a metadata-only inventory of docs/ (path, top... |
+| `SCR-370` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/validation_access_cli.py` | VA-XAUUSD-M15 dual-surface validation access: Surface A human CLI ladder (std... |
+| `SCR-371` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/crt_config_construction_census.py` | P1 OBSERVE census of CRTConfig construction: static AST scan for ConfigBuilde... |
+| `SCR-372` | GOVERNANCE | ACTIVE | TESTED | `scripts/analysis/module_census.py` | Module attribution census: enumerate src/**/*.py and report closure-surface c... |
+| `SCR-373` | GOVERNANCE | ACTIVE | EXTRACTED_TO_SRC | `scripts/governance/seed_semantic_os.py` | Compile the hand-authored Semantic OS YAMLs (docs/governance/semantic_os/conc... |
+| `SCR-374` | GOVERNANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/coverage_dashboard.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-375` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/mc_cpr_l0_residual_harness.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-376` | GOVERNANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/enrich_workbooks_with_semantic_identity.py` | Append Semantic File Identity columns (Semantic ID / Semantic Name / Filename... |
+| `SCR-377` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xauusd_episode_coverage_census.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-378` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xauusd_episode_semantic_reconstruction.py` | GRANDFATHER_UNCLASSIFIED |
 
 ---
 

@@ -97,13 +97,40 @@
     "version": "202605_bnb_v2_bnbusdt",
     "dataset_file": null,
     "n_samples": 0,
-    "n_features": 35,
+    "n_features": 38,
     "trained_at": "2026-05-24T06:34:26Z",
     "active": true,
     "model_file": "models/rr_model_202605_bnb_v2.json",
     "model_exists": true,
     "metrics": {
       "n_train": 49000,
+      "ridge_alpha": 10.0
+    }
+  },
+  "20260728_v39_xau": {
+    "version": "20260728_v39_xau",
+    "dataset_file": "models\\XAUUSD\\20260728_v39\\rr_dataset_20260728_v39_xau.json",
+    "model_file": null,
+    "model_exists": false,
+    "n_samples": 94332,
+    "n_features": 39,
+    "metrics": {},
+    "trained_at": "2026-07-28T14:23:11Z",
+    "active": false,
+    "instrument": "XAUUSD",
+    "run_id": "20260728_v39"
+  },
+  "20260728_v39_xau_xauusd": {
+    "version": "20260728_v39_xau_xauusd",
+    "dataset_file": null,
+    "n_samples": 0,
+    "n_features": 35,
+    "trained_at": "2026-07-28T14:23:23Z",
+    "active": false,
+    "model_file": "models/XAUUSD/20260728_v39/rr_model_20260728_v39_xau.json",
+    "model_exists": true,
+    "metrics": {
+      "n_train": 94332,
       "ridge_alpha": 10.0
     }
   }

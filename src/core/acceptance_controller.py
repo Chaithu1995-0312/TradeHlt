@@ -72,7 +72,16 @@ class AcceptanceController:
         from config_layer.production_config import get_prod_section
         s = get_prod_section("acceptance_controller")
         merged = dict(base_config or {})
-        for key in ("theta_min", "theta_max", "min_history", "fusion_percentile"):
+        # T-22 (2026-07-19): the five integral-control params were MISSING from this list, so
+        # they were never strict-read nor injected — __init__ then fell back to its code
+        # literals and the live adaptive threshold ran on values absent from the production
+        # config entirely (undeclared, unhashable, invisible to config_reachability). The
+        # two-tier design was correct; the required list was simply incomplete.
+        for key in (
+            "theta_min", "theta_max", "min_history", "fusion_percentile",
+            "acceptance_alpha", "acceptance_target_low", "acceptance_target_high",
+            "acceptance_k_sigma", "acceptance_window",
+        ):
             if key not in s:
                 raise KeyError(
                     f"Required config key '{key}' missing from 'acceptance_controller' section. "

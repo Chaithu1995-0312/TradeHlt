@@ -123,13 +123,21 @@ class TestPoweredRegistryEnforces:
 # ── No zones / disabled edge cases ───────────────────────────────────────────
 
 class TestEdgeCases:
-    def test_no_zones_underpowered_is_false_but_fails_open(self):
-        """Empty zone list → _underpowered=False (no zones to weigh), fails open."""
+    def test_no_zones_underpowered_is_false_but_fails_closed(self):
+        """Empty zone list → _underpowered=False (no zones to weigh), fails CLOSED.
+
+        Renamed from ``..._fails_open``. The branch returns score 0.0 and omits
+        ``top_scores``, so downstream (``zone_cluster_score._model_fn``) it fails any
+        positive ``zone_cluster_threshold`` — it has always blocked. The old name and
+        assertion asserted the opposite of the behaviour.
+        """
         gate = BitNetZoneGate(zones=[], config={"zone_min_samples": 50})
         assert gate._underpowered is False
         result = gate.check([0.0] * 35)
-        # fail-open path: no zones
-        assert result["allowed"] is True
+        # fail-closed path: no zones → block
+        assert result["allowed"] is False
+        assert result["score"] == 0.0
+        assert result["reason"] == "no_zones_fail_closed"
 
     def test_disabled_gate_always_allows(self):
         """Disabled gate ignores _underpowered and always allows."""

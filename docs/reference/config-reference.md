@@ -49,7 +49,7 @@ Consumed by `src/core/engine_runner.py`.
 | `model_path`               | str      | `"results/model_export_format.json"`                        |
 | `min_atr`                  | float    | `0.0003`                                                    |
 | `allowed_sessions`         | list[str]| `["london","new_york","overlap"]`                           |
-| `bitnet_zone_threshold`    | float    | `0.25`                                                      |
+| `zone_cluster_threshold`    | float    | `0.25`                                                      |
 | `zone_registry_path`       | str      | `"models/zone_registry.json"`                               |
 | `zone_gate_execution_mode` | str      | `"normal"` (normal \| shadow)                               |
 | `zone_mode`                | str      | `"hard"` (hard \| soft)                                     |
@@ -110,7 +110,7 @@ Consumed by `src/core/fusion_engine.py`.
 | ---------------------------- | ----- | ------- |
 | `score_threshold`            | float | `0.45`  |
 | `p_win_threshold`            | float | `0.40`  |
-| `rr_threshold`               | float | `1.20`  |
+| `rr_threshold`               | float | `1.20`  | **RETIRED (F-048, 2026-07-24)** — DecisionEngine no longer reads this; key retained for archived/baseline consistency, gates nothing. Economic reward:risk = `ultron_risk_gate.min_rr_ratio`. |
 | `weak_component_threshold`   | float | `0.55`  |
 | `weak_link_weight`           | float | `0.30`  |
 

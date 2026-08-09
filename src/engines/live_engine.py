@@ -43,8 +43,13 @@ except Exception:  # pragma: no cover — keep live engine importable in strippe
 LOGS_DIR       = Path("logs")
 ALERT_LOG_PATH = LOGS_DIR / "live_alerts.jsonl"
 
-# Default zone registry path (written by BitNetSearchEngine)
-ZONE_REGISTRY_PATH = "models/zone_registry.json"
+# Default zone runtime artifact — layout owned by ModelPaths (Phase 0).
+# Version selection remains models/zone_gate_registry.json via ModelResolver.
+try:
+    from config_layer.model_paths import ModelPaths as _ModelPaths
+    ZONE_REGISTRY_PATH = str(_ModelPaths.ZONE_GATE_RUNTIME_ALIAS)
+except Exception:  # pragma: no cover — stripped envs without config_layer
+    ZONE_REGISTRY_PATH = "models/zone_registry.json"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # BITNET ZONE GATE
@@ -61,6 +66,15 @@ def get_zone_registry_path(instrument: str, base_dir: str = "models/bitnet") -> 
         if os.path.exists(cand):
             return cand
     return "models/zone_registry.json"
+
+
+class ZoneFeatureOrderError(RuntimeError):
+    """The zone registry's trained `feature_order` cannot be aligned to the live feature schema.
+
+    Raised at LOAD time, never per-bar, and never swallowed by the fail-open registry handlers.
+    A hard gate (F-041) that scores a misaligned vector decides confidently and wrongly, which is
+    strictly worse than not starting.
+    """
 
 
 class BitNetZoneGate:
@@ -110,6 +124,11 @@ class BitNetZoneGate:
         self._zone_path = zone_path
         self._zones: list = []
         self._underpowered: bool = False
+        # SCHEMA-V4 SAFETY NET (2026-07-22): the feature-name order the on-disk zone vectors
+        # (`mu`/`sigma`/`weights`) are aligned to. Read from the registry's own top-level
+        # `feature_order`; None means the registry predates the field and the caller must fall
+        # back to the ambient canonical order. See _validate_feature_order.
+        self.feature_order: list | None = None
         # Number of top zone scores surfaced as ``top_scores`` for cluster weighting.
         # The live spine enforces this fail-fast at the engine_runner config boundary
         # (engine_runner.zone_gate.top_k); the soft default here serves only standalone /
@@ -137,6 +156,13 @@ class BitNetZoneGate:
         # will produce noisy similarity scores.  In that case the gate
         # auto-bypasses rather than injecting spurious rejections.
         _cfg = config or {}
+        # T-22: NOT a silent config default. This is the standalone/unit-test tier of the
+        # same two-tier pattern used by core.acceptance_controller.__init__ — the live path
+        # always arrives via get_zone_gate(), which is fed from engine_runner's fail-fast
+        # _cfg_require("zone_min_samples"). A caller that constructs this class directly with
+        # no config is by definition not the configured spine, so there is no config to
+        # silently fall back FROM. Do not "fix" this to a strict read: it would break
+        # standalone construction without closing any real config-drift hole.
         _min_samples = float(_cfg.get("zone_min_samples", 50))
         _total_samples = sum(float(z.get("weight", 0)) for z in self._zones)
         if self._zones and _total_samples < _min_samples:
@@ -159,10 +185,56 @@ class BitNetZoneGate:
         """Factory: create a disabled gate (always allows trades)."""
         return cls(enabled=False)
 
+    def _validate_feature_order(self, path: str) -> None:
+        """Read + validate the registry's `feature_order` against the live schema (FAIL-CLOSED).
+
+        WHY THIS EXISTS (2026-07-22). `models/zone_registry.json` has always stored a
+        `feature_order` name list alongside the zone vectors, but NOTHING read it: the scoring
+        vector was built from the ambient `CANONICAL_FEATURE_ORDER` and
+        `zone_gate_engine._extract_vector` SILENTLY TRUNCATED anything longer (a v2.0(35)->v3.0(38)
+        back-compat path). ZoneGate is the only LIVE hard gate (F-041, zone_mode=hard) and every
+        other trained consumer is inert or off (F-004/F-005/F-038/F-060), so a schema change that
+        reordered or extended the vector would have made this gate score against misaligned
+        `mu`/`sigma` and raise nothing at all.
+
+        A misalignment is NOT fail-open. Failing open would silently disable a hard gate; failing
+        closed per-bar would be a silent outage. So this raises ONCE, at load, and refuses to
+        construct — the process does not start rather than mis-decide.
+        """
+        try:
+            with open(path, encoding="utf-8") as fh:
+                raw = json.load(fh)
+        except (OSError, json.JSONDecodeError):
+            return   # generic load failure is handled (fail-open) by the caller's except blocks
+
+        order = raw.get("feature_order")
+        if not order:
+            log.warning(
+                "BitNetZoneGate: registry %s has no `feature_order`; falling back to the ambient "
+                "canonical order. This is only safe while the schema is unchanged since training.",
+                path,
+            )
+            return
+
+        from features.feature_schema import CANONICAL_FEATURE_ORDER
+        live = set(CANONICAL_FEATURE_ORDER)
+        missing = [n for n in order if n not in live]
+        if missing:
+            raise ZoneFeatureOrderError(
+                f"zone registry {path} was trained on feature(s) absent from the live schema: "
+                f"{missing}. The registry must be remapped or retrained before this gate can "
+                f"score — refusing to start rather than score against a misaligned vector."
+            )
+        self.feature_order = list(order)
+
     def _load_registry(self, path: str) -> None:
-        """Load zone registry from JSON. Fail-safe: empty zones on any error."""
+        """Load zone registry from JSON. Fail-safe: empty zones on any error.
+
+        EXCEPTION: `ZoneFeatureOrderError` is deliberately NOT caught — see _validate_feature_order.
+        """
         try:
             from bitnet.zone_cosine_searcher import load_zone_registry
+            self._validate_feature_order(path)
             zones = load_zone_registry(path)
             # Validate expected BitNet schema (mu/sigma/weights/threshold)
             valid = [
@@ -186,6 +258,10 @@ class BitNetZoneGate:
                         f"from registry {path}"
                     )
                 self._zones = valid
+        except ZoneFeatureOrderError:
+            # Vector-alignment failure — NEVER fail open. A hard gate scoring a misaligned vector
+            # is worse than no gate, because it decides confidently and wrongly.
+            raise
         except ImportError:
             # bitnet module not yet installed — fail open
             log.warning("BitNetZoneGate: bitnet module not available, gate disabled")
@@ -244,20 +320,31 @@ class BitNetZoneGate:
                 "top_scores": [],
             }
 
-        # No zones loaded → CRITICAL log + fail-open with visible warning
-        # (fail-open retained for safety; highly visible in logs)
+        # No zones loaded → CRITICAL log + fail-CLOSED.
+        #
+        # NAMING CORRECTED (was "no_zones_fail_open", which stated the opposite of the
+        # behaviour): omitting `top_scores` below makes zone_cluster_score._model_fn fall
+        # through to `result.get("score", 0.5)` → 0.0, which fails any positive
+        # zone_cluster_threshold (0.25 on the active config) → every candle BLOCKS.
+        # The omission is deliberate and load-bearing — do not add `top_scores` here
+        # without deciding the pass/block question explicitly.
+        #
+        # Contrast with the two branches above, which DO pass: `gate_disabled` and
+        # `underpowered_zone_registry` both return score 1.0. Blocking on an empty
+        # registry is the intended asymmetry — an unloadable registry must not silently
+        # admit unfiltered trades.
         if not self._zones:
             log.critical(
-                "BitNetZoneGate: no zones loaded — gate in pass-through mode. "
-                "Run BitNetSearchEngine.run_search() + save_zones() first. "
-                "All trades are passing unfiltered."
+                "BitNetZoneGate: no zones loaded — gate is BLOCKING all trades "
+                "(fail-closed). Run BitNetSearchEngine.run_search() + save_zones() "
+                "first. No trade can pass the zone gate until the registry loads."
             )
             return {
-                "allowed":   True,
+                "allowed":   False,
                 "score":     0.0,
                 "threshold": 0.0,
                 "zone_id":   "none",
-                "reason":    "no_zones_fail_open",
+                "reason":    "no_zones_fail_closed",
             }
 
         # Score against all zones; allow if ANY zone passes
@@ -277,8 +364,9 @@ class BitNetZoneGate:
 
         # NOTE: the per-zone `allowed`/`reason` decision computed below is part of this
         # method's standalone return contract, but it is BYPASSED by the live spine. The
-        # real gate decision is made in engine_runner._zone_model_fn:
-        #   compute_weighted_cluster_score(top_scores) >= bitnet_zone_threshold.
+        # real gate decision is made in engines.zone_cluster_score.score_zone_cluster:
+        #   compute_weighted_cluster_score(top_scores) >= zone_cluster_threshold.
+
         # `top_scores` (length = self._top_n, config: engine_runner.zone_gate.top_k) is the
         # only field the live path consumes from this result.
         for zone in self._zones:

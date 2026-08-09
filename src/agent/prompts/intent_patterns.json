@@ -66,5 +66,52 @@
   "findings_explain": {
     "mode": null,
     "patterns": ["^(explain|why) (run|finding) ([a-f0-9]{6,})", "explain.*([a-f0-9]{6,})"]
+  },
+  "ops_diagnose": {
+    "mode": "ops",
+    "patterns": [
+      "ops[\\s_-]?doctor",
+      "ask\\s+grokagenticai.*diagnos",
+      "grokagenticai.*diagnos",
+      "diagnos(e|is|ing)",
+      "why.*(no|zero|few).*trade",
+      "throughput",
+      "incident\\s*pack",
+      "funnel\\s*(fail|diagnos|drop)"
+    ]
+  },
+  "campaign_run": {
+    "mode": "pipeline",
+    "patterns": [
+      "campaign[\\s_-]?runner",
+      "ask\\s+grokagenticai.*campaign",
+      "grokagenticai.*campaign",
+      "run\\s+campaign",
+      "tune.*until",
+      "campaign\\s+(for|on|until)"
+    ]
+  },
+  "campaign_tune_validate": {
+    "mode": "pipeline",
+    "patterns": [
+      "campaign.*tune.*valid",
+      "tune\\s+and\\s+validate\\s+campaign"
+    ]
+  },
+  "truth_janitor": {
+    "mode": "truth",
+    "patterns": [
+      "truth[\\s_-]?janitor",
+      "ask\\s+grokagenticai.*hygiene",
+      "grokagenticai.*hygiene",
+      "ask\\s+grokagenticai.*truth",
+      "construction\\s+protocol",
+      "doc\\s*drift",
+      "citation\\s+sync",
+      "script\\s+census",
+      "feature[\\s_-]?math\\s+lint",
+      "repo\\s+hygiene",
+      "governance\\s+hygiene"
+    ]
   }
 }

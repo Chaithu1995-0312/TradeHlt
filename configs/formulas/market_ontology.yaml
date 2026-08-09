@@ -23,9 +23,13 @@
 #     threshold recalibration (e.g. body_ratio >= 0.70) and is gated.
 #   - `derived_metrics` are deterministic NORMALIZED quantities (ATR/price-relative). They live
 #     in src/features/derived_math.py; the vectorized feature_pipeline.py is bound to them by a
-#     parity battery. STOP HERE: rolling indicators (RSI/MACD/ATR) and stateful detection
-#     (sweep/BOS/CHOCH/pivot state machines) are ALGORITHMS, not this layer — adding them is a
-#     separate architectural review (boundary freeze).
+#     parity battery.
+#   - `rolling_indicators` are WINDOWED indicators (ATR/RSI/EMA/true_range/swing publication). The
+#     2026-07-12 bottom-up certification program LIFTED the earlier boundary freeze for the seven
+#     load-bearing ones: they are first-class registered identities (FM-040..FM-046) with
+#     `computation_class: rolling` — computed by the pipeline (no scalar float->float form exists),
+#     certified by a SERIES-level parity + PIT probe rather than the scalar parity battery. Stateful
+#     detection state-machines (BOS/CHOCH/pivot) remain out of this layer.
 #
 # GOVERNANCE FIELDS (per entry):
 #   id         — stable FM-0NN handle; findings/tests/docs reference the ID, so a rename never
@@ -40,8 +44,224 @@
 #   source_of_truth — (derived_metrics only) provenance pointer to the canonical pipeline site,
 #                kept until the pipeline routes through the registry.
 
-version: 1.1
+version: 1.4                     # 1.4 (2026-07-24): Feature Specification System — every entry carries
+                                # taxonomy/semantics/lineage/states; +structural_states section (FM-054..061);
+                                # +rolling_indicators FM-062/063/066/067. Coverage of CANONICAL_FEATURES
+                                # completed 2026-07-31: FM-064 trend_strength + FM-065 candles_since_retest
+                                # registered (closing the two-slot gap; each required a same-name execution-code
+                                # collision to be resolved first — a local-variable rename in engine_runner.py
+                                # for FM-064, and a new FM-070 identity + CRT-engine key rename for FM-065).
+                                # ADDITIVE ONLY: no existing runtime key was moved, renamed or reindented
+                                # (see spec_schema.frozen_runtime_keys).
+                                # 1.3 (2026-07-12): bottom-up cert program — rolling_indicators section
+                                # (FM-040..046 first-class windowed identities); atr/ema removed from base_inputs.
+                                # 1.2: B0/B1 semantic-migration governance (FM-022/023/002 + indicator_identities + migration_candidates).
 authority: user_approved        # WHAT layer; grants no promotion authority (§6.5 — HOW stays in production/*.json)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SPEC SCHEMA — the contract every feature entry satisfies (v1.4, 2026-07-24)
+# ═══════════════════════════════════════════════════════════════════════════
+# This ontology is a FEATURE SPECIFICATION SYSTEM, not merely a formula registry. Every entry
+# answers: what is it · why does it exist · how is it computed · what does it mean · what states
+# can it express · which config influences it · who consumes it · what depends on it.
+#
+# HYBRID LAYOUT (non-negotiable — the reason this migration is zero-risk):
+#   The keys in `frozen_runtime_keys` below are read by LIVE CODE at MODULE IMPORT TIME, flat, by
+#   hard subscript. `config_layer/crt_engine_v2.py:33-34` calls `bind_phase2_crt_callables()` at
+#   import, which walks (primitives, feature_compositions, derived_metrics) in
+#   `features/fm_resolve.py:61` and reads spec["id"/"impl"/"lifecycle"/"numerator"/"denominator"];
+#   `features/registry/derived_registry.py:43` does DERIVED[entry["impl"]]. crt_engine_v2 is
+#   imported by every live AND backtest path. Nesting any of these keys (e.g. moving `formula`
+#   under a `math:` block) does not degrade validation — it HARD-CRASHES the CRT engine on import.
+#   Therefore: frozen keys stay FLAT and byte-identical; all specification content is carried in
+#   ADDITIVE sibling blocks that no runtime path reads.
+#
+# EMPTY VALUES: always `[]` — never `null`, `~`, or a bare key. YAML null deserializes to Python
+# None, so `entry.get("states", [])` returns None (the default never fires) and the next iteration
+# raises TypeError. Absent-means-empty is a trap; empty-means-empty is the contract.
+spec_schema:
+  version: 1
+  frozen_runtime_keys:          # FLAT, never nested — see the import-time note above
+    - id                        # fm_resolve.py:68 · validate_registry
+    - version                   # validate_registry
+    - lifecycle                 # fm_resolve.py:81 · validate_registry
+    - formula                   # validate_registry
+    - impl                      # derived_registry.py:43 (hard subscript) · fm_resolve.py:80
+    - computation_class         # validate_registry (rolling / temporal / structural_state branches)
+    - depends_on                # build_lineage_graph
+    - numerator                 # composition_registry.py:29 (feature_compositions only)
+    - denominator               # composition_registry.py:29 (feature_compositions only)
+  additive_spec_blocks:         # NEW in v1.4 — unread by any runtime path
+    taxonomy:
+      category:        "closed vocabulary below — the market domain this feature belongs to"
+      knowledge_class: "closed vocabulary below — what KIND of knowledge this is"
+    semantics:
+      description:     "what the quantity is, in one sentence"
+      why_it_exists:   "the decision or gate it was built to serve"
+      interpretation:  "{high: ..., low: ...} — what the reader should conclude from the value"
+    states:            "list of {name, value, condition, description}; [] for continuous features"
+    lineage:
+      derivation_depth: "DESCRIPTIVE int — hops from a base_input. NOT computed by validate_registry"
+      produced_by:      "the pipeline method or scalar callable that emits it"
+      consumed_by:      "SCALAR consumers only (named call sites reading this feature alone), or [UNKNOWN]"
+      vector_key:       "CANONICAL_FEATURES name, or [] when the feature has no vector slot"
+      vector_index:     "index into CANONICAL_FEATURES, or [] when unbound"
+  # The market domain. Chosen by WHAT QUESTION THE FEATURE ANSWERS, not by what its inputs are:
+  # volatility_ratio consumes candle geometry but answers a volatility question -> Volatility.
+  category_vocabulary:
+    - Price                     # raw OHLCV level
+    - CandleGeometry            # single-candle shape
+    - Trend                     # directional regime / alignment
+    - Momentum                  # rate of change
+    - Volatility                # dispersion / range magnitude
+    - Liquidity                 # sweeps, stop-runs, liquidity levels
+    - MarketStructure           # swings, BOS, HH/LL
+    - Retest                    # post-sweep return-to-level behaviour
+    - Volume                    # traded size and its anomalies
+    - Time                      # calendar projections
+  # What KIND of knowledge this is — tells a future author how much to trust and whether it is tunable.
+  knowledge_class_vocabulary:
+    - Primitive                 # mathematical identity over OHLC; not debatable, not configurable
+    - Derived                   # deterministic normalization of primitives/indicators
+    - Statistical               # distributional (z-score, percentile, rank)
+    - Heuristic                 # threshold-dependent; the cut is a judgement call, not a truth
+    - Structural                # state-machine / event detection over a price sequence
+    - Behavioral                # encodes a market-participant interpretation
+  # `states` shape. Declarative ONLY — `condition` is documentation, NEVER eval'd, same rule as
+  # `formula`. Required non-empty when computation_class == structural_state or an enumerated
+  # domain/bounds exists; `[]` otherwise.
+  states_shape:
+    name:        "human-readable state label"
+    value:       "the emitted numeric value"
+    condition:   "the predicate, as prose/pseudocode — never executed"
+    description: "what this state means about the market"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # CANONICAL MARKET ONTOLOGY EVOLUTION CONTRACT (adopted 2026-07-25)
+  # ═══════════════════════════════════════════════════════════════════════════
+  # The ontology is the SUPREME semantic authority (user decision 2026-07-25: LITERAL
+  # SUPERSESSION — authority #1, first-mover; runtime/models and the historical §4.0/§6.5
+  # precedence DERIVE from it for MEANING). Every market concept must exist as a canonical node
+  # with full lineage; discovered-but-undefined behaviour becomes an explicit UNKNOWN node here,
+  # never a TODO or a comment.
+  #
+  # TWO MECHANICAL CONSTRAINTS (physical — keep supremacy coherent, NOT doctrine-overridable):
+  #   1. frozen_runtime_keys stay FLAT + additive: primitives/feature_compositions/derived_metrics
+  #      are read by crt_engine_v2 at import (fm_resolve.bind_phase2_crt_callables). The ontology
+  #      may change first, but frozen-key edits are additive-only or the engine hard-crashes on
+  #      import. New node types live in the NON-frozen sibling sections named below.
+  #   2. An ontology change that would alter PRODUCTION behaviour cascades through parity-proof +
+  #      the promotion gate before it reaches runtime. "Ontology first" governs the ORIGIN and
+  #      REQUIREMENT of a change, not an automatic unvalidated runtime mutation (anti-split-brain).
+  #
+  # The semantic sections are ADDITIVE and NOT in features/registry `_ITERATED_SECTIONS`, so they
+  # are invisible to the frozen runtime binding and to validate_registry. A SEPARATE validator,
+  # features.registry.validate_semantic_registry, enforces the contract below.
+  semantic_registry:
+    version: 1
+    # NON-frozen sibling sections that hold contract node types (validated by
+    # validate_semantic_registry; never read on the runtime binding path).
+    sections:
+      - state_transitions        # edges of a state machine as first-class nodes
+      - regimes                  # volatility / trend / market regimes
+      - execution_behaviours     # how the engine/resolver behaves when acting
+      - risk_behaviours          # risk-gate / sizing behaviours
+      - model_contracts          # model input/output contracts
+      - invariants               # properties that must always hold
+      - canonical_unknowns       # UNKNOWN_* nodes awaiting refinement (permanent citizens)
+      - reasoning_capabilities   # WHAT KIND of market-reasoning question a model answers, bottom-up
+                                  # extracted from existing model behaviour (never invented a-priori
+                                  # — see docs/governance/REASONING_CAPABILITY_REGISTRY.md). A capability
+                                  # groups 1+ market questions (miar_registry.json market_question_matrix)
+                                  # that are the SAME reasoning axis at a coarser grain, even when
+                                  # answered by different models today. Grants NO authority (§6.5) —
+                                  # informational only; never read on the runtime binding path.
+    # Refinement ladder — the KNOWLEDGE axis (distinct from `lifecycle`, the EXECUTION contract).
+    # A node refines IN PLACE up this ladder; its identity (id) never changes, no duplicate node.
+    knowledge_status_ladder:
+      - UNKNOWN                   # behaviour observed to exist but not characterized
+      - OBSERVED                  # measured once; mechanism not proven
+      - CHARACTERIZED             # mechanism understood qualitatively
+      - MATHEMATICALLY_DEFINED    # a precise definition exists
+      - FORMULA_DERIVED           # an executable formula exists
+      - VALIDATED                 # cross-checked against independent evidence
+      - PRODUCTION_CERTIFIED      # earned production authority (§6.5 — measured G001)
+      - STABLE                    # frozen canonical semantic
+    # WHAT KIND of market object a node is.
+    semantic_category_vocabulary:
+      - Feature
+      - Formula
+      - DerivedMathematics
+      - State
+      - Transition
+      - Pattern
+      - Regime
+      - Context
+      - Structure
+      - Zone
+      - Geometry
+      - LiquidityBehaviour
+      - VolatilityBehaviour
+      - ExecutionBehaviour
+      - RiskBehaviour
+      - ModelInput
+      - ModelOutput
+      - ValidationRule
+      - Invariant
+      - Unknown
+      - ReasoningCapability     # a market-reasoning question-axis, bottom-up extracted from
+                                 # existing model behaviour (reasoning_capabilities section)
+    # Every node in a semantic section MUST carry these keys. A field's VALUE may be UNKNOWN / []
+    # until discovered (contract: "may remain UNKNOWN, never fabricate"), but the key must be
+    # PRESENT. `evidence` and `origin` must be non-empty (not UNKNOWN) once status is above UNKNOWN.
+    semantic_node_required_fields:
+      - id                       # unique across ALL sections (FM-0NN and SEM-/UNK- ids)
+      - canonical_name
+      - aliases
+      - semantic_category        # in semantic_category_vocabulary
+      - knowledge_status         # in knowledge_status_ladder
+      - description
+      - observed_behaviour
+      - mathematical_definition
+      - units
+      - formula
+      - dependencies
+      - required_inputs
+      - produced_outputs
+      - producers
+      - consumers
+      - transitions
+      - validation_rules
+      - confidence
+      - evidence
+      - origin
+      - status
+      - version
+      - owner
+      - traceability
+      - notes
+    # EPISTEMIC BLOCK (2026-07-25) — separate epistemic LEVELS so a hypothesis never becomes a
+    # "fact" by repetition. A research-stage node carries an `epistemic:` mapping with these keys.
+    # MANDATORY when knowledge_status == UNKNOWN; ENCOURAGED for OBSERVED / CHARACTERIZED. When
+    # present on any node it is always validated. `observation` lives in the node's
+    # `observed_behaviour`; supporting `evidence` in the node's `evidence` field.
+    #   Component          | Purpose                              | May change?
+    #   known_invariants   | facts already validated              | only with new evidence
+    #   unknown_mechanism  | the single unanswered question       | yes
+    #   candidate_hypotheses | explicitly-untested guesses (NOT truth) | yes
+    #   resolution_metric  | how the question will be answered    | can evolve if improved
+    #   falsification_conditions | what evidence would DISPROVE the hypotheses | can evolve
+    epistemic_fields:
+      - known_invariants          # a list; facts already validated (change only with new evidence)
+      - unknown_mechanism         # prose; the single unanswered question
+      - candidate_hypotheses      # a list; NEVER ontology truth
+      - resolution_metric         # prose/list; how it will be answered
+      - falsification_conditions  # a list; what evidence would prove the hypotheses WRONG
+    research_stage_statuses:      # where the epistemic discipline applies
+      - UNKNOWN                   # epistemic block MANDATORY
+      - OBSERVED                  # ENCOURAGED
+      - CHARACTERIZED             # ENCOURAGED
+    unknown_token: UNKNOWN        # the only permitted stand-in for an undiscovered value
 
 # Leaf/base inputs of the dependency DAG — raw OHLCV plus out-of-ontology upstream quantities
 # (rolling indicators / structural levels) that derived metrics legitimately consume. These are
@@ -52,9 +272,8 @@ base_inputs:
   - low
   - close
   - volume
-  - atr            # close-relative ATR (rolling indicator — out of ontology scope, a leaf here)
-  - ema_fast
-  - ema_slow
+  # atr / ema_fast / ema_slow were promoted to first-class registered `rolling_indicators`
+  # (FM-041/043/044) on 2026-07-12 — they are no longer leaves; the DAG grounds them via true_range/close.
   - close_delta    # close.diff() — one-bar price change
   - ref_high       # trailing swing-high reference price (structural — out of scope, a leaf)
   - ref_low        # trailing swing-low reference price
@@ -62,6 +281,15 @@ base_inputs:
   - disp_open      # displacement-candle open  (cross-candle context for FM-027)
   - disp_close     # displacement-candle close
   - retest_close   # retest-candle close
+  # 2026-07-31 (FM-070): CRT engine bar-index counters. Structural state-machine bookkeeping, not
+  # OHLCV market math — a leaf by the same rule as disp_open/disp_close/retest_close.
+  - current_candle_index   # CRT engine's running bar index
+  - retest_candle_index    # bar index of the candle that confirmed the active retest
+  # T-16/Item-2 (2026-07-19): timestamp is the calendar root for `temporal_context` (FM-051/052).
+  # A leaf by the same rule as ref_high/ref_low/bos_level — it is raw input, not derived from OHLC.
+  # Already a raw input in scripts/analysis/feature_dag_layers.py (_RAW_INPUTS), so this aligns the
+  # ontology with the DAG rather than introducing a new concept.
+  - timestamp      # bar open time (UTC) — calendar root (structural — out of scope, a leaf)
 
 primitives:
   body_size:
@@ -71,6 +299,22 @@ primitives:
     formula:   "abs(close - open)"
     impl:      candle_math.body_size
     depends_on: [open, close]
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Primitive
+    semantics:
+      description:   "Absolute distance between the candle's open and close."
+      why_it_exists: "The magnitude of committed directional movement within the bar — the numerator of every conviction ratio and the base of displacement strength."
+      interpretation:
+        high: "Price travelled far from open to close: participants committed in one direction."
+        low:  "Open and close nearly coincide: the bar resolved indecisively regardless of its range."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      candle_math.body_size
+      consumed_by:      [UNKNOWN]
+      vector_key:       body_size
+      vector_index:     27
   candle_range:
     id:        FM-002
     version:   1
@@ -78,7 +322,45 @@ primitives:
     formula:   "high - low"
     impl:      candle_math.candle_range
     depends_on: [high, low]
-    note:      "the quantity historically mislabelled `wick_size` in the feature vector"
+    # Exact equality — NOT a second formula identity. Pipeline CANONICAL_FEATURES
+    # key remains `wick_size` for schema stability; resolves to this identity.
+    aliases:   [wick_size]                       # READ-side only (historical records); never emitted
+    vector_key: candle_range                     # v4.0: the slot finally carries the honest name
+    # ── B0/B1 wick_size misnomer governance (2026-07-12) — RESOLVED 2026-07-22 ──
+    semantic_quantity: candle_range              # the REAL quantity: high - low (full range)
+    misnomer_alias:    wick_size                 # the v3.0 vector slot name, now retired
+    status:            resolved_renamed_v4       # was deprecated_misnomer_alias until 2026-07-22
+    wick_magnitude_is: total_wick                # actual wick magnitude = FM-005 (upper_wick+lower_wick)
+    migration_class:   IDENTITY_CLARIFICATION    # slot math unchanged; identity made unmistakable
+    artifact_compatibility: LEGACY_BOUND         # v3 artifacts bind the old NAME; math unchanged
+    note: >
+      RESOLVED 2026-07-22 (SCHEMA-V4-VECTOR-MIGRATION): the canonical vector key is now
+      `candle_range`, so the slot name and the quantity finally agree. The math NEVER changed —
+      it was always high-low — which is why this was a rename and not a formula correction.
+      `wick_size` survives ONLY as a read-side alias for historical records; it must never be
+      emitted. Do not register a separate FM-id for it. Actual wick magnitude remains FM-005
+      total_wick (upper+lower). Original 2026-07-12 framing, kept per §6.2 rule 4: "the name
+      `wick_size` is a DEPRECATED MISNOMER ... slot math is FROZEN (would break vector slot 28 /
+      trained artifacts)" — the freeze held; the rename was executed under an explicit waiver with
+      per-artifact reconciliation. B1/F5 fresh-reproduced 2026-07-12.
+      Distinct from total_wick (FM-005 = upper+lower wick = range-body) and from
+      live_engine_hook total_wick under the same historical name (GD-001 family).
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Primitive
+    semantics:
+      description:   "Full high-to-low extent of the bar."
+      why_it_exists: "The bar's total opportunity span — the denominator that converts absolute movement into a scale-free conviction ratio."
+      interpretation:
+        high: "Wide bar: the market explored a large price area within the period."
+        low:  "Narrow bar: compression, little exploration."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      candle_math.candle_range
+      consumed_by:      [UNKNOWN]
+      vector_key:       candle_range
+      vector_index:     28
   upper_wick:
     id:        FM-003
     version:   1
@@ -86,6 +368,22 @@ primitives:
     formula:   "high - max(open, close)"
     impl:      candle_math.upper_wick
     depends_on: [open, high, close]
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Primitive
+    semantics:
+      description:   "Distance from the bar's high down to the top of its body."
+      why_it_exists: "Measures upside rejection — price that was reached and then given back before the close."
+      interpretation:
+        high: "Sellers rejected higher prices: an upside probe failed."
+        low:  "The close held near the high: no upside rejection."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      candle_math.upper_wick
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
   lower_wick:
     id:        FM-004
     version:   1
@@ -93,6 +391,22 @@ primitives:
     formula:   "min(open, close) - low"
     impl:      candle_math.lower_wick
     depends_on: [open, low, close]
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Primitive
+    semantics:
+      description:   "Distance from the bottom of the bar's body down to its low."
+      why_it_exists: "Measures downside rejection — price that was reached and then recovered before the close."
+      interpretation:
+        high: "Buyers rejected lower prices: a downside probe failed."
+        low:  "The close held near the low: no downside rejection."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      candle_math.lower_wick
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
   total_wick:
     id:        FM-005
     version:   1
@@ -100,6 +414,22 @@ primitives:
     formula:   "upper_wick + lower_wick"     # == candle_range - body_size
     impl:      candle_math.total_wick
     depends_on: [upper_wick, lower_wick]
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Primitive
+    semantics:
+      description:   "Combined length of both wicks; equivalently candle_range - body_size."
+      why_it_exists: "Total rejected price travel — the portion of the bar's range the market refused to hold."
+      interpretation:
+        high: "Most of the bar's range was rejected: indecision or a failed probe."
+        low:  "Little rejection: the bar's range was mostly committed body."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      candle_math.total_wick
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
 
 feature_compositions:
   body_ratio:
@@ -112,12 +442,57 @@ feature_compositions:
     active:      true
     depends_on:  [body_size, candle_range]
     note: >
-      CANONICAL. The CRT displacement gate `body_ratio >= 0.70` is coherent ONLY against this
-      bounded [0,1] definition. Verified 2026-07-05 that the CRT Candle property and the batch
-      pipeline both compute this; the dead single-row builder's body/total_wick was the outlier.
-    variants:                              # research-time only — each needs threshold recalibration
-      classic:     {denominator: candle_range}   # == active
-      wick_based:  {denominator: total_wick}      # unbounded; body dominance over wicks
+      CANONICAL body_to_range_ratio. Identity FEAT-BODY_TO_RANGE_RATIO / FORMULA-BODY-TO-RANGE.
+      The CRT displacement gate `body_ratio >= 0.70` is coherent ONLY against this bounded [0,1]
+      definition. Verified 2026-07-05 that the CRT Candle property and the batch pipeline both
+      compute this. Distinct from body_to_total_wick_ratio (FM-013).
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Fraction of the candle's full range occupied by its body, bounded [0, 1]."
+      why_it_exists: "The canonical conviction measure. Scale-free, so one threshold (the CRT displacement gate at 0.70) is coherent across instruments and price levels."
+      interpretation:
+        high: "Decisive candle — the market moved and held; little was rejected."
+        low:  "Indecision — the range was explored but surrendered before the close."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      candle_math.body_ratio
+      consumed_by:      [UNKNOWN]
+      vector_key:       body_ratio
+      vector_index:     29
+  body_to_total_wick_ratio:
+    id:          FM-013
+    version:     1
+    lifecycle:   registered
+    numerator:   body_size
+    denominator: total_wick
+    bounded:     null
+    active:      false
+    depends_on:  [body_size, total_wick]
+    impl:        candle_math.body_to_total_wick_ratio
+    note: >
+      DISTINCT semantic (Phase-1 identity closure). body/total_wick — historically live_engine_hook
+      bare name body_ratio (GD-001 / Q-BODY-RATIO-NONCANON-LIVE). Identity
+      FEAT-BODY_TO_TOTAL_WICK_RATIO / FORMULA-BODY-TO-TOTAL-WICK. Must not share governed bare name
+      body_ratio with FM-010. Unbounded above 1 when body > wicks.
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Body size relative to total wick length; unbounded above 1 when the body exceeds the wicks."
+      why_it_exists: "An alternative conviction framing that contrasts commitment against rejection directly, rather than against the full range."
+      interpretation:
+        high: "Body dwarfs the wicks — movement met almost no rejection."
+        low:  "Wicks dominate — the bar was mostly rejected travel."
+    states: []
+    lineage:
+      derivation_depth: 3
+      produced_by:      candle_math.body_to_total_wick_ratio
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
   upper_wick_ratio:
     id:          FM-011
     version:     1
@@ -128,6 +503,22 @@ feature_compositions:
     active:      false
     depends_on:  [upper_wick, candle_range]
     note: "upper rejection strength; research candidate, not wired"
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Fraction of the candle's range consumed by the upper wick, bounded [0, 1]."
+      why_it_exists: "Scale-free upside-rejection strength — proposed for isolating failed upside probes."
+      interpretation:
+        high: "Most of the range was an upside probe that failed."
+        low:  "Negligible upside rejection."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      candle_math.upper_wick
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
   lower_wick_ratio:
     id:          FM-012
     version:     1
@@ -138,6 +529,22 @@ feature_compositions:
     active:      false
     depends_on:  [lower_wick, candle_range]
     note: "lower rejection strength; research candidate, not wired"
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Fraction of the candle's range consumed by the lower wick, bounded [0, 1]."
+      why_it_exists: "Scale-free downside-rejection strength — proposed for isolating failed downside probes."
+      interpretation:
+        high: "Most of the range was a downside probe that failed."
+        low:  "Negligible downside rejection."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      candle_math.lower_wick
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
 
 # Deterministic normalized metrics. Canonical formulas transcribed VERBATIM from
 # feature_pipeline.py (the training-truth source); the YAML must equal the pipeline math.
@@ -148,45 +555,243 @@ derived_metrics:
     id:          FM-020
     version:     1
     lifecycle:   parity_verified
-    formula:     "clip(body_size / (atr * close), 0.0, 3.0) if atr>0 and close>0 else nan"
+    formula:     "clip(body_size / (atr * close), <feature_pipeline.disp_strength_clip_low>, <feature_pipeline.disp_strength_clip_high>) if atr>0 and close>0 else nan  # defaults 0.0, 3.0"
+    config_keys: [feature_pipeline.disp_strength_clip_low, feature_pipeline.disp_strength_clip_high]
     impl:        derived_math.disp_strength
     depends_on:  [body_size, atr, close]
     clip:        [0.0, 3.0]
     active:      true
-    source_of_truth: feature_pipeline.py:565
+    source_of_truth: feature_pipeline.py:950     # CORRECTED 2026-07-24 (was :565, stale)
     note: >
-      Body size normalized by ATR-scaled price. NOTE a naming collision: scoring_engine.py:31
-      computes a LOCAL `disp_strength = move/atr` (a different quantity); adjudication deferred to
-      Phase B (see F-047 sibling). This entry is the FEATURE-VECTOR definition (CANONICAL_FEATURES).
+      Body size normalized by ATR-scaled price. The former naming collision with scoring_engine.py's
+      local `disp_strength = move/atr` was adjudicated 2026-07-11 (GD-004 closure): a DISTINCT third
+      quantity, registered as FM-029 disp_strength_atr_rescale. This entry is the FEATURE-VECTOR
+      definition (CANONICAL_FEATURES).
+    taxonomy:
+      category:        Volatility
+      knowledge_class: Derived
+    semantics:
+      description:   "Candle body measured in units of ATR-scaled price, clipped to [0, 3]."
+      why_it_exists: "Answers whether a move is large FOR CURRENT CONDITIONS. A 50-point body means nothing until it is compared to prevailing volatility; this is the displacement test the CRT state machine gates on."
+      interpretation:
+        high: "Displacement — the bar moved far beyond what recent volatility would predict."
+        low:  "The move is unremarkable for this volatility regime; no displacement."
+    states: []
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_canonical_temporal_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       disp_strength
+      vector_index:     33
   retest_depth:
     id:          FM-021
     version:     1
     lifecycle:   parity_verified
-    formula:     "clip(abs(close - ema_fast) / (atr * close), 0.0, 1.0) if atr>0 and close>0 else 0.0"
+    formula:     "clip(abs(close - ema_fast) / (atr * close), <feature_pipeline.retest_depth_clip_low>, <feature_pipeline.retest_depth_clip_high>) if retest_flag==1 and atr>0 and close>0 else 0.0  # defaults 0.0, 1.0"
+    config_keys: [feature_pipeline.retest_depth_clip_low, feature_pipeline.retest_depth_clip_high]
     impl:        derived_math.retest_depth
-    depends_on:  [close, ema_fast, atr]
+    depends_on:  [close, ema_fast, atr, retest_flag]
     clip:        [0.0, 1.0]
     active:      true
-    source_of_truth: feature_pipeline.py:579
-    note: "distance from close to fast EMA (ATR-scaled). Pipeline gates on retest_flag==1 (state); the math when active is this."
+    source_of_truth: feature_pipeline.py:969     # CORRECTED 2026-07-24 (was :579, stale)
+    note: >
+      Distance from close to the fast EMA (ATR-scaled). GATE MADE EXPLICIT 2026-07-24: the emitted
+      value is 0.0 on every bar where retest_flag != 1 — which is MOST bars (measured zero_rate
+      42.31% on the XAUUSD freeze corpus). Until now that gate lived only in this note while the
+      `formula` described the ungated math, so the declaration disagreed with the emitted column on
+      the majority of rows. `retest_flag` (FM-061) is now a declared dependency. The scalar
+      derived_math.retest_depth is UNCHANGED and remains correct for the gated branch — the pipeline
+      applies the gate via np.where at feature_pipeline.py:969.
+    taxonomy:
+      category:        Retest
+      knowledge_class: Derived
+    semantics:
+      description:   "How far price sits from the fast EMA, in ATR-scaled units, on bars where a retest is active; 0.0 otherwise."
+      why_it_exists: "After a liquidity sweep, the question is whether price returned to a fair-value reference. This measures the depth of that return in volatility-normalized terms."
+      interpretation:
+        high: "Price is far from the reference — a shallow or failed retest."
+        low:  "Price has returned tightly to the reference — a deep retest. NOTE 0.0 is ambiguous: it means EITHER a perfect retest OR no retest at all; disambiguate with retest_flag."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      feature_pipeline.compute_canonical_temporal_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       retest_depth
+      vector_index:     34
   ema_spread:
     id:          FM-022
     version:     1
     lifecycle:   parity_verified
-    formula:     "(ema_fast - ema_slow) / atr if atr>0 else nan"
+    formula:     "(ema_fast - ema_slow) / atr if atr>0 else nan   # emitted only when <feature_pipeline.normalization_basis> == 'atr_relative' (the default); 'atr_absolute' selects FM-030 instead"
     impl:        derived_math.ema_spread
     depends_on:  [ema_fast, ema_slow, atr]
     active:      true
-    source_of_truth: feature_pipeline.py:497
+    source_of_truth: feature_pipeline.py:869     # CORRECTED 2026-07-24 (was :497, stale)
+    # ── B0/B1 semantic-migration governance (2026-07-12) — LEGACY identity, DO NOT silently change ──
+    semantic_version:    "1.0-legacy-price-scaled"
+    units:               price_scaled            # NOT dimensionless: absolute-price numerator / dimensionless atr
+    normalization_basis: atr_relative            # denominator `atr` is close-relative (atr_14_raw/close)
+    temporal_semantics:  same_bar
+    known_issue: >
+      DIMENSIONAL MIX (B1/F1, fresh-reproduced 2026-07-12): numerator (ema_fast-ema_slow) is absolute
+      price; denominator `atr` is dimensionless (close-relative) -> the quantity SCALES with price level
+      (probe: median ratio 100x at 100x price). Corrected identity = FM-030 ema_spread_atr.
+      DECISION-SURFACE COST MEASURED 2026-07-22 (F-061): because the emitted magnitude equals the
+      corrected value times `close`, the engine_runner.dual_engine thresholds tuned for a
+      dimensionless O(1) quantity (trend_strength_threshold 0.15 / momentum_threshold 0.3) are
+      INERT on crypto and binding only on FX. On BNBUSDT/BTCUSDT (median |ema_spread| 320 / 38,110
+      vs 0.47 corrected) detect_regime returns "trend" on 98.9%/99.9% of bars and breakout_engine's
+      score is pinned at 1.0 on ~100%; under the corrected identity both discriminate (52.7% trend,
+      6.8% pinned) and are instrument-scale invariant. So this is no longer a representational
+      defect only -- it degrades live decisions. Correction is now REACHABLE (config-gated, inactive).
+    replacement_identity: FM-030                  # registered below as a first-class inactive identity
+    migration_class:      FORMULA_CORRECTION_CONFIG_GATED   # was FORMULA_CORRECTION_DEFERRED until 2026-07-22
+    config_key:           feature_pipeline.normalization_basis   # "atr_relative" selects THIS identity (default)
+    artifact_compatibility: LEGACY_BOUND          # active code (engine_runner regime/breakout, heuristic
+                                                  # gaussian) + inactive rr_model/gaussian-38 artifacts bind
+                                                  # to this math; correction requires retrain + recalibration.
+    taxonomy:
+      category:        Trend
+      knowledge_class: Derived
+    semantics:
+      description:   "Separation between the fast and slow EMA, divided by close-relative ATR."
+      why_it_exists: "Measures how strongly the short-term trend has pulled away from the longer-term trend, intended to be normalized for volatility."
+      interpretation:
+        high: "Fast EMA far above slow — strong established uptrend."
+        low:  "Large negative — strong established downtrend; near zero means the EMAs are entangled (no trend)."
+        caveat: "READ THIS BEFORE USING THE VALUE: the emitted magnitude scales with PRICE LEVEL (see known_issue / F-061). Cross-instrument or cross-epoch comparison of raw values is invalid under this legacy identity."
+    states: []
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_canonical_ema_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       ema_spread
+      vector_index:     9
   momentum_score:
     id:          FM-023
     version:     1
     lifecycle:   parity_verified
-    formula:     "close_delta / atr if atr>0 else nan"    # close_delta = close.diff()
+    formula:     "close_delta / atr if atr>0 else nan   # close_delta = close.diff(); emitted only when <feature_pipeline.normalization_basis> == 'atr_relative' (the default); 'atr_absolute' selects FM-031 instead"
     impl:        derived_math.momentum_score
     depends_on:  [close_delta, atr]
     active:      true
-    source_of_truth: feature_pipeline.py:503
+    source_of_truth: feature_pipeline.py:875     # CORRECTED 2026-07-24 (was :503, stale)
+    # ── B0/B1 semantic-migration governance (2026-07-12) — LEGACY identity, DO NOT silently change ──
+    semantic_version:    "1.0-legacy-price-scaled"
+    units:               price_scaled
+    normalization_basis: atr_relative
+    temporal_semantics:  same_bar_delta          # close_delta = close.diff() (one-bar change)
+    known_issue: >
+      Same dimensional mix as FM-022 (B1/F2, fresh-reproduced 2026-07-12): close_delta (absolute price)
+      / dimensionless atr -> SCALES with price level (probe: 100x ratio). Corrected = FM-031.
+      DECISION-SURFACE COST MEASURED 2026-07-22 (F-061) — see FM-022's known_issue; momentum_score is
+      the sharper case: `tanh(momentum_score)` in heuristic_gaussian_engine.py saturates on 98.8% (BNB)
+      / 99.9% (BTC) of bars, and gate_intelligence.py's REVERSAL score `1 - min(1, |mom|)` collapses
+      to a constant 0.0 on crypto.
+    replacement_identity: FM-031
+    migration_class:      FORMULA_CORRECTION_CONFIG_GATED   # was FORMULA_CORRECTION_DEFERRED until 2026-07-22
+    config_key:           feature_pipeline.normalization_basis   # "atr_relative" selects THIS identity (default)
+    artifact_compatibility: LEGACY_BOUND
+    taxonomy:
+      category:        Momentum
+      knowledge_class: Derived
+    semantics:
+      description:   "One-bar price change divided by close-relative ATR."
+      why_it_exists: "Rate of change normalized for volatility — intended to answer whether the last bar's move was fast relative to prevailing conditions."
+      interpretation:
+        high: "Sharp upward thrust relative to recent volatility."
+        low:  "Sharp downward thrust; near zero means the bar closed where it opened relative to volatility."
+        caveat: "READ THIS BEFORE USING THE VALUE: same price-level scaling defect as FM-022, and sharper in consequence — tanh(momentum_score) saturates on 98.8-99.9% of crypto bars (F-061), so downstream consumers see a near-constant."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      feature_pipeline.compute_canonical_ema_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       momentum_score
+      vector_index:     12
+  # ── FM-030 / FM-031 — corrected identities, CONFIG-GATED and INACTIVE (2026-07-22) ──────────
+  # Promoted here from the `migration_candidates:` block (which stays, marked SUPERSEDED_BY) so
+  # they are first-class, executable, parity-testable identities rather than prose proposals.
+  # `active: false` — they are NOT what the active config emits. Selecting them requires
+  # `feature_pipeline.normalization_basis: "atr_absolute"`, which today exists only on the
+  # non-promoted shadow config. Registration grants NO production authority (CLAUDE.md 6.5:
+  # tunability is not authority); activation would still require demonstrated G001 improvement
+  # plus recalibration of the engine_runner.dual_engine thresholds tuned to the legacy magnitudes.
+  # Program: FM-030-031-DIMENSIONAL-MIX-MIGRATION (feature-layer freeze waiver, 2026-07-22).
+  ema_spread_atr:
+    id:          FM-030
+    version:     1
+    lifecycle:   parity_verified
+    formula:     "(ema_fast - ema_slow) / (atr * close) if atr>0 and close>0 else nan   # emitted only when <feature_pipeline.normalization_basis> == 'atr_absolute'; the default 'atr_relative' selects FM-022 instead"
+    impl:        derived_math.ema_spread_atr
+    depends_on:  [ema_fast, ema_slow, atr, close]
+    active:      false
+    source_of_truth: feature_pipeline.py:compute_canonical_ema_features (atr_absolute arm)
+    replaces:            FM-022
+    semantic_version:    "2.0-atr-absolute"
+    units:               dimensionless          # divides by ABSOLUTE atr (atr*close) -> scale-invariant
+    normalization_basis: atr_absolute
+    temporal_semantics:  same_bar
+    config_key:          feature_pipeline.normalization_basis
+    migration_class:     FORMULA_CORRECTION
+    requires:            [retrain_inactive_artifacts, recalibrate_active_thresholds]
+    note: >
+      Scalar<->pipeline parity and the closed-form relation (this identity == FM-022 / close)
+      are proven in tests/test_fm030_031_normalization_basis.py, together with scale invariance
+      (100x price leaves this unchanged and multiplies FM-022 by 100). Evidence for WHY the
+      correction matters beyond representation: F-061.
+    taxonomy:
+      category:        Trend
+      knowledge_class: Derived
+    semantics:
+      description:   "EMA separation divided by ABSOLUTE ATR (atr * close) — the scale-invariant form of FM-022."
+      why_it_exists: "Corrects FM-022's dimensional mix so trend strength is comparable across instruments and price epochs. Registered and executable but INACTIVE."
+      interpretation:
+        high: "Strong uptrend, in volatility units that mean the same thing on BTC and EURUSD."
+        low:  "Strong downtrend; near zero means no EMA separation."
+    states: []
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_canonical_ema_features
+      consumed_by:      []
+      vector_key:       []
+      vector_index:     []
+  momentum_score_atr:
+    id:          FM-031
+    version:     1
+    lifecycle:   parity_verified
+    formula:     "close_delta / (atr * close) if atr>0 and close>0 else nan   # close_delta = close.diff(); emitted only when <feature_pipeline.normalization_basis> == 'atr_absolute'; the default 'atr_relative' selects FM-023 instead"
+    impl:        derived_math.momentum_score_atr
+    depends_on:  [close_delta, atr, close]
+    active:      false
+    source_of_truth: feature_pipeline.py:compute_canonical_ema_features (atr_absolute arm)
+    replaces:            FM-023
+    semantic_version:    "2.0-atr-absolute"
+    units:               dimensionless
+    normalization_basis: atr_absolute
+    temporal_semantics:  same_bar_delta
+    config_key:          feature_pipeline.normalization_basis
+    migration_class:     FORMULA_CORRECTION
+    requires:            [retrain_inactive_artifacts, recalibrate_active_thresholds]
+    note: >
+      Same proof battery as FM-030 (tests/test_fm030_031_normalization_basis.py). F-061 records
+      the decision-surface cost this identity removes.
+    taxonomy:
+      category:        Momentum
+      knowledge_class: Derived
+    semantics:
+      description:   "One-bar price change divided by ABSOLUTE ATR (atr * close) — the scale-invariant form of FM-023."
+      why_it_exists: "Corrects FM-023's dimensional mix so momentum is comparable across instruments; removes the tanh saturation F-061 measured. Registered and executable but INACTIVE."
+      interpretation:
+        high: "Fast upward thrust in true volatility units."
+        low:  "Fast downward thrust; near zero means a quiet bar."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      feature_pipeline.compute_canonical_ema_features
+      consumed_by:      []
+      vector_key:       []
+      vector_index:     []
   volatility_ratio:
     id:          FM-024
     version:     1
@@ -195,8 +800,24 @@ derived_metrics:
     impl:        derived_math.volatility_ratio
     depends_on:  [candle_range, atr, close]
     active:      true
-    source_of_truth: feature_pipeline.py:482
+    source_of_truth: feature_pipeline.py:821     # CORRECTED 2026-07-24 (was :482, stale)
     note: "fallback is 1.0 (NOT nan/0.0) — mirrors the pipeline default exactly."
+    taxonomy:
+      category:        Volatility
+      knowledge_class: Derived
+    semantics:
+      description:   "This bar's full range expressed in units of ATR-scaled price; 1.0 when undefined."
+      why_it_exists: "Answers whether THIS bar is wide or narrow relative to the recent norm — the range analogue of disp_strength, which measures body instead."
+      interpretation:
+        high: "Range expansion — this bar covered far more ground than recent bars."
+        low:  "Range compression — a quiet bar, often preceding expansion."
+    states: []
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_canonical_volatility_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       volatility_ratio
+      vector_index:     14
   liquidity_distance:
     id:          FM-025
     version:     1
@@ -205,21 +826,57 @@ derived_metrics:
     impl:        derived_math.liquidity_distance
     depends_on:  [close, atr, ref_high, ref_low, bos_level]
     active:      true
-    source_of_truth: feature_pipeline.py:645
+    source_of_truth: feature_pipeline.py:1037    # CORRECTED 2026-07-24 (was :645, stale)
     note: >
-      In CANONICAL_FEATURES (index 35) but lifecycle stays `registered`: the registry owns the
+      In CANONICAL_FEATURES (index 36) but lifecycle stays `registered`: the registry owns the
       DISTANCE MATH; level resolution (shift/ffill/bos) is structural (pipeline-owned, out of scope).
       Full scalar<->pipeline-column parity is deferred; a self-consistency unit test covers the scalar.
+      INDEX CORRECTED 2026-07-24: this note said index 35, but schema v4.0's MACD split shifted the
+      v3.0 tail by +1 — liquidity_distance is index 36 (see lineage.vector_index below).
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Derived
+    semantics:
+      description:   "ATR-normalized distance from close to the NEAREST liquidity reference (last swing high, last swing low, or last BOS level)."
+      why_it_exists: "Liquidity sits at prior structural levels. Proximity to one is where stop-runs and reversals concentrate, so distance-to-nearest-level is a proxy for how loaded the current price area is."
+      interpretation:
+        high: "Price is in open space, far from any known liquidity pool."
+        low:  "Price is sitting on a liquidity level — elevated probability of a sweep."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      feature_pipeline.compute_liquidity_distance
+      consumed_by:      [UNKNOWN]
+      vector_key:       liquidity_distance
+      vector_index:     36
   liquidity_pressure_score:
     id:          FM-026
     version:     1
     lifecycle:   registered      # parity deferred (depends on liquidity_distance)
-    formula:     "clip(exp(-0.5 * liquidity_distance), 0.0, 1.0); nan distance -> treated as 10.0"
+    formula:     "clip(exp(<feature_pipeline.liquidity_decay_coeff> * liquidity_distance), 0.0, 1.0); nan distance -> treated as <feature_pipeline.liquidity_nan_sentinel>  # defaults -0.5, 10.0"
+    config_keys: [feature_pipeline.liquidity_decay_coeff, feature_pipeline.liquidity_nan_sentinel]
     impl:        derived_math.liquidity_pressure_score
     depends_on:  [liquidity_distance]
     clip:        [0.0, 1.0]
     active:      true
-    source_of_truth: feature_pipeline.py:654
+    source_of_truth: feature_pipeline.py:1049    # CORRECTED 2026-07-24 (was :654, stale)
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Derived
+    semantics:
+      description:   "Exponential decay of liquidity_distance into a bounded [0, 1] proximity score."
+      why_it_exists: "Turns 'how far to the nearest level' into 'how much pressure is here', on a bounded scale a gate or a model can consume directly."
+      interpretation:
+        high: "Price is pressed against a liquidity level — sweep risk is elevated."
+        low:  "No nearby liquidity; the area is structurally empty."
+        caveat: "A NaN distance is deliberately mapped to the sentinel (default 10.0) before decay, which floors the score near zero rather than propagating NaN."
+    states: []
+    lineage:
+      derivation_depth: 5
+      produced_by:      feature_pipeline.compute_liquidity_distance
+      consumed_by:      [UNKNOWN]
+      vector_key:       liquidity_pressure_score
+      vector_index:     37
   displacement_retrace:
     id:          FM-027
     version:     1
@@ -236,17 +893,1917 @@ derived_metrics:
       a DISTINCT quantity from FM-021 retest_depth (same-candle EMA/ATR). The math is internally
       INTENTIONAL (F-050 lineage); the defect was the NAME collision. Emission-key rename is CH-002
       (MODEL_INPUT_CHANGE: consumers stage1_dataset_builder/trainer/rr_fusion + historical artifacts).
+    taxonomy:
+      category:        Retest
+      knowledge_class: Derived
+    semantics:
+      description:   "How far the retest candle's close retraced back into the displacement candle's body, as a fraction of that body."
+      why_it_exists: "A CROSS-CANDLE retracement measure for the CRT sequence: after displacement, how deeply did price come back before continuing? Deep retracements invalidate; shallow ones confirm."
+      interpretation:
+        high: "Price retraced most of the displacement — the move is being given back."
+        low:  "Shallow retracement — displacement is holding."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      derived_math.displacement_retrace
+      consumed_by:      [crt_gaussian_scorer, crt_engine_v2, bitnet.encoders]
+      vector_key:       []
+      vector_index:     []
   displacement_atr_ratio:
     id:          FM-028
     version:     1
     lifecycle:   registered      # F-050 sibling (CH-001): range-ATR multiple emitted as "disp_str"/
                                  # "disp_strength" by CRT sites — distinct from FM-020 body/(atr*close).
-    formula:     "candle_range / atr; atr<=0 -> 0.0"
+    formula:     "candle_range / atr_abs; atr_abs<=0 -> 0.0  # atr_abs = SMA(period) of true_range, ABSOLUTE price units (state.atr_abs), NOT the close-relative FM-041 `atr`"
     impl:        derived_math.displacement_atr_ratio
-    depends_on:  [candle_range, atr]
+    depends_on:  [candle_range, true_range]
     active:      true
     source_of_truth: crt_engine_v2.py:1355   # family: :1560 score_breakout, crt_gaussian_scorer:194
     note: >
       FAM-06 range-ATR multiple (structural displacement magnitude in ATR units). Collides in NAME
       with FM-020 disp_strength on the cached-features/telemetry path; registration separates the
       identities. Rename deferred to CH-002 with FM-027.
+      DEPENDENCY CORRECTED 2026-07-31 (Semantic Layer Certification Audit, Tier 1 item 5): both
+      real callers (crt_engine_v2.py:1548, crt_gaussian_scorer.py:208-211) pass `state.atr_abs`
+      (ABSOLUTE price, SMA of FM-040 true_range) as the `atr` argument, NOT the close-relative
+      FM-041 `atr` (atr_14_raw/close). `depends_on` previously named FM-041 `atr`, matching the
+      same declaration-drift class FM-050 fixed 2026-07-19 (crt_engine_v2.py's own runtime trace
+      metadata mislabeled `state.atr_abs` as `formula_id: FM-041` at 4 sites; corrected same turn).
+      No first-class FM id exists for the bare absolute-ATR intermediate, so `depends_on` points at
+      its true root (true_range, FM-040) rather than the wrong sibling identity.
+    taxonomy:
+      category:        Volatility
+      knowledge_class: Derived
+    semantics:
+      description:   "Candle range expressed as a multiple of ATR."
+      why_it_exists: "The CRT state machine's overextension guard: a displacement whose range exceeds max_displacement_strength ATRs is too stretched to retest cleanly."
+      interpretation:
+        high: "Range far exceeds normal volatility — an overextended, exhaustion-prone move."
+        low:  "Range is ordinary for current volatility."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      derived_math.displacement_atr_ratio
+      consumed_by:      [crt_engine_v2, crt_gaussian_scorer, bitnet.encoders]
+      vector_key:       []
+      vector_index:     []
+  disp_strength_atr_rescale:
+    id:          FM-029
+    version:     1
+    lifecycle:   registered      # GD-004 closure 2026-07-11: the scoring_engine.py:31 local
+                                 # `disp_strength = move/atr` — a THIRD identity, distinct from
+                                 # FM-020 and FM-028 (probe: equals FM-028 on 0.00% of bars).
+    formula:     "disp_strength / atr; atr<=0 -> 0.0"
+    impl:        derived_math.disp_strength_atr_rescale
+    depends_on:  [disp_strength, atr]
+    active:      true
+    source_of_truth: scoring_engine.py:31
+    note: >
+      AS-WIRED quantity of scoring_engine.compute_scores: the sole caller (crt_engine.py:23) passes
+      the FM-020 feature as `move` and the close-relative pipeline atr, so the value is
+      FM-020/atr_rel == body_size*close/atr_14_raw^2. HYPOTHESIS (deferred, FU-CRT-MOVE-MISWIRE):
+      the signature (`move`, `atr`) suggests a raw-move/FM-028-like input was intended — fixing the
+      call site is a gate-ON fusion BEHAVIOR change, out of identity-closure scope. Characterization
+      (docs/governance/gd004_disp_rescale_probe-2026-07-11.json, BNBUSDT 29,922 bars): saturates
+      s_breakout's min(x/2,1) at 1.0 on 97.5% of bars; equals FM-020 2.08% (zero-disp bars only),
+      equals FM-028 0.00%. Impact bounded: backtests gate-OFF (F-037), run() never executes (F-048).
+    taxonomy:
+      category:        Volatility
+      knowledge_class: Derived
+    semantics:
+      description:   "The AS-WIRED quantity of scoring_engine.compute_scores: FM-020 divided again by close-relative ATR."
+      why_it_exists: "Registered to SEPARATE a third colliding identity, not because the quantity is desirable. Its existence is a record of what the code actually computes."
+      interpretation:
+        high: "Saturating — the value pins s_breakout's min(x/2, 1) at 1.0 on 97.5% of bars, so the score carries almost no information."
+        low:  "Only reached on near-zero-displacement bars."
+        caveat: "Double-normalized by construction (body_size*close / atr_14_raw^2). Do NOT read this as a displacement measure; see the FU-CRT-MOVE-MISWIRE hypothesis in the note."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      scoring_engine.compute_scores
+      consumed_by:      [scoring_engine]
+      vector_key:       []
+      vector_index:     []
+  candles_since_retest_state:
+    id:        FM-070
+    version:   1
+    lifecycle: registered
+    formula:   "current_candle_index - retest_candle_index"
+    impl:      derived_math.candles_since_retest_state
+    depends_on: [current_candle_index, retest_candle_index]
+    active:    true
+    note: >
+      REGISTERED 2026-07-31 to resolve the FM-065 name collision (see that entry's note in
+      rolling_indicators). The CRT engine's live bars-since-the-RETEST-CANDLE count — DISTINCT
+      from FM-065's bars-since-SWEEP pipeline quantity, despite historically sharing the bare
+      name `candles_since_retest`. Consumed only inside `approve()` / `approve_with_soft_conf()`
+      (config_layer/crt_engine_v2.py) to build the transient BitNet input dict; aliased to the
+      legacy key `candles_since_retest` at that call boundary only, matching the existing
+      FM-027/FM-028 alias pattern (CH-002). Also computed independently, under the LOCAL name
+      `candles_elapsed`, by `compute_decay_factor` (same subtraction, different consumer —
+      exponential score decay rather than a BitNet feature) — a duplicate-formula site noted
+      here, not remediated in this pass (no name collision, so the ownership lint does not flag
+      it; consolidating it is a code-simplification opportunity, not a semantic defect).
+    taxonomy:
+      category:        Retest
+      knowledge_class: Derived
+    semantics:
+      description:   "Bars elapsed since the retest candle that triggered the current CRT engine confirmation window."
+      why_it_exists: "Feeds the BitNet legacy-6 encoder's `candles_since_retest` input under its expected name, computed from the CRT engine's own state rather than re-deriving it from the training vector."
+      interpretation:
+        high: "The retest confirmation happened many bars ago — soft-confirmation staleness."
+        low:  "The retest just occurred."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      derived_math.candles_since_retest_state
+      consumed_by:      [crt_engine_v2, bitnet.encoders]
+      vector_key:       []
+      vector_index:     []
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ROLLING INDICATORS — first-class WINDOWED identities (bottom-up cert program, 2026-07-12)
+# ═══════════════════════════════════════════════════════════════════════════
+# Promoted from the descriptive `indicator_identities` freeze to FIRST-CLASS registered entries
+# (FM-040..FM-046). These are WINDOWED (no scalar float->float form), so `computation_class: rolling`:
+#   * they ARE iterated by the registry/lineage (build_lineage_graph, validate_registry) — first-class
+#     DAG nodes with `depends_on`, so atr/ema_fast/ema_slow are no longer base_inputs leaves;
+#   * validate_registry EXEMPTS them from the scalar-FORMULA_REGISTRY impl-resolution (there is no
+#     scalar callable) — the `impl` names the pipeline computation authority;
+#   * certified by a SERIES-level parity + PIT-prefix probe (feature_dag_rolling_certification.py),
+#     NOT the scalar derived_math parity battery.
+# Math is byte-identical to the existing pipeline (feature_pipeline.py) — a registration, not a change.
+rolling_indicators:
+  true_range:
+    id:        FM-040
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "max(high - low, abs(high - prev_close), abs(low - prev_close))"
+    impl:      feature_pipeline.compute_indicators        # df['true_range']; no scalar form (uses prev_close)
+    depends_on: [high, low, close]
+    lookback:  1
+    units:     price_absolute
+    active:    true
+    taxonomy:
+      category:        Volatility
+      knowledge_class: Primitive
+    semantics:
+      description:   "Wilder's true range: the greatest of this bar's range and its two gap-inclusive extensions against the previous close."
+      why_it_exists: "A bar's own high-low understates movement when the market gapped. True range restores the real distance travelled, making it the honest input to every volatility average."
+      interpretation:
+        high: "Large real movement including any gap from the prior close."
+        low:  "Quiet bar with no gap."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      feature_pipeline.compute_indicators
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
+  atr:
+    id:        FM-041
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "SMA(<feature_pipeline.atr_period>) of true_range, close-relative: atr_14_raw / close (atr_14_raw = true_range.rolling(<feature_pipeline.atr_period>).mean())  # default 14"
+    impl:      feature_pipeline.compute_canonical_volatility_features
+    depends_on: [true_range]
+    smoothing_method: SMA
+    lookback:  14
+    config_key: feature_pipeline.atr_period
+    normalization_basis: close
+    units:     dimensionless
+    active:    true
+    supersedes_descriptive: IND-001        # was descriptive-only in indicator_identities
+    taxonomy:
+      category:        Volatility
+      knowledge_class: Statistical
+    semantics:
+      description:   "Simple moving average of true_range over the configured period, divided by close (close-relative, dimensionless)."
+      why_it_exists: "The system's unit of volatility. Nearly every normalized feature divides by this, so it is what makes thresholds portable across instruments."
+      interpretation:
+        high: "Volatile regime — the same point move means less here."
+        low:  "Quiet regime — small absolute moves are significant."
+        caveat: "SMA-smoothed, NOT Wilder's recursive EWMA (measured maxdiff 0.118 vs Wilder). And close-RELATIVE: multiply by close to recover absolute-price ATR."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      feature_pipeline.compute_canonical_volatility_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       atr
+      vector_index:     13
+  rsi_14:
+    id:        FM-042
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "100 - 100/(1+RS); RS = SMA(<feature_pipeline.rsi_period>) gain / (SMA(<feature_pipeline.rsi_period>) loss + 1e-9); clipped [0,100]  # default period 14"
+    impl:      feature_pipeline.compute_indicators
+    depends_on: [close]
+    smoothing_method: SMA
+    lookback:  14
+    config_key: feature_pipeline.rsi_period
+    bounds:    "[0, 100]"
+    active:    true
+    supersedes_descriptive: IND-002
+    taxonomy:
+      category:        Momentum
+      knowledge_class: Statistical
+    semantics:
+      description:   "Relative Strength Index on a [0, 100] scale, using SMA-averaged gains and losses."
+      why_it_exists: "Bounded momentum oscillator — expresses whether recent bars have been dominated by gains or losses without reference to price level."
+      interpretation:
+        high: "Gains dominate the window (>70 conventionally 'overbought')."
+        low:  "Losses dominate (<30 conventionally 'oversold'); 50 means balance."
+        caveat: "SMA gain/loss averaging, NOT Wilder's EWMA (measured maxdiff 35.8 vs Wilder). The RS ratio form is Wilder's; the averaging is not."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      feature_pipeline.compute_indicators
+      consumed_by:      [UNKNOWN]
+      vector_key:       rsi_14
+      vector_index:     15
+  ema_fast:
+    id:        FM-043
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "close.ewm(span=<feature_pipeline.ema_fast_span>, adjust=False).mean()  # default 9"
+    impl:      feature_pipeline.compute_canonical_ema_features
+    depends_on: [close]
+    lookback:  9
+    config_key: feature_pipeline.ema_fast_span
+    active:    true
+    taxonomy:
+      category:        Trend
+      knowledge_class: Statistical
+    semantics:
+      description:   "Exponentially weighted moving average of close over the fast span."
+      why_it_exists: "The short-term fair-value reference. Retests are measured against it, and its relation to ema_slow defines trend_bias."
+      interpretation:
+        high: "Above price — recent closes have been falling toward it."
+        low:  "Below price — recent closes have been rising away from it."
+        caveat: "UNRELATED to crt_engine.ema_fast (a different pair, spans 2/5, soft-confirmation logic). Same bare name, different module — do not conflate."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      feature_pipeline.compute_canonical_ema_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       ema_fast
+      vector_index:     7
+  ema_slow:
+    id:        FM-044
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "close.ewm(span=<feature_pipeline.ema_slow_span>, adjust=False).mean()  # default 21"
+    impl:      feature_pipeline.compute_canonical_ema_features
+    depends_on: [close]
+    lookback:  21
+    config_key: feature_pipeline.ema_slow_span
+    active:    true
+    taxonomy:
+      category:        Trend
+      knowledge_class: Statistical
+    semantics:
+      description:   "Exponentially weighted moving average of close over the slow span."
+      why_it_exists: "The longer-term trend reference. Its separation from ema_fast is the raw material for ema_spread and trend_bias."
+      interpretation:
+        high: "Above price — the longer trend is still pointing down relative to current price."
+        low:  "Below price — the longer trend supports current price."
+        caveat: "UNRELATED to crt_engine.ema_slow (different pair, span 5). Same bare name, different module."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      feature_pipeline.compute_canonical_ema_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       ema_slow
+      vector_index:     8
+  swing_high:
+    id:        FM-045
+    version:   1
+    lifecycle: registered
+    computation_class: rolling_stateful
+    formula:   "causal DELAYED publication of a centered rolling-max swing high over width 2k+1 (FC1-A: math at t, published with k-bar delay, available_at = t+k); k = <feature_pipeline.swing_window>  # default 2"
+    impl:      feature_pipeline.compute_structure_liquidity
+    depends_on: [high]
+    lookback:  2
+    config_key: feature_pipeline.swing_window
+    active:    true
+    note: >
+      TUNABLE STRUCTURAL, highest blast radius in the layer. k sets BOTH the pivot width (2k+1)
+      AND the FC1-A causal publication delay -- i.e. WHEN this feature becomes knowable. Changing
+      it shifts the PIT contract and invalidates artifacts certified against the old value
+      (re-certification, not a re-run). Resolve it ONLY via
+      features.feature_pipeline.resolve_swing_window(); never re-declare the literal.
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Structural
+    semantics:
+      description:   "Flag marking that a local pivot high was confirmed, published k bars after the pivot itself."
+      why_it_exists: "Swing highs are where resting buy-side liquidity accumulates. Identifying them is the precondition for detecting sweeps, breaks of structure, and higher highs."
+      interpretation:
+        high: "A pivot high has been confirmed as of this bar."
+        low:  "No pivot confirmation on this bar."
+        caveat: "PIT SEMANTICS: the pivot occurred k bars ago; this flag is its CONFIRMATION, delayed so no future information is used. The value is knowable at t, the event was at t-k."
+    states:
+      - name:        NoSwingHigh
+        value:       0
+        condition:   "no centered pivot high confirmed at this bar"
+        description: "No structural high has been established here."
+      - name:        SwingHighConfirmed
+        value:       1
+        condition:   "centered rolling-max pivot over width 2k+1, published k bars later"
+        description: "A structural high is now confirmed — a liquidity reference above the market."
+    lineage:
+      derivation_depth: 1
+      produced_by:      feature_pipeline.compute_structure_liquidity
+      consumed_by:      [UNKNOWN]
+      vector_key:       swing_high
+      vector_index:     23
+  swing_low:
+    id:        FM-046
+    version:   1
+    lifecycle: registered
+    computation_class: rolling_stateful
+    formula:   "causal DELAYED publication of a centered rolling-min swing low over width 2k+1 (FC1-A); k = <feature_pipeline.swing_window>  # default 2"
+    impl:      feature_pipeline.compute_structure_liquidity
+    depends_on: [low]
+    lookback:  2
+    config_key: feature_pipeline.swing_window
+    active:    true
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Structural
+    semantics:
+      description:   "Flag marking that a local pivot low was confirmed, published k bars after the pivot itself."
+      why_it_exists: "Swing lows are where resting sell-side liquidity accumulates — the mirror of swing_high and the other half of the structural reference pair."
+      interpretation:
+        high: "A pivot low has been confirmed as of this bar."
+        low:  "No pivot confirmation on this bar."
+        caveat: "Same PIT delay as swing_high: the event was at t-k, the confirmation is at t."
+    states:
+      - name:        NoSwingLow
+        value:       0
+        condition:   "no centered pivot low confirmed at this bar"
+        description: "No structural low has been established here."
+      - name:        SwingLowConfirmed
+        value:       1
+        condition:   "centered rolling-min pivot over width 2k+1, published k bars later"
+        description: "A structural low is now confirmed — a liquidity reference below the market."
+    lineage:
+      derivation_depth: 1
+      produced_by:      feature_pipeline.compute_structure_liquidity
+      consumed_by:      [UNKNOWN]
+      vector_key:       swing_low
+      vector_index:     24
+  # ── M16-WU-ONTOLOGY-REGISTRATION (partial), 2026-07-19 ────────────────────────
+  # Registration ONLY — no formula change. These identities were already certified
+  # PROMOTED_PRODUCTION by the L0-L6 DAG programme (census 2026-07-14) but carried
+  # ONTOLOGY_REGISTRATION_DEBT: their executable identity was pipeline-defined only.
+  # Registering them puts them inside feature_math_lint's watch-list (_registered_names()
+  # is built from this ontology), which is what enables re-derivation enforcement.
+  macd_line:
+    id:        FM-047
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "close.ewm(span=<feature_pipeline.macd_fast>, adjust=False).mean() - close.ewm(span=<feature_pipeline.macd_slow>, adjust=False).mean()  # defaults 12, 26"
+    impl:      feature_pipeline.compute_indicators
+    depends_on: [close]
+    smoothing_method: EWM
+    lookback:  26
+    config_keys: [feature_pipeline.macd_fast, feature_pipeline.macd_slow]
+    # `lookback` mirrors the LONGER span (the effective warmup); names which key it tracks so the
+    # ontology<->config parity test can assert it rather than guess among the plural keys.
+    lookback_config_key: feature_pipeline.macd_slow
+    active:    true
+    taxonomy:
+      category:        Momentum
+      knowledge_class: Statistical
+    semantics:
+      description:   "Difference between a fast and a slow EWM of close."
+      why_it_exists: "Classic convergence/divergence momentum: expresses whether short-term average price is pulling away from long-term average price."
+      interpretation:
+        high: "Short-term average above long-term — upward momentum."
+        low:  "Short-term below long-term — downward momentum; zero is the crossover."
+        caveat: "Absolute price units, so magnitudes are NOT comparable across instruments or price epochs."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      feature_pipeline.compute_indicators
+      consumed_by:      [UNKNOWN]
+      vector_key:       macd_line
+      vector_index:     16
+  macd_signal:
+    id:        FM-048
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "macd_line.ewm(span=<feature_pipeline.macd_signal>, adjust=False).mean()  # default 9"
+    impl:      feature_pipeline.compute_indicators
+    depends_on: [macd_line]
+    smoothing_method: EWM
+    lookback:  9
+    config_key: feature_pipeline.macd_signal
+    active:    true
+    taxonomy:
+      category:        Momentum
+      knowledge_class: Statistical
+    semantics:
+      description:   "EWM smoothing of macd_line over the signal span."
+      why_it_exists: "A slower reference for macd_line; their difference (macd_hist_raw) is where the actual signal lives."
+      interpretation:
+        high: "Smoothed momentum is positive."
+        low:  "Smoothed momentum is negative."
+        caveat: "Same absolute-price-unit caveat as macd_line."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      feature_pipeline.compute_indicators
+      consumed_by:      [UNKNOWN]
+      vector_key:       macd_signal
+      vector_index:     17
+  macd_hist_raw:
+    id:        FM-049
+    version:   2                 # v2 (2026-07-22): split; this entry is now the RAW difference only
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "macd_line - macd_signal"
+    impl:      feature_pipeline.compute_indicators
+    depends_on: [macd_line, macd_signal]
+    active:    true
+    vector_key: macd_hist_raw    # canonical index 18 (schema v4.0)
+    note: >
+      SPLIT 2026-07-22 (SCHEMA-V4-VECTOR-MIGRATION). v1 of this entry carried BOTH quantities under
+      one name and warned: "Emitted value is Z-SCORED. compute_normalization overwrites macd_hist in
+      place ... Easy to misread from the formula line alone." That warning is now unnecessary: the
+      formula above is exactly what this feature emits, and the z-score moved to FM-053
+      `macd_hist_z`. The v3.0 vector key `macd_hist` carried the Z-SCORED value, so historical
+      records alias to FM-053, NOT to this entry (features/feature_schema.py SCHEMA_V3_ALIASES).
+    taxonomy:
+      category:        Momentum
+      knowledge_class: Statistical
+    semantics:
+      description:   "macd_line minus macd_signal — the raw MACD histogram, in absolute price units."
+      why_it_exists: "Acceleration of momentum: whether the momentum measure is itself pulling away from its own average."
+      interpretation:
+        high: "Momentum is accelerating upward."
+        low:  "Momentum is accelerating downward; zero marks the signal-line crossover."
+        caveat: "This is the RAW difference. Schema v3.0 emitted the Z-SCORED value under the name `macd_hist`; that quantity is now FM-053. Historical records alias to FM-053, not here."
+    states: []
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_indicators
+      consumed_by:      [UNKNOWN]
+      vector_key:       macd_hist_raw
+      vector_index:     18
+  macd_hist_z:
+    id:        FM-053
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "rolling(<feature_pipeline.zscore_window>) z-score of macd_hist_raw  # default 50"
+    config_key: feature_pipeline.zscore_window
+    impl:      feature_pipeline.compute_normalization
+    depends_on: [macd_hist_raw]
+    active:    true
+    vector_key: macd_hist_z      # canonical index 19 (schema v4.0)
+    note: >
+      The value schema v3.0 emitted under the name `macd_hist`. Written to its OWN column now
+      (NORMALIZE_TO_NEW_COL) instead of overwriting its source in place, so the declared formula and
+      the emitted value finally agree for both halves of the pair. The zscore_window also sets the
+      canonical ~78-row warmup (see T-5).
+    taxonomy:
+      category:        Momentum
+      knowledge_class: Statistical
+    semantics:
+      description:   "Rolling z-score of macd_hist_raw over the configured window."
+      why_it_exists: "Makes MACD acceleration comparable across instruments and price epochs by expressing it in standard deviations of its own recent history — which the raw form cannot do."
+      interpretation:
+        high: "Momentum acceleration is unusually strong versus its own recent distribution."
+        low:  "Unusually negative; near zero means typical for this instrument lately."
+        caveat: "This is the value schema v3.0 emitted under the name `macd_hist` — the name/quantity mismatch that motivated the v4.0 split."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      feature_pipeline.compute_normalization
+      consumed_by:      [UNKNOWN]
+      vector_key:       macd_hist_z
+      vector_index:     19
+  trend_strength:
+    id:        FM-064
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "rolling(<feature_pipeline.zscore_window>) z-score of SMA(<feature_pipeline.trend_strength_window>) of diff(SMA(<feature_pipeline.ma_periods[0]>) of close)  # defaults 50, 10, 20"
+    config_keys: [feature_pipeline.zscore_window, feature_pipeline.trend_strength_window, feature_pipeline.ma_periods]
+    impl:      feature_pipeline.compute_trend_features
+    depends_on: [close]
+    active:    true
+    vector_key: trend_strength     # canonical index 11 (unchanged across v3.0/v4.0)
+    note: >
+      REGISTERED 2026-07-31 (closes the last of two canonical slots with no ontology identity,
+      the other being FM-065 candles_since_retest below). Was reserved as FM-064 since ontology
+      v1.4 (2026-07-24) but deliberately not registered: `core/engine_runner.py` had a LOCAL
+      variable also named `trend_strength` (= abs(ema_spread), an unrelated regime-detection
+      quantity — see `dual_engine.detect_regime`) that would trip `feature_math_lint`'s ownership
+      check the moment this name became a registered identity. That local has been renamed to
+      `ema_spread_abs` (engine_runner.py, zero behavior change — the value and its use in
+      `detect_regime`'s threshold comparison are unchanged, only the local variable's name
+      differs) so the two quantities can no longer collide under one name.
+      `compute_trend_features` computes the raw four-stage chain (`ma_20 -> ma_slope_20 ->
+      rolling-mean trend_strength`); `compute_normalization` then z-scores it in place — the
+      SAME two-stage split every other rolling+normalized feature in this ontology already
+      documents (c.f. FM-049/FM-053 macd_hist_raw/macd_hist_z). `trend_strength_window` also
+      sets the canonical ~78-row warmup jointly with `zscore_window` and `ma_periods[0]`
+      (`required_warmup_rows()`, feature_pipeline.py).
+    taxonomy:
+      category:        Trend
+      knowledge_class: Statistical
+    semantics:
+      description:   "Rolling z-score of the 10-bar smoothed slope of the 20-bar moving average of close."
+      why_it_exists: "A trend-strength measure orthogonal to ema_spread/momentum_score — it tracks whether the SLOPE of a slower moving average is itself accelerating, standardized against its own recent history so it is comparable across instruments and epochs."
+      interpretation:
+        high: "The 20-bar trend is steepening unusually fast relative to its own recent history."
+        low:  "Unusually flattening or reversing; near zero is typical for this instrument lately."
+        caveat: "Distinct from FM-022 ema_spread (EMA separation) and FM-023 momentum_score (1-bar change) — this is a SLOPE-OF-A-SLOWER-MA statistic, twice-smoothed and z-scored. Do not conflate the three as interchangeable 'trend' features."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      feature_pipeline.compute_normalization
+      consumed_by:      [UNKNOWN]
+      vector_key:       trend_strength
+      vector_index:     11
+  volatility_regime:
+    id:        FM-050
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "tercile(atr_14.rolling(<feature_pipeline.volatility_percentile_window>, min_periods=1).rank(pct=True)); atr_14 = SMA(14) of true_range (ABSOLUTE); cuts at <feature_pipeline.volatility_tercile_low>/<feature_pipeline.volatility_tercile_high> -> int8 {0,1,2}  # defaults 200, 0.33/0.66"
+    config_keys: [feature_pipeline.volatility_percentile_window, feature_pipeline.volatility_tercile_low, feature_pipeline.volatility_tercile_high]
+    impl:      feature_pipeline.compute_volatility_regime
+    depends_on: [true_range]
+    lookback:  200
+    # `lookback` mirrors the percentile window (the tercile cuts are thresholds, not lookbacks).
+    lookback_config_key: feature_pipeline.volatility_percentile_window
+    bounds:    "{0, 1, 2}"
+    active:    true
+    note: >
+      DEPENDENCY IS ABSOLUTE atr_14, NOT the close-relative FM-041 `atr`. compute_volatility_regime
+      ranks df["atr_14"] (== atr_14_raw == SMA(14) of true_range, absolute price units); FM-041 `atr`
+      is atr_14_raw / close (close-relative, canonical index 13). Different quantities -- hence
+      depends_on true_range (FM-040), the registered ancestor of the absolute form, NOT `atr`.
+      Corrected 2026-07-19 after an initial entry wrongly declared depends_on [atr]; matches the
+      M14B analysis recorded at scripts/analysis/feature_dag_layers.py:123-124.
+      Production bind is ROLLING_CAUSAL (FC1-D, FC-0.5 adjudication). The sibling
+      volatility_regime_global_batch (full-frame rank, non-PIT) and _expanding_causal identities
+      are research/legacy only and are deliberately NOT registered. CORRECTED 2026-07-19: the
+      window and tercile cuts are NO LONGER hardcoded -- they were migrated to config in the
+      Phase-A Tier-2 pass (see config_keys above). They are TUNABLE STRUCTURAL: changing any of
+      them redefines THIS identity and invalidates artifacts trained against it, so a sweep is a
+      semantic change requiring re-certification, not a free knob.
+    taxonomy:
+      category:        Volatility
+      knowledge_class: Statistical
+    semantics:
+      description:   "Tercile bucket of the current absolute ATR against its own trailing rolling percentile."
+      why_it_exists: "Converts continuous volatility into a coarse regime label so downstream logic can condition on 'quiet / normal / volatile' without picking instrument-specific cutoffs."
+      interpretation:
+        high: "Bucket 2 — currently among the most volatile third of the trailing window."
+        low:  "Bucket 0 — among the quietest third."
+        caveat: "Local and RELATIVE, not a latent regime state: it ranks ATR against the trailing window only. Depends on ABSOLUTE atr_14, not the close-relative FM-041 `atr`."
+    states:
+      - name:        LowVolatility
+        value:       0
+        condition:   "trailing ATR percentile < volatility_tercile_low"
+        description: "Compression — quietest third of the trailing window."
+      - name:        NormalVolatility
+        value:       1
+        condition:   "volatility_tercile_low <= percentile < volatility_tercile_high"
+        description: "Middle third — typical conditions for this instrument recently."
+      - name:        HighVolatility
+        value:       2
+        condition:   "percentile >= volatility_tercile_high"
+        description: "Expansion — most volatile third of the trailing window."
+    lineage:
+      derivation_depth: 2
+      produced_by:      feature_pipeline.compute_volatility_regime
+      consumed_by:      [UNKNOWN]
+      vector_key:       volatility_regime
+      vector_index:     30
+  # ── v1.4 COVERAGE COMPLETION (2026-07-24) ─────────────────────────────────────
+  # Registration ONLY — no formula change, no pipeline edit. These identities were emitted by the
+  # pipeline into CANONICAL_FEATURES but had NO declared identity, so nothing bound their meaning
+  # and the ownership lint could not police their names. `last_swing_*_price` carry no vector slot
+  # but are registered because the structural_states chain (FM-055/056/057/058) depends on them:
+  # they are pipeline-DERIVED, not raw inputs, so grounding them on the `ref_high`/`ref_low`
+  # base_input leaves would have been a false statement about the DAG.
+  volume_ratio:
+    id:        FM-062
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "volume / SMA(volume, <feature_pipeline.volume_ma_window>); 1.0 where the moving average is <= 0  # default 20"
+    config_key: feature_pipeline.volume_ma_window
+    impl:      feature_pipeline.compute_volume_features
+    depends_on: [volume]
+    lookback:  20
+    units:     dimensionless
+    active:    true
+    taxonomy:
+      category:        Volume
+      knowledge_class: Statistical
+    semantics:
+      description:   "This bar's volume as a multiple of its own trailing average."
+      why_it_exists: "Raw volume is not comparable across instruments or eras. Expressing it as a ratio to its own recent mean makes participation self-normalizing."
+      interpretation:
+        high: "Participation well above normal — conviction or an event."
+        low:  "Below-average participation — moves here carry less weight."
+        caveat: "Binds to SOURCE volume only. On instruments with dead volume (many FX feeds report zeros) the moving average is 0 and this pins to the 1.0 fallback — a constant, not a signal. The high-low proxy is emitted separately as volume_range_proxy_ratio and is deliberately NOT this feature."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      feature_pipeline.compute_volume_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       volume_ratio
+      vector_index:     5
+  volume_spike:
+    id:        FM-063
+    version:   1
+    lifecycle: registered
+    computation_class: rolling_stateful
+    formula:   "volume_ratio > rolling(<feature_pipeline.volume_spike_adaptive_window>, min_periods=<feature_pipeline.volume_spike_min_samples>).quantile(<feature_pipeline.volume_spike_percentile>/100); where that threshold is NaN fall back to <feature_pipeline.volume_spike_fixed_fallback> -> int8 {0, 1}  # defaults 50, 20, 75, 1.5"
+    config_keys: [feature_pipeline.volume_spike_adaptive_window, feature_pipeline.volume_spike_min_samples, feature_pipeline.volume_spike_percentile, feature_pipeline.volume_spike_fixed_fallback]
+    impl:      feature_pipeline.promote_volume_spike
+    depends_on: [volume_ratio]
+    lookback:  50
+    lookback_config_key: feature_pipeline.volume_spike_adaptive_window
+    bounds:    "{0, 1}"
+    active:    true
+    taxonomy:
+      category:        Volume
+      knowledge_class: Heuristic
+    semantics:
+      description:   "Whether volume_ratio exceeds an ADAPTIVE trailing percentile of its own distribution."
+      why_it_exists: "A fixed multiple is not portable across instruments with different volume characteristics. Ranking each bar against the instrument's own recent distribution makes 'spike' mean the same thing everywhere."
+      interpretation:
+        high: "1 — participation in the top quantile of this instrument's recent behaviour."
+        low:  "0 — ordinary participation."
+        caveat: "HEURISTIC on two counts: the percentile cut is a judgement call, and during warmup (fewer than min_samples) it silently falls back to a FIXED multiple — so early bars use a different rule than later ones. Emitted twice in the pipeline: seeded with the fixed rule in compute_volume_features, then OVERWRITTEN by this adaptive form in promote_volume_spike. This entry declares the final emitted value."
+    states:
+      - name:        NoSpike
+        value:       0
+        condition:   "volume_ratio <= the adaptive threshold (or the fixed fallback during warmup)"
+        description: "Participation is unremarkable for this instrument."
+      - name:        VolumeSpike
+        value:       1
+        condition:   "volume_ratio > the adaptive percentile threshold"
+        description: "Participation is in the upper tail of the instrument's own recent distribution."
+    lineage:
+      derivation_depth: 2
+      produced_by:      feature_pipeline.promote_volume_spike
+      consumed_by:      [UNKNOWN]
+      vector_key:       volume_spike
+      vector_index:     38
+  candles_since_retest:
+    id:        FM-065
+    version:   1
+    lifecycle: registered
+    computation_class: rolling_stateful
+    formula:   "cumcount of bars since the last liquidity_sweep event (groupby (liquidity_sweep != 0).cumsum()); 0 before the first sweep. Falls back to a retest_flag-keyed grouping ONLY when liquidity_sweep is absent from the frame (feature_pipeline.py:988-991) — non-authoritative, unreachable in production per the certification ledger."
+    impl:      feature_pipeline.compute_canonical_temporal_features
+    depends_on: [liquidity_sweep]
+    units:     bars
+    active:    true
+    vector_key: candles_since_retest   # canonical index 35
+    note: >
+      REGISTERED 2026-07-31, closing a MODEL_INTENT_CHANGE-free path that was blocked on
+      2026-07-24 (see FM-070 below for the resolution). This entry is the PIPELINE's canonical
+      vector-slot quantity ONLY — bars since the last SWEEP event, matching what
+      CANONICAL_FEATURES index 35 actually emits and what the DAG/certification ledger have
+      always treated it as. It is NOT the CRT engine's live bars-since-RETEST-CANDLE quantity,
+      which historically was ALSO written under the bare name `candles_since_retest`
+      (config_layer/crt_engine_v2.py:1977,2056, a transient dict local to
+      approve()/approve_with_soft_conf(), consumed only by the BitNet legacy-6 encoder) —
+      exactly the FM-027/FM-028 (F-050/GD-001) name-collision pattern: intentional math on both
+      sides, colliding name. That distinct quantity is now separately registered as FM-070
+      `candles_since_retest_state`, and the CRT engine's two call sites were renamed to write
+      `candles_since_retest_state` internally, with an explicit legacy-name alias
+      (`_bn_in["candles_since_retest"] = ...`) at the BitNet call boundary ONLY — mirroring
+      CH-002's existing `retest_depth`/`disp_strength` aliasing for FM-027/FM-028. Zero behavior
+      change: the value fed to BitNet under the legacy key is numerically identical
+      (`current_candle_index - retest_candle_index`, unchanged); `use_bitnet` stays false on the
+      active config (F-004) so the path is presently inert either way.
+    taxonomy:
+      category:        Retest
+      knowledge_class: Statistical
+    semantics:
+      description:   "Bars elapsed since the most recent liquidity_sweep event; 0 before any sweep has occurred."
+      why_it_exists: "A recency/decay signal for how fresh a sweep-driven setup still is — the pipeline's counterpart to the CRT engine's own internal decay_factor (compute_decay_factor), computed from a different anchor (sweep vs. retest confirmation) for a different consumer (training vector vs. live scoring)."
+      interpretation:
+        high: "The last sweep was long ago — any retest/displacement built on it is stale."
+        low:  "A sweep just occurred — the setup is fresh."
+        caveat: "Do NOT conflate with the CRT engine's live `candles_since_retest_state` (FM-070) — same name historically, different anchor (sweep vs. retest candle), different producer, different consumer."
+    states: []
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_canonical_temporal_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       candles_since_retest
+      vector_index:     35
+  # ── FM-065/FM-070 resolution history (2026-07-24 → 2026-07-31) ─────────────────────────────
+  # DISCOVERED BY REGISTRATION, then withdrawn on 2026-07-24. Registering the name turned
+  # tests/test_feature_math_lint.py::test_floor_is_green RED on two sites:
+  #     config_layer/crt_engine_v2.py:1966 and :2045
+  #         features["candles_since_retest"] = state.current_candle_index - state.retest_candle_index
+  # That is a DIFFERENT QUANTITY from the pipeline's column of the same name:
+  #     CRT engine  — bars since the RETEST CANDLE  (matches what the name says)
+  #     pipeline    — bars since the last SWEEP     (feature_pipeline.py:988, cumcount over
+  #                                                  sweep-event groups; deliberately NOT keyed on
+  #                                                  retest_flag, which gave zero variance)
+  # So the vector slot's name describes the CRT quantity while carrying the pipeline quantity —
+  # exactly the FM-027/FM-028 (F-050 / GD-001) collision pattern: intentional math, colliding name.
+  #
+  # RESOLVED 2026-07-31: the CRT quantity is now registered under its own identity (FM-070
+  # `candles_since_retest_state` above), and `crt_engine_v2.py`'s two emission sites were renamed
+  # to write `candles_since_retest_state` internally, aliasing to the legacy key
+  # `candles_since_retest` only at the BitNet call boundary — the same CH-002 pattern already
+  # used for FM-027/FM-028 (`retest_depth`/`disp_strength`). No new GD pin was needed:
+  # `_ORIGINAL_BASELINE_IDS` (feature_math_lint.py) stays frozen at exactly 10 GD ids; this
+  # collision is resolved by a rename + a new FM id, not by a lint allowlist entry.
+  # `trend_strength`'s parallel collision (`core/engine_runner.py:151`, an unrelated local
+  # variable) is resolved the same way — see FM-064 above.
+  last_swing_high_price:
+    id:        FM-066
+    version:   1
+    lifecycle: registered
+    computation_class: rolling_stateful
+    formula:   "forward-fill of high where the centered swing-high pivot fired, then shifted by k = <feature_pipeline.swing_window> (FC1-A causal publication)  # default 2"
+    config_key: feature_pipeline.swing_window
+    impl:      feature_pipeline.compute_structure_liquidity
+    depends_on: [high, swing_high]
+    lookback:  2
+    units:     price_absolute
+    active:    true
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Structural
+    semantics:
+      description:   "Price level of the most recent confirmed swing high, carried forward until a new one confirms."
+      why_it_exists: "The structural REFERENCE LEVEL above the market. Every upside structure event — higher_high, bullish break, buy-side sweep — is measured against this."
+      interpretation:
+        high: "The overhead reference sits far above current price."
+        low:  "The reference is close — the market is near a known liquidity pool."
+        caveat: "NO VECTOR SLOT — an internal reference, registered so the structural chain grounds honestly. Carries the FC1-A k-bar publication delay of its parent pivot; consumers shift it AGAIN by 1 so the reference reflects pre-open state."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      feature_pipeline.compute_structure_liquidity
+      consumed_by:      [higher_high, break_of_structure, liquidity_sweep, liquidity_distance]
+      vector_key:       []
+      vector_index:     []
+  last_swing_low_price:
+    id:        FM-067
+    version:   1
+    lifecycle: registered
+    computation_class: rolling_stateful
+    formula:   "forward-fill of low where the centered swing-low pivot fired, then shifted by k = <feature_pipeline.swing_window> (FC1-A causal publication)  # default 2"
+    config_key: feature_pipeline.swing_window
+    impl:      feature_pipeline.compute_structure_liquidity
+    depends_on: [low, swing_low]
+    lookback:  2
+    units:     price_absolute
+    active:    true
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Structural
+    semantics:
+      description:   "Price level of the most recent confirmed swing low, carried forward until a new one confirms."
+      why_it_exists: "The structural REFERENCE LEVEL below the market — the mirror of FM-066 and the anchor for every downside structure event."
+      interpretation:
+        high: "The reference is close beneath price — near a known liquidity pool."
+        low:  "The supporting reference is far below."
+        caveat: "NO VECTOR SLOT — internal reference. Same FC1-A delay semantics as FM-066."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      feature_pipeline.compute_structure_liquidity
+      consumed_by:      [lower_low, break_of_structure, liquidity_sweep, liquidity_distance]
+      vector_key:       []
+      vector_index:     []
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TEMPORAL CONTEXT — calendar projections (Item-2, 2026-07-19)
+# ═══════════════════════════════════════════════════════════════════════════
+# A THIRD computation class. These are neither scalar market math (`derived_metrics`, whose impl
+# must resolve in FORMULA_REGISTRY and whose charter is "scalar float -> float" ATR/price-relative
+# quantities) nor windowed indicators (`rolling_indicators`, computation_class rolling/
+# rolling_stateful). They are per-bar projections of the bar's own timestamp — no window, no price
+# input. Declaring either of the existing classes would be a false statement, hence this section.
+# Like rolling_indicators they are EXEMPT from FORMULA_REGISTRY impl-resolution (the pipeline is
+# the computation authority); `impl` names that authority.
+temporal_context:
+  hour_of_day:
+    id:        FM-051
+    version:   1
+    lifecycle: registered
+    computation_class: calendar
+    formula:   "timestamp.dt.hour -> int8"
+    impl:      feature_pipeline.compute_context
+    depends_on: [timestamp]
+    bounds:    "[0, 23]"
+    active:    true
+    taxonomy:
+      category:        Time
+      knowledge_class: Structural
+    semantics:
+      description:   "UTC hour of the bar's own timestamp, 0-23."
+      why_it_exists: "The calendar root for session classification, and the raw handle for any time-of-day conditioning."
+      interpretation:
+        high: "Later in the UTC day."
+        low:  "Earlier in the UTC day."
+        caveat: "CYCLIC, not ordinal: hour 23 is adjacent to hour 0. Any model treating this as a linear magnitude is mis-reading it."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      feature_pipeline.compute_context
+      consumed_by:      [UNKNOWN]
+      vector_key:       hour_of_day
+      vector_index:     32
+  session:
+    id:        FM-052
+    version:   2                 # v2 (2026-07-22): 3-value hour partition -> 5-value window model
+    lifecycle: registered
+    computation_class: calendar
+    formula:   "window model over <feature_pipeline.session_windows_utc>, half-open [start, end): OVERLAP if in LONDON and NEWYORK; else NEWYORK; else LONDON; else ASIA; else CLOSED -> int8  # defaults ASIA [0,9) LONDON [7,16) NEWYORK [12,21)"
+    config_keys: [feature_pipeline.session_windows_utc]
+    impl:      features.session_classifier.classify_session_feature
+    depends_on: [hour_of_day]
+    bounds:    "{0, 1, 2, 3, 4}"   # ASIA, LONDON, NEWYORK, OVERLAP, CLOSED
+    active:    true
+    note: >
+      KNOWN 4-WAY COLLISION -- registering this name is precisely to put it under lint enforcement.
+      This entry is the PIPELINE's hour-bucket definition (cutoffs 8/16, feature_pipeline:463-464).
+      It is NOT dataset_integrity's session-aware tradability calendar (a different concept: market
+      open/closed for gap accounting), NOT inout.scanner.s06_scalping.session_hours_start/end
+      (7/17 -- same concept, DIFFERENT values, different module, not read by the pipeline), and
+      M16-WU-SESSION-ENCODING (P1, BLOCKS_ACTIVATION) records a further canonical-vs-consumer
+      encoding permutation against SESSION_MAP/dashboard. The hour cutoffs ARE config-driven via
+      config_keys above (session_asia_end_hour/session_london_end_hour) and the formula uses the
+      tokens. (CORRECTED 2026-07-19 per §6.2: this note previously asserted the cutoffs were
+      hardcoded and un-configurable, contradicting the declared config_keys at :550 -- a
+      documented-vs-actual drift now guarded by test_ontology_config_parity Rule F.)
+    taxonomy:
+      category:        Time
+      knowledge_class: Structural
+    semantics:
+      description:   "Which major trading session the bar falls in, under a 5-value window model that can express the London/New-York overlap and a no-session CLOSED state."
+      why_it_exists: "Liquidity and volatility are session-dependent. Encoding the session lets a model condition on WHO is trading rather than merely on the clock."
+      interpretation:
+        high: "Higher ordinals are not 'more' of anything — this is a NOMINAL category, not a magnitude."
+        low:  "Same: ordinal 0 (ASIA) is not 'less' than ordinal 2 (NEWYORK)."
+        caveat: "NOMINAL encoding in a float vector. A linear model reads a false ordering. Also: this is the FEATURE's session, deliberately separate from the session FILTER policy in CRTConfig.session_windows, and from three other same-named concepts (scanner 7/17, dataset_integrity calendar) — see the 4-way collision note above."
+    states:
+      - name:        ASIA
+        value:       0
+        condition:   "hour in ASIA window and not in LONDON or NEWYORK"
+        description: "Asian session — typically the lowest-liquidity, range-bound period."
+      - name:        LONDON
+        value:       1
+        condition:   "hour in LONDON window and not in NEWYORK"
+        description: "London session — first major liquidity injection of the day."
+      - name:        NEWYORK
+        value:       2
+        condition:   "hour in NEWYORK window and not simultaneously in LONDON"
+        description: "New York session — US participation without London."
+      - name:        OVERLAP
+        value:       3
+        condition:   "hour in BOTH the LONDON and NEWYORK windows"
+        description: "London/New-York overlap — the highest-liquidity window of the day. DERIVED, deliberately not configurable."
+      - name:        CLOSED
+        value:       4
+        condition:   "hour in no configured session window"
+        description: "No major session active — thin conditions. DERIVED, deliberately not configurable."
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.session_classifier.classify_session_feature
+      consumed_by:      [UNKNOWN]
+      vector_key:       session
+      vector_index:     31
+
+# ═══════════════════════════════════════════════════════════════════════════
+# STRUCTURAL STATES — event / classification identities (v1.4, 2026-07-24)
+# ═══════════════════════════════════════════════════════════════════════════
+# A FOURTH computation class. These are neither scalar market math (`derived_metrics`, whose impl
+# must resolve in FORMULA_REGISTRY and whose charter is scalar float -> float), nor windowed
+# indicators (`rolling_indicators`), nor calendar projections (`temporal_context`). They emit a
+# small ENUMERATED DOMAIN: a detection event or a classification, not a magnitude. Declaring any
+# existing class would be a false statement, which is precisely why `temporal_context` was created
+# for FM-051/052 rather than forcing them elsewhere — the same reasoning applies here.
+#
+# Like rolling_indicators and temporal_context they are EXEMPT from FORMULA_REGISTRY
+# impl-resolution (the pipeline is the computation authority); `impl` names that authority.
+#
+# EVERY entry here MUST carry a non-empty `states` block. That is the whole point of the section:
+# a bare `domain: {-1, 0, 1}` records the legal values but not what they MEAN, and the meaning is
+# what a future reader (or model consumer) actually needs. `condition` strings are DOCUMENTATION —
+# declarative only, never `eval`'d, exactly like `formula`.
+#
+# COVERAGE NOTE: these 8 identities close the vector->ontology gap for the structural/event slots
+# of CANONICAL_FEATURES. `retest_flag` has NO vector slot but is registered because FM-021
+# retest_depth is gated on it — without it that entry's dependency graph cannot ground.
+structural_states:
+  trend_bias:
+    id:        FM-054
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "sign(ema_fast - ema_slow) -> float32 {-1, 0, +1}"
+    impl:      feature_pipeline.compute_canonical_trend_features
+    depends_on: [ema_fast, ema_slow]
+    bounds:    "{-1, 0, 1}"
+    active:    true
+    taxonomy:
+      category:        Trend
+      knowledge_class: Structural
+    semantics:
+      description:   "Ternary direction of the fast EMA relative to the slow EMA."
+      why_it_exists: "Collapses the continuous ema_spread into the only question most consumers ask of it: which side of the trend are we on? Immune to the price-level scaling defect that afflicts FM-022, because only the SIGN is kept."
+      interpretation:
+        high: "+1 — short-term average above long-term: market aligned upward."
+        low:  "-1 — short-term below long-term: aligned downward. 0 means the EMAs are exactly equal (rare)."
+    states:
+      - name:        Bearish
+        value:       -1
+        condition:   "ema_fast < ema_slow"
+        description: "Fast EMA below slow EMA — the market is trading below its short-term trend reference."
+      - name:        Neutral
+        value:       0
+        condition:   "ema_fast == ema_slow"
+        description: "No separation between the EMAs — no directional alignment. Rare on real data."
+      - name:        Bullish
+        value:       1
+        condition:   "ema_fast > ema_slow"
+        description: "Fast EMA above slow EMA — the market is trading above its short-term trend reference."
+    lineage:
+      derivation_depth: 2
+      produced_by:      feature_pipeline.compute_canonical_trend_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       trend_bias
+      vector_index:     10
+  higher_high:
+    id:        FM-055
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "high > prev(last_swing_high_price) -> int8 {0, 1}; NaN reference compares False"
+    impl:      feature_pipeline.compute_structure_liquidity
+    depends_on: [high, last_swing_high_price]
+    bounds:    "{0, 1}"
+    active:    true
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Structural
+    semantics:
+      description:   "Whether this bar's high exceeded the previous confirmed swing high."
+      why_it_exists: "The elementary bullish structure event. A sequence of higher highs is the definition of an uptrend in structural terms, independent of any moving average."
+      interpretation:
+        high: "1 — structure extended upward past the last reference high."
+        low:  "0 — no upward structural extension."
+    states:
+      - name:        NoHigherHigh
+        value:       0
+        condition:   "high <= previous last_swing_high_price, or no reference exists yet"
+        description: "Structure has not extended upward on this bar."
+      - name:        HigherHigh
+        value:       1
+        condition:   "high > previous last_swing_high_price"
+        description: "Price took out the prior structural high — bullish structural extension."
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_structure_liquidity
+      consumed_by:      [UNKNOWN]
+      vector_key:       higher_high
+      vector_index:     25
+  lower_low:
+    id:        FM-056
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "low < prev(last_swing_low_price) -> int8 {0, 1}; NaN reference compares False"
+    impl:      feature_pipeline.compute_structure_liquidity
+    depends_on: [low, last_swing_low_price]
+    bounds:    "{0, 1}"
+    active:    true
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Structural
+    semantics:
+      description:   "Whether this bar's low undercut the previous confirmed swing low."
+      why_it_exists: "The elementary bearish structure event — the mirror of higher_high, and the other half of structural trend definition."
+      interpretation:
+        high: "1 — structure extended downward past the last reference low."
+        low:  "0 — no downward structural extension."
+    states:
+      - name:        NoLowerLow
+        value:       0
+        condition:   "low >= previous last_swing_low_price, or no reference exists yet"
+        description: "Structure has not extended downward on this bar."
+      - name:        LowerLow
+        value:       1
+        condition:   "low < previous last_swing_low_price"
+        description: "Price took out the prior structural low — bearish structural extension."
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_structure_liquidity
+      consumed_by:      [UNKNOWN]
+      vector_key:       lower_low
+      vector_index:     26
+  break_of_structure:
+    id:        FM-057
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "+1 if close > prev(last_swing_high_price); -1 if close < prev(last_swing_low_price); else 0 -> int8"
+    impl:      feature_pipeline.compute_structure_liquidity
+    depends_on: [close, last_swing_high_price, last_swing_low_price]
+    bounds:    "{-1, 0, 1}"
+    active:    true
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Structural
+    semantics:
+      description:   "Directional break of structure, decided on the CLOSE rather than the extreme."
+      why_it_exists: "Distinguishes a genuine structural break from a wick through the level. Closing beyond a reference means the market accepted the new price; merely trading through it does not."
+      interpretation:
+        high: "+1 — bullish break: closed above the prior structural high."
+        low:  "-1 — bearish break: closed below the prior structural low. 0 means no break."
+        caveat: "CLOSE-based by design. This is what separates it from liquidity_sweep, which requires the close to come BACK inside — the two are mutually exclusive on the same reference."
+    states:
+      - name:        BearishBreak
+        value:       -1
+        condition:   "close < previous last_swing_low_price"
+        description: "Accepted below prior structural support — bearish structural shift."
+      - name:        NoBreak
+        value:       0
+        condition:   "close within the prior structural range"
+        description: "Structure intact; no accepted break in either direction."
+      - name:        BullishBreak
+        value:       1
+        condition:   "close > previous last_swing_high_price"
+        description: "Accepted above prior structural resistance — bullish structural shift."
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_structure_liquidity
+      consumed_by:      [UNKNOWN]
+      vector_key:       break_of_structure
+      vector_index:     22
+  liquidity_sweep:
+    id:        FM-058
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "+1 if high > ref_high and close <= ref_high; -1 if low < ref_low and close >= ref_low; else 0 -> int8   # ref_* = prev(last_swing_*_price)"
+    impl:      feature_pipeline.compute_structure_liquidity
+    depends_on: [high, low, close, last_swing_high_price, last_swing_low_price]
+    bounds:    "{-1, 0, 1}"
+    active:    true
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Structural
+    semantics:
+      description:   "A stop-run: price traded THROUGH a structural reference but closed back inside it."
+      why_it_exists: "The founding event of the CRT ontology. Resting stops sit beyond swing points; a sweep is the market reaching them and rejecting the level, which is a fundamentally different act from accepting a break."
+      interpretation:
+        high: "+1 — buy-side sweep: the high ran stops above the prior swing high, then closed back below it."
+        low:  "-1 — sell-side sweep: the low ran stops below the prior swing low, then closed back above it. 0 means no sweep."
+        caveat: "MUTUALLY EXCLUSIVE with break_of_structure on the same reference: a sweep requires the close to return inside, a break requires it to stay outside. Sign convention is by WHICH SIDE was swept, not by resulting direction."
+    states:
+      - name:        SellSideSweep
+        value:       -1
+        condition:   "low < ref_low and close >= ref_low"
+        description: "Sell-side liquidity taken below the prior swing low, then rejected — often bullish in consequence."
+      - name:        NoSweep
+        value:       0
+        condition:   "neither sweep condition met"
+        description: "No stop-run on this bar."
+      - name:        BuySideSweep
+        value:       1
+        condition:   "high > ref_high and close <= ref_high"
+        description: "Buy-side liquidity taken above the prior swing high, then rejected — often bearish in consequence."
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_structure_liquidity
+      consumed_by:      [UNKNOWN]
+      vector_key:       liquidity_sweep
+      vector_index:     21
+  sweep_detected:
+    id:        FM-059
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "liquidity_sweep != 0 -> int8 {0, 1}"
+    impl:      feature_pipeline.compute_canonical_structure_features
+    depends_on: [liquidity_sweep]
+    bounds:    "{0, 1}"
+    active:    true
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Structural
+    semantics:
+      description:   "Direction-agnostic presence of a liquidity sweep on this bar."
+      why_it_exists: "Consumers that care WHETHER a sweep happened, not which side, would otherwise have to re-derive `!= 0` themselves — which is exactly the kind of re-derivation the ownership lint forbids."
+      interpretation:
+        high: "1 — a sweep occurred in some direction."
+        low:  "0 — no sweep."
+    states:
+      - name:        NoSweep
+        value:       0
+        condition:   "liquidity_sweep == 0"
+        description: "No stop-run detected on this bar."
+      - name:        SweepDetected
+        value:       1
+        condition:   "liquidity_sweep != 0"
+        description: "A stop-run occurred; consult liquidity_sweep for the side."
+    lineage:
+      derivation_depth: 4
+      produced_by:      feature_pipeline.compute_canonical_structure_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       sweep_detected
+      vector_index:     20
+  double_sweep:
+    id:        FM-060
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "any(liquidity_sweep > 0) and any(liquidity_sweep < 0) over rolling(<feature_pipeline.double_sweep_window>, min_periods=1) -> int8 {0, 1}  # default 5"
+    config_key: feature_pipeline.double_sweep_window
+    impl:      feature_pipeline.compute_canonical_structure_features
+    depends_on: [liquidity_sweep]
+    lookback:  5
+    bounds:    "{0, 1}"
+    active:    true
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Heuristic
+    semantics:
+      description:   "Both sweep directions observed within a short trailing window."
+      why_it_exists: "A two-sided stop-run is a trap signature: the market took liquidity above AND below in quick succession, which usually means neither side is in control."
+      interpretation:
+        high: "1 — both sides swept recently; a liquidity trap / whipsaw regime."
+        low:  "0 — at most one side swept in the window."
+        caveat: "HEURISTIC: the window length is a judgement call, not a mathematical truth. Widening it monotonically increases the flag rate."
+    states:
+      - name:        NoDoubleSweep
+        value:       0
+        condition:   "at most one sweep direction present in the trailing window"
+        description: "No two-sided liquidity event."
+      - name:        DoubleSweep
+        value:       1
+        condition:   "both a positive and a negative liquidity_sweep within the trailing window"
+        description: "Liquidity taken on both sides in quick succession — trap / whipsaw conditions."
+    lineage:
+      derivation_depth: 4
+      produced_by:      feature_pipeline.compute_canonical_structure_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       double_sweep
+      vector_index:     6
+  retest_flag:
+    id:        FM-061
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "rolling_any(liquidity_sweep != 0, <feature_pipeline.retest_lookback>) and abs(close - ema_fast) <= <feature_pipeline.retest_atr_band_mult> * atr * close -> int8 {0, 1}  # defaults 10, 1.0"
+    config_keys: [feature_pipeline.retest_lookback, feature_pipeline.retest_atr_band_mult]
+    impl:      feature_pipeline.compute_canonical_structure_features
+    depends_on: [liquidity_sweep, close, ema_fast, atr]
+    lookback:  10
+    bounds:    "{0, 1}"
+    active:    true
+    taxonomy:
+      category:        Retest
+      knowledge_class: Heuristic
+    semantics:
+      description:   "A recent sweep occurred AND price is currently within an ATR-scaled band of the fast EMA."
+      why_it_exists: "The CRT sequence needs a bar where price has returned to fair value after taking liquidity. This conjunction is that bar."
+      interpretation:
+        high: "1 — an active retest: liquidity was recently taken and price has come back to the reference."
+        low:  "0 — either no recent sweep, or price has not returned to the band."
+        caveat: "REGISTERED BUT NOT A VECTOR FEATURE — it has no CANONICAL_FEATURES slot. It is registered because FM-021 retest_depth is GATED on it (retest_depth is 0.0 wherever this is 0), so the dependency cannot ground without it. Heuristic: both the lookback and the band multiplier are judgement calls."
+    states:
+      - name:        NoRetest
+        value:       0
+        condition:   "no sweep within retest_lookback bars, or |close - ema_fast| outside the ATR band"
+        description: "No active retest. FM-021 retest_depth emits 0.0 on these bars."
+      - name:        RetestActive
+        value:       1
+        condition:   "sweep within retest_lookback bars AND |close - ema_fast| <= retest_atr_band_mult * atr * close"
+        description: "Price has returned to the fast-EMA reference after taking liquidity — FM-021 retest_depth is meaningful here."
+    lineage:
+      derivation_depth: 4
+      produced_by:      feature_pipeline.compute_canonical_structure_features
+      consumed_by:      [feature_pipeline.compute_canonical_temporal_features]
+      vector_key:       []
+      vector_index:     []
+  # ── Phase 2A (2026-07-24): EXISTING pipeline state columns, finally registered ───────────────
+  # These two were already computed, already config-driven, and already banded — they simply had
+  # no declared identity, so nothing bound their meaning and the ownership lint could not police
+  # their names. Registering them is CONSOLIDATION, not addition: no new math, no new config key,
+  # no pipeline edit. They also establish the layer-2 pattern the roadmap asks for —
+  # "Features measure. States interpret." — as SEPARATE identities rather than one entry doing
+  # both: FM-042 rsi_14 stays a continuous measurement, and its interpretation is FM-068 rsi_state.
+  rsi_state:
+    id:        FM-068
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "+1 if rsi_14 > <feature_pipeline.rsi_overbought>; -1 if rsi_14 < <feature_pipeline.rsi_oversold>; else 0 -> int8  # defaults 70, 30"
+    config_keys: [feature_pipeline.rsi_overbought, feature_pipeline.rsi_oversold]
+    impl:      feature_pipeline.compute_indicators
+    depends_on: [rsi_14]
+    bounds:    "{-1, 0, 1}"
+    active:    true
+    taxonomy:
+      category:        Momentum
+      knowledge_class: Heuristic
+    semantics:
+      description:   "Ternary interpretation of rsi_14 against its overbought/oversold thresholds."
+      why_it_exists: "Separates MEASUREMENT from INTERPRETATION: rsi_14 reports a number, this reports what the number means. Consumers that only need the verdict should not each re-apply the thresholds — that is how a shared cut silently becomes three different cuts."
+      interpretation:
+        high: "+1 — momentum is stretched to the upside by the configured cut."
+        low:  "-1 — stretched to the downside; 0 is the unremarkable middle band."
+        caveat: "HEURISTIC: 70/30 are conventional, not derived. They are TIER-3 BEHAVIORAL — tuning them changes this identity's output but does NOT redefine FM-042, whose formula does not mention them. Not a canonical vector slot."
+    states:
+      - name:        Oversold
+        value:       -1
+        condition:   "rsi_14 < rsi_oversold"
+        description: "Losses have dominated the window past the configured cut."
+      - name:        NeutralMomentum
+        value:       0
+        condition:   "rsi_oversold <= rsi_14 <= rsi_overbought"
+        description: "Neither side dominates — the majority band."
+      - name:        Overbought
+        value:       1
+        condition:   "rsi_14 > rsi_overbought"
+        description: "Gains have dominated the window past the configured cut."
+    lineage:
+      derivation_depth: 2
+      produced_by:      feature_pipeline.compute_indicators
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
+  displacement_flag:
+    id:        FM-069
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "body_size > candle_range * <feature_pipeline.displacement_strong_body_mult> and atr > 0 -> int8 {0, 1}  # default 0.6"
+    config_key: feature_pipeline.displacement_strong_body_mult
+    impl:      feature_pipeline.compute_canonical_structure_features
+    depends_on: [body_size, candle_range, atr]
+    bounds:    "{0, 1}"
+    active:    true
+    taxonomy:
+      category:        Volatility
+      knowledge_class: Heuristic
+    semantics:
+      description:   "Marks a candle whose body occupies more than the configured fraction of its range, on a bar with valid ATR."
+      why_it_exists: "The trap-first displacement marker: a conviction test expressed as a boolean so downstream structure logic does not each re-apply the body/range cut."
+      interpretation:
+        high: "1 — a decisive, body-dominated candle."
+        low:  "0 — the bar lacked body dominance, or ATR was unavailable."
+        caveat: "HEURISTIC and DISTINCT from FM-020 disp_strength (a continuous ATR-normalized magnitude) and from the CRT engine's own `body_ratio >= 0.70` displacement gate. Three related-but-different conviction tests; this is the pipeline's boolean one. Not a canonical vector slot."
+    states:
+      - name:        NoDisplacement
+        value:       0
+        condition:   "body_size <= candle_range * displacement_strong_body_mult, or atr <= 0"
+        description: "The bar is not body-dominated — no displacement marker."
+      - name:        Displacement
+        value:       1
+        condition:   "body_size > candle_range * displacement_strong_body_mult and atr > 0"
+        description: "Body-dominated candle — a conviction move by the configured cut."
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_canonical_structure_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
+
+# ═══════════════════════════════════════════════════════════════════════════
+# INDICATOR IDENTITIES — DESCRIPTIVE clarification of rolling indicators (B0/B1, 2026-07-12)
+# ═══════════════════════════════════════════════════════════════════════════
+# NOTE (2026-07-12 bottom-up cert): IND-001 atr / IND-002 rsi_14 were PROMOTED to first-class
+# registered identities FM-041 / FM-042 in `rolling_indicators` above. These descriptive entries are
+# retained for history (§6.2 rule 4); the registered entries are now authoritative.
+# Rolling indicators (ATR/RSI/MACD) are ALGORITHMS, explicitly OUT of the derived_metrics layer
+# (boundary freeze, see header). This section is DESCRIPTIVE ONLY — it does NOT register an executable
+# impl and grants no computation authority (the pipeline remains the sole computation authority).
+# It exists to make the SEMANTICS machine-readable and to CORRECT false declarations at an authoritative
+# source.
+#
+# SUPERSEDED comment (was: "Full FM-id registration + parity wiring is a separate architectural
+# review (deferred, B2/B3).") — WRONG as of 2026-07-19 (tracker C-1 / T-9). MACD was certified and
+# promoted by the L0–L6 successor programme WITHOUT a B2/B3 review: macd_line / macd_signal /
+# macd_hist are PROMOTED_PRODUCTION + BOUND_CANONICAL_VECTOR (indices 16/17/18) and registered as
+# FM-047 / FM-048 / FM-049 under `rolling_indicators`. ATR/RSI are FM-041/FM-042. This
+# `indicator_identities` block remains descriptive history only — do not treat it as the live
+# registration path. Residual for MACD is ontology-registration hygiene only (M16-WU-ONTOLOGY-
+# REGISTRATION P7, BLOCKS_ACTIVATION:false), not a deferred architectural review.
+# NOT iterated by the registry/lineage/lint (which scan only primitives/feature_compositions/
+# derived_metrics/rolling_indicators/temporal_context via their own section tuples).
+indicator_identities:
+  atr:
+    id:                 IND-001
+    versioning_status:  clarified_descriptive       # runtime math UNCHANGED (identity clarification only)
+    vector_key:         atr                          # CANONICAL_FEATURES index 13
+    smoothing_method:   SMA                          # simple rolling mean of True Range (NOT Wilder RMA)
+    lookback:           14
+    true_range:         "max(high-low, |high-prev_close|, |low-prev_close|)"
+    output:             close_relative               # atr_14_raw / close
+    normalization_basis: close
+    units:              dimensionless
+    computation_authority: "feature_pipeline.py compute_indicators (atr_14_raw) + compute_canonical_volatility_features (atr)"
+    false_claims_corrected: >
+      (2026-07-12) B1/F3 fresh-reproduced: production ATR == SMA-of-TR (maxdiff 0.0 vs SMA, 0.118 vs
+      Wilder). The identity `atr` is close-relative SMA-TR — NOT Wilder ATR and NOT absolute-price ATR.
+      Do not silently substitute Wilder smoothing (would change trained-artifact inputs + gate thresholds).
+  rsi_14:
+    id:                 IND-002
+    versioning_status:  clarified_descriptive
+    vector_key:         rsi_14                        # CANONICAL_FEATURES index 15
+    smoothing_method:   SMA                           # gain/loss are simple rolling(14).mean() — NOT Wilder EWMA
+    lookback:           14
+    output_scale:       [0, 100]
+    rs_form:            "avg_gain / (avg_loss + 1e-9)"
+    zero_loss_behavior: "1e-9 denominator guard -> RSI -> 100 (clipped)"
+    zero_gain_behavior: "RSI -> 0 (clipped)"
+    warmup_behavior:    "NaN for first 14 bars (rolling window) -> dropped by finalize()"
+    computation_authority: "feature_pipeline.py compute_indicators (rsi_14)"
+    false_claims_corrected: >
+      (2026-07-12) B1/F4 fresh-reproduced: production RSI uses SMA gain/loss (maxdiff 0.0 vs SMA, 35.8
+      vs Wilder). The docstring at feature_pipeline.py compute_indicators formerly asserted "Standard
+      Wilder formula" — CORRECTED same-turn to state SMA (behavior-neutral). RS *ratio form* is Wilder's;
+      the *averaging* is SMA. Do not silently substitute Wilder smoothing.
+
+# ═══════════════════════════════════════════════════════════════════════════
+# MIGRATION CANDIDATES — PROPOSED corrected identities (B0/B1, 2026-07-12) — NOT ACTIVE, NOT WIRED
+# ═══════════════════════════════════════════════════════════════════════════
+# SUPERSEDED_BY: derived_metrics.ema_spread_atr / derived_metrics.momentum_score_atr (2026-07-22).
+# Both proposals were promoted to first-class registered identities (same FM-030/FM-031 ids, same
+# formulas) with a real `impl` and a config selector. This block is RETAINED, not deleted, per
+# CLAUDE.md §6.2 rule 4 (preserve history) — it is the record of what was proposed on 2026-07-12
+# and is no longer the authority. Status below reads `proposed_correction`; the live status is
+# `active: false` + `config_key: feature_pipeline.normalization_basis` in derived_metrics.
+# Still true after promotion: NOT active, NOT what the production config emits, no vector slot; the
+# canonical vector is 39-dim (schema v4.0, 2026-07-22) and these identities add NO slot, order
+# unchanged. What CHANGED: the identity is now executable and measurable (shadow config) instead of
+# prose-only.
+# ═══════════════════════════════════════════════════════════════════════════
+# Explicit corrected formula identities for the FM-022/FM-023 dimensional-mix defect. These are
+# PROPOSALS with a machine-readable formula but NO registered impl and NO vector slot — they are NOT
+# executed anywhere. Activation is a FUTURE migration (B2+) gated on: retraining the (currently inactive)
+# rr_model / gaussian-38 artifacts AND recalibrating the active engine_runner thresholds
+# (dual_engine.trend_strength_threshold / momentum_threshold) that are tuned to the legacy price-scaled
+# magnitudes. NOT iterated by the registry/lineage/lint. The canonical vector is 39-dim (schema v4.0);
+# these add no slot, order unchanged.
+migration_candidates:
+  ema_spread_atr:
+    id:                 FM-030
+    replaces:           FM-022                        # ema_spread (legacy price-scaled)
+    status:             proposed_correction
+    active:             false
+    semantic_version:   "2.0-atr-absolute"
+    formula:            "(ema_fast - ema_slow) / (atr * close) if atr>0 and close>0 else nan"
+    units:              dimensionless                 # divides by ABSOLUTE atr (atr*close) -> scale-invariant
+    normalization_basis: atr_absolute
+    depends_on:         [ema_fast, ema_slow, atr, close]
+    migration_class:    FORMULA_CORRECTION
+    requires:           [retrain_inactive_artifacts, recalibrate_active_thresholds]
+    proof:              "scale-invariance verified in tests/test_b0b1_feature_semantic_migration.py"
+  momentum_score_atr:
+    id:                 FM-031
+    replaces:           FM-023                        # momentum_score (legacy price-scaled)
+    status:             proposed_correction
+    active:             false
+    semantic_version:   "2.0-atr-absolute"
+    formula:            "close_delta / (atr * close) if atr>0 and close>0 else nan"
+    units:              dimensionless
+    normalization_basis: atr_absolute
+    depends_on:         [close_delta, atr, close]
+    migration_class:    FORMULA_CORRECTION
+    requires:           [retrain_inactive_artifacts, recalibrate_active_thresholds]
+    proof:              "scale-invariance verified in tests/test_b0b1_feature_semantic_migration.py"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SEMANTIC REGISTRY SECTIONS (Canonical Market Ontology Evolution Contract, 2026-07-25)
+# ═══════════════════════════════════════════════════════════════════════════════
+# NON-frozen sibling sections (see spec_schema.semantic_registry). Validated by
+# features.registry.validate_semantic_registry; NEVER read on the runtime binding path or by
+# validate_registry. Every node carries the full spec_schema.semantic_node_required_fields set;
+# a field VALUE may be UNKNOWN / [] until discovered, never fabricated.
+#
+# CONTAMINATION CAVEAT (user directive 2026-07-25): the seed nodes below derive from a SINGLE
+# XAUUSD run and the SHADOW resolver, and some upstream numbers may carry F-022-class label
+# contamination. They are seeded at OBSERVED/UNKNOWN with modest confidence and explicit evidence
+# so they HELP future work without being trusted as certain truth. They grant NO production
+# authority (§6.5 — authority is earned only by measured G001).
+
+execution_behaviours:
+
+  expansion_dwell_divergence:
+    id:                     SEM-001
+    canonical_name:         EXPANSION_DWELL_DIVERGENCE
+    aliases:                []
+    semantic_category:      ExecutionBehaviour
+    knowledge_status:       OBSERVED
+    description:            "The shadow CRTStateResolver holds the EXPANSION state for far fewer bars than the authoritative CRT engine over the same corpus."
+    observed_behaviour:     "On XAUUSD M15 (run_20260724_104845), engine EXPANSION per-bar occupancy = 4,604 bars vs resolver EXPANSION = 1,125 bars (~4x under-production). Resolver also over-produces SHADOW_PENDING (254 vs 43) and RETEST (57 vs 17), consistent with cycling out of EXPANSION too early."
+    mathematical_definition: "delta = engine_state_distribution[EXPANSION] - resolver_counts[EXPANSION]; observed delta = +3,479 bars on the reference run."
+    units:                  bars
+    formula:                UNKNOWN
+    dependencies:           [SEM-002, SEM-003]
+    required_inputs:        [engine_state_distribution, resolver_counts]
+    produced_outputs:       [confusion_matrix_off_diagonal.EXPANSION_to_RANGE]
+    producers:              ["scripts/research/crt_state_confusion_matrix.py"]
+    consumers:              [UNKNOWN]
+    transitions:            []
+    validation_rules:       ["measured only after the Investigation-2 state_from reconstruction fix; a pre-fix engine axis under-counted EXPANSION and masked this gap"]
+    confidence:             Possible
+    evidence:               ["reports/crt_state_confusion_matrix.json (post-fix, 2026-07-25): engine EXPANSION=4604 resolver EXPANSION=1125", "assistant_project.md SESSION LOG 2026-07-25 (Investigation 2 regeneration)"]
+    origin:                 "crt-state shadow-consistency audit, Investigation 2 (2026-07-25)"
+    status:                 open
+    version:                1
+    owner:                  crt-state-program
+    traceability:           "crt_state_resolver.py (shadow) vs crt_engine_v2.py (authority); market_crt_states.yaml lifecycle thresholds"
+    notes:                  "CONTAMINATION CAVEAT: single XAUUSD run, shadow resolver. Root mechanism is UNKNOWN (see UNK-001). Descriptive only; grants no authority."
+    # Epistemic block (ENCOURAGED for OBSERVED) — the mechanism question is delegated to UNK-001.
+    epistemic:
+      known_invariants:
+        - "Measured after the Investigation-2 accounting correction; the pre-fix engine axis under-counted EXPANSION and had masked this gap."
+      unknown_mechanism: "The lifecycle cause of the occupancy gap is unresolved — tracked as UNK-001."
+      candidate_hypotheses: []
+      resolution_metric: "See UNK-001 (per-episode lifecycle comparison)."
+      falsification_conditions:
+        - "A re-run on a second instrument shows no engine-vs-resolver EXPANSION occupancy gap (would make the observation XAUUSD-specific or contamination-driven)."
+
+  htf_protection:
+    id:                     SEM-002
+    canonical_name:         HTF_PROTECTION
+    aliases:                [htf_protect_states]
+    semantic_category:      ExecutionBehaviour
+    knowledge_status:       CHARACTERIZED
+    description:            "On a higher-timeframe (HTF) window change the CRT engine does NOT reset an active EXPANSION or RETEST setup to RANGE; those states are protected and dwell across HTF boundaries."
+    observed_behaviour:     "Engine: HTF-boundary RESET is suppressed while current_state in {EXPANSION, RETEST} (and EXECUTION), so protected setups persist. The shadow resolver declares the same protect list (market_crt_states.yaml lifecycle.htf_protect_states) but under-replicates the resulting dwell (see SEM-001)."
+    mathematical_definition: "reset_applies(state, HTF_change) = (state not in {EXPANSION, RETEST, EXECUTION}); gap/forced resets are NOT protected."
+    units:                  boolean
+    formula:                "current_state in htf_protect_states => suppress HTF reset"
+    dependencies:           []
+    required_inputs:        [current_state, htf_window_id, reset_reason]
+    produced_outputs:       [reset_suppressed]
+    producers:              ["src/config_layer/crt_engine_v2.py (HTF reset logic)", "src/features/crt_state_resolver.py (_apply_lifecycle_resets)"]
+    consumers:              [SEM-001]
+    transitions:            ["EXPANSION -> EXPANSION (HTF change, protected)", "RETEST -> RETEST (HTF change, protected)"]
+    validation_rules:       ["gap and forced resets ALWAYS terminate the narrative, including EXPANSION (only HTF-boundary resets are protected)"]
+    confidence:             Likely
+    evidence:               ["src/config_layer/crt_engine_v2.py htf_protect handling", "configs/formulas/market_crt_states.yaml thresholds.lifecycle.htf_protect_states=[EXPANSION, RETEST] + htf_protect_execution=true"]
+    origin:                 "crt-state shadow-consistency audit (2026-07-25)"
+    status:                 characterized_engine_side
+    version:                1
+    owner:                  crt-state-program
+    traceability:           "engine htf_protect_states vs resolver _apply_lifecycle_resets htf_protect_states"
+    notes:                  "Engine side proven from source; the resolver's fidelity to it is the open gap (SEM-001 / UNK-001)."
+
+  liquidity_score_volume_component_dead:
+    id:                     SEM-004
+    canonical_name:         LIQUIDITY_SCORE_VOLUME_COMPONENT_STRUCTURALLY_DEAD
+    aliases:                [gate_intelligence_vol_score, H7]
+    semantic_category:      ExecutionBehaviour
+    knowledge_status:       CHARACTERIZED
+    description:            "GateIntelligence._liquidity_score's participation half (vol_score, declared 50% weight) is a structural constant zero on every live and backtest bar, because its sole input (volume_ma20) is never emitted by either production feature builder."
+    observed_behaviour:     "vol_score = min(1.0, max(0.0, (vol/vm20)/2.0)) if vm20 > 0 else 0.0 (src/core/gate_intelligence.py:270-278). vm20 = features.get('volume_ma20', 0.0) always defaults to 0.0: grep-confirmed absent from both src/runtime/live_engine_hook.py and src/runtime/backtest_v2.py, the only two production feature builders. volume_ma20 exists ONLY as an intermediate pipeline column (feature_pipeline.py:432, non-canonical, no vector slot) and as a hardcoded test fixture (config_layer/execution_planner.py:502). Consequence: _liquidity_score always resolves to 0.5*sweep_score exactly (line 281/286), never the documented '0.5*sweep_score + 0.5*vol_score' blend."
+    mathematical_definition: "vol_score(features) = 0.0 for all features reachable from either production feature builder, by construction (the key volume_ma20 is never present in that dict)."
+    units:                  score_0_1
+    formula:                "vol_score := (vol/vm20)/2.0 clipped [0,1] if vm20>0 else 0.0; vm20 is unreachable in production, so vol_score is always 0.0"
+    dependencies:           []
+    required_inputs:        [volume, volume_ma20]
+    produced_outputs:       [liquidity_score]
+    producers:              ["src/core/gate_intelligence.py::GateIntelligence._liquidity_score"]
+    consumers:              ["src/core/gate_intelligence.py::GateIntelligence.decide (gate_weight_liquidity=0.20)"]
+    transitions:            []
+    validation_rules:       ["A fix (emitting volume_ma20 from a production feature builder) changes live decision-path scores on every bar — NOT a declarative/hash-neutral change; requires a separate authorized behavior-change program, not a documentation pass."]
+    confidence:             Certain
+    evidence:               ["src/core/gate_intelligence.py:270-278", "src/runtime/live_engine_hook.py (grep: no volume_ma20 occurrence)", "src/runtime/backtest_v2.py (grep: no volume_ma20 occurrence)", "src/features/feature_pipeline.py:432 (volume_ma20 computed but non-canonical)", "src/config_layer/execution_planner.py:46,502 (_OPTIONAL_FEATURE_KEYS + hardcoded test fixture only)"]
+    origin:                 "Semantic Layer Certification Audit (2026-07-31), finding H7"
+    status:                 open
+    version:                1
+    owner:                  semantic-layer-audit
+    traceability:           "gate_intelligence.py::_liquidity_score -> GateIntelligence.decide -> EngineRunner composite decision"
+    notes:                  "Declaration only (this entry) -- no code changed. See also H8 / market_crt_states.yaml volume_spike (a sibling reachability gap in the CRT state resolver's predicate set, not the same mechanism)."
+
+  mt5_session_timestamp_domain_mislabel:
+    id:                     SEM-005
+    canonical_name:         SESSION_HOUR_OF_DAY_TIMESTAMP_DOMAIN_MISLABEL
+    aliases:                [F-066, broker_local_vs_utc, session_timestamp_basis]
+    semantic_category:      ExecutionBehaviour
+    knowledge_status:       MATHEMATICALLY_DEFINED
+    description:            "session/hour_of_day (FM-052) on MT5-sourced corpora are derived from broker-server time labeled UTC, not true UTC as session_windows_utc's name and session_classifier.py's docstring claim. 53.36% of XAUUSD bars carry the wrong session label under the legacy derivation."
+    observed_behaviour:     "src/inout/mt5_candle_fetcher.py:186 calls datetime.fromtimestamp(r['time'], tz=timezone.utc) on MT5 copy_rates' 'time' field, a documented broker-server epoch. Two independent tests confirm: (A) cross-correlating XAUUSD's 15-min realized-range profile against Binance BTCUSDT (true-UTC klines) finds best alignment shift exactly -3h00m Apr-Sep (r=0.675) / -2h00m Nov-Feb (r=0.709) -- on-the-hour, differing by exactly the DST step; (B) NFP release (08:30 America/New_York) lands at the same server time (15:30) in both seasons -- season-invariance an EET/EEST server predicts, true-UTC stamps would alternate 12:30/13:30. The server tracks US (America/New_York) DST transitions, not EU: the daily 01:00->23:45 boundary holds through the 2025-03-10..27 / 2025-10-27..31 / 2024-10-28..11-01 US/EU DST-mismatch weeks."
+    mathematical_definition: "ts_utc = ts_broker - offset(date), offset(d) = 3h if America/New_York observes DST at local noon on d else 2h. Implemented in src/features/broker_clock.py::mt5_server_to_utc."
+    units:                  hours_offset
+    formula:                "offset(d) in {2,3}, selected by America/New_York DST status at noon on calendar date d (never the 2AM transition-ambiguous instant)"
+    dependencies:           []
+    required_inputs:        [timestamp]
+    produced_outputs:       [hour_of_day, session]
+    producers:              ["src/features/broker_clock.py::mt5_server_to_utc", "src/features/feature_pipeline.py::compute_context (session_timestamp_basis selector)"]
+    consumers:              ["src/features/session_classifier.py (FM-052 session/hour_of_day)", "FM-052 downstream: engine_runner.allowed_sessions, crt_engine.session_windows (FILTER surface -- deliberately NOT re-based, see notes)"]
+    transitions:            []
+    validation_rules:       ["raw `timestamp` column must never be mutated by either session_timestamp_basis arm -- OHLCV identity/hashing must stay byte-identical", "utc_corrected must only be applied to MT5-sourced frames; it has no provenance detection and would corrupt an already-true-UTC corpus (e.g. Binance) if misapplied -- tests/test_session_timestamp_basis.py pins this as a regression, not just a comment"]
+    confidence:             Certain
+    evidence:               ["src/inout/mt5_candle_fetcher.py:186", "data/mt5/XAUUSD_M15.csv 516-day boundary census (2026-08-01 session)", "cross-correlation vs data/binance/BTCUSDT_M15.csv", "NFP first-Friday release-bar alignment census", "tests/test_session_timestamp_basis.py"]
+    origin:                 "Blind-label descriptive-fidelity investigation (2026-08-01), preparing a chart-comparison prompt"
+    status:                 shipped_config_gated_inactive
+    version:                1
+    owner:                  claude
+    traceability:           "mt5_candle_fetcher.py (raw ingestion) -> broker_clock.py (conversion) -> feature_pipeline.py compute_context (selector) -> session_classifier.py (FM-052 encoding)"
+    notes:                  "Two surfaces, deliberately NOT treated the same. The FEATURE (session_windows_utc) is a mislabel -- corrected, config-gated (feature_pipeline.session_timestamp_basis: broker_local DEFAULT / utc_corrected opt-in), default stays byte-identical (F-061/normalization_basis pattern). The FILTER (crt_engine.session_windows, the live trading-eligibility gate) was empirically tuned ON broker-time data; re-basing its timestamps while keeping its band numbers would silently move the actually-traded hours by 2-3h, and a static band cannot compensate a seasonal offset -- left untouched, a separate economic decision. Binance-sourced corpora (F-017/F-021's BNBUSDT base) are UNAFFECTED -- their epochs are genuinely UTC already. Activating utc_corrected on the ACTIVE production config is a separate, explicitly-gated decision (freeze-pin re-certification required) -- NOT made by this registration. See F-066 in docs/current-findings.md for the full evidence record."
+
+  soft_confirmation_double_ema_update:
+    id:                     SEM-006
+    canonical_name:         SOFT_CONFIRMATION_DOUBLE_EMA_UPDATE
+    aliases:                [F-067, double_ema_update, alpha_eff_compression]
+    semantic_category:      ExecutionBehaviour
+    knowledge_status:       MATHEMATICALLY_DEFINED
+    description:            "EngineState.update_emas is called twice on the same candle close during the RETEST/soft-confirmation window -- once unconditionally at the top of process_candle, once inside the evaluating_soft_conf branch (there is no RETEST state branch, so every confirmation candle falls through to it). Re-applying the same update is mathematically equivalent to ONE update at an effective smoothing coefficient alpha_eff = 2*alpha - alpha**2, not to nested composition (a prior bug-trace's EMA(EMA(close)) characterization)."
+    observed_behaviour:     "On the full XAUUSD M15 corpus (47,275 bars, config v2_multi_2026_04): 17 soft-confirmation evaluations. Trend-only mean spread ratio (double-update / single-update) = 0.4673 (n=10), matching the closed-form prediction (~0.457-0.467 for ema_fast=2/ema_slow=5). Chop-only ratio = 0.9698 (n=7) -- the toy alternating-series inflation prediction (~1.34x) did NOT replicate on real data; real chop includes near-zero EMA crossings that can sign-flip between arms rather than scale (e.g. candle_index=37273), so it is reported as observed, not forced to the pre-registered toy figure. 0/17 tier-bucket flips -- ledger-neutral on this corpus (all three historically-approved soft-conf candidates on the 8-week freeze slice were separately killed by the discount/premium zone filter, unrelated to this mechanism)."
+    mathematical_definition: "alpha = 2/(period+1); applying the EMA update twice with the same close: ema' = close*alpha + (close*alpha + ema*(1-alpha))*(1-alpha) = close*alpha_eff + ema*(1-alpha_eff), alpha_eff = 2*alpha - alpha**2. For ema_fast=2 (alpha=2/3): alpha_eff=8/9 (effective span 1.25, not 2). For ema_slow=5 (alpha=2/6): alpha_eff=5/9 (effective span 2.6, not 5)."
+    units:                  dimensionless
+    formula:                "f_mom = clip((ema_fast - ema_slow) * dir_mult / atr_abs, 0, 1), where ema_fast/ema_slow are the DOUBLE-updated (alpha_eff) trajectories, not the configured alpha"
+    dependencies:           []
+    required_inputs:        [ema_fast_val, ema_slow_val, atr_abs, direction]
+    produced_outputs:       [f_mom, soft_confirmation_score_C, fusion_score_S]
+    producers:              ["src/config_layer/crt_engine_v2.py:291 EngineState.update_emas", "src/config_layer/crt_engine_v2.py:2629 (call site A, unconditional)", "src/config_layer/crt_engine_v2.py:2998 (call site B, inside evaluating_soft_conf)"]
+    consumers:              ["src/config_layer/crt_engine_v2.py:1898 UltronRiskEngine.compute_soft_confirmation (reads at :1919)", "src/config_layer/crt_engine_v2.py:1953 approve_with_soft_conf (S vs tier_1/tier_2 thresholds)"]
+    transitions:            []
+    validation_rules:       ["a probe or fix touching this mechanism must reproduce compute_soft_confirmation byte-exactly when fed the SAME ema values it reads (tests/test_soft_conf_ema_probe.py self-consistency battery)", "the closed-form alpha_eff prediction is a MECHANISM claim, not an economic one -- do not cite the trend-compression ratio as evidence of a G001 improvement without a fresh measurement"]
+    confidence:             Certain
+    evidence:               ["results/analysis/soft_conf_ema_double_update.LATEST.json (n=17, self_consistency_err=0.0)", "tests/test_soft_conf_ema_probe.py (12 tests, closed-form + corpus self-consistency)", "docs/current-findings.md F-067"]
+    origin:                 "Source-verification of a multi-model (grok/deepseek) bug trace, 2026-08-04 -- the trace's mechanism and direction were both backwards and are corrected here, not just in chat (CLAUDE.md Epistemic Integrity correction discipline)"
+    status:                 measured_no_fix_applied
+    version:                1
+    owner:                  claude
+    traceability:           "update_emas (:291) -> two call sites (:2629, :2998) -> compute_soft_confirmation (:1898) -> approve_with_soft_conf (:1953) -> tier bucket -> TRADE_OPENED/FILTER_REJECTED"
+    notes:                  "OBSERVATION_ONLY per user decision ('measure first, fix after') -- no src/ edit landed with this registration. Whether to remove the duplicate call at :2998 is a separate BEHAVIOR_CHANGE_AUTHORIZED turn. Grants NO authority (SS6.5) -- the trend-compression confirmation is mechanism evidence, not an economic G001 result; n=17 is thin (XAUUSD throughput ceiling, consistent with F-035/F-045-class corpus limits)."
+    epistemic:
+      known_invariants:
+        - "Both call sites are real and unconditional on every soft-confirmation-window candle (source-verified, not a comment/log-string inference)."
+        - "Double-application is mathematically alpha_eff = 2*alpha - alpha**2 (exact closed form, verified to 1e-12 in tests/test_soft_conf_ema_probe.py), NOT nested composition EMA(EMA(close))."
+        - "Trend-only spread compression is confirmed on the full XAUUSD corpus (ratio 0.4673, n=10) and matches the closed-form prediction."
+      unknown_mechanism: "Whether removing the duplicate call would improve, degrade, or leave unchanged any real economic outcome is unmeasured -- XAUUSD gives only n=17 soft-conf evaluations and 1 total_setup on the full corpus, so no fix-vs-no-fix economic comparison is currently constructible on this instrument. The chop-regime prediction (toy alternating-series inflation ~1.34x) also did not replicate on real corpus chop (observed 0.9698) -- the mechanism for why real chop behaves differently from the idealized toy series (near-zero-spread sign flips) is not fully characterized."
+      candidate_hypotheses:
+        - "Removing the duplicate call (single update per candle) would make f_mom track true momentum more faithfully, plausibly changing the S-score vector meaningfully on instruments with more soft-conf throughput than XAUUSD."
+        - "The effect is economically negligible in practice because the RETEST/soft-conf window is already rare and short-lived (soft_conf_max_candles=3), so any single-candle EMA distortion self-corrects within the window before it can change many decisions."
+      resolution_metric: "A fix-vs-no-fix A/B ledger comparison on an instrument with enough soft-conf throughput to be decisive (XAUUSD alone is insufficient at n=17/1-setup); OR a forward-looking S-score sensitivity analysis across the historical BNBUSDT/ETHUSDT/BTCUSDT/SOLUSDT corpora used in F-019 onward."
+      falsification_conditions:
+        - "A same-method re-run on a higher-throughput instrument shows near-zero trend-compression ratio (would mean the XAUUSD result was instrument-specific, not a general property of the alpha_eff mechanism)."
+        - "A fix-vs-no-fix ledger A/B shows the duplicate call is net-neutral or net-positive for realized economics (would mean the mechanism, though real, carries no correctness argument for removal)."
+
+  shadow_ttl_created_bar_off_by_one:
+    id:                     SEM-007
+    canonical_name:         SHADOW_TTL_CREATED_BAR_OFF_BY_ONE
+    aliases:                [F-068, pending_displacement_created_idx, deadlock_fix_ttl_interaction]
+    semantic_category:      ExecutionBehaviour
+    knowledge_status:       VALIDATED
+    description:            "reset_to_range's [DEADLOCK FIX] fall-through (deliberate -- lets a sweep fire on the freshly-seeded range on the SAME candle rather than losing a bar) means that when an HTF-triggered reset creates shadow displacement memory, the RANGE branch of process_candle runs on that SAME candle immediately after creation. Pre-fix, that branch unconditionally decremented pending_displacement_ttl there too, so a configured TTL of N yielded only N-1 usable subsequent bars."
+    observed_behaviour:     "XAUUSD full-corpus (47,275 bars) before/after the fix: SHADOW_PENDING resumptions 43 -> 51 (+8), SWEEP 6995 -> 6987 (-8), DISPLACEMENT/EXPANSION/RETEST/EXECUTION/RANGE/total_setups byte-identical. test_shadow_survives_configured_ttl_then_expires verified to FAIL against the pre-fix guard (temporarily reverted, observed sequence [2,1,0,0] vs the expected [3,2,1,0], restored)."
+    mathematical_definition: "pre-fix: ttl(bar_0)=N-1, ttl(bar_k)=max(N-1-k,0) for k>=0 relative to the creating bar. post-fix: ttl(bar_0)=N (unchanged), ttl(bar_k)=max(N-k,0) for k>=1. The creating bar (k=0) is now excluded from the decrement via pending_displacement_created_idx == candle.index."
+    units:                  bars
+    formula:                "decrement condition: pending_displacement_ttl > 0 AND candle.index != pending_displacement_created_idx"
+    dependencies:           []
+    required_inputs:        [pending_displacement_ttl, pending_displacement_created_idx, candle.index]
+    produced_outputs:       [pending_displacement_ttl, SHADOW_PENDING_resumption_eligibility]
+    producers:              ["src/config_layer/crt_engine_v2.py:1734 _create_shadow (reset_to_range)", "src/config_layer/crt_engine_v2.py:2700-2701 RANGE-branch decrement guard"]
+    consumers:              ["src/config_layer/crt_engine_v2.py RANGE branch sweep-resume check (try_range_to_shadow_pending)", "src/config_layer/crt_engine_v2.py:2856 consumed-path teardown (try_shadow_pending_to_expansion)"]
+    transitions:            ["RANGE -> SHADOW_PENDING (matching-direction sweep while pending_displacement_ttl > 0, including on the bar TTL would otherwise hit its last surviving decrement)"]
+    validation_rules:       ["pending_displacement_created_idx must be cleared on every teardown path that clears pending_displacement_ttl (consumed, SHADOW_LEAK, TTL-exhaustion, non-HTF-reset expiry) -- no fifth stale field"]
+    confidence:             Certain
+    evidence:               ["tests/test_shadow_ttl_lifecycle.py (6 tests, includes the pre-fix-must-fail verification)", "results/ttl_before vs results/ttl_after XAUUSD state_distribution diff", "docs/current-findings.md F-068"]
+    origin:                 "Source-verification of a multi-model (grok/deepseek) bug trace, 2026-08-04 -- the trace's claim that this was mitigated by an existing code comment was checked and found false"
+    status:                 shipped
+    version:                1
+    owner:                  claude
+    traceability:           "reset_to_range :1734 (create) -> process_candle RANGE branch :2700-2701 (guard) -> try_range_to_shadow_pending (resume) -> try_shadow_pending_to_expansion :2856 (consume/clear)"
+    notes:                  "Correctness-only fix; no economic claim. total_setups is unchanged at 1 on the full XAUUSD corpus -- at that N, no economic conclusion (positive or negative) is derivable from this fix; the state-distribution delta (+8 SHADOW_PENDING resumptions) is the complete, honest result. A prior bug-trace rated this defect 'Low' severity based on a code comment ('same bar burns 1') that does not exist in crt_engine_v2.py -- CORRECTED: the comment existed only in a prior session's assistant_project.md entry, never in source; the fix adds the comment the claim assumed was already there. Grants NO authority beyond the correctness fix itself (SS6.5)."
+
+invariants:
+
+  state_occupancy_vs_dwell_span:
+    id:                     SEM-003
+    canonical_name:         STATE_OCCUPANCY_VS_DWELL_SPAN
+    aliases:                []
+    semantic_category:      Invariant
+    knowledge_status:       MATHEMATICALLY_DEFINED
+    description:            "Per-bar STATE OCCUPANCY and candidate-lifetime DWELL SPAN are DISTINCT quantities and must never be equated or cross-substituted."
+    observed_behaviour:     "For EXPANSION on the reference run: occupancy (state_distribution) = 4,605 bars; dwell-span (expansion_dwell_stats sum) ~= 6,105; they differ by ~1,500 because dwell-span is an index span of a candidate lifetime that includes bars the engine's current_state was NOT EXPANSION. Conflating them was the Investigation-2 accounting drift."
+    mathematical_definition: "occupancy(S) = count(bar : prev_state(bar) == S)  [backtest_v2.py:2106-2109]; dwell_span(episode) = episode_end_idx - episode_start_idx  [crt_engine_v2.py:500]. occupancy != sum(dwell_span) in general."
+    units:                  bars
+    formula:                "occupancy(S) = sum over bars of [current_state == S]; dwell_span = end_idx - start_idx"
+    dependencies:           []
+    required_inputs:        [state_distribution, expansion_dwell_stats]
+    produced_outputs:       [reconciliation_check]
+    producers:              ["src/runtime/backtest_v2.py (state_counts)", "src/config_layer/crt_engine_v2.py (expansion_dwell_stats)"]
+    consumers:              ["scripts/research/crt_state_confusion_matrix.py"]
+    transitions:            []
+    validation_rules:       ["NEVER set reference[RESOLUTION]=reference[EXECUTION] or otherwise synthesize occupancy from a different metric (the removed :776-777 fabrication)", "a reporting path claiming 'time in state S' must state whether it means occupancy or dwell-span"]
+    confidence:             Certain
+    evidence:               ["assistant_project.md SESSION LOG 2026-07-25 (Investigation 2)", "reports/crt_state_confusion_matrix.md root-cause note", "tests/test_crt_confusion_reconstruction.py"]
+    origin:                 "Investigation 2 accounting-drift root cause (2026-07-25)"
+    status:                 active
+    version:                1
+    owner:                  crt-state-program
+    traceability:           "backtest_v2.py:2106-2109 (occupancy) vs crt_engine_v2.py:500 (dwell span)"
+    notes:                  "Both formulas are known and proven; this is a definitional invariant, not a contaminated measurement."
+
+canonical_unknowns:
+
+  unknown_expansion_occupancy_gap_mechanism:
+    id:                     UNK-001
+    canonical_name:         UNKNOWN_EXECUTION_BEHAVIOUR__EXPANSION_OCCUPANCY_GAP
+    aliases:                []
+    semantic_category:      Unknown
+    knowledge_status:       UNKNOWN
+    # Factual encoding (do NOT bake an inferred mechanism into ontology truth): the node records
+    # an OBSERVATION, a KNOWN INVARIANT that rules out the accounting artifact, an explicitly
+    # UNKNOWN mechanism, and a RESOLUTION METRIC. It does not assert that the resolver "exits early".
+    description:            "UNKNOWN MECHANISM: the lifecycle divergence responsible for the EXPANSION occupancy gap between the CRT engine and the shadow resolver has not yet been identified. Only the occupancy gap is observed; no entry/persistence/protection/resume/exit cause is established."
+    observed_behaviour:     "OBSERVATION (fact, no mechanism inferred): on the reference run (XAUUSD M15, run_20260724_104845) engine EXPANSION per-bar occupancy (4,604) significantly exceeds resolver occupancy (1,125)."
+    mathematical_definition: UNKNOWN
+    units:                  UNKNOWN
+    formula:                UNKNOWN
+    dependencies:           [SEM-001, SEM-002, SEM-003]
+    required_inputs:        [UNKNOWN]
+    produced_outputs:       [UNKNOWN]
+    producers:              [UNKNOWN]
+    consumers:              [UNKNOWN]
+    transitions:            []
+    validation_rules:       []      # epistemic content lives in the `epistemic` block below
+    confidence:             Possible
+    evidence:               ["reports/crt_state_confusion_matrix.json (post-fix): engine EXPANSION=4604 resolver EXPANSION=1125", "SEM-001", "SEM-003"]
+    origin:                 "crt-state shadow-consistency audit (2026-07-25)"
+    status:                 open
+    version:                1
+    owner:                  crt-state-program
+    traceability:           "refines into an execution_behaviours node once the mechanism is characterized (do NOT create a duplicate; graduate this node's knowledge_status in place)"
+    notes:                  "A canonical UNKNOWN is a permanent citizen until resolved, not a TODO. CONTAMINATION CAVEAT: single XAUUSD run, shadow resolver."
+    # Epistemic block — epistemic levels kept DISTINCT (fact / validated / unknown / guess / metric).
+    epistemic:
+      known_invariants:
+        - "The current evidence indicates the EXPANSION occupancy gap is NOT explained by the previously identified reporting/accounting defect (Investigation-2 state_from reconstruction bug; SEM-003 occupancy-vs-dwell-span). It does NOT rule out a different, not-yet-identified measurement issue."
+        - "Engine and resolver declare the same htf_protect_states (EXPANSION, RETEST)."
+      unknown_mechanism: "Which lifecycle stage (entry, persistence, protection, resume, or exit) produces the occupancy gap has not been identified."
+      candidate_hypotheses:
+        - "resolver HTF phase-lock / reset handling"
+        - "EXPANSION TTL (max_expansion_age_candles)"
+        - "DISPLACEMENT->EXPANSION funnel gate rarity"
+        - "shadow-resume path fidelity"
+      resolution_metric: "Per-episode engine-vs-resolver lifecycle comparison across entry, persistence, protection, resume, exit."
+      falsification_conditions:
+        - "Engine and resolver EXPANSION entry counts differ significantly (moves the gap to ENTRY, not persistence)."
+        - "Engine and resolver begin EXPANSION on different bars (entry TIMING, not dwell)."
+        - "HTF-protection parity fails between engine and resolver (PROTECTION, not TTL/funnel)."
+
+  # ── Capital Semantics Layer (proposed 2026-08-08) ──────────────────────────
+  # Latent pre-OHLC layer. Explains why candles look the way they do; does NOT
+  # replace OHLC→features→CRT→execution. Grants NO production authority (§6.5).
+  # Trader risk%/position sizing remains owned by UltronRiskGate / execution_planner;
+  # any CPR→risk mapping is a candidate hypothesis only (not runtime).
+
+  unknown_global_capital:
+    id:                     UNK-002
+    canonical_name:         UNKNOWN_LATENT__GLOBAL_CAPITAL
+    aliases:                ["global_capital", "total_participating_capital"]
+    semantic_category:      Unknown
+    knowledge_status:       UNKNOWN
+    description:            "Latent total capital participating in the instrument/market at a decision horizon. Not observed in this repository (no level-2 book / CFTC / venue capital feed on the CRT spine)."
+    observed_behaviour:     "OBSERVATION: the system never measures global capital; all production paths begin at OHLCV candles. Global capital is a proposed pre-OHLC semantic parent of investment pools, not a runtime feature."
+    mathematical_definition: UNKNOWN
+    units:                  UNKNOWN
+    formula:                UNKNOWN
+    dependencies:           []
+    required_inputs:        [UNKNOWN]
+    produced_outputs:       [UNK-003]
+    producers:              [UNKNOWN]
+    consumers:              [UNK-003]
+    transitions:            []
+    validation_rules:       []
+    confidence:             Possible
+    evidence:               ["user proposal Capital Semantics Layer 2026-08-08", "repo production path starts at OHLCV (feature_pipeline / crt_engine_v2); no capital-pool producer on spine"]
+    origin:                 "Capital Semantics Layer proposal (2026-08-08) — ontology registration only"
+    status:                 open
+    version:                1
+    owner:                  capital-semantics-research
+    traceability:           "Parent of UNK-003 Investment Pool. Graduate in place when a measurement definition exists; never invent a numeric global-capital series without a sealed measurement contract."
+    notes:                  "CONTAMINATION CAVEAT: conceptual proposal. Does not authorize reading broker equity as 'global capital' or substituting account balance for market capital."
+    epistemic:
+      known_invariants:
+        - "Production decision spine consumes OHLCV-derived features and CRT state; it does not consume a global-capital series today."
+        - "Account balance / risk_percent in UltronRiskGate is trader capital, not market global capital (distinct objects)."
+      unknown_mechanism: "Whether any observable proxy can identify global participating capital for XAUUSD/crypto majors at M15 without lookahead."
+      candidate_hypotheses:
+        - "Global capital is permanently unobservable and only its directional imbalance (CPR) can be inferred from OHLC morphology."
+        - "Session volume or open interest (where available) is a partial proxy for participating capital, not identity."
+      resolution_metric: "A sealed measurement contract naming instrument, horizon, data source, and a non-circular proxy test against held-out OHLC morphology."
+      falsification_conditions:
+        - "A claimed global-capital series is only a re-label of volume or ATR (no incremental information)."
+        - "Any use of future-session totals would introduce lookahead (forbidden under no-lookahead invariant)."
+
+  unknown_investment_pool:
+    id:                     UNK-003
+    canonical_name:         UNKNOWN_LATENT__INVESTMENT_POOL
+    aliases:                ["investment_pool", "seeking_capital"]
+    semantic_category:      Unknown
+    knowledge_status:       UNKNOWN
+    description:            "Latent capital currently seeking opportunities in the market: Investment Pool = Buy Investment (BI) + Sell Investment (SI). Parent of directional investment and CPR."
+    observed_behaviour:     "OBSERVATION: no runtime object named investment pool exists. PortfolioAllocator / capital_policy operate on *trader* book capital, not market-seeking capital."
+    mathematical_definition: "PROPOSED (candidate, not validated): InvestmentPool = BI + SI"
+    units:                  UNKNOWN
+    formula:                UNKNOWN
+    dependencies:           [UNK-002]
+    required_inputs:        [UNK-002]
+    produced_outputs:       [UNK-004, UNK-005]
+    producers:              [UNKNOWN]
+    consumers:              [UNK-004, UNK-005]
+    transitions:            []
+    validation_rules:       []
+    confidence:             Possible
+    evidence:               ["user proposal Capital Semantics Layer 2026-08-08", "src/portfolio/ capital modules are trader-side, not market-side pool"]
+    origin:                 "Capital Semantics Layer proposal (2026-08-08)"
+    status:                 open
+    version:                1
+    owner:                  capital-semantics-research
+    traceability:           "Child of UNK-002; parent of UNK-004 and UNK-005. Do not merge with portfolio allocator objects."
+    notes:                  "BI+SI is a definitional split of a latent quantity, not a claim that either leg is measured."
+    epistemic:
+      known_invariants:
+        - "Trader portfolio capital and market investment pool are distinct semantic objects."
+      unknown_mechanism: "How to partition total seeking capital into BI vs SI without using the outcome candle that the ratio is meant to explain (circularity risk)."
+      candidate_hypotheses:
+        - "BI/SI can only be inferred post-hoc from aggressive buy/sell volume (requires trade tape, not OHLCV alone)."
+        - "BI/SI imbalance is recoverable (up to scale) from OHLC geometry families already registered (displacement, sweep, range)."
+      resolution_metric: "Non-circular estimator: BI/SI inferred from information set F_t that excludes future bars and excludes labels derived from the same CPR being estimated."
+      falsification_conditions:
+        - "Any BI/SI estimator that requires the same bar's close direction as an input while claiming to cause that close (circular)."
+        - "Pool total identified with account equity (category error)."
+
+  unknown_directional_investment:
+    id:                     UNK-004
+    canonical_name:         UNKNOWN_LATENT__DIRECTIONAL_INVESTMENT
+    aliases:                ["buy_investment", "sell_investment", "BI", "SI"]
+    semantic_category:      Unknown
+    knowledge_status:       UNKNOWN
+    description:            "Latent directional legs of the investment pool: BI = buy-seeking capital, SI = sell-seeking capital. Ratio forms CPR (UNK-005)."
+    observed_behaviour:     "OBSERVATION: CRT Direction (LONG/SHORT) is a *setup thesis from sweep geometry*, not a measurement of BI or SI. RR/candle polarity scores are candle-structure quality, not capital legs."
+    mathematical_definition: "PROPOSED (candidate): BI >= 0, SI >= 0, InvestmentPool = BI + SI"
+    units:                  UNKNOWN
+    formula:                UNKNOWN
+    dependencies:           [UNK-003]
+    required_inputs:        [UNK-003]
+    produced_outputs:       [UNK-005]
+    producers:              [UNKNOWN]
+    consumers:              [UNK-005]
+    transitions:            []
+    validation_rules:       []
+    confidence:             Possible
+    evidence:               ["user proposal Capital Semantics Layer 2026-08-08", "crt_engine_v2 detect_sweep direction = reversal thesis from range boundary, not capital legs"]
+    origin:                 "Capital Semantics Layer proposal (2026-08-08)"
+    status:                 open
+    version:                1
+    owner:                  capital-semantics-research
+    traceability:           "Must not be identified with CRTState direction or ExecutionPlanner intent without a validated mapping study."
+    notes:                  "CONTAMINATION CAVEAT: mapping BI→LONG or SI→SHORT is a hypothesis, not ontology truth."
+    epistemic:
+      known_invariants:
+        - "CRT Direction is assigned from sweep geometry (high-sweep→SHORT, low-sweep→LONG), not from measured capital flows."
+      unknown_mechanism: "Observable signature that separates BI-dominant from SI-dominant regimes at M15 without tape."
+      candidate_hypotheses:
+        - "Displacement body sign is a noisy proxy for the dominant leg (contested by OPPOSED body-vs-direction cases in XAUUSD RETEST window 2026-08)."
+        - "Session-conditioned volume imbalance proxies directional investment (needs data beyond current spine)."
+      resolution_metric: "Proxy correlated with held-out aggressive buy/sell volume (or similar) at lag>=0 without using future bars."
+      falsification_conditions:
+        - "Proxy equals CRT direction by construction (no new information)."
+        - "Proxy only works in-sample on a single news window (overfit)."
+
+  unknown_capital_pressure_ratio:
+    id:                     UNK-005
+    canonical_name:         UNKNOWN_LATENT__CAPITAL_PRESSURE_RATIO
+    aliases:                ["CPR", "capital_pressure_ratio", "BI_over_SI"]
+    semantic_category:      Unknown
+    knowledge_status:       UNKNOWN
+    description:            "Latent Capital Pressure Ratio CPR = BI/SI (when SI>0). Proposed hidden cause of OHLC morphology: body, range, ATR expansion, displacement, liquidity sweep, retest, continuation. Positions *upstream* of OHLC; repository already models OHLC→features→CRT→execution. CPR does not replace CRT or engines."
+    observed_behaviour:     "OBSERVATION: the repository measures OHLC manifestations (body_ratio, ATR, sweeps, displacement, retest, expansion occupancy) extensively; it does not estimate CPR. Force-session XAUUSD RETEST probes show geometry and DecisionEngine opportunity layers can reject without any capital-flow object existing — consistent with CPR being latent/unmeasured, not with CPR being implemented."
+    mathematical_definition: "PROPOSED (candidate, not validated): CPR = BI / SI for SI > 0; scale-free directional imbalance. Example interpretive table (hypothesis only): CPR~1 balanced; CPR>>1 bullish pressure; CPR<<1 bearish pressure. Exact cutpoints (1:5 … 5:1) are NOT validated thresholds."
+    units:                  "dimensionless ratio (proposed)"
+    formula:                UNKNOWN
+    dependencies:           [UNK-003, UNK-004]
+    required_inputs:        [UNK-004]
+    produced_outputs:       [UNKNOWN]
+    producers:              [UNKNOWN]
+    consumers:              [UNKNOWN]
+    transitions:            []
+    validation_rules:       []
+    confidence:             Possible
+    evidence:
+      - "user proposal Capital Semantics Layer 2026-08-08"
+      - "reports/xauusd_semantics_vs_math_adjudication.md — OHLC/geometry layers exist; no capital-flow layer"
+      - "F-019…F-025 entry-information nulls under standard measurement (research authority) — any CPR claim must clear measurement contract before economic authority"
+      - "configs/research/measurement_contracts/MC-CPR-L0-XAUUSD-M15-UTC-V1.json (PREREGISTERED 2026-08-08; mt00=PARTIAL first harness; economic_claims_allowed=false)"
+      - "docs/research-readiness/mc-cpr-l0-xauusd-m15-preregistration.md"
+      - "results/research/mc_cpr_l0/metrics.json — L1_FAIL 2026-08-08: no BH hit; max delta R2(eta) N=16 <=0; OHLCV proxy does not add residual info under sealed gates"
+    origin:                 "Capital Semantics Layer proposal (2026-08-08) — latent pre-OHLC layer registration"
+    status:                 open
+    version:                1
+    owner:                  capital-semantics-research
+    traceability:           "Upstream of OHLC only. Downstream mapping CPR→CRT state or CPR→risk% is RESEARCH HYPOTHESIS (see notes). Graduate knowledge_status in place: OBSERVED when a proxy exists; MATHEMATICALLY_DEFINED when a non-circular formula is sealed; PRODUCTION_CERTIFIED only via measured G001 (§6.5)."
+    notes: >
+      LAYER PLACEMENT (non-contradiction rule): GlobalCapital → InvestmentPool → (BI,SI) → CPR
+      → (latent order-flow pressure) → OHLC manifestation → Feature Pipeline → CRT State →
+      Execution Intent → Trade Entry → Position Size → Capital Allocation (trader-side).
+      Existing spine ownership unchanged: features (ontology/pipeline), CRT (state machine),
+      DecisionEngine (semantic opportunity), ExecutionPlanner (entry intent), compute_crt_levels /
+      build_trade (geometry), UltronRiskGate (capital risk). CPR must not short-circuit these.
+      RISK MAPPING HYPOTHESIS (not runtime): stronger inferred directional imbalance *might*
+      justify a larger fraction of a *predefined* risk budget — never an automatic CPR→2% path,
+      never bypass of session/geometry/DecisionEngine/Ultron. Cutpoints 0.25%/0.5%/1%/2% are
+      illustrative only and have zero authority.
+    epistemic:
+      known_invariants:
+        - "OHLC morphology is observed; CPR is not observed in production data paths."
+        - "CRT inverted-SL and DecisionEngine gates are independent of any CPR object (none is wired)."
+        - "Authority Ladder (§6.5): information ≠ value ≠ authority ≠ architecture. Registering CPR grants no fusion weight, risk%, or config authority."
+      unknown_mechanism: "Whether a stable, non-circular, PIT-safe estimator of BI/SI (hence CPR) exists from M15 OHLCV alone, or whether tape/OI is required."
+      candidate_hypotheses:
+        - "Large |log CPR| precedes expansion/displacement; CPR~1 precedes range/sweep/reset (qualitative story only until measured)."
+        - "CPR is not recoverable from OHLCV; only coarser bullish/bearish pressure regimes are (identification limits)."
+        - "Trader risk% could be a monotone function of inferred |log CPR| inside Ultron caps (separate BEHAVIOR_CHANGE_AUTHORIZED program if ever pursued)."
+      resolution_metric: >
+        Sealed MC-* measurement contract: define BI/SI proxy, PIT rules, cost model, and a
+        pre-registered test that CPR-conditioned morphology or expectancy differs from
+        shuffle/regime controls under Authority Ladder L1 then L2. Prefer multi-instrument OOS.
+      falsification_conditions:
+        - "No proxy beats OHLC-only baselines for forward morphology or expectancy after multiple-testing control (CPR layer adds no information)."
+        - "Proxy is a rename of existing features (disp_strength, body_ratio, session) without residual explanatory power."
+        - "Any CPR→risk implementation that bypasses UltronRiskGate or inverted-SL geometry (governance falsification of the proposal's non-contradiction rule)."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REASONING_CAPABILITIES (registered 2026-07-29) — bottom-up extraction, not a-priori design.
+# Each node groups 1+ existing models' outputs by WHAT REASONING QUESTION they answer, extracted
+# from evidence of what the 21 registered models already do (docs/governance/
+# MODEL_INTENT_AUTHORITY_REGISTER.md) — never invented ahead of implementation. See
+# docs/governance/REASONING_CAPABILITY_REGISTRY.md for the doctrine and
+# docs/governance/capability_model_map.json for the capability<->model mapping + declared overlap.
+# Grants NO authority (§6.5) — informational only; never read on the runtime binding path.
+# ─────────────────────────────────────────────────────────────────────────────
+reasoning_capabilities:
+
+  statistical_structural_familiarity:
+    id:                     RC-001
+    canonical_name:         REASONING_CAPABILITY__STATISTICAL_STRUCTURAL_FAMILIARITY
+    aliases:                [familiarity, conformity, distance_from_known_state]
+    semantic_category:      ReasoningCapability
+    knowledge_status:       OBSERVED
+    description:            "The reasoning question of how statistically or structurally typical the current market state is relative to previously observed or reference states. Bottom-up extracted from docs/architecture/model-design-intent.md Part VII (Authority: NONE, narrative), which observes that four existing models independently frame their output as a form of 'distance from what I know'. Registering this as OBSERVED records the cross-model pattern as worth tracking — it does NOT assert the four are the same capability; see epistemic.unknown_mechanism."
+    observed_behaviour:     "Four production models compute a distance-from-known-state quantity under four different mechanisms: a 3-feature global parametric kernel (Gaussian heuristic), a trained density model over the full vector (Gaussian ML, offline/shadow only), a full-vector local geometric similarity kernel used as a hard gate (Zone Gate), and an internal soft-confirmation distance-decay embedded in the CRT state machine (not a standalone output). No shared formula, scale, or declared target exists across the four today."
+    mathematical_definition: UNKNOWN
+    units:                  UNKNOWN
+    formula:                UNKNOWN
+    dependencies:           [feature_pipeline]
+    required_inputs:        ["ema_fast, ema_slow, momentum_score (Gaussian heuristic subset)", "full 39-dim canonical vector (Zone Gate hard gate; Gaussian ML; CRT internal)"]
+    produced_outputs:       ["ordinal familiarity/conformity SCORE (Gaussian heuristic/ML) — never a probability, per MIAR locked vocabulary", "binary pass/fail + score (Zone Gate hard gate)", "soft-confirmation contribution embedded in CRT's internal state (not a standalone exposed output)"]
+    producers:              ["HeuristicGaussianEngine.compute (src/engines/heuristic_gaussian_engine.py) — global parametric, 3-feature kernel", "MLGaussianEngine.compute (src/engines/ml_gaussian_engine.py) — trained NB density, full vector, offline/shadow only", "Zone Gate similarity kernel (src/engines/zone_gate_engine.py, run_zone_gate_engine) — local geometric, full 39-dim, hard gate", "CRT internal distance-decay soft-confirmation (src/config_layer/crt_engine_v2.py) — embedded, not a standalone MIAR-registered output"]
+    consumers:              ["FusionEngine.compute via the 'gaussian' and 'zone_gate' engine_results slots (src/core/fusion_engine.py)", "crt_engine_v2's own internal approve/soft-confirmation gate (self-consumed, not exposed to fusion)"]
+    transitions:            []
+    validation_rules:       []      # epistemic content lives in the `epistemic` block below
+    confidence:             Possible
+    evidence:               ["docs/architecture/model-design-intent.md Part VII 'Which models are measuring the same thing?' — Familiarity (four surfaces) (Authority: NONE, narrative)", "F-060: the live Gaussian heuristic channel is unparameterized (registry mu=0/sigma=1 defaults fire on a successful load) and degenerates to a near-constant ~0.8825 (std 3e-3)", "F-036: Zone Gate weight/threshold sweeps are byte-identical (deltaG001 == 0) — non-pivotal on the fused live decision", "F-041B: 0/8 Zone Gate zones clear honest E>0 under forward_walk re-derivation"]
+    origin:                 "Reasoning Capability Layer M1 pilot (2026-07-29) — bottom-up extraction per user-directed methodology; see docs/governance/REASONING_CAPABILITY_REGISTRY.md"
+    status:                 open
+    version:                1
+    owner:                  reasoning-capability-program
+    traceability:           "Groups the existing gaussian/zone_gate MIAR entries (docs/governance/miar_registry.json) and CRT's internal confirmation gate by reasoning axis, WITHOUT altering any of their individual authority_boundary or explicit_non_goals. Graduates IN PLACE if the resolution_metric below is ever measured — no duplicate node on refinement."
+    notes:                  "The four producers have structurally different authority shapes today (soft score / hard gate / embedded-internal) — part of what is unresolved is whether 'same reasoning question, different authority shape' is itself meaningful or an artifact of ad-hoc development. This node grants no authority to any producer and does not alter Zone Gate's hard-gate status, Gaussian's fusion weight, or CRT's internal confirmation logic."
+    # Epistemic block — OBSERVED is in research_stage_statuses (ENCOURAGED, not mandatory); included
+    # because the cross-model pattern this node records is explicitly a hypothesis, not yet a fact.
+    epistemic:
+      known_invariants:
+        - "Four production models compute a distance-from-known-state quantity: HeuristicGaussianEngine (3-feature EMA/momentum kernel), MLGaussianEngine (trained NB density), Zone Gate similarity kernel (full 39-dim, hard gate), and CRT's internal distance-decay soft-confirmation (crt_engine_v2.py). This is a citable code fact, not a hypothesis."
+        - "No shared formula, scale, or declared target exists across the four producers today (F-060, F-036 independently measured each in isolation; no joint analysis exists)."
+      unknown_mechanism: "Whether these four surfaces are genuinely one reasoning capability (statistical/structural distance-from-known-state) realized four times at different granularities, or four computations that only share informal vocabulary ('familiarity') without any common formal definition, scale, or target."
+      candidate_hypotheses:
+        - "All four estimate a common latent quantity (distance from a learned/reference distribution of market states) at different granularities — global parametric (Gaussian heuristic/ML) vs local geometric (Zone Gate) vs internal-heuristic (CRT)."
+        - "Only Gaussian heuristic and Gaussian ML are truly the same capability (same declared target, different estimators); Zone Gate and CRT-internal are a structurally distinct membership/geometry capability that merely shares vocabulary."
+        - "The four are accidental convergent reimplementations with no principled relationship, each added independently to solve a locally-perceived need."
+      resolution_metric: "Cross-producer measurement (not run by this registration): for a fixed corpus, compute correlation / rank-agreement across all four producers' raw pre-threshold outputs. High mutual correlation supports one shared capability; near-zero/negative correlation supports the accidental-reimplementation hypothesis. Per §6.5 Authority Ladder, this registers the QUESTION (information), not a measurement — no authority is claimed or implied."
+      falsification_conditions:
+        - "Pairwise correlation among the four producers' raw scores is not significantly different from zero on a real corpus — refutes 'one shared capability'."
+        - "A fifth, clearly different-axis model (e.g. RR polarity, which answers a distinct commitment-geometry question per MIAR) shows equal or higher correlation with one of the four than the four show with each other — refutes that the grouping is meaningful at all."

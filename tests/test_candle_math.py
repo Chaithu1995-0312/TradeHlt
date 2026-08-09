@@ -96,5 +96,6 @@ def test_pipeline_vectorized_equals_scalar_primitive():
         o, h, l, c = row["open"], row["high"], row["low"], row["close"]
         # float32 columns → tolerance
         assert row["body_size"] == pytest.approx(cm.body_size(o, c), rel=1e-6)
-        assert row["wick_size"] == pytest.approx(cm.candle_range(h, l), rel=1e-6)
+        # v4.0: the column is `candle_range` — the same quantity under its honest name.
+        assert row["candle_range"] == pytest.approx(cm.candle_range(h, l), rel=1e-6)
         assert row["body_ratio"] == pytest.approx(cm.body_ratio(o, h, l, c), rel=1e-5, abs=1e-6)

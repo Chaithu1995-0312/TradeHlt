@@ -36,12 +36,14 @@ digraph flow_runtime {
     "engines.trap_validator_engine" [style="dashed", fontcolor="#888888"];
     "engines.zone_gate_engine" [style="dashed", fontcolor="#888888"];
     "events.event_fabric" [style="dashed", fontcolor="#888888"];
+    "features.causal_structure" [style="dashed", fontcolor="#888888"];
     "features.feature_monitor" [style="dashed", fontcolor="#888888"];
     "features.feature_schema" [style="dashed", fontcolor="#888888"];
     "features.schema_validator" [style="dashed", fontcolor="#888888"];
     "governance.strategy_backtest" [style="dashed", fontcolor="#888888"];
     "journal.trade_logger" [style="dashed", fontcolor="#888888"];
     "llm_research.forward_tester" [style="dashed", fontcolor="#888888"];
+    "research.ic002_entry_evolution.build_trajectories" [style="dashed", fontcolor="#888888"];
     "runtime.backtest_bitnet" [style="dashed", fontcolor="#888888"];
     "runtime.backtest_v2" [style="dashed", fontcolor="#888888"];
     "runtime.live_engine_hook" [style="dashed", fontcolor="#888888"];
@@ -81,12 +83,15 @@ digraph flow_runtime {
     "core.engine_runner" -> "engines.trap_validator_engine";
     "core.engine_runner" -> "engines.zone_gate_engine";
     "core.engine_runner" -> "events.event_fabric";
+    "core.engine_runner" -> "features.feature_schema";
     "core.engine_runner" -> "utils.logging_config";
+    "core.feature_store" -> "features.causal_structure";
     "core.feature_store" -> "features.feature_schema";
     "core.feature_store" -> "features.schema_validator";
     "core.fusion_engine" -> "utils.integrity_events";
     "core.model_registry" -> "features.feature_pipeline";
     "core.ultron_risk_gate" -> "utils.logging_config";
+    "features.causal_structure" -> "features.feature_pipeline";
     "features.feature_pipeline" -> "data_ingestion.ohlcv_schema";
     "features.feature_pipeline" -> "features.feature_monitor";
     "features.feature_pipeline" -> "features.feature_schema";
@@ -96,6 +101,7 @@ digraph flow_runtime {
     "journal.trade_logger" -> "core.collector";
     "llm_research.forward_tester" -> "config_layer.execution_planner";
     "llm_research.forward_tester" -> "core.engine_runner";
+    "research.ic002_entry_evolution.build_trajectories" -> "features.feature_pipeline";
     "runtime.backtest_bitnet" -> "core.engine_runner";
     "runtime.backtest_bitnet" -> "features.feature_pipeline";
     "runtime.backtest_v2" -> "core.engine_runner";

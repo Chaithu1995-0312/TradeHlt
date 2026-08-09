@@ -3,7 +3,7 @@
 > **Topic-visibility unit.** How models (Gaussian NB, TradeNet) are trained, gated by the Phase-5
 > calibration check, and promoted through the model registry. Distinct from *config* promotion.
 >
-> Created: 2026-06-05 · Updated: 2026-06-05 · Status: living
+> Created: 2026-06-05 · Updated: 2026-07-22 · Status: living
 
 ## In plain language
 Some engines use trained models. Training is **offline**: mine paired trade records → fit a model →
@@ -41,3 +41,5 @@ Funding posture for new model tracks is KILLED/FROZEN per the Funding Ledger (F-
 - **Risks:** 2026-06-05 — active models are still v2.0 (35-feature) while the pipeline emits 38; a truncation/slice happens at inference — keep the schema-hash baseline in sync (see [`feature-schema.md`](feature-schema.md)).
 - **Blockers:** 2026-06-05 — no live automated re-training loop (F-001); models are trained via manual/batch runs.
 - **Need more info:** 2026-06-05 — TradeNet is built but unwired (F-005); confirm before investing in its training path.
+- **2026-07-22 — TradeNet Qualification Protocol (`TN_QUAL_V1`):** governing path for any future TradeNet authority is now [`docs/governance/tradenet_qualification_protocol.md`](../governance/tradenet_qualification_protocol.md) — **GATE-0** label feasibility (practical + worth implementing?) before any clean-label builder; then GATE-L via `forward_walk(intrabar_fixed)` (stream `outcome` banned as primary y, F-022), retrain triggers, offline KEEP_CANDIDATE, weight-0 shadow + ΔG001, GATE-P spine wire. Does **not** wire `neural_fn` or reopen Funding Ledger production; lineage stays AUDITED/INERT. Sibling pattern: RR clean-label / F-059.
+- **2026-07-22 — GATE-0 added:** lightweight feasibility assessment (G0-Q1…Q9) with verdicts FEASIBLE_GO / FEASIBLE_DEFER / INFEASIBLE_STOP; only FEASIBLE_GO unblocks GATE-L builder work.

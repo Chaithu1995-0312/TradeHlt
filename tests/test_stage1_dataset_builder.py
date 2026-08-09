@@ -234,7 +234,9 @@ def test_feature_quality_constant_nonzero_vector_low_variance():
 def test_feature_quality_missing_keys_reduces_present_frac():
     feats = _valid_features()
     feats.pop("rsi_14")
-    feats.pop("macd_hist")
+    # macd_hist_raw (was macd_hist pre-2026-07-22 SCHEMA-V4-VECTOR-MIGRATION, which split the
+    # single v3.0 column into macd_hist_raw + macd_hist_z).
+    feats.pop("macd_hist_raw")
     q = compute_feature_quality(feats)
     assert q["present_frac"] < 1.0
     assert q["score"] < 1.0

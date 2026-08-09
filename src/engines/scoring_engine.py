@@ -7,8 +7,13 @@ from typing import Dict, Optional
 from features.feature_schema import CANONICAL_FEATURES
 from config_layer.llm_scorer import llm_score_safe
 from features.schema_validator import validate_feature_values, validate_features
+from features.fm_resolve import bind_phase3b_scoring_callables
 
 log = logging.getLogger("ScoringEngine")
+
+# Phase-3b: FM-029 via resolve_fm (identity == derived_math.disp_strength_atr_rescale).
+# Bound once at import — same discipline as crt_engine_v2 Phase-2 _FM_CRT.
+_FM_SCORING: dict = bind_phase3b_scoring_callables()
 
 
 def compute_scores(
@@ -28,7 +33,9 @@ def compute_scores(
     All sub-scores are bounded to [0, 1]. Decay is applied once.
     score_weights: (sweep, breakout, retest, time) — configurable via crt_engine.score_component_weights.
     """
-    disp_strength = move / atr if atr > 0 else 0.0
+    # FM-029 disp_strength_atr_rescale (GD-004 closure): the caller passes the FM-020 feature as
+    # `move`, so this is a DISTINCT rescaled quantity — resolved via FORMULA_REGISTRY (Phase-3b).
+    disp_strength_atr_rescale = _FM_SCORING["FM-029"](move, atr)
 
     if not sweep_detected:
         s_sweep = 0.0
@@ -37,7 +44,7 @@ def compute_scores(
     else:
         s_sweep = 0.7
 
-    s_breakout = 0.5 * min(body_ratio, 1.0) + 0.5 * min(disp_strength / 2.0, 1.0)
+    s_breakout = 0.5 * min(body_ratio, 1.0) + 0.5 * min(disp_strength_atr_rescale / 2.0, 1.0)
     s_retest = math.exp(-((retest_depth - 0.5) ** 2) / 0.04)
     s_time = math.exp(-lambda_decay * max(0, candles_since_retest))
 

@@ -29,39 +29,40 @@ def feature_dict_32():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def test_tradenet_schema_is_32():
-    from features.feature_schema import TRADENET_SCHEMA, CANONICAL_FEATURES
-    assert TRADENET_SCHEMA.n_features == len(CANONICAL_FEATURES) == 38
+    # Name kept for history; live schema is v4.0 (39-dim).
+    from features.feature_schema import TRADENET_SCHEMA, CANONICAL_FEATURES, CANONICAL_FEATURE_DIM
+    assert TRADENET_SCHEMA.n_features == len(CANONICAL_FEATURES) == CANONICAL_FEATURE_DIM == 39
 
 
 def test_gaussian_schema_is_32():
-    from features.feature_schema import GAUSSIAN_SCHEMA, CANONICAL_FEATURES
-    assert GAUSSIAN_SCHEMA.n_features == len(CANONICAL_FEATURES) == 38
+    from features.feature_schema import GAUSSIAN_SCHEMA, CANONICAL_FEATURES, CANONICAL_FEATURE_DIM
+    assert GAUSSIAN_SCHEMA.n_features == len(CANONICAL_FEATURES) == CANONICAL_FEATURE_DIM == 39
 
 
 def test_schema_object_attribute_and_dict_access():
     from features.feature_schema import TRADENET_SCHEMA, GAUSSIAN_SCHEMA, SchemaObject
     assert isinstance(TRADENET_SCHEMA, SchemaObject)
     assert isinstance(GAUSSIAN_SCHEMA, SchemaObject)
-    # Attribute access
-    assert TRADENET_SCHEMA.n_features == 38
-    assert GAUSSIAN_SCHEMA.n_features == 38
+    # Attribute access — ambient live width (schema v4.0 = 39)
+    assert TRADENET_SCHEMA.n_features == 39
+    assert GAUSSIAN_SCHEMA.n_features == 39
     # Dict-style access
-    assert TRADENET_SCHEMA["n_features"] == 38
-    assert GAUSSIAN_SCHEMA.get("n_features") == 38
+    assert TRADENET_SCHEMA["n_features"] == 39
+    assert GAUSSIAN_SCHEMA.get("n_features") == 39
     # feature_names and checksum
-    assert len(TRADENET_SCHEMA.feature_names) == 38
+    assert len(TRADENET_SCHEMA.feature_names) == 39
     assert len(GAUSSIAN_SCHEMA.checksum) == 32   # MD5 hex is always 32 chars
 
 
 def test_validate_vector_with_label():
     from features.feature_schema import validate_vector, GAUSSIAN_SCHEMA
-    vec38 = [0.0] * 38
-    assert validate_vector(vec38, GAUSSIAN_SCHEMA, label="test_label") is True
+    vec = [0.0] * GAUSSIAN_SCHEMA.n_features
+    assert validate_vector(vec, GAUSSIAN_SCHEMA, label="test_label") is True
 
 
 def test_validate_vector_raises_on_mismatch():
     from features.feature_schema import validate_vector, GAUSSIAN_SCHEMA
-    with pytest.raises(ValueError, match="expected 38"):
+    with pytest.raises(ValueError, match="expected 39"):
         validate_vector([0.0] * 10, GAUSSIAN_SCHEMA, label="wrong_dim")
 
 
@@ -71,8 +72,9 @@ def test_validate_vector_raises_on_mismatch():
 
 def test_trainer_n_features_is_32():
     from training.trainer import N_FEATURES, GAUSSIAN_N_FEATURES
-    assert N_FEATURES == 38, f"TradeNet N_FEATURES={N_FEATURES}, expected 38"
-    assert GAUSSIAN_N_FEATURES == 38, f"Gaussian N_FEATURES={GAUSSIAN_N_FEATURES}, expected 38"
+    from features.feature_schema import CANONICAL_FEATURE_DIM
+    assert N_FEATURES == CANONICAL_FEATURE_DIM == 39, f"TradeNet N_FEATURES={N_FEATURES}"
+    assert GAUSSIAN_N_FEATURES == CANONICAL_FEATURE_DIM == 39
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -166,6 +168,7 @@ def test_engine_runner_config_override():
 
 def test_feature_dict_to_vector_returns_32(feature_dict_32):
     from features.feature_builder import feature_dict_to_vector
+    from features.feature_schema import CANONICAL_FEATURE_DIM
     vec = feature_dict_to_vector(feature_dict_32)
-    assert len(vec) == 38
+    assert len(vec) == CANONICAL_FEATURE_DIM == 39
     assert all(isinstance(v, float) for v in vec)

@@ -54,7 +54,7 @@ class TestDispStrengthFilter:
         state = EngineState()
         state.current_state = CRTState.EXPANSION
         state.direction = Direction.LONG
-        state.atr = atr
+        state.atr_abs = atr
         state.current_candle_index = 100
 
         # Fake range: h_ref=1.10, l_ref=1.09 (size=0.01)

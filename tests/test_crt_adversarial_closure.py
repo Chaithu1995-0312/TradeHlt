@@ -128,7 +128,12 @@ def test_adversarial_crt_cache_emission_uses_derived_math_keys():
     sm = StateMachine(cfg)
     st = EngineState()
     st.current_state = CRTState.EXPANSION
-    st.atr = 2.0
+    # PRE-EXISTING BUG FIXED 2026-08-01: EngineState has no field named `atr` (deliberately --
+    # see crt_engine_v2.py:244-249, the bare name collided with two other quantities historically).
+    # `st.atr = 2.0` silently created an unused stray attribute; the cache-population guard at
+    # crt_engine_v2.py:1599 reads `state.atr_abs`, which stayed at its 0.0 default, so
+    # cached_features never left its zeroed default and this test's parity assertion failed.
+    st.atr_abs = 2.0
     st.direction = Direction.LONG
     st.active_range = Range(
         h_ref=120.0, l_ref=100.0, equilibrium=110.0,
@@ -285,9 +290,12 @@ def test_adversarial_dead_and_legacy_config_remain_flagged():
 
 def test_adversarial_hardcoded_g_weights_and_min_depth_remain_registered():
     d = _load_json("crt_config_reachability.json")
-    ids = {h["id"] for h in d["hardcoded_shadows"]}
-    assert "HC-G-WEIGHTS" in ids
-    assert "HC-RETEST-MIN-DEPTH" in ids
+    by_id = {h["id"]: h for h in d["hardcoded_shadows"]}
+    assert "HC-G-WEIGHTS" in by_id
+    assert "HC-RETEST-MIN-DEPTH" in by_id
+    # IC-007 PLAN-001: min_depth floor is HOW-owned; keep id for audit trail.
+    assert by_id["HC-RETEST-MIN-DEPTH"].get("severity") == "REMEDIATED"
+    assert "REMEDIATED_PLAN001" in by_id["HC-RETEST-MIN-DEPTH"].get("shadows", "")
 
 
 def test_control_reachable_fields_still_majority():

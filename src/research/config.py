@@ -46,6 +46,15 @@ class ResearchConfig:
     instruments: object              # "ALL" | list[str]
     # provenance
     _canonical: str                  # canonical JSON of the meaningful keys (for hashing)
+    # §13 item6 / §14.D — declares what KIND of research activity this config
+    # drives: "threshold_search" (strategy/gate tuning) | "model_retrain"
+    # (fitting a new model artifact) | "unspecified" (legacy configs; no claim).
+    # A single string field, not two flags, so "declaring both" is structurally
+    # impossible rather than something a validator has to catch. Process
+    # metadata only — deliberately OUTSIDE `meaningful`/`_canonical` so adding
+    # it never changes any existing config's config_sha256 (same precedent as
+    # the conditional `entry_ttl` guard below).
+    job_kind: str = "unspecified"
 
     @classmethod
     def from_dict(cls, d: dict) -> "ResearchConfig":
@@ -93,6 +102,15 @@ class ResearchConfig:
         # its published config_sha256 byte-identical.
         if "entry_ttl" in fw:
             meaningful["forward_walk"]["entry_ttl"] = int(fw["entry_ttl"])
+
+        job_kind = str(d.get("job_kind", "unspecified"))
+        _valid_job_kinds = {"threshold_search", "model_retrain", "unspecified"}
+        if job_kind not in _valid_job_kinds:
+            raise ValueError(
+                f"ResearchConfig.job_kind={job_kind!r} is not one of {sorted(_valid_job_kinds)} "
+                "(§5 rule 4: threshold search and model retrain are two separate research "
+                "activities — declare exactly one)."
+            )
         return cls(
             warmup=meaningful["harness"]["warmup"],
             window_size=meaningful["harness"]["window_size"],
@@ -116,6 +134,7 @@ class ResearchConfig:
             pattern=meaningful["universe"]["pattern"],
             instruments=meaningful["universe"]["instruments"],
             _canonical=json.dumps(meaningful, sort_keys=True, separators=(",", ":")),
+            job_kind=job_kind,
         )
 
     @classmethod

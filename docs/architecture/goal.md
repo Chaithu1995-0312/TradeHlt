@@ -7,8 +7,15 @@
 >
 > Companion detail lives in [`docs/architecture/signal-flow.md`](signal-flow.md) (step-by-step flow),
 > [`codebase-state-map.md`](codebase-state-map.md) (module map),
-> [`service-boundary-map.md`](service-boundary-map.md) (service contracts), and
-> [`event-taxonomy.md`](event-taxonomy.md) (events). This doc stays high-level on purpose.
+> [`service-boundary-map.md`](service-boundary-map.md) (service contracts),
+> [`event-taxonomy.md`](event-taxonomy.md) (events), and
+> [`target-strategy-architecture.md`](target-strategy-architecture.md) (**city plan**: market semantics vs
+> strategy, Strategy Lifecycle research→promotion→ledger, not-yet-built checklist).
+>
+> **Role of this file:** the **constitution** — *why we exist* and *what must never change*
+> (priorities, happy flow, invariants). It intentionally avoids strategy-packaging detail.
+> Evolution without violating this constitution is owned by `target-strategy-architecture.md`.
+> This doc stays high-level on purpose.
 
 ---
 

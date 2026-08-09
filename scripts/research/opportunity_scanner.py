@@ -162,6 +162,10 @@ def scan(csv_path: Path, instrument: str, *, tp_atr_mult: float = 2.0,
     import time as _time
     _run_id = run_id or _time.strftime("%Y%m%d_%H%M%S")
 
+    if instrument.upper() == "XAUUSD":
+        from data_ingestion.xauusd_phase1_candidate import guard_xauusd_csv_path
+        csv_path = Path(guard_xauusd_csv_path(csv_path, instrument))
+
     df = _load_csv(csv_path)
     pipeline = FeaturePipeline(df)
     enriched_df, _ = pipeline.run()

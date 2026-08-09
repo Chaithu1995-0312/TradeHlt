@@ -23,6 +23,7 @@ from features.registry import (  # noqa: F401  (re-export)
     compute_derived,
     load_ontology,
     validate_registry,
+    validate_semantic_registry,
     _ONTOLOGY_PATH,
 )
 
@@ -31,6 +32,7 @@ __all__ = [
     "compute_composition",
     "compute_derived",
     "validate_registry",
+    "validate_semantic_registry",
     "build_lineage_graph",
     "load_ontology",
     "_ONTOLOGY_PATH",

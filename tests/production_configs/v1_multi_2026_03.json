@@ -18,7 +18,7 @@
       "new_york",
       "overlap"
     ],
-    "bitnet_zone_threshold": 0.25,
+    "zone_cluster_threshold": 0.25,
     "zone_registry_path": "models/zone_registry.json",
     "zone_gate_execution_mode": "normal",
     "zone_mode": "hard",

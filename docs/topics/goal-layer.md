@@ -5,7 +5,7 @@
 > code it covers, how it's reached, what tests it, what's still open — **without loading the
 > rest of the codebase**. Link, don't inline.
 >
-> Created: 2026-06-14 · Updated: 2026-06-14 (avg_rr wired by Metrics Layer V2) · Status: living
+> Created: 2026-06-14 · Updated: 2026-07-26 (G001 consumer attribution ledger) · Status: living
 
 ## In plain language
 The Goal Layer is the system's single, machine-readable statement of **what success means in
@@ -59,3 +59,11 @@ acceptance siblings it unifies: `config_validator` (promotion gate) and the M4
 - **Ambiguities:** 2026-06-14 — aspirational G001 vs measured reality; resolved as advisory-first + dormant `enforce` so targets can be aspirational without blocking.
 - **Enhancements:** 2026-06-14 — flip `goal.enforce=true` once an edge clears G001; add a true avg-RR metric; per-instrument goal overrides.
 - **Need more info:** the canonical numbers are the owner's example values — revisit when a real edge exists.
+- **2026-07-26 — Semantic vs economic separation formalized:** permanent ledger
+  [`docs/governance/g001_consumer_attribution.md`](../governance/g001_consumer_attribution.md)
+  attributes each consumer (CRT spine, fusion, zone, BitNet, RR, session, Ultron, shadow)
+  with semantic_status vs economic_status vs authority_ladder_level. All consumers currently
+  ladder=0; economic MEASURED_POSITIVE count=0. Feature-layer parity lives in
+  [`fm_ownership_consumer_matrix.md`](../governance/fm_ownership_consumer_matrix.md) and
+  **never** sets G001 authority (`economic_authority=NONE` per FM). Rebuild:
+  `python scripts/governance/build_g001_consumer_attribution.py` (+ ownership matrix sibling).

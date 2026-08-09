@@ -146,6 +146,8 @@ def _build_runner(rr_fusion, fusion_compare=False, fusion_use=False, eval_score=
         "trend_strength_threshold": 0.1,
         "momentum_threshold": 0.1,
     }
+    # PLAN-002: engines-path weights — test uses legacy defaults
+    runner._score_component_weights = (0.35, 0.25, 0.20, 0.20)
     return runner
 
 
@@ -180,8 +182,12 @@ def test_rr_fusion_applies_score_before_fusion(monkeypatch):
     monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
     monkeypatch.setattr(
         er,
-        "run_zone_gate_engine",
-        lambda **_kwargs: {"score": 0.8, "passed": True},
+        "score_zone_cluster",
+        lambda *_a, **_k: {
+            "score": 0.8,
+            "passed": True,
+            "meta": {"score": 0.8, "passed": True},
+        },
     )
 
     runner = _build_runner(_GoodFusion())
@@ -202,8 +208,12 @@ def test_rr_fusion_failure_falls_back_to_base_rr(monkeypatch):
     monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
     monkeypatch.setattr(
         er,
-        "run_zone_gate_engine",
-        lambda **_kwargs: {"score": 0.8, "passed": True},
+        "score_zone_cluster",
+        lambda *_a, **_k: {
+            "score": 0.8,
+            "passed": True,
+            "meta": {"score": 0.8, "passed": True},
+        },
     )
 
     runner = _build_runner(_BadFusion())
@@ -222,8 +232,12 @@ def test_rr_fusion_disabled_is_base_rr_identity(monkeypatch):
     monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
     monkeypatch.setattr(
         er,
-        "run_zone_gate_engine",
-        lambda **_kwargs: {"score": 0.8, "passed": True},
+        "score_zone_cluster",
+        lambda *_a, **_k: {
+            "score": 0.8,
+            "passed": True,
+            "meta": {"score": 0.8, "passed": True},
+        },
     )
 
     runner = _build_runner(rr_fusion=None)
@@ -257,8 +271,12 @@ def test_fusion_compare_mode_records_evaluate_shadow(monkeypatch):
     monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
     monkeypatch.setattr(
         er,
-        "run_zone_gate_engine",
-        lambda **_kwargs: {"score": 0.8, "passed": True},
+        "score_zone_cluster",
+        lambda *_a, **_k: {
+            "score": 0.8,
+            "passed": True,
+            "meta": {"score": 0.8, "passed": True},
+        },
     )
 
     runner = _build_runner(rr_fusion=None, fusion_compare=True, fusion_use=False, eval_score=0.12)
@@ -274,8 +292,12 @@ def test_fusion_use_evaluate_overrides_final_score(monkeypatch):
     monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
     monkeypatch.setattr(
         er,
-        "run_zone_gate_engine",
-        lambda **_kwargs: {"score": 0.8, "passed": True},
+        "score_zone_cluster",
+        lambda *_a, **_k: {
+            "score": 0.8,
+            "passed": True,
+            "meta": {"score": 0.8, "passed": True},
+        },
     )
 
     runner = _build_runner(rr_fusion=None, fusion_compare=False, fusion_use=True, eval_score=0.12)

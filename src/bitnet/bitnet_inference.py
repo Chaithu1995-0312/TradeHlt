@@ -54,8 +54,10 @@ import os
 import numpy as np
 
 from bitnet.model_contract import (
+    BITNET_V3_FEATURE_DIM,
     CANONICAL_FEATURE_DIM,
     CANONICAL_MODEL_SCHEMA_VERSION,
+    assert_canonical_dim,
     normalize_loaded,
 )
 
@@ -114,8 +116,14 @@ class BitNetModel:
         # attribute for backward compatibility with callers (BitNetRunner).
         self.input_dim = self.feature_dim
 
+        # SCHEMA-V4 (2026-07-22): a canonical v3 envelope cannot be served under a different
+        # canonical dimension. Fails closed HERE — at model load — rather than at module import,
+        # which used to take the whole spine down (see model_contract.assert_canonical_dim).
+        if is_canonical_v3 and self.feature_dim == BITNET_V3_FEATURE_DIM:
+            assert_canonical_dim()
+
         # Phase 6 — runtime feature_order_hash verification for canonical v3
-        # models that declare the full 38-feature canonical dimension.
+        # models that declare the full canonical dimension.
         if (
             is_canonical_v3
             and self.feature_dim == CANONICAL_FEATURE_DIM
@@ -319,14 +327,13 @@ def bitnet_score(features: dict) -> float:
     Input:  CRT features dict (canonical keys only)
     Output: confidence score [0, 1]
 
+    CONTRACT-A façade (Spec v1.2.1):
+      ≡ BitNetComposition.predict(features).confidence
+      recipe: enc_legacy6 + bb_legacy_mlp + conf head + ad_crt_gate
+
     Uses hard key access — CRASH on missing (production behavior).
+    Applies CRT serve aliases (FM-027/028 → legacy keys) when present.
     """
-    x = [
-        features["body_ratio"],
-        features["retest_depth"],
-        features["disp_strength"],
-        features["atr"],
-        features["candles_since_retest"],
-        float(features["double_sweep"]),
-    ]
-    return _get_bitnet().forward(x)
+    from bitnet.composition import get_default_composition
+
+    return float(get_default_composition().predict(features).confidence)

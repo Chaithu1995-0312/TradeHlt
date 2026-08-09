@@ -417,4 +417,34 @@ class TradeNetV2:
             pass
 
 
+def make_neural_fn_v2(instrument: Optional[str] = None,
+                      model_path: Optional[str] = None):
+    """Wrapper for TradeNet v2 (3-head survival classifier) that preserves the
+    ``Callable[[dict], float] -> float`` interface FusionEngine.neural expects.
+
+    Returns the composite ``0.4·p_tp1 + 0.4·p_tp2 + 0.2·p_survives_be`` for v2
+    envelopes; falls back to the single sigmoid for legacy v1 .pth via the
+    TradeNetV2 bridge. When no model is registered for the instrument, returns
+    ``None`` so FusionEngine renormalises remaining engines (lines 599-606).
+
+    Parameters
+    ----------
+    instrument : per-instrument lookup via TradeNetRegistry.__active__[instrument]
+    model_path : explicit envelope path; overrides registry lookup
+
+    Usage
+    -----
+        from training.trade_net_v2 import make_neural_fn_v2
+        fusion = FusionEngine(..., neural_fn=make_neural_fn_v2(instrument="ETHUSDT"))
+    """
+    tnv2 = TradeNetV2(model_path=model_path, instrument=instrument)
+
+    def _infer_v2(features: dict):
+        result = tnv2.predict(features)
+        if result is None:
+            return None
+        return float(result["tradenet_score"])
+
+    return _infer_v2
+
 __all__ = ["TradeNetV2", "SCHEMA_VERSION_V2", "COMPOSITE_WEIGHTS"]

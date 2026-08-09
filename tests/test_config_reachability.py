@@ -37,7 +37,7 @@ def test_report_has_expected_shape(report):
     assert report["keys"]
     for k in report["keys"]:
         assert k["verdict"] in {
-            "READ_AND_USED", "READ_BUT_INERT", "SHADOW_ONLY",
+            "READ_AND_USED", "TOOLING_ONLY", "READ_BUT_INERT", "SHADOW_ONLY",
             "DOC_ONLY", "DEAD", "HARDCODED_OVERRIDE", "METADATA",
         }
 

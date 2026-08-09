@@ -21,6 +21,16 @@ DERIVED: dict[str, Callable] = {
     # F-050 remediation CH-001: the two formerly name-colliding CRT quantities, now first-class.
     "derived_math.displacement_retrace":     derived_math.displacement_retrace,
     "derived_math.displacement_atr_ratio":   derived_math.displacement_atr_ratio,
+    # GD-004 closure 2026-07-11: scoring_engine's as-wired breakout displacement input (FM-029).
+    "derived_math.disp_strength_atr_rescale": derived_math.disp_strength_atr_rescale,
+    # FM-030/031 (2026-07-22): scale-invariant corrections of FM-022/FM-023, selected by
+    # `feature_pipeline.normalization_basis`. Registered so the identity is executable and
+    # parity-testable; ontology entries stay `active: false` (no production authority, §6.5).
+    "derived_math.ema_spread_atr":            derived_math.ema_spread_atr,
+    "derived_math.momentum_score_atr":        derived_math.momentum_score_atr,
+    # FM-070 (2026-07-31): CRT engine's live bars-since-retest-candle count, registered to
+    # resolve the FM-065 candles_since_retest name collision (see that entry's note).
+    "derived_math.candles_since_retest_state": derived_math.candles_since_retest_state,
 }
 
 

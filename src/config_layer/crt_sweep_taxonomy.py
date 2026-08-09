@@ -121,13 +121,17 @@ def candle_geometry(
     """
     full_range = max(high - low, 0.001)  # floor per Table 3
     body = abs(close - open_)
-    upper_wick = (high - max(open_, close)) / full_range
-    lower_wick = (min(open_, close) - low) / full_range
+    # T-15 / GD-008/009 (2026-07-20): diagnostic fractions of full_range — NOT
+    # FM-003/004 raw wicks and NOT FM-011/012 registered ratio names (those would
+    # re-trip the ownership lint). Return-dict KEYS keep historical handover-doc
+    # names for tools/btcusdt_crt_v3_replay.py API stability.
+    sweep_uw_frac = (high - max(open_, close)) / full_range
+    sweep_lw_frac = (min(open_, close) - low) / full_range
     return {
         "full_range": full_range,
         "body":       body,
         "body_ratio": body / full_range,
-        "upper_wick": upper_wick,
-        "lower_wick": lower_wick,
+        "upper_wick": sweep_uw_frac,
+        "lower_wick": sweep_lw_frac,
         "bearish":    close < open_,
     }

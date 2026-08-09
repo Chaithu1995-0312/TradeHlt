@@ -27,9 +27,10 @@ _CSV_2 = _REPO / "data" / "SOLUSDT_M15.csv"
 
 def _run_capped(n: int, instrument: str = _INSTRUMENT, csv: Path = _CSV) -> tuple[str, dict]:
     from runtime.backtest_v2 import BacktestConfig, BacktestRunner, CandleLoader
-    from config_layer.config_builder import ConfigBuilder
+    from config_layer.production_config import get_active_version, load_prod_config_from_registry
 
-    crt_cfg = ConfigBuilder.build(instrument, overrides={})
+    # P2 F-057: product path requires PRODUCTION_MERGED (not bare ConfigBuilder).
+    crt_cfg = load_prod_config_from_registry(get_active_version(), instrument)
     cfg = BacktestConfig.from_prod_config(instrument=instrument, crt_config=crt_cfg)
     loader = CandleLoader(str(csv), instrument)
     out_dir = tempfile.mkdtemp(prefix="replay_det_")
@@ -55,9 +56,10 @@ def _run_artifacts(n: int, instrument: str, csv: Path) -> dict[str, bytes]:
     *_summary.json, *_report.txt). The run-dir NAME carries a wall-clock stamp, but the
     artifact CONTENTS must be replay-identical — that is what this captures."""
     from runtime.backtest_v2 import BacktestConfig, BacktestRunner, CandleLoader
-    from config_layer.config_builder import ConfigBuilder
+    from config_layer.production_config import get_active_version, load_prod_config_from_registry
 
-    crt_cfg = ConfigBuilder.build(instrument, overrides={})
+    # P2 F-057: product path requires PRODUCTION_MERGED (not bare ConfigBuilder).
+    crt_cfg = load_prod_config_from_registry(get_active_version(), instrument)
     cfg = BacktestConfig.from_prod_config(instrument=instrument, crt_config=crt_cfg)
     out_dir = tempfile.mkdtemp(prefix="replay_art_")
     BacktestRunner(cfg, csv_path=str(csv)).run(

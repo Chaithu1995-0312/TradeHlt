@@ -123,10 +123,23 @@ class TradeLogger:
         tp1_price:     float,
         tp2_price:     float,
         opened_at:     Optional[datetime] = None,
+        provenance:         Optional[dict] = None,
+        feature_vector_sha: str = "",
+        gates_fired:        Optional[dict] = None,
     ) -> None:
         """
         Called immediately after a trade is opened.
         Write everything needed to later reconstruct the decision.
+
+        provenance / feature_vector_sha / gates_fired (target-strategy-architecture.md
+        §13 item8 / §9 — additive, default-empty so existing readers are unaffected):
+          provenance         — TradeProvenanceV1.to_dict() (config version/hash, model
+                                pins, strategy_id) — WHY this trade was allowed to exist.
+          feature_vector_sha — sha256 fingerprint of the canonical feature vector at
+                                decision time, so the exact market state is joinable
+                                without storing the full vector on every line.
+          gates_fired        — the CRTConfig threshold snapshot active for this trade
+                                (dataclasses.asdict(crt_cfg)) — WHAT let it through.
         """
         record = {
             "event":       "ENTRY",
@@ -143,6 +156,9 @@ class TradeLogger:
             "sl_price":    round(sl_price,    6),
             "tp1_price":   round(tp1_price,   6),
             "tp2_price":   round(tp2_price,   6),
+            "provenance":         provenance or {},
+            "feature_vector_sha": feature_vector_sha,
+            "gates_fired":        gates_fired or {},
         }
         self._write(record)
 

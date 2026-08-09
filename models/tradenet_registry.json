@@ -50,5 +50,58 @@
     "active": true,
     "instrument": "ETHUSDT",
     "run_id": "20260519_113806"
+  },
+  "_schema_v4_note": "Stamped 2026-07-22 (SCHEMA-V4-VECTOR-MIGRATION). TradeNet is UNWIRED (F-005) and its .pth is absent from the repo; wire-up is gated behind TN_QUAL_V1. Any checkpoint trained pre-2026-07-22 is aligned to schema v3.0 (38 dims) and must be revalidated against v4 before wire-up.",
+  "canonical_schema_version_at_stamp": "4.0",
+  "__active__": {
+    "ETHUSDT": "v5_auto_2026_06_eth"
+  },
+  "v2_xauusd_20260723T084643": {
+    "version": "v2_xauusd_20260723T084643",
+    "model_file": "D:\\Tradelatest\\models\\XAUUSD\\20260723T084643\\tradenet_v2_XAUUSD_20260723T084643.json",
+    "metrics": {
+      "auc_p_tp1": 0.5,
+      "pos_rate_p_tp1": 0.0,
+      "auc_p_tp2": 0.5,
+      "pos_rate_p_tp2": 0.0,
+      "auc_p_survives_be": 0.6436011550325142,
+      "pos_rate_p_survives_be": 0.2081478238105774
+    },
+    "trained_at": "2026-07-23T08:46:43Z",
+    "active": false,
+    "instrument": "XAUUSD",
+    "run_id": "20260723T084643"
+  },
+  "v2_xauusd_20260728T060451": {
+    "version": "v2_xauusd_20260728T060451",
+    "model_file": "D:\\Tradelatest\\models\\XAUUSD\\20260728T060451\\tradenet_v2_XAUUSD_20260728T060451.json",
+    "metrics": {
+      "auc_p_tp1": 0.5,
+      "pos_rate_p_tp1": 0.0,
+      "auc_p_tp2": 0.5,
+      "pos_rate_p_tp2": 0.0,
+      "auc_p_survives_be": 0.6343615044607053,
+      "pos_rate_p_survives_be": 0.2081478238105774
+    },
+    "trained_at": "2026-07-28T06:04:51Z",
+    "active": false,
+    "instrument": "XAUUSD",
+    "run_id": "20260728T060451"
+  },
+  "v2_xauusd_20260728T060800": {
+    "version": "v2_xauusd_20260728T060800",
+    "model_file": "D:\\Tradelatest\\models\\XAUUSD\\20260728T060800\\tradenet_v2_XAUUSD_20260728T060800.json",
+    "metrics": {
+      "auc_p_tp1": 0.8284992402373476,
+      "pos_rate_p_tp1": 0.014247551560401917,
+      "auc_p_tp2": 0.5,
+      "pos_rate_p_tp2": 0.0,
+      "auc_p_survives_be": 0.6157097882303005,
+      "pos_rate_p_survives_be": 0.2081478238105774
+    },
+    "trained_at": "2026-07-28T06:08:00Z",
+    "active": false,
+    "instrument": "XAUUSD",
+    "run_id": "20260728T060800"
   }
 }

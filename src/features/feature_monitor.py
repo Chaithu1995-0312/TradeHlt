@@ -296,12 +296,17 @@ if __name__ == "__main__":
 
     monitor = FeatureMonitor(window_size=200)
 
-    # Feed 50 normal samples
+    # Feed 50 normal samples (synthetic fixture noise — bind to intermediates so the
+    # governed keys receive TRANSPORTED values; the demo synthesizes inputs, not
+    # feature math — feature_math_lint 2026-07-11 hardening)
     for _ in range(50):
+        _rd = random.uniform(0.2, 0.6)
+        _br = random.uniform(0.4, 0.8)
+        _ds = random.uniform(0.1, 0.4)
         monitor.update({
-            "retest_depth":  random.uniform(0.2, 0.6),
-            "body_ratio":    random.uniform(0.4, 0.8),
-            "disp_strength": random.uniform(0.1, 0.4),
+            "retest_depth":  _rd,
+            "body_ratio":    _br,
+            "disp_strength": _ds,
         })
 
     print("After 50 normal samples:")

@@ -5,9 +5,9 @@
 > why." Read this to know **which doc to open for which question** and **how to traverse between
 > them** — without grepping the whole tree. This is an LLM-reference doc; CLAUDE.md only points here.
 >
-> Created: 2026-06-05 · Updated: 2026-06-05
+> Created: 2026-06-05 · Updated: 2026-07-28
 >
-> **See also:** [`timeline.md`](timeline.md) (the date-join) · [`current-findings.md`](current-findings.md) · [`plans/readme.md`](plans/readme.md) · [`analysis/readme.md`](analysis/readme.md) · [`topics/readme.md`](topics/readme.md)
+> **See also:** [`timeline.md`](timeline.md) (the date-join) · [`current-findings.md`](current-findings.md) · [`plans/readme.md`](plans/readme.md) · [`analysis/readme.md`](analysis/readme.md) · [`topics/readme.md`](topics/readme.md) · [`architecture/target-strategy-architecture.md`](architecture/target-strategy-architecture.md) (target strategy vs market semantics + not-yet-built checklist)
 
 ## The record systems (which doc owns which question)
 
@@ -17,10 +17,14 @@
 | **Plans** | [`plans/readme.md`](plans/readme.md) | *What was planned/designed* (point-in-time design records, 64 plans) | "was X planned? what was the design / was it shipped or killed?" |
 | **Analysis** | [`analysis/readme.md`](analysis/readme.md) | *Point-in-time studies & audits* (evidence; **not** current truth) | "what did the study on X measure?" / "where's the evidence for a finding?" |
 | **Findings** | [`current-findings.md`](current-findings.md) | *Current validated conclusions* `F-0xx` + Funding Ledger | "what do we already know about X? what's funded/killed?" |
-| **Codebase structure** | [`architecture/code-map.generated.md`](architecture/code-map.generated.md) (authoritative tree) · [`architecture/codebase-state-map.md`](architecture/codebase-state-map.md) (role per pkg) · [`architecture/entry-exit-map.md`](architecture/entry-exit-map.md) (I/O surface) | *What packages/modules exist, what each is for, how it's invoked & what it emits* | "where does this change land? what's package Y for? how is the app called / what does it write?" |
+| **Research families** | [`governance/research_family_registry.json`](governance/research_family_registry.json) | *Which market objects were researched, and which of the six questions L0–L5 was asked of each* — an atlas of **questions and gaps**, explicitly **not** of answers (a cell records that work happened, never that its conclusion holds) | "what has been researched about object X? which layer is unanswered? where are the explicit gaps?" |
+| **Codebase structure** | [`architecture/code-map.generated.md`](architecture/code-map.generated.md) (authoritative tree) · [`architecture/codebase-state-map.md`](architecture/codebase-state-map.md) (role per pkg) · [`architecture/entry-exit-map.md`](architecture/entry-exit-map.md) (I/O surface) · [`architecture/model-design-intent.md`](architecture/model-design-intent.md) (why each model exists — design intent, not implementation) | *What packages/modules exist, what each is for, how it's invoked & what it emits* | "where does this change land? what's package Y for? how is the app called / what does it write?" / "why does model X exist?" |
 | **Topics** | [`topics/readme.md`](topics/readme.md) | *Concept ↔ code ↔ tests ↔ validations* (per concept) | "give me the grounded picture of concept X" |
 | **Timeline** (the join) | [`timeline.md`](timeline.md) | *Date → milestone → SESSION LOG → plan → finding* in one table | "what changed when, and why?" |
 | **Research substrates** (frozen datasets) | `../results/research/{bnbusdt,btcusdt,ethusdt,solusdt}_trade_anatomy/README.md` (BNB is the schema reference: [`bnbusdt`](../results/research/bnbusdt_trade_anatomy/README.md)) | *Canonical per-trade datasets for downstream research, one per crypto major* (sha256-pinned, regenerate-don't-edit) | "what's the canonical {coin} trade-behavior dataset (survival/clustering/ML)?" — see F-022/023/024 + `docs/analysis/cross-instrument-anatomy-2026-06-13.md` |
+| **Config / registry authorities** | [`governance/config_authority_matrix.md`](governance/config_authority_matrix.md) | *WHO/HOW/WHAT + 14 Sources + field-level authority matrix* (observational; not a fourth peer layer) | "which file owns this threshold / registry active flag / formula? what's descriptive vs executable?" |
+| **Target strategy architecture** | [`architecture/target-strategy-architecture.md`](architecture/target-strategy-architecture.md) | *Target framing: market semantics vs strategy knobs, research/live split, BitNet role, Strategy Registry, ledger, not-yet-built checklist* (not runtime authority) | "what is the target strategy system? what is structural vs configurable? what is not built yet?" |
+| **Model runtime alignment** | [`governance/model_lineage_rollup.md`](governance/model_lineage_rollup.md) (cross-model rollup) · per-family: [`gaussian`](governance/gaussian_lineage_audit.md) · [`zonegate`](governance/zonegate_lineage_audit.md) · [`rr`](governance/rr_lineage_audit.md) · [`bitnet`](governance/bitnet_lineage_audit.md) · [`tradenet`](governance/tradenet_lineage_audit.md) | *Does the runtime load the artifact the registry declares and the trainer produced* (latest vs active vs loaded, per model) | "is model X's checkpoint stale? what does the spine actually load? should active_models.yaml change?" |
 
 ## How they connect
 

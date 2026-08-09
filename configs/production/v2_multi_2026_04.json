@@ -18,8 +18,8 @@
       "new_york",
       "overlap"
     ],
-    "bitnet_zone_threshold": 0.25,
-    "zone_registry_path": "models/zone_registry.json",
+    "zone_cluster_threshold": 0.25,
+    "zone_registry_path": "models/zone_registry_v4_2026_07.json",
     "zone_gate_execution_mode": "normal",
     "zone_mode": "hard",
     "zone_gate": {
@@ -32,9 +32,9 @@
     "convergence_window": 500,
     "rr_fusion": {
       "enabled": false,
-      "model_path": "models/rr_model.json",
+      "model_path": "models/XAUUSD/20260728_v39/rr_model_20260728_v39_xau.json",
       "threshold": 0.5,
-      "full_feature_vector": false
+      "full_feature_vector": true
     },
     "dual_engine": {
       "trend_strength_threshold": 0.15,
@@ -71,7 +71,7 @@
     }
   },
   "sl_tp_comparison": {
-    "_comment": "Reference params for legacy SL/TP method \u00e2\u20ac\u201d used ONLY by SLTPComparator, never in live path",
+    "_comment": "Reference params for legacy SL/TP method â€” used ONLY by SLTPComparator, never in live path",
     "legacy_sl_atr_mult": 1.0,
     "legacy_tp_atr_mult_breakout": 2.0,
     "legacy_tp_atr_mult_pullback": 1.5,
@@ -122,12 +122,16 @@
     "enable_llm": true,
     "tier_full": 0.75,
     "tier_half": 0.6,
-    "tier_quarter": 0.5
+    "tier_quarter": 0.5,
+    "_comment_consensus": "T-22 (2026-07-19): declared because engine_runner previously read these via .get(key, literal) while its six neighbouring fusion keys used the strict _cfg_require -- an inconsistency in a single constructor call. Values equal the prior code defaults AND the FusionConfig dataclass defaults (fusion_engine.py:172-173) AND the consensus_sweep baseline, so declaring them is behaviour-neutral. NOTE the consensus gate itself is dormant on the decision path; scripts/analysis/consensus_sweep.py injects these via a get_prod_section monkeypatch, so they are NOT dead keys.",
+    "min_consensus_signals": 2,
+    "min_consensus_agreement": 0.6
   },
   "decision_engine": {
     "score_threshold": 0.45,
     "p_win_threshold": 0.4,
     "rr_threshold": 1.5,
+    "rr_threshold__retired": "F-048 2026-07-24 - DecisionEngine no longer reads this; economic RR owned by ultron_risk_gate.min_rr_ratio. Key kept for archived/baseline consistency, gates nothing.",
     "weak_component_threshold": 0.4,
     "weak_link_weight": 0.3,
     "threshold_percentile": 85,
@@ -136,8 +140,16 @@
   },
   "regime_governor": {
     "max_trades_per_batch": 3,
-    "regime_penalty": { "trend": 0.0, "range": 0.15, "neutral": 0.15 },
-    "regime_accept_percentile": { "trend": 0.75, "range": 0.9, "neutral": 0.92 },
+    "regime_penalty": {
+      "trend": 0.0,
+      "range": 0.15,
+      "neutral": 0.15
+    },
+    "regime_accept_percentile": {
+      "trend": 0.75,
+      "range": 0.9,
+      "neutral": 0.92
+    },
     "direction_penalty": 0.1,
     "fallback_threshold": 0.45,
     "window_min_samples": 10,
@@ -160,7 +172,13 @@
     "theta_min": 0.5,
     "theta_max": 0.95,
     "min_history": 10,
-    "fusion_percentile": 85
+    "fusion_percentile": 85,
+    "_comment_integral": "T-22 (2026-07-19): the five integral-control params below were LIVE but UNDECLARED -- AcceptanceController.from_prod_config enforced only the four keys above, so __init__ fell back to code literals for these and the adaptive acceptance threshold ran on numbers absent from this config (invisible to config_reachability and to the config hash). Values here EQUAL the prior code defaults exactly, so declaring them is behaviour-neutral.",
+    "acceptance_alpha": 0.01,
+    "acceptance_target_low": 0.05,
+    "acceptance_target_high": 0.15,
+    "acceptance_k_sigma": 1.0,
+    "acceptance_window": 200
   },
   "validation_summary": {
     "config_id": "v2_multi_2026_04_candidate_1",
@@ -257,7 +275,20 @@
     "expansion_age_warn_candles": 342,
     "shadow_advisory_only": false,
     "shadow_age_norm_candles": 0,
-    "shadow_age_penalty_lambda": 0.0
+    "shadow_age_penalty_lambda": 0.0,
+    "retest_min_depth_atr_fraction": 0.1,
+    "risk_score_weights": [
+      0.35,
+      0.25,
+      0.2,
+      0.2
+    ],
+    "score_component_weights": [
+      0.35,
+      0.25,
+      0.2,
+      0.2
+    ]
   },
   "rr_model": {
     "ridge_alpha": 10.0,
@@ -272,8 +303,18 @@
       "ml": 0.3,
       "confidence": 0.2
     },
-    "model_path": "models/rr_model.json",
-    "dataset_path": "models/rr_dataset.json"
+    "model_path": "models/XAUUSD/20260728_v39/rr_model_20260728_v39_xau.json",
+    "dataset_path": "models/XAUUSD/20260728_v39/rr_dataset.json",
+    "confidence_gate": {
+      "mode": "percentile",
+      "p_threshold": 0.01,
+      "dof_scaled_max": 3.0,
+      "d_sq_cut": 40.4212,
+      "target_bypass_fraction": 0.1,
+      "calibration_artifact": "results/rr_confidence_probe/rr_v39_xau_gate_calibration.json",
+      "calibrated_model": "models/XAUUSD/20260728_v39/rr_model_20260728_v39_xau.json",
+      "note": "F-044 percentile gate calibrated on XAU 39-dim train d_sq CDF; rr_fusion remains disabled"
+    }
   },
   "gaussian_scorer": {
     "retest_mu": 0.237,
@@ -298,7 +339,8 @@
     "max_cal_error": 0.25,
     "cv_corr_std_max": 0.05,
     "cv_n_folds": 2,
-    "require_cv_stable": false
+    "require_cv_stable": false,
+    "min_p_win": 0.35
   },
   "tuner": {
     "trade_count_floor": 3,
@@ -360,19 +402,47 @@
   "goal": {
     "goal_id": "G001",
     "enforce": false,
-    "trades_per_month": {"min": 20, "target": 40, "max": 80},
-    "avg_rr": {"min": 2.0},
-    "win_rate": {"min": 0.35},
-    "max_drawdown_pct": {"max": 0.10},
-    "risk_per_trade": {"target": 0.005},
-    "expectancy_r": {"min": 0.20},
-    "timeframe": {"execution": "M15", "structure": "H1"},
-    "instruments": ["BTCUSDT", "ETHUSDT", "BNBUSDT"],
-    "constraints": {"reaction_only": true, "human_execution": true, "no_prediction": true}
+    "trades_per_month": {
+      "min": 20,
+      "target": 40,
+      "max": 80
+    },
+    "avg_rr": {
+      "min": 2.0
+    },
+    "win_rate": {
+      "min": 0.35
+    },
+    "max_drawdown_pct": {
+      "max": 0.1
+    },
+    "risk_per_trade": {
+      "target": 0.005
+    },
+    "expectancy_r": {
+      "min": 0.2
+    },
+    "timeframe": {
+      "execution": "M15",
+      "structure": "H1"
+    },
+    "instruments": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "BNBUSDT"
+    ],
+    "constraints": {
+      "reaction_only": true,
+      "human_execution": true,
+      "no_prediction": true
+    }
   },
   "backtest": {
     "htf_candles_per_range": 4,
-    "warmup_candles": 30,
+    "_comment_warmup_candles": "T-16 (2026-07-23): raised 30 -> 78 to match the feature pipeline's CANONICAL warmup, which FeaturePipeline.finalize() drops. 78 is DERIVED, not chosen: feature_pipeline.ma_periods[0](20) + 1 (ma_slope diff) + trend_strength_window(10) - 1 + zscore_window(50) - 1, resolved by features.feature_pipeline.required_warmup_rows(). At 30 the replay loop ran candles 30..77 through the CRT state machine with NO feature row behind them, and a trade opened there silently received a zero vector. BacktestRunner now refuses to start when this value is below the derived one, so changing any of those three feature_pipeline windows without raising this key FAILS LOUDLY instead of reopening the gap.",
+    "warmup_candles": 78,
+    "_comment_engine_gate_enabled": "F-058 resolution (2026-07-23). The 4-engine fusion gate (CRT/Gaussian/ZoneGate/RR -> Fusion -> DecisionEngine veto) inside EngineRunner.run(). Previously declared NOWHERE and read only as os.getenv('BACKTEST_ENGINE_GATE', '1'), so documented behavior depended on an UNTRACKED .env: F-037/active_models.yaml describe it as OFF while the code default is ON, and any scrubbed/CI environment silently produced a different ledger. Declared here as the authority; the env var remains an explicit override and now logs at WARNING when it disagrees. Declaring ON is an EPOCH CHANGE -- the gate-OFF research corpus (F-019...F-036) stays valid for its own epoch and is not retro-invalidated.",
+    "engine_gate_enabled": true,
     "slippage_enabled": true,
     "slippage_atr_fraction": 0.1,
     "slippage_seed": 42,
@@ -382,7 +452,9 @@
     "use_compounding": true,
     "gap_reset_enabled": true,
     "gap_reset_minutes": 120,
-    "event_flush_every": 100
+    "event_flush_every": 100,
+    "_comment_bypass_zone_invalid": "F-058-class fix (2026-07-29, target-strategy-architecture.md sec13 item2). Backtest-mode bypass for the zone_gate_invalid EngineRunner rejection: that rule is production-only (requires a populated zone_registry.json; backtest sees <=5 zones, treated as \"no zones\"). Was os.getenv(\"BACKTEST_BYPASS_ZONE_INVALID\", \"1\"), declared in no config -- same undeclared-env-truth class as F-058's engine_gate_enabled. Declared here as the authority (true = current behavior, byte-identical); the env var remains an explicit override and logs at WARNING when it disagrees.",
+    "bypass_zone_invalid": true
   },
   "feature_monitor": {
     "window_size": 500,
@@ -393,6 +465,69 @@
   },
   "feature_store": {
     "max_history": 1000
+  },
+  "feature_pipeline": {
+    "_comment": "src/features/feature_pipeline.py indicator periods. CLAUDE.md Section 6.5 exception 2026-07-18 (BEHAVIORAL, config-driven) -- scoped to rolling-window/span PERIOD NUMBERS only; geometric primitives (body_size/wick_size/body_ratio/candle_body/upper_wick/lower_wick) remain STRUCTURAL/immutable. Values below equal the prior hardcoded literals byte-for-byte (parity-proven migration).",
+    "rsi_period": 14,
+    "atr_period": 14,
+    "ma_periods": [
+      20,
+      50,
+      200
+    ],
+    "bb_period": 20,
+    "bb_std": 2.0,
+    "macd_fast": 12,
+    "macd_slow": 26,
+    "macd_signal": 9,
+    "trend_strength_window": 10,
+    "ema_fast_span": 9,
+    "ema_slow_span": 21,
+    "_comment_tier3": "TIER 3 BEHAVIORAL (2026-07-19 Phase A) -- tunable without redefining any registered identity; every target feature below has NO FM id. Values equal the prior hardcoded literals byte-for-byte.",
+    "volume_ma_window": 20,
+    "volume_spike_fixed_fallback": 1.5,
+    "rsi_overbought": 70,
+    "rsi_oversold": 30,
+    "range_size_window": 20,
+    "displacement_strong_body_mult": 0.6,
+    "retest_lookback": 10,
+    "retest_atr_band_mult": 1.0,
+    "double_sweep_window": 5,
+    "volume_spike_adaptive_window": 50,
+    "volume_spike_min_samples": 20,
+    "volume_spike_percentile": 75,
+    "_comment_tier2": "TIER 2 TUNABLE STRUCTURAL (2026-07-19 Phase A) -- config-driven, BUT each shapes a REGISTERED identity: changing one redefines that feature, requires the ontology formula to be re-synced, and invalidates trained artifacts. Not a free sweep knob. swing_window is deliberately EXCLUDED from Phase A (see Phase B).",
+    "disp_strength_clip_low": 0.0,
+    "disp_strength_clip_high": 3.0,
+    "retest_depth_clip_low": 0.0,
+    "retest_depth_clip_high": 1.0,
+    "liquidity_decay_coeff": -0.5,
+    "liquidity_nan_sentinel": 10.0,
+    "volatility_percentile_window": 200,
+    "volatility_tercile_low": 0.33,
+    "volatility_tercile_high": 0.66,
+    "zscore_window": 50,
+    "_comment_session_windows": "FM-052 v4.0 (2026-07-22, SCHEMA-V4-VECTOR-MIGRATION). REPLACES session_asia_end_hour/session_london_end_hour, which defined a 3-value hour PARTITION (0 if h<8 else 1 if h<16 else 2). Those keys are REMOVED rather than reused: silently redefining a key's meaning is the config-illusion class F-056 closed. Half-open [start, end) UTC hours, matching the old `hour < end` convention. OVERLAP (=LONDON n NEWYORK) and CLOSED (=no window) are DERIVED and deliberately NOT configurable. These are the FEATURE's windows (real market sessions); the FILTER's narrow trading bands live in CRTConfig.session_windows and are a different concept - see src/features/session_classifier.py.",
+    "session_windows_utc": {
+      "ASIA": [
+        0,
+        9
+      ],
+      "LONDON": [
+        7,
+        16
+      ],
+      "NEWYORK": [
+        12,
+        21
+      ]
+    },
+    "_comment_swing": "PHASE B (2026-07-19) TUNABLE STRUCTURAL, HIGHEST BLAST RADIUS. swing_window sets BOTH the pivot half-window (rolling width 2k+1) AND the FC1-A causal publication delay (available_at = t+k) -- it determines WHEN a feature becomes knowable, not just how it is sized. It defines lookback on FM-045/046, and 6 governance/certification scripts record it as a provenance fact. Changing it invalidates every artifact certified against the old value and requires re-certification, not just a re-run.",
+    "swing_window": 2,
+    "_comment_normalization_basis": "FM-030/031 IDENTITY SELECTOR (2026-07-22, program FM-030-031-DIMENSIONAL-MIX-MIGRATION). Not a period -- it chooses WHICH registered identity ema_spread/momentum_score emit. 'atr_relative' = FM-022/FM-023, numerator / atr; because atr is close-relative (atr_14_raw/close) and the numerator is absolute price, the emitted value scales with price level (legacy == corrected * close). This is the DEFAULT and is byte-identical to the pre-2026-07-22 pipeline -- the XAUUSD freeze-pin vector SHA is its parity proof. 'atr_absolute' = FM-030/FM-031, numerator / (atr * close), scale-invariant. F-061 measured the legacy arm's decision-surface cost on crypto (detect_regime ~constant 'trend', breakout score pinned at 1.0, tanh(momentum) saturated); the corrected arm is measured via configs/production/v2_multi_dimfix_shadow_2026_07.json and carries NO production authority (CLAUDE.md 6.5).",
+    "normalization_basis": "atr_relative",
+    "_comment_session_timestamp_basis": "F-066 (2026-08-01, blind-label investigation). Selects which clock hour_of_day/session (FM-052) derive from. 'broker_local' = the DEFAULT, byte-identical to every pipeline run before this key existed: uses the raw timestamp column as-is. For this MT5-sourced corpus that raw timestamp is actually broker-server time (EET/EEST, tracking America/New_York DST), NOT UTC, despite session_windows_utc's name -- measured 53.36 pct of XAUUSD bars carry the wrong session label under this basis (two independent cross-instrument tests: BTCUSDT cross-correlation, NFP-release alignment; see docs/research/preregistration-blind-label-descriptive-fidelity.md). 'utc_corrected' = derives from features/broker_clock.py's true-UTC conversion, making session/hour_of_day match what session_windows_utc already claims. This key stays 'broker_local' here; flipping the ACTIVE config to 'utc_corrected' is a separate, explicitly-gated decision (feature-vector SHA changes on ~53 pct of bars, freeze-pin re-certification required) -- NOT made by this config edit.",
+    "session_timestamp_basis": "broker_local"
   },
   "notes": "April tuner run, 3-month window",
   "schema_version": "1.3",
@@ -596,7 +731,9 @@
     }
   },
   "dataset_integrity": {
-    "canonical_data_roots": ["data"],
+    "canonical_data_roots": [
+      "data"
+    ],
     "path_pattern": "{symbol}_{timeframe}.csv",
     "enforce_path_consistency": true,
     "max_missing_pct": 0.02,
@@ -615,40 +752,154 @@
       "autoderive_presence_min": 0.5
     },
     "session_calendar": {
-      "crypto_quote_suffixes": ["USDT", "USDC", "BUSD"],
-      "metals_prefixes": ["XAU", "XAG", "XPT", "XPD"],
+      "crypto_quote_suffixes": [
+        "USDT",
+        "USDC",
+        "BUSD"
+      ],
+      "metals_prefixes": [
+        "XAU",
+        "XAG",
+        "XPT",
+        "XPD"
+      ],
       "weekday_open_hour": 22,
       "weekday_open_weekday": 6,
       "weekday_close_hour": 21,
       "weekday_close_weekday": 4,
-      "weekday_daily_break_hours": [21],
+      "weekday_daily_break_hours": [
+        21
+      ],
       "_holidays_doc": "Reviewed market-closure dates (UTC) surfaced by the strict autoderive gate on IC-Markets FX+metals data 2026-06-26. Union of FX (Christmas/New Year) + XAUUSD US-market calendar (Memorial/Juneteenth/Jul4/Labor/Thanksgiving/MLK/Presidents/Good-Friday/Christmas-Eve). Applied to ALL symbols (over-marking a date a symbol DID trade is harmless: present bars on a holiday are extra, never 'missing'). DELIBERATELY EXCLUDES intraday micro-gaps (e.g. 2026-03-25, 2026-04-01, 2025-06-02, 2025-07-30) which are genuine 5-7 bar feed holes, NOT closures, and must keep hard-stopping per the zero-tolerance rule.",
       "holidays": [
-        "2024-05-27", "2024-06-19", "2024-07-04", "2024-09-02", "2024-11-28", "2024-11-29",
-        "2024-12-24", "2024-12-25",
-        "2025-01-01", "2025-01-20", "2025-02-17", "2025-04-18", "2025-05-26", "2025-06-19",
-        "2025-07-04", "2025-09-01", "2025-11-27", "2025-11-28", "2025-12-24", "2025-12-25",
-        "2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03"
+        "2024-05-27",
+        "2024-06-19",
+        "2024-07-04",
+        "2024-09-02",
+        "2024-11-28",
+        "2024-11-29",
+        "2024-12-24",
+        "2024-12-25",
+        "2025-01-01",
+        "2025-01-20",
+        "2025-02-17",
+        "2025-04-18",
+        "2025-05-26",
+        "2025-06-19",
+        "2025-07-04",
+        "2025-09-01",
+        "2025-11-27",
+        "2025-11-28",
+        "2025-12-24",
+        "2025-12-25",
+        "2026-01-01",
+        "2026-01-19",
+        "2026-02-16",
+        "2026-04-03",
+        "2026-07-04"
       ],
       "_known_gaps_doc": "Reviewed, timestamp-RANGE accept-list for genuine intraday broker feed outages (a few bars) that are NOT full-day closures — so the good bars that day are kept (unlike whole-day holidays). Each entry: {symbol?(optional; omit=all), from, to (half-open UTC ISO), reason}. A bar inside any applicable range is treated as non-tradable (accepted). EMPTY DEFAULT = byte-parity; entries are added ONLY by reviewed decision after the strict gate surfaces a hole confirmed to be a broker outage (not corruption). Populated 2026-07-02 from the IC-Markets bulk-fetch review: broker-wide multi-symbol windows are global; single-symbol holes are scoped; XAUUSD 2026-05-25/06-19 are US-holiday early-closes (gold) not yet in the holidays list.",
       "known_gaps": [
-        {"symbol": "EURCAD", "from": "2025-06-02T00:00:00", "to": "2025-06-02T00:05:00", "reason": "broker feed outage 2025-06-02 (EURCAD), reviewed 2026-07-02"},
-        {"symbol": "AUDUSD", "from": "2025-07-30T20:15:00", "to": "2025-07-30T21:20:00", "reason": "broker feed outage 2025-07-30 (AUDUSD), reviewed 2026-07-02"},
-        {"symbol": "EURCAD", "from": "2025-11-10T00:00:00", "to": "2025-11-10T00:05:00", "reason": "broker feed outage 2025-11-10 (EURCAD), reviewed 2026-07-02"},
-        {"symbol": "AUDUSD", "from": "2025-11-12T17:15:00", "to": "2025-11-12T17:25:00", "reason": "broker feed outage 2025-11-12 (AUDUSD), reviewed 2026-07-02"},
-        {"symbol": "EURCAD", "from": "2025-11-17T00:00:00", "to": "2025-11-17T00:05:00", "reason": "broker feed outage 2025-11-17 (EURCAD), reviewed 2026-07-02"},
-        {"symbol": "GBPUSD", "from": "2025-12-22T00:00:00", "to": "2025-12-22T00:05:00", "reason": "broker feed outage 2025-12-22 (GBPUSD), reviewed 2026-07-02"},
-        {"symbol": "EURCAD", "from": "2025-12-29T00:00:00", "to": "2025-12-29T00:05:00", "reason": "broker feed outage 2025-12-29 (EURCAD), reviewed 2026-07-02"},
-        {"from": "2026-03-25T16:10:00", "to": "2026-03-25T17:35:00", "reason": "broker-wide feed outage 2026-03-25 (4 syms), reviewed 2026-07-02"},
-        {"from": "2026-04-01T00:00:00", "to": "2026-04-01T08:35:00", "reason": "broker-wide feed outage 2026-04-01 (5 syms), reviewed 2026-07-02"},
-        {"from": "2026-04-22T09:55:00", "to": "2026-04-22T10:05:00", "reason": "broker-wide feed outage 2026-04-22 (5 syms), reviewed 2026-07-02"},
-        {"from": "2026-05-01T00:35:00", "to": "2026-05-01T00:40:00", "reason": "broker-wide feed outage 2026-05-01 (4 syms), reviewed 2026-07-02"},
-        {"symbol": "XAUUSD", "from": "2026-05-25T21:30:00", "to": "2026-05-26T00:00:00", "reason": "XAUUSD US-holiday early-close 2026-05-25 (Memorial Day), reviewed 2026-07-02"},
-        {"from": "2026-05-26T19:45:00", "to": "2026-05-26T19:50:00", "reason": "broker-wide feed outage 2026-05-26 (5 syms), reviewed 2026-07-02"},
-        {"from": "2026-06-15T12:15:00", "to": "2026-06-15T12:35:00", "reason": "broker-wide feed outage 2026-06-15 (6 syms), reviewed 2026-07-02"},
-        {"symbol": "XAUUSD", "from": "2026-06-19T20:00:00", "to": "2026-06-20T00:00:00", "reason": "XAUUSD US-holiday early-close 2026-06-19 (Juneteenth), reviewed 2026-07-02"},
-        {"from": "2026-06-29T08:05:00", "to": "2026-06-29T10:05:00", "reason": "broker-wide feed outage 2026-06-29 (6 syms), reviewed 2026-07-02"},
-        {"from": "2026-07-01T00:35:00", "to": "2026-07-01T00:40:00", "reason": "broker-wide feed outage 2026-07-01 (5 syms), reviewed 2026-07-02"}
+        {
+          "symbol": "EURCAD",
+          "from": "2025-06-02T00:00:00",
+          "to": "2025-06-02T00:05:00",
+          "reason": "broker feed outage 2025-06-02 (EURCAD), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "AUDUSD",
+          "from": "2025-07-30T20:15:00",
+          "to": "2025-07-30T21:20:00",
+          "reason": "broker feed outage 2025-07-30 (AUDUSD), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "EURCAD",
+          "from": "2025-11-10T00:00:00",
+          "to": "2025-11-10T00:05:00",
+          "reason": "broker feed outage 2025-11-10 (EURCAD), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "AUDUSD",
+          "from": "2025-11-12T17:15:00",
+          "to": "2025-11-12T17:25:00",
+          "reason": "broker feed outage 2025-11-12 (AUDUSD), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "EURCAD",
+          "from": "2025-11-17T00:00:00",
+          "to": "2025-11-17T00:05:00",
+          "reason": "broker feed outage 2025-11-17 (EURCAD), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "GBPUSD",
+          "from": "2025-12-22T00:00:00",
+          "to": "2025-12-22T00:05:00",
+          "reason": "broker feed outage 2025-12-22 (GBPUSD), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "EURCAD",
+          "from": "2025-12-29T00:00:00",
+          "to": "2025-12-29T00:05:00",
+          "reason": "broker feed outage 2025-12-29 (EURCAD), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-03-25T16:10:00",
+          "to": "2026-03-25T17:35:00",
+          "reason": "broker-wide feed outage 2026-03-25 (4 syms), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-04-01T00:00:00",
+          "to": "2026-04-01T08:35:00",
+          "reason": "broker-wide feed outage 2026-04-01 (5 syms), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-04-22T09:55:00",
+          "to": "2026-04-22T10:05:00",
+          "reason": "broker-wide feed outage 2026-04-22 (5 syms), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-05-01T00:35:00",
+          "to": "2026-05-01T00:40:00",
+          "reason": "broker-wide feed outage 2026-05-01 (4 syms), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "XAUUSD",
+          "from": "2026-05-25T21:30:00",
+          "to": "2026-05-26T00:00:00",
+          "reason": "XAUUSD US-holiday early-close 2026-05-25 (Memorial Day), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-05-26T19:45:00",
+          "to": "2026-05-26T19:50:00",
+          "reason": "broker-wide feed outage 2026-05-26 (5 syms), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-06-15T12:15:00",
+          "to": "2026-06-15T12:35:00",
+          "reason": "broker-wide feed outage 2026-06-15 (6 syms), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "XAUUSD",
+          "from": "2026-06-19T20:00:00",
+          "to": "2026-06-20T00:00:00",
+          "reason": "XAUUSD US-holiday early-close 2026-06-19 (Juneteenth), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-06-29T08:05:00",
+          "to": "2026-06-29T10:05:00",
+          "reason": "broker-wide feed outage 2026-06-29 (6 syms), reviewed 2026-07-02"
+        },
+        {
+          "from": "2026-07-01T00:35:00",
+          "to": "2026-07-01T00:40:00",
+          "reason": "broker-wide feed outage 2026-07-01 (5 syms), reviewed 2026-07-02"
+        },
+        {
+          "symbol": "XAUUSD",
+          "from": "2026-07-03T20:00:00",
+          "to": "2026-07-06T01:00:00",
+          "reason": "XAUUSD Jul-4-holiday early-close through weekend reopen, reviewed 2026-07-07"
+        }
       ]
     }
   },
@@ -686,7 +937,14 @@
   },
   "perp_funding_data": {
     "base_url": "https://fapi.binance.com",
-    "instruments": ["BNBUSDT", "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT"],
+    "instruments": [
+      "BNBUSDT",
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT",
+      "XRPUSDT",
+      "DOGEUSDT"
+    ],
     "funding_path": "/fapi/v1/fundingRate",
     "basis_path": "/fapi/v1/premiumIndexKlines",
     "interval": "15m",
@@ -695,5 +953,51 @@
     "max_limit": 1000,
     "out_dir": "data/perp"
   },
-  "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613"
+  "model_runners": {
+    "authority": "research_only",
+    "max_error_rate": 0.0,
+    "emit_vectors": false,
+    "crt_state_machine": {
+      "seed_bars": 50
+    }
+  },
+  "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613",
+  "market_router": {
+    "_comment": "Config-driven market_router (target-strategy-architecture.md sec13 item1 / F-057, 2026-07-29). classes = the 5-key CRT profile per market class (byte-identical seed from the prior market_router.py FOREX_CONFIG/CRYPTO_CONFIG literals). symbol_map = instrument -> class, consulted by classify_market()/get_crt_config() with a leading-symbol-token fallback for filename-derived instrument hints (e.g. XAUUSD_M15). Unmapped instruments raise UnknownInstrumentError -- no safe default.",
+    "classes": {
+      "CRYPTO": {
+        "retest_depth_max": 0.25,
+        "retest_atr_depth_fraction": 0.3,
+        "body_ratio_min": 0.5,
+        "atr_multiplier_min": 1.0,
+        "expansion_atr_min_distance": 0.15
+      },
+      "FOREX": {
+        "retest_depth_max": 0.35,
+        "retest_atr_depth_fraction": 0.5,
+        "body_ratio_min": 0.6,
+        "atr_multiplier_min": 1.5,
+        "expansion_atr_min_distance": 0.08
+      }
+    },
+    "symbol_map": {
+      "EURUSD": "FOREX",
+      "GBPUSD": "FOREX",
+      "USDJPY": "FOREX",
+      "AUDUSD": "FOREX",
+      "NZDUSD": "FOREX",
+      "USDCHF": "FOREX",
+      "XAUUSD": "FOREX",
+      "BTCUSDT": "CRYPTO",
+      "ETHUSDT": "CRYPTO",
+      "BNBUSDT": "CRYPTO",
+      "SOLUSDT": "CRYPTO",
+      "ADAUSDT": "CRYPTO",
+      "EURCAD": "FOREX",
+      "EURGBP": "FOREX",
+      "USDCAD": "FOREX",
+      "DOGEUSDT": "CRYPTO",
+      "XRPUSDT": "CRYPTO"
+    }
+  }
 }

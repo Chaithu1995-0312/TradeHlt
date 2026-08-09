@@ -67,6 +67,8 @@ def _make_runner():
     runner._acceptance = AcceptanceController({})
     from core.convergence_controller import ConvergenceController
     runner._convergence = ConvergenceController(window_size=500)
+    # PLAN-002: engines-path weights — test uses legacy defaults
+    runner._score_component_weights = (0.35, 0.25, 0.20, 0.20)
     return runner
 
 

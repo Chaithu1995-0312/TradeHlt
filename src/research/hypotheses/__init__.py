@@ -9,6 +9,7 @@ from research.hypotheses import spine_hypothesis  # noqa: F401  (registers the p
 from research.hypotheses import compression_breakout  # noqa: F401  (Program-4b transition consumer)
 from research.hypotheses import weekly_sweep_reversal  # noqa: F401  (Program-8 weekly-sweep consumer)
 from research.hypotheses import compression_box_straddle  # noqa: F401  (Program-9 OCO straddle consumer)
+from research.hypotheses import market_shape_hypothesis  # noqa: F401  (Program-11 semantic-shape consumer)
 
 __all__ = ["expansion_breakout", "mean_reversion", "spine_hypothesis", "compression_breakout",
-           "weekly_sweep_reversal", "compression_box_straddle"]
+           "weekly_sweep_reversal", "compression_box_straddle", "market_shape_hypothesis"]

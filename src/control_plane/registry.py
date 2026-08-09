@@ -44,6 +44,9 @@ _WORKFLOW_STAGE_BY_COMMAND: dict[str, str] = {
     "validation.config_validator": "Validation & Promotion",
     "promotion.manager": "Validation & Promotion",
     "governance.orchestrator": "Validation & Promotion",
+    "governance.script_census": "Validation & Promotion",
+    "governance.seed_script_registry": "Validation & Promotion",
+    "governance.query_scripts": "Validation & Promotion",
     "replay.unified": "Replay & Backtest",
     "backtest.v2": "Replay & Backtest",
     "backtest.bitnet": "Replay & Backtest",
@@ -935,6 +938,128 @@ def core_command_specs() -> tuple[CommandSpec, ...]:
                 ArgSpec("out",    flag="--out",    kind="str",   default="model.json", help="Output model JSON path"),
             ),
             artifacts=("model.json", "models/bitnet/**/*.json"),
+        ),
+        # ── Multi-LLM Research Lane (plan initiation — no API call) ─────────
+        CommandSpec(
+            id="research.initiate_plan",
+            title="Initiate Multi-LLM Research Plan",
+            description=(
+                "Prepare model-separated PROPOSAL + plan-design PROMPT + curated CONTEXT_BUNDLE "
+                "(ERP docs only; no full-repo scan). Paste into grok/deepseek/gemini/claude/chatgpt. "
+                "Does not call LLM APIs."
+            ),
+            category="Validation & Promotion",
+            mode="python-file",
+            script="scripts/multi_llm/initiate_plan.py",
+            args_schema=(
+                ArgSpec(
+                    "model",
+                    flag="--model",
+                    kind="choice",
+                    default="grok",
+                    choices=("deepseek", "grok", "gemini", "claude", "chatgpt", "all"),
+                    help="Target LLM for plan initiation",
+                ),
+                ArgSpec("cycle", flag="--cycle", kind="str", default="", help="Cycle id (empty=auto RC-timestamp)"),
+                ArgSpec("focus", flag="--focus", kind="str", default="", help="Optional plan focus"),
+                ArgSpec("no_ledger", flag="--no-ledger", kind="bool", default=False, help="Skip ledger append"),
+            ),
+            artifacts=(
+                "multi_llm/research_lane/proposals/**/PROPOSAL.md",
+                "multi_llm/research_lane/proposals/**/PROMPT_FOR_*.md",
+                "multi_llm/research_lane/proposals/**/CONTEXT_BUNDLE.md",
+                "multi_llm/research_lane/research_cycle_ledger.jsonl",
+            ),
+        ),
+        # ── SITS (Script & Implementation Traceability) operator CLIs ───────
+        CommandSpec(
+            id="governance.script_census",
+            title="Script Census (SITS)",
+            description=(
+                "Discover scripts/** + root *.py and optionally merge path-stable SCR stubs "
+                "(inventory observe layer; no trading behavior)."
+            ),
+            category="Validation & Promotion",
+            mode="python-file",
+            script="scripts/analysis/script_census.py",
+            args_schema=(
+                ArgSpec(
+                    "write_stubs",
+                    flag="--write-stubs",
+                    kind="str",
+                    default="",
+                    help="If set, merge stubs to this path (e.g. docs/governance/script_registry_stubs.jsonl)",
+                ),
+                ArgSpec(
+                    "json",
+                    flag="--json",
+                    kind="str",
+                    default="",
+                    help="Optional census summary JSON output path",
+                ),
+            ),
+            artifacts=(
+                "docs/governance/script_registry_stubs.jsonl",
+                "reports/script_census.LATEST.json",
+            ),
+        ),
+        CommandSpec(
+            id="governance.seed_script_registry",
+            title="Seed Script Registry (SITS)",
+            description=(
+                "Project stubs + overlays + CommandSpec reverse-map into data/script_registry.jsonl "
+                "(GENERATED; inventory authority only)."
+            ),
+            category="Validation & Promotion",
+            mode="python-file",
+            script="scripts/governance/seed_script_registry.py",
+            args_schema=(
+                ArgSpec(
+                    "stubs",
+                    flag="--stubs",
+                    kind="str",
+                    default="docs/governance/script_registry_stubs.jsonl",
+                    help="PRIMARY stubs JSONL path",
+                ),
+                ArgSpec(
+                    "out",
+                    flag="--out",
+                    kind="str",
+                    default="data/script_registry.jsonl",
+                    help="Generated registry JSONL path",
+                ),
+            ),
+            artifacts=("data/script_registry.jsonl",),
+        ),
+        CommandSpec(
+            id="governance.query_scripts",
+            title="Query Script Registry (SITS)",
+            description=(
+                "Query/filter the script inventory; --validate runs schema + path checks; "
+                "--canonical-gap lists ACTIVE CANONICAL_CLI missing CommandSpec linkage."
+            ),
+            category="Validation & Promotion",
+            mode="python-file",
+            script="scripts/governance/query_scripts.py",
+            args_schema=(
+                ArgSpec("summary", flag="--summary", kind="bool", default=True, help="Print summary JSON"),
+                ArgSpec("validate", flag="--validate", kind="bool", default=False, help="Schema/path validation"),
+                ArgSpec(
+                    "canonical_gap",
+                    flag="--canonical-gap",
+                    kind="bool",
+                    default=False,
+                    help="ACTIVE CANONICAL_CLI without control_plane_id / allowlist",
+                ),
+                ArgSpec(
+                    "missing_impl",
+                    flag="--missing-impl",
+                    kind="bool",
+                    default=False,
+                    help="logic_in_script without valid promotion plan",
+                ),
+            ),
+            artifacts=("data/script_registry.jsonl",),
         ),
     )
     enriched: list[CommandSpec] = []

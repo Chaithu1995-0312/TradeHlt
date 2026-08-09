@@ -102,7 +102,8 @@ def _build_trade_audited(self, state, risk_engine=None):
     has_disp    = getattr(state, "displacement_candle", None) is not None
     has_retest  = getattr(state, "retest_candle", None) is not None
     direction   = state.direction
-    atr         = getattr(state, "atr", None)
+    # Direct access, no getattr default (a default could only mask a rename).
+    atr         = state.atr_abs   # ABSOLUTE atr, NOT the close-relative FM-041 `atr`
     atr_present = isinstance(atr, float) and atr > 0
     risk_score  = state.risk_score
     cached_feats = state.cached_features or {}

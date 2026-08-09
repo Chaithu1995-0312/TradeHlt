@@ -3,15 +3,27 @@
 > **Topic-visibility unit.** The BitNet neural scorer and the LIVE hard rejection gate it drives.
 > This is the topic behind finding **F-004** (BitNet is a live gate, its score is persisted).
 >
-> Created: 2026-06-05 · Updated: 2026-06-05 · Status: living
+> Created: 2026-06-05 · Updated: 2026-07-21 · Status: living
 
 ## In plain language
-BitNet is a small quantized neural model that scores a candidate trade's features. It is **not
-advisory** — on the live/backtest CRT path, if the BitNet score falls below `0.55` the trade is
-**hard-rejected** before fusion even matters, and the score is persisted on the trade record. So
-BitNet is a real gatekeeper in the decision path (this corrected an earlier belief that BitNet was
-built-but-dormant). What *is* dormant is only an *adaptive, regime-aware* threshold — there is no
-such function; the cutoff is the static `0.55`.
+BitNet is a small neural model that scores a candidate trade's features and, **when enabled**,
+acts as a **hard-reject gate** (score `< bitnet_main_threshold`, default `0.55` →
+`RejectReason.LOW_SCORE`). It is **not** a fusion engine and **not** TradeNet.
+
+**Active-config reality (F-004 / F-055):** on production `v2_multi_2026_04`, `use_bitnet: false`,
+so the gate is **INERT** — it does not score, reject, or influence the live spine. When
+`use_bitnet: true`, the score is real, may be persisted (`bitnet_score_at_entry`), and can
+reset CRT trajectories (veto, not a pure filter). The adaptive/regime threshold path is
+separate and not what CRT uses (CRT uses the static config threshold).
+
+**Spec DESIGN FROZEN through v1.2.1 (2026-07-21):**  
+[`docs/implementation_plan/bitnet-cpp-specification-v1-2026-07-21.md`](../implementation_plan/bitnet-cpp-specification-v1-2026-07-21.md).  
+**A/B/C** contracts · hierarchy Encoder→Backbone→Heads→Adapter ·  
+backbone **family** `bb_bitlinear_res_v1` (L1 structure frozen); **H/L/N_res/budgets = L2 versioned
+defaults** (`bitlinear_res_defaults_v1`: 38/64/32/2), not immutable laws.  
+**Research program (Spec v1.2.6):** R0–R1 done. **R2.5 harness shipped**
+(`bitnet.r25_kill_test` / `scripts/research/bitnet_r25_kill_test.py`) — kill-test suite with
+pre-registered `r25_thresholds_v1`. PASS earns R3 only. Run on real CSV before R3. No enable.
 
 ## Code covered
 - [`src/bitnet/bitnet_inference.py:317`](../../src/bitnet/bitnet_inference.py) — `bitnet_score` — feature-dict → confidence score `[0,1]` (legacy forward pass).
@@ -45,3 +57,7 @@ Funding Ledger.
   "GGUF" language elsewhere in the docs); the GGUF path is for the separate zone/BitNet artifacts.
 - **Enhancements:** 2026-06-05 — F-004 notes the regime-adaptive threshold is the dormant piece; any
   reopen must clear the Funding-Ledger FROZEN reopen conditions first.
+- **DOC_DRIFT fixed 2026-07-21:** earlier topic prose treated BitNet as always-on live gatekeeper;
+  active patch is inert (`use_bitnet:false`). Conditional hard-reject when enabled remains correct.
+  Spec v1 freezes CONTRACT-A vs aspirational BitNet.cpp multi-head (CONTRACT-B) so rewrites cannot
+  silently change CRT semantics.

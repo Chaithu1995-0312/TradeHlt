@@ -41,13 +41,63 @@ from core.model_registry import (
     get_active_rr_entry,
 )
 
-# Indices (0-based) of absolute-price / size features in CANONICAL_FEATURES order.
-# Zeroing these at train-time (and matching inference-time) prevents the Ridge
-# regression from anchoring on instrument price level — a non-generalizable signal.
-#   open=0  high=1   low=2    close=3   volume=4
-#   ema_fast=7  ema_slow=8   macd_line=16  macd_signal=17
-#   body_size=26  wick_size=27
-_PRICE_FEATURE_INDICES: list = [0, 1, 2, 3, 4, 7, 8, 16, 17, 26, 27]
+# Indices (0-based) of absolute-price / size features in CANONICAL_FEATURES order
+# (schema v4.0, CANONICAL_FEATURE_DIM=39). Zeroing at train+predict prevents Ridge
+# from anchoring on instrument price level.
+#   open=0  high=1  low=2  close=3  volume=4
+#   ema_fast=7  ema_slow=8  macd_line=16  macd_signal=17
+#   body_size=27  candle_range=28  (v3 had body_size=26 wick_size=27)
+_PRICE_FEATURE_INDICES: list = [0, 1, 2, 3, 4, 7, 8, 16, 17, 27, 28]
+
+
+def _load_dataset_self_described(path: str) -> tuple[list, list, list]:
+    """Load an rr_dataset.json validating rows against its OWN stored n_features.
+
+    Opt-in sibling of rr_dataset_builder.load_dataset() for legacy 38-dim clean-label
+    datasets. The shared loader pins width/hash to the live canonical schema (39);
+    this one trusts the file's self-declared width, so a documented-subset dataset
+    loads without mutating the shared production module. Still fails closed on a
+    missing/incoherent declaration or ragged rows.
+    """
+    p = Path(path)
+    if not p.exists():
+        raise SystemExit(f"dataset not found: {p}")
+
+    payload = json.loads(p.read_text(encoding="utf-8"))
+    X = payload.get("X") or []
+    y_rr = payload.get("y_rr") or []
+    y_win = payload.get("y_win") or []
+
+    declared = payload.get("n_features")
+    if not isinstance(declared, int) or declared <= 0:
+        raise SystemExit(
+            f"--legacy-38-dim: {p} has no usable 'n_features' declaration "
+            f"(got {declared!r}); refusing to guess the width."
+        )
+
+    names = payload.get("feature_names") or []
+    if names and len(names) != declared:
+        raise SystemExit(
+            f"--legacy-38-dim: {p} declares n_features={declared} but carries "
+            f"{len(names)} feature_names — incoherent, refusing to load."
+        )
+
+    if len(X) != len(y_rr) or len(X) != len(y_win):
+        raise SystemExit(
+            f"--legacy-38-dim: inconsistent lengths X={len(X)} "
+            f"y_rr={len(y_rr)} y_win={len(y_win)}"
+        )
+
+    for i, vec in enumerate(X):
+        if not isinstance(vec, list) or len(vec) != declared:
+            raise SystemExit(
+                f"--legacy-38-dim: row {i} width "
+                f"{len(vec) if isinstance(vec, list) else type(vec).__name__} "
+                f"!= declared n_features {declared}"
+            )
+
+    print(f"  [legacy-38-dim] loaded self-described dataset: n_features={declared}")
+    return X, y_rr, y_win
 
 
 def main() -> None:
@@ -92,6 +142,15 @@ def main() -> None:
         help="Run ID (e.g. 20260519_113806). With --instrument auto-resolves both "
              "input dataset and output model paths to the run-scoped directory.",
     )
+    ap.add_argument(
+        "--legacy-38-dim", action="store_true", default=False,
+        help=(
+            "Load a legacy 38-dim dataset (macd_hist_raw excluded) by validating rows "
+            "against the file's OWN stored n_features instead of the live canonical dim. "
+            "Use with datasets from build_rr_dataset_from_clean_labels.py. The default "
+            "(unset) path is unchanged and still uses the strict shared load_dataset()."
+        ),
+    )
     args = ap.parse_args()
 
     # ── Resolve dataset path ─────────────────────────────────────────────────
@@ -121,7 +180,13 @@ def main() -> None:
                 dataset_path = "models/rr_dataset.json"
     print(f"Loading dataset: {dataset_path}")
 
-    X, y_rr, y_win = load_dataset(dataset_path)
+    if args.legacy_38_dim:
+        # Opt-in: validate against the file's OWN stored n_features rather than the
+        # live canonical dim. Used for clean-label datasets built at the legacy
+        # 38-dim layout (macd_hist_raw deferred). Never reached by default.
+        X, y_rr, y_win = _load_dataset_self_described(dataset_path)
+    else:
+        X, y_rr, y_win = load_dataset(dataset_path)
     n_samples  = len(X)
     n_features = len(X[0]) if X else 0
     print(f"  {n_samples} samples, {n_features} features")

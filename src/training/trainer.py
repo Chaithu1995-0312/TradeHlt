@@ -213,15 +213,23 @@ class GaussianNBModel:
         return [e / total for e in exps]
 
     def predict_expected_rr(self, x: list[float]) -> tuple[float, float, list[float]]:
-        # PATCH v3: validate every inference vector against GAUSSIAN_SCHEMA
-        validate_vector(x, GAUSSIAN_SCHEMA, label="trainer.GaussianNBModel.predict_expected_rr")
         """
         Returns (expected_rr, confidence, probabilities).
 
         expected_rr  : Σ P(class_i) × RR_weight_i
         confidence   : max(probabilities) — certainty of dominant class
         probabilities: [P(loss), P(small), P(mid), P(big)]
+
+        Width contract (P0 2026-07-22): validate against **this model's**
+        ``n_features``, not ambient ``GAUSSIAN_SCHEMA`` (live schema may be
+        wider; name-anchored extract supplies the trained subset).
         """
+        if len(x) != self.n_features:
+            raise ValueError(
+                f"GaussianNBModel.predict_expected_rr: feature vector length {len(x)} "
+                f"!= trained n_features {self.n_features}. "
+                f"Use name-anchored extract (gaussian_schema_contract), not ambient truncate."
+            )
         probs = self.predict_proba(x)
         expected_rr = sum(p * w for p, w in zip(probs, _RR_WEIGHTS))
         confidence  = max(probs)
@@ -409,12 +417,25 @@ def load_gaussian_model(
     """
     Load a Gaussian model bundle from models/<name>.
 
-    FIX 2 (hard schema check): raises ValueError if saved feature_schema
-    does not match current GAUSSIAN_FEATURE_SCHEMA.
+    Schema contract (P0 2026-07-22 — ``features.gaussian_schema_contract``):
+      * saved ``feature_schema`` names must resolve to live canonical names
+        (exact match or ``SCHEMA_V3_ALIASES``: macd_hist→macd_hist_z,
+        wick_size→candle_range);
+      * resolved length must equal ``model.n_features``;
+      * unresolvable names raise ``GaussianSchemaError`` (fail-closed);
+      * inference must use the resolved name order — never ambient-vector
+        truncation (see ``MLGaussianEngine.compute``).
 
-    Returns (model, scaler, metadata_dict)
+    Returns (model, scaler, metadata_dict) with meta keys:
+      feature_schema           — original saved names
+      feature_schema_resolved  — live names in trained order
+      schema_alignment         — exact | named_subset
     """
-    from features.dataset_builder import GAUSSIAN_FEATURE_SCHEMA
+    from features.gaussian_schema_contract import (
+        GaussianSchemaError,
+        assert_model_schema_compatible,
+        schema_alignment_report,
+    )
 
     path = MODELS_DIR / name
     if not path.exists():
@@ -422,16 +443,34 @@ def load_gaussian_model(
 
     bundle = json.loads(path.read_text())
 
-    # FIX 2: Hard error on schema mismatch — not just a warning
-    saved_schema = bundle.get("feature_schema", [])
-    if saved_schema and saved_schema != GAUSSIAN_FEATURE_SCHEMA:
-        raise ValueError(
-            f"Feature schema mismatch in model '{name}'!\n"
-            f"  Saved:   {saved_schema}\n"
-            f"  Current: {GAUSSIAN_FEATURE_SCHEMA}\n"
-            f"  The model was trained with a different feature set. "
-            f"Retrain with the current GAUSSIAN_FEATURE_SCHEMA or "
-            f"use the matching model version."
+    # Pre-resolve schema against live v4 (name-aligned; not ambient-list equality).
+    saved_schema = list(bundle.get("feature_schema") or [])
+    # Need model n_features for the width check — parse model first if schema present.
+    # Scaler gate still runs after so missing scaler stays the same error type.
+    model_probe = bundle.get("model") or {}
+    model_n = int(model_probe.get("n_features") or len(saved_schema) or 0)
+
+    resolved_schema: list = []
+    if saved_schema:
+        try:
+            resolved_schema = assert_model_schema_compatible(
+                saved_schema, model_n_features=model_n if model_n > 0 else len(saved_schema)
+            )
+        except GaussianSchemaError as exc:
+            # Preserve a readable multi-line error for operators / harnesses.
+            report = schema_alignment_report(saved_schema)
+            raise GaussianSchemaError(
+                f"Feature schema contract failed for Gaussian model '{name}': {exc}\n"
+                f"  Saved:    {saved_schema}\n"
+                f"  Resolved: {report.get('resolved_order')}\n"
+                f"  Missing:  {report.get('missing')}\n"
+                f"  Renames:  {report.get('renames')}\n"
+                f"  Remap aliases or retrain — refusing silent index truncation."
+            ) from exc
+    else:
+        raise GaussianSchemaError(
+            f"Gaussian model '{name}' has no feature_schema — refusing load under "
+            f"schema-v4 name-anchored contract (cannot prove alignment)."
         )
 
     # Audit missing-scaler failures so they land in logs/integrity_events.jsonl
@@ -457,12 +496,35 @@ def load_gaussian_model(
 
     model  = GaussianNBModel.from_dict(bundle["model"])
     scaler = StandardScaler.from_dict(bundle["scaler"])
+    # Re-assert against the real model object (authoritative n_features).
+    if len(resolved_schema) != int(model.n_features):
+        raise GaussianSchemaError(
+            f"Gaussian model '{name}': resolved schema length {len(resolved_schema)} "
+            f"!= model.n_features {model.n_features}."
+        )
+
+    from features.feature_schema import CANONICAL_FEATURE_ORDER as _LIVE_ORDER
+
     meta   = bundle.get("metrics", {})
     meta["feature_schema"] = saved_schema
+    meta["feature_schema_resolved"] = list(resolved_schema)
+    meta["schema_alignment"] = (
+        "exact" if list(resolved_schema) == list(_LIVE_ORDER) else "named_subset"
+    )
+    # Surface hash for callers (MLGaussianEngine registers under *version* id).
+    _stored_hash = bundle.get("feature_order_hash", "") or ""
+    if _stored_hash:
+        meta["feature_order_hash"] = _stored_hash
+    # Name-anchored contract is the alignment authority; hash equality to live
+    # FEATURE_ORDER_HASH is informational only for subset models.
+    meta["name_anchored"] = True
 
     # Part 1 — FeatureSchemaRegistry: register stored hash so callers can
     # detect schema drift at inference time via check_compatibility(name).
-    _stored_hash = bundle.get("feature_order_hash", "")
+    # NOTE: load path registers under model *file* name; EngineRunner also
+    # registers under the registry *version* id after load (see MLGaussianEngine).
+    # Under the name-anchored contract, MLGaussianEngine no longer treats a hash
+    # mismatch as a hard score-block when feature_schema_resolved is present.
     if _stored_hash:
         try:
             from features.feature_schema import FeatureSchemaRegistry
@@ -470,7 +532,10 @@ def load_gaussian_model(
         except Exception:
             pass   # fail-open: registry unavailable doesn't break loading
 
-    log.info(f"Gaussian model loaded ← {path}")
+    log.info(
+        "Gaussian model loaded ← %s (n_features=%d alignment=%s)",
+        path, model.n_features, meta.get("schema_alignment"),
+    )
     return model, scaler, meta
 
 
@@ -840,35 +905,3 @@ def make_neural_fn(model, scaler: Optional[StandardScaler] = None):
 
     return _infer
 
-
-def make_neural_fn_v2(instrument: Optional[str] = None,
-                      model_path: Optional[str] = None):
-    """Wrapper for TradeNet v2 (3-head survival classifier) that preserves the
-    ``Callable[[dict], float] -> float`` interface FusionEngine.neural expects.
-
-    Returns the composite ``0.4·p_tp1 + 0.4·p_tp2 + 0.2·p_survives_be`` for v2
-    envelopes; falls back to the single sigmoid for legacy v1 .pth via the
-    TradeNetV2 bridge. When no model is registered for the instrument, returns
-    ``None`` so FusionEngine renormalises remaining engines (lines 599-606).
-
-    Parameters
-    ----------
-    instrument : per-instrument lookup via TradeNetRegistry.__active__[instrument]
-    model_path : explicit envelope path; overrides registry lookup
-
-    Usage
-    -----
-        from training.trainer import make_neural_fn_v2
-        fusion = FusionEngine(..., neural_fn=make_neural_fn_v2(instrument="ETHUSDT"))
-    """
-    from training.trade_net_v2 import TradeNetV2
-
-    tnv2 = TradeNetV2(model_path=model_path, instrument=instrument)
-
-    def _infer_v2(features: dict):
-        result = tnv2.predict(features)
-        if result is None:
-            return None
-        return float(result["tradenet_score"])
-
-    return _infer_v2

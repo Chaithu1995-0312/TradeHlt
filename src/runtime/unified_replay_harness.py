@@ -88,9 +88,15 @@ def _materialize_month_window_csv(data_path: str, months: int, output_dir: str) 
 
 
 def _build_backtest_v2_config(config: dict, instrument: str) -> BacktestConfig:
+    # F-057 fix (2026-07-29): route through the governed loader (production JSON
+    # params/crt_engine merge) instead of the bare router profile, so this
+    # programmatic path matches what the CLI would build for the same instrument.
+    from config_layer.production_config import load_prod_config_from_registry, PROD_VERSION
     params = config.get("params", {}) if isinstance(config, dict) else {}
 
-    crt_cfg = ConfigBuilder.build(instrument, overrides=params) if params else ConfigBuilder.build(instrument)
+    crt_cfg = load_prod_config_from_registry(PROD_VERSION, instrument)
+    if params:
+        crt_cfg = ConfigBuilder.from_existing(instrument, crt_cfg, extra_overrides=params)
 
     return BacktestConfig.from_prod_config(
         instrument=instrument,

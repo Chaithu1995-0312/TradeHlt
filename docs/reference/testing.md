@@ -1,7 +1,10 @@
 # TESTING.md
 
-> pytest-based test suite for Tradelatest. 116 files across 15 directories (counted
-> 2026-06-12; was "51 / 10" — corrected by the research-readiness audit).
+> pytest-based test suite for Tradelatest. 411 `.py` files (415 incl. 4 fixture `.json` files)
+> across 25 directories (counted 2026-08-07, excluding `__pycache__`; was "116 / 15" — the prior
+> count included only source at the time and had drifted as the suite grew; a naive count including
+> `__pycache__` compiled-bytecode cache reaches ~1,248 files/54 dirs, which is not a meaningful
+> figure for this claim).
 
 ---
 

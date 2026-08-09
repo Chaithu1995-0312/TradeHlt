@@ -81,52 +81,68 @@ T = {
 ("candle_math.py",37,"<return>"): row("CANONICAL_EQUIVALENT","FAM-13-F3-UPPER","V-exact","n/a",CANON_REG,"F3 anchor (raw price units)"),
 ("candle_math.py",42,"<return>"): row("CANONICAL_EQUIVALENT","FAM-14-F4-LOWER","V-exact","n/a",CANON_REG,"F4 anchor"),
 ("candle_math.py",47,"<return>"): row("CANONICAL_EQUIVALENT","FAM-15-F5-TOTALW","V-exact","n/a",CANON_REG,"F5 anchor = F3+F4 (identity-tested)"),
-("candle_math.py",57,"rng"):      row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-12-F2-RANGE","V-exact","n/a",CANON_REG,"F2 operand inside canonical F6"),
-("candle_math.py",58,"<return>"): row("CANONICAL_EQUIVALENT","FAM-16-F6-BODY-RATIO","V-guard0","zero_0.0",CANON_REG,"F6 anchor body/range, rng>0 guard (F-046)"),
+("candle_math.py",60,"rng"):      row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-12-F2-RANGE","V-exact","n/a",CANON_REG,"F2 operand inside canonical F6"),
+("candle_math.py",61,"<return>"): row("CANONICAL_EQUIVALENT","FAM-16-F6-BODY-RATIO","V-guard0","zero_0.0",CANON_REG,"F6 anchor body/range, rng>0 guard (F-046)"),
+("candle_math.py",74,"<return>"): row("CANONICAL_EQUIVALENT","FAM-02-GD001-BODY-OVER-TOTALW","V-registered-impl-FM013","guard_1e-8",LIVE_HOOK,"FM-013 body_to_total_wick_ratio registered impl (Phase-1 GD-001 closure); sole consumer live_engine_hook body_ratio binding"),
 ("composition_registry.py",0,"val"): row("CANONICAL_EQUIVALENT","FAM-07-REGISTRY-EXEC","V-config-num-den","zero_0.0",CANON_REG,"executor_dispatch: ontology-selected num/den + bounds clamp; parity battery test_formula_registry"),
 ("derived_registry.py",0,"<dispatch>"): row("CANONICAL_EQUIVALENT","FAM-07-REGISTRY-EXEC","V-signature-dispatch","delegates",CANON_REG,"executor_dispatch: NO local math; dispatch to derived_math impls; parity test_derived_math","HYPOTHESIS_PARTIAL"),
-("derived_math.py",40,"val"):     row("CANONICAL_EQUIVALENT","FAM-17-FM020-DISPSTR","V-clip0-3","nan_fallback",PIPE,"FM-020 impl body/(atr*close) clip[0,3]; parity-bound"),
-("derived_math.py",84,"<return>"): row("CANONICAL_EQUIVALENT","FAM-18-FM024-VOLRATIO","V-fallback1","one_fallback",PIPE,"FM-024 impl (high-low)/(atr*close); 1.0 fallback mirrors pipeline"),
+("derived_math.py",41,"val"):     row("CANONICAL_EQUIVALENT","FAM-17-FM020-DISPSTR","V-clip0-3","nan_fallback",PIPE,"FM-020 impl body/(atr*close) clip[0,3]; parity-bound"),
+("derived_math.py",123,"<return>"): row("CANONICAL_EQUIVALENT","FAM-18-FM024-VOLRATIO","V-fallback1","one_fallback",PIPE,"FM-024 impl (high-low)/(atr*close); 1.0 fallback mirrors pipeline"),
 # CH-001/CH-002 (F-050): FM-027/FM-028 registered impls — canonical scalars for CRT emission
-("derived_math.py",117,"disp_move"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-20-CROSS-CANDLE-RETRACE","V-body-guard","zero_0.0",CANON_REG,"FM-027 operand |disp.close-disp.open|; F-050 CH-002"),
-("derived_math.py",120,"val"): row("CANONICAL_EQUIVALENT","FAM-20-CROSS-CANDLE-RETRACE","V-registered-impl-FM027","zero_0.0",CANON_REG,"FM-027 displacement_retrace canonical scalar (F-050 CH-001/CH-002); CRT emission key"),
-("derived_math.py",130,"<return>"): row("CANONICAL_EQUIVALENT","FAM-06-RANGE-ATR-MULTIPLE","V-registered-impl-FM028","guard_atr>0",CANON_REG,"FM-028 displacement_atr_ratio canonical scalar (F-050 CH-001/CH-002); CRT emission key"),
+# CENSUS-INVISIBLE 2026-07-22 (disclosed recall residual, NOT a retirement): the FM-027
+#   displacement_retrace rows below (formerly :118 disp_move / :121 val, now :155 / :158) no longer
+#   appear in the census. The CODE is byte-identical to its authoring commit b48d4d9 — the census
+#   changed, not the impl: census-v2's same-candle guard resolves price tokens via _PRICE_LOOKUP,
+#   and the parameter names `disp_close`/`disp_open` are not price aliases, so abs(disp_close -
+#   disp_open) no longer matches F1. Effect is RECALL-ONLY and confined to a REGISTERED canonical
+#   impl living where math is supposed to live — it cannot hide an ungoverned re-derivation, which
+#   is what the floor exists to catch. Kept here (unmatched keys are inert) so the adjudication is
+#   not silently lost. Follow-up: FU-CENSUS-PARAM-ALIAS (extend _PRICE token aliasing to
+#   `<prefix>_<price>` parameter names, then re-adjudicate these two sites).
+# ("derived_math.py",155,"disp_move"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-20-CROSS-CANDLE-RETRACE","V-body-guard","zero_0.0",CANON_REG,"FM-027 operand |disp.close-disp.open|; F-050 CH-002"),
+# ("derived_math.py",158,"val"): row("CANONICAL_EQUIVALENT","FAM-20-CROSS-CANDLE-RETRACE","V-registered-impl-FM027","zero_0.0",CANON_REG,"FM-027 displacement_retrace canonical scalar (F-050 CH-001/CH-002); CRT emission key"),
+("derived_math.py",169,"<return>"): row("CANONICAL_EQUIVALENT","FAM-06-RANGE-ATR-MULTIPLE","V-registered-impl-FM028","guard_atr>0",CANON_REG,"FM-028 displacement_atr_ratio canonical scalar (F-050 CH-001/CH-002); CRT emission key"),
 # ---- feature_pipeline (vectorized authority; parity-bound) ------------------------------
-("feature_pipeline.py",186,"upper_wick"): row("CANONICAL_EQUIVALENT","FAM-13-F3-UPPER","V-vectorized","n/a",PIPE_AUX,"vectorized F3 raw (np.maximum); intermediate column"),
-("feature_pipeline.py",187,"lower_wick"): row("CANONICAL_EQUIVALENT","FAM-14-F4-LOWER","V-vectorized","n/a",PIPE_AUX,"vectorized F4 raw"),
-("feature_pipeline.py",214,"proxy"):      row("SAME_MATH_DIFFERENT_NAME","FAM-12-F2-RANGE","V-vectorized","n/a",RB("YES","NO","YES","NO","NO","NO","G5-RESOLVED: LATENT path — zero corpora in data/*_M15.csv are majority-zero-volume, proxy never fired; conditional on future zero-volume corpora"),"F2 written into the VOLUME column as tick-activity proxy for all-zero-volume corpora (FX!) — F2 masquerading as volume","HYPOTHESIS_PARTIAL","CS-3: F2-as-volume proxy — volume_ratio/volume_spike on FX derive from RANGE math","G5-3: which datasets/models consumed proxy-volume?"),
-("feature_pipeline.py",263,"tr1"):        row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder","n/a",PIPE,"F2 as TR operand (ATR kernel)"),
-("feature_pipeline.py",266,"true_range"): row("INDEPENDENT_UNGOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder","n/a",PIPE,"Wilder TR = max(tr1,tr2,tr3); feeds atr_14"),
-("feature_pipeline.py",449,"body_size"):  row("CANONICAL_EQUIVALENT","FAM-01-F1-BODY","V-vectorized-methodabs","n/a",PIPE,"(close-open).abs() — Series.abs METHOD (census UNKNOWN_FORM label; math is exact F1); parity-bound test_candle_math"),
-("feature_pipeline.py",450,"wick_size"):  row("CANONICAL_EQUIVALENT","FAM-12-F2-RANGE","V-vectorized","n/a",PIPE,"F2 under the legacy wick_size column name (F-046 documented)"),
-("feature_pipeline.py",452,"body_ratio"): row("CANONICAL_EQUIVALENT","FAM-16-F6-BODY-RATIO","V-guard0-vectorized","zero_0.0",PIPE,"body_size/wick_size where wick_size column==F2 ⇒ canonical F6 (census NC label resolved by column semantics); np.where guard","HYPOTHESIS_PARTIAL"),
-("feature_pipeline.py",458,"price_position"): row("INDEPENDENT_UNGOVERNED_QUANTITY","FAM-19-PRICE-POSITION","V-guard05","half_fallback",PIPE,"(close-low)/range — position-in-range [0,1], 0.5 fallback; distinct quantity consuming F2"),
-("feature_pipeline.py",482,"volatility_ratio"): row("CANONICAL_EQUIVALENT","FAM-18-FM024-VOLRATIO","V-vectorized-fallback1","one_fallback",PIPE,"FM-024 vectorized; parity-bound test_derived_math"),
-("feature_pipeline.py",565,"disp_strength"): row("CANONICAL_EQUIVALENT","FAM-17-FM020-DISPSTR","V-vectorized-clip","nan_fallback",PIPE,"FM-020 vectorized; parity-bound"),
-# ---- live hook (GD-001/2/3) --------------------------------------------------------------
-("live_engine_hook.py",360,"body_size"): row("CANONICAL_EQUIVALENT","FAM-01-F1-BODY","V-exact","n/a",LIVE_HOOK,"GD-003: byte-identical F1 inline (re-derivation debt, math correct)"),
-("live_engine_hook.py",361,"wick_size"): row("NON_EQUIVALENT_SAME_NAME","FAM-15-F5-TOTALW","V-clip0","clip0",LIVE_HOOK,"GD-002: F5 total_wick under the F2 wick_size name (canonical column meaning = F2)","HYPOTHESIS_CONFIRMED","GD-002 preserved","G5-1: aux dict -> FeatureStore -> logs"),
-("live_engine_hook.py",362,"body_ratio"): row("NON_EQUIVALENT_SAME_NAME","FAM-02-GD001-BODY-OVER-TOTALW","V-guard1e8","guard_1e-8_to_0.0",LIVE_HOOK,"GD-001: body/total_wick vs canonical body/range; 97% value drift measured","HYPOTHESIS_CONFIRMED","GD-001 preserved","G5-1"),
+("feature_pipeline.py",342,"upper_wick"): row("CANONICAL_EQUIVALENT","FAM-13-F3-UPPER","V-vectorized","n/a",PIPE_AUX,"vectorized F3 raw (np.maximum); intermediate column"),
+("feature_pipeline.py",343,"lower_wick"): row("CANONICAL_EQUIVALENT","FAM-14-F4-LOWER","V-vectorized","n/a",PIPE_AUX,"vectorized F4 raw"),
+# Phase-1 T-003 volume identity split: proxy is an EXPLICIT column now; source volume never rewritten.
+("feature_pipeline.py",368,"proxy"):      row("SAME_MATH_DIFFERENT_NAME","FAM-12-F2-RANGE","V-vectorized","n/a",PIPE_AUX,"F2 as tick-activity proxy operand (Phase-1 T-003 fix: no longer overwrites the volume column; explicit identity FEAT-VOLUME_RANGE_PROXY)"),
+("feature_pipeline.py",369,"volume_range_proxy"): row("SAME_MATH_DIFFERENT_NAME","FAM-12-F2-RANGE","V-vectorized","n/a",PIPE_AUX,"explicit F2 proxy column (FEAT-VOLUME_RANGE_PROXY); not in CANONICAL_FEATURES, volume_ratio/volume_spike bind to source volume only"),
+("feature_pipeline.py",388,"proxy_ma20"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-12-F2-RANGE","V-window-mean","n/a",PIPE_AUX,"rolling-20 mean of the F2 proxy (denominator of the explicit proxy ratio)"),
+("feature_pipeline.py",389,"volume_range_proxy_ratio"): row("INDEPENDENT_UNGOVERNED_QUANTITY","FAM-11-RANGE-EXPANSION","V-proxy-ratio-fallback1","one_fallback",PIPE_AUX,"proxy/proxy_ma20 — range-expansion-style ratio under an explicit name (never volume_ratio)"),
+("feature_pipeline.py",456,"tr1"):        row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder","n/a",PIPE,"F2 as TR operand (ATR kernel)"),
+("feature_pipeline.py",459,"true_range"): row("INDEPENDENT_UNGOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder","n/a",PIPE,"Wilder TR = max(tr1,tr2,tr3); feeds atr_14"),
+("feature_pipeline.py",717,"body_size"):  row("CANONICAL_EQUIVALENT","FAM-01-F1-BODY","V-vectorized-methodabs","n/a",PIPE,"(close-open).abs() — Series.abs METHOD (census UNKNOWN_FORM label; math is exact F1); parity-bound test_candle_math"),
+("feature_pipeline.py",718,"wick_size"):  row("CANONICAL_EQUIVALENT","FAM-12-F2-RANGE","V-vectorized","n/a",PIPE,"F2 under the legacy wick_size column name (F-046 documented)"),
+("feature_pipeline.py",720,"body_ratio"): row("CANONICAL_EQUIVALENT","FAM-16-F6-BODY-RATIO","V-guard0-vectorized","zero_0.0",PIPE,"body_size/wick_size where wick_size column==F2 ⇒ canonical F6 (census NC label resolved by column semantics); np.where guard","HYPOTHESIS_PARTIAL"),
+("feature_pipeline.py",726,"price_position"): row("INDEPENDENT_UNGOVERNED_QUANTITY","FAM-19-PRICE-POSITION","V-guard05","half_fallback",PIPE,"(close-low)/range — position-in-range [0,1], 0.5 fallback; distinct quantity consuming F2"),
+("feature_pipeline.py",753,"volatility_ratio"): row("CANONICAL_EQUIVALENT","FAM-18-FM024-VOLRATIO","V-vectorized-fallback1","one_fallback",PIPE,"FM-024 vectorized; parity-bound test_derived_math"),
+("feature_pipeline.py",882,"disp_strength"): row("CANONICAL_EQUIVALENT","FAM-17-FM020-DISPSTR","V-vectorized-clip","nan_fallback",PIPE,"FM-020 vectorized; parity-bound"),
+# ---- live hook (GD-001/2/3 RETIRED 2026-07-10: math routed through candle_math; the
+#      name-collision semantics are preserved by explicit identity binding, FU-WICK-SIZE-NAME) ----
+("live_engine_hook.py",469,"body_size"): row("CANONICAL_EQUIVALENT","FAM-01-F1-BODY","V-routed-call","n/a",LIVE_HOOK,"GD-003 retired: routed candle_math.body_size call (census UNKNOWN_FORM = registry call)"),
+("live_engine_hook.py",471,"wick_size"): row("NON_EQUIVALENT_SAME_NAME","FAM-15-F5-TOTALW","V-routed-call","clip0",LIVE_HOOK,"GD-002 retired: routed candle_math.total_wick call; F5 semantic under the F2 wick_size name persists as explicit binding (FU-WICK-SIZE-NAME)","HYPOTHESIS_CONFIRMED","GD-002 name collision preserved by binding","G5-1: aux dict -> FeatureStore -> logs"),
 # ---- crt_engine_v2 -----------------------------------------------------------------------
-("crt_engine_v2.py",1011,"tr"):   row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder-scalar","n/a",CRT_SPINE,"TR kernel in RangeDetector.compute_atr"),
-("crt_engine_v2.py",1045,"full_range"): row("DOMAIN_POLICY_VARIANT","FAM-12-F2-RANGE","V-floor0.001-table3","eps_floor_0.001",CRT_TELEM,"F2 with Table-3 doc floor; diagnostic-only consumer (GD-006 ctx)"),
-("crt_engine_v2.py",1046,"upper_wick"): row("NON_EQUIVALENT_SAME_NAME","FAM-04-TABLE3-FLOORED-WICK","V-floored-ratio","eps_floor_0.001",CRT_TELEM,"NORMALIZED F7-like ratio under the RAW F3 name (GD-006); floored denom"),
-("crt_engine_v2.py",1047,"lower_wick"): row("NON_EQUIVALENT_SAME_NAME","FAM-04-TABLE3-FLOORED-WICK","V-floored-ratio","eps_floor_0.001",CRT_TELEM,"GD-007 twin of upper_wick floored ratio"),
-("crt_engine_v2.py",1216,"move"): row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-exact","n/a",CRT_SPINE,"F1 as displacement magnitude vs atr_min_displacement*atr — HARD state-machine gate (decision)"),
-("crt_engine_v2.py",1360,"_disp_strength"): row("CANONICAL_EQUIVALENT","FAM-06-RANGE-ATR-MULTIPLE","V-plain","guard_atr>0",CRT_SPINE,"FM-028 local gate wick_size/atr vs max_displacement_strength (F-050 CH-002; cache emits displacement_atr_ratio)"),
-("crt_engine_v2.py",1566,"atr_multiple"): row("INDEPENDENT_UNGOVERNED_QUANTITY","FAM-06-RANGE-ATR-MULTIPLE","V-plain","guard_atr>0",CRT_SPINE,"score_breakout: Candle.wick_size(F2)/atr"),
-("crt_engine_v2.py",1567,"atr_component"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-06-RANGE-ATR-MULTIPLE","V-div3-cap1","n/a",CRT_SPINE,"min(atr_multiple/3,1) score component"),
-("crt_engine_v2.py",1664,"f_body"): row("INDEPENDENT_UNGOVERNED_QUANTITY","FAM-09-SOFTCONF-SCORES","V-norm-body-min","n/a",CRT_SPINE,"min(1, body_ratio/confirmation_body_min) — parameterized score consuming FM-010"),
-("crt_engine_v2.py",1684,"disp_move"): row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-exact","guard_disp",CRT_SPINE,"F1 of displacement candle for f_disp"),
-("crt_engine_v2.py",1685,"f_disp"): row("INDEPENDENT_UNGOVERNED_QUANTITY","FAM-10-BODY-ATR-MULTIPLE","V-1.5atr-cap1","guard_atr>0",CRT_SPINE,"min(1, disp_move/(1.5*atr)) — body-ATR multiple score (kin of scoring_engine move/atr)"),
-("crt_engine_v2.py",2130,"move"): row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-exact","guard_>0",CRT_SPINE,"F1 base for reset retrace |price-disp.close|/move >= retrace_reset_pct (decision: reset)"),
-("crt_engine_v2.py",2566,"_body_ratio"): row("CANONICAL_EQUIVALENT","FAM-16-F6-BODY-RATIO","V-routed-call","zero_0.0",CRT_TELEM,"routed _cm.body_ratio call (F-047 refactor); would_trade telemetry"),
+("crt_engine_v2.py",870,"tr"):   row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder-scalar","n/a",CRT_SPINE,"TR kernel in RangeDetector.compute_atr"),
+("crt_engine_v2.py",904,"full_range"): row("DOMAIN_POLICY_VARIANT","FAM-12-F2-RANGE","V-floor0.001-table3","eps_floor_0.001",CRT_TELEM,"F2 with Table-3 doc floor; diagnostic-only consumer (GD-006 ctx)"),
+("crt_engine_v2.py",910,"sweep_uw_frac"): row("NON_EQUIVALENT_SAME_NAME","FAM-04-TABLE3-FLOORED-WICK","V-floored-ratio","eps_floor_0.001",CRT_TELEM,"NORMALIZED F7-like ratio, floored denom. GD-006 RETIRED 2026-07-20 (T-15) by behaviour-neutral rename upper_wick -> sweep_uw_frac: math byte-identical, the raw-F3 NAME collision is gone but the non-canonical SEMANTIC persists (relation unchanged)"),
+("crt_engine_v2.py",911,"sweep_lw_frac"): row("NON_EQUIVALENT_SAME_NAME","FAM-04-TABLE3-FLOORED-WICK","V-floored-ratio","eps_floor_0.001",CRT_TELEM,"GD-007 twin; RETIRED 2026-07-20 (T-15): lower_wick -> sweep_lw_frac, byte-identical rename"),
+("crt_engine_v2.py",1095,"move"): row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-exact","n/a",CRT_SPINE,"F1 as displacement magnitude vs atr_min_displacement*atr — HARD state-machine gate (decision)"),
+# ("crt_engine_v2.py",1360,"_disp_strength") RETIRED 2026-07-11 (GD-005 closure): [PATCH 7] gate
+#   now routed through derived_math.displacement_atr_ratio (FM-028) — no longer a census derivation.
+("crt_engine_v2.py",1793,"atr_multiple"): row("INDEPENDENT_UNGOVERNED_QUANTITY","FAM-06-RANGE-ATR-MULTIPLE","V-plain","guard_atr>0",CRT_SPINE,"score_breakout: Candle.wick_size(F2)/atr"),
+("crt_engine_v2.py",1794,"atr_component"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-06-RANGE-ATR-MULTIPLE","V-div3-cap1","n/a",CRT_SPINE,"min(atr_multiple/3,1) score component"),
+("crt_engine_v2.py",1892,"f_body"): row("INDEPENDENT_UNGOVERNED_QUANTITY","FAM-09-SOFTCONF-SCORES","V-norm-body-min","n/a",CRT_SPINE,"min(1, body_ratio/confirmation_body_min) — parameterized score consuming FM-010"),
+("crt_engine_v2.py",1912,"disp_move"): row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-exact","guard_disp",CRT_SPINE,"F1 of displacement candle for f_disp"),
+("crt_engine_v2.py",1913,"f_disp"): row("INDEPENDENT_UNGOVERNED_QUANTITY","FAM-10-BODY-ATR-MULTIPLE","V-1.5atr-cap1","guard_atr>0",CRT_SPINE,"min(1, disp_move/(1.5*atr)) — body-ATR multiple score (kin of scoring_engine move/atr)"),
+("crt_engine_v2.py",2358,"move"): row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-exact","guard_>0",CRT_SPINE,"F1 base for reset retrace |price-disp.close|/move >= retrace_reset_pct (decision: reset)"),
+("crt_engine_v2.py",2886,"_body_ratio"): row("CANONICAL_EQUIVALENT","FAM-16-F6-BODY-RATIO","V-routed-call","zero_0.0",CRT_TELEM,"routed _cm.body_ratio call (F-047 refactor); would_trade telemetry"),
 # ---- crt_sweep_taxonomy (dead twin) ------------------------------------------------------
 ("crt_sweep_taxonomy.py",122,"full_range"): row("DOMAIN_POLICY_VARIANT","FAM-12-F2-RANGE","V-floor0.001-table3","eps_floor_0.001",DEAD,"Table-3 floor; candle_geometry 0 callers (GD-008)"),
 ("crt_sweep_taxonomy.py",123,"body"):       row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-exact","n/a",DEAD,"F1 in dead helper"),
-("crt_sweep_taxonomy.py",124,"upper_wick"): row("NON_EQUIVALENT_SAME_NAME","FAM-04-TABLE3-FLOORED-WICK","V-floored-ratio","eps_floor_0.001",DEAD,"GD-008 dead twin of crt floored upper_wick"),
-("crt_sweep_taxonomy.py",125,"lower_wick"): row("NON_EQUIVALENT_SAME_NAME","FAM-04-TABLE3-FLOORED-WICK","V-floored-ratio","eps_floor_0.001",DEAD,"GD-009 dead twin"),
-("crt_sweep_taxonomy.py",126,"body_ratio"): row("DOMAIN_POLICY_VARIANT","FAM-16-F6-BODY-RATIO","V-floored-denom","eps_floor_0.001",DEAD,"F6 with floored denominator (dead) — floored body_ratio variant"),
+("crt_sweep_taxonomy.py",128,"sweep_uw_frac"): row("NON_EQUIVALENT_SAME_NAME","FAM-04-TABLE3-FLOORED-WICK","V-floored-ratio","eps_floor_0.001",DEAD,"GD-008 dead twin; RETIRED 2026-07-20 (T-15): local upper_wick -> sweep_uw_frac, return-dict KEY 'upper_wick' retained for tools/btcusdt_crt_v3_replay API stability"),
+("crt_sweep_taxonomy.py",129,"sweep_lw_frac"): row("NON_EQUIVALENT_SAME_NAME","FAM-04-TABLE3-FLOORED-WICK","V-floored-ratio","eps_floor_0.001",DEAD,"GD-009 dead twin; RETIRED 2026-07-20 (T-15): lower_wick -> sweep_lw_frac, dict KEY retained"),
+("crt_sweep_taxonomy.py",130,"body_ratio"): row("DOMAIN_POLICY_VARIANT","FAM-16-F6-BODY-RATIO","V-floored-denom","eps_floor_0.001",DEAD,"F6 with floored denominator (dead) — floored body_ratio variant"),
 # ---- gaussian scorer (F-050 CH-002: emits FM-027/028 keys via derived_math) --------------
 ("crt_gaussian_scorer.py",196,"disp_move"): row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-exact","skip_none",CRT_TELEM,"F1 of disp candle as body-zero guard before FM-027/028 emission (F-050 CH-002)"),
 # ---- gate intelligence / rr engine -------------------------------------------------------
@@ -180,14 +196,26 @@ T = {
 ("feature_math_drift_probe.py",55,"wick_size"): row("NON_EQUIVALENT_SAME_NAME","FAM-15-F5-TOTALW","V-probe-replica-clip0","clip0",TOOLING,"replica"),
 ("feature_math_drift_probe.py",56,"body_ratio"): row("NON_EQUIVALENT_SAME_NAME","FAM-02-GD001-BODY-OVER-TOTALW","V-probe-replica","guard_1e-8",TOOLING,"replica"),
 ("feature_math_drift_probe.py",104,"canonical_ws"): row("SAME_MATH_DIFFERENT_NAME","FAM-12-F2-RANGE","V-probe","n/a",TOOLING,"canonical range"),
+("feature_semantic_adjudication_pass_a.py",403,"body"): row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-probe-replica","n/a",TOOLING,"Phase-1 semantic-adjudication probe replica (F1)"),
+("feature_semantic_adjudication_pass_a.py",464,"rng"): row("SAME_MATH_DIFFERENT_NAME","FAM-12-F2-RANGE","V-probe-replica","n/a",TOOLING,"Phase-1 semantic-adjudication probe replica (F2)"),
+# GD-004 identity-closure probe (2026-07-11): recomputes TR/ATR independently to verify the
+# pipeline atr column's unit, and the FM-028 comparator for the identity adjudication.
+("gd004_disp_rescale_probe.py",86,"tr1"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder","n/a",TOOLING,"TR operand for independent atr_14_raw recomputation (ATR-unit check)"),
+("gd004_disp_rescale_probe.py",89,"atr_raw_recomputed"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder-mean","n/a",TOOLING,"rolling-14 TR mean == atr_14_raw replica (feature_pipeline.py:271-275)"),
+("gd004_disp_rescale_probe.py",107,"fm028"): row("SAME_MATH_DIFFERENT_NAME","FAM-06-RANGE-ATR-MULTIPLE","V-probe","guard_atr>0",TOOLING,"FM-028 comparator (high-low)/atr_abs for the GD-004 identity adjudication (equals-FM-028 rate 0.00%)"),
+# CRT XAUUSD runtime trace (observational, behavior-neutral wrapper; telemetry replicas)
+("crt_xauusd_runtime_trace.py",96,"body_size"): row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-probe-replica","n/a",TOOLING,"F1 replica for per-candle IN/OUT trace record (JSONL telemetry only)"),
+("crt_xauusd_runtime_trace.py",97,"candle_range"): row("SAME_MATH_DIFFERENT_NAME","FAM-12-F2-RANGE","V-probe-replica","n/a",TOOLING,"F2 replica for trace record"),
+("crt_xauusd_runtime_trace.py",98,"body_ratio"): row("MATHEMATICALLY_EQUIVALENT_VARIANT","FAM-16-F6-BODY-RATIO","V-probe-replica-guard0","zero_0.0",TOOLING,"canonical F6 replica (body/range, range>0 guard) for trace record"),
 # ---- dead / orphan / transport / demo / tests --------------------------------------------
-("crt_feature_builder.py",123,"body_size"): row("CANONICAL_EQUIVALENT","FAM-01-F1-BODY","V-routed-call","zero_0.0",DEAD,"routed candle_math call (F-046 corrected builder; 0 callers)"),
-("crt_feature_builder.py",124,"wick_size"): row("CANONICAL_EQUIVALENT","FAM-12-F2-RANGE","V-routed-call","n/a",DEAD,"routed call, dead"),
-("crt_feature_builder.py",125,"body_ratio"): row("CANONICAL_EQUIVALENT","FAM-16-F6-BODY-RATIO","V-routed-call","zero_0.0",DEAD,"routed call, dead"),
+("crt_feature_builder.py",131,"body_size"): row("CANONICAL_EQUIVALENT","FAM-01-F1-BODY","V-routed-call","zero_0.0",DEAD,"routed candle_math call (F-046 corrected builder; 0 callers)"),
+("crt_feature_builder.py",132,"wick_size"): row("CANONICAL_EQUIVALENT","FAM-12-F2-RANGE","V-routed-call","n/a",DEAD,"routed call, dead"),
+("crt_feature_builder.py",133,"body_ratio"): row("CANONICAL_EQUIVALENT","FAM-16-F6-BODY-RATIO","V-routed-call","zero_0.0",DEAD,"routed call, dead"),
 ("strategy_backtest.py",285,"body_size"): row("NO_GOVERNED_COUNTERPART","-","V-transport","n/a",RB("NO","NO","NO","NO","NO","NO","strategy_backtest tooling (governance sandbox); _f row-read helper"),"_f(row) READ helper (transport; census UNKNOWN_FORM from unlisted helper)","HYPOTHESIS_PARTIAL"),
 ("strategy_backtest.py",285,"wick_size"): row("NO_GOVERNED_COUNTERPART","-","V-transport","n/a",RB("NO","NO","NO","NO","NO","NO","same"),"row-read transport","HYPOTHESIS_PARTIAL"),
 ("strategy_backtest.py",285,"body_ratio"): row("NO_GOVERNED_COUNTERPART","-","V-transport","n/a",RB("NO","NO","NO","NO","NO","NO","same"),"row-read transport","HYPOTHESIS_PARTIAL"),
-("feature_monitor.py",301,"body_ratio"): row("TEST_ORACLE","-","V-demo-random","n/a",TESTF,"__main__ demo feeding random.uniform values (module demo block)"),
+# ("feature_monitor.py",301,"body_ratio") RETIRED 2026-07-11 (lint hardening): demo now binds
+#   fixture noise to intermediates (transport) — no longer a census derivation.
 ("s09_pattern_recog.py",204,"prev_body"): row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-orphan","n/a",ORPHAN,"engulfing pattern F1 (prev candle)"),
 ("s09_pattern_recog.py",205,"curr_body"): row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-orphan","n/a",ORPHAN,"engulfing F1 (curr)"),
 ("s09_pattern_recog.py",242,"body"):      row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-orphan","skip_none",ORPHAN,"single-candle F1"),
@@ -196,7 +224,47 @@ T = {
 ("s09_pattern_recog.py",245,"total_range"): row("SAME_MATH_DIFFERENT_NAME","FAM-12-F2-RANGE","V-orphan","skip_none",ORPHAN,"F2"),
 ("s09_pattern_recog.py",250,"body_pct"): row("SAME_MATH_DIFFERENT_NAME","FAM-08-F6-EQUIV-SKIPPOLICY","V-skip-none","skip_none",ORPHAN,"F6 formula with SKIP-CANDLE zero policy (CS-2: policy splits family from FAM-16)"),
 ("test_derived_math.py",45,"atr_14_raw"): row("TEST_ORACLE","-","V-test-fixture","n/a",TESTF,"F2.clip(0.5) as positive-ATR proxy in parity test setup"),
-("test_feature_pipeline.py",571,"body_ratio"): row("TEST_ORACLE","-","V-test-fixture","n/a",TESTF,"extreme-drift test fixture"),
+("test_feature_pipeline.py",582,"body_ratio"): row("TEST_ORACLE","-","V-test-fixture","n/a",TESTF,"extreme-drift test fixture"),
+("test_phase1_duplicate_formula_identity_closure.py",131,"t003_math"): row("TEST_ORACLE","-","V-test-fixture","n/a",TESTF,"T-003 proxy-formula oracle (high-low) asserting no same-name volume substitution"),
+
+# ═════════════════════════════════════════════════════════════════════════════════════════
+# 2026-07-22 ADJUDICATION PASS — 21 census-fresh derivations admitted since the last freeze.
+# SCOPE DECISION (explicit): NO scripts/ or tests/ census-scope exemption was granted. The
+#   census universe is unchanged. Rationale: (a) ~20 scripts/tools sites are ALREADY adjudicated
+#   here as TOOLING — an exemption would retroactively un-govern them; (b) tests/
+#   test_feature_math_lint.py::test_universe_reconciliation_with_census exists precisely to close
+#   the lint's outside-src/ scope gap via census closure — exempting scripts/ would punch a hole
+#   where that floor was built; (c) adjudication costs one row and leaves an auditable record,
+#   whereas an exemption is invisible. ZERO new FM ids were minted: every row below resolves to an
+#   EXISTING family (TR kernels -> FAM-05, routed registry calls -> canonical families, RR polarity
+#   -> FAM-21) or is a test oracle. No new SEMANTIC quantity appeared.
+# ── analysis / certification scripts: independent-recompute TR kernels (TOOLING) ──────────
+("b2a_feature_candidate_certification.py",150,"tr_abs"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder","n/a",TOOLING,"F2 as Wilder-TR operand in the B2A candidate-certification independent recompute (np.maximum triple)"),
+("crt_local_math_authority_probe.py",45,"tr1"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder","n/a",TOOLING,"F2 TR operand for the pipeline atr_14_raw replica (CRT local-math authority probe)"),
+("crt_local_math_authority_probe.py",48,"true_range"): row("INDEPENDENT_UNGOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder","n/a",TOOLING,"Wilder TR = max(tr1,tr2,tr3) — deliberate replica of feature_pipeline.py:459 for the ATR-unit authority check"),
+("feature_dag_rolling_certification.py",75,"tr"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder","n/a",TOOLING,"F2 TR operand in the L1 rolling-indicator independent recompute (FM-040..046 certification)"),
+("feature_dag_structural_certification.py",91,"tr"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder","n/a",TOOLING,"F2 TR operand reconstructing promoted FM-041 atr for liquidity_distance certification"),
+("volatility_regime_certification.py",48,"tr1"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-05-TRUE-RANGE","V-wilder-scalar","nan_bar0",TOOLING,"F2 TR operand in the scalar-loop TR oracle (bar-0 NaN semantics deliberately mirrored)"),
+# ── crt_state_transition_audit_4m: ROUTED candle_math calls (census UNKNOWN_FORM = registry call,
+#    same class as crt_feature_builder.py:131-133) ─────────────────────────────────────────
+("crt_state_transition_audit_4m.py",61,"body_ratio"): row("CANONICAL_EQUIVALENT","FAM-16-F6-BODY-RATIO","V-routed-call","zero_0.0",TOOLING,"routed candle_math.body_ratio call in the _bar audit record — no local math"),
+("crt_state_transition_audit_4m.py",61,"body_size"): row("CANONICAL_EQUIVALENT","FAM-01-F1-BODY","V-routed-call","n/a",TOOLING,"routed candle_math.body_size call"),
+("crt_state_transition_audit_4m.py",61,"candle_range"): row("CANONICAL_EQUIVALENT","FAM-12-F2-RANGE","V-routed-call","n/a",TOOLING,"routed candle_math.candle_range call"),
+("crt_state_transition_audit_4m.py",61,"wick_size"): row("CANONICAL_EQUIVALENT","FAM-12-F2-RANGE","V-routed-call","n/a",TOOLING,"routed candle_math.candle_range under the legacy wick_size key — F2 semantic, matching feature_pipeline.py:718 (F-046), NOT the live_engine_hook total_wick semantic"),
+# ── research: ERP synthetic trace + path ambiguity + story builder (RESEARCH) ─────────────
+("erp_synth_4h_trace.py",266,"rng"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-21-POLARITY-FRACTIONS","V-exact","eps_reject_1e-9",RESEARCH,"F2 denominator of the RREngine polarity replica (twin of rr_engine.py:59 with the same 1e-9 doji reject)"),
+("erp_synth_4h_trace.py",514,"rng"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-12-F2-RANGE","V-exact","zero_0.0",RESEARCH,"F2 operand of the deliberate manual-vs-canonical body_ratio A/B on the entry bar"),
+("erp_synth_4h_trace.py",515,"body"): row("SAME_MATH_DIFFERENT_NAME","FAM-01-F1-BODY","V-exact","n/a",RESEARCH,"F1 operand of the same A/B"),
+("erp_synth_4h_trace.py",516,"br_manual"): row("MATHEMATICALLY_EQUIVALENT_VARIANT","FAM-16-F6-BODY-RATIO","V-guard0-research","zero_0.0",RESEARCH,"INTENTIONAL manual F6 replica emitted alongside cm_body_ratio(:517) in one record — the replica IS the measurement (manual-vs-registry divergence probe), not stray math"),
+("ambiguity_census.py",132,"bar_range"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-12-F2-RANGE","V-exact","zero_0.0_no_exit_bar",RESEARCH,"F2 of the SL/TP collision exit bar; 0.0 when the exit bar is out of range (P1 ambiguity census)"),
+("story_builder.py",92,"body_ratio"): row("CANONICAL_EQUIVALENT","FAM-16-F6-BODY-RATIO","V-routed-call","zero_0.0",RESEARCH,"routed cm_body_ratio call in synthetic story design features (census UNKNOWN_FORM = registry call)"),
+("story_builder.py",116,"rng"): row("SUBEXPRESSION_OF_GOVERNED_QUANTITY","FAM-21-POLARITY-FRACTIONS","V-exact","eps_reject",RESEARCH,"F2 denominator of the RR polarity replica (twin of erp_synth_4h_trace.py:266)"),
+# ── live hook: T-11 strict-accessor READ misread as UNKNOWN_FORM (LIVE_HOOK) ──────────────
+("live_engine_hook.py",417,"body_ratio"): row("NO_GOVERNED_COUNTERPART","-","V-transport","n/a",LIVE_HOOK,"_require_feature_value(trade_data,'body_ratio') in _build_engine_input = T-11 strict READ accessor. TRANSPORT, not mathematics: the census labels it UNKNOWN_FORM only because the strict accessor is an unlisted helper (identical class to live_path_replay.py:137 and strategy_backtest.py:285). Adjudicated rather than added to census _COERCION_LEAVES — that allowlist is for numeric coercion (float/int), and widening it for domain accessors would blind the floor repo-wide","HYPOTHESIS_PARTIAL"),
+# ── tests: oracles / fixtures (TESTF) ─────────────────────────────────────────────────────
+("test_b0b1_feature_semantic_migration.py",70,"tr1"): row("TEST_ORACLE","-","V-test-fixture","n/a",TESTF,"F2 TR operand in the _true_range oracle for the B0/B1 FM-030/031 semantic-migration A/B"),
+("test_b0b1_feature_semantic_migration.py",154,"hl"): row("TEST_ORACLE","-","V-test-fixture","n/a",TESTF,"high-low oracle asserting F5 wick_size == candle_range (not wick magnitude)"),
+("test_bitnet_composition.py",44,"body_ratio"): row("TEST_ORACLE","-","V-test-fixture","n/a",TESTF,"seeded legacy-feature fixture literal (0.55 + seed); census UNKNOWN_FORM from fixture arithmetic at a governed sink"),
 }
 
 def main() -> int:

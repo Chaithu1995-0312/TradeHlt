@@ -17,7 +17,12 @@ _log.propagate = False
 def compute(trade_id: str, features: dict, context: dict) -> dict:
     try:
         _raw_weights = context.get("score_component_weights")
-        _score_weights = tuple(_raw_weights) if _raw_weights else (0.35, 0.25, 0.20, 0.20)
+        if _raw_weights is None:
+            raise KeyError(
+                "score_component_weights missing from context — PLAN-002 requires explicit HOW weights. "
+                "Callers must pass context={'score_component_weights': [w1,w2,w3,w4]}"
+            )
+        _score_weights = tuple(_raw_weights)
         result = compute_scores(
             body_ratio=float(features["body_ratio"]),
             move=float(features["disp_strength"]),

@@ -25,7 +25,8 @@ from engines.trap_validator_engine import TrapValidatorEngine
 from engines.crt_engine import compute as crt_compute
 from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
 from engines.ml_gaussian_engine import MLGaussianEngine
-from engines.zone_gate_engine import run_zone_gate_engine, _compute_soft_zone_score, compute_weighted_cluster_score
+from engines.zone_gate_engine import _compute_soft_zone_score
+from engines.zone_cluster_score import score_zone_cluster
 from engines.rr_engine import RREngine
 from features.feature_schema import CANONICAL_FEATURES
 from core.fusion_engine import FusionEngine, GaussianAdapter
@@ -91,7 +92,7 @@ ENGINE_RUNNER_DEFAULTS: dict = {
     "model_path":               "model_export_format.json",
     "min_atr":                  0.0003,
     "allowed_sessions":         ["london", "new_york", "overlap"],
-    "bitnet_zone_threshold":    0.25,
+    "zone_cluster_threshold":    0.25,
     "zone_registry_path":       "models/zone_registry.json",
     "zone_gate_execution_mode": "normal",
     "zone_mode":                "hard",
@@ -104,6 +105,11 @@ ENGINE_RUNNER_DEFAULTS: dict = {
     "fusion_use_evaluate":      False,
     "dual_engine":              DUAL_ENGINE_DEFAULTS,
     "rr_fusion":                {"enabled": False, "model_path": "", "threshold": 0.5, "full_feature_vector": False},
+    # TEST FIXTURE ONLY — not a runtime authority. The runtime reads every fusion weight
+    # strictly via _cfg_require from the production config (see __init__, ~:384-387), which
+    # fails fast if a key is absent. These values only seed direct-construction tests and may
+    # differ from the active config (which is the sole source of truth). Locked by
+    # tests/test_fusion_weights_config_only.py.
     "fusion_engine": {
         "weight_crt": 0.4, "weight_gaussian": 0.3,
         "weight_zone_gate": 0.2, "weight_rr": 0.1,
@@ -142,12 +148,17 @@ def _signed_direction(value: float) -> int:
 
 
 def detect_regime(features: dict, cfg: dict) -> str:
-    trend_strength = abs(_safe_float(features.get("ema_spread"), 0.0))
+    # NOTE (2026-07-31): local named `ema_spread_abs`, NOT `trend_strength` — this is abs(ema_spread),
+    # an unrelated regime-detection quantity distinct from the ontology's registered FM-064
+    # `trend_strength` (a rolling z-score of the ma_20 slope). The two shared a bare name before
+    # FM-064 was registered; renaming this local resolves that collision (zero behavior change —
+    # only the local variable's name differs, not its value or the threshold comparison below).
+    ema_spread_abs = abs(_safe_float(features.get("ema_spread"), 0.0))
     momentum = abs(_safe_float(features.get("momentum_score"), 0.0))
     volatility = _safe_float(features.get("volatility_ratio"), 1.0)
 
     if (
-        trend_strength >= _safe_float(_cfg_require(cfg, "trend_strength_threshold", "dual_engine"), 0.0)
+        ema_spread_abs >= _safe_float(_cfg_require(cfg, "trend_strength_threshold", "dual_engine"), 0.0)
         and momentum >= _safe_float(_cfg_require(cfg, "momentum_threshold", "dual_engine"), 0.0)
     ):
         return "trend"
@@ -338,6 +349,9 @@ class EngineRunner:
         self.gaussian = self._get_gaussian_engine(config)
         self.gaussian_shadow = self._get_shadow_gaussian_engine(config)  # None unless shadow_ml
         self.rr = RREngine(config)
+        # Contract B (trained rr_fusion): default inert / shadow-only.
+        # Only mutates the RR fusion slot when engine_runner.rr_fusion.enabled=true
+        # (authority: F-038 disabled on active config; do not re-enable without ΔG001).
         self.rr_fusion = None
         self._rr_fusion_enabled = False
 
@@ -346,13 +360,39 @@ class EngineRunner:
         # (via RRFusionLayer.score) instead of the 3-feature score_dict stub that starves the model
         # (→ confidence≈1e-88 → 100% gaussian bypass). Soft default False = byte-identical legacy path.
         self._rr_fusion_full_vector = bool(rr_fusion_cfg.get("full_feature_vector", False))
+        self._rr_resolved = None
         if bool(_cfg_require(rr_fusion_cfg, "enabled", "engine_runner.rr_fusion")):
             if RRFusionLayer is None:
                 logger.warning("EngineRunner: rr_fusion requested but import failed: %s", _RR_FUSION_IMPORT_ERROR)
             else:
                 try:
+                    # Phase 0: resolve identity/registry; load still uses HOW model_path
+                    # (registry active model_file may differ from rr_model.json alias — no silent swap).
+                    _rr_how = str(_cfg_require(rr_fusion_cfg, "model_path", "engine_runner.rr_fusion"))
+                    try:
+                        from config_layer.model_resolver import resolve_model as _resolve_model
+                        self._rr_resolved = _resolve_model(
+                            "rr",
+                            how_path=_rr_how,
+                            require_artifact=False,
+                            require_how_match=False,
+                            require_identity_parity=True,
+                        )
+                        if (
+                            self._rr_resolved.artifact_path is not None
+                            and self._rr_resolved.how_path is not None
+                            and self._rr_resolved.artifact_path != self._rr_resolved.how_path
+                        ):
+                            logger.warning(
+                                "EngineRunner: rr_fusion HOW path %s != registry artifact %s "
+                                "(loading HOW path; unify under ModelPaths later)",
+                                self._rr_resolved.how_path,
+                                self._rr_resolved.artifact_path,
+                            )
+                    except Exception as _res_exc:
+                        logger.warning("EngineRunner: rr resolve failed (non-fatal while enabled): %s", _res_exc)
                     self.rr_fusion = RRFusionLayer(
-                        model_path=str(_cfg_require(rr_fusion_cfg, "model_path", "engine_runner.rr_fusion")),
+                        model_path=_rr_how,
                         threshold=float(_cfg_require(rr_fusion_cfg, "threshold", "engine_runner.rr_fusion")),
                         enabled=True,
                     )
@@ -395,8 +435,16 @@ class EngineRunner:
             tier_full=float(_cfg_require(_fusion_cfg_dict, "tier_full", "fusion_engine")),
             tier_half=float(_cfg_require(_fusion_cfg_dict, "tier_half", "fusion_engine")),
             tier_quarter=float(_cfg_require(_fusion_cfg_dict, "tier_quarter", "fusion_engine")),
-            min_consensus_signals=int(_fusion_cfg_dict.get("min_consensus_signals", 2)),
-            min_consensus_agreement=float(_fusion_cfg_dict.get("min_consensus_agreement", 0.60)),
+            # T-22 (2026-07-19): these two were the ONLY .get(default) reads in this constructor —
+            # the six keys above already used the strict _cfg_require. Now declared in config and
+            # read strictly. consensus_sweep.py injects them via a get_prod_section monkeypatch,
+            # so the sweep path still supplies them explicitly and remains unaffected.
+            min_consensus_signals=int(
+                _cfg_require(_fusion_cfg_dict, "min_consensus_signals", "fusion_engine")
+            ),
+            min_consensus_agreement=float(
+                _cfg_require(_fusion_cfg_dict, "min_consensus_agreement", "fusion_engine")
+            ),
         )
         self.fusion = FusionEngine(
             gaussian_adapter=self._gaussian_adapter,
@@ -416,16 +464,43 @@ class EngineRunner:
         self._fusion_use_evaluate = bool(_cfg_require(config, "fusion_use_evaluate", "engine_runner"))
         self._fusion_compare_evaluate = bool(_cfg_require(config, "fusion_compare_evaluate", "engine_runner"))
 
-        # BitNet zone gate — lazy-loaded singleton; fail-open if registry missing.
+        # BitNet zone gate — path derived via ModelResolver (Phase 0):
+        # registry active.model_file + ModelPaths layout + WHO identity parity;
+        # HOW zone_registry_path must match the resolved artifact (fail-closed).
         # zone_gate BEHAVIORAL knobs (top_k / cluster_min_n / cluster_spread_max) are
         # read fail-fast from the nested engine_runner.zone_gate section (§6.5 A1 rule).
         zone_registry_path = str(_cfg_require(config, "zone_registry_path", "engine_runner"))
-        _zone_min_samples  = int(config.get("zone_min_samples", 50))
+        from config_layer.model_resolver import resolve_zone_gate_runtime
+        self._zone_resolved = resolve_zone_gate_runtime(how_path=zone_registry_path)
+        zone_registry_path = str(self._zone_resolved.require_artifact())
+        _zone_min_samples  = int(_cfg_require(config, "zone_min_samples", "engine_runner"))
         _zone_gate_cfg     = _cfg_require(config, "zone_gate", "engine_runner")
         _zone_top_k        = int(_cfg_require(_zone_gate_cfg, "top_k", "engine_runner.zone_gate"))
         self._zone_gate = get_zone_gate(
             zone_registry_path, min_samples=_zone_min_samples, top_n=_zone_top_k,
         )
+
+        # [IC-007 / PLAN-002] engines-path CRT component weights (sweep, breakout, retest, time).
+        # HOW-owned via the crt_engine section (unhashed defaults layer); strict read — a missing
+        # key is an error (§6.5 no-silent-defaults). DISTINCT identity from CRTConfig.
+        # risk_score_weights (RiskScore.final) and conf_weights — never alias.
+        from config_layer.production_config import get_prod_section as _get_prod_section
+        _crt_sec = _get_prod_section("crt_engine")
+        if "score_component_weights" not in _crt_sec:
+            raise KeyError(
+                "crt_engine.score_component_weights missing from production config "
+                "(PLAN-002 strict HOW key — no silent CODE default in production)"
+            )
+        _scw = _crt_sec["score_component_weights"]
+        if not isinstance(_scw, (list, tuple)) or len(_scw) != 4 or any(
+            isinstance(c, bool) or not isinstance(c, (int, float))
+            or not math.isfinite(float(c)) or float(c) < 0.0
+            for c in _scw
+        ):
+            raise ValueError(
+                f"crt_engine.score_component_weights must be 4 finite non-negative reals, got {_scw!r}"
+            )
+        self._score_component_weights = tuple(float(c) for c in _scw)
 
         # Observability + adaptive control
         debug_mode = bool(_cfg_require(config, "debug_mode", "engine_runner"))
@@ -594,7 +669,7 @@ class EngineRunner:
         
         zonegate_input = {**input_data, **(context or {})}
 
-        _zone_threshold = float(_cfg_require(self.config, "bitnet_zone_threshold", "engine_runner"))
+        _zone_threshold = float(_cfg_require(self.config, "zone_cluster_threshold", "engine_runner"))
         _exec_mode = str(_cfg_require(self.config, "zone_gate_execution_mode", "engine_runner"))
         _debug_mode = bool(_cfg_require(self.config, "debug_mode", "engine_runner"))
         # zone_gate cluster-aggregation knobs (fail-fast nested read — §6.5 A1 rule)
@@ -609,27 +684,21 @@ class EngineRunner:
             "distance_to_nearest":zonegate_input.get("zone_distance"),
         } if _debug_mode else None
 
-        def _zone_model_fn(vector: list) -> float:
-            """Score via BitNetZoneGate using weighted cluster score (top-k zones).
-            top_k / cluster_min_n / cluster_spread_max are config-driven (zone_gate block).
-            Returns 0.5 on any error (neutral, non-blocking)."""
-            try:
-                result = self._zone_gate.check(vector)
-                top_scores = result.get("top_scores")
-                if top_scores and len(top_scores) >= _cluster_min_n:
-                    return compute_weighted_cluster_score(top_scores, spread_max=_cluster_spread_max)
-                return float(result.get("score", 0.5))
-            except Exception as _e:
-                logger.debug(f"ZoneGate scoring fallback (0.5): {_e}")
-                return 0.5
-
-        zone_raw = run_zone_gate_engine(
-            raw_features=zonegate_input,
-            model_fn=_zone_model_fn,
-            threshold=_zone_threshold,
+        # Hard-path cluster score — shared helper (HistoricalZoneMapper parity).
+        # Soft mode still applied below as a score-only override.
+        _zone_scored = score_zone_cluster(
+            zonegate_input,
+            self._zone_gate,
+            zone_cluster_threshold=_zone_threshold,
+            cluster_min_n=_cluster_min_n,
+            cluster_spread_max=_cluster_spread_max,
             execution_mode=_exec_mode,
             zone_debug_config=_zone_debug_config,
         )
+        zone_raw = dict(_zone_scored.get("meta") or {})
+        if "score" not in zone_raw:
+            zone_raw["score"] = _zone_scored["score"]
+            zone_raw["passed"] = _zone_scored["passed"]
 
         # Soft zone scoring (optional override of score only — pass/fail still from hard gate)
         _zone_mode = str(_cfg_require(self.config, "zone_mode", "engine_runner"))
@@ -646,7 +715,12 @@ class EngineRunner:
             "direction": 1 if zone_raw.get("passed") else 0,
             "meta": zone_raw,
         }
-        crt_result = crt_compute(trade_id="Test:", features=input_data, context={})
+        # [IC-007 / PLAN-002] inject the HOW-owned engines-path weights (previously context={}
+        # meant the CODE default tuple in engines.crt_engine always won — the dual-path gap).
+        crt_result = crt_compute(
+            trade_id="Test:", features=input_data,
+            context={"score_component_weights": self._score_component_weights},
+        )
         # Extract CRT-determined direction so the gaussian engine can apply
         # feature mirroring for short trades (MLGaussianEngine / direction-aware path).
         # input_data["direction"] is an int (1=LONG, -1=SHORT) set by backtest_v2.py
@@ -946,13 +1020,22 @@ class EngineRunner:
             "valid": bool(zone_result.get("passed", False)),
             "score": _safe_float(zone_result.get("score"), 0.0),
         }
-        fusion_ctx = {
-            # DecisionEngine expects a true RR ratio (e.g. >= 1.2),
-            # not the normalized RR score used by fusion averaging.
-            "rr": _safe_float(
+        # F-048 RESOLVED 2026-07-24 — RR ownership split, DecisionEngine is semantic-only:
+        #   A — RREngine polarity score feeds FusionEngine averaging (weight_rr), upstream of here.
+        #   C — DecisionEngine has NO economic RR gate anymore, so it reads no rr/rr_semantic here.
+        #   D — True RR is enforced by UltronRiskGate after SL/TP (live_engine_hook).
+        #   B — rr_fusion stays off unless explicitly enabled (shadow/inert by default).
+        # candle_polarity retained on the ctx for the collector audit record ONLY (non-decision);
+        # the former "rr"/"rr_semantic" shim keys are gone — nothing consumes them now.
+        _polarity = _safe_float(
+            engine_results.get("rr", {}).get("candle_polarity"),
+            _safe_float(
                 engine_results.get("rr", {}).get("rr_ratio"),
                 _safe_float(engine_results.get("rr", {}).get("score"), 0.0),
             ),
+        )
+        fusion_ctx = {
+            "candle_polarity": _polarity,   # audit only — not read by DecisionEngine
             "weak_component": max(
                 0.0,
                 1.0 - _safe_float(fusion_result.get("final_score"), 0.0),

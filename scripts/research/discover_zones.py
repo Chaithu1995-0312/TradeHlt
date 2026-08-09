@@ -23,6 +23,7 @@ import json
 import logging
 import random
 import sys
+from collections.abc import Iterable
 from pathlib import Path
 
 _SRC = Path(__file__).resolve().parents[2] / "src"
@@ -46,12 +47,32 @@ def _load_records(path: Path):
                 continue
 
 
-def _vector_from_record(rec: dict, weights: list[float]) -> list[float] | None:
+def active_feature_order(exclude_features: Iterable[str] = ()) -> list[str]:
+    """CANONICAL_FEATURE_ORDER minus `exclude_features`, order preserved.
+
+    Fail-closed on an unknown name: a typo must not silently exclude nothing and
+    produce a model whose feature_order differs from what the operator intended.
+    Empty exclusion returns the canonical order unchanged, so every pre-existing
+    invocation is byte-identical.
+    """
+    excl = {str(n) for n in exclude_features}
+    unknown = excl - set(CANONICAL_FEATURE_ORDER)
+    if unknown:
+        raise ValueError(
+            f"--exclude-feature names not in CANONICAL_FEATURE_ORDER: {sorted(unknown)}"
+        )
+    return [n for n in CANONICAL_FEATURE_ORDER if n not in excl]
+
+
+def _vector_from_record(
+    rec: dict, weights: list[float], feature_order: list[str] | None = None
+) -> list[float] | None:
     feats = rec.get("features")
     if not isinstance(feats, dict):
         return None
+    names = feature_order if feature_order is not None else list(CANONICAL_FEATURE_ORDER)
     out: list[float] = []
-    for i, name in enumerate(CANONICAL_FEATURE_ORDER):
+    for i, name in enumerate(names):
         if name not in feats:
             return None
         try:
@@ -101,16 +122,24 @@ def _kmeans(points: list[list[float]], k: int, max_iter: int = 30,
 
 
 def discover(opportunities: list[Path], *, n_clusters: int, min_samples: int,
-             feature_weights: list[float], subsample: int = 1) -> dict:
+             feature_weights: list[float], subsample: int = 1,
+             exclude_features: Iterable[str] = ()) -> dict:
     """
     subsample: keep every Nth record (1 = all records; 5 = 20% of data).
     Subsampling is deterministic (index % subsample == 0) so results are
     reproducible across runs on the same JSONL.
+
+    exclude_features: canonical names to drop from the trained vector. Default ()
+    keeps the full canonical order, so existing callers are unaffected. Used to
+    train a documented SUBSET of the live schema (e.g. excluding `macd_hist_raw`,
+    a price-unit dim that `scale_free_v1` zero-weights anyway) so centroids and
+    sigma are estimated on exactly the names the model will score.
     """
-    if len(feature_weights) != len(CANONICAL_FEATURE_ORDER):
+    feature_order = active_feature_order(exclude_features)
+    if len(feature_weights) != len(feature_order):
         raise ValueError(
             f"feature_weights length {len(feature_weights)} != "
-            f"CANONICAL_FEATURE_ORDER length {len(CANONICAL_FEATURE_ORDER)}"
+            f"feature_order length {len(feature_order)}"
         )
     vectors: list[list[float]] = []
     rr_values: list[float] = []
@@ -122,7 +151,7 @@ def discover(opportunities: list[Path], *, n_clusters: int, min_samples: int,
                 _rec_idx += 1
                 continue
             _rec_idx += 1
-            v = _vector_from_record(rec, feature_weights)
+            v = _vector_from_record(rec, feature_weights, feature_order)
             if v is None:
                 continue
             vectors.append(v)
@@ -156,14 +185,21 @@ def discover(opportunities: list[Path], *, n_clusters: int, min_samples: int,
             "sl_hit_rate": round(zone_sl / len(member_idx), 4),
         })
 
-    return {
+    out = {
         "schema_version":  "zone_v1",
-        "feature_order":   list(CANONICAL_FEATURE_ORDER),
+        "feature_order":   feature_order,
         "feature_weights": feature_weights,
         "n_clusters_requested": n_clusters,
         "min_samples":     min_samples,
         "zones":           zones,
     }
+    # Provenance only when a subset was trained — keeps the default artifact
+    # byte-identical to every previously published zone_v1 file.
+    excluded = [n for n in CANONICAL_FEATURE_ORDER if n not in feature_order]
+    if excluded:
+        out["excluded_features"] = excluded
+        out["live_schema_dim"] = len(CANONICAL_FEATURE_ORDER)
+    return out
 
 
 def _read_run_id_from_jsonl(path: Path) -> str:
@@ -198,6 +234,12 @@ def main(argv=None) -> int:
     ap.add_argument("--version", default=None,
                     help="Version key for zone_gate_registry.json "
                          "(auto-generates YYYYMM_v1 if omitted)")
+    ap.add_argument("--exclude-feature", action="append", default=None,
+                    metavar="NAME",
+                    help="Canonical feature name to EXCLUDE from the trained vector "
+                         "(repeatable). Default: none — the full CANONICAL_FEATURE_ORDER "
+                         "is used, byte-identical to prior runs. Use to train a documented "
+                         "subset of the live schema, e.g. --exclude-feature macd_hist_raw.")
     ap.add_argument("--subsample", type=int, default=1, metavar="N",
                     help="Keep every Nth record (default 1 = all). "
                          "Use 5-10 on large JSONL files to speed up the pure-Python KMeans.")
@@ -250,15 +292,22 @@ def main(argv=None) -> int:
                   file=sys.stderr)
             return 1
 
+    exclude = tuple(args.exclude_feature or ())
+    try:
+        _order = active_feature_order(exclude)
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
     if args.feature_weights:
         weights = [float(x) for x in args.feature_weights.split(",") if x.strip()]
     else:
-        weights = [1.0] * len(CANONICAL_FEATURE_ORDER)
+        weights = [1.0] * len(_order)
 
     paths = [Path(p) for p in args.opportunities]
     result = discover(paths, n_clusters=args.n_clusters,
                       min_samples=args.min_samples, feature_weights=weights,
-                      subsample=args.subsample)
+                      subsample=args.subsample, exclude_features=exclude)
 
     # ── versioned save ──────────────────────────────────────────────────────
     import time as _time

@@ -50,14 +50,14 @@ def test_no_duplicates():
         seen.add(f)
 
 
-# ── 3. Exactly 38 features (schema v3.0 — Part 1 adds liquidity_distance,
-#          liquidity_pressure_score, volume_spike at indices 35-37)
+# ── 3. Exactly 39 features (schema v4.0 — the MACD histogram split adds
+#          macd_hist_raw at index 18 alongside macd_hist_z at 19; v3.0 was 38)
 def test_feature_count():
     from features.feature_schema import CANONICAL_FEATURES, CANONICAL_FEATURE_DIM
-    assert len(CANONICAL_FEATURES) == 38, (
-        f"Expected 38 canonical features (schema v3.0), got {len(CANONICAL_FEATURES)}"
+    assert len(CANONICAL_FEATURES) == 39, (
+        f"Expected 39 canonical features (schema v4.0), got {len(CANONICAL_FEATURES)}"
     )
-    assert CANONICAL_FEATURE_DIM == 38
+    assert CANONICAL_FEATURE_DIM == 39
 
 
 # ── 4. FEATURE_INDEX_MAP consistency ─────────────────────────────────────────

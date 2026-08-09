@@ -107,7 +107,7 @@ class S06Scalping(BaseStrategy):
         if volatility_ratio > 2.0:
             return self._no_trade("VOLATILE")
 
-        macd_hist = float(features.get("macd_hist", 0.0))
+        macd_hist = float(features.get("macd_hist_z", 0.0))   # v4.0: v3.0 emitted the z-score under `macd_hist`
         momentum = float(features.get("momentum_score", 0.0))
 
         self._macd_buf.append(macd_hist)

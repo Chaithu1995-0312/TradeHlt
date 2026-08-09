@@ -4,7 +4,17 @@
 > labels M1–M5 and were becoming intertwined. This doc is a *router*: each row points to
 > the canonical home that owns the detail. It does not redefine those docs.
 >
-> Created: 2026-06-01 · Updated: 2026-06-01 · Anchored to `v2_multi_2026_04`.
+> Created: 2026-06-01 · Updated: 2026-07-20 · Anchored to `v2_multi_2026_04`.
+
+### Active engineering focus (2026-07-20)
+
+Feature-layer free-form work is under a **governance** freeze
+[`FEATURE_LAYER_MUTATION_FREEZE = ACTIVE`](../governance/feature-layer-mutation-freeze-2026-07-20.md)
+(XAUUSD feature-matrix pin + schema/source SHAs + floor tests — **not** scientific closure).
+**Default next work** is the
+[`backtest/runtime roadmap`](../implementation_plan/backtest-runtime-roadmap-2026-07-20.md)
+(runtime benchmarks open at R-1/R-2). M16 consumer-alignment and other named future programs
+remain explicit exceptions, not the default queue.
 
 ---
 

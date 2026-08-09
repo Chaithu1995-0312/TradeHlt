@@ -29,7 +29,11 @@ logger = logging.getLogger(__name__)
 # REGISTRY CONSTANTS
 # ─────────────────────────────────────────────────────────────────────────────
 
-GAUSSIAN_REGISTRY_PATH: str = "models/gaussian_registry.json"
+try:
+    from config_layer.model_paths import ModelPaths as _ModelPaths
+    GAUSSIAN_REGISTRY_PATH: str = str(_ModelPaths.GAUSSIAN_REGISTRY)
+except Exception:  # pragma: no cover
+    GAUSSIAN_REGISTRY_PATH = "models/gaussian_registry.json"
 GAUSSIAN_MODELS_DIR: str = "models"
 
 _FALLBACK_PRIORITY = ["v1", "import_fix_v1"]
@@ -203,6 +207,13 @@ class HeuristicGaussianEngine:
         self._instrument: str = instrument or config.get("instrument", "EURUSD")
         self._registry: Optional[GaussianRegistry] = None
         self._loaded_version: Optional[str] = None
+        # P1 2026-07-22: cache load outcome so a failed lookup (e.g. XAUUSD with
+        # no __active__ pointer) is NOT re-attempted on every compute() candle.
+        # Prior bug: `_registry is None` was both "never tried" and "tried+failed",
+        # which produced a per-bar registry retry storm (~47k warnings on XAUUSD).
+        # Re-attempt only when RegistryWatcher sees an mtime advance (promotion).
+        self._registry_resolved: bool = False
+        self._registry_load_error: Optional[str] = None
 
         self._mu_override: Optional[float] = (
             float(config["gaussian_mu"]) if "gaussian_mu" in config else None
@@ -229,6 +240,8 @@ class HeuristicGaussianEngine:
                 registry_path, instrument=self._instrument
             ).load()
             self._loaded_version = self._registry.active_version
+            self._registry_resolved = True
+            self._registry_load_error = None
             logger.info(
                 "HeuristicGaussianEngine[%s]: loaded registry — active version '%s'",
                 self._instrument, self._loaded_version,
@@ -244,18 +257,48 @@ class HeuristicGaussianEngine:
                 pass
             logger.warning(
                 "HeuristicGaussianEngine[%s]: registry load failed (%s). "
-                "Using config/default mu=%.2f, sigma=%.2f.",
+                "Using config/default mu=%.2f, sigma=%.2f. "
+                "Will not retry until registry file mtime advances.",
                 self._instrument, exc,
                 self._mu_override or 0.0,
                 self._sigma_override or 1.0,
             )
             self._registry = None
             self._loaded_version = None
+            self._registry_resolved = True  # cache the miss — stop the retry storm
+            self._registry_load_error = str(exc)
+
+    def _ensure_registry(self) -> None:
+        """Lazy-load once; re-load only on registry mtime advance (hot-reload)."""
+        if self._mu_override is not None:
+            # Explicit config mu: registry is irrelevant for scoring.
+            return
+        if not self._registry_resolved:
+            self._load_registry()
+            self._watcher.mark_loaded()
+            return
+        # Resolved (hit or miss): only re-attempt when the file changes.
+        if self._watcher.needs_reload():
+            prev = self._loaded_version
+            prev_err = self._registry_load_error
+            self._registry = None
+            self._registry_resolved = False
+            self._load_registry()
+            self._watcher.mark_loaded()
+            if self._loaded_version != prev or self._registry_load_error != prev_err:
+                logger.info(
+                    "HeuristicGaussianEngine[%s]: reloaded after mtime change — "
+                    "version '%s' -> '%s' (error=%s)",
+                    self._instrument, prev, self._loaded_version,
+                    self._registry_load_error,
+                )
 
     @property
     def mu(self) -> float:
         if self._mu_override is not None:
             return self._mu_override
+        if not self._registry_resolved:
+            self._ensure_registry()
         if self._registry is not None:
             return self._registry.mu
         return 0.0
@@ -264,6 +307,8 @@ class HeuristicGaussianEngine:
     def sigma(self) -> float:
         if self._sigma_override is not None:
             return self._sigma_override
+        if not self._registry_resolved:
+            self._ensure_registry()
         if self._registry is not None:
             return self._registry.sigma
         return 1.0
@@ -282,19 +327,7 @@ class HeuristicGaussianEngine:
         Returns:
             dict with 'score' (float in [0,1]) and 'reason' (str)
         """
-        if self._registry is None and self._mu_override is None:
-            self._load_registry()
-            self._watcher.mark_loaded()
-        elif self._registry is not None and self._watcher.needs_reload():
-            prev = self._loaded_version
-            self._registry = None
-            self._load_registry()
-            self._watcher.mark_loaded()
-            if self._loaded_version != prev:
-                logger.info(
-                    "HeuristicGaussianEngine[%s]: reloaded — '%s' -> '%s'",
-                    self._instrument, prev, self._loaded_version,
-                )
+        self._ensure_registry()
 
         assert isinstance(input_data, dict), "HeuristicGaussianEngine input must be dict"
         assert len(input_data) >= len(CANONICAL_FEATURES), (

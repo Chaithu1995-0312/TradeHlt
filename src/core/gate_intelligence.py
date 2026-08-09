@@ -269,6 +269,12 @@ class GateIntelligence:
         """
         atr  = float(features.get("atr",            1.0))
         vol  = float(features.get("volume",          0.0))
+        # SEM-004 (2026-07-31 semantic layer audit, H7): `volume_ma20` is never emitted by either
+        # production feature builder (live_engine_hook.py / backtest_v2.py), so `vm20` is always
+        # 0.0 here and `vol_score` below is a structural constant zero -- the "50% volume" half of
+        # this method's documented blend never actually contributes. Declaration only; wiring
+        # volume_ma20 in would change live decision scores and is a separate, authorized
+        # behavior-change program, not a documentation fix. See market_ontology.yaml SEM-004.
         vm20 = float(features.get("volume_ma20",     0.0))
         ll20 = float(features.get("lowest_low_20",   0.0))
         ll5  = float(features.get("lowest_low_5",    0.0))

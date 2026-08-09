@@ -1,10 +1,15 @@
 """
 train_trade_net_v2.py
 =====================
-Train TradeNet v2 — 3-head survival classifier on the 38-dim canonical feature
-vector. One model per instrument. Writes a JSON envelope (no PyTorch state_dict
-at the production boundary) and registers it via the per-instrument TradeNet
-registry.
+Train TradeNet v2 — 3-head survival classifier on the **live** canonical
+feature vector (``CANONICAL_FEATURE_DIM`` / schema v4.0 = 39 dims).
+
+One model per instrument. Writes a JSON envelope (no PyTorch state_dict at the
+production boundary) and registers it via the per-instrument TradeNet registry.
+
+Single source of truth for input width: ``features.feature_schema.CANONICAL_*``.
+Legacy 38-dim (drop macd_hist_raw) envelopes are **not** produced by this
+script anymore — they cannot load under live TradeNetV2 fail-closed dim check.
 
 Labels are derived from opportunity outcomes:
   reaches_tp1   = 1 iff outcome reached TP1
@@ -15,9 +20,9 @@ Sample gate honors ``training_trigger.min_new_samples`` from the production
 config and counts closed records only.
 
 Usage:
-    py train_trade_net_v2.py --instrument ETHUSDT
-    py train_trade_net_v2.py --instrument ETHUSDT --shadow         # train + register, do not promote
-    py train_trade_net_v2.py --instrument ETHUSDT --force-promote  # bypass regression guard
+    py train_trade_net_v2.py --instrument XAUUSD --shadow
+    py train_trade_net_v2.py --instrument ETHUSDT --shadow
+    py train_trade_net_v2.py --instrument ETHUSDT --force-promote
 """
 from __future__ import annotations
 
@@ -39,9 +44,9 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from features.feature_schema import (  # noqa: E402
-    CANONICAL_FEATURES,
     CANONICAL_FEATURE_DIM,
-    CANONICAL_FEATURE_ORDER,
+    CANONICAL_FEATURES,
+    FEATURE_ORDER_HASH,
 )
 from features.dataset_builder import extract_feature_vector  # noqa: E402
 
@@ -52,7 +57,8 @@ logging.basicConfig(
 log = logging.getLogger("train_trade_net_v2")
 
 # Public so verification snippets can import the constant.
-INPUT_DIM: int = CANONICAL_FEATURE_DIM  # 38
+# Width == live spine / TradeNetV2.predict contract (schema v4.0).
+INPUT_DIM: int = CANONICAL_FEATURE_DIM  # 39
 HIDDEN_1: int = 32
 HIDDEN_2: int = 16
 HEAD_NAMES = ("p_tp1", "p_tp2", "p_survives_be")
@@ -60,8 +66,9 @@ COMPOSITE_WEIGHTS = (0.4, 0.4, 0.2)
 SCHEMA_VERSION_V2 = "tradenet_v2"
 
 # Outcome strings that count as "reached TP1" and "reached TP2".
-# Covers backtest_v2 (TP1, TP2) and opportunity_scanner (TP1_HIT, TP2_HIT) variants.
-_TP1_OUTCOMES = frozenset({"TP1", "TP2", "TP1_HIT", "TP2_HIT"})
+# Covers backtest_v2 (TP1, TP2), opportunity_scanner (TP1_HIT, TP2_HIT),
+# and stream shorthand TP_HIT (XAUUSD phase-1 opportunities use this).
+_TP1_OUTCOMES = frozenset({"TP1", "TP2", "TP1_HIT", "TP2_HIT", "TP_HIT"})
 _TP2_OUTCOMES = frozenset({"TP2", "TP2_HIT"})
 
 
@@ -164,11 +171,10 @@ def extract_labels(records: list[dict]) -> np.ndarray:
 
 
 def build_input_matrix(records: list[dict]) -> np.ndarray:
-    """Build (N, 38) feature matrix from opportunity records.
+    """Build (N, CANONICAL_FEATURE_DIM) feature matrix from opportunity records.
 
-    Records without a usable ``features`` dict are skipped silently — callers
-    should keep the index alignment with ``extract_labels`` by filtering both
-    through ``filter_usable_records`` first.
+    Records without a usable ``features`` dict are skipped — callers must keep
+    index alignment with ``extract_labels`` via ``filter_usable_records`` first.
     """
     rows: list[list[float]] = []
     for rec in records:
@@ -179,6 +185,8 @@ def build_input_matrix(records: list[dict]) -> np.ndarray:
             vec = extract_feature_vector(feats)
         except (ValueError, KeyError, TypeError, AssertionError):
             continue
+        if len(vec) != INPUT_DIM:
+            continue
         rows.append(vec)
     if not rows:
         return np.zeros((0, INPUT_DIM), dtype=np.float32)
@@ -186,7 +194,7 @@ def build_input_matrix(records: list[dict]) -> np.ndarray:
 
 
 def filter_usable_records(records: list[dict]) -> list[dict]:
-    """Drop records lacking a complete 38-dim features dict."""
+    """Drop records lacking a complete live canonical features dict."""
     out: list[dict] = []
     required = set(CANONICAL_FEATURES)
     for rec in records:
@@ -204,8 +212,8 @@ def filter_usable_records(records: list[dict]) -> list[dict]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class _Trunk:
-    """Plain shape container for the 38 -> 32 -> 16 trunk + 3 heads. Built by
-    ``_build_torch_model``; weights flow through ``_export_envelope``."""
+    """Plain shape container for the INPUT_DIM -> 32 -> 16 trunk + 3 heads.
+    Built by ``_build_torch_model``; weights flow through ``_export_envelope``."""
 
 
 def _build_torch_model():
@@ -360,15 +368,20 @@ def _export_envelope(
     class_balance: dict,
     output_path: Path,
 ) -> Path:
-    feature_order_hash = hashlib.sha256(
-        json.dumps(list(CANONICAL_FEATURE_ORDER), sort_keys=False).encode()
-    ).hexdigest()[:16]
+    # Prefer schema FEATURE_ORDER_HASH when names == live order; else hash names.
+    feature_names = list(CANONICAL_FEATURES)
+    if feature_names == list(CANONICAL_FEATURES):
+        feature_order_hash = FEATURE_ORDER_HASH
+    else:
+        feature_order_hash = hashlib.sha256(
+            json.dumps(feature_names, sort_keys=False).encode()
+        ).hexdigest()[:16]
 
     envelope = {
         "schema_version": SCHEMA_VERSION_V2,
         "feature_dim": INPUT_DIM,
         "feature_order_hash": feature_order_hash,
-        "feature_names": list(CANONICAL_FEATURE_ORDER),
+        "feature_names": feature_names,
         "trunk": [
             _layer_dict(model.fc1),
             {"type": "relu"},
@@ -392,6 +405,8 @@ def _export_envelope(
             "n_samples_closed": int(n_closed),
             "class_balance": class_balance,
             "metrics": metrics,
+            "canonical_feature_dim": CANONICAL_FEATURE_DIM,
+            "schema": "v4.0",
         },
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -503,6 +518,19 @@ def main() -> int:
     if X.shape[0] == 0:
         log.error("No usable records after feature extraction")
         return 1
+    if X.shape[1] != INPUT_DIM:
+        log.error(
+            "Feature width %d != INPUT_DIM %d (CANONICAL_FEATURE_DIM=%d)",
+            X.shape[1],
+            INPUT_DIM,
+            CANONICAL_FEATURE_DIM,
+        )
+        return 1
+    log.info(
+        "training matrix | n=%d feature_dim=%d (canonical live schema)",
+        X.shape[0],
+        X.shape[1],
+    )
 
     class_balance = {
         head: [int((Y[:, i] <= 0.5).sum()), int((Y[:, i] > 0.5).sum())]
