@@ -148,5 +148,134 @@ def test_contexts_from_a_real_pipeline_run(builder):
         as_dict = {f: row[i] for f, i in FEATURE_INDEX_MAP.items()}
         assert builder.build_from_features(as_dict).context_hash == ctx.context_hash
         hashes.add(ctx.context_hash)
+        # L4 closure: structured fields present; no invented magnitude states
+        assert ctx.completeness in ("COMPLETE", "PARTIAL")
+        assert ctx.temporal is not None
+        assert ctx.temporal.causality == "UNKNOWN"
+        assert "body_commitment" not in (
+            (ctx.dimensions.get("CandleGeometry") or {})
+        ), "vector-only build must not fabricate magnitude states"
     # a real market produces multiple distinct contexts, not one constant
     assert len(hashes) > 3, f"only {len(hashes)} distinct contexts across the run — suspicious"
+
+
+# ── L4 structured closure contract ───────────────────────────────────────────
+
+def test_dimension_records_map_from_authoritative_states(builder, enc):
+    """Every populated dimension feature is an ontology-declared stateful identity."""
+    states = _zero_states(enc)
+    ctx = builder.build(states)
+    for cat, rec in ctx.dimension_records.items():
+        assert cat in builder.dimensions or rec.status == "EMPTY"
+        for feat, dfr in rec.features.items():
+            assert feat in enc.stateful_features
+            assert dfr.category == cat
+            assert dfr.fm_id  # ontology id present
+            if dfr.known:
+                assert dfr.state in enc.spec(feat).value_to_state.values()
+            else:
+                assert dfr.state.startswith(X_PREFIX)
+
+
+def test_unknown_x_state_remains_unknown_not_fabricated(builder, enc):
+    states = _zero_states(enc)
+    states["trend_bias"] = f"{X_PREFIX}UNMAPPED(9.0)"
+    ctx = builder.build(states)
+    assert ctx.dimensions["Trend"]["trend_bias"].startswith(X_PREFIX)
+    assert ctx.dimension_records["Trend"].features["trend_bias"].known is False
+    assert "Trend" in ctx.unknown_dimensions or ctx.dimension_records["Trend"].status == "DRIFT"
+    # Completeness must be PARTIAL when any X_ is present
+    assert ctx.completeness == "PARTIAL"
+
+
+def test_absent_optional_magnitude_is_not_fabricated(builder, enc):
+    """Without magnitude states, CandleGeometry stays EMPTY — never LowCommitment."""
+    ctx = builder.build(_zero_states(enc))
+    assert ctx.dimension_records["CandleGeometry"].status == "EMPTY"
+    assert "CandleGeometry" in ctx.unknown_dimensions
+    assert "body_commitment" not in (ctx.dimensions.get("CandleGeometry") or {})
+
+
+def test_magnitude_states_merge_when_supplied(builder, enc):
+    states = _zero_states(enc)
+    mag = {
+        "body_commitment": "MediumCommitment",
+        "atr_magnitude": "HighAtrMagnitude",
+        "momentum_magnitude": "LowMomentumMagnitude",
+    }
+    ctx = builder.build_with_magnitude(states, mag)
+    assert ctx.dimensions["CandleGeometry"]["body_commitment"] == "MediumCommitment"
+    assert ctx.dimensions["Volatility"]["atr_magnitude"] == "HighAtrMagnitude"
+    assert ctx.dimensions["Momentum"]["momentum_magnitude"] == "LowMomentumMagnitude"
+    assert ctx.dimension_records["CandleGeometry"].features["body_commitment"].source == (
+        "magnitude_states"
+    )
+    assert "features.magnitude_states.MagnitudeStateEncoder" in ctx.provenance
+
+
+def test_context_deterministic_with_structure(builder, enc):
+    a = builder.build(_zero_states(enc))
+    b = builder.build(_zero_states(enc))
+    assert a.context_hash == b.context_hash
+    assert a.completeness == b.completeness
+    assert a.completeness_ratio == b.completeness_ratio
+    assert a.unknown_dimensions == b.unknown_dimensions
+    assert a.temporal.causality == b.temporal.causality == "UNKNOWN"
+
+
+def test_context_does_not_alter_canonical_feature_values(builder, enc):
+    """Context is pure regrouping — input states pass through unmodified."""
+    states = _zero_states(enc)
+    states["trend_bias"] = "Bullish"
+    ctx = builder.build(states)
+    assert ctx.dimensions["Trend"]["trend_bias"] == "Bullish"
+    assert states["trend_bias"] == "Bullish"  # input unchanged
+
+
+def test_session_uses_single_session_owner(builder, enc):
+    ctx = builder.build(_zero_states(enc))
+    assert ctx.temporal is not None
+    assert ctx.temporal.session_owner == "features.session_classifier"
+    assert "session_classifier" in " ".join(ctx.provenance) or any(
+        "session" in p for p in ctx.provenance
+    )
+    # Time dimension carries session from feature_states, not a reimplementation
+    assert ctx.dimension_records["Time"].features["session"].source == "session_classifier"
+
+
+def test_temporal_causality_is_unknown_unless_defined(builder, enc):
+    ctx = builder.build(_zero_states(enc))
+    assert ctx.temporal.causality == "UNKNOWN"
+    assert ctx.temporal.to_dict()["inferred_episode_causality"] == "UNKNOWN"
+    # Session may still be known as observed_time_context
+    assert ctx.temporal.session_known is True
+    assert ctx.temporal.session_state is not None
+
+
+def test_completeness_deterministic_vector_only_complete(builder, enc):
+    ctx = builder.build(_zero_states(enc))
+    # All vector-bound known, no X_ → COMPLETE even if optional magnitude EMPTY
+    assert ctx.completeness == "COMPLETE"
+    assert ctx.completeness_ratio == 1.0
+
+
+def test_unresolved_continuous_listed_not_banded(builder, enc):
+    ctx = builder.build(_zero_states(enc))
+    assert len(ctx.unresolved_continuous) == len(enc.continuous_features)
+    assert "body_ratio" in ctx.unresolved_continuous
+    assert "atr" in ctx.unresolved_continuous
+    # These continuous features must NOT appear as fabricated context states
+    flat_feats = {f for feats in ctx.dimensions.values() for f in feats}
+    assert "body_ratio" not in flat_feats
+    assert "atr" not in flat_feats
+
+
+def test_to_dict_contract_shape(builder, enc):
+    ctx = builder.build(_zero_states(enc))
+    d = ctx.to_dict()
+    for key in (
+        "dimensions", "dimensions_flat", "completeness", "unknown_dimensions",
+        "unresolved_continuous", "provenance", "temporal", "signature", "context_hash",
+    ):
+        assert key in d
+    assert d["temporal"]["causality"] == "UNKNOWN"

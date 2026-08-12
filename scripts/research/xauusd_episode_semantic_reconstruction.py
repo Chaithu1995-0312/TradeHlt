@@ -42,9 +42,12 @@ from engines.live_engine import get_zone_gate  # noqa: E402
 from features.feature_pipeline import FeaturePipeline  # noqa: E402
 from features.feature_schema import CANONICAL_FEATURES  # noqa: E402
 from features.feature_states import FeatureStateEncoder  # noqa: E402
+from features.magnitude_states import MagnitudeStateEncoder  # noqa: E402
 from features.market_context import MarketContextBuilder  # noqa: E402
 from features.market_shape import MarketShapeClassifier  # noqa: E402
 from features.model_evidence import ModelEvidenceBuilder  # noqa: E402
+from research.episode_agreement import attach_agreement  # noqa: E402
+from research.episode_propositions import build_propositions, propositions_to_jsonable  # noqa: E402
 from runtime.backtest_v2 import HTFBuilder  # noqa: E402
 
 
@@ -317,6 +320,19 @@ def _continuous_snapshot(feat: dict[str, float]) -> dict[str, float]:
     return out
 
 
+def _series_context_from_arr(arr: np.ndarray) -> dict[str, list[float]]:
+    """Full-corpus series for percentile magnitude bands (O7/O18). No new formulas."""
+    idx = {name: i for i, name in enumerate(CANONICAL_FEATURES)}
+    out: dict[str, list[float]] = {}
+    for name in ("atr", "momentum_score"):
+        j = idx.get(name)
+        if j is None:
+            continue
+        col = arr[:, j]
+        out[name] = [float(x) for x in col if np.isfinite(x)]
+    return out
+
+
 def _reconstruct_one(
     ep: dict,
     df: pd.DataFrame,
@@ -325,6 +341,8 @@ def _reconstruct_one(
     state_by_idx: dict[int, str],
     action_by_idx: dict[int, dict],
     encoder: FeatureStateEncoder,
+    mag_encoder: MagnitudeStateEncoder,
+    series_context: dict[str, list[float]],
     ctx_builder: MarketContextBuilder,
     shape_clf: MarketShapeClassifier,
     evidence_builder: ModelEvidenceBuilder,
@@ -377,6 +395,7 @@ def _reconstruct_one(
         },
         "canonical_features": None,
         "feature_states": None,
+        "magnitude_states": None,
         "market_context": None,
         "market_shape": None,
         "model_evidence": None,
@@ -398,17 +417,38 @@ def _reconstruct_one(
         "stateful_raw": {k: feat.get(k) for k in encoder.vector_bound_features if k in feat},
     }
 
-    # Feature states + context + shape
+    # Feature states + Phase 2A magnitude states + context + shape
     try:
         states = encoder.classify(feat)
         out["feature_states"] = states
-        # attach non-vector if present in enriched — only if keys exist
-        ctx = ctx_builder.build(states)
+        try:
+            out["magnitude_states"] = mag_encoder.classify_features(
+                feat, series_context=series_context
+            )
+        except Exception as mag_exc:
+            out["errors"].append(f"magnitude_states:{mag_exc}")
+            out["magnitude_states"] = None
+        # L4: merge magnitude twins into context when available (never invent them).
+        mag = out.get("magnitude_states") or None
+        if mag:
+            ctx = ctx_builder.build_with_magnitude(states, mag)
+        else:
+            ctx = ctx_builder.build(states)
         out["market_context"] = {
             "signature": ctx.signature,
             "context_hash": ctx.context_hash,
             "describe": ctx.describe(),
-            "dimensions": ctx.dimensions,
+            "dimensions": ctx.dimensions,  # flat substrate for shape / legacy
+            "dimensions_flat": ctx.dimensions,
+            "dimension_records": {
+                cat: rec.to_dict() for cat, rec in ctx.dimension_records.items()
+            },
+            "completeness": ctx.completeness,
+            "completeness_ratio": ctx.completeness_ratio,
+            "unknown_dimensions": list(ctx.unknown_dimensions),
+            "unresolved_continuous": list(ctx.unresolved_continuous),
+            "provenance": list(ctx.provenance),
+            "temporal": ctx.temporal.to_dict() if ctx.temporal else None,
             "x_markers": list(ctx.x_markers),
         }
         shape = shape_clf.classify_context(ctx)
@@ -424,12 +464,15 @@ def _reconstruct_one(
     except Exception as exc:
         out["errors"].append(f"semantic_layers:{exc}")
 
-    # Model evidence
+    # Model evidence (L7 testimony) — CRT story surfaces kept separate from scores
     direction = 1
+    crt_dir_raw = None
     if out["crt"].get("event") and out["crt"]["event"].get("direction") == "SHORT":
         direction = -1
+        crt_dir_raw = "SHORT"
     elif out["crt"].get("event") and out["crt"]["event"].get("direction") == "LONG":
         direction = 1
+        crt_dir_raw = "LONG"
     try:
         er = _engine_results(feat, direction, zone_gate, eng_cfg)
         # ensure rr has required fields
@@ -440,20 +483,44 @@ def _reconstruct_one(
         # crt must expose score
         if "score" not in er["crt"]:
             er["crt"]["score"] = float(er["crt"].get("final", er["crt"].get("structure", 0.0)) or 0.0)
-        evset = evidence_builder.build(er)
+        # Story snapshot for relationship fields (does not alter scores)
+        trend = (out.get("feature_states") or {}).get("trend_bias")
+        shape_name = (out.get("market_shape") or {}).get("name")
+        story = {
+            "crt_state": out["crt"].get("state"),
+            "crt_direction": crt_dir_raw,
+            "context_direction": trend,
+            "shape_name": shape_name,
+            "shape_direction": shape_name,
+        }
+        evset = evidence_builder.build(er, story=story)
         out["model_evidence"] = {
             "signature": evset.signature,
             "evidence_hash": evset.evidence_hash,
             "describe": evset.describe(),
             "absent": list(evset.absent),
+            "absent_records": dict(evset.absent_records),
             "x_markers": list(evset.x_markers),
+            "provenance": list(evset.provenance),
+            "story_snapshot": evset.story_snapshot,
+            "crt_story": evset.crt_story,
+            "crt_testimony": evset.crt_testimony,
             "values": {
                 mid: {
                     "value": ev.value,
+                    "score": ev.value,
                     "semantic": ev.semantic,
+                    "score_semantics": ev.score_semantics,
                     "question": ev.question,
                     "reason": ev.reason,
                     "status": ev.status,
+                    "producer": ev.producer,
+                    "availability": ev.availability,
+                    "direction": ev.direction,
+                    "applicability": ev.applicability,
+                    "relationship_to_story": ev.relationship_to_story,
+                    "story_refs": dict(ev.story_refs),
+                    "provenance": ev.provenance,
                 }
                 for mid, ev in evset.evidence.items()
             },
@@ -465,41 +532,61 @@ def _reconstruct_one(
     except Exception as exc:
         out["errors"].append(f"model_evidence:{exc}")
 
-    # Agreement / disagreement (semantic, not arithmetic fusion)
-    agree = {"aligned": [], "tension": [], "silent": []}
-    me = out.get("model_evidence") or {}
-    vals = (me.get("values") or {})
-    crt_s = out["crt"]["state"]
-    # CRT expansion/retest vs gaussian/rr polarity
-    if vals:
-        g = vals.get("gaussian", {}).get("value")
-        rr = vals.get("rr_model", {}).get("value")
-        crt_sc = vals.get("crt", {}).get("value")
-        zg = vals.get("zone_gate", {}).get("value")
-        if g is not None and rr is not None:
-            # rr polarity >0.5 bullishish structure quality not direction — note semantic carefully
-            agree["aligned"].append(
-                f"gaussian={g:.3f} ({vals['gaussian']['semantic']}); "
-                f"rr={rr:.3f} ({vals['rr_model']['semantic']}) — both are quality scores not directional capital"
-            )
-        if crt_s in ("EXPANSION", "RETEST", "DISPLACEMENT") and crt_sc is not None and crt_sc < 0.3:
-            agree["tension"].append(
-                f"CRT state={crt_s} (story advanced) but crt structure_rule_score={crt_sc:.3f} low"
-            )
+    # Phase 2B propositions + Phase 2C Agreement fold (O14). Conflict preserved under AGR-v0.
+    try:
+        out["propositions"] = propositions_to_jsonable(build_propositions(out))
+        folded = attach_agreement(out, ensure_propositions=False)
+        out["propositions"] = folded["propositions"]
+        out["agreement_object"] = folded["agreement_object"]
+        out["agreement"] = folded["agreement"]
+        # Morphology note that is not an O11/O12 proposition — keep as diagnostic tension only
+        crt_s = out["crt"]["state"]
         if crt_s == "RANGE" and body_atr_like(feat) > 0.7:
-            agree["tension"].append(
+            out["agreement"]["tension"] = list(out["agreement"].get("tension") or []) + [
                 "Large body/range bar while CRT state=RANGE — expansion morphology without CRT expansion state"
-            )
-        for mid in me.get("absent") or []:
-            agree["silent"].append(f"{mid} declared absent (no engine slot)")
-    out["agreement"] = agree
+            ]
+    except Exception as agr_exc:
+        out["errors"].append(f"agreement:{agr_exc}")
+        out["propositions"] = out.get("propositions") or []
+        out["agreement_object"] = None
+        out["agreement"] = {
+            "aligned": [],
+            "tension": [f"agreement_build_failed:{agr_exc}"],
+            "silent": [],
+            "verdict": "BREAK",
+            "policy_version": "AGR-v0",
+            "note": "build_failed",
+        }
 
     # Unexplained dimensions (from continuous remainder + X_ markers + CRT gaps)
     unex = []
     cont = encoder.continuous_features
+    mag = out.get("magnitude_states") or {}
+    interpreted_sources = {
+        "body_ratio": mag.get("body_commitment"),
+        "atr": mag.get("atr_magnitude"),
+        "momentum_score": mag.get("momentum_magnitude"),
+    }
+    still_raw = [
+        f for f in cont
+        if f not in interpreted_sources
+        or not interpreted_sources[f]
+        or str(interpreted_sources[f]).startswith("X_")
+    ]
+    # O6/O7/O18 twin states cover three continuous measurements without removing them from the vector
+    covered_mag = [
+        f"{src}→{st}"
+        for src, st in interpreted_sources.items()
+        if st and not str(st).startswith("X_")
+    ]
+    if covered_mag:
+        unex.append(
+            f"MAGNITUDE_STATES_PHASE2A: interpreted {covered_mag} "
+            f"(shadow FM-071/072/073; continuous vector slots remain for math)"
+        )
     unex.append(
-        f"CONTINUOUS_UNINTERPRETED: {len(cont)} canonical features have no declared states "
-        f"(measured not interpreted), e.g. {list(cont)[:12]}…"
+        f"CONTINUOUS_UNINTERPRETED: {len(still_raw)}/{len(cont)} continuous features still lack "
+        f"magnitude twins or declared states, e.g. {list(still_raw)[:12]}…"
     )
     if out.get("market_context") and out["market_context"].get("x_markers"):
         unex.append(f"X_MARKERS in context: {out['market_context']['x_markers']}")
@@ -523,12 +610,31 @@ def _reconstruct_one(
         "WICK_GEOMETRY_NON_VECTOR: upper_wick/lower_wick/price_position may be pipeline-computed "
         "but are not first-class 39-dim semantic states (known representational gap)"
     )
-    # session vs move
-    sess = (out.get("feature_states") or {}).get("session")
+    # session vs move — temporal contract: observed vs causality (UNKNOWN is explicit closure)
+    temporal = (out.get("market_context") or {}).get("temporal") or {}
+    sess = temporal.get("session_state") or (out.get("feature_states") or {}).get("session")
     if sess is not None:
         unex.append(
-            f"SESSION_STATE={sess}: session is labeled but not linked to episode causality "
-            f"(why this move now remains unexplained by session alone)"
+            f"SESSION_STATE={sess}: observed_time_context labeled; "
+            f"inferred_episode_causality={temporal.get('causality', 'UNKNOWN')} "
+            f"(session is not auto-cause; single owner=session_classifier)"
+        )
+    # L4 completeness note
+    mc = out.get("market_context") or {}
+    if mc.get("completeness"):
+        unex.append(
+            f"CONTEXT_CONTRACT: completeness={mc.get('completeness')} "
+            f"ratio={mc.get('completeness_ratio')}; "
+            f"unknown_dimensions={mc.get('unknown_dimensions')}; "
+            f"unresolved_continuous_n={len(mc.get('unresolved_continuous') or [])}"
+        )
+    # L7 CRT story vs testimony separation
+    me = out.get("model_evidence") or {}
+    if me.get("crt_story") is not None or me.get("crt_testimony") is not None:
+        unex.append(
+            f"CRT_STORY_VS_TESTIMONY: story={me.get('crt_story')}; "
+            f"testimony={me.get('crt_testimony')} "
+            f"(kept separate; structure_rule_score ≠ chapter validity)"
         )
     out["unexplained"] = unex
 
@@ -551,7 +657,8 @@ def _compose_narrative(out: dict) -> dict[str, str]:
     return {
         "market_what_happened": m,
         "canonical_representation": (
-            f"States: {out.get('feature_states')}; continuous snapshot: "
+            f"States: {out.get('feature_states')}; magnitude_states: {out.get('magnitude_states')}; "
+            f"continuous snapshot: "
             f"{(out.get('canonical_features') or {}).get('continuous_snapshot')}"
         ),
         "crt_recognition": f"state={crt}; event={out['crt'].get('event')}; nearby={len(out['crt'].get('nearby_events') or [])}",
@@ -588,6 +695,8 @@ def main() -> int:
 
     print("Semantic layers…")
     encoder = FeatureStateEncoder()
+    mag_encoder = MagnitudeStateEncoder(state_encoder=encoder)
+    series_context = _series_context_from_arr(arr)
     ctx_builder = MarketContextBuilder(encoder)
     shape_clf = MarketShapeClassifier(ctx_builder)
     evidence_builder = ModelEvidenceBuilder()
@@ -616,7 +725,8 @@ def main() -> int:
         print(" ", ep["id"], ep["kind"], ep["anchor_idx"])
         rec = _reconstruct_one(
             ep, df, arr, key_to_i, state_by_idx, action_by_idx,
-            encoder, ctx_builder, shape_clf, evidence_builder, zone_gate, eng_cfg,
+            encoder, mag_encoder, series_context,
+            ctx_builder, shape_clf, evidence_builder, zone_gate, eng_cfg,
         )
         reconstructions.append(rec)
 
@@ -636,6 +746,9 @@ def main() -> int:
         "surfaces_used": [
             "FeaturePipeline/CANONICAL_FEATURES",
             "FeatureStateEncoder",
+            "MagnitudeStateEncoder(O6/O7/O18 shadow)",
+            "research.episode_propositions(O11/O12 Phase 2B)",
+            "research.episode_agreement(O14 Phase 2C AGR-v0)",
             "MarketContextBuilder",
             "MarketShapeClassifier",
             "CRTEngine+HTFBuilder(htf=4)",
@@ -667,12 +780,17 @@ def _synthesize_missing_dimensions(recs: list[dict], encoder: FeatureStateEncode
     n_err = sum(1 for r in recs if r.get("errors"))
     n_x = sum(1 for r in recs if (r.get("market_context") or {}).get("x_markers"))
 
+    n_mag = sum(1 for r in recs if r.get("magnitude_states"))
     gaps.append({
         "dimension": "CONTINUOUS_FEATURE_SEMANTICS",
-        "evidence": f"{len(encoder.continuous_features)}/39 canonical features have no declared states",
+        "evidence": (
+            f"{len(encoder.continuous_features)}/39 canonical features still continuous on the vector; "
+            f"Phase 2A magnitude twins present on {n_mag}/{len(recs)} episodes "
+            f"(body_commitment/atr_magnitude/momentum_magnitude — shadow FM-071/072/073)"
+        ),
         "examples": list(encoder.continuous_features)[:15],
-        "why_missing": "Features measure magnitude but Layer-2 states do not interpret them — "
-                       "episodes show expansion/momentum only as raw numbers, not semantic bands.",
+        "why_missing": "Most continuous features remain unbanded; O6/O7/O18 now have non-vector "
+                       "magnitude states, but residual continuous dimensions still lack twins.",
         "not_a_new_indicator": True,
     })
     if n_unnamed:
@@ -771,6 +889,26 @@ def _render_md(payload: dict) -> str:
             f"**CRT:** state=`{(ep.get('crt') or {}).get('state')}` event=`{(ep.get('crt') or {}).get('event')}`",
             "",
         ]
+        if ep.get("magnitude_states"):
+            lines.append(f"**Magnitude states (Phase 2A):** `{ep['magnitude_states']}`")
+            lines.append("")
+        if ep.get("propositions"):
+            lines.append("**Propositions (Phase 2B):**")
+            for p in ep["propositions"]:
+                lines.append(
+                    f"- `{p.get('proposition_id')}` {p.get('claim_kind')} → "
+                    f"**{p.get('relation')}** — {(p.get('surfaces') or {}).get('adjudication_note')}"
+                )
+            lines.append("")
+        if ep.get("agreement_object"):
+            ao = ep["agreement_object"]
+            lines.append(
+                f"**Agreement (Phase 2C O14):** verdict=**{ao.get('verdict')}** "
+                f"policy=`{ao.get('policy_version')}`"
+            )
+            lines.append("")
+            lines.append(ao.get("episode_interpretation") or "")
+            lines.append("")
         if ep.get("market_shape"):
             lines.append(f"**Shape:** `{ep['market_shape'].get('label')}` family=`{ep['market_shape'].get('family')}`")
             lines.append("")

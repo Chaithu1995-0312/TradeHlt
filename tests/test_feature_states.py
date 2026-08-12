@@ -36,7 +36,15 @@ def test_vector_bound_set_is_exactly_the_declared_one(enc):
 
 
 def test_nonvector_stateful_identities_are_known_but_not_vector_bound(enc):
-    for name in ("retest_flag", "rsi_state", "displacement_flag"):
+    for name in (
+        "retest_flag",
+        "rsi_state",
+        "displacement_flag",
+        # Phase 2A magnitude states (non-vector; continuous sources stay continuous)
+        "body_commitment",
+        "atr_magnitude",
+        "momentum_magnitude",
+    ):
         assert name in enc.stateful_features
         assert enc.spec(name).vector_index is None
 
@@ -57,9 +65,19 @@ def test_continuous_features_partition_the_vector(enc):
     cont = set(enc.continuous_features)
     assert bound | cont == set(CANONICAL_FEATURES)
     assert not (bound & cont)
-    # The features whose banding is deliberately absent stay continuous (F-061 blocks ema_spread
-    # magnitude bands; the others have no cut anywhere in code to declare).
-    for f in ("rsi_14", "ema_spread", "momentum_score", "retest_depth", "disp_strength", "close"):
+    # Continuous measurements stay continuous even when Phase 2A magnitude *twins* exist
+    # (body_commitment / atr_magnitude / momentum_magnitude are non-vector). F-061 still
+    # blocks fixed absolute bands on ema_spread / raw momentum_score vector slots.
+    for f in (
+        "rsi_14",
+        "ema_spread",
+        "momentum_score",
+        "body_ratio",
+        "atr",
+        "retest_depth",
+        "disp_strength",
+        "close",
+    ):
         assert f in cont, f"{f} unexpectedly acquired states — was a banding added deliberately?"
 
 

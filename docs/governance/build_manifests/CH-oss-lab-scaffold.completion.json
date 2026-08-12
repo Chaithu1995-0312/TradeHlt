@@ -1,0 +1,27 @@
+{
+  "manifest_id": "CH-oss-lab-scaffold",
+  "status": "COMPLETE_LAB_SCAFFOLD",
+  "completed_utc": "2026-08-12T00:00:00Z",
+  "production_behavior_changed": false,
+  "checks_run": [
+    "tests/test_oss_lab.py"
+  ],
+  "artifacts_shipped": [
+    "oss_lab/README.md",
+    "oss_lab/registry/schema.json",
+    "oss_lab/registry/oss_capabilities.jsonl",
+    "oss_lab/registry/loader.py",
+    "oss_lab/contracts/*",
+    "oss_lab/adapters/**",
+    "oss_lab/metrics/canonical.py",
+    "oss_lab/runners/*",
+    "oss_lab/scenarios/bm_xauusd_m15_phase1.json",
+    "oss_lab/reports/comparison_matrix_template.json",
+    "oss_lab/governance/*",
+    "docs/governance/OSS_INTEGRATION_ARCHITECTURE.md",
+    "docs/implementation_plan/oss-integration-benchmark-lab.md",
+    "tests/test_oss_lab.py"
+  ],
+  "authority_statement": "RESEARCH_LAB_ONLY — no promotion, no production authority, external OSS remain DISCOVERED stubs.",
+  "next_step": "Wire Tradelatest baseline adapter to a real backtest_v2 trades artifact under Phase-1 corpus pin; do not install external OSS yet."
+}

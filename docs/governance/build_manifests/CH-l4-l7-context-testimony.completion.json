@@ -1,0 +1,42 @@
+{
+  "change_id": "CH-l4-l7-context-testimony",
+  "status": "COMPLETE",
+  "completed_utc": "2026-08-12T10:25:00Z",
+  "production_behavior_changed": false,
+  "checks_run": [
+    "tests/test_market_context.py (all passed)",
+    "tests/test_model_evidence.py (all passed)",
+    "tests/test_market_shape.py (shape substrate compatibility)",
+    "scripts/research/xauusd_episode_semantic_reconstruction.py (10 episodes)",
+    "scripts/research/xauusd_episode_coverage_census.py"
+  ],
+  "certification": {
+    "episodes": 10,
+    "CONTEXT_layer": "OK 10/10",
+    "TESTIMONY_layer": "OK 10/10",
+    "O16_temporal_episode_causality": "COVERED 10/10",
+    "O19_model_question_vs_crt_validity": "COVERED 10/10",
+    "magnitude_in_context": "10/10",
+    "crt_story_vs_testimony_split": "10/10",
+    "quality_scores_direction": "UNKNOWN 10/10 (not invented)",
+    "AGREEMENT": "unchanged BREAK 5 / PARTIAL 4 / OK 1 — NOT reimplemented",
+    "full_coherent": 1,
+    "layerwise_describable": 5
+  },
+  "closure": {
+    "CONTEXT_CLOSURE": "CLOSED",
+    "TESTIMONY_CLOSURE": "CLOSED",
+    "AGREEMENT": "NOT_IMPLEMENTED_AS_NEW (AGR-v0 research fold pre-exists; not part of this task)"
+  },
+  "residuals": [
+    "O5 participation vs expansion PARTIAL 5/10",
+    "O11 CRT dir vs context/shape CONFLICT 5 / PARTIAL 4 / COVERED 1",
+    "O15 wick absorption UNREPRESENTED 10/10 (NEW_MEASUREMENT_REQUIRED if pursued)",
+    "27 continuous vector features still unresolved_continuous (interpretation gap, not indicators)"
+  ],
+  "artifacts": [
+    "results/research/xauusd_episode_semantic_reconstruction/episodes.json",
+    "results/research/xauusd_episode_semantic_reconstruction/coverage_census.json",
+    "results/research/xauusd_episode_semantic_reconstruction/phase2_chain_coherence.json"
+  ]
+}

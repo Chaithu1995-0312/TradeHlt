@@ -2345,3 +2345,265 @@ Belief Update / ROI / Goal:
 Open Questions: whether to freeze this taxonomy as a short charter addendum under docs/governance/ (vs keep in session log only); whether Phase-2 AGREEMENT object is next authorized build.
 Next Step: User chooses — (A) freeze taxonomy into SEMANTIC_OS design/contract, (B) design Phase-2 AGREEMENT object, (C) audit Book under-specified 'semantic' phrases, or (D) hold as doctrine-only.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-09 10:25
+Topic: Classify real repo statements on VALUE→…→AGREEMENT × statement kind
+Decision/Output: Walked CRT_RETEST_CONFIRMED_2024-06-07_123000 through the ladder with source-quoted statements; classified each as semantic/descriptive/implementation/evidence/governance. Mapped coverage census O1–O19 onto the same grid. Cliff map: semantic stops hard at continuous STATE (27/39), weakens at CONTEXT→episode causality, mostly holds SHAPE/CRT declarative, TESTIMONY is role-semantic but not story-linked, AGREEMENT is pseudo-object (reconstruction heuristic, 10/10 BREAK). No code change.
+Belief Update / ROI / Goal:
+  Goal: locate where repository meaning fails so INTEGRATED work is scoped.
+  Belief: cliff is not CRT absence — CRT/SHAPE declarative exist; cliff is continuous STATE bands + cross-layer AGREEMENT contract.
+  Knowledge ROI: high — concrete statement inventory replaces abstract diagnosis.
+  Action: next build target = O14 AGREEMENT object + O6/O7/O18 state bands, not more encyclopedia prose.
+Open Questions: freeze this classification as a governance artifact under docs/governance or results/research?
+Next Step: User may authorize Phase-2 AGREEMENT design or taxonomy freeze (A/B from prior turn).
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-09 10:45
+Topic: Lock three-axis episode semantics + Phase 2A→2B→2C program (B+C)
+Decision/Output: Froze diagnosis and program in docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md. Cross-linked from SEMANTIC_OS_CONTRACT.md §5.1 and SEMANTIC_OS_V1_DESIGN.md (orthogonal ladders). Locked: not non-semantic; D/L/I grades; VALUE is measurement not anti-semantic — missing hop is VALUE→STATE; three cliffs O6/O7/O18 → O11/O12 → O14; Agreement ≠ score; no new measurements; 0/10 = connectivity not absence. Phase order 2A→2B→2C→certify same 10 episodes. Implementation constraint recorded: FeatureStateEncoder integer domains; copy volatility_regime pre-discretize pattern; F-061 guard on momentum/ema_spread absolute bands. PRODUCTION_BEHAVIOR_CHANGED=NO. No runtime code.
+Belief Update / ROI / Goal:
+  Goal: I-grade integrated episode semantics without measurement theater.
+  Belief: product path is interpretation+join, not more docs/scores/CRT states; 2A must use scale-safe surfaces first (body_ratio, vol-style ranks).
+  Knowledge ROI: high — program is executable and ordered.
+  Action: next implement turn = Phase 2A O6 body_ratio states (Option A) shadow-only.
+Open Questions: exact band cut config keys for O6/O7; whether O7 binds absolute atr_14 vs FM-041 relative (ontology already documents dual).
+Next Step: Implement Phase 2A starting with O6 body commitment bands when user says Implement.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-09 11:15
+Topic: Implement Phase 2A magnitude states O6/O7/O18 (VALUE→STATE shadow)
+Decision/Output: Shipped FM-071 body_commitment, FM-072 atr_magnitude, FM-073 momentum_magnitude in market_ontology structural_states; MagnitudeStateEncoder in src/features/magnitude_states.py (pre-discretize + FeatureStateEncoder integer map). body_ratio identity bins [0.33,0.70] CRT-coherent high; atr/momentum series percentiles (F-061-safe for momentum). Wired xauusd episode reconstruction + coverage census. Cert on same 10 episodes: O6/O7/O18 COVERED 10/10, STATE OK 10/10, AGREEMENT BREAK 10/10, full/layerwise still 0. Tests: magnitude_states + feature_states + formula_registry + lineage green; validate_registry []. PRODUCTION_BEHAVIOR_CHANGED=NO (shadow only). Manifest CH-phase2a-magnitude-states.
+Belief Update / ROI / Goal:
+  Goal: I-grade episode semantics via MEASURED→INTERPRETED→…→AGREED.
+  Belief: Cliff 1 closed for O6/O7/O18 on cert corpus; Cliffs 2–3 (O11/O12/O14) remain the binding gap.
+  Knowledge ROI: high — real STATE layer on continuous surfaces without new indicators.
+  Action: Phase 2B next (cross-layer propositions), not more magnitude bands.
+Open Questions: series_context uses full-corpus percentile (research) vs trailing window for PIT purity — disclose for 2B; atr absolute vs relative dual still documented.
+Next Step: Phase 2B O11/O12 same-event propositions when user continues Implement.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-09 11:20
+Topic: Phase 2A residual — geometry census pre-existing red
+Decision/Output: Documented residual: geometry_census/gate2b RED from pre-existing branch derivation drift (mt5_analytics etc.), not from magnitude state banding. Impact APPROVED; focused floors green. No census regenerate in this turn (scope).
+Belief Update / ROI / Goal: none (hygiene residual disclosure)
+Open Questions: whether to run full geometry_census regenerate as separate program
+Next Step: Phase 2B on command
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-09 11:35
+Topic: Certify Phase 2A CLOSED; freeze Phase 2B proposition-first frontier
+Decision/Output: User certification locked in EPISODE_SEMANTIC_INTEGRATION_PHASE2.md §0.1–0.2: O6/O7/O18 COVERED 10/10, STATE OK 10/10, no new measurements, spine/production unchanged, AGREEMENT BREAK 10/10 correctly retained. Explicit: do not improve 2A by touching Agreement. Magnitude states = semantic substrate not episode explanation. Geometry census residual quarantined. Phase 2B design freeze §8: proposition-first (O11/O12), closed relation vocab SAME_EVENT|ORTHOGONAL|CONFLICT|SILENT|INSUFFICIENT, O14 blocked until 2B exit. Empirical O11 CONTRADICTORY 5/10 is primary 2B input; O12 field-binding sensitive. No code this turn.
+Belief Update / ROI / Goal:
+  Goal: integrated episode semantics without measurement theater or Agreement score-chasing.
+  Belief: Cliff 1 closed; frontier is same-event propositions not more STATE bands or O14.
+  Knowledge ROI: high — order 2A→2B→2C preserved with hard non-goals.
+  Action: next Implement = 2B proposition builder only.
+Open Questions: research vs features package for episode_propositions; ORTHOGONAL policy final wording for chapter vs structure score.
+Next Step: Implement Phase 2B on user command.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-09 11:50
+Topic: Implement Phase 2B typed episode propositions (O11/O12)
+Decision/Output: Shipped src/research/episode_propositions.py — DIRECTION_ALIGNMENT, CHAPTER_VS_STRUCTURE_SCORE (+ POL-O12-SCORE-NOT-CHAPTER ORTHOGONAL), QUALITY_VS_DIRECTION, MAGNITUDE_SUBSTRATE. Wired reconstruction + census attach. Cert: 10/10 episodes have exit claims; O14 still UNREPRESENTED; AGREEMENT BREAK 10/10 by design; STATE OK 10/10. Tests 14 passed. Impact CH-phase2b APPROVED. No spine/production change. No O14.
+Belief Update / ROI / Goal:
+  Goal: same-event joins without Agreement score-chasing.
+  Belief: O11 CONFLICT is real product of 2B; O12 low-score-as-conflict was a mis-join — policy freezes ORTHOGONAL.
+  Knowledge ROI: high — typed proposition substrate ready for 2C fold.
+  Action: Phase 2C O14 only when user authorizes; do not redefine AGREEMENT=OK without O14.
+Open Questions: none blocking; 2C schema when ready.
+Next Step: Phase 2C AGREEMENT object on command.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-09 12:05
+Topic: Certify Phase 2B CLOSED; freeze Phase 2C Agreement design (preserve conflict)
+Decision/Output: User verdict locked: 2B CLOSED/SHIPPED — RELATED hop complete; O11 CONFLICT 5/10 represented not erased; O12 ORTHOGONAL 10/10 is semantic resolution not evasion; AGREEMENT BREAK correctly preserved (propositions ≠ Agreement). Phase 2C design freeze in EPISODE_SEMANTIC_INTEGRATION_PHASE2.md §0.2–0.3 + §9: Agreement folds propositions only; must preserve conflict; AGR-v0 verdict BREAK if unresolved O11 CONFLICT; no new relationships; COHERENT not forced. No code this turn.
+Belief Update / ROI / Goal:
+  Goal: episode-level interpretation that does not false-agree.
+  Belief: O14 can be implemented without guessing — empirical O11/O12 distributions are the fold inputs.
+  Knowledge ROI: high — only remaining Phase-2 product is typed Agreement fold.
+  Action: Implement 2C on command; never collapse CONFLICT into TRUE agreement.
+Open Questions: default COHERENT rule (require SAME_EVENT vs allow all-ORTHOGONAL) — frozen as prefer SAME_EVENT for COHERENT, else PARTIAL.
+Next Step: Implement Phase 2C O14 when user says Implement.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-09 12:20
+Topic: Implement Phase 2C O14 Agreement fold (AGR-v0)
+Decision/Output: Shipped src/research/episode_agreement.py — folds propositions into Agreement with by_relation, unresolved_conflicts, episode_interpretation, verdict COHERENT|PARTIAL|BREAK. AGR-v0: exit CONFLICT⇒BREAK; COHERENT requires O11 SAME_EVENT + O12 non-conflict; O12 ORTHOGONAL never false-conflicts. Wired reconstruction + census. Cert: O14 COVERED 10/10; verdicts BREAK 5 / PARTIAL 4 / COHERENT 1; layerwise 5/10; full 0/10; all 5 O11 CONFLICT → BREAK (conflict preserved). Tests 26 passed. Impact APPROVED. PRODUCTION_BEHAVIOR_CHANGED=NO. Phase 2A/2B/2C research-shadow program complete.
+Belief Update / ROI / Goal:
+  Goal: integrated episode semantics without false agreement.
+  Belief: Agreement is a fold not a discovery layer; preserving CONFLICT is the product quality signal.
+  Knowledge ROI: high — Phase-2 cliffs closed with measurable cert matrix.
+  Action: do not reopen 2A/2B/2C contracts; residual O5/O15/O16 are separate.
+Open Questions: none on Phase-2 cliffs.
+Next Step: optional residual work (CONTEXT/TESTIMONY partial) only if user prioritizes — not Phase-2 reopen.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-12 10:30
+Topic: L4 CONTEXT + L7 TESTIMONY semantic contract closure
+Decision/Output: Closed L4 market_context structured contract (dimension_records, completeness, unknown_dimensions, unresolved_continuous, provenance, temporal with causality=UNKNOWN; build_with_magnitude for Phase-2A twins without fabrication). Closed L7 model_evidence testimony contract (question, score_semantics, availability PRESENT/ABSENT, direction default UNKNOWN, relationship_to_story SUPPORTS|CONTRADICTS|NEUTRAL|NOT_APPLICABLE|UNKNOWN, crt_story vs crt_testimony split; no agreement fold). Reconstruction merges magnitude into context + story snapshot into testimony. Census: O16 10→COVERED, O19 10→COVERED; CONTEXT OK 10/10; TESTIMONY OK 10/10; AGREEMENT unchanged BREAK5/PARTIAL4/OK1. Tests 64 L4/L7 + shape green. No new indicators/formulas/vector/CRT/fusion/decision/risk.
+Belief Update / ROI / Goal:
+  Goal: semantic episode chain coherent without inventing meaning.
+  Belief: CONTEXT/TESTIMONY partial was contract incompleteness (structure + honesty fields), not missing indicators; magnitude already existed but was not composed into context; quality scores must never become direction.
+  Knowledge ROI: high — O16/O19 closed by explicit UNKNOWN/NOT_APPLICABLE, not by fabricating causality or validity.
+  Action: AGREEMENT remains separate; residual O5/O11/O15 are honest gaps; do not invent wick states without NEW_MEASUREMENT_REQUIRED path.
+Open Questions: whether O5 participation-vs-expansion should become a typed proposition (not a new band); O15 wick remains UNREPRESENTED without ontology state.
+Next Step: none required for L4/L7; optional O5 proposition or O15 UNKNOWN node only if user prioritizes.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-12 10:33
+Topic: STATE semantic census of 39 canonical features — targeted closure (C=0)
+Decision/Output: Full A–G census of CANONICAL_FEATURES (39). Counts: A16 B7 C0 D0 E5 F11 G0 (sum 39). No new states implemented (C=0). O5 PARTIAL classified as participation↔expansion CONTEXT relationship (volume_spike already NoSpike/VolumeSpike). O15 verified D if pursued (FM-011/012 research inactive; price_position discarded, no FM). Continuous 27/39 = census remainder not backlog. Artifacts: docs/governance/STATE_SEMANTIC_CENSUS_39.md; EPISODE_SEMANTIC_INTEGRATION_PHASE2.md §0.5. L4/L7/AGR untouched. Regression 116 semantic tests pass. PRODUCTION_BEHAVIOR_CHANGED=NO. STATE_CLOSURE=CLOSED.
+Belief Update / ROI / Goal:
+  Goal: honest STATE layer status without invented semantics.
+  Belief: no discrete state ≠ semantic gap; forcing bands on intermediates/F-061-blocked/context relationships would be false completeness.
+  Knowledge ROI: high — eliminates "band the remaining 27" as a false work queue; O15 correctly stays measurement-blocked.
+  Action: do not implement wick/participation magnitude states without a separate authorized measurement program; keep C=0 result.
+Open Questions: none on 39-slot classification; optional future program only if user authorizes O15 measurement promotion.
+Next Step: none required for STATE closure; residual O5 relationship / O15 D only on explicit priority.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-12 10:43
+Topic: O15 wick/absorption semantic closure investigation (source-only, no code)
+Decision/Output: Full lineage trace of upper_wick/lower_wick (FM-003/004), wick ratios (FM-011/012 research active:false), price_position (pipeline intermediate, no FM, discarded from 39-vector), body_commitment (FM-071 ≠ O15), CRT diagnostic sweep_uw/lw_frac (off-ontology). Verdict PARTIALLY_CLOSED: geometry formulas exist but no authoritative active measurement + state vocabulary for directional absorption; body_commitment is unsigned only; absorption concept absent from ontology. No production/STATE/L4/L7 changes.
+Belief Update / ROI / Goal:
+  Goal: determine whether O15 can close without new measurement math.
+  Belief: O15 cannot close from production-authoritative surfaces alone; FM-011/012 are research-inactive; price_position is ungoverned intermediate; "absorption" is not an established ontology concept distinct from wick rejection geometry.
+  Knowledge ROI: high — confirms census D-path without inventing states; PARTIALLY_CLOSED is more precise than pure NEW_FORMULA (math exists inactive) but EXISTING_MEASUREMENT_SUFFICIENT=NO.
+  Action: do not implement O15 states; optional future program = activate FM-011/012 or formalize price_position + declare states only under explicit authorization.
+Open Questions: if O15 is pursued, prefer activate FM-011/012 (rejection ratios) vs formalize price_position (close-in-range) vs define absorption as a distinct process quantity.
+Next Step: none unless user authorizes an O15 measurement-promotion program (separate from STATE 39-closure).
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-12 10:55
+Topic: Commit pending files to clean the working tree (tree-restoration B8-B14)
+Decision/Output: Executed the approved commit-cleanup plan (docs/implementation_plan/we-need-to-commit-reactive-quilt.md). Deleted 2 corrupted/garbled-name debris files from a broken terminal command (never tracked, no commit needed). Fixed .gitignore models\ -> models/ typo (models/ is 459MB, now correctly ignored) - commit 157e2dc. Committed B8 root analysis scripts+census outputs (2b7fc1b), B9 root-level planning docs (6dda98f), B10 full reports/ tree (7233051), B11 research packages: H-G001-001*, H-SECONDLOW-002_Complete_Package/, msip_1_verification_package/ (7cb7697), B12 multi_llm/ coordination layer + llm_project_assistant.md (8e2bc50), B13 ChatGpt workflow/ + grok/ + reference binaries (7951242), B14 scratch run logs (1054905). DEFERRED (user decision): B6 (13 modified tracked files incl. this file) and B7 (new src/features, src/research modules) and the docs/governance/ additions - all blocked by 9 PRE-EXISTING GREEN_FLOOR governance-gate failures (geometry census staleness, session-log entry-count bound, rr_model how_path_ref mismatch, epistemic/provenance invariants) unrelated to any staged content; traced each failure to confirm none referenced the files being committed. EXCLUDED per user decision: models/, duplicate zip exports, terminals/, agent-tools/, xauusd_backtest_run/ (regenerable outputs). Discovered ~15 concurrent claude.exe sessions active against this repo mid-task (2 git.exe processes, an index.lock that was genuinely live not stale, a HEAD-moved-under-me race on commit a4773c9/16c565e for an in-flight F-072 ATR fix, and a new untracked oss_lab/ directory (34 files) plus docs/governance/STATE_SEMANTIC_CENSUS_39.md appearing mid-session) - left all of that untouched throughout, staged only explicit path lists (never git add -A/.) after one early accidental git add -A was caught and reset before any commit.
+Belief Update / ROI / Goal:
+  Goal: bring the working tree to a clean, honest committed state without capturing junk, oversized binaries, or another concurrent session's in-progress work.
+  Belief: this repo's pre-commit governance gate (GREEN_FLOOR) currently carries 9 pre-existing, untriaged failures that block ANY commit touching src/features/, src/research/, or docs/governance/ - confirmed unrelated to this session's changes, so the correct move under a "commits only" constraint is to defer those paths rather than bypass the gate or silently fix it.
+  Knowledge ROI: high - surfaces a concrete, scoped punch list (9 named failing tests) for whoever next works on B6/B7/B9, and confirms multiple Claude Code sessions can and do run concurrently against this exact repo (relevant to how future commit/staging work should be sequenced).
+  Action: leave B6/B7/B9-governance uncommitted for the user or a future session to resolve (fix the 9 GREEN_FLOOR failures, or explicitly authorize --no-verify) before committing them.
+Open Questions: whether xauusd_backtest_run/ (9MB regenerable backtest output) should also be gitignored like models/ was; whether the 9 pre-existing GREEN_FLOOR failures are already tracked somewhere (they were not visibly triaged as of this session).
+Next Step: user decides how to unblock B6/B7/B9 (fix tests vs. --no-verify); otherwise tree-restoration is complete through B14.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-12T12:00:00Z
+Topic: OSS Integration Lab — design, trace, and Phase 0–4 scaffold
+Decision/Output: Shipped isolated oss_lab/ (registry, contracts, Tradelatest baseline adapter, CanonicalMetrics, Qlib/Nautilus/FinRL stubs), architecture doc docs/governance/OSS_INTEGRATION_ARCHITECTURE.md, implementation plan, risk/UNKNOWN registers, comparison matrix template, tests/test_oss_lab.py (11 passed). External OSS remain DISCOVERED; T4 forbidden; no pip installs; no production spine wiring. Primary corpus pin = XAUUSD M15 Phase-1 frozen candidate.
+Belief Update / ROI / Goal:
+  Goal: accelerate generic capabilities via OSS without surrendering Tradelatest semantic/capital/governance authority.
+  Belief: reuse-first inventory is rich (research.measurement, costs, provenance, ExperimentSpec, corpus authority, runtime benchmark suite); no prior Qlib/Nautilus/FinRL integration existed — lab isolation at repo root (mt5_analytics pattern) is the correct seam.
+  Knowledge ROI: high — prevents authority leakage class of failure.
+  Action: next wire baseline adapter to real backtest_v2 trades under Phase-1 pin; do not install external OSS until APPROVED_FOR_LAB.
+Open Questions: FinRL license (U-OSS-003); Nautilus LGPL legal review (R-OSS-006); when to author Semantic OS CN/BD/CT (Phase 9); optional change_class OSS_LAB_CHANGE later.
+Next Step: Wire TradelatestBaselineAdapter to a real backtest_v2 trades artifact; fill Tradelatest comparison-matrix column with MEASURED cells (descriptive only).
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-12T18:30:00Z
+Topic: OSS monitor candidates — reuse verdict + registry intake
+Decision/Output: Confirmed existing oss_lab fully reusable for governance/execution; added REPO_INTELLIGENCE track via StructuralFactRecord. Registered OSS-CODEBASE-MEMORY (T1 DISCOVERED, pri1), OSS-LEAN (T3 DISCOVERED), OSS-INFIGRAPH (T1 DISCOVERED), OSS-VECTORBT (T2 DEFERRED Commons Clause), OSS-RIG-METHOD (T0 REFERENCE_ONLY). Stubs + scenarios (repo-intel H2H, execution three-way) + evaluation_queue.md. Tests 15 passed. No installs.
+Belief Update / ROI / Goal:
+  Goal: evaluate OSS without authority leakage; prioritize repo intelligence for Semantic OS structural layer.
+  Belief: biggest near-term ROI is Codebase-Memory as structural fact provider INTO Semantic OS, not another trading engine; LEAN strengthens independent execution comparison; do not dual-adopt Infigraph without H2H.
+  Knowledge ROI: high — intake pipeline absorbs monitor scan without new lab package.
+  Action: next controlled Codebase-Memory security/pin assessment; keep VectorBT deferred.
+Open Questions: Windows binary SLSA verify for Codebase-Memory; Infigraph LICENSE byte-verify; LEAN fill-model declaration when stub implemented.
+Next Step: APPROVED_FOR_LAB gate checklist for Codebase-Memory (security audit + version pin) before any local benchmark run.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-12T19:00:00Z
+Topic: OSS lab architecture approval + Codebase-Memory gate staging
+Decision/Output: Marked initiative ARCHITECTURALLY APPROVED (ARCHITECTURE_APPROVAL.md). Implementation remains staged. Next gate is Codebase-Memory G1–G6 only (codebase_memory_gate.md). Shipped frozen REPO-INTEL-QA-V1 corpus (12 items), benchmark report template, evaluation queue status. Explicit: no installs, no Semantic OS mutation. Tests 16 passed.
+Belief Update / ROI / Goal:
+  Goal: progress OSS without authority leakage.
+  Belief: design consensus locked; only security/pin blocks first real repo-intel benchmark.
+  Knowledge ROI: high — freezes scope so next work cannot sprawl into dual tools or SOS writes.
+  Action: execute G1–G3 on Codebase-Memory when operator ready; then isolated Q&A run.
+Open Questions: none architectural; operational pin choice for Codebase-Memory release remains OPEN.
+Next Step: Operator completes codebase_memory_gate.md G1–G3 (license, version pin, security/install isolation) before any binary install or benchmark run.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-12T20:15:00Z
+Topic: Codebase-Memory gate G1–G3 complete
+Decision/Output: G1 PASS (MIT at pin b377c62a). G2 PASS (v0.10.2 pinned in registry). G3 PASS_WITH_RESIDUALS (Windows amd64 zip SHA-256 verified 8f08e5c5…; checksums+sbom digests match; install isolation policy tools/oss_lab/codebase-memory/v0.10.2; residuals: SLSA/cosign not locally verified, GitHub update-check, binary not executed). Lifecycle remains DISCOVERED. Evidence: oss_lab/evidence/repo_intel/codebase_memory_v0.10.2/. Tests 17 passed. No Semantic OS mutation; no install activation.
+Belief Update / ROI / Goal:
+  Goal: clear security/pin gate without authority leakage.
+  Belief: pin is real and hash-verified; residual provenance verification is pre-execute not pre-pin.
+  Knowledge ROI: high — unblocks G4–G6 without premature install.
+  Action: next G4 boundary reconfirm + residual cosign/attestation then isolated install under INSTALL_ISOLATION.md.
+Open Questions: whether lab can disable MCP initialize update-check; operator time for cosign/gh attestation tools.
+Next Step: Complete G4–G6; optional SLSA residual; then isolated install+REPO-INTEL-QA-V1 run (still no Semantic OS writes).
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-12T21:15:00Z
+Topic: Codebase-Memory G4–G6 complete + SLSA residual attempt
+Decision/Output: G4 PASS (architectural boundary / StructuralFactRecord / forbidden surfaces). G5 PASS (QA corpus, run dirs, RunManifest plan, lab.cbmignore). G6 PASS → registry lifecycle APPROVED_FOR_LAB / LAB_ONLY. SLSA residual ATTEMPTED_TOOLS_ABSENT (gh/cosign not on PATH); cosign .bundle downloaded next to verified zip. Still no extract/execute, no Semantic OS mutation. Evidence G4_G6_gate_evidence.json. Tests 18 passed.
+Belief Update / ROI / Goal:
+  Goal: finish lab admission gate without authority leakage.
+  Belief: APPROVED_FOR_LAB is correctly narrow (isolated install+benchmark only); integrity proof today is SHA-256; SLSA/cosign is best-effort residual.
+  Knowledge ROI: high — unblocks first real repo-intel run.
+  Action: next isolated extract under tools/oss_lab/codebase-memory/v0.10.2 with --skip-config + REPO-INTEL-QA-V1.
+Open Questions: install gh+cosign for residual verify before first execute (optional if SHA-256 accepted as interim).
+Next Step: Isolated install/extract of pin zip under INSTALL_ISOLATION.md; run REPO-INTEL-QA-V1; still no Semantic OS writes.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-12T22:30:00Z
+Topic: OSS-lab Tradelatest adapter — PnL unit correction + real Phase-1 artifact normalization
+Decision/Output: Ran a fresh Phase-1-pinned backtest (`results/run_20260812_113506_XAUUSD/`, 1 trade CRT-0001, guard-verified sha256 4d73f5ce…/47,275 rows) and traced its trades-CSV through `TradelatestBaselineAdapter`. Found the adapter recognized ~4 of ~24 markable fields AND that its one PnL mapping was unit-wrong: `net_pnl ← pnl_rr_net`, which is a dimensionless R-multiple (`backtest_v2.py:1051-1053`, pip_size cancels) written into a field the contract defines as money (`trade_record.py:107`, "price units unless *_r"). Latent hazard: `initial_risk` was absent so `expectancy_r` correctly read UNKNOWN; populating it without fixing the unit would have computed R ÷ price_distance and labeled it MEASURED — converting an honest gap into a silent error. FIXED in strict order: (1) `net_pnl ← capital_after − capital_before` (account currency, `CapitalCurve.apply_trade:421-427`), R-valued keys refused; (2) `initial_risk ← derived |entry_fill − sl| × position_size`, provenance says "precision bounded by producer CSV rounding" not "exact" (measured 999.9947 vs 1000.00 — exactly the position_size 2dp bound); (3) `tp → NOT_APPLICABLE` (not NOT_AVAILABLE) because tp1→tp2 is a sequential LADDER — `:1335` counts a TP2 exit as also a TP1 hit — that no single scalar can represent, and neither leg is picked; (4) gross/spread/slippage derived in money from the pip columns; (5) CRT testimony (`risk_score`, `state_path`, `htf_id`, 45 feature columns) parked in the `adapter_meta` sidecar, never a metric input. Correctness proof: `expectancy_r` = −0.038270 vs the engine's own `pnl_rr_net` = −0.0383 (Δ 3e-5) — two independent paths agreeing. Tests 24 passed (18 existing + 6 new hermetic cases mirroring the real CSV vocabulary; deliberately not depending on run-scoped `results/`). §6.2 DOC_DRIFT auto-fixed same turn: Phase-3 status in `OSS_INTEGRATION_ARCHITECTURE.md` + `oss-integration-benchmark-lab.md` (both said "normalize only / not wired").
+Belief Update / ROI / Goal:
+  Goal: make the OSS lab able to benchmark Tradelatest against external engines on real evidence, without leaking authority.
+  Belief: the adapter's NOT_AVAILABLE count was NOT mostly missing data — roughly half was source-vocabulary mismatch, and the one field it DID map was silently unit-wrong. Also corrected my own earlier claim that gross/spread/slippage were unrecoverable: they are exactly derivable in money (decomposition closes to ~0.003).
+  Knowledge ROI: high — caught a fix-ordering hazard where doing the obvious repair first (populate initial_risk) would have manufactured a corrupt MEASURED metric out of an honest UNKNOWN. That failure class (fix makes it worse) is worth generalizing.
+  Action: never map an R-valued key into an unsuffixed money field; when a contract field can't hold the source's structure, mark NOT_APPLICABLE with the shape reason rather than picking a leg.
+Open Questions: MFE/MAE are computed (`observe_open_bar:912-939`, `mfe_rr/mae_rr:1067-1068`) but dropped by `to_csv_rows` — recovering them is a producer-side emission change, not attempted. `pip_size` is not a CSV column; inferred from rounded pip columns when the caller doesn't supply it (inferred residual 0.003 vs explicit-0.01 residual 0.012).
+Next Step: Optional `runners/backtest_baseline.py` to shell to backtest_v2 under the Phase-1 pin, then fill the Tradelatest column of the comparison matrix with MEASURED (descriptive-only) cells. Grants no authority (§6.5) — no finding created or flipped.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-08-12T21:50:00Z
+Topic: Codebase-Memory isolated install + REPO-INTEL-QA-V1 first run
+Decision/Output: Extracted pin zip to tools/oss_lab/codebase-memory/v0.10.2/ (CLI only; no install.ps1/agent config). Indexed tradelatest fast mode ~70.6s → 34572 nodes / 120458 edges. Cache at %LOCALAPPDATA%/codebase-memory-mcp-lab-tradelatest (results/ path failed cache-private). Ran REPO-INTEL-QA-V1 via oss_lab/runners/repo_intel_qa_run.py as RI-RUN-20260812T214500Z: 12/12 pass, 0 fail, semantic_os_mutated=false. Artifacts under results/oss_lab/repo_intel/runs/RI-RUN-20260812T214500Z/ + oss_lab/reports/. RESEARCH_LAB_ONLY unsealed; not a production finding; no SOS YAML writes.
+Belief Update / ROI / Goal:
+  Goal: first real structural benchmark without authority leakage.
+  Belief: Codebase-Memory produces usable structural hits on Tradelatest; cold multi-CLI latency high (~25s p50) — daemon-warm runs would be fairer; graph.dot baseline still complementary.
+  Knowledge ROI: high — lab path proven end-to-end.
+  Action: review usefulness for Semantic OS ingestion design; do not auto-ingest.
+Open Questions: whether to re-run with warm daemon for latency; SLSA residual still open; Infigraph H2H timing.
+Next Step: Human usefulness review of RI-RUN report; optional warm-daemon latency remeasure; ingestion contract only if approved.
+---

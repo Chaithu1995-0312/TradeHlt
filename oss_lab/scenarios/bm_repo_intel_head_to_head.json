@@ -1,0 +1,41 @@
+{
+  "scenario_id": "BM-SCENARIO-REPO-INTEL-H2H",
+  "name": "Repository intelligence head-to-head (structural facts only)",
+  "track": "REPO_INTELLIGENCE",
+  "engines": [
+    "OSS-CODEBASE-MEMORY",
+    "OSS-INFIGRAPH",
+    "OSS-TRADLATEST-BASELINE"
+  ],
+  "local_baselines": [
+    "graph.dot / scripts/analysis/gen_pyan.py",
+    "src/governance/semantic_os.py (meaning layer, not structural competitor)",
+    "src/control_plane/dot_graph_context.py"
+  ],
+  "methodology_reference": "OSS-RIG-METHOD",
+  "required_metrics": [
+    "index_wall_clock",
+    "query_latency_p50",
+    "query_latency_p95",
+    "structural_edge_count",
+    "call_edge_precision_sample",
+    "import_edge_precision_sample",
+    "language_coverage_on_tradelatest",
+    "false_edge_rate_sample",
+    "token_cost_for_fixed_agent_task_set",
+    "tool_call_count_for_fixed_agent_task_set",
+    "reproducibility"
+  ],
+  "output_contract": "oss_lab/contracts/structural_fact.py#StructuralFactRecord",
+  "authority": "RESEARCH_LAB_ONLY",
+  "hard_rules": [
+    "Do not adopt both Codebase-Memory and Infigraph without this benchmark.",
+    "Structural facts never become Semantic OS meaning without ingestion + governance.",
+    "Paper claims (RIG, Codebase-Memory arXiv) are PUBLISHED RESULT until reproduced here.",
+    "No production install until APPROVED_FOR_LAB + version pin + security audit."
+  ],
+  "notes": [
+    "Tradelatest baseline for this track is EXISTING local tooling (pyan/graph), not trading spine.",
+    "Priority 1 candidate: OSS-CODEBASE-MEMORY."
+  ]
+}

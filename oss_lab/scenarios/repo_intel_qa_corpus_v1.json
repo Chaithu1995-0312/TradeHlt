@@ -1,0 +1,168 @@
+{
+  "corpus_id": "REPO-INTEL-QA-V1",
+  "schema_version": "1.0.0",
+  "authority": "RESEARCH_LAB_ONLY",
+  "purpose": "Fixed structural Q&A set for Codebase-Memory (and later Infigraph) head-to-head against local baselines. Answers are STRUCTURAL, not semantic meaning.",
+  "frozen": true,
+  "mutation_policy": "append-only new corpus versions (v2+); never silently edit scored items",
+  "local_baselines": [
+    {
+      "id": "BASE-GRAPH-DOT",
+      "path": "graph.dot",
+      "kind": "module_import_graph",
+      "notes": "AST-derived module import graph (gen_code_map / historical pyan path)"
+    },
+    {
+      "id": "BASE-GEN-PYAN",
+      "path": "scripts/analysis/gen_pyan.py",
+      "kind": "call_graph_generator",
+      "notes": "Function-level call graph generator; may hit Windows path limits on full tree"
+    },
+    {
+      "id": "BASE-DOT-GRAPH-CONTEXT",
+      "path": "src/control_plane/dot_graph_context.py",
+      "kind": "agent_graph_context",
+      "notes": "Existing control-plane graph context for agents"
+    }
+  ],
+  "comparison_engines": [
+    "OSS-CODEBASE-MEMORY",
+    "OSS-INFIGRAPH",
+    "LOCAL-BASELINE"
+  ],
+  "scoring": {
+    "structural_correctness": "human_or_dual_baseline_agreement",
+    "latency": "wall_clock_query_ms",
+    "completeness": "edges_or_symbols_returned_nonempty",
+    "reproducibility": "triple_run_answer_hash",
+    "forbidden": [
+      "Do not score 'semantic correctness' of CRT meaning here",
+      "Do not treat published arXiv gains as this corpus score"
+    ]
+  },
+  "items": [
+    {
+      "qa_id": "RI-QA-001",
+      "question": "What modules import or call FusionEngine (or fusion_engine)?",
+      "expected_kind": "CALLS_OR_IMPORTS",
+      "anchor_paths": ["src/core/fusion_engine.py"],
+      "baseline_hint": "graph.dot edges into/out of core.fusion_engine / fusion_engine",
+      "pass_criteria": "Returns non-empty structural neighbors; lists at least engine_runner as a consumer if present in baseline"
+    },
+    {
+      "qa_id": "RI-QA-002",
+      "question": "What calls or depends on UltronRiskGate.evaluate (or ultron_risk_gate)?",
+      "expected_kind": "CALLS_OR_IMPORTS",
+      "anchor_paths": ["src/core/ultron_risk_gate.py"],
+      "baseline_hint": "module import graph + known live/backtest call sites",
+      "pass_criteria": "Structural neighbors non-empty; no fabricated production authority claims"
+    },
+    {
+      "qa_id": "RI-QA-003",
+      "question": "Where is ExecutionPlannerV1_2 (or execution_planner) defined and who imports it?",
+      "expected_kind": "DEFINES_AND_IMPORTS",
+      "anchor_paths": ["src/config_layer/execution_planner.py"],
+      "baseline_hint": "graph.dot + config_layer package",
+      "pass_criteria": "Definition path correct; at least one real importer if baseline has any"
+    },
+    {
+      "qa_id": "RI-QA-004",
+      "question": "What is the definition path of CRT engine v2 and which package owns state identity?",
+      "expected_kind": "DEFINES",
+      "anchor_paths": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/state_identity.py"
+      ],
+      "baseline_hint": "config_layer package layout",
+      "pass_criteria": "Correct paths; does not invent a second CRT authority"
+    },
+    {
+      "qa_id": "RI-QA-005",
+      "question": "List production feature pipeline / feature_schema related modules in src/features/.",
+      "expected_kind": "DEFINES_OR_PACKAGE_MEMBERS",
+      "anchor_paths": ["src/features/feature_pipeline.py", "src/features/feature_schema.py"],
+      "baseline_hint": "src/features package + BD-001 membership if available",
+      "pass_criteria": "Includes feature_pipeline and feature_schema; no market_ontology formula invention"
+    },
+    {
+      "qa_id": "RI-QA-006",
+      "question": "Who loads or validates the market ontology / formula registry?",
+      "expected_kind": "CALLS_OR_IMPORTS",
+      "anchor_paths": [
+        "configs/formulas/market_ontology.yaml",
+        "src/features/formula_registry.py",
+        "src/features/registry/"
+      ],
+      "baseline_hint": "features.registry package imports",
+      "pass_criteria": "Structural consumers listed; tool does not claim to own ontology"
+    },
+    {
+      "qa_id": "RI-QA-007",
+      "question": "What files implement Semantic OS load/validate (not meaning content)?",
+      "expected_kind": "DEFINES",
+      "anchor_paths": [
+        "src/governance/semantic_os.py",
+        "docs/governance/semantic_os/"
+      ],
+      "baseline_hint": "governance package + tests/test_semantic_os.py",
+      "pass_criteria": "Points at semantic_os.py / tests; does not rewrite concept meaning"
+    },
+    {
+      "qa_id": "RI-QA-008",
+      "question": "Trace imports: backtest_v2 → which major spine modules does it depend on?",
+      "expected_kind": "IMPORTS",
+      "anchor_paths": ["src/runtime/backtest_v2.py"],
+      "baseline_hint": "graph.dot neighbors of runtime.backtest_v2",
+      "pass_criteria": "Non-empty import set consistent with module graph sample"
+    },
+    {
+      "qa_id": "RI-QA-009",
+      "question": "Where is the XAUUSD Phase-1 frozen candidate guard implemented?",
+      "expected_kind": "DEFINES",
+      "anchor_paths": ["src/data_ingestion/xauusd_phase1_candidate.py"],
+      "baseline_hint": "data_ingestion package",
+      "pass_criteria": "Correct path; mentions binding JSON path if tool returns file refs"
+    },
+    {
+      "qa_id": "RI-QA-010",
+      "question": "What is the module path of PromotionManager?",
+      "expected_kind": "DEFINES",
+      "anchor_paths": ["src/governance/promotion_manager.py"],
+      "baseline_hint": "governance package",
+      "pass_criteria": "Exact or unambiguous path; no claim of promotion authority for the OSS tool"
+    },
+    {
+      "qa_id": "RI-QA-011",
+      "question": "Negative control: is there a production module named FakeFusionEngineV9?",
+      "expected_kind": "ABSENCE",
+      "anchor_paths": [],
+      "baseline_hint": "must not invent",
+      "pass_criteria": "Answer is no/not found; inventing a path = FAIL"
+    },
+    {
+      "qa_id": "RI-QA-012",
+      "question": "What tests guard Semantic OS registry validity?",
+      "expected_kind": "DEFINES_OR_IMPORTS",
+      "anchor_paths": ["tests/test_semantic_os.py"],
+      "baseline_hint": "tests package",
+      "pass_criteria": "Finds test_semantic_os.py or equivalent structural test reference"
+    }
+  ],
+  "report_fields_per_item": [
+    "qa_id",
+    "engine",
+    "answer_summary",
+    "structural_refs",
+    "latency_ms",
+    "status",
+    "notes",
+    "UNKNOWN_if_any"
+  ],
+  "status_enum": [
+    "MEASURED",
+    "UNKNOWN",
+    "FAILED",
+    "NOT_APPLICABLE",
+    "NOT_RUN"
+  ]
+}

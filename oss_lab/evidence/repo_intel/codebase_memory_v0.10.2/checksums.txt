@@ -1,0 +1,8 @@
+bb6cb47aea9e50e2193cdd917d5dbafa63b7d9c1cbe74bab5ec9bf4faa67e295  codebase-memory-mcp-darwin-amd64.tar.gz
+fa3ee085485fd9c16d1c1bd8a102df518862dabd2d6a09e4c6d8dfb3cd2a7eb4  codebase-memory-mcp-darwin-arm64.tar.gz
+4ead161715fe959ef8a0e38946d63b1728d31e5fb1762a85dbb4b8c4abfbe481  codebase-memory-mcp-linux-amd64-portable.tar.gz
+6e3bb7353be21407a78e67b5465e53e3afb1a4a213e7a561606900ac08dcfdd6  codebase-memory-mcp-linux-amd64.tar.gz
+dcd6f31f4004c25e7945b355ae23a5a381acb2a620301bca93e1ddb159b672fd  codebase-memory-mcp-linux-arm64-portable.tar.gz
+b70148686cec55c31673fc0cebc0caf7f664f4ae29f7ba7f07b9617c2e5eaf85  codebase-memory-mcp-linux-arm64.tar.gz
+8f08e5c5b480e625adf9d4560765a860d493a690df6ded5b94127283ec5b660a  codebase-memory-mcp-windows-amd64.zip
+b77b81975021b879ca53cdd94c60b48cc5de102194b52117938a2187a42f89c6  codebase-memory-mcp-windows-arm64.zip

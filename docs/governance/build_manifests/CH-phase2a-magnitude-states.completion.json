@@ -1,0 +1,35 @@
+{
+  "change_id": "CH-phase2a-magnitude-states",
+  "status": "COMPLETE",
+  "completed_utc": "2026-08-09T11:10:00Z",
+  "production_behavior_changed": false,
+  "checks_run": [
+    "tests/test_magnitude_states.py (pass)",
+    "tests/test_feature_states.py (pass)",
+    "tests/test_formula_registry.py (pass)",
+    "tests/test_feature_lineage.py (pass)",
+    "validate_registry() == []",
+    "scripts/research/xauusd_episode_semantic_reconstruction.py (10 episodes rewritten)",
+    "scripts/research/xauusd_episode_coverage_census.py (O6/O7/O18 COVERED 10/10; STATE OK 10/10)",
+    "construction_protocol validate-impact → IMPACT: APPROVED"
+  ],
+  "residuals": [
+    "tests/test_geometry_census.py + test_gate2b_closure.py are RED on this branch due to pre-existing derivation drift (mt5_analytics/evaluate_bar_features_outcome.py NEW sites; feature_pipeline body_ratio/wick_size REMOVED forms, etc.) — not introduced by FM-071/072/073 (magnitude banding is not geometry re-derivation). Full census regenerate is a separate hygiene program; out of Phase 2A scope."
+  ],
+  "certification": {
+    "episodes": 10,
+    "O6_O7_O18": "COVERED 10/10",
+    "STATE_layer": "OK 10/10",
+    "AGREEMENT": "BREAK 10/10 (Phase 2C not started)",
+    "full_coherent": 0,
+    "layerwise_describable": 0
+  },
+  "artifacts": [
+    "configs/formulas/market_ontology.yaml",
+    "src/features/magnitude_states.py",
+    "results/research/xauusd_episode_semantic_reconstruction/episodes.json",
+    "results/research/xauusd_episode_semantic_reconstruction/coverage_census.json",
+    "results/research/xauusd_episode_semantic_reconstruction/phase2_chain_coherence.json"
+  ],
+  "rollback": "see impact manifest rollback_boundary"
+}

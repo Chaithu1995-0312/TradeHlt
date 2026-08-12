@@ -6,6 +6,10 @@ their declared semantic STATES. The single source of state truth is the ontology
 (configs/formulas/market_ontology.yaml): every entry carrying a non-empty ``states`` block defines
 the legal value→meaning map, and this encoder is a pure interpreter of that declaration.
 
+Continuous *magnitude* bands (body_commitment / atr_magnitude / momentum_magnitude — Phase 2A O6/O7/O18)
+are pre-discretized by ``features.magnitude_states.MagnitudeStateEncoder`` (ontology ``band_edges``),
+then mapped here as ordinary integer-domain states. This file still owns no numeric cuts.
+
 WHAT THIS MODULE IS NOT
 -----------------------
 - NOT a feature computer. It never derives a feature from OHLC or from other features — that is
@@ -15,6 +19,7 @@ WHAT THIS MODULE IS NOT
   features (e.g. ema_spread magnitude) requires declared states in the ontology first; the
   ema_spread case is explicitly BLOCKED on the FM-030 activation (F-061: legacy magnitudes scale
   with price level, so fixed bands would bake the dimensional defect into the semantic layer).
+  Phase 2A momentum uses abs *series percentile* (FM-073), never fixed absolute edges on FM-023.
 - NOT on the decision path. Shadow-only: nothing on the spine consumes this output.
 
 CONTRACT (no defaults, no fallbacks)

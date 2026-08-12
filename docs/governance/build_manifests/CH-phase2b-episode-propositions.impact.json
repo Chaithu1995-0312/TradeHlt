@@ -1,0 +1,33 @@
+{
+  "change_id": "CH-phase2b-episode-propositions",
+  "objective": "Phase 2B: typed same-event propositions for O11 DIRECTION_ALIGNMENT and O12 CHAPTER_VS_STRUCTURE_SCORE (plus diagnostic QUALITY_VS_DIRECTION / MAGNITUDE_SUBSTRATE). Research shadow only. No O14 Agreement object. No new measurements. No spine consumption.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "src/research/episode_propositions.py",
+    "scripts/research/xauusd_episode_semantic_reconstruction.py",
+    "scripts/research/xauusd_episode_coverage_census.py",
+    "tests/test_episode_propositions.py",
+    "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md",
+    "docs/governance/build_manifests/CH-phase2b-episode-propositions.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": "none",
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_episode_propositions.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "remove episode_propositions.py + reconstruction/census hooks + tests; restore free-text agreement-only path",
+  "production_behavior_changed": false,
+  "notes": [
+    "DOCUMENTATION_ONLY + research shadow code (no production config/spine). Class chosen to avoid FEATURE_IDENTITY_CHANGE geometry-census coupling; no new FM identities.",
+    "POL-O12-SCORE-NOT-CHAPTER freezes structure_rule_score as orthogonal to CRT chapter",
+    "O14 deliberately not implemented — AGREEMENT stays BREAK"
+  ]
+}

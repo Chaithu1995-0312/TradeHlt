@@ -255,3 +255,196 @@ def test_module_does_not_import_the_spine() -> None:
     source = (_ROOT / "src" / "features" / "model_evidence.py").read_text(encoding="utf-8")
     for forbidden in ("from core", "import core", "from engines", "import engines"):
         assert forbidden not in source
+
+
+# ── L7 structured testimony contract ────────────────────────────────────────
+
+def test_every_producer_has_explicit_question_and_score_semantics(
+    builder: ModelEvidenceBuilder, engine_results: dict
+) -> None:
+    es = builder.build(engine_results)
+    for mid in builder.producers:
+        ev = es.evidence[mid]
+        assert ev.question  # non-empty producer question
+        assert ev.score_semantics == ev.semantic
+        assert ev.producer == mid
+        assert ev.availability == "PRESENT"
+        assert "active_models.yaml" in ev.provenance
+
+
+def test_absent_producer_is_structured_absent(
+    builder: ModelEvidenceBuilder, engine_results: dict
+) -> None:
+    es = builder.build(engine_results)
+    for mid in ("bitnet", "tradenet", "envelope"):
+        assert mid in es.absent
+        rec = es.absent_records[mid]
+        assert rec["availability"] == "ABSENT"
+        assert rec["value"] is None
+        assert rec["direction"] == "UNKNOWN"
+        assert rec["relationship_to_story"] == "NOT_APPLICABLE"
+        assert "active_models.yaml" in rec["provenance"]
+
+
+def test_quality_score_never_becomes_direction(
+    builder: ModelEvidenceBuilder, engine_results: dict
+) -> None:
+    """Gaussian 0.88 is quality testimony — direction stays UNKNOWN."""
+    engine_results["gaussian"]["score"] = 0.88
+    es = builder.build(engine_results)
+    g = es.evidence["gaussian"]
+    assert g.value == pytest.approx(0.88)
+    assert g.direction == "UNKNOWN"
+    assert g.relationship_to_story == "UNKNOWN"
+    assert "profitable" in g.question.lower() or "probability" in g.question.lower()
+
+
+def test_crt_story_and_crt_testimony_remain_separate(
+    builder: ModelEvidenceBuilder, engine_results: dict
+) -> None:
+    """CRT state=RETEST + structure_rule_score=0.0 must not collapse into 'CRT invalid'."""
+    engine_results["crt"]["score"] = 0.0
+    story = {
+        "crt_state": "RETEST",
+        "crt_direction": "SHORT",
+        "context_direction": "Bearish",
+        "shape_name": "BearishBreakoutExpansion",
+    }
+    es = builder.build(engine_results, story=story)
+    crt = es.evidence["crt"]
+    assert crt.value == pytest.approx(0.0)
+    assert crt.semantic == "structure_rule_score"
+    assert crt.relationship_to_story == "NOT_APPLICABLE"
+    assert crt.direction == "UNKNOWN"  # score is not direction
+    assert es.crt_story is not None
+    assert es.crt_story["state"] == "RETEST"
+    assert es.crt_story["direction"] == "SHORT"
+    assert es.crt_testimony is not None
+    assert es.crt_testimony["value"] == pytest.approx(0.0)
+    assert es.crt_testimony["surface"] == "CRT_TESTIMONY"
+    # story surface remains distinct from testimony surface
+    assert es.crt_story["surface"] == "CRT_STORY"
+
+
+def test_high_gaussian_with_crt_story_stays_unknown_relationship(
+    builder: ModelEvidenceBuilder, engine_results: dict
+) -> None:
+    engine_results["gaussian"]["score"] = 0.99
+    engine_results["crt"]["score"] = 0.0
+    es = builder.build(
+        engine_results,
+        story={"crt_state": "RETEST", "crt_direction": "SHORT"},
+    )
+    assert es.evidence["gaussian"].relationship_to_story == "UNKNOWN"
+    assert es.evidence["crt"].relationship_to_story == "NOT_APPLICABLE"
+
+
+def test_testimony_does_not_become_market_state(
+    builder: ModelEvidenceBuilder, engine_results: dict
+) -> None:
+    """Evidence records are scores+questions — no trend/volatility/CRT chapter fields."""
+    es = builder.build(engine_results)
+    for ev in es.evidence.values():
+        d = ev.to_dict()
+        assert "crt_state" not in d or d.get("story_refs") is not None
+        assert d["score_semantics"]  # meaning travels with value
+        # no fabricated market-state label
+        assert d["direction"] in ("UNKNOWN", "LONG", "SHORT")
+
+
+def test_testimony_deterministic_with_story(
+    builder: ModelEvidenceBuilder, engine_results: dict
+) -> None:
+    story = {"crt_state": "EXPANSION", "crt_direction": "LONG"}
+    a = builder.build(copy.deepcopy(engine_results), story=story)
+    b = builder.build(copy.deepcopy(engine_results), story=story)
+    assert a.evidence_hash == b.evidence_hash
+    assert a.signature == b.signature
+    for mid in a.evidence:
+        assert a.evidence[mid].relationship_to_story == b.evidence[mid].relationship_to_story
+
+
+def test_active_models_remains_authoritative_for_producers(
+    builder: ModelEvidenceBuilder,
+) -> None:
+    doc = load_active_models()
+    declared_questions = {
+        k: v["intent"]["question"]
+        for k, v in doc.items()
+        if isinstance(v, dict)
+        and isinstance(v.get("intent"), dict)
+        and v["intent"].get("question")
+        and isinstance(v.get("runtime"), dict)
+        and v.get("status") is not None
+    }
+    assert set(builder.models) == set(declared_questions)
+    for mid in builder.models:
+        assert builder.spec(mid).question == declared_questions[mid]
+
+
+def test_producer_declared_direction_can_support_or_contradict(
+    builder: ModelEvidenceBuilder, engine_results: dict
+) -> None:
+    """Only explicit direction fields may SUPPORT/CONTRADICT — never score magnitude."""
+    # Inject an explicit direction on gaussian (hypothetical producer extension)
+    engine_results["gaussian"]["direction"] = "LONG"
+    es_support = builder.build(
+        engine_results,
+        story={"crt_state": "RETEST", "crt_direction": "LONG", "context_direction": "Bullish"},
+    )
+    assert es_support.evidence["gaussian"].direction == "LONG"
+    assert es_support.evidence["gaussian"].relationship_to_story == "SUPPORTS"
+
+    engine_results["gaussian"]["direction"] = "SHORT"
+    es_contra = builder.build(
+        engine_results,
+        story={"crt_state": "RETEST", "crt_direction": "LONG", "context_direction": "Bullish"},
+    )
+    assert es_contra.evidence["gaussian"].relationship_to_story == "CONTRADICTS"
+
+
+def test_no_agreement_field_on_evidence_set(
+    builder: ModelEvidenceBuilder, engine_results: dict
+) -> None:
+    """Testimony must not collapse into agreement."""
+    es = builder.build(engine_results)
+    d = es.to_dict()
+    assert "agreement" not in d
+    assert "verdict" not in d
+    assert "models_agree" not in d
+
+
+# ── Cross-layer relationship honesty cases ───────────────────────────────────
+
+@pytest.mark.parametrize(
+    "crt_dir,trend,shape,expect_crt_rel",
+    [
+        ("LONG", "Bullish", "BullishBreakoutExpansion", "NOT_APPLICABLE"),
+        ("SHORT", "Bearish", "BearishBreakoutExpansion", "NOT_APPLICABLE"),
+        ("LONG", "Bearish", "BearishBreakoutExpansion", "NOT_APPLICABLE"),
+        ("SHORT", "Bullish", "BullishBreakoutExpansion", "NOT_APPLICABLE"),
+    ],
+)
+def test_cross_layer_crt_score_relationship_not_direction_proxy(
+    builder: ModelEvidenceBuilder,
+    engine_results: dict,
+    crt_dir: str,
+    trend: str,
+    shape: str,
+    expect_crt_rel: str,
+) -> None:
+    engine_results["crt"]["score"] = 0.0 if crt_dir == "SHORT" else 0.9
+    es = builder.build(
+        engine_results,
+        story={
+            "crt_state": "RETEST",
+            "crt_direction": crt_dir,
+            "context_direction": trend,
+            "shape_name": shape,
+        },
+    )
+    assert es.evidence["crt"].relationship_to_story == expect_crt_rel
+    assert es.evidence["gaussian"].relationship_to_story == "UNKNOWN"
+    assert es.evidence["rr_model"].direction == "UNKNOWN"
+    assert es.crt_story["direction"] == crt_dir
+    assert es.crt_testimony["semantic"] == "structure_rule_score"

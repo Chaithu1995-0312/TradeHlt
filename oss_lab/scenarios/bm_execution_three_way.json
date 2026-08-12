@@ -1,0 +1,39 @@
+{
+  "scenario_id": "BM-SCENARIO-EXECUTION-THREE-WAY",
+  "name": "Independent execution mechanics: Tradelatest | Nautilus | LEAN",
+  "track": "EXECUTION",
+  "dataset_id": "BM-XAUUSD-M15-PHASE1-FROZEN",
+  "engines": [
+    "OSS-TRADLATEST-BASELINE",
+    "OSS-NAUTILUS",
+    "OSS-LEAN"
+  ],
+  "signal_policy": "SAME_TRADLATEST_SIGNAL_OR_DECLARED_DIVERGENCE",
+  "cost_modes": ["NO_COST", "WITH_COST"],
+  "required_metrics": [
+    "fill_model",
+    "slippage",
+    "transaction_costs",
+    "latency",
+    "trade_count",
+    "mfe",
+    "mae",
+    "profit_factor",
+    "expectancy",
+    "max_drawdown",
+    "reproducibility",
+    "execution_speed"
+  ],
+  "output_contract": "oss_lab/contracts/trade_record.py#BenchmarkTradeRecord",
+  "metric_authority": "oss_lab/metrics/canonical.py",
+  "authority": "RESEARCH_LAB_ONLY",
+  "hard_rules": [
+    "Do not import LEAN or Nautilus strategy architecture into Tradelatest.",
+    "Do not replace CRT/Fusion/Decision/Planner/Ultron.",
+    "Declare fill model per engine; no silent comparison.",
+    "Nautilus LGPL-3.0 legal review remains a hard gate before non-lab integration."
+  ],
+  "notes": [
+    "Extends BM-SCENARIO-XAUUSD-M15-PHASE1 with LEAN as third execution lab."
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "_doc": "Planned Semantic OS entities for OSS Lab. NOT yet authored into docs/governance/semantic_os/*.yaml — Phase 9. Semantic OS is advisory; runtime remains authoritative. This file is a design seed only.",
+  "authority": "advisory_design_seed",
+  "planned_concepts": [
+    {
+      "id": "CN-OSS-LAB",
+      "name": "OSS Integration Laboratory",
+      "why": "Isolate mature OSS capabilities behind adapters without granting production authority.",
+      "canonical_source": "oss_lab/README.md",
+      "owner_boundary_planned": "BD-OSS-LAB"
+    },
+    {
+      "id": "CN-OSS-CAPABILITY",
+      "name": "OSS Capability Provider",
+      "why": "Name what an external project provides vs what it must never own.",
+      "canonical_source": "oss_lab/registry/schema.json"
+    },
+    {
+      "id": "CN-BENCHMARK-TRADE-RECORD",
+      "name": "Benchmark Trade Record",
+      "why": "Common execution/evidence model for cross-engine comparison.",
+      "canonical_source": "oss_lab/contracts/trade_record.py"
+    }
+  ],
+  "planned_boundaries": [
+    {
+      "id": "BD-OSS-LAB",
+      "name": "OSS Lab Isolation Seam",
+      "invariant_protected": "Production spine never imports oss_lab; external OSS never owns ontology/CRT/Fusion/Decision/Ultron/governance.",
+      "members_planned": ["oss_lab/**"]
+    }
+  ],
+  "planned_contracts": [
+    {
+      "id": "CT-OSS-INTAKE",
+      "name": "OSS Intake Pipeline Contract",
+      "why": "DISCOVER→…→GOVERNANCE DECISION is mandatory; no silent promote."
+    },
+    {
+      "id": "CT-OSS-METRIC-AUTHORITY",
+      "name": "Canonical Metric Authority Contract",
+      "why": "Metrics computed independently from BenchmarkTradeRecord; framework-native metrics are evidence inputs only."
+    }
+  ],
+  "query_answers_target": [
+    "What OSS capability is this?",
+    "Why do we use it?",
+    "What does it provide / not provide?",
+    "Who owns the adapter?",
+    "What data does it consume?",
+    "What evidence does it produce?",
+    "What authority does it have?",
+    "What production surfaces can it touch?",
+    "What happens if it is removed?",
+    "What files implement the adapter?",
+    "What dependencies does it introduce?"
+  ],
+  "status": "DESIGNED_NOT_AUTHORED",
+  "repo_intel_ingestion_note": "Codebase-Memory and Infigraph may only feed STRUCTURAL facts (StructuralFactRecord). Semantic OS remains the meaning/control plane. Do not author CN records that treat either tool as runtime authority.",
+  "monitor_scan_2026_08_12": {
+    "priority_1": "OSS-CODEBASE-MEMORY",
+    "priority_2": "OSS-LEAN",
+    "head_to_head": ["OSS-CODEBASE-MEMORY", "OSS-INFIGRAPH"],
+    "reference_only": ["OSS-RIG-METHOD"],
+    "deferred": ["OSS-VECTORBT"]
+  }
+}

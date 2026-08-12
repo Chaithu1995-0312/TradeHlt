@@ -45,10 +45,11 @@ Never re-derive formula math in engines/scripts — use registry / `derived_math
 | Structure / PIT | `causal_structure.py` | FC1-A delayed-confirmed swings (no lookahead) |
 | Session / clock | `session_classifier.py`, `broker_clock.py` | Session ownership; MT5 UTC correction (F-066) |
 | Semantic L2 | `feature_states.py` | Feature values → declared states |
-| Semantic L4 | `market_context.py` | States → market context |
+| Semantic L2 magnitude (Phase 2A shadow) | `magnitude_states.py` | Continuous VALUE → O6/O7/O18 magnitude STATE (FM-071/072/073); not spine-consumed |
+| Semantic L4 | `market_context.py` | States → structured market context (dimensions + completeness + temporal causality=UNKNOWN; magnitude twins optional via `build_with_magnitude`) |
 | Semantic L5 | `market_shape.py` | Context → recurring shapes |
 | Semantic L5 CRT | `crt_state_resolver.py` | Feature states → CRT 9-state resolve (parity with engine) |
-| Semantic L7 | `model_evidence.py` | Model testimony per bar |
+| Semantic L7 | `model_evidence.py` | Model testimony per bar (question/score_semantics/availability/relationship_to_story; CRT story ≠ CRT score) |
 | Contracts | `gaussian_schema_contract.py` | Gaussian NB schema under v4 migration |
 | Dataset prep | `dataset_builder.py`, `dataset_validator.py` | Train/log feature extract + validate |
 | Drift | `feature_monitor.py` | Rolling distribution / Z-drift on trades |
