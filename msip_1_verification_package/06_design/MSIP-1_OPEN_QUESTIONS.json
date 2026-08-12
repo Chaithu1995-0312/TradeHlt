@@ -1,0 +1,75 @@
+{
+  "_doc": "Unresolved MSIP-1 design questions. LLMs must NOT treat these as decided.",
+  "generated_at": "2026-07-14T07:08:43Z",
+  "questions": [
+    {
+      "id": "OQ-001",
+      "question": "Is MSIP a pure observation/sidecar layer, or does it eventually replace CRT as the interpretation authority?",
+      "status": "OPEN",
+      "default_assumption_forbidden": true
+    },
+    {
+      "id": "OQ-002",
+      "question": "Does MarketStateVector include CRT state as a first-class dimension, or only non-CRT dimensions (session, vol regime, structure, liquidity)?",
+      "status": "OPEN"
+    },
+    {
+      "id": "OQ-003",
+      "question": "Are MSIP dimensions allowed to introduce new formulas, or must they only compose already-certified FM identities?",
+      "status": "OPEN_WITH_BIAS",
+      "bias": "config-first + ontology-first: prefer compose certified FMs; new formulas require FM registration first"
+    },
+    {
+      "id": "OQ-004",
+      "question": "What is the publication cadence \u2014 same-bar as FeaturePipeline, event-gated like CRT, or multi-timeframe?",
+      "status": "OPEN"
+    },
+    {
+      "id": "OQ-005",
+      "question": "Does MSIP bind into EngineRunner / DecisionEngine in phase 1, or remain shadow/telemetry only?",
+      "status": "OPEN_WITH_BIAS",
+      "bias": "shadow/telemetry first; production binding requires Authority Ladder evidence (\u0394G001)"
+    },
+    {
+      "id": "OQ-006",
+      "question": "How are known consumer encoding debts (session 0/1/2 vs SESSION_MAP; trend_strength name collision; volatility_regime int8 vs s05 strings) handled before MSIP activation?",
+      "status": "OPEN",
+      "related_evidence": "docs/governance/feature_completion_alignment_census-2026-07-14.json"
+    },
+    {
+      "id": "OQ-007",
+      "question": "Is visual validation (charts/overlays) in-scope for MSIP-1 implementation gate, or deferred?",
+      "status": "OPEN"
+    },
+    {
+      "id": "OQ-008",
+      "question": "What is the MSIP config section name and ownership relative to crt_engine / engine_runner / fusion?",
+      "status": "OPEN"
+    },
+    {
+      "id": "OQ-009",
+      "question": "How is CRT-local ATR/EMA/body_ratio/wick_size proven byte- or tolerance-parity with FeaturePipeline before any MSIP→CRT binding?",
+      "status": "OPEN",
+      "related_evidence": "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json"
+    },
+    {
+      "id": "OQ-010",
+      "question": "Which CRT-private state quantities (active_range refs, sweep_event, displacement_candle memory) must remain forever outside the feature layer?",
+      "status": "OPEN_WITH_BIAS",
+      "bias": "KEEP_IN_CRT unless a new ontology proves shared market meaning without lookahead"
+    },
+    {
+      "id": "OQ-001-UPDATE",
+      "question": "Is MSIP a pure observation/sidecar layer, or does it eventually replace CRT as the interpretation authority?",
+      "status": "CONSTRAINED",
+      "constraint": "Phase-1 MUST be shadow/sidecar; CRT remains CLOSED lifecycle authority until reopen + Authority Ladder",
+      "related_evidence": "docs/governance/MSIP-1_DESIGN_CONTRACT_CORRECTION-2026-07-14.md"
+    },
+    {
+      "id": "OQ-005-UPDATE",
+      "question": "Does MSIP bind into EngineRunner / DecisionEngine in phase 1, or remain shadow/telemetry only?",
+      "status": "REQUIRED_SHADOW_PHASE1",
+      "constraint": "shadow/telemetry only until CRT_INPUT_AUTHORITY_MATRIX migration decisions + parity proofs"
+    }
+  ]
+}

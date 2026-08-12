@@ -1,0 +1,56 @@
+# H-G001-001 experiment contract (machine-readable)
+research_id: H-G001-001
+title: Liquidity Sweep Veto Qualification on XAUUSD
+program: G001_consumer_qualification
+promotable: false
+
+instrument: XAUUSD
+timeframe: M15
+corpus:
+  resolver: data_ingestion.xauusd_phase1_candidate.guard_xauusd_csv_path
+  logical_path: data/XAUUSD_M15.csv
+  # physical path resolved at runtime (data/mt5/XAUUSD_M15.csv)
+
+baseline:
+  name: production_crt_spine
+  prod_version: v2_multi_2026_04
+  spine_config: configs/research/research_config_spine_xauusd.json
+  entry_source: research.adapters.spine_signal_source.ProductionSpineSource
+
+treatment:
+  name: production_crt_spine_plus_liquidity_sweep_veto
+  consumer: liquidity_sweep_veto
+  rule: "discard entry if liquidity_sweep[entry_index] != 0"
+  feature: FM-058
+  feature_computation: feature_pipeline.compute_structure_liquidity
+  # Single-consumer rule: no other knobs
+
+exit:
+  model: intrabar_fixed
+  round_trip_bps: 12.0
+  max_forward: 40
+  trail_mult: 0.5
+
+qualification:
+  config: configs/research/research_config_spine_xauusd.json
+  min_samples: 30
+  expectancy_min: 0.0
+  pf_min: 1.0
+  oos_split: 0.3
+  n_permutations: 2000
+  significance_alpha: 0.05
+
+decision_rule:
+  promote_candidate_if: "positive reproducible ΔG001 / economic usefulness vs baseline"
+  reject_if: "neutral or negative Δexpectancy / no G001 improvement"
+  forbid: ["ontology_edits", "fm_math_edits", "production_config_promotion"]
+
+deliverables:
+  - hypothesis.md
+  - experiment.yaml
+  - baseline_results.json
+  - treatment_results.json
+  - goal_report.md
+  - promotion_decision.md
+
+runner: scripts/research/run_h_g001_001_sweep_veto.py

@@ -1,0 +1,68 @@
+# H-G001-001b experiment contract (machine-readable)
+research_id: H-G001-001b
+title: Liquidity Sweep Veto Qualification on XAUUSD (CRT-only lens)
+program: G001_consumer_qualification
+parent_research_id: H-G001-001
+promotable: false
+
+instrument: XAUUSD
+timeframe: M15
+corpus:
+  resolver: data_ingestion.xauusd_phase1_candidate.guard_xauusd_csv_path
+  logical_path: data/XAUUSD_M15.csv
+  # physical path resolved at runtime (data/mt5/XAUUSD_M15.csv)
+
+validation_lens:
+  name: crt_only_gate_off
+  env:
+    BACKTEST_ENGINE_GATE: "0"
+  rationale: "New H-id because H-G001-001 used fusion gate ON and produced n=1."
+
+baseline:
+  name: crt_only_spine
+  prod_version: v2_multi_2026_04
+  spine_config: configs/research/research_config_spine_xauusd.json
+  entry_source: research.adapters.spine_signal_source.ProductionSpineSource
+  lens_override: BACKTEST_ENGINE_GATE=0
+
+treatment:
+  name: crt_only_spine_plus_liquidity_sweep_veto
+  consumer: liquidity_sweep_veto
+  rule: "discard entry if liquidity_sweep[entry_index] != 0"
+  feature: FM-058
+  feature_computation: feature_pipeline.compute_structure_liquidity
+  # Single-consumer rule: no other knobs.
+
+exit:
+  model: intrabar_fixed
+  round_trip_bps: 12.0
+  max_forward: 40
+  trail_mult: 0.5
+
+qualification:
+  config: configs/research/research_config_spine_xauusd.json
+  min_samples: 30
+  expectancy_min: 0.0
+  pf_min: 1.0
+  oos_split: 0.3
+  n_permutations: 2000
+  significance_alpha: 0.05
+
+decision_rule:
+  promote_candidate_if: "positive reproducible delta_G001 / economic usefulness vs baseline"
+  reject_if: "neutral or negative delta_expectancy / no G001 improvement"
+  insufficient_if: "either arm n < 30"
+  forbid: ["ontology_edits", "fm_math_edits", "production_config_promotion"]
+
+deliverables:
+  - hypothesis.md
+  - experiment.yaml
+  - baseline_results.json
+  - treatment_results.json
+  - goal_report.md
+  - promotion_decision.md
+  - delta_summary.json
+
+runner:
+  path: scripts/research/run_h_g001_001_sweep_veto.py
+  invocation: "python scripts/research/run_h_g001_001_sweep_veto.py --research-id H-G001-001b --engine-gate 0"

@@ -1,0 +1,509 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# MARKET ONTOLOGY — the WHAT layer (market mathematics)
+# ═══════════════════════════════════════════════════════════════════════════
+# Third authority in the WHO / HOW / WHAT split (CLAUDE.md §6.5 Config-First):
+#   active_models.yaml      = WHO   (which model uses which feature, and why)
+#   configs/production/*.json = HOW  (runtime policy: thresholds, weights, switches)
+#   configs/formulas/*.yaml   = WHAT (the mathematical meaning of a feature)
+#
+# AUTHORITY MODEL (registry is authoritative, ontology is descriptive):
+#   Ontology (WHAT, descriptive) -> Formula Registry (authoritative dispatch)
+#     -> Implementations (scalar callables) -> Consumers (read the registry).
+#   CONFIG-DECLARED, CODE-EXECUTED — the `formula` strings below are the human/LLM-readable
+#   AUTHORITY for what each quantity MEANS; the single authority for HOW it is COMPUTED is the
+#   named Python callable in src/features/registry/ (FORMULA_REGISTRY). NEVER `eval`'d. A parity
+#   test binds declaration to implementation; an ownership-lint forbids re-derivation elsewhere.
+#   Enforced rule: a registered quantity may only ORIGINATE from a registered implementation.
+#
+# LAYER SEPARATION (the wick_size lesson, 2026-07-05; extended to derived metrics 2026-07-06):
+#   - `primitives` are mathematical IDENTITIES over OHLC — immutable, never configurable
+#     (like area = pi*r*r). They live in src/features/candle_math.py.
+#   - `feature_compositions` are trading INTERPRETATIONS (which numerator/denominator a
+#     ratio uses). Debatable; changing an ACTIVE denominator is a policy change that REQUIRES
+#     threshold recalibration (e.g. body_ratio >= 0.70) and is gated.
+#   - `derived_metrics` are deterministic NORMALIZED quantities (ATR/price-relative). They live
+#     in src/features/derived_math.py; the vectorized feature_pipeline.py is bound to them by a
+#     parity battery.
+#   - `rolling_indicators` are WINDOWED indicators (ATR/RSI/EMA/true_range/swing publication). The
+#     2026-07-12 bottom-up certification program LIFTED the earlier boundary freeze for the seven
+#     load-bearing ones: they are first-class registered identities (FM-040..FM-046) with
+#     `computation_class: rolling` — computed by the pipeline (no scalar float->float form exists),
+#     certified by a SERIES-level parity + PIT probe rather than the scalar parity battery. Stateful
+#     detection state-machines (BOS/CHOCH/pivot) remain out of this layer.
+#
+# GOVERNANCE FIELDS (per entry):
+#   id         — stable FM-0NN handle; findings/tests/docs reference the ID, so a rename never
+#                breaks references.
+#   version    — per-feature formula version (global `version` below tracks the schema).
+#   lifecycle  — verification maturity on the fixed ladder:
+#                  proposed -> research -> registered -> parity_verified -> consumable -> deprecated
+#                (lifecycle tracks VERIFICATION state, not mere usage; a feature consumed by the
+#                 vector but whose scalar<->pipeline-column parity is not yet wired stays `registered`).
+#   depends_on — dependency edges (registered features or `base_inputs`); the DAG resolves to OHLC.
+#                Reverse `used_by` edges are COMPUTED by build_lineage_graph(), never stored.
+#   source_of_truth — (derived_metrics only) provenance pointer to the canonical pipeline site,
+#                kept until the pipeline routes through the registry.
+
+version: 1.3                     # 1.3 (2026-07-12): bottom-up cert program — rolling_indicators section
+                                # (FM-040..046 first-class windowed identities); atr/ema removed from base_inputs.
+                                # 1.2: B0/B1 semantic-migration governance (FM-022/023/002 + indicator_identities + migration_candidates).
+authority: user_approved        # WHAT layer; grants no promotion authority (§6.5 — HOW stays in production/*.json)
+
+# Leaf/base inputs of the dependency DAG — raw OHLCV plus out-of-ontology upstream quantities
+# (rolling indicators / structural levels) that derived metrics legitimately consume. These are
+# terminal nodes: every registered feature's depends_on chain resolves down to this set.
+base_inputs:
+  - open
+  - high
+  - low
+  - close
+  - volume
+  # atr / ema_fast / ema_slow were promoted to first-class registered `rolling_indicators`
+  # (FM-041/043/044) on 2026-07-12 — they are no longer leaves; the DAG grounds them via true_range/close.
+  - close_delta    # close.diff() — one-bar price change
+  - ref_high       # trailing swing-high reference price (structural — out of scope, a leaf)
+  - ref_low        # trailing swing-low reference price
+  - bos_level      # last break-of-structure price level
+  - disp_open      # displacement-candle open  (cross-candle context for FM-027)
+  - disp_close     # displacement-candle close
+  - retest_close   # retest-candle close
+
+primitives:
+  body_size:
+    id:        FM-001
+    version:   1
+    lifecycle: consumable
+    formula:   "abs(close - open)"
+    impl:      candle_math.body_size
+    depends_on: [open, close]
+  candle_range:
+    id:        FM-002
+    version:   1
+    lifecycle: consumable
+    formula:   "high - low"
+    impl:      candle_math.candle_range
+    depends_on: [high, low]
+    # Exact equality — NOT a second formula identity. Pipeline CANONICAL_FEATURES
+    # key remains `wick_size` for schema stability; resolves to this identity.
+    aliases:   [wick_size]
+    vector_key: wick_size
+    # ── B0/B1 wick_size misnomer governance (2026-07-12) ──
+    semantic_quantity: candle_range              # the REAL quantity: high - low (full range)
+    misnomer_alias:    wick_size                 # the vector slot name is a MISNOMER
+    status:            deprecated_misnomer_alias # new consumers must NOT read this as wick magnitude
+    wick_magnitude_is: total_wick                # actual wick magnitude = FM-005 (upper_wick+lower_wick)
+    migration_class:   IDENTITY_CLARIFICATION    # slot math unchanged; identity made unmistakable
+    artifact_compatibility: LEGACY_BOUND         # vector slot 28 consumed by rr_model (inactive); math frozen
+    note: >
+      Exact equivalence: pipeline vector key `wick_size` == candle_range (high-low).
+      Historically mislabelled; do not register a separate FM-id for wick_size. The name `wick_size`
+      is a DEPRECATED MISNOMER — the quantity is the full candle RANGE, not wick magnitude (actual
+      wick magnitude is FM-005 total_wick = upper+lower). Slot math is FROZEN (do not change to
+      wick magnitude — would break vector slot 28 / trained artifacts). B1/F5 fresh-reproduced 2026-07-12.
+      Distinct from total_wick (FM-005 = upper+lower wick = range-body) and from
+      live_engine_hook total_wick under the same historical name (GD-001 family).
+  upper_wick:
+    id:        FM-003
+    version:   1
+    lifecycle: parity_verified
+    formula:   "high - max(open, close)"
+    impl:      candle_math.upper_wick
+    depends_on: [open, high, close]
+  lower_wick:
+    id:        FM-004
+    version:   1
+    lifecycle: parity_verified
+    formula:   "min(open, close) - low"
+    impl:      candle_math.lower_wick
+    depends_on: [open, low, close]
+  total_wick:
+    id:        FM-005
+    version:   1
+    lifecycle: parity_verified
+    formula:   "upper_wick + lower_wick"     # == candle_range - body_size
+    impl:      candle_math.total_wick
+    depends_on: [upper_wick, lower_wick]
+
+feature_compositions:
+  body_ratio:
+    id:          FM-010
+    version:     1
+    lifecycle:   consumable
+    numerator:   body_size
+    denominator: candle_range
+    bounded:     [0, 1]
+    active:      true
+    depends_on:  [body_size, candle_range]
+    note: >
+      CANONICAL body_to_range_ratio. Identity FEAT-BODY_TO_RANGE_RATIO / FORMULA-BODY-TO-RANGE.
+      The CRT displacement gate `body_ratio >= 0.70` is coherent ONLY against this bounded [0,1]
+      definition. Verified 2026-07-05 that the CRT Candle property and the batch pipeline both
+      compute this. Distinct from body_to_total_wick_ratio (FM-013).
+  body_to_total_wick_ratio:
+    id:          FM-013
+    version:     1
+    lifecycle:   registered
+    numerator:   body_size
+    denominator: total_wick
+    bounded:     null
+    active:      false
+    depends_on:  [body_size, total_wick]
+    impl:        candle_math.body_to_total_wick_ratio
+    note: >
+      DISTINCT semantic (Phase-1 identity closure). body/total_wick — historically live_engine_hook
+      bare name body_ratio (GD-001 / Q-BODY-RATIO-NONCANON-LIVE). Identity
+      FEAT-BODY_TO_TOTAL_WICK_RATIO / FORMULA-BODY-TO-TOTAL-WICK. Must not share governed bare name
+      body_ratio with FM-010. Unbounded above 1 when body > wicks.
+  upper_wick_ratio:
+    id:          FM-011
+    version:     1
+    lifecycle:   research
+    numerator:   upper_wick
+    denominator: candle_range
+    bounded:     [0, 1]
+    active:      false
+    depends_on:  [upper_wick, candle_range]
+    note: "upper rejection strength; research candidate, not wired"
+  lower_wick_ratio:
+    id:          FM-012
+    version:     1
+    lifecycle:   research
+    numerator:   lower_wick
+    denominator: candle_range
+    bounded:     [0, 1]
+    active:      false
+    depends_on:  [lower_wick, candle_range]
+    note: "lower rejection strength; research candidate, not wired"
+
+# Deterministic normalized metrics. Canonical formulas transcribed VERBATIM from
+# feature_pipeline.py (the training-truth source); the YAML must equal the pipeline math.
+# `impl` -> src/features/derived_math.py scalar callable. `source_of_truth` is a temporary
+# provenance pointer kept until the pipeline routes through the registry.
+derived_metrics:
+  disp_strength:
+    id:          FM-020
+    version:     1
+    lifecycle:   parity_verified
+    formula:     "clip(body_size / (atr * close), 0.0, 3.0) if atr>0 and close>0 else nan"
+    impl:        derived_math.disp_strength
+    depends_on:  [body_size, atr, close]
+    clip:        [0.0, 3.0]
+    active:      true
+    source_of_truth: feature_pipeline.py:565
+    note: >
+      Body size normalized by ATR-scaled price. The former naming collision with scoring_engine.py's
+      local `disp_strength = move/atr` was adjudicated 2026-07-11 (GD-004 closure): a DISTINCT third
+      quantity, registered as FM-029 disp_strength_atr_rescale. This entry is the FEATURE-VECTOR
+      definition (CANONICAL_FEATURES).
+  retest_depth:
+    id:          FM-021
+    version:     1
+    lifecycle:   parity_verified
+    formula:     "clip(abs(close - ema_fast) / (atr * close), 0.0, 1.0) if atr>0 and close>0 else 0.0"
+    impl:        derived_math.retest_depth
+    depends_on:  [close, ema_fast, atr]
+    clip:        [0.0, 1.0]
+    active:      true
+    source_of_truth: feature_pipeline.py:579
+    note: "distance from close to fast EMA (ATR-scaled). Pipeline gates on retest_flag==1 (state); the math when active is this."
+  ema_spread:
+    id:          FM-022
+    version:     1
+    lifecycle:   parity_verified
+    formula:     "(ema_fast - ema_slow) / atr if atr>0 else nan"
+    impl:        derived_math.ema_spread
+    depends_on:  [ema_fast, ema_slow, atr]
+    active:      true
+    source_of_truth: feature_pipeline.py:497
+    # ── B0/B1 semantic-migration governance (2026-07-12) — LEGACY identity, DO NOT silently change ──
+    semantic_version:    "1.0-legacy-price-scaled"
+    units:               price_scaled            # NOT dimensionless: absolute-price numerator / dimensionless atr
+    normalization_basis: atr_relative            # denominator `atr` is close-relative (atr_14_raw/close)
+    temporal_semantics:  same_bar
+    known_issue: >
+      DIMENSIONAL MIX (B1/F1, fresh-reproduced 2026-07-12): numerator (ema_fast-ema_slow) is absolute
+      price; denominator `atr` is dimensionless (close-relative) -> the quantity SCALES with price level
+      (probe: median ratio 100x at 100x price). Corrected identity = FM-030 ema_spread_atr.
+    replacement_identity: FM-030                  # (proposed correction; see migration_candidates)
+    migration_class:      FORMULA_CORRECTION_DEFERRED
+    artifact_compatibility: LEGACY_BOUND          # active code (engine_runner regime/breakout, heuristic
+                                                  # gaussian) + inactive rr_model/gaussian-38 artifacts bind
+                                                  # to this math; correction requires retrain + recalibration.
+  momentum_score:
+    id:          FM-023
+    version:     1
+    lifecycle:   parity_verified
+    formula:     "close_delta / atr if atr>0 else nan"    # close_delta = close.diff()
+    impl:        derived_math.momentum_score
+    depends_on:  [close_delta, atr]
+    active:      true
+    source_of_truth: feature_pipeline.py:503
+    # ── B0/B1 semantic-migration governance (2026-07-12) — LEGACY identity, DO NOT silently change ──
+    semantic_version:    "1.0-legacy-price-scaled"
+    units:               price_scaled
+    normalization_basis: atr_relative
+    temporal_semantics:  same_bar_delta          # close_delta = close.diff() (one-bar change)
+    known_issue: >
+      Same dimensional mix as FM-022 (B1/F2, fresh-reproduced 2026-07-12): close_delta (absolute price)
+      / dimensionless atr -> SCALES with price level (probe: 100x ratio). Corrected = FM-031.
+    replacement_identity: FM-031
+    migration_class:      FORMULA_CORRECTION_DEFERRED
+    artifact_compatibility: LEGACY_BOUND
+  volatility_ratio:
+    id:          FM-024
+    version:     1
+    lifecycle:   parity_verified
+    formula:     "(high - low) / (atr * close) if atr>0 and close>0 else 1.0"   # (high-low) == candle_range
+    impl:        derived_math.volatility_ratio
+    depends_on:  [candle_range, atr, close]
+    active:      true
+    source_of_truth: feature_pipeline.py:482
+    note: "fallback is 1.0 (NOT nan/0.0) — mirrors the pipeline default exactly."
+  liquidity_distance:
+    id:          FM-025
+    version:     1
+    lifecycle:   registered      # scalar<->pipeline-column parity DEFERRED (structural level resolution)
+    formula:     "min over levels of abs(close - level) / (atr * close), clipped >= 0; nan if atr*close<=0 or no finite level"
+    impl:        derived_math.liquidity_distance
+    depends_on:  [close, atr, ref_high, ref_low, bos_level]
+    active:      true
+    source_of_truth: feature_pipeline.py:645
+    note: >
+      In CANONICAL_FEATURES (index 35) but lifecycle stays `registered`: the registry owns the
+      DISTANCE MATH; level resolution (shift/ffill/bos) is structural (pipeline-owned, out of scope).
+      Full scalar<->pipeline-column parity is deferred; a self-consistency unit test covers the scalar.
+  liquidity_pressure_score:
+    id:          FM-026
+    version:     1
+    lifecycle:   registered      # parity deferred (depends on liquidity_distance)
+    formula:     "clip(exp(-0.5 * liquidity_distance), 0.0, 1.0); nan distance -> treated as 10.0"
+    impl:        derived_math.liquidity_pressure_score
+    depends_on:  [liquidity_distance]
+    clip:        [0.0, 1.0]
+    active:      true
+    source_of_truth: feature_pipeline.py:654
+  displacement_retrace:
+    id:          FM-027
+    version:     1
+    lifecycle:   registered      # F-050 remediation CH-001: the CROSS-CANDLE quantity historically
+                                 # EMITTED under the name "retest_depth" by the CRT engine/scorer.
+    formula:     "clip(|retest_close - disp_open| / |disp_close - disp_open|, 0.0, 1.0); disp body 0 -> skip"
+    impl:        derived_math.displacement_retrace
+    depends_on:  [retest_close, disp_open, disp_close]
+    clip:        [0.0, 1.0]
+    active:      true
+    source_of_truth: crt_engine_v2.py:1372   # + crt_gaussian_scorer.py:190 ("to match CRTGaussianScorer")
+    note: >
+      CROSS-CANDLE retracement (retest close vs displacement open, normalized by displacement body) —
+      a DISTINCT quantity from FM-021 retest_depth (same-candle EMA/ATR). The math is internally
+      INTENTIONAL (F-050 lineage); the defect was the NAME collision. Emission-key rename is CH-002
+      (MODEL_INPUT_CHANGE: consumers stage1_dataset_builder/trainer/rr_fusion + historical artifacts).
+  displacement_atr_ratio:
+    id:          FM-028
+    version:     1
+    lifecycle:   registered      # F-050 sibling (CH-001): range-ATR multiple emitted as "disp_str"/
+                                 # "disp_strength" by CRT sites — distinct from FM-020 body/(atr*close).
+    formula:     "candle_range / atr; atr<=0 -> 0.0"
+    impl:        derived_math.displacement_atr_ratio
+    depends_on:  [candle_range, atr]
+    active:      true
+    source_of_truth: crt_engine_v2.py:1355   # family: :1560 score_breakout, crt_gaussian_scorer:194
+    note: >
+      FAM-06 range-ATR multiple (structural displacement magnitude in ATR units). Collides in NAME
+      with FM-020 disp_strength on the cached-features/telemetry path; registration separates the
+      identities. Rename deferred to CH-002 with FM-027.
+  disp_strength_atr_rescale:
+    id:          FM-029
+    version:     1
+    lifecycle:   registered      # GD-004 closure 2026-07-11: the scoring_engine.py:31 local
+                                 # `disp_strength = move/atr` — a THIRD identity, distinct from
+                                 # FM-020 and FM-028 (probe: equals FM-028 on 0.00% of bars).
+    formula:     "disp_strength / atr; atr<=0 -> 0.0"
+    impl:        derived_math.disp_strength_atr_rescale
+    depends_on:  [disp_strength, atr]
+    active:      true
+    source_of_truth: scoring_engine.py:31
+    note: >
+      AS-WIRED quantity of scoring_engine.compute_scores: the sole caller (crt_engine.py:23) passes
+      the FM-020 feature as `move` and the close-relative pipeline atr, so the value is
+      FM-020/atr_rel == body_size*close/atr_14_raw^2. HYPOTHESIS (deferred, FU-CRT-MOVE-MISWIRE):
+      the signature (`move`, `atr`) suggests a raw-move/FM-028-like input was intended — fixing the
+      call site is a gate-ON fusion BEHAVIOR change, out of identity-closure scope. Characterization
+      (docs/governance/gd004_disp_rescale_probe-2026-07-11.json, BNBUSDT 29,922 bars): saturates
+      s_breakout's min(x/2,1) at 1.0 on 97.5% of bars; equals FM-020 2.08% (zero-disp bars only),
+      equals FM-028 0.00%. Impact bounded: backtests gate-OFF (F-037), run() never executes (F-048).
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ROLLING INDICATORS — first-class WINDOWED identities (bottom-up cert program, 2026-07-12)
+# ═══════════════════════════════════════════════════════════════════════════
+# Promoted from the descriptive `indicator_identities` freeze to FIRST-CLASS registered entries
+# (FM-040..FM-046). These are WINDOWED (no scalar float->float form), so `computation_class: rolling`:
+#   * they ARE iterated by the registry/lineage (build_lineage_graph, validate_registry) — first-class
+#     DAG nodes with `depends_on`, so atr/ema_fast/ema_slow are no longer base_inputs leaves;
+#   * validate_registry EXEMPTS them from the scalar-FORMULA_REGISTRY impl-resolution (there is no
+#     scalar callable) — the `impl` names the pipeline computation authority;
+#   * certified by a SERIES-level parity + PIT-prefix probe (feature_dag_rolling_certification.py),
+#     NOT the scalar derived_math parity battery.
+# Math is byte-identical to the existing pipeline (feature_pipeline.py) — a registration, not a change.
+rolling_indicators:
+  true_range:
+    id:        FM-040
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "max(high - low, abs(high - prev_close), abs(low - prev_close))"
+    impl:      feature_pipeline.compute_indicators        # df['true_range']; no scalar form (uses prev_close)
+    depends_on: [high, low, close]
+    lookback:  1
+    units:     price_absolute
+    active:    true
+  atr:
+    id:        FM-041
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "SMA(14) of true_range, close-relative: atr_14_raw / close (atr_14_raw = true_range.rolling(14).mean())"
+    impl:      feature_pipeline.compute_canonical_volatility_features
+    depends_on: [true_range]
+    smoothing_method: SMA
+    lookback:  14
+    normalization_basis: close
+    units:     dimensionless
+    active:    true
+    supersedes_descriptive: IND-001        # was descriptive-only in indicator_identities
+  rsi_14:
+    id:        FM-042
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "100 - 100/(1+RS); RS = SMA(14) gain / (SMA(14) loss + 1e-9); clipped [0,100]"
+    impl:      feature_pipeline.compute_indicators
+    depends_on: [close]
+    smoothing_method: SMA
+    lookback:  14
+    bounds:    "[0, 100]"
+    active:    true
+    supersedes_descriptive: IND-002
+  ema_fast:
+    id:        FM-043
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "close.ewm(span=9, adjust=False).mean()"
+    impl:      feature_pipeline.compute_canonical_ema_features
+    depends_on: [close]
+    lookback:  9
+    active:    true
+  ema_slow:
+    id:        FM-044
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "close.ewm(span=21, adjust=False).mean()"
+    impl:      feature_pipeline.compute_canonical_ema_features
+    depends_on: [close]
+    lookback:  21
+    active:    true
+  swing_high:
+    id:        FM-045
+    version:   1
+    lifecycle: registered
+    computation_class: rolling_stateful
+    formula:   "causal DELAYED publication of a centered rolling-max swing high (FC1-A: math at t, published with SWING_WINDOW delay)"
+    impl:      feature_pipeline.compute_structure_liquidity
+    depends_on: [high]
+    lookback:  2
+    active:    true
+  swing_low:
+    id:        FM-046
+    version:   1
+    lifecycle: registered
+    computation_class: rolling_stateful
+    formula:   "causal DELAYED publication of a centered rolling-min swing low (FC1-A)"
+    impl:      feature_pipeline.compute_structure_liquidity
+    depends_on: [low]
+    lookback:  2
+    active:    true
+
+# ═══════════════════════════════════════════════════════════════════════════
+# INDICATOR IDENTITIES — DESCRIPTIVE clarification of rolling indicators (B0/B1, 2026-07-12)
+# ═══════════════════════════════════════════════════════════════════════════
+# NOTE (2026-07-12 bottom-up cert): IND-001 atr / IND-002 rsi_14 were PROMOTED to first-class
+# registered identities FM-041 / FM-042 in `rolling_indicators` above. These descriptive entries are
+# retained for history (§6.2 rule 4); the registered entries are now authoritative.
+# Rolling indicators (ATR/RSI/MACD) are ALGORITHMS, explicitly OUT of the derived_metrics layer
+# (boundary freeze, see header). This section is DESCRIPTIVE ONLY — it does NOT register an executable
+# impl and grants no computation authority (the pipeline remains the sole computation authority).
+# It exists to make the SEMANTICS machine-readable and to CORRECT false declarations at an authoritative
+# source. Full FM-id registration + parity wiring is a separate architectural review (deferred, B2/B3).
+# NOT iterated by the registry/lineage/lint (which scan only primitives/feature_compositions/derived_metrics).
+indicator_identities:
+  atr:
+    id:                 IND-001
+    versioning_status:  clarified_descriptive       # runtime math UNCHANGED (identity clarification only)
+    vector_key:         atr                          # CANONICAL_FEATURES index 13
+    smoothing_method:   SMA                          # simple rolling mean of True Range (NOT Wilder RMA)
+    lookback:           14
+    true_range:         "max(high-low, |high-prev_close|, |low-prev_close|)"
+    output:             close_relative               # atr_14_raw / close
+    normalization_basis: close
+    units:              dimensionless
+    computation_authority: "feature_pipeline.py compute_indicators (atr_14_raw) + compute_canonical_volatility_features (atr)"
+    false_claims_corrected: >
+      (2026-07-12) B1/F3 fresh-reproduced: production ATR == SMA-of-TR (maxdiff 0.0 vs SMA, 0.118 vs
+      Wilder). The identity `atr` is close-relative SMA-TR — NOT Wilder ATR and NOT absolute-price ATR.
+      Do not silently substitute Wilder smoothing (would change trained-artifact inputs + gate thresholds).
+  rsi_14:
+    id:                 IND-002
+    versioning_status:  clarified_descriptive
+    vector_key:         rsi_14                        # CANONICAL_FEATURES index 15
+    smoothing_method:   SMA                           # gain/loss are simple rolling(14).mean() — NOT Wilder EWMA
+    lookback:           14
+    output_scale:       [0, 100]
+    rs_form:            "avg_gain / (avg_loss + 1e-9)"
+    zero_loss_behavior: "1e-9 denominator guard -> RSI -> 100 (clipped)"
+    zero_gain_behavior: "RSI -> 0 (clipped)"
+    warmup_behavior:    "NaN for first 14 bars (rolling window) -> dropped by finalize()"
+    computation_authority: "feature_pipeline.py compute_indicators (rsi_14)"
+    false_claims_corrected: >
+      (2026-07-12) B1/F4 fresh-reproduced: production RSI uses SMA gain/loss (maxdiff 0.0 vs SMA, 35.8
+      vs Wilder). The docstring at feature_pipeline.py compute_indicators formerly asserted "Standard
+      Wilder formula" — CORRECTED same-turn to state SMA (behavior-neutral). RS *ratio form* is Wilder's;
+      the *averaging* is SMA. Do not silently substitute Wilder smoothing.
+
+# ═══════════════════════════════════════════════════════════════════════════
+# MIGRATION CANDIDATES — PROPOSED corrected identities (B0/B1, 2026-07-12) — NOT ACTIVE, NOT WIRED
+# ═══════════════════════════════════════════════════════════════════════════
+# Explicit corrected formula identities for the FM-022/FM-023 dimensional-mix defect. These are
+# PROPOSALS with a machine-readable formula but NO registered impl and NO vector slot — they are NOT
+# executed anywhere. Activation is a FUTURE migration (B2+) gated on: retraining the (currently inactive)
+# rr_model / gaussian-38 artifacts AND recalibrating the active engine_runner thresholds
+# (dual_engine.trend_strength_threshold / momentum_threshold) that are tuned to the legacy price-scaled
+# magnitudes. NOT iterated by the registry/lineage/lint. Canonical vector dim stays 38; order unchanged.
+migration_candidates:
+  ema_spread_atr:
+    id:                 FM-030
+    replaces:           FM-022                        # ema_spread (legacy price-scaled)
+    status:             proposed_correction
+    active:             false
+    semantic_version:   "2.0-atr-absolute"
+    formula:            "(ema_fast - ema_slow) / (atr * close) if atr>0 and close>0 else nan"
+    units:              dimensionless                 # divides by ABSOLUTE atr (atr*close) -> scale-invariant
+    normalization_basis: atr_absolute
+    depends_on:         [ema_fast, ema_slow, atr, close]
+    migration_class:    FORMULA_CORRECTION
+    requires:           [retrain_inactive_artifacts, recalibrate_active_thresholds]
+    proof:              "scale-invariance verified in tests/test_b0b1_feature_semantic_migration.py"
+  momentum_score_atr:
+    id:                 FM-031
+    replaces:           FM-023                        # momentum_score (legacy price-scaled)
+    status:             proposed_correction
+    active:             false
+    semantic_version:   "2.0-atr-absolute"
+    formula:            "close_delta / (atr * close) if atr>0 and close>0 else nan"
+    units:              dimensionless
+    normalization_basis: atr_absolute
+    depends_on:         [close_delta, atr, close]
+    migration_class:    FORMULA_CORRECTION
+    requires:           [retrain_inactive_artifacts, recalibrate_active_thresholds]
+    proof:              "scale-invariance verified in tests/test_b0b1_feature_semantic_migration.py"

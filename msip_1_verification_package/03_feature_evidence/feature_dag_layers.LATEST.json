@@ -1,0 +1,8 @@
+{
+  "_doc": "Stable pointer to the freshest feature-DAG layer spine. Dated artifacts are immutable; resolve via this pointer (verify sha256) \u2014 never by filename date.",
+  "path": "docs/governance/feature_dag_layers-2026-07-14.json",
+  "generated_at": "2026-07-14T06:37:27.083563+00:00",
+  "sha256": "d48f81d0bba1ed16337d097bbc70b94639a05a9a81d26e5e3ce526613d8c3b14",
+  "is_dag": true,
+  "n_nodes": 48
+}

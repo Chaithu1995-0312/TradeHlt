@@ -1,0 +1,54 @@
+{
+  "_doc": "MSIP consumer impact matrix (UNDER VERIFICATION \u2014 proposed).",
+  "generated_at": "2026-07-14T07:08:43Z",
+  "consumers": [
+    {
+      "consumer": "CRTEngine (crt_engine_v2)",
+      "impact": "NONE in phase-1 if MSIP is sidecar; READ-ONLY if MSD-CRT_PHASE included",
+      "mutation_surface": "none (forbidden without CRT reopen)",
+      "risk": "name collision if MSIP redefines CRT semantics"
+    },
+    {
+      "consumer": "EngineRunner",
+      "impact": "NONE until explicit wire; must not auto-bind",
+      "mutation_surface": "future optional consume MarketStateVector",
+      "risk": "premature authority without \u0394G001"
+    },
+    {
+      "consumer": "FeaturePipeline",
+      "impact": "READ \u2014 MSIP consumes pipeline outputs; should not re-implement math",
+      "mutation_surface": "none preferred",
+      "risk": "duplicate formula math (forbidden by construction protocol)"
+    },
+    {
+      "consumer": "Models (Gaussian/BitNet/TradeNet/RR)",
+      "impact": "NONE \u2014 feature-surface CLOSED does not authorize model reuse",
+      "mutation_surface": "none in MSIP-1",
+      "risk": "false authorization from closure confusion"
+    },
+    {
+      "consumer": "Backtest / live",
+      "impact": "shadow telemetry only unless approved",
+      "mutation_surface": "optional journal fields",
+      "risk": "lookahead if multi-TF dimensions introduced carelessly"
+    },
+    {
+      "consumer": "Research / interpreters",
+      "impact": "PRIMARY early consumer of MarketStateVector",
+      "mutation_surface": "research packages only",
+      "risk": "overclaiming economic edge from descriptive states"
+    },
+    {
+      "consumer": "Telemetry / dashboard",
+      "impact": "visual validation surface (OQ-007)",
+      "mutation_surface": "UI labels \u2014 must use canonical encodings",
+      "risk": "session label permutation debt"
+    },
+    {
+      "consumer": "crt_feature_builder",
+      "impact": "NONE \u2014 stale secondary surface; do not treat as MSIP authority",
+      "mutation_surface": "none",
+      "risk": "mistaken for active producer"
+    }
+  ]
+}

@@ -1,0 +1,498 @@
+{
+  "corpus_binding": {
+    "physical_path": "data/mt5/XAUUSD_M15.csv",
+    "rows": 47275,
+    "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "status": "FROZEN_CANDIDATE_NOT_PROMOTED"
+  },
+  "created_utc": "2026-07-10T00:00:00Z",
+  "fc1a_note": "2026-07-11 FC1-A: bare swing_high/swing_low legacy aliases moved from CENTERED_BATCH to CAUSAL_CONFIRMED (production bind).",
+  "fc1d_note": "2026-07-11 FC1-D: bare volatility_regime legacy alias moved GLOBAL→ROLLING_CAUSAL production bind",
+  "identities": [
+    {
+      "canonical_name": "volume",
+      "consumer_bindings": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "live_engine_hook.ohlcv"
+      ],
+      "family": "VOLUME",
+      "feature_id": "FEAT-VOLUME",
+      "formula_definition": "passthrough source OHLCV volume column; never rewritten by pipeline",
+      "formula_id": "FORMULA-SOURCE-TICK-VOLUME",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/feature_pipeline.py::compute_volume_features (passthrough) + loader",
+      "legacy_implementations": [
+        "T-003 FeaturePipeline branch that overwrote volume with high-low (REJECTED governed authority)"
+      ],
+      "legacy_names": [
+        "volume"
+      ],
+      "parameters": {},
+      "quantity_ids": [
+        "Q-VOL-TICK"
+      ],
+      "semantic_description": "Source tick/trade volume as loaded for the instrument",
+      "source_semantics": "TICK_VOLUME on frozen XAUUSD (MT5 tick_volume)",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED",
+      "temporal_semantics": "value_timestamp=t; available_at=t; bar-local",
+      "units": "tick_count"
+    },
+    {
+      "canonical_name": "volume_range_proxy",
+      "consumer_bindings": [
+        "FeaturePipeline (explicit proxy column)"
+      ],
+      "family": "VOLUME",
+      "feature_id": "FEAT-VOLUME_RANGE_PROXY",
+      "formula_definition": "high - low",
+      "formula_id": "FORMULA-PRICE-RANGE-PROXY-HL",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/feature_pipeline.py::compute_volume_features volume_range_proxy column",
+      "is_synthetic": true,
+      "legacy_implementations": [
+        "Q-VOL-PROXY-T003 same-column overwrite under name volume (consolidated here)"
+      ],
+      "legacy_names": [],
+      "parameters": {},
+      "quantity_ids": [
+        "Q-VOL-RANGE-PROXY-SEPARATE",
+        "Q-VOL-PROXY-T003"
+      ],
+      "semantic_description": "Intrabar price-range proxy for dead-volume corpora; synthetic",
+      "source_semantics": "derived from high,low; is_synthetic=true; NOT tick volume",
+      "status": "IDENTITY_CLOSED",
+      "temporal_semantics": "value_timestamp=t; available_at=t; bar-local",
+      "units": "price"
+    },
+    {
+      "canonical_name": "volume_ratio",
+      "consumer_bindings": [
+        "FeaturePipeline",
+        "BacktestRunner"
+      ],
+      "family": "VOLUME",
+      "feature_id": "FEAT-VOLUME_RATIO",
+      "formula_definition": "source_volume / rolling_mean(source_volume, 20); 1.0 when ma<=0",
+      "formula_id": "FORMULA-VOLUME-RATIO-SOURCE",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/feature_pipeline.py::compute_volume_features",
+      "legacy_implementations": [
+        "T-003 proxy-derived volume_ratio under same name (retired)"
+      ],
+      "legacy_names": [
+        "volume_ratio"
+      ],
+      "parameters": {
+        "window": 20
+      },
+      "quantity_ids": [],
+      "semantic_description": "Volume ratio bound to FEAT-VOLUME source semantic only",
+      "source_semantics": "inherits FEAT-VOLUME (TICK_VOLUME on XAU)",
+      "status": "IDENTITY_CLOSED",
+      "temporal_semantics": "value_timestamp=t; lookback=20",
+      "units": "ratio"
+    },
+    {
+      "canonical_name": "swing_high_centered_batch",
+      "consumer_bindings": [
+        "FeaturePipeline (research *_centered_batch only)"
+      ],
+      "family": "SWING",
+      "feature_id": "FEAT-SWING_HIGH_CENTERED_BATCH",
+      "formula_definition": "high == rolling(high, w=2*k+1, center=True).max(); k=SWING_WINDOW=2",
+      "formula_id": "FORMULA-SWING-HIGH-CENTERED-BATCH",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/feature_pipeline.py::compute_structure_liquidity centered path",
+      "legacy_implementations": [],
+      "legacy_names": [],
+      "parameters": {
+        "SWING_WINDOW": 2,
+        "center": true
+      },
+      "quantity_ids": [
+        "Q-SWING-CENTER"
+      ],
+      "semantic_description": "Centered-batch swing-high pivot flag (research/legacy; PIT-leaking if used as production)",
+      "source_semantics": "high series",
+      "status": "DISTINCT_SEMANTIC_PRESERVED",
+      "temporal_semantics": "event_time=t; confirmation_uses_bars_through_t+k; publication_legacy=t; PIT_LEAKING_LEGACY",
+      "units": "binary"
+    },
+    {
+      "canonical_name": "swing_low_centered_batch",
+      "consumer_bindings": [
+        "FeaturePipeline (research *_centered_batch only)"
+      ],
+      "family": "SWING",
+      "feature_id": "FEAT-SWING_LOW_CENTERED_BATCH",
+      "formula_definition": "low == rolling(low, w=2*k+1, center=True).min(); k=SWING_WINDOW=2",
+      "formula_id": "FORMULA-SWING-LOW-CENTERED-BATCH",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/feature_pipeline.py::compute_structure_liquidity centered path",
+      "legacy_implementations": [],
+      "legacy_names": [],
+      "parameters": {
+        "SWING_WINDOW": 2,
+        "center": true
+      },
+      "quantity_ids": [
+        "Q-SWING-CENTER"
+      ],
+      "semantic_description": "Centered-batch swing-low pivot flag (research/legacy; PIT-leaking if used as production)",
+      "source_semantics": "low series",
+      "status": "DISTINCT_SEMANTIC_PRESERVED",
+      "temporal_semantics": "event_time=t; confirmation_uses_bars_through_t+k; publication_legacy=t; PIT_LEAKING_LEGACY",
+      "units": "binary"
+    },
+    {
+      "canonical_name": "swing_high_causal_confirmed",
+      "consumer_bindings": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "FeatureStore (live causal structure)"
+      ],
+      "family": "SWING",
+      "feature_id": "FEAT-SWING_HIGH_CAUSAL_CONFIRMED",
+      "formula_definition": "centered_swing_high.shift(k); k=SWING_WINDOW=2",
+      "formula_id": "FORMULA-SWING-HIGH-CAUSAL-CONFIRMED",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/feature_pipeline.py::compute_structure_liquidity production bind (FC1-A) + src/features/causal_structure.py",
+      "legacy_implementations": [
+        "TRUST_SWING_CAUSAL=1 in-place overwrite of swing_high (LEGACY shadow; no longer mutates centered identity)"
+      ],
+      "legacy_names": [
+        "swing_high"
+      ],
+      "parameters": {
+        "SWING_WINDOW": 2,
+        "shift": 2
+      },
+      "quantity_ids": [
+        "Q-SWING-CAUSAL-PRODUCTION"
+      ],
+      "semantic_description": "PRODUCTION swing-high: causal delayed publication (available_at=t+k); FC1-A",
+      "source_semantics": "high series via centered pivot then delay",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED",
+      "temporal_semantics": "event_time=t; confirmation_at=t+k; available_at=t+k; publication_delay=k",
+      "units": "binary"
+    },
+    {
+      "canonical_name": "swing_low_causal_confirmed",
+      "consumer_bindings": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "FeatureStore (live causal structure)"
+      ],
+      "family": "SWING",
+      "feature_id": "FEAT-SWING_LOW_CAUSAL_CONFIRMED",
+      "formula_definition": "centered_swing_low.shift(k); k=SWING_WINDOW=2",
+      "formula_id": "FORMULA-SWING-LOW-CAUSAL-CONFIRMED",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/feature_pipeline.py::compute_structure_liquidity production bind (FC1-A) + src/features/causal_structure.py",
+      "legacy_implementations": [
+        "TRUST_SWING_CAUSAL=1 in-place overwrite of swing_low (LEGACY shadow)"
+      ],
+      "legacy_names": [
+        "swing_low"
+      ],
+      "parameters": {
+        "SWING_WINDOW": 2,
+        "shift": 2
+      },
+      "quantity_ids": [
+        "Q-SWING-CAUSAL-PRODUCTION"
+      ],
+      "semantic_description": "PRODUCTION swing-low: causal delayed publication (available_at=t+k); FC1-A",
+      "source_semantics": "low series via centered pivot then delay",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED",
+      "temporal_semantics": "event_time=t; confirmation_at=t+k; available_at=t+k; publication_delay=k",
+      "units": "binary"
+    },
+    {
+      "canonical_name": "volatility_regime_global_batch",
+      "consumer_bindings": [
+        "FeaturePipeline (research volatility_regime_global_batch only)"
+      ],
+      "family": "VOLATILITY_REGIME",
+      "feature_id": "FEAT-VOLATILITY_REGIME_GLOBAL_BATCH_RANK",
+      "formula_definition": "tercile(atr_14.rank(pct=True, method=average) over full batch); cuts 0.33/0.66 → {0,1,2}",
+      "formula_id": "FORMULA-VR-GLOBAL-BATCH",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/feature_pipeline.py::compute_volatility_regime global path",
+      "legacy_implementations": [],
+      "legacy_names": [],
+      "parameters": {
+        "rank_method": "average",
+        "tercile_cuts": [
+          0.33,
+          0.66
+        ]
+      },
+      "quantity_ids": [
+        "Q-VR-GLOBAL"
+      ],
+      "semantic_description": "GLOBAL full-frame ATR percentile tercile — non-PIT research/legacy (FC1-D demoted from production)",
+      "source_semantics": "atr_14",
+      "status": "LEGACY_IMPLEMENTATION_SHADOW_ONLY",
+      "temporal_semantics": "ranking_population=full_batch; available_at depends on future rows in batch; GLOBAL_FIT",
+      "units": "class_0_2"
+    },
+    {
+      "canonical_name": "volatility_regime_expanding_causal",
+      "consumer_bindings": [
+        "FeaturePipeline (research expanding column only)"
+      ],
+      "family": "VOLATILITY_REGIME",
+      "feature_id": "FEAT-VOLATILITY_REGIME_EXPANDING_CAUSAL_RANK",
+      "formula_definition": "tercile(atr_14.expanding(min_periods=1).rank(pct=True)); cuts 0.33/0.66",
+      "formula_id": "FORMULA-VR-EXPANDING",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/feature_pipeline.py::compute_volatility_regime expanding column",
+      "legacy_implementations": [
+        "TRUST_VOLREGIME_CAUSAL=expanding in-place overwrite of volatility_regime (retired mutation)"
+      ],
+      "legacy_names": [],
+      "parameters": {
+        "min_periods": 1,
+        "tercile_cuts": [
+          0.33,
+          0.66
+        ]
+      },
+      "quantity_ids": [
+        "Q-VR-EXPAND"
+      ],
+      "semantic_description": "Expanding causal ATR rank tercile",
+      "source_semantics": "atr_14",
+      "status": "DISTINCT_SEMANTIC_PRESERVED",
+      "temporal_semantics": "ranking_population=expanding_prefix_to_t; causal; no future rows",
+      "units": "class_0_2"
+    },
+    {
+      "canonical_name": "volatility_regime_rolling_causal",
+      "consumer_bindings": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "s05_grid"
+      ],
+      "family": "VOLATILITY_REGIME",
+      "feature_id": "FEAT-VOLATILITY_REGIME_ROLLING_CAUSAL_RANK",
+      "formula_definition": "tercile(atr_14.rolling(N=200, min_periods=1).rank(pct=True)); cuts 0.33/0.66",
+      "formula_id": "FORMULA-VR-ROLLING",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/feature_pipeline.py::compute_volatility_regime production bind (FC1-D)",
+      "legacy_implementations": [
+        "TRUST_VOLREGIME_CAUSAL=rolling in-place overwrite of volatility_regime (retired mutation)"
+      ],
+      "legacy_names": [
+        "volatility_regime"
+      ],
+      "parameters": {
+        "N": 200,
+        "N_status": "provisional_impl_not_frozen_canonical",
+        "min_periods": 1,
+        "tercile_cuts": [
+          0.33,
+          0.66
+        ]
+      },
+      "quantity_ids": [
+        "Q-VR-ROLL"
+      ],
+      "semantic_description": "PRODUCTION volatility_regime: rolling ATR percentile tercile N=200 (FC1-D); local vol context not latent regime detection",
+      "source_semantics": "atr_14",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED",
+      "temporal_semantics": "ranking_population=rolling_window_N; causal within window",
+      "units": "class_0_2"
+    },
+    {
+      "canonical_name": "body_to_range_ratio",
+      "consumer_bindings": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "CRTEngine",
+        "FeatureMonitor"
+      ],
+      "family": "BODY_RATIO",
+      "feature_id": "FEAT-BODY_TO_RANGE_RATIO",
+      "formula_definition": "body_size / candle_range; 0 if range<=0; bounded [0,1]",
+      "formula_id": "FORMULA-BODY-TO-RANGE",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/candle_math.py::body_ratio + feature_pipeline + CRT Candle (FM-010)",
+      "legacy_implementations": [],
+      "legacy_names": [
+        "body_ratio"
+      ],
+      "ontology_id": "FM-010",
+      "parameters": {},
+      "quantity_ids": [
+        "Q-BODY-RATIO"
+      ],
+      "semantic_description": "Body dominance over full candle range",
+      "source_semantics": "OHLC",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED",
+      "temporal_semantics": "bar-local t",
+      "units": "ratio"
+    },
+    {
+      "canonical_name": "body_to_total_wick_ratio",
+      "consumer_bindings": [
+        "live_engine_hook"
+      ],
+      "family": "BODY_RATIO",
+      "feature_id": "FEAT-BODY_TO_TOTAL_WICK_RATIO",
+      "formula_definition": "body_size / total_wick; 0 if total_wick<=1e-8; unbounded above 1",
+      "formula_id": "FORMULA-BODY-TO-TOTAL-WICK",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/candle_math.py::body_to_total_wick_ratio; live_engine_hook binds live body_ratio key here",
+      "legacy_implementations": [
+        "live_engine_hook bare body_ratio = body/total_wick (GD-001)"
+      ],
+      "legacy_names": [],
+      "ontology_id": "FM-013",
+      "parameters": {},
+      "quantity_ids": [
+        "Q-BODY-RATIO-NONCANON-LIVE"
+      ],
+      "semantic_description": "Body size relative to wick mass only (not full range)",
+      "source_semantics": "OHLC",
+      "status": "DISTINCT_SEMANTIC_PRESERVED",
+      "temporal_semantics": "bar-local t",
+      "units": "ratio"
+    },
+    {
+      "canonical_name": "disp_strength",
+      "consumer_bindings": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "FeatureMonitor"
+      ],
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-DISP_STRENGTH",
+      "formula_definition": "clip(body_size / (atr * close), 0, 3); nan if atr/close unavailable",
+      "formula_id": "FORMULA-FM-020",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/derived_math.py::disp_strength + feature_pipeline",
+      "legacy_implementations": [],
+      "legacy_names": [
+        "disp_strength"
+      ],
+      "ontology_id": "FM-020",
+      "parameters": {
+        "clip": [
+          0.0,
+          3.0
+        ]
+      },
+      "quantity_ids": [
+        "Q-FM020"
+      ],
+      "semantic_description": "Pipeline body/(atr*close) displacement strength",
+      "source_semantics": "body_size, atr (close-relative), close",
+      "status": "IDENTITY_CLOSED",
+      "temporal_semantics": "bar-local; depends ATR warmup",
+      "units": "ratio"
+    },
+    {
+      "canonical_name": "retest_depth",
+      "consumer_bindings": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "FeatureMonitor"
+      ],
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-RETEST_DEPTH",
+      "formula_definition": "clip(|close - ema_fast| / (atr * close), 0, 1) when retest_flag; else 0",
+      "formula_id": "FORMULA-FM-021",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/derived_math.py::retest_depth + feature_pipeline",
+      "legacy_implementations": [],
+      "legacy_names": [
+        "retest_depth"
+      ],
+      "ontology_id": "FM-021",
+      "parameters": {
+        "clip": [
+          0.0,
+          1.0
+        ]
+      },
+      "quantity_ids": [
+        "Q-FM021"
+      ],
+      "semantic_description": "Pipeline same-candle EMA distance ATR-scaled",
+      "source_semantics": "close, ema_fast, atr",
+      "status": "IDENTITY_CLOSED",
+      "temporal_semantics": "bar-local; gated on retest_flag",
+      "units": "ratio"
+    },
+    {
+      "canonical_name": "displacement_retrace",
+      "consumer_bindings": [
+        "CRTEngine",
+        "BitNet (alias map if enabled — maps to legacy retest_depth input key)"
+      ],
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-DISPLACEMENT_RETRACE",
+      "formula_definition": "clip(|retest_close - disp_open| / |disp_close - disp_open|, 0, 1); 0 if disp body 0",
+      "formula_id": "FORMULA-FM-027",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/derived_math.py::displacement_retrace + crt_engine_v2 cached_features",
+      "legacy_implementations": [
+        "historical CRT emission key retest_depth pre-CH-002"
+      ],
+      "legacy_names": [],
+      "ontology_id": "FM-027",
+      "parameters": {
+        "clip": [
+          0.0,
+          1.0
+        ]
+      },
+      "quantity_ids": [
+        "Q-FM027"
+      ],
+      "semantic_description": "Cross-candle retracement toward displacement open",
+      "source_semantics": "retest_close, disp_open, disp_close",
+      "status": "IDENTITY_CLOSED",
+      "temporal_semantics": "cross-candle CRT retest context",
+      "units": "ratio"
+    },
+    {
+      "canonical_name": "displacement_atr_ratio",
+      "consumer_bindings": [
+        "CRTEngine",
+        "BitNet (alias map if enabled — maps to legacy disp_strength input key)"
+      ],
+      "family": "DISPLACEMENT_RETEST",
+      "feature_id": "FEAT-DISPLACEMENT_ATR_RATIO",
+      "formula_definition": "candle_range / atr; 0 if atr<=0",
+      "formula_id": "FORMULA-FM-028",
+      "formula_version": "v1",
+      "implementation_authority": "src/features/derived_math.py::displacement_atr_ratio + crt_engine_v2",
+      "legacy_implementations": [
+        "historical CRT emission keys disp_str/disp_strength pre-CH-002"
+      ],
+      "legacy_names": [],
+      "ontology_id": "FM-028",
+      "parameters": {},
+      "quantity_ids": [
+        "Q-FM028"
+      ],
+      "semantic_description": "Structural displacement magnitude in ATR units",
+      "source_semantics": "candle_range, atr",
+      "status": "IDENTITY_CLOSED",
+      "temporal_semantics": "bar-local CRT displacement context",
+      "units": "atr_multiple"
+    }
+  ],
+  "lookup_rules": {
+    "bare_name_policy": "fail_closed_if_ambiguous",
+    "env_may_mutate_formula_under_one_identity": false,
+    "legacy_alias_resolution": "optional_single_match_only",
+    "resolve_by": "feature_id"
+  },
+  "registry_id": "PHASE1_FEATURE_IDENTITY_REGISTRY",
+  "schema_version": "1.0.0"
+}

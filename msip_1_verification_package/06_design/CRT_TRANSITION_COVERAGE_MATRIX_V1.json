@@ -1,0 +1,184 @@
+{
+  "_doc": "CRT_TRANSITION_COVERAGE_MATRIX_V1",
+  "generated_at_utc": "2026-07-14T07:49:18.344009+00:00",
+  "corpus_scan": {
+    "corpus_path": "data/mt5/XAUUSD_M15.csv",
+    "primary_window": {
+      "anchor_family": "RANGE_TO_SWEEP",
+      "anchor_candle_idx": 97,
+      "anchor_timestamp": "2024-05-23 02:00:00",
+      "pre_context_bars": 8,
+      "post_context_bars": 15,
+      "records_captured": 24,
+      "trace_sha256": "4d02215a13ee7292baff501bfe61414542ba7ec720091ae6ebb980d78d4078c7"
+    }
+  },
+  "classification_legend": {
+    "OBSERVED_TRUE": "At least one occurrence in corpus scan or window",
+    "OBSERVED_FALSE": "Guard evaluated false in instrumented window",
+    "REACHABLE_NOT_OBSERVED": "Family defined in code; not hit in this corpus/config scan",
+    "UNREACHABLE": "Structurally impossible under current code (none asserted yet)",
+    "UNKNOWN": "Insufficient evidence"
+  },
+  "families": [
+    {
+      "family_id": "RANGE_TO_SWEEP",
+      "classification": "OBSERVED_TRUE",
+      "first_timestamp": "2024-05-22 08:30:00",
+      "first_candle_idx": 31,
+      "state_before": "RANGE",
+      "state_after": "SWEEP",
+      "action": "SWEEP_DETECTED",
+      "note": null
+    },
+    {
+      "family_id": "RANGE_TO_SHADOW",
+      "classification": "OBSERVED_TRUE",
+      "first_timestamp": "2024-05-28 09:30:00",
+      "first_candle_idx": 393,
+      "state_before": "RANGE",
+      "state_after": "SHADOW_PENDING",
+      "action": "SHADOW_SWEEP_DETECTED",
+      "note": null
+    },
+    {
+      "family_id": "SHADOW_TO_EXPANSION",
+      "classification": "OBSERVED_TRUE",
+      "first_timestamp": "2024-05-28 09:45:00",
+      "first_candle_idx": 394,
+      "state_before": "SHADOW_PENDING",
+      "state_after": "EXPANSION",
+      "action": "SHADOW_EXPANSION_CONFIRMED",
+      "note": null
+    },
+    {
+      "family_id": "SWEEP_TO_DISPLACEMENT",
+      "classification": "OBSERVED_TRUE",
+      "first_timestamp": "2024-05-23 09:15:00",
+      "first_candle_idx": 126,
+      "state_before": "SWEEP",
+      "state_after": "DISPLACEMENT",
+      "action": "DISPLACEMENT_CONFIRMED",
+      "note": null
+    },
+    {
+      "family_id": "DISPLACEMENT_TO_EXPANSION",
+      "classification": "OBSERVED_TRUE",
+      "first_timestamp": "2024-08-02 09:00:00",
+      "first_candle_idx": 4787,
+      "state_before": "DISPLACEMENT",
+      "state_after": "EXPANSION",
+      "action": "EXPANSION_CONFIRMED",
+      "note": null
+    },
+    {
+      "family_id": "EXPANSION_TO_RETEST",
+      "classification": "OBSERVED_TRUE",
+      "first_timestamp": "2024-06-07 12:30:00",
+      "first_candle_idx": 1141,
+      "state_before": "EXPANSION",
+      "state_after": "RETEST",
+      "action": "RETEST_CONFIRMED",
+      "note": null
+    },
+    {
+      "family_id": "EXPANSION_TO_EXPIRED",
+      "classification": "OBSERVED_TRUE",
+      "first_timestamp": "2024-08-07 13:15:00",
+      "first_candle_idx": 5080,
+      "state_before": "EXPANSION",
+      "state_after": "EXPIRED",
+      "action": "EXPANSION_EXPIRED",
+      "note": null
+    },
+    {
+      "family_id": "EXPIRED_TO_RANGE",
+      "classification": "OBSERVED_TRUE",
+      "first_timestamp": "2024-08-07 13:30:00",
+      "first_candle_idx": 5081,
+      "state_before": "EXPIRED",
+      "state_after": "RANGE",
+      "action": "RESET",
+      "note": null
+    },
+    {
+      "family_id": "RETEST_TO_EXECUTION",
+      "classification": "OBSERVED_TRUE",
+      "first_timestamp": "2024-06-17 15:00:00",
+      "first_candle_idx": 1703,
+      "state_before": "RETEST",
+      "state_after": "EXECUTION",
+      "action": "TRADE_OPENED",
+      "note": null
+    },
+    {
+      "family_id": "EXECUTION_TO_RESOLUTION",
+      "classification": "REACHABLE_NOT_OBSERVED",
+      "first_timestamp": null,
+      "first_candle_idx": null,
+      "state_before": null,
+      "state_after": null,
+      "action": null,
+      "note": "No first occurrence in full Phase-1 corpus scan under active config"
+    },
+    {
+      "family_id": "RESET_TO_RANGE",
+      "classification": "OBSERVED_TRUE",
+      "first_timestamp": "2024-05-22 08:45:00",
+      "first_candle_idx": 32,
+      "state_before": "SWEEP",
+      "state_after": "RANGE",
+      "action": "RESET",
+      "note": null
+    },
+    {
+      "family_id": "TRADE_OPENED",
+      "classification": "OBSERVED_TRUE",
+      "first_timestamp": "2024-06-17 15:00:00",
+      "first_candle_idx": 1703,
+      "state_before": "RETEST",
+      "state_after": "EXECUTION",
+      "action": "TRADE_OPENED",
+      "note": null
+    },
+    {
+      "family_id": "TRADE_EXIT",
+      "classification": "OBSERVED_TRUE",
+      "first_timestamp": "2024-06-17 15:15:00",
+      "first_candle_idx": 1704,
+      "state_before": "EXECUTION",
+      "state_after": "RANGE",
+      "action": "TRADE_TP1",
+      "note": null
+    }
+  ],
+  "family_counts": {
+    "OBSERVED_TRUE": 12,
+    "REACHABLE_NOT_OBSERVED": 1,
+    "UNKNOWN": 0,
+    "UNREACHABLE": 0
+  },
+  "window_guard_observations": {
+    "true_count": 2,
+    "false_count": 22,
+    "true_guard_ids": [
+      "G_RANGE_SWEEP_DETECT"
+    ],
+    "false_guard_ids": [
+      "G_RANGE_SWEEP_DETECT",
+      "G_SWEEP_DISP_MOVE"
+    ]
+  },
+  "baseline_v1": {
+    "status": "FROZEN_SUCCESS",
+    "selection_rule": "FIRST_16_FINALIZED_BARS",
+    "trace_sha256": "26e185b943ec5caeee31d32a0b598b543f00a48f953d9fefc9a272eb77ea72d7",
+    "all_range_note": "Baseline window remained RANGE \u2014 mechanism proof, not transition coverage"
+  },
+  "gaps_for_msip": [
+    "Per-family dedicated windows (8+1+15) not yet captured for every OBSERVED_TRUE family \u2014 only full-scan first-hit index + one RANGE\u2192SWEEP window",
+    "Soft-confirmation internal guard operand traces need deeper instrumentation when RETEST\u2192EXECUTION fires",
+    "CRT ATR vs pipeline atr parity not measured"
+  ],
+  "authority": "research/governance only"
+}

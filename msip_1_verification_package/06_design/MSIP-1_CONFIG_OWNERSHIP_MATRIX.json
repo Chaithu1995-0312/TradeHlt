@@ -1,0 +1,52 @@
+{
+  "_doc": "Proposed MSIP config ownership matrix (UNDER VERIFICATION).",
+  "generated_at": "2026-07-14T07:08:43Z",
+  "doctrine": "Config-first: BEHAVIORAL knobs externalized via strict _require / from_prod_config; STRUCTURAL frozen in code",
+  "parameters": [
+    {
+      "param": "msip.enabled",
+      "current_owner": "NONE (not implemented)",
+      "proposed_owner": "configs/production/*.json top-level section msip",
+      "class": "BEHAVIORAL",
+      "default_policy": "fail-closed if section present but incomplete; absent section = feature off"
+    },
+    {
+      "param": "msip.dimensions.*.enabled",
+      "current_owner": "NONE",
+      "proposed_owner": "msip section",
+      "class": "BEHAVIORAL"
+    },
+    {
+      "param": "msip.session.encoding",
+      "current_owner": "FeaturePipeline hardcoded piecewise hours",
+      "proposed_owner": "UNDECIDED (OQ-006) \u2014 do not silently change pipeline identity",
+      "class": "STRUCTURAL_OR_BEHAVIORAL"
+    },
+    {
+      "param": "msip.volatility_regime.*",
+      "current_owner": "FeaturePipeline (window 200, edges 0.33/0.66)",
+      "proposed_owner": "UNDECIDED \u2014 currently structural in pipeline",
+      "class": "STRUCTURAL_TODAY"
+    },
+    {
+      "param": "crt_engine.* thresholds",
+      "current_owner": "configs/production + CRTConfig / active_models state_contracts",
+      "proposed_owner": "REMAINS crt_engine \u2014 MSIP must not duplicate",
+      "class": "EXISTING_AUTHORITY"
+    },
+    {
+      "param": "msip.shadow_only",
+      "current_owner": "NONE",
+      "proposed_owner": "msip section",
+      "class": "BEHAVIORAL",
+      "bias": "true until Authority Ladder promotion"
+    },
+    {
+      "param": "msip.consumer_adapters.session_map",
+      "current_owner": "NONE",
+      "proposed_owner": "msip.adapters or separate encoding registry",
+      "class": "BEHAVIORAL",
+      "purpose": "map foreign encodings without mutating canonical session"
+    }
+  ]
+}

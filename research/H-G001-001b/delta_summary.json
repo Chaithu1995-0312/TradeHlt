@@ -1,0 +1,40 @@
+{
+  "research_id": "H-G001-001b",
+  "generated_at_utc": "2026-07-26T08:51:55Z",
+  "instrument": "XAUUSD",
+  "prod_version": "v2_multi_2026_04",
+  "spine_config": "configs/research/research_config_spine_xauusd.json",
+  "corpus_path": "D:/Tradelatest/data/mt5/XAUUSD_M15.csv",
+  "corpus_status": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION",
+  "authority_note": "status=FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION; NOT AUTHORITATIVE / NOT VALIDATED / NOT APPROVED / NOT ECONOMICALLY_ADMISSIBLE; path=data/mt5/XAUUSD_M15.csv; sha256=4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56; range=2024-05-22T01:00:00..2026-05-21T23:45:00",
+  "validation_lens": "crt_only_gate_off",
+  "backtest_engine_gate": "0",
+  "corpus_span_months": 23.9823,
+  "qualification_version": "1.0",
+  "permutation_method_version": "1.0",
+  "bh_method_version": "1.0",
+  "n_permutations": 2000,
+  "exit_model": "intrabar_fixed",
+  "round_trip_bps": 12.0,
+  "truth_standard": {
+    "version": "2.0",
+    "exit_geometry": "intrabar_fixed",
+    "slippage_model": "flat_12bps",
+    "tie_break": "SL_before_TP"
+  },
+  "research_cost_model_version": "1.0",
+  "spine_cost_model_version": "1.0",
+  "non_promotable": true,
+  "ontology_edits": false,
+  "fm_math_edits": false,
+  "delta_treatment_minus_baseline": {
+    "n": 0,
+    "win_rate": 0.0,
+    "profit_factor": 0.0,
+    "expectancy_rr": 0.0,
+    "max_drawdown_rr": 0.0,
+    "trades_per_month": 0.0
+  },
+  "decision": "REJECT_INSUFFICIENT",
+  "decision_reason": "Both arms underpowered (baseline n=1, treatment n=1; min_samples=30). No \u0394G001 claim."
+}

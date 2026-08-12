@@ -1,0 +1,800 @@
+{
+  "_doc": "Mechanically extracted CRT nine-state baseline for MSIP-1 verification. READ-ONLY extract.",
+  "extracted_at": "2026-07-14T07:08:43Z",
+  "sources": [
+    "src/config_layer/state_topology.py (VALID_TRANSITIONS / CRTState)",
+    "active_models.yaml crt.runtime.state_contracts / valid_transitions",
+    "configs/production/v2_multi_2026_04.json (key inventory)",
+    "docs/governance/crt_config_reachability.json (if present)"
+  ],
+  "n_states": 9,
+  "states": [
+    "RANGE",
+    "SHADOW_PENDING",
+    "SWEEP",
+    "DISPLACEMENT",
+    "EXPANSION",
+    "EXPIRED",
+    "RETEST",
+    "EXECUTION",
+    "RESOLUTION"
+  ],
+  "golden_path": [
+    "RANGE",
+    "SWEEP",
+    "DISPLACEMENT",
+    "EXPANSION",
+    "RETEST",
+    "EXECUTION",
+    "RESOLUTION"
+  ],
+  "branch_paths": {
+    "shadow": [
+      "RANGE",
+      "SHADOW_PENDING",
+      "SWEEP"
+    ],
+    "ttl_soft_archive": [
+      "EXPANSION",
+      "EXPIRED",
+      "RANGE"
+    ]
+  },
+  "valid_transitions_code": {
+    "RANGE": [
+      "SHADOW_PENDING",
+      "SWEEP"
+    ],
+    "SHADOW_PENDING": [
+      "RANGE",
+      "SWEEP"
+    ],
+    "SWEEP": [
+      "DISPLACEMENT",
+      "EXPANSION",
+      "RANGE"
+    ],
+    "DISPLACEMENT": [
+      "EXPANSION",
+      "RANGE"
+    ],
+    "EXPANSION": [
+      "EXPIRED",
+      "RANGE",
+      "RETEST"
+    ],
+    "EXPIRED": [
+      "RANGE"
+    ],
+    "RETEST": [
+      "EXECUTION",
+      "RANGE"
+    ],
+    "EXECUTION": [
+      "RESOLUTION"
+    ],
+    "RESOLUTION": [
+      "RANGE"
+    ]
+  },
+  "valid_transitions_yaml": {
+    "RANGE": [
+      "SWEEP",
+      "SHADOW_PENDING"
+    ],
+    "SHADOW_PENDING": [
+      "SWEEP",
+      "RANGE"
+    ],
+    "SWEEP": [
+      "DISPLACEMENT",
+      "EXPANSION",
+      "RANGE"
+    ],
+    "DISPLACEMENT": [
+      "EXPANSION",
+      "RANGE"
+    ],
+    "EXPANSION": [
+      "RETEST",
+      "EXPIRED",
+      "RANGE"
+    ],
+    "EXPIRED": [
+      "RANGE"
+    ],
+    "RETEST": [
+      "EXECUTION",
+      "RANGE"
+    ],
+    "EXECUTION": [
+      "RESOLUTION"
+    ],
+    "RESOLUTION": [
+      "RANGE"
+    ]
+  },
+  "transitions_parity_code_vs_yaml": {
+    "RANGE": {
+      "code": [
+        "SHADOW_PENDING",
+        "SWEEP"
+      ],
+      "yaml": [
+        "SHADOW_PENDING",
+        "SWEEP"
+      ],
+      "match": true
+    },
+    "SHADOW_PENDING": {
+      "code": [
+        "RANGE",
+        "SWEEP"
+      ],
+      "yaml": [
+        "RANGE",
+        "SWEEP"
+      ],
+      "match": true
+    },
+    "SWEEP": {
+      "code": [
+        "DISPLACEMENT",
+        "EXPANSION",
+        "RANGE"
+      ],
+      "yaml": [
+        "DISPLACEMENT",
+        "EXPANSION",
+        "RANGE"
+      ],
+      "match": true
+    },
+    "DISPLACEMENT": {
+      "code": [
+        "EXPANSION",
+        "RANGE"
+      ],
+      "yaml": [
+        "EXPANSION",
+        "RANGE"
+      ],
+      "match": true
+    },
+    "EXPANSION": {
+      "code": [
+        "EXPIRED",
+        "RANGE",
+        "RETEST"
+      ],
+      "yaml": [
+        "EXPIRED",
+        "RANGE",
+        "RETEST"
+      ],
+      "match": true
+    },
+    "EXPIRED": {
+      "code": [
+        "RANGE"
+      ],
+      "yaml": [
+        "RANGE"
+      ],
+      "match": true
+    },
+    "RETEST": {
+      "code": [
+        "EXECUTION",
+        "RANGE"
+      ],
+      "yaml": [
+        "EXECUTION",
+        "RANGE"
+      ],
+      "match": true
+    },
+    "EXECUTION": {
+      "code": [
+        "RESOLUTION"
+      ],
+      "yaml": [
+        "RESOLUTION"
+      ],
+      "match": true
+    },
+    "RESOLUTION": {
+      "code": [
+        "RANGE"
+      ],
+      "yaml": [
+        "RANGE"
+      ],
+      "match": true
+    }
+  },
+  "state_contracts": {
+    "RANGE": {
+      "required_fm": [],
+      "config_keys": [
+        "atr_period",
+        "atr_buffer_multiplier",
+        "ema_fast",
+        "ema_slow",
+        "pending_displacement_ttl_candles",
+        "retrace_reset_pct",
+        "extension_reset_fib"
+      ],
+      "eligible_models": []
+    },
+    "SHADOW_PENDING": {
+      "required_fm": [],
+      "config_keys": [],
+      "eligible_models": []
+    },
+    "SWEEP": {
+      "required_fm": [
+        "FM-002",
+        "FM-010"
+      ],
+      "config_keys": [
+        "atr_min_displacement",
+        "body_ratio_min",
+        "atr_multiplier_min",
+        "max_sweep_age_candles"
+      ],
+      "eligible_models": []
+    },
+    "DISPLACEMENT": {
+      "required_fm": [],
+      "config_keys": [
+        "expansion_atr_min_distance",
+        "retrace_reset_pct",
+        "extension_reset_fib"
+      ],
+      "eligible_models": []
+    },
+    "EXPANSION": {
+      "required_fm": [
+        "FM-010",
+        "FM-028"
+      ],
+      "config_keys": [
+        "retest_depth_max",
+        "retest_atr_depth_fraction",
+        "max_displacement_strength",
+        "max_expansion_age_candles",
+        "max_expansion_age_hours",
+        "body_ratio_min"
+      ],
+      "eligible_models": []
+    },
+    "RETEST": {
+      "required_fm": [
+        "FM-010",
+        "FM-027",
+        "FM-028"
+      ],
+      "config_keys": [
+        "conf_alpha",
+        "conf_beta",
+        "conf_weights",
+        "conf_floor",
+        "weak_link_weight",
+        "confirmation_body_min",
+        "retest_depth_max",
+        "retest_atr_depth_fraction",
+        "retest_min_depth_atr_fraction",
+        "risk_score_weights",
+        "ema_fast",
+        "ema_slow",
+        "tier_1_threshold",
+        "tier_2_threshold",
+        "soft_conf_max_candles",
+        "score_decay_lambda",
+        "use_bitnet",
+        "bitnet_main_threshold",
+        "shadow_age_penalty_lambda",
+        "shadow_age_norm_candles",
+        "shadow_advisory_only",
+        "allowed_sessions",
+        "session_windows",
+        "sizing_bands",
+        "sl_atr_buffer",
+        "tp1_atr_multiplier",
+        "tp2_atr_multiplier"
+      ],
+      "eligible_models": [
+        "bitnet"
+      ]
+    },
+    "EXECUTION": {
+      "required_fm": [],
+      "config_keys": [
+        "exit_model"
+      ],
+      "eligible_models": []
+    },
+    "RESOLUTION": {
+      "required_fm": [],
+      "config_keys": [],
+      "eligible_models": []
+    },
+    "EXPIRED": {
+      "required_fm": [],
+      "config_keys": [],
+      "eligible_models": []
+    }
+  },
+  "detection_excerpt": {
+    "range": {
+      "method": "pure_geometric",
+      "file_line": "src/config_layer/crt_engine_v2.py:985",
+      "logic": "h_ref = max(c.high); l_ref = min(c.low) over HTF window",
+      "ohlcv_inputs": [
+        "high",
+        "low"
+      ],
+      "config_keys": [],
+      "defaults": {}
+    },
+    "sweep": {
+      "method": "boundary_breach_with_rejection",
+      "file_line": "src/config_layer/crt_engine_v2.py:1017",
+      "logic_long": "candle.high > range.h_ref AND candle.close < range.h_ref",
+      "logic_short": "candle.low  < range.l_ref AND candle.close > range.l_ref",
+      "ohlcv_inputs": [
+        "high",
+        "low",
+        "close"
+      ],
+      "config_keys": [],
+      "defaults": {},
+      "double_confirmed": "prev_sweep exists AND direction differs",
+      "sweep_types": [
+        "TYPE-A",
+        "TYPE-B",
+        "TYPE-C",
+        "TYPE-D"
+      ]
+    },
+    "displacement": {
+      "method": "multi_gate",
+      "file_line": "src/config_layer/crt_engine_v2.py:1201",
+      "logic": {
+        "all_gates_must_pass": true,
+        "gate_1": "abs(close-open) >= atr_min_displacement \u00d7 ATR",
+        "gate_2": "body_ratio >= body_ratio_min",
+        "gate_3": "wick_size >= atr_multiplier_min \u00d7 ATR",
+        "gate_4": "sweep age <= max_sweep_age_candles"
+      },
+      "ohlcv_inputs": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "config_keys": [
+        "atr_min_displacement",
+        "body_ratio_min",
+        "atr_multiplier_min",
+        "max_sweep_age_candles"
+      ],
+      "defaults": {
+        "atr_min_displacement": 1.2,
+        "body_ratio_min": 0.7,
+        "atr_multiplier_min": 1.5,
+        "max_sweep_age_candles": 20
+      }
+    },
+    "expansion": {
+      "method": "single_candle_extension",
+      "file_line": "src/config_layer/crt_engine_v2.py:1250",
+      "logic": [
+        "close > displacement_candle.close (long) / close < disp.close (short)",
+        "abs(close - disp_close) >= expansion_atr_min_distance \u00d7 ATR"
+      ],
+      "ohlcv_inputs": [
+        "close"
+      ],
+      "config_keys": [
+        "expansion_atr_min_distance"
+      ],
+      "defaults": {
+        "expansion_atr_min_distance": 0.2
+      }
+    },
+    "retest": {
+      "method": "adaptive_depth_ceiling",
+      "file_line": "src/config_layer/crt_engine_v2.py:1302",
+      "logic": "depth = close - range.l_ref (long); must be < adaptive_ceiling",
+      "adaptive_ceiling": "max(0.25\u00d7range_size, 0.50\u00d7ATR)",
+      "min_depth": "0.1 \u00d7 ATR",
+      "ohlcv_inputs": [
+        "close"
+      ],
+      "config_keys": [
+        "retest_depth_max",
+        "retest_atr_depth_fraction",
+        "retest_min_depth_atr_fraction"
+      ],
+      "defaults": {
+        "retest_depth_max": 0.25,
+        "retest_atr_depth_fraction": 0.5
+      }
+    },
+    "expired": {
+      "method": "ttl_guard",
+      "file_line": "src/config_layer/crt_engine_v2.py:2578",
+      "logic": "age_candles > max_expansion_age_candles OR age_hours > max_expansion_age_hours",
+      "ohlcv_inputs": [],
+      "config_keys": [
+        "max_expansion_age_candles",
+        "max_expansion_age_hours"
+      ],
+      "defaults": {
+        "max_expansion_age_candles": 495,
+        "max_expansion_age_hours": 124
+      }
+    }
+  },
+  "lifecycle_excerpt": {
+    "shadow_pending": {
+      "type": "lifecycle_state",
+      "entered_by": [
+        "RANGE"
+      ],
+      "file_line": "src/config_layer/crt_engine_v2.py:1162"
+    },
+    "execution": {
+      "type": "terminal_execution_state",
+      "entered_by": [
+        "RETEST"
+      ],
+      "file_line": "src/config_layer/crt_engine_v2.py:1420"
+    },
+    "resolution": {
+      "type": "post_trade_state",
+      "entered_by": [
+        "EXECUTION"
+      ],
+      "file_line": "src/config_layer/crt_engine_v2.py:1435"
+    }
+  },
+  "thresholds_excerpt": {
+    "body_ratio_min": {
+      "type": "float",
+      "default": 0.7
+    },
+    "atr_multiplier_min": {
+      "type": "float",
+      "default": 1.5
+    },
+    "atr_min_displacement": {
+      "type": "float",
+      "default": 1.2
+    },
+    "confirmation_body_min": {
+      "type": "float",
+      "default": 0.6
+    },
+    "retest_depth_max": {
+      "type": "float",
+      "default": 0.25
+    },
+    "retest_atr_depth_fraction": {
+      "type": "float",
+      "default": 0.5
+    },
+    "max_displacement_strength": {
+      "type": "float",
+      "default": 2.0
+    },
+    "atr_period": {
+      "type": "int",
+      "default": 14
+    },
+    "atr_buffer_multiplier": {
+      "type": "int",
+      "default": 3
+    },
+    "max_sweep_age_candles": {
+      "type": "int",
+      "default": 20
+    },
+    "max_expansion_age_candles": {
+      "type": "int",
+      "default": 495
+    },
+    "max_expansion_age_hours": {
+      "type": "int",
+      "default": 124
+    },
+    "expansion_age_warn_candles": {
+      "type": "int",
+      "default": 342
+    },
+    "pending_displacement_ttl_candles": {
+      "type": "int",
+      "default": 4
+    },
+    "shadow_age_penalty_lambda": {
+      "type": "float",
+      "default": 0.0
+    },
+    "shadow_age_norm_candles": {
+      "type": "int",
+      "default": 0
+    },
+    "expansion_atr_min_distance": {
+      "type": "float",
+      "default": 0.2
+    },
+    "score_decay_lambda": {
+      "type": "float",
+      "default": 0.05
+    },
+    "score_threshold": {
+      "type": "float",
+      "default": 0.45
+    },
+    "tier_1_threshold": {
+      "type": "float",
+      "default": 0.75
+    },
+    "tier_2_threshold": {
+      "type": "float",
+      "default": 0.3
+    },
+    "conf_alpha": {
+      "type": "float",
+      "default": 0.7
+    },
+    "conf_beta": {
+      "type": "float",
+      "default": 0.3
+    },
+    "conf_weights": {
+      "type": "list",
+      "default": [
+        0.35,
+        0.35,
+        0.15,
+        0.15
+      ]
+    },
+    "conf_floor": {
+      "type": "float",
+      "default": 0.2
+    },
+    "weak_link_weight": {
+      "type": "float",
+      "default": 0.3
+    },
+    "soft_conf_max_candles": {
+      "type": "int",
+      "default": 3
+    },
+    "bitnet_main_threshold": {
+      "type": "float",
+      "default": 0.55
+    },
+    "use_bitnet": {
+      "type": "bool",
+      "default": false
+    },
+    "allowed_sessions": {
+      "type": "list",
+      "default": [
+        "LONDON",
+        "NEWYORK",
+        "OVERLAP"
+      ]
+    },
+    "retrace_reset_pct": {
+      "type": "float",
+      "default": 0.5
+    },
+    "extension_reset_fib": {
+      "type": "float",
+      "default": 1.618
+    },
+    "sizing_bands": {
+      "type": "list",
+      "default": [
+        [
+          0.75,
+          0.01
+        ],
+        [
+          0.55,
+          0.005
+        ]
+      ]
+    },
+    "sl_atr_buffer": {
+      "type": "float",
+      "default": 0.2
+    },
+    "tp1_atr_multiplier": {
+      "type": "float",
+      "default": 1.0
+    },
+    "tp2_atr_multiplier": {
+      "type": "float",
+      "default": 2.0
+    },
+    "tp1_atr_multiplier_breakout": {
+      "type": "float",
+      "default": 1.5
+    },
+    "tp1_atr_multiplier_pullback": {
+      "type": "float",
+      "default": 0.8
+    },
+    "tp1_atr_multiplier_liq_sweep": {
+      "type": "float",
+      "default": 1.2
+    },
+    "tp1_atr_multiplier_reversal": {
+      "type": "float",
+      "default": 1.0
+    },
+    "breakout_disp_threshold": {
+      "type": "float",
+      "default": 1.5
+    },
+    "exit_model": {
+      "type": "str",
+      "default": "intrabar_touch"
+    },
+    "news_blackout_minutes": {
+      "type": "int",
+      "default": 15
+    },
+    "max_spread_pct": {
+      "type": "float",
+      "default": 0.05
+    },
+    "shadow_advisory_only": {
+      "type": "bool",
+      "default": false
+    },
+    "ema_fast": {
+      "type": "int",
+      "default": 2
+    },
+    "ema_slow": {
+      "type": "int",
+      "default": 5
+    },
+    "session_windows": {
+      "LONDON": [
+        "07:00",
+        600
+      ],
+      "NEWYORK": [
+        780,
+        960
+      ],
+      "ASIA": [
+        "00:00",
+        "03:00"
+      ]
+    }
+  },
+  "cached_features_at_retest": [
+    {
+      "feature": "displacement_retrace",
+      "fm_id": "FM-027",
+      "description": "Cross-candle retrace toward disp.open (NOT pipeline FM-021 retest_depth)"
+    },
+    {
+      "feature": "body_ratio",
+      "fm_id": "FM-010",
+      "description": "Displacement candle body/range ratio"
+    },
+    {
+      "feature": "displacement_atr_ratio",
+      "fm_id": "FM-028",
+      "description": "Displacement candle_range/ATR (NOT pipeline FM-020 disp_strength)"
+    },
+    {
+      "feature": "retest_index",
+      "description": "Candle index when retest confirmed"
+    },
+    {
+      "feature": "session",
+      "description": "Session name from active_range"
+    },
+    {
+      "feature": "double_sweep",
+      "description": "Double sweep confirmed boolean"
+    }
+  ],
+  "production_config_section_keys": {
+    "crt_engine_keys": [
+      "atr_buffer_multiplier",
+      "atr_min_displacement",
+      "atr_period",
+      "bitnet_main_threshold",
+      "breakout_disp_threshold",
+      "conf_alpha",
+      "conf_beta",
+      "conf_floor",
+      "conf_weights",
+      "confirmation_body_min",
+      "ema_fast",
+      "ema_slow",
+      "exit_model",
+      "expansion_age_warn_candles",
+      "extension_reset_fib",
+      "max_displacement_strength",
+      "max_expansion_age_candles",
+      "max_expansion_age_hours",
+      "max_spread_pct",
+      "max_sweep_age_candles",
+      "news_blackout_minutes",
+      "pending_displacement_ttl_candles",
+      "retest_min_depth_atr_fraction",
+      "retrace_reset_pct",
+      "risk_score_weights",
+      "score_component_weights",
+      "score_decay_lambda",
+      "score_threshold",
+      "session_windows",
+      "shadow_advisory_only",
+      "shadow_age_norm_candles",
+      "shadow_age_penalty_lambda",
+      "sizing_bands",
+      "sl_atr_buffer",
+      "soft_conf_max_candles",
+      "tier_1_threshold",
+      "tier_2_threshold",
+      "tp1_atr_multiplier",
+      "tp1_atr_multiplier_breakout",
+      "tp1_atr_multiplier_liq_sweep",
+      "tp1_atr_multiplier_pullback",
+      "tp1_atr_multiplier_reversal",
+      "tp2_atr_multiplier",
+      "use_bitnet",
+      "weak_link_weight"
+    ],
+    "params_sample_crt_related": [
+      "atr_multiplier_min",
+      "body_ratio_min",
+      "expansion_atr_min_distance",
+      "retest_atr_depth_fraction",
+      "retest_depth_max"
+    ]
+  },
+  "crt_config_reachability_present": true,
+  "crt_config_reachability_summary": {
+    "top_keys": [
+      "schema",
+      "phase",
+      "program",
+      "generated_at_utc",
+      "active_version",
+      "instrument_probe",
+      "load_chain",
+      "field_count",
+      "status_histogram",
+      "matrix",
+      "hardcoded_shadows",
+      "environment_overrides",
+      "dual_authorities",
+      "highest_risk",
+      "phase5_status",
+      "blockers",
+      "next_phase"
+    ]
+  },
+  "authority_notes": [
+    "CRT CLOSED boundary = OHLCV \u2192 TRADE_OPENED only (crt_closure_report.md).",
+    "CRT CLOSED does NOT imply EngineRunner admission, DecisionEngine, live SM, or model lineages closed.",
+    "Python VALID_TRANSITIONS remains executable transition authority; YAML must parity.",
+    "state_contracts required_fm / config_keys / eligible_models are WHO-layer declarations."
+  ],
+  "msip_relationship_placeholder": "MSIP proposes an interpretation layer that REUSES CRT state semantics as one consumer/dimension source \u2014 it does NOT reopen CRT CLOSED by existing, and must not mutate CRT transition authority without a CRT reopen condition."
+}
