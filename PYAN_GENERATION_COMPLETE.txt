@@ -1,0 +1,198 @@
+================================================================================
+PYAN DOT FILE GENERATION & CODEBASE WIRING ANALYSIS — COMPLETE
+================================================================================
+
+Date: 2026-07-17
+Status: COMPLETE — All phases executed successfully
+
+================================================================================
+PHASE 1: ARTIFACT REGENERATION
+================================================================================
+
+✓ graph.dot (351 modules, 696 edges)
+  - AST-derived module-level import graph
+  - Deterministic, byte-identical on re-run
+  - Source: scripts/analysis/gen_code_map.py
+
+✓ flow_graphs/*.dot (7 domain-scoped subgraphs)
+  - agent.dot (17 modules)
+  - control_plane.dot (17 modules)
+  - governance.dot (30 modules)
+  - research.dot (32 modules)
+  - runtime.dot (45 modules)
+  - telemetry.dot (36 modules)
+  - training.dot (23 modules)
+  - Source: scripts/analysis/gen_flow_graphs.py
+
+✓ analysis_results.json (structured dependency data)
+  - Module counts per package
+  - In/out degree for each module
+  - Circular dependency detection
+  - Per-flow isolation metrics
+  - Source: scripts/analysis/codebase_wiring_analysis.py
+
+✓ analysis_summary.txt (human-readable report)
+  - Top packages by module count
+  - Bottleneck modules (most depended-on)
+  - Exporter modules (most dependent)
+  - Flow isolation scores
+  - Circular dependency list
+
+================================================================================
+PHASE 2: ANALYSIS & INSIGHTS
+================================================================================
+
+Key Findings:
+
+Bottlenecks (High In-Degree):
+  • config_layer.production_config        54 consumers
+  • utils.logging_config                  36 consumers
+  • features.feature_schema                35 consumers
+
+Hot-Path Orchestrators (High Out-Degree):
+  • runtime.backtest_v2                   24 dependencies
+  • core.engine_runner                    20 dependencies
+  • runtime.live_engine_hook              19 dependencies
+
+Circular Dependencies:
+  • 5 cycles detected (all minor, in governance/config tiers)
+  • config_layer.crt_engine_v2 <-> state_contract (2 cycles)
+  • config_layer.llm_* (3 modules, 2 cycles)
+  • training.trainer <-> trade_net_v2 (1 cycle)
+
+Flow Isolation:
+  • Perfect: All 7 flows achieve 1.0 isolation (zero boundary edges)
+  • Consequence: Flows are independently deployable
+
+Codebase Structure:
+  • 36 packages
+  • 351 modules
+  • 696 dependencies (2.0 dependencies/module average)
+  • research dominates (77 modules, experimental code)
+  • core is lean (20 modules, production hot path)
+
+================================================================================
+PHASE 3: INTERACTIVE TOOLS
+================================================================================
+
+✓ codebase_explorer.html (85 KB, self-contained)
+  - Module search & filtering
+  - Package browsing
+  - Bottleneck identification
+  - Module detail pane (dependencies + dependents)
+  - Interactive tabs for different views
+  - No external dependencies, works offline
+
+✓ graph_query.py CLI tool (scripts/analysis/graph_query.py)
+  - Query individual modules
+  - Show transitive dependents
+  - Find shortest paths
+  - Browse packages
+  - Display flow topology
+  - Detect cycles
+  - Global statistics
+
+Usage Examples:
+  python graph_query.py --module core.engine_runner
+  python graph_query.py --downstream config_layer.production_config
+  python graph_query.py --path runtime.backtest_v2 engines.crt_engine
+  python graph_query.py --flow runtime
+  python graph_query.py --cycles
+  python graph_query.py --stats
+
+================================================================================
+CRITICAL PATHS (Data Flow)
+================================================================================
+
+Path 1: Configuration Authority
+  configs/production/*.json
+    -> config_layer.production_config
+    -> core.engine_runner
+    -> 4 engines + gates
+
+Path 2: Feature Pipeline
+  OHLCV candles
+    -> features.feature_pipeline
+    -> features.feature_schema (38-dim)
+    -> core.engine_runner
+    -> 4 engines
+
+Path 3: Scoring -> Decision
+  4 engines
+    -> core.fusion_engine
+    -> core.decision_engine
+    -> core.acceptance_controller
+    -> core.ultron_risk_gate
+
+Path 4: Decision -> Execution
+  core.ultron_risk_gate
+    -> runtime.live_engine_hook
+    -> execution.execution_intent_v1_0
+    -> journal.trade_logger
+
+================================================================================
+HOW TO USE THESE ARTIFACTS
+================================================================================
+
+1. INTERACTIVE EXPLORATION (Browser)
+   Open: codebase_explorer.html
+   - Search for modules
+   - Browse by package
+   - Click modules to see dependencies
+   - Find bottlenecks
+
+2. CLI QUERIES (Terminal)
+   python graph_query.py --module core.engine_runner
+   python graph_query.py --downstream config_layer.production_config
+   python graph_query.py --cycles
+
+3. STATIC ANALYSIS (Read Files)
+   analysis_summary.txt         -> Human-readable report
+   analysis_results.json        -> Machine-readable data
+   docs/architecture/codebase-wiring-guide.md -> Deep dive
+
+4. VISUALIZATION (Graphviz, requires 'dot' command)
+   dot -Tsvg graph.dot -o graph.svg
+   dot -Tpng graph.dot -o graph.png
+
+================================================================================
+FILES GENERATED
+================================================================================
+
+Artifacts:
+  graph.dot                                 (59 KB)
+  analysis_results.json                     (20 KB)
+  analysis_summary.txt                      (3.3 KB)
+  codebase_explorer.html                    (85 KB)
+
+Scripts:
+  scripts/analysis/graph_query.py            (new)
+  scripts/analysis/codebase_wiring_analysis.py (new)
+  scripts/analysis/gen_html_explorer.py      (new)
+
+Documentation:
+  docs/architecture/codebase-wiring-guide.md (new)
+  CODEBASE_WIRING_QUICKREF.md               (new)
+
+Flow Graphs (7 files):
+  flow_graphs/agent.dot
+  flow_graphs/control_plane.dot
+  flow_graphs/governance.dot
+  flow_graphs/research.dot
+  flow_graphs/runtime.dot
+  flow_graphs/telemetry.dot
+  flow_graphs/training.dot
+
+================================================================================
+COMPLETION SUMMARY
+================================================================================
+
+✓ Phase 1: Artifact Regeneration        COMPLETE
+✓ Phase 2: Dependency Analysis          COMPLETE
+✓ Phase 3: Interactive Tools            COMPLETE
+✓ Phase 4: Generation Scripts           COMPLETE
+✓ Phase 5: Documentation                COMPLETE
+
+All phases complete. The codebase wiring is now documented, analyzed, and
+ready for exploration. Start with codebase_explorer.html or read the quick
+reference guide: CODEBASE_WIRING_QUICKREF.md
