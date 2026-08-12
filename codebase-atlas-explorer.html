@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tradelatest Three-Layer Codebase Atlas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(135deg, #0066cc, #003d7a);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 { font-size: 22px; margin-bottom: 5px; }
+        .header p { font-size: 13px; opacity: 0.9; }
+        .container {
+            display: grid;
+            grid-template-columns: 300px 1fr 400px;
+            gap: 1px;
+            height: calc(100vh - 80px);
+            background: #ddd;
+        }
+        .panel {
+            background: white;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        .panel h2 { margin-bottom: 12px; color: #222; font-size: 16px; }
+        .panel h3 { margin-top: 12px; margin-bottom: 8px; color: #555; font-size: 13px; font-weight: 600; }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #eee;
+        }
+        .tab {
+            padding: 8px 12px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #666;
+            font-size: 12px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            color: #0066cc;
+            border-bottom-color: #0066cc;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .layer-selector {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .layer-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            background: #f9f9f9;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            color: #666;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+        .layer-btn.active {
+            background: #0066cc;
+            color: white;
+            border-color: #0066cc;
+        }
+        .layer-btn:hover:not(.active) {
+            background: #f0f0f0;
+        }
+        .search-box {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .module-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .module-item {
+            padding: 7px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Monaco', monospace;
+            transition: all 0.15s;
+        }
+        .module-item:hover {
+            background: #e3f2fd;
+            border-color: #0066cc;
+        }
+        .module-item.selected {
+            background: #0066cc;
+            color: white;
+        }
+        .detail-section {
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-section:last-child {
+            border-bottom: none;
+        }
+        .detail-section h4 {
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .layer-label {
+            display: inline-block;
+            padding: 2px 6px;
+            background: #e3f2fd;
+            color: #0066cc;
+            border-radius: 2px;
+            font-size: 10px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        .layer-label.layer2 { background: #f3e5f5; color: #7b1fa2; }
+        .layer-label.layer3 { background: #fff3e0; color: #e65100; }
+        .stat-item {
+            padding: 6px;
+            background: #f9f9f9;
+            border-radius: 2px;
+            font-size: 11px;
+            margin-bottom: 4px;
+            border-left: 3px solid #0066cc;
+        }
+        .stat-item.layer2 { border-left-color: #7b1fa2; }
+        .stat-item.layer3 { border-left-color: #e65100; }
+        .table {
+            width: 100%;
+            font-size: 11px;
+            border-collapse: collapse;
+        }
+        .table th {
+            text-align: left;
+            padding: 6px;
+            border-bottom: 1px solid #ddd;
+            font-weight: 600;
+        }
+        .table td {
+            padding: 6px;
+            border-bottom: 1px solid #eee;
+        }
+        .table tr:hover {
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Three-Layer Codebase Atlas</h1>
+        <p>Static | Runtime | Authority — Explore all three dimensions of Tradelatest</p>
+    </div>
+
+    <div class="container">
+        <!-- LEFT PANEL: Module Search -->
+        <div class="panel">
+            <h2>Find Module</h2>
+            <input type="text" class="search-box" id="searchInput" placeholder="Search modules...">
+            <div class="module-list" id="searchResults"></div>
+        </div>
+
+        <!-- MIDDLE PANEL: Layer Navigation -->
+        <div class="panel">
+            <h2>Layer View</h2>
+
+            <div class="layer-selector">
+                <button class="layer-btn active" data-layer="1">Layer 1<br>Static</button>
+                <button class="layer-btn" data-layer="2">Layer 2<br>Runtime</button>
+                <button class="layer-btn" data-layer="3">Layer 3<br>Authority</button>
+            </div>
+
+            <!-- Layer 1: Static -->
+            <div id="layer1" class="layer-content">
+                <h3>Module Statistics (Layer 1)</h3>
+                <div id="layer1Stats"></div>
+            </div>
+
+            <!-- Layer 2: Runtime -->
+            <div id="layer2" class="layer-content" style="display:none;">
+                <h3>Execution Position (Layer 2)</h3>
+                <p style="font-size:11px; color:#666; margin-bottom:10px;">Select a module to see its role in the production spine</p>
+                <div id="layer2Content"></div>
+            </div>
+
+            <!-- Layer 3: Authority -->
+            <div id="layer3" class="layer-content" style="display:none;">
+                <h3>Governance & Authority (Layer 3)</h3>
+                <p style="font-size:11px; color:#666; margin-bottom:10px;">Who controls this module?</p>
+                <div id="layer3Content"></div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Module Details -->
+        <div class="panel">
+            <h2>Module Details</h2>
+            <div id="detailsContent">
+                <p style="color:#999; font-size:12px;">Select a module to view all three layers</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MODULES_DATA = {
+            "core.engine_runner": {
+                layer1: { consumers: 0, deps: 20, tier: "Tier 0", role: "Hot-path orchestrator" },
+                layer2: { position: "Step 4: Orchestrate", execution: "Calls 4 engines, applies weights, triggers fusion", gate: "No direct gate; orchestrator only" },
+                layer3: { authority: "Core Authority", approval: "Code change + PR + tests", frozen: false }
+            },
+            "config_layer.production_config": {
+                layer1: { consumers: 54, deps: 0, tier: "Tier 1", role: "Config bottleneck" },
+                layer2: { position: "Step 1: Config Load", execution: "Loads JSON, fail-fast checks, injects into all subsystems", gate: "Strict _require() validation" },
+                layer3: { authority: "Config Authority", approval: "JSON edit + re-hash + promote", frozen: false }
+            },
+            "features.feature_schema": {
+                layer1: { consumers: 35, deps: 0, tier: "Tier 1", role: "Feature contract (38-dim)" },
+                layer2: { position: "Step 2: Feature Pipeline", execution: "Canonical 38-dimension vector; PIT checks", gate: "Schema validation in pipeline" },
+                layer3: { authority: "F-054 Certification", approval: "Re-certification required", frozen: true }
+            },
+            "core.ultron_risk_gate": {
+                layer1: { consumers: 1, deps: 3, tier: "Tier 0", role: "Hard risk control" },
+                layer2: { position: "Step 8: Risk Gate", execution: "Validates SL/TP/RR bounds; hard reject if violated", gate: "Hard gate (APPROVE/REJECT)" },
+                layer3: { authority: "Risk Authority", approval: "Config-driven (JSON)", frozen: false }
+            },
+            "engines.tradenet_meta_engine": {
+                layer1: { consumers: 5, deps: 0, tier: "Tier 3", role: "Latent neural fusion" },
+                layer2: { position: "NOT ON SPINE", execution: "Code exists but never wired into EXPECTED_ENGINES", gate: "Not called" },
+                layer3: { authority: "Research Authority", approval: "Wiring decision (code frozen)", frozen: false }
+            }
+        };
+
+        const ALL_MODULES = Object.keys(MODULES_DATA).sort();
+        let currentLayer = 1;
+        let selectedModule = null;
+
+        function init() {
+            setupLayerTabs();
+            populateSearchResults();
+            setupModuleListener();
+        }
+
+        function setupLayerTabs() {
+            document.querySelectorAll('.layer-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const layer = btn.dataset.layer;
+                    document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.layer-content').forEach(c => c.style.display = 'none');
+                    btn.classList.add('active');
+                    document.getElementById('layer' + layer).style.display = 'block';
+                    currentLayer = parseInt(layer);
+                    if (selectedModule) updateLayerView();
+                });
+            });
+        }
+
+        function setupModuleListener() {
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                populateSearchResults(query);
+            });
+        }
+
+        function populateSearchResults(query = '') {
+            const results = ALL_MODULES.filter(m => m.toLowerCase().includes(query)).slice(0, 20);
+            const html = results.map(m => `
+                <div class="module-item" onclick="selectModule('${m}')">${m}</div>
+            `).join('');
+            document.getElementById('searchResults').innerHTML = html || '<p style="color:#999; font-size:11px;">No results</p>';
+        }
+
+        function selectModule(moduleName) {
+            selectedModule = moduleName;
+            document.querySelectorAll('.module-item').forEach(el => el.classList.remove('selected'));
+            event.target.classList.add('selected');
+            updateModuleDetails();
+            updateLayerView();
+        }
+
+        function updateLayerView() {
+            if (!selectedModule || !MODULES_DATA[selectedModule]) return;
+            const data = MODULES_DATA[selectedModule];
+
+            if (currentLayer === 1) {
+                const layer1 = data.layer1;
+                const html = `
+                    <div style="font-size:11px;">
+                        <div class="stat-item">Consumers: <strong>${layer1.consumers}</strong> modules</div>
+                        <div class="stat-item">Dependencies: <strong>${layer1.deps}</strong> modules</div>
+                        <div class="stat-item">Tier: <strong>${layer1.tier}</strong></div>
+                        <div class="stat-item">Role: <strong>${layer1.role}</strong></div>
+                    </div>
+                `;
+                document.getElementById('layer1Stats').innerHTML = html;
+            } else if (currentLayer === 2) {
+                const layer2 = data.layer2;
+                const html = `
+                    <div class="stat-item layer2">
+                        <strong>${layer2.position}</strong><br>
+                        ${layer2.execution}<br>
+                        <em style="color:#999;">Gate: ${layer2.gate}</em>
+                    </div>
+                `;
+                document.getElementById('layer2Content').innerHTML = html;
+            } else if (currentLayer === 3) {
+                const layer3 = data.layer3;
+                const html = `
+                    <div class="stat-item layer3">
+                        <strong>${layer3.authority}</strong><br>
+                        Approval: ${layer3.approval}<br>
+                        Frozen: ${layer3.frozen ? 'YES (design-frozen)' : 'NO (changeable)'}
+                    </div>
+                `;
+                document.getElementById('layer3Content').innerHTML = html;
+            }
+        }
+
+        function updateModuleDetails() {
+            if (!selectedModule) return;
+            const data = MODULES_DATA[selectedModule];
+
+            const html = `
+                <div style="font-size:12px;">
+                    <h3 style="margin-bottom:10px;">${selectedModule}</h3>
+
+                    <div class="detail-section">
+                        <h4>Layer 1: Static Topology</h4>
+                        <span class="layer-label">Imports & Dependents</span>
+                        <table class="table">
+                            <tr><td>Consumers</td><td><strong>${data.layer1.consumers}</strong></td></tr>
+                            <tr><td>Dependencies</td><td><strong>${data.layer1.deps}</strong></td></tr>
+                            <tr><td>Tier</td><td><strong>${data.layer1.tier}</strong></td></tr>
+                            <tr><td>Role</td><td><strong>${data.layer1.role}</strong></td></tr>
+                        </table>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>Layer 2: Runtime Execution</h4>
+                        <span class="layer-label layer2">Execution Position</span>
+                        <table class="table">
+                            <tr><td>Position</td><td><strong>${data.layer2.position}</strong></td></tr>
+                            <tr><td colspan="2" style="padding:6px; background:#f9f9f9; color:#666; font-size:11px;">${data.layer2.execution}</td></tr>
+                            <tr><td>Gate</td><td><strong>${data.layer2.gate}</strong></td></tr>
+                        </table>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>Layer 3: Governance & Authority</h4>
+                        <span class="layer-label layer3">Decision Authority</span>
+                        <table class="table">
+                            <tr><td>Authority</td><td><strong>${data.layer3.authority}</strong></td></tr>
+                            <tr><td>Approval</td><td><strong>${data.layer3.approval}</strong></td></tr>
+                            <tr><td>Frozen?</td><td><strong>${data.layer3.frozen ? 'YES' : 'NO'}</strong></td></tr>
+                        </table>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailsContent').innerHTML = html;
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "flow": "telemetry",
+  "title": "Telemetry / Event-Bus",
+  "doc": "docs/architecture/event-taxonomy.md",
+  "service_ids": ["S7"],
+  "entrypoint": "events.event_fabric",
+  "modules": [
+    "events.event_fabric",
+    "utils.engine_telemetry",
+    "utils.integrity_events",
+    "utils.episode_summarizer",
+    "core.collector"
+  ],
+  "keywords": ["telemetry", "event", "envelope", "jsonl", "episode", "audit"],
+  "command_ids": [],
+  "inputs": ["events from every service (make_event_envelope)"],
+  "outputs": ["enveloped JSONL streams (telemetry/audit channels)", "logs/llm_episodes.jsonl per-episode rollup"]
+}

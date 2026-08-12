@@ -1,0 +1,83 @@
+digraph flow_telemetry {
+    rankdir=LR;
+    node [shape=box, fontsize=10];
+
+    subgraph "cluster_telemetry" {
+        label="telemetry — Telemetry / Event-Bus"; style="rounded";
+        "core.collector";
+        "events.event_fabric";
+        "utils.engine_telemetry";
+        "utils.episode_summarizer";
+        "utils.integrity_events";
+    }
+
+    // 1-hop dependency boundary (not flow members)
+    "bitnet.bitnet_inference" [style="dashed", fontcolor="#888888"];
+    "bitnet.bitnet_runner" [style="dashed", fontcolor="#888888"];
+    "bitnet.model_contract" [style="dashed", fontcolor="#888888"];
+    "cognitive.cognitive_bus" [style="dashed", fontcolor="#888888"];
+    "config_layer.crt_engine_v2" [style="dashed", fontcolor="#888888"];
+    "config_layer.production_config" [style="dashed", fontcolor="#888888"];
+    "config_layer.rr.rr_fusion" [style="dashed", fontcolor="#888888"];
+    "core.engine_runner" [style="dashed", fontcolor="#888888"];
+    "core.fusion_engine" [style="dashed", fontcolor="#888888"];
+    "core.model_registry" [style="dashed", fontcolor="#888888"];
+    "engines.heuristic_gaussian_engine" [style="dashed", fontcolor="#888888"];
+    "engines.live_engine" [style="dashed", fontcolor="#888888"];
+    "events" [style="dashed", fontcolor="#888888"];
+    "features.crt_feature_builder" [style="dashed", fontcolor="#888888"];
+    "features.feature_schema" [style="dashed", fontcolor="#888888"];
+    "journal.trade_logger" [style="dashed", fontcolor="#888888"];
+    "multi_llm.turn_ledger" [style="dashed", fontcolor="#888888"];
+    "portfolio.correlation_engine" [style="dashed", fontcolor="#888888"];
+    "replay.replay_drift_governor" [style="dashed", fontcolor="#888888"];
+    "replay.replay_memory_engine" [style="dashed", fontcolor="#888888"];
+    "runtime.analyze_fusion_shadow" [style="dashed", fontcolor="#888888"];
+    "runtime.backtest_v2" [style="dashed", fontcolor="#888888"];
+    "runtime.live_engine_hook" [style="dashed", fontcolor="#888888"];
+    "training.stage1_dataset_builder" [style="dashed", fontcolor="#888888"];
+    "training.trade_net_v2" [style="dashed", fontcolor="#888888"];
+    "training.trainer" [style="dashed", fontcolor="#888888"];
+    "utils.logging_config" [style="dashed", fontcolor="#888888"];
+    "utils.sweep_trace_logger" [style="dashed", fontcolor="#888888"];
+    "utils.trade_logger" [style="dashed", fontcolor="#888888"];
+
+    // member -> member (intra-flow dependencies)
+    "utils.engine_telemetry" -> "events.event_fabric";
+    "utils.episode_summarizer" -> "events.event_fabric";
+
+    // boundary dependencies (one endpoint outside the flow)
+    "bitnet.bitnet_inference" -> "utils.integrity_events";
+    "bitnet.bitnet_runner" -> "utils.integrity_events";
+    "bitnet.model_contract" -> "utils.integrity_events";
+    "cognitive.cognitive_bus" -> "events.event_fabric";
+    "config_layer.crt_engine_v2" -> "events.event_fabric";
+    "config_layer.crt_engine_v2" -> "utils.integrity_events";
+    "config_layer.rr.rr_fusion" -> "utils.integrity_events";
+    "core.collector" -> "config_layer.production_config";
+    "core.collector" -> "utils.logging_config";
+    "core.engine_runner" -> "core.collector";
+    "core.engine_runner" -> "events.event_fabric";
+    "core.fusion_engine" -> "utils.integrity_events";
+    "core.model_registry" -> "utils.integrity_events";
+    "engines.heuristic_gaussian_engine" -> "utils.integrity_events";
+    "engines.live_engine" -> "utils.integrity_events";
+    "events" -> "events.event_fabric";
+    "events.event_fabric" -> "features.feature_schema";
+    "features.crt_feature_builder" -> "utils.integrity_events";
+    "journal.trade_logger" -> "core.collector";
+    "journal.trade_logger" -> "utils.integrity_events";
+    "multi_llm.turn_ledger" -> "events.event_fabric";
+    "portfolio.correlation_engine" -> "utils.integrity_events";
+    "replay.replay_drift_governor" -> "events.event_fabric";
+    "replay.replay_memory_engine" -> "utils.integrity_events";
+    "runtime.analyze_fusion_shadow" -> "utils.integrity_events";
+    "runtime.backtest_v2" -> "utils.episode_summarizer";
+    "runtime.backtest_v2" -> "utils.integrity_events";
+    "runtime.live_engine_hook" -> "core.collector";
+    "training.stage1_dataset_builder" -> "utils.integrity_events";
+    "training.trade_net_v2" -> "utils.integrity_events";
+    "training.trainer" -> "utils.integrity_events";
+    "utils.sweep_trace_logger" -> "events.event_fabric";
+    "utils.trade_logger" -> "events.event_fabric";
+}
