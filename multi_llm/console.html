@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧠 Multi-LLM Protocol Console</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --mono: 'Cascadia Code','JetBrains Mono','Fira Code',monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font: 14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+  
+  /* layout */
+  #app { display: grid; height: 100vh; grid-template-rows: auto 1fr auto; gap: 0; }
+  header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  header h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
+  header h1 span { color: var(--accent); }
+  header .tag { font-size: 11px; color: var(--text2); background: var(--bg3); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border); }
+  header .actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn { padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: var(--border); }
+  .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-accent:hover { filter: brightness(1.15); }
+  .btn-green { background: var(--green); color: #000; border-color: var(--green); }
+  .btn-danger { background: var(--red); color: #fff; border-color: var(--red); }
+
+  .main-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0; overflow: hidden; }
+  .panel { border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; background: var(--bg); }
+  .panel-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); padding: 6px 12px; background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .panel-title .badge { font-size: 10px; padding: 0 6px; border-radius: 8px; background: var(--bg3); color: var(--text2); }
+  .panel-body { flex: 1; overflow: auto; padding: 8px 12px; }
+  .panel-body textarea { width: 100%; height: 100%; min-height: 80px; background: var(--bg2); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 8px; font: 12px/1.6 var(--mono); resize: vertical; }
+
+  /* tabs */
+  .tab-bar { display: flex; gap: 2px; flex-wrap: wrap; margin-bottom: 6px; flex-shrink: 0; }
+  .tab { padding: 3px 10px; font-size: 11px; border-radius: 4px 4px 0 0; cursor: pointer; background: var(--bg3); color: var(--text2); border: 1px solid var(--border); border-bottom: 0; }
+  .tab.active { background: var(--bg); color: var(--accent); border-color: var(--border); border-bottom: 1px solid var(--bg); margin-bottom: -1px; font-weight: 600; }
+  .tab-content { display: none; flex: 1; }
+  .tab-content.active { display: flex; flex-direction: column; }
+  .tab-content textarea { flex: 1; }
+
+  /* queue cards */
+  .queue-list { display: flex; flex-direction: column; gap: 4px; }
+  .q-card { padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg2); font-size: 12px; }
+  .q-card.done { opacity: 0.5; border-color: var(--green); }
+  .q-card.pending { border-color: var(--orange); }
+  .q-card.blocked { opacity: 0.4; }
+  .q-card.active-story { border-color: var(--accent); background: rgba(88,166,255,0.08); }
+  .q-card .q-id { font-weight: 600; color: var(--accent); font-family: var(--mono); font-size: 11px; }
+  .q-card .q-title { color: var(--text); }
+  .q-card .q-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .q-card .q-meta .epic-tag { display: inline-block; padding: 0 5px; border-radius: 3px; background: var(--bg3); margin-right: 4px; }
+  .q-card .q-meta .conf { color: var(--orange); }
+
+  /* handoff state */
+  .handoff-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 13px; font-family: var(--mono); white-space: pre-wrap; }
+  .handoff-card .field { margin: 2px 0; }
+  .handoff-card .field strong { color: var(--accent); }
+
+  /* §3 parser */
+  .parsed-fields { display: grid; gap: 4px; }
+  .pf { background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; padding: 5px 8px; font-size: 12px; }
+  .pf .pf-label { font-weight: 600; color: var(--purple); font-family: var(--mono); font-size: 11px; }
+  .pf .pf-val { color: var(--text); word-break: break-word; font-family: var(--mono); font-size: 11px; margin-top: 2px; max-height: 80px; overflow-y: auto; }
+
+  /* turn ledger */
+  .turn-ledger { display: flex; flex-direction: column; gap: 3px; }
+  .tl-entry { padding: 4px 8px; background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; font-size: 11px; }
+  .tl-entry .tl-actor { font-weight: 600; }
+  .tl-entry .tl-actor.ds { color: var(--orange); }
+  .tl-entry .tl-actor.gm { color: var(--green); }
+  .tl-entry .tl-actor.cg { color: var(--purple); }
+  .tl-entry .tl-actor.cl { color: var(--accent); }
+
+  .cmd-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font: 12px/1.6 var(--mono); overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 4px 0; }
+
+  /* footer */
+  footer { background: var(--bg2); border-top: 1px solid var(--border); padding: 6px 16px; display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text2); flex-wrap: wrap; }
+  footer .f-left { display: flex; align-items: center; gap: 8px; }
+  footer .f-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+  /* Utility */
+  .flex-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .mt-4 { margin-top: 4px; }
+  .mb-4 { margin-bottom: 4px; }
+  .w-full { width: 100%; }
+  .text-mono { font-family: var(--mono); }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text2); }
+
+  @media (max-width: 800px) {
+    .main-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ===== HEADER ===== -->
+<header>
+  <h1><span>🧠</span> Protocol Console</h1>
+  <span class="tag">MULTI_LLM_PROTOCOL.md §4</span>
+  <div class="actions">
+    <button class="btn" id="btnClearLocal" title="Clear all saved state from localStorage">Clear State</button>
+    <button class="btn btn-accent" id="btnExportState">Export State</button>
+    <input type="file" id="importStateInput" accept=".json" style="display:none">
+    <button class="btn" id="btnImportState">Import State</button>
+  </div>
+</header>
+
+<!-- ===== MAIN 4-QUADRANT GRID ===== -->
+<div class="main-grid">
+
+  <!-- ──────── QUADRANT 1: CONTEXT VIEWER ──────── -->
+  <div class="panel">
+    <div class="panel-title">
+      📄 Context Files
+      <span class="badge">Compile: python scripts/context/build_context.py</span>
+      <button class="btn" id="btnCopyContextCmd" style="margin-left:auto">📋 Copy cmd</button>
+    </div>
+    <div class="panel-body" style="display:flex; flex-direction:column;">
+      <div class="tab-bar" id="contextTabs"></div>
+      <div id="contextContents" style="flex:1; display:flex; flex-direction:column;"></div>
+    </div>
+  </div>
+
+  <!-- ──────── QUADRANT 2: PROMPT COMPOSER ──────── -->
+  <div class="panel">
+    <div class="panel-title">
+      📤 Prompt Composer
+      <button class="btn btn-accent" id="btnCopyPrompt" style="margin-left:auto">📋 Copy All</button>
+    </div>
+    <div class="panel-body" style="display:flex; flex-direction:column;">
+      <div class="flex-row mb-4">
+        <label style="font-size:12px;color:var(--text2);">Active context:</label>
+        <select id="promptContextSelector" style="background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:12px;flex:1;"></select>
+      </div>
+      <textarea id="promptComposer" placeholder="Merged prompt will appear here. Edit freely before copying."></textarea>
+      <div class="flex-row mt-4">
+        <button class="btn btn-green" id="btnBuildPrompt">🔄 Build from active tab</button>
+        <button class="btn" id="btnAppendPrompt">➕ Append PROMPT_FOR_NEXT_MODEL</button>
+        <button class="btn btn-danger" id="btnClearPrompt">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────── QUADRANT 3: QUEUE + HANDOFF ──────── -->
+  <div class="panel">
+    <div class="panel-title">
+      📋 Queue & Handoff
+      <button class="btn" id="btnRefreshQueue" style="margin-left:auto">🔄 Refresh Queue</button>
+    </div>
+    <div class="panel-body" style="display:flex; flex-direction:column; gap:8px;">
+      <!-- Handoff card -->
+      <div id="handoffDisplay" class="handoff-card">No handoff data. Paste HANDOFF.md content below.</div>
+      <div class="flex-row">
+        <input type="text" id="handoffPaste" placeholder="Paste full HANDOFF.md here..." style="flex:1; background:var(--bg2); color:var(--text); border:1px solid var(--border); border-radius:4px; padding:4px 8px; font:11px var(--mono);">
+        <button class="btn btn-accent" id="btnParseHandoff">Parse</button>
+      </div>
+      <!-- Queue -->
+      <div style="font-size:12px;color:var(--text2);display:flex;gap:8px;align-items:center;">
+        <span>Queue:</span>
+        <input type="text" id="queuePaste" placeholder="Paste build_queue.jsonl content here..." style="flex:1; background:var(--bg2); color:var(--text); border:1px solid var(--border); border-radius:4px; padding:4px 8px; font:11px var(--mono);">
+        <button class="btn" id="btnParseQueue">Render</button>
+        <button class="btn" id="btnCopyQueueCmd">📋 Copy cmd</button>
+      </div>
+      <div id="queueRender" class="queue-list" style="flex:1;overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- ──────── QUADRANT 4: RESPONSE PARSER ──────── -->
+  <div class="panel">
+    <div class="panel-title">
+      📥 Response §3 Parser
+      <button class="btn" id="btnClearResponse" style="margin-left:auto">Clear</button>
+    </div>
+    <div class="panel-body" style="display:flex; flex-direction:column; gap:6px;">
+      <textarea id="responseInput" placeholder="Paste model response here, then click Extract §3..." style="min-height:60px; flex-shrink:0;"></textarea>
+      <div class="flex-row">
+        <button class="btn btn-accent" id="btnExtractS3">🔍 Extract §3 Block</button>
+        <button class="btn" id="btnCopyParsedFields">📋 Copy Fields</button>
+      </div>
+      <div id="parsedFields" class="parsed-fields"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== FOOTER: TURN LEDGER + CLI COMMANDS ===== -->
+<footer>
+  <div class="f-left">
+    <span>📝 Turn Logger</span>
+    <span style="color:var(--text2);">|</span>
+    <span id="footerState" style="font-family:var(--mono);font-size:11px;">No active turn</span>
+  </div>
+  <div class="f-right">
+    <span id="logCmdDisplay" style="font-family:var(--mono);font-size:11px;color:var(--text2);">—</span>
+    <button class="btn" id="btnCopyLogCmd">📋 Copy Cmd</button>
+    <button class="btn" id="btnResetFooter">↺ Reset</button>
+  </div>
+</footer>
+
+</div>
+
+<script>
+// ====================================================================
+// STATE (persisted to localStorage)
+// ====================================================================
+const STORAGE_KEY = 'multi_llm_console_v1';
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) { /* ignore */ }
+  return {};
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e) { /* ignore */ }
+}
+
+const state = loadState();
+if (!state.contextFiles) state.contextFiles = {};    // { "01_GLOBAL_CONTEXT.md": "..." }
+if (!state.handoffRaw) state.handoffRaw = "";
+if (!state.queueRaw) state.queueRaw = "";
+if (!state.promptComposer) state.promptComposer = "";
+if (!state.turnLedger) state.turnLedger = [];       // [{actor, story, when, turn_id?}]
+if (!state.handoffParsed) state.handoffParsed = {};
+if (!state.lastActor) state.lastActor = "";
+if (!state.lastStory) state.lastStory = "";
+if (!state.responseInput) state.responseInput = "";
+
+const CONTEXT_FILE_NAMES = [
+  "01_GLOBAL_CONTEXT.md",
+  "02_CURRENT_STATE.md",
+  "03_FINDINGS.md",
+  "04_DEPENDENCY_AND_INTENT.md",
+  "05_HANDOFF.md",
+  "06_DISCUSSION.md"
+];
+
+// ====================================================================
+// UTILITY
+// ====================================================================
+function $(sel, el) { return (el||document).querySelector(sel); }
+function $$(sel, el) { return [...(el||document).querySelectorAll(sel)]; }
+
+function copyText(text) {
+  if (!text) return;
+  navigator.clipboard.writeText(text).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+  });
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function now() {
+  const d = new Date();
+  return d.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+}
+
+// ====================================================================
+// §3 PARSER
+// ====================================================================
+function parseS3Block(text) {
+  const fields = ['CURRENT_TASK','NEXT_10_STEPS','CONTEXT_DELTA','FOR_NEXT_MODEL','PROMPT_FOR_NEXT_MODEL','CONFIRMATION'];
+  const result = {};
+  // Try fenced code block first
+  let block = '';
+  const fenceMatch = text.match(/```(?:yaml)?\s*\n([\s\S]*?)```/);
+  if (fenceMatch) block = fenceMatch[1];
+  else block = text; // search whole text
+
+  for (const f of fields) {
+    const re = new RegExp(`^${f}:\\s*(.+)$`, 'm');
+    const m = block.match(re);
+    if (m) {
+      // Grab multi-line value if next line is indented
+      let val = m[1];
+      const lines = block.split('\n');
+      const idx = lines.findIndex(l => l.startsWith(f + ':'));
+      if (idx >= 0) {
+        const accum = [val.replace(/^ +/, '')];
+        for (let i = idx + 1; i < lines.length; i++) {
+          if (lines[i].startsWith(' ') || lines[i] === '') accum.push(lines[i]);
+          else break;
+        }
+        val = accum.join(' ').trim();
+      }
+      result[f] = val || '(empty)';
+    } else {
+      result[f] = '(not found)';
+    }
+  }
+  return result;
+}
+
+function renderParsedFields(fields) {
+  const el = $('#parsedFields');
+  if (!fields || Object.keys(fields).length === 0) {
+    el.innerHTML = '<div style="color:var(--text2);font-size:12px;">No fields extracted yet.</div>';
+    return;
+  }
+  let html = '';
+  for (const [k, v] of Object.entries(fields)) {
+    html += `<div class="pf"><div class="pf-label">${k}</div><div class="pf-val">${escapeHtml(v)}</div></div>`;
+  }
+  el.innerHTML = html;
+}
+
+// ====================================================================
+// HANDOFF PARSER
+// ====================================================================
+function parseHandoff(text) {
+  const result = {};
+  const m = text.match(/current_actor:\s*(.+)$/m);
+  if (m) result.current_actor = m[1].trim();
+  const m2 = text.match(/next_actor:\s*(.+)$/m);
+  if (m2) result.next_actor = m2[1].trim();
+  const m3 = text.match(/current_story:\s*(.+)$/m);
+  if (m3) result.current_story = m3[1].trim();
+  const m4 = text.match(/next_prompt:\s*\|?\s*\n([\s\S]*?)(?=^[a-z_]+:|```|$)/m);
+  if (m4) result.next_prompt = m4[1].trim();
+  const m5 = text.match(/confirmation:\s*(.+)$/m);
+  if (m5) result.confirmation = m5[1].trim();
+  const m6 = text.match(/blocked:\s*\[([^\]]*)\]/m);
+  if (m6) result.blocked = m6[1].trim();
+  return result;
+}
+
+function renderHandoff(parsed) {
+  const el = $('#handoffDisplay');
+  if (!parsed || Object.keys(parsed).length === 0) {
+    el.textContent = 'No handoff data parsed. Paste HANDOFF.md content and click Parse.';
+    return;
+  }
+  let html = `<div class="field"><strong>current_actor:</strong> <span style="color:var(--${
+    (parsed.current_actor||'').toLowerCase().includes('deepseek')?'orange':
+    (parsed.current_actor||'').toLowerCase().includes('gemini')?'green':
+    (parsed.current_actor||'').toLowerCase().includes('chatgpt')?'purple':
+    (parsed.current_actor||'').toLowerCase().includes('claude')?'accent':'text'
+  })">${escapeHtml(parsed.current_actor||'?')}</span></div>`;
+  html += `<div class="field"><strong>next_actor:</strong> <span style="color:var(--orange)">${escapeHtml(parsed.next_actor||'?')}</span></div>`;
+  html += `<div class="field"><strong>story:</strong> ${escapeHtml(parsed.current_story||'?')}</div>`;
+  if (parsed.blocked) html += `<div class="field"><strong>blocked:</strong> ${escapeHtml(parsed.blocked)}</div>`;
+  if (parsed.confirmation) html += `<div class="field"><strong>confirmation:</strong> ${escapeHtml(parsed.confirmation)}</div>`;
+  if (parsed.next_prompt) html += `<div class="field"><strong>next_prompt:</strong> ${escapeHtml(parsed.next_prompt.substring(0,120))}…</div>`;
+  el.innerHTML = html;
+
+  // Update footer with current actor + story for log command
+  state.lastActor = parsed.current_actor || '';
+  state.lastStory = parsed.current_story ? parsed.current_story.split(' ')[0] : '';
+  updateFooter();
+}
+
+// ====================================================================
+// QUEUE RENDERER
+// ====================================================================
+function parseQueue(text) {
+  const items = [];
+  for (const ln of text.split('\n')) {
+    const s = ln.trim();
+    if (!s) continue;
+    try { items.push(JSON.parse(s)); } catch(e) { /* skip bad lines */ }
+  }
+  return items;
+}
+
+function renderQueue(items) {
+  const el = $('#queueRender');
+  if (!items.length) {
+    el.innerHTML = '<div style="color:var(--text2);font-size:12px;">No queue items. Paste build_queue.jsonl and click Render.</div>';
+    return;
+  }
+  const doneIds = new Set(items.filter(i => i.status === 'done').map(i => i.id));
+  let html = '';
+  for (const item of items) {
+    const isDone = item.status === 'done';
+    const isBlocked = (item.depends_on||[]).some(d => !doneIds.has(d));
+    const isActive = !isDone && !isBlocked;
+    const cls = isDone ? 'done' : (isBlocked ? 'blocked' : 'pending active-story');
+    html += `<div class="q-card ${cls}">
+      <span class="q-id">${escapeHtml(item.id||'?')}</span>
+      <span class="q-title">${escapeHtml(item.title||'')}</span>
+      <div class="q-meta">
+        <span class="epic-tag">Epic ${item.epic||'?'}</span>
+        ${item.epic_title ? escapeHtml(item.epic_title) : ''}
+        ${item.confidence !== undefined ? `· <span class="conf">conf ${item.confidence}%</span>` : ''}
+        ${isDone ? '· ✅ done' : (isBlocked ? '· 🔒 blocked' : '· 🟢 ready')}
+        ${item.depends_on && item.depends_on.length ? `· depends: ${item.depends_on.join(', ')}` : ''}
+      </div>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+// ====================================================================
+// CONTEXT FILES (tab management)
+// ====================================================================
+function renderContextTabs() {
+  const tabBar = $('#contextTabs');
+  const contentArea = $('#contextContents');
+  let activeTab = state._activeContextTab || CONTEXT_FILE_NAMES[0];
+
+  let tabsHtml = '';
+  let contentsHtml = '';
+  for (const name of CONTEXT_FILE_NAMES) {
+    const isActive = name === activeTab;
+    tabsHtml += `<div class="tab ${isActive?'active':''}" data-name="${name}">${name.replace(/\.md$/,'')}</div>`;
+    contentsHtml += `<div class="tab-content ${isActive?'active':''}" data-name="${name}">
+      <textarea placeholder="Paste ${name} contents here..." data-file="${name}">${escapeHtml(state.contextFiles[name] || '')}</textarea>
+    </div>`;
+  }
+  tabBar.innerHTML = tabsHtml;
+  contentArea.innerHTML = contentsHtml;
+
+  // Tab click
+  $$('.tab', tabBar).forEach(tab => {
+    tab.addEventListener('click', () => {
+      const name = tab.dataset.name;
+      state._activeContextTab = name;
+      $$('.tab', tabBar).forEach(t => t.classList.toggle('active', t.dataset.name === name));
+      $$('.tab-content', contentArea).forEach(tc => tc.classList.toggle('active', tc.dataset.name === name));
+      updatePromptContextSelector();
+      saveState();
+    });
+  });
+
+  // Auto-save textarea changes
+  $$('textarea[data-file]', contentArea).forEach(ta => {
+    ta.addEventListener('input', () => {
+      state.contextFiles[ta.dataset.file] = ta.value;
+      saveState();
+    });
+  });
+
+  updatePromptContextSelector();
+}
+
+function updatePromptContextSelector() {
+  const sel = $('#promptContextSelector');
+  if (!sel) return;
+  const active = state._activeContextTab || CONTEXT_FILE_NAMES[0];
+  sel.innerHTML = CONTEXT_FILE_NAMES.map(n =>
+    `<option value="${n}" ${n===active?'selected':''}>${n}</option>`
+  ).join('');
+}
+
+// ====================================================================
+// PROMPT COMPOSER
+// ====================================================================
+function buildPrompt() {
+  const active = state._activeContextTab || CONTEXT_FILE_NAMES[0];
+  const content = state.contextFiles[active] || '';
+  let prompt = content;
+  // Append the PROMPT_FOR_NEXT_MODEL from last parsed handoff or parsed response
+  const parsed = state._lastParsedFields || {};
+  const handoff = state.handoffParsed || {};
+  const nextPrompt = parsed.PROMPT_FOR_NEXT_MODEL && parsed.PROMPT_FOR_NEXT_MODEL !== '(not found)'
+    ? parsed.PROMPT_FOR_NEXT_MODEL
+    : (handoff.next_prompt || '');
+  if (nextPrompt) {
+    prompt += '\n\n---\n\n## Prompt for next model\n\n' + nextPrompt;
+  }
+  state.promptComposer = prompt;
+  $('#promptComposer').value = prompt;
+  saveState();
+}
+
+// ====================================================================
+// TURN LEDGER
+// ====================================================================
+function addTurnEntry(actor, story) {
+  const entry = { actor, story: story || '?', when: now() };
+  state.turnLedger.push(entry);
+  if (state.turnLedger.length > 50) state.turnLedger.shift();
+  saveState();
+  renderTurnLedger();
+}
+
+function renderTurnLedger() {
+  const el = $('#footerState');
+  if (!state.turnLedger.length) {
+    el.textContent = 'No turns logged yet.';
+    $('#logCmdDisplay').textContent = '—';
+    return;
+  }
+  const last = state.turnLedger[state.turnLedger.length - 1];
+  el.textContent = `${last.actor} → ${last.story} (${last.when})`;
+  updateFooter();
+}
+
+function updateFooter() {
+  const actor = state.lastActor || state.handoffParsed?.current_actor || '?';
+  const story = state.lastStory || (state.handoffParsed?.current_story || '').split(' ')[0] || '?';
+  const cmd = `python scripts/context/log_turn.py --actor ${actor.toLowerCase()} --story ${story} --in resp.txt`;
+  $('#logCmdDisplay').textContent = cmd;
+  state._lastLogCmd = cmd;
+  saveState();
+}
+
+// ====================================================================
+// EXPORT / IMPORT
+// ====================================================================
+function exportState() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `multi_llm_state_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importState(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      Object.assign(state, imported);
+      saveState();
+      refreshAll();
+    } catch(err) {
+      alert('Failed to import: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ====================================================================
+// REFRESH ALL
+// ====================================================================
+function refreshAll() {
+  renderContextTabs();
+  $('#promptComposer').value = state.promptComposer || '';
+  $('#responseInput').value = state.responseInput || '';
+
+  // Re-parse handoff if we have raw text
+  if (state.handoffRaw) {
+    const parsed = parseHandoff(state.handoffRaw);
+    state.handoffParsed = parsed;
+    renderHandoff(parsed);
+  } else {
+    renderHandoff(null);
+  }
+
+  // Re-parse queue if raw text exists
+  if (state.queueRaw) {
+    const items = parseQueue(state.queueRaw);
+    renderQueue(items);
+  } else {
+    renderQueue([]);
+  }
+
+  // Re-render last parsed fields
+  if (state._lastParsedFields) {
+    renderParsedFields(state._lastParsedFields);
+  } else {
+    renderParsedFields(null);
+  }
+
+  updatePromptContextSelector();
+  renderTurnLedger();
+  updateFooter();
+}
+
+// ====================================================================
+// INIT — event binding
+// ====================================================================
+document.addEventListener('DOMContentLoaded', () => {
+
+  // Refresh context tabs
+  renderContextTabs();
+  $('#promptComposer').value = state.promptComposer || '';
+  $('#responseInput').value = state.responseInput || '';
+
+  // Handoff parse button
+  $('#btnParseHandoff').addEventListener('click', () => {
+    const text = $('#handoffPaste').value.trim();
+    if (!text) return;
+    state.handoffRaw = text;
+    const parsed = parseHandoff(text);
+    state.handoffParsed = parsed;
+    renderHandoff(parsed);
+    saveState();
+  });
+
+  // Queue parse button
+  $('#btnParseQueue').addEventListener('click', () => {
+    const text = $('#queuePaste').value.trim();
+    if (!text) return;
+    state.queueRaw = text;
+    const items = parseQueue(text);
+    renderQueue(items);
+    saveState();
+  });
+
+  // Prompt builder
+  $('#btnBuildPrompt').addEventListener('click', buildPrompt);
+
+  $('#btnAppendPrompt').addEventListener('click', () => {
+    buildPrompt(); // rebuild does the append
+  });
+
+  $('#btnClearPrompt').addEventListener('click', () => {
+    state.promptComposer = '';
+    $('#promptComposer').value = '';
+    saveState();
+  });
+
+  // Copy buttons
+  $('#btnCopyPrompt').addEventListener('click', () => {
+    copyText($('#promptComposer').value);
+  });
+
+  $('#btnCopyContextCmd').addEventListener('click', () => {
+    copyText('python scripts/context/build_context.py');
+  });
+
+  $('#btnCopyQueueCmd').addEventListener('click', () => {
+    copyText('python scripts/context/pack_story.py --story ' + (state.lastStory || 'STORY-?.?'));
+  });
+
+  // §3 extraction
+  $('#btnExtractS3').addEventListener('click', () => {
+    const text = $('#responseInput').value;
+    if (!text) return;
+    state.responseInput = text;
+    const fields = parseS3Block(text);
+    state._lastParsedFields = fields;
+    renderParsedFields(fields);
+    saveState();
+
+    // Auto-populate PROMPT_FOR_NEXT_MODEL into composer if available
+    const next = fields.PROMPT_FOR_NEXT_MODEL;
+    if (next && next !== '(not found)') {
+      const current = $('#promptComposer').value;
+      if (current && !current.includes(next)) {
+        $('#promptComposer').value = current + '\n\n---\n\n## PROMPT_FOR_NEXT_MODEL\n\n' + next;
+        state.promptComposer = $('#promptComposer').value;
+        saveState();
+      } else if (!current) {
+        $('#promptComposer').value = next;
+        state.promptComposer = next;
+        saveState();
+      }
+    }
+  });
+
+  $('#btnCopyParsedFields').addEventListener('click', () => {
+    const fields = state._lastParsedFields;
+    if (!fields) return;
+    let txt = '';
+    for (const [k, v] of Object.entries(fields)) {
+      txt += `${k}: ${v}\n\n`;
+    }
+    copyText(txt.trim());
+  });
+
+  $('#btnClearResponse').addEventListener('click', () => {
+    state.responseInput = '';
+    $('#responseInput').value = '';
+    state._lastParsedFields = null;
+    renderParsedFields(null);
+    saveState();
+  });
+
+  // Footer log command
+  $('#btnCopyLogCmd').addEventListener('click', () => {
+    const cmd = state._lastLogCmd || `python scripts/context/log_turn.py --actor ${(state.lastActor||'?').toLowerCase()} --story ${state.lastStory||'?'} --in resp.txt`;
+    copyText(cmd);
+    // Also add a turn entry
+    addTurnEntry(state.lastActor || '?', state.lastStory || '?');
+  });
+
+  $('#btnResetFooter').addEventListener('click', () => {
+    state.lastActor = '';
+    state.lastStory = '';
+    state._lastLogCmd = '';
+    updateFooter();
+    saveState();
+  });
+
+  // Queue refresh
+  $('#btnRefreshQueue').addEventListener('click', () => {
+    if (state.queueRaw) {
+      const items = parseQueue(state.queueRaw);
+      renderQueue(items);
+    }
+  });
+
+  // State management
+  $('#btnClearLocal').addEventListener('click', () => {
+    if (confirm('Clear all saved state? This cannot be undone.')) {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+  });
+
+  $('#btnExportState').addEventListener('click', exportState);
+
+  $('#btnImportState').addEventListener('click', () => {
+    $('#importStateInput').click();
+  });
+
+  $('#importStateInput').addEventListener('change', (e) => {
+    if (e.target.files[0]) importState(e.target.files[0]);
+  });
+
+  // Recover last parsed fields on load
+  if (state._lastParsedFields) {
+    renderParsedFields(state._lastParsedFields);
+  }
+
+  // Recover handoff
+  if (state.handoffRaw) {
+    $('#handoffPaste').value = state.handoffRaw;
+    const parsed = parseHandoff(state.handoffRaw);
+    state.handoffParsed = parsed;
+    renderHandoff(parsed);
+  }
+
+  // Recover queue
+  if (state.queueRaw) {
+    $('#queuePaste').value = state.queueRaw;
+    const items = parseQueue(state.queueRaw);
+    renderQueue(items);
+  }
+
+  renderTurnLedger();
+  updateFooter();
+});
+</script>
+</body>
+</html>

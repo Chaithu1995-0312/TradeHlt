@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tradelatest.multi_llm.research_lane.package.v1",
+  "title": "ResearchLanePackage",
+  "type": "object",
+  "required": [
+    "package_id",
+    "kind",
+    "cycle_id",
+    "created_at",
+    "author_role",
+    "summary",
+    "status"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "package_id": { "type": "string", "minLength": 3 },
+    "kind": {
+      "type": "string",
+      "enum": ["PROPOSAL", "CRITIQUE", "EXECUTION_EVIDENCE", "DECISION"]
+    },
+    "cycle_id": { "type": "string", "pattern": "^RC-[0-9]{3,}$" },
+    "created_at": { "type": "string" },
+    "author_role": {
+      "type": "string",
+      "enum": [
+        "principal",
+        "architect",
+        "hypothesis_diversity",
+        "technical_critic",
+        "executor",
+        "system"
+      ]
+    },
+    "author_model": {
+      "type": "string",
+      "description": "e.g. grok, chatgpt, deepseek, claude, human"
+    },
+    "claim_type": {
+      "type": "string",
+      "enum": ["H_tool", "H_market", "process", "none"]
+    },
+    "summary": { "type": "string", "minLength": 1 },
+    "binds": {
+      "type": "object",
+      "properties": {
+        "entrypoint": { "type": "string" },
+        "lens": { "type": "string" },
+        "active_version": { "type": "string" },
+        "instruments": { "type": "array", "items": { "type": "string" } },
+        "phase": { "type": "string" },
+        "promise_rung_max_claim": {
+          "type": "string",
+          "enum": ["PL-0", "PL-1", "PL-2", "PL-3", "PL-4", "PL-5", "PL-5+"]
+        }
+      }
+    },
+    "falsifier": { "type": "string" },
+    "h1_h2_h3_risks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "artifact_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "related_package_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PROPOSED", "ACCEPTED", "REJECTED", "SUPERSEDED", "BLOCKED"]
+    },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": true
+}
