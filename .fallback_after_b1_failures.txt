@@ -1,0 +1,2 @@
+FAILED tests/replay/test_timing_reconstructor.py::test_scanner_path_matches_offline_rewalker
+FAILED tests/test_control_plane_doc_alignment.py::test_agents_path_alignment
