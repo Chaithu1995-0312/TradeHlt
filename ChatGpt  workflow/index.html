@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🤖 Merged Multi-LLM Protocol Visualizer</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --mono: 'Cascadia Code','JetBrains Mono','Fira Code',monospace;
+
+    --deepseek: #ff6b35;
+    --gemini-think: #4285f4;
+    --gemini-pro: #34a853;
+    --chatgpt: #10a37f;
+    --claude: #c977e0;
+    --reality: #f0c040;
+    --grok: #8b5cf6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font: 14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+
+  #app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar { width: 56px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 4px; flex-shrink: 0; }
+  .sidebar .sbtn { width: 40px; height: 40px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--text2); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .sidebar .sbtn:hover { background: var(--bg3); border-color: var(--border); color: var(--text); }
+  .sidebar .sbtn.active { background: var(--bg3); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 8px rgba(88,166,255,0.15); }
+  .sidebar .sbtn .sbadge { font-size: 9px; color: var(--text2); margin-top: 1px; display: block; }
+  .sidebar .spacer { flex: 1; }
+  .sidebar .slogo { font-size: 20px; margin-bottom: 8px; }
+
+  /* ===== MAIN ===== */
+  .main { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  header h1 { font-size: 18px; font-weight: 700; }
+  header .tag { font-size: 10px; color: var(--text2); background: var(--bg3); padding: 2px 8px; border-radius: 8px; border: 1px solid var(--border); }
+  header .actions { margin-left: auto; display: flex; gap: 6px; }
+
+  .tab-content { display: none; flex-direction: column; gap: 16px; }
+  .tab-content.active { display: flex; }
+
+  .btn { padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: var(--border); }
+  .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-sm { padding: 2px 8px; font-size: 10px; }
+  .btn-green { background: var(--green); color: #000; border-color: var(--green); }
+  .btn-danger { background: var(--red); color: #fff; border-color: var(--red); }
+
+  /* ===== FLOW ===== */
+  .flow-section { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; }
+  .flow-section h2 { font-size: 13px; margin-bottom: 10px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+  .flow-canvas { display: flex; align-items: center; justify-content: center; gap: 0; padding: 16px 0; min-width: 1100px; }
+  .flow-node { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 80px; cursor: pointer; position: relative; }
+  .flow-node .node-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; border: 2px solid var(--border); transition: transform 0.15s; }
+  .flow-node .node-icon:hover { transform: scale(1.1); }
+  .flow-node .node-label { font-size: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2px; text-align: center; max-width: 80px; }
+  .flow-node .node-model { font-size: 7px; color: var(--text2); }
+  .flow-node.active .node-icon { box-shadow: 0 0 12px rgba(88,166,255,0.25); }
+  .flow-arrow { display: flex; align-items: center; gap: 1px; margin: 0 1px; flex-shrink: 0; position: relative; }
+  .flow-arrow .arrow-line { width: 18px; height: 2px; background: var(--border); flex-shrink: 0; }
+  .flow-arrow .arrow-head { font-size: 8px; color: var(--border); flex-shrink: 0; }
+  .flow-arrow .arrow-label { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 7px; color: var(--text2); white-space: nowrap; background: var(--bg2); padding: 0 3px; }
+
+  .node-deepseek .node-icon { border-color: var(--deepseek); }
+  .node-gemini-think .node-icon { border-color: var(--gemini-think); }
+  .node-gemini-pro .node-icon { border-color: var(--gemini-pro); }
+  .node-chatgpt .node-icon { border-color: var(--chatgpt); }
+  .node-claude .node-icon { border-color: var(--claude); }
+  .node-reality .node-icon { border-color: var(--reality); }
+  .node-grok .node-icon { border-color: var(--grok); }
+  .node-user .node-icon { border-color: var(--text2); }
+
+  .flow-node.node-deepseek .node-label { color: var(--deepseek); }
+  .flow-node.node-gemini-think .node-label { color: var(--gemini-think); }
+  .flow-node.node-gemini-pro .node-label { color: var(--gemini-pro); }
+  .flow-node.node-chatgpt .node-label { color: var(--chatgpt); }
+  .flow-node.node-claude .node-label { color: var(--claude); }
+  .flow-node.node-reality .node-label { color: var(--reality); }
+  .flow-node.node-grok .node-label { color: var(--grok); }
+  .flow-node.node-user .node-label { color: var(--text2); }
+
+  /* ===== AGENT GRID ===== */
+  .agents-section h2 { font-size: 13px; color: var(--text2); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .agents-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  @media (max-width: 1000px) { .agents-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .agents-grid { grid-template-columns: 1fr; } }
+
+  .agent-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 10px; cursor: pointer; transition: border-color 0.15s; }
+  .agent-card:hover { border-color: var(--text2); }
+  .agent-card.expanded { border-color: var(--accent); }
+  .agent-card .ac-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .agent-card .ac-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; border: 2px solid var(--border); flex-shrink: 0; }
+  .agent-card .ac-info { flex: 1; min-width: 0; }
+  .agent-card .ac-name { font-weight: 700; font-size: 13px; }
+  .agent-card .ac-role { font-size: 10px; color: var(--text2); }
+  .agent-card .ac-model { font-size: 9px; color: var(--text2); background: var(--bg3); display: inline-block; padding: 0 5px; border-radius: 3px; }
+  .agent-card .ac-never { font-size: 10px; color: var(--orange); margin-top: 3px; padding: 3px 6px; background: rgba(210,153,34,0.08); border-radius: 4px; border-left: 2px solid var(--orange); }
+  .ac-detail { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .agent-card.expanded .ac-detail { display: block; }
+  .ac-detail table { width: 100%; font-size: 10px; }
+  .ac-detail td { padding: 2px 5px; vertical-align: top; }
+  .ac-detail td:first-child { color: var(--text2); white-space: nowrap; width: 70px; }
+  .ac-detail td:last-child { color: var(--text); word-break: break-word; }
+  .ac-detail .copy-prompt { margin-top: 6px; width: 100%; font-size: 10px; }
+  .ac-detail .prompt-box { display: none; margin-top: 4px; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 6px; font: 10px/1.4 var(--mono); white-space: pre-wrap; max-height: 180px; overflow-y: auto; }
+  .ac-detail .prompt-box.visible { display: block; }
+
+  /* ===== STATUS TABLE ===== */
+  .status-section { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .status-section h2 { font-size: 13px; color: var(--text2); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .status-controls { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+  .status-controls input { flex: 1; min-width: 120px; background: var(--bg3); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; font: 11px var(--mono); }
+  .status-controls select { background: var(--bg3); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; font-size: 11px; }
+
+  .agent-stories { margin-bottom: 12px; }
+  .agent-stories:last-child { margin-bottom: 0; }
+  .agent-stories .as-header { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px 6px 0 0; font-size: 12px; font-weight: 600; }
+  .agent-stories .as-header .as-count { font-size: 10px; font-weight: 400; color: var(--text2); margin-left: auto; }
+
+  .story-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .story-table th { text-align: left; padding: 5px 8px; background: var(--bg3); border-bottom: 1px solid var(--border); color: var(--text2); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .story-table td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .story-table tr:last-child td { border-bottom: none; }
+  .story-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .story-table .story-id { font-weight: 600; font-family: var(--mono); font-size: 10px; color: var(--accent); cursor: pointer; }
+  .story-table .story-id:hover { text-decoration: underline; }
+  .story-table .story-title { color: var(--text); }
+  .story-table .story-epic { font-size: 9px; color: var(--text2); }
+  .story-table .story-deps { font-size: 9px; color: var(--text2); }
+  .story-table .story-conf { font-size: 9px; }
+  .story-table .story-files { font-size: 9px; color: var(--purple); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .status-badge { display: inline-block; padding: 1px 8px; border-radius: 8px; font-size: 9px; font-weight: 600; text-transform: uppercase; cursor: pointer; }
+  .status-badge.pending { background: rgba(139,148,158,0.15); color: var(--text2); }
+  .status-badge.in_progress { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .status-badge.done { background: rgba(63,185,80,0.15); color: var(--green); }
+  .status-badge.blocked { background: rgba(248,81,73,0.15); color: var(--red); }
+  .status-badge.deferred { background: rgba(210,153,34,0.15); color: var(--orange); }
+
+  .story-detail { display: none; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin: 4px 8px 8px 8px; }
+  .story-detail.visible { display: block; }
+  .story-detail table { width: 100%; font-size: 10px; }
+  .story-detail td { padding: 3px 6px; vertical-align: top; }
+  .story-detail td:first-child { color: var(--text2); white-space: nowrap; width: 90px; }
+
+  .story-checklist { margin-top: 6px; }
+  .story-checklist label { display: block; font-size: 10px; padding: 2px 0; cursor: pointer; }
+  .story-checklist input { margin-right: 6px; }
+
+  /* ===== REFERENCE BARS ===== */
+  .chain-ref { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; font-size: 10px; flex-shrink: 0; }
+  .chain-ref .cr-item { display: flex; align-items: center; gap: 3px; color: var(--text2); }
+  .chain-ref .cr-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .cr-dot.pending { background: var(--text2); }
+  .cr-dot.in_progress { background: var(--accent); }
+  .cr-dot.done { background: var(--green); }
+  .cr-dot.blocked { background: var(--red); }
+  .cr-dot.deferred { background: var(--orange); }
+
+  .phase-ref { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 10px; justify-content: center; flex-shrink: 0; }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar">
+  <div class="slogo">🤖</div>
+  <button class="sbtn active" data-tab="flow" title="Pipeline Flow">📊</button>
+  <button class="sbtn" data-tab="cards" title="Agent Role Cards">🧩</button>
+  <button class="sbtn" data-tab="status" title="Agent Status Board">📋<span class="sbadge">Status</span></button>
+  <div class="spacer"></div>
+  <button class="sbtn" id="btnExportState" title="Export State">📥</button>
+  <input type="file" id="importInput" accept=".json" style="display:none">
+  <button class="sbtn" id="btnImportState" title="Import State">📤</button>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+
+<header>
+  <h1>🤖 Merged Multi-LLM Protocol</h1>
+  <span class="tag">CLAUDE.md §13</span>
+  <span class="tag">ChatGpt Workflow</span>
+  <span class="tag">7 Actors</span>
+  <span class="tag">👤 User = Bridge</span>
+</header>
+
+<!-- ===== TAB 1: FLOW ===== -->
+<div class="tab-content active" id="tab-flow">
+  <div class="flow-section">
+    <h2>📊 Pipeline <span style="font-weight:400;color:var(--text2);font-size:11px;">— click any node → agent card · each arrow = User copy-pastes §3 handoff</span></h2>
+    <div class="flow-canvas" id="flowCanvas"><div style="color:var(--text2);padding:30px;">Loading...</div></div>
+  </div>
+  <div class="phase-ref">
+    <span style="font-weight:600;color:var(--text);">Phases:</span>
+    <span style="color:var(--accent);font-weight:600;">GATHER</span>
+    <span style="color:var(--text2);">G-1 Clarifier · G-2 Pyan · G-3 Boundary Audit</span>
+    <span style="color:var(--text2);">|</span>
+    <span style="color:var(--green);font-weight:600;">ENHANCE</span>
+    <span style="color:var(--text2);">E-1 Context · E-2 Output · E-3 Uncertainty · E-4 Role · E-5 Step-by-Step</span>
+    <span style="color:var(--text2);">|</span>
+    <span style="color:var(--claude);font-weight:600;">IMPLEMENT</span>
+    <span style="color:var(--text2);">I-1 SpecWriter → I-2 DiffGen ‖ I-3 TestGen → I-4 Auditor</span>
+  </div>
+  <div class="chain-ref">
+    <span style="font-weight:600;color:var(--text);">Chain Status:</span>
+    <span class="cr-item"><span class="cr-dot pending"></span> PENDING</span>
+    <span class="cr-item"><span class="cr-dot in_progress"></span> IN_PROGRESS</span>
+    <span class="cr-item"><span class="cr-dot done"></span> DONE</span>
+    <span class="cr-item"><span class="cr-dot blocked"></span> BLOCKED / UNKNOWN</span>
+    <span class="cr-item"><span class="cr-dot deferred"></span> NEEDS REVISION</span>
+  </div>
+</div>
+
+<!-- ===== TAB 2: AGENT CARDS ===== -->
+<div class="tab-content" id="tab-cards">
+  <div class="agents-section">
+    <h2>🧩 Agent Role Cards <span style="font-weight:400;color:var(--text2);font-size:11px;">— click to expand input/output/dependencies + system prompt</span></h2>
+    <div class="agents-grid" id="agentGrid"></div>
+  </div>
+</div>
+
+<!-- ===== TAB 3: AGENT STATUS ===== -->
+<div class="tab-content" id="tab-status">
+  <div class="status-section">
+    <h2>📋 Agent Status Board <span style="font-weight:400;color:var(--text2);font-size:11px;">— Jira-style story tracking per agent</span></h2>
+    <div class="status-controls">
+      <input type="text" id="queuePaste" placeholder="Paste build_queue.jsonl content here...">
+      <button class="btn btn-accent" id="btnLoadQueue">📥 Load Queue</button>
+      <button class="btn" id="btnAddStory">+ Add Story</button>
+      <select id="statusFilter">
+        <option value="all">All</option>
+        <option value="pending">Pending</option>
+        <option value="in_progress">In Progress</option>
+        <option value="done">Done</option>
+        <option value="blocked">Blocked</option>
+      </select>
+      <button class="btn btn-danger btn-sm" id="btnClearStories">Clear</button>
+    </div>
+    <div id="statusBoard"><div style="color:var(--text2);font-size:12px;padding:20px;text-align:center;">No stories loaded. Paste build_queue.jsonl from multi_llm/build_queue.jsonl and click Load Queue, or add stories manually.</div></div>
+  </div>
+  <div class="chain-ref">
+    <span style="font-weight:600;color:var(--text);">Cycle status:</span>
+    <span>Click story ID to expand/collapse Jira fields</span>
+    <span style="color:var(--text2);">|</span>
+    <span>Click status badge to cycle: PENDING → IN_PROGRESS → DONE → BLOCKED</span>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+</div><!-- /app -->
+
+<script>
+// ====================================================================
+// AGENT DEFINITIONS
+// ====================================================================
+const AGENTS = [
+  { id: 'deepseek', name: 'DeepSeek', role: 'Planner', model: 'DeepSeek', icon: '🔴', color: 'var(--deepseek)', never: 'Writes new features', input: '👤 User goal + context/*.md + story pack', output: 'Plan · §3 handoff · Prompts', depends: '👤 User', pipelinePos: 1,
+    systemPrompt: `You are DeepSeek, the Planner.\n\n- Decompose user goal into a structured plan\n- Output §3 handoff block\n- Do NOT write new features, code, or implementations\n\nFlow: DeepSeek → Gemini Think → Gemini Pro → ChatGPT → Claude → Reality → Grok-2` },
+  { id: 'gemini-think', name: 'Gemini Think', role: 'Quant Analyst', model: 'Gemini 2.0', icon: '🔵', color: 'var(--gemini-think)', never: 'Optimises code', input: 'Quant/math request (from DeepSeek plan)', output: 'Formulas · Stats · CRT validation · Edge cases', depends: '🔴 DeepSeek', pipelinePos: 2,
+    systemPrompt: `You are Gemini Think, the Quantitative Analyst.\n\n- Perform quantitative analysis with full mathematical reasoning\n- CRT logic validation, statistical tests, Monte Carlo\n- Do NOT optimise code — pass raw results to Gemini Pro\n\nFlow: DeepSeek → Gemini Think → Gemini Pro` },
+  { id: 'gemini-pro', name: 'Gemini Pro', role: 'Optimizer', model: 'Gemini Pro', icon: '🟢', color: 'var(--gemini-pro)', never: 'Re-derives mathematics', input: 'Gemini Think analysis', output: 'Optimised code · Performance rationale', depends: '🔵 Gemini Think', pipelinePos: 3,
+    systemPrompt: `You are Gemini Pro, the Optimizer.\n\n- Convert Gemini Think's analysis into efficient code\n- Refactor for performance\n- Do NOT re-derive mathematics\n\nFlow: Gemini Think → Gemini Pro → ChatGPT` },
+  { id: 'chatgpt', name: 'ChatGPT', role: 'Architect', model: 'GPT-4o', icon: '🧠', color: 'var(--chatgpt)', never: 'Executes tasks', input: 'Plan + context', output: 'JSON task plan · Expanded params', depends: '🟢 Gemini Pro', pipelinePos: 4,
+    systemPrompt: `You are ChatGPT, the Architect.\n\n- Decompose plan into JSON execution plan\n- Craft exact prompts for downstream models\n- Include open_questions[] if ambiguous\n- Do NOT execute tasks\n\nFlow: Gemini Pro → ChatGPT → Claude` },
+  { id: 'claude', name: 'Claude', role: 'Executor', model: 'Claude Sonnet', icon: '🟣', color: 'var(--claude)', never: 'Adds unsolicited explanations', input: 'Spec + context + JSON plan', output: 'Code diff · pytest tests · SESSION LOG', depends: '🧠 ChatGPT', pipelinePos: 5,
+    systemPrompt: `You are Claude, the Executor.\n\n- Write production-ready code as specified\n- Run Validate after implementation\n- Append SESSION LOG\n- If blocked: write # BLOCKED: [reason]\n\nFlow: ChatGPT → Claude → Reality` },
+  { id: 'reality', name: 'Reality', role: 'Tests', model: 'pytest + findings', icon: '🟡', color: 'var(--reality)', never: 'Ignores failures', input: 'Code + tests from Claude', output: 'VALIDATED / REFUTED / INCONCLUSIVE', depends: '🟣 Claude', pipelinePos: 6,
+    systemPrompt: `You are Reality — the test suite and findings validator.\n\nOutcomes: VALIDATED | REFUTED | INCONCLUSIVE\nEvidence has no authority; only demonstrated G001 improvement grants authority.` },
+  { id: 'grok', name: 'Grok-2', role: 'Synthesizer', model: 'xAI Grok-2', icon: '𐃘', color: 'var(--grok)', never: 'Ignores findings', input: 'All outputs + Reality verdict', output: 'Synthesised final answer', depends: '🟡 Reality', pipelinePos: 7,
+    systemPrompt: `You are Grok-2, the Synthesizer.\n\n- Combine all model outputs + Reality findings\n- Produce coherent final answer for User\n- Respect Reality's verdict\n\nFlow: Reality → Grok-2 → 👤 User decides` }
+];
+
+// ====================================================================
+// STATE
+// ====================================================================
+const STORAGE_KEY = 'merged_protocol_v2';
+function loadState() { try { const r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch(e) {} return { expandedAgent: null, activeTab: 'flow', stories: [], storyDetail: null, filter: 'all' }; }
+function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {} }
+const state = loadState();
+if (!state.stories) state.stories = [];
+if (!state.expandedAgent) state.expandedAgent = null;
+if (!state.activeTab) state.activeTab = 'flow';
+if (!state.filter) state.filter = 'all';
+
+// Story data model (Jira fields from docs)
+// { id, title, status, agent, epic, epic_title, depends_on, confidence, files, description, checklist: [{text, done}], labels }
+
+const STATUS_CYCLE = ['pending', 'in_progress', 'done', 'blocked'];
+
+// Default checklist template (from Jira Task Creation doc)
+const DEFAULT_CHECKLIST = [
+  { text: 'Spec compliance — acceptance criteria met', done: false },
+  { text: 'Test coverage — edge cases covered', done: false },
+  { text: 'Security — no secrets or injection risks', done: false },
+  { text: 'Performance — no N+1 or blocking I/O', done: false },
+  { text: 'Service boundaries — single entry point', done: false }
+];
+
+// ====================================================================
+// AGENT TO STORY MAPPING (which agent gets which stories)
+// ====================================================================
+function getAgentForStory(story) {
+  // Simple heuristic: based on story content keywords
+  const t = (story.title || '').toLowerCase();
+  const f = (story.files || []).join(' ').toLowerCase();
+  if (t.includes('audit') || t.includes('review') || t.includes('plan') || t.includes('decompos')) return 'deepseek';
+  if (t.includes('math') || t.includes('stat') || t.includes('crt') || t.includes('monte carlo') || t.includes('quant')) return 'gemini-think';
+  if (t.includes('optim') || t.includes('perform')) return 'gemini-pro';
+  if (t.includes('spec') || t.includes('architect') || t.includes('plan') || t.includes('interpret')) return 'chatgpt';
+  if (t.includes('implement') || t.includes('code') || t.includes('diff') || t.includes('test') || t.includes('fix') || t.includes('wire') || t.includes('build') || t.includes('refactor')) return 'claude';
+  if (t.includes('valid') || t.includes('verify') || t.includes('regression')) return 'reality';
+  if (t.includes('synthes') || t.includes('final') || t.includes('report')) return 'grok';
+  // Default: Claude gets stories that need code changes
+  if (story.files && story.files.length > 0) return 'claude';
+  return 'deepseek'; // Planner as fallback
+}
+
+// ====================================================================
+// RENDER FLOW
+// ====================================================================
+function renderFlow() {
+  const el = document.getElementById('flowCanvas');
+  const pipeline = [
+    { id: 'user', icon: '👤', label: 'User', cls: 'node-user', model: 'Bridge' },
+    { id: 'deepseek', icon: '🔴', label: 'DeepSeek', cls: 'node-deepseek', model: 'Planner' },
+    { id: 'gemini-think', icon: '🔵', label: 'Think', cls: 'node-gemini-think', model: 'Quant Analyst' },
+    { id: 'gemini-pro', icon: '🟢', label: 'Pro', cls: 'node-gemini-pro', model: 'Optimizer' },
+    { id: 'chatgpt', icon: '🧠', label: 'ChatGPT', cls: 'node-chatgpt', model: 'Architect' },
+    { id: 'claude', icon: '🟣', label: 'Claude', cls: 'node-claude', model: 'Executor' },
+    { id: 'reality', icon: '🟡', label: 'Reality', cls: 'node-reality', model: 'Tests' },
+    { id: 'grok', icon: '𐃘', label: 'Grok-2', cls: 'node-grok', model: 'Synthesizer' },
+    { id: 'user-end', icon: '👤', label: 'User', cls: 'node-user', model: 'Decides' }
+  ];
+  const edgeLabels = { 'deepseek': 'plan', 'gemini-think': 'analysis', 'gemini-pro': 'optimized', 'chatgpt': 'spec', 'claude': 'code', 'reality': 'verdict', 'grok': 'synthesis', 'user-end': 'approve' };
+  let html = '';
+  for (let i = 0; i < pipeline.length; i++) {
+    const node = pipeline[i];
+    const isActive = state.expandedAgent === node.id || (node.id === 'user-end' && state.expandedAgent === 'user');
+    html += `<div class="flow-node ${node.cls} ${isActive?'active':''}" onclick="switchTab('cards');setTimeout(()=>toggleAgent('${node.id==='user-end'?'user':node.id}'),50)">
+      <div class="node-icon">${node.icon}</div>
+      <div class="node-label">${node.label}</div>
+      <div class="node-model">${node.model}</div>
+    </div>`;
+    if (i < pipeline.length - 1) {
+      const next = pipeline[i+1];
+      html += `<div class="flow-arrow"><div class="arrow-label">${edgeLabels[next.id]||'→'}</div><div class="arrow-line"></div><div class="arrow-head">▶</div></div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+// ====================================================================
+// RENDER AGENT CARDS
+// ====================================================================
+function renderAgentCards() {
+  const el = document.getElementById('agentGrid');
+  let html = '';
+  for (const a of AGENTS) {
+    const ex = state.expandedAgent === a.id;
+    html += `<div class="agent-card ${ex?'expanded':''}">
+      <div class="ac-header" onclick="toggleAgent('${a.id}')">
+        <div class="ac-icon" style="border-color:${a.color};">${a.icon}</div>
+        <div class="ac-info"><div class="ac-name" style="color:${a.color};">${a.name}</div><div class="ac-role">${a.role}</div><div class="ac-model">${a.model}</div></div>
+        <span style="color:var(--text2);font-size:12px;">${ex?'▼':'▶'}</span>
+      </div>
+      <div class="ac-never">⛔ Never: ${a.never}</div>
+      <div class="ac-detail">
+        <table><tr><td>Input</td><td>${a.input}</td></tr><tr><td>Output</td><td>${a.output}</td></tr><tr><td>Depends</td><td>${a.depends}</td></tr></table>
+        <button class="btn btn-sm btn-accent copy-prompt" onclick="copyPrompt('${a.id}')">📋 Copy System Prompt</button>
+        <div class="prompt-box" id="prompt-${a.id}">${htmlEscape(a.systemPrompt)}</div>
+      </div>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+function toggleAgent(id) {
+  state.expandedAgent = state.expandedAgent === id ? null : id;
+  saveState();
+  renderAgentCards();
+}
+
+function copyPrompt(id) {
+  const a = AGENTS.find(x => x.id === id);
+  if (!a) return;
+  navigator.clipboard.writeText(a.systemPrompt).catch(()=>{});
+  const box = document.getElementById('prompt-'+id);
+  if (box) { box.classList.add('visible'); setTimeout(()=>box.classList.remove('visible'),2000); }
+}
+
+function htmlEscape(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ====================================================================
+// RENDER STATUS BOARD
+// ====================================================================
+function renderStatusBoard() {
+  const el = document.getElementById('statusBoard');
+  const stories = state.stories;
+
+  if (!stories.length) {
+    el.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:20px;text-align:center;">No stories loaded. Paste build_queue.jsonl and click Load Queue.</div>';
+    return;
+  }
+
+  const filter = state.filter;
+  const filtered = filter === 'all' ? stories : stories.filter(s => s.status === filter);
+
+  // Group by agent
+  const groups = {};
+  for (const s of filtered) {
+    const agentId = getAgentForStory(s);
+    if (!groups[agentId]) groups[agentId] = [];
+    groups[agentId].push(s);
+  }
+
+  let html = '';
+  for (const a of AGENTS) {
+    const agentStories = groups[a.id] || [];
+    if (agentStories.length === 0 && filter === 'all') continue;
+    if (agentStories.length === 0) continue;
+
+    const counts = { pending: 0, in_progress: 0, done: 0, blocked: 0 };
+    for (const s of agentStories) { if (counts[s.status] !== undefined) counts[s.status]++; }
+
+    html += `<div class="agent-stories">
+      <div class="as-header">
+        <span>${a.icon}</span>
+        <span style="color:${a.color};">${a.name}</span>
+        <span class="as-role" style="color:var(--text2);font-size:10px;">${a.role}</span>
+        <span class="as-count">${agentStories.length} stories · ${counts.pending>0?`🟢${counts.pending} `:''}${counts.in_progress>0?`🔵${counts.in_progress} `:''}${counts.done>0?`✅${counts.done} `:''}${counts.blocked>0?`❌${counts.blocked}`:''}</span>
+      </div>
+      <table class="story-table">
+        <tr><th>ID</th><th>Title</th><th>Status</th><th>Epic</th><th>Conf</th><th>Deps</th></tr>`;
+
+    for (const s of agentStories) {
+      const isExpanded = state.storyDetail === s.id;
+      html += `<tr>
+        <td><span class="story-id" onclick="toggleStoryDetail('${s.id}')">${htmlEscape(s.id)}</span></td>
+        <td class="story-title">${htmlEscape(s.title||'')}</td>
+        <td><span class="status-badge ${s.status||'pending'}" onclick="cycleStatus('${s.id}')">${(s.status||'pending').replace('_',' ')}</span></td>
+        <td class="story-epic">${s.epic_title ? htmlEscape(s.epic_title) : (s.epic ? 'Epic '+s.epic : '')}</td>
+        <td class="story-conf">${s.confidence !== undefined ? s.confidence+'%' : ''}</td>
+        <td class="story-deps">${s.depends_on ? s.depends_on.join(', ') : ''}</td>
+      </tr>`;
+      if (isExpanded) {
+        html += `<tr><td colspan="6" style="padding:0;">
+          <div class="story-detail visible">
+            <table>
+              <tr><td>Description</td><td>${htmlEscape(s.description||'No description')}</td></tr>
+              <tr><td>Files</td><td style="font-family:var(--mono);font-size:9px;">${s.files ? s.files.map(f=>htmlEscape(f)).join('<br>') : '—'}</td></tr>
+              <tr><td>Labels</td><td>${s.labels ? s.labels.map(l=>'<span style="display:inline-block;padding:0 5px;background:var(--bg3);border-radius:3px;margin:1px;">'+htmlEscape(l)+'</span>').join(' ') : '<span style="color:var(--text2)">—</span>'}</td></tr>
+              <tr><td>Checklist</td><td><div class="story-checklist">${renderChecklist(s)}</div></td></tr>
+            </table>
+          </div>
+        </td></tr>`;
+      }
+    }
+    html += `</table></div>`;
+  }
+  el.innerHTML = html || '<div style="color:var(--text2);font-size:12px;padding:20px;text-align:center;">No stories match the current filter.</div>';
+}
+
+function renderChecklist(story) {
+  if (!story.checklist || !story.checklist.length) {
+    return '<span style="color:var(--text2)">No checklist items. Click story ID to add.</span>';
+  }
+  return story.checklist.map((item, i) =>
+    `<label><input type="checkbox" ${item.done?'checked':''} onchange="toggleChecklist('${story.id}',${i})"> ${htmlEscape(item.text)}</label>`
+  ).join('');
+}
+
+function toggleStoryDetail(id) {
+  state.storyDetail = state.storyDetail === id ? null : id;
+  saveState();
+  renderStatusBoard();
+}
+
+function cycleStatus(id) {
+  const s = state.stories.find(x => x.id === id);
+  if (!s) return;
+  const idx = STATUS_CYCLE.indexOf(s.status || 'pending');
+  s.status = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
+  saveState();
+  renderStatusBoard();
+}
+
+function toggleChecklist(storyId, itemIdx) {
+  const s = state.stories.find(x => x.id === storyId);
+  if (!s || !s.checklist || !s.checklist[itemIdx]) return;
+  s.checklist[itemIdx].done = !s.checklist[itemIdx].done;
+  saveState();
+  renderStatusBoard();
+}
+
+// ====================================================================
+// PARSE build_queue.jsonl
+// ====================================================================
+function parseQueue(text) {
+  const items = [];
+  for (const ln of text.split('\n')) {
+    const s = ln.trim();
+    if (!s) continue;
+    try { items.push(JSON.parse(s)); } catch(e) {}
+  }
+  return items;
+}
+
+function loadQueue(text) {
+  const items = parseQueue(text);
+  const stories = [];
+  for (const item of items) {
+    stories.push({
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `merged_protocol_state_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('btnImportState').addEventListener('click', () => {
+    document.getElementById('importInput').click();
+  });
+  document.getElementById('importInput').addEventListener('change', (e) => {
+    if (!e.target.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        Object.assign(state, imported);
+        saveState();
+        renderFlow();
+        renderAgentCards();
+      } catch(err) { alert('Import failed: ' + err.message); }
+    };
+    reader.readAsText(e.target.files[0]);
+  });
+});
+</script>
+</body>
+</html>

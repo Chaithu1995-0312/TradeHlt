@@ -1,0 +1,39 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "created": "YYYY-MM-DD",
+    "last_updated": "YYYY-MM-DD",
+    "chain_status": "pending"
+  },
+  "task": "",
+  "issue_id": "",
+  "branch": "",
+  "existing_architecture_summary": {
+    "task_description": "",
+    "affected_files": [],
+    "existing_patterns": [],
+    "dependencies": [],
+    "constraints": [],
+    "open_questions": []
+  },
+  "spec": "",
+  "diff": "",
+  "tests": "",
+  "audit": {
+    "status": "",
+    "issues": [],
+    "sign_off": ""
+  },
+  "commit_msg": "",
+  "pr_body": "",
+  "changelog_entry": "",
+  "agent_log": [
+    {
+      "timestamp": "",
+      "agent": "",
+      "input_summary": "",
+      "output_summary": "",
+      "status": "pending | done | blocked"
+    }
+  ]
+}
