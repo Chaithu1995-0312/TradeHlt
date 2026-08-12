@@ -276,12 +276,16 @@ class ExecutionPlanAdapter:
             raise KeyError("executing plan missing 'trade_intent'")
         intent = str(trade_plan["trade_intent"]).upper()
         tp1_mult, tp2_mult = self._tp_multipliers(intent)
+        # F-072: compute_crt_levels requires price-unit ATR; feats["atr"] (FM-041) is
+        # close-relative (atr_14_raw/close). Recover the registered absolute form
+        # (FM-074, atr_absolute == atr_14_raw) the same way execution_planner.py does.
+        atr_abs = feats["atr"] * feats["close"]
         crt = compute_crt_levels(
             entry=float(trade_plan["entry_price"]),
             direction=int(trade_plan["direction"]),
             low=feats["low"],
             high=feats["high"],
-            atr=feats["atr"],
+            atr=atr_abs,
             sl_atr_buffer=self._sl_atr_buffer,
             tp1_mult=tp1_mult,
             tp2_mult=tp2_mult,

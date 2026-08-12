@@ -914,9 +914,9 @@ derived_metrics:
     version:     1
     lifecycle:   registered      # F-050 sibling (CH-001): range-ATR multiple emitted as "disp_str"/
                                  # "disp_strength" by CRT sites — distinct from FM-020 body/(atr*close).
-    formula:     "candle_range / atr_abs; atr_abs<=0 -> 0.0  # atr_abs = SMA(period) of true_range, ABSOLUTE price units (state.atr_abs), NOT the close-relative FM-041 `atr`"
+    formula:     "candle_range / atr_abs; atr_abs<=0 -> 0.0  # atr_abs = SMA(period) of true_range, ABSOLUTE price units (state.atr_abs, now registered as FM-074 atr_absolute), NOT the close-relative FM-041 `atr`"
     impl:        derived_math.displacement_atr_ratio
-    depends_on:  [candle_range, true_range]
+    depends_on:  [candle_range, atr_absolute]
     active:      true
     source_of_truth: crt_engine_v2.py:1355   # family: :1560 score_breakout, crt_gaussian_scorer:194
     note: >
@@ -929,8 +929,11 @@ derived_metrics:
       FM-041 `atr` (atr_14_raw/close). `depends_on` previously named FM-041 `atr`, matching the
       same declaration-drift class FM-050 fixed 2026-07-19 (crt_engine_v2.py's own runtime trace
       metadata mislabeled `state.atr_abs` as `formula_id: FM-041` at 4 sites; corrected same turn).
-      No first-class FM id exists for the bare absolute-ATR intermediate, so `depends_on` points at
-      its true root (true_range, FM-040) rather than the wrong sibling identity.
+      RE-POINTED 2026-08-09 (F-072): `state.atr_abs` now has a first-class identity, FM-074
+      `atr_absolute` — registered after this same gap (there was previously no id for the bare
+      absolute-ATR intermediate) let an equivalent unit-mismatch defect reach a THIRD site
+      (compute_crt_levels / gate_intelligence.py, F-072) undetected. `depends_on` now points
+      directly at FM-074 rather than its ancestor true_range (FM-040).
     taxonomy:
       category:        Volatility
       knowledge_class: Derived
@@ -1093,6 +1096,49 @@ rolling_indicators:
       consumed_by:      [UNKNOWN]
       vector_key:       atr
       vector_index:     13
+  atr_absolute:
+    id:        FM-074
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "SMA(<feature_pipeline.atr_period>) of true_range, ABSOLUTE price units (no division by close): true_range.rolling(<feature_pipeline.atr_period>).mean()  # default 14"
+    impl:      feature_pipeline.compute_indicators                 # atr_14_raw / atr_14 (pipeline)
+    depends_on: [true_range]
+    smoothing_method: SMA
+    lookback:  14
+    config_key: feature_pipeline.atr_period
+    normalization_basis: none
+    units:     price_absolute
+    active:    true
+    taxonomy:
+      category:        Volatility
+      knowledge_class: Statistical
+    semantics:
+      description:   "Simple moving average of true_range over the configured period, in absolute price units — the pre-division intermediate that FM-041 `atr` derives from (atr_14_raw / close = FM-041)."
+      why_it_exists: >
+        Registered 2026-08-09 (F-072) to close a gap the ontology had already diagnosed in its own
+        words at FM-028's note below: "No first-class FM id exists for the bare absolute-ATR
+        intermediate." That gap let the same defect recur three times under three different local
+        names before this node existed: the FM-050 volatility_regime runtime-metadata mislabel
+        (2026-07-19, 4 sites, corrected), the FM-028 displacement_atr_ratio depends_on correction
+        (2026-07-31), and F-072 (2026-08-09) — compute_crt_levels (gate_intelligence.py:24-84)
+        requires price-unit ATR for SL/TP geometry but received the close-relative FM-041 `atr`
+        at up to 3 call sites, producing a ~2000x SL error on XAUUSD. This node does not change any
+        runtime value — it names a quantity that was already being computed twice, independently,
+        under two different local identifiers (see source_of_truth), and gives every future
+        consumer a single registered name to depend on instead of re-deriving or mislabeling it.
+      interpretation:
+        high: "Volatile regime — large absolute point moves per bar."
+        low:  "Quiet regime — small absolute point moves per bar."
+        caveat: "Same SMA-of-true_range computation as FM-041, without the /close step. FM-041 == this / close (equivalently, this == FM-041 * close). Do not conflate with FM-050 volatility_regime, which ranks this quantity's rolling percentile rather than emitting its value."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      feature_pipeline.compute_indicators
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
+    source_of_truth: "feature_pipeline.py:601 (df['atr_14_raw']) and crt_engine_v2.py:869-882 (EngineState.compute_atr -> state.atr_abs, real callers crt_engine_v2.py:1548/2201, crt_gaussian_scorer.py:208-211)"
   rsi_14:
     id:        FM-042
     version:   1
@@ -1444,7 +1490,7 @@ rolling_indicators:
     formula:   "tercile(atr_14.rolling(<feature_pipeline.volatility_percentile_window>, min_periods=1).rank(pct=True)); atr_14 = SMA(14) of true_range (ABSOLUTE); cuts at <feature_pipeline.volatility_tercile_low>/<feature_pipeline.volatility_tercile_high> -> int8 {0,1,2}  # defaults 200, 0.33/0.66"
     config_keys: [feature_pipeline.volatility_percentile_window, feature_pipeline.volatility_tercile_low, feature_pipeline.volatility_tercile_high]
     impl:      feature_pipeline.compute_volatility_regime
-    depends_on: [true_range]
+    depends_on: [atr_absolute]
     lookback:  200
     # `lookback` mirrors the percentile window (the tercile cuts are thresholds, not lookbacks).
     lookback_config_key: feature_pipeline.volatility_percentile_window
@@ -1454,9 +1500,12 @@ rolling_indicators:
       DEPENDENCY IS ABSOLUTE atr_14, NOT the close-relative FM-041 `atr`. compute_volatility_regime
       ranks df["atr_14"] (== atr_14_raw == SMA(14) of true_range, absolute price units); FM-041 `atr`
       is atr_14_raw / close (close-relative, canonical index 13). Different quantities -- hence
-      depends_on true_range (FM-040), the registered ancestor of the absolute form, NOT `atr`.
+      depends_on FM-074 atr_absolute (the registered absolute form), NOT `atr`.
       Corrected 2026-07-19 after an initial entry wrongly declared depends_on [atr]; matches the
       M14B analysis recorded at scripts/analysis/feature_dag_layers.py:123-124.
+      RE-POINTED 2026-08-09 (F-072): depends_on previously pointed at true_range (FM-040), the
+      absolute form's ancestor, because no first-class id existed for the absolute form itself.
+      FM-074 `atr_absolute` now registers that quantity directly; depends_on points at it instead.
       Production bind is ROLLING_CAUSAL (FC1-D, FC-0.5 adjudication). The sibling
       volatility_regime_global_batch (full-frame rank, non-PIT) and _expanding_causal identities
       are research/legacy only and are deliberately NOT registered. CORRECTED 2026-07-19: the
@@ -2187,6 +2236,138 @@ structural_states:
     lineage:
       derivation_depth: 3
       produced_by:      feature_pipeline.compute_canonical_structure_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
+
+  # ── Phase 2A magnitude states (EPISODE_SEMANTIC_INTEGRATION_PHASE2) ─────────
+  # Shadow interpretation of EXISTING continuous measurements. Not vector slots.
+  # Encoder: features.magnitude_states (pre-discretize → integer → name).
+  # Spine does NOT consume these. PRODUCTION_BEHAVIOR_CHANGED=NO.
+  body_commitment:
+    id:        FM-071
+    version:   1
+    lifecycle: research
+    computation_class: structural_state
+    formula:   "bin(body_ratio; band_edges) -> int8 {0,1,2}  # identity transform; edges ontology-owned"
+    impl:      features.magnitude_states.MagnitudeStateEncoder
+    depends_on: [body_ratio]
+    bounds:    "{0, 1, 2}"
+    active:    true
+    source_feature: body_ratio
+    source_transform: identity
+    band_edges: [0.33, 0.70]   # HighCommitment aligns with CRT body_ratio>=0.70 displacement gate coherence
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Structural
+    semantics:
+      description:   "Discrete body-commitment magnitude state derived from continuous body_ratio (FM-010)."
+      why_it_exists: "Phase 2A O6 — promote measured body_ratio into STATE so episodes can reason about commitment without a new indicator."
+      interpretation:
+        high: "HighCommitment — body dominates the candle range (gate-coherent high band)."
+        low:  "LowCommitment — range mostly wick; little directional hold at the close."
+    states:
+      - name:        LowCommitment
+        value:       0
+        condition:   "body_ratio < band_edges[0] (default 0.33)"
+        description: "Weak body vs range — indecision / rejection-dominated bar."
+      - name:        MediumCommitment
+        value:       1
+        condition:   "band_edges[0] <= body_ratio < band_edges[1]"
+        description: "Mixed commitment — neither pure wick nor CRT-scale body dominance."
+      - name:        HighCommitment
+        value:       2
+        condition:   "body_ratio >= band_edges[1] (default 0.70, CRT displacement-coherent)"
+        description: "Strong body commitment — decisive hold of the printed range."
+    lineage:
+      derivation_depth: 3
+      produced_by:      features.magnitude_states.MagnitudeStateEncoder
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
+
+  atr_magnitude:
+    id:        FM-072
+    version:   1
+    lifecycle: research
+    computation_class: structural_state
+    formula:   "bin(percentile_rank(atr | series); band_edges) -> int8 {0,1,2}  # series percentile of FM-041 relative atr"
+    impl:      features.magnitude_states.MagnitudeStateEncoder
+    depends_on: [atr]
+    bounds:    "{0, 1, 2}"
+    active:    true
+    source_feature: atr
+    source_transform: series_percentile
+    band_edges: [0.33, 0.66]   # terciles on in-sample / provided series percentile of relative ATR
+    taxonomy:
+      category:        Volatility
+      knowledge_class: Structural
+    semantics:
+      description:   "Discrete ATR intensity state from continuous close-relative ATR (FM-041), via series percentile rank."
+      why_it_exists: "Phase 2A O7 — interpret ATR magnitude without inventing a new volatility formula; distinct from FM-050 volatility_regime (absolute atr_14 rolling terciles)."
+      interpretation:
+        high: "HighAtrMagnitude — ATR is in the upper tercile of the provided series."
+        low:  "LowAtrMagnitude — ATR is in the lower tercile of the provided series."
+        caveat: "Bands the canonical vector atr (close-relative). Absolute event ATR (price units) is a different quantity; do not conflate. Requires series_context for classify; single-value path without series is fail-closed X_."
+    states:
+      - name:        LowAtrMagnitude
+        value:       0
+        condition:   "percentile_rank(atr) < band_edges[0]"
+        description: "Relatively quiet ATR vs the series used for ranking."
+      - name:        MediumAtrMagnitude
+        value:       1
+        condition:   "band_edges[0] <= percentile_rank(atr) < band_edges[1]"
+        description: "Mid-tercile relative ATR intensity."
+      - name:        HighAtrMagnitude
+        value:       2
+        condition:   "percentile_rank(atr) >= band_edges[1]"
+        description: "Elevated relative ATR vs the ranking series."
+    lineage:
+      derivation_depth: 3
+      produced_by:      features.magnitude_states.MagnitudeStateEncoder
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
+
+  momentum_magnitude:
+    id:        FM-073
+    version:   1
+    lifecycle: research
+    computation_class: structural_state
+    formula:   "bin(percentile_rank(|momentum_score| | series); band_edges) -> int8 {0,1,2}  # F-061: never fixed abs edges on legacy FM-023"
+    impl:      features.magnitude_states.MagnitudeStateEncoder
+    depends_on: [momentum_score]
+    bounds:    "{0, 1, 2}"
+    active:    true
+    source_feature: momentum_score
+    source_transform: abs_series_percentile
+    band_edges: [0.33, 0.66]
+    taxonomy:
+      category:        Momentum
+      knowledge_class: Structural
+    semantics:
+      description:   "Discrete momentum intensity from |momentum_score| series percentile (F-061-safe)."
+      why_it_exists: "Phase 2A O18 — interpret momentum magnitude without baking the FM-023 dimensional mix into fixed absolute bands."
+      interpretation:
+        high: "HighMomentumMagnitude — |momentum| ranks in the upper tercile of the series."
+        low:  "LowMomentumMagnitude — |momentum| ranks in the lower tercile of the series."
+        caveat: "Does NOT authorize fixed thresholds on raw momentum_score (F-061). Prefer corrected FM-031 path for future absolute bands under atr_relative activation."
+    states:
+      - name:        LowMomentumMagnitude
+        value:       0
+        condition:   "percentile_rank(|momentum_score|) < band_edges[0]"
+        description: "Weak |momentum| relative to the ranking series."
+      - name:        MediumMomentumMagnitude
+        value:       1
+        condition:   "band_edges[0] <= percentile_rank(|momentum_score|) < band_edges[1]"
+        description: "Mid-tercile |momentum| intensity."
+      - name:        HighMomentumMagnitude
+        value:       2
+        condition:   "percentile_rank(|momentum_score|) >= band_edges[1]"
+        description: "Strong |momentum| relative to the ranking series."
+    lineage:
+      derivation_depth: 3
+      produced_by:      features.magnitude_states.MagnitudeStateEncoder
       consumed_by:      [UNKNOWN]
       vector_key:       []
       vector_index:     []

@@ -164,6 +164,32 @@ def test_double_sweep_triggers_liq_sweep():
     r = p.plan(_engine(1), f, _context())
     assert r["trade_intent"] == "LIQ_SWEEP"
 
+def test_liq_sweep_entry_offset_uses_absolute_atr_not_ratio():
+    """F-072 regression: the LIQ_SWEEP limit-entry offset (0.1 * atr) must scale with the
+    ABSOLUTE-price ATR (FM-074), not the canonical close-relative `atr` feature (FM-041) it
+    receives — those differ by a factor of `close`. Tests `_compute_entry` directly (the
+    established pattern for this file's pure-computation methods, e.g.
+    test_breakout_disp_threshold.py's `_derive_intent` calls) rather than through the full
+    `plan()` gate: a realistic close-relative atr (0.02, i.e. 2%) is too small to clear
+    GateIntelligence's approval threshold at this fixture's other default scores, which is a
+    gate-tuning concern orthogonal to the arithmetic this test checks."""
+    p = _planner()
+
+    f_long = _base_features(atr=0.02, close=100.0, low=98.0, high=102.0)
+    entry_type, price, _reason = p._compute_entry("LIQ_SWEEP", f_long, direction=1)
+    assert entry_type == "LIMIT"
+    expected_long = 98.0 + 0.1 * (0.02 * 100.0)  # low + 0.1 * atr_abs == 98.2
+    assert price == pytest.approx(expected_long, abs=1e-9)
+    # Pre-fix bug would have produced low + 0.1*atr(ratio) = 98.0 + 0.1*0.02 = 98.002 — outside
+    # float tolerance of the correct 98.2, and implausibly close to `low` for a 4-point range.
+    assert price != pytest.approx(98.0 + 0.1 * 0.02, abs=1e-9)
+
+    f_short = _base_features(atr=0.02, close=100.0, low=98.0, high=102.0)
+    entry_type_s, price_s, _reason_s = p._compute_entry("LIQ_SWEEP", f_short, direction=-1)
+    assert entry_type_s == "LIMIT"
+    expected_short = 102.0 - 0.1 * (0.02 * 100.0)  # high - 0.1 * atr_abs == 101.8
+    assert price_s == pytest.approx(expected_short, abs=1e-9)
+
 def test_reversal_long_when_ema_fast_lt_ema_slow():
     """ema_fast < ema_slow but direction=1 → counter-trend → REVERSAL."""
     p = _planner()

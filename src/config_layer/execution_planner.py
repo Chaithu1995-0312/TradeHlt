@@ -388,6 +388,10 @@ class ExecutionPlannerV1_2:
         """
         close = float(features["close"])
         atr = float(features["atr"])
+        # F-072: `atr` (FM-041) is close-relative (atr_14_raw/close); every price-unit offset
+        # below needs the absolute form (FM-074, `atr_absolute` = atr_14_raw). No absolute-ATR
+        # key is in _REQUIRED_FEATURE_KEYS, so recover it the registered way: FM-074 == FM-041 * close.
+        atr_abs = atr * close
         low = float(features["low"])
         high = float(features["high"])
 
@@ -400,10 +404,10 @@ class ExecutionPlannerV1_2:
 
         if intent == "LIQ_SWEEP":
             if direction == 1:
-                price = low + 0.1 * atr
+                price = low + 0.1 * atr_abs
                 return "LIMIT", price, f"limit beyond sweep low wick ({price:.5f})"
             else:
-                price = high - 0.1 * atr
+                price = high - 0.1 * atr_abs
                 return "LIMIT", price, f"limit beyond sweep high wick ({price:.5f})"
 
         # BREAKOUT, REVERSAL, UNKNOWN → market at close

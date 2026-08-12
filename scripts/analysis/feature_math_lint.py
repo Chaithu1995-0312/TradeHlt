@@ -27,6 +27,20 @@ Method (purely static, AST — SEMANTICS not syntax)
 Pre-existing divergences are pinned in _KNOWN_DIVERGENCES (grandfathered debt, tracked to a
 finding). The floor is GREEN over that pinned set today and FAILS on any NEW re-derivation.
 
+Second check (added 2026-08-09, F-072): DIMENSIONAL-UNIT MISMATCH at known price-unit call
+sites. Ownership (above) asks "who may derive this name"; this asks "does a close-relative
+ratio reach a parameter that needs a price-unit value" for a small, explicit watch-list of
+call sites — currently just `compute_crt_levels`'s `atr` parameter (FM-041 `atr` is
+atr_14_raw/close; the function needs the FM-074 `atr_absolute` form). This is a NAMING-
+CONVENTION heuristic, not true dimensional analysis: an argument expression is judged SAFE if
+its unparsed source contains `_abs` or a `*`-multiplication naming `close`, else UNSAFE. It
+scans ALL of src/ (not just _SCAN_DIRS) because the ownership lint's live-spine scoping is
+exactly what let 2 of this defect's 3 real sites go unpoliced (research/model_runners/ is
+outside _SCAN_DIRS). Pre-existing/intentionally-unfixed sites are pinned in
+_KNOWN_DIMENSIONAL_MISMATCHES the same shrink-only way _KNOWN_DIVERGENCES works above — a pin
+matches by (file, line, unparsed arg text); editing that line makes the pin stale and the site
+resurfaces as NEW, forcing a conscious decision rather than silent continued exemption.
+
 Usage
     python scripts/analysis/feature_math_lint.py            # writes JSON + MD report
     python scripts/analysis/feature_math_lint.py --check     # exit 1 on any NEW (unpinned) violation
@@ -153,6 +167,27 @@ _KNOWN_DIVERGENCES: list[dict] = [
 # permanent (recorded in the manifest). Enforced by tests/test_feature_math_lint.py.
 _ORIGINAL_BASELINE_IDS = frozenset(f"GD-{i:03d}" for i in range(1, 11))
 _RETIREMENT_MANIFEST = _ROOT / "docs" / "governance" / "feature-math-grandfather-retirements.json"
+
+# ── Dimensional-unit mismatch watch-list (F-072, 2026-08-09) ──────────────────────────────────
+# Small, explicit set of (call name, price-unit param name) pairs known to have caused a
+# close-relative-vs-absolute unit mismatch. Widen only when a NEW instance of this exact class
+# is found — this is not a general unit-inference system (see module docstring).
+_DIMENSIONAL_WATCHLIST: tuple[tuple[str, str], ...] = (
+    ("compute_crt_levels", "atr"),
+)
+
+# Sites deliberately left unfixed this pass, pinned by (file, line, unparsed-arg-text) so an
+# edit to the line invalidates the pin instead of silently continuing to exempt it.
+# live_engine_hook.py:916 — F-073 (no live rail: HookedLiveEngine is never instantiated) is
+# parked; fixing this site is scoped together with that decision, not this ontology-closure pass.
+_KNOWN_DIMENSIONAL_MISMATCHES: tuple[dict, ...] = (
+    {
+        "id": "DM-001", "file": "runtime/live_engine_hook.py", "line": 916,
+        "call": "compute_crt_levels", "param": "atr", "arg_text": "float(engine_input['atr'])",
+        "finding": "F-072", "reason": "dead code per F-073 (HookedLiveEngine never instantiated); "
+                                        "fix is scoped with the live-rail repair/retire decision, not here",
+    },
+)
 
 
 def load_retirements() -> list[dict]:
@@ -467,6 +502,78 @@ def _scan_module(path: Path, registered: set[str]) -> list[dict]:
     return violations
 
 
+def _dim_pinned_keys() -> set[tuple[str, int, str]]:
+    return {(p["file"], p["line"], p["arg_text"]) for p in _KNOWN_DIMENSIONAL_MISMATCHES}
+
+
+def _find_calls(tree: ast.AST, name: str):
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            fname = None
+            if isinstance(node.func, ast.Name):
+                fname = node.func.id
+            elif isinstance(node.func, ast.Attribute):
+                fname = node.func.attr
+            if fname == name:
+                yield node
+
+
+def _is_safe_price_unit_arg(text: str) -> bool:
+    """Naming-convention heuristic (see module docstring) — not true unit inference."""
+    if "_abs" in text:
+        return True
+    if "*" in text and "close" in text:
+        return True
+    return False
+
+
+def _scan_dimensional_mismatches(src_root: Path) -> list[dict]:
+    violations: list[dict] = []
+    for path in sorted(src_root.rglob("*.py")):
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+        rel = _rel(path)
+        for call_name, param in _DIMENSIONAL_WATCHLIST:
+            for call in _find_calls(tree, call_name):
+                arg_node = None
+                for kw in call.keywords:
+                    if kw.arg == param:
+                        arg_node = kw.value
+                        break
+                if arg_node is None:
+                    continue  # positional-only call sites are not currently in the watch-list's usage
+                text = ast.unparse(arg_node)
+                if _is_safe_price_unit_arg(text):
+                    continue
+                violations.append({
+                    "module": rel, "line": arg_node.lineno, "call": call_name,
+                    "param": param, "arg_text": text,
+                })
+    return violations
+
+
+def check_dimensional_violations(dim_violations: list[dict]) -> tuple[list[str], list[str]]:
+    """Returns (new-problem messages, stale-pin messages). Empty both = clean."""
+    pinned = _dim_pinned_keys()
+    live_keys = {(v["module"], v["line"], v["arg_text"]) for v in dim_violations}
+    new = [v for v in dim_violations if (v["module"], v["line"], v["arg_text"]) not in pinned]
+    stale = [p for p in _KNOWN_DIMENSIONAL_MISMATCHES
+             if (p["file"], p["line"], p["arg_text"]) not in live_keys]
+    problems = [
+        f"{v['module']}:{v['line']} — {v['call']}({v['param']}={v['arg_text']}) looks close-relative, "
+        f"not price-unit (naming heuristic: expected '_abs' or a '* close' multiplication)"
+        for v in new
+    ]
+    stale_msgs = [
+        f"stale dimensional pin '{p['id']}' ({p['file']}:{p['line']}) — the line no longer matches; "
+        f"re-adjudicate (fixed? re-pin the new text; moved? update line)"
+        for p in stale
+    ]
+    return problems, stale_msgs
+
+
 def build_report() -> dict:
     ont = load_ontology()
     registered = _registered_names(ont)
@@ -492,6 +599,15 @@ def build_report() -> dict:
     retired_ids = {r.get("gd_id") for r in retired}
     current_ids = {p["id"] for p in _KNOWN_DIVERGENCES}
 
+    dim_violations = _scan_dimensional_mismatches(_SRC)
+    dim_problems, dim_stale_msgs = check_dimensional_violations(dim_violations)
+    dim_pinned = _dim_pinned_keys()
+    dim_live_keys = {(v["module"], v["line"], v["arg_text"]) for v in dim_violations}
+    dim_known_present = sorted(
+        p["id"] for p in _KNOWN_DIMENSIONAL_MISMATCHES
+        if (p["file"], p["line"], p["arg_text"]) in dim_pinned & dim_live_keys
+    )
+
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "summary": {
@@ -503,6 +619,9 @@ def build_report() -> dict:
             "current_pins": len(current_ids),
             "retired": len(retired_ids),
             "registered_count": len(registered),
+            "dimensional_new_violations": len(dim_problems),
+            "dimensional_stale_pins": len(dim_stale_msgs),
+            "dimensional_current_pins": len(_KNOWN_DIMENSIONAL_MISMATCHES),
         },
         "registered_names": sorted(registered),
         "new_violations": sorted(new_violations, key=lambda v: (v["module"], v["line"])),
@@ -513,6 +632,20 @@ def build_report() -> dict:
             "original_baseline_ids": sorted(_ORIGINAL_BASELINE_IDS),
             "current_ids": sorted(current_ids),
             "retired_ids": sorted(i for i in retired_ids if i),
+        },
+        "dimensional": {
+            "watchlist": [{"call": c, "param": p} for c, p in _DIMENSIONAL_WATCHLIST],
+            "new_violations": sorted(
+                [v for v in dim_violations
+                 if (v["module"], v["line"], v["arg_text"]) not in dim_pinned],
+                key=lambda v: (v["module"], v["line"]),
+            ),
+            "known_present": dim_known_present,
+            "stale_pins": sorted(
+                p["id"] for p in _KNOWN_DIMENSIONAL_MISMATCHES
+                if (p["file"], p["line"], p["arg_text"]) not in dim_live_keys
+            ),
+            "pins": list(_KNOWN_DIMENSIONAL_MISMATCHES),
         },
     }
 
@@ -529,6 +662,18 @@ def check_violations(report: dict) -> list[str]:
         problems.append(
             f"stale pin '{gid}' — its site's durable_key no longer matches (formula edited / moved). "
             f"Re-adjudicate: retire it via the manifest if resolved, or re-pin the new site."
+        )
+    dim = report.get("dimensional", {})
+    for v in dim.get("new_violations", []):
+        problems.append(
+            f"{v['module']}:{v['line']} — {v['call']}({v['param']}={v['arg_text']}) looks "
+            f"close-relative, not price-unit (naming heuristic: expected '_abs' or a '* close' "
+            f"multiplication) — see F-072"
+        )
+    for gid in dim.get("stale_pins", []):
+        problems.append(
+            f"stale dimensional pin '{gid}' — its site's line/text no longer matches. "
+            f"Re-adjudicate: fixed → drop the pin; moved → update file/line/arg_text."
         )
     return problems
 
@@ -565,6 +710,29 @@ def _to_markdown(report: dict) -> str:
     lines += ["", f"_Ledger: baseline {len(led['original_baseline_ids'])} · current "
               f"{len(led['current_ids'])} · retired {len(led['retired_ids'])}. Full evidence + call-chains: "
               "`docs/analysis/feature-math-divergence-adjudication.md`._"]
+
+    dim = report.get("dimensional", {})
+    lines += [
+        "",
+        "## Dimensional-unit mismatches (F-072, naming-convention heuristic — see module docstring)",
+        "",
+        f"**Watch-list** {', '.join(w['call'] + '(' + w['param'] + ')' for w in dim.get('watchlist', []))} · "
+        f"**NEW** {s.get('dimensional_new_violations', 0)} · "
+        f"**pinned** {s.get('dimensional_current_pins', 0)} · "
+        f"**stale-pins** {s.get('dimensional_stale_pins', 0)}",
+        "",
+    ]
+    dnv = dim.get("new_violations", [])
+    lines += (
+        [f"- `{v['module']}:{v['line']}` — `{v['call']}({v['param']}={v['arg_text']})`" for v in dnv]
+        if dnv else ["_none — floor is green_"]
+    )
+    if dim.get("pins"):
+        lines += ["", "| pin | site | reason |", "|---|---|---|"]
+        dim_present = set(dim.get("known_present", []))
+        for p in dim["pins"]:
+            stale = "" if p["id"] in dim_present else " ⚠STALE"
+            lines.append(f"| {p['id']}{stale} | `{p['file']}:{p['line']}` | {p['reason']} |")
     return "\n".join(lines)
 
 
@@ -578,7 +746,7 @@ def main() -> int:
 
     if args.check:
         if problems:
-            print("FEATURE-MATH OWNERSHIP VIOLATION:")
+            print("FEATURE-MATH LINT VIOLATION (ownership and/or dimensional-unit):")
             for p in problems:
                 print(f"  - {p}")
             return 1

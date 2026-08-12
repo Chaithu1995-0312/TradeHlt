@@ -57,11 +57,11 @@
   "source_file_pins": {
     "market_ontology.yaml": {
       "path": "configs/formulas/market_ontology.yaml",
-      "sha256": "fb783d71157508275af1fa966bf9bbb67028e14673dde16fac6fe02d26c2f99a"
+      "sha256": "84507977f23abc5cc4e557fb3684388ec5a8de3df093851dfa8d41298dc7f5bd"
     },
     "active_config": {
       "path": "configs/production/v2_multi_2026_04.json",
-      "sha256": "9f8cb382b28cbd969e0a774e1381aa1e115326421729ca9810dd6772f311d8b4"
+      "sha256": "9f9bcc2370b401139164924f0a3e078590e318e06c62485dca8f898dff5d7d5d"
     },
     "ACTIVE_VERSION": {
       "path": "configs/production/ACTIVE_VERSION",
@@ -69,7 +69,7 @@
     },
     "feature_pipeline.py": {
       "path": "src/features/feature_pipeline.py",
-      "sha256": "06c971e0ade75b2cf6241f168cdb00b91a28ea053ce2b46e2ef42f0017c26c9d"
+      "sha256": "d605650b9ffdacca1f534126f3846bcd3a1c9e32e5e7dfc783b996e415ae018d"
     },
     "feature_schema.py": {
       "path": "src/features/feature_schema.py",
@@ -308,6 +308,46 @@
         },
         "note": "PRODUCTION_BEHAVIOR_CHANGED=YES was already declared by the SCHEMA-V4-VECTOR-MIGRATION entry itself -- this vector SHA move is the EXPECTED, already-accepted consequence of that migration (MACD split + candle_range rename + FM-052 window model), not a new undocumented change. No feature MATH changed in this Tier-1 session: verified separately by an independent pre/post byte-identity check on data/mt5/XAUUSD_M15.csv (untouched by this refresh, a different corpus) showing the SAME vector SHA before and after every Tier-1 edit."
       }
+    },
+    {
+      "date_utc": "2026-08-09",
+      "program_id": "F-072-ATR-DIMENSIONAL-MIX-ONTOLOGY-CLOSURE",
+      "source_sha_refresh": [
+        "market_ontology.yaml",
+        "active_config",
+        "feature_pipeline.py"
+      ],
+      "pre_existing_drift_declared": {
+        "_doc": "NOT laundering (CLAUDE.md 6.2 rule 4 discipline, same as the FM-030/031 and Tier-1 precedents above): active_config and feature_pipeline.py were ALREADY drifted from the 2026-08-01 pin before this session's own edit -- neither file is `git status` modified (both equal HEAD), so the drift entered at an earlier commit (most likely the same-day tree-restoration batch B2, `9b1b5ed`, which committed already-modified tracked files without reconciling this pin). market_ontology.yaml's drift is a mix of two sources: (a) this session's own additive FM-074 `atr_absolute` registration plus the FM-028/FM-050 `depends_on` re-point (F-072), and (b) a CONCURRENT session's independent, unrelated Phase-2A magnitude-state work (FM-071 body_commitment / FM-072 atr_magnitude / FM-073 momentum_magnitude -- note these FM ids are unrelated to and do not collide with finding ids F-072/F-073; different registries), which landed in the same shared working tree with its own build manifest (docs/governance/build_manifests/CH-phase2a-magnitude-states.completion.json) declaring PRODUCTION_BEHAVIOR_CHANGED=NO and lifecycle:research. This refresh necessarily captures both, since both are already on disk. Bounding evidence: all 7 non-pin freeze tests (vector shape/SHA/nansum, schema hash, feature-order hash) PASSED at refresh time -- byte-identical output despite all of the above.",
+        "market_ontology.yaml": {
+          "pinned_2026_08_01": "fb783d71157508275af1fa966bf9bbb67028e14673dde16fac6fe02d26c2f99a",
+          "live_2026_08_09": "84507977f23abc5cc4e557fb3684388ec5a8de3df093851dfa8d41298dc7f5bd"
+        },
+        "active_config": {
+          "pinned_2026_07_20": "9f8cb382b28cbd969e0a774e1381aa1e115326421729ca9810dd6772f311d8b4",
+          "live_2026_08_09": "9f9bcc2370b401139164924f0a3e078590e318e06c62485dca8f898dff5d7d5d",
+          "_note": "not touched by this session's edits or the concurrent Phase-2A session; pre-existing, unattributed, matches the exact class the FM-030/031 waiver already documented for this same pin"
+        },
+        "feature_pipeline.py": {
+          "pinned_2026_07_20": "06c971e0ade75b2cf6241f168cdb00b91a28ea053ce2b46e2ef42f0017c26c9d",
+          "live_2026_08_09": "d605650b9ffdacca1f534126f3846bcd3a1c9e32e5e7dfc783b996e415ae018d",
+          "_note": "same as active_config -- pre-existing, not touched by this change set"
+        },
+        "unchanged_at_session_open": [
+          "ACTIVE_VERSION",
+          "feature_schema.py",
+          "candle_math.py",
+          "derived_math.py",
+          "causal_structure.py",
+          "registry_init.py"
+        ]
+      },
+      "this_change_set_scope": {
+        "what": "Registered FM-074 atr_absolute (a first-class ontology identity for the SMA-of-true_range absolute-price ATR intermediate that FM-041 `atr` divides by close to produce), and re-pointed FM-028 displacement_atr_ratio and FM-050 volatility_regime's depends_on/notes at it instead of describing the same gap in prose at each site.",
+        "why": "The ontology itself already documented this exact gap in FM-028's note ('No first-class FM id exists for the bare absolute-ATR intermediate') -- the gap had already caused two prior local-name defects (FM-050 2026-07-19, FM-028 2026-07-31) before producing a third, F-072 (compute_crt_levels / gate_intelligence.py receiving the close-relative ratio where price-unit ATR was required, ~2000x SL error on XAUUSD). This registers the missing node rather than patching a fourth site under a fourth local name.",
+        "not_in_scope": "No emitted feature value changes (registration only, no code touched by this ontology edit). Fixing the F-072 call sites themselves (execution_planner.py, model_runners/adapters/execution_plan.py) is a separate, code-level change in the same session, verified independently via the planner/adapter test suites, not via this feature-freeze pin (those files are not pinned sources)."
+      },
+      "parity_contract": "XAUUSD vector SHA MUST be unchanged; confirmed via tests/test_feature_layer_freeze.py (7/8 tests pass without a pin update; the 8th, test_source_file_pins_match, is exactly the hash check this waiver entry discharges)."
     }
   ],
   "runtime_benchmarks": {

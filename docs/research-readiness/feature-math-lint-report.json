@@ -1,5 +1,30 @@
 {
-  "generated_at": "2026-08-07T05:07:33.694203+00:00",
+  "dimensional": {
+    "known_present": [
+      "DM-001"
+    ],
+    "new_violations": [],
+    "pins": [
+      {
+        "arg_text": "float(engine_input['atr'])",
+        "call": "compute_crt_levels",
+        "file": "runtime/live_engine_hook.py",
+        "finding": "F-072",
+        "id": "DM-001",
+        "line": 916,
+        "param": "atr",
+        "reason": "dead code per F-073 (HookedLiveEngine never instantiated); fix is scoped with the live-rail repair/retire decision, not here"
+      }
+    ],
+    "stale_pins": [],
+    "watchlist": [
+      {
+        "call": "compute_crt_levels",
+        "param": "atr"
+      }
+    ]
+  },
+  "generated_at": "2026-08-12T05:08:59.389022+00:00",
   "known_present": [
     "c090bd49a8872a77"
   ],
@@ -56,6 +81,9 @@
   ],
   "registered_names": [
     "atr",
+    "atr_absolute",
+    "atr_magnitude",
+    "body_commitment",
     "body_ratio",
     "body_size",
     "body_to_total_wick_ratio",
@@ -87,6 +115,7 @@
     "macd_hist_z",
     "macd_line",
     "macd_signal",
+    "momentum_magnitude",
     "momentum_score",
     "momentum_score_atr",
     "retest_depth",
@@ -112,10 +141,13 @@
   "stale_pins": [],
   "summary": {
     "current_pins": 1,
+    "dimensional_current_pins": 1,
+    "dimensional_new_violations": 0,
+    "dimensional_stale_pins": 0,
     "known_present": 1,
-    "modules_scanned": 83,
+    "modules_scanned": 84,
     "new_violations": 0,
-    "registered_count": 53,
+    "registered_count": 57,
     "retired": 9,
     "stale_pins": 0,
     "total_derivations": 1
