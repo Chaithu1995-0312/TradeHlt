@@ -8,7 +8,7 @@ reports/dataset_integrity/
 venv
 .env
 .claude
-models\
+models/
 logs.zip
 context/
 multi_llm/turns/
