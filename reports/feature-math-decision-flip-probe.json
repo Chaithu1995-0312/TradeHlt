@@ -1,0 +1,128 @@
+{
+  "generated_at": "2026-07-08T02:16:15.777040+00:00",
+  "symbol": "BNBUSDT",
+  "config_version": "v2_multi_2026_04",
+  "events": 70002,
+  "gd_ids": [
+    "GD-001",
+    "GD-002"
+  ],
+  "adaptive": {
+    "tag": "adaptive",
+    "approve_current_A": 0,
+    "approve_canonical_B": 0,
+    "flips": 0,
+    "flip_rate": 0.0,
+    "canonicalizing_adds_trade": 0,
+    "canonicalizing_removes_trade": 0,
+    "score_gated_candles": 39456,
+    "conditional_flip_rate": 0.0,
+    "reasonB_histogram": {
+      "low_score": 39418,
+      "invalid_session:asia": 23346,
+      "low_rr": 6918,
+      "ultron_gate:regime_range_no_direction": 319,
+      "ultron_gate:neutral_low_confidence": 1
+    }
+  },
+  "frozen": {
+    "tag": "frozen",
+    "approve_current_A": 0,
+    "approve_canonical_B": 0,
+    "flips": 0,
+    "flip_rate": 0.0,
+    "canonicalizing_adds_trade": 0,
+    "canonicalizing_removes_trade": 0
+  },
+  "distance_to_threshold_among_adaptive_flips": {
+    "abs_fusion_gap_final_minus_0.25": {
+      "n": 0
+    },
+    "abs_decision_gap_final_minus_dyn": {
+      "n": 0
+    }
+  },
+  "adaptive_flip_by_reject_stage": {},
+  "adaptive_flip_rate_by_regime": {
+    "neutral": {
+      "flips": 0,
+      "n": 191,
+      "rate": 0.0
+    },
+    "range": {
+      "flips": 0,
+      "n": 319,
+      "rate": 0.0
+    },
+    "trend": {
+      "flips": 0,
+      "n": 46146,
+      "rate": 0.0
+    },
+    "unknown": {
+      "flips": 0,
+      "n": 23346,
+      "rate": 0.0
+    }
+  },
+  "adaptive_flip_rate_by_session": {
+    "asia": {
+      "flips": 0,
+      "n": 23346,
+      "rate": 0.0
+    },
+    "london": {
+      "flips": 0,
+      "n": 23328,
+      "rate": 0.0
+    },
+    "newyork": {
+      "flips": 0,
+      "n": 23328,
+      "rate": 0.0
+    }
+  },
+  "adaptive_flip_rate_by_score_decile": {
+    "d0": {
+      "flips": 0,
+      "n": 23666,
+      "rate": 0.0
+    },
+    "d3": {
+      "flips": 0,
+      "n": 4343,
+      "rate": 0.0
+    },
+    "d4": {
+      "flips": 0,
+      "n": 7018,
+      "rate": 0.0
+    },
+    "d5": {
+      "flips": 0,
+      "n": 6981,
+      "rate": 0.0
+    },
+    "d6": {
+      "flips": 0,
+      "n": 7014,
+      "rate": 0.0
+    },
+    "d7": {
+      "flips": 0,
+      "n": 6995,
+      "rate": 0.0
+    },
+    "d8": {
+      "flips": 0,
+      "n": 6988,
+      "rate": 0.0
+    },
+    "d9": {
+      "flips": 0,
+      "n": 6997,
+      "rate": 0.0
+    }
+  },
+  "scope_caveat": "Decision-flip at the REAL fusion/decision boundary. NO P&L. live-hook path is F-010-unverified and backtests bypass it (F-037) \u2192 bounds potential impact only, NOT a production-loss claim."
+}

@@ -1,0 +1,138 @@
+{
+ "_doc": "F-049 GATE-0 zero-range evidence matrix (measurement only; NO policy decision). Producer behaviors: candle_math.body_ratio/feature_pipeline/rr_engine -> 0.0 on zero range; crt_engine_v2:1044 + crt_sweep_taxonomy:122 -> max(range,0.001) denominator floor. ohlcv_schema.py:188 permits high==low (no rejection). Tick-size metadata: UNAVAILABLE. Downstream dynamic trace (scalers/training): NOT DONE.",
+ "corpora": [
+  {
+   "corpus": "data/AUDUSD_M15.csv",
+   "rows": 49722,
+   "zero_range": 1,
+   "lt_1e-9": 1,
+   "lt_0.001_abs": 45330,
+   "floor_bind_rate_0.001": 0.9117,
+   "min_positive_range": 9.99999999995449e-06,
+   "median_range": 0.00045999999999990493
+  },
+  {
+   "corpus": "data/BNBUSDT_M15.csv",
+   "rows": 70080,
+   "zero_range": 0,
+   "lt_1e-9": 0,
+   "lt_0.001_abs": 0,
+   "floor_bind_rate_0.001": 0.0,
+   "min_positive_range": 0.009999999999990905,
+   "median_range": 1.9599999999999227
+  },
+  {
+   "corpus": "data/BTCUSDT_M15.csv",
+   "rows": 70080,
+   "zero_range": 0,
+   "lt_1e-9": 0,
+   "lt_0.001_abs": 0,
+   "floor_bind_rate_0.001": 0.0,
+   "min_positive_range": 0.00999999999476131,
+   "median_range": 211.25
+  },
+  {
+   "corpus": "data/DOGEUSDT_M15.csv",
+   "rows": 70080,
+   "zero_range": 61477,
+   "lt_1e-9": 61477,
+   "lt_0.001_abs": 61477,
+   "floor_bind_rate_0.001": 0.8772,
+   "min_positive_range": 0.009999999999999953,
+   "median_range": 0.0
+  },
+  {
+   "corpus": "data/ETHUSDT_M15.csv",
+   "rows": 70080,
+   "zero_range": 0,
+   "lt_1e-9": 0,
+   "lt_0.001_abs": 0,
+   "floor_bind_rate_0.001": 0.0,
+   "min_positive_range": 0.47000000000025466,
+   "median_range": 10.679999999999836
+  },
+  {
+   "corpus": "data/EURCAD_M15.csv",
+   "rows": 49715,
+   "zero_range": 1,
+   "lt_1e-9": 1,
+   "lt_0.001_abs": 37070,
+   "floor_bind_rate_0.001": 0.7457,
+   "min_positive_range": 3.999999999981796e-05,
+   "median_range": 0.0006699999999999484
+  },
+  {
+   "corpus": "data/EURUSD_M15.csv",
+   "rows": 49721,
+   "zero_range": 1,
+   "lt_1e-9": 1,
+   "lt_0.001_abs": 41480,
+   "floor_bind_rate_0.001": 0.8343,
+   "min_positive_range": 9.999999999843467e-06,
+   "median_range": 0.0005399999999999849
+  },
+  {
+   "corpus": "data/GBPUSD_M15.csv",
+   "rows": 49716,
+   "zero_range": 2,
+   "lt_1e-9": 2,
+   "lt_0.001_abs": 37225,
+   "floor_bind_rate_0.001": 0.7488,
+   "min_positive_range": 2.999999999997449e-05,
+   "median_range": 0.0006700000000001705
+  },
+  {
+   "corpus": "data/SOLUSDT_M15.csv",
+   "rows": 70080,
+   "zero_range": 0,
+   "lt_1e-9": 0,
+   "lt_0.001_abs": 0,
+   "floor_bind_rate_0.001": 0.0,
+   "min_positive_range": 0.030000000000001137,
+   "median_range": 0.7400000000000091
+  },
+  {
+   "corpus": "data/USDJPY_M15.csv",
+   "rows": 49716,
+   "zero_range": 1,
+   "lt_1e-9": 1,
+   "lt_0.001_abs": 1,
+   "floor_bind_rate_0.001": 0.0,
+   "min_positive_range": 0.0020000000000095497,
+   "median_range": 0.09900000000001796
+  },
+  {
+   "corpus": "data/XAUUSD_M15.csv",
+   "rows": 50169,
+   "zero_range": 0,
+   "lt_1e-9": 0,
+   "lt_0.001_abs": 0,
+   "floor_bind_rate_0.001": 0.0,
+   "min_positive_range": 0.25,
+   "median_range": 4.449999999999818
+  },
+  {
+   "corpus": "data/XRPUSDT_M15.csv",
+   "rows": 70080,
+   "zero_range": 23964,
+   "lt_1e-9": 23964,
+   "lt_0.001_abs": 23964,
+   "floor_bind_rate_0.001": 0.342,
+   "min_positive_range": 0.009999999999999787,
+   "median_range": 0.010000000000000009
+  }
+ ],
+ "producer_policies": {
+  "return_0.0": [
+   "candle_math.body_ratio:58",
+   "feature_pipeline:452 (np.where)",
+   "rr_engine:60 (<1e-9)",
+   "crt_engine_v2:146 RangeState"
+  ],
+  "eps_floor_0.001": [
+   "crt_engine_v2:1044 detect_sweep",
+   "crt_sweep_taxonomy:122 candle_geometry (dead)"
+  ]
+ },
+ "key_observation": "The 0.001 floor is PRICE-UNIT-SCALE-DEPENDENT: it binds on 75-91% of FX-major candles (EURUSD 41480/49721, GBPUSD 37225/49716, EURCAD 37070/49715, AUDUSD 45330/49722) distorting normalized wick ratios there, but binds on 0% of crypto-major candles (BNB/BTC/ETH/SOL). True zero-range candles: crypto majors 0; FX majors 1-2 each; DOGE 61477/70080 (87.7%) and XRP 23964/70080 (34.2%) \u2014 price-granularity artifact corpora. On TRUE zero-range candles both policies emit 0 (body=0); they diverge only on NEAR-zero range (0<range<0.001)."
+}

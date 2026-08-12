@@ -1,0 +1,1425 @@
+{
+  "_doc": "Deterministic XAUUSD M15 dual-corpus timestamp/gap/overlap analysis. Computed from raw CSV bytes; not inferred from closure report row counts.",
+  "generated_at_utc": "2026-07-10T19:54:12Z",
+  "symbol": "XAUUSD",
+  "bar_minutes": 15,
+  "calendar_source": "configs/production/v2_multi_2026_04.json dataset_integrity.session_calendar",
+  "n_holidays_in_config": 25,
+  "n_known_gap_ranges_applicable": 11,
+  "classification_rules": {
+    "WEEKEND_SESSION_CLOSE": "Fri>=close_hour, Sat all, Sun<open_hour (config weekday_*)",
+    "HOLIDAY": "timestamp date in session_calendar.holidays",
+    "KNOWN_GAP": "timestamp in known_gaps half-open range (symbol-scoped or global)",
+    "DAILY_BREAK": "hour in weekday_daily_break_hours (config; often empty for this broker)",
+    "OBSERVED_MIDNIGHT_ROLLOVER": "Mon\u2013Fri hour 00 (measured 23:45\u219201:00 = 75m on both corpora)",
+    "CONFIG_OPEN_NO_BAR": "Sun 22\u201323: config session open, corpus never has bars (open Mon 01:00)",
+    "UNEXPLAINED": "residual mid-session holes after config + observed broker patterns"
+  },
+  "corpora": {
+    "C-ROOT-EXTENDED": {
+      "path": "data/XAUUSD_M15.csv",
+      "sha256": "486cf3616415ff86f7647e23bec1043b50ff24a08f85898b9d79d1103a8a42af",
+      "n_rows": 50169,
+      "n_unique_timestamps": 50169,
+      "first_timestamp": "2024-05-22 01:00:00",
+      "last_timestamp": "2026-07-06 23:45:00",
+      "duplicate_timestamp_count": 0,
+      "duplicate_timestamps_sample": [],
+      "out_of_order_adjacent_pairs": 0,
+      "delta_seconds_histogram": {
+        "900": 49618,
+        "1800": 1,
+        "4500": 418,
+        "7200": 2,
+        "13500": 14,
+        "90900": 2,
+        "102600": 2,
+        "177300": 104,
+        "185400": 2,
+        "191700": 3,
+        "263700": 2
+      },
+      "delta_histogram_labeled": {
+        "15m": 49618,
+        "75m": 418,
+        "2955m": 104,
+        "225m": 14,
+        "3195m": 3,
+        "2h": 2,
+        "1515m": 2,
+        "1710m": 2,
+        "3090m": 2,
+        "4395m": 2,
+        "30m": 1
+      }
+    },
+    "C-PINNED-LEGACY": {
+      "path": "data/mt5/XAUUSD_M15.csv",
+      "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "n_rows": 47275,
+      "n_unique_timestamps": 47275,
+      "first_timestamp": "2024-05-22 01:00:00",
+      "last_timestamp": "2026-05-21 23:45:00",
+      "duplicate_timestamp_count": 0,
+      "duplicate_timestamps_sample": [],
+      "out_of_order_adjacent_pairs": 0,
+      "delta_seconds_histogram": {
+        "900": 46758,
+        "4500": 394,
+        "7200": 1,
+        "13500": 13,
+        "90900": 2,
+        "102600": 2,
+        "177300": 99,
+        "185400": 2,
+        "191700": 1,
+        "263700": 2
+      },
+      "delta_histogram_labeled": {
+        "15m": 46758,
+        "75m": 394,
+        "2955m": 99,
+        "225m": 13,
+        "1515m": 2,
+        "1710m": 2,
+        "3090m": 2,
+        "4395m": 2,
+        "2h": 1,
+        "3195m": 1
+      }
+    },
+    "C-QUARANTINE-TWIN": {
+      "path": "data/mt5/_rejected/XAUUSD_M15.csv",
+      "sha256": "486cf3616415ff86f7647e23bec1043b50ff24a08f85898b9d79d1103a8a42af",
+      "byte_identical_to_root": true,
+      "n_rows": 50169
+    }
+  },
+  "gaps": {
+    "C-ROOT-EXTENDED": {
+      "grid_first": "2024-05-22 01:00:00",
+      "grid_last": "2026-07-06 23:45:00",
+      "n_missing_15m_slots_wall_clock": 24323,
+      "missing_slot_class_counts": {
+        "OBSERVED_MIDNIGHT_ROLLOVER": 2108,
+        "WEEKEND_SESSION_CLOSE": 20240,
+        "CONFIG_OPEN_NO_BAR": 880,
+        "HOLIDAY": 838,
+        "KNOWN_GAP": 257
+      },
+      "missing_slot_samples_by_class": {
+        "OBSERVED_MIDNIGHT_ROLLOVER": [
+          "2024-05-23 00:00:00",
+          "2024-05-23 00:15:00",
+          "2024-05-23 00:30:00",
+          "2024-05-23 00:45:00",
+          "2024-05-24 00:00:00",
+          "2024-05-24 00:15:00",
+          "2024-05-24 00:30:00",
+          "2024-05-24 00:45:00",
+          "2024-05-28 00:00:00",
+          "2024-05-28 00:15:00",
+          "2024-05-28 00:30:00",
+          "2024-05-28 00:45:00",
+          "2024-05-29 00:00:00",
+          "2024-05-29 00:15:00",
+          "2024-05-29 00:30:00",
+          "2024-05-29 00:45:00",
+          "2024-05-30 00:00:00",
+          "2024-05-30 00:15:00",
+          "2024-05-30 00:30:00",
+          "2024-05-30 00:45:00",
+          "2024-05-31 00:00:00",
+          "2024-05-31 00:15:00",
+          "2024-05-31 00:30:00",
+          "2024-05-31 00:45:00",
+          "2024-06-03 00:00:00",
+          "2024-06-03 00:15:00",
+          "2024-06-03 00:30:00",
+          "2024-06-03 00:45:00",
+          "2024-06-04 00:00:00",
+          "2024-06-04 00:15:00",
+          "2024-06-04 00:30:00",
+          "2024-06-04 00:45:00",
+          "2024-06-05 00:00:00",
+          "2024-06-05 00:15:00",
+          "2024-06-05 00:30:00",
+          "2024-06-05 00:45:00",
+          "2024-06-06 00:00:00",
+          "2024-06-06 00:15:00",
+          "2024-06-06 00:30:00",
+          "2024-06-06 00:45:00",
+          "2024-06-07 00:00:00",
+          "2024-06-07 00:15:00",
+          "2024-06-07 00:30:00",
+          "2024-06-07 00:45:00",
+          "2024-06-10 00:00:00",
+          "2024-06-10 00:15:00",
+          "2024-06-10 00:30:00",
+          "2024-06-10 00:45:00",
+          "2024-06-11 00:00:00",
+          "2024-06-11 00:15:00"
+        ],
+        "WEEKEND_SESSION_CLOSE": [
+          "2024-05-25 00:00:00",
+          "2024-05-25 00:15:00",
+          "2024-05-25 00:30:00",
+          "2024-05-25 00:45:00",
+          "2024-05-25 01:00:00",
+          "2024-05-25 01:15:00",
+          "2024-05-25 01:30:00",
+          "2024-05-25 01:45:00",
+          "2024-05-25 02:00:00",
+          "2024-05-25 02:15:00",
+          "2024-05-25 02:30:00",
+          "2024-05-25 02:45:00",
+          "2024-05-25 03:00:00",
+          "2024-05-25 03:15:00",
+          "2024-05-25 03:30:00",
+          "2024-05-25 03:45:00",
+          "2024-05-25 04:00:00",
+          "2024-05-25 04:15:00",
+          "2024-05-25 04:30:00",
+          "2024-05-25 04:45:00",
+          "2024-05-25 05:00:00",
+          "2024-05-25 05:15:00",
+          "2024-05-25 05:30:00",
+          "2024-05-25 05:45:00",
+          "2024-05-25 06:00:00",
+          "2024-05-25 06:15:00",
+          "2024-05-25 06:30:00",
+          "2024-05-25 06:45:00",
+          "2024-05-25 07:00:00",
+          "2024-05-25 07:15:00",
+          "2024-05-25 07:30:00",
+          "2024-05-25 07:45:00",
+          "2024-05-25 08:00:00",
+          "2024-05-25 08:15:00",
+          "2024-05-25 08:30:00",
+          "2024-05-25 08:45:00",
+          "2024-05-25 09:00:00",
+          "2024-05-25 09:15:00",
+          "2024-05-25 09:30:00",
+          "2024-05-25 09:45:00",
+          "2024-05-25 10:00:00",
+          "2024-05-25 10:15:00",
+          "2024-05-25 10:30:00",
+          "2024-05-25 10:45:00",
+          "2024-05-25 11:00:00",
+          "2024-05-25 11:15:00",
+          "2024-05-25 11:30:00",
+          "2024-05-25 11:45:00",
+          "2024-05-25 12:00:00",
+          "2024-05-25 12:15:00"
+        ],
+        "CONFIG_OPEN_NO_BAR": [
+          "2024-05-26 22:00:00",
+          "2024-05-26 22:15:00",
+          "2024-05-26 22:30:00",
+          "2024-05-26 22:45:00",
+          "2024-05-26 23:00:00",
+          "2024-05-26 23:15:00",
+          "2024-05-26 23:30:00",
+          "2024-05-26 23:45:00",
+          "2024-06-02 22:00:00",
+          "2024-06-02 22:15:00",
+          "2024-06-02 22:30:00",
+          "2024-06-02 22:45:00",
+          "2024-06-02 23:00:00",
+          "2024-06-02 23:15:00",
+          "2024-06-02 23:30:00",
+          "2024-06-02 23:45:00",
+          "2024-06-09 22:00:00",
+          "2024-06-09 22:15:00",
+          "2024-06-09 22:30:00",
+          "2024-06-09 22:45:00",
+          "2024-06-09 23:00:00",
+          "2024-06-09 23:15:00",
+          "2024-06-09 23:30:00",
+          "2024-06-09 23:45:00",
+          "2024-06-16 22:00:00",
+          "2024-06-16 22:15:00",
+          "2024-06-16 22:30:00",
+          "2024-06-16 22:45:00",
+          "2024-06-16 23:00:00",
+          "2024-06-16 23:15:00",
+          "2024-06-16 23:30:00",
+          "2024-06-16 23:45:00",
+          "2024-06-23 22:00:00",
+          "2024-06-23 22:15:00",
+          "2024-06-23 22:30:00",
+          "2024-06-23 22:45:00",
+          "2024-06-23 23:00:00",
+          "2024-06-23 23:15:00",
+          "2024-06-23 23:30:00",
+          "2024-06-23 23:45:00",
+          "2024-06-30 22:00:00",
+          "2024-06-30 22:15:00",
+          "2024-06-30 22:30:00",
+          "2024-06-30 22:45:00",
+          "2024-06-30 23:00:00",
+          "2024-06-30 23:15:00",
+          "2024-06-30 23:30:00",
+          "2024-06-30 23:45:00",
+          "2024-07-07 22:00:00",
+          "2024-07-07 22:15:00"
+        ],
+        "HOLIDAY": [
+          "2024-05-27 00:00:00",
+          "2024-05-27 00:15:00",
+          "2024-05-27 00:30:00",
+          "2024-05-27 00:45:00",
+          "2024-05-27 21:30:00",
+          "2024-05-27 21:45:00",
+          "2024-05-27 22:00:00",
+          "2024-05-27 22:15:00",
+          "2024-05-27 22:30:00",
+          "2024-05-27 22:45:00",
+          "2024-05-27 23:00:00",
+          "2024-05-27 23:15:00",
+          "2024-05-27 23:30:00",
+          "2024-05-27 23:45:00",
+          "2024-06-19 00:00:00",
+          "2024-06-19 00:15:00",
+          "2024-06-19 00:30:00",
+          "2024-06-19 00:45:00",
+          "2024-06-19 21:30:00",
+          "2024-06-19 21:45:00",
+          "2024-06-19 22:00:00",
+          "2024-06-19 22:15:00",
+          "2024-06-19 22:30:00",
+          "2024-06-19 22:45:00",
+          "2024-06-19 23:00:00",
+          "2024-06-19 23:15:00",
+          "2024-06-19 23:30:00",
+          "2024-06-19 23:45:00",
+          "2024-07-04 00:00:00",
+          "2024-07-04 00:15:00",
+          "2024-07-04 00:30:00",
+          "2024-07-04 00:45:00",
+          "2024-07-04 21:30:00",
+          "2024-07-04 21:45:00",
+          "2024-07-04 22:00:00",
+          "2024-07-04 22:15:00",
+          "2024-07-04 22:30:00",
+          "2024-07-04 22:45:00",
+          "2024-07-04 23:00:00",
+          "2024-07-04 23:15:00",
+          "2024-07-04 23:30:00",
+          "2024-07-04 23:45:00",
+          "2024-09-02 00:00:00",
+          "2024-09-02 00:15:00",
+          "2024-09-02 00:30:00",
+          "2024-09-02 00:45:00",
+          "2024-09-02 21:30:00",
+          "2024-09-02 21:45:00",
+          "2024-09-02 22:00:00",
+          "2024-09-02 22:15:00"
+        ],
+        "KNOWN_GAP": [
+          "2026-03-25 16:30:00",
+          "2026-03-25 16:45:00",
+          "2026-03-25 17:00:00",
+          "2026-03-25 17:15:00",
+          "2026-04-01 00:00:00",
+          "2026-04-01 00:15:00",
+          "2026-04-01 00:30:00",
+          "2026-04-01 00:45:00",
+          "2026-04-01 01:00:00",
+          "2026-04-01 01:15:00",
+          "2026-04-01 01:30:00",
+          "2026-05-25 21:30:00",
+          "2026-05-25 21:45:00",
+          "2026-05-25 22:00:00",
+          "2026-05-25 22:15:00",
+          "2026-05-25 22:30:00",
+          "2026-05-25 22:45:00",
+          "2026-05-25 23:00:00",
+          "2026-05-25 23:15:00",
+          "2026-05-25 23:30:00",
+          "2026-05-25 23:45:00",
+          "2026-06-15 12:15:00",
+          "2026-06-19 20:00:00",
+          "2026-06-19 20:15:00",
+          "2026-06-19 20:30:00",
+          "2026-06-19 20:45:00",
+          "2026-06-19 21:00:00",
+          "2026-06-19 21:15:00",
+          "2026-06-19 21:30:00",
+          "2026-06-19 21:45:00",
+          "2026-06-19 22:00:00",
+          "2026-06-19 22:15:00",
+          "2026-06-19 22:30:00",
+          "2026-06-19 22:45:00",
+          "2026-06-19 23:00:00",
+          "2026-06-19 23:15:00",
+          "2026-06-19 23:30:00",
+          "2026-06-19 23:45:00",
+          "2026-06-29 08:15:00",
+          "2026-06-29 08:30:00",
+          "2026-06-29 08:45:00",
+          "2026-06-29 09:00:00",
+          "2026-06-29 09:15:00",
+          "2026-06-29 09:30:00",
+          "2026-06-29 09:45:00",
+          "2026-07-03 20:00:00",
+          "2026-07-03 20:15:00",
+          "2026-07-03 20:30:00",
+          "2026-07-03 20:45:00",
+          "2026-07-03 21:00:00"
+        ]
+      },
+      "n_gap_events": 550,
+      "gap_events_longest": [
+        {
+          "from": "2025-04-17 23:45:00",
+          "to": "2025-04-21 01:00:00",
+          "span_minutes": 4395,
+          "missing_15m_slots": 292,
+          "class_counts": {
+            "HOLIDAY": 96,
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2026-04-02 23:45:00",
+          "to": "2026-04-06 01:00:00",
+          "span_minutes": 4395,
+          "missing_15m_slots": 292,
+          "class_counts": {
+            "HOLIDAY": 96,
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2025-07-04 19:45:00",
+          "to": "2025-07-07 01:00:00",
+          "span_minutes": 3195,
+          "missing_15m_slots": 212,
+          "class_counts": {
+            "HOLIDAY": 16,
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2026-06-19 19:45:00",
+          "to": "2026-06-22 01:00:00",
+          "span_minutes": 3195,
+          "missing_15m_slots": 212,
+          "class_counts": {
+            "KNOWN_GAP": 16,
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2026-07-03 19:45:00",
+          "to": "2026-07-06 01:00:00",
+          "span_minutes": 3195,
+          "missing_15m_slots": 212,
+          "class_counts": {
+            "KNOWN_GAP": 212
+          },
+          "dominant_class": "KNOWN_GAP",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-11-29 21:30:00",
+          "to": "2024-12-02 01:00:00",
+          "span_minutes": 3090,
+          "missing_15m_slots": 205,
+          "class_counts": {
+            "HOLIDAY": 9,
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2025-11-28 21:30:00",
+          "to": "2025-12-01 01:00:00",
+          "span_minutes": 3090,
+          "missing_15m_slots": 205,
+          "class_counts": {
+            "HOLIDAY": 9,
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-05-24 23:45:00",
+          "to": "2024-05-27 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "HOLIDAY": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-05-31 23:45:00",
+          "to": "2024-06-03 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-06-07 23:45:00",
+          "to": "2024-06-10 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-06-14 23:45:00",
+          "to": "2024-06-17 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-06-21 23:45:00",
+          "to": "2024-06-24 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-06-28 23:45:00",
+          "to": "2024-07-01 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-07-05 23:45:00",
+          "to": "2024-07-08 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-07-12 23:45:00",
+          "to": "2024-07-15 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-07-19 23:45:00",
+          "to": "2024-07-22 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-07-26 23:45:00",
+          "to": "2024-07-29 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-08-02 23:45:00",
+          "to": "2024-08-05 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-08-09 23:45:00",
+          "to": "2024-08-12 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-08-16 23:45:00",
+          "to": "2024-08-19 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-08-23 23:45:00",
+          "to": "2024-08-26 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-08-30 23:45:00",
+          "to": "2024-09-02 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "HOLIDAY": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-09-06 23:45:00",
+          "to": "2024-09-09 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-09-13 23:45:00",
+          "to": "2024-09-16 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-09-20 23:45:00",
+          "to": "2024-09-23 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        }
+      ],
+      "n_unexplained_gap_events": 0,
+      "unexplained_gap_events": [],
+      "n_long_intraday_unexplained": 0,
+      "long_intraday_unexplained": [],
+      "n_calendar_days_with_bars": 548,
+      "weekday_bar_count_median": 92,
+      "partial_weekday_days": [],
+      "weekend_bars_present": 0,
+      "n_unexplained_missing_slots": 0,
+      "n_expected_closure_missing_slots": 24323,
+      "n_config_explained_only": 21335,
+      "n_broker_pattern_explained": 2988
+    },
+    "C-PINNED-LEGACY": {
+      "grid_first": "2024-05-22 01:00:00",
+      "grid_last": "2026-05-21 23:45:00",
+      "n_missing_15m_slots_wall_clock": 22801,
+      "missing_slot_class_counts": {
+        "OBSERVED_MIDNIGHT_ROLLOVER": 1984,
+        "WEEKEND_SESSION_CLOSE": 19136,
+        "CONFIG_OPEN_NO_BAR": 832,
+        "HOLIDAY": 838,
+        "KNOWN_GAP": 11
+      },
+      "missing_slot_samples_by_class": {
+        "OBSERVED_MIDNIGHT_ROLLOVER": [
+          "2024-05-23 00:00:00",
+          "2024-05-23 00:15:00",
+          "2024-05-23 00:30:00",
+          "2024-05-23 00:45:00",
+          "2024-05-24 00:00:00",
+          "2024-05-24 00:15:00",
+          "2024-05-24 00:30:00",
+          "2024-05-24 00:45:00",
+          "2024-05-28 00:00:00",
+          "2024-05-28 00:15:00",
+          "2024-05-28 00:30:00",
+          "2024-05-28 00:45:00",
+          "2024-05-29 00:00:00",
+          "2024-05-29 00:15:00",
+          "2024-05-29 00:30:00",
+          "2024-05-29 00:45:00",
+          "2024-05-30 00:00:00",
+          "2024-05-30 00:15:00",
+          "2024-05-30 00:30:00",
+          "2024-05-30 00:45:00",
+          "2024-05-31 00:00:00",
+          "2024-05-31 00:15:00",
+          "2024-05-31 00:30:00",
+          "2024-05-31 00:45:00",
+          "2024-06-03 00:00:00",
+          "2024-06-03 00:15:00",
+          "2024-06-03 00:30:00",
+          "2024-06-03 00:45:00",
+          "2024-06-04 00:00:00",
+          "2024-06-04 00:15:00",
+          "2024-06-04 00:30:00",
+          "2024-06-04 00:45:00",
+          "2024-06-05 00:00:00",
+          "2024-06-05 00:15:00",
+          "2024-06-05 00:30:00",
+          "2024-06-05 00:45:00",
+          "2024-06-06 00:00:00",
+          "2024-06-06 00:15:00",
+          "2024-06-06 00:30:00",
+          "2024-06-06 00:45:00",
+          "2024-06-07 00:00:00",
+          "2024-06-07 00:15:00",
+          "2024-06-07 00:30:00",
+          "2024-06-07 00:45:00",
+          "2024-06-10 00:00:00",
+          "2024-06-10 00:15:00",
+          "2024-06-10 00:30:00",
+          "2024-06-10 00:45:00",
+          "2024-06-11 00:00:00",
+          "2024-06-11 00:15:00"
+        ],
+        "WEEKEND_SESSION_CLOSE": [
+          "2024-05-25 00:00:00",
+          "2024-05-25 00:15:00",
+          "2024-05-25 00:30:00",
+          "2024-05-25 00:45:00",
+          "2024-05-25 01:00:00",
+          "2024-05-25 01:15:00",
+          "2024-05-25 01:30:00",
+          "2024-05-25 01:45:00",
+          "2024-05-25 02:00:00",
+          "2024-05-25 02:15:00",
+          "2024-05-25 02:30:00",
+          "2024-05-25 02:45:00",
+          "2024-05-25 03:00:00",
+          "2024-05-25 03:15:00",
+          "2024-05-25 03:30:00",
+          "2024-05-25 03:45:00",
+          "2024-05-25 04:00:00",
+          "2024-05-25 04:15:00",
+          "2024-05-25 04:30:00",
+          "2024-05-25 04:45:00",
+          "2024-05-25 05:00:00",
+          "2024-05-25 05:15:00",
+          "2024-05-25 05:30:00",
+          "2024-05-25 05:45:00",
+          "2024-05-25 06:00:00",
+          "2024-05-25 06:15:00",
+          "2024-05-25 06:30:00",
+          "2024-05-25 06:45:00",
+          "2024-05-25 07:00:00",
+          "2024-05-25 07:15:00",
+          "2024-05-25 07:30:00",
+          "2024-05-25 07:45:00",
+          "2024-05-25 08:00:00",
+          "2024-05-25 08:15:00",
+          "2024-05-25 08:30:00",
+          "2024-05-25 08:45:00",
+          "2024-05-25 09:00:00",
+          "2024-05-25 09:15:00",
+          "2024-05-25 09:30:00",
+          "2024-05-25 09:45:00",
+          "2024-05-25 10:00:00",
+          "2024-05-25 10:15:00",
+          "2024-05-25 10:30:00",
+          "2024-05-25 10:45:00",
+          "2024-05-25 11:00:00",
+          "2024-05-25 11:15:00",
+          "2024-05-25 11:30:00",
+          "2024-05-25 11:45:00",
+          "2024-05-25 12:00:00",
+          "2024-05-25 12:15:00"
+        ],
+        "CONFIG_OPEN_NO_BAR": [
+          "2024-05-26 22:00:00",
+          "2024-05-26 22:15:00",
+          "2024-05-26 22:30:00",
+          "2024-05-26 22:45:00",
+          "2024-05-26 23:00:00",
+          "2024-05-26 23:15:00",
+          "2024-05-26 23:30:00",
+          "2024-05-26 23:45:00",
+          "2024-06-02 22:00:00",
+          "2024-06-02 22:15:00",
+          "2024-06-02 22:30:00",
+          "2024-06-02 22:45:00",
+          "2024-06-02 23:00:00",
+          "2024-06-02 23:15:00",
+          "2024-06-02 23:30:00",
+          "2024-06-02 23:45:00",
+          "2024-06-09 22:00:00",
+          "2024-06-09 22:15:00",
+          "2024-06-09 22:30:00",
+          "2024-06-09 22:45:00",
+          "2024-06-09 23:00:00",
+          "2024-06-09 23:15:00",
+          "2024-06-09 23:30:00",
+          "2024-06-09 23:45:00",
+          "2024-06-16 22:00:00",
+          "2024-06-16 22:15:00",
+          "2024-06-16 22:30:00",
+          "2024-06-16 22:45:00",
+          "2024-06-16 23:00:00",
+          "2024-06-16 23:15:00",
+          "2024-06-16 23:30:00",
+          "2024-06-16 23:45:00",
+          "2024-06-23 22:00:00",
+          "2024-06-23 22:15:00",
+          "2024-06-23 22:30:00",
+          "2024-06-23 22:45:00",
+          "2024-06-23 23:00:00",
+          "2024-06-23 23:15:00",
+          "2024-06-23 23:30:00",
+          "2024-06-23 23:45:00",
+          "2024-06-30 22:00:00",
+          "2024-06-30 22:15:00",
+          "2024-06-30 22:30:00",
+          "2024-06-30 22:45:00",
+          "2024-06-30 23:00:00",
+          "2024-06-30 23:15:00",
+          "2024-06-30 23:30:00",
+          "2024-06-30 23:45:00",
+          "2024-07-07 22:00:00",
+          "2024-07-07 22:15:00"
+        ],
+        "HOLIDAY": [
+          "2024-05-27 00:00:00",
+          "2024-05-27 00:15:00",
+          "2024-05-27 00:30:00",
+          "2024-05-27 00:45:00",
+          "2024-05-27 21:30:00",
+          "2024-05-27 21:45:00",
+          "2024-05-27 22:00:00",
+          "2024-05-27 22:15:00",
+          "2024-05-27 22:30:00",
+          "2024-05-27 22:45:00",
+          "2024-05-27 23:00:00",
+          "2024-05-27 23:15:00",
+          "2024-05-27 23:30:00",
+          "2024-05-27 23:45:00",
+          "2024-06-19 00:00:00",
+          "2024-06-19 00:15:00",
+          "2024-06-19 00:30:00",
+          "2024-06-19 00:45:00",
+          "2024-06-19 21:30:00",
+          "2024-06-19 21:45:00",
+          "2024-06-19 22:00:00",
+          "2024-06-19 22:15:00",
+          "2024-06-19 22:30:00",
+          "2024-06-19 22:45:00",
+          "2024-06-19 23:00:00",
+          "2024-06-19 23:15:00",
+          "2024-06-19 23:30:00",
+          "2024-06-19 23:45:00",
+          "2024-07-04 00:00:00",
+          "2024-07-04 00:15:00",
+          "2024-07-04 00:30:00",
+          "2024-07-04 00:45:00",
+          "2024-07-04 21:30:00",
+          "2024-07-04 21:45:00",
+          "2024-07-04 22:00:00",
+          "2024-07-04 22:15:00",
+          "2024-07-04 22:30:00",
+          "2024-07-04 22:45:00",
+          "2024-07-04 23:00:00",
+          "2024-07-04 23:15:00",
+          "2024-07-04 23:30:00",
+          "2024-07-04 23:45:00",
+          "2024-09-02 00:00:00",
+          "2024-09-02 00:15:00",
+          "2024-09-02 00:30:00",
+          "2024-09-02 00:45:00",
+          "2024-09-02 21:30:00",
+          "2024-09-02 21:45:00",
+          "2024-09-02 22:00:00",
+          "2024-09-02 22:15:00"
+        ],
+        "KNOWN_GAP": [
+          "2026-03-25 16:30:00",
+          "2026-03-25 16:45:00",
+          "2026-03-25 17:00:00",
+          "2026-03-25 17:15:00",
+          "2026-04-01 00:00:00",
+          "2026-04-01 00:15:00",
+          "2026-04-01 00:30:00",
+          "2026-04-01 00:45:00",
+          "2026-04-01 01:00:00",
+          "2026-04-01 01:15:00",
+          "2026-04-01 01:30:00"
+        ]
+      },
+      "n_gap_events": 516,
+      "gap_events_longest": [
+        {
+          "from": "2025-04-17 23:45:00",
+          "to": "2025-04-21 01:00:00",
+          "span_minutes": 4395,
+          "missing_15m_slots": 292,
+          "class_counts": {
+            "HOLIDAY": 96,
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2026-04-02 23:45:00",
+          "to": "2026-04-06 01:00:00",
+          "span_minutes": 4395,
+          "missing_15m_slots": 292,
+          "class_counts": {
+            "HOLIDAY": 96,
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2025-07-04 19:45:00",
+          "to": "2025-07-07 01:00:00",
+          "span_minutes": 3195,
+          "missing_15m_slots": 212,
+          "class_counts": {
+            "HOLIDAY": 16,
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-11-29 21:30:00",
+          "to": "2024-12-02 01:00:00",
+          "span_minutes": 3090,
+          "missing_15m_slots": 205,
+          "class_counts": {
+            "HOLIDAY": 9,
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2025-11-28 21:30:00",
+          "to": "2025-12-01 01:00:00",
+          "span_minutes": 3090,
+          "missing_15m_slots": 205,
+          "class_counts": {
+            "HOLIDAY": 9,
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-05-24 23:45:00",
+          "to": "2024-05-27 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "HOLIDAY": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-05-31 23:45:00",
+          "to": "2024-06-03 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-06-07 23:45:00",
+          "to": "2024-06-10 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-06-14 23:45:00",
+          "to": "2024-06-17 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-06-21 23:45:00",
+          "to": "2024-06-24 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-06-28 23:45:00",
+          "to": "2024-07-01 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-07-05 23:45:00",
+          "to": "2024-07-08 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-07-12 23:45:00",
+          "to": "2024-07-15 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-07-19 23:45:00",
+          "to": "2024-07-22 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-07-26 23:45:00",
+          "to": "2024-07-29 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-08-02 23:45:00",
+          "to": "2024-08-05 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-08-09 23:45:00",
+          "to": "2024-08-12 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-08-16 23:45:00",
+          "to": "2024-08-19 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-08-23 23:45:00",
+          "to": "2024-08-26 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-08-30 23:45:00",
+          "to": "2024-09-02 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "HOLIDAY": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-09-06 23:45:00",
+          "to": "2024-09-09 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-09-13 23:45:00",
+          "to": "2024-09-16 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-09-20 23:45:00",
+          "to": "2024-09-23 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-09-27 23:45:00",
+          "to": "2024-09-30 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        },
+        {
+          "from": "2024-10-04 23:45:00",
+          "to": "2024-10-07 01:00:00",
+          "span_minutes": 2955,
+          "missing_15m_slots": 196,
+          "class_counts": {
+            "WEEKEND_SESSION_CLOSE": 184,
+            "CONFIG_OPEN_NO_BAR": 8,
+            "OBSERVED_MIDNIGHT_ROLLOVER": 4
+          },
+          "dominant_class": "WEEKEND_SESSION_CLOSE",
+          "is_long_intraday": false
+        }
+      ],
+      "n_unexplained_gap_events": 0,
+      "unexplained_gap_events": [],
+      "n_long_intraday_unexplained": 0,
+      "long_intraday_unexplained": [],
+      "n_calendar_days_with_bars": 516,
+      "weekday_bar_count_median": 92,
+      "partial_weekday_days": [],
+      "weekend_bars_present": 0,
+      "n_unexplained_missing_slots": 0,
+      "n_expected_closure_missing_slots": 22801,
+      "n_config_explained_only": 19985,
+      "n_broker_pattern_explained": 2816
+    }
+  },
+  "overlap": {
+    "n_overlap_timestamps": 47275,
+    "n_only_in_root": 2894,
+    "n_only_in_legacy": 0,
+    "n_ohlcv_mismatches_on_shared_ts": 0,
+    "ohlcv_mismatch_sample": [],
+    "n_rows_added_after_legacy_last": 2894,
+    "extension_first": "2026-05-22 01:00:00",
+    "extension_last": "2026-07-06 23:45:00",
+    "n_rows_only_root_before_legacy_first": 0,
+    "n_only_root_inside_legacy_window": 0,
+    "n_only_legacy_inside_root_window": 0,
+    "only_root_inside_legacy_window_sample": [],
+    "only_legacy_inside_root_window_sample": [],
+    "added_after_legacy_sample_head": [
+      "2026-05-22 01:00:00",
+      "2026-05-22 01:15:00",
+      "2026-05-22 01:30:00",
+      "2026-05-22 01:45:00",
+      "2026-05-22 02:00:00",
+      "2026-05-22 02:15:00",
+      "2026-05-22 02:30:00",
+      "2026-05-22 02:45:00",
+      "2026-05-22 03:00:00",
+      "2026-05-22 03:15:00",
+      "2026-05-22 03:30:00",
+      "2026-05-22 03:45:00",
+      "2026-05-22 04:00:00",
+      "2026-05-22 04:15:00",
+      "2026-05-22 04:30:00",
+      "2026-05-22 04:45:00",
+      "2026-05-22 05:00:00",
+      "2026-05-22 05:15:00",
+      "2026-05-22 05:30:00",
+      "2026-05-22 05:45:00"
+    ],
+    "added_after_legacy_sample_tail": [
+      "2026-07-06 19:00:00",
+      "2026-07-06 19:15:00",
+      "2026-07-06 19:30:00",
+      "2026-07-06 19:45:00",
+      "2026-07-06 20:00:00",
+      "2026-07-06 20:15:00",
+      "2026-07-06 20:30:00",
+      "2026-07-06 20:45:00",
+      "2026-07-06 21:00:00",
+      "2026-07-06 21:15:00",
+      "2026-07-06 21:30:00",
+      "2026-07-06 21:45:00",
+      "2026-07-06 22:00:00",
+      "2026-07-06 22:15:00",
+      "2026-07-06 22:30:00",
+      "2026-07-06 22:45:00",
+      "2026-07-06 23:00:00",
+      "2026-07-06 23:15:00",
+      "2026-07-06 23:30:00",
+      "2026-07-06 23:45:00"
+    ],
+    "byte_identical": false,
+    "hashes": {
+      "root": "486cf3616415ff86f7647e23bec1043b50ff24a08f85898b9d79d1103a8a42af",
+      "legacy": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
+    }
+  },
+  "verdicts": {
+    "C-ROOT-EXTENDED": [
+      "SEQUENCE_INTEGRITY_PASS",
+      "MARKET_CLOSURE_ONLY_CLAIM_UNPROVEN",
+      "CORPUS_DIVERGENCE_APPEND_ONLY",
+      "AUTHORITY_UNRESOLVED"
+    ],
+    "C-PINNED-LEGACY": [
+      "SEQUENCE_INTEGRITY_PASS",
+      "MARKET_CLOSURE_ONLY_CLAIM_UNPROVEN",
+      "CORPUS_DIVERGENCE_APPEND_ONLY",
+      "AUTHORITY_UNRESOLVED"
+    ],
+    "PAIR": [
+      "CORPUS_DIVERGENCE_APPEND_ONLY",
+      "AUTHORITY_UNRESOLVED"
+    ]
+  },
+  "verdict_revision_note": "EXPECTED_MARKET_CLOSURES_ONLY was OVERCLAIMED: classifier uses production session_calendar + observed broker pattern + known_gaps (circular for market-truth). Use multi-axis verdicts below. See docs/governance/xauusd_m15_strict_reject_forensic-2026-07-10.md",
+  "verdicts_revised": {
+    "C-ROOT-EXTENDED": {
+      "SEQUENCE_INTEGRITY": "PASS",
+      "OVERLAP_INTEGRITY": "PASS",
+      "HISTORICAL_REWRITE": "NOT_DETECTED",
+      "MID_SESSION_UNCLASSIFIED_GAPS": 0,
+      "SESSION_CALENDAR_CONSISTENCY": "FAIL",
+      "KNOWN_GAP_INDEPENDENT_VALIDATION": "UNPROVEN",
+      "MARKET_CLOSURE_ONLY_CLAIM": "UNPROVEN",
+      "PAIR_DIVERGENCE_TYPE": "APPEND_ONLY_EXTENSION",
+      "STRICT_REJECT_CLASS": "CALENDAR_CONTRACT",
+      "AUTHORITY_STATUS": "UNRESOLVED"
+    },
+    "C-PINNED-LEGACY": {
+      "SEQUENCE_INTEGRITY": "PASS",
+      "OVERLAP_INTEGRITY": "PASS",
+      "HISTORICAL_REWRITE": "NOT_DETECTED",
+      "MID_SESSION_UNCLASSIFIED_GAPS": 0,
+      "SESSION_CALENDAR_CONSISTENCY": "FAIL",
+      "KNOWN_GAP_INDEPENDENT_VALIDATION": "UNPROVEN",
+      "MARKET_CLOSURE_ONLY_CLAIM": "UNPROVEN",
+      "PAIR_DIVERGENCE_TYPE": "APPEND_ONLY_EXTENSION",
+      "AUTHORITY_STATUS": "UNRESOLVED"
+    },
+    "PAIR": {
+      "PAIR_DIVERGENCE_TYPE": "APPEND_ONLY_EXTENSION",
+      "HISTORICAL_REWRITE": "NOT_DETECTED",
+      "AUTHORITY_STATUS": "UNRESOLVED"
+    }
+  },
+  "verdicts_legacy_overclaim": {
+    "C-ROOT-EXTENDED": [
+      "EXPECTED_MARKET_CLOSURES_ONLY",
+      "CORPUS_DIVERGENCE"
+    ],
+    "C-PINNED-LEGACY": [
+      "EXPECTED_MARKET_CLOSURES_ONLY",
+      "CORPUS_DIVERGENCE"
+    ],
+    "PAIR": [
+      "EXPECTED_MARKET_CLOSURES_ONLY",
+      "CORPUS_DIVERGENCE"
+    ]
+  }
+}

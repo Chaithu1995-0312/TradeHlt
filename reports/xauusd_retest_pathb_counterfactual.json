@@ -1,0 +1,214 @@
+{
+  "generated_at": "2026-08-07T22:35:02Z",
+  "active_version": "v2_multi_2026_04",
+  "corpus": "data\\XAUUSD_M15_20260807_203705.xlsx",
+  "htf_candles_per_range": 4,
+  "observe_only": true,
+  "production_behavior_changed": false,
+  "targets": [
+    {
+      "id": "retest_1_short",
+      "retest_ts": "2026-07-22 19:00:00",
+      "soft_conf_ts": "2026-07-22 19:15:00",
+      "expected_dir": "SHORT"
+    },
+    {
+      "id": "retest_2_long",
+      "retest_ts": "2026-07-28 05:30:00",
+      "soft_conf_ts": "2026-07-28 05:45:00",
+      "expected_dir": "LONG"
+    }
+  ],
+  "path_a": {
+    "allowed_sessions_forced": [
+      "LONDON",
+      "NEWYORK",
+      "OVERLAP",
+      "ASIA",
+      "OFF_SESSION"
+    ],
+    "trade_opened_by_ts": {},
+    "soft_conf_outcomes": {
+      "2026-07-22 19:15:00": {
+        "ts": "2026-07-22 19:15:00",
+        "state_before": "RETEST",
+        "state_after": "EXECUTION",
+        "action": "NONE",
+        "direction": "SHORT",
+        "has_active_trade": false,
+        "soft_conf_candles": 1
+      },
+      "2026-07-28 05:45:00": {
+        "ts": "2026-07-28 05:45:00",
+        "state_before": "RETEST",
+        "state_after": "EXECUTION",
+        "action": "NONE",
+        "direction": "LONG",
+        "has_active_trade": false,
+        "soft_conf_candles": 1
+      }
+    },
+    "build_trade_snaps": [
+      {
+        "ts": "2026-07-22 19:00:00",
+        "dir": "SHORT",
+        "entry": 4154.55,
+        "sl_would": 4148.662428571429,
+        "disp_high": 4146.75,
+        "disp_low": 4132.02,
+        "disp_open": 4132.02,
+        "disp_close": 4142.79,
+        "atr": 9.562142857142915,
+        "sl_atr_buffer": 0.2,
+        "inverted_sl": true,
+        "trade_built": false
+      },
+      {
+        "ts": "2026-07-28 05:30:00",
+        "dir": "LONG",
+        "entry": 4044.31,
+        "sl_would": 4045.0657142857144,
+        "disp_high": 4059.19,
+        "disp_low": 4046.38,
+        "disp_open": 4058.08,
+        "disp_close": 4047.41,
+        "atr": 6.571428571428571,
+        "sl_atr_buffer": 0.2,
+        "inverted_sl": true,
+        "trade_built": false
+      }
+    ],
+    "events": [
+      {
+        "event": "ACTION",
+        "ts": "2026-07-22 19:00:00",
+        "state_before": "EXPANSION",
+        "state_after": "RETEST",
+        "action": "RETEST_CONFIRMED",
+        "direction": "SHORT",
+        "has_active_trade": false,
+        "soft_conf_candles": 0
+      },
+      {
+        "event": "ACTION",
+        "ts": "2026-07-22 19:15:00",
+        "state_before": "RETEST",
+        "state_after": "EXECUTION",
+        "action": "NONE",
+        "direction": "SHORT",
+        "has_active_trade": false,
+        "soft_conf_candles": 1
+      },
+      {
+        "event": "ACTION",
+        "ts": "2026-07-28 05:30:00",
+        "state_before": "EXPANSION",
+        "state_after": "RETEST",
+        "action": "RETEST_CONFIRMED",
+        "direction": "LONG",
+        "has_active_trade": false,
+        "soft_conf_candles": 0
+      },
+      {
+        "event": "ACTION",
+        "ts": "2026-07-28 05:45:00",
+        "state_before": "RETEST",
+        "state_after": "EXECUTION",
+        "action": "NONE",
+        "direction": "LONG",
+        "has_active_trade": false,
+        "soft_conf_candles": 1
+      }
+    ]
+  },
+  "path_b": [
+    {
+      "id": "retest_1_short",
+      "retest_ts": "2026-07-22 19:00:00",
+      "soft_conf_ts": "2026-07-22 19:15:00",
+      "expected_dir": "SHORT",
+      "path_a_trade_at_soft_or_retest": null,
+      "engine_runner": {
+        "decision": "reject",
+        "reason": "zone_gate_invalid",
+        "reject_stage": "decision",
+        "final_score": 0.567,
+        "selected_direction": 1,
+        "confidence": 0.0,
+        "regime": "trend",
+        "engine_scores": null,
+        "keys": [
+          "confidence",
+          "decision",
+          "dual_score",
+          "final_score",
+          "gate_reason",
+          "reason",
+          "regime",
+          "reject_stage",
+          "selected_direction",
+          "selected_engine",
+          "threshold_used"
+        ],
+        "zone_valid_reeval": "reject",
+        "zone_valid_reeval_reason": "weak_setup"
+      },
+      "planner": null,
+      "crt_levels": null,
+      "ultron": null,
+      "verdict": "PATH_B_STOP_ENGINE_RUNNER:zone_gate_invalid|zone_valid_reeval:weak_setup",
+      "errors": [],
+      "decision_reeval_zone_valid": {
+        "decision": "reject",
+        "reason": "weak_setup",
+        "confidence": 0.0,
+        "threshold_used": 0.55,
+        "reject_stage": "weak_setup"
+      }
+    },
+    {
+      "id": "retest_2_long",
+      "retest_ts": "2026-07-28 05:30:00",
+      "soft_conf_ts": "2026-07-28 05:45:00",
+      "expected_dir": "LONG",
+      "path_a_trade_at_soft_or_retest": null,
+      "engine_runner": {
+        "decision": "reject",
+        "reason": "zone_gate_invalid",
+        "reject_stage": "decision",
+        "final_score": 0.4602,
+        "selected_direction": -1,
+        "confidence": 0.0,
+        "regime": "trend",
+        "engine_scores": null,
+        "keys": [
+          "confidence",
+          "decision",
+          "dual_score",
+          "final_score",
+          "gate_reason",
+          "reason",
+          "regime",
+          "reject_stage",
+          "selected_direction",
+          "selected_engine",
+          "threshold_used"
+        ],
+        "zone_valid_reeval": "reject",
+        "zone_valid_reeval_reason": "low_score"
+      },
+      "planner": null,
+      "crt_levels": null,
+      "ultron": null,
+      "verdict": "PATH_B_STOP_ENGINE_RUNNER:zone_gate_invalid|zone_valid_reeval:low_score",
+      "errors": [],
+      "decision_reeval_zone_valid": {
+        "decision": "reject",
+        "reason": "low_score",
+        "confidence": 0.0,
+        "threshold_used": 0.55,
+        "reject_stage": "low_score"
+      }
+    }
+  ]
+}

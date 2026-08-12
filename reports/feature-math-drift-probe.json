@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-07-07T18:10:08.725152+00:00",
+  "symbol": "BNBUSDT",
+  "bars": 19922,
+  "gd_ids": [
+    "GD-001",
+    "GD-002"
+  ],
+  "value_drift": {
+    "bars_differ": 19329,
+    "differ_rate": 0.9702339122578054,
+    "current_ge_canonical_rate": 0.9915671117357695,
+    "bound_violations_gt1": 9165,
+    "bound_violation_rate": 0.46004417227186023,
+    "abs_body_ratio_delta": {
+      "n": 19922,
+      "mean": 1.7571792912904092,
+      "median": 0.4999999999996211,
+      "p95": 7.111111104486099,
+      "max": 494.0020161275643
+    },
+    "abs_wick_size_delta": {
+      "n": 19922,
+      "mean": 1.2338028310410605,
+      "median": 0.8000000000000682,
+      "p95": 3.660000000000082,
+      "max": 24.399999999999977
+    }
+  },
+  "crt_score_drift": {
+    "bars_score_differ": 19274,
+    "score_differ_rate": 0.9674731452665395,
+    "score_inflated_rate": 0.959040257002309,
+    "abs_score_delta": {
+      "n": 19922,
+      "mean": 0.02806718200983837,
+      "median": 0.02629999999999999,
+      "p95": 0.06020000000000003,
+      "max": 0.12500000000000006
+    }
+  },
+  "scope_caveat": "CRT-score delta is the necessary channel to a fusion flip; live-hook path is F-010-unverified and backtests bypass it (F-037). Bounds potential impact only."
+}

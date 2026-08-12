@@ -1,0 +1,2090 @@
+{
+  "authority": "research_only",
+  "observation_only": true,
+  "total": 47197,
+  "agreement": 35891,
+  "agreement_rate": 0.7604508761150073,
+  "class_counts": {
+    "AGREE_OTHER": 32204,
+    "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep": 3391,
+    "AGREE_SWEEP": 3687,
+    "E_SWEEP_R_RANGE__sticky_or_lifecycle": 3057,
+    "SWEEP_MIXED__eng_SWEEP__res_DISPLACEMENT": 248,
+    "NON_SWEEP_MISMATCH": 3792,
+    "E_RANGE_R_SWEEP__range_ref_diverge": 36,
+    "SWEEP_MIXED__eng_SHADOW_PENDING__res_SWEEP": 42,
+    "SWEEP_MIXED__eng_EXPANSION__res_SWEEP": 719,
+    "SWEEP_MIXED__eng_DISPLACEMENT__res_SWEEP": 17,
+    "E_SWEEP_R_RANGE__range_ref_diverge": 4
+  },
+  "ref_stats": {
+    "n_both_ready": 47197,
+    "frac_exact_match": 0.89940038561773,
+    "mean_abs_dh": 3.3221376358666834,
+    "mean_abs_dl": 3.3214416170519327,
+    "median_abs_dh": 0.0,
+    "median_abs_dl": 0.0,
+    "p90_abs_dh": 0.0,
+    "p90_abs_dl": 0.0
+  },
+  "e_sweep_r_range": 3061,
+  "e_range_r_sweep": 3427,
+  "eng_meta": {
+    "n_bars": 47275,
+    "warmup": 78,
+    "atr_period": 14,
+    "htf_candles": 4,
+    "n_seed": 1,
+    "n_rebuild_reset": 10839,
+    "n_ready": 47197,
+    "timeline_notes": [
+      "RESOLUTION appeared in events but not in exit timeline (check ordering)."
+    ],
+    "index_remap": {
+      "n_events": 18147,
+      "n_miss_timestamp": 0,
+      "delta_mode": [
+        74,
+        18026
+      ],
+      "delta_histogram_top": [
+        [
+          74,
+          18026
+        ],
+        [
+          0,
+          121
+        ]
+      ]
+    }
+  },
+  "res_meta": {
+    "n_raw": 47275,
+    "n_resolved": 47197,
+    "first_src": 78,
+    "sweep_geometry": "htf_range",
+    "range_atr_period": 14,
+    "resolver_counts": {
+      "RANGE": 38462,
+      "SWEEP": 7892,
+      "DISPLACEMENT": 335,
+      "SHADOW_PENDING": 46,
+      "EXPANSION": 447,
+      "RETEST": 15
+    },
+    "lifecycle_stats": {
+      "htf_reset_count": 1047,
+      "gap_reset_count": 0,
+      "forced_reset_count": 10840,
+      "last_reset_reason": "HTF changed: XAUUSD-HTF-011817 \u2192 XAUUSD-HTF-011818"
+    },
+    "engine_reset_injection": 10840
+  },
+  "samples": {
+    "e_sweep_r_range": [
+      {
+        "idx": 99,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2382.79,
+        "res_h": 2382.79,
+        "eng_l": 2376.87,
+        "res_l": 2376.87,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 103,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2383.74,
+        "res_h": 2383.74,
+        "eng_l": 2377.53,
+        "res_l": 2377.53,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 143,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2367.79,
+        "res_h": 2367.79,
+        "eng_l": 2355.18,
+        "res_l": 2355.18,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 147,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2369.45,
+        "res_h": 2369.45,
+        "eng_l": 2356.28,
+        "res_l": 2356.28,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 155,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2369.9,
+        "res_h": 2369.9,
+        "eng_l": 2350.7,
+        "res_l": 2350.7,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 163,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2369.9,
+        "res_h": 2369.9,
+        "eng_l": 2340.43,
+        "res_l": 2340.43,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 171,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2351.0,
+        "res_h": 2351.0,
+        "eng_l": 2332.02,
+        "res_l": 2332.02,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 175,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2350.13,
+        "res_h": 2350.13,
+        "eng_l": 2331.86,
+        "res_l": 2331.86,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 183,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2339.05,
+        "res_h": 2339.05,
+        "eng_l": 2327.03,
+        "res_l": 2327.03,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 219,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2339.59,
+        "res_h": 2339.59,
+        "eng_l": 2329.43,
+        "res_l": 2329.43,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 223,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2340.65,
+        "res_h": 2340.65,
+        "eng_l": 2332.12,
+        "res_l": 2332.12,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 227,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2341.04,
+        "res_h": 2341.04,
+        "eng_l": 2334.2,
+        "res_l": 2334.2,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 231,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2343.27,
+        "res_h": 2343.27,
+        "eng_l": 2335.25,
+        "res_l": 2335.25,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 235,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2343.92,
+        "res_h": 2343.92,
+        "eng_l": 2336.14,
+        "res_l": 2336.14,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 243,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2343.92,
+        "res_h": 2343.92,
+        "eng_l": 2335.62,
+        "res_l": 2335.62,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 247,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2347.42,
+        "res_h": 2347.42,
+        "eng_l": 2335.62,
+        "res_l": 2335.62,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 251,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2347.42,
+        "res_h": 2347.42,
+        "eng_l": 2335.56,
+        "res_l": 2335.56,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 271,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2336.79,
+        "res_h": 2336.79,
+        "eng_l": 2331.91,
+        "res_l": 2331.91,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 279,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2340.7,
+        "res_h": 2340.7,
+        "eng_l": 2331.91,
+        "res_l": 2331.91,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 283,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2340.75,
+        "res_h": 2340.75,
+        "eng_l": 2331.91,
+        "res_l": 2331.91,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 295,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2346.48,
+        "res_h": 2346.48,
+        "eng_l": 2334.51,
+        "res_l": 2334.51,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 299,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2347.63,
+        "res_h": 2347.63,
+        "eng_l": 2334.51,
+        "res_l": 2334.51,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 315,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2344.66,
+        "res_h": 2344.66,
+        "eng_l": 2338.17,
+        "res_l": 2338.17,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 319,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2346.24,
+        "res_h": 2346.24,
+        "eng_l": 2338.17,
+        "res_l": 2338.17,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 343,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2358.56,
+        "res_h": 2358.56,
+        "eng_l": 2343.25,
+        "res_l": 2343.25,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 359,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2356.65,
+        "res_h": 2356.65,
+        "eng_l": 2350.88,
+        "res_l": 2350.88,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 375,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2356.41,
+        "res_h": 2356.41,
+        "eng_l": 2349.23,
+        "res_l": 2349.23,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 411,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2346.32,
+        "res_h": 2346.32,
+        "eng_l": 2340.33,
+        "res_l": 2340.33,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 443,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2362.25,
+        "res_h": 2362.25,
+        "eng_l": 2352.82,
+        "res_l": 2352.82,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 467,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2361.06,
+        "res_h": 2361.06,
+        "eng_l": 2355.7,
+        "res_l": 2355.7,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 471,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2361.06,
+        "res_h": 2361.06,
+        "eng_l": 2354.48,
+        "res_l": 2354.48,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 487,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2361.37,
+        "res_h": 2361.37,
+        "eng_l": 2351.14,
+        "res_l": 2351.14,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 491,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2361.37,
+        "res_h": 2361.37,
+        "eng_l": 2347.35,
+        "res_l": 2347.35,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 507,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2347.33,
+        "res_h": 2347.33,
+        "eng_l": 2338.63,
+        "res_l": 2338.63,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 511,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2347.33,
+        "res_h": 2347.33,
+        "eng_l": 2334.54,
+        "res_l": 2334.54,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 539,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2344.33,
+        "res_h": 2344.33,
+        "eng_l": 2336.08,
+        "res_l": 2336.08,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 555,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2339.9,
+        "res_h": 2339.9,
+        "eng_l": 2334.06,
+        "res_l": 2334.06,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 559,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2339.9,
+        "res_h": 2339.9,
+        "eng_l": 2332.89,
+        "res_l": 2332.89,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 587,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2338.02,
+        "res_h": 2338.02,
+        "eng_l": 2324.08,
+        "res_l": 2324.08,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 603,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2345.29,
+        "res_h": 2345.29,
+        "eng_l": 2330.64,
+        "res_l": 2330.64,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 631,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2348.89,
+        "res_h": 2348.89,
+        "eng_l": 2339.94,
+        "res_l": 2339.94,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 647,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2347.75,
+        "res_h": 2347.75,
+        "eng_l": 2342.12,
+        "res_l": 2342.12,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 651,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2347.77,
+        "res_h": 2347.77,
+        "eng_l": 2342.61,
+        "res_l": 2342.61,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 671,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2347.13,
+        "res_h": 2347.13,
+        "eng_l": 2341.07,
+        "res_l": 2341.07,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 675,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2347.13,
+        "res_h": 2347.13,
+        "eng_l": 2339.73,
+        "res_l": 2339.73,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 715,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2336.75,
+        "res_h": 2336.75,
+        "eng_l": 2324.01,
+        "res_l": 2324.01,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 755,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2330.98,
+        "res_h": 2330.98,
+        "eng_l": 2320.08,
+        "res_l": 2320.08,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 759,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2328.25,
+        "res_h": 2328.25,
+        "eng_l": 2314.81,
+        "res_l": 2314.81,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 763,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2328.85,
+        "res_h": 2328.85,
+        "eng_l": 2314.79,
+        "res_l": 2314.79,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 787,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2336.58,
+        "res_h": 2336.58,
+        "eng_l": 2325.75,
+        "res_l": 2325.75,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1167,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2328.13,
+        "res_h": 2328.13,
+        "eng_l": 2303.08,
+        "res_l": 2303.08,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1203,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2301.39,
+        "res_h": 2301.39,
+        "eng_l": 2293.97,
+        "res_l": 2293.97,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1211,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2301.39,
+        "res_h": 2301.39,
+        "eng_l": 2292.78,
+        "res_l": 2292.78,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1223,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2297.35,
+        "res_h": 2297.35,
+        "eng_l": 2287.79,
+        "res_l": 2287.79,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1227,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2297.62,
+        "res_h": 2297.62,
+        "eng_l": 2287.79,
+        "res_l": 2287.79,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1263,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2313.8,
+        "res_h": 2313.8,
+        "eng_l": 2301.4,
+        "res_l": 2301.4,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1311,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2304.48,
+        "res_h": 2304.48,
+        "eng_l": 2297.77,
+        "res_l": 2297.77,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1315,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2305.3,
+        "res_h": 2305.3,
+        "eng_l": 2297.77,
+        "res_l": 2297.77,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1319,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2307.77,
+        "res_h": 2307.77,
+        "eng_l": 2297.77,
+        "res_l": 2297.77,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1331,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2308.91,
+        "res_h": 2308.91,
+        "eng_l": 2301.58,
+        "res_l": 2301.58,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1339,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2319.97,
+        "res_h": 2319.97,
+        "eng_l": 2305.29,
+        "res_l": 2305.29,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1355,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2317.82,
+        "res_h": 2317.82,
+        "eng_l": 2305.93,
+        "res_l": 2305.93,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1367,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2316.64,
+        "res_h": 2316.64,
+        "eng_l": 2307.96,
+        "res_l": 2307.96,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1371,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2317.12,
+        "res_h": 2317.12,
+        "eng_l": 2312.21,
+        "res_l": 2312.21,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1375,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2317.7,
+        "res_h": 2317.7,
+        "eng_l": 2312.56,
+        "res_l": 2312.56,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1391,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2316.76,
+        "res_h": 2316.76,
+        "eng_l": 2310.7,
+        "res_l": 2310.7,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1411,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2317.78,
+        "res_h": 2317.78,
+        "eng_l": 2311.22,
+        "res_l": 2311.22,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1415,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2317.78,
+        "res_h": 2317.78,
+        "eng_l": 2310.87,
+        "res_l": 2310.87,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1459,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2339.61,
+        "res_h": 2339.61,
+        "eng_l": 2315.91,
+        "res_l": 2315.91,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1479,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2322.99,
+        "res_h": 2322.99,
+        "eng_l": 2308.17,
+        "res_l": 2308.17,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1495,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2316.35,
+        "res_h": 2316.35,
+        "eng_l": 2309.06,
+        "res_l": 2309.06,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1503,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2318.61,
+        "res_h": 2318.61,
+        "eng_l": 2309.06,
+        "res_l": 2309.06,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1515,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2320.02,
+        "res_h": 2320.02,
+        "eng_l": 2309.77,
+        "res_l": 2309.77,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1523,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2326.72,
+        "res_h": 2326.72,
+        "eng_l": 2303.99,
+        "res_l": 2303.99,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1551,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2304.99,
+        "res_h": 2304.99,
+        "eng_l": 2299.09,
+        "res_l": 2299.09,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1563,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2304.37,
+        "res_h": 2304.37,
+        "eng_l": 2301.56,
+        "res_l": 2301.56,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1591,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2313.38,
+        "res_h": 2313.38,
+        "eng_l": 2303.56,
+        "res_l": 2303.56,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1607,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2332.71,
+        "res_h": 2332.71,
+        "eng_l": 2314.89,
+        "res_l": 2314.89,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1611,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2336.68,
+        "res_h": 2336.68,
+        "eng_l": 2315.26,
+        "res_l": 2315.26,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1627,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2335.5,
+        "res_h": 2335.5,
+        "eng_l": 2324.07,
+        "res_l": 2324.07,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1635,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2335.62,
+        "res_h": 2335.62,
+        "eng_l": 2324.07,
+        "res_l": 2324.07,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1659,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2332.87,
+        "res_h": 2332.87,
+        "eng_l": 2322.76,
+        "res_l": 2322.76,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1667,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2329.04,
+        "res_h": 2329.04,
+        "eng_l": 2321.57,
+        "res_l": 2321.57,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1675,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2326.34,
+        "res_h": 2326.34,
+        "eng_l": 2321.15,
+        "res_l": 2321.15,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1715,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2327.65,
+        "res_h": 2327.65,
+        "eng_l": 2316.86,
+        "res_l": 2316.86,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1735,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2320.82,
+        "res_h": 2320.82,
+        "eng_l": 2313.35,
+        "res_l": 2313.35,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1739,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2320.95,
+        "res_h": 2320.95,
+        "eng_l": 2316.28,
+        "res_l": 2316.28,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1743,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2321.27,
+        "res_h": 2321.27,
+        "eng_l": 2317.95,
+        "res_l": 2317.95,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1747,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2323.22,
+        "res_h": 2323.22,
+        "eng_l": 2318.55,
+        "res_l": 2318.55,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1751,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2325.58,
+        "res_h": 2325.58,
+        "eng_l": 2318.93,
+        "res_l": 2318.93,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1759,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2325.68,
+        "res_h": 2325.68,
+        "eng_l": 2319.28,
+        "res_l": 2319.28,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1775,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2324.87,
+        "res_h": 2324.87,
+        "eng_l": 2317.59,
+        "res_l": 2317.59,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1783,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2322.76,
+        "res_h": 2322.76,
+        "eng_l": 2310.7,
+        "res_l": 2310.7,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1791,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2315.53,
+        "res_h": 2315.53,
+        "eng_l": 2306.62,
+        "res_l": 2306.62,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1811,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2329.81,
+        "res_h": 2329.81,
+        "eng_l": 2313.73,
+        "res_l": 2313.73,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1815,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2332.63,
+        "res_h": 2332.63,
+        "eng_l": 2318.77,
+        "res_l": 2318.77,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1819,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2333.17,
+        "res_h": 2333.17,
+        "eng_l": 2318.77,
+        "res_l": 2318.77,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1847,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2331.03,
+        "res_h": 2331.03,
+        "eng_l": 2326.54,
+        "res_l": 2326.54,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1851,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2331.78,
+        "res_h": 2331.78,
+        "eng_l": 2326.54,
+        "res_l": 2326.54,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1863,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2331.78,
+        "res_h": 2331.78,
+        "eng_l": 2326.86,
+        "res_l": 2326.86,
+        "eng_sig": 0,
+        "res_sig": 0
+      }
+    ],
+    "e_range_r_sweep": [
+      {
+        "idx": 96,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2381.35,
+        "res_h": 2381.35,
+        "eng_l": 2374.98,
+        "res_l": 2374.98,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 102,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2382.79,
+        "res_h": 2382.79,
+        "eng_l": 2376.87,
+        "res_l": 2376.87,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 124,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2373.99,
+        "res_h": 2373.99,
+        "eng_l": 2358.34,
+        "res_l": 2358.34,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 140,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2367.19,
+        "res_h": 2367.19,
+        "eng_l": 2355.18,
+        "res_l": 2355.18,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 146,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2367.79,
+        "res_h": 2367.79,
+        "eng_l": 2355.18,
+        "res_l": 2355.18,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 152,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2369.45,
+        "res_h": 2369.45,
+        "eng_l": 2360.78,
+        "res_l": 2360.78,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 161,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2369.9,
+        "res_h": 2369.9,
+        "eng_l": 2341.59,
+        "res_l": 2341.59,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 168,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2369.53,
+        "res_h": 2369.53,
+        "eng_l": 2340.05,
+        "res_l": 2340.05,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 172,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2351.0,
+        "res_h": 2351.0,
+        "eng_l": 2332.02,
+        "res_l": 2332.02,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 180,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2345.36,
+        "res_h": 2345.36,
+        "eng_l": 2331.01,
+        "res_l": 2331.01,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 196,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2333.69,
+        "res_h": 2333.69,
+        "eng_l": 2327.03,
+        "res_l": 2327.03,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 202,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2335.24,
+        "res_h": 2335.24,
+        "eng_l": 2326.82,
+        "res_l": 2326.82,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 216,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2339.36,
+        "res_h": 2339.36,
+        "eng_l": 2325.43,
+        "res_l": 2325.43,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 221,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2339.59,
+        "res_h": 2339.59,
+        "eng_l": 2329.43,
+        "res_l": 2329.43,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 226,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2340.65,
+        "res_h": 2340.65,
+        "eng_l": 2332.12,
+        "res_l": 2332.12,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 229,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2341.04,
+        "res_h": 2341.04,
+        "eng_l": 2334.2,
+        "res_l": 2334.2,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 234,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2343.27,
+        "res_h": 2343.27,
+        "eng_l": 2335.25,
+        "res_l": 2335.25,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 242,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2343.92,
+        "res_h": 2343.92,
+        "eng_l": 2336.68,
+        "res_l": 2336.68,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 244,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2343.92,
+        "res_h": 2343.92,
+        "eng_l": 2335.62,
+        "res_l": 2335.62,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 249,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2347.42,
+        "res_h": 2347.42,
+        "eng_l": 2335.62,
+        "res_l": 2335.62,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 269,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2336.98,
+        "res_h": 2336.98,
+        "eng_l": 2332.0,
+        "res_l": 2332.0,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 277,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2338.29,
+        "res_h": 2336.79,
+        "eng_l": 2331.91,
+        "res_l": 2331.91,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 281,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2340.7,
+        "res_h": 2340.7,
+        "eng_l": 2331.91,
+        "res_l": 2331.91,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 293,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2340.75,
+        "res_h": 2340.75,
+        "eng_l": 2334.51,
+        "res_l": 2334.51,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 296,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2346.48,
+        "res_h": 2346.48,
+        "eng_l": 2334.51,
+        "res_l": 2334.51,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 312,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2347.59,
+        "res_h": 2347.59,
+        "eng_l": 2340.34,
+        "res_l": 2340.34,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 318,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2344.66,
+        "res_h": 2344.66,
+        "eng_l": 2338.17,
+        "res_l": 2338.17,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 340,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2357.03,
+        "res_h": 2357.03,
+        "eng_l": 2343.25,
+        "res_l": 2343.25,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 358,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2356.91,
+        "res_h": 2358.02,
+        "eng_l": 2350.88,
+        "res_l": 2352.14,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 374,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2353.91,
+        "res_h": 2353.91,
+        "eng_l": 2349.23,
+        "res_l": 2349.23,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 389,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2355.96,
+        "res_h": 2355.96,
+        "eng_l": 2350.34,
+        "res_l": 2350.34,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 392,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2354.6,
+        "res_h": 2354.6,
+        "eng_l": 2342.22,
+        "res_l": 2342.22,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 408,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2345.51,
+        "res_h": 2345.51,
+        "eng_l": 2340.33,
+        "res_l": 2340.33,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 416,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2356.39,
+        "res_h": 2356.39,
+        "eng_l": 2342.35,
+        "res_l": 2342.35,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 440,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2362.25,
+        "res_h": 2362.25,
+        "eng_l": 2353.03,
+        "res_l": 2353.03,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 465,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2362.66,
+        "res_h": 2362.66,
+        "eng_l": 2356.43,
+        "res_l": 2356.43,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 470,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2361.06,
+        "res_h": 2361.06,
+        "eng_l": 2355.7,
+        "res_l": 2355.7,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 480,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2360.93,
+        "res_h": 2360.93,
+        "eng_l": 2354.48,
+        "res_l": 2354.48,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 484,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2361.37,
+        "res_h": 2361.37,
+        "eng_l": 2351.81,
+        "res_l": 2351.81,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 490,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2361.37,
+        "res_h": 2361.37,
+        "eng_l": 2351.14,
+        "res_l": 2351.14,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 505,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2351.86,
+        "res_h": 2351.86,
+        "eng_l": 2340.9,
+        "res_l": 2340.9,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 510,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2347.33,
+        "res_h": 2347.33,
+        "eng_l": 2338.63,
+        "res_l": 2338.63,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 538,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2344.33,
+        "res_h": 2344.33,
+        "eng_l": 2336.09,
+        "res_l": 2336.09,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 553,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2339.25,
+        "res_h": 2339.25,
+        "eng_l": 2335.7,
+        "res_l": 2335.7,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 557,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2339.9,
+        "res_h": 2339.9,
+        "eng_l": 2334.06,
+        "res_l": 2334.06,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 586,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2337.75,
+        "res_h": 2337.75,
+        "eng_l": 2322.65,
+        "res_l": 2322.65,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 601,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2341.64,
+        "res_h": 2341.64,
+        "eng_l": 2330.64,
+        "res_l": 2330.64,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 628,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2348.89,
+        "res_h": 2348.89,
+        "eng_l": 2340.88,
+        "res_l": 2340.88,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 645,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2346.44,
+        "res_h": 2346.44,
+        "eng_l": 2341.57,
+        "res_l": 2341.57,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 650,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2347.75,
+        "res_h": 2347.75,
+        "eng_l": 2342.12,
+        "res_l": 2342.12,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 653,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2347.77,
+        "res_h": 2347.77,
+        "eng_l": 2342.61,
+        "res_l": 2342.61,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 670,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2345.62,
+        "res_h": 2345.62,
+        "eng_l": 2337.07,
+        "res_l": 2337.07,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 674,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2347.13,
+        "res_h": 2347.13,
+        "eng_l": 2341.07,
+        "res_l": 2341.07,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 712,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2349.09,
+        "res_h": 2349.09,
+        "eng_l": 2324.11,
+        "res_l": 2324.11,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 753,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2331.07,
+        "res_h": 2331.07,
+        "eng_l": 2320.31,
+        "res_l": 2320.31,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 757,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2330.98,
+        "res_h": 2330.98,
+        "eng_l": 2320.08,
+        "res_l": 2320.08,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 760,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2328.25,
+        "res_h": 2328.25,
+        "eng_l": 2314.81,
+        "res_l": 2314.81,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 784,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2333.33,
+        "res_h": 2333.33,
+        "eng_l": 2324.36,
+        "res_l": 2324.36,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 788,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2336.58,
+        "res_h": 2336.58,
+        "eng_l": 2325.75,
+        "res_l": 2325.75,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 793,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2342.69,
+        "res_h": 2342.69,
+        "eng_l": 2325.75,
+        "res_l": 2325.75,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1165,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2339.43,
+        "res_h": 2339.43,
+        "eng_l": 2305.03,
+        "res_l": 2305.03,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1202,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2300.12,
+        "res_h": 2300.12,
+        "eng_l": 2289.4,
+        "res_l": 2289.4,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1210,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2301.39,
+        "res_h": 2301.39,
+        "eng_l": 2293.97,
+        "res_l": 2293.97,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1221,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2297.79,
+        "res_h": 2297.79,
+        "eng_l": 2290.5,
+        "res_l": 2290.5,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1226,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2297.35,
+        "res_h": 2297.35,
+        "eng_l": 2287.79,
+        "res_l": 2287.79,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1240,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2301.26,
+        "res_h": 2301.26,
+        "eng_l": 2291.93,
+        "res_l": 2291.93,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1260,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2313.02,
+        "res_h": 2313.02,
+        "eng_l": 2300.44,
+        "res_l": 2300.44,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1308,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2304.48,
+        "res_h": 2304.48,
+        "eng_l": 2298.82,
+        "res_l": 2298.82,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1312,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2304.48,
+        "res_h": 2304.48,
+        "eng_l": 2297.77,
+        "res_l": 2297.77,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1316,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2305.3,
+        "res_h": 2305.3,
+        "eng_l": 2297.77,
+        "res_l": 2297.77,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1328,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2308.67,
+        "res_h": 2308.67,
+        "eng_l": 2301.58,
+        "res_l": 2301.58,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1338,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2315.54,
+        "res_h": 2315.54,
+        "eng_l": 2301.58,
+        "res_l": 2301.58,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1352,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2319.6,
+        "res_h": 2319.6,
+        "eng_l": 2306.77,
+        "res_l": 2306.77,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1366,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2315.75,
+        "res_h": 2315.75,
+        "eng_l": 2305.93,
+        "res_l": 2305.93,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1370,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2316.64,
+        "res_h": 2316.64,
+        "eng_l": 2307.96,
+        "res_l": 2307.96,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1372,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2317.12,
+        "res_h": 2317.12,
+        "eng_l": 2312.21,
+        "res_l": 2312.21,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1388,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2317.52,
+        "res_h": 2317.52,
+        "eng_l": 2310.83,
+        "res_l": 2310.83,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1408,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2317.78,
+        "res_h": 2317.78,
+        "eng_l": 2312.05,
+        "res_l": 2312.05,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1413,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2317.78,
+        "res_h": 2317.78,
+        "eng_l": 2311.22,
+        "res_l": 2311.22,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1456,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2339.61,
+        "res_h": 2339.61,
+        "eng_l": 2316.14,
+        "res_l": 2316.14,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1476,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2325.59,
+        "res_h": 2325.59,
+        "eng_l": 2310.41,
+        "res_l": 2310.41,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1492,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2316.35,
+        "res_h": 2316.35,
+        "eng_l": 2309.36,
+        "res_l": 2309.36,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1501,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2317.2,
+        "res_h": 2317.2,
+        "eng_l": 2309.06,
+        "res_l": 2309.06,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1514,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2320.02,
+        "res_h": 2320.02,
+        "eng_l": 2313.33,
+        "res_l": 2313.33,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1520,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2320.02,
+        "res_h": 2320.02,
+        "eng_l": 2303.99,
+        "res_l": 2303.99,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1549,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2304.49,
+        "res_h": 2304.49,
+        "eng_l": 2295.55,
+        "res_l": 2295.55,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1560,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2304.99,
+        "res_h": 2304.99,
+        "eng_l": 2302.14,
+        "res_l": 2302.14,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1588,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2312.25,
+        "res_h": 2312.25,
+        "eng_l": 2303.56,
+        "res_l": 2303.56,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1592,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2313.38,
+        "res_h": 2313.38,
+        "eng_l": 2303.56,
+        "res_l": 2303.56,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1606,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2329.75,
+        "res_h": 2329.75,
+        "eng_l": 2309.41,
+        "res_l": 2309.41,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1609,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2332.71,
+        "res_h": 2332.71,
+        "eng_l": 2314.89,
+        "res_l": 2314.89,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1625,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2335.5,
+        "res_h": 2335.5,
+        "eng_l": 2324.21,
+        "res_l": 2324.21,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1632,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2335.5,
+        "res_h": 2335.5,
+        "eng_l": 2324.07,
+        "res_l": 2324.07,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1658,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2333.01,
+        "res_h": 2333.01,
+        "eng_l": 2325.26,
+        "res_l": 2325.26,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1664,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2329.67,
+        "res_h": 2329.67,
+        "eng_l": 2322.76,
+        "res_l": 2322.76,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1674,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2328.98,
+        "res_h": 2328.98,
+        "eng_l": 2321.57,
+        "res_l": 2321.57,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1676,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2326.34,
+        "res_h": 2326.34,
+        "eng_l": 2321.15,
+        "res_l": 2321.15,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1681,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2326.24,
+        "res_h": 2326.24,
+        "eng_l": 2316.85,
+        "res_l": 2316.85,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1712,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2326.61,
+        "res_h": 2326.61,
+        "eng_l": 2316.86,
+        "res_l": 2316.86,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1734,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2320.1,
+        "res_h": 2320.1,
+        "eng_l": 2312.65,
+        "res_l": 2312.65,
+        "eng_sig": 1,
+        "res_sig": 1
+      }
+    ]
+  }
+}

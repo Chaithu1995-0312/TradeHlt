@@ -1,0 +1,75 @@
+{
+  "authority": "research_only",
+  "mode": "remapped_timeline_no_engine_reset_injection",
+  "index_remap": {
+    "n_events": 18147,
+    "n_miss_timestamp": 0,
+    "delta_mode": [
+      74,
+      18026
+    ],
+    "delta_histogram_top": [
+      [
+        74,
+        18026
+      ],
+      [
+        0,
+        121
+      ]
+    ]
+  },
+  "agreement": 34935,
+  "total": 47197,
+  "agreement_rate": 0.7401953513994534,
+  "resolver_counts": {
+    "RANGE": 36886,
+    "SWEEP": 7640,
+    "DISPLACEMENT": 353,
+    "SHADOW_PENDING": 335,
+    "EXPANSION": 1890,
+    "RETEST": 93
+  },
+  "engine_counts": {
+    "RANGE": 35130,
+    "SWEEP": 6996,
+    "DISPLACEMENT": 373,
+    "SHADOW_PENDING": 51,
+    "EXPANSION": 4625,
+    "RETEST": 17,
+    "EXECUTION": 5
+  },
+  "matrix": {
+    "RANGE|RANGE": 30652,
+    "RANGE|SWEEP": 3330,
+    "SWEEP|SWEEP": 3551,
+    "SWEEP|RANGE": 2971,
+    "SWEEP|DISPLACEMENT": 238,
+    "DISPLACEMENT|DISPLACEMENT": 81,
+    "DISPLACEMENT|SHADOW_PENDING": 185,
+    "SHADOW_PENDING|RANGE": 8,
+    "SHADOW_PENDING|EXPANSION": 8,
+    "EXPANSION|EXPANSION": 651,
+    "RANGE|EXPANSION": 988,
+    "RANGE|RETEST": 54,
+    "DISPLACEMENT|RANGE": 60,
+    "SHADOW_PENDING|SWEEP": 34,
+    "EXPANSION|RANGE": 3177,
+    "EXPANSION|SWEEP": 703,
+    "EXPANSION|DISPLACEMENT": 32,
+    "EXPANSION|SHADOW_PENDING": 44,
+    "RETEST|SWEEP": 2,
+    "RETEST|RANGE": 13,
+    "EXECUTION|RANGE": 5,
+    "RANGE|DISPLACEMENT": 1,
+    "RANGE|SHADOW_PENDING": 105,
+    "DISPLACEMENT|EXPANSION": 27,
+    "SWEEP|EXPANSION": 215,
+    "DISPLACEMENT|SWEEP": 20,
+    "SWEEP|RETEST": 21,
+    "RETEST|EXPANSION": 1,
+    "EXPANSION|RETEST": 18,
+    "SHADOW_PENDING|DISPLACEMENT": 1,
+    "RETEST|SHADOW_PENDING": 1
+  }
+}

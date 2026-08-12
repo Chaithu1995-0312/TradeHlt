@@ -1,0 +1,249 @@
+version: 1
+authority: user_approved
+feature_states:
+  liquidity_sweep:
+  - NoSweep
+  - SellSideSweep
+  - BuySideSweep
+  sweep_detected:
+  - NoSweep
+  - SweepDetected
+  double_sweep:
+  - NoDoubleSweep
+  - DoubleSweep
+  break_of_structure:
+  - NoBreak
+  - BearishBreak
+  - BullishBreak
+  higher_high:
+  - NoHigherHigh
+  - HigherHigh
+  lower_low:
+  - NoLowerLow
+  - LowerLow
+  retest_flag:
+  - NoRetest
+  - RetestActive
+  displacement_flag:
+  - NoDisplacement
+  - Displacement
+  volatility_regime:
+  - LowVolatility
+  - NormalVolatility
+  - HighVolatility
+  trend_bias:
+  - Bearish
+  - Neutral
+  - Bullish
+  rsi_state:
+  - Oversold
+  - NeutralMomentum
+  - Overbought
+  swing_high:
+  - NoSwingHigh
+  - SwingHighConfirmed
+  swing_low:
+  - NoSwingLow
+  - SwingLowConfirmed
+  session:
+  - ASIA
+  - LONDON
+  - NEWYORK
+  - OVERLAP
+  - CLOSED
+  volume_spike:
+  - NoSpike
+  - VolumeSpike
+states:
+- name: EXECUTION
+  description: Trade opened — retest confirmed + score threshold met + soft confirmation
+    passed
+  requires_memory: true
+  when:
+    retest_flag:
+    - RetestActive
+    trend_bias:
+    - Bullish
+    - Bearish
+    rsi_state:
+    - NeutralMomentum
+    session:
+    - LONDON
+    - NEWYORK
+    - OVERLAP
+  notes: 'The rarest state. Requires retest active, directional alignment, and momentum
+    not overextended. In the CRT engine, this also requires the risk score >= score_threshold
+    (0.45) and soft confirmation. Limited to high-liquidity sessions (LONDON, NEWYORK,
+    OVERLAP).
+
+    '
+- name: RETEST
+  description: Price returned to fast EMA after a sweep — retest is active
+  requires_memory: true
+  when:
+    retest_flag:
+    - RetestActive
+    sweep_detected:
+    - SweepDetected
+    break_of_structure:
+    - NoBreak
+  notes: 'retest_flag (FM-061) requires a sweep within retest_lookback bars AND close
+    within ATR band of fast EMA. This is the CRT engine''s EXPANSION→RETEST transition
+    point.
+
+    '
+- name: EXPANSION
+  description: Post-displacement extension — engine DISPLACEMENT→EXPANSION (or shadow
+    resume)
+  requires_memory: true
+  when:
+    displacement_flag:
+    - Displacement
+  notes: "ENGINE ENTRY SEMANTICS (crt_engine_v2.try_displacement_to_expansion):\n\
+    \  1. Only from DISPLACEMENT (or shadow resume: SHADOW/SWEEP + pending_disp)\n\
+    \  2. Directional bar (bullish if LONG / bearish if SHORT)\n  3. close extends\
+    \ beyond displacement_close\n  4. abs(close - disp_close) >= expansion_atr_min_distance\
+    \ * atr_abs\nResolver enforces (1)+(3)+(4) in continuous gates; (2) via candle\
+    \ body sign. Shadow resume skips strength check (engine: \"strength check skipped\"\
+    ).\n"
+- name: DISPLACEMENT
+  description: SWEEP→DISPLACEMENT only — engine try_sweep_to_displacement gates
+  requires_memory: true
+  when:
+    displacement_flag:
+    - Displacement
+  notes: "ENGINE ENTRY (try_sweep_to_displacement): ONLY from SWEEP.\n  1. abs(close-open)\
+    \ >= atr_min_displacement * atr_abs\n  2. sweep age <= max_sweep_age_candles (else\
+    \ expire → RANGE)\n  3. body_ratio >= body_ratio_min (0.70)\n  4. candle_range\
+    \ (v4.0 rename of wick_size; high-low) >= atr_multiplier_min * atr_abs (1.5)\n\
+    Depends on faithful SWEEP dwell (implement SWEEP before tuning this).\n"
+- name: SHADOW_PENDING
+  description: Cross-window displacement memory active — awaiting confirming sweep
+    in new HTF window
+  requires_memory: true
+  when: {}
+  notes: 'SHADOW_PENDING is a stateful memory from a prior HTF window''s displacement
+    that survived an HTF reset. It cannot be detected from a single bar''s features
+    alone — it requires the resolver to carry pending_displacement state across resets.
+    The resolver must detect this from its own state memory, not from bar features.
+
+    '
+- name: SWEEP
+  description: RANGE→SWEEP founding event — liquidity taken, closed back inside
+  requires_memory: false
+  when:
+    liquidity_sweep:
+    - SellSideSweep
+    - BuySideSweep
+    break_of_structure:
+    - NoBreak
+    displacement_flag:
+    - NoDisplacement
+  notes: 'ENGINE ENTRY: only from RANGE (try_range_to_sweep) or via SHADOW_PENDING
+    collapse. Detector geometry differs (engine uses HTF range refs; pipeline uses
+    last-swing liquidity_sweep) — funnel still enforces state legality. EXIT: HTF/gap
+    RESET, max_sweep_age_candles expiry → RANGE, or forward to DISPLACEMENT / shadow
+    EXPANSION. Mean engine SWEEP dwell ~2 bars (HTF window = 4 dominates age=20).
+
+    '
+- name: EXPIRED
+  description: TTL exceeded while in EXPANSION — soft archive before returning to
+    RANGE
+  requires_memory: true
+  when: {}
+  notes: 'EXPIRED is a temporal state: the engine was in EXPANSION for too many candles
+    (max_expansion_age_candles=495) or hours (max_expansion_age_hours=124). It is
+    a soft archive state that lasts one candle before returning to RANGE.
+
+    '
+- name: RESOLUTION
+  description: Trade resolved — TP or SL hit
+  requires_memory: true
+  when: {}
+  notes: 'RESOLUTION is the terminal state after a trade closes. It lasts one candle
+    before the engine resets to RANGE. Cannot be detected from features alone.
+
+    '
+- name: RANGE
+  description: Default state — no structural event active, market is range-bound
+  requires_memory: false
+  when:
+    liquidity_sweep:
+    - NoSweep
+    break_of_structure:
+    - NoBreak
+    sweep_detected:
+    - NoSweep
+    displacement_flag:
+    - NoDisplacement
+    double_sweep:
+    - NoDoubleSweep
+    higher_high:
+    - NoHigherHigh
+    lower_low:
+    - NoLowerLow
+    retest_flag:
+    - NoRetest
+    swing_high:
+    - NoSwingHigh
+    swing_low:
+    - NoSwingLow
+  notes: 'RANGE is the default/ground state. It requires the absence of all structural
+    events. Most bars (~75%) are in RANGE. Bars that fail this predicate set still
+    fall through to RANGE as the resolver default (first-match exhaust → ground state).
+
+    '
+valid_transitions:
+  RANGE:
+  - SWEEP
+  - SHADOW_PENDING
+  SHADOW_PENDING:
+  - SWEEP
+  - RANGE
+  SWEEP:
+  - DISPLACEMENT
+  - EXPANSION
+  - RANGE
+  DISPLACEMENT:
+  - EXPANSION
+  - RANGE
+  EXPANSION:
+  - RETEST
+  - EXPIRED
+  - RANGE
+  EXPIRED:
+  - RANGE
+  RETEST:
+  - EXECUTION
+  - RANGE
+  EXECUTION:
+  - RESOLUTION
+  RESOLUTION:
+  - RANGE
+thresholds:
+  body_ratio_min: 0.7
+  atr_multiplier_min: 1.5
+  atr_min_displacement: 1.2
+  expansion_atr_min_distance: 0.2
+  expansion_atr_is_relative: true
+  retest_depth_max: 0.08
+  retest_atr_depth_fraction: 0.5
+  max_sweep_age_candles: 20
+  max_displacement_age_candles: 3
+  max_expansion_age_candles: 495
+  max_expansion_age_hours: 124
+  score_threshold: 0.45
+  soft_conf_max_candles: 3
+  rsi_overbought: 70
+  rsi_oversold: 30
+  lifecycle:
+    htf_reset_enabled: true
+    htf_candles_per_range: 4
+    htf_protect_states:
+    - EXPANSION
+    - RETEST
+    htf_protect_execution: true
+    gap_reset_enabled: true
+    gap_reset_minutes: 120
+    shadow_on_htf_displacement_reset: false
+    pending_displacement_ttl_candles: 4

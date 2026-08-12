@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-07-04T13:00:08+00:00",
+  "active_version": "v2_multi_2026_04",
+  "verdict_counts": {
+    "METADATA": 8,
+    "READ_AND_USED": 265,
+    "READ_BUT_INERT": 11,
+    "TOOLING_ONLY": 4,
+    "SHADOW_ONLY": 15
+  },
+  "dead_count": 0,
+  "tooling_only_keys": [
+    "dataset_integrity.strict_fetch",
+    "tuner.consistency_alpha",
+    "tuner.llm_gate",
+    "tuner.trade_count_floor"
+  ],
+  "runtime_flags_verified": {
+    "bitnet_enabled": false,
+    "zone_mode": "hard",
+    "registry_file": "models/zone_registry.json",
+    "gaussian_impl": "heuristic",
+    "rr_fusion_active": false
+  },
+  "guard_suite": [
+    "tests/test_config_reachability.py",
+    "tests/test_reachability_golden.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_crt_state_invariants.py"
+  ]
+}

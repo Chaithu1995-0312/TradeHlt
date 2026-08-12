@@ -1,0 +1,124 @@
+{
+  "authority": "research_only",
+  "engine_mode": "enter",
+  "agreement": 35103,
+  "total": 47197,
+  "agreement_rate": 0.7437548996758269,
+  "engine_counts": {
+    "RANGE": 35103,
+    "SWEEP": 7046,
+    "DISPLACEMENT": 371,
+    "SHADOW_PENDING": 51,
+    "EXPANSION": 4604,
+    "RETEST": 17,
+    "EXECUTION": 5
+  },
+  "resolver_counts": {
+    "RANGE": 47197
+  },
+  "reference_counts": {
+    "RANGE": 35159,
+    "SWEEP": 6987,
+    "DISPLACEMENT": 373,
+    "EXPANSION": 4605,
+    "RETEST": 17,
+    "EXECUTION": 5,
+    "RESOLUTION": 0,
+    "SHADOW_PENDING": 51,
+    "EXPIRED": 0
+  },
+  "matrix": {
+    "RANGE|RANGE": 35103,
+    "SWEEP|RANGE": 7046,
+    "DISPLACEMENT|RANGE": 371,
+    "SHADOW_PENDING|RANGE": 51,
+    "EXPANSION|RANGE": 4604,
+    "RETEST|RANGE": 17,
+    "EXECUTION|RANGE": 5
+  },
+  "top_confusions": [
+    {
+      "engine": "SWEEP",
+      "resolver": "RANGE",
+      "n": 7046
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "RANGE",
+      "n": 4604
+    },
+    {
+      "engine": "DISPLACEMENT",
+      "resolver": "RANGE",
+      "n": 371
+    },
+    {
+      "engine": "SHADOW_PENDING",
+      "resolver": "RANGE",
+      "n": 51
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "RANGE",
+      "n": 17
+    },
+    {
+      "engine": "EXECUTION",
+      "resolver": "RANGE",
+      "n": 5
+    }
+  ],
+  "edge_mismatch_n": 3863,
+  "timeline": {
+    "n_bars": 47275,
+    "n_transitions": 3869,
+    "n_resets": 10869,
+    "htf_resets": 10666,
+    "gap_resets": 121,
+    "reset_from_counts": {
+      "RANGE": 7441,
+      "SWEEP": 3062,
+      "DISPLACEMENT": 298,
+      "SHADOW_PENDING": 8,
+      "EXPANSION": 43,
+      "RETEST": 12,
+      "RESOLUTION": 1,
+      "EXECUTION": 4
+    }
+  },
+  "resolver_meta": {
+    "n_raw": 47275,
+    "n_resolved": 47197,
+    "n_dropped_warmup": 78,
+    "resolver_counts": {
+      "RANGE": 47197
+    },
+    "config": "reports\\parity_experiment\\iter10_htf_window_1.yaml",
+    "lifecycle_stats": {
+      "htf_reset_count": 47075,
+      "gap_reset_count": 121,
+      "forced_reset_count": 0,
+      "last_reset_reason": "HTF changed: XAUUSD-HTF-047274 \u2192 XAUUSD-HTF-047275"
+    },
+    "lifecycle_cfg": {
+      "htf_reset_enabled": true,
+      "htf_candles_per_range": 1,
+      "htf_protect_states": [
+        "EXPANSION",
+        "RETEST"
+      ],
+      "htf_protect_execution": true,
+      "gap_reset_enabled": true,
+      "gap_reset_minutes": 120.0,
+      "shadow_on_htf_displacement_reset": true,
+      "pending_displacement_ttl_candles": 4
+    },
+    "htf_mode": "engine",
+    "htf_instrument": "XAUUSD",
+    "htf_candles_per_range": 1,
+    "htf_unique_ids": 47197,
+    "htf_changes_on_resolved_slice": 47196,
+    "htf_first_id": "XAUUSD-HTF-000079",
+    "htf_last_id": "XAUUSD-HTF-047275"
+  }
+}
