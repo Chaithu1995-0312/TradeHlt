@@ -10,10 +10,17 @@ substitution, and no zero/one-fill for the six mandatory fields. A dataset that
 is missing a column — or that carries NaN/non-numeric/negative/inconsistent
 values in the six fields — is a schema violation and must fail fast.
 
-Two enforcement phases:
+Three enforcement phases:
   1. PRESENCE   — `require_ohlcv_columns(columns)`  (the six columns must exist).
   2. INTEGRITY  — `validate_ohlcv_frame(df)` / `validate_ohlcv_row(...)`
                   (no NaN/non-numeric, volume >= 0, candle high/low consistent).
+  3. PROVENANCE — `require_reviewed_clock(path)`    (the corpus's timezone must be DECLARED and
+                  human-REVIEWED). Phases 1-2 validate the numbers; phase 3 validates what the
+                  timestamps MEAN. `mt5_candle_fetcher.py:186` labels MT5 broker-server time as
+                  UTC, so a file's own claim about its clock is not evidence (F-066). Fail-closed:
+                  no record, a stale SHA, or `user_reviewed:false` raises `ClockProvenanceError`.
+                  Phase 3 applies to FILE-BACKED reads only — an in-memory/synthetic frame has no
+                  corpus to review, and the loader that produced it is itself gated.
 
 Header aliasing (e.g. ``Open`` -> ``open``, ``tick_volume`` -> ``volume``) is the
 caller's responsibility and is permitted normalization — it maps an existing
@@ -58,6 +65,19 @@ class FeatureAlignmentError(DatasetIntegrityError):
     Subclasses `DatasetIntegrityError` so existing `except DatasetIntegrityError` handlers on the
     loader paths keep catching it — the alignment failure is a data-contract failure.
     """
+
+
+class ClockProvenanceError(DatasetIntegrityError):
+    """Raised when a corpus is read without a human-reviewed timezone declaration (Phase 3).
+
+    A corpus whose clock is undeclared is a data-contract failure in exactly the same sense as a
+    missing column: the six mandatory fields say WHAT the numbers are, the clock record says WHAT
+    THE TIMESTAMPS MEAN. `mt5_candle_fetcher.py:186` labels MT5 broker-server time as UTC, so
+    "the file says UTC" is not evidence (F-066) — only a reviewed record is.
+
+    Subclasses `DatasetIntegrityError` so existing loader handlers keep catching it.
+    """
+
 
 # The six mandatory historical-data columns. Load-bearing — do not re-declare
 # this set anywhere else; import it from here.
@@ -169,6 +189,22 @@ def parse_ohlcv_timestamp(raw: str) -> datetime:
         except ValueError:
             continue
     raise ValueError(f"Cannot parse timestamp: '{raw}'")
+
+
+# ── Phase 3: clock provenance (file-backed reads) ──────────────────────────────
+def require_reviewed_clock(path, *, basis: Optional[str] = None):
+    """Phase-3 gate — raise `ClockProvenanceError` unless `path` has a reviewed clock record.
+
+    Thin façade over ``data_ingestion.clock_registry`` so every ingestion path can reach all three
+    enforcement phases through this one module. The import is function-local because
+    ``clock_registry`` imports ``ClockProvenanceError`` from here — a module-level import would
+    make that a cycle.
+
+    `basis` — pass the active ``feature_pipeline.session_timestamp_basis`` when the caller resolves
+    one, to also run the double-conversion guard.
+    """
+    from data_ingestion.clock_registry import require_reviewed_clock as _gate
+    return _gate(path, basis=basis)
 
 
 def require_unique_ohlcv_headers(

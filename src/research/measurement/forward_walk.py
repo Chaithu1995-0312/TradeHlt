@@ -24,6 +24,59 @@ from typing import Sequence
 from research.contracts import Outcome, Signal
 
 
+@dataclasses.dataclass(frozen=True)
+class AdverseFill:
+    """How a STOP order actually fills. SEM-016 ADVERSE_STOP_FILL_EXCURSION.
+
+    A stop-loss is an order, not a price guarantee. Two distinct effects:
+
+    `model_gaps`   when a bar OPENS beyond the stop, price never traded at the stop
+                   level at all — the fill is that open, which can be far worse than
+                   the nominal 1R. This needs no broker calibration: the gap is
+                   already in the OHLCV data.
+    `stop_slippage` ordinary fill drift in price units, applied when the stop is
+                   reached intrabar rather than gapped through.
+
+    Deliberately asymmetric: there is no favourable counterpart. A take-profit is a
+    resting limit order and never fills better than its level, so TP is untouched.
+    """
+
+    stop_slippage: float = 0.0
+    model_gaps: bool = True
+
+    def __post_init__(self) -> None:
+        if self.stop_slippage < 0:
+            raise ValueError(
+                f"AdverseFill.stop_slippage must be >= 0 (got {self.stop_slippage}); "
+                "it is a magnitude, direction is applied per-side"
+            )
+
+
+def _stop_fill_price(bar, stop: float, direction: str, adverse: "AdverseFill | None") -> float:
+    """Price at which a triggered stop actually fills.
+
+    Returns `stop` unchanged when `adverse` is None — the historical behaviour, and
+    the reason the default path stays bit-identical.
+    """
+    if adverse is None:
+        return stop
+    if adverse.model_gaps:
+        open_ = getattr(bar, "open", None)
+        if open_ is None:
+            # Fail closed. Silently skipping gap modelling would reintroduce exactly
+            # the optimism this parameter exists to remove.
+            raise ValueError(
+                "forward_walk(adverse_fill=...) with model_gaps=True requires bars carrying "
+                "`.open`; this bar has none. Pass model_gaps=False to price slippage only."
+            )
+        open_ = float(open_)
+        if direction == "long" and open_ <= stop:
+            return open_
+        if direction == "short" and open_ >= stop:
+            return open_
+    return stop - adverse.stop_slippage if direction == "long" else stop + adverse.stop_slippage
+
+
 def forward_walk(
     signal: Signal,
     future: Sequence,            # bars strictly after entry_index; each has .high/.low/.close/.index
@@ -31,6 +84,7 @@ def forward_walk(
     max_forward: int = 40,
     trail_mult: float = 0.5,
     exit_model: str = "intrabar_fixed",
+    adverse_fill: "AdverseFill | None" = None,
 ) -> Outcome:
     """Forward-walk `future` bars; return a measured Outcome.
 
@@ -47,6 +101,12 @@ def forward_walk(
             no ratchet); "trailing" (opt-in legacy — stop ratchets toward price); or
             "close_only" (MEASURE-ONLY forensic bound — fixed SL/TP triggered only when
             bar.close crosses the level, never a wick touch; the optimistic counterfactual).
+        adverse_fill: SEM-016. When None (default) a triggered stop fills exactly at its
+            level, so a fixed-stop SL_HIT is exactly -1.000R however far the bar gapped
+            through it — the historical behaviour, preserved bit-identically. When supplied,
+            the stop fills at the bar OPEN if the bar gapped past the level, otherwise at
+            level +/- `stop_slippage`. TP is never adjusted: a resting limit order does not
+            fill better than its level.
     """
     direction = signal.direction
     entry = signal.entry
@@ -134,7 +194,8 @@ def forward_walk(
                 rr = reward_distance / risk_distance
                 return _result(signal, "TP_HIT", rr, mfe, mae, duration,
                                time_to_tp, None, risk_distance)
-            rr = ((trail_stop - entry) if direction == "long" else (entry - trail_stop)) / risk_distance
+            fill = _stop_fill_price(bar, trail_stop, direction, adverse_fill)
+            rr = ((fill - entry) if direction == "long" else (entry - fill)) / risk_distance
             return _result(signal, "SL_HIT", rr, mfe, mae, duration,
                            time_to_tp, duration, risk_distance)
 
