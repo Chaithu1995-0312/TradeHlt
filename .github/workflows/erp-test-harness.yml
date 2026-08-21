@@ -7,6 +7,12 @@ name: erp-test-harness
 # permanently red and enforce nothing. This subset (tests/harness + the story-library goldens) is
 # green and grows as the harness expands. The governance green-floor (governance.yml) is separate and
 # untouched. Rationale: docs/research-readiness/edge-research-platform-testing-plan.md §8 (T0).
+#
+# 2026-08-21: tests/research/test_stop_policy.py joined the subset to enforce the SEM-017 guard
+# (the production TP1 trail lands HALF-WAY to TP1, not at breakeven, despite the config key being
+# named partial_tp_breakeven_enabled). Mutation-verified: rewriting the trail to real breakeven
+# fails 4 of its tests. Its import closure (src/research/oracle/{__init__,multi_tp_walk,
+# reference_walker,stop_policy}.py) was tracked in the same change; it needs only numpy+pytest.
 
 on:
   push:
@@ -32,3 +38,4 @@ jobs:
           tests/research/test_story_library_golden.py
           tests/research/test_story_ontology.py
           tests/research/test_xauusd_corpus_certification.py
+          tests/research/test_stop_policy.py
