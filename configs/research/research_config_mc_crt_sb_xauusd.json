@@ -1,0 +1,18 @@
+{
+  "_doc": "Spine config for MC-CRT-SB-XAUUSD-M15-V1 only. Does not change ACTIVE_VERSION. Universe is the long MT5 XAUUSD M15 corpus.",
+  "measurement_contract_id": "MC-CRT-SB-XAUUSD-M15-V1",
+  "harness": { "warmup": 30, "window_size": 64, "min_samples": 30 },
+  "forward_walk": { "max_forward": 200, "exit_model": "intrabar_fixed" },
+  "signal": { "apply_signal_defaults": false },
+  "costs": { "round_trip_bps": 12.0 },
+  "universe": {
+    "data_dir": "data/mt5",
+    "pattern": "XAUUSD_M15.csv",
+    "instruments": ["XAUUSD"]
+  },
+  "spine": {
+    "prod_version": "v2_multi_2026_04",
+    "scorer_mode": "calibrated",
+    "tp_target": "tp2"
+  }
+}

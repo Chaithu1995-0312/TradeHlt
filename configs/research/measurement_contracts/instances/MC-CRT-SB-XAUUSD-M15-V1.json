@@ -1,0 +1,334 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "MC-CRT-SB-XAUUSD-M15-V1",
+  "experiment_id": "E-CRT-SB-XAUUSD-M15",
+  "created_utc": "2026-08-15T00:00:00Z",
+  "authority": {
+    "economic_admissible": false,
+    "requires_mt00_pass": true,
+    "note": "Sense B preregister only. Historical F-019\u2026F-027/F-035/F-070 are evidence, not economic closure for this instance. economic_claims_allowed remains false until mt00==PASS and mt01_matrix_coverage==COMPLETE. Sealing this JSON grants comparability, never promotion, never fusion weight, never Ultron change, never ACTIVE_VERSION control."
+  },
+  "population": {
+    "unit_of_analysis": "trade_decision",
+    "instruments": [
+      "XAUUSD"
+    ],
+    "timeframe": "M15",
+    "calendar_window": {
+      "start": "2024-05-22 01:00:00",
+      "end": "2026-05-21 23:45:00",
+      "timezone": "broker_server_labeled_UTC"
+    },
+    "inclusion_rule": "Independent unit = one CRT TRADE_OPENED event produced by src/config_layer/crt_engine_v2.py on ACTIVE_VERSION=v2_multi_2026_04 (F-074 directional displacement in path). Count the journaled trade, not SWEEP/DISPLACEMENT/RETEST detections. Path: BacktestRunner / xauusd excel tracer that calls CRTEngine.process_candle then EngineRunner when engine_gate_enabled=true.",
+    "exclusion_rule": "Exclude FILTER_REJECTED, inverted-SL EXECUTION with no TRADE_OPENED, SHADOW_PENDING-only visits, S1\u2013S10 StrategyOrchestrator consensus rows (weight_strategy_consensus default 0; not this population). Exclude opportunities.jsonl detections (F-022). Holiday/gap: do NOT apply the FX holiday-gap REJECT that F-035 used to drop XAUUSD; keep MT5 missing-bar gaps as absent rows and record drop count in the fingerprint.",
+    "n_declared_min": 30,
+    "detection_vs_trade": "trade_ledger",
+    "population_hash_inputs": [
+      "instrument",
+      "trade_id",
+      "entry_ts",
+      "side",
+      "crt_state_at_open",
+      "setup_id",
+      "corpus_path",
+      "corpus_sha256",
+      "active_version",
+      "f074_directional_displacement"
+    ]
+  },
+  "features": {
+    "feature_set_id": "FS-CRT-SB-XAUUSD-M15-V1",
+    "feature_ids": [
+      "FM-041",
+      "FM-043",
+      "FM-044",
+      "FM-031",
+      "FM-021",
+      "FM-020",
+      "FM-027",
+      "FM-028",
+      "FM-052"
+    ],
+    "formula_authority": "market_ontology",
+    "point_in_time_rule": "Decision time t = TRADE_OPENED bar. Features are whatever production FeaturePipeline emits on ACTIVE_VERSION (normalization_basis=atr_relative, session_timestamp_basis=broker_local, swing_window as configured). F-051 centered-swing leak and F-066 broker-clock session mislabel are DECLARED residuals of this object \u2014 they are part of what is being measured, not silently cleaned. No extra global-rank. No future bars beyond what production already publishes.",
+    "name_binding": {
+      "body_ratio": {
+        "fm_id": "FM-021",
+        "formula_ref": "src/features/candle_math.py body/range",
+        "units": "dimensionless_0_1",
+        "not_equal_to": [
+          "body/total_wick",
+          "crt_feature_builder.body_ratio"
+        ]
+      },
+      "atr": {
+        "fm_id": "FM-041",
+        "formula_ref": "market_ontology rolling ATR close-relative",
+        "units": "close_relative",
+        "not_equal_to": [
+          "FM-074_atr_absolute",
+          "atr_abs"
+        ]
+      },
+      "session": {
+        "fm_id": "FM-052",
+        "formula_ref": "feature_pipeline.session_timestamp_basis=broker_local",
+        "units": "session_label",
+        "not_equal_to": [
+          "utc_corrected_session",
+          "crt_engine.session_windows_execution_filter"
+        ]
+      },
+      "displacement_retrace": {
+        "fm_id": "FM-027",
+        "formula_ref": "derived_math.displacement_retrace (CH-002)",
+        "units": "fraction",
+        "not_equal_to": [
+          "pipeline.retest_depth",
+          "FM-021"
+        ]
+      },
+      "displacement_atr_ratio": {
+        "fm_id": "FM-028",
+        "formula_ref": "derived_math.displacement_atr_ratio (CH-002)",
+        "units": "atr_multiple",
+        "not_equal_to": [
+          "pipeline.disp_strength",
+          "FM-020"
+        ]
+      }
+    },
+    "forbidden_aliases": [
+      "opportunities.outcome",
+      "opportunities.rr_achieved",
+      "retest_depth_as_FM027",
+      "disp_strength_as_FM028",
+      "utc_session_as_broker_session"
+    ],
+    "builder_entrypoints": [
+      "src/features/feature_pipeline.py:FeaturePipeline",
+      "src/config_layer/crt_engine_v2.py:CRTEngine.process_candle"
+    ]
+  },
+  "labels": {
+    "label_family": "forward_walk_economic",
+    "y_definition": "y_R = net R-multiple of the TRADE_OPENED unit under exit_model_id=EX-CRT-SB-INTRABAR-V1 and cost_model_id=CM-XAUUSD-LEGACY-12BPS-UNCALIBRATED. y_win = 1 if y_R>0 else 0. Never use opportunities.outcome or trade.rr_achieved from the F-022 stream as y.",
+    "derivation_authority": "forward_walk.intrabar_fixed",
+    "stream_fields_banned_for_economic_claims": [
+      "opportunities.outcome",
+      "opportunities.rr",
+      "opportunities.rr_achieved",
+      "trade.rr_achieved",
+      "trade.outcome"
+    ],
+    "rederive_protocol": {
+      "enabled": true,
+      "matcher": "trade_id+entry_ts+side",
+      "min_agreement": 0.99,
+      "on_fail": "BLOCK_EXPERIMENT"
+    },
+    "horizon_bars": null,
+    "sign_convention": "LONG positive when price rises; SHORT positive when price falls; R = pnl / initial_risk after declared costs"
+  },
+  "costs": {
+    "cost_model_id": "CM-XAUUSD-LEGACY-12BPS-UNCALIBRATED",
+    "components": [
+      {
+        "name": "round_trip",
+        "bps_or_formula": "12 bps round-trip LEGACY constant (F-025/F-035 provenance). NOT a calibrated XAUUSD spread. Metals profile calibration is PENDING. Net figures under this model are DIAGNOSTIC until a derived_per_instrument.v1 k is sealed.",
+        "applied_on": "round_trip"
+      }
+    ],
+    "gross_vs_net": {
+      "report_gross": true,
+      "report_net": true,
+      "promotable": "net_only"
+    },
+    "success_gate_uses": "net",
+    "code_entrypoint": "src/research/measurement/forward_walk.py"
+  },
+  "exits": {
+    "exit_model_id": "EX-CRT-SB-INTRABAR-V1",
+    "exit_family": "intrabar_fixed_sl_tp",
+    "parameters": {
+      "sl_atr_buffer": 0.2,
+      "tp1_atr_multiplier": 1.0,
+      "tp2_atr_multiplier": 2.0,
+      "partial_tp_fraction": 0.5,
+      "source": "configs/production/v2_multi_2026_04.json crt_engine + backtest"
+    },
+    "intrabar_rule": "forward_walk.intrabar_fixed: on each M15 bar, SL is tested before TP (conservative same-bar). Partial TP at tp1 then remainder at tp2 or SL. No stream-outcome substitution.",
+    "not_equal_to": [
+      "opportunities.outcome",
+      "live ExecutionPlanner without declaration",
+      "info_only_no_exit",
+      "close_only_exit"
+    ],
+    "code_entrypoint": "src/research/measurement/forward_walk.py"
+  },
+  "splits": {
+    "scheme": "single_holdout_chronologic",
+    "embargo": "96 M15 bars (24h) between last train decision and first test decision",
+    "purge": "drop train trades whose exit horizon overlaps the test start timestamp",
+    "n_folds_or_windows": 1,
+    "overlap_policy": "forbid_overlapping_labels",
+    "seed": 20260815,
+    "oos_fraction_or_dates": "last 20% of TRADE_OPENED events by entry_ts after inclusion; exact dates locked in split_manifest at run"
+  },
+  "metrics": {
+    "information_metrics": [
+      "n_trades",
+      "win_rate",
+      "funnel_counts_RANGE_to_TRADE_OPENED"
+    ],
+    "economic_metrics": [
+      "net_expectancy_R",
+      "profit_factor",
+      "max_drawdown_R",
+      "trades_per_month"
+    ],
+    "success_gate": "OOS n>=30 AND net_expectancy_R>0 AND profit_factor>1 AND max_drawdown_R within G001 10% band AND beats pre-registered controls (random_entry, long_only). Diagnostic only until mt00+mt01 seal. Does NOT promote.",
+    "kill_criteria": "KILL economic claim if: (1) n<30 (INSUFFICIENT, not harmful); (2) y used stream outcome; (3) detections counted as trades; (4) gate-OFF CRT-only path claimed as fusion; (5) 12bps treated as calibrated metals cost; (6) session utc_corrected claimed as production filter. New thesis requires a new MC id.",
+    "multiplicity": {
+      "n_variants_preregistered": 1,
+      "control": "none_single_test"
+    },
+    "authority_ladder": {
+      "info_not_value": true,
+      "value_not_authority": true,
+      "insufficient_not_harmful": true
+    },
+    "forbidden_metric_substitutions": [
+      "p_value_as_edge",
+      "gross_as_success",
+      "n_detections_as_n_trades",
+      "in_sample_as_oos",
+      "uncalibrated_12bps_as_calibrated_metals"
+    ]
+  },
+  "pipeline_identity": {
+    "config_version_source": "configs/production/ACTIVE_VERSION \u2192 v2_multi_2026_04 via get_prod_config / load_prod_config_from_registry",
+    "active_version_file": "configs/production/ACTIVE_VERSION",
+    "engine_gate_mode": "gate_on_fusion",
+    "expected_engines": [
+      "crt",
+      "gaussian",
+      "zone_gate",
+      "rr"
+    ],
+    "modules_in_path": [
+      "src/config_layer/crt_engine_v2.py",
+      "src/config_layer/state_identity.py",
+      "src/features/feature_pipeline.py",
+      "src/core/engine_runner.py",
+      "src/core/fusion_engine.py",
+      "src/core/decision_engine.py",
+      "src/research/measurement/forward_walk.py"
+    ],
+    "modules_explicitly_out_of_path": [
+      "src/strategies/strategy_orchestrator.py (consensus weight 0)",
+      "src/training/trade_net_v2.py",
+      "src/bitnet/* (use_bitnet false)",
+      "src/config_layer/rr/rr_fusion.py (enabled false)",
+      "src/execution/loop.py",
+      "src/runtime/live_engine_hook.py (F-073 no live rail)",
+      "oss_lab/* (RESEARCH_LAB_ONLY)",
+      "mt5_analytics/* (broker honesty sidecar, not this entry generator)",
+      "tools/tv_forensic/*"
+    ],
+    "dataset_integrity_level": "L1_L2_L3",
+    "feature_flags": {
+      "use_bitnet": false,
+      "rr_fusion.enabled": false,
+      "engine_gate_enabled": true,
+      "htf_candles_per_range": 16,
+      "session_timestamp_basis": "broker_local",
+      "normalization_basis": "atr_relative",
+      "f074_directional_displacement": true,
+      "profile_inherited": "MP-METALS-MT5",
+      "family": "RF-CRT-STRUCTURE"
+    }
+  },
+  "prohibited_substitutions": [
+    {
+      "surface": "population",
+      "forbidden": "Count SWEEP/RETEST/opportunities.jsonl detections as trades",
+      "historical_class": "FC-POP-DETECTION-AS-TRADE"
+    },
+    {
+      "surface": "features",
+      "forbidden": "Treat pipeline retest_depth as FM-027 or utc_corrected session as the production filter",
+      "historical_class": "FC-FEATURE-NAME-COLLISION"
+    },
+    {
+      "surface": "features",
+      "forbidden": "Ignore F-051 centered-swing leak while claiming PIT-clean labels",
+      "historical_class": "FC-FEATURE-LOOKAHEAD-CENTER"
+    },
+    {
+      "surface": "labels",
+      "forbidden": "Use opportunities.outcome / rr_achieved as y",
+      "historical_class": "FC-LABEL-STREAM-INCONSISTENT"
+    },
+    {
+      "surface": "costs",
+      "forbidden": "Treat 12bps as a calibrated XAUUSD cost or report only gross as success",
+      "historical_class": "FC-COST-MODEL-SUBSTITUTION"
+    },
+    {
+      "surface": "exits",
+      "forbidden": "Substitute stream outcome or close-only for forward_walk.intrabar_fixed",
+      "historical_class": "FC-EXIT-PROXY-NOT-GOVERNING"
+    },
+    {
+      "surface": "splits",
+      "forbidden": "Train labels whose horizon overlaps OOS",
+      "historical_class": "FC-SPLIT-OVERLAP-LEAKAGE"
+    },
+    {
+      "surface": "metrics",
+      "forbidden": "p-value or n_detections as edge; n<30 as harmful rather than insufficient",
+      "historical_class": "FC-METRIC-STAT-AS-ECON"
+    },
+    {
+      "surface": "pipeline",
+      "forbidden": "Claim gate-OFF CRT-only as the fusion spine (F-037/F-058)",
+      "historical_class": "FC-ENGINE-GATE-OFF-SUBSTITUTION"
+    },
+    {
+      "surface": "pipeline",
+      "forbidden": "Count StrategyOrchestrator, TradeNet, BitNet, live hook, or oss_lab as this measured path",
+      "historical_class": "FC-ENGINE-ORPHAN-SIDECAR"
+    }
+  ],
+  "evidence_artifacts": {
+    "contract_path": "configs/research/measurement_contracts/instances/MC-CRT-SB-XAUUSD-M15-V1.json",
+    "population_fingerprint_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_v1/population_fingerprint.json",
+    "feature_parity_path": null,
+    "label_rederive_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_v1/label_rederive.json",
+    "cost_exit_fixture_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_v1/cost_exit_fixture.json",
+    "split_manifest_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_v1/split_manifest.json",
+    "metric_compute_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_v1/metrics.json",
+    "mt00_report_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_v1/mt00.json",
+    "mt01_mutation_coverage_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_v1/mt01.json",
+    "code_commit": null,
+    "data_snapshot_ids": [
+      "sha256:4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
+    ]
+  },
+  "trust_status": {
+    "mt00": "UNRUN",
+    "mt01_matrix_coverage": "UNRUN",
+    "economic_claims_allowed": false,
+    "failing_probes": [],
+    "open_risks_non_blocking": [
+      "F-066 broker_local session mislabel is part of the measured production object",
+      "F-051 centered-swing leak is part of the measured production object",
+      "12bps cost uncalibrated for XAUUSD",
+      "n may be <30 on available XAUUSD windows (INSUFFICIENT, not harmful)",
+      "27 E-MT-01 probes are not implemented in this repo (0/27)",
+      "diagnostic_walk_verdict=INSUFFICIENT",
+      "n_trade_opened=3"
+    ]
+  }
+}

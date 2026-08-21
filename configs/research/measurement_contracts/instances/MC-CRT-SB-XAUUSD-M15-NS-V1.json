@@ -1,0 +1,246 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "MC-CRT-SB-XAUUSD-M15-NS-V1",
+  "experiment_id": "E-CRT-SB-XAUUSD-M15-NS",
+  "created_utc": "2026-08-15T16:00:00Z",
+  "authority": {
+    "economic_admissible": false,
+    "requires_mt00_pass": true,
+    "note": "THIRD object. Not a tweak of V1 or SOFF. Research-only: CRT allowed_sessions = all windows + OFF_SESSION AND engine_runner/TrapValidator allowed_sessions includes asia, london, new_york, overlap, closed. Production JSON is not written. ACTIVE_VERSION unchanged. economic_claims_allowed false until mt00==PASS and mt01 COMPLETE."
+  },
+  "population": {
+    "unit_of_analysis": "trade_decision",
+    "instruments": [
+      "XAUUSD"
+    ],
+    "timeframe": "M15",
+    "calendar_window": {
+      "start": "2024-05-22 01:00:00",
+      "end": "2026-05-21 23:45:00",
+      "timezone": "broker_server_labeled_UTC"
+    },
+    "inclusion_rule": "TRADE_OPENED from crt_engine_v2 on v2_multi_2026_04, F-074 on, fusion gate ON, CRT session veto off (all windows+OFF_SESSION), AND TrapValidatorEngine allowed_sessions includes asia/london/new_york/overlap/closed so adapter invalid_session does not fire. Ultron and inverted-SL still apply.",
+    "exclusion_rule": "Detections are not trades. Do not pool V1 or SOFF n into this population. Do not report this as production session policy.",
+    "n_declared_min": 30,
+    "detection_vs_trade": "trade_ledger",
+    "population_hash_inputs": [
+      "instrument",
+      "trade_id",
+      "entry_ts",
+      "side",
+      "corpus_sha256",
+      "session_policy=CRT_ALL_PLUS_ADAPTER_CLOSED_ASIA"
+    ]
+  },
+  "features": {
+    "feature_set_id": "FS-CRT-SB-XAUUSD-M15-NS-V1",
+    "feature_ids": [
+      "FM-041",
+      "FM-052",
+      "FM-021"
+    ],
+    "formula_authority": "market_ontology",
+    "point_in_time_rule": "Same production FeaturePipeline as V1/SOFF. Changed object is session POLICY at CRT and adapter, not FM-052 math.",
+    "name_binding": {
+      "session": {
+        "fm_id": "FM-052",
+        "formula_ref": "broker_local feature label",
+        "units": "session_ordinal",
+        "not_equal_to": [
+          "production_engine_runner.allowed_sessions",
+          "production_crt.allowed_sessions"
+        ]
+      }
+    },
+    "forbidden_aliases": [
+      "MC-CRT-SB-XAUUSD-M15-V1_population",
+      "MC-CRT-SB-XAUUSD-M15-SOFF-V1_population"
+    ],
+    "builder_entrypoints": [
+      "src/config_layer/crt_engine_v2.py:CRTEngine.process_candle"
+    ]
+  },
+  "labels": {
+    "label_family": "forward_walk_economic",
+    "y_definition": "net R via forward_walk.intrabar_fixed minus 12bps UNCALIBRATED",
+    "derivation_authority": "forward_walk.intrabar_fixed",
+    "stream_fields_banned_for_economic_claims": [
+      "opportunities.outcome",
+      "trade.rr_achieved"
+    ],
+    "rederive_protocol": {
+      "enabled": true,
+      "matcher": "trade_id+entry_ts+side",
+      "min_agreement": 0.99,
+      "on_fail": "BLOCK_EXPERIMENT"
+    },
+    "horizon_bars": null,
+    "sign_convention": "LONG up / SHORT down"
+  },
+  "costs": {
+    "cost_model_id": "CM-XAUUSD-LEGACY-12BPS-UNCALIBRATED",
+    "components": [
+      {
+        "name": "round_trip",
+        "bps_or_formula": "12 bps UNCALIBRATED",
+        "applied_on": "round_trip"
+      }
+    ],
+    "gross_vs_net": {
+      "report_gross": true,
+      "report_net": true,
+      "promotable": "net_only"
+    },
+    "success_gate_uses": "net",
+    "code_entrypoint": "src/research/measurement/forward_walk.py"
+  },
+  "exits": {
+    "exit_model_id": "EX-CRT-SB-INTRABAR-V1",
+    "exit_family": "intrabar_fixed_sl_tp",
+    "parameters": {
+      "tp2_atr_multiplier": 2.0,
+      "partial_tp_not_reproduced": true
+    },
+    "intrabar_rule": "SL-before-TP single TP2",
+    "not_equal_to": [
+      "opportunities.outcome"
+    ],
+    "code_entrypoint": "src/research/measurement/forward_walk.py"
+  },
+  "splits": {
+    "scheme": "single_holdout_chronologic",
+    "embargo": "96 M15 bars",
+    "purge": "drop train overlapping test start",
+    "n_folds_or_windows": 1,
+    "overlap_policy": "forbid_overlapping_labels",
+    "seed": 20260815,
+    "oos_fraction_or_dates": "last 20% of TRADE_OPENED"
+  },
+  "metrics": {
+    "information_metrics": [
+      "n_trades",
+      "n_vs_V1",
+      "n_vs_SOFF",
+      "adapter_invalid_session_count"
+    ],
+    "economic_metrics": [
+      "net_expectancy_R",
+      "profit_factor"
+    ],
+    "success_gate": "OOS n>=30 AND net E>0. Diagnostic. Does NOT promote.",
+    "kill_criteria": "KILL if reported as production session policy; if pooled with V1/SOFF; if n<30 treated as harmful.",
+    "multiplicity": {
+      "n_variants_preregistered": 1,
+      "control": "none_single_test"
+    },
+    "authority_ladder": {
+      "info_not_value": true,
+      "value_not_authority": true,
+      "insufficient_not_harmful": true
+    },
+    "forbidden_metric_substitutions": [
+      "ns_as_production_session",
+      "n_detections_as_n_trades"
+    ]
+  },
+  "pipeline_identity": {
+    "config_version_source": "v2_multi_2026_04 + in-process CRT allowed_sessions replace + in-process engine_runner.allowed_sessions patch",
+    "active_version_file": "configs/production/ACTIVE_VERSION",
+    "engine_gate_mode": "gate_on_fusion",
+    "expected_engines": [
+      "crt",
+      "gaussian",
+      "zone_gate",
+      "rr"
+    ],
+    "modules_in_path": [
+      "src/config_layer/crt_engine_v2.py",
+      "src/engines/trap_validator_engine.py",
+      "src/core/engine_runner.py"
+    ],
+    "modules_explicitly_out_of_path": [
+      "production engine_runner.allowed_sessions",
+      "production crt_engine.allowed_sessions"
+    ],
+    "dataset_integrity_level": "L1_L2_L3",
+    "feature_flags": {
+      "session_policy_crt": "ALL_WINDOWS_PLUS_OFF_SESSION",
+      "session_policy_adapter": "ASIA_LONDON_NEWYORK_OVERLAP_CLOSED",
+      "not_production_session_filter": true,
+      "f074_directional_displacement": true,
+      "supersedes_contracts": "MC-CRT-SB-XAUUSD-M15-V1,MC-CRT-SB-XAUUSD-M15-SOFF-V1",
+      "family": "RF-CRT-STRUCTURE"
+    }
+  },
+  "prohibited_substitutions": [
+    {
+      "surface": "population",
+      "forbidden": "Pool V1 or SOFF trades into this n",
+      "historical_class": "FC-POP-DETECTION-AS-TRADE"
+    },
+    {
+      "surface": "pipeline",
+      "forbidden": "Report this as production session policy",
+      "historical_class": "FC-SESSION-SILENT-DEFAULT"
+    },
+    {
+      "surface": "labels",
+      "forbidden": "Use stream outcome as y",
+      "historical_class": "FC-LABEL-STREAM-INCONSISTENT"
+    },
+    {
+      "surface": "costs",
+      "forbidden": "Treat 12bps as calibrated",
+      "historical_class": "FC-COST-MODEL-SUBSTITUTION"
+    },
+    {
+      "surface": "exits",
+      "forbidden": "Substitute stream outcome",
+      "historical_class": "FC-EXIT-PROXY-NOT-GOVERNING"
+    },
+    {
+      "surface": "splits",
+      "forbidden": "Pool three arms in one split",
+      "historical_class": "FC-SPLIT-OVERLAP-LEAKAGE"
+    },
+    {
+      "surface": "metrics",
+      "forbidden": "n<30 as harmful",
+      "historical_class": "FC-METRIC-STAT-AS-ECON"
+    },
+    {
+      "surface": "features",
+      "forbidden": "Claim production session filter equals this arm",
+      "historical_class": "FC-FEATURE-NAME-COLLISION"
+    }
+  ],
+  "evidence_artifacts": {
+    "contract_path": "configs/research/measurement_contracts/instances/MC-CRT-SB-XAUUSD-M15-NS-V1.json",
+    "population_fingerprint_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_ns_v1/population_fingerprint.json",
+    "feature_parity_path": null,
+    "label_rederive_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_ns_v1/label_rederive.json",
+    "cost_exit_fixture_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_ns_v1/cost_exit_fixture.json",
+    "split_manifest_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_ns_v1/split_manifest.json",
+    "metric_compute_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_ns_v1/metrics.json",
+    "mt00_report_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_ns_v1/mt00.json",
+    "mt01_mutation_coverage_path": "D:/Tradelatest/results/research/mc_crt_sb_xauusd_m15_ns_v1/mt01.json",
+    "code_commit": null,
+    "data_snapshot_ids": [
+      "sha256:4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
+    ]
+  },
+  "trust_status": {
+    "mt00": "UNRUN",
+    "mt01_matrix_coverage": "UNRUN",
+    "economic_claims_allowed": false,
+    "failing_probes": [],
+    "open_risks_non_blocking": [
+      "Research-only dual session bypass",
+      "Ultron and inverted-SL still bind",
+      "12bps uncalibrated",
+      "E-MT-01 0/27",
+      "diagnostic_walk_verdict=INSUFFICIENT",
+      "n_trade_opened=16"
+    ]
+  }
+}

@@ -1,0 +1,348 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "MC-VCRT-XAUUSD-M15-V2",
+  "experiment_id": "E-VCRT-XAUUSD-M15",
+  "created_utc": "2026-08-19T00:00:00Z",
+  "authority": {
+    "economic_admissible": false,
+    "requires_mt00_pass": true,
+    "note": "SUPERSEDES MC-VCRT-XAUUSD-M15-V1. V2 exists because V1's COST MODEL and EXIT MODEL are superseded, which V1's own kill_criteria requires be done as a NEW MC-* id and never as an edit to V1. V1's VERDICT is NOT superseded: F-081's 0 PROMOTE rests on GROSS expectancy (arm A +0.0080R, arm B -0.0835R, both CI crossing zero) and gross is cost-independent by construction. V1 remains sealed and was reproduced byte-identically from its committed ledgers before V2 was built (A n=944 gross +0.00798263 net -0.55588555; B n=462 gross -0.08352186 net -1.26166572). EXACTLY TWO measurement surfaces differ from V1: costs and exits. population, features, labels, pipeline_identity, prohibited_substitutions, split PARAMETERS, kill_criteria, all geometry, horizon, duplicate rule and both arm definitions are carried over unchanged. SPLIT EXECUTION: V1 declared splits.scheme=single_holdout_chronologic and never executed it -- driver.py contained no split/embargo/purge code and no split_manifest.json was written. V2 executes it with every V1 parameter unchanged, including seed 20260817; this is the first execution of the sealed definition, not a new definition. The same seed governs the random_entry control draw. SCHEMA NOTE: the frozen measurement_contract.schema.json carries additionalProperties:false on every object and has no slot for cost provenance, control configuration, or an execution note. Those statements are folded into the free-text fields the schema does allow (costs.components[].bps_or_formula, exits.intrabar_rule, metrics.success_gate, this note) rather than amending a frozen schema. Lane 2 of P-CRT-LANE-02 measures POPULATION AND POWER for SEM-012 (VISUAL_CRT_TRADE_OBJECT), not economics. Sealing this JSON grants comparability only: never promotion, never fusion weight, never an Ultron or ExecutionPlanner change, never ACTIVE_VERSION control, and never G001. economic_claims_allowed stays false until mt00==PASS and mt01_matrix_coverage==COMPLETE; repo-wide that is 0/27 probes implemented and MEASUREMENT_LAYER_STATUS=OPEN. A positive diagnostic expectancy under this contract is NOT an economic validation. This contract was sealed BEFORE any detector code existed, so the definition cannot have been fitted to an observed outcome. V2 ADDITIONALLY: a corrected cost model does NOT grant economic admissibility. V2 is a measurement-basis REPLICATION of V1's two pre-registered arms on the SAME corpus -- it inherits V1's Bonferroni alpha=0.025, spends no new alpha, and is not an independent test. A POSITIVE V2 result is therefore NOT registrable as an economic edge under any circumstance; it would require a fresh pre-registration on unseen data. Declared before the run (UNK-VCRT-02) so the outcome cannot be re-interpreted afterwards."
+  },
+  "population": {
+    "unit_of_analysis": "trade_decision",
+    "instruments": [
+      "XAUUSD"
+    ],
+    "timeframe": "M15",
+    "calendar_window": {
+      "start": "2024-05-22 01:00:00",
+      "end": "2026-05-21 23:45:00",
+      "timezone": "broker_server_labeled_UTC"
+    },
+    "inclusion_rule": "MEASUREMENT CORPUS = data/mt5/XAUUSD_M15.csv ONLY (47,275 bars, sha256 4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56). One independent unit = one SEM-012 Visual CRT entry emitted by src/research/visual_crt/ under the frozen geometry: a sweep of a chart-visible pool (prior CLOSED calendar H4 high/low, PDH, PDL) followed by an F-074 directional displacement, then entry per arm. ARM A entry = displacement bar close. ARM B entry = retest bar close. Both arms are pre-registered together; selecting an arm after seeing outcomes is forbidden. DUPLICATE RULE (contract-owned, driver-implemented): one shot per (pool, direction) until a newer closed parent replaces that pool, AND at most one open trade at a time - a signal arriving while a trade is open is DROPPED, not queued. That makes the detection-to-trade mapping 1:1 by construction and keeps labels non-overlapping.",
+    "exclusion_rule": "EXCLUDED FROM THE POPULATION: data/XAUUSD_M15.csv (2,116 bars, 2026-07-07 01:00 -> 2026-08-06 23:45, sha256 478b075150935c950ccc749925709db783e337c55c886d6dda1e3ee8b9692c5b). That one-month file is the VISUAL AUDIT corpus for the 10 TradingView shots ONLY; it is never merged into the measured population or any denominator, and it does not overlap the measurement window in time. Also excluded: signals suppressed by the duplicate rule; sweeps of a pool whose formed_at_index >= the sweep bar index (not yet drawable); any CRT engine TRADE_OPENED event (this object is not the engine funnel); opportunities.jsonl detections (F-022). GAP POLICY (resolves MP-METALS-MT5 unresolved_terms population.gap_policy, blocks_freeze true, F-035): do NOT apply the FX holiday-gap REJECT that F-035 used to drop XAUUSD. Keep MT5 missing bars as absent rows and record the drop count in the population fingerprint. This resolves the term FOR THIS INSTANCE only; the profile stays DRAFT.",
+    "n_declared_min": 30,
+    "detection_vs_trade": "hybrid_explicit",
+    "population_hash_inputs": [
+      "instrument",
+      "arm",
+      "entry_ts",
+      "side",
+      "pool_kind",
+      "pool_price",
+      "sweep_bar_index",
+      "displacement_bar_index",
+      "corpus_path",
+      "corpus_sha256",
+      "sem_012_version",
+      "contract_id"
+    ]
+  },
+  "features": {
+    "feature_set_id": "FS-VCRT-XAUUSD-M15-V1",
+    "feature_ids": [
+      "FM-010",
+      "FM-074"
+    ],
+    "formula_authority": "market_ontology",
+    "point_in_time_rule": "Decision time t = the entry bar (arm A: displacement bar; arm B: retest bar). SEM-012 consumes RAW OHLC plus CLOSED calendar parents only (ParentCandleBuilder.parent_history never exposes an in-progress period), and detect_pool_sweep additionally refuses any pool with formed_at_index >= bar.index. F-051 (centered-swing PIT leak) is OUT OF PATH for this object because it does not read the centered-swing feature path at all - declared, NOT claimed to be fixed globally. F-066 (broker-clock session mislabel) is likewise OUT OF PATH: SEM-012 consumes no session input. Both resolve MP-METALS-MT5 unresolved_terms (features.point_in_time_rule, features.session_timestamp_basis) FOR THIS INSTANCE only; the profile stays DRAFT and the global defects stay open.",
+    "name_binding": {
+      "body_ratio": {
+        "fm_id": "FM-010",
+        "formula_ref": "src/features/candle_math.py body_ratio = body_size/candle_range, bounded [0,1]",
+        "units": "dimensionless_0_1",
+        "not_equal_to": [
+          "body/total_wick",
+          "crt_feature_builder.body_ratio"
+        ]
+      },
+      "atr_abs": {
+        "fm_id": "FM-074",
+        "formula_ref": "atr_absolute, ATR in PRICE units (atr_period=14)",
+        "units": "price",
+        "not_equal_to": [
+          "FM-041 atr (close-relative)",
+          "atr_relative * close computed ad hoc at a call site"
+        ]
+      },
+      "pool_price": {
+        "fm_id": "SEM-012",
+        "formula_ref": "high/low of a CLOSED calendar H4 or D1 parent (features/parent_candle.py ParentCandleBuilder)",
+        "units": "price",
+        "not_equal_to": [
+          "SEM-011 M15-SLR h_ref/l_ref",
+          "HTFBuilder count-window high/low",
+          "features.smc tanh-bounded normalized distances"
+        ]
+      },
+      "impulse": {
+        "fm_id": "SEM-012",
+        "formula_ref": "abs(displacement.close - sweep.sweep_price) - ARM B MODELLING SUBSTITUTION for the engine's rng.size, which is undefined for a level-valued pool",
+        "units": "price",
+        "not_equal_to": [
+          "crt_engine_v2 rng.size",
+          "canonical CRT retest formula"
+        ]
+      }
+    },
+    "forbidden_aliases": [
+      "M15-SLR as the swept envelope",
+      "active_range.h_ref / l_ref as pool_price",
+      "FM-041 atr substituted for FM-074 atr_abs",
+      "pipeline retest_depth as this object's depth_abs"
+    ]
+  },
+  "labels": {
+    "label_family": "forward_walk_economic",
+    "y_definition": "y_R = net R-multiple of the entry unit under exit_model_id=EX-VCRT-INTRABAR-V1 and cost_model_id=CM-XAUUSD-LEGACY-12BPS-UNCALIBRATED. y_win = 1 if y_R > 0 else 0. Computed ONLY by src/research/measurement/forward_walk.py at source. Never read from opportunities.outcome, opportunities.rr_achieved, trade.outcome or trade.rr_achieved (F-022: that stream is 36.8% self-consistent).",
+    "derivation_authority": "forward_walk.intrabar_fixed",
+    "stream_fields_banned_for_economic_claims": [
+      "opportunities.outcome",
+      "opportunities.rr",
+      "opportunities.rr_achieved",
+      "trade.rr_achieved",
+      "trade.outcome"
+    ],
+    "rederive_protocol": {
+      "enabled": false,
+      "matcher": "not_applicable_no_prior_stream",
+      "min_agreement": 1.0,
+      "on_fail": "BLOCK_EXPERIMENT"
+    },
+    "horizon_bars": 40,
+    "sign_convention": "LONG positive when price rises; SHORT positive when price falls; R = pnl / initial_risk after declared costs"
+  },
+  "costs": {
+    "cost_model_id": "CM-XAUUSD-COMPONENT-MEASURED-V1",
+    "components": [
+      {
+        "name": "ontology_and_provenance",
+        "bps_or_formula": "SEM-015 BROKER_EXECUTION_COST_DECOMPOSITION. PROVENANCE: measured from results/research/xauusd_mt5_cost_calibration/xauusd_mt5_cost_calibration_manifest_20260806T134255Z.json sha256 6ce4abf5cd76e37e24102b317588a5ebc188a320b84983c0a176ff52b1bb8e62. LEG MODEL: entry_leg = half_spread + commission + entry_slippage (market order at the entry bar close); exit_leg = half_spread + commission + stop_slippage on a stop exit, else half_spread + commission (take-profit limit / timeout). NOT 2 * c_per_side -- the manifest's c_per_side bundles stop slippage into every side because ZONE-X, which commissioned it, places stops on both legs; this object enters on a market order, so doubling would double-charge a take-profit exit. SWAP NOT CHARGED: every entry resolves inside the 40-bar horizon so nights_held=0 (measured swap -0.5601/+0.3834 USD/oz/night is recorded on SEM-015 and is inapplicable here). SUPERSEDES CM-XAUUSD-LEGACY-12BPS-UNCALIBRATED: F-082 measured that constant charging 0.5394R where the broker charges 0.0477R (stop exit) / 0.0354R (TP exit) at the reference case -- an 11.3x / 15.2x over-charge on XAUUSD. Net figures here remain DIAGNOSTIC: a calibrated cost model does not grant economic admissibility.",
+        "applied_on": "round_trip"
+      },
+      {
+        "name": "half_spread",
+        "bps_or_formula": "MEASURED 0.0450 USD/oz",
+        "applied_on": "entry"
+      },
+      {
+        "name": "half_spread",
+        "bps_or_formula": "MEASURED 0.0450 USD/oz",
+        "applied_on": "exit"
+      },
+      {
+        "name": "commission",
+        "bps_or_formula": "MEASURED 0.0400 USD/oz (MT5 reports it signed-negative; abs applied)",
+        "applied_on": "entry"
+      },
+      {
+        "name": "commission",
+        "bps_or_formula": "MEASURED 0.0400 USD/oz",
+        "applied_on": "exit"
+      },
+      {
+        "name": "entry_slippage",
+        "bps_or_formula": "PROXY_FROM_STOP 0.0900 USD/oz -- MARKET-order slippage is INSUFFICIENT_DATA (n=0 fills) in the source run, so the measured STOP median is used as a declared conservative proxy; never defaulted to zero",
+        "applied_on": "entry"
+      },
+      {
+        "name": "stop_slippage",
+        "bps_or_formula": "MEASURED 0.0900 USD/oz median (n=7, p90 0.3200) -- charged ONLY on a stop exit; a take-profit limit order does not slip favourably",
+        "applied_on": "exit"
+      }
+    ],
+    "gross_vs_net": {
+      "report_gross": true,
+      "report_net": true,
+      "promotable": "net_only"
+    },
+    "success_gate_uses": "net",
+    "code_entrypoint": "src/research/costs.py::ComponentCostModel"
+  },
+  "exits": {
+    "exit_model_id": "EX-VCRT-INTRABAR-ADVERSE-V2",
+    "exit_family": "intrabar_fixed_sl_tp",
+    "parameters": {
+      "sl_rule": "sweep_price -/+ sl_atr_buffer * atr_abs, placed BEYOND the swept extreme (LONG: below; SHORT: above)",
+      "sl_atr_buffer": 0.2,
+      "tp_atr_mult": 2.0,
+      "max_forward": 40,
+      "partial_tp": "none - single TP, no partial fill, no ratchet",
+      "source": "SEM-012 spec section 3.5; thresholds mirror configs/production/v2_htfcrt_2026_08 for comparability",
+      "adverse_fill": "AdverseFill(stop_slippage=0.09, model_gaps=True). A triggered stop fills at the bar OPEN when the bar opened beyond the stop (price never traded at the level), otherwise at level -/+ 0.09 USD/oz. Deliberately asymmetric: the take-profit leg is unchanged, because a resting limit order never fills better than its level."
+    },
+    "intrabar_rule": "forward_walk.intrabar_fixed: on each M15 bar SL is tested before TP (conservative same-bar tie-break). Fixed SL and TP, no trailing, no ratchet. Timeout at 40 bars is declared, never left to the max_forward default. V2 ADDS the adverse-fill model: V1 booked every fixed-stop exit at exactly -1.000R regardless of how far the triggering bar gapped through the level (measured 649/649 stop exits on a corpus probe). The SL-before-TP tie-break, the no-lookahead guard and the 40-bar timeout are unchanged. ONTOLOGY: SEM-016 ADVERSE_STOP_FILL_EXCURSION. SUPERSEDES EX-VCRT-INTRABAR-V1, whose perfect stop fill is the SEM-016 defect.",
+    "not_equal_to": [
+      "opportunities.outcome",
+      "close_only_exit",
+      "trailing",
+      "live ExecutionPlanner without declaration",
+      "info_only_no_exit",
+      "perfect_stop_fill_at_the_level"
+    ],
+    "code_entrypoint": "src/research/measurement/forward_walk.py::forward_walk(adverse_fill=...)"
+  },
+  "splits": {
+    "scheme": "single_holdout_chronologic",
+    "embargo": "96 M15 bars (24h) between the last train entry and the first test entry",
+    "purge": "drop train units whose 40-bar exit horizon overlaps the test start timestamp",
+    "n_folds_or_windows": 1,
+    "overlap_policy": "forbid_overlapping_labels",
+    "seed": 20260817,
+    "oos_fraction_or_dates": "last 20% of entries by entry_ts, computed per arm after inclusion; exact dates locked in split_manifest at run time"
+  },
+  "metrics": {
+    "information_metrics": [
+      "n_entries_per_arm",
+      "win_rate",
+      "funnel_counts_pool_to_sweep_to_displacement_to_entry",
+      "suppressed_by_duplicate_rule"
+    ],
+    "economic_metrics": [
+      "net_expectancy_R",
+      "profit_factor",
+      "max_drawdown_R",
+      "trades_per_month"
+    ],
+    "success_gate": "DIAGNOSTIC ONLY, promotes nothing. Reported per arm: n >= 30 AND net_expectancy_R > 0 AND profit_factor > 1 AND beats the pre-registered controls (random_entry, long_only). Meeting every clause is still NOT an economic validation while economic_claims_allowed is false (mt00/mt01 UNRUN). n >= 30 means sufficiently populated for reporting; 30 is a pre-declared lane minimum, not a statistical threshold conferring validity. CONTROLS, EXECUTED FOR THE FIRST TIME UNDER V2 (V1 declared them here and never ran one): random_entry = same n as the arm, same direction mix, same SL/TP geometry, ATR taken at the DRAWN bar, entry bars drawn uniformly without replacement subject to a full 40-bar forward window existing, seeded from splits.seed so the draw is reproducible; long_only = the arm's own entry bars and geometry with direction forced long, the binding control on this corpus because XAUUSD trended up across 2024-05 -> 2026-05, so a directional object must beat passive long exposure and not merely zero. BOTH controls resolve through the SAME forward_walk exit model and the SAME cost model as the arm they judge; scoring a control on a different basis would rig the comparison. The gate is a POINT-ESTIMATE comparison -- no paired difference test is declared here, so 'beats' means the arm's net mean exceeds the control's, not that the difference is significant.",
+    "kill_criteria": "NON-NEGOTIABLE. Any outcome - n=0, n<30, negative diagnostic expectancy, or a clean positive - is a RESULT TO REGISTER, not an invitation to retune. Changing ANY frozen dimension after seeing outcomes (pool vocabulary, pool tolerance, sweep predicate, displacement thresholds, retest predicate, the arm-B impulse substitution, duplicate rule, entry/SL/TP, cost model, exit model, timeout, corpus) requires a NEW MC-* id, a new hypothesis and a new pre-registration (V2) - never an edit to this instance. Additionally KILL the economic claim if: (1) y is taken from the F-022 stream instead of forward_walk; (2) suppressed duplicate signals are counted as units; (3) the 1-month visual-audit corpus is merged into the measured denominator; (4) 12bps is described as a calibrated metals cost; (5) an arm is selected after seeing outcomes; (6) the arm-B impulse substitution is restated as the canonical CRT retest formula.",
+    "multiplicity": {
+      "n_variants_preregistered": 2,
+      "control": "bonferroni"
+    },
+    "authority_ladder": {
+      "info_not_value": true,
+      "value_not_authority": true,
+      "insufficient_not_harmful": true
+    },
+    "forbidden_metric_substitutions": [
+      "p_value_as_edge",
+      "gross_as_success",
+      "n_detections_as_n_trades",
+      "in_sample_as_oos",
+      "visual_audit_n_as_measured_n",
+      "screenshot_window_trades_as_measured_n",
+      "diagnostic_expectancy_as_economic_validation",
+      "n_ge_30_as_proof_of_validity"
+    ]
+  },
+  "pipeline_identity": {
+    "config_version_source": "NOT the production config path. SEM-012 thresholds are pre-registered in docs/research/visual_crt_trade_object.md section 3.4 and mirror v2_htfcrt_2026_08 numerically for comparability only. configs/production/ACTIVE_VERSION is READ but never written and never loaded to drive this object.",
+    "active_version_file": "configs/production/ACTIVE_VERSION",
+    "engine_gate_mode": "research_custom",
+    "expected_engines": [],
+    "modules_in_path": [
+      "src/research/visual_crt/pools.py",
+      "src/research/visual_crt/geometry.py",
+      "src/research/visual_crt/retest.py",
+      "src/research/visual_crt/driver.py",
+      "src/features/parent_candle.py",
+      "src/features/candle_math.py",
+      "src/research/measurement/forward_walk.py",
+      "src/research/contracts.py",
+      "src/data_ingestion/dataset_integrity.py"
+    ],
+    "modules_explicitly_out_of_path": [
+      "src/config_layer/crt_engine_v2.py (AST-enforced: no runtime import from src/research/visual_crt/)",
+      "src/config_layer/m15_structural_range.py (SEM-011 is NOT the swept envelope here)",
+      "src/config_layer/parent_crt.py",
+      "src/runtime/backtest_v2.py",
+      "src/core/engine_runner.py",
+      "src/core/fusion_engine.py",
+      "src/core/decision_engine.py",
+      "src/features/feature_pipeline.py (no 48-dim vector is built for this object)",
+      "src/features/smc/* (levels are tanh-bounded distances, not drawable pools)",
+      "src/runtime/live_engine_hook.py (F-073 no live rail)",
+      "tools/tv_forensic/* (visual audit only, separate corpus, separate run)"
+    ],
+    "dataset_integrity_level": "L1_L2_L3"
+  },
+  "prohibited_substitutions": [
+    {
+      "surface": "population",
+      "forbidden": "Merge the 1-month visual-audit corpus (data/XAUUSD_M15.csv) into the measured population or any economic denominator, or report trades found in the screenshot window as the measured n",
+      "historical_class": "FC-CORPUS-DENOMINATOR-MERGE"
+    },
+    {
+      "surface": "population",
+      "forbidden": "Count pool sweeps, displacements, or duplicate-suppressed signals as trade units",
+      "historical_class": "FC-POP-DETECTION-AS-TRADE"
+    },
+    {
+      "surface": "features",
+      "forbidden": "Use SEM-011 M15-SLR h_ref/l_ref as the swept level, or substitute FM-041 close-relative atr for FM-074 atr_abs",
+      "historical_class": "FC-FEATURE-NAME-COLLISION"
+    },
+    {
+      "surface": "labels",
+      "forbidden": "Use opportunities.outcome / rr_achieved as y",
+      "historical_class": "FC-LABEL-STREAM-INCONSISTENT"
+    },
+    {
+      "surface": "costs",
+      "forbidden": "Describe 12bps as a calibrated XAUUSD cost, or report gross as success",
+      "historical_class": "FC-COST-MODEL-SUBSTITUTION"
+    },
+    {
+      "surface": "exits",
+      "forbidden": "Substitute close-only, trailing, or a stream outcome for forward_walk.intrabar_fixed",
+      "historical_class": "FC-EXIT-PROXY-NOT-GOVERNING"
+    },
+    {
+      "surface": "splits",
+      "forbidden": "Admit overlapping labels by relaxing the one-open-trade rule",
+      "historical_class": "FC-SPLIT-LABEL-OVERLAP"
+    },
+    {
+      "surface": "metrics",
+      "forbidden": "Select arm A or arm B after seeing outcomes, or report an arm without the Bonferroni correction for 2 pre-registered variants",
+      "historical_class": "FC-METRIC-VARIANT-SELECTION"
+    },
+    {
+      "surface": "metrics",
+      "forbidden": "Present diagnostic expectancy as economic validation while economic_claims_allowed is false",
+      "historical_class": "FC-DIAGNOSTIC-AS-ECONOMIC"
+    },
+    {
+      "surface": "pipeline",
+      "forbidden": "Restate the arm-B impulse substitution as the canonical CRT retest formula, or read a positive arm-B result as certifying crt_engine_v2.try_expansion_to_retest",
+      "historical_class": "FC-PIPELINE-SUBSTITUTION-LAUNDERED-AS-CANON"
+    },
+    {
+      "surface": "pipeline",
+      "forbidden": "Run the driver without the L3 pre-flight (dataset_integrity.validate_dataset) on the measurement corpus. dataset_integrity_level=L1_L2_L3 is BINDING on this instance, not inherited: F-039 established that research paths normally stream with only the inline L1/L2 backstop, and this contract pre-registers the stronger gate instead of that research default.",
+      "historical_class": "FC-PIPELINE-L3-SKIPPED-AS-RESEARCH-DEFAULT"
+    }
+  ],
+  "evidence_artifacts": {
+    "contract_path": "configs/research/measurement_contracts/instances/MC-VCRT-XAUUSD-M15-V2.json",
+    "population_fingerprint_path": "results/visual_crt/mc_vcrt_xauusd_m15_v2/population_fingerprint.json",
+    "feature_parity_path": null,
+    "label_rederive_path": null,
+    "cost_exit_fixture_path": "results/visual_crt/mc_vcrt_xauusd_m15_v2/cost_exit_fixture.json",
+    "split_manifest_path": "results/visual_crt/mc_vcrt_xauusd_m15_v2/split_manifest.json",
+    "metric_compute_path": "results/visual_crt/mc_vcrt_xauusd_m15_v2/metrics.json",
+    "mt00_report_path": "results/visual_crt/mc_vcrt_xauusd_m15_v2/mt00.json",
+    "mt01_mutation_coverage_path": "results/visual_crt/mc_vcrt_xauusd_m15_v2/mt01.json",
+    "code_commit": null
+  },
+  "trust_status": {
+    "mt00": "UNRUN",
+    "mt01_matrix_coverage": "UNRUN",
+    "economic_claims_allowed": false,
+    "failing_probes": [],
+    "open_risks_non_blocking": [
+      "27 E-MT-01 probes are not implemented in this repo (0/27); MEASUREMENT_LAYER_STATUS=OPEN",
+      "12bps cost is uncalibrated for XAUUSD metals; MP-METALS-MT5 lifecycle is DRAFT",
+      "n may be <30 on either arm (INSUFFICIENT, not harmful, not evidence against the object)",
+      "Arm B rests on the declared impulse-for-rng.size substitution; a positive arm B licenses only this research object under that substitution",
+      "SEM-012 is CHARACTERIZED, not domain-certified: pool-founded CRT is a construction, not an established institutional reading",
+      "Every prior directional program on this spine returned null (F-019...F-042); the prior is unfavourable",
+      "F-051 and F-066 are OUT OF PATH for this object but remain open globally",
+      "Stop slippage in the V2 cost model rests on n=7 near-market DEMO stop fills and likely UNDERSTATES gap-driven barrier slip (p90 0.3200 against a 0.0900 median).",
+      "Entry slippage is a declared conservative PROXY from the STOP median, not a measurement: MARKET-order slippage was INSUFFICIENT_DATA (n=0 fills).",
+      "V1 declared an OOS split and two controls and executed neither; V2 is the first complete execution of this contract. This does not affect F-081's REJECT, because controls and OOS are gates a POSITIVE result must clear.",
+      "V2 re-uses V1's corpus. It is a replication under a corrected ruler, not new evidence."
+    ]
+  }
+}
