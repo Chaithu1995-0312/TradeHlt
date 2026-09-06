@@ -12,7 +12,7 @@ python scripts/analysis/generate_script_matrix.py
 Authority: **inventory only** (no promote power). Thin-wrapper purity is **not**
 CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` only.
 
-**Records:** 378
+**Records:** 442
 
 | ID | Category | Lifecycle | Impl status | Path | Purpose |
 |---|---|---|---|---|---|
@@ -394,6 +394,70 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-376` | GOVERNANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/enrich_workbooks_with_semantic_identity.py` | Append Semantic File Identity columns (Semantic ID / Semantic Name / Filename... |
 | `SCR-377` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xauusd_episode_coverage_census.py` | GRANDFATHER_UNCLASSIFIED |
 | `SCR-378` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xauusd_episode_semantic_reconstruction.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-379` | PROBE | EPHEMERAL | LOGIC_IN_SCRIPT | `_dedent.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-380` | PROBE | EPHEMERAL | LOGIC_IN_SCRIPT | `_run_mr.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-381` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/all_states_economic_probe.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-382` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/all_states_persistence_probe.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-383` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/blind_label_rasterize.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-384` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/build_decision_atlas.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-385` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/build_sweep_liquidity_fact.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-386` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/crt_config_completeness_census.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-387` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/crt_declare_all_knobs_parity.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-388` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/crt_episode_number_trace.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-389` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/crt_threshold_authority_census.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-390` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/p001_excursion_probe.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-391` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/query_decision_atlas.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-392` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/query_trace.py` | READ-ONLY DuckDB query surface over Trace/research Parquet projections (crt_c... |
+| `SCR-393` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/render_chart.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-394` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/research_dag_provenance.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-395` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/run_crt_trace_workflow.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-396` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/session_filter_funnel_probe.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-397` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/shadow_cross_range_restoration_probe.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-398` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/sweep_conditional_magnitude_probe.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-399` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/sweep_state_persistence_probe.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-400` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/sweep_structure_economic_probe.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-401` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/v3_config_parity.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-402` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/xauusd_excel_feature_state_trace.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-403` | GOVERNANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/provenance_query.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-404` | GOVERNANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/query_semantic_os.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-405` | GOVERNANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/review_ohlcv_clocks.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-406` | ORPHAN | ACTIVE | LOGIC_IN_SCRIPT | `scripts/live/run_live_rail.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-407` | MAINTENANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/maintenance/g1_build_v4_crt_sot_config.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-408` | MAINTENANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/maintenance/g2_v4_crt_sot_parity.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-409` | MAINTENANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/maintenance/g3_append_v4_crt_sot_registration.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-410` | MAINTENANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/maintenance/gen_crt_state_identity.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-411` | MAINTENANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/maintenance/jsonl_to_parquet.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-412` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/build_bar_matrix.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-413` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/crt_state_window_trace.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-414` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/crt_variant_surface.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-415` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/e1_retest_depth_max_probe.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-416` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/emit_bar_structure_snapshots.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-417` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/emit_dual_construction_trace.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-418` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/exit_geometry_scan.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-419` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/high_acceptance_activity_conditioning.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-420` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/high_acceptance_gap_policy.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-421` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/high_acceptance_group_ablation.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-422` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/high_acceptance_multivariate_model.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-423` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/high_acceptance_normalization_control.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-424` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/high_acceptance_regime_stability.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-425` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/high_acceptance_scan.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-426` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/high_acceptance_structural_scan.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-427` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/htf_objective_gate_shadow.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-428` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/htf_parent_telemetry_extract.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-429` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/oracle_pattern_scan.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-430` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/p_struct_01_displacement_evidence.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-431` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/parent_crt_pivotality_probe.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-432` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/rc003_distinct_object.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-433` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/run_evidence_layer.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-434` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/smc_feature_month_extract.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-435` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/smc_visual_verification.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-436` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/tv_engine_odds.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-437` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/tv_structure_comparison.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-438` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/validate_oracle_harness.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-439` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/vcrt_remeasure_v2.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-440` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/visual_state_questions.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-441` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/visual_state_sample.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-442` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/visual_state_score.py` | GRANDFATHER_UNCLASSIFIED |
 
 ---
 

@@ -1,0 +1,40 @@
+{
+  "change_id": "CH-trace-parquet-duckdb-query",
+  "date_utc": "2026-09-06",
+  "declared_files": [
+    "pyproject.toml",
+    "src/utils/duckdb_query.py",
+    "scripts/maintenance/jsonl_to_parquet.py",
+    "scripts/analysis/query_trace.py",
+    "tests/test_duckdb_query.py",
+    "tests/test_query_trace.py",
+    "tests/test_jsonl_to_parquet_family.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/governance/script_registry_grandfather.json",
+    "data/script_registry.jsonl",
+    "docs/reference/script-matrix.md",
+    "docs/reference/schemas.md",
+    "docs/topics/crt-spine.md",
+    "docs/governance/build_manifests/CH-trace-parquet-duckdb-query.impact.json",
+    "docs/governance/build_manifests/CH-trace-parquet-duckdb-query.completion.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_parquet_store.py",
+    "tests/test_duckdb_query.py",
+    "tests/test_query_trace.py",
+    "tests/test_jsonl_to_parquet_family.py",
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py"
+  ],
+  "repo_state_hash": "PENDING",
+  "completion_status": "BLOCKED_PREEXISTING_DIRTY_TREE",
+  "completion_note": "STATUS is BLOCKED_PREEXISTING_DIRTY_TREE following CH-resolver-engine-envelope precedent. validate-completion compares the whole porcelain tree against declared_files; this worktree carries hundreds of undeclared governed paths from concurrent sessions. They are NOT absorbed into declared_files.\\n\\nChange-specific work is done: duckdb in parquet extra; FAMILY_DEFAULTS _crt_construction.jsonl\u2192engine_state_after; duckdb_query.open_views; query_trace CLI; tests 32/32 green for the parquet/duckdb/query_trace/family suite; SITS overlay+stubs+grandfather+matrix include query_trace classified DIAGNOSTIC/LOGIC_IN_SCRIPT; schemas \u00a79.17 Parquet note; crt-spine Discussion 2026-09-06; session log appended. production_behavior_changed=NO. JSONL remains SoR.\\n\\nVerification: pytest 32 passed; jsonl_to_parquet --dry-run --glob logs/**/*_crt_construction.jsonl shows partition_by=engine_state_after on 7 targets (logs/crt_construction/*.jsonl is empty \u2014 corpora live under logs/dual_construction*); query_trace --list lists existing family projections. check_governance_invariants --all and construction_protocol check remain RED on pre-existing floors (findings freshness, session-log cap, geometry census, etc.) unrelated to this change.",
+  "production_behavior_changed": "NO",
+  "evidence": {
+    "pytest_parquet_duckdb": "32 passed",
+    "dry_run_family": "partition_by=engine_state_after on *_crt_construction.jsonl",
+    "query_trace_list": "crt_telemetry/events/opportunities/clean_labels/bar_structure present; crt_construction ABSENT until projected"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "change_id": "CH-trace-parquet-duckdb-query",
+  "date_utc": "2026-09-06",
+  "objective": "Additive Trace \u2192 Parquet \u2192 DuckDB query layer: register _crt_construction.jsonl family default (partition engine_state_after), add src/utils/duckdb_query.open_views, and scripts/analysis/query_trace.py over regenerable Parquet sidecars. JSONL remains system of record. No runtime emitter flip; no engine_runner/backtest_v2/live_engine_hook wiring; query_decision_atlas untouched.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "New diagnostic script + SITS overlay/stubs/matrix (SCRIPT_LIFECYCLE_CHANGE). Shared duckdb_query helper and jsonl_to_parquet FAMILY_DEFAULTS extension are additive read-only infrastructure over existing parquet_store doctrine \u2014 not TRACE_OBSERVATION_JOIN (no emitter/schema field change), not RUNTIME_DECISION_PATH_CHANGE. Docs: schemas.md \u00a79.17 projection note + crt-spine Discussion (DOCUMENTATION_ONLY).",
+  "affected_files": [
+    "pyproject.toml",
+    "src/utils/duckdb_query.py",
+    "scripts/maintenance/jsonl_to_parquet.py",
+    "scripts/analysis/query_trace.py",
+    "tests/test_duckdb_query.py",
+    "tests/test_query_trace.py",
+    "tests/test_jsonl_to_parquet_family.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "data/script_registry.jsonl",
+    "docs/reference/script-matrix.md",
+    "docs/reference/schemas.md",
+    "docs/topics/crt-spine.md",
+    "docs/governance/build_manifests/CH-trace-parquet-duckdb-query.impact.json",
+    "docs/governance/build_manifests/CH-trace-parquet-duckdb-query.completion.json",
+    "assistant_project.md",
+    "docs/governance/script_registry_grandfather.json"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_parquet_store.py",
+    "tests/test_duckdb_query.py",
+    "tests/test_query_trace.py",
+    "tests/test_jsonl_to_parquet_family.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert duckdb_query.py, query_trace.py, FAMILY_DEFAULTS entry, parquet extra duckdb pin, tests, SITS overlay/stubs/matrix, schemas \u00a79.17 projection note, crt-spine Discussion row, manifests, session log. JSONL corpora and runtime emitters untouched.",
+  "authority_granted": "User 2026-09-06: implement additive Trace \u2192 Parquet \u2192 DuckDB query layer on Windows checkout; Cloud Agents unavailable.",
+  "authority_NOT_granted": "No flip of crt_construction_trace.enabled; no src/identity/; no engine_runner/backtest_v2/live_engine_hook wiring; no migrating query_decision_atlas onto the helper; no inventing Context/ODP/Policy emitters; no F-id; no active_models.yaml machine_readable_sources edit.",
+  "production_behavior_changed": "NO"
+}

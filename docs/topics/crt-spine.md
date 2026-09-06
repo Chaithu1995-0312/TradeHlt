@@ -41,6 +41,7 @@ This *is* the spine in [`docs/architecture/signal-flow.md`](../architecture/sign
 authoritative for flow and states; this topic is the human-language entry point that links to them.
 
 ## Discussion (filled in-session)
+- **Trace → Parquet → DuckDB query layer (2026-09-06):** Additive read-only sidecars only. `jsonl_to_parquet.FAMILY_DEFAULTS` maps `_crt_construction.jsonl` → `engine_state_after`. New `src/utils/duckdb_query.open_views` + `scripts/analysis/query_trace.py` query projections under `logs/` and `results/`. JSONL remains system of record; no emitter enable flip; no spine wiring; `query_decision_atlas.py` unchanged. See `docs/reference/schemas.md` §9.17.
 - **Risks:** `2026-06-01` removing/renaming an engine without updating `EXPECTED_ENGINES` produces silent partial fusion (`CLAUDE.md §4`).
 - **Challenges:** `2026-06-01` per-step `tests/` file mapping not yet pinned here — relies on `testing.md` domains.
 - **Blockers:** `2026-06-01` none.

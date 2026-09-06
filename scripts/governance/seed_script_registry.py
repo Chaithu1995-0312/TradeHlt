@@ -494,6 +494,29 @@ OVERLAYS: list[dict[str, Any]] = [
             "PR-6: query surface already library-backed by ScriptRegistry; CLI is argparse only."
         ),
     },
+    # -- CH-trace-parquet-duckdb-query: DuckDB over Trace/research Parquet sidecars --
+    {
+        "path": "scripts/analysis/query_trace.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "dest_modules": [
+            "src/utils/duckdb_query.py",
+            "src/utils/parquet_store.py",
+            "scripts/maintenance/jsonl_to_parquet.py",
+        ],
+        "config_keys": [],
+        "purpose": (
+            "READ-ONLY DuckDB query surface over Trace/research Parquet projections "
+            "(crt_construction, crt_telemetry, events, opportunities, clean_labels, "
+            "bar_structure) via src/utils/duckdb_query.open_views. JSONL remains system "
+            "of record; projections are regenerable sidecars from jsonl_to_parquet. "
+            "Accepts --list / --family / --sql. DESCRIPTIVE ONLY; no p-value/verdict/"
+            "economic claim. Does not replace query_decision_atlas.py."
+        ),
+    },
+
 ]
 
 

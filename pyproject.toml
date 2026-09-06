@@ -12,6 +12,17 @@ where = ["src"]
 
 [project.optional-dependencies]
 hummingbot = ["hummingbot>=2.0.0"]
+# Parquet projections over JSONL research corpora (src/utils/parquet_store.py) and
+# DuckDB query helpers over those projections (src/utils/duckdb_query.py). Optional:
+# build/projection needs pyarrow; query needs duckdb. Every read path degrades to the
+# JSONL source when pyarrow is absent; duckdb_query raises only when a query is attempted.
+parquet = ["pyarrow", "duckdb"]
+# Own-corpus OHLC chart rendering (src/charts/, INFRA-CPC-V1 Workstream A0). Optional:
+# render.py imports mplfinance behind a guard and degrades to a stdlib inline-SVG
+# backend when it is absent, so an absent plotting stack changes the output FORMAT
+# and never the availability of the chart or its series/legend/pin artifacts.
+charts = ["mplfinance"]
+live_rail = ["websockets>=12"]
 # MT5-first analytics subsystem (mt5_analytics/). Foundation/kernel needs only
 # MetaTrader5 (behind an import guard); the rest support later phases (storage,
 # dashboard, research).

@@ -582,6 +582,18 @@ Open Questions: BTC/SOL ML registry eligibility.
 Next Step: after reboot — run BTC then SOL CLI; write h-gauss-delta-001-run-findings.md; close if no CONSUMABLE.
 
 ---
+📝 SESSION LOG ENTRY
+Date: 2026-09-06
+Topic: Additive Trace → Parquet → DuckDB query layer (CH-trace-parquet-duckdb-query)
+Decision/Output: Built regenerable read-only sidecars only. pyproject parquet extra adds duckdb (build=pyarrow, query=duckdb). jsonl_to_parquet FAMILY_DEFAULTS maps _crt_construction.jsonl → engine_state_after. NEW src/utils/duckdb_query.py + scripts/analysis/query_trace.py. Tests for duckdb_query / query_trace / family defaults + synthetic crt_construction parity. SITS overlay for query_trace. schemas §9.17 Parquet note + crt-spine Discussion 2026-09-06. No emitter enable flip; no spine wiring; query_decision_atlas untouched; no F-id.
+Belief Update / ROI / Goal:
+  Goal: query Trace/research Parquet projections without inventing emitters.
+  Belief: CONFIRMED JSONL remains SoR; DuckDB is ephemeral views over regenerable Parquet.
+  Knowledge ROI: high for stratum research queries; zero trading-edge claim.
+  Action: project dual_construction JSONL when needed; query via query_trace.py.
+Open Questions: measured crt_construction columns TBD until an enabled:true research run.
+Next Step: optional project+query dual_construction_v2; do not enable emitter on ACTIVE_VERSION without a separate TRACE_OBSERVATION_JOIN turn.
+---
 SESSION LOG ENTRY
 Date: 2026-07-21
 Topic: BitNet phase transition affirmed - evidence bottleneck; CONTRACT-C + model.bundle

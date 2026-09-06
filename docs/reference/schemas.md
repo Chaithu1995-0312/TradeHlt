@@ -872,3 +872,18 @@ No Pydantic, no Zod, no class-validator. Validation is enforced by:
 | Promotion preconditions                                        | `governance/promotion_manager.py`                      | `report["decision"] == "APPROVE"` + hash verify |
 | Backtest warmup / data sufficiency                             | `runtime/backtest_v2.py`                               | `warmup_candles` parameter, raises if insufficient |
 | TTL / RR / kill-switch thresholds                              | `core/ultron_risk_gate.py`                             | Hard checks in `evaluate()`          |
+
+## 9.17 `CRTConstructionTrace` JSONL — observation sidecar (Parquet note)
+
+Full row schema for the observation-only `CRTConstructionTrace` stream is maintained with
+change class `TRACE_OBSERVATION_JOIN` (emitter: `src/runtime/crt_construction_trace.py`;
+default `enabled: false`). This section records the **Parquet projection** contract for
+that family so research readers can find it without waiting on an `enabled:true` production run.
+
+**Parquet projection (regenerable sidecar).** Family suffix `_crt_construction.jsonl` →
+partition key `engine_state_after` (same CRT-state stratum pattern as `_bar_structure.jsonl`).
+Build with `scripts/maintenance/jsonl_to_parquet.py`; query with
+`scripts/analysis/query_trace.py` (`--family crt_construction`) via
+`src/utils/duckdb_query.open_views`. JSONL remains system of record; measured columns TBD —
+no production `enabled:true` run yet.
+
