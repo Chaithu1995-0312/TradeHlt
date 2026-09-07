@@ -113,3 +113,54 @@ def test_default_report_is_descriptive(construction_projection, capsys) -> None:
     out = capsys.readouterr().out
     assert "DESCRIPTIVE ONLY" in out
     assert "crt_construction" in out
+
+
+@pytest.fixture()
+def events_tree(tmp_path: Path, monkeypatch) -> Path:
+    """Fake ROOT logs/ with three *_events families plus one runtime-events one.
+
+    GT-3: integrity_events and secondlow_prospective_events share the
+    `*_events.parquet` glob but are NOT the runtime-events population. They must
+    be excluded from the `events` view by discover_projections.
+    """
+    import query_trace as qt
+    from utils.parquet_store import compact_jsonl
+
+    logs = tmp_path / "logs"
+    runtime = logs / "run_20260903_161258_XAUUSD"
+    runtime.mkdir(parents=True)
+    foreign2 = logs / "dual_construction_v2" / "scratch" / "arm_a" / "data"
+    foreign2.mkdir(parents=True)
+
+    runtime_records = [
+        {
+            "event": "STATE_TRANSITION", "timestamp": "t0", "candle_index": 1,
+            "state_from": "RANGE", "state_to": "EXPANSION", "direction": "long",
+            "price": 1.0, "reason": "r", "metadata": {},
+        },
+        {
+            "event": "RESET", "timestamp": "t1", "candle_index": 10,
+            "state_from": "RANGE", "state_to": "RANGE", "direction": "long",
+            "price": 2.0, "reason": "r2", "metadata": {},
+        },
+    ]
+    integrity_rec = [{"event": "INTEGRITY_FAIL", "payload": "x", "severity": "error", "source": "s", "ts": "t"}]
+    prospective_rec = [{"collected_at": "c", "corpus_hash_prefix": "h", "detector": "d", "hypothesis_id": "id", "post_window_complete": True, "purge_time": "p"}]
+
+    compact_jsonl(_write_jsonl(runtime / "XAUUSD_events.jsonl", runtime_records))
+    compact_jsonl(_write_jsonl(logs / "integrity_events.jsonl", integrity_rec))
+    compact_jsonl(_write_jsonl(foreign2 / "secondlow_prospective_events.jsonl", prospective_rec))
+
+    monkeypatch.setattr(qt, "ROOT", tmp_path)
+    return logs
+
+
+def test_events_discover_excludes_foreign_populations(events_tree) -> None:
+    import query_trace as qt
+
+    found = qt.discover_projections(["events"])
+    events = [p.relative_to(qt.ROOT).as_posix() for p in found.get("events", [])]
+    assert len(events) == 1, f"events should contain ONLY the runtime events family, got {events}"
+    assert "XAUUSD_events.parquet" in events[0]
+    assert not any("integrity_events" in p for p in events), events
+    assert not any("secondlow_prospective_events" in p for p in events), events

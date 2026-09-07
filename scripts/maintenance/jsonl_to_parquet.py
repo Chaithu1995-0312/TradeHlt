@@ -58,10 +58,22 @@ FAMILY_DEFAULTS: dict[str, tuple] = {
     "_crt_construction.jsonl": ("engine_state_after", None),
 }
 
+# Foreign `*_events` look-alikes (analytics schema registry §2.3). They share the
+# `_events.jsonl` suffix but are NOT the runtime-events population: different
+# owner / population / cardinality / measurement meaning / decision rights
+# (GT-3). Never let them project into the `events` family.
+EVENTS_FAMILY_EXCLUDE = {
+    "integrity_events.jsonl",                # {event,payload,severity,source,ts}
+    "secondlow_prospective_events.jsonl",    # {collected_at,hypothesis_id,detector,...}
+}
+
 
 def resolve_family(path: Path) -> tuple:
     """(partition_by, skip_predicate) for *path*, from its family suffix."""
     name = path.name
+    if name in EVENTS_FAMILY_EXCLUDE:
+        # Foreign *_events look-alike — unpartitioned, unlabelled; NOT the events family.
+        return (None, None)
     for suffix, opts in FAMILY_DEFAULTS.items():
         if name.endswith(suffix):
             return opts

@@ -63,6 +63,12 @@ FAMILY_GLOBS: dict[str, tuple[str, ...]] = {
     ),
 }
 
+# Exclude non-events-population files from the `events` view (GT-3).
+# These share the `*_events.parquet` glob but are distinct populations
+# (integrity events, secondlow prospective events) — mixing them would
+# silently coalesce three schemas into one family.
+NON_EVENTS_FAMILY_PREFIXES = ("integrity_events", "secondlow_prospective_events")
+
 
 def _read_parquet_glob(projection: Path) -> str:
     """DuckDB read_parquet argument for a single-file or partitioned projection."""
@@ -85,6 +91,9 @@ def discover_projections(families: list[str] | None = None) -> dict[str, list[Pa
         for pattern in FAMILY_GLOBS[fam]:
             for hit in _glob.glob(str(ROOT / pattern), recursive=True):
                 p = Path(hit)
+                # Exclude non-events-population files from the `events` view (GT-3).
+                if p.name.startswith(NON_EVENTS_FAMILY_PREFIXES):
+                    continue
                 # glob may hit part-0.parquet inside a partitioned dir; keep the
                 # projection root (the *.parquet file OR the *.parquet directory).
                 if p.is_file() and p.parent.name.endswith(".parquet"):

@@ -33,6 +33,20 @@ def test_unknown_family_has_no_partition() -> None:
     assert skip is None
 
 
+def test_foreign_events_lookalikes_are_excluded_from_events_family() -> None:
+    # GT-3: these share the `_events.jsonl` suffix but are NOT the runtime-events
+    # population (different owner/population/cardinality/meaning/decision-rights).
+    # resolm_family must NOT map them onto the `events` family partition.
+    for name in (
+        "logs/integrity_events.jsonl",
+        "logs/dual_construction_v2/scratch_roots/arm_a_v2_baseline/"
+        "data/secondlow_prospective_events.jsonl",
+    ):
+        partition_by, skip = resolve_family(Path(name))
+        assert partition_by is None, f"{name}: foreign *_events leaked into events family"
+        assert skip is None
+
+
 def test_family_defaults_contains_crt_construction_suffix() -> None:
     assert "_crt_construction.jsonl" in FAMILY_DEFAULTS
     assert FAMILY_DEFAULTS["_crt_construction.jsonl"] == ("engine_state_after", None)

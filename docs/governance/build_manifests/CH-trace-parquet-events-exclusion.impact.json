@@ -1,0 +1,39 @@
+{
+  "change_id": "CH-trace-parquet-events-exclusion",
+  "date_utc": "2026-09-07",
+  "objective": "Fix GT-3 population-mixing defect + GT-1 legacy-naming annotation in the Trace→Parquet→DuckDB analytics layer. GT-3: the `_events.jsonl` family suffix and `*_events.parquet` glob currently admit three distinct populations (runtime transition events, integrity events, secondlow prospective events). This excludes the two foreign streams from the `events` family at BOTH the projection layer (jsonl_to_parquet.resolve_family) and the query layer (query_trace.discover_projections), preventing silent population coalescing in DuckDB. GT-1: document tp2_surrogate_r as the legacy name of canonical tp2_stretch_r in both analytics registries (annotation only \u2014 NO new row, counts stay 268/1608).",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Modifies existing diagnostic/maintenance scripts (jsonl_to_parquet.py, query_trace.py) to add an events-family exclusion \u2014 matching the parent CH-trace-parquet-duckdb-query classification (SCRIPT_LIFECYCLE_CHANGE), not a new emitter, not a runtime decision-path change, not a schema field change. Analytics registry annotations are documentation-only (DOCUMENTATION_ONLY). No ontology, no F-id, no production config change.",
+  "affected_files": [
+    "scripts/maintenance/jsonl_to_parquet.py",
+    "scripts/analysis/query_trace.py",
+    "tests/test_jsonl_to_parquet_family.py",
+    "tests/test_query_trace.py",
+    "docs/governance/ANALYTICS_SCHEMA_REGISTRY.md",
+    "docs/governance/ANALYTICS_LINEAGE_REGISTRY.md",
+    "docs/governance/build_manifests/CH-trace-parquet-events-exclusion.impact.json",
+    "docs/governance/build_manifests/CH-trace-parquet-events-exclusion.completion.json"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_jsonl_to_parquet_family.py",
+    "tests/test_query_trace.py",
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert jsonl_to_parquet.py EVENTS_FAMILY_EXCLUDE, query_trace.py NON_EVENTS_FAMILY_PREFIXES + discover_projections filter, the two tests, and the two registry annotations, together. JSONL corpora and runtime emitters untouched.",
+  "authority_granted": "User approved act mode: execute GT-3 (population separation) \u2192 GT-1 (registry) \u2192 re-parity \u2192 promote the trace/parquet/duckdb analytics lineage fix.",
+  "authority_NOT_granted": "No new EMITTER field promotion; no runtime emitter flip; no change to production_behavior; no F-id; no active_models edit; no new Parquet family.",
+  "production_behavior_changed": "NO"
+}
