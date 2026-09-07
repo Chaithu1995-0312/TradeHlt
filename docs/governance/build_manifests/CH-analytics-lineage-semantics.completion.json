@@ -1,0 +1,23 @@
+{
+  "change_id": "CH-analytics-lineage-semantics",
+  "date_utc": "2026-09-07",
+  "declared_files": [
+    "docs/design/context-finding-odp/ANALYTICS_LINEAGE_SEMANTICS_DECISION.md",
+    "docs/governance/ANALYTICS_LINEAGE_REGISTRY.md",
+    "docs/governance/build_manifests/CH-analytics-lineage-semantics.impact.json",
+    "docs/governance/build_manifests/CH-analytics-lineage-semantics.completion.json"
+  ],
+  "checks_executed": [
+    "tests/test_topic_docs.py"
+  ],
+  "repo_state_hash": "PENDING",
+  "completion_status": "BLOCKED_PREEXISTING_DIRTY_TREE",
+  "completion_note": "DOCTRINE FROZEN: L-001 definitions (written_by/produced_by/owner/consumed_by), evidence taxonomy (CORPUS_VERIFIED/CODE_VERIFIED/DECLARED_ONLY), attribution-eligibility (opportunities.outcome/rr_achieved NOT eligible until L-003). Phase B measurement recorded: 191 writer==owner / 65 backtest_v2-umbrella / 12 opportunities UNKNOWN; consumed_by 0 variance; lineage variance LOCALIZED to opportunities - global 4-column lineage schema falsified; family-scoped produced_by=list[str] held as measured-not-promoted. Lineage registry doctrine notes added (evidence class + attribution eligibility). Parity verified post-edit: 268<->268, 1:1 exact, 12 UNKNOWN unchanged. validate-impact APPROVED. test_topic_docs 3 passed. test_current_findings (3) + test_doc_citations (1) remain RED on PRE-EXISTING floors (stale findings, untracked evidence paths) unrelated to this change; none reference the decision sheet or lineage registry.",
+  "production_behavior_changed": "NO",
+  "evidence": {
+    "impact_validation": "APPROVED",
+    "parity_after_definitions": "268<->268, 1:1 exact, 12 UNKNOWN unchanged",
+    "test_topic_docs": "3 passed",
+    "pre_existing_floors_unrelated": "test_current_findings 3 + test_doc_citations 1 (stale/untracked evidence, not lineage files)"
+  }
+}

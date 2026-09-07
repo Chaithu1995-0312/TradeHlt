@@ -18,6 +18,8 @@
   - `producer_id` ≠ Context `state_producer`;
   - DecisionEngine `confidence` / telemetry decision vocabulary ≠ ODP `confidence` (`decision_confidence` vs `odp_confidence`).
 - **UNKNOWN policy:** if a lineage cell is not evidenced from emitters / JSONL samples / `FAMILY_DEFAULTS` / `FAMILY_GLOBS`, it is marked **`UNKNOWN` explicitly** — never invented.
+- **Evidence class (doctrine — see `docs/design/context-finding-odp/ANALYTICS_LINEAGE_SEMANTICS_DECISION.md` §4):** each row/family is classed `CORPUS_VERIFIED` / `CODE_VERIFIED` / `DECLARED_ONLY`. Only `CORPUS_VERIFIED` with resolved `produced_by` is eligible as attribution input. A row may be `CODE_VERIFIED` (reachable in emitter code) without being `CORPUS_VERIFIED` (observed on disk) — **implemented ≠ observed**.
+- **Attribution eligibility (doctrine — decision sheet §5):** `opportunities.outcome` / `rr_achieved` are **NOT attribution-eligible** until an exit/oracle contract (L-003) makes them mean a realized trade. `opportunities.features` / `clean_labels.features` are parent-only; per-field producer unenumerated (GT-4).
 - **`consumed_by`:** research tooling / diagnostics only unless a real decision consumer is evidenced. **Do not invent DecisionEngine consumers.**
 
 ### Column schema (this companion)
