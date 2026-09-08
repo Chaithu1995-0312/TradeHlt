@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "docs/research/reports/schemas/falsify_record.schema.json",
+  "title": "FalsifyRecord",
+  "type": "object",
+  "required": [
+    "record_id",
+    "H0",
+    "MeasurementObject",
+    "Population",
+    "Join",
+    "Metric",
+    "Result",
+    "scope_limits",
+    "artifact_paths",
+    "non_claims"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string"
+    },
+    "finding_id": {
+      "type": "string"
+    },
+    "H0": {
+      "type": "string"
+    },
+    "MeasurementObject": {
+      "type": "object"
+    },
+    "predictor": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "Population": {
+      "type": "string"
+    },
+    "Join": {
+      "type": "string"
+    },
+    "Metric": {
+      "type": "object"
+    },
+    "Result": {
+      "type": "object"
+    },
+    "scope_limits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "artifact_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "non_claims": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "FALSIFIED",
+        "ASSOCIATED",
+        "UNSUPPORTED",
+        "INCONCLUSIVE"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

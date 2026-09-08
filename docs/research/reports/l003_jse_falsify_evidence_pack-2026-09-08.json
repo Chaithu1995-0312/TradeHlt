@@ -1,0 +1,350 @@
+{
+  "pack_id": "L003_JSE_FALSIFY_EVIDENCE_PACK",
+  "version": "ARCH-REVIEW.v1",
+  "run_id": "arch_review_falsify_pack_20260908_023341",
+  "generated_at_utc": "2026-09-07T21:03:41Z",
+  "generated_at_ist": "2026-09-08T02:33:41+05:30",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "branch": "feature/trace-parquet-duckdb-query",
+  "purpose": "Machine-readable FALSIFY evidence + associated (not falsified) evidence for architecture review. Shareable with schemas under docs/research/reports/schemas/.",
+  "grades_from_user_review": {
+    "Identity": "A",
+    "Ontology": "A-",
+    "Measurement": "B+",
+    "Population": "B",
+    "Predictive": "B-",
+    "Trading_process": "C+"
+  },
+  "ontology_freeze_note": "L-003 package remains L003_PACKAGE_FROZEN (L-003-FREEZE.v1). This pack is episode/registry extension + review report \u2014 not doctrine reopen.",
+  "mathematical_freeze_targets": {
+    "L": {
+      "name": "OutcomeLabel",
+      "members": [
+        "SL_HIT",
+        "TP_HIT",
+        "TIMEOUT"
+      ]
+    },
+    "S": {
+      "notation": "S = L \u00d7 L",
+      "alias": "Omega_joint / Ic_joint",
+      "cardinality": 9
+    },
+    "Omega": {
+      "Omega_anatomy_opportunity": "BNB/BTC/ETH/SOL trade_dataset rows",
+      "Omega_bnb_anatomy": "BNB subset",
+      "STATE_SL_TP_anatomy": "{x in Omega_anatomy_opportunity : Y_joint(x)=STATE_SL_TP}"
+    },
+    "maps": {
+      "Y_scanner": "Omega -> L",
+      "Y_oracle": "Omega -> L",
+      "Y_joint": "Omega -> S"
+    }
+  },
+  "falsify_records": [
+    {
+      "record_id": "FALSIFY-L003G-ENTRY-YJOINT",
+      "finding_id": "L-003G",
+      "version": "L-003G.v1",
+      "run_id": "l003g_joint_state_entry_predictability_20260907_190242",
+      "status": "FALSIFIED",
+      "H0": "Entry-time anatomy fields available before trade completion predict membership in {x: Y_joint(x)=STATE_SL_TP} (alias JOINT_STATE_SL_TP).",
+      "MeasurementObject": {
+        "predictor_family": "entry_time_anatomy_fields",
+        "target_object": "Y_joint",
+        "target_coordinate": "STATE_SL_TP",
+        "mathematical_maps": {
+          "Y_joint": "Omega_anatomy_opportunity -> S",
+          "membership": "1[Y_joint(x)=STATE_SL_TP]"
+        }
+      },
+      "predictor": "51 kept entry-time anatomy fields (52 candidates; bitnet_score dropped); LOIO multivariate excludes absolute prices",
+      "target": "Y_joint -> STATE_SL_TP (art_outcome==SL_HIT & outcome==TP_HIT)",
+      "Population": "Omega_anatomy_opportunity (BNB/BTC/ETH/SOL trade_dataset rows); n=559768; base_rate STATE_SL_TP=0.315257",
+      "Join": "Anatomy trade_dataset join across four instruments; no CRT/HTF/manipulation on join",
+      "Metric": {
+        "primary": "LOIO_mean_AUC",
+        "secondary": [
+          "LOIO_mean_top_decile_lift",
+          "within_instrument_chrono_AUC"
+        ],
+        "falsify_band": "AUC\u22480.5\u20130.55 and lifts~null => FALSIFY entry-time predictability on available fields"
+      },
+      "Result": {
+        "lean": "FALSIFIED_on_available_entry_fields",
+        "LOIO_mean_AUC": 0.5162,
+        "LOIO_mean_top_decile_lift": 1.0534,
+        "within_mean_AUC": 0.5146,
+        "aggregate_holdout_AUC": 0.5218,
+        "summary": "Entry-time observables on this anatomy join do NOT predict STATE_SL_TP. Wording errata: population is path-geometry-associated, not entry-defined on available fields (do not overclaim path-defined)."
+      },
+      "scope_limits": [
+        "Available anatomy entry fields only",
+        "CRT/HTF/manipulation unavailable this pass",
+        "Absolute prices excluded from LOIO multivariate",
+        "Does not falsify all possible entry-time worlds \u2014 only measured inventory"
+      ],
+      "artifact_paths": [
+        "docs/governance/ANALYTICS_JOINT_STATE_ENTRY_PREDICTABILITY_L003G.md",
+        "docs/governance/analytics_joint_state_entry_predictability_l003g-2026-09-07.json"
+      ],
+      "non_claims": [
+        "Predicting membership != explaining trailing stops",
+        "No attribution unlock",
+        "STATE_SL_TP remains OBSERVED population coordinate membership; EARLY_STOP_CANDIDATE remains alias",
+        "No edge / economic claim",
+        "Does not claim path-generation process observed"
+      ]
+    },
+    {
+      "record_id": "FALSIFY-JSE001-ENGINESTATE-STATESLTP",
+      "finding_id": "JSE-001",
+      "version": "JSE-001.v1",
+      "run_id": "jse001_crt_context_bnbusdt_20260908_020033",
+      "status": "FALSIFIED",
+      "H0": "engine_state_asof explains {x: Y_joint(x)=STATE_SL_TP} on the BNB anatomy\u2194events join.",
+      "MeasurementObject": {
+        "predictor": "engine_state_asof",
+        "target_object": "Y_joint",
+        "target_coordinate": "STATE_SL_TP",
+        "note": "engine_state_asof \u2260 CRT Context"
+      },
+      "predictor": "engine_state_asof (categorical state_to from one BNB runtime events run, as-of joined)",
+      "target": "STATE_SL_TP ovr (also STATE_SL_SL / STATE_TP_TP checked)",
+      "Population": "Omega_bnb_anatomy (BNBUSDT trade_dataset rows); n=139942; join coverage 1.000",
+      "Join": "results/research/bnbusdt_trade_anatomy/trade_dataset_BNBUSDT.csv as-of joined to results/run_20260603_122112_BNBUSDT/BNBUSDT_events.jsonl (GT-3); RESET\u2192RANGE",
+      "Metric": {
+        "primary": "chrono_holdout_70_30_AUC_STATE_SL_TP",
+        "secondary": [
+          "macro_ovr_AUC",
+          "engine_state+hour AUC",
+          "lift_by_state"
+        ]
+      },
+      "Result": {
+        "lean": "FALSIFIED for this specific join surface",
+        "AUC_STATE_SL_TP": 0.5004,
+        "AUC_STATE_SL_SL": 0.5008,
+        "AUC_STATE_TP_TP": 0.5019,
+        "macro_ovr": 0.501,
+        "engine_state_plus_hour_SL_TP": 0.5109,
+        "summary": "AUC \u2248 0.500 \u2014 chance. Not better than L-003G entry prior (~0.516)."
+      },
+      "scope_limits": [
+        "BNB-only",
+        "One runtime events run",
+        "Categorical state_to only",
+        "Not Parent/HTF/manipulation/liquidity/range/transition history",
+        "Never upgrade to 'CRT falsified'"
+      ],
+      "artifact_paths": [
+        "docs/research/JOINT_STATE_EXPLAINABILITY.md",
+        "docs/research/jse001_crt_context_bnbusdt-2026-09-07.json",
+        "results/research/jse001_crt_context_bnbusdt/"
+      ],
+      "non_claims": [
+        "Does NOT say CRT falsified",
+        "No edge / attribution / which-outcome-is-right",
+        "Not a full CRT ontology claim"
+      ]
+    },
+    {
+      "record_id": "FALSIFY-JSE002-ENGINESTATE-PATHGEOM",
+      "finding_id": "JSE-002",
+      "version": "JSE-002.v1",
+      "run_id": "jse002_engine_state_path_geometry_20260908_021500",
+      "status": "FALSIFIED",
+      "H0": "engine_state_asof predicts path-geometry descriptors (peak/MFE/T_MAE buckets; optional scanner_exit_precedes_oracle_tp) on BNB.",
+      "MeasurementObject": {
+        "predictor": "engine_state_asof",
+        "targets": [
+          "bars_to_peak_within_trade buckets",
+          "mfe_r buckets",
+          "time_to_bottom_path / T_MAE buckets",
+          "scanner_exit_precedes_oracle_tp"
+        ]
+      },
+      "predictor": "engine_state_asof (same join as JSE-001)",
+      "target": "path geometry descriptors (L-003C\u2013E style buckets) + optional exit-ordering binary",
+      "Population": "Omega_bnb_anatomy; coverage 1.000; L-003H exit-ordering match fraction 1.0",
+      "Join": "Same anatomy + GT-3 events population as JSE-001",
+      "Metric": {
+        "primary": "macro_AUC_ovr_multiclass_path_buckets",
+        "secondary": [
+          "binary AUCs",
+          "delta_vs_JSE001_Yjoint"
+        ]
+      },
+      "Result": {
+        "lean": "FALSIFY_PATH_AND_YJOINT",
+        "peak_bucket_macro_AUC": 0.5045,
+        "mfe_bucket_macro_AUC": 0.5033,
+        "t_mae_bucket_macro_AUC": 0.4978,
+        "best_binary_AUC": 0.5102,
+        "path_better_than_Yjoint_by_0_02": false,
+        "summary": "engine_state_asof does not separate path geometry meaningfully better than chance, nor better than it separates STATE_SL_TP."
+      },
+      "scope_limits": [
+        "BNB-only",
+        "One events run",
+        "Categorical state_to only",
+        "Never say CRT falsified"
+      ],
+      "artifact_paths": [
+        "docs/research/JOINT_STATE_EXPLAINABILITY.md",
+        "docs/research/jse002_engine_state_path_geometry_bnbusdt-2026-09-07.json",
+        "results/research/jse002_engine_state_path_geometry_bnbusdt/"
+      ],
+      "non_claims": [
+        "No edge / attribution / which-outcome-is-right",
+        "No L-003 doctrine reopen",
+        "No CRT ontology claim",
+        "Does not weaken L-003C\u2013E path-geometry association with Y_joint (different predictor)"
+      ]
+    },
+    {
+      "record_id": "FALSIFY-JSE003-ENGINEHIST-PATHGEOM",
+      "finding_id": "JSE-003",
+      "version": "JSE-003.v1",
+      "run_id": "jse003_engine_context_history_path_geometry_20260908_021900",
+      "status": "FALSIFIED",
+      "H0": "engine_context_history features predict path-geometry descriptors better than chance / better than single as-of state_to on BNB.",
+      "MeasurementObject": {
+        "predictor": "engine_context_history",
+        "note": "NOT CRT Context; history built from same GT-3 events timeline",
+        "targets": [
+          "peak_bucket",
+          "mfe_bucket",
+          "t_mae_dist_bucket"
+        ]
+      },
+      "predictor": "engine_context_history (~48 features: dwell, n_transitions_W, frac_time_in_state_W64, last_k_states, bars_since_last_sweep, plus asof baseline)",
+      "target": "path geometry descriptors",
+      "Population": "Omega_bnb_anatomy; coverage 1.000",
+      "Join": "Same anatomy + same events as JSE-001/002",
+      "Metric": {
+        "primary": "history_set_macro_AUC_ovr",
+        "secondary": [
+          "delta_vs_asof",
+          "binary AUCs"
+        ],
+        "support_threshold_note": "SUPPORT_ASSOCIATION requires AUC\u22650.58 + chrono stability (not met)"
+      },
+      "Result": {
+        "lean": "FALSIFY for engine_context_history \u2192 path_geometry on this join",
+        "peak_asof_macro_AUC": 0.5045,
+        "peak_history_macro_AUC": 0.5146,
+        "mfe_history_macro_AUC": 0.5081,
+        "best_binary_AUC": 0.5217,
+        "summary": "History AUC still \u22480.50\u20130.55; modest +0.01 over asof is not material."
+      },
+      "scope_limits": [
+        "BNB-only",
+        "One events run",
+        "Not CRT / Parent / HTF / manipulation",
+        "Not causal"
+      ],
+      "artifact_paths": [
+        "docs/research/JOINT_STATE_EXPLAINABILITY.md",
+        "docs/research/jse003_engine_context_history_path_geometry-2026-09-07.json",
+        "results/research/jse003_engine_context_history_path_geometry/"
+      ],
+      "non_claims": [
+        "Not a CRT claim",
+        "Not causal",
+        "No edge / attribution / L-003 doctrine reopen"
+      ]
+    }
+  ],
+  "associated_evidence": [
+    {
+      "record_id": "ASSOC-L003B-HOMONYM",
+      "finding_id": "L-003B",
+      "status": "ASSOCIATED",
+      "claim_class": "identity_observation",
+      "summary": "scanner_outcome \u00d7 oracle_outcome confusion on anatomy join establishes Y_scanner \u2260 Y_oracle (HOMONYM); LABEL_MATCH \u2260 process agreement.",
+      "artifact_paths": [
+        "docs/governance/ANALYTICS_OUTCOME_POPULATION_COMPARISON_L003B.md",
+        "docs/governance/analytics_outcome_population_comparison_l003b-2026-09-07.json"
+      ],
+      "non_claims": [
+        "Does not decide which outcome is correct",
+        "No edge"
+      ]
+    },
+    {
+      "record_id": "ASSOC-L003F-JOINT-CENSUS",
+      "finding_id": "L-003F",
+      "status": "ASSOCIATED",
+      "claim_class": "population_census",
+      "summary": "Joint state census; STATE_SL_TP / EARLY_STOP_CANDIDATE mass observed (~31.5%); coordinates later canonicalized under L-003M.",
+      "artifact_paths": [
+        "docs/governance/ANALYTICS_JOINT_OUTCOME_STATES_L003F.md",
+        "docs/governance/analytics_joint_outcome_states_l003f-2026-09-07.json"
+      ],
+      "non_claims": [
+        "EARLY_STOP_CANDIDATE not promoted beyond SAFE_ALIAS",
+        "No attribution"
+      ]
+    },
+    {
+      "record_id": "ASSOC-L003CDE-PATH-GEOMETRY",
+      "finding_id": "L-003C/D/E",
+      "status": "ASSOCIATED",
+      "claim_class": "path_geometry_association",
+      "summary": "Path-geometry descriptors (disagreement population / path mechanics / adverse timing) associate with joint membership. Strongest positive association family vs entry/engine_state nulls. Wording: path-geometry-associated (not path-defined).",
+      "artifact_paths": [
+        "docs/governance/ANALYTICS_OUTCOME_DISAGREEMENT_POPULATION_L003C.md",
+        "docs/governance/ANALYTICS_OUTCOME_PATH_MECHANICS_L003D.md",
+        "docs/governance/ANALYTICS_OUTCOME_ADVERSE_TIMING_L003E.md"
+      ],
+      "non_claims": [
+        "Association \u2260 causal trail story",
+        "Does not by itself yield entry-time predictors",
+        "Does not observe path-generation process end-to-end"
+      ]
+    },
+    {
+      "record_id": "ASSOC-L003H-EXIT-ORDERING",
+      "finding_id": "L-003H",
+      "status": "ASSOCIATED",
+      "claim_class": "exit_ordering_association",
+      "summary": "Lean LEAN_SUPPORTS_TRAIL_EARLY_EXIT_PATTERN_IN_JOINT_STATE_SL_TP; scanner_exit_precedes_oracle_tp high within STATE_SL_TP; path-timing association only.",
+      "artifact_paths": [
+        "docs/governance/ANALYTICS_TRAIL_EXIT_TRANSITIONS_L003H.md",
+        "docs/governance/analytics_trail_exit_transitions_l003h-2026-09-07.json"
+      ],
+      "non_claims": [
+        "Not trail causality",
+        "Not detector-stopped-early inference upgrade"
+      ]
+    },
+    {
+      "record_id": "ASSOC-L003I-BASELINE-DIRECTION",
+      "finding_id": "L-003I",
+      "status": "ASSOCIATED",
+      "claim_class": "baseline_direction",
+      "summary": "Baseline inversion measured (P(JOINT|trail_*) vs P(trail|JOINT)); lean retained; trail not sufficient; no causality upgrade.",
+      "artifact_paths": [
+        "docs/governance/ANALYTICS_TRAIL_BASELINE_INVERSION_L003I.md",
+        "docs/governance/analytics_trail_baseline_inversion_l003i-2026-09-07.json"
+      ],
+      "non_claims": [
+        "No counterfactual without-trail world",
+        "No edge"
+      ]
+    }
+  ],
+  "schemas": [
+    "docs/research/reports/schemas/measurement_object.schema.json",
+    "docs/research/reports/schemas/joint_state_space.schema.json",
+    "docs/research/reports/schemas/population.schema.json",
+    "docs/research/reports/schemas/falsify_record.schema.json",
+    "docs/research/reports/SCHEMAS_README.md"
+  ],
+  "recommended_next_episode": {
+    "id": "PATH_GENERATION_FOR_STATE_SL_TP",
+    "objective": "Observe the path-generation process for population STATE_SL_TP_anatomy before attempting new predictors.",
+    "stance": "observe before predict"
+  }
+}

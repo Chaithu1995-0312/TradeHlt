@@ -1,0 +1,35 @@
+{
+  "version": "ARCH-REVIEW.v1",
+  "run_id": "arch_review_falsify_pack_20260908_023341",
+  "note": "Reference shapes copied/adapted from existing L-003L/M + MOR registries; not a doctrine reopen.",
+  "sources": [
+    "docs/governance/measurement_object_registry.json",
+    "docs/governance/analytics_joint_state_space_l003l-2026-09-07.json",
+    "docs/governance/analytics_noun_parity_l003m-2026-09-07.json"
+  ],
+  "measurement_object_registry_shape_keys": [
+    "object_id",
+    "formula",
+    "emitter_path",
+    "emitter_symbol",
+    "emitter_params",
+    "value_domain",
+    "related_columns",
+    "population_default",
+    "status",
+    "edge_claim",
+    "attribution_eligible",
+    "formula_map",
+    "mathematical_type"
+  ],
+  "l003l_omega_joint_shape_keys": [
+    "definition",
+    "state_id_formula",
+    "cardinality",
+    "states[].state_id",
+    "states[].Y_scanner",
+    "states[].Y_oracle",
+    "states[].aliases"
+  ],
+  "binding": "FALSIFY records reference MeasurementObject.object_id, Population.population_id, and JointStateSpace StateIDs."
+}

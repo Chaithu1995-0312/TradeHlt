@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "docs/research/reports/schemas/population.schema.json",
+  "title": "Population",
+  "type": "object",
+  "required": [
+    "population_id",
+    "unit",
+    "membership_rule"
+  ],
+  "properties": {
+    "population_id": {
+      "type": "string"
+    },
+    "unit": {
+      "type": "string",
+      "description": "What one x in Omega is"
+    },
+    "membership_rule": {
+      "type": "string"
+    },
+    "instrument_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "parent_population": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "n_observed": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "status": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}
