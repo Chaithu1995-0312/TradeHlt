@@ -1,0 +1,48 @@
+{
+  "change_id": "CH-l003b-outcome-population-comparison",
+  "date_utc": "2026-09-07",
+  "objective": "L-003 Phase B: measure Detection x Oracle confusion matrices on anatomy trade_dataset join surface (art_outcome vs outcome) for BNB/BTC/ETH/SOL; demote L-003 from FROZEN to OBSERVED_PARTIAL; keep promotion flags false.",
+  "change_classes": [
+    "GOVERNANCE_OBSERVATION"
+  ],
+  "change_class_rationale": "Measurement/governance artifacts only. No analytics registry row/column edits, no attribution unlock, no runtime path change.",
+  "affected_files": [
+    "docs/governance/ANALYTICS_OUTCOME_SEMANTICS_L003.md",
+    "docs/governance/analytics_outcome_semantics_l003-2026-09-07.json",
+    "docs/governance/ANALYTICS_OUTCOME_POPULATION_COMPARISON_L003B.md",
+    "docs/governance/analytics_outcome_population_comparison_l003b-2026-09-07.json",
+    "docs/governance/build_manifests/CH-l003b-outcome-population-comparison.impact.json",
+    "docs/design/context-finding-odp/ANALYTICS_LINEAGE_SEMANTICS_DECISION.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [],
+  "unknowns": [
+    "No chronological holdout in anatomy corpus; comparison is in-sample descriptive only."
+  ],
+  "rollback_boundary": "Delete L-003B MD/JSON/impact; restore L-003 status banner to prior FROZEN wording; revert SEMANTICS_DECISION pointer sentence. Registries were never edited.",
+  "authority_granted": "User directed L-003 demotion + Phase B population comparison measurement; pointers only; no registry promotion.",
+  "authority_NOT_granted": "No ANALYTICS_SCHEMA_REGISTRY or ANALYTICS_LINEAGE_REGISTRY edits; no src/; no commits; no forward_walk re-run.",
+  "production_behavior_changed": "NO",
+  "run_id": "l003b_outcome_population_comparison_20260907_173349",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "doctrine_version": "L-003B.v1",
+  "promotion": {
+    "registry_column_added": false,
+    "l003_frozen": false,
+    "attribution_unblocked": false
+  },
+  "headline_numbers": {
+    "aggregate_n": 559768,
+    "aggregate_agreement_rate": 0.67118,
+    "per_instrument_agreement": {
+      "BNBUSDT": 0.669442,
+      "BTCUSDT": 0.672193,
+      "ETHUSDT": 0.672957,
+      "SOLUSDT": 0.670128
+    },
+    "verdict": "HOMONYM / separate populations"
+  }
+}

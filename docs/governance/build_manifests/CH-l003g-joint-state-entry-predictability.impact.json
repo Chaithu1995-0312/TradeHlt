@@ -1,0 +1,84 @@
+{
+  "change_id": "CH-l003g-joint-state-entry-predictability",
+  "finding_id": "L-003G",
+  "run_id": "l003g_joint_state_entry_predictability_20260907_190242",
+  "generated_at_utc": "2026-09-07T19:02:42.252Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "version": "L-003G.v1",
+  "status": "MEASURED",
+  "touched_paths": [
+    "docs/governance/ANALYTICS_JOINT_STATE_ENTRY_PREDICTABILITY_L003G.md",
+    "docs/governance/analytics_joint_state_entry_predictability_l003g-2026-09-07.json",
+    "docs/governance/build_manifests/CH-l003g-joint-state-entry-predictability.impact.json",
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_STATES_L003F.md",
+    "docs/governance/analytics_joint_outcome_states_l003f-2026-09-07.json",
+    "docs/governance/ANALYTICS_L003_TERMINOLOGY_PARITY_AUDIT.md",
+    "docs/governance/analytics_l003_terminology_parity_audit-2026-09-07.json",
+    "docs/governance/ANALYTICS_OUTCOME_POPULATION_COMPARISON_L003B.md"
+  ],
+  "src_edits": false,
+  "registry_edits": false,
+  "git_commit_created": false,
+  "promotion_flags": {
+    "economic_claims_allowed": false,
+    "attribution_unblocked": false,
+    "l003_frozen": false,
+    "registry_column_added": false,
+    "chronological_holdout_used": true,
+    "ontology_promoted": false
+  },
+  "summary": {
+    "canonical_id": "JOINT_STATE_SL_TP",
+    "safe_alias": "EARLY_STOP_CANDIDATE",
+    "n": 559768,
+    "base_rate": 0.31525739234825856,
+    "loio_mean_auc": 0.5161962193219644,
+    "loio_mean_top_decile_lift": 1.0534444626968038,
+    "within_mean_auc": 0.5145929379196726,
+    "lean": "FALSIFIED_on_available_entry_fields",
+    "top5": [
+      {
+        "feature": "hour",
+        "kind": "categorical",
+        "best_level_lift": 1.069574786218503,
+        "max_abs_rate_delta": 0.0219339656764328,
+        "best_level": 5,
+        "best_level_n": 23328,
+        "note": "best among n>=1000 levels"
+      },
+      {
+        "feature": "f_hour_of_day",
+        "kind": "categorical",
+        "best_level_lift": 1.069574786218503,
+        "max_abs_rate_delta": 0.0219339656764328,
+        "best_level": 5.0,
+        "best_level_n": 23328,
+        "note": "duplicate of hour"
+      },
+      {
+        "feature": "year",
+        "kind": "categorical",
+        "best_level_lift": 1.0103225028818175,
+        "max_abs_rate_delta": 0.012837739596134434,
+        "best_level": 2024,
+        "best_level_n": 171168
+      },
+      {
+        "feature": "weekday",
+        "kind": "categorical",
+        "best_level_lift": 1.0198076582759876,
+        "max_abs_rate_delta": 0.009706010136720122,
+        "best_level": 0,
+        "best_level_n": 79872
+      },
+      {
+        "feature": "session_code",
+        "kind": "categorical",
+        "best_level_lift": 1.0292099084261512,
+        "max_abs_rate_delta": 0.00920863956115986,
+        "best_level": 0.0,
+        "best_level_n": 186528
+      }
+    ]
+  }
+}

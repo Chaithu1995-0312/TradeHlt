@@ -1,0 +1,45 @@
+{
+  "change_id": "CH-l003d-path-mechanics",
+  "finding_id": "L-003D",
+  "run_id": "l003d_path_mechanics_20260907_180219",
+  "generated_at_utc": "2026-09-07T18:02:19.282Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "version": "L-003D.v1",
+  "status": "MEASURED (observation)",
+  "touched_paths": [
+    "docs/governance/ANALYTICS_OUTCOME_PATH_MECHANICS_L003D.md",
+    "docs/governance/analytics_outcome_path_mechanics_l003d-2026-09-07.json",
+    "docs/governance/build_manifests/CH-l003d-path-mechanics.impact.json",
+    "docs/governance/ANALYTICS_OUTCOME_DISAGREEMENT_POPULATION_L003C.md"
+  ],
+  "src_edits": false,
+  "registry_edits": false,
+  "git_commit_created": false,
+  "promotion_flags": {
+    "economic_claims_allowed": false,
+    "attribution_unblocked": false,
+    "l003_frozen": false,
+    "registry_column_added": false,
+    "chronological_holdout_used": false
+  },
+  "summary": {
+    "aggregate_n": 559768,
+    "aggregate_DISAGREE_SL_TP_rate": 0.31525739234825856,
+    "peak_rates": {
+      "peak_le_2": 0.08771356748235361,
+      "peak_3_5": 0.45711117914263727,
+      "peak_6_10": 0.6433230520301361,
+      "peak_gt_10": 0.7364029566508505,
+      "peak_missing": 0.0
+    },
+    "mfe_rates": {
+      "mfe_lt_2R": 0.0,
+      "mfe_2R_4R": 0.4944434347717803,
+      "mfe_4R_6R": 0.5180032251609638,
+      "mfe_6R_plus": 0.5253051304649734
+    },
+    "hottest_cell": "Peak>10 x MFE 6R+ rate=0.9499 n=9969",
+    "instrument_stability_peak_loo_rho_min": 1.0,
+    "instrument_stability_mfe_loo_rho_min": 0.39999999999999997
+  }
+}

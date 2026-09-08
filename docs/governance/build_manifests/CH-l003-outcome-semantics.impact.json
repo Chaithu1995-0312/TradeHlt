@@ -1,0 +1,34 @@
+{
+  "change_id": "CH-l003-outcome-semantics",
+  "date_utc": "2026-09-07",
+  "objective": "Produce L-003 Outcome Semantics as an observation/doctrine artifact (measure-before-promote): separate DETECTION_STREAM vs GOVERNING_ORACLE vs LIVE_INGEST_TWIN populations, census opportunities.outcome vocabulary on local JSONL, restate published F-022 consistency rates, and freeze mechanical attribution-block rules — without registry promotion or src changes.",
+  "change_classes": [
+    "GOVERNANCE_OBSERVATION"
+  ],
+  "change_class_rationale": "Temporary/design governance artifacts only. No analytics registry row/column edits, no attribution unlock, no runtime path change.",
+  "affected_files": [
+    "docs/governance/ANALYTICS_OUTCOME_SEMANTICS_L003.md",
+    "docs/governance/analytics_outcome_semantics_l003-2026-09-07.json",
+    "docs/governance/build_manifests/CH-l003-outcome-semantics.impact.json",
+    "docs/design/context-finding-odp/ANALYTICS_LINEAGE_SEMANTICS_DECISION.md",
+    "docs/governance/ANALYTICS_LINEAGE_ANOMALY_REVIEW.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [],
+  "unknowns": [
+    "No local logs/live_training.jsonl corpus to census WIN/LOSS/BREAKEVEN counts this pass (vocab pinned from emitter code/docs only)."
+  ],
+  "rollback_boundary": "Delete the two L-003 artifacts and this impact note; revert the two short pointer bullets in SEMANTICS_DECISION and ANOMALY_REVIEW. Registries were never edited.",
+  "authority_granted": "User directed L-003 observation/doctrine artifact with optional pointer updates only; no registry promotion.",
+  "authority_NOT_granted": "No ANALYTICS_SCHEMA_REGISTRY or ANALYTICS_LINEAGE_REGISTRY edits; no evidence_class/outcome_semantics column; no Phase 5 Attribution; no src/ changes; no commits.",
+  "production_behavior_changed": "NO",
+  "run_id": "l003_outcome_semantics_20260907_172143",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "promotion": {
+    "registry_column_added": false,
+    "attribution_unblocked": false
+  }
+}
