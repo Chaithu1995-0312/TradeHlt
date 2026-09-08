@@ -1,0 +1,53 @@
+﻿{
+  "finding_id": "L-003M",
+  "version": "L-003M.v1",
+  "run_id": "l003m_noun_parity_20260907_201028",
+  "generated_at_utc": "2026-09-07T20:10:28Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "title": "NOUN_PARITY_LOCKED",
+  "summary": {
+    "canonical_state_ids": [
+      "STATE_SL_SL",
+      "STATE_TP_TP",
+      "STATE_TO_TO",
+      "STATE_SL_TP",
+      "STATE_TP_SL",
+      "STATE_TO_TP",
+      "STATE_TO_SL",
+      "STATE_TP_TO",
+      "STATE_SL_TO"
+    ],
+    "match_framing": "MATCH_RELATION (not CORRECTNESS_RELATION)",
+    "terminal_label_vocab": [
+      "scanner_terminal_label",
+      "oracle_terminal_label"
+    ],
+    "path_measured_noun": "path geometry descriptors",
+    "identity_promotion_class": "MeasurementObject registry",
+    "locked": "coordinate STATE_* + rewrite rules + terminal_label vocab + path geometry descriptors",
+    "not_locked": "edge claims / attribution / analytics schema columns / EARLY_STOP-as-fact / L-003 freeze / historical B-I rewrite"
+  },
+  "flags": {
+    "noun_parity_locked": true,
+    "edge_claims": false,
+    "attribution_unblocked": false,
+    "registry_column_edits": false,
+    "l003_frozen": false,
+    "src_edits": false,
+    "new_measurements": false,
+    "git_commit": false
+  },
+  "artifacts": [
+    "docs/governance/ANALYTICS_NOUN_PARITY_L003M.md",
+    "docs/governance/analytics_noun_parity_l003m-2026-09-07.json",
+    "docs/governance/analytics_noun_parity_l003m_impact-2026-09-07.json",
+    "docs/governance/ANALYTICS_JOINT_STATE_SPACE_L003L.md",
+    "docs/governance/analytics_joint_state_space_l003l-2026-09-07.json",
+    "docs/governance/MEASUREMENT_OBJECT_REGISTRY.md",
+    "docs/governance/measurement_object_registry.json",
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_FORMULAS_L003K.md",
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_STATE_ONTOLOGY_L003J.md",
+    "docs/governance/ANALYTICS_L003_TERMINOLOGY_PARITY_AUDIT.md",
+    "docs/governance/analytics_l003_terminology_parity_audit-2026-09-07.json"
+  ]
+}

@@ -1,0 +1,794 @@
+{
+  "finding_id": "L-003B",
+  "parent_finding_id": "L-003",
+  "run_id": "l003b_outcome_population_comparison_20260907_173349",
+  "generated_at_utc": "2026-09-07T17:33:49.906Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "doctrine_version": "L-003B.v1",
+  "measurement_version": "L-003B.v1",
+  "status": "OBSERVED",
+  "status_note": "Phase B outcome-population comparison measured; L-003 remains NOT frozen pending interpretation gate. No registry promotion.",
+  "question": "Can scanner_outcome (column art_outcome) be treated as the same random variable as oracle_outcome (column outcome)? Requires scanner_outcome x oracle_outcome confusion matrix. LABEL_MATCH = terminal label equality only (historical: agreement).",
+  "label_vocabulary_note": "Both scanner_outcome (art_outcome) and oracle_outcome (outcome) use SL_HIT/TP_HIT/TIMEOUT (not TP1/TP2). Oracle is forward_walk(intrabar_fixed) single TP. LABEL_MATCH/LABEL_MISMATCH = terminal equality only. Do not invent TP1/TP2 labels.",
+  "join_rule": {
+    "type": "ROW_IDENTITY",
+    "description": "Anatomy trade_dataset already pairs labels per opportunity: art_outcome=detection-stream, outcome=governing forward_walk(intrabar_fixed). Join is row identity in the CSV (same entry_index/timestamp/direction opportunity with oracle derived onto detection population). NOT a fuzzy time join. forward_walk was NOT re-run this pass.",
+    "detection_rv": "art_outcome",
+    "oracle_rv": "outcome",
+    "consistency_flag_column": "art_consistent"
+  },
+  "instruments": {
+    "BNBUSDT": {
+      "instrument": "BNBUSDT",
+      "population": {
+        "unit": "one anatomy trade_dataset row = one detection opportunity with re-derived governing outcome",
+        "detection_rv": "art_outcome",
+        "oracle_rv": "outcome",
+        "join_rule": "ROW_IDENTITY in anatomy trade_dataset (same entry_index/timestamp/direction opportunity; oracle labels derived onto the detection population). NOT a fuzzy time join.",
+        "label_vocabulary": {
+          "detection": [
+            "SL_HIT",
+            "TP_HIT",
+            "TIMEOUT"
+          ],
+          "oracle": [
+            "SL_HIT",
+            "TP_HIT",
+            "TIMEOUT"
+          ],
+          "note": "Both sides use SL_HIT / TP_HIT / TIMEOUT. Governing is forward_walk(intrabar_fixed) single TP. Do NOT invent TP1/TP2 labels."
+        },
+        "holdout": {
+          "chronological_holdout_used": false,
+          "note": "Anatomy summaries expose descriptive splits (by_year/month/weekday/hour/session/vol) but no chronological train/holdout partition. This pass is an in-sample descriptive comparison on the full anatomy corpus; no new holdout invented.",
+          "splits_present_in_summary": [
+            "by_year",
+            "by_month",
+            "by_weekday",
+            "by_hour",
+            "by_session_derived",
+            "by_volatility_regime"
+          ],
+          "comparison_type": "in-sample descriptive comparison on full anatomy corpus"
+        }
+      },
+      "sources": {
+        "trade_dataset_csv": {
+          "path": "results/research/bnbusdt_trade_anatomy/trade_dataset_BNBUSDT.csv",
+          "size_bytes": 127143244,
+          "mtime_utc": "2026-06-13T06:54:28.523866Z"
+        },
+        "anatomy_summary_json": {
+          "path": "results/research/bnbusdt_trade_anatomy/anatomy_summary.json",
+          "size_bytes": 7205,
+          "mtime_utc": "2026-06-13T06:55:13.345102Z"
+        },
+        "dataset_sha256": "f8bdabbe683fe43f54f3853dcce809f113fe22e9385828210d48c6cc2aa34934",
+        "dataset_rows_summary": 139942,
+        "n_opportunities_summary": 139942
+      },
+      "counts": {
+        "n_rows": 139942,
+        "detection_marginals": {
+          "SL_HIT": 138091,
+          "TP_HIT": 1830,
+          "TIMEOUT": 21
+        },
+        "oracle_marginals": {
+          "SL_HIT": 91914,
+          "TP_HIT": 46580,
+          "TIMEOUT": 1448
+        },
+        "confusion_matrix_detection_x_oracle": {
+          "SL_HIT": {
+            "SL_HIT": 91873,
+            "TP_HIT": 44791,
+            "TIMEOUT": 1427
+          },
+          "TP_HIT": {
+            "SL_HIT": 41,
+            "TP_HIT": 1789,
+            "TIMEOUT": 0
+          },
+          "TIMEOUT": {
+            "SL_HIT": 0,
+            "TP_HIT": 0,
+            "TIMEOUT": 21
+          }
+        },
+        "agreement_n": 93683,
+        "agreement_rate": 0.669442,
+        "majority_class_baseline_always_oracle_SL_HIT": 0.656801,
+        "agreement_minus_majority_baseline": 0.012641,
+        "mapping_rate": 1.0,
+        "mapping_rate_definition": "n_dataset / n_opportunities from summary (row-identity join; anatomy pairs oracle onto detection population)",
+        "art_consistent_true_n": 51496,
+        "art_consistent_rate_from_column": 0.367981,
+        "artifact_consistency_rate_from_summary": 0.368,
+        "consistency_vs_agreement_note": "artifact_consistency_rate (~0.36-0.37) is a DIFFERENT metric (internal SL_HIT vs mae consistency on artifact stream) than label agreement (art_outcome == outcome). Do not conflate."
+      },
+      "precision_recall_detection_as_predictor_of_oracle": {
+        "SL_HIT": {
+          "precision": 0.665308,
+          "recall": 0.999554,
+          "support_detection": 138091,
+          "support_oracle": 91914,
+          "tp": 91873
+        },
+        "TP_HIT": {
+          "precision": 0.977596,
+          "recall": 0.038407,
+          "support_detection": 1830,
+          "support_oracle": 46580,
+          "tp": 1789
+        },
+        "TIMEOUT": {
+          "precision": 1.0,
+          "recall": 0.014503,
+          "support_detection": 21,
+          "support_oracle": 1448,
+          "tp": 21
+        }
+      },
+      "sanity_vs_summary": {
+        "detection_marginals_match": true,
+        "oracle_marginals_match": true,
+        "n_match_dataset_rows": true
+      },
+      "summary_distributions_cited": {
+        "artifact": {
+          "SL_HIT": 138091,
+          "TIMEOUT": 21,
+          "TP_HIT": 1830
+        },
+        "governing": {
+          "SL_HIT": 91914,
+          "TIMEOUT": 1448,
+          "TP_HIT": 46580
+        }
+      },
+      "measurement_engine": "pandas"
+    },
+    "BTCUSDT": {
+      "instrument": "BTCUSDT",
+      "population": {
+        "unit": "one anatomy trade_dataset row = one detection opportunity with re-derived governing outcome",
+        "detection_rv": "art_outcome",
+        "oracle_rv": "outcome",
+        "join_rule": "ROW_IDENTITY in anatomy trade_dataset (same entry_index/timestamp/direction opportunity; oracle labels derived onto the detection population). NOT a fuzzy time join.",
+        "label_vocabulary": {
+          "detection": [
+            "SL_HIT",
+            "TP_HIT",
+            "TIMEOUT"
+          ],
+          "oracle": [
+            "SL_HIT",
+            "TP_HIT",
+            "TIMEOUT"
+          ],
+          "note": "Both sides use SL_HIT / TP_HIT / TIMEOUT. Governing is forward_walk(intrabar_fixed) single TP. Do NOT invent TP1/TP2 labels."
+        },
+        "holdout": {
+          "chronological_holdout_used": false,
+          "note": "Anatomy summaries expose descriptive splits (by_year/month/weekday/hour/session/vol) but no chronological train/holdout partition. This pass is an in-sample descriptive comparison on the full anatomy corpus; no new holdout invented.",
+          "splits_present_in_summary": [
+            "by_year",
+            "by_month",
+            "by_weekday",
+            "by_hour",
+            "by_session_derived",
+            "by_volatility_regime"
+          ],
+          "comparison_type": "in-sample descriptive comparison on full anatomy corpus"
+        }
+      },
+      "sources": {
+        "trade_dataset_csv": {
+          "path": "results/research/btcusdt_trade_anatomy/trade_dataset_BTCUSDT.csv",
+          "size_bytes": 128163817,
+          "mtime_utc": "2026-06-13T11:26:14.354477Z"
+        },
+        "anatomy_summary_json": {
+          "path": "results/research/btcusdt_trade_anatomy/anatomy_summary.json",
+          "size_bytes": 7205,
+          "mtime_utc": "2026-06-13T11:26:49.420172Z"
+        },
+        "dataset_sha256": "09baca48253a50011a8869c991d6618bef79b99cc51764cb0ee71db2a2de0233",
+        "dataset_rows_summary": 139942,
+        "n_opportunities_summary": 139942
+      },
+      "counts": {
+        "n_rows": 139942,
+        "detection_marginals": {
+          "SL_HIT": 137648,
+          "TP_HIT": 2259,
+          "TIMEOUT": 35
+        },
+        "oracle_marginals": {
+          "SL_HIT": 91954,
+          "TP_HIT": 45561,
+          "TIMEOUT": 2427
+        },
+        "confusion_matrix_detection_x_oracle": {
+          "SL_HIT": {
+            "SL_HIT": 91864,
+            "TP_HIT": 43392,
+            "TIMEOUT": 2392
+          },
+          "TP_HIT": {
+            "SL_HIT": 90,
+            "TP_HIT": 2169,
+            "TIMEOUT": 0
+          },
+          "TIMEOUT": {
+            "SL_HIT": 0,
+            "TP_HIT": 0,
+            "TIMEOUT": 35
+          }
+        },
+        "agreement_n": 94068,
+        "agreement_rate": 0.672193,
+        "majority_class_baseline_always_oracle_SL_HIT": 0.657087,
+        "agreement_minus_majority_baseline": 0.015106,
+        "mapping_rate": 1.0,
+        "mapping_rate_definition": "n_dataset / n_opportunities from summary (row-identity join; anatomy pairs oracle onto detection population)",
+        "art_consistent_true_n": 52039,
+        "art_consistent_rate_from_column": 0.371861,
+        "artifact_consistency_rate_from_summary": 0.3719,
+        "consistency_vs_agreement_note": "artifact_consistency_rate (~0.36-0.37) is a DIFFERENT metric (internal SL_HIT vs mae consistency on artifact stream) than label agreement (art_outcome == outcome). Do not conflate."
+      },
+      "precision_recall_detection_as_predictor_of_oracle": {
+        "SL_HIT": {
+          "precision": 0.667383,
+          "recall": 0.999021,
+          "support_detection": 137648,
+          "support_oracle": 91954,
+          "tp": 91864
+        },
+        "TP_HIT": {
+          "precision": 0.960159,
+          "recall": 0.047607,
+          "support_detection": 2259,
+          "support_oracle": 45561,
+          "tp": 2169
+        },
+        "TIMEOUT": {
+          "precision": 1.0,
+          "recall": 0.014421,
+          "support_detection": 35,
+          "support_oracle": 2427,
+          "tp": 35
+        }
+      },
+      "sanity_vs_summary": {
+        "detection_marginals_match": true,
+        "oracle_marginals_match": true,
+        "n_match_dataset_rows": true
+      },
+      "summary_distributions_cited": {
+        "artifact": {
+          "SL_HIT": 137648,
+          "TIMEOUT": 35,
+          "TP_HIT": 2259
+        },
+        "governing": {
+          "SL_HIT": 91954,
+          "TIMEOUT": 2427,
+          "TP_HIT": 45561
+        }
+      },
+      "measurement_engine": "pandas"
+    },
+    "ETHUSDT": {
+      "instrument": "ETHUSDT",
+      "population": {
+        "unit": "one anatomy trade_dataset row = one detection opportunity with re-derived governing outcome",
+        "detection_rv": "art_outcome",
+        "oracle_rv": "outcome",
+        "join_rule": "ROW_IDENTITY in anatomy trade_dataset (same entry_index/timestamp/direction opportunity; oracle labels derived onto the detection population). NOT a fuzzy time join.",
+        "label_vocabulary": {
+          "detection": [
+            "SL_HIT",
+            "TP_HIT",
+            "TIMEOUT"
+          ],
+          "oracle": [
+            "SL_HIT",
+            "TP_HIT",
+            "TIMEOUT"
+          ],
+          "note": "Both sides use SL_HIT / TP_HIT / TIMEOUT. Governing is forward_walk(intrabar_fixed) single TP. Do NOT invent TP1/TP2 labels."
+        },
+        "holdout": {
+          "chronological_holdout_used": false,
+          "note": "Anatomy summaries expose descriptive splits (by_year/month/weekday/hour/session/vol) but no chronological train/holdout partition. This pass is an in-sample descriptive comparison on the full anatomy corpus; no new holdout invented.",
+          "splits_present_in_summary": [
+            "by_year",
+            "by_month",
+            "by_weekday",
+            "by_hour",
+            "by_session_derived",
+            "by_volatility_regime"
+          ],
+          "comparison_type": "in-sample descriptive comparison on full anatomy corpus"
+        }
+      },
+      "sources": {
+        "trade_dataset_csv": {
+          "path": "results/research/ethusdt_trade_anatomy/trade_dataset_ETHUSDT.csv",
+          "size_bytes": 128643376,
+          "mtime_utc": "2026-06-13T11:27:56.954963Z"
+        },
+        "anatomy_summary_json": {
+          "path": "results/research/ethusdt_trade_anatomy/anatomy_summary.json",
+          "size_bytes": 7209,
+          "mtime_utc": "2026-06-13T11:28:16.811273Z"
+        },
+        "dataset_sha256": "530c9a35f0db2c120cb9d3bcdbba7013ec4176c44109ae2d318a23556a39e1a0",
+        "dataset_rows_summary": 139942,
+        "n_opportunities_summary": 139942
+      },
+      "counts": {
+        "n_rows": 139942,
+        "detection_marginals": {
+          "SL_HIT": 137477,
+          "TP_HIT": 2411,
+          "TIMEOUT": 54
+        },
+        "oracle_marginals": {
+          "SL_HIT": 91912,
+          "TP_HIT": 46035,
+          "TIMEOUT": 1995
+        },
+        "confusion_matrix_detection_x_oracle": {
+          "SL_HIT": {
+            "SL_HIT": 91811,
+            "TP_HIT": 43725,
+            "TIMEOUT": 1941
+          },
+          "TP_HIT": {
+            "SL_HIT": 101,
+            "TP_HIT": 2310,
+            "TIMEOUT": 0
+          },
+          "TIMEOUT": {
+            "SL_HIT": 0,
+            "TP_HIT": 0,
+            "TIMEOUT": 54
+          }
+        },
+        "agreement_n": 94175,
+        "agreement_rate": 0.672957,
+        "majority_class_baseline_always_oracle_SL_HIT": 0.656786,
+        "agreement_minus_majority_baseline": 0.016171,
+        "mapping_rate": 1.0,
+        "mapping_rate_definition": "n_dataset / n_opportunities from summary (row-identity join; anatomy pairs oracle onto detection population)",
+        "art_consistent_true_n": 51718,
+        "art_consistent_rate_from_column": 0.369567,
+        "artifact_consistency_rate_from_summary": 0.3696,
+        "consistency_vs_agreement_note": "artifact_consistency_rate (~0.36-0.37) is a DIFFERENT metric (internal SL_HIT vs mae consistency on artifact stream) than label agreement (art_outcome == outcome). Do not conflate."
+      },
+      "precision_recall_detection_as_predictor_of_oracle": {
+        "SL_HIT": {
+          "precision": 0.667828,
+          "recall": 0.998901,
+          "support_detection": 137477,
+          "support_oracle": 91912,
+          "tp": 91811
+        },
+        "TP_HIT": {
+          "precision": 0.958109,
+          "recall": 0.050179,
+          "support_detection": 2411,
+          "support_oracle": 46035,
+          "tp": 2310
+        },
+        "TIMEOUT": {
+          "precision": 1.0,
+          "recall": 0.027068,
+          "support_detection": 54,
+          "support_oracle": 1995,
+          "tp": 54
+        }
+      },
+      "sanity_vs_summary": {
+        "detection_marginals_match": true,
+        "oracle_marginals_match": true,
+        "n_match_dataset_rows": true
+      },
+      "summary_distributions_cited": {
+        "artifact": {
+          "SL_HIT": 137477,
+          "TIMEOUT": 54,
+          "TP_HIT": 2411
+        },
+        "governing": {
+          "SL_HIT": 91912,
+          "TIMEOUT": 1995,
+          "TP_HIT": 46035
+        }
+      },
+      "measurement_engine": "pandas"
+    },
+    "SOLUSDT": {
+      "instrument": "SOLUSDT",
+      "population": {
+        "unit": "one anatomy trade_dataset row = one detection opportunity with re-derived governing outcome",
+        "detection_rv": "art_outcome",
+        "oracle_rv": "outcome",
+        "join_rule": "ROW_IDENTITY in anatomy trade_dataset (same entry_index/timestamp/direction opportunity; oracle labels derived onto the detection population). NOT a fuzzy time join.",
+        "label_vocabulary": {
+          "detection": [
+            "SL_HIT",
+            "TP_HIT",
+            "TIMEOUT"
+          ],
+          "oracle": [
+            "SL_HIT",
+            "TP_HIT",
+            "TIMEOUT"
+          ],
+          "note": "Both sides use SL_HIT / TP_HIT / TIMEOUT. Governing is forward_walk(intrabar_fixed) single TP. Do NOT invent TP1/TP2 labels."
+        },
+        "holdout": {
+          "chronological_holdout_used": false,
+          "note": "Anatomy summaries expose descriptive splits (by_year/month/weekday/hour/session/vol) but no chronological train/holdout partition. This pass is an in-sample descriptive comparison on the full anatomy corpus; no new holdout invented.",
+          "splits_present_in_summary": [
+            "by_year",
+            "by_month",
+            "by_weekday",
+            "by_hour",
+            "by_session_derived",
+            "by_volatility_regime"
+          ],
+          "comparison_type": "in-sample descriptive comparison on full anatomy corpus"
+        }
+      },
+      "sources": {
+        "trade_dataset_csv": {
+          "path": "results/research/solusdt_trade_anatomy/trade_dataset_SOLUSDT.csv",
+          "size_bytes": 128198376,
+          "mtime_utc": "2026-06-13T11:28:54.424149Z"
+        },
+        "anatomy_summary_json": {
+          "path": "results/research/solusdt_trade_anatomy/anatomy_summary.json",
+          "size_bytes": 7189,
+          "mtime_utc": "2026-06-13T11:29:11.943443Z"
+        },
+        "dataset_sha256": "69cdc70ea422b19937c9d50d4762e4fbbd0050a7f495707f548ad9b9238f5bbc",
+        "dataset_rows_summary": 139942,
+        "n_opportunities_summary": 139942
+      },
+      "counts": {
+        "n_rows": 139942,
+        "detection_marginals": {
+          "SL_HIT": 138490,
+          "TP_HIT": 1414,
+          "TIMEOUT": 38
+        },
+        "oracle_marginals": {
+          "SL_HIT": 92423,
+          "TP_HIT": 45929,
+          "TIMEOUT": 1590
+        },
+        "confusion_matrix_detection_x_oracle": {
+          "SL_HIT": {
+            "SL_HIT": 92375,
+            "TP_HIT": 44563,
+            "TIMEOUT": 1552
+          },
+          "TP_HIT": {
+            "SL_HIT": 48,
+            "TP_HIT": 1366,
+            "TIMEOUT": 0
+          },
+          "TIMEOUT": {
+            "SL_HIT": 0,
+            "TP_HIT": 0,
+            "TIMEOUT": 38
+          }
+        },
+        "agreement_n": 93779,
+        "agreement_rate": 0.670128,
+        "majority_class_baseline_always_oracle_SL_HIT": 0.660438,
+        "agreement_minus_majority_baseline": 0.00969,
+        "mapping_rate": 1.0,
+        "mapping_rate_definition": "n_dataset / n_opportunities from summary (row-identity join; anatomy pairs oracle onto detection population)",
+        "art_consistent_true_n": 50048,
+        "art_consistent_rate_from_column": 0.357634,
+        "artifact_consistency_rate_from_summary": 0.3576,
+        "consistency_vs_agreement_note": "artifact_consistency_rate (~0.36-0.37) is a DIFFERENT metric (internal SL_HIT vs mae consistency on artifact stream) than label agreement (art_outcome == outcome). Do not conflate."
+      },
+      "precision_recall_detection_as_predictor_of_oracle": {
+        "SL_HIT": {
+          "precision": 0.667016,
+          "recall": 0.999481,
+          "support_detection": 138490,
+          "support_oracle": 92423,
+          "tp": 92375
+        },
+        "TP_HIT": {
+          "precision": 0.966054,
+          "recall": 0.029742,
+          "support_detection": 1414,
+          "support_oracle": 45929,
+          "tp": 1366
+        },
+        "TIMEOUT": {
+          "precision": 1.0,
+          "recall": 0.023899,
+          "support_detection": 38,
+          "support_oracle": 1590,
+          "tp": 38
+        }
+      },
+      "sanity_vs_summary": {
+        "detection_marginals_match": true,
+        "oracle_marginals_match": true,
+        "n_match_dataset_rows": true
+      },
+      "summary_distributions_cited": {
+        "artifact": {
+          "SL_HIT": 138490,
+          "TIMEOUT": 38,
+          "TP_HIT": 1414
+        },
+        "governing": {
+          "SL_HIT": 92423,
+          "TIMEOUT": 1590,
+          "TP_HIT": 45929
+        }
+      },
+      "measurement_engine": "pandas"
+    }
+  },
+  "aggregate": {
+    "instruments": [
+      "BNBUSDT",
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT"
+    ],
+    "n_rows": 559768,
+    "detection_marginals": {
+      "SL_HIT": 551706,
+      "TP_HIT": 7914,
+      "TIMEOUT": 148
+    },
+    "oracle_marginals": {
+      "SL_HIT": 368203,
+      "TP_HIT": 184105,
+      "TIMEOUT": 7460
+    },
+    "confusion_matrix_detection_x_oracle": {
+      "SL_HIT": {
+        "SL_HIT": 367923,
+        "TP_HIT": 176471,
+        "TIMEOUT": 7312
+      },
+      "TP_HIT": {
+        "SL_HIT": 280,
+        "TP_HIT": 7634,
+        "TIMEOUT": 0
+      },
+      "TIMEOUT": {
+        "SL_HIT": 0,
+        "TP_HIT": 0,
+        "TIMEOUT": 148
+      }
+    },
+    "agreement_n": 375705,
+    "agreement_rate": 0.67118,
+    "majority_class_baseline_always_oracle_SL_HIT": 0.657778,
+    "agreement_minus_majority_baseline": 0.013402,
+    "precision_recall_detection_as_predictor_of_oracle": {
+      "SL_HIT": {
+        "precision": 0.666882,
+        "recall": 0.99924,
+        "support_detection": 551706,
+        "support_oracle": 368203,
+        "tp": 367923
+      },
+      "TP_HIT": {
+        "precision": 0.96462,
+        "recall": 0.041465,
+        "support_detection": 7914,
+        "support_oracle": 184105,
+        "tp": 7634
+      },
+      "TIMEOUT": {
+        "precision": 1.0,
+        "recall": 0.019839,
+        "support_detection": 148,
+        "support_oracle": 7460,
+        "tp": 148
+      }
+    }
+  },
+  "interpretation_gate": {
+    "discipline": "Observation -> Measurement -> Evidence -> Promotion (measure-before-promote)",
+    "criteria": {
+      "SAFE_ALIAS_candidate_if": "agreement high AND off-diagonals concentrated in interpretable aliases (still not auto-promote)",
+      "HOMONYM_separate_populations_if": "agreement ~ chance / chaotic or systematically biased off-diagonals that show different generative processes"
+    },
+    "observed": {
+      "per_instrument_agreement_rates": {
+        "BNBUSDT": 0.669442,
+        "BTCUSDT": 0.672193,
+        "ETHUSDT": 0.672957,
+        "SOLUSDT": 0.670128
+      },
+      "aggregate_agreement_rate": 0.67118,
+      "majority_class_baseline": 0.657778,
+      "dominant_off_diagonal": "Detection=SL_HIT x Oracle=TP_HIT (~43k-45k per instrument; ~176k aggregate)",
+      "detection_TP_HIT_recall_of_oracle_TP": 0.041465,
+      "artifact_consistency_rate_cluster": {
+        "BNBUSDT": 0.368,
+        "BTCUSDT": 0.3719,
+        "ETHUSDT": 0.3696,
+        "SOLUSDT": 0.3576,
+        "note": "Published/summary consistency rates ~0.36-0.37; DIFFERENT metric from label agreement — do not conflate."
+      },
+      "aggregate_LABEL_MATCH_rate": 0.67118,
+      "aggregate_agreement_rate_historical_synonym_note": "aggregate_agreement_rate == LABEL_MATCH rate (label equality only)",
+      "dominant_off_diagonal_canonical": "LABEL_MISMATCH_SL_TP = scanner_outcome=SL_HIT x oracle_outcome=TP_HIT (~176k aggregate)",
+      "dominant_off_diagonal_note": "Historical wording Detection=SL_HIT x Oracle=TP_HIT; trailing-stop explanation is hypothesis (unmeasured)"
+    },
+    "verdict_this_pass": "HOMONYM / separate populations (supports ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS). Shared token vocabulary SL_HIT/TP_HIT/TIMEOUT does NOT make scanner_outcome and oracle_outcome the same RV. LABEL_MATCH ~0.67 is only ~1.4pp above always-predict-oracle-SL baseline; scanner TP recall of oracle TP is ~4%. Off-diagonal concentration LABEL_MISMATCH_SL_TP is interpretable as trailing-stop hypothesis (unmeasured) vs fixed-stop single-TP forward_walk but is evidence of DIFFERENT exit generative processes, not SAFE_ALIAS. Distinct from ATTRIBUTION_BLOCKER_IDENTITY (L-001).",
+    "not_auto_promote": true
+  },
+  "promotion": {
+    "registry_column_added": false,
+    "l003_frozen": false,
+    "attribution_unblocked": false,
+    "analytics_schema_registry_edited": false,
+    "analytics_lineage_registry_edited": false
+  },
+  "non_goals": [
+    "No forward_walk re-run (used existing anatomy trade_dataset join surface)",
+    "No registry table edits",
+    "No src/ changes",
+    "No venv work",
+    "No git commit / git add",
+    "No TP1/TP2 label invention"
+  ],
+  "cross_links": [
+    "docs/governance/ANALYTICS_OUTCOME_SEMANTICS_L003.md (Phase A; demoted to OBSERVED_PARTIAL)",
+    "docs/governance/analytics_outcome_semantics_l003-2026-09-07.json",
+    "docs/design/context-finding-odp/ANALYTICS_LINEAGE_SEMANTICS_DECISION.md section 5",
+    "docs/current-findings.md F-022",
+    "docs/analysis/cross-instrument-anatomy-2026-06-13.md"
+  ],
+  "artifacts": {
+    "md": "docs/governance/ANALYTICS_OUTCOME_POPULATION_COMPARISON_L003B.md",
+    "json": "docs/governance/analytics_outcome_population_comparison_l003b-2026-09-07.json",
+    "impact": "docs/governance/build_manifests/CH-l003b-outcome-population-comparison.impact.json"
+  },
+  "terminology_parity": {
+    "version": "L-003-TERM.v1",
+    "run_id": "l003_terminology_parity_20260907_182845",
+    "generated_at_utc": "2026-09-07T18:28:45.866Z",
+    "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+    "pass_type": "documentation_terminology_parity_only",
+    "no_new_measurements": true,
+    "canonical_terms": {
+      "scanner_outcome": {
+        "emitter": "opportunity_scanner._simulate",
+        "labels": [
+          "SL_HIT",
+          "TP_HIT",
+          "TIMEOUT"
+        ],
+        "csv_column": "art_outcome",
+        "former_aliases": [
+          "art_outcome",
+          "detection outcome",
+          "DETECTION_STREAM.outcome"
+        ]
+      },
+      "oracle_outcome": {
+        "emitter": "forward_walk(intrabar_fixed)",
+        "labels": [
+          "SL_HIT",
+          "TP_HIT",
+          "TIMEOUT"
+        ],
+        "csv_column": "outcome",
+        "former_aliases": [
+          "outcome",
+          "governing outcome",
+          "GOVERNING_ORACLE.outcome"
+        ]
+      },
+      "live_outcome": {
+        "emitter": "ingest_live_outcomes",
+        "labels": [
+          "WIN",
+          "LOSS",
+          "BREAKEVEN"
+        ],
+        "former_aliases": [
+          "LIVE_INGEST_TWIN outcome"
+        ]
+      },
+      "attribution_target": {
+        "meaning": "trade edge realization (implicit eligibility target; not a scanner/oracle terminal label)"
+      },
+      "LABEL_MATCH": {
+        "formula": "scanner_outcome == oracle_outcome",
+        "meaning": "terminal label equality only; NOT semantic/process agreement",
+        "historical_synonym": "AGREE"
+      },
+      "LABEL_MISMATCH": {
+        "formula": "scanner_outcome != oracle_outcome",
+        "historical_synonym": "DISAGREE"
+      },
+      "LABEL_MISMATCH_SL_TP": {
+        "formula": "scanner_outcome==SL_HIT AND oracle_outcome==TP_HIT",
+        "historical_synonym": "DISAGREE_SL_TP",
+        "primary_mismatch_class": true
+      },
+      "path_geometry_or_path_shape_metrics": {
+        "measured_set": [
+          "time_to_peak / bars_to_peak_within_trade",
+          "MFE / mfe_r",
+          "T_MAE / time_to_bottom_path"
+        ],
+        "note": "Prefer 'path geometry' / 'path-shape metrics' for the measured set; 'path mechanics' retained as finding-id narrative only"
+      },
+      "T_MAE": {
+        "formula": "time_to_bottom_path = timing of deepest adverse on PEAK_HORIZON path",
+        "not": [
+          "magnitude+timing composite",
+          "first stop-threat",
+          "true FAE-to-stop"
+        ],
+        "preferred_prose": "early MAE timing / early-path minimum"
+      },
+      "trailing_stop_hypothesis": {
+        "claim_class": "hypothesis_only_unmeasured",
+        "labels": [
+          "path-mechanics hypothesis",
+          "trailing-stop hypothesis (unmeasured)"
+        ],
+        "unmeasured": [
+          "trail activation",
+          "trail move",
+          "trail exit",
+          "trail touch"
+        ]
+      },
+      "early_stop_inference": {
+        "claim_class": "INFERENCE_not_observation",
+        "observation_is_only": "terminal label pair (scanner_outcome, oracle_outcome)",
+        "would_require": "detector_exit_ts < oracle_tp_ts (unmeasured)"
+      }
+    },
+    "attribution_blockers": {
+      "ATTRIBUTION_BLOCKER_IDENTITY": "12 opportunities.produced_by UNKNOWN (L-001)",
+      "ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS": "scanner_outcome ≠ oracle_outcome as RVs (L-003B HOMONYM)"
+    },
+    "machine_key_policy": "Existing JSON keys AGREE / DISAGREE / DISAGREE_SL_TP / art_outcome / outcome retained for prior run_id reproducibility; see label_vocabulary aliases."
+  },
+  "label_vocabulary": {
+    "canonical": {
+      "LABEL_MATCH": "scanner_outcome == oracle_outcome (terminal equality only)",
+      "LABEL_MISMATCH": "scanner_outcome != oracle_outcome",
+      "LABEL_MISMATCH_SL_TP": "scanner SL_HIT × oracle TP_HIT",
+      "scanner_outcome": "art_outcome / opportunities outcome field",
+      "oracle_outcome": "anatomy column outcome (forward_walk)",
+      "live_outcome": "WIN/LOSS/BREAKEVEN"
+    },
+    "historical_machine_keys_retained": true,
+    "historical_synonyms": {
+      "AGREE": "LABEL_MATCH",
+      "DISAGREE": "LABEL_MISMATCH",
+      "DISAGREE_SL_TP": "LABEL_MISMATCH_SL_TP",
+      "DISAGREE_OTHER": "LABEL_MISMATCH_OTHER",
+      "art_outcome": "scanner_outcome",
+      "outcome (anatomy)": "oracle_outcome"
+    },
+    "note": "Machine keys AGREE/DISAGREE/... kept for prior run_id reproducibility; prose uses canonical terms."
+  }
+}

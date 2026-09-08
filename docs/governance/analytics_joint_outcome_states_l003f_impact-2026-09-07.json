@@ -1,0 +1,18 @@
+{
+  "change_id": "CH-l003f",
+  "run_id": "l003f_joint_outcome_states_20260907_184519",
+  "version": "L-003F.v1",
+  "generated_at_utc": "2026-09-07T18:45:19.742273Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "intent": "Joint outcome state observation (Y_joint census); EARLY_STOP_CANDIDATE sized as OBSERVED_CANDIDATE_POPULATION only",
+  "artifacts_written": [
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_STATES_L003F.md",
+    "docs/governance/analytics_joint_outcome_states_l003f-2026-09-07.json",
+    "docs/governance/analytics_joint_outcome_states_l003f_impact-2026-09-07.json"
+  ],
+  "src_touched": false,
+  "registry_promoted": false,
+  "EARLY_STOP_CANDIDATE_promoted": false,
+  "commit_performed": false,
+  "observation_before_intervention": true
+}

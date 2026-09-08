@@ -1,0 +1,525 @@
+{
+  "finding_id": "L-003I",
+  "version": "L-003I.v1",
+  "run_id": "l003i_trail_baseline_inversion_20260907_193404",
+  "generated_at_utc": "2026-09-07T19:34:04.182378Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "branch": "feature/trace-parquet-duckdb-query",
+  "status": "MEASURED",
+  "title": "BASELINE_DIRECTION_MEASURED",
+  "doctrine": "Observation \u2192 Measurement \u2192 Evidence \u2192 Promotion",
+  "questions_answered": [
+    "P(JOINT_STATE_SL_TP | trail_activated) and related Bayes-facing conditionals on the L-003H replay universe",
+    "Base-rate / precision side of trail markers vs P(trail|JOINT) from L-003H",
+    "Among trail_activated=1, joint-state mix (JOINT vs BOTH_SL vs BOTH_TP)"
+  ],
+  "questions_NOT_answered": [
+    "Whether trail causes JOINT / label mismatch",
+    "Counterfactual without-trail world",
+    "Promotion / economic edge claims"
+  ],
+  "path_semantics": {
+    "Path_plus_TrailLogic_to_scanner": "trailing walk (trail_mult=0.5) \u2192 scanner_outcome_replay",
+    "Path_plus_FixedLogic_to_oracle": "intrabar_fixed walk \u2192 oracle_outcome_replay",
+    "explicit": "No counterfactual without-trail world constructed; conditionals are associations within dual-path replay labels"
+  },
+  "flags": {
+    "promotion": false,
+    "l003_frozen": false,
+    "attribution_unblocked": false,
+    "economic_claims": false,
+    "registry_edits": false,
+    "causal_language_upgrade": false
+  },
+  "data_reuse": {
+    "source_finding": "L-003H",
+    "source_run_id": "l003h_trail_exit_transitions_20260907_192115",
+    "source_json": "docs/governance/analytics_trail_exit_transitions_l003h-2026-09-07.json",
+    "method": "Derived contingency / Bayes inversion from L-003H aggregate + per-instrument by_joint_state_replay counters; no new candle replay",
+    "n_universe": 559768,
+    "instruments": [
+      "BNBUSDT",
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT"
+    ]
+  },
+  "wording": {
+    "finding_title": "BASELINE_DIRECTION_MEASURED",
+    "lean_retained": "LEAN_SUPPORTS_TRAIL_EARLY_EXIT_PATTERN_IN_JOINT_STATE_SL_TP",
+    "lean_note": "Do NOT upgrade to causality; baseline direction shows trail markers are not precise for JOINT despite near-certain activation inside JOINT",
+    "baseline_direction_story": "BASELINE_WEAKENS_TRAIL_AS_JOINT_MARKER: among trail_activated=1, JOINT is only 0.4719 (~47.2%) while BOTH_SL is 0.4873; P(JOINT|trail_activated)=0.4719 vs base 0.3153 (lift 1.497). Trail activation is necessary-looking for JOINT (recall-side from H) but not precise for JOINT; BOTH_TP also 100% activated. trail_exit lifts slightly more than activation alone; seb is near-certain for JOINT when true but is path-timing not causation."
+  },
+  "aggregate": {
+    "n": 559768,
+    "p_joint_base_rate": 0.31525739234825856,
+    "joint_n": 176471,
+    "primary_inversion": {
+      "P_joint_given_trail_activated_1": 0.47194854514334617,
+      "P_joint_given_trail_activated_0": 0.0,
+      "P_joint_given_trail_exit_1": 0.4821730589003555,
+      "P_joint_given_trail_exit_0": 0.0,
+      "P_joint_given_seb_1": 1.0,
+      "P_joint_given_seb_0": 0.020272066416514155,
+      "lift_vs_base_trail_activated_1": 1.4970261018399658,
+      "lift_vs_base_trail_activated_0": 0.0,
+      "lift_vs_base_trail_exit_1": 1.5294583746594863,
+      "lift_vs_base_trail_exit_0": 0.0,
+      "lift_vs_base_seb_1": 3.172011265307048,
+      "lift_vs_base_seb_0": 0.06430322304423557,
+      "n_trail_activated_1": 373920,
+      "n_trail_activated_0": 185848,
+      "n_trail_exit_1": 365991,
+      "n_trail_exit_0": 193777,
+      "n_seb_1": 168540,
+      "n_seb_0": 391228
+    },
+    "confusion_style_counts": {
+      "trail_activated_x_joint": {
+        "ta1_joint1": 176471,
+        "ta1_joint0": 197449,
+        "ta0_joint1": 0,
+        "ta0_joint0": 185848,
+        "note": "contingency counts only; not predictor-of-edge language"
+      },
+      "trail_exit_x_joint": {
+        "te1_joint1": 176471,
+        "te1_joint0": 189520,
+        "te0_joint1": 0,
+        "te0_joint0": 193777
+      },
+      "seb_x_joint": {
+        "seb1_joint1": 168540,
+        "seb1_joint0": 0,
+        "seb0_joint1": 7931,
+        "seb0_joint0": 383297
+      }
+    },
+    "among_trail_activated_1_joint_state_mix": {
+      "counts": {
+        "JOINT_STATE_SL_TP": 176471,
+        "BOTH_SL": 182208,
+        "BOTH_TP": 7634,
+        "OTHER": 7607
+      },
+      "fractions": {
+        "JOINT_STATE_SL_TP": 0.47194854514334617,
+        "BOTH_SL": 0.48729139922978176,
+        "BOTH_TP": 0.020416131792896877,
+        "OTHER": 0.02034392383397518
+      },
+      "counts_full_state": {
+        "BOTH_SL": 182208,
+        "JOINT_STATE_SL_TP": 176471,
+        "BOTH_TP": 7634,
+        "SCANNER_SL_ORACLE_TIMEOUT": 7312,
+        "FALSE_TP_CANDIDATE": 280,
+        "BOTH_TIMEOUT": 15
+      },
+      "fractions_full_state": {
+        "BOTH_SL": 0.48729139922978176,
+        "JOINT_STATE_SL_TP": 0.47194854514334617,
+        "BOTH_TP": 0.020416131792896877,
+        "SCANNER_SL_ORACLE_TIMEOUT": 0.019554985023534446,
+        "FALSE_TP_CANDIDATE": 0.0007488232777064613,
+        "BOTH_TIMEOUT": 4.011553273427471e-05
+      },
+      "critical_note": "BOTH_TP also had 100% trail_activated in L-003H; among activations BOTH_SL is plurality and JOINT is ~half \u2014 activation alone does not imply JOINT"
+    },
+    "descriptive_precision_recall_trail_exit_as_joint_detector": {
+      "precision_P_joint_given_trail_exit": 0.4821730589003555,
+      "recall_P_trail_exit_given_joint": 1.0,
+      "disclaimer": "label-association stats only, not trading performance"
+    }
+  },
+  "per_instrument": {
+    "BNBUSDT": {
+      "n": 139942,
+      "p_joint_base_rate": 0.32006831401580654,
+      "joint_n": 44791,
+      "primary_inversion": {
+        "P_joint_given_trail_activated_1": 0.4813234756818328,
+        "P_joint_given_trail_activated_0": 0.0,
+        "P_joint_given_trail_exit_1": 0.49100017539244056,
+        "P_joint_given_trail_exit_0": 0.0,
+        "P_joint_given_seb_1": 1.0,
+        "P_joint_given_seb_0": 0.020132638559924206,
+        "lift_vs_base_trail_activated_1": 1.5038148251628016,
+        "lift_vs_base_trail_activated_0": 0.0,
+        "lift_vs_base_trail_exit_1": 1.5340480575287205,
+        "lift_vs_base_trail_exit_0": 0.0,
+        "lift_vs_base_seb_1": 3.1243330133285707,
+        "lift_vs_base_seb_0": 0.06290106729818297,
+        "n_trail_activated_1": 93058,
+        "n_trail_activated_0": 46884,
+        "n_trail_exit_1": 91224,
+        "n_trail_exit_0": 48718,
+        "n_seb_1": 42836,
+        "n_seb_0": 97106
+      },
+      "confusion_style_counts": {
+        "trail_activated_x_joint": {
+          "ta1_joint1": 44791,
+          "ta1_joint0": 48267,
+          "ta0_joint1": 0,
+          "ta0_joint0": 46884,
+          "note": "contingency counts only; not predictor-of-edge language"
+        },
+        "trail_exit_x_joint": {
+          "te1_joint1": 44791,
+          "te1_joint0": 46433,
+          "te0_joint1": 0,
+          "te0_joint0": 48718
+        },
+        "seb_x_joint": {
+          "seb1_joint1": 42836,
+          "seb1_joint0": 0,
+          "seb0_joint1": 1955,
+          "seb0_joint0": 95151
+        }
+      },
+      "among_trail_activated_1_joint_state_mix": {
+        "counts": {
+          "JOINT_STATE_SL_TP": 44791,
+          "BOTH_SL": 45006,
+          "BOTH_TP": 1789,
+          "OTHER": 1472
+        },
+        "fractions": {
+          "JOINT_STATE_SL_TP": 0.4813234756818328,
+          "BOTH_SL": 0.48363386275226206,
+          "BOTH_TP": 0.01922456962324572,
+          "OTHER": 0.015818091942659415
+        },
+        "counts_full_state": {
+          "BOTH_SL": 45006,
+          "JOINT_STATE_SL_TP": 44791,
+          "BOTH_TP": 1789,
+          "SCANNER_SL_ORACLE_TIMEOUT": 1427,
+          "FALSE_TP_CANDIDATE": 41,
+          "BOTH_TIMEOUT": 4
+        },
+        "fractions_full_state": {
+          "BOTH_SL": 0.48363386275226206,
+          "JOINT_STATE_SL_TP": 0.4813234756818328,
+          "BOTH_TP": 0.01922456962324572,
+          "SCANNER_SL_ORACLE_TIMEOUT": 0.0153345225558254,
+          "FALSE_TP_CANDIDATE": 0.0004405854413376604,
+          "BOTH_TIMEOUT": 4.298394549635711e-05
+        },
+        "critical_note": "BOTH_TP also had 100% trail_activated in L-003H; among activations BOTH_SL is plurality and JOINT is ~half \u2014 activation alone does not imply JOINT"
+      },
+      "descriptive_precision_recall_trail_exit_as_joint_detector": {
+        "precision_P_joint_given_trail_exit": 0.49100017539244056,
+        "recall_P_trail_exit_given_joint": 1.0,
+        "disclaimer": "label-association stats only, not trading performance"
+      }
+    },
+    "BTCUSDT": {
+      "n": 139942,
+      "p_joint_base_rate": 0.3100713152591788,
+      "joint_n": 43392,
+      "primary_inversion": {
+        "P_joint_given_trail_activated_1": 0.4637631593010207,
+        "P_joint_given_trail_activated_0": 0.0,
+        "P_joint_given_trail_exit_1": 0.4752475247524752,
+        "P_joint_given_trail_exit_0": 0.0,
+        "P_joint_given_seb_1": 1.0,
+        "P_joint_given_seb_0": 0.02166423476005188,
+        "lift_vs_base_trail_activated_1": 1.4956661144658794,
+        "lift_vs_base_trail_activated_0": 0.0,
+        "lift_vs_base_trail_exit_1": 1.532703934110225,
+        "lift_vs_base_trail_exit_0": 0.0,
+        "lift_vs_base_seb_1": 3.2250645280235988,
+        "lift_vs_base_seb_0": 0.06986855505141916,
+        "n_trail_activated_1": 93565,
+        "n_trail_activated_0": 46377,
+        "n_trail_exit_1": 91304,
+        "n_trail_exit_0": 48638,
+        "n_seb_1": 41254,
+        "n_seb_0": 98688
+      },
+      "confusion_style_counts": {
+        "trail_activated_x_joint": {
+          "ta1_joint1": 43392,
+          "ta1_joint0": 50173,
+          "ta0_joint1": 0,
+          "ta0_joint0": 46377,
+          "note": "contingency counts only; not predictor-of-edge language"
+        },
+        "trail_exit_x_joint": {
+          "te1_joint1": 43392,
+          "te1_joint0": 47912,
+          "te0_joint1": 0,
+          "te0_joint0": 48638
+        },
+        "seb_x_joint": {
+          "seb1_joint1": 41254,
+          "seb1_joint0": 0,
+          "seb0_joint1": 2138,
+          "seb0_joint0": 96550
+        }
+      },
+      "among_trail_activated_1_joint_state_mix": {
+        "counts": {
+          "JOINT_STATE_SL_TP": 43392,
+          "BOTH_SL": 45520,
+          "BOTH_TP": 2169,
+          "OTHER": 2484
+        },
+        "fractions": {
+          "JOINT_STATE_SL_TP": 0.4637631593010207,
+          "BOTH_SL": 0.4865067065676268,
+          "BOTH_TP": 0.02318174531074654,
+          "OTHER": 0.026548388820605996
+        },
+        "counts_full_state": {
+          "BOTH_SL": 45520,
+          "JOINT_STATE_SL_TP": 43392,
+          "SCANNER_SL_ORACLE_TIMEOUT": 2392,
+          "BOTH_TP": 2169,
+          "FALSE_TP_CANDIDATE": 90,
+          "BOTH_TIMEOUT": 2
+        },
+        "fractions_full_state": {
+          "BOTH_SL": 0.4865067065676268,
+          "JOINT_STATE_SL_TP": 0.4637631593010207,
+          "SCANNER_SL_ORACLE_TIMEOUT": 0.025565115160583553,
+          "BOTH_TP": 0.02318174531074654,
+          "FALSE_TP_CANDIDATE": 0.0009618981456741303,
+          "BOTH_TIMEOUT": 2.1375514348314006e-05
+        },
+        "critical_note": "BOTH_TP also had 100% trail_activated in L-003H; among activations BOTH_SL is plurality and JOINT is ~half \u2014 activation alone does not imply JOINT"
+      },
+      "descriptive_precision_recall_trail_exit_as_joint_detector": {
+        "precision_P_joint_given_trail_exit": 0.4752475247524752,
+        "recall_P_trail_exit_given_joint": 1.0,
+        "disclaimer": "label-association stats only, not trading performance"
+      }
+    },
+    "ETHUSDT": {
+      "n": 139942,
+      "p_joint_base_rate": 0.31245087250432324,
+      "joint_n": 43725,
+      "primary_inversion": {
+        "P_joint_given_trail_activated_1": 0.4679273147553615,
+        "P_joint_given_trail_activated_0": 0.0,
+        "P_joint_given_trail_exit_1": 0.4803361529166209,
+        "P_joint_given_trail_exit_0": 0.0,
+        "P_joint_given_seb_1": 1.0,
+        "P_joint_given_seb_0": 0.02169779666703948,
+        "lift_vs_base_trail_activated_1": 1.4976028423440775,
+        "lift_vs_base_trail_activated_0": 0.0,
+        "lift_vs_base_trail_exit_1": 1.537317367900692,
+        "lift_vs_base_trail_exit_0": 0.0,
+        "lift_vs_base_seb_1": 3.2005031446540877,
+        "lift_vs_base_seb_0": 0.06944386646492484,
+        "n_trail_activated_1": 93444,
+        "n_trail_activated_0": 46498,
+        "n_trail_exit_1": 91030,
+        "n_trail_exit_0": 48912,
+        "n_seb_1": 41591,
+        "n_seb_0": 98351
+      },
+      "confusion_style_counts": {
+        "trail_activated_x_joint": {
+          "ta1_joint1": 43725,
+          "ta1_joint0": 49719,
+          "ta0_joint1": 0,
+          "ta0_joint0": 46498,
+          "note": "contingency counts only; not predictor-of-edge language"
+        },
+        "trail_exit_x_joint": {
+          "te1_joint1": 43725,
+          "te1_joint0": 47305,
+          "te0_joint1": 0,
+          "te0_joint0": 48912
+        },
+        "seb_x_joint": {
+          "seb1_joint1": 41591,
+          "seb1_joint0": 0,
+          "seb0_joint1": 2134,
+          "seb0_joint0": 96217
+        }
+      },
+      "among_trail_activated_1_joint_state_mix": {
+        "counts": {
+          "JOINT_STATE_SL_TP": 43725,
+          "BOTH_SL": 45364,
+          "BOTH_TP": 2310,
+          "OTHER": 2045
+        },
+        "fractions": {
+          "JOINT_STATE_SL_TP": 0.4679273147553615,
+          "BOTH_SL": 0.4854672317109713,
+          "BOTH_TP": 0.024720688326698343,
+          "OTHER": 0.02188476520696888
+        },
+        "counts_full_state": {
+          "BOTH_SL": 45364,
+          "JOINT_STATE_SL_TP": 43725,
+          "BOTH_TP": 2310,
+          "SCANNER_SL_ORACLE_TIMEOUT": 1941,
+          "FALSE_TP_CANDIDATE": 101,
+          "BOTH_TIMEOUT": 3
+        },
+        "fractions_full_state": {
+          "BOTH_SL": 0.4854672317109713,
+          "JOINT_STATE_SL_TP": 0.4679273147553615,
+          "BOTH_TP": 0.024720688326698343,
+          "SCANNER_SL_ORACLE_TIMEOUT": 0.020771799152433542,
+          "FALSE_TP_CANDIDATE": 0.0010808612645006636,
+          "BOTH_TIMEOUT": 3.2104790034673176e-05
+        },
+        "critical_note": "BOTH_TP also had 100% trail_activated in L-003H; among activations BOTH_SL is plurality and JOINT is ~half \u2014 activation alone does not imply JOINT"
+      },
+      "descriptive_precision_recall_trail_exit_as_joint_detector": {
+        "precision_P_joint_given_trail_exit": 0.4803361529166209,
+        "recall_P_trail_exit_given_joint": 1.0,
+        "disclaimer": "label-association stats only, not trading performance"
+      }
+    },
+    "SOLUSDT": {
+      "n": 139942,
+      "p_joint_base_rate": 0.3184390676137257,
+      "joint_n": 44563,
+      "primary_inversion": {
+        "P_joint_given_trail_activated_1": 0.4748170010548411,
+        "P_joint_given_trail_activated_0": 0.0,
+        "P_joint_given_trail_exit_1": 0.4821113671524239,
+        "P_joint_given_trail_exit_0": 0.0,
+        "P_joint_given_seb_1": 1.0,
+        "P_joint_given_seb_0": 0.017551991594820928,
+        "lift_vs_base_trail_activated_1": 1.4910764706509114,
+        "lift_vs_base_trail_activated_0": 0.0,
+        "lift_vs_base_trail_exit_1": 1.5139831012733547,
+        "lift_vs_base_trail_exit_0": 0.0,
+        "lift_vs_base_seb_1": 3.1403182011983035,
+        "lift_vs_base_seb_0": 0.0551188386724958,
+        "n_trail_activated_1": 93853,
+        "n_trail_activated_0": 46089,
+        "n_trail_exit_1": 92433,
+        "n_trail_exit_0": 47509,
+        "n_seb_1": 42859,
+        "n_seb_0": 97083
+      },
+      "confusion_style_counts": {
+        "trail_activated_x_joint": {
+          "ta1_joint1": 44563,
+          "ta1_joint0": 49290,
+          "ta0_joint1": 0,
+          "ta0_joint0": 46089,
+          "note": "contingency counts only; not predictor-of-edge language"
+        },
+        "trail_exit_x_joint": {
+          "te1_joint1": 44563,
+          "te1_joint0": 47870,
+          "te0_joint1": 0,
+          "te0_joint0": 47509
+        },
+        "seb_x_joint": {
+          "seb1_joint1": 42859,
+          "seb1_joint0": 0,
+          "seb0_joint1": 1704,
+          "seb0_joint0": 95379
+        }
+      },
+      "among_trail_activated_1_joint_state_mix": {
+        "counts": {
+          "JOINT_STATE_SL_TP": 44563,
+          "BOTH_SL": 46318,
+          "BOTH_TP": 1366,
+          "OTHER": 1606
+        },
+        "fractions": {
+          "JOINT_STATE_SL_TP": 0.4748170010548411,
+          "BOTH_SL": 0.4935164565863638,
+          "BOTH_TP": 0.014554675929378922,
+          "OTHER": 0.017111866429416214
+        },
+        "counts_full_state": {
+          "BOTH_SL": 46318,
+          "JOINT_STATE_SL_TP": 44563,
+          "SCANNER_SL_ORACLE_TIMEOUT": 1552,
+          "BOTH_TP": 1366,
+          "FALSE_TP_CANDIDATE": 48,
+          "BOTH_TIMEOUT": 6
+        },
+        "fractions_full_state": {
+          "BOTH_SL": 0.4935164565863638,
+          "JOINT_STATE_SL_TP": 0.4748170010548411,
+          "SCANNER_SL_ORACLE_TIMEOUT": 0.016536498566907823,
+          "BOTH_TP": 0.014554675929378922,
+          "FALSE_TP_CANDIDATE": 0.0005114381000074585,
+          "BOTH_TIMEOUT": 6.392976250093231e-05
+        },
+        "critical_note": "BOTH_TP also had 100% trail_activated in L-003H; among activations BOTH_SL is plurality and JOINT is ~half \u2014 activation alone does not imply JOINT"
+      },
+      "descriptive_precision_recall_trail_exit_as_joint_detector": {
+        "precision_P_joint_given_trail_exit": 0.4821113671524239,
+        "recall_P_trail_exit_given_joint": 1.0,
+        "disclaimer": "label-association stats only, not trading performance"
+      }
+    }
+  },
+  "loio_stability": {
+    "per_holdout": [
+      {
+        "holdout": "holdout_BNBUSDT",
+        "n_train": 419826,
+        "P_joint_given_trail_activated_1": 0.4688423496236586,
+        "P_joint_given_trail_exit_1": 0.47924241266236484,
+        "P_joint_given_seb_1": 1.0,
+        "p_joint_base_rate": 0.31365375179240923
+      },
+      {
+        "holdout": "holdout_BTCUSDT",
+        "n_train": 419826,
+        "P_joint_given_trail_activated_1": 0.47468031602789323,
+        "P_joint_given_trail_exit_1": 0.4844750570649503,
+        "P_joint_given_seb_1": 1.0,
+        "p_joint_base_rate": 0.31698608471128514
+      },
+      {
+        "holdout": "holdout_ETHUSDT",
+        "n_train": 419826,
+        "P_joint_given_trail_activated_1": 0.47328826708880617,
+        "P_joint_given_trail_exit_1": 0.48278119442393647,
+        "P_joint_given_seb_1": 1.0,
+        "p_joint_base_rate": 0.3161928989629037
+      },
+      {
+        "holdout": "holdout_SOLUSDT",
+        "n_train": 419826,
+        "P_joint_given_trail_activated_1": 0.4709872994676274,
+        "P_joint_given_trail_exit_1": 0.48219390403497614,
+        "P_joint_given_seb_1": 1.0,
+        "p_joint_base_rate": 0.3141968339264362
+      }
+    ],
+    "P_joint_given_trail_activated_1": {
+      "mean": 0.47194955805199634,
+      "std": 0.0022265369303295585,
+      "range": [
+        0.4688423496236586,
+        0.47468031602789323
+      ]
+    },
+    "P_joint_given_trail_exit_1": {
+      "mean": 0.4821731420465569,
+      "std": 0.0018879980289364703,
+      "range": [
+        0.47924241266236484,
+        0.4844750570649503
+      ]
+    }
+  },
+  "parent_links": {
+    "L-003H": "docs/governance/ANALYTICS_TRAIL_EXIT_TRANSITIONS_L003H.md",
+    "L-003F": "docs/governance/ANALYTICS_JOINT_OUTCOME_STATES_L003F.md"
+  },
+  "reproducibility": {
+    "script_note": "scripts/research/l003i_trail_baseline_inversion.py derives from L-003H JSON counters; l003h replay not re-executed",
+    "commit": "d7c25f6e55616261b8b229b000875abd3bd315eb"
+  }
+}

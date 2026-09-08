@@ -1,0 +1,164 @@
+{
+  "finding_id": "L-003K",
+  "version": "L-003K.v1",
+  "run_id": "l003k_joint_outcome_formulas_20260907_195221",
+  "generated_at_utc": "2026-09-07T19:52:21.897045Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "branch": "feature/trace-parquet-duckdb-query",
+  "status": "FORMULAS_FROZEN",
+  "status_detail": "equation companion to L-003J ontology lock â€” not registry promotion",
+  "companion_to": "L-003J",
+  "companion_path": "docs/governance/ANALYTICS_JOINT_OUTCOME_STATE_ONTOLOGY_L003J.md",
+  "doctrine": "Freeze equations before narrative. Formula freeze only; ontology remains L-003J.",
+  "equations": {
+    "Y_scanner": {
+      "definition": "Y_scanner := outcome emitted by opportunity_scanner._simulate",
+      "emitter_path": "scripts/research/opportunity_scanner.py",
+      "emitter_symbol": "_simulate",
+      "signature": "_simulate(direction, entry, sl, tp, forward_bars, risk_distance, trail_mult=0.5) -> dict",
+      "return_field": "outcome",
+      "trail_mult_default": 0.5,
+      "anatomy_column_artifact": "art_outcome"
+    },
+    "Y_oracle": {
+      "definition": "Y_oracle := outcome emitted by research.measurement.forward_walk(exit_model=\"intrabar_fixed\")",
+      "emitter_path": "src/research/measurement/forward_walk.py",
+      "emitter_symbol": "forward_walk",
+      "signature": "forward_walk(signal, future, *, max_forward=40, trail_mult=0.5, exit_model=\"intrabar_fixed\", adverse_fill=None) -> Outcome",
+      "exit_model": "intrabar_fixed",
+      "anatomy_column": "outcome"
+    },
+    "Y_joint": {
+      "definition": "Y_joint := (Y_scanner, Y_oracle)",
+      "primary_observable_alias": "JOINT_OUTCOME_STATE",
+      "components": [
+        "Y_scanner",
+        "Y_oracle"
+      ]
+    }
+  },
+  "variable_locks": [
+    {
+      "id": "HOMONYM",
+      "rule": "Y_scanner != Y_oracle as variables (distinct RVs); label equality does NOT imply variable identity"
+    },
+    {
+      "id": "TERMINAL_LABEL_EQUALITY_ONLY",
+      "rule": "scanner_outcome == oracle_outcome means terminal-label equality only, NOT Y_scanner = Y_oracle"
+    },
+    {
+      "id": "JOINT_STATE_SL_TP_IS_COORDINATE",
+      "rule": "JOINT_STATE_SL_TP is a coordinate State(Y_scanner=SL, Y_oracle=TP) â€” NOT an SL->TP transition, failure, disagreement, or error",
+      "formula": "State(Y_scanner=SL_HIT, Y_oracle=TP_HIT)"
+    },
+    {
+      "id": "EARLY_STOP_CANDIDATE_ALIAS_ONLY",
+      "rule": "EARLY_STOP_CANDIDATE = research alias only (maps_to JOINT_STATE_SL_TP)"
+    }
+  ],
+  "wording_formula_parity": [
+    {
+      "current_wording": "LABEL_MATCH",
+      "formula_actually_measured": "scanner_label == oracle_label",
+      "better_wording": "Terminal-label equality"
+    },
+    {
+      "current_wording": "LABEL_MISMATCH",
+      "formula_actually_measured": "scanner_label != oracle_label",
+      "better_wording": "Terminal-label inequality"
+    },
+    {
+      "current_wording": "JOINT_STATE_SL_TP",
+      "formula_actually_measured": "(scanner=SL, oracle=TP)",
+      "better_wording": "Joint outcome state (coordinate)"
+    },
+    {
+      "current_wording": "scanner_exit_before_oracle_tp",
+      "formula_actually_measured": "exit_bar_scanner < exit_bar_oracle_tp",
+      "better_wording": "Exit-order inequality"
+    },
+    {
+      "current_wording": "path geometry explains JOINT",
+      "formula_actually_measured": "association only",
+      "better_wording": "Path geometry associated with JOINT"
+    },
+    {
+      "current_wording": "trail interaction",
+      "formula_actually_measured": "not directly measured as cause",
+      "better_wording": "Trail-related pattern hypothesis"
+    },
+    {
+      "current_wording": "early adverse movement",
+      "formula_actually_measured": "T_MAE proxy",
+      "better_wording": "Early MAE timing proxy"
+    }
+  ],
+  "mechanical_checks": [
+    "Does \"agreement\" actually mean Y_scanner == Y_oracle as labels only?",
+    "Does \"prediction\" mean P(Y_joint | X)?",
+    "Does \"association\" accidentally become \"cause\"?",
+    "Does a state name accidentally become a process explanation?"
+  ],
+  "anatomy_column_map": {
+    "art_outcome": "Y_scanner artifact (opportunities.jsonl / anatomy)",
+    "outcome": "Y_oracle (anatomy oracle column)",
+    "note": "L-003H replay may re-emit both; art_outcome remains identity xref for scanner artifact"
+  },
+  "promotion": {
+    "formulas_frozen": true,
+    "registry_column_promoted": false,
+    "EARLY_STOP_CANDIDATE_promoted_to_ontology_as_fact": false,
+    "EARLY_STOP_CANDIDATE_promoted_to_registry": false,
+    "JOINT_OUTCOME_STATE_registry_column": false,
+    "replace_scanner_with_oracle": false,
+    "economic_claims_allowed": false,
+    "attribution_unblocked": false,
+    "l003_frozen": false,
+    "causal_language_upgrade": false,
+    "src_edits": false,
+    "new_measurements": false,
+    "git_commit": false
+  },
+  "attribution_blockers_remain": [
+    "ATTRIBUTION_BLOCKER_IDENTITY",
+    "ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS"
+  ],
+  "artifacts": [
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_FORMULAS_L003K.md",
+    "docs/governance/analytics_joint_outcome_formulas_l003k-2026-09-07.json",
+    "docs/governance/analytics_joint_outcome_formulas_l003k_impact-2026-09-07.json"
+  ],
+  "pointers": [
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_STATE_ONTOLOGY_L003J.md",
+    "docs/governance/ANALYTICS_JOINT_STATE_SPACE_L003L.md"
+  ],
+  "successor_l003l": {
+    "finding_id": "L-003L",
+    "path": "docs/governance/ANALYTICS_JOINT_STATE_SPACE_L003L.md",
+    "run_id": "l003l_joint_state_space_measurement_objects_20260907_200006",
+    "role": "Omega_joint freeze + four-layer freeze + MeasurementObject identity registry"
+  },
+  "l003m_noun_parity_pointer": {
+    "finding_id": "L-003M",
+    "version": "L-003M.v1",
+    "run_id": "l003m_noun_parity_20260907_201028",
+    "status": "NOUN_PARITY_LOCKED",
+    "path_md": "docs/governance/ANALYTICS_NOUN_PARITY_L003M.md",
+    "path_json": "docs/governance/analytics_noun_parity_l003m-2026-09-07.json"
+  },
+  "package_freeze": {
+    "status": "L003_PACKAGE_FROZEN",
+    "version": "L-003-FREEZE.v1",
+    "run_id": "l003_package_freeze_20260907_201945",
+    "generated_at_utc": "2026-09-07T20:19:45.454186Z",
+    "prohibit_further_l003_doctrine_except_errata": true,
+    "successor_episode": "docs/research/JOINT_STATE_EXPLAINABILITY.md"
+  },
+  "outcome_label_discipline": {
+    "OutcomeLabel": "value domain only {SL_HIT, TP_HIT, TIMEOUT}",
+    "f_scanner": "Y_scanner emitter",
+    "f_oracle": "Y_oracle emitter",
+    "same_token_not_same_event": true,
+    "source": "L-003-FREEZE.v1"
+  }
+}

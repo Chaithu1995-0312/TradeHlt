@@ -1,0 +1,158 @@
+{
+  "finding_id": "L-003-FREEZE",
+  "version": "L-003-FREEZE.v1",
+  "run_id": "l003_package_freeze_20260907_201945",
+  "generated_at_utc": "2026-09-07T20:19:45.454186Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "branch": "feature/trace-parquet-duckdb-query",
+  "status": "L003_PACKAGE_FROZEN",
+  "status_token": "L003_PACKAGE_FROZEN",
+  "prohibit_further_l003_doctrine_noun_ontology_edits": true,
+  "errata_only": true,
+  "successor_episode": {
+    "id": "JOINT_STATE_EXPLAINABILITY",
+    "path": "docs/research/JOINT_STATE_EXPLAINABILITY.md",
+    "status": "EPISODE_OPEN",
+    "measurements_this_pass": false
+  },
+  "pin": {
+    "commit": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+    "branch": "feature/trace-parquet-duckdb-query",
+    "expected_head": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+    "verified": true
+  },
+  "leak_closures": [
+    {
+      "id": "leak_1_outcome_label_vs_measurement_object",
+      "OutcomeLabel": "value domain only {SL_HIT, TP_HIT, TIMEOUT}",
+      "emitters": {
+        "Y_scanner": "f_scanner(path) -> OutcomeLabel",
+        "Y_oracle": "f_oracle(path) -> OutcomeLabel"
+      },
+      "consequence": "SL_HIT under Y_scanner and SL_HIT under Y_oracle are not automatically the same event",
+      "updated": [
+        "docs/governance/MEASUREMENT_OBJECT_REGISTRY.md",
+        "docs/governance/measurement_object_registry.json",
+        "docs/governance/ANALYTICS_JOINT_OUTCOME_FORMULAS_L003K.md"
+      ]
+    },
+    {
+      "id": "leak_2_coordinate_vs_population",
+      "JointStateCoordinate": "s ∈ Ω_joint (e.g. STATE_SL_TP)",
+      "JointStatePopulation": "{ x : Y_joint(x) = s }",
+      "forbid": "prose equating JOINT with a population without set notation",
+      "updated": [
+        "docs/governance/ANALYTICS_JOINT_STATE_SPACE_L003L.md",
+        "docs/governance/ANALYTICS_NOUN_PARITY_L003M.md"
+      ]
+    },
+    {
+      "id": "leak_3_exit_ordering_name",
+      "canonical_observation": "scanner_exit_precedes_oracle_tp",
+      "formula": "scanner_exit_bar < oracle_tp_bar",
+      "relation_class": "exit_ordering_relation",
+      "aliases_deprecated": [
+        "scanner_exit_before_oracle_tp",
+        "trail_exit_before_oracle_tp",
+        "seb"
+      ],
+      "note": "do not encode cause in the name",
+      "updated": [
+        "docs/governance/ANALYTICS_TRAIL_EXIT_TRANSITIONS_L003H.md",
+        "docs/governance/ANALYTICS_TRAIL_BASELINE_INVERSION_L003I.md",
+        "docs/governance/ANALYTICS_NOUN_PARITY_L003M.md"
+      ]
+    }
+  ],
+  "run_id_chain_highlights": [
+    {
+      "finding": "L-003B",
+      "role": "population comparison; Y_scanner ≠ Y_oracle homonym"
+    },
+    {
+      "finding": "L-003C-E",
+      "role": "path geometry associates"
+    },
+    {
+      "finding": "L-003F",
+      "role": "joint state census"
+    },
+    {
+      "finding": "L-003G",
+      "role": "strongest empirical: AUC≈0.516 entry-time predictability falsified; path-defined not entry-defined",
+      "auc_loio_mean_approx": 0.516
+    },
+    {
+      "finding": "L-003H-I",
+      "role": "exit-ordering associates; trail not sufficient"
+    },
+    {
+      "finding": "L-003J",
+      "run_id": "l003j_joint_outcome_state_ontology_20260907_194325",
+      "role": "ontology lock framing"
+    },
+    {
+      "finding": "L-003K",
+      "run_id": "l003k_joint_outcome_formulas_20260907_195221",
+      "role": "formula freeze"
+    },
+    {
+      "finding": "L-003L",
+      "run_id": "l003l_joint_state_space_measurement_objects_20260907_200006",
+      "role": "Ω_joint + MeasurementObject registry"
+    },
+    {
+      "finding": "L-003M",
+      "run_id": "l003m_noun_parity_20260907_201028",
+      "role": "noun parity"
+    },
+    {
+      "finding": "L-003-FREEZE",
+      "run_id": "l003_package_freeze_20260907_201945",
+      "role": "package freeze"
+    }
+  ],
+  "strongest_empirical": {
+    "finding": "L-003G",
+    "claim": "entry-time predictability of JOINT on available anatomy fields",
+    "result": "FALSIFIED",
+    "auc_approx": 0.516,
+    "interpretation": "path-defined not entry-defined"
+  },
+  "strongest_identity": {
+    "claim": "Y_scanner ≠ Y_oracle",
+    "measurement_objects_registered": [
+      "Y_scanner",
+      "Y_oracle",
+      "Y_joint"
+    ],
+    "promotion_class": "REGISTERED_IDENTITY (not edge)"
+  },
+  "non_promotions": {
+    "edge_claims": false,
+    "attribution_unlocked": false,
+    "analytics_schema_column_edits": false,
+    "lineage_registry_column_edits": false,
+    "src_edits": false,
+    "new_empirical_measurements_this_pass": false,
+    "git_commit_or_add": false,
+    "further_l003_doctrine_except_errata": false
+  },
+  "attribution_blockers_remain": [
+    "ATTRIBUTION_BLOCKER_IDENTITY",
+    "ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS"
+  ],
+  "research_reframe": "Observe/explain Y_joint populations; do not ask which outcome is correct",
+  "banner_sites": [
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_STATE_ONTOLOGY_L003J.md",
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_FORMULAS_L003K.md",
+    "docs/governance/ANALYTICS_JOINT_STATE_SPACE_L003L.md",
+    "docs/governance/ANALYTICS_NOUN_PARITY_L003M.md"
+  ],
+  "artifacts": [
+    "docs/governance/ANALYTICS_L003_PACKAGE_FREEZE.md",
+    "docs/governance/analytics_l003_package_freeze-2026-09-07.json",
+    "docs/research/JOINT_STATE_EXPLAINABILITY.md",
+    "docs/research/joint_state_explainability_pin.json"
+  ]
+}

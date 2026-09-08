@@ -1,0 +1,1304 @@
+{
+  "finding_id": "L-003H",
+  "version": "L-003H.v1",
+  "run_id": "l003h_trail_exit_transitions_20260907_192115",
+  "generated_at_utc": "2026-09-07T19:23:21.428584Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "branch": "feature/trace-parquet-duckdb-query",
+  "status": "MEASURED",
+  "doctrine": "Observation \u2192 Measurement \u2192 Evidence \u2192 Promotion",
+  "questions_answered": [
+    "Does JOINT_STATE_SL_TP show measured trail/exit transition patterns that BOTH_SL / BOTH_TP do not?",
+    "What is scanner_exit_before_oracle_tp rate within JOINT_STATE_SL_TP?"
+  ],
+  "questions_NOT_answered": [
+    "Does trail cause label mismatch?",
+    "Should scanner be replaced by oracle?",
+    "Is EARLY_STOP_CANDIDATE a true early-stop (remains INFERENCE)"
+  ],
+  "horizon": {
+    "max_forward_exit_outcomes": 40,
+    "trail_mult": 0.5,
+    "peak_horizon_not_used": 96,
+    "note": "Exit outcomes use MAX_FORWARD=40 to match governing anatomy/scanner layer; trail uses the same horizon."
+  },
+  "flags": {
+    "promotion": false,
+    "l003_frozen": false,
+    "attribution_unblocked": false,
+    "economic_claims": false,
+    "registry_edits": false
+  },
+  "terminology": {
+    "JOINT_STATE_SL_TP": "scanner_outcome==SL_HIT & oracle_outcome==TP_HIT",
+    "EARLY_STOP_CANDIDATE": "SAFE_ALIAS only for JOINT_STATE_SL_TP",
+    "scanner_exit_before_oracle_tp": "measured path-timing operationalization; not trail-causality proof",
+    "detector_stopped_early": "INFERENCE unless exit timestamps prove scanner_exit_bar < oracle_tp_bar"
+  },
+  "aggregate": {
+    "n": 559768,
+    "by_joint_state_replay": {
+      "BOTH_SL": {
+        "n": 367923,
+        "rate": 0.6572776578868388,
+        "trail_activated_n": 182208,
+        "trail_activated_rate": 0.4952340571260834,
+        "trail_exit_n": 182208,
+        "trail_exit_rate": 0.4952340571260834,
+        "median_bars_to_trail_activation": 1.0,
+        "scanner_exit_before_oracle_tp_n": 0,
+        "scanner_exit_before_oracle_tp_rate": 0.0,
+        "scanner_exit_before_oracle_tp_among_oracle_tp": {
+          "n_oracle_tp": 0,
+          "n_true": 0,
+          "rate": null
+        },
+        "scanner_exit_bar": {
+          "median": 2.0,
+          "p25": 1.0,
+          "p75": 3.0,
+          "mean": 2.295276457302207
+        },
+        "oracle_exit_bar": {
+          "median": 3.0,
+          "p25": 2.0,
+          "p75": 7.0,
+          "mean": 5.450795410996323
+        },
+        "exit_bar_delta_oracle_minus_scanner": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 4.0,
+          "mean": 3.1555189536941155,
+          "frac_positive": 0.46370300307401274
+        }
+      },
+      "JOINT_STATE_SL_TP": {
+        "n": 176471,
+        "rate": 0.31525739234825856,
+        "trail_activated_n": 176471,
+        "trail_activated_rate": 1.0,
+        "trail_exit_n": 176471,
+        "trail_exit_rate": 1.0,
+        "median_bars_to_trail_activation": 1.0,
+        "scanner_exit_before_oracle_tp_n": 168540,
+        "scanner_exit_before_oracle_tp_rate": 0.9550577715318664,
+        "scanner_exit_before_oracle_tp_among_oracle_tp": {
+          "n_oracle_tp": 176471,
+          "n_true": 168540,
+          "rate": 0.9550577715318664
+        },
+        "scanner_exit_bar": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 2.0,
+          "mean": 1.9460647925154841
+        },
+        "oracle_exit_bar": {
+          "median": 6.0,
+          "p25": 3.0,
+          "p75": 11.0,
+          "mean": 8.30428229000799
+        },
+        "exit_bar_delta_oracle_minus_scanner": {
+          "median": 4.0,
+          "p25": 2.0,
+          "p75": 8.0,
+          "mean": 6.358217497492506,
+          "frac_positive": 0.9550577715318664
+        }
+      },
+      "BOTH_TP": {
+        "n": 7634,
+        "rate": 0.013637792799874234,
+        "trail_activated_n": 7634,
+        "trail_activated_rate": 1.0,
+        "trail_exit_n": 0,
+        "trail_exit_rate": 0.0,
+        "median_bars_to_trail_activation": 1.0,
+        "scanner_exit_before_oracle_tp_n": 0,
+        "scanner_exit_before_oracle_tp_rate": 0.0,
+        "scanner_exit_before_oracle_tp_among_oracle_tp": {
+          "n_oracle_tp": 7634,
+          "n_true": 0,
+          "rate": 0.0
+        },
+        "scanner_exit_bar": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 2.0,
+          "mean": 1.6856169766832592
+        },
+        "oracle_exit_bar": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 2.0,
+          "mean": 1.6856169766832592
+        },
+        "exit_bar_delta_oracle_minus_scanner": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0,
+          "mean": 0.0,
+          "frac_positive": 0.0
+        }
+      },
+      "SCANNER_SL_ORACLE_TIMEOUT": {
+        "n": 7312,
+        "rate": 0.013062554486858842,
+        "trail_activated_n": 7312,
+        "trail_activated_rate": 1.0,
+        "trail_exit_n": 7312,
+        "trail_exit_rate": 1.0,
+        "median_bars_to_trail_activation": 2.0,
+        "scanner_exit_before_oracle_tp_n": 0,
+        "scanner_exit_before_oracle_tp_rate": 0.0,
+        "scanner_exit_before_oracle_tp_among_oracle_tp": {
+          "n_oracle_tp": 0,
+          "n_true": 0,
+          "rate": null
+        },
+        "scanner_exit_bar": {
+          "median": 2.0,
+          "p25": 1.0,
+          "p75": 5.0,
+          "mean": 4.481537199124727
+        },
+        "oracle_exit_bar": {
+          "median": 40.0,
+          "p25": 40.0,
+          "p75": 40.0,
+          "mean": 39.620760393873084
+        },
+        "exit_bar_delta_oracle_minus_scanner": {
+          "median": 37.0,
+          "p25": 34.0,
+          "p75": 39.0,
+          "mean": 35.13922319474836,
+          "frac_positive": 0.9989059080962801
+        }
+      },
+      "FALSE_TP_CANDIDATE": {
+        "n": 280,
+        "rate": 0.0005002072287090366,
+        "trail_activated_n": 280,
+        "trail_activated_rate": 1.0,
+        "trail_exit_n": 0,
+        "trail_exit_rate": 0.0,
+        "median_bars_to_trail_activation": 1.0,
+        "scanner_exit_before_oracle_tp_n": 0,
+        "scanner_exit_before_oracle_tp_rate": 0.0,
+        "scanner_exit_before_oracle_tp_among_oracle_tp": {
+          "n_oracle_tp": 0,
+          "n_true": 0,
+          "rate": null
+        },
+        "scanner_exit_bar": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 2.0,
+          "mean": 1.6857142857142857
+        },
+        "oracle_exit_bar": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 2.0,
+          "mean": 1.6857142857142857
+        },
+        "exit_bar_delta_oracle_minus_scanner": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0,
+          "mean": 0.0,
+          "frac_positive": 0.0
+        }
+      },
+      "BOTH_TIMEOUT": {
+        "n": 148,
+        "rate": 0.0002643952494604908,
+        "trail_activated_n": 15,
+        "trail_activated_rate": 0.10135135135135136,
+        "trail_exit_n": 0,
+        "trail_exit_rate": 0.0,
+        "median_bars_to_trail_activation": 36.0,
+        "scanner_exit_before_oracle_tp_n": 0,
+        "scanner_exit_before_oracle_tp_rate": 0.0,
+        "scanner_exit_before_oracle_tp_among_oracle_tp": {
+          "n_oracle_tp": 0,
+          "n_true": 0,
+          "rate": null
+        },
+        "scanner_exit_bar": {
+          "median": 40.0,
+          "p25": 40.0,
+          "p75": 40.0,
+          "mean": 38.45945945945946
+        },
+        "oracle_exit_bar": {
+          "median": 40.0,
+          "p25": 40.0,
+          "p75": 40.0,
+          "mean": 38.45945945945946
+        },
+        "exit_bar_delta_oracle_minus_scanner": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0,
+          "mean": 0.0,
+          "frac_positive": 0.0
+        }
+      }
+    },
+    "joint_state_artifact_counts": {
+      "BOTH_SL": 367923,
+      "JOINT_STATE_SL_TP": 176471,
+      "BOTH_TP": 7634,
+      "SCANNER_SL_ORACLE_TIMEOUT": 7312,
+      "FALSE_TP_CANDIDATE": 280,
+      "BOTH_TIMEOUT": 148
+    },
+    "scanner_label_match_rate": 1.0
+  },
+  "per_instrument": {
+    "BNBUSDT": {
+      "n": 139942,
+      "skips": {},
+      "runtime_s": 6.950013875961304,
+      "by_joint_state_replay": {
+        "BOTH_SL": {
+          "n": 91873,
+          "rate": 0.6565076960455045,
+          "trail_activated_n": 45006,
+          "trail_activated_rate": 0.48987188836763795,
+          "trail_exit_n": 45006,
+          "trail_exit_rate": 0.48987188836763795,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 2.0,
+            "p25": 1.0,
+            "p75": 3.0,
+            "mean": 2.272593689114321
+          },
+          "oracle_exit_bar": {
+            "median": 3.0,
+            "p25": 2.0,
+            "p75": 7.0,
+            "mean": 5.302776659083735
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 4.0,
+            "mean": 3.0301829699694145,
+            "frac_positive": 0.4592644193615099
+          }
+        },
+        "JOINT_STATE_SL_TP": {
+          "n": 44791,
+          "rate": 0.32006831401580654,
+          "trail_activated_n": 44791,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 44791,
+          "trail_exit_rate": 1.0,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 42836,
+          "scanner_exit_before_oracle_tp_rate": 0.9563528387399254,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 44791,
+            "n_true": 42836,
+            "rate": 0.9563528387399254
+          },
+          "scanner_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.9409033064678172
+          },
+          "oracle_exit_bar": {
+            "median": 6.0,
+            "p25": 3.0,
+            "p75": 11.0,
+            "mean": 8.153758567569378
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 4.0,
+            "p25": 2.0,
+            "p75": 8.0,
+            "mean": 6.21285526110156,
+            "frac_positive": 0.9563528387399254
+          }
+        },
+        "BOTH_TP": {
+          "n": 1789,
+          "rate": 0.012783867602292378,
+          "trail_activated_n": 1789,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 0,
+          "trail_exit_rate": 0.0,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 1789,
+            "n_true": 0,
+            "rate": 0.0
+          },
+          "scanner_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.6674119619899386
+          },
+          "oracle_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.6674119619899386
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 0.0,
+            "mean": 0.0,
+            "frac_positive": 0.0
+          }
+        },
+        "SCANNER_SL_ORACLE_TIMEOUT": {
+          "n": 1427,
+          "rate": 0.01019708164811136,
+          "trail_activated_n": 1427,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 1427,
+          "trail_exit_rate": 1.0,
+          "median_bars_to_trail_activation": 2.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 2.0,
+            "p25": 1.0,
+            "p75": 5.0,
+            "mean": 4.379817799579538
+          },
+          "oracle_exit_bar": {
+            "median": 40.0,
+            "p25": 40.0,
+            "p75": 40.0,
+            "mean": 39.44849334267695
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 37.0,
+            "p25": 34.0,
+            "p75": 39.0,
+            "mean": 35.068675543097406,
+            "frac_positive": 0.9992992291520673
+          }
+        },
+        "FALSE_TP_CANDIDATE": {
+          "n": 41,
+          "rate": 0.0002929785196724357,
+          "trail_activated_n": 41,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 0,
+          "trail_exit_rate": 0.0,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.853658536585366
+          },
+          "oracle_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.853658536585366
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 0.0,
+            "mean": 0.0,
+            "frac_positive": 0.0
+          }
+        },
+        "BOTH_TIMEOUT": {
+          "n": 21,
+          "rate": 0.000150062168612711,
+          "trail_activated_n": 4,
+          "trail_activated_rate": 0.19047619047619047,
+          "trail_exit_n": 0,
+          "trail_exit_rate": 0.0,
+          "median_bars_to_trail_activation": 36.5,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 40.0,
+            "p25": 40.0,
+            "p75": 40.0,
+            "mean": 38.142857142857146
+          },
+          "oracle_exit_bar": {
+            "median": 40.0,
+            "p25": 40.0,
+            "p75": 40.0,
+            "mean": 38.142857142857146
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 0.0,
+            "mean": 0.0,
+            "frac_positive": 0.0
+          }
+        }
+      },
+      "joint_state_artifact_counts": {
+        "BOTH_SL": 91873,
+        "JOINT_STATE_SL_TP": 44791,
+        "BOTH_TP": 1789,
+        "SCANNER_SL_ORACLE_TIMEOUT": 1427,
+        "FALSE_TP_CANDIDATE": 41,
+        "BOTH_TIMEOUT": 21
+      },
+      "scanner_label_match_rate": 1.0,
+      "JOINT_STATE_SL_TP_replay_rate": 0.32006831401580654
+    },
+    "BTCUSDT": {
+      "n": 139942,
+      "skips": {},
+      "runtime_s": 6.89926290512085,
+      "by_joint_state_replay": {
+        "BOTH_SL": {
+          "n": 91864,
+          "rate": 0.6564433836875276,
+          "trail_activated_n": 45520,
+          "trail_activated_rate": 0.4955151092919969,
+          "trail_exit_n": 45520,
+          "trail_exit_rate": 0.4955151092919969,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 2.0,
+            "p25": 1.0,
+            "p75": 3.0,
+            "mean": 2.3134742663067143
+          },
+          "oracle_exit_bar": {
+            "median": 3.0,
+            "p25": 2.0,
+            "p75": 7.0,
+            "mean": 5.468997648698076
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 4.0,
+            "mean": 3.1555233823913613,
+            "frac_positive": 0.4584929896368545
+          }
+        },
+        "JOINT_STATE_SL_TP": {
+          "n": 43392,
+          "rate": 0.3100713152591788,
+          "trail_activated_n": 43392,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 43392,
+          "trail_exit_rate": 1.0,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 41254,
+          "scanner_exit_before_oracle_tp_rate": 0.9507282448377581,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 43392,
+            "n_true": 41254,
+            "rate": 0.9507282448377581
+          },
+          "scanner_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.9740044247787611
+          },
+          "oracle_exit_bar": {
+            "median": 6.0,
+            "p25": 3.0,
+            "p75": 11.0,
+            "mean": 8.319575036873156
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 4.0,
+            "p25": 2.0,
+            "p75": 8.0,
+            "mean": 6.345570612094395,
+            "frac_positive": 0.9507282448377581
+          }
+        },
+        "SCANNER_SL_ORACLE_TIMEOUT": {
+          "n": 2392,
+          "rate": 0.01709279558674308,
+          "trail_activated_n": 2392,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 2392,
+          "trail_exit_rate": 1.0,
+          "median_bars_to_trail_activation": 2.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 2.0,
+            "p25": 1.0,
+            "p75": 5.0,
+            "mean": 4.262541806020067
+          },
+          "oracle_exit_bar": {
+            "median": 40.0,
+            "p25": 40.0,
+            "p75": 40.0,
+            "mean": 39.647157190635454
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 38.0,
+            "p25": 35.0,
+            "p75": 39.0,
+            "mean": 35.38461538461539,
+            "frac_positive": 0.9991638795986622
+          }
+        },
+        "BOTH_TP": {
+          "n": 2169,
+          "rate": 0.015499278272427149,
+          "trail_activated_n": 2169,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 0,
+          "trail_exit_rate": 0.0,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 2169,
+            "n_true": 0,
+            "rate": 0.0
+          },
+          "scanner_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.6500691562932226
+          },
+          "oracle_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.6500691562932226
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 0.0,
+            "mean": 0.0,
+            "frac_positive": 0.0
+          }
+        },
+        "FALSE_TP_CANDIDATE": {
+          "n": 90,
+          "rate": 0.0006431235797687613,
+          "trail_activated_n": 90,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 0,
+          "trail_exit_rate": 0.0,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.4
+          },
+          "oracle_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.4
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 0.0,
+            "mean": 0.0,
+            "frac_positive": 0.0
+          }
+        },
+        "BOTH_TIMEOUT": {
+          "n": 35,
+          "rate": 0.0002501036143545183,
+          "trail_activated_n": 2,
+          "trail_activated_rate": 0.05714285714285714,
+          "trail_exit_n": 0,
+          "trail_exit_rate": 0.0,
+          "median_bars_to_trail_activation": 34.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 40.0,
+            "p25": 40.0,
+            "p75": 40.0,
+            "mean": 37.94285714285714
+          },
+          "oracle_exit_bar": {
+            "median": 40.0,
+            "p25": 40.0,
+            "p75": 40.0,
+            "mean": 37.94285714285714
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 0.0,
+            "mean": 0.0,
+            "frac_positive": 0.0
+          }
+        }
+      },
+      "joint_state_artifact_counts": {
+        "BOTH_SL": 91864,
+        "JOINT_STATE_SL_TP": 43392,
+        "BOTH_TP": 2169,
+        "SCANNER_SL_ORACLE_TIMEOUT": 2392,
+        "FALSE_TP_CANDIDATE": 90,
+        "BOTH_TIMEOUT": 35
+      },
+      "scanner_label_match_rate": 1.0,
+      "JOINT_STATE_SL_TP_replay_rate": 0.3100713152591788
+    },
+    "ETHUSDT": {
+      "n": 139942,
+      "skips": {},
+      "runtime_s": 6.731527805328369,
+      "by_joint_state_replay": {
+        "BOTH_SL": {
+          "n": 91811,
+          "rate": 0.6560646553572195,
+          "trail_activated_n": 45364,
+          "trail_activated_rate": 0.49410201391990066,
+          "trail_exit_n": 45364,
+          "trail_exit_rate": 0.49410201391990066,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 2.0,
+            "p25": 1.0,
+            "p75": 3.0,
+            "mean": 2.360240058380804
+          },
+          "oracle_exit_bar": {
+            "median": 3.0,
+            "p25": 2.0,
+            "p75": 7.0,
+            "mean": 5.593534543791049
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 4.0,
+            "mean": 3.233294485410245,
+            "frac_positive": 0.4635065515025433
+          }
+        },
+        "JOINT_STATE_SL_TP": {
+          "n": 43725,
+          "rate": 0.31245087250432324,
+          "trail_activated_n": 43725,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 43725,
+          "trail_exit_rate": 1.0,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 41591,
+          "scanner_exit_before_oracle_tp_rate": 0.9511949685534591,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 43725,
+            "n_true": 41591,
+            "rate": 0.9511949685534591
+          },
+          "scanner_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.9911034877072613
+          },
+          "oracle_exit_bar": {
+            "median": 6.0,
+            "p25": 3.0,
+            "p75": 11.0,
+            "mean": 8.415757575757576
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 4.0,
+            "p25": 2.0,
+            "p75": 9.0,
+            "mean": 6.424654088050315,
+            "frac_positive": 0.9511949685534591
+          }
+        },
+        "BOTH_TP": {
+          "n": 2310,
+          "rate": 0.01650683854739821,
+          "trail_activated_n": 2310,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 0,
+          "trail_exit_rate": 0.0,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 2310,
+            "n_true": 0,
+            "rate": 0.0
+          },
+          "scanner_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.8
+          },
+          "oracle_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.8
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 0.0,
+            "mean": 0.0,
+            "frac_positive": 0.0
+          }
+        },
+        "SCANNER_SL_ORACLE_TIMEOUT": {
+          "n": 1941,
+          "rate": 0.013870031870346286,
+          "trail_activated_n": 1941,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 1941,
+          "trail_exit_rate": 1.0,
+          "median_bars_to_trail_activation": 2.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 3.0,
+            "p25": 1.0,
+            "p75": 6.0,
+            "mean": 4.722823286965482
+          },
+          "oracle_exit_bar": {
+            "median": 40.0,
+            "p25": 40.0,
+            "p75": 40.0,
+            "mean": 39.780010303967025
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 37.0,
+            "p25": 34.0,
+            "p75": 39.0,
+            "mean": 35.057187017001546,
+            "frac_positive": 0.9979392065945389
+          }
+        },
+        "FALSE_TP_CANDIDATE": {
+          "n": 101,
+          "rate": 0.0007217275728516099,
+          "trail_activated_n": 101,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 0,
+          "trail_exit_rate": 0.0,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.9306930693069306
+          },
+          "oracle_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.9306930693069306
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 0.0,
+            "mean": 0.0,
+            "frac_positive": 0.0
+          }
+        },
+        "BOTH_TIMEOUT": {
+          "n": 54,
+          "rate": 0.0003858741478612568,
+          "trail_activated_n": 3,
+          "trail_activated_rate": 0.05555555555555555,
+          "trail_exit_n": 0,
+          "trail_exit_rate": 0.0,
+          "median_bars_to_trail_activation": 38.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 40.0,
+            "p25": 40.0,
+            "p75": 40.0,
+            "mean": 39.27777777777778
+          },
+          "oracle_exit_bar": {
+            "median": 40.0,
+            "p25": 40.0,
+            "p75": 40.0,
+            "mean": 39.27777777777778
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 0.0,
+            "mean": 0.0,
+            "frac_positive": 0.0
+          }
+        }
+      },
+      "joint_state_artifact_counts": {
+        "JOINT_STATE_SL_TP": 43725,
+        "BOTH_SL": 91811,
+        "BOTH_TP": 2310,
+        "SCANNER_SL_ORACLE_TIMEOUT": 1941,
+        "BOTH_TIMEOUT": 54,
+        "FALSE_TP_CANDIDATE": 101
+      },
+      "scanner_label_match_rate": 1.0,
+      "JOINT_STATE_SL_TP_replay_rate": 0.31245087250432324
+    },
+    "SOLUSDT": {
+      "n": 139942,
+      "skips": {},
+      "runtime_s": 6.88356614112854,
+      "by_joint_state_replay": {
+        "BOTH_SL": {
+          "n": 92375,
+          "rate": 0.6600948964571036,
+          "trail_activated_n": 46318,
+          "trail_activated_rate": 0.5014127198917456,
+          "trail_exit_n": 46318,
+          "trail_exit_rate": 0.5014127198917456,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 2.0,
+            "p25": 1.0,
+            "p75": 3.0,
+            "mean": 2.235171853856563
+          },
+          "oracle_exit_bar": {
+            "median": 3.0,
+            "p25": 2.0,
+            "p75": 7.0,
+            "mean": 5.438040595399188
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 4.0,
+            "mean": 3.202868741542625,
+            "frac_positive": 0.4734939106901218
+          }
+        },
+        "JOINT_STATE_SL_TP": {
+          "n": 44563,
+          "rate": 0.3184390676137257,
+          "trail_activated_n": 44563,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 44563,
+          "trail_exit_rate": 1.0,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 42859,
+          "scanner_exit_before_oracle_tp_rate": 0.9617619998653592,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 44563,
+            "n_true": 42859,
+            "rate": 0.9617619998653592
+          },
+          "scanner_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.879855485492449
+          },
+          "oracle_exit_bar": {
+            "median": 6.0,
+            "p25": 4.0,
+            "p75": 11.0,
+            "mean": 8.33130624060319
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 4.0,
+            "p25": 2.0,
+            "p75": 9.0,
+            "mean": 6.451450755110742,
+            "frac_positive": 0.9617619998653592
+          }
+        },
+        "SCANNER_SL_ORACLE_TIMEOUT": {
+          "n": 1552,
+          "rate": 0.01109030884223464,
+          "trail_activated_n": 1552,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 1552,
+          "trail_exit_rate": 1.0,
+          "median_bars_to_trail_activation": 2.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 2.0,
+            "p25": 1.0,
+            "p75": 6.0,
+            "mean": 4.610824742268041
+          },
+          "oracle_exit_bar": {
+            "median": 40.0,
+            "p25": 40.0,
+            "p75": 40.0,
+            "mean": 39.53930412371134
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 37.0,
+            "p25": 34.0,
+            "p75": 39.0,
+            "mean": 34.928479381443296,
+            "frac_positive": 0.9993556701030928
+          }
+        },
+        "BOTH_TP": {
+          "n": 1366,
+          "rate": 0.0097611867773792,
+          "trail_activated_n": 1366,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 0,
+          "trail_exit_rate": 0.0,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 1366,
+            "n_true": 0,
+            "rate": 0.0
+          },
+          "scanner_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.5724743777452417
+          },
+          "oracle_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.5724743777452417
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 0.0,
+            "mean": 0.0,
+            "frac_positive": 0.0
+          }
+        },
+        "FALSE_TP_CANDIDATE": {
+          "n": 48,
+          "rate": 0.0003429992425433394,
+          "trail_activated_n": 48,
+          "trail_activated_rate": 1.0,
+          "trail_exit_n": 0,
+          "trail_exit_rate": 0.0,
+          "median_bars_to_trail_activation": 1.0,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.5625
+          },
+          "oracle_exit_bar": {
+            "median": 1.0,
+            "p25": 1.0,
+            "p75": 2.0,
+            "mean": 1.5625
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 0.0,
+            "mean": 0.0,
+            "frac_positive": 0.0
+          }
+        },
+        "BOTH_TIMEOUT": {
+          "n": 38,
+          "rate": 0.000271541067013477,
+          "trail_activated_n": 6,
+          "trail_activated_rate": 0.15789473684210525,
+          "trail_exit_n": 0,
+          "trail_exit_rate": 0.0,
+          "median_bars_to_trail_activation": 35.5,
+          "scanner_exit_before_oracle_tp_n": 0,
+          "scanner_exit_before_oracle_tp_rate": 0.0,
+          "scanner_exit_before_oracle_tp_among_oracle_tp": {
+            "n_oracle_tp": 0,
+            "n_true": 0,
+            "rate": null
+          },
+          "scanner_exit_bar": {
+            "median": 40.0,
+            "p25": 40.0,
+            "p75": 40.0,
+            "mean": 37.94736842105263
+          },
+          "oracle_exit_bar": {
+            "median": 40.0,
+            "p25": 40.0,
+            "p75": 40.0,
+            "mean": 37.94736842105263
+          },
+          "exit_bar_delta_oracle_minus_scanner": {
+            "median": 0.0,
+            "p25": 0.0,
+            "p75": 0.0,
+            "mean": 0.0,
+            "frac_positive": 0.0
+          }
+        }
+      },
+      "joint_state_artifact_counts": {
+        "BOTH_SL": 92375,
+        "JOINT_STATE_SL_TP": 44563,
+        "BOTH_TP": 1366,
+        "FALSE_TP_CANDIDATE": 48,
+        "SCANNER_SL_ORACLE_TIMEOUT": 1552,
+        "BOTH_TIMEOUT": 38
+      },
+      "scanner_label_match_rate": 1.0,
+      "JOINT_STATE_SL_TP_replay_rate": 0.3184390676137257
+    }
+  },
+  "reconcile_vs_l003f": {
+    "l003f_expected_n": 559768,
+    "l003f_expected_esc_n": 176471,
+    "l003f_expected_esc_rate": 0.315257,
+    "replay_n": 559768,
+    "replay_joint_sl_tp_n": 176471,
+    "replay_joint_sl_tp_rate": 0.31525739234825856,
+    "artifact_joint_sl_tp_n": 176471,
+    "artifact_joint_sl_tp_rate": 0.31525739234825856,
+    "artifact_vs_l003f_n_delta": 0,
+    "artifact_vs_l003f_rate_delta": 3.923482585488358e-07,
+    "replay_vs_l003f_rate_delta": 3.923482585488358e-07,
+    "scanner_label_match_rate": 1.0,
+    "notes": "L-003F used anatomy art_outcome \u00d7 anatomy oracle outcome; this pass reconciles artifact scanner labels \u00d7 re-simulated oracle, and separately reports fully re-simulated joint states."
+  },
+  "falsification_lean": {
+    "trail_activated_rate_JOINT_STATE_SL_TP": 1.0,
+    "trail_activated_rate_BOTH_SL": 0.4952340571260834,
+    "trail_activated_rate_BOTH_TP": 1.0,
+    "trail_exit_rate_JOINT_STATE_SL_TP": 1.0,
+    "trail_exit_rate_BOTH_SL": 0.4952340571260834,
+    "trail_exit_rate_BOTH_TP": 0.0,
+    "enrichment_vs_BOTH_SL": 0.5047659428739166,
+    "enrichment_vs_BOTH_TP": 0.0,
+    "scanner_exit_before_oracle_tp_rate_JOINT_STATE_SL_TP": 0.9550577715318664,
+    "scanner_exit_before_oracle_tp_among_oracle_tp_JOINT_STATE_SL_TP": 0.9550577715318664,
+    "scanner_exit_before_oracle_tp_among_oracle_tp_BOTH_TP": 0.0,
+    "thresholds": {
+      "trail_enrichment_vs_BOTH_SL_abs_lt": 0.05,
+      "seb_near_certain_lt": 0.9,
+      "trail_enrichment_vs_BOTH_TP_gt": 0.1,
+      "seb_or_trail_exit_gap_vs_BOTH_TP_gt": 0.5
+    },
+    "criterion_flags": {
+      "weakens_trail_involvement_vs_BOTH_SL": false,
+      "weakens_stopped_earlier": false,
+      "supports_trail_activated_enrichment_vs_BOTH_TP": false,
+      "differentiates_vs_BOTH_TP_via_scanner_exit_before_oracle_tp": true,
+      "differentiates_vs_BOTH_TP_via_trail_exit": true
+    },
+    "leans": [
+      "SUPPORTS_TRAIL_INVOLVEMENT_VS_BOTH_SL: trail_activated enrichment=0.5048 (JOINT=1.0000 vs BOTH_SL=0.4952)",
+      "SUPPORTS_STOPPED_EARLIER_OPERATIONALIZATION: scanner_exit_before_oracle_tp among oracle-TP in JOINT_STATE_SL_TP=0.9551 (still not trail-causality proof)",
+      "NO_TRAIL_ACTIVATED_ENRICHMENT_VS_BOTH_TP: both near-certain activation (JOINT=1.0000, BOTH_TP=1.0000) \u2014 trail_activated alone does not separate these states",
+      "DIFFERENTIATES_VS_BOTH_TP_VIA_EXIT_TIMING: seb_otp JOINT=0.9551 vs BOTH_TP=0.0",
+      "DIFFERENTIATES_VS_BOTH_TP_VIA_TRAIL_EXIT: trail_exit_rate JOINT=1.0000 vs BOTH_TP=0.0000"
+    ],
+    "overall_lean": "LEAN_SUPPORTS_TRAIL_EARLY_EXIT_PATTERN_IN_JOINT_STATE_SL_TP",
+    "caveats": [
+      "scanner_exit_before_oracle_tp is a measured path-timing operationalization; not proof of trail causality alone",
+      "detector stopped early remains INFERENCE unless exit timestamps prove scanner_exit_bar < oracle_tp_bar (this pass measures that inequality rate)",
+      "trail_activated enrichment vs BOTH_SL supports trail-involvement candidate; both JOINT and BOTH_TP are fully trail-activated so activation alone does not separate them \u2014 exit timing / trail_exit does",
+      "trail_activated enrichment is not causation of label mismatch alone"
+    ]
+  },
+  "loio_stability": {
+    "per_instrument": {
+      "BNBUSDT": {
+        "n": 44791,
+        "act": 44791,
+        "rate": 1.0
+      },
+      "BTCUSDT": {
+        "n": 43392,
+        "act": 43392,
+        "rate": 1.0
+      },
+      "ETHUSDT": {
+        "n": 43725,
+        "act": 43725,
+        "rate": 1.0
+      },
+      "SOLUSDT": {
+        "n": 44563,
+        "act": 44563,
+        "rate": 1.0
+      }
+    },
+    "loio": {
+      "holdout_BNBUSDT": {
+        "n_joint_sl_tp": 131680,
+        "trail_activated_n": 131680,
+        "trail_activated_rate": 1.0
+      },
+      "holdout_BTCUSDT": {
+        "n_joint_sl_tp": 133079,
+        "trail_activated_n": 133079,
+        "trail_activated_rate": 1.0
+      },
+      "holdout_ETHUSDT": {
+        "n_joint_sl_tp": 132746,
+        "trail_activated_n": 132746,
+        "trail_activated_rate": 1.0
+      },
+      "holdout_SOLUSDT": {
+        "n_joint_sl_tp": 131908,
+        "trail_activated_n": 131908,
+        "trail_activated_rate": 1.0
+      }
+    },
+    "loio_rate_mean": 1.0,
+    "loio_rate_std": 0.0,
+    "loio_rate_range": [
+      1.0,
+      1.0
+    ]
+  },
+  "skips": {
+    "BNBUSDT": {},
+    "BTCUSDT": {},
+    "ETHUSDT": {},
+    "SOLUSDT": {}
+  },
+  "runtime_s": {
+    "per_instrument": {
+      "BNBUSDT": 6.950013875961304,
+      "BTCUSDT": 6.89926290512085,
+      "ETHUSDT": 6.731527805328369,
+      "SOLUSDT": 6.88356614112854
+    },
+    "total": 35.97611737251282
+  },
+  "reproducibility": {
+    "script": "scripts/research/l003h_trail_exit_transition_replay.py",
+    "bnb_events_csv": "D:\\Tradelatest\\results\\research\\l003h_trail_exit_transitions\\l003h_trail_exit_transitions_20260907_192115_BNBUSDT_events.csv",
+    "summary_json": "results/research/l003h_trail_exit_transitions/l003h_trail_exit_transitions_20260907_192115_summary.json",
+    "subsample": null
+  },
+  "parent_links": {
+    "L-003F": "docs/governance/ANALYTICS_JOINT_OUTCOME_STATES_L003F.md",
+    "L-003G": "docs/governance/ANALYTICS_JOINT_STATE_ENTRY_PREDICTABILITY_L003G.md"
+  }
+}

@@ -1,0 +1,181 @@
+﻿{
+    "finding_id":  "L-003-TERM",
+    "version":  "L-003-TERM.v1",
+    "run_id":  "l003_terminology_parity_20260907_182845",
+    "generated_at_utc":  "2026-09-07T18:28:45.866Z",
+    "git_commit_sha":  "d7c25f6e55616261b8b229b000875abd3bd315eb",
+    "status":  "DOCUMENTATION_CORRECTION_ONLY",
+    "no_new_measurements":  true,
+    "highest_priority_correction":  {
+                                        "from":  [
+                                                     "AGREE",
+                                                     "DISAGREE",
+                                                     "DISAGREE_SL_TP"
+                                                 ],
+                                        "to":  [
+                                                   "LABEL_MATCH",
+                                                   "LABEL_MISMATCH",
+                                                   "LABEL_MISMATCH_SL_TP"
+                                               ],
+                                        "formula":  "scanner_outcome == oracle_outcome  # terminal label equality only",
+                                        "not":  "semantic/process agreement"
+                                    },
+    "terminology_parity":  {
+                               "version":  "L-003-TERM.v1",
+                               "run_id":  "l003_terminology_parity_20260907_182845",
+                               "generated_at_utc":  "2026-09-07T18:28:45.866Z",
+                               "git_commit_sha":  "d7c25f6e55616261b8b229b000875abd3bd315eb",
+                               "pass_type":  "documentation_terminology_parity_only",
+                               "no_new_measurements":  true,
+                               "canonical_terms":  {
+                                                       "scanner_outcome":  {
+                                                                               "emitter":  "opportunity_scanner._simulate",
+                                                                               "labels":  [
+                                                                                              "SL_HIT",
+                                                                                              "TP_HIT",
+                                                                                              "TIMEOUT"
+                                                                                          ],
+                                                                               "csv_column":  "art_outcome",
+                                                                               "former_aliases":  [
+                                                                                                      "art_outcome",
+                                                                                                      "detection outcome",
+                                                                                                      "DETECTION_STREAM.outcome"
+                                                                                                  ]
+                                                                           },
+                                                       "oracle_outcome":  {
+                                                                              "emitter":  "forward_walk(intrabar_fixed)",
+                                                                              "labels":  [
+                                                                                             "SL_HIT",
+                                                                                             "TP_HIT",
+                                                                                             "TIMEOUT"
+                                                                                         ],
+                                                                              "csv_column":  "outcome",
+                                                                              "former_aliases":  [
+                                                                                                     "outcome",
+                                                                                                     "governing outcome",
+                                                                                                     "GOVERNING_ORACLE.outcome"
+                                                                                                 ]
+                                                                          },
+                                                       "live_outcome":  {
+                                                                            "emitter":  "ingest_live_outcomes",
+                                                                            "labels":  [
+                                                                                           "WIN",
+                                                                                           "LOSS",
+                                                                                           "BREAKEVEN"
+                                                                                       ],
+                                                                            "former_aliases":  [
+                                                                                                   "LIVE_INGEST_TWIN outcome"
+                                                                                               ]
+                                                                        },
+                                                       "attribution_target":  {
+                                                                                  "meaning":  "trade edge realization (implicit eligibility target; not a scanner/oracle terminal label)"
+                                                                              },
+                                                       "LABEL_MATCH":  {
+                                                                           "formula":  "scanner_outcome == oracle_outcome",
+                                                                           "meaning":  "terminal label equality only; NOT semantic/process agreement",
+                                                                           "historical_synonym":  "AGREE"
+                                                                       },
+                                                       "LABEL_MISMATCH":  {
+                                                                              "formula":  "scanner_outcome != oracle_outcome",
+                                                                              "historical_synonym":  "DISAGREE"
+                                                                          },
+                                                       "LABEL_MISMATCH_SL_TP":  {
+                                                                                    "formula":  "scanner_outcome==SL_HIT AND oracle_outcome==TP_HIT",
+                                                                                    "historical_synonym":  "DISAGREE_SL_TP",
+                                                                                    "primary_mismatch_class":  true
+                                                                                },
+                                                       "path_geometry_or_path_shape_metrics":  {
+                                                                                                   "measured_set":  [
+                                                                                                                        "time_to_peak / bars_to_peak_within_trade",
+                                                                                                                        "MFE / mfe_r",
+                                                                                                                        "T_MAE / time_to_bottom_path"
+                                                                                                                    ],
+                                                                                                   "note":  "Prefer \u0027path geometry\u0027 / \u0027path-shape metrics\u0027 for the measured set; \u0027path mechanics\u0027 retained as finding-id narrative only"
+                                                                                               },
+                                                       "T_MAE":  {
+                                                                     "formula":  "time_to_bottom_path = timing of deepest adverse on PEAK_HORIZON path",
+                                                                     "not":  [
+                                                                                 "magnitude+timing composite",
+                                                                                 "first stop-threat",
+                                                                                 "true FAE-to-stop"
+                                                                             ],
+                                                                     "preferred_prose":  "early MAE timing / early-path minimum"
+                                                                 },
+                                                       "trailing_stop_hypothesis":  {
+                                                                                        "claim_class":  "hypothesis_only_unmeasured",
+                                                                                        "labels":  [
+                                                                                                       "path-mechanics hypothesis",
+                                                                                                       "trailing-stop hypothesis (unmeasured)"
+                                                                                                   ],
+                                                                                        "unmeasured":  [
+                                                                                                           "trail activation",
+                                                                                                           "trail move",
+                                                                                                           "trail exit",
+                                                                                                           "trail touch"
+                                                                                                       ]
+                                                                                    },
+                                                       "early_stop_inference":  {
+                                                                                    "claim_class":  "INFERENCE_not_observation",
+                                                                                    "observation_is_only":  "terminal label pair (scanner_outcome, oracle_outcome)",
+                                                                                    "would_require":  "detector_exit_ts \u003c oracle_tp_ts (unmeasured)"
+                                                                                }
+                                                   },
+                               "attribution_blockers":  {
+                                                            "ATTRIBUTION_BLOCKER_IDENTITY":  "12 opportunities.produced_by UNKNOWN (L-001)",
+                                                            "ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS":  "scanner_outcome â‰  oracle_outcome as RVs (L-003B HOMONYM)"
+                                                        },
+                               "machine_key_policy":  "Existing JSON keys AGREE / DISAGREE / DISAGREE_SL_TP / art_outcome / outcome retained for prior run_id reproducibility; see label_vocabulary aliases."
+                           },
+    "label_vocabulary":  {
+                             "canonical_prose":  [
+                                                     "LABEL_MATCH",
+                                                     "LABEL_MISMATCH",
+                                                     "LABEL_MISMATCH_SL_TP",
+                                                     "scanner_outcome",
+                                                     "oracle_outcome",
+                                                     "live_outcome"
+                                                 ],
+                             "historical_machine_keys_retained":  true
+                         },
+    "files_updated":  [
+                          "docs/design/context-finding-odp/ANALYTICS_LINEAGE_SEMANTICS_DECISION.md",
+                          "docs/governance/ANALYTICS_OUTCOME_SEMANTICS_L003.md",
+                          "docs/governance/ANALYTICS_OUTCOME_POPULATION_COMPARISON_L003B.md",
+                          "docs/governance/ANALYTICS_OUTCOME_DISAGREEMENT_POPULATION_L003C.md",
+                          "docs/governance/ANALYTICS_OUTCOME_PATH_MECHANICS_L003D.md",
+                          "docs/governance/ANALYTICS_OUTCOME_ADVERSE_TIMING_L003E.md",
+                          "docs/governance/analytics_outcome_semantics_l003-2026-09-07.json",
+                          "docs/governance/analytics_outcome_population_comparison_l003b-2026-09-07.json",
+                          "docs/governance/analytics_outcome_disagreement_population_l003c-2026-09-07.json",
+                          "docs/governance/analytics_outcome_path_mechanics_l003d-2026-09-07.json",
+                          "docs/governance/analytics_outcome_adverse_timing_l003e-2026-09-07.json",
+                          "docs/governance/ANALYTICS_L003_TERMINOLOGY_PARITY_AUDIT.md",
+                          "docs/governance/analytics_l003_terminology_parity_audit-2026-09-07.json",
+                          "docs/governance/build_manifests/CH-l003-terminology-parity.impact.json"
+                      ],
+    "promotion":  {
+                      "registry_column_added":  false,
+                      "l003_frozen":  false,
+                      "attribution_unblocked":  false,
+                      "ANALYTICS_SCHEMA_REGISTRY_edited":  false,
+                      "ANALYTICS_LINEAGE_REGISTRY_edited":  false,
+                      "src_edited":  false,
+                      "new_measurements":  false
+                  },
+    "l003g_naming_note":  {
+                              "canonical_id":  "JOINT_STATE_SL_TP",
+                              "safe_alias":  "EARLY_STOP_CANDIDATE",
+                              "formula":  "art_outcome==SL_HIT \u0026 outcome==TP_HIT",
+                              "docs_only":  true,
+                              "prior_run_ids_preserved":  true
+                          },
+    "l003m_noun_parity_pointer":  {
+                                      "finding_id":  "L-003M",
+                                      "version":  "L-003M.v1",
+                                      "run_id":  "l003m_noun_parity_20260907_201028",
+                                      "status":  "NOUN_PARITY_LOCKED",
+                                      "path_md":  "docs/governance/ANALYTICS_NOUN_PARITY_L003M.md",
+                                      "path_json":  "docs/governance/analytics_noun_parity_l003m-2026-09-07.json",
+                                      "note":  "Coordinate-only STATE_* canonical IDs; MATCH_RELATION; terminal_label vocab; Process-vs-Variable rewrite; path geometry descriptors. Alias tables / pointers only — no end-to-end rewrite of TERM audit body."
+                                  }
+}

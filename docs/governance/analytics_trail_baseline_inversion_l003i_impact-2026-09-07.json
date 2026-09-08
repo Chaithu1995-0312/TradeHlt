@@ -1,0 +1,30 @@
+{
+  "finding_id": "L-003I",
+  "version": "L-003I.v1",
+  "run_id": "l003i_trail_baseline_inversion_20260907_193404",
+  "generated_at_utc": "2026-09-07T19:34:04.182378Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "title": "BASELINE_DIRECTION_MEASURED",
+  "summary": {
+    "P_JOINT_given_trail_activated": 0.47194854514334617,
+    "P_JOINT_given_trail_exit": 0.4821730589003555,
+    "P_JOINT_given_seb": 1.0,
+    "base_rate_JOINT": 0.31525739234825856,
+    "among_ta1_JOINT_frac": 0.47194854514334617,
+    "among_ta1_BOTH_SL_frac": 0.48729139922978176,
+    "among_ta1_BOTH_TP_frac": 0.020416131792896877,
+    "baseline_effect_on_trail_story": "WEAKENS_precision_of_trail_activated_as_JOINT_marker; RETAINS_L003H_lean_on_exit_timing_pattern"
+  },
+  "flags": {
+    "promotion": false,
+    "l003_frozen": false,
+    "attribution_unblocked": false,
+    "economic_claims": false,
+    "registry_edits": false,
+    "causal_language_upgrade": false
+  },
+  "artifacts": [
+    "docs/governance/ANALYTICS_TRAIL_BASELINE_INVERSION_L003I.md",
+    "docs/governance/analytics_trail_baseline_inversion_l003i-2026-09-07.json"
+  ]
+}

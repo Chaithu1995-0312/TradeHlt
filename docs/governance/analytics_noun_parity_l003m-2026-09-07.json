@@ -1,0 +1,268 @@
+{
+  "finding_id": "L-003M",
+  "version": "L-003M.v1",
+  "run_id": "l003m_noun_parity_20260907_201028",
+  "generated_at_utc": "2026-09-07T20:10:28Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "branch": "feature/trace-parquet-duckdb-query",
+  "status": "NOUN_PARITY_LOCKED",
+  "status_detail": "Noun/vocabulary parity lock: coordinate-only STATE_* IDs, MATCH_RELATION, terminal_label vocabulary, Process-vs-Variable rewrite, path geometry descriptors. NOT edge/attribution/schema-column/src/measurement.",
+  "doctrine": "Equations clean (L-003K); remaining debt is nouns that smuggle explanations. Canonical IDs stay coordinate/identity-only; mechanism-tinged names = research aliases only (same discipline as EARLY_STOP_CANDIDATE).",
+  "companions": [
+    "L-003L",
+    "L-003K",
+    "L-003J",
+    "L-003-TERM"
+  ],
+  "scorecard_response": {
+    "equations": "clean (L-003K affirmed)",
+    "remaining_debt": "nouns that smuggle explanations",
+    "locked": [
+      "STATE_* coordinate-only canonical map",
+      "MATCH_RELATION (not CORRECTNESS_RELATION)",
+      "scanner_terminal_label / oracle_terminal_label",
+      "Process vs Variable mechanical rewrite",
+      "path geometry descriptors as measured noun",
+      "MeasurementObject registry = correct identity promotion class"
+    ]
+  },
+  "canonical_state_map": [
+    {
+      "state_id": "STATE_SL_SL",
+      "Y_scanner": "SL_HIT",
+      "Y_oracle": "SL_HIT",
+      "pair": "(SL_HIT, SL_HIT)",
+      "aliases": [
+        "BOTH_SL"
+      ]
+    },
+    {
+      "state_id": "STATE_TP_TP",
+      "Y_scanner": "TP_HIT",
+      "Y_oracle": "TP_HIT",
+      "pair": "(TP_HIT, TP_HIT)",
+      "aliases": [
+        "BOTH_TP"
+      ]
+    },
+    {
+      "state_id": "STATE_TO_TO",
+      "Y_scanner": "TIMEOUT",
+      "Y_oracle": "TIMEOUT",
+      "pair": "(TIMEOUT, TIMEOUT)",
+      "aliases": [
+        "BOTH_TIMEOUT"
+      ]
+    },
+    {
+      "state_id": "STATE_SL_TP",
+      "Y_scanner": "SL_HIT",
+      "Y_oracle": "TP_HIT",
+      "pair": "(SL_HIT, TP_HIT)",
+      "aliases": [
+        "JOINT_STATE_SL_TP",
+        "EARLY_STOP_CANDIDATE"
+      ]
+    },
+    {
+      "state_id": "STATE_TP_SL",
+      "Y_scanner": "TP_HIT",
+      "Y_oracle": "SL_HIT",
+      "pair": "(TP_HIT, SL_HIT)",
+      "aliases": [
+        "FALSE_TP_CANDIDATE"
+      ]
+    },
+    {
+      "state_id": "STATE_TO_TP",
+      "Y_scanner": "TIMEOUT",
+      "Y_oracle": "TP_HIT",
+      "pair": "(TIMEOUT, TP_HIT)",
+      "aliases": [
+        "LATE_REALIZATION"
+      ]
+    },
+    {
+      "state_id": "STATE_TO_SL",
+      "Y_scanner": "TIMEOUT",
+      "Y_oracle": "SL_HIT",
+      "pair": "(TIMEOUT, SL_HIT)",
+      "aliases": [
+        "LATE_FAILURE"
+      ]
+    },
+    {
+      "state_id": "STATE_TP_TO",
+      "Y_scanner": "TP_HIT",
+      "Y_oracle": "TIMEOUT",
+      "pair": "(TP_HIT, TIMEOUT)",
+      "aliases": [
+        "SCANNER_TP_ORACLE_TIMEOUT"
+      ]
+    },
+    {
+      "state_id": "STATE_SL_TO",
+      "Y_scanner": "SL_HIT",
+      "Y_oracle": "TIMEOUT",
+      "pair": "(SL_HIT, TIMEOUT)",
+      "aliases": [
+        "SCANNER_SL_ORACLE_TIMEOUT"
+      ]
+    }
+  ],
+  "alias_discipline": {
+    "rule": "Mechanism-tinged / interpretive names = research aliases ONLY; same discipline as EARLY_STOP_CANDIDATE",
+    "machine_keys_and_prior_run_ids": "may retain aliases for reproducibility",
+    "new_prose": "prefer STATE_* coordinates",
+    "alias_is_not": "observation that the named mechanism occurred",
+    "historical_l003b_i": "pointer / alias table only; no end-to-end rewrite"
+  },
+  "match_relation": {
+    "preferred_framing": "MATCH_RELATION",
+    "forbidden_framing": "CORRECTNESS_RELATION",
+    "definitions": {
+      "LABEL_MATCH": "1[Y_scanner == Y_oracle]  # terminal-label equality only",
+      "LABEL_MISMATCH": "1[Y_scanner != Y_oracle]"
+    },
+    "meaning": "components equal / unequal as emitted labels",
+    "not": [
+      "oracle right / scanner wrong",
+      "semantic agreement",
+      "process agreement",
+      "error"
+    ]
+  },
+  "terminal_label_vocabulary": {
+    "when_measurement_object_not_named": {
+      "scanner_terminal_label": "emitted value of Y_scanner",
+      "oracle_terminal_label": "emitted value of Y_oracle"
+    },
+    "bare_outcome_reserved_for": "only when MeasurementObject is explicit (Y_scanner / Y_oracle)",
+    "historical_synonyms_retained": [
+      "scanner_outcome",
+      "oracle_outcome",
+      "art_outcome",
+      "outcome"
+    ],
+    "columns_are": "projections, not MeasurementObjects"
+  },
+  "process_vs_variable_rewrite": {
+    "forbidden": [
+      "forward_walk outcome",
+      "forward_walk says",
+      "forward_walk predicts",
+      "scanner says",
+      "_simulate outcome",
+      "_simulate predicts"
+    ],
+    "required": [
+      "Y_oracle emitted by forward_walk(...)",
+      "Y_scanner emitted by opportunity_scanner._simulate(...)"
+    ]
+  },
+  "path_geometry_descriptors": {
+    "canonical_measured_noun": "path geometry descriptors",
+    "measured_set": [
+      "time_to_peak",
+      "MFE",
+      "T_MAE",
+      "exit-order inequality"
+    ],
+    "hypothesis_aliases_only": [
+      "path mechanics",
+      "stopped early",
+      "trail interaction"
+    ]
+  },
+  "identity_promotion_affirmation": {
+    "promotion_class": "MeasurementObject registry (REGISTERED_IDENTITY)",
+    "objects": [
+      "Y_scanner",
+      "Y_oracle",
+      "Y_joint"
+    ],
+    "principle": "identity before edge",
+    "does_not_unlock": [
+      "edge claims",
+      "attribution",
+      "analytics schema columns"
+    ]
+  },
+  "mechanical_rewrite_checklist": [
+    "State name = coordinate (STATE_*)? Or mechanism alias without alias mark?",
+    "Equality = MATCH_RELATION / LABEL_* only? Or slipped into correctness / error?",
+    "Bare outcome bound to named MeasurementObject? Else use *_terminal_label.",
+    "Process verb attached to process, not to Y_*? (emitted by, never forward_walk says)",
+    "Path language = geometry descriptors vs hypothesis aliases?",
+    "Any promotion claiming edge / attribution? Forbidden without new evidence."
+  ],
+  "promotion": {
+    "noun_parity_locked": true,
+    "canonical_state_ids_frozen": true,
+    "match_relation_framing": true,
+    "terminal_label_vocabulary": true,
+    "process_vs_variable_rewrite_rule": true,
+    "path_geometry_descriptors_canonical": true,
+    "measurement_object_identity_affirmed": true,
+    "edge_claims": false,
+    "attribution_unblocked": false,
+    "analytics_schema_column_promoted": false,
+    "lineage_registry_column_edits": false,
+    "EARLY_STOP_CANDIDATE_promoted_to_ontology_as_fact": false,
+    "l003_frozen": false,
+    "src_edits": false,
+    "new_measurements": false,
+    "git_commit": false,
+    "historical_l003b_i_end_to_end_rewrite": false,
+    "causal_language_upgrade": false
+  },
+  "attribution_blockers_remain": [
+    "ATTRIBUTION_BLOCKER_IDENTITY",
+    "ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS"
+  ],
+  "artifacts": [
+    "docs/governance/ANALYTICS_NOUN_PARITY_L003M.md",
+    "docs/governance/analytics_noun_parity_l003m-2026-09-07.json",
+    "docs/governance/analytics_noun_parity_l003m_impact-2026-09-07.json"
+  ],
+  "updated_companions": [
+    "docs/governance/ANALYTICS_JOINT_STATE_SPACE_L003L.md",
+    "docs/governance/analytics_joint_state_space_l003l-2026-09-07.json",
+    "docs/governance/MEASUREMENT_OBJECT_REGISTRY.md",
+    "docs/governance/measurement_object_registry.json",
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_FORMULAS_L003K.md",
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_STATE_ONTOLOGY_L003J.md",
+    "docs/governance/ANALYTICS_L003_TERMINOLOGY_PARITY_AUDIT.md",
+    "docs/governance/analytics_l003_terminology_parity_audit-2026-09-07.json"
+  ],
+  "pointers": [
+    "docs/governance/ANALYTICS_JOINT_STATE_SPACE_L003L.md",
+    "docs/governance/MEASUREMENT_OBJECT_REGISTRY.md",
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_FORMULAS_L003K.md",
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_STATE_ONTOLOGY_L003J.md",
+    "docs/governance/ANALYTICS_L003_TERMINOLOGY_PARITY_AUDIT.md"
+  ],
+  "package_freeze": {
+    "status": "L003_PACKAGE_FROZEN",
+    "version": "L-003-FREEZE.v1",
+    "run_id": "l003_package_freeze_20260907_201945",
+    "generated_at_utc": "2026-09-07T20:19:45.454186Z",
+    "prohibit_further_l003_doctrine_except_errata": true,
+    "successor_episode": "docs/research/JOINT_STATE_EXPLAINABILITY.md"
+  },
+  "exit_ordering_noun": {
+    "relation_class": "exit_ordering_relation",
+    "canonical_observation": "scanner_exit_precedes_oracle_tp",
+    "formula": "scanner_exit_bar < oracle_tp_bar",
+    "aliases_deprecated": [
+      "scanner_exit_before_oracle_tp",
+      "trail_exit_before_oracle_tp",
+      "seb"
+    ]
+  },
+  "joint_state_coordinate_vs_population": {
+    "JointStateCoordinate": "s ∈ Ω_joint",
+    "JointStatePopulation": "{ x : Y_joint(x) = s }",
+    "forbid_bare_joint_as_population": true
+  }
+}
