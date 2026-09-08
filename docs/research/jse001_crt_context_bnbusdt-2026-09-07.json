@@ -1,0 +1,276 @@
+{
+  "finding_id": "JSE-001",
+  "version": "JSE-001.v1",
+  "run_id": "jse001_crt_context_bnbusdt_20260908_020033",
+  "generated_at_utc": "2026-09-07T20:31:37Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "branch": "feature/trace-parquet-duckdb-query",
+  "episode": "JOINT_STATE_EXPLAINABILITY",
+  "scope": "BNB-only (honest scope)",
+  "question": "Does engine_state_asof explain / predict joint-state membership ({x: Y_joint(x)=STATE_SL_TP}) on this join?",
+  "measurement_process": {
+    "name": "engine_state_asof",
+    "definition": "As-of last known engine state_to at or before anatomy entry timestamp, from piecewise-constant series built from STATE_TRANSITION (+ RESET->RANGE) in ONE runtime BNBUSDT_events.jsonl population (GT-3).",
+    "not_claimed": [
+      "full CRT ontology",
+      "HTF parent context",
+      "parent_crt without evidence"
+    ]
+  },
+  "reset_rule": {
+    "rule": "RESET updates engine state to state_to (observed RANGE in this stream)",
+    "interpretation": "RESET clears engine path state back to RANGE for the piecewise series (engine_state_asof construction; not a CRT ontology claim)",
+    "included_in_series": true
+  },
+  "data": {
+    "anatomy_path": "D:\\Tradelatest\\results\\research\\bnbusdt_trade_anatomy\\trade_dataset_BNBUSDT.csv",
+    "anatomy_n": 139942,
+    "anatomy_ts_min": "2024-05-23 03:00:00",
+    "anatomy_ts_max": "2026-05-21 23:30:00",
+    "events_path": "D:\\Tradelatest\\results\\run_20260603_122112_BNBUSDT\\BNBUSDT_events.jsonl",
+    "events_run_dir": "run_20260603_122112_BNBUSDT",
+    "events_bytes": 7034039,
+    "events_series_n_updates": 22326,
+    "events_ts_min": "2024-05-22 07:30:00",
+    "events_ts_max": "2026-05-21 23:45:00",
+    "event_type_counts_in_file": {
+      "SWEEP": 4638,
+      "STATE_TRANSITION": 6427,
+      "RESET": 16078,
+      "BEGIN_SOFT_CONF": 134,
+      "FILTER_REJECTED": 29,
+      "TRADE_OPENED": 35,
+      "TRADE_TP2": 15,
+      "TRADE_STOPPED": 20
+    },
+    "gt3": "ONE runtime events population only; no integrity_events / secondlow / other instruments mixed",
+    "Y_scanner_col": "art_outcome",
+    "Y_oracle_col": "outcome",
+    "state_map": "L-003M canonical STATE_* from (scanner_terminal_label, oracle_terminal_label)"
+  },
+  "coverage": {
+    "n_anatomy": 139942,
+    "n_joined_non_null": 139942,
+    "fraction": 1.0,
+    "CRT_JOIN_WEAK": false,
+    "threshold": 0.5
+  },
+  "joined_subset": {
+    "n": 139942,
+    "Y_joint_counts": {
+      "STATE_SL_SL": 91873,
+      "STATE_SL_TP": 44791,
+      "STATE_TP_TP": 1789,
+      "STATE_SL_TO": 1427,
+      "STATE_TP_SL": 41,
+      "STATE_TO_TO": 21
+    },
+    "Y_joint_base_rates": {
+      "STATE_SL_SL": 0.6565076960455045,
+      "STATE_SL_TP": 0.32006831401580654,
+      "STATE_TP_TP": 0.012783867602292378,
+      "STATE_SL_TO": 0.01019708164811136,
+      "STATE_TP_SL": 0.0002929785196724357,
+      "STATE_TO_TO": 0.000150062168612711
+    },
+    "engine_state_marginals": {
+      "RANGE": 104872,
+      "SWEEP": 18342,
+      "EXPANSION": 12322,
+      "DISPLACEMENT": 2552,
+      "EXECUTION": 1272,
+      "SHADOW_PENDING": 288,
+      "RETEST": 270,
+      "EXPIRED": 14,
+      "RESOLUTION": 10
+    }
+  },
+  "lifts_by_engine_state_n_ge_500": [
+    {
+      "engine_state": "RANGE",
+      "n": 104872,
+      "rate_STATE_SL_TP": 0.3195037760317339,
+      "base_STATE_SL_TP": 0.32006831401580654,
+      "lift_STATE_SL_TP": 0.9982361953390839,
+      "delta_STATE_SL_TP": -0.0005645379840726328,
+      "rate_STATE_SL_SL": 0.6566194980547715,
+      "base_STATE_SL_SL": 0.6565076960455045,
+      "lift_STATE_SL_SL": 1.0001702980938996,
+      "delta_STATE_SL_SL": 0.00011180200926697026,
+      "rate_STATE_TP_TP": 0.012853764589213517,
+      "base_STATE_TP_TP": 0.012783867602292378,
+      "lift_STATE_TP_TP": 1.0054675931490877,
+      "delta_STATE_TP_TP": 6.989698692113841e-05
+    },
+    {
+      "engine_state": "SWEEP",
+      "n": 18342,
+      "rate_STATE_SL_TP": 0.32608221567986045,
+      "base_STATE_SL_TP": 0.32006831401580654,
+      "lift_STATE_SL_TP": 1.0187894315079153,
+      "delta_STATE_SL_TP": 0.006013901664053911,
+      "rate_STATE_SL_SL": 0.6521644313597209,
+      "base_STATE_SL_SL": 0.6565076960455045,
+      "lift_STATE_SL_SL": 0.9933842897624119,
+      "delta_STATE_SL_SL": -0.00434326468578361,
+      "rate_STATE_TP_TP": 0.011994329953113074,
+      "base_STATE_TP_TP": 0.012783867602292378,
+      "lift_STATE_TP_TP": 0.9382395317487702,
+      "delta_STATE_TP_TP": -0.0007895376491793039
+    },
+    {
+      "engine_state": "EXPANSION",
+      "n": 12322,
+      "rate_STATE_SL_TP": 0.3186171076124006,
+      "base_STATE_SL_TP": 0.32006831401580654,
+      "lift_STATE_SL_TP": 0.9954659479246849,
+      "delta_STATE_SL_TP": -0.001451206403405958,
+      "rate_STATE_SL_SL": 0.6593085538062002,
+      "base_STATE_SL_SL": 0.6565076960455045,
+      "lift_STATE_SL_SL": 1.0042662984418413,
+      "delta_STATE_SL_SL": 0.0028008577606957186,
+      "rate_STATE_TP_TP": 0.011280636260347346,
+      "base_STATE_TP_TP": 0.012783867602292378,
+      "lift_STATE_TP_TP": 0.8824118499416033,
+      "delta_STATE_TP_TP": -0.001503231341945032
+    },
+    {
+      "engine_state": "DISPLACEMENT",
+      "n": 2552,
+      "rate_STATE_SL_TP": 0.31739811912225707,
+      "base_STATE_SL_TP": 0.32006831401580654,
+      "lift_STATE_SL_TP": 0.991657421942062,
+      "delta_STATE_SL_TP": -0.0026701948935494713,
+      "rate_STATE_SL_SL": 0.6575235109717869,
+      "base_STATE_SL_SL": 0.6565076960455045,
+      "lift_STATE_SL_SL": 1.0015473008654752,
+      "delta_STATE_SL_SL": 0.0010158149262823324,
+      "rate_STATE_TP_TP": 0.019984326018808778,
+      "base_STATE_TP_TP": 0.012783867602292378,
+      "lift_STATE_TP_TP": 1.563245696883252,
+      "delta_STATE_TP_TP": 0.007200458416516399
+    },
+    {
+      "engine_state": "EXECUTION",
+      "n": 1272,
+      "rate_STATE_SL_TP": 0.2916666666666667,
+      "base_STATE_SL_TP": 0.32006831401580654,
+      "lift_STATE_SL_TP": 0.9112637955541665,
+      "delta_STATE_SL_TP": -0.028401647349139858,
+      "rate_STATE_SL_SL": 0.6831761006289309,
+      "base_STATE_SL_SL": 0.6565076960455045,
+      "lift_STATE_SL_SL": 1.0406216176048877,
+      "delta_STATE_SL_SL": 0.02666840458342634,
+      "rate_STATE_TP_TP": 0.020440251572327043,
+      "base_STATE_TP_TP": 0.012783867602292378,
+      "lift_STATE_TP_TP": 1.598909829812516,
+      "delta_STATE_TP_TP": 0.007656383970034665
+    }
+  ],
+  "chi_square_engine_state_x_focus_joint": {
+    "chi2": 26.566652175857133,
+    "dof": 8,
+    "p": 0.0008396436406421553,
+    "expected_min": 16.381336447310204
+  },
+  "predictability": {
+    "target_primary": "STATE_SL_TP membership (one-vs-rest)",
+    "features_primary": "engine_state only (one-hot)",
+    "holdout": {
+      "scheme": "chronological within BNB joined subset",
+      "train_frac": 0.7,
+      "test_frac": 0.3,
+      "cut_index": 97959
+    },
+    "engine_state_only_STATE_SL_TP": {
+      "auc_train": 0.5031098525859599,
+      "auc_test": 0.500400830066991,
+      "n_train": 97959,
+      "n_test": 41983,
+      "base_test": 0.3093394945573208,
+      "n_features": 9,
+      "categories": [
+        "DISPLACEMENT",
+        "EXECUTION",
+        "EXPANSION",
+        "EXPIRED",
+        "RANGE",
+        "RESOLUTION",
+        "RETEST",
+        "SHADOW_PENDING",
+        "SWEEP"
+      ]
+    },
+    "engine_state_only_multiclass_ovr_focus": {
+      "per_state_auc_test": {
+        "STATE_SL_TP": 0.500400830066991,
+        "STATE_SL_SL": 0.5008147700601039,
+        "STATE_TP_TP": 0.5018707565274888
+      },
+      "macro_auc_test": 0.501028785551528
+    },
+    "secondary_engine_state_plus_hour": {
+      "auc_test": 0.5109369200795604,
+      "auc_train": 0.5133716712506001,
+      "features": "engine_state + hour"
+    },
+    "L003G_prior_entry_time_AUC": 0.516,
+    "engine_state_better_than_L003G_by_0p02": false
+  },
+  "falsification": {
+    "stance": "If AUC≈0.5–0.55 and lifts null → engine_state_asof on this join does not explain STATE_SL_TP (BNB). Not a CRT-falsified claim.",
+    "lifts_null_STATE_SL_TP_abs_lt_0p10": true,
+    "primary_target": "STATE_SL_TP",
+    "lean": "FALSIFY",
+    "lean_reason": "AUC≈0.500 and STATE_SL_TP lifts ~null on engine_state_asof join => engine_state_asof FALSIFIED for explaining {x: Y_joint(x)=STATE_SL_TP} on this specific join surface (BNBUSDT, one runtime events run). Valid negative result. NOT a claim that CRT Context is falsified (CRT Context ≠ engine_state_asof).",
+    "allowed_status_phrase": "FALSIFIED for this specific join surface (BNBUSDT, one runtime events run)",
+    "disallowed_phrases": [
+      "CRT falsified",
+      "CRT does not explain Y_joint",
+      "CRT/engine context falsified"
+    ]
+  },
+  "non_promotions": {
+    "edge": false,
+    "attribution": false,
+    "which_outcome_correct": false,
+    "l003_doctrine_edit": false,
+    "full_crt_ontology_claim": false
+  },
+  "artifacts": [
+    "docs/research/JOINT_STATE_EXPLAINABILITY.md",
+    "docs/research/jse001_crt_context_bnbusdt-2026-09-07.json",
+    "scripts/research/jse001_crt_context_join.py",
+    "results/research/jse001_crt_context_bnbusdt/",
+    "docs/research/joint_state_explainability_pin.json"
+  ],
+  "title": "engine_state_asof vs joint-state membership (BNB-only) — NOT a CRT claim",
+  "ontology": {
+    "context_measurement_object": "engine_state_asof",
+    "CRT_Context_equivalent_to_engine_state_asof": false,
+    "note": "CRT Context ≠ engine_state_asof unless declared equivalent (it is not).",
+    "never_say": [
+      "CRT falsified",
+      "CRT does not explain Y_joint",
+      "CRT/engine context falsified"
+    ]
+  },
+  "allowed_conclusion": {
+    "H0": "engine_state_asof explains {x: Y_joint(x)=STATE_SL_TP}",
+    "Result": "AUC ≈ 0.500",
+    "Status": "FALSIFIED for this specific join surface (BNBUSDT, one runtime events run)"
+  },
+  "limitations": [
+    "one instrument (BNBUSDT)",
+    "one runtime events run (GT-3)",
+    "predictor = categorical state_to (engine_state_asof) only",
+    "not Parent/HTF/manipulation/liquidity/range/transition history",
+    "CRT Context ≠ engine_state_asof"
+  ],
+  "observation_hierarchy_banner": "Entry weak (L-003G) · Current engine_state_asof weak (JSE-001) · Path geometry strong (L-003C–E)",
+  "errata": {
+    "applied": "JSE-001 wording errata — reject upgrading to 'CRT falsified'",
+    "applied_at_utc": "2026-09-07T20:45:35Z",
+    "run_id_preserved": "jse001_crt_context_bnbusdt_20260908_020033"
+  }
+}
