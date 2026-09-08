@@ -131,7 +131,7 @@ No registry was promoted, no entry elevated, no schema altered. Grants no author
 
 Observation proposals only — no architectural change is proposed.
 
-1. **Contract population vs registry population overlap.** Measure whether any contract's embedded `population` block describes a set already registered as an `Omega_*`. Today this is unknown; it decides whether a contract->population reference would even have a target.
+1. **Contract population vs registry population overlap.** Measure whether any contract's embedded `population` block describes a set already registered as an `Omega_*`. Today this is unknown; it decides whether a contract->population reference would even have a target. — **Executed 2026-09-09:** `docs/research/reports/POPULATION_EQUIVALENCE_ANALYSIS.md` (BG-005). Verdict: disjoint populations over incommensurable vocabularies (instrument intersection empty; 0 of 12 compared dimensions SHARED). No target exists today.
 2. **Extend BG-002 to the MPA ledger.** The provenance spine reports 4 provenance-complete chains over 168 records; measuring how many of those resolve to *tracked* targets would apply the same git-tracked standard the floor test now applies to the pack.
 3. **Re-run BG-001 after any new sealed contract.** The count is a moving denominator; the 2-exception assessment holds only while the *kinds* stay at 2.
 
