@@ -1,0 +1,62 @@
+{
+  "registry_id": "POPULATION_REGISTRY",
+  "version": "POPREG.v1-stub",
+  "status": "STUB_REGISTERED",
+  "run_id": "arch_review_falsify_pack_20260908_023341",
+  "arch_review_version": "ARCH-REVIEW.v1",
+  "generated_at_utc": "2026-09-07T21:03:41Z",
+  "generated_at_ist": "2026-09-08T02:33:41+05:30",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "purpose": "Register research Populations as first-class sets (not variables). Complements MeasurementObject Registry. Does not reopen L-003 doctrine.",
+  "schema_ref": "docs/research/reports/schemas/population.schema.json",
+  "l003_package_status": "L003_PACKAGE_FROZEN",
+  "populations": [
+    {
+      "population_id": "Omega_anatomy_opportunity",
+      "unit": "anatomy trade_dataset opportunity row (one scanner/oracle dual-path opportunity)",
+      "membership_rule": "Rows in results/research/{instrument}_trade_anatomy/trade_dataset_{INSTRUMENT}.csv for instruments in instrument_scope (L-003F join corpus).",
+      "instrument_scope": [
+        "BNBUSDT",
+        "BTCUSDT",
+        "ETHUSDT",
+        "SOLUSDT"
+      ],
+      "parent_population": null,
+      "n_observed": 559768,
+      "status": "REGISTERED_STUB",
+      "notes": "Default domain Omega for Y_scanner / Y_oracle / Y_joint on anatomy join. Dataset SHA256 pins in L-003G JSON."
+    },
+    {
+      "population_id": "Omega_bnb_anatomy",
+      "unit": "BNBUSDT anatomy trade_dataset opportunity row",
+      "membership_rule": "Subset of Omega_anatomy_opportunity with instrument=BNBUSDT (trade_dataset_BNBUSDT.csv).",
+      "instrument_scope": [
+        "BNBUSDT"
+      ],
+      "parent_population": "Omega_anatomy_opportunity",
+      "n_observed": 139942,
+      "status": "REGISTERED_STUB",
+      "notes": "JSE-001/002/003 measurement population."
+    },
+    {
+      "population_id": "STATE_SL_TP_anatomy",
+      "unit": "anatomy opportunity row with joint coordinate STATE_SL_TP",
+      "membership_rule": "{ x in Omega_anatomy_opportunity : Y_joint(x) = STATE_SL_TP } where STATE_SL_TP := (Y_scanner=SL_HIT, Y_oracle=TP_HIT).",
+      "instrument_scope": [
+        "BNBUSDT",
+        "BTCUSDT",
+        "ETHUSDT",
+        "SOLUSDT"
+      ],
+      "parent_population": "Omega_anatomy_opportunity",
+      "n_observed": 176471,
+      "status": "REGISTERED_STUB",
+      "notes": "Aliases: JOINT_STATE_SL_TP, EARLY_STOP_CANDIDATE (SAFE_ALIAS only). n from L-003F/L-003L mass note. Next episode PATH_GENERATION_FOR_STATE_SL_TP observes path-generation on this population."
+    }
+  ],
+  "anti_slide": [
+    "Never write Population as a MeasurementObject / variable",
+    "Never equate a StateID with a population without set notation",
+    "Y_joint : Omega -> S; populations are preimages under Y_joint"
+  ]
+}
