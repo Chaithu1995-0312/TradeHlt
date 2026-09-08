@@ -56,7 +56,8 @@
         "mathematical_maps": {
           "Y_joint": "Omega_anatomy_opportunity -> S",
           "membership": "1[Y_joint(x)=STATE_SL_TP]"
-        }
+        },
+        "object_id": "Y_joint"
       },
       "predictor": "51 kept entry-time anatomy fields (52 candidates; bitnet_score dropped); LOIO multivariate excludes absolute prices",
       "target": "Y_joint -> STATE_SL_TP (art_outcome==SL_HIT & outcome==TP_HIT)",
@@ -94,7 +95,8 @@
         "STATE_SL_TP remains OBSERVED population coordinate membership; EARLY_STOP_CANDIDATE remains alias",
         "No edge / economic claim",
         "Does not claim path-generation process observed"
-      ]
+      ],
+      "population_id": "Omega_anatomy_opportunity"
     },
     {
       "record_id": "FALSIFY-JSE001-ENGINESTATE-STATESLTP",
@@ -107,7 +109,8 @@
         "predictor": "engine_state_asof",
         "target_object": "Y_joint",
         "target_coordinate": "STATE_SL_TP",
-        "note": "engine_state_asof \u2260 CRT Context"
+        "note": "engine_state_asof \u2260 CRT Context",
+        "object_id": "Y_joint"
       },
       "predictor": "engine_state_asof (categorical state_to from one BNB runtime events run, as-of joined)",
       "target": "STATE_SL_TP ovr (also STATE_SL_SL / STATE_TP_TP checked)",
@@ -146,7 +149,8 @@
         "Does NOT say CRT falsified",
         "No edge / attribution / which-outcome-is-right",
         "Not a full CRT ontology claim"
-      ]
+      ],
+      "population_id": "Omega_bnb_anatomy"
     },
     {
       "record_id": "FALSIFY-JSE002-ENGINESTATE-PATHGEOM",
@@ -162,7 +166,9 @@
           "mfe_r buckets",
           "time_to_bottom_path / T_MAE buckets",
           "scanner_exit_precedes_oracle_tp"
-        ]
+        ],
+        "object_id": null,
+        "object_id_absent_reason": "Targets are path-geometry descriptor buckets (bars_to_peak_within_trade, mfe_r, T_MAE, scanner_exit_precedes_oracle_tp), not a MeasurementObject registered in measurement_object_registry.json. No id is invented (CLAUDE.md 6.6); the gap is declared so it stays visible."
       },
       "predictor": "engine_state_asof (same join as JSE-001)",
       "target": "path geometry descriptors (L-003C\u2013E style buckets) + optional exit-ordering binary",
@@ -200,7 +206,8 @@
         "No L-003 doctrine reopen",
         "No CRT ontology claim",
         "Does not weaken L-003C\u2013E path-geometry association with Y_joint (different predictor)"
-      ]
+      ],
+      "population_id": "Omega_bnb_anatomy"
     },
     {
       "record_id": "FALSIFY-JSE003-ENGINEHIST-PATHGEOM",
@@ -216,7 +223,9 @@
           "peak_bucket",
           "mfe_bucket",
           "t_mae_dist_bucket"
-        ]
+        ],
+        "object_id": null,
+        "object_id_absent_reason": "Targets are path-geometry descriptor buckets (peak_bucket, mfe_bucket, t_mae_dist_bucket), not a MeasurementObject registered in measurement_object_registry.json. No id is invented (CLAUDE.md 6.6); the gap is declared so it stays visible."
       },
       "predictor": "engine_context_history (~48 features: dwell, n_transitions_W, frac_time_in_state_W64, last_k_states, bars_since_last_sweep, plus asof baseline)",
       "target": "path geometry descriptors",
@@ -253,7 +262,8 @@
         "Not a CRT claim",
         "Not causal",
         "No edge / attribution / L-003 doctrine reopen"
-      ]
+      ],
+      "population_id": "Omega_bnb_anatomy"
     }
   ],
   "associated_evidence": [
@@ -346,5 +356,15 @@
     "id": "PATH_GENERATION_FOR_STATE_SL_TP",
     "objective": "Observe the path-generation process for population STATE_SL_TP_anatomy before attempting new predictors.",
     "stance": "observe before predict"
+  },
+  "binding_normalization": {
+    "applied_utc": "2026-09-09",
+    "rules_satisfied": [
+      "SCHEMAS_README rule 1 (MeasurementObject cites object_id registered in MOR, or null with a declared reason)",
+      "SCHEMAS_README rule 2 (Population cites a population_id from Population Registry)"
+    ],
+    "method": "ADDITIVE ONLY. Population kept verbatim as a string because falsify_record.schema.json types it {\"type\":\"string\"}; population_id added as a sibling. No original key or value removed or altered.",
+    "authority": "none - enforcement/observability only, grants no authority (CLAUDE.md 6.5)",
+    "enforced_by": "tests/governance/test_falsify_record_binding.py"
   }
 }

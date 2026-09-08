@@ -2454,6 +2454,21 @@ Next Step: Implement Phase 2C O14 when user says Implement.
 
 ---
 📝 SESSION LOG ENTRY
+Date: 2026-09-08
+Topic: Inventory of .schema files in the codebase (observation-only)
+Decision/Output: Zero files with extension `.schema`. Eighteen first-class `*.schema.json` / `*.schema.yaml` artifacts in the repo proper (5 git-tracked governance JSON Schema; 13 untracked: dataset_identity, MPA provenance pair, 4 L-003 FALSIFY schemas, 6 Context/ODP design YAMLs). Copies in `.claude/worktrees/`, `.venv/`, and `logs/dual_construction*/` excluded as non-source. No repo edits this turn besides this log.
+Belief Update / ROI / Goal:
+  Goal: ground "what schema files exist" in disk + git, not memory.
+  Belief: the repo uses JSON Schema (`*.schema.json`) and design YAML (`*.schema.yaml`); it does not use a bare `.schema` extension.
+  Knowledge ROI: high for later schema/governance work; no G001.
+  Action: wait for user which schema family to open.
+Open Questions: whether user meant only `*.schema.json` governance contracts, or also design YAML + nearby `*_schema.json` names.
+Next Step: user picks a family if they want contents, wiring, or git-status of a specific schema.
+---
+
+
+---
+📝 SESSION LOG ENTRY
 Date: 2026-08-09 12:20
 Topic: Implement Phase 2C O14 Agreement fold (AGR-v0)
 Decision/Output: Shipped src/research/episode_agreement.py — folds propositions into Agreement with by_relation, unresolved_conflicts, episode_interpretation, verdict COHERENT|PARTIAL|BREAK. AGR-v0: exit CONFLICT⇒BREAK; COHERENT requires O11 SAME_EVENT + O12 non-conflict; O12 ORTHOGONAL never false-conflicts. Wired reconstruction + census. Cert: O14 COVERED 10/10; verdicts BREAK 5 / PARTIAL 4 / COHERENT 1; layerwise 5/10; full 0/10; all 5 O11 CONFLICT → BREAK (conflict preserved). Tests 26 passed. Impact APPROVED. PRODUCTION_BEHAVIOR_CHANGED=NO. Phase 2A/2B/2C research-shadow program complete.
@@ -2619,3 +2634,46 @@ Belief Update / ROI / Goal:
 Open Questions: whether to re-run with warm daemon for latency; SLSA residual still open; Infigraph H2H timing.
 Next Step: Human usefulness review of RI-RUN report; optional warm-daemon latency remeasure; ingestion contract only if approved.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-08
+Topic: Schema-only comparison of the 18 first-class .schema.json/.schema.yaml files for duplication
+Decision/Output: Observation-only. 18 artifacts are 16 distinct objects + 2 declared copies. Real duplication: (1) identity_selector_fields byte-identical in context.schema.yaml and odp.schema.yaml (declared D2); (2) L1/L3/L4 vocab copied from observation_hierarchy.schema.yaml into context.schema.yaml; (3) MeasurementContract EXISTS TWICE — frozen JSON Schema vs ODP-facing YAML, same title, drifted enums (unit_of_analysis, detection_vs_trade, splits). Near-dup: volume_semantic + decision_status shared by corpus_authority_decision vs dataset_identity with TICK_VOLUME_APPROXIMATE only on dataset_identity. Same-name-not-same-object: Population (MC nested vs L-003 Omega), MeasurementObject vs MeasurementContract, RR L1 nested contract vs MC. No production edit.
+Belief Update / ROI / Goal:
+  Goal: know whether schema files are one authority or competing copies.
+  Belief: the load-bearing JSON Schema set is not internally duplicated; the risk is the YAML MeasurementContract + Context/ODP hierarchy copies drifting from the frozen JSON / CRT identity.
+  Knowledge ROI: high — prevents treating two MeasurementContract files as one schema.
+  Action: user decides whether to treat YAML as design-only pointers (as they claim) or collapse them.
+Open Questions: whether TICK_VOLUME_APPROXIMATE omission on CAD is intentional (F-099) or enum drift.
+Next Step: user picks which pair to reconcile, if any.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-08
+Topic: Reconcile the 3 schema duplication pairs flagged by the prior turn's inventory
+Decision/Output: Re-verified all 3 claims at source before acting (§1.1): (1) YAML measurement_contract.schema.yaml diverges from the FROZEN JSON schema on 4 enums (unit_of_analysis, detection_vs_trade, splits.holdout_procedure vs splits.scheme, overlap_policy) with no prior mapping — CONFIRMED, now documented as a `vocabulary_divergence_from_formal_schema` block in the YAML file (design-only, JSON schema untouched, FROZEN v1.0.0 preserved). (2) identity_selector_fields byte-identity between context.schema.yaml and odp.schema.yaml was TRUE but UNENFORCED (D2 "RETIRED" on a one-time dated manual check only) — added tests/governance/test_design_schema_identity_selectors.py (raw-text + parsed equality), joins GREEN_FLOOR automatically via tests/governance/ prefix; negative-controlled (mutated odp.schema.yaml field order → 2/3 tests failed as expected → reverted → green). (3) TICK_VOLUME_APPROXIMATE missing from corpus_authority_decision.schema.json's volume_semantic enum — CONFIRMED NOT intentional (CORPUS_AUTHORITY.md itself lists BC-4a schema-wiring as open); added the enum member + description; found and fixed a 3rd undiscovered copy (tests/test_corpus_authority_decisions.py VOLUME frozenset) and added test_volume_enum_matches_schema to pin it against the schema going forward so the two copies cannot silently drift again. Synced DESIGN_DEFECTS_D1_D2_D3_L4.md:22 and CORPUS_AUTHORITY.md (BC-4 row + G4 table row) to record the new guard/enum without overclaiming BC-4a closure. All 48 corpus_authority_decisions.jsonl rows left untouched (still UNDECLARED); no MC-* instance touched; no src/ change. Full governance floor run: 18 pre-existing failures (findings-export staleness, script-registry drift, geometry-census freshness, model-paths-literal ratchet, gate2b closure, session-log bound) — verified none reference any of the 6 files this turn touched (grep, zero hits); consistent with recorded concurrent-session drift on this repo, reported not fixed (§1.2 scope control).
+Belief Update / ROI / Goal:
+  Goal: convert the prior turn's 3 open duplication findings into either enforced guards or explicit mappings so they cannot resurface as unknowns.
+  Belief: all 3 were real gaps, not false alarms; the YAML MC's divergence has no mapping table anywhere else in the repo, and the volume enum had a 3rd undiscovered copy the original inventory missed.
+  Knowledge ROI: high — two silent-drift surfaces (identity_selector_fields, VOLUME frozenset) now have mechanical guards instead of resting on prose/dated verification (closes the same silent-gap class as F-079/F-083/F-085).
+  Action: none further needed on these 3 pairs; BC-4a's remaining work (is_synthetic enforcement, SEED-OHLCV-19) stays a separate, explicitly-still-open item.
+Open Questions: none on this turn's scope. The 18 pre-existing GREEN_FLOOR failures are unadjudicated and unrelated — a separate task if the user wants them triaged.
+Next Step: none required; user may ask for the 18 pre-existing failures to be triaged as a separate task.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-09
+Topic: Phase 0 (Enforcement Only) — track the L-003 substrate, make its declared FALSIFY binding mechanical
+Decision/Output: An external architecture review proposed an "L-004 Measurement Authority Graph" with 4 freezes. Per §6.8 every claim was reproduced against source FIRST, and three were wrong: (a) "chain_complete true iff grants_authority false" is FABRICATED — `grants_authority` is `{"const": false}`, pinned unconditionally, and `chain_complete` is COMPUTED from slot resolution; the two are unrelated. (b) "FalsifyRecord cites MeasurementObject and Population by string" is HALF WRONG — Population is a string, MeasurementObject is `{"type":"object"}` and therefore cannot join to object_id. (c) "next package should be L-004" contradicts the pack's OWN `recommended_next_episode` (PATH_GENERATION_FOR_STATE_SL_TP, "observe before predict") and L-003 is L003_PACKAGE_FROZEN. Rules 3+5 of SCHEMAS_README were already satisfied. TWO REAL findings the review missed or mis-framed: (1) the ENTIRE L-003 substrate was UNTRACKED — docs/research/reports 0-of-8, both registries, 15 ANALYTICS_*L003* docs, 8 build manifests, JSE evidence; no .gitignore rule, just never added, while 397 other docs/governance files were tracked. Live F-071 recurrence, and mechanically load-bearing because provenance_record.schema.json defines `resolves` as "git ls-files, NEVER the filesystem" — so every identity the proposed bridge would link resolved from one disk only. (2) the real "missing bridge" already existed as PROSE nothing enforced: SCHEMAS_README declares 5 binding rules and rules 1-2 were violated by 4 of 4 records (MeasurementObject carried four DIFFERENT key shapes, object_id never a key; Population was prose fusing id+n+base_rate). Same silent-gap class as F-079/F-083/F-085/F-056. SHIPPED Phase 0 (user-scoped, enforcement only): 5 dependency-ordered additive commits (beea5c4 doctrine 37 files → c25e3f7 registries 5 → 1368652 manifests 8 → 95f03ef ARCH-REVIEW pack 8, committed AS-IS pre-remediation so the normalization is a visible diff → f411b7f JSE evidence 5); fresh-worktree proof 9/9 resolve from a clean checkout. Normalized the 4 records ADDITIVELY (object_id inside MeasurementObject; population_id as a SIBLING because falsify_record.schema.json types Population as `{"type":"string"}` — making it an object would break rule-4 validation); recursive comparison vs the committed version confirms 0 original entries lost or changed. Records 3-4 carry `object_id: null` + required `object_id_absent_reason` rather than an invented id (§6.6). New floor `tests/governance/test_falsify_record_binding.py` (7 tests, auto-joins GREEN_FLOOR via the tests/governance/ prefix) enforces all 5 rules + a git-tracked assertion; negative-controlled with THREE mutations (bad population_id → 2 red; deleted object_id key → red; null id without reason → red), each reverted to green. Additive sidecar `measurement_binding.schema.json` shipped as TEMPLATE ONLY (zero instances by design, `grants_authority` pinned false, asserts no authority over contracts). TruthConflict recorded in SCHEMAS_README (§6.2 rule 3) for the contract↔population/dataset gap — frozen schema NOT mutated. Mermaid flow + unit_of_analysis reconciliation table appended. REJECTED per user: no L-004, no authority graph, no registry promotion, no frozen-schema edit.
+Belief Update / ROI / Goal:
+  Goal: decide whether the proposed measurement-authority bridge was buildable, and build only the part evidence supports.
+  Belief: the bridge was not the missing piece — the substrate wasn't in the repository at all, and the binding it would have formalized was already declared and already violated. Enforcement had to precede ontology.
+  Knowledge ROI: high — caught 3 fabricated/half-wrong external claims before they became repository truth (§6.8 working as designed), converted a one-disk-only substrate into a tracked one, and turned 5 prose rules into a mechanical floor with a proven negative control.
+  Action: do NOT open L-004. The pack's own next episode (PATH_GENERATION_FOR_STATE_SL_TP, "observe before predict") stands. Populating the sidecar is a separate authorized decision.
+Open Questions: whether to track the ~29 remaining untracked docs/research/*.md (sujan_*, preregistration-*, *_object.md) — deliberately left out of scope. The 18 pre-existing GREEN_FLOOR reds remain unadjudicated.
+Next Step: none required. Enforcement layer is live; no new ontology was created and no authority was granted (§6.5).
+---
+
