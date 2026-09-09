@@ -1,0 +1,133 @@
+# DESIGN ONLY — Outcome Distribution Profile = measured facts over Context + MeasurementContract.
+# D2 (population key) CLOSED as of v0.5.1: identity_selector_fields is duplicated here
+# byte-identical to context.schema.yaml (no wildcards, no cross-ref-only). Lookup rules
+# + producer_actionability_rule below are the match/action authorities. See
+# DESIGN_DEFECTS_D1_D2_D3_L4.md.
+
+
+schema_version: "0.5.1"
+artifact: OutcomeDistributionProfile
+status: design_draft
+defect_status:
+  resolves: [D2_population_key_and_lookup]
+
+authority:
+  stores: empirical_forward_outcome_distributions
+  does_not_store: [size_multiplier, target_multiplier, stop_recipes, participation_allowed]
+  reads_from_observation:
+    - src/runtime/crt_construction_trace.py
+    - src/runtime/bar_structure_snapshot.py
+    - src/runtime/backtest_v2.py
+  never_writes_to: [CRTEngine decisions, DecisionEngine, UltronRiskGate]
+
+fields:
+  id:
+    type: string
+    pattern: "^ODP-[0-9]{3,4}$"
+    required: true
+  finding_id: { type: string | null }
+  contract_ref:
+    type: string
+    required: true
+    description: |
+      MC-* MeasurementContract id. Required on every ODP row.
+      DRAFT MC allowed for exploratory ODPs (confidence none/thin).
+      Promotion / pooling requires SEALED contract_ref match.
+  condition:
+    type: Context
+    required: true
+  lookahead_bars:
+    type: integer
+    required: true
+    notes: Must match contract.sampling.lookahead_bars
+  outcome_metric:
+    type: string
+    required: true
+    notes: Must match contract.sampling.outcome_metric — name alone is not identity
+  quantiles:
+    type: object | null
+    fields: { p5: float, p10: float, p25: float, p50: float, p75: float, p90: float, p95: float }
+    null_means: not_measured
+  n: { type: integer, required: true }
+  confidence:
+    type: string
+    enum: [survivor, confirmed, provisional, thin, none]
+    required: true
+  measurement_period: { type: string | null }
+  corpus_pin: { type: string | null }
+  mechanism: { type: string | null, default: null }
+  mechanism_confidence: { type: string, enum: [none, provisional, confirmed], default: none }
+  notes: { type: string | null }
+
+fallback_contract:
+  id: ODP-FALLBACK
+  contract_ref: null
+  condition: null
+  quantiles: null
+  n: 0
+  confidence: none
+  mechanism: null
+  mechanism_confidence: none
+  rationale: |
+    Fallback must NOT look measured. Synthetic quantile tables quietly become evidence.
+
+# Canonical identity_selector_fields — MUST stay byte-identical to the same key in
+# context.schema.yaml (D2 verification). No wildcards. Cross-ref alone is not enough.
+identity_selector_fields:
+  # Discrete identity only — Identity ≠ Measurement (D3 strengthened).
+  # Explicit enumeration on purpose (C: identity hygiene) — no wildcards. A new
+  # structure.* / transition.* field added to the `structure:` or `transition:`
+  # block above is NOT automatically an identity selector: it must be added to
+  # this list explicitly, or it silently re-keys nothing (safe by default) but
+  # also cannot be selected on (fails loud when a contract references it, per
+  # the exact-match rule below — never fails silent).
+  - state_producer
+  - variant_id          # required when producer=resolver; null when engine
+  - state
+  - parent_crt
+  - objective.status
+  - objective.direction
+  - objective.htf_state
+  - structure.breaker_present
+  - structure.order_block_present
+  - structure.double_sweep
+  - structure.liquidity_sweep_direction
+  - structure.break_of_structure_present
+  - structure.choch_present
+  - transition.from_state
+  - transition.to_state
+  - transition.edge_id
+  - location.instrument
+  - location.timeframe
+  - location.htf_bucket           # discrete bucket ONLY
+  - location.session_id
+
+lookup_rules:
+  - |
+    Admissible population key (D2): contract_ref + identity_selectors, where
+    identity_selectors is EXACTLY the field set named in THIS document's
+    identity_selector_fields (must remain byte-identical to context.schema.yaml) -
+    never "exact non-null keys" over the whole
+    Context object. Annotation/measurement fields (mechanism, mechanism_confidence,
+    location.htf_percentile, location.distance_to_boundary_atr, resolver_state)
+    are NOT part of the key even when non-null; matching on them is a schema
+    violation, not an optional strictness.
+  - Match live Context against ODP.condition on identity_selectors only.
+  - state_producer is always part of the match; variant_id is part of the match
+    whenever state_producer=resolver (never omitted, never wildcarded).
+  - Prefer higher specificity among matches that agree on identity_selectors.
+  - If no match: ODP-FALLBACK.
+  - Never pool ODPs across different contract_ref values.
+  - Never pool ODPs across different identity_selector value-sets under one contract_ref
+    (same label, different population — the class D2 exists to forbid).
+
+producer_actionability_rule: |
+  An ODP with state_producer=resolver is OBSERVATION-ONLY: it may inform a Finding
+  or research conclusion, but a PolicyOpinion that gates a LIVE decision path may only
+  consume an ODP whose state_producer matches the producer on that live path. The live
+  path is CRTEngine (state_producer=engine) — see POLICY_OPINION_SOCKET_ADAPTER_CONTRACT.md
+  §1/§3. Recording the producer makes Engine≠Resolver divergence visible; this rule is
+  what makes acting across that divergence illegal rather than merely visible.
+
+separation_from_policy: |
+  ODP = measured; Policy = chosen; never mix.

@@ -1,0 +1,71 @@
+# ILLUSTRATIVE ExecutionPolicy — opinions only. Zero measured fields.
+id: POLICY-ODP-READ-XAUUSD-M15-EXAMPLE
+title: "Abstain unless sealed ODP matches sparse SWEEP+breaker+OB Context"
+status: DRAFT
+owner: user
+
+reads:
+  context_selector:
+    parent_crt: null          # admissible, not mandatory
+    objective: null
+    state_producer: engine
+    variant_id: null
+    state: SWEEP
+    structure:
+      breaker_present: true
+      order_block_present: true
+      # other L4 atoms omitted / null by doctrine — keep bucket measurable
+    transition: null
+    location:
+      instrument: XAUUSD
+      timeframe: M15
+      htf_percentile: null
+      htf_bucket: null
+      distance_to_boundary_atr: null
+      session_id: null
+    mechanism: null
+    mechanism_confidence: none
+  finding_ids: [F-EXAMPLE-001]
+  odp_ids: [ODP-EXAMPLE-001]
+  contract_ref: MC-ODP-CTX-XAUUSD-M15-EXAMPLE
+  require_odp_confidence_in: [survivor, confirmed]
+  on_odp_fallback: abstain
+
+decision_thresholds:
+  score_threshold: null
+  p_win_threshold: null
+  weak_component_threshold: null
+  threshold_percentile: null
+  threshold_min: null
+  threshold_max: null
+  notes: "Leave null until user chooses; do not copy ODP numbers here."
+
+participation_rules:
+  participation_allowed_default: false
+  require_matching_odp: true
+  max_trades_per_day: null
+  session_allowlist: null
+  intent_allowlist: null
+  reject_unknown_intent: true
+
+sizing_rules:
+  base_size_multiplier: 1.0
+  min_size_multiplier: 0.5
+  max_size_multiplier: 2.0
+  max_risk_per_trade_pct: 1.0
+  rules: []   # no silent p5→size mapping
+
+risk_rules:
+  min_rr_ratio: 1.5
+  max_portfolio_risk_pct: 5.0
+  max_daily_loss_pct: 3.0
+  kill_switch_enabled: true
+  stop_target_source: crt_engine_owned
+
+conflict_resolution:
+  multiple_odp_matches: most_specific_context
+  finding_vs_odp_disagreement: abstain
+  policy_vs_runtime_engine: runtime_engine_wins
+  missing_sealed_contract: abstain
+
+measured_fields: {}

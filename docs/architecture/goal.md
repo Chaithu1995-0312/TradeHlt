@@ -135,6 +135,11 @@ These are the rules the happy flow depends on. Breaking one is a real deviation:
 6. **CRT state moves only along legal transitions.** The state graph is fixed (see
    [`event-taxonomy.md`](event-taxonomy.md) §3); illegal jumps are rejected.
 7. **No database, no broker, no cloud dependency.** Everything is file-backed.
+8. **Recompute ≠ recover.** Rebuilding a layer from upstream with current code
+   produces a *new* object, not the historical one. Recovery requires the frozen
+   primary key of [`CANONICAL_LAYER_IDENTITY_CONTRACT.md`](../governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md)
+   (v1.0.0, `CH-canonical-layer-identity`). User-accepted 2026-08-23.
+   `RECOMPUTE != RECOVER`.
 
 The migration adds five questions every change is scored against:
 **(1)** still deterministic? **(2)** still comparable across runs? **(3)** auditable later?

@@ -5,7 +5,7 @@
 > code on **every working response** (`CLAUDE.md §6.4 Topic Sync Mandate`). This is the
 > concept↔code↔tests↔validations index; the rest of `docs/` owns flow, schemas, and history.
 >
-> Created: 2026-06-01 · Updated: 2026-08-08
+> Created: 2026-06-01 · Updated: 2026-09-04
 >
 > **See also:** [`../knowledge-map.md`](../knowledge-map.md) — how the topics layer connects to the other record systems (SESSION LOG, plans, analysis, findings, structure maps).
 
@@ -15,6 +15,9 @@
 - **Keep it true:** when you change code that a topic covers, update that topic's doc the same
   turn (only that file — token-aware). See `CLAUDE.md §6.1` and the `Sync` trigger in
   [`trigger-vocabulary.md`](../architecture/trigger-vocabulary.md).
+- **Remainder inventory (2026-09-04):** sidecar / measurement / tests / lab paths that would
+  bloat Code covered live in [`.grok/infra_file_citations.md`](../../.grok/infra_file_citations.md)
+  (existence only; grouped by owning topic). Not a behavior claim.
 
 ## Relationship to idea-governance Bricks
 This layer (concepts) and [`idea-governance-framework.md`](../architecture/idea-governance-framework.md)

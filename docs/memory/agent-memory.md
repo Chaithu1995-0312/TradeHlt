@@ -32,6 +32,7 @@ confirm-gated execution, and audit. Entry: `Ask GrokAgenticAI …` / `python -m 
 | Dispatch | `src/agent/executor.py` · `Executor.dispatch` |
 | Tools registry | `src/agent/tool_registry.py` · `REGISTRY` |
 | Mode registration | `src/agent/modes/*.py` (import side-effect) |
+| Closed claim grounding | `truth.ground_claim` → `SemanticGrounder` (`src/governance/semantic_grounding.py`) |
 
 ## Exit points
 

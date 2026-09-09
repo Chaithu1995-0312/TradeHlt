@@ -4,7 +4,7 @@
 > an MT5 order + Telegram alert, and where the kill-switch / drift sit. This is the path behind
 > finding **F-010** (live PnL is UNVERIFIED — ExecutionPlanner + Ultron are exercised only here).
 >
-> Created: 2026-06-05 · Updated: 2026-06-05 · Status: living
+> Created: 2026-06-05 · Updated: 2026-09-03 · Status: living
 
 ## In plain language
 In replay, candles come from CSVs and nothing is ordered. **Live** is the other half: candle fetchers
@@ -22,6 +22,23 @@ was archived 2026-05-02; what remains live are the fetchers, bridges, and the ho
 - [`src/inout/alphavantage_candle_fetcher.py:129`](../../src/inout/alphavantage_candle_fetcher.py) — `AlphaVantageCandleFetcher` — FX M15 OHLCV → CSV.
 - [`src/inout/hummingbot_candle_fetcher.py:206`](../../src/inout/hummingbot_candle_fetcher.py) — `HummingbotCandleFetcher` — crypto OHLCV (Binance/Bybit/…) → CSV.
 - [`src/execution/loop.py:31`](../../src/execution/loop.py) — `ExecutionLoop` — continuous tick pipeline (scan→rank→regime→allocate→gate→alert→override); `AlertManager`/`OverrideHandler` alongside.
+
+- **Spine inventory (2026-09-03 citation pass — path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.:**
+- [`src/live/__init__.py`](../../src/live/__init__.py)
+- [`src/live/order_manager.py`](../../src/live/order_manager.py)
+- [`src/inout/live_rail/__init__.py`](../../src/inout/live_rail/__init__.py)
+- [`src/inout/live_rail/bar_builder.py`](../../src/inout/live_rail/bar_builder.py)
+- [`src/inout/live_rail/binance_ws_adapter.py`](../../src/inout/live_rail/binance_ws_adapter.py)
+- [`src/inout/live_rail/config.py`](../../src/inout/live_rail/config.py)
+- [`src/inout/live_rail/factory.py`](../../src/inout/live_rail/factory.py)
+- [`src/inout/live_rail/longport_adapter.py`](../../src/inout/live_rail/longport_adapter.py)
+- [`src/inout/live_rail/ohlcv_replay_port.py`](../../src/inout/live_rail/ohlcv_replay_port.py)
+- [`src/inout/live_rail/resilience.py`](../../src/inout/live_rail/resilience.py)
+- [`src/inout/live_rail/tickdb_adapter.py`](../../src/inout/live_rail/tickdb_adapter.py)
+- [`src/inout/live_rail/types.py`](../../src/inout/live_rail/types.py)
+- [`src/runtime/live_rail_feeder.py`](../../src/runtime/live_rail_feeder.py)
+- [`src/runtime/live_rail_orchestrator.py`](../../src/runtime/live_rail_orchestrator.py)
+- [`src/runtime/__init__.py`](../../src/runtime/__init__.py)
 
 ## Ins / Outs
 - **Ins:** live OHLCV (fetchers) + per-tick features + portfolio state; config `get_prod_section("live_integration")` (mt5/telegram toggles, dry_run) and `get_prod_section("inout")`.
@@ -45,3 +62,4 @@ unverified) and F-008 (drift not acted on) both live here.
 - **Risks:** 2026-06-05 — live PnL unverified (F-010): the planner + Ultron arm is only exercised here, so backtest ROI does not yet imply live ROI.
 - **Blockers:** 2026-06-05 — `live_engine_hook` uses module-level singletons (lazy `_get_*`), a known decoupling blocker (Trd-M3); complicates isolated testing.
 - **Need more info:** 2026-06-05 — inout execution pipeline archived 2026-05-02 (`archive/inout_legacy/`); only fetchers remain live. Confirm no caller still imports the archived controllers.
+- **2026-09-03 — spine citation pass:** named 15 previously unreferenced spine paths under Code covered (path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.).

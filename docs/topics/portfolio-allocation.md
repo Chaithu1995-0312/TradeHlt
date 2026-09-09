@@ -4,7 +4,7 @@
 > correlation, and the risk-sizing policy. Fully built + tested, but **orthogonal** to the per-candle
 > live decision path (it belongs to the multi-signal ExecutionLoop, which is itself dormant).
 >
-> Created: 2026-06-05 · Updated: 2026-06-05 · Status: living
+> Created: 2026-06-05 · Updated: 2026-09-03 · Status: living
 
 ## In plain language
 When you trade several instruments, you can't size each in isolation — total exposure and correlation
@@ -19,6 +19,9 @@ multi-signal ranking loop, which is not currently wired in.
 - [`src/portfolio/exposure_tracker.py:9`](../../src/portfolio/exposure_tracker.py) — `ExposureTracker` — open positions + `total_risk()` at :48.
 - [`src/portfolio/correlation_engine.py:44`](../../src/portfolio/correlation_engine.py) — `CorrelationEngine` — `correlation()` at :98 (20-day Pearson primary; static-heuristic fallback).
 - [`src/portfolio/capital_policy.py:11`](../../src/portfolio/capital_policy.py) — `CapitalPolicy` — `compute_risk()` at :60 (exposure/correlation/confidence → risk fraction, hard-capped).
+
+- **Spine inventory (2026-09-03 citation pass — path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.:**
+- [`src/portfolio/__init__.py`](../../src/portfolio/__init__.py)
 
 ## Ins / Outs
 - **Ins:** a signal dict (`symbol`, `confidence`, optional `rr`/`regime`) + current exposure state; config `get_prod_section("portfolio")` (`capital_policy`, `correlation` lookback/cache).
@@ -40,3 +43,4 @@ authority; PortfolioAllocator is *multi-signal capital allocation* for the (dorm
 - **Risks:** 2026-06-05 — fully built + tested but **not on the live decision path**; don't assume portfolio-level risk limits are enforced live (Ultron does its own, independently).
 - **Ambiguities:** 2026-06-05 — `CorrelationEngine`'s rolling-Pearson primary path needs a data fetcher not present in the live process, so the static heuristic is what actually runs.
 - **Reconciled:** 2026-06-05 — `CorrelationEngine` is **IMPLEMENTED** (rolling Pearson + fallback), but this whole allocator path is **ORPHANED** from the live spine (finding **F-013**): portfolio risk limits are not enforced on the live per-candle path. See `analysis/intent-vs-code-reconciliation-2026-06-05.md` items 2 + 6.
+- **2026-09-03 — spine citation pass:** named 1 previously unreferenced spine paths under Code covered (path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.).

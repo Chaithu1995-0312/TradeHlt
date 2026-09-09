@@ -53,8 +53,12 @@ Decide where a new file goes by asking "what is it?" then matching against this 
 | Unit / integration tests                        | `tests/` (flat) or `tests/<subpackage>/` | pytest; `pythonpath=["src","scripts","."]`                    |
 | New production config version                   | `configs/production/v{N}_{label}_{YYYY_MM}.json` | Immutable once promoted                               |
 | Experimental / spec doc                         | `configs/experimental/spec/*.md`         | Design docs, not runtime                                      |
-| Runtime artifacts (never commit)                | `results/`                               | Tuner checkpoints, baselines, validation reports              |
-| JSONL audit logs                                | `logs/`                                  | Append-only, structured                                       |
+| Runtime artifacts (never commit)                | `results/`                               | LOCAL_RUN — tuner/baselines/validation; **not git** ([`GITIGNORE_SCHEMA.md`](../governance/GITIGNORE_SCHEMA.md)) |
+| JSONL audit logs                                | `logs/`                                  | LOCAL_TELEMETRY — append-only occupancy; **not git**          |
+| OHLCV / corpus bytes                            | `data/`                                  | LOCAL_BLOB — identity is Dataset Identity + sha256, not the CSV |
+| Serialized models                               | `models/`                                | LOCAL_MODEL — new files ignored; 32 MIXED_RESIDUE still tracked |
+| Class C identity bindings                       | `docs/governance/identity_bindings/`     | TRACKED_BINDING — hashes only; Class A/B stay local           |
+| Sealed measurement evidence                     | `docs/research-readiness/`               | TRACKED_BINDING — never `results/` (findings gate = `git ls-files`) |
 | Documentation (human-facing)                    | `docs/`                                  | Handover, CLI matrix, architecture                            |
 
 **Never place runtime logic in `scripts/`** — scripts are thin CLI wrappers that import from `src/`.

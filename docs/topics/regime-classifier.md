@@ -3,7 +3,7 @@
 > **Topic-visibility unit.** The deterministic market-regime detector and the config/weight router it
 > drives — it runs *before* the engines on the live path and tells fusion which weight profile to use.
 >
-> Created: 2026-06-05 · Updated: 2026-06-05 · Status: living
+> Created: 2026-06-05 · Updated: 2026-09-03 · Status: living
 
 ## In plain language
 Markets behave differently when trending vs ranging vs wildly volatile. Before scoring a candle, the
@@ -15,6 +15,9 @@ flip every candle, and always falls back to `RANGING` on error.
 ## Code covered
 - [`src/regime/regime_classifier.py:25`](../../src/regime/regime_classifier.py) — `RegimeClassifier` — deterministic detector; `classify()` at :58 returns the regime string; 5-candle switch cooldown.
 - [`src/regime/config_router.py:43`](../../src/regime/config_router.py) — `ConfigRouter` — regime → profile (SAFE/BALANCED/AGGRESSIVE); `get_fusion_weights()` at :150 returns per-regime fusion weights.
+
+- **Spine inventory (2026-09-03 citation pass — path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.:**
+- [`src/regime/__init__.py`](../../src/regime/__init__.py)
 
 ## Ins / Outs
 - **Ins:** feature dict (`atr`, `trend_score`, optional `volatility`/`adx`); router loads `configs/production/regime_map.json` (or hardcoded defaults).
@@ -36,3 +39,4 @@ Live-wired via `live_engine_hook`.
 - **Risks:** 2026-06-05 — regime drives weight blending but the *re-tuning* of those weights is offline (see [`search`](../topics/readme.md)); `update_regime_weights`/`save_map` exist but aren't called in the live path.
 - **Ambiguities:** 2026-06-05 — regime thresholds are config-set; confirm `regime_map.json` matches the active production config's intent.
 - **Reconciled:** 2026-06-05 — verdict **IMPLEMENTED** (regime re-detected in `engine_runner.py:765`, fusion call at `engine_runner.py:777`, weights applied in `fusion_engine.py:290`); `integration-audit.md`'s "never injected" is stale. The live `context["fusion_weights"]` injection (`live_engine_hook.py:659`) is an unread/orphaned path. See `analysis/intent-vs-code-reconciliation-2026-06-05.md` item 1.
+- **2026-09-03 — spine citation pass:** named 1 previously unreferenced spine paths under Code covered (path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.).

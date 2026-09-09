@@ -12,7 +12,7 @@ python scripts/analysis/generate_script_matrix.py
 Authority: **inventory only** (no promote power). Thin-wrapper purity is **not**
 CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` only.
 
-**Records:** 442
+**Records:** 448
 
 | ID | Category | Lifecycle | Impl status | Path | Purpose |
 |---|---|---|---|---|---|
@@ -458,6 +458,12 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-440` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/visual_state_questions.py` | GRANDFATHER_UNCLASSIFIED |
 | `SCR-441` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/visual_state_sample.py` | GRANDFATHER_UNCLASSIFIED |
 | `SCR-442` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/visual_state_score.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-443` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/analytics_evidence_class_census.py` | EC-001 observation-only evidence-class census over analytics lineage rows (CO... |
+| `SCR-444` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/jse001_crt_context_join.py` | JSE-001 measure-only: engine_state_asof vs joint-state membership (BNB-only).... |
+| `SCR-445` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/jse002_engine_state_path_geometry.py` | JSE-002 measure-only: does engine_state_asof predict path geometry (BNB-only)... |
+| `SCR-446` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/jse003_engine_context_history_path_geometry.py` | JSE-003 measure-only: engine_context_history vs path geometry (BNB-only). Com... |
+| `SCR-447` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/l003h_trail_exit_transition_replay.py` | L-003H measure-only candle replay for trail/exit transition events (standalon... |
+| `SCR-448` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/l003i_trail_baseline_inversion.py` | L-003I measure-only baseline direction / base-rate inversion derived from L-0... |
 
 ---
 

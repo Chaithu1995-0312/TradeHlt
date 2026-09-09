@@ -1,6 +1,6 @@
 # Runtime Memory (navigation)
 
-> **Last generation:** 2026-08-07  
+> **Last generation:** 2026-09-05  
 > **Code-first:** `src/runtime/**` is authoritative on conflict.
 
 ## Purpose
@@ -13,7 +13,8 @@ Index historical replay and live hook harnesses that exercise (or wrap) the deci
 - Build features and drive CRT / optional EngineRunner gate.  
 - Simulate capital, slippage, spread; emit trades/metrics/reports.  
 - Live path: candle → spine → planner → Ultron → bridges (when called).  
-- Capture baselines / unified replay for determinism work.
+- Capture baselines / unified replay for determinism work.  
+- Optionally emit observation-only per-bar traces (`BarStructureSnapshot`, `CRTConstructionTrace`) after `process_candle` returns. Default-off. Not on the decision path.
 
 ## Runtime role
 
@@ -29,6 +30,8 @@ Index historical replay and live hook harnesses that exercise (or wrap) the deci
 | Replay harness | `src/runtime/unified_replay_harness.py` |
 | Control-plane cmd | `backtest.v2` in `src/control_plane/registry.py` |
 | Agent tool | `backtest.run_v2`, `live_hook.dry_run` (pipeline mode) |
+| CRT construction trace | `src/runtime/crt_construction_trace.py` · `ConstructionTraceEmitter` (schema v2.0.0; `CRTStateResolver.resolve_metadata()` is the resolver half) |
+| Bar-structure snapshot | `src/runtime/bar_structure_snapshot.py` · `BarStructureSnapshot` |
 
 ## Exit points
 
@@ -38,6 +41,8 @@ Index historical replay and live hook harnesses that exercise (or wrap) the deci
 | Live | MT5 / Telegram / journals (when bridges invoked) |
 | Baseline manifests | under `results/baseline/` (via baseline_capture) |
 | Logs | fusion/collector/trade streams depending on path |
+| Construction trace JSONL | `crt_construction_trace.output_dir` (v4 research config); v2 envelope shape in `docs/reference/schemas.md` §9.17 |
+| Bar-structure snapshot JSONL | `bar_structure_snapshot.output_dir` (v3+ research configs) |
 
 ## Important contracts
 
@@ -46,6 +51,7 @@ Index historical replay and live hook harnesses that exercise (or wrap) the deci
 3. **`backtest.engine_gate_enabled`** controls whether EngineRunner fusion gate runs in backtest.  
 4. Live capital path: EngineRunner → ExecutionPlanner → **UltronRiskGate** (not RegimeGovernor).  
 5. Config: `backtest` section + ACTIVE production version; programmatic `BacktestRunner` without CRTConfig can hit ConfigBuilder split-brain (F-057 — see findings).
+6. **`crt_construction_trace` is OBSERVATION ONLY** (CH-resolver-engine-envelope). Section absent on ACTIVE_VERSION `v2_htfcrt_2026_08`; present and default-off on non-active `v4_dual_construction_2026_09`. Emit runs AFTER `process_candle`. Schema v2.0.0 joins engine `S_t` (state + this-bar `transition_log` slice + `get_live_metrics()`) beside resolver `F_t | S_t` (`resolve_metadata()` — no rival state label). Injection stays `"none"` (F-069). Decision-neutrality of the v2 envelope: 3-arm A/B/C at `logs/dual_construction_v2/XAUUSD_dual_construction_run_summary.json`. Grants no G001.
 
 ## Reading order
 
@@ -77,4 +83,4 @@ Index historical replay and live hook harnesses that exercise (or wrap) the deci
 
 ## Last generation timestamp
 
-2026-08-07
+2026-09-05

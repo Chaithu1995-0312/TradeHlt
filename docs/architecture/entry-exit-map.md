@@ -26,7 +26,7 @@ tool. The runtime harnesses (backtest / live) are programmatic entries; candle f
 | **Control-plane HTTP routes** (~40) | `src/control_plane/server.py:1649 · do_GET`, `src/control_plane/server.py:2003 · do_POST` | GET/POST `/runs`,`/commands`,`/api/*`,`/catalog`,… | [`control-plane.md`](../reference/control-plane.md) (full route table) | was DRIFT-DOC → now MATCH (route table added) |
 | **Agent tools** (25 / 17 intents) | `src/agent/cli.py:49 · main` (REPL) | `python -m src.agent.cli` | [`agent-reference.md`](../reference/agent-reference.md) | MATCH |
 | **Backtest replay** | `src/runtime/backtest_v2.py:1763 · run` (→ `src/core/engine_runner.py:635 · run`) | CSV in `data/` → metrics; cmd `backtest.v2` | [`signal-flow.md`](signal-flow.md) §1 | MATCH (exercised path) |
-| **Live tick** | `src/runtime/live_engine_hook.py:688 · process` | one candle → engines → planner → Ultron → order | [`live-execution.md`](../topics/live-execution.md) | **NO-CALLER** — no production loop invokes it today (F-010 live unverified; F-013) |
+| **Live tick** | `src/runtime/live_engine_hook.py:817 · process` | one candle → engines → planner → Ultron → order | [`live-execution.md`](../topics/live-execution.md) | **NO-CALLER** — no production loop invokes it today (F-010 live unverified; F-013) |
 | **Candle / data ingestion** | `src/inout/` fetchers; `src/data_ingestion/historical_fetcher.py` | OHLCV → CSV (`data/`) | [`signal-flow.md`](signal-flow.md) §1 | DRIFT-DOC — fetcher/feed details thin |
 | **TradingView webhook** | — (not implemented) | — | plan-only | BY-DESIGN (no code) |
 
@@ -41,7 +41,7 @@ tool. The runtime harnesses (backtest / live) are programmatic entries; candle f
 | **Integrity events** | `src/utils/integrity_events.py:50 · emit_integrity_event` | `logs/integrity_events.jsonl` | [`schemas.md`](../reference/schemas.md) §9 | was UNDOCUMENTED → catalogued |
 | **Canonical event envelope** | `src/events/event_fabric.py:119 · make_event_envelope` | per-channel JSONL (telemetry/audit) | [`event-fabric.md`](../topics/event-fabric.md), [`event-taxonomy.md`](event-taxonomy.md) | MATCH |
 | **CRT sweep trace** | `src/utils/sweep_trace_logger.py` (`log_sweep_decision`) | `logs/sweep_lifecycle.jsonl`, `logs/execution/runs/{run}/sweep_trace.jsonl` | [`schemas.md`](../reference/schemas.md) §9 | was UNDOCUMENTED → catalogued |
-| **Backtest outputs** | `src/runtime/backtest_v2.py:1508 · _write_trades`, `:1502 · _write_summary`, `:1518 · _write_events` | `results/…/{instrument}_{trades.csv,summary.json,events.jsonl}` | [`schemas.md`](../reference/schemas.md) §9 | was DRIFT → catalogued |
+| **Backtest outputs** | `src/runtime/backtest_v2.py:1574 · _write_trades`, `:1568 · _write_summary`, `:1584 · _write_events` | `results/…/{instrument}_{trades.csv,summary.json,events.jsonl}` | [`schemas.md`](../reference/schemas.md) §9 | was DRIFT → catalogued (re-verified 2026-08-15, CH-htfcrt-parent-candle-smc-v1 shifted these +66 lines) |
 | **Model artifacts** | `src/core/model_registry.py` (`register`/`_save_atomic`, GOV-3) | `models/{registry.json,gaussian_*.json,zone_registry.json,rr_model*}` | [`governance.md`](../reference/governance.md), [`training-calibration.md`](../topics/training-calibration.md) | DRIFT-DOC — atomic/active.txt details thin |
 | **Config promotion** | `src/governance/promotion_manager.py:499 · _write_to_registry`, `:723 · _log_event` | `configs/production/{version}.json`, `configs/promotion_log.jsonl`, `ACTIVE_VERSION` | [`governance.md`](../reference/governance.md) | MATCH |
 | **HTTP responses** | `src/control_plane/server.py:1649 · do_GET` / `:2003 · do_POST` | JSON to `localhost:8787` clients | [`control-plane.md`](../reference/control-plane.md) | MATCH |
@@ -60,7 +60,7 @@ tool. The runtime harnesses (backtest / live) are programmatic entries; candle f
   `src/control_plane/registry.py:197 · core_command_specs`.
 - **Still thin (acceptable):** model-registry atomic-write/`active.txt` internals; historical-fetcher feed
   config — covered at role level, deep detail lives in code.
-- **The load-bearing caveat:** the **live entry (`live_engine_hook.py:688 · process`) has no production
+- **The load-bearing caveat:** the **live entry (`live_engine_hook.py:817 · process`) has no production
   caller loop** — the exercised entry is `backtest_v2`. So most *exit* points on the live arm (MT5,
   Telegram, live trade journal) are reachable in code but **not driven live today** (findings F-010, F-013).
   Backtest exits (CSV/JSONL/summary) and governance exits (promotion log, configs) **are** driven.

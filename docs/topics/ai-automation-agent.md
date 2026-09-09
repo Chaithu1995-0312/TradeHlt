@@ -6,7 +6,7 @@
 > [`agent-reference.md`](../reference/agent-reference.md). Design:
 > [`implementation_plan/agentic-ai-kitchen-design.md`](../implementation_plan/agentic-ai-kitchen-design.md).
 >
-> Created: 2026-06-05 · Updated: 2026-08-07 · Status: living
+> Created: 2026-06-05 · Updated: 2026-08-25 · Status: living
 
 ## In plain language
 **GrokAgenticAI** lets an operator drive the kitchen in plain English ("Ask GrokAgenticAI …").
@@ -58,3 +58,7 @@ pipeline/governance tools but holds no execution authority. Governance design:
 - **Ambiguities:** 2026-06-05 — intent classification falls back to an LLM below the regex confidence floor; the *plan* stays deterministic but the *intent* can be LLM-chosen — keep that boundary clear.
 - **2026-08-07 — GrokAgenticAI P0:** Product brand + multi-specialist differentiation shipped. OpsDoctor (read-heavy + incident pack) and CampaignRunner (pipeline goal loop with one REJECT→retune). Free tool choice still forbidden. Design doc remains authoritative for Phases 3–6.
 - **2026-08-07 — P1 TruthJanitor:** `truth.*` tools wrap construction_protocol check, feature_math_lint, script_census (observe JSON), citation pytest floor, and confirm-gated `results/hygiene/` pack. No auto-edit of docs/findings/production.
+- **2026-08-13 — Closed semantic environment:** `truth.ground_claim` + intent `semantic_ground` wrap `SemanticGrounder` (CT-008). Repository nouns/relations/implementation/evidence must come from tool-returned authority; UNKNOWN fails closed. Reasoning/prose stay free. Advisory only.
+- **2026-08-19 — live_hook.dry_run rewrite (PR-4d):** Tool now builds `trade_data` via `LiveRailFeeder` (or refuses `feeder_not_ready`) and calls `HookedLiveEngine.process` with `hook_submit_orders=False`. The `LiveEngineHook` / `simulate_one` / `dry_run_ok` path is gone. Still not a production live rail (F-073 OPEN).
+- **2026-08-19 — paper TickDB CLI (CH-live-rail-cli):** `scripts/live/run_live_rail.py --paper` is a thin diagnostic wrapper (SCR-399). Not an agent tool. Experimental paper drain: exit=0, 80 closed bars, 0 process_calls, 2× FEATURE_REJECT. F-073 stays OPEN.
+- **2026-08-25 — JSONL claim kind + `REFUSED` (CH-jsonl-claim-surface PR-2):** `truth.ground_claim` now accepts `kind=JSONL`, which asks whether a JSONL stream may *close* a claim and requires `relation=CC-*` from `docs/governance/jsonl_claim_catalog.yaml`. Two behaviours matter for agent callers. (1) The tool's success path previously overwrote the grounding verdict — `out["status"] = "ok"` clobbered the value `to_dict()` had just written — so a refusal survived only as `passed: False`, indistinguishable from UNKNOWN. The verdict is now copied to **`grounding_status`** first; the envelope `status`/`passed` contract is unchanged, so existing consumers are unaffected. (2) For `kind=JSONL` the tool passes `token` **as-is** instead of `token or relation`, because an empty token is legal for a join-only call. No new intent — `semantic_ground` already routes here (CN-013: the LLM must not improvise tool graphs). Advisory; grants no authority.

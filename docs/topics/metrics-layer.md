@@ -5,7 +5,7 @@
 > code it covers, how it's reached, what tests it, what's still open — **without loading the
 > rest of the codebase**. Link, don't inline.
 >
-> Created: 2026-06-14 · Updated: 2026-06-14 · Status: living
+> Created: 2026-06-14 · Updated: 2026-09-03 · Status: living
 
 ## In plain language
 The Metrics Layer is the second-order measurement surface that lets us judge *whether a change
@@ -30,6 +30,13 @@ telemetry (`goal_report`). A→B→C only.
   recompute (imports nothing from the production metrics path).
 - [`src/research/measurement/forward_walk.py`](../../src/research/measurement/forward_walk.py) —
   the **frozen MFE/MAE oracle** the live within-trade tracking must match (reused, never modified).
+
+- **Spine inventory (2026-09-03 citation pass — path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.:**
+- [`src/journal/__init__.py`](../../src/journal/__init__.py)
+- [`src/journal/schema.py`](../../src/journal/schema.py)
+- [`src/journal/trade_execution_link_v1_0.py`](../../src/journal/trade_execution_link_v1_0.py)
+- [`src/journal/trade_identity_v1_0.py`](../../src/journal/trade_identity_v1_0.py)
+- [`src/journal/trade_provenance_v1_0.py`](../../src/journal/trade_provenance_v1_0.py)
 
 ## Ins / Outs
 - **Ins:** the closed-trade ledger (`TradeJournal.closed` → `TradeRecord` fields: `pnl_rr_net`,
@@ -75,3 +82,4 @@ measured against G001 — not before Oracle V2 parity is green.
 - **Enhancements:** 2026-06-14 — eventual `TradeRecord → {TradePathStats, TradeExecutionStats,
   TradeAttributionStats}` split; per-session RR attribution; survival metrics by win/loss subset.
 - **Need more info:** none.
+- **2026-09-03 — spine citation pass:** named 5 previously unreferenced spine paths under Code covered (path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.).

@@ -11,6 +11,8 @@
 
 **Not granted by this doc:** no new Ontology/ODP/Policy emitters; no attribution or causal-edge claim; no `analytics never becomes authority` reversal; no field promotion; no new Parquet family; no global lineage schema migration.
 
+> **Ontology note (L-003J):** Outcome identity framing advances from rival `scanner_outcome` / `oracle_outcome` labels to primary **`JOINT_OUTCOME_STATE`** (`Y_joint`). This is docs measurement-object framing only — not registry promotion, not attribution unlock. See `docs/governance/ANALYTICS_JOINT_OUTCOME_STATE_ONTOLOGY_L003J.md`.
+
 ---
 ## 1. What this decision freezes
 
@@ -64,11 +66,14 @@ Attribution = link a feature/field to an outcome credibly. Gate = identity + pop
 
 | Field | Eligible? | Why |
 |---|---|---|
-| `opportunities.outcome` / `rr_achieved` | **NOT eligible** | detection-stream derived, NOT realized trade edge; no governing exit/oracle (L-003) |
+| `opportunities.outcome` / `rr_achieved` (`scanner_outcome`) | **NOT eligible** | detection-stream `scanner_outcome`, NOT realized trade edge / `attribution_target`; `ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS` (L-003) |
 | `opportunities.features` / `clean_labels.features` | Not until producer-set resolved | children collapsed under parent; per-field producer unenumerable (GT-4) |
 | crt_construction / bar_structure / events / clean_labels.y_* | Pending | lineage resolved, evidence CORPUS_VERIFIED; needs outcome/exit contract |
+
+**L-003 (2026-09-07):** NOT frozen — status **OBSERVED_PARTIAL**. **L-003J:** ontology lock — `JOINT_OUTCOME_STATE` primary measured object (docs framing only; NOT registry promotion). Phase A vocab: `docs/governance/ANALYTICS_OUTCOME_SEMANTICS_L003.md` + JSON. Phase B scanner_outcome × oracle_outcome population comparison: `ANALYTICS_OUTCOME_POPULATION_COMPARISON_L003B.md` + JSON (HOMONYM). Phases C–E: LABEL_MISMATCH_SL_TP characterization + path-shape metrics + early MAE timing (T_MAE). Terminology parity audit: `docs/governance/ANALYTICS_L003_TERMINOLOGY_PARITY_AUDIT.md` (`L-003-TERM.v1`). Attribution remains blocked under **`ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS`** (scanner_outcome ≠ oracle_outcome as RVs) — distinct from **`ATTRIBUTION_BLOCKER_IDENTITY`** (L-001 `produced_by` UNKNOWN). No registry column promoted; freeze deferred. Bare `outcome` is not an RV name in corrected prose (`scanner_outcome` / `oracle_outcome` / `live_outcome`).
 
 ## 6. Promote vs hold
 
 **Promote now (doctrine only):** L-001 definitions (§3), evidence taxonomy (§4), attribution-eligibility doctrine (§5).
 **Hold (measured, not promoted):** global 4-column lineage schema — falsified; family-scoped `opportunities.produced_by = list[str]` — correct exception, deferred as its own governed change.
+

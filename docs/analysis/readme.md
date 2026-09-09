@@ -9,8 +9,47 @@
 >
 > **See also:** [`../knowledge-map.md`](../knowledge-map.md) (how the record systems connect) · [`../current-findings.md`](../current-findings.md) (the validated conclusions these studies feed) · [`../timeline.md`](../timeline.md) · [`../plans/readme.md`](../plans/readme.md).
 
+## Generated code inventories (living — regenerate, do not read as history)
+
+Unlike everything in the table below, these workbooks are **regenerated from the tree**, so they
+describe the repository as it is *now*. Row counts are checked against disk; a stale workbook is a
+bug, not a snapshot. Columns are `File Name | Summary of functionality | Referred files`, plus the
+Semantic File Identity columns appended by
+[`../../scripts/governance/enrich_workbooks_with_semantic_identity.py`](../../scripts/governance/enrich_workbooks_with_semantic_identity.py)
+where the Semantic OS declares identities for that tree.
+
+| Workbook | Covers | Regenerate with |
+|---|---|---|
+| `results/analysis/src_business_functionality.xlsx` | `src/` (564) · `tools/` (17) · `exec_telemetry/` (4) · repo-root `*.py` (23), one sheet each | `python scripts/analysis/src_business_functionality_inventory.py` |
+| `scripts_business_functionality.xlsx` (repo root) | `scripts/` (386) | maintained additively; `--tree scripts --out <tmp>` regenerates a comparison copy — its summaries come from an earlier, different summarizer, so do **not** overwrite it blind |
+| `tests_functionality_inventory.xlsx` | `tests/` (510 files / 622 classes), incl. **Intent of test class** | `python scripts/analysis/test_functionality_excel.py` |
+| `grok_test_intent.xlsx` · `claude_test_intent.xlsx` | the two auditor suites, one row per pytest nodeid, with Intent · Source contract · Failure mode | same script (emits all three) |
+| `.grok/gcmc_v2_inventory.xlsx` | `mt5_analytics/` (45) · `oss_lab/` (37) · `tools/` (17) | `python .grok/_build_gcmc_v2.py` |
+
+**Order matters:** regeneration rewrites each sheet and drops the identity columns, so run the
+enrichment *after* the generators, never before. Sheets for trees the Semantic OS does not cover
+(`tools_py_inventory`, `exec_telemetry_py_inventory`) are left un-enriched on purpose — a blank
+Semantic ID column would read as "coverage measured at zero" rather than "coverage not measured".
+
+---
+
+## Historical analyses
+
 | File | Date | Topic (as written) |
 |---|---|---|
+| `atlas-findings-audit-2026-08-28.md` | 2026-08-28 | **Path A.** Four MATCH atlases vs findings. F-088 does not cite the leakage atlas; the spec lock had treated 2R-missed-TP count as SL-first proof — corrected. F-091 is stricter than the full-sample atlas. No G001. |
+| `crt-spine-journal-2026-08-27.md` | 2026-08-27 | **Events/telemetry grain only** (`run_20260822` / `v2_multi_2026_04`). Funnel RANGE→SWEEP 1792 → DISP 399 (22%) → EXP 142 → RETEST 24 → EXEC 4 → TRADE_OPENED **3**. Deaths: RESET_HTF 1442/1798. Late RETEST_REPLAY 19/23 OFF_SESSION. Not the NS 16-trade walk. Not the 94k ledger. **Path B addendum 2026-08-28:** t=0 geometry on the 3 opens (SL = disp_low−0.2 ATR; TP1 R 1.0/1.5/1.5). Leakage join refused. n=3 INSUFFICIENT. No G001. |
+| `parquet-formula-parity-2026-08-27.md` | 2026-08-27 | **Stored parquet features vs ontology formulas.** Three-layer check on XAUUSD `clean_labels` n=47,166: (A) formula(stored inputs)==stored output — geometry/ATR identities hold, FM-022/023 are the F-061 formula not a dump error; (B) OHLC exact vs cited CSV; (C) all 38 overlapping cols bit-identical to HEAD `FeaturePipeline`. Schema 38≠48. Protocol `PIT_UNCLEAN` conservative on this file. No G001. |
+| `research-dag-provenance-2026-08-26.md` | 2026-08-26 | **Can any architectural decision be traced back to its origin?** Typed provenance DAG over the whole record: 1,169 decisions (1,051 SESSION LOG entries back to 2026-04-10 + 88 build manifests + 15 promotions + 15 closure surfaces) × 4 origin slots = 4,676 edges, each classified EXPLICIT / INFERRED / UNKNOWN by an ordered rule set with a per-edge `witness`. Result **18.63 % / 18.16 % / 63.22 %**; `originating_measurement_basis` is **100 % UNKNOWN** (`sealed_pass_bound: 0`, zero contracts with a proven run) and `originating_hypothesis` only 1.37 % explicit (18 of 20 H-* back-seeded on one day). Gate 6 moved UNKNOWN −5.4 pp but EXPLICIT only +0.5 pp. Gaps recorded, never filled. 4 TruthConflicts surfaced, none resolved. Artifact: `governance/research_dag_provenance-2026-08-26.json`. No G001, no F-id. |
+| `mother-range-prior-holdout-2026-08-24.md` | 2026-08-24 | **MC-MRPRIOR-XAUUSD-M15-V1 sealed holdout.** SEM-030: sparse SEM-026 mother-range inside entries + SEM-028/FM-054 magnitude-time prior. Both arms are INSUFFICIENT: holdout agree n=9 below the frozen n>=30 floor, with sign flips recorded. F-094. No G001. |
+| `mfe-to-rnet-collapse-2026-08-24.md` | 2026-08-24 | **Why SEM-028 +0.21R MFE becomes SEM-029 +0.025R y_R_net.** 83% of the extra path is after the walk already exited. Residual booked R is a +1 pp TP-hit mix, not fatter R given outcome. Not a new PRIMARY. |
+| `rnet-overlay-holdout-2026-08-24.md` | 2026-08-24 | **MC-RNET-OVERLAY-XAUUSD-M15-V1 sealed holdout.** SEM-029: k=0.5 size overlay on independent-entry y_R_net. DIAGNOSTIC_PASS overlay Δ +0.0058 / +0.0064 on a still-losing book (holdout E[y]=−0.55R). F-093. No G001. |
+| `magnitude-prior-holdout-2026-08-24.md` | 2026-08-24 | **MC-MAGPRIOR-XAUUSD-M15-V1 sealed holdout.** SEM-028: trend_bias as magnitude/time prior on a given side. Arm S +0.265 / +0.209 (MFE). Arm T −0.209 / −0.220 (bars to MFE, faster not longer). DIAGNOSTIC_PASS both, not G001. F-092. |
+| `asymmetry-decomposition-2026-08-24.md` | 2026-08-24 | **ΔMFE state-family decomposition on the sealed split.** Four stats per cell (mean/median/P(Δ>0)/n). Naive E[Δ] spread ranks hour>session>vol; directional object is trend_bias (sign-agrees, P-stable, E[Δ\|Δ>0] channel, BOS nested). PRIMARY not retuned. No G001. |
+| `asymmetry-holdout-2026-08-24.md` | 2026-08-24 | **MC-ASYM-XAUUSD-M15-V1 sealed holdout.** PRIMARY FM-054 contrast keeps sign (train +0.415 / holdout +0.469, n=9454). Unconditional E[ΔMFE] flips (+0.438 → −0.546). DIAGNOSTIC_PASS, not G001. F-091. |
+| `evidence-atlases-2026-08-24.md` | 2026-08-24 | **Leakage / state-value / long−short MFE atlases** on the 94k bar×direction grain. Exclusive leak ladder (28,007 reached 2R missed TP). State value is E[MFE]/E[time] (path_net≡0 for side-symmetric states). Asymmetry E[MFE_L−MFE_S]=+0.239; session/vol/hour/trend_bias move it. No G001. |
+| `parquet-evidence-layer-2026-08-23.md` | 2026-08-23 | **Parquet as evidence layer, not a dataset.** Four XAUUSD projections queried as State→Decision→Lifecycle→Outcome. Grain split: 94,332 = bar×direction (joinable to clean_labels); events/telemetry = later CRT spine run (TRADE_OPENED=3), not 1:1 joined. Quality ≠ outcome (44,859 high-MFE low-TP). No G001, no F-id. Spec: `docs/research/parquet_evidence_layer.md`. |
+| `feature-identity-state-inventory-2026-08-19.xlsx` | 2026-08-19 | **Feature + state census (observation only).** 48 decision-vector slots · 65 unique FM-* · machine/workflow states · discrete feature-states. Sheet **Files declaring values** = `filename \| features in that file` (identity + emission under `src/` + `configs/formulas/` only). Regenerator: `_build_feature_state_inventory.py`. Not G001, not CRT CLOSED. |
 | `knowledge-graph-first-principles-audit-2026-07-10.md` | 2026-07-10 | **First-principles audit of `knowledge_graph.json` + `preregistered_experiments.md` under untrusted-measurement assumption.** Prior F-xxx / backtests **not** admissible as economic closure. Output: graph coverage → missing families → redundancies → experiment coverage → missing experiments → scientific defects → EIG → cost → ranked portfolio (Tier 0 E-MT-00/01 → Tier 1 baselines/vol-info/E-P2-04/05 → …) → stopping conditions. Companion edits: KG v0.4 decontamination; prereg rewrite. **No economic SUPPORTED/FALSIFIED claims.** |
 | `structural-asymmetry-bnbusdt-2026-06-13.md` | 2026-06-13 | **Program 2 / Phase E1 — structural continuation asymmetry (BNBUSDT, PURE, no profitability).** Does the completed sweep→displacement→retest structure add forward asymmetry beyond sweep alone? Multi-horizon MFE/MAE + symmetric first-hit vs 4 controls (incl. sweep-only D), permutation + OOS + in-pipeline calibration. VERDICT INSUFFICIENT_POWER · POWER INADEQUATE: test n=47 NEGATIVE point estimate, loses to all controls; funnel ~1% sweep→retest completion (P(disp\|sweep)=8.6%); calibration PASSED (instrument valid). → **F-026**; Program 2 FROZEN after one experiment (no E2). |
 | `program-1-closure-2026-06-13.md` | 2026-06-13 | **Program 1 Closure — Next-Bar Directional Ontology (M15 crypto-majors, intrabar+12bps).** The durable synthesis: four independent falsifications under one governing truth standard (entry F-019 / conditional F-020 / selection F-021 / exit F-025), the **decomposition guards** that killed each false-positive headline (the transferable asset), the **reality_gap +4.16R** (value is upstream/informational, not exit geometry), **EXHAUSTED ≠ WRONG** + the deferred Program-2 frontier, and the frozen result-JSON hashes. Program 1 = **KILLED** (reopen only via a new ontology, never a parameter pass). |

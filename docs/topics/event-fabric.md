@@ -3,7 +3,7 @@
 > **Topic-visibility unit.** The canonical event-envelope system every cross-component JSONL write
 > flows through — the telemetry/audit backbone that makes replay comparable and auditable.
 >
-> Created: 2026-06-05 · Updated: 2026-06-05 · Status: living
+> Created: 2026-06-05 · Updated: 2026-08-25 · Status: living
 
 ## In plain language
 Whenever any component writes a record meant for another component (telemetry, decision snapshots,
@@ -40,3 +40,4 @@ is the **consolidation point** named in the migration doctrine (`assistant_proje
 - **Risks:** 2026-06-05 — schema_hash is passive; a drifted record is only caught if someone runs the offline audit. No runtime guard by design.
 - **Ambiguities:** 2026-06-05 — `generation` is per-process and resets on restart; it orders within a run, not across runs (replay comparison deliberately ignores `event_id`/`generation`/wall-clock).
 - **Enhancements:** 2026-06-05 — several consumers (cognitive bus, replay memory) are sidecar-only today (F-012); the fabric carries their telemetry but the spine doesn't consume it back.
+- **Claim admissibility:** 2026-08-25 — envelope *shape* is now separable from stream *identity*. `docs/governance/jsonl_claim_catalog.yaml` (CH-jsonl-claim-surface PR-1) classifies each JSONL stream into one of four families and records what it may close: `CC-ENVELOPE-SHAPE` grounds the envelope contract from `schemas.md` §9.4 + `make_event_envelope` **without** requiring the gitignored stream file, while occupancy claims against the same stream stay refused (a global `crt_transitions.jsonl` has no RESET, so folding it is a wrong series). Emitting `payload.ontology_ids` from the emitters is explicitly **not** that program — a log line stays occupancy, never a definition (CLAUDE.md §6.6).

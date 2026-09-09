@@ -135,3 +135,33 @@ label is collected; I do not open that file until after scoring is complete.
 Research/docs only. A descriptive-fidelity score, however it comes out, changes no config, no
 model weight, no fusion authority, no `ACTIVE_VERSION` (§6.5 Authority Ladder: information ≠
 economic usefulness ≠ authority ≠ architecture).
+
+---
+
+## Appended 2026-08-31 — navigational pointer only (nothing above is modified)
+
+> This note is **append-only and purely navigational**. No question wording, prediction,
+> interpretation rule, sample design, order of operations, gate, or authority statement above has
+> been altered. Added after the freeze and dated so the append is visibly later
+> (CLAUDE.md §6.2 rule 4: append-discipline, never silent revision).
+
+A **sibling program** reuses this same instrument — the same
+`results/blind_label/sample_manifest.json` (seed `20260801`, 100 items, Arm A=60 / B=30 / C=10),
+the same `session_01.html` stimulus, the same four questions, and the same
+`scripts/analysis/blind_label_score.py` — with exactly one variable changed: **the labeler is an
+LLM rather than a human**.
+
+* [`preregistration-llm-blind-label-annotator.md`](preregistration-llm-blind-label-annotator.md)
+  (CH-llm-blind-label-annotator-v1)
+
+**The two programs answer different questions and their results must never be read as each
+other's.** This registration's subject is the human — it exists to convert *"would an experienced
+discretionary trader broadly agree?"* into a number, and its design rests on the trader-language /
+code-semantics collision being the measurement. An LLM's agreement with the code is not evidence
+about what a discretionary trader sees.
+
+Status at the time of this append: **this human registration remains unrun** — no labels, no scored
+report, and the sealed user-prediction SHA-256 in the section above is still unfilled. The sibling
+program is required not to consume or contaminate it: LLM answers are stored separately and are
+never shown to a future human labeler, so every step above remains executable on these same 100
+items.

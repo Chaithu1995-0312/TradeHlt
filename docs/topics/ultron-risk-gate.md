@@ -3,7 +3,7 @@
 > **Topic-visibility unit.** The terminal authority on the spine: the last check that approves a
 > trade and sets its final size, or rejects it. The LLM never reaches here.
 >
-> Created: 2026-06-01 · Updated: 2026-06-01 (Trd-M5) · Status: living
+> Created: 2026-06-01 · Updated: 2026-09-03 (Trd-M5) · Status: living
 
 ## In plain language
 `UltronRiskGate` is the **sole execution authority** — the final, deterministic gate that consumes
@@ -17,6 +17,9 @@ re-instantiating the object (a real hardening fix, "FRAG-1").
 - [`src/core/ultron_risk_gate_wrapper.py:58`](../../src/core/ultron_risk_gate_wrapper.py) — `UltronRiskGateWrapper`, the adapter used alongside the gate.
 - Both imported by the live path: [`src/runtime/live_engine_hook.py:25-26`](../../src/runtime/live_engine_hook.py).
 - **Trd-M5 (2026-06-01):** `evaluate()` opens with an **execution-authority isolation assertion** (`core/governance_mode.assert_isolated`): the inbound plan must carry no LLM-derived execution verdict (`llm_decision`/`llm_gated`/`llm_verdict`), enforcing that this gate stays rule-based and the advisory LLM never reaches execution. `GOVERNANCE_MODE=strict` raises; `advisory` (default) warns + continues.
+
+- **Spine inventory (2026-09-03 citation pass — path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.:**
+- [`src/core/ultron_live_adapter.py`](../../src/core/ultron_live_adapter.py)
 
 ## Ins / Outs
 - **Ins:** `trade` (execution-plan dict: entry/SL/TP/RR/TTL), `portfolio_state` (open exposure, daily P&L, trade count); config section `ultron_risk_gate`.
@@ -41,3 +44,4 @@ Spine step 5 of 5 (terminal authority): `… → ExecutionPlannerV1_2 → Ultron
 - **Ambiguities:** `2026-06-01` **module drift (3-way)** — runtime uses `core/ultron_risk_gate.py` (+ `core/ultron_risk_gate_wrapper.py`, both imported at [`live_engine_hook.py:25-26`](../../src/runtime/live_engine_hook.py)), but [`codebase-analysis.md`](../analysis/codebase-analysis.md) documents `src/risk/ultron_risk_gate.py`. The `risk/` variant is a dead-code/drift candidate. An archived legacy import also exists (`archive/inout_legacy/...`). Not resolved here (code change, out of scope).
 - **Enhancements:** `2026-06-01` emit a structured per-check trace (which of the 7 fired) into telemetry for replay-auditable rejections.
 - **Need more info:** `2026-06-01` exact line of `evaluate()` and the position-sizing formula (check 7) — read on next touch.
+- **2026-09-03 — spine citation pass:** named 1 previously unreferenced spine paths under Code covered (path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.).

@@ -145,7 +145,39 @@ Consumed by `src/config_layer/execution_planner.py` (`ExecutionPlannerV1_2`).
 | `default_account_balance`     | float | `10000.0`  |
 | `precision_overrides`         | dict  | `{XAUUSD:2, BTCUSDT:2, ETHUSDT:2, BTCUSD:2, ETHUSD:2}` |
 
-⚠️ **Runtime status** *(as of 2026-06-07 12:52 UTC+5:30)*: `ExecutionPlannerV1_2` reads TTL keys (`ttl_*_sec`), `risk_percent`, `precision_default`, `precision_overrides`, and `default_account_balance`. However, `min_rr_ratio`, `default_sl_atr_mult`, `lookback_candles_sl`, and `liquidity_*` keys are **not read by ExecutionPlanner** — these SL/RR/liquidity values are delegated to `gate_intelligence.compute_crt_levels()`. The active config `v2_multi_2026_04.json` may be missing some of these keys entirely, causing hardcoded fallback values to be used. Verify the actual consumer before relying on changes to these keys.
+⚠️ **Runtime status** *(as of 2026-06-07 12:52 UTC+5:30)*: `ExecutionPlannerV1_2` reads TTL keys (`ttl_*_sec`), `risk_percent`, `precision_default`, `precision_overrides`, and `default_account_balance`. However, `min_rr_ratio`, `default_sl_atr_mult`, `lookback_candles_sl`, and `liquidity_*` keys are **not read by ExecutionPlanner** — these SL/RR/liquidity values are delegated to `gate_intelligence.compute_crt_levels()`. The active config (`configs/production/ACTIVE_VERSION`) may be missing some of these keys entirely, causing hardcoded fallback values to be used. Verify the actual consumer before relying on changes to these keys.
+
+### Partial-exit keys — ⚠️ `partial_tp_breakeven_enabled` IS A MISNOMER
+
+| Key                           | Type  | Active value | Read by |
+| ----------------------------- | ----- | ------------ | ------- |
+| `partial_tp_breakeven_enabled`| bool  | `true`       | `src/runtime/backtest_v2.py:2094` (strict `_require_bt_cfg`) |
+| `partial_tp_fraction`         | float | `0.5`        | `src/runtime/backtest_v2.py:2095` (strict; see F-056) |
+
+> **The key name and the behaviour disagree, and the code is what runs.**
+> `partial_tp_breakeven_enabled` reads as *"move the stop to breakeven"*. **It does not.**
+> On the TP1 transition, `ExecutionEngine.update_trade`
+> (`src/config_layer/crt_engine_v2.py`) closes `partial_tp_fraction` of the position and
+> reassigns `trade.sl_price` to the **half-way point** between entry and TP1 —
+> `entry + 0.5*(tp1 − entry)` for a long — which is *already in profit*, not breakeven.
+> Registered as ontology node **`SEM-017` `MULTI_TARGET_PARTIAL_EXIT`**; recorded as **F-088**
+> in [`docs/current-findings.md`](../current-findings.md).
+
+**Why the key is retained as named.** Renaming it would touch 10 files under
+`configs/production/` plus the strict read site — a config change requiring its own
+authorisation, not a documentation fix. It is therefore **retained-but-documented**, the same
+treatment F-048 gave `decision_engine.rr_threshold` (retained-but-RETIRED, hash-neutral).
+The half-way semantics are pinned by a mechanical guard in
+[`tests/research/test_stop_policy.py`](../../tests/research/test_stop_policy.py) so a future
+session cannot resolve the divergence in the **wrong** direction — i.e. changing the behaviour
+to match the name — without a test failing.
+
+**What this key implies about measurement.** Because production trades a two-target,
+partial-exit, trailing object, a single-TP research kernel does not model it.
+`src/research/measurement/forward_walk.py` models one TP with no partial and no trail;
+`src/research/oracle/multi_tp_walk.py` is the kernel that expresses the production object
+(F-088). Audited by F-087: the half-way trail is the worst point estimate in a 12-arm grid on
+the geometry production actually runs, but sub-noise — **not** an instruction to disable it.
 
 ---
 
@@ -578,7 +610,7 @@ SQLite-like trade store for live mode: `path`, `wal_mode`, `timeout`.
 
 ## `signal_belief` — Temporal Conviction Accumulator
 
-*(Not present in the active v2_multi_2026_04.json — documented here for reference.)*
+*(Not present in the active config — documented here for reference.)*
 
 | Key                | Type  | Default |
 | ------------------ | ----- | ------- |
@@ -592,7 +624,7 @@ SQLite-like trade store for live mode: `path`, `wal_mode`, `timeout`.
 
 ## `cognitive_layer` — Cognitive Bus
 
-*(Not present in the active v2_multi_2026_04.json — documented here for reference.)*
+*(Not present in the active config — documented here for reference.)*
 
 | Key       | Type  | Default |
 | --------- | ----- | ------- |

@@ -1,0 +1,42 @@
+# ILLUSTRATIVE — design review only. Quantiles not claimed.
+id: F-EXAMPLE-001
+title: "SWEEP + breaker_present + order_block_present has a distinct forward ATR distribution"
+type: MEASUREMENT
+family: RF-CRT-STRUCTURE
+contract_ref: MC-ODP-CTX-XAUUSD-M15-EXAMPLE
+status: OPEN
+confidence: Possible
+validated: 2026-09-06
+revalidate_by: 2026-12-05
+evidence:
+  - "PENDING — attach analysis path / construction-trace join / bar_structure_snapshot pin"
+supersedes: null
+reversal: null
+owner: user
+claim_kind: distribution
+mechanism: null
+mechanism_confidence: none
+context_selector:
+  parent_crt: null
+  objective: null
+  state_producer: engine
+  variant_id: null
+  state: SWEEP
+  structure:
+    breaker_present: true
+    order_block_present: true
+    double_sweep: false
+    liquidity_sweep_direction: 0
+    break_of_structure_present: false
+    choch_present: null
+  transition: null
+  location:
+    instrument: XAUUSD
+    timeframe: M15
+    htf_percentile: null
+    htf_bucket: null
+    distance_to_boundary_atr: null
+    session_id: null
+  mechanism: null
+  mechanism_confidence: none
+odp_ref: ODP-EXAMPLE-001

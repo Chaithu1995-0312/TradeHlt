@@ -68,7 +68,7 @@ class ToolSpec:
 | `validator.validate`                  |       | `checkpoint_path`, `data_dir`, `config_id`                | Run `ConfigValidator.validate()` → `ValidationReport`       |
 | `promotion.promote_from_checkpoint`   |  ✔︎   | `checkpoint_path`, `version*`, `data_dir`                 | Validate + promote approved config                          |
 | `backtest.run_v2`                     |       | `config_path`, `data_dir`                                 | Run `BacktestRunner` on a production config                 |
-| `live_hook.dry_run`                   |       | `instrument`, `data_path`                                 | Simulate live execution (no order dispatch)                 |
+| `live_hook.dry_run`                   |       | `instrument*`, `bars_jsonl`, `tick_json`, `timeframe`     | Paper `HookedLiveEngine.process` (`hook_submit_orders=False`); refuses if feeder not ready |
 | `live_hook.enable`                    |  ✔︎   | `approval_code*`                                          | Enable live execution mode                                  |
 
 ### 3.3 Copilot-mode tools (7, all read-only)
@@ -100,7 +100,20 @@ class ToolSpec:
 | `audit.tail`     | `session_id`, `n_records`   | Retrieve session history from audit logs   |
 | `audit.inspect`  | `session_id*`               | Detailed inspection of a single session    |
 
-### 3.6 Registry helpers
+### 3.6 TruthJanitor / closed environment tools
+
+| Tool | Write | Args (required *) | Purpose |
+| --- | :---: | --- | --- |
+| `truth.ground_claim` | | `kind*`, `token`, `relation`, `source`, `target`, `symbol` | Ground a NOUN / RELATIONSHIP / IMPLEMENTATION / EVIDENCE claim. Fail closed. |
+| `truth.construction_check` | | `timeout_s` | Run construction_protocol.py check |
+| `truth.feature_math_lint` | | `check`, `timeout_s` | Feature-math ownership lint |
+| `truth.script_census` | | `timeout_s` | Observe-only script census JSON |
+| `truth.citation_floor` | | `timeout_s` | Citation pytest floor |
+| `truth.hygiene_pack` | ✔︎ | `notes`, `prior_json` | Hygiene rollup under `results/hygiene/` |
+
+Intent `semantic_ground` is a single-step plan: `truth.ground_claim`. See CLAUDE.md §6.7 / CT-008.
+
+### 3.7 Registry helpers
 
 ```python
 get_tool(name: str) -> ToolSpec

@@ -32,6 +32,32 @@ files directly under `tests/`, not in a dedicated subdirectory. `tests/fixtures/
 `tests/harness/`, `tests/helpers/`, `tests/manual/`, `tests/production_configs/` hold shared test
 infrastructure rather than test cases themselves.
 
+### Semantic-auditor suites (`tests/Grok/`, `tests/Claude/`)
+
+Two subdirectories are not organized by `src/` domain at all. They are **semantic auditors**: each
+module is a lettered "family" that asks a journey / substitution / name-collision question the
+domain floors do not, and each test carries a docstring in a fixed house style (a one-sentence
+intent, then `Source:` and `Failure mode:` lines). Family letters are globally unique across the
+two suites, so a merged view is unambiguous.
+
+| Suite | Families | Asks about |
+|---|---|---|
+| `tests/Grok/` | A–I | CRT episode journeys · number provenance · dual-implementation parity · Semantic OS fail-closed grounding · config split-brain · unit/scale mismatch · time semantics · ingestion · parent/HTF graph split |
+| `tests/Claude/` | J–M | directional displacement (F-074) · SMC primitives are features not states (F-076) · schema vs stale model artifact, fail-open vs fail-closed (F-076) · reachability is not certification (F-073 / F-075) |
+
+They deliberately do **not** retread the YAML↔enum count floors, the golden tests, or the wiring
+tests — a family is a *pin*, not the layer's only test. Neither suite modifies production code and
+neither grants authority (no `ACTIVE_VERSION` change, no G001, no closure stamp).
+
+Both are inventoried at pytest-**nodeid** grain — one row per test *case*, so a parametrized
+family's individual cells stay visible — by
+`scripts/analysis/test_functionality_excel.py`, which writes
+`docs/analysis/grok_test_intent.xlsx` and `docs/analysis/claude_test_intent.xlsx` plus a pointer
+sheet for each on the class-grain `docs/analysis/tests_functionality_inventory.xlsx`. Intent is
+**extracted from the docstrings, never authored in Excel**: to change a row, fix the test's
+docstring and regenerate. Design:
+[`docs/implementation_plan/topic-ladder-and-grok-test-intent-excel.md`](../implementation_plan/topic-ladder-and-grok-test-intent-excel.md).
+
 ### Representative patterns
 
 The reference doc documents four representative test-writing patterns (assertion-based, invariant-
@@ -63,6 +89,7 @@ book generated itself.
 |---|---|
 | The test suite itself | Production, actively maintained |
 | `docs/reference/testing.md`'s file-count header | **Fixed** (2026-08-07) — 411 `.py` files / 415 incl. fixtures, across 25 directories |
+| `tests/Grok/` (families A–I) + `tests/Claude/` (families J–M) | Semantic auditors — advisory, grant no authority; not in GREEN_FLOOR |
 
 ## Authoritative sources
 
@@ -70,6 +97,9 @@ book generated itself.
   patterns, conventions, CI/regression).
 - `tests/conftest.py` — shared fixtures and pytest configuration hooks.
 - `pyproject.toml` — the pytest configuration itself.
+- `tests/Grok/__init__.py`, `tests/Claude/__init__.py` — each auditor suite's own doctrine.
+- `scripts/analysis/test_functionality_excel.py` — the inventory generator for all three workbooks.
+- `tests/test_grok_intent_workbook.py`, `tests/test_claude_intent_workbook.py` — the workbook floors.
 
 ## Unresolved questions
 

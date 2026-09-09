@@ -3,7 +3,7 @@
 > **Topic-visibility unit.** How models (Gaussian NB, TradeNet) are trained, gated by the Phase-5
 > calibration check, and promoted through the model registry. Distinct from *config* promotion.
 >
-> Created: 2026-06-05 · Updated: 2026-07-22 · Status: living
+> Created: 2026-06-05 · Updated: 2026-09-03 · Status: living
 
 ## In plain language
 Some engines use trained models. Training is **offline**: mine paired trade records → fit a model →
@@ -17,6 +17,10 @@ is no automated live re-training loop (per F-001, that capability is unfunded).
 - [`src/training/trainer.py:287`](../../src/training/trainer.py) — `train_gaussian` — fit `GaussianNBModel` + scaler → (model, scaler, metrics).
 - [`src/training/phase5_calibration.py:131`](../../src/training/phase5_calibration.py) — `make_calibration_fn` — binds model+scaler; `_run_gates()` at :95 is the 4 hard checks (incl. `min_corr` 0.10).
 - [`src/core/model_registry.py`](../../src/core/model_registry.py) — `ModelRegistry` — GOV-3 atomic promotion (`PROMOTION_MARGIN` 2%).
+
+- **Spine inventory (2026-09-03 citation pass — path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.:**
+- [`src/config_layer/rr/__init__.py`](../../src/config_layer/rr/__init__.py)
+- [`src/config_layer/rr/rr_dataset_builder.py`](../../src/config_layer/rr/rr_dataset_builder.py)
 
 ## Ins / Outs
 - **Ins:** `*_fusion.jsonl` paired trade logs (the clean training data), a target version label; config `get_prod_section("phase5_calibration")` + `get_prod_section("training")`.
@@ -43,3 +47,4 @@ Funding posture for new model tracks is KILLED/FROZEN per the Funding Ledger (F-
 - **Need more info:** 2026-06-05 — TradeNet is built but unwired (F-005); confirm before investing in its training path.
 - **2026-07-22 — TradeNet Qualification Protocol (`TN_QUAL_V1`):** governing path for any future TradeNet authority is now [`docs/governance/tradenet_qualification_protocol.md`](../governance/tradenet_qualification_protocol.md) — **GATE-0** label feasibility (practical + worth implementing?) before any clean-label builder; then GATE-L via `forward_walk(intrabar_fixed)` (stream `outcome` banned as primary y, F-022), retrain triggers, offline KEEP_CANDIDATE, weight-0 shadow + ΔG001, GATE-P spine wire. Does **not** wire `neural_fn` or reopen Funding Ledger production; lineage stays AUDITED/INERT. Sibling pattern: RR clean-label / F-059.
 - **2026-07-22 — GATE-0 added:** lightweight feasibility assessment (G0-Q1…Q9) with verdicts FEASIBLE_GO / FEASIBLE_DEFER / INFEASIBLE_STOP; only FEASIBLE_GO unblocks GATE-L builder work.
+- **2026-09-03 — spine citation pass:** named 2 previously unreferenced spine paths under Code covered (path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.).

@@ -33,6 +33,7 @@ Index how research artifacts become (or fail to become) production config/models
 | Model registry | `src/core/model_registry.py` |
 | Active config load | `src/config_layer/production_config.py` |
 | Agent tools | `modes/pipeline_mode.py`, `modes/governance_mode.py` |
+| Closed claim grounding | `src/governance/semantic_grounding.py` · `SemanticGrounder.ground` |
 | Control-plane | `promotion.manager`, `validation.config_validator`, `governance.orchestrator` |
 
 ## Exit points

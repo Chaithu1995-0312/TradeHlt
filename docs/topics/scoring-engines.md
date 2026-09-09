@@ -4,7 +4,7 @@
 > topic ([`crt-spine.md`](crt-spine.md)); fusion of all four is [`fusion-decision.md`](fusion-decision.md).
 > Read this for what each scorer contributes and how the runner enforces all four.
 >
-> Created: 2026-06-05 · Updated: 2026-06-05 · Status: living
+> Created: 2026-06-05 · Updated: 2026-09-03 · Status: living
 
 ## In plain language
 Every candle is scored by **four independent engines**, then fused. CRT reads market structure;
@@ -21,6 +21,12 @@ the runner rejects** rather than fusing a partial set.
 - [`src/engines/zone_gate_engine.py:191`](../../src/engines/zone_gate_engine.py) — `run_zone_gate_engine` — schema-validated BitNet zone gate (hard/soft/force_pass modes); fail-open neutral 0.5 on registry error.
 - [`src/core/engine_runner.py:52`](../../src/core/engine_runner.py) — `EXPECTED_ENGINES` — `{"crt","gaussian","zone_gate","rr"}`; the completeness contract.
 - [`src/core/engine_runner.py:748`](../../src/core/engine_runner.py) — `missing_engines` — partial-fusion guard: any missing engine → hard reject (`incomplete_engine_execution`).
+
+- **Spine inventory (2026-09-03 citation pass — path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.:**
+- [`src/engines/__init__.py`](../../src/engines/__init__.py)
+- [`src/engines/gaussian_engine.py`](../../src/engines/gaussian_engine.py)
+- [`src/engines/tradenet_meta_engine.py`](../../src/engines/tradenet_meta_engine.py)
+- [`src/engines/zone_cluster_score.py`](../../src/engines/zone_cluster_score.py)
 
 ## Ins / Outs
 - **Ins:** a canonical feature dict (see [`feature-schema.md`](feature-schema.md)) + `direction`; Gaussian heuristic needs `ema_fast/ema_slow/momentum_score`, RR needs `close/high/low`, Zone-Gate needs the canonical vector + a `model_fn` + optional zone registry. Config: `get_prod_section("engine_runner")` (impl/mode selectors) and `get_prod_section("fusion_engine")` (per-engine weights).
@@ -44,3 +50,4 @@ The scoring stage of the spine: `EngineRunner → FusionEngine → DecisionEngin
 - **Risks:** 2026-06-05 — Zone-Gate `force_pass` mode logs the real decision but returns `passed=True`; ensure it's never on in production by accident.
 - **Need more info:** 2026-06-05 — RR engine returns a `rr_ratio` legacy-compat field but actually scores candle polarity, not forward RR; downstream readers should not treat it as realized RR.
 - **Reconciled:** 2026-06-05 — zone **expectancy** (`mean_rr`/`tp_hit_rate` in the registry) is **ORPHANED**: `zone_gate_engine.py` scores geometry only, never expectancy. `strategy_consensus` is fused only when its config weight > 0. See `analysis/intent-vs-code-reconciliation-2026-06-05.md` items 3–4.
+- **2026-09-03 — spine citation pass:** named 4 previously unreferenced spine paths under Code covered (path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.).
