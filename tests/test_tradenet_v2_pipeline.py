@@ -164,8 +164,8 @@ def test_input_matrix_is_38_dim():
     recs = [{"features": dict(feats)} for _ in range(5)]
     X = build_input_matrix(recs)
     assert X.shape == (5, INPUT_DIM)
-    # 39 under schema v4.0 (was 38 pre-2026-07-22 SCHEMA-V4-VECTOR-MIGRATION).
-    assert INPUT_DIM == 39
+    # 48 under schema v5.0 (was 39 pre-2026-08-15 CH-htfcrt-parent-candle-smc-v1; 38 pre-v4).
+    assert INPUT_DIM == 48
 
 
 # ─────────────────────────────────────────────────────────────────────────────

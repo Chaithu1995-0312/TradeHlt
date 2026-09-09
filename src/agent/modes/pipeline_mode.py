@@ -148,25 +148,134 @@ def _backtest_run(csv_path: str, instrument: str = "") -> dict:
 
 @register_tool(
     name="live_hook.dry_run",
-    description="Simulate one live tick through the engine without placing orders.",
+    description=(
+        "Paper one HookedLiveEngine.process call (hook_submit_orders=False). "
+        "Requires bars_jsonl with warmup+1 OHLCV rows; refuses if the feeder is not ready. "
+        "Does not place orders."
+    ),
     write=False,
     args_schema={
         "instrument": {"type": "str", "required": True,  "desc": "Trading instrument"},
-        "tick_json":  {"type": "str", "required": False, "desc": "JSON tick dict (uses latest bar if omitted)"},
+        "bars_jsonl": {"type": "str", "required": False, "desc": "JSONL of OHLCV bars (timestamp/open/high/low/close/volume)"},
+        "tick_json":  {"type": "str", "required": False, "desc": "Optional last-bar JSON appended after bars_jsonl"},
+        "timeframe":  {"type": "str", "required": False, "desc": "Bar timeframe (default M15)"},
     },
 )
-def _live_dry_run(instrument: str, tick_json: str = "") -> dict:
+def _live_dry_run(
+    instrument: str,
+    bars_jsonl: str = "",
+    tick_json: str = "",
+    timeframe: str = "M15",
+) -> dict:
+    """Rewrite (PR-4d): feeder → HookedLiveEngine.process. Not a rename.
+
+    HookedLiveEngine does not take a production-config dict and has no one-tick simulator.
+    """
+    from datetime import datetime, timedelta
+
+    from config_layer.crt_engine_v2 import Candle
+    from config_layer.production_config import get_prod_section
+    from engines.live_engine import LiveEngineConfig
+    from inout.live_rail.types import ClockBasis, ClosedBar, VenueName
+    from runtime.live_engine_hook import HookedLiveEngine
+    from runtime.live_rail_feeder import LiveRailFeeder
+
+    def _parse_ts(raw: object) -> datetime:
+        ts = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        if ts.tzinfo is None:
+            raise ValueError("naive timestamp refused (F-066)")
+        return ts
+
+    def _bar_from_row(row: dict, index: int) -> ClosedBar:
+        ts = _parse_ts(row.get("ts") or row.get("timestamp"))
+        candle = Candle(
+            timestamp=ts,
+            open=float(row["open"]),
+            high=float(row["high"]),
+            low=float(row["low"]),
+            close=float(row["close"]),
+            volume=float(row.get("volume", 0.0)),
+            index=index,
+        )
+        return ClosedBar(
+            candle=candle,
+            extras={},
+            symbol=instrument,
+            clock_basis=ClockBasis.BROKER_LOCAL,
+            venue=VenueName.TICKDB,
+            n_ticks=1,
+            period_start=ts,
+            period_end=ts + timedelta(minutes=15),
+        )
+
+    rows: list[dict] = []
+    if bars_jsonl:
+        path = Path(bars_jsonl)
+        if not path.is_file():
+            return {"status": "error", "error": f"bars_jsonl not found: {bars_jsonl}"}
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                rows.append(json.loads(line))
+    if tick_json:
+        extra = json.loads(tick_json)
+        if isinstance(extra, list):
+            rows.extend(extra)
+        else:
+            rows.append(extra)
+    if not rows:
+        return {
+            "status": "error",
+            "error": "feeder_not_ready",
+            "detail": "bars_jsonl or tick_json required; a single missing history is a refuse",
+        }
+
+    feeder = LiveRailFeeder(symbol=instrument, timeframe=timeframe or "M15")
+    last: ClosedBar | None = None
+    for i, row in enumerate(rows):
+        last = _bar_from_row(row, i)
+        feeder.push(last)
+    if last is None or not feeder.ready():
+        return {
+            "status": "error",
+            "error": "feeder_not_ready",
+            "n_bars": len(rows),
+            "warmup_rows": feeder.warmup_rows,
+            "need": feeder.warmup_rows + 1,
+        }
+
+    ep = get_prod_section("execution_planner") or {}
+    if "default_account_balance" not in ep:
+        return {
+            "status": "error",
+            "error": "execution_planner.default_account_balance missing",
+        }
+    portfolio = {
+        "account_balance": float(ep["default_account_balance"]),
+        "total_open_risk_pct": 0.0,
+        "trades_today": 0,
+        "daily_loss_pct": 0.0,
+        "open_positions": 0,
+        "positions": {},
+    }
+    trade_data = feeder.as_trade_data(last, portfolio)
+    hook = HookedLiveEngine(
+        LiveEngineConfig(enabled=False),
+        hook_submit_orders=False,
+    )
     try:
-        from runtime.live_engine_hook import LiveEngineHook
-        from config_layer.production_config import get_prod_config
-        cfg  = get_prod_config(instrument)
-        hook = LiveEngineHook(cfg)
-        tick = json.loads(tick_json) if tick_json else {}
-        result = hook.simulate_one(tick) if hasattr(hook, "simulate_one") else {"status": "dry_run_ok"}
-        return result if isinstance(result, dict) else {"status": "ok"}
+        result = hook.process(
+            trade_data,
+            gaussian_model=None,
+            scaler=None,
+            candle_idx=int(last.candle.index),
+            timeframe=timeframe or "M15",
+        )
     except Exception as exc:
-        logger.error("live_hook.dry_run: %s", exc)
-        return {"status": "error", "error": str(exc)}
+        logger.error("live_hook.dry_run process failed: %s", exc)
+        return {"status": "error", "error": str(exc), "hook_submit_orders": False}
+    if not isinstance(result, dict):
+        return {"status": "error", "error": "process_returned_non_dict"}
+    return {"status": "ok", "hook_submit_orders": False, "result": result}
 
 
 # ── live_hook.enable ───────────────────────────────────────────────────────────

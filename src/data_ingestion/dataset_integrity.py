@@ -69,6 +69,7 @@ from data_ingestion.ohlcv_schema import (
     DatasetIntegrityError,  # re-exported: callers import it from here OR ohlcv_schema
     parse_ohlcv_timestamp,
     require_ohlcv_columns,
+    require_reviewed_clock,
     require_unique_ohlcv_headers,
     resolve_ohlcv_headers,
 )
@@ -527,6 +528,10 @@ def _stream_candles(
     the timestamp column (single header or split date+time) and the OHLCV columns
     via the shared schema helpers. Raises ValueError on a missing/unparseable
     timestamp or a missing OHLCV column (L1 presence)."""
+    # Phase 3 (ohlcv_schema): the corpus's clock must be declared + human-reviewed before its
+    # timestamps are interpreted. Ordered ahead of the open so an undeclared corpus never gets
+    # partially validated first.
+    require_reviewed_clock(path)
     with open(path, newline="", encoding="utf-8-sig") as f:
         reader = csv.reader(f)
         try:

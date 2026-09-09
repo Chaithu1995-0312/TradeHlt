@@ -20,13 +20,37 @@ WHAT IS GENUINELY NEW (and what is merely joined)
    `scripts/research/run_crt_state_on_mt5_xauusd.py`) is a corpus-level aggregate. This is the
    first per-bar record with run identity, joinable to `v3`'s `bar_structure_snapshot` by
    `run_id` + `bar_index`.
-2. **NOTHING else is new code.** The ontology label is JOINED from `CRTStateResolver.resolve()`
+2. **Almost nothing else is new code.** (v2.0.0 amends this: `CRTStateResolver.resolve_metadata()`
+   is genuinely new — see "SCHEMA v2.0.0" below. Everything named in this item remains a join.)
+   The ontology label is JOINED from `CRTStateResolver.resolve()`
    (unmodified, called with `injection="none"` — see RISK 1 below). The gate detail is JOINED
    from `CRTBaselineTraceHooks` (`runtime/crt_baseline_trace.py`), an EXISTING, already-decision-
    neutral, already-tested (`tests/test_crt_baseline_trace.py`) engine facility that has existed
    since before this module and was previously only reachable from one-off analysis scripts
    (`scripts/analysis/xauusd_crt_baseline_trace.py`). This module is a JOIN + persistence layer
    over two already-built read paths, not a new construction.
+
+SCHEMA v2.0.0 — the ResolverEngine envelope
+--------------------------------------------
+v1.0.0 carried only the resolver's FINAL LABEL (`ontology_state`), which collapses the
+interesting part: a disagreement was visible but never explicable. v2.0.0 widens the row into
+a non-contradictory ENVELOPE — `engine.*` (the execution authority's state, every transition
+taken on the bar, and its live indicator context) beside `resolver.*` (the L2 feature-state
+map, per-state predicate affinity, continuous-gate outcomes, and the projected funnel site).
+
+The invariant that makes one row able to hold both: **the resolver contributes `F_t | S_t`,
+never a rival `S_t`.** `resolve_metadata()` deliberately returns no state label. The engine
+owns `S_t`; this row does not adjudicate between the two constructions, it exhibits them.
+That is a FORMALIZATION of the already-adjudicated INTENTIONAL SEMANTIC SEPARATION, not a
+resolution of it — F-069's construction difference stays OPEN.
+
+`engine.transitions` is a LIST because `try_shadow_resume` (`crt_engine_v2.py:1094-1105`)
+performs two transitions inside one `process_candle`; a "last transition" scalar would drop
+the intermediate one silently — the F-056/F-079/F-083/F-085 silent-gap class.
+
+Legacy `ontology_state` / `agree` / `divergence_pair` are RETAINED (backward lineage), joined
+by `agree_scope` so a reader cannot mistake that feature-conditioned diagnostic for a verdict
+on engine truth.
 
 OBSERVATION ONLY — the invariant this module exists under
 ---------------------------------------------------------
@@ -35,9 +59,17 @@ OBSERVATION ONLY — the invariant this module exists under
   has already returned for this bar. Nothing produced here is consumed by the backtest loop.
 - `engine.baseline_trace` attachment is itself decision-neutral by the PRE-EXISTING contract at
   `crt_baseline_trace.py`'s own docstring: "Does NOT recompute features, re-evaluate guards, or
-  mutate CRT control flow." This module inherits that guarantee rather than re-proving it, but
-  see `tests/test_crt_construction_trace.py::test_decision_neutrality_full_corpus` for the
-  parity re-proof anyway (same discipline as `bar_structure_snapshot`).
+  mutate CRT control flow." This module inherits that guarantee rather than re-proving it.
+- CORRECTED 2026-09-05 (CH-resolver-engine-envelope): this docstring previously cited
+  `tests/test_crt_construction_trace.py::test_decision_neutrality_full_corpus` as the parity
+  re-proof. **That test has never existed** — the citation was to an unwritten artifact, which
+  is the same declared-but-unexecuted class as F-083 (a contract naming evidence nothing
+  produced). The parity proof that DOES exist is the 3-arm A/B/C run in
+  `scripts/research/emit_dual_construction_trace.py` (active config / section OFF / section ON,
+  compared via `scripts/analysis/v3_config_parity.py::compare` with a non-vacuity row-count
+  gate). Neutrality of the v2.0.0 resolver envelope specifically is pinned by
+  `tests/test_resolver_metadata.py::test_behavior_neutral`; row shape by
+  `tests/test_crt_construction_trace_envelope.py`.
 
 RISK 1 — INJECTION MUST STAY OFF (load-bearing)
 ------------------------------------------------
@@ -87,7 +119,7 @@ from typing import Any, Optional
 
 logger = logging.getLogger("CRT.ConstructionTrace")
 
-TRACE_SCHEMA_VERSION = "1.0.0"
+TRACE_SCHEMA_VERSION = "2.0.0"
 EMITTED_BY = "runtime.crt_construction_trace"
 
 #: The 9 M15 CRT states `market_crt_states.yaml` defines. Frozen here rather than read from the
@@ -124,6 +156,7 @@ class ConstructionTraceConfig:
     ontology_source: str
     record_engine_gates: bool
     emit_on_warmup_bars: bool
+    record_resolver_engine: bool
 
     @classmethod
     def from_prod_config(cls, version: Optional[str] = None) -> Optional["ConstructionTraceConfig"]:
@@ -163,6 +196,7 @@ class ConstructionTraceConfig:
             ontology_source=str(_require(section, "ontology_source")),
             record_engine_gates=bool(_require(section, "record_engine_gates")),
             emit_on_warmup_bars=bool(_require(section, "emit_on_warmup_bars")),
+            record_resolver_engine=bool(_require(section, "record_resolver_engine")),
         )
 
 
@@ -275,6 +309,20 @@ class ConstructionTraceEmitter:
         rec["agree"] = None
         rec["divergence_pair"] = None
         rec["engine_gates"] = None
+        # v2.0.0: same columns as a LIVE row, all None — a warmup bar is identity-only, and a
+        # uniform row shape means a reader never has to branch on `phase` to parse a record.
+        rec["agree_scope"] = "m15_ontology_injection_none"
+        rec["engine.crt_state"] = None
+        rec["engine.transitions"] = None
+        rec["engine.live_context"] = None
+        rec["resolver.feature_vector"] = None
+        rec["resolver.l2_map"] = None
+        rec["resolver.predicate_affinity"] = None
+        rec["resolver.continuous_passed"] = None
+        rec["resolver.projected_site"] = None
+        rec["resolver.supply_ok"] = None
+        rec["resolver.missing_when"] = None
+        rec["producer_id"] = "resolver_engine_v1"
         self._write(rec)
 
     def emit(
@@ -289,6 +337,8 @@ class ConstructionTraceEmitter:
         engine_reason: Optional[str],
         feature_dict: Optional[dict],
         gate_hooks,
+        engine_live: Optional[dict] = None,
+        transitions: Optional[list] = None,
     ) -> None:
         """Build and write the full record for one processed bar.
 
@@ -324,6 +374,24 @@ class ConstructionTraceEmitter:
                 )
                 onto_state = None
                 onto_reason = "RESOLVER_ERROR"
+
+        # ---- resolver envelope (v2.0.0): F_t | S_t, never a rival S_t ----
+        # OBSERVATION ONLY, and degrades the same way `resolve()` above does: this is a
+        # sidecar, so a resolver failure records an absent envelope rather than taking the
+        # backtest down. `resolve_metadata` is proven not to disturb the resolver's own
+        # sequence (tests/test_resolver_metadata.py::test_behavior_neutral), so calling it
+        # beside `resolve()` on the same bar cannot perturb `ontology_state`.
+        resolver_meta = None
+        if self.cfg.record_resolver_engine and feature_dict is not None:
+            try:
+                resolver_meta = self._resolver.resolve_metadata(
+                    feature_dict, timestamp=timestamp
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "CRTStateResolver.resolve_metadata() failed at bar_index=%s (recorded as "
+                    "resolver.* = None, backtest unaffected): %s", bar_index, exc,
+                )
 
         rec = OrderedDict(self._identity)
         rec["bar_index"] = int(bar_index)
@@ -362,6 +430,36 @@ class ConstructionTraceEmitter:
             ]
         else:
             rec["engine_gates"] = None
+
+        # ---- v2.0.0 envelope: both constructions, side by side, non-contradictory ----
+        # `engine.*` is the EXECUTION authority's answer; `resolver.*` is the feature-
+        # conditioned view beside it. The legacy `ontology_state`/`agree`/`divergence_pair`
+        # above are RETAINED for backward lineage, and `agree_scope` exists so no reader
+        # mistakes that feature-conditioned diagnostic for a verdict on engine truth.
+        rec["agree_scope"] = "m15_ontology_injection_none"
+        rec["engine.crt_state"] = eng_after
+        # A list, never a scalar: `try_shadow_resume` fires TWO transitions inside one
+        # `process_candle` (crt_engine_v2.py:1094-1105), so a "last transition" field would
+        # silently drop the intermediate one. Empty list = bar had none; None = caller did
+        # not supply the capture at all. Absent and empty are different facts.
+        rec["engine.transitions"] = transitions
+        rec["engine.live_context"] = engine_live
+        rec["resolver.feature_vector"] = resolver_meta.feature_vector if resolver_meta else None
+        rec["resolver.l2_map"] = resolver_meta.l2_map if resolver_meta else None
+        rec["resolver.predicate_affinity"] = (
+            resolver_meta.predicate_affinity if resolver_meta else None
+        )
+        rec["resolver.continuous_passed"] = (
+            resolver_meta.continuous_passed if resolver_meta else None
+        )
+        rec["resolver.projected_site"] = (
+            resolver_meta.projected_funnel_site if resolver_meta else None
+        )
+        rec["resolver.supply_ok"] = resolver_meta.supply_ok if resolver_meta else None
+        rec["resolver.missing_when"] = (
+            list(resolver_meta.missing_when) if resolver_meta else None
+        )
+        rec["producer_id"] = "resolver_engine_v1"
 
         self._write(rec)
 

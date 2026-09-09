@@ -8,6 +8,11 @@ from typing import Callable
 
 from features import derived_math
 from features.registry._loader import load_ontology
+from features.smc import breaker as _smc_breaker
+from features.smc import fvg as _smc_fvg
+from features.smc import levels as _smc_levels
+from features.smc import mitigation as _smc_mitigation
+from features.smc import order_block as _smc_order_block
 
 # Declared impl name (derived_metrics.<name>.impl in the ontology) -> explicit callable.
 DERIVED: dict[str, Callable] = {
@@ -31,6 +36,17 @@ DERIVED: dict[str, Callable] = {
     # FM-070 (2026-07-31): CRT engine's live bars-since-retest-candle count, registered to
     # resolve the FM-065 candles_since_retest name collision (see that entry's note).
     "derived_math.candles_since_retest_state": derived_math.candles_since_retest_state,
+    # FM-075..FM-082 (2026-08-15, CH-htfcrt-parent-candle-smc-v1): the 8 SMC distance
+    # primitives. Unlike every entry above, these are NOT in derived_math — they live in the
+    # isolated features.smc package (pure, window-based Candle scanners; see that package's
+    # __init__.py LAYERING/isolation note). Registered here by their real qualified impl path
+    # so FORMULA_REGISTRY resolution works identically to every other derived_metrics entry.
+    "features.smc.order_block.order_block_distance": _smc_order_block.order_block_distance,
+    "features.smc.fvg.fvg_distance":                  _smc_fvg.fvg_distance,
+    "features.smc.breaker.breaker_distance":          _smc_breaker.breaker_distance,
+    "features.smc.mitigation.mitigation_block_distance": _smc_mitigation.mitigation_block_distance,
+    "features.smc.levels.pdh_pdl_distance":           _smc_levels.pdh_pdl_distance,
+    "features.smc.levels.eqh_eql_distance":           _smc_levels.eqh_eql_distance,
 }
 
 

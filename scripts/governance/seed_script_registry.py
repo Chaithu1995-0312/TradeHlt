@@ -517,6 +517,81 @@ OVERLAYS: list[dict[str, Any]] = [
         ),
     },
 
+    # -- 2026-09-09 overlay clear: classify census-fresh scripts (purpose ≠ GRANDFATHER_UNCLASSIFIED) --
+    {
+        "path": "scripts/analysis/analytics_evidence_class_census.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": (
+            "EC-001 observation-only evidence-class census over analytics lineage rows "
+            "(CORPUS_VERIFIED/CODE_VERIFIED/DECLARED_ONLY/UNKNOWN). Does not mutate either "
+            "analytics registry."
+        ),
+        "task_refs": ["EC-001"],
+    },
+    {
+        "path": "scripts/research/jse001_crt_context_join.py",
+        "category": "RESEARCH_RUNNER",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": (
+            "JSE-001 measure-only: engine_state_asof vs joint-state membership (BNB-only). "
+            "NOT a CRT claim; no L-003 doctrine reopen; no src/ edits."
+        ),
+        "task_refs": ["JSE-001"],
+    },
+    {
+        "path": "scripts/research/jse002_engine_state_path_geometry.py",
+        "category": "RESEARCH_RUNNER",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": (
+            "JSE-002 measure-only: does engine_state_asof predict path geometry (BNB-only). "
+            "Same join as JSE-001; not CRT Context; no L-003 doctrine reopen."
+        ),
+        "task_refs": ["JSE-002"],
+    },
+    {
+        "path": "scripts/research/jse003_engine_context_history_path_geometry.py",
+        "category": "RESEARCH_RUNNER",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": (
+            "JSE-003 measure-only: engine_context_history vs path geometry (BNB-only). "
+            "Compares asof-only baseline vs history features; not CRT unless declared."
+        ),
+        "task_refs": ["JSE-003"],
+    },
+    {
+        "path": "scripts/research/l003h_trail_exit_transition_replay.py",
+        "category": "RESEARCH_RUNNER",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": (
+            "L-003H measure-only candle replay for trail/exit transition events "
+            "(standalone duplicate of scanner/forward_walk hooks). No src/ edits."
+        ),
+        "task_refs": ["L-003H"],
+    },
+    {
+        "path": "scripts/research/l003i_trail_baseline_inversion.py",
+        "category": "RESEARCH_RUNNER",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": (
+            "L-003I measure-only baseline direction / base-rate inversion derived from "
+            "L-003H JSON artifact. No src/ edits."
+        ),
+        "task_refs": ["L-003I"],
+    },
+
 ]
 
 

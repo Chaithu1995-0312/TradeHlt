@@ -16,6 +16,7 @@ Flows active only when BACKTEST_ENGINE_GATE=1:
 
 Live-mode only:
     LIVE_HOOK         - Live execution hook layer
+    LIVE_RAIL         - TickDB / BarBuilder / live-rail adapters (PR-1; unwired)
 
 All coin-scoped flows log to:
   1. Dedicated per-flow file: logs/run_{RUN_ID}/{symbol}/flow_{name}.log
@@ -87,6 +88,11 @@ FLOWS = {
     },
     "LIVE_HOOK": {
         "file": f"flow_live_hook_{RUN_ID}.log",
+        "color": "\033[95m",  # Magenta
+        "level": logging.INFO
+    },
+    "LIVE_RAIL": {
+        "file": f"flow_live_rail_{RUN_ID}.log",
         "color": "\033[95m",  # Magenta
         "level": logging.INFO
     },

@@ -85,7 +85,7 @@ class FeatureStore:
 
         Returns:
             FeatureFrame with every CANONICAL_FEATURES key and the integrity sentinel.
-            (39 names under schema v4.0 — `_validate_schema` checks against the constant,
+            (48 names under schema v5.0, F-076 — `_validate_schema` checks against the constant,
             never a literal; this docstring said "33" from the v2.0 era.)
         """
         raw = self._merge_inputs(ohlcv, auxiliary or {})

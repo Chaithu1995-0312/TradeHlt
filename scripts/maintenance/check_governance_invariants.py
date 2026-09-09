@@ -45,6 +45,10 @@ GOVERNED_PREFIXES: tuple[str, ...] = (
     # SITS PR-3: new ephemera homes pull GREEN_FLOOR (inventory coverage + ratchet)
     "scripts/probes/",
     "scripts/tmp/",
+    # PR-3: flipping a sealed MC-* instance off UNRUN must fire the F-083 floor.
+    # Scoped to instances/ only — profiles, drafts and the parent-dir CPR contract are
+    # out of the scan universe and must not pay the pre-commit tax.
+    "configs/research/measurement_contracts/instances/",
 )
 
 # Exact files (not under a governed prefix) that also pull in the gate.
@@ -62,6 +66,11 @@ GOVERNED_FILES: tuple[str, ...] = (
     "tests/test_script_registry.py",
     "tests/test_script_matrix_sync.py",
     "docs/reference/script-matrix.md",
+    # JSONL Claim Surface: the catalog loader. The PRIMARY YAML is already covered by the
+    # docs/governance/ prefix; src/governance/ is deliberately NOT a prefix (too broad).
+    "src/governance/jsonl_claim_catalog.py",
+    "src/governance/semantic_grounding.py",  # PR-2: the grounder the surface extends
+    "src/governance/measurement_result_log.py",  # PR-3: the module, NOT the log file
 )
 
 # The curated, currently-green pytest target list — the SINGLE source of truth shared by
@@ -89,6 +98,17 @@ GREEN_FLOOR: tuple[str, ...] = (
     # SITS PR-2: coverage + matrix sync (atomic with enabling 100% path registration)
     "tests/test_script_registry.py",
     "tests/test_script_matrix_sync.py",
+    # Closed semantic environment (CT-008): invented nouns/joins must fail closed
+    "tests/test_semantic_grounding.py",
+    # JSONL Claim Surface PR-1: the CAN/CANNOT catalog is closed + the projection is not hand-edited.
+    # The two export/registry floors join here (both measured green 2026-08-25, E-001F).
+    "tests/test_jsonl_claim_catalog.py",
+    "tests/test_findings_export.py",
+    "tests/test_hypothesis_registry.py",
+    # PR-2: the JSONL kind + REFUSED status must fail closed on every CANNOT class.
+    "tests/test_jsonl_claim_grounding.py",
+    # PR-3: a sealed contract claiming a non-UNRUN mt00 needs a real result line (F-083).
+    "tests/test_measurement_result_log.py",
 )
 
 

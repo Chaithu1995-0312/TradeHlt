@@ -28,8 +28,17 @@ gap simply yields no bucket for the empty spans: Friday's bucket flushes when th
 
 DETERMINISM / ASSOCIATIVITY. OHLC are grouping-invariant by construction (max/min are
 associative; open=first, close=last). Volume is summed with `Decimal` over the exact
-decimal each input represents, which is exact and grouping-invariant — so
-`resample(resample(M15, "H1"), "H4")` is byte-identical to `resample(M15, "H4")`.
+decimal each input represents, which is exact and grouping-invariant — so every bucket
+that `resample(resample(M15, "H1"), "H4")` and `resample(M15, "H4")` BOTH emit is
+byte-identical.
+
+CORRECTED 2026-08-22 (measured, tests/test_chart_series.py): this docstring previously
+claimed the two are byte-identical outright. They are not, at the TAIL. The trailing
+partial bucket is dropped at EACH step, so when the input ends exactly on a bucket
+boundary the composed path emits one FEWER bucket than the direct path (e.g. 96 M15 bars
+= exactly 24 h -> direct H4 emits 6, via-H1 emits 5). The divergence is bounded at one
+trailing bucket and never affects an emitted value — grouping-invariance itself is
+unchanged. Prefer the DIRECT rule when bucket count at the tail matters.
 """
 
 from __future__ import annotations
@@ -44,7 +53,20 @@ from config_layer.crt_engine_v2 import Candle
 # floor is always aligned to 00:00 of the candle's calendar day (so H4 buckets start
 # at 00,04,08,12,16,20 — and H4 boundaries are a superset of H1 boundaries, which is
 # what makes M15->H1->H4 == M15->H4).
-_RULE_HOURS = {"H1": 1, "H4": 4}
+#
+# D1 (CH-htfcrt-parent-candle-smc-v1, 2026-08-15, additive): 24 is a degenerate case of
+# `_bucket_start` that is still correct — `(ts.hour // 24) * 24 == 0` for every ts, so
+# `_bucket_start(ts, 24)` floors to midnight of ts's own calendar day. H4 (4) divides
+# D1 (24) evenly and both share the 00:00 origin, so H4 boundaries are a subset of D1
+# boundaries and the resample(resample(x,"H4"),"D1") == resample(x,"D1") associativity
+# claim above extends to D1 without modification. This floor is calendar-DAY, not
+# broker-session; MT5-sourced instruments carry broker-server timestamps (see
+# feature_pipeline.py F-066 session_timestamp_basis), so a "D1" bucket here is a
+# midnight-of-source-timestamp day, not necessarily a trading-session day. That
+# distinction is a semantic decision for the consumer, not something this function
+# resolves — see calendar_periods.py for the W1/MN1 rules this ladder does NOT extend
+# to (a genuinely different, non-hour-grid construction).
+_RULE_HOURS = {"H1": 1, "H4": 4, "D1": 24}
 
 # Minute-width rules (Program 9 additive extension: M5 base needs M5->M15). Same
 # 00:00-of-day alignment (M15 buckets start at :00/:15/:30/:45), so M15 boundaries are

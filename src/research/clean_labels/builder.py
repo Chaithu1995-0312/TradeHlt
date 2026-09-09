@@ -27,7 +27,27 @@ from features.feature_schema import (
 # already expect — dropping this one slot avoids touching either of those.
 MACD_HIST_RAW_IDX = FEATURE_INDEX_MAP["macd_hist_raw"]
 LEGACY_FEATURE_DIM = 38
-LEGACY_FEATURE_NAMES = [n for i, n in enumerate(CANONICAL_FEATURES) if i != MACD_HIST_RAW_IDX]
+# CH-htfcrt-parent-candle-smc-v1 (2026-08-15): the 9 v5.0 SMC primitives are likewise deferred
+# from clean-labels rows — same rationale as macd_hist_raw above (pending separate research
+# validation), and the SAME fixed 38-dim layout every existing consumer expects. Without this
+# exclusion the list-comprehension below would silently grow to 47 every time
+# CANONICAL_FEATURES grows, redefining what "legacy 38-dim" means (see the analogous fix and
+# fail-closed guard in research.model_runners.schema_resolver._canonical_minus_v4_only).
+_V5_ONLY_FEATURES = frozenset({
+    "order_block_distance", "fvg_distance", "breaker_distance", "mitigation_block_distance",
+    "pdh_distance", "pdl_distance", "eqh_distance", "eql_distance", "change_of_character",
+})
+LEGACY_FEATURE_NAMES = [
+    n for i, n in enumerate(CANONICAL_FEATURES)
+    if i != MACD_HIST_RAW_IDX and n not in _V5_ONLY_FEATURES
+]
+if len(LEGACY_FEATURE_NAMES) != LEGACY_FEATURE_DIM:
+    raise RuntimeError(
+        f"LEGACY_FEATURE_NAMES: expected {LEGACY_FEATURE_DIM} names after exclusion, got "
+        f"{len(LEGACY_FEATURE_NAMES)} (CANONICAL_FEATURE_DIM={CANONICAL_FEATURE_DIM}). The live "
+        f"schema grew by a different amount than this module accounts for — update the "
+        f"exclusion set, do not silently accept a new dim."
+    )
 from research.clean_labels.protocol import (
     COMPOSITE_WEIGHTS,
     COST_BPS,

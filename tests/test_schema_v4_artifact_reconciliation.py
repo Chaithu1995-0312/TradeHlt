@@ -41,8 +41,14 @@ def _load(p: Path) -> dict:
 
 # ── the schema itself ───────────────────────────────────────────────────────────────────────
 def test_schema_is_v4():
-    assert SCHEMA_VERSION == "4.0"
-    assert CANONICAL_FEATURE_DIM == 39 == len(CANONICAL_FEATURE_ORDER)
+    """Asserts the v4 migration's specific structural facts, which remain true after v5.0
+    (CH-htfcrt-parent-candle-smc-v1, 2026-08-15, purely additive at indices 39-47) — the live
+    SCHEMA_VERSION has since moved past "4.0", but the MACD split / candle_range rename this
+    file's B6 reconciliation covers were never undone. Do not read this test as "the live
+    schema is v4"; read it as "v4's changes are still present in whatever the live schema is."
+    """
+    assert SCHEMA_VERSION == "5.0"
+    assert CANONICAL_FEATURE_DIM == 48 == len(CANONICAL_FEATURE_ORDER)
     assert {"macd_hist_raw", "macd_hist_z", "candle_range"} <= set(CANONICAL_FEATURE_ORDER)
     assert not ({"macd_hist", "wick_size"} & set(CANONICAL_FEATURE_ORDER)), (
         "v3 names must be gone from the canonical vector — they survive only as read-side aliases"

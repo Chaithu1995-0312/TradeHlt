@@ -139,6 +139,10 @@ class UltronRiskGate:
         except Exception as exc:
             logger.warning("UltronRiskGate: kill-switch state persistence failed: %s", exc)
 
+    def is_tripped(self) -> bool:
+        """Read-only kill-switch view. Does not call evaluate() and does not write the file."""
+        return bool(self._kill_switch_tripped) or bool(self._load_ks_state())
+
     def reset_kill_switch(self) -> None:
         """
         Clear the persisted kill-switch state — operator admin action.

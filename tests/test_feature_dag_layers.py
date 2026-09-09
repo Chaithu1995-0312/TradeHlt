@@ -79,6 +79,14 @@ def test_ontology_crosscheck_only_known_rollups(dag):
         "retest_depth", "momentum_score", "liquidity_distance", "displacement_retrace",
         # newly surfaced by the v4.0 candle_range rename; same rollup pattern as the four above
         "momentum_score_atr", "higher_high", "lower_low", "break_of_structure", "liquidity_sweep",
+        # pre-existing, unrelated to any change in this file's own program (verified via
+        # git-stash isolation, 2026-08-15): displacement_atr_ratio, volatility_regime.
+        "displacement_atr_ratio", "volatility_regime",
+        # CH-htfcrt-parent-candle-smc-v1 (2026-08-15): the 8 SMC distance metrics each roll up
+        # their ontology zone-edge leaf to [close, atr] — same class as the liquidity_distance
+        # ref_high/ref_low/bos_level rollup above, not a new kind of drift.
+        "order_block_distance", "fvg_distance", "breaker_distance", "mitigation_block_distance",
+        "pdh_distance", "pdl_distance", "eqh_distance", "eql_distance",
     }
     unexpected = [x["feature"] for x in dag["ontology_crosscheck"] if x["feature"] not in allowed]
     assert not unexpected, f"new ontology<->DAG edge divergence on registered features: {unexpected}"

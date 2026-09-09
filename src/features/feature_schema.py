@@ -42,7 +42,7 @@ FEATURE_SCHEMA = {
 }
 
 # Canonical feature order for vector construction.
-# Total vector dimension = 39 (== CANONICAL_FEATURE_DIM below; hard-asserted at import).
+# Total vector dimension = 48 (== CANONICAL_FEATURE_DIM below; hard-asserted at import).
 #
 # ── SCHEMA v4.0 (2026-07-22, program SCHEMA-V4-VECTOR-MIGRATION) ──────────────────────────────
 # THREE changes from v3.0, all name-level and therefore all hash-invalidating (SCHEMA_HASH and
@@ -67,7 +67,24 @@ FEATURE_SCHEMA = {
 #      features/session_classifier.py — it is the single owner, and it deliberately keeps the
 #      FEATURE separate from the session FILTER policy.
 #
-# The v2.0/v3.0 index comments below are NOT updated in place: they record what the layout WAS.
+# ── SCHEMA v5.0 (2026-08-15, program CH-htfcrt-parent-candle-smc-v1, USER-AUTHORIZED) ──────────
+# Adds 9 features at indices 39-47: the SMC (smart-money-concepts) primitives that were
+# GENUINELY ABSENT from the codebase before this program (verified by repo-wide grep during the
+# preceding study — see docs/implementation_plan/study-sujantrader-docs-composed-snowflake.md).
+# All 9 are produced by the new src/features/smc/ package (pure geometry, window-bounded, no
+# spine import). Unlike v4.0's renames/splits, this is a PURE ADDITION — no existing index
+# changes meaning, so SCHEMA_V4_FEATURE_DIM=39 model artifacts remain sliceable/compatible via
+# the same truncation discipline FeatureSchemaRegistry already applies for v2/v3.
+#   Index 39: order_block_distance        — signed ATR distance to nearest unmitigated OB
+#   Index 40: fvg_distance                — signed ATR distance to nearest unfilled FVG
+#   Index 41: breaker_distance            — signed ATR distance to nearest un-retested breaker
+#   Index 42: mitigation_block_distance   — signed ATR distance to nearest live mitigation block
+#   Index 43: pdh_distance                — signed ATR distance to previous-day high
+#   Index 44: pdl_distance                — signed ATR distance to previous-day low
+#   Index 45: eqh_distance                — signed ATR distance to nearest equal-highs cluster
+#   Index 46: eql_distance                — signed ATR distance to nearest equal-lows cluster
+#   Index 47: change_of_character         — signed {-1,0,+1}, derived from break_of_structure x trend_bias
+# The v2.0/v3.0/v4.0 index comments below are NOT updated in place: they record what the layout WAS.
 CANONICAL_FEATURES = tuple([
     # ── indices 0-17 (unchanged since v2.0) ──────────────────────────────────
     "open", "high", "low", "close", "volume",
@@ -95,6 +112,16 @@ CANONICAL_FEATURES = tuple([
     "liquidity_distance",       # ATR-normalised distance to nearest liq level
     "liquidity_pressure_score", # composite proximity score [0, 1]
     "volume_spike",             # promoted from internal, int8 {0, 1}
+    # ── indices 39-47 (added in v5.0 — SMC primitives, see block comment above) ─────
+    "order_block_distance",
+    "fvg_distance",
+    "breaker_distance",
+    "mitigation_block_distance",
+    "pdh_distance",
+    "pdl_distance",
+    "eqh_distance",
+    "eql_distance",
+    "change_of_character",
 ])
 
 # Read-side aliases: v3.0 name -> v4.0 canonical name. For DECODING historical records
@@ -109,12 +136,19 @@ SCHEMA_V2_FEATURE_DIM: int = 35
 
 CANONICAL_FEATURE_ORDER = list(CANONICAL_FEATURES)
 
-# Total number of floats produced by extract_feature_vector() under schema v4.0.
+# Total number of floats produced by extract_feature_vector() under schema v5.0.
 # MUST equal len(CANONICAL_FEATURES).
-CANONICAL_FEATURE_DIM: int = 39
+CANONICAL_FEATURE_DIM: int = 48
 
 # v3.0 sentinel — artifacts trained on the 38-dim layout slice/reject against this.
 SCHEMA_V3_FEATURE_DIM: int = 38
+
+# v4.0 sentinel — artifacts trained on the 39-dim layout (pre-SMC) slice/reject against this.
+# CH-htfcrt-parent-candle-smc-v1 (2026-08-15): every model family trained before this program
+# carries n_features=39; FeatureSchemaRegistry.check_compatibility uses this to detect and
+# truncate/degrade gracefully rather than silently misaligning a 48-dim vector against a
+# 39-dim model.
+SCHEMA_V4_FEATURE_DIM: int = 39
 
 assert len(CANONICAL_FEATURE_ORDER) == CANONICAL_FEATURE_DIM, (
     f"CANONICAL_FEATURE_ORDER has {len(CANONICAL_FEATURE_ORDER)} entries "
@@ -255,12 +289,12 @@ class SchemaObject:
 
 # ── Schema versioning (required by model_registry.py and training/trainer.py) ──
 
-SCHEMA_VERSION: str = "4.0"   # v2.0 = 35 feats; v3.0 = 38; v4.0 = 39 (MACD split + candle_range rename + FM-052 domain)
+SCHEMA_VERSION: str = "5.0"   # v2.0 = 35 feats; v3.0 = 38; v4.0 = 39 (MACD split + candle_range rename + FM-052 domain); v5.0 = 48 (+9 SMC primitives, CH-htfcrt-parent-candle-smc-v1)
 
 # TradeNet — uses full canonical vector (n_features computed dynamically from CANONICAL_FEATURES).
 TRADENET_SCHEMA = SchemaObject(
     name="tradenet",
-    n_features=len(CANONICAL_FEATURES),   # 39 (schema v4.0)
+    n_features=len(CANONICAL_FEATURES),   # 48 (schema v5.0)
     version="3.0",
     features=list(CANONICAL_FEATURES),
 )
@@ -268,7 +302,7 @@ TRADENET_SCHEMA = SchemaObject(
 # Gaussian NB — uses full canonical vector.
 GAUSSIAN_SCHEMA = SchemaObject(
     name="gaussian",
-    n_features=len(CANONICAL_FEATURES),   # 39 (schema v4.0)
+    n_features=len(CANONICAL_FEATURES),   # 48 (schema v5.0)
     version="3.0",
     features=list(CANONICAL_FEATURES),
 )

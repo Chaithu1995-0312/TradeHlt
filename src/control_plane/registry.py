@@ -785,6 +785,60 @@ def core_command_specs() -> tuple[CommandSpec, ...]:
             ),
             artifacts=("results/validation/automation/*.json",),
         ),
+        # ── TV Forensic (standalone Playwright instrument; CH-htfcrt-parent- ──
+        # ── candle-smc-v1, 2026-08-15 — registered, not previously reachable) ──
+        CommandSpec(
+            id="tv_forensic.capture",
+            title="TV Forensic — Capture",
+            description=(
+                "Standalone Playwright tool: opens a public TradingView chart, frames an exact "
+                "date window from data/XAUUSD_M15.csv's own broker clock (resolved by OHLC "
+                "measurement, never hardcoded), and saves a screenshot + sidecar JSON with the "
+                "resolved clock, achieved window, per-bar pixel geometry, and an engine-vs-TV "
+                "diff. Does not touch the trading engine or any production config. Requires "
+                "`pip install -r tools/tv_forensic/requirements.txt` + `playwright install "
+                "chromium` (not part of the base repo environment)."
+            ),
+            category="Analysis",
+            mode="python-file",
+            script="tools/tv_forensic/capture_tv.py",
+            args_schema=(
+                ArgSpec("preset", flag="--preset", kind="choice", default=None,
+                        choices=("jul28-m15", "jul28-long", "macro", "jul15-20", "all"),
+                        help="Named shot preset from shot_plan.json (overrides --from/--to)"),
+                ArgSpec("symbol", flag="--symbol", kind="str", default="OANDA:XAUUSD", help="TradingView symbol"),
+                ArgSpec("interval", flag="--interval", kind="str", default="15", help="Bar interval: 15, 240 (4H), 60, D, ..."),
+                ArgSpec("start", flag="--from", kind="str", default=None, help='One-off window start, broker clock, e.g. "2026-07-28 03:45"'),
+                ArgSpec("end", flag="--to", kind="str", default=None, help='One-off window end, broker clock, e.g. "2026-07-30 08:00"'),
+                ArgSpec("clock", flag="--clock", kind="choice", default="broker", choices=("broker", "utc"), help="Clock basis for --from/--to"),
+                ArgSpec("name", flag="--name", kind="str", default="custom_shot", help="Output name for a one-off capture"),
+                ArgSpec("engine_csv", flag="--engine-csv", kind="file", default=None,
+                        file_glob="data/*.csv", help="Engine CSV (defaults to shot_plan.json's engine_csv)"),
+                ArgSpec("headed", flag="--headed", kind="bool", default=False, help="Show the browser window instead of headless"),
+                ArgSpec("via_ui", flag="--via-ui", kind="bool", default=False, help="Frame via the Go-to-date dialog instead of the widget API"),
+            ),
+            artifacts=("tools/tv_forensic/shots/*.png", "tools/tv_forensic/shots/*.json"),
+        ),
+        CommandSpec(
+            id="tv_forensic.annotate",
+            title="TV Forensic — Annotate",
+            description=(
+                "Draws engine events onto a captured TV Forensic shot using the sidecar JSON's "
+                "own pixel geometry (never hand-measured coordinates). An event outside the "
+                "captured frame is listed as absent, never force-drawn; --strict makes that an "
+                "error instead. Requires Pillow (`pip install -r tools/tv_forensic/"
+                "requirements.txt`) and a prior `capture` run producing the sidecar."
+            ),
+            category="Analysis",
+            mode="python-file",
+            script="tools/tv_forensic/annotate.py",
+            args_schema=(
+                ArgSpec("shot", flag="--shot", kind="str", default=None, help="Shot name without extension (mutually exclusive with --all)"),
+                ArgSpec("all", flag="--all", kind="bool", default=False, help="Annotate every captured shot with a sidecar"),
+                ArgSpec("strict", flag="--strict", kind="bool", default=False, help="Fail if any engine event falls outside the captured frame"),
+            ),
+            artifacts=("tools/tv_forensic/shots/*_ANNOTATED.png", "tools/tv_forensic/shots/*_ANNOTATED.json"),
+        ),
         # ── Agent ─────────────────────────────────────────────────────────────
         CommandSpec(
             id="agent.cli",

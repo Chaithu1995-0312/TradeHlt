@@ -30,7 +30,7 @@ def feature_dict_to_vector(features: dict) -> list:
     Returns
     -------
     list of CANONICAL_FEATURE_DIM floats in CANONICAL_FEATURE_ORDER
-    (39 under schema v4.0; this docstring said "32" from the v2.0 era — the length is
+    (48 under schema v5.0, F-076; this docstring said "32" from the v2.0 era — the length is
     whatever the schema declares, never a literal in a caller.)
     """
     from features.dataset_builder import extract_feature_vector

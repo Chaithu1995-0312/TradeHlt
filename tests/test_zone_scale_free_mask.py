@@ -85,8 +85,20 @@ def test_no_price_unit_dim_survives_on_the_live_schema():
 
 # ── the v5 retrain shape ─────────────────────────────────────────────────────
 def test_v5_subset_shape():
-    """38-name subset -> 13 zeroed, 25 active at 0.04 (same active count as v3)."""
-    order = [n for n in CANONICAL_FEATURE_ORDER if n != "macd_hist_raw"]
+    """38-name subset -> 13 zeroed, 25 active at 0.04 (same active count as v3).
+
+    "v5" here is this test's own historical name for the zone-registry converter concept
+    (unrelated to feature_schema.SCHEMA_VERSION, which is independently "5.0" as of
+    CH-htfcrt-parent-candle-smc-v1 2026-08-15 — do not conflate the two). The 9 new SMC
+    primitives from that program are excluded here for the same reason macd_hist_raw already
+    is: this test targets the FIXED historical 38-name subset, not "whatever the live schema
+    minus one name is today."
+    """
+    _v5_only = {
+        "order_block_distance", "fvg_distance", "breaker_distance", "mitigation_block_distance",
+        "pdh_distance", "pdl_distance", "eqh_distance", "eql_distance", "change_of_character",
+    }
+    order = [n for n in CANONICAL_FEATURE_ORDER if n != "macd_hist_raw" and n not in _v5_only]
     assert len(order) == 38
     weights, zero_idx = cz.scale_free_weights(order)
     assert len(zero_idx) == 13

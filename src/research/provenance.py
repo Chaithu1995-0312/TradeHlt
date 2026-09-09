@@ -31,14 +31,46 @@ RESEARCH_COST_MODEL_VERSION = "1.0"
 SPINE_COST_MODEL_VERSION = "1.0"
 
 
-def truth_standard_block(exit_model: str, round_trip_bps: float) -> dict:
-    """The execution-reality stamp for a research artifact."""
-    return {
+def truth_standard_block(
+    exit_model: str,
+    round_trip_bps: float,
+    *,
+    cost_model: dict | None = None,
+    fill_model: dict | None = None,
+) -> dict:
+    """The execution-reality stamp for a research artifact.
+
+    `cost_model` / `fill_model` are optional and ADDITIVE: when both are omitted the
+    returned dict is byte-identical to the pre-2026-08-19 shape, so every existing
+    artifact keeps its provenance unchanged.
+
+    Supply them when a run uses the SEM-015 component cost model or the SEM-016
+    adverse-fill model, so a result carries the ruler that produced it. A result whose
+    measurement basis cannot be recovered from its own artifact is precisely the gap
+    MEASUREMENT_CONTRACT.md was written about.
+
+    Args:
+        cost_model: e.g. `ComponentCostModel.provenance()` — model id, instrument,
+            source manifest sha256, per-component values, entry-slippage basis.
+        fill_model: how a triggered stop filled, e.g.
+            `{"model": "adverse_fill", "ontology_id": "SEM-016",
+              "stop_slippage": 0.09, "model_gaps": True}`.
+    """
+    block = {
         "version": TRUTH_STANDARD_VERSION,
         "exit_geometry": exit_model,
         "slippage_model": f"flat_{round_trip_bps:g}bps",
         "tie_break": "SL_before_TP",
     }
+    if cost_model is not None:
+        # The flat bps figure is retained above as provenance of what WOULD have been
+        # charged, so a reader can see both rulers side by side rather than only the
+        # one that won.
+        block["slippage_model"] = cost_model.get("cost_model_id", "component_measured")
+        block["flat_bps_superseded"] = f"flat_{round_trip_bps:g}bps"
+        block["cost_model"] = cost_model
+    block["fill_model"] = fill_model if fill_model is not None else "perfect_stop_fill"
+    return block
 
 
 def production_config_block() -> dict:
@@ -70,10 +102,22 @@ def production_config_block() -> dict:
     }
 
 
-def provenance_block(exit_model: str, round_trip_bps: float) -> dict:
-    """Realism + cost-model + production-truth provenance (M4 adds qual/method versions)."""
+def provenance_block(
+    exit_model: str,
+    round_trip_bps: float,
+    *,
+    cost_model: dict | None = None,
+    fill_model: dict | None = None,
+) -> dict:
+    """Realism + cost-model + production-truth provenance (M4 adds qual/method versions).
+
+    `cost_model` / `fill_model` pass through to `truth_standard_block`; omitting both
+    reproduces the historical block exactly.
+    """
     return {
-        "truth_standard": truth_standard_block(exit_model, round_trip_bps),
+        "truth_standard": truth_standard_block(
+            exit_model, round_trip_bps, cost_model=cost_model, fill_model=fill_model
+        ),
         "research_cost_model_version": RESEARCH_COST_MODEL_VERSION,
         "spine_cost_model_version": SPINE_COST_MODEL_VERSION,
         **production_config_block(),

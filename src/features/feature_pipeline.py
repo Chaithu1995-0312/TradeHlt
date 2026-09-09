@@ -139,6 +139,12 @@ _FP_CFG_KEYS = (
     # tests/test_session_timestamp_basis.py for a regression proving the shift is NOT a no-op on
     # non-MT5 timestamps (documented, not just asserted away). ──
     "session_timestamp_basis",                                # FM-052 clock domain + crt_engine filter
+    # ── SMC primitives (CH-htfcrt-parent-candle-smc-v1, 2026-08-15) — `compute_smc_features`
+    # reuses the EXISTING `swing_window` key above (no duplicate) for its causal swing half-
+    # window; `smc_max_window` is the ONE genuinely new key, a trailing-candle-buffer bound
+    # for the OB/FVG/breaker/mitigation scanners (a performance/scope bound, not a registered
+    # identity parameter — smaller values simply forget older, likely-stale zones sooner).
+    "smc_max_window",
 )
 
 # Legal values for `feature_pipeline.normalization_basis`. Anything else is a config-authoring
@@ -366,7 +372,7 @@ def build_features(row: "pd.Series") -> dict:
     The row MUST come from a DataFrame that has been processed by
     FeaturePipeline.run() — i.e., all intermediate columns must be present.
 
-    CANONICAL_FEATURES is the SINGLE SOURCE OF TRUTH (39 names under schema v4.0).
+    CANONICAL_FEATURES is the SINGLE SOURCE OF TRUTH (48 names under schema v5.0, F-076).
     This function returns EXACTLY those keys — no more, no less.
 
     Args:
@@ -1197,6 +1203,112 @@ class FeaturePipeline:
         df = self.df
         df["session"] = df["session"].astype(np.int8)
 
+    def compute_smc_features(self) -> None:
+        """CH-htfcrt-parent-candle-smc-v1 (2026-08-15): the 9 SMC (smart-money-concepts)
+        primitives — order_block_distance, fvg_distance, breaker_distance,
+        mitigation_block_distance, pdh_distance, pdl_distance, eqh_distance, eql_distance,
+        change_of_character.
+
+        UNLIKE every other `compute_*` method in this class, this is NOT vectorized: the
+        underlying `features.smc.*` functions are pure, window-based `Candle` scanners
+        (deliberately isolated from pandas/config, per `research.weekly_sweep`'s reimplement-
+        rather-than-couple precedent — see `features/smc/_geometry.py`'s LAYERING note). This
+        method runs ONE Python loop building a trailing `Candle` window (bounded by
+        `smc_max_window`, oldest candles dropped) plus a parallel D1 `ParentCandleBuilder` for
+        PDH/PDL, calling the already-unit-tested `features.smc` functions at each closed bar.
+        Known cost: O(n * smc_max_window * swing_window) — a one-time feature-build cost, not
+        a per-backtest cost (pipeline output is typically cached). A vectorized reimplementation
+        is a legitimate future optimization but was deliberately NOT attempted here: reusing the
+        already-adversarially-tested pure functions verbatim is safer than a second, unverified
+        vectorized reimplementation of the same OB/FVG/breaker/mitigation geometry.
+
+        `change_of_character` is the one exception — it is a pure per-row algebraic combination
+        of the ALREADY-COMPUTED `break_of_structure`/`trend_bias` columns (see
+        `features.smc.choch`'s module doc on why this does not reopen the ontology's BOS/CHoCH
+        detection-state-machine exclusion) and is vectorized normally alongside the loop.
+
+        No lookahead: the Candle window and D1 builder are built incrementally in chronological
+        row order, so row i only ever sees candles/D1-closes from rows < i (`ParentCandleBuilder`
+        additionally never exposes an in-progress D1 period — see its own no-lookahead tests).
+        """
+        from config_layer.crt_engine_v2 import Candle
+        from features.parent_candle import ParentCandleBuilder
+        from features.smc.breaker import breaker_distance
+        from features.smc.choch import change_of_character
+        from features.smc.fvg import fvg_distance
+        from features.smc.levels import eqh_eql_distance, pdh_pdl_distance
+        from features.smc.mitigation import mitigation_block_distance
+        from features.smc.order_block import order_block_distance
+
+        df = self.df
+        n = len(df)
+        k = resolve_swing_window(self._fp_cfg)
+        max_window = int(self._fp_cfg["smc_max_window"])
+
+        opens = df["open"].to_numpy()
+        highs = df["high"].to_numpy()
+        lows = df["low"].to_numpy()
+        closes = df["close"].to_numpy()
+        # atr column is close-relative (normalization_basis governs this elsewhere); the SMC
+        # primitives need ABSOLUTE (price-unit) ATR, same F-072/FM-074 atr_absolute pattern
+        # `compute_liquidity_distance` already uses just above.
+        atr_abs = (df["atr"] * df["close"]).to_numpy()
+        timestamps = df["timestamp"].to_numpy()
+
+        ob_d = np.zeros(n, dtype=np.float32)
+        fvg_d = np.zeros(n, dtype=np.float32)
+        brk_d = np.zeros(n, dtype=np.float32)
+        mit_d = np.zeros(n, dtype=np.float32)
+        pdh_d = np.zeros(n, dtype=np.float32)
+        pdl_d = np.zeros(n, dtype=np.float32)
+        eqh_d = np.zeros(n, dtype=np.float32)
+        eql_d = np.zeros(n, dtype=np.float32)
+
+        window: list = []
+        d1_builder = ParentCandleBuilder("D1", keep=2)
+
+        for i in range(n):
+            ts = pd.Timestamp(timestamps[i]).to_pydatetime()
+            c = Candle(
+                timestamp=ts, open=float(opens[i]), high=float(highs[i]), low=float(lows[i]),
+                close=float(closes[i]), volume=0.0, index=i,
+            )
+            window.append(c)
+            if len(window) > max_window:
+                window = window[-max_window:]
+            d1_builder.push(c)
+
+            atr_i = float(atr_abs[i]) if not np.isnan(atr_abs[i]) else 0.0
+
+            ob_d[i] = order_block_distance(window, k, atr_i)
+            fvg_d[i] = fvg_distance(window, atr_i)
+            brk_d[i] = breaker_distance(window, k, atr_i)
+            mit_d[i] = mitigation_block_distance(window, k, atr_i)
+            pdh, pdl = pdh_pdl_distance(float(closes[i]), d1_builder.parent_history, atr_i)
+            pdh_d[i] = pdh
+            pdl_d[i] = pdl
+            eqh, eql = eqh_eql_distance(window, k, atr_i)
+            eqh_d[i] = eqh
+            eql_d[i] = eql
+
+        df["order_block_distance"] = ob_d
+        df["fvg_distance"] = fvg_d
+        df["breaker_distance"] = brk_d
+        df["mitigation_block_distance"] = mit_d
+        df["pdh_distance"] = pdh_d
+        df["pdl_distance"] = pdl_d
+        df["eqh_distance"] = eqh_d
+        df["eql_distance"] = eql_d
+
+        # change_of_character: vectorized, pure algebra over already-computed columns.
+        df["change_of_character"] = [
+            change_of_character(float(b), float(t))
+            for b, t in zip(df["break_of_structure"].to_numpy(), df["trend_bias"].to_numpy())
+        ]
+        df["change_of_character"] = df["change_of_character"].astype(np.float32)
+
+        self.df = df
+
     # ------------------------------------------------------------------
     # FINAL CLEANUP
     # ------------------------------------------------------------------
@@ -1285,7 +1397,7 @@ class FeaturePipeline:
     def build_feature_vector(self) -> np.ndarray:
         """
         Build the (N, len(CANONICAL_FEATURES)) feature matrix from the enriched DataFrame
-        (39 under schema v4.0; the docstring no longer hardcodes the dim -- see the v3.0/v4.0
+        (48 under schema v5.0, F-076; the docstring no longer hardcodes the dim -- see the v3.0/v4.0
         migration note on CANONICAL_FEATURES in features/feature_schema.py).
 
         Uses CANONICAL_FEATURES from features.feature_schema — NOT a local list.
@@ -1330,7 +1442,7 @@ class FeaturePipeline:
         -------
         df : pd.DataFrame
             Enriched, NaN-free DataFrame with all len(CANONICAL_FEATURES) canonical features
-            (39 under schema v4.0).
+            (48 under schema v5.0, F-076).
         vectors : np.ndarray, shape (N, len(CANONICAL_FEATURES)), dtype float32
             Feature matrix in canonical CANONICAL_FEATURES order.
         """
@@ -1354,6 +1466,7 @@ class FeaturePipeline:
         self.compute_liquidity_distance()     # v3.0: index 35 + 36 (after structure)
         self.promote_volume_spike()           # v3.0: index 37 (adaptive percentile)
         self.compute_canonical_session()
+        self.compute_smc_features()           # v5.0: indices 39-47 (9 SMC primitives)
 
         # Finalize and build vectors
         df = self.finalize()

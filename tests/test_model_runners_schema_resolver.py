@@ -46,8 +46,10 @@ def test_registry_has_the_three_known_generations():
 
 
 def test_canonical_39_is_the_live_schema():
+    # Name kept for history ("canonical_39" predates v5.0); live dim is now 48
+    # (CH-htfcrt-parent-candle-smc-v1, 2026-08-15).
     s = resolve_named("canonical_39")
-    assert s.dim == CANONICAL_FEATURE_DIM == 39
+    assert s.dim == CANONICAL_FEATURE_DIM == 48
     assert list(s.live_names) == list(CANONICAL_FEATURES)
     assert s.renames == {}
 
@@ -85,10 +87,12 @@ def test_parity_with_legacy_feature_names_from_clean_labels():
 def test_parity_with_the_removed_rr_trained_v3_mapping():
     """canonical_38_v3 must reproduce the old hardcoded _v3_order_from_v4()."""
 
+    from research.model_runners.schema_resolver import _V5_ONLY_FEATURES
+
     def _old_v3_order_from_v4(canonical_v4):
         v3 = []
         for n in canonical_v4:
-            if n == "macd_hist_raw":
+            if n == "macd_hist_raw" or n in _V5_ONLY_FEATURES:
                 continue
             if n == "macd_hist_z":
                 v3.append("macd_hist")

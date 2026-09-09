@@ -14,6 +14,11 @@ Usage:
   PYTHONPATH=src python scripts/multi_llm/initiate_plan.py --model all --cycle RC-001
 
 Models: deepseek | grok | gemini | claude | chatgpt
+
+Additive flags (all default to the historical behaviour):
+  --manifest <path>   use a cycle-scoped context manifest instead of context_manifest.json
+  --kind <KIND>       PROPOSAL (default) | CRITIQUE | DECISION — stub read from templates/<KIND>.md
+  --prompt <path>     use a bespoke role prompt instead of prompts/PLAN_DESIGN_PROMPT.md
 """
 from __future__ import annotations
 
@@ -29,6 +34,10 @@ MANIFEST = LANE / "context_manifest.json"
 PROMPT_MASTER = LANE / "prompts" / "PLAN_DESIGN_PROMPT.md"
 LEDGER = LANE / "research_cycle_ledger.jsonl"
 PROPOSALS_ROOT = LANE / "proposals"
+TEMPLATES = LANE / "templates"
+
+KINDS = ("PROPOSAL", "CRITIQUE", "DECISION")
+_KIND_ABBR = {"PROPOSAL": "PROP", "CRITIQUE": "CRIT", "DECISION": "DEC"}
 
 MODELS: dict[str, dict[str, str]] = {
     "deepseek": {
@@ -81,10 +90,11 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _load_manifest() -> dict:
-    if not MANIFEST.is_file():
-        raise FileNotFoundError(f"Missing context manifest: {MANIFEST}")
-    return json.loads(MANIFEST.read_text(encoding="utf-8"))
+def _load_manifest(manifest_path: Path | None = None) -> dict:
+    path = manifest_path or MANIFEST
+    if not path.is_file():
+        raise FileNotFoundError(f"Missing context manifest: {path}")
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _read_capped(path: Path, max_chars: int) -> tuple[str, bool]:
@@ -96,17 +106,23 @@ def _read_capped(path: Path, max_chars: int) -> tuple[str, bool]:
     return text, False
 
 
-def build_context_bundle(out_dir: Path, max_chars: int | None = None) -> dict:
-    man = _load_manifest()
+def build_context_bundle(
+    out_dir: Path,
+    max_chars: int | None = None,
+    manifest_path: Path | None = None,
+) -> dict:
+    man = _load_manifest(manifest_path)
+    used_manifest = manifest_path or MANIFEST
     default_cap = int(man.get("max_chars_per_file_default", 120000))
     cap = max_chars if max_chars is not None else default_cap
     docs = sorted(man.get("docs", []), key=lambda d: int(d.get("priority", 99)))
 
     index_lines = [
-        "# CONTEXT_INDEX — curated ERP docs (no full-repo scan)",
+        "# CONTEXT_INDEX — "
+        + str(man.get("description", "curated docs (no full-repo scan)")),
         "",
         f"Generated: {_utc_now()}",
-        f"Manifest: `{MANIFEST.relative_to(REPO).as_posix()}`",
+        f"Manifest: `{used_manifest.relative_to(REPO).as_posix()}`",
         "",
         "| # | path | role | status |",
         "|---|---|---|---|",
@@ -202,6 +218,22 @@ _INITIATED empty — model must complete this section._
 """
 
 
+def _stub_for_kind(model: str, cycle_id: str, focus: str, meta: dict, kind: str) -> str:
+    """PROPOSAL keeps the historical inline stub; other kinds read templates/<KIND>.md."""
+    if kind == "PROPOSAL":
+        return _proposal_stub(model, cycle_id, focus, meta)
+    tpl = TEMPLATES / (kind + ".md")
+    if not tpl.is_file():
+        raise FileNotFoundError(f"Missing package template: {tpl}")
+    nl = chr(10)
+    header = (
+        "<!-- INITIATED  model={m}  cycle={c}  kind={k}  at {t}" + nl
+        + "     focus: {f}" + nl
+        + "     Fill every section from the model reply; keep the yaml block. -->" + nl + nl
+    ).format(m=model, c=cycle_id, k=kind, t=_utc_now(), f=focus or "(none)")
+    return header + tpl.read_text(encoding="utf-8")
+
+
 def _role_block(model: str, meta: dict) -> str:
     return (
         f"**Model:** `{model}`\n"
@@ -218,8 +250,10 @@ def write_prompt(
     focus: str,
     proposal_rel: str,
     meta: dict,
+    prompt_path: Path | None = None,
 ) -> Path:
-    master = PROMPT_MASTER.read_text(encoding="utf-8") if PROMPT_MASTER.is_file() else (
+    src = prompt_path or PROMPT_MASTER
+    master = src.read_text(encoding="utf-8") if src.is_file() else (
         "Design a PROPOSAL using the CONTEXT_BUNDLE. Role: {{ROLE_BLOCK}}\n"
     )
     text = master
@@ -241,17 +275,19 @@ def write_prompt(
     return path
 
 
-def append_ledger(model: str, cycle_id: str, proposal_rel: str, out_dir_rel: str) -> None:
+def append_ledger(
+    model: str, cycle_id: str, proposal_rel: str, out_dir_rel: str, kind: str = "PROPOSAL"
+) -> None:
     line = {
         "schema_version": "1.0",
-        "package_id": f"{cycle_id}-PROP-{model.upper()}-INIT",
-        "kind": "PROPOSAL",
+        "package_id": f"{cycle_id}-{_KIND_ABBR[kind]}-{model.upper()}-INIT",
+        "kind": kind,
         "cycle_id": cycle_id,
         "created_at": _utc_now(),
         "author_role": "system",
         "author_model": "initiate_plan.py",
         "claim_type": "process",
-        "summary": f"Initiated plan package for model={model}; PROPOSAL stub awaiting model fill.",
+        "summary": f"Initiated plan package for model={model}; {kind} stub awaiting model fill.",
         "binds": {
             "phase": "P0/P6.A",
             "promise_rung_max_claim": "PL-0",
@@ -259,7 +295,7 @@ def append_ledger(model: str, cycle_id: str, proposal_rel: str, out_dir_rel: str
         },
         "artifact_paths": [proposal_rel, out_dir_rel],
         "status": "PROPOSED",
-        "notes": f"model={model}",
+        "notes": f"model={model} kind={kind}",
     }
     with LEDGER.open("a", encoding="utf-8") as f:
         f.write(json.dumps(line, ensure_ascii=False) + "\n")
@@ -272,6 +308,9 @@ def initiate_one(
     *,
     no_ledger: bool,
     max_chars: int | None,
+    manifest_path: Path | None = None,
+    kind: str = "PROPOSAL",
+    prompt_path: Path | None = None,
 ) -> Path:
     if model not in MODELS:
         raise SystemExit(f"Unknown model '{model}'. Choose: {', '.join(MODELS)}")
@@ -279,14 +318,14 @@ def initiate_one(
     out_dir = PROPOSALS_ROOT / model / cycle_id
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    ctx = build_context_bundle(out_dir, max_chars=max_chars)
-    proposal_path = out_dir / "PROPOSAL.md"
+    ctx = build_context_bundle(out_dir, max_chars=max_chars, manifest_path=manifest_path)
+    proposal_path = out_dir / (kind + ".md")
     proposal_path.write_text(
-        _proposal_stub(model, cycle_id, focus, meta), encoding="utf-8"
+        _stub_for_kind(model, cycle_id, focus, meta, kind), encoding="utf-8"
     )
     proposal_rel = proposal_path.relative_to(REPO).as_posix()
-    prompt_path = write_prompt(
-        out_dir, model, cycle_id, focus, proposal_rel, meta
+    write_prompt(
+        out_dir, model, cycle_id, focus, proposal_rel, meta, prompt_path=prompt_path
     )
 
     readme = out_dir / "README.md"
@@ -297,18 +336,18 @@ def initiate_one(
 1. Open `PROMPT_FOR_{model.upper()}.md`
 2. Attach or paste `CONTEXT_BUNDLE.md` (curated docs only)
 3. Send to **{model}**
-4. Replace `PROPOSAL.md` with the model's filled PROPOSAL
+4. Replace `{kind}.md` with the model's filled {kind}
 5. Optional: run critic model with a new `--model deepseek` package, or fill CRITIQUE template
 
 ## Files
 - `CONTEXT_INDEX.md` — doc list ({ctx['n_docs']} entries; missing={ctx['missing']}, truncated={ctx['truncated']})
 - `CONTEXT_BUNDLE.md` — concatenated context
 - `PROMPT_FOR_{model.upper()}.md` — plan design prompt
-- `PROPOSAL.md` — model-separated proposal (fill)
+- `{kind}.md` — model-separated {kind} package (fill)
 
 ## Commands
 ```bash
-PYTHONPATH=src python scripts/multi_llm/initiate_plan.py --model {model} --cycle {cycle_id}
+PYTHONPATH=src python scripts/multi_llm/initiate_plan.py --model {model} --cycle {cycle_id} --kind {kind}
 ```
 """,
         encoding="utf-8",
@@ -320,6 +359,7 @@ PYTHONPATH=src python scripts/multi_llm/initiate_plan.py --model {model} --cycle
             cycle_id,
             proposal_rel,
             out_dir.relative_to(REPO).as_posix(),
+            kind=kind,
         )
 
     return out_dir
@@ -338,6 +378,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--cycle", "-c", default=None, help="Cycle id (default RC-YYYYmmdd-HHMM)")
     p.add_argument("--focus", "-f", default="", help="Optional focus string for the plan")
     p.add_argument("--no-ledger", action="store_true", help="Do not append research_cycle_ledger.jsonl")
+    p.add_argument("--manifest", default=None, help="Cycle-scoped context manifest (default: context_manifest.json)")
+    p.add_argument("--kind", default="PROPOSAL", choices=list(KINDS), help="Package kind (default PROPOSAL)")
+    p.add_argument("--prompt", default=None, help="Bespoke role prompt (default: prompts/PLAN_DESIGN_PROMPT.md)")
     p.add_argument(
         "--max-chars-per-file",
         type=int,
@@ -357,11 +400,14 @@ def main(argv: list[str] | None = None) -> int:
             args.focus,
             no_ledger=args.no_ledger,
             max_chars=args.max_chars_per_file,
+            manifest_path=Path(args.manifest).resolve() if args.manifest else None,
+            kind=args.kind,
+            prompt_path=Path(args.prompt).resolve() if args.prompt else None,
         )
         rel = out.relative_to(REPO).as_posix()
         print(f"  [{m}] -> {rel}/")
         print(f"       PROMPT: {rel}/PROMPT_FOR_{m.upper()}.md")
-        print(f"       PROPOSAL: {rel}/PROPOSAL.md")
+        print(f"       PACKAGE:  {rel}/{args.kind}.md")
         print(f"       CONTEXT: {rel}/CONTEXT_BUNDLE.md")
     print("Done. Paste PROMPT + CONTEXT_BUNDLE into the chosen model; do not full-repo scan.")
     return 0

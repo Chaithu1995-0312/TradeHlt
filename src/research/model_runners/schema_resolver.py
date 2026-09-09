@@ -52,15 +52,47 @@ _LIVE_TO_V3: dict[str, str] = {live: v3 for v3, live in SCHEMA_V3_ALIASES.items(
 # The one dimension v4 added over v3/legacy-38 (the MACD histogram split).
 _V4_ONLY_FEATURE = "macd_hist_raw"
 
+# CH-htfcrt-parent-candle-smc-v1 (2026-08-15): the 9 dimensions v5.0 added over v4 (39 -> 48).
+# `legacy_38_env`/`canonical_38_v3` represent FROZEN historical schemas (models trained before
+# v4 even existed) — they must stay exactly 38-dim regardless of how many MORE features the
+# live schema grows to carry. Without this exclusion, `_canonical_minus_v4_only` would return
+# 47 (48 live features minus only the one v4 addition), silently redefining what "the v3
+# schema" means every time CANONICAL_FEATURES grows — exactly the kind of drift this module's
+# fail-closed discipline exists to prevent.
+_V5_ONLY_FEATURES = frozenset({
+    "order_block_distance", "fvg_distance", "breaker_distance", "mitigation_block_distance",
+    "pdh_distance", "pdl_distance", "eqh_distance", "eql_distance", "change_of_character",
+})
+
 
 def _canonical_minus_v4_only() -> list[str]:
-    """Live canonical order with the v4-only feature removed (39 -> 38)."""
+    """Live canonical order with every POST-v3 addition removed (v4's + v5's -> back to 38).
+
+    Name kept for history (it originally removed only the v4 MACD-split feature); the function
+    now generalizes to "every feature generation newer than v3/legacy-38", which is what every
+    caller actually wants — a frozen 38-dim historical schema, not "minus exactly one name."
+    """
     if _V4_ONLY_FEATURE not in CANONICAL_FEATURES:
         raise SchemaResolutionError(
             f"expected {_V4_ONLY_FEATURE!r} in CANONICAL_FEATURES; live schema "
             f"changed (dim={CANONICAL_FEATURE_DIM}). Update schema_resolver."
         )
-    return [n for n in CANONICAL_FEATURES if n != _V4_ONLY_FEATURE]
+    missing_v5 = _V5_ONLY_FEATURES - set(CANONICAL_FEATURES)
+    if missing_v5:
+        raise SchemaResolutionError(
+            f"expected {sorted(missing_v5)} in CANONICAL_FEATURES; live schema "
+            f"changed (dim={CANONICAL_FEATURE_DIM}). Update schema_resolver."
+        )
+    exclude = {_V4_ONLY_FEATURE} | _V5_ONLY_FEATURES
+    result = [n for n in CANONICAL_FEATURES if n not in exclude]
+    if len(result) != 38:
+        raise SchemaResolutionError(
+            f"_canonical_minus_v4_only: expected 38 names after exclusion, got "
+            f"{len(result)} (dim={CANONICAL_FEATURE_DIM}, excluded={sorted(exclude)}). "
+            f"The live schema grew by a different amount than this function accounts for — "
+            f"update schema_resolver's exclusion set, do not silently accept a new dim."
+        )
+    return result
 
 
 @dataclass(frozen=True)

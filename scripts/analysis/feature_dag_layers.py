@@ -152,6 +152,21 @@ _NODES: dict[str, tuple[list[str], int, str | None]] = {
     # ontology<->DAG crosscheck divergence-free.
     "session":                  (["hour_of_day"], 4, "FM-052"),
     "hour_of_day":              (["timestamp"], 4, "FM-051"),
+    # CH-htfcrt-parent-candle-smc-v1 (2026-08-15): 9 SMC primitives. The 8 distance-type
+    # metrics roll up their ontology zone-edge leaf (order_block_zone_edge etc. — structural,
+    # features.smc-owned, not a DAG node) to [close, atr], the SAME pattern liquidity_distance
+    # above already uses for its ref_high/ref_low/bos_level leaves; see `allowed` in
+    # test_ontology_crosscheck_only_known_rollups for the corresponding whitelist entries.
+    "order_block_distance":      (["close", "atr"], 3, "FM-075"),
+    "fvg_distance":               (["close", "atr"], 3, "FM-076"),
+    "breaker_distance":           (["close", "atr"], 3, "FM-077"),
+    "mitigation_block_distance":  (["close", "atr"], 3, "FM-078"),
+    "pdh_distance":               (["close", "atr"], 3, "FM-079"),
+    "pdl_distance":               (["close", "atr"], 3, "FM-080"),
+    "eqh_distance":               (["close", "atr"], 3, "FM-081"),
+    "eql_distance":               (["close", "atr"], 3, "FM-082"),
+    # change_of_character depends only on two ALREADY-registered DAG nodes -- no rollup needed.
+    "change_of_character":        (["break_of_structure", "trend_bias"], 3, "FM-083"),
 }
 
 

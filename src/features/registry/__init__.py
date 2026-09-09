@@ -32,6 +32,8 @@ _VALID_LIFECYCLE = (
 __all__ = [
     "FORMULA_REGISTRY", "compute_composition", "compute_derived",
     "validate_registry", "validate_semantic_registry",
+    "load_structural_profiles", "validate_structural_profiles",
+    "validate_crt_threshold_refs",
     "build_lineage_graph", "load_ontology", "_ONTOLOGY_PATH",
 ]
 
@@ -387,5 +389,273 @@ def validate_semantic_registry(ontology: dict | None = None) -> list[str]:
                 for lf in ("known_invariants", "candidate_hypotheses", "falsification_conditions"):
                     if lf in epi and epi[lf] is None:
                         problems.append(f"{where}: epistemic.{lf} is null — use []")
+
+    return problems
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STRUCTURE PROFILES (RC-9, 2026-08-19) — the FOUNDING half of the structural kernel.
+#
+# Sibling of the ontology, NOT a `spec_schema.semantic_registry.sections` entry: a section
+# entry would force all 25 `semantic_node_required_fields` onto a nine-field profile table and
+# run it through the wrong walker. Own file, own closed validator, reached through
+# `spec_schema.semantic_registry.external_sections.structural_profiles`.
+#
+# FAIL-CLOSED, NEVER FAIL-AT-IMPORT: a missing sibling yields a validator PROBLEM, never an
+# exception. `load_ontology` is on the path of `from features.registry import FORMULA_REGISTRY`,
+# which `crt_engine_v2` imports — raising here would break the engine over a missing
+# research-declaration file. Pinned by a test that hides the sibling and imports the engine.
+# ─────────────────────────────────────────────────────────────────────────────
+
+import re as _re
+from pathlib import Path as _Path
+
+_PROFILE_REQUIRED_KEYS = (
+    "id", "aliases", "founding", "walk", "status", "owner", "evidence", "origin", "version",
+)
+_PROFILE_STATUSES = ("research", "registered")
+_PROFILE_ID_RE = _re.compile(r"^SPP-\d+$")
+
+
+def _external_section_path(ontology: dict, name: str):
+    """Absolute path for a declared external section, or None when the pointer is absent."""
+    sr = (ontology.get("spec_schema") or {}).get("semantic_registry") or {}
+    rel = (sr.get("external_sections") or {}).get(name)
+    if not rel:
+        return None
+    return (_Path(_ONTOLOGY_PATH).resolve().parents[2] / rel).resolve()
+
+
+def load_structural_profiles(ontology: dict | None = None) -> dict:
+    """Load the structure-profiles sibling. Returns {} when the pointer or file is absent.
+
+    Reuses `load_ontology(path)` — already a generic, mtime-keyed YAML cache — so the sibling
+    gets its own independent cache entry with no new caching machinery.
+    """
+    ont = ontology if ontology is not None else load_ontology()
+    path = _external_section_path(ont, "structural_profiles")
+    if path is None or not path.exists():
+        return {}
+    return load_ontology(path)
+
+
+def _declared_ontology_ids(ont: dict) -> set:
+    """Every id a profile is allowed to reference (frozen + semantic sections)."""
+    ids = set()
+    for _sec, _name, spec in _iter_entries(ont):
+        if spec.get("id"):
+            ids.add(spec["id"])
+    sr = (ont.get("spec_schema") or {}).get("semantic_registry") or {}
+    for section in tuple(sr.get("sections") or ()):
+        for spec in (ont.get(section) or {}).values():
+            if isinstance(spec, dict) and spec.get("id"):
+                ids.add(spec["id"])
+    return ids
+
+
+def validate_structural_profiles(ontology: dict | None = None) -> list:
+    """Validate structure profiles against their own closed contract. [] == satisfied."""
+    ont = ontology if ontology is not None else load_ontology()
+    path = _external_section_path(ont, "structural_profiles")
+    if path is None:
+        return []                                # no pointer declared: nothing to validate
+    if not path.exists():
+        return [
+            f"external_sections.structural_profiles points at {path}, which does not exist "
+            "(fail-closed: a problem here, never an import-time raise)"
+        ]
+
+    doc = load_structural_profiles(ont)
+    problems: list = []
+    if doc.get("schema") != "structure_profiles/v1":
+        problems.append(f"structure_profiles: unsupported schema {doc.get('schema')!r}")
+
+    block = doc.get("structural_profiles")
+    if not isinstance(block, dict) or not block:
+        problems.append("structure_profiles: `structural_profiles` must be a non-empty mapping")
+        return problems
+
+    known_ids = _declared_ontology_ids(ont)
+    seen: dict = {}
+
+    for name, prof in block.items():
+        where = f"structural_profiles '{name}'"
+        if not isinstance(prof, dict):
+            problems.append(f"{where}: profile must be a mapping")
+            continue
+
+        for key in _PROFILE_REQUIRED_KEYS:
+            if key not in prof:
+                problems.append(f"{where}: missing required key {key!r}")
+
+        pid = prof.get("id")
+        if not isinstance(pid, str) or not _PROFILE_ID_RE.match(pid or ""):
+            problems.append(f"{where}: id {pid!r} must match ^SPP-<digits>$")
+        elif pid in seen:
+            problems.append(f"{where}: duplicate id {pid!r} (also {seen[pid]!r})")
+        else:
+            seen[pid] = name
+
+        if prof.get("status") not in _PROFILE_STATUSES:
+            problems.append(
+                f"{where}: status {prof.get('status')!r} not in {list(_PROFILE_STATUSES)} "
+                "(the semantic-node `status`, never an FM `lifecycle` token)"
+            )
+
+        if not isinstance(prof.get("version"), int):
+            problems.append(f"{where}: version must be an int")
+
+        for list_key in ("aliases", "evidence"):
+            if list_key in prof and not isinstance(prof[list_key], list):
+                problems.append(f"{where}: {list_key} must be a list")
+
+        walk = prof.get("walk")
+        if isinstance(walk, str) and walk != "UNKNOWN" and walk not in known_ids:
+            problems.append(f"{where}: walk {walk!r} is not a declared ontology id")
+
+        for pred in (prof.get("predicates") or []):
+            if pred != "UNKNOWN" and pred not in known_ids:
+                problems.append(f"{where}: predicate {pred!r} is not a declared ontology id")
+
+        founding = prof.get("founding")
+        if not isinstance(founding, dict):
+            problems.append(f"{where}: founding must be a mapping")
+            continue
+
+        fid = founding.get("identity")
+        if fid is None:
+            problems.append(f"{where}: founding.identity absent (declare UNKNOWN if none exists)")
+        elif fid != "UNKNOWN" and fid not in known_ids:
+            problems.append(f"{where}: founding.identity {fid!r} is not a declared ontology id")
+
+        # thresholds are NAMES, never VALUES — a number here is a second source of truth
+        for tname, tval in (founding.get("threshold_refs") or {}).items():
+            if isinstance(tval, (int, float)) and not isinstance(tval, bool):
+                problems.append(
+                    f"{where}: threshold_refs.{tname} is a VALUE ({tval!r}); a profile carries "
+                    "the NAME of a CRTConfig / production-JSON / MC-* field, never its value"
+                )
+
+    return problems
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CRT THRESHOLD REFS (Phase D, CH-crt-sot-2026-08-31)
+# ─────────────────────────────────────────────────────────────────────────────
+# configs/formulas/market_crt_states.yaml:threshold_refs is a SEPARATE file/section from the
+# ontology's structural_profiles above -- not reached via load_ontology(), not an
+# external_sections pointer. Housed here anyway, consistent with validate_structural_profiles'
+# own precedent immediately above (also not an ontology `sections` entry; this module is where
+# closed-contract validators over the CRT/structural artifact family live, by convention, not
+# strictly by ontology membership).
+
+_CRT_STATES_YAML_PATH = _Path("configs/formulas/market_crt_states.yaml")
+
+#: Closed set of legal `kind` values for a threshold_refs entry — see market_crt_states.yaml's
+#: own THRESHOLD REFS header comment for what each means.
+_VALID_THRESHOLD_REF_KINDS = frozenset({
+    "crtconfig_duplicate",
+    "crtconfig_duplicate_dead",
+    "name_alias_documented",
+    "resolver_only",
+    "dead_unconsumed",
+})
+
+
+#: Repo root computed from THIS file's own location, not cwd -- same pattern as
+#: features/registry/_loader.py's _ONTOLOGY_PATH. (Corrected 2026-08-31, Phase E0 / CR-3: the
+#: prior default of `_Path(".")` made the no-arg call only work when invoked from the repo root;
+#: this file lives at src/features/registry/__init__.py, 3 parents up from repo root.)
+_DEFAULT_REPO_ROOT = _Path(__file__).resolve().parents[3]
+
+
+def _load_market_crt_states(repo_root: _Path | None = None) -> dict:
+    root = repo_root if repo_root is not None else _DEFAULT_REPO_ROOT
+    path = root / _CRT_STATES_YAML_PATH
+    import io as _io
+    import yaml as _yaml
+    # market_crt_states.yaml contains non-ASCII bytes that break cp1252 (Windows default) --
+    # force utf-8. Hit repeatedly elsewhere this session; documented here too.
+    with _io.open(path, encoding="utf-8") as fh:
+        return _yaml.safe_load(fh)
+
+
+def validate_crt_threshold_refs(
+    doc: dict | None = None, *, repo_root: _Path | None = None
+) -> list[str]:
+    """Validate market_crt_states.yaml's `threshold_refs` block against its own closed contract.
+
+    [] == satisfied. Checks:
+      1. every `thresholds` key (including `lifecycle.<subkey>`, dot-qualified) has EXACTLY one
+         `threshold_refs.refs` entry -- no silent gap, no orphaned ref for a retired key;
+      2. every entry's `kind` is one of the 5 declared values;
+      3. every entry naming a `ref` under kind crtconfig_duplicate / crtconfig_duplicate_dead
+         names a REAL CRTConfig field (cross-checked against
+         config_layer.crt_config_completeness.all_crtconfig_fields(), not hand-maintained twice);
+      4. no `resolver_only` / `dead_unconsumed` entry carries a non-null `ref` (that would be a
+         fabricated reference to nothing);
+      5. `crtconfig_duplicate` / `crtconfig_duplicate_dead` / `name_alias_documented` entries
+         carry a non-null `ref`.
+
+    Does NOT validate that `consumed` matches actual resolver source code — that is a source-code
+    fact re-verified by hand when the resolver changes, not mechanically derivable from this
+    validator without parsing crt_state_resolver.py itself (out of scope here).
+    """
+    d = doc if doc is not None else _load_market_crt_states(repo_root)
+    problems: list[str] = []
+
+    thresholds = d.get("thresholds") or {}
+    scalar_keys = {k for k in thresholds if k != "lifecycle"}
+    lifecycle_keys = {f"lifecycle.{k}" for k in (thresholds.get("lifecycle") or {})}
+    expected_keys = scalar_keys | lifecycle_keys
+
+    tr = d.get("threshold_refs")
+    if not isinstance(tr, dict):
+        return ["threshold_refs: section absent or not a mapping"]
+    refs = tr.get("refs")
+    if not isinstance(refs, dict) or not refs:
+        return ["threshold_refs.refs: must be a non-empty mapping"]
+
+    declared_keys = set(refs)
+    missing = expected_keys - declared_keys
+    orphaned = declared_keys - expected_keys
+    if missing:
+        problems.append(f"threshold_refs.refs: missing entries for {sorted(missing)}")
+    if orphaned:
+        problems.append(
+            f"threshold_refs.refs: entries for keys not in thresholds: {sorted(orphaned)} "
+            "(a threshold was renamed/retired without updating this section)"
+        )
+
+    try:
+        from config_layer.crt_config_completeness import all_crtconfig_fields
+        crt_fields = all_crtconfig_fields()
+    except ImportError:
+        crt_fields = None  # src not importable in this context — skip ref-name cross-check
+
+    for name, entry in refs.items():
+        where = f"threshold_refs.refs[{name!r}]"
+        if not isinstance(entry, dict):
+            problems.append(f"{where}: entry must be a mapping")
+            continue
+        kind = entry.get("kind")
+        if kind not in _VALID_THRESHOLD_REF_KINDS:
+            problems.append(f"{where}: kind {kind!r} not one of {sorted(_VALID_THRESHOLD_REF_KINDS)}")
+            continue
+        ref = entry.get("ref")
+        if kind in ("resolver_only", "dead_unconsumed"):
+            if ref is not None:
+                problems.append(f"{where}: kind={kind} must not carry a ref, got {ref!r}")
+        else:
+            if not ref:
+                problems.append(f"{where}: kind={kind} requires a non-null ref")
+            elif kind in ("crtconfig_duplicate", "crtconfig_duplicate_dead") and crt_fields is not None:
+                if ref not in crt_fields:
+                    problems.append(
+                        f"{where}: ref {ref!r} is not a real CRTConfig field name "
+                        "(fabricated or renamed reference)"
+                    )
+        if "consumed" not in entry or not isinstance(entry.get("consumed"), bool):
+            problems.append(f"{where}: consumed must be present and a bool")
 
     return problems

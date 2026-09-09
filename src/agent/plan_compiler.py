@@ -142,6 +142,9 @@ PLAN_REGISTRY: Dict[str, List[ToolStep]] = {
         _s("truth.citation_floor"),
         _s("truth.hygiene_pack"),
     ],
+    "semantic_ground": [
+        _s("truth.ground_claim"),
+    ],
 }
 
 _ASK_PLAN = Plan(intent_key="ask_user", steps=[])

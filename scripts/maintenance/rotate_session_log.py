@@ -26,10 +26,25 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
 _DEFAULT_LOG = Path("assistant_project.md")
 _ARCHIVE_DIR = Path("docs/analysis/session-log-archive")
 _MARKER = "📝 SESSION LOG ENTRY"
-# Recognise the canonical marker AND its emoji-corrupted form (`??`), produced by older
-# cp1252 round-trips. Both are real entries; the corrupted ones are repaired to `📝` on write
-# (otherwise they hide from the parser and get dumped into the preamble — the bug this fixes).
-_MARKER_RE = re.compile(r"^(?:📝|\?\?) SESSION LOG ENTRY[ \t]*$")
+# Recognise the canonical marker, its emoji-corrupted form (`??`) from older cp1252 round-trips,
+# AND the BARE form with no prefix at all. All three are real entries; the first two are repaired
+# to `📝` on write (otherwise they hide from the parser and get dumped into the preamble).
+#
+# 2026-08-26 (CH-measurement-provenance-boundary): the bare form was added after the provenance
+# audit measured 90 bare markers in the live log against 78 the parser could see. Running the
+# rotator as documented would have swallowed those 90 entries into the doctrine preamble — no
+# content deleted, but 90 entries would stop being addressable as entries.
+# The `*` also absorbs a doubled prefix — `📝 📝 SESSION LOG ENTRY` really occurs once in the live
+# log (an earlier append bug) and was invisible to the parser AND to the old guard. Repaired to a
+# single canonical marker on write, the same treatment `??` already gets.
+_MARKER_RE = re.compile(r"^(?:(?:📝|\?\?) )*SESSION LOG ENTRY[ \t]*$")
+
+# The conservation guard MUST count with a regex independent of the parser's. Before this change
+# both used _MARKER_RE, so the guard compared the parser against itself (78 == 78) and could never
+# fire on a marker form the parser did not recognise — a guard structurally blind to the failure it
+# existed to catch. This one is deliberately looser: it matches the phrase on its own line whatever
+# precedes it.
+_LOOSE_MARKER_RE = re.compile(r"^.{0,4}SESSION LOG ENTRY[ \t]*$")
 _HR_RE = re.compile(r"^---\s*$")
 _DATE_RE = re.compile(
     r"^Date:\s*(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?", re.MULTILINE
@@ -105,13 +120,16 @@ def render_archive(entries: list[str], source_name: str = "assistant_project.md"
 def rotate(keep: int, dry_run: bool, *, log_path: Path = _DEFAULT_LOG,
            archive_dir: Path = _ARCHIVE_DIR, prefix: str = "session-log") -> int:
     text = log_path.read_text(encoding="utf-8")
-    marker_count = sum(1 for ln in text.splitlines() if _MARKER_RE.match(ln))
+    # Counted with the LOOSE regex, not the parser's — a guard that shares the parser's blind spot
+    # cannot detect the parser's blind spot.
+    marker_count = sum(1 for ln in text.splitlines() if _LOOSE_MARKER_RE.match(ln))
     preamble, entries = parse_log(text)
 
     # Conservation guard — abort before any write if parsing dropped/duplicated an entry.
     if len(entries) != marker_count:
-        print(f"[ABORT] parsed {len(entries)} entries but found {marker_count} markers — "
-              "refusing to rewrite (would lose content).")
+        print(f"[ABORT] parsed {len(entries)} entries but a loose scan found {marker_count} "
+              "markers — refusing to rewrite (entries the parser cannot see would be swallowed "
+              "into the preamble).")
         return 1
     for e in entries:
         if _date_key(e) == (0, 0, 0, 0, 0, 0):

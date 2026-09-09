@@ -4,8 +4,11 @@
 Filename/artifact-pointer name (feature_38_lineage_census*) is a historical identifier kept
 for path stability (referenced by feature_surface_closure_audit.py and the LATEST pointer
 convention); it does NOT assert the vector is 38-dim. The census covers every name in
-CANONICAL_FEATURES, whatever CANONICAL_FEATURE_DIM currently is (39 as of schema v4.0,
-2026-07-22) -- see main()'s `len(CANONICAL_FEATURES) == CANONICAL_FEATURE_DIM` assertion.
+CANONICAL_FEATURES, whatever CANONICAL_FEATURE_DIM currently is (48 as of schema v5.0,
+2026-08-15) -- see main()'s `len(CANONICAL_FEATURES) == CANONICAL_FEATURE_DIM` assertion.
+The LINEAGE table below must cover every canonical name or main() raises `LINEAGE table
+mismatch` and writes nothing -- that fail-closed is why the shipped artifact sat at 39 rows
+from the v5.0 SMC bump (2026-08-15) until the 9 SMC entries were added (2026-09-05).
 
 Read-only. Uses frozen XAUUSD Phase-1 candidate only for optional smoke vectors.
 Does not change formulas or configs.
@@ -30,6 +33,7 @@ from features.feature_schema import (  # noqa: E402
     CANONICAL_FEATURES,
     FEATURE_ORDER_HASH,
     SCHEMA_HASH,
+    SCHEMA_VERSION,
 )
 # PROVENANCE RULE (resolve_swing_window docstring): a governance artifact must never re-declare
 # the swing_window literal, or it can assert a value the pipeline did not actually use. The PEP
@@ -498,6 +502,130 @@ LINEAGE: dict[str, dict] = {
         "pit_class": "CAUSAL_DERIVED",
         "consumers": ["FeaturePipeline vector index 37"],
     },
+
+    # ── schema v5.0 SMC primitives, indices 39-47 (CH-htfcrt-parent-candle-smc-v1,
+    # 2026-08-15). These landed AFTER the 2026-07-31 census run, so until this block
+    # existed the generator raised `LINEAGE table mismatch` and could not run at all —
+    # which is why the shipped artifact stayed at 39 rows and `feature_surface_query
+    # --summary` reported `pit: {..., None: 9}` / `closure: {CLOSED: 39, None: 9}`.
+    #
+    # PIT classes are assigned from the EXISTING vocabulary, source-verified against
+    # src/features/smc/ (577 lines, whole package read) — no new class was invented:
+    #   · the five swing-founded distances reach price geometry only through
+    #     `_geometry.detect_causal_swings`/`collect_causal_swings`, which confirm a pivot
+    #     at j only once k later bars have closed (_geometry.py:46-76) — the same
+    #     construction that makes liquidity_sweep/break_of_structure
+    #     STRUCTURE_WITH_CAUSAL_SWING rather than CAUSAL_DELAYED_PUBLICATION (the latter
+    #     is for the swing SLOTS themselves, which are stamped at the pivot bar).
+    #   · fvg_distance touches no swing at all; it is a 3-candle test whose zone is
+    #     stamped at the MIDDLE candle but is only knowable once bars[i+1] closed
+    #     (fvg.py:23-37) — publication lag 1, i.e. exactly CAUSAL_DELAYED_PUBLICATION.
+    #   · pdh/pdl read the most recently CLOSED D1 parent (levels.py:26-35), so the
+    #     reference is a completed prior calendar unit, never the forming day.
+    #   · change_of_character is pure algebra over two already-classified canonical
+    #     slots and inherits the weaker parent (break_of_structure).
+    # Emission is causal for all nine: compute_smc_features grows `window` strictly to
+    # bar i before each call (feature_pipeline.py:1270-1292), and passes ABSOLUTE ATR
+    # (`atr * close`, :1255), so the F-072/FM-074 dimensional trap does not apply here.
+    "order_block_distance": {
+        "source_ohlcv": ["open", "high", "low", "close"],
+        "formula": f"tanh(signed ATR distance from close to nearest UNMITIGATED order-block edge); OB = last opposite-colour candle before a causal-swing break, k=SWING_WINDOW={SWING_WINDOW}",
+        "formula_id": "SMC-OB",
+        "impl": "feature_pipeline.compute_smc_features -> smc.order_block.order_block_distance",
+        "impl_refs": ["src/features/feature_pipeline.py:1283", "src/features/smc/order_block.py", "src/features/smc/_geometry.py", f"SWING_WINDOW={SWING_WINDOW}"],
+        "pit": "break events use detect_causal_swings(bars[:i], k) — no lookahead (order_block.py:38-50); window grows only to bar i",
+        "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "consumers": ["FeaturePipeline vector index 39"],
+        "note": "schema v5.0 (F-076); PIT classified 2026-09-05, classification only — grants no closure and no authority",
+    },
+    "fvg_distance": {
+        "source_ohlcv": ["high", "low", "close"],
+        "formula": "tanh(signed ATR distance from close to nearest UNFILLED fair-value-gap near edge); 3-candle test bars[i-1].high < bars[i+1].low (bullish) / bars[i-1].low > bars[i+1].high (bearish)",
+        "formula_id": "SMC-FVG",
+        "impl": "feature_pipeline.compute_smc_features -> smc.fvg.fvg_distance",
+        "impl_refs": ["src/features/feature_pipeline.py:1284", "src/features/smc/fvg.py"],
+        "pit": "zone is STAMPED at the middle candle (formed_at_index) but only becomes detectable once bars[i+1] has closed — publication lag 1; the interior loop range(1, n-1) never reads past the caller's window, so the EMITTED value at bar i uses only bars <= i (fvg.py:23-37)",
+        "pit_class": "CAUSAL_DELAYED_PUBLICATION",
+        "consumers": ["FeaturePipeline vector index 40"],
+        "note": "schema v5.0 (F-076); the delayed publication is on the zone's backdated stamp, not on the emitted distance. PIT classified 2026-09-05",
+    },
+    "breaker_distance": {
+        "source_ohlcv": ["open", "high", "low", "close"],
+        "formula": f"tanh(signed ATR distance to nearest un-retested BREAKER — an order block whose far edge was fully closed through, polarity flipped), k=SWING_WINDOW={SWING_WINDOW}",
+        "formula_id": "SMC-BREAKER",
+        "impl": "feature_pipeline.compute_smc_features -> smc.breaker.breaker_distance",
+        "impl_refs": ["src/features/feature_pipeline.py:1285", "src/features/smc/breaker.py", "src/features/smc/order_block.py"],
+        "pit": "reuses order_block._find_break_events (causal swings, bars[:i]); breaker requires a LATER close-through, so it is strictly backward-looking",
+        "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "consumers": ["FeaturePipeline vector index 41"],
+        "note": "schema v5.0 (F-076); PIT classified 2026-09-05",
+    },
+    "mitigation_block_distance": {
+        "source_ohlcv": ["open", "high", "low", "close"],
+        "formula": f"tanh(signed ATR distance to the BODY-only inner zone of the active OB origin whose outer zone was already touched), k=SWING_WINDOW={SWING_WINDOW}",
+        "formula_id": "SMC-MITIGATION",
+        "impl": "feature_pipeline.compute_smc_features -> smc.mitigation.mitigation_block_distance",
+        "impl_refs": ["src/features/feature_pipeline.py:1286", "src/features/smc/mitigation.py", "src/features/smc/order_block.py"],
+        "pit": "same causal break-event scan as order_block; the outer-zone touch it gates on is a past event",
+        "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "consumers": ["FeaturePipeline vector index 42"],
+        "note": "schema v5.0 (F-076); deliberately a DIFFERENT distance from order_block_distance, not an alias. PIT classified 2026-09-05",
+    },
+    "pdh_distance": {
+        "source_ohlcv": ["high", "close"],
+        "formula": "tanh(signed ATR distance from close to the most recently CLOSED D1 parent's high); 0.0 before the first D1 parent closes",
+        "formula_id": "SMC-PDH",
+        "impl": "feature_pipeline.compute_smc_features (ParentCandleBuilder('D1')) -> smc.levels.pdh_pdl_distance",
+        "impl_refs": ["src/features/feature_pipeline.py:1287", "src/features/smc/levels.py", "src/features/parent_candle.py"],
+        "pit": "reads parent_history[-1] = the last COMPLETED daily candle, never the forming one (levels.py:26-35); reference is a prior calendar unit, so it is delayed relative to the bar that publishes it",
+        "pit_class": "CAUSAL_DELAYED_PUBLICATION",
+        "consumers": ["FeaturePipeline vector index 43"],
+        "note": "schema v5.0 (F-076); NOT CALENDAR_SAME_BAR — session/hour_of_day derive from the bar's OWN timestamp, this derives from a previous completed day. PIT classified 2026-09-05",
+    },
+    "pdl_distance": {
+        "source_ohlcv": ["low", "close"],
+        "formula": "tanh(signed ATR distance from close to the most recently CLOSED D1 parent's low); 0.0 before the first D1 parent closes",
+        "formula_id": "SMC-PDL",
+        "impl": "feature_pipeline.compute_smc_features (ParentCandleBuilder('D1')) -> smc.levels.pdh_pdl_distance",
+        "impl_refs": ["src/features/feature_pipeline.py:1287", "src/features/smc/levels.py", "src/features/parent_candle.py"],
+        "pit": "reads parent_history[-1] = the last COMPLETED daily candle, never the forming one (levels.py:26-35)",
+        "pit_class": "CAUSAL_DELAYED_PUBLICATION",
+        "consumers": ["FeaturePipeline vector index 44"],
+        "note": "schema v5.0 (F-076); PIT classified 2026-09-05",
+    },
+    "eqh_distance": {
+        "source_ohlcv": ["high", "close"],
+        "formula": f"tanh(signed ATR distance to the most recent member of an EQUAL-HIGHS cluster — 2+ confirmed swing highs within tolerance_atr=0.1 * atr), k=SWING_WINDOW={SWING_WINDOW}",
+        "formula_id": "SMC-EQH",
+        "impl": "feature_pipeline.compute_smc_features -> smc.levels.eqh_eql_distance",
+        "impl_refs": ["src/features/feature_pipeline.py:1290", "src/features/smc/levels.py", "src/features/smc/_geometry.py"],
+        "pit": "collect_causal_swings only returns pivots confirmed by k closed later bars (_geometry.py:79-101)",
+        "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "consumers": ["FeaturePipeline vector index 45"],
+        "note": "schema v5.0 (F-076); cluster extension of the single-swing FM-025/026 liquidity reading. PIT classified 2026-09-05",
+    },
+    "eql_distance": {
+        "source_ohlcv": ["low", "close"],
+        "formula": f"tanh(signed ATR distance to the most recent member of an EQUAL-LOWS cluster — 2+ confirmed swing lows within tolerance_atr=0.1 * atr), k=SWING_WINDOW={SWING_WINDOW}",
+        "formula_id": "SMC-EQL",
+        "impl": "feature_pipeline.compute_smc_features -> smc.levels.eqh_eql_distance",
+        "impl_refs": ["src/features/feature_pipeline.py:1290", "src/features/smc/levels.py", "src/features/smc/_geometry.py"],
+        "pit": "collect_causal_swings only returns pivots confirmed by k closed later bars (_geometry.py:79-101)",
+        "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "consumers": ["FeaturePipeline vector index 46"],
+        "note": "schema v5.0 (F-076); PIT classified 2026-09-05",
+    },
+    "change_of_character": {
+        "source_ohlcv": ["high", "low", "close"],
+        "formula": "break_of_structure if sign(break_of_structure) != sign(trend_bias) and both nonzero, else 0.0",
+        "formula_id": "FM-083/SMC-CHOCH",
+        "impl": "feature_pipeline.compute_smc_features -> smc.choch.change_of_character",
+        "impl_refs": ["src/features/feature_pipeline.py:1303", "src/features/smc/choch.py"],
+        "pit": "stateless algebra over two already-classified canonical slots; inherits the weaker parent (break_of_structure = STRUCTURE_WITH_CAUSAL_SWING), trend_bias is CAUSAL_DERIVED",
+        "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+        "consumers": ["FeaturePipeline vector index 47"],
+        "note": "schema v5.0 (F-076); adds NO new BOS/CHoCH detection state machine (choch.py:6-15). Registered FM-083 and STATEFUL in the ontology, but named in NO resolver `when:` clause. PIT classified 2026-09-05",
+    },
 }
 
 
@@ -566,8 +694,11 @@ def main() -> int:
     )
 
     report = {
-        "_doc": "Canonical-feature lineage census (39-dim, schema v4.0). Source-verified table "
-                "+ optional frozen-XAU smoke.",
+        "_doc": f"Canonical-feature lineage census ({CANONICAL_FEATURE_DIM}-dim, schema "
+                f"v{SCHEMA_VERSION}). Source-verified table + optional frozen-XAU smoke. "
+                "Dim/version are read from the live schema, never re-declared here — the "
+                "hardcoded '39-dim, schema v4.0' text survived the v5.0 bump and described "
+                "an artifact that no longer existed (corrected 2026-09-05).",
         "generated_at_utc": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
         "schema": {
             "canonical_feature_dim": CANONICAL_FEATURE_DIM,
@@ -618,7 +749,7 @@ def main() -> int:
     }, indent=2) + "\n", encoding="utf-8")
 
     lines = [
-        f"# Canonical-Feature Lineage Census ({CANONICAL_FEATURE_DIM}-dim, schema v4.0)",
+        f"# Canonical-Feature Lineage Census ({CANONICAL_FEATURE_DIM}-dim, schema v{SCHEMA_VERSION})",
         "",
         f"Generated (UTC): `{report['generated_at_utc']}`",
         "",

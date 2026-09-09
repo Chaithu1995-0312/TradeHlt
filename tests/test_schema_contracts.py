@@ -54,10 +54,10 @@ def test_no_duplicates():
 #          macd_hist_raw at index 18 alongside macd_hist_z at 19; v3.0 was 38)
 def test_feature_count():
     from features.feature_schema import CANONICAL_FEATURES, CANONICAL_FEATURE_DIM
-    assert len(CANONICAL_FEATURES) == 39, (
-        f"Expected 39 canonical features (schema v4.0), got {len(CANONICAL_FEATURES)}"
+    assert len(CANONICAL_FEATURES) == 48, (
+        f"Expected 48 canonical features (schema v5.0), got {len(CANONICAL_FEATURES)}"
     )
-    assert CANONICAL_FEATURE_DIM == 39
+    assert CANONICAL_FEATURE_DIM == 48
 
 
 # ── 4. FEATURE_INDEX_MAP consistency ─────────────────────────────────────────

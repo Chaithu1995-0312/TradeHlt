@@ -55,6 +55,13 @@ class ResearchConfig:
     # it never changes any existing config's config_sha256 (same precedent as
     # the conditional `entry_ttl` guard below).
     job_kind: str = "unspecified"
+    # Which cost model prices a trade. "flat_bps" (default) is the historical flat
+    # `round_trip_bps` haircut — one number for every instrument. "component_measured"
+    # is the decomposed broker model (SEM-015: half-spread + commission + order-type
+    # slippage + swap), usable only for an instrument with a MEASURED calibration.
+    # Like `entry_ttl` above, this enters `meaningful` ONLY when the JSON declares it,
+    # so every pre-existing config keeps its published config_sha256 byte-identical.
+    cost_model: str = "flat_bps"
 
     @classmethod
     def from_dict(cls, d: dict) -> "ResearchConfig":
@@ -103,6 +110,23 @@ class ResearchConfig:
         if "entry_ttl" in fw:
             meaningful["forward_walk"]["entry_ttl"] = int(fw["entry_ttl"])
 
+        # sha-parity (load-bearing, same precedent as `entry_ttl` directly above):
+        # `cost_model` enters the canonical dict ONLY when the JSON carries it. All 23
+        # pre-existing ResearchConfig files omit it and keep their published
+        # config_sha256 byte-identical. A config that DOES declare it is measuring a
+        # different object and correctly gets a different hash.
+        if "cost_model" in costs:
+            meaningful["costs"]["cost_model"] = str(costs["cost_model"])
+
+        cost_model = str(costs.get("cost_model", "flat_bps"))
+        _valid_cost_models = {"flat_bps", "component_measured"}
+        if cost_model not in _valid_cost_models:
+            raise ValueError(
+                f"ResearchConfig.cost_model={cost_model!r} is not one of "
+                f"{sorted(_valid_cost_models)} (SEM-015: declare the cost model explicitly; "
+                "an unrecognised value must never silently fall back to the flat haircut)."
+            )
+
         job_kind = str(d.get("job_kind", "unspecified"))
         _valid_job_kinds = {"threshold_search", "model_retrain", "unspecified"}
         if job_kind not in _valid_job_kinds:
@@ -135,6 +159,7 @@ class ResearchConfig:
             instruments=meaningful["universe"]["instruments"],
             _canonical=json.dumps(meaningful, sort_keys=True, separators=(",", ":")),
             job_kind=job_kind,
+            cost_model=cost_model,
         )
 
     @classmethod

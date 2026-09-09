@@ -180,7 +180,8 @@ def test_retired_v3_registry_still_fails_closed():
 
 
 def test_v4_registry_scores_a_strict_subset_of_the_schema():
-    """feature_order is a 38-name SUBSET of the 39-dim v4 vector.
+    """feature_order is a 38-name SUBSET of the live vector (39-dim under v4, 48-dim under v5
+    CH-htfcrt-parent-candle-smc-v1 2026-08-15 — the registry artifact itself is unchanged).
 
     `macd_hist_raw` is deliberately absent — no trained statistics exist for it — and `session` is
     present but zero-weighted. Both facts are load-bearing: a future reader must not assume
@@ -190,7 +191,7 @@ def test_v4_registry_scores_a_strict_subset_of_the_schema():
 
     reg = json.loads(REGISTRY.read_text(encoding="utf-8"))
     order = reg["feature_order"]
-    assert len(order) == 38 and len(CANONICAL_FEATURE_ORDER) == 39
+    assert len(order) == 38 and len(CANONICAL_FEATURE_ORDER) == 48
     assert "macd_hist_raw" not in order
     assert {"candle_range", "macd_hist_z"} <= set(order)
     si = order.index("session")

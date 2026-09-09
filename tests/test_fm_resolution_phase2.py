@@ -196,4 +196,9 @@ def test_crt_engine_imports_and_loads_contracts():
         "RETEST",
         "EXECUTION",
         "RESOLUTION",
+        # Parent-timeframe 3-candle CRT states (disjoint sub-graph),
+        # CH-htfcrt-parent-candle-smc-v1, 2026-08-15:
+        "RANGE_C1",
+        "MANIPULATION_C2",
+        "DISTRIBUTION_C3",
     }

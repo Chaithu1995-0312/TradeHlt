@@ -45,11 +45,8 @@ ALERT_LOG_PATH = LOGS_DIR / "live_alerts.jsonl"
 
 # Default zone runtime artifact — layout owned by ModelPaths (Phase 0).
 # Version selection remains models/zone_gate_registry.json via ModelResolver.
-try:
-    from config_layer.model_paths import ModelPaths as _ModelPaths
-    ZONE_REGISTRY_PATH = str(_ModelPaths.ZONE_GATE_RUNTIME_ALIAS)
-except Exception:  # pragma: no cover — stripped envs without config_layer
-    ZONE_REGISTRY_PATH = "models/zone_registry.json"
+from config_layer.model_paths import ModelPaths as _ModelPaths
+ZONE_REGISTRY_PATH = str(_ModelPaths.ZONE_GATE_RUNTIME_ALIAS)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # BITNET ZONE GATE
@@ -65,7 +62,7 @@ def get_zone_registry_path(instrument: str, base_dir: str = "models/bitnet") -> 
         cand = os.path.join(base_dir, inst, "zone_registry.json")
         if os.path.exists(cand):
             return cand
-    return "models/zone_registry.json"
+    return ZONE_REGISTRY_PATH
 
 
 class ZoneFeatureOrderError(RuntimeError):

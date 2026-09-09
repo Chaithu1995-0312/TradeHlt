@@ -16,6 +16,8 @@ QUARANTINE NOTE (trust-layer WS2B, 2026-06-10)
 
 from __future__ import annotations
 
+import inspect
+
 from statistics import median
 from typing import Sequence
 
@@ -60,10 +62,30 @@ class EdgeAggregator:
             )
 
         # NET every gross R by the round-trip cost — all gates qualify on NET.
+        # `exit_kind` is passed only to a cost model that accepts it (SEM-015
+        # ComponentCostModel, which charges stop slippage on a stop exit and NOT on a
+        # take-profit). The flat `CostModel` has no such parameter and is called with
+        # the historical positional signature, so its arithmetic is byte-identical.
+        _exit_aware = "exit_kind" in inspect.signature(cost_model.net_rr).parameters
         rrs = [
-            cost_model.net_rr(o.rr_achieved, o.signal.entry, o.signal.sl_atr_mult * o.signal.atr)
+            cost_model.net_rr(
+                o.rr_achieved, o.signal.entry, o.signal.sl_atr_mult * o.signal.atr,
+                **({"exit_kind": o.outcome, "direction": o.signal.direction} if _exit_aware else {}),
+            )
             for o in outs
         ]
+        # `round_trip_bps` is a field of the flat model only. A component model prices in
+        # absolute price units, so its bps equivalent moves with the price level — report the
+        # REALISED mean over this book rather than inventing a constant or a sentinel.
+        _rt_bps = getattr(cost_model, "round_trip_bps", None)
+        if _rt_bps is None:
+            _rt_bps = sum(
+                cost_model.effective_bps(
+                    o.signal.entry, exit_kind=o.outcome, direction=o.signal.direction
+                )
+                for o in outs
+            ) / n
+
         wins = sum(1 for r in rrs if r > 0)
         losses = sum(1 for r in rrs if r <= 0)
         gross_win = sum(r for r in rrs if r > 0)
@@ -98,7 +120,7 @@ class EdgeAggregator:
             median_time_to_failure=float(median(failures)) if failures else 0.0,
             continuation_prob=round(continuation_prob, 4),
             max_drawdown_rr=round(self._max_drawdown_rr(rrs), 4),
-            round_trip_bps=cost_model.round_trip_bps,
+            round_trip_bps=_rt_bps,
         )
 
     @staticmethod

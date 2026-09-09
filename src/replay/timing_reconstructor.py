@@ -36,7 +36,10 @@ from typing import Dict, List, Optional, Sequence, Tuple
 # Strict OHLCV schema gate (pure-stdlib; no pandas pulled in).
 import sys as _sys
 _sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from data_ingestion.ohlcv_schema import require_ohlcv_columns, resolve_ohlcv_headers
+from data_ingestion.ohlcv_schema import (
+    require_ohlcv_columns, require_reviewed_clock, resolve_ohlcv_headers,
+)
+from utils.parquet_store import iter_records
 
 # Favorable R-levels we time (matches the falsification-gate experiment).
 R_LEVELS: Tuple[float, ...] = (0.25, 0.5, 1.0)
@@ -180,6 +183,7 @@ def load_candles(csv_path: "str | Path") -> Tuple[List[str], List[float],
     highs: List[float] = []
     lows: List[float] = []
     closes: List[float] = []
+    require_reviewed_clock(p)   # Phase 3: declared + reviewed clock (ohlcv_schema)
     with p.open(newline="", encoding="utf-8") as f:
         reader = _csv.reader(f)
         header = [h.strip().lower() for h in next(reader)]
@@ -238,16 +242,12 @@ def reconstruct_record(record: dict,
 
 def iter_jsonl(path: "str | Path"):
     """Yield parsed records from an opportunities.jsonl, skipping the
-    run_header line. Fail-soft on malformed lines (skipped)."""
-    with Path(path).open(encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                rec = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if rec.get("type") == "run_header":
-                continue
-            yield rec
+    run_header line. Fail-soft on malformed lines (skipped).
+
+    Reads through a Parquet projection when a fresh one exists, else straight from the
+    JSONL source. The name is kept for its callers; the records are identical either way.
+    """
+    for rec in iter_records(path):
+        if rec.get("type") == "run_header":
+            continue
+        yield rec

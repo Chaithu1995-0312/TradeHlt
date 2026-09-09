@@ -4,6 +4,7 @@ truth_mode.py — GrokAgenticAI TruthJanitor tools
 Governance / documentation hygiene (async kitchen only).
 
 Tools (read-first):
+  truth.ground_claim        — closed Semantic OS claim grounder (noun/relation/impl/evidence)
   truth.construction_check  — construction_protocol.py check
   truth.feature_math_lint   — feature_math_lint.py (ownership lint)
   truth.script_census       — script_census.py summary JSON under results/
@@ -69,6 +70,76 @@ def _run(
         "error": None if ok else ((proc.stderr or proc.stdout or "non-zero exit")[-800:]),
         "passed": ok,
     }
+
+
+@register_tool(
+    name="truth.ground_claim",
+    description=(
+        "Closed semantic environment: ground a repository NOUN, RELATIONSHIP, "
+        "IMPLEMENTATION, or EVIDENCE claim against tool-returned authorities. "
+        "UNKNOWN/AMBIGUOUS/UNANSWERABLE means do not invent the record."
+    ),
+    write=False,
+    args_schema={
+        "kind": {
+            "type": "str",
+            "required": True,
+            "desc": "NOUN | RELATIONSHIP | IMPLEMENTATION | EVIDENCE | JSONL",
+        },
+        "token": {
+            "type": "str",
+            "required": False,
+            "desc": "Noun / path / finding id / relation label",
+        },
+        "relation": {
+            "type": "str",
+            "required": False,
+            "desc": "Closed relation kind when kind=RELATIONSHIP",
+        },
+        "source": {"type": "str", "required": False, "desc": "Relationship source id"},
+        "target": {"type": "str", "required": False, "desc": "Relationship target id"},
+        "symbol": {"type": "str", "required": False, "desc": "Optional implementation symbol"},
+    },
+)
+def _ground_claim(
+    kind: str,
+    token: str = "",
+    relation: str = "",
+    source: str = "",
+    target: str = "",
+    symbol: str = "",
+) -> dict:
+    try:
+        from governance.semantic_grounding import SemanticGrounder
+
+        # kind=JSONL passes `token` AS-IS — an omitted token is legal for a join-only call.
+        jsonl = str(kind or "").strip().upper() == "JSONL"
+        hit = SemanticGrounder.load().ground(
+            kind,
+            token if jsonl else (token or relation),
+            source=source,
+            target=target,
+            symbol=symbol,
+            relation=relation,
+        )
+        out = hit.to_dict()
+        # Copy the grounding status BEFORE the envelope clobbers `status` with "ok". Without this
+        # a REFUSED verdict would survive only as `passed: False`, which reads identically to an
+        # UNKNOWN — the F-079 silent-gap class. The envelope contract itself is unchanged.
+        out["grounding_status"] = hit.status
+        out["status"] = "ok"
+        out["passed"] = hit.status == "GROUNDED"
+        out["truth.complete"] = False
+        return out
+    except Exception as exc:  # noqa: BLE001
+        logger.error("truth.ground_claim: %s", exc)
+        return {
+            "status": "error",
+            "error": str(exc),
+            "passed": False,
+            "grounding_status": "UNANSWERABLE",
+            "truth.complete": False,
+        }
 
 
 @register_tool(

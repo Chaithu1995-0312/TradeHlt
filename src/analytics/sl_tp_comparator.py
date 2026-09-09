@@ -46,7 +46,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 # independent oracle so this comparator and the backtest path cannot drift. The
 # oracle is the shared authority for win-rate / expectancy / drawdown in R.
 from analytics import metrics_oracle as mo
-from data_ingestion.ohlcv_schema import require_ohlcv_columns, resolve_ohlcv_headers
+from data_ingestion.ohlcv_schema import (
+    require_ohlcv_columns, require_reviewed_clock, resolve_ohlcv_headers,
+)
 
 log = logging.getLogger("SLTPComparator")
 
@@ -486,6 +488,7 @@ class SLTPComparator:
         """
         import csv as _csv
         candles = []
+        require_reviewed_clock(csv_path)   # Phase 3: declared + reviewed clock (ohlcv_schema)
         with open(csv_path, newline="", encoding="utf-8") as f:
             reader = _csv.DictReader(f)
             # Enforce the full six-column dataset contract even though this

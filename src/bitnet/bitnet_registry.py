@@ -31,11 +31,9 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-try:
-    from config_layer.model_paths import ModelPaths as _ModelPaths
-    DEFAULT_REGISTRY_PATH: Path = Path(str(_ModelPaths.BITNET_REGISTRY))
-except Exception:  # pragma: no cover
-    DEFAULT_REGISTRY_PATH = Path("models/bitnet/bitnet_registry.json")
+from config_layer.model_paths import ModelPaths as _ModelPaths
+
+DEFAULT_REGISTRY_PATH: Path = Path(str(_ModelPaths.BITNET_REGISTRY))
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 

@@ -17,6 +17,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Sequence
 
+# SK-1 (2026-08-19): SP-001 now has ONE implementation. The module's original isolation note
+# ("reimplement the small shared arithmetic locally; never import the live spine") is
+# SUPERSEDED for the ARITHMETIC only — `structure.predicates` is a pure, config-free identity
+# module, not the spine. The FOUNDING (this file's weekly calendar range) stays entirely
+# local, which is the independence that made F-042 a genuinely new ontology.
+from structure.predicates import swept_high as _swept_high, swept_low as _swept_low
+
 if TYPE_CHECKING:  # avoid pulling the heavy crt_engine_v2 import at runtime
     from config_layer.crt_engine_v2 import Candle
 
@@ -157,10 +164,10 @@ def _first_sweep_this_week(window: Sequence["Candle"], weekly_range: WeeklyRange
         if b.timestamp.weekday() not in SWEEP_WEEKDAYS:
             continue
         if boundary == "HIGH":
-            if float(b.high) > weekly_range.h_ref and float(b.close) < weekly_range.h_ref:
+            if _swept_high(float(b.high), float(b.close), weekly_range.h_ref):
                 return False
         else:
-            if float(b.low) < weekly_range.l_ref and float(b.close) > weekly_range.l_ref:
+            if _swept_low(float(b.low), float(b.close), weekly_range.l_ref):
                 return False
     return True
 
@@ -182,8 +189,8 @@ def detect_weekly_sweep(window: Sequence["Candle"], weekly_range: WeeklyRange) -
     if not bars:
         return None
     bar = bars[-1]
-    swept_high = float(bar.high) > weekly_range.h_ref and float(bar.close) < weekly_range.h_ref
-    swept_low = float(bar.low) < weekly_range.l_ref and float(bar.close) > weekly_range.l_ref
+    swept_high = _swept_high(float(bar.high), float(bar.close), weekly_range.h_ref)
+    swept_low = _swept_low(float(bar.low), float(bar.close), weekly_range.l_ref)
 
     if not swept_high and not swept_low:
         return None

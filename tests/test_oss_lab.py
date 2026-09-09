@@ -360,8 +360,8 @@ def test_codebase_memory_g1_g3_pin_and_evidence():
     assert rec["version"] == "v0.10.2"
     assert "b377c62a4e8b7ad64ccd295e4aa88abc8d275180" in rec["commit_or_tag"]
     assert rec["license"] == "MIT"
-    assert rec["decision"] == "APPROVED_FOR_LAB"
-    assert rec["lifecycle_status"] == "APPROVED_FOR_LAB"
+    assert rec["decision"] == "BENCHMARKED"
+    assert rec["lifecycle_status"] == "BENCHMARKED"
     assert rec["certification_status"] == "LAB_ONLY"
     assert rec["output_contract"].endswith("StructuralFactRecord")
     for surface in (
@@ -427,6 +427,44 @@ def test_gate_doc_shows_approved_for_lab():
     assert "G6 — Lifecycle transition — **PASS**" in gate
     assert "APPROVED_FOR_LAB" in gate
     assert "ATTEMPTED_TOOLS_ABSENT" in gate
+
+
+def test_ri_qa_milestone_and_sos_compat_gate_designed():
+    verdict = (
+        _REPO / "oss_lab" / "governance" / "RI_QA_V1_MILESTONE_VERDICT.md"
+    ).read_text(encoding="utf-8")
+    assert "SUCCESSFUL RESEARCH-LAB VALIDATION" in verdict
+    assert "not yet a Semantic OS integration" in verdict.lower() or "not SOS" in verdict.lower() or "≠ Semantic OS" in verdict
+    assert "FakeFusionEngineV9" in verdict or "negative control" in verdict.lower()
+    compat = (
+        _REPO / "oss_lab" / "governance" / "RI_SOS_EVIDENCE_COMPATIBILITY.md"
+    ).read_text(encoding="utf-8")
+    assert "FORBIDDEN" in compat
+    assert "Structural correctness" in compat or "structural_correctness" in compat
+    assert "read-only" in compat.lower() or "Read-only" in compat
+    corpus = json.loads(
+        (_REPO / "oss_lab" / "scenarios" / "ri_sos_compat_corpus_v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert corpus["corpus_id"] == "RI-SOS-COMPAT-V1"
+    assert corpus["status"] in ("DESIGNED_NOT_RUN", "RUN_COMPLETED")
+    assert len(corpus["items"]) >= 10
+    cats = {i["category"] for i in corpus["items"]}
+    for required in (
+        "file_identity",
+        "call_dependency",
+        "journey_reconstruction",
+        "boundary_membership",
+        "negative_nonexistent",
+        "sos_to_implementation",
+        "implementation_to_sos",
+    ):
+        assert required in cats
+    # 12/12 lab run must not be registered as SOS write surface
+    assert "write docs/governance/semantic_os" in " ".join(corpus["forbidden"]).lower() or any(
+        "semantic_os" in f.lower() for f in corpus["forbidden"]
+    )
 
 
 def test_lookahead_compare_detects_divergence():

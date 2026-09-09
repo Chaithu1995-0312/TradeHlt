@@ -46,6 +46,19 @@ except Exception:  # pragma: no cover
     def emit_integrity_event(*_a, **_kw):  # type: ignore[no-redef]
         return None
 
+# Optional Parquet projection reader. When unavailable, projection_status never reports
+# FRESH, so _parse_jsonl simply keeps using the raw-line path — same records, no fast path.
+try:
+    from utils.parquet_store import FRESH, iter_records, projection_status  # noqa: F401
+except Exception:  # pragma: no cover
+    FRESH = "FRESH"  # type: ignore[assignment]
+
+    def projection_status(*_a, **_kw):  # type: ignore[no-redef]
+        return "UNAVAILABLE"
+
+    def iter_records(*_a, **_kw):  # type: ignore[no-redef]
+        return iter(())
+
 try:
     from src.utils.registry_refresh import RegistryWatcher  # noqa: F401
 except Exception:  # pragma: no cover
@@ -303,10 +316,60 @@ class ReplayMemoryEngine:
                 break
         return found
 
+    def _record_from(self, rec: dict, now_ts: float) -> Optional[ReplayRecord]:
+        """One raw opportunity dict -> ReplayRecord, or None if it is not usable.
+
+        Shared by the JSONL and Parquet read paths so the two cannot drift. Shape
+        rejects (KeyError / ValueError) are silent here by design — only JSON-parse
+        failures count as corruption, and those can only happen on the JSONL path.
+        """
+        try:
+            if rec.get("type") == "run_header":
+                return None
+            features_dict = rec.get("features", {})
+            if not features_dict:
+                return None
+
+            age_days = self._age_days(rec.get("timestamp", ""), now_ts)
+            if age_days > self._staleness_threshold * 2:
+                return None  # very stale — skip entirely
+
+            cluster_id     = self._assign_cluster(features_dict)
+            features_list  = [float(v) for v in features_dict.values()]
+
+            return ReplayRecord(
+                timestamp   = str(rec.get("timestamp", "")),
+                instrument  = str(rec.get("instrument", "")),
+                direction   = str(rec.get("direction", "long")),
+                outcome     = str(rec.get("outcome", "UNKNOWN")),
+                rr_achieved = float(rec.get("rr_achieved", 0.0)),
+                cluster_id  = cluster_id,
+                features    = features_list,
+                age_days    = age_days,
+                # Phase D: backward-compatible — old records have no strategy key
+                strategy_id = str(rec.get("strategy", {}).get("winning_id", "")
+                                 if isinstance(rec.get("strategy"), dict)
+                                 else rec.get("strategy_id", "")),
+            )
+        except (KeyError, ValueError):
+            return None
+
     def _parse_jsonl(self, path: Path, now_ts: float) -> List[ReplayRecord]:
-        records = []
+        records: List[ReplayRecord] = []
         malformed = 0
         valid = 0
+
+        # Fast path: a FRESH Parquet projection was built from a source that already
+        # parsed cleanly and was verified record-for-record, so there is no corruption
+        # left to detect or report. Anything less than FRESH takes the raw-line path
+        # below, which keeps the line-numbered integrity reporting intact.
+        if projection_status(path) == FRESH:
+            for rec in iter_records(path):
+                got = self._record_from(rec, now_ts)
+                if got is not None:
+                    records.append(got)
+            return records
+
         with path.open("r", encoding="utf-8") as fh:
             for lineno, line in enumerate(fh, 1):
                 line = line.strip()
@@ -332,36 +395,9 @@ class ReplayMemoryEngine:
                         },
                     )
                     continue
-                try:
-                    if rec.get("type") == "run_header":
-                        continue
-                    features_dict = rec.get("features", {})
-                    if not features_dict:
-                        continue
-
-                    age_days = self._age_days(rec.get("timestamp", ""), now_ts)
-                    if age_days > self._staleness_threshold * 2:
-                        continue  # very stale — skip entirely
-
-                    cluster_id     = self._assign_cluster(features_dict)
-                    features_list  = [float(v) for v in features_dict.values()]
-
-                    records.append(ReplayRecord(
-                        timestamp   = str(rec.get("timestamp", "")),
-                        instrument  = str(rec.get("instrument", "")),
-                        direction   = str(rec.get("direction", "long")),
-                        outcome     = str(rec.get("outcome", "UNKNOWN")),
-                        rr_achieved = float(rec.get("rr_achieved", 0.0)),
-                        cluster_id  = cluster_id,
-                        features    = features_list,
-                        age_days    = age_days,
-                        # Phase D: backward-compatible — old records have no strategy key
-                        strategy_id = str(rec.get("strategy", {}).get("winning_id", "")
-                                         if isinstance(rec.get("strategy"), dict)
-                                         else rec.get("strategy_id", "")),
-                    ))
-                except (KeyError, ValueError):
-                    continue
+                got = self._record_from(rec, now_ts)
+                if got is not None:
+                    records.append(got)
         total = malformed + valid
         if total and (malformed / total) > MAX_CORRUPTION_RATIO:
             emit_integrity_event(

@@ -1,14 +1,30 @@
 #!/usr/bin/env python3
-"""Inventory business functionality of every src/**/*.py file.
+"""Inventory business functionality of the repository's non-test Python trees.
 
 Columns: File Name | Summary of functionality | Referred files
-Output: results/analysis/src_business_functionality.xlsx
+Output: results/analysis/src_business_functionality.xlsx — one sheet per tree.
+
+Trees covered (see ``TREES``): ``src/`` (the original scope), ``tools/``,
+``exec_telemetry/``, and the repo-root ``*.py`` files. ``scripts/`` has its own
+long-standing workbook at the repo root and is emitted here only on request
+(``--tree scripts --out <path>``) so its output can be diffed rather than
+silently overwritten.
+
+The ``src`` sheet is byte-compatible with the pre-multi-tree version: relative-import
+resolution and the project-reference filter are unchanged for that tree.
+
+Usage:
+    python scripts/analysis/src_business_functionality_inventory.py
+    python scripts/analysis/src_business_functionality_inventory.py --tree tools
+    python scripts/analysis/src_business_functionality_inventory.py --tree scripts --out /tmp/s.xlsx
 """
 from __future__ import annotations
 
+import argparse
 import ast
 import re
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 
 try:
@@ -19,7 +35,72 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
+
+#: Value written to "Referred files" when a module imports nothing project-local.
+_NO_REFS = "(none / stdlib-only)"
 OUT = ROOT / "results" / "analysis" / "src_business_functionality.xlsx"
+
+
+@dataclass(frozen=True)
+class Tree:
+    """One Python tree to inventory, and how to resolve its imports.
+
+    ``extra_tops`` widens the project-reference filter beyond ``src/``'s own
+    subpackages. It is deliberately EMPTY for ``src`` so that sheet reproduces the
+    original single-tree output exactly.
+    """
+
+    key: str
+    sheet: str
+    root: Path
+    recursive: bool = True
+    extra_tops: frozenset = field(default_factory=frozenset)
+    #: Does the Semantic OS declare file identities for this tree? Sheets where it
+    #: does not must NOT be enriched — a blank Semantic ID column would read as
+    #: "coverage measured at zero" rather than "coverage not measured".
+    has_identities: bool = False
+    #: Write ``File Name`` relative to the TREE root rather than the repo root.
+    #: Only ``scripts`` uses this, to preserve the convention its long-standing
+    #: workbook already ships — the enrichment join reads that column verbatim.
+    relative_to_tree: bool = False
+    #: Emit the legacy ``Counts`` summary sheet alongside this tree's sheet.
+    counts_sheet: bool = False
+
+
+#: Sibling trees an import may legitimately name. ``multi_llm`` is deliberately absent:
+#: the repo-root ``multi_llm/`` holds no Python, while ``src/multi_llm/`` does, so claiming
+#: the name here would misroute ``src`` imports away from the package that really backs them.
+_TREE_TOPS = frozenset({"src", "scripts", "tools", "tests", "mt5_analytics", "exec_telemetry"})
+
+TREES: dict[str, Tree] = {
+    "src": Tree("src", "src_py_inventory", SRC, True, frozenset(), True),
+    "tools": Tree("tools", "tools_py_inventory", ROOT / "tools", True, _TREE_TOPS, False),
+    "exec_telemetry": Tree(
+        "exec_telemetry",
+        "exec_telemetry_py_inventory",
+        ROOT / "exec_telemetry",
+        True,
+        _TREE_TOPS,
+        False,
+    ),
+    "root": Tree("root", "root_py_inventory", ROOT, False, _TREE_TOPS, True),
+    "scripts": Tree(
+        "scripts",
+        "Scripts Analysis",
+        ROOT / "scripts",
+        True,
+        _TREE_TOPS,
+        True,
+        relative_to_tree=True,
+        counts_sheet=True,
+    ),
+}
+
+#: Trees written into the default workbook, in sheet order.
+DEFAULT_TREES = ("src", "tools", "exec_telemetry", "root")
+
+#: Set per-tree by :func:`inventory_tree`; the import-resolution helpers read it.
+_TREE: Tree = TREES["src"]
 
 # Patterns that look like noise for summary
 _SKIP_NAMES = frozenset(
@@ -54,11 +135,11 @@ def _first_sentence(text: str, max_len: int = 320) -> str:
             if lines:
                 break  # blank after content often ends title block
             continue
-        if re.fullmatch(r"[=#\-─_~*]{4,}", s):
+        if re.fullmatch(r"[=#\-─═━┄┈_~*+]{4,}", s):
             continue
-        if re.fullmatch(r"[\w./\\-]+\.py\s*[=#\-─_~*]*", s, flags=re.I):
+        if re.fullmatch(r"[\w./\\-]+\.py\s*[=#\-─═━┄┈_~*+]*", s, flags=re.I):
             continue
-        if re.fullmatch(r"[=#\-─_~*]{2,}\s*[\w./\\-]+\.py\s*[=#\-─_~*]{2,}", s, flags=re.I):
+        if re.fullmatch(r"[=#\-─═━┄┈_~*+]{2,}\s*[\w./\\-]+\.py\s*[=#\-─═━┄┈_~*+]{2,}", s, flags=re.I):
             continue
         lines.append(s)
     text = " ".join(lines)
@@ -105,9 +186,9 @@ def _resolve_relative(file_path: Path, raw: str) -> str:
     while level < len(raw) and raw[level] == ".":
         level += 1
     rest = raw[level:]
-    # file package: parent of file relative to src, then go up (level-1)
+    # file package: parent of file relative to the tree root, then go up (level-1)
     try:
-        rel = file_path.relative_to(SRC)
+        rel = file_path.relative_to(_TREE.root)
     except ValueError:
         return raw
     parts = list(rel.parts[:-1])  # package dirs
@@ -123,12 +204,19 @@ def _resolve_relative(file_path: Path, raw: str) -> str:
 
 
 def _project_tops() -> set[str]:
+    """Top-level import names treated as project-local.
+
+    Always ``src/``'s own subpackages plus ``src`` itself — that is the whole set for
+    the ``src`` tree, which keeps its sheet identical to the original single-tree run.
+    Other trees additionally claim the sibling tree names they legitimately import from.
+    """
     tops = {
         p.name
         for p in SRC.iterdir()
         if p.is_dir() and not p.name.startswith("__") and p.name != "tradelatest.egg-info"
     }
     tops.add("src")
+    tops |= set(_TREE.extra_tops)
     return tops
 
 
@@ -165,14 +253,18 @@ def _module_to_file_hint(mod: str) -> str:
         parts = parts[1:]
     if not parts:
         return mod
-    py = SRC.joinpath(*parts).with_suffix(".py")
-    init = SRC.joinpath(*parts) / "__init__.py"
+    # A sibling tree (tools.x, scripts.y, mt5_analytics.z) lives under ROOT, not src/.
+    base, prefix = (SRC, "src/")
+    if parts[0] in _TREE_TOPS and (ROOT / parts[0]).is_dir():
+        base, prefix = (ROOT, "")
+    py = base.joinpath(*parts).with_suffix(".py")
+    init = base.joinpath(*parts) / "__init__.py"
     if py.is_file():
         return py.relative_to(ROOT).as_posix()
     if init.is_file():
         return init.relative_to(ROOT).as_posix()
     # package prefix only
-    return "src/" + "/".join(parts)
+    return prefix + "/".join(parts)
 
 
 def _summarize(tree: ast.AST, source: str, file_path: Path) -> str:
@@ -222,7 +314,8 @@ def _summarize(tree: ast.AST, source: str, file_path: Path) -> str:
 
 
 def analyze_file(path: Path) -> dict:
-    rel = path.relative_to(ROOT).as_posix()
+    base = _TREE.root if _TREE.relative_to_tree else ROOT
+    rel = path.relative_to(base).as_posix()
     try:
         source = path.read_text(encoding="utf-8", errors="replace")
     except OSError as e:
@@ -402,32 +495,117 @@ def analyze_file(path: Path) -> dict:
     return {
         "File Name": rel,
         "Summary of functionality": summary,
-        "Referred files": "; ".join(referred_display) if referred_display else "(none / stdlib-only)",
+        "Referred files": "; ".join(referred_display) if referred_display else _NO_REFS,
     }
 
 
-def main() -> int:
-    files = sorted(SRC.rglob("*.py"))
-    # skip __pycache__
-    files = [f for f in files if "__pycache__" not in f.parts]
-    rows = [analyze_file(f) for f in files]
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    df = pd.DataFrame(rows, columns=["File Name", "Summary of functionality", "Referred files"])
-    with pd.ExcelWriter(OUT, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False, sheet_name="src_py_inventory")
-        ws = writer.sheets["src_py_inventory"]
-        ws.freeze_panes = "A2"
-        ws.auto_filter.ref = ws.dimensions
-        widths = {"A": 55, "B": 90, "C": 80}
-        for col, w in widths.items():
-            ws.column_dimensions[col].width = w
-        # wrap text for summary + refs
-        from openpyxl.styles import Alignment
+def _iter_tree_files(tree: Tree) -> list[Path]:
+    """Every non-``__pycache__`` ``.py`` in the tree, sorted."""
+    it = tree.root.rglob("*.py") if tree.recursive else tree.root.glob("*.py")
+    return sorted(f for f in it if "__pycache__" not in f.parts)
 
-        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=1, max_col=3):
-            for cell in row:
-                cell.alignment = Alignment(wrap_text=True, vertical="top")
-    print(f"Wrote {len(df)} rows -> {OUT}")
+
+def inventory_tree(tree: Tree) -> "pd.DataFrame":
+    """Analyze one tree. Sets the module-level ``_TREE`` the import helpers read."""
+    global _TREE, _PROJECT_TOPS
+    _TREE = tree
+    _PROJECT_TOPS = None  # recompute: the project-reference filter is tree-scoped
+    rows = [analyze_file(f) for f in _iter_tree_files(tree)]
+    return pd.DataFrame(rows, columns=["File Name", "Summary of functionality", "Referred files"])
+
+
+def _style(ws) -> None:
+    from openpyxl.styles import Alignment
+
+    ws.freeze_panes = "A2"
+    ws.auto_filter.ref = ws.dimensions
+    for col, w in {"A": 55, "B": 90, "C": 80}.items():
+        ws.column_dimensions[col].width = w
+    for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=1, max_col=3):
+        for cell in row:
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+
+
+def _readme_rows(trees: list[Tree], counts: dict[str, int]) -> list[str]:
+    lines = [
+        "Python business-functionality inventory — one sheet per tree.",
+        f"Generated by: scripts/analysis/{Path(__file__).name}",
+        "Regenerate: python scripts/analysis/src_business_functionality_inventory.py",
+        "Summary of functionality: module docstring first line, else inferred from class/function names.",
+        "Referred files: direct imports only, resolved to project-relative paths (stdlib/third-party omitted).",
+        "No transitive dependency analysis.",
+        "",
+        "Sheets:",
+    ]
+    for t in trees:
+        scope = f"{t.root.relative_to(ROOT).as_posix() or '.'}/*.py" + ("" if t.recursive else " (non-recursive)")
+        ident = "identities declared" if t.has_identities else "NO Semantic OS identities declared for this tree"
+        lines.append(f"  {t.sheet}: {scope} — {counts[t.key]} files — {ident}")
+    lines += [
+        "",
+        "Semantic identity columns are appended by",
+        "scripts/governance/enrich_workbooks_with_semantic_identity.py (run it AFTER this script;",
+        "regeneration overwrites the sheet and drops those columns).",
+        "A sheet marked 'NO Semantic OS identities' is left un-enriched on purpose: a blank",
+        "Semantic ID column would read as 'coverage measured at zero', not 'coverage not measured'.",
+    ]
+    return lines
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument(
+        "--tree",
+        action="append",
+        choices=sorted(TREES),
+        help=f"tree(s) to inventory; default: {' '.join(DEFAULT_TREES)}",
+    )
+    ap.add_argument("--out", type=Path, help=f"output workbook (default: {OUT.relative_to(ROOT).as_posix()})")
+    args = ap.parse_args(argv)
+
+    keys = args.tree or list(DEFAULT_TREES)
+    trees = [TREES[k] for k in keys]
+    out = args.out or OUT
+
+    frames = {t.key: inventory_tree(t) for t in trees}
+    counts = {k: len(df) for k, df in frames.items()}
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with pd.ExcelWriter(out, engine="openpyxl") as writer:
+        for t in trees:
+            frames[t.key].to_excel(writer, index=False, sheet_name=t.sheet)
+            _style(writer.sheets[t.sheet])
+        for t in trees:
+            if not t.counts_sheet:
+                continue
+            df = frames[t.key]
+            refs = df["Referred files"]
+            summ = df["Summary of functionality"]
+            pd.DataFrame(
+                {
+                    "Metric": [
+                        f"Total Python files under {t.root.relative_to(ROOT).as_posix()}/",
+                        "Files with referred project imports",
+                        "Files with empty referred files",
+                        "Parse/read errors",
+                    ],
+                    "Value": [
+                        len(df),
+                        int((refs != _NO_REFS).sum()),
+                        int((refs == _NO_REFS).sum()),
+                        int(summ.str.startswith(("SYNTAX ERROR", "UNREADABLE")).sum()),
+                    ],
+                }
+            ).to_excel(writer, index=False, sheet_name="Counts")
+            writer.sheets["Counts"].column_dimensions["A"].width = 42
+
+        readme = pd.DataFrame({"README": _readme_rows(trees, counts)})
+        readme.to_excel(writer, index=False, sheet_name="README")
+        writer.sheets["README"].column_dimensions["A"].width = 110
+
+    total = sum(counts.values())
+    detail = ", ".join(f"{t.sheet}={counts[t.key]}" for t in trees)
+    print(f"Wrote {total} rows ({detail}) -> {out}")
     return 0
 
 

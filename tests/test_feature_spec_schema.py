@@ -212,10 +212,12 @@ def test_depends_on_is_referentially_intact(ont, entries):
 def test_canonical_coverage_is_near_complete(entries, ont):
     """Coverage is a number worth pinning: v1.4 took it from 23/39 to 37/39; 2026-08-01 (FM-064
     trend_strength + FM-065 candles_since_retest registered) closed the gap to 39/39 -- full
-    coverage, matching _UNREGISTERED_VECTOR_SLOTS now being empty in test_feature_lineage.py."""
+    coverage, matching _UNREGISTERED_VECTOR_SLOTS now being empty in test_feature_lineage.py.
+    2026-08-15 (CH-htfcrt-parent-candle-smc-v1): 9 new SMC primitives registered FM-075..FM-083,
+    raising full coverage to 48/48."""
     known = {name for _s, name, _sp in entries} | set(ont.get("base_inputs") or ())
     covered = [f for f in CANONICAL_FEATURES if f in known]
-    assert len(covered) == 39, (
+    assert len(covered) == 48, (
         f"canonical coverage changed: {len(covered)}/{len(CANONICAL_FEATURES)}. "
         "Raising this is the goal (see _UNREGISTERED_VECTOR_SLOTS in test_feature_lineage.py); "
         "lowering it means an identity was withdrawn — update this pin deliberately."

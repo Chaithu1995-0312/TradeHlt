@@ -184,7 +184,7 @@ class FeatureStateEncoder:
         return {sf.name: self.classify_value(sf.name, features[sf.name]) for sf in self._vector_bound}
 
     def classify_vector(self, vector: Sequence[float]) -> dict[str, str]:
-        """Interpret a full canonical vector (schema v4.0, 39 dims) into its state vector."""
+        """Interpret a full canonical vector (schema v5.0, 48 dims) into its state vector."""
         if len(vector) != len(CANONICAL_FEATURES):
             raise ValueError(
                 f"classify_vector(): expected {len(CANONICAL_FEATURES)}-dim canonical vector, "

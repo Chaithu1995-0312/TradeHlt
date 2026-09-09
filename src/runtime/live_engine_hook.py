@@ -19,7 +19,7 @@ import core.collector as collector
 
 from core.engine_runner import EngineRunner
 from core.gate_intelligence import compute_crt_levels
-from engines.live_engine import LiveEngine
+from engines.live_engine import LiveEngine, LiveEngineConfig
 from config_layer.execution_planner import ExecutionPlannerV1_2
 from config_layer.production_config import get_prod_metadata, get_prod_section
 from core.ultron_risk_gate import UltronRiskGate
@@ -78,6 +78,11 @@ except Exception:
     _REGIME_AVAILABLE = False
 
 logger = get_flow_logger("LIVE_HOOK")
+
+
+def _decision_is_approve(ultron_result: dict) -> bool:
+    """Ultron returns 'approve'; the hook historically compared 'APPROVE' and never sent."""
+    return str(ultron_result.get("decision", "")).lower() == "approve"
 
 from config_layer.production_config import PROD_VERSION as _LIVE_PROD_VERSION
 logger.info("Production config version: %s", _LIVE_PROD_VERSION)
@@ -200,6 +205,17 @@ def _normalize_session(value) -> str:
         "new_york": "new_york",
         "ny": "new_york",
         "overlap": "overlap",
+        # SessionOrdinal.CLOSED (=4) is the FIFTH value of the v4.0 window model; the single
+        # owner is features/session_classifier.py. This map knew only 0-3, so every bar in the
+        # CLOSED bucket (20% of a 2024 XAUUSD sample) raised instead of being classified. CLOSED
+        # means "no major session active" -- NOT "the exchange is shut" (crypto trades through
+        # it). Admission is unchanged: "closed" is simply absent from allowed_sessions, so such a
+        # bar REJECTs on the session gate exactly as any non-allowed session does.
+        4: "closed",
+        "4": "closed",
+        "closed": "closed",
+        "off_session": "closed",
+        "offsession": "closed",
     }
     # T-11: no silent fallback. `None` previously became "london" — fabricating a specific
     # trading session. Callers must not pass None (_derive_session already guards this).
@@ -271,7 +287,13 @@ def _load_engine_config() -> dict:
     Raises RuntimeError if the production config is missing or malformed.
     No default fallbacks permitted — all values must come from v1_multi_2026_03.json.
     """
-    global _ENGINE_CONFIG_CACHE, _feature_monitor
+    # _feature_store MUST be listed here. It was not until 2026-08-19: the assignment
+    # below then bound a function-local and was discarded, leaving the module singleton
+    # None forever, so the canonical ingestion boundary in process() never ran and
+    # EngineRunner scored on the reduced _build_engine_input() dict (ZoneGate raised
+    # 'Missing canonical keys' on 29 of 48). Skipped validation is indistinguishable
+    # from absent validation -- see the fail-closed guard in process().
+    global _ENGINE_CONFIG_CACHE, _feature_monitor, _feature_store
     if _ENGINE_CONFIG_CACHE is not None:
         return deepcopy(_ENGINE_CONFIG_CACHE)
 
@@ -370,8 +392,8 @@ def _load_engine_config() -> dict:
         )
 
     # Initialize FeatureStore as canonical ingestion boundary.
-    # Validates all CANONICAL_FEATURES (39 under schema v4.0), computes history-derived
-    # double_sweep,
+    # Validates all CANONICAL_FEATURES (48 under schema v5.0, F-076), computes
+    # history-derived double_sweep,
     # and injects _data_integrity="real" sentinel before EngineRunner receives the dict.
     if _STORE_AVAILABLE and FeatureStore is not None:
         fs_cfg = metadata.get("feature_store")
@@ -547,10 +569,12 @@ def _build_ohlcv_and_auxiliary(trade_data: dict) -> tuple[dict, dict]:
         # divergence (F-047), unchanged here and still tracked separately. The canonical key now
         # carries the canonical quantity; the divergent live value keeps its own name.
         "candle_range":         candle_range,
-        "wick_size":            wick_size,  # live total_wick — NON-canonical, GD-002 (F-047)
         "body_ratio":           body_ratio,  # CANONICAL body/range (FM-010) since T-16
-        "body_to_total_wick_ratio": body_to_total_wick_ratio,
-        "body_to_range_ratio":  body_to_range_ratio,
+        # `wick_size` / `body_to_total_wick_ratio` / `body_to_range_ratio` are NOT canonical
+        # (GD-001/GD-002, F-047) and are deliberately dual-emitted elsewhere. They are not passed
+        # here: FeatureStore validates an EXACT canonical set and rejects extras, and its output
+        # replaces engine_input with canonical-only anyway, so these never survived this boundary.
+        # Nothing loses access to either identity -- this is the store's contract, not a demotion.
         # Regime / volatility
         "volatility_regime":    _req(trade_data, "volatility_regime"),
         # Indicators — MANDATORY. Previously "passed through if supplied, otherwise 0.0", which
@@ -569,6 +593,23 @@ def _build_ohlcv_and_auxiliary(trade_data: dict) -> tuple[dict, dict]:
         "disp_strength":        _req(trade_data, "disp_strength"),
         "retest_depth":         _req(trade_data, "retest_depth"),
         "candles_since_retest": int(_req(trade_data, "candles_since_retest")),
+        # Schema v5.0 remainder (F-076, CH-htfcrt-parent-candle-smc-v1). This literal predated
+        # v5.0 while the docstring above already promised "all remaining CANONICAL_FEATURES",
+        # so FeatureStore rejected every live bar for 12 missing canonical keys. MANDATORY via
+        # _req for the same reason as the indicators: a defaulted distance must never be
+        # indistinguishable from a real zero one.
+        "volume_spike":              _req(trade_data, "volume_spike"),
+        "liquidity_distance":        _req(trade_data, "liquidity_distance"),
+        "liquidity_pressure_score":  _req(trade_data, "liquidity_pressure_score"),
+        "order_block_distance":      _req(trade_data, "order_block_distance"),
+        "fvg_distance":              _req(trade_data, "fvg_distance"),
+        "breaker_distance":          _req(trade_data, "breaker_distance"),
+        "mitigation_block_distance": _req(trade_data, "mitigation_block_distance"),
+        "pdh_distance":              _req(trade_data, "pdh_distance"),
+        "pdl_distance":              _req(trade_data, "pdl_distance"),
+        "eqh_distance":              _req(trade_data, "eqh_distance"),
+        "eql_distance":              _req(trade_data, "eql_distance"),
+        "change_of_character":       _req(trade_data, "change_of_character"),
     }
     return ohlcv, auxiliary
 
@@ -686,6 +727,93 @@ def register_trade_outcome(pnl_inr: float) -> bool:
 
 
 class HookedLiveEngine(LiveEngine):
+    """Live tail around EngineRunner → planner → Ultron.
+
+    ``hook_submit_orders=False`` (default) is XOR-as-code: this class stays
+    decision-only. OrderManager (PR-3/4c) is the Layer-5 submitter. Passing
+    True restores the historical MT5/Telegram send path.
+    """
+
+    def __init__(
+        self,
+        config: LiveEngineConfig | None = None,
+        *,
+        hook_submit_orders: bool = False,
+        ultron_gate: UltronRiskGate | None = None,
+    ) -> None:
+        super().__init__(config)
+        self._hook_submit_orders = bool(hook_submit_orders)
+        self._ultron_gate = ultron_gate
+
+    def _may_submit(self, ultron_result: dict, ks_blocked: bool) -> bool:
+        return (
+            self._hook_submit_orders
+            and _decision_is_approve(ultron_result)
+            and not ks_blocked
+        )
+
+    def _emit_live_io(
+        self,
+        *,
+        ultron_result: dict,
+        ks_blocked: bool,
+        trade_plan: dict,
+        pair: str,
+        timeframe: str,
+        close: float,
+        confidence: float,
+        orch_result,
+    ) -> int | None:
+        """Telegram-as-order + MT5 send. Skipped when XOR is off.
+
+        Side is still ``trade_intent`` here (historical). OrderManager (PR-3)
+        maps ``direction`` 1/-1 → BUY/SELL; this path is only for
+        ``hook_submit_orders=True`` isolation tests until that PR lands.
+        """
+        if not self._may_submit(ultron_result, ks_blocked):
+            return None
+        _tg = _get_telegram()
+        if _tg is not None:
+            try:
+                _sl_inr = float(trade_plan.get("sl_inr", 0.0))
+                _tp_inr = float(trade_plan.get("tp_inr", 0.0))
+                _rr = float(trade_plan.get("rr_ratio", 0.0))
+                _sig = str(trade_plan.get("trade_intent", "BUY"))
+                _conf = float(confidence)
+                _scores = (
+                    orch_result.to_dict().get("strategy_scores", {})
+                    if orch_result is not None else {}
+                )
+                _tg.send_signal_alert(
+                    pair=pair, timeframe=timeframe, signal=_sig,
+                    confidence=_conf, entry_price=close,
+                    sl_inr=_sl_inr, tp_inr=_tp_inr, rr_ratio=_rr,
+                    strategy_scores=_scores,
+                )
+            except Exception as exc:
+                logger.warning("LIVE_HOOK: Telegram signal alert failed (ignored): %s", exc)
+        ticket = None
+        _mt5_bridge = _get_mt5()
+        if _mt5_bridge is not None:
+            try:
+                _lot = float(ultron_result.get("final_position_size", 0.01))
+                _act = str(trade_plan.get("trade_intent", "BUY"))
+                _sl_p = float(trade_plan.get("stop_loss", trade_plan.get("sl_price", 0.0)))
+                _tp_p = float(trade_plan.get("take_profit_1", trade_plan.get("tp_price", 0.0)))
+                ticket = _mt5_bridge.send_order(
+                    symbol=pair, action=_act,
+                    lot_size=_lot, sl_price=_sl_p, tp_price=_tp_p,
+                    comment=f"tradelatest_{pair}_{timeframe}",
+                )
+                if ticket is not None:
+                    logger.info(
+                        "LIVE_HOOK: MT5 order placed — ticket=%s pair=%s action=%s lot=%.2f",
+                        ticket, pair, _act, _lot,
+                    )
+            except Exception as exc:
+                logger.warning("LIVE_HOOK: MT5Bridge send_order failed (ignored): %s", exc)
+        return ticket
+
     def process(
         self,
         trade_data: dict,
@@ -722,6 +850,22 @@ class HookedLiveEngine(LiveEngine):
         # but a warning line. A validation failure must REJECT the tick, never downgrade it.
         # No kill-switch flag by deliberate decision: such a flag gets switched on under pressure
         # and left on.
+        if _STORE_AVAILABLE and _feature_store is None:
+            # The T-11 fail-closed intent above covers FeatureStore RAISING. It did not
+            # cover FeatureStore never being CONSTRUCTED -- which is what the missing
+            # `global` produced: the guard below was simply skipped and the engines were
+            # handed the un-validated dict with no warning at all. Silence is the bug.
+            #
+            # _load_engine_config() is the only builder and is cache-idempotent, so call it
+            # here rather than depending on it having run earlier in process() (it is first
+            # reached below, at the EngineRunner config line). Order-independent by design.
+            _load_engine_config()
+        if _STORE_AVAILABLE and _feature_store is None:
+            raise RuntimeError(
+                "LIVE_HOOK: FeatureStore is importable but the singleton is still None "
+                "after _load_engine_config() -- its assignment is not reaching the module "
+                "global. Refusing to score on un-validated features (fail closed)."
+            )
         if _STORE_AVAILABLE and _feature_store is not None:
             _ohlcv, _auxiliary = _build_ohlcv_and_auxiliary(trade_data)
             _timestamp = trade_data["timestamp"]  # guaranteed present (checked above)
@@ -908,12 +1052,15 @@ class HookedLiveEngine(LiveEngine):
             # tests/test_live_hook_crt_config_plumbing.py.
             _tp1_mult = float(_crt_cfg.get(_tp1_key, _crt_cfg.get("tp1_atr_multiplier", 1.0)))
             _tp2_mult = float(_crt_cfg.get("tp2_atr_multiplier", 2.0))
+            # F-072 / DM-001: canonical atr is close-relative (FM-041).
+            # compute_crt_levels wants price-unit ATR (FM-074 == atr * close).
+            _atr_abs = float(engine_input["atr"]) * float(engine_input["close"])
             _crt = compute_crt_levels(
                 entry        = float(trade_plan["entry_price"]),
                 direction    = int(trade_plan["direction"]),
                 low          = float(engine_input["low"]),
                 high         = float(engine_input["high"]),
-                atr          = float(engine_input["atr"]),
+                atr          = _atr_abs,
                 sl_atr_buffer= float(_require_cfg(_crt_cfg, "sl_atr_buffer", "crt_engine")),
                 tp1_mult     = _tp1_mult,
                 tp2_mult     = _tp2_mult,
@@ -992,6 +1139,8 @@ class HookedLiveEngine(LiveEngine):
                     "trades_today":         int(trade_data["trades_today"]),
                     "daily_loss_pct":       float(trade_data["daily_loss_pct"]),
                     "open_positions":       int(trade_data["open_positions"]),
+                    # FRAG-2: omit → skip; empty dict → skip; populated → duplicate guard.
+                    "positions":            trade_data.get("positions", {}),
                 }
                 _daily_reset_tracker.apply_reset_if_new_day(portfolio_state)  # GAP-006
                 ultron_cfg = engine_config.get("ultron_risk_gate")
@@ -1005,7 +1154,7 @@ class HookedLiveEngine(LiveEngine):
                 # by regime factor before delegating unconditionally to gate.evaluate()).
                 # regime is set by EngineRunner.run() Step 6/7 and is always present.
                 _regime = str(engine_outputs.get("regime", "neutral"))
-                gate = UltronRiskGate(ultron_cfg)
+                gate = self._ultron_gate if self._ultron_gate is not None else UltronRiskGate(ultron_cfg)
                 wrapper = UltronRiskGateWrapper(
                     gate,
                     regime_factors=ultron_cfg.get("regime_factors"),  # from ultron_risk_gate config
@@ -1046,6 +1195,9 @@ class HookedLiveEngine(LiveEngine):
         _pair = _require_symbol(trade_data)
         _tf   = str(trade_data.get("timeframe", timeframe))
 
+        result["trade_plan"] = trade_plan
+        result["ultron"] = ultron_result
+
         # 1. Kill switch pre-check — block if already tripped
         _ks = _get_kill_switch()
         _ks_blocked = False
@@ -1058,6 +1210,7 @@ class HookedLiveEngine(LiveEngine):
             result["ks_blocked"]  = True
             result["ks_reason"]   = _ks.trip_reason()
             result["drift_severity"] = _drift_severity
+            result["mt5_ticket"] = None
             return result
 
         # StrategyOrchestrator already ran as 5th engine before EngineRunner — see
@@ -1065,52 +1218,17 @@ class HookedLiveEngine(LiveEngine):
         if _orch_result is not None:
             result["orchestrator"] = _orch_result.to_dict()
 
-        # 2. Send Telegram signal alert if ultron approved
-        if ultron_result.get("decision") == "APPROVE" and not _ks_blocked:
-            _tg = _get_telegram()
-            if _tg is not None:
-                try:
-                    _sl_inr = float(trade_plan.get("sl_inr", 0.0))
-                    _tp_inr = float(trade_plan.get("tp_inr", 0.0))
-                    _rr     = float(trade_plan.get("rr_ratio", 0.0))
-                    _sig    = str(trade_plan.get("trade_intent", "BUY"))
-                    _entry  = float(engine_input["close"])
-                    _conf   = float(engine_outputs.get("final_score", 0.0))
-                    _scores = (
-                        _orch_result.to_dict().get("strategy_scores", {})
-                        if _orch_result is not None else {}
-                    )
-                    _tg.send_signal_alert(
-                        pair=_pair, timeframe=_tf, signal=_sig,
-                        confidence=_conf, entry_price=_entry,
-                        sl_inr=_sl_inr, tp_inr=_tp_inr, rr_ratio=_rr,
-                        strategy_scores=_scores,
-                    )
-                except Exception as exc:
-                    logger.warning("LIVE_HOOK: Telegram signal alert failed (ignored): %s", exc)
-
-        # 4. MT5 order — only when ultron APPROVE and not kill-switch blocked
-        _mt5_ticket = None
-        if ultron_result.get("decision") == "APPROVE" and not _ks_blocked:
-            _mt5_bridge = _get_mt5()
-            if _mt5_bridge is not None:
-                try:
-                    _lot  = float(ultron_result.get("final_position_size", 0.01))
-                    _act  = str(trade_plan.get("trade_intent", "BUY"))
-                    _sl_p = float(trade_plan.get("sl_price",  0.0))
-                    _tp_p = float(trade_plan.get("tp_price",  0.0))
-                    _mt5_ticket = _mt5_bridge.send_order(
-                        symbol=_pair, action=_act,
-                        lot_size=_lot, sl_price=_sl_p, tp_price=_tp_p,
-                        comment=f"tradelatest_{_pair}_{_tf}",
-                    )
-                    if _mt5_ticket is not None:
-                        logger.info(
-                            "LIVE_HOOK: MT5 order placed — ticket=%s pair=%s action=%s lot=%.2f",
-                            _mt5_ticket, _pair, _act, _lot,
-                        )
-                except Exception as exc:
-                    logger.warning("LIVE_HOOK: MT5Bridge send_order failed (ignored): %s", exc)
+        # XOR: default hook_submit_orders=False → no Telegram-as-order, no MT5 send.
+        _mt5_ticket = self._emit_live_io(
+            ultron_result=ultron_result,
+            ks_blocked=_ks_blocked,
+            trade_plan=trade_plan,
+            pair=_pair,
+            timeframe=_tf,
+            close=float(engine_input["close"]),
+            confidence=float(engine_outputs.get("final_score", 0.0)),
+            orch_result=_orch_result,
+        )
 
         result["ks_blocked"]   = _ks_blocked
         result["ks_reason"]    = _ks.trip_reason() if _ks is not None else ""

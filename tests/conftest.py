@@ -14,6 +14,28 @@ collect_ignore = [
 # Add src/ to sys.path so all packages resolve without a 'src.' prefix
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+
+@pytest.fixture(scope="session", autouse=True)
+def _declare_synthetic_corpus_clocks(tmp_path_factory):
+    """Phase-3 clock provenance for test-built corpora.
+
+    `ohlcv_schema.require_reviewed_clock` refuses to read any OHLCV file whose timezone has not
+    been human-reviewed (see data_ingestion/clock_registry.py). That gate is about corpora that
+    ARRIVE from outside with an unknown clock — it is not about a 6-row CSV a test writes into
+    tmp_path and deletes on teardown, whose clock the test itself chose.
+
+    So the harness declares its own scratch tree, in process, once. This is a CALL in test
+    infrastructure — not an env var, not a config flag, and never persisted to the registry — and
+    `test_ohlcv_clock_provenance.py::test_no_production_module_declares_in_process` fails the build
+    if any module under `src/` tries the same trick.
+    """
+    from data_ingestion.clock_registry import declare_tree_in_process
+    declare_tree_in_process(
+        tmp_path_factory.getbasetemp(), "UTC",
+        reason="pytest tmp tree: corpora are constructed by the test that reads them",
+    )
+
+
 _FIXTURE_PATH = Path(__file__).parent / "fixtures" / "test_vectors.json"
 
 

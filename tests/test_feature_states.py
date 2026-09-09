@@ -31,8 +31,16 @@ def test_vector_bound_set_is_exactly_the_declared_one(enc):
         "double_sweep", "trend_bias", "sweep_detected", "liquidity_sweep",
         "break_of_structure", "swing_high", "swing_low", "higher_high", "lower_low",
         "volatility_regime", "session", "volume_spike",
+        # Added by schema v5.0 (CH-htfcrt-parent-candle-smc-v1, 2026-08-15): FM-083
+        # change_of_character declares states in `structural_states` AND binds to vector
+        # index 47, so the encoder picks it up. This pin was left at 12 by that program and
+        # had been RED since; corrected 2026-09-05. NOTE it is stateful but named in no CRT
+        # `when:` clause — see tests/test_feature_surface_query.py
+        # ::test_stateful_but_unconsumed_slots_named_explicitly.
+        "change_of_character",
     }
     assert set(enc.vector_bound_features) == expected
+    assert len(expected) == 13
 
 
 def test_nonvector_stateful_identities_are_known_but_not_vector_bound(enc):

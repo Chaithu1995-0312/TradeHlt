@@ -167,7 +167,7 @@ def test_no_silent_truncate_helper_exists_not_used_for_overlong_ambient():
 
     feats = {k: float(i) for i, k in enumerate(CANONICAL_FEATURE_ORDER)}
     ambient = extract_feature_vector(feats)
-    assert len(ambient) == CANONICAL_FEATURE_DIM == 39
+    assert len(ambient) == CANONICAL_FEATURE_DIM == 48
 
     path = __import__("pathlib").Path(
         "models/BNBUSDT/bnbusdt_balanced_20260524/gaussian_p5_20260524T120449.json"

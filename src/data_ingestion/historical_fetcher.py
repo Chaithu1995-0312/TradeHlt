@@ -45,7 +45,7 @@ if str(_ROOT) not in sys.path:
 
 from config_layer.production_config import get_prod_section  # type: ignore
 from data_ingestion.ohlcv_schema import (  # type: ignore
-    require_ohlcv_columns, resolve_ohlcv_headers, validate_ohlcv_row,
+    require_ohlcv_columns, require_reviewed_clock, resolve_ohlcv_headers, validate_ohlcv_row,
 )
 from utils.logging_config import get_flow_logger             # type: ignore
 
@@ -504,6 +504,7 @@ class HistoricalFetcher:
             return []
 
         rows: List[OHLCVRow] = []
+        require_reviewed_clock(csv_path)   # Phase 3: declared + reviewed clock (ohlcv_schema)
         with open(csv_path, newline="", encoding="utf-8") as fh:
             reader = csv.DictReader(fh)
             # Phase 1 — resolve each mandatory column to an actual header (case +

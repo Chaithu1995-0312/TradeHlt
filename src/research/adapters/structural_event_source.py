@@ -19,6 +19,8 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
+from utils.parquet_store import iter_records
+
 from research.indicators import atr as _research_atr
 
 _STAGES = ("SWEEP", "DISPLACEMENT", "EXPANSION", "RETEST")
@@ -74,11 +76,10 @@ def harvest(instrument: str, csv: str, out_root: Path, *, atr_period: int = 14):
             events.append(StructuralEvent("SWEEP", *pending_sweep, completed=False))
         pending_sweep = None
 
-    for line in open(ev_path, encoding="utf-8"):
-        line = line.strip()
-        if not line:
-            continue
-        d = json.loads(line)
+    # Only three of the nine columns are read, so a Parquet projection (when one exists)
+    # skips the polymorphic `metadata` blob entirely. Falls back to the JSONL source
+    # whenever no fresh projection is present -- same records either way.
+    for d in iter_records(ev_path, columns=["event", "state_to", "timestamp"]):
         if d.get("event") != "STATE_TRANSITION":
             continue
         st = d.get("state_to")

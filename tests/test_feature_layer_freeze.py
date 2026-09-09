@@ -62,11 +62,11 @@ def test_freeze_pin_schema_governance_class():
     assert pin.get("freeze_class") == "GOVERNANCE_FREEZE"
     assert pin.get("active_config_version") == "v2_multi_2026_04"
     schema = pin["schema"]
-    # 39 under schema v4.0 (was 38 pre-2026-07-22 SCHEMA-V4-VECTOR-MIGRATION; pin refreshed
-    # 2026-08-01 per that program's own already-authorized regeneration requirement).
-    assert schema["feature_dim"] == 39
-    assert schema["feature_count"] == 39
-    assert len(schema["canonical_features"]) == 39
+    # 48 under schema v5.0 (was 39 pre-2026-08-15 CH-htfcrt-parent-candle-smc-v1, 38 pre-v4;
+    # pin refreshed 2026-08-15 per that program's own regeneration requirement).
+    assert schema["feature_dim"] == 48
+    assert schema["feature_count"] == 48
+    assert len(schema["canonical_features"]) == 48
     assert "regression_benchmarks" in pin
     assert "source_file_pins" in pin
     assert isinstance(pin.get("accepted_future_programs"), list)

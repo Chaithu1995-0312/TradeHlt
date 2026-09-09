@@ -77,7 +77,15 @@ from features.registry import load_ontology  # noqa: E402
 # geometry subset, and tests/test_feature_math_lint.py::test_universe_reconciliation_with_census
 # mechanically enforces that no ontology-registered geometry derivation outside this lint's
 # universe escapes census adjudication.
-_SCAN_DIRS = ("features", "core", "config_layer", "engines", "runtime")
+_SCAN_DIRS = (
+    "features", "core", "config_layer", "engines", "runtime",
+    # SK-0b (2026-08-19): NARROW widening — only the two research packages that carry
+    # decision-family CRT geometry (SP-001/SP-002). The rest of research/ stays excluded on the
+    # dormant-sidecar rationale above; widening to all of research/ would pull a large surface
+    # under the lint and force a mass re-adjudication that buys nothing for this program.
+    # `scan_roots` compares with str.startswith, so sub-package paths are valid entries.
+    "research/weekly_sweep", "research/visual_crt",
+)
 
 # ── Authoritative math sources (exempt): they DEFINE the math or are parity-bound to it. ──
 _ALLOWLISTED_FILES = {
@@ -92,11 +100,24 @@ _ALLOWLISTED_FILES = {
     # structural_states registration put `double_sweep` under enforcement (line 152).
     "features/causal_structure.py",
 }
-_ALLOWLISTED_PREFIXES = ("features/registry/",)
+_ALLOWLISTED_PREFIXES = ("features/registry/", "structure/")
 
 # Column aliases: the feature vector / code names differ from the ontology name in one case.
 _NAME_ALIASES: dict[str, tuple[str, ...]] = {
     "candle_range": ("wick_size",),
+    # SK-0b (2026-08-19): the structural predicates are bound to LOCAL names that never equal
+    # their ontology name — detection matches the assignment target (`canon = raw.lstrip("_")`),
+    # so without these aliases SP-001 stays invisible even once its section is policed.
+    # Census of the actual bindings across the 9 decision-family sites (2026-08-18 re-audit).
+    "swept_boundary": (
+        "swept_high", "swept_low",     # crt_engine_v2:882 · parent_crt:154 · resolver:1083
+                                        #   · weekly_range:185 · crt_range_rebuild_probe:70
+        "cross_high", "cross_low",     # crt_engine_v2:2944/:3039 (leading _ is stripped)
+        "sweep_high", "sweep_low",     # feature_pipeline:832 — NOTE: the FM-058 family, which
+                                        #   is a DIFFERENT quantity (swing reference, inclusive
+                                        #   boundary). feature_pipeline.py is _ALLOWLISTED, so
+                                        #   this alias cannot mis-flag it; listed for the census.
+    ),
 }
 
 # Attribute roots / aliases that denote a registry/impl call source.
@@ -176,18 +197,10 @@ _DIMENSIONAL_WATCHLIST: tuple[tuple[str, str], ...] = (
     ("compute_crt_levels", "atr"),
 )
 
-# Sites deliberately left unfixed this pass, pinned by (file, line, unparsed-arg-text) so an
-# edit to the line invalidates the pin instead of silently continuing to exempt it.
-# live_engine_hook.py:916 — F-073 (no live rail: HookedLiveEngine is never instantiated) is
-# parked; fixing this site is scoped together with that decision, not this ontology-closure pass.
-_KNOWN_DIMENSIONAL_MISMATCHES: tuple[dict, ...] = (
-    {
-        "id": "DM-001", "file": "runtime/live_engine_hook.py", "line": 916,
-        "call": "compute_crt_levels", "param": "atr", "arg_text": "float(engine_input['atr'])",
-        "finding": "F-072", "reason": "dead code per F-073 (HookedLiveEngine never instantiated); "
-                                        "fix is scoped with the live-rail repair/retire decision, not here",
-    },
-)
+# Shrink-only pin list. DM-001 (live_engine_hook compute_crt_levels atr=float(engine_input['atr']))
+# was retired 2026-08-19 by CH-live-rail-pr4a: the call now passes FM-074 `_atr_abs = atr * close`.
+# Empty tuple is legal — the watch-list still flags a NEW close-relative recurrence.
+_KNOWN_DIMENSIONAL_MISMATCHES: tuple[dict, ...] = ()
 
 
 def load_retirements() -> list[dict]:
@@ -230,10 +243,31 @@ def _registered_names(ont: dict | None = None) -> set[str]:
     # construction" and the promotion conferred identity without enforcement. It happened a THIRD
     # time with `structural_states` (registered 40 names when the ontology held 49). A literal here
     # is a silent enforcement hole by design; deriving it makes a new section policed on arrival.
+    # SK-0b (2026-08-19): the pattern above happened a FOURTH time, in the OTHER section
+    # family. `_ITERATED_SECTIONS` is the frozen feature-vector family and is DISJOINT from
+    # `spec_schema.semantic_registry.sections`, so SK-0's `structural_predicates` (SP-001
+    # swept_boundary / SP-002 directional_impulse / SP-003 retest_band) were registered but
+    # un-flaggable — identity and lineage without enforcement, exactly as described above.
+    # Fixed by ALSO deriving from the ontology-declared `lint_policed_sections`. That list is
+    # deliberately NOT the whole `sections:` tuple: `canonical_unknowns` nodes are UNKNOWN by
+    # definition and `structural_walks` entries are sequencing, not arithmetic — policing them
+    # would assert a math contract that does not exist. The ontology declares the intent; this
+    # function derives it, so a new computational section is policed on arrival.
     from features.registry import _ITERATED_SECTIONS
 
     for section in _ITERATED_SECTIONS:
         names |= set((ont.get(section) or {}).keys())
+
+    _sr = (ont.get("spec_schema") or {}).get("semantic_registry") or {}
+    _declared = tuple(_sr.get("sections") or ())
+    for section in tuple(_sr.get("lint_policed_sections") or ()):
+        if section not in _declared:
+            raise SystemExit(
+                f"spec_schema.semantic_registry.lint_policed_sections names {section!r}, "
+                "which is not in its own `sections:` list — fix the ontology"
+            )
+        names |= set((ont.get(section) or {}).keys())
+
     for canon, aliases in _NAME_ALIASES.items():
         if canon in names:
             names |= set(aliases)
@@ -264,6 +298,9 @@ _REGISTRY_MODULE_PREFIXES = (
     # Phase-2 FM resolution layer (2026-07-11): binds FM ids -> registry callables via the
     # ontology + FORMULA_REGISTRY; fail-closed, never invents math (fm_resolve charter).
     "features.fm_resolve",
+    # SK-1 (2026-08-19): the structural kernel. Same standing as candle_math — it DEFINES the
+    # SP-001/SP-002 identities, so routing a call through it is authority, not re-derivation.
+    "structure.predicates",
 )
 
 
@@ -574,6 +611,145 @@ def check_dimensional_violations(dim_violations: list[dict]) -> tuple[list[str],
     return problems, stale_msgs
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# RC-6 (2026-08-19) — STRUCTURAL SHAPE CHECK (SP-001 / SP-002)
+#
+# The name-based check above can only see a re-derivation that BINDS A REGISTERED NAME. Two of
+# the nine sweep copies SK-1 migrated were inline `if high > ref and close < ref:` conditions
+# with no assignment target at all — structurally invisible to it. This check matches the
+# SHAPE instead, so a new copy is caught however it is spelled.
+#
+# FALSE-POSITIVE CONTROL: the PAIR is required, never a lone compare. `close > open` appears
+# all over the repository and means nothing on its own; "pierced a reference AND closed back
+# through the same reference" is the actual CRT sweep geometry and is specific.
+#
+# Both the strict form (SP-001, `close < ref`) and the inclusive form (FM-058, `close <= ref`)
+# are reported. The allowlist is what separates the legitimate producers
+# (`structure/predicates.py`, `feature_pipeline.py`, `causal_structure.py`) from a new copy.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _cmp_dir(op: ast.cmpop) -> str | None:
+    if isinstance(op, (ast.Gt, ast.GtE)):
+        return "gt"
+    if isinstance(op, (ast.Lt, ast.LtE)):
+        return "lt"
+    return None
+
+
+def _unwrap_casts(node: ast.AST) -> ast.AST:
+    """Peel single-argument wrapper calls: `float(bar.high)` -> `bar.high`.
+
+    RC-6 recall fix (2026-08-19), found by this check's own regression test: the original
+    `weekly_range.py` copy was written `float(bar.high) > wr.h_ref and float(bar.close) < ...`,
+    and without unwrapping, the leaf of `float(bar.high)` reads as `float` — so the detector
+    would have missed a REAL pre-migration copy. Only single-arg, no-keyword calls are peeled,
+    so this cannot swallow a genuine computation like `max(a, b)`.
+    """
+    seen = 0
+    while (isinstance(node, ast.Call) and len(node.args) == 1 and not node.keywords
+           and seen < 4):
+        node = node.args[0]
+        seen += 1
+    return node
+
+
+def _simple_compare(node: ast.AST) -> tuple[str, str, str] | None:
+    """(direction, left_src, right_src) for a single two-operand comparison, else None."""
+    if not isinstance(node, ast.Compare) or len(node.ops) != 1 or len(node.comparators) != 1:
+        return None
+    d = _cmp_dir(node.ops[0])
+    if d is None:
+        return None
+    return (
+        d,
+        ast.unparse(_unwrap_casts(node.left)),
+        ast.unparse(_unwrap_casts(node.comparators[0])),
+    )
+
+
+def _leaf(expr_src: str) -> str:
+    """Last attribute/subscript component, lowercased: `candle.high` -> `high`."""
+    txt = expr_src.split("(")[0].rstrip("]")
+    for sep in (".", "["):
+        if sep in txt:
+            txt = txt.rsplit(sep, 1)[-1]
+    return txt.strip().strip("'\"").lower()
+
+
+_EXTREMES = {"high": "gt", "low": "lt"}     # pierce direction implied by the extreme used
+
+
+def _scan_structural_shapes(src_root: Path) -> list[dict]:
+    """Find sweep-shape and F-074-core-shape pairs across the scan universe."""
+    out: list[dict] = []
+    scan_roots = [src_root / d for d in _SCAN_DIRS]
+    for path in sorted(src_root.rglob("*.py")):
+        rel = _rel(path)
+        if not any(str(path).startswith(str(r)) for r in scan_roots):
+            continue
+        if _is_allowlisted(rel) or path.name == "__init__.py":
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except SyntaxError:                                    # pragma: no cover
+            continue
+        for node in ast.walk(tree):
+            if not (isinstance(node, ast.BoolOp) and isinstance(node.op, ast.And)):
+                continue
+            parts = [_simple_compare(v) for v in node.values]
+            pairs = [p for p in parts if p]
+            if len(pairs) < 2:
+                continue
+            for i in range(len(pairs)):
+                for j in range(len(pairs)):
+                    if i == j:
+                        continue
+                    (d1, l1, r1), (d2, l2, r2) = pairs[i], pairs[j]
+                    lf1, lf2 = _leaf(l1), _leaf(l2)
+
+                    # SP-001: <extreme> <dir> REF  AND  close <opposite> SAME REF
+                    if lf1 in _EXTREMES and d1 == _EXTREMES[lf1] and lf2 == "close" and r1 == r2:
+                        if d2 != d1:
+                            out.append({
+                                "module": rel, "line": node.lineno, "kind": "sweep_shape",
+                                "text": ast.unparse(node)[:160],
+                                "detail": f"pierce({lf1} {d1} {r1}) AND close-back(close {d2} {r2})",
+                            })
+                    # SP-002 core: close <dir> open AND close <same dir> <sweep level>
+                    if lf1 == "close" and lf2 == "close" and d1 == d2 and _leaf(r1) == "open" and _leaf(r2) != "open":
+                        out.append({
+                            "module": rel, "line": node.lineno, "kind": "f074_core_shape",
+                            "text": ast.unparse(node)[:160],
+                            "detail": f"body-sign(close {d1} open) AND clear-level(close {d2} {r2})",
+                        })
+    # de-duplicate: one finding per (module, line, kind)
+    seen: set[tuple] = set()
+    uniq: list[dict] = []
+    for v in out:
+        k = (v["module"], v["line"], v["kind"])
+        if k not in seen:
+            seen.add(k)
+            uniq.append(v)
+    return uniq
+
+
+def check_structural_shape_violations(violations: list[dict]) -> list[str]:
+    _WHY = {
+        "sweep_shape": (
+            "re-derives SP-001 swept_boundary geometry inline — route through "
+            "structure.predicates.swept_high/swept_low (the ontology `definition` is the meaning)"
+        ),
+        "f074_core_shape": (
+            "re-derives SP-002 directional_impulse core (F-074) inline — route through "
+            "structure.predicates.directional_impulse"
+        ),
+    }
+    return [
+        f"{v['module']}:{v['line']} — {_WHY[v['kind']]}; found {v['detail']}"
+        for v in violations
+    ]
+
+
 def build_report() -> dict:
     ont = load_ontology()
     registered = _registered_names(ont)
@@ -599,6 +775,9 @@ def build_report() -> dict:
     retired_ids = {r.get("gd_id") for r in retired}
     current_ids = {p["id"] for p in _KNOWN_DIVERGENCES}
 
+    shape_violations = _scan_structural_shapes(_SRC)
+    shape_problems = check_structural_shape_violations(shape_violations)
+
     dim_violations = _scan_dimensional_mismatches(_SRC)
     dim_problems, dim_stale_msgs = check_dimensional_violations(dim_violations)
     dim_pinned = _dim_pinned_keys()
@@ -619,6 +798,7 @@ def build_report() -> dict:
             "current_pins": len(current_ids),
             "retired": len(retired_ids),
             "registered_count": len(registered),
+            "structural_shape_violations": len(shape_problems),
             "dimensional_new_violations": len(dim_problems),
             "dimensional_stale_pins": len(dim_stale_msgs),
             "dimensional_current_pins": len(_KNOWN_DIMENSIONAL_MISMATCHES),
@@ -632,6 +812,9 @@ def build_report() -> dict:
             "original_baseline_ids": sorted(_ORIGINAL_BASELINE_IDS),
             "current_ids": sorted(current_ids),
             "retired_ids": sorted(i for i in retired_ids if i),
+        },
+        "structural_shape": {
+            "violations": sorted(shape_violations, key=lambda v: (v["module"], v["line"])),
         },
         "dimensional": {
             "watchlist": [{"call": c, "param": p} for c, p in _DIMENSIONAL_WATCHLIST],
@@ -663,6 +846,10 @@ def check_violations(report: dict) -> list[str]:
             f"stale pin '{gid}' — its site's durable_key no longer matches (formula edited / moved). "
             f"Re-adjudicate: retire it via the manifest if resolved, or re-pin the new site."
         )
+    for msg in check_structural_shape_violations(
+        report.get("structural_shape", {}).get("violations", [])
+    ):
+        problems.append(msg)
     dim = report.get("dimensional", {})
     for v in dim.get("new_violations", []):
         problems.append(
@@ -710,6 +897,17 @@ def _to_markdown(report: dict) -> str:
     lines += ["", f"_Ledger: baseline {len(led['original_baseline_ids'])} · current "
               f"{len(led['current_ids'])} · retired {len(led['retired_ids'])}. Full evidence + call-chains: "
               "`docs/analysis/feature-math-divergence-adjudication.md`._"]
+
+    shp = report.get("structural_shape", {}).get("violations", [])
+    lines += [
+        "",
+        "## Structural shape copies (RC-6 — SP-001 sweep / SP-002 F-074 core, shape not name)",
+        "",
+        f"**NEW** {len(shp)} — the pair (pierce AND close-back) is required, never a lone compare.",
+        "",
+    ]
+    lines += ([f"- `{v['module']}:{v['line']}` — {v['kind']}: `{v['detail']}`" for v in shp]
+              if shp else ["_none — floor is green_"])
 
     dim = report.get("dimensional", {})
     lines += [

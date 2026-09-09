@@ -64,7 +64,9 @@ def _minimal_valid_doc(base: dict) -> dict:
 def test_load_production_active_models_succeeds():
     bundle = load_and_validate_state_contracts()
     assert bundle.schema_version == SCHEMA_VERSION
-    assert len(bundle.contracts) == 9
+    # 12 = 9 execution-timeframe + 3 parent-timeframe (RANGE_C1/MANIPULATION_C2/
+    # DISTRIBUTION_C3), added CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Was 9.
+    assert len(bundle.contracts) == 12
     assert set(bundle.contracts) == {s.name for s in CRTState}
 
 
@@ -131,7 +133,7 @@ def test_contracts_immutable():
 def test_exactly_one_contract_per_state():
     bundle = load_and_validate_state_contracts()
     assert len(bundle.contracts) == len(set(bundle.contracts))
-    assert len(bundle.contracts) == 9
+    assert len(bundle.contracts) == 12   # see test_load_production_active_models_succeeds
 
 
 def test_stale_legacy_cache_names_not_in_required_fm(am_doc: dict):
@@ -166,7 +168,7 @@ def test_crt_engine_loads_contracts_non_mutating():
     cfg = CRTConfig()
     eng = CRTEngine(config=cfg)
     assert eng.state_contracts is not None
-    assert len(eng.state_contracts.contracts) == 9
+    assert len(eng.state_contracts.contracts) == 12   # see test_load_production_active_models_succeeds
     c = eng.get_state_contract("RETEST")
     assert c.required_fm == ("FM-010", "FM-027", "FM-028")
     c2 = eng.get_state_contract()  # current state RANGE at init

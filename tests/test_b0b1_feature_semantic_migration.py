@@ -172,15 +172,16 @@ def test_F5_candle_range_slot_is_the_range_not_wick_magnitude():
 # ═══════════════════════════════════ MIGRATION / GOVERNANCE TESTS ═════════════════════
 
 def test_canonical_dim_is_39_and_target_slots_pinned():
-    """Schema v4.0 (was: dim 38, `wick_size` at 27, `body_ratio` at 28).
+    """Schema v5.0 (was: dim 38 pre-v4, 39 pre-v5; `wick_size` at 27, `body_ratio` at 28).
 
     The B0/B1 targets below (ema_spread, momentum_score, atr, rsi_14) sit BEFORE the MACD split at
-    index 18, so their positions are unchanged — which is the point worth pinning: the v4 migration
-    did not disturb the dimensional-mix features this file governs. The two slots that DID move are
-    pinned at their new positions.
+    index 18, so their positions are unchanged — which is the point worth pinning: neither the v4
+    nor the v5 (CH-htfcrt-parent-candle-smc-v1, purely additive at indices 39-47) migration
+    disturbed the dimensional-mix features this file governs. The two slots that DID move (in v4)
+    are pinned at their new positions.
     """
-    assert CANONICAL_FEATURE_DIM == 39
-    assert len(CANONICAL_FEATURES) == 39
+    assert CANONICAL_FEATURE_DIM == 48
+    assert len(CANONICAL_FEATURES) == 48
     idx = {f: i for i, f in enumerate(CANONICAL_FEATURES)}
     # unchanged by v4 (all precede the index-18 split)
     assert idx["ema_spread"] == 9
