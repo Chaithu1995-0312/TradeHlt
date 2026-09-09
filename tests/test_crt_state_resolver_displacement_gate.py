@@ -31,6 +31,7 @@ def _sweep_resolver() -> CRTStateResolver:
     r._memory.current_state = "SWEEP"
     r._memory.candle_index = 10
     r._memory.sweep_candle_index = 10  # age 0 ≤ max_sweep_age_candles → not stale
+    r._memory.displacement_direction = 1  # LONG — matches bullish _raw fixture
     return r
 
 

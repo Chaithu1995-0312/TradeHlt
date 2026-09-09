@@ -380,6 +380,14 @@ def build_resolver_timeline(
 
     thr_defaults = {"rsi_overbought": 70.0, "rsi_oversold": 30.0}
     resolver = CRTStateResolver(config_path=config_path)
+    # CH-resolution-site: turn the (default-OFF, decision-neutral) RC-003 capture on
+    # so every bar carries WHICH branch produced its state. F-069 classified the
+    # residual by mismatch CELL only, which cannot separate a TTL expiry from a
+    # dwell hold from predicate exhaustion. Observation only — the recorder does not
+    # influence control flow, and the injection=none parity number must reproduce
+    # 88.1560% exactly with it on.
+    resolver.record_resolver_evidence = True
+    resolver.last_resolver_evidence = {}
     thr = resolver._config.get("thresholds", {})
     rsi_ob = float(thr.get("rsi_overbought", thr_defaults["rsi_overbought"]))
     rsi_os = float(thr.get("rsi_oversold", thr_defaults["rsi_oversold"]))
@@ -425,6 +433,7 @@ def build_resolver_timeline(
         enriched[ts_col] = pd.to_datetime(enriched[ts_col])
 
     states: list[str] = []
+    resolution_sites: list[Optional[str]] = []
     htf_ids_used: list[str] = []
     for row_i, (_, row) in enumerate(enriched.iterrows()):
         fv: dict[str, float] = {}
@@ -477,6 +486,11 @@ def build_resolver_timeline(
                 engine_state_to=eng_to,
             )
         )
+        # CH-resolution-site: WHICH branch produced that state. Parallel to
+        # `states` by construction (appended in the same iteration), so the
+        # analysis side never has to re-align them.
+        ev = resolver.last_resolver_evidence or {}
+        resolution_sites.append(ev.get("resolution_site"))
 
     # Phase-lock diagnostics
     n_htf_changes = 0
@@ -511,6 +525,11 @@ def build_resolver_timeline(
         "engine_state_to_injection": (
             len(engine_state_to_by_idx) if engine_state_to_by_idx is not None else 0
         ),
+        # CH-resolution-site. Carried in meta rather than widening the return tuple,
+        # so crt_parity_sweep.py and run_once() keep their existing unpacking.
+        "resolution_sites": resolution_sites,
+        "site_counts": dict(Counter(s for s in resolution_sites if s is not None)),
+        "n_site_unattributed": sum(1 for s in resolution_sites if s is None),
     }
     return states, source_indices, meta
 
@@ -596,6 +615,15 @@ class ConfusionReport:
     # Consecutive runs where states differ
     divergence_episodes: list[dict[str, Any]]
     n_aligned_bars: int
+    # CH-resolution-site (additive, empty when sites were not supplied):
+    # (engine, resolver, resolution_site) → count over MISMATCHED bars only, plus
+    # the pre-predicate / predicate-derived split of the residual. This is the
+    # dimension F-069 never had — it classified by cell, never by code path.
+    site_matrix: dict[tuple[str, str, str], int] = field(default_factory=dict)
+    residual_site_counts: dict[str, int] = field(default_factory=dict)
+    residual_pre_predicate: int = 0
+    residual_predicate_derived: int = 0
+    residual_site_unattributed: int = 0
 
 
 def build_confusion(
@@ -608,21 +636,55 @@ def build_confusion(
     engine_events: list[dict[str, Any]],
     max_edge_samples: int = 40,
     max_episodes: int = 30,
+    resolution_sites: Optional[list[Optional[str]]] = None,
 ) -> ConfusionReport:
-    """Align resolver bars to engine via source_indices; build matrix."""
+    """Align resolver bars to engine via source_indices; build matrix.
+
+    ``resolution_sites`` (optional, parallel to ``resolver_states``) adds the
+    CH-resolution-site cross-tab. Omitted → the report's site fields stay empty
+    and every pre-existing field is unchanged, so old callers are unaffected.
+    """
     # Map: only bars that exist in both
     eng_aligned: list[str] = []
     res_aligned: list[str] = []
     idx_aligned: list[int] = []
+    site_aligned: list[Optional[str]] = []
     for res_i, src_i in enumerate(source_indices):
         if 0 <= src_i < len(engine_states):
             eng_aligned.append(engine_states[src_i])
             res_aligned.append(resolver_states[res_i])
             idx_aligned.append(src_i)
+            if resolution_sites is not None and res_i < len(resolution_sites):
+                site_aligned.append(resolution_sites[res_i])
+            else:
+                site_aligned.append(None)
 
     matrix: Counter = Counter()
     for e, r in zip(eng_aligned, res_aligned):
         matrix[(e, r)] += 1
+
+    # ── CH-resolution-site: cross-tab over MISMATCHED bars only ──────────────
+    # The question is "which branch produced the residual", so agreeing bars are
+    # deliberately excluded — including them would let the ~88% agreement swamp
+    # the 11.84% the measurement is about.
+    site_matrix: Counter = Counter()
+    residual_site_counts: Counter = Counter()
+    residual_pre = residual_post = residual_unattributed = 0
+    if resolution_sites is not None:
+        from features.crt_state_resolver import _PRE_PREDICATE_SITES  # noqa: PLC0415
+
+        for e, r, s in zip(eng_aligned, res_aligned, site_aligned):
+            if e == r:
+                continue
+            if s is None:
+                residual_unattributed += 1
+                continue
+            site_matrix[(e, r, s)] += 1
+            residual_site_counts[s] += 1
+            if s in _PRE_PREDICATE_SITES:
+                residual_pre += 1
+            else:
+                residual_post += 1
 
     agreement = sum(1 for e, r in zip(eng_aligned, res_aligned) if e == r)
     total = len(eng_aligned)
@@ -690,6 +752,11 @@ def build_confusion(
         top_confusions=off[:25],
         divergence_episodes=episodes,
         n_aligned_bars=total,
+        site_matrix=dict(site_matrix),
+        residual_site_counts=dict(residual_site_counts),
+        residual_pre_predicate=residual_pre,
+        residual_predicate_derived=residual_post,
+        residual_site_unattributed=residual_unattributed,
     )
 
 
@@ -939,7 +1006,23 @@ def write_json_artifact(
             "reset_from_counts": dict(timeline.reset_from_counts),
         },
         "resolver_meta": res_meta,
+        # CH-resolution-site: decision provenance over the residual.
+        "resolution_site": {
+            "site_matrix": {
+                f"{e}|{r}|{s}": n for (e, r, s), n in report.site_matrix.items()
+            },
+            "residual_site_counts": report.residual_site_counts,
+            "residual_pre_predicate": report.residual_pre_predicate,
+            "residual_predicate_derived": report.residual_predicate_derived,
+            "residual_site_unattributed": report.residual_site_unattributed,
+        },
     }
+    # The per-bar site list is large and already summarised above; keep it out of
+    # the artifact so the JSON stays diffable.
+    if isinstance(payload.get("resolver_meta"), dict):
+        payload["resolver_meta"] = {
+            k: v for k, v in payload["resolver_meta"].items() if k != "resolution_sites"
+        }
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     print(f"JSON artifact written to {path}")
@@ -1053,6 +1136,7 @@ def run_once(
         reference=engine_ctx.reference,
         engine_events=engine_ctx.events,
         max_episodes=max_episodes,
+        resolution_sites=res_meta.get("resolution_sites"),
     )
     return report, res_meta
 

@@ -8,6 +8,23 @@ CI. It also encodes historical drift points as institutional memory.
 
 conftest.py puts `src/` on sys.path, so the engine imports without a `src.` prefix.
 The YAML must be opened as UTF-8 (it contains box-drawing / math glyphs).
+
+SEMANTICS CHANGED 2026-08-31 (CH-crt-state-generation-v1) -- READ BEFORE TRUSTING THIS FILE.
+`CRTState` / `VALID_TRANSITIONS` are now GENERATED from this same active_models.yaml by
+scripts/maintenance/gen_crt_state_identity.py. So assertions 1 and 2 below no longer compare
+two INDEPENDENTLY-maintained records; both sides derive from one file. They are now a
+FRESHNESS check (is the committed generated artifact current with the YAML?) rather than a
+drift detector. That is a real reduction in what this file proves, recorded rather than glossed.
+
+Independence now lives elsewhere, deliberately:
+  * tests/test_crt_state_generated_parity.py pins the generated output against values
+    transcribed by hand from the PRE-generation state_identity.py.
+  * tests/test_crt_states_yaml_transition_parity.py (SK-0) and
+    tests/test_crt_states_yaml_state_names.py compare against
+    configs/formulas/market_crt_states.yaml -- a DIFFERENT file, not the generation source,
+    so those remain fully non-vacuous cross-file guards.
+Assertions 3 and 4 (historical-drift memory, RESOLUTION lifecycle) are unaffected: they encode
+facts, not cross-record agreement.
 """
 from pathlib import Path
 

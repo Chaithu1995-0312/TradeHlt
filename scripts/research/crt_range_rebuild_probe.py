@@ -32,6 +32,10 @@ _ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_ROOT))
 sys.path.insert(0, str(_ROOT / "src"))
 
+# SK-1 (2026-08-19): SP-001 single implementation. Imported AFTER the sys.path setup above,
+# which is why this is not at module top (the repo has no installed package).
+from structure.predicates import swept_high as _swept_high, swept_low as _swept_low  # noqa: E402
+
 logger = logging.getLogger("RANGE_REBUILD_PROBE")
 
 
@@ -66,9 +70,14 @@ class BarDiag:
 
 
 def _detect_sweep(high: float, low: float, close: float, h_ref: float, l_ref: float) -> int:
-    """Engine RangeDetector.detect_sweep geometry (strict close inequalities)."""
-    swept_high = high > h_ref and close < h_ref
-    swept_low = low < l_ref and close > l_ref
+    """SP-001 swept_boundary via the structural kernel (strict close inequalities).
+
+    SK-1 (2026-08-19): was a local re-derivation. This file lives outside src/, so
+    feature_math_lint cannot reach it — routed by hand and recorded in SP-001's
+    consumers_migrated so the census stays honest.
+    """
+    swept_high = _swept_high(high, close, h_ref)
+    swept_low = _swept_low(low, close, l_ref)
     if not swept_high and not swept_low:
         return 0
     if swept_high:

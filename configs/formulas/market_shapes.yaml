@@ -114,3 +114,42 @@ blocked_shapes:
     blocker: "same momentum-magnitude blocker as MeanReversion"
   - name:    RangeRotation
     blocker: "a MULTI-BAR sequence property (legs between bounds); not readable from one bar's states — Phase-5+ sequence construction"
+  - name:    SweepReversal
+    blocker: >
+      UNSATISFIABLE under the current directional-contract gate — measured, not assumed
+      (docs/implementation_plan/no-context-from-soruces-humming-tower.md, Phases 4a-4e).
+      `_displacement_entry_allowed` requires the candle's close-vs-open sign to match the
+      founding SWEEP's implied continuation direction; every magnitude-qualifying, SWEEP-held
+      candle moving the OPPOSITE way is rejected (32/32, deterministic — Residual Attribution).
+      `break_of_structure` and `trend_bias` independently and correctly identify the reversal on
+      30 of those 32 bars (93.75%) — the evidence exists — but `change_of_character` can never
+      represent it: its formula (features/smc/choch.py) requires the two inputs to DISAGREE, and
+      the trend was ALREADY established in the candle's direction before it arrived, so BOS and
+      trend_bias agree and CHoCH is correctly silent (30/32 TRUE_OMISSION, checked t+1/t+2 —
+      never a timing lag, Phase 4e).
+      CORRECTED 2026-09-04: an earlier version of this entry said the two inputs FLIP TOGETHER
+      same-bar on a reversal candle. That was wrong and is retracted. Measured: trend_bias does
+      NOT flip at t on 30/32 bars, and was already aligned with the candle's direction at t-1 on
+      29/32 (90.6%). These are therefore NOT trend reversals — the founding sweep pointed AGAINST
+      an already-prevailing trend and the candle moved WITH that trend (trend resumption after a
+      counter-trend sweep). The name `SweepReversal` is retained for traceability but is a
+      MISNOMER on this evidence. The directional-contract rejection is correspondingly more
+      defensible than first characterised: the engine declines to call a candle moving against a
+      sweep a DISPLACEMENT *of that sweep*. User-decided Position B was taken on the pre-correction
+      characterisation and should be revisited against this one; representability design remains a
+      separate, not-yet-authorized turn.
+      CORRECTED AGAIN 2026-09-04 (RC-002 turn 1, DeepSeek CRITIQUE RC-002-CRIT-DEEPSEEK-001):
+      the 2026-09-04 "trend resumption" reading above is ALSO withdrawn. Its supporting statistic
+      (trend_bias at t-1 already aligned with the candle direction, 29/32 = 90.62%) was published
+      against a global base rate of 47.86% and looked decisive at p~4e-07. That denominator was
+      WRONG: the population is defined as candles moving against the founding sweep, so the
+      statistic is conditioned by the selection rule. Measured on the non-circular question --
+      "is a founding sweep counter-trend by nature?" -- the answer is 182/203 = 89.66% corpus-wide,
+      against which 29/32 gives p = 0.574. VACUOUS. Both Phase 4g statistics are now dead
+      (no-flip p=0.826; pre-aligned p=0.574). What STANDS: the 32/32 directional-contract
+      rejection, the 88/88 attribution, the 0/32 CHoCH timing-lag result, and the falsification of
+      the original same-bar-flip mechanism (a direct observation, not a rate). What does NOT stand:
+      any identity for this population. It is UNKNOWN -- neither "reversal" nor "resumption" is
+      established. Position B is therefore neither supported nor refuted by this entry; it remains
+      open on the user's decision. Full adjudication:
+      multi_llm/research_lane/proposals/deepseek/RC-002/CRITIQUE.md

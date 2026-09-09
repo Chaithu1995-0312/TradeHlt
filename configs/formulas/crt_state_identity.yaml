@@ -1,0 +1,791 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# crt_state_identity.yaml — CRT Semantic Authority (PR-1, 2026-09-03)
+# ═══════════════════════════════════════════════════════════════════════════
+# WHAT layer, declarative only (CLAUDE.md §6.5: authority user_approved). Grants NO
+# G001, NO promotion, NO live-rail, NO CRT CLOSED, NO production behaviour change.
+#
+# PURPOSE — constructor-neutral CRT identity
+# -------------------------------------------
+# CRT state identity (existence, order, topology, classification, occupancy semantics)
+# exists independently of any one implementation. Engine (crt_engine_v2.py) and Resolver
+# (crt_state_resolver.py) are both CONSTRUCTORS of this one identity, not competing
+# authorities on what a CRT state IS. Adding a future constructor means registering it
+# under `constructors:`, never re-declaring `states:`.
+#
+# Document root is EXACTLY {identity: <schema>}. Generator/loader/validator walk
+# data["identity"]. A missing `identity` key fail-closes — this is the mechanical
+# firewall against ever pointing generation at market_crt_states.yaml (the resolver's
+# own file, which the generator refuses at file level — see
+# scripts/maintenance/gen_crt_state_identity.py:8-17).
+#
+# THREE-TIER METADATA PARTITION (this is the load-bearing design decision)
+# --------------------------------------------------------------------------
+#   Tier 1  identity.states.<NAME>                         — semantic core.
+#           True regardless of who constructs the state. NEVER names a Python
+#           symbol, a dispatch mechanism, or a construction step. Every
+#           constructor MUST agree on these fields for a given state.
+#   Tier 2  identity.constructors.<C>.states.<NAME>         — constructor bindings.
+#           HOW one named constructor reaches / handles the state. Engine-shaped
+#           fields (handler, dispatch, htf_protected, records_entry_index,
+#           reset_telemetry, ttl_kind, ...) live ONLY here, never in Tier 1.
+#   Tier 3  identity.constructors.<C>.capabilities           — capability contract.
+#           What the constructor can DO: reach a signal state, produce trade
+#           geometry, be runtime-eligible. `blocking_gaps` non-empty forces
+#           `runtime_eligible: false` (tests/test_crt_state_identity.py enforces
+#           this — the field cannot silently drift out of sync).
+#
+# This partition is WHY the design changed from the original draft
+# (docs/implementation_plan/crt-state-identity-ontology-2026-09.md): a
+# StateDefinition that mixes handler/dispatch/reset_telemetry into the semantic
+# core makes identity engine-shaped — the resolver could never satisfy it, and
+# a future constructor is born non-conformant. See that document's "Constructor-
+# neutral identity" revision (Alternative I) for the full reconstruction.
+#
+# RESOLVER = RUNTIME DIRECTION (user-directed, 2026-09-03)
+# ------------------------------------------------------------
+# The long-term direction is that any constructor satisfying the Tier-3 capability
+# contract is runtime-eligible; Engine is not privileged by name. Today only
+# `engine` clears the contract. `resolver`'s TWO blocking gaps are named, sourced,
+# and machine-checked here — NOT prose:
+#   1. EXECUTION is structurally unreachable: `_continuous_gates_pass` fail-closes
+#      EXECUTION when raw.get('score'/'risk_score'/'crt_score') is None, and NONE
+#      of those three keys exist in CANONICAL_FEATURES
+#      (src/features/crt_state_resolver.py:1302-1309;
+#      reports/crt_semantic_parity_report.md:100). This is independent of F-069
+#      construction parity — closing the 11.84% construction gap does not touch it.
+#   2. No trade geometry: the resolver has no entry/SL/TP model at all.
+# This is NOT a parity problem (F-069's 88.16% is accepted, not disputed, per
+# user direction) — it is a CAPABILITY problem, and this file is the ledger.
+#
+# F-069 (do not re-litigate; do not re-measure in this program)
+# -----------------------------------------------------------------
+# CRTStateResolver vs BacktestRunner, config-only, XAUUSD M15, 47,197 bars:
+# 88.1560% agreement (41,607/47,197); EXPANSION recall 10.77%; residual 96.1%
+# Category C (divergent EXPANSION-entry CONSTRUCTION, not a mistuned threshold).
+# Declared structurally config-unreachable (reports/crt_semantic_parity_report.md:119).
+# This file does NOT encode the resolver's when: predicates and does NOT attempt
+# to close the construction gap — that would require resolver CODE changes, out
+# of this program's scope (design KD-8, reframed).
+#
+# GENERATION (unchanged by this file until PR-3)
+# --------------------------------------------------
+# scripts/maintenance/gen_crt_state_identity.py still reads active_models.yaml
+# today. This file is DECLARATION-ONLY in PR-1, parity-checked against the
+# current generation source (state_list / valid_transitions / parent_timeframe_states
+# byte-identical as sets). PR-3 migrates the generator's SOURCE_YAML to this file,
+# walking ONLY data["identity"]["valid_transitions"] etc — never
+# data["constructors"], which stays invisible to the generator.
+# ═══════════════════════════════════════════════════════════════════════════
+
+identity:
+  schema: crt_state_identity/v1
+  version: 1
+  authority: user_approved
+  generated_artifact: src/config_layer/_crt_state_generated.py
+  generator: scripts/maintenance/gen_crt_state_identity.py
+  # identity_sha256 is WRITTEN BY THE GENERATOR into the artifact header (PR-3),
+  # not authored here. PR-1/PR-2 do not compare a stamp that does not exist yet.
+
+  # ── state_list ── order is LOAD-BEARING (Enum auto() values 1..N). Must equal
+  # active_models.yaml:crt.runtime.state_list until PR-3 migrates the source.
+  state_list:
+    - RANGE
+    - SHADOW_PENDING
+    - SWEEP
+    - DISPLACEMENT
+    - EXPANSION
+    - EXPIRED
+    - RETEST
+    - EXECUTION
+    - RESOLUTION
+    - RANGE_C1
+    - MANIPULATION_C2
+    - DISTRIBUTION_C3
+
+  parent_timeframe_states:
+    - RANGE_C1
+    - MANIPULATION_C2
+    - DISTRIBUTION_C3
+  # execution_timeframe_states MUST NOT appear here — it is the derived complement
+  # (state_list minus parent_timeframe_states), exactly as
+  # src/config_layer/_crt_state_generated.py:71-73 already computes it.
+
+  # ── SOLE identity graph. Byte-identical (as an edge set) to generated
+  # VALID_TRANSITIONS and to active_models.yaml:crt.runtime.valid_transitions.
+  # This is the ENGINE graph. It is NOT the resolver's projection — SHADOW_PENDING
+  # -> EXPANSION does NOT appear here. That edge is a per-bar EXIT-STATE artifact of
+  # a two-hop collapse (try_shadow_pending_to_expansion performs SHADOW_PENDING ->
+  # SWEEP -> EXPANSION inside one process_candle) and is declared ONLY as
+  # constructors.resolver.projection_allowances below — never as an identity edge.
+  valid_transitions:
+    RANGE:           [SWEEP, SHADOW_PENDING]
+    SHADOW_PENDING:  [SWEEP, RANGE]
+    SWEEP:           [DISPLACEMENT, EXPANSION, RANGE]
+    DISPLACEMENT:    [EXPANSION, RANGE]
+    EXPANSION:       [RETEST, EXPIRED, RANGE]
+    EXPIRED:         [RANGE]
+    RETEST:          [EXECUTION, RANGE]
+    EXECUTION:       [RESOLUTION]
+    RESOLUTION:      [RANGE]
+    RANGE_C1:        [MANIPULATION_C2, RANGE_C1]
+    MANIPULATION_C2: [DISTRIBUTION_C3, RANGE_C1]
+    DISTRIBUTION_C3: [RANGE_C1]
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # TIER 1 — SEMANTIC CORE. Constructor-neutral. Every constructor must agree.
+  # Forbidden here: when / condition / formula / eval / code / thresholds /
+  # required_fm / config_keys / eligible_models / handler / dispatch — those are
+  # constructor bindings (Tier 2) or WHO/resolver concerns, never identity.
+  # ═══════════════════════════════════════════════════════════════════════
+  states:
+    RANGE:
+      id: CRT-S-RANGE
+      name: RANGE
+      sem_id: null
+      timeframe_role: execution_timeframe
+      subgraph: m15_execution
+      description: "Default/ground state — no structural event active."
+      occupancy_class: ground
+      requires_memory: false
+      is_ground: true
+      can_emit_signal: false
+      can_emit_bias: false
+      is_cycle_reset: false
+      is_one_bar_archive: false
+      self_loop_legal: false
+      lifecycle: registered
+      knowledge_status: CHARACTERIZED
+      epistemic: null
+      notes: >
+        Both constructors treat RANGE as ground. Resolver default: bars that
+        fail every predicate set still fall through to RANGE (first-match
+        exhaust, market_crt_states.yaml). Engine: RANGE is also where the
+        pending-displacement TTL is counted down — a construction fact,
+        recorded under constructors.engine, not here.
+
+    SHADOW_PENDING:
+      id: CRT-S-SHADOW_PENDING
+      name: SHADOW_PENDING
+      sem_id: null
+      timeframe_role: execution_timeframe
+      subgraph: m15_execution
+      description: "Cross-window displacement memory; awaiting confirming sweep."
+      occupancy_class: memory
+      requires_memory: true
+      is_ground: false
+      can_emit_signal: false
+      can_emit_bias: false
+      is_cycle_reset: false
+      is_one_bar_archive: false
+      self_loop_legal: false
+      lifecycle: registered
+      knowledge_status: CHARACTERIZED
+      epistemic: null
+      notes: >
+        Memory-only occupancy: cannot be resolved from a single bar's features
+        (market_crt_states.yaml declares an empty when-block for this state).
+        Collapse SHADOW_PENDING -> SWEEP -> EXPANSION is TWO legal hops inside
+        one process_candle on the engine constructor. Identity graph does NOT
+        contain SHADOW_PENDING -> EXPANSION directly; see
+        constructors.resolver.projection_allowances.
+
+    SWEEP:
+      id: CRT-S-SWEEP
+      name: SWEEP
+      sem_id: null
+      timeframe_role: execution_timeframe
+      subgraph: m15_execution
+      description: "Liquidity taken, closed back inside the founding range."
+      occupancy_class: event
+      requires_memory: false
+      is_ground: false
+      can_emit_signal: false
+      can_emit_bias: false
+      is_cycle_reset: false
+      is_one_bar_archive: false
+      self_loop_legal: false
+      lifecycle: registered
+      knowledge_status: CHARACTERIZED
+      epistemic: null
+      notes: >
+        The directional-impulse contract on the SWEEP-to-DISPLACEMENT edge
+        (F-074) is owned by each constructor's own construction, not by this
+        identity node.
+
+    DISPLACEMENT:
+      id: CRT-S-DISPLACEMENT
+      name: DISPLACEMENT
+      sem_id: null
+      timeframe_role: execution_timeframe
+      subgraph: m15_execution
+      description: "Directional impulse away from the swept side (F-074)."
+      occupancy_class: event
+      requires_memory: true
+      is_ground: false
+      can_emit_signal: false
+      can_emit_bias: false
+      is_cycle_reset: false
+      is_one_bar_archive: false
+      self_loop_legal: false
+      lifecycle: registered
+      knowledge_status: CHARACTERIZED
+      epistemic: null
+      notes: >
+        Unsigned energy-only SWEEP-to-DISPLACEMENT is illegal (F-074).
+        Directional-impulse enforcement is a construction fact
+        (constructors.engine / constructors.resolver), not a semantic-core
+        field.
+
+    EXPANSION:
+      id: CRT-S-EXPANSION
+      name: EXPANSION
+      sem_id: null
+      timeframe_role: execution_timeframe
+      subgraph: m15_execution
+      description: "Post-displacement extension. May archive to EXPIRED on timeout."
+      occupancy_class: event
+      requires_memory: true
+      is_ground: false
+      can_emit_signal: false
+      can_emit_bias: false
+      is_cycle_reset: false
+      is_one_bar_archive: false
+      self_loop_legal: false
+      lifecycle: registered
+      knowledge_status: CHARACTERIZED
+      epistemic: null
+      notes: >
+        F-069 Category C: the resolver reaches EXPANSION via a declarative
+        when-block (displacement_flag: [Displacement]) or sticky-dwell, never
+        via the engine's try_displacement_to_expansion() ATR-extension state
+        machine. This identity node does NOT encode the resolver predicate
+        and does NOT encode the engine's extension algorithm — both are
+        constructor bindings.
+
+    EXPIRED:
+      id: CRT-S-EXPIRED
+      name: EXPIRED
+      sem_id: null
+      timeframe_role: execution_timeframe
+      subgraph: m15_execution
+      description: "One-candle soft archive after expansion timeout; then RANGE."
+      occupancy_class: archive
+      requires_memory: true
+      is_ground: false
+      can_emit_signal: false
+      can_emit_bias: false
+      is_cycle_reset: false
+      is_one_bar_archive: true
+      self_loop_legal: false
+      lifecycle: registered
+      knowledge_status: CHARACTERIZED
+      epistemic: null
+      notes: >
+        Temporal state — the resolver documents this as undetectable from
+        features alone; it requires temporal TTL tracking
+        (market_crt_states.yaml).
+
+    RETEST:
+      id: CRT-S-RETEST
+      name: RETEST
+      sem_id: null
+      timeframe_role: execution_timeframe
+      subgraph: m15_execution
+      description: "Price returned to the retest band; soft-confirmation window."
+      occupancy_class: event
+      requires_memory: true
+      is_ground: false
+      can_emit_signal: false
+      can_emit_bias: false
+      is_cycle_reset: false
+      is_one_bar_archive: false
+      self_loop_legal: false
+      lifecycle: registered
+      knowledge_status: CHARACTERIZED
+      epistemic: null
+      notes: >
+        On the engine constructor, occupancy of RETEST is not a
+        process_candle `s ==` dispatch branch — soft-confirmation runs on a
+        flag-gated prelude (elif self.state.evaluating_soft_conf) after the
+        dispatch chain. That is a construction fact, not a semantic-core
+        fact; see constructors.engine.
+
+    EXECUTION:
+      id: CRT-S-EXECUTION
+      name: EXECUTION
+      sem_id: null
+      timeframe_role: execution_timeframe
+      subgraph: m15_execution
+      description: "Trade opened — a position is live."
+      occupancy_class: trade
+      requires_memory: true
+      is_ground: false
+      can_emit_signal: true
+      can_emit_bias: false
+      is_cycle_reset: false
+      is_one_bar_archive: false
+      self_loop_legal: false
+      lifecycle: registered
+      knowledge_status: CHARACTERIZED
+      epistemic: null
+      notes: >
+        The ONLY state with can_emit_signal: true (TRADE_OPENED commitment,
+        concepts.yaml:442) — this is a Tier-1 capability declaration: what
+        occupying EXECUTION AUTHORIZES, independent of which constructor
+        reaches it. On the engine constructor, occupancy is not a
+        process_candle `s ==` branch either — open-trade handling runs on
+        state.active_trade BEFORE the dispatch switch and returns on close
+        (construction fact). The resolver constructor cannot currently reach
+        this state at all — see constructors.resolver.capabilities.blocking_gaps.
+
+    RESOLUTION:
+      id: CRT-S-RESOLUTION
+      name: RESOLUTION
+      sem_id: null
+      timeframe_role: execution_timeframe
+      subgraph: m15_execution
+      description: "Trade resolved (TP or SL hit); one-candle terminal before reset."
+      occupancy_class: event
+      requires_memory: true
+      is_ground: false
+      can_emit_signal: false
+      can_emit_bias: false
+      is_cycle_reset: true
+      is_one_bar_archive: false
+      self_loop_legal: false
+      lifecycle: registered
+      knowledge_status: CHARACTERIZED
+      epistemic: null
+      notes: >
+        is_cycle_reset: true — not a dead-end; the cycle-closing state
+        before RANGE. Structurally unreachable on the resolver constructor
+        today — no trade-state model at all.
+
+    RANGE_C1:
+      id: CRT-S-RANGE_C1
+      name: RANGE_C1
+      sem_id: null
+      timeframe_role: parent_timeframe
+      subgraph: parent_three_candle
+      description: "Reference parent candle; its own high/low become h_ref/l_ref."
+      occupancy_class: ground
+      requires_memory: true
+      is_ground: true
+      can_emit_signal: false
+      can_emit_bias: false
+      is_cycle_reset: false
+      is_one_bar_archive: false
+      self_loop_legal: true
+      lifecycle: registered
+      knowledge_status: CHARACTERIZED
+      epistemic: null
+      notes: >
+        Ground state of the disjoint parent_three_candle subgraph (F-075).
+        Not the same node as M15 RANGE — do not collapse.
+
+    MANIPULATION_C2:
+      id: CRT-S-MANIPULATION_C2
+      name: MANIPULATION_C2
+      sem_id: null
+      timeframe_role: parent_timeframe
+      subgraph: parent_three_candle
+      description: "Sweeps C1 boundary and closes back inside (parent-scale sweep)."
+      occupancy_class: event
+      requires_memory: true
+      is_ground: false
+      can_emit_signal: false
+      can_emit_bias: false
+      is_cycle_reset: false
+      is_one_bar_archive: false
+      self_loop_legal: false
+      lifecycle: registered
+      knowledge_status: CHARACTERIZED
+      epistemic: null
+      notes: >
+        A C2 sweep alone does not set the parent bias — bias requires
+        DISTRIBUTION_C3 (F-074 at parent scale).
+
+    DISTRIBUTION_C3:
+      id: CRT-S-DISTRIBUTION_C3
+      name: DISTRIBUTION_C3
+      sem_id: null
+      timeframe_role: parent_timeframe
+      subgraph: parent_three_candle
+      description: "Directional impulse away from the swept side, confirming C2."
+      occupancy_class: event
+      requires_memory: true
+      is_ground: false
+      can_emit_signal: false
+      can_emit_bias: true
+      is_cycle_reset: false
+      is_one_bar_archive: false
+      self_loop_legal: false
+      lifecycle: registered
+      knowledge_status: CHARACTERIZED
+      epistemic: null
+      notes: >
+        The ONLY state with can_emit_bias: true — a Tier-1 capability
+        declaration (parent_crt.py:102-110). Not HTFState.DISTRIBUTION and
+        not Romeo/Sujan 4H "State 3 Distribution" (F-077 — near-inverted
+        meaning); do not collapse.
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # TIER 2 + TIER 3 — CONSTRUCTORS. Engine and Resolver are both consumers of
+  # the Tier-1 core above, not authorities on it.
+  # ═══════════════════════════════════════════════════════════════════════
+  constructors:
+
+    engine:
+      source: src/config_layer/crt_engine_v2.py
+      description: >
+        The M15 process_candle state machine plus ParentCRTTrack. EXECUTION
+        authority for live trading (market_crt_states.yaml:21-22).
+      projection_allowances: []
+      capabilities:
+        produces_occupancy: true
+        produces_memory: true
+        covers_states: [RANGE, SHADOW_PENDING, SWEEP, DISPLACEMENT, EXPANSION, EXPIRED, RETEST, EXECUTION, RESOLUTION, RANGE_C1, MANIPULATION_C2, DISTRIBUTION_C3]
+        reaches_signal_state: true
+        produces_trade_geometry: true
+        runtime_eligible: true
+        blocking_gaps: []
+      # WHICH construction of this identity is this? `producer_id` alone cannot say:
+      # the repo held two resolver occupancy series on the same XAUUSD corpus
+      # (RANGE 39,308 vs 21,745) that differed only in parameterization — the motivating
+      # case for this block. Resolved 2026-09-04 by the supply contract, but the
+      # requirement stands: a constructor still has to name its parameterization, and
+      # the next divergence will look exactly like that one did. POINTERS and
+      # closed-vocabulary choices only — never file-content hashes, which would go
+      # stale on any unrelated config promotion. Content hashes belong on the RECORD.
+      parameterization:
+        determined: true
+        constructor_id: "965168941ce1e9030a268d70afaf6d7cf5f8f18ab67844e95690d6bab5b0a8e3"
+        construction:
+          config_source: configs/production/ACTIVE_VERSION
+          config_selector: "config_layer.production_config.get_prod_config(instrument)"
+          topology_source: "src/config_layer/state_identity.py::VALID_TRANSITIONS"
+          state_machine_source: "src/config_layer/crt_engine_v2.py::CRTEngine.process_candle"
+        invocation:
+          supply_set: ohlcv_candle_stream
+          htf_source: internal_htf_builder
+          injection: none
+      states:
+        RANGE:
+          dispatch: state_eq
+          handler: process_range
+          ttl_applies: true            # pending_displacement TTL ticked HERE (F-068), not in SHADOW_PENDING
+          ttl_kind: pending_displacement
+          htf_protected: false
+          htf_protect_via_active_trade: false
+          creates_shadow_on_htf_reset: false
+          records_entry_index: false
+          records_entry_timestamp: false
+          ends_expansion_telemetry_on_enter: false
+          reset_telemetry: none
+          reset_target: RANGE
+          source_ref: "crt_engine_v2.py:2960 (dispatch), :3255-3259 (TTL countdown, F-068 created_idx guard)"
+        SHADOW_PENDING:
+          dispatch: state_eq
+          handler: process_shadow_pending
+          ttl_applies: false           # TTL consumed on RANGE branch, not here (F-068)
+          ttl_kind: none
+          htf_protected: false
+          htf_protect_via_active_trade: false
+          creates_shadow_on_htf_reset: false
+          records_entry_index: false
+          records_entry_timestamp: false
+          ends_expansion_telemetry_on_enter: false
+          reset_telemetry: none
+          reset_target: RANGE
+          source_ref: "crt_engine_v2.py:3066 (dispatch)"
+        SWEEP:
+          dispatch: state_eq
+          handler: process_sweep
+          ttl_applies: false           # age expiry is a try_* guard, not a TTL state
+          ttl_kind: none
+          htf_protected: false
+          htf_protect_via_active_trade: false
+          creates_shadow_on_htf_reset: false
+          records_entry_index: false
+          records_entry_timestamp: false
+          ends_expansion_telemetry_on_enter: false
+          reset_telemetry: none
+          reset_target: RANGE
+          source_ref: "crt_engine_v2.py:3126 (dispatch)"
+        DISPLACEMENT:
+          dispatch: state_eq
+          handler: process_displacement
+          ttl_applies: false
+          ttl_kind: none
+          htf_protected: false
+          htf_protect_via_active_trade: false
+          creates_shadow_on_htf_reset: true
+          records_entry_index: true
+          records_entry_timestamp: false
+          ends_expansion_telemetry_on_enter: false
+          reset_telemetry: displacement_age
+          reset_target: RANGE
+          source_ref: "crt_engine_v2.py:1036 (entry index), :1894 (shadow create), :1859 (reset telemetry), :3163 (dispatch)"
+        EXPANSION:
+          dispatch: state_eq
+          handler: process_expansion
+          ttl_applies: true
+          ttl_kind: expansion_age
+          htf_protected: true
+          htf_protect_via_active_trade: false
+          creates_shadow_on_htf_reset: false
+          records_entry_index: true
+          records_entry_timestamp: true
+          ends_expansion_telemetry_on_enter: false
+          reset_telemetry: candidate_age
+          reset_target: RANGE
+          source_ref: "crt_engine_v2.py:1038 (entry index), :1040 (entry timestamp), :1880 (reset telemetry), :2580 (HTF-protect set), :3168 (dispatch)"
+        EXPIRED:
+          dispatch: state_eq
+          handler: process_expired
+          ttl_applies: false
+          ttl_kind: none
+          htf_protected: false
+          htf_protect_via_active_trade: false
+          creates_shadow_on_htf_reset: false
+          records_entry_index: false
+          records_entry_timestamp: false
+          ends_expansion_telemetry_on_enter: false
+          reset_telemetry: none
+          reset_target: RANGE
+          source_ref: "crt_engine_v2.py:3257 (dispatch)"
+        RETEST:
+          dispatch: none               # NOT a process_candle `s ==` branch
+          handler: null
+          ttl_applies: false
+          ttl_kind: none
+          htf_protected: true
+          htf_protect_via_active_trade: false
+          creates_shadow_on_htf_reset: false
+          records_entry_index: false
+          records_entry_timestamp: false
+          ends_expansion_telemetry_on_enter: true
+          reset_telemetry: none
+          reset_target: RANGE
+          source_ref: "crt_engine_v2.py:1043 (expansion-telemetry-end), :2580 (HTF-protect set), :3262 (elif evaluating_soft_conf prelude — not `s ==`)"
+        EXECUTION:
+          dispatch: none               # NOT a process_candle `s ==` branch
+          handler: null
+          ttl_applies: false
+          ttl_kind: none
+          htf_protected: false
+          htf_protect_via_active_trade: true
+          creates_shadow_on_htf_reset: false
+          records_entry_index: false
+          records_entry_timestamp: false
+          ends_expansion_telemetry_on_enter: false
+          reset_telemetry: none
+          reset_target: RESOLUTION
+          source_ref: "crt_engine_v2.py:2574-2575 (active_trade OPEN/TP1 protects reset), :2930-2955 (open-trade prelude before `s ==` chain, returns on close)"
+        RESOLUTION:
+          dispatch: none                # not a process_candle `s ==` branch; consumed by try_execution_to_resolution + immediate reset
+          handler: null
+          ttl_applies: false
+          ttl_kind: none
+          htf_protected: false
+          htf_protect_via_active_trade: false
+          creates_shadow_on_htf_reset: false
+          records_entry_index: false
+          records_entry_timestamp: false
+          ends_expansion_telemetry_on_enter: false
+          reset_telemetry: none
+          reset_target: RANGE
+          source_ref: "crt_engine_v2.py:2950-2952 (try_execution_to_resolution then reset_to_range, same candle)"
+        RANGE_C1:
+          dispatch: parent_track
+          handler: process_c1
+          ttl_applies: false
+          ttl_kind: none
+          htf_protected: false
+          htf_protect_via_active_trade: false
+          creates_shadow_on_htf_reset: false
+          records_entry_index: false
+          records_entry_timestamp: false
+          ends_expansion_telemetry_on_enter: false
+          reset_telemetry: none
+          reset_target: RANGE_C1
+          source_ref: "parent_crt.py:123 (dispatch), :152-155 (_become_c1)"
+        MANIPULATION_C2:
+          dispatch: parent_track
+          handler: process_c2
+          ttl_applies: false
+          ttl_kind: none
+          htf_protected: false
+          htf_protect_via_active_trade: false
+          creates_shadow_on_htf_reset: false
+          records_entry_index: false
+          records_entry_timestamp: false
+          ends_expansion_telemetry_on_enter: false
+          reset_telemetry: none
+          reset_target: RANGE_C1
+          source_ref: "parent_crt.py:133 (dispatch)"
+        DISTRIBUTION_C3:
+          dispatch: parent_track
+          handler: process_c3
+          ttl_applies: false
+          ttl_kind: none
+          htf_protected: false
+          htf_protect_via_active_trade: false
+          creates_shadow_on_htf_reset: false
+          records_entry_index: false
+          records_entry_timestamp: false
+          ends_expansion_telemetry_on_enter: false
+          reset_telemetry: none
+          reset_target: RANGE_C1
+          source_ref: "parent_crt.py:108 (bias gate), :142 (dispatch)"
+
+    resolver:
+      source: configs/formulas/market_crt_states.yaml
+      description: >
+        CRTStateResolver — MARKET REALITY layer, config-driven predicate
+        system. Runs alongside the engine, never replacing it
+        (market_crt_states.yaml:10-11).
+      # The ONE declared difference from the identity graph. Typed, ratcheted
+      # delta — not a rival graph. Mirrors the existing stale-pin ratchet in
+      # tests/test_crt_states_yaml_transition_parity.py (SK-0), which continues
+      # to run unchanged as the independent cross-file guard.
+      projection_allowances:
+        - from: SHADOW_PENDING
+          to: EXPANSION
+          reason: >
+            Per-bar exit-state projection of a two-hop engine collapse
+            (SHADOW_PENDING -> SWEEP -> EXPANSION inside one process_candle
+            via try_shadow_pending_to_expansion). B1d comment,
+            market_crt_states.yaml:247-249. NOT an identity edge — proven a
+            two-step walk, not waved through
+            (test_crt_states_yaml_transition_parity.py ::
+            test_allowance_is_grounded_in_engine_behaviour).
+      capabilities:
+        produces_occupancy: true
+        produces_memory: true
+        covers_states: [RANGE, SHADOW_PENDING, SWEEP, DISPLACEMENT, EXPANSION, EXPIRED, RETEST, EXECUTION, RESOLUTION]
+        # 9 of 12 — parent_three_candle subgraph is UNDEFINED on this
+        # constructor (market_crt_states.yaml has no RANGE_C1/MANIPULATION_C2/
+        # DISTRIBUTION_C3 predicate blocks). covers_states must stay a SUBSET
+        # of identity.state_list.
+        reaches_signal_state: false
+        produces_trade_geometry: false
+        runtime_eligible: false
+        blocking_gaps:
+          - id: GAP-RESOLVER-001
+            capability: reaches_signal_state
+            summary: "EXECUTION is structurally unreachable — score gate fail-closes on every real vector."
+            evidence: >
+              src/features/crt_state_resolver.py:1302-1309
+              (_continuous_gates_pass fail-closes EXECUTION when
+              raw.get('score'/'risk_score'/'crt_score') is None); none of
+              those three keys exist in CANONICAL_FEATURES;
+              reports/crt_semantic_parity_report.md:100 (EXECUTION 5/5 bars,
+              0.00% recall, category B-UNREACHABLE-STATE).
+            independent_of_f069: true   # closing the 11.84% construction gap does NOT close this gap
+          - id: GAP-RESOLVER-002
+            capability: produces_trade_geometry
+            summary: "No entry/SL/TP model — the resolver has no trade-geometry construction at all."
+            evidence: >
+              src/features/crt_state_resolver.py has no
+              ExecutionPlanner-equivalent; RESOLUTION is documented as
+              requiring trade state the resolver does not carry
+              (market_crt_states.yaml).
+            independent_of_f069: true
+      # DETERMINED 2026-09-04. The null used to be the point: two callers produced
+      # resolver occupancy and disagreed by 17,563 RANGE bars, and nothing recorded
+      # which supply set each had used.
+      #   HISTORICAL A — scripts/research/run_crt_state_on_mt5_xauusd.py:100-128,
+      #     CANONICAL n columns + retest_flag + displacement_flag, rsi_state ABSENT,
+      #     silent `if pd.isna(val): val = 0.0`   (canonical_plus_non_vector)
+      #     -> RANGE 39,308 / SWEEP 6,213 / EXPANSION 1,125
+      #        (numbers preserved here per S6.2 rule 4; the report they came from,
+      #         reports/crt_state_fresh_run_xauusd.md, has since been regenerated —
+      #         recover the original with `git show <pre-2026-09-04>:<that path>`)
+      #   HISTORICAL B — scripts/research/build_bar_matrix.py:76,160,209, EVERY
+      #     enriched column incl. rsi_state        (enriched_all_columns)
+      #     -> RANGE 21,745 / SWEEP 15,186 / EXPANSION 7,092 (F-086)
+      #
+      # WHY it was caller-dependent at all: crt_state_resolver.resolve() classifies
+      # EVERY key the caller supplies and `.update()`s the result over classify()'s
+      # own output, so `feature_states` is a function of what was passed, not of the
+      # bar. The encoder's stateful vocabulary holds SIX non-vector names, not the
+      # three the resolver's source comment lists.
+      #
+      # RESOLVED BY CONSTRUCTION, not by adjudication: `features/resolver_supply.py`
+      # sources every canonical value from the VECTOR and exactly the non-vector
+      # `when:`-named features from the enriched frame, and passes nothing else.
+      # Caller A rewired onto it reproduces HISTORICAL B's series EXACTLY
+      # (21,745 / 15,186 / 7,092 on 47,197 bars), so the two series are no longer
+      # divergent — there is one series with a stable fingerprint
+      # (resolver_supply: 77d31663c1fa9126...).
+      #
+      # SCOPE LIMIT (E-001): this ATTRIBUTES NOTHING about the past. Commit 03c3dbf
+      # changed both the resolver and market_crt_states.yaml between the two
+      # historical run dates, so today's contract cannot explain a run made under
+      # different code. The claim is prevention of recurrence, not attribution.
+      # `determined: true` grants NO runtime eligibility — the two blocking_gaps
+      # above are capability gaps and are untouched by this.
+      parameterization:
+        determined: true
+        constructor_id: "61ef9dfe48ed4efb83615cf6c26c39ade0e8effaf0e46941aa9227de95691fe3"
+        construction:
+          states_config: configs/formulas/market_crt_states.yaml
+          links_config: configs/formulas/crt_resolver_links.yaml
+          variant: base                 # crt_resolver_links.yaml: every link disabled
+          enabled_links: []
+          ontology_source: configs/formulas/market_ontology.yaml
+          waived_when_features: []
+        invocation:
+          supply_set: canonical_v5_plus_nonvector  # == resolver_supply.SUPPLY_SET_ID
+          htf_source: phase_locked_timeline   # both callers phase-lock (build_htf_id_timeline)
+          injection: none               # neither caller passes engine_state_to/engine_reset
+      states:
+        RANGE:
+          defined: true
+          predicate_source: "market_crt_states.yaml:214-233 (states.RANGE.when)"
+          sticky: false
+          reachable: true
+        SHADOW_PENDING:
+          defined: true
+          predicate_source: "market_crt_states.yaml:169-176 (states.SHADOW_PENDING.when — memory-only, empty when-block)"
+          sticky: true
+          reachable: true
+        SWEEP:
+          defined: true
+          predicate_source: "market_crt_states.yaml:178-192 (states.SWEEP.when)"
+          sticky: true
+          reachable: true
+        DISPLACEMENT:
+          defined: true
+          predicate_source: "market_crt_states.yaml:156-166 (states.DISPLACEMENT.when)"
+          sticky: true
+          reachable: true
+        EXPANSION:
+          defined: true
+          predicate_source: "market_crt_states.yaml:133-153 (states.EXPANSION.when + continuous gates)"
+          sticky: true
+          reachable: true
+          construction_diverges_from_engine: true   # F-069 Category C — declared, not disputed
+        EXPIRED:
+          defined: true
+          predicate_source: "market_crt_states.yaml:194-201 (states.EXPIRED.when — temporal, TTL-tracked)"
+          sticky: true
+          reachable: true
+        RETEST:
+          defined: true
+          predicate_source: "market_crt_states.yaml:126-136 (states.RETEST.when)"
+          sticky: true
+          reachable: true
+        EXECUTION:
+          defined: true
+          predicate_source: "market_crt_states.yaml:112-123 (states.EXECUTION.when)"
+          sticky: true
+          reachable: false
+          unreachable_reason: "GAP-RESOLVER-001 — see constructors.resolver.capabilities.blocking_gaps"
+        RESOLUTION:
+          defined: false
+          predicate_source: null
+          sticky: false
+          reachable: false
+          unreachable_reason: "No states[].name block; no trade-state model to detect resolution from (market_crt_states.yaml comment on RESOLUTION)."

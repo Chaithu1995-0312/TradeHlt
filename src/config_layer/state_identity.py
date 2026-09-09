@@ -4,13 +4,30 @@ state_identity.py
 CRT State Machine Identity — Enums, Baseline Transitions, and Configuration Schema.
 
 Single source of truth for:
-  - CRTState enum (9 members: RANGE, SWEEP, DISPLACEMENT, EXPANSION, RETEST, EXECUTION, RESOLUTION, SHADOW_PENDING, EXPIRED)
+  - CRTState enum (12 members: the original 9 execution-timeframe states — RANGE, SWEEP,
+    DISPLACEMENT, EXPANSION, RETEST, EXECUTION, RESOLUTION, SHADOW_PENDING, EXPIRED — plus 3
+    parent-timeframe (calendar-true H4/D1/W1/MN1) states added by CH-htfcrt-parent-candle-smc-v1
+    (2026-08-15, user-authorized): RANGE_C1, MANIPULATION_C2, DISTRIBUTION_C3. The 3 new states
+    form a DISJOINT sub-graph from the original 9 (see VALID_TRANSITIONS below) — they classify
+    the parent-timeframe 3-candle CRT construct (config_layer.parent_crt.ParentCRTTrack), never
+    the M15 execution machine directly. See docs/governance/crt_closure_report.md (reopened by
+    F-074, scope widened again by this program) and docs/governance/semantic_os/concepts.yaml
+    CN-004 (invariant text updated 9->12 states, same turn).
   - Direction enum (LONG, SHORT, NONE)
   - RejectReason enum (LOW_SCORE, OUTSIDE_SESSION, NO_DOUBLE_SWEEP, NEWS_FILTER, HIGH_SPREAD, INVALID_STATE)
   - VALID_TRANSITIONS module seed (legal state edges)
   - CRTConfig dataclass (frozen, validation in __post_init__)
 
+CRTState, VALID_TRANSITIONS, PARENT_TIMEFRAME_STATES and EXECUTION_TIMEFRAME_STATES are
+GENERATED from active_models.yaml (crt.runtime) by
+scripts/maintenance/gen_crt_state_identity.py into _crt_state_generated.py, and re-exported
+here (CH-crt-state-generation-v1, 2026-08-31) -- so the ontology is the single authored source
+for state IDENTITY. This module remains the import site for every consumer and keeps the
+governance rationale. Direction, RejectReason, _VALID_KILL_PRECEDENCE and CRTConfig stay
+hand-authored here: none is declared in the ontology.
+
 Zero imports from: crt_engine_v2, state_contract_loader, state_topology.
+(The one new import, config_layer._crt_state_generated, imports only `enum` -- no cycle.)
 Imported by: all three (and tests, strategies, engines, etc.).
 
 This module breaks the circular dependency:
@@ -32,17 +49,31 @@ from typing import Any, Optional
 # STATE MACHINE ENUMS
 # ─────────────────────────────────────────────────────────────────
 
-class CRTState(Enum):
-    """Legal states in the CRT state machine (9 members)."""
-    RANGE          = auto()
-    SHADOW_PENDING = auto()   # Cross-window displacement memory active; awaiting sweep confirmation
-    SWEEP          = auto()
-    DISPLACEMENT   = auto()
-    EXPANSION      = auto()
-    EXPIRED        = auto()   # Phase 3b — soft archive: TTL exceeded, one-candle pause before RANGE reset
-    RETEST         = auto()
-    EXECUTION      = auto()
-    RESOLUTION     = auto()
+# ── CRTState: GENERATED from active_models.yaml ──────────────────────────────
+# The 12 members (9 execution-timeframe + 3 parent-timeframe, added
+# CH-htfcrt-parent-candle-smc-v1 2026-08-15) are emitted by
+# scripts/maintenance/gen_crt_state_identity.py into _crt_state_generated.py and
+# re-exported here, so the ontology is the single authored source for state identity
+# (CH-crt-state-generation-v1, 2026-08-31). The rationale below is retained here
+# rather than moved to YAML -- see the generator's docstring for why.
+#
+# Per-member semantics (previously inline comments on the enum, preserved verbatim):
+#   SHADOW_PENDING  Cross-window displacement memory active; awaiting sweep confirmation
+#   EXPIRED         Phase 3b -- soft archive: TTL exceeded, one-candle pause before RANGE reset
+#   RANGE_C1        C1: the reference parent candle -- its H/L become h_ref/l_ref
+#   MANIPULATION_C2 C2: sweeps C1's boundary and closes back inside (parent-scale sweep)
+#   DISTRIBUTION_C3 C3: directional impulse away from the swept side (F-074 contract)
+#
+# The 3 parent-timeframe states classify 3 consecutive CALENDAR-TRUE parent candles
+# (H4/D1/W1/MN1, built by features.parent_candle.ParentCandleBuilder) via
+# config_layer.parent_crt.ParentCRTTrack. They never appear as a transition
+# target/source for any of the 9 execution states.
+from config_layer._crt_state_generated import (  # noqa: E402
+    CRTState,
+    VALID_TRANSITIONS,
+    PARENT_TIMEFRAME_STATES,
+    EXECUTION_TIMEFRAME_STATES,
+)
 
 
 class Direction(Enum):
@@ -66,22 +97,41 @@ class RejectReason(Enum):
 # VALID TRANSITIONS SEED
 # ─────────────────────────────────────────────────────────────────
 
-VALID_TRANSITIONS: dict[CRTState, list[CRTState]] = {
-    CRTState.RANGE:          [CRTState.SWEEP, CRTState.SHADOW_PENDING],
-    CRTState.SHADOW_PENDING: [CRTState.SWEEP, CRTState.RANGE],
-    CRTState.SWEEP:          [CRTState.DISPLACEMENT, CRTState.EXPANSION, CRTState.RANGE],
-    CRTState.DISPLACEMENT:   [CRTState.EXPANSION, CRTState.RANGE],
-    CRTState.EXPANSION:      [CRTState.RETEST, CRTState.EXPIRED, CRTState.RANGE],  # Phase 3b: EXPIRED added
-    CRTState.EXPIRED:        [CRTState.RANGE],   # Phase 3b — one-candle soft archive then RANGE
-    CRTState.RETEST:         [CRTState.EXECUTION, CRTState.RANGE],
-    CRTState.EXECUTION:      [CRTState.RESOLUTION],
-    CRTState.RESOLUTION:     [CRTState.RANGE],
-}
+# VALID_TRANSITIONS, PARENT_TIMEFRAME_STATES and EXECUTION_TIMEFRAME_STATES are
+# GENERATED and imported above. Their governance rationale, retained verbatim:
+#
+# Parent-timeframe 3-candle CRT sub-graph (CH-htfcrt-parent-candle-smc-v1, 2026-08-15):
+#   DISJOINT from the 9 execution states -- no edge crosses between the two sub-graphs (no
+#   execution state ever transitions into RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3, and none
+#   of these three ever transitions into RANGE/SWEEP/.../RESOLUTION). Deliberate -- these
+#   classify a PARENT-timeframe 3-candle window (config_layer.parent_crt.ParentCRTTrack), a
+#   different timeframe than the M15 execution machine; interleaving the two graphs would
+#   conflate timeframes and change every existing consumer's transition-count invariants. The
+#   parent track feeds the M15 engine only through the defaulted `parent_state` keyword on
+#   `process_candle` (a bias/objective gate), never through a shared CRTState transition.
+#
+#   EXPANSION -> EXPIRED is the Phase 3b soft archive; RESOLUTION -> RANGE is a cycle-reset,
+#   NOT a dead-end (terminality is expressed in lifecycle.resolution).
+#
+# State-set partition (CH-htfcrt-parent-candle-smc-v1, 2026-08-15):
+#   Single source of truth for the disjoint split, so no consumer (tests, census artifacts,
+#   docs generation) hand-duplicates the 3-name list. `PARENT_TIMEFRAME_STATES` is the
+#   parent-timeframe 3-candle CRT sub-graph; `EXECUTION_TIMEFRAME_STATES` is the original
+#   9-state M15 execution machine (config_layer.crt_engine_v2.CRTEngine) -- the scope of e.g.
+#   docs/governance/crt_executable_state_graph.json, which is a crt_engine_v2.py-only census
+#   and does not (and should not) grow to cover a different module's states.
+
+
 
 
 # ─────────────────────────────────────────────────────────────────
 # CONFIGURATION SCHEMA
 # ─────────────────────────────────────────────────────────────────
+
+# [SEM-021] Legal values for CRTConfig.displacement_origin_kill_precedence. The two arms are
+# measured separately and never pooled; "absolute" is a declared measurement weakness.
+_VALID_KILL_PRECEDENCE = frozenset({"after_resting_fills", "absolute"})
+
 
 @dataclass(frozen=True)
 class CRTConfig:
@@ -171,6 +221,8 @@ class CRTConfig:
     allowed_sessions: tuple = ("LONDON", "NEWYORK", "OVERLAP")
 
     # Reset triggers
+    # Fraction of the displacement body. Fires only when close moves AGAINST
+    # state.direction (LONG: below disp.close; SHORT: above). Continuation is not a retrace.
     retrace_reset_pct:   float = 0.50
     extension_reset_fib: float = 1.618
 
@@ -193,8 +245,32 @@ class CRTConfig:
 
     # ── Shadow displacement protection (Phase 1) ──────────────────
     # Candles a pending_displacement memory survives after an HTF reset.
-    # TTL = 4 = one HTF window (4 × M15 = 1 h).  Set to 0 to disable.
+    # Independent of backtest.htf_candles_per_range (do not auto-scale with HTF size).
+    # Set to 0 to disable.
     pending_displacement_ttl_candles: int = 4
+
+    # ── SEM-021 Displacement-Origin Invalidation (CH-DISP-ORIGIN-KILL, 2026-08-21) ──
+    # A CLOSE-triggered structural-failure exit: when a candle CLOSES beyond the ORIGIN
+    # (open) of the displacement candle that founded the setup, the premise that justified
+    # the entry is void, so the trade is closed at that close rather than carried to the
+    # geometric stop. Distinct from stop PLACEMENT (SEM-017) and from the stop-POLICY class
+    # (SEM-019) — it moves nothing, it terminates.
+    #
+    # Rankable from M15 OHLC precisely BECAUSE it reads the close and not a running extreme:
+    # F-087 measured the extreme-following arms at a 0.261R same-bar ambiguity band, 12–15x
+    # the 0.0198–0.0212R policy spread, versus ~0.0005R for close/elapsed-time arms.
+    #
+    # DEFAULT OFF. Enabled only on a non-promoted shadow config; the active config and its
+    # params hash are untouched. Grants no authority (§6.5) — measurable ≠ valuable.
+    displacement_origin_kill_enabled: bool = False
+    # "after_resting_fills" (default): TP2 → SL → TP1 partial → THEN the kill at the close.
+    #   Resting orders fill intrabar and are mechanically prior; the kill still strictly
+    #   preempts the SEM-017 half-way trail, so a bar that reaches TP1 and closes through the
+    #   origin books the partial and exits the runner instead of arming the trail.
+    # "absolute": the kill is evaluated before TP2/SL/TP1. Literal "fires first", but it can
+    #   cancel a resting order that would already have filled earlier in the same bar — a form
+    #   of lookahead. A DECLARED MEASUREMENT WEAKNESS, not a neutral alternative.
+    displacement_origin_kill_precedence: str = "after_resting_fills"
 
     # ── Expansion TTL guard (Phase 3b) ────────────────────────────
     # Expire if EITHER candle OR hour limit is exceeded. Set 0 to disable either.
@@ -232,6 +308,22 @@ class CRTConfig:
 
     def __post_init__(self) -> None:
         """Fail-closed validation for IC-007 PLAN-001/PLAN-002 HOW keys (and future strict knobs)."""
+        # [SEM-021] Fail closed on an unrecognised precedence rather than silently defaulting.
+        # A typo that quietly fell back to "after_resting_fills" would produce a run labelled
+        # as the other arm — the two are NOT equivalent, and a mislabelled arm is worse than
+        # a crash because it looks like evidence.
+        _prec = self.displacement_origin_kill_precedence
+        if _prec not in _VALID_KILL_PRECEDENCE:
+            raise ValueError(
+                f"displacement_origin_kill_precedence must be one of "
+                f"{sorted(_VALID_KILL_PRECEDENCE)}, got {_prec!r}"
+            )
+        if not isinstance(self.displacement_origin_kill_enabled, bool):
+            raise ValueError(
+                "displacement_origin_kill_enabled must be a bool, got "
+                f"{type(self.displacement_origin_kill_enabled).__name__}"
+            )
+
         v = self.retest_min_depth_atr_fraction
         if isinstance(v, bool) or not isinstance(v, (int, float)):
             raise ValueError(

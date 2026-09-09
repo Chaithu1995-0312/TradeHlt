@@ -16,12 +16,12 @@ def test_closure_report_exists():
     assert _REPORT.is_file(), f"missing {_REPORT}"
 
 
-def test_closure_status_is_closed_after_ch002():
-    """Post CH-002 F-050 emission rename: CRT boundary identity is CLOSED."""
+def test_closure_status_reopened_after_directional_displacement():
+    """F-074 / CH-directional-displacement-contract reopened the CRT boundary."""
     text = _REPORT.read_text(encoding="utf-8")
-    assert "CRT_CLOSURE_STATUS = CLOSED" in text
+    assert "CRT_CLOSURE_STATUS = REOPENED" in text
+    assert "CH-directional-displacement-contract" in text
     assert "F-050" in text
-    # Residual history may mention BLOCKED; active verdict must be CLOSED
     assert "CH-002" in text or "REMEDIATED" in text or "emission rename" in text.lower()
 
 

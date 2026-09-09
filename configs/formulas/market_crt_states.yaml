@@ -85,6 +85,11 @@ feature_states:
   # reachability defect (H7 — see market_ontology.yaml's execution_behaviours SEM-004). Declared
   # here per §6.6 (undefined-but-referenced semantics become an explicit node, never a silent
   # gap) rather than removed, since a future CRT state MAY legitimately gate on it.
+  # CH-PSTRUCT-04 / SEM-013 (2026-08-18): FM-063 is authorized as a RESEARCH
+  # volume_participation qualifier on CRT DISPLACEMENT events (identity of
+  # NoSpike/VolumeSpike). CH-PSTRUCT-06 CLOSED: CRT_WIRE is
+  # DISPLACEMENT:VolumeSpike:ANNOTATION_ONLY, gate UNUSED. Still NOT a when:
+  # predicate, hard gate, or soft gate.
   volume_spike: [NoSpike, VolumeSpike]
 
 # ───────────────────────────────────────────────────────────────────────────
@@ -249,6 +254,15 @@ valid_transitions:
   RETEST: [EXECUTION, RANGE]
   EXECUTION: [RESOLUTION]
   RESOLUTION: [RANGE]
+  # ── Parent-timeframe 3-candle CRT sub-graph (CH-htfcrt-parent-candle-smc-v1, 2026-08-15) ──
+  # Mirrors src/config_layer/state_identity.py:VALID_TRANSITIONS exactly (documentation
+  # only here — this resolver's `.get(current, [])` lookup at crt_state_resolver.py:1300
+  # never actually produces these labels; the resolver operates purely on the M15
+  # execution-timeframe track). Kept in sync per CLAUDE.md §6.2 rule 6 (two records of
+  # one edge set must not silently diverge), not because it is runtime-enforced here.
+  RANGE_C1: [MANIPULATION_C2, RANGE_C1]
+  MANIPULATION_C2: [DISTRIBUTION_C3, RANGE_C1]
+  DISTRIBUTION_C3: [RANGE_C1]
 
 # ───────────────────────────────────────────────────────────────────────────
 # PREDICATE THRESHOLDS
@@ -262,8 +276,9 @@ thresholds:
   # htf_range  = engine RangeDetector.detect_sweep (frozen HTF active_range)
   # pipeline_swing = legacy FeaturePipeline last-swing liquidity_sweep
   sweep_geometry: htf_range
-  # Engine CRTConfig.atr_period — active_range rebuild window on HTF/gap reset
-  # (crt_engine_v2.process_candle uses candle_buffer[-atr_period:]).
+  # Engine CRTConfig.atr_period — M15 structural liquidity range (SEM-011)
+  # rebuild window on HTF/gap reset (clock flip). detect_m15_structural_range
+  # uses candle_buffer[-atr_period:]. HTFBuilder is the clock, not this envelope.
   range_atr_period: 14
 
   # Displacement gate (SWEEP→DISPLACEMENT) — align to active prod params
@@ -286,7 +301,13 @@ thresholds:
   # Retest gate (EXPANSION→RETEST)
   # Pipeline retest_flag fires on ~58% of bars; engine RETEST is ~17/47k.
   # Keep depth tight so only near-touch retests promote.
-  retest_depth_max: 0.08         # retest_depth must be <= this (tuned vs engine rarity)
+  # [Phase E1, CH-crt-sot-2026-08-31] Aligned 0.08 -> 0.15 to match the live production value
+  # (configs/production/v2_htfcrt_2026_08.json:params.retest_depth_max). MEASURED inert for the
+  # resolver before this edit: scripts/research/e1_retest_depth_max_probe.py found
+  # byte-identical agreement (87.7047%) and RETEST recall (0.0%, resolver_n=0) at 0.08/0.15/0.25
+  # -- the RETEST branch is never entered on this corpus regardless of this value. This edit
+  # removes a divergent number with no functional reason to exist; it changes no resolver output.
+  retest_depth_max: 0.15         # retest_depth must be <= this (aligned to production, Phase E1)
   retest_atr_depth_fraction: 0.50  # adaptive ceiling = this * ATR
 
   # Sweep age (engine-like dwell after sweep event)
@@ -328,3 +349,224 @@ thresholds:
     # On HTF reset from DISPLACEMENT → set pending shadow (engine Phase 1)
     shadow_on_htf_displacement_reset: true
     pending_displacement_ttl_candles: 4
+
+# ───────────────────────────────────────────────────────────────────────────
+# THRESHOLD REFS (Phase D, CH-crt-sot-2026-08-31, added 2026-08-31)
+# ───────────────────────────────────────────────────────────────────────────
+# `thresholds:` above still holds every LITERAL VALUE the resolver actually reads today --
+# UNCHANGED by this section, byte-for-byte, so resolver behavior is untouched. This block adds
+# the NAMES those values should be understood against, following the doctrine
+# structure_profiles.yaml already states: "THRESHOLDS ARE NAMES, NEVER VALUES... copying a
+# number into this file would create a second source of truth for it." `thresholds:`'s own
+# header comment already half-admits this ("These mirror the CRTConfig values") -- this section
+# makes that admission precise and machine-checkable, key by key, rather than one paragraph.
+#
+# Each entry classifies one `thresholds:` key (or `lifecycle.<key>` for the nested block):
+#   kind:
+#     crtconfig_duplicate       -- an exact-name CRTConfig field, ACTIVELY read by the resolver
+#                                   today via thr.get(<key>, ...). The real "second value-copy."
+#     crtconfig_duplicate_dead  -- an exact-name CRTConfig field, declared here, but the
+#                                   resolver never reads this key by name (0 occurrences) --
+#                                   same defect class as crt_resolver_links.yaml LINK-002/003
+#                                   (declared permission nothing exercises), on the threshold
+#                                   axis rather than the feature_states axis.
+#     name_alias_documented     -- NOT an exact CRTConfig field name, but this file's OWN prior
+#                                   comment already asserts the underlying quantity is the same
+#                                   one, under a different name. `ref` names what the comment
+#                                   cites. NOT verified byte-identical in behavior by this
+#                                   program -- an assertion inherited from existing prose, not a
+#                                   fresh proof; still a discovered relationship, not a fact.
+#     resolver_only             -- genuinely has no production counterpart. Deliberately NOT
+#                                   given a fabricated `ref` -- these are resolver-construction
+#                                   knobs (research-shadow behavior, HTF/gap reset policy,
+#                                   schema-handling switches), several explicitly documented in
+#                                   this file's own header as intentional resolver/engine
+#                                   construction differences (F-069).
+#     dead_unconsumed           -- neither a CRTConfig field NOR read anywhere in
+#                                   crt_state_resolver.py by this name. Likely vestigial.
+#
+# `consumed` (bool) is independently verified against crt_state_resolver.py source -- NOT
+# inferred from `kind` -- so a future edit that starts/stops reading a key is a real, checkable
+# fact, not an assumption carried by this table.
+#
+# VALIDATOR: features.registry.validate_crt_threshold_refs (closed contract: every `thresholds:`
+# key must appear here exactly once; every `ref` naming a CRTConfig field must be a real one).
+# AUTHORITY: none. Declaration only, same as structure_profiles.yaml (§6.5) -- this section is
+# NOT consumed by crt_state_resolver.py; it does not change which value the resolver uses for
+# anything. Wiring resolution (making the resolver look values up via these refs instead of the
+# literal `thresholds:` block) is a separate, later, parity-provable phase -- not this one.
+#
+# `schema`/`version` are nested UNDER threshold_refs, not siblings of it -- this file already
+# has a top-level `version: 1` (state-machine schema version); a second top-level `version:`
+# key would silently collide with it under YAML's last-key-wins parsing. Caught before writing.
+threshold_refs:
+  schema: threshold_refs/v1
+  version: 1
+
+  refs:
+
+    sweep_geometry:
+      kind: resolver_only
+      ref: null
+      consumed: true
+      note: >
+        Selects the RANGE→SWEEP founding detector (htf_range vs pipeline_swing). Resolver
+        construction mode; crt_engine_v2 has no equivalent switch.
+
+    range_atr_period:
+      kind: name_alias_documented
+      ref: atr_period
+      consumed: true
+      note: >
+        This file's own comment at the `range_atr_period` declaration already reads "Engine
+        CRTConfig.atr_period — M15 structural liquidity range (SEM-011)". Both default to 14.
+        Elevated here from prose to a machine-checkable ref, not independently re-derived.
+
+    body_ratio_min:
+      kind: crtconfig_duplicate
+      ref: body_ratio_min
+      consumed: true
+
+    atr_multiplier_min:
+      kind: crtconfig_duplicate
+      ref: atr_multiplier_min
+      consumed: true
+
+    atr_min_displacement:
+      kind: crtconfig_duplicate
+      ref: atr_min_displacement
+      consumed: true
+
+    expansion_atr_min_distance:
+      kind: crtconfig_duplicate
+      ref: expansion_atr_min_distance
+      consumed: true
+
+    expansion_atr_is_relative:
+      kind: resolver_only
+      ref: null
+      consumed: true
+      note: >
+        Controls whether the resolver's own atr_abs computation treats the vector's `atr` as
+        relative or absolute. crt_engine_v2 has no such toggle -- resolver-specific
+        schema-handling knob (see FM-030/031, F-061 dimensional-mix history for why this axis
+        exists at all).
+
+    continuous_disp_to_expansion:
+      kind: resolver_only
+      ref: null
+      consumed: true
+      note: >
+        B1h research-shadow switch. This file's own header already documents it as OFF by
+        default and names the reason (residual FPs on short DISP dwells) -- a deliberate
+        resolver/engine construction difference (F-069), not a value the engine could share.
+
+    retest_depth_max:
+      kind: crtconfig_duplicate
+      ref: retest_depth_max
+      consumed: true
+
+    retest_atr_depth_fraction:
+      kind: crtconfig_duplicate_dead
+      ref: retest_atr_depth_fraction
+      consumed: false
+      note: >
+        IS a CRTConfig field and IS declared here, but crt_state_resolver.py never reads this
+        key by name (0 occurrences of thr.get("retest_atr_depth_fraction", ...)) -- declared
+        permission nothing exercises, same defect class as LINK-002/LINK-003.
+
+    max_sweep_age_candles:
+      kind: crtconfig_duplicate
+      ref: max_sweep_age_candles
+      consumed: true
+
+    max_displacement_age_candles:
+      kind: dead_unconsumed
+      ref: null
+      consumed: false
+      note: >
+        Not a CRTConfig field and not read anywhere in crt_state_resolver.py by this name.
+        Likely vestigial -- the resolver's actual displacement-age gate is
+        lifecycle.pending_displacement_ttl_candles.
+
+    max_expansion_age_candles:
+      kind: crtconfig_duplicate
+      ref: max_expansion_age_candles
+      consumed: true
+
+    max_expansion_age_hours:
+      kind: crtconfig_duplicate
+      ref: max_expansion_age_hours
+      consumed: true
+
+    score_threshold:
+      kind: crtconfig_duplicate
+      ref: score_threshold
+      consumed: true
+
+    soft_conf_max_candles:
+      kind: crtconfig_duplicate
+      ref: soft_conf_max_candles
+      consumed: true
+
+    rsi_overbought:
+      kind: dead_unconsumed
+      ref: null
+      consumed: false
+      note: >
+        Not a CRTConfig field, not read by this name. The resolver consumes the classified
+        rsi_state feature-state vocabulary entry instead of a raw numeric RSI threshold.
+
+    rsi_oversold:
+      kind: dead_unconsumed
+      ref: null
+      consumed: false
+      note: See rsi_overbought.
+
+    lifecycle.htf_reset_enabled:
+      kind: resolver_only
+      ref: null
+      consumed: true
+
+    lifecycle.htf_candles_per_range:
+      kind: name_alias_documented
+      ref: "backtest.htf_candles_per_range"
+      consumed: true
+      note: >
+        This file's own comment at the declaration already reads "backtest.htf_candles_per_range
+        (active prod) — HTFBuilder window size". `backtest` is a top-level production-JSON
+        section, not a CRTConfig field -- the same cross-section pattern
+        structure_profiles.yaml's SPP-001 entry already uses for the identical live founding
+        (threshold_refs.clock: backtest.htf_candles_per_range).
+
+    lifecycle.htf_protect_states:
+      kind: resolver_only
+      ref: null
+      consumed: true
+
+    lifecycle.htf_protect_execution:
+      kind: resolver_only
+      ref: null
+      consumed: true
+
+    lifecycle.gap_reset_enabled:
+      kind: resolver_only
+      ref: null
+      consumed: true
+
+    lifecycle.gap_reset_minutes:
+      kind: name_alias_documented
+      ref: "backtest.gap_reset_minutes"
+      consumed: true
+      note: >
+        This file's own comment at the declaration already reads "backtest.gap_reset_minutes".
+
+    lifecycle.shadow_on_htf_displacement_reset:
+      kind: resolver_only
+      ref: null
+      consumed: true
+
+    lifecycle.pending_displacement_ttl_candles:
+      kind: crtconfig_duplicate
+      ref: pending_displacement_ttl_candles
+      consumed: true

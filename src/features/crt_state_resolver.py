@@ -77,13 +77,18 @@ import math
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, Iterable, Mapping, Optional, Sequence
 
 import yaml
 
+from config_layer.state_identity import CRTState
 from features.feature_schema import CANONICAL_FEATURES
 from features.feature_states import FeatureStateEncoder
 from features.registry import load_ontology
+# SK-1 (2026-08-19): SP-001 arithmetic only. The resolver's own SEQUENCING and its
+# market_crt_states.yaml graph are deliberately untouched — the F-069 construction difference
+# stays OPEN as ontology node UNK-006 and is NOT resolved by this migration.
+from structure.predicates import swept_high as _swept_high, swept_low as _swept_low
 
 logger = logging.getLogger("CRT_STATE_RESOLVER")
 
@@ -110,6 +115,25 @@ class TransitionError(CRTStateResolverError):
 
 
 # ── Data structures ──────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class ResolverMetadata:
+    """The resolver's per-bar `F_t | S_t` view: what the FEATURES say, not a competing state.
+
+    Produced by `CRTStateResolver.resolve_metadata()` for the dual-construction trace
+    (`runtime/crt_construction_trace.py`). Deliberately carries NO resolved state label — the
+    engine owns `S_t`; this is the feature-conditioned diagnostic beside it, so one trace row
+    can hold both constructions without contradicting itself.
+    """
+
+    l2_map: dict[str, str]              # the 19 L2 feature states (13 vector-bound + 6 supplied)
+    feature_vector: dict[str, float]    # the caller's normalized dict, echoed for the row
+    predicate_affinity: dict[str, bool]  # state -> its `when:` clauses matched this bar
+    continuous_passed: dict[str, bool]   # state -> `_continuous_gates_pass` on the raw values
+    projected_funnel_site: Optional[str]  # `_resolve_from_features` site AT CURRENT MEMORY
+    supply_ok: bool
+    missing_when: tuple[str, ...]       # required `when:` names neither supplied nor waived
+
 
 @dataclass
 class CRTStateMemory:
@@ -159,6 +183,125 @@ class CRTStateMemory:
 
 # ── Resolver ─────────────────────────────────────────────────────
 
+_LINKS_CONFIG = Path("configs/formulas/crt_resolver_links.yaml")
+
+# `when:`-named features that are NOT vector-bound (ontology lineage.vector_key:
+# []), mapped to what actually produces them. They are real pipeline outputs --
+# just non-canonical columns, which a caller filtering to CANONICAL_FEATURES will
+# silently drop. Naming the producer in the error turns "why is this missing?"
+# into a one-line answer. Advisory text only; nothing branches on it.
+_NON_VECTOR_PRODUCERS: dict[str, str] = {
+    "retest_flag": "FM-061 - FeaturePipeline.compute_canonical_structure_features "
+                   "(features/feature_pipeline.py:1030), non-canonical column",
+    "displacement_flag": "FM-069 - FeaturePipeline.compute_canonical_structure_features "
+                         "(features/feature_pipeline.py:1009), non-canonical column",
+    "rsi_state": "FM-068 - FeaturePipeline.compute_indicators "
+                 "(features/feature_pipeline.py:598), non-canonical column",
+}
+
+# ── Decision provenance: WHICH branch produced the state (CH-resolution-site) ──
+#
+# F-069 classified all 5,447 residual mismatches by MISMATCH CELL
+# (engine_state -> resolver_state) and never by CODE PATH. Those are orthogonal:
+# an `EXPANSION -> RANGE` mismatch can come from a TTL expiry, a dwell hold, or
+# predicate exhaustion, and the cell cannot tell them apart. These ids name the
+# REASON, not the output -- `sweep_age_expiry` and `ground_state_fallthrough`
+# both return "RANGE" for opposite reasons and must never be merged.
+#
+# FOUR stages of resolve() can each decide, and later ones OVERWRITE earlier
+# ones, so a site recorded only inside the funnel would bill a stage-3 rewrite
+# to stage 2. `resolution_site` is the DECIDING stage: injection > validity >
+# funnel. (Measured relevance: the largest single mismatch cell, EXPANSION->RANGE
+# at 61.9% / 3,374 bars, is frequently a stage-3 rewrite, not a funnel return.)
+#
+# EXHAUSTIVENESS IS ENFORCED, not assumed: tests/research/test_rc003_distinct_object.py
+# walks every ast.Return in _resolve_from_features and fails if one is not covered
+# by a site here. A 17th unnamed return would silently under-attribute -- the same
+# silent-gap class as F-056/F-079/F-083/F-085.
+_RESOLUTION_SITES: tuple[str, ...] = (
+    # stage 1 - lifecycle reset, returns from resolve() itself (:591) and never
+    # enters the funnel. `else:` branch => pipeline_swing ONLY; under the default
+    # htf_range a reset rebuilds the range and falls through, so a ZERO count here
+    # on the active config is EXPECTED AND CORRECT, not a broken recorder.
+    "lifecycle_reset_range",
+    # stage 2 - funnel, pre-predicate (decided before any `when:` is evaluated)
+    "ttl_expiry",
+    "expansion_dwell_hold",
+    "execution_resolution",
+    "execution_age_resolution",
+    "sweep_age_expiry",
+    "shadow_collapse_expansion",
+    "shadow_leak_range",
+    "htf_founding_shadow",
+    "htf_founding_sweep",
+    "funnel_displacement",
+    "funnel_expansion",
+    # stage 2 - funnel, predicate-derived (a `when:` block was evaluated)
+    "funnel_entry_sweep_override",
+    "sticky_protects_range_match",
+    "predicate_match",
+    "sticky_hold_no_match",
+    "ground_state_fallthrough",
+    # stage 3 - _apply_transition_validity rewrote the funnel's answer
+    "transition_validity_rewrite",
+    # stage 4 - engine-oracle injection overrode everything (diagnostic modes only)
+    "engine_injection_shadow_pending",
+    "engine_injection_expansion",
+    "engine_injection_expansion_exit",
+    "engine_injection_range_leave",
+)
+
+# The pre-predicate subset -- the answer to "how much of the residual is decided
+# before the YAML predicates are ever reached?". Derived here so the analysis
+# side never re-declares the split (a second copy would drift).
+_PRE_PREDICATE_SITES: frozenset[str] = frozenset({
+    "lifecycle_reset_range",
+    "ttl_expiry",
+    "expansion_dwell_hold",
+    "execution_resolution",
+    "execution_age_resolution",
+    "sweep_age_expiry",
+    "shadow_collapse_expansion",
+    "shadow_leak_range",
+    "htf_founding_shadow",
+    "htf_founding_sweep",
+    "funnel_displacement",
+    "funnel_expansion",
+})
+
+
+def _clause_states_and_link(value) -> tuple[list[str], str | None]:
+    """Normalise one `when:` clause value into (allowed_states, link_id).
+
+    Two accepted forms, so link tags live NEXT TO the clause they gate rather
+    than in a parallel table that could drift out of step with it:
+
+        retest_flag: [RetestActive]                          # baseline, always on
+        change_of_character: {states: [BullishCHoCH], link: LINK-001}   # link-gated
+
+    A baseline clause returns link_id None. Anything else raises, so a
+    malformed clause is never silently treated as "no predicate".
+    """
+    if isinstance(value, Mapping):
+        states = value.get("states")
+        link = value.get("link")
+        if not isinstance(states, (list, tuple)) or not states:
+            raise PredicateValidationError(
+                f"link-gated clause must carry a non-empty `states` list, got {value!r}"
+            )
+        if not isinstance(link, str) or not link.strip():
+            raise PredicateValidationError(
+                f"link-gated clause must carry a `link` id, got {value!r}"
+            )
+        return list(states), link.strip()
+    if isinstance(value, (list, tuple)):
+        return list(value), None
+    raise PredicateValidationError(
+        f"`when:` clause must be a list of state names or a "
+        f"{{states, link}} mapping, got {type(value).__name__}: {value!r}"
+    )
+
+
 class CRTStateResolver:
     """Config-driven CRT state resolver.
 
@@ -173,11 +316,34 @@ class CRTStateResolver:
         self,
         config_path: Path | str | None = None,
         ontology: dict | None = None,
+        *,
+        variant: str | None = None,
+        links: Iterable[str] | None = None,
+        links_config_path: Path | str | None = None,
+        allow_missing_when_features: Iterable[str] | None = None,
     ):
         self._config_path = Path(config_path) if config_path else _CRT_STATES_CONFIG
+        self._links_config_path = (
+            Path(links_config_path) if links_config_path else _LINKS_CONFIG
+        )
         self._config = self._load_config()
         self._encoder = FeatureStateEncoder(ontology or load_ontology())
+        # Registry loads BEFORE validation so a clause's `link:` id is checked
+        # against real links rather than accepted on faith.
+        self._links_registry = self._load_links_registry()
+        # Validation runs on the UNFILTERED config: every clause across every
+        # link, enabled or not. Otherwise a typo inside a disabled link's clause
+        # stays hidden until someone enables it -- the exact silent-gap class
+        # this program exists to close.
         self._validate_predicates()
+        self._variant_id, self._enabled_links = self._resolve_enabled_links(variant, links)
+        # Filtering happens AFTER validation and rewrites each state's `when` in
+        # place, so every downstream reader (the state loop AND _check_resolution)
+        # sees the resolved variant without needing to know links exist.
+        self._apply_link_filter()
+        self._required_when_features = self._compute_required_when_features()
+        self._when_feature_states = self._index_when_features()
+        self._waived_when_features = self._resolve_waivers(allow_missing_when_features)
         self._memory = CRTStateMemory()
         self._counts: dict[str, int] = {}
         self._transition_count: int = 0
@@ -190,6 +356,21 @@ class CRTStateResolver:
                 f"thresholds.sweep_geometry must be 'htf_range' or 'pipeline_swing', got {geom!r}"
             )
         self._sweep_geometry = geom
+        # ── RC-003: additive, default-OFF evidence capture (OBSERVATION_ONLY).
+        # resolve() computes feature_states and (under htf_range) sweep_sig, then
+        # returns only the final state string -- the evidence that produced the
+        # answer is discarded. Downstream research had to reach into private
+        # methods from outside the class to see it. This records it instead.
+        # Reads already-computed local state; never influences control flow.
+        self.record_resolver_evidence: bool = False
+        self.last_resolver_evidence: dict | None = None
+        # CH-resolution-site: which branch produced the last answer. Written
+        # UNCONDITIONALLY (not gated on record_resolver_evidence) -- a branch that
+        # only runs when the flag is on is a branch the default path never
+        # exercises, so the flag would be testing different code than production.
+        # Only the PUBLISH into last_resolver_evidence is flag-gated.
+        self._last_funnel_site: str | None = None
+        self._last_injection_site: str | None = None
         # Engine CRTConfig.atr_period — used to rebuild active_range on HTF/gap reset
         # (crt_engine_v2.process_candle:2656-2658 uses candle_buffer[-atr_period:]).
         self._range_atr_period = int(thr0.get("range_atr_period", 14))
@@ -199,6 +380,36 @@ class CRTStateResolver:
         self._ohlc_buffer_cap = max(self._range_atr_period * 3, 48)
 
     # ── public API ───────────────────────────────────────────────
+
+    @property
+    def variant_id(self) -> str | None:
+        """Declared variant this instance resolves, or None for an explicit
+        link set / the all-links-off default."""
+        return self._variant_id
+
+    @property
+    def enabled_links(self) -> frozenset[str]:
+        """Link ids active on this instance. Empty is the default (all off)."""
+        return self._enabled_links
+
+    @property
+    def waived_when_features(self) -> frozenset[str]:
+        """Features whose absence this instance tolerates.
+
+        Exposed because otherwise a lax run's output is indistinguishable from a
+        strict one's -- reintroducing the silent gap one level up. A research
+        script constructing a lax resolver should print this into its report.
+        """
+        return self._waived_when_features
+
+    @property
+    def required_when_features(self) -> frozenset[str]:
+        """Features every resolve() call must supply for THIS variant.
+
+        Exposed so a run's actual input contract is readable rather than
+        inferred from the YAML plus a link set held somewhere else.
+        """
+        return self._required_when_features
 
     @property
     def counts(self) -> dict[str, int]:
@@ -341,6 +552,13 @@ class CRTStateResolver:
         Raises:
             PredicateValidationError: If features are missing or invalid.
         """
+        # CH-resolution-site: clear per-bar provenance FIRST, so a path that
+        # somehow fails to set a site reports None (visible) rather than last
+        # bar's value (silent, and wrong in exactly the way this instrument
+        # exists to detect).
+        self._last_funnel_site = None
+        self._last_injection_site = None
+
         # Normalize to dict
         feat_dict = self._normalize_features(features)
 
@@ -354,24 +572,48 @@ class CRTStateResolver:
                 # Late seed if caller skipped seed_ohlc/finalize_seed_range
                 self.finalize_seed_range()
 
-        # Get feature states
-        feature_states: dict[str, str] = {}
-        try:
-            feature_states = self._encoder.classify(feat_dict)
-        except KeyError as e:
-            raise PredicateValidationError(
-                f"Missing required features for state resolution: {e}"
-            ) from e
+        # Get feature states (vector-bound + whatever non-vector identities the caller supplied)
+        feature_states: dict[str, str] = self._classify_l2_map(feat_dict)
 
-        # Also classify non-vector stateful features that the predicates reference
-        non_vector_features = {}
-        for fname in feat_dict:
-            try:
-                non_vector_features[fname] = self._encoder.classify_value(fname, feat_dict[fname])
-            except KeyError:
-                pass  # not a stateful feature — skip
+        if self.record_resolver_evidence:
+            # sweep_sig is filled in later by _detect_htf_range_sweep (htf_range
+            # mode only); left None here so an absent value is distinguishable
+            # from a computed zero.
+            self.last_resolver_evidence = {
+                "feature_states": dict(feature_states),
+                "sweep_geometry": self._sweep_geometry,
+                "sweep_sig": None,
+                "range_h_ref": float(self._memory.range_h_ref),
+                "range_l_ref": float(self._memory.range_l_ref),
+                "range_ready": bool(self._memory.range_ready),
+            }
 
-        feature_states.update(non_vector_features)
+        # ── Supply contract for `when:`-named features ────────────────
+        # `classify()` above already fails closed for every VECTOR-BOUND stateful
+        # feature. The non-vector ones (lineage.vector_key: []) arrive only via the
+        # pass above, i.e. only if the caller supplied them. There are SIX of them in
+        # the encoder's vocabulary -- FM-061 retest_flag, FM-068 rsi_state, FM-069
+        # displacement_flag, FM-071 body_commitment, FM-072 atr_magnitude, FM-073
+        # momentum_magnitude -- not the three this comment listed until 2026-09-05.
+        # Only the first three are named in a `when:` clause on the current variant,
+        # so `_required_when_features` covers three; the other three are still
+        # classifiable names, which is exactly why the overwrite loop above is
+        # sensitive to WHAT THE CALLER PASSED. `features.resolver_supply` is the
+        # producer-side contract that makes that supply set declarable and stable --
+        # see its module docstring for the 17,563-bar divergence this caused, and do
+        # not re-derive the count here; read it from FeatureStateEncoder.
+        # Absent, they made
+        # _predicates_match return False silently, indistinguishable from
+        # "present but did not match": a state simply never fired and the run
+        # looked clean. Closing that asymmetry is the point of this check.
+        #
+        # Tested against the CALLER'S keys, not feature_states: classify_value
+        # returns an X_UNMAPPED(...) marker for an out-of-domain value, which is
+        # a VALUE failure that should fail the predicate normally -- not a SUPPLY
+        # failure. The two must stay distinguishable.
+        missing = self._required_when_features - feat_dict.keys() - self._waived_when_features
+        if missing:
+            raise PredicateValidationError(self._missing_supply_message(missing))
 
         # Update memory candle index
         self._memory.candle_index += 1
@@ -431,6 +673,16 @@ class CRTStateResolver:
                     )
             else:
                 resolved = "RANGE"
+                # Stage 1: this returns from resolve() and NEVER enters the funnel,
+                # so it needs its own site or these bars carry a stale/None one.
+                # `else:` => pipeline_swing only; under htf_range the reset rebuilds
+                # the range and falls through, so 0 here on the active config is
+                # expected, not a broken recorder.
+                self._last_funnel_site = "lifecycle_reset_range"
+                self._last_injection_site = None
+                self._publish_resolution_evidence(
+                    funnel_state=resolved, validity_state=resolved, final_state=resolved
+                )
                 self._memory.last_timestamp = timestamp
                 self._counts[resolved] = self._counts.get(resolved, 0) + 1
                 return resolved
@@ -440,9 +692,11 @@ class CRTStateResolver:
 
         # Resolve state through predicate evaluation (+ continuous thresholds)
         resolved = self._resolve_from_features(feature_states, timestamp, feat_dict)
+        _funnel_state = resolved
 
         # Apply transition validity from memory
         resolved = self._apply_transition_validity(resolved)
+        _validity_state = resolved
 
         # B1e/B1g/B1h research: honour engine STATE_TRANSITION for EXP + SHADOW
         # entry/exit. engine_state_to may be "FROM>TO" (B1g) or bare "TO" (legacy).
@@ -460,6 +714,7 @@ class CRTStateResolver:
                 "RANGE", "SWEEP", "SHADOW_PENDING"
             ):
                 resolved = "SHADOW_PENDING"
+                self._last_injection_site = "engine_injection_shadow_pending"
             elif eng_to == "EXPANSION":
                 # Only promote along engine-legal edges.
                 # Engine shadow collapse is logged as SWEEP>EXPANSION while the
@@ -471,11 +726,14 @@ class CRTStateResolver:
                     ):
                         if eng_from == "SWEEP" and cur_pre in ("SWEEP", "SHADOW_PENDING"):
                             resolved = "EXPANSION"
+                            self._last_injection_site = "engine_injection_expansion"
                         elif eng_from in ("DISPLACEMENT", "SHADOW_PENDING"):
                             resolved = "EXPANSION"
+                            self._last_injection_site = "engine_injection_expansion"
                 elif cur_pre in ("DISPLACEMENT", "SHADOW_PENDING"):
                     # legacy bare TO: never from SWEEP (B1g FP guard)
                     resolved = "EXPANSION"
+                    self._last_injection_site = "engine_injection_expansion"
             elif cur_pre == "EXPANSION" and eng_to in (
                 "RETEST", "EXPIRED", "RANGE", "RESOLUTION", "SWEEP"
             ):
@@ -483,12 +741,23 @@ class CRTStateResolver:
                     resolved = "RANGE"
                 else:
                     resolved = eng_to
+                self._last_injection_site = "engine_injection_expansion_exit"
             # B1h: engine leaves DISPLACEMENT→RANGE (HTF reset) without EXP —
             # if continuous path still produced EXP, leave inject is handled by
             # engine_reset; here honour direct DISP→RANGE / SWEEP→RANGE leaves.
             elif cur_pre in ("DISPLACEMENT", "SWEEP", "SHADOW_PENDING") and eng_to == "RANGE":
                 if eng_from in ("", cur_pre) or eng_from == cur_pre:
                     resolved = "RANGE"
+                    self._last_injection_site = "engine_injection_range_leave"
+
+        # CH-resolution-site: publish stage-aware provenance BEFORE _update_memory
+        # mutates current_state (the sites above are relative to the PRE-update
+        # state, so recording after would describe a different bar).
+        self._publish_resolution_evidence(
+            funnel_state=_funnel_state,
+            validity_state=_validity_state,
+            final_state=resolved,
+        )
 
         # Update memory based on resolved state
         self._update_memory(resolved, feat_dict, timestamp)
@@ -518,6 +787,113 @@ class CRTStateResolver:
             fr = force_resets[i] if force_resets else False
             states.append(self.resolve(fv, ts, htf_id=hid, force_reset=fr))
         return states
+
+    # ── observation-only metadata (dual-construction trace) ───────
+
+    def resolve_metadata(
+        self,
+        features: Mapping[str, float] | Sequence[float],
+        *,
+        timestamp: Optional[Any] = None,
+        enforce_required_when: bool = True,
+    ) -> ResolverMetadata:
+        """The resolver's `F_t | S_t` view for one bar. Returns NO state label — read the docstring.
+
+        OBSERVATION ONLY. This method NEVER advances resolution: it does not touch
+        `_memory`, `_counts`, `_transition_count`, the OHLC buffer, the HTF id, or the
+        published resolution sites. Calling it between `resolve()` calls is a no-op on
+        everything `resolve()` subsequently returns — pinned by
+        `tests/test_resolver_metadata.py::test_behavior_neutral`, which is what makes the
+        `_resolve_from_features` reuse below safe.
+
+        WHAT `projected_funnel_site` MEANS (and does not)
+        -------------------------------------------------
+        It is the branch `_resolve_from_features` reaches **at current memory**, evaluated
+        BEFORE the lifecycle work `resolve()` performs ahead of its own funnel call
+        (`_push_bar_ohlc_from_features`, `candle_index += 1`, `_advance_htf`,
+        `_apply_lifecycle_resets`, `_tick_shadow_ttl`). So it is NOT "what `resolve()` would
+        return for this bar" — on a gap/HTF-reset bar the two legitimately differ. The name
+        says `funnel_site` rather than `projected_state` for exactly that reason: a field
+        whose name implies more than it measures is this repository's most expensive recurring
+        defect (F-088).
+
+        The real `_resolve_from_features` is called rather than reimplemented — it writes only
+        `_last_funnel_site` (and, flag-gated, `last_resolver_evidence["sweep_sig"]`), and every
+        helper it reaches is self-write-free — so a hand-copied "pure twin" would buy nothing
+        and would silently diverge the first time the funnel is edited.
+
+        Args:
+            features: canonical vector or name->value mapping, as `resolve()` accepts.
+            timestamp: optional bar timestamp (TTL checks inside the funnel).
+            enforce_required_when: when True (default) an unsupplied `when:`-named feature
+                raises, matching `resolve():611`. When False the same set is reported in
+                `missing_when` and evaluation continues — the trace prefers a recorded gap
+                over a dropped row.
+
+        Raises:
+            PredicateValidationError: on a malformed vector, a missing VECTOR-BOUND stateful
+                feature, or (when enforcing) an unsupplied `when:`-named feature.
+        """
+        feat_dict = self._normalize_features(features)
+        feature_states = self._classify_l2_map(feat_dict)
+
+        missing = self._required_when_features - feat_dict.keys() - self._waived_when_features
+        if missing and enforce_required_when:
+            raise PredicateValidationError(self._missing_supply_message(missing))
+
+        # ── per-state predicate affinity + continuous gates ──────────
+        # `self._config["states"]` is a LIST of state dicts, not a mapping — mirror
+        # `_resolve_from_features`'s own iteration and its two skip rules exactly, or the
+        # affinity map describes states that funnel never considers.
+        cur = self._memory.current_state
+        predicate_affinity: dict[str, bool] = {}
+        continuous_passed: dict[str, bool] = {}
+        for state_def in self._config["states"]:
+            name = state_def["name"]
+            when = state_def.get("when", {})
+
+            # Skip 1 (mirrors the funnel): memory-only states carry no `when:` block.
+            if state_def.get("requires_memory", False) and not when:
+                continue
+            # Skip 2 (mirrors the funnel): under htf_range, SWEEP/DISPLACEMENT/EXPANSION
+            # entry is continuous-gate owned, so their when-blocks are not re-read on entry.
+            if self._sweep_geometry == "htf_range" and name in (
+                "SWEEP", "DISPLACEMENT", "EXPANSION"
+            ) and cur != name:
+                continue
+
+            # An empty `when:` is unconditionally True in `_predicates_match`; recording that
+            # as "affinity" would read as evidence when it is the absence of a predicate.
+            if when:
+                predicate_affinity[name] = self._predicates_match(when, feature_states)
+            continuous_passed[name] = self._continuous_gates_pass(name, feat_dict)
+
+        # ── projected funnel site (read-only window) ─────────────────
+        _saved_site = self._last_funnel_site
+        _saved_injection = self._last_injection_site
+        _saved_evidence = self.last_resolver_evidence
+        # `last_resolver_evidence` is mutated IN PLACE by the funnel
+        # (`last_resolver_evidence["sweep_sig"] = ...`), so restoring the reference afterwards
+        # would not undo it. Detach it for the window instead — the funnel's write is guarded
+        # on `is not None`, so nulling it means the write never happens at all.
+        self.last_resolver_evidence = None
+        try:
+            self._resolve_from_features(feature_states, timestamp, feat_dict)
+            projected = self._last_funnel_site
+        finally:
+            self._last_funnel_site = _saved_site
+            self._last_injection_site = _saved_injection
+            self.last_resolver_evidence = _saved_evidence
+
+        return ResolverMetadata(
+            l2_map=dict(sorted(feature_states.items())),
+            feature_vector=dict(feat_dict),
+            predicate_affinity=predicate_affinity,
+            continuous_passed=continuous_passed,
+            projected_funnel_site=projected,
+            supply_ok=not missing,
+            missing_when=tuple(sorted(missing)),
+        )
 
     # ── lifecycle (HTF / gap) ─────────────────────────────────────
 
@@ -771,11 +1147,38 @@ class CRTStateResolver:
                         f"Valid states: {sorted(actual_states)}"
                     )
 
-        # Validate each state's predicates
+        # Validate each state's predicates. UNFILTERED on purpose: a clause
+        # belonging to a disabled link is validated exactly like a baseline one.
+        known_links = set(self._links_registry.get("links", {}))
+        known_state_names = {s.name for s in CRTState}
+        seen_names: set[str] = set()
         for state_def in self._config["states"]:
             name = state_def["name"]
+            # Phase F1 (2026-08-31): an unknown/typo'd state name previously degraded
+            # silently -- _find_state_def(name) returns {} on a miss, and
+            # _predicates_match({}, ...) treats an empty `when` as unconditionally TRUE.
+            # A misspelled 'RANGE' here would make RESOLUTION fire on every bar. Fail
+            # closed instead, same discipline _clause_states_and_link already applies to
+            # `when:` clauses ("a malformed clause is never silently treated as
+            # no predicate").
+            if name not in known_state_names:
+                raise PredicateValidationError(
+                    f"CRT state definition {name!r} is not a real CRTState member "
+                    f"(known: {sorted(known_state_names)})"
+                )
+            if name in seen_names:
+                raise PredicateValidationError(
+                    f"CRT state {name!r} is declared more than once in 'states'"
+                )
+            seen_names.add(name)
             when = state_def.get("when", {})
-            for fname, allowed_states in when.items():
+            for fname, clause in when.items():
+                allowed_states, link_id = _clause_states_and_link(clause)
+                if link_id is not None and link_id not in known_links:
+                    raise PredicateValidationError(
+                        f"CRT state '{name}': clause for '{fname}' names unknown link "
+                        f"{link_id!r} (declared: {sorted(known_links) or 'none'})"
+                    )
                 if fname not in declared:
                     raise PredicateValidationError(
                         f"CRT state '{name}': feature '{fname}' not in feature_states block "
@@ -788,6 +1191,159 @@ class CRTStateResolver:
                             f"CRT state '{name}': state '{sname}' not valid for feature "
                             f"'{fname}' (valid: {sorted(actual)})"
                         )
+
+    # ── links / variants ─────────────────────────────────────────
+
+    def _load_links_registry(self) -> dict:
+        """Load the link/variant registry. Absent file => no links declared.
+
+        A missing registry is legitimate (the resolver predates links and every
+        baseline clause is untagged), but a PRESENT-and-malformed one is not.
+        """
+        path = self._links_config_path
+        if not path.exists():
+            return {"links": {}, "variants": {}}
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                reg = yaml.safe_load(fh) or {}
+        except Exception as e:
+            raise ConfigLoadError(f"Failed to parse {path}: {e}") from e
+        if not isinstance(reg.get("links", {}), Mapping):
+            raise ConfigLoadError(f"{path}: 'links' must be a mapping")
+        if not isinstance(reg.get("variants", {}), Mapping):
+            raise ConfigLoadError(f"{path}: 'variants' must be a mapping")
+        return reg
+
+    def _resolve_enabled_links(
+        self, variant: str | None, links: Iterable[str] | None
+    ) -> tuple[str | None, frozenset[str]]:
+        """Resolve (variant_id, enabled_links). Default is EVERY LINK OFF.
+
+        `variant` and `links` are mutually exclusive: accepting both would make
+        the resolved set depend on a precedence rule nobody declared.
+        """
+        if variant is not None and links is not None:
+            raise ConfigLoadError(
+                "pass `variant` or `links`, not both -- their precedence is undeclared"
+            )
+        known = set(self._links_registry.get("links", {}))
+        if links is not None:
+            requested = {str(x).strip() for x in links}
+            unknown = sorted(requested - known)
+            if unknown:
+                raise ConfigLoadError(
+                    f"unknown link id(s) {unknown}; declared: {sorted(known) or 'none'}"
+                )
+            return None, frozenset(requested)
+        if variant is not None:
+            variants = self._links_registry.get("variants", {})
+            if variant not in variants:
+                raise ConfigLoadError(
+                    f"unknown variant {variant!r}; declared: {sorted(variants) or 'none'}"
+                )
+            spec = variants[variant] or {}
+            requested = {str(x).strip() for x in (spec.get("links") or [])}
+            unknown = sorted(requested - known)
+            if unknown:
+                raise ConfigLoadError(
+                    f"variant {variant!r} names unknown link id(s) {unknown}"
+                )
+            return variant, frozenset(requested)
+        return None, frozenset()
+
+    def _apply_link_filter(self) -> None:
+        """Rewrite each state's `when` to the clauses active for this variant.
+
+        Untagged clauses are baseline and always survive; a tagged clause
+        survives only when its link is enabled. Values are normalised to plain
+        lists so every downstream reader stays unchanged.
+        """
+        for state_def in self._config["states"]:
+            when = state_def.get("when") or {}
+            resolved: dict[str, list[str]] = {}
+            for fname, clause in when.items():
+                allowed_states, link_id = _clause_states_and_link(clause)
+                if link_id is None or link_id in self._enabled_links:
+                    resolved[fname] = allowed_states
+            state_def["when"] = resolved
+
+    def _compute_required_when_features(self) -> frozenset[str]:
+        """Features every `resolve()` caller must supply, for THIS variant.
+
+        Computed AFTER link filtering, because a link can add a clause and so
+        change the set (13 features with LINK-001 off, 14 with it on). A set
+        frozen before link resolution would simply be wrong for some variants.
+
+        Within a fixed link set the requirement is geometry-INDEPENDENT: it does
+        not vary with `sweep_geometry`. Two reasons, and the first is commonly
+        gotten backwards --
+          (1) the htf_range skip at the state loop is ENTRY-ONLY
+              (`cur != "SWEEP"`), so SWEEP.when IS still evaluated while the
+              resolver is dwelling in SWEEP; and
+          (2) every feature named by SWEEP.when also appears in RANGE.when,
+              which is never skipped and is additionally read by
+              _check_resolution.
+        Making the set vary with a threshold would itself be a silent-gap
+        generator -- the input contract must be readable off the config shape.
+        """
+        required: set[str] = set()
+        for state_def in self._config["states"]:
+            required.update((state_def.get("when") or {}).keys())
+        return frozenset(required)
+
+    def _index_when_features(self) -> dict[str, tuple[str, ...]]:
+        """feature -> the CRT states whose `when:` names it (post-filter).
+
+        Used only to make the supply error say WHY a feature is required.
+        """
+        idx: dict[str, list[str]] = {}
+        for state_def in self._config["states"]:
+            for fname in (state_def.get("when") or {}):
+                idx.setdefault(fname, []).append(state_def["name"])
+        return {k: tuple(v) for k, v in idx.items()}
+
+    def _resolve_waivers(self, waived: Iterable[str] | None) -> frozenset[str]:
+        """Validate and freeze the missing-feature waiver set.
+
+        A NAME LIST, never a `strict=False` boolean: a boolean waives an
+        unbounded, unnamed set and stops tracking reality the moment the config
+        grows a new `when:` name -- the same defect class this check closes.
+
+        SELF-VALIDATING: the waived set must be a subset of what is actually
+        required for THIS variant. So a waiver naming a feature that stops being
+        `when:`-named goes red at construction rather than lingering as dead
+        weight (the stale-allowance ratchet, applied at construction time).
+        """
+        if not waived:
+            return frozenset()
+        requested = {str(x).strip() for x in waived}
+        stale = sorted(requested - self._required_when_features)
+        if stale:
+            raise ConfigLoadError(
+                f"allow_missing_when_features names {stale}, which are not "
+                f"`when:`-named for this variant (required: "
+                f"{sorted(self._required_when_features)}). Remove the stale "
+                "waiver rather than carrying it."
+            )
+        return frozenset(requested)
+
+    def _missing_supply_message(self, missing: set[str]) -> str:
+        """Explain WHICH feature is missing, WHY it is required, and WHO emits it."""
+        lines = [
+            "resolve(): missing required `when:`-named feature(s): "
+            f"{sorted(missing)}"
+        ]
+        for name in sorted(missing):
+            states = ", ".join(self._when_feature_states.get(name, ())) or "unknown"
+            producer = _NON_VECTOR_PRODUCERS.get(name, "vector-bound canonical feature")
+            lines.append(f"  - {name}: required by [{states}]; produced by {producer}")
+        lines.append(
+            "  These are NOT defaulted: a silent 0.0 would make the predicate "
+            "fail exactly as a missing key did, which is the ambiguity this "
+            "check removes. Supply them, or name them explicitly in "
+            "`allow_missing_when_features`."
+        )
+        return "\n".join(lines)
 
     # ── resolution logic ─────────────────────────────────────────
 
@@ -803,6 +1359,38 @@ class CRTStateResolver:
                 f"Expected {len(CANONICAL_FEATURES)}-dim canonical vector, got {len(features)}"
             )
         return dict(zip(CANONICAL_FEATURES, features))
+
+    def _classify_l2_map(self, feat_dict: Mapping[str, float]) -> dict[str, str]:
+        """The full L2 feature-state map for one bar.
+
+        Extracted verbatim from `resolve()` so `resolve()` and `resolve_metadata()` cannot
+        drift apart — the two-step construction here is load-bearing and easy to get wrong:
+
+        1. `_encoder.classify()` covers only the VECTOR-BOUND stateful identities (13 of the
+           encoder's 19). It fails closed on a missing one.
+        2. The remaining 6 are non-vector (`lineage.vector_key: []` — retest_flag, rsi_state,
+           displacement_flag, body_commitment, atr_magnitude, momentum_magnitude). They exist
+           only if the CALLER supplied them, so they are classified opportunistically from the
+           caller's keys and overlaid. A reader who assumes `classify()` alone returns all 19
+           gets a 13-key map and a predicate that silently never fires.
+        """
+        try:
+            feature_states: dict[str, str] = self._encoder.classify(feat_dict)
+        except KeyError as e:
+            raise PredicateValidationError(
+                f"Missing required features for state resolution: {e}"
+            ) from e
+
+        # Also classify non-vector stateful features that the predicates reference
+        non_vector_features = {}
+        for fname in feat_dict:
+            try:
+                non_vector_features[fname] = self._encoder.classify_value(fname, feat_dict[fname])
+            except KeyError:
+                pass  # not a stateful feature — skip
+
+        feature_states.update(non_vector_features)
+        return feature_states
 
     def _resolve_from_features(
         self,
@@ -823,6 +1411,7 @@ class CRTStateResolver:
         # Check memory-only states first (these check current memory, not features)
         if self._memory.current_state == "EXPANSION":
             if self._check_expired(timestamp):
+                self._last_funnel_site = "ttl_expiry"
                 return "EXPIRED"
             # B1f: continuous mid-dwell hold. Engine stays in EXPANSION until
             # try_expansion_to_retest (strict geometry) or TTL/RESET — NOT until
@@ -830,18 +1419,22 @@ class CRTStateResolver:
             # promoting EXP→RETEST→RANGE mid-episode, opening ~2k FN holes).
             # Research RETEST/RANGE exits still apply via engine_state_to inject
             # after this return path is overridden in resolve().
+            self._last_funnel_site = "expansion_dwell_hold"
             return "EXPANSION"
 
         if self._memory.current_state == "EXECUTION":
             if self._check_resolution(feature_states):
+                self._last_funnel_site = "execution_resolution"
                 return "RESOLUTION"
             # Cap EXECUTION dwell at soft_conf_max_candles (trade lifecycle
             # is not fully modelled; avoid multi-thousand-bar EXECUTION).
             if self._sticky_age_expired("EXECUTION"):
+                self._last_funnel_site = "execution_age_resolution"
                 return "RESOLUTION"
 
         # SWEEP age expiry → RANGE (engine: max_sweep_age during SWEEP handling)
         if self._memory.current_state == "SWEEP" and self._sticky_age_expired("SWEEP"):
+            self._last_funnel_site = "sweep_age_expiry"
             return "RANGE"
 
         # ── B1d: shadow + HTF-range SWEEP founding (engine RANGE/SHADOW branches)
@@ -858,11 +1451,18 @@ class CRTStateResolver:
             else 0
         )
 
+        if self.record_resolver_evidence and self.last_resolver_evidence is not None:
+            # RC-003: the founding signal, filled in only once this branch is
+            # reached. Under pipeline_swing it stays None -- absent, not zero.
+            self.last_resolver_evidence["sweep_sig"] = int(sweep_sig)
+
         if cur == "SHADOW_PENDING":
             if self._memory.pending_displacement_active:
                 # Engine SHADOW branch: collapse to EXPANSION (strength skipped)
+                self._last_funnel_site = "shadow_collapse_expansion"
                 return "EXPANSION"
             # SHADOW_LEAK equivalent
+            self._last_funnel_site = "shadow_leak_range"
             return "RANGE"
 
         if (
@@ -874,7 +1474,11 @@ class CRTStateResolver:
             if self._memory.pending_displacement_active and self._shadow_dir_matches(
                 sweep_sig
             ):
+                self._last_funnel_site = "htf_founding_shadow"
                 return "SHADOW_PENDING"
+            # SP-001 geometry founding: this is the branch that bypasses the SWEEP
+            # `when:` block entirely (market_crt_states.yaml SWEEP notes declare it).
+            self._last_funnel_site = "htf_founding_sweep"
             return "SWEEP"
 
         # ── B1c/B1g/B1h: continuous-only funnel (engine StateMachine, not pipeline flags)
@@ -888,6 +1492,7 @@ class CRTStateResolver:
         # (DISPLACEMENT>EXPANSION / SWEEP>EXPANSION) + SHADOW collapse above.
         if cur == "SWEEP":
             if self._displacement_entry_allowed(raw):
+                self._last_funnel_site = "funnel_displacement"
                 return "DISPLACEMENT"
         thr = self._config.get("thresholds", {})
         if (
@@ -895,6 +1500,7 @@ class CRTStateResolver:
             and bool(thr.get("continuous_disp_to_expansion", False))
             and self._expansion_entry_allowed(raw)
         ):
+            self._last_funnel_site = "funnel_expansion"
             return "EXPANSION"
 
         # Evaluate config-defined states in order (with funnel-entry override)
@@ -940,6 +1546,7 @@ class CRTStateResolver:
                 self._memory.current_state in ("RANGE", "SHADOW_PENDING")
                 and "SWEEP" in matched
             ):
+                self._last_funnel_site = "funnel_entry_sweep_override"
                 return "SWEEP"
             # Passive RANGE predicate match must NOT kill sticky dwell mid-window.
             # Narrative termination is owned by lifecycle RESET (HTF/gap) and
@@ -949,7 +1556,9 @@ class CRTStateResolver:
                 and self._memory.current_state in self._STICKY_STATES
                 and not self._sticky_age_expired(self._memory.current_state)
             ):
+                self._last_funnel_site = "sticky_protects_range_match"
                 return self._memory.current_state
+            self._last_funnel_site = "predicate_match"
             return matched[0]
 
         # Sticky hold: if no new predicate matched, keep dwelling in the
@@ -957,8 +1566,12 @@ class CRTStateResolver:
         # Age expiry is enforced in _apply_transition_validity (entry indices
         # set only on transition — see _update_memory).
         if self._memory.current_state in self._STICKY_STATES:
+            self._last_funnel_site = "sticky_hold_no_match"
             return self._memory.current_state
 
+        # Predicate exhaustion -> ground state. Deliberately NOT the same site as
+        # `sweep_age_expiry` above: same output "RANGE", opposite reasons.
+        self._last_funnel_site = "ground_state_fallthrough"
         return "RANGE"
 
     def _continuous_gates_pass(self, state_name: str, raw: Mapping[str, float]) -> bool:
@@ -1065,6 +1678,43 @@ class CRTStateResolver:
         elif self._memory.active_htf_id:
             self._memory.range_htf_id = self._memory.active_htf_id
 
+    def _publish_resolution_evidence(
+        self, *, funnel_state: str, validity_state: str, final_state: str
+    ) -> None:
+        """Copy this bar's decision provenance into ``last_resolver_evidence``.
+
+        `resolution_site` is the DECIDING stage, precedence
+        ``injection > validity > funnel`` — because stages 3 and 4 OVERWRITE the
+        funnel's answer, so attributing an overwritten bar to its funnel site
+        would be confidently wrong. Both intermediate states are published too,
+        so the analysis side can see the rewrite rather than infer it.
+
+        No-op unless ``record_resolver_evidence`` is on. The SITES themselves are
+        recorded unconditionally by the branches; only this publish is gated.
+        """
+        if not self.record_resolver_evidence or self.last_resolver_evidence is None:
+            return
+        validity_rewrote = validity_state != funnel_state
+        injection_applied = final_state != validity_state
+        if injection_applied:
+            # An injection that changed the answer but named no site is a real
+            # gap, not a zero — say so rather than silently crediting the funnel.
+            site = self._last_injection_site or "engine_injection_unattributed"
+        elif validity_rewrote:
+            site = "transition_validity_rewrite"
+        else:
+            site = self._last_funnel_site
+        self.last_resolver_evidence.update({
+            "funnel_site": self._last_funnel_site,
+            "funnel_state": funnel_state,
+            "validity_state": validity_state,
+            "validity_rewrote": validity_rewrote,
+            "injection_state": final_state,
+            "injection_applied": injection_applied,
+            "resolution_site": site,
+            "pre_predicate": site in _PRE_PREDICATE_SITES,
+        })
+
     def _detect_htf_range_sweep(self, raw: Mapping[str, float]) -> int:
         """Engine RangeDetector.detect_sweep geometry.
 
@@ -1080,8 +1730,8 @@ class CRTStateResolver:
             return 0
         h_ref = self._memory.range_h_ref
         l_ref = self._memory.range_l_ref
-        swept_high = float(h) > h_ref and float(c) < h_ref
-        swept_low = float(l) < l_ref and float(c) > l_ref
+        swept_high = _swept_high(float(h), float(c), h_ref)
+        swept_low = _swept_low(float(l), float(c), l_ref)
         if not swept_high and not swept_low:
             return 0
         # Engine: if both (rare), direction = SHORT if swept_high else LONG
@@ -1103,6 +1753,8 @@ class CRTStateResolver:
         """Engine-grade DISPLACEMENT entry (try_sweep_to_displacement).
 
         ONLY from SWEEP. Gates (all must pass):
+          0. directional contract (CH-directional-displacement-contract):
+             LONG  → close > open; SHORT → close < open
           1. sweep age <= max_sweep_age_candles
           2. abs(close-open) >= atr_min_displacement * atr_abs
           3. body_ratio >= body_ratio_min
@@ -1124,6 +1776,16 @@ class CRTStateResolver:
         close = raw.get("close")
         open_ = raw.get("open")
         if close is None or open_ is None:
+            return False
+
+        # Gate 0 — directional impulse. Sweep side is stored at SWEEP entry as
+        # displacement_direction (+1 LONG / -1 SHORT). Fail-closed if unknown.
+        want = int(self._memory.displacement_direction or 0)
+        if want == 0:
+            return False
+        if want > 0 and not (float(close) > float(open_)):
+            return False
+        if want < 0 and not (float(close) < float(open_)):
             return False
 
         atr_abs = self._atr_abs(raw)

@@ -70,6 +70,7 @@ def _section(overrides: Optional[dict] = None) -> dict:
         "injection": "none",
         "record_engine_gates": True,
         "emit_on_warmup_bars": True,
+        "record_resolver_engine": False,
     }
     if overrides:
         base.update(overrides)
@@ -133,6 +134,7 @@ def _disabled_cfg() -> ConstructionTraceConfig:
         filename_suffix="_x.jsonl", flush_every=500,
         ontology_source="configs/formulas/market_crt_states.yaml",
         record_engine_gates=True, emit_on_warmup_bars=True,
+        record_resolver_engine=False,
     )
 
 
@@ -151,6 +153,7 @@ def test_disabled_emit_writes_nothing(tmp_path):
         filename_suffix="_x.jsonl", flush_every=500,
         ontology_source="configs/formulas/market_crt_states.yaml",
         record_engine_gates=True, emit_on_warmup_bars=True,
+        record_resolver_engine=False,
     )
     em = _make_emitter(cfg)
     em.emit_warmup(0, None)
@@ -186,6 +189,7 @@ def _emitter_with_fake_resolver(fixed_state: str, tmp_path):
         filename_suffix="_x.jsonl", flush_every=500,
         ontology_source="configs/formulas/market_crt_states.yaml",
         record_engine_gates=False, emit_on_warmup_bars=True,
+        record_resolver_engine=False,
     )
     em = _make_emitter(cfg)
     fake = _FakeResolver(fixed_state)

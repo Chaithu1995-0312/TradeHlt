@@ -5,15 +5,20 @@ Converts CRT trade, candle and state objects to canonical feature schema.
 STRICT CONTRACT: Output dict ALWAYS contains EXACTLY ALL CANONICAL_FEATURES.
 No missing keys. No extra keys. All values float.
 
-STATUS (2026-07-23, T-16): `build_bitnet_features` still has ZERO call sites (its sibling lives
-in archive/dead_code/), but it is no longer schema-stale. It was migrated v2.0 -> v4.0 so the
-strict `output_keys == CANONICAL_FEATURES` assertion at the bottom passes instead of raising:
+STATUS (2026-08-15, CH-htfcrt-parent-candle-smc-v1): `build_bitnet_features` still has ZERO
+call sites (its sibling lives in archive/dead_code/), but it is no longer schema-stale. It was
+migrated v2.0 -> v5.0 so the strict `output_keys == CANONICAL_FEATURES` assertion at the bottom
+passes instead of raising:
 
   * `macd_hist`  -> `macd_hist_raw` (macd_line - macd_signal, the DECLARED FM-049 formula)
                  +  `macd_hist_z`   (the feeder's legacy `macd_hist`, which WAS the z-score)
   * `wick_size`  -> `candle_range`  (pure key rename; the value was already high - low)
   * ADDED the v3.0 tail it never carried: liquidity_distance, liquidity_pressure_score,
     volume_spike — the actual reason it would AssertionError against any post-v2 schema.
+  * ADDED the v5.0 tail (2026-08-15): order_block_distance, fvg_distance, breaker_distance,
+    mitigation_block_distance, pdh_distance, pdl_distance, eqh_distance, eql_distance,
+    change_of_character — the 9 SMC primitives, transcribed from `state` like every other
+    derived structural feature (this builder computes none of their geometry itself).
 
 Kept (not deleted) per CLAUDE.md §6.2 rule 4. **Being schema-current does not make it live:** the
 live BitNet path reads canonical geometry from the CRT engine's cached_features
@@ -246,6 +251,21 @@ def build_bitnet_features(trade: dict, candle: dict, state: dict) -> dict:
     features["liquidity_distance"]       = float(_require(state, "liquidity_distance", "state"))
     features["liquidity_pressure_score"] = float(_require(state, "liquidity_pressure_score", "state"))
     features["volume_spike"]             = float(_require(candle, "volume_spike", "candle"))
+
+    # --------------------------
+    # SMC primitives (schema v5.0 tail, indices 39-47) — CH-htfcrt-parent-candle-smc-v1
+    # (2026-08-15). Same TRANSCRIBER contract as the liquidity/volume block above: sourced
+    # from `state` (the FeatureStore/pipeline-supplied market-state dict), not computed here.
+    # --------------------------
+    features["order_block_distance"]      = float(_require(state, "order_block_distance", "state"))
+    features["fvg_distance"]              = float(_require(state, "fvg_distance", "state"))
+    features["breaker_distance"]          = float(_require(state, "breaker_distance", "state"))
+    features["mitigation_block_distance"] = float(_require(state, "mitigation_block_distance", "state"))
+    features["pdh_distance"]              = float(_require(state, "pdh_distance", "state"))
+    features["pdl_distance"]              = float(_require(state, "pdl_distance", "state"))
+    features["eqh_distance"]              = float(_require(state, "eqh_distance", "state"))
+    features["eql_distance"]              = float(_require(state, "eql_distance", "state"))
+    features["change_of_character"]       = float(_require(state, "change_of_character", "state"))
 
     # --------------------------
     # NaN Guard

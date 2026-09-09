@@ -48,6 +48,10 @@ sys.path.insert(0, str(_ROOT))
 sys.path.insert(0, str(_ROOT / "src"))
 
 from features.crt_state_resolver import CRTStateResolver, CRTStateResolverError
+# CLAUDE.md §4: non-ASCII console output must go through console_safe (cp1252
+# fallback). print_report emits U+2713/U+2717 tick marks, which raised
+# UnicodeEncodeError on a stock Windows console before this was routed.
+from utils.console_safe import safe_print
 
 logger = logging.getLogger("CRT_STATE_VALIDATOR")
 
@@ -122,6 +126,14 @@ def _make_synthetic_features(
         "candles_since_retest": 0.0,
         "liquidity_distance": 10.0, "liquidity_pressure_score": 0.0,
         "volume_spike": 0.0,
+        # FM-083, vector-bound (idx 47) AND stateful since 2026-08-15, so
+        # FeatureStateEncoder.classify() hard-requires it. Its absence made this
+        # synthetic path raise on bar 0 before it could validate anything.
+        "change_of_character": 0.0,
+        # v4.0 canonical name. `wick_size` above is the pre-v4.0 spelling, kept
+        # because _displacement_entry_allowed still carries a documented
+        # wick_size fallback -- both are supplied so neither branch is starved.
+        "candle_range": 0.0,
     }
     features.update(kwargs)
     return features
@@ -285,13 +297,13 @@ def validate_resolver(
 
 def print_report(report: dict[str, Any], reference: dict[str, int] | None = None) -> None:
     """Print a formatted validation report."""
-    print(f"\n{'='*60}")
-    print(f"CRT State Resolver Validation: {report['label']}")
-    print(f"{'='*60}")
-    print(f"Total bars: {report['total_bars']}")
-    print(f"Transitions: {report['transitions']}")
-    print(f"\n{'State':<20} {'Count':<10} {'%':<8} {'Reference':<10} {'Match?':<10}")
-    print(f"{'-'*60}")
+    safe_print(f"\n{'='*60}")
+    safe_print(f"CRT State Resolver Validation: {report['label']}")
+    safe_print(f"{'='*60}")
+    safe_print(f"Total bars: {report['total_bars']}")
+    safe_print(f"Transitions: {report['transitions']}")
+    safe_print(f"\n{'State':<20} {'Count':<10} {'%':<8} {'Reference':<10} {'Match?':<10}")
+    safe_print(f"{'-'*60}")
 
     counts = report["counts"]
     total = report["total_bars"]
@@ -302,21 +314,26 @@ def print_report(report: dict[str, Any], reference: dict[str, int] | None = None
         pct = (c / total * 100) if total > 0 else 0
         r = ref.get(state, 0)
         match = "✓" if abs(c - r) <= max(1, r * 0.1) else "✗"
-        print(f"{state:<20} {c:<10} {pct:<8.2f} {r:<10} {match:<10}")
+        safe_print(f"{state:<20} {c:<10} {pct:<8.2f} {r:<10} {match:<10}")
 
     # Unmatched states
     unmatched = set(counts.keys()) - set(ALL_STATES)
     if unmatched:
-        print(f"\nUNMATCHED STATES: {unmatched}")
+        safe_print(f"\nUNMATCHED STATES: {unmatched}")
 
-    print(f"\nFirst 20 states: {report['state_sequence_sample']}")
-    print(f"{'='*60}\n")
+    safe_print(f"\nFirst 20 states: {report['state_sequence_sample']}")
+    safe_print(f"{'='*60}\n")
 
 
-def run_synthetic_test(resolver: CRTStateResolver) -> dict[str, Any]:
-    """Run the resolver on synthetic data that exercises all states."""
-    print("Generating synthetic feature sequence...")
-    sequence = _generate_synthetic_sequence(5000)
+def run_synthetic_test(resolver: CRTStateResolver, bars: int = 5000) -> dict[str, Any]:
+    """Run the resolver on synthetic data that exercises all states.
+
+    `bars` was previously hardcoded here, so the `--bars` CLI flag was declared
+    but never read -- a declared-but-unconsumed knob (the config-illusion class,
+    cf. F-056). It is threaded through now.
+    """
+    print(f"Generating synthetic feature sequence ({bars} bars)...")
+    sequence = _generate_synthetic_sequence(bars)
     report = validate_resolver(resolver, sequence, "synthetic")
     print_report(report, REFERENCE_COUNTS)
     return report
@@ -705,7 +722,7 @@ def main():
         print_report(report, reference)
         reports.append(report)
     elif args.synthetic or not args.data:
-        report = run_synthetic_test(resolver)
+        report = run_synthetic_test(resolver, bars=args.bars)
         reports.append(report)
 
     # Interactive tuning

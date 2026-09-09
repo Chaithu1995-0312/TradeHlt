@@ -26,6 +26,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from features.feature_pipeline import FeaturePipeline
 from features.feature_schema import CANONICAL_FEATURES
 from features.crt_state_resolver import CRTStateResolver, build_htf_id_timeline
+from features.resolver_supply import build_resolver_supply
+from data_ingestion.corpus_gate import admit_corpus
 from features.feature_states import FeatureStateEncoder
 from features.registry import load_ontology
 from config_layer.production_config import get_prod_section
@@ -37,19 +39,33 @@ OHLCV_PATH = "data/mt5/XAUUSD_M15.csv"
 REPORT_PATH = "reports/crt_state_fresh_run_xauusd.md"
 
 
+SUPPLY_STATS = {}  # supply-set provenance for the report header
+ADMISSION = None  # CorpusAdmission for this run; stamped into the report header
+
+
 def load_ohlcv(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path)
+    # Corpus gate: IDENTITY (bound dataset + verified sha256) then SEQUENCE
+    # then PLAUSIBILITY (D-1..D-4), before a single row is parsed. write_report
+    # is False because the fingerprint slot is {symbol}_{tf}.json and collides
+    # with the forensic data/XAUUSD_M15.csv -- the report is carried in the run
+    # artifact instead. A REJECT raises; a WARN proceeds and is recorded.
+    global ADMISSION
+    ADMISSION = admit_corpus(path, "XAUUSD", write_report=False, log=log)
+    df = pd.read_csv(ADMISSION.filepath)
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     log.info("Loaded %d OHLCV rows from %s", len(df), path)
     return df
 
 
-def run_feature_pipeline(df: pd.DataFrame) -> pd.DataFrame:
+def run_feature_pipeline(df: pd.DataFrame) -> tuple:
+    """Return BOTH halves. `vectors` is the canonical, order-defined surface the
+    resolver supply must be sourced from -- returning only `enriched_df` is what
+    forced callers to reconstruct the supply by hand, each differently."""
     pipeline = FeaturePipeline(df)
     enriched_df, vectors = pipeline.run()
     log.info("FeaturePipeline produced %d enriched rows (%d-dim vectors)",
              len(enriched_df), vectors.shape[1] if vectors is not None else 0)
-    return enriched_df
+    return enriched_df, vectors
 
 
 def main():
@@ -65,7 +81,7 @@ def main():
     log.info("=" * 60)
     log.info("STEP 2: Running FeaturePipeline")
     log.info("=" * 60)
-    enriched = run_feature_pipeline(df)
+    enriched, vectors = run_feature_pipeline(df)
     total_enriched = len(enriched)
 
     log.info("Raw OHLCV rows: %d", total_raw)
@@ -89,52 +105,36 @@ def main():
     )
     log.info("HTF phase-lock: candles_per_htf=%d, first htf_id=%s", _candles_per_htf, htf_ids[0])
 
-    # Step 3: Enumerate canonical features available in enriched df
-    available_features = [c for c in CANONICAL_FEATURES if c in enriched.columns]
-    missing_features = [c for c in CANONICAL_FEATURES if c not in enriched.columns]
-    log.info("Canonical features available: %d / %d", len(available_features), len(CANONICAL_FEATURES))
-    if missing_features:
-        log.warning("Missing canonical features: %s", missing_features[:10])
+    # Step 3: Build the resolver supply through the ONE contract-driven adapter.
+    # Previously this hand-rolled a dict of `canonical-intersection + retest_flag +
+    # displacement_flag` with a silent `if pd.isna(val): val = 0.0` coercion, and
+    # omitted rsi_state entirely. Since `resolve()` classifies EVERY supplied key
+    # and .update()s over classify()'s output, that made feature_states a function
+    # of the caller. resolver_supply sources canonical names from the vector,
+    # non-vector `when:` features from the enriched frame, and passes nothing else.
+    resolver = CRTStateResolver()
+    global SUPPLY_STATS
+    supply_rows, supply_stats = build_resolver_supply(resolver, enriched, vectors)
+    SUPPLY_STATS = supply_stats
+    log.info("Supply set: %s (%s)", supply_stats["supply_set_id"],
+             supply_stats["supply_fingerprint"][:16])
+    log.info("  %d canonical from vector + %s from enriched; nan_policy=%s",
+             supply_stats["keys_from_vector"], supply_stats["keys_from_enriched"],
+             supply_stats["nan_policy"])
 
-    # Check for non-vector stateful features needed by resolver
-    extra_needed = ["retest_flag", "displacement_flag"]
-    for col in extra_needed:
-        if col not in enriched.columns:
-            log.warning("'%s' not in enriched data — will use default", col)
-            enriched[col] = 0
-
-    # Step 4: Run CRT State Resolver on every bar
     log.info("")
     log.info("=" * 60)
     log.info("STEP 3: Running CRT State Resolver")
     log.info("=" * 60)
-
-    resolver = CRTStateResolver()
-    log.info("Resolver states: %s", [s["name"] for s in resolver._config["states"]])
     log.info("Total bars to resolve: %d", total_enriched)
 
     state_sequence = []
     resolver.reset_counts()
     resolver.reset_memory()
 
-    # Build feature dicts for each bar and resolve
-    for i, (idx, row) in enumerate(enriched.iterrows()):
-        feat_dict = {}
-        for col in available_features:
-            val = row[col]
-            if pd.isna(val):
-                val = 0.0
-            feat_dict[col] = float(val)
-        for col in extra_needed:
-            if col in enriched.columns:
-                val = row[col]
-                if pd.isna(val):
-                    val = 0.0
-                feat_dict[col] = float(val)
-            else:
-                feat_dict[col] = 0.0
-
-        state = resolver.resolve(feat_dict, timestamp=row.get("timestamp"), htf_id=htf_ids[i])
+    timestamps = enriched["timestamp"].tolist()
+    for i, feat_dict in enumerate(supply_rows):
+        state = resolver.resolve(feat_dict, timestamp=timestamps[i], htf_id=htf_ids[i])
         state_sequence.append(state)
 
     counts = resolver.counts
@@ -187,7 +187,17 @@ def main():
     lines.append("# CRT State Resolver — Fresh Run on MT5 XAUUSD M15")
     lines.append("")
     lines.append("> **Generated:** %s" % pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"))
-    lines.append("> **Data source:** `data/mt5/XAUUSD_M15.csv`")
+    lines.append("> **Data source:** `%s`" % (ADMISSION.filepath if ADMISSION else OHLCV_PATH))
+    if ADMISSION is not None:
+        lines.append("> **dataset_id:** `%s` (bound=%s, decision=%s)"
+                     % (ADMISSION.dataset_id, ADMISSION.bound, ADMISSION.decision))
+        lines.append("> **file_hash:** `%s`" % ADMISSION.file_hash)
+        lines.append("> **plausibility:** `%s`" % ADMISSION.plausibility)
+    if SUPPLY_STATS:
+        lines.append("> **supply_set:** `%s` / `%s` (nan_policy=%s)"
+                     % (SUPPLY_STATS["supply_set_id"],
+                        SUPPLY_STATS["supply_fingerprint"][:16],
+                        SUPPLY_STATS["nan_policy"]))
     lines.append("> **CRT states config:** `configs/formulas/market_crt_states.yaml`")
     lines.append("> **Resolver:** `src/features/crt_state_resolver.py`")
     lines.append("")

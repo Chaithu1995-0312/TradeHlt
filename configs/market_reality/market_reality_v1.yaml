@@ -25,7 +25,14 @@
 # ============================================================================
 
 schema_version: "market_reality/v1"
-authority: user_approved            # WHO-layer convention (mirrors market_ontology.yaml)
+authority: user_approved            # WHO-layer convention (mirrors market_ontology.yaml).
+                                     # CH-htfcrt-parent-candle-smc-v1 (2026-08-15): this was
+                                     # DUPLICATED by a second `authority:` mapping key further
+                                     # down (now renamed to `authority_capabilities` below) --
+                                     # yaml.safe_load silently kept only the LAST occurrence,
+                                     # so this WHO-layer scalar was being dropped on every
+                                     # parse. Verified: no code loads this file (grep confirmed
+                                     # zero Python readers), so the defect was latent, not live.
 enabled: false                      # HARD fail-closed master switch
 mode: observe_only                  # observe_only | (future) shadow | (future) active
 
@@ -133,10 +140,16 @@ temporal_derivations:
     enabled: false
     source_features: [high, low, close]
     horizon: MEDIUM
-    status: unresolved_placeholder
+    status: partially_addressed
     blockers:
-      - "No canonical range-location feature (range_size/bb_position are noncanonical)."
-      - "DERIVABLE_FROM_38_HISTORY; needs a registered derivation identity."
+      - "PARTIALLY ADDRESSED 2026-08-15 (CH-htfcrt-parent-candle-smc-v1): pdh_distance/
+         pdl_distance (FM-079/080) give a related but DISTINCT location signal (position
+         relative to the previous D1 parent's high/low), not the same concept as this entry's
+         original target (position within the CURRENT range / range_size / bb_position). The
+         core blocker (no registered range_size-style derivation identity) is NOT resolved --
+         noted here to avoid a future reader conflating the two."
+      - "DERIVABLE_FROM_38_HISTORY; still needs a registered derivation identity for the
+         original range_size/bb_position concept specifically."
   directional_run_length:
     enabled: false
     source_features: [open, close]
@@ -155,9 +168,13 @@ temporal_derivations:
     enabled: false
     source_features: [high, low]
     horizon: FAST
-    status: unresolved_placeholder
+    status: producer_now_exists
     blockers:
-      - "GENUINELY_ABSENT producer; DERIVABLE from 3-bar OHLC (search §8/§9)."
+      - "RESOLVED 2026-08-15 (CH-htfcrt-parent-candle-smc-v1): features.smc.fvg.fvg_distance
+         (FM-076, derived_metrics) is now a registered producer, vector-bound at
+         CANONICAL_FEATURES index 40. `status` changed from unresolved_placeholder to
+         producer_now_exists; `enabled` stays false regardless -- this file is fail-closed by
+         contract (see header), producer existence does not activate a dimension."
 
 # ---------------------------------------------------------------------------
 # DIMENSIONS — all 17. Fail-closed: every dimension enabled=false initially.
@@ -208,8 +225,12 @@ dimensions:
     <<: *dimension_defaults
     evidence: []
     blockers:
-      - "No canonical premium/discount or range-location feature (engine-internal only, search §5/§11)."
-      - "Depends on temporal_derivations.range_location (unresolved)."
+      - "No canonical premium/discount feature -- still engine-internal only
+         (config_layer.crt_engine_v2.py's EXECUTION-gate zone filter), unresolved by
+         CH-htfcrt-parent-candle-smc-v1 (2026-08-15) despite that program's pdh_distance/
+         pdl_distance additions -- see dimensions.range_location's note for why those are a
+         related but distinct concept, not a resolution of this blocker."
+      - "Depends on temporal_derivations.range_location (partially addressed, not resolved)."
 
   impulse:
     <<: *dimension_defaults
@@ -240,10 +261,14 @@ dimensions:
 
   range_location:
     <<: *dimension_defaults
-    evidence: []
+    evidence: [pdh_distance, pdl_distance]
     blockers:
-      - "No canonical range-location/premium-discount feature (range_size/bb_position noncanonical)."
-      - "Depends on temporal_derivations.range_location (unresolved)."
+      - "PARTIALLY ADDRESSED 2026-08-15 (CH-htfcrt-parent-candle-smc-v1): pdh_distance/
+         pdl_distance give a related but DISTINCT location signal -- see
+         temporal_derivations.range_location's note. The premium/discount-of-CURRENT-range
+         concept this entry originally targeted remains engine-internal only
+         (config_layer.crt_engine_v2.py's EXECUTION-gate zone filter), never exposed as a
+         canonical feature -- that specific blocker is NOT resolved."
 
   breakout:
     <<: *dimension_defaults
@@ -259,10 +284,12 @@ dimensions:
 
   imbalance:
     <<: *dimension_defaults
-    evidence: []
+    evidence: [fvg_distance]
     blockers:
-      - "No FVG/imbalance producer anywhere (GENUINELY_ABSENT, search §9)."
-      - "Depends on temporal_derivations.fair_value_gap (unresolved)."
+      - "RESOLVED 2026-08-15 (CH-htfcrt-parent-candle-smc-v1): fvg_distance (FM-076) is now a
+         registered, vector-bound producer -- see temporal_derivations.fair_value_gap. `enabled`
+         stays false regardless (fail-closed by contract); this only records that evidence now
+         exists where none did before."
 
   temporal_session:
     <<: *dimension_defaults
@@ -272,9 +299,15 @@ dimensions:
 
   multi_timeframe:
     <<: *dimension_defaults
-    evidence: []
+    evidence: [pdh_distance, pdl_distance]
     blockers:
-      - "HTF/MTF alignment exists ONLY in research (candle_state/mtf_conjunction.py), outside the 38-source contract (search §6)."
+      - "PARTIALLY RESOLVED 2026-08-15 (CH-htfcrt-parent-candle-smc-v1): features.parent_candle.
+         ParentCandleBuilder now builds real, calendar-true H4/D1/W1/MN1 parent candles IN
+         PRODUCTION (not just research), and pdh_distance/pdl_distance (FM-079/080) are
+         vector-bound canonical features derived from the D1 parent. HTF/MTF alignment as a
+         CONJUNCTION signal (candle_state/mtf_conjunction.py-style, multiple timeframes combined
+         into one key) is still research-only, outside the source_contract -- not resolved by
+         this program. `enabled` stays false regardless (fail-closed by contract)."
 
   quality_uncertainty:
     <<: *dimension_defaults
@@ -335,9 +368,13 @@ output_policy:
   may_write_engine_inputs: false
 
 # ---------------------------------------------------------------------------
-# AUTHORITY — fail-closed. Market Reality is NOT an engine or decision authority.
+# AUTHORITY CAPABILITIES — fail-closed. Market Reality is NOT an engine or decision authority.
+# Renamed from `authority` (2026-08-15, CH-htfcrt-parent-candle-smc-v1) -- that name collided
+# with the top-level WHO-layer `authority: user_approved` scalar at the top of this file; YAML
+# silently kept only this (the later) occurrence under the shared key, so the WHO marker was
+# being dropped on every parse. See the top-level `authority:` field's comment for detail.
 # ---------------------------------------------------------------------------
-authority:
+authority_capabilities:
   may_emit_trade_decision: false
   may_modify_engine_outputs: false
   may_modify_fusion: false

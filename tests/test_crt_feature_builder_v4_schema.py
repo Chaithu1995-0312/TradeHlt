@@ -44,6 +44,10 @@ def _inputs() -> tuple[dict, dict, dict]:
         "swing_high": 0.0, "swing_low": 1.0, "higher_high": 0.0, "lower_low": 1.0,
         "disp_strength": 0.4845, "retest_depth": 0.3011, "candles_since_retest": 2.0,
         "liquidity_distance": 0.1384, "liquidity_pressure_score": 0.9331,
+        # CH-htfcrt-parent-candle-smc-v1 (2026-08-15): schema v5.0 tail (indices 39-47).
+        "order_block_distance": 0.0, "fvg_distance": 0.0, "breaker_distance": 0.0,
+        "mitigation_block_distance": 0.0, "pdh_distance": 0.0, "pdl_distance": 0.0,
+        "eqh_distance": 0.0, "eql_distance": 0.0, "change_of_character": 0.0,
     }
     return trade, candle, state
 

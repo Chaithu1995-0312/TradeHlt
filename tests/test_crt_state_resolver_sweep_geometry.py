@@ -44,7 +44,16 @@ def _base_features(**overrides) -> dict:
         "volatility_regime": 1.0,
         "trend_bias": 0.0,
         "rsi_14": 50.0,
+        # FM-068 rsi_state is `when:`-named (EXECUTION) but NOT vector-bound, so
+        # it is not implied by rsi_14 -- classify() deliberately never derives it
+        # (that would be re-derivation). Inert here: no test in this file asserts
+        # EXECUTION, and 0.0 maps to NeutralMomentum.
+        "rsi_state": 0.0,
         "session": 1.0,
+        # CH-htfcrt-parent-candle-smc-v1 (2026-08-15): change_of_character (FM-083) is now a
+        # registered structural_state with a states: block, so FeatureStateEncoder requires it
+        # on every classify() call (no defaults, by design -- see feature_states.py's contract).
+        "change_of_character": 0.0,
     }
     fv.update(overrides)
     return fv

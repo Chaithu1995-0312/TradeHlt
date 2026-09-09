@@ -115,8 +115,8 @@ def test_trace_on_off_action_parity():
 def test_trace_does_not_recompute_features_and_38_schema():
     from features.feature_schema import CANONICAL_FEATURES, SCHEMA_HASH, FEATURE_ORDER_HASH
 
-    # 39 under schema v4.0 (was 38 pre-2026-07-22 SCHEMA-V4-VECTOR-MIGRATION).
-    assert len(CANONICAL_FEATURES) == 39
+    # 48 under schema v5.0 (was 39 pre-2026-08-15 CH-htfcrt-parent-candle-smc-v1; 38 pre-v4).
+    assert len(CANONICAL_FEATURES) == 48
     assert SCHEMA_HASH
     assert FEATURE_ORDER_HASH
 

@@ -100,6 +100,46 @@ CATEGORY_PRECEDENCE: tuple[str, ...] = (
     "D-UNKNOWN",
 )
 
+# ── Divergence code -> RejectReason correspondence (declared NEGATIVE) ─────────
+# WHY THIS EXISTS: `RejectReason` (src/config_layer/state_identity.py) is the
+# repository's only pre-existing "reason something was refused" enum, so it is a
+# standing temptation to reuse it as this module's cause taxonomy. It does not
+# fit, and this table records that as a tested fact rather than leaving the next
+# reader to re-derive it (or to assume the reuse silently).
+#
+# The two taxonomies answer DIFFERENT QUESTIONS:
+#   * RejectReason         -> "why was this TRADE SIGNAL refused?"  (execution domain)
+#   * CATEGORY_PRECEDENCE  -> "why do ENGINE and RESOLVER DISAGREE about state?"
+#
+# Same English notion ("a reason"), different quantity — the FM-058 / SP-001
+# join-is-not-identity class (CLAUDE.md 6.8 §5). Mapping one onto the other would
+# launder a coincidence of vocabulary into an apparent shared identity.
+#
+# A non-None value here must name a real `RejectReason` MEMBER NAME (str, not the
+# enum object — this module is import-pure by contract, see the header). The
+# floor test resolves these names against the live enum, so a rename goes red.
+DIVERGENCE_CODE_REJECT_REASON: dict[str, str | None] = {
+    # Covers THREE heterogeneous structural reasons (EXECUTION lacks a `score`
+    # key at all; RESOLUTION and EXPIRED are `when: {}`). LOW_SCORE means a score
+    # that exists and fell below a threshold — absent is not low.
+    "B-UNREACHABLE-STATE": None,
+    # A power gate (n < MIN_CELL_N), not a cause at all.
+    "INSUFFICIENT": None,
+    # An engine-side threshold with no resolver counterpart; RejectReason has no
+    # member for "the two configurations do not span the same knobs".
+    "B-NO-COUNTERPART": None,
+    # Same-named threshold carrying different values on the two sides.
+    "A-THRESHOLD-DELTA": None,
+    # Closable by resolver config; a statement about reachability, not refusal.
+    "A-SWEEP-REACHABLE": None,
+    # Marginals agree but recall is low — a timing/phase offset, not a refusal.
+    "C-PHASE-ERROR": None,
+    # Divergent construction behind a shared name (F-069 Category C, 96.1% of
+    # residual bars). The dominant real cause, and the one with no analogue.
+    "C-GEOMETRY": None,
+    "D-UNKNOWN": None,
+}
+
 
 @dataclass(frozen=True)
 class MismatchContext:

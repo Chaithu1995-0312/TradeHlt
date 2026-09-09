@@ -1,0 +1,94 @@
+# CRT Resolver — Link & Variant Registry (wiring phase)
+# =============================================================================
+# A LINK is a config-level switch, DEFAULT OFF, with a stable id, that makes one
+# piece of already-built-but-unconsumed resolver capability reachable. A link
+# that cannot be individually disabled has not been wired correctly.
+#
+# A VARIANT is a hand-declared set of enabled links. Variants are emitted as N
+# PARALLEL labelled streams and compared; none is canonical during this phase.
+#
+# DUPLICATE vs VARIANT (the rule this file makes mechanical):
+#   duplicate = one quantity with two UNDECLARED definitions that drifted apart
+#               -> delete one. Emitting both launders an accident into an
+#                  apparent intention, which is worse than the original defect.
+#   variant   = one quantity with two DELIBERATELY DECLARED definitions, each
+#               with a rationale naming what the comparison tests.
+#   Test: can you state what you will learn BEFORE running it? No -> duplicate.
+#
+# Binding: a `when:` clause in market_crt_states.yaml may carry a `link:` tag.
+# Untagged clauses are BASELINE and always evaluate; tagged clauses evaluate
+# only when their link is enabled in the resolved variant. Predicate VALIDATION
+# always runs on the UNFILTERED config, so a typo inside a disabled link's
+# clause cannot hide until someone enables it.
+#
+# Authority: research/shadow only. No link grants production authority (§6.5).
+
+schema_version: 1
+
+# Hard cap on live variants. Not a suggestion: N parallel streams on one frame
+# make max-of-N optimistically biased, and a cross-product sweep (12 links
+# on/off = 4096 streams) is a search, not a comparison.
+max_live_variants: 8
+
+# ── Links ────────────────────────────────────────────────────────────────────
+# status:
+#   declared -> registered with a rationale, NOT yet bound to any clause.
+#               Must have ZERO tagged clauses in market_crt_states.yaml.
+#   bound    -> bound to >=1 tagged clause. Must have >=1.
+# The floor test enforces both directions, so flipping status without doing the
+# binding (or vice versa) goes red.
+links:
+  LINK-001:
+    name: change_of_character_predicate
+    status: declared
+    rationale: >
+      FM-083 change_of_character is vector-bound (CANONICAL_FEATURES idx 47) and
+      is the only feature that separates a reversal (break AGAINST the prevailing
+      trend) from ordinary continuation BOS. It is currently named by no resolver
+      predicate and is absent from the vocabulary entirely. Tests whether giving
+      the resolver access to the reversal/continuation distinction changes which
+      bars it disagrees with the engine about.
+    surfaces:
+      - configs/formulas/market_crt_states.yaml:feature_states
+      - configs/formulas/market_crt_states.yaml:states
+    supply_cost: none    # already vector-bound => classify() already requires it
+
+  LINK-002:
+    name: volatility_regime_predicate
+    status: declared
+    rationale: >
+      volatility_regime (idx 30) is declared in the resolver's feature_states
+      vocabulary but named by ZERO when: blocks — permission granted that nothing
+      exercises, evidence the vocabulary and the predicates were authored in
+      separate passes. Tests whether the declared-but-unused vocabulary entry
+      carries any information, or is dead permission that should be removed.
+    surfaces:
+      - configs/formulas/market_crt_states.yaml:states
+    supply_cost: none
+
+  LINK-003:
+    name: volume_spike_predicate
+    status: declared
+    rationale: >
+      volume_spike (idx 38) is the second declared-but-never-named vocabulary
+      entry (the participation channel; cf. F-065, where the volume channel is
+      declared twice on the live path and consumed by neither). Same test as
+      LINK-002 on an independent feature, so a null result on one does not have
+      to stand alone.
+    surfaces:
+      - configs/formulas/market_crt_states.yaml:states
+    supply_cost: none
+
+# ── Variants ─────────────────────────────────────────────────────────────────
+# `canonical` MUST be false for every variant during the wiring phase. Marking
+# one canonical is a governance event requiring a written justification entry in
+# the floor test's _CANONICAL_DECLARATIONS, not a config edit.
+variants:
+  base:
+    canonical: false
+    links: []
+    rationale: >
+      Baseline: the shipped resolver configuration with every link disabled.
+      The fixed reference every inert-link ablation is measured against; also
+      reproduces the F-069 config-only figure (41607/47197) so a drift in the
+      surface itself is detectable.

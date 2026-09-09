@@ -186,8 +186,11 @@ def test_adversarial_graph_cannot_add_illegal_transition_without_code():
             assert dst in code[src], f"graph claims illegal {src}->{dst}"
 
 
-def test_control_valid_transitions_cover_exactly_nine_states():
-    assert len(CRTState) == 9
+def test_control_valid_transitions_cover_exactly_twelve_states():
+    # 12 = 9 execution-timeframe + 3 parent-timeframe (RANGE_C1/MANIPULATION_C2/
+    # DISTRIBUTION_C3, disjoint sub-graph), added CH-htfcrt-parent-candle-smc-v1
+    # (2026-08-15). Was 9 before this program.
+    assert len(CRTState) == 12
     assert set(VALID_TRANSITIONS.keys()) == set(CRTState)
 
 

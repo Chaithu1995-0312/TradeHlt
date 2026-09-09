@@ -1,0 +1,143 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# STRUCTURE PROFILES — the FOUNDING half of the structural kernel (RC-9, 2026-08-19)
+#
+# A profile names the answer to *"what is the box?"* — which reference object a structural
+# predicate is evaluated against — and binds it to a walk, an owner, and its evidence.
+#
+# WHY THIS FILE EXISTS
+# --------------------
+# The kernel (SP-001/SP-002) unified the ARITHMETIC of "swept". It deliberately did NOT unify
+# the FOUNDING: what counts as liquidity is exactly what made F-042 (a weekly calendar range)
+# and F-081 (chart-visible pools) legitimately NEW ontologies rather than re-runs of the
+# incumbent, and F-028's only reopen condition is a new founding. Before this file, a program
+# expressed its founding by writing a MODULE, so "which founding produced this evidence?" was
+# answered by reading import paths. Here it is a declared, groundable identity.
+#
+#   ontology (WHAT: what "swept" MEANS)  →  structural_predicates.<n>.definition
+#   this file (WHAT: what box it is EVALUATED AGAINST)  →  structural_profiles
+#   production JSON (HOW-policy: the magnitude thresholds)  →  caller resolves
+#
+# AUTHORITY: none. Declaration only (§6.5). No runtime path reads a profile as of RC-9 —
+# these describe foundings that already exist in code, so listing one changes no behaviour.
+# A `status` flip is a governed SEMANTIC_REGISTRY_CHANGE, never a PromotionManager write.
+#
+# THRESHOLDS ARE NAMES, NEVER VALUES. `threshold_refs` carries the NAME of an existing
+# CRTConfig / production-JSON / MC-* field for a caller to resolve. Copying a number into this
+# file would create a second source of truth for it — the exact defect this program removes.
+#
+# VALIDATOR: features.registry.validate_structural_profiles (closed nine-key set). This file is
+# NOT a `spec_schema.semantic_registry.sections` entry and is NOT walked by
+# validate_semantic_registry — that walker enforces 25 fields meant for semantic nodes.
+# Reached via spec_schema.semantic_registry.external_sections.structural_profiles.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+schema: structure_profiles/v1
+version: 1
+
+structural_profiles:
+
+  crt_m15_live:
+    id:             SPP-001
+    aliases:        ["crt-m15-live", "the live CRT spine founding"]
+    founding:
+      identity:     SEM-011
+      name:         M15 structural liquidity range
+      object:       src/config_layer/m15_structural_range.py
+      description: >
+        The execution-timeframe envelope the live engine sweeps against: max high / min low
+        over the trailing ATR-period window, re-founded on the HTFBuilder clock flip.
+      threshold_refs:
+        window:     crt_engine.atr_period
+        clock:      backtest.htf_candles_per_range
+    walk:           SP-010
+    predicates:     [SP-001, SP-002, SP-003]
+    status:         registered
+    owner:          crt-state-program
+    evidence:       ["describes the engine as shipped; RangeDetector.detect_sweep", "CT-009 crt_object_relations_closure.md"]
+    origin:         "RC-9 (2026-08-19) — declaring the incumbent founding so research foundings are comparable to it."
+    version:        1
+    notes: >
+      The incumbent. Listed so that a research profile is a peer of something, not an orphan.
+      SP-003 appears under `predicates` because the engine HAS a retest stage — its ontology
+      `definition` is deferred on OQ7, which is a meaning gap, not a founding gap.
+
+  parent_h4:
+    id:             SPP-002
+    aliases:        ["parent-h4", "the 3-candle parent CRT founding"]
+    founding:
+      identity:     UNKNOWN
+      name:         Parent candle range (C1 high/low)
+      object:       src/config_layer/parent_crt.py
+      description: >
+        A calendar-true parent candle's own high/low, becoming the reference the NEXT parent
+        candle may sweep. A different timeframe from SPP-001, not a different rule.
+      threshold_refs:
+        timeframe:  parent_crt.timeframe
+        armed:      parent_crt.enabled
+    walk:           SP-011
+    predicates:     [SP-001, SP-002]
+    status:         registered
+    owner:          parent-crt-program
+    evidence:       ["F-075", "F-077"]
+    origin:         "RC-9 (2026-08-19) — parent founding declared; armed on v2_htfcrt_2026_08."
+    version:        1
+    notes: >
+      PRODUCTION-ARMED (`parent_crt.enabled: true` on the active config), unlike SPP-003/004.
+      No retest stage: the parent narrative ends at DISTRIBUTION_C3. `founding.identity` is
+      UNKNOWN because ParentRange has no SEM-* node yet — declared as UNKNOWN rather than
+      invented (§6.6: never fabricate an id).
+
+  weekly_fx:
+    id:             SPP-003
+    aliases:        ["weekly-fx", "Mon-Tue accumulation range"]
+    founding:
+      identity:     UNKNOWN
+      name:         ISO-week Monday+Tuesday accumulation range
+      object:       src/research/weekly_sweep/weekly_range.py
+      description: >
+        A calendar-founded box: the high/low of an ISO week's Monday and Tuesday bars, swept
+        only on Wed/Thu/Fri. Calendar-founded rather than price-structure-founded — which is
+        precisely why F-042 counted as a new ontology and not a sweep of the incumbent.
+      threshold_refs:
+        accumulation_weekdays: research.weekly_sweep.ACCUMULATION_WEEKDAYS
+        sweep_weekdays:        research.weekly_sweep.SWEEP_WEEKDAYS
+        min_accumulation_bars: caller-supplied keyword (no default, F-056)
+    walk:           UNKNOWN
+    predicates:     [SP-001]
+    status:         research
+    owner:          weekly-calendar-program
+    evidence:       ["F-042"]
+    origin:         "RC-9 (2026-08-19) — F-042's founding declared; the program itself is CLOSED (0 PROMOTE)."
+    version:        1
+    notes: >
+      DECLARATION ONLY — the two weekday tuples remain MODULE CONSTANTS in
+      `weekly_range.py`; naming them here does not move them into config and does not touch
+      F-042's evidence. `walk` is UNKNOWN because this founding has no multi-state walk: it
+      uses SP-001 and stops. Declared UNKNOWN rather than back-filling a walk that does not
+      exist.
+
+  visual_xau:
+    id:             SPP-004
+    aliases:        ["visual-xau", "chart-visible liquidity pools"]
+    founding:
+      identity:     SEM-012
+      name:         Visual liquidity pool (PDH/PDL, prior closed H4)
+      object:       src/research/visual_crt/pools.py
+      description: >
+        Levels a trader could actually have drawn from CLOSED higher-timeframe parents. A pool
+        is only sweepable once it is already on the chart (`formed_at_index < bar index`) —
+        the visibility rule that separates this founding from a computed envelope.
+      threshold_refs:
+        n_prior_h4: pre-registered per experiment (visual_crt.pools.visible_pools kwarg)
+    walk:           UNKNOWN
+    predicates:     [SP-001, SP-002]
+    status:         research
+    owner:          visual-crt-program
+    evidence:       ["F-081", "MC-VCRT-XAUUSD-M15-V1"]
+    origin:         "RC-9 (2026-08-19) — F-081's founding declared; the trade object carried no edge (0 PROMOTE)."
+    version:        1
+    notes: >
+      SP-003 is absent from `predicates` on purpose: the visual retest anchors on the swept
+      POOL with a declared `impulse`-for-`rng.size` substitution, which is a different
+      reference anchor from the engine's. Unifying the two anchors would move F-081 Arm B's
+      evidence, so they stay two foundings rather than one predicate.

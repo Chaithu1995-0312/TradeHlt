@@ -50,9 +50,10 @@ def test_sweep_rejected_mid_funnel():
 
 
 # ── DISPLACEMENT gates 1-3 (try_sweep_to_displacement): only from SWEEP + move/body/age ────────
-def _disp_resolver() -> CRTStateResolver:
+def _disp_resolver(*, direction: int = 1) -> CRTStateResolver:
     r = _resolver("SWEEP")
     r._memory.sweep_candle_index = 10  # age 0 → fresh
+    r._memory.displacement_direction = direction  # +1 LONG / -1 SHORT
     return r
 
 
@@ -88,6 +89,30 @@ def test_displacement_rejected_stale_sweep():
 
 def test_displacement_admitted_when_all_gates_pass():
     assert _disp_resolver()._displacement_entry_allowed(_disp_raw()) is True
+
+
+def test_displacement_rejected_wrong_way_long():
+    """LONG sweep + bearish body is not a displacement (directional contract)."""
+    raw = _disp_raw(move=2.5)
+    raw["open"] = 2002.5
+    raw["close"] = 2000.0
+    assert _disp_resolver(direction=1)._displacement_entry_allowed(raw) is False
+
+
+def test_displacement_rejected_wrong_way_short():
+    """SHORT sweep + bullish body is not a displacement."""
+    assert _disp_resolver(direction=-1)._displacement_entry_allowed(_disp_raw()) is False
+
+
+def test_displacement_admitted_short_bearish():
+    raw = _disp_raw(move=2.5)
+    raw["open"] = 2002.5
+    raw["close"] = 2000.0
+    assert _disp_resolver(direction=-1)._displacement_entry_allowed(raw) is True
+
+
+def test_displacement_rejected_unknown_direction():
+    assert _disp_resolver(direction=0)._displacement_entry_allowed(_disp_raw()) is False
 
 
 # ── DISPLACEMENT→EXPANSION (try_displacement_to_expansion) ────────────────────────────────────

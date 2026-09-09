@@ -13,7 +13,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from config_layer.state_identity import CRTState, VALID_TRANSITIONS
+from config_layer.state_identity import (
+    CRTState, EXECUTION_TIMEFRAME_STATES, VALID_TRANSITIONS,
+)
 
 _ROOT = Path(__file__).resolve().parents[1]
 _GRAPH_PATH = _ROOT / "docs" / "governance" / "crt_executable_state_graph.json"
@@ -34,9 +36,17 @@ def test_graph_file_exists_and_schema():
 
 
 def test_graph_states_match_crtstate_exactly():
+    """This census is deliberately SCOPED to crt_engine_v2.py's execution-timeframe
+    state machine (see `source_module` + `scope_note` in the artifact and
+    state_identity.EXECUTION_TIMEFRAME_STATES). CH-htfcrt-parent-candle-smc-v1
+    (2026-08-15) added 3 parent-timeframe states (RANGE_C1/MANIPULATION_C2/
+    DISTRIBUTION_C3) living in a SEPARATE module (config_layer.parent_crt) — they
+    are out of scope for this artifact by design, not an omission. Comparing
+    against the full CRTState enum here would be wrong (it would demand this
+    crt_engine_v2.py-only census document a different module's line numbers)."""
     g = _load_graph()
     graph_states = {s["name"] for s in g["states"]}
-    code_states = {s.name for s in CRTState}
+    code_states = {s.name for s in EXECUTION_TIMEFRAME_STATES}
     assert graph_states == code_states
     assert len(graph_states) == 9
     # historical drift memory (shared with test_crt_state_invariants)
@@ -45,9 +55,16 @@ def test_graph_states_match_crtstate_exactly():
 
 
 def test_valid_transitions_parity_code_vs_graph_edges():
-    """Every VALID_TRANSITIONS edge must appear as a governed_transition record."""
+    """Every VALID_TRANSITIONS edge WITHIN THE EXECUTION-TIMEFRAME SUB-GRAPH must
+    appear as a governed_transition record. The parent-timeframe sub-graph
+    (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3) is out of scope — see
+    test_graph_states_match_crtstate_exactly's docstring."""
     g = _load_graph()
-    code = {s.name: {t.name for t in ts} for s, ts in VALID_TRANSITIONS.items()}
+    code = {
+        s.name: {t.name for t in ts}
+        for s, ts in VALID_TRANSITIONS.items()
+        if s in EXECUTION_TIMEFRAME_STATES
+    }
 
     # Build set of (from,to) that are via _transition or listed as valid
     graph_edges = set()

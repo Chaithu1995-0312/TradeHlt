@@ -34,6 +34,19 @@ from features.fm_resolve import bind_phase2_crt_callables
 _FM_CRT: dict = bind_phase2_crt_callables()  # FM-002/010/027/028 callables
 from config_layer.state_identity import CRTState, Direction, RejectReason, VALID_TRANSITIONS, CRTConfig
 from config_layer.crt_sweep_taxonomy import classify_sweep as _classify_sweep_geometry
+# SK-1 (2026-08-19): SP-001 single implementation (ontology structural_predicates). The three
+# sweep sites in THIS file — the authority in RangeDetector.detect_sweep and the two telemetry
+# re-derivations in process_candle — migrate together, so a trace packet can never describe a
+# different event than the one that actually fired.
+from structure.predicates import swept_high as _swept_high, swept_low as _swept_low
+from config_layer.htf_state import activation_allows as _activation_allows
+from config_layer.m15_structural_range import (
+    M15StructuralLiquidityRange,
+    from_child_window as _m15_range_from_children,
+)
+# Historical name: ``Range`` is the M15 structural liquidity range (sweep envelope).
+# HTFBuilder is the reset clock, not this type.
+Range = M15StructuralLiquidityRange
 from utils.sweep_trace_logger import SweepTraceLogger
 from utils.integrity_events import emit_integrity_event
 import statistics as _statistics
@@ -103,29 +116,6 @@ class Candle:
     @property
     def midpoint(self) -> float:
         return (self.high + self.low) / 2
-
-
-@dataclass
-class Range:
-    """HTF or session-level price range."""
-    h_ref:       float
-    l_ref:       float
-    equilibrium: float
-    formed_at:   datetime
-    htf_candle_id: str
-    session:     str = "UNKNOWN"
-
-    @property
-    def size(self) -> float:
-        return self.h_ref - self.l_ref
-
-    def is_inside(self, price: float) -> bool:
-        return self.l_ref <= price <= self.h_ref
-
-    def retrace_depth(self, price: float, direction: Direction) -> float:
-        if direction == Direction.LONG:
-            return (price - self.l_ref) / self.size if self.size > 0 else 0.0
-        return (self.h_ref - price) / self.size if self.size > 0 else 0.0
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -225,6 +215,12 @@ class Trade:
     status:         str   = "PENDING"
     cached_features: Optional[dict] = None   # features copied from state at build time; survives reset
     open_candle_index: int = 0     # [P1] candle index at open, for time-stop tracking
+    # [SEM-021] open() of the displacement candle that founded this setup. Captured HERE,
+    # at build time, and NOT read from EngineState at kill time: reset_to_range moves
+    # state.displacement_candle into pending_displacement_candle while the trade may still
+    # be open, so an engine-state read would silently no-op after any reset — an inertness
+    # bug indistinguishable from "measured and found ineffective" (cf. F-083, F-085).
+    displacement_origin: Optional[float] = None
 
     @property
     def risk_reward_tp1(self) -> float:
@@ -236,6 +232,7 @@ class Trade:
 @dataclass
 class EngineState:
     current_state:       CRTState  = CRTState.RANGE
+    # M15 structural liquidity range (sweep envelope). Not HTFBuilder, not ParentRange.
     active_range:        Optional[Range] = None
     sweep_event:         Optional[SweepEvent] = None
     risk_score:          Optional[RiskScore] = None
@@ -826,6 +823,17 @@ class TelemetryCollector:
                     },
                 )
 
+        # NOTE (documented 2026-08-30, not changed -- behavior-preserving): RANGE has two
+        # increment sites (this generic path at ~:425 AND the unconditional
+        # `on_reset()` bump at :580, which fires even when RANGE is already the current
+        # state), while every other state has exactly one. So
+        # state_entry_counts["RANGE"] counts "entered-or-re-entered-via-reset", not
+        # "distinct RANGE episodes" -- it will read higher than a state-CHANGE-based
+        # count (e.g. crt_state_changed in bar_structure_snapshot.py) for RANGE only.
+        # Confirmed empirically: XAUUSD Jul-Aug 2026 window, telemetry RANGE=144 vs
+        # 83 real before!=after transitions into RANGE (+57 RANGE->RANGE resets, +4
+        # warmup residual). Do not "fix" this counter without checking every consumer
+        # first -- it would change committed telemetry (F-068-style ledger impact).
         records: list[dict] = [{
             "kind":                  "TRANSITION_COUNTER",
             "state_entry_counts":    dict(self._transition_counts),
@@ -849,22 +857,27 @@ class RangeDetector:
         self.config = config
         self.log = logging.getLogger("CRT.RangeDetector")
 
+    def detect_m15_structural_range(
+        self, candles: list[Candle], clock_id: str, session: str = "UNKNOWN"
+    ) -> Range:
+        """Build the M15 structural liquidity range (sweep envelope).
+
+        ``clock_id`` is the HTFBuilder reset-clock tag, not a claim that
+        this envelope equals that count window. Geometry is delegated to
+        ``m15_structural_range.from_child_window`` (max high / min low).
+        """
+        r = _m15_range_from_children(candles, clock_id, session)
+        self.log.info(
+            f"M15-SLR | H={r.h_ref:.5f} L={r.l_ref:.5f} EQ={r.equilibrium:.5f} "
+            f"Session={session} clock={clock_id} n={r.child_count}"
+        )
+        return r
+
     def detect_htf_range(
         self, candles: list[Candle], htf_candle_id: str, session: str = "UNKNOWN"
     ) -> Range:
-        h_ref = max(c.high for c in candles)
-        l_ref = min(c.low  for c in candles)
-        equilibrium = (h_ref + l_ref) / 2
-        r = Range(
-            h_ref=h_ref, l_ref=l_ref, equilibrium=equilibrium,
-            formed_at=candles[-1].timestamp,
-            htf_candle_id=htf_candle_id, session=session,
-        )
-        self.log.info(
-            f"Range | H={h_ref:.5f} L={l_ref:.5f} EQ={equilibrium:.5f} "
-            f"Session={session} HTF={htf_candle_id}"
-        )
-        return r
+        """Legacy name. Same object as ``detect_m15_structural_range``."""
+        return self.detect_m15_structural_range(candles, htf_candle_id, session)
 
     def compute_atr(self, candles: list[Candle], period: int = 14) -> float:
         if len(candles) < 2:
@@ -884,12 +897,14 @@ class RangeDetector:
     def detect_sweep(
         self,
         candle: Candle,
-        active_range: Range,
+        active_range: Optional[Range],
         prev_sweep: Optional[SweepEvent],
         current_index: int,
     ) -> Optional[SweepEvent]:
-        swept_high = candle.high > active_range.h_ref and candle.close < active_range.h_ref
-        swept_low  = candle.low  < active_range.l_ref and candle.close > active_range.l_ref
+        if active_range is None:
+            return None
+        swept_high = _swept_high(candle.high, candle.close, active_range.h_ref)
+        swept_low  = _swept_low(candle.low, candle.close, active_range.l_ref)
 
         if not swept_high and not swept_low:
             return None
@@ -1096,10 +1111,154 @@ class StateMachine:
         """
         [PATCH 2] Sweep age check — invalidate if sweep is too old.
         [PATCH 3] Displacement requires body_ratio AND ATR size.
+        [CH-directional-displacement-contract] Impulse must travel away from
+        the swept side: LONG = bullish close above sweep.price; SHORT = bearish
+        close below sweep.price.
         """
         move = abs(candle.close - candle.open)
         thr_move = self.config.atr_min_displacement * state.atr_abs
         _loc = "crt_engine_v2.StateMachine.try_sweep_to_displacement"
+
+        # Directional displacement contract (CH-directional-displacement-contract,
+        # user-authorized 2026-08-13). Sweep side sets the intended impulse:
+        #   LONG  = sell-side / range-low sweep  → displacement must be UP
+        #   SHORT = buy-side  / range-high sweep → displacement must be DOWN
+        # Matches build_trade doctrine ("Swept LOW → displaced UP"). Unsigned
+        # energy-only displacement is no longer a legal SWEEP→DISPLACEMENT.
+        direction = (
+            state.sweep_event.direction
+            if state.sweep_event is not None
+            else state.direction
+        )
+        if direction not in (Direction.LONG, Direction.SHORT):
+            self._trace_guard(
+                guard_id="G_SWEEP_DISP_DIR_NONE",
+                guard_name="displacement_direction_present",
+                source_location=_loc,
+                from_state="SWEEP",
+                candidate_to_state="DISPLACEMENT",
+                result=False,
+                operator="direction in {LONG, SHORT}",
+                operands=[{
+                    "name": "direction", "runtime_value": getattr(direction, "value", str(direction)),
+                    "source_class": "STATE_MEMORY",
+                    "source_name": "sweep_event.direction or state.direction",
+                    "source_location": _loc, "formula_id": None, "feature_id": None, "config_key": None,
+                }],
+                thresholds=[],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="direction_none",
+            )
+            return False
+
+        is_long = direction == Direction.LONG
+        if is_long and not (candle.close > candle.open):
+            self._trace_guard(
+                guard_id="G_SWEEP_DISP_DIR_LONG",
+                guard_name="long_displacement_must_be_bullish",
+                source_location=_loc,
+                from_state="SWEEP",
+                candidate_to_state="DISPLACEMENT",
+                result=False,
+                operator="close > open when LONG",
+                operands=[
+                    {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                     "source_name": "candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": "close", "config_key": None},
+                    {"name": "open", "runtime_value": candle.open, "source_class": "RAW_OHLC",
+                     "source_name": "candle.open", "source_location": _loc,
+                     "formula_id": None, "feature_id": "open", "config_key": None},
+                ],
+                thresholds=[],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="long_displacement_not_bullish",
+            )
+            self.log.debug(
+                f"Displacement REJECTED: LONG requires bullish bar "
+                f"(open={candle.open:.5f} close={candle.close:.5f})"
+            )
+            return False
+        if (not is_long) and not (candle.close < candle.open):
+            self._trace_guard(
+                guard_id="G_SWEEP_DISP_DIR_SHORT",
+                guard_name="short_displacement_must_be_bearish",
+                source_location=_loc,
+                from_state="SWEEP",
+                candidate_to_state="DISPLACEMENT",
+                result=False,
+                operator="close < open when SHORT",
+                operands=[
+                    {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                     "source_name": "candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": "close", "config_key": None},
+                    {"name": "open", "runtime_value": candle.open, "source_class": "RAW_OHLC",
+                     "source_name": "candle.open", "source_location": _loc,
+                     "formula_id": None, "feature_id": "open", "config_key": None},
+                ],
+                thresholds=[],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="short_displacement_not_bearish",
+            )
+            self.log.debug(
+                f"Displacement REJECTED: SHORT requires bearish bar "
+                f"(open={candle.open:.5f} close={candle.close:.5f})"
+            )
+            return False
+
+        if state.sweep_event is not None:
+            sweep_px = state.sweep_event.price
+            if is_long and candle.close <= sweep_px:
+                self._trace_guard(
+                    guard_id="G_SWEEP_DISP_AWAY_LONG",
+                    guard_name="long_displacement_closes_above_sweep",
+                    source_location=_loc,
+                    from_state="SWEEP",
+                    candidate_to_state="DISPLACEMENT",
+                    result=False,
+                    operator="close > sweep.price when LONG",
+                    operands=[
+                        {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                         "source_name": "candle.close", "source_location": _loc,
+                         "formula_id": None, "feature_id": "close", "config_key": None},
+                        {"name": "sweep_price", "runtime_value": sweep_px, "source_class": "STATE_MEMORY",
+                         "source_name": "sweep_event.price", "source_location": _loc,
+                         "formula_id": None, "feature_id": None, "config_key": None},
+                    ],
+                    thresholds=[],
+                    short_circuit_status="FAIL_RETURN",
+                    failure_reason="long_close_not_above_sweep",
+                )
+                self.log.debug(
+                    f"Displacement REJECTED: LONG close={candle.close:.5f} "
+                    f"<= sweep={sweep_px:.5f}"
+                )
+                return False
+            if (not is_long) and candle.close >= sweep_px:
+                self._trace_guard(
+                    guard_id="G_SWEEP_DISP_AWAY_SHORT",
+                    guard_name="short_displacement_closes_below_sweep",
+                    source_location=_loc,
+                    from_state="SWEEP",
+                    candidate_to_state="DISPLACEMENT",
+                    result=False,
+                    operator="close < sweep.price when SHORT",
+                    operands=[
+                        {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                         "source_name": "candle.close", "source_location": _loc,
+                         "formula_id": None, "feature_id": "close", "config_key": None},
+                        {"name": "sweep_price", "runtime_value": sweep_px, "source_class": "STATE_MEMORY",
+                         "source_name": "sweep_event.price", "source_location": _loc,
+                         "formula_id": None, "feature_id": None, "config_key": None},
+                    ],
+                    thresholds=[],
+                    short_circuit_status="FAIL_RETURN",
+                    failure_reason="short_close_not_below_sweep",
+                )
+                self.log.debug(
+                    f"Displacement REJECTED: SHORT close={candle.close:.5f} "
+                    f">= sweep={sweep_px:.5f}"
+                )
+                return False
 
         if move < thr_move:
             self._trace_guard(
@@ -2283,6 +2442,10 @@ class ExecutionEngine:
             risk_pct=risk_pct,
             runner_active=True,
             cached_features=state.cached_features,   # persists through state reset
+            displacement_origin=(
+                float(state.displacement_candle.open)
+                if state.displacement_candle is not None else None
+            ),                                   # [SEM-021] persists through state reset
         )
         self.log.info(
             f"Trade built | {trade.id} | Dir={direction.value} "
@@ -2357,6 +2520,32 @@ class ExecutionEngine:
             )
             return "TP1"
 
+    def close_structural(self, trade: Trade, exit_price: float) -> str:
+        """[SEM-021] Terminate a trade whose founding displacement has been negated.
+
+        Books at `exit_price` (the bar CLOSE), never at the displacement origin -- booking at
+        the origin would assume a fill at a level the bar may never have offered after the
+        trigger became knowable, which is lookahead wearing a structural argument.
+
+        When the trade already reached TP1 the partial is KEPT and only the runner is
+        terminated, so this preempts the SEM-017 half-way trail without discarding a fill that
+        genuinely happened.
+        """
+        if trade.status not in ("OPEN", "TP1"):
+            return "UNCHANGED"
+        pnl_direction = 1 if trade.direction == Direction.LONG else -1
+        if trade.status == "TP1":
+            runner_pnl = 0.5 * pnl_direction * (exit_price - trade.entry_price)
+            trade.pnl = trade.partial_pnl + runner_pnl
+        else:
+            trade.pnl = pnl_direction * (exit_price - trade.entry_price)
+        trade.status = "STOPPED_STRUCTURAL"
+        self.log.info(
+            f"Trade STRUCTURAL KILL | {trade.id} | close={exit_price:.5f} "
+            f"origin={trade.displacement_origin} PnL={trade.pnl:.5f}"
+        )
+        return "STOPPED_STRUCTURAL"
+
         return "UNCHANGED"
 
 
@@ -2385,17 +2574,26 @@ class ResetLogic:
         if state.active_trade and state.active_trade.status in ("OPEN", "TP1"):
             return False, ""
 
-        if current_htf_id != state.active_range.htf_candle_id:
+        # Compare reset CLOCK ids (HTFBuilder). active_range is the M15
+        # structural liquidity envelope; htf_candle_id on it is the clock tag.
+        if current_htf_id != state.active_range.clock_id:
             if state.current_state in [CRTState.EXPANSION, CRTState.RETEST]:
                 return False, ""  # DO NOT INTERRUPT ACTIVE SETUP
-            return True, f"HTF changed: {state.active_range.htf_candle_id} → {current_htf_id}"
+            return True, f"HTF changed: {state.active_range.clock_id} → {current_htf_id}"
 
         price = current_candle.close
 
         if state.displacement_candle is not None:
             disp = state.displacement_candle
             move = abs(disp.close - disp.open)
-            retrace = abs(price - disp.close) / move if move > 0 else 0.0
+            # Against state.direction only. Continuation past disp.close is not a retrace.
+            # LONG pullback = close below disp.close; SHORT = close above. Direction NONE
+            # skips this rule (no setup axis). Unsigned abs() was the previous formula.
+            retrace = 0.0
+            if move > 0 and state.direction == Direction.LONG and price < disp.close:
+                retrace = (disp.close - price) / move
+            elif move > 0 and state.direction == Direction.SHORT and price > disp.close:
+                retrace = (price - disp.close) / move
             if retrace >= self.config.retrace_reset_pct:
                 return True, f"50% retrace hit (retrace={retrace:.3f})"
 
@@ -2481,6 +2679,15 @@ class CRTEngine:
         # process_candle's session-filter block).
         from config_layer.production_config import get_prod_section
         self._session_ts_basis = get_prod_section("feature_pipeline")["session_timestamp_basis"]
+        # CH-htfcrt-parent-candle-smc-v1 (2026-08-15): resolve ONCE (hot loop), same pattern
+        # as _session_ts_basis above. enabled:false (v2_multi_2026_04) means process_candle's
+        # parent_state gate below is a structural no-op regardless of what a caller passes —
+        # byte-identical behavior on this config. See config comment "_comment_parent_crt".
+        _pc = get_prod_section("parent_crt")
+        self._parent_crt_enabled = bool(_pc["enabled"])
+        _og = _pc["objective_gate"]
+        self._objective_gate_enabled = bool(_og["enabled"])
+        self._objective_gate_mode = str(_og["mode"])
 
     # ── Public API ────────────────────────────────────────────
 
@@ -2505,6 +2712,33 @@ class CRTEngine:
                 pass
         self.sm.trace_hooks = None
         return action
+
+    def _displacement_origin_kill(self, trade: Trade, candle: Candle) -> bool:
+        """[SEM-021] True when this bar's CLOSE negates the founding displacement.
+
+        LONG  -> close < open(displacement candle);  SHORT -> close > open(displacement candle)
+
+        CLOSE-triggered by construction, and that is load-bearing rather than incidental: a
+        wick through the origin that closes back inside must NOT fire. An extreme-triggered
+        variant would forfeit the whole reason this rule is measurable -- F-087 put the
+        same-bar ambiguity band of every extreme-reading arm at 0.261R, 12-15x the
+        0.0198-0.0212R spread it would be used to measure, versus ~0.0005R for close and
+        elapsed-time arms. Reading candle.high/candle.low here would silently move this rule
+        into the unrankable half of that grid.
+
+        Fail-quiet on a missing origin is deliberate: any trade built without a displacement
+        candle in scope carries None and must behave exactly as it did before this existed.
+        """
+        if not self.config.displacement_origin_kill_enabled:
+            return False
+        origin = trade.displacement_origin
+        if origin is None:
+            return False
+        if trade.status not in ("OPEN", "TP1"):
+            return False
+        if trade.direction == Direction.LONG:
+            return candle.close < origin
+        return candle.close > origin
 
     @staticmethod
     def _intrabar_trigger_price(trade: Trade, candle: Candle) -> float:
@@ -2604,7 +2838,16 @@ class CRTEngine:
         except Exception:
             pass
 
-    def process_candle(self, candle: Candle, htf_candle_id: str) -> dict:
+    def process_candle(
+        self, candle: Candle, htf_candle_id: str,
+        parent_state: Optional[Direction] = None,
+        parent_objective=None,
+    ) -> dict:
+        """`parent_state`: ParentCRTTrack.bias (C3 direction or NONE).
+        `parent_objective`: ObjectiveStatus from htf_state.resolve_objective.
+        Both default None. Bias veto requires parent_crt.enabled.
+        Objective activation requires parent_crt.objective_gate.enabled (default
+        false — unused kwarg is ledger-neutral)."""
         # Optional baseline trace: capture state_before (no behavior change when None/disabled).
         _bt = self.baseline_trace
         if _bt is not None and getattr(_bt, "enabled", False):
@@ -2678,8 +2921,26 @@ class CRTEngine:
                 _trigger_price = self._intrabar_trigger_price(_t, candle)
             else:
                 _trigger_price = candle.close
-            result = self.executor.update_trade(_t, _trigger_price)
-            if result in ("STOPPED", "TP2", "TP1"):
+
+            # [SEM-021] Displacement-origin invalidation. Evaluated HERE rather than inside
+            # ExecutionEngine.update_trade because this is where the CANDLE is in scope --
+            # the rule needs the bar's CLOSE specifically, while update_trade takes a single
+            # scalar trigger price. Keeping update_trade's signature stable also matters
+            # because the research parity floors bind to it.
+            _kill = self._displacement_origin_kill(_t, candle)
+            if _kill and self.config.displacement_origin_kill_precedence == "absolute":
+                result = self.executor.close_structural(_t, candle.close)
+            else:
+                result = self.executor.update_trade(_t, _trigger_price)
+                # after_resting_fills: resting orders (TP2/SL/TP1) fill intrabar and are
+                # mechanically prior, so the kill only speaks once they have been resolved --
+                # and it strictly PREEMPTS the SEM-017 half-way trail, so a bar that reached
+                # TP1 and closed through the origin books the partial and then exits the
+                # runner instead of arming the trail.
+                if _kill and result in ("UNCHANGED", "TP1"):
+                    result = self.executor.close_structural(_t, candle.close)
+
+            if result in ("STOPPED", "TP2", "TP1", "STOPPED_STRUCTURAL"):
                 self.ev_log.record(
                     f"TRADE_{result}", candle,
                     reason=f"Trade {self.state.active_trade.id} closed: {result}",
@@ -2779,8 +3040,8 @@ class CRTEngine:
                     # ── Layer 0: Sweep Trace Packet ────────────────────────
                     if self._sweep_tracer is not None and self.state.active_range is not None:
                         rng = self.state.active_range
-                        _cross_high = candle.high > rng.h_ref and candle.close < rng.h_ref
-                        _cross_low  = candle.low  < rng.l_ref and candle.close > rng.l_ref
+                        _cross_high = _swept_high(candle.high, candle.close, rng.h_ref)
+                        _cross_low  = _swept_low(candle.low, candle.close, rng.l_ref)
                         _ref        = rng.h_ref if _cross_high else rng.l_ref
                         _pen_pts    = abs(sweep.price - _ref)
                         _pen_atr    = _pen_pts / self.state.atr_abs if self.state.atr_abs > 0 else 0.0
@@ -2874,8 +3135,8 @@ class CRTEngine:
                 # ── Layer 0: Sweep Trace Packet (expired) — capture BEFORE reset ──
                 if self._sweep_tracer is not None and self.state.active_range is not None:
                     rng = self.state.active_range
-                    _cross_high = candle.high > rng.h_ref and candle.close < rng.h_ref
-                    _cross_low  = candle.low  < rng.l_ref and candle.close > rng.l_ref
+                    _cross_high = _swept_high(candle.high, candle.close, rng.h_ref)
+                    _cross_low  = _swept_low(candle.low, candle.close, rng.l_ref)
                     _ref        = rng.h_ref if _cross_high else rng.l_ref
                     _pen_pts    = abs(candle.high - _ref) if _cross_high else abs(candle.low - _ref)
                     _pen_atr    = _pen_pts / self.state.atr_abs if self.state.atr_abs > 0 else 0.0
@@ -3080,13 +3341,60 @@ class CRTEngine:
                     self.ev_log.record("FILTER_REJECTED", candle, reason="Not in discount zone")
                     self.sm.reset_to_range(self.state, "Not in discount zone", candle, self.ev_log)
                     action["action"] = "FILTER_REJECTED"
+                    action["reason"] = "Not in discount zone"
                     self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="ZONE")
 
                 elif self.state.direction == Direction.SHORT and entry_price < mid:
                     self.ev_log.record("FILTER_REJECTED", candle, reason="Not in premium zone")
                     self.sm.reset_to_range(self.state, "Not in premium zone", candle, self.ev_log)
                     action["action"] = "FILTER_REJECTED"
+                    action["reason"] = "Not in premium zone"
                     self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="ZONE")
+
+                # ── Parent-timeframe bias gate (CH-htfcrt-parent-candle-smc-v1, 2026-08-15) ──
+                # Fires only when parent_crt.enabled is true AND a caller passed a
+                # non-NONE parent_state that disagrees with the M15 setup direction.
+                # BacktestRunner threads ParentCRTFeed.bias (CH-parent-crt-caller-wire).
+                # enabled=false (v2_multi_2026_04) keeps this elif unreachable.
+                elif (
+                    self._parent_crt_enabled
+                    and parent_state is not None
+                    and parent_state != Direction.NONE
+                    and self.state.direction != parent_state
+                ):
+                    self.ev_log.record(
+                        "FILTER_REJECTED", candle,
+                        reason=f"Against parent-timeframe bias ({parent_state.value})",
+                    )
+                    self.sm.reset_to_range(
+                        self.state, f"Against parent-timeframe bias ({parent_state.value})",
+                        candle, self.ev_log,
+                    )
+                    action["action"] = "FILTER_REJECTED"
+                    action["reason"] = f"Against parent-timeframe bias ({parent_state.value})"
+                    self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="PARENT_BIAS")
+
+                elif (
+                    self._objective_gate_enabled
+                    and parent_objective is not None
+                    and not _activation_allows(parent_objective, self._objective_gate_mode)
+                ):
+                    self.ev_log.record(
+                        "FILTER_REJECTED", candle,
+                        reason=f"Against parent-timeframe objective ({parent_objective.value})",
+                    )
+                    self.sm.reset_to_range(
+                        self.state,
+                        f"Against parent-timeframe objective ({parent_objective.value})",
+                        candle, self.ev_log,
+                    )
+                    action["action"] = "FILTER_REJECTED"
+                    action["reason"] = (
+                        f"Against parent-timeframe objective ({parent_objective.value})"
+                    )
+                    self._emit_retest_replay(
+                        candle, _effective_S, accepted=False, reject_reason="PARENT_OBJECTIVE",
+                    )
 
                 else:
                     # ── Override final score with fusion S for downstream sizing ──
@@ -3124,6 +3432,7 @@ class CRTEngine:
                             candle, self.ev_log,
                         )
                         action["action"] = "FILTER_REJECTED"
+                        action["reason"] = f"off_session:{_sess_name}"
                         action["state_after"] = self.state.current_state.name
                         self._emit_retest_replay(candle, _effective_S, accepted=False,
                                                  reject_reason="OFF_SESSION")

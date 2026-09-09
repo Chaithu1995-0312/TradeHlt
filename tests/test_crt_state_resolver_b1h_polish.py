@@ -72,6 +72,12 @@ def test_engine_inject_shadow_pending_overrides_sweep():
     from features.feature_schema import CANONICAL_FEATURES
 
     feats = {name: 0.0 for name in CANONICAL_FEATURES}
+    # FM-061/068/069 are `when:`-named but NOT vector-bound (lineage.vector_key:
+    # []), so a CANONICAL_FEATURES-only dict does not contain them. They are real
+    # pipeline outputs (non-canonical columns), and resolve() requires every
+    # when:-named feature. Zeros are inert here: all three tests assert an
+    # engine_state_to INJECTION result, which overrides the predicate path.
+    feats.update({"retest_flag": 0.0, "displacement_flag": 0.0, "rsi_state": 0.0})
     feats.update(
         {
             "open": 2000.0,
@@ -97,6 +103,12 @@ def test_engine_inject_sweep_to_exp_from_shadow():
     from features.feature_schema import CANONICAL_FEATURES
 
     feats = {name: 0.0 for name in CANONICAL_FEATURES}
+    # FM-061/068/069 are `when:`-named but NOT vector-bound (lineage.vector_key:
+    # []), so a CANONICAL_FEATURES-only dict does not contain them. They are real
+    # pipeline outputs (non-canonical columns), and resolve() requires every
+    # when:-named feature. Zeros are inert here: all three tests assert an
+    # engine_state_to INJECTION result, which overrides the predicate path.
+    feats.update({"retest_flag": 0.0, "displacement_flag": 0.0, "rsi_state": 0.0})
     feats.update(
         {
             "open": 2000.0,
@@ -122,6 +134,12 @@ def test_engine_inject_disp_to_exp_still_works():
     from features.feature_schema import CANONICAL_FEATURES
 
     feats = {name: 0.0 for name in CANONICAL_FEATURES}
+    # FM-061/068/069 are `when:`-named but NOT vector-bound (lineage.vector_key:
+    # []), so a CANONICAL_FEATURES-only dict does not contain them. They are real
+    # pipeline outputs (non-canonical columns), and resolve() requires every
+    # when:-named feature. Zeros are inert here: all three tests assert an
+    # engine_state_to INJECTION result, which overrides the predicate path.
+    feats.update({"retest_flag": 0.0, "displacement_flag": 0.0, "rsi_state": 0.0})
     feats.update(
         {
             "open": 2000.0,

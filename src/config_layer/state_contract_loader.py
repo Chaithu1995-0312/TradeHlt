@@ -137,6 +137,17 @@ def _validate_state_set(contract_ids: set[str]) -> None:
 
 
 def _validate_transition_graph(yaml_trans: dict[str, list]) -> dict[str, tuple[str, ...]]:
+    """Parity-check active_models.yaml's valid_transitions against the code seed.
+
+    SEMANTICS CHANGED 2026-08-31 (CH-crt-state-generation-v1): the code seed
+    (state_identity.VALID_TRANSITIONS) is now GENERATED from this same YAML block, so this is a
+    FRESHNESS check on the committed generated artifact, not an independent cross-record
+    comparison. It still fails closed and still catches the case that matters at runtime -- a
+    stale generated module -- but it no longer constitutes independent corroboration.
+    Independent guards: tests/test_crt_state_generated_parity.py (hand-transcribed anchor) and
+    the market_crt_states.yaml floors (a different file). See
+    scripts/maintenance/gen_crt_state_identity.py.
+    """
     if not isinstance(yaml_trans, dict):
         raise StateContractError("crt.runtime.valid_transitions must be a mapping")
     code = _code_transitions()
