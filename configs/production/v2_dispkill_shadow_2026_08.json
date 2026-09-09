@@ -1,8 +1,8 @@
 {
-  "version": "v3_unified_market_structure_2026_09",
-  "config_id": "v4_dual_construction_2026_09_registered",
-  "created_at": "2026-08-29T00:00:00+00:00",
-  "promoted_at": null,
+  "version": "v2_dispkill_shadow_2026_08",
+  "config_id": "v2_htfcrt_2026_08_promote",
+  "created_at": "2026-08-15T00:00:00+00:00",
+  "promoted_at": "2026-08-15T00:00:00+00:00",
   "params": {
     "retest_depth_max": 0.15,
     "retest_atr_depth_fraction": 0.3,
@@ -71,7 +71,7 @@
     }
   },
   "sl_tp_comparison": {
-    "_comment": "Reference params for legacy SL/TP method — used ONLY by SLTPComparator, never in live path",
+    "_comment": "Reference params for legacy SL/TP method \u2014 used ONLY by SLTPComparator, never in live path",
     "legacy_sl_atr_mult": 1.0,
     "legacy_tp_atr_mult_breakout": 2.0,
     "legacy_tp_atr_mult_pullback": 1.5,
@@ -296,7 +296,9 @@
       0.25,
       0.2,
       0.2
-    ]
+    ],
+    "displacement_origin_kill_enabled": true,
+    "displacement_origin_kill_precedence": "after_resting_fills"
   },
   "_comment_parent_crt": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15) + CH-parent-crt-caller-wire (2026-08-16). ARM ON on this version (user decision, distinct from v2_multi_2026_04 where enabled:false preserves byte-identical behavior). CRTEngine.__init__ strictly reads parent_crt.enabled once at construction. With enabled:true, process_candle's EXECUTION-gate bias check is live: a trade whose direction disagrees with the parent-timeframe (H4) 3-candle CRT bias (ParentCRTTrack.bias, non-NONE only once DISTRIBUTION_C3 confirms) is rejected and reset to RANGE. CH-parent-crt-caller-wire: BacktestRunner constructs runtime.parent_crt_feed.ParentCRTFeed.from_prod_config() and threads feed.bias into process_candle on every bar (feed is pushed on warmup bars too). Live still has no process_candle loop (F-073). Research/analysis process_candle call sites still default parent_state=None.",
   "parent_crt": {
@@ -555,7 +557,7 @@
     "_comment_smc_max_window": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Trailing-candle-buffer bound for compute_smc_features's OB/FVG/breaker/mitigation scanners -- a performance/scope bound, not a registered identity parameter. Reuses swing_window above for the causal swing half-window k (no duplicate key).",
     "smc_max_window": 100
   },
-  "notes": "CH-v4-dual-construction-crt-trace-2026-08-30 (user-authorized). REGISTERED, NOT ACTIVATED -- ACTIVE_VERSION stays v2_htfcrt_2026_08. Adds crt_construction_trace: a per-bar JOIN of the engine (crt_engine_v2.py, execution authority) CRT state against the ontology (configs/formulas/market_crt_states.yaml + features/crt_state_resolver.py, declarative MEANING layer) CRT state, plus the engine pre-existing CRTBaselineTraceHooks gate-level threshold detail for that bar (runtime/crt_baseline_trace.py -- already decision-neutral by its own pre-existing contract, previously reachable only from one-off analysis scripts). Answers where/why F-069 (88.16% one-off agreement) and F-086 (RANGE dwell gap 21,745 vs 35,159) diverge, per bar, as a queryable stream rather than a research program. OBSERVATION ONLY: crt_construction_trace.enabled defaults false; the resolver call and gate read both happen AFTER process_candle returns; injection is HARD-PINNED to none (module docstring RISK 1) so the resolver never sees the engine answer it is being compared against. params UNCHANGED from v3_unified_market_structure_2026_09 / v2_htfcrt_2026_08 (config_hash identical 7de09f62..., no rehash). The new section is top-level and therefore hash-neutral. Canonical feature vector UNTOUCHED (48 dims, SCHEMA_HASH f52bf5d3f2ae6ddb75e8a35e9c323e07) -- this is an out-of-vector sidecar exactly like bar_structure_snapshot. Introduces NO new market quantity (module docstring AUTHORITY section) -- both constructions it joins already exist and are independently authoritative within their own declared scope; a SEM id for the JOIN itself is deliberately left unregistered pending Semantic OS allocation, before any downstream program cites this stream as evidence. AUTHORITY: none. context_attribution unchanged from v3, still empty. REGISTRATION PATH: hand-written config + a single REGISTERED line appended to configs/promotion_log.jsonl, same as v3 (PromotionManager.promote_* would silently strip non-_METADATA_KEYS sections -- see v3/v2_htfcrt_2026_08 notes for the documented trap).",
+  "notes": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15, user-authorized). Real calendar-true HTF parent candles (H4/D1/W1/MN1) + 3-candle parent-timeframe CRT (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3, disjoint sub-graph) + 9 SMC primitives (order block, FVG, breaker, mitigation block, PDH/PDL, EQH/EQL, change-of-character) as canonical vector features (39->48, schema v5.0). parent_crt.enabled=true (arm ON per user decision) -- the M15 EXECUTION-gate bias check in crt_engine_v2.process_candle is live IN CODE. CH-parent-crt-caller-wire (2026-08-16): BacktestRunner now constructs runtime.parent_crt_feed.ParentCRTFeed and threads feed.bias into process_candle (pushed on every child bar including warmup). Live still has no process_candle loop (F-073). Research/analysis process_candle call sites still default parent_state=None. params UNCHANGED from v2_multi_2026_04 (config_hash identical, no rehash needed). MODEL-ARTIFACT STATUS: zone_gate/rr_fusion/gaussian/bitnet/tradenet are ALL trained on <=39-dim schemas and were ALREADY degrading (zone_gate: pre-existing feature_order drift, KeyError on legacy macd_hist name, fail-closed BLOCK) before this program -- verified via direct integration test that this promotion does not make it worse (BLOCK/refuse-load, never silent truncate, identical failure mode to today). Retraining all 6 model families is a separate, explicitly deferred, compute-bound activity; per user decision (\"Promote now, gates inert\"), this promotion does not block on that retrain. PROMOTION PATH: NOT via PromotionManager.promote_* (would silently strip parent_crt and every other new top-level section by overlaying only _METADATA_KEYS onto the v1_multi_2026_03 base). ConfigValidator.validate() was ATTEMPTED first (the real governance gate, not bypassed for convenience) and found REJECTing with hard_failure 'F-057 product gate: CRTConfig mode UNKNOWN' -- confirmed via a control run that this rejection is PRE-EXISTING and unrelated to this program: the unchanged, currently-active v2_multi_2026_04 params produce the IDENTICAL rejection today, because ConfigValidator does not stamp CRTConfig with an allowed construction-provenance mode before calling BacktestRunner. This is a real, separate defect worth its own governed fix, not patched here. Promoted via the governed manual-write shape (matching scripts/maintenance/_promote_v4_bnb_cutover.py's own precedent for when PromotionManager.promote_* cannot carry a full-config change): write config, flip ACTIVE_VERSION, append PROMOTED log entry with params_fingerprint freshness anchor, verify via PromotionManager.load_version + config_integrity.audit. User confirmed this exact write+flip explicitly before it was executed.",
   "schema_version": "1.3",
   "inout": {
     "scanner": {
@@ -824,7 +826,7 @@
         "2026-04-03",
         "2026-07-04"
       ],
-      "_known_gaps_doc": "Reviewed, timestamp-RANGE accept-list for genuine intraday broker feed outages (a few bars) that are NOT full-day closures — so the good bars that day are kept (unlike whole-day holidays). Each entry: {symbol?(optional; omit=all), from, to (half-open UTC ISO), reason}. A bar inside any applicable range is treated as non-tradable (accepted). EMPTY DEFAULT = byte-parity; entries are added ONLY by reviewed decision after the strict gate surfaces a hole confirmed to be a broker outage (not corruption). Populated 2026-07-02 from the IC-Markets bulk-fetch review: broker-wide multi-symbol windows are global; single-symbol holes are scoped; XAUUSD 2026-05-25/06-19 are US-holiday early-closes (gold) not yet in the holidays list.",
+      "_known_gaps_doc": "Reviewed, timestamp-RANGE accept-list for genuine intraday broker feed outages (a few bars) that are NOT full-day closures \u2014 so the good bars that day are kept (unlike whole-day holidays). Each entry: {symbol?(optional; omit=all), from, to (half-open UTC ISO), reason}. A bar inside any applicable range is treated as non-tradable (accepted). EMPTY DEFAULT = byte-parity; entries are added ONLY by reviewed decision after the strict gate surfaces a hole confirmed to be a broker outage (not corruption). Populated 2026-07-02 from the IC-Markets bulk-fetch review: broker-wide multi-symbol windows are global; single-symbol holes are scoped; XAUUSD 2026-05-25/06-19 are US-holiday early-closes (gold) not yet in the holidays list.",
       "known_gaps": [
         {
           "symbol": "EURCAD",
@@ -1026,65 +1028,5 @@
       "XRPUSDT": "CRYPTO"
     }
   },
-  "bar_structure_snapshot": {
-    "_comment": "CH-v3-unified-market-structure-v1. OBSERVATION ONLY (CLAUDE.md 6.5 Authority Ladder). Default OFF. Read by src/runtime/bar_structure_snapshot.py ONLY -- no engine, gate, planner, fusion or risk module reads this section. Hash-neutral: config_hash covers `params` only (production_config.py:89-92).",
-    "enabled": false,
-    "schema_version": "1.0.0",
-    "authority": "OBSERVATION_ONLY",
-    "decision_neutral": true,
-    "emit_on_warmup_bars": true,
-    "output_dir": "logs/bar_structure",
-    "filename_suffix": "_bar_structure.jsonl",
-    "flush_every": 500,
-    "families": {
-      "crt": true,
-      "parent_crt": true,
-      "htf": true,
-      "objective": true,
-      "fvg": true,
-      "order_block": true,
-      "breaker": true,
-      "mitigation": true,
-      "choch": true,
-      "eqh_eql": true,
-      "pdh_pdl": true
-    },
-    "smc": {
-      "_comment": "Window/swing parameters are NOT redeclared here -- they are READ from feature_pipeline so the snapshot can never fork from the canonical 48-dim SMC block. These two keys name the source of truth; they are not values.",
-      "max_window_source": "feature_pipeline.smc_max_window",
-      "swing_window_source": "feature_pipeline.swing_window",
-      "eqh_eql_tolerance_atr": 0.1,
-      "eqh_eql_max_swings": 8,
-      "memoize_break_events": true
-    }
-  },
-  "bar_structure_parquet": {
-    "_comment": "Parquet is a REGENERABLE PROJECTION, never a second authority (CC-PARQUET-PROJECTION, docs/governance/jsonl_claim_catalog.yaml). The JSONL stream is the system of record.",
-    "enabled": false,
-    "partition_by": "crt_state_after",
-    "compression": "zstd",
-    "verify_on_write": true
-  },
-  "context_attribution": {
-    "_comment": "The promotion ledger for requirement 8, made mechanical. A context family may only appear in promoted_families after MC-CTXATTR-XAUUSD-M15-V1 produces holdout evidence AND a separate, separately-authorized change program wires it in. An empty list is the enforced default.",
-    "promoted_families": [],
-    "evidence_required": "MC-CTXATTR-XAUUSD-M15-V1",
-    "authority": "NONE"
-  },
-  "crt_construction_trace": {
-    "_comment": "CH-v4-dual-construction-crt-trace-2026-08-30. OBSERVATION ONLY (CLAUDE.md 6.5 Authority Ladder). Default OFF. Read by src/runtime/crt_construction_trace.py ONLY. Hash-neutral: config_hash covers params only (production_config.py:89-92). injection is HARD-PINNED to none by the module (crt_construction_trace.py RISK 1) -- this key exists so intent is legible in the JSON, changing it to anything else raises at load, it is not a real switch.",
-    "enabled": false,
-    "schema_version": "2.0.0",
-    "authority": "OBSERVATION_ONLY",
-    "decision_neutral": true,
-    "output_dir": "logs/crt_construction",
-    "filename_suffix": "_crt_construction.jsonl",
-    "flush_every": 500,
-    "ontology_source": "configs/formulas/market_crt_states.yaml",
-    "injection": "none",
-    "record_engine_gates": true,
-    "emit_on_warmup_bars": true,
-    "_comment_record_resolver_engine": "CH-resolver-engine-envelope. Adds the schema-v2.0.0 resolver envelope (resolver.l2_map / predicate_affinity / continuous_passed / projected_site) beside the engine's state, transitions and live context. Calls CRTStateResolver.resolve_metadata(), which returns NO state label -- the engine owns S_t, the resolver contributes F_t | S_t. Proven decision-neutral by tests/test_resolver_metadata.py::test_behavior_neutral. OBSERVATION ONLY, grants no authority (CLAUDE.md 6.5).",
-    "record_resolver_engine": true
-  }
+  "_shadow_note": "SEM-021 displacement-origin-kill SHADOW. NOT PROMOTED, NOT ACTIVE_VERSION. Sole delta vs v2_htfcrt_2026_08: crt_engine.displacement_origin_kill_enabled true (default is false) and displacement_origin_kill_precedence. Exists so the arm is reachable for measurement without touching the active config or its params hash. Grants no authority (CLAUDE.md 6.5); flip precedence to 'absolute' for the second, declared-weaker arm. See docs/governance/build_manifests/CH-DISP-ORIGIN-KILL.impact.json."
 }

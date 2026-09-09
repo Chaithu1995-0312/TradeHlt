@@ -1,6 +1,6 @@
 {
   "version": "v3_unified_market_structure_2026_09",
-  "config_id": "v4_dual_construction_2026_09_registered",
+  "config_id": "v3_unified_market_structure_2026_09_registered",
   "created_at": "2026-08-29T00:00:00+00:00",
   "promoted_at": null,
   "params": {
@@ -555,7 +555,7 @@
     "_comment_smc_max_window": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Trailing-candle-buffer bound for compute_smc_features's OB/FVG/breaker/mitigation scanners -- a performance/scope bound, not a registered identity parameter. Reuses swing_window above for the causal swing half-window k (no duplicate key).",
     "smc_max_window": 100
   },
-  "notes": "CH-v4-dual-construction-crt-trace-2026-08-30 (user-authorized). REGISTERED, NOT ACTIVATED -- ACTIVE_VERSION stays v2_htfcrt_2026_08. Adds crt_construction_trace: a per-bar JOIN of the engine (crt_engine_v2.py, execution authority) CRT state against the ontology (configs/formulas/market_crt_states.yaml + features/crt_state_resolver.py, declarative MEANING layer) CRT state, plus the engine pre-existing CRTBaselineTraceHooks gate-level threshold detail for that bar (runtime/crt_baseline_trace.py -- already decision-neutral by its own pre-existing contract, previously reachable only from one-off analysis scripts). Answers where/why F-069 (88.16% one-off agreement) and F-086 (RANGE dwell gap 21,745 vs 35,159) diverge, per bar, as a queryable stream rather than a research program. OBSERVATION ONLY: crt_construction_trace.enabled defaults false; the resolver call and gate read both happen AFTER process_candle returns; injection is HARD-PINNED to none (module docstring RISK 1) so the resolver never sees the engine answer it is being compared against. params UNCHANGED from v3_unified_market_structure_2026_09 / v2_htfcrt_2026_08 (config_hash identical 7de09f62..., no rehash). The new section is top-level and therefore hash-neutral. Canonical feature vector UNTOUCHED (48 dims, SCHEMA_HASH f52bf5d3f2ae6ddb75e8a35e9c323e07) -- this is an out-of-vector sidecar exactly like bar_structure_snapshot. Introduces NO new market quantity (module docstring AUTHORITY section) -- both constructions it joins already exist and are independently authoritative within their own declared scope; a SEM id for the JOIN itself is deliberately left unregistered pending Semantic OS allocation, before any downstream program cites this stream as evidence. AUTHORITY: none. context_attribution unchanged from v3, still empty. REGISTRATION PATH: hand-written config + a single REGISTERED line appended to configs/promotion_log.jsonl, same as v3 (PromotionManager.promote_* would silently strip non-_METADATA_KEYS sections -- see v3/v2_htfcrt_2026_08 notes for the documented trap).",
+  "notes": "CH-v3-unified-market-structure-v1 (2026-08-29, user-authorized). REGISTERED, NOT ACTIVATED -- ACTIVE_VERSION stays v2_htfcrt_2026_08. Adds a per-bar BarStructureSnapshot sidecar that records CRT state (ENGINE-authoritative), parent-CRT state, HTFState, ObjectiveStatus, and the full SMC Zone geometry (FVG / order block / breaker / mitigation / PDH-PDL / EQH-EQL / CHoCH) that features.smc already computes on every bar and discards at the *_distance tanh collapse. OBSERVATION ONLY: no new value reaches any decision path -- bar_structure_snapshot.enabled defaults false, emission happens AFTER CRTEngine.process_candle returns, and decision-neutrality is PROVEN by a byte-identical-ledger test (emit ON vs OFF), not asserted. params UNCHANGED from v2_htfcrt_2026_08 / v2_multi_2026_04 (config_hash identical 7de09f62..., no rehash). All three new sections are top-level and therefore hash-neutral (config_hash covers `params` only, production_config.py:89-92). Canonical feature vector UNTOUCHED: still 48 dims, SCHEMA_HASH f52bf5d3f2ae6ddb75e8a35e9c323e07, FEATURE_ORDER_HASH 160c96c52b198a16 -- the snapshot is an out-of-vector sidecar, so tests/test_feature_layer_freeze.py's XAUUSD vector_sha256 pin is unaffected and no model family is re-staled. REGISTRATION PATH: NOT via PromotionManager.promote_* (its _write_to_registry overlays only the 9 _METADATA_KEYS onto the v1_multi_2026_03 base and would silently strip parent_crt / feature_pipeline / backtest -- the same trap documented in v2_htfcrt_2026_08's own notes). Hand-written config + a single REGISTERED line appended to configs/promotion_log.jsonl. Deliberately NOT a PROMOTED line: config_integrity.active_version_is_governed is the only event-value consumer and only inspects the version named by ACTIVE_VERSION, so writing PROMOTED for a never-activated version would be a false governance record. AUTHORITY: none. context_attribution.promoted_families is empty and stays empty until MC-CTXATTR-XAUUSD-M15-V1 produces holdout evidence; per CLAUDE.md 6.5 an observation earns tunability, never authority. Activation would require its own governed decision (freeze-pin re-certification, ConfigValidator, ACTIVE_VERSION flip) and is explicitly NOT granted here.",
   "schema_version": "1.3",
   "inout": {
     "scanner": {
@@ -1070,21 +1070,5 @@
     "promoted_families": [],
     "evidence_required": "MC-CTXATTR-XAUUSD-M15-V1",
     "authority": "NONE"
-  },
-  "crt_construction_trace": {
-    "_comment": "CH-v4-dual-construction-crt-trace-2026-08-30. OBSERVATION ONLY (CLAUDE.md 6.5 Authority Ladder). Default OFF. Read by src/runtime/crt_construction_trace.py ONLY. Hash-neutral: config_hash covers params only (production_config.py:89-92). injection is HARD-PINNED to none by the module (crt_construction_trace.py RISK 1) -- this key exists so intent is legible in the JSON, changing it to anything else raises at load, it is not a real switch.",
-    "enabled": false,
-    "schema_version": "2.0.0",
-    "authority": "OBSERVATION_ONLY",
-    "decision_neutral": true,
-    "output_dir": "logs/crt_construction",
-    "filename_suffix": "_crt_construction.jsonl",
-    "flush_every": 500,
-    "ontology_source": "configs/formulas/market_crt_states.yaml",
-    "injection": "none",
-    "record_engine_gates": true,
-    "emit_on_warmup_bars": true,
-    "_comment_record_resolver_engine": "CH-resolver-engine-envelope. Adds the schema-v2.0.0 resolver envelope (resolver.l2_map / predicate_affinity / continuous_passed / projected_site) beside the engine's state, transitions and live context. Calls CRTStateResolver.resolve_metadata(), which returns NO state label -- the engine owns S_t, the resolver contributes F_t | S_t. Proven decision-neutral by tests/test_resolver_metadata.py::test_behavior_neutral. OBSERVATION ONLY, grants no authority (CLAUDE.md 6.5).",
-    "record_resolver_engine": true
   }
 }

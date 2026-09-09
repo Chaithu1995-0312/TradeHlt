@@ -1,14 +1,55 @@
 {
-  "version": "v3_unified_market_structure_2026_09",
-  "config_id": "v4_dual_construction_2026_09_registered",
-  "created_at": "2026-08-29T00:00:00+00:00",
-  "promoted_at": null,
+  "version": "v4_crt_sot_2026_08",
+  "config_id": "v4_crt_sot_2026_08_registered",
+  "created_at": "2026-08-31T13:42:55.334563+00:00",
   "params": {
-    "retest_depth_max": 0.15,
-    "retest_atr_depth_fraction": 0.3,
     "body_ratio_min": 0.65,
     "atr_multiplier_min": 1.0,
-    "expansion_atr_min_distance": 0.3
+    "retest_depth_max": 0.15,
+    "atr_period": 14,
+    "atr_buffer_multiplier": 3,
+    "max_sweep_age_candles": 20,
+    "expansion_atr_min_distance": 0.3,
+    "retest_atr_depth_fraction": 0.3,
+    "retest_min_depth_atr_fraction": 0.1,
+    "max_displacement_strength": 2.0,
+    "score_decay_lambda": 0.05,
+    "score_threshold": 0.45,
+    "max_spread_pct": 0.05,
+    "atr_min_displacement": 1.2,
+    "confirmation_body_min": 0.6,
+    "sl_atr_buffer": 0.2,
+    "tp1_atr_multiplier": 1.0,
+    "tp2_atr_multiplier": 2.0,
+    "exit_model": "intrabar_touch",
+    "breakout_disp_threshold": 1.5,
+    "tp1_atr_multiplier_breakout": 1.5,
+    "tp1_atr_multiplier_pullback": 0.8,
+    "tp1_atr_multiplier_liq_sweep": 1.2,
+    "tp1_atr_multiplier_reversal": 1.0,
+    "bitnet_main_threshold": 0.55,
+    "use_bitnet": false,
+    "retrace_reset_pct": 0.5,
+    "extension_reset_fib": 1.618,
+    "news_blackout_minutes": 15,
+    "conf_alpha": 0.7,
+    "conf_beta": 0.3,
+    "conf_floor": 0.2,
+    "weak_link_weight": 0.3,
+    "ema_fast": 2,
+    "ema_slow": 5,
+    "tier_1_threshold": 0.75,
+    "tier_2_threshold": 0.3,
+    "soft_conf_max_candles": 3,
+    "pending_displacement_ttl_candles": 4,
+    "displacement_origin_kill_enabled": false,
+    "displacement_origin_kill_precedence": "after_resting_fills",
+    "max_expansion_age_candles": 495,
+    "max_expansion_age_hours": 124,
+    "expansion_age_warn_candles": 342,
+    "shadow_age_penalty_lambda": 0.0,
+    "shadow_age_norm_candles": 0,
+    "shadow_advisory_only": false
   },
   "engine_runner": {
     "model_path": "results/model_export_format.json",
@@ -555,7 +596,7 @@
     "_comment_smc_max_window": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Trailing-candle-buffer bound for compute_smc_features's OB/FVG/breaker/mitigation scanners -- a performance/scope bound, not a registered identity parameter. Reuses swing_window above for the causal swing half-window k (no duplicate key).",
     "smc_max_window": 100
   },
-  "notes": "CH-v4-dual-construction-crt-trace-2026-08-30 (user-authorized). REGISTERED, NOT ACTIVATED -- ACTIVE_VERSION stays v2_htfcrt_2026_08. Adds crt_construction_trace: a per-bar JOIN of the engine (crt_engine_v2.py, execution authority) CRT state against the ontology (configs/formulas/market_crt_states.yaml + features/crt_state_resolver.py, declarative MEANING layer) CRT state, plus the engine pre-existing CRTBaselineTraceHooks gate-level threshold detail for that bar (runtime/crt_baseline_trace.py -- already decision-neutral by its own pre-existing contract, previously reachable only from one-off analysis scripts). Answers where/why F-069 (88.16% one-off agreement) and F-086 (RANGE dwell gap 21,745 vs 35,159) diverge, per bar, as a queryable stream rather than a research program. OBSERVATION ONLY: crt_construction_trace.enabled defaults false; the resolver call and gate read both happen AFTER process_candle returns; injection is HARD-PINNED to none (module docstring RISK 1) so the resolver never sees the engine answer it is being compared against. params UNCHANGED from v3_unified_market_structure_2026_09 / v2_htfcrt_2026_08 (config_hash identical 7de09f62..., no rehash). The new section is top-level and therefore hash-neutral. Canonical feature vector UNTOUCHED (48 dims, SCHEMA_HASH f52bf5d3f2ae6ddb75e8a35e9c323e07) -- this is an out-of-vector sidecar exactly like bar_structure_snapshot. Introduces NO new market quantity (module docstring AUTHORITY section) -- both constructions it joins already exist and are independently authoritative within their own declared scope; a SEM id for the JOIN itself is deliberately left unregistered pending Semantic OS allocation, before any downstream program cites this stream as evidence. AUTHORITY: none. context_attribution unchanged from v3, still empty. REGISTRATION PATH: hand-written config + a single REGISTERED line appended to configs/promotion_log.jsonl, same as v3 (PromotionManager.promote_* would silently strip non-_METADATA_KEYS sections -- see v3/v2_htfcrt_2026_08 notes for the documented trap).",
+  "notes": "CH-crt-sot-2026-08-31 (Phase G). REGISTERED, NOT PROMOTED and NOT ACTIVATED -- ACTIVE_VERSION remains v2_htfcrt_2026_08 and was not written. Declares all 47 scalar-required CRTConfig fields explicitly in `params` (Phase A-E census + parity proof), replacing the 5-key params / 45-key crt_engine split-brain. `crt_engine` is left intact (§6.2 rule 4: never delete truth) and is now fully redundant since params wins on every shared key. Base is the ACTIVE config (v2_htfcrt_2026_08), NOT PromotionManager's v1_multi_2026_03 fallback -- that path was measured to drop 11 top-level sections (parent_crt, feature_pipeline, dataset_integrity, model_runners, regime_governor, convergence_controller, acceptance_controller, live_integration, perp_funding_data, uat, _comment_parent_crt) and silently revert 10 more (crt_engine 45->29 keys among them) -- confirmed by direct measurement, and independently corroborated by _promote_v4_bnb_cutover.py's own documented reason for bypassing PromotionManager. ConfigValidator was NOT run and is NOT claimed: XAUUSD's ~4 executions across 47,275 bars cannot clear config_validator.min_trades_per_instrument=10, so score/score_std_dev stay null, matching the v3_unified_market_structure_2026_09 precedent. Parity proof (byte-identical XAUUSD ledger vs the active config) is Phase G2, run separately after this file is written.",
   "schema_version": "1.3",
   "inout": {
     "scanner": {
@@ -987,7 +1028,7 @@
       "seed_bars": 50
     }
   },
-  "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613",
+  "config_hash": "e496a94ce8e8bbac997571f8d247b9e0dc943ec699ad7faf68d70de9a3733c66",
   "market_router": {
     "_comment": "Config-driven market_router (target-strategy-architecture.md sec13 item1 / F-057, 2026-07-29). classes = the 5-key CRT profile per market class (byte-identical seed from the prior market_router.py FOREX_CONFIG/CRYPTO_CONFIG literals). symbol_map = instrument -> class, consulted by classify_market()/get_crt_config() with a leading-symbol-token fallback for filename-derived instrument hints (e.g. XAUUSD_M15). Unmapped instruments raise UnknownInstrumentError -- no safe default.",
     "classes": {
@@ -1025,66 +1066,5 @@
       "DOGEUSDT": "CRYPTO",
       "XRPUSDT": "CRYPTO"
     }
-  },
-  "bar_structure_snapshot": {
-    "_comment": "CH-v3-unified-market-structure-v1. OBSERVATION ONLY (CLAUDE.md 6.5 Authority Ladder). Default OFF. Read by src/runtime/bar_structure_snapshot.py ONLY -- no engine, gate, planner, fusion or risk module reads this section. Hash-neutral: config_hash covers `params` only (production_config.py:89-92).",
-    "enabled": false,
-    "schema_version": "1.0.0",
-    "authority": "OBSERVATION_ONLY",
-    "decision_neutral": true,
-    "emit_on_warmup_bars": true,
-    "output_dir": "logs/bar_structure",
-    "filename_suffix": "_bar_structure.jsonl",
-    "flush_every": 500,
-    "families": {
-      "crt": true,
-      "parent_crt": true,
-      "htf": true,
-      "objective": true,
-      "fvg": true,
-      "order_block": true,
-      "breaker": true,
-      "mitigation": true,
-      "choch": true,
-      "eqh_eql": true,
-      "pdh_pdl": true
-    },
-    "smc": {
-      "_comment": "Window/swing parameters are NOT redeclared here -- they are READ from feature_pipeline so the snapshot can never fork from the canonical 48-dim SMC block. These two keys name the source of truth; they are not values.",
-      "max_window_source": "feature_pipeline.smc_max_window",
-      "swing_window_source": "feature_pipeline.swing_window",
-      "eqh_eql_tolerance_atr": 0.1,
-      "eqh_eql_max_swings": 8,
-      "memoize_break_events": true
-    }
-  },
-  "bar_structure_parquet": {
-    "_comment": "Parquet is a REGENERABLE PROJECTION, never a second authority (CC-PARQUET-PROJECTION, docs/governance/jsonl_claim_catalog.yaml). The JSONL stream is the system of record.",
-    "enabled": false,
-    "partition_by": "crt_state_after",
-    "compression": "zstd",
-    "verify_on_write": true
-  },
-  "context_attribution": {
-    "_comment": "The promotion ledger for requirement 8, made mechanical. A context family may only appear in promoted_families after MC-CTXATTR-XAUUSD-M15-V1 produces holdout evidence AND a separate, separately-authorized change program wires it in. An empty list is the enforced default.",
-    "promoted_families": [],
-    "evidence_required": "MC-CTXATTR-XAUUSD-M15-V1",
-    "authority": "NONE"
-  },
-  "crt_construction_trace": {
-    "_comment": "CH-v4-dual-construction-crt-trace-2026-08-30. OBSERVATION ONLY (CLAUDE.md 6.5 Authority Ladder). Default OFF. Read by src/runtime/crt_construction_trace.py ONLY. Hash-neutral: config_hash covers params only (production_config.py:89-92). injection is HARD-PINNED to none by the module (crt_construction_trace.py RISK 1) -- this key exists so intent is legible in the JSON, changing it to anything else raises at load, it is not a real switch.",
-    "enabled": false,
-    "schema_version": "2.0.0",
-    "authority": "OBSERVATION_ONLY",
-    "decision_neutral": true,
-    "output_dir": "logs/crt_construction",
-    "filename_suffix": "_crt_construction.jsonl",
-    "flush_every": 500,
-    "ontology_source": "configs/formulas/market_crt_states.yaml",
-    "injection": "none",
-    "record_engine_gates": true,
-    "emit_on_warmup_bars": true,
-    "_comment_record_resolver_engine": "CH-resolver-engine-envelope. Adds the schema-v2.0.0 resolver envelope (resolver.l2_map / predicate_affinity / continuous_passed / projected_site) beside the engine's state, transitions and live context. Calls CRTStateResolver.resolve_metadata(), which returns NO state label -- the engine owns S_t, the resolver contributes F_t | S_t. Proven decision-neutral by tests/test_resolver_metadata.py::test_behavior_neutral. OBSERVATION ONLY, grants no authority (CLAUDE.md 6.5).",
-    "record_resolver_engine": true
   }
 }
