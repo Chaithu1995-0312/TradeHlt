@@ -4,10 +4,11 @@
 |---|---|
 | Status | **ARCHITECTURALLY APPROVED** |
 | Implementation | **Safely staged** (scaffold + registry + stubs) |
-| Blocked on | Optional next: SLSA tool residual; **ingestion contract design** only after usefulness review (first run complete) |
+| Blocked on | Optional **L4 evidence ingestion contract design** (COMPAT_USEFUL_READ_ONLY). Still no SOS auto-mutate. Warm-latency deferred. |
 | Authority | RESEARCH_LAB_ONLY — no production authority |
 | Approved | 2026-08-12 (design consensus) |
-| Semantic OS mutation | **FORBIDDEN** until post-benchmark ingestion design |
+| RI-QA-V1 | **Lab PASS** — successful research-lab validation only |
+| Semantic OS mutation | **FORBIDDEN** until COMPAT gate + separate governed ingestion program |
 
 ---
 

@@ -13,10 +13,12 @@ Authority: RESEARCH_LAB_ONLY
 | Pin | **v0.10.2** / `b377c62a…` SHA-256 verified |
 | SLSA residual | **ATTEMPTED_TOOLS_ABSENT** — cosign bundle saved; gh/cosign not on PATH |
 | First lab run | **`RI-RUN-20260812T214500Z`** — REPO-INTEL-QA-V1 **12/12 pass** (MEASURED, unsealed) |
-| Index | 34,572 nodes · 120,458 edges · ~71s fast mode |
-| Waiting on | Optional SLSA when tools available; ingestion-contract design only if we promote usefulness |
-| Semantic OS writes | **Still forbidden** (not mutated this run) |
-| Install | Binary extracted to `tools/oss_lab/codebase-memory/v0.10.2/` (CLI only; no agent config install) |
+| Milestone verdict | **SUCCESSFUL RESEARCH-LAB VALIDATION** — not SOS integration ([`RI_QA_V1_MILESTONE_VERDICT.md`](RI_QA_V1_MILESTONE_VERDICT.md)) |
+| Registry lifecycle | **BENCHMARKED** (LAB_ONLY) |
+| RI-SOS-COMPAT-V1 | **RUN** canonical `RI-SOS-20260812T233000Z` → **`COMPAT_USEFUL_READ_ONLY`** (unsealed lab) |
+| Waiting on | Optional: design **read-only L4 evidence ingestion contract** (still no auto-mutate SOS); warm-latency deferred |
+| Semantic OS writes | **Still forbidden** |
+| Install | Binary at `tools/oss_lab/codebase-memory/v0.10.2/` (CLI only) |
 
 ## Can we reuse the existing OSS lab?
 
@@ -52,7 +54,7 @@ Do **not** invent a second lab package.
 
 | Pri | oss_id | Tier | Decision | Action |
 |---|---|---|---|---|
-| **1** | OSS-CODEBASE-MEMORY | T1 | **APPROVED_FOR_LAB** | First run done: `RI-RUN-20260812T214500Z` 12/12; report under results + `oss_lab/reports/` |
+| **1** | OSS-CODEBASE-MEMORY | T1 | **BENCHMARKED** | COMPAT_USEFUL_READ_ONLY — design L4 evidence join only; no auto-mutate SOS |
 | **2** | OSS-LEAN | T3 | DISCOVERED | Add to execution three-way with Nautilus + Tradelatest |
 | **3** | OSS-RIG-METHOD | T0 | REFERENCE_ONLY | Use as methodology input for repo-intel scenario design |
 | **4** | OSS-INFIGRAPH | T1 | DISCOVERED | Head-to-head vs Codebase-Memory only — no dual adopt |

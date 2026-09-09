@@ -63,5 +63,12 @@
     "head_to_head": ["OSS-CODEBASE-MEMORY", "OSS-INFIGRAPH"],
     "reference_only": ["OSS-RIG-METHOD"],
     "deferred": ["OSS-VECTORBT"]
+  },
+  "ri_qa_v1_verdict": {
+    "status": "SUCCESSFUL_RESEARCH_LAB_VALIDATION",
+    "not": ["SOS_INTEGRATION", "PRODUCTION_FINDING", "SEMANTIC_AUTHORITY"],
+    "run_id": "RI-RUN-20260812T214500Z",
+    "next_gate": "RI-SOS-COMPAT-V1",
+    "ingestion_mode_if_ever": "read_only_evidence_to_L4_joins_never_auto_CN_BD"
   }
 }

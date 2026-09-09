@@ -1,0 +1,168 @@
+{
+  "corpus_id": "RI-SOS-COMPAT-V1",
+  "schema_version": "1.0.0",
+  "status": "RUN_COMPLETED",
+  "last_run_id": "RI-SOS-20260812T233000Z",
+  "last_exit_state": "COMPAT_USEFUL_READ_ONLY",
+  "prior_runs": ["RI-SOS-20260812T230000Z"],
+  "authority": "RESEARCH_LAB_ONLY",
+  "prerequisite": "RI-QA-V1 lab PASS",
+  "purpose": "Test whether Codebase-Memory structural evidence improves Semantic OS reasoning without becoming a second semantic authority. Read-only; no SOS YAML mutation.",
+  "mutation_policy": "append-only new corpus versions; never silently edit scored items after a run seals",
+  "forbidden": [
+    "Write docs/governance/semantic_os/*.yaml",
+    "Treat structural edge as CN/BD meaning",
+    "Collapse six score dimensions into one vanity score",
+    "Register production findings from unsealed lab output"
+  ],
+  "score_dimensions": [
+    "structural_correctness",
+    "semantic_correctness",
+    "authority_correctness",
+    "negative_control_correctness",
+    "provenance_quality",
+    "retrieval_usefulness"
+  ],
+  "items": [
+    {
+      "qa_id": "RI-SOS-001",
+      "category": "file_identity",
+      "question": "What is the FileIdentity / semantic name for the module that emits the canonical feature vector?",
+      "sos_hints": ["CN-001", "BD-001", "src/features/feature_pipeline.py", "src/features/feature_schema.py"],
+      "cbm_hints": ["search name FeaturePipeline / feature_pipeline / feature_schema"],
+      "expected_kind": "SOS_TO_IMPL_AND_IDENTITY",
+      "pass_notes": "SOS meaning + path must agree with disk; CBM must not invent alternate feature authority"
+    },
+    {
+      "qa_id": "RI-SOS-002",
+      "category": "call_dependency",
+      "question": "Who structurally depends on FusionEngine, and which SOS boundary owns fusion?",
+      "sos_hints": ["BD-008", "CT fusion/decision contracts if any", "src/core/fusion_engine.py"],
+      "cbm_hints": ["imports/callers of fusion_engine"],
+      "expected_kind": "STRUCT_PLUS_SOS_BOUNDARY",
+      "pass_notes": "CBM edges + SOS boundary membership; no claim that fusion is production strategy"
+    },
+    {
+      "qa_id": "RI-SOS-003",
+      "category": "journey_reconstruction",
+      "question": "Reconstruct the candle→order spine journey steps and name the primary modules per step.",
+      "sos_hints": ["JN-* spine journey if present", "signal-flow.md as book context only"],
+      "cbm_hints": ["engine_runner, decision_engine, execution_planner, ultron_risk_gate paths"],
+      "expected_kind": "JOURNEY_PLUS_STRUCT",
+      "pass_notes": "SOS owns step meaning; CBM supplies path evidence; book is not SOS authority"
+    },
+    {
+      "qa_id": "RI-SOS-004",
+      "category": "boundary_membership",
+      "question": "Is src/core/ultron_risk_gate.py inside the Capital Risk Gate boundary, and what invariant does that boundary protect?",
+      "sos_hints": ["BD-002", "Ultron"],
+      "cbm_hints": ["path existence + importers"],
+      "expected_kind": "BOUNDARY_MEMBERSHIP",
+      "pass_notes": "Meaning of invariant from SOS only; CBM may confirm path/callers only"
+    },
+    {
+      "qa_id": "RI-SOS-005",
+      "category": "contract_coverage",
+      "question": "Which tests structurally cover Semantic OS validation, and what contract guarantees does SOS claim?",
+      "sos_hints": ["CT-*", "tests/test_semantic_os.py"],
+      "cbm_hints": ["search test_semantic_os, semantic_os imports"],
+      "expected_kind": "CONTRACT_PLUS_TESTS",
+      "pass_notes": "Do not invent guarantees not in CT records"
+    },
+    {
+      "qa_id": "RI-SOS-006",
+      "category": "crt_execution_trace",
+      "question": "Where is CRT state machine implementation and state identity authority, and what SOS concept/boundary covers CRT structure?",
+      "sos_hints": ["BD-006 CRT Structure", "state_identity", "crt_engine_v2"],
+      "cbm_hints": ["paths + imports for crt_engine_v2 / state_identity"],
+      "expected_kind": "CRT_STRUCT_PLUS_SOS",
+      "pass_notes": "CRT is structural language not strategy (SOS rule 6)"
+    },
+    {
+      "qa_id": "RI-SOS-007",
+      "category": "feature_pipeline_trace",
+      "question": "Trace feature pipeline emission to consumers without re-deriving feature math.",
+      "sos_hints": ["CN-001", "BD-001", "market ontology is formula authority not SOS"],
+      "cbm_hints": ["feature_pipeline callers", "formula_registry consumers"],
+      "expected_kind": "PIPELINE_TRACE",
+      "pass_notes": "CBM must not invent FM formulas; ontology remains math authority"
+    },
+    {
+      "qa_id": "RI-SOS-008",
+      "category": "negative_nonexistent",
+      "question": "Is there a Semantic OS concept and implementation for FakeFusionEngineV9?",
+      "sos_hints": ["should be absent"],
+      "cbm_hints": ["search FakeFusionEngineV9"],
+      "expected_kind": "NEGATIVE_CONTROL",
+      "pass_notes": "Both SOS and CBM must not invent; status UNKNOWN/absent not fabricated meaning"
+    },
+    {
+      "qa_id": "RI-SOS-009",
+      "category": "sos_to_implementation",
+      "question": "Given CN-001 (Canonical Feature Vector), what OBJ/paths implement it?",
+      "sos_hints": ["CN-001 canonical_source / related paths"],
+      "cbm_hints": ["feature_pipeline, feature_schema"],
+      "expected_kind": "SOS_TO_IMPL",
+      "pass_notes": "Start from SOS meaning; end at implementation last hop"
+    },
+    {
+      "qa_id": "RI-SOS-010",
+      "category": "implementation_to_sos",
+      "question": "Given path src/config_layer/execution_planner.py, what SOS meaning/boundary/contracts apply (if any)?",
+      "sos_hints": ["planner ownership if authored", "else UNKNOWN"],
+      "cbm_hints": ["definitions/importers only"],
+      "expected_kind": "IMPL_TO_SOS",
+      "pass_notes": "If SOS silent, answer UNKNOWN for meaning; CBM structure alone is not meaning"
+    },
+    {
+      "qa_id": "RI-SOS-011",
+      "category": "file_identity",
+      "question": "Does the physical path of promotion_manager still match its semantic identity / governance role?",
+      "sos_hints": ["FileIdentity for promotion_manager if present", "BD-009"],
+      "cbm_hints": ["path + importers"],
+      "expected_kind": "FILE_IDENTITY_CHECK",
+      "pass_notes": "Rename-stability is SOS FileIdentity concern; CBM only confirms path existence"
+    },
+    {
+      "qa_id": "RI-SOS-012",
+      "category": "call_dependency",
+      "question": "What calls DecisionEngine, and is DecisionEngine economic-RR authority?",
+      "sos_hints": ["F-048 ownership: Ultron owns economic RR; DecisionEngine semantic-approval"],
+      "cbm_hints": ["decision_engine callers"],
+      "expected_kind": "STRUCT_PLUS_AUTHORITY",
+      "pass_notes": "Authority correctness: CBM must not claim DecisionEngine owns min_rr economics"
+    },
+    {
+      "qa_id": "RI-SOS-013",
+      "category": "journey_reconstruction",
+      "question": "Where does research measurement (forward_walk / EdgeAggregator) sit relative to SOS vs production spine?",
+      "sos_hints": ["research is not production authority", "quarantine notes"],
+      "cbm_hints": ["paths under src/research/measurement"],
+      "expected_kind": "RESEARCH_VS_SPINE",
+      "pass_notes": "Structural presence ≠ promotion authority"
+    },
+    {
+      "qa_id": "RI-SOS-014",
+      "category": "boundary_membership",
+      "question": "Is oss_lab/ inside any production SOS boundary membership? Should it be?",
+      "sos_hints": ["likely outside BD-001..BD-010 production seams"],
+      "cbm_hints": ["path tree under oss_lab"],
+      "expected_kind": "LAB_BOUNDARY",
+      "pass_notes": "Lab isolation: oss_lab should not claim production boundary ownership"
+    },
+    {
+      "qa_id": "RI-SOS-015",
+      "category": "contract_coverage",
+      "question": "What non-guarantees does Semantic OS declare, and can CBM accidentally imply they are guaranteed?",
+      "sos_hints": ["SEMANTIC_OS_CONTRACT non-goals", "CT non_guarantees"],
+      "cbm_hints": ["not applicable for meaning; structure only"],
+      "expected_kind": "AUTHORITY_NEGATIVE",
+      "pass_notes": "Authority correctness critical: structure must not upgrade advisory SOS to production authority"
+    }
+  ],
+  "run_protocol": {
+    "engines": ["SemanticOS", "CodebaseMemory", "Optional_graph.dot"],
+    "write_sos_yaml": false,
+    "report_template": "oss_lab/reports/ri_sos_compat_report_template.md"
+  }
+}

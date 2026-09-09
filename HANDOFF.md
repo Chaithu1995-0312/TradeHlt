@@ -5,8 +5,8 @@
 > The User owns this file (`multi_llm/roles/ROLE_USER.md`).
 
 ```yaml
-current_actor:   Grok (Synthesizer)
-current_story:   H-SECONDLOW — MT5 canonical corpus policy shipped
+current_actor:   Claude (Executor)
+current_story:   RC-003 EXECUTED on the Phase-1 admitted corpus — first non-null on this population; awaiting Principal
 standing_rules:
   # All XAUUSD M15 analysis/backtest/live CSV loads → Phase-1 frozen candidate only (fail-closed)
   canonical_corpus: data/mt5/XAUUSD_M15.csv  # sha256 4d73f5cebe33ec91…b26aba56; range ..2026-05-21T23:45:00
@@ -32,6 +32,8 @@ standing_rules:
   forward_plan: H-SECONDLOW-002_Complete_Package/SECONDLOW_Forward_Research_Plan_v1.md
   next_action: Phase-1 CONTENT-ADDRESSED PASS (see xauusd_phase1_validation_report-2026-07-10); residuals remain — do NOT promote to AUTHORITATIVE; feature_38_lineage_census-2026-07-10 complete; next = optional independent open-time/broker calendar or Phase-2 candle math with multi-boundary awareness
 completed:
+  - RC-002 INITIATED (Lane R): 4 role-separated packages + cycle-scoped dossier/manifest;
+    initiate_plan.py gained --manifest/--kind/--prompt (parity-proven byte-identical on RC-001)
   - Track-3 multi-LLM layer + memory/transfer + User role + log split (codebase vs workflow)
   - STORY-1.1: llm_scorer fail-open 0.5 -> 1.0; 82/82 llm tests green; spine byte-identical (181 passed)
   - STORY-1.2 / 1.3: dual-gate + rr-fusion ALREADY GREEN (stale spec) — verified, marked done (no-op)
@@ -43,12 +45,26 @@ verification:
   - Gate A: 40/40 target tests green (was 4 failing)
   - Gate B: golden-ledger + oracle + invariants + replay-determinism 180/180 byte-identical (spine-neutral; active gaussian_impl=heuristic)
   - Gate C: full suite 1787 passed / 10 failed — ZERO new failures; remaining 10 all pre-existing (timing_reconstructor volume-fixture, agents_path_alignment) — assign_cluster 8 now FIXED
-next_actor:      Gemini
+next_actor:      DeepSeek
 next_prompt: |
-  Epic 1 "Repair the Spine" is COMPLETE (all 6 stories done; spine byte-identical). Read context/*.md
-  + multi_llm/build_queue.jsonl. Open Epic 2 "Wire or Remove Dead Config" starting at STORY-2.1
-  (wire capital_management into UltronRiskGate). Confirm the live state of capital_management +
-  ultron_risk_gate, list the next 10, and flag gaps before DeepSeek plans it. NOTE 2 known pre-existing
-  reds outside Epic-1 scope: test_timing_reconstructor (OHLCV volume fixture) + test_agents_path_alignment.
-confirmation:    "Was this produced by the intended role (Claude=Executor)?  yes"
+  RC-003 is executed. Phase-1 ADMITTED corpus (47,275 bars, sha 4d73f5ce), n=553 violating /
+  1,100 control, both far past the declared floor of 150. PRIMARY (close beyond the swept extreme,
+  Referent A = HTF range bound): 0.8047 vs 0.3891, diff +0.4156, block-bootstrap CI excludes zero.
+  FIRST NON-NULL on this population in the whole programme, and it falsified the pre-registration's
+  own frozen prediction that it would find nothing.
+  TWO DEFECTS DECLARED, NOT REPAIRED (section 8 forbids fishing a repair from results): S1's control
+  is degenerate (asks close > own high, impossible, p=0 by construction); and the PRIMARY control is
+  NOT matched on proximity — violating bars sit in SWEEP having just probed the very bound under
+  test. So the gap cannot yet separate a real break-through from a proximity selection effect.
+  KILL MAP: nothing dies. SAME_SIDE_CONTINUATION_THROUGH_SWEEP is the leading hypothesis, well
+  powered and openly confounded. Identity remains UNKNOWN.
+  PROVENANCE CAVEAT: the run executed against an uncommitted working-tree resolver (3,382 lines from
+  concurrent sessions, sha ea5d7068), NOT against HEAD 0fa3768 — F-071 class. Verified: the red
+  resolver test passes at HEAD and fails against the working tree, before and after RC-003's change.
+  NOTHING pending for a model actor. Two Principal decisions open: (1) whether to register a finding
+  in docs/current-findings.md — deliberately not done, two interpretations were already retracted in
+  RC-002 and the confound here is self-declared; (2) whether to authorize a proximity-matched
+  replication, which is a NEW pre-registration, not a re-cut of RC-003.
+  Cycle record: multi_llm/research_lane/cycles/RC-003/README.md
+confirmation:    "Was this produced by the intended role (Claude=Executor)?  yes"  # RC-002 closed model-side; Claude authored only 2 EXECUTION_EVIDENCE gate checks
 ```
