@@ -470,7 +470,10 @@ class PromotionManager:
         # ── 1. Preferred fallback ──────────────────────────────────────────
         preferred = registry_dir / f"{_BASE_VERSION_FALLBACK}.json"
         if preferred.exists():
-            with open(preferred) as f:
+            # utf-8 explicit: production configs carry box-drawing/math glyphs in comments
+            # that break Windows' cp1252 default (the trap this session hit repeatedly
+            # elsewhere) -- bare open() here made this function unusable on Windows.
+            with open(preferred, encoding="utf-8") as f:
                 cfg = json.load(f)
             if _FULL_CONFIG_SENTINEL in cfg:
                 return cfg
@@ -487,7 +490,7 @@ class PromotionManager:
             # Skip archived copies and the promotion log
             if "archived" in path.name or "promotion_log" in path.name:
                 continue
-            with open(path) as f:
+            with open(path, encoding="utf-8") as f:
                 cfg = json.load(f)
             if _FULL_CONFIG_SENTINEL in cfg:
                 print(f"  ℹ️  Using {path.name} as merge base (fallback scan).")

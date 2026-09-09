@@ -92,6 +92,17 @@ Design and validate this stack **before** growing CN/BD/JN inventories. Layers a
 
 **Rule:** Implementation (L6) is always the **final mapping layer**, never the starting vocabulary.
 
+### Orthogonal ladder — market episode reasoning (do not merge with L0–L6)
+
+```text
+VALUE → STATE → CONTEXT → SHAPE → CRT → TESTIMONY → AGREEMENT
+```
+
+- **Semantic OS L0–L6** = repository meaning.  
+- **Episode ladder** = market-event meaning.  
+- Integrated episode semantics (same-event AGREEMENT) is a **separate product**.  
+Program lock: [`EPISODE_SEMANTIC_INTEGRATION_PHASE2.md`](EPISODE_SEMANTIC_INTEGRATION_PHASE2.md).
+
 ### Identity catalog (L0 — minimal, not a parallel ontology)
 
 L0 kinds are **labels for reasoning**, not file types:
@@ -299,6 +310,10 @@ The Semantic OS must answer, for any identity:
 **Canonical path:** Concept/Journey question → Semantic OS join → code last.
 
 Existing L5 surface: `src/governance/semantic_query.py` (extend, do not replace).  
+Closed-environment companion: `src/governance/semantic_grounding.py` (`SemanticGrounder`) —
+four claim kinds (NOUN / RELATIONSHIP / IMPLEMENTATION / EVIDENCE) fail closed to
+GROUNDED / UNKNOWN / AMBIGUOUS / UNANSWERABLE. CLI: `scripts/governance/query_semantic_os.py`.
+Contract: CT-008. This grounds *repository claims*; it does not execute market semantics.
 L6 impact: `semantic_impact.py` (complete if missing) for blast radius + draft BUILD_IMPACT_MANIFEST.
 
 ---

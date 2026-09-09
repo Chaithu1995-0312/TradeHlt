@@ -1,0 +1,39 @@
+{
+  "change_id": "CH-evidence-atlases",
+  "date_utc": "2026-08-24",
+  "objective": "Add three evidence atlases on the 94k bar×direction grain: (1) opportunity leakage modes, (2) state-value surface (E[MFE]/E[MAE]/E[time]/E[TP1]/E[TP2], not win-rate branding), (3) same-timestamp long−short MFE asymmetry. Research-only. No G001. No training. CRT engine states stay on the spine-run grain.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE"
+  ],
+  "change_class_rationale": "Additive research queries inside src/research/evidence/. No new scripts/** path. No live-spine. No feature identity. No production config. Parent package already SITS-registered.",
+  "affected_files": [
+    "src/research/evidence/atlases.py",
+    "src/research/evidence/queries.py",
+    "src/research/evidence/driver.py",
+    "src/research/evidence/__init__.py",
+    "src/research/evidence/__main__.py",
+    "tests/research/test_evidence_layer.py",
+    "docs/research/parquet_evidence_layer.md",
+    "docs/topics/research-measurement-contract.md",
+    "docs/analysis/readme.md",
+    "docs/analysis/evidence-atlases-2026-08-24.md",
+    "docs/governance/build_manifests/CH-evidence-atlases.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/research/test_evidence_layer.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert atlases.py and the wiring/docs/tests. Parent evidence layer and parquet corpora untouched.",
+  "authority_granted": "User 2026-08-24: leakage atlas, state-value surface, same-timestamp long-short MFE asymmetry on the existing evidence layer.",
+  "authority_NOT_granted": "No production, no G001, no F-id auto-registration, no 1:1 join of CRT journal onto the 94k ledger, no new market formula, no training.",
+  "production_behavior_changed": "NO"
+}

@@ -1,0 +1,70 @@
+{
+  "change_id": "CH-monthly-tv-coverage-h4-recon",
+  "task_class": "OBSERVATION_ONLY",
+  "objective": "Close the three input gaps behind reports/monthly_tv_vs_active_production_semantic_comparison.md (the report itself already exists and is registered in F-074/F-075/F-076/F-077/F-078; it is NOT missing). (A) H4 OHLC/clock reconciliation: capture_tv.py gates the diff on interval=='15' because engine_data.diff_table hardcodes a 15-minute cursor, so every H4 sidecar carries engine_vs_tv.status=NOT_APPLICABLE structurally and any NEW H4 shot would too. (B) TradingView coverage is 5 of ~22 trading days: shot_plan.json's two month-spanning shots (01_h4_july_macro, 02_h4_july_setup) were never captured, and Jul 7-14 / Aug 1-6 have no capture of any kind. (C) Report row 8 (SMC) states presence/plausibility only — no human-eye or mechanical check that a detected order block / FVG matches what is visible. User selected all three 2026-08-17. No production behavior changes; grants no G001 and no authority (CLAUDE.md 6.5).",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "tools/tv_forensic/htf_bars.py",
+    "tools/tv_forensic/engine_data.py",
+    "tools/tv_forensic/capture_tv.py",
+    "tools/tv_forensic/shot_plan.json",
+    "scripts/research/smc_visual_verification.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "tests/test_tv_forensic_smoke.py",
+    "reports/monthly_tv_vs_active_production_semantic_comparison.md",
+    "reports/monthly_tv_vs_active_production_semantic_comparison.json",
+    "docs/current-findings.md",
+    "docs/governance/build_manifests/CH-monthly-tv-coverage-h4-recon.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — no model is read, retrained, or re-registered. F-076's 6 stale families (zone_gate/rr/rr_fusion/gaussian/bitnet/tradenet) stay exactly as stale as they already were.",
+  "affected_production_config": "none — configs/production/ACTIVE_VERSION stays v2_htfcrt_2026_08 and no config file is read for write. parent_crt.objective_gate stays enabled:false.",
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_tv_forensic_smoke.py"
+  ],
+  "pre_registration": {
+    "ritual": "CLAUDE.md 6.2 Epistemic Integrity Pre-Registration (Program E-001). These rules are fixed BEFORE any capture or diff runs so no result can be reverse-fitted.",
+    "h4_grid_alignment": "MEASURED, never assumed. TradingView's OANDA:XAUUSD H4 bars are exchange-session anchored; the engine's are calendar-true broker-time buckets, and the resolved broker offset is +3 (odd) so broker 00:00/04:00/08:00 map to UTC 21:00/01:00/05:00 — the two grids may not align 1:1. Candidate anchors are scored by actual OHLC agreement exactly as engine_data.resolve_offset does, inheriting its D-2 anchor-floor rule (the winner must have matched EVERY usable anchor before its mean error is trusted). FAIL CLOSED: if no candidate is decisive the sidecar keeps status=NOT_APPLICABLE with reason=H4_GRID_UNRESOLVED. An unresolved grid is a recorded absence, never a pass.",
+    "match_tolerance_basis": "Inherited, not re-chosen. engine_data.MATCH_TOLERANCE=3.0 and DECISIVE_RATIO=5.0 are defined for a single M15 bar's summed O/H/L/C L1 error. An H4 bar aggregates 16 M15 children, so absolute error scales with aggregation. DECIDED IN ADVANCE: the H4 comparison applies the SAME numeric MATCH_TOLERANCE=3.0 to the per-bar L1 error of the aggregated H4 OHLC (open=first child's open, close=last child's close, high=max, low=min — all four are single price points, not sums, so the L1 error does NOT scale with 16). No tolerance is widened after seeing a number.",
+    "corpus_boundary": "data/XAUUSD_M15.csv covers 2026-07-07 01:00 -> 2026-08-06 23:45 broker. shot 01_h4_july_macro requests Jul 1 -> Aug 7, so Jul 1-6 has NO engine bar at all. That span is reported as NO_ENGINE_BAR rows and counted in the denominator — never silently dropped to flatter the match rate.",
+    "smc_claim_split": "Two DISTINCT claims, never blended. MECHANICAL = independently verifiable against the sidecar's own stored TV bars (e.g. the PDH/PDL reference level equals the prior day's max/min of TV bars; an FVG's edges equal the gap between the recorded bar pair; a Zone reported active is not already mitigated per _geometry.is_mitigated). A mechanical failure is a defect. VISUAL = human judgment on the annotated PNG; a visual mismatch alone is INSUFFICIENT EVIDENCE pending user adjudication, NOT a defect. Report row 8 upgrades only for what is mechanically proven.",
+    "new_finding_condition": "A new F-id is registered ONLY IF H4 reconciliation finds genuine OHLC divergence beyond the inherited tolerance, or a mechanical SMC check fails. A null result (H4 grids agree, SMC checks pass) updates the existing Notes on F-075/F-076/F-079 and registers NOTHING new — a clean measurement is not a finding.",
+    "verdict_vocabulary": "The closed CLAUDE.md 6.8 set only. No row says 'bug' without naming the violated contract."
+  },
+  "unknowns": [
+    {
+      "question": "Whether TradingView's OANDA:XAUUSD H4 grid is anchored to the same boundaries as the engine's calendar-true broker H4 buckets.",
+      "blocking": false,
+      "resolution": "This is the measurement, not a precondition. resolve_htf_anchor scores candidate anchors by OHLC agreement and fails closed to NOT_APPLICABLE/H4_GRID_UNRESOLVED when no candidate is decisive. A non-aligning grid is a reportable result, not a blocker."
+    },
+    {
+      "question": "Whether frame_shot's two-sided achieved-vs-requested assertion (capture_tv.py:212-224) can frame a 5-week H4 window, or whether zoomToBarsRange silently clamps it.",
+      "blocking": false,
+      "resolution": "Out of the code's scope to pre-answer. If it raises on 01_h4_july_macro, the framing failure is reported and the --via-ui Go-to-date path is used as fallback. The assertion is NOT loosened — it is the guard that caught shot 04's original mis-framing."
+    },
+    {
+      "question": "Whether tradingview.com is reachable and OANDA:XAUUSD history back to 2026-07-01 is served at the M15/H4 resolutions requested.",
+      "blocking": false,
+      "resolution": "Workstream A (H4 reconciliation + backfill of the two ALREADY-captured H4 sidecars) is fully deliverable with zero network. If capture is unavailable, Workstream B is reported as NOT EXECUTED with the reason and the coverage table keeps its honest 5-of-22 numbers."
+    },
+    {
+      "question": "Whether the pre-existing untracked state of tools/tv_forensic/ and reports/monthly_tv_* (review defect D-3) should be resolved in this change.",
+      "blocking": false,
+      "resolution": "Out of scope. Flagged to the user; git tracking is their call. ~15 concurrent Claude sessions run against this repo, so no blanket `git add -A` is performed under any circumstance."
+    }
+  ],
+  "rollback_boundary": "Delete tools/tv_forensic/htf_bars.py and scripts/research/smc_visual_verification.py; revert the step_minutes parameter on engine_data.diff_table and the 3-branch reconciliation block in capture_tv.py; restore the two H4 sidecars from their *_PRE_H4RECON.json backups; revert the shot_plan.json additions, the seed_script_registry.py overlay, the report .md/.json edits and the F-075/F-076/F-079 Notes. No src/, no configs/, no models/ touched, so there is nothing to re-hash and no promotion to unwind.",
+  "authority_granted": "User selected all three workstreams 2026-08-17. Read-only/observational: no ACTIVE_VERSION change, no config promotion, no model retrain, no objective_gate flip, no CRT re-closure (stays REOPENED), no G001 claim. Better TradingView coverage does NOT adjudicate F-077's Romeo/Sujan non-equivalence."
+}

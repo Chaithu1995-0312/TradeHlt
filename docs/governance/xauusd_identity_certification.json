@@ -1,0 +1,48 @@
+{
+  "gate": "XAUUSD_IDENTITY_CERTIFICATION",
+  "status": "FAIL",
+  "production_approved": false,
+  "corpus_path": "data/mt5/XAUUSD_M15.csv",
+  "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "corpus_rows": 47275,
+  "written": {
+    "L0": 47275,
+    "L1": 47197,
+    "L2": 613561,
+    "L3_OCCUPANCY": 47275,
+    "L3_EVENT": 0,
+    "L4": 0,
+    "L5": 0
+  },
+  "queried_preserved": {
+    "L0": 47275,
+    "L1": 47197,
+    "L2": 519167,
+    "L3_OCCUPANCY": 47275,
+    "L3_EVENT": 0,
+    "L4": 0,
+    "L5": 0
+  },
+  "RESET_events_present": false,
+  "UNIDENTIFIED": 0,
+  "IDENTITY_INCOMPLETE": 0,
+  "IDENTITY_MISMATCH": 94394,
+  "write_fail": {
+    "UNIDENTIFIED": 0,
+    "IDENTITY_MISMATCH": 0,
+    "IDENTITY_INCOMPLETE": 0
+  },
+  "scan_fail": {
+    "UNIDENTIFIED": 0,
+    "IDENTITY_MISMATCH": 94394,
+    "IDENTITY_INCOMPLETE": 0
+  },
+  "recoverable_written_layers": false,
+  "errors": [],
+  "notes": [
+    "WRITE used FeaturePipeline / FeatureStateEncoder / CRTEngine as producers.",
+    "QUERY used IdentityQuery / Identity Check only.",
+    "L5 not produced (engine TRADE_OPENED has no outcome until close).",
+    "Not production. Not live-spine. Grants no G001."
+  ]
+}

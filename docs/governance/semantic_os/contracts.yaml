@@ -284,3 +284,96 @@ contracts:
 
     supersedes: null
     superseded_by: null
+
+  - id: CT-008
+    kind: contract
+    name: Closed Semantic Environment
+    contract_kind: GOVERNANCE
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHO
+
+    governs_concepts:
+      - CN-012
+      - CN-013
+    governs_boundaries:
+      - BD-010
+
+    inputs:
+      - A typed claim (NOUN, RELATIONSHIP, IMPLEMENTATION, EVIDENCE, or JSONL) plus tokens.
+      - Hand-authored Semantic OS YAML and the existing authority set (ontology, findings, disk/AST, closure index).
+      - For JSONL claims, a REQUIRED relation naming a CC-* class in docs/governance/jsonl_claim_catalog.yaml.
+    outputs:
+      - A Grounding record with status GROUNDED, UNKNOWN, AMBIGUOUS, UNANSWERABLE, or REFUSED.
+      - Tool-returned payload only; never a fabricated repository noun.
+      - On REFUSED, the refusal_class naming the CC-* class that forbids the claim.
+    guarantees:
+      - Repository nouns, relationships, implementation claims, and evidence claims resolve through SemanticGrounder.
+      - Unknown tokens fail closed (UNKNOWN / AMBIGUOUS / UNANSWERABLE) and never invent CN/BD/JN/CT/FM/F-ids.
+      - Claim kinds and relation kinds are closed vocabularies; unknown kinds are UNANSWERABLE.
+      - A JSONL claim without relation=CC-* is UNANSWERABLE; catalog existence alone is never a check.
+      - A CANNOT-polarity claim class always returns REFUSED, and a forbidden join is evaluated before any CAN can ground.
+    non_guarantees:
+      - Does NOT constrain free reasoning, explanation, or communication about already-grounded records.
+      - Does NOT make the repository a semantically-executable trading OS.
+      - Does NOT complete Semantic OS inventory coverage; silence stays UNKNOWN.
+      - Does NOT grant production, promotion, or G001 authority.
+      - Does NOT identify a catalogued JSONL stream; catalog_stream_status is a census label, never an identity CheckResult.
+    enforced_by_tests:
+      - tests/test_semantic_grounding.py
+      - tests/test_semantic_query.py
+      - tests/test_jsonl_claim_grounding.py
+      - tests/test_jsonl_claim_catalog.py
+
+    findings: []
+    closure_surface_id: null
+    why_this_contract: >-
+      LLM sessions must be free to think and speak, but repository claims must be tool-returned.
+      Without this seam the Semantic OS is a library the model can ignore.
+
+    supersedes: null
+    superseded_by: null
+
+  - id: CT-009
+    kind: contract
+    name: CRT Existing-Object Relations
+    contract_kind: GOVERNANCE
+    status: ACTIVE
+    authority: advisory
+    authority_layer: WHAT
+
+    governs_concepts:
+      - CN-004
+    governs_boundaries:
+      - BD-006
+
+    inputs:
+      - The existing CRT objects: M15-SLR, HTFBuilder, ParentRange / ParentCRTTrack, ResetLogic, detect_sweep, features.smc.
+      - docs/governance/crt_object_relations.yaml (closed relation verbs).
+    outputs:
+      - A pass/fail that each declared relation still holds in source (types + AST).
+    guarantees:
+      - M15-SLR is not HTFBuilder and is not ParentRange.
+      - detect_sweep reads EngineState.active_range (M15-SLR) high/low only.
+      - detect_sweep does not import or name features.smc or ParentRange.
+      - ResetLogic compares the HTFBuilder clock id, not a calendar H4 identity.
+      - ParentCRTTrack.bias joins process_candle only at the EXECUTION soft-conf filter, after sweep founding.
+      - P-CRT-LIQ-01: no second named CRT liquidity object is introduced by this contract.
+    non_guarantees:
+      - Does NOT certify M15-SLR as domain / TradingView liquidity.
+      - Does NOT claim SMC or prior-H4 coincidence with sweeps.
+      - Does NOT grant G001, promotion, or a new envelope geometry.
+    enforced_by_tests:
+      - tests/test_crt_object_relations.py
+      - tests/test_m15_structural_range.py
+
+    findings: []
+    closure_surface_id: CRT_OBJECT_RELATIONS
+    why_this_contract: >-
+      After naming M15-SLR and closing P-CRT-LIQ-01 (no second liquidity object),
+      the remaining architecture work is to make joins among the existing objects
+      explicit and mechanically testable so they cannot silently collapse.
+      CLOSED 2026-08-17 for the join contract only — CRT / SEM-011 / G001 stay open.
+
+    supersedes: null
+    superseded_by: null

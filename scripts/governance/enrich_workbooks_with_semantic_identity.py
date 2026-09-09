@@ -236,9 +236,15 @@ def _append_count_row(ws, label: str, value: Any) -> None:
     ws.append([label, value])
 
 
-def enrich_src_workbook(path: Path, identity_by_path: dict[str, dict]) -> dict:
-    wb = openpyxl.load_workbook(path)
-    ws = wb["src_py_inventory"]
+#: Sheets of the src workbook that carry declared file identities, so may be enriched.
+#: ``tools_py_inventory`` / ``exec_telemetry_py_inventory`` are deliberately ABSENT: the
+#: Semantic OS declares no identities for those trees, and a blank Semantic ID column would
+#: read as "coverage measured at zero" rather than "coverage not measured".
+_SRC_WORKBOOK_SHEETS = ("src_py_inventory", "root_py_inventory")
+
+
+def _enrich_identity_sheet(ws, identity_by_path: dict[str, dict]) -> dict:
+    """Append the five identity columns to one path-keyed sheet. Idempotent."""
     cols = _ensure_columns(ws, _IDENTITY_HEADERS)
 
     joined = 0
@@ -266,9 +272,26 @@ def enrich_src_workbook(path: Path, identity_by_path: dict[str, dict]) -> dict:
         get_column_letter(cols["Identity Provenance"]): 16,
     })
     _refresh_autofilter(ws)
-
-    wb.save(path)
     return {"total": total, "joined": joined, "join_rate": (joined / total) if total else 0.0}
+
+
+def enrich_src_workbook(path: Path, identity_by_path: dict[str, dict]) -> dict:
+    wb = openpyxl.load_workbook(path)
+    per_sheet = {
+        name: _enrich_identity_sheet(wb[name], identity_by_path)
+        for name in _SRC_WORKBOOK_SHEETS
+        if name in wb.sheetnames
+    }
+    wb.save(path)
+
+    total = sum(v["total"] for v in per_sheet.values())
+    joined = sum(v["joined"] for v in per_sheet.values())
+    return {
+        "total": total,
+        "joined": joined,
+        "join_rate": (joined / total) if total else 0.0,
+        "sheets": per_sheet,
+    }
 
 
 _TESTS_README_LINES = (

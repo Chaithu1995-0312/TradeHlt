@@ -1,0 +1,29 @@
+{
+  "change_id": "CH-mother-range-candidate-register",
+  "date_utc": "2026-08-23",
+  "objective": "Keep mother-range knowledge durable without promoting it. Register H-019 (structure: big-mother raises inside-close rate) and H-020 (economic fade candidate frozen). Point knowledge-map at the hypothesis registry as the candidate layer between findings and PromotionManager. No new ID namespace. No production.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Seed-script is the PRIMARY for the gitignored hypothesis JSONL (same pattern as findings export). Ontology SEM-026 observed_behaviour updated with structure census. No live-spine, no schema change to hypothesis registry (promotion fields remain forbidden).",
+  "affected_files": [
+    "scripts/governance/seed_hypothesis_registry.py",
+    "configs/formulas/market_ontology.yaml",
+    "docs/knowledge-map.md",
+    "docs/governance/build_manifests/CH-mother-range-candidate-register.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_hypothesis_registry.py",
+    "tests/test_semantic_registry.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert H-019/H-020 seed rows, SEM-026 observation text, knowledge-map row. F-090 and MC-MRANGE stay.",
+  "authority_granted": "User 2026-08-23: durable candidate/knowledge between research and production; mother-range as registered structural primitive, not tradable.",
+  "authority_NOT_granted": "No production, no G001, no PromotionManager path, no new MRANGE-* namespace, no promotion_requirements field on H-records.",
+  "production_behavior_changed": "NO"
+}

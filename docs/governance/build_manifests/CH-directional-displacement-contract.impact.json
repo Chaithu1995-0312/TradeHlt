@@ -1,0 +1,52 @@
+{
+  "change_id": "CH-directional-displacement-contract",
+  "objective": "Authorize and implement the directional displacement contract: after a LONG (sell-side / range-low) sweep, DISPLACEMENT must be an UP impulse (close > open and close > sweep.price); after a SHORT (buy-side / range-high) sweep, DISPLACEMENT must be a DOWN impulse (close < open and close < sweep.price). Resolves the TruthConflict between try_sweep_to_displacement (unsigned energy) and build_trade's written doctrine ('Swept LOW → displaced UP'). User-authorized 2026-08-13 after Jul 28 XAUUSD forensic review. Behavior change is the declared intent.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "src/config_layer/crt_engine_v2.py",
+    "src/features/crt_state_resolver.py",
+    "tests/test_crt_adversarial_closure.py",
+    "tests/test_crt_state_resolver_gate_parity.py",
+    "tests/test_crt_state_resolver_displacement_gate.py",
+    "tests/test_directional_displacement.py",
+    "active_models.yaml",
+    "docs/topics/crt-spine.md",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/governance/build_manifests/CH-directional-displacement-contract.impact.json",
+    "docs/governance/crt_closure_report.md",
+    "docs/governance/closure_authority_index.json",
+    "tests/test_crt_closure_report.py",
+    "tests/test_closure_authority_index.py",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "crt FSM detection only — no model input/training/artifact; fusion crt score path unchanged",
+  "affected_production_config": "none (hash-neutral; no configs/production/* key added; this is a structural meaning contract, not a threshold)",
+  "required_checks_ack": [
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_directional_displacement.py",
+    "tests/test_crt_adversarial_closure.py",
+    "tests/test_crt_state_resolver_gate_parity.py",
+    "tests/test_crt_state_resolver_displacement_gate.py",
+    "tests/test_crt_closure_report.py",
+    "tests/test_closure_authority_index.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Whether historical unsigned-displacement episodes (e.g. Jul 28 01:15 UTC dump labeled DISPLACEMENT on a LONG sweep) should be re-run for economic impact.",
+      "blocking": false,
+      "resolution": "Out of this change. Contract is meaning, not a G001 claim. Ledger change is declared intent. Re-measure is a separate authorized research turn.",
+      "followup": "Optional: re-run XAUUSD spine under the new guard and compare TRADE_OPENED set."
+    }
+  ],
+  "rollback_boundary": "Revert the direction guard in try_sweep_to_displacement + resolver _displacement_entry_allowed + tests + active_models displacement gates + F-074 + crt-spine discussion. No config hash change.",
+  "authority_granted": "User authorized the directional displacement contract 2026-08-13. Grants no production promotion, no G001, no ontology FM-id. Shadow-resume path unchanged (prior-window displacement already validated)."
+}

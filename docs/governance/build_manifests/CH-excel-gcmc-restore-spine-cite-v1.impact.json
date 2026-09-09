@@ -1,0 +1,40 @@
+{
+  "change_id": "CH-excel-gcmc-restore-spine-cite-v1",
+  "date_utc": "2026-09-03",
+  "objective": "Restore GCMC v1 to 100% by regenerating the three functionality Excels, re-join stack-room columns, rebuild How-index, then cite previously unreferenced spine files in owning topic docs + INFRA.md. Inventory + documentation linking only.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Regenerate untracked/inventory workbooks, .grok How-index/KPI/INFRA, and topic citation lists. No src/, no configs/production, no models/, no formula math, no ACTIVE_VERSION. DOCUMENTATION_ONLY allows docs/ and does not grant spine behavior change.",
+  "affected_files": [
+    "results/analysis/src_business_functionality.xlsx",
+    "scripts_business_functionality.xlsx",
+    "docs/analysis/tests_functionality_inventory.xlsx",
+    ".grok/infra_architecture_link.xlsx",
+    ".grok/infra_architecture_link_coverage.json",
+    ".grok/excel_file_list.json",
+    ".grok/HOW_INDEX.md",
+    ".grok/_build_how_index.py",
+    ".grok/INFRA.md",
+    ".grok/CLOSURE_KPI.md",
+    ".grok/PENDING.md",
+    ".grok/rules/GROK.md",
+    "docs/topics/",
+    "docs/governance/build_manifests/CH-excel-gcmc-restore-spine-cite-v1.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the three inventory workbooks, .grok How-index/KPI/INFRA/PENDING/GROK.md overlay numbers, topic citation edits, and this manifest. Do not touch src/ or ACTIVE_VERSION.",
+  "authority_granted": "User 2026-09-03: both in order — P-EXCEL-07 regenerate then Unreferenced_spine topic citation pass.",
+  "authority_NOT_granted": "Spine behavior. Production config. G001. Live rail. Regenerating as a claim that 100% GCMC means CRT CLOSED or money.",
+  "production_behavior_changed": "NO"
+}

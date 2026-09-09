@@ -177,6 +177,54 @@
     {
       "claim": "F-062",
       "reason": "Governance/hygiene — stale feature-DAG spine vs schema v4.0."
+    },
+    {
+      "claim": "F-071",
+      "reason": "Governance — committed-vs-running-system restore; not a market object."
+    },
+    {
+      "claim": "F-072",
+      "reason": "Architecture/hygiene — FM-074 atr_absolute registration; feature identity, not RF-HTF economics."
+    },
+    {
+      "claim": "F-073",
+      "reason": "Architecture — no live execution rail (F-013 class); not a market object."
+    },
+    {
+      "claim": "F-076",
+      "reason": "Feature-ontology schema bump (39→48 SMC primitives). Meaning is registered; not an RF-HTF economic cell."
+    },
+    {
+      "claim": "F-079",
+      "reason": "Governance/tooling hygiene — screenshot-reconciliation and Semantic OS grounding fail-closed fixes; not a market object."
+    },
+    {
+      "claim": "F-080",
+      "reason": "Architecture — engine vs TradingView OHLC session-boundary artifact; not a market-object family cell."
+    },
+    {
+      "claim": "F-081",
+      "reason": "Visual CRT (SEM-012) economic diagnostic; object is not in the atlas families as its own row. Bound would require a new family; excluded until Phase B rather than silently stuffed into RF-CRT-STRUCTURE."
+    },
+    {
+      "claim": "F-082",
+      "reason": "Architecture/governance — XAUUSD cost and stop-fill basis correction (SEM-015/016); instrument measurement basis, not a market-object cell."
+    },
+    {
+      "claim": "F-083",
+      "reason": "Governance — sealed-contract vs executed-artifact silent gap; instrument hygiene."
+    },
+    {
+      "claim": "F-084",
+      "reason": "Visual CRT V2 re-measure; same SEM-012 object as F-081, excluded on the same basis."
+    },
+    {
+      "claim": "F-085",
+      "reason": "Architecture — FeatureStore live-path singleton bug; not a market object."
+    },
+    {
+      "claim": "F-088",
+      "reason": "Architecture — multi_tp_walk vs forward_walk object gap; measurement-kernel identity, not a market-object cell."
     }
   ],
   "families": [
@@ -189,9 +237,9 @@
       "runner": null,
       "cells": {
         "L0": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
-        "L1": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-067", "F-068"] },
+        "L1": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-067", "F-068", "F-074"] },
         "L2": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-002", "F-015"] },
-        "L3": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L3": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-086"] },
         "L4": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-011", "F-019", "F-026", "F-035"] },
         "L5": { "evidence_mass": "med", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-037", "F-070"] }
       },
@@ -387,11 +435,11 @@
       "runner": null,
       "cells": {
         "L0": { "evidence_mass": "none", "status": "GAP", "claims": [] },
-        "L1": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
+        "L1": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-075", "F-077", "F-078"] },
         "L2": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
         "L3": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
         "L4": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-027"] },
-        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+        "L5": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-089"] }
       },
       "script_evidence": ["qualify_htf"],
       "notes": "UNPARTITIONED — inherits the bundled atlas matrix row. Timeframe is arguably a scope dimension like instrument rather than an object; flagged for reconsideration in Phase B when contract profiles are defined."
@@ -426,7 +474,7 @@
         "L1": { "evidence_mass": "none", "status": "GAP", "claims": [] },
         "L2": { "evidence_mass": "none", "status": "GAP", "claims": [] },
         "L3": { "evidence_mass": "none", "status": "GAP", "claims": ["F-014"] },
-        "L4": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-010", "F-024", "F-025"] },
+        "L4": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-010", "F-024", "F-025", "F-087"] },
         "L5": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] }
       },
       "script_evidence": ["phase_d_exit_grid", "exit_model_band", "phase_s_selection_effect", "phase_e_structural_asymmetry", "early_invalidation_ab", "purge_delay", "purge_slice"],
@@ -467,6 +515,132 @@
       },
       "script_evidence": ["opportunity_stream_vs_trades", "build_rr_dataset_from_clean_labels", "bitnet_population_label_audit", "ingest_live_outcomes"],
       "notes": "Atlas family with NO matrix row, so all cells are UNTESTED. This is the load-bearing family: F-022's contamination re-surfaced independently in RF-ZONE-GEOMETRY (F-041B) and RF-RR (F-045 then F-059). In Phase B its answer becomes a CONTRACT TERM (one label derivation via forward_walk) rather than a per-family result — which is the single highest-leverage consequence of this registry."
+    },
+    {
+      "family_id": "RF-MOTHER-RANGE",
+      "object": "Mother-range inside-close trade (calendar block fade)",
+      "question": "Does a t=0 inside close after a large calendar mother range carry holdout expectancy under fixed SL/TP?",
+      "canonical_instrument": "XAUUSD",
+      "contract_profile": "MP-METALS-MT5",
+      "runner": "src/research/mother_range/driver.py",
+      "cells": {
+        "L0": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": [] },
+        "L1": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": [] },
+        "L2": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L3": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L4": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-090"] },
+        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+      },
+      "script_evidence": ["mother_range_inside_close", "mother_range"],
+      "notes": "SEM-026 / MC-MRANGE-XAUUSD-M15-V1. Not CRT. Not identity L5. F-086 not reopened."
+    },
+    {
+      "family_id": "RF-DIRECTIONAL-ASYMMETRY",
+      "object": "Same-timestamp long−short MFE pair (ΔMFE)",
+      "question": "Does FM-054 trend_bias contrast in E[ΔMFE] keep sign on a chronologic holdout?",
+      "canonical_instrument": "XAUUSD",
+      "contract_profile": "MP-METALS-MT5",
+      "runner": "src/research/evidence/asymmetry_contract.py",
+      "cells": {
+        "L0": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": [] },
+        "L1": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L2": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L3": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": ["F-091"] },
+        "L4": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+      },
+      "script_evidence": ["asymmetry_contract", "evidence_atlases"],
+      "notes": "SEM-027 / MC-ASYM-XAUUSD-M15-V1. Information object, not a trade. Full-sample atlas 2026-08-24 is not the holdout. F-086 stride unspent. F-066 hour/session out of PRIMARY."
+    },
+    {
+      "family_id": "RF-TREND-MAGNITUDE-PRIOR",
+      "object": "t=0 trend_bias as magnitude/time prior on a given side",
+      "question": "Given side, does FM-054 agreement increase that side's MFE and/or change time-to-MFE on a chronologic holdout?",
+      "canonical_instrument": "XAUUSD",
+      "contract_profile": "MP-METALS-MT5",
+      "runner": "src/research/evidence/magnitude_prior.py",
+      "cells": {
+        "L0": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": [] },
+        "L1": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L2": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L3": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": ["F-092"] },
+        "L4": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+      },
+      "script_evidence": ["magnitude_prior"],
+      "notes": "SEM-028 / MC-MAGPRIOR-XAUUSD-M15-V1. Not a side picker. Not SEM-027 ΔMFE. Overlay k=0.5 diagnostic only. F-086 unspent. P-GOAL-04 not opened."
+    },
+    {
+      "family_id": "RF-RNET-SIZE-OVERLAY",
+      "object": "mean-preserving FM-054 size overlay on independent-entry y_R_net",
+      "question": "Does overweighting the agreeing side's stored y_R_net lift E[w y] versus equal size on a chronologic holdout?",
+      "canonical_instrument": "XAUUSD",
+      "contract_profile": "MP-METALS-MT5",
+      "runner": "src/research/evidence/rnet_overlay.py",
+      "cells": {
+        "L0": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": [] },
+        "L1": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L2": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L3": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": ["F-093"] },
+        "L4": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+      },
+      "script_evidence": ["rnet_overlay"],
+      "notes": "SEM-029 / MC-RNET-OVERLAY-XAUUSD-M15-V1. Independent entry = clean_labels bar×side. k=0.5 PRIMARY. 12bps baked in y (F-082). E>0 not the gate. P-GOAL-04 not opened. F-093."
+    },
+    {
+      "family_id": "RF-MOTHER-RANGE-PRIOR",
+      "object": "Sparse mother-range inside signal x trend magnitude/time prior",
+      "question": "Does FM-054 agreement move MFE or time-to-MFE on the sparse SEM-026 mother-range inside-close entry set?",
+      "canonical_instrument": "XAUUSD",
+      "contract_profile": "MP-METALS-MT5",
+      "runner": "src/research/evidence/mother_range_prior.py",
+      "cells": {
+        "L0": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": [] },
+        "L1": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L2": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L3": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": ["F-094"] },
+        "L4": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+      },
+      "script_evidence": ["mother_range_prior"],
+      "notes": "SEM-030 / MC-MRPRIOR-XAUUSD-M15-V1. Sparse signal is SEM-026 inside-close entries; prior is SEM-028/FM-054 agreement. Holdout agree n=9, so F-094 is INSUFFICIENT. Not SEM-026 trade ledger, not SEM-029 every-bar y_R_net overlay, no side picker, no G001."
+    },
+    {
+      "family_id": "RF-SUJAN-VETO",
+      "object": "Sujan nested veto chain (SEM-031 calendar-parent activation)",
+      "question": "Does the accepted nested veto conjunction (R4) clear a diagnostic holdout gate on XAUUSD M15 under SEM-015/016?",
+      "canonical_instrument": "XAUUSD",
+      "contract_profile": "MP-METALS-MT5",
+      "runner": "src/research/sujan_crt/driver.py",
+      "cells": {
+        "L0": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": [] },
+        "L1": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": [] },
+        "L2": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": [] },
+        "L3": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L4": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": ["F-095"] },
+        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+      },
+      "script_evidence": ["sujan_crt"],
+      "notes": "SEM-031 / MC-SUJAN-XAUUSD-M15-V1. PRIMARY R4 nested vetoes, not SEM-023 admission. F-095 REJECT. Not ParentCRT C1/C2/C3 (F-077). Not Visual CRT. No G001."
+    },
+    {
+      "family_id": "RF-VISUAL-CRT-PRIOR",
+      "object": "Sparse Visual CRT entries x trend magnitude/time prior",
+      "question": "Does FM-054 agreement move MFE or time-to-MFE on the SEM-012 Visual CRT Arm A and Arm B entry set?",
+      "canonical_instrument": "XAUUSD",
+      "contract_profile": "MP-METALS-MT5",
+      "runner": "src/research/evidence/visual_crt_prior.py",
+      "cells": {
+        "L0": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": [] },
+        "L1": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L2": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L3": { "evidence_mass": "low", "status": "IN_PROGRESS", "claims": [] },
+        "L4": { "evidence_mass": "none", "status": "GAP", "claims": [] },
+        "L5": { "evidence_mass": "none", "status": "GAP", "claims": [] }
+      },
+      "script_evidence": ["visual_crt_prior"],
+      "notes": "SEM-032 / MC-VCRTPRIOR-XAUUSD-M15-V1. Sparse signal is SEM-012 run_arm A+B; prior is SEM-028/FM-054 agreement. Not F-081 walk R, not SEM-030 mother-range, no side picker, no G001."
     }
   ]
 }

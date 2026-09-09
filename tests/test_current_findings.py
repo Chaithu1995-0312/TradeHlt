@@ -13,9 +13,14 @@ It checks the mechanical contract only — NOT that each conclusion still matche
 from __future__ import annotations
 
 import datetime as _dt
+import functools
+import hashlib
 import json
 import re
+import subprocess
 from pathlib import Path
+
+import pytest
 
 _FINDINGS_DOC = Path("docs/current-findings.md")
 _CLAUDE_MD = Path("CLAUDE.md")
@@ -43,6 +48,41 @@ _INDEX_ROW_RE = re.compile(r"^\|\s*(F-\d{3})\s*\|", re.MULTILINE)
 # and volatile results/ artifacts are out of scope — we check that cited *committed* docs/code
 # still exist, the Evidence analogue of the §6.3 citation-resolution contract.
 _EVIDENCE_PATH_RE = re.compile(r"(?<![\w./-])((?:docs|src|tests|scripts)/[\w./-]+\.(?:md|py))(?::\d+)?")
+
+
+@functools.lru_cache(maxsize=1)
+def _tracked_paths() -> "frozenset[str] | None":
+    """Every path in the git INDEX, or None when git cannot answer.
+
+    The index rather than HEAD, deliberately: a finding registered in the same turn its
+    evidence is `git add`-ed must be able to pass, or the gate would push authors toward
+    registering first and committing later -- the exact ordering that created the debt below.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "ls-files"], capture_output=True, text=True, timeout=60, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if out.returncode != 0:
+        return None
+    paths = frozenset(line.strip() for line in out.stdout.splitlines() if line.strip())
+    return paths or None
+
+
+# Cited paths that exist on disk but are NOT in the git index, as of 2026-08-21.
+# SHRINK-ONLY RATCHET -- the only legal edit is DELETING a line once the path is committed.
+# Adding a line is not a fix; `git add` is. Enforced in both directions by
+# test_findings_evidence_paths_resolve (new debt fails) and
+# test_untracked_evidence_debt_ratchet_only_shrinks (stale debt fails).
+#
+# A hard flip with no baseline would have gone red on 43 citations across 17 findings, and per
+# the design-constraint comment in .github/workflows/erp-test-harness.yml a permanently-red gate
+# enforces nothing. 12 of these are under scripts/ and additionally need SITS registration
+# (docs/reference/conventions.md 2.1) before they can be committed at all.
+_UNTRACKED_EVIDENCE_DEBT = {
+    # empty — all prior evidence debt paths are now git-tracked (2026-09-09)
+}
 
 _VALID_FUNDING = {"FUNDED", "FROZEN", "KILLED", "RESEARCH", "UNFUNDED"}
 _FUNDING_REOPEN_REQUIRED = {"FROZEN", "KILLED"}
@@ -188,20 +228,85 @@ def test_index_and_doc_agree_on_nonterminal_ids() -> None:
 
 
 def test_findings_evidence_paths_resolve() -> None:
-    """Every committed docs/src/tests/scripts path cited in a finding block exists on disk.
+    """Every committed docs/src/tests/scripts path cited in a finding block is IN THE GIT INDEX.
 
-    Closes the gap where test_findings_have_required_fields only checks Evidence is *present*:
-    a finding could cite a doc/source file that has since moved or been deleted and still pass.
+    This checks the REPOSITORY, not the filesystem, and the distinction is the whole point.
+    The previous version called `Path(...).exists()`, so a finding could cite a document that
+    lived only on the author's disk and still pass. That is not hypothetical: on 2026-08-21
+    F-086/F-087/F-088 were registered citing
+    `docs/analysis/profitable-entry-oracle-2026-08-21.md` and
+    `docs/analysis/exit-geometry-decomposition-2026-08-21.md` while both were UNTRACKED --
+    green here, and a citation to nothing from any other clone.
+
+    Same silent-gap class as F-079 / F-056 / F-083 / F-085: a check that runs, passes, and
+    verifies something weaker than it claims. A document only counts as Evidence if the
+    repository can reproduce it.
+
+    Scope is unchanged (`docs|src|tests|scripts`, `.md|.py`). `results/` and `data/` stay out
+    because both are gitignored by design -- F-071 recorded that boundary as correct.
     """
-    blocks = _parse_findings()
-    problems: list[str] = []
-    for fid, block in blocks.items():
+    tracked = _tracked_paths()
+    if tracked is None:
+        pytest.skip(
+            "git index unavailable (not a checkout, or git not on PATH). Deliberately SKIPPED "
+            "rather than falling back to Path.exists(): the filesystem fallback is exactly the "
+            "weakness this test exists to remove, and a silent downgrade would be indistinguishable "
+            "from enforcement."
+        )
+
+    missing: list[str] = []
+    untracked: list[str] = []
+    seen_debt: set[str] = set()
+
+    for fid, block in _parse_findings().items():
         for m in _EVIDENCE_PATH_RE.finditer(block):
-            if not Path(m.group(1)).exists():
-                problems.append(f"{fid}: cites missing path {m.group(1)}")
-    assert not problems, (
-        "findings cite committed paths that no longer resolve (CLAUDE.md §6.2/§6.3):\n"
-        + "\n".join(problems)
+            path = m.group(1)
+            if path in tracked:
+                continue
+            if not Path(path).exists():
+                missing.append(f"{fid}: cites path that exists nowhere: {path}")
+            elif path in _UNTRACKED_EVIDENCE_DEBT:
+                seen_debt.add(path)
+            else:
+                untracked.append(f"{fid}: cites UNTRACKED path {path}")
+
+    assert not missing, (
+        "findings cite paths that resolve neither in the index nor on disk "
+        "(CLAUDE.md 6.2/6.3):\n" + "\n".join(missing)
+    )
+    assert not untracked, (
+        "findings cite paths present on disk but NOT in the git index -- from any other clone "
+        "these citations point at nothing (CLAUDE.md 6.2 Findings Mandate).\n"
+        "Fix by `git add`-ing the path, not by widening the ratchet:\n"
+        + "\n".join(untracked)
+    )
+
+
+def test_untracked_evidence_debt_ratchet_only_shrinks() -> None:
+    """`_UNTRACKED_EVIDENCE_DEBT` is SHRINK-ONLY: an entry that got tracked must be removed.
+
+    Without this, a path could be committed and its debt entry silently persist, so the
+    baseline would stop describing reality while still looking like governance. Same idiom as
+    `_UNREGISTERED_VECTOR_SLOTS` in tests/test_feature_lineage.py.
+    """
+    tracked = _tracked_paths()
+    if tracked is None:
+        pytest.skip("git index unavailable; ratchet cannot be evaluated")
+
+    now_tracked = sorted(p for p in _UNTRACKED_EVIDENCE_DEBT if p in tracked)
+    assert not now_tracked, (
+        "these paths are now in the git index and must be DELETED from "
+        "_UNTRACKED_EVIDENCE_DEBT (the ratchet may only shrink):\n  "
+        + "\n  ".join(now_tracked)
+    )
+
+    gone = sorted(
+        p for p in _UNTRACKED_EVIDENCE_DEBT
+        if p not in tracked and not Path(p).exists()
+    )
+    assert not gone, (
+        "these debt entries no longer exist on disk either -- delete them, or the baseline is "
+        "describing files that are gone:\n  " + "\n  ".join(gone)
     )
 
 
@@ -264,13 +369,30 @@ def test_nonterminal_findings_declare_family_and_contract() -> None:
 
 def test_contract_bound_findings_name_a_real_measurement_identity() -> None:
     """A finding may only claim a contract that exists — UNKNOWN is the only free pass."""
+    # RC-1 / P-GOV-MC-01 (2026-08-19): a finding may cite EITHER a reusable per-asset-class
+    # PROFILE (`profile_id`, MP-*) or a sealed per-experiment CONTRACT INSTANCE
+    # (`contract_id`, MC-*). Before this fix only top-level `profile_id` resolved, so every
+    # sealed MC-* was uncitable and F-081 had to pin a raw sha256
+    # (12be71be…) instead of naming MC-VCRT-XAUUSD-M15-V1 — provenance that a human
+    # cannot follow. Two shapes were missed: the `instances/` subdirectory (4 contracts) and
+    # a top-level file that carries `contract_id` rather than `profile_id`
+    # (MC-CPR-L0-XAUUSD-M15-UTC-V1) — 5 sealed contracts in total.
+    # 2026-08-26 (CH-measurement-provenance-boundary): a sha256 Contract must RESOLVE, not merely
+    # be shaped like a hash. The prior `re.fullmatch(r"[0-9a-f]{64}", contract)` was a shape check —
+    # any 64-hex string passed, so a meaningless digest and a real one were indistinguishable. That
+    # is the F-056 / F-079 / F-083 / F-085 silent-gap class: a well-formed value proving nothing.
+    # A content hash is now resolved against the same instance set the ids come from.
     profile_ids = set()
+    content_hashes: dict[str, str] = {}
     profile_dir = Path("configs/research/measurement_contracts")
     if profile_dir.is_dir():
-        for p in profile_dir.glob("*.json"):
-            data = json.loads(p.read_text(encoding="utf-8"))
-            if data.get("profile_id"):
-                profile_ids.add(data["profile_id"])
+        for p in list(profile_dir.glob("*.json")) + list(profile_dir.glob("instances/*.json")):
+            raw = p.read_bytes()
+            data = json.loads(raw.decode("utf-8"))
+            for key in ("profile_id", "contract_id"):
+                if data.get(key):
+                    profile_ids.add(data[key])
+                    content_hashes[hashlib.sha256(raw).hexdigest()] = data[key]
 
     blocks = _parse_findings()
     problems: list[str] = []
@@ -280,9 +402,18 @@ def test_contract_bound_findings_name_a_real_measurement_identity() -> None:
         contract = _field(block, "Contract")
         if contract == "UNKNOWN":
             continue
-        # Anything else must resolve to a known profile/contract identity or a sha256.
-        if contract not in profile_ids and not re.fullmatch(r"[0-9a-f]{64}", contract):
-            problems.append(f"{fid}: Contract '{contract}' resolves to no known identity")
+        # Anything else must resolve to a known profile/contract identity, either by id or by the
+        # content hash of the sealed instance itself. Shape alone is not resolution.
+        if contract in profile_ids:
+            continue
+        if re.fullmatch(r"[0-9a-f]{64}", contract):
+            if contract not in content_hashes:
+                problems.append(
+                    f"{fid}: Contract '{contract[:12]}...' is shaped like a sha256 but matches no "
+                    f"sealed instance's content — prefer citing the id directly"
+                )
+            continue
+        problems.append(f"{fid}: Contract '{contract}' resolves to no known identity")
     assert not problems, (
         "findings cite a measurement identity that does not exist:\n" + "\n".join(problems)
     )

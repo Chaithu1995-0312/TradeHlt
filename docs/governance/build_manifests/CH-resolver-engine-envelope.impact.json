@@ -1,0 +1,60 @@
+{
+  "change_id": "CH-resolver-engine-envelope",
+  "date_utc": "2026-09-05",
+  "objective": "Widen the OBSERVATION-ONLY CRTConstructionTrace row from schema v1.0.0 (engine label vs resolver label) to v2.0.0 (a non-contradictory envelope: engine state + every transition taken on the bar + live indicator context, beside the resolver's L2 feature-state map, per-state predicate affinity, continuous-gate outcomes and projected funnel site). Add CRTStateResolver.resolve_metadata() as the read-only producer of the resolver half. FORMALIZES the already-adjudicated INTENTIONAL SEMANTIC SEPARATION between the engine and the resolver; does NOT resolve it. No decision path, no canonical quantity, no CANONICAL_FEATURES change, no G001.",
+  "change_classes": [
+    "TRACE_OBSERVATION_JOIN"
+  ],
+  "change_class_rationale": "New class, registered this turn together with tests/test_construction_protocol.py per change_contracts.json's own header requirement. RUNTIME_DECISION_PATH_CHANGE was considered and REJECTED as a false claim: nothing here reaches a gate, engine, fusion, decision, planner or risk surface. The trace emit() is called AFTER process_candle has returned and its output is consumed by no backtest code path; the two new engine reads (state.transition_log slice, get_live_metrics()) are pure reads of a legacy audit list and the engine's documented read-only execution-audit API; resolve_metadata() is proven not to disturb the resolver's own resolution sequence. FEATURE_IDENTITY_CHANGE / FORMULA_CHANGE / DERIVED_METRIC_CHANGE / DATASET_SCHEMA_CHANGE do not fire: no new market quantity is defined or computed, CANONICAL_FEATURES stays 48 (v5.0), and the emitted feature values are echoed from the caller's existing dict. JSONL_CLAIM_SURFACE_CHANGE does not fire: that class is scoped to the CC-* claim catalog and the measurement result log, not to an arbitrary observation stream. PRODUCTION_CONFIG_CHANGE does not fire: the edited config (v4_dual_construction_2026_09) is a non-active research config and the edited section is hash-neutral (config_hash covers `params` only).",
+  "affected_files": [
+    "src/features/crt_state_resolver.py",
+    "src/runtime/crt_construction_trace.py",
+    "src/runtime/backtest_v2.py",
+    "configs/production/v4_dual_construction_2026_09.json",
+    "docs/governance/change_contracts.json",
+    "docs/governance/build_manifests/CH-resolver-engine-envelope.impact.json",
+    "tests/test_resolver_metadata.py",
+    "tests/test_crt_construction_trace_envelope.py",
+    "tests/test_crt_construction_trace.py",
+    "tests/test_construction_protocol.py",
+    "docs/reference/schemas.md",
+    "docs/memory/runtime-memory.md",
+    "docs/topics/crt-spine.md",
+    "docs/current-findings.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none (ACTIVE_VERSION is v2_htfcrt_2026_08 and carries no crt_construction_trace section; the edited v4_dual_construction_2026_09 is a non-active research config, and the edited section is outside `params` so the config hash is unchanged)",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_crt_construction_trace.py",
+    "tests/test_crt_construction_trace_envelope.py",
+    "tests/test_resolver_metadata.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Does the v2.0.0 envelope perturb the backtest ledger end-to-end (not just at the unit level)?",
+      "blocking": false,
+      "resolution": "Addressed by construction and by unit proof: the emit is post-decision, both engine reads are pure, and resolve_metadata is proven behaviour-neutral (tests/test_resolver_metadata.py::test_behavior_neutral, run with record_resolver_evidence both off and on). The end-to-end instrument is the pre-existing 3-arm A/B/C run in scripts/research/emit_dual_construction_trace.py, which compares the active config against the section OFF and ON.",
+      "followup": "Run the 3-arm script on a real corpus before any downstream program cites this stream as evidence."
+    },
+    {
+      "question": "Is a SEM id required for the JOIN itself before this stream is cited?",
+      "blocking": false,
+      "resolution": "Not this turn, and unchanged by this change. The module's own AUTHORITY section already records that a SEM id for the join is deliberately unallocated pending Semantic OS registration. v2.0.0 widens the same unregistered join; it does not create a second one.",
+      "followup": "Allocate a SEM id through the Semantic OS registry before any downstream program cites this stream as evidence."
+    },
+    {
+      "question": "Does src/features/crt_state_resolver.py carry uncommitted work from a concurrent session?",
+      "blocking": false,
+      "resolution": "YES, and it is reported rather than absorbed. The file differs from HEAD by ~685 insertions that are NOT part of this change (RC-003 resolution sites, a links registry, SP-001 predicates). One pre-existing red follows from that work: tests/test_crt_state_resolver_sweep_geometry.py::test_funnel_sweep_to_displacement_bypasses_pipeline_flag. It was ISOLATED and proven pre-existing -- reverting this change's extraction leaves it failing, and it passes at HEAD. Not this change's to fix (CLAUDE.md 1.2 scope control).",
+      "followup": "The owning session commits or reverts that resolver work; this change must not be measured against HEAD while it is present."
+    }
+  ],
+  "rollback_boundary": "Single commit. The trace schema bump, the emitter fields, the backtest_v2 capture, the config key, resolve_metadata + its dataclass, and the new change class revert together. The prior tracking commit (which only put existing bytes under version control) is independent and stays.",
+  "authority_granted": "User 2026-09-05: authorized this implementation from an approved plan, including committing the previously-untracked trace base first and reusing _resolve_from_features under save/restore rather than duplicating it.",
+  "authority_NOT_granted": "OBSERVATION ONLY (CLAUDE.md 6.5 Authority Ladder): information only, never economic value, never production authority, never architecture justification. No G001, no promotion, no ACTIVE_VERSION change, no re-enabling of any gate, no CRT recertification, no new SEM/FM/F/CC id, no claim that the two constructions' divergence is a defect, and no economic claim from any row this stream emits.",
+  "production_behavior_changed": "NO"
+}

@@ -1,0 +1,58 @@
+{
+  "change_id": "CH-bc4-volume-semantics-v1",
+  "date_utc": "2026-09-03",
+  "extends": "CH-bc2-open-close-emission-hardening-v2",
+  "objective": "BC-4 program: pre-register and implement a live volume-semantics probe (Test 1 semantic identity vs independently-counted ticks, Test 2 artifact binding across the frozen corpus's full range), score the live pair, register the finding honestly (TICK_VOLUME_APPROXIMATE, not CONFIRMED -- the frozen prereg forbids rounding a small directional gap up to an exact match), then wire the BC-4a enforcement half: turn the previously-dead SCHEMA_PATH into a real fail-closed jsonschema validation, add is_synthetic to the schema, and write SEED-OHLCV-19 (the proxy-branch test the closure report names as never written).",
+  "change_classes": [
+    "CORPUS_AUTHORITY_CHANGE"
+  ],
+  "change_class_rationale": "Evidence probe + schema-enforcement change for OHLCV BC-4 on the admitted dataset's producer family, same class as the BC-2 program. Schema validation is additive/behavior-preserving (verified before wiring: the one existing record validates cleanly as-is). No admission-gate behavior change beyond turning a presence-only check into a real one that was already declared required. No CAD migration.",
+  "affected_files": [
+    "docs/research/preregistration-bc4-volume-semantics.md",
+    "src/research/ohlcv_probe_report.py",
+    "src/research/ohlcv_volume_semantics.py",
+    "tests/test_ohlcv_volume_semantics.py",
+    "docs/research-readiness/bc4_volume_semantics/snapshot.json",
+    "docs/research-readiness/bc4_volume_semantics/score.json",
+    "src/data_ingestion/dataset_registry.py",
+    "docs/governance/dataset_identity.schema.json",
+    "tests/test_dataset_registry.py",
+    "docs/governance/CORPUS_AUTHORITY.md",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/governance/build_manifests/CH-bc4-volume-semantics-v1.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_dataset_registry.py",
+    "tests/test_corpus_authority_decisions.py",
+    "tests/test_xauusd_phase1_frozen_candidate.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_ohlcv_open_close_label.py",
+    "tests/test_ohlcv_volume_semantics.py",
+    "tests/test_ohlcv_clock_provenance.py"
+  ],
+  "verdict_invariance": "The prereg's frozen scoring rules (section 4/5 verdict tables) were never touched after they were written. All three bugs found during capture were in the CAPTURE layer (a clock-basis mismatch feeding age comparisons, a missing positional argument to copy_rates_range, and unaligned M15-lattice sample targets) -- each was root-caused with an isolated read-only diagnostic probe before any fix, and each was verified not to change the frozen thresholds or verdict vocabulary. TICK_VOLUME_APPROXIMATE is not a downgrade invented after the fact -- it is section 4 rule 3 of the prereg, written before any live bar was scored.",
+  "unknowns": [
+    {
+      "question": "Whether Test 1 would ever reach TICK_VOLUME_CONFIRMED (exact match) given more data, or whether the ~0.6% tick-vs-bar-aggregation gap is a structural property of how the terminal computes tick_volume vs COPY_TICKS_ALL.",
+      "blocking": false,
+      "resolution": "Non-blocking. TICK_VOLUME_APPROXIMATE is a valid, real, and useful terminal state under the frozen interpretation table -- it does not need to resolve to CONFIRMED to be reported. BC-4 stays a blocker either way pending further evidence.",
+      "followup": "A larger Test 1 sample (more fresh bars over multiple sessions) could clarify whether the gap is a fixed small bias or something that occasionally reaches exact match; not pursued this turn -- would need a new pre-registered threshold, not a retroactive one."
+    },
+    {
+      "question": "Why 3 of 20 Test 2 samples had no re-fetchable bar (2024-06-29T11:00, 2024-09-14T07:00, 2024-11-30T03:00).",
+      "blocking": false,
+      "resolution": "Not investigated -- consistent with the same session/holiday-gap class already documented in F-098, and Test 2's verdict rule only requires the USABLE sample to clear its threshold (17/17 did, at 100%), so an unresolved gap does not by itself contradict BOUND.",
+      "followup": "None planned; would only matter if artifact_binding needed to move off BOUND."
+    }
+  ],
+  "rollback_boundary": "Revert the BC-4 scorer, its shared module, tests, prereg, and evidence dir; revert the CORPUS_AUTHORITY/findings/CLAUDE.md edits; revert dataset_registry.py's schema wiring and dataset_identity.schema.json's is_synthetic addition, and the SEED-OHLCV-19 tests. BC-2's scorer, F-098, and the dataset identity record/registry data are untouched by this change and stay.",
+  "authority_granted": "User 2026-09-03: BC-4 program, probe then enforcement, on the plan approved this session (both halves, plus the artifact-binding test).",
+  "authority_NOT_granted": "No BC-1/BC-3/BC-5/BC-6, no R3b, no OHLCV CLOSED, no APPROVED, no G001, no fetcher rewrite, no production config, no dataset-record edit (the record's declared volume_semantic: TICK_VOLUME is left as-is -- APPROXIMATE is the closest existing enum token, not grounds to rewrite the declaration).",
+  "production_behavior_changed": "NO"
+}

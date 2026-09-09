@@ -1,0 +1,29 @@
+{
+  "change_id": "CH-zone-x-parquet-link",
+  "date_utc": "2026-08-23",
+  "objective": "Join halted ZONE-X window occupancy (frozen v0.8 L=12/h=12 splits) to the existing XAUUSD Parquet projection layer. Rebuild window ledger from the same CSV O-4 used; project via parquet_store; occupancy-join opportunities/clean_labels/events/telemetry/mother-range ledger by timestamp. Do not seek region class X. Do not unseal test year for search. No G001.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Measurement/evidence join only. Runner + parquet sidecars live under gitignored results/. Tracked edits are the ZONE-X knowledge-transfer pointer and the INFRA reference row. No src/, no production config, no ontology, no script registry (runner follows the H-019 results/ pattern).",
+  "affected_files": [
+    "ZONE-X-KNOWLEDGE-TRANSFER.md",
+    "docs/governance/INFRA_CHART_PAPER_COMPARE_V1.md",
+    "docs/governance/build_manifests/CH-zone-x-parquet-link.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the two doc pointers and this manifest. Delete results/research/zone_x_parquet_link/ (gitignored). ZONE-X path (a) Stop unchanged.",
+  "authority_granted": "User 2026-08-23: link ZONE-X programme with the XAUUSD parquet layer.",
+  "authority_NOT_granted": "No ZONE-X geometry reopen, no CRT states from ZONE-X, no G001, no production, no candle-parquet substitution, no unsealing test year for search.",
+  "production_behavior_changed": "NO"
+}

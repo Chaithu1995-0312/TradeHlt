@@ -1,0 +1,40 @@
+{
+  "change_id": "CH-p-struct-01-narrow-node",
+  "task_class": "OBSERVATION_ONLY",
+  "objective": "Authorize and implement the narrow P-STRUCT-01 research node: an evidence table over CRT DISPLACEMENT events only (direction, after_sweep, numeric ages as UNKNOWN_N, FM-062/063 values where present). Explicitly exclude after_range, CRT high-volume class, against_ema, deep_retracement. No fingerprint, no new FM-id, no ontology promotion, no G001.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "docs/research/p_struct_01_displacement_evidence.md",
+    "docs/research/structure-dimension-inventory-displacement.md",
+    "scripts/research/p_struct_01_displacement_evidence.py",
+    "tests/test_p_struct_01_displacement_evidence.py",
+    "reports/p_struct_01_displacement_evidence.md",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "docs/topics/crt-spine.md",
+    "docs/governance/build_manifests/CH-p-struct-01-narrow-node.impact.json",
+    ".grok/PENDING.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_p_struct_01_displacement_evidence.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Delete the spec, extractor, test, this manifest; revert inventory status, overlays, topic, pending. No src/ or configs/.",
+  "authority_granted": "User 2026-08-18: keep the inventory boundary; authorize only the narrow evidence-table node; UNKNOWN_N is data; FM-062 is a number not high_volume=true; no six-axis fingerprint; no invented thresholds; no new FM-id; no semantic promotion; no economic claim.",
+  "authority_NOT_granted": "No ontology node, no Semantic OS id, no FM-id, no volume/EMA/retrace cuts, no after_range, no parent-CRT/SMC dimensions, no P-VSTATE-02 capture workaround, no G001.",
+  "production_behavior_changed": "NO"
+}

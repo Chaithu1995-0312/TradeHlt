@@ -1,0 +1,87 @@
+{
+  "change_id": "CH-sujan-bulk-proxy-v1",
+  "date_utc": "2026-08-29",
+  "objective": "Register SEM-034, a human-bridge-APPROVED but UNVALIDATED mechanical proxy that shortlists candidate parent bulk candles for SEM-033: top-N over the whole corpus by FM-002 candle_range and, separately, by FM-001 body_size, two lists never merged, N=50, ties by ascending bar index. Add a Parquet cross-check that fails closed, and a confirmation page whose yes-answers become both the parents file and the hand-labelled set UNK-007's resolution_metric requires. Refine UNK-007 in place; it stays OPEN.",
+  "change_classes": [
+    "SEMANTIC_REGISTRY_CHANGE",
+    "JSONL_CLAIM_SURFACE_CHANGE"
+  ],
+  "change_class_rationale": "New SEM-034 node plus in-place refinement of UNK-007 and SEM-033 (all declaration-only, non-frozen sections, never read on the runtime binding path), plus one claim-catalog stream and two CC-* classes for the candidate stream. New modules under src/research/ import features.candle_math and utils.parquet_store only. No production config, no model, no feature-vector change, no new FM-* id, no script under scripts/**.",
+  "affected_files": [
+    "src/research/sujan_manipulation/bulk_proxy.py",
+    "src/research/sujan_manipulation/parquet_check.py",
+    "src/research/sujan_manipulation/label_page.py",
+    "src/research/sujan_manipulation/driver.py",
+    "src/research/sujan_manipulation/parent.py",
+    "src/research/sujan_manipulation/__main__.py",
+    "src/research/sujan_manipulation/__init__.py",
+    "tests/research/test_sujan_manipulation.py",
+    "configs/formulas/market_ontology.yaml",
+    "docs/governance/jsonl_claim_catalog.yaml",
+    "docs/research/sujan_manipulation_object.md",
+    "docs/research/sujan_identity_drift_log.md",
+    "docs/research-readiness/sujan_manipulation/candidates/candidates_candle_range.jsonl",
+    "docs/research-readiness/sujan_manipulation/candidates/candidates_body_size.jsonl",
+    "docs/research-readiness/sujan_manipulation/candidates/candidates_manifest.json",
+    "docs/research-readiness/sujan_manipulation/candidates/candidates.html",
+    "docs/research-readiness/sujan_manipulation/candidates/confirmed_parents.template.json",
+    "docs/governance/build_manifests/CH-sujan-bulk-proxy-v1.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [
+    "SEM-034"
+  ],
+  "ontology_nodes_refined": [
+    "UNK-007 (v1 -> v2, stays knowledge_status UNKNOWN / status open)",
+    "SEM-033 (v1 -> v2, gains SEM-034 dependency)"
+  ],
+  "required_checks_ack": [
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_jsonl_claim_catalog.py",
+    "tests/test_jsonl_claim_grounding.py",
+    "tests/test_measurement_result_log.py",
+    "tests/test_semantic_os.py",
+    "tests/test_feature_math_lint.py",
+    "tests/research/test_sujan_manipulation.py"
+  ],
+  "unknowns": [
+    {
+      "id": "BULK_CANDLE_SELECTOR",
+      "status": "UNRESOLVED",
+      "blocking": false,
+      "registered_as": "UNK-007 v2 (still open) + SEM-034 (APPROVED, UNVALIDATED)",
+      "why_not_blocking": "The bridge approved a proxy, not an answer. SEM-034 shortlists; a candidate becomes a parent only on human confirmation, and the detector consumes confirmed parents only. The concept remains open by explicit ruling, so no downstream step depends on resolving it."
+    },
+    {
+      "id": "SEM034_AGREEMENT_UNMEASURED",
+      "status": "UNVALIDATED",
+      "blocking": false,
+      "registered_as": "SEM-034 epistemic.resolution_metric",
+      "why_not_blocking": "No agreement check between the proxy and a chart reading exists, because no hand-labelled set existed before this build. The confirmation page is the instrument that produces one. Recording the proxy as UNVALIDATED is the correct state, not a gap to close in this change."
+    },
+    {
+      "id": "TOP_N_TEMPORAL_CONCENTRATION",
+      "status": "MEASURED",
+      "blocking": false,
+      "registered_as": "candidates_manifest.json temporal_coverage; SEM-034 observed_behaviour",
+      "why_not_blocking": "Top-N over the whole corpus left 20-21 of 25 XAUUSD months with zero candidates. This is the bridge-chosen comparison scope behaving as specified, measured and recorded rather than silently absorbed. Changing the scope would be a NEW freeze, not a fix."
+    },
+    {
+      "id": "MODULE_ATTRIBUTION_ENUMERATION_DRIFT",
+      "status": "PRE_EXISTING",
+      "blocking": false,
+      "registered_as": "tests/test_module_attribution.py (not in GREEN_FLOOR, not in CI)",
+      "why_not_blocking": "Stub file was already stale by 108 src/ modules before CH-sujan-manipulation-phase1; this change adds 3 more. Refreshing is all-or-nothing and would register other work's modules under this change id. Deliberately NOT refreshed, same reasoning as the prior manifest."
+    }
+  ],
+  "rollback_boundary": "Delete bulk_proxy.py, parquet_check.py, label_page.py and the candidates/ artifact dir; revert the driver/parent/__main__/__init__ edits and the proxy tests; remove the SEM-034 block and restore UNK-007 v1 and SEM-033 v1 field values; remove STR-SEM034-BULK-CANDIDATES and the two CC-SEM034-* classes and regenerate data/jsonl_claim_catalog.jsonl. SEM-033 detection is untouched by all of this and keeps working on externally supplied parents. Drift log Record 6 is append-only history and is NOT reverted (CLAUDE.md 6.2 rule 4).",
+  "authority_granted": "User (human bridge) 2026-08-29: instruction to find parent bulk candles from OHLC, plus seven recorded rulings - repo decides (proxy approved), shortlist then eyeball, both size readings emitted un-merged, top-N over the whole corpus, N=50, CSV as source with Parquet as cross-check, UNK-007 refined in place and left open.",
+  "authority_NOT_granted": "APPROVED is not VALIDATED: SEM-034 does not define a bulk candle, does not resolve UNK-007, and does not certify identity. A candidate is not a parent. No MC-*, no F-*, no RF-* row, no G001, no production config, no promotion, no spine wiring. No economic claim: candidate counts, overlap and month coverage are facts about the proxy, not about the market. Absence from the shortlist is not evidence about a bar. No SEM-031 retune and no import from research.sujan_crt.",
+  "production_behavior_changed": "NO"
+}

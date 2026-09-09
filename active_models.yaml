@@ -52,7 +52,7 @@ meta:
   last_verified_against:                       # dual-form `path:line · Symbol` — enforced by tests/test_doc_citations.py
     - src/config_layer/state_identity.py:35 · CRTState              # enum + transitions extracted here 2026-07-18
     - src/config_layer/state_identity.py:69 · VALID_TRANSITIONS     # re-exported by crt_engine_v2 for back-compat
-    - src/config_layer/crt_engine_v2.py:2554 · process_candle       # SM entry point (transition defs span :847-:2927)
+    - src/config_layer/crt_engine_v2.py:2828 · process_candle       # SM entry point (transition defs span :847-:3230)
     - src/engines/heuristic_gaussian_engine.py:316 · compute
     - src/engines/zone_gate_engine.py:163 · filter_canonical_inputs
     - src/engines/rr_engine.py:45 · compute
@@ -105,7 +105,10 @@ crt:
     engine_key: crt
     output_field: score
     output_semantic: structure_rule_score
-    states: 9              # CORRECTED from 10 — matches state_list + VALID_TRANSITIONS + CLAUDE.md §4
+    states: 12             # CH-htfcrt-parent-candle-smc-v1 (2026-08-15): 9 execution-timeframe
+                            # + 3 parent-timeframe (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3),
+                            # a DISJOINT sub-graph classifying config_layer.parent_crt.ParentCRTTrack.
+                            # Was: states: 9 (CORRECTED from 10 — matches state_list + VALID_TRANSITIONS + CLAUDE.md §4)
     state_list:            # enum order — src/config_layer/state_identity.py:35 · CRTState (no CANCELLED state exists)
       - RANGE
       - SHADOW_PENDING
@@ -116,7 +119,13 @@ crt:
       - RETEST
       - EXECUTION
       - RESOLUTION
+      - RANGE_C1          # parent-timeframe; disjoint sub-graph (2026-08-15)
+      - MANIPULATION_C2   # parent-timeframe; disjoint sub-graph (2026-08-15)
+      - DISTRIBUTION_C3   # parent-timeframe; disjoint sub-graph (2026-08-15)
     valid_transitions:     # src/config_layer/state_identity.py:69 · VALID_TRANSITIONS — re-exported by crt_engine_v2
+                            # parity-checked EXACTLY (edge-set equality) by
+                            # state_contract_loader._validate_transition_graph at every
+                            # CRTEngine() construction — must match state_identity.py verbatim.
       RANGE:          [SWEEP, SHADOW_PENDING]
       SHADOW_PENDING: [SWEEP, RANGE]
       SWEEP:          [DISPLACEMENT, EXPANSION, RANGE]
@@ -126,6 +135,22 @@ crt:
       RETEST:         [EXECUTION, RANGE]
       EXECUTION:      [RESOLUTION]
       RESOLUTION:     [RANGE]   # cycle-reset (NOT a dead-end); terminality expressed in lifecycle.resolution
+      # ── Parent-timeframe 3-candle CRT sub-graph (disjoint; 2026-08-15) ──
+      RANGE_C1:          [MANIPULATION_C2, RANGE_C1]
+      MANIPULATION_C2:   [DISTRIBUTION_C3, RANGE_C1]
+      DISTRIBUTION_C3:   [RANGE_C1]
+
+    # ── State-set partition (CH-crt-state-generation-v1, 2026-08-31) ──────────
+    # Which states belong to the PARENT-timeframe 3-candle sub-graph. Previously
+    # hand-authored in src/config_layer/state_identity.py; moved here because it is
+    # semantic classification (ontology owns meaning, §6.6), not execution logic.
+    # EXECUTION_TIMEFRAME_STATES is NOT declared — it is the derived complement
+    # (all states minus these), so there is only ever one record of the split.
+    # Deliberately a SIBLING key, not a field inside `state_contracts`: that block is
+    # parsed fail-closed by state_contract.parse_state_contract, which rejects any
+    # field outside {required_fm, config_keys, eligible_models} AND requires all three —
+    # so an added key there would raise at every CRTEngine() construction.
+    parent_timeframe_states: [RANGE_C1, MANIPULATION_C2, DISTRIBUTION_C3]
 
     # ── Phase-1 state contracts (WHO — ids/refs only; no formulas, no numbers) ──
     # Loaded by config_layer.state_contract_loader → immutable StateContractBundle.
@@ -226,16 +251,38 @@ crt:
         required_fm: []
         config_keys: []
         eligible_models: []
+      # ── Parent-timeframe 3-candle CRT states (2026-08-15) ── config_keys deliberately
+      # empty: these are governed by the NEW top-level `parent_crt` config section, not
+      # CRTConfig fields — parity-checked as a disjoint identity set, not coupled to the
+      # M15 engine's HOW binding.
+      RANGE_C1:
+        required_fm: []
+        config_keys: []
+        eligible_models: []
+      MANIPULATION_C2:
+        required_fm: []
+        config_keys: []
+        eligible_models: []
+      DISTRIBUTION_C3:
+        required_fm: []
+        config_keys: []
+        eligible_models: []
 
     # ── Detection states — rules that CLASSIFY a candle into a state ──
     detection:
       range:
         method: pure_geometric
-        file_line: src/config_layer/crt_engine_v2.py:847 · detect_htf_range
-        logic: "h_ref = max(c.high); l_ref = min(c.low) over HTF window"
+        object: M15StructuralLiquidityRange
+        object_id: M15-SLR
+        semantic_id: SEM-011
+        file_line: src/config_layer/m15_structural_range.py · from_child_window
+        engine_entry: src/config_layer/crt_engine_v2.py · RangeDetector.detect_m15_structural_range
+        legacy_alias: detect_htf_range
+        logic: "h_ref = max(c.high); l_ref = min(c.low) of caller-supplied M15 children (NOT the HTFBuilder window-as-range; HTFBuilder is the reset clock only)"
         ohlcv_inputs: [high, low]
-        config_keys: []
+        config_keys: [atr_period]
         defaults: {}
+        distinct_from: [HTFBuilder, ParentRange]
 
       sweep:
         method: boundary_breach_with_rejection
@@ -250,9 +297,10 @@ crt:
 
       displacement:
         method: multi_gate
-        file_line: src/config_layer/crt_engine_v2.py:1087 · try_sweep_to_displacement
+        file_line: src/config_layer/crt_engine_v2.py:1092 · try_sweep_to_displacement
         logic:
           all_gates_must_pass: true
+          gate_0: "directional contract — LONG: close>open AND close>sweep.price; SHORT: close<open AND close<sweep.price (CH-directional-displacement-contract, 2026-08-13)"
           gate_1: "abs(close-open) >= atr_min_displacement × ATR"
           gate_2: "body_ratio >= body_ratio_min"
           gate_3: "wick_size >= atr_multiplier_min × ATR"
@@ -267,7 +315,7 @@ crt:
 
       expansion:
         method: single_candle_extension
-        file_line: src/config_layer/crt_engine_v2.py:1263 · try_displacement_to_expansion   # also the SHADOW_PENDING resume path
+        file_line: src/config_layer/crt_engine_v2.py:1419 · try_displacement_to_expansion   # also the SHADOW_PENDING resume path
         logic:
           - "close > displacement_candle.close (long) / close < disp.close (short)"
           - "abs(close - disp_close) >= expansion_atr_min_distance × ATR"
@@ -278,7 +326,7 @@ crt:
 
       retest:
         method: adaptive_depth_ceiling
-        file_line: src/config_layer/crt_engine_v2.py:1433 · try_expansion_to_retest
+        file_line: src/config_layer/crt_engine_v2.py:1591 · try_expansion_to_retest
         logic: "depth = close - range.l_ref (long); must be < adaptive_ceiling"
         adaptive_ceiling: "max(0.25×range_size, 0.50×ATR)"
         min_depth: "0.1 × ATR"
@@ -290,7 +338,7 @@ crt:
 
       expired:
         method: ttl_guard
-        file_line: src/config_layer/crt_engine_v2.py:2983 · expansion_ttl_exceeded   # EXPANSION→EXPIRED TTL branch (emitted from process_candle :2929)
+        file_line: src/config_layer/crt_engine_v2.py:3238 · expansion_ttl_exceeded   # EXPANSION→EXPIRED TTL branch (emitted from process_candle)
         logic: "age_candles > max_expansion_age_candles OR age_hours > max_expansion_age_hours"
         ohlcv_inputs: []                                    # time-based, not price-based
         config_keys: [max_expansion_age_candles, max_expansion_age_hours]
@@ -307,11 +355,11 @@ crt:
       execution:
         type: terminal_execution_state   # trade emitted; no detection — RETEST→EXECUTION on gate pass
         entered_by: [RETEST]
-        file_line: src/config_layer/crt_engine_v2.py:1655 · try_retest_to_execution
+        file_line: src/config_layer/crt_engine_v2.py:1815 · try_retest_to_execution
       resolution:
         type: post_trade_state       # terminal; EXECUTION→RESOLUTION then reset to RANGE
         entered_by: [EXECUTION]
-        file_line: src/config_layer/crt_engine_v2.py:1670 · RESOLUTION   # _transition(state, CRTState.RESOLUTION, ...)
+        file_line: src/config_layer/crt_engine_v2.py:1826 · try_execution_to_resolution
 
     cached_features_at_retest:   # CH-002 / F-050 identities — authoritative emission keys
       - {feature: displacement_retrace,   fm_id: FM-027, description: "Cross-candle retrace toward disp.open (NOT pipeline FM-021 retest_depth)"}
@@ -564,7 +612,7 @@ gaussian:
     identity_status: enabled_without_checkpoint
     how_path_ref: null                   # live heuristic has no HOW model_path
     runtime_binding:
-      config_version: v2_multi_2026_04
+      config_version: v2_htfcrt_2026_08
       compatibility:
         feature_schema_dim: 38           # pipeline emits 38; trained actives may be 35/38
 
@@ -647,7 +695,7 @@ bitnet:
       config_key: model_path
       expected_value: results/model_export_format.json   # HOW claim ≠ composition_default
     runtime_binding:
-      config_version: v2_multi_2026_04
+      config_version: v2_htfcrt_2026_08
       compatibility:
         feature_schema_dim: 6            # legacy 6-feature gate contract when enabled
         dual_schema_fork: true
@@ -751,7 +799,7 @@ zone_gate:
       config_key: zone_registry_path
       expected_value: models/zone_registry_v4_2026_07.json
     runtime_binding:
-      config_version: v2_multi_2026_04
+      config_version: v2_htfcrt_2026_08
       compatibility:
         feature_schema_dim: 39
         scored_dims: 38
@@ -843,9 +891,9 @@ rr_model:
     how_path_ref:
       config_section: engine_runner
       config_key: rr_fusion.model_path
-      expected_value: models/rr_model.json
+      expected_value: models/XAUUSD/20260728_v39/rr_model_20260728_v39_xau.json
     runtime_binding:
-      config_version: v2_multi_2026_04
+      config_version: v2_htfcrt_2026_08
       compatibility:
         feature_schema_dim: 38         # CORRECTED 2026-07-23 (CH-rr-registry-dim-38)
 
@@ -914,7 +962,7 @@ tradenet:
     identity_status: selected_not_enabled
     how_path_ref: null
     runtime_binding:
-      config_version: v2_multi_2026_04
+      config_version: v2_htfcrt_2026_08
       compatibility:
         feature_schema_dim: 35
 
@@ -955,7 +1003,7 @@ envelope:
     label_authority: "forward_walk / horizon_excursion (never the F-022 opportunity stream)"
     pit_status: PIT_UNCLEAN_STORED_FEATURES   # bundle-declared; GATE-P FORBIDDEN until a causal re-dataset
     code:
-      - src/research/clean_labels/builder.py:52 · BuildResult
+      - src/research/clean_labels/builder.py:85 · BuildResult
       - src/research/envelope_offline/train.py:109 · load_l2_matrix
       - src/research/envelope_offline/shadow.py:90 · predict_heads
 
@@ -1194,13 +1242,13 @@ philosophy:
 # Provenance lines index src/features/feature_pipeline.py unless noted. Guard:
 # tests/test_active_models_registry.py (feature_lineage block). Code is authority.
 feature_lineage:
-  config: v2_multi_2026_04
+  config: v2_htfcrt_2026_08
   authority: none
   human_source: docs/topics/model-intent-and-feature-ownership.md
   canonical_schema: src/features/feature_schema.py   # CANONICAL_FEATURES order
   candle_geometry_primitive: src/features/candle_math.py
   fusion_weights: {crt: 0.4, gaussian: 0.2, zone_gate: 0.2, rr: 0.2}   # active fusion_engine; LIVE-path only (fusion OFF in backtests, F-037)
-  role_counts: {structural: 11, unused: 20, advisory: 8}
+  role_counts: {structural: 11, unused: 29, advisory: 8}   # +9 unused (CH-htfcrt-parent-candle-smc-v1, 2026-08-15)
   pit_note: >
     2026-07-11 (F-051 / FC1-A / FC1-D): production publication for the 10-dim structure closure
     (double_sweep, sweep_detected, liquidity_sweep, break_of_structure, swing_high, swing_low,
@@ -1250,3 +1298,16 @@ feature_lineage:
   - {index: 36, name: liquidity_distance, ohlcv: "h,l,c", formula: "min dist to ref/BOS / atr", provenance: {file: src/features/feature_pipeline.py, line: 599}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
   - {index: 37, name: liquidity_pressure_score, ohlcv: "h,l,c", formula: "exp(-0.5*liquidity_distance)", provenance: {file: src/features/feature_pipeline.py, line: 648}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
   - {index: 38, name: volume_spike, ohlcv: "v", formula: "vol_ratio>rolling-75pctile(50)", provenance: {file: src/features/feature_pipeline.py, line: 654}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  # CH-htfcrt-parent-candle-smc-v1 (2026-08-15, user-authorized): 9 SMC primitives, FM-075..FM-083.
+  # Not yet consumed by any engine (unused, same as most of indices 5-38 above) -- registered in
+  # the ontology + DAG + this lineage for identity completeness; wiring an engine to actually READ
+  # them (e.g. into the CRT fusion score or a gate) is a separate, unauthorized-by-this-turn step.
+  - {index: 39, name: order_block_distance, ohlcv: "o,h,l,c", formula: "tanh(sign*(close-ob_edge)/atr)", provenance: {file: src/features/smc/order_block.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 40, name: fvg_distance, ohlcv: "h,l", formula: "tanh(sign*(close-fvg_edge)/atr)", provenance: {file: src/features/smc/fvg.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 41, name: breaker_distance, ohlcv: "o,h,l,c", formula: "tanh(sign*(close-breaker_edge)/atr)", provenance: {file: src/features/smc/breaker.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 42, name: mitigation_block_distance, ohlcv: "o,h,l,c", formula: "tanh(sign*(close-mitig_edge)/atr)", provenance: {file: src/features/smc/mitigation.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 43, name: pdh_distance, ohlcv: "h", formula: "tanh(-(close-prev_day_high)/atr)", provenance: {file: src/features/smc/levels.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 44, name: pdl_distance, ohlcv: "l", formula: "tanh((close-prev_day_low)/atr)", provenance: {file: src/features/smc/levels.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 45, name: eqh_distance, ohlcv: "h", formula: "tanh(-(close-eqh_level)/atr)", provenance: {file: src/features/smc/levels.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 46, name: eql_distance, ohlcv: "l", formula: "tanh((close-eql_level)/atr)", provenance: {file: src/features/smc/levels.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 47, name: change_of_character, ohlcv: "derived", formula: "break_of_structure if sign differs from trend_bias, else 0", provenance: {file: src/features/smc/choch.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}

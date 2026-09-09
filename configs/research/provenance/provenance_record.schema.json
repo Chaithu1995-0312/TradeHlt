@@ -1,0 +1,180 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "provenance_record.schema.json",
+  "title": "Provenance Record (MPA v1)",
+  "description": "One claim-bearing decision bound to four typed origin slots: Evidence, Hypothesis, Measurement Contract, Measurement Execution. FROZEN v1.0.0. A record proves the ORIGIN of a claim is recoverable — never that the claim is true, economic, or authorised (CLAUDE.md §6.5). Authoritative prose: docs/governance/MEASUREMENT_PROVENANCE_ARCHITECTURE.md. Implementation: src/governance/provenance_record.py.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "timestamp",
+    "kind",
+    "schema",
+    "subject",
+    "slots",
+    "chain_class",
+    "chain_complete",
+    "authority",
+    "grants_authority",
+    "notes"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "pattern": "^PV-[0-9]{8}T[0-9]{6}Z-(FINDING|DECISION|PROMOTION|CLOSURE)-[A-Za-z0-9._:-]+$"
+    },
+    "timestamp": { "type": "string", "minLength": 1 },
+    "kind": { "const": "PROVENANCE_RECORD" },
+    "schema": { "const": "provenance_ledger/1" },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id", "source_path", "source_sha256"],
+      "description": "The natural key of an EXISTING record. This layer mints no identifiers for subjects. SESSION LOG entries are deliberately excluded: 1,052 of the 2026-08-26 audit's 1,170 decisions are session entries and most record no architectural decision, so admitting them would rebuild the audit's denominator problem inside the ledger.",
+      "properties": {
+        "type": { "enum": ["FINDING", "DECISION", "PROMOTION", "CLOSURE"] },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "F-094 | CH-<slug> | promotion-log line timestamp | closure surface_id"
+        },
+        "source_path": { "type": "string", "minLength": 1 },
+        "source_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "slots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence", "hypothesis", "contract", "execution"],
+      "description": "UNKNOWN is recorded by OMISSION (null / empty list), never asserted as a value. `evidence` is a list because a claim may rest on several artifacts; the other three hold at most one binding.",
+      "properties": {
+        "evidence": { "type": "array", "items": { "$ref": "#/definitions/slotBinding" } },
+        "hypothesis": {
+          "oneOf": [{ "$ref": "#/definitions/slotBinding" }, { "type": "null" }]
+        },
+        "contract": {
+          "oneOf": [{ "$ref": "#/definitions/slotBinding" }, { "type": "null" }]
+        },
+        "execution": {
+          "oneOf": [{ "$ref": "#/definitions/slotBinding" }, { "type": "null" }]
+        }
+      }
+    },
+    "chain_class": {
+      "enum": ["EXPLICIT", "DERIVED", "ATTESTED", "UNKNOWN"],
+      "description": "The WEAKEST non-UNKNOWN class among bindings that resolve, or UNKNOWN. COMPUTED, never caller-supplied — a supplied value disagreeing with the bindings is rejected. Weakest-wins is what stops coverage being inflated by attesting everything."
+    },
+    "chain_complete": {
+      "type": "boolean",
+      "description": "True only when all four slots carry at least one binding that RESOLVES. A binding naming a target that does not exist is recorded so the dangling citation stays visible, but does not complete the chain. COMPUTED, never caller-supplied."
+    },
+    "authority": { "const": "research" },
+    "grants_authority": {
+      "const": false,
+      "description": "PINNED. Provenance completeness is not validity, is not economic value, and is not authority. Mirrors economic_claims_allowed in measurement_result_log.jsonl."
+    },
+    "notes": { "type": "string" }
+  },
+  "definitions": {
+    "slotBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_kind",
+        "target_id",
+        "resolution",
+        "resolves",
+        "witness",
+        "target_sha256",
+        "derivation",
+        "attestation"
+      ],
+      "properties": {
+        "target_kind": {
+          "enum": ["EVIDENCE_PATH", "HYPOTHESIS", "CONTRACT", "EXECUTION"]
+        },
+        "target_id": { "type": "string", "minLength": 1 },
+        "resolution": {
+          "enum": ["EXPLICIT", "DERIVED", "ATTESTED"],
+          "description": "EXPLICIT = the subject's own record names the target. Backfill can NEVER produce EXPLICIT. DERIVED = mechanically reproducible by a named, versioned rule. ATTESTED = a human/agent adjudication. UNKNOWN is not a value here — it is the absence of a binding."
+        },
+        "resolves": {
+          "type": "boolean",
+          "description": "The target exists and, for paths, is GIT-TRACKED. `git ls-files`, never the filesystem: an untracked path points at nothing from any other clone (39 of 374 finding evidence refs are untracked today)."
+        },
+        "witness": {
+          "type": "string",
+          "description": "The literal bytes justifying this binding — the field, path, or digest that was read."
+        },
+        "target_sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "derivation": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["rule_id", "rule_version", "inputs"],
+              "properties": {
+                "rule_id": {
+                  "enum": [
+                    "D1_CONTRACT_CONTENT_HASH",
+                    "D2_EXECUTION_BY_CONTRACT",
+                    "D3_HYPOTHESIS_BACKLINK",
+                    "D4_FAMILY_CLAIM_CELL",
+                    "D5_MANIFEST_AFFECTED_FILES",
+                    "D6_FINDING_EVIDENCE_PATHS"
+                  ]
+                },
+                "rule_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+                "inputs": { "type": "array", "items": { "type": "string" } },
+                "caveat": {
+                  "type": "string",
+                  "description": "Where a rule is weaker than it looks. D3/D4 reconstruct through a registry whose 18-of-20 records were authored on 2026-07-03 about completed work: reproducible is not contemporaneous."
+                }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
+        "attestation": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["by", "utc", "basis", "authority"],
+              "description": "An attestation is a claim someone stands behind, so it records who, when, on what basis, and under whose authority. All four are required and non-empty.",
+              "properties": {
+                "by": { "type": "string", "minLength": 1 },
+                "utc": { "type": "string", "minLength": 1 },
+                "basis": { "type": "string", "minLength": 1 },
+                "authority": { "type": "string", "minLength": 1 }
+              }
+            },
+            { "type": "null" }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "resolution": { "const": "DERIVED" } } },
+          "then": { "properties": { "derivation": { "type": "object" } } }
+        },
+        {
+          "if": { "properties": { "resolution": { "const": "ATTESTED" } } },
+          "then": { "properties": { "attestation": { "type": "object" } } }
+        },
+        {
+          "if": { "properties": { "resolution": { "const": "EXPLICIT" } } },
+          "then": {
+            "properties": {
+              "derivation": { "type": "null" },
+              "attestation": { "type": "null" }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

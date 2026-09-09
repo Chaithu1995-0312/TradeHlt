@@ -1,0 +1,35 @@
+{
+  "change_id": "CH-ec001-evidence-class-census",
+  "date_utc": "2026-09-07",
+  "objective": "Restore the documented Python 3.12 venv using the locally managed Python 3.12.14 runtime, then add EC-001: a read-only, commit-pinned evidence-class census for the 268 analytics-lineage rows. The census emits a per-row mechanical classification and aggregate counts without editing either analytics registry, promoting an evidence_class column, or advancing L-003.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE"
+  ],
+  "change_class_rationale": "EC-001 is a new diagnostic script under scripts/analysis with a unit test and SITS registration. It reads registries, code, and local JSONL corpora; it changes no runtime decision path, production config, ontology, analytics registry schema, or attribution eligibility.",
+  "affected_files": [
+    "scripts/analysis/analytics_evidence_class_census.py",
+    "tests/test_analytics_evidence_class_census.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "docs/governance/analytics_evidence_class_census-2026-09-07.json",
+    "docs/governance/analytics_evidence_class_census-2026-09-07.md",
+    "docs/governance/build_manifests/CH-ec001-evidence-class-census.impact.json",
+    "docs/governance/build_manifests/CH-ec001-evidence-class-census.completion.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Remove the EC-001 script, its test, its SITS registry and matrix entries, its dated census outputs, and both manifests together. The repaired local venv is ignored infrastructure and is recreated from the managed Python 3.12.14 runtime.",
+  "authority_granted": "User directed: fix venv/runtime reproducibility and continue with the evidence-class observation layer. No registry promotion or L-003 work is authorized.",
+  "authority_NOT_granted": "No analytics registry row or column edits; no evidence_class promotion; no L-003 outcome-semantics work; no attribution or causal-edge claims; no production behavior change.",
+  "production_behavior_changed": "NO"
+}

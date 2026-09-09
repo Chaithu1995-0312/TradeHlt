@@ -1,0 +1,62 @@
+{
+  "change_id": "CH-directional-displacement-contract",
+  "completed_utc": "2026-08-13T20:35:00Z",
+  "completion_status": "PARTIAL",
+  "repo_state_hash": "PENDING",
+  "this_change_files": [
+    "src/config_layer/crt_engine_v2.py",
+    "src/features/crt_state_resolver.py",
+    "tests/test_directional_displacement.py",
+    "tests/test_crt_adversarial_closure.py",
+    "tests/test_crt_state_resolver_gate_parity.py",
+    "tests/test_crt_state_resolver_displacement_gate.py",
+    "tests/test_crt_closure_report.py",
+    "tests/test_closure_authority_index.py",
+    "active_models.yaml",
+    "docs/topics/crt-spine.md",
+    "docs/current-findings.md",
+    "docs/governance/crt_closure_report.md",
+    "docs/governance/closure_authority_index.json",
+    "docs/governance/build_manifests/CH-directional-displacement-contract.impact.json",
+    "CLAUDE.md",
+    "assistant_project.md"
+  ],
+  "declared_files": [
+    "src/config_layer/crt_engine_v2.py",
+    "src/features/crt_state_resolver.py",
+    "tests/test_directional_displacement.py",
+    "tests/test_crt_adversarial_closure.py",
+    "tests/test_crt_state_resolver_gate_parity.py",
+    "tests/test_crt_state_resolver_displacement_gate.py",
+    "tests/test_crt_closure_report.py",
+    "tests/test_closure_authority_index.py",
+    "active_models.yaml",
+    "docs/topics/crt-spine.md",
+    "docs/current-findings.md",
+    "docs/governance/crt_closure_report.md",
+    "docs/governance/closure_authority_index.json",
+    "docs/governance/build_manifests/CH-directional-displacement-contract.impact.json",
+    "CLAUDE.md",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_directional_displacement.py",
+    "tests/test_crt_adversarial_closure.py",
+    "tests/test_crt_state_resolver_gate_parity.py",
+    "tests/test_crt_state_resolver_displacement_gate.py",
+    "tests/test_crt_closure_report.py",
+    "tests/test_closure_authority_index.py",
+    "tests/test_current_findings.py",
+    "tests/test_topic_docs.py",
+    "tests/test_doc_citations.py"
+  ],
+  "checks_result": "85 passed (this-change floors). test_feature_math_lint.py::test_universe_reconciliation_with_census is pre-existing red (census/adjudication gap outside this change). Full validate-completion denied by pre-existing dirty tree + that lint.",
+  "flags": {
+    "BEHAVIOR_CHANGED": true,
+    "BEHAVIOR_NOTE": "SWEEP→DISPLACEMENT now requires directional impulse away from the swept side. Jul 28 01:15 UTC dump after LONG sweep is REJECT. Shadow-resume unchanged. No config hash change.",
+    "ECONOMIC_CLAIMS_ALLOWED": false,
+    "MODEL_ENABLEMENT_CHANGED": false,
+    "CRT_CLOSURE_REOPENED": true
+  },
+  "notes": "User authorized 2026-08-13. F-074 registered. CRT closure surface reopened (OHLCV→TRADE_OPENED). Re-close only after re-certification."
+}

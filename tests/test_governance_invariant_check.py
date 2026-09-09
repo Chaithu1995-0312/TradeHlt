@@ -60,6 +60,22 @@ def test_policy_constants_are_named_and_typed() -> None:
     # SITS PR-3 ephemera prefixes
     assert "scripts/probes/" in chk.GOVERNED_PREFIXES
     assert "scripts/tmp/" in chk.GOVERNED_PREFIXES
+    # JSONL Claim Surface PR-1 (CT-008 extension): catalog loader is governed; the PRIMARY YAML
+    # rides the existing docs/governance/ prefix. src/governance/ stays OFF the prefix list.
+    assert "src/governance/jsonl_claim_catalog.py" in chk.GOVERNED_FILES
+    assert "src/governance/" not in chk.GOVERNED_PREFIXES
+    assert "tests/test_jsonl_claim_catalog.py" in chk.GREEN_FLOOR
+    assert "tests/test_findings_export.py" in chk.GREEN_FLOOR
+    assert "tests/test_hypothesis_registry.py" in chk.GREEN_FLOOR
+    # PR-2: grounder + its floor
+    assert "src/governance/semantic_grounding.py" in chk.GOVERNED_FILES
+    assert "tests/test_jsonl_claim_grounding.py" in chk.GREEN_FLOOR
+    # PR-3: result-log module + the instances/ prefix. The LOG FILE itself must NOT be a
+    # governed file — every append would otherwise re-run the whole floor.
+    assert "src/governance/measurement_result_log.py" in chk.GOVERNED_FILES
+    assert "configs/research/measurement_contracts/instances/" in chk.GOVERNED_PREFIXES
+    assert "configs/research/measurement_result_log.jsonl" not in chk.GOVERNED_FILES
+    assert "tests/test_measurement_result_log.py" in chk.GREEN_FLOOR
     assert chk.requires_run(["scripts/probes/foo.py"])
     assert chk.requires_run(["scripts/tmp/scratch.py"])
 

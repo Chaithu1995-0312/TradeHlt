@@ -1,0 +1,147 @@
+{
+  "gate": "XAUUSD_IDENTITY_CERTIFICATION",
+  "status": "PASS",
+  "production_approved": false,
+  "corpus_path": "data/mt5/XAUUSD_M15.csv",
+  "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "corpus_rows": 47275,
+  "written": {
+    "L0": 47275,
+    "L1": 47197,
+    "L2": 613561,
+    "L3_OCCUPANCY": 47275,
+    "L3_EVENT": 4871,
+    "L4": 4,
+    "L5": 4
+  },
+  "queried_preserved": {
+    "L0": 47275,
+    "L1": 47197,
+    "L2": 613561,
+    "L3_OCCUPANCY": 47275,
+    "L3_EVENT": 4871,
+    "L4": 4,
+    "L5": 4
+  },
+  "RESET_events_present": true,
+  "UNIDENTIFIED": 0,
+  "IDENTITY_INCOMPLETE": 0,
+  "IDENTITY_MISMATCH": 0,
+  "write_fail": {
+    "UNIDENTIFIED": 0,
+    "IDENTITY_MISMATCH": 0,
+    "IDENTITY_INCOMPLETE": 0
+  },
+  "scan_fail": {
+    "UNIDENTIFIED": 0,
+    "IDENTITY_MISMATCH": 0,
+    "IDENTITY_INCOMPLETE": 0
+  },
+  "recoverable_written_layers": true,
+  "crt_candle_errors": 0,
+  "crt_candle_error_sample": [],
+  "engine_event_kinds": {
+    "RESET": 2595,
+    "SWEEP": 1673,
+    "STATE_TRANSITION": 2276,
+    "BEGIN_SOFT_CONF": 27,
+    "FILTER_REJECTED": 21,
+    "TRADE_OPENED": 4,
+    "TRADE_STOPPED": 3,
+    "CONFIRMATION_FAILED": 1,
+    "TRADE_TP1": 1,
+    "TRADE_TP2": 1
+  },
+  "occupancy_states": {
+    "RANGE": 20786,
+    "SWEEP": 14432,
+    "DISPLACEMENT": 760,
+    "EXPANSION": 11228,
+    "RETEST": 29,
+    "EXECUTION": 6,
+    "SHADOW_PENDING": 6,
+    "EXPIRED": 28
+  },
+  "crt_config": {
+    "version": "v2_htfcrt_2026_08",
+    "mode": "PRODUCTION_MERGED",
+    "instrument": "XAUUSD"
+  },
+  "skipped_events_missing_from_to": 0,
+  "errors": [],
+  "notes": [
+    "WRITE used FeaturePipeline / FeatureStateEncoder / CRTEngine as producers.",
+    "QUERY used IdentityQuery / Identity Check only.",
+    "L5 written on engine close (STOPPED/TP2/STOPPED_STRUCTURAL/ABORTED) under named backtest_ledger + none_gross + engine_intrabar. Missing cost/fill is not defaulted.",
+    "2-year mt5 corpus run.",
+    "L3 WRITE uses ACTIVE_VERSION CRTConfig + HTFBuilder clock + initialise_range (BacktestRunner path). Isolated process_candle(htf_id='') stays RANGE.",
+    "Executed-close freeze 2026-08-23: 4-of-4 L5 is the complete CRTEngine close record for this corpus/basis. F-086 remains definitive on M15 structural tradeability.",
+    "Not production. Not live-spine. Grants no G001."
+  ],
+  "executed_close_freeze": {
+    "change_id": "CH-identity-l5-executed-record-freeze",
+    "complete_executed_crt_closes": true,
+    "structural_tradeability_authority": "F-086",
+    "trade_lib_scan_authorized": false,
+    "percent_positive_window_scan_authorized": false,
+    "production_approved": false
+  },
+  "executed_crt_closes": [
+    {
+      "bar_open_ts": "2024-11-12T15:30:00",
+      "direction": "long",
+      "entry_px": 2614.46,
+      "sl_px": 2610.04757143,
+      "exit_reason": "TRADE_STOPPED",
+      "y_R_gross": -1.0,
+      "mfe": 0.08838669990607612,
+      "mae": 2.0192961440086727,
+      "duration_bars": 2,
+      "walk_kernel": "backtest_ledger",
+      "cost_model_id": "none_gross",
+      "fill_model_id": "engine_intrabar"
+    },
+    {
+      "bar_open_ts": "2024-11-15T07:45:00",
+      "direction": "long",
+      "entry_px": 2565.48,
+      "sl_px": 2564.55985714,
+      "exit_reason": "TRADE_STOPPED",
+      "y_R_gross": -1.0,
+      "mfe": 0.0,
+      "mae": 10.32448377580715,
+      "duration_bars": 2,
+      "walk_kernel": "backtest_ledger",
+      "cost_model_id": "none_gross",
+      "fill_model_id": "engine_intrabar"
+    },
+    {
+      "bar_open_ts": "2025-02-25T15:45:00",
+      "direction": "long",
+      "entry_px": 2934.39,
+      "sl_px": 2933.20985714,
+      "exit_reason": "TRADE_TP2",
+      "y_R_gross": 1.7500000000000964,
+      "mfe": 7.18557075414524,
+      "mae": 1.1185086551261327,
+      "duration_bars": 3,
+      "walk_kernel": "backtest_ledger",
+      "cost_model_id": "none_gross",
+      "fill_model_id": "engine_intrabar"
+    },
+    {
+      "bar_open_ts": "2026-03-03T15:15:00",
+      "direction": "long",
+      "entry_px": 5163.98,
+      "sl_px": 5131.76071429,
+      "exit_reason": "TRADE_STOPPED",
+      "y_R_gross": -1.0,
+      "mfe": 0.6915112953643822,
+      "mae": 1.1303788768927057,
+      "duration_bars": 3,
+      "walk_kernel": "backtest_ledger",
+      "cost_model_id": "none_gross",
+      "fill_model_id": "engine_intrabar"
+    }
+  ]
+}

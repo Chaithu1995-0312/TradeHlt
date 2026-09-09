@@ -1,0 +1,48 @@
+{
+  "change_id": "CH-live-rail-pr4a",
+  "objective": "PR-4a of the authorized live-rail repair path: (1) XOR-as-code — HookedLiveEngine skips MT5 send_order and Telegram signal-as-order when hook_submit_orders=false; (2) DM-001 / F-072 remaining site — compute_crt_levels at the hook receives FM-074 atr*close. Same patch lowercases Ultron decision. No orchestrator, no pipeline_mode rewrite, no dry_run=false, no ACTIVE_VERSION edit. User authorized 2026-08-19.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "production_behavior_changed": false,
+  "affected_files": [
+    "src/runtime/live_engine_hook.py",
+    "scripts/analysis/feature_math_lint.py",
+    "tests/test_live_rail_hook_xor.py",
+    "tests/test_live_rail_dm001_atr.py",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/architecture/entry-exit-map.md",
+    "docs/governance/build_manifests/CH-live-rail-pr4a.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": ["FM-074"],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_live_rail_hook_xor.py",
+    "tests/test_live_rail_dm001_atr.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Whether existing tests construct HookedLiveEngine() and expect the old APPROVE-masked send path.",
+      "blocking": false,
+      "resolution": "Grep: no production constructor. Default hook_submit_orders=False. Tests that want the send path must pass True.",
+      "followup": "PR-4c orchestrator sets hook_submit_orders from live_rail config."
+    },
+    {
+      "question": "Whether to regenerate docs/research-readiness/feature-math-lint-report.{json,md}.",
+      "blocking": false,
+      "resolution": "Out of this change. Tests run lint live. The committed report is already dirty on this branch. Pin retirement in feature_math_lint.py is the authority.",
+      "followup": "Optional regenerate when the lint-report surface is owned by a hygiene turn."
+    }
+  ],
+  "rollback_boundary": "Revert live_engine_hook.py constructor/XOR/atr_abs/shared gate/positions; restore DM-001 pin; revert F-072 note. No params hash, no ACTIVE_VERSION.",
+  "authority_granted": "User authorized PR-4a 2026-08-19. Does not authorize PR-4c caller, dry_run=false, live money, or promotion."
+}

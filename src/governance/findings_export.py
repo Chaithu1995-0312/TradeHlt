@@ -40,6 +40,12 @@ _EMDASH = "—"
 _FIELDS = (
     ("Type", "type"),
     ("Status", "status"),
+    # Added 2026-08-26 (CH-measurement-provenance-boundary). These two fields entered the findings
+    # doc with the 2026-08-06 measurement-contract work and were never mirrored here, so the
+    # GENERATED view named in CLAUDE.md §2 as a truth artifact could not answer "what measurement
+    # basis?" or "what research family?" at all — the gap the 2026-08-26 provenance audit hit.
+    ("Family", "family"),
+    ("Contract", "contract"),
     ("Confidence", "confidence"),
     ("Validated", "validated"),
     ("Revalidate-by", "revalidate_by"),

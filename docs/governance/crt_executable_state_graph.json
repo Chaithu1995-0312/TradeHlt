@@ -5,6 +5,7 @@
   "generated_at_utc": "2026-07-09T09:00:00Z",
   "commit": "ed1e418e47489dc8d76a2f7cc4e0cd340348b661",
   "source_module": "src/config_layer/crt_engine_v2.py",
+  "scope_note": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15): CRTState grew from 9 to 12 members (added RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3, a disjoint parent-timeframe sub-graph classifying config_layer.parent_crt.ParentCRTTrack, a SEPARATE module from source_module above). This census stays scoped to the original 9 execution-timeframe states in crt_engine_v2.py by design -- state_count below is unchanged (9), not stale. state_identity.EXECUTION_TIMEFRAME_STATES is the single source of truth for this scope boundary; do not regenerate this file to include the parent-timeframe states unless a future census explicitly widens source_module to include config_layer/parent_crt.py.",
   "valid_transitions_line": 1075,
   "state_machine_line": 1088,
   "process_candle_line": 2257,
@@ -18,9 +19,20 @@
         "StateMachine.reset_to_range L1508 (force assign)",
         "initialise_range leaves state at RANGE after range seed"
       ],
-      "incoming_via_valid_transitions": ["SHADOW_PENDING", "SWEEP", "DISPLACEMENT", "EXPANSION", "EXPIRED", "RETEST", "RESOLUTION"],
+      "incoming_via_valid_transitions": [
+        "SHADOW_PENDING",
+        "SWEEP",
+        "DISPLACEMENT",
+        "EXPANSION",
+        "EXPIRED",
+        "RETEST",
+        "RESOLUTION"
+      ],
       "incoming_via_force_reset": "ANY state via reset_to_range (bypasses VALID_TRANSITIONS)",
-      "outgoing_via_valid_transitions": ["SWEEP", "SHADOW_PENDING"],
+      "outgoing_via_valid_transitions": [
+        "SWEEP",
+        "SHADOW_PENDING"
+      ],
       "process_candle_branch": "L2334",
       "behaviors": [
         {
@@ -40,7 +52,11 @@
           "guard": "pending_displacement_candle set AND sweep.direction == pending_displacement_dir",
           "target": "SHADOW_PENDING",
           "emitted_action": "SHADOW_SWEEP_DETECTED",
-          "side_effects": ["sweep_event=set", "direction=sweep.direction", "telemetry candidate opened shadow=True"]
+          "side_effects": [
+            "sweep_event=set",
+            "direction=sweep.direction",
+            "telemetry candidate opened shadow=True"
+          ]
         },
         {
           "id": "RANGE.to_sweep",
@@ -49,18 +65,32 @@
           "guard": "sweep detected and not shadow-match path",
           "target": "SWEEP",
           "emitted_action": "SWEEP_DETECTED",
-          "side_effects": ["event SWEEP", "telemetry candidate opened", "optional SweepTraceLogger"]
+          "side_effects": [
+            "event SWEEP",
+            "telemetry candidate opened",
+            "optional SweepTraceLogger"
+          ]
         }
       ],
       "reachable_under_active_prod": true,
-      "tests": ["tests/test_crt_state_invariants.py", "tests/test_crt_executable_state_graph.py"]
+      "tests": [
+        "tests/test_crt_state_invariants.py",
+        "tests/test_crt_executable_state_graph.py"
+      ]
     },
     {
       "name": "SHADOW_PENDING",
       "enum_line": 66,
-      "entry_sites": ["try_range_to_shadow_pending L1164"],
-      "incoming_via_valid_transitions": ["RANGE"],
-      "outgoing_via_valid_transitions": ["SWEEP", "RANGE"],
+      "entry_sites": [
+        "try_range_to_shadow_pending L1164"
+      ],
+      "incoming_via_valid_transitions": [
+        "RANGE"
+      ],
+      "outgoing_via_valid_transitions": [
+        "SWEEP",
+        "RANGE"
+      ],
       "process_candle_branch": "L2398",
       "behaviors": [
         {
@@ -70,14 +100,19 @@
           "target": "RANGE",
           "via": "force_reset",
           "emitted_action": "SHADOW_LEAK",
-          "external_calls": ["emit_integrity_event SHADOW_LEAK"]
+          "external_calls": [
+            "emit_integrity_event SHADOW_LEAK"
+          ]
         },
         {
           "id": "SHADOW_PENDING.to_expansion_two_step",
           "method": "try_shadow_pending_to_expansion",
           "line": 2429,
           "guard": "sweep valid and direction matches pending",
-          "sequence": ["SHADOW_PENDING→SWEEP", "SWEEP→EXPANSION"],
+          "sequence": [
+            "SHADOW_PENDING→SWEEP",
+            "SWEEP→EXPANSION"
+          ],
           "governed_double_transition": true,
           "note": "Same candle; skips body_ratio/ATR displacement strength checks; restores pending displacement_candle",
           "emitted_action": "SHADOW_EXPANSION_CONFIRMED",
@@ -86,18 +121,32 @@
             "_shadow_htf_alignment computed",
             "pending_* memory cleared"
           ],
-          "config_keys": ["pending_displacement_ttl_candles (set at creation)"]
+          "config_keys": [
+            "pending_displacement_ttl_candles (set at creation)"
+          ]
         }
       ],
       "reachable_under_active_prod": true,
-      "tests": ["tests/test_crt_executable_state_graph.py"]
+      "tests": [
+        "tests/test_crt_executable_state_graph.py"
+      ]
     },
     {
       "name": "SWEEP",
       "enum_line": 67,
-      "entry_sites": ["try_range_to_sweep L1152", "try_shadow_pending_to_expansion first hop L1190"],
-      "incoming_via_valid_transitions": ["RANGE", "SHADOW_PENDING"],
-      "outgoing_via_valid_transitions": ["DISPLACEMENT", "EXPANSION", "RANGE"],
+      "entry_sites": [
+        "try_range_to_sweep L1152",
+        "try_shadow_pending_to_expansion first hop L1190"
+      ],
+      "incoming_via_valid_transitions": [
+        "RANGE",
+        "SHADOW_PENDING"
+      ],
+      "outgoing_via_valid_transitions": [
+        "DISPLACEMENT",
+        "EXPANSION",
+        "RANGE"
+      ],
       "process_candle_branch": "L2456",
       "behaviors": [
         {
@@ -110,11 +159,23 @@
             "body_ratio >= body_ratio_min",
             "if atr>0: wick_size >= atr_multiplier_min * atr"
           ],
-          "config_keys": ["atr_min_displacement", "max_sweep_age_candles", "body_ratio_min", "atr_multiplier_min"],
-          "formulas": ["body_ratio FM-010", "wick_size=FM-002 candle_range", "body move vs ATR"],
+          "config_keys": [
+            "atr_min_displacement",
+            "max_sweep_age_candles",
+            "body_ratio_min",
+            "atr_multiplier_min"
+          ],
+          "formulas": [
+            "body_ratio FM-010",
+            "wick_size=FM-002 candle_range",
+            "body move vs ATR"
+          ],
           "target": "DISPLACEMENT",
           "emitted_action": "DISPLACEMENT_CONFIRMED",
-          "side_effects": ["displacement_candle=candle", "_displacement_entry_idx on enter"]
+          "side_effects": [
+            "displacement_candle=candle",
+            "_displacement_entry_idx on enter"
+          ]
         },
         {
           "id": "SWEEP.expire_reset",
@@ -123,19 +184,31 @@
           "target": "RANGE",
           "via": "force_reset",
           "emitted_action": "SWEEP_EXPIRED",
-          "config_keys": ["max_sweep_age_candles"]
+          "config_keys": [
+            "max_sweep_age_candles"
+          ]
         }
       ],
       "note": "VALID_TRANSITIONS also lists SWEEP→EXPANSION for shadow two-step hop only",
       "reachable_under_active_prod": true,
-      "tests": ["tests/test_crt_executable_state_graph.py", "tests/test_disp_strength_filter.py"]
+      "tests": [
+        "tests/test_crt_executable_state_graph.py",
+        "tests/test_disp_strength_filter.py"
+      ]
     },
     {
       "name": "DISPLACEMENT",
       "enum_line": 68,
-      "entry_sites": ["try_sweep_to_displacement L1246"],
-      "incoming_via_valid_transitions": ["SWEEP"],
-      "outgoing_via_valid_transitions": ["EXPANSION", "RANGE"],
+      "entry_sites": [
+        "try_sweep_to_displacement L1246"
+      ],
+      "incoming_via_valid_transitions": [
+        "SWEEP"
+      ],
+      "outgoing_via_valid_transitions": [
+        "EXPANSION",
+        "RANGE"
+      ],
       "process_candle_branch": "L2493",
       "behaviors": [
         {
@@ -148,28 +221,49 @@
             "close extends beyond disp_close",
             "if atr>0: |close-disp_close| >= expansion_atr_min_distance * atr"
           ],
-          "config_keys": ["expansion_atr_min_distance"],
+          "config_keys": [
+            "expansion_atr_min_distance"
+          ],
           "target": "EXPANSION",
           "emitted_action": "EXPANSION_CONFIRMED",
-          "side_effects": ["_expansion_entry_idx/ts on enter"]
+          "side_effects": [
+            "_expansion_entry_idx/ts on enter"
+          ]
         },
         {
           "id": "DISPLACEMENT.htf_reset_may_create_shadow",
           "via": "reset_to_range when reason contains HTF",
           "line": 1485,
-          "side_effects": ["pending_displacement_* populated", "TTL set"],
-          "config_keys": ["pending_displacement_ttl_candles"]
+          "side_effects": [
+            "pending_displacement_* populated",
+            "TTL set"
+          ],
+          "config_keys": [
+            "pending_displacement_ttl_candles"
+          ]
         }
       ],
       "reachable_under_active_prod": true,
-      "tests": ["tests/test_crt_executable_state_graph.py"]
+      "tests": [
+        "tests/test_crt_executable_state_graph.py"
+      ]
     },
     {
       "name": "EXPANSION",
       "enum_line": 69,
-      "entry_sites": ["try_displacement_to_expansion L1298", "try_shadow_pending_to_expansion second hop L1197"],
-      "incoming_via_valid_transitions": ["DISPLACEMENT", "SWEEP"],
-      "outgoing_via_valid_transitions": ["RETEST", "EXPIRED", "RANGE"],
+      "entry_sites": [
+        "try_displacement_to_expansion L1298",
+        "try_shadow_pending_to_expansion second hop L1197"
+      ],
+      "incoming_via_valid_transitions": [
+        "DISPLACEMENT",
+        "SWEEP"
+      ],
+      "outgoing_via_valid_transitions": [
+        "RETEST",
+        "EXPIRED",
+        "RANGE"
+      ],
       "process_candle_branch": "L2498",
       "mutation_order_same_candle": [
         "1) try_expansion_to_retest FIRST (priority over TTL)",
@@ -186,8 +280,16 @@
             "depth_abs <= adaptive_ceiling = max(retest_depth_max*range.size, retest_atr_depth_fraction*atr)",
             "disp.wick_size/atr <= max_displacement_strength"
           ],
-          "config_keys": ["retest_depth_max", "retest_atr_depth_fraction", "max_displacement_strength"],
-          "formulas": ["range-boundary depth_abs (CRT policy)", "FM-028-like disp strength gate", "FM-027 cache write"],
+          "config_keys": [
+            "retest_depth_max",
+            "retest_atr_depth_fraction",
+            "max_displacement_strength"
+          ],
+          "formulas": [
+            "range-boundary depth_abs (CRT policy)",
+            "FM-028-like disp strength gate",
+            "FM-027 cache write"
+          ],
           "target": "RETEST",
           "emitted_action": "RETEST_CONFIRMED",
           "side_effects": [
@@ -207,21 +309,36 @@
             "retest did not fire this candle",
             "age candles > max_expansion_age_candles OR age hours > max_expansion_age_hours"
           ],
-          "config_keys": ["max_expansion_age_candles", "max_expansion_age_hours", "expansion_age_warn_candles"],
+          "config_keys": [
+            "max_expansion_age_candles",
+            "max_expansion_age_hours",
+            "expansion_age_warn_candles"
+          ],
           "target": "EXPIRED",
           "emitted_action": "EXPANSION_EXPIRED",
-          "external_calls": ["emit_integrity_event EXPANSION_EXPIRED"]
+          "external_calls": [
+            "emit_integrity_event EXPANSION_EXPIRED"
+          ]
         }
       ],
       "reachable_under_active_prod": true,
-      "tests": ["tests/test_crt_executable_state_graph.py", "tests/test_disp_strength_filter.py"]
+      "tests": [
+        "tests/test_crt_executable_state_graph.py",
+        "tests/test_disp_strength_filter.py"
+      ]
     },
     {
       "name": "EXPIRED",
       "enum_line": 70,
-      "entry_sites": ["EXPANSION TTL _transition L2580"],
-      "incoming_via_valid_transitions": ["EXPANSION"],
-      "outgoing_via_valid_transitions": ["RANGE"],
+      "entry_sites": [
+        "EXPANSION TTL _transition L2580"
+      ],
+      "incoming_via_valid_transitions": [
+        "EXPANSION"
+      ],
+      "outgoing_via_valid_transitions": [
+        "RANGE"
+      ],
       "process_candle_branch": "L2587",
       "behaviors": [
         {
@@ -235,14 +352,23 @@
         }
       ],
       "reachable_under_active_prod": true,
-      "tests": ["tests/test_crt_executable_state_graph.py"]
+      "tests": [
+        "tests/test_crt_executable_state_graph.py"
+      ]
     },
     {
       "name": "RETEST",
       "enum_line": 71,
-      "entry_sites": ["try_expansion_to_retest L1416"],
-      "incoming_via_valid_transitions": ["EXPANSION"],
-      "outgoing_via_valid_transitions": ["EXECUTION", "RANGE"],
+      "entry_sites": [
+        "try_expansion_to_retest L1416"
+      ],
+      "incoming_via_valid_transitions": [
+        "EXPANSION"
+      ],
+      "outgoing_via_valid_transitions": [
+        "EXECUTION",
+        "RANGE"
+      ],
       "process_candle_branch": "NOT matched by s==RETEST; processed via evaluating_soft_conf flag L2592",
       "behaviors": [
         {
@@ -251,14 +377,30 @@
           "guard": "evaluating_soft_conf True (set at retest confirm)",
           "method": "UltronRiskEngine.approve_with_soft_conf",
           "config_keys": [
-            "conf_weights", "conf_floor", "weak_link_weight", "confirmation_body_min",
-            "ema_fast", "ema_slow", "retest_depth_max", "retest_atr_depth_fraction",
-            "tier_1_threshold", "tier_2_threshold", "soft_conf_max_candles",
-            "max_spread_pct", "use_bitnet", "bitnet_main_threshold",
-            "shadow_age_penalty_lambda", "shadow_age_norm_candles", "shadow_advisory_only",
-            "allowed_sessions", "session_windows"
+            "conf_weights",
+            "conf_floor",
+            "weak_link_weight",
+            "confirmation_body_min",
+            "ema_fast",
+            "ema_slow",
+            "retest_depth_max",
+            "retest_atr_depth_fraction",
+            "tier_1_threshold",
+            "tier_2_threshold",
+            "soft_conf_max_candles",
+            "max_spread_pct",
+            "use_bitnet",
+            "bitnet_main_threshold",
+            "shadow_age_penalty_lambda",
+            "shadow_age_norm_candles",
+            "shadow_advisory_only",
+            "allowed_sessions",
+            "session_windows"
           ],
-          "hard_gates": ["news_active → NEWS_FILTER", "spread > max_spread_pct → HIGH_SPREAD"],
+          "hard_gates": [
+            "news_active → NEWS_FILTER",
+            "spread > max_spread_pct → HIGH_SPREAD"
+          ],
           "outcomes": [
             {
               "id": "RETEST.zone_filter_reject",
@@ -283,7 +425,9 @@
               "target": "RANGE",
               "via": "force_reset",
               "emitted_action": "SHADOW_ADVISORY_BLOCK",
-              "config_keys": ["shadow_advisory_only"],
+              "config_keys": [
+                "shadow_advisory_only"
+              ],
               "reachable_under_active_prod": false,
               "note": "shadow_advisory_only=false on v2_multi_2026_04"
             },
@@ -301,7 +445,10 @@
                 "telemetry candidate accepted",
                 "optional TEMPORAL_PARADOX / TEMPORAL_STALE_WIN integrity events"
               ],
-              "external_calls": ["emit_integrity_event conditional", "bitnet_score if use_bitnet"]
+              "external_calls": [
+                "emit_integrity_event conditional",
+                "bitnet_score if use_bitnet"
+              ]
             },
             {
               "id": "RETEST.soft_conf_timeout",
@@ -324,14 +471,23 @@
       ],
       "overwrite_before_consumption_note": "cached_features written at retest confirm; soft conf / BitNet / build_trade consume same snapshot; reset clears",
       "reachable_under_active_prod": true,
-      "tests": ["tests/test_crt_session_filter.py", "tests/test_crt_executable_state_graph.py"]
+      "tests": [
+        "tests/test_crt_session_filter.py",
+        "tests/test_crt_executable_state_graph.py"
+      ]
     },
     {
       "name": "EXECUTION",
       "enum_line": 72,
-      "entry_sites": ["try_retest_to_execution L1426"],
-      "incoming_via_valid_transitions": ["RETEST"],
-      "outgoing_via_valid_transitions": ["RESOLUTION"],
+      "entry_sites": [
+        "try_retest_to_execution L1426"
+      ],
+      "incoming_via_valid_transitions": [
+        "RETEST"
+      ],
+      "outgoing_via_valid_transitions": [
+        "RESOLUTION"
+      ],
       "process_candle_branch": "active_trade management L2303 (not s==EXECUTION elif)",
       "behaviors": [
         {
@@ -339,25 +495,39 @@
           "line": 2303,
           "guard": "active_trade status in OPEN,TP1",
           "exit_model": "intrabar_touch (prod) or close_only via config/env",
-          "config_keys": ["exit_model", "TRUST_INTRABAR_TOUCH env"],
+          "config_keys": [
+            "exit_model",
+            "TRUST_INTRABAR_TOUCH env"
+          ],
           "on_close": {
             "method": "try_execution_to_resolution then reset_to_range",
             "line": 2323,
-            "sequence": ["EXECUTION→RESOLUTION", "force reset → RANGE"],
+            "sequence": [
+              "EXECUTION→RESOLUTION",
+              "force reset → RANGE"
+            ],
             "emitted_action": "TRADE_STOPPED|TRADE_TP1|TRADE_TP2",
             "early_return": true
           }
         }
       ],
       "reachable_under_active_prod": true,
-      "tests": ["tests/test_crt_executable_state_graph.py"]
+      "tests": [
+        "tests/test_crt_executable_state_graph.py"
+      ]
     },
     {
       "name": "RESOLUTION",
       "enum_line": 73,
-      "entry_sites": ["try_execution_to_resolution L1432"],
-      "incoming_via_valid_transitions": ["EXECUTION"],
-      "outgoing_via_valid_transitions": ["RANGE"],
+      "entry_sites": [
+        "try_execution_to_resolution L1432"
+      ],
+      "incoming_via_valid_transitions": [
+        "EXECUTION"
+      ],
+      "outgoing_via_valid_transitions": [
+        "RANGE"
+      ],
       "process_candle_branch": "transient — immediately force-reset after resolution in process_candle L2326",
       "behaviors": [
         {
@@ -369,27 +539,128 @@
         }
       ],
       "reachable_under_active_prod": true,
-      "tests": ["tests/test_crt_state_invariants.py"]
+      "tests": [
+        "tests/test_crt_state_invariants.py"
+      ]
     }
   ],
   "governed_transitions": [
-    {"from": "RANGE", "to": "SWEEP", "method": "try_range_to_sweep", "line": 1158, "via": "_transition"},
-    {"from": "RANGE", "to": "SHADOW_PENDING", "method": "try_range_to_shadow_pending", "line": 1171, "via": "_transition"},
-    {"from": "SHADOW_PENDING", "to": "SWEEP", "method": "try_shadow_pending_to_expansion", "line": 1190, "via": "_transition"},
-    {"from": "SHADOW_PENDING", "to": "RANGE", "method": "reset_to_range / leak", "via": "force_reset", "valid_transitions_allows": true},
-    {"from": "SWEEP", "to": "DISPLACEMENT", "method": "try_sweep_to_displacement", "line": 1246, "via": "_transition"},
-    {"from": "SWEEP", "to": "EXPANSION", "method": "try_shadow_pending_to_expansion hop2", "line": 1197, "via": "_transition", "note": "only shadow path uses this hop from SWEEP mid-sequence"},
-    {"from": "SWEEP", "to": "RANGE", "method": "reset_to_range expire", "via": "force_reset"},
-    {"from": "DISPLACEMENT", "to": "EXPANSION", "method": "try_displacement_to_expansion", "line": 1298, "via": "_transition"},
-    {"from": "DISPLACEMENT", "to": "RANGE", "method": "reset_to_range", "via": "force_reset"},
-    {"from": "EXPANSION", "to": "RETEST", "method": "try_expansion_to_retest", "line": 1416, "via": "_transition"},
-    {"from": "EXPANSION", "to": "EXPIRED", "method": "_transition expansion_ttl", "line": 2580, "via": "_transition"},
-    {"from": "EXPANSION", "to": "RANGE", "method": "reset_to_range", "via": "force_reset"},
-    {"from": "EXPIRED", "to": "RANGE", "method": "reset_to_range", "line": 2588, "via": "force_reset"},
-    {"from": "RETEST", "to": "EXECUTION", "method": "try_retest_to_execution", "line": 1426, "via": "_transition"},
-    {"from": "RETEST", "to": "RANGE", "method": "reset_to_range filters/timeout", "via": "force_reset"},
-    {"from": "EXECUTION", "to": "RESOLUTION", "method": "try_execution_to_resolution", "line": 1437, "via": "_transition"},
-    {"from": "RESOLUTION", "to": "RANGE", "method": "reset_to_range post-resolution", "line": 2326, "via": "force_reset"}
+    {
+      "from": "RANGE",
+      "to": "SWEEP",
+      "method": "try_range_to_sweep",
+      "line": 1158,
+      "via": "_transition"
+    },
+    {
+      "from": "RANGE",
+      "to": "SHADOW_PENDING",
+      "method": "try_range_to_shadow_pending",
+      "line": 1171,
+      "via": "_transition"
+    },
+    {
+      "from": "SHADOW_PENDING",
+      "to": "SWEEP",
+      "method": "try_shadow_pending_to_expansion",
+      "line": 1190,
+      "via": "_transition"
+    },
+    {
+      "from": "SHADOW_PENDING",
+      "to": "RANGE",
+      "method": "reset_to_range / leak",
+      "via": "force_reset",
+      "valid_transitions_allows": true
+    },
+    {
+      "from": "SWEEP",
+      "to": "DISPLACEMENT",
+      "method": "try_sweep_to_displacement",
+      "line": 1246,
+      "via": "_transition"
+    },
+    {
+      "from": "SWEEP",
+      "to": "EXPANSION",
+      "method": "try_shadow_pending_to_expansion hop2",
+      "line": 1197,
+      "via": "_transition",
+      "note": "only shadow path uses this hop from SWEEP mid-sequence"
+    },
+    {
+      "from": "SWEEP",
+      "to": "RANGE",
+      "method": "reset_to_range expire",
+      "via": "force_reset"
+    },
+    {
+      "from": "DISPLACEMENT",
+      "to": "EXPANSION",
+      "method": "try_displacement_to_expansion",
+      "line": 1298,
+      "via": "_transition"
+    },
+    {
+      "from": "DISPLACEMENT",
+      "to": "RANGE",
+      "method": "reset_to_range",
+      "via": "force_reset"
+    },
+    {
+      "from": "EXPANSION",
+      "to": "RETEST",
+      "method": "try_expansion_to_retest",
+      "line": 1416,
+      "via": "_transition"
+    },
+    {
+      "from": "EXPANSION",
+      "to": "EXPIRED",
+      "method": "_transition expansion_ttl",
+      "line": 2580,
+      "via": "_transition"
+    },
+    {
+      "from": "EXPANSION",
+      "to": "RANGE",
+      "method": "reset_to_range",
+      "via": "force_reset"
+    },
+    {
+      "from": "EXPIRED",
+      "to": "RANGE",
+      "method": "reset_to_range",
+      "line": 2588,
+      "via": "force_reset"
+    },
+    {
+      "from": "RETEST",
+      "to": "EXECUTION",
+      "method": "try_retest_to_execution",
+      "line": 1426,
+      "via": "_transition"
+    },
+    {
+      "from": "RETEST",
+      "to": "RANGE",
+      "method": "reset_to_range filters/timeout",
+      "via": "force_reset"
+    },
+    {
+      "from": "EXECUTION",
+      "to": "RESOLUTION",
+      "method": "try_execution_to_resolution",
+      "line": 1437,
+      "via": "_transition"
+    },
+    {
+      "from": "RESOLUTION",
+      "to": "RANGE",
+      "method": "reset_to_range post-resolution",
+      "line": 2326,
+      "via": "force_reset"
+    }
   ],
   "force_reset_semantics": {
     "method": "StateMachine.reset_to_range",
@@ -397,9 +668,17 @@
     "bypasses_valid_transitions": true,
     "mechanism": "direct state.current_state = RANGE (L1508) after logging; not _transition",
     "clears": [
-      "sweep_event", "displacement_candle", "retest_candle", "risk_score", "direction",
-      "cached_features", "evaluating_soft_conf", "soft_conf_candles", "_came_from_shadow",
-      "_expansion_entry_idx/ts", "_shadow_htf_alignment"
+      "sweep_event",
+      "displacement_candle",
+      "retest_candle",
+      "risk_score",
+      "direction",
+      "cached_features",
+      "evaluating_soft_conf",
+      "soft_conf_candles",
+      "_came_from_shadow",
+      "_expansion_entry_idx/ts",
+      "_shadow_htf_alignment"
     ],
     "may_create_shadow_memory": "when from DISPLACEMENT and reason contains HTF",
     "callers": [

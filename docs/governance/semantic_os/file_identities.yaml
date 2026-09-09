@@ -1098,11 +1098,11 @@ file_identities:
     type: code
   - path: src/config_layer/crt_engine_v2.py
     symbol: process_candle
-    line: 2607
+    line: 2760
     type: code
   - path: src/config_layer/crt_engine_v2.py
     symbol: CRTEngine
-    line: 2422
+    line: 2609
     type: code
   supersedes: null
   superseded_by: null
@@ -2054,7 +2054,7 @@ file_identities:
   evidence:
   - path: src/features/market_context.py
     symbol: MarketContextBuilder
-    line: 58
+    line: 223
     type: code
   supersedes: null
   superseded_by: null
@@ -2120,7 +2120,7 @@ file_identities:
   evidence:
   - path: src/features/model_evidence.py
     symbol: ModelEvidenceBuilder
-    line: 145
+    line: 373
     type: code
   supersedes: null
   superseded_by: null
@@ -2699,7 +2699,7 @@ file_identities:
   evidence:
   - path: src/runtime/backtest_v2.py
     symbol: BacktestRunner
-    line: 1717
+    line: 1775
     type: code
   supersedes: null
   superseded_by: null

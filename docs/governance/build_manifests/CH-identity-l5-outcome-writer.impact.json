@@ -1,0 +1,36 @@
+{
+  "change_id": "CH-identity-l5-outcome-writer",
+  "date_utc": "2026-08-23",
+  "objective": "Authorize and build the L5 close/outcome writer. Persist engine-closed outcomes as Class B identity records under the frozen L5 PK (L4 PK + walk_kernel + cost_model_id + fill_model_id). Path stats (y_R_gross, mfe, mae, duration_bars, exit_reason) are payload. Identity Check never imports TradeLib or engines. Missing walk/cost/fill is UNIDENTIFIED, never a HEAD default. Not production.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY",
+    "IDENTITY_STORE_CHANGE"
+  ],
+  "change_class_rationale": "L5 writer/check/certify only. Frozen L5 PK is not redefined (no trade_id PK, no nested parameters object). Additive payload fields. certify.py WRITE may snapshot engine close events; check.py / query.py / store.py / outcome.py stay AST-isolated from TradeLib and CRT engine. Not live-spine.",
+  "affected_files": [
+    "src/identity/tokens.py",
+    "src/identity/check.py",
+    "src/identity/outcome.py",
+    "src/identity/store.py",
+    "src/identity/certify.py",
+    "src/identity/__init__.py",
+    "tests/test_identity_store.py",
+    "docs/governance/build_manifests/CH-identity-l5-outcome-writer.impact.json",
+    "docs/governance/xauusd_identity_certification_2y.md",
+    "docs/governance/xauusd_identity_certification_2y.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_identity_store.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert L5 payload requirement, outcome.py, certify L5 close writer, tests. Frozen L5 PK unchanged. Identity contracts stay CLOSED.",
+  "authority_granted": "User 2026-08-23: authorize and build L5 close/outcome writer. Strict Identity Check; no TradeLib on load; no HEAD cost/fill default.",
+  "authority_NOT_granted": "No production approval, no live-spine wire, no G001, no ACTIVE_VERSION change, no L5 PK redefinition (trade_id / l4_geometry_hash rejected), no TradeLib import on load.",
+  "production_behavior_changed": "NO"
+}

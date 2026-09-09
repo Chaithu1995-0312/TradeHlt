@@ -1,0 +1,87 @@
+{
+  "change_id": "CH-htfcrt-parent-candle-smc-v1",
+  "date_utc": "2026-08-15",
+  "objective": "Build a real calendar-true HTF parent candle (the repo currently has an HTF reset CLOCK, HTFBuilder, with zero OHLC aggregation) plus a 3-candle CRT construct (C1 range / C2 manipulation / C3 distribution) on top of it, register 9 SMC primitives absent from the codebase (order block, FVG, breaker, mitigation, PDH/PDL, EQH/EQL, CHoCH) as canonical vector features (39->48), and promote a new active version v2_htfcrt_2026_08 with the arm ON. User-authorized per session plan approval 2026-08-15 (AskUserQuestion: 3-candle wiring=new CRT states, TF ladder=H4+D1+W1+MN1, Bucket B scope=all 9 primitives, default arm=ON immediately, feature repr=canonical vector slots 39->48). Source: SujanTraderCRTExp.txt / SujanTraderCrtExpPart2.txt study (docs/implementation_plan/study-sujantrader-docs-composed-snowflake.md).",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE",
+    "DATASET_SCHEMA_CHANGE",
+    "DERIVED_METRIC_CHANGE",
+    "MODEL_INPUT_CHANGE",
+    "MODEL_TRAINING_CHANGE",
+    "MODEL_ARTIFACT_CHANGE",
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "PRODUCTION_CONFIG_CHANGE",
+    "ACTIVE_MODEL_CHANGE"
+  ],
+  "change_class_rationale": "FEATURE_IDENTITY_CHANGE + DATASET_SCHEMA_CHANGE + DERIVED_METRIC_CHANGE cover the 9 new FM-ids and the CANONICAL_FEATURES 39->48 vector growth. MODEL_INPUT_CHANGE + MODEL_TRAINING_CHANGE + MODEL_ARTIFACT_CHANGE cover the mandatory recapture/retrain of all 6 model families (zone_gate/rr/rr_fusion/gaussian/bitnet/tradenet) once the vector dimension moves. RUNTIME_DECISION_PATH_CHANGE covers the new CRT states (9->12), VALID_TRANSITIONS extension, and the parent_state bridge into process_candle -- a declared behavior change, not a parity-preserving one, per user decision (arm ON, ledger changes accepted). PRODUCTION_CONFIG_CHANGE + ACTIVE_MODEL_CHANGE cover authoring and promoting configs/production/v2_htfcrt_2026_08.json and flipping ACTIVE_VERSION.",
+  "affected_files": [
+    "src/research/resample.py",
+    "src/features/calendar_periods.py",
+    "src/features/parent_candle.py",
+    "src/runtime/backtest_v2.py",
+    "src/config_layer/state_identity.py",
+    "src/config_layer/state_topology.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/config_layer/parent_crt.py",
+    "src/features/smc/order_block.py",
+    "src/features/smc/fvg.py",
+    "src/features/smc/breaker.py",
+    "src/features/smc/mitigation.py",
+    "src/features/smc/levels.py",
+    "src/features/smc/choch.py",
+    "src/features/feature_schema.py",
+    "src/features/feature_pipeline.py",
+    "configs/formulas/market_ontology.yaml",
+    "configs/formulas/market_crt_states.yaml",
+    "configs/research/market_story_ontology.yaml",
+    "configs/production/v2_htfcrt_2026_08.json",
+    "configs/production/v2_multi_2026_04.json",
+    "configs/production/ACTIVE_VERSION",
+    "configs/promotion_log.jsonl",
+    "active_models.yaml",
+    "docs/governance/semantic_os/concepts.yaml",
+    "docs/governance/crt_closure_report.md",
+    "docs/governance/feature-layer-freeze-pin-2026-07-20.json",
+    "docs/topics/crt-spine.md",
+    "docs/current-findings.md",
+    "tools/tv_forensic/",
+    "configs/market_reality/market_reality_v1.yaml",
+    "src/control_plane/registry.py"
+  ],
+  "required_checks_ack": [
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_candle_math.py",
+    "tests/test_derived_math.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_feature_pipeline.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_current_findings.py",
+    "tests/test_config_reachability.py",
+    "tests/test_reachability_golden.py",
+    "tests/test_zone_manifest_runtime_parity.py",
+    "tests/test_feature_layer_freeze.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_doc_citations.py"
+  ],
+  "unknowns": [
+    {
+      "field": "downstream_model_retrain_scope",
+      "detail": "Whether all 6 model families can be recaptured/retrained on the existing corpus within this program, or whether some (e.g. tradenet, a .pth binary with no registry dim field) require a separately authorized retrain program.",
+      "blocking": false
+    },
+    {
+      "field": "w1_mn1_associativity_carveout_acceptance",
+      "detail": "resample()'s documented determinism guarantee (resample(resample(x,H1),H4)==resample(x,H4)) provably fails at the W1->MN1 rung (a week can straddle a month boundary). Phase 1 documents this as an explicit carve-out rather than resolving it -- flagged as a permanent, not temporary, limitation.",
+      "blocking": false
+    }
+  ],
+  "rollback_boundary": "Phased, dependency-ordered commits (Phase 0 through Phase 6 per docs/implementation_plan/study-sujantrader-docs-composed-snowflake.md). Each phase is independently revertable via git; the ACTIVE_VERSION flip (Phase 4) is the single irreversible-in-place step and is rollback-safe only via the archived {version}_archived_{ts}.json + promotion_log.jsonl PROMOTED/rollback trail (docs/reference/governance.md rollback procedure). Freeze-pin waiver_log entries preserve the pre-change baseline (results/baseline/20260815T112746Z_pre_htfcrt/manifest.json) as the comparison point.",
+  "pre_existing_floor_state": {
+    "note": "CONSTRUCTION FLOOR was RED (7/136 failing) before this change began, per scripts/governance/construction_protocol.py check run 2026-08-15. All 7 failures are pre-existing, unrelated to CRT/feature-schema surfaces: tests/test_feature_math_lint.py::test_universe_reconciliation_with_census, tests/test_geometry_census.py (x2, stale census), tests/test_gate2b_closure.py (x2, closure id / family registry drift), tests/test_active_models_registry.py::test_identity_r2_how_path_ref_parity (rr_model how_path_ref points at an archived per-instrument path), tests/test_session_log.py::test_session_log_entry_count_is_bounded (163 entries, rotation overdue). None touch CANONICAL_FEATURES, CRTState, or VALID_TRANSITIONS. Not remediated by this change (out of scope, separate concerns); acknowledged so completion validation is not confused by inherited red.",
+    "captured_at": "2026-08-15T11:29:57Z"
+  },
+  "authority": "User-authorized behavior change (CLAUDE.md 6.5 Authority Ladder: this is a declared, ledger-changing program, not evidence claiming automatic authority). Grants no economic-edge claim -- the VA ladder E rung (docs/governance/VALIDATION_ACCESS_VA_XAUUSD_M15.md) stays OPEN throughout (no sealed MC-*); Phase 6 verification states this explicitly rather than implying the new feature/state surface is validated as profitable."
+}

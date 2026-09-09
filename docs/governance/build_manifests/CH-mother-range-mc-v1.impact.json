@@ -1,0 +1,41 @@
+{
+  "change_id": "CH-mother-range-mc-v1",
+  "date_utc": "2026-08-23",
+  "objective": "Freeze a t=0 mother-range inside-close trade object (SEM-026) in sealed MC-MRANGE-XAUUSD-M15-V1, then single-pass measure holdout only. Causal calendar x=16 blocks, big-mother atr_mult=1.5 lookback=20, fade toward opposite mother extreme, fixed SL/TP at mother extremes, forward_walk.intrabar_fixed, none_gross + SEM-015 net diagnostic. F-086 holdout stride remains unspent. No retune. No production.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY",
+    "SEMANTIC_REGISTRY_CHANGE"
+  ],
+  "change_class_rationale": "New research-only SEM node + MC instance + isolated geometry/driver. Not live-spine. Not IDENTITY_STORE. Formula frozen sections untouched.",
+  "affected_files": [
+    "configs/formulas/market_ontology.yaml",
+    "configs/research/measurement_contracts/instances/MC-MRANGE-XAUUSD-M15-V1.json",
+    "docs/research/mother_range_trade_object.md",
+    "docs/governance/research_family_registry.json",
+    "docs/governance/build_manifests/CH-mother-range-mc-v1.impact.json",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "src/research/mother_range/__init__.py",
+    "src/research/mother_range/geometry.py",
+    "src/research/mother_range/driver.py",
+    "src/research/mother_range/__main__.py",
+    "tests/research/test_mother_range_trade_object.py",
+    "tests/test_research_family_registry.py",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": ["SEM-026"],
+  "required_checks_ack": [
+    "tests/test_semantic_registry.py",
+    "tests/research/test_mother_range_trade_object.py",
+    "tests/test_measurement_contract.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert SEM-026, MC instance, mother_range package, family row, finding. Identity L5 freeze and F-086 untouched.",
+  "authority_granted": "User 2026-08-23: formally freeze t=0 mother-range geometry in a new MC-* then single-pass measure unspent holdout.",
+  "authority_NOT_granted": "No production, no G001, no F-086 reopen, no identity L5 rewrite, no retune after seeing y, no TradeLib, no 100% window harvest.",
+  "production_behavior_changed": "NO"
+}

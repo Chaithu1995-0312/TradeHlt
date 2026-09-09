@@ -1,0 +1,72 @@
+{
+  "change_id": "CH-measurement-provenance-architecture",
+  "date_utc": "2026-08-26",
+  "change_classes": [
+    "DOCUMENTATION_ONLY",
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "JSONL_CLAIM_SURFACE_CHANGE"
+  ],
+  "declared_files": [
+    "docs/governance/MEASUREMENT_PROVENANCE_ARCHITECTURE.md",
+    "configs/research/provenance/provenance_record.schema.json",
+    "configs/research/provenance/measurement_execution.schema.json",
+    "configs/research/provenance_ledger.jsonl",
+    "src/governance/provenance_record.py",
+    "src/governance/provenance_resolver.py",
+    "src/governance/provenance_derivation.py",
+    "scripts/governance/provenance_query.py",
+    "tests/test_provenance_ledger.py",
+    "docs/governance/jsonl_claim_catalog.yaml",
+    "docs/governance/closure_authority_index.json",
+    "CLAUDE.md",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/governance/script_registry_grandfather.json",
+    "data/script_registry.jsonl",
+    "data/jsonl_claim_catalog.jsonl",
+    "docs/reference/script-matrix.md",
+    "docs/governance/research_dag_provenance-2026-08-26.json",
+    "docs/governance/build_manifests/CH-measurement-provenance-architecture.impact.json",
+    "docs/governance/build_manifests/CH-measurement-provenance-architecture.completion.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_provenance_ledger.py (33 passed, 1 skipped - jsonschema importorskip)",
+    "tests/test_jsonl_claim_catalog.py + test_jsonl_claim_grounding.py (86 passed)",
+    "tests/test_closure_authority_index.py (11 passed)",
+    "tests/test_current_findings.py (11 passed)",
+    "tests/test_research_dag_provenance.py (26 passed)",
+    "tests/test_measurement_result_log.py (44 passed)",
+    "tests/test_findings_export.py (6 passed)",
+    "tests/test_doc_citations.py + test_topic_docs.py (passed)",
+    "combined affected sweep: 223 passed, 1 skipped"
+  ],
+  "verification": {
+    "planted_defect_gates": "Every invariant is proved by planting the defect and asserting red (E-001: a test that cannot fail is not enforcement). DERIVED without a derivation block; DERIVED naming an unregistered rule; DERIVED at a wrong rule_version; ATTESTED with any one of by/utc/basis/authority blank (parametrised x4); an attestation carried by a non-ATTESTED class; a caller-supplied chain_class and chain_complete disagreeing with the bindings; asserting UNKNOWN as a resolution value; grants_authority flipped to true. All nine fire.",
+    "backfill_never_explicit": "test_no_derivation_rule_can_emit_explicit walks EVERY subject in the repository and asserts no derived binding is EXPLICIT; test_ledger_holds_no_explicit_backfill asserts the same over the whole written ledger; test_derivation_never_overwrites_an_explicit_binding asserts a weaker class never displaces a stronger one.",
+    "audit_uncontaminated": "Two independent checks. (1) STRUCTURAL: test_audit_extractor_does_not_read_the_ledger greps scripts/analysis/research_dag_provenance.py for any reference to the provenance modules - the guarantee is in the source, not in prose. (2) OUTPUT: the audit's computed rollup is asserted to contain no ledger token and to keep its own EXPLICIT/INFERRED/UNKNOWN vocabulary rather than adopting DERIVED/ATTESTED. Deliberately NOT a byte-comparison against the committed artifact: that would pin a SNAPSHOT and go red on ordinary corpus drift while saying nothing about contamination - the exact antipattern corrected earlier today in three other floors.",
+    "idempotence": "provenance_query.py --backfill run twice: first appended 168, second appended 0 and skipped 168 unchanged. Append-only means a second run must be a no-op, not a duplicate append.",
+    "tracked_only": "test_evidence_resolution_is_tracked_only plants an untracked path and asserts resolves=false with status DANGLING; test_tracked_paths_fails_closed monkeypatches git away and asserts the tracked set is EMPTY - with no git nothing resolves, never everything.",
+    "d1_kept_reachable": "D1_CONTRACT_CONTENT_HASH fires zero times on this corpus because the six bare-sha256 Contract fields were rebound to ids earlier today under CH-measurement-provenance-boundary. Kept reachable by a synthetic fixture asserting both a matching and a non-matching hash, so it cannot rot into dead code - the same treatment the audit gives its own unexercised rule I4.",
+    "schema_code_parity": "test_schema_rule_enum_matches_the_code_registry asserts the schema's rule_id enum and DERIVATION_RULES cannot diverge - the silent-divergence class that left Contract/Family out of findings_export._FIELDS for 20 days.",
+    "impact_validation": "IMPACT: APPROVED"
+  },
+  "result_summary": "MPA v1 shipped: an additive provenance spine binding FINDING / DECISION / PROMOTION / CLOSURE to four typed origin slots (Evidence, Hypothesis, Measurement Contract, Measurement Execution). Splitting the audit's single originating_measurement_basis slot into CONTRACT and EXECUTION makes declared-but-never-executed a first-class queryable state instead of a footnote. Backfill produced 168 records over 212 subjects: chain_class EXPLICIT=70, DERIVED=64, UNKNOWN=34, with 44 subjects carrying nothing to bind. EXACTLY FOUR chains are provenance-complete - F-091, F-092, F-093, F-094 - precisely the four contracts that executed E-MT-00 earlier the same day under CH-measurement-provenance-boundary. Nothing else in the repository's history has all four origin slots resolving, and that is the honest headline.",
+  "additive_only_proof_executed": "The findings architecture was not modified: docs/current-findings.md is byte-unchanged by this change (the six Contract rebindings belong to the EARLIER change contract today), governance/findings_export.py is untouched here, and no finding's Status, Confidence, Contract, Family, Evidence or verdict was altered. The four subject record systems are opened read-only. The sole write to an existing governance registry is a NEW surface row appended to closure_authority_index.json for this surface itself, plus the CLAUDE.md index row its own floor requires.",
+  "authority_unchanged": "grants_authority is const false on every record and pinned by test_grants_authority_is_pinned_false. No G001, no promotion, no config, no ACTIVE_VERSION, no ontology node, no retrain. MEASUREMENT_LAYER_STATUS stays OPEN: this records WHETHER a basis exists; only mt00 PASS AND mt01 COMPLETE makes one admissible and E-MT-01 coverage is 0/27. The Phase-4 enforce gate is deliberately NOT built and no check fails on a MISSING record.",
+  "reported_not_fixed": {
+    "promotion_evidence": "All 15 PROMOTION subjects resolve to nothing on every slot, and that is the CORRECT output rather than a resolver bug - a promotion line carries no field binding it to evidence. provenance_derivation.FORBIDDEN blocks the evidence rules for PROMOTION and a test asserts none is ever derived, because deriving by date proximity would be the audit's own weakest inference (I3_DATE_COLOCATION, 325 of its 849 INFERRED edges). ATTESTED is the only honest path and needs per-line user authority.",
+    "unknown_residue": "34 chains classify UNKNOWN and 44 subjects had nothing to bind. Recorded and reported; not filled.",
+    "d3_d4_weakness": "64 DERIVED chains rest on D3/D4, which reconstruct through hypothesis_registry / research_family_registry. The H-* registry begins 2026-07-03 with 18 of its 20 records authored that single day about completed work. Each such binding carries that caveat in derivation.caveat: reproducible is not contemporaneous.",
+    "untracked_contracts_RESOLVED_2026_08_27": "MC-ASYM-XAUUSD-M15-V1 (F-091) and MC-MRPRIOR-XAUUSD-M15-V1 (F-094) are now git-tracked on explicit user instruction. Rationale accepted and verified: they are the declared measurement bases for two of the repository's only four provenance-complete chains, so leaving them untracked meant 50% of that set resolved on one disk only. The resolver was ALSO fixed in the same turn - it applied the tracked-only instrument to evidence but resolved contracts by filesystem glob, so it could not have warned about this exact gap. New floors: test_contract_resolution_is_tracked_only and test_every_cited_contract_is_tracked."
+  },
+  "pre_existing_failures_not_caused_by_this_change": {
+    "tests/test_script_registry.py::test_grandfather_paths_match_stubs and ::test_grandfather_ratchet_live_universe": "name exclusively _dedent.py and _run_mr.py - untracked repo-root scripts dated 2026-08-24 from another session's working tree, verified untracked via git ls-files. Not adopted into the pin: registering another session's WIP under this change contract would launder it. Same disposition as CH-research-dag-provenance. This change's own path IS registered (pin 407 -> 408).",
+    "tests/test_session_log.py::test_session_log_entry_count_is_bounded": "entry count over the cap; the documented remedy is rotate_session_log.py, made SAFE earlier today but deliberately not run.",
+    "tests/test_measurement_contract.py": "ModuleNotFoundError: jsonschema is not installed in this interpreter.",
+    "others": "tests/test_active_models_registry.py, tests/test_gate5_lineage_report.py, tests/test_feature_contract_v1.py, tests/research/test_exit_model_reconcile.py, tests/research/episodes/test_candidate_features.py, tests/governance/test_provenance_remediation.py (feature-ontology domain; name collision on 'provenance' only, it reads feature_certification_ledger.jsonl which this change does not touch), tests/research/test_sujan_crt_contract.py (errors on MC-SUJAN-XAUUSD-M15-V1.json). CORRECTED 2026-08-27: the earlier note said the file 'has never existed'. True of git history, but incomplete - the contract DOES exist on disk at configs/research/measurement_contracts/drafts/MC-SUJAN-XAUUSD-M15-V1.json, untracked, while its test floor looks for it under instances/. It is an unsealed DRAFT that no finding cites, so it is correctly outside the sealed-instance scan universe and was NOT adopted here."
+  },
+  "repo_state_hash": "0fa376884d53+48159534526e",
+  "completion_status": "WORK_COMPLETE_GATE_BLOCKED_BY_SHARED_DIRTY_TREE",
+  "production_behavior_changed": "NO",
+  "completion_status_explanation": "Every check this change can affect is green (223 passed across its declared floors; all nine planted-defect gates verified to fire). Mechanical validate-completion returns BLOCKED because this checkout carries pre-existing unrelated governed changes from concurrent sessions (active_models.yaml, configs/formulas/*.yaml, configs/market_reality/*, configs/production/*, configs/data_provenance/). Declaring them would launder unrelated work into this manifest. Same disposition and precedent as CH-research-dag-provenance and CH-measurement-provenance-boundary."
+}

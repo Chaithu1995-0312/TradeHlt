@@ -1,0 +1,77 @@
+{
+  "change_id": "CH-sujan-manipulation-phase1",
+  "date_utc": "2026-08-28",
+  "objective": "Build SUJAN_MANIPULATION_RESEARCH_PHASE_1 (SEM-033): a detection-only detector that monitors an externally supplied parent bulk candle and emits SUJAN_MANIPULATION_DETECTED when a later candle purges the full wick-to-wick range and closes back fully inside it. Register the founding gap as UNK-007. No entries, no targets, no HTF, no CRT state machine, no MC-*, no finding, no economic claim.",
+  "change_classes": [
+    "SEMANTIC_REGISTRY_CHANGE",
+    "JSONL_CLAIM_SURFACE_CHANGE"
+  ],
+  "change_class_rationale": "New SEM-033 + UNK-007 ontology nodes (declaration-only, non-frozen sections, never read on the runtime binding path) plus one new claim-catalog stream and two CC-* classes for the alert stream. New isolated package under src/research/ imports SP-001 only. No production config, no model, no feature-vector change, no script under scripts/**.",
+  "affected_files": [
+    "src/research/sujan_manipulation/__init__.py",
+    "src/research/sujan_manipulation/__main__.py",
+    "src/research/sujan_manipulation/parent.py",
+    "src/research/sujan_manipulation/geometry.py",
+    "src/research/sujan_manipulation/state.py",
+    "src/research/sujan_manipulation/driver.py",
+    "tests/research/test_sujan_manipulation.py",
+    "configs/formulas/market_ontology.yaml",
+    "docs/governance/jsonl_claim_catalog.yaml",
+    "docs/research/sujan_manipulation_object.md",
+    "docs/research/sujan_identity_drift_log.md",
+    "docs/governance/build_manifests/CH-sujan-manipulation-phase1.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [
+    "SEM-033",
+    "UNK-007"
+  ],
+  "required_checks_ack": [
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_jsonl_claim_catalog.py",
+    "tests/test_jsonl_claim_grounding.py",
+    "tests/test_measurement_result_log.py",
+    "tests/test_semantic_os.py",
+    "tests/research/test_sujan_manipulation.py"
+  ],
+  "unknowns": [
+    {
+      "id": "BULK_CANDLE_SELECTOR",
+      "status": "UNRESOLVED",
+      "blocking": false,
+      "registered_as": "UNK-007 UNKNOWN_FOUNDING__SUJAN_BULK_CANDLE",
+      "why_not_blocking": "The founding is supplied EXTERNALLY by design. SEM-033's predicate is fully determined once a parent is given, so the detector is correct and testable without it. Resolving it would require inventing a size heuristic, which the specification and the identity charter both forbid. This is incomplete-by-design, not an unresolved implementation question."
+    },
+    {
+      "id": "STRONG_CONFIRMATION",
+      "status": "UNKNOWN",
+      "blocking": false,
+      "registered_as": "drift log Record 3 / Record 5a scope note",
+      "why_not_blocking": "The second half of Q10 is not answered by this construction and nothing in SEM-033 depends on it."
+    },
+    {
+      "id": "BAR_PREDICATE_VS_PATH",
+      "status": "MULTIPLE_INTERPRETATIONS",
+      "blocking": false,
+      "registered_as": "drift log Record 5e; object spec section 6",
+      "why_not_blocking": "The single-candle reading is bridge-specified. The multi-candle purge/reclaim path is recorded as a preserved ambiguity and deliberately not implemented."
+    },
+    {
+      "id": "MODULE_ATTRIBUTION_ENUMERATION_DRIFT",
+      "status": "PRE_EXISTING",
+      "blocking": false,
+      "registered_as": "tests/test_module_attribution.py (not in GREEN_FLOOR, not in CI)",
+      "why_not_blocking": "docs/governance/module_attribution_stubs.jsonl was already stale by 108 src/ modules before this change; this package adds 6 more, for 114. Refreshing it via module_census.py --write-stubs is all-or-nothing and would register 108 modules built by other work under this change id. Deliberately NOT refreshed. The test was red before this change and stays red for the same reason."
+    }
+  ],
+  "rollback_boundary": "Delete src/research/sujan_manipulation/ and tests/research/test_sujan_manipulation.py; revert the SEM-033 and UNK-007 ontology blocks; revert the STR-SEM033-MANIPULATION-ALERTS stream and the two CC-SEM033-* classes and regenerate data/jsonl_claim_catalog.jsonl; delete docs/research/sujan_manipulation_object.md; drift log Record 5 is append-only history and is NOT reverted (CLAUDE.md 6.2 rule 4). Nothing else is touched, so rollback is total.",
+  "authority_granted": "User (human bridge) 2026-08-28: the SUJAN_MANIPULATION_RESEARCH_PHASE_1 specification, which is the separate authorized construction change required by SUJAN_CRT_IDENTITY_EXTRACTION_SYSTEM.md line 392. Plus six recorded rulings: Level-1 provenance, fully-inside close reading, protocol-plus-file-adapter input, name approved as-is, side=BOTH, alert-every-time with no expiry.",
+  "authority_NOT_granted": "No identity certification (the coding layer cannot self-certify FROZEN). No MC-*, no F-*, no RF-* family row. No economic claim of any kind; the alert count is an observation, never a result. No G001, no production config, no ACTIVE_VERSION change, no promotion, no spine wiring. No SEM-031 retune and no import from research.sujan_crt. F-095 does not travel to SEM-033 and no SEM-033 result travels to Sujan CRT. BULK_CANDLE_SELECTOR is not resolved and may not be resolved by an implementation.",
+  "production_behavior_changed": "NO"
+}

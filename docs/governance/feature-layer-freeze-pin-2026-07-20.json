@@ -1,5 +1,5 @@
 {
-  "_doc": "Feature-layer GOVERNANCE freeze pin + XAUUSD-only regression benchmark (2026-07-20, scoped 2026-07-20b). Not a scientific claim that feature research is complete. Do not hand-edit vector hashes \u2014 regenerate with FeaturePipeline on the pinned CSV. BNB and multi-instrument runtime benchmarks are deferred to R-1/R-2 runtime suite, not this pin. Mutation of frozen surfaces requires an accepted future-program waiver.",
+  "_doc": "Feature-layer GOVERNANCE freeze pin + XAUUSD-only regression benchmark (2026-07-20, scoped 2026-07-20b). Not a scientific claim that feature research is complete. Do not hand-edit vector hashes — regenerate with FeaturePipeline on the pinned CSV. BNB and multi-instrument runtime benchmarks are deferred to R-1/R-2 runtime suite, not this pin. Mutation of frozen surfaces requires an accepted future-program waiver.",
   "schema_version": "1.1.0",
   "freeze_id": "FEATURE-LAYER-MUTATION-FREEZE-2026-07-20",
   "status_token": "FEATURE_LAYER_MUTATION_FREEZE = ACTIVE",
@@ -8,10 +8,10 @@
   "active_config_version": "v2_multi_2026_04",
   "prod_version_constant": "v2_multi_2026_04",
   "schema": {
-    "schema_version": "4.0",
-    "schema_hash": "c87a1aba7bc79803d04c680e0232389e",
-    "feature_dim": 39,
-    "feature_count": 39,
+    "schema_version": "5.0",
+    "schema_hash": "f52bf5d3f2ae6ddb75e8a35e9c323e07",
+    "feature_dim": 48,
+    "feature_count": 48,
     "canonical_features": [
       "open",
       "high",
@@ -51,17 +51,26 @@
       "candles_since_retest",
       "liquidity_distance",
       "liquidity_pressure_score",
-      "volume_spike"
+      "volume_spike",
+      "order_block_distance",
+      "fvg_distance",
+      "breaker_distance",
+      "mitigation_block_distance",
+      "pdh_distance",
+      "pdl_distance",
+      "eqh_distance",
+      "eql_distance",
+      "change_of_character"
     ]
   },
   "source_file_pins": {
     "market_ontology.yaml": {
       "path": "configs/formulas/market_ontology.yaml",
-      "sha256": "84507977f23abc5cc4e557fb3684388ec5a8de3df093851dfa8d41298dc7f5bd"
+      "sha256": "d2a6577e7bdc4d908067005ea53790350cd5d6386d0b145cef03669d57b71fbb"
     },
     "active_config": {
       "path": "configs/production/v2_multi_2026_04.json",
-      "sha256": "9f9bcc2370b401139164924f0a3e078590e318e06c62485dca8f898dff5d7d5d"
+      "sha256": "a9507d6c2e5658caf831f9bb2618116b9d4ba23edaa6aff49804c81098b2a74a"
     },
     "ACTIVE_VERSION": {
       "path": "configs/production/ACTIVE_VERSION",
@@ -69,11 +78,11 @@
     },
     "feature_pipeline.py": {
       "path": "src/features/feature_pipeline.py",
-      "sha256": "d605650b9ffdacca1f534126f3846bcd3a1c9e32e5e7dfc783b996e415ae018d"
+      "sha256": "40d3fed6cac0baf24538b68bfc5e0296f25cace1308ab23296e0b8af2860c8f8"
     },
     "feature_schema.py": {
       "path": "src/features/feature_schema.py",
-      "sha256": "61477205087f9a60f31be14f75dd13033eb0ba33d1484fa62f94173af8de5ad2"
+      "sha256": "d418cac53ed5444bedbf550f398904810eda76adb22d31c329be245566f51530"
     },
     "candle_math.py": {
       "path": "src/features/candle_math.py",
@@ -101,21 +110,23 @@
       "drop": 78,
       "vector_shape": [
         3871,
-        39
+        48
       ],
       "vector_dtype": "float32",
-      "vector_sha256": "37f43f449af0720ff547dcb9cd0c45243f0e6c421e1f9475e9c9d75517601ef5",
-      "vector_nansum": 130762304.0,
+      "vector_sha256": "3d133d81e085f09ba40348c3e42389145a31a3bf58f2da07979cd8e04ce66a49",
+      "vector_nansum": 130777360.0,
       "coverage": {
         "benchmark_class": "FEATURE_MATRIX",
-        "contract": "full CSV -> FeaturePipeline.run() -> float32 (N, 39) SHA-256",
+        "contract": "full CSV -> FeaturePipeline.run() -> float32 (N, 48) SHA-256",
         "exercises": {
           "feature_pipeline_batch_run": true,
           "canonical_38_vector_emission": false,
           "warmup_dropna_finalize": true,
           "schema_v3_dim38": false,
           "canonical_39_vector_emission": true,
-          "schema_v4_dim39": true
+          "schema_v4_dim39": true,
+          "schema_v5_dim48": true,
+          "canonical_48_vector_emission": true
         },
         "does_not_exercise": {
           "note": "Matching this vector SHA does NOT imply full trading-path behavioral equivalence. Runtime/filter/planner/partial-TP coverage belongs in the runtime benchmark suite (R-1/R-2).",
@@ -134,7 +145,7 @@
         "feature_rows_out": 3871,
         "warmup_drop": 78,
         "trade_count": null,
-        "trade_count_note": "Not part of this benchmark. Related XAUUSD 2-month BACKTEST (separate artifact) had 0 trades / 3 session-filtered retests \u2014 see results/XAUUSD/backtests/run_20260719_021925_XAUUSD/ and tracker section 13. That is runtime evidence, not a feature-matrix pin field.",
+        "trade_count_note": "Not part of this benchmark. Related XAUUSD 2-month BACKTEST (separate artifact) had 0 trades / 3 session-filtered retests — see results/XAUUSD/backtests/run_20260719_021925_XAUUSD/ and tracker section 13. That is runtime evidence, not a feature-matrix pin field.",
         "related_runtime_artifact": "results/XAUUSD/backtests/run_20260719_021925_XAUUSD/"
       }
     }
@@ -213,19 +224,25 @@
       "note": "user-authorized 2026-07-22. Three changes to CANONICAL_FEATURES: (1) macd_hist -> macd_hist_raw + macd_hist_z, ending the in-place z-score overwrite that made the emitted value differ from the declared formula (FM-049's own note warned of this); (2) wick_size -> candle_range, the honest name for high-low, which the ontology already declares as FM-002's semantic_quantity with wick_size as misnomer_alias; (3) FM-052 session domain {0,1,2} hour-partition -> {0..4} window model incl. OVERLAP and CLOSED. SCHEMA_HASH and FEATURE_ORDER_HASH are computed over feature NAMES (feature_schema.py:111,122), so (1) and (2) invalidate every stored schema hash with zero math change; (3) changes emitted values on slot 30. Requires baseline recapture and per-artifact reconciliation.",
       "supersedes_or_absorbs": [
         "M16-WU-SUPERSEDED-VECTOR-MIGRATION (this IS the explicit migration plan + retrain gates it required; still no silent dim swap)",
-        "M16-WU-SESSION-ENCODING (P1, BLOCKS_ACTIVATION \u2014 the canonical-vs-consumer session encoding permutation is resolved by the single owning module)",
-        "T-17 (macd_hist z-score semantics revisit \u2014 resolved by splitting raw from normalized)",
-        "T-19 (naming revisit \u2014 same class of fix as the candle_range rename)"
+        "M16-WU-SESSION-ENCODING (P1, BLOCKS_ACTIVATION — the canonical-vs-consumer session encoding permutation is resolved by the single owning module)",
+        "T-17 (macd_hist z-score semantics revisit — resolved by splitting raw from normalized)",
+        "T-19 (naming revisit — same class of fix as the candle_range rename)"
       ],
       "_supersession_note": "The absorbed ids are RETAINED in this list above, not deleted (CLAUDE.md 6.2 rule 4). They record what was planned and when; this entry records how it was discharged.",
-      "parity_contract": "NONE \u2014 PRODUCTION_BEHAVIOR_CHANGED = YES. The XAUUSD vector SHA, schema hash, feature_dim and canonical_features WILL move and must be regenerated by running the pipeline, never hand-edited. The binding requirement is instead ATTRIBUTION: the gate-ON BNBUSDT ledger delta must be fully explained by the three sub-changes measured independently. An unattributed delta means stop.",
+      "parity_contract": "NONE — PRODUCTION_BEHAVIOR_CHANGED = YES. The XAUUSD vector SHA, schema hash, feature_dim and canonical_features WILL move and must be regenerated by running the pipeline, never hand-edited. The binding requirement is instead ATTRIBUTION: the gate-ON BNBUSDT ledger delta must be fully explained by the three sub-changes measured independently. An unattributed delta means stop.",
       "prerequisite": "ZONEGATE-ALIGNMENT-SAFETY-NET must be green FIRST (tests/test_zone_gate_alignment.py). ZoneGate is the only live hard gate (F-041) and consumed the vector POSITIONALLY while silently truncating over-length vectors; migrating the schema before closing that path would have mis-scored silently."
     },
     {
       "id": "ZONEGATE-ALIGNMENT-SAFETY-NET",
       "phase": "fail-closed vector alignment; prerequisite of SCHEMA-V4-VECTOR-MIGRATION",
-      "note": "2026-07-22. models/zone_registry.json always stored a top-level `feature_order` and nothing read it; zone_gate_engine._extract_vector built from the ambient CANONICAL_FEATURE_ORDER and silently truncated over-length vectors (a v2.0(35)->v3.0(38) back-compat path). Fixed: scoring is now name-anchored to the registry's own feature_order, truncation raises, and a registry naming a feature absent from the live schema raises ZoneFeatureOrderError at LOAD (never fail-open \u2014 a hard gate scoring a misaligned vector is worse than no gate).",
+      "note": "2026-07-22. models/zone_registry.json always stored a top-level `feature_order` and nothing read it; zone_gate_engine._extract_vector built from the ambient CANONICAL_FEATURE_ORDER and silently truncated over-length vectors (a v2.0(35)->v3.0(38) back-compat path). Fixed: scoring is now name-anchored to the registry's own feature_order, truncation raises, and a registry naming a feature absent from the live schema raises ZoneFeatureOrderError at LOAD (never fail-open — a hard gate scoring a misaligned vector is worse than no gate).",
       "parity_contract": "MUST be a no-op at v3.0: name-anchored extraction == positional extraction while feature_order == CANONICAL_FEATURE_ORDER, and the gate-ON BNBUSDT ledger stays 9bcba138775d4109."
+    },
+    {
+      "id": "SCHEMA-V5-HTFCRT-SMC-MIGRATION",
+      "phase": "active-arm feature-schema migration (v4.0/39dim -> v5.0/48dim) + new CRTState members; NOT parity-preserving by design",
+      "note": "2026-08-15. Adds a real calendar-true HTF parent candle + 3-candle CRT (C1 range/C2 manipulation/C3 distribution) as new CRTState members RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3 (disjoint sub-graph, parent-timeframe scoped), and registers 9 previously-ABSENT SMC primitives (order block, FVG, breaker, mitigation block, PDH/PDL, EQH/EQL, CHoCH) as canonical vector features. Ships on new active version v2_htfcrt_2026_08 with the arm ON, by explicit user decision accepting a ledger change (not a byte-identity migration like SCHEMA-V4-VECTOR-MIGRATION or FM-030/031).",
+      "parity_contract": "NONE -- PRODUCTION_BEHAVIOR_CHANGED = YES, declared intent. Acceptance bar is fully-attributed ledger diff (every changed trade maps to a named mechanism), not byte-identity. See docs/implementation_plan/study-sujantrader-docs-composed-snowflake.md Phase 6 Verification."
     }
   ],
   "engineering_focus_after_freeze": "docs/implementation_plan/backtest-runtime-roadmap-2026-07-20.md",
@@ -348,15 +365,100 @@
         "not_in_scope": "No emitted feature value changes (registration only, no code touched by this ontology edit). Fixing the F-072 call sites themselves (execution_planner.py, model_runners/adapters/execution_plan.py) is a separate, code-level change in the same session, verified independently via the planner/adapter test suites, not via this feature-freeze pin (those files are not pinned sources)."
       },
       "parity_contract": "XAUUSD vector SHA MUST be unchanged; confirmed via tests/test_feature_layer_freeze.py (7/8 tests pass without a pin update; the 8th, test_source_file_pins_match, is exactly the hash check this waiver entry discharges)."
+    },
+    {
+      "date_utc": "2026-08-15",
+      "program_id": "SCHEMA-V5-HTFCRT-SMC-MIGRATION",
+      "source_sha_refresh": "PRE-DECLARATION -- edits not yet made. Intent: touch feature_schema.py, feature_pipeline.py, market_ontology.yaml, ACTIVE_VERSION, active_config, state_identity.py, crt_engine_v2.py.",
+      "pre_existing_drift_declared": {
+        "_doc": "Filed BEFORE any edit in this program, per CLAUDE.md 6.2 rule 4 (declared drift, not silent) and this pin doc own rule (mutation of frozen surfaces requires an accepted future-program waiver). Baseline captured at results/baseline/20260815T112746Z_pre_htfcrt/manifest.json: schema_hash c87a1aba7bc79803d04c680e0232389e, feature_dim 39, config_sha256 a59367c0762ea15be178e3783b0f0f4bbe05300d5d97191979e928ee87f7c6dd (production.version v2_multi_2026_04). Impact manifest: docs/governance/build_manifests/CH-htfcrt-parent-candle-smc-v1.impact.json (IMPACT: APPROVED).",
+        "scope": "CANONICAL_FEATURES 39->48 (9 new SMC primitive slots), SCHEMA_VERSION 4.0->5.0, CRTState 9->12 (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3), new active version v2_htfcrt_2026_08 with the arm ON by explicit user decision.",
+        "user_authorization": "AskUserQuestion answers 2026-08-15: 3-candle wiring=new CRT states, TF ladder=H4+D1+W1+MN1, Bucket B scope=all 9 primitives, default arm=ON immediately, feature repr=canonical vector slots 39->48."
+      }
+    },
+    {
+      "date_utc": "2026-08-15",
+      "program_id": "SCHEMA-V5-HTFCRT-SMC-MIGRATION",
+      "source_sha_refresh": [
+        "market_ontology.yaml",
+        "active_config",
+        "feature_pipeline.py",
+        "feature_schema.py"
+      ],
+      "pre_existing_drift_declared": {
+        "_doc": "COMPLETION entry for the pre-declaration filed earlier the same day (see the prior 2026-08-15 waiver_log entry). Registers the actual landed change: CANONICAL_FEATURES 39->48 (9 new SMC primitives FM-075..FM-083), SCHEMA_VERSION 4.0->5.0, plus CRTState 9->12 (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3, state_identity.py, not a pinned source of this feature-layer pin). candle_math.py, derived_math.py, causal_structure.py, registry_init.py, ACTIVE_VERSION unchanged by this program (verified: SHAs identical to the 2026-08-09 pin).",
+        "schema_version_before_after": {
+          "before": "4.0",
+          "after": "5.0"
+        },
+        "vector_shape_before_after": {
+          "before": [
+            3871,
+            39
+          ],
+          "after": [
+            3871,
+            48
+          ]
+        },
+        "vector_sha256_before_after": {
+          "before": "37f43f449af0720ff547dcb9cd0c45243f0e6c421e1f9475e9c9d75517601ef5",
+          "after": "3d133d81e085f09ba40348c3e42389145a31a3bf58f2da07979cd8e04ce66a49"
+        },
+        "note": "PRODUCTION_BEHAVIOR_CHANGED=YES was already declared by the accepted_future_programs SCHEMA-V5-HTFCRT-SMC-MIGRATION entry itself -- this vector SHA move is the EXPECTED, already-accepted consequence (9 new SMC primitives appended at indices 39-47; all 39 prior indices unchanged -- verified via test_b0b1_feature_semantic_migration.py pinned positions for ema_spread/momentum_score/atr/rsi_14). Determinism verified: re-ran FeaturePipeline on the same pinned CSV twice, byte-identical vector_sha256 both times.",
+        "downstream_fallout_handled": {
+          "ontology_registration": "9 nodes registered (8 derived_metrics FM-075..FM-082 as signed ATR-normalized distances; 1 structural_state FM-083 change_of_character); DERIVED registry wired (src/features/registry/derived_registry.py); validate_registry() returns [] (0 problems).",
+          "zone_gate_behavior": "Verified NOT newly broken: models/zone_registry.json feature_order (38 names, already stale against v4/39 before this program per stack_version.py pre-existing divergence note) continues to fail-closed correctly (BLOCK, score=0.0) via the existing name-anchored _extract_vector -- confirmed via direct integration test, not just reasoning.",
+          "downstream_dim_pins_fixed": "~30 test assertions across 16 files updated from literal 39 to 48 (or version 4.0 to 5.0), following the exact precedent SCHEMA-V4-VECTOR-MIGRATION set for its own 38->39 bump. Two REAL production-code bugs found and fixed in the process (not just test literals): research.model_runners.schema_resolver._canonical_minus_v4_only and research.clean_labels.builder.LEGACY_FEATURE_NAMES both derived a frozen historical 38-dim schema by subtracting only the ONE v4 addition from the LIVE (now-48) CANONICAL_FEATURES, silently redefining what \"the v3 schema\" meant every time the live schema grows; both fixed with an explicit v5-exclusion set + fail-closed dim guard.",
+          "deferred_not_fixed": [
+            "tests/test_crt_baseline_trace.py::test_artifact_invariants_if_present -- the underlying docs/governance/xauusd_crt_baseline_trace/xauusd_crt_baseline_trace_v1.jsonl artifact is itself frozen under XAUUSD_CRT_BASELINE_TRACE_V1_FREEZE.json and stores per-bar feature_count=39; regenerating it is a separate governed re-certification, not done in this pass.",
+            "Model retraining: all 6 model families (zone_gate/rr/rr_fusion/gaussian/bitnet/tradenet) remain trained on <=39-dim schemas; every fail-closed dim-mismatch mechanism was verified to degrade correctly (BLOCK/refuse-load, never silent truncate), but no artifact was retrained in this pass -- a separately sequenced, compute-bound activity.",
+            "docs/governance/geometry_census.jsonl / geometry_semantic_adjudication.jsonl: pre-existing stale (7-failure baseline before this program began) grew further (80 unadjudicated derivations, some newly contributed by features/smc/*.py); not regenerated in this pass, same pre-existing debt class."
+          ]
+        }
+      }
+    },
+    {
+      "date_utc": "2026-08-17",
+      "program_id": "CH-visual-crt-trade-object",
+      "source_sha_refresh": "market_ontology.yaml",
+      "why_this_is_not_a_feature_layer_mutation": "Added ontology node SEM-012 (VISUAL_CRT_TRADE_OBJECT) to the NON-frozen semantic section 'execution_behaviours'. Frozen surface #4 covers the ontology WHAT layer for NEW FM IDS and FORMULA IDENTITY CHANGES; this change adds neither. No primitive, feature_composition, derived_metric, or rolling_indicator was touched. The pin hashes the whole file, so a semantic-section addition moves the SHA without touching feature math.",
+      "bounding_evidence": "tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression PASSED with the post-edit file in place (vector_sha256 3d133d81e085f09b... unchanged, 48-dim float32). That single pass bounds BOTH the pre-existing drift below AND this change set's edit: the emitted feature matrix is byte-identical to the pinned benchmark. validate_semantic_registry() -> []. 123 Semantic OS tests green.",
+      "pre_existing_drift_declared": {
+        "_doc": "NOT laundering. The file was ALREADY drifted from the recorded pin before this change set edited it. Measured, not assumed: removing this change set's SEM-012 block from the live file in memory and re-hashing yields 34f237f4..., which is NOT the recorded pin 3530782a.... So the refresh below absorbs a pre-existing delta this change set did not create. Recorded per CLAUDE.md 6.2 rule 4.",
+        "market_ontology.yaml": {
+          "pinned_before_this_change": "3530782a21b26fc3497fcd18fb8e8ee41a02033e457d8c5e7790fac662d1e7eb",
+          "live_pre_edit_measured_2026_08_17": "34f237f4dc8bef290953dc1e800c42fb4053dcfb91d82028f165b7859006f379",
+          "live_post_edit_2026_08_17": "45baab20aa7fba7820c1d6e6ccef2ca6993d46696aee7c1fb5609f1e95db739c"
+        },
+        "provenance_of_pre_existing_drift": "NOT established by this change set. Plausibly the 2026-08-17 SEM-011 epistemic update recorded under P-CRT-LIQ-01 (which states the decision was written into the ontology epistemic block), and/or another concurrent session -- the working tree carries many uncommitted modifications. Stated as a hypothesis, not a finding."
+      },
+      "authority": "Research-lane semantic registration only. No promotion, no G001, no ACTIVE_VERSION change, no feature activation."
+    },
+    {
+      "date_utc": "2026-08-17",
+      "program_id": "CH-visual-crt-lane2-seal",
+      "source_sha_refresh": "market_ontology.yaml",
+      "why_this_is_not_a_feature_layer_mutation": "SEM-012 amended v1->v2 IN PLACE (two pre-registered arms A/B, retest predicate, duplicate rule, arm-B substitution caveat) inside the NON-frozen semantic section 'execution_behaviours'. No FM id and no formula identity added or changed; no primitive, feature_composition, derived_metric, or rolling_indicator touched. Frozen surface #4 is not engaged.",
+      "attribution_measured": {
+        "_doc": "Unlike the previous entry, this delta is FULLY attributed to this change set. Measured: removing the visual_crt_trade_object block from the live file and re-hashing yields 34f237f4..., the SAME value measured before the v2 amendment. Everything outside the node is therefore byte-identical, so the whole 45baab20->d2a6577e delta is this change set's own edit. No pre-existing drift is absorbed by this refresh.",
+        "market_ontology.yaml": {
+          "pinned_before_this_refresh": "45baab20aa7fba7820c1d6e6ccef2ca6993d46696aee7c1fb5609f1e95db739c",
+          "live_after_v2_amendment": "d2a6577e7bdc4d908067005ea53790350cd5d6386d0b145cef03669d57b71fbb",
+          "file_with_sem012_block_removed": "34f237f4dc8bef290953dc1e800c42fb4053dcfb91d82028f165b7859006f379"
+        }
+      },
+      "bounding_evidence": "tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression PASSED under the PROJECT interpreter venv/Scripts/python.exe with the amended file in place (vector_sha256 3d133d81e085f09b... unchanged, 48-dim float32). validate_semantic_registry() -> []. 156 semantic/isolation/relations tests green; measurement-contract floor 16/16.",
+      "authority": "Research-lane semantic amendment only. No promotion, no G001, no ACTIVE_VERSION change, no feature activation. economic_claims_allowed remains false on MC-VCRT-XAUUSD-M15-V1."
     }
   ],
   "runtime_benchmarks": {
     "status": "NOT_YET_OPENED",
     "opens_with": "docs/implementation_plan/backtest-runtime-roadmap-2026-07-20.md R-1/R-2",
     "planned_examples": [
-      "Runtime Benchmark 1 \u2014 BNB Gate ON/OFF",
-      "Runtime Benchmark 2 \u2014 Multi-instrument execution",
-      "Runtime Benchmark 3 \u2014 Trade ledger parity"
+      "Runtime Benchmark 1 — BNB Gate ON/OFF",
+      "Runtime Benchmark 2 — Multi-instrument execution",
+      "Runtime Benchmark 3 — Trade ledger parity"
     ],
     "note": "Deliberately separate from feature freeze pin so feature parity is not confused with execution-path coverage."
   }

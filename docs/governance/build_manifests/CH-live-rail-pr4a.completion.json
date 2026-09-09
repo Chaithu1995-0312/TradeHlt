@@ -1,0 +1,30 @@
+{
+  "change_id": "CH-live-rail-pr4a",
+  "declared_files": [
+    "src/runtime/live_engine_hook.py",
+    "scripts/analysis/feature_math_lint.py",
+    "tests/test_live_rail_hook_xor.py",
+    "tests/test_live_rail_dm001_atr.py",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/architecture/entry-exit-map.md",
+    "docs/governance/build_manifests/CH-live-rail-pr4a.impact.json",
+    "docs/governance/build_manifests/CH-live-rail-pr4a.completion.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_live_rail_hook_xor.py",
+    "tests/test_live_rail_dm001_atr.py",
+    "tests/test_current_findings.py",
+    "tests/test_feature_math_lint.py::test_floor_is_green",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "checks_result": {
+    "pr4a_and_doc_floors": "24 passed (hook XOR, DM-001 magnitude, findings, lint floor, citations, topics)",
+    "test_geometry_census": "not re-run this turn — pre-existing stale vs untracked packages (CH-live-rail-pr1)"
+  },
+  "repo_state_hash": "PENDING",
+  "completion_status": "INCOMPLETE",
+  "completion_notes": "PR-4a implementation is on disk and its own tests + findings/citation/lint floors are green. Mechanical COMPLETE denied: dirty working tree undeclared surfaces + pre-existing census floor. F-073 still OPEN (no caller)."
+}

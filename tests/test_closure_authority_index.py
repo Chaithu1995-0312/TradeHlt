@@ -243,7 +243,9 @@ def test_geometry_and_query_not_closed():
     assert by_id["GEOMETRY_STATIC_LINEAGE"]["status"] == "COMPLETE"
     assert by_id["FEATURE_QUERY_SURFACE"]["status"] == "AUTHORITY_ACTIVE"
     assert by_id["CANONICAL_FEATURE_CODE_SURFACE"]["status"] == "CLOSED"
-    assert by_id["CRT"]["status"] == "CLOSED"
+    # CRT reopened 2026-08-13 (F-074 directional displacement). Still must not
+    # be inferred-closed from any other surface.
+    assert by_id["CRT"]["status"] == "OPEN"
 
 
 def test_claude_md_exposes_index_and_matches_registry_status():

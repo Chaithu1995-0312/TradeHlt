@@ -1,0 +1,45 @@
+{
+  "change_id": "CH-parquet-evidence-layer",
+  "date_utc": "2026-08-23",
+  "objective": "Treat the existing XAUUSD parquet projections as a queryable evidence layer over the trading decision lifecycle (not a training dataset). Catalog grain + legal joins, run named evidence queries (feature census, regimes, opportunity quality, path-exit counterfactuals, candidate lifecycle, ontology coincidence, evidence graph, question→candidate finding). JSONL remains system of record. No G001. No model training. No production.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE"
+  ],
+  "change_class_rationale": "New research-only package src/research/evidence/ plus a thin scripts/research wrapper. Not live-spine. Not FEATURE_IDENTITY. Not MODEL_TRAINING. Parquet stays a projection of JSONL (parquet_store doctrine unchanged).",
+  "affected_files": [
+    "src/research/evidence/__init__.py",
+    "src/research/evidence/catalog.py",
+    "src/research/evidence/records.py",
+    "src/research/evidence/queries.py",
+    "src/research/evidence/driver.py",
+    "src/research/evidence/__main__.py",
+    "scripts/research/run_evidence_layer.py",
+    "tests/research/test_evidence_layer.py",
+    "docs/research/parquet_evidence_layer.md",
+    "docs/topics/research-measurement-contract.md",
+    "docs/analysis/readme.md",
+    "docs/analysis/parquet-evidence-layer-2026-08-23.md",
+    "docs/governance/build_manifests/CH-parquet-evidence-layer.impact.json",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/governance/script_registry_grandfather.json",
+    "docs/reference/script-matrix.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/research/test_evidence_layer.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the evidence package, CLI, tests, spec, SITS overlay/stubs/matrix, topic discussion row, analysis snapshot. parquet_store and the four JSONL/parquet corpora untouched.",
+  "authority_granted": "User 2026-08-23: stop treating these parquet files as datasets; treat them as a queryable evidence layer and perform the named capabilities.",
+  "authority_NOT_granted": "No production, no G001, no XGBoost/training, no parquet-as-authority, no silent join of the 94k ledger onto the later CRT spine run, no F-id auto-registration, no ACTIVE_VERSION change.",
+  "production_behavior_changed": "NO"
+}

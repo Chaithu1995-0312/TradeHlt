@@ -1,0 +1,34 @@
+{
+  "change_id": "CH-live-rail-cli",
+  "declared_files": [
+    "scripts/live/run_live_rail.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "configs/experimental/spec/live_rail_tickdb_paper_run.json",
+    "tests/fixtures/ticks/xauusd_m15_paper_81.jsonl",
+    "tests/test_live_rail_cli.py",
+    "tests/test_live_rail_orchestrator.py",
+    "src/runtime/live_rail_orchestrator.py",
+    "docs/governance/build_manifests/CH-live-rail-cli.impact.json",
+    "docs/governance/build_manifests/CH-live-rail-cli.completion.json",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/topics/ai-automation-agent.md",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_live_rail_cli.py",
+    "tests/test_live_rail_orchestrator.py::test_ready_raise_is_feature_reject_and_drain_completes",
+    "tests/test_live_rail_orchestrator.py::test_drain_flushes_closed_bars",
+    "python scripts/live/run_live_rail.py --paper --config configs/experimental/spec/live_rail_tickdb_paper_run.json"
+  ],
+  "checks_result": {
+    "cli_pytest": "2 passed",
+    "orchestrator_drain": "5 passed (subset)",
+    "paper_run": "exit=0 closed_bars=80 process_calls=0 FEATURE_REJECT=2"
+  },
+  "repo_state_hash": "PENDING",
+  "completion_status": "INCOMPLETE",
+  "completion_notes": "Thin CLI + SITS SCR-399 + paper TickDB drain on disk. COMPLETE denied: dirty tree + pre-existing census. No orders, no ACTIVE_VERSION live_rail, F-073 stays OPEN."
+}

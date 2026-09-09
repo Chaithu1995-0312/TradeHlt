@@ -33,6 +33,7 @@ def _rec(
     findings: list[str] | None = None, models: list[str] | None = None,
     code_hypotheses: list[str] | None = None, programs: list[str] | None = None,
     evidence: list[dict] | None = None, notes: str = "",
+    created: str = _TS, last_validated: str | None = None,
 ) -> dict:
     return {
         "id": hid, "statement": statement, "family": family, "status": status,
@@ -40,7 +41,7 @@ def _rec(
         "findings": findings or [], "models": models or [],
         "code_hypotheses": code_hypotheses or [], "programs": programs or [],
         "evidence": evidence or [],
-        "created": _TS, "last_validated": _TS, "notes": notes,
+        "created": created, "last_validated": last_validated or created, "notes": notes,
     }
 
 
@@ -273,6 +274,52 @@ def build_records() -> list[dict]:
         notes="Alias H-MSIP-002. Owner-accepted MATCHING_DEPENDENT. E0 rep H-017; E1/E2 "
               "sign reverse with adequate E1 overlap. Closes H-017/H-018 thread "
               "(H-017 preserved matched-scope only). No rescue of P-BOS=+1. RESEARCH_ONLY.",
+    ))
+    R.append(_rec(
+        "H-019",
+        "On XAUUSD M15, a trailing big-mother filter raises the next-block inside-close "
+        "rate versus the unfiltered mother/test pair rate (structure only; no y).",
+        family="mother_range", status="validated",
+        findings=[], models=[],
+        created="2026-08-23T00:00:00Z",
+        programs=[
+            "scripts/analysis/mother_range_inside_close.py",
+            "docs/analysis/mother-range-structure-2026-08-23.md",
+            "docs/research/mother_range_trade_object.md",
+        ],
+        evidence=[
+            {"type": "doc", "path": "docs/analysis/mother-range-structure-2026-08-23.md"},
+            {"type": "code", "path": "scripts/analysis/mother_range_inside_close.py"},
+            {"type": "doc", "path": "docs/research/mother_range_trade_object.md"},
+        ],
+        notes="SEM-026 structural primitive. Calendar x=16: 3094 pairs, inside-close 51.7% "
+              "(1600/3094); P90/100 big-mother 70.6% (n=378); 1.5xATR/20 66.9% (n=478, "
+              "320 big+inside). PROMOTION NOT ELIGIBLE. Missing: cross-instrument structure "
+              "census. Not an economic claim. Distinct from identity L5 4-of-4 and from F-086.",
+    ))
+    R.append(_rec(
+        "H-020",
+        "A t=0 fade after a big inside-close (SEM-026, MC-MRANGE-XAUUSD-M15-V1) has "
+        "holdout expectancy that generalizes (train and holdout same sign; economic_claims_allowed).",
+        family="mother_range", status="frozen",
+        findings=["F-090"], models=[],
+        created="2026-08-23T00:00:00Z",
+        programs=[
+            "docs/research/mother_range_trade_object.md",
+            "configs/research/measurement_contracts/instances/MC-MRANGE-XAUUSD-M15-V1.json",
+            "docs/analysis/mother-range-holdout-2026-08-23.md",
+        ],
+        evidence=[
+            {"type": "finding", "path": "docs/current-findings.md"},
+            {"type": "doc", "path": "docs/analysis/mother-range-holdout-2026-08-23.md"},
+            {"type": "doc", "path": "docs/research-readiness/mother_range_mc_mrange_xauusd_m15_v1_metrics.json"},
+            {"type": "code", "path": "src/research/mother_range/geometry.py"},
+            {"type": "test", "path": "tests/research/test_mother_range_trade_object.py"},
+        ],
+        notes="Holdout n=59 net +0.204R diagnostic-pass; train n=240 net -0.252R (sign flip). "
+              "FROZEN pending a NEW MC-* or a cross-instrument test. PROMOTION NOT ELIGIBLE. "
+              "economic_claims_allowed false. Does not reopen F-086. Does not rewrite identity L5. "
+              "Does not merge H-019 into production.",
     ))
     return R
 

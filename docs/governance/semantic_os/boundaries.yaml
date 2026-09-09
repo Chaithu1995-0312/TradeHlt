@@ -358,6 +358,7 @@ boundaries:
 
     contract_ids:
       - CT-004
+      - CT-009
     contract:
       inputs:
         - Canonical features / OHLCV for the bar.
@@ -726,7 +727,8 @@ boundaries:
       Research significance treated as production authority, freeform tool graphs, or :8787 exposed
       beyond trusted localhost.
 
-    contract_ids: []
+    contract_ids:
+      - CT-008
     contract:
       inputs:
         - Pre-registered experiment configs / measurement profiles (research).

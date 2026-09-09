@@ -1,0 +1,69 @@
+{
+  "change_id": "CH-xauusd-tv-odds",
+  "task_class": "OBSERVATION_ONLY",
+  "objective": "Answer the user's question 'extract one month of XAUUSD data, compare it with TradingView, and state the odds between the two' with a valid month-wide per-bar agreement rate. Two defects in the existing evidence block a valid answer today. (A) COVERAGE: only 1,241 of the corpus's 2,116 M15 bars have any TradingView capture (58.6%); four spans have none (Jul 15 01:00-02:30, Jul 15 23:15 -> Jul 20 08:45, Jul 20 18:15 -> Jul 28 03:30, Jul 30 08:15 -> Jul 31 23:45). (B) DOUBLE-COUNTING: F-080's headline '1,455 bars compared / 25 divergent' is a NAIVE SUM of per-shot `compared` counts (scripts/research/htf_parent_telemetry_extract.py:163-164) across shots whose windows overlap — 05_m15_jul28_displacement (13) and 06_m15_jul30_trade (6) are strict subsets of 04_m15_jul28_forensic (202), and on H4 both 03_h4_jul27_31 and 09_h4_jul15_20 sit inside 01_h4_july_macro's window. Arithmetic: 202+13+6+82+37+552+368 = 1,260 summed M15 vs 1,241 unique; 1,260 + 195 H4 = exactly 1,455. An agreement rate over an inflated, overlapping denominator is not a valid odds statement. This change closes coverage to ~100% and computes the odds over DEDUPLICATED unique (timeframe, broker-timestamp) bars. No production behavior changes; grants no G001 and no authority (CLAUDE.md 6.5).",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "tools/tv_forensic/shot_plan.json",
+    "scripts/research/tv_engine_odds.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "tests/test_tv_forensic_smoke.py",
+    "reports/xauusd_month_tv_engine_odds.md",
+    "docs/current-findings.md",
+    "docs/governance/build_manifests/CH-xauusd-tv-odds.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — no model is read, retrained, or re-registered. F-076's 6 stale families (zone_gate/rr/rr_fusion/gaussian/bitnet/tradenet) stay exactly as stale as they already were.",
+  "affected_production_config": "none — configs/production/ACTIVE_VERSION stays v2_htfcrt_2026_08 and no config file is read for write. The pinned corpus data/XAUUSD_M15.csv (2,116 bars, 2026-07-07 01:00 -> 2026-08-06 23:45 broker, sha256 478b0751...) is READ ONLY and is NOT re-fetched — a fresh MT5 pull would invalidate the clock alignment of all 10 existing shots.",
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_tv_forensic_smoke.py"
+  ],
+  "pre_registration": {
+    "ritual": "CLAUDE.md 6.2 Epistemic Integrity Pre-Registration (Program E-001). Every rule below is fixed BEFORE the three new captures run and BEFORE any odds number is computed, so no threshold can be reverse-fitted to a result that is already visible.",
+    "tolerance_basis": "INHERITED, NOT RE-CHOSEN. engine_data.MATCH_TOLERANCE=3.0 (engine_data.py:24) is imported, never restated as a literal in the new aggregator. A bar is DIVERGENT iff its summed O/H/L/C L1 error exceeds 3.0 — the same rule every existing sidecar was already scored under. The tolerance is NOT widened or narrowed after any number is seen. If the resulting agreement rate is uncomfortable, the rate is reported as measured.",
+    "unit_of_account": "The odds denominator is the count of UNIQUE (interval_min, broker_timestamp) keys with BOTH an engine bar and a TradingView bar, i.e. status in {OK, DIVERGENT}. Deduplication is declared in advance as the correct unit because a bar covered by three overlapping shots is one bar of evidence, not three. Where two shots cover the same key, their stored OHLC must agree; a mismatch is reported as a CROSS_SHOT_INCONSISTENCY and BLOCKS the report rather than being silently collapsed to one side (that would reproduce the D-1 silent-gap class F-079 fixed).",
+    "coverage_is_not_disagreement": "Rows with status NO_ENGINE_BAR / ENGINE_BAR_MISSING_TV_HAS_ONE / NO_TV_BAR are counted in a COVERAGE denominator and are excluded from the odds numerator and denominator alike. Specifically 01_h4_july_macro's 61 missing_engine_bar + 30 engine_gap_tv_has_bar rows are the pre-corpus Jul 1-6 span — that is the corpus not existing yet, NOT the two feeds disagreeing. Reporting them as agreement would flatter the rate; reporting them as divergence would fabricate disagreement. Neither is done.",
+    "primary_metric_is_disaggregated": "DECIDED IN ADVANCE: the headline is reported per timeframe (M15, H4) AND per OHLC field, never as one pooled composite alone. Rationale fixed before measuring: the L1 composite sums four fields, so a single large open-field delta can flag a bar whose high/low/close agree to within a spread. F-080 already observed Close max |delta| = 0.99 against 25 composite-DIVERGENT bars. A single composite number would hide which field actually disagrees, so per-field max and p99 |delta| are mandatory report rows, not optional extras.",
+    "uncertainty_is_stated": "The divergence rate carries a Wilson 95% confidence interval. n is ~1,400 unique bars, not infinite; a point estimate with no interval would overstate precision. If an interval crosses a threshold that would change the report's wording, the interval wins.",
+    "localization_prereg": "Divergence is broken out by broker hour-of-day BEFORE interpretation. F-080's standing claim is that 25/25 divergences localize to one slot per trading day (H4 broker 00:00, M15 broker 01:00). Full coverage adds ~875 previously unmeasured M15 bars spanning every hour, so this claim is now genuinely falsifiable: if divergences appear away from the daily-open slot, F-080's localization conclusion is WEAKENED and that is reported as such. The prediction is recorded here in advance.",
+    "f080_correction_is_gated": "Deduplication plus full coverage will change F-080's registered counts. Per the CLAUDE.md 6.2 Documentation Drift Protocol gate, a change to a registered finding's numbers is NOT auto-fixed: the corrected figures are brought to the user for approval, the originals are marked CORRECTED: <old> -> <new> and never deleted (6.2 rule 4). Expected shape (stated in advance, not after): F-080's CONCLUSION — divergences localize to the daily-open boundary, cross-feed session artifact, not an engine or aggregation defect — survives, and only the counts move. If the localization conclusion itself moves, that is a REVERSAL requiring separate approval.",
+    "new_finding_condition": "A new F-id is registered ONLY IF (a) the deduplicated full-coverage odds materially contradict F-080's localization conclusion, or (b) a cross-shot OHLC inconsistency is found. A clean measurement that merely sharpens F-080's counts is a CORRECTION to F-080, not a new finding — a tidier number is not a discovery.",
+    "verdict_vocabulary": "The closed CLAUDE.md 6.8 set only. `different != wrong`: OANDA and the MT5 broker are different venues, so bars agree to within a spread BY CONSTRUCTION. No row says 'bug' or 'defect' about a price delta without naming the violated contract."
+  },
+  "unknowns": [
+    {
+      "question": "Whether frame_shot's two-sided achieved-vs-requested assertion can frame the three new M15 windows (4.4, 7.4 and 1.7 days), or refuses them the way it has always refused 02_h4_july_setup.",
+      "blocking": false,
+      "resolution": "Bounded by precedent, not assumption. 10_m15_jul07_14 already framed and reconciled an 8-day M15 window (552 bars), so all three new windows sit inside a proven envelope; 02_h4_july_setup fails at H4 over ~3 weeks, a different regime. Every new edge is placed on a live-market bar, never inside a weekend gap. If a window is refused the assertion is NOT loosened — it is the guard that caught shot 04's original mis-framing; the window is narrowed and split, and the refusal is recorded."
+    },
+    {
+      "question": "Whether tradingview.com is reachable and OANDA:XAUUSD M15 history back to 2026-07-14 is served.",
+      "blocking": false,
+      "resolution": "Phase B (the deduplicating aggregator) is fully deliverable with ZERO network from the 10 sidecars already on disk, because each stores its complete per-bar `engine_vs_tv.rows` array. If capture is unavailable, the odds are reported at the honest 58.6% coverage with the coverage figure stated in the headline, not buried."
+    },
+    {
+      "question": "Whether the three new shots will overlap existing coverage by exactly the amount predicted.",
+      "blocking": false,
+      "resolution": "This is the measurement, not a precondition. Overlap is deliberate (edges are placed inside already-covered spans) precisely so the cross-shot consistency check has something to check. The dedup arithmetic is verified against the known 19-bar overlap of shots 05+06 as a fixed regression anchor."
+    },
+    {
+      "question": "Whether tools/tv_forensic/ and reports/ remaining untracked in git (review defect D-3) should be resolved here.",
+      "blocking": false,
+      "resolution": "Out of scope, unchanged from CH-monthly-tv-coverage-h4-recon. Git tracking is the user's call. ~15 concurrent Claude sessions run against this repo, so no blanket `git add -A` is performed under any circumstance."
+    }
+  ],
+  "rollback_boundary": "Delete scripts/research/tv_engine_odds.py, reports/xauusd_month_tv_engine_odds.md and results/xauusd_tv_odds/; revert the three shot entries plus the month-complete preset in tools/tv_forensic/shot_plan.json and delete the three new sidecars/PNGs from tools/tv_forensic/shots/; revert the seed_script_registry.py overlay, the script-matrix regeneration, the tests/test_tv_forensic_smoke.py addition and the F-080 Note edit. No src/, no configs/, no models/, no data/ touched — nothing to re-hash, no promotion to unwind, and the pinned corpus is byte-unchanged.",
+  "authority_granted": "User approved the plan 2026-08-18 (capture the gaps, keep the pinned corpus, deliver report + JSON). Read-only/observational: no ACTIVE_VERSION change, no config promotion, no model retrain, no CRT re-closure (stays REOPENED per F-074), no G001 claim. This measures FEED FIDELITY — how often two data sources agree — and says nothing about whether either predicts price. A high agreement rate grants no economic or trading authority whatsoever."
+}

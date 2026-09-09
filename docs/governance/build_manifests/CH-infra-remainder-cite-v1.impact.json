@@ -1,0 +1,35 @@
+{
+  "change_id": "CH-infra-remainder-cite-v1",
+  "date_utc": "2026-09-04",
+  "objective": "Cite the remaining sidecar, measurement, tests, and lab .py paths (845 v1 + 99 v2) so Infra-doc referenced covers the full declared-tree census. Existence inventory only — not behavior, not G001.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Generated citation inventory under .grok/ plus linker/INFRA/topic pointers. No src/, no configs/production, no models/, no formula math.",
+  "affected_files": [
+    ".grok/infra_file_citations.md",
+    ".grok/_cite_remainder.py",
+    ".grok/_link_infra_architecture.py",
+    ".grok/infra_architecture_link.xlsx",
+    ".grok/infra_architecture_link_coverage.json",
+    ".grok/INFRA.md",
+    ".grok/PENDING.md",
+    "docs/topics/readme.md",
+    "docs/governance/build_manifests/CH-infra-remainder-cite-v1.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Delete infra_file_citations.md and remainder citer; revert linker citation bucket, INFRA leftover paragraph, topic readme pointer.",
+  "authority_granted": "User 2026-09-04: add remaining un-cited sidecar/measurement/tests/lab files as well.",
+  "authority_NOT_granted": "Spine behavior. Production config. G001. Live rail. Claiming 100% citation means CRT CLOSED or money.",
+  "production_behavior_changed": "NO"
+}

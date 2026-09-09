@@ -153,6 +153,105 @@ def _yload(p: Path) -> Any:
     return yaml.safe_load(Path(p).read_text(encoding="utf-8"))
 
 
+def _semantic_states(root: Path) -> tuple[dict[str, dict], dict]:
+    """L2 state declarations per feature, read from `FeatureStateEncoder`.
+
+    Returns ``(by_name, meta)``. ``by_name`` covers BOTH vector-bound names and the
+    non-vector stateful identities (retest_flag / rsi_state / displacement_flag /
+    body_commitment / atr_magnitude / momentum_magnitude), because the second group is
+    exactly the one that keeps being under-counted from source comments.
+
+    On failure the meta carries ``status: UNAVAILABLE`` and a reason. It does NOT return
+    an all-False map: "the ontology declares no states for this slot" and "the encoder
+    could not be built" must stay distinguishable (F-079/F-083/F-085 silent-gap class).
+    """
+    try:
+        sys.path.insert(0, str(root / "src"))
+        from features.feature_states import FeatureStateEncoder  # noqa: PLC0415
+
+        enc = FeatureStateEncoder()
+    except Exception as exc:  # noqa: BLE001
+        return {}, {"status": "UNAVAILABLE", "reason": f"{type(exc).__name__}: {exc}"}
+
+    by_name: dict[str, dict] = {}
+    vector_bound = set(enc.vector_bound_features)
+    for fname in enc.stateful_features:
+        sf = enc.spec(fname)
+        by_name[fname] = {
+            "stateful": True,
+            "fm_id": sf.fm_id,
+            "ontology_section": sf.section,
+            "category": sf.category,
+            "vector_bound": fname in vector_bound,
+            "vector_index": sf.vector_index,
+            "states": {int(v): n for v, n in sorted(sf.value_to_state.items())},
+            "evidence_class": "PROVEN",
+        }
+    meta = {
+        "status": "OK",
+        "source": "features.feature_states.FeatureStateEncoder (ontology-derived)",
+        "n_stateful_total": len(enc.stateful_features),
+        "n_vector_bound": len(vector_bound),
+        "n_non_vector": len(enc.stateful_features) - len(vector_bound),
+        "non_vector_names": sorted(set(enc.stateful_features) - vector_bound),
+        "n_continuous_vector_slots": len(enc.continuous_features),
+    }
+    return by_name, meta
+
+
+def _resolver_binding(root: Path) -> tuple[dict[str, dict], dict]:
+    """Which features the CRT resolver actually NAMES in a `when:` clause.
+
+    Distinct from "supplied to the resolver": `features.resolver_supply.plan_supply`
+    passes every canonical vector name plus the non-vector `when:`-named ones, so
+    membership in the supply set says nothing about whether a predicate reads the value.
+    Both are reported, separately, per feature.
+
+    Fails soft with an explicit ``status: UNAVAILABLE`` — the resolver needs
+    `configs/formulas/market_crt_states.yaml` AND `crt_resolver_links.yaml`, and the
+    latter is currently untracked, so a clean clone must degrade visibly rather than
+    silently reporting "nothing is consumed".
+    """
+    try:
+        sys.path.insert(0, str(root / "src"))
+        from features.crt_state_resolver import CRTStateResolver  # noqa: PLC0415
+
+        res = CRTStateResolver()
+        required = set(res.required_when_features)
+        waived = set(res.waived_when_features)
+    except Exception as exc:  # noqa: BLE001
+        return {}, {"status": "UNAVAILABLE", "reason": f"{type(exc).__name__}: {exc}"}
+
+    try:
+        from features.feature_schema import CANONICAL_FEATURES as _CF  # noqa: PLC0415
+
+        canon = set(_CF)
+    except Exception:  # noqa: BLE001
+        canon = set()
+
+    by_name: dict[str, dict] = {}
+    for fname in sorted(required | waived | canon):
+        by_name[fname] = {
+            # named in at least one state's `when:` clause on the active variant
+            "required_when": fname in required,
+            "waived": fname in waived,
+            # handed to resolve() by resolver_supply regardless of predicate use
+            "in_supply_set": fname in canon or fname in (required - waived),
+            "evidence_class": "PROVEN",
+        }
+    meta = {
+        "status": "OK",
+        "source": "features.crt_state_resolver.CRTStateResolver.required_when_features",
+        "supply_source": "features.resolver_supply.plan_supply",
+        "n_required_when": len(required),
+        "n_required_when_canonical": len(required & canon),
+        "n_required_when_non_vector": len(required - canon),
+        "required_when": sorted(required),
+        "waived": sorted(waived),
+    }
+    return by_name, meta
+
+
 # ── index ────────────────────────────────────────────────────────────────────
 
 @dataclass
@@ -204,6 +303,24 @@ class FeatureSurfaceIndex:
         lineage_by = {f["name"]: f for f in (lineage.get("features") or []) if "name" in f}
         closure_by = {f["name"]: f for f in (closure.get("features") or []) if "name" in f}
         write_sites = graph.get("column_write_sites") or {}
+
+        # ── L2 semantic states + resolver binding (2026-09-05) ───────────────────
+        # Read from the LIVE authorities, never a table here: the encoder derives its
+        # stateful vocabulary from the ontology at construction, and the resolver
+        # derives `required_when_features` from market_crt_states.yaml + the link
+        # registry. Re-declaring either would create the same second-source split this
+        # index exists to expose.
+        #
+        # An external design doc reached "13 stateful + 3 non-vector, and the resolver
+        # consumes all of them" by reading a stale source comment. Both halves are
+        # wrong, and the fix is these two blocks being derived and separately reported:
+        # `stateful` (does the ontology declare states for this slot?) and
+        # `required_when` (does any CRT state's `when:` clause NAME it?) are different
+        # questions with different answers, and `in_supply_set` is a THIRD question --
+        # resolver_supply.plan_supply hands the resolver every canonical name from the
+        # vector regardless of whether a predicate reads it.
+        semantic_state_by, semantic_state_meta = _semantic_states(root)
+        resolver_by, resolver_meta = _resolver_binding(root)
 
         # consumers from binding manifest
         cons_by: dict[str, list[dict]] = {n: [] for n in CANONICAL_FEATURES}
@@ -393,6 +510,9 @@ class FeatureSurfaceIndex:
             "rr_pit_status": rr_prov.get("pit_status"),
             "zone_pit_status": zone_prov.get("pit_status"),
             "generated_from": "existing artifacts only — no new census",
+            # live-derived (not artifacts): see _semantic_states / _resolver_binding
+            "semantic_state": semantic_state_meta,
+            "resolver_binding": resolver_meta,
         }
 
         for name in CANONICAL_FEATURES:
@@ -567,6 +687,27 @@ class FeatureSurfaceIndex:
                 "ACTIVE_VALUES": active_values,
                 "OVERRIDE_PATHS": overrides,
                 "PIT_STATUS": pit,
+                # L2: does the ontology declare semantic states for this slot?
+                "SEMANTIC_STATE": semantic_state_by.get(name) or {
+                    "stateful": False,
+                    "vector_bound": True,
+                    "vector_index": i,
+                    "states": {},
+                    "evidence_class": "PROVEN",
+                    "note": "continuous / no declared states"
+                    if semantic_state_meta.get("status") == "OK"
+                    else "encoder UNAVAILABLE — stateful status UNKNOWN, not False",
+                },
+                # L3: does any CRT state's `when:` clause NAME it? (≠ supplied to it)
+                "RESOLVER_BINDING": resolver_by.get(name) or {
+                    "required_when": False if resolver_meta.get("status") == "OK" else None,
+                    "waived": False if resolver_meta.get("status") == "OK" else None,
+                    "in_supply_set": True,
+                    "evidence_class": "PROVEN",
+                    "note": None
+                    if resolver_meta.get("status") == "OK"
+                    else "resolver UNAVAILABLE — consumption UNKNOWN, not False",
+                },
                 "REACHABILITY": reach,
                 # textual occurrences of the name in tests/ — evidence_class TEXT_REFERENCE;
                 # a hit does NOT mean the feature's behavior is tested.
@@ -632,6 +773,16 @@ class FeatureSurfaceIndex:
                         "ACTIVE_VALUES": [],
                         "OVERRIDE_PATHS": [],
                         "PIT_STATUS": {"pit_class": ident.get("temporal_semantics"), "note": "identity-registry only (not vector member)"},
+                        "SEMANTIC_STATE": semantic_state_by.get(cn) or {
+                            "stateful": False, "vector_bound": False, "vector_index": None,
+                            "states": {}, "evidence_class": "PROVEN",
+                            "note": "identity-registry only; no declared states",
+                        },
+                        "RESOLVER_BINDING": resolver_by.get(cn) or {
+                            "required_when": False, "waived": False, "in_supply_set": False,
+                            "evidence_class": "PROVEN",
+                            "note": "identity-registry only; not in the resolver supply set",
+                        },
                         "REACHABILITY": {"in_canonical_vector": False},
                         "TEST_REFERENCE_HITS": _scan_tests(root, [cn]).get(cn) or [],
                         "CLOSURE_STATUS": {"code_status": "IDENTITY_ONLY_NOT_VECTOR"},
@@ -852,12 +1003,29 @@ def _print_feature(row: dict, *, fields: list[str] | None = None) -> None:
         print(f"  OVERRIDES:   " + ", ".join(o.get("name", str(o)) for o in ov[:6]))
     pit = row.get("PIT_STATUS") or {}
     print(f"  PIT:         {pit.get('pit_class_effective') or pit.get('pit_class')} — {pit.get('pit_note') or ''}")
+    sem = row.get("SEMANTIC_STATE") or {}
+    if sem.get("stateful"):
+        _states = ", ".join(f"{v}={n}" for v, n in (sem.get("states") or {}).items())
+        print(f"  L2 STATES:   {sem.get('fm_id')} [{sem.get('ontology_section')}] {_states}")
+    else:
+        print(f"  L2 STATES:   none declared — continuous ({sem.get('note') or 'no states block in the ontology'})")
+    res = row.get("RESOLVER_BINDING") or {}
+    # `required_when` (a predicate reads it) and `in_supply_set` (it is handed to
+    # resolve()) are DIFFERENT facts — printed together so they cannot be conflated.
+    print(f"  RESOLVER:    named_in_when={res.get('required_when')} "
+          f"supplied={res.get('in_supply_set')} waived={res.get('waived')}"
+          + (f"  [{res['note']}]" if res.get("note") else ""))
     rch = row.get("REACHABILITY") or {}
     print(f"  REACH:       producer={rch.get('has_producer')} consumers={rch.get('n_consumers')} "
           f"cfg={rch.get('n_config_keys')} rr_active={rch.get('rr_model_dim_active')} "
           f"zone_mass={rch.get('zone_weight_mass')}")
     cl = row.get("CLOSURE_STATUS") or {}
-    print(f"  CLOSURE:     {cl.get('code_status')}  doc={cl.get('doc_alignment')}")
+    # A vector member absent from the closure audit reads NOT_IN_CLOSURE_AUDIT, not None:
+    # "never certified" and "no data" must not look identical (F-079/F-083/F-085 class).
+    _closure = cl.get("code_status") or (
+        "NOT_IN_CLOSURE_AUDIT" if row.get("_vector_member") else None
+    )
+    print(f"  CLOSURE:     {_closure}  doc={cl.get('doc_alignment')}")
     tests = row.get("TEST_REFERENCE_HITS") or []
     print(f"  TEST REFS:   {len(tests)} (textual, not behavioral coverage) → {', '.join(tests[:5])}")
 
@@ -869,6 +1037,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--summary", action="store_true", help="index summary + surface gate status")
     ap.add_argument("--feature", "-f", metavar="NAME|FEATURE_ID", help="full card for one feature")
     ap.add_argument("--list", action="store_true", help="list vector features (compact)")
+    ap.add_argument(
+        "--lineage",
+        action="store_true",
+        help="full-vector lineage table: index / formula source / stateful / resolver consumption",
+    )
     ap.add_argument("--search", metavar="TEXT", help="substring search across joined rows")
     ap.add_argument("--pit", metavar="PIT_CLASS", help="filter by effective PIT class")
     ap.add_argument("--closure", metavar="STATUS", help="filter by code closure status")
@@ -891,10 +1064,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.sources:
         print(json.dumps(idx.sources, indent=2))
-        if not any([args.summary, args.feature, args.list, args.search, args.pit, args.closure]):
+        if not any([args.summary, args.feature, args.list, args.lineage, args.search, args.pit, args.closure]):
             return 0
 
-    if args.summary or not any([args.feature, args.list, args.search, args.pit, args.closure, args.sources]):
+    if args.summary or not any([args.feature, args.list, args.lineage, args.search, args.pit, args.closure, args.sources]):
         s = idx.summary()
         if args.json:
             print(json.dumps(s, indent=2, default=str))
@@ -907,7 +1080,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  closure: {s['closure_histogram']}")
             print(f"  rr_pit: {s['meta'].get('rr_pit_status')}  zone_pit: {s['meta'].get('zone_pit_status')}")
             print(f"  sources: {len(s['sources'])} artifacts")
-        if not any([args.feature, args.list, args.search, args.pit, args.closure]):
+        if not any([args.feature, args.list, args.lineage, args.search, args.pit, args.closure]):
             return 0
 
     if args.feature:
@@ -928,6 +1101,61 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(row, indent=2, default=str))
         else:
             _print_feature(row, fields=args.fields)
+        return 0
+
+    # ── full-vector lineage table ────────────────────────────────────────────
+    # OHLCV → 48 slots → declared L2 states → the subset any CRT `when:` clause
+    # actually names. Sorted by canonical index so the vector's own order is the
+    # table's order (--list sorts differently and puts index 0 last).
+    if args.lineage:
+        lin_rows = sorted(
+            (r for r in idx.rows.values() if r.get("_vector_member")),
+            key=lambda r: r.get("INDEX") if r.get("INDEX") is not None else 10**6,
+        )
+        if args.json:
+            print(json.dumps(lin_rows, indent=2, default=str))
+            return 0
+        sem_meta = idx.meta.get("semantic_state") or {}
+        res_meta = idx.meta.get("resolver_binding") or {}
+        print("Canonical feature lineage (OHLCV → vector → L2 states → CRT resolver)")
+        print(f"  schema dim {idx.meta.get('canonical_feature_dim')} · "
+              f"encoder {sem_meta.get('status')} · resolver {res_meta.get('status')}")
+        print()
+        print(f"{'idx':>3}  {'name':<26} {'FM/ID':<22} {'formula source':<34} "
+              f"{'stateful':<9} {'when:':<6} {'PIT':<28} {'CLOSURE'}")
+        n_stateful = n_when = 0
+        for r in lin_rows:
+            sem = r.get("SEMANTIC_STATE") or {}
+            res = r.get("RESOLVER_BINDING") or {}
+            fml = r.get("FORMULA") or {}
+            src = fml.get("ontology_id") or fml.get("formula_id") or ""
+            impl = (fml.get("impl") or "")[:34]
+            stateful = sem.get("stateful")
+            when = res.get("required_when")
+            n_stateful += bool(stateful)
+            n_when += bool(when)
+            print(
+                f"{str(r.get('INDEX')):>3}  {r.get('NAME') or '':<26} "
+                f"{(str(src) or ''):<22} {impl:<34} "
+                f"{('YES' if stateful else ('?' if stateful is None else '-')):<9} "
+                f"{('YES' if when else ('?' if when is None else '-')):<6} "
+                f"{((r.get('PIT_STATUS') or {}).get('pit_class_effective') or 'UNCLASSIFIED'):<28} "
+                f"{(r.get('CLOSURE_STATUS') or {}).get('code_status') or 'NOT_IN_CLOSURE_AUDIT'}"
+            )
+        print(f"\n({len(lin_rows)} vector slots · {n_stateful} stateful · {n_when} named in a `when:` clause)")
+        # The gap the table exists to make visible: declaring states for a feature does
+        # NOT mean any CRT predicate reads it.
+        unread = sorted(
+            r.get("NAME") for r in lin_rows
+            if (r.get("SEMANTIC_STATE") or {}).get("stateful")
+            and not (r.get("RESOLVER_BINDING") or {}).get("required_when")
+        )
+        if unread:
+            print(f"  stateful but NOT consumed by any `when:` clause: {', '.join(unread)}")
+        nonvec = sem_meta.get("non_vector_names") or []
+        if nonvec:
+            print(f"  non-vector stateful identities ({len(nonvec)}, supplied from enriched frame): "
+                  f"{', '.join(nonvec)}")
         return 0
 
     # list / filter

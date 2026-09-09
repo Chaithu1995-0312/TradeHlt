@@ -3,7 +3,7 @@
 **Program:** CRT Closure (audit-first) + **CH-002 F-050 emission rename**  
 **Phase:** 8 of 8 (re-evaluated after CH-002)  
 **Date (UTC):** 2026-07-09  
-**Active config:** `v2_multi_2026_04`  
+**Active config:** `v2_htfcrt_2026_08`  
 **Boundary:** OHLCV → CRT `TRADE_OPENED` only  
 
 ---
@@ -11,8 +11,28 @@
 ## CRT_CLOSURE_STATUS
 
 ```text
-CRT_CLOSURE_STATUS = CLOSED
+CRT_CLOSURE_STATUS = REOPENED
 ```
+
+**Reopened 2026-08-13** by user-authorized `CH-directional-displacement-contract` (F-074):
+`try_sweep_to_displacement` now requires a directional impulse away from the swept
+side. That is a governed CRT code change inside the OHLCV → `TRADE_OPENED` boundary
+(reopen condition 1). Prior Phase-8 / CH-002 verdict `CLOSED` is preserved as history
+below; it is no longer the active token.
+
+**Scope widened further 2026-08-15** by user-authorized `CH-htfcrt-parent-candle-smc-v1`
+(F-075): `CRTState` extended 9→12 (`RANGE_C1`/`MANIPULATION_C2`/`DISTRIBUTION_C3`, a
+disjoint parent-timeframe sub-graph — `state_identity.py:59-61`/`:104-106`) and
+`CRTEngine.process_candle` gained an optional `parent_state` bias-gate keyword
+(`crt_engine_v2.py:2765`, `:3261-3275`). Both are governed CRT code changes inside the
+canonical source of this boundary (reopen condition 1) — the criteria checklist below
+covers the pre-F-075 9-state topology only and has **not** been re-run against the
+12-state graph. **CH-parent-crt-caller-wire (2026-08-16):** `BacktestRunner` now
+constructs `runtime.parent_crt_feed.ParentCRTFeed` and threads `feed.bias` into
+`process_candle` — the EXECUTION parent-bias gate is reachable on
+`v2_htfcrt_2026_08`. That does **not** re-close CRT: the 12-state checklist has
+still not been re-run. Re-close only after an explicit Phase 1–8 re-run (or
+equivalent adversarial re-certification) that covers all 12 states.
 
 ### Criteria checklist (post CH-002)
 

@@ -67,8 +67,11 @@ def _completion(tmp_path, tool, **overrides):
 
 def test_contracts_registry_wellformed(tool):
     c = json.loads(_CONTRACTS.read_text(encoding="utf-8"))["change_classes"]
-    assert len(c) == 13  # + SCRIPT_LIFECYCLE_CHANGE (SITS PR-3)
+    assert len(c) == 18  # + TRACE_OBSERVATION_JOIN (CH-resolver-engine-envelope, 2026-09-05)
     assert "SCRIPT_LIFECYCLE_CHANGE" in c
+    assert "IDENTITY_STORE_CHANGE" in c
+    assert "CORPUS_AUTHORITY_CHANGE" in c
+    assert "TRACE_OBSERVATION_JOIN" in c
     for name, spec in c.items():
         for f in ("description", "authorities_to_inspect", "artifacts_to_update",
                   "required_checks", "rollback_boundary", "completion_criteria"):
@@ -81,6 +84,24 @@ def test_contracts_registry_wellformed(tool):
     sits = c["SCRIPT_LIFECYCLE_CHANGE"]
     assert "tests/test_script_registry.py" in sits["required_checks"]
     assert "tests/test_script_matrix_sync.py" in sits["required_checks"]
+
+
+def test_trace_observation_join_is_not_a_decision_path_class(tool):
+    """CH-resolver-engine-envelope: the two classes must stay distinguishable.
+
+    An observation-only trace widening and a gate/engine behaviour change are different kinds
+    of change with different completion criteria. Collapsing them would let a real decision
+    change ride in under an observation-only rollback boundary — or, in the other direction,
+    force a parity-of-ledger proof on a stream that never touches the ledger.
+    """
+    c = json.loads(_CONTRACTS.read_text(encoding="utf-8"))["change_classes"]
+    trace = c["TRACE_OBSERVATION_JOIN"]
+    decision = c["RUNTIME_DECISION_PATH_CHANGE"]
+    assert trace["required_checks"] != decision["required_checks"]
+    assert trace["completion_criteria"] != decision["completion_criteria"]
+    # the class must state what it is NOT allowed to touch
+    assert "CANONICAL_FEATURES" in trace["description"]
+    assert "decision path" in trace["description"].lower()
 
 
 def test_construction_floor_targets_exist(tool):

@@ -1,0 +1,41 @@
+{
+  "change_id": "CH-parent-crt-caller-wire",
+  "completed_utc": "2026-08-16T01:20:00Z",
+  "completion_status": "PARTIAL",
+  "repo_state_hash": "PENDING",
+  "declared_files": [
+    "src/runtime/parent_crt_feed.py",
+    "src/runtime/backtest_v2.py",
+    "src/config_layer/crt_engine_v2.py",
+    "tests/test_parent_crt_feed.py",
+    "tests/test_parent_crt_wiring.py",
+    "configs/production/v2_htfcrt_2026_08.json",
+    "configs/production/v2_multi_2026_04.json",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/topics/crt-spine.md",
+    "docs/governance/crt_closure_report.md",
+    "docs/governance/build_manifests/CH-parent-crt-caller-wire.impact.json",
+    "docs/governance/build_manifests/CH-parent-crt-caller-wire.completion.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_parent_crt_feed.py",
+    "tests/test_parent_crt_wiring.py",
+    "tests/test_parent_crt_track.py",
+    "tests/test_parent_candle_builder.py",
+    "tests/test_current_findings.py",
+    "tests/test_topic_docs.py",
+    "tests/test_doc_citations.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py"
+  ],
+  "check_results": {
+    "this_change_parent_crt_tests": "GREEN 57/57 (feed + wiring + track + parent_candle)",
+    "findings_topic_citations": "GREEN 28/28",
+    "test_feature_math_lint.py": "RED pre-existing — msip_1_verification_package + scripts/analysis/semantic_layer_validation.py; parent_crt_feed.py not in the missing set",
+    "test_geometry_census.py": "RED pre-existing — 79 NEW sites in msip_1_verification_package / reports; 6 REMOVED from already-dirty src/ (feature_pipeline, crt_feature_builder, strategy_backtest). parent_crt_feed.py not among NEW derivations."
+  },
+  "completion_status_reason": "This change's own tests and doc floors are green. validate-completion cannot be COMPLETE: (1) the working tree is already dirty from concurrent/prior work so undeclared governed surfaces fail the diff check; (2) the class-required lint/census floors are pre-existing RED and regenerating them is out of scope (would mix unrelated dirty-tree math). Honest PARTIAL, not forced green.",
+  "BEHAVIOR_NOTE": "On ACTIVE v2_htfcrt_2026_08 (parent_crt.enabled=true) BacktestRunner now constructs ParentCRTFeed and threads feed.bias into process_candle. EXECUTION parent-bias veto is reachable. v2_multi_2026_04 enabled:false still returns None / parent_state=None. No params hash change. No G001. CRT stays REOPENED."
+}

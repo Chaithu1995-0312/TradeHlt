@@ -1,0 +1,609 @@
+# JSONL Claim Catalog — PRIMARY, hand-authored, living.
+#
+# The closed vocabulary behind SemanticGrounder's `kind=JSONL` claim kind (CT-008 extension).
+# Encodes P-FLOW-15's CAN / CANNOT table as data so an LLM receives a NAMED refusal instead of
+# a plausible-looking GROUNDED. Spec: docs/governance/JSONL_CLAIM_SURFACE.md.
+#
+# GENERATED projection: data/jsonl_claim_catalog.jsonl — never hand-edit it; the floor
+# (tests/test_jsonl_claim_catalog.py) asserts on-disk == a fresh deterministic render.
+#
+# SCOPE / AUTHORITY (CLAUDE.md §6.5): advisory only. Cataloguing a stream does NOT identify it,
+# does NOT grant it economic authority, and does NOT stamp the frozen L0–L5 primary keys onto it
+# (CANONICAL_LAYER_IDENTITY_CONTRACT.md §12.3 forbids treating existing JSONL as if it already
+# carried them). `catalog_stream_status` below is a §11 census label, NEVER an
+# identity.check.CheckResult.status.
+#
+# v1 = the P-FLOW-15 seed. The completeness oracle is this file's own tables, not a writer-site
+# census. An uncatalogued stream path grounds UNKNOWN (fail closed). Adding a stream is a later
+# JSONL_CLAIM_SURFACE_CHANGE PR, not a v1 gap.
+#
+# Glob rules: `generated_registry` and `committed_audit` paths are EXACT (a registry is one file);
+# `runtime_untracked` and `parquet_projection` may glob (they are per-run trees).
+
+schema_version: jsonl_claim_catalog/1
+authority: advisory
+
+# ---------------------------------------------------------------------------------------------
+# STREAMS — what a JSONL file on disk is, and which claim classes it can close.
+# ---------------------------------------------------------------------------------------------
+streams:
+  - id: STR-F022-OPPORTUNITIES
+    path: "**/opportunities.jsonl"
+    family: runtime_untracked
+    layer: L5
+    catalog_stream_status: CONTAMINATED
+    allowed_cc: [CC-ENVELOPE-SHAPE]
+    forbidden_cc: [CC-F022-CONTAMINATED, CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG]
+    meaning_authority: INVENTORY_NOT_MARKET
+    identity_notes: >-
+      F-022 DETECTION stream, not a trade ledger: outcome / rr_achieved are only 36.8%
+      self-consistent (SL_HIT on paths that never touched the stop) and are not L5 of
+      engine_trade. 139,942 detections is not 13 spine trades (frequency illusion).
+    findings: [F-022]
+    primary_source: null
+
+  - id: STR-CRT-TRANSITIONS-GLOBAL
+    path: "logs/crt_transitions.jsonl"
+    family: runtime_untracked
+    layer: L3
+    catalog_stream_status: UNIDENTIFIED
+    allowed_cc: [CC-ENVELOPE-SHAPE]
+    forbidden_cc: [CC-L3-GLOBAL-UNIDENTIFIED, CC-L3-FORBIDDEN-JOIN, CC-MEANING-NOT-LOG]
+    meaning_authority: [SEM-011]
+    identity_notes: >-
+      Global append stream with an empty instrument field and no RESET record, so folding it
+      yields a WRONG state series - it is not an occupancy series (identity contract 7.3, 11).
+      Only a run-scoped event stream is fold-complete.
+    findings: []
+    primary_source: null
+
+  - id: STR-FEATURE-SNAPSHOTS
+    path: "logs/feature_snapshots.jsonl"
+    family: runtime_untracked
+    layer: L1
+    catalog_stream_status: UNIDENTIFIED
+    allowed_cc: [CC-ENVELOPE-SHAPE]
+    forbidden_cc: [CC-L1-UNIDENTIFIED, CC-MEANING-NOT-LOG]
+    meaning_authority: [FM-041]
+    identity_notes: >-
+      No instrument, no corpus, no run - UNIDENTIFIED under identity contract 11. A row cannot
+      be bound back to the bar that produced it.
+    findings: []
+    primary_source: null
+
+  - id: STR-BACKTEST-TRADES
+    path: "results/**/trades.jsonl"
+    family: runtime_untracked
+    layer: L5
+    catalog_stream_status: UNIDENTIFIED
+    allowed_cc: [CC-ENVELOPE-SHAPE]
+    forbidden_cc: [CC-ULTRON-NOT-IN-BACKTEST, CC-PRESENCE-NOT-G001, CC-TV-NOT-IN-STREAM]
+    meaning_authority: INVENTORY_NOT_MARKET
+    identity_notes: >-
+      Backtest ledger. EngineRunner.run() ends at DecisionEngine and backtest_v2 never enters
+      ExecutionPlanner or UltronRiskGate (P-FLOW-13), so no row here records a risk-gate
+      approval.
+    findings: []
+    primary_source: null
+
+  - id: STR-AGENT-AUDIT
+    path: "logs/agent_audit.jsonl"
+    family: runtime_untracked
+    layer: null
+    catalog_stream_status: UNIDENTIFIED
+    allowed_cc: [CC-AGENT-AUDIT-RAN, CC-ENVELOPE-SHAPE]
+    forbidden_cc: [CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG]
+    meaning_authority: INVENTORY_NOT_MARKET
+    identity_notes: >-
+      Session-local tool-invocation log. Proves a tool RAN in this checkout; a fresh clone has
+      no such file (gitignored), so absence grounds UNKNOWN, never REFUSED.
+    findings: [F-071]
+    primary_source: null
+
+  - id: STR-PROMOTION-LOG
+    path: "configs/promotion_log.jsonl"
+    family: committed_audit
+    layer: null
+    catalog_stream_status: IDENTIFIED
+    allowed_cc: [CC-PROMOTION-LOG, CC-ENVELOPE-SHAPE]
+    forbidden_cc: [CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG]
+    meaning_authority: INVENTORY_NOT_MARKET
+    identity_notes: >-
+      Append-only committed promotion audit. Proves a version was PROMOTED / REJECTED / ROLLED
+      BACK at a config hash - never that the config is profitable.
+    findings: []
+    primary_source: null
+
+  - id: STR-MEASUREMENT-RESULT-LOG
+    path: "configs/research/measurement_result_log.jsonl"
+    family: committed_audit
+    layer: null
+    catalog_stream_status: IDENTIFIED
+    allowed_cc: [CC-MC-RESULT-BINDING, CC-ENVELOPE-SHAPE]
+    forbidden_cc: [CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG, CC-L5-UNIDENTIFIED]
+    meaning_authority: INVENTORY_NOT_MARKET
+    identity_notes: >-
+      Committed append-only record that a sealed MC-* instance actually EXECUTED. A run-level
+      basis declaration is not an L5 object and is never PRESERVED. Ships in PR-3.
+    findings: [F-083]
+    primary_source: null
+
+  - id: STR-SEM034-BULK-CANDIDATES
+    path: "docs/research-readiness/sujan_manipulation/candidates/candidates_candle_range.jsonl"
+    family: committed_audit
+    layer: null
+    catalog_stream_status: IDENTIFIED
+    allowed_cc: [CC-SEM034-PROXY-RANK, CC-ENVELOPE-SHAPE]
+    forbidden_cc: [CC-SEM034-NOT-A-PARENT, CC-SEM033-NOT-SUJAN, CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG]
+    meaning_authority: [SEM-034]
+    identity_notes: >-
+      SEM-034 proxy shortlist. A line proves only that this bar was ranked top-N by one
+      registered magnitude over this corpus. It does NOT prove the bar is a bulk candle: the
+      proxy is UNVALIDATED, UNK-007 is open, and a candidate becomes a parent only on human
+      confirmation. The body_size sibling list is a SEPARATE stream by the same rules; the two
+      are never merged, and their overlap is a fact about the proxy, not about the market.
+    findings: []
+    primary_source: null
+
+  - id: STR-SEM033-MANIPULATION-ALERTS
+    path: "docs/research-readiness/sujan_manipulation/phase1/alerts.jsonl"
+    family: committed_audit
+    layer: null
+    catalog_stream_status: IDENTIFIED
+    allowed_cc: [CC-SEM033-DETECTION, CC-ENVELOPE-SHAPE]
+    forbidden_cc: [CC-SEM033-NOT-SUJAN, CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG, CC-L5-UNIDENTIFIED]
+    meaning_authority: [SEM-033]
+    identity_notes: >-
+      SEM-033 Phase-1 DETECTION stream. Each line proves the frozen purge-and-close-back-inside
+      predicate fired at that bar against an EXTERNALLY SUPPLIED parent whose selection rule is
+      UNRESOLVED (UNK-007). It is not a trade, carries no outcome, and its COUNT is an
+      observation, never a result. It also does not establish that the detected object is the
+      manipulation the trader means - that is an uncertified identity question.
+    findings: []
+    primary_source: null
+
+  - id: STR-PROVENANCE-LEDGER
+    path: "configs/research/provenance_ledger.jsonl"
+    family: committed_audit
+    layer: null
+    catalog_stream_status: IDENTIFIED
+    allowed_cc: [CC-PV-CHAIN-BINDING, CC-ENVELOPE-SHAPE]
+    forbidden_cc: [CC-PV-NOT-VALIDITY, CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG, CC-L5-UNIDENTIFIED]
+    meaning_authority: INVENTORY_NOT_MARKET
+    identity_notes: >-
+      Committed append-only record binding a claim-bearing decision (FINDING / DECISION /
+      PROMOTION / CLOSURE) to four typed origin slots. Proves the ORIGIN of a claim is
+      recoverable - never that the claim is true. grants_authority is const false.
+      MPA v1, CH-measurement-provenance-architecture.
+    findings: []
+    primary_source: null
+
+  - id: STR-FINDINGS-EXPORT
+    path: "data/findings.jsonl"
+    family: generated_registry
+    layer: null
+    catalog_stream_status: IDENTIFIED
+    allowed_cc: [CC-FINDING-EXPORT]
+    forbidden_cc: [CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG]
+    meaning_authority: INVENTORY_NOT_MARKET
+    identity_notes: >-
+      Derived view of the living conclusions doc. The PRIMARY markdown is the authority and is
+      clone-visible; this projection is gitignored and its absence is a caveat, not a failure.
+    findings: []
+    primary_source: docs/current-findings.md
+
+  - id: STR-HYPOTHESIS-REGISTRY
+    path: "data/hypothesis_registry.jsonl"
+    family: generated_registry
+    layer: null
+    catalog_stream_status: IDENTIFIED
+    allowed_cc: [CC-HYPOTHESIS-REGISTRY]
+    forbidden_cc: [CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG]
+    meaning_authority: INVENTORY_NOT_MARKET
+    identity_notes: >-
+      Seeded registry carrying research authority only. An H-id existing is not an H-id
+      validated.
+    findings: []
+    primary_source: scripts/governance/seed_hypothesis_registry.py
+
+  - id: STR-SCRIPT-REGISTRY
+    path: "data/script_registry.jsonl"
+    family: generated_registry
+    layer: null
+    catalog_stream_status: IDENTIFIED
+    allowed_cc: [CC-SCRIPT-REGISTRY]
+    forbidden_cc: [CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG]
+    meaning_authority: INVENTORY_NOT_MARKET
+    identity_notes: >-
+      SITS inventory. An SCR-id proves the path is registered, not that the script is correct.
+    findings: []
+    primary_source: docs/governance/script_registry_stubs.jsonl
+
+  - id: STR-SEMANTIC-OS-FILE-IDENTITIES
+    path: "data/semantic_os/file_identities.jsonl"
+    family: generated_registry
+    layer: null
+    catalog_stream_status: IDENTIFIED
+    allowed_cc: [CC-SEMANTIC-OS]
+    forbidden_cc: [CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG]
+    meaning_authority: [CN-012]
+    identity_notes: >-
+      Projection of the hand-authored Semantic OS YAML; the YAML is the authority.
+    findings: []
+    primary_source: docs/governance/semantic_os/file_identities.yaml
+
+  - id: STR-JSONL-CLAIM-CATALOG
+    path: "data/jsonl_claim_catalog.jsonl"
+    family: generated_registry
+    layer: null
+    catalog_stream_status: IDENTIFIED
+    allowed_cc: [CC-SEMANTIC-OS]
+    forbidden_cc: [CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG]
+    meaning_authority: INVENTORY_NOT_MARKET
+    identity_notes: >-
+      This catalog's own generated projection. Self-describing; grants itself nothing.
+    findings: []
+    primary_source: docs/governance/jsonl_claim_catalog.yaml
+
+  - id: STR-PARQUET-PROJECTION
+    path: "**/*.parquet"
+    family: parquet_projection
+    layer: null
+    catalog_stream_status: N_A
+    allowed_cc: []
+    forbidden_cc: [CC-PARQUET-PROJECTION, CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG]
+    meaning_authority: INVENTORY_NOT_MARKET
+    identity_notes: >-
+      Derived projection of a JSONL system of record; a stale sidecar is ignored by the reader.
+      Never a second authority - it cannot corroborate the JSONL it was made from.
+    findings: []
+    primary_source: null
+
+  - id: STR-BAR-STRUCTURE-SNAPSHOT
+    path: "logs/**/*_bar_structure.jsonl"
+    family: runtime_untracked
+    layer: L3
+    catalog_stream_status: IDENTIFIED
+    allowed_cc: [CC-CTX-RUN-SCOPED-OBSERVATION]
+    forbidden_cc: [CC-CTX-NOT-DECISION, CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG]
+    meaning_authority: [SEM-035]
+    identity_notes: >-
+      Run-scoped and fold-complete. Carries instrument, corpus_sha256 and run_id, and a GAPLESS
+      bar_index over every bar including warmup, so folding it yields a correct occupancy series.
+      That is precisely what logs/crt_transitions.jsonl lacks (empty instrument, no RESET record)
+      and is why that stream is CC-L3-GLOBAL-UNIDENTIFIED while this one is not. The CRT state is
+      the ENGINE state, not the resolver - joining the two on bar index remains CC-L3-FORBIDDEN-JOIN.
+    findings: []
+    primary_source: null
+
+# ---------------------------------------------------------------------------------------------
+# CLAIM CLASSES — the closed CC-* vocabulary. polarity CANNOT is always REFUSED.
+# ---------------------------------------------------------------------------------------------
+claim_classes:
+  # ---- CANNOT --------------------------------------------------------------------------------
+  - id: CC-F022-CONTAMINATED
+    polarity: CANNOT
+    llm_claim: "This trade was profitable"
+    against: "opportunities.jsonl outcome / rr_achieved"
+    why: "F-022 CONTAMINATED - a detection stream, not L5 of engine_trade"
+    catalog_stream_status: CONTAMINATED
+    findings: [F-022]
+    meaning_authority: []
+
+  - id: CC-L3-GLOBAL-UNIDENTIFIED
+    polarity: CANNOT
+    llm_claim: "CRT was in state X at this bar"
+    against: "global logs/crt_transitions.jsonl"
+    why: "No RESET record and an empty instrument - not an occupancy series (identity 7.3, 11)"
+    catalog_stream_status: UNIDENTIFIED
+    findings: []
+    meaning_authority: [SEM-011]
+
+  - id: CC-CTX-NOT-DECISION
+    polarity: CANNOT
+    llm_claim: "This context feature influenced a trading decision"
+    against: "logs/**/*_bar_structure.jsonl"
+    why: "Emitted AFTER process_candle returns, default-off, promoted_families empty - observation is not authority (6.5)"
+    catalog_stream_status: IDENTIFIED
+    findings: []
+    meaning_authority: [SEM-035]
+
+  - id: CC-L1-UNIDENTIFIED
+    polarity: CANNOT
+    llm_claim: "These features are the bar"
+    against: "logs/feature_snapshots.jsonl"
+    why: "UNIDENTIFIED - no instrument, no corpus, no run (identity 11)"
+    catalog_stream_status: UNIDENTIFIED
+    findings: []
+    meaning_authority: [FM-041]
+
+  - id: CC-L3-FORBIDDEN-JOIN
+    polarity: CANNOT
+    llm_claim: "Engine state equals resolver state"
+    against: "two L3 producers joined on bar index"
+    why: "Forbidden join - divergent construction, 88.16% agreement (F-069, contract 7.2)"
+    catalog_stream_status: UNJOINABLE
+    findings: [F-069]
+    meaning_authority: [SEM-011]
+
+  - id: CC-PARQUET-PROJECTION
+    polarity: CANNOT
+    llm_claim: "Parquet says so, therefore the JSONL agrees"
+    against: "any *.parquet next to its source JSONL"
+    why: "Projection, not a second authority - derived from the thing it would corroborate"
+    catalog_stream_status: N_A
+    findings: []
+    meaning_authority: []
+
+  - id: CC-PRESENCE-NOT-G001
+    polarity: CANNOT
+    llm_claim: "This is positive expectancy / a G001 improvement"
+    against: "any JSONL merely being present"
+    why: "Presence is not expectancy. Authority is earned only by measured G001 (CLAUDE.md 6.5)"
+    catalog_stream_status: N_A
+    findings: [F-001]
+    meaning_authority: []
+
+  - id: CC-TV-NOT-IN-STREAM
+    polarity: CANNOT
+    llm_claim: "The chart matches TradingView"
+    against: "any JSONL"
+    why: "Screenshots are not in the stream; TV forensic coverage is month-scoped (P-FLOW-03)"
+    catalog_stream_status: N_A
+    findings: [F-080]
+    meaning_authority: []
+
+  - id: CC-ULTRON-NOT-IN-BACKTEST
+    polarity: CANNOT
+    llm_claim: "UltronRiskGate approved this backtest trade"
+    against: "backtest trade / event JSONL"
+    why: "P-FLOW-13: EngineRunner.run() ends at DecisionEngine; backtest_v2 never calls the gate"
+    catalog_stream_status: N_A
+    findings: []
+    meaning_authority: []
+
+  - id: CC-MEANING-NOT-LOG
+    polarity: CANNOT
+    llm_claim: "What RANGE (or any market state) means"
+    against: "any JSONL"
+    why: "Meaning is the ontology (CLAUDE.md 6.6). A log line is occupancy or an event, never a definition"
+    catalog_stream_status: N_A
+    findings: []
+    meaning_authority: [SEM-011]
+
+  - id: CC-ILLEGAL-JOIN
+    polarity: CANNOT
+    llm_claim: "Two true lines, therefore one object"
+    against: "any join not declared legal"
+    why: "Valid lines plus an illegal join is still a hallucination"
+    catalog_stream_status: UNJOINABLE
+    findings: []
+    meaning_authority: []
+
+  - id: CC-MC-DECLARED-UNEXECUTED
+    polarity: CANNOT
+    llm_claim: "The contract ran / mt00 is PASS"
+    against: "an MC-* instance with no matching result line"
+    why: "F-083 silent gap - declared-but-unexecuted was indistinguishable from executed"
+    catalog_stream_status: N_A
+    findings: [F-083]
+    meaning_authority: []
+
+  - id: CC-L5-UNIDENTIFIED
+    polarity: CANNOT
+    llm_claim: "This is the realized R of production's trade"
+    against: "a result line whose l5_basis fails the five-key token classifier"
+    why: "A run-level basis is not an L5 object; an incomplete basis cannot close an outcome claim"
+    catalog_stream_status: UNIDENTIFIED
+    findings: [F-088]
+    meaning_authority: []
+
+  # ---- CAN -----------------------------------------------------------------------------------
+  - id: CC-FINDING-EXPORT
+    polarity: CAN
+    llm_claim: "Finding F-NNN exists and the export is a faithful view of it"
+    against: "docs/current-findings.md (PRIMARY); data/findings.jsonl is the derived view"
+    why: "Existence of a registered conclusion. NOT that the conclusion is true or economic"
+    catalog_stream_status: IDENTIFIED
+    findings: []
+    meaning_authority: []
+
+  - id: CC-CTX-RUN-SCOPED-OBSERVATION
+    polarity: CAN
+    llm_claim: "The engine CRT state at this identified bar of this identified run was X"
+    against: "logs/**/*_bar_structure.jsonl"
+    why: "Run + instrument + corpus identity present and bar coverage gapless. Observation only, never value"
+    catalog_stream_status: IDENTIFIED
+    findings: []
+    meaning_authority: [SEM-035]
+
+  - id: CC-HYPOTHESIS-REGISTRY
+    polarity: CAN
+    llm_claim: "Hypothesis H-NNN is registered"
+    against: "data/hypothesis_registry.jsonl"
+    why: "Registration only, research authority. Registered is not validated"
+    catalog_stream_status: IDENTIFIED
+    findings: []
+    meaning_authority: []
+
+  - id: CC-SEMANTIC-OS
+    polarity: CAN
+    llm_claim: "This CN / BD / JN / CT / FileIdentity id exists"
+    against: "Semantic OS YAML via the existing CT-008 NOUN path"
+    why: "Closed-vocabulary membership. Does not grant the node any production authority"
+    catalog_stream_status: IDENTIFIED
+    findings: []
+    meaning_authority: [CN-012]
+
+  - id: CC-SCRIPT-REGISTRY
+    polarity: CAN
+    llm_claim: "This script path carries an SCR-id"
+    against: "data/script_registry.jsonl"
+    why: "Inventory coverage only. Registered is not correct"
+    catalog_stream_status: IDENTIFIED
+    findings: []
+    meaning_authority: []
+
+  - id: CC-PROMOTION-LOG
+    polarity: CAN
+    llm_claim: "Version V was promoted / rejected / rolled back at hash H"
+    against: "configs/promotion_log.jsonl"
+    why: "An audited governance event happened. NOT that the promoted config is profitable"
+    catalog_stream_status: IDENTIFIED
+    findings: []
+    meaning_authority: []
+
+  - id: CC-ENVELOPE-SHAPE
+    polarity: CAN
+    llm_claim: "This stream's SCHEMA carries the event-fabric envelope keys"
+    against: "docs/reference/schemas.md 9.4 + make_event_envelope"
+    why: >-
+      Shape of the contract, proved from committed sources. Does NOT require the gitignored
+      stream file to exist and does NOT prove any occupancy.
+    catalog_stream_status: N_A
+    findings: []
+    meaning_authority: []
+
+  - id: CC-AGENT-AUDIT-RAN
+    polarity: CAN
+    llm_claim: "Tool T ran in this session"
+    against: "logs/agent_audit.jsonl (source = the tool name)"
+    why: >-
+      A local invocation record. Never GROUNDED from the catalog row alone; a missing file is
+      UNKNOWN (not clone-visible), never REFUSED.
+    catalog_stream_status: UNIDENTIFIED
+    findings: [F-071]
+    meaning_authority: []
+
+  - id: CC-MC-SCHEMA-SHAPE
+    polarity: CAN
+    llm_claim: "This MC-* document validates against the frozen measurement-contract schema"
+    against: "configs/research/measurement_contracts/instances/MC-*.json"
+    why: "Shape only. UNRUN is legal and still GROUNDS - shape is not execution"
+    catalog_stream_status: IDENTIFIED
+    findings: [F-083]
+    meaning_authority: []
+
+  - id: CC-MC-RESULT-BINDING
+    polarity: CAN
+    llm_claim: "This measurement actually executed and its artifacts are bound"
+    against: "an MC-* instance joined to configs/research/measurement_result_log.jsonl"
+    why: >-
+      Executed, not passed - FAIL and PARTIAL with an honest result line GROUND. Requires
+      non-UNRUN plus a result line plus matching artifact hashes plus N_A or BASIS_DECLARED.
+    catalog_stream_status: IDENTIFIED
+    findings: [F-083]
+    meaning_authority: []
+
+# ---------------------------------------------------------------------------------------------
+# FORBIDDEN JOINS — evaluated BEFORE any CAN can ground. Endpoint grammar (closed):
+#   STR-* | producer:engine | producer:resolver | family:<family>
+# Matching is order-insensitive. Do not overlap the specialized row with the generic one.
+# ---------------------------------------------------------------------------------------------
+  - id: CC-SEM034-PROXY-RANK
+    polarity: CAN
+    llm_claim: "The SEM-034 proxy ranked bar B top-N by candle_range (or by body_size) over corpus C"
+    against: "docs/research-readiness/sujan_manipulation/candidates/candidates_*.jsonl"
+    why: >-
+      A deterministic, recomputable ordering over FM-002 / FM-001 magnitudes. NOT that the bar
+      is visually dominant, NOT that it is a bulk candle, NOT that it is a parent.
+    catalog_stream_status: IDENTIFIED
+    findings: []
+    meaning_authority: [SEM-034]
+
+  - id: CC-SEM034-NOT-A-PARENT
+    polarity: CANNOT
+    llm_claim: "Therefore this bar is a bulk candle / a parent / what Sujan means by visually dominant"
+    against: "any SEM-034 candidate stream"
+    why: >-
+      SEM-034 is an APPROVED but UNVALIDATED mechanical proxy for a VISUAL concept, and
+      UNK-007 remains open. It has never been agreement-checked against a chart reading. A
+      candidate becomes a parent only by human-bridge confirmation. Absence from the shortlist
+      is likewise not evidence: top-N over the whole corpus left 20 of 25 XAUUSD months empty.
+    catalog_stream_status: N_A
+    findings: []
+    meaning_authority: [UNK-007, SEM-034]
+
+  - id: CC-SEM033-DETECTION
+    polarity: CAN
+    llm_claim: "The frozen SEM-033 predicate fired at bar B against supplied parent P"
+    against: "docs/research-readiness/sujan_manipulation/phase1/alerts.jsonl"
+    why: >-
+      A recomputable geometric fact over OHLC and two supplied levels. NOT that the bar was
+      tradable, profitable, or that P is a bulk candle by any approved rule (UNK-007).
+    catalog_stream_status: IDENTIFIED
+    findings: []
+    meaning_authority: [SEM-033]
+
+  - id: CC-SEM033-NOT-SUJAN
+    polarity: CANNOT
+    llm_claim: "Therefore Sujan CRT manipulation occurred / Sujan CRT works or does not work"
+    against: "any SEM-033 stream"
+    why: >-
+      Measurement firewall. SEM-033 is an object the human bridge specified; its identity as
+      Sujan's manipulation is NOT CERTIFIED and its founding is UNRESOLVED (UNK-007). A
+      detection result never propagates upward to Sujan CRT, and never sideways to ParentCRT
+      MANIPULATION_C2 (F-077) or to SEM-031 / F-095.
+    catalog_stream_status: N_A
+    findings: [F-077, F-095]
+    meaning_authority: [SEM-033]
+
+  - id: CC-PV-CHAIN-BINDING
+    polarity: CAN
+    llm_claim: "The origin of this decision is recoverable: its evidence, hypothesis, measurement contract and measurement execution all resolve"
+    against: "a provenance record in configs/research/provenance_ledger.jsonl"
+    why: >-
+      Requires chain_complete true AND every binding resolves. RECOVERABLE, not correct - a
+      binding proves a target exists and was named, never that it supports the claim. The
+      weakest binding class sets chain_class, so an ATTESTED slot makes an ATTESTED chain.
+    catalog_stream_status: IDENTIFIED
+    findings: []
+    meaning_authority: []
+
+  - id: CC-PV-NOT-VALIDITY
+    polarity: CANNOT
+    llm_claim: "This decision has a complete provenance chain, therefore its claim is true / economic / authorised"
+    against: "configs/research/provenance_ledger.jsonl joined to any outcome or promotion surface"
+    why: >-
+      The misreading this architecture most invites. Provenance completeness is not validity, is
+      not economic value and is not authority (CLAUDE.md 6.5). grants_authority is const false on
+      every record and pinned by a test. A complete chain over a FALSIFIED finding is normal and
+      expected - it means the falsification is well documented.
+    catalog_stream_status: IDENTIFIED
+    findings: []
+    meaning_authority: []
+
+
+forbidden_joins:
+  - source_str: "producer:engine"
+    target_str: "producer:resolver"
+    cc_id: CC-L3-FORBIDDEN-JOIN
+
+  - source_str: "family:parquet_projection"
+    target_str: "family:runtime_untracked"
+    cc_id: CC-PARQUET-PROJECTION
+
+  - source_str: "family:parquet_projection"
+    target_str: "family:committed_audit"
+    cc_id: CC-PARQUET-PROJECTION
+
+  - source_str: "family:parquet_projection"
+    target_str: "family:generated_registry"
+    cc_id: CC-PARQUET-PROJECTION
+
+  - source_str: "STR-F022-OPPORTUNITIES"
+    target_str: "family:committed_audit"
+    cc_id: CC-ILLEGAL-JOIN
+
+  - source_str: "STR-F022-OPPORTUNITIES"
+    target_str: "STR-BACKTEST-TRADES"
+    cc_id: CC-ILLEGAL-JOIN
+
+  - source_str: "STR-FEATURE-SNAPSHOTS"
+    target_str: "STR-CRT-TRANSITIONS-GLOBAL"
+    cc_id: CC-ILLEGAL-JOIN
+
+  - source_str: "STR-PROVENANCE-LEDGER"
+    target_str: "STR-PROMOTION-LOG"
+    cc_id: CC-PV-NOT-VALIDITY
+

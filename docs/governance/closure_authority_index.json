@@ -6,7 +6,8 @@
   "distinctions": [
     "AUDITED != CLOSED",
     "LINEAGE CLOSED != ECONOMICALLY VALIDATED",
-    "UPSTREAM CLOSED != DOWNSTREAM CLOSED"
+    "UPSTREAM CLOSED != DOWNSTREAM CLOSED",
+    "RECOMPUTE != RECOVER"
   ],
   "non_transitivity": {
     "rule": "A CLOSED upstream subsystem does not make a downstream join, query surface, model, artifact, or decision path CLOSED. Only the named authoritative_artifact establishes closure for the declared boundary.",
@@ -14,7 +15,9 @@
       "CRT CLOSED does not close Gaussian, ZoneGate, RR, BitNet, or TradeNet lineage",
       "CANONICAL_FEATURE_CODE_SURFACE CLOSED does not authorize RR/Zone economic reuse or model enablement",
       "Geometry Gate-5 COMPLETE does not close Feature Query Surface or model lineages",
-      "Feature Query Surface authority does not close any producer, consumer, or model path"
+      "Feature Query Surface authority does not close any producer, consumer, or model path",
+      "CANONICAL_LAYER_IDENTITY CLOSED does not close storage, writers, readers, migrations, CRT, or measurement-contract admissibility",
+      "STORAGE_PRESERVATION CLOSED does not close a physical store, writers, readers, CRT, or measurement-contract admissibility"
     ]
   },
   "allowed_status": [
@@ -39,12 +42,12 @@
     {
       "surface_id": "CRT",
       "surface_name": "CRT closure",
-      "status": "CLOSED",
-      "status_detail": "CRT_CLOSURE_STATUS=CLOSED (Phase 8 post CH-002)",
+      "status": "OPEN",
+      "status_detail": "CRT_CLOSURE_STATUS=REOPENED 2026-08-13 (CH-directional-displacement-contract / F-074); scope widened further 2026-08-15 (CH-htfcrt-parent-candle-smc-v1 / F-075, CRTState 9→12, parent_state bias gate). Prior Phase-8 post CH-002 CLOSED is historical.",
       "scope_boundary": "OHLCV → CRT TRADE_OPENED only (executable CRT surface, formulas, state graph, diversions, config reachability, candidate provenance, adversarial suite). Does NOT include EngineRunner admission, DecisionEngine low_rr, live SM wiring, or model training lineages.",
       "authoritative_artifact": "docs/governance/crt_closure_report.md",
-      "status_token": "CRT_CLOSURE_STATUS = CLOSED",
-      "frozen": true,
+      "status_token": "CRT_CLOSURE_STATUS = REOPENED",
+      "frozen": false,
       "reopen_policy": "boundary_scoped_default",
       "reopen_conditions": [
         "governed CRT code/config/formula dependencies inside OHLCV→TRADE_OPENED change",
@@ -59,10 +62,45 @@
         "RR_LINEAGE",
         "BITNET_LINEAGE",
         "TRADENET_LINEAGE",
-        "FEATURE_QUERY_SURFACE"
+        "FEATURE_QUERY_SURFACE",
+        "CRT_OBJECT_RELATIONS"
       ],
       "economically_validated": false,
       "notes": "Residual non-blockers (OI-ER-001, OI-F048-E2E, live SM, historical JSONL keys) do not reopen CRT CLOSED."
+    },
+    {
+      "surface_id": "CRT_OBJECT_RELATIONS",
+      "surface_name": "CRT existing-object relations (CT-009)",
+      "status": "CLOSED",
+      "status_detail": "CRT_OBJECT_RELATIONS_STATUS=CLOSED 2026-08-17. Joins among M15-SLR / HTFBuilder / ParentRange / detect_sweep / ResetLogic / SMC founding. Does NOT close CRT, SEM-011 domain meaning, or G001.",
+      "scope_boundary": "Declared relations in docs/governance/crt_object_relations.yaml only (types + AST joins). Does NOT include CRT TRADE_OPENED recertification, M15-SLR as TradingView/SMC liquidity, measurement-contract admissibility, or any economic claim.",
+      "authoritative_artifact": "docs/governance/crt_object_relations_closure.md",
+      "status_token": "CRT_OBJECT_RELATIONS_STATUS = CLOSED",
+      "supporting_artifacts": [
+        "docs/governance/crt_object_relations.yaml",
+        "docs/governance/semantic_os/contracts.yaml"
+      ],
+      "frozen": true,
+      "reopen_policy": "boundary_scoped_default",
+      "reopen_conditions": [
+        "a declared object path or relation in crt_object_relations.yaml changes",
+        "tests/test_crt_object_relations.py fails",
+        "new contradictory evidence invalidates a listed join",
+        "construction rewires detect_sweep, ResetLogic clock compare, or the EXECUTION parent-bias join"
+      ],
+      "upstream_surfaces": [],
+      "downstream_not_implied_closed": [
+        "CRT",
+        "RESEARCH_MEASUREMENT_CONTRACT",
+        "FEATURE_QUERY_SURFACE",
+        "GAUSSIAN_LINEAGE",
+        "ZONEGATE_LINEAGE",
+        "RR_LINEAGE",
+        "BITNET_LINEAGE",
+        "TRADENET_LINEAGE"
+      ],
+      "economically_validated": false,
+      "notes": "CLOSED relations != CRT CLOSED != economically validated. SEM-011 stays CHARACTERIZED. P-CRT-LIQ-01 remains no second liquidity object."
     },
     {
       "surface_id": "GEOMETRY_STATIC_LINEAGE",
@@ -334,6 +372,149 @@
       "downstream_not_implied_closed": [],
       "economically_validated": false,
       "notes": "Subordination is mechanical: tests/test_measurement_contract.py asserts every profile enum value is a member of the frozen schema's own enums, so the profile layer cannot drift from the charter's vocabulary. F-070 (2026-08-06, M-GATE-01) is the layer's first real measurement output; authority NONE per §6.5. See docs/governance/research_family_registry.json for the object×layer atlas this contract binds claims through, and docs/topics/research-measurement-contract.md for the human-language picture."
+    },
+    {
+      "surface_id": "CANONICAL_LAYER_IDENTITY",
+      "surface_name": "Canonical layer identity (L0–L5 equality)",
+      "status": "CLOSED",
+      "status_detail": "LAYER_IDENTITY_STATUS=CLOSED 2026-08-23. Phase 1 user-accepted. FROZEN v1.0.0. Defines equality for OHLC / Feature Values / Feature States / CRT States / Geometry / Outcome. RECOMPUTE != RECOVER is a repository invariant. Does NOT close storage, writers, readers, migrations, replay engines, CRT, or measurement-contract admissibility.",
+      "scope_boundary": "Equality of the six named layers: primary keys, lineage keys, immutability (including RECOMPUTE != RECOVER), schema versioning, archive rules. Authoritative artifact: docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md v1.0.0 / CH-canonical-layer-identity. Does NOT include any persistence design, Parquet layout, writer, reader, migration, replay engine, CRT TRADE_OPENED recertification, or economic claim.",
+      "authoritative_artifact": "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+      "status_token": "LAYER_IDENTITY_STATUS = CLOSED",
+      "supporting_artifacts": [
+        "docs/analysis/feature_state_lineage_census.md",
+        "docs/architecture/goal.md"
+      ],
+      "frozen": true,
+      "reopen_policy": "boundary_scoped_default",
+      "reopen_conditions": [
+        "a primary-key component, closed vocabulary, or immutability rule inside the identity contract changes",
+        "a construction-protocol change proposes storage/writers/readers/migrations without citing CANONICAL_LAYER_IDENTITY_CONTRACT.md v1.0.0 and CH-canonical-layer-identity",
+        "new contradictory evidence invalidates LAYER_IDENTITY_STATUS=CLOSED",
+        "an explicit revalidation condition in the identity contract fires (PK change = new major, new change id)"
+      ],
+      "upstream_surfaces": [],
+      "downstream_not_implied_closed": [
+        "CRT",
+        "CRT_OBJECT_RELATIONS",
+        "GEOMETRY_STATIC_LINEAGE",
+        "CANONICAL_FEATURE_CODE_SURFACE",
+        "FEATURE_QUERY_SURFACE",
+        "GAUSSIAN_LINEAGE",
+        "ZONEGATE_LINEAGE",
+        "RR_LINEAGE",
+        "BITNET_LINEAGE",
+        "TRADENET_LINEAGE",
+        "RESEARCH_MEASUREMENT_CONTRACT",
+        "STORAGE_PRESERVATION",
+        "PHYSICAL_STORAGE"
+      ],
+      "economically_validated": false,
+      "notes": "CLOSED identity != stored identity. Phase 2 preservation rules are a separate surface (STORAGE_PRESERVATION). G-05 is closed as a PK requirement (corpus_sha256), not as a writer. No G001."
+    },
+    {
+      "surface_id": "STORAGE_PRESERVATION",
+      "surface_name": "Storage preservation (L0–L5 obligations)",
+      "status": "CLOSED",
+      "status_detail": "STORAGE_PRESERVATION_STATUS=CLOSED 2026-08-23. Phase 2 user-accepted. FROZEN v1.0.0. Subordinate to CANONICAL_LAYER_IDENTITY. Defines what must be preserved so the same object can be recovered (Store→Load→Identity Check; all-six admissibility). Does NOT close a physical store, writers, readers, migrations, replay engines, CRT, or measurement-contract admissibility.",
+      "scope_boundary": "Preservation obligations for the six named layers: persist+validate every frozen PK component, RESET first-class, RECOMPUTE != RECOVER operationalized as load-time fail-closed, archive families kept as archives. Authoritative artifact: docs/governance/STORAGE_PRESERVATION_CONTRACT.md v1.0.0 / CH-storage-preservation-contract. Does NOT include Parquet/DuckDB/layout, writers, readers, migrations, replay engines, CRT TRADE_OPENED recertification, or any economic claim.",
+      "authoritative_artifact": "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+      "status_token": "STORAGE_PRESERVATION_STATUS = CLOSED",
+      "supporting_artifacts": [
+        "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+        "docs/analysis/feature_state_lineage_census.md"
+      ],
+      "frozen": true,
+      "reopen_policy": "boundary_scoped_default",
+      "reopen_conditions": [
+        "a required persist field, load-time validation rule, or all-six admissibility row inside the preservation contract changes",
+        "a construction-protocol change proposes physical storage/writers/readers/migrations without citing both CANONICAL_LAYER_IDENTITY_CONTRACT.md v1.0.0 and STORAGE_PRESERVATION_CONTRACT.md v1.0.0",
+        "new contradictory evidence invalidates STORAGE_PRESERVATION_STATUS=CLOSED",
+        "an explicit revalidation condition in the preservation contract fires"
+      ],
+      "upstream_surfaces": [
+        "CANONICAL_LAYER_IDENTITY"
+      ],
+      "downstream_not_implied_closed": [
+        "CRT",
+        "CRT_OBJECT_RELATIONS",
+        "GEOMETRY_STATIC_LINEAGE",
+        "CANONICAL_FEATURE_CODE_SURFACE",
+        "FEATURE_QUERY_SURFACE",
+        "GAUSSIAN_LINEAGE",
+        "ZONEGATE_LINEAGE",
+        "RR_LINEAGE",
+        "BITNET_LINEAGE",
+        "TRADENET_LINEAGE",
+        "RESEARCH_MEASUREMENT_CONTRACT",
+        "PHYSICAL_STORAGE"
+      ],
+      "economically_validated": false,
+      "notes": "CLOSED preservation != a store exists. Phase 3 architecture is a separate surface (PHYSICAL_STORAGE). No G001."
+    },
+    {
+      "surface_id": "PHYSICAL_STORAGE",
+      "surface_name": "Physical storage architecture (identity-addressed files)",
+      "status": "CLOSED",
+      "status_detail": "PHYSICAL_STORAGE_STATUS=CLOSED 2026-08-23. Phase 3 user-accepted. Admissibility PASS. File-backed Class A/B/C store. Does NOT close writers-as-production, live spine, CRT, or G001. Phase 4 Identity Check lives in src/identity/ and is not this closure's boundary.",
+      "scope_boundary": "The physical architecture that can recover frozen L0–L5 identity: declaration snapshots, identity records embedding PKs, tracked bindings, occupancy stored not folded, RESET first-class, JSONL as identity-record encoding. Authoritative artifact: docs/governance/PHYSICAL_STORAGE_ARCHITECTURE.md v1.0.0. Does NOT include live-engine wiring, promotion, measurement-contract admissibility, or declaring existing gitignored files PRESERVED.",
+      "authoritative_artifact": "docs/governance/PHYSICAL_STORAGE_ARCHITECTURE.md",
+      "status_token": "PHYSICAL_STORAGE_STATUS = CLOSED",
+      "supporting_artifacts": [
+        "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+        "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+        "src/identity/check.py"
+      ],
+      "frozen": true,
+      "reopen_policy": "boundary_scoped_default",
+      "reopen_conditions": [
+        "a Class A/B/C rule, occupancy-stored-not-folded rule, or Identity Check step in the architecture artifact changes",
+        "a construction-protocol change wires this store into the live decision path without a new authorization",
+        "new contradictory evidence invalidates PHYSICAL_STORAGE_STATUS=CLOSED",
+        "an explicit revalidation condition in the architecture artifact fires"
+      ],
+      "upstream_surfaces": [
+        "CANONICAL_LAYER_IDENTITY",
+        "STORAGE_PRESERVATION"
+      ],
+      "downstream_not_implied_closed": [
+        "CRT",
+        "CRT_OBJECT_RELATIONS",
+        "GEOMETRY_STATIC_LINEAGE",
+        "CANONICAL_FEATURE_CODE_SURFACE",
+        "FEATURE_QUERY_SURFACE",
+        "GAUSSIAN_LINEAGE",
+        "ZONEGATE_LINEAGE",
+        "RR_LINEAGE",
+        "BITNET_LINEAGE",
+        "TRADENET_LINEAGE",
+        "RESEARCH_MEASUREMENT_CONTRACT"
+      ],
+      "economically_validated": false,
+      "notes": "CLOSED architecture != existing files are this store. Phase 4 Identity Check is implementation of the load role, not a reopen. No G001."
+    },
+    {
+      "surface_id": "MEASUREMENT_PROVENANCE",
+      "surface_name": "Measurement provenance (MPA v1)",
+      "status": "OPEN",
+      "status_detail": "Spine SHIPPED 2026-08-26 (CH-measurement-provenance-architecture): ledger + resolver + derivation + 33-test floor; 168 records over 212 subjects. Exactly 4 chains are provenance-complete (F-091..F-094 - the four contracts that executed E-MT-00 the same day). OPEN because coverage is the point: 34 chains are UNKNOWN, PROMOTION evidence is underivable by construction, and the Phase-4 enforce gate is not built.",
+      "scope_boundary": "Whether a claim-bearing decision's FOUR origin slots (evidence / hypothesis / measurement contract / measurement execution) resolve to targets that exist. Does NOT include whether the claim is true, economic, or authorised; does NOT include SESSION LOG entries as subjects; does NOT include measurement ADMISSIBILITY (that is MEASUREMENT_CONTRACT.md's E4 seal, mt01 coverage 0/27).",
+      "authoritative_artifact": "docs/governance/MEASUREMENT_PROVENANCE_ARCHITECTURE.md",
+      "status_token": "MEASUREMENT_PROVENANCE_STATUS=OPEN",
+      "frozen": false,
+      "reopen_policy": "not CLOSED - advancement only",
+      "reopen_conditions": [
+        "Not CLOSED, so nothing to reopen: this surface ADVANCES. It may be proposed for closure only when every subject type has a stated coverage floor, the Phase-4 enforce gate is built and defensible, and PROMOTION evidence has an adjudicated path.",
+        "A derivation rule changing behaviour requires a rule_version bump and a re-run of the backfill; DERIVED bindings at a stale rule_version are rejected on read.",
+        "If the audit extractor ever reads this ledger, the separation that keeps the audit honest is broken and this surface is invalid until restored."
+      ],
+      "upstream_surfaces": [],
+      "downstream_not_implied_closed": [
+        "RESEARCH_MEASUREMENT_CONTRACT",
+        "CANONICAL_LAYER_IDENTITY"
+      ],
+      "economically_validated": false,
+      "notes": "Additive: the findings architecture is untouched and the 2026-08-26 audit extractor does not read this ledger (enforced structurally by a test), so the audit's UNKNOWN percentages stay honest. Grants no authority - grants_authority is const false."
     }
   ]
 }

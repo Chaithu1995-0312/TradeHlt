@@ -1,8 +1,8 @@
 {
   "_doc": "Stable pointer to the freshest lineage census. Dated artifacts are immutable; resolve via this pointer (verify sha256) or embedded generated_at_utc \u2014 never by filename date.",
-  "path": "docs/governance/feature_38_lineage_census-2026-07-31.json",
-  "generated_at": "2026-07-31T05:50:56Z",
-  "schema_hash": "c87a1aba7bc79803d04c680e0232389e",
-  "feature_order_hash": "0edda573414f0a64",
-  "sha256": "cb7f66219eb709c39904564e62df45be07f6f6173dfee6a7028f4d5558206684"
+  "path": "docs/governance/feature_38_lineage_census-2026-09-05.json",
+  "generated_at": "2026-09-05T09:39:54Z",
+  "schema_hash": "f52bf5d3f2ae6ddb75e8a35e9c323e07",
+  "feature_order_hash": "160c96c52b198a16",
+  "sha256": "69cd98f973e88ebbcff1d1c201e574b01ff138dd94d376a7ad2cff4a8b525f63"
 }

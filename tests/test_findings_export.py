@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from governance.findings_export import META_LINE, parse_findings, render
+from governance.findings_export import _FIELDS, META_LINE, parse_findings, render
 
 _REPO = Path(__file__).resolve().parents[1]
 _FINDINGS_DOC = _REPO / "docs" / "current-findings.md"
@@ -77,3 +77,46 @@ def test_on_disk_export_is_not_hand_edited(records: list[dict]) -> None:
         "data/findings.jsonl differs from a fresh render — it was hand-edited or is stale; "
         "regenerate via: python scripts/governance/export_findings.py (§6.2: never hand-edit)"
     )
+
+
+_FIELD_LINE_RE = re.compile(r"^-\s+([A-Z][A-Za-z-]*):", re.MULTILINE)
+_BLOCK_SPLIT_RE = re.compile(r"^###\s+F-\d{3}", re.MULTILINE)
+
+#: A field carried by at least this share of finding blocks is STRUCTURAL — part of the doc's
+#: schema rather than prose inside a Note/Evidence body (`Date:`/`Update:` appear in nested
+#: sub-entries at ~27% and below, and are deliberately not exported).
+_STRUCTURAL_SHARE = 0.5
+
+
+def test_export_fields_cover_the_docs_structural_schema() -> None:
+    """Every structural field in the findings doc survives into the GENERATED export.
+
+    Regression floor for the gap the 2026-08-26 provenance audit hit: `Family:`/`Contract:`
+    entered the doc with the 2026-08-06 measurement-contract work and were never added to
+    `_FIELDS`, so `data/findings.jsonl` — named in CLAUDE.md §2 as a machine-readable truth
+    artifact — could not answer "what measurement basis?" or "what research family?" at all.
+    Nothing compared the two schemas, so the divergence was silent for 20 days.
+    """
+    text = _FINDINGS_DOC.read_text(encoding="utf-8")
+    blocks = _BLOCK_SPLIT_RE.split(text)[1:]
+    assert blocks, "no finding blocks parsed from the doc"
+
+    counts: dict[str, int] = {}
+    for block in blocks:
+        for name in {m.group(1) for m in _FIELD_LINE_RE.finditer(block)}:
+            counts[name] = counts.get(name, 0) + 1
+
+    exported = {doc_name for doc_name, _ in _FIELDS}
+    structural = {n for n, c in counts.items() if c >= _STRUCTURAL_SHARE * len(blocks)}
+
+    missing = sorted(structural - exported)
+    assert not missing, (
+        "findings-doc fields carried by most findings but absent from findings_export._FIELDS: "
+        + ", ".join(f"{n} ({counts[n]}/{len(blocks)} findings)" for n in missing)
+    )
+
+    phantom = sorted(exported - set(counts))
+    assert not phantom, (
+        "findings_export._FIELDS exports fields the doc never uses: " + ", ".join(phantom)
+    )
+

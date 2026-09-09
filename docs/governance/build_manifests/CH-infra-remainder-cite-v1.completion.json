@@ -1,0 +1,24 @@
+{
+  "change_id": "CH-infra-remainder-cite-v1",
+  "date_utc": "2026-09-04",
+  "declared_files": [
+    ".grok/infra_file_citations.md",
+    ".grok/_cite_remainder.py",
+    ".grok/_link_infra_architecture.py",
+    ".grok/infra_architecture_link.xlsx",
+    ".grok/infra_architecture_link_coverage.json",
+    ".grok/INFRA.md",
+    "docs/topics/readme.md",
+    "docs/governance/build_manifests/CH-infra-remainder-cite-v1.impact.json",
+    "docs/governance/build_manifests/CH-infra-remainder-cite-v1.completion.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_topic_docs.py",
+    "tests/test_doc_citations.py"
+  ],
+  "repo_state_hash": "PENDING",
+  "completion_status": "BLOCKED_PREEXISTING_FINDINGS_FLOOR",
+  "completion_note": "Remainder citation inventory shipped. Infra-doc referenced 1630/1630 declared-tree .py (v1 1531/1531, v2 99/99). 944 paths in .grok/infra_file_citations.md existence-only, grouped by owning topic. test_current_findings.py pre-existing red (F-096 / stale Revalidate-by) out of scope. No src behavior. No G001.",
+  "production_behavior_changed": "NO"
+}

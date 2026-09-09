@@ -50,6 +50,7 @@ Do **not** implement B before A0 has a stable bar series hash (compare needs a p
 | **Role in this infra** | **Reference only** — cost dual-`c`, stop protocol, knowledge transfer |
 | **Forbidden** | Geometry/feature search under ZONE-X branding; using ZONE-X g(W) to form CRT states; unsealing test year for chart work |
 | **Allowed residual** | Read cost notes; accumulate live stop samples **outside** this chart programme if operator chooses |
+| **Parquet link (2026-08-23)** | Window occupancy ledger joined to XAUUSD parquet by timestamp — `results/research/zone_x_parquet_link/`. Calendar overlap is full on opportunities/clean_labels/events; §6 feature-null is NOT_REACHABLE_VIA_PARQUET. Path (a) Stop unchanged. |
 | **Docs (root)** | `ZONE-X-SPEC-v0.8.md` · `ZONE-X-DECISION-2026-08-06.md` · `ZONE-X-COST-NOTE.md` · `ZONE-X-KNOWLEDGE-TRANSFER.md` · `ZONE-X-DESIGN-CONTINUATION-v0.9.md` |
 
 CRT states come from **CRT SM + CRTConfig + features**, never from ZONE-X.
@@ -281,6 +282,47 @@ Known trap: F-066 session labels vs wall-clock UTC — compare **price geometry*
 
 Amend this freeze only by a new dated decision section or superseding doc.  
 Implementation starts only on explicit user authorize (e.g. `build A0` / `build A0-C0` / `build full CPC`).
+
+### Amendment 2026-08-22 — **A0 AUTHORIZED AND BUILT**
+
+User authorized the renderer (build the chart tool, then use it). **Workstream A0 only.**
+A1 (8-layer story tags), A2 (FM panel), B (paper trades) and C (broker compare) remain
+DESIGN_FROZEN and unbuilt; `legend.json` declares `V2_story_tags:false` / `V3_fm_panel:false`
+so an export cannot advertise a layer it does not draw.
+
+**Shipped:** `src/charts/{chart_series,crt_overlay,render}.py` · CLI
+`scripts/analysis/render_chart.py` (SITS-registered) · floor `tests/test_chart_series.py`
+(38 tests) · optional extra `charts = ["mplfinance"]` in `pyproject.toml`.
+
+**Header pin CORRECTED.** This document's header records `ACTIVE_VERSION` as
+`v2_multi_2026_04` (true on 2026-08-06). On `feature/truth-registry-v2` at 2026-08-22,
+`configs/production/ACTIVE_VERSION` reads **`v2_htfcrt_2026_08`** (§4.0 Tier 0). Both
+statements are correct for their date/branch; the §3.1 rule — load via the production
+ACTIVE_VERSION path, never a programmatic config — is what binds, and A0 honours it.
+
+**§9 acceptance status:**
+
+| ID | Status | Evidence |
+|---|---|---|
+| A-AC1 | **PASS** | 66 sampled bars equal `data/mt5/XAUUSD_M15.csv` exactly; corpus sha256 pinned in `config_pin.json` |
+| A-AC2 | **PARTIAL** | states come from a real `BacktestRunner` run under ACTIVE_VERSION via `load_prod_config_from_registry`; engine→base index shift is SOLVED from event timestamps (measured **+62**, unanimous over 2,382 transitions) and fails closed on disagreement. A state-sequence *hash* pin is not yet written |
+| A-AC3 | **PASS** | legend lists colour tokens by frozen name + clock basis + state source |
+| A-AC3b | **PASS** | legend carries an explicit FM-043/044 vs `crt_live_ema_*` guard (A0 draws neither) |
+| A-AC4 | **N/A** | LIVE_PARTIAL/story tags are A1, not built |
+| Z-AC1 | **PASS** | enforced by test — no ZONE-X token reachable from `src/charts/` |
+
+**Finding recorded against §3.2 Layer V1 (measured, descriptive):** the per-bar CRTState
+colour is **legible only at M15/H1**. CRT is an M15 state machine; on XAUUSD under
+`v2_htfcrt_2026_08` it transitions 2,382 times across 47,275 bars (~1 per 20 bars, ~5 h),
+so a D1 bucket contains ~5 flips and its close-state is near-random — the rendered chart
+is a barcode that *looks* like structure. A0 does not suppress the layer; it measures the
+change-rate, sets `legend.crt_aliasing.aliased`, and stamps a WARNING into the image title
+(the PNG travels without its legend). Design impact: §3.2's "per-bar background colour by
+CRTState" is sound but implicitly assumes the chart timeframe is the state machine's
+timeframe. A future A1/A2 pass wanting HTF semantics needs a *bucket-summary* vocabulary
+(e.g. "did EXECUTION occur in this bucket"), which is NOT in this freeze.
+
+Authority unchanged: infra only. No promotion, no G001 claim, no economic claim.
 
 ---
 

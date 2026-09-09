@@ -28,10 +28,16 @@ def idx() -> FeatureSurfaceIndex:
 
 
 def test_loads_39_vector_members(idx: FeatureSurfaceIndex):
-    # 39 under schema v4.0 (was 38 under v3.0 before the 2026-07-22 MACD histogram split
-    # shifted the tail +1 -- see features/feature_schema.py:47-68).
+    # 48 under schema v5.0 (was 39 under v4.0 before the 2026-08-15 CH-htfcrt-parent-candle-
+    # smc-v1 program added 9 SMC primitives; was 38 under v3.0 before the 2026-07-22 MACD
+    # histogram split shifted the tail +1 -- see features/feature_schema.py:47-68).
     vec = idx.list_vector()
-    assert len(vec) == 39
+    assert len(vec) == 48
+    # `surface_status` echoes the STATIC feature_surface_closure_audit-2026-07-31.json
+    # artifact's own self-declared status, scoped to the 39-feature/38-canonical surface IT
+    # certified — correctly "CLOSED" for that boundary, and NOT a claim that the 9 new SMC
+    # features are certified (idx.summary()['meta']['closure_verdict']['closure_histogram']
+    # honestly shows {'CLOSED': 39, None: 9} for exactly this reason).
     assert idx.meta.get("surface_status") == "CLOSED"
 
 
@@ -82,7 +88,20 @@ def test_joined_fields_present(idx: FeatureSurfaceIndex):
 def test_filter_pit(idx: FeatureSurfaceIndex):
     rows = idx.filter(pit="CAUSAL_DELAYED_PUBLICATION")
     names = {r["NAME"] for r in rows}
-    assert names == {"swing_high", "swing_low"}
+    # Was {swing_high, swing_low} until 2026-09-05, when the 9 schema-v5.0 SMC slots got
+    # their first PIT classification. Three of them join this class, each for the SAME
+    # reason the swing slots are in it — the value is attributed to a bar EARLIER than the
+    # bar at which it becomes knowable:
+    #   fvg_distance — 3-candle test, zone stamped at the middle candle but undetectable
+    #                  until bars[i+1] closes (src/features/smc/fvg.py:23-37), lag 1
+    #   pdh/pdl      — reference the most recently CLOSED D1 parent, never the forming day
+    #                  (src/features/smc/levels.py:26-35)
+    # The other six SMC slots reach geometry through detect_causal_swings and are therefore
+    # STRUCTURE_WITH_CAUSAL_SWING, matching liquidity_sweep/break_of_structure.
+    assert names == {
+        "swing_high", "swing_low",
+        "fvg_distance", "pdh_distance", "pdl_distance",
+    }
 
 
 def test_cli_summary_exit_0():
@@ -216,3 +235,107 @@ def test_meta_exposes_staleness_and_collisions(idx: FeatureSurfaceIndex):
     assert idx.meta["stale_artifacts"] == [], (
         f"loaded artifacts are stale vs live schema: {idx.meta['stale_artifacts']}"
     )
+
+
+# ── SEMANTIC_STATE / RESOLVER_BINDING (2026-09-05) ───────────────────────────
+#
+# These pin the distinction an external design doc collapsed: "13 stateful vector
+# channels + 3 non-vector, all consumed by the resolver". Every clause of that is
+# wrong, and each assertion below is the mechanical guard for one of them.
+
+
+def test_semantic_state_matches_live_encoder(idx: FeatureSurfaceIndex):
+    """`stateful` is READ from FeatureStateEncoder, never a table in the query script."""
+    sys.path.insert(0, str(ROOT / "src"))
+    from features.feature_states import FeatureStateEncoder
+
+    enc = FeatureStateEncoder()
+    expected = set(enc.vector_bound_features)
+
+    got = {
+        r["NAME"] for r in idx.list_vector()
+        if (r.get("SEMANTIC_STATE") or {}).get("stateful")
+    }
+    assert got == expected, f"query/encoder disagree: only-query={got - expected} only-encoder={expected - got}"
+    assert len(got) == 13, f"expected 13 vector-bound stateful slots, got {len(got)}: {sorted(got)}"
+
+
+def test_six_non_vector_stateful_identities_not_three(idx: FeatureSurfaceIndex):
+    """The count that caused the error. crt_state_resolver's source comment listed THREE
+    (retest_flag / rsi_state / displacement_flag); the encoder's vocabulary has SIX. The
+    three magnitude states (FM-071/072/073) are the ones that kept being dropped."""
+    meta = idx.meta["semantic_state"]
+    assert meta["status"] == "OK", meta
+    assert meta["n_non_vector"] == 6, meta["non_vector_names"]
+    assert set(meta["non_vector_names"]) == {
+        "retest_flag", "rsi_state", "displacement_flag",
+        "body_commitment", "atr_magnitude", "momentum_magnitude",
+    }
+
+
+def test_resolver_consumes_ten_canonical_plus_three_non_vector(idx: FeatureSurfaceIndex):
+    """`required_when_features` is 13 TOTAL — not "the 13 stateful vector slots"."""
+    meta = idx.meta["resolver_binding"]
+    assert meta["status"] == "OK", meta
+    assert meta["n_required_when"] == 13, meta["required_when"]
+    assert meta["n_required_when_canonical"] == 10, meta["required_when"]
+    assert meta["n_required_when_non_vector"] == 3, meta["required_when"]
+
+
+def test_stateful_but_unconsumed_slots_named_explicitly(idx: FeatureSurfaceIndex):
+    """THE guard against re-collapsing "stateful" into "consumed": these three slots declare
+    ontology states and are named in NO CRT `when:` clause. `change_of_character` being here
+    is the source-level answer to "why is CHoCH ignored?" — it is not ignored by accident,
+    no predicate references it."""
+    unconsumed = {
+        r["NAME"] for r in idx.list_vector()
+        if (r.get("SEMANTIC_STATE") or {}).get("stateful")
+        and not (r.get("RESOLVER_BINDING") or {}).get("required_when")
+    }
+    assert unconsumed == {"volatility_regime", "volume_spike", "change_of_character"}
+
+
+def test_supply_set_is_not_the_consumed_set(idx: FeatureSurfaceIndex):
+    """resolver_supply hands the resolver every canonical name; only 13 are read by a
+    predicate. Conflating the two is what made the external doc's resolver contract wrong."""
+    vec = idx.list_vector()
+    supplied = [r for r in vec if (r.get("RESOLVER_BINDING") or {}).get("in_supply_set")]
+    consumed = [r for r in vec if (r.get("RESOLVER_BINDING") or {}).get("required_when")]
+    assert len(supplied) == 48
+    assert len(consumed) == 10   # the canonical subset; +3 non-vector = 13 total
+    assert len(consumed) < len(supplied)
+
+
+def test_every_vector_row_carries_both_blocks(idx: FeatureSurfaceIndex):
+    for r in idx.list_vector():
+        assert "SEMANTIC_STATE" in r, r["NAME"]
+        assert "RESOLVER_BINDING" in r, r["NAME"]
+        # never None-as-False: an unavailable authority must say so
+        assert r["SEMANTIC_STATE"].get("stateful") is not None, r["NAME"]
+
+
+def test_smc_slots_have_pit_classification(idx: FeatureSurfaceIndex):
+    """The 9 schema-v5.0 SMC slots (indices 39-47) landed after the 2026-07-31 census, so
+    they had NO pit_class at all — a missing classification indistinguishable from an absent
+    feature. Classified 2026-09-05 via the census LINEAGE source (not by hand-editing the
+    generated artifact). Closure is deliberately NOT asserted here: that is a separate,
+    authorized certification act."""
+    smc = [
+        "order_block_distance", "fvg_distance", "breaker_distance",
+        "mitigation_block_distance", "pdh_distance", "pdl_distance",
+        "eqh_distance", "eql_distance", "change_of_character",
+    ]
+    for name in smc:
+        row = idx.get(name)
+        assert row is not None, name
+        pit = (row.get("PIT_STATUS") or {}).get("pit_class_effective")
+        assert pit, f"{name} has no effective PIT class"
+
+
+def test_cli_lineage_exit_0(capsys):
+    assert main(["--lineage"]) == 0
+    out = capsys.readouterr().out
+    assert "48 vector slots" in out
+    assert "13 stateful" in out
+    # the two questions must be rendered as separate columns, not one
+    assert "stateful" in out and "when:" in out

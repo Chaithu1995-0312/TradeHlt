@@ -1,0 +1,53 @@
+{
+  "change_id": "CH-live-rail-pr1",
+  "objective": "PR-1 of the authorized live-rail repair path: freeze NormalizedTick / MarketDataPort / LiveRailConfig contracts, implement TickDB replay + BarBuilder + LongPort stub + reconnect/breaker. Zero live I/O. No EngineRunner, no orders, no HookedLiveEngine caller, no active-config edit. User authorized 2026-08-19 (TickDB first, repair F-073, no CRT-only skip). Grants no G001, no promotion, no P-GOAL-04.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE"
+  ],
+  "production_behavior_changed": false,
+  "affected_files": [
+    "src/inout/live_rail/__init__.py",
+    "src/inout/live_rail/types.py",
+    "src/inout/live_rail/config.py",
+    "src/inout/live_rail/resilience.py",
+    "src/inout/live_rail/tickdb_adapter.py",
+    "src/inout/live_rail/bar_builder.py",
+    "src/inout/live_rail/longport_adapter.py",
+    "src/utils/logging_config.py",
+    "tests/test_live_rail_contracts.py",
+    "tests/test_live_rail_tickdb.py",
+    "tests/test_live_rail_bar_builder.py",
+    "tests/fixtures/ticks/xauusd_m15_sample.jsonl",
+    "configs/experimental/spec/live_rail_tickdb_paper.json",
+    "docs/governance/build_manifests/CH-live-rail-pr1.impact.json",
+    "docs/implementation_plan/live-rail-repair-path.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — PR-1 does not touch model I/O or the 48-dim vector",
+  "affected_production_config": "none — live_rail example lives only in configs/experimental/spec/; ACTIVE_VERSION v2_htfcrt_2026_08 is not edited",
+  "required_checks_ack": [
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py",
+    "tests/test_live_rail_contracts.py",
+    "tests/test_live_rail_tickdb.py",
+    "tests/test_live_rail_bar_builder.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Whether a committed tests/fixtures/ticks/*.jsonl needs a Phase-3 clock record in the on-disk registry.",
+      "blocking": false,
+      "resolution": "Tests copy or generate ticks under pytest tmp_path (in-process clock declaration). require_clock_record=true is exercised against tmp files. Committed fixture is documentation/sample only.",
+      "followup": "Register a real data/ticks/*.jsonl via review_ohlcv_clocks.py when a paper corpus is authorized."
+    },
+    {
+      "question": "Whether live-execution.md should list TickDB/BarBuilder this turn.",
+      "blocking": false,
+      "resolution": "Meaning of the live path is unchanged (still no caller — F-073). Topic cite repair is PR-6. Deferred.",
+      "followup": "PR-6 topic sync after PR-4c exists."
+    }
+  ],
+  "rollback_boundary": "Delete src/inout/live_rail/, the three tests, tests/fixtures/ticks/, configs/experimental/spec/live_rail_tickdb_paper.json, and this manifest. No params hash, no ACTIVE_VERSION, no spine module revert.",
+  "authority_granted": "User authorized PR-1 2026-08-19 after locking TickDB-first, repair F-073, no EngineRunner skip. Does not authorize PR-4a/4c, dry_run=false, live money, or promotion."
+}

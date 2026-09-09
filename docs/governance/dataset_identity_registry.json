@@ -1,0 +1,21 @@
+{
+  "_doc": "R3 Dataset Identity index. Each record is a Dataset Identity JSON validated against dataset_identity.schema.json. Unbound instruments are not listed; CandleLoader path-passthrough applies until a dataset is bound. Not APPROVED. Not OHLCV CLOSED.",
+  "schema_version": "1.0.0",
+  "status_token": "DATASET_IDENTITY_STATUS = FROZEN",
+  "unbound_load_policy": "path_passthrough",
+  "producer_canonical": "features.parent_candle.ParentCandleBuilder",
+  "datasets": [
+    {
+      "dataset_id": "XAUUSD_MT5_PHASE1_20260521",
+      "record": "docs/governance/datasets/XAUUSD_MT5_PHASE1_20260521.json",
+      "symbol": "XAUUSD",
+      "canonical_timeframe": "M15"
+    },
+    {
+      "dataset_id": "XAUUSD_MT5_TVWINDOW_20260706_20260807",
+      "record": "docs/governance/datasets/XAUUSD_MT5_TVWINDOW_20260706_20260807.json",
+      "symbol": "XAUUSD",
+      "canonical_timeframe": "M15"
+    }
+  ]
+}

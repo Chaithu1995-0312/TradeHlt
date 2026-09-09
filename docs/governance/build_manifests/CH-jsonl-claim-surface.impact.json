@@ -1,0 +1,40 @@
+{
+  "change_id": "CH-jsonl-claim-surface",
+  "date_utc": "2026-08-25",
+  "objective": "PR-1 of the approved JSONL Claim Surface spec (docs/governance/JSONL_CLAIM_SURFACE.md). Encode the P-FLOW-15 CAN/CANNOT table as a committed PRIMARY catalog of named claim classes (CC-*) and streams (STR-*), with a loader, an admissibility matrix, a deterministic GENERATED projection, and a pytest floor on GREEN_FLOOR. The grounder is NOT touched in PR-1: CT-008 behaves exactly as before, so an incomplete merge changes no claim result. Register the JSONL_CLAIM_SURFACE_CHANGE class. Advisory only: no G001, no promotion, no live rail, no identity persistence.",
+  "change_classes": ["JSONL_CLAIM_SURFACE_CHANGE"],
+  "change_class_rationale": "New class registered in this PR. NOT SEMANTIC_REGISTRY_CHANGE (that class governs the non-frozen market-ontology sections in configs/formulas/market_ontology.yaml; nothing here touches the ontology). NOT IDENTITY_STORE_CHANGE (no Class A/B/C record is written and identity_check is never called). NOT RUNTIME_DECISION_PATH_CHANGE or PRODUCTION_CONFIG_CHANGE (this module is not imported by engine_runner, backtest_v2 or crt_engine_v2). DOCUMENTATION_ONLY is illegal alone because src/ changes.",
+  "affected_files": [
+    "docs/governance/jsonl_claim_catalog.yaml",
+    "src/governance/jsonl_claim_catalog.py",
+    "tests/test_jsonl_claim_catalog.py",
+    "scripts/maintenance/check_governance_invariants.py",
+    "tests/test_governance_invariant_check.py",
+    "docs/governance/change_contracts.json",
+    "tests/test_construction_protocol.py",
+    "docs/governance/JSONL_CLAIM_SURFACE.md",
+    "docs/governance/build_manifests/CH-jsonl-claim-surface.impact.json",
+    "docs/reference/schemas.md",
+    "docs/topics/event-fabric.md",
+    "CLAUDE.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_jsonl_claim_catalog.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_governance_invariant_check.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Single commit. Revert docs/governance/jsonl_claim_catalog.yaml, src/governance/jsonl_claim_catalog.py, tests/test_jsonl_claim_catalog.py, the JSONL_CLAIM_SURFACE_CHANGE class, the GREEN_FLOOR / GOVERNED_FILES additions and their pins together. Reverting must not leave a GREEN_FLOOR or required_checks entry pointing at a deleted test, and must restore tests/test_construction_protocol.py to len == 15.",
+  "authority_granted": "User 2026-08-25: approved the implementation plan for CH-jsonl-claim-surface PR-1..4, lifting the spec's design-only lock.",
+  "authority_NOT_granted": "No G001, no promotion, no ACTIVE_VERSION change, no live rail, no LLM order-send, no new agent intent, no new detector. Does not reopen Canonical Layer Identity / Storage Preservation / Physical Storage or CRT. Does not stamp frozen PKs onto historical JSONL (identity contract 12.3). Does not grant the catalog a Semantic OS CN (PR-5 skipped). Does not edit signal-flow.md or register the P-FLOW-14 F-id.",
+  "production_behavior_changed": "NO"
+}

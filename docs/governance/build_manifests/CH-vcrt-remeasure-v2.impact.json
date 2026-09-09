@@ -1,0 +1,84 @@
+{
+  "change_id": "CH-vcrt-remeasure-v2",
+  "date_utc": "2026-08-19",
+  "objective": "Re-measure the Visual CRT trade object (SEM-012 v2) under the corrected measurement basis shipped by F-082, as a NEW sealed contract instance MC-VCRT-XAUUSD-M15-V2. Changes exactly two frozen dimensions of MC-VCRT-XAUUSD-M15-V1 -- costs (flat 12bps -> SEM-015 measured broker decomposition) and exits (perfect stop fill -> SEM-016 adverse fill) -- which is the path V1's own kill_criteria mandates. Additionally executes the OOS split and the two control benchmarks that V1's sealed contract DECLARED but never ran, making V2 the first complete execution of this contract. V1 stays sealed, registered, and byte-reproducible; F-081's verdict is not edited.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "SCRIPT_LIFECYCLE_CHANGE: a new runnable entry point scripts/research/vcrt_remeasure_v2.py is added and SITS-registered the same turn. DOCUMENTATION_ONLY: two new findings plus topic/index synchronisation. The src/research/visual_crt/ edits (driver made contract-bindable; new controls module) are research-harness changes covered by the non-blocking UNK-COST-01 carried forward from CH-cost-model-broker-truth -- change_contracts.json still registers no class for the research measurement harness, and RUNTIME_DECISION_PATH_CHANGE does not apply because src/research/visual_crt/ is AST-enforced to import no live-spine module. No production config, no model artifact, no ACTIVE_VERSION, no ontology node.",
+  "affected_files": [
+    "configs/research/measurement_contracts/instances/MC-VCRT-XAUUSD-M15-V2.json",
+    "src/research/visual_crt/driver.py",
+    "src/research/visual_crt/controls.py",
+    "scripts/research/vcrt_remeasure_v2.py",
+    "tests/research/test_vcrt_v2_contract.py",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/topics/research-measurement-contract.md",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "docs/governance/build_manifests/CH-vcrt-remeasure-v2.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/research/test_visual_crt_trade_object.py",
+    "tests/research/test_vcrt_v2_contract.py",
+    "tests/test_measurement_contract.py",
+    "tests/test_component_cost_model.py",
+    "tests/test_forward_walk_adverse_fill.py"
+  ],
+  "unknowns": [
+    {
+      "id": "UNK-COST-01",
+      "blocking": false,
+      "statement": "Carried forward unchanged from CH-cost-model-broker-truth: change_contracts.json registers no change class for the research measurement harness (src/research/). Non-blocking here because the driver refactor is proved behaviour-preserving by a byte-identical reproduction of the V1 ledgers before any V2 number is produced.",
+      "resolution_owner": "user",
+      "impact_if_wrong": "A future research-harness change could alter measurement semantics without a declared contract or required checks."
+    },
+    {
+      "id": "UNK-VCRT-01",
+      "blocking": false,
+      "statement": "MC-VCRT-XAUUSD-M15-V1 declared splits.scheme=single_holdout_chronologic (embargo 96 bars, purge, seed 20260817, 'exact dates locked in split_manifest at run time') and a success_gate requiring the arm to beat pre-registered controls (random_entry, long_only). Neither was implemented: driver.py contains zero occurrences of control/random_entry/long_only/oos/holdout/embargo/purge/split, no split_manifest artifact exists, and the V1 ledger rows carry no split or control fields. Declared NON-BLOCKING for F-081's registered verdict because controls and OOS are gates a POSITIVE result must clear -- an arm rejected at the absolute-expectancy stage never reaches them, so their absence cannot have turned an edge into a null. It IS blocking for any future positive result, which is why V2 implements both. Registered separately as a governance finding.",
+      "resolution_owner": "claude",
+      "impact_if_wrong": "If controls/OOS could have changed a REJECT into something else, F-081 would need reopening. They cannot: both are additional hurdles, never rescues."
+    },
+    {
+      "id": "UNK-VCRT-02",
+      "blocking": false,
+      "statement": "V2 is a measurement-basis replication of V1's two pre-registered arms on the SAME corpus, not an independent test. It inherits V1's Bonferroni alpha=0.025 and spends no new alpha. Consequently a POSITIVE V2 result is not registrable as an economic edge under any circumstance -- it would require a fresh pre-registration on unseen data. This is declared before the run so the outcome cannot be re-interpreted afterwards.",
+      "resolution_owner": "claude",
+      "impact_if_wrong": "Treating a second look at the same data as confirmatory evidence would be the FC-METRIC-VARIANT-SELECTION failure class."
+    }
+  ],
+  "rollback_boundary": "Single commit. Delete configs/research/measurement_contracts/instances/MC-VCRT-XAUUSD-M15-V2.json, src/research/visual_crt/controls.py, scripts/research/vcrt_remeasure_v2.py, tests/research/test_vcrt_v2_contract.py, results/visual_crt/mc_vcrt_xauusd_m15_v2/, this manifest, the two new finding rows and their CLAUDE.md index entries; revert the driver.py parameterisation (its defaults are V1-identical, so reverting is behaviour-neutral) and the SITS registry rows.",
+  "authority_granted": "User 2026-08-19: agreed UNK-COST-02 (broker decomposition supersedes the volatility proxy) and authorised a re-measurement turn on Visual CRT, at full scope (cost/fill correction PLUS completing the contract's declared OOS split and controls), with the instruction to investigate in the same turn if either arm contradicts the pre-registered prediction.",
+  "authority_NOT_granted": "No economic claim regardless of outcome (economic_claims_allowed stays false; mt00/mt01 UNRUN; 0/27 E-MT-01 probes). No promotion, no G001, no fusion weight, no ACTIVE_VERSION change, no Ultron or ExecutionPlanner change. No edit to MC-VCRT-XAUUSD-M15-V1 or to F-081's verdict. No retuning of any frozen dimension after seeing V2 outcomes -- that requires a V3. No re-measurement of any finding other than Visual CRT.",
+  "production_behavior_changed": "NO",
+  "pre_registration": {
+    "sealed_before_code": true,
+    "note": "V1 earned credibility by sealing its contract before the detector existed. V2 keeps that discipline: this prediction and these decision rules are committed BEFORE the controls/OOS code is written and BEFORE any V2 number is produced. The V1 baseline was reproduced byte-identically first (arm A n=944 gross +0.00798263 net -0.55588555; arm B n=462 gross -0.08352186 net -1.26166572) so the refactor has a fixed reference point.",
+    "predicted_outcome": "Both arms still REJECT. Net moves from decisively negative to mildly negative; gross stays indistinguishable from zero.",
+    "predicted_ranges": {
+      "arm_A": {"gross_R": "0.000 to +0.007", "net_R": "-0.03 to -0.08"},
+      "arm_B": {"gross_R": "-0.09 to -0.12", "net_R": "-0.15 to -0.30"}
+    },
+    "mechanism": "Cost in R falls roughly 10x, and arm B benefits most because its median risk is 0.78 ATR against arm A's 2.64, making it far more cost-sensitive. The adverse fill pushes GROSS slightly more negative (arm A 42% stop rate, arm B 71%). The two corrections partially offset, which is why they must never be described as a single 'costs were too high' fix.",
+    "decision_rules": [
+      "Both REJECT (predicted): register as confirmatory -- the null is information-driven, not a cost artifact. Grants nothing.",
+      "Either arm positive: investigate in the SAME turn, in this order -- cost-model sign/leg error, adverse-fill sign error, V1-reproduction drift, look-ahead in the new split/control code. Report the diagnosis with the numbers. A positive surviving investigation is still NOT registrable as an edge (see UNK-VCRT-02).",
+      "Controls not beaten: the arm fails the success gate regardless of expectancy sign.",
+      "OOS retention below IS: report, do not retune."
+    ]
+  }
+}

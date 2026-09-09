@@ -1,0 +1,37 @@
+{
+  "change_id": "CH-storage-preservation-contract",
+  "date_utc": "2026-08-23",
+  "objective": "Phase 2 only: freeze the Storage Preservation Contract answering the identity-gate question 'How does storage preserve the frozen identity?' for L0–L5. Subordinate to CANONICAL_LAYER_IDENTITY_CONTRACT.md v1.0.0 / CH-canonical-layer-identity. No Parquet, DuckDB, writers, readers, migrations, replay engines, compression, partitioning, or file layout.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "New living preservation specification plus navigation pointers on the identity contract and knowledge-map. No src/, configs/, scripts/, tests/, or models/ edit. Does not reopen LAYER_IDENTITY_STATUS=CLOSED. No ontology node, no Semantic OS id, no FM-id, no F-id.",
+  "affected_files": [
+    "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+    "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+    "docs/governance/build_manifests/CH-storage-preservation-contract.impact.json",
+    "docs/knowledge-map.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Whether the user will accept Phase 2 as CLOSED (LAYER preservation surface) the way Phase 1 identity was accepted.",
+      "blocking": false,
+      "resolution": "Specified FROZEN v1.0.0, not claimed CLOSED in the Closure Index this turn.",
+      "followup": "User freeze-acceptance, if given, is a separate change id."
+    }
+  ],
+  "rollback_boundary": "Delete STORAGE_PRESERVATION_CONTRACT.md and this manifest; revert the identity-contract Phase 2/3 pointer and the knowledge-map row. Identity freeze stays CLOSED.",
+  "authority_granted": "User 2026-08-23: Phase 2 = Storage Preservation Contract answering the identity gate; explicitly not physical storage. Sequence Phase 0 census → Phase 1 identity → Phase 2 preservation → Phase 3 physical design.",
+  "authority_NOT_granted": "No Parquet, DuckDB, writers, readers, migrations, replay engines, compression, partitioning, file layout, G001, promotion, ACTIVE_VERSION change, Semantic OS id, F-id, and no reopen of LAYER_IDENTITY_STATUS=CLOSED.",
+  "production_behavior_changed": "NO"
+}

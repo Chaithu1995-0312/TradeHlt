@@ -1,0 +1,20 @@
+{
+  "change_id": "CH-live-rail-pr4b",
+  "declared_files": [
+    "src/runtime/live_rail_feeder.py",
+    "tests/test_live_rail_feeder.py",
+    "docs/governance/build_manifests/CH-live-rail-pr4b.impact.json",
+    "docs/governance/build_manifests/CH-live-rail-pr4b.completion.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_live_rail_feeder.py"
+  ],
+  "checks_result": {
+    "pr4b_tests": "8 passed",
+    "class_required_census": "not re-run — pre-existing stale vs untracked packages (CH-live-rail-pr1)"
+  },
+  "repo_state_hash": "PENDING",
+  "completion_status": "INCOMPLETE",
+  "completion_notes": "PR-4b implementation is on disk and its tests are green. Mechanical COMPLETE denied: dirty working tree + pre-existing census floor. Feeder is unwired until PR-4c."
+}

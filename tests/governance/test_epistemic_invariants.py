@@ -373,9 +373,13 @@ class TestEpistemicInvariantEvidenceLink:
                 continue
             for token in re.split(r"[;,]\s*", evidence):
                 path_part = re.sub(r"\s*\(.*\)\s*$", "", token).strip().strip("`\"'")
-                if path_part.startswith("/") or (
-                    len(path_part) > 1 and path_part[1] == ":"
-                ):
+                # A Windows drive letter is ALWAYS followed by a separator: `C:\` or `C:/`.
+                # 2026-08-27: this previously flagged any token whose 2nd char was ':', which
+                # fired on F-051's prose enumeration label ("C: rr_model zero_indices leaves
+                # 10/10 contaminated dims") — a list marker, not a path. The instrument was
+                # wrong, not the finding, so the heuristic is tightened rather than the
+                # published Evidence edited.
+                if path_part.startswith("/") or re.match(r"^[A-Za-z]:[\\/]", path_part):
                     pytest.fail(
                         f"{f['id']}: evidence path '{path_part}' appears absolute"
                     )

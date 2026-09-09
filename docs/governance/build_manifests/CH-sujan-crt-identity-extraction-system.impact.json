@@ -1,0 +1,42 @@
+{
+  "change_id": "CH-sujan-crt-identity-extraction-system",
+  "date_utc": "2026-08-28",
+  "objective": "Install a Sujan CRT Semantic Lock system prompt whose sole purpose is identity preservation during extraction. Prevents the Conversation→Interpretation→Compression→Implementation→Backtest mutation path exposed by SEM-031 → F-095. Identity is primary; measurement is downstream. No new trade object, no retune of SEM-031, no G001.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Process charter + session-load wiring only. No src/, configs/, scripts/, tests/, or models/ edit. No ontology node, no SEM id, no FM-id, no new F-id (F-095 Note gains a pointer, conclusion unchanged). No measurement contract, no detector.",
+  "affected_files": [
+    "docs/governance/SUJAN_CRT_IDENTITY_EXTRACTION_SYSTEM.md",
+    "docs/governance/build_manifests/CH-sujan-crt-identity-extraction-system.impact.json",
+    "docs/governance/build_manifests/CH-sujan-crt-identity-extraction-system.completion.json",
+    "docs/governance/SEMANTIC_REVIEW_PROTOCOL.md",
+    "docs/research/sujan_veto_chain_object.md",
+    "docs/knowledge-map.md",
+    "docs/timeline.md",
+    "docs/topics/research-measurement-contract.md",
+    "docs/topics/crt-spine.md",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    ".grok/rules/GROK.md",
+    ".grok/rules/sujan-crt-identity-lock.md",
+    ".grok/SUJAN_ACCEPTED.md",
+    ".grok/PENDING.md",
+    "assistant_project.md",
+    "docs/analysis/session-log-archive/session-log-2026-08-25_to_2026-08-27.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit; revert the system prompt, Grok overlay, and pointer edits. SEM-031 / F-095 / SUJAN_ACCEPTED steelman unchanged.",
+  "authority_granted": "User 2026-08-28: put the Semantic Lock in sources as SUJAN_CRT_IDENTITY_EXTRACTION_SYSTEM.md and require coding/model sessions to load it before proposing Sujan implementations, contracts, ontologies, or backtests.",
+  "authority_NOT_granted": "No new Sujan object, no SEM-031 retune, no new MC-*, no ontology edit of SEM-022..031, no src/research/sujan_crt/ change, no G001, no promotion, no ACTIVE_VERSION change, no identity self-certification by the coding LLM.",
+  "production_behavior_changed": "NO"
+}

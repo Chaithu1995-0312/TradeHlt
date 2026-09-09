@@ -26,11 +26,6 @@
       "count": 1
     },
     {
-      "file": "src/bitnet/bitnet_registry.py",
-      "literal": "models/bitnet/bitnet_registry.json",
-      "count": 1
-    },
-    {
       "file": "src/bitnet/composition.py",
       "literal": "...l_path`` argument wins.\n      2. Else ``models/bitnet/bitnet_registry.json`` composition_default / selection.\n      3. Else historical ``model.json``.\n   ...",
       "count": 1
@@ -181,11 +176,6 @@
       "count": 1
     },
     {
-      "file": "src/engines/live_engine.py",
-      "literal": "models/zone_registry.json",
-      "count": 2
-    },
-    {
       "file": "src/engines/zone_gate_engine.py",
       "literal": "...he registry's own top-level name list (`models/zone_registry.json`\n    -> `feature_order`). When supplied it is AUTHORITATIVE: the vector is assembled by ...",
       "count": 1
@@ -246,6 +236,6 @@
       "count": 1
     }
   ],
-  "debt_pair_count": 46,
-  "debt_occurrence_count": 57
+  "debt_pair_count": 44,
+  "debt_occurrence_count": 54
 }

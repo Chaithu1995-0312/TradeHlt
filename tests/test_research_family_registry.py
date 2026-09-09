@@ -59,6 +59,13 @@ REQUIRED_FAMILY_IDS = {
     "RF-EXIT-COST-PATH",
     "RF-FEATURE-ONTOLOGY",
     "RF-LABEL-TRUTH",
+    "RF-MOTHER-RANGE",
+    "RF-DIRECTIONAL-ASYMMETRY",
+    "RF-TREND-MAGNITUDE-PRIOR",
+    "RF-RNET-SIZE-OVERLAY",
+    "RF-MOTHER-RANGE-PRIOR",
+    "RF-SUJAN-VETO",
+    "RF-VISUAL-CRT-PRIOR",
 }
 
 # Which statuses a given evidence_mass may legally carry.

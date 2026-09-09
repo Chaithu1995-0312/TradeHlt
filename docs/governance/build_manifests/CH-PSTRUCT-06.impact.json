@@ -1,0 +1,43 @@
+{
+  "change_id": "CH-PSTRUCT-06",
+  "task_class": "OBSERVATION_ONLY",
+  "objective": "Close P-STRUCT-06: attach SEM-013 to CRT DISPLACEMENT as a research-only annotation (CRT_WIRE=DISPLACEMENT:VolumeSpike:ANNOTATION_ONLY, gate=UNUSED). Does not change DISPLACEMENT classification. No when: predicate, no hard/soft gate, no new CRTState, no new FM, no N, no EMA, no G001.",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE"
+  ],
+  "affected_files": [
+    "configs/formulas/market_ontology.yaml",
+    "configs/formulas/market_crt_states.yaml",
+    "scripts/research/p_struct_01_displacement_evidence.py",
+    "tests/test_p_struct_01_displacement_evidence.py",
+    "docs/research/p_struct_01_displacement_evidence.md",
+    "docs/research/structure-dimension-inventory-displacement.md",
+    "reports/p_struct_01_displacement_evidence.md",
+    "docs/topics/crt-spine.md",
+    ".grok/PENDING.md",
+    "docs/governance/build_manifests/CH-PSTRUCT-06.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [
+    "FM-063"
+  ],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_amended": [
+    "SEM-013"
+  ],
+  "required_checks_ack": [
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_p_struct_01_displacement_evidence.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert SEM-013 v2 fields, H8 comment, extractor crt_wire columns, tests, docs. No src/ engine, no FeaturePipeline, no VALID_TRANSITIONS, no production config.",
+  "authority_granted": "User 2026-08-18: least-invasive token CRT_WIRE=DISPLACEMENT:VolumeSpike:ANNOTATION_ONLY, gate UNUSED. P-STRUCT-06 CLOSED as research annotation with no runtime consumption.",
+  "authority_NOT_granted": "No CRT when: consume, no hard/soft gate, no state transition, no new CRTState, no new FM, no N, no EMA, no economic test, no G001.",
+  "production_behavior_changed": "NO"
+}

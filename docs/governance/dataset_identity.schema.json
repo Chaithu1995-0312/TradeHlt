@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tradelatest://governance/dataset_identity.schema.json",
+  "title": "DatasetIdentity",
+  "description": "R3 Dataset Identity record. The dataset is the authority; one canonical admitted artifact; coarser timeframes are direct ParentCandleBuilder projections (star, not cascade). Not APPROVED unless decision_status says so. Not a second L0-L5.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "dataset_id",
+    "symbol",
+    "source_family",
+    "clock_basis",
+    "volume_semantic",
+    "decision_status",
+    "canonical_artifact",
+    "timeframes",
+    "load_policy",
+    "explicitly_not"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "dataset_id": {
+      "type": "string",
+      "pattern": "^[A-Z0-9][A-Z0-9_]+$"
+    },
+    "symbol": { "type": "string" },
+    "source_family": { "type": "string" },
+    "clock_basis": {
+      "type": "string",
+      "enum": ["broker_local", "utc_corrected", "UNKNOWN"]
+    },
+    "volume_semantic": {
+      "type": "string",
+      "enum": [
+        "BASE_ASSET_VOLUME",
+        "QUOTE_ASSET_VOLUME",
+        "TICK_VOLUME",
+        "TICK_VOLUME_APPROXIMATE",
+        "LEG_VOLUME",
+        "SYNTHETIC_PRICE_RANGE_PROXY",
+        "NONE",
+        "UNDECLARED"
+      ]
+    },
+    "legacy_rewrite_target": {
+      "type": "boolean",
+      "description": "R3 multi-dataset routing. True on the ONE record that absorbs bare XAUUSD_M15* load requests via is_xauusd_m15_request (the pre-multi-dataset behaviour). Optional: absence means false. Two records carrying it is a fail-closed error -- ambiguous rewrite targets must raise, never be silently resolved."
+    },
+    "is_synthetic": {
+      "type": "boolean",
+      "description": "True when the volume column is derived/proxy rather than a genuine broker-provided counter (closure-report BC-4 requirement, docs/governance/ohlcv-closure-report-2026-07-10.md:106). Optional: absence means undeclared, not false -- a record predating this field carries no claim either way."
+    },
+    "decision_status": {
+      "type": "string",
+      "enum": [
+        "APPROVED",
+        "REJECTED",
+        "QUARANTINED",
+        "UNRESOLVED",
+        "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION"
+      ]
+    },
+    "parent_timeframe_source": {
+      "type": ["string", "null"],
+      "enum": ["derived_h4", "native_h4", null]
+    },
+    "canonical_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timeframe", "path", "sha256", "source", "admitted"],
+      "properties": {
+        "timeframe": { "type": "string" },
+        "path": { "type": "string" },
+        "sha256": { "type": "string", "minLength": 64, "maxLength": 64 },
+        "source": { "type": "string" },
+        "admitted": { "type": "boolean" },
+        "rows": { "type": ["integer", "null"] },
+        "start": { "type": ["string", "null"] },
+        "end": { "type": ["string", "null"] },
+        "phase1_binding_ref": { "type": ["string", "null"] }
+      }
+    },
+    "timeframes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role"],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["canonical_artifact", "projection", "forensic", "absent"]
+          },
+          "source": { "type": ["string", "null"] },
+          "admitted": { "type": "boolean" },
+          "path": { "type": ["string", "null"] },
+          "sha256": { "type": ["string", "null"] },
+          "rows": { "type": ["integer", "null"] },
+          "start": { "type": ["string", "null"] },
+          "end": { "type": ["string", "null"] },
+          "producer": { "type": ["string", "null"] },
+          "rule": { "type": ["string", "null"] },
+          "parent": { "type": ["string", "null"] },
+          "parent_sha256": { "type": ["string", "null"] },
+          "derivation": {
+            "type": ["string", "null"],
+            "enum": ["direct", null]
+          }
+        }
+      }
+    },
+    "forensic_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "load_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["require_hash_match", "unbound_instruments", "reject_forensic_as_canonical"],
+      "properties": {
+        "require_hash_match": { "type": "boolean" },
+        "unbound_instruments": {
+          "type": "string",
+          "enum": ["path_passthrough", "reject"]
+        },
+        "reject_forensic_as_canonical": { "type": "boolean" }
+      }
+    },
+    "explicitly_not": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

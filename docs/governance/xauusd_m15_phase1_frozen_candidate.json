@@ -47,14 +47,17 @@
   "promotion_rule": "Only after remaining_phase1_validation pass: record APPROVED for this exact hash+path+range; never a different file under the same logical id without a new decision.",
   "runtime_enforcement": {
     "guard": "src/data_ingestion/xauusd_phase1_candidate.guard_xauusd_csv_path",
+    "admission": "src/data_ingestion/dataset_registry.admit_csv_path",
+    "dataset_id": "XAUUSD_MT5_PHASE1_20260521",
     "wired_into": [
+      "src/data_ingestion/dataset_registry.admit_csv_path",
       "src/runtime/backtest_v2.CandleLoader.__init__",
       "src/runtime/backtest_v2.BacktestRunner.__init__",
       "src/runtime/backtest_v2._preflight_dataset",
       "src/runtime/backtest_v2.run_backtest",
       "src/research/secondlow_v1/corpus.py"
     ],
-    "behavior": "XAUUSD M15 loads rewrite to physical_path and fail closed on hash/range drift; other instruments unchanged"
+    "behavior": "R3: XAUUSD M15 loads rewrite to physical_path and fail closed on hash/range drift; native XAUUSD HTF CSVs FORENSIC-reject via DatasetRegistry; unbound instruments path-passthrough"
   }
 }
 

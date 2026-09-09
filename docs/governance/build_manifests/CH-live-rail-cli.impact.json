@@ -1,0 +1,49 @@
+{
+  "change_id": "CH-live-rail-cli",
+  "objective": "Thin CLI scripts/live/run_live_rail.py for paper TickDB run_until_exhausted, SITS-register it, add a synthetic 81-tick XAUUSD fixture + experimental paper-run config (not ACTIVE_VERSION). Then execute one paper run. User authorized 2026-08-19.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "RUNTIME_DECISION_PATH_CHANGE"
+  ],
+  "production_behavior_changed": false,
+  "affected_files": [
+    "scripts/live/run_live_rail.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "configs/experimental/spec/live_rail_tickdb_paper_run.json",
+    "tests/fixtures/ticks/xauusd_m15_paper_81.jsonl",
+    "tests/test_live_rail_cli.py",
+    "tests/test_live_rail_orchestrator.py",
+    "src/runtime/live_rail_orchestrator.py",
+    "docs/governance/build_manifests/CH-live-rail-cli.impact.json",
+    "docs/governance/build_manifests/CH-live-rail-cli.completion.json",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/topics/ai-automation-agent.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py",
+    "tests/test_live_rail_cli.py",
+    "tests/test_live_rail_orchestrator.py::test_ready_raise_is_feature_reject_and_drain_completes"
+  ],
+  "unknowns": [
+    {
+      "question": "Clock record for synthetic JSONL?",
+      "blocking": false,
+      "resolution": "paper-run config sets require_clock_record=false. Fixture is authored this turn, not an external corpus. review_ohlcv_clocks only scans csv/xlsx.",
+      "followup": "If a real XAUUSD tick corpus is acquired, register it via review_ohlcv_clocks and set require_clock_record=true."
+    }
+  ],
+  "rollback_boundary": "Delete CLI, stub, overlay, fixture, paper-run JSON, CLI test. Revert script-matrix if regenerated. No ACTIVE_VERSION.",
+  "authority_granted": "User authorized thin CLI + paper TickDB run 2026-08-19. Does not authorize dry_run=false, live money, or ACTIVE_VERSION live_rail."
+}

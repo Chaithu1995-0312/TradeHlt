@@ -1,0 +1,25 @@
+{
+  "change_id": "CH-live-rail-pr5",
+  "declared_files": [
+    "src/inout/live_rail/binance_ws_adapter.py",
+    "src/inout/live_rail/factory.py",
+    "src/inout/live_rail/__init__.py",
+    "pyproject.toml",
+    "tests/test_live_rail_binance_ws.py",
+    "tests/test_live_rail_orchestrator.py",
+    "docs/governance/build_manifests/CH-live-rail-pr5.impact.json",
+    "docs/governance/build_manifests/CH-live-rail-pr5.completion.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_live_rail_binance_ws.py",
+    "tests/test_live_rail_orchestrator.py::test_factory_binance_returns_adapter",
+    "tests/test_live_rail_contracts.py::test_binance_xauusd_refused"
+  ],
+  "checks_result": {
+    "pr5": "11 passed"
+  },
+  "repo_state_hash": "PENDING",
+  "completion_status": "INCOMPLETE",
+  "completion_notes": "PR-5 on disk. No network tests. COMPLETE denied: dirty tree + pre-existing census. No orders, no ACTIVE_VERSION Binance."
+}

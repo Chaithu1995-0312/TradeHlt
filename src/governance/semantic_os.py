@@ -257,23 +257,51 @@ def load_ontology(path: Path = _ONTOLOGY) -> dict:
         return {}
 
 
+def _walk_ids(node: Any, into: dict, source: str) -> None:
+    """Collect every ``id:`` in a loaded YAML tree, recording which file declared it."""
+    if isinstance(node, dict):
+        rid = node.get("id")
+        if isinstance(rid, str) and rid:
+            into.setdefault(rid, source)
+        for value in node.values():
+            _walk_ids(value, into, source)
+    elif isinstance(node, list):
+        for value in node:
+            _walk_ids(value, into, source)
+
+
+def ontology_id_sources(path: Path = _ONTOLOGY) -> dict[str, str]:
+    """Map every declared id -> the repo-relative path of the file that declares it.
+
+    RC-9 (2026-08-19): ids no longer live in one file. ``spec_schema.semantic_registry.
+    external_sections`` points at sibling declaration files (structure_profiles.yaml holds the
+    SPP-* founding profiles), and a grounding hit must name the file that ACTUALLY declares the
+    id — reporting market_ontology.yaml for an SPP-* would be a false citation.
+
+    Fail-closed: a pointer whose file is missing contributes nothing here (the owning validator
+    reports the problem); it never raises.
+    """
+    sources: dict[str, str] = {}
+    main = load_ontology(path)
+    _walk_ids(main, sources, "configs/formulas/market_ontology.yaml")
+
+    sr = (main.get("spec_schema") or {}).get("semantic_registry") or {}
+    for rel in (sr.get("external_sections") or {}).values():
+        if not isinstance(rel, str) or not rel:
+            continue
+        sibling = (Path(path).resolve().parents[2] / rel).resolve()
+        if not sibling.exists():
+            continue
+        try:
+            _walk_ids(load_ontology(sibling), sources, rel)
+        except Exception:
+            continue
+    return sources
+
+
 def ontology_ids(path: Path = _ONTOLOGY) -> set[str]:
-    """Every ``id:`` declared anywhere in the market ontology (FM-/SEM-/UNK-/RC-/IND-)."""
-    found: set[str] = set()
-
-    def _walk(node: Any) -> None:
-        if isinstance(node, dict):
-            rid = node.get("id")
-            if isinstance(rid, str) and rid:
-                found.add(rid)
-            for value in node.values():
-                _walk(value)
-        elif isinstance(node, list):
-            for value in node:
-                _walk(value)
-
-    _walk(load_ontology(path))
-    return found
+    """Every ``id:`` declared in the ontology or any declared external section."""
+    return set(ontology_id_sources(path))
 
 
 def miar_stages(path: Path = _MIAR) -> set[str]:

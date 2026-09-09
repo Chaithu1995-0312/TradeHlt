@@ -1,0 +1,36 @@
+{
+  "change_id": "CH-visual-crt-disp-exp-fidelity",
+  "task_class": "OBSERVATION_ONLY",
+  "objective": "Lock Option A for P-VSTATE-02 and pre-register a NEW visual-fidelity experiment: DISPLACEMENT and EXPANSION only, on the frozen 2-year XAUUSD corpus. RETEST stays unmeasured/INSUFFICIENT (n=24 < agreed ≥30). No corpus expansion. No floor rewrite. No capture and no labels this change. Experiment 1 is not amended.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "docs/research/preregistration-visual-crt-disp-exp-fidelity.md",
+    "docs/research/visual-crt-disp-exp-user-predictions.SEALED.md",
+    "reports/xauusd_visual_state_exp2_feasibility.md",
+    "docs/topics/crt-spine.md",
+    "docs/governance/build_manifests/CH-visual-crt-disp-exp-fidelity.impact.json",
+    ".grok/PENDING.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none — ACTIVE_VERSION untouched. The 2-year corpus data/mt5/XAUUSD_M15.csv is READ ONLY and is not re-fetched.",
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Whether TradingView still serves OANDA:XAUUSD M15 history back to 2024-05.",
+      "blocking": false,
+      "resolution": "Out of this change. Capture is not started. If a later authorized capture cannot frame a window, that window is coverage, not disagreement. If captured-and-legible DISPLACEMENT or EXPANSION falls below 30, that cell is INSUFFICIENT."
+    }
+  ],
+  "rollback_boundary": "Delete the new prereg, the sealed template, this manifest, and revert the feasibility-report Option A section and the P-VSTATE-02 pending row. Experiment 1 artifacts untouched.",
+  "authority_granted": "User 2026-08-18: P-VSTATE-02 will measure DISPLACEMENT and EXPANSION on the existing frozen 2-year XAUUSD corpus. RETEST remains explicitly unmeasured/INSUFFICIENT because n=24 does not meet the pre-declared ≥30 floor. No corpus expansion and no floor rewrite.",
+  "authority_NOT_granted": "No capture, no labels, no Experiment 1 edit, no RETEST scoring, no ≥30 rewrite, no EXECUTION visual cell, no G001, no finding, no CRT re-closure.",
+  "production_behavior_changed": "NO"
+}

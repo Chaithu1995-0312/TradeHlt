@@ -1,0 +1,26 @@
+{
+  "change_id": "CH-structure-dimension-inventory",
+  "task_class": "OBSERVATION_ONLY",
+  "objective": "First-pass inventory mapping proposed DISPLACEMENT structure dimensions onto existing authorities. UNDEFINED where the codebase cannot answer. No new FM-id, no ontology node, no LLM structure invention.",
+  "change_classes": ["DOCUMENTATION_ONLY"],
+  "affected_files": [
+    "docs/research/structure-dimension-inventory-displacement.md",
+    "docs/topics/crt-spine.md",
+    "docs/governance/build_manifests/CH-structure-dimension-inventory.impact.json",
+    ".grok/PENDING.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Delete the inventory doc, this manifest, and revert the topic/pending lines.",
+  "authority_granted": "User 2026-08-18: pursue canonical structure ontology + deterministic evidence contracts; first inventory, mark UNDEFINED, do not let the LLM invent structure.",
+  "authority_NOT_granted": "No new ontology nodes, no FM-ids, no Semantic OS ids, no thresholds, no P-VSTATE-02 capture workaround, no G001, no finding.",
+  "production_behavior_changed": "NO"
+}

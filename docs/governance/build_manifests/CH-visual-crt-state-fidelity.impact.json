@@ -1,0 +1,72 @@
+{
+  "change_id": "CH-visual-crt-state-fidelity",
+  "task_class": "OBSERVATION_ONLY",
+  "objective": "Pre-register and build the harness for a two-arm visual CRT state-fidelity measurement: does the engine's SWEEP/DISPLACEMENT/EXPANSION/RETEST classification at a marked bar correspond to what an independent observer can see on a TradingView chart? Two arms (bare chart vs. the same crop with the engine's h_ref/l_ref drawn, states never shown) separate the already-measured level-visibility confound (5/84 sweeps align tightly with a production SMC level; 51/84 touch none) from genuine classification disagreement. Event-anchored sample of all 111 engine transitions plus matched silent-bar controls. Research/docs only; grants no G001 and no authority (CLAUDE.md 6.5).",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "docs/research/preregistration-visual-crt-state-fidelity.md",
+    "docs/research/visual-crt-user-predictions.SEALED.md",
+    "docs/research/visual-crt-labeler-brief.md",
+    "tools/tv_forensic/shot_plan.json",
+    "scripts/research/visual_state_questions.py",
+    "scripts/research/visual_state_sample.py",
+    "scripts/research/visual_state_score.py",
+    "tests/test_visual_state_harness.py",
+    "tests/test_tv_forensic_smoke.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "docs/topics/crt-spine.md",
+    "docs/governance/build_manifests/CH-visual-crt-state-fidelity.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — no model is read, retrained, or re-registered. F-076's 6 stale families stay exactly as stale as they already were.",
+  "affected_production_config": "none — configs/production/ACTIVE_VERSION stays v2_htfcrt_2026_08. The pinned corpus data/XAUUSD_M15.csv is READ ONLY and is NOT re-fetched. Engine events are read from results/htfcrt_1month_parent_wired/run_20260816_011239_XAUUSD/; per-bar range levels from results/crt_survey_trace/20260815T062829Z/trace.jsonl. Both are fail-closed on state-sequence disagreement.",
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_tv_forensic_smoke.py",
+    "tests/test_visual_state_harness.py"
+  ],
+  "pre_registration": {
+    "ritual": "CLAUDE.md 6.2 Epistemic Integrity Pre-Registration (Program E-001). Frozen in docs/research/preregistration-visual-crt-state-fidelity.md BEFORE any item image is generated and BEFORE any label is collected.",
+    "questions_are_trader_language": "V1-V4 are frozen in trader language with no CRT vocabulary and no engine thresholds. A rule-card that asked 'did the high exceed h_ref while the close came back below it' would make the labeler a slow computer and measure nothing. The definitional collision is the measurement.",
+    "two_arms_are_mandatory": "Arm 1 = bare 48-bar crop. Arm 2 = identical crop plus two unlabelled neutral horizontal lines at the engine's h_ref/l_ref. States are never shown. The load-bearing number is Arm2-Arm1 kappa delta on V1 SWEEP. Without the two arms the experiment mostly re-measures the already-known level-visibility confound (reports/monthly_tv_vs_active_production_semantic_comparison.md: 5/84 tight SMC, 51/84 no SMC).",
+    "controls_are_mandatory": "All 111 STATE_TRANSITION events plus ~111 action==NONE controls matched on session and candle-range percentile. Without controls only agreement on engine-positives is measurable; events the engine missed are undetectable.",
+    "insufficient_cells_declared_now": "The month contains 2 RETESTs and 6 EXPANSIONs. Under the <15 minority-class rule those cells cannot produce a result at any effort. DISPLACEMENT n=19 is marginal. Only SWEEP n=84 can carry a real number. Declared before any label exists so a thin cell cannot later be presented as a null (E-001: underpowered != negative).",
+    "join_is_timestamp_never_index": "Ground truth joins on timestamp. candle_index bases differ by a constant per-run offset (crt_state_confusion_matrix.remap_event_indices_to_ohlcv exists for exactly this). 100% of items must resolve by timestamp or the run aborts.",
+    "config_consistency_fail_closed": "The events artifact and the trace artifact come from different runs. State sequences must agree on every shared timestamp before they are used together. The known 85-vs-84 sweep delta is one sweep inside the 78-bar backtest warmup and is not a mismatch. Disagreement elsewhere aborts; do not reconcile by hand.",
+    "new_finding_condition": "A new F-id is registered ONLY IF Arm 2 is also low (state logic diverges from an observer given the same level) AND the user-adjudicated ceiling on that question is >= 0.5. A clean measurement that confirms the already-known level-visibility confound is NOT a discovery. Findings decision is gated (CLAUDE.md 6.2) — results are brought before any finding is edited. Default is no new F-id.",
+    "verdict_vocabulary": "Anything read off pixels is a VISUAL claim under the smc_visual_verification.py:19-30 split: never self-certifies; renders the evidence and stops. Headline verdict is RENDERED_PENDING_HUMAN_ADJUDICATION, bounded by the measured LLM-vs-human ceiling. Never a column called TradingView_state — TradingView declares no state. Closed CLAUDE.md 6.8 set only. different != wrong.",
+    "arm_independence": "Arm 1 and Arm 2 must be labelled by different cold subagents. Reusing one agent across arms anchors Arm 2 on Arm 1 and destroys the delta. Subagent blinding is procedural, not mechanical (disclosed). The user-adjudicated ~30-item subsample is mechanically blind and is the reliability ceiling; bulk numbers are reported as a fraction of that ceiling."
+  },
+  "unknowns": [
+    {
+      "question": "Whether frame_shot's two-sided achieved-vs-requested assertion can frame twenty ~160-bar M15 windows, or refuses one the way it has always refused 02_h4_july_setup.",
+      "blocking": false,
+      "resolution": "Every edge is placed on a live-market bar from data/XAUUSD_M15.csv (never a calendar edge inside a weekend gap — that was the shot-02 defect). The assertion is NOT loosened. On refusal the refused window is narrowed and split, and the refusal is recorded. Capture is Phase B; the sampler, scorer, floors, and prereg are fully deliverable with synthetic fixtures if capture is unavailable this turn."
+    },
+    {
+      "question": "Whether Pillow and Playwright are installed in this environment so the real crop render and the month-legible capture can run.",
+      "blocking": false,
+      "resolution": "tests/test_visual_state_harness.py builds synthetic sidecars + PNGs (Pillow importorskip on the render path only). Manifest blinding, determinism, join, config-consistency, and scorer-sanity floors run with zero network and zero Playwright. Capture is attempted after the preset exists; a refusal is recorded, not worked around by loosening frame_shot."
+    },
+    {
+      "question": "Whether the user seals docs/research/visual-crt-user-predictions.SEALED.md this turn.",
+      "blocking": false,
+      "resolution": "The prereg records a SHA-256 slot. visual_state_sample.py refuses to emit the real item set until that slot holds a 64-hex digest (override --allow-unsealed is test-only). Item generation on the real corpus waits. The harness, floors, and preset do not."
+    }
+  ],
+  "rollback_boundary": "Delete the three new scripts, the three research docs, tests/test_visual_state_harness.py, the month-legible preset and its 20 shot entries in tools/tv_forensic/shot_plan.json, and this manifest; revert the seed_script_registry.py overlays, the script-matrix regeneration, the test_tv_forensic_smoke.py addition, and the crt-spine.md Discussion bullet. No src/, no configs/, no models/, no data/ touched — nothing to re-hash, no promotion to unwind, pinned corpus byte-unchanged.",
+  "authority_granted": "User approved the two-arm event-anchored design, the pre-registration-with-sealed-predictions, and the fresh-cold-subagent classification (2026-08-18). Read-only/observational: no ACTIVE_VERSION change, no config promotion, no model retrain, no CRT re-closure (stays REOPENED per F-074), no G001 claim. This measures DESCRIPTIVE FIDELITY — whether the engine's labels match what is visible — and says nothing about predictive or economic value. F-019 through F-043 answered that separately and this cannot revise them.",
+  "authority_NOT_granted": "No engine, config, or model change. No re-fetch of the corpus. No promotion. No CRT re-closure. No authority to treat a pixel reading as a TradingView_state. No authority to present an INSUFFICIENT cell as a null.",
+  "production_behavior_changed": "NO"
+}

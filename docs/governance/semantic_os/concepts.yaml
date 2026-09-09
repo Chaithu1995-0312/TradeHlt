@@ -421,7 +421,8 @@ concepts:
     miar_stage: opportunity_understanding
     miar_entry: crt
     closure_surface_id: CRT
-    ontology_ids: []
+    ontology_ids:
+      - SEM-011
     owner_boundary: BD-006
     related_boundaries:
       - BD-001
@@ -429,7 +430,9 @@ concepts:
     canonical_source: src/config_layer/crt_engine_v2.py
 
     invariants:
-      - Only VALID_TRANSITIONS among the 9 CRT states are legal.
+      - Only VALID_TRANSITIONS among the 12 CRT states are legal (9 execution-timeframe + 3 disjoint parent-timeframe, F-075).
+      - The 3 parent-timeframe states (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3) form a self-contained sub-graph that never intersects the 9 execution-timeframe states — see PARENT_TIMEFRAME_STATES / EXECUTION_TIMEFRAME_STATES.
+      - M15-SLR, HTFBuilder, and ParentRange are distinct objects (CT-009 / crt_object_relations.yaml); detect_sweep reads only M15-SLR.
       - Structural config defines the narrative; consumer config must not rewrite state meaning.
       - Resolver parity with the engine may be incomplete by construction (F-069) — engine is authority for trades.
     preconditions:
@@ -471,17 +474,19 @@ concepts:
       - F-019
       - F-057
       - F-069
+      - F-075
     hypotheses: []
     framework_ids: []
 
     summary_50: >-
       Shared CRT structural narrative of the market — not a strategy, not an economic claim.
     summary_200: >-
-      CRT market structure is the structural language used by the spine: nine states and legal
-      transitions describing accumulation, sweep, displacement, and execution setup. Consumers
-      (fusion, research, risk) may score or gate differently but must not invent alternate
-      structural meanings for the same candle. Economic nulls under research do not reopen the
-      mechanism boundary without new evidence.
+      CRT market structure is the structural language used by the spine: twelve states (nine
+      execution-timeframe + three disjoint parent-timeframe, F-075) and legal transitions
+      describing accumulation, sweep, displacement, and execution setup. Consumers (fusion,
+      research, risk) may score or gate differently but must not invent alternate structural
+      meanings for the same candle. Economic nulls under research do not reopen the mechanism
+      boundary without new evidence.
     retrieval_keywords:
       - CRT
       - state machine
@@ -1147,7 +1152,8 @@ concepts:
     miar_stage: measurement
     miar_entry: qualification_gate
     closure_surface_id: RESEARCH_MEASUREMENT_CONTRACT
-    ontology_ids: []
+    ontology_ids:
+      - SEM-012
     owner_boundary: BD-010
     related_boundaries: []
     canonical_source: src/research/qualification.py

@@ -26,6 +26,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE_DIR = ROOT / "configs" / "research" / "measurement_contracts"
+INSTANCE_DIR = PROFILE_DIR / "instances"
 SCHEMA = ROOT / "docs" / "governance" / "measurement_contract.schema.json"
 CHARTER = ROOT / "docs" / "governance" / "MEASUREMENT_CONTRACT.md"
 CLAUDE_MD = ROOT / "CLAUDE.md"
@@ -76,7 +77,12 @@ def _profiles() -> dict[str, dict]:
     assert PROFILE_DIR.is_dir(), f"missing profile dir: {PROFILE_DIR}"
     out: dict[str, dict] = {}
     for p in sorted(PROFILE_DIR.glob("*.json")):
+        # MC-* files are contract instances, not profiles (charter §9 vs E0).
+        if p.name.startswith("MC-"):
+            continue
         data = json.loads(p.read_text(encoding="utf-8"))
+        if data.get("contract_id"):
+            continue
         pid = data.get("profile_id")
         assert pid, f"{p.name}: profile_id required"
         assert pid not in out, f"duplicate profile_id {pid}"
@@ -256,8 +262,17 @@ def test_costs_are_derived_not_a_shared_constant():
     """The F-025/F-035 lesson, enforced: cost must be per-instrument, not a flat bps."""
     for pid, prof in _profiles().items():
         costs = prof["surface_defaults"]["costs"]
-        assert costs["cost_model_id"].startswith("derived_per_instrument"), (
-            f"{pid}: cost_model_id must be a derived per-instrument model"
+        # Two per-instrument model families satisfy the F-025/F-035 lesson:
+        #   derived_per_instrument.*  — cost DERIVED from that instrument's own bar stats
+        #   component_measured.*      — cost MEASURED from that instrument's own broker
+        #                               (SEM-015; strictly stronger evidence than a proxy)
+        # Anything else — notably a flat shared bps constant — still fails.
+        assert costs["cost_model_id"].startswith(
+            ("derived_per_instrument", "component_measured")
+        ), (
+            f"{pid}: cost_model_id must be a per-instrument model "
+            f"(derived_per_instrument.* or component_measured.*), got "
+            f"{costs['cost_model_id']!r}"
         )
         formulas = " ".join(c["bps_or_formula"] for c in costs["components"])
         assert "DERIVED" in formulas, (
@@ -304,3 +319,71 @@ def test_profiles_grant_no_admissibility():
         assert "not an admissibility seal" in prof["_doc"].lower(), (
             f"{pid}: _doc must state the profile is not an admissibility seal"
         )
+
+
+def _mc_instances() -> list[tuple[Path, dict]]:
+    if not INSTANCE_DIR.is_dir():
+        return []
+    out = []
+    for p in sorted(INSTANCE_DIR.glob("MC-*.json")):
+        out.append((p, json.loads(p.read_text(encoding="utf-8"))))
+    return out
+
+
+def test_mc_instances_validate_schema_and_cannot_claim_economics_while_unrun():
+    """E0 shape only. Does not run E-MT-00/01 and grants no edge."""
+    import jsonschema
+
+    schema = _schema()
+    instances = _mc_instances()
+    assert instances, "expected at least one MC-* instance under measurement_contracts/instances/"
+    for path, inst in instances:
+        jsonschema.validate(instance=inst, schema=schema)
+        assert inst["schema_version"] == "1.0.0"
+        assert inst["authority"]["economic_admissible"] is False
+        assert inst["authority"]["requires_mt00_pass"] is True
+        assert inst["trust_status"]["economic_claims_allowed"] is False
+        if inst["trust_status"]["mt00"] != "PASS" or inst["trust_status"][
+            "mt01_matrix_coverage"
+        ] != "COMPLETE":
+            assert inst["trust_status"]["economic_claims_allowed"] is False
+        surfaces = {row["surface"] for row in inst["prohibited_substitutions"]}
+        assert "population" in surfaces
+        assert "labels" in surfaces
+        assert "pipeline" in surfaces
+
+
+def test_mc_crt_sb_declares_playground_identity():
+    wanted = "MC-CRT-SB-XAUUSD-M15-V1"
+    found = {inst["contract_id"]: inst for _, inst in _mc_instances()}
+    assert wanted in found, f"missing {wanted}"
+    inst = found[wanted]
+    assert inst["population"]["unit_of_analysis"] == "trade_decision"
+    assert inst["population"]["detection_vs_trade"] == "trade_ledger"
+    assert inst["labels"]["derivation_authority"] == "forward_walk.intrabar_fixed"
+    assert inst["pipeline_identity"]["engine_gate_mode"] == "gate_on_fusion"
+    assert inst["pipeline_identity"]["feature_flags"]["f074_directional_displacement"] is True
+    assert inst["trust_status"]["mt00"] == "UNRUN"
+    assert inst["trust_status"]["mt01_matrix_coverage"] == "UNRUN"
+
+
+def test_mc_crt_sb_soff_is_a_new_object():
+    found = {inst["contract_id"]: inst for _, inst in _mc_instances()}
+    assert "MC-CRT-SB-XAUUSD-M15-SOFF-V1" in found
+    soff = found["MC-CRT-SB-XAUUSD-M15-SOFF-V1"]
+    v1 = found["MC-CRT-SB-XAUUSD-M15-V1"]
+    assert soff["contract_id"] != v1["contract_id"]
+    assert soff["pipeline_identity"]["feature_flags"]["not_production_session_filter"] is True
+    assert soff["pipeline_identity"]["feature_flags"]["session_policy"] == "ALL_WINDOWS_PLUS_OFF_SESSION"
+    assert soff["authority"]["economic_admissible"] is False
+    assert soff["trust_status"]["economic_claims_allowed"] is False
+
+
+def test_mc_crt_sb_ns_is_a_third_object():
+    found = {inst["contract_id"]: inst for _, inst in _mc_instances()}
+    ns = found["MC-CRT-SB-XAUUSD-M15-NS-V1"]
+    assert ns["pipeline_identity"]["feature_flags"]["session_policy_adapter"] == (
+        "ASIA_LONDON_NEWYORK_OVERLAP_CLOSED"
+    )
+    assert ns["pipeline_identity"]["feature_flags"]["not_production_session_filter"] is True
+    assert ns["authority"]["economic_admissible"] is False

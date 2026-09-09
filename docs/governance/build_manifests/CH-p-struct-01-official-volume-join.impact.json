@@ -1,0 +1,34 @@
+{
+  "change_id": "CH-p-struct-01-official-volume-join",
+  "task_class": "OBSERVATION_ONLY",
+  "objective": "P-STRUCT-01 specific join only: attach official FeaturePipeline FM-062 volume_ratio and FM-063 volume_spike (numeric) to existing nullable columns on the CRT DISPLACEMENT evidence table. No high_volume class, no new column, no UNKNOWN_N fill, no ontology contract change, no G001.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "scripts/research/p_struct_01_displacement_evidence.py",
+    "tests/test_p_struct_01_displacement_evidence.py",
+    "docs/research/p_struct_01_displacement_evidence.md",
+    "docs/research/structure-dimension-inventory-displacement.md",
+    "reports/p_struct_01_displacement_evidence.md",
+    "docs/topics/crt-spine.md",
+    ".grok/PENDING.md",
+    "docs/governance/build_manifests/CH-p-struct-01-official-volume-join.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_p_struct_01_displacement_evidence.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert extractor join helper, tests, spec/report/topic/pending. No src/ or configs/. Joined numbers are results/ only.",
+  "authority_granted": "User 2026-08-18: authorize a specific join / a specific contract change. Join specified as official FM-062/063 into existing P-STRUCT-01 columns. Contract change not named — none made.",
+  "authority_NOT_granted": "No high_volume boolean, no new ROW_KEYS, no UNKNOWN_N fill, no N, no after_range, no against_ema, no deep_retracement, no new FM-id, no ontology node, no G001, no P-VSTATE-02 workaround.",
+  "production_behavior_changed": "NO"
+}

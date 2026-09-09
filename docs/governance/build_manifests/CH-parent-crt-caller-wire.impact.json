@@ -1,0 +1,53 @@
+{
+  "change_id": "CH-parent-crt-caller-wire",
+  "objective": "Close F-075's open caller gap: construct a calendar-true ParentCandleBuilder + ParentCRTTrack per backtest run and thread track.bias into CRTEngine.process_candle(..., parent_state=). Makes the already-implemented EXECUTION parent-bias gate reachable on v2_htfcrt_2026_08 (parent_crt.enabled:true). Configs with enabled:false stay parent_state=None (byte-identical). User authorized 2026-08-16 ('wire parent_crt'). Behavior change is the declared intent on the armed config only. Grants no G001.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "src/runtime/parent_crt_feed.py",
+    "src/runtime/backtest_v2.py",
+    "src/config_layer/crt_engine_v2.py",
+    "tests/test_parent_crt_feed.py",
+    "tests/test_parent_crt_wiring.py",
+    "configs/production/v2_htfcrt_2026_08.json",
+    "configs/production/v2_multi_2026_04.json",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/topics/crt-spine.md",
+    "docs/governance/crt_closure_report.md",
+    "docs/governance/build_manifests/CH-parent-crt-caller-wire.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — parent bias is an EXECUTION veto on the CRT FSM; no model I/O or vector change",
+  "affected_production_config": "comment/notes only on parent_crt (enabled/timeframe/bias_gate_mode values unchanged; hash-neutral)",
+  "required_checks_ack": [
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_parent_crt_feed.py",
+    "tests/test_parent_crt_wiring.py",
+    "tests/test_parent_crt_track.py",
+    "tests/test_parent_candle_builder.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Whether research/analysis process_candle mirrors (zone_mapping, excel/crt tracers, crt_state_machine adapter) should also thread parent_state.",
+      "blocking": false,
+      "resolution": "Out of this change. F-075 named the backtest/live runner as the missing caller. Live has no process_candle loop (F-073). Research mirrors stay default parent_state=None; they are not the spine.",
+      "followup": "Optional: thread ParentCRTFeed in analysis scripts that claim to replay the armed HTF-CRT config."
+    },
+    {
+      "question": "Economic impact of the now-reachable parent-bias veto on XAUUSD TRADE_OPENED.",
+      "blocking": false,
+      "resolution": "Out of this change. Wiring grants reachability, not G001. One-month window previously died at off_session before this elif; a re-measure is a separate authorized turn.",
+      "followup": "Optional: re-run results/htfcrt_1month under the wired caller and compare FILTER_REJECTED reasons."
+    }
+  ],
+  "rollback_boundary": "Delete src/runtime/parent_crt_feed.py, revert the process_candle call + feed construction in backtest_v2.py, revert F-075 Note/CLAUDE.md/crt-spine/crt_closure_report/config comments. parent_crt.enabled stays as-authored. No params hash change.",
+  "authority_granted": "User authorized wiring parent_crt 2026-08-16. Does not flip parent_crt.enabled (already true on ACTIVE v2_htfcrt_2026_08). Grants no promotion, no G001, no live-rail repair."
+}

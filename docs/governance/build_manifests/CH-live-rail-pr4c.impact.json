@@ -1,0 +1,48 @@
+{
+  "change_id": "CH-live-rail-pr4c",
+  "objective": "PR-4c: LiveRailOrchestrator is the missing HookedLiveEngine.process caller (F-073 repair, paper). TickDB run_until_exhausted drain; required LiveRailFeeder; paper OrderManager; UltronLiveAdapter read-only preflight. No dry_run=false, no ACTIVE_VERSION, no CLI (SITS deferred), no Binance adapter (PR-5). User authorized 2026-08-19. PR-2/PR-3 slices land here because 4c depends on them and they were not built separately.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE"
+  ],
+  "production_behavior_changed": false,
+  "affected_files": [
+    "src/core/ultron_risk_gate.py",
+    "src/core/ultron_live_adapter.py",
+    "src/live/order_manager.py",
+    "src/inout/live_rail/factory.py",
+    "src/runtime/live_rail_orchestrator.py",
+    "src/runtime/live_rail_feeder.py",
+    "tests/test_live_rail_orchestrator.py",
+    "tests/test_live_rail_ultron_adapter.py",
+    "tests/test_live_rail_order_manager.py",
+    "docs/governance/build_manifests/CH-live-rail-pr4c.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none — live_rail still only in experimental JSON; ACTIVE_VERSION untouched",
+  "required_checks_ack": [
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py",
+    "tests/test_live_rail_orchestrator.py",
+    "tests/test_live_rail_ultron_adapter.py",
+    "tests/test_live_rail_order_manager.py"
+  ],
+  "unknowns": [
+    {
+      "question": "CLI scripts/live/run_live_rail.py + SITS?",
+      "blocking": false,
+      "resolution": "Deferred. Adding a scripts/** path requires SCRIPT_LIFECYCLE_CHANGE on a dirty grandfather tree. Orchestrator is importable and tested.",
+      "followup": "Thin CLI + SITS overlay in a later authorized turn."
+    },
+    {
+      "question": "Real HookedLiveEngine.process (EngineRunner) on TickDB paper?",
+      "blocking": false,
+      "resolution": "Orchestrator calls hook.process. Unit tests inject a stub hook so CI does not need models/ or a 79-bar EngineRunner. XOR e2e is stub-process + real PaperVenueExecutor + patched _get_mt5 on the real hook_submit_orders=False engine.",
+      "followup": "Optional integration test when a paper corpus and gaussian load are authorized."
+    }
+  ],
+  "rollback_boundary": "Delete orchestrator/factory/adapter/order_manager and their tests; revert UltronRiskGate.is_tripped and feeder Mapping duck-type. No params hash.",
+  "authority_granted": "User authorized PR-4c 2026-08-19. Does not authorize dry_run=false, live money, promotion, PR-4d, or PR-5."
+}

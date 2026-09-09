@@ -1,0 +1,72 @@
+{
+  "change_id": "CH-cost-model-broker-truth",
+  "date_utc": "2026-08-19",
+  "objective": "Replace the research harness's single flat 12bps round-trip cost constant with a decomposed, per-instrument, provenance-carrying broker cost model (half-spread + commission + slippage + swap), and give forward_walk an opt-in adverse-fill model so stop-losses stop filling at exactly -1.000R regardless of gap. Both are additive and config-gated with defaults that reproduce today's output byte-for-byte. Seeds the metals_mt5 measurement profile from the repo's OWN already-MEASURED MT5 broker calibration (2026-08-06), which has sat unused while all three profiles declared calibration.status=PENDING_CALIBRATION. No re-measurement, no production activation, no economic claim in this change.",
+  "change_classes": [
+    "SEMANTIC_REGISTRY_CHANGE",
+    "PRODUCTION_CONFIG_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "SEMANTIC_REGISTRY_CHANGE: execution-friction semantics are registered as two nodes (SEM-015 broker execution cost decomposition, SEM-016 adverse stop-fill excursion) in execution_behaviours in a NON-frozen sibling section of market_ontology.yaml. They carry NO vector_key, so CANONICAL_FEATURE_DIM stays 48 and every schema/vector hash is untouched; the frozen runtime-binding sections (primitives / feature_compositions / derived_metrics, read flat by crt_engine_v2 at import) are not edited. PRODUCTION_CONFIG_CHANGE: v2_htfcrt_2026_08.json ultron_risk_gate gains EXPLICIT declarations of spread_pips / slippage_pips / min_sl_pips / pip_size at their current EFFECTIVE values (0.0), closing the F-018/F-056 silent-default class. Values are unchanged, so behaviour is byte-identical and the params hash is untouched (ultron_risk_gate is not a params sub-key). DOCUMENTATION_ONLY: findings, topic and reference docs. The src/research/ measurement-harness edits are covered by the non-blocking unknown below.",
+  "affected_files": [
+    "src/research/costs.py",
+    "src/research/config.py",
+    "src/research/measurement/forward_walk.py",
+    "src/research/provenance.py",
+    "src/research/measurement/metrics.py",
+    "configs/formulas/market_ontology.yaml",
+    "configs/research/measurement_contracts/metals_mt5.v1.json",
+    "configs/production/v2_htfcrt_2026_08.json",
+    "tests/test_component_cost_model.py",
+    "tests/test_cost_model_parity.py",
+    "tests/test_forward_walk_adverse_fill.py",
+    "tests/test_measurement_profile_calibration.py",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/governance/build_manifests/CH-cost-model-broker-truth.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "configs/production/v2_htfcrt_2026_08.json \u2014 ultron_risk_gate gains four EXPLICIT key declarations at their current effective values (0.0). No value changes, no behaviour change, params hash unchanged.",
+  "ontology_nodes_added": [
+    "SEM-015",
+    "SEM-016"
+  ],
+  "required_checks_ack": [
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_config_reachability.py",
+    "tests/test_reachability_golden.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_component_cost_model.py",
+    "tests/test_cost_model_parity.py",
+    "tests/test_forward_walk_adverse_fill.py",
+    "tests/test_measurement_profile_calibration.py"
+  ],
+  "unknowns": [
+    {
+      "id": "UNK-COST-01",
+      "blocking": false,
+      "statement": "change_contracts.json registers no change class for the RESEARCH MEASUREMENT HARNESS (src/research/ costs, forward_walk, provenance, metrics). The closest class, RUNTIME_DECISION_PATH_CHANGE, is scoped to gates/engines/fusion/decision/planner/risk and does not apply: none of these files is imported by the live decision path. Declared non-blocking because the harness edits here are additive and parity-proved byte-identical, so no governed behaviour changes. Two pre-existing manifests (CH-visual-crt-trade-object, CH-va-xauusd-m15) worked around the same gap by declaring an unregistered class literal 'RESEARCH_ONLY', which validate_impact would reject at line 120 \u2014 evidence the gap is real and recurring, not specific to this change. Recommend registering a RESEARCH_HARNESS_CHANGE class in a separate governance turn.",
+      "resolution_owner": "user",
+      "impact_if_wrong": "A future research-harness change could alter measurement semantics without a declared contract or required checks."
+    },
+    {
+      "id": "UNK-COST-02",
+      "blocking": false,
+      "statement": "All three measurement profiles declare cost_model_id 'derived_per_instrument.v1' with the placeholder formula 'k * median(bar_range_pct)' \u2014 deriving trading cost from VOLATILITY. This change seeds metals_mt5 with the measured BROKER decomposition instead, on the domain argument that cost is a broker property (spread/commission/slippage/swap), not a volatility property: a wider bar does not make a broker charge more. The placeholder is left in place alongside the measured block rather than deleted (CLAUDE.md 6.2 rule 4). Non-blocking because the seeded values are opt-in and default-unreachable.",
+      "resolution_owner": "user",
+      "impact_if_wrong": "If the volatility proxy was a deliberate frozen decision rather than a placeholder, the measured decomposition would need to be recorded as an alternative rather than a correction."
+    }
+  ],
+  "rollback_boundary": "Single commit. Revert src/research/{costs,config,provenance}.py and src/research/measurement/{forward_walk,metrics}.py; revert the EXF-00x ontology nodes; revert the metals_mt5.v1.json costs.calibration block to PENDING_CALIBRATION; revert the four ultron_risk_gate key declarations; delete the four new tests, this manifest, and the new finding row.",
+  "authority_granted": "User 2026-08-19: 'Fix the ruler first' + 'Build it, measure nothing yet' \u2014 ship the corrected cost model and fill realism as config-gated infrastructure, default off and byte-identical, and leave re-measurement to a separately authorised turn.",
+  "authority_NOT_granted": "No re-measurement of any finding. No promotion. No ACTIVE_VERSION change. No gate flip. No G001. No non-zero activation of the UltronRiskGate cost tax. No CRT recertification. No economic claim of any kind, and specifically no claim that correcting the cost model creates, restores, or implies an edge.",
+  "production_behavior_changed": "NO"
+}

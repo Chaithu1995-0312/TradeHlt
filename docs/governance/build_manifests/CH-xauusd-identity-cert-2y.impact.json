@@ -1,0 +1,33 @@
+{
+  "change_id": "CH-xauusd-identity-cert-2y",
+  "date_utc": "2026-08-23",
+  "objective": "1-month XAUUSD identity cert PASS. Fix 2-year flow: content-fingerprinted sha256 cache, snapshot cache, layer-required Class A snaps, ACTIVE_VERSION CRTConfig + HTFBuilder clock (isolated process_candle stays RANGE). Then shadow-certify data/mt5/XAUUSD_M15.csv. Production approved remains false. 1-month official report is not overwritten.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY",
+    "IDENTITY_STORE_CHANGE"
+  ],
+  "change_class_rationale": "Identity-store performance and cert runner only. sha256 cache is content-fingerprinted (not bare id()). Snapshot bytes cached per digest. Cert binds Class A snapshots the Identity Check for that layer requires. Not live-spine. Not a CRT engine change this turn.",
+  "affected_files": [
+    "src/identity/hashes.py",
+    "src/identity/store.py",
+    "src/identity/certify.py",
+    "tests/test_identity_store.py",
+    "docs/governance/xauusd_identity_certification_2y.md",
+    "docs/governance/xauusd_identity_certification_2y.json",
+    "docs/governance/build_manifests/CH-xauusd-identity-cert-2y.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_identity_store.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert hash/store cache, certify runner, 2y report. 1-month certification artifacts stay. Identity contracts stay CLOSED.",
+  "authority_granted": "User 2026-08-23: 1-month first; if expected, run 2-year corpus. Do not promote.",
+  "authority_NOT_granted": "No production approval, no live-spine wire, no G001, no ACTIVE_VERSION change, no overwrite of the 1-month PASS report.",
+  "production_behavior_changed": "NO"
+}

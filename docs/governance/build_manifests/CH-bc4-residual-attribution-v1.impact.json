@@ -1,0 +1,54 @@
+{
+  "change_id": "CH-bc4-residual-attribution-v1",
+  "date_utc": "2026-09-03",
+  "extends": "CH-bc4-volume-semantics-v1",
+  "objective": "Attribute (or fail to attribute) the 0.55-0.68% residual F-099 measured between tick_volume and len(copy_ticks_range). Pre-registered 9-candidate frozen list with an anti-overfit clause, discovery capture, then an independent holdout capture from a separate session. Outcome: UNATTRIBUTED (V1) and UNATTRIBUTED_V2 -- a perfect 4/4 discovery pattern failed out-of-sample. Records the previously-untracked Phase 0 tick-class observation and the newly-discovered non-stationarity of MT5's tick flag vocabulary.",
+  "change_classes": ["CORPUS_AUTHORITY_CHANGE"],
+  "change_class_rationale": "Evidence probe bearing on OHLCV BC-4 / BC-5 for the admitted dataset's producer family. Research-only: no admission-gate change, no schema change, no dataset-record edit. Additive module + tests + evidence artifacts + doc updates.",
+  "affected_files": [
+    "docs/research/preregistration-bc4-residual-attribution.md",
+    "src/research/ohlcv_tick_attribution.py",
+    "tests/test_ohlcv_tick_attribution.py",
+    "docs/research-readiness/bc4_residual_attribution/discovery.json",
+    "docs/research-readiness/bc4_residual_attribution/holdout.json",
+    "docs/research-readiness/bc4_residual_attribution/holdout_precapture_no_c9.json",
+    "docs/research-readiness/bc4_residual_attribution/attribution.json",
+    "docs/governance/CORPUS_AUTHORITY.md",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/governance/build_manifests/CH-bc4-residual-attribution-v1.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_ohlcv_tick_attribution.py",
+    "tests/test_ohlcv_volume_semantics.py",
+    "tests/test_ohlcv_open_close_label.py",
+    "tests/test_dataset_registry.py",
+    "tests/test_corpus_authority_decisions.py",
+    "tests/test_xauusd_phase1_frozen_candidate.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "anti_overfit_discipline": "The 9-candidate list was frozen in the user-approved plan BEFORE any raw tick array existed. When all 9 failed, the pattern spotted in discovery output (count(flags & TICK_FLAG_BID)) was registered as a HYPOTHESIS with zero out-of-sample support -- appended to the prereg as section 8 BEFORE the holdout was scored -- and tested separately as V2, never retro-fitted into V1. C9_flag_bid is deliberately excluded from the V1 CANDIDATES dict so V1's UNATTRIBUTED outcome stays byte-reproducible; pinned by test_v2_candidate_is_not_in_the_v1_frozen_list.",
+  "unknowns": [
+    {
+      "question": "What actually explains the 0.55-0.68% residual, now that tick class, boundary inclusion, duplication, price-change filtering and BID-flag filtering are all ruled out?",
+      "blocking": false,
+      "resolution": "UNRESOLVED and explicitly not searched further -- prereg section 8.3 forbids a third candidate search off the same data. The residual is better characterised than before but unexplained.",
+      "followup": "A future attempt needs a genuinely new pre-registration and must treat the tick flag vocabulary as non-stationary across sessions (the mechanism that broke V2)."
+    },
+    {
+      "question": "Why the tick flag vocabulary changed between the 2026-09-02 late session and the 2026-09-03 morning session.",
+      "blocking": false,
+      "resolution": "Observed and recorded, not explained. Discovery bars carried {134,130,4}; holdout bars {6,2,4}; the failing 07:00 bar carried both.",
+      "followup": "Out of scope for this program; recorded as a risk surface for any flag-based rule."
+    }
+  ],
+  "rollback_boundary": "Revert the attribution module, its tests, the prereg, the evidence dir, and the F-100 / CORPUS_AUTHORITY / CLAUDE.md edits. F-098, F-099, BC-2's and BC-4's scorers, the dataset registry schema wiring, and the dataset record are untouched by this change and stay.",
+  "authority_granted": "User 2026-09-03: BC-4 residual attribution, with an independent holdout required before any V2 verdict.",
+  "authority_NOT_granted": "No BC-1/BC-3/BC-5/BC-6, no R3b, no OHLCV CLOSED, no APPROVED, no G001, no loader / Dataset Identity / Parent CRT / fetcher change, no production config. BC-4b stays PARTIALLY_ADVANCED; no TICK_VOLUME_CONFIRMED was earned.",
+  "production_behavior_changed": "NO"
+}

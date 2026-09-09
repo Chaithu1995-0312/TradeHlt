@@ -75,6 +75,28 @@
       "rollback_boundary": "archived {version}_archived_{ts}.json + promotion_log.jsonl",
       "completion_criteria": "USER APPROVAL required (active-config edits are always user-gated); reachability green; hash valid"
     },
+    "TRACE_OBSERVATION_JOIN": {
+      "description": "Extend an OBSERVATION-ONLY runtime trace stream with new joined or derived metadata fields (e.g. the CRTConstructionTrace resolver envelope). Strictly no decision path, no canonical quantity, no CANONICAL_FEATURES change, no claim-catalog change. Deliberately NOT RUNTIME_DECISION_PATH_CHANGE: classifying an observation-only join as a decision-path change would be a false claim, and the two carry different completion criteria (parity-of-ledger vs proof-of-non-participation).",
+      "authorities_to_inspect": [
+        "src/runtime/crt_construction_trace.py",
+        "src/runtime/bar_structure_snapshot.py",
+        "src/features/crt_state_resolver.py",
+        "docs/reference/schemas.md"
+      ],
+      "artifacts_to_update": [
+        "docs/reference/schemas.md (the JSONL line schema)",
+        "docs/memory/runtime-memory.md",
+        "the emitting module's own schema_version + config section"
+      ],
+      "required_checks": [
+        "tests/test_crt_construction_trace.py",
+        "tests/test_crt_construction_trace_envelope.py",
+        "tests/test_resolver_metadata.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "rollback_boundary": "single commit; the trace schema bump, the emitter fields and the producing read-only accessor revert together",
+      "completion_criteria": "the emitting section stays OBSERVATION_ONLY and default-off; every new field present on BOTH warmup and live rows (uniform shape); any newly-called producer proven not to mutate its own subject (a behaviour-neutrality test, not an assertion in prose); and no new field carries a rival authority label for a quantity another module already owns"
+    },
     "RUNTIME_DECISION_PATH_CHANGE": {
       "description": "Change gates/engines/fusion/decision/planner/risk behavior.",
       "authorities_to_inspect": ["docs/architecture/signal-flow.md", "docs/current-findings.md (F-036/F-037/F-048)", "docs/governance/geometry_semantic_adjudication.jsonl"],
@@ -121,6 +143,97 @@
       ],
       "rollback_boundary": "single commit; stubs + overlays + grandfather pin are PRIMARY",
       "completion_criteria": "tests/test_script_registry.py green (coverage + grandfather ratchet); seed dump deterministic; every declared new scripts/**/*.py or root *.py path present in registry non-terminal records with purpose != GRANDFATHER_UNCLASSIFIED"
+    },
+    "IDENTITY_STORE_CHANGE": {
+      "description": "Add or change the identity-store substrate (Class A declaration snapshots, Class B identity records, Class C tracked bindings, Identity Check, writers/readers). Not the live decision path. Load must not import feature_pipeline / feature_states / feature_schema / crt_engine / crt_state_resolver as a substitute for stored identity.",
+      "authorities_to_inspect": [
+        "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+        "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+        "docs/governance/PHYSICAL_STORAGE_ARCHITECTURE.md"
+      ],
+      "artifacts_to_update": [
+        "docs/governance/PHYSICAL_STORAGE_ARCHITECTURE.md"
+      ],
+      "required_checks": [
+        "tests/test_identity_store.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "rollback_boundary": "single commit; revert src/identity/ + tests/test_identity_store.py + this class if added in the same change",
+      "completion_criteria": "Identity Check round-trip PRESERVED for L0–L5; missing PK / hash mismatch / dropped RESET fail closed; AST isolation: check/reader do not import recompute producers"
+    },
+    "CORPUS_AUTHORITY_CHANGE": {
+      "description": "Add or change Dataset Identity records, the dataset-identity schema/registry, or the load-time corpus admission gate (R3). Owns which physical OHLCV artifact a governed load may stream. Not L0-L5 identity store, not live decision scoring, not G001, not OHLCV CLOSED.",
+      "authorities_to_inspect": [
+        "docs/governance/CORPUS_AUTHORITY.md",
+        "docs/governance/xauusd_m15_phase1_frozen_candidate.json",
+        "src/data_ingestion/xauusd_phase1_candidate.py",
+        "src/runtime/backtest_v2.py CandleLoader"
+      ],
+      "artifacts_to_update": [
+        "docs/governance/CORPUS_AUTHORITY.md",
+        "docs/governance/dataset_identity.schema.json",
+        "docs/governance/dataset_identity_registry.json"
+      ],
+      "required_checks": [
+        "tests/test_dataset_registry.py",
+        "tests/test_corpus_authority_decisions.py",
+        "tests/test_xauusd_phase1_frozen_candidate.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "rollback_boundary": "single commit; revert dataset records + dataset_registry.py + CandleLoader admit wire + this class if added in the same change. Phase-1 XAUUSD guard must remain fail-closed.",
+      "completion_criteria": "Bound XAUUSD M15 loads still rewrite to data/mt5/XAUUSD_M15.csv @ 4d73f5ce and fail closed on hash/range drift; unbound instruments path-passthrough; native XAUUSD HTF CSVs rejected as FORENSIC; projections have no file path; decision_status is not APPROVED; OHLCV_CLOSURE_STATUS unchanged."
+    },
+    "SEMANTIC_REGISTRY_CHANGE": {
+      "description": "Add or refine a node in a NON-frozen semantic section of the market ontology (structural_predicates / structural_walks / canonical_unknowns / htf_states / objectives / execution_behaviours / invariants / regimes / ...), or the sibling data that declares how those nodes are policed or founded. Declaration-only: these sections are never read on the runtime binding path (market_ontology.yaml spec_schema.semantic_registry), so this class asserts NO production behaviour change. Meaning-origin edits per CLAUDE.md 6.6; grants no production, promotion or G001 authority per 6.5.",
+      "authorities_to_inspect": [
+        "configs/formulas/market_ontology.yaml (spec_schema.semantic_registry)",
+        "src/features/registry/__init__.py (validate_semantic_registry, _ITERATED_SECTIONS)",
+        "docs/governance/MARKET_ONTOLOGY_EVOLUTION_CONTRACT.md",
+        "src/governance/semantic_grounding.py (id recognizer)",
+        "scripts/analysis/feature_math_lint.py (lint_policed_sections)"
+      ],
+      "artifacts_to_update": [
+        "configs/formulas/market_ontology.yaml (the node, refined IN PLACE - never a duplicate id)",
+        "tests/test_semantic_registry.py (pin new/changed node ids + knowledge_status)",
+        "docs/current-findings.md when the node records or overturns a conclusion"
+      ],
+      "required_checks": [
+        "tests/test_semantic_registry.py",
+        "tests/test_feature_lineage.py",
+        "tests/test_semantic_grounding.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "completion_criteria": "validate_semantic_registry() == [] and validate_registry() == []; every new id GROUNDED via query_semantic_os.py --ground --kind NOUN; frozen runtime sections (primitives/feature_compositions/derived_metrics) byte-unchanged; production config hash unchanged; nodes refined IN PLACE with version bumped, never duplicated. If the node names an impl, that impl must be reachable and policed - registration WITHOUT enforcement is an incomplete change (the failure mode that produced this class).",
+      "rollback_boundary": "single commit; the ontology node is PRIMARY. Reverting must not orphan a test pin or leave a policed-section name pointing at a deleted section."
+    },
+    "JSONL_CLAIM_SURFACE_CHANGE": {
+      "description": "Add or refine the JSONL claim catalog (CC-* claim classes / STR-* streams / forbidden_joins), the SemanticGrounder JSONL claim kind and REFUSED status, the CT-008 refine-in-place, or the measurement result log. Advisory anti-hallucination surface: it decides whether a JSONL stream may CLOSE an LLM claim, nothing else. NOT identity persistence (no Class A/B/C record, no identity_check on run-level lines), NOT the live spine, NOT G001 or promotion, and NOT SEMANTIC_REGISTRY_CHANGE (that class is the non-frozen market-ontology sections in market_ontology.yaml; CT-008 lives in docs/governance/semantic_os/contracts.yaml).",
+      "authorities_to_inspect": [
+        "docs/governance/JSONL_CLAIM_SURFACE.md (the approved spec)",
+        "docs/governance/jsonl_claim_catalog.yaml (PRIMARY catalog)",
+        "src/governance/jsonl_claim_catalog.py (loader + admissibility)",
+        "src/governance/semantic_grounding.py (the grounder this extends)",
+        "docs/governance/semantic_os/contracts.yaml (CT-008)",
+        "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md (S11 census labels, S12.3 no-PK-stamping)",
+        "docs/governance/MEASUREMENT_CONTRACT.md (F-083 declared-vs-executed)"
+      ],
+      "artifacts_to_update": [
+        "docs/governance/jsonl_claim_catalog.yaml (the PRIMARY; never hand-edit the data/ projection)",
+        "docs/reference/schemas.md (S9.15 catalog line, S9.16 result line, S9.14 Grounding)",
+        "docs/governance/SEMANTIC_OS_CONTRACT.md (S10) and CT-008 refined IN PLACE - never a new CT-id",
+        "CLAUDE.md S6.7 + the machine-readable truth-sources table",
+        "docs/topics/ (the one topic doc the change touches, per S6.4)"
+      ],
+      "required_checks": [
+        "tests/test_jsonl_claim_catalog.py",
+        "tests/test_jsonl_claim_grounding.py",
+        "tests/test_measurement_result_log.py",
+        "tests/test_semantic_grounding.py",
+        "tests/test_semantic_os.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "completion_criteria": "load_catalog() validates and every CC-*/STR-* id is unique; no CANNOT class appears in any stream allowed_cc and every forbidden_cc is a subset of the CANNOT ids; the GENERATED data/jsonl_claim_catalog.jsonl equals a fresh deterministic render; every meaning_authority entry is the INVENTORY_NOT_MARKET sentinel or GROUNDs as a NOUN (no invented SEM/CN/FM ids); catalog authority stays 'advisory'; frozen ontology runtime sections (primitives/feature_compositions/derived_metrics) byte-unchanged; production config hash unchanged; no G001, promotion, ACTIVE_VERSION or live-rail key introduced. PR-2 adds: every CANNOT class returns REFUSED; a missing or non-CC-* relation is UNANSWERABLE; a forbidden join refuses BEFORE any CAN can ground; a CAN outside the stream's allowed_cc is UNANSWERABLE (never a silent GROUND); path-escape tokens are UNKNOWN and never opened; the agent envelope carries grounding_status before status is set to 'ok'; CT-008 is refined IN PLACE with its id and all 18 required keys intact; and the four original claim kinds still ground unchanged. PR-3 adds: every git-tracked instances/MC-*.json with mt00 != UNRUN has a result line whose artifact hashes match; classify_l5_basis checks FIVE keys against five frozensets and never iterates identity.tokens.L5_BASIS (3 keys, no geometry); identity_check is never called on a run-level line and basis_status is never PRESERVED; economic_claims_allowed is const false; and the result log file is NOT a GOVERNED_FILE so appends do not re-run the floor.",
+      "rollback_boundary": "Single commit. The catalog YAML is PRIMARY: revert the YAML, the loader, the grounder change and the tests together. Reverting must not leave a GREEN_FLOOR or required_checks entry pointing at a deleted test."
     }
   }
 }

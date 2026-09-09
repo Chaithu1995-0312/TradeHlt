@@ -1,0 +1,93 @@
+# CRT object relations — explicit joins among EXISTING objects.
+# Schema: crt_object_relations/v1
+# Policy: P-CRT-LIQ-01 (no second named CRT liquidity object).
+# Authority: advisory / test-enforced. Not a production gate. Not G001.
+# Closed relation verbs: is_not | reads | does_not_read | clocks | joins_only_at | does_not_found
+
+schema: crt_object_relations/v1
+change_id: CH-crt-object-relations
+policy: P-CRT-LIQ-01
+semantic_contract: CT-009
+closure_status: CLOSED
+closure_token: "CRT_OBJECT_RELATIONS_STATUS = CLOSED"
+does_not_close:
+  - CRT
+  - SEM-011_domain_meaning
+  - G001
+  - RESEARCH_MEASUREMENT_CONTRACT
+
+objects:
+  M15-SLR:
+    type: M15StructuralLiquidityRange
+    path: src/config_layer/m15_structural_range.py
+    role: m15_sweep_envelope
+  HTFBuilder:
+    type: HTFBuilder
+    path: src/runtime/backtest_v2.py
+    role: reset_clock
+  ParentRange:
+    type: ParentRange
+    path: src/config_layer/parent_crt.py
+    role: calendar_h4_c1_range
+  ParentCRTTrack:
+    type: ParentCRTTrack
+    path: src/config_layer/parent_crt.py
+    role: parent_c1_c2_c3
+  ResetLogic:
+    type: ResetLogic
+    path: src/config_layer/crt_engine_v2.py
+    role: m15_reset
+  detect_sweep:
+    type: RangeDetector.detect_sweep
+    path: src/config_layer/crt_engine_v2.py
+    role: sweep_founding
+  process_candle:
+    type: CRTEngine.process_candle
+    path: src/config_layer/crt_engine_v2.py
+    role: m15_lifecycle
+  SMC:
+    type: features.smc
+    path: src/features/smc/__init__.py
+    role: independent_smc_geometry
+
+relations:
+  - id: REL-001
+    source: M15-SLR
+    relation: is_not
+    dest: HTFBuilder
+    check: types_m15_slr_is_not_htf_builder
+  - id: REL-002
+    source: M15-SLR
+    relation: is_not
+    dest: ParentRange
+    check: types_m15_slr_is_not_parent_range
+  - id: REL-003
+    source: detect_sweep
+    relation: reads
+    dest: M15-SLR
+    check: detect_sweep_reads_active_range_hl
+  - id: REL-004
+    source: detect_sweep
+    relation: does_not_read
+    dest: SMC
+    check: crt_engine_has_no_smc_import
+  - id: REL-005
+    source: detect_sweep
+    relation: does_not_read
+    dest: ParentRange
+    check: detect_sweep_body_omits_parent_range
+  - id: REL-006
+    source: HTFBuilder
+    relation: clocks
+    dest: ResetLogic
+    check: reset_compares_clock_id
+  - id: REL-007
+    source: ParentCRTTrack
+    relation: joins_only_at
+    dest: process_candle
+    check: parent_state_only_at_execution_filter
+  - id: REL-008
+    source: SMC
+    relation: does_not_found
+    dest: detect_sweep
+    check: crt_engine_has_no_smc_import
