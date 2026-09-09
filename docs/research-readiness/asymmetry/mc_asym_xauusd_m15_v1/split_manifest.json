@@ -1,0 +1,11 @@
+{
+  "holdout_start": "2025-12-24 19:15:00",
+  "train_last_allowed": "2025-12-23 19:15:00",
+  "embargo_bars": 96,
+  "purge_horizon_bars": 40,
+  "n_train": 37621,
+  "n_holdout": 9454,
+  "n_embargo_dropped": 91,
+  "f086_stride_spent": false,
+  "full_sample_atlas_is_not_this_split": true
+}

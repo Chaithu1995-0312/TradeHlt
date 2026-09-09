@@ -1,0 +1,14 @@
+{
+  "contract_id": "MC-RNET-OVERLAY-XAUUSD-M15-V1",
+  "n": 94332,
+  "sha256": "c096fcfd6b7ee378535d20f48eaa6add53333f63e07cc532c226c1b2abda8650",
+  "population_hash_inputs": [
+    "instrument",
+    "decision_ts",
+    "side",
+    "y_R_net",
+    "corpus_path",
+    "corpus_sha256",
+    "contract_id"
+  ]
+}

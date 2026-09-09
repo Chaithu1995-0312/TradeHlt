@@ -1,0 +1,137 @@
+{
+  "authority": "research",
+  "contract_id": "MC-SUJAN-XAUUSD-M15-V1",
+  "counts": {
+    "FAIL": 2,
+    "INCONCLUSIVE": 4,
+    "PASS": 10
+  },
+  "economic_claims_allowed": false,
+  "failing_probes": [
+    "E1-03-POPULATION-FINGERPRINT",
+    "E2-01-DECLARED-MODULES-EXIST"
+  ],
+  "inconclusive_probes": [
+    "E0-05-PROHIBITED-SUBSTITUTIONS",
+    "E1-05-FINGERPRINT-DIGEST-COMPOSITION",
+    "E2-02-OUT-OF-PATH-NOT-IMPORTED",
+    "E2-04-METRIC-GATE-TRACE"
+  ],
+  "note": "E-MT-00 clean-path only. mt00 PASS is ONE of four E4 clauses; E-MT-01 matrix coverage is a separate program and economic admissibility is not granted here.",
+  "probes": [
+    {
+      "detail": "instance schema_version '1.0.0' vs frozen const '1.0.0'",
+      "outcome": "PASS",
+      "probe_id": "E0-01-SCHEMA-VERSION",
+      "stage": "E0",
+      "witness": "1.0.0"
+    },
+    {
+      "detail": "all top-level required keys present",
+      "outcome": "PASS",
+      "probe_id": "E0-02-TOP-LEVEL-REQUIRED",
+      "stage": "E0",
+      "witness": ""
+    },
+    {
+      "detail": "all seven surfaces carry their required fields",
+      "outcome": "PASS",
+      "probe_id": "E0-03-SEVEN-SURFACES-POPULATED",
+      "stage": "E0",
+      "witness": ""
+    },
+    {
+      "detail": "authority.economic_admissible=False (must be false on a sealed, unrun contract)",
+      "outcome": "PASS",
+      "probe_id": "E0-04-NOT-PRE-SEALED-ADMISSIBLE",
+      "stage": "E0",
+      "witness": "False"
+    },
+    {
+      "detail": "14 substitutions covering ['costs', 'exits', 'features', 'labels', 'metrics', 'pipeline', 'population']; no forbid declared for ['splits'] \u2014 the charter requires one per surface the experiment USES, which this runner cannot determine mechanically",
+      "outcome": "INCONCLUSIVE",
+      "probe_id": "E0-05-PROHIBITED-SUBSTITUTIONS",
+      "stage": "E0",
+      "witness": "splits"
+    },
+    {
+      "detail": "contract_id 'MC-SUJAN-XAUUSD-M15-V1' vs filename stem 'MC-SUJAN-XAUUSD-M15-V1'",
+      "outcome": "PASS",
+      "probe_id": "E0-06-CONTRACT-ID-BINDS-FILE",
+      "stage": "E0",
+      "witness": "MC-SUJAN-XAUUSD-M15-V1"
+    },
+    {
+      "detail": "evidence_artifacts.contract_path='configs/research/measurement_contracts/instances/MC-SUJAN-XAUUSD-M15-V1.json' vs actual 'configs/research/measurement_contracts/instances/MC-SUJAN-XAUUSD-M15-V1.json'",
+      "outcome": "PASS",
+      "probe_id": "E1-01-CONTRACT-SELF-REFERENCE",
+      "stage": "E1",
+      "witness": "configs/research/measurement_contracts/instances/MC-SUJAN-XAUUSD-M15-V1.json"
+    },
+    {
+      "detail": "4 declared artifacts resolve and parse; 2 declared null (['cost_exit_fixture_path', 'feature_parity_path']); 0 non-path ([])",
+      "outcome": "PASS",
+      "probe_id": "E1-02-DECLARED-ARTIFACTS-RESOLVE",
+      "stage": "E1",
+      "witness": "label_rederive_path,metric_compute_path,population_fingerprint_path,split_manifest_path"
+    },
+    {
+      "detail": "fingerprint carries no sha256 digest over the unit keys",
+      "outcome": "FAIL",
+      "probe_id": "E1-03-POPULATION-FINGERPRINT",
+      "stage": "E1",
+      "witness": "docs/research-readiness/sujan_crt/mc_sujan_xauusd_m15_v1/population_fingerprint.json"
+    },
+    {
+      "detail": "the fingerprint's key LIST is checked against the contract (E1-03); whether the digest mixed each of those keys is not verifiable from the artifact and needs re-derivation",
+      "outcome": "INCONCLUSIVE",
+      "probe_id": "E1-05-FINGERPRINT-DIGEST-COMPOSITION",
+      "stage": "E1",
+      "witness": "docs/research-readiness/sujan_crt/mc_sujan_xauusd_m15_v1/population_fingerprint.json"
+    },
+    {
+      "detail": "mt01_matrix_coverage='UNRUN' and the coverage report is present \u2014 consistent either way while UNRUN",
+      "outcome": "PASS",
+      "probe_id": "E1-06-TRUST-REPORTS",
+      "stage": "E1",
+      "witness": "docs/research-readiness/sujan_crt/mc_sujan_xauusd_m15_v1/mt01.json"
+    },
+    {
+      "detail": "scheme='single_holdout_chronologic', manifest carries 9 field(s)",
+      "outcome": "PASS",
+      "probe_id": "E1-04-SPLIT-MANIFEST",
+      "stage": "E1",
+      "witness": "docs/research-readiness/sujan_crt/mc_sujan_xauusd_m15_v1/split_manifest.json"
+    },
+    {
+      "detail": "declared modules absent: ['src/research/sujan_crt/vetoes.py detect_funnel_entries', 'src/config_layer/htf_state.py classify_htf_state', 'src/structure/predicates.py swept_high / swept_low / directional_impulse', 'src/research/indicators.py atr', 'src/research/costs.py ComponentCostModel']",
+      "outcome": "FAIL",
+      "probe_id": "E2-01-DECLARED-MODULES-EXIST",
+      "stage": "E2",
+      "witness": "src/research/sujan_crt/vetoes.py detect_funnel_entries,src/config_layer/htf_state.py classify_htf_state,src/structure/predicates.py swept_high / swept_low / directional_impulse,src/research/indicators.py atr,src/research/costs.py ComponentCostModel"
+    },
+    {
+      "detail": "4 structural out-of-path declarations hold; 6 are qualified or glob-shaped and assert BEHAVIOURAL inertness, which an import scan cannot decide: ['src/core/engine_runner.py (no fusion gate; this is not the spine)', 'src/engines/ (crt, gaussian, zone_gate, rr)', 'src/research/visual_crt/ (F-081/F-084 geometry is NOT imported; its pool vocabulary is a different founding structure)', 'src/research/oracle/multi_tp_walk.py (see exit_justification_vs_f088)', 'src/research/candle_state/, src/interpreters/regime_observer.py (forbidden fourth expansion implementation)', 'every trained model artifact (zone_gate, rr, gaussian, bitnet, tradenet - all stale on <=39-dim schemas per F-076)']",
+      "outcome": "INCONCLUSIVE",
+      "probe_id": "E2-02-OUT-OF-PATH-NOT-IMPORTED",
+      "stage": "E2",
+      "witness": ""
+    },
+    {
+      "detail": "pipeline_identity.dataset_integrity_level='L1_L2_only'",
+      "outcome": "PASS",
+      "probe_id": "E2-03-DATASET-INTEGRITY-DECLARED",
+      "stage": "E2",
+      "witness": "L1_L2_only"
+    },
+    {
+      "detail": "9 forbidden metric substitutions are declared; confirming the success gate consumed only declared metrics requires re-executing the experiment under trace, which this clean-path runner does not do",
+      "outcome": "INCONCLUSIVE",
+      "probe_id": "E2-04-METRIC-GATE-TRACE",
+      "stage": "E2",
+      "witness": "reporting the maximum rung instead of the whole funnel,reporting gross expectancy as if it were net,reporting raw n where effective n is required"
+    }
+  ],
+  "schema": "mt00_report/1",
+  "status": "FAIL"
+}

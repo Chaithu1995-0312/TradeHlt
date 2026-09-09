@@ -135,8 +135,10 @@ def test_items_respect_minimum_spacing(sample_dir):
 def test_scorer_perfect_labels_give_high_kappa():
     from scripts.analysis.blind_label_score import _kappa
 
-    y_true = [1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0,
-              -1.0, 0.0, 1.0, -1.0, 0.0]
+    # 15 of each class -- clears both the total-n floor AND the minority-class floor
+    # (MIN_CELL_N=15 applies to each, per the registered rule; see
+    # test_scorer_reports_insufficient_minority_below_registered_floor below).
+    y_true = [1.0, -1.0, 0.0] * 15
     result = _kappa(y_true, y_true, "nominal")
     assert result["status"] == "SCORED"
     assert result["kappa"] == pytest.approx(1.0)
@@ -164,12 +166,54 @@ def test_scorer_reports_insufficient_below_min_n():
     assert result["kappa"] is None
 
 
+def test_scorer_reports_insufficient_minority_below_registered_floor():
+    """docs/research/registration-blind-label-scorer-min-n-correction.md (D2): the
+    pre-registration gates on RAREST-class instance count (>= MIN_CELL_N), not total n. A cell
+    can clear the total-n floor while one class has almost no support. These six cases reproduce
+    the 6 measured cells the unfixed scorer wrongly reported SCORED (Arm A q3_sweep/q4_bos;
+    Arm B q1_trend/q2_vol/q3_sweep/q4_bos) as synthetic class-count fixtures -- pred is a copy of
+    true (the best possible case), so even a perfect labeler must not be reported SCORED on an
+    underpowered minority class."""
+    from scripts.analysis.blind_label_score import _kappa
+
+    cases = [
+        ("nominal", {0: 50, 1: 6, -1: 4}),   # Arm A q3_sweep
+        ("nominal", {0: 42, 1: 13, -1: 5}),  # Arm A q4_bos
+        ("nominal", {1: 17, -1: 13}),        # Arm B q1_trend
+        ("linear", {2: 14, 1: 10, 0: 6}),    # Arm B q2_vol
+        ("nominal", {0: 13, -1: 9, 1: 8}),   # Arm B q3_sweep
+        ("nominal", {0: 15, 1: 9, -1: 6}),   # Arm B q4_bos
+    ]
+    for weight_mode, counts in cases:
+        y_true = [v for v, c in counts.items() for _ in range(c)]
+        result = _kappa(y_true, y_true, weight_mode)
+        assert result["status"] == "INSUFFICIENT_MINORITY", (counts, result)
+        assert result["kappa"] is None
+        assert result["minority_class_n"] == min(counts.values())
+
+
+def test_scorer_still_scores_well_powered_cells_after_minority_fix():
+    """Same registration, verification #2: the fix must not make everything insufficient --
+    Arm A q1_trend/q2_vol (n=60, every class >= 15) must remain SCORED."""
+    from scripts.analysis.blind_label_score import _kappa
+
+    q1_true = [1.0] * 27 + [-1.0] * 33  # Arm A q1_trend measured composition (rarest=27)
+    result = _kappa(q1_true, q1_true, "nominal")
+    assert result["status"] == "SCORED"
+    assert result["kappa"] == pytest.approx(1.0)
+
+    q2_true = [2] * 16 + [1] * 22 + [0] * 22  # Arm A q2_vol measured composition (rarest=16)
+    result = _kappa(q2_true, q2_true, "linear")
+    assert result["status"] == "SCORED"
+    assert result["kappa"] == pytest.approx(1.0)
+
+
 def test_linear_weighted_kappa_penalizes_distance():
     """volatility_regime is ordinal (Low<Normal<High) -- a Low/High confusion should score
     worse than a Low/Normal confusion under linear weighting, which is why Q2 uses it."""
     from scripts.analysis.blind_label_score import _kappa
 
-    n = 20
+    n = 45  # 15 per class -- clears the minority-class floor too (was n=20 / 6-7 per class)
     y_true = [0, 1, 2] * (n // 3) + [0] * (n % 3)
     y_adjacent_errors = [min(v + 1, 2) if v < 2 else v for v in y_true]  # off-by-one only
     y_extreme_errors = [2 - v for v in y_true]  # Low<->High flips

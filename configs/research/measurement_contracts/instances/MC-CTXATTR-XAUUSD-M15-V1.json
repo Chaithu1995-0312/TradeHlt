@@ -1,0 +1,431 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "MC-CTXATTR-XAUUSD-M15-V1",
+  "experiment_id": "E-CTXATTR-XAUUSD-M15",
+  "created_utc": "2026-08-29T00:00:00Z",
+  "authority": {
+    "economic_admissible": false,
+    "requires_mt00_pass": true,
+    "note": "Sealed BEFORE src/research/evidence/context_attribution.py existed and before any holdout delta was computed (the F-083 lesson: a contract written after the driver is a description, not a pre-registration). MEASURES incremental value on the EVERY-BAR population, NOT on production's executed trades -- those are 3 trades in 47,275 XAUUSD M15 bars (results/run_20260829_005642_XAUUSD), so per-family attribution against the CRT ledger is structurally impossible and was never attempted. A family clearing this gate has shown information orthogonal to CRT state on a population production does not trade. That is rung 1 of the Authority Ladder and nothing more: it is NOT a G001 improvement, NOT permission to size, and NOT permission to enter context_attribution.promoted_families, which stays empty. AMENDMENT 2026-08-29, BEFORE any y was computed and before mt00 ran: the PRIMARY metric's definition was tightened from 'overlay inside each stratum' to 'overlay on stratum-CENTERED y, skipping strata where the context does not vary'. Two defects in the looser reading were found by the orthogonality floor (tests/research/test_context_attribution_contract.py) while it was still a planted-fixture test with no outcome data attached: uncentered y leaves a k*stratum_mean*(n_a-n_d)/n term, and a single-cell stratum is a uniform rescale rather than a contrast. This is a pre-registration correction, not a post-hoc retune -- no metrics.json existed when it was made. Recorded rather than silently applied, per E-001."
+  },
+  "population": {
+    "unit_of_analysis": "candle",
+    "instruments": [
+      "XAUUSD"
+    ],
+    "timeframe": "M15",
+    "calendar_window": {
+      "start": "2024-05-22 01:00:00",
+      "end": "2026-05-21 23:45:00",
+      "timezone": "broker_server_labeled_UTC"
+    },
+    "inclusion_rule": "UNIT = one (candle, direction) pair. `unit_of_analysis` is declared `candle` because the FROZEN schema enum offers no bar_x_direction member and the schema is not loosened to fit an instance; the 2x directional fan-out is explicit here and in population_hash_inputs, and the two directions on one bar are NOT independent of each other. MEASUREMENT CORPUS = data/mt5/XAUUSD_M15.csv ONLY (47275 bars, sha256 4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56). Outcome surface = results/research/oracle_labels/XAUUSD_M15/labels.csv (SEM-018, 377256 units over 47157 labelled bars). PRIMARY ARM is the single declared arm (sl_geom=disp_bar, tie_break=production) -> 94314 units; labeler.py:76-79 already declares the other three as robustness, not extra shots at significance. Context surface = the BarStructureSnapshot stream (SEM-035) for the SAME corpus_sha256. JOIN is labels._pos == snapshot.bar_index, legal ONLY within one run_id and one corpus_sha256. Snapshot rows with phase=WARMUP carry no engine state and are excluded from every arm. SUCCESS GATE uses HOLDOUT units only (timestamp >= 2025-12-24 19:15:00, corpus index 37820).",
+    "exclusion_rule": "F-086's 236-bar stride holdout is NOT this split and remains UNSPENT. CRT TRADE_OPENED rows are NOT this population (n=3; see authority.note). SEM-012 visual-CRT, SEM-026 mother-range and SEM-031 Sujan entries are different populations. opportunities.outcome is never y. WARMUP snapshot rows are excluded. Rows whose snapshot crt_state_after is null are excluded. Session and hour_of_day are OUT OF PATH (F-066: 53.36% of XAUUSD bars carry a wrong session label under broker_local).",
+    "n_declared_min": 30,
+    "detection_vs_trade": "hybrid_explicit",
+    "population_hash_inputs": [
+      "instrument",
+      "timestamp",
+      "direction",
+      "bar_index",
+      "crt_state_after",
+      "sl_geom",
+      "tie_break",
+      "corpus_path",
+      "corpus_sha256",
+      "snapshot_schema_version",
+      "contract_id"
+    ]
+  },
+  "features": {
+    "feature_set_id": "FS-CTXATTR-XAUUSD-M15-V1",
+    "feature_ids": [
+      "SEM-035",
+      "FM-054",
+      "FM-057"
+    ],
+    "formula_authority": "market_ontology",
+    "point_in_time_rule": "Every snapshot field is emitted AFTER CRTEngine.process_candle returns for that bar and is a function of bars <= i only: the trailing Candle window and the D1 ParentCandleBuilder are advanced incrementally in chronological order (bar_structure_snapshot.BarStructureEmitter._advance_window), and ParentCRTFeed never exposes an in-progress parent. The OUTCOME is forward-looking by construction (SEM-018 selects bars by their future); the CONTEXT is not. Session and hour_of_day are OUT OF PATH.",
+    "name_binding": {
+      "crt_state_after": {
+        "fm_id": "SEM-035",
+        "formula_ref": "engine.state.current_state.name AFTER process_candle, recorded per bar",
+        "units": "categorical",
+        "not_equal_to": [
+          "features.crt_state_resolver output",
+          "build_bar_matrix crt_state column",
+          "logs/crt_transitions.jsonl folded state"
+        ]
+      },
+      "agree_parent_crt": {
+        "fm_id": "SEM-036",
+        "formula_ref": "parent_bias == 'LONG' and side == 'long', or parent_bias == 'SHORT' and side == 'short'; NONE excluded from both cells",
+        "units": "boolean",
+        "not_equal_to": [
+          "crt_direction",
+          "trend_bias",
+          "a side picker"
+        ]
+      },
+      "agree_htf": {
+        "fm_id": "SEM-036",
+        "formula_ref": "htf_state == 'EXPANSION' and parent_bias matches side",
+        "units": "boolean",
+        "not_equal_to": [
+          "CRTState.DISTRIBUTION_C3",
+          "volatility_regime",
+          "htf_range_ratio"
+        ]
+      },
+      "agree_objective": {
+        "fm_id": "SEM-036",
+        "formula_ref": "objective_status == 'EXISTS' and objective_direction matches side",
+        "units": "boolean",
+        "not_equal_to": [
+          "an active gate; objective_gate.enabled is false on v2 and v3 (F-078)"
+        ]
+      },
+      "agree_fvg": {
+        "fm_id": "SEM-036",
+        "formula_ref": "fvg_present and fvg_bullish == (side == 'long')",
+        "units": "boolean",
+        "not_equal_to": [
+          "fvg_distance sign",
+          "canonical feature index 40"
+        ]
+      },
+      "agree_order_block": {
+        "fm_id": "SEM-036",
+        "formula_ref": "order_block_present and order_block_bullish == (side == 'long')",
+        "units": "boolean",
+        "not_equal_to": [
+          "order_block_distance sign",
+          "canonical feature index 39"
+        ]
+      },
+      "agree_breaker": {
+        "fm_id": "SEM-036",
+        "formula_ref": "breaker_present and breaker_bullish == (side == 'long')",
+        "units": "boolean",
+        "not_equal_to": [
+          "order block polarity before the flip"
+        ]
+      },
+      "agree_mitigation": {
+        "fm_id": "SEM-036",
+        "formula_ref": "mitigation_present and mitigation_bullish == (side == 'long')",
+        "units": "boolean",
+        "not_equal_to": [
+          "order block outer zone",
+          "Zone.mitigated"
+        ]
+      },
+      "agree_choch": {
+        "fm_id": "SEM-036",
+        "formula_ref": "choch_value != 0 and sign(choch_value) == (+1 if side == 'long' else -1); rows with choch_basis == 'UNAVAILABLE_NO_PIPELINE_COLUMNS' are excluded from both cells",
+        "units": "boolean",
+        "not_equal_to": [
+          "break_of_structure alone",
+          "a new BOS/CHoCH detection state machine"
+        ]
+      },
+      "agree_eqh_eql": {
+        "fm_id": "SEM-036",
+        "formula_ref": "for long: eql_present and not eqh_present; for short: eqh_present and not eql_present (liquidity pool resting on the far side of the trade)",
+        "units": "boolean",
+        "not_equal_to": [
+          "liquidity_distance FM-025",
+          "liquidity_pressure_score FM-026"
+        ]
+      },
+      "agree_pdh_pdl": {
+        "fm_id": "SEM-036",
+        "formula_ref": "for long: close nearer PDL than PDH (abs(pdl_distance) < abs(pdh_distance)); for short: the reverse. Both must be present.",
+        "units": "boolean",
+        "not_equal_to": [
+          "intraday range",
+          "the CRT active_range"
+        ]
+      },
+      "agree_composite": {
+        "fm_id": "SEM-036",
+        "formula_ref": "majority (>= 6 of the 10 single-family predicates) agree for this side; ties are excluded from both cells",
+        "units": "boolean",
+        "not_equal_to": [
+          "a fusion score",
+          "a trained model",
+          "an engine weight vector"
+        ]
+      },
+      "overlay_weight": {
+        "fm_id": "SEM-036",
+        "formula_ref": "w = 1+k if agree else 1-k; k = 0.5 FROZEN. Applied to STRATUM-CENTERED y within each crt_state_after stratum. Centering is load-bearing, not cosmetic: on raw y the delta reduces to k*stratum_mean*(n_agree-n_disagree)/n when the context carries no information, and with a base rate near -0.29R an information-free context with lopsided cells would score a spurious effect of roughly the size being looked for.",
+        "units": "dimensionless",
+        "not_equal_to": [
+          "position_size_dollars",
+          "ultron_risk_percent",
+          "a sizing rule"
+        ]
+      }
+    },
+    "forbidden_aliases": [
+      "session as any PRIMARY or stratum",
+      "hour_of_day as any PRIMARY or stratum",
+      "crt_state_resolved as the stratum (that is the RESOLVER, not the engine -- F-069, F-086)",
+      "{f}_window_truncated as an exclusion criterion (it is a warmup marker, True for all but the first ~100 bars; use {f}_age_bars against smc_window_len for boundary proximity)",
+      "{f}_distance == 0.0 read as 'zero distance' rather than 'no structure'",
+      "the composite family counted as an 11th independent discovery rather than 1 of 22 pre-registered tests",
+      "k swept after seeing y"
+    ]
+  },
+  "labels": {
+    "label_family": "forward_walk_economic",
+    "y_definition": "y = y_R_net from results/research/oracle_labels/XAUUSD_M15/labels.csv PRIMARY arm = multi_tp_walk (SEM-017) under the production two-target geometry (50% at TP1, stop reassigned to the half-way point, runner to TP2), net of ComponentCostModel (SEM-015, MEASURED XAUUSD broker) with AdverseFill (SEM-016) applied to stop exits. y_R_gross is carried alongside and reported, because a net figure on disp_bar geometry is cost-dominated by the tight stop and describes the geometry as much as the market (labeler.py's own caveat). NOT opportunities.rr_achieved. NOT clean_labels y_R_net (that bakes protocol 12bps, ~11x punitive per F-082 -- using it would confound exit kernel with cost model). SCHEMA NOTE: derivation_authority is declared 'forward_walk.other' because the FROZEN schema enum has no member for SEM-017 multi_tp_walk. The actual kernel is src/research/oracle/multi_tp_walk.py; 'forward_walk.intrabar_fixed' would be WRONG here (that is the comparability arm, and F-088 established the two are different trade objects).",
+    "derivation_authority": "forward_walk.other",
+    "stream_fields_banned_for_economic_claims": [
+      "opportunities.outcome",
+      "opportunities.rr_achieved",
+      "opportunities.mfe",
+      "diagnostics.stream_outcome",
+      "trades.csv pnl_rr_net"
+    ],
+    "rederive_protocol": {
+      "enabled": false,
+      "matcher": "not_applicable_y_is_derived_at_source_by_multi_tp_walk",
+      "min_agreement": 1.0,
+      "on_fail": "BLOCK_EXPERIMENT"
+    },
+    "horizon_bars": 40,
+    "sign_convention": "Positive delta_within_stratum means overweighting the agreeing side raises mean R-net RELATIVE to equal sizing, holding CRT state fixed. It does NOT mean E[y] > 0; the base rate on this population is negative (F-086: approximately -0.29R), so a positive delta can still describe losing less."
+  },
+  "costs": {
+    "cost_model_id": "CM-XAUUSD-COMPONENT-MEASURED-V1",
+    "components": [
+      {
+        "name": "half_spread",
+        "bps_or_formula": "0.045 price units PER SIDE (MEASURED, xauusd_mt5_cost_calibration); declared applied_on=round_trip because the frozen enum has no 'each_side' member and both sides are always paid",
+        "applied_on": "round_trip"
+      },
+      {
+        "name": "commission",
+        "bps_or_formula": "0.040 price units round-trip (MEASURED)",
+        "applied_on": "round_trip"
+      },
+      {
+        "name": "entry_slippage",
+        "bps_or_formula": "0.090 price units (PROXY_FROM_STOP -- declared as a proxy, not measured on entries)",
+        "applied_on": "entry"
+      },
+      {
+        "name": "stop_slippage",
+        "bps_or_formula": "0.090 price units applied via AdverseFill (SEM-016, model_gaps=true) on STOP exits only; declared applied_on=exit because the frozen enum has no 'stop_exit' member -- TP exits are not slipped (forward_walk.AdverseFill never adjusts TP)",
+        "applied_on": "exit"
+      }
+    ],
+    "gross_vs_net": {
+      "report_gross": true,
+      "report_net": true,
+      "promotable": "none_info_stage"
+    },
+    "success_gate_uses": "net",
+    "code_entrypoint": "src/research/costs.py ComponentCostModel.from_manifest"
+  },
+  "exits": {
+    "exit_model_id": "EX-CTXATTR-MULTITP-V1",
+    "exit_family": "intrabar_fixed_sl_tp",
+    "parameters": {
+      "partial_fraction": 0.5,
+      "trail_fraction": 0.5,
+      "tie_break": "production",
+      "runner_stop_pricing": "ledger_blend",
+      "timeout_pricing": "mark_to_close",
+      "max_forward": 40,
+      "sl_geometry": "disp_bar",
+      "label": "PRIMARY. F-088's naming trap is REPRODUCED, not fixed: partial_tp_breakeven_enabled does not do breakeven, trail_fraction 0.5 is a half-way trail, and the effective tie-break is SL-first via _intrabar_trigger_price rather than the declared TP2>SL>TP1 branch order.",
+      "comparability_arm": {
+        "exit_model_id": "EX-CTXATTR-FORWARDWALK-V1",
+        "code_entrypoint": "src/research/measurement/forward_walk.py::forward_walk",
+        "parameters": {
+          "exit_model": "intrabar_fixed",
+          "max_forward": 40
+        },
+        "cost_model_id": "CM-XAUUSD-COMPONENT-MEASURED-V1",
+        "role": "DECLARED, REPORTED, NEVER GATED. Run under the SAME SEM-015 measured cost as PRIMARY so the exit kernel is the only difference between the arms. Its purpose is comparability with the F-081..F-096 corpus, which was measured on the single-TP object; a disagreement between the arms is reported as a basis sensitivity, never resolved in favour of whichever is more favourable.",
+        "_note": "Nested under exits.parameters rather than as a sibling key because measurement_contract.schema.json is FROZEN v1.0.0 with exits.additionalProperties=false. The schema is not loosened to fit an instance; the instance conforms."
+      },
+      "_schema_note": "exit_family is declared 'intrabar_fixed_sl_tp' because the FROZEN schema enum has no member for production's actual trade object: two targets, a 50% partial at TP1, and the remainder run on a half-way trail. That absence is itself the F-088 observation -- the measurement vocabulary was written around a single-TP walk, which is exactly the object F-088 found every prior result had been measured on while production traded something else. The real geometry is fully specified in exit_model_id and the sibling parameters; nothing here is loosened to fit, and the schema is not edited to fit an instance."
+    },
+    "intrabar_rule": "SL-first on same-bar ambiguity (multi_tp_walk._intrabar_trigger_price). Declared explicitly because F-088 established the declared branch order and the effective order differ.",
+    "not_equal_to": [
+      "forward_walk single-TP (that is the declared COMPARABILITY arm, never the gate)",
+      "close_only",
+      "trailing without the TP1 partial",
+      "opportunities.outcome"
+    ],
+    "code_entrypoint": "src/research/oracle/multi_tp_walk.py::multi_tp_walk"
+  },
+  "splits": {
+    "scheme": "single_holdout_chronologic",
+    "embargo": "96 M15 bars between last train timestamp and first holdout timestamp",
+    "purge": "drop train rows whose 40-bar horizon overlaps holdout start",
+    "n_folds_or_windows": 1,
+    "overlap_policy": "forbid_overlapping_labels",
+    "seed": 20260829,
+    "oos_fraction_or_dates": "First holdout timestamp 2025-12-24 19:15:00 (corpus index 37820). Imported verbatim from src/research/evidence/asymmetry_contract.py:22-27, the same frozen calendar MC-ASYM / MC-MAGPRIOR / MC-MRPRIOR / MC-VCRTPRIOR use -- reusing it spends no new holdout and keeps cross-contract comparability. The run WRITES the resolved boundary index and timestamp to split_manifest.json; a declared-but-unwritten split is the F-083 failure this contract must not repeat. F-086's 236-bar stride holdout is a DIFFERENT split and is not spent."
+  },
+  "metrics": {
+    "information_metrics": [
+      "n_holdout_units",
+      "n_agree",
+      "n_disagree",
+      "delta_within_stratum",
+      "delta_marginal",
+      "crt_proxy_component",
+      "e_y",
+      "e_w_y",
+      "sign_match_train_holdout",
+      "p_block_permutation",
+      "bh_fdr_survives",
+      "stratum_occupancy"
+    ],
+    "economic_metrics": [
+      "mean_R_net",
+      "mean_R_gross",
+      "profit_factor"
+    ],
+    "success_gate": "DIAGNOSTIC ONLY. Per family x direction, on HOLDOUT units only, ALL FOUR clauses: (1) holdout agree-cell n >= 30 AND disagree-cell n >= 30; (2) sign(holdout delta_within_stratum) == sign(train delta_within_stratum); (3) survives Benjamini-Hochberg FDR at q=0.10 across all 22 pre-registered primary tests, with p from a block-permutation null (block=40 bars, n_perm=199); (4) |holdout delta_within_stratum| exceeds BOTH the long_only control and the shuffled-context control. PRIMARY is delta_within_stratum: the overlay is computed INSIDE each crt_state_after stratum on STRATUM-CENTERED y (each y minus its own stratum mean), strata where the context does not vary (all-agree or all-disagree) contribute nothing, and the surviving strata are aggregated size-weighted. Never delta_marginal. k=0.5 frozen. E>0 is deliberately NOT a clause: the base rate on this population is approximately -0.29R (F-086), so beating the base means losing less, not earning. If MORE than 6 of 22 pass, the set is reported as a suspected multiplicity artifact and NOT claimed. Meeting every clause is NOT economic validation while economic_claims_allowed is false.",
+    "kill_criteria": "Any outcome including n=0, n<30, or 0-of-22 is REGISTERED, not re-cut. INSUFFICIENT is an expected and legitimate result: F-086 measured the effective independent sample at 941 per direction (block autocorrelation +0.292 at lag 1 decaying to +0.003 by lag 20), NOT 47157, and 22 tests against that is not much power. Changing y, k, any agree predicate, the stratum variable, the holdout date, the embargo, the purge, the block length, or the permutation count AFTER seeing holdout y requires a NEW MC-* id. Adding a 12th family after seeing results requires a NEW MC-* id. Do not convert an overlay lift into a sizing rule. Do not present a diagnostic pass as G001. MULTIPLICITY MECHANISM (control is declared 'bh_fdr' because that is the closed enum member; the full pre-registered procedure is four-part): BH-FDR at q=0.10 over the 22 primary tests, p from a block-permutation null (block=40 bars, n_perm=199), PLUS train/holdout sign-match, PLUS a pass-count ceiling of 6 of 22. BH-FDR rather than Bonferroni: at an effective independent n of ~941 per direction, Bonferroni over 22 has essentially no power and would guarantee a vacuous null regardless of what is there. Block permutation rather than iid bootstrap because the label autocorrelation was MEASURED, not assumed. NOT GATED (reported only): sl_geom=fixed_atr; tie_break=optimistic; forward_walk intrabar_fixed comparability arm; delta_marginal.",
+    "multiplicity": {
+      "n_variants_preregistered": 22,
+      "control": "bh_fdr"
+    },
+    "authority_ladder": {
+      "info_not_value": true,
+      "value_not_authority": true,
+      "insufficient_not_harmful": true
+    },
+    "forbidden_metric_substitutions": [
+      "delta_marginal presented as the PRIMARY (it contains the CRT-proxy component by construction)",
+      "E>0 used as the success gate",
+      "beating the base rate described as profitable (the base rate is negative)",
+      "long_only omitted as a control (XAUUSD rose across this corpus; zero is the wrong reference -- F-086 saw positive cell counts collapse 65->8, 56->1, 2->0 against it)",
+      "{f}_window_truncated used as an exclusion criterion",
+      "a pass count above the ceiling of 6 reported as a set of discoveries",
+      "the comparability arm used to gate when it is more favourable than PRIMARY",
+      "the every-bar population described as production trades",
+      "delta_within_stratum computed on UNCENTERED y, or with single-cell strata folded in (either reintroduces the CRT-proxy term the primary metric exists to remove)"
+    ]
+  },
+  "pipeline_identity": {
+    "config_version_source": "v3_unified_market_structure_2026_09, read from an ISOLATED config root (src/utils/isolated_config_root.py). configs/production/ACTIVE_VERSION is NEVER written and remains v2_htfcrt_2026_08 throughout.",
+    "active_version_file": "configs/production/ACTIVE_VERSION",
+    "engine_gate_mode": "gate_on_fusion",
+    "expected_engines": [
+      "crt",
+      "gaussian",
+      "zone_gate",
+      "rr"
+    ],
+    "modules_in_path": [
+      "src/runtime/bar_structure_snapshot.py",
+      "src/runtime/backtest_v2.py",
+      "src/config_layer/crt_engine_v2.py",
+      "src/runtime/parent_crt_feed.py",
+      "src/config_layer/parent_crt.py",
+      "src/config_layer/htf_state.py",
+      "src/features/smc/_geometry.py",
+      "src/features/smc/order_block.py",
+      "src/features/smc/fvg.py",
+      "src/features/smc/breaker.py",
+      "src/features/smc/mitigation.py",
+      "src/features/smc/levels.py",
+      "src/features/smc/choch.py",
+      "src/research/oracle/labeler.py",
+      "src/research/oracle/multi_tp_walk.py",
+      "src/research/costs.py",
+      "src/research/measurement/forward_walk.py",
+      "src/research/evidence/context_attribution.py",
+      "src/data_ingestion/dataset_integrity.py"
+    ],
+    "modules_explicitly_out_of_path": [
+      "src/core/engine_runner.py as a scorer of the snapshot",
+      "src/governance/promotion_manager.py",
+      "src/inout/",
+      "TradeLib"
+    ],
+    "dataset_integrity_level": "L1_L2_L3"
+  },
+  "prohibited_substitutions": [
+    {
+      "surface": "population",
+      "forbidden": "Present the every-bar (bar x direction) population as production's executed trades, or count CRT TRADE_OPENED rows as this population",
+      "historical_class": "FC-POP-DETECTION-AS-TRADE"
+    },
+    {
+      "surface": "features",
+      "forbidden": "Stratify on crt_state_resolved (the RESOLVER) instead of the engine's crt_state_after, or use session / hour_of_day as a stratum",
+      "historical_class": "FC-FEATURE-NAME-COLLISION"
+    },
+    {
+      "surface": "labels",
+      "forbidden": "Use opportunities.outcome, trades.csv pnl_rr_net, or clean_labels y_R_net as this y",
+      "historical_class": "FC-LABEL-STREAM-INCONSISTENT"
+    },
+    {
+      "surface": "costs",
+      "forbidden": "Run the comparability arm under protocol 12bps while PRIMARY runs under SEM-015, which would confound exit kernel with cost model",
+      "historical_class": "FC-COST-MODEL-SUBSTITUTION"
+    },
+    {
+      "surface": "exits",
+      "forbidden": "Gate on the forward_walk comparability arm, or 'fix' the partial_tp_breakeven_enabled naming so the walk stops matching production",
+      "historical_class": "FC-EXIT-PROXY-NOT-GOVERNING"
+    },
+    {
+      "surface": "splits",
+      "forbidden": "Spend F-086's 236-bar stride holdout, or move the MC-ASYM calendar after seeing holdout y",
+      "historical_class": "FC-SPLIT-LABEL-OVERLAP"
+    },
+    {
+      "surface": "metrics",
+      "forbidden": "Report delta_marginal as PRIMARY, use E>0 as the gate, or present a diagnostic pass as G001 or as authority to size",
+      "historical_class": "FC-DIAGNOSTIC-AS-ECONOMIC"
+    },
+    {
+      "surface": "pipeline",
+      "forbidden": "Skip L3 dataset_integrity.validate_dataset on the candle CSV, or write configs/production/ACTIVE_VERSION to run this experiment",
+      "historical_class": "FC-PIPELINE-L3-SKIPPED-AS-RESEARCH-DEFAULT"
+    }
+  ],
+  "evidence_artifacts": {
+    "contract_path": "configs/research/measurement_contracts/instances/MC-CTXATTR-XAUUSD-M15-V1.json",
+    "population_fingerprint_path": "docs/research-readiness/context_attribution/mc_ctxattr_xauusd_m15_v1/population_fingerprint.json",
+    "feature_parity_path": null,
+    "label_rederive_path": null,
+    "cost_exit_fixture_path": null,
+    "split_manifest_path": "docs/research-readiness/context_attribution/mc_ctxattr_xauusd_m15_v1/split_manifest.json",
+    "metric_compute_path": "docs/research-readiness/context_attribution/mc_ctxattr_xauusd_m15_v1/metrics.json",
+    "mt00_report_path": "docs/research-readiness/context_attribution/mc_ctxattr_xauusd_m15_v1/mt00.json",
+    "mt01_mutation_coverage_path": "docs/research-readiness/context_attribution/mc_ctxattr_xauusd_m15_v1/mt01.json",
+    "code_commit": null
+  },
+  "trust_status": {
+    "mt00": "PARTIAL",
+    "mt01_matrix_coverage": "UNRUN",
+    "economic_claims_allowed": false,
+    "failing_probes": [],
+    "open_risks_non_blocking": [
+      "27 E-MT-01 probes unimplemented (0/27), so E4 is unmet and no economic authority can be granted regardless of outcome",
+      "Effective independent n is ~941 per direction (F-086 measured), not 94314; INSUFFICIENT is a likely and registrable outcome across 22 tests",
+      "Selecting bars by realised outcome is lookahead BY CONSTRUCTION (SEM-018). The holdout partition is what makes a forward reading possible at all, and it is single, not repeated",
+      "entry_slippage is PROXY_FROM_STOP, not measured on entries (SEM-015 declares this)",
+      "The composite family is a function of the other ten, so its test is not independent of them; it is counted inside the 22 and inside the pass-count ceiling rather than treated as separate evidence",
+      "MP-METALS-MT5 profile is lifecycle DRAFT; this instance resolves both of its REQUIRES_DECISION terms explicitly (gap_policy inherited from the L3 dataset gate; session_timestamp_basis declared broker_local with session/hour OUT OF PATH per F-066)",
+      "The snapshot's CRT strata come from the ENGINE; F-069 measured only 88.16% agreement with the resolver, so results are not comparable to any resolver-strata study",
+      "F-086 already found this every-bar population does not mark a profitable entry (0 of 84 cells cleared zero). This contract asks a DIFFERENT question -- incremental value ORTHOGONAL to CRT state -- and a null here would be consistent with, not additional to, that finding",
+      "PRIMARY metric definition was amended 2026-08-29 before any y was computed (see authority.note). The amendment made the metric stricter, not more permissive.",
+      "pipeline_identity.modules_in_path listed the directory 'src/features/smc/' rather than its seven module files; E2-01-DECLARED-MODULES-EXIST caught it and the list was corrected. A path-list correction, not a change to population, labels, metrics or gate.",
+      "E-MT-00 executed 2026-08-29: 14 PASS, 0 FAIL, 2 INCONCLUSIVE ['E1-05-FINGERPRINT-DIGEST-COMPOSITION', 'E2-04-METRIC-GATE-TRACE'] -> verdict PARTIAL. Both inconclusives are structural limits of the clean-path runner (it does not re-derive the fingerprint digest or re-execute under trace) and are carried by every contract in this repository, not defects specific to this instance. mt01 stays UNRUN, so the E4 seal is unmet and no economic authority is granted regardless of outcome."
+    ]
+  }
+}

@@ -1,0 +1,243 @@
+{
+  "probe_id": "BC4-RESIDUAL-ATTRIBUTION-XAUUSD-MT5-V1",
+  "dataset_id": "XAUUSD_MT5_PHASE1_20260521",
+  "admitted_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "admitted_path": "data/mt5/XAUUSD_M15.csv",
+  "admitted_artifact_present": true,
+  "admitted_sha256_match": true,
+  "prereg": "docs/research/preregistration-bc4-residual-attribution.md",
+  "clock_basis": "broker_local",
+  "source_a": "live_mt5",
+  "source_b": "live_mt5",
+  "wall_clock_skew_seconds_a": 18851.540904,
+  "wall_clock_skew_seconds_b": -10799.252816,
+  "stale_threshold_seconds": 21600,
+  "terminal_a": {
+    "company": "MetaQuotes Ltd.",
+    "name": "MetaTrader 5",
+    "build": 6140,
+    "connected": true,
+    "server": "ICMarketsSC-Demo"
+  },
+  "terminal_b": {
+    "company": "MetaQuotes Ltd.",
+    "name": "MetaTrader 5",
+    "build": 6140,
+    "connected": true,
+    "server": "ICMarketsSC-Demo"
+  },
+  "producer_family_match": "UNVERIFIED_NO_RECORDED_TERMINAL",
+  "ohlcv_closure": "UNCHANGED",
+  "frozen_candidates": [
+    "C0_len",
+    "C1_exclusive_upper",
+    "C2_dedup_exact",
+    "C3_price_changed",
+    "C4_flag_bid_or_ask",
+    "C5_flag_last",
+    "C6_distinct_time_msc",
+    "C7_excl_and_price_changed",
+    "C8_excl_and_flag_bid_ask"
+  ],
+  "n_discovery_bars": 4,
+  "n_holdout_bars": 4,
+  "discovery_survivors": [],
+  "holdout_survivors": [],
+  "winner": null,
+  "outcome": "UNATTRIBUTED",
+  "reason": "no_candidate_matches_every_discovery_bar",
+  "discovery_table": [
+    {
+      "T": "2026-09-02T22:45:00+00:00",
+      "tick_volume": 9483,
+      "candidates": {
+        "C0_len": 9535,
+        "C1_exclusive_upper": 9535,
+        "C2_dedup_exact": 9535,
+        "C3_price_changed": 9525,
+        "C4_flag_bid_or_ask": 9535,
+        "C5_flag_last": 0,
+        "C6_distinct_time_msc": 9472,
+        "C7_excl_and_price_changed": 9525,
+        "C8_excl_and_flag_bid_ask": 9535
+      },
+      "flag_histogram": {
+        "134": 9422,
+        "130": 61,
+        "4": 52
+      }
+    },
+    {
+      "T": "2026-09-02T23:00:00+00:00",
+      "tick_volume": 4924,
+      "candidates": {
+        "C0_len": 4962,
+        "C1_exclusive_upper": 4962,
+        "C2_dedup_exact": 4962,
+        "C3_price_changed": 4950,
+        "C4_flag_bid_or_ask": 4962,
+        "C5_flag_last": 0,
+        "C6_distinct_time_msc": 4938,
+        "C7_excl_and_price_changed": 4950,
+        "C8_excl_and_flag_bid_ask": 4962
+      },
+      "flag_histogram": {
+        "134": 4878,
+        "130": 46,
+        "4": 38
+      }
+    },
+    {
+      "T": "2026-09-02T23:15:00+00:00",
+      "tick_volume": 4286,
+      "candidates": {
+        "C0_len": 4327,
+        "C1_exclusive_upper": 4327,
+        "C2_dedup_exact": 4326,
+        "C3_price_changed": 4315,
+        "C4_flag_bid_or_ask": 4327,
+        "C5_flag_last": 0,
+        "C6_distinct_time_msc": 4287,
+        "C7_excl_and_price_changed": 4315,
+        "C8_excl_and_flag_bid_ask": 4327
+      },
+      "flag_histogram": {
+        "134": 4231,
+        "130": 55,
+        "4": 41
+      }
+    },
+    {
+      "T": "2026-09-02T23:30:00+00:00",
+      "tick_volume": 2531,
+      "candidates": {
+        "C0_len": 2546,
+        "C1_exclusive_upper": 2546,
+        "C2_dedup_exact": 2546,
+        "C3_price_changed": 2533,
+        "C4_flag_bid_or_ask": 2546,
+        "C5_flag_last": 0,
+        "C6_distinct_time_msc": 2515,
+        "C7_excl_and_price_changed": 2533,
+        "C8_excl_and_flag_bid_ask": 2546
+      },
+      "flag_histogram": {
+        "134": 2508,
+        "130": 23,
+        "4": 15
+      }
+    }
+  ],
+  "holdout_table": [
+    {
+      "T": "2026-09-03T07:00:00+00:00",
+      "tick_volume": 5466,
+      "candidates": {
+        "C0_len": 5500,
+        "C1_exclusive_upper": 5500,
+        "C2_dedup_exact": 5500,
+        "C3_price_changed": 5491,
+        "C4_flag_bid_or_ask": 5500,
+        "C5_flag_last": 0,
+        "C6_distinct_time_msc": 5449,
+        "C7_excl_and_price_changed": 5491,
+        "C8_excl_and_flag_bid_ask": 5500,
+        "C9_flag_bid": 5437
+      }
+    },
+    {
+      "T": "2026-09-03T07:15:00+00:00",
+      "tick_volume": 3061,
+      "candidates": {
+        "C0_len": 3109,
+        "C1_exclusive_upper": 3109,
+        "C2_dedup_exact": 3109,
+        "C3_price_changed": 3095,
+        "C4_flag_bid_or_ask": 3109,
+        "C5_flag_last": 0,
+        "C6_distinct_time_msc": 3090,
+        "C7_excl_and_price_changed": 3095,
+        "C8_excl_and_flag_bid_ask": 3109,
+        "C9_flag_bid": 3061
+      }
+    },
+    {
+      "T": "2026-09-03T07:30:00+00:00",
+      "tick_volume": 3155,
+      "candidates": {
+        "C0_len": 3206,
+        "C1_exclusive_upper": 3206,
+        "C2_dedup_exact": 3206,
+        "C3_price_changed": 3195,
+        "C4_flag_bid_or_ask": 3206,
+        "C5_flag_last": 0,
+        "C6_distinct_time_msc": 3184,
+        "C7_excl_and_price_changed": 3195,
+        "C8_excl_and_flag_bid_ask": 3206,
+        "C9_flag_bid": 3155
+      }
+    },
+    {
+      "T": "2026-09-03T07:45:00+00:00",
+      "tick_volume": 2737,
+      "candidates": {
+        "C0_len": 2788,
+        "C1_exclusive_upper": 2788,
+        "C2_dedup_exact": 2788,
+        "C3_price_changed": 2775,
+        "C4_flag_bid_or_ask": 2788,
+        "C5_flag_last": 0,
+        "C6_distinct_time_msc": 2764,
+        "C7_excl_and_price_changed": 2775,
+        "C8_excl_and_flag_bid_ask": 2788,
+        "C9_flag_bid": 2737
+      }
+    }
+  ],
+  "v2_candidate": "C9_flag_bid",
+  "v2_min_holdout_bars": 3,
+  "v2_n_holdout_bars": 4,
+  "v2_table": [
+    {
+      "T": "2026-09-03T07:00:00+00:00",
+      "tick_volume": 5466,
+      "C9_flag_bid": 5437,
+      "exact": false
+    },
+    {
+      "T": "2026-09-03T07:15:00+00:00",
+      "tick_volume": 3061,
+      "C9_flag_bid": 3061,
+      "exact": true
+    },
+    {
+      "T": "2026-09-03T07:30:00+00:00",
+      "tick_volume": 3155,
+      "C9_flag_bid": 3155,
+      "exact": true
+    },
+    {
+      "T": "2026-09-03T07:45:00+00:00",
+      "tick_volume": 2737,
+      "C9_flag_bid": 2737,
+      "exact": true
+    }
+  ],
+  "v2_outcome": "UNATTRIBUTED_V2",
+  "v2_reason": "holdout_mismatch_discovery_pattern_did_not_generalise",
+  "flag_vocabulary_discovery": [
+    "4",
+    "130",
+    "134"
+  ],
+  "flag_vocabulary_holdout": [
+    "2",
+    "4",
+    "6",
+    "130",
+    "134"
+  ],
+  "discovery_fetched_at": "2026-09-02T23:52:23+00:00",
+  "holdout_fetched_at": "2026-09-03T08:10:32+00:00",
+  "independent_captures": true
+}

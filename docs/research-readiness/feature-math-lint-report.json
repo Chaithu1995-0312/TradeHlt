@@ -1,21 +1,8 @@
 {
   "dimensional": {
-    "known_present": [
-      "DM-001"
-    ],
+    "known_present": [],
     "new_violations": [],
-    "pins": [
-      {
-        "arg_text": "float(engine_input['atr'])",
-        "call": "compute_crt_levels",
-        "file": "runtime/live_engine_hook.py",
-        "finding": "F-072",
-        "id": "DM-001",
-        "line": 916,
-        "param": "atr",
-        "reason": "dead code per F-073 (HookedLiveEngine never instantiated); fix is scoped with the live-rail repair/retire decision, not here"
-      }
-    ],
+    "pins": [],
     "stale_pins": [],
     "watchlist": [
       {
@@ -24,7 +11,7 @@
       }
     ]
   },
-  "generated_at": "2026-08-12T05:08:59.389022+00:00",
+  "generated_at": "2026-08-20T18:52:30.741170+00:00",
   "known_present": [
     "c090bd49a8872a77"
   ],
@@ -88,9 +75,14 @@
     "body_size",
     "body_to_total_wick_ratio",
     "break_of_structure",
+    "breaker_distance",
     "candle_range",
     "candles_since_retest",
     "candles_since_retest_state",
+    "change_of_character",
+    "cross_high",
+    "cross_low",
+    "directional_impulse",
     "disp_strength",
     "disp_strength_atr_rescale",
     "displacement_atr_ratio",
@@ -101,6 +93,9 @@
     "ema_slow",
     "ema_spread",
     "ema_spread_atr",
+    "eqh_distance",
+    "eql_distance",
+    "fvg_distance",
     "higher_high",
     "hour_of_day",
     "last_swing_high_price",
@@ -115,15 +110,25 @@
     "macd_hist_z",
     "macd_line",
     "macd_signal",
+    "mitigation_block_distance",
     "momentum_magnitude",
     "momentum_score",
     "momentum_score_atr",
+    "order_block_distance",
+    "pdh_distance",
+    "pdl_distance",
+    "retest_band",
     "retest_depth",
     "retest_flag",
     "rsi_14",
     "rsi_state",
     "session",
     "sweep_detected",
+    "sweep_high",
+    "sweep_low",
+    "swept_boundary",
+    "swept_high",
+    "swept_low",
     "swing_high",
     "swing_low",
     "total_wick",
@@ -139,17 +144,21 @@
     "wick_size"
   ],
   "stale_pins": [],
+  "structural_shape": {
+    "violations": []
+  },
   "summary": {
     "current_pins": 1,
-    "dimensional_current_pins": 1,
+    "dimensional_current_pins": 0,
     "dimensional_new_violations": 0,
     "dimensional_stale_pins": 0,
     "known_present": 1,
-    "modules_scanned": 84,
+    "modules_scanned": 108,
     "new_violations": 0,
-    "registered_count": 57,
+    "registered_count": 75,
     "retired": 9,
     "stale_pins": 0,
+    "structural_shape_violations": 0,
     "total_derivations": 1
   }
 }

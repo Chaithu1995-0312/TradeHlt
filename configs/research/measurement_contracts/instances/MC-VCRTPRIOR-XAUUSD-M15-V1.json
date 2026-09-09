@@ -1,0 +1,278 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "MC-VCRTPRIOR-XAUUSD-M15-V1",
+  "experiment_id": "E-VCRTPRIOR-XAUUSD-M15",
+  "created_utc": "2026-08-28T00:00:00Z",
+  "authority": {
+    "economic_admissible": false,
+    "requires_mt00_pass": true,
+    "note": "Sealed BEFORE any gate's holdout contrast was computed. Sparse independent signal = SEM-012 Visual CRT Arm A and Arm B entries from visual_crt.driver.run_arm (same detector and duplicate rule as F-081). FM-054 agree is a magnitude/time prior (SEM-028), not the entry. y_mfe_r / y_time_to_mfe are path labels, not F-081 walk R and not book PnL. economic_claims_allowed stays false until mt00==PASS and mt01_matrix_coverage==COMPLETE. P-GOAL-04 is not opened. A diagnostic sign-match is NOT G001. Not a retune of MC-MRPRIOR / F-094."
+  },
+  "population": {
+    "unit_of_analysis": "signal_event",
+    "instruments": [
+      "XAUUSD"
+    ],
+    "timeframe": "M15",
+    "calendar_window": {
+      "start": "2024-05-22 01:00:00",
+      "end": "2026-05-21 23:45:00",
+      "timezone": "broker_server_labeled_UTC"
+    },
+    "inclusion_rule": "MEASUREMENT CORPUS = data/mt5/XAUUSD_M15.csv ONLY (47275 bars, sha256 4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56). SPARSE SIGNAL POPULATION = SEM-012 v2 entries from research.visual_crt.driver.run_arm for arms A and B independently (Arm A = displacement-close, Arm B = retest-close; one shot per (pool, direction) until pool replaced; at most one open trade at a time). Each entry e resolved to its clean label row (decision_ts = e.entry_ts, side = e.direction) from results/clean_labels/XAUUSD/20260723T083443Z/clean_labels (TN_ENV_CLEAN_L2). One unit = one such (entry_ts, direction, visual_arm) row with finite y_mfe_r and trend_bias in {+1,-1}. SUCCESS GATE uses HOLDOUT units only (entry_ts >= 2025-12-24 19:15:00). Four diagnostic gates: A-S, A-T, B-S, B-T.",
+    "exclusion_rule": "EXCLUDED: the every-bar x side clean_labels grain (SEM-028/SEM-029 / F-086); SEM-026 mother-range inside-close (that is SEM-030 / F-094); the SEM-012 trade-ledger y (F-081/F-084 forward_walk R); CRT spine events/telemetry; opportunities.outcome (F-022). trend_bias=0 rows dropped from PRIMARY. F-086 236-bar stride holdout is NOT this split. F-081 last-20%-of-entries OOS is NOT this split. Hour-of-day and session cells are OUT OF PATH for the success gate (F-066).",
+    "n_declared_min": 30,
+    "detection_vs_trade": "not_applicable",
+    "population_hash_inputs": [
+      "instrument",
+      "entry_ts",
+      "direction",
+      "visual_arm",
+      "y_mfe_r",
+      "corpus_path",
+      "corpus_sha256",
+      "contract_id"
+    ]
+  },
+  "features": {
+    "feature_set_id": "FS-VCRTPRIOR-XAUUSD-M15-V1",
+    "feature_ids": [
+      "FM-054"
+    ],
+    "formula_authority": "market_ontology",
+    "point_in_time_rule": "Sparse signal (SEM-012) is computed from only bars at or before the entry bar (causal run_arm). trend_bias (FM-054) is the stored t=0 ternary on that bar. y_mfe_r and y_time_to_mfe use path labels after t. F-051: PRIMARY uses only FM-054 sign. F-066 session/hour OUT OF PATH for the gate.",
+    "name_binding": {
+      "sparse_signal": {
+        "fm_id": "SEM-012",
+        "formula_ref": "visual_crt.driver.run_arm(bars, arm) one (entry_ts, direction) per SEM-012 v2 entry",
+        "units": "signal",
+        "not_equal_to": [
+          "scanned bar",
+          "every-bar row",
+          "SEM-026 inside-close",
+          "F-081 walk R"
+        ]
+      },
+      "agree": {
+        "fm_id": "SEM-028",
+        "formula_ref": "(direction=long and trend_bias=+1) or (direction=short and trend_bias=-1)",
+        "units": "boolean",
+        "not_equal_to": [
+          "delta_mfe",
+          "side picker",
+          "trend_strength"
+        ]
+      },
+      "trend_bias": {
+        "fm_id": "FM-054",
+        "formula_ref": "sign(ema_fast - ema_slow) in {-1,0,+1}",
+        "units": "ternary",
+        "not_equal_to": [
+          "trend_strength",
+          "session ordinal",
+          "hour_of_day"
+        ]
+      }
+    },
+    "forbidden_aliases": [
+      "hour_of_day as PRIMARY",
+      "session as PRIMARY",
+      "every-bar clean_labels row as SPARSE_SIGNAL",
+      "SEM-026 inside-close as this signal",
+      "F-081 rr_gross as this y",
+      "trend_bias as a side classifier"
+    ]
+  },
+  "labels": {
+    "label_family": "information_only",
+    "y_definition": "Arm S: y = clean_labels y_mfe_r on the sparse entry's (entry_ts, direction) row (TN_ENV_CLEAN_L2 horizon_excursion, exit-agnostic, max_forward=40). Arm T: y = y_time_to_mfe on that row (nulls dropped). NOT stream mfe, NOT y_tp1, NOT y_R_net, NOT F-081 rr_gross/rr_net, NOT SEM-027 ΔMFE.",
+    "derivation_authority": "information_target",
+    "stream_fields_banned_for_economic_claims": [
+      "opportunities.outcome",
+      "opportunities.rr_achieved",
+      "opportunities.mfe",
+      "diagnostics.stream_outcome",
+      "visual_crt ledger rr_gross",
+      "visual_crt ledger rr_net"
+    ],
+    "rederive_protocol": {
+      "enabled": false,
+      "matcher": "not_applicable_y_is_already_clean_labels",
+      "min_agreement": 1.0,
+      "on_fail": "BLOCK_EXPERIMENT"
+    },
+    "horizon_bars": 40,
+    "sign_convention": "Positive contrast_S means the agreeing sparse entry printed more MFE than the disagreeing entry. Positive contrast_T means the agreeing entry took more bars to print its MFE."
+  },
+  "costs": {
+    "cost_model_id": "CM-INFO-STAGE-NONE",
+    "components": [
+      {
+        "name": "not_a_trade",
+        "bps_or_formula": "y_mfe_r / y_time_to_mfe are not book PnL. No spread, commission, or slippage is applied. SEM-015 is OUT OF PATH. F-081 12bps walk is a different object.",
+        "applied_on": "round_trip"
+      }
+    ],
+    "gross_vs_net": {
+      "report_gross": false,
+      "report_net": false,
+      "promotable": "none_info_stage"
+    },
+    "success_gate_uses": "none_info_stage",
+    "code_entrypoint": "src/research/evidence/visual_crt_prior.py"
+  },
+  "exits": {
+    "exit_model_id": "EX-VCRTPRIOR-HORIZON-MFE-V1",
+    "exit_family": "event_horizon",
+    "parameters": {
+      "max_forward": 40,
+      "label": "TN_ENV_CLEAN_L2 horizon_excursion mfe_r and y_time_to_mfe"
+    },
+    "intrabar_rule": "Inherited from the sealed clean_labels protocol (horizon_excursion, exit-agnostic). This experiment does not re-walk SL/TP and does not use F-081 ledger R. run_arm still walks internally ONLY to apply SEM-012 one-open-trade suppression (duration_candles); that walk's R is not PRIMARY y.",
+    "not_equal_to": [
+      "opportunities.outcome",
+      "y_tp1 as this y",
+      "F-081 forward_walk net R as this y",
+      "SEM-027 delta_mfe as this y",
+      "SEM-026 ledger SL/TP walk as this y"
+    ],
+    "code_entrypoint": "src/research/measurement/forward_walk.py::horizon_excursion"
+  },
+  "splits": {
+    "scheme": "single_holdout_chronologic",
+    "embargo": "96 M15 bars between last train entry and first holdout entry",
+    "purge": "drop train entries whose 40-bar label horizon overlaps holdout start",
+    "n_folds_or_windows": 1,
+    "overlap_policy": "forbid_overlapping_labels",
+    "seed": 20260828,
+    "oos_fraction_or_dates": "last 20% of corpus bars by index; first holdout entry timestamp 2025-12-24 19:15:00 (idx 37820). Identical calendar to MC-MRANGE/MC-ASYM/MC-MAGPRIOR/MC-MRPRIOR. F-081 last-20%-of-entries OOS is a different split and is not spent. F-086 stride holdout of 236 bars is a different split and is not spent."
+  },
+  "metrics": {
+    "information_metrics": [
+      "n_sparse_entries_A",
+      "n_sparse_entries_B",
+      "n_holdout_units",
+      "contrast_S",
+      "contrast_T",
+      "sign_match_train_holdout_S",
+      "sign_match_train_holdout_T"
+    ],
+    "economic_metrics": [],
+    "success_gate": "DIAGNOSTIC ONLY, PER GATE. Four gates: visual-arm A|B × prior-arm S|T. For each: holdout both agree/disagree cells n>=30 AND sign(holdout contrast)==sign(train contrast). Meeting a clause is NOT economic validation while economic_claims_allowed is false. Passing A-S does not pass B-S or A-T. Bonferroni 4.",
+    "kill_criteria": "Any outcome including n=0 or n<30 is registered. Changing y, the sparse signal definition, the agree rule, holdout date, embargo, purge, or dropping a visual arm after seeing holdout y requires a NEW MC-* id. Do not promote session/hour into PRIMARY. Do not turn this into a side picker. Do not retune SEM-012 geometry. Do not reopen F-081/F-084 or F-094.",
+    "multiplicity": {
+      "n_variants_preregistered": 4,
+      "control": "bonferroni"
+    },
+    "authority_ladder": {
+      "info_not_value": true,
+      "value_not_authority": true,
+      "insufficient_not_harmful": true
+    },
+    "forbidden_metric_substitutions": [
+      "p_value_as_edge",
+      "in_sample_as_oos",
+      "f081_walk_R_as_this_y",
+      "f086_stride_as_this_holdout",
+      "f081_entry_fraction_oos_as_this_split",
+      "session_or_hour_as_primary_after_peeking",
+      "y_mfe_r_as_expectancy_R",
+      "y_R_net_as_this_y",
+      "diagnostic_sign_match_as_economic_validation",
+      "side_picker_as_this_object",
+      "every_bar_grain_as_this_sparse_signal",
+      "sem026_inside_close_as_this_sparse_signal"
+    ]
+  },
+  "pipeline_identity": {
+    "config_version_source": "NOT the production config path. Object frozen in docs/research/visual_crt_prior_object.md. ACTIVE_VERSION is never written.",
+    "active_version_file": "configs/production/ACTIVE_VERSION",
+    "engine_gate_mode": "info_only",
+    "expected_engines": [],
+    "modules_in_path": [
+      "src/research/evidence/visual_crt_prior.py",
+      "src/research/visual_crt/driver.py",
+      "src/research/visual_crt/geometry.py",
+      "src/research/evidence/magnitude_prior.py",
+      "src/research/evidence/asymmetry_contract.py",
+      "src/data_ingestion/dataset_integrity.py"
+    ],
+    "modules_explicitly_out_of_path": [
+      "src/config_layer/crt_engine_v2.py",
+      "src/runtime/backtest_v2.py",
+      "src/core/engine_runner.py",
+      "src/research/mother_range/driver.py",
+      "src/research/visual_crt/measure.py",
+      "TradeLib"
+    ],
+    "dataset_integrity_level": "L1_L2_L3"
+  },
+  "prohibited_substitutions": [
+    {
+      "surface": "population",
+      "forbidden": "Count the every-bar clean_labels grain, CRT TRADE_OPENED, SEM-026 inside-close, or F-081 walk R as PRIMARY units",
+      "historical_class": "FC-POP-DETECTION-AS-TRADE"
+    },
+    {
+      "surface": "labels",
+      "forbidden": "Use opportunities.outcome, stream mfe, y_R_net, SEM-027 ΔMFE, or F-081 rr_gross as this y",
+      "historical_class": "FC-LABEL-STREAM-INCONSISTENT"
+    },
+    {
+      "surface": "costs",
+      "forbidden": "Treat y_mfe_r as net expectancy or apply 12bps as if this were a trade book",
+      "historical_class": "FC-COST-MODEL-SUBSTITUTION"
+    },
+    {
+      "surface": "exits",
+      "forbidden": "Substitute y_tp1 or F-081 forward_walk net R for stored horizon_excursion labels",
+      "historical_class": "FC-EXIT-PROXY-NOT-GOVERNING"
+    },
+    {
+      "surface": "splits",
+      "forbidden": "Spend F-086's 236-bar stride holdout, use F-081 entry-fraction OOS, or retune the split after seeing holdout y",
+      "historical_class": "FC-SPLIT-LABEL-OVERLAP"
+    },
+    {
+      "surface": "metrics",
+      "forbidden": "Present diagnostic sign-match as G001, drop a visual arm after seeing holdout, or treat this as a side picker",
+      "historical_class": "FC-DIAGNOSTIC-AS-ECONOMIC"
+    },
+    {
+      "surface": "pipeline",
+      "forbidden": "Skip L3 dataset_integrity.validate_dataset on the candle CSV",
+      "historical_class": "FC-PIPELINE-L3-SKIPPED-AS-RESEARCH-DEFAULT"
+    },
+    {
+      "surface": "features",
+      "forbidden": "Use hour_of_day, session, or trend_strength as the PRIMARY state; use trend_bias to choose side; substitute the every-bar grain or SEM-026 for the sparse signal",
+      "historical_class": "FC-FEATURE-NAME-COLLISION"
+    }
+  ],
+  "evidence_artifacts": {
+    "contract_path": "configs/research/measurement_contracts/instances/MC-VCRTPRIOR-XAUUSD-M15-V1.json",
+    "population_fingerprint_path": "docs/research-readiness/visual_crt_prior/mc_vcrtprior_xauusd_m15_v1/population_fingerprint.json",
+    "feature_parity_path": null,
+    "label_rederive_path": null,
+    "cost_exit_fixture_path": null,
+    "split_manifest_path": "docs/research-readiness/visual_crt_prior/mc_vcrtprior_xauusd_m15_v1/split_manifest.json",
+    "metric_compute_path": "docs/research-readiness/visual_crt_prior/mc_vcrtprior_xauusd_m15_v1/metrics.json",
+    "mt00_report_path": "docs/research-readiness/visual_crt_prior/mc_vcrtprior_xauusd_m15_v1/mt00.json",
+    "mt01_mutation_coverage_path": "docs/research-readiness/visual_crt_prior/mc_vcrtprior_xauusd_m15_v1/mt01.json",
+    "code_commit": null
+  },
+  "trust_status": {
+    "mt00": "UNRUN",
+    "mt01_matrix_coverage": "UNRUN",
+    "economic_claims_allowed": false,
+    "failing_probes": [],
+    "open_risks_non_blocking": [
+      "27 E-MT-01 probes unimplemented (0/27)",
+      "SEM-012 one-open suppression uses forward_walk duration; that walk's R is not PRIMARY y",
+      "F-086 stride holdout remains unspent by design",
+      "F-081 entry-fraction OOS remains unspent by design",
+      "P-GOAL-04 remains OPEN",
+      "Stored labels inherit TN_ENV_CLEAN_L2 PIT_UNCLEAN_STORED_FEATURES (F-051); PRIMARY uses FM-054 sign only"
+    ]
+  }
+}

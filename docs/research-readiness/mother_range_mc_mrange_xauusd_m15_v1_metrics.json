@@ -1,0 +1,31 @@
+{
+  "contract_id": "MC-MRANGE-XAUUSD-M15-V1",
+  "contract_sha256": "94d1ae0325325d464ac199f66f11dd4ff6a7358ff91a69d8efd888e5855796b5",
+  "sem_id": "SEM-026",
+  "holdout_start": "2025-12-24 19:15:00",
+  "detected": 320,
+  "suppressed_one_open": 21,
+  "train": {
+    "n": 240,
+    "gross_mean": -0.15864041666666667,
+    "net_mean": -0.25205577247441774,
+    "win_rate": 0.3458333333333333,
+    "pf": 0.7763572626016633
+  },
+  "holdout": {
+    "n": 59,
+    "gross_mean": 0.22536101694915253,
+    "net_mean": 0.20438064483778445,
+    "win_rate": 0.3728813559322034,
+    "pf": 1.3861846824998039
+  },
+  "long_only_holdout_gross_mean": -0.09275932203389832,
+  "gate": {
+    "n_ge_30": true,
+    "net_mean_gt_0": true,
+    "pf_gt_1": true,
+    "beats_long_only": true
+  },
+  "verdict": "DIAGNOSTIC_PASS_NOT_ECONOMIC",
+  "economic_claims_allowed": false
+}

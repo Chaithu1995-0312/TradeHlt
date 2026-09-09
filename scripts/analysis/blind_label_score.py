@@ -15,8 +15,11 @@ Cohen's kappa (linear-weighted for the ordinal volatility question) per pre-regi
   * Arm C -- intra-rater reliability ceiling (same bar, two presentations).
   * Q4 (break_of_structure) split by whether the relevant reference level was on/off screen.
 
-Any cell with fewer than MIN_CELL_N instances is reported INSUFFICIENT, never as a null
-(E-001 discipline: underpowered is not evidence of no agreement).
+Any cell with fewer than MIN_CELL_N total instances, OR fewer than MIN_CELL_N instances of its
+rarest true-label class, is reported INSUFFICIENT / INSUFFICIENT_MINORITY, never as a null
+(E-001 discipline: underpowered is not evidence of no agreement). Both conditions are necessary
+for a cell to be SCORED -- see docs/research/registration-blind-label-scorer-min-n-correction.md
+for why the minority-class check was added 2026-08-31.
 
 Usage:
     PYTHONPATH=src python scripts/analysis/blind_label_score.py \\
@@ -60,10 +63,27 @@ def _load_labels(path: Path) -> dict[str, dict]:
     return out
 
 
+def _class_counts(y_true: list) -> dict:
+    counts: dict = {}
+    for v in y_true:
+        counts[v] = counts.get(v, 0) + 1
+    return counts
+
+
 def _kappa(y_true: list, y_pred: list, weights: str | None) -> dict:
     n = len(y_true)
     if n < MIN_CELL_N:
         return {"n": n, "status": "INSUFFICIENT", "kappa": None}
+    # Registered rule (preregistration-blind-label-descriptive-fidelity.md): a cell needs
+    # >= MIN_CELL_N instances of its RAREST true-label class, not just >= MIN_CELL_N total.
+    # A cell can clear the total-n floor above while one class has almost no support, which
+    # makes cohen_kappa_score's agreement-by-chance correction unreliable. Distinct status so
+    # the two INSUFFICIENT reasons (too few items vs. too imbalanced) don't collapse into one.
+    counts = _class_counts(y_true)
+    minority_n = min(counts.values()) if counts else 0
+    if minority_n < MIN_CELL_N:
+        return {"n": n, "status": "INSUFFICIENT_MINORITY", "kappa": None,
+                "minority_class_n": minority_n}
     kw = None if weights == "nominal" else weights
     k = cohen_kappa_score(y_true, y_pred, weights=kw)
     agreement = sum(1 for a, b in zip(y_true, y_pred) if a == b) / n

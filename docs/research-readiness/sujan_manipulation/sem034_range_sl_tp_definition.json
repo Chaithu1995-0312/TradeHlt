@@ -1,0 +1,129 @@
+{
+  "object": "SEM034_RANGE_SL_TP_DEFINITION",
+  "not": [
+    "fill book",
+    "expectancy",
+    "G001",
+    "y_tp1",
+    "P-GOAL-04"
+  ],
+  "freeze": {
+    "sl": "distance = parent high - parent low (max-min of that corpus bar)",
+    "tp": "distance = parent high - parent low (min-to-max of the same bar)",
+    "ohlc": "corpus bar at exact timestamp, not TV OHLC (F-080)",
+    "entry": "undefined",
+    "side": "undefined; HIGH_SWEEP vs LOW_SWEEP not mapped to long/short",
+    "economic_claims_allowed": false
+  },
+  "n": 12,
+  "rows": [
+    {
+      "timestamp": "2025-10-14 08:30:00",
+      "high": 4179.72,
+      "low": 4119.32,
+      "range_width": 60.4,
+      "sl_distance": 60.4,
+      "tp_distance": 60.4,
+      "rr_if_both_range": 1.0
+    },
+    {
+      "timestamp": "2025-10-21 11:00:00",
+      "high": 4301.78,
+      "low": 4244.62,
+      "range_width": 57.16,
+      "sl_distance": 57.16,
+      "tp_distance": 57.16,
+      "rr_if_both_range": 1.0
+    },
+    {
+      "timestamp": "2025-10-22 03:00:00",
+      "high": 4094.14,
+      "low": 4004.69,
+      "range_width": 89.45,
+      "sl_distance": 89.45,
+      "tp_distance": 89.45,
+      "rr_if_both_range": 1.0
+    },
+    {
+      "timestamp": "2026-01-29 01:30:00",
+      "high": 5598.38,
+      "low": 5489.4,
+      "range_width": 108.98,
+      "sl_distance": 108.98,
+      "tp_distance": 108.98,
+      "rr_if_both_range": 1.0
+    },
+    {
+      "timestamp": "2026-01-29 17:15:00",
+      "high": 5387.1,
+      "low": 5126.98,
+      "range_width": 260.12,
+      "sl_distance": 260.12,
+      "tp_distance": 260.12,
+      "rr_if_both_range": 1.0
+    },
+    {
+      "timestamp": "2026-02-02 03:00:00",
+      "high": 4784.63,
+      "low": 4584.22,
+      "range_width": 200.41,
+      "sl_distance": 200.41,
+      "tp_distance": 200.41,
+      "rr_if_both_range": 1.0
+    },
+    {
+      "timestamp": "2026-02-05 04:45:00",
+      "high": 4899.26,
+      "low": 4805.22,
+      "range_width": 94.04,
+      "sl_distance": 94.04,
+      "tp_distance": 94.04,
+      "rr_if_both_range": 1.0
+    },
+    {
+      "timestamp": "2026-02-10 01:00:00",
+      "high": 5075.95,
+      "low": 4987.4,
+      "range_width": 88.55,
+      "sl_distance": 88.55,
+      "tp_distance": 88.55,
+      "rr_if_both_range": 1.0
+    },
+    {
+      "timestamp": "2026-02-12 18:00:00",
+      "high": 5068.32,
+      "low": 4949.12,
+      "range_width": 119.2,
+      "sl_distance": 119.2,
+      "tp_distance": 119.2,
+      "rr_if_both_range": 1.0
+    },
+    {
+      "timestamp": "2026-03-03 16:30:00",
+      "high": 5145.99,
+      "low": 5062.04,
+      "range_width": 83.95,
+      "sl_distance": 83.95,
+      "tp_distance": 83.95,
+      "rr_if_both_range": 1.0
+    },
+    {
+      "timestamp": "2026-03-23 14:00:00",
+      "high": 4463.27,
+      "low": 4269.11,
+      "range_width": 194.16,
+      "sl_distance": 194.16,
+      "tp_distance": 194.16,
+      "rr_if_both_range": 1.0
+    },
+    {
+      "timestamp": "2026-03-24 23:15:00",
+      "high": 4484.16,
+      "low": 4399.19,
+      "range_width": 84.97,
+      "sl_distance": 84.97,
+      "tp_distance": 84.97,
+      "rr_if_both_range": 1.0
+    }
+  ]
+}

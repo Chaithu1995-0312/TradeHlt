@@ -1,0 +1,82 @@
+{
+  "prereg_frozen_prefix_sha256": "731ccbcfadcc43310db0a1a588f9b997692187d87f809278cee30d226a1ddc4c",
+  "prereg_freeze_whole_file_sha256": "0102f9dc66bbcf08181aef9712c7cf0048a3fe58607de7325796c54a8c8e0f57",
+  "insufficient": false,
+  "n_violating": 553,
+  "n_continuation": 1100,
+  "tests": {
+    "PRIMARY_close_refA": {
+      "p_a": 0.8047016274864376,
+      "p_b": 0.3890909090909091,
+      "diff": 0.4156107183955285,
+      "ci_lo": 0.3681259522658264,
+      "ci_hi": 0.4621227433677347,
+      "crosses_zero": false,
+      "n_a_raw": 553,
+      "n_b_raw": 1100,
+      "n_a_eff_blocks": 307,
+      "n_b_eff_blocks": 366,
+      "block_bars": 96,
+      "alpha": 0.05,
+      "status": "OK",
+      "referent": "A",
+      "mode": "close"
+    },
+    "S1_close_refB": {
+      "p_a": 0.7468354430379747,
+      "p_b": 0.0,
+      "diff": 0.7468354430379747,
+      "ci_lo": 0.7021924784688995,
+      "ci_hi": 0.788234525137793,
+      "crosses_zero": false,
+      "n_a_raw": 553,
+      "n_b_raw": 1100,
+      "n_a_eff_blocks": 307,
+      "n_b_eff_blocks": 366,
+      "block_bars": 96,
+      "alpha": 0.0167,
+      "status": "OK",
+      "referent": "B",
+      "mode": "close"
+    },
+    "S2_extend_refA": {
+      "p_a": 0.9041591320072333,
+      "p_b": 0.41545454545454547,
+      "diff": 0.48870458655268784,
+      "ci_lo": 0.4371801902744963,
+      "ci_hi": 0.538719460100317,
+      "crosses_zero": false,
+      "n_a_raw": 553,
+      "n_b_raw": 1100,
+      "n_a_eff_blocks": 307,
+      "n_b_eff_blocks": 366,
+      "block_bars": 96,
+      "alpha": 0.0167,
+      "status": "OK",
+      "referent": "A",
+      "mode": "extend"
+    },
+    "S3_duration": {
+      "p_a": 1.54249547920434,
+      "p_b": 1.8808007279344858,
+      "diff": -0.3383052487301459,
+      "ci_lo": -0.6100503630530238,
+      "ci_hi": -0.0506924193962363,
+      "crosses_zero": false,
+      "n_a_raw": 553,
+      "n_b_raw": 1099,
+      "n_a_eff_blocks": 307,
+      "n_b_eff_blocks": 366,
+      "block_bars": 96,
+      "alpha": 0.0167,
+      "status": "OK",
+      "note": "mean bars-to-next-structural-event; diff = violating - continuation"
+    }
+  },
+  "referent_disagreement": {
+    "n_compared": 553,
+    "n_disagree": 32,
+    "rate": 0.05786618444846293,
+    "primary_verdict_flips": false
+  }
+}

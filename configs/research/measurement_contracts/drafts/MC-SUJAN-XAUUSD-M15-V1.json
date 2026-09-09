@@ -1,0 +1,260 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "MC-SUJAN-XAUUSD-M15-V1",
+  "experiment_id": "E-SUJAN-CRT-XAUUSD-M15",
+  "created_utc": "2026-08-22T00:00:00Z",
+  "authority": {
+    "economic_admissible": false,
+    "requires_mt00_pass": true,
+    "note": "DIAGNOSTIC ONLY. Sealed BEFORE src/research/sujan_crt/ exists, per CLAUDE.md 6.6 and the F-081 precedent. Registers a measurement of the SujanTrader CRT execution protocol (SEM-022 ladder, SEM-023 alignment rubric, SEM-024 location gate, SEM-025 structural RR floor) on XAUUSD M15. PROVENANCE BOUNDARY (F-077 discipline): the source docs SujanTraderCRTExp.txt and SujanTraderCrtExpPart2.txt are DIALOGUE TRANSCRIPTS in which the four-state model, the 8-phase checklist and the 100-point rubric are proposed by the AI interlocutor, not authored by the trader. They are the TRIGGER for this experiment and are NOT an authority for any design decision inside it. Nothing here re-opens F-081/F-084: that program measured a pool-founded sweep object with no HTF-state gating at all, and this one is founded on a multi-timeframe objective ladder, which is a different founding structure (the only legitimate reopen condition F-028 allows). economic_claims_allowed stays false while mt00/mt01 are UNRUN. 0 of 27 E-MT-00/E-MT-01 probes are implemented repository-wide (MEASUREMENT_LAYER_STATUS=OPEN). No result from this contract may be described as economically validated."
+  },
+  "population": {
+    "unit_of_analysis": "signal_event",
+    "instruments": [
+      "XAUUSD"
+    ],
+    "timeframe": "M15",
+    "calendar_window": {
+      "start": "2024-05-22T01:00:00Z",
+      "end": "2026-05-21T23:45:00Z",
+      "note": "The full extent of data/mt5/XAUUSD_M15.csv, 47275 bars, measured 2026-08-22. Timestamps are BROKER-LOCAL labelled UTC (F-066); no session-derived feature is used by any rung, so the F-066 mislabel is out of this contract's dependency path. session_timestamp_basis stays broker_local.",
+      "timezone": "broker-local labelled UTC (F-066). Declared, not assumed: no rung in this contract consumes a session or hour-of-day feature, so the mislabel is outside the dependency path."
+    },
+    "inclusion_rule": "A candidate is a bar at which a LONG or SHORT entry is proposed by the funnel rung under evaluation. SIX RUNGS ARE PRE-REGISTERED AS A NESTED FUNNEL, each strictly a subset of the one above it: R0 = phases 6+7 only (liquidity sweep of a prior structural level, then activation = rejection then F-074 directional displacement then return); R1 = R0 AND phase 5 (SEM-024 location gate); R2 = R1 AND phases 3+4 (daily objective declared AND 4H parent objective status EXISTS); R3 = R2 AND phases 1+2 (SEM-022 ladder aligned across MN1 and W1); R4 = R3 AND phase 8 (SEM-025 floor, rr >= 5); R5 = R4 AND SEM-023 alignment score >= 90. THE FUNNEL IS THE PRIMARY MEASUREMENT: n and expectancy are reported at EVERY rung, and a rung whose n falls below 30 is reported with n and no claim rather than dropped. Rungs are evaluated on CLOSED bars only.",
+    "exclusion_rule": "Excluded: any candidate whose forward window of max_bars does not exist inside the corpus; any candidate whose declared structural objective level or invalidation level is undefined at the entry bar; any candidate arising on a rung whose SEM-022 ladder contains an UNMEASURABLE rung (see the 6M/3M declaration in population_hash_inputs). Duplicate candidates at the same bar and direction are collapsed to one, keeping the first, and the collapse count is reported.",
+    "n_declared_min": 30,
+    "detection_vs_trade": "detection_stream",
+    "population_hash_inputs": [
+      "data/mt5/XAUUSD_M15.csv sha256",
+      "corpus row count 47275",
+      "funnel rung id R0..R5",
+      "ladder timeframe set [MN1, W1, D1, H4]",
+      "SEM-022 UNMEASURABLE RUNG DECLARATION: the source protocol specifies a six-rung ladder including 6M and 3M. This corpus contains 4 six-month and 8 three-month candles, so BOTH are declared UNMEASURABLE and are EXCLUDED from the alignment relation. They are not treated as agreeing, not imputed, and not silently dropped. Any result from this contract is therefore a measurement of a FOUR-rung ladder and must be described as such.",
+      "HTFStateThresholds (expansion_min_range_ratio, accumulation_max_range_ratio, distribution_min_range_ratio)",
+      "SEM-024 admissible level set and location_tolerance_atr",
+      "SEM-025 rr_floor",
+      "SEM-023 component weights and admission threshold",
+      "sweep predicate identity: structure.predicates.swept_high / swept_low (SP-001)",
+      "displacement predicate identity: structure.predicates.directional_impulse (SP-002, F-074)",
+      "atr period and basis",
+      "duplicate collapse rule"
+    ]
+  },
+  "features": {
+    "feature_set_id": "SUJAN-CRT-V1",
+    "feature_ids": [
+      "SEM-008",
+      "SEM-009",
+      "SEM-022",
+      "SEM-023",
+      "SEM-024",
+      "SEM-025",
+      "SP-001",
+      "SP-002"
+    ],
+    "formula_authority": "market_ontology",
+    "point_in_time_rule": "Every quantity is computed from bars with index <= t, and every parent-timeframe quantity from parents already CLOSED at t. ParentCandleBuilder.push returns closure explicitly and is the only clock; no rung consults an in-progress parent. The centered-swing PIT defect recorded in F-051 is NOT in this contract's path: structural levels here are parent-candle boundaries and SMC primitives, not centered swings.",
+    "name_binding": {
+      "atr": "FM-041 close-relative canonical atr; any conversion to price units must go through FM-074 atr_absolute (F-072), never a bare multiply",
+      "swept_high_low": "SP-001 structure.predicates, strict on both sides",
+      "directional_impulse": "SP-002 structure.predicates, the F-074 contract",
+      "htf_state": "SEM-008 config_layer.htf_state.classify_htf_state"
+    },
+    "forbidden_aliases": [
+      "CRTState.DISTRIBUTION_C3 used as SEM-008 DISTRIBUTION (F-077: near-inverted meanings)",
+      "weekly_range.ACCUMULATION_WEEKDAYS used as HTFState.ACCUMULATION (Mon/Tue calendar, not Wyckoff posture)",
+      "research.candle_state.CandleStateEncoder or RegimeLabeler substituted for SEM-008 (a fourth expansion implementation is forbidden)",
+      "momentum_score / ema_spread under the legacy FM-022/FM-023 dimensional basis (F-061/F-064: saturates on 99.7 pct of XAUUSD bars)"
+    ]
+  },
+  "labels": {
+    "label_family": "forward_walk_economic",
+    "y_definition": "y_gross_R is the realised R returned by research.measurement.forward_walk over bars strictly after the entry bar, with the stop at the structural invalidation level and the single take-profit at the structural objective level, both converted to ATR multiples at the entry bar. y_net_R is y_gross_R less the SEM-015 component cost for the realised exit kind. A candidate that neither touches its stop nor its target within max_bars resolves TIMEOUT at its mark.",
+    "derivation_authority": "forward_walk.intrabar_fixed",
+    "stream_fields_banned_for_economic_claims": [
+      "opportunities.jsonl outcome",
+      "opportunities.jsonl rr",
+      "events.jsonl rr_achieved",
+      "trade.pnl read from any engine object",
+      "any label inherited from a prior program's ledger"
+    ],
+    "rederive_protocol": {
+      "rule": "Outcomes are DERIVED by forward_walk inside this contract's own run. No outcome field is ever read from a detection stream (F-022: opportunities.jsonl is 36.8 pct self-consistent) or inherited from F-081/F-084 ledgers.",
+      "trigger": "Any inherited outcome column appearing in a run artifact voids the run.",
+      "authority": "research.measurement.forward_walk",
+      "verification": "The run must emit its own per-candidate ledger with entry, stop, target, atr, outcome and both gross and net R, recomputable from the corpus alone.",
+      "enabled": true,
+      "matcher": "per-candidate join on (instrument, entry_bar_index, direction); every outcome recomputed by forward_walk from the corpus, never joined in from a prior ledger",
+      "min_agreement": 1.0,
+      "on_fail": "BLOCK_EXPERIMENT"
+    },
+    "horizon_bars": 96,
+    "sign_convention": "Positive R is favourable to the candidate's own declared direction. Short candidates are NOT sign-flipped after the fact."
+  },
+  "costs": {
+    "cost_model_id": "SEM-015-METALS-MT5",
+    "components": [
+      "half_spread",
+      "commission_per_side",
+      "stop_slippage",
+      "entry_slippage_basis",
+      "swap_per_night",
+      "instrument XAUUSD",
+      "source: results/research/xauusd_mt5_cost_calibration measured broker calibration (F-082)"
+    ],
+    "gross_vs_net": {
+      "gross_definition": "R before any execution cost, the basis on which any information claim is made",
+      "net_definition": "gross less the SEM-015 component cost for the realised exit kind, computed per candidate from that candidate's own risk_leg",
+      "which_is_reported": "both, always, per rung and per arm",
+      "report_gross": true,
+      "report_net": true,
+      "promotable": "none_info_stage",
+      "cost_note": "MANDATORY per F-082: the flat 12bps used by earlier programs charges 0.5394R on XAUUSD where the measured broker cost is 0.0477R on a stop and 0.0354R on a target, roughly 11x too punitive. A flat-bps arm is NOT admissible here. CRITICAL INTERACTION WITH SEM-025: cost_r = cost_price / risk_leg, so the component cost must be evaluated against each candidate's OWN risk_leg. Using a corpus-mean risk distance would destroy exactly the relationship SEM-025 is built to measure and would silently flatter the with-floor arm."
+    },
+    "success_gate_uses": "net",
+    "code_entrypoint": "src/research/costs.py ComponentCostModel.from_manifest"
+  },
+  "exits": {
+    "exit_model_id": "SEM-016-ADVERSE-FIXED-SINGLE-TP",
+    "exit_family": "intrabar_fixed_sl_tp",
+    "parameters": {
+      "max_bars": 96,
+      "single_take_profit": true,
+      "partial_fraction": 0.0,
+      "trail": "none",
+      "stop_source": "structural invalidation level, converted to sl_atr_mult at the entry bar",
+      "target_source": "structural objective level, converted to tp_atr_mult at the entry bar",
+      "adverse_fill": "SEM-016 enabled, stop_slippage from the XAUUSD broker calibration",
+      "exit_justification_vs_f088": "F-088 established that forward_walk measures a DIFFERENT trade object than production, which trades two targets with a partial and a half-way trail, and that multi_tp_walk is the kernel that matches production. THAT DOES NOT APPLY HERE AND THIS IS DELIBERATE, NOT A REGRESSION. The object under measurement in this contract is the SujanTrader protocol trade, whose Phase 8 declares exactly one target at the HTF objective, no partial and no trail (SujanTraderCrtExpPart2.txt:1262-1270). forward_walk models THAT object exactly; multi_tp_walk would measure a trade this protocol does not take. Any future comparison against a production-shaped object requires a NEW MC-* id, never an edit here."
+    },
+    "intrabar_rule": "Intrabar high/low touch with conservative SL-before-TP tie-break on a bar that spans both, matching CRTEngine._intrabar_trigger_price (F-088 corrected the declared branch order: the effective production tie-break is SL-first). A triggered stop fills at the bar OPEN when the bar gapped past the level, otherwise at level +/- stop_slippage; a target never fills better than its level.",
+    "not_equal_to": [
+      "multi_tp_walk / SEM-017 two-target partial exit",
+      "forward_walk exit_model='trailing'",
+      "forward_walk exit_model='close_only'",
+      "forward_walk_oco",
+      "the production ExecutionEngine.update_trade half-way trail",
+      "any exit whose stop level is a function of the realised path"
+    ],
+    "code_entrypoint": "src/research/measurement/forward_walk.py forward_walk(exit_model='intrabar_fixed', adverse_fill=...)"
+  },
+  "splits": {
+    "scheme": "single_holdout_chronologic",
+    "embargo": "96 bars, equal to horizon_bars, applied at the IS/OOS boundary so no in-sample label can see an out-of-sample bar",
+    "purge": "Any candidate whose forward window crosses the boundary is purged from BOTH partitions, not assigned to either",
+    "n_folds_or_windows": 1,
+    "overlap_policy": "allow_with_block_bootstrap",
+    "seed": 20260822,
+    "oos_fraction_or_dates": "Final 25 percent of the corpus by bar index is OOS. The exact boundary bar index and timestamp MUST be written to the split manifest by the run itself and never left implicit - F-083 recorded a contract that declared 'dates locked in split_manifest' while the driver contained zero occurrences of split, embargo or purge. Candidates from a nested funnel overlap heavily in time and R0 candidates are strictly a superset of R5's. Effective n must be estimated from measured autocorrelation of the R series (F-086's method) and reported alongside raw n. Raw n is NOT the sample size."
+  },
+  "metrics": {
+    "information_metrics": [
+      "rung survival count and survival fraction, per rung",
+      "hit rate versus the geometric baseline r/(r+R) implied by each candidate's own rr",
+      "block-permutation p-value for the SEM-023 alignment score against a measured null",
+      "measured autocorrelation of the per-candidate R series, and the effective n it implies"
+    ],
+    "economic_metrics": [
+      "gross expectancy in R with bootstrap confidence interval, per rung",
+      "net expectancy in R under SEM-015, per rung",
+      "profit factor, per rung",
+      "risk_leg distribution and mean cost_r, per rung and per SEM-025 arm"
+    ],
+    "success_gate": "DIAGNOSTIC ONLY, promotes nothing. A rung is reported as PROMOTE-SHAPED only if ALL of: n >= 30 AND net_expectancy_R > 0 AND profit_factor > 1 AND it beats EVERY pre-registered control. CONTROLS ARE MANDATORY AND MUST BE EXECUTED, NOT MERELY DECLARED (F-083). Three controls, all resolving through the SAME forward_walk exit model and the SAME SEM-015 cost model as the rung they judge: (1) random_entry - same n, same direction mix, same SL/TP geometry, ATR at the drawn bar, entry bars drawn uniformly without replacement subject to a full forward window existing, seeded from splits.seed, AND repeated over at least 100 seeds with the win fraction reported, because F-084 established that a single random draw is too noisy to gate on; (2) long_only - the rung's own entry bars and geometry with direction forced long, THE BINDING CONTROL on this corpus because XAUUSD trended up across the window and F-087 measured 0 of 156 long cells beating passive hold; (3) funnel_matched - same n drawn at random from the bars that passed R3 only, which isolates the marginal value of the R4/R5 gates from the value of the macro alignment that precedes them. Control (3) is the control F-081 lacked. Meeting every clause is still NOT economic validation while economic_claims_allowed is false.",
+    "kill_criteria": "NON-NEGOTIABLE. Any outcome - n=0, n<30 at the strict rungs, negative expectancy everywhere, or a clean positive - is a RESULT TO REGISTER, not an invitation to retune. Changing ANY frozen dimension after seeing outcomes (rung definitions, ladder timeframe set, HTFState thresholds, location tolerance, rr_floor, rubric weights or threshold, sweep or displacement predicates, horizon, cost model, exit model, corpus, seed) requires a NEW MC-* id and a new pre-registration, never an edit to this instance. Additionally KILL the economic claim if: (1) any label is read from a detection stream rather than derived by forward_walk; (2) any control is reported without having been executed; (3) the OOS boundary is not written to the split manifest by the run; (4) a 6M or 3M ladder rung is evaluated as if measurable; (5) cost_r is computed from a corpus-average risk distance rather than per candidate.",
+    "multiplicity": {
+      "n_variants_preregistered": 13,
+      "control": "hierarchical_stage_gate"
+    },
+    "authority_ladder": {
+      "info_not_value": true,
+      "value_not_authority": true,
+      "insufficient_not_harmful": true
+    },
+    "forbidden_metric_substitutions": [
+      "reporting the maximum rung instead of the whole funnel",
+      "reporting gross expectancy as if it were net",
+      "reporting raw n where effective n is required",
+      "describing a rung that merely beats the base rate as profitable (F-086: the XAUUSD base rate is negative, so beating it is losing less)",
+      "describing SEM-025 as a quality filter rather than a stop-distance bound",
+      "reporting a with-floor arm without its paired without-floor arm",
+      "substituting a single random_entry draw for the 100-seed win fraction",
+      "omitting long_only on the grounds that the object is bidirectional",
+      "treating a rung's PROMOTE-SHAPED status as authority to alter any config"
+    ]
+  },
+  "pipeline_identity": {
+    "config_version_source": "research-local; this contract does not read configs/production/ACTIVE_VERSION and does not run the production spine F-039: L3 dataset_integrity.validate_dataset runs at only two call sites, both in backtest_v2, so a research-path run carries the always-on inline L1/L2 backstop only. Declared, not silently assumed.",
+    "active_version_file": "configs/production/ACTIVE_VERSION",
+    "engine_gate_mode": "research_custom",
+    "expected_engines": [],
+    "modules_in_path": [
+      "src/research/sujan_crt/ (to be created)",
+      "src/features/parent_candle.py ParentCandleBuilder",
+      "src/config_layer/parent_crt.py ParentCRTTrack",
+      "src/config_layer/htf_state.py classify_htf_state / resolve_objective",
+      "src/structure/predicates.py swept_high / swept_low / directional_impulse",
+      "src/research/measurement/forward_walk.py",
+      "src/research/costs.py ComponentCostModel",
+      "src/research/contracts.py Signal / Outcome"
+    ],
+    "modules_explicitly_out_of_path": [
+      "src/core/engine_runner.py (no fusion gate; this is not the spine)",
+      "src/engines/ (crt, gaussian, zone_gate, rr)",
+      "src/core/execution_planner.py",
+      "src/governance/ultron_risk_gate.py",
+      "src/runtime/backtest_v2.py",
+      "src/runtime/live_engine_hook.py",
+      "src/research/visual_crt/ (F-081/F-084 geometry is NOT imported; its pool vocabulary is a different founding structure)",
+      "src/research/oracle/multi_tp_walk.py (see exit_justification_vs_f088)",
+      "src/research/candle_state/, src/interpreters/regime_observer.py (forbidden fourth expansion implementation)",
+      "every trained model artifact (zone_gate, rr, gaussian, bitnet, tradenet - all stale on <=39-dim schemas per F-076)"
+    ],
+    "dataset_integrity_level": "L1_L2_only"
+  },
+  "prohibited_substitutions": [
+    {"surface": "labels", "forbidden": "Reading any outcome or rr from opportunities.jsonl or events.jsonl (F-022)", "historical_class": "FC-LABEL-STREAM-INCONSISTENT"},
+    {"surface": "features", "forbidden": "Importing src/research/visual_crt geometry to found the pools (different founding structure; would collapse this program into F-081)", "historical_class": "FC-FEATURE-NAME-COLLISION"},
+    {"surface": "costs", "forbidden": "Substituting a flat 12bps cost for the SEM-015 component model (F-082)", "historical_class": "FC-COST-MODEL-SUBSTITUTION"},
+    {"surface": "exits", "forbidden": "Disabling SEM-016 adverse fill so every stop books exactly -1.000R (F-082)", "historical_class": "FC-EXIT-PROXY-NOT-GOVERNING"},
+    {"surface": "exits", "forbidden": "Using multi_tp_walk or any two-target exit (see exit_justification_vs_f088)", "historical_class": "FC-EXIT-PROXY-NOT-GOVERNING"},
+    {"surface": "population", "forbidden": "Evaluating the 6M or 3M ladder rung on this corpus (4 and 8 candles)", "historical_class": "FC-POP-DETECTION-AS-TRADE"},
+    {"surface": "metrics", "forbidden": "Treating an UNMEASURABLE ladder rung as agreeing", "historical_class": "FC-DIAGNOSTIC-AS-ECONOMIC"},
+    {"surface": "features", "forbidden": "Extending CRTState with HTF posture members (F-077; SEM-008 is a separate dimension)", "historical_class": "FC-FEATURE-NAME-COLLISION"},
+    {"surface": "features", "forbidden": "Re-deriving swept_high / swept_low / directional_impulse locally instead of importing SP-001/SP-002", "historical_class": "FC-FEATURE-NAME-COLLISION"},
+    {"surface": "features", "forbidden": "Re-deriving the SMC levels instead of reading the canonical v5.0 emission (the F-046/F-047 re-derivation class)", "historical_class": "FC-FEATURE-NAME-COLLISION"},
+    {"surface": "features", "forbidden": "Using session or hour_of_day features (F-066 broker-clock mislabel is unresolved on the feature surface)", "historical_class": "FC-FEATURE-NAME-COLLISION"},
+    {"surface": "pipeline", "forbidden": "Any write to configs/production/, ACTIVE_VERSION, or any promoted config", "historical_class": "FC-PIPELINE-L3-SKIPPED-AS-RESEARCH-DEFAULT"},
+    {"surface": "metrics", "forbidden": "Citing this contract's output as authority to enable parent_crt, the objective gate, or any production gate", "historical_class": "FC-DIAGNOSTIC-AS-ECONOMIC"},
+    {"surface": "pipeline", "forbidden": "Recording any evidence_artifacts path inside a gitignored tree (results/, data/, models/, logs/). Tracked home is docs/research-readiness/sujan_crt/.", "historical_class": "FC-PIPELINE-L3-SKIPPED-AS-RESEARCH-DEFAULT"}
+  ],
+  "evidence_artifacts": {
+    "contract_path": "configs/research/measurement_contracts/instances/MC-SUJAN-XAUUSD-M15-V1.json",
+    "population_fingerprint_path": "docs/research-readiness/sujan_crt/UNRUN.json",
+    "feature_parity_path": null,
+    "label_rederive_path": null,
+    "cost_exit_fixture_path": null,
+    "split_manifest_path": null,
+    "metric_compute_path": null,
+    "mt00_report_path": "docs/research-readiness/sujan_crt/UNRUN.json",
+    "mt01_mutation_coverage_path": "docs/research-readiness/sujan_crt/UNRUN.json",
+    "code_commit": null
+  },
+  "trust_status": {
+    "mt00": "UNRUN",
+    "mt01_matrix_coverage": "UNRUN",
+    "economic_claims_allowed": false,
+    "failing_probes": [],
+    "open_risks_non_blocking": [
+      "Every path here is null BECAUSE NOTHING HAS BEEN RUN. F-083 recorded a sealed contract that declared 8 evidence_artifacts of which 1 existed on disk, making declared-but-unexecuted indistinguishable from executed. A null is an honest UNRUN; a non-null path that does not resolve is a contract violation. The run is responsible for populating these and the floor is responsible for checking that every non-null path exists AND is git-tracked.",
+      "The 6M and 3M ladder rungs are UNMEASURABLE on this corpus, so the protocol is measured at four rungs, not six. Any negative result is a result about the four-rung ladder and does not falsify the six-rung one.",
+      "The strict rungs R4/R5 are expected to be severely underpowered by construction - the source protocol is explicitly designed to reject roughly 90 percent of charts. n<30 at those rungs is an anticipated outcome, not a failure, and must be reported with no claim attached (the F-026 precedent, which died at n=47).",
+      "Nested rungs overlap heavily; raw n overstates independent information at every rung.",
+      "HTFStateThresholds are inherited from the shipped parent_crt config and were not tuned for this protocol. They are a declared, frozen input, not an optimised one.",
+      "The five FX setups that motivated this trace are NOT a fidelity test set: the corpus ends 2026-05-21, those posts are approximately 2026-08, and three of the five pairs have no data in the repository. No fidelity check against the trader's own executed setups is possible under this contract.",
+      "SEM-023's rubric maps eight qualitative checklist items onto binary indicators. That mapping is a declared interpretation made by the implementer, not a specification recovered from the source, and different reasonable mappings exist.",
+      "MP-METALS-MT5 remains DRAFT, so the metals measurement profile this contract leans on has not itself been sealed.",
+      "0 of 27 E-MT-00/E-MT-01 probes exist repository-wide, so no result here can be economically admissible regardless of outcome."
+    ]
+  }
+}

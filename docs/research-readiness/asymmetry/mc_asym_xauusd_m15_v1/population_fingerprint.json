@@ -1,0 +1,13 @@
+{
+  "contract_id": "MC-ASYM-XAUUSD-M15-V1",
+  "n": 47166,
+  "sha256": "a9d3c840e1cd492c68fbfb8d7ec5913936e16a1d2e2ecd40cfa854028f10c976",
+  "population_hash_inputs": [
+    "instrument",
+    "decision_ts",
+    "delta_mfe",
+    "corpus_path",
+    "corpus_sha256",
+    "contract_id"
+  ]
+}

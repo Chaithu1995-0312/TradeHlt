@@ -1,0 +1,227 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "MC-MRANGE-XAUUSD-M15-V1",
+  "experiment_id": "E-MRANGE-XAUUSD-M15",
+  "created_utc": "2026-08-23T00:00:00Z",
+  "authority": {
+    "economic_admissible": false,
+    "requires_mt00_pass": true,
+    "note": "Sealed BEFORE any y_R_gross was computed. Historical F-xxx (including F-086) are not economic closure of THIS object. F-086 remains the definitive answer on the declared M15 vocabulary marking a profitable entry bar and is not reopened. Identity 4-of-4 L5 rows are CRTEngine closes, a different object. economic_claims_allowed stays false until mt00==PASS and mt01_matrix_coverage==COMPLETE (repo-wide 0/27 probes). A positive diagnostic expectancy is NOT economic validation and grants no G001."
+  },
+  "population": {
+    "unit_of_analysis": "trade_decision",
+    "instruments": ["XAUUSD"],
+    "timeframe": "M15",
+    "calendar_window": {
+      "start": "2024-05-22 01:00:00",
+      "end": "2026-05-21 23:45:00",
+      "timezone": "broker_server_labeled_UTC"
+    },
+    "inclusion_rule": "MEASUREMENT CORPUS = data/mt5/XAUUSD_M15.csv ONLY (47275 bars, sha256 4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56). One unit = one SEM-026 inside-close entry after a big calendar mother (x=16), fade to opposite extreme, one open at a time. SUCCESS GATE uses HOLDOUT units only (entry_ts >= 2025-12-24 19:15:00, corpus index 37820).",
+    "exclusion_rule": "F-086 236-bar stride holdout is NOT this split and remains unspent. Identity L5 engine closes are not units. CRT TRADE_OPENED is not a unit. opportunities.jsonl is not a unit. Positional (non-calendar) blocks are not this object.",
+    "n_declared_min": 30,
+    "detection_vs_trade": "hybrid_explicit",
+    "population_hash_inputs": [
+      "instrument", "entry_ts", "side", "entry_index", "inside_score",
+      "corpus_path", "corpus_sha256", "contract_id"
+    ]
+  },
+  "features": {
+    "feature_set_id": "FS-MRANGE-XAUUSD-M15-V1",
+    "feature_ids": [],
+    "formula_authority": "market_ontology",
+    "point_in_time_rule": "Decision t = C2, the last close of calendar test block i+1. Mother high/low and big-mother threshold use only blocks at or before mother i. No future bars. F-051 centered-swing is OUT OF PATH. F-066 session labels are OUT OF PATH.",
+    "name_binding": {
+      "InsideScore": {
+        "fm_id": "SEM-026",
+        "formula_ref": "(C2 - L1) / (H1 - L1) on calendar mother/test pair",
+        "units": "dimensionless_0_1",
+        "not_equal_to": ["crt retest_depth", "FM-021 retest_depth", "session ordinal"]
+      }
+    },
+    "forbidden_aliases": [
+      "positional 16-bar blocks as this object",
+      "SEM-011 M15-SLR as mother",
+      "identity L5 engine_trade as this population"
+    ]
+  },
+  "labels": {
+    "label_family": "forward_walk_economic",
+    "y_definition": "y_R_gross = forward_walk.intrabar_fixed R-multiple of SEM-026 entry with SL/TP at mother extremes. y_R_net = SEM-015 ComponentCostModel net of that gross. Never opportunities.outcome (F-022).",
+    "derivation_authority": "forward_walk.intrabar_fixed",
+    "stream_fields_banned_for_economic_claims": [
+      "opportunities.outcome",
+      "opportunities.rr_achieved",
+      "trade.outcome"
+    ],
+    "rederive_protocol": {
+      "enabled": false,
+      "matcher": "not_applicable_no_prior_stream",
+      "min_agreement": 1.0,
+      "on_fail": "BLOCK_EXPERIMENT"
+    },
+    "horizon_bars": 40,
+    "sign_convention": "LONG positive when price rises; SHORT positive when price falls; R = pnl / initial_risk"
+  },
+  "costs": {
+    "cost_model_id": "CM-XAUUSD-COMPONENT-MEASURED-V1",
+    "components": [
+      {
+        "name": "gross_basis",
+        "bps_or_formula": "none_gross is NAMED for the walk identity. Net diagnostic uses SEM-015 measured half_spread 0.045 + commission 0.040 per leg, entry_slippage 0.090 (PROXY_FROM_STOP), stop_slippage 0.090 on SL only.",
+        "applied_on": "round_trip"
+      }
+    ],
+    "gross_vs_net": {
+      "report_gross": true,
+      "report_net": true,
+      "promotable": "net_only"
+    },
+    "success_gate_uses": "net",
+    "code_entrypoint": "src/research/costs.py::ComponentCostModel"
+  },
+  "exits": {
+    "exit_model_id": "EX-MRANGE-INTRABAR-ADVERSE-V1",
+    "exit_family": "intrabar_fixed_sl_tp",
+    "parameters": {
+      "sl_rule": "LONG L1; SHORT H1 (mother extremes)",
+      "tp_rule": "LONG H1; SHORT L1",
+      "max_forward": 40,
+      "partial_tp": "none"
+    },
+    "intrabar_rule": "forward_walk.intrabar_fixed SL-before-TP. AdverseFill stop_slippage=0.09 model_gaps=True (SEM-016).",
+    "not_equal_to": [
+      "opportunities.outcome",
+      "trailing",
+      "identity L5 backtest_ledger"
+    ],
+    "code_entrypoint": "src/research/measurement/forward_walk.py::forward_walk"
+  },
+  "splits": {
+    "scheme": "single_holdout_chronologic",
+    "embargo": "96 M15 bars between last train entry horizon and first test entry",
+    "purge": "drop train units whose 40-bar horizon overlaps test start",
+    "n_folds_or_windows": 1,
+    "overlap_policy": "forbid_overlapping_labels",
+    "seed": 20260823,
+    "oos_fraction_or_dates": "last 20% of corpus bars by index; first holdout bar 2025-12-24 19:15:00 (idx 37820). F-086 stride holdout of 236 bars is a different split and is not spent."
+  },
+  "metrics": {
+    "information_metrics": [
+      "n_holdout",
+      "win_rate",
+      "suppressed_one_open"
+    ],
+    "economic_metrics": [
+      "gross_expectancy_R",
+      "net_expectancy_R",
+      "profit_factor"
+    ],
+    "success_gate": "DIAGNOSTIC ONLY. Holdout n>=30 AND net_expectancy_R>0 AND profit_factor>1 AND beats long_only (same entries, direction forced long, same risk distance). Meeting every clause is NOT economic validation while economic_claims_allowed is false.",
+    "kill_criteria": "Any outcome including n=0 or n<30 is registered. Changing block size, calendar vs positional, atr_mult, lookback, fade rule, SL/TP, walk, cost, fill, or split after seeing y requires a NEW MC-* id. Do not harvest 100% positive windows.",
+    "multiplicity": {
+      "n_variants_preregistered": 1,
+      "control": "none_single_test"
+    },
+    "authority_ladder": {
+      "info_not_value": true,
+      "value_not_authority": true,
+      "insufficient_not_harmful": true
+    },
+    "forbidden_metric_substitutions": [
+      "p_value_as_edge",
+      "gross_as_success",
+      "in_sample_as_oos",
+      "f086_stride_as_this_holdout",
+      "diagnostic_expectancy_as_economic_validation",
+      "percent_positive_window_as_edge"
+    ]
+  },
+  "pipeline_identity": {
+    "config_version_source": "NOT the production config path. Thresholds frozen in docs/research/mother_range_trade_object.md. ACTIVE_VERSION is never written.",
+    "active_version_file": "configs/production/ACTIVE_VERSION",
+    "engine_gate_mode": "research_custom",
+    "expected_engines": [],
+    "modules_in_path": [
+      "src/research/mother_range/geometry.py",
+      "src/research/mother_range/driver.py",
+      "src/research/measurement/forward_walk.py",
+      "src/research/contracts.py",
+      "src/research/costs.py",
+      "src/data_ingestion/dataset_integrity.py"
+    ],
+    "modules_explicitly_out_of_path": [
+      "src/config_layer/crt_engine_v2.py",
+      "src/config_layer/m15_structural_range.py",
+      "src/runtime/backtest_v2.py",
+      "src/core/engine_runner.py",
+      "TradeLib"
+    ],
+    "dataset_integrity_level": "L1_L2_L3"
+  },
+  "prohibited_substitutions": [
+    {
+      "surface": "population",
+      "forbidden": "Count identity L5 engine closes or CRT TRADE_OPENED as mother-range units",
+      "historical_class": "FC-POP-DETECTION-AS-TRADE"
+    },
+    {
+      "surface": "labels",
+      "forbidden": "Use opportunities.outcome as y",
+      "historical_class": "FC-LABEL-STREAM-INCONSISTENT"
+    },
+    {
+      "surface": "costs",
+      "forbidden": "Describe 12bps as calibrated metals cost",
+      "historical_class": "FC-COST-MODEL-SUBSTITUTION"
+    },
+    {
+      "surface": "exits",
+      "forbidden": "Substitute trailing or stream outcome for forward_walk.intrabar_fixed",
+      "historical_class": "FC-EXIT-PROXY-NOT-GOVERNING"
+    },
+    {
+      "surface": "splits",
+      "forbidden": "Spend F-086's 236-bar stride holdout as this experiment's test set, or report train expectancy as the success gate",
+      "historical_class": "FC-SPLIT-LABEL-OVERLAP"
+    },
+    {
+      "surface": "metrics",
+      "forbidden": "Harvest 100% positive time windows after seeing y, or present diagnostic expectancy as economic validation",
+      "historical_class": "FC-DIAGNOSTIC-AS-ECONOMIC"
+    },
+    {
+      "surface": "pipeline",
+      "forbidden": "Skip L3 dataset_integrity.validate_dataset",
+      "historical_class": "FC-PIPELINE-L3-SKIPPED-AS-RESEARCH-DEFAULT"
+    },
+    {
+      "surface": "features",
+      "forbidden": "Use positional blocks or SEM-011 as the mother range",
+      "historical_class": "FC-FEATURE-NAME-COLLISION"
+    }
+  ],
+  "evidence_artifacts": {
+    "contract_path": "configs/research/measurement_contracts/instances/MC-MRANGE-XAUUSD-M15-V1.json",
+    "population_fingerprint_path": "results/mother_range/mc_mrange_xauusd_m15_v1/population_fingerprint.json",
+    "feature_parity_path": null,
+    "label_rederive_path": null,
+    "cost_exit_fixture_path": null,
+    "split_manifest_path": "results/mother_range/mc_mrange_xauusd_m15_v1/split_manifest.json",
+    "metric_compute_path": "results/mother_range/mc_mrange_xauusd_m15_v1/metrics.json",
+    "mt00_report_path": "results/mother_range/mc_mrange_xauusd_m15_v1/mt00.json",
+    "mt01_mutation_coverage_path": "results/mother_range/mc_mrange_xauusd_m15_v1/mt01.json",
+    "code_commit": null
+  },
+  "trust_status": {
+    "mt00": "UNRUN",
+    "mt01_matrix_coverage": "UNRUN",
+    "economic_claims_allowed": false,
+    "failing_probes": [],
+    "open_risks_non_blocking": [
+      "27 E-MT-01 probes unimplemented (0/27)",
+      "Holdout n may be <30 (INSUFFICIENT, not harmful)",
+      "F-086 stride holdout remains unspent by design"
+    ]
+  }
+}

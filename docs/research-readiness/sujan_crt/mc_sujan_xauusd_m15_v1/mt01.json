@@ -1,0 +1,5 @@
+{
+  "status": "UNRUN",
+  "contract_id": "MC-SUJAN-XAUUSD-M15-V1",
+  "reason": "0 of 27 E-MT-01 probes are implemented repository-wide. Honest UNRUN, not a silent skip."
+}

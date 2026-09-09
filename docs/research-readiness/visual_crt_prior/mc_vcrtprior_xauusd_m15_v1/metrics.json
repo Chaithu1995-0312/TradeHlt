@@ -1,0 +1,228 @@
+{
+  "contract_id": "MC-VCRTPRIOR-XAUUSD-M15-V1",
+  "sem_id": "SEM-032",
+  "authority": "RESEARCH_ONLY",
+  "economic_claims_allowed": false,
+  "p_goal_04_opened": false,
+  "side_picker": false,
+  "sem028_primary_not_retuned": true,
+  "sem030_not_retuned": true,
+  "f081_y_not_used": true,
+  "visual_arms": {
+    "A": {
+      "n_entries": 941,
+      "split": {
+        "holdout_start": "2025-12-24 19:15:00",
+        "train_last_allowed": "2025-12-23 19:15:00",
+        "embargo_bars": 96,
+        "purge_horizon_bars": 40,
+        "n_train": 759,
+        "n_holdout": 180,
+        "n_embargo_dropped": 2,
+        "f086_stride_spent": false,
+        "f081_entry_fraction_oos_spent": false,
+        "sparse_signal_is_sem012_entries": true,
+        "sem030_not_retuned": true
+      },
+      "arm_s": {
+        "y": "y_mfe_r",
+        "train": {
+          "agree": {
+            "n": 324,
+            "mean": 4.07764475308642,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 4.07764475308642
+          },
+          "disagree": {
+            "n": 435,
+            "mean": 4.138092183908046,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 4.138092183908046
+          },
+          "contrast": -0.0604474308216254,
+          "n_trend_zero_or_unknown": 0,
+          "n_null_y": 0
+        },
+        "holdout": {
+          "agree": {
+            "n": 72,
+            "mean": 4.183183333333333,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 4.183183333333333
+          },
+          "disagree": {
+            "n": 108,
+            "mean": 3.5642833333333335,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 3.5642833333333335
+          },
+          "contrast": 0.6188999999999996,
+          "n_trend_zero_or_unknown": 0,
+          "n_null_y": 0
+        },
+        "sign_match": false,
+        "verdict": "DIAGNOSTIC_FAIL"
+      },
+      "arm_t": {
+        "y": "y_time_to_mfe",
+        "train": {
+          "agree": {
+            "n": 321,
+            "mean": 3.1059190031152646,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 3.1059190031152646
+          },
+          "disagree": {
+            "n": 432,
+            "mean": 3.365740740740741,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 3.365740740740741
+          },
+          "contrast": -0.25982173762547633,
+          "n_trend_zero_or_unknown": 0,
+          "n_null_y": 6
+        },
+        "holdout": {
+          "agree": {
+            "n": 71,
+            "mean": 3.0422535211267605,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 3.0422535211267605
+          },
+          "disagree": {
+            "n": 108,
+            "mean": 3.759259259259259,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 3.759259259259259
+          },
+          "contrast": -0.7170057381324986,
+          "n_trend_zero_or_unknown": 0,
+          "n_null_y": 1
+        },
+        "sign_match": true,
+        "verdict": "DIAGNOSTIC_PASS"
+      }
+    },
+    "B": {
+      "n_entries": 462,
+      "split": {
+        "holdout_start": "2025-12-24 19:15:00",
+        "train_last_allowed": "2025-12-23 19:15:00",
+        "embargo_bars": 96,
+        "purge_horizon_bars": 40,
+        "n_train": 375,
+        "n_holdout": 86,
+        "n_embargo_dropped": 1,
+        "f086_stride_spent": false,
+        "f081_entry_fraction_oos_spent": false,
+        "sparse_signal_is_sem012_entries": true,
+        "sem030_not_retuned": true
+      },
+      "arm_s": {
+        "y": "y_mfe_r",
+        "train": {
+          "agree": {
+            "n": 94,
+            "mean": 3.556345744680851,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 3.556345744680851
+          },
+          "disagree": {
+            "n": 281,
+            "mean": 3.8980430604982206,
+            "p_gt_0": 0.9928825622775801,
+            "e_given_gt_0": 3.9259860215053766
+          },
+          "contrast": -0.3416973158173695,
+          "n_trend_zero_or_unknown": 0,
+          "n_null_y": 0
+        },
+        "holdout": {
+          "agree": {
+            "n": 24,
+            "mean": 3.348708333333333,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 3.348708333333333
+          },
+          "disagree": {
+            "n": 62,
+            "mean": 4.315187096774194,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 4.315187096774194
+          },
+          "contrast": -0.9664787634408607,
+          "n_trend_zero_or_unknown": 0,
+          "n_null_y": 0
+        },
+        "sign_match": true,
+        "verdict": "INSUFFICIENT"
+      },
+      "arm_t": {
+        "y": "y_time_to_mfe",
+        "train": {
+          "agree": {
+            "n": 92,
+            "mean": 5.445652173913044,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 5.445652173913044
+          },
+          "disagree": {
+            "n": 274,
+            "mean": 5.145985401459854,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 5.145985401459854
+          },
+          "contrast": 0.2996667724531896,
+          "n_trend_zero_or_unknown": 0,
+          "n_null_y": 9
+        },
+        "holdout": {
+          "agree": {
+            "n": 24,
+            "mean": 4.708333333333333,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 4.708333333333333
+          },
+          "disagree": {
+            "n": 60,
+            "mean": 3.466666666666667,
+            "p_gt_0": 1.0,
+            "e_given_gt_0": 3.466666666666667
+          },
+          "contrast": 1.2416666666666663,
+          "n_trend_zero_or_unknown": 0,
+          "n_null_y": 2
+        },
+        "sign_match": true,
+        "verdict": "INSUFFICIENT"
+      }
+    }
+  },
+  "n_entries": 1403,
+  "split": {
+    "holdout_start": "2025-12-24 19:15:00",
+    "train_last_allowed": "2025-12-23 19:15:00",
+    "embargo_bars": 96,
+    "purge_horizon_bars": 40,
+    "n_train": 1134,
+    "n_holdout": 266,
+    "n_embargo_dropped": 3,
+    "f086_stride_spent": false,
+    "f081_entry_fraction_oos_spent": false,
+    "sparse_signal_is_sem012_entries": true,
+    "sem030_not_retuned": true
+  },
+  "not": [
+    "trade PnL",
+    "G001",
+    "P-GOAL-04",
+    "F-081 walk R",
+    "SEM-030 mother-range",
+    "SEM-029 y_R_net overlay",
+    "SEM-028 every-bar agree",
+    "side picker",
+    "F-086 stride holdout",
+    "F-081 entry-fraction OOS",
+    "session/hour PRIMARY"
+  ]
+}

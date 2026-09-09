@@ -1,0 +1,132 @@
+{
+  "authority": "research",
+  "contract_id": "MC-RNET-OVERLAY-XAUUSD-M15-V1",
+  "counts": {
+    "FAIL": 0,
+    "INCONCLUSIVE": 2,
+    "PASS": 14
+  },
+  "economic_claims_allowed": false,
+  "failing_probes": [],
+  "inconclusive_probes": [
+    "E1-05-FINGERPRINT-DIGEST-COMPOSITION",
+    "E2-04-METRIC-GATE-TRACE"
+  ],
+  "note": "E-MT-00 clean-path only. mt00 PASS is ONE of four E4 clauses; E-MT-01 matrix coverage is a separate program and economic admissibility is not granted here.",
+  "probes": [
+    {
+      "detail": "instance schema_version '1.0.0' vs frozen const '1.0.0'",
+      "outcome": "PASS",
+      "probe_id": "E0-01-SCHEMA-VERSION",
+      "stage": "E0",
+      "witness": "1.0.0"
+    },
+    {
+      "detail": "all top-level required keys present",
+      "outcome": "PASS",
+      "probe_id": "E0-02-TOP-LEVEL-REQUIRED",
+      "stage": "E0",
+      "witness": ""
+    },
+    {
+      "detail": "all seven surfaces carry their required fields",
+      "outcome": "PASS",
+      "probe_id": "E0-03-SEVEN-SURFACES-POPULATED",
+      "stage": "E0",
+      "witness": ""
+    },
+    {
+      "detail": "authority.economic_admissible=False (must be false on a sealed, unrun contract)",
+      "outcome": "PASS",
+      "probe_id": "E0-04-NOT-PRE-SEALED-ADMISSIBLE",
+      "stage": "E0",
+      "witness": "False"
+    },
+    {
+      "detail": "8 substitutions covering ['costs', 'exits', 'features', 'labels', 'metrics', 'pipeline', 'population', 'splits']",
+      "outcome": "PASS",
+      "probe_id": "E0-05-PROHIBITED-SUBSTITUTIONS",
+      "stage": "E0",
+      "witness": ""
+    },
+    {
+      "detail": "contract_id 'MC-RNET-OVERLAY-XAUUSD-M15-V1' vs filename stem 'MC-RNET-OVERLAY-XAUUSD-M15-V1'",
+      "outcome": "PASS",
+      "probe_id": "E0-06-CONTRACT-ID-BINDS-FILE",
+      "stage": "E0",
+      "witness": "MC-RNET-OVERLAY-XAUUSD-M15-V1"
+    },
+    {
+      "detail": "evidence_artifacts.contract_path='configs/research/measurement_contracts/instances/MC-RNET-OVERLAY-XAUUSD-M15-V1.json' vs actual 'configs/research/measurement_contracts/instances/MC-RNET-OVERLAY-XAUUSD-M15-V1.json'",
+      "outcome": "PASS",
+      "probe_id": "E1-01-CONTRACT-SELF-REFERENCE",
+      "stage": "E1",
+      "witness": "configs/research/measurement_contracts/instances/MC-RNET-OVERLAY-XAUUSD-M15-V1.json"
+    },
+    {
+      "detail": "3 declared artifacts resolve and parse; 3 declared null (['cost_exit_fixture_path', 'feature_parity_path', 'label_rederive_path']); 0 non-path ([])",
+      "outcome": "PASS",
+      "probe_id": "E1-02-DECLARED-ARTIFACTS-RESOLVE",
+      "stage": "E1",
+      "witness": "metric_compute_path,population_fingerprint_path,split_manifest_path"
+    },
+    {
+      "detail": "fingerprint key list matches the contract's population_hash_inputs ['contract_id', 'corpus_path', 'corpus_sha256', 'decision_ts', 'instrument', 'side', 'y_R_net']",
+      "outcome": "PASS",
+      "probe_id": "E1-03-POPULATION-FINGERPRINT",
+      "stage": "E1",
+      "witness": "c096fcfd6b7ee378535d20f48eaa6add53333f63e07cc532c226c1b2abda8650"
+    },
+    {
+      "detail": "the fingerprint's key LIST is checked against the contract (E1-03); whether the digest mixed each of those keys is not verifiable from the artifact and needs re-derivation",
+      "outcome": "INCONCLUSIVE",
+      "probe_id": "E1-05-FINGERPRINT-DIGEST-COMPOSITION",
+      "stage": "E1",
+      "witness": "c096fcfd6b7ee378535d20f48eaa6add53333f63e07cc532c226c1b2abda8650"
+    },
+    {
+      "detail": "mt01_matrix_coverage='UNRUN' and the coverage report is present \u2014 consistent either way while UNRUN",
+      "outcome": "PASS",
+      "probe_id": "E1-06-TRUST-REPORTS",
+      "stage": "E1",
+      "witness": "docs/research-readiness/rnet_overlay/mc_rnet_overlay_xauusd_m15_v1/mt01.json"
+    },
+    {
+      "detail": "scheme='single_holdout_chronologic', manifest carries 11 field(s)",
+      "outcome": "PASS",
+      "probe_id": "E1-04-SPLIT-MANIFEST",
+      "stage": "E1",
+      "witness": "docs/research-readiness/rnet_overlay/mc_rnet_overlay_xauusd_m15_v1/split_manifest.json"
+    },
+    {
+      "detail": "every module_in_path is on disk",
+      "outcome": "PASS",
+      "probe_id": "E2-01-DECLARED-MODULES-EXIST",
+      "stage": "E2",
+      "witness": ""
+    },
+    {
+      "detail": "no module_in_path imports a module declared explicitly out of path",
+      "outcome": "PASS",
+      "probe_id": "E2-02-OUT-OF-PATH-NOT-IMPORTED",
+      "stage": "E2",
+      "witness": ""
+    },
+    {
+      "detail": "pipeline_identity.dataset_integrity_level='L1_L2_L3'",
+      "outcome": "PASS",
+      "probe_id": "E2-03-DATASET-INTEGRITY-DECLARED",
+      "stage": "E2",
+      "witness": "L1_L2_L3"
+    },
+    {
+      "detail": "10 forbidden metric substitutions are declared; confirming the success gate consumed only declared metrics requires re-executing the experiment under trace, which this clean-path runner does not do",
+      "outcome": "INCONCLUSIVE",
+      "probe_id": "E2-04-METRIC-GATE-TRACE",
+      "stage": "E2",
+      "witness": "p_value_as_edge,in_sample_as_oos,e_gt_0_as_this_gate"
+    }
+  ],
+  "schema": "mt00_report/1",
+  "status": "PARTIAL"
+}

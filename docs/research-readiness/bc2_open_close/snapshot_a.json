@@ -1,0 +1,58 @@
+{
+  "ok": true,
+  "fetched_at": "2026-09-02T22:32:13+00:00",
+  "symbol": "XAUUSD",
+  "clock": "mt5_tick",
+  "clock_basis": "broker_local",
+  "source": "live_mt5",
+  "terminal": {
+    "company": "MetaQuotes Ltd.",
+    "name": "MetaTrader 5",
+    "build": 6140,
+    "connected": true,
+    "server": "ICMarketsSC-Demo"
+  },
+  "wall_clock_skew_seconds": -10799.484298,
+  "bars": [
+    {
+      "timestamp": "2026-09-02T21:30:00+00:00",
+      "open": 4373.15,
+      "high": 4378.2,
+      "low": 4372.54,
+      "close": 4373.05,
+      "volume": 7059.0
+    },
+    {
+      "timestamp": "2026-09-02T21:45:00+00:00",
+      "open": 4373.05,
+      "high": 4375.85,
+      "low": 4372.61,
+      "close": 4374.15,
+      "volume": 6185.0
+    },
+    {
+      "timestamp": "2026-09-02T22:00:00+00:00",
+      "open": 4374.14,
+      "high": 4380.4,
+      "low": 4371.79,
+      "close": 4379.24,
+      "volume": 6883.0
+    },
+    {
+      "timestamp": "2026-09-02T22:15:00+00:00",
+      "open": 4379.24,
+      "high": 4383.16,
+      "low": 4378.28,
+      "close": 4381.17,
+      "volume": 6654.0
+    },
+    {
+      "timestamp": "2026-09-02T22:30:00+00:00",
+      "open": 4381.17,
+      "high": 4382.83,
+      "low": 4381.17,
+      "close": 4382.12,
+      "volume": 1117.0
+    }
+  ]
+}

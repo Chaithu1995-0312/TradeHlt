@@ -1,0 +1,8 @@
+{
+  "mt00_failing_probes": [],
+  "mt00_inconclusive_probes": [
+    "E1-05-FINGERPRINT-DIGEST-COMPOSITION",
+    "E2-04-METRIC-GATE-TRACE"
+  ],
+  "mt00_verdict": "PARTIAL"
+}

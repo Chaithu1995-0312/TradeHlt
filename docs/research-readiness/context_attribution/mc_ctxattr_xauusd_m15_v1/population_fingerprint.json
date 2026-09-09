@@ -1,0 +1,24 @@
+{
+  "contract_id": "MC-CTXATTR-XAUUSD-M15-V1",
+  "n": 94314,
+  "sha256": "039b1180033f55d0890b95663f2c078bf3178d82f457fe19a485df1ce3c6d878",
+  "corpus_path": "data\\mt5\\XAUUSD_M15.csv",
+  "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "primary_arm": {
+    "sl_geom": "disp_bar",
+    "tie_break": "production"
+  },
+  "population_hash_inputs": [
+    "instrument",
+    "timestamp",
+    "direction",
+    "bar_index",
+    "crt_state_after",
+    "sl_geom",
+    "tie_break",
+    "corpus_path",
+    "corpus_sha256",
+    "snapshot_schema_version",
+    "contract_id"
+  ]
+}

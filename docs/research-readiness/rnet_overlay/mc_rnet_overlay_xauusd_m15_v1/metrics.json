@@ -1,0 +1,77 @@
+{
+  "contract_id": "MC-RNET-OVERLAY-XAUUSD-M15-V1",
+  "sem_id": "SEM-029",
+  "authority": "RESEARCH_ONLY",
+  "economic_claims_allowed": false,
+  "p_goal_04_opened": false,
+  "side_picker": false,
+  "k_primary": 0.5,
+  "cost_bps_baked": 12.0,
+  "sem015_retuned": false,
+  "train": {
+    "k": 0.5,
+    "n": 75238,
+    "e_y": -1.0215561794040247,
+    "e_w_y": -1.015746734708525,
+    "delta": 0.00580944469549971,
+    "n_trend_zero_or_unknown": 4,
+    "agree": {
+      "n": 37619,
+      "mean": -1.0099372900130252,
+      "p_gt_0": 0.32087508971530343
+    },
+    "disagree": {
+      "n": 37619,
+      "mean": -1.0331750687950239,
+      "p_gt_0": 0.3180042000053165
+    },
+    "contrast": 0.02323777878199862
+  },
+  "holdout": {
+    "k": 0.5,
+    "n": 18906,
+    "e_y": -0.5506517436792553,
+    "e_w_y": -0.5442767119432984,
+    "delta": 0.006375031735956882,
+    "n_trend_zero_or_unknown": 2,
+    "agree": {
+      "n": 9453,
+      "mean": -0.5379016802073416,
+      "p_gt_0": 0.3355548503120702
+    },
+    "disagree": {
+      "n": 9453,
+      "mean": -0.5634018071511689,
+      "p_gt_0": 0.3275150745794986
+    },
+    "contrast": 0.025500126943827306
+  },
+  "sign_match": true,
+  "verdict": "DIAGNOSTIC_PASS",
+  "n_units": 94332,
+  "split": {
+    "holdout_start": "2025-12-24 19:15:00",
+    "train_last_allowed": "2025-12-23 19:15:00",
+    "embargo_bars": 96,
+    "purge_horizon_bars": 40,
+    "n_train": 75242,
+    "n_holdout": 18908,
+    "n_embargo_dropped": 182,
+    "f086_stride_spent": false,
+    "sem027_primary_not_retuned": true,
+    "k_is_primary": true,
+    "sem028_primary_not_retuned": true
+  },
+  "not": [
+    "side picker",
+    "SEM-028 y_mfe_r PRIMARY",
+    "SEM-027 \u0394MFE PRIMARY",
+    "E>0 gate",
+    "G001",
+    "P-GOAL-04",
+    "SEM-015 cost swap",
+    "F-086 stride holdout",
+    "k sweep",
+    "live size overlay"
+  ]
+}
