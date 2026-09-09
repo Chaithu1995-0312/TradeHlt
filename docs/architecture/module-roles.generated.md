@@ -4,7 +4,7 @@
 
 _`(no module docstring)` flags a module that should get a one-line docstring — that is the actionable code gap, not a docs gap._
 
-**Coverage: 425/474 modules carry a docstring role (89%).** 49 flagged `(no module docstring)`.
+**Coverage: 455/504 modules carry a docstring role (90%).** 49 flagged `(no module docstring)`.
 
 ### `src/agent/`
 
@@ -98,13 +98,16 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `config_layer.execution_planner` | execution_planner.py |
 | `config_layer.goal_schema` | goal_schema.py |
 | `config_layer.goal_validator` | goal_validator.py |
+| `config_layer.htf_state` | htf_state.py — CH-htf-state-objective (Stage 3): HTFState + Objective. |
 | `config_layer.insight_reporter` | insight_reporter.py |
 | `config_layer.llm_inference_client` | llm_inference_client.py |
 | `config_layer.llm_narrative` | llm_narrative.py |
 | `config_layer.llm_scorer` | llm_scorer.py |
+| `config_layer.m15_structural_range` | M15 structural liquidity range — the CRT sweep envelope. |
 | `config_layer.market_router` | Market-type CRT config profiles (crypto/forex) and the profile router. |
 | `config_layer.model_paths` | model_paths.py — CODE layout authority for model artifacts (Phase 0). |
 | `config_layer.model_resolver` | model_resolver.py — resolve family → registry active → artifact (+ WHO identity parity). |
+| `config_layer.parent_crt` | parent_crt.py — CH-htfcrt-parent-candle-smc-v1 (2026-08-15, user-authorized): the |
 | `config_layer.production_bundle` | production_bundle.py — the executable production state, as one immutable object. |
 | `config_layer.production_config` | production_config.py |
 | `config_layer.rr` | Risk-reward fusion layer: RR dataset builder and RR model fusion. |
@@ -163,6 +166,8 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | Module | Role (docstring line 1) |
 | --- | --- |
 | `data_ingestion` | _(no module docstring)_ |
+| `data_ingestion.clock_detector` | clock_detector.py — ADVISORY evidence for a human clock review. Never a verdict of record. |
+| `data_ingestion.clock_registry` | clock_registry.py — declared, human-reviewed clock provenance for OHLCV corpora. |
 | `data_ingestion.dataset_integrity` | dataset_integrity.py |
 | `data_ingestion.historical_fetcher` | historical_fetcher.py |
 | `data_ingestion.ohlcv_schema` | ohlcv_schema.py |
@@ -221,6 +226,7 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | --- | --- |
 | `features` | _(no module docstring)_ |
 | `features.broker_clock` | broker_clock.py — converts MT5 broker-server timestamps to true UTC. |
+| `features.calendar_periods` | calendar_periods.py — W1 (ISO week) and MN1 (calendar month) parent-candle aggregation. |
 | `features.candle_math` | Candle geometry primitives — the single, immutable source of truth for candle math. |
 | `features.causal_structure` | causal_structure.py — FC1-A delayed-confirmed structure publication helpers. |
 | `features.crt_feature_builder` | CRT Feature Builder |
@@ -237,16 +243,28 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `features.fm_resolve` | fm_resolve.py |
 | `features.formula_registry` | Formula registry — BACK-COMPAT FACADE over the registry package (src/features/registry/). |
 | `features.gaussian_schema_contract` | gaussian_schema_contract.py |
+| `features.magnitude_states` | Magnitude state layer — Phase 2A continuous VALUE → discrete STATE (shadow only). |
 | `features.market_context` | Market Context layer — Layer 4 of the semantic pipeline (roadmap Phase 3). |
+| `features.market_reality_contract` | market_reality_contract.py — read-only loader/validator for |
 | `features.market_shape` | Market Shape layer — Layer 5 of the semantic pipeline (roadmap Phase 5). |
 | `features.model_evidence` | Model Evidence layer — Layer 7 of the semantic pipeline. |
+| `features.parent_candle` | parent_candle.py — CH-htfcrt-parent-candle-smc-v1: real, calendar-true HTF parent candles. |
 | `features.registry` | Feature-math registry — the AUTHORITATIVE source of feature-mathematics implementation. |
 | `features.registry._loader` | Ontology loader — leaf module (no intra-package deps) so registry submodules can share it |
 | `features.registry.composition_registry` | Composition registry — trading-interpretation ratios (numerator/denominator over primitives). |
 | `features.registry.derived_registry` | Derived registry — deterministic normalized metrics (ATR/price-relative). Maps declared impl |
+| `features.registry.predicate_registry` | predicate_registry — the governed interpreter for `structural_predicates` definitions. |
 | `features.registry.primitive_registry` | Primitive registry — the OHLC-identity layer. Maps declared primitive impl names to the |
 | `features.schema_validator` | schema_validator.py |
 | `features.session_classifier` | session_classifier.py — THE single owner of "what session is this?". |
+| `features.smc` | features.smc — CH-htfcrt-parent-candle-smc-v1 (2026-08-15, user-authorized): the 9 SMC |
+| `features.smc._geometry` | features.smc._geometry — shared, pure helpers for the SMC primitive modules. |
+| `features.smc.breaker` | features.smc.breaker — Breaker Block detection. |
+| `features.smc.choch` | features.smc.choch — Change of Character (CHoCH). |
+| `features.smc.fvg` | features.smc.fvg — Fair Value Gap (FVG) / imbalance detection. |
+| `features.smc.levels` | features.smc.levels — Previous-Day High/Low (PDH/PDL) and Equal Highs/Lows (EQH/EQL). |
+| `features.smc.mitigation` | features.smc.mitigation — Mitigation Block. |
+| `features.smc.order_block` | features.smc.order_block — Order Block (OB) detection. |
 
 ### `src/feedback/`
 
@@ -276,6 +294,8 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `governance.script_census` | SITS script census core (PR-6 extract from scripts/analysis/script_census.py). |
 | `governance.script_registry` | ScriptRegistry — inventory / debt visibility for scripts (SITS). |
 | `governance.script_seed` | SITS seed pipeline core (PR-6 extract from scripts/governance/seed_script_registry.py). |
+| `governance.semantic_grounding` | semantic_grounding — closed-world claim grounder (Semantic OS L5 companion). |
+| `governance.semantic_identity` | semantic_identity — Tier-3 derivation for the Semantic File Identity Layer. |
 | `governance.semantic_objects` | semantic_objects — the GENERATED Object layer of the Semantic OS. |
 | `governance.semantic_os` | SemanticOSRegistry — the hand-authored semantic layer (Concepts / Boundaries / Journeys). |
 | `governance.semantic_query` | semantic_query — L5, the Semantic Query Engine. |
@@ -422,6 +442,8 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `research.envelope_offline` | Envelope offline research training (ENV_OFFLINE_TRAIN_V1). |
 | `research.envelope_offline.shadow` | Envelope shadow weight-0 logging — ENV_SHADOW_W0_V1. |
 | `research.envelope_offline.train` | Narrow multi-head Envelope offline trainer — ENV_OFFLINE_TRAIN_V1. |
+| `research.episode_agreement` | Phase 2C — typed AGREEMENT object (O14): fold over Phase 2B propositions. |
+| `research.episode_propositions` | Phase 2B — typed same-event propositions (research shadow). |
 | `research.episodes` | Opportunity Episode research substrate (protocol OE_L1). |
 | `research.episodes.builder` | EpisodeBuilder — candles + entry geometry → observation timeline. |
 | `research.episodes.events` | EventEngine — sparse semantic milestones DERIVED from an episode timeline. |
@@ -520,6 +542,11 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `research.synthetic.story_builder` | story_builder.py — turn a StorySpec into an intended-vs-produced golden trace + six-layer binding. |
 | `research.synthetic.story_registry` | story_registry.py — the single collection point for every registered StorySpec. |
 | `research.synthetic.story_spec` | story_spec.py — frozen value objects for a deterministic market story. |
+| `research.visual_crt` | visual_crt — the Visual CRT trade object (SEM-012), Lane 1 geometry. |
+| `research.visual_crt.driver` | driver.py — Visual CRT ledger driver, bound to MC-VCRT-XAUUSD-M15-V1. |
+| `research.visual_crt.geometry` | geometry.py — Visual CRT sweep + directional-displacement geometry (SEM-012). |
+| `research.visual_crt.pools` | pools.py — chart-visible liquidity pools for the Visual CRT trade object (SEM-012). |
+| `research.visual_crt.retest` | retest.py — Arm B retest predicate for the Visual CRT trade object (SEM-012 v2). |
 | `research.weekly_sweep` | weekly_sweep — Program 8: weekly liquidity-sweep ontology (pure geometry, no-lookahead). |
 | `research.weekly_sweep.weekly_range` | weekly_range.py — Program 8: weekly accumulation range + sweep geometry. |
 | `research.xau_metals_protocol` | xau_metals_protocol.py |
@@ -565,6 +592,7 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `runtime.crt_fail_reason_counters` | CRT try_* fail-reason counters — OBSERVATION_ONLY. |
 | `runtime.exit_model_band` | exit_model_band.py |
 | `runtime.live_engine_hook` | live_engine_hook.py |
+| `runtime.parent_crt_feed` | parent_crt_feed.py — streaming adapter that closes F-075's caller gap. |
 | `runtime.unified_replay_harness` | unified_replay_harness.py |
 
 ### `src/scanner/`
@@ -606,6 +634,13 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `strategies.strategy_package` | strategy_package.py |
 | `strategies.strategy_registry` | strategy_registry.py |
 | `strategies.strategy_result` | strategy_result.py |
+
+### `src/structure/`
+
+| Module | Role (docstring line 1) |
+| --- | --- |
+| `structure` | structure — the governed CRT structural kernel. |
+| `structure.predicates` | Structural decision predicates — HOW-COMPUTATION for SP-001 / SP-002. |
 
 ### `src/training/`
 

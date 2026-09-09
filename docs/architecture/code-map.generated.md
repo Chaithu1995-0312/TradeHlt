@@ -2,7 +2,7 @@
 
 > **GENERATED — do not edit by hand.** Regenerate with `python scripts/analysis/gen_code_map.py`. Narrative + how-to-navigate lives in [`code-map.md`](code-map.md); module roles in [`codebase-state-map.md`](codebase-state-map.md).
 
-`src/` module-level import graph — 474 modules across 37 packages. Each per-package slice shows that package's modules and everything they import (a loadable unit).
+`src/` module-level import graph — 504 modules across 38 packages. Each per-package slice shows that package's modules and everything they import (a loadable unit).
 
 ## L0 — package dependency overview
 
@@ -40,6 +40,7 @@ flowchart LR
     scanner["scanner"]
     search["search"]
     strategies["strategies"]
+    structure["structure"]
     training["training"]
     uat["uat"]
     ui["ui"]
@@ -70,6 +71,7 @@ flowchart LR
     config_layer --> events
     config_layer --> features
     config_layer --> runtime
+    config_layer --> structure
     config_layer --> utils
     control_plane --> agent
     control_plane --> config_layer
@@ -95,6 +97,7 @@ flowchart LR
     expansion --> runtime
     features --> config_layer
     features --> data_ingestion
+    features --> structure
     features --> utils
     governance --> config_layer
     governance --> control_plane
@@ -136,6 +139,7 @@ flowchart LR
     research --> features
     research --> interpreters
     research --> runtime
+    research --> structure
     research --> training
     runtime --> analytics
     runtime --> bitnet
@@ -217,6 +221,7 @@ flowchart LR
     governance_orchestrator["governance.orchestrator"]
     governance_promotion_manager["governance.promotion_manager"]
     governance_reflection_buffer_advanced["governance.reflection_buffer_advanced"]
+    governance_semantic_grounding["governance.semantic_grounding"]
     governance_shadow_promotion_gate["governance.shadow_promotion_gate"]
     runtime_backtest_v2["runtime.backtest_v2"]
     runtime_live_engine_hook["runtime.live_engine_hook"]
@@ -283,6 +288,7 @@ flowchart LR
     agent_modes_pipeline_mode --> runtime_backtest_v2
     agent_modes_pipeline_mode --> runtime_live_engine_hook
     agent_modes_truth_mode --> agent_tool_registry
+    agent_modes_truth_mode --> governance_semantic_grounding
     agent_recipes --> agent_recipes_campaign_pipeline
     agent_recipes --> agent_recipes_ops_diagnose
     agent_recipes --> agent_recipes_truth_janitor
@@ -436,13 +442,16 @@ flowchart LR
     config_layer_execution_planner["config_layer.execution_planner"]
     config_layer_goal_schema["config_layer.goal_schema"]
     config_layer_goal_validator["config_layer.goal_validator"]
+    config_layer_htf_state["config_layer.htf_state"]
     config_layer_insight_reporter["config_layer.insight_reporter"]
     config_layer_llm_inference_client["config_layer.llm_inference_client"]
     config_layer_llm_narrative["config_layer.llm_narrative"]
     config_layer_llm_scorer["config_layer.llm_scorer"]
+    config_layer_m15_structural_range["config_layer.m15_structural_range"]
     config_layer_market_router["config_layer.market_router"]
     config_layer_model_paths["config_layer.model_paths"]
     config_layer_model_resolver["config_layer.model_resolver"]
+    config_layer_parent_crt["config_layer.parent_crt"]
     config_layer_production_bundle["config_layer.production_bundle"]
     config_layer_production_config["config_layer.production_config"]
     config_layer_rr["config_layer.rr"]
@@ -469,6 +478,7 @@ flowchart LR
     features_schema_validator["features.schema_validator"]
     runtime_backtest_v2["runtime.backtest_v2"]
     runtime_crt_baseline_trace["runtime.crt_baseline_trace"]
+    structure_predicates["structure.predicates"]
     utils_integrity_events["utils.integrity_events"]
     utils_logging_config["utils.logging_config"]
     utils_sweep_trace_logger["utils.sweep_trace_logger"]
@@ -486,6 +496,8 @@ flowchart LR
     config_layer_crt_engine_v2 --> bitnet_bitnet_inference
     config_layer_crt_engine_v2 --> bitnet_bitnet_registry
     config_layer_crt_engine_v2 --> config_layer_crt_sweep_taxonomy
+    config_layer_crt_engine_v2 --> config_layer_htf_state
+    config_layer_crt_engine_v2 --> config_layer_m15_structural_range
     config_layer_crt_engine_v2 --> config_layer_production_config
     config_layer_crt_engine_v2 --> config_layer_state_contract_loader
     config_layer_crt_engine_v2 --> config_layer_state_identity
@@ -497,6 +509,7 @@ flowchart LR
     config_layer_crt_engine_v2 --> features_fm_resolve
     config_layer_crt_engine_v2 --> features_schema_validator
     config_layer_crt_engine_v2 --> runtime_crt_baseline_trace
+    config_layer_crt_engine_v2 --> structure_predicates
     config_layer_crt_engine_v2 --> utils_integrity_events
     config_layer_crt_engine_v2 --> utils_sweep_trace_logger
     config_layer_crt_gaussian_scorer --> config_layer_production_config
@@ -506,15 +519,22 @@ flowchart LR
     config_layer_execution_planner --> utils_logging_config
     config_layer_goal_schema --> config_layer_production_config
     config_layer_goal_validator --> config_layer_goal_schema
+    config_layer_htf_state --> config_layer_crt_engine_v2
+    config_layer_htf_state --> config_layer_parent_crt
+    config_layer_htf_state --> config_layer_state_identity
     config_layer_insight_reporter --> config_layer_llm_narrative
     config_layer_llm_inference_client --> config_layer_llm_narrative
     config_layer_llm_inference_client --> config_layer_llm_scorer
     config_layer_llm_inference_client --> config_layer_production_config
     config_layer_llm_narrative --> config_layer_llm_inference_client
     config_layer_llm_scorer --> config_layer_llm_inference_client
+    config_layer_m15_structural_range --> config_layer_state_identity
     config_layer_market_router --> config_layer_production_config
     config_layer_market_router --> config_layer_state_identity
     config_layer_model_resolver --> config_layer_model_paths
+    config_layer_parent_crt --> config_layer_crt_engine_v2
+    config_layer_parent_crt --> config_layer_state_identity
+    config_layer_parent_crt --> structure_predicates
     config_layer_production_bundle --> config_layer_model_resolver
     config_layer_production_bundle --> config_layer_production_config
     config_layer_production_config --> config_layer_config_builder
@@ -675,15 +695,21 @@ flowchart LR
 ```mermaid
 flowchart LR
     data_ingestion["data_ingestion"]
+    data_ingestion_clock_detector["data_ingestion.clock_detector"]
+    data_ingestion_clock_registry["data_ingestion.clock_registry"]
     data_ingestion_dataset_integrity["data_ingestion.dataset_integrity"]
     data_ingestion_historical_fetcher["data_ingestion.historical_fetcher"]
     data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
     data_ingestion_session_autoderive["data_ingestion.session_autoderive"]
     data_ingestion_xauusd_phase1_candidate["data_ingestion.xauusd_phase1_candidate"]
     config_layer_production_config["config_layer.production_config"]
+    features_broker_clock["features.broker_clock"]
     features_feature_schema["features.feature_schema"]
     utils_console_safe["utils.console_safe"]
     utils_logging_config["utils.logging_config"]
+    data_ingestion_clock_detector --> data_ingestion_ohlcv_schema
+    data_ingestion_clock_detector --> features_broker_clock
+    data_ingestion_clock_registry --> data_ingestion_ohlcv_schema
     data_ingestion_dataset_integrity --> config_layer_production_config
     data_ingestion_dataset_integrity --> data_ingestion_ohlcv_schema
     data_ingestion_dataset_integrity --> data_ingestion_session_autoderive
@@ -693,6 +719,7 @@ flowchart LR
     data_ingestion_historical_fetcher --> config_layer_production_config
     data_ingestion_historical_fetcher --> data_ingestion_ohlcv_schema
     data_ingestion_historical_fetcher --> utils_logging_config
+    data_ingestion_ohlcv_schema --> data_ingestion_clock_registry
     data_ingestion_xauusd_phase1_candidate --> data_ingestion_ohlcv_schema
 ```
 
@@ -815,6 +842,7 @@ flowchart LR
 flowchart LR
     features["features"]
     features_broker_clock["features.broker_clock"]
+    features_calendar_periods["features.calendar_periods"]
     features_candle_math["features.candle_math"]
     features_causal_structure["features.causal_structure"]
     features_crt_feature_builder["features.crt_feature_builder"]
@@ -831,20 +859,35 @@ flowchart LR
     features_fm_resolve["features.fm_resolve"]
     features_formula_registry["features.formula_registry"]
     features_gaussian_schema_contract["features.gaussian_schema_contract"]
+    features_magnitude_states["features.magnitude_states"]
     features_market_context["features.market_context"]
+    features_market_reality_contract["features.market_reality_contract"]
     features_market_shape["features.market_shape"]
     features_model_evidence["features.model_evidence"]
+    features_parent_candle["features.parent_candle"]
     features_registry["features.registry"]
     features_registry__loader["features.registry._loader"]
     features_registry_composition_registry["features.registry.composition_registry"]
     features_registry_derived_registry["features.registry.derived_registry"]
+    features_registry_predicate_registry["features.registry.predicate_registry"]
     features_registry_primitive_registry["features.registry.primitive_registry"]
     features_schema_validator["features.schema_validator"]
     features_session_classifier["features.session_classifier"]
+    features_smc["features.smc"]
+    features_smc__geometry["features.smc._geometry"]
+    features_smc_breaker["features.smc.breaker"]
+    features_smc_choch["features.smc.choch"]
+    features_smc_fvg["features.smc.fvg"]
+    features_smc_levels["features.smc.levels"]
+    features_smc_mitigation["features.smc.mitigation"]
+    features_smc_order_block["features.smc.order_block"]
+    config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
     config_layer_production_config["config_layer.production_config"]
     data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
+    structure_predicates["structure.predicates"]
     utils_integrity_events["utils.integrity_events"]
     utils_logging_config["utils.logging_config"]
+    features_calendar_periods --> config_layer_crt_engine_v2
     features_causal_structure --> features_feature_pipeline
     features_causal_structure --> features_fm_resolve
     features_crt_feature_builder --> features_derived_math
@@ -854,18 +897,27 @@ flowchart LR
     features_crt_state_resolver --> features_feature_schema
     features_crt_state_resolver --> features_feature_states
     features_crt_state_resolver --> features_registry
+    features_crt_state_resolver --> structure_predicates
     features_dataset_builder --> features_feature_schema
     features_dataset_validator --> config_layer_production_config
     features_dataset_validator --> features_feature_builder
     features_dataset_validator --> features_feature_schema
     features_feature_builder --> features_dataset_builder
+    features_feature_pipeline --> config_layer_crt_engine_v2
     features_feature_pipeline --> config_layer_production_config
     features_feature_pipeline --> data_ingestion_ohlcv_schema
     features_feature_pipeline --> features_broker_clock
     features_feature_pipeline --> features_feature_monitor
     features_feature_pipeline --> features_feature_schema
+    features_feature_pipeline --> features_parent_candle
     features_feature_pipeline --> features_schema_validator
     features_feature_pipeline --> features_session_classifier
+    features_feature_pipeline --> features_smc_breaker
+    features_feature_pipeline --> features_smc_choch
+    features_feature_pipeline --> features_smc_fvg
+    features_feature_pipeline --> features_smc_levels
+    features_feature_pipeline --> features_smc_mitigation
+    features_feature_pipeline --> features_smc_order_block
     features_feature_pipeline --> utils_logging_config
     features_feature_schema --> features_schema_validator
     features_feature_schema --> features_session_classifier
@@ -876,10 +928,14 @@ flowchart LR
     features_fm_resolve --> features_registry
     features_formula_registry --> features_registry
     features_gaussian_schema_contract --> features_feature_schema
+    features_magnitude_states --> features_feature_states
+    features_magnitude_states --> features_registry
     features_market_context --> features_feature_states
     features_market_context --> features_registry
     features_market_shape --> features_feature_states
     features_market_shape --> features_market_context
+    features_parent_candle --> config_layer_crt_engine_v2
+    features_parent_candle --> features_calendar_periods
     features_registry --> features_registry__loader
     features_registry --> features_registry_composition_registry
     features_registry --> features_registry_derived_registry
@@ -888,7 +944,26 @@ flowchart LR
     features_registry_composition_registry --> features_registry_primitive_registry
     features_registry_derived_registry --> features_derived_math
     features_registry_derived_registry --> features_registry__loader
+    features_registry_derived_registry --> features_smc_breaker
+    features_registry_derived_registry --> features_smc_fvg
+    features_registry_derived_registry --> features_smc_levels
+    features_registry_derived_registry --> features_smc_mitigation
+    features_registry_derived_registry --> features_smc_order_block
+    features_registry_predicate_registry --> features_registry__loader
     features_registry_primitive_registry --> features_candle_math
+    features_smc__geometry --> config_layer_crt_engine_v2
+    features_smc_breaker --> config_layer_crt_engine_v2
+    features_smc_breaker --> features_smc__geometry
+    features_smc_breaker --> features_smc_order_block
+    features_smc_fvg --> config_layer_crt_engine_v2
+    features_smc_fvg --> features_smc__geometry
+    features_smc_levels --> config_layer_crt_engine_v2
+    features_smc_levels --> features_smc__geometry
+    features_smc_mitigation --> config_layer_crt_engine_v2
+    features_smc_mitigation --> features_smc__geometry
+    features_smc_mitigation --> features_smc_order_block
+    features_smc_order_block --> config_layer_crt_engine_v2
+    features_smc_order_block --> features_smc__geometry
 ```
 
 ## feedback
@@ -920,6 +995,8 @@ flowchart LR
     governance_script_census["governance.script_census"]
     governance_script_registry["governance.script_registry"]
     governance_script_seed["governance.script_seed"]
+    governance_semantic_grounding["governance.semantic_grounding"]
+    governance_semantic_identity["governance.semantic_identity"]
     governance_semantic_objects["governance.semantic_objects"]
     governance_semantic_os["governance.semantic_os"]
     governance_semantic_query["governance.semantic_query"]
@@ -966,6 +1043,10 @@ flowchart LR
     governance_script_registry --> utils_jsonl_writer
     governance_script_seed --> governance_script_registry
     governance_script_seed --> utils_jsonl_writer
+    governance_semantic_grounding --> governance_framework_registry
+    governance_semantic_grounding --> governance_semantic_os
+    governance_semantic_grounding --> governance_semantic_query
+    governance_semantic_objects --> governance_semantic_identity
     governance_semantic_objects --> governance_semantic_os
     governance_semantic_os --> governance_framework_registry
     governance_semantic_query --> governance_semantic_objects
@@ -1215,6 +1296,8 @@ flowchart LR
     research_envelope_offline["research.envelope_offline"]
     research_envelope_offline_shadow["research.envelope_offline.shadow"]
     research_envelope_offline_train["research.envelope_offline.train"]
+    research_episode_agreement["research.episode_agreement"]
+    research_episode_propositions["research.episode_propositions"]
     research_episodes["research.episodes"]
     research_episodes_builder["research.episodes.builder"]
     research_episodes_events["research.episodes.events"]
@@ -1313,6 +1396,11 @@ flowchart LR
     research_synthetic_story_builder["research.synthetic.story_builder"]
     research_synthetic_story_registry["research.synthetic.story_registry"]
     research_synthetic_story_spec["research.synthetic.story_spec"]
+    research_visual_crt["research.visual_crt"]
+    research_visual_crt_driver["research.visual_crt.driver"]
+    research_visual_crt_geometry["research.visual_crt.geometry"]
+    research_visual_crt_pools["research.visual_crt.pools"]
+    research_visual_crt_retest["research.visual_crt.retest"]
     research_weekly_sweep["research.weekly_sweep"]
     research_weekly_sweep_weekly_range["research.weekly_sweep.weekly_range"]
     research_xau_metals_protocol["research.xau_metals_protocol"]
@@ -1347,6 +1435,7 @@ flowchart LR
     core_engine_runner["core.engine_runner"]
     core_fusion_engine["core.fusion_engine"]
     core_gate_intelligence["core.gate_intelligence"]
+    data_ingestion_dataset_integrity["data_ingestion.dataset_integrity"]
     data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
     data_ingestion_session_autoderive["data_ingestion.session_autoderive"]
     data_ingestion_xauusd_phase1_candidate["data_ingestion.xauusd_phase1_candidate"]
@@ -1363,8 +1452,10 @@ flowchart LR
     features_feature_pipeline["features.feature_pipeline"]
     features_feature_schema["features.feature_schema"]
     features_market_shape["features.market_shape"]
+    features_parent_candle["features.parent_candle"]
     interpreters_regime_observer["interpreters.regime_observer"]
     runtime_backtest_v2["runtime.backtest_v2"]
+    structure_predicates["structure.predicates"]
     training_trade_net_v2["training.trade_net_v2"]
     training_trainer["training.trainer"]
     research_adapters --> research_adapters_spine_signal_source
@@ -1421,6 +1512,7 @@ flowchart LR
     research_envelope_offline_shadow --> research_envelope_offline_train
     research_envelope_offline_train --> features_feature_schema
     research_envelope_offline_train --> research_clean_labels_builder
+    research_episode_agreement --> research_episode_propositions
     research_episodes --> research_episodes_protocol
     research_episodes_builder --> research_episodes_protocol
     research_episodes_builder --> research_episodes_schema
@@ -1684,9 +1776,27 @@ flowchart LR
     research_synthetic_story_builder --> research_synthetic_story_spec
     research_synthetic_story_registry --> research_synthetic_stories
     research_synthetic_story_registry --> research_synthetic_story_spec
+    research_visual_crt --> research_visual_crt_geometry
+    research_visual_crt --> research_visual_crt_pools
+    research_visual_crt_driver --> data_ingestion_dataset_integrity
+    research_visual_crt_driver --> features_parent_candle
+    research_visual_crt_driver --> research_contracts
+    research_visual_crt_driver --> research_indicators
+    research_visual_crt_driver --> research_measurement_forward_walk
+    research_visual_crt_driver --> research_visual_crt_geometry
+    research_visual_crt_driver --> research_visual_crt_pools
+    research_visual_crt_driver --> research_visual_crt_retest
+    research_visual_crt_geometry --> config_layer_crt_engine_v2
+    research_visual_crt_geometry --> features_candle_math
+    research_visual_crt_geometry --> research_visual_crt_pools
+    research_visual_crt_geometry --> structure_predicates
+    research_visual_crt_pools --> config_layer_crt_engine_v2
+    research_visual_crt_retest --> config_layer_crt_engine_v2
+    research_visual_crt_retest --> research_visual_crt_geometry
     research_weekly_sweep --> research_weekly_sweep_weekly_range
     research_weekly_sweep_weekly_range --> config_layer_crt_engine_v2
     research_weekly_sweep_weekly_range --> data_ingestion_session_autoderive
+    research_weekly_sweep_weekly_range --> structure_predicates
     research_zone_label_audit --> bitnet_zone_cosine_searcher
     research_zone_label_audit --> research_contracts
     research_zone_label_audit --> research_measurement_forward_walk
@@ -1797,6 +1907,7 @@ flowchart LR
     runtime_crt_fail_reason_counters["runtime.crt_fail_reason_counters"]
     runtime_exit_model_band["runtime.exit_model_band"]
     runtime_live_engine_hook["runtime.live_engine_hook"]
+    runtime_parent_crt_feed["runtime.parent_crt_feed"]
     runtime_unified_replay_harness["runtime.unified_replay_harness"]
     analytics_metrics_oracle["analytics.metrics_oracle"]
     bitnet_bitnet_inference["bitnet.bitnet_inference"]
@@ -1806,9 +1917,12 @@ flowchart LR
     config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
     config_layer_execution_planner["config_layer.execution_planner"]
     config_layer_goal_validator["config_layer.goal_validator"]
+    config_layer_htf_state["config_layer.htf_state"]
+    config_layer_parent_crt["config_layer.parent_crt"]
     config_layer_production_bundle["config_layer.production_bundle"]
     config_layer_production_config["config_layer.production_config"]
     config_layer_stack_version["config_layer.stack_version"]
+    config_layer_state_identity["config_layer.state_identity"]
     core_collector["core.collector"]
     core_engine_runner["core.engine_runner"]
     core_feature_store["core.feature_store"]
@@ -1825,6 +1939,7 @@ flowchart LR
     features_feature_monitor["features.feature_monitor"]
     features_feature_pipeline["features.feature_pipeline"]
     features_feature_schema["features.feature_schema"]
+    features_parent_candle["features.parent_candle"]
     journal_trade_provenance_v1_0["journal.trade_provenance_v1_0"]
     live_mt5_bridge["live.mt5_bridge"]
     live_telegram_bridge["live.telegram_bridge"]
@@ -1864,7 +1979,9 @@ flowchart LR
     runtime_backtest_v2 --> features_feature_monitor
     runtime_backtest_v2 --> features_feature_pipeline
     runtime_backtest_v2 --> features_feature_schema
+    runtime_backtest_v2 --> features_parent_candle
     runtime_backtest_v2 --> journal_trade_provenance_v1_0
+    runtime_backtest_v2 --> runtime_parent_crt_feed
     runtime_backtest_v2 --> strategies_strategy_orchestrator
     runtime_backtest_v2 --> strategies_strategy_registry
     runtime_backtest_v2 --> training_training_trigger
@@ -1904,6 +2021,11 @@ flowchart LR
     runtime_live_engine_hook --> uat_kill_switch
     runtime_live_engine_hook --> utils_config_dumper
     runtime_live_engine_hook --> utils_logging_config
+    runtime_parent_crt_feed --> config_layer_htf_state
+    runtime_parent_crt_feed --> config_layer_parent_crt
+    runtime_parent_crt_feed --> config_layer_production_config
+    runtime_parent_crt_feed --> config_layer_state_identity
+    runtime_parent_crt_feed --> features_parent_candle
     runtime_unified_replay_harness --> config_layer_config_builder
     runtime_unified_replay_harness --> config_layer_production_config
     runtime_unified_replay_harness --> runtime_backtest_bitnet
@@ -2047,6 +2169,14 @@ flowchart LR
     strategies_strategy_package --> features_feature_schema
     strategies_strategy_registry --> strategies_strategy_package
     strategies_strategy_result --> strategies_strategy_intent
+```
+
+## structure
+
+```mermaid
+flowchart LR
+    structure["structure"]
+    structure_predicates["structure.predicates"]
 ```
 
 ## training

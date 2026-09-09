@@ -84,13 +84,16 @@ digraph code_map {
         "config_layer.execution_planner";
         "config_layer.goal_schema";
         "config_layer.goal_validator";
+        "config_layer.htf_state";
         "config_layer.insight_reporter";
         "config_layer.llm_inference_client";
         "config_layer.llm_narrative";
         "config_layer.llm_scorer";
+        "config_layer.m15_structural_range";
         "config_layer.market_router";
         "config_layer.model_paths";
         "config_layer.model_resolver";
+        "config_layer.parent_crt";
         "config_layer.production_bundle";
         "config_layer.production_config";
         "config_layer.rr";
@@ -143,6 +146,8 @@ digraph code_map {
     subgraph "cluster_data_ingestion" {
         label="data_ingestion"; style="rounded";
         "data_ingestion";
+        "data_ingestion.clock_detector";
+        "data_ingestion.clock_registry";
         "data_ingestion.dataset_integrity";
         "data_ingestion.historical_fetcher";
         "data_ingestion.ohlcv_schema";
@@ -191,6 +196,7 @@ digraph code_map {
         label="features"; style="rounded";
         "features";
         "features.broker_clock";
+        "features.calendar_periods";
         "features.candle_math";
         "features.causal_structure";
         "features.crt_feature_builder";
@@ -207,16 +213,28 @@ digraph code_map {
         "features.fm_resolve";
         "features.formula_registry";
         "features.gaussian_schema_contract";
+        "features.magnitude_states";
         "features.market_context";
+        "features.market_reality_contract";
         "features.market_shape";
         "features.model_evidence";
+        "features.parent_candle";
         "features.registry";
         "features.registry._loader";
         "features.registry.composition_registry";
         "features.registry.derived_registry";
+        "features.registry.predicate_registry";
         "features.registry.primitive_registry";
         "features.schema_validator";
         "features.session_classifier";
+        "features.smc";
+        "features.smc._geometry";
+        "features.smc.breaker";
+        "features.smc.choch";
+        "features.smc.fvg";
+        "features.smc.levels";
+        "features.smc.mitigation";
+        "features.smc.order_block";
     }
     subgraph "cluster_feedback" {
         label="feedback"; style="rounded";
@@ -242,6 +260,8 @@ digraph code_map {
         "governance.script_census";
         "governance.script_registry";
         "governance.script_seed";
+        "governance.semantic_grounding";
+        "governance.semantic_identity";
         "governance.semantic_objects";
         "governance.semantic_os";
         "governance.semantic_query";
@@ -364,6 +384,8 @@ digraph code_map {
         "research.envelope_offline";
         "research.envelope_offline.shadow";
         "research.envelope_offline.train";
+        "research.episode_agreement";
+        "research.episode_propositions";
         "research.episodes";
         "research.episodes.builder";
         "research.episodes.events";
@@ -462,6 +484,11 @@ digraph code_map {
         "research.synthetic.story_builder";
         "research.synthetic.story_registry";
         "research.synthetic.story_spec";
+        "research.visual_crt";
+        "research.visual_crt.driver";
+        "research.visual_crt.geometry";
+        "research.visual_crt.pools";
+        "research.visual_crt.retest";
         "research.weekly_sweep";
         "research.weekly_sweep.weekly_range";
         "research.xau_metals_protocol";
@@ -503,6 +530,7 @@ digraph code_map {
         "runtime.crt_fail_reason_counters";
         "runtime.exit_model_band";
         "runtime.live_engine_hook";
+        "runtime.parent_crt_feed";
         "runtime.unified_replay_harness";
     }
     subgraph "cluster_scanner" {
@@ -538,6 +566,11 @@ digraph code_map {
         "strategies.strategy_package";
         "strategies.strategy_registry";
         "strategies.strategy_result";
+    }
+    subgraph "cluster_structure" {
+        label="structure"; style="rounded";
+        "structure";
+        "structure.predicates";
     }
     subgraph "cluster_training" {
         label="training"; style="rounded";
@@ -651,6 +684,7 @@ digraph code_map {
     "agent.modes.pipeline_mode" -> "runtime.backtest_v2";
     "agent.modes.pipeline_mode" -> "runtime.live_engine_hook";
     "agent.modes.truth_mode" -> "agent.tool_registry";
+    "agent.modes.truth_mode" -> "governance.semantic_grounding";
     "agent.recipes" -> "agent.recipes.campaign_pipeline";
     "agent.recipes" -> "agent.recipes.ops_diagnose";
     "agent.recipes" -> "agent.recipes.truth_janitor";
@@ -737,6 +771,8 @@ digraph code_map {
     "config_layer.crt_engine_v2" -> "bitnet.bitnet_inference";
     "config_layer.crt_engine_v2" -> "bitnet.bitnet_registry";
     "config_layer.crt_engine_v2" -> "config_layer.crt_sweep_taxonomy";
+    "config_layer.crt_engine_v2" -> "config_layer.htf_state";
+    "config_layer.crt_engine_v2" -> "config_layer.m15_structural_range";
     "config_layer.crt_engine_v2" -> "config_layer.production_config";
     "config_layer.crt_engine_v2" -> "config_layer.state_contract_loader";
     "config_layer.crt_engine_v2" -> "config_layer.state_identity";
@@ -748,6 +784,7 @@ digraph code_map {
     "config_layer.crt_engine_v2" -> "features.fm_resolve";
     "config_layer.crt_engine_v2" -> "features.schema_validator";
     "config_layer.crt_engine_v2" -> "runtime.crt_baseline_trace";
+    "config_layer.crt_engine_v2" -> "structure.predicates";
     "config_layer.crt_engine_v2" -> "utils.integrity_events";
     "config_layer.crt_engine_v2" -> "utils.sweep_trace_logger";
     "config_layer.crt_gaussian_scorer" -> "config_layer.production_config";
@@ -757,15 +794,22 @@ digraph code_map {
     "config_layer.execution_planner" -> "utils.logging_config";
     "config_layer.goal_schema" -> "config_layer.production_config";
     "config_layer.goal_validator" -> "config_layer.goal_schema";
+    "config_layer.htf_state" -> "config_layer.crt_engine_v2";
+    "config_layer.htf_state" -> "config_layer.parent_crt";
+    "config_layer.htf_state" -> "config_layer.state_identity";
     "config_layer.insight_reporter" -> "config_layer.llm_narrative";
     "config_layer.llm_inference_client" -> "config_layer.llm_narrative";
     "config_layer.llm_inference_client" -> "config_layer.llm_scorer";
     "config_layer.llm_inference_client" -> "config_layer.production_config";
     "config_layer.llm_narrative" -> "config_layer.llm_inference_client";
     "config_layer.llm_scorer" -> "config_layer.llm_inference_client";
+    "config_layer.m15_structural_range" -> "config_layer.state_identity";
     "config_layer.market_router" -> "config_layer.production_config";
     "config_layer.market_router" -> "config_layer.state_identity";
     "config_layer.model_resolver" -> "config_layer.model_paths";
+    "config_layer.parent_crt" -> "config_layer.crt_engine_v2";
+    "config_layer.parent_crt" -> "config_layer.state_identity";
+    "config_layer.parent_crt" -> "structure.predicates";
     "config_layer.production_bundle" -> "config_layer.model_resolver";
     "config_layer.production_bundle" -> "config_layer.production_config";
     "config_layer.production_config" -> "config_layer.config_builder";
@@ -851,6 +895,9 @@ digraph code_map {
     "core.model_registry" -> "utils.integrity_events";
     "core.regime_governor" -> "config_layer.production_config";
     "core.ultron_risk_gate" -> "utils.logging_config";
+    "data_ingestion.clock_detector" -> "data_ingestion.ohlcv_schema";
+    "data_ingestion.clock_detector" -> "features.broker_clock";
+    "data_ingestion.clock_registry" -> "data_ingestion.ohlcv_schema";
     "data_ingestion.dataset_integrity" -> "config_layer.production_config";
     "data_ingestion.dataset_integrity" -> "data_ingestion.ohlcv_schema";
     "data_ingestion.dataset_integrity" -> "data_ingestion.session_autoderive";
@@ -860,6 +907,7 @@ digraph code_map {
     "data_ingestion.historical_fetcher" -> "config_layer.production_config";
     "data_ingestion.historical_fetcher" -> "data_ingestion.ohlcv_schema";
     "data_ingestion.historical_fetcher" -> "utils.logging_config";
+    "data_ingestion.ohlcv_schema" -> "data_ingestion.clock_registry";
     "data_ingestion.xauusd_phase1_candidate" -> "data_ingestion.ohlcv_schema";
     "engines.crt_engine" -> "engines.scoring_engine";
     "engines.gaussian_engine" -> "engines.heuristic_gaussian_engine";
@@ -904,6 +952,7 @@ digraph code_map {
     "expansion.expansion_engine" -> "runtime.backtest_v2";
     "expansion.llm_pattern_extractor" -> "config_layer.llm_inference_client";
     "expansion.llm_pattern_extractor" -> "expansion.policy_schema";
+    "features.calendar_periods" -> "config_layer.crt_engine_v2";
     "features.causal_structure" -> "features.feature_pipeline";
     "features.causal_structure" -> "features.fm_resolve";
     "features.crt_feature_builder" -> "features.derived_math";
@@ -913,18 +962,27 @@ digraph code_map {
     "features.crt_state_resolver" -> "features.feature_schema";
     "features.crt_state_resolver" -> "features.feature_states";
     "features.crt_state_resolver" -> "features.registry";
+    "features.crt_state_resolver" -> "structure.predicates";
     "features.dataset_builder" -> "features.feature_schema";
     "features.dataset_validator" -> "config_layer.production_config";
     "features.dataset_validator" -> "features.feature_builder";
     "features.dataset_validator" -> "features.feature_schema";
     "features.feature_builder" -> "features.dataset_builder";
+    "features.feature_pipeline" -> "config_layer.crt_engine_v2";
     "features.feature_pipeline" -> "config_layer.production_config";
     "features.feature_pipeline" -> "data_ingestion.ohlcv_schema";
     "features.feature_pipeline" -> "features.broker_clock";
     "features.feature_pipeline" -> "features.feature_monitor";
     "features.feature_pipeline" -> "features.feature_schema";
+    "features.feature_pipeline" -> "features.parent_candle";
     "features.feature_pipeline" -> "features.schema_validator";
     "features.feature_pipeline" -> "features.session_classifier";
+    "features.feature_pipeline" -> "features.smc.breaker";
+    "features.feature_pipeline" -> "features.smc.choch";
+    "features.feature_pipeline" -> "features.smc.fvg";
+    "features.feature_pipeline" -> "features.smc.levels";
+    "features.feature_pipeline" -> "features.smc.mitigation";
+    "features.feature_pipeline" -> "features.smc.order_block";
     "features.feature_pipeline" -> "utils.logging_config";
     "features.feature_schema" -> "features.schema_validator";
     "features.feature_schema" -> "features.session_classifier";
@@ -935,10 +993,14 @@ digraph code_map {
     "features.fm_resolve" -> "features.registry";
     "features.formula_registry" -> "features.registry";
     "features.gaussian_schema_contract" -> "features.feature_schema";
+    "features.magnitude_states" -> "features.feature_states";
+    "features.magnitude_states" -> "features.registry";
     "features.market_context" -> "features.feature_states";
     "features.market_context" -> "features.registry";
     "features.market_shape" -> "features.feature_states";
     "features.market_shape" -> "features.market_context";
+    "features.parent_candle" -> "config_layer.crt_engine_v2";
+    "features.parent_candle" -> "features.calendar_periods";
     "features.registry" -> "features.registry._loader";
     "features.registry" -> "features.registry.composition_registry";
     "features.registry" -> "features.registry.derived_registry";
@@ -947,7 +1009,26 @@ digraph code_map {
     "features.registry.composition_registry" -> "features.registry.primitive_registry";
     "features.registry.derived_registry" -> "features.derived_math";
     "features.registry.derived_registry" -> "features.registry._loader";
+    "features.registry.derived_registry" -> "features.smc.breaker";
+    "features.registry.derived_registry" -> "features.smc.fvg";
+    "features.registry.derived_registry" -> "features.smc.levels";
+    "features.registry.derived_registry" -> "features.smc.mitigation";
+    "features.registry.derived_registry" -> "features.smc.order_block";
+    "features.registry.predicate_registry" -> "features.registry._loader";
     "features.registry.primitive_registry" -> "features.candle_math";
+    "features.smc._geometry" -> "config_layer.crt_engine_v2";
+    "features.smc.breaker" -> "config_layer.crt_engine_v2";
+    "features.smc.breaker" -> "features.smc._geometry";
+    "features.smc.breaker" -> "features.smc.order_block";
+    "features.smc.fvg" -> "config_layer.crt_engine_v2";
+    "features.smc.fvg" -> "features.smc._geometry";
+    "features.smc.levels" -> "config_layer.crt_engine_v2";
+    "features.smc.levels" -> "features.smc._geometry";
+    "features.smc.mitigation" -> "config_layer.crt_engine_v2";
+    "features.smc.mitigation" -> "features.smc._geometry";
+    "features.smc.mitigation" -> "features.smc.order_block";
+    "features.smc.order_block" -> "config_layer.crt_engine_v2";
+    "features.smc.order_block" -> "features.smc._geometry";
     "governance" -> "governance.orchestrator";
     "governance.expansion_integration" -> "expansion.expansion_engine";
     "governance.expansion_integration" -> "governance.shadow_promotion_gate";
@@ -976,6 +1057,10 @@ digraph code_map {
     "governance.script_registry" -> "utils.jsonl_writer";
     "governance.script_seed" -> "governance.script_registry";
     "governance.script_seed" -> "utils.jsonl_writer";
+    "governance.semantic_grounding" -> "governance.framework_registry";
+    "governance.semantic_grounding" -> "governance.semantic_os";
+    "governance.semantic_grounding" -> "governance.semantic_query";
+    "governance.semantic_objects" -> "governance.semantic_identity";
     "governance.semantic_objects" -> "governance.semantic_os";
     "governance.semantic_os" -> "governance.framework_registry";
     "governance.semantic_query" -> "governance.semantic_objects";
@@ -1097,6 +1182,7 @@ digraph code_map {
     "research.envelope_offline.shadow" -> "research.envelope_offline.train";
     "research.envelope_offline.train" -> "features.feature_schema";
     "research.envelope_offline.train" -> "research.clean_labels.builder";
+    "research.episode_agreement" -> "research.episode_propositions";
     "research.episodes" -> "research.episodes.protocol";
     "research.episodes.builder" -> "research.episodes.protocol";
     "research.episodes.builder" -> "research.episodes.schema";
@@ -1360,9 +1446,27 @@ digraph code_map {
     "research.synthetic.story_builder" -> "research.synthetic.story_spec";
     "research.synthetic.story_registry" -> "research.synthetic.stories";
     "research.synthetic.story_registry" -> "research.synthetic.story_spec";
+    "research.visual_crt" -> "research.visual_crt.geometry";
+    "research.visual_crt" -> "research.visual_crt.pools";
+    "research.visual_crt.driver" -> "data_ingestion.dataset_integrity";
+    "research.visual_crt.driver" -> "features.parent_candle";
+    "research.visual_crt.driver" -> "research.contracts";
+    "research.visual_crt.driver" -> "research.indicators";
+    "research.visual_crt.driver" -> "research.measurement.forward_walk";
+    "research.visual_crt.driver" -> "research.visual_crt.geometry";
+    "research.visual_crt.driver" -> "research.visual_crt.pools";
+    "research.visual_crt.driver" -> "research.visual_crt.retest";
+    "research.visual_crt.geometry" -> "config_layer.crt_engine_v2";
+    "research.visual_crt.geometry" -> "features.candle_math";
+    "research.visual_crt.geometry" -> "research.visual_crt.pools";
+    "research.visual_crt.geometry" -> "structure.predicates";
+    "research.visual_crt.pools" -> "config_layer.crt_engine_v2";
+    "research.visual_crt.retest" -> "config_layer.crt_engine_v2";
+    "research.visual_crt.retest" -> "research.visual_crt.geometry";
     "research.weekly_sweep" -> "research.weekly_sweep.weekly_range";
     "research.weekly_sweep.weekly_range" -> "config_layer.crt_engine_v2";
     "research.weekly_sweep.weekly_range" -> "data_ingestion.session_autoderive";
+    "research.weekly_sweep.weekly_range" -> "structure.predicates";
     "research.zone_label_audit" -> "bitnet.zone_cosine_searcher";
     "research.zone_label_audit" -> "research.contracts";
     "research.zone_label_audit" -> "research.measurement.forward_walk";
@@ -1465,7 +1569,9 @@ digraph code_map {
     "runtime.backtest_v2" -> "features.feature_monitor";
     "runtime.backtest_v2" -> "features.feature_pipeline";
     "runtime.backtest_v2" -> "features.feature_schema";
+    "runtime.backtest_v2" -> "features.parent_candle";
     "runtime.backtest_v2" -> "journal.trade_provenance_v1_0";
+    "runtime.backtest_v2" -> "runtime.parent_crt_feed";
     "runtime.backtest_v2" -> "strategies.strategy_orchestrator";
     "runtime.backtest_v2" -> "strategies.strategy_registry";
     "runtime.backtest_v2" -> "training.training_trigger";
@@ -1505,6 +1611,11 @@ digraph code_map {
     "runtime.live_engine_hook" -> "uat.kill_switch";
     "runtime.live_engine_hook" -> "utils.config_dumper";
     "runtime.live_engine_hook" -> "utils.logging_config";
+    "runtime.parent_crt_feed" -> "config_layer.htf_state";
+    "runtime.parent_crt_feed" -> "config_layer.parent_crt";
+    "runtime.parent_crt_feed" -> "config_layer.production_config";
+    "runtime.parent_crt_feed" -> "config_layer.state_identity";
+    "runtime.parent_crt_feed" -> "features.parent_candle";
     "runtime.unified_replay_harness" -> "config_layer.config_builder";
     "runtime.unified_replay_harness" -> "config_layer.production_config";
     "runtime.unified_replay_harness" -> "runtime.backtest_bitnet";
