@@ -3,7 +3,7 @@
 Drift is permitted only when a non-UNRESOLVED corpus authority decision for the
 same logical_corpus_id lists the new hash (approved_sha256 or a candidate hash).
 
-This is NOT CandleLoader admission (R3).
+Byte-pin for R0. CandleLoader admission is R3 (`dataset_registry.admit_csv_path`).
 """
 from __future__ import annotations
 

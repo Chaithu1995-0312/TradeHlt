@@ -32,9 +32,12 @@ LEGAL_STATUS = frozenset({
     "UNRESOLVED",
     "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION",
 })
+# Duplicated copy of corpus_authority_decision.schema.json's volume_semantic enum (schema is
+# authority on conflict). test_volume_enum_matches_schema below pins the two together so this
+# frozenset can never silently drift from the schema again.
 VOLUME = frozenset({
-    "BASE_ASSET_VOLUME", "QUOTE_ASSET_VOLUME", "TICK_VOLUME", "LEG_VOLUME",
-    "SYNTHETIC_PRICE_RANGE_PROXY", "NONE", "UNDECLARED",
+    "BASE_ASSET_VOLUME", "QUOTE_ASSET_VOLUME", "TICK_VOLUME", "TICK_VOLUME_APPROXIMATE",
+    "LEG_VOLUME", "SYNTHETIC_PRICE_RANGE_PROXY", "NONE", "UNDECLARED",
 })
 
 
@@ -73,6 +76,47 @@ def test_schema_and_doctrine_exist():
     assert "synthetic" in text.lower()
 
 
+def test_dataset_identity_star_freeze_tokens():
+    """CH-dataset-identity-star-v1: object-model freeze must not silently drift."""
+    text = DOCTRINE.read_text(encoding="utf-8")
+    for token in (
+        "DATASET_IDENTITY_STATUS = FROZEN",
+        "canonical admitted artifact",
+        "direct projections",
+        "one admitted artifact, projections are functions",
+        "ParentCandleBuilder",
+        "derivation: direct",
+        "W1 forbidden as parent",
+        "FORENSIC",
+        "derived_h4",
+        "CalendarHTFBuilder",
+        "BC-1_INFRASTRUCTURE = IMPLEMENTED",
+        "BC-1_CLOSURE        = NOT_GRANTED",
+        "Construction ≠ Closure",
+        "path-governed",
+        "dataset-governed",
+        "What does the admitted object mean?",
+        "executable_open_vs_close_label_proof",
+        "declared ≠ enforced",
+        # BC-2 flipped 2026-09-03 on a LIVE OPEN pair (CH-bc2-open-close-emission-hardening-v2,
+        # evidence docs/research-readiness/bc2_open_close/). The pre-flip tokens were
+        # "BC-2_STATUS = AUTHORIZED INSTRUMENTED PRE-REGISTERED UNPROVEN" and
+        # "G-06 mt5 remains UNPROVEN"; the doc keeps them as an explicit supersedes line.
+        "BC-2_STATUS = PROVEN OPEN (mt5 family, 2026-09-03)",
+        "G-06_MT5 = PROVEN",
+        # the flip is family-scoped: closure must NOT follow from it
+        "BLOCKED:BC-1,BC-2[binance|yfinance],BC-3,BC-4,BC-5,BC-6[yfinance]",
+        "UNVERIFIED_NO_RECORDED_TERMINAL",
+        # the three inequalities stay: they are WHY this needed a live capture
+        "Probe exists ≠ Evidence exists",
+        "Scorer exists ≠ Proof exists",
+        "Synthetic PASS ≠ Live verdict",
+    ):
+        assert token in text, f"CORPUS_AUTHORITY.md missing freeze token {token!r}"
+    assert "M15 → H1 → H4" in text
+    assert "independently authoritative" in text
+
+
 def test_seeded_row_count_matches_logical_rollup():
     fp = json.loads(FINGERPRINT.read_text(encoding="utf-8"))
     n_logical = fp["n_logical_corpora"]
@@ -82,6 +126,17 @@ def test_seeded_row_count_matches_logical_rollup():
     )
     ids = [r["logical_corpus_id"] for r in rows]
     assert len(ids) == len(set(ids)), "duplicate logical_corpus_id in decisions"
+
+
+def test_volume_enum_matches_schema():
+    """The module-level VOLUME frozenset is a duplicated copy (test-side convenience) of
+    corpus_authority_decision.schema.json's volume_semantic enum. Pin equality so the copy
+    cannot silently drift from the schema again (same class as F-079/F-083 silent-gap)."""
+    schema_enum = set(_schema()["properties"]["volume_semantic"]["enum"])
+    assert VOLUME == schema_enum, (
+        f"VOLUME frozenset drifted from schema enum: "
+        f"only-in-test={VOLUME - schema_enum} only-in-schema={schema_enum - VOLUME}"
+    )
 
 
 def test_required_fields_and_status_enum():

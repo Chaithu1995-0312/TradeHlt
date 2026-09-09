@@ -98,11 +98,13 @@
         "BASE_ASSET_VOLUME",
         "QUOTE_ASSET_VOLUME",
         "TICK_VOLUME",
+        "TICK_VOLUME_APPROXIMATE",
         "LEG_VOLUME",
         "SYNTHETIC_PRICE_RANGE_PROXY",
         "NONE",
         "UNDECLARED"
-      ]
+      ],
+      "description": "TICK_VOLUME_APPROXIMATE added for BC-4a schema-wiring parity with dataset_identity.schema.json (F-099: MT5 volume is measured APPROXIMATE, not CONFIRMED). Adding the member is expressibility only -- is_synthetic enforcement and SEED-OHLCV-19 remain open; BC-4 stays a blocker (CORPUS_AUTHORITY.md)."
     },
     "volume_meta": {
       "type": ["object", "null"],
