@@ -1,22 +1,101 @@
+# GITIGNORE SCHEMA v1 — docs/governance/GITIGNORE_SCHEMA.md
+# Classes (closed): TRACKED_CODE | TRACKED_MEANING | TRACKED_BINDING
+#                   LOCAL_BLOB | LOCAL_MODEL | LOCAL_RUN | LOCAL_TELEMETRY
+#                   LOCAL_IDENTITY | LOCAL_SECRET | LOCAL_CACHE | MIXED_RESIDUE
+# Occupancy is never git. Identity names (hashes, Dataset Identity, Class C) are.
+# Do not `git add` data/ models/ logs/ results/ telemetry. Do not `git rm --cached`
+# MIXED_RESIDUE without a separate authorization.
+
+# --- LOCAL_CACHE ---
 __pycache__/
-data
-logs
-*results*.zip
-results
-*.bak
-reports/dataset_integrity/
-venv
-.env
-.claude
-models/
-logs.zip
+*.pyc
+*.pyo
+venv/
+.venv/
 context/
-multi_llm/turns/
-multi_llm/turn_ledger.jsonl
-# mt5_analytics generated/ephemeral output (rebuildable from MT5 history)
+*.bak
+~$*
+
+# --- LOCAL_SECRET ---
+.env
+
+# --- LOCAL_BLOB (INV-050) ---
+# Corpus bytes. Dataset Identity + frozen-candidate hashes are TRACKED_BINDING.
+/data/*
+!/data/.gitkeep
+!/data/README.md
+
+# --- LOCAL_TELEMETRY (INV-053) ---
+# Append-only JSONL. The claim catalog is TRACKED_MEANING, not this tree.
+/logs/*
+!/logs/.gitkeep
+!/logs/README.md
+runtime/exec_telemetry/
+
+# --- LOCAL_RUN (INV-052) ---
+/results/*
+!/results/.gitkeep
+!/results/README.md
+/reports/*
+reports/dataset_integrity/
+xauusd_backtest_run/
+*results*.zip
+
+# --- LOCAL_MODEL (INV-051) ---
+# New files ignored. 32 already-tracked files = MIXED_RESIDUE (see schema §3).
+/models/*
+!/models/README.md
+
+# --- LOCAL_IDENTITY (Class A/B occupancy) ---
+# Class C lives at docs/governance/identity_bindings/ (TRACKED_BINDING).
+/objects/
+/records/
+/identity_store/
+
+# --- LOCAL_CACHE / vendored / generated (existing trees) ---
+.claude
 mt5_analytics/artifacts/
 mt5_analytics/reports/
 mt5_analytics/state/
 mt5_analytics/audit/
-# Execution Quality Observatory telemetry (runtime artifact, re-captured by --exec-log)
-runtime/exec_telemetry/
+tools/oss_lab/
+tools/tv_forensic/shots/
+multi_llm/turns/
+multi_llm/turn_ledger.jsonl
+bundles/
+agent-tools/
+
+# --- LOCAL_RUN archives / scratch ---
+*.zip
+logs.zip
+docs (*).zip
+scripts (*).zip
+
+# session dumps at repo root (not findings, not Evidence)
+/pytest_*.txt
+/pytest_*.log
+/pytest_out.txt
+/pytest_output.txt
+/pytest_result.txt
+/pytest_full_run.log
+/test_out.txt
+/test_capture.json
+
+# --- TRACKED_HARNESS exception (Grok TUI) ---
+# .grok/ is tracked except bot outbox occupancy.
+.grok/bot_drop/*/outbox/*
+!.grok/bot_drop/*/outbox/.gitkeep
+
+# --- MIXED_RESIDUE (named, not rewritten this turn) ---
+# models/ : 32 files still in the index despite the ignore rule.
+# reports/ : 126 files still in the index; new files now LOCAL_RUN.
+# Untrack only under a separate authorization. Schema §3.
+
+# --- LOCAL_RUN / scratch (working-tree hygiene 2026-09-09) ---
+/terminals/
+/copiedSrcFiles/
+/_l003_scratch/
+/H-SECONDLOW-002_Complete_Package/data/
+/H-SECONDLOW-002_Complete_Package/results/
+/src/logs/
+/src/runtime/results/

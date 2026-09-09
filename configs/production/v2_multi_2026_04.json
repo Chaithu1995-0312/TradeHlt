@@ -290,6 +290,21 @@
       0.2
     ]
   },
+  "_comment_parent_crt": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15) + CH-parent-crt-caller-wire (2026-08-16). New top-level section (hash-neutral -- params untouched). CRTEngine.__init__ strictly reads parent_crt.enabled once at construction -- a missing key is a config authoring error, so this section must exist on every production config. enabled:false here preserves BYTE-IDENTICAL behavior: ParentCRTFeed.from_prod_config() returns None and BacktestRunner passes parent_state=None; the engine flag additionally no-ops the EXECUTION bias check even if a caller passed a bias. The arm is enabled:true only on v2_htfcrt_2026_08.",
+  "parent_crt": {
+    "enabled": false,
+    "timeframe": "H4",
+    "bias_gate_mode": "reject_on_mismatch",
+    "htf_state": {
+      "expansion_min_range_ratio": 1.2,
+      "accumulation_max_range_ratio": 0.7,
+      "distribution_min_range_ratio": 1.0
+    },
+    "objective_gate": {
+      "enabled": false,
+      "mode": "allow_exists_only"
+    }
+  },
   "rr_model": {
     "ridge_alpha": 10.0,
     "gnb_var_smoothing": 1e-09,
@@ -438,7 +453,8 @@
     }
   },
   "backtest": {
-    "htf_candles_per_range": 4,
+    "_comment_htf_candles_per_range": "M15 bars per completed HTF window (HTFBuilder). 4 = 1H, 16 = 4H. The ONLY effect is how often current_htf_id flips, which ResetLogic.should_reset compares to active_range.htf_candle_id (DISPLACEMENT/SWEEP/RANGE/SHADOW_PENDING reset; EXPANSION/RETEST exempt). Independent of crt_engine.pending_displacement_ttl_candles, retrace_reset_pct, sessions, and TP. Changing this key does not change those rules.",
+    "htf_candles_per_range": 16,
     "_comment_warmup_candles": "T-16 (2026-07-23): raised 30 -> 78 to match the feature pipeline's CANONICAL warmup, which FeaturePipeline.finalize() drops. 78 is DERIVED, not chosen: feature_pipeline.ma_periods[0](20) + 1 (ma_slope diff) + trend_strength_window(10) - 1 + zscore_window(50) - 1, resolved by features.feature_pipeline.required_warmup_rows(). At 30 the replay loop ran candles 30..77 through the CRT state machine with NO feature row behind them, and a trade opened there silently received a zero vector. BacktestRunner now refuses to start when this value is below the derived one, so changing any of those three feature_pipeline windows without raising this key FAILS LOUDLY instead of reopening the gap.",
     "warmup_candles": 78,
     "_comment_engine_gate_enabled": "F-058 resolution (2026-07-23). The 4-engine fusion gate (CRT/Gaussian/ZoneGate/RR -> Fusion -> DecisionEngine veto) inside EngineRunner.run(). Previously declared NOWHERE and read only as os.getenv('BACKTEST_ENGINE_GATE', '1'), so documented behavior depended on an UNTRACKED .env: F-037/active_models.yaml describe it as OFF while the code default is ON, and any scrubbed/CI environment silently produced a different ledger. Declared here as the authority; the env var remains an explicit override and now logs at WARNING when it disagrees. Declaring ON is an EPOCH CHANGE -- the gate-OFF research corpus (F-019...F-036) stays valid for its own epoch and is not retro-invalidated.",
@@ -527,7 +543,9 @@
     "_comment_normalization_basis": "FM-030/031 IDENTITY SELECTOR (2026-07-22, program FM-030-031-DIMENSIONAL-MIX-MIGRATION). Not a period -- it chooses WHICH registered identity ema_spread/momentum_score emit. 'atr_relative' = FM-022/FM-023, numerator / atr; because atr is close-relative (atr_14_raw/close) and the numerator is absolute price, the emitted value scales with price level (legacy == corrected * close). This is the DEFAULT and is byte-identical to the pre-2026-07-22 pipeline -- the XAUUSD freeze-pin vector SHA is its parity proof. 'atr_absolute' = FM-030/FM-031, numerator / (atr * close), scale-invariant. F-061 measured the legacy arm's decision-surface cost on crypto (detect_regime ~constant 'trend', breakout score pinned at 1.0, tanh(momentum) saturated); the corrected arm is measured via configs/production/v2_multi_dimfix_shadow_2026_07.json and carries NO production authority (CLAUDE.md 6.5).",
     "normalization_basis": "atr_relative",
     "_comment_session_timestamp_basis": "F-066 (2026-08-01, blind-label investigation). Selects which clock hour_of_day/session (FM-052) derive from. 'broker_local' = the DEFAULT, byte-identical to every pipeline run before this key existed: uses the raw timestamp column as-is. For this MT5-sourced corpus that raw timestamp is actually broker-server time (EET/EEST, tracking America/New_York DST), NOT UTC, despite session_windows_utc's name -- measured 53.36 pct of XAUUSD bars carry the wrong session label under this basis (two independent cross-instrument tests: BTCUSDT cross-correlation, NFP-release alignment; see docs/research/preregistration-blind-label-descriptive-fidelity.md). 'utc_corrected' = derives from features/broker_clock.py's true-UTC conversion, making session/hour_of_day match what session_windows_utc already claims. This key stays 'broker_local' here; flipping the ACTIVE config to 'utc_corrected' is a separate, explicitly-gated decision (feature-vector SHA changes on ~53 pct of bars, freeze-pin re-certification required) -- NOT made by this config edit.",
-    "session_timestamp_basis": "broker_local"
+    "session_timestamp_basis": "broker_local",
+    "_comment_smc_max_window": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Trailing-candle-buffer bound for compute_smc_features's OB/FVG/breaker/mitigation scanners -- a performance/scope bound, not a registered identity parameter. Reuses swing_window above for the causal swing half-window k (no duplicate key).",
+    "smc_max_window": 100
   },
   "notes": "April tuner run, 3-month window",
   "schema_version": "1.3",

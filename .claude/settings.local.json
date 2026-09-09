@@ -130,7 +130,8 @@
       "Bash(venv/Scripts/pip show *)",
       "Bash(python -m pytest tests/test_sl_tp_comparator.py -q)",
       "Bash(pytest tests/test_crt_session_filter.py tests/test_engine_runner_dual_gate.py tests/test_execution_planner.py -q)",
-      "Bash(python -m pytest tests/test_zone_gate_min_samples.py -v)"
+      "Bash(python -m pytest tests/test_zone_gate_min_samples.py -v)",
+      "Bash(python scripts/maintenance/gen_crt_state_identity.py)"
     ]
   },
   "hooks": {

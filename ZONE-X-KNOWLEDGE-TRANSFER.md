@@ -391,6 +391,7 @@ picked.
 | 3 | Larger live stop sample across vol regimes | **Open** — may revise design `c`; does not auto-reopen search |
 | 4 | Max drawdown → `f` (O-3) | Open, deferred |
 | 5 | O-4 gap penalty descriptive | **CLOSED 2026-08-06** — avg penalty ~0 at m=1; report in `results/research/zone_x_o4_gap_study/` |
+| 6 | Parquet layer join | **CLOSED 2026-08-23** — occupancy linked; §6 null remains NOT_REACHABLE; path (a) unchanged |
 
 ---
 
@@ -407,6 +408,7 @@ picked.
 | `scripts/research/xauusd_mt5_cost_seed_stops.py` | DEMO STOP fill seeder |
 | `scripts/research/zone_x_o4_gap_study.py` | O-4 descriptive gap penalty study |
 | `results/research/zone_x_o4_gap_study/` | O-4 report + JSON |
+| `results/research/zone_x_parquet_link/` | 2026-08-23 join to the XAUUSD Parquet projection layer (window occupancy + O-4 sample). See Part 13. |
 | `ZONE-X-SPEC-v0.7.md` | previous — one-year rebase, headroom metric |
 | `ZONE-X-SPEC-v0.6.md` | previous — power correction, `O-2`/`O-4` resolution |
 | `ZONE-X-SPEC-v0.5.md` | previous — straddle EV substitution, first measured rebuild |
@@ -431,3 +433,49 @@ ZONE-X geometry search on gold M15. Any future economic or labeling claim that
 depends on cost must be shown on the {0.0238, 0.055, optional 0.070} grid;
 stability across that grid is required before treating a rule as ontology-ready
 (`ZONE-X-DECISION-2026-08-06.md`).
+
+---
+
+# PART 13 — PARQUET LAYER LINK (2026-08-23)
+
+**Lane:** measurement/evidence. **Path (a) Stop is unchanged.** This does not seek X,
+does not unseal the test year for search, and does not form CRT states from ZONE-X.
+
+The XAUUSD parquet layer is a JSONL projection (`src/utils/parquet_store.py`), not the
+candle store. Canonical OHLC stays `data/mt5/XAUUSD_M15.csv`. The join grain is the
+ZONE-X window **anchor timestamp** (close of bar `t+L-1`) against parquet row timestamps.
+
+## What was projected
+
+| Artifact | Rows | Parquet status | Verify |
+|---|---:|---|---|
+| `zone_x_windows.jsonl` (occupancy, no `g(W)` features) | 47,252 | FRESH, 17.3× | 0 mismatches |
+| O-4 stop-event sample CSV | 5,000 | FRESH, 9.3× | 0 mismatches |
+
+Window counts **hold** against O-4 on the same CSV (`sha256 4d73f5ce…`, 47,275 bars):
+generation 23,541 / test 23,711 windows; admissible 17,639 / 17,743.
+
+## Occupancy join (existing XAUUSD parquet, FRESH)
+
+| Corpus | n | Calendar split | Admissible-anchor hits |
+|---|---:|---|---|
+| opportunities | 94,332 | gen 46,888 / test 47,444 / outside 0 | 70,620 (74.86%) |
+| clean_labels | 94,332 | same | 70,620 (74.86%) |
+| events | 7,112 | gen 3,483 / test 3,629 / outside 0 | 5,380 (75.65%) |
+| telemetry | 4,883 | 4,860 rows have no timestamp | 20 (0.41%) — sparse `kind` stream |
+| mother-range ledger | 299 | gen 150 / test 149 / outside 0 | 163 (54.52%) |
+
+Opportunities and clean_labels sit entirely inside the ZONE-X generation+test calendar.
+They are **not** a ZONE-X window corpus — they are a detection/label stream that happens
+to timestamp onto the same gold M15 bars.
+
+## What parquet cannot see
+
+| Object | Verdict |
+|---|---|
+| v0.8 §6 eight-feature null | **NOT_REACHABLE_VIA_PARQUET** — no JSONL of per-window `g(W)` vectors; path (a) forbids rebuilding them under ZONE-X branding |
+| O-1 cost calibration | **SEMANTIC_LINK_NOT_PARQUET_GRAIN** — JSON/CSV summaries already consumed by SEM-015 / F-082; not a row stream |
+
+Regenerate: `python results/research/zone_x_parquet_link/link.py`
+(gitignored `results/`, same pattern as the H-019 parquet revalidation).
+Artifact: `results/research/zone_x_parquet_link/report.json`.
