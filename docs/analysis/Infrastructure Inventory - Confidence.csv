@@ -1,0 +1,81 @@
+﻿Asset,Confidence,Reason
+INV-001 Agent (GrokAgenticAI),HIGH,Dedicated memory doc + architecture-memory §3.1 + agent-reference + package on disk.
+INV-002 Control Plane,HIGH,architecture-memory §3.7 + entry-exit-map + server.py + run_server.py.
+INV-003 CLI Scripts Fleet,HIGH,conventions.md §2.1 + cli-matrix + 385 files counted. Internal per-script I/O not expanded (by design: one row).
+INV-004 Core Decision Spine,HIGH,signal-flow + service-boundary S3 + architecture-memory §3.3 + src/core on disk.
+INV-005 Config Layer,HIGH,architecture-memory §3.4 + production_config.py + ACTIVE_VERSION file read this pass.
+INV-006 CRT State Machine,HIGH,engine-memory + crt-spine topic + state_identity + multiple findings. Parent CRT included with cited F-075/F-089.
+INV-007 Scoring Engines,HIGH,engine-memory + scoring-engines topic + EXPECTED_ENGINES contract.
+"INV-008 Feature Schema, Pipeline, Ontology Math",HIGH,"feature-memory + topic + schema/pipeline files. Dim 38 vs 48 recorded as unresolved doc conflict, not guessed away."
+INV-009 SMC Feature Primitives,HIGH,Package __init__ isolation contract + F-076.
+INV-010 Governance / Promotion,HIGH,governance-memory + promotion topic + promotion_manager.py.
+INV-011 Runtime Harnesses,HIGH,runtime-memory + entry-exit-map live NO-CALLER.
+INV-012 Data Ingestion + Integrity,MEDIUM,Listed in architecture-memory §2.10 and F-039; module bodies not fully read this pass.
+INV-013 Inout Candle Fetchers,MEDIUM,entry-exit-map marks fetcher details DRIFT-DOC. Presence confirmed; I/O details thin.
+INV-014 Live Rail,HIGH,Package docstring + F-073 + live_rail tests exist.
+INV-015 Live Bridges,HIGH,entry-exit-map + live-execution topic + mt5/telegram modules.
+INV-016 Execution Loop,HIGH,loop.py docstring + F-013 orphan status. Downstream live use is documented as absent.
+INV-017 Scanner / Signal Pool,HIGH,scanner.py + F-013. Designed vs consumed distinguished.
+INV-018 Portfolio Allocator,HIGH,allocator.py + F-013.
+INV-019 Strategies (S01–S10),LOW,Package exists (~18 .py) and is listed in §2.10; Ins/Outs not read. INFRA.md says dormant consensus. Marked UNKNOWN where unread.
+INV-020 BitNet Package,HIGH,bitnet-gate topic + F-004/F-055 + package on disk.
+INV-021 Training Kitchen,HIGH,train_pipeline.py header + architecture-memory §4.10 + scripts/training.
+INV-022 Research Platform,HIGH,src/research/__init__.py authority split + 175 files counted + runtime-boundary test cited.
+INV-023 Research Measurement Contracts,HIGH,Instances listed on disk this pass; closure index OPEN; topic doc 0-sealed claim flagged as DOC_DRIFT vs disk.
+INV-024 Interpreters,MEDIUM,§2.10 + F-028/F-043. Module internals not fully read.
+INV-025 Replay Memory,HIGH,Module docstring + F-012 sidecar finding.
+INV-026 Cognitive Bus,HIGH,Module HARD RULES + F-012.
+INV-027 Event Fabric,HIGH,event_fabric.py + service-boundary S7 + topic.
+INV-028 Trade Journal,HIGH,trade_logger.py + entry-exit-map + schemas.md.
+INV-029 Expansion Engine,MEDIUM,Listed in architecture.md and §2.10; evaluator internals not read.
+INV-030 Analytics,MEDIUM,§2.10 + one documented upward import. Full I/O UNKNOWN.
+INV-031 Retrieval / RAG,LOW,Package exists; live call-site wiring UNKNOWN this pass.
+INV-032 LLM Advisory Client,HIGH,service-boundary S8 + architecture.md §5 + llm_inference_client fail-open.
+INV-033 LLM Research Pipeline,MEDIUM,Package __init__ describes the pipeline; not in §2.10; callers UNKNOWN.
+INV-034 AI Feedback,MEDIUM,Module HARD RULES read; production schedule UNKNOWN.
+INV-035 Regime Classifier + Config Router,LOW,Module exists; whether it is the live fusion regime path is UNKNOWN (other detect_regime sites exist).
+INV-036 Regime Weight Searcher,LOW,Single module; FusionEngine import seen; runtime use UNKNOWN.
+INV-037 Structural Predicates,HIGH,predicates.py authority split + binding test.
+INV-038 MSIP Shadow,HIGH,Package __init__ flags + dedicated tests.
+INV-039 Charts,HIGH,Package __init__ scope (A0 only) + INFRA-CPC-V1 citation.
+INV-040 Identity Store,HIGH,Package __init__ + three CLOSED storage contracts + test_identity_store.py.
+INV-041 Semantic OS,HIGH,SEMANTIC_OS_CONTRACT.md + semantic_os.py + grounding CLI.
+INV-042 Validation Access Ladder,MEDIUM,__init__ authority statement read; ladder steps not expanded.
+INV-043 UAT Package,LOW,One-line package comment + §2.10 listing only.
+INV-044 Utils,MEDIUM,§2.10 + entry-exit-map for integrity/sweep loggers; not every helper inventoried.
+INV-045 Health Checker,MEDIUM,Module docstring complete; whether anything binds port 8788 in production UNKNOWN.
+INV-046 Exec Telemetry Report,MEDIUM,report.py operational-only contract read; dual-tree (exec_telemetry/ vs runtime/exec_telemetry/) unresolved.
+INV-047 Production Config Registry,HIGH,ACTIVE_VERSION file read (v2_htfcrt_2026_08) + §4.0 doctrine.
+INV-048 Formula / Ontology YAML,HIGH,§6.6 + feature-memory + configs/formulas listing.
+INV-049 Market Reality Config,MEDIUM,File exists + F-076 note; consumers not fully traced.
+INV-050 OHLCV Data Corpus,HIGH,Directory listing + README/architecture citations. Tracked-vs-gitignored per-file not enumerated.
+INV-051 Model Artifacts,HIGH,"Directory listing + model_registry write path. Informativeness of artifacts is findings, not this inventory."
+INV-052 Results Artifacts,HIGH,Directory listing + backtest writers. Contents not catalogued file-by-file.
+INV-053 Logs / JSONL Streams,HIGH,entry-exit-map + claim catalog. Individual stream completeness UNKNOWN.
+INV-054 Tests,HIGH,tests/ listing + testing.md + pyproject. File count in testing.md is stale vs disk.
+INV-055 Documentation Corpus,HIGH,README 4-tier map + CLAUDE.md companion table. Internally many sub-corpora; grouped on purpose.
+INV-056 Findings + Closure Index,HIGH,Always-loaded CLAUDE.md tables + enforcing tests.
+INV-057 MT5 Analytics,HIGH,architecture.md + conventions.md + tree + tests/mt5_analytics/. Not opened module-by-module.
+INV-058 OSS Lab,HIGH,README + OSS_INTEGRATION_ARCHITECTURE.md + test_oss_lab.py.
+INV-059 TradingView Forensic Tools,HIGH,README + F-079/F-080.
+INV-060 Multi-LLM Coordination Layer,HIGH,multi_llm/README + CLAUDE.md §13 + src/multi_llm.
+INV-061 Grok Session Layer,HIGH,.grok/rules/GROK.md auto-load + INFRA/HOW_INDEX/PENDING.
+INV-062 Git Hooks + CI,HIGH,hooks/README + .github/workflows listing.
+INV-063 UI Kits,HIGH,ui_kits/control_plane/README.md stubbed-backend statement.
+INV-064 Manual Tools,MEDIUM,conventions.md placement rule; trade_generator.py not opened.
+INV-065 Archive,HIGH,Directory listing only — sufficient for 'not live'.
+INV-066 Reports Tree,MEDIUM,Tree exists; per-report authority UNKNOWN.
+INV-067 Flow Graphs + Code Maps,HIGH,Generated-docs row in entry-exit-map + flow_context/runtime.json opened.
+INV-068 Portable Mind,HIGH,CLAUDE.md Compile trigger + build_context.py + test_context_compiler.py.
+INV-069 Knowledge Book PDFs,MEDIUM,Directory listing + docs/book/README as the living source.
+INV-070 Packaging / Environment,HIGH,pyproject.toml + README + Dockerfile seen. venv excluded from product.
+INV-071 active_models.yaml,HIGH,CLAUDE.md machine-readable sources + dedicated test.
+INV-072 Goal Layer (G001),HIGH,goal-layer topic + goal_schema.py + tests.
+INV-073 Feature Store,HIGH,feature_store.py + architecture.md + F-085.
+INV-074 Model Registry,HIGH,entry-exit-map + governance-memory.
+INV-075 Collector,HIGH,entry-exit-map + architecture.md §3.1.
+INV-076 Execution Planner,HIGH,execution-planning topic + signal-flow.
+INV-077 Ultron Risk Gate,HIGH,ultron-risk-gate topic + F-048 + service-boundary S4.
+INV-078 Functionality / GCMC Inventories,HIGH,HOW_INDEX + CLOSURE_KPI. This workbook is a different grain.
+INV-079 Session Logs,HIGH,CLAUDE.md §6 + files on disk + tests.
+INV-080 Experimental Specs + ZONE-X docs,MEDIUM,Files exist; runtime load UNKNOWN; charts forbids ZONE-X import.

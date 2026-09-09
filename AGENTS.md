@@ -9,6 +9,7 @@ name; it deliberately does **not** duplicate the doctrine (the previous duplicat
 drifted out of date).
 
 **Start here:**
+- Grok session? → [`.grok/rules/GROK.md`](.grok/rules/GROK.md) (auto-loaded harness). Repo-root [`GROK.md`](GROK.md) is a pointer only.
 - New to the repo? → [`README.md`](README.md) (Quick Start + docs map).
 - Operating rules / how to work → [`CLAUDE.md`](CLAUDE.md).
 - LLM cold-start recipe → [`docs/architecture/TRIGGER_VOCABULARY.md`](docs/architecture/TRIGGER_VOCABULARY.md).

@@ -1,0 +1,55 @@
+﻿Source,Relationship,Target,Evidence
+OHLCV CSV (data/),streamed into,Runtime Harnesses (Backtest),docs/architecture/signal-flow.md; docs/reference/architecture.md §3.1; README Quick Start
+"Feature Schema, Pipeline, Ontology Math",emits canonical vector to,Core Decision Spine (EngineRunner),docs/memory/feature-memory.md Exit points; docs/reference/architecture.md §3.1; flow_context/runtime.json
+"Feature Schema, Pipeline, Ontology Math",writes into,Feature Store,docs/reference/architecture.md §3.1 FeaturePipeline → FeatureStore
+"Scoring Engines (Gaussian, ZoneGate, RR, Trap)",emit scores to,Core Decision Spine (FusionEngine),docs/memory/engine-memory.md; docs/architecture/service-boundary-map.md S2→S3
+CRT State Machine,scored via wrapper by,Scoring Engines / EngineRunner,docs/memory/engine-memory.md (CRT score wrapper vs state machine)
+Core Decision Spine (FusionEngine),feeds,Core Decision Spine (DecisionEngine),docs/architecture/service-boundary-map.md S3; architecture-memory.md §5.1
+Core Decision Spine (DecisionEngine),"on ACCEPT, consumed by",Execution Planner,docs/topics/execution-planning.md; architecture-memory.md §5.1
+Execution Planner,consumed by,Ultron Risk Gate,docs/topics/ultron-risk-gate.md; architecture-memory.md §5.1; F-048
+Ultron Risk Gate,"on APPROVE, would send to",Live Bridges (MT5 + Telegram),docs/topics/live-execution.md; entry-exit-map.md — production loop uncalled
+Runtime Harnesses (Backtest),drives,CRT State Machine + optional EngineRunner gate,docs/memory/runtime-memory.md; F-037/F-058 engine_gate_enabled
+ConfigValidator (Config Layer),runs,Runtime Harnesses (Backtest),docs/reference/architecture.md §3.2; service-boundary-map.md upward violation citation config_validator.py
+Governance / Promotion,requires APPROVE from,ConfigValidator (Config Layer),docs/memory/governance-memory.md; docs/topics/promotion-governance.md
+Governance / Promotion,writes,Production Config Registry + ACTIVE_VERSION + promotion_log.jsonl,docs/architecture/entry-exit-map.md; promotion_manager.py cited
+Governance / Promotion,"imports (upward, documented violation)",Runtime Harnesses (Backtest),docs/architecture/service-boundary-map.md (governance/portfolio_validation.py)
+Analytics,"imports (upward, documented violation)",Runtime Harnesses (Backtest),docs/architecture/service-boundary-map.md (analytics/sl_tp_comparator.py:589)
+Agent (GrokAgenticAI),triggers / taps,Governance / Promotion and Runtime Harnesses,docs/memory/agent-memory.md; architecture-memory.md §1 diagram
+Control Plane,launches as jobs,CLI Scripts Fleet,docs/architecture/architecture-memory.md §3.7; entry-exit-map.md
+CLI Scripts Fleet,import,src/ packages (never own production logic),docs/reference/conventions.md §2
+LLM Advisory Client,advisory dotted edge to,FusionEngine (uncertainty band),docs/architecture/service-boundary-map.md S8; architecture.md §3.1 LLM tie-breaker
+Event Fabric,envelopes events from,services that call make_event_envelope,docs/architecture/service-boundary-map.md S7; src/events/event_fabric.py
+Collector (decision audit),writes,logs/collector.jsonl,entry-exit-map.md; architecture.md §3.1
+Trade Journal,should also route through,Collector (decision audit),src/journal/trade_logger.py integration rule
+Cognitive Bus,consumes DecisionSnapshot from,EngineRunner (non-blocking emit),src/cognitive/cognitive_bus.py HARD RULES
+Cognitive Bus,never returns to,execution plane,src/cognitive/cognitive_bus.py HARD RULES; F-012
+Replay Memory,consumed by,Cognitive Bus,src/replay/replay_memory_engine.py Consumed by list
+BitNet Package,hard-reject inside CRT when,use_bitnet enabled (currently false),docs/topics/bitnet-gate.md; F-004
+Training Kitchen,registers models via,Model Registry,src/training/train_pipeline.py; governance-memory.md
+Model Registry,writes,Model Artifacts (models/),entry-exit-map.md
+Live Rail,does not call (documented unwired),Live Engine Hook / orders,src/inout/live_rail/__init__.py; F-073
+Scanner / Signal Pool,designed to call,EngineRunner,src/scanner/scanner.py docstring
+Scanner / Signal Pool,not consumed by live spine (orphaned),single-candle live path,F-013
+Execution Loop + Alerts + Override,designed to orchestrate,Scanner + Regime + Portfolio + Ultron,src/execution/loop.py docstring; F-013 ORPHANED
+Portfolio Allocator,designed to precede,Ultron Risk Gate,src/portfolio/allocator.py docstring; F-013
+SMC Feature Primitives,consumed by,Feature Pipeline compute_smc_*,src/features/smc/__init__.py
+Structural Predicates,must conform to,Formula / Ontology YAML structural_predicates,src/structure/predicates.py; tests/test_predicate_definition_binding.py
+Semantic OS,grounds claims for,Agent truth.ground_claim,docs/memory/agent-memory.md; SEMANTIC_OS_CONTRACT.md
+Research Platform,must not import,PromotionManager / ConfigValidator,src/research/__init__.py; tests/test_runtime_boundary.py
+Research Platform model_runners,may observe,production EngineRunner / Fusion / Decision,src/research/__init__.py
+OSS Lab,must not be imported by,"production spine (src/core, CRT, Fusion, Decision, Ultron, ontology)",oss_lab/README.md Hard rules
+OSS Lab,may import from,src/ (reuse only),oss_lab/README.md Hard rules
+MT5 Analytics (read-only),imports,src/,docs/reference/architecture.md §2; conventions.md
+MT5 Analytics (read-only),must not place,orders (manual_tools is the acting side),docs/reference/conventions.md
+TV Forensic Tools,reads only,data/XAUUSD_M15.csv (no engine mutation),tools/tv_forensic/README.md
+Git Hooks + CI,enforce,GREEN_FLOOR + SESSION LOG on governed paths,hooks/README.md
+Goal Layer (G001),scored inside,Backtest metrics / ConfigValidator,docs/topics/goal-layer.md
+Inout Candle Fetchers,seed,OHLCV Data Corpus,entry-exit-map.md (DRIFT-DOC on details)
+Charts (corpus OHLC renderer),must not import,ZONE-X modules,src/charts/__init__.py Z-AC1
+AI Feedback,suggestions feed (not auto-apply),Expansion Engine,src/feedback/ai_feedback.py HARD RULES
+Multi-LLM Coordination Layer,consumes generated,Portable Mind (context/*.md),multi_llm/README.md
+Portable Mind (context/*.md),generated from,Documentation Corpus via scripts/context/build_context.py,CLAUDE.md §13 Compile trigger
+Identity Store,implements Phase 4 of,Physical storage architecture (CLOSED spec),src/identity/__init__.py; PHYSICAL_STORAGE_ARCHITECTURE.md
+MSIP Shadow,must not influence,CRT / events / trades / execution,src/msip/__init__.py SHADOW_AFFECTS_* = False
+Control Plane,does not have,broker authority,architecture-memory.md §3.7
+Ultron Risk Gate,kill-switch path uses,logs/kill_switch_state.json (hardcoded path cited),service-boundary-map.md S4 blockers

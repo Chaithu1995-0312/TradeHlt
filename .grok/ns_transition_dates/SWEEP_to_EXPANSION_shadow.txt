@@ -1,0 +1,6 @@
+2024-06-13T15:45:00	idx=1459	dir=None	Shadow resume: displacement carried from prior HTF window — strength check skipped
+2024-06-25T18:45:00	idx=2197	dir=None	Shadow resume: displacement carried from prior HTF window — strength check skipped
+2024-06-27T04:45:00	idx=2325	dir=None	Shadow resume: displacement carried from prior HTF window — strength check skipped
+2024-11-04T09:15:00	idx=10787	dir=None	Shadow resume: displacement carried from prior HTF window — strength check skipped
+2025-06-03T16:45:00	idx=24371	dir=None	Shadow resume: displacement carried from prior HTF window — strength check skipped
+2025-12-18T17:00:00	idx=37381	dir=None	Shadow resume: displacement carried from prior HTF window — strength check skipped
