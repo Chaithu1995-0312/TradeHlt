@@ -1,0 +1,1519 @@
+{
+  "title": "Chart Not Found \u2014 TradingView India",
+  "url": "https://in.tradingview.com/chart/Io3C5clp/",
+  "buttons": [
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Skip to main content",
+      "cls": "button-XNUivTou"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Open menu",
+      "title": "",
+      "text": "",
+      "cls": "tv-header__hamburger-menu js-header-main-menu-mobile-button"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "TradingView main page",
+      "title": "",
+      "text": "",
+      "cls": "tv-header__link tv-header__link--logo js-header-context-menu"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Search",
+      "title": "",
+      "text": "Search",
+      "cls": "tv-header-search-container tv-header-search-container__button tv-header-search-c"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Search",
+      "title": "",
+      "text": "",
+      "cls": "tv-header-search-container__button tv-header-search-container__button--simple js"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Products",
+      "cls": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "Products menu",
+      "title": "",
+      "text": "",
+      "cls": "tv-header__main-menu-item__chevron"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Community",
+      "cls": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "Community menu",
+      "title": "",
+      "text": "",
+      "cls": "tv-header__main-menu-item__chevron"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Markets",
+      "cls": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "Markets menu",
+      "title": "",
+      "text": "",
+      "cls": "tv-header__main-menu-item__chevron"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Brokers",
+      "cls": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "Brokers menu",
+      "title": "",
+      "text": "",
+      "cls": "tv-header__main-menu-item__chevron"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "More",
+      "cls": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "More menu",
+      "title": "",
+      "text": "",
+      "cls": "tv-header__main-menu-item__chevron"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Open language menu",
+      "title": "",
+      "text": "IN",
+      "cls": "tv-header__language-button js-header-language-button"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Open user menu",
+      "title": "",
+      "text": "",
+      "cls": "tv-header__user-menu-button tv-header__user-menu-button--anonymous js-header-use"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Open user menu",
+      "title": "",
+      "text": "",
+      "cls": "tv-header__user-menu-button tv-header__user-menu-button--logged js-header-user-m"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "log in",
+      "cls": "linkButton-dfXNuaqf"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Go to homepage",
+      "cls": "button-dfXNuaqf button-mLEhCrVw large-mLEhCrVw black-mLEhCrVw primary-mLEhCrVw a"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "TradingView main page",
+      "title": "",
+      "text": "",
+      "cls": "logoWrapper-s9vf589d"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "TradingView on X",
+      "title": "",
+      "text": "",
+      "cls": "lightButton-kjRfTlfx link-kjRfTlfx noContent-kjRfTlfx withStartSlot-kjRfTlfx gho"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "TradingView on Facebook",
+      "title": "",
+      "text": "",
+      "cls": "lightButton-kjRfTlfx link-kjRfTlfx noContent-kjRfTlfx withStartSlot-kjRfTlfx gho"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "TradingView on YouTube",
+      "title": "",
+      "text": "",
+      "cls": "lightButton-kjRfTlfx link-kjRfTlfx noContent-kjRfTlfx withStartSlot-kjRfTlfx gho"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "TradingView on Instagram",
+      "title": "",
+      "text": "",
+      "cls": "lightButton-kjRfTlfx link-kjRfTlfx noContent-kjRfTlfx withStartSlot-kjRfTlfx gho"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "TradingView on LinkedIn",
+      "title": "",
+      "text": "",
+      "cls": "lightButton-kjRfTlfx link-kjRfTlfx noContent-kjRfTlfx withStartSlot-kjRfTlfx gho"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "TradingView on Telegram",
+      "title": "",
+      "text": "",
+      "cls": "lightButton-kjRfTlfx link-kjRfTlfx noContent-kjRfTlfx withStartSlot-kjRfTlfx gho"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "TradingView on TikTok",
+      "title": "",
+      "text": "",
+      "cls": "lightButton-kjRfTlfx link-kjRfTlfx noContent-kjRfTlfx withStartSlot-kjRfTlfx gho"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "TradingView on Reddit",
+      "title": "",
+      "text": "",
+      "cls": "lightButton-kjRfTlfx link-kjRfTlfx noContent-kjRfTlfx withStartSlot-kjRfTlfx gho"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "English \u200e(India)\u200e",
+      "cls": "lightButton-kjRfTlfx withStartSlot-kjRfTlfx withEndSlot-kjRfTlfx secondary-IeQwP"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "ICE Data Services",
+      "cls": "textLink-s9vf589d"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Quartr",
+      "cls": "textLink-s9vf589d"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Supercharts",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Stocks",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "ETFs",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Bonds",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Crypto coins",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "CEX pairs",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "DEX pairs",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Pine",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Stocks",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "ETFs",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Crypto coins",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Economic",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Earnings",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Dividends",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "IPOs",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "News Flow",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Portfolios",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Fundamental Graphs",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Yield Curves",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Options",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Macro Maps",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Pine Script\u00ae",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Mobile",
+      "cls": "footerLinksColumnListItem-H5MmHsXE i-hidden-on-tvdesktop"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Desktop",
+      "cls": "footerLinksColumnListItem-H5MmHsXE i-hidden-on-tvdesktop"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Social network",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Wall of Love",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Refer a friend",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Creator program",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "House Rules",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Moderators",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Trading",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Education",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Editors' picks",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Indicators & strategies",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Wizards",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Freelancers",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Paid Spaces",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Features",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Pricing",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Market data",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Gift plans",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Overview",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Brokers",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Brokers comparison",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "The Leap",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "CME Group futures",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Eurex futures",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "US stocks bundle",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Who we are",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Space mission",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Blog",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Help Center",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Careers",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Media kit",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "TradingView store",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Tarot cards for traders",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "The C63 TradeTime",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Terms of Use",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Disclaimer",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Privacy Policy",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Cookies Policy",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Accessibility Statement",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Security tips",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Bug Bounty program",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Status page",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Widgets",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Charting libraries",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Lightweight Charts\u2122",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Advanced Charts",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Trading Platform",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Advertising",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Brokerage integration",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Partner program",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Education program",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Social network",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Wall of Love",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Refer a friend",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Creator program",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "House Rules",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Moderators",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Trading",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Education",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Editors' picks",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Indicators & strategies",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Wizards",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Freelancers",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Paid Spaces",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Widgets",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Charting libraries",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Lightweight Charts\u2122",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Advanced Charts",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Trading Platform",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Advertising",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Brokerage integration",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Partner program",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Education program",
+      "cls": "footerLinksColumnListItem-H5MmHsXE"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-orders",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-orders",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-alerts",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-alerts",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-alertsFireControl",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-alertsFireControl",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-alertsWatchlistFireControl",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-alertsWatchlistFireControl",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-trading-notifications",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-trading-notifications",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-gift",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-gift",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-force-password-change",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-force-password-change",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-chat-message",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-chat-message",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-three-month-offer",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-account-deletion-initiated",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-account-deletion-initiated",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-account-deletion-cancelled",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-account-deletion-cancelled",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-support-portal",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-support-portal",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-global-notification",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-global-notification",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-news-notification",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-news-notification",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-chart_warning",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-chart_warning",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-chart_info",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-chart_info",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-x-share-group",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-x-share-group",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-bf-notification",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-bf-notification",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-coupon-notification",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-coupon-notification",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-cookies",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-charting-ad",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-charting-ad",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    }
+  ],
+  "inputs": []
+}

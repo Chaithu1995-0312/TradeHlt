@@ -1,0 +1,278 @@
+{
+  "_clock": "Single US-DST season summer_2026. calibrate_clock runs once. Do not merge with another season (F-066).",
+  "engine_csv": "data/mt5/XAUUSD_M15.csv",
+  "presets": {
+    "summer_2026": {
+      "description": "P-VSTATE-02 Option A summer_2026",
+      "shots": [
+        "d2_summer_2026_000",
+        "d2_summer_2026_001",
+        "d2_summer_2026_002",
+        "d2_summer_2026_003",
+        "d2_summer_2026_004",
+        "d2_summer_2026_005",
+        "d2_summer_2026_006",
+        "d2_summer_2026_007",
+        "d2_summer_2026_008",
+        "d2_summer_2026_009",
+        "d2_summer_2026_010",
+        "d2_summer_2026_011",
+        "d2_summer_2026_012",
+        "d2_summer_2026_013",
+        "d2_summer_2026_014",
+        "d2_summer_2026_015",
+        "d2_summer_2026_016",
+        "d2_summer_2026_017",
+        "d2_summer_2026_018",
+        "d2_summer_2026_019",
+        "d2_summer_2026_020"
+      ]
+    }
+  },
+  "shots": {
+    "d2_summer_2026_000": {
+      "name": "d2_summer_2026_000",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-03-06 13:15",
+      "end": "2026-03-10 07:00",
+      "note": "P-VSTATE-02 summer_2026 tile 1/21. 160 bars. DISP=2 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_001": {
+      "name": "d2_summer_2026_001",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-03-10 04:15",
+      "end": "2026-03-11 21:00",
+      "note": "P-VSTATE-02 summer_2026 tile 2/21. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_002": {
+      "name": "d2_summer_2026_002",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-03-13 06:00",
+      "end": "2026-03-16 22:45",
+      "note": "P-VSTATE-02 summer_2026 tile 3/21. 160 bars. DISP=3 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_003": {
+      "name": "d2_summer_2026_003",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-03-16 20:00",
+      "end": "2026-03-18 13:45",
+      "note": "P-VSTATE-02 summer_2026 tile 4/21. 160 bars. DISP=3 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_004": {
+      "name": "d2_summer_2026_004",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-03-24 20:30",
+      "end": "2026-03-26 15:15",
+      "note": "P-VSTATE-02 summer_2026 tile 5/21. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_005": {
+      "name": "d2_summer_2026_005",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-03-26 07:30",
+      "end": "2026-03-30 01:15",
+      "note": "P-VSTATE-02 summer_2026 tile 6/21. 160 bars. DISP=1 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_006": {
+      "name": "d2_summer_2026_006",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-03-30 14:45",
+      "end": "2026-04-01 09:15",
+      "note": "P-VSTATE-02 summer_2026 tile 7/21. 160 bars. DISP=1 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_007": {
+      "name": "d2_summer_2026_007",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-04-09 09:15",
+      "end": "2026-04-13 03:00",
+      "note": "P-VSTATE-02 summer_2026 tile 8/21. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_008": {
+      "name": "d2_summer_2026_008",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-04-10 22:45",
+      "end": "2026-04-14 16:30",
+      "note": "P-VSTATE-02 summer_2026 tile 9/21. 160 bars. DISP=1 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_009": {
+      "name": "d2_summer_2026_009",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-04-15 06:30",
+      "end": "2026-04-16 23:15",
+      "note": "P-VSTATE-02 summer_2026 tile 10/21. 160 bars. DISP=2 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_010": {
+      "name": "d2_summer_2026_010",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-04-16 19:45",
+      "end": "2026-04-20 13:30",
+      "note": "P-VSTATE-02 summer_2026 tile 11/21. 160 bars. DISP=2 EXP=2. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_011": {
+      "name": "d2_summer_2026_011",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-04-22 14:30",
+      "end": "2026-04-24 08:15",
+      "note": "P-VSTATE-02 summer_2026 tile 12/21. 160 bars. DISP=1 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_012": {
+      "name": "d2_summer_2026_012",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-04-28 14:00",
+      "end": "2026-04-30 07:45",
+      "note": "P-VSTATE-02 summer_2026 tile 13/21. 160 bars. DISP=2 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_013": {
+      "name": "d2_summer_2026_013",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-04-29 19:15",
+      "end": "2026-05-01 13:00",
+      "note": "P-VSTATE-02 summer_2026 tile 14/21. 160 bars. DISP=2 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_014": {
+      "name": "d2_summer_2026_014",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-05-01 16:00",
+      "end": "2026-05-05 09:45",
+      "note": "P-VSTATE-02 summer_2026 tile 15/21. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_015": {
+      "name": "d2_summer_2026_015",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-05-05 04:15",
+      "end": "2026-05-06 21:00",
+      "note": "P-VSTATE-02 summer_2026 tile 16/21. 160 bars. DISP=2 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_016": {
+      "name": "d2_summer_2026_016",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-05-07 04:15",
+      "end": "2026-05-08 21:00",
+      "note": "P-VSTATE-02 summer_2026 tile 17/21. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_017": {
+      "name": "d2_summer_2026_017",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-05-12 04:15",
+      "end": "2026-05-13 21:00",
+      "note": "P-VSTATE-02 summer_2026 tile 18/21. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_018": {
+      "name": "d2_summer_2026_018",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-05-13 18:30",
+      "end": "2026-05-15 12:15",
+      "note": "P-VSTATE-02 summer_2026 tile 19/21. 160 bars. DISP=2 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_019": {
+      "name": "d2_summer_2026_019",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-05-18 22:00",
+      "end": "2026-05-20 15:45",
+      "note": "P-VSTATE-02 summer_2026 tile 20/21. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_summer_2026_020": {
+      "name": "d2_summer_2026_020",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2026-05-20 07:00",
+      "end": "2026-05-21 23:45",
+      "note": "P-VSTATE-02 summer_2026 tile 21/21. 160 bars. DISP=1 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    }
+  },
+  "engine_events": [
+    {
+      "event": "DISPLACEMENT",
+      "time": "2026-03-09 02:00",
+      "status": "CURRENT",
+      "detail": "clock-anchor summer_2026"
+    },
+    {
+      "event": "DISPLACEMENT",
+      "time": "2026-03-16 03:00",
+      "status": "CURRENT",
+      "detail": "clock-anchor summer_2026"
+    },
+    {
+      "event": "EXPANSION",
+      "time": "2026-03-18 09:30",
+      "status": "CURRENT",
+      "detail": "clock-anchor summer_2026"
+    },
+    {
+      "event": "EXPANSION",
+      "time": "2026-03-31 03:45",
+      "status": "CURRENT",
+      "detail": "clock-anchor summer_2026"
+    },
+    {
+      "event": "DISPLACEMENT",
+      "time": "2026-04-16 01:15",
+      "status": "CURRENT",
+      "detail": "clock-anchor summer_2026"
+    },
+    {
+      "event": "EXPANSION",
+      "time": "2026-04-20 04:15",
+      "status": "CURRENT",
+      "detail": "clock-anchor summer_2026"
+    },
+    {
+      "event": "DISPLACEMENT",
+      "time": "2026-04-30 08:00",
+      "status": "CURRENT",
+      "detail": "clock-anchor summer_2026"
+    },
+    {
+      "event": "DISPLACEMENT",
+      "time": "2026-05-07 16:00",
+      "status": "CURRENT",
+      "detail": "clock-anchor summer_2026"
+    }
+  ],
+  "engine_events_provenance": {
+    "source_run": "results/htf_objective_shadow/two_year/off/run_20260816_074305_XAUUSD/XAUUSD_events.jsonl",
+    "status": "CURRENT",
+    "note": "Clock anchors only. Item ground truth is the events JSONL."
+  }
+}

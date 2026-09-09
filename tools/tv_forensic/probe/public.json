@@ -1,0 +1,1645 @@
+{
+  "title": "XAUUSD 4,350.945 \u25bc \u22121.31%",
+  "url": "https://www.tradingview.com/chart/?symbol=OANDA%3AXAUUSD&interval=15",
+  "buttons": [
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "button-hK2snT3G button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "Symbol search",
+      "text": "",
+      "cls": "button-eTD3FKHQ apply-common-tooltip"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "Switch data type",
+      "text": "",
+      "cls": "action-eTD3FKHQ apply-common-tooltip"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Compare symbols",
+      "title": "",
+      "text": "",
+      "cls": "button-P4LQzYFS button-vxmgjera withoutText-vxmgjera button-_yKxzjvM apply-commo"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "15 minutes",
+      "title": "",
+      "text": "",
+      "cls": "menuBtn-HNxWMF1j button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Candles",
+      "title": "",
+      "text": "",
+      "cls": "menu-tBSqohxx button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "open-indicators-dialog",
+      "aria": "Indicators, metrics, and strategies",
+      "title": "",
+      "text": "",
+      "cls": "button-P4LQzYFS button-vxmgjera withText-vxmgjera button-_yKxzjvM apply-common-t"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Indicator templates",
+      "title": "",
+      "text": "",
+      "cls": "button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Create alert",
+      "title": "",
+      "text": "",
+      "cls": "button-P4LQzYFS button-vxmgjera withText-vxmgjera button-_yKxzjvM apply-common-t"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Bar replay",
+      "title": "",
+      "text": "",
+      "cls": "button-P4LQzYFS button-vxmgjera withText-vxmgjera button-_yKxzjvM apply-common-t"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "button-_yKxzjvM isDisabled-_yKxzjvM accessible-_yKxzjvM"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "button-_yKxzjvM isDisabled-_yKxzjvM accessible-_yKxzjvM"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Layout setup",
+      "title": "",
+      "text": "",
+      "cls": "button-j6Tj5pnD button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Save all charts for all symbols and intervals on your layout",
+      "title": "",
+      "text": "",
+      "cls": "button-OjWQ1m5F buttonSmallPadding-OjWQ1m5F button-vxmgjera withText-vxmgjera bu"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Manage layouts",
+      "title": "",
+      "text": "",
+      "cls": "button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Quick search",
+      "title": "",
+      "text": "",
+      "cls": "iconButton-P4LQzYFS button-fmZRxceI button-_yKxzjvM apply-common-tooltip isInter"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Settings",
+      "title": "",
+      "text": "",
+      "cls": "iconButton-P4LQzYFS button-fmZRxceI button-_yKxzjvM apply-common-tooltip isInter"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Fullscreen mode",
+      "title": "",
+      "text": "",
+      "cls": "button-fmZRxceI button-_yKxzjvM apply-common-tooltip isInteractive-_yKxzjvM acce"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Take a snapshot",
+      "title": "",
+      "text": "",
+      "cls": "button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "activeArea-xzAtFmlE noStretch-xzAtFmlE hasClickListener-xzAtFmlE"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Share your idea with the trade community",
+      "title": "",
+      "text": "Publish",
+      "cls": "menuWrap-Ii3Sgsld accessible-Ii3Sgsld button-waoVoTI0 apply-common-tooltip acces"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "Symbol search",
+      "text": "",
+      "cls": "button-eTD3FKHQ apply-common-tooltip"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "Switch data type",
+      "text": "",
+      "cls": "action-eTD3FKHQ apply-common-tooltip"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Compare symbols",
+      "title": "",
+      "text": "",
+      "cls": "button-P4LQzYFS button-vxmgjera withoutText-vxmgjera button-_yKxzjvM apply-commo"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "15 minutes",
+      "title": "",
+      "text": "",
+      "cls": "menuBtn-HNxWMF1j button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Candles",
+      "title": "",
+      "text": "",
+      "cls": "menu-tBSqohxx button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "open-indicators-dialog",
+      "aria": "Indicators, metrics, and strategies",
+      "title": "",
+      "text": "",
+      "cls": "button-P4LQzYFS button-vxmgjera withoutText-vxmgjera button-_yKxzjvM apply-commo"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Indicator templates",
+      "title": "",
+      "text": "",
+      "cls": "button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Create alert",
+      "title": "",
+      "text": "",
+      "cls": "button-P4LQzYFS button-vxmgjera withoutText-vxmgjera button-_yKxzjvM apply-commo"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Bar replay",
+      "title": "",
+      "text": "",
+      "cls": "button-P4LQzYFS button-vxmgjera withoutText-vxmgjera button-_yKxzjvM apply-commo"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "button-_yKxzjvM isDisabled-_yKxzjvM accessible-_yKxzjvM"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "button-_yKxzjvM isDisabled-_yKxzjvM accessible-_yKxzjvM"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Layout setup",
+      "title": "",
+      "text": "",
+      "cls": "button-j6Tj5pnD button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Save all charts for all symbols and intervals on your layout",
+      "title": "",
+      "text": "",
+      "cls": "button-OjWQ1m5F buttonSmallPadding-OjWQ1m5F button-vxmgjera withText-vxmgjera bu"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Manage layouts",
+      "title": "",
+      "text": "",
+      "cls": "button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Quick search",
+      "title": "",
+      "text": "",
+      "cls": "iconButton-P4LQzYFS button-fmZRxceI button-_yKxzjvM apply-common-tooltip isInter"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Settings",
+      "title": "",
+      "text": "",
+      "cls": "iconButton-P4LQzYFS button-fmZRxceI button-_yKxzjvM apply-common-tooltip isInter"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Fullscreen mode",
+      "title": "",
+      "text": "",
+      "cls": "button-fmZRxceI button-_yKxzjvM apply-common-tooltip isInteractive-_yKxzjvM acce"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Take a snapshot",
+      "title": "",
+      "text": "",
+      "cls": "button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "activeArea-xzAtFmlE noStretch-xzAtFmlE hasClickListener-xzAtFmlE"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Share your idea with the trade community",
+      "title": "",
+      "text": "Publish",
+      "cls": "menuWrap-Ii3Sgsld accessible-Ii3Sgsld button-waoVoTI0 apply-common-tooltip acces"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-symbol-search",
+      "name": "",
+      "aria": "",
+      "title": "Symbol search",
+      "text": "XAUUSD",
+      "cls": "button-eTD3FKHQ apply-common-tooltip"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-switch-data-type",
+      "name": "",
+      "aria": "",
+      "title": "Switch data type",
+      "text": "",
+      "cls": "action-eTD3FKHQ apply-common-tooltip"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-compare",
+      "name": "",
+      "aria": "Compare symbols",
+      "title": "",
+      "text": "",
+      "cls": "button-P4LQzYFS button-vxmgjera withoutText-vxmgjera button-_yKxzjvM apply-commo"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "15 minutes",
+      "title": "",
+      "text": "15m",
+      "cls": "menuBtn-HNxWMF1j button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Candles",
+      "title": "",
+      "text": "",
+      "cls": "menu-tBSqohxx button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "open-indicators-dialog",
+      "aria": "Indicators, metrics, and strategies",
+      "title": "",
+      "text": "Indicators",
+      "cls": "button-P4LQzYFS button-vxmgjera withText-vxmgjera button-_yKxzjvM apply-common-t"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Indicator templates",
+      "title": "",
+      "text": "",
+      "cls": "button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-alerts",
+      "name": "",
+      "aria": "Create alert",
+      "title": "",
+      "text": "Alert",
+      "cls": "button-P4LQzYFS button-vxmgjera withText-vxmgjera button-_yKxzjvM apply-common-t"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-replay",
+      "name": "",
+      "aria": "Bar replay",
+      "title": "",
+      "text": "Replay",
+      "cls": "button-P4LQzYFS button-vxmgjera withText-vxmgjera button-_yKxzjvM apply-common-t"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "button-_yKxzjvM isDisabled-_yKxzjvM accessible-_yKxzjvM"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "button-_yKxzjvM isDisabled-_yKxzjvM accessible-_yKxzjvM"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-layouts",
+      "name": "",
+      "aria": "Layout setup",
+      "title": "",
+      "text": "",
+      "cls": "button-j6Tj5pnD button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-save-load",
+      "name": "",
+      "aria": "Save all charts for all symbols and intervals on your layout",
+      "title": "",
+      "text": "Save\nSave",
+      "cls": "button-OjWQ1m5F buttonSmallPadding-OjWQ1m5F button-vxmgjera withText-vxmgjera bu"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "save-load-menu",
+      "aria": "Manage layouts",
+      "title": "",
+      "text": "",
+      "cls": "button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-quick-search",
+      "name": "header-toolbar-quick-search",
+      "aria": "Quick search",
+      "title": "",
+      "text": "",
+      "cls": "iconButton-P4LQzYFS button-fmZRxceI button-_yKxzjvM apply-common-tooltip isInter"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-properties",
+      "name": "header-toolbar-properties",
+      "aria": "Settings",
+      "title": "",
+      "text": "",
+      "cls": "iconButton-P4LQzYFS button-fmZRxceI button-_yKxzjvM apply-common-tooltip isInter"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-fullscreen",
+      "name": "header-toolbar-fullscreen",
+      "aria": "Fullscreen mode",
+      "title": "",
+      "text": "",
+      "cls": "button-fmZRxceI button-_yKxzjvM apply-common-tooltip isInteractive-_yKxzjvM acce"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Take a snapshot",
+      "title": "",
+      "text": "",
+      "cls": "button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "activeArea-xzAtFmlE noStretch-xzAtFmlE hasClickListener-xzAtFmlE"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Share your idea with the trade community",
+      "title": "",
+      "text": "Publish",
+      "cls": "menuWrap-Ii3Sgsld accessible-Ii3Sgsld button-waoVoTI0 apply-common-tooltip acces"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Trade",
+      "cls": "activeArea-xzAtFmlE noStretch-xzAtFmlE hasClickListener-xzAtFmlE"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Share your idea with the trade community",
+      "title": "",
+      "text": "Publish",
+      "cls": "menuWrap-Ii3Sgsld accessible-Ii3Sgsld button-waoVoTI0 apply-common-tooltip acces"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Cross",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isA"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Cursors",
+      "title": "",
+      "text": "",
+      "cls": "arrow-FuKse5bD apply-common-tooltip common-tooltip-vertical accessible-FuKse5bD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Trendline",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Trend tools",
+      "title": "",
+      "text": "",
+      "cls": "arrow-FuKse5bD apply-common-tooltip common-tooltip-vertical accessible-FuKse5bD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Fib retracement",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Gann and Fibonacci tools",
+      "title": "",
+      "text": "",
+      "cls": "arrow-FuKse5bD apply-common-tooltip common-tooltip-vertical accessible-FuKse5bD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "XABCD pattern",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Patterns",
+      "title": "",
+      "text": "",
+      "cls": "arrow-FuKse5bD apply-common-tooltip common-tooltip-vertical accessible-FuKse5bD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Long position",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Forecasting and measurement tools",
+      "title": "",
+      "text": "",
+      "cls": "arrow-FuKse5bD apply-common-tooltip common-tooltip-vertical accessible-FuKse5bD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Brush",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Geometric shapes",
+      "title": "",
+      "text": "",
+      "cls": "arrow-FuKse5bD apply-common-tooltip common-tooltip-vertical accessible-FuKse5bD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Text",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Annotation tools",
+      "title": "",
+      "text": "",
+      "cls": "arrow-FuKse5bD apply-common-tooltip common-tooltip-vertical accessible-FuKse5bD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Icon",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Icons",
+      "title": "",
+      "text": "",
+      "cls": "arrow-FuKse5bD apply-common-tooltip common-tooltip-vertical accessible-FuKse5bD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "measure",
+      "aria": "Measure",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "zoom",
+      "aria": "Zoom in",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Magnet mode snaps drawings placed near price bars to the closest OHLC value",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Magnets",
+      "title": "",
+      "text": "",
+      "cls": "arrow-FuKse5bD apply-common-tooltip common-tooltip-vertical accessible-FuKse5bD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "drawginmode",
+      "aria": "Keep drawing",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "lockAllDrawings",
+      "aria": "Lock all drawings",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Hide all drawings",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Hide options",
+      "title": "",
+      "text": "",
+      "cls": "arrow-FuKse5bD apply-common-tooltip common-tooltip-vertical accessible-FuKse5bD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Remove objects",
+      "title": "",
+      "text": "",
+      "cls": "button-Pa6R9wGK button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Remove options",
+      "title": "",
+      "text": "",
+      "cls": "arrow-FuKse5bD apply-common-tooltip common-tooltip-vertical accessible-FuKse5bD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Change symbol",
+      "title": "",
+      "text": "Gold Spot / U.S. Dollar",
+      "cls": "title-quatTGAC accessible-quatTGAC"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Change interval",
+      "title": "",
+      "text": "15",
+      "cls": "title-quatTGAC accessible-quatTGAC"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Flag symbol",
+      "title": "Flag symbol",
+      "text": "",
+      "cls": "button-quatTGAC flag-quatTGAC apply-common-tooltip accessible-quatTGAC"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Symbol/interval chart syncing",
+      "title": "Symbol/interval chart syncing",
+      "text": "",
+      "cls": "button-quatTGAC blockHidden-wVrpb0RA linking-quatTGAC apply-common-tooltip acces"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Hide",
+      "title": "Hide",
+      "text": "",
+      "cls": "button-quatTGAC blockHidden-wVrpb0RA eye-quatTGAC apply-common-tooltip accessibl"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "More",
+      "title": "More",
+      "text": "",
+      "cls": "button-quatTGAC apply-common-tooltip accessible-quatTGAC"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "Market open \u00b7 One update every 5 seconds",
+      "text": "",
+      "cls": "apply-common-tooltip common-tooltip-wide small-poFlIIKj small-poFlIIKj"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Hide indicator legend",
+      "title": "Hide indicator legend",
+      "text": "",
+      "cls": "toggler-quatTGAC pane-button-wVrpb0RA apply-common-tooltip accessible-quatTGAC o"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Hide",
+      "title": "Hide",
+      "text": "",
+      "cls": "button-quatTGAC eye-quatTGAC apply-common-tooltip accessible-quatTGAC"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Show interval settings",
+      "title": "Show interval settings",
+      "text": "",
+      "cls": "button-quatTGAC blockHidden-wVrpb0RA intervalEye-quatTGAC apply-common-tooltip a"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Settings",
+      "title": "Settings",
+      "text": "",
+      "cls": "button-quatTGAC apply-common-tooltip accessible-quatTGAC"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Remove",
+      "title": "Remove",
+      "text": "",
+      "cls": "button-quatTGAC apply-common-tooltip accessible-quatTGAC"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "More",
+      "title": "More",
+      "text": "",
+      "cls": "button-quatTGAC apply-common-tooltip accessible-quatTGAC"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Toggle auto scale",
+      "title": "",
+      "text": "",
+      "cls": "priceScaleModeButton-tzk2lJM6 priceScaleModeButton_activated-tzk2lJM6 priceScale"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Toggle log scale",
+      "title": "",
+      "text": "",
+      "cls": "priceScaleModeButton-tzk2lJM6 priceScaleModeButtons__button-_mS3UChv apply-commo"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-ranges-menu",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "button-fl4u3BRF dateRange-RaFdWJxD button-waoVoTI0 apply-common-tooltip accessib"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-1D",
+      "aria": "1 day in 1 minute intervals",
+      "title": "",
+      "text": "1D",
+      "cls": "item-I2jS9UTX button-_yKxzjvM apply-common-tooltip isInteractive-_yKxzjvM access"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-5D",
+      "aria": "5 days in 5 minutes intervals",
+      "title": "",
+      "text": "5D",
+      "cls": "item-I2jS9UTX button-_yKxzjvM apply-common-tooltip isInteractive-_yKxzjvM access"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-1M",
+      "aria": "1 month in 30 minutes intervals",
+      "title": "",
+      "text": "1M",
+      "cls": "item-I2jS9UTX button-_yKxzjvM apply-common-tooltip isInteractive-_yKxzjvM access"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-3M",
+      "aria": "3 months in 1 hour intervals",
+      "title": "",
+      "text": "3M",
+      "cls": "item-I2jS9UTX button-_yKxzjvM apply-common-tooltip isInteractive-_yKxzjvM access"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-6M",
+      "aria": "6 months in 2 hours intervals",
+      "title": "",
+      "text": "6M",
+      "cls": "item-I2jS9UTX button-_yKxzjvM apply-common-tooltip isInteractive-_yKxzjvM access"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-YTD",
+      "aria": "Year to day in 1 day intervals",
+      "title": "",
+      "text": "YTD",
+      "cls": "item-I2jS9UTX button-_yKxzjvM apply-common-tooltip isInteractive-_yKxzjvM access"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-12M",
+      "aria": "1 year in 1 day intervals",
+      "title": "",
+      "text": "1Y",
+      "cls": "item-I2jS9UTX button-_yKxzjvM apply-common-tooltip isInteractive-_yKxzjvM access"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-60M",
+      "aria": "5 years in 1 week intervals",
+      "title": "",
+      "text": "5Y",
+      "cls": "item-I2jS9UTX button-_yKxzjvM apply-common-tooltip isInteractive-_yKxzjvM access"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-ALL",
+      "aria": "All data in 1 month intervals",
+      "title": "",
+      "text": "All",
+      "cls": "item-I2jS9UTX button-_yKxzjvM apply-common-tooltip isInteractive-_yKxzjvM access"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "go-to-date",
+      "aria": "Go to",
+      "title": "",
+      "text": "",
+      "cls": "button-q07qTelu button-fmZRxceI button-_yKxzjvM apply-common-tooltip isInteracti"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "time-zone-menu",
+      "aria": "Timezone",
+      "title": "",
+      "text": "19:34:58 UTC",
+      "cls": "item-RaFdWJxD button-_yKxzjvM button-EzpeYLKj apply-common-tooltip isInteractive"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "base",
+      "aria": "Watchlist, details, and news",
+      "title": "",
+      "text": "",
+      "cls": "button-bzoSYBVb button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isA"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "alerts",
+      "aria": "Alerts",
+      "title": "",
+      "text": "",
+      "cls": "button-bzoSYBVb button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "object_tree",
+      "aria": "Object tree and data window",
+      "title": "",
+      "text": "",
+      "cls": "button-bzoSYBVb button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "screener-dialog-button",
+      "aria": "Screeners",
+      "title": "",
+      "text": "",
+      "cls": "button-bzoSYBVb button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "pine-dialog-button",
+      "aria": "Pine",
+      "title": "",
+      "text": "",
+      "cls": "button-bzoSYBVb button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "calendar-dialog-button",
+      "aria": "Calendars",
+      "title": "",
+      "text": "",
+      "cls": "button-bzoSYBVb button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "community-hub-button",
+      "aria": "Community",
+      "title": "",
+      "text": "",
+      "cls": "button-bzoSYBVb button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "notifications-button",
+      "aria": "Notifications",
+      "title": "",
+      "text": "",
+      "cls": "button-bzoSYBVb button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Products",
+      "title": "",
+      "text": "",
+      "cls": "button-_302krV8 common-tooltip-vertical button-waoVoTI0 apply-common-tooltip acc"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "help-button",
+      "aria": "Help Center",
+      "title": "",
+      "text": "",
+      "cls": "button-bzoSYBVb button-_yKxzjvM apply-common-tooltip common-tooltip-vertical isI"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "watchlists-button",
+      "aria": "",
+      "title": "",
+      "text": "Watchlist",
+      "cls": "button-waoVoTI0 button-CBjOwjj0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "add-symbol-button",
+      "aria": "Add symbol",
+      "title": "",
+      "text": "",
+      "cls": "headerButton-zDcxZk2G button-fmZRxceI button-_yKxzjvM apply-common-tooltip isInt"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "advanced-view-button",
+      "aria": "Advanced view",
+      "title": "",
+      "text": "",
+      "cls": "headerButton-zDcxZk2G button-fmZRxceI button-_yKxzjvM apply-common-tooltip isInt"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "settings-button",
+      "aria": "Settings",
+      "title": "",
+      "text": "",
+      "cls": "headerButton-zDcxZk2G button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "button-3tCoNgsh accessible-3tCoNgsh"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Symbol",
+      "cls": "label-ql4iq1lU sortable-ql4iq1lU accessible-ql4iq1lU"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Last",
+      "cls": "label-ql4iq1lU sortable-ql4iq1lU accessible-ql4iq1lU"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Chg",
+      "cls": "label-ql4iq1lU sortable-ql4iq1lU accessible-ql4iq1lU"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Chg%",
+      "cls": "label-ql4iq1lU sortable-ql4iq1lU accessible-ql4iq1lU"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "Metrics",
+      "text": "",
+      "cls": "wrap-zLhGRF7m button-_yKxzjvM apply-common-tooltip isInteractive-_yKxzjvM access"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "Gold Spot / U.S. Dollar",
+      "cls": "link-P6QsLrTd"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "More seasonals",
+      "cls": "button-JGj449vt"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "More technicals",
+      "cls": "button-JGj449vt"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "menuButton-e9wUhp2L button-waoVoTI0 apply-common-tooltip accessible-waoVoTI0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toggle-visibility-button",
+      "aria": "Open panel",
+      "title": "",
+      "text": "",
+      "cls": "button-tQ8Kilpy firstButton-tQ8Kilpy button-fmZRxceI button-_yKxzjvM apply-commo"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toggle-maximize-button",
+      "aria": "Maximize panel",
+      "title": "",
+      "text": "",
+      "cls": "button-tQ8Kilpy button-fmZRxceI button-_yKxzjvM apply-common-tooltip isInteracti"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-orders",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-orders",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-alerts",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-alerts",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-alertsFireControl",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-alertsFireControl",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-alertsWatchlistFireControl",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-alertsWatchlistFireControl",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-trading-notifications",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-trading-notifications",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-gift",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-gift",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-force-password-change",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-force-password-change",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-chat-message",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-chat-message",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-three-month-offer",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-account-deletion-initiated",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-account-deletion-initiated",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-account-deletion-cancelled",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-account-deletion-cancelled",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-support-portal",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-support-portal",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-global-notification",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-global-notification",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-news-notification",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-news-notification",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-chart_warning",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-chart_warning",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-chart_info",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-chart_info",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-x-share-group",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-x-share-group",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-bf-notification",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-bf-notification",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-coupon-notification",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-coupon-notification",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-cookies",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-charting-ad",
+      "aria": "",
+      "title": "",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-charting-ad",
+      "aria": "",
+      "title": "Close all",
+      "text": "",
+      "cls": "roundButton-LEXhwY2Z roundButtonColor-bRjlnCjX gray-bRjlnCjX quiet-primary-bRjln"
+    }
+  ],
+  "inputs": []
+}

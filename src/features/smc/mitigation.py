@@ -22,14 +22,25 @@ if TYPE_CHECKING:
     from config_layer.crt_engine_v2 import Candle
 
 
-def find_active_mitigation_block(window: "Sequence[Candle]", k: int) -> Optional[Zone]:
+def find_active_mitigation_block(
+    window: "Sequence[Candle]", k: int,
+    break_events: Optional[list[tuple[int, bool]]] = None,
+) -> Optional[Zone]:
     """The body-only inner zone of the most recent OB origin whose OUTER zone has already been
     touched at least once (mitigation "in progress") and whose INNER (body) zone has not yet
-    itself been fully entered. Pure; only inspects `window`."""
+    itself been fully entered. Pure; only inspects `window`.
+
+    `break_events` is an optional PRECOMPUTED `_find_break_events(window, k)` result. It exists
+    only so a caller that needs several of the three break-event families on the SAME window
+    (order block / breaker / mitigation block) can pay for that scan once instead of three
+    times — `_find_break_events` is pure, so passing its own output back in is by construction
+    identical to recomputing it. Omitting it (the default) reproduces the original behaviour
+    bit-for-bit; `tests/test_smc_break_event_memo.py` pins that equivalence.
+    """
     bars = list(window)
     if not bars:
         return None
-    events = _find_break_events(bars, k)
+    events = _find_break_events(bars, k) if break_events is None else break_events
     for break_pos, bullish in reversed(events):
         origin_pos = _origin_candle(bars, break_pos, bullish)
         if origin_pos is None:
@@ -53,10 +64,13 @@ def find_active_mitigation_block(window: "Sequence[Candle]", k: int) -> Optional
     return None
 
 
-def mitigation_block_distance(window: "Sequence[Candle]", k: int, atr: float) -> float:
+def mitigation_block_distance(
+    window: "Sequence[Candle]", k: int, atr: float,
+    break_events: Optional[list[tuple[int, bool]]] = None,
+) -> float:
     """Signed, ATR-normalized, tanh-bounded distance from `window[-1].close` to the nearest
     live mitigation block's near edge. `0.0` if none exists."""
-    zone = find_active_mitigation_block(window, k)
+    zone = find_active_mitigation_block(window, k, break_events)
     if zone is None:
         return 0.0
     close = window[-1].close
