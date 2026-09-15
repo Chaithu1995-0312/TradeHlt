@@ -1,0 +1,50 @@
+package,module,in_reduced_schema,schema_role
+governance,governance.promotion_manager,yes,ONLY path to production. Requires ValidationReport APPROVE. Imported by agent.pipeline_mode only — NOT by runtime
+governance,governance.orchestrator,yes,Meta-governor. Agent governance_mode. Fans to shadow + bitnet executor + reflection
+governance,governance.shadow_promotion_gate,yes,Shadow backtest then promote. Orchestrator + expansion_integration
+governance,governance.expansion_integration,yes,Wires expansion_engine + shadow + backtest_v2
+governance,governance.portfolio_validation,yes,Multi-instrument validation via BacktestRunner (upward import into runtime)
+governance,governance.semantic_grounding,yes,§6.7 claim grounding. Agent truth_mode + retrieval
+governance,governance.semantic_os,yes,Hand-authored CN/BD/JN registry
+governance,governance.semantic_query,yes,Query + scriptmod. Grounding uses this
+governance,governance.framework_registry,yes,Framework JSONL seed target
+governance,governance.script_registry,yes,SITS registry → also control_plane.registry
+governance,governance.measurement_result_log,yes,MC result log → identity.tokens
+governance,governance.strategy_backtest,yes,Strategy family backtest → strategy_orchestrator
+governance,governance.bitnet_governance_executor,no,Orchestrator child
+governance,governance.reflection_buffer_advanced,no,Orchestrator child
+governance,governance.jsonl_claim_catalog,no,Grounding catalog internal
+governance,governance.semantic_objects,no,Generated objects — Semantic OS internal
+governance,governance.semantic_identity,no,Semantic OS internal
+governance,governance.hypothesis_registry,no,Registry sibling of framework
+governance,governance.module_census,no,SITS census
+governance,governance.module_attribution,no,SITS attribution
+governance,governance.script_census,no,SITS census
+governance,governance.script_seed,no,SITS seed
+governance,governance.provenance_record,no,MPA record
+governance,governance.provenance_resolver,no,MPA resolver
+governance,governance.provenance_derivation,no,MPA derivation
+governance,governance.multi_strategy_validator,no,Wraps strategy_backtest
+governance,governance.config_integrity,no,ISOLATED — real check, zero src importers (F-006)
+governance,governance.findings_export,no,ISOLATED — zero src importers
+governance,governance.archive_manifest,no,ISOLATED — zero src importers
+identity,identity.tokens,yes,Closed vocabularies L0–L5. measurement_result_log + store/check
+identity,identity.store,yes,Identity-addressed store
+identity,identity.check,yes,Store→Load identity check
+identity,identity.certify,yes,Certify path — imports CRT + backtest + parent_crt_feed
+identity,identity.query,yes,Query over store
+identity,identity.hashes,no,Hash helper
+identity,identity.outcome,no,Outcome helper
+expansion,expansion.expansion_engine,yes,Deterministic param expansion. Imports backtest_v2. LLM has zero role here
+expansion,expansion.policy_schema,yes,Plan/step schema. search + mutator + evaluator
+expansion,expansion.config_mutator,no,Engine child
+expansion,expansion.evaluator,no,Engine child
+expansion,expansion.llm_pattern_extractor,no,LLM suggests directions only
+search,search.regime_weight_searcher,yes,Fusion-weight search → fusion_engine + policy_schema + journal. ZERO src importers
+portfolio,portfolio.allocator,yes,Allocate via exposure+correlation+policy. Only portfolio.replay imports it — NOT runtime (F-013)
+portfolio,portfolio.capital_policy,no,Allocator child
+portfolio,portfolio.correlation_engine,no,Allocator child — also historical_fetcher
+portfolio,portfolio.exposure_tracker,no,Allocator child
+portfolio,portfolio.replay,no,Only consumer of allocator
+validation_access,validation_access.ladder,yes,VA-XAUUSD-M15 S→I→F→E. Packaging only — no runtime/fusion/promotion. → research
+validation_access,validation_access.surfaces,no,Ladder wrapper

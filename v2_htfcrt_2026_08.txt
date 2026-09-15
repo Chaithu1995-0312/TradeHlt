@@ -1,0 +1,212 @@
+# Parent-Candle CRT + SMC Primitives → new active version `v2_htfcrt_2026_08`
+
+## Context
+
+The SujanTrader CRT transcripts (`SujanTraderCRTExp.txt`, `SujanTraderCrtExpPart2.txt`) describe a
+multi-timeframe CRT framework. A read-only study (delivered in-session, this file's prior revision)
+mapped it against the repo and found:
+
+- The framework's **foundational primitive is absent**. The repo has an HTF *clock*, not an HTF
+  *candle*: `HTFBuilder` (`backtest_v2.py:874-906`) counts N M15 bars and emits an opaque id with
+  **zero OHLC aggregation**; `detect_htf_range` (`crt_engine_v2.py:852-867`) computes H and L but
+  discards O and C; and after the first bar the reset path (`:2807-2809`) rebuilds the range from
+  the **last 14 M15 bars**, not the HTF window at all.
+- **No 3-candle CRT construct exists** anywhere (`grep` for parent_candle/three_candle/amd → 2
+  false positives in `sl_tp_comparator.py`).
+- **Bucket B is entirely absent**: no order block, FVG, breaker, mitigation, PDH/PDL, EQH/EQL, or
+  CHoCH in `src/`.
+- `resample.py` caps at H1/H4; MT5 fetch caps at D1; `market_reality_v1.yaml` has zero readers and
+  zero tests; `tools/tv_forensic/` (Playwright) is untracked and unwired.
+
+This plan builds all of it. **User decisions, taken with costs stated:**
+
+| Decision | Choice | Consequence accepted |
+|---|---|---|
+| 3-candle wiring | **New CRT states** | `CRTState` 9→12, `VALID_TRANSITIONS` extended, CN-004 invariant rewritten, CRT closure reopen widens |
+| TF ladder | **H4 + D1 + W1 + MN1** | W1/MN1 need calendar aggregation; `resample`'s associativity guarantee gets an explicit carve-out |
+| Bucket B scope | **All 9 primitives** | OB, FVG, Breaker, Mitigation, PDH/PDL, EQH/EQL, CHoCH |
+| Default arm | **ON immediately** | Trade ledger changes on promotion; freeze-pin re-certification + baseline recapture required |
+| Feature repr | **Canonical vector slots 39→48** | `SCHEMA_HASH` + `FEATURE_ORDER_HASH` move; all 6 model families need recapture/retrain; ~11 tests unpin |
+
+**The headline consequence of the last two:** the repo's usual safety net — "prove byte-identity"
+— is deliberately given up. Verification therefore shifts from *zero ledger diff* to
+**fully attributed ledger diff**: every changed trade must be explained by a named mechanism.
+That is the acceptance bar throughout.
+
+Deferred by user: 3M/6M tiers, pending deeper history (2-yr corpus → only 24 monthly candles).
+
+---
+
+## Phase 0 — Baseline and waivers (do first, nothing else works without it)
+
+1. `python src/runtime/baseline_capture.py --label pre_htfcrt` → `results/baseline/<ts>_pre_htfcrt/`.
+2. Record the current XAUUSD trade ledger and vector SHA as the comparison base (freeze-pin
+   `docs/governance/feature-layer-freeze-pin-2026-07-20.json` currently pins
+   `vector_sha256 37f43f44…`, `feature_dim 39`, `schema_hash c87a1aba…`).
+3. Open BUILD_IMPACT_MANIFEST per §3.3b: `python scripts/governance/construction_protocol.py check`,
+   classify against `docs/governance/change_contracts.json`. Blocking UNKNOWN = STOP.
+4. Pre-write the freeze-pin `waiver_log` entries — this program touches 5 of the 9 pinned source
+   files plus `ACTIVE_VERSION` and the active config, so `test_source_file_pins_match` and
+   `test_schema_pins_match` **will** fail until the pin is regenerated. Declared drift, not silent.
+
+## Phase 1 — Real parent candles (calendar-true)
+
+**Critical distinction to preserve:** `HTFBuilder` windows are *count-based* and stream-offset
+dependent; `resample` buckets are *calendar-floored*. These are different objects and must not be
+conflated. The parent-CRT track uses calendar parents.
+
+- **`src/research/resample.py`** — add `D1` to `_RULE_HOURS` as `24`. `_bucket_start(ts, 24)` gives
+  the correct midnight floor because `(ts.hour // 24) * 24 == 0`; associativity holds (H4 ⊂ D1).
+  One-line, additive to all 5 existing consumers.
+- **New `src/features/calendar_periods.py`** — W1/MN1 aggregation following the
+  `src/research/weekly_sweep/weekly_range.py` pattern verbatim: `isocalendar()` / `day == 1`
+  grouping, inline `max(high)`/`min(low)` over the filtered subset, **lock-on-close**, and
+  `None`-on-partial rather than a contaminated range. `resample`'s day-local `.replace()` floor
+  cannot express these — do not try to extend it. Document the **W1 ⊄ MN1 associativity failure**
+  (a week straddles a month boundary) as an explicit carve-out in the module docstring.
+- **New `src/features/parent_candle.py`** — `ParentCandleBuilder(rule, keep=3)`. Emits closed
+  parent `Candle`s, retains the last ≥3 (the one genuine state addition: `HTFBuilder` keeps only
+  one completed window). Reuse `resample._emit`'s aggregation exactly, including `Decimal` volume
+  summation for grouping-invariance.
+- **`HTFBuilder`** gains `parent_candle` and `parent_history` properties. Purely additive —
+  `push()`'s bool, `current_htf_id`'s format, and `seed_candles()`'s contents are untouched, so
+  all 7 existing consumers stay bit-identical.
+
+**No-lookahead invariant (non-negotiable):** never expose an in-progress parent. `_buffer` stays
+private; only completed windows are readable. Test this adversarially.
+
+## Phase 2 — The 3-candle CRT state machine
+
+- **`src/config_layer/state_identity.py`** — add `RANGE_C1`, `MANIPULATION_C2`, `DISTRIBUTION_C3`
+  to `CRTState` (9→12) and a **disjoint sub-graph** to `VALID_TRANSITIONS`:
+  `RANGE_C1 → {MANIPULATION_C2, RANGE_C1}`, `MANIPULATION_C2 → {DISTRIBUTION_C3, RANGE_C1}`,
+  `DISTRIBUTION_C3 → {RANGE_C1}`. Disjoint is deliberate: these are parent-timeframe states, and
+  interleaving them into the M15 golden path would conflate timeframes and break every consumer.
+  Mirror into the immutable view `state_topology.py:109` and the second declaration in
+  `configs/formulas/market_crt_states.yaml:240` (keep both in sync — they are two records of one
+  edge set).
+- **New `src/config_layer/parent_crt.py`** — `ParentCRTTrack`, one instance per parent timeframe.
+  Classifies `parent_history[-3:]`:
+  - **C1 (range)** — the reference parent candle; its own high/low become `h_ref`/`l_ref`.
+  - **C2 (manipulation)** — sweeps C1's boundary and closes back inside. Reuse
+    `RangeDetector.detect_sweep`'s geometry (`crt_engine_v2.py:891-892`) against the *parent*
+    range; reimplement rather than import, per the Program-8 isolation precedent.
+  - **C3 (distribution)** — directional impulse away from the swept side. Reuse the **F-074
+    directional displacement contract** (`crt_engine_v2.py:1105-1112`) — LONG requires a bullish
+    close above the sweep, SHORT a bearish close below. Do not reintroduce unsigned energy.
+- **Bridge into the M15 engine.** `process_candle(candle, htf_candle_id, parent_state=None)` — a
+  defaulted keyword keeps all 6 existing call sites working. Parent state feeds the M15 track as
+  a bias/objective gate. **This is the authorized behavior change** (arm ON per user decision).
+- **Config** — new top-level `parent_crt` section (hash-neutral): `enabled`, `timeframes`,
+  per-TF thresholds, `bias_gate_mode`. Strict `_require`-style reads with a legal-value tuple and
+  no silent defaults, following `feature_pipeline.normalization_basis`
+  (`feature_pipeline.py:216-248`) exactly — that is the repo's proven pattern.
+- **Ontology** — seed the declared-but-empty `state_transitions:` section of
+  `configs/formulas/market_ontology.yaml` with the C1→C2→C3 edges (non-frozen, invisible to
+  `behavior_hash` and `fm_resolve` — the cheapest correct seam), plus 3 `structural_states` nodes.
+  Also update `active_models.yaml` (currently declares 9 states).
+
+## Phase 3 — The 9 SMC primitives, as canonical features (39 → 48)
+
+**New package `src/features/smc/`** — pure geometry, no spine import, window-bounded like
+`weekly_range.py`: `order_block.py`, `fvg.py`, `breaker.py`, `mitigation.py`, `levels.py`
+(PDH/PDL derived from D1 parents; EQH/EQL from swing clustering), `choch.py`.
+
+One normalized scalar slot per primitive → 48. Stateful detail (OB lifecycle, mitigation
+fraction) stays engine-side; only the scalar reaches the vector.
+
+Schema work, all of which is a **re-certification event, not a re-run**:
+
+- `src/features/feature_schema.py` — extend `CANONICAL_FEATURES`, bump `CANONICAL_FEATURE_DIM`
+  to 48 (two import-time asserts at `:119-127` enforce this), `SCHEMA_VERSION` → `"5.0"`. Add
+  `SCHEMA_V4_FEATURE_DIM = 39` as the back-compat sentinel alongside the existing v2/v3 ones.
+- `src/features/feature_pipeline.py` — new `compute_smc_*()` steps in `run()`. Thread the new
+  warmup through **`required_warmup_rows()` (`:285-320`)** — this is the single authority and
+  skipping it recreates the exact split-brain its docstring records. If any primitive needs a
+  causal publication delay, use the `resolve_swing_window()` (`:251-267`) precedent.
+- Register 9 ontology nodes in `structural_states` with `computation_class: structural_state`,
+  a **non-empty `states:` list** (mandatory for enumerated bounds), and real `vector_index`
+  values. `taxonomy.category` must come from the closed vocabulary — `MarketStructure` or
+  `Liquidity`; there is no `HTF` member.
+- **Downstream fallout to work, not discover:** `zone_registry.json`'s stored `feature_order`
+  raises `ZoneFeatureOrderError` at load on mismatch (fail-closed by design — do not weaken it);
+  all 6 model families (zone_gate/rr/rr_fusion/gaussian/bitnet/tradenet) need recapture or
+  retrain; ~11 test files hardcode 39 (`test_feature_layer_freeze.py`,
+  `test_b0b1_feature_semantic_migration.py`, `test_crt_baseline_trace.py`, `test_bitnet_parity.py`
+  and others — the list is in the exploration notes).
+- Regenerate the freeze-pin **by running the pipeline**, never by hand-editing the JSON.
+
+## Phase 4 — New active version `v2_htfcrt_2026_08`
+
+Name rationale: `v3_multi_2026_06` and `v4_multi_2026_06` already exist for the other code line,
+so reusing v3/v4 would be a split-brain. `v2_<label>_<YYYY_MM>` is the §3.1 convention.
+
+- Author `configs/production/v2_htfcrt_2026_08.json` from the active config plus the new
+  `parent_crt`, `smc`, and `feature_pipeline` keys. **`params` is untouched, so `config_hash`
+  stays `7de09f62…`** and no rehash is needed.
+- **Do not promote via `PromotionManager.promote_*`** — `_write_to_registry` overlays only
+  `_METADATA_KEYS` onto the `v1_multi_2026_03` base and would **silently strip every new
+  top-level section**. Use the `scripts/maintenance/_promote_v4_bnb_cutover.py` shape: write the
+  file, set the metadata keys, add `validation_summary.params_fingerprint = sha256(params)` (the
+  freshness anchor `promote_*` omits), flip `ACTIVE_VERSION`, append the `PROMOTED` line to
+  `configs/promotion_log.jsonl`.
+- Because this goes live, run `ConfigValidator.validate()` for a genuine APPROVE rather than
+  taking the `promote_direct` bypass.
+- Verify: `PromotionManager.load_version(v)` (hash), `config_integrity.audit("configs/production")`.
+
+## Phase 5 — Market reality + Playwright verification
+
+`tools/tv_forensic/` is a 3-day-old standalone Playwright instrument that already produced real
+forensic results (F-074 verification, MT5 clock measurement). It is **untracked, untested, and
+absent from the control-plane registry**.
+
+- Commit it (decision currently open in the session log), add the undeclared `Pillow` dependency
+  to its `requirements.txt`, add a smoke test, and register it in `src/control_plane/registry.py`.
+- Extend `shot_plan.json` and `annotate.py` to draw the new primitives — OB/FVG/breaker boxes and
+  the parent-CRT C1/C2/C3 boundaries — from the sidecar JSON. Keep the tool's own discipline:
+  **the sidecar is the evidence, the screenshot is the illustration.** `annotate.py --strict`
+  already exits 1 on off-frame events; extend that negative control to the new marks.
+- `configs/market_reality/market_reality_v1.yaml`: fix the **duplicate top-level `authority` key**
+  (`:28` scalar vs `:340` mapping — `yaml.safe_load` silently keeps the mapping and drops the
+  `user_approved` marker). Then fill the dimensions whose blockers this program clears:
+  `imbalance` (FVG producer now exists), `multi_timeframe` (parent candles now exist),
+  `range_location` / `auction_balance` (premium/discount now derivable). Add a loader and a test —
+  it currently has zero of both, so nothing would catch `enabled: false` flipping.
+
+## Phase 6 — Governance close-out (not optional)
+
+- File findings for each behavior change; cite `file:line` evidence, set `Family` + `Contract`.
+- Rewrite the CN-004 invariant in `docs/governance/semantic_os/concepts.yaml` (9 → 12 states),
+  append-discipline. Update `docs/governance/crt_closure_report.md` — stays REOPENED, scope widens.
+- Sync `docs/topics/crt-spine.md` (§6.4) and citation map (§6.3).
+- Session log entry per §6/§7.4.
+- `python scripts/governance/construction_protocol.py validate-completion <manifest>`.
+
+---
+
+## Verification
+
+Byte-identity is **not** available here by design. The acceptance bar is attribution.
+
+1. **No-lookahead (hard gate, blocks everything):** adversarial test that no in-progress parent is
+   ever readable, and that the last emitted parent at bar *t* is always fully closed before *t*.
+   `forward_walk`'s existing assertion style is the model.
+2. **Determinism:** two identical runs → byte-identical vector and ledger.
+3. **Ledger diff, fully attributed:** XAUUSD backtest before vs after. Every added/removed/changed
+   trade must map to a named mechanism (parent-CRT gate, a specific SMC feature, the schema
+   change). An unexplained diff is a defect, not noise.
+4. **Freeze-pin regenerated + waiver-log entries filed.** New vector SHA recorded as the successor
+   baseline. `pytest tests/test_feature_layer_freeze.py`.
+5. **Full suite:** `python -m pytest tests/ -q`, with the ~11 dimensionality tests re-pinned to 48.
+6. **VA ladder:** `PYTHONPATH=src python scripts/governance/validation_access_cli.py`. F rung
+   requires every new vector feature to carry a `CLOSURE_STATUS` row, or the surface drops to
+   PARTIAL. **E rung stays OPEN** (no sealed `MC-*`) — so no economic claim about any of this is
+   admissible yet, regardless of how green S/I/F are. Say so explicitly in the finding.
+7. `python src/runtime/baseline_capture.py --label post_htfcrt` and diff against `pre_htfcrt`.
+
+## Sequencing note
+
+Phases 1→2→3 are strictly ordered (parent candles before the state machine before the features
+that depend on both). Phase 4 must not run until Phase 3's re-certification is green — promoting a
+config whose feature schema does not match the trained models would fail closed at
+`zone_registry` load. Phase 5 can run in parallel with 1–3. Phase 6 gates completion.

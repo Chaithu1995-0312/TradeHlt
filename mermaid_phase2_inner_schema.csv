@@ -1,0 +1,34 @@
+package,module,in_reduced_schema,schema_role
+inout,inout.live_rail.types,yes,Live-rail contracts (ClosedBar / MarketDataPort / DataVenue). Imports Candle + ohlcv_schema
+inout,inout.live_rail.config,yes,LiveRailConfig from production_config
+inout,inout.live_rail.factory,yes,build_port: TickDB / Binance / LongPort. DataVenue.MT5_CANDLES returns None
+inout,inout.live_rail.bar_builder,yes,ticks → closed bars
+inout,inout.live_rail.resilience,yes,CircuitBreaker + reconnect
+inout,inout.live_rail.tickdb_adapter,yes,Paper TickDB data venue
+inout,inout.live_rail.binance_ws_adapter,yes,Binance WS data venue
+inout,inout.live_rail.longport_adapter,yes,LongPort data venue
+inout,inout.live_rail.ohlcv_replay_port,yes,OHLCV replay port (uses crt Candle)
+inout,inout.live_rail,yes,Package re-export of rail parts
+inout,inout.alphavantage_candle_fetcher,no,Legacy historical fetcher — config only
+inout,inout.hummingbot_candle_fetcher,no,Legacy historical fetcher — config only
+inout,inout.perp_funding_fetcher,no,Perp funding fetcher — config only
+inout,inout.mt5_candle_fetcher,no,ISOLATED historical MT5 CSV CLI — no src imports
+live,live.mt5_bridge,yes,MT5 order/alert bridge — live_engine_hook + monitoring
+live,live.telegram_bridge,yes,Telegram alerts — live_engine_hook + monitoring
+live,live.order_manager,yes,Paper VenueExecutor — live_rail_orchestrator only. Size from Ultron
+journal,journal.schema,yes,TradeRecord JSONL schema
+journal,journal.trade_logger,yes,Journal writer → schema + core.collector
+journal,journal.trade_provenance_v1_0,yes,Governance provenance — backtest_v2 imports this
+journal,journal.trade_identity_v1_0,no,UNLINKED schema (Tier 0A). Zero src importers
+journal,journal.trade_execution_link_v1_0,no,UNLINKED schema (Tier 0B transport). Zero src importers
+regime,regime.regime_classifier,yes,Deterministic TRENDING/RANGING/HIGH_VOLATILITY
+regime,regime.config_router,yes,Routes config by regime — imports classifier
+regime,regime.market_state_cluster_engine,no,Sidecar — consumed by cognitive (Phase 3) not the live walk
+execution,execution.execution_intent_v1_0,no,UNLINKED human-in-loop intent (Tier 0B). Tests only
+execution,execution.loop,no,UNLINKED tick ExecutionLoop. Stdlib only. No src importer
+execution,execution.alert_manager,no,UNLINKED. Tests only
+execution,execution.override_handler,no,UNLINKED. Tests only
+uat,uat.kill_switch,yes,Daily/weekly loss gate — live_engine_hook + monitoring + uat_runner
+uat,uat.uat_runner,yes,Acceptance runner — kill_switch + monte_carlo + strategies (Phase 3)
+uat,uat.monte_carlo,no,Runner helper only
+monitoring,monitoring.health_checker,yes,Health overlay → mt5/telegram/kill_switch/strategies

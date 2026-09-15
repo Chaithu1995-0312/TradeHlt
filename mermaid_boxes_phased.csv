@@ -1,0 +1,41 @@
+phase,box,own_modules,l0_out,l0_in,role,phase_links
+1_spine,data_ingestion,11,"config_layer,features,utils","analytics,charts,features,governance,inout,portfolio,replay,research,runtime",Historical OHLCV + integrity gate,"features,config_layer,runtime"
+1_spine,features,42,"config_layer,data_ingestion,structure,utils","analytics,bitnet,charts,config_layer,core,data_ingestion,engines,events,governance,identity,msip,research,runtime,strategies,training",Canonical feature pipeline + schema + SMC,"config_layer,data_ingestion,engines,core,runtime"
+1_spine,config_layer,34,"bitnet,core,engines,events,features,runtime,structure,utils","agent,analytics,bitnet,charts,control_plane,core,data_ingestion,engines,expansion,features,governance,identity,inout,interpreters,live,llm_research,monitoring,portfolio,research,runtime,search,strategies,training,uat,utils",ACTIVE_VERSION + CRT math + execution planner,"features,engines,core,runtime,data_ingestion"
+1_spine,engines,13,"bitnet,config_layer,core,features,training,utils","agent,bitnet,cognitive,config_layer,core,research,runtime,strategies",Four scoring engines + live harness,"config_layer,features,core,runtime"
+1_spine,core,21,"cognitive,config_layer,engines,events,features,runtime,training,utils","agent,cognitive,config_layer,engines,journal,live,llm_research,research,runtime,search,strategies,training",EngineRunner fusion decision risk,"config_layer,engines,features,runtime"
+1_spine,runtime,15,"analytics,bitnet,config_layer,core,data_ingestion,engines,features,inout,journal,live,regime,strategies,training,uat,utils","agent,analytics,charts,config_layer,core,expansion,governance,identity,research",Backtest loop + live hook + parent CRT feed,"data_ingestion,features,config_layer,engines,core"
+2_live,inout,14,"config_layer,data_ingestion,utils","agent,runtime",Live candle adapters + live_rail types,runtime
+2_live,live,4,"config_layer,core,utils","monitoring,runtime",MT5 + telegram bridges,runtime
+2_live,journal,6,"core,utils","runtime,search",Trade journal JSONL,runtime
+2_live,regime,4,utils,"cognitive,runtime",TRENDING/RANGING classifier,runtime
+2_live,execution,5,,,Tick loop + alerts + override (NO src imports — unlinked on L0),
+2_live,uat,4,"config_layer,strategies,utils","monitoring,runtime",Kill-switch + acceptance runner,runtime
+2_live,monitoring,2,"config_layer,live,strategies,uat,utils",,Health checker,"live,uat"
+3_sidecars,strategies,18,"bitnet,config_layer,core,engines,features,utils","governance,monitoring,runtime,uat",S01-S10 entry families,runtime
+3_sidecars,bitnet,23,"config_layer,engines,features,utils","config_layer,engines,research,runtime,strategies",GGUF zone inference,"engines,runtime,strategies"
+3_sidecars,training,8,"config_layer,core,features,utils","core,engines,research,runtime",Trainer + phase-5 calibration,"core,engines,runtime"
+3_sidecars,events,2,features,"cognitive,config_layer,core,multi_llm,replay,utils",Canonical event fabric,"core,config_layer"
+3_sidecars,structure,2,,,"config_layer,features,research",Predicate helpers (inbound only — no out edges),"config_layer,features"
+3_sidecars,cognitive,2,"core,engines,events,regime,replay,utils",core,CognitiveBus sidecar,core
+4_gov,governance,30,"config_layer,control_plane,data_ingestion,expansion,features,identity,research,runtime,strategies,utils","agent,retrieval",Promotion + semantic OS + registries,"config_layer,runtime,identity,expansion"
+4_gov,identity,8,"config_layer,features,runtime",governance,Identity tokens / store,governance
+4_gov,expansion,6,"config_layer,runtime","governance,search",Bounded param explorer,"governance,runtime"
+4_gov,search,1,"config_layer,core,expansion,journal",,Fusion-weight searcher,expansion
+4_gov,portfolio,6,"config_layer,data_ingestion,utils",,Allocator + exposure (outbound only),
+4_gov,validation_access,3,research,,Research validation ladder,research
+5_ops,agent,28,"config_layer,control_plane,core,engines,governance,inout,runtime",control_plane,Advisory LLM agent,"control_plane,governance,runtime"
+5_ops,control_plane,12,"agent,charts,config_layer,retrieval,utils","agent,charts,governance",localhost:8787 HTTP,"agent,charts,retrieval"
+5_ops,charts,6,"config_layer,control_plane,data_ingestion,features,research,runtime",control_plane,Chart series API,control_plane
+5_ops,retrieval,13,"governance,utils",control_plane,RAG / knowledge API,"control_plane,governance"
+5_ops,ui,1,,,Dashboard stub (NO src imports — unlinked on L0),
+5_ops,analytics,5,"config_layer,data_ingestion,features,runtime",runtime,Metrics oracle + SL/TP study,runtime
+6_research,research,219,"bitnet,config_layer,core,data_ingestion,engines,features,interpreters,runtime,structure,training,utils","charts,governance,interpreters,validation_access",Edge discovery platform (do not explode L0),interpreters
+6_research,interpreters,6,"config_layer,research",research,Level-4 event producers,research
+6_research,llm_research,5,"config_layer,core",,Offline LLM research (outbound only),
+6_research,feedback,2,,,Offline LLM trade feedback (NO src imports — unlinked on L0),
+6_research,replay,6,"data_ingestion,events,utils",cognitive,Replay memory + drift audit,
+6_research,msip,6,features,,MSIP (outbound to features only),
+6_research,multi_llm,5,"events,utils",,Turn ledger (outbound only),
+6_research,scanner,6,,,Opportunity scanner (NO src imports — unlinked on L0),
+shared,utils,21,"config_layer,events","bitnet,cognitive,config_layer,control_plane,core,data_ingestion,engines,features,governance,inout,journal,live,monitoring,multi_llm,portfolio,regime,replay,research,retrieval,runtime,strategies,training,uat",Logging + telemetry + jsonl (hub — not a phase),

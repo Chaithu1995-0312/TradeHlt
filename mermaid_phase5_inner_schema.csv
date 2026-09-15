@@ -1,0 +1,62 @@
+package,module,in_reduced_schema,schema_role
+agent,agent.cli,yes,CLI entry. No src importer — process entry like a main
+agent,agent.agent_core,yes,Turn loop: IntentRouter → PlanCompiler or GoalLoop → Executor
+agent,agent.intent_router,yes,NL → mode/intent_key
+agent,agent.plan_compiler,yes,Deterministic PLAN_REGISTRY compiler
+agent,agent.executor,yes,Tool run + y/N write fence
+agent,agent.tool_registry,yes,Tool catalog — all modes
+agent,agent.modes.pipeline_mode,yes,Calls promotion_manager + backtest + live_hook + live_rail.types + config_validator
+agent,agent.modes.governance_mode,yes,Calls orchestrator + shadow_promotion_gate
+agent,agent.modes.truth_mode,yes,Calls semantic_grounding
+agent,agent.modes.copilot_mode,yes,Calls engine_runner + fusion + ultron + execution_planner
+agent,agent.findings_synthesizer,yes,Findings LLM — control_plane.server + findings_mode
+agent,agent.modes,no,Mode package re-export
+agent,agent.modes.findings_mode,no,Findings mode
+agent,agent.modes.log_query_mode,no,Log query mode
+agent,agent.modes.ops_mode,no,Ops mode
+agent,agent.goal_loop,no,Specialist GoalLoop
+agent,agent.goal,no,Goal objects
+agent,agent.grok_agentic,no,GrokAgenticAI wrapper
+agent,agent.groq_client,no,Groq client — also dashboard_api
+agent,agent.state,no,Session state
+agent,agent.audit,no,Audit log
+agent,agent.tool_planner,no,Tool planner
+agent,agent.log_query,no,Log query helper
+agent,agent.recipes,no,Recipe package
+agent,agent.recipes.campaign_pipeline,no,Recipe
+agent,agent.recipes.ops_diagnose,no,Recipe
+agent,agent.recipes.truth_janitor,no,Recipe
+control_plane,control_plane.server,yes,localhost:8787. Package entry. Wires jobs/registry/dashboard/charts/retrieval/reports
+control_plane,control_plane.jobs,yes,JobManager — run_id → results/{instrument}_{short8}.json
+control_plane,control_plane.registry,yes,CommandSpec catalog. Also imported by governance.script_registry + findings_synthesizer
+control_plane,control_plane.dashboard_api,yes,Trading dashboard JSON. 2-cycle with charts.chart_api
+control_plane,control_plane.retrieval_api,yes,KnowledgeAPI → retrieval package
+control_plane,control_plane.report_api,no,Run report
+control_plane,control_plane.context_report,no,Context report
+control_plane,control_plane.code_context_extractor,no,Code context
+control_plane,control_plane.dot_graph_context,no,graph.dot helper
+control_plane,control_plane.monitors,no,Job monitors
+control_plane,control_plane.cp_types,no,Types
+charts,charts.chart_api,yes,Chart payload for :8787. Server imports it
+charts,charts.chart_series,yes,OHLC series from corpus + backtest
+charts,charts.crt_overlay,yes,Engine CRT overlay
+charts,charts.resolver_overlay,yes,Resolver CRT overlay
+charts,charts.render,no,Render helper
+retrieval,retrieval.retriever,yes,Truth-tier retrieval — never blends CURRENT/INTENDED/RECORDED
+retrieval,retrieval.truth_tier,yes,Truth class partition
+retrieval,retrieval.claude_integration,yes,Calls semantic_grounding + retriever
+retrieval,retrieval.config,yes,RetrievalConfig
+retrieval,retrieval,yes,Package re-export — retrieval_api imports this
+retrieval,retrieval.chunking,no,Index internal
+retrieval,retrieval.corpus,no,Index internal
+retrieval,retrieval.embedding,no,Index internal
+retrieval,retrieval.vector_store,no,Index internal
+retrieval,retrieval.lexical,no,Lexical index
+retrieval,retrieval.index_store,no,Parquet index
+retrieval,retrieval.divergence,no,Divergence flags
+retrieval,retrieval.monitor,no,Monitor
+analytics,analytics.metrics_oracle,yes,Independent metric recompute. runtime.exit_model_band + sl_tp_comparator. MUST NOT import BacktestMetrics
+analytics,analytics.sl_tp_comparator,yes,SL/TP study — imports backtest_v2
+analytics,analytics.clustering,no,ISOLATED — no src importers
+analytics,analytics.performance,no,ISOLATED on src graph. Docstring says feedback loop — not promotion
+ui,ui,no,ISOLATED package stub. React lives in ui_kits/. Zero modules besides __init__

@@ -1,0 +1,1459 @@
+Grok’s native equivalent of CLAUDE.md is AGENTS.md. There is no GROK.md.
+
+Claude Code boots from CLAUDE.md. Grok’s user-guide chapter is literally titled Project Rules (AGENTS.md) — that is the file it is designed around.
+
+What Grok actually loads
+
+It scans these names, in this order, and loads every match:
+
+1. Agents.md
+2. Claude.md
+3. CLAUDE.md
+4. CLAUDE.local.md
+5. AGENT.md
+6. AGENTS.md
+
+Claude compatibility is on by default, so Grok also picks up CLAUDE.md the way Claude Code does. On Windows (case-insensitive), Agents.md/AGENTS.md collapse to one file, and Claude.md/CLAUDE.md collapse to one file. In this repo that means Grok already loads both AGENTS.md and CLAUDE.md.
+
+Extra Grok-only layer (Claude has no exact twin)
+
+┌────────────────────┬───────────────────────────────────────────────────┐
+│ Location           │ Role                                              │
+├────────────────────┼───────────────────────────────────────────────────┤
+│ AGENTS.md          │ Native project rules (Claude analog of CLAUDE.md) │
+├────────────────────┼───────────────────────────────────────────────────┤
+│ .grok/rules/*.md   │ Project-only Grok extras                          │
+├────────────────────┼───────────────────────────────────────────────────┤
+│ ~/.grok/rules/*.md │ Your global Grok rules, every project             │
+├────────────────────┼───────────────────────────────────────────────────┤
+│ grok --rules "..." │ This session only                                 │
+└────────────────────┴───────────────────────────────────────────────────┘
+
+grok inspect shows which files were loaded and roughly how many tokens they cost.
+
+This repo’s design (from the pointer, not from reading source)
+
+AGENTS.md here is intentionally a stub. It says the doctrine lives in CLAUDE.md and exists only because tools look for that filename. That is the right split:
+
+• One doctrine: CLAUDE.md
+• Grok/Cursor/Codex find a file: AGENTS.md points at it
+• Do not copy the doctrine into AGENTS.md (that is how it drifted last time)
+• Do not invent GROK.md
+
+So: Claude’s default is CLAUDE.md. Grok’s default is AGENTS.md. In this repo Grok still boots the Claude doctrine because it also auto-loads CLAUDE.md.
+
+If you want a Grok-specific overlay (TUI habits, grok inspect, session-only flags) that should go in .grok/rules/, not a second bootloader.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Grok vs Claude default project-rules file (discussion only; trading source not read) Decision/Output: Grok's native equivalent of Claude's CLAUDE.md is AGENTS.md. Official user-guide (12-project-rules.md) discovery order: Agents.md → Claude.md → CLAUDE.md → CLAUDE.local.md → AGENT.md → AGENTS.md. Grok loads every matching name; Claude compatibility is ON by default so CLAUDE.md is also auto-loaded. Extra Grok-only layer: ~/.grok/rules/.md (global) and .grok/rules/.md (project). No GROK.md. This repo's AGENTS.md is a pointer; CLAUDE.md remains the doctrine. Belief Update / ROI / Goal:
+  Goal: know which file Grok actually boots from so we do not invent a second doctrine.
+  Belief: Grok already reads CLAUDE.md here; AGENTS.md is the native name, not a second source of truth.
+  Knowledge ROI: high — one-sentence map, no repo archaeology.
+  Action: do not create GROK.md; do not duplicate CLAUDE.md into AGENTS.md. Open Questions: whether the user wants a thin Grok-only overlay in .grok/rules/ (session-style, TUI, inspect) vs keeping AGENTS.md as a pointer only. Next Step: User decides if they want a Grok overlay, or to leave the current pointer design.
+---Wired so Grok actually injects it. Content is a working draft — we fill it together.
+
+Constraint (this is why the path looks odd): a repo-root file named GROK.md is not in Grok’s auto-load list. Putting the real file only at the root would mean Grok never reads it.
+
+What exists now
+
+┌─────────────────────┬──────────────────────────────────────────────────────────────────────┐
+│ File                │ Role                                                                 │
+├─────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│ .grok/rules/GROK.md │ The bootloader. Auto-injected (every *.md under .grok/rules/ loads). │
+├─────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│ GROK.md             │ Human pointer. Not auto-loaded.                                      │
+├─────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│ AGENTS.md           │ Now routes: Grok → .grok/rules/GROK.md, Claude → CLAUDE.md.          │
+└─────────────────────┴──────────────────────────────────────────────────────────────────────┘
+
+Doctrine stays in CLAUDE.md. Nothing was copied.
+
+What the draft already says
+
+1. In a live Grok TUI session you are the implementer. The “Claude-only writes” rule is the six-model pipeline, not this session.
+2. No extra authority — construction protocol, gates, y/N still bind.
+3. Do not re-read CLAUDE.md wholesale if it was already injected.
+4. Domain memory by task, session log every turn, source wins.
+5. §7 is empty on purpose — that is where we write the rest together. A line is not a rule until we promote it out of §7.
+
+Restart Grok (or start a new session) and run grok inspect. You should see .grok/rules/GROK.md in the loaded-rules list.
+
+Next we write §7. Typical candidates:
+
+• How Grok should sound / decide differently from Claude in this repo
+• When Grok is synthesizer in the six-model pipeline vs acting implementer here
+• What to skip when CLAUDE.md is already in context
+• Any Grok-only workflow you want (inspect, plan mode, subagents)
+
+Tell me which of those to lock first, or paste the rules you want in.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Prepare GROK.md bootloader (wired to auto-load; content is a joint working draft) Decision/Output: Root GROK.md is not in Grok's recognized auto-load list. Wired the user-chosen path: canonical bootloader at .grok/rules/GROK.md (auto-injected), root GROK.md is a pointer, AGENTS.md now routes Grok → that file and Claude → CLAUDE.md. Thickness left open — file is a working draft with §7 for joint rules. No CLAUDE.md copy. Trading source not read. No G001. Belief Update / ROI / Goal:
+  Goal: give Grok a default boot file without a second doctrine.
+  Belief: .grok/rules/*.md is the only reliable “named GROK.md and actually injected” path.
+  Knowledge ROI: high — wiring constraint is now encoded in the repo, not just chat.
+  Action: iterate §7 with the user; confirm load via grok inspect on next session. Open Questions: response-style diffs, synthesizer-vs-implementer, token-control vs injected CLAUDE.md, any Grok-only workflow. Next Step: User edits the draft with me — promote agreed lines out of §7 into numbered rules.
+---Understood. We draft from your How / What / Why only. I clarify until there is one reading. I do not invent, and I do not open the trading repo.
+
+Drafting contract (lock this)
+
+┌──────┬───────────────────────────────────────────────┬────────────────────────────────────────────┐
+│ Lane │ Meaning                                       │ I may not                                  │
+├──────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤
+│ What │ The rule. What Grok must do or must not do.   │ Soften it, add extra rules, or “complete”  │
+│      │                                               │ it from CLAUDE.md                          │
+├──────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤
+│ How  │ The procedure. Exact steps, files, order.     │ Substitute a different procedure that “    │
+│      │                                               │ should work”                               │
+├──────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤
+│ Why  │ The reason. So a later session cannot “       │ Invent a nicer why, or treat why as        │
+│      │ improve” the rule away                        │ optional color                             │
+└──────┴───────────────────────────────────────────────┴────────────────────────────────────────────┘
+
+My job on each batch
+1. Restate What / How / Why in one reading each.
+2. List every ambiguity as a question. Missing How or Why is an ambiguity, not a gap I fill.
+3. If something is unknown, I say UNKNOWN — I do not guess from memory or the codebase.
+4. I do not edit .grok/rules/GROK.md until you confirm that reading.
+5. After confirm, that triad becomes a numbered rule. Until then it stays discussion.
+
+Hard stops
+• Do not read the codebase.
+• Do not copy CLAUDE.md into GROK.md.
+• Do not promote a line because it “sounds like this repo.”
+• If How is missing, the rule is not writable. If Why is missing, the rule will drift.
+
+One ambiguity before you send the first batch
+
+The file already has §§1–6 from the last turn (who Grok is, load path, first moves, authority, what stays in Claude, harness notes).
+
+Which of these do you mean?
+
+A. Keep that scaffold. Your How / What / Why only add or replace rules.
+B. Ignore the scaffold. GROK.md is rebuilt only from what you send now.
+
+Reply A or B, then send the first What / How / Why. I will only discuss until you confirm.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: GROK.md drafting protocol — How/What/Why, no invention, no codebase Decision/Output: Locked a discuss-first contract: user supplies What (rule), How (procedure), Why (reason). I restate, surface ambiguity, say UNKNOWN instead of guessing, and do not edit .grok/rules/GROK.md until confirm. Scaffold keep-vs-rebuild is the only open question (A/B). Belief Update / ROI / Goal:
+  Goal: a Grok bootloader with no second doctrine and no hallucinated rules.
+  Belief: collapsing How/What/Why is how instruction files drift.
+  Knowledge ROI: high — process locked before content.
+  Action: wait for A/B plus the first triad. Open Questions: A keep scaffold vs B rebuild from their batches only. Next Step: User picks A or B and sends the first What / How / Why.
+---File-list coverage of the three functionality Excels vs the trees they claim: 97.3% (1,247 / 1,281).
+That is “is this .py file named in the workbook?”, not “is the summary complete or correct.”
+
+Workbooks last written 2026-08-08. Counted today against disk. 0 stale rows (nothing in Excel is missing from disk).
+
+The three inventories
+
+┌───────────────────────────────┬──────────────────┬────────┬────────┬─────────┬─────────┬──────────┐
+│ Workbook                      │ Sheet used       │ Disk . │     In │ Covered │ Missing │ Coverage │
+│                               │                  │     py │  Excel │         │         │          │
+├───────────────────────────────┼──────────────────┼────────┼────────┼─────────┼─────────┼──────────┤
+│ results/analysis/src_         │ src_py_inventory │    482 │    476 │     476 │       6 │    98.8% │
+│ business_functionality.xlsx   │                  │        │        │         │         │          │
+├───────────────────────────────┼──────────────────┼────────┼────────┼─────────┼─────────┼──────────┤
+│ scripts_business_             │ Scripts Analysis │    363 │    357 │     357 │       6 │    98.3% │
+│ functionality.xlsx            │                  │        │        │         │         │          │
+├───────────────────────────────┼──────────────────┼────────┼────────┼─────────┼─────────┼──────────┤
+│ docs/analysis/tests_          │ By File (one row │    436 │    414 │     414 │      22 │    95.0% │
+│ functionality_inventory.xlsx  │ per file)        │        │        │         │         │          │
+├───────────────────────────────┼──────────────────┼────────┼────────┼─────────┼─────────┼──────────┤
+│ src + scripts + tests         │ union            │  1,281 │  1,247 │   1,247 │      34 │    97.3% │
+└───────────────────────────────┴──────────────────┴────────┴────────┴─────────┴─────────┴──────────┘
+
+Tests also has a class-level sheet (Test Functionality, 526 data rows). Coverage above uses By File, so one file with many classes still counts once.
+
+What is not in these Excels (by design)
+
+They only inventory src/, scripts/, and tests/. They never claimed:
+
+• mt5_analytics/ (45)
+• oss_lab/ (37)
+• tools/ (14)
+• grok/ (4)
+• repo-root one-off scripts
+• .venv / .claude (thousands of files — ignore those)
+
+A “whole repo” percentage (~11%) is the wrong number. It is dominated by virtualenv and Claude worktrees.
+
+The 34 files added after 2026-08-08
+
+src (6)
+clock_detector.py, clock_registry.py, magnitude_states.py, semantic_grounding.py, episode_agreement.py, episode_propositions.py
+
+scripts (6)
+crt_episode_number_trace.py, run_crt_trace_workflow.py, session_filter_funnel_probe.py, xauusd_excel_feature_state_trace.py, query_semantic_os.py, review_ohlcv_clocks.py
+
+tests (22)
+tests/Grok/* (10 files) plus test_directional_displacement.py, test_semantic_grounding.py, test_ohlcv_clock_provenance.py, test_retrace_reset_direction.py, and the other post-Aug-8 floors.
+
+What this does not mean
+
+• Not economic coverage
+• Not “every function is described”
+• Not that summaries are still accurate for files that are listed
+
+It means: almost every current src/scripts/tests file is listed; the 2.7% gap is new files since 8 Aug.
+
+I can regenerate the three workbooks so coverage goes to 100% of those trees, or leave them as the 8 Aug snapshot. Which do you want?
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Functionality Excel vs current codebase file coverage Decision/Output: Measured three inventories dated 2026-08-08 against disk now. FILE coverage (listed vs exists), not summary-quality. src 476/482 = 98.8%; scripts 357/363 = 98.3%; tests By-File 414/436 = 95.0%; three-tree union 1247/1281 = 97.3%. 0 stale Excel rows. 34 files on disk missing from Excel (6 src, 6 scripts, 22 tests) — added after 2026-08-08. Whole-repo 11.4% is not the fair number (.venv/.claude dominate). Belief Update / ROI / Goal:
+  Goal: know how complete the functionality Excels are vs the code.
+  Belief: inventories are nearly complete for src/scripts/tests and 0% stale; gap is post-Aug-8 files, not deleted files.
+  Knowledge ROI: high — live recount, not session-log memory.
+  Action: treat 97.3% as file-list coverage only; regenerate if the user wants 100% of the three trees. Open Questions: whether to regenerate the three workbooks; whether to inventory mt5_analytics/oss_lab/tools (never in these books). Next Step: User decides regenerate vs leave, and whether GROK.md drafting continues.
+---Excel file-coverage is closed in GROK.md. Leftovers and every other “later” from this chat are in one ledger. A future “what is pending” must open that file — not invent the list from memory.
+
+Closed (GROK.md §8)
+
+File-list only, 2026-08-15 vs workbooks dated 2026-08-08:
+
+src + scripts + tests = 97.3% (1,247 / 1,281). 0 stale rows.
+
+Not closed: summary quality, economics, whole-repo, the 34 missing files.
+
+How “pending” works now (GROK.md §9)
+
+┌─────────────────────────────────────────┬─────────────────────────────────────────────────────────┐
+│ You say                                 │ Grok must                                               │
+├─────────────────────────────────────────┼─────────────────────────────────────────────────────────┤
+│ pending / later / leftover / what’s     │ Open .grok/PENDING.md and list every row that is not    │
+│ left                                    │ DONE                                                    │
+├─────────────────────────────────────────┼─────────────────────────────────────────────────────────┤
+│ “later” on a new item                   │ Append a row the same turn                              │
+├─────────────────────────────────────────┼─────────────────────────────────────────────────────────┤
+│ something is finished                   │ Mark DONE — never delete the row                        │
+└─────────────────────────────────────────┴─────────────────────────────────────────────────────────┘
+
+The list is not copied into GROK.md. GROK.md only points at the ledger.
+
+What’s on the ledger now (13 items)
+
+Excel leftovers (you said add later)
+• P-EXCEL-01 — the 34 missing files
+• P-EXCEL-02 / 03 / 04 — the src / scripts / tests splits
+• P-EXCEL-05 — regenerate workbooks vs append-only (not chosen)
+• P-EXCEL-06 — whether to inventory mt5_analytics/, oss_lab/, tools/ (not chosen)
+
+GROK.md still open
+• P-GROK-01 — keep scaffold vs rebuild (A/B unanswered)
+• P-GROK-02 — first How / What / Why batch not sent
+• P-GROK-03–06 — the old §7 rule drafts
+• P-GROK-07 — confirm load with grok inspect
+
+Say pending any time and that table is the answer. Say later on a new task and it gets a row.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: GROK.md Excel closure + PENDING ledger for all later items Decision/Output: Excel file-coverage (97.3%, 0 stale) recorded as GROK.md §8 CLOSED. Leftovers not closed. Created .grok/PENDING.md as the only retrieve surface. GROK.md §3.5 + §9: on “pending/later/leftover” open that file; on a new “later”, append same turn; never delete rows. Seeded P-EXCEL-01..06 and P-GROK-01..07 from this conversation only. Belief Update / ROI / Goal:
+  Goal: future “what is pending” returns every deferred item, not chat memory.
+  Belief: a thin bootloader + one ledger beats stuffing tasks into GROK.md.
+  Knowledge ROI: high — retrieve path is now a rule.
+  Action: next “pending” lists the ledger; next deferral appends a row. Open Questions: none on the retrieve path. Content of P-* still user-owned. Next Step: User says “pending” to test retrieve, or continues How/What/Why (P-GROK-02).
+---Goal is locked. You chose A: name what this playground already implements. No new strategy. No production edit.
+
+What strategy does the playground already implement?
+
+RECOMMENDATION
+KEEP CURRENT ARCHITECTURE.
+
+The playground does not implement one named trading strategy. It implements a market-structure lifecycle (CRT) plus separate scoring, approval, execution-geometry, and risk layers. Calling that stack “the strategy” collapses meanings the repository already forbids.
+
+CONFIDENCE
+HIGH on the ownership split (MIAR + target architecture + VALID_TRANSITIONS).
+HIGH that the 10-strategy pack is not the acting entry owner on the active config (consensus weight default 0.0, key absent from v2_multi_2026_04).
+MEDIUM on how often StrategyOrchestrator actually changes a fused decision (weight is 0, so by contract it should not).
+
+DOMAIN REASONING
+
+In a market, four different questions get mixed because people say “strategy” for all of them:
+
+1. What is the market doing? Range, sweep of liquidity, impulse away from the taken side, expansion, come-back (retest). That is structure.
+2. When are we willing to act? Session, filters, “only after a retest.” That is policy.
+3. If we act, where is the trade? Entry, stop, target, time-to-live. That is execution geometry.
+4. May we put risk on? Size, RR after costs, vetoes. That is risk.
+
+A strategy is (2) applied to (1), then (3) and (4).
+A structure detector is only (1).
+If you treat (1) as a strategy, every valid pattern looks like a trade. The repo’s own constitution says the opposite: structure validity ≠ execution validity.
+
+CRT (Candle Range Theory / ICT-style) is a standard domain picture of (1): a range is raided, price displaces away from the raid, expands, then returns. That is market meaning. It is not automatically “go long/short now.”
+
+CURRENT BEHAVIOR
+
+Runtime version: v2_multi_2026_04 (configs/production/ACTIVE_VERSION).
+
+What actually walks a candle toward an order (the spine):
+OHLCV → features → CRT state machine → (optional) four-engine fusion → decision → planner → risk.
+
+┌──────────────────┬────────────────────────────────┬───────────────────────────────────────────────┐
+│ Layer            │ Question it answers today      │ Evidence                                      │
+├──────────────────┼────────────────────────────────┼───────────────────────────────────────────────┤
+│ CRT FSM          │ What structural state is this  │ CRTState + VALID_TRANSITIONS in src/config_   │
+│                  │ bar in?                        │ layer/state_identity.py                       │
+├──────────────────┼────────────────────────────────┼───────────────────────────────────────────────┤
+│ CRT score        │ A structure-rule score for     │ src/engines/crt_engine.py (separate path from │
+│ wrapper          │ fusion                         │ the FSM)                                      │
+├──────────────────┼────────────────────────────────┼───────────────────────────────────────────────┤
+│ Gaussian / Zone  │ Conformity / neighbourhood /   │ EXPECTED_ENGINES in src/core/engine_runner    │
+│ / RR             │ candle commitment              │ .py:54                                        │
+├──────────────────┼────────────────────────────────┼───────────────────────────────────────────────┤
+│ Fusion +         │ Should this be approved as a   │ Stage 4 in MIAR                               │
+│ Decision         │ decision object?               │                                               │
+├──────────────────┼────────────────────────────────┼───────────────────────────────────────────────┤
+│ Execution        │ Entry / SL / TP / TTL after    │ Stage 5 in MIAR                               │
+│ planner          │ approval                       │                                               │
+├──────────────────┼────────────────────────────────┼───────────────────────────────────────────────┤
+│ Ultron risk      │ Economic / risk veto           │ Stage 5                                       │
+├──────────────────┼────────────────────────────────┼───────────────────────────────────────────────┤
+│ src/strategies/  │ Parallel “consensus” scores    │ StrategyOrchestrator in backtest_v2.py:1947   │
+│ S1–S10           │                                │ -1966 and :2441-2464                          │
+└──────────────────┴────────────────────────────────┴───────────────────────────────────────────────┘
+
+Legal CRT path (source, not docs):
+
+RANGE → SWEEP → DISPLACEMENT → EXPANSION → RETEST → EXECUTION → RESOLUTION
+plus SHADOW_PENDING and EXPIRED (state_identity.py:69-79).
+
+F-074 (already established): DISPLACEMENT must be an impulse away from the swept side. That is domain meaning the engine now encodes.
+
+Acting entry owner on the research/backtest CRT path is still the CRT state machine reaching TRADE_OPENED, not S1–S10. MIAR already records that as alignment 🟡: CRT is Stage-1 (“never decide whether to trade”) but the FSM can open a structural path to a trade.
+
+S1–S10: backtest_v2 runs them and may put strategy_consensus_score into EngineRunner context. Fusion only consumes that when weight_strategy_consensus > 0. FusionConfig defaults that weight to 0.0 (fusion_engine.py:158). Active config does not declare the key. So the pack is wired and dormant, not the incumbent strategy.
+
+Live HookedLiveEngine is a separate, currently non-runnable rail (F-073). Do not treat live and backtest as one “strategy” surface.
+
+INTENDED SEMANTICS
+
+┌─────────────────┬─────────────────────────────────────────────────────────────────────────────────┐
+│ Kind            │ Meaning                                                                         │
+├─────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+│ Universal       │ Structure (range/sweep/displace/expand/retest) is a description of price. A     │
+│ domain          │ strategy is a willingness to act on some description, plus geometry and risk.   │
+├─────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+│ Repository (    │ CRT owns “what structural state is the market in?” It must never estimate p(    │
+│ locked)         │ win), own economic RR, or decide whether to trade (MIAR §3.3 + §0.1). Strategy  │
+│                 │ vs market semantics are forbidden to collapse (target-strategy-architecture.md  │
+│                 │ §0.2).                                                                          │
+├─────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+│ Strategy policy │ Sessions, fusion weights, planner multiples, Ultron gates — when/how we act.    │
+│                 │ Not CRT’s job.                                                                  │
+├─────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+│ Implementation  │ Nine-state enum, four engines, orchestrator, planner. Machinery, not meaning.   │
+└─────────────────┴─────────────────────────────────────────────────────────────────────────────────┘
+
+CODEBASE EVIDENCE
+
+• src/config_layer/state_identity.py:35-79 — CRTState, VALID_TRANSITIONS
+• src/core/engine_runner.py:54 — EXPECTED_ENGINES = {crt, gaussian, zone_gate, rr}
+• docs/governance/MODEL_INTENT_AUTHORITY_REGISTER.md §0.2 / §3.3 — CRT question + non-goals
+• docs/architecture/target-strategy-architecture.md §0.2 — market semantics ≠ strategy ≠ models ≠ governance
+• docs/architecture/goal.md — structure validity ≠ execution validity
+• src/runtime/backtest_v2.py:1947-1951 — orchestrator is consensus into fusion if weight > 0
+• src/core/fusion_engine.py:158 — weight_strategy_consensus: 0.0
+• configs/production/v2_multi_2026_04.json — that key absent
+• F-037 / F-073 / F-074 — historical evidence of CRT-only research spine, no live rail, directional displacement; evidence, not a new hunt
+
+SEMANTIC OWNERSHIP
+
+┌───────────────┬──────────────────────┬─────────────┬───────────────┬──────────────┬───────────────┐
+│ Layer         │ Question answered    │ Input       │ Output        │ Authority    │ Consumer      │
+├───────────────┼──────────────────────┼─────────────┼───────────────┼──────────────┼───────────────┤
+│ CRT FSM       │ What structure is    │ OHLCV       │ State /       │ MIAR crt     │ Backtest CRT  │
+│               │ this?                │             │ direction /   │              │ path,         │
+│               │                      │             │ events        │              │ journals      │
+├───────────────┼──────────────────────┼─────────────┼───────────────┼──────────────┼───────────────┤
+│ CRT fusion    │ How strong is the    │ Features    │ crt score     │ Same owner,  │ Fusion        │
+│ score         │ structure-rule       │             │               │ second       │               │
+│               │ score?               │             │               │ surface      │               │
+├───────────────┼──────────────────────┼─────────────┼───────────────┼──────────────┼───────────────┤
+│ Gaussian      │ How familiar is this │ EMA /       │ Conformity    │ MIAR         │ Fusion        │
+│               │ state?               │ momentum    │ score         │ gaussian     │               │
+├───────────────┼──────────────────────┼─────────────┼───────────────┼──────────────┼───────────────┤
+│ ZoneGate      │ Is this a known      │ Feature     │ Pass / score  │ MIAR zone_   │ Fusion /      │
+│               │ neighbourhood?       │ vector      │               │ gate         │ decision      │
+├───────────────┼──────────────────────┼─────────────┼───────────────┼──────────────┼───────────────┤
+│ RR engine     │ How committed is     │ OHLC        │ Polarity /    │ MIAR rr      │ Fusion (not   │
+│               │ this candle?         │ geometry    │ score         │              │ Ultron RR)    │
+├───────────────┼──────────────────────┼─────────────┼───────────────┼──────────────┼───────────────┤
+│ Fusion +      │ Approve the          │ Four scores │ APPROVE /     │ Stage 4      │ Planner       │
+│ Decision      │ decision?            │             │ REJECT        │              │               │
+├───────────────┼──────────────────────┼─────────────┼───────────────┼──────────────┼───────────────┤
+│ Planner       │ Where is the trade?  │ Approved    │ Entry / SL /  │ Stage 5      │ Ultron        │
+│               │                      │ signal +    │ TP            │              │               │
+│               │                      │ ATR         │               │              │               │
+├───────────────┼──────────────────────┼─────────────┼───────────────┼──────────────┼───────────────┤
+│ Ultron        │ May we take this     │ Plan +      │ APPROVE /     │ Stage 5      │ Ledger        │
+│               │ risk?                │ costs       │ REJECT        │              │               │
+├───────────────┼──────────────────────┼─────────────┼───────────────┼──────────────┼───────────────┤
+│ S1–S10        │ Do packaged          │ Features +  │ Consensus     │ Strategy     │ Fusion only   │
+│ orchestrator  │ hypotheses agree?    │ candle      │ BUY/SELL      │ package      │ if weight > 0 │
+│               │                      │             │ score         │              │               │
+├───────────────┼──────────────────────┼─────────────┼───────────────┼──────────────┼───────────────┤
+│ Session       │ Is this clock        │ Timestamp / │ Filter        │ Config / CRT │ CRT execution │
+│ windows       │ allowed to execute?  │ policy      │               │ filter       │ gate          │
+└───────────────┴──────────────────────┴─────────────┴───────────────┴──────────────┴───────────────┘
+
+These vocabularies must not be made identical. “Session” as a feature label is not “session” as an execution permit (F-066 already split those).
+
+ALTERNATIVE INTERPRETATION
+
+“CRT is the strategy, because that is what opens trades.”
+That describes current acting path, not intended meaning. It would be the right reading only if the repository withdrew MIAR’s “CRT never decides whether to trade” and goal.md’s structure≠execution rule. It has not. Evidence that would make the alternative correct: an authorized contract that CRT EXECUTION means “strategy entry.” That would be a policy change, not a discovery.
+
+FAILURE / CONTAMINATION RISK
+
+If we call CRT “the strategy”:
+
+• every structural completion looks like an edge (F-026 already weakened that as an edge source);
+• session / fusion / planner / Ultron look like bugs when they veto a “valid strategy”;
+• S1–S10 look like the missing strategy when they are a dormant consensus vote;
+• Sense B (measure an edge) would measure the wrong object.
+
+WHAT SHOULD BE TESTED
+
+Not new tests this turn. Existing contracts that already encode the naming:
+
+• VALID_TRANSITIONS exhaustiveness
+• EXPECTED_ENGINES completeness
+• MIAR non-goals (CRT must not own p(win) / economic RR / trade decision)
+• F-074 directional displacement
+
+Do not add a test that “S1–S10 must affect the ledger.” That would invent a strategy contract the active config does not grant.
+
+WHAT SHOULD NOT YET BE CHANGED
+
+• Production config v2_multi_2026_04
+• CRT transitions / F-074 gate
+• Fusion default weight_strategy_consensus = 0.0
+• S2–S10 implementations
+• xfails
+• No Sense B measurement unless you authorize it (P-GOAL-04 is LATER)
+
+USER AUTHORIZATION REQUIRED
+
+Only if you want a different naming than the repository already established:
+
+A. Keep the split (recommended): CRT = structure; policy/gates = willingness; planner/Ultron = geometry/risk. The playground’s incumbent concept is CRT structure. It is not yet a named strategy.
+B. Authorize treating the CRT TRADE_OPENED path as the strategy for Sense B measurement (knowing MIAR still says CRT must not decide to trade — that tension stays visible).
+C. Authorize turning S1–S10 consensus on (weight_strategy_consensus > 0) as a different strategy surface. That is a behavior change, not a naming.
+
+I am not asking you to resolve trading-domain meaning. Domain + MIAR already establish A. B and C are policy.
+
+───
+
+Classification: INTENTIONAL SEMANTIC SEPARATION
+
+The incumbent playground concept is CRT market structure (range → sweep → directional displacement → expansion → retest).
+The incumbent playground does not contain a single authorized strategy object.
+Sense B (does that concept have an edge?) is on the pending ledger as P-GOAL-04 and is not started.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Goal lock + Sense A — name what the playground already implements Decision/Output: Goal persisted (.grok/GOAL.md, PLAYGROUND.md). Review charter = existing SEMANTIC_REVIEW_PROTOCOL.md (paste not a second doctrine). User chose A. Named incumbent: CRT structural lifecycle (RANGE→…→RESOLUTION), not a complete strategy. MIAR: CRT answers “what structural state?” and must never decide to trade. Acting TRADE_OPENED path is the CRT FSM (alignment 🟡). src/strategies S1–S10 run in backtest as consensus; FusionConfig.weight_strategy_consensus defaults 0.0 and is absent from v2_multi_2026_04 → dormant vote. No production edit. Classification: INTENTIONAL SEMANTIC SEPARATION. Belief Update / ROI / Goal:
+  Goal: identify a strategy in the market; first name what the lab already is.
+  Belief: collapsing CRT-as-strategy would invent meaning the repo already forbids.
+  Knowledge ROI: high — one ownership map instead of a hunt.
+  Action: do not start Sense B/C unless asked. Do not unify strategy pack with CRT spine. Open Questions: whether the user later authorizes Sense B (edge) or wants CRT self-approve vs MIAR non-goal treated as a separate review. Next Step: User accepts the naming, asks pending, or authorizes Sense B.
+---Locked. Three things, not one:
+
+┌──────┬────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Lane │ Meaning                                                                                    │
+├──────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ What │ I reason as a professional trader / analyst whose job is to earn money.                    │
+├──────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ How  │ Every market claim, assumption, and “this should work” must pass this codebase before it   │
+│      │ is treated as true.                                                                        │
+├──────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Why  │ A trader-LLM has no built-in brake on hallucination. This repo is that brake.              │
+└──────┴────────────────────────────────────────────────────────────────────────────────────────────┘
+
+What this does not mean
+
+• I am not a live trader. There is no authorized live rail.
+• The code is not already the money strategy. Sense A still stands: CRT is structure, not a complete strategy.
+• “Earn money” does not skip measurement, promotion, or your authorization.
+• A green backtest, a comment, or another model’s “edge” is not profit.
+
+How the validation base works
+
+Trader thought is allowed. Belief is not, until the playground answers:
+
+1. Meaning — what market concept is this?
+2. Existence — does this repo actually implement it?
+3. Owner — structure vs policy vs geometry vs risk (they are not the same)
+4. Honesty — measurable without lookahead, bad labels, or the wrong clock?
+5. Money — only after 1–4: does it improve keepable expectancy?
+
+UNKNOWN at any step → say so. Do not assume a strategy into existence.
+
+A finding of no edge is a successful validation. Hallucination was stopped. That is how this lab earns (or saves) money.
+
+CURRENT vs INTENDED (not collapsed)
+
+• CURRENT: Grok can talk like a trader and invent setups with no check.
+• INTENDED: Same trader reasoning, but the repo is the only court that can promote a thought to a claim.
+• RECOMMENDED: Keep that split. Do not turn “earn money” into “run CRT harder.”
+
+Sense B (measure whether CRT-as-structure has an edge) is still later (P-GOAL-04). Wanting money does not start that measurement by itself.
+
+Bring a trader hypothesis whenever you want. I will run it through the five gates instead of believing it.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Trader-analyst role + earn-money goal + codebase as hallucination validation base Decision/Output: Locked How/What/Why: What = reason as professional trader/analyst to earn money. How = every claim must pass this repo. Why = LLM has no native check on invention. Codebase validates truth of claims, does not mint profit and is not the strategy. Sense A stands (CRT = structure). Sense B still LATER (P-GOAL-04). No live authority, no production edit. Belief Update / ROI / Goal:
+  Goal: earn money under a check that stops hallucinated edges.
+  Belief: trader intuition without this repo is the failure mode; “code already trades” is the other failure mode.
+  Knowledge ROI: high — role and validation gate are now durable.
+  Action: treat unverified trader thoughts as hypotheses; do not start money-measurement until P-GOAL-04. Open Questions: none on the lock. Sense B still user-gated. Next Step: User may authorize Sense B, ask pending, or bring a trader hypothesis to validate.
+---Recorded in GROK.md §10. The How is a route, not 1,247 filenames stuffed into the bootloader.
+
+Recorded in GROK.md
+
+┌──────┬─────────────────────────────────────────────────────────────────────────────────────┐
+│ Lane │ Meaning                                                                             │
+├──────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ What │ Trader / analyst whose job is to earn money                                         │
+├──────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ How  │ Topic → Ins/Outs → cited files → Excel inventory → only then money                  │
+├──────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ Why  │ This repo is the hallucination brake. It validates claims. It does not mint profit. │
+└──────┴─────────────────────────────────────────────────────────────────────────────────────┘
+
+Full extract: `.grok/HOW_INDEX.md` (.grok/HOW_INDEX.md)
+Regenerate later: python .grok/_build_how_index.py
+
+How-index (extracted)
+
+27 topics from docs/topics/: 13 NEEDED on the money/structure path, 14 USEFUL (sidecar / orphan / search).
+
+Excel file names tracked (workbooks 2026-08-08, coverage 97.3%):
+
+┌─────────────────────────────────────┬───────┐
+│ Workbook                            │ Files │
+├─────────────────────────────────────┼───────┤
+│ src_business_functionality.xlsx     │   476 │
+├─────────────────────────────────────┼───────┤
+│ scripts_business_functionality.xlsx │   357 │
+├─────────────────────────────────────┼───────┤
+│ tests_functionality_inventory.xlsx  │   414 │
+├─────────────────────────────────────┼───────┤
+│ Union                               │ 1,247 │
+└─────────────────────────────────────┴───────┘
+
+The 34 leftovers stay on P-EXCEL-*. They are not in this extract.
+
+NEEDED topics (the How path)
+
+┌────────────────────┬─────────────────────────────────┬────────────────────────────────────────────┐
+│ Topic              │ Ins                             │ Outs                                       │
+├────────────────────┼─────────────────────────────────┼────────────────────────────────────────────┤
+│ CRT spine          │ M15 candles + prod config       │ Decision / plan / APPROVE·REJECT / TRADE_  │
+│                    │ sections                        │ OPENED                                     │
+├────────────────────┼─────────────────────────────────┼────────────────────────────────────────────┤
+│ Scoring engines    │ Canonical features              │ {crt, gaussian, zone_gate, rr} scores      │
+├────────────────────┼─────────────────────────────────┼────────────────────────────────────────────┤
+│ Fusion + decision  │ Four scores                     │ Approve the decision                       │
+├────────────────────┼─────────────────────────────────┼────────────────────────────────────────────┤
+│ Execution planning │ Engine result + features        │ Entry / intent / TTL (SL/TP later)         │
+├────────────────────┼─────────────────────────────────┼────────────────────────────────────────────┤
+│ Ultron risk        │ Plan + portfolio                │ Final APPROVE/REJECT + size                │
+├────────────────────┼─────────────────────────────────┼────────────────────────────────────────────┤
+│ Feature schema     │ Raw OHLCV                       │ 38-dim vector                              │
+├────────────────────┼─────────────────────────────────┼────────────────────────────────────────────┤
+│ Live execution     │ Live rail                       │ No live book (F-073)                       │
+├────────────────────┼─────────────────────────────────┼────────────────────────────────────────────┤
+│ Measurement        │ Experiment surfaces             │ Sealed MC-* (none yet)                     │
+│ contract           │                                 │                                            │
+├────────────────────┼─────────────────────────────────┼────────────────────────────────────────────┤
+│ Promotion          │ Approved ValidationReport       │ Production version + log                   │
+├────────────────────┼─────────────────────────────────┼────────────────────────────────────────────┤
+│ Goal layer         │ Economic objective              │ G001 metrics                               │
+├────────────────────┼─────────────────────────────────┼────────────────────────────────────────────┤
+│ Model intent       │ Feature vector + config         │ Who owns which question                    │
+├────────────────────┼─────────────────────────────────┼────────────────────────────────────────────┤
+│ BitNet             │ CRT feature subset              │ Hard reject when enabled (inert now)       │
+├────────────────────┼─────────────────────────────────┼────────────────────────────────────────────┤
+│ Config validation  │ Params + CSVs                   │ APPROVE/REJECT report                      │
+└────────────────────┴─────────────────────────────────┴────────────────────────────────────────────┘
+
+USEFUL (not the money path unless you say so): agent, expansion, replay memory, portfolio, execution loop, CPR (explicitly no TRADE_OPENED), weight search, training, etc.
+
+Largest Excel packages: src/research 143, scripts/research 129, scripts/analysis 115, tests/research 72. Those are research machinery, not extra strategies.
+
+Bring a trader claim and I will run it through a NEEDED topic first.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Record trader How/What/Why in GROK.md + How-index from topics and Excels Decision/Output: GROK.md §10 records What=trader/earn money, How=topic→Ins/Outs→files→Excel, Why=repo is hallucination brake. Extracted 27 topics (13 NEEDED / 14 USEFUL) with Ins/Outs and cited files into .grok/HOW_INDEX.md. Excel rollup: src 476, scripts 357, tests 414 (1247). Did not inline 1247 filenames. Regenerator: .grok/_build_how_index.py. No production edit. No Sense B. Belief Update / ROI / Goal:
+  Goal: earn money only via claims the playground can validate.
+  Belief: How is a route (topic/contract/file/inventory), not a dump of every Python file into the bootloader.
+  Knowledge ROI: high — needed topics are now one open away.
+  Action: on a trader claim, open HOW_INDEX NEEDED section first. Open Questions: regenerate after P-EXCEL-01 leftovers. Next Step: User brings a hypothesis or asks pending.
+---The infra is a router, not a new trading engine. The candle walk already exists. Grok only decides which intent you spoke, then follows a fixed happy path.
+
+Full spec: `.grok/INFRA.md` (.grok/INFRA.md)
+
+Two layers (do not merge)
+
+┌──────────────┬───────────────────────────────────────────────────────────┬────────────────────────┐
+│ Layer        │ Happy flow                                                │ Owner                  │
+├──────────────┼───────────────────────────────────────────────────────────┼────────────────────────┤
+│ Constitution │ M15 bar → structure → four scores → fusion → decision →   │ docs/architecture/goal │
+│              │ planner → Ultron → order                                  │ .md                    │
+├──────────────┼───────────────────────────────────────────────────────────┼────────────────────────┤
+│ Grok session │ Your phrase → intent → fixed files/gates → fail-closed    │ .grok/INFRA.md         │
+│              │ answer                                                    │                        │
+├──────────────┼───────────────────────────────────────────────────────────┼────────────────────────┤
+│ In-repo      │ PLAN_REGISTRY tool sequences                              │ src/agent/ — leave it  │
+│ agent        │                                                           │ alone                  │
+└──────────────┴───────────────────────────────────────────────────────────┴────────────────────────┘
+
+Earn-money sits next to G001, never above replay correctness.
+
+───
+
+Session intents (what I do when you speak)
+
+┌──────────────────────────────────────┬──────────────────┬───────────────────────────────────────┐
+│ You say                              │ Intent           │ Happy flow                            │
+├──────────────────────────────────────┼──────────────────┼───────────────────────────────────────┤
+│ New session / orient                 │ boot             │ GROK → GOAL → PLAYGROUND              │
+├──────────────────────────────────────┼──────────────────┼───────────────────────────────────────┤
+│ What’s pending                       │ pending          │ Open PENDING, list non-DONE           │
+├──────────────────────────────────────┼──────────────────┼───────────────────────────────────────┤
+│ Later / leave it                     │ defer            │ Append a PENDING row now              │
+├──────────────────────────────────────┼──────────────────┼───────────────────────────────────────┤
+│ “This is a setup / this makes money” │ claim.validate   │ 5-gate How below                      │
+├──────────────────────────────────────┼──────────────────┼───────────────────────────────────────┤
+│ What does the lab implement?         │ structure.name   │ Sense A (already done)                │
+├──────────────────────────────────────┼──────────────────┼───────────────────────────────────────┤
+│ Measure the edge                     │ edge.measure     │ Blocked until you authorize P-GOAL-04 │
+├──────────────────────────────────────┼──────────────────┼───────────────────────────────────────┤
+│ Invent a new strategy                │ concept.discover │ Blocked until authorized              │
+├──────────────────────────────────────┼──────────────────┼───────────────────────────────────────┤
+│ Is this a bug?                       │ review.semantic  │ Review protocol, no edit              │
+├──────────────────────────────────────┼──────────────────┼───────────────────────────────────────┤
+│ Walk a candle                        │ spine.walk       │ Stages 0→G below                      │
+├──────────────────────────────────────┼──────────────────┼───────────────────────────────────────┤
+│ Record / close                       │ closure.record   │ Write the owning file + log           │
+├──────────────────────────────────────┼──────────────────┼───────────────────────────────────────┤
+│ Anything else                        │ ask_user         │ I do not guess                        │
+└──────────────────────────────────────┴──────────────────┴───────────────────────────────────────┘
+
+I classify the intent. I do not invent the next file.
+
+───
+
+claim.validate — How (happy)
+
+claim
+  → [1] MEANING     one NEEDED topic + Ins/Outs
+  → [2] EXISTENCE   cited source + ACTIVE_VERSION + Excel row
+  → [3] CONTRACT    one MIAR owner (structure ≠ policy ≠ geometry ≠ risk)
+  → [4] HONESTY     measurable (clock, no lookahead, clean labels)
+  → [5] MONEY       only if P-GOAL-04 is on → G001
+
+Stop at the first UNKNOWN. [5] is never assumed.
+
+───
+
+spine.walk — candle happy flow (assumed success)
+
+┌───────────────────┬─────────────────────┬─────────────────────────────────────┬───────────────────┐
+│ Stage             │ Intent of the stage │ In → Out                            │ Must not become   │
+├───────────────────┼─────────────────────┼─────────────────────────────────────┼───────────────────┤
+│ 0 Feature schema  │ Represent the bar   │ OHLCV → 38-vector                   │ A signal          │
+├───────────────────┼─────────────────────┼─────────────────────────────────────┼───────────────────┤
+│ 1a CRT            │ Name structure      │ Candle → legal state                │ A strategy        │
+├───────────────────┼─────────────────────┼─────────────────────────────────────┼───────────────────┤
+│ 1b Four engines   │ Answer four         │ Vector → four scores                │ p(win)            │
+│                   │ questions           │                                     │                   │
+├───────────────────┼─────────────────────┼─────────────────────────────────────┼───────────────────┤
+│ 2 Fusion +        │ Approve the         │ Scores → ACCEPT/REJECT              │ An order          │
+│ decision          │ decision            │                                     │                   │
+├───────────────────┼─────────────────────┼─────────────────────────────────────┼───────────────────┤
+│ 3 Planner         │ Draw geometry       │ Decision → entry/TTL                │ A fill            │
+├───────────────────┼─────────────────────┼─────────────────────────────────────┼───────────────────┤
+│ 4 Ultron          │ Permit risk         │ Plan → size or kill                 │ Optional          │
+├───────────────────┼─────────────────────┼─────────────────────────────────────┼───────────────────┤
+│ 5 BitNet          │ Optional veto       │ Features → reject if on             │ A voter (inert    │
+│                   │                     │                                     │ now)              │
+├───────────────────┼─────────────────────┼─────────────────────────────────────┼───────────────────┤
+│ 6 Live            │ Send                │ Plan → no rail (F-073)              │ “We are live”     │
+├───────────────────┼─────────────────────┼─────────────────────────────────────┼───────────────────┤
+│ M Measure         │ Judge money         │ Ledger → ΔG001                      │ Promotion         │
+├───────────────────┼─────────────────────┼─────────────────────────────────────┼───────────────────┤
+│ G Promote         │ Change production   │ ValidationReport APPROVE → new      │ Silent default    │
+│                   │                     │ version                             │                   │
+└───────────────────┴─────────────────────┴─────────────────────────────────────┴───────────────────┘
+
+CRT golden path (structure only):
+RANGE → SWEEP → DISPLACEMENT → EXPANSION → RETEST → EXECUTION → RESOLUTION
+
+───
+
+What I will not build unless you authorize it
+
+• A second PLAN_REGISTRY in src/agent/
+• Auto-loading the How-index
+• A live order path
+• Turning S1–S10 into the strategy
+
+That optional router is P-GOAL-09 (later).
+
+Say a phrase and I will name the intent, then walk only that happy path.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Design Grok validation infra + happy flow per intent Decision/Output: Wrote .grok/INFRA.md. Two layers: constitution candle walk (goal.md) vs Grok session intents (closed set, LLM classifies only). claim.validate = 5-gate How. spine.walk = 0→G stages mapped to 13 NEEDED topics. edge.measure/concept.discover stay gated. No second PLAN_REGISTRY. No production code. GROK.md points at INFRA. Belief Update / ROI / Goal:
+  Goal: earn money only through routed, fail-closed intents.
+  Belief: collapsing session infra into the spine or into the in-repo agent would invent a third pipeline.
+  Knowledge ROI: high — every user phrase now has a happy path or ask_user.
+  Action: next user phrase → classify intent from INFRA table. Open Questions: whether to authorize a code router (P-GOAL-09). Next Step: User runs an intent (pending, claim, spine walk) or authorizes Sense B.
+---No. I do not have full control of the codebase.
+I have read access and a validation map. I do not own production, live money, or meaning.
+
+Those are two different questions. Mixing them is how an LLM pretends it “has” the repo.
+
+1. Do I have full control?
+
+No.
+
+┌────────────────────────────────────────────────────┬───────────────────────────────────────────┐
+│ I can                                              │ I cannot                                  │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────┤
+│ Read files, run tools you allow, classify intents  │ Promote a config                          │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────┤
+│ Propose a change through the construction protocol │ Change ACTIVE_VERSION (v2_multi_2026_04)  │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────┤
+│ Ground a claim against topics / source / Excel     │ Place a live order (no live rail — F-073) │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────┤
+│ Record later items                                 │ Invent a strategy and call it closed      │
+├────────────────────────────────────────────────────┼───────────────────────────────────────────┤
+│ Edit when you authorize a turn                     │ Bypass Ultron, ontology, or y/N           │
+└────────────────────────────────────────────────────┴───────────────────────────────────────────┘
+
+Trader role + “earn money” does not become control.
+Advice is not authority. Only a measured G001 improvement plus your promotion path can change production.
+
+───
+
+2. How much closure exists (governed surfaces)
+
+Closure is boundary-scoped. Closed upstream ≠ closed downstream. Audited ≠ closed. Lineage closed ≠ economically validated.
+
+┌──────────────────────────────────────┬────────────────────────────────┬───────────────────────────┐
+│ Surface                              │ Status                         │ Economically validated?   │
+├──────────────────────────────────────┼────────────────────────────────┼───────────────────────────┤
+│ CRT (OHLCV → TRADE_OPENED)           │ OPEN (reopened 2026-08-13 by   │ No                        │
+│                                      │ F-074)                         │                           │
+├──────────────────────────────────────┼────────────────────────────────┼───────────────────────────┤
+│ Research measurement contract        │ OPEN (0 sealed MC-*)           │ No                        │
+├──────────────────────────────────────┼────────────────────────────────┼───────────────────────────┤
+│ 38-dim feature code surface          │ CLOSED                         │ No — code identity, not   │
+│                                      │                                │ edge                      │
+├──────────────────────────────────────┼────────────────────────────────┼───────────────────────────┤
+│ Feature mutation freeze              │ COMPLETE                       │ No                        │
+├──────────────────────────────────────┼────────────────────────────────┼───────────────────────────┤
+│ Geometry static lineage              │ COMPLETE                       │ No                        │
+├──────────────────────────────────────┼────────────────────────────────┼───────────────────────────┤
+│ Feature query API                    │ AUTHORITY_ACTIVE               │ No                        │
+├──────────────────────────────────────┼────────────────────────────────┼───────────────────────────┤
+│ Gaussian / Zone / RR / BitNet /      │ AUDITED only                   │ No                        │
+│ TradeNet                             │                                │                           │
+├──────────────────────────────────────┼────────────────────────────────┼───────────────────────────┤
+│ OHLCV layer audit                    │ BLOCKED (separate program)     │ No                        │
+└──────────────────────────────────────┴────────────────────────────────┴───────────────────────────┘
+
+So: one frozen code-surface closed. The acting strategy surface (CRT) is open. Money is not closed anywhere.
+
+───
+
+3. How much of the files I can name (inventory, not understanding)
+
+This is file-list coverage, not “I understand every function.”
+
+┌────────────────────────────────────────────────┬──────────────────┬──────────┬──────────────┐
+│ Tree                                           │ Tracked in Excel │ Disk now │     Coverage │
+├────────────────────────────────────────────────┼──────────────────┼──────────┼──────────────┤
+│ src/ + scripts/ + tests/                       │            1,247 │    1,281 │        97.3% │
+├────────────────────────────────────────────────┼──────────────────┼──────────┼──────────────┤
+│ Leftovers (later)                              │                0 │       34 │   not listed │
+├────────────────────────────────────────────────┼──────────────────┼──────────┼──────────────┤
+│ mt5_analytics / oss_lab / tools / root scripts │    never claimed │    ~100+ │ 0% by design │
+└────────────────────────────────────────────────┴──────────────────┴──────────┴──────────────┘
+
+Topics extracted for How: 27 (13 NEEDED on the money path, 14 USEFUL sidecars).
+
+That is a map, not closure of the code.
+
+───
+
+4. What this Grok session has actually closed
+
+┌───────────────────────────────────────────┬────────────────────────────────────────┐
+│ Item                                      │ State                                  │
+├───────────────────────────────────────────┼────────────────────────────────────────┤
+│ Sense A — what the playground implements  │ DONE (CRT = structure, not a strategy) │
+├───────────────────────────────────────────┼────────────────────────────────────────┤
+│ Excel file-list vs those three trees      │ CLOSED at 97.3%                        │
+├───────────────────────────────────────────┼────────────────────────────────────────┤
+│ Trader role + repo as hallucination brake │ LOCKED                                 │
+├───────────────────────────────────────────┼────────────────────────────────────────┤
+│ Infra / intent happy flows                │ DESIGNED (not built as a router)       │
+├───────────────────────────────────────────┼────────────────────────────────────────┤
+│ Sense B — does it make money              │ NOT authorized                         │
+├───────────────────────────────────────────┼────────────────────────────────────────┤
+│ Live book                                 │ NOT closable (no rail)                 │
+└───────────────────────────────────────────┴────────────────────────────────────────┘
+
+───
+
+One sentence
+
+I have a validation base over most of src/scripts/tests and the 13 money-path topics.
+I do not have CRT closure, measurement closure, economic closure, or control of production.
+
+If you want a single number: there isn’t an honest one. Averaging “feature code CLOSED” with “CRT OPEN” would be a hallucination.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Codebase closure vs Grok control Decision/Output: No full control. Governance: CRT OPEN, measurement OPEN, feature code surface CLOSED, engines AUDITED≠CLOSED, 0 economically validated. File inventory 97.3% of src/scripts/tests. Session: Sense A done; Sense B and live not closed. Refused a fake overall %. Belief Update / ROI / Goal:
+  Goal: earn money only via validated claims.
+  Belief: “I have the codebase” would be the exact hallucination this repo exists to stop.
+  Knowledge ROI: high — control and closure stay distinct.
+  Action: do not speak as if CRT or money is closed. Open Questions: none on control. CRT re-close still needs re-certification after F-074. Next Step: User may ask pending, authorize Sense B, or pick one surface to close.
+---The single number is 100%.
+
+GCMC v1 = 1,281 / 1,281 = 100.0%
+
+That is the number we drive to 100%. Hitting it is done for this KPI.
+
+What the number is
+
+GCMC = files listed in the three Excels ∩ files on disk
+     / files on disk
+
+Trees: src/ + scripts/ + tests/ only.
+
+┌──────────┬──────┬────────┬─────────┐
+│ Tree     │ Disk │ Listed │ Missing │
+├──────────┼──────┼────────┼─────────┤
+│ src/     │  482 │    482 │       0 │
+├──────────┼──────┼────────┼─────────┤
+│ scripts/ │  363 │    363 │       0 │
+├──────────┼──────┼────────┼─────────┤
+│ tests/   │  436 │    436 │       0 │
+└──────────┴──────┴────────┴─────────┘
+
+Was 97.3% (34 leftovers). Regenerated the three workbooks. Gap closed.
+
+Definition: `.grok/CLOSURE_KPI.md` (.grok/CLOSURE_KPI.md)
+
+What 100% does not mean
+
+It does not mean CRT is CLOSED, that we have an edge, that I control production, or that mt5_analytics / oss_lab / tools are inventoried. Those stay off this number on purpose — mixing them would make “100%” a lie.
+
+How it stays 100%
+
+A new .py under those three trees drops GCMC until we regenerate. That regenerate is the work. Other trees would be a new KPI (v2), not a silent change of this one.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Single closure number GCMC v1 driven to 100% Decision/Output: Frozen KPI = listed∩disk / disk on src+scripts+tests only. Regenerated three Excels + semantic enrich. GCMC 97.3% (1247/1281) → 100.0% (1281/1281). 0 missing, 0 stale. 100% = file-map complete, NOT CRT CLOSED, NOT money, NOT control. Definition in .grok/CLOSURE_KPI.md. P-EXCEL-01..05 DONE. P-EXCEL-06 (other trees) still LATER — that would be a v2 KPI. Belief Update / ROI / Goal:
+  Goal: one number, move it to 100%, that is done for this KPI.
+  Belief: mixing CRT/money into the same % would make 100% unreachable or dishonest.
+  Knowledge ROI: high — target hit on the declared denominator.
+  Action: re-run generators when new .py lands; do not claim governance/economic 100%. Open Questions: whether user wants GCMC v2 (mt5_analytics/oss_lab/tools) as a new number. Next Step: Keep GCMC at 100% on each new file, or authorize a v2 denominator.
+---I will not pretend those four asks are one switch. They are four tracks. Spec: `.grok/FOUR_TRACKS.md` (.grok/FOUR_TRACKS.md)
+
+T1 — Use mt5_analytics / oss_lab / tools
+
+Done as a map. GCMC v2 = 97 / 97 = 100% listed.
+
+┌───────────────┬───────┬──────────────────────────────────────────────────┐
+│ Tree          │ Files │ Job on the other tracks                          │
+├───────────────┼───────┼──────────────────────────────────────────────────┤
+│ mt5_analytics │    45 │ Broker-deal honesty (real fills vs F-022 labels) │
+├───────────────┼───────┼──────────────────────────────────────────────────┤
+│ oss_lab       │    37 │ Research lab only — no production authority      │
+├───────────────┼───────┼──────────────────────────────────────────────────┤
+│ tools         │    15 │ TV/replay check that CRT means the picture       │
+└───────────────┴───────┴──────────────────────────────────────────────────┘
+
+Inventory: .grok/gcmc_v2_inventory.xlsx
+Listed ≠ they now run production.
+
+T2 — Control production
+
+Refused as a grab. I do not take ACTIVE_VERSION. It stays v2_multi_2026_04.
+
+Production is controlled only by: ConfigValidator → ValidationReport.APPROVE → PromotionManager → hash → promotion_log.jsonl.
+oss_lab is explicitly RESEARCH_LAB_ONLY. Using it does not become a production remote.
+
+T3 — Make CRT CLOSED
+
+Not stamped. The report and tests/test_crt_closure_report.py both require CRT_CLOSURE_STATUS = REOPENED until a real Phase 1–8 re-cert after F-074.
+
+What I did run: 75 / 75 F-074 + adversarial + closure floors — green. That is evidence, not closure. Flipping the string would be a lie and would fail the test on purpose.
+
+T4 — Find an edge
+
+No edge claimed. Sense B is now measure, not invent (P-GOAL-04 OPEN).
+
+Current validation-base reading (already on the books): crypto majors under the M4 gate did not qualify (F-019…F-027). XAUUSD CRT path has been session-starved. That is a successful stop of hallucination, not a found edge.
+
+Next honest step for T4 is a sealed measurement contract + a ledger from forward_walk / CRT replay — not a story, and not oss_lab declaring profit.
+
+───
+
+Single numbers that are 100%: GCMC v1 (src/scripts/tests) and GCMC v2 (those three trees).
+Not 100%: CRT closure, production control, edge.
+
+Pick the next track to actually run: T3 full Phase 1–8 re-cert, or T4 measurement contract. I will not do both as a fake 100%.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Four tracks — v2 inventory, refuse production grab, CRT re-cert start, no invented edge Decision/Output: Split the ask into FOUR_TRACKS.md. T1: GCMC v2 97/97=100% (.grok/gcmc_v2_inventory.xlsx). T2: will not take ACTIVE_VERSION; production stays ValidationReport+PromotionManager. T3: 75 CRT F-074/closure floors passed; CRT_CLOSURE_STATUS remains REOPENED (test-enforced); no Phase 1–8 re-close stamp. T4: Sense B opened as measure-only; no edge claimed. oss_lab stays RESEARCH_LAB_ONLY. Belief Update / ROI / Goal:
+  Goal: earn money without hallucinating control, closure, or edge.
+  Belief: stamping CRT CLOSED or “we have an edge” this turn would be the failure mode.
+  Knowledge ROI: high — four jobs stay four jobs.
+  Action: next CRT work = Phase 1–8 equivalent, not a status-string edit. Next edge work = MC + ledger, not a story. Open Questions: whether user authorizes a full CRT Phase 1–8 re-run and a sealed MC for Sense B. Next Step: User picks T3 re-cert program or T4 measurement contract.
+---
+T4 only. E0 is done. There is no edge in this turn.
+
+What exists now
+
+MC-CRT-SB-XAUUSD-M15-V1
+configs/research/measurement_contracts/instances/MC-CRT-SB-XAUUSD-M15-V1.json
+
+┌────────────────────┬──────────────────────────────────────────────────────────────────────────┐
+│ Surface            │ Declared (playground as it runs)                                         │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+│ Population         │ XAUUSD M15 TRADE_OPENED only — not detections                            │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+│ Labels             │ forward_walk.intrabar_fixed — F-022 stream fields banned                 │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+│ Costs              │ 12 bps uncalibrated (cannot be treated as a metals spread)               │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+│ Exits              │ SL buffer 0.2 ATR, TP1 1.0, TP2 2.0, SL-before-TP                        │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+│ Pipeline           │ v2_multi_2026_04, fusion gate ON, F-074 on, BitNet/rr_fusion off         │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+│ Session / features │ broker_local + atr_relative (F-066 / F-064 left in — that is the object) │
+└────────────────────┴──────────────────────────────────────────────────────────────────────────┘
+
+economic_admissible: false
+mt00 / mt01: UNRUN / UNRUN
+Tests: tests/test_measurement_contract.py 14 passed
+
+Also fixed a pre-existing break: MC-CPR-*.json in the profile folder was making profile tests fail. Loaders now skip MC-*.
+
+What this is not
+
+• Not a found edge
+• Not E-MT-00 / E-MT-01 (those 27 probes are still 0/27 in the repo)
+• Not CRT CLOSED
+• Not production control
+• Not 100% of T4
+
+A contract grants comparability, not authority.
+
+Next (only if you ask)
+
+Run the declared walk and fill the UNRUN: artifact paths. If n < 30, the result is INSUFFICIENT, not an edge and not a kill.
+
+Say run it or stop at E0.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: T4 E0 — MC-CRT-SB-XAUUSD-M15-V1 (no edge) Decision/Output: Wrote configs/research/measurement_contracts/instances/MC-CRT-SB-XAUUSD-M15-V1.json. Unit=TRADE_OPENED, forward_walk labels, gate_on_fusion, F-074 on, 12bps uncalibrated, economic_admissible=false, mt00/mt01 UNRUN. Profile loader now skips MC-* (fixed pre-existing red on MC-CPR sitting in the profile dir). tests/test_measurement_contract.py 14 passed. No ledger, no CRT close, no production edit. Belief Update / ROI / Goal:
+  Goal: earn money only after a named measurement basis exists.
+  Belief: E0 is the brake; running numbers without it would recreate F-022/F-037.
+  Knowledge ROI: high — T4 now has a contract id, not a story.
+  Action: do not quote expectancy. Next run is optional and still non-admissible until E-MT-00/01. Open Questions: whether to execute the UNRUN walk knowing n may be <30. Next Step: User says run the contract, or stop at E0.
+  The declared walk ran. Verdict: INSUFFICIENT. There is no edge and no powered kill.
+
+What ran
+
+┌────────────────────┬──────────────────────────────────────────────────────────────────────────────┐
+│ Item               │ Result                                                                       │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────────┤
+│ Contract           │ MC-CRT-SB-XAUUSD-M15-V1                                                      │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────────┤
+│ Corpus             │ data/mt5/XAUUSD_M15.csv — 47,275 M15 bars (2024-05-22 → 2026-05-21)          │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────────┤
+│ Clock              │ Declared MT5_SERVER_NY_DST (F-066). Not UTC. Required before the loader      │
+│                    │ would start.                                                                 │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────────┤
+│ Config             │ v2_multi_2026_04, fusion gate ON                                             │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────────┤
+│ EngineRunner.run   │ 3 (gate actually fired; not a vacant overlay)                                │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────────┤
+│ TRADE_OPENED       │ 3 (need ≥ 30)                                                                │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────────┤
+│ economic_          │ still false                                                                  │
+│ admissible         │                                                                              │
+├────────────────────┼──────────────────────────────────────────────────────────────────────────────┤
+│ E-MT-00 / E-MT-01  │ still UNRUN                                                                  │
+└────────────────────┴──────────────────────────────────────────────────────────────────────────────┘
+
+Artifacts: results/research/mc_crt_sb_xauusd_m15_v1/
+
+The three trades (descriptive only)
+
+All longs. Single-TP2 re-derive (spine scale-out not reproduced).
+
+┌──────────────────┬──────┬───────────┬─────────┬─────────────┬───────┬───────────────┐
+│ Entry            │ Side │ Walk      │ Gross R │ 12 bps as R │ Net R │ Spine ledger  │
+├──────────────────┼──────┼───────────┼─────────┼─────────────┼───────┼───────────────┤
+│ 2024-11-12 15:30 │ long │ SL 1 bar  │    −1.0 │        0.71 │ −1.71 │ STOPPED −1.05 │
+├──────────────────┼──────┼───────────┼─────────┼─────────────┼───────┼───────────────┤
+│ 2024-11-15 07:45 │ long │ SL 1 bar  │    −1.0 │        3.35 │ −4.35 │ STOPPED −1.25 │
+├──────────────────┼──────┼───────────┼─────────┼─────────────┼───────┼───────────────┤
+│ 2025-02-25 15:45 │ long │ TP2 1 bar │    +2.0 │        2.98 │ −0.98 │ TP2 +0.61     │
+└──────────────────┴──────┴───────────┴─────────┴─────────────┴───────┴───────────────┘
+
+Sign agreement vs spine = 0.67 < 0.99 → contract BLOCK_EXPERIMENT on labels. The third trade is the reason: 12 bps of gold vs a ~1.2 point stop eats more than 2R.
+
+What this means
+
+The binding fact is throughput: two years of XAUUSD M15 produced three TRADE_OPENED events. That is not enough to test money.
+
+I will not treat −2.3R mean as a finding. n=3, cost uncalibrated, re-derive blocked.
+
+A different object (for example session-off) needs a new MC id, not a silent tweak of this one.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: T4 declared walk run — INSUFFICIENT (n=3) Decision/Output: Clock-declared data/mt5/XAUUSD_M15.csv as MT5_SERVER_NY_DST (F-066). Ran ProductionSpineSource gate-ON on v2_multi_2026_04. EngineRunner.run=3, TRADE_OPENED n=3 / 47,275 bars. Verdict INSUFFICIENT. Re-derive sign agree 0.67 → BLOCK_EXPERIMENT. 12bps vs tiny SL makes even TP2 net-negative. economic_admissible stays false. Artifacts in results/research/mc_crt_sb_xauusd_m15_v1/. No promotion. No CRT close. Belief Update / ROI / Goal:
+  Goal: measure whether playground CRT opens enough trades to test money.
+  Belief: on this 2y XAUUSD book the spine is throughput-starved (n=3). That is the binding fact, not a −2.3R “edge kill.”
+  Knowledge ROI: high — contract prevented quoting detections or stream RR as trades.
+  Action: stop hunting this MC for profit. New n or new thesis = new MC id. Open Questions: whether user wants a different population (session-off research arm) — that is a new contract, not a tweak. Next Step: User accepts INSUFFICIENT or authorizes a new MC with a different declared object.
+---New contract, new object. V1 was not edited.
+
+MC-CRT-SB-XAUUSD-M15-SOFF-V1
+CRT TRADE_OPENED with every session window plus OFF_SESSION allowed, in-process only. Production allowed_sessions is unchanged.
+
+Walk
+
+Same 47,275-bar XAUUSD book, gate ON, F-074 on.
+
+┌──────────────────┬──────────────────────────┬────────────────────────┐
+│                  │ V1 (production sessions) │     SOFF (this object) │
+├──────────────────┼──────────────────────────┼────────────────────────┤
+│ TRADE_OPENED     │                        3 │                     12 │
+├──────────────────┼──────────────────────────┼────────────────────────┤
+│ EngineRunner.run │                        3 │                     16 │
+├──────────────────┼──────────────────────────┼────────────────────────┤
+│ Verdict          │             INSUFFICIENT │ INSUFFICIENT (need 30) │
+├──────────────────┼──────────────────────────┼────────────────────────┤
+│ Economic claim   │                     none │                   none │
+└──────────────────┴──────────────────────────┴────────────────────────┘
+
+Session was a bind (3 → 12). It was not the only bind: the adapter still rejected 4 as invalid_session. Inverted SL and Ultron also still fire. Opening CRT’s filter does not open the whole spine.
+
+Mean R is not a finding. n=12, 12 bps still uncalibrated, E-MT-00/01 still UNRUN.
+
+Artifacts: results/research/mc_crt_sb_xauusd_m15_soff_v1/
+
+A third object that also turns off adapter session would need another MC id. I will not fold that into SOFF.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: New MC SOFF — session-open CRT object, n=12 INSUFFICIENT Decision/Output: New id MC-CRT-SB-XAUUSD-M15-SOFF-V1 (not a V1 tweak). In-process allowed_sessions=all windows+OFF_SESSION; production JSON untouched. Walk: n=12 TRADE_OPENED vs V1 n=3. EngineRunner 16 calls (4 adapter invalid_session). Verdict INSUFFICIENT. economic_admissible=false. Tests 15+2 green. No edge. No CRT close. Belief Update / ROI / Goal:
+  Goal: see if session was the only throughput bind.
+  Belief: session was a bind (3→12) but not the only one — adapter session + inverted SL + Ultron remain. Still not 30 trades.
+  Knowledge ROI: high — new object named and measured; production filter unchanged.
+  Action: do not promote SOFF. Next different object would need adapter session in the declaration too, as a third MC. Open Questions: whether user wants a third MC that also disables adapter invalid_session (still research-only). Next Step: User accepts both arms INSUFFICIENT or authorizes a third declared object.Third object is declared and walked. New id, not a tweak.
+
+MC-CRT-SB-XAUUSD-M15-NS-V1
+CRT session-open and adapter allowed_sessions includes asia / overlap / closed. Production JSON not written.
+
+Three arms (same 47,275-bar XAUUSD book)
+
+┌────────┬────────────────────────────────┬──────────────┬──────────────┬──────────────┐
+│ Object │ Session policy                 │ TRADE_OPENED │ EngineRunner │ Verdict      │
+├────────┼────────────────────────────────┼──────────────┼──────────────┼──────────────┤
+│ V1     │ Production CRT + adapter       │            3 │            3 │ INSUFFICIENT │
+├────────┼────────────────────────────────┼──────────────┼──────────────┼──────────────┤
+│ SOFF   │ CRT open; adapter still vetoes │           12 │           16 │ INSUFFICIENT │
+├────────┼────────────────────────────────┼──────────────┼──────────────┼──────────────┤
+│ NS     │ CRT open and adapter open      │           16 │           16 │ INSUFFICIENT │
+└────────┴────────────────────────────────┴──────────────┴──────────────┴──────────────┘
+
+NS is the one that actually removed the adapter invalid_session (16 calls = 16 trades). Session as a stack is now measured through.
+
+What this does not mean
+
+n=16 is still < 30. No edge. Mean R is not a kill. Ultron and inverted SL still apply. economic_admissible stays false.
+
+The remaining bind is structure completion / inverted SL / Ultron, not another session knob. A fourth MC that only pokes sessions would be the same thesis again. I will not open that unless you name a different object.
+
+Artifacts: results/research/mc_crt_sb_xauusd_m15_ns_v1/
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Third MC NS — CRT+adapter session off, n=16 INSUFFICIENT Decision/Output: New id MC-CRT-SB-XAUUSD-M15-NS-V1. In-process CRT all-sessions + engine_runner.allowed_sessions includes closed/asia. Production JSON untouched. Walk: n=16 TRADE_OPENED, EngineRunner=16 (adapter session veto gone). Verdict INSUFFICIENT (<30). economic_admissible=false. 16 MC tests green. No edge. No CRT close. Belief Update / ROI / Goal:
+  Goal: see if adapter session was the remaining throughput bind.
+  Belief: it was a bind (12→16) but the book still cannot power an edge test. Next bind is inverted SL / Ultron / CRT completion rate, not another session tweak.
+  Knowledge ROI: high — session policy stack is measured and exhausted as a 100% path to n≥30.
+  Action: do not promote NS. Do not open a fourth session-like MC. Open Questions: none on session. A new object would have to change structure/SL/Ultron, which is a different thesis. Next Step: User accepts three-arm INSUFFICIENT or names a non-session object.
+---Third object is declared and walked. New id, not a tweak.
+
+MC-CRT-SB-XAUUSD-M15-NS-V1
+CRT session-open and adapter allowed_sessions includes asia / overlap / closed. Production JSON not written.
+
+Three arms (same 47,275-bar XAUUSD book)
+
+┌────────┬────────────────────────────────┬──────────────┬──────────────┬──────────────┐
+│ Object │ Session policy                 │ TRADE_OPENED │ EngineRunner │ Verdict      │
+├────────┼────────────────────────────────┼──────────────┼──────────────┼──────────────┤
+│ V1     │ Production CRT + adapter       │            3 │            3 │ INSUFFICIENT │
+├────────┼────────────────────────────────┼──────────────┼──────────────┼──────────────┤
+│ SOFF   │ CRT open; adapter still vetoes │           12 │           16 │ INSUFFICIENT │
+├────────┼────────────────────────────────┼──────────────┼──────────────┼──────────────┤
+│ NS     │ CRT open and adapter open      │           16 │           16 │ INSUFFICIENT │
+└────────┴────────────────────────────────┴──────────────┴──────────────┴──────────────┘
+
+NS is the one that actually removed the adapter invalid_session (16 calls = 16 trades). Session as a stack is now measured through.
+
+What this does not mean
+
+n=16 is still < 30. No edge. Mean R is not a kill. Ultron and inverted SL still apply. economic_admissible stays false.
+
+The remaining bind is structure completion / inverted SL / Ultron, not another session knob. A fourth MC that only pokes sessions would be the same thesis again. I will not open that unless you name a different object.
+
+Artifacts: results/research/mc_crt_sb_xauusd_m15_ns_v1/
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Third MC NS — CRT+adapter session off, n=16 INSUFFICIENT Decision/Output: New id MC-CRT-SB-XAUUSD-M15-NS-V1. In-process CRT all-sessions + engine_runner.allowed_sessions includes closed/asia. Production JSON untouched. Walk: n=16 TRADE_OPENED, EngineRunner=16 (adapter session veto gone). Verdict INSUFFICIENT (<30). economic_admissible=false. 16 MC tests green. No edge. No CRT close. Belief Update / ROI / Goal:
+  Goal: see if adapter session was the remaining throughput bind.
+  Belief: it was a bind (12→16) but the book still cannot power an edge test. Next bind is inverted SL / Ultron / CRT completion rate, not another session tweak.
+  Knowledge ROI: high — session policy stack is measured and exhausted as a 100% path to n≥30.
+  Action: do not promote NS. Do not open a fourth session-like MC. Open Questions: none on session. A new object would have to change structure/SL/Ultron, which is a different thesis. Next Step: User accepts three-arm INSUFFICIENT or names a non-session object.
+---Third object is declared and walked. New id, not a tweak.
+
+MC-CRT-SB-XAUUSD-M15-NS-V1
+CRT session-open and adapter allowed_sessions includes asia / overlap / closed. Production JSON not written.
+
+Three arms (same 47,275-bar XAUUSD book)
+
+┌────────┬────────────────────────────────┬──────────────┬──────────────┬──────────────┐
+│ Object │ Session policy                 │ TRADE_OPENED │ EngineRunner │ Verdict      │
+├────────┼────────────────────────────────┼──────────────┼──────────────┼──────────────┤
+│ V1     │ Production CRT + adapter       │            3 │            3 │ INSUFFICIENT │
+├────────┼────────────────────────────────┼──────────────┼──────────────┼──────────────┤
+│ SOFF   │ CRT open; adapter still vetoes │           12 │           16 │ INSUFFICIENT │
+├────────┼────────────────────────────────┼──────────────┼──────────────┼──────────────┤
+│ NS     │ CRT open and adapter open      │           16 │           16 │ INSUFFICIENT │
+└────────┴────────────────────────────────┴──────────────┴──────────────┴──────────────┘
+
+NS is the one that actually removed the adapter invalid_session (16 calls = 16 trades). Session as a stack is now measured through.
+
+What this does not mean
+
+n=16 is still < 30. No edge. Mean R is not a kill. Ultron and inverted SL still apply. economic_admissible stays false.
+
+The remaining bind is structure completion / inverted SL / Ultron, not another session knob. A fourth MC that only pokes sessions would be the same thesis again. I will not open that unless you name a different object.
+
+Artifacts: results/research/mc_crt_sb_xauusd_m15_ns_v1/
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Third MC NS — CRT+adapter session off, n=16 INSUFFICIENT Decision/Output: New id MC-CRT-SB-XAUUSD-M15-NS-V1. In-process CRT all-sessions + engine_runner.allowed_sessions includes closed/asia. Production JSON untouched. Walk: n=16 TRADE_OPENED, EngineRunner=16 (adapter session veto gone). Verdict INSUFFICIENT (<30). economic_admissible=false. 16 MC tests green. No edge. No CRT close. Belief Update / ROI / Goal:
+  Goal: see if adapter session was the remaining throughput bind.
+  Belief: it was a bind (12→16) but the book still cannot power an edge test. Next bind is inverted SL / Ultron / CRT completion rate, not another session tweak.
+  Knowledge ROI: high — session policy stack is measured and exhausted as a 100% path to n≥30.
+  Action: do not promote NS. Do not open a fourth session-like MC. Open Questions: none on session. A new object would have to change structure/SL/Ultron, which is a different thesis. Next Step: User accepts three-arm INSUFFICIENT or names a non-session object.
+---ORIENT: After session is fully open (V1 3 → SOFF 12 → NS 16), the remaining binds are structure completion, inverted SL, and Ultron. Recounted on the NS book. Not an edge. Not a production change.
+
+Session is exhausted. These three are why 16 ≠ 30.
+
+1792 sweeps
+  → 399 directional displacements (22%)
+    → 148 expansions
+      → 24 retests (~16%)
+        → 24 soft-conf starts
+          → 23 risk-approved   (1 timeout)
+            → 16 TRADE_OPENED  (7 inverted SL)
+
+Full write-up: .grok/STUDY_FUNNEL_SL_ULTRON.md.
+
+───
+
+1. Structure completion — the book dies in the middle
+
+A CRT setup is a sequence, not a score: raid → impulse away → expand → come back. Most raids never finish. That is the structure contract working.
+
+┌──────────────────────────┬────────────────┬──────────────────┐
+│ Step                     │          Count │ Keep vs previous │
+├──────────────────────────┼────────────────┼──────────────────┤
+│ RANGE → SWEEP            │           1792 │                — │
+├──────────────────────────┼────────────────┼──────────────────┤
+│ SWEEP → DISPLACEMENT     │            399 │              22% │
+├──────────────────────────┼────────────────┼──────────────────┤
+│ DISPLACEMENT → EXPANSION │ 142 + 6 shadow │       36% of 399 │
+├──────────────────────────┼────────────────┼──────────────────┤
+│ EXPANSION → RETEST       │             24 │      ~16% of 148 │
+├──────────────────────────┼────────────────┼──────────────────┤
+│ RETEST → EXECUTION       │             23 │              96% │
+├──────────────────────────┼────────────────┼──────────────────┤
+│ TRADE_OPENED             │             16 │ 70% of EXECUTION │
+└──────────────────────────┴────────────────┴──────────────────┘
+
+Telemetry TRANSITION_COUNTER matches: SWEEP 1798 (1792 + 6 shadow), DISP 399, EXP 148, RETEST 24, EXECUTION 23, RESOLUTION 16.
+
+RESET events (2,883) are loud but not the completion bind:
+
+┌───────────────────────┬───────┐
+│ Family                │ Count │
+├───────────────────────┼───────┤
+│ HTF clock change      │  2465 │
+├───────────────────────┼───────┤
+│ 50% retrace           │   166 │
+├───────────────────────┼───────┤
+│ Session gap > 120 min │   121 │
+├───────────────────────┼───────┤
+│ 1.618 extension       │   109 │
+├───────────────────────┼───────┤
+│ Post-resolution       │    21 │
+├───────────────────────┼───────┤
+│ Soft-conf timeout     │     1 │
+└───────────────────────┴───────┘
+
+HTF fires every ~16 M15 bars. EXPANSION is HTF-exempt (prior study). The completion kill is SWEEP→DISP (78% of sweeps die — F-074 directional impulse) and EXP→RETEST (124 of 148 expansions never get a legal retest).
+
+Close: INTENTIONAL SEMANTIC SEPARATION. Rare completion is not a missing session.
+
+───
+
+2. Inverted SL — largest late drop
+
+Stop belongs beyond the displacement extreme. Entry is the retest close.
+
+• LONG SL = displacement.low − 0.2×ATR
+• SHORT SL = displacement.high + 0.2×ATR
+• Reject if LONG and sl ≥ entry, or SHORT and sl ≤ entry
+
+Source: crt_engine_v2.py build_trade (lines 2349–2386). Config sl_atr_buffer=0.2.
+
+NS walk log, 7 rejects (4 SHORT, 3 LONG). Arithmetic: 23 EXECUTION − 7 = 16 TRADE_OPENED. No events.jsonl row — function returns None.
+
+Examples:
+
+┌───────┬─────────┬─────────┬────────────────┐
+│ Side  │   Entry │      SL │ Why invalid    │
+├───────┼─────────┼─────────┼────────────────┤
+│ SHORT │ 2329.94 │ 2327.81 │ SL below entry │
+├───────┼─────────┼─────────┼────────────────┤
+│ LONG  │ 2640.86 │ 2644.12 │ SL above entry │
+├───────┼─────────┼─────────┼────────────────┤
+│ SHORT │ 2629.17 │ 2625.62 │ SL below entry │
+├───────┼─────────┼─────────┼────────────────┤
+│ LONG  │ 4989.12 │ 4994.75 │ SL above entry │
+└───────┴─────────┴─────────┴────────────────┘
+
+The retest close has already gone past the displacement extreme plus buffer. Taking it would put the stop in the profit direction.
+
+Close: confirmed fail-closed geometry, not a defect. Throughput bind (7 of 23). Do not move SL to sweep.price or the range boundary to “get more trades” — that is a new geometry thesis.
+
+───
+
+3. Two Ultrons — do not unify the names
+
+┌──────────────────┬─────────────────────┬──────────────────────────┬────────────────────────┐
+│ Name             │ File                │ Question                 │ Binding on NS?         │
+├──────────────────┼─────────────────────┼──────────────────────────┼────────────────────────┤
+│ UltronRiskEngine │ crt_engine_v2.py    │ Is fused score S ≥ 0.30? │ One setup              │
+├──────────────────┼─────────────────────┼──────────────────────────┼────────────────────────┤
+│ UltronRiskGate   │ ultron_risk_gate.py │ May we size this plan?   │ No — rejected_trades=0 │
+└──────────────────┴─────────────────────┴──────────────────────────┴────────────────────────┘
+
+Walk lines that say CRT.UltronRisk | REJECTED | S=0.289 < tier_2=0.3 are the engine, not the capital gate.
+
+Correction (caught on recount): those 3 lines (S = 0.289, 0.258, 0.247) are the same 3-candle soft-conf window. They pair with the one CONFIRMATION_FAILED at 2025-02-24 17:30. Not three extra dead setups. Funnel is 24 retests → 23 approved + 1 timeout.
+
+UltronRiskGate owns cost-taxed min RR 1.5, TTL, daily limits, kill switch, exposure (F-048). On this backtest object it rejected nothing.
+
+Close: INTENTIONAL SEMANTIC SEPARATION. Keep the two owners. On NS only the CRT score floor bound, and only once.
+
+───
+
+What this is not
+
+• Not an edge. NS still INSUFFICIENT (n=16 < 30). economic_admissible=false.
+• Not a reason to flip CRT CLOSED.
+• Not a reason to edit production or ACTIVE_VERSION.
+• A new MC that only relaxes inverted SL or tier_2 is a geometry/score thesis, not another session tweak.
+
+┌──────┬─────────────────────┬────┐
+│ Walk │ Session object      │  n │
+├──────┼─────────────────────┼────┤
+│ V1   │ production sessions │  3 │
+├──────┼─────────────────────┼────┤
+│ SOFF │ CRT all-sessions    │ 12 │
+├──────┼─────────────────────┼────┤
+│ NS   │ CRT + adapter open  │ 16 │
+└──────┴─────────────────────┴────┘
+
+───
+
+If you want a fourth declared object, name it: EXP→RETEST definition, or inverted-SL geometry. I will not invent another session-like contract.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: Re-verified NS study of structure completion / inverted SL / Ultron after context compact Decision/Output: Recounted NS events + walk log. Funnel confirmed: 1792 RANGE→SWEEP → 399 DISP (22%) → 148 EXP → 24 RETEST (~16%) → 23 EXECUTION → 16 TRADE_OPENED. RESET families: HTF 2465, 50% retrace 166, 1.618 109, session gap 121 (study had ~100, corrected), post-res 21, timeout 1. Inverted SL 7/23 from NS console (4 SHORT / 3 LONG); build_trade fail-closed at crt_engine_v2.py:2375-2386; no events.jsonl row. CORRECTION: 3 CRT.UltronRisk S<0.30 lines are the same 3-candle timeout (CONFIRMATION_FAILED 2025-02-24 17:30), not 3 extra dead setups. UltronRiskGate rejected_trades=0. Updated .grok/STUDY_FUNNEL_SL_ULTRON.md. No new MC. No production edit. No edge. Belief Update / ROI / Goal:
+  Goal: know why n=16 after session stack is exhausted.
+  Belief: book dies mid-graph (SWEEP→DISP and EXP→RETEST). Late bind is inverted SL (7). CRT-Ultron is one timeout. Capital Ultron is not binding.
+  Knowledge ROI: high — name collision uncollapsed; Ultron 3-line overclaim corrected before it became a fourth MC thesis.
+  Action: do not relax SL or tier_2 without a new named object. Do not promote. Open Questions: none on session. Fourth object would be EXP→RETEST definition or inverted-SL geometry — user must name it. Next Step: User picks a named new object or stops T4.
+---
+ORIENT: Dates are from the NS walk XAUUSD_events.jsonl. Clock is broker-server (MT5_SERVER_NY_DST), not UTC.
+
+Every row of the table is dated. The rare steps are listed here. The 1,792 sweeps and 399 displacements are too many for chat — full dump: .grok/ns_transition_dates/all_steps.csv.
+
+───
+
+EXPANSION → RETEST (24) → EXECUTION (23) → TRADE_OPENED (16)
+
+One row per retest. EXECUTION is almost always the next M15 bar (+15 min).
+
+┌────┬──────────────────┬──────────────────┬──────────────────┬───────┐
+│  # │ RETEST           │ EXECUTION        │ TRADE_OPENED     │ Side  │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│  1 │ 2024-06-03 14:30 │ 2024-06-03 14:45 │ — inverted SL    │       │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│  2 │ 2024-06-04 18:30 │ 2024-06-04 18:45 │ 2024-06-04 18:45 │ LONG  │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│  3 │ 2024-07-19 18:00 │ 2024-07-19 18:15 │ 2024-07-19 18:15 │ LONG  │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│  4 │ 2024-09-23 16:00 │ 2024-09-23 16:15 │ — inverted SL    │       │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│  5 │ 2024-10-07 17:45 │ 2024-10-07 18:00 │ — inverted SL    │       │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│  6 │ 2024-10-23 16:45 │ 2024-10-23 17:00 │ — inverted SL    │       │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│  7 │ 2024-11-01 17:45 │ 2024-11-01 18:00 │ 2024-11-01 18:00 │ LONG  │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│  8 │ 2024-11-12 15:15 │ 2024-11-12 15:30 │ 2024-11-12 15:30 │ LONG  │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│  9 │ 2024-11-15 07:30 │ 2024-11-15 07:45 │ 2024-11-15 07:45 │ LONG  │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 10 │ 2024-12-04 18:30 │ 2024-12-04 18:45 │ — inverted SL    │       │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 11 │ 2024-12-31 17:45 │ 2024-12-31 18:00 │ 2024-12-31 18:00 │ SHORT │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 12 │ 2025-01-31 20:45 │ 2025-01-31 21:00 │ 2025-01-31 21:00 │ SHORT │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 13 │ 2025-02-24 16:45 │ — timeout 17:30  │ —                │       │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 14 │ 2025-02-25 15:30 │ 2025-02-25 15:45 │ 2025-02-25 15:45 │ LONG  │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 15 │ 2025-03-04 03:00 │ 2025-03-04 03:15 │ 2025-03-04 03:15 │ LONG  │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 16 │ 2025-07-10 20:00 │ 2025-07-10 20:15 │ — inverted SL    │       │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 17 │ 2025-08-14 17:15 │ 2025-08-14 17:30 │ 2025-08-14 17:30 │ LONG  │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 18 │ 2025-09-09 22:30 │ 2025-09-09 22:45 │ 2025-09-09 22:45 │ LONG  │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 19 │ 2025-12-09 05:00 │ 2025-12-09 05:15 │ 2025-12-09 05:15 │ SHORT │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 20 │ 2026-02-19 11:15 │ 2026-02-19 11:30 │ 2026-02-19 11:30 │ SHORT │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 21 │ 2026-03-18 11:15 │ 2026-03-18 11:30 │ — inverted SL    │       │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 22 │ 2026-04-17 11:30 │ 2026-04-17 11:45 │ 2026-04-17 11:45 │ SHORT │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 23 │ 2026-04-21 17:15 │ 2026-04-21 17:30 │ 2026-04-21 17:30 │ LONG  │
+├────┼──────────────────┼──────────────────┼──────────────────┼───────┤
+│ 24 │ 2026-05-21 19:45 │ 2026-05-21 20:00 │ 2026-05-21 20:00 │ LONG  │
+└────┴──────────────────┴──────────────────┴──────────────────┴───────┘
+
+The 7 EXECUTION dates with no trade: 2024-06-03 14:45, 2024-09-23 16:15, 2024-10-07 18:00, 2024-10-23 17:00, 2024-12-04 18:45, 2025-07-10 20:15, 2026-03-18 11:30.
+
+The one RETEST that never reached EXECUTION: 2025-02-24 16:45 (soft-conf timeout at 17:30 — the 3 Ultron S<0.30 candle evals).
+
+───
+
++6 shadow path (SWEEP → EXPANSION, not DISP → EXPANSION)
+
+┌──────────────────┬───────┐
+│ Date             │   idx │
+├──────────────────┼───────┤
+│ 2024-06-13 15:45 │  1459 │
+├──────────────────┼───────┤
+│ 2024-06-25 18:45 │  2197 │
+├──────────────────┼───────┤
+│ 2024-06-27 04:45 │  2325 │
+├──────────────────┼───────┤
+│ 2024-11-04 09:15 │ 10787 │
+├──────────────────┼───────┤
+│ 2025-06-03 16:45 │ 24371 │
+├──────────────────┼───────┤
+│ 2025-12-18 17:00 │ 37381 │
+└──────────────────┴───────┘
+
+These are the “142 + 6 shadow = 148 expansions.”
+
+───
+
+Earlier steps — monthly counts (every timestamp in the CSV)
+
+┌─────────┬──────────────────┬────────────────┬──────────────┐
+│ Month   │ RANGE→SWEEP 1792 │ SWEEP→DISP 399 │ DISP→EXP 142 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2024-05 │               30 │              8 │            3 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2024-06 │               75 │             17 │            6 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2024-07 │               50 │             11 │            7 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2024-08 │               76 │             11 │            6 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2024-09 │               68 │             20 │            9 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2024-10 │               79 │             22 │            8 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2024-11 │               63 │             13 │            4 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2024-12 │               67 │             20 │            7 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2025-01 │              100 │             20 │            6 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2025-02 │               85 │             19 │            5 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2025-03 │               53 │             13 │            6 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2025-04 │               81 │             22 │            6 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2025-05 │               70 │             15 │            4 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2025-06 │               74 │             19 │            2 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2025-07 │               54 │             11 │            5 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2025-08 │               62 │             21 │            9 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2025-09 │               87 │             20 │           11 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2025-10 │               87 │             11 │            5 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2025-11 │               79 │             14 │            5 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2025-12 │               94 │             21 │            5 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2026-01 │               87 │             27 │            6 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2026-02 │               64 │             11 │            6 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2026-03 │               74 │             13 │            5 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2026-04 │               67 │             10 │            5 │
+├─────────┼──────────────────┼────────────────┼──────────────┤
+│ 2026-05 │               66 │             10 │            1 │
+└─────────┴──────────────────┴────────────────┴──────────────┘
+
+Sweeps happen every month. Retests do not — several months have zero (2024-05, 2024-08, 2025-04/05/06, 2025-10/11, 2026-01). That is the mid-graph death on a calendar.
+
+Full file: .grok/ns_transition_dates/all_steps.csv (2,418 rows: 1792+399+142+6+24+23+16+16 resolution).
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-15 Topic: NS golden-path transition dates listed from events.jsonl Decision/Output: Extracted every RANGE→SWEEP / SWEEP→DISP / DISP→EXP / shadow SWEEP→EXP / EXP→RETEST / RETEST→EXEC / TRADE_OPENED timestamp from the NS walk. Late steps listed in chat. Full dump .grok/ns_transition_dates/all_steps.csv (clock = MT5_SERVER_NY_DST broker-server, not UTC). 7 EXECUTION dates with no TRADE_OPENED identified. No new MC. No production edit. Belief Update / ROI / Goal:
+  Goal: inspect when the funnel actually fires, not just counts.
+  Belief: unchanged on binds. Dates confirm EXP→RETEST is sparse across 24 months, not clustered in one regime.
+  Knowledge ROI: medium — calendar is now inspectable; still no edge.
+  Action: do not treat timestamps as UTC. Open Questions: none — user asked for dates. Next Step: User names a new object or stops T4.
+---

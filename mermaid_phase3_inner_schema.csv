@@ -1,0 +1,51 @@
+package,module,in_reduced_schema,schema_role
+strategies,strategies.strategy_orchestrator,yes,S01-S10 consensus. Imported by backtest_v2 + live_engine_hook + monitoring + uat + governance
+strategies,strategies.base_strategy,yes,Shared strategy base + prod config
+strategies,strategies.s01_crt_wrapper,yes,ONLY family that imports engines.crt_engine.compute — CRT adapter
+strategies,strategies.s08_ml_ensemble,yes,ONLY family that imports bitnet.bitnet_inference
+strategies,strategies.intent_builder,yes,Builds strategy_intent from results
+strategies,strategies.strategy_intent,yes,Intent value
+strategies,strategies.strategy_result,yes,Result value
+strategies,strategies.strategy_registry,yes,Registry of strategy_package — backtest_v2 imports
+strategies,strategies.strategy_package,yes,Package wrapper → model_registry + feature_schema
+strategies,strategies.s02_mean_reversion,no,Clone of base — config only; no engine import
+strategies,strategies.s03_breakout,no,Clone of base — config only
+strategies,strategies.s04_stat_arb,no,Clone of base — config only
+strategies,strategies.s05_grid,no,Clone of base — config only
+strategies,strategies.s06_scalping,no,Clone of base — config only
+strategies,strategies.s07_news_sentiment,no,Clone of base — config only
+strategies,strategies.s09_pattern_recog,no,Clone of base — config only
+strategies,strategies.s10_trap_strategy,no,Clone of base — config only
+bitnet,bitnet.bitnet_inference,yes,GGUF/JSON inference. crt_engine_v2 + backtest_v2 import. use_bitnet false on active config (F-004)
+bitnet,bitnet.bitnet_registry,yes,Model path registry — crt_engine_v2
+bitnet,bitnet.bitnet_runner,yes,Runner around inference — backtest_bitnet
+bitnet,bitnet.zone_cosine_searcher,yes,Zone cosine. live_engine + scoring_engine
+bitnet,bitnet.zone_validator,yes,Zone validation (package re-export)
+bitnet,bitnet.stability_checker,yes,Stability check (package re-export)
+bitnet,bitnet.composition,yes,Assembles adapters/backbones/heads/registry
+bitnet,bitnet.model_contract,yes,Feature-schema contract for BitNet I/O
+bitnet,bitnet.adapters,no,Composition internal
+bitnet,bitnet.backbones,no,Composition internal
+bitnet,bitnet.heads,no,Composition internal
+bitnet,bitnet.encoders,no,Composition internal
+bitnet,bitnet.layers,no,Composition internal
+bitnet,bitnet.defaults,no,Composition internal
+bitnet,bitnet.runtime_types,no,Composition internal
+bitnet,bitnet.contract_c_trainer,no,Offline trainer — not on live walk
+bitnet,bitnet.label_contracts,no,Offline labels
+bitnet,bitnet.model_bundle,no,Offline bundle
+bitnet,bitnet.forward_tester,no,Offline tester
+bitnet,bitnet.population_label_audit,no,Offline audit
+bitnet,bitnet.r25_kill_test,no,Offline kill-test
+bitnet,bitnet._smoke_test,no,Smoke — also imports scoring_engine
+training,training.training_trigger,yes,Retrain gate — backtest_v2 + live_engine
+training,training.trainer,yes,Gaussian/TradeNet trainer — model_registry + ml_gaussian + tradenet_meta
+training,training.train_pipeline,yes,Train orchestrator + phase-5 gate
+training,training.phase5_calibration,yes,Calibration gate before register
+training,training.evaluator,yes,Eval — model_registry imports this
+training,training.trade_net_v2,yes,TradeNet v2 trainer (F-005 fusion slot still unwired)
+training,training.stage1_dataset_builder,no,Dataset helper
+training,training.bar_semantic_tracker,no,ISOLATED on src graph — scripts/training only
+events,events.event_fabric,yes,Canonical event envelope. engine_runner + crt_engine_v2 + cognitive + utils telemetry
+structure,structure.predicates,yes,SP-001/SP-002 HOW. Inbound from crt_engine_v2 + parent_crt + crt_state_resolver. No outbound
+cognitive,cognitive.cognitive_bus,yes,Write-only sidecar. engine_runner emit → HMF/TradeNet/event_fabric/regime cluster/replay. Never returns to execution (F-012)

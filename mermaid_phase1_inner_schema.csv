@@ -1,0 +1,51 @@
+package,module,in_reduced_schema,schema_role
+data_ingestion,data_ingestion.ohlcv_schema,yes,OHLCV identity / column contract
+data_ingestion,data_ingestion.dataset_integrity,yes,L3 integrity preflight
+data_ingestion,data_ingestion.corpus_gate,yes,corpus admit/reject
+data_ingestion,data_ingestion.corpus_store,yes,store behind the gate
+data_ingestion,data_ingestion.dataset_registry,yes,dataset identity
+data_ingestion,data_ingestion.historical_fetcher,yes,MT5/file fetch
+data_ingestion,data_ingestion.clock_registry,yes,clock basis
+data_ingestion,data_ingestion.clock_detector,yes,clock detection
+data_ingestion,data_ingestion.session_autoderive,no,session derive helper
+data_ingestion,data_ingestion.xauusd_phase1_candidate,no,XAUUSD candidate corpus
+features,features.feature_pipeline,yes,bar → canonical vector
+features,features.feature_schema,yes,CANONICAL_FEATURES + hash
+features,features.candle_math,yes,body/range primitives
+features,features.derived_math,yes,FM derived metrics
+features,features.fm_resolve,yes,FM-id resolver
+features,features.registry,yes,ontology-backed formula registry
+features,features.crt_state_resolver,yes,resolver CRT states (not engine)
+features,features.parent_candle,yes,HTF parent bars
+features,features.feature_monitor,yes,drift on TRADE_OPENED
+features,features.broker_clock,yes,session timestamp basis
+features,features.smc.order_block,yes,SMC primitive
+features,features.smc.fvg,yes,SMC primitive
+features,features.smc.breaker,yes,SMC primitive
+config_layer,config_layer.production_config,yes,ACTIVE_VERSION loader
+config_layer,config_layer.config_builder,yes,override + schema keys
+config_layer,config_layer.crt_engine_v2,yes,CRT state machine (math lives here)
+config_layer,config_layer.execution_planner,yes,entry/SL/TP plan
+config_layer,config_layer.state_identity,yes,CRTState + VALID_TRANSITIONS
+config_layer,config_layer.parent_crt,yes,H4 parent CRT
+config_layer,config_layer.htf_state,yes,HTFState / ObjectiveStatus
+config_layer,config_layer.config_validator,yes,pre-promotion ValidationReport
+engines,engines.crt_engine,yes,CRT score adapter
+engines,engines.heuristic_gaussian_engine,yes,live gaussian
+engines,engines.ml_gaussian_engine,yes,ML gaussian
+engines,engines.zone_gate_engine,yes,zone HARD gate
+engines,engines.rr_engine,yes,base RR
+engines,engines.scoring_engine,yes,shared scoring
+engines,engines.live_engine,yes,zone-gate singleton harness
+core,core.engine_runner,yes,orchestrator of 4 engines
+core,core.fusion_engine,yes,weighted completeness fusion
+core,core.decision_engine,yes,semantic accept/reject
+core,core.ultron_risk_gate,yes,capital gate
+core,core.feature_store,yes,canonical feature ingest
+core,core.model_registry,yes,atomic model load
+core,core.gate_intelligence,yes,planner helper scores
+runtime,runtime.backtest_v2,yes,candle loop
+runtime,runtime.live_engine_hook,yes,live orchestration
+runtime,runtime.live_rail_orchestrator,yes,paper/live rail
+runtime,runtime.live_rail_feeder,yes,rail feature feed
+runtime,runtime.parent_crt_feed,yes,parent bias into process_candle

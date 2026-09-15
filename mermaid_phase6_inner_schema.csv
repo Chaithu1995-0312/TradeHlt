@@ -1,0 +1,46 @@
+package,module,in_reduced_schema,schema_role
+research,research.cli,yes,Process entry. python -m research.cli. No src importer
+research,research.runner,yes,HypothesisRunner. cli imports it. Touches backtest_v2 + corpus_store
+research,research.qualification,yes,M4 7-gate PROMOTE/REJECT. Never live spine
+research,research.hypotheses,yes,Registers 7 plugins
+research,research.contracts,yes,Shared contracts. interpreters.adapter + 30 research importers
+research,research.costs,yes,Cost model
+research,research.measurement.forward_walk,yes,Walk kernel. 19 importers
+research,research.measurement.metrics,yes,Metrics for qualify + runner
+research,research.registry,yes,Hypothesis registry
+research,research.config,yes,ResearchConfig
+research,research.model_runners.runner,yes,OBSERVATION_ONLY engine adapters
+research,research.probes.scriptmod,yes,load_py choke-point. P4 semantic_query + VA ladder
+research,research.synthetic.ontology,yes,VA ladder ontology
+research,research.mother_range.driver,yes,Named mother-range MC driver
+research,research.sujan_crt.driver,yes,Named Sujan MC driver
+research,research.visual_crt.driver,yes,Named Visual CRT MC driver
+interpreters,interpreters.contract,yes,Interpreter contract. Imports crt_engine_v2 Candle only
+interpreters,interpreters.adapter,yes,Bridge to forward_walk + QualificationGate. No src importer
+interpreters,interpreters.point_and_figure,yes,P&F — F-028 REJECT
+interpreters,interpreters.reference,no,Reference interpreter
+interpreters,interpreters.regime_observer,no,Markov regime — weekly_sweep_reversal imports it
+llm_research,llm_research.forward_tester,yes,Forward test via engine_runner + execution_planner
+llm_research,llm_research.evaluator,yes,Evaluates forward tester
+llm_research,llm_research.pattern_extractor,no,LLM pattern extract
+llm_research,llm_research.policy_builder,no,Policy from patterns
+replay,replay.replay_memory_engine,yes,CognitiveBus sidecar memory. P3 inbound
+replay,replay.replay_drift_governor,yes,DRIFT_AUDIT via event_fabric
+replay,replay.timing_reconstructor,no,Timing reconstruct → ohlcv_schema
+replay,replay.replay_similarity_index,no,ISOLATED
+replay,replay.timing_advisor,no,ISOLATED
+msip,msip.shadow_emitter,yes,Shadow MSIP → feature_schema
+msip,msip.market_state_vector,yes,State vector
+msip,msip.interpretation_config,no,Config
+msip,msip.disagreement,no,Disagreement
+msip,msip.isolation,no,ISOLATED
+multi_llm,multi_llm.turn_ledger,yes,Turn ledger → event_fabric
+multi_llm,multi_llm.context_pack,no,Story packs
+multi_llm,multi_llm.discussion,no,Rewind view
+multi_llm,multi_llm.tokens,no,Tokens
+scanner,scanner.scanner,no,ISOLATED entire package. Docstring claims EngineRunner — zero src imports (F-013)
+scanner,scanner.ranker,no,ISOLATED
+scanner,scanner.signal_pool,no,ISOLATED
+scanner,scanner.spine_adapter,no,ISOLATED
+scanner,scanner.universe,no,ISOLATED
+feedback,feedback.ai_feedback,no,ISOLATED. LLM suggestions only — no src imports

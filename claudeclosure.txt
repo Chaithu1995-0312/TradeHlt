@@ -1,0 +1,412 @@
+# Integrated Claude Operating Workflow — design plan
+
+**Status:** design only. Nothing in the repository is modified by this turn.
+**Deliverable constraint (user, this session):** plan file only — no repo doc writes, and
+**no `assistant_project.md` SESSION LOG append this turn** (CLAUDE.md §6 deliberately waived by
+the user's "Plan file only" answer; note it if you resume).
+**Scope answers locked:** reconcile-and-supersede the prior design · plan file only · spec **plus**
+implementation PR plan.
+
+---
+
+## Context
+
+The lab has ~30 distinct machine-readable capability surfaces (agent kitchen, Semantic OS, ontology,
+AST censuses, registries, telemetry JSONL, RAG, TV/MT5 visual evidence, research artifacts, 461 test
+files, multi-LLM context packs). A session LLM arriving cold does **not** systematically use them.
+It re-derives routing, reaches for `grep` and the session log, and occasionally upgrades an artifact
+into a conclusion. The repository has already paid for that: F-067 (an external bug trace repeated
+backwards), F-068 (a code comment cited that did not exist), and the 2026-08-18 attribution entry
+(working-tree changes credited to the wrong agent because `assistant_project.md` is undifferentiated
+across agents).
+
+The missing piece is **typed routing over surfaces that already exist** — not another engine. This
+plan (a) inventories what is built, verified against source; (b) reconciles with a design a Grok
+session completed hours earlier; (c) names the gaps that actually block systematic use; (d) specifies
+a dispatch layer; (e) sequences it as implementable PRs.
+
+**Intended outcome:** a cold session can name the owner of any phrase, pick the right capability,
+keep artifact/evidence/concept/capability/conclusion distinct, and fail closed — without a fourth
+intent registry and without new authority.
+
+### Prior art this supersedes
+
+A Grok session logged **"Design — Integrated Claude Operating Workflow"** at 2026-08-18 18:18
+(`%TEMP%\grok-Hi\grok-design-doc-b578c7a8.md`, 1,078 lines; **not in the repo**). It is strong and
+mostly correct. Per the user's instruction this plan **reconciles and supersedes** it: its structure
+and naming are adopted where they hold, three claims are corrected, and four gaps it did not name are
+added. Divergences are listed explicitly in *Reconciliation* below so the two do not become competing
+doctrines.
+
+### Coverage honesty
+
+Read in full: `assistant_project.md` doctrine header + the newest ~15 entries + all ~80 entry topics;
+`.grok/INFRA.md`; the prior design's type system, key decisions, interface map, gap analysis, dispatch
+table. **Sampled, not fully read:** June–July session-log mid-history, the prior design's §joins /
+§rollout / §PR-plan tail. Every capability row below was verified on disk this turn or is marked
+UNVERIFIED.
+
+---
+
+## Part 1 — Epistemic type system (adopted, unchanged)
+
+Every row, retrieval, and sentence is **exactly one** type. Collapsing types is a protocol violation.
+This is the prior design's contribution and it is adopted verbatim in substance:
+
+| Type | Is | May | May not |
+|---|---|---|---|
+| **Artifact** | a file/JSONL line/report/screenshot on disk | be opened, hashed, cited as "this file says" | become a conclusion; override source or `ACTIVE_VERSION` |
+| **Evidence** | an observation from a **named procedure** | support/weaken a claim at its declared class | auto-register a finding; grant G001 |
+| **Concept** | a named meaning owned by ontology / Semantic OS / MIAR | constrain language | invent a formula, `CRTState`, or FM/SEM id |
+| **Capability** | a runnable interface (CLI, `@register_tool`, script, floor) | be invoked with documented inputs | acquire authority its handler lacks |
+| **Conclusion** | a **registered** finding / closure status / promotion decision | bind future sessions | be inferred from RAG, session log, or Excel |
+
+Promotion is one-directional and fail-closed:
+`artifact --search--> artifact` · `artifact --named procedure--> evidence` ·
+`evidence --findings mandate + E-001 ritual--> conclusion` · `concept --ground--> GROUNDED|UNKNOWN|AMBIGUOUS|UNANSWERABLE` ·
+`capability --invoke--> artifact|evidence` (never a conclusion).
+
+**Reuse the existing enums.** `feature_surface_query.py:11-15` already emits
+`PROVEN | HEURISTIC | TEXT_REFERENCE`; `semantic_grounding.py` emits
+`GROUNDED | UNKNOWN | AMBIGUOUS | UNANSWERABLE`. Do not mint a sixth vocabulary.
+
+**Forbidden promotions:** session-log sentence → conclusion · RAG chunk → finding · Excel row →
+runtime behavior · TV mark → `TRADE_OPENED` · capability exists → capability has authority ·
+`MC-*` file on disk → measurement layer CLOSED (charter is still `OPEN`).
+
+---
+
+## Part 2 — Capability census (verified this turn)
+
+Authority column states what the surface **does not** get, even when it returns a confident dict.
+
+### Agent kitchen — `src/agent/`
+| Capability | Entry | Verified | Authority it lacks |
+|---|---|---|---|
+| `PLAN_REGISTRY` — deterministic intent → tool order | [plan_compiler.py:42](src/agent/plan_compiler.py:42) | **22 keys** (ran it) | LLM never picks tools |
+| Tool registry | [tool_registry.py](src/agent/tool_registry.py) | **35 tools** (ran it) | write tools need `confirmed=True` + path-guard |
+| 7 modes | `src/agent/modes/` | copilot, findings, governance, log_query, **ops**, pipeline, **truth** | — |
+| NL classification | [intent_router.py:30](src/agent/intent_router.py:30) `_MODE_INTENTS` | **21 of 22** classifiable | `semantic_ground` unreachable via NL |
+| `truth.*` janitor set | `modes/truth_mode.py` | `ground_claim`, `construction_check`, `feature_math_lint`, `script_census`, `citation_floor`, `hygiene_pack` | advisory |
+| Audit stream | `logs/agent_audit.jsonl`, `agent_intent_log.jsonl`, `agent_findings.jsonl` | present | `findings.synthesize` writes JSONL, **not** `docs/current-findings.md` |
+
+### Semantic OS / grounding
+`scripts/governance/query_semantic_os.py --validate|--summary|--ask|--ground` over
+`docs/governance/semantic_os/{concepts,boundaries,contracts,journeys,file_identities}.yaml`.
+**Ran `--summary` this turn:** 15 concepts · 10 boundaries · 9 contracts · 1 journey (7 steps) ·
+854 objects (projection) · 98 file identities · 11/11 spine files claimed · **80 findings, 18
+hypotheses loaded** · `authority: advisory` · 0 warnings. Agent twin: `truth.ground_claim`.
+
+### Ontology / registries (the meaning + conclusion layer)
+`configs/formulas/market_ontology.yaml` (authority #1, §6.6) · `market_crt_states.yaml` ·
+`src/features/registry/` behind the `formula_registry` facade · `active_models.yaml` (v2.1) ·
+`docs/governance/miar_registry.json` · `closure_authority_index.json` ·
+**GENERATED** `data/*.jsonl`: findings **81**, script_registry **393**, framework_registry **41**,
+hypothesis_registry **18** (line counts verified). Query CLIs: `query_registry.py`,
+`query_scripts.py`, `query_hypotheses.py`, `feature_surface_query.py`, `export_findings.py`.
+
+### AST / census / floors (the instrument layer)
+`behavior_census.py` (STRUCTURAL/BEHAVIORAL/GOAL_SEEKING + maturity) · `feature_math_lint.py`
+(ownership lint) · `feature_dag_layers.py` (38/39-slot DAG) · `feature_certification_state.py` /
+`feature_dag_certify.py` · `config_reachability.py` · `script_census.py` · `module_census.py` ·
+`graph_query.py` over `graph.dot` (92KB, 2026-08-08) · `gen_citation_map.py` ·
+`construction_protocol.py {validate-impact, validate-completion, check}` ·
+GREEN_FLOOR via `scripts/maintenance/check_governance_invariants.py` (curated green set;
+deliberately **not** whole-suite — ~66 known reds).
+
+### Telemetry / evidence stores
+`logs/` per-instrument dirs + `crt_transitions.jsonl`, `feature_snapshots.jsonl`,
+`llm_episodes.enveloped.jsonl`, `integrity_events.jsonl`, `logs/index/{run,trade,instrument}_index.jsonl`;
+`results/` per-instrument + `results/research/`; `src/agent/log_query.py` (`log.get_run` / `get_trade` /
+`query`); `src/events/event_fabric.py` (has `EventType.LLM_TURN` — no new bus needed);
+`src/journal/trade_identity_v1_0.py` (canonical trade identity).
+
+### Visual / broker evidence
+`tools/tv_forensic/` (`capture_tv`, `annotate`, `engine_data`, `htf_bars`, `tv_bridge`,
+`measure_corpus_clock`, `shots/`, `shots_disp_exp/`) — control-plane ids `tv_forensic.capture` /
+`.annotate`; `mt5_analytics/` (deals→`PositionEpisode` read model) + `exec_telemetry/`;
+`docs/governance/clock_evidence/`. Conclusions already registered here: **F-080** (feed
+reconciliation), **F-081** (visual CRT trade object — 0 PROMOTE).
+
+### Research / measurement
+`src/research/` (episodes, candle_state, clean_labels, measurement, model_runners, ic003*),
+`src/interpreters/`, `src/msip/`, `oss_lab/`, `docs/research/` preregistrations + SEALED prediction
+files, `configs/research/measurement_contracts/`. **Measurement Contract layer status is `OPEN`** —
+sealed `MC-*` files on disk do **not** close it (P-GOV-MC-01).
+
+### Multi-LLM / context
+`multi_llm/` (protocol, roles, `build_queue.jsonl`, `turn_ledger.jsonl`), `HANDOFF.md`,
+`scripts/context/{build_context,discussion,log_turn,pack_story}.py` → `context/01..06_*.md`
+(derived Portable Mind, regenerate via `Compile`, never hand-edit), `.grok/` overlay
+(`GOAL`, `INFRA`, `HOW_INDEX`, `PENDING`, `CLOSURE_KPI`), `tests/Grok/` (A–I) and
+`tests/Claude/` (J–M) auditor suites.
+
+### Control plane
+`src/control_plane/registry.py` — **44 `CommandSpec`s** (counted); generated view
+`docs/reference/cli-matrix.md`. Localhost-only, no auth.
+
+### RAG (sidecar; **not** grounding)
+`src/retrieval/` + `scripts/rag_index.py {--rebuild, --incremental, query, metrics, verify, discover}`;
+Chroma store `data/chroma_db/` (633 MB). Measured directly from the store this turn — see G-1.
+
+---
+
+## Part 3 — Interface map (ride these edges; do not add parallel ones)
+
+```
+                    ┌─ trigger vocabulary (CLAUDE.md §12) ──► session ritual
+user phrase ──► DISPATCH ─┼─ PLAN_REGISTRY (src/agent) ──────► kitchen tool order
+                    └─ .grok/INFRA.md ────────────────────► trader/session intents (+ code.* when CLAC lands)
+
+authority:  ACTIVE_VERSION ──► get_prod_config ──► CRTConfig/ConfigBuilder
+            market_ontology.yaml ──► formula_registry ──► derived_math
+            SemanticGrounder ──► findings.jsonl + hypotheses + closure index + ACTIVE_VERSION
+            construction_protocol ──► GREEN_FLOOR
+
+retrieval:  feature_surface_query · query_{semantic_os,registry,scripts,hypotheses}
+            log_query · graph_query · build_context → context/*.md
+            RetrievalPipeline (search over artifacts ONLY)
+```
+
+**Non-edges — intentional semantic separation, do not "fix":** INFRA ↛ `PLAN_REGISTRY`
+(`INFRA.md:11,165`) · RAG ↛ `PLAN_REGISTRY`/control plane (no `@register_tool` in `src/retrieval`) ·
+`findings.synthesize` ↛ `docs/current-findings.md` · `EnterpriseGate.verify` (chunk-count grounding,
+[claude_integration.py:115](src/retrieval/claude_integration.py:115)) ↛ `SemanticGrounder.ground`
+(different meaning of "grounded" — never conflate) · Portable Mind ↛ Tier 0 · GCMC/Excel ↛ runtime ·
+TV mark ↛ `TRADE_OPENED`.
+
+---
+
+## Part 4 — Reconciliation with the prior Grok design
+
+### Confirmed against source (adopt as-is)
+- The five-type system, the fail-closed promotion ladder, and the reuse-existing-enums rule.
+- "Playbook, not a fourth runtime"; compose three intent owners, never merge them.
+- `agent-reference.md:4` says **"14 intents, 20 registered tools"** — source is **22 / 35**. DOC_DRIFT confirmed.
+- `agent-reference.md:101` lists tool **`audit.inspect`** — not in `REGISTRY`. Phantom confirmed.
+  (`PLAN_REGISTRY["audit_inspect"]` correctly steps `audit.tail`, which exists — the drift is doc-only.)
+- `plan_compiler.py:41` comment **"All 14 intents"** stale vs 22 keys. Confirmed.
+- `semantic_ground` is a real `PLAN_REGISTRY` key but absent from `IntentRouter` → NL-unreachable. Confirmed (21 of 22 classifiable).
+- `full_pipeline` step 5 is `live_hook.dry_run`, which cannot construct (F-073). Confirmed — leave broken, do not call.
+- `docs/memory/agent-memory.md` modes list omits `ops` and `truth`. Confirmed.
+- Generated `cli-matrix.md` pins `v2_multi_2026_04` (`:13,14,16,45`) while **`ACTIVE_VERSION` = `v2_htfcrt_2026_08`** (read this turn). Confirmed — regenerate from `registry.py`, never hand-edit the markdown.
+
+### Corrected
+1. **The RAG gap is not "historical / later" — it is measured, it is the largest gap, and the fix
+   it proposes is insufficient.** See G-1. Adding `domain_patterns` alone would drown the added
+   authorities: one generated census JSON is already 27% of the whole index.
+2. **RAG freshness is not absent — it exists and is structurally inert.** The prior design does not
+   mention `src/retrieval/monitor.py`. It has `embedding_staleness_commits`, but
+   [monitor.py:53](src/retrieval/monitor.py:53) sets `self._indexed_commit = self._get_current_commit()`
+   in `__init__` and never reloads it, so `snapshot()` computes `git rev-list --count HEAD..HEAD` = **0**
+   in every fresh process. This is the F-006 / F-060 pattern (a real check that gates nothing), and the
+   true indexed commit is already persisted in `data/rag_metrics.jsonl` index events. Sharper statement,
+   cheaper fix.
+3. **Sequencing must not hard-depend on CLAC PR-1.** Verified this turn: `.grok/CLAC.md` and
+   `scripts/governance/build_clac.py` **do not exist** — CLAC PR-1 has not landed. Making PR-1 land
+   "after or into" an unlanded PR owned by a different agent, in a tree ~15 concurrent sessions share,
+   is a stall. Design for graceful degradation instead (below).
+
+### Added (not in the prior design)
+4. **The dispatch table must be GENERATED, not hand-written.** A one-screen hand-maintained owner
+   table is precisely the artifact class that just drifted (`agent-reference.md` 14/20 vs 22/35). The
+   repo already owns the counter-pattern — `generate_cli_matrix.py`, `generate_script_matrix.py`,
+   `gen_citation_map.py`, `.grok/_build_how_index.py`, all seed→generate→sync-floor. Apply the repo's
+   own §6.5 corollary: *correcting the instrument creates more value than optimizing the system.*
+5. **Multi-agent attribution belongs in BOOT.** `assistant_project.md` is append-shared and
+   undifferentiated across Grok and ~15 concurrent Claude sessions (proved 2026-08-18). Unfamiliar
+   untracked files are another session's WIP.
+6. **Load economics are a first-class constraint.** `CLAUDE.md` is already **123,038 bytes** and
+   auto-loaded. A playbook that is not reachable from an auto-loaded surface does not bind; one that
+   is pasted in full makes every session more expensive. The binding must be a ≤12-line pointer.
+7. **A `TruthConflict` this design must surface, not resolve:** `docs/reference/cli-matrix.md` argv
+   (`v2_multi_2026_04`) vs `configs/production/ACTIVE_VERSION` (`v2_htfcrt_2026_08`). Source is
+   `registry.py` `CommandSpec` templates — changing those is a control-plane decision with a separate
+   owner. Regenerating the view does not fix the pinned template. Flag; do not pick a winner (§6.2 rule 3).
+
+**Name:** keep **"Claude Operating Playbook."** Reusing the prior name is the reconcile discipline —
+a second name for one procedure is the fragmentation this whole exercise exists to prevent.
+
+---
+
+## Part 5 — Gaps (verified, ranked by blocking power)
+
+| ID | Gap | Verified evidence | Blocks | Extend (do not rebuild) |
+|---|---|---|---|---|
+| **G-1** | **RAG corpus omits every authority surface and is dominated by one generated census.** Measured from `data/chroma_db/chroma.sqlite3` (read-only, this turn): 149,853 chunks in collection `tradelatest_rag`. Domains: governance 127,481 (**85%**), config 7,752, source_code 6,410, tests 5,296, analysis 1,757, architecture 677, research 344, intent 69, operations 67. Single largest file = `docs/governance/behavioral_constant_authority_trace-2026-07-11.json` at **39,997 chunks (27% of the index)**. Path probes (separator-agnostic): `CLAUDE.md` **0** · `docs/current-findings.md` **0** · `docs/topics/` **0** · `docs/reference/` **0** · `docs/memory/` **0** · `docs/book/` **0** · `scripts/**` **0** · `docs/governance/semantic_os/*.yaml` **0** · `active_models.yaml` **0**. (Present: `configs/production/` 6,088 · `market_ontology.yaml` 30 · `src/core/` 534 · `src/features/` 451 · `src/agent/` 162.) | Search systematically cannot see the bootloader, the conclusions record, the concept index, the schema/convention references, the Semantic OS, the model registry, or any of 372 scripts | `RetrievalConfig.domain_patterns` **plus** a size/exclusion policy for generated census JSON ([config.py:66-97](src/retrieval/config.py:66)) |
+| **G-2** | **No session dispatcher naming which of the three owners owns a phrase** | three owners exist (§12 triggers, 22 `PLAN_REGISTRY` keys, INFRA rows); no table joins them | cold session re-derives routing or invents a fourth registry | generated dispatch index (Part 6) |
+| **G-3** | **No typed-retrieval rule in any auto-loaded surface** | CLAUDE.md §6.7 mandates grounding but gives no retrieval order; nothing says "RAG is search, not grounding" | sessions skip to grep/RAG and promote types — **or** over-ground and stall Orient | ≤12-line CLAUDE.md §14 pointer |
+| **G-4** | **RAG staleness gate is structurally inert** | [monitor.py:53](src/retrieval/monitor.py:53); `snapshot()` → `HEAD..HEAD` = 0; index events in `data/rag_metrics.jsonl` do carry the real `commit_hash` | a session cannot tell whether a hit reflects current code — and the one mechanism that would say reports 0 | read last index event's `commit_hash` from the existing JSONL |
+| **G-5** | **Operator docs disagree with source** | `agent-reference.md:4` (14/20 vs 22/35), `:101` phantom `audit.inspect`; `plan_compiler.py:41` "All 14 intents"; `agent-memory.md` modes missing `ops`/`truth` | cold session trusts the wrong counts and hunts a tool that does not exist | header/comment hygiene only |
+| **G-6** | **No attribution discipline for a shared working tree** | 2026-08-18 log entry: attribution required transcript fingerprinting + `.grok/PENDING.md`; the tree carried 248 uncommitted paths | a session edits or reports another agent's WIP | BOOT step + existing `.grok/PENDING.md` |
+| **G-7** | **No authority-preserving join recipe** for visual ↔ CRT ↔ finding ↔ test | F-081 exists precisely because marks were nearly counted as trades | joins collapse types silently | playbook join card (Part 6) |
+| **G-8** | `MEASUREMENT_CONTRACT` prose `OPEN` vs sealed `MC-*` files vs a findings validator that cannot resolve `MC-*` ids | P-GOV-MC-01 already OPEN | cannot tell if a claim is contract-bound | **owned elsewhere** — do not silently fix |
+
+### Non-gaps — explicitly do not build
+A Claude-specific `PLAN_REGISTRY` · wrapping every CLI as an agent tool · putting RAG in
+`PLAN_REGISTRY` or the control plane · rebuilding Semantic OS as a graph DB · a free-tool-choice
+meta-agent (`grok_agentic.py` Mode D is forbidden) · Portable Mind as the workflow · indexing
+`assistant_project.md` as truth · a new telemetry bus (`event_fabric.EventType.LLM_TURN` exists) ·
+fixing F-073 here · enabling BitNet/rr_fusion because the code exists (capability ≠ authority).
+
+---
+
+## Part 6 — Proposed design: the Claude Operating Playbook
+
+A **procedure plus one generated index**. No daemon, no package, no new authority, no new KPI.
+
+### 6.1 Session vs turn
+
+**Once per session (re-run only if `ACTIVE_VERSION` or the lane could have changed):**
+1. **BOOT** — load only the §0 memory doc matching the task domain. Never open `.env`.
+2. **ORIENT_RUNTIME** (§4.0) — read `configs/production/ACTIVE_VERSION`; load via `get_prod_config()`;
+   verify keys exist in `CRTConfig`/`ConfigBuilder`; record `ACTIVE_VERSION=<v>`.
+3. **NAME_LANE** — state the lane and check for concurrent owners: `git status` shape, `.grok/PENDING.md`
+   open rows, unfamiliar untracked paths. Unfamiliar new files = another session's WIP; leave alone. (G-6)
+
+**Every turn:**
+`DISPATCH → (GROUND if needed) → RETRIEVE_TYPED → ACT → (VALIDATE_FLOOR if state-changing) → CLOSE`
+with `ASK_USER` reachable from DISPATCH (unknown/collision) and from GROUND (UNKNOWN on a token the
+user asked to use as if it existed).
+
+### 6.2 DISPATCH — one owner, fail closed
+
+| Phrase class | Owner | Next step | Stop if |
+|---|---|---|---|
+| `Orient` `Status` `Continue` `Next step` `Map` `Audit` `Sync` `Plan` `Log` `Compile` `Validate` (as §12 trigger words) | trigger vocabulary | that trigger's documented load list | the trigger would grant new authority |
+| tune / validate-checkpoint / promote / backtest / advise / veto / resize / ops diagnose / truth janitor | `PLAN_REGISTRY` via `python -m src.agent.cli` | `IntentRouter → PlanCompiler → Executor` | `ask_user`; unconfirmed write; path-guard |
+| "is this a setup" / "does it make money" / walk a candle / pending / later / semantic review | `.grok/INFRA.md` | that intent's happy flow | gate 1–4 UNKNOWN; P-GOAL-04 off for money |
+| coding: orient-this-change / classify / implement / validate the floor / refresh CLAC | INFRA `code.*` **once CLAC PR-1 lands** | that `code.*` flow | **`PENDING_CLAC`** until it lands → fall back to trigger `Implement` + construction protocol |
+| "ground this noun" / "does CN-001 exist" | Semantic OS CLI | `--ground` / `--ask` | status ≠ `GROUNDED` on a new claim |
+| "what does this feature join to" | `feature_surface_query.py` | `--feature` / `--search` | `AmbiguousAliasError` |
+| "search the repo" | RAG **as search** | `rag_index.py query`, then re-ground any noun you intend to assert | treating a hit as `GROUNDED`; **G-1 blind spots apply** |
+| anything else | `ask_user` | state UNKNOWN, offer the table | guessing |
+
+**Meta-rule:** exactly one owner. Two owners after the collision matrix → `ask_user`. Never a fourth table.
+
+Collisions to encode (the ones that actually bite): bare `orient` (trigger vs `code.orient`) ·
+`Validate` trigger vs kitchen `validate_only` vs `code.validate` · `Compile` (Portable Mind) vs
+`code.regenerate` (CLAC/citation/SITS) vs `how.regenerate` (How-index) · `record this` (trigger `Log`
+vs INFRA `closure.record`) · `implement` (trigger vs `code.implement` vs the `/implement` skill).
+
+### 6.3 RETRIEVE_TYPED — ordered ladder
+
+1. **Ground the token** → Semantic OS. 2. **Concept?** → ontology / `formula_registry` / MIAR.
+3. **Conclusion?** → `docs/current-findings.md` + `closure_authority_index.json`.
+4. **Evidence?** → the named procedure's artifact (ledger, probe output, floor).
+5. **Artifact search?** → RAG / grep / How-index / `graph_query`.
+
+Skipping to (5) is legal **only** when the user asked for a search. **Grounding carve-out (keeps Orient
+cheap):** citing a token already bound on a loaded authority page — the Repository Truths Index, the
+closure index, `ACTIVE_VERSION` — needs no subprocess per id. Ground when asserting a **join**, an
+**implementation fact not on the loaded page**, or a **token the user just invented**.
+
+### 6.4 Join card — required fields for any cross-surface claim (G-7)
+
+`claim` · `left` (type + artifact + procedure) · `right` (type + artifact + procedure) ·
+`join key` (what makes them the same object — timestamp? trade id? FM id?) ·
+`evidence_class` (`PROVEN|HEURISTIC|TEXT_REFERENCE`) · `what this does NOT establish`.
+Missing join key → the claim is not made. A TV mark joined to a bar timestamp is a *bar* join, never
+a *trade* join.
+
+### 6.5 CLOSE
+Read-only turn → answer + typed sources. State-changing turn → `construction_protocol.py check`
+(or the declared floor) **then** the §7.4 SESSION LOG entry. Conflicts → `TruthConflict` shape
+(§6.2 rule 3), never a silent pick.
+
+### 6.6 What the playbook must never do
+Edit `ACTIVE_VERSION` as a side effect · add `PLAN_REGISTRY` keys · merge the three owners ·
+promote a type · call `live_hook.dry_run` · enable BitNet/rr_fusion · hand-edit a GENERATED artifact ·
+treat RAG as grounding · claim measurement-layer closure · act on another session's untracked WIP.
+
+---
+
+## Part 7 — Implementation PR plan
+
+Every PR classified against `docs/governance/change_contracts.json` (13 classes verified).
+`DOCUMENTATION_ONLY` throughout except PR-4/PR-5. **No PR touches `src/` decision paths,
+`configs/production/`, or `ACTIVE_VERSION`.** Each ends with
+`python scripts/governance/construction_protocol.py check`.
+
+### PR-1 — Generated dispatch index `[DOCUMENTATION_ONLY + SCRIPT_LIFECYCLE_CHANGE]`
+**The core ship.** Do not hand-write the table.
+
+- **New:** `scripts/governance/build_dispatch_index.py` — follows `generate_script_matrix.py` exactly.
+  Reads, at build time: `PLAN_REGISTRY` keys + each step's tool + `REGISTRY` write flags (import,
+  not parse); `_MODE_INTENTS` (to mark the 1 unclassifiable key); the §12 trigger list; `.grok/INFRA.md`
+  rows (parse the intent table); `src/control_plane/registry.py` `core_command_specs()`.
+- **Graceful CLAC degradation (correction 3):** if `.grok/CLAC.md` is absent, emit `code.*` rows as
+  `PENDING_CLAC` with the fallback owner named. When CLAC lands, a rerun fills them. **No hard dependency.**
+- **New (generated):** `docs/architecture/dispatch-index.generated.md` — the one-screen owner table +
+  collision matrix + the typed-retrieval ladder. Header carries `generated_at` + generator path +
+  a "never hand-edit" banner.
+- **New:** `tests/test_dispatch_index_sync.py` — regenerate in-memory, assert byte-equality with the
+  committed file, and assert every `PLAN_REGISTRY` key and every `REGISTRY` tool appears exactly once.
+  This is the floor that makes the 14/20-vs-22/35 drift class *impossible*, not merely corrected.
+- **SITS:** register the new script the same turn — `script_census.py --write-stubs` →
+  `seed_script_registry.py` → `generate_script_matrix.py` (unregistered paths fail GREEN_FLOOR).
+
+### PR-2 — Bind it from the auto-loaded surface `[DOCUMENTATION_ONLY]`
+≤12 lines added to `CLAUDE.md` as **§14 Session Dispatch** (correction 6): the five types in one line
+each, the retrieval ladder in one line, the one-owner meta-rule, and a pointer to the generated index.
+Plus one line in `docs/architecture/trigger-vocabulary.md` cold-start recipe. **No prose duplication** —
+the generated index is the body. Nothing else may grow `CLAUDE.md` in this train.
+
+### PR-3 — Operator-doc hygiene `[DOCUMENTATION_ONLY]` (G-5)
+Auto-fixable drift only, changes no registered conclusion: `agent-reference.md:4` → 22 intents /
+21 classifiable / 35 tools; delete the phantom `audit.inspect` row at `:101`; `plan_compiler.py:41`
+comment → 22; `agent-memory.md` modes → add `ops`, `truth`. **Not** in scope: hand-editing generated
+`cli-matrix.md`. **Surface, do not resolve:** the `cli-matrix` argv vs `ACTIVE_VERSION` `TruthConflict`
+(correction 7) — file it for the control-plane owner.
+
+### PR-4 — RAG corpus + staleness `[SCRIPT_LIFECYCLE_CHANGE]` — **user-gated** (G-1, G-4)
+Highest value, highest cost; ship only on explicit authorization.
+- **4a (cheap, do first):** make staleness real — read the last `{"event":"index"}` `commit_hash` from
+  `data/rag_metrics.jsonl` into `Monitor._indexed_commit` instead of `_get_current_commit()`
+  ([monitor.py:53](src/retrieval/monitor.py:53)); have `rag_index.py query` print the staleness banner.
+  ~10 lines, no reindex, turns an inert gate into a live one.
+- **4b:** extend `domain_patterns` to cover `CLAUDE.md`, `docs/current-findings.md`, `docs/topics/**`,
+  `docs/reference/**`, `docs/memory/**`, `docs/book/**`, `docs/governance/**/*.yaml` (recursive — the
+  current pattern is non-recursive and misses all of `semantic_os/`), `active_models.yaml`, `scripts/**/*.py`.
+- **4c (required with 4b, else 4b is wasted):** cap or exclude generated census JSON under
+  `docs/governance/*-2026-*.json`. Without this, one artifact keeps 27% of the index and the newly
+  added authorities are drowned. Rebuild cost is real: 633 MB store, 149,853 chunks.
+- Floor: extend `tests/test_retrieval_pipeline.py` with a corpus-coverage assertion (the authority
+  paths must be discoverable) — coverage only, never a relevance claim.
+
+### PR-5 — `semantic_ground` NL reachability `[DOCUMENTATION_ONLY + SCRIPT_LIFECYCLE_CHANGE]` (G-2 hygiene)
+Add the key to `_MODE_INTENTS` + `intent_patterns.json` so 22/22 are classifiable. Header stays
+"21 classifiable" until this lands. Not a new grounder. Sequence after PR-3 so the counts change once.
+
+### Owned elsewhere — do not clone
+CLAC PR-1 (`.grok/CLAC.md`, INFRA `code.*` rows, `build_clac.py`) · P-GOV-MC-01 (measurement-contract
+id resolution, G-8) · F-073 live rail · control-plane `CommandSpec` argv templates · CRT re-certification.
+
+---
+
+## Verification
+
+1. **PR-1:** `python scripts/governance/build_dispatch_index.py` → diff is empty on rerun;
+   `pytest tests/test_dispatch_index_sync.py -q` green; mutate one `PLAN_REGISTRY` key and confirm the
+   floor goes **red** (a floor that cannot fail enforces nothing — E-001F).
+   `python scripts/governance/query_scripts.py --validate` green (SITS).
+2. **PR-2:** confirm the added §14 is ≤12 lines and `CLAUDE.md` grows <1 KB; cold-read the section and
+   check every phrase class in Part 6.2 resolves to exactly one owner.
+3. **PR-3:** `pytest tests/test_doc_citations.py -q` green; grep confirms no `audit.inspect` outside
+   history; `python -c "...len(PLAN_REGISTRY), len(REGISTRY)"` matches the doc headers.
+4. **PR-4a:** `python scripts/rag_index.py metrics` reports non-zero `embedding_staleness_commits`
+   against an index built at an older commit (currently always 0 — that is the red-before-green proof).
+   **PR-4b/c:** re-run the sqlite probe used in G-1 and assert `CLAUDE.md`, `docs/current-findings.md`,
+   `docs/topics/`, `docs/governance/semantic_os/` are all > 0 and no single file exceeds ~5% of chunks.
+5. **PR-5:** `python -m src.agent.cli` with a natural-language grounding phrase classifies to
+   `semantic_ground` rather than `ask_user`.
+6. **Every PR:** `python scripts/governance/construction_protocol.py check` green;
+   `python scripts/maintenance/check_governance_invariants.py --all` green (GREEN_FLOOR, not whole suite —
+   ~66 known unrelated reds exist).
+7. **Whole-design acceptance:** run the Part 6.2 table against 10 real phrases from recent session-log
+   entries; every one lands on exactly one owner or `ask_user`. Zero type promotions in the answers.
+
+## Authority statement
+
+This design grants **no** production, promotion, activation, or live-order authority (§6.5). It
+produces routing and hygiene only. No F-id. No G001 claim. No ontology node. No `ACTIVE_VERSION` change.

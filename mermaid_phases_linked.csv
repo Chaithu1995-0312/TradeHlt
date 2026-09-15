@@ -1,0 +1,43 @@
+from_phase,to_phase,from_hub,to_hub,drawn,note
+1,2,runtime.live_rail_orchestrator,inout.live_rail.factory,yes,paper live_rail
+1,2,runtime.live_rail_orchestrator,live.order_manager,yes,paper orders
+1,2,runtime.live_engine_hook,live.mt5_bridge,yes,hook bridges
+1,2,runtime.live_engine_hook,regime.regime_classifier,yes,regime on hook
+1,2,runtime.live_engine_hook,uat.kill_switch,yes,kill switch on hook
+1,2,runtime.backtest_v2,journal.trade_provenance_v1_0,yes,journal on backtest
+2,1,inout.live_rail.types,data_ingestion.ohlcv_schema,yes,rail bars are OHLCV
+2,1,inout.live_rail.types,config_layer.crt_engine_v2,yes,rail uses Candle
+1,3,core.engine_runner,events.event_fabric,yes,envelope
+1,3,core.engine_runner,cognitive.cognitive_bus,yes,write-only sidecar
+1,3,config_layer.crt_engine_v2,structure.predicates,yes,SP HOW
+1,3,config_layer.crt_engine_v2,bitnet.bitnet_inference,yes,imported not live-gated
+1,3,runtime.backtest_v2,strategies.strategy_orchestrator,yes,S01-S10 fan
+1,3,runtime.backtest_v2,training.training_trigger,yes,retrain gate
+3,1,strategies.s01_crt_wrapper,engines.crt_engine,yes,only family that hits CRT
+2,3,monitoring.health_checker,strategies.strategy_orchestrator,yes,health overlay
+5,1,agent.modes.copilot_mode,core.engine_runner,yes,agent on spine
+5,1,agent.modes.pipeline_mode,runtime.backtest_v2,yes,agent runs backtest
+5,1,agent.modes.pipeline_mode,runtime.live_engine_hook,yes,agent runs live hook
+5,1,charts.chart_series,runtime.backtest_v2,yes,charts read ledger
+5,2,agent.modes.pipeline_mode,inout.live_rail.types,yes,agent sees rail types
+5,4,agent.modes.pipeline_mode,governance.promotion_manager,yes,ONLY src caller of promotion
+5,4,agent.modes.governance_mode,governance.orchestrator,yes,shadow/meta-gov
+5,4,agent.modes.truth_mode,governance.semantic_grounding,yes,§6.7
+5,4,retrieval.claude_integration,governance.semantic_grounding,yes,RAG grounds claims
+4,1,governance.promotion_manager,config_layer.config_validator,yes,APPROVE then promote
+4,1,governance.portfolio_validation,runtime.backtest_v2,yes,upward import
+4,1,expansion.expansion_engine,runtime.backtest_v2,yes,upward import
+4,3,governance.strategy_backtest,strategies.strategy_orchestrator,yes,
+4,5,governance.script_registry,control_plane.registry,yes,SITS → command catalog
+4,6,validation_access.ladder,research.probes.scriptmod,yes,packaging
+4,6,governance.semantic_query,research.probes.scriptmod,yes,grounding load_py
+6,1,research.runner,runtime.backtest_v2,yes,qualify uses backtest candles
+6,1,research.contracts,config_layer.crt_engine_v2,yes,Candle type
+6,1,llm_research.forward_tester,core.engine_runner,yes,offline LLM research
+6,1,interpreters.contract,config_layer.crt_engine_v2,yes,
+3,6,cognitive.cognitive_bus,replay.replay_memory_engine,yes,bus → replay memory
+6,3,replay.replay_drift_governor,events.event_fabric,yes,DRIFT_AUDIT
+6,3,multi_llm.turn_ledger,events.event_fabric,yes,turn events
+1,5,runtime.exit_model_band,analytics.metrics_oracle,yes,only P1→P5
+5,6,charts.chart_series,research.resample,no,thin; not drawn on overview
+4,2,search.regime_weight_searcher,journal.trade_logger,no,searcher has zero src callers
