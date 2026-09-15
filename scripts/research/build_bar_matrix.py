@@ -40,6 +40,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
 import sys
 import time
 from collections import Counter
@@ -75,6 +76,22 @@ from runtime.parent_crt_feed import ParentCRTFeed  # noqa: E402
 # intermediates; the CRT resolver's supply contract raises if they are absent, so they are
 # carried explicitly rather than left to chance.
 _NON_VECTOR_STATE_INPUTS = ("retest_flag", "displacement_flag", "rsi_state")
+
+
+def _code_identity() -> dict:
+    """HEAD sha + whether tracked files differ from it. `None` = git unavailable, not clean."""
+    def _run(*args: str):
+        try:
+            out = subprocess.run(
+                ["git", *args], cwd=_ROOT, capture_output=True, text=True, timeout=60
+            )
+        except Exception:  # noqa: BLE001 — provenance is best-effort, never blocks a build
+            return None
+        return out.stdout.strip() if out.returncode == 0 else None
+
+    sha = _run("rev-parse", "HEAD")
+    status = _run("status", "--porcelain", "--untracked-files=no")
+    return {"git_sha": sha, "tree_dirty": None if status is None else bool(status)}
 
 
 def _sha256(path: Path) -> str:
@@ -182,6 +199,9 @@ def build_bar_matrix(
         raise RuntimeError("build_bar_matrix: `_pos` is not strictly increasing and unique")
 
     rows = enriched.to_dict("records")
+    # The pipeline block (every FeaturePipeline column + `_pos`), before any state/CRT column is
+    # appended below. Written on its own as `features.parquet` / `features.xlsx`.
+    feature_cols = list(enriched.columns)
 
     # ── B. absolute ATR (FM-074). Canonical `atr` is close-relative (FM-041). ─────
     enriched["atr_abs"] = enriched["atr"] * enriched["close"]
@@ -302,6 +322,9 @@ def build_bar_matrix(
         "schema_hash": SCHEMA_HASH,
         "feature_order_hash": FEATURE_ORDER_HASH,
         "canonical_dim": len(CANONICAL_FEATURES),
+        "feature_column_count": len(feature_cols),
+        "feature_columns": feature_cols,
+        **_code_identity(),
         "magnitude_window": magnitude_window,
         "htf_candles_per_range": htf_candles,
         "breakout_disp_threshold": breakout_thr,
@@ -341,6 +364,10 @@ def main(argv=None) -> int:
     ap.add_argument("--csv", default=None, help="defaults to data/mt5/<INST>_<TF>.csv")
     ap.add_argument("--out-dir", default=None)
     ap.add_argument("--limit", type=int, default=None, help="first N raw bars (smoke runs)")
+    ap.add_argument(
+        "--xlsx", action="store_true",
+        help="also write features.xlsx (pipeline block only; needs openpyxl, takes minutes)",
+    )
     args = ap.parse_args(argv)
 
     csv_path = Path(args.csv) if args.csv else (
@@ -371,6 +398,22 @@ def main(argv=None) -> int:
     except Exception as exc:  # noqa: BLE001 — CSV is canonical
         manifest["parquet_written"] = False
         manifest["parquet_skipped_reason"] = str(exc).splitlines()[0]
+    features = frame[manifest["feature_columns"]]
+    try:
+        features.to_parquet(out_dir / "features.parquet", index=False)
+        manifest["features_parquet_written"] = True
+    except Exception as exc:  # noqa: BLE001 — CSV is canonical
+        manifest["features_parquet_written"] = False
+        manifest["features_parquet_skipped_reason"] = str(exc).splitlines()[0]
+    if args.xlsx:
+        try:
+            if len(features) > 1_048_575:  # Excel sheet limit, header row included
+                raise ValueError(f"{len(features)} rows exceed the Excel sheet limit")
+            features.to_excel(out_dir / "features.xlsx", index=False, sheet_name="features")
+            manifest["features_xlsx_written"] = True
+        except Exception as exc:  # noqa: BLE001 — optional convenience copy
+            manifest["features_xlsx_written"] = False
+            manifest["features_xlsx_skipped_reason"] = str(exc).splitlines()[0]
     (out_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2, default=str), encoding="utf-8"
     )
@@ -379,7 +422,9 @@ def main(argv=None) -> int:
     print(f"  rows {manifest['rows_emitted']} of {manifest['rows_raw']} raw "
           f"(warmup dropped {manifest['warmup_dropped']}) in {manifest['build_seconds']}s")
     print(f"  schema v{manifest['schema_version']} dim {manifest['canonical_dim']} "
-          f"| columns {len(frame.columns)}")
+          f"| columns {len(frame.columns)} | feature block {manifest['feature_column_count']}")
+    print(f"  features.parquet written={manifest['features_parquet_written']} "
+          f"| features.xlsx written={manifest.get('features_xlsx_written', 'not requested')}")
     print(f"  CRT states   : {manifest['crt_state_distribution']}")
     print(f"  trade intent : {manifest['trade_intent_distribution']}")
     print(f"  regime       : {manifest['regime_distribution']}")

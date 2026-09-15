@@ -267,6 +267,35 @@ def test_bar_matrix_refused_when_parquet_not_written(tmp_path: Path, monkeypatch
     assert "REFUSED bar_matrix" in capsys.readouterr().out
 
 
+def test_bar_matrix_features_refused_when_parquet_not_written(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """features.parquet has its OWN written flag: a completed bar_matrix write must not vouch
+    for a skipped features write beside it."""
+    import query_trace as qt
+
+    d = tmp_path / "results" / "research" / "bar_matrix" / "XAUUSD_M15"
+    d.mkdir(parents=True)
+    (d / "features.parquet").write_bytes(b"")
+    (d / "manifest.json").write_text(
+        json.dumps({
+            "parquet_written": True,
+            "features_parquet_written": False,
+            "features_parquet_skipped_reason": "disk full",
+        }),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(qt, "ROOT", tmp_path)
+
+    ok, why = qt.admissible("bar_matrix_features", d / "features.parquet")
+    assert ok is False
+    assert "disk full" in why
+
+    rc = qt.main(["--family", "bar_matrix_features"])
+    assert rc == 1
+    assert "REFUSED bar_matrix_features" in capsys.readouterr().out
+
+
 # --------------------------------------------------------------------------- #
 # lineage — run identity must be CHECKED from the data, not trusted from a path
 # --------------------------------------------------------------------------- #

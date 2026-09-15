@@ -78,11 +78,22 @@ FAMILY_GLOBS: dict[str, tuple[str, ...]] = {
     "bar_matrix": (
         "results/research/bar_matrix/**/bar_matrix.parquet",
     ),
+    # The pipeline block of the same build (every FeaturePipeline column + `_pos`), written
+    # beside bar_matrix.parquet from the same frame in the same pass; joins to it on `_pos`.
+    "bar_matrix_features": (
+        "results/research/bar_matrix/**/features.parquet",
+    ),
 }
 
 # Families that are direct Parquet artifacts rather than JSONL projections. They are exempt
 # from the projection-manifest verification check and carry their own admissibility rule.
-_NON_PROJECTION_FAMILIES = ("bar_matrix",)
+_NON_PROJECTION_FAMILIES = ("bar_matrix", "bar_matrix_features")
+
+# Which `manifest.json` flag records that each non-projection writer actually ran.
+_WRITTEN_FLAG = {
+    "bar_matrix.parquet": ("parquet_written", "parquet_skipped_reason"),
+    "features.parquet": ("features_parquet_written", "features_parquet_skipped_reason"),
+}
 
 # Exclude non-events-population files from the `events` view (GT-3).
 # These share the `*_events.parquet` glob but are distinct populations
@@ -105,9 +116,12 @@ def _bar_matrix_parquet_ok(projection: Path) -> "tuple[bool, str]":
         data = json.loads(manifest.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         return False, f"unreadable manifest.json: {exc}"
-    if data.get("parquet_written") is not True:
-        reason = data.get("parquet_skipped_reason", "parquet_written is not true")
-        return False, f"CSV is canonical here; parquet not written ({reason})"
+    flag, reason_key = _WRITTEN_FLAG.get(
+        projection.name, ("parquet_written", "parquet_skipped_reason")
+    )
+    if data.get(flag) is not True:
+        reason = data.get(reason_key, f"{flag} is not true")
+        return False, f"CSV is canonical here; {projection.name} not written ({reason})"
     return True, ""
 
 
@@ -289,7 +303,7 @@ def assert_view_lineage(con, selected: dict[str, Path]) -> dict:
     """
     report: dict[str, dict] = {}
     for fam, path in selected.items():
-        if fam == "bar_matrix":
+        if fam in _NON_PROJECTION_FAMILIES:
             report[fam] = _bar_matrix_lineage(path)
             continue
         cols = {r[0] for r in con.execute(f"describe {fam}").fetchall()}
