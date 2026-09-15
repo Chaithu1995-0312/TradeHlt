@@ -8,6 +8,13 @@
 > several sections below. These notes describe whether each config section has a
 > confirmed runtime consumer in the current codebase, without making decisions
 > about what to change.
+>
+> > **STALENESS FLAG (2026-09-14).** This reference's header cites
+> > `configs/production/v1_multi_2026_03.json` as "the single source of truth" — two
+> > production versions behind `ACTIVE_VERSION` (= `configs/protduction/ACTIVE_VERSION` →
+> > `v2_htfcrt_2026_08`). Fully regenerating this reference is out of scope for the TSA
+> > refresh that flagged it; treat the version/example values here as stale pointers pending
+> > that dedicated regeneration (tracked as follow-up).
 
 ---
 

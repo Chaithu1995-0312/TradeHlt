@@ -1,0 +1,60 @@
+{
+  "change_id": "CH-f069-epoch-scope",
+  "date_utc": "2026-09-10",
+  "objective": "Three linked corrections surfaced while joining the canonical feature vector to CRT decisions: (1) epoch-scope F-069's 88.16% engine<->resolver agreement baseline, which does not reproduce on a full-corpus re-measurement; (2) restore the agree_scope guard column that build_decision_atlas.py silently dropped at the join; (3) make the 2026-09-10 surfaces_ruling (forbidden_inferences outranks trust_table) mechanical in run_linkage_registry.json and its validator, rather than prose-only. Do not mint contract_id, mx_id, a new finding_id, MC-*, SEM-*, or a provenance record_id. Do not ablate F-074/F-075/F-068 as drivers -- they stay hypotheses.",
+  "change_classes": [
+    "TRACE_OBSERVATION_JOIN",
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "TRACE_OBSERVATION_JOIN covers the agree_scope pass-through into build_decision_atlas.py's envelope_bar/transition_decision tables (same class as the CH-runid-schema-bridge/CH-analysis-trace-linkage precedents touching this same registry) and the registry surfaces_ruling + validator token split (a set-membership refinement over an existing observation surface, no new record type). DOCUMENTATION_ONLY covers the F-069 epoch-scope addendum in docs/current-findings.md, the mirrored CLAUDE.md Repository Truths Index row, and the dated pointer note in reports/crt_semantic_parity_report.md -- text only, no src/production-config diff under that class's own files.",
+  "affected_files": [
+    "scripts/analysis/build_decision_atlas.py",
+    "docs/governance/run_linkage_registry.json",
+    "tests/test_run_linkage_traces.py",
+    "tests/test_run_linkage.py",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "reports/crt_semantic_parity_report.md",
+    "docs/governance/build_manifests/CH-f069-epoch-scope.impact.json",
+    "docs/governance/build_manifests/CH-f069-epoch-scope.completion.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_crt_construction_trace.py",
+    "tests/test_crt_construction_trace_envelope.py",
+    "tests/test_resolver_metadata.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "required_checks_note": "The first four are mandated by TRACE_OBSERVATION_JOIN (precedent-inherited); the last three by DOCUMENTATION_ONLY. tests/test_run_linkage.py and tests/test_run_linkage_traces.py are not class-mandated but were run as the direct consumer/validator floors for the registry edit. Two pre-existing failures unrelated to this change (test_current_findings::test_nonterminal_findings_are_fresh, test_doc_citations::test_every_code_citation_resolves on docs/architecture/entry-exit-map.md) are in the captured baseline and are not this change's regression.",
+  "unknowns": [],
+  "problem_addressed": {
+    "summary": "Querying bar_matrix.parquet joined to the decision atlas for a feature-map-at-CRT-state task surfaced that F-069's headline agreement figure does not reproduce over the exact corpus it claims to cover, that the guard column explaining why is dropped at the one place it would matter, and that a user ruling recorded in prose never reached the machine-readable registry it was supposed to govern.",
+    "f069_epoch_defect": "results/decision_atlas_full/envelope_bar.parquet (run_20260906_013609, same corpus, same injection=none scope as F-069's own baseline) measures 68.69% (32,418/47,197) engine<->resolver agreement, not F-069's recorded 88.16% (41,607/47,197). Both constructions' state distributions moved, not just the rate -- verified via the join (bar_matrix._pos == envelope_bar.bar_index, identical index sets, all 47,197 timestamps match, resolver_state == crt_state_resolved at 1.000).",
+    "agree_scope_defect": "src/runtime/crt_construction_trace.py:51 emits agree_scope specifically so a reader cannot mistake a feature-conditioned diagnostic for a verdict on engine truth. scripts/analysis/build_decision_atlas.py carried agree=r.get('agree') through to its output tables but never agree_scope -- same silent-gap class as F-079/F-083/F-085.",
+    "surfaces_ruling_defect": "run_20260909_202201.schema_bridge.surfaces marked all 8 CREATE context surfaces VALID, including the three (create_session_hour_tables, create_htf_parent_context_tables, create_H20_context_economics) the 2026-09-10 user ruling forbids via the context pack's forbidden_inferences. The ruling was recorded in AN-SHADOWMEM-XAUUSD-M15-V1.withdrawn_claims for claims already made, but nothing stopped a NEW claim from citing one of the three -- tests/test_run_linkage_traces.py asserted only that a cited value was a status token (VALID or INVALIDATED), never that it was VALID."
+  },
+  "enforcement": {
+    "agree_scope": "Pass-through only, no recompute. Verified: envelope_bar.parquet and transition_decision.parquet are byte-identical to the pre-edit tables in every other column; row counts unchanged (47,197 and 5,269); agree True/False counts unchanged (32,418/14,779). New column agree_scope is constant m15_ontology_injection_none across all 47,197 rows -- confirms the re-measurement used the same injection scope as F-069's own baseline, so the 68.69%-vs-88.16% gap is a construction-epoch difference, not an injection-mode artifact.",
+    "surfaces_ruling": "tests/test_run_linkage_traces.py split SURFACE_STATUS_TOKENS into VALID_SURFACE_TOKENS (admits) and INVALIDATED_SURFACE_TOKENS (named refusal, not a pass). tests/test_run_linkage.py's pre-existing pin, which asserted the three surfaces VALID, was itself encoding the defect (it locked in the pre-ruling state rather than catching it) -- corrected to assert INVALIDATED with a comment explaining why the pin changed.",
+    "negative_control": "A live claim (AN-SHADOWMEM-XAUUSD-M15-V1.C1) was retargeted to run_20260909_202201#create_H20_context_economics; tests/test_run_linkage_traces.py::test_every_claim_names_a_registered_surface failed with a named REFUSED message citing the surface and pointing at surfaces_ruling. Reverted; floor green again (20/20 passed).",
+    "additivity": "The registry still reconstructs to sha256 5ac5d098ebfe2fc5 -- the CH-analysis-trace-linkage baseline -- by removing _analyses, _traces, the surfaces_ruling block, reverting the 3 surface values to VALID, and trimming the _doc sentence. Verified after this turn's edits."
+  },
+  "no_code_change": "src/runtime/crt_construction_trace.py and src/utils/run_linkage.py are untouched -- agree_scope already existed on the source stream, this only stops dropping it at one downstream join. The registry consumer (run_linkage.py:158) does a keyed run_id lookup and never reads schema_bridge.surfaces or surfaces_ruling directly.",
+  "residual_not_fixed": [
+    "F-074/F-075/F-068 are recorded as candidate drivers of the epoch drift, explicitly NOT isolated or ablated in this change.",
+    "docs/governance/run_linkage_registry.json remains UNTRACKED in git (user: not yet decided) -- Step 2b's enforcement reaches no other clone either.",
+    "The AN/TR schema's decorative fields (surface_refs, clock_basis/ordering_key asserted-constant, *_note prose fields) were identified this session as candidates for trimming but are explicitly deferred, not touched here.",
+    "The residual 9-29 bar gap between F-069's own engine figures and F-086's independently-cited engine reference is noted in the current-findings.md addendum but not investigated."
+  ],
+  "rollback_boundary": "Two independent commits would suffice: (a) revert the agree_scope pass-through in build_decision_atlas.py and rebuild results/decision_atlas_full/ from the pre-edit hashes recorded in this session; (b) revert the registry surfaces_ruling block + the 3 surface values + both test files' assertions together. The doc addenda (current-findings.md/CLAUDE.md/report) revert independently of both -- they are prose only.",
+  "authority_granted": "User: 'trace only numbers mentioned and discuss on it'; 'trace runid and check whether all are all aligned to runid or not'; the AN/TR schema design conversation and its Documentation Drift Protocol follow-through (epoch-scope F-069, preserve, annotate, no causal attribution) approved via this turn's plan.",
+  "authority_NOT_granted": "No MC-* seal, no finding_id, no F-*, no mx_id, no SEM-* node, no provenance record_id, no G001, no promotion, no economic_claims_allowed flip, no ablation of F-074/F-075/F-068, no registry tracking, no AN/TR schema trim.",
+  "production_behavior_changed": "NO"
+}

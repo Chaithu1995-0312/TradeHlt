@@ -1,6 +1,6 @@
 # Architecture Memory (navigation)
 
-> **Last generation:** 2026-08-07  
+> **Last generation:** 2026-09-14  
 > **Code-first:** source under `src/` is authoritative on conflict.
 
 ## Purpose
@@ -29,6 +29,10 @@ Index the whole-system layer map so a session can locate the correct subsystem, 
 | I/O catalog | `docs/architecture/entry-exit-map.md` |
 | Service seams | `docs/architecture/service-boundary-map.md` |
 | Decision spine exemplar | `docs/architecture/services/decision-spine.md` |
+| Research probes helpers | `src/research/probes/` (`scriptmod.load_py` choke-point) |
+| UI kits (product) | `ui_kits/control_plane/`, `ui_kits/crt_dashboard/` via `:8787` |
+| run_id closure | `src/control_plane/jobs.py` → `results/{instrument}/{instrument}_{short8}.json` |
+| Knowledge API | `/api/knowledge/search`, `/api/knowledge/status` (`retrieval_api.py`) |
 
 ## Exit points
 
@@ -63,6 +67,9 @@ Index the whole-system layer map so a session can locate the correct subsystem, 
 | [`../architecture/entry-exit-map.md`](../architecture/entry-exit-map.md) | External I/O |
 | [`../architecture/service-boundary-map.md`](../architecture/service-boundary-map.md) | Service seams |
 | [`../reference/architecture.md`](../reference/architecture.md) | Stack / tree / patterns |
+| [`../UI_LLM_NAVIGATION.md`](../UI_LLM_NAVIGATION.md) | UI ↔ code nav graph |
+| [`../implementation_plan/ui-design-plan-closure-runid-2026-09-14.md`](../implementation_plan/ui-design-plan-closure-runid-2026-09-14.md) | Closure + run_id UI plan |
+| [`../research/probes_extraction_audit_2026-09-14.md`](../research/probes_extraction_audit_2026-09-14.md) | Probes extraction audit |
 
 ## Known coverage
 
@@ -73,7 +80,10 @@ Index the whole-system layer map so a session can locate the correct subsystem, 
 | Deep file contracts | In `docs/architecture/architecture-memory.md` (~40% of `src/` by name; spine packages high) |
 | Full inventory of all 1,220 governed `.py` | **Not** this doc — use functionality Excels |
 | `src/research/` (~143 files) | Package-level only in deep map |
+| Probes lane `src/research/probes/` | Indexed 2026-09-14 in `docs/reference/architecture.md` §5b |
+| UI kits + run_id closure | Indexed 2026-09-14 in `docs/reference/architecture.md` §5c |
+| Truth-tier retrieval | Indexed 2026-09-14 in `docs/reference/architecture.md` §5d |
 
 ## Last generation timestamp
 
-2026-08-07
+2026-09-14

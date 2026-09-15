@@ -2,6 +2,8 @@
 
 > Technical architecture of the **Tradelatest** quantitative trading bot.
 > Source of truth: `D:\Tradelatest`. Derived from live code inspection, not assumptions.
+>
+> **Synced 2026-09-14:** added research probes lane, `ui_kits` + `run_id` closure, and truth-tier knowledge/retrieval pointers. Companion: `docs/implementation_plan/architecture-doc-sync-audit-2026-09-14.md`.
 
 ---
 
@@ -37,7 +39,7 @@ D:\Tradelatest/
 │   ├── bitnet/                   # BitNet GGUF inference + zone validation
 │   ├── config_layer/             # Config loaders, builders, validators, decision rules (CRT, llm_inference_client, execution_planner)
 │   │   └── rr/                   # Risk-reward fusion layer (dataset builder, RR model fusion)
-│   ├── control_plane/            # Stdlib HTTP server + HTML UI for command execution
+│   ├── control_plane/            # Stdlib HTTP server; serves ui_kits/ + /runs/{run_id} APIs
 │   ├── core/                     # Decision kernel: EngineRunner, FusionEngine, DecisionEngine, UltronRiskGate, Collector
 │   ├── engines/                  # 4 scoring engines + trap-validation gating engine
 │   ├── expansion/                # Deterministic parameter-expansion explorer (bounded mutation)
@@ -45,6 +47,10 @@ D:\Tradelatest/
 │   ├── governance/               # PromotionManager, shadow testing, portfolio validation, meta-governor
 │   ├── inout/                    # Live trading executor (state machine, scanner, executor stub)
 │   ├── llm_research/             # LLM-offline research pipeline (pattern extraction → policy builder → forward test)
+│   ├── research/                 # Offline research programs + shared probe helpers
+│   │   └── probes/               # Thin-CLI shared helpers (corpus, horizon, scoreboard, scriptmod.load_py)
+│   ├── retrieval/                # Truth-tier lexical RAG (BM25 + DuckDB/Parquet index)
+│   ├── ui/                       # Empty Python package (dead) — product UI is ui_kits/
 │   ├── runtime/                  # Execution harnesses: backtest_v2, live_engine_hook, baseline_capture
 │   ├── training/                 # Model training orchestrators
 │   └── utils/                    # Logging, console-safe printing, trade logging, schema migration
@@ -79,6 +85,9 @@ D:\Tradelatest/
 ├── data/                         # Market data CSVs (OHLCV, M15 bars)
 ├── models/                       # BitNet GGUF, zone registry, RR model artifacts
 ├── results/                      # Runtime artifacts: baseline manifests, tuner checkpoints, validation reports
+├── ui_kits/                     # Product React UI (Babel) — control_plane + crt_dashboard
+│   ├── control_plane/           # Runs / Launcher / Inspector (run_id source of truth)
+│   └── crt_dashboard/           # Ops / Research / Models / Knowledge tabs
 ├── logs/                         # JSONL audit logs (agent_audit, intent_log, expansion_trace, expansion_rejected)
 ├── docs/                         # Handover docs, CLI matrix, architecture diagram HTML
 │
@@ -222,6 +231,49 @@ No queues, no message brokers, no cloud storage, no external databases.
 
 ---
 
+
+## 5b. Research probes (shared helpers)
+
+Trading/CRT research scripts under `scripts/research/` and `scripts/analysis/` stay **thin CLIs**.
+Shared helpers live in `src/research/probes/`:
+
+| Module | Role |
+|--------|------|
+| `corpus.py` / `horizon.py` / `scoreboard.py` / `costs_path.py` | Corpus load, horizon close, scoreboard, costs |
+| `excursion.py` / `phase1_replay.py` / `persistence.py` | Replay / excursion / episode-chain helpers |
+| `governance.py` | `assert_no_claim_keys` / forbidden claim keys |
+| `scriptmod.py` | **`load_py(path, name)`** — sole `importlib.util.spec_from_file_location` choke-point under `src/` + `scripts/` (registers in `sys.modules` before `exec_module`) |
+
+Scripts import via `sys.path` → `ROOT/src` then `from research.probes...`. Extraction is archive-first (see `docs/research/probes_extraction_audit_2026-09-14.md`).
+
+## 5c. UI kits + run_id closure
+
+| Surface | Path | Notes |
+|---------|------|-------|
+| Control Plane kit | `ui_kits/control_plane/` | Views: runs, dashboard, workflow, explore, agent. **run_id source of truth** |
+| CRT Dashboard kit | `ui_kits/crt_dashboard/` | TopBar pages including Knowledge (`page9_knowledge.jsx`) |
+| Server | `src/control_plane/server.py` | `:8787`; `/` → control_plane kit; `/ui_kits/*` static |
+| `src/ui/` | empty package | Dead — do not treat as product UI |
+
+**run_id contract** (`src/control_plane/jobs.py` / `cp_types.RunRecord`):
+
+- Full id: `uuid.uuid4().hex`
+- Persist: `results/{instrument}/{instrument}_{run_id[:8]}.json` (legacy: `logs/control_plane/runs/{run_id}.json`)
+- HTTP: `/runs`, `/runs/{run_id}`, `/runs/{run_id}/logs|artifacts|monitors`, report endpoints
+- Nav map: `docs/UI_LLM_NAVIGATION.md`, routes: `docs/analysis/UI_ROUTE_MAP.md`
+- Design plan: `docs/implementation_plan/ui-design-plan-closure-runid-2026-09-14.md`
+
+## 5d. Knowledge / retrieval (truth-tier)
+
+Lexical (not dense-vector) retrieval under `src/retrieval/` (`lexical.py`, `truth_tier.py`, `index_store.py`, …).
+
+Control-plane knowledge API (`src/control_plane/retrieval_api.KnowledgeAPI`):
+
+- `GET /api/knowledge/search`
+- `GET /api/knowledge/status`
+
+Dashboard Knowledge tab consumes this lane. Embeddings/Chroma paths exist in-tree but are not the live truth-tier path.
+
 ## 6. Environment Config Overview
 
 ### 6.1 `.env` keys
@@ -271,5 +323,6 @@ Missing or malformed config **fails fast at import time** — no lazy silent def
 | `python src/runtime/backtest_v2.py`                                                     | Candle-by-candle backtest       |
 | `python src/runtime/baseline_capture.py --label phase0`                                 | Baseline manifest snapshot      |
 | `python src/inout/runner.py`                                                            | Live trading executor           |
-| `python scripts/control_plane/run_server.py`                                            | HTTP UI at `localhost:8787`     |
+| `python scripts/control_plane/run_server.py`                                            | HTTP UI at `localhost:8787` (`/ui_kits/control_plane/`, `/ui_kits/crt_dashboard/`) |
+| Open `/ui_kits/control_plane/?run={run_id}`                                             | Deep-link Closure Inspector to a run |
 | `python -m src.agent.cli`                                                               | Agent REPL                      |

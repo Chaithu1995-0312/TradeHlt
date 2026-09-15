@@ -37,6 +37,8 @@ Semantic ID column would read as "coverage measured at zero" rather than "covera
 
 | File | Date | Topic (as written) |
 |---|---|---|
+| `sweep-conditional-three-arm-2026-09-15.md` | 2026-09-15 | M15 engine-SWEEP occupancy, three geometries + random ATR control. Window MFE ≠ exit MFE. Median −1R; SWEEP atr ≈ random. Extends F-086. Registered F-106. No G001. |
+| `feature-state-census-2026-09-16.md` | 2026-09-16 | FeatureState occupancy vs engine SWEEP on the F-106 corpus. 927/1792 overlap. CRT filter session ≠ FM-052. Observation, not a finding. |
 | `atlas-findings-audit-2026-08-28.md` | 2026-08-28 | **Path A.** Four MATCH atlases vs findings. F-088 does not cite the leakage atlas; the spec lock had treated 2R-missed-TP count as SL-first proof — corrected. F-091 is stricter than the full-sample atlas. No G001. |
 | `crt-spine-journal-2026-08-27.md` | 2026-08-27 | **Events/telemetry grain only** (`run_20260822` / `v2_multi_2026_04`). Funnel RANGE→SWEEP 1792 → DISP 399 (22%) → EXP 142 → RETEST 24 → EXEC 4 → TRADE_OPENED **3**. Deaths: RESET_HTF 1442/1798. Late RETEST_REPLAY 19/23 OFF_SESSION. Not the NS 16-trade walk. Not the 94k ledger. **Path B addendum 2026-08-28:** t=0 geometry on the 3 opens (SL = disp_low−0.2 ATR; TP1 R 1.0/1.5/1.5). Leakage join refused. n=3 INSUFFICIENT. No G001. |
 | `parquet-formula-parity-2026-08-27.md` | 2026-08-27 | **Stored parquet features vs ontology formulas.** Three-layer check on XAUUSD `clean_labels` n=47,166: (A) formula(stored inputs)==stored output — geometry/ATR identities hold, FM-022/023 are the F-061 formula not a dump error; (B) OHLC exact vs cited CSV; (C) all 38 overlapping cols bit-identical to HEAD `FeaturePipeline`. Schema 38≠48. Protocol `PIT_UNCLEAN` conservative on this file. No G001. |

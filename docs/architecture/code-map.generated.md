@@ -2,7 +2,7 @@
 
 > **GENERATED — do not edit by hand.** Regenerate with `python scripts/analysis/gen_code_map.py`. Narrative + how-to-navigate lives in [`code-map.md`](code-map.md); module roles in [`codebase-state-map.md`](codebase-state-map.md).
 
-`src/` module-level import graph — 504 modules across 38 packages. Each per-package slice shows that package's modules and everything they import (a loadable unit).
+`src/` module-level import graph — 625 modules across 40 packages. Each per-package slice shows that package's modules and everything they import (a loadable unit).
 
 ## L0 — package dependency overview
 
@@ -11,6 +11,7 @@ flowchart LR
     agent["agent"]
     analytics["analytics"]
     bitnet["bitnet"]
+    charts["charts"]
     cognitive["cognitive"]
     config_layer["config_layer"]
     control_plane["control_plane"]
@@ -23,6 +24,7 @@ flowchart LR
     features["features"]
     feedback["feedback"]
     governance["governance"]
+    identity["identity"]
     inout["inout"]
     interpreters["interpreters"]
     journal["journal"]
@@ -49,7 +51,9 @@ flowchart LR
     agent --> config_layer
     agent --> control_plane
     agent --> core
+    agent --> engines
     agent --> governance
+    agent --> inout
     agent --> runtime
     analytics --> config_layer
     analytics --> data_ingestion
@@ -59,6 +63,12 @@ flowchart LR
     bitnet --> engines
     bitnet --> features
     bitnet --> utils
+    charts --> config_layer
+    charts --> control_plane
+    charts --> data_ingestion
+    charts --> features
+    charts --> research
+    charts --> runtime
     cognitive --> core
     cognitive --> engines
     cognitive --> events
@@ -74,7 +84,10 @@ flowchart LR
     config_layer --> structure
     config_layer --> utils
     control_plane --> agent
+    control_plane --> charts
     control_plane --> config_layer
+    control_plane --> retrieval
+    control_plane --> utils
     core --> cognitive
     core --> config_layer
     core --> engines
@@ -104,15 +117,23 @@ flowchart LR
     governance --> data_ingestion
     governance --> expansion
     governance --> features
+    governance --> identity
+    governance --> research
     governance --> runtime
     governance --> strategies
     governance --> utils
+    identity --> config_layer
+    identity --> features
+    identity --> runtime
     inout --> config_layer
+    inout --> data_ingestion
+    inout --> utils
     interpreters --> config_layer
     interpreters --> research
     journal --> core
     journal --> utils
     live --> config_layer
+    live --> core
     live --> utils
     llm_research --> config_layer
     llm_research --> core
@@ -141,6 +162,9 @@ flowchart LR
     research --> runtime
     research --> structure
     research --> training
+    research --> utils
+    retrieval --> governance
+    retrieval --> utils
     runtime --> analytics
     runtime --> bitnet
     runtime --> config_layer
@@ -148,6 +172,7 @@ flowchart LR
     runtime --> data_ingestion
     runtime --> engines
     runtime --> features
+    runtime --> inout
     runtime --> journal
     runtime --> live
     runtime --> regime
@@ -210,6 +235,7 @@ flowchart LR
     agent_tool_planner["agent.tool_planner"]
     agent_tool_registry["agent.tool_registry"]
     config_layer_config_validator["config_layer.config_validator"]
+    config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
     config_layer_execution_planner["config_layer.execution_planner"]
     config_layer_llm_inference_client["config_layer.llm_inference_client"]
     config_layer_production_config["config_layer.production_config"]
@@ -217,14 +243,17 @@ flowchart LR
     core_engine_runner["core.engine_runner"]
     core_fusion_engine["core.fusion_engine"]
     core_ultron_risk_gate["core.ultron_risk_gate"]
+    engines_live_engine["engines.live_engine"]
     governance_bitnet_governance_executor["governance.bitnet_governance_executor"]
     governance_orchestrator["governance.orchestrator"]
     governance_promotion_manager["governance.promotion_manager"]
     governance_reflection_buffer_advanced["governance.reflection_buffer_advanced"]
     governance_semantic_grounding["governance.semantic_grounding"]
     governance_shadow_promotion_gate["governance.shadow_promotion_gate"]
+    inout_live_rail_types["inout.live_rail.types"]
     runtime_backtest_v2["runtime.backtest_v2"]
     runtime_live_engine_hook["runtime.live_engine_hook"]
+    runtime_live_rail_feeder["runtime.live_rail_feeder"]
     agent --> agent_modes
     agent_agent_core --> agent_audit
     agent_agent_core --> agent_executor
@@ -283,10 +312,14 @@ flowchart LR
     agent_modes_ops_mode --> agent_tool_registry
     agent_modes_pipeline_mode --> agent_tool_registry
     agent_modes_pipeline_mode --> config_layer_config_validator
+    agent_modes_pipeline_mode --> config_layer_crt_engine_v2
     agent_modes_pipeline_mode --> config_layer_production_config
+    agent_modes_pipeline_mode --> engines_live_engine
     agent_modes_pipeline_mode --> governance_promotion_manager
+    agent_modes_pipeline_mode --> inout_live_rail_types
     agent_modes_pipeline_mode --> runtime_backtest_v2
     agent_modes_pipeline_mode --> runtime_live_engine_hook
+    agent_modes_pipeline_mode --> runtime_live_rail_feeder
     agent_modes_truth_mode --> agent_tool_registry
     agent_modes_truth_mode --> governance_semantic_grounding
     agent_recipes --> agent_recipes_campaign_pipeline
@@ -407,6 +440,48 @@ flowchart LR
     bitnet_zone_cosine_searcher --> features_feature_schema
 ```
 
+## charts
+
+```mermaid
+flowchart LR
+    charts["charts"]
+    charts_chart_api["charts.chart_api"]
+    charts_chart_series["charts.chart_series"]
+    charts_crt_overlay["charts.crt_overlay"]
+    charts_render["charts.render"]
+    charts_resolver_overlay["charts.resolver_overlay"]
+    config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
+    config_layer_production_config["config_layer.production_config"]
+    control_plane_dashboard_api["control_plane.dashboard_api"]
+    data_ingestion_corpus_gate["data_ingestion.corpus_gate"]
+    data_ingestion_dataset_integrity["data_ingestion.dataset_integrity"]
+    features_calendar_periods["features.calendar_periods"]
+    features_crt_state_resolver["features.crt_state_resolver"]
+    features_feature_pipeline["features.feature_pipeline"]
+    features_resolver_supply["features.resolver_supply"]
+    research_resample["research.resample"]
+    runtime_backtest_v2["runtime.backtest_v2"]
+    charts_chart_api --> charts_chart_series
+    charts_chart_api --> charts_crt_overlay
+    charts_chart_api --> charts_resolver_overlay
+    charts_chart_api --> control_plane_dashboard_api
+    charts_chart_api --> data_ingestion_dataset_integrity
+    charts_chart_series --> config_layer_crt_engine_v2
+    charts_chart_series --> config_layer_production_config
+    charts_chart_series --> features_calendar_periods
+    charts_chart_series --> research_resample
+    charts_chart_series --> runtime_backtest_v2
+    charts_crt_overlay --> charts_chart_series
+    charts_crt_overlay --> config_layer_production_config
+    charts_crt_overlay --> runtime_backtest_v2
+    charts_render --> charts_chart_series
+    charts_resolver_overlay --> config_layer_production_config
+    charts_resolver_overlay --> data_ingestion_corpus_gate
+    charts_resolver_overlay --> features_crt_state_resolver
+    charts_resolver_overlay --> features_feature_pipeline
+    charts_resolver_overlay --> features_resolver_supply
+```
+
 ## cognitive
 
 ```mermaid
@@ -433,11 +508,14 @@ flowchart LR
 ```mermaid
 flowchart LR
     config_layer["config_layer"]
+    config_layer__crt_state_generated["config_layer._crt_state_generated"]
     config_layer_config_builder["config_layer.config_builder"]
     config_layer_config_validator["config_layer.config_validator"]
+    config_layer_crt_config_completeness["config_layer.crt_config_completeness"]
     config_layer_crt_config_provenance["config_layer.crt_config_provenance"]
     config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
     config_layer_crt_gaussian_scorer["config_layer.crt_gaussian_scorer"]
+    config_layer_crt_identity_schema["config_layer.crt_identity_schema"]
     config_layer_crt_sweep_taxonomy["config_layer.crt_sweep_taxonomy"]
     config_layer_execution_planner["config_layer.execution_planner"]
     config_layer_goal_schema["config_layer.goal_schema"]
@@ -490,6 +568,7 @@ flowchart LR
     config_layer_config_validator --> config_layer_production_config
     config_layer_config_validator --> config_layer_state_identity
     config_layer_config_validator --> runtime_backtest_v2
+    config_layer_crt_config_completeness --> config_layer_state_identity
     config_layer_crt_config_provenance --> config_layer_config_builder
     config_layer_crt_config_provenance --> config_layer_production_config
     config_layer_crt_config_provenance --> config_layer_state_identity
@@ -558,6 +637,7 @@ flowchart LR
     config_layer_state_contract_loader --> config_layer_state_contract
     config_layer_state_contract_loader --> config_layer_state_identity
     config_layer_state_contract_loader --> features_fm_resolve
+    config_layer_state_identity --> config_layer__crt_state_generated
     config_layer_state_topology --> config_layer_state_identity
 ```
 
@@ -575,20 +655,27 @@ flowchart LR
     control_plane_monitors["control_plane.monitors"]
     control_plane_registry["control_plane.registry"]
     control_plane_report_api["control_plane.report_api"]
+    control_plane_retrieval_api["control_plane.retrieval_api"]
     control_plane_server["control_plane.server"]
     agent_findings_synthesizer["agent.findings_synthesizer"]
     agent_groq_client["agent.groq_client"]
+    charts_chart_api["charts.chart_api"]
     config_layer_llm_inference_client["config_layer.llm_inference_client"]
     config_layer_production_config["config_layer.production_config"]
+    retrieval["retrieval"]
+    utils_run_linkage["utils.run_linkage"]
     control_plane --> control_plane_jobs
     control_plane --> control_plane_registry
     control_plane --> control_plane_server
     control_plane_dashboard_api --> agent_groq_client
+    control_plane_dashboard_api --> utils_run_linkage
     control_plane_jobs --> control_plane_cp_types
     control_plane_jobs --> control_plane_monitors
     control_plane_jobs --> control_plane_registry
     control_plane_registry --> control_plane_cp_types
+    control_plane_retrieval_api --> retrieval
     control_plane_server --> agent_findings_synthesizer
+    control_plane_server --> charts_chart_api
     control_plane_server --> config_layer_llm_inference_client
     control_plane_server --> config_layer_production_config
     control_plane_server --> control_plane_code_context_extractor
@@ -598,6 +685,7 @@ flowchart LR
     control_plane_server --> control_plane_jobs
     control_plane_server --> control_plane_registry
     control_plane_server --> control_plane_report_api
+    control_plane_server --> control_plane_retrieval_api
 ```
 
 ## core
@@ -622,6 +710,7 @@ flowchart LR
     core_signal_audit["core.signal_audit"]
     core_signal_belief_tracker["core.signal_belief_tracker"]
     core_types["core.types"]
+    core_ultron_live_adapter["core.ultron_live_adapter"]
     core_ultron_risk_gate["core.ultron_risk_gate"]
     core_ultron_risk_gate_wrapper["core.ultron_risk_gate_wrapper"]
     cognitive_cognitive_bus["cognitive.cognitive_bus"]
@@ -687,6 +776,8 @@ flowchart LR
     core_model_registry --> training_evaluator
     core_model_registry --> utils_integrity_events
     core_regime_governor --> config_layer_production_config
+    core_ultron_live_adapter --> core_ultron_risk_gate
+    core_ultron_live_adapter --> utils_logging_config
     core_ultron_risk_gate --> utils_logging_config
 ```
 
@@ -697,11 +788,15 @@ flowchart LR
     data_ingestion["data_ingestion"]
     data_ingestion_clock_detector["data_ingestion.clock_detector"]
     data_ingestion_clock_registry["data_ingestion.clock_registry"]
+    data_ingestion_corpus_gate["data_ingestion.corpus_gate"]
+    data_ingestion_corpus_store["data_ingestion.corpus_store"]
     data_ingestion_dataset_integrity["data_ingestion.dataset_integrity"]
+    data_ingestion_dataset_registry["data_ingestion.dataset_registry"]
     data_ingestion_historical_fetcher["data_ingestion.historical_fetcher"]
     data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
     data_ingestion_session_autoderive["data_ingestion.session_autoderive"]
     data_ingestion_xauusd_phase1_candidate["data_ingestion.xauusd_phase1_candidate"]
+    config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
     config_layer_production_config["config_layer.production_config"]
     features_broker_clock["features.broker_clock"]
     features_feature_schema["features.feature_schema"]
@@ -710,12 +805,21 @@ flowchart LR
     data_ingestion_clock_detector --> data_ingestion_ohlcv_schema
     data_ingestion_clock_detector --> features_broker_clock
     data_ingestion_clock_registry --> data_ingestion_ohlcv_schema
+    data_ingestion_corpus_gate --> data_ingestion_dataset_integrity
+    data_ingestion_corpus_gate --> data_ingestion_dataset_registry
+    data_ingestion_corpus_gate --> data_ingestion_xauusd_phase1_candidate
+    data_ingestion_corpus_store --> config_layer_crt_engine_v2
+    data_ingestion_corpus_store --> data_ingestion_corpus_gate
+    data_ingestion_corpus_store --> data_ingestion_dataset_integrity
+    data_ingestion_corpus_store --> data_ingestion_dataset_registry
+    data_ingestion_corpus_store --> data_ingestion_xauusd_phase1_candidate
     data_ingestion_dataset_integrity --> config_layer_production_config
     data_ingestion_dataset_integrity --> data_ingestion_ohlcv_schema
     data_ingestion_dataset_integrity --> data_ingestion_session_autoderive
     data_ingestion_dataset_integrity --> features_feature_schema
     data_ingestion_dataset_integrity --> utils_console_safe
     data_ingestion_dataset_integrity --> utils_logging_config
+    data_ingestion_dataset_registry --> data_ingestion_xauusd_phase1_candidate
     data_ingestion_historical_fetcher --> config_layer_production_config
     data_ingestion_historical_fetcher --> data_ingestion_ohlcv_schema
     data_ingestion_historical_fetcher --> utils_logging_config
@@ -871,6 +975,7 @@ flowchart LR
     features_registry_derived_registry["features.registry.derived_registry"]
     features_registry_predicate_registry["features.registry.predicate_registry"]
     features_registry_primitive_registry["features.registry.primitive_registry"]
+    features_resolver_supply["features.resolver_supply"]
     features_schema_validator["features.schema_validator"]
     features_session_classifier["features.session_classifier"]
     features_smc["features.smc"]
@@ -881,8 +986,10 @@ flowchart LR
     features_smc_levels["features.smc.levels"]
     features_smc_mitigation["features.smc.mitigation"]
     features_smc_order_block["features.smc.order_block"]
+    config_layer_crt_config_completeness["config_layer.crt_config_completeness"]
     config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
     config_layer_production_config["config_layer.production_config"]
+    config_layer_state_identity["config_layer.state_identity"]
     data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
     structure_predicates["structure.predicates"]
     utils_integrity_events["utils.integrity_events"]
@@ -894,6 +1001,7 @@ flowchart LR
     features_crt_feature_builder --> features_feature_schema
     features_crt_feature_builder --> features_fm_resolve
     features_crt_feature_builder --> utils_integrity_events
+    features_crt_state_resolver --> config_layer_state_identity
     features_crt_state_resolver --> features_feature_schema
     features_crt_state_resolver --> features_feature_states
     features_crt_state_resolver --> features_registry
@@ -936,6 +1044,7 @@ flowchart LR
     features_market_shape --> features_market_context
     features_parent_candle --> config_layer_crt_engine_v2
     features_parent_candle --> features_calendar_periods
+    features_registry --> config_layer_crt_config_completeness
     features_registry --> features_registry__loader
     features_registry --> features_registry_composition_registry
     features_registry --> features_registry_derived_registry
@@ -951,6 +1060,7 @@ flowchart LR
     features_registry_derived_registry --> features_smc_order_block
     features_registry_predicate_registry --> features_registry__loader
     features_registry_primitive_registry --> features_candle_math
+    features_resolver_supply --> features_feature_schema
     features_smc__geometry --> config_layer_crt_engine_v2
     features_smc_breaker --> config_layer_crt_engine_v2
     features_smc_breaker --> features_smc__geometry
@@ -979,18 +1089,24 @@ flowchart LR
 ```mermaid
 flowchart LR
     governance["governance"]
+    governance_archive_manifest["governance.archive_manifest"]
     governance_bitnet_governance_executor["governance.bitnet_governance_executor"]
     governance_config_integrity["governance.config_integrity"]
     governance_expansion_integration["governance.expansion_integration"]
     governance_findings_export["governance.findings_export"]
     governance_framework_registry["governance.framework_registry"]
     governance_hypothesis_registry["governance.hypothesis_registry"]
+    governance_jsonl_claim_catalog["governance.jsonl_claim_catalog"]
+    governance_measurement_result_log["governance.measurement_result_log"]
     governance_module_attribution["governance.module_attribution"]
     governance_module_census["governance.module_census"]
     governance_multi_strategy_validator["governance.multi_strategy_validator"]
     governance_orchestrator["governance.orchestrator"]
     governance_portfolio_validation["governance.portfolio_validation"]
     governance_promotion_manager["governance.promotion_manager"]
+    governance_provenance_derivation["governance.provenance_derivation"]
+    governance_provenance_record["governance.provenance_record"]
+    governance_provenance_resolver["governance.provenance_resolver"]
     governance_reflection_buffer_advanced["governance.reflection_buffer_advanced"]
     governance_script_census["governance.script_census"]
     governance_script_registry["governance.script_registry"]
@@ -1011,6 +1127,8 @@ flowchart LR
     expansion_expansion_engine["expansion.expansion_engine"]
     features_feature_pipeline["features.feature_pipeline"]
     features_feature_schema["features.feature_schema"]
+    identity_tokens["identity.tokens"]
+    research_probes_scriptmod["research.probes.scriptmod"]
     runtime_backtest_v2["runtime.backtest_v2"]
     strategies_strategy_orchestrator["strategies.strategy_orchestrator"]
     utils_jsonl_writer["utils.jsonl_writer"]
@@ -1022,6 +1140,7 @@ flowchart LR
     governance_framework_registry --> utils_jsonl_writer
     governance_hypothesis_registry --> governance_framework_registry
     governance_hypothesis_registry --> utils_jsonl_writer
+    governance_measurement_result_log --> identity_tokens
     governance_module_attribution --> governance_script_registry
     governance_module_attribution --> utils_jsonl_writer
     governance_module_census --> governance_module_attribution
@@ -1035,6 +1154,9 @@ flowchart LR
     governance_portfolio_validation --> config_layer_state_identity
     governance_portfolio_validation --> runtime_backtest_v2
     governance_promotion_manager --> config_layer_config_validator
+    governance_provenance_derivation --> governance_provenance_record
+    governance_provenance_derivation --> governance_provenance_resolver
+    governance_provenance_resolver --> governance_provenance_record
     governance_reflection_buffer_advanced --> features_feature_schema
     governance_script_census --> governance_script_registry
     governance_script_census --> utils_jsonl_writer
@@ -1044,6 +1166,8 @@ flowchart LR
     governance_script_seed --> governance_script_registry
     governance_script_seed --> utils_jsonl_writer
     governance_semantic_grounding --> governance_framework_registry
+    governance_semantic_grounding --> governance_jsonl_claim_catalog
+    governance_semantic_grounding --> governance_measurement_result_log
     governance_semantic_grounding --> governance_semantic_os
     governance_semantic_grounding --> governance_semantic_query
     governance_semantic_objects --> governance_semantic_identity
@@ -1051,11 +1175,63 @@ flowchart LR
     governance_semantic_os --> governance_framework_registry
     governance_semantic_query --> governance_semantic_objects
     governance_semantic_query --> governance_semantic_os
+    governance_semantic_query --> research_probes_scriptmod
     governance_strategy_backtest --> data_ingestion_ohlcv_schema
     governance_strategy_backtest --> features_feature_pipeline
     governance_strategy_backtest --> features_feature_schema
     governance_strategy_backtest --> strategies_strategy_orchestrator
     governance_strategy_backtest --> utils_logging_config
+```
+
+## identity
+
+```mermaid
+flowchart LR
+    identity["identity"]
+    identity_certify["identity.certify"]
+    identity_check["identity.check"]
+    identity_hashes["identity.hashes"]
+    identity_outcome["identity.outcome"]
+    identity_query["identity.query"]
+    identity_store["identity.store"]
+    identity_tokens["identity.tokens"]
+    config_layer_crt_config_provenance["config_layer.crt_config_provenance"]
+    config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
+    config_layer_production_config["config_layer.production_config"]
+    config_layer_state_identity["config_layer.state_identity"]
+    features_feature_pipeline["features.feature_pipeline"]
+    features_feature_schema["features.feature_schema"]
+    features_feature_states["features.feature_states"]
+    runtime_backtest_v2["runtime.backtest_v2"]
+    runtime_parent_crt_feed["runtime.parent_crt_feed"]
+    identity --> identity_check
+    identity --> identity_outcome
+    identity --> identity_query
+    identity --> identity_store
+    identity --> identity_tokens
+    identity_certify --> config_layer_crt_config_provenance
+    identity_certify --> config_layer_crt_engine_v2
+    identity_certify --> config_layer_production_config
+    identity_certify --> config_layer_state_identity
+    identity_certify --> features_feature_pipeline
+    identity_certify --> features_feature_schema
+    identity_certify --> features_feature_states
+    identity_certify --> identity_hashes
+    identity_certify --> identity_outcome
+    identity_certify --> identity_query
+    identity_certify --> identity_store
+    identity_certify --> identity_tokens
+    identity_certify --> runtime_backtest_v2
+    identity_certify --> runtime_parent_crt_feed
+    identity_check --> identity_hashes
+    identity_check --> identity_tokens
+    identity_outcome --> identity_tokens
+    identity_query --> identity_check
+    identity_query --> identity_store
+    identity_query --> identity_tokens
+    identity_store --> identity_check
+    identity_store --> identity_hashes
+    identity_store --> identity_tokens
 ```
 
 ## inout
@@ -1064,11 +1240,61 @@ flowchart LR
 flowchart LR
     inout_alphavantage_candle_fetcher["inout.alphavantage_candle_fetcher"]
     inout_hummingbot_candle_fetcher["inout.hummingbot_candle_fetcher"]
+    inout_live_rail["inout.live_rail"]
+    inout_live_rail_bar_builder["inout.live_rail.bar_builder"]
+    inout_live_rail_binance_ws_adapter["inout.live_rail.binance_ws_adapter"]
+    inout_live_rail_config["inout.live_rail.config"]
+    inout_live_rail_factory["inout.live_rail.factory"]
+    inout_live_rail_longport_adapter["inout.live_rail.longport_adapter"]
+    inout_live_rail_ohlcv_replay_port["inout.live_rail.ohlcv_replay_port"]
+    inout_live_rail_resilience["inout.live_rail.resilience"]
+    inout_live_rail_tickdb_adapter["inout.live_rail.tickdb_adapter"]
+    inout_live_rail_types["inout.live_rail.types"]
     inout_mt5_candle_fetcher["inout.mt5_candle_fetcher"]
     inout_perp_funding_fetcher["inout.perp_funding_fetcher"]
+    config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
     config_layer_production_config["config_layer.production_config"]
+    data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
+    utils_logging_config["utils.logging_config"]
     inout_alphavantage_candle_fetcher --> config_layer_production_config
     inout_hummingbot_candle_fetcher --> config_layer_production_config
+    inout_live_rail --> inout_live_rail_bar_builder
+    inout_live_rail --> inout_live_rail_binance_ws_adapter
+    inout_live_rail --> inout_live_rail_config
+    inout_live_rail --> inout_live_rail_longport_adapter
+    inout_live_rail --> inout_live_rail_ohlcv_replay_port
+    inout_live_rail --> inout_live_rail_resilience
+    inout_live_rail --> inout_live_rail_tickdb_adapter
+    inout_live_rail --> inout_live_rail_types
+    inout_live_rail_bar_builder --> config_layer_crt_engine_v2
+    inout_live_rail_bar_builder --> inout_live_rail_config
+    inout_live_rail_bar_builder --> inout_live_rail_types
+    inout_live_rail_bar_builder --> utils_logging_config
+    inout_live_rail_binance_ws_adapter --> inout_live_rail_config
+    inout_live_rail_binance_ws_adapter --> inout_live_rail_resilience
+    inout_live_rail_binance_ws_adapter --> inout_live_rail_types
+    inout_live_rail_binance_ws_adapter --> utils_logging_config
+    inout_live_rail_config --> config_layer_production_config
+    inout_live_rail_config --> inout_live_rail_types
+    inout_live_rail_factory --> inout_live_rail_binance_ws_adapter
+    inout_live_rail_factory --> inout_live_rail_config
+    inout_live_rail_factory --> inout_live_rail_longport_adapter
+    inout_live_rail_factory --> inout_live_rail_resilience
+    inout_live_rail_factory --> inout_live_rail_tickdb_adapter
+    inout_live_rail_factory --> inout_live_rail_types
+    inout_live_rail_longport_adapter --> inout_live_rail_types
+    inout_live_rail_ohlcv_replay_port --> config_layer_crt_engine_v2
+    inout_live_rail_ohlcv_replay_port --> inout_live_rail_config
+    inout_live_rail_ohlcv_replay_port --> inout_live_rail_types
+    inout_live_rail_ohlcv_replay_port --> utils_logging_config
+    inout_live_rail_resilience --> utils_logging_config
+    inout_live_rail_tickdb_adapter --> config_layer_production_config
+    inout_live_rail_tickdb_adapter --> data_ingestion_ohlcv_schema
+    inout_live_rail_tickdb_adapter --> inout_live_rail_config
+    inout_live_rail_tickdb_adapter --> inout_live_rail_types
+    inout_live_rail_tickdb_adapter --> utils_logging_config
+    inout_live_rail_types --> config_layer_crt_engine_v2
+    inout_live_rail_types --> data_ingestion_ohlcv_schema
     inout_perp_funding_fetcher --> config_layer_production_config
 ```
 
@@ -1121,11 +1347,15 @@ flowchart LR
 flowchart LR
     live["live"]
     live_mt5_bridge["live.mt5_bridge"]
+    live_order_manager["live.order_manager"]
     live_telegram_bridge["live.telegram_bridge"]
     config_layer_production_config["config_layer.production_config"]
+    core_ultron_live_adapter["core.ultron_live_adapter"]
     utils_logging_config["utils.logging_config"]
     live_mt5_bridge --> config_layer_production_config
     live_mt5_bridge --> utils_logging_config
+    live_order_manager --> core_ultron_live_adapter
+    live_order_manager --> utils_logging_config
     live_telegram_bridge --> config_layer_production_config
     live_telegram_bridge --> utils_logging_config
 ```
@@ -1256,12 +1486,15 @@ flowchart LR
     events_event_fabric["events.event_fabric"]
     utils_integrity_events["utils.integrity_events"]
     utils_logging_config["utils.logging_config"]
+    utils_parquet_store["utils.parquet_store"]
     utils_registry_refresh["utils.registry_refresh"]
     replay_replay_drift_governor --> events_event_fabric
     replay_replay_drift_governor --> utils_logging_config
     replay_replay_memory_engine --> utils_integrity_events
+    replay_replay_memory_engine --> utils_parquet_store
     replay_replay_memory_engine --> utils_registry_refresh
     replay_timing_reconstructor --> data_ingestion_ohlcv_schema
+    replay_timing_reconstructor --> utils_parquet_store
 ```
 
 ## research
@@ -1273,6 +1506,7 @@ flowchart LR
     research_adapters_shape_signal_source["research.adapters.shape_signal_source"]
     research_adapters_spine_signal_source["research.adapters.spine_signal_source"]
     research_adapters_structural_event_source["research.adapters.structural_event_source"]
+    research_band_tables["research.band_tables"]
     research_band_validation["research.band_validation"]
     research_candle_state["research.candle_state"]
     research_candle_state_encoder["research.candle_state.encoder"]
@@ -1311,6 +1545,20 @@ flowchart LR
     research_episodes_schema["research.episodes.schema"]
     research_episodes_store["research.episodes.store"]
     research_episodes_tensors["research.episodes.tensors"]
+    research_evidence["research.evidence"]
+    research_evidence___main__["research.evidence.__main__"]
+    research_evidence_asymmetry_contract["research.evidence.asymmetry_contract"]
+    research_evidence_atlases["research.evidence.atlases"]
+    research_evidence_catalog["research.evidence.catalog"]
+    research_evidence_context_attribution["research.evidence.context_attribution"]
+    research_evidence_driver["research.evidence.driver"]
+    research_evidence_magnitude_prior["research.evidence.magnitude_prior"]
+    research_evidence_mother_range_prior["research.evidence.mother_range_prior"]
+    research_evidence_queries["research.evidence.queries"]
+    research_evidence_records["research.evidence.records"]
+    research_evidence_rnet_overlay["research.evidence.rnet_overlay"]
+    research_evidence_run_close_out["research.evidence.run_close_out"]
+    research_evidence_visual_crt_prior["research.evidence.visual_crt_prior"]
     research_exit_grid["research.exit_grid"]
     research_experiment_spec["research.experiment_spec"]
     research_forensics["research.forensics"]
@@ -1340,10 +1588,15 @@ flowchart LR
     research_ic003b_sequence_geometry_schema["research.ic003b_sequence_geometry.schema"]
     research_ic003b_sequence_geometry_summarize["research.ic003b_sequence_geometry.summarize"]
     research_indicators["research.indicators"]
+    research_mc_kit["research.mc_kit"]
+    research_mc_kit_bars["research.mc_kit.bars"]
+    research_mc_kit_stats["research.mc_kit.stats"]
+    research_mc_kit_trade["research.mc_kit.trade"]
     research_measurement["research.measurement"]
     research_measurement_bootstrap["research.measurement.bootstrap"]
     research_measurement_forward_walk["research.measurement.forward_walk"]
     research_measurement_metrics["research.measurement.metrics"]
+    research_measurement_mt00["research.measurement.mt00"]
     research_model_runners["research.model_runners"]
     research_model_runners_adapters["research.model_runners.adapters"]
     research_model_runners_adapters_bitnet["research.model_runners.adapters.bitnet"]
@@ -1367,13 +1620,45 @@ flowchart LR
     research_model_runners_schema_resolver["research.model_runners.schema_resolver"]
     research_model_runners_stats["research.model_runners.stats"]
     research_model_runners_substrate["research.model_runners.substrate"]
+    research_mother_range["research.mother_range"]
+    research_mother_range___main__["research.mother_range.__main__"]
+    research_mother_range_driver["research.mother_range.driver"]
+    research_mother_range_geometry["research.mother_range.geometry"]
     research_mt5_cost_calibration["research.mt5_cost_calibration"]
+    research_ohlcv_open_close_label["research.ohlcv_open_close_label"]
+    research_ohlcv_probe_report["research.ohlcv_probe_report"]
+    research_ohlcv_tick_attribution["research.ohlcv_tick_attribution"]
+    research_ohlcv_volume_semantics["research.ohlcv_volume_semantics"]
+    research_opportunity_bands["research.opportunity_bands"]
+    research_oracle["research.oracle"]
+    research_oracle_exit_analysis["research.oracle.exit_analysis"]
+    research_oracle_exit_sweep["research.oracle.exit_sweep"]
+    research_oracle_labeler["research.oracle.labeler"]
+    research_oracle_multi_tp_walk["research.oracle.multi_tp_walk"]
+    research_oracle_reference_walker["research.oracle.reference_walker"]
+    research_oracle_scan["research.oracle.scan"]
+    research_oracle_stop_policy["research.oracle.stop_policy"]
     research_path["research.path"]
     research_path_ambiguity_census["research.path.ambiguity_census"]
+    research_probes["research.probes"]
+    research_probes_atlas_io["research.probes.atlas_io"]
+    research_probes_corpus["research.probes.corpus"]
+    research_probes_costs_path["research.probes.costs_path"]
+    research_probes_excursion["research.probes.excursion"]
+    research_probes_governance["research.probes.governance"]
+    research_probes_horizon["research.probes.horizon"]
+    research_probes_persistence["research.probes.persistence"]
+    research_probes_phase1_replay["research.probes.phase1_replay"]
+    research_probes_scoreboard["research.probes.scoreboard"]
+    research_probes_scriptmod["research.probes.scriptmod"]
+    research_probes_shadow_collapse["research.probes.shadow_collapse"]
     research_process_characterization["research.process_characterization"]
     research_process_diagnostics["research.process_diagnostics"]
     research_provenance["research.provenance"]
     research_qualification["research.qualification"]
+    research_qualify_matrix["research.qualify_matrix"]
+    research_rc003_distinct_object["research.rc003_distinct_object"]
+    research_rc003_distinct_object_driver["research.rc003_distinct_object.driver"]
     research_regime_conditioning["research.regime_conditioning"]
     research_registry["research.registry"]
     research_resample["research.resample"]
@@ -1386,6 +1671,21 @@ flowchart LR
     research_selection_effect["research.selection_effect"]
     research_shape_statistics["research.shape_statistics"]
     research_structural_asymmetry["research.structural_asymmetry"]
+    research_sujan_crt["research.sujan_crt"]
+    research_sujan_crt___main__["research.sujan_crt.__main__"]
+    research_sujan_crt_driver["research.sujan_crt.driver"]
+    research_sujan_crt_geometry["research.sujan_crt.geometry"]
+    research_sujan_crt_score["research.sujan_crt.score"]
+    research_sujan_crt_vetoes["research.sujan_crt.vetoes"]
+    research_sujan_manipulation["research.sujan_manipulation"]
+    research_sujan_manipulation___main__["research.sujan_manipulation.__main__"]
+    research_sujan_manipulation_bulk_proxy["research.sujan_manipulation.bulk_proxy"]
+    research_sujan_manipulation_driver["research.sujan_manipulation.driver"]
+    research_sujan_manipulation_geometry["research.sujan_manipulation.geometry"]
+    research_sujan_manipulation_label_page["research.sujan_manipulation.label_page"]
+    research_sujan_manipulation_parent["research.sujan_manipulation.parent"]
+    research_sujan_manipulation_parquet_check["research.sujan_manipulation.parquet_check"]
+    research_sujan_manipulation_state["research.sujan_manipulation.state"]
     research_synthetic["research.synthetic"]
     research_synthetic_ontology["research.synthetic.ontology"]
     research_synthetic_stories["research.synthetic.stories"]
@@ -1397,8 +1697,10 @@ flowchart LR
     research_synthetic_story_registry["research.synthetic.story_registry"]
     research_synthetic_story_spec["research.synthetic.story_spec"]
     research_visual_crt["research.visual_crt"]
+    research_visual_crt_controls["research.visual_crt.controls"]
     research_visual_crt_driver["research.visual_crt.driver"]
     research_visual_crt_geometry["research.visual_crt.geometry"]
+    research_visual_crt_measure["research.visual_crt.measure"]
     research_visual_crt_pools["research.visual_crt.pools"]
     research_visual_crt_retest["research.visual_crt.retest"]
     research_weekly_sweep["research.weekly_sweep"]
@@ -1426,6 +1728,7 @@ flowchart LR
     config_layer_execution_planner["config_layer.execution_planner"]
     config_layer_goal_schema["config_layer.goal_schema"]
     config_layer_goal_validator["config_layer.goal_validator"]
+    config_layer_htf_state["config_layer.htf_state"]
     config_layer_model_resolver["config_layer.model_resolver"]
     config_layer_production_config["config_layer.production_config"]
     config_layer_rr_rr_pattern_miner["config_layer.rr.rr_pattern_miner"]
@@ -1435,6 +1738,7 @@ flowchart LR
     core_engine_runner["core.engine_runner"]
     core_fusion_engine["core.fusion_engine"]
     core_gate_intelligence["core.gate_intelligence"]
+    data_ingestion_corpus_store["data_ingestion.corpus_store"]
     data_ingestion_dataset_integrity["data_ingestion.dataset_integrity"]
     data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
     data_ingestion_session_autoderive["data_ingestion.session_autoderive"]
@@ -1447,7 +1751,9 @@ flowchart LR
     engines_scoring_engine["engines.scoring_engine"]
     engines_zone_cluster_score["engines.zone_cluster_score"]
     engines_zone_gate_engine["engines.zone_gate_engine"]
+    features_calendar_periods["features.calendar_periods"]
     features_candle_math["features.candle_math"]
+    features_crt_state_resolver["features.crt_state_resolver"]
     features_dataset_builder["features.dataset_builder"]
     features_feature_pipeline["features.feature_pipeline"]
     features_feature_schema["features.feature_schema"]
@@ -1458,6 +1764,9 @@ flowchart LR
     structure_predicates["structure.predicates"]
     training_trade_net_v2["training.trade_net_v2"]
     training_trainer["training.trainer"]
+    utils_parquet_store["utils.parquet_store"]
+    utils_run_manifest["utils.run_manifest"]
+    utils_validation_contract["utils.validation_contract"]
     research_adapters --> research_adapters_spine_signal_source
     research_adapters_shape_signal_source --> data_ingestion_xauusd_phase1_candidate
     research_adapters_shape_signal_source --> features_feature_pipeline
@@ -1467,6 +1776,7 @@ flowchart LR
     research_adapters_spine_signal_source --> runtime_backtest_v2
     research_adapters_structural_event_source --> research_indicators
     research_adapters_structural_event_source --> runtime_backtest_v2
+    research_adapters_structural_event_source --> utils_parquet_store
     research_band_validation --> features_feature_pipeline
     research_band_validation --> research_measurement_bootstrap
     research_candle_state_encoder --> research_indicators
@@ -1485,7 +1795,6 @@ flowchart LR
     research_clean_labels_builder --> research_measurement_forward_walk
     research_cli --> research_config
     research_cli --> research_controls
-    research_cli --> research_costs
     research_cli --> research_goal_alignment
     research_cli --> research_hypotheses
     research_cli --> research_measurement_metrics
@@ -1538,6 +1847,64 @@ flowchart LR
     research_episodes_store --> research_episodes_protocol
     research_episodes_store --> research_episodes_schema
     research_episodes_tensors --> research_episodes_schema
+    research_evidence --> research_evidence_atlases
+    research_evidence --> research_evidence_catalog
+    research_evidence --> research_evidence_queries
+    research_evidence --> research_evidence_records
+    research_evidence___main__ --> research_evidence_driver
+    research_evidence_asymmetry_contract --> data_ingestion_dataset_integrity
+    research_evidence_asymmetry_contract --> research_evidence_catalog
+    research_evidence_asymmetry_contract --> research_evidence_driver
+    research_evidence_asymmetry_contract --> research_evidence_queries
+    research_evidence_asymmetry_contract --> research_evidence_run_close_out
+    research_evidence_atlases --> research_evidence_queries
+    research_evidence_atlases --> research_evidence_records
+    research_evidence_context_attribution --> data_ingestion_dataset_integrity
+    research_evidence_context_attribution --> research_evidence_asymmetry_contract
+    research_evidence_context_attribution --> research_evidence_magnitude_prior
+    research_evidence_context_attribution --> research_evidence_run_close_out
+    research_evidence_driver --> research_evidence_catalog
+    research_evidence_driver --> research_evidence_queries
+    research_evidence_driver --> research_evidence_records
+    research_evidence_driver --> utils_parquet_store
+    research_evidence_magnitude_prior --> data_ingestion_dataset_integrity
+    research_evidence_magnitude_prior --> research_evidence_asymmetry_contract
+    research_evidence_magnitude_prior --> research_evidence_catalog
+    research_evidence_magnitude_prior --> research_evidence_driver
+    research_evidence_magnitude_prior --> research_evidence_queries
+    research_evidence_magnitude_prior --> research_evidence_run_close_out
+    research_evidence_mother_range_prior --> data_ingestion_dataset_integrity
+    research_evidence_mother_range_prior --> research_evidence_asymmetry_contract
+    research_evidence_mother_range_prior --> research_evidence_catalog
+    research_evidence_mother_range_prior --> research_evidence_driver
+    research_evidence_mother_range_prior --> research_evidence_magnitude_prior
+    research_evidence_mother_range_prior --> research_evidence_queries
+    research_evidence_mother_range_prior --> research_evidence_run_close_out
+    research_evidence_mother_range_prior --> research_mc_kit_bars
+    research_evidence_mother_range_prior --> research_mc_kit_stats
+    research_evidence_mother_range_prior --> research_mother_range_geometry
+    research_evidence_queries --> research_evidence_atlases
+    research_evidence_queries --> research_evidence_catalog
+    research_evidence_queries --> research_evidence_records
+    research_evidence_rnet_overlay --> data_ingestion_dataset_integrity
+    research_evidence_rnet_overlay --> research_evidence_asymmetry_contract
+    research_evidence_rnet_overlay --> research_evidence_catalog
+    research_evidence_rnet_overlay --> research_evidence_driver
+    research_evidence_rnet_overlay --> research_evidence_magnitude_prior
+    research_evidence_rnet_overlay --> research_evidence_queries
+    research_evidence_rnet_overlay --> research_evidence_run_close_out
+    research_evidence_run_close_out --> research_measurement_mt00
+    research_evidence_run_close_out --> research_provenance
+    research_evidence_run_close_out --> utils_run_manifest
+    research_evidence_run_close_out --> utils_validation_contract
+    research_evidence_visual_crt_prior --> data_ingestion_dataset_integrity
+    research_evidence_visual_crt_prior --> research_evidence_asymmetry_contract
+    research_evidence_visual_crt_prior --> research_evidence_catalog
+    research_evidence_visual_crt_prior --> research_evidence_driver
+    research_evidence_visual_crt_prior --> research_evidence_magnitude_prior
+    research_evidence_visual_crt_prior --> research_evidence_queries
+    research_evidence_visual_crt_prior --> research_evidence_run_close_out
+    research_evidence_visual_crt_prior --> research_visual_crt_driver
     research_exit_grid --> research_contracts
     research_exit_grid --> research_costs
     research_exit_grid --> research_measurement_forward_walk
@@ -1611,6 +1978,8 @@ flowchart LR
     research_ic003b_sequence_geometry_continuum --> research_ic003b_sequence_geometry_schema
     research_ic003b_sequence_geometry_dtw --> research_ic003b_sequence_geometry_schema
     research_ic003b_sequence_geometry_summarize --> research_ic003b_sequence_geometry_schema
+    research_mc_kit_trade --> research_contracts
+    research_mc_kit_trade --> research_measurement_forward_walk
     research_measurement --> research_measurement_forward_walk
     research_measurement --> research_measurement_metrics
     research_measurement_forward_walk --> research_contracts
@@ -1718,9 +2087,54 @@ flowchart LR
     research_model_runners_substrate --> features_feature_pipeline
     research_model_runners_substrate --> features_feature_schema
     research_model_runners_substrate --> research_model_runners_require_config
+    research_mother_range --> research_mother_range_geometry
+    research_mother_range___main__ --> research_mother_range_driver
+    research_mother_range_driver --> data_ingestion_dataset_integrity
+    research_mother_range_driver --> research_contracts
+    research_mother_range_driver --> research_costs
+    research_mother_range_driver --> research_mc_kit_bars
+    research_mother_range_driver --> research_mc_kit_stats
+    research_mother_range_driver --> research_mc_kit_trade
+    research_mother_range_driver --> research_measurement_forward_walk
+    research_mother_range_driver --> research_mother_range_geometry
+    research_ohlcv_tick_attribution --> research_ohlcv_probe_report
+    research_ohlcv_volume_semantics --> research_ohlcv_probe_report
+    research_opportunity_bands --> research_band_tables
+    research_oracle --> research_oracle_multi_tp_walk
+    research_oracle --> research_oracle_reference_walker
+    research_oracle_exit_sweep --> research_oracle_labeler
+    research_oracle_exit_sweep --> research_oracle_multi_tp_walk
+    research_oracle_exit_sweep --> research_oracle_stop_policy
+    research_oracle_labeler --> config_layer_production_config
+    research_oracle_labeler --> research_costs
+    research_oracle_labeler --> research_measurement_forward_walk
+    research_oracle_labeler --> research_oracle_multi_tp_walk
+    research_oracle_multi_tp_walk --> research_oracle_stop_policy
+    research_oracle_reference_walker --> research_oracle_multi_tp_walk
     research_path_ambiguity_census --> research_contracts
     research_path_ambiguity_census --> research_exit_grid
     research_path_ambiguity_census --> research_measurement_forward_walk
+    research_probes --> research_probes_atlas_io
+    research_probes --> research_probes_corpus
+    research_probes --> research_probes_costs_path
+    research_probes --> research_probes_excursion
+    research_probes --> research_probes_governance
+    research_probes --> research_probes_horizon
+    research_probes --> research_probes_persistence
+    research_probes --> research_probes_phase1_replay
+    research_probes --> research_probes_scoreboard
+    research_probes --> research_probes_scriptmod
+    research_probes_costs_path --> research_costs
+    research_probes_costs_path --> research_probes_horizon
+    research_probes_excursion --> research_contracts
+    research_probes_excursion --> research_measurement_forward_walk
+    research_probes_phase1_replay --> config_layer_crt_engine_v2
+    research_probes_phase1_replay --> config_layer_production_config
+    research_probes_phase1_replay --> research_costs
+    research_probes_phase1_replay --> research_probes_costs_path
+    research_probes_phase1_replay --> research_probes_scoreboard
+    research_probes_phase1_replay --> runtime_backtest_v2
+    research_probes_shadow_collapse --> research_probes_phase1_replay
     research_process_characterization --> research_indicators
     research_process_diagnostics --> research_process_characterization
     research_provenance --> config_layer_production_config
@@ -1728,12 +2142,23 @@ flowchart LR
     research_qualification --> research_contracts
     research_qualification --> research_costs
     research_qualification --> research_measurement_metrics
+    research_qualify_matrix --> research_config
+    research_qualify_matrix --> research_costs
+    research_qualify_matrix --> research_measurement_metrics
+    research_qualify_matrix --> research_qualification
+    research_rc003_distinct_object --> research_rc003_distinct_object_driver
+    research_rc003_distinct_object_driver --> config_layer_production_config
+    research_rc003_distinct_object_driver --> features_crt_state_resolver
+    research_rc003_distinct_object_driver --> features_feature_pipeline
+    research_rc003_distinct_object_driver --> features_feature_schema
+    research_rc003_distinct_object_driver --> research_measurement_bootstrap
     research_regime_conditioning --> research_contracts
     research_regime_conditioning --> research_costs
     research_regime_conditioning --> research_measurement_metrics
     research_regime_conditioning --> research_qualification
     research_registry --> research_contracts
     research_resample --> config_layer_crt_engine_v2
+    research_runner --> data_ingestion_corpus_store
     research_runner --> research_config
     research_runner --> research_contracts
     research_runner --> research_costs
@@ -1750,6 +2175,51 @@ flowchart LR
     research_shape_statistics --> features_feature_pipeline
     research_shape_statistics --> features_market_shape
     research_shape_statistics --> research_measurement_bootstrap
+    research_sujan_crt --> research_sujan_crt_geometry
+    research_sujan_crt --> research_sujan_crt_score
+    research_sujan_crt --> research_sujan_crt_vetoes
+    research_sujan_crt___main__ --> research_sujan_crt_driver
+    research_sujan_crt_driver --> data_ingestion_dataset_integrity
+    research_sujan_crt_driver --> research_contracts
+    research_sujan_crt_driver --> research_costs
+    research_sujan_crt_driver --> research_indicators
+    research_sujan_crt_driver --> research_mc_kit_bars
+    research_sujan_crt_driver --> research_mc_kit_stats
+    research_sujan_crt_driver --> research_mc_kit_trade
+    research_sujan_crt_driver --> research_measurement_forward_walk
+    research_sujan_crt_driver --> research_provenance
+    research_sujan_crt_driver --> research_sujan_crt_geometry
+    research_sujan_crt_driver --> research_sujan_crt_vetoes
+    research_sujan_crt_geometry --> features_calendar_periods
+    research_sujan_crt_geometry --> structure_predicates
+    research_sujan_crt_vetoes --> config_layer_htf_state
+    research_sujan_crt_vetoes --> research_sujan_crt_geometry
+    research_sujan_crt_vetoes --> research_sujan_crt_score
+    research_sujan_manipulation --> research_sujan_manipulation_bulk_proxy
+    research_sujan_manipulation --> research_sujan_manipulation_geometry
+    research_sujan_manipulation --> research_sujan_manipulation_parent
+    research_sujan_manipulation --> research_sujan_manipulation_state
+    research_sujan_manipulation___main__ --> research_sujan_manipulation_bulk_proxy
+    research_sujan_manipulation___main__ --> research_sujan_manipulation_driver
+    research_sujan_manipulation_bulk_proxy --> features_candle_math
+    research_sujan_manipulation_bulk_proxy --> research_sujan_manipulation_parent
+    research_sujan_manipulation_driver --> data_ingestion_dataset_integrity
+    research_sujan_manipulation_driver --> research_sujan_manipulation_bulk_proxy
+    research_sujan_manipulation_driver --> research_sujan_manipulation_geometry
+    research_sujan_manipulation_driver --> research_sujan_manipulation_label_page
+    research_sujan_manipulation_driver --> research_sujan_manipulation_parent
+    research_sujan_manipulation_driver --> research_sujan_manipulation_parquet_check
+    research_sujan_manipulation_driver --> research_sujan_manipulation_state
+    research_sujan_manipulation_geometry --> research_sujan_manipulation_parent
+    research_sujan_manipulation_geometry --> structure_predicates
+    research_sujan_manipulation_label_page --> research_sujan_manipulation_bulk_proxy
+    research_sujan_manipulation_label_page --> research_sujan_manipulation_parent
+    research_sujan_manipulation_parquet_check --> features_candle_math
+    research_sujan_manipulation_parquet_check --> research_sujan_manipulation_bulk_proxy
+    research_sujan_manipulation_parquet_check --> research_sujan_manipulation_parent
+    research_sujan_manipulation_parquet_check --> utils_parquet_store
+    research_sujan_manipulation_state --> research_sujan_manipulation_geometry
+    research_sujan_manipulation_state --> research_sujan_manipulation_parent
     research_synthetic --> research_synthetic_story_spec
     research_synthetic_ontology --> config_layer_state_identity
     research_synthetic_ontology --> config_layer_state_topology
@@ -1778,6 +2248,10 @@ flowchart LR
     research_synthetic_story_registry --> research_synthetic_story_spec
     research_visual_crt --> research_visual_crt_geometry
     research_visual_crt --> research_visual_crt_pools
+    research_visual_crt_controls --> research_contracts
+    research_visual_crt_controls --> research_indicators
+    research_visual_crt_controls --> research_measurement_forward_walk
+    research_visual_crt_controls --> research_visual_crt_driver
     research_visual_crt_driver --> data_ingestion_dataset_integrity
     research_visual_crt_driver --> features_parent_candle
     research_visual_crt_driver --> research_contracts
@@ -1790,6 +2264,12 @@ flowchart LR
     research_visual_crt_geometry --> features_candle_math
     research_visual_crt_geometry --> research_visual_crt_pools
     research_visual_crt_geometry --> structure_predicates
+    research_visual_crt_measure --> data_ingestion_dataset_integrity
+    research_visual_crt_measure --> research_costs
+    research_visual_crt_measure --> research_measurement_forward_walk
+    research_visual_crt_measure --> research_provenance
+    research_visual_crt_measure --> research_visual_crt_controls
+    research_visual_crt_measure --> research_visual_crt_driver
     research_visual_crt_pools --> config_layer_crt_engine_v2
     research_visual_crt_retest --> config_layer_crt_engine_v2
     research_visual_crt_retest --> research_visual_crt_geometry
@@ -1867,27 +2347,52 @@ flowchart LR
     retrieval_claude_integration["retrieval.claude_integration"]
     retrieval_config["retrieval.config"]
     retrieval_corpus["retrieval.corpus"]
+    retrieval_divergence["retrieval.divergence"]
     retrieval_embedding["retrieval.embedding"]
+    retrieval_index_store["retrieval.index_store"]
+    retrieval_lexical["retrieval.lexical"]
     retrieval_monitor["retrieval.monitor"]
     retrieval_retriever["retrieval.retriever"]
+    retrieval_truth_tier["retrieval.truth_tier"]
     retrieval_vector_store["retrieval.vector_store"]
+    governance_semantic_grounding["governance.semantic_grounding"]
+    utils_duckdb_query["utils.duckdb_query"]
+    utils_parquet_store["utils.parquet_store"]
     retrieval --> retrieval_chunking
     retrieval --> retrieval_config
     retrieval --> retrieval_corpus
+    retrieval --> retrieval_divergence
     retrieval --> retrieval_embedding
+    retrieval --> retrieval_index_store
+    retrieval --> retrieval_lexical
     retrieval --> retrieval_monitor
     retrieval --> retrieval_retriever
+    retrieval --> retrieval_truth_tier
     retrieval --> retrieval_vector_store
     retrieval_chunking --> retrieval_config
     retrieval_chunking --> retrieval_corpus
+    retrieval_claude_integration --> governance_semantic_grounding
     retrieval_claude_integration --> retrieval
     retrieval_claude_integration --> retrieval_config
     retrieval_claude_integration --> retrieval_retriever
+    retrieval_claude_integration --> retrieval_truth_tier
     retrieval_corpus --> retrieval_config
+    retrieval_corpus --> retrieval_truth_tier
+    retrieval_divergence --> retrieval_truth_tier
     retrieval_embedding --> retrieval_config
+    retrieval_index_store --> retrieval_chunking
+    retrieval_index_store --> retrieval_config
+    retrieval_index_store --> retrieval_corpus
+    retrieval_index_store --> retrieval_truth_tier
+    retrieval_index_store --> utils_parquet_store
+    retrieval_lexical --> retrieval_config
+    retrieval_lexical --> retrieval_index_store
+    retrieval_lexical --> retrieval_truth_tier
+    retrieval_lexical --> utils_duckdb_query
     retrieval_monitor --> retrieval_config
     retrieval_retriever --> retrieval_config
-    retrieval_retriever --> retrieval_vector_store
+    retrieval_retriever --> retrieval_divergence
+    retrieval_retriever --> retrieval_lexical
     retrieval_vector_store --> retrieval_chunking
     retrieval_vector_store --> retrieval_config
     retrieval_vector_store --> retrieval_corpus
@@ -1902,11 +2407,15 @@ flowchart LR
     runtime_analyze_fusion_shadow["runtime.analyze_fusion_shadow"]
     runtime_backtest_bitnet["runtime.backtest_bitnet"]
     runtime_backtest_v2["runtime.backtest_v2"]
+    runtime_bar_structure_snapshot["runtime.bar_structure_snapshot"]
     runtime_baseline_capture["runtime.baseline_capture"]
     runtime_crt_baseline_trace["runtime.crt_baseline_trace"]
+    runtime_crt_construction_trace["runtime.crt_construction_trace"]
     runtime_crt_fail_reason_counters["runtime.crt_fail_reason_counters"]
     runtime_exit_model_band["runtime.exit_model_band"]
     runtime_live_engine_hook["runtime.live_engine_hook"]
+    runtime_live_rail_feeder["runtime.live_rail_feeder"]
+    runtime_live_rail_orchestrator["runtime.live_rail_orchestrator"]
     runtime_parent_crt_feed["runtime.parent_crt_feed"]
     runtime_unified_replay_harness["runtime.unified_replay_harness"]
     analytics_metrics_oracle["analytics.metrics_oracle"]
@@ -1929,19 +2438,36 @@ flowchart LR
     core_gate_intelligence["core.gate_intelligence"]
     core_model_registry["core.model_registry"]
     core_signal_belief_tracker["core.signal_belief_tracker"]
+    core_ultron_live_adapter["core.ultron_live_adapter"]
     core_ultron_risk_gate["core.ultron_risk_gate"]
     core_ultron_risk_gate_wrapper["core.ultron_risk_gate_wrapper"]
+    data_ingestion_corpus_gate["data_ingestion.corpus_gate"]
     data_ingestion_dataset_integrity["data_ingestion.dataset_integrity"]
+    data_ingestion_dataset_registry["data_ingestion.dataset_registry"]
     data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
     data_ingestion_xauusd_phase1_candidate["data_ingestion.xauusd_phase1_candidate"]
     engines_live_engine["engines.live_engine"]
+    features_calendar_periods["features.calendar_periods"]
     features_candle_math["features.candle_math"]
+    features_crt_state_resolver["features.crt_state_resolver"]
     features_feature_monitor["features.feature_monitor"]
     features_feature_pipeline["features.feature_pipeline"]
     features_feature_schema["features.feature_schema"]
     features_parent_candle["features.parent_candle"]
+    features_smc_breaker["features.smc.breaker"]
+    features_smc_choch["features.smc.choch"]
+    features_smc_fvg["features.smc.fvg"]
+    features_smc_levels["features.smc.levels"]
+    features_smc_mitigation["features.smc.mitigation"]
+    features_smc_order_block["features.smc.order_block"]
+    inout_live_rail_bar_builder["inout.live_rail.bar_builder"]
+    inout_live_rail_config["inout.live_rail.config"]
+    inout_live_rail_factory["inout.live_rail.factory"]
+    inout_live_rail_resilience["inout.live_rail.resilience"]
+    inout_live_rail_types["inout.live_rail.types"]
     journal_trade_provenance_v1_0["journal.trade_provenance_v1_0"]
     live_mt5_bridge["live.mt5_bridge"]
+    live_order_manager["live.order_manager"]
     live_telegram_bridge["live.telegram_bridge"]
     regime_config_router["regime.config_router"]
     regime_regime_classifier["regime.regime_classifier"]
@@ -1973,14 +2499,19 @@ flowchart LR
     runtime_backtest_v2 --> core_engine_runner
     runtime_backtest_v2 --> core_model_registry
     runtime_backtest_v2 --> core_signal_belief_tracker
+    runtime_backtest_v2 --> data_ingestion_corpus_gate
     runtime_backtest_v2 --> data_ingestion_dataset_integrity
+    runtime_backtest_v2 --> data_ingestion_dataset_registry
     runtime_backtest_v2 --> data_ingestion_ohlcv_schema
     runtime_backtest_v2 --> data_ingestion_xauusd_phase1_candidate
+    runtime_backtest_v2 --> features_calendar_periods
     runtime_backtest_v2 --> features_feature_monitor
     runtime_backtest_v2 --> features_feature_pipeline
     runtime_backtest_v2 --> features_feature_schema
     runtime_backtest_v2 --> features_parent_candle
     runtime_backtest_v2 --> journal_trade_provenance_v1_0
+    runtime_backtest_v2 --> runtime_bar_structure_snapshot
+    runtime_backtest_v2 --> runtime_crt_construction_trace
     runtime_backtest_v2 --> runtime_parent_crt_feed
     runtime_backtest_v2 --> strategies_strategy_orchestrator
     runtime_backtest_v2 --> strategies_strategy_registry
@@ -1993,12 +2524,23 @@ flowchart LR
     runtime_backtest_v2 --> utils_pattern_hasher
     runtime_backtest_v2 --> utils_sweep_trace_logger
     runtime_backtest_v2 --> utils_trade_logger
+    runtime_bar_structure_snapshot --> config_layer_production_config
+    runtime_bar_structure_snapshot --> features_parent_candle
+    runtime_bar_structure_snapshot --> features_smc_breaker
+    runtime_bar_structure_snapshot --> features_smc_choch
+    runtime_bar_structure_snapshot --> features_smc_fvg
+    runtime_bar_structure_snapshot --> features_smc_levels
+    runtime_bar_structure_snapshot --> features_smc_mitigation
+    runtime_bar_structure_snapshot --> features_smc_order_block
     runtime_baseline_capture --> config_layer_production_bundle
     runtime_baseline_capture --> config_layer_production_config
     runtime_baseline_capture --> config_layer_stack_version
     runtime_baseline_capture --> core_model_registry
     runtime_baseline_capture --> features_feature_schema
     runtime_baseline_capture --> utils_console_safe
+    runtime_crt_construction_trace --> config_layer_production_config
+    runtime_crt_construction_trace --> features_crt_state_resolver
+    runtime_crt_construction_trace --> runtime_crt_baseline_trace
     runtime_exit_model_band --> analytics_metrics_oracle
     runtime_exit_model_band --> runtime_backtest_v2
     runtime_live_engine_hook --> config_layer_execution_planner
@@ -2021,6 +2563,23 @@ flowchart LR
     runtime_live_engine_hook --> uat_kill_switch
     runtime_live_engine_hook --> utils_config_dumper
     runtime_live_engine_hook --> utils_logging_config
+    runtime_live_rail_feeder --> features_feature_pipeline
+    runtime_live_rail_feeder --> features_feature_schema
+    runtime_live_rail_feeder --> inout_live_rail_types
+    runtime_live_rail_feeder --> utils_logging_config
+    runtime_live_rail_orchestrator --> config_layer_production_config
+    runtime_live_rail_orchestrator --> core_ultron_live_adapter
+    runtime_live_rail_orchestrator --> core_ultron_risk_gate
+    runtime_live_rail_orchestrator --> engines_live_engine
+    runtime_live_rail_orchestrator --> inout_live_rail_bar_builder
+    runtime_live_rail_orchestrator --> inout_live_rail_config
+    runtime_live_rail_orchestrator --> inout_live_rail_factory
+    runtime_live_rail_orchestrator --> inout_live_rail_resilience
+    runtime_live_rail_orchestrator --> inout_live_rail_types
+    runtime_live_rail_orchestrator --> live_order_manager
+    runtime_live_rail_orchestrator --> runtime_live_engine_hook
+    runtime_live_rail_orchestrator --> runtime_live_rail_feeder
+    runtime_live_rail_orchestrator --> utils_logging_config
     runtime_parent_crt_feed --> config_layer_htf_state
     runtime_parent_crt_feed --> config_layer_parent_crt
     runtime_parent_crt_feed --> config_layer_production_config
@@ -2265,16 +2824,20 @@ flowchart LR
 flowchart LR
     utils_config_dumper["utils.config_dumper"]
     utils_console_safe["utils.console_safe"]
+    utils_duckdb_query["utils.duckdb_query"]
     utils_engine_telemetry["utils.engine_telemetry"]
     utils_episode_summarizer["utils.episode_summarizer"]
     utils_integrity_events["utils.integrity_events"]
+    utils_isolated_config_root["utils.isolated_config_root"]
     utils_jsonl_writer["utils.jsonl_writer"]
     utils_llm_logger["utils.llm_logger"]
     utils_log_identity["utils.log_identity"]
     utils_log_index_writer["utils.log_index_writer"]
     utils_logging_config["utils.logging_config"]
+    utils_parquet_store["utils.parquet_store"]
     utils_pattern_hasher["utils.pattern_hasher"]
     utils_registry_refresh["utils.registry_refresh"]
+    utils_run_linkage["utils.run_linkage"]
     utils_run_manifest["utils.run_manifest"]
     utils_sweep_trace_logger["utils.sweep_trace_logger"]
     utils_trade_logger["utils.trade_logger"]
@@ -2287,6 +2850,7 @@ flowchart LR
     utils_engine_telemetry --> events_event_fabric
     utils_episode_summarizer --> events_event_fabric
     utils_logging_config --> utils_console_safe
+    utils_parquet_store --> utils_jsonl_writer
     utils_pattern_hasher --> config_layer_crt_engine_v2
     utils_run_manifest --> config_layer_production_config
     utils_sweep_trace_logger --> events_event_fabric
@@ -2300,10 +2864,12 @@ flowchart LR
     validation_access["validation_access"]
     validation_access_ladder["validation_access.ladder"]
     validation_access_surfaces["validation_access.surfaces"]
+    research_probes_scriptmod["research.probes.scriptmod"]
     research_synthetic_ontology["research.synthetic.ontology"]
     research_synthetic_story_builder["research.synthetic.story_builder"]
     research_synthetic_story_registry["research.synthetic.story_registry"]
     validation_access --> validation_access_ladder
+    validation_access_ladder --> research_probes_scriptmod
     validation_access_ladder --> research_synthetic_ontology
     validation_access_ladder --> research_synthetic_story_builder
     validation_access_ladder --> research_synthetic_story_registry

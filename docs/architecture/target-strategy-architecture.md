@@ -5,7 +5,7 @@
 > Strategy Registry, decision ledger, and the **Strategy Lifecycle** that ties research to production.
 > Distinguishes **target architecture** from **current implementation**. **No code / promotion authority.**
 >
-> **Created:** 2026-07-28 · **Updated:** 2026-07-28 (lifecycle + goal.md pairing) ·
+> **Created:** 2026-07-28 · **Updated:** 2026-09-14 (parent-CRT/HTF §2/§7 · live-rail caveat · 48-dim/v5.0 · ACTIVE_VERSION refresh) ·
 > **Status:** TARGET + checklist (not a promotion grant)
 >
 > **Companions:** [`goal.md`](goal.md) (**constitution** / north star) · [`signal-flow.md`](signal-flow.md) (live path) ·
@@ -84,11 +84,11 @@ Every stage has an owner, an artifact, and a **must-not**.
 
 ```text
 [1] Market semantics (stable)
-        │  ontology + registry + candle/derived math + CRT topology
+        │  ontology + registry + candle/derived math + CRT topology (9-state M15 + parent/HTF C1–C3)
         │  MUST NOT: redefine formulas as “tuning”
         ▼
 [2] Feature pipeline (deterministic)
-        │  canonical feature vector
+        │  canonical feature vector (48-dim, schema v5.0 — F-076)
         │  MUST NOT: strategy-specific formula forks
         ▼
 [3] Strategy package (versioned)
@@ -150,7 +150,7 @@ Movement **backward** (changing semantics or formulas) is a **semantic/architect
 | **WHO** | Which models / contracts exist? | `active_models.yaml`, `models/*_registry.json`, MIAR |
 | **WHAT** | What do market concepts mean? | `configs/formulas/market_ontology.yaml` |
 | **HOW (formulas)** | How is each quantity computed? | `src/features/registry/*` → named callables (`candle_math`, `derived_math`, …) — **never `eval` YAML** |
-| **HOW (runtime knobs)** | Which parameters run today? | `configs/production/ACTIVE_VERSION` → `configs/production/<version>.json` (active: `v2_multi_2026_04`) |
+| **HOW (runtime knobs)** | Which parameters run today? | `configs/production/ACTIVE_VERSION` → `configs/production/<version>.json` (active: `v2_htfcrt_2026_08`) |
 | **EXECUTION** | Score → decide → plan → risk → order | Feature pipeline · engines · fusion · planner · Ultron · backtest/live |
 
 **WHO / WHAT / HOW in plain language:**
@@ -214,8 +214,9 @@ These represent **the market itself**, not the trading strategy. Prefer **STRUCT
 | OHLCV ingestion & schema | candle loaders, integrity |
 | Candle geometry | `candle_math.py` — `body_size`, `candle_range`, `body_ratio = body_size/candle_range` (zero-range safe) |
 | Feature formulas & FM identities | ontology (meaning) + registry (callables) + `derived_math` (e.g. `disp_strength`) |
-| Canonical feature vector | `CANONICAL_FEATURES` / feature schema — pipeline emits deterministic vector |
+| Canonical feature vector | `CANONICAL_FEATURES` / feature schema — pipeline emits deterministic vector (**48-dim, schema v5.0 — F-076**) |
 | CRT state **topology** / legal transitions | `VALID_TRANSITIONS` / state_identity — structure of the story |
+| **Parent-CRT / HTF-CRT dimension (F-075)** | 9-state M15 graph **plus** a disjoint `RANGE_C1` / `MANIPULATION_C2` / `DISTRIBUTION_C3` parent sub-graph on the HTF (H4/H1) timeframe — `HTFBuilder` / `ParentCRTTrack` / `ParentCRTFeed.bias`, gated by `parent_crt.enabled`, bridged via `process_candle(..., parent_state=None)` |
 | Market structure geometry used by CRT | engine geometry in code; thresholds may be config |
 
 **Do not** “optimize” formula identities as strategy knobs. Changing `body_ratio`’s definition is a **semantic** change, not a threshold search.
@@ -437,12 +438,19 @@ Live OHLCV
 **Today live path (simplified):**
 
 ```text
-OHLCV → features → CRT + Gaussian + ZoneGate + RR
+OHLCV → features → CRT (+ parent-CRT/HTF track) + Gaussian + ZoneGate + RR
       → fusion / decision → ExecutionPlanner → Ultron
       → live/backtest
 ```
 
 (BitNet off; research spine separate; fusion gate state must be **config-declared** — see F-058.)
+
+> **Caveat — no production live rail exists yet (F-073, OPEN since 2026-08-19).** The
+> "Today live path" above is the **design / paper** path, not a running rail:
+> `ACTIVE_VERSION` (`v2_htfcrt_2026_08`) carries **no `live_rail` section**, only paper
+> callers exist (`LiveRailOrchestrator --paper`, dry-run), and no orders are submitted.
+> Today only the **backtest** journey is runnable; live-vs-backtest equivalence is not yet
+> a production-measurable question.
 
 ---
 
@@ -470,7 +478,7 @@ risk:
   max_risk_per_trade_pct: 0.5
   min_rr_ratio: 1.5
 provenance:
-  parent_config: v2_multi_2026_04
+  parent_config: v2_htfcrt_2026_08
   ontology_ref: market_ontology.yaml@...
   feature_schema_hash: <schema>
 ```
@@ -751,7 +759,7 @@ Use as a living checklist. Mark items when closed with evidence (test + SESSION 
 ```text
                  DOMAIN TRUTH (stable)
          ontology + registry + candle/derived math
-         CRT topology (code) + canonical features
+         CRT topology (code: 9-state M15 + parent/HTF C1–C3) + canonical features (48-dim v5.0)
                            │
                            ▼
               SEMANTIC FEATURE VECTOR
@@ -784,3 +792,4 @@ Use as a living checklist. Mark items when closed with evidence (test + SESSION 
 - **Update** when target framing changes, a checklist item closes, or a finding reverses a premise.  
 - **Do not** treat this doc as runtime authority (Tier-3/4 relative to `ACTIVE_VERSION` + code schema).  
 - Closing a checklist item requires: code/config evidence, tests where applicable, SESSION LOG, and findings update if a registered conclusion moves.
+- **2026-09-14** — docs-only refresh: `ACTIVE_VERSION` example → `v2_htfcrt_2026_08`; parent-CRT/HTF-CRT dimension added to §2/§7 (F-075); §7 no-live-rail caveat (F-073); 48-dim/v5.0 notation on the canonical feature vector (F-076). No structural claims or registered conclusions changed.

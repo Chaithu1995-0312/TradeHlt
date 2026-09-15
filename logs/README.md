@@ -9,3 +9,8 @@ What a stream may *prove* is catalogued in
 
 A clone recaptures telemetry. It does not recover a historical occupancy series
 from git.
+
+Run-id → artifact **binding** is not this tree. It lives at
+[`docs/governance/run_linkage_registry.json`](../docs/governance/run_linkage_registry.json)
+(TRACKED_BINDING). `src/utils/run_linkage.py` reads that file, not a gitignored
+`logs/run_linkage_registry.json`.

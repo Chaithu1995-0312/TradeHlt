@@ -4,7 +4,7 @@
 
 _`(no module docstring)` flags a module that should get a one-line docstring — that is the actionable code gap, not a docs gap._
 
-**Coverage: 455/504 modules carry a docstring role (90%).** 49 flagged `(no module docstring)`.
+**Coverage: 576/625 modules carry a docstring role (92%).** 49 flagged `(no module docstring)`.
 
 ### `src/agent/`
 
@@ -77,6 +77,17 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `bitnet.zone_cosine_searcher` | Zone Cosine Searcher |
 | `bitnet.zone_validator` | bitnet/zone_validator.py |
 
+### `src/charts/`
+
+| Module | Role (docstring line 1) |
+| --- | --- |
+| `charts` | charts — INFRA-CPC-V1 Workstream A0: own OHLC charts from the corpus we consume. |
+| `charts.chart_api` | chart_api.py — read-only payload builder for the dashboard's Trade Chart tab. |
+| `charts.chart_series` | chart_series.py — INFRA-CPC-V1 A0 series builder (pure; no drawing). |
+| `charts.crt_overlay` | crt_overlay.py — INFRA-CPC-V1 A0 Layer V1: resolve a per-bar CRTState track. |
+| `charts.render` | render.py — INFRA-CPC-V1 A0 drawing layer (Layer V0 bars + Layer V1 CRTState colour). |
+| `charts.resolver_overlay` | resolver_overlay.py — precompute + serve the CRTStateResolver per-bar track for a chart. |
+
 ### `src/cognitive/`
 
 | Module | Role (docstring line 1) |
@@ -89,11 +100,14 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | Module | Role (docstring line 1) |
 | --- | --- |
 | `config_layer` | Config loaders, validators, and decision rules (CRT math, execution planner, LLM client). |
+| `config_layer._crt_state_generated` | _crt_state_generated.py -- GENERATED FILE, DO NOT EDIT BY HAND. |
 | `config_layer.config_builder` | config_builder.py |
 | `config_layer.config_validator` | config_validator.py |
+| `config_layer.crt_config_completeness` | crt_config_completeness.py |
 | `config_layer.crt_config_provenance` | CRTConfig construction provenance — P1 OBSERVE (F-057 class). |
 | `config_layer.crt_engine_v2` | ╔══════════════════════════════════════════════════════════════════╗ |
 | `config_layer.crt_gaussian_scorer` | Central CRT Gaussian scorer. |
+| `config_layer.crt_identity_schema` | crt_identity_schema.py |
 | `config_layer.crt_sweep_taxonomy` | crt_sweep_taxonomy.py |
 | `config_layer.execution_planner` | execution_planner.py |
 | `config_layer.goal_schema` | goal_schema.py |
@@ -134,6 +148,7 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `control_plane.monitors` | Control-plane dashboard monitor specs (jsonl-tail/json/regex/file-stat sources). |
 | `control_plane.registry` | CommandSpec registry: the catalog of control-plane commands. |
 | `control_plane.report_api` | report_api.py — RunReportAPI: Excel generation + Groq LLM analysis for run history reports. |
+| `control_plane.retrieval_api` | retrieval_api.py — KnowledgeAPI: truth-tier RAG surface for the control plane. |
 | `control_plane.server` | Stdlib-HTTP control-plane server (localhost:8787 dashboard and API). |
 
 ### `src/core/`
@@ -158,6 +173,7 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `core.signal_audit` | core/signal_audit.py — Per-bar Signal Audit + Leak Detection |
 | `core.signal_belief_tracker` | signal_belief_tracker.py |
 | `core.types` | core/types.py |
+| `core.ultron_live_adapter` | Live portfolio adapter around UltronRiskGate. Not a second risk engine. |
 | `core.ultron_risk_gate` | ultron_risk_gate.py |
 | `core.ultron_risk_gate_wrapper` | core/ultron_risk_gate_wrapper.py — UltronRiskGateWrapper |
 
@@ -168,7 +184,10 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `data_ingestion` | _(no module docstring)_ |
 | `data_ingestion.clock_detector` | clock_detector.py — ADVISORY evidence for a human clock review. Never a verdict of record. |
 | `data_ingestion.clock_registry` | clock_registry.py — declared, human-reviewed clock provenance for OHLCV corpora. |
+| `data_ingestion.corpus_gate` | corpus_gate.py |
+| `data_ingestion.corpus_store` | corpus_store.py — Parquet READ-CACHE over an admitted OHLCV corpus. |
 | `data_ingestion.dataset_integrity` | dataset_integrity.py |
+| `data_ingestion.dataset_registry` | R3 Dataset Identity registry + load-time admission. |
 | `data_ingestion.historical_fetcher` | historical_fetcher.py |
 | `data_ingestion.ohlcv_schema` | ohlcv_schema.py |
 | `data_ingestion.session_autoderive` | session_autoderive.py — learn a provider's tradable session from the data itself. |
@@ -255,6 +274,7 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `features.registry.derived_registry` | Derived registry — deterministic normalized metrics (ATR/price-relative). Maps declared impl |
 | `features.registry.predicate_registry` | predicate_registry — the governed interpreter for `structural_predicates` definitions. |
 | `features.registry.primitive_registry` | Primitive registry — the OHLC-identity layer. Maps declared primitive impl names to the |
+| `features.resolver_supply` | resolver_supply.py |
 | `features.schema_validator` | schema_validator.py |
 | `features.session_classifier` | session_classifier.py — THE single owner of "what session is this?". |
 | `features.smc` | features.smc — CH-htfcrt-parent-candle-smc-v1 (2026-08-15, user-authorized): the 9 SMC |
@@ -278,18 +298,24 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | Module | Role (docstring line 1) |
 | --- | --- |
 | `governance` | _(no module docstring)_ |
+| `governance.archive_manifest` | Archive manifest ledger — every file under ``archive/`` is accounted for, nothing is deleted. |
 | `governance.bitnet_governance_executor` | _(no module docstring)_ |
 | `governance.config_integrity` | config_integrity.py — governance guards for production-config lineage. |
 | `governance.expansion_integration` | _(no module docstring)_ |
 | `governance.findings_export` | Findings export — GENERATED machine-readable derived view of docs/current-findings.md. |
 | `governance.framework_registry` | FrameworkRegistry — queryable, append-only map of the trading-system architecture. |
 | `governance.hypothesis_registry` | HypothesisRegistry — queryable, append-only registry of research hypotheses (H-ids). |
+| `governance.jsonl_claim_catalog` | JSONL claim catalog — loader + admissibility over the PRIMARY CAN/CANNOT vocabulary. |
+| `governance.measurement_result_log` | Measurement result log — the committed record that a sealed MC-* contract actually EXECUTED. |
 | `governance.module_attribution` | Module attribution registry core — governance-surface ownership for every ``src/`` module. |
 | `governance.module_census` | Module attribution census core — discovery + path-stable stub merge for ``src/**/*.py``. |
 | `governance.multi_strategy_validator` | multi_strategy_validator.py |
 | `governance.orchestrator` | governance/orchestrator.py |
 | `governance.portfolio_validation` | ╔══════════════════════════════════════════════════════════════════════╗ |
 | `governance.promotion_manager` | promotion_manager.py |
+| `governance.provenance_derivation` | provenance_derivation.py — the backfill engine (MPA v1, Phase 3). |
+| `governance.provenance_record` | provenance_record.py — the Provenance Spine's append-only record (MPA v1, Phase 1). |
+| `governance.provenance_resolver` | provenance_resolver.py — read-only slot resolution over the EXISTING record systems (Phase 2). |
 | `governance.reflection_buffer_advanced` | _(no module docstring)_ |
 | `governance.script_census` | SITS script census core (PR-6 extract from scripts/analysis/script_census.py). |
 | `governance.script_registry` | ScriptRegistry — inventory / debt visibility for scripts (SITS). |
@@ -302,12 +328,35 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `governance.shadow_promotion_gate` | governance/shadow_promotion_gate.py |
 | `governance.strategy_backtest` | strategy_backtest.py |
 
+### `src/identity/`
+
+| Module | Role (docstring line 1) |
+| --- | --- |
+| `identity` | Identity store — Phase 4 writers/readers for the frozen layer identities. |
+| `identity.certify` | Shadow XAUUSD identity certification. |
+| `identity.check` | Identity Check — the only legal load path. |
+| `identity.hashes` | Identity hashes. Algorithms are frozen in the identity contract, not imported from HEAD schema. |
+| `identity.outcome` | L5 outcome record builder. |
+| `identity.query` | Phase 5 — replay and query over PRESERVED identity records only. |
+| `identity.store` | File-backed identity store: Class A snapshots, Class B records, Class C bindings. |
+| `identity.tokens` | Closed vocabularies copied from the identity contract. Not imported from HEAD engines. |
+
 ### `src/inout/`
 
 | Module | Role (docstring line 1) |
 | --- | --- |
 | `inout.alphavantage_candle_fetcher` | AlphaVantageCandleFetcher |
 | `inout.hummingbot_candle_fetcher` | HummingbotCandleFetcher |
+| `inout.live_rail` | Live-rail PR-1 contracts. Unwired — no HookedLiveEngine caller, no orders. |
+| `inout.live_rail.bar_builder` | Aggregate ticks into 6-col Candle + optional spread extras. No lookahead. |
+| `inout.live_rail.binance_ws_adapter` | Binance combined-stream paper-data. Crypto only. No orders. |
+| `inout.live_rail.config` | live_rail config. Nested ``_require`` — no silent defaults. Not on ACTIVE_VERSION. |
+| `inout.live_rail.factory` | Venue port factory. Paper order venue only. |
+| `inout.live_rail.longport_adapter` | LongPort reservation. Zero repo presence — do not pretend an SDK is wired. |
+| `inout.live_rail.ohlcv_replay_port` | Deterministic historical replay source for live-rail certification. |
+| `inout.live_rail.resilience` | Reconnect backoff + fail-closed circuit breaker for live-rail I/O. |
+| `inout.live_rail.tickdb_adapter` | File-backed JSONL tick replay. Default data venue. Zero network. Zero money. |
+| `inout.live_rail.types` | Live-rail value types. PR-1 contracts — no EngineRunner, no orders. |
 | `inout.mt5_candle_fetcher` | MT5CandleFetcher |
 | `inout.perp_funding_fetcher` | PerpFundingFetcher |
 
@@ -339,6 +388,7 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | --- | --- |
 | `live` | _(no module docstring)_ |
 | `live.mt5_bridge` | mt5_bridge.py |
+| `live.order_manager` | Layer-5 paper order I/O. Size is Ultron final_position_size only. |
 | `live.telegram_bridge` | telegram_bridge.py |
 
 ### `src/llm_research/`
@@ -419,6 +469,7 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `research.adapters.shape_signal_source` | shape_signal_source.py — precompute MarketShape directional signals per bar (Program 11 / B1). |
 | `research.adapters.spine_signal_source` | spine_signal_source.py — run the production CRT spine, harvest its entries. |
 | `research.adapters.structural_event_source` | structural_event_source.py — Phase E1 harvester: the full CRT structural-event population. |
+| `research.band_tables` | band_tables.py — strict loader + classifiers for configs/research/band_tables.json. |
 | `research.band_validation` | band_validation.py — do candidate band thresholds correspond to STABLE BEHAVIORAL REGIMES? |
 | `research.candle_state` | candle_state — non-directional candle-state encoding + multi-timeframe conjunction. |
 | `research.candle_state.encoder` | encoder.py — CandleStateEncoder: a candle window -> discrete state + continuous features. |
@@ -457,6 +508,20 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `research.episodes.schema` | OpportunityEpisode canonical types (protocol OE_L1). |
 | `research.episodes.store` | Episode store — canonical serialization + I/O. |
 | `research.episodes.tensors` | Tier-3 tensor materializer — [N, T, D] views for sequence models. |
+| `research.evidence` | Queryable evidence layer over the XAUUSD parquet projections. |
+| `research.evidence.__main__` | python -m research.evidence --out results/research/parquet_evidence_layer |
+| `research.evidence.asymmetry_contract` | MC-ASYM-XAUUSD-M15-V1 — same-timestamp ΔMFE holdout. |
+| `research.evidence.atlases` | Three atlases over the bar×direction outcome surface. |
+| `research.evidence.catalog` | Grain catalog for the XAUUSD parquet evidence layer. |
+| `research.evidence.context_attribution` | MC-CTXATTR-XAUUSD-M15-V1 — does any context family add value beyond CRT state alone? |
+| `research.evidence.driver` | Load the four projections and emit an evidence report. |
+| `research.evidence.magnitude_prior` | MC-MAGPRIOR-XAUUSD-M15-V1 — trend_bias as magnitude/time prior on a given side. |
+| `research.evidence.mother_range_prior` | MC-MRPRIOR-XAUUSD-M15-V1 — sparse mother-range inside signal x FM-054 trend prior. |
+| `research.evidence.queries` | Named evidence queries over column maps. |
+| `research.evidence.records` | Evidence records — measurements, not predictions. |
+| `research.evidence.rnet_overlay` | MC-RNET-OVERLAY-XAUUSD-M15-V1 — y_R_net size overlay on independent entry. |
+| `research.evidence.run_close_out` | run_close_out.py — the shared close-out every sealed-contract experiment runs. |
+| `research.evidence.visual_crt_prior` | MC-VCRTPRIOR-XAUUSD-M15-V1 — sparse Visual CRT entries x FM-054 trend prior. |
 | `research.exit_grid` | exit_grid.py — Phase D pure core: SL/TP exit-geometry grid + the recoverable-value ceilings. |
 | `research.experiment_spec` | experiment_spec.py — the immutable execution specification for the research platform. |
 | `research.forensics` | forensics.py — Layer-6 root-cause analysis: WHY a behavior loses under intrabar truth. |
@@ -486,10 +551,15 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `research.ic003b_sequence_geometry.schema` | IC-003B frozen constants — match h-ic003b experiment definition. |
 | `research.ic003b_sequence_geometry.summarize` | Arm S: path-summary vectorization (7 stats × D). |
 | `research.indicators` | indicators.py — small, dependency-light technical helpers for hypotheses/controls. |
+| `research.mc_kit` | mc_kit — shared low-level primitives for sealed-contract (MC-*) research drivers. |
+| `research.mc_kit.bars` | bars.py — CSV bar loading shared by sealed-contract drivers. |
+| `research.mc_kit.stats` | stats.py — per-cell statistics shared by sealed-contract drivers. |
+| `research.mc_kit.trade` | trade.py — forward-walk step and exit classification shared by trade-contract drivers. |
 | `research.measurement` | Measurement core — no-lookahead forward-walk + edge aggregation. |
 | `research.measurement.bootstrap` | bootstrap.py — deterministic percentile bootstrap confidence interval. |
 | `research.measurement.forward_walk` | forward_walk.py — no-lookahead forward simulation of a Signal. |
 | `research.measurement.metrics` | metrics.py — EdgeAggregator: turn a list of Outcomes into an EdgeReport. |
+| `research.measurement.mt00` | mt00.py — the E-MT-00 clean-path runner (MEASUREMENT_CONTRACT.md §2, E0–E2). |
 | `research.model_runners` | Per-model historical offline runners (OBSERVATION_ONLY). |
 | `research.model_runners.adapters` | Model adapters — call production engines only. |
 | `research.model_runners.adapters.bitnet` | BitNet hard-reject gate adapter (off-spine observe; does not flip use_bitnet). |
@@ -513,13 +583,45 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `research.model_runners.schema_resolver` | Single live->trained feature-schema authority for model_runners (R1). |
 | `research.model_runners.stats` | Pure summary stats over collected numeric arrays (no fill / no imputation). |
 | `research.model_runners.substrate` | Historical OHLCV + FeaturePipeline substrate (one load path). |
+| `research.mother_range` | Mother-range inside-close trade object (SEM-026). Research only. |
+| `research.mother_range.__main__` | python -m research.mother_range --out results/mother_range/mc_mrange_xauusd_m15_v1 |
+| `research.mother_range.driver` | Single-pass mother-range measurement. Bindings = MC-MRANGE-XAUUSD-M15-V1. |
+| `research.mother_range.geometry` | t=0 mother-range inside-close geometry (SEM-026). |
 | `research.mt5_cost_calibration` | mt5_cost_calibration |
+| `research.ohlcv_open_close_label` | BC-2 executable open-vs-close label scorer. |
+| `research.ohlcv_probe_report` | Shared emission contract for OHLCV corpus-authority probes (BC-2, BC-4, ...). |
+| `research.ohlcv_tick_attribution` | BC-4 residual attribution: what explains tick_volume vs len(copy_ticks_range)? |
+| `research.ohlcv_volume_semantics` | BC-4 volume-semantics scorer: does MT5 `volume` count ticks? |
+| `research.opportunity_bands` | opportunity_bands.py — Phase-1 arithmetic derivation over one SEM-037 kernel row. |
+| `research.oracle` | oracle — outcome-first (SEM-018) per-bar labelling under the SEM-017 exit geometry. |
+| `research.oracle.exit_analysis` | exit_analysis.py — SEM-020 exit-capture decomposition: what any exit COULD achieve. |
+| `research.oracle.exit_sweep` | exit_sweep.py — geometry x dynamic-stop-policy sweep over the dense bar universe. |
+| `research.oracle.labeler` | labeler.py — Stage 1 of the profitable-entry oracle program (SEM-018). |
+| `research.oracle.multi_tp_walk` | multi_tp_walk.py — SEM-017 two-target partial-exit forward walk. |
+| `research.oracle.reference_walker` | reference_walker.py — deliberately naive twin of `multi_tp_walk`, for triangulation. |
+| `research.oracle.scan` | scan.py — effect sizes, controls and partitioning for the oracle pattern search. |
+| `research.oracle.stop_policy` | stop_policy.py — SEM-019 causal dynamic stop policies for the two-target object. |
 | `research.path` | research.path — Program 10 (intrabar path) measurement layer. |
 | `research.path.ambiguity_census` | ambiguity_census.py — Program 10 / Phase 0A pure core: how often does the same-bar |
+| `research.probes` | Shared research probe helpers. |
+| `research.probes.atlas_io` | Decision-atlas IO helpers extracted from build_decision_atlas.py. |
+| `research.probes.corpus` | Candle corpus loading shared by analysis probes. |
+| `research.probes.costs_path` | SEM-015 cost + TIMEOUT net-R path shared by economic probes. |
+| `research.probes.excursion` | Uncapped ATR excursion via governed forward_walk (from p001 probe). |
+| `research.probes.governance` | Probe artifact governance helpers. |
+| `research.probes.horizon` | Hold-to-horizon gross R scoring shared by economic probes. |
+| `research.probes.persistence` | Episode-chain persistence helpers shared by sweep/state probes. |
+| `research.probes.phase1_replay` | Phase-1 resolver replay helpers shared by evidence + sample_acquisition CLIs. |
+| `research.probes.scoreboard` | Generic probe scoreboard rows (n / coverage / expectancy / PF / win rate). |
+| `research.probes.scriptmod` | Load a sibling .py file as a module (single importlib choke-point). |
+| `research.probes.shadow_collapse` | SHADOW to EXP collapse capture - re-exports phase1_replay helpers. |
 | `research.process_characterization` | process_characterization.py — statistical fingerprint of a raw OHLCV series. |
 | `research.process_diagnostics` | process_diagnostics.py — significance tests over the Phase-1 process fingerprint. |
 | `research.provenance` | provenance.py — versioned realism/method stamps for research artifacts. |
 | `research.qualification` | qualification.py — M4 QualificationGate for the Edge Discovery Program. |
+| `research.qualify_matrix` | qualify_matrix.py — shared scope-loop helpers for the QUALIFY family of research drivers. |
+| `research.rc003_distinct_object` | RC-003 — are the directional-contract-violation bars a distinct object at all? |
+| `research.rc003_distinct_object.driver` | RC-003 driver — executes the frozen pre-registration, nothing more. |
 | `research.regime_conditioning` | regime_conditioning.py — Program 4 conditioning harness (the only new measurement). |
 | `research.registry` | registry.py — hypothesis plugin registry (mirrors src/agent/tool_registry.py). |
 | `research.resample` | resample.py — deterministic calendar OHLCV resampler (Program 3 harness; Program 9 |
@@ -532,6 +634,21 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `research.selection_effect` | selection_effect.py — Phase S1 pure core: the spine's RETEST selection effect. |
 | `research.shape_statistics` | Historical Statistics layer — Layer 6 of the semantic pipeline (roadmap Phase 5, statistics). |
 | `research.structural_asymmetry` | structural_asymmetry.py — Program 2 / Phase E1 pure core: forward asymmetry of a structural-event |
+| `research.sujan_crt` | Sujan nested veto chain (SEM-031). Research only. |
+| `research.sujan_crt.__main__` | python -m research.sujan_crt --out docs/research-readiness/sujan_crt/mc_sujan_xauusd_m15_v1 |
+| `research.sujan_crt.driver` | MC-SUJAN-XAUUSD-M15-V1 driver. Bindings frozen in the sealed instance. |
+| `research.sujan_crt.geometry` | SEM-031 primitives: calendar parents, SP-001 sweep, SP-002 displacement, return, RR. |
+| `research.sujan_crt.score` | SEM-023 comparison arm. Never admits or rejects a SEM-031 candidate. |
+| `research.sujan_crt.vetoes` | SEM-031 nested veto chain. Conjunction is admission. SEM-023 never gates. |
+| `research.sujan_manipulation` | Sujan manipulation detection, Phase 1 (SEM-033). Research only. |
+| `research.sujan_manipulation.__main__` | SEM-033 Phase-1 CLI. Two modes, deliberately separate. |
+| `research.sujan_manipulation.bulk_proxy` | SEM-034 — the bulk-candle proxy. APPROVED by the human bridge, UNVALIDATED. |
+| `research.sujan_manipulation.driver` | SUJAN_MANIPULATION_RESEARCH_PHASE_1 run driver (SEM-033). Research only. |
+| `research.sujan_manipulation.geometry` | SUJAN_MANIPULATION_RESEARCH_PHASE_1 primitives (SEM-033). Research only. |
+| `research.sujan_manipulation.label_page` | Render the bulk-candle confirmation page — a CURATION TOOL, not a measurement instrument. |
+| `research.sujan_manipulation.parent` | The FOUNDING layer for SEM-033 — still incomplete, now with an approved proxy. |
+| `research.sujan_manipulation.parquet_check` | Cross-check the proxy's CSV-derived magnitudes against the Parquet projection. |
+| `research.sujan_manipulation.state` | The Phase-1 state machine, implemented literally. |
 | `research.synthetic` | research.synthetic — deterministic market-STORY library (ERP P1 golden fixtures). |
 | `research.synthetic.ontology` | ontology.py — loader + six-layer binder for the market-story ontology. |
 | `research.synthetic.stories` | stories — the Phase-A market-story library (4 active families). |
@@ -543,8 +660,10 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `research.synthetic.story_registry` | story_registry.py — the single collection point for every registered StorySpec. |
 | `research.synthetic.story_spec` | story_spec.py — frozen value objects for a deterministic market story. |
 | `research.visual_crt` | visual_crt — the Visual CRT trade object (SEM-012), Lane 1 geometry. |
-| `research.visual_crt.driver` | driver.py — Visual CRT ledger driver, bound to MC-VCRT-XAUUSD-M15-V1. |
+| `research.visual_crt.controls` | controls.py — the OOS split and control benchmarks MC-VCRT-XAUUSD-M15-V1 declared. |
+| `research.visual_crt.driver` | driver.py — Visual CRT ledger driver. Default bindings = MC-VCRT-XAUUSD-M15-V1. |
 | `research.visual_crt.geometry` | geometry.py — Visual CRT sweep + directional-displacement geometry (SEM-012). |
+| `research.visual_crt.measure` | measure.py — run a sealed Visual CRT measurement contract end to end. |
 | `research.visual_crt.pools` | pools.py — chart-visible liquidity pools for the Visual CRT trade object (SEM-012). |
 | `research.visual_crt.retest` | retest.py — Arm B retest predicate for the Visual CRT trade object (SEM-012 v2). |
 | `research.weekly_sweep` | weekly_sweep — Program 8: weekly liquidity-sweep ontology (pure geometry, no-lookahead). |
@@ -569,14 +688,18 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 
 | Module | Role (docstring line 1) |
 | --- | --- |
-| `retrieval` | retrieval/ — Enterprise RAG system for the Tradelatest codebase. |
+| `retrieval` | retrieval/ — Truth-tier lexical RAG for the Tradelatest corpus. |
 | `retrieval.chunking` | retrieval/chunking.py — Semantic chunking by language construct, not fixed token size. |
-| `retrieval.claude_integration` | retrieval/claude_integration.py — Integration with Claude Code for RAG-grounded tasks. |
-| `retrieval.config` | retrieval/config.py — Configuration for the RAG pipeline. |
-| `retrieval.corpus` | retrieval/corpus.py — Document discovery across the repository. |
+| `retrieval.claude_integration` | retrieval/claude_integration.py — Claude / control-plane integration for truth-tier RAG. |
+| `retrieval.config` | retrieval/config.py — Configuration for the truth-tier retrieval pipeline. |
+| `retrieval.corpus` | retrieval/corpus.py — Truth-classified document discovery. |
+| `retrieval.divergence` | retrieval/divergence.py — Mechanical divergence checks over retrieval hits. |
 | `retrieval.embedding` | retrieval/embedding.py — Embedding pipeline using sentence-transformers. |
+| `retrieval.index_store` | retrieval/index_store.py — DuckDB/Parquet-backed lexical index. |
+| `retrieval.lexical` | retrieval/lexical.py — BM25 over DuckDB/Parquet (hand-rolled, no fts extension). |
 | `retrieval.monitor` | retrieval/monitor.py — Monitoring and metrics for the RAG pipeline. |
-| `retrieval.retriever` | retrieval/retriever.py — The Retriever: high-level retrieval interface with context assembly. |
+| `retrieval.retriever` | retrieval/retriever.py — Truth-tier retrieval + context assembly. |
+| `retrieval.truth_tier` | retrieval/truth_tier.py — Truth classification for retrieval chunks. |
 | `retrieval.vector_store` | retrieval/vector_store.py — ChromaDB-backed vector store with hybrid search. |
 
 ### `src/runtime/`
@@ -587,11 +710,15 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | `runtime.analyze_fusion_shadow` | Analyze EngineRunner fusion shadow telemetry from collector logs. |
 | `runtime.backtest_bitnet` | backtest_bitnet.py |
 | `runtime.backtest_v2` | ╔═══════════════════════════════════════════════════════════════════════╗ |
+| `runtime.bar_structure_snapshot` | bar_structure_snapshot.py — the v3 `BarStructureSnapshot`: one observation-only record per bar. |
 | `runtime.baseline_capture` | baseline_capture.py |
 | `runtime.crt_baseline_trace` | crt_baseline_trace.py — optional, behavior-preserving CRT baseline observation. |
+| `runtime.crt_construction_trace` | crt_construction_trace.py — the v4 `CRTConstructionTrace`: engine vs ontology, per bar. |
 | `runtime.crt_fail_reason_counters` | CRT try_* fail-reason counters — OBSERVATION_ONLY. |
 | `runtime.exit_model_band` | exit_model_band.py |
 | `runtime.live_engine_hook` | live_engine_hook.py |
+| `runtime.live_rail_feeder` | Live-rail feature feeder (PR-4b). |
+| `runtime.live_rail_orchestrator` | F-073 repair: missing caller of HookedLiveEngine.process. Paper TickDB only. |
 | `runtime.parent_crt_feed` | parent_crt_feed.py — streaming adapter that closes F-075's caller gap. |
 | `runtime.unified_replay_harness` | unified_replay_harness.py |
 
@@ -676,16 +803,20 @@ _`(no module docstring)` flags a module that should get a one-line docstring —
 | --- | --- |
 | `utils.config_dumper` | config_dumper.py |
 | `utils.console_safe` | Console-safe output helpers for mixed terminal encodings. |
+| `utils.duckdb_query` | duckdb_query.py — optional DuckDB query surface over Parquet projections. |
 | `utils.engine_telemetry` | engine_telemetry.py |
 | `utils.episode_summarizer` | episode_summarizer.py |
 | `utils.integrity_events` | integrity_events.py |
+| `utils.isolated_config_root` | isolated_config_root.py — run a process against a chosen production config, safely. |
 | `utils.jsonl_writer` | jsonl_writer.py — the canonical append-only JSONL helper. |
 | `utils.llm_logger` | llm_logger.py |
 | `utils.log_identity` | log_identity.py |
 | `utils.log_index_writer` | log_index_writer.py |
 | `utils.logging_config` | Centralized Logging Configuration for Trading System |
+| `utils.parquet_store` | parquet_store.py — derived Parquet projections over append-only JSONL corpora. |
 | `utils.pattern_hasher` | pattern_hasher.py |
 | `utils.registry_refresh` | registry_refresh.py |
+| `utils.run_linkage` | run_linkage.py — resolve every artifact linked to a backtest run_id. |
 | `utils.run_manifest` | run_manifest.py — provenance manifest for research/tool runs (ERP testing-plan §3.3). |
 | `utils.sweep_trace_logger` | Sweep Trace Logger — Layer 0 of the trace-first repair pipeline. |
 | `utils.trade_logger` | trade_logger.py |
