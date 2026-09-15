@@ -1,0 +1,34 @@
+{
+  "change_id": "CH-run-linkage-registry",
+  "date_utc": "2026-09-10",
+  "objective": "Register the dual-construction source run_id run_20260906_013609 (and the four-arm measurement run_20260909_190546) in a TRACKED_BINDING registry, and make resolve_artifacts consult that registry when no results/run_*_<INSTR>/ directory exists. Observation addressability only.",
+  "change_classes": [
+    "TRACE_OBSERVATION_JOIN"
+  ],
+  "change_class_rationale": "This is addressability of an existing OBSERVATION-ONLY dual-construction join (crt_construction + bar_structure), not a new field on the stream and not a decision-path change. The registry is a TRACKED_BINDING (run_id → artifact paths). logs/ occupancy stays LOCAL_TELEMETRY.",
+  "affected_files": [
+    "src/utils/run_linkage.py",
+    "docs/governance/run_linkage_registry.json",
+    "docs/governance/GITIGNORE_SCHEMA.md",
+    "tests/test_run_linkage.py",
+    "tests/test_gitignore_schema.py",
+    "logs/README.md",
+    "docs/governance/build_manifests/CH-run-linkage-registry.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_crt_construction_trace.py",
+    "tests/test_crt_construction_trace_envelope.py",
+    "tests/test_resolver_metadata.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert src/utils/run_linkage.py, docs/governance/run_linkage_registry.json, the GITIGNORE_SCHEMA table row, tests/test_run_linkage.py, and the gitignore-schema pin together. Dual-construction JSONL/parquet occupancy is untouched.",
+  "authority_granted": "User authorized a run_linkage_registry row for the dual-construction source id that dashboard/run_linkage could not resolve.",
+  "authority_NOT_granted": "No dashboard dropdown of observation-only runs; no fabricated results/run_*_XAUUSD ledger; no per-row restamp of collapse/engine entries; no G001; no production config change.",
+  "production_behavior_changed": "NO"
+}

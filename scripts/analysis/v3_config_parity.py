@@ -9,10 +9,13 @@ WHAT IT PROVES
 Two independent claims, each a byte-comparison of a real backtest ledger:
 
   A. **Requirement 9 (compatibility).** `v2_htfcrt_2026_08` and
-     `v3_unified_market_structure_2026_09` produce byte-identical `*_events.jsonl` and
-     `*_crt_telemetry.jsonl`, and `*_trades.csv` / `*_summary.json` identical on every field
-     EXCEPT `config_version`. v3 differs from v2 only by three new hash-neutral top-level
-     sections, so any other divergence means one of them leaked into a decision.
+     `v3_unified_market_structure_2026_09` produce identical `*_events.jsonl` and
+     `*_crt_telemetry.jsonl` (2026-09-16: compared ignoring `run_id`, since every core output
+     file now carries one — see `_compare_jsonl_ignoring`; every other field is still
+     decision-bearing and must match exactly), and `*_trades.csv` / `*_summary.json` identical
+     on every field EXCEPT `config_version` (and `run_id`, same reason). v3 differs from v2 only
+     by three new hash-neutral top-level sections, so any other divergence means one of them
+     leaked into a decision.
 
      The `config_version` carve-out is not a loosened gate. The ledger stamps the config it
      ran under on every trade row; two different configs producing the same stamp would be a
@@ -47,7 +50,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import filecmp
 import json
 import os
 import platform
@@ -147,6 +149,37 @@ VOLATILE_SUMMARY_KEYS = (
 VERSION_STAMP_COLUMN = "config_version"
 
 
+def _compare_jsonl_ignoring(pa: Path, pb: Path, *, ignore_keys: tuple) -> bool:
+    """Line-wise JSONL comparison, stripping `ignore_keys` from every record first.
+
+    2026-09-16 (user-authorized run_id stamping): `events.jsonl`/`crt_telemetry.jsonl` gained a
+    `run_id` field on every record (previously carried NO run identity at all — this script's
+    own `run` function is why that gap was closed). A raw `filecmp.cmp` would now report
+    DIVERGED on every comparison regardless of decisions, since `run_id` legitimately differs
+    per arm. Mirrors `VOLATILE_SUMMARY_KEYS`'s existing treatment of `run_id` on summary.json —
+    same volatility class, now applied here too. Falls back to a plain byte-length/line-count
+    check (not a truth claim of equality) only if a line fails to parse as JSON, so a malformed
+    stream is still flagged as different rather than silently treated as equal.
+    """
+    with pa.open(encoding="utf-8") as fa, pb.open(encoding="utf-8") as fb:
+        la, lb = fa.readlines(), fb.readlines()
+    if len(la) != len(lb):
+        return False
+    for line_a, line_b in zip(la, lb):
+        try:
+            ra, rb = json.loads(line_a), json.loads(line_b)
+        except json.JSONDecodeError:
+            if line_a != line_b:
+                return False
+            continue
+        for key in ignore_keys:
+            ra.pop(key, None)
+            rb.pop(key, None)
+        if ra != rb:
+            return False
+    return True
+
+
 def _compare_trades(pa: Path, pb: Path, *, ignore: tuple) -> tuple:
     """Column-wise trade comparison -> (identical_ignoring, differing_columns)."""
     with pa.open(encoding="utf-8", newline="") as fa, pb.open(encoding="utf-8", newline="") as fb:
@@ -164,14 +197,17 @@ def compare(a: Path, b: Path, instrument: str, label: str,
             *, expect_version_stamp_differs: bool) -> bool:
     """Compare the decision-bearing artifacts of two arms.
 
-    `events.jsonl` and `crt_telemetry.jsonl` are compared BYTE-for-byte: they carry no version
-    stamp, so any difference at all is a decision difference. `trades.csv` and `summary.json`
-    both embed `config_version`, so they are compared field-wise with that one stamp handled
-    explicitly per arm (see VERSION_STAMP_COLUMN). Volatile wall-clock keys are stripped —
-    treating a differing timestamp as a decision difference would make the gate meaningless.
+    `events.jsonl` and `crt_telemetry.jsonl` are compared line-wise with `VOLATILE_SUMMARY_KEYS`
+    stripped from each record first (as of 2026-09-16: just `run_id`, and the other keys in that
+    tuple in case any is ever added to these streams too) — any OTHER difference is still a
+    decision difference, the same guarantee raw byte comparison gave before `run_id` existed.
+    `trades.csv` and `summary.json` both embed `config_version`, so they are compared field-wise
+    with that one stamp handled explicitly per arm (see VERSION_STAMP_COLUMN); `trades.csv` also
+    gets `VOLATILE_SUMMARY_KEYS` in its ignore set for the same `run_id`-column reason.
     """
     ok = True
     ignore = (VERSION_STAMP_COLUMN,) if expect_version_stamp_differs else ()
+    trades_ignore = ignore + VOLATILE_SUMMARY_KEYS
     print(f"\n  {label}")
 
     for artifact in ("events.jsonl", "crt_telemetry.jsonl"):
@@ -183,9 +219,9 @@ def compare(a: Path, b: Path, instrument: str, label: str,
             print(f"    X {artifact:<20} present in only one arm")
             ok = False
             continue
-        same = filecmp.cmp(pa, pb, shallow=False)
+        same = _compare_jsonl_ignoring(pa, pb, ignore_keys=VOLATILE_SUMMARY_KEYS)
         print(f"    {'OK' if same else 'X '} {artifact:<20} "
-              f"{'byte-identical' if same else 'DIVERGED'} ({pa.stat().st_size:,} bytes)")
+              f"{'identical (ignoring run_id)' if same else 'DIVERGED'} ({pa.stat().st_size:,} bytes)")
         ok = ok and same
 
     pa, pb = a / f"{instrument}_trades.csv", b / f"{instrument}_trades.csv"
@@ -195,8 +231,8 @@ def compare(a: Path, b: Path, instrument: str, label: str,
         print(f"    X {'trades.csv':<20} present in only one arm")
         ok = False
     else:
-        same, differing = _compare_trades(pa, pb, ignore=ignore)
-        extra = [c for c in differing if c not in ignore]
+        same, differing = _compare_trades(pa, pb, ignore=trades_ignore)
+        extra = [c for c in differing if c not in trades_ignore]
         note = "all columns identical" if not differing else (
             f"identical except {differing}" if same else f"DIVERGED on {extra}")
         print(f"    {'OK' if same else 'X '} {'trades.csv':<20} {note}")

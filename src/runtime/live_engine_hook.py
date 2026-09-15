@@ -285,7 +285,9 @@ def _load_engine_config() -> dict:
     Load the full production config and build the merged EngineRunner config dict.
 
     Raises RuntimeError if the production config is missing or malformed.
-    No default fallbacks permitted — all values must come from v1_multi_2026_03.json.
+    No default fallbacks permitted — all values must come from the active production config
+    (`configs/production/{ACTIVE_VERSION}.json`, resolved via `get_prod_metadata()`/`PROD_VERSION`;
+    NOT a hardcoded filename — see `config_layer.production_config`).
     """
     # _feature_store MUST be listed here. It was not until 2026-08-19: the assignment
     # below then bound a function-local and was discarded, leaving the module singleton
@@ -301,35 +303,35 @@ def _load_engine_config() -> dict:
     if not metadata:
         raise RuntimeError(
             "LIVE_HOOK: production metadata is empty. "
-            "Ensure configs/production/v1_multi_2026_03.json exists and is valid."
+            "Ensure the active production config (configs/production/ACTIVE_VERSION) exists and is valid."
         )
 
     engine_cfg = metadata.get("engine_runner")
     if not isinstance(engine_cfg, dict):
         raise RuntimeError(
             "LIVE_HOOK: 'engine_runner' section missing from production config. "
-            "Add it to configs/production/v1_multi_2026_03.json."
+            "Add it to the active production config (configs/production/ACTIVE_VERSION)."
         )
 
     decision_cfg = metadata.get("decision_engine")
     if not isinstance(decision_cfg, dict):
         raise RuntimeError(
             "LIVE_HOOK: 'decision_engine' section missing from production config. "
-            "Add it to configs/production/v1_multi_2026_03.json."
+            "Add it to the active production config (configs/production/ACTIVE_VERSION)."
         )
 
     fusion_cfg = metadata.get("fusion_engine")
     if not isinstance(fusion_cfg, dict):
         raise RuntimeError(
             "LIVE_HOOK: 'fusion_engine' section missing from production config. "
-            "Add it to configs/production/v1_multi_2026_03.json."
+            "Add it to the active production config (configs/production/ACTIVE_VERSION)."
         )
 
     ultron_cfg = metadata.get("ultron_risk_gate")
     if not isinstance(ultron_cfg, dict):
         raise RuntimeError(
             "LIVE_HOOK: 'ultron_risk_gate' section missing from production config. "
-            "Add it to configs/production/v1_multi_2026_03.json."
+            "Add it to the active production config (configs/production/ACTIVE_VERSION)."
         )
 
     # Normalize session strings in allowed_sessions
@@ -342,7 +344,7 @@ def _load_engine_config() -> dict:
     if not isinstance(exec_planner_cfg, dict):
         raise RuntimeError(
             "LIVE_HOOK: 'execution_planner' section missing from production config. "
-            "Add it to configs/production/v1_multi_2026_03.json."
+            "Add it to the active production config (configs/production/ACTIVE_VERSION)."
         )
 
     # C3 (2026-07-29): crt_engine was ABSENT from this merge, so the SL/TP block in
@@ -377,13 +379,13 @@ def _load_engine_config() -> dict:
         if not isinstance(fm_cfg, dict):
             raise RuntimeError(
                 "LIVE_HOOK: 'feature_monitor' section missing from production config. "
-                "Add it to configs/production/v1_multi_2026_03.json."
+                "Add it to the active production config (configs/production/ACTIVE_VERSION)."
             )
         window_size = fm_cfg.get("window_size")
         if window_size is None:
             raise KeyError(
                 "Required key 'window_size' missing from feature_monitor config. "
-                "Add it to configs/production/v1_multi_2026_03.json."
+                "Add it to the active production config (configs/production/ACTIVE_VERSION)."
             )
         _feature_monitor = FeatureMonitor(
             window_size=int(window_size),
@@ -400,13 +402,13 @@ def _load_engine_config() -> dict:
         if not isinstance(fs_cfg, dict):
             raise RuntimeError(
                 "LIVE_HOOK: 'feature_store' section missing from production config. "
-                "Add it to configs/production/v1_multi_2026_03.json."
+                "Add it to the active production config (configs/production/ACTIVE_VERSION)."
             )
         max_history = fs_cfg.get("max_history")
         if max_history is None:
             raise KeyError(
                 "Required key 'max_history' missing from feature_store config. "
-                "Add it to configs/production/v1_multi_2026_03.json."
+                "Add it to the active production config (configs/production/ACTIVE_VERSION)."
             )
         _feature_store = FeatureStore(max_history=int(max_history))
 
@@ -999,7 +1001,7 @@ class HookedLiveEngine(LiveEngine):
         if not isinstance(exec_planner_cfg, dict):
             raise RuntimeError(
                 "LIVE_HOOK: 'execution_planner' section missing from engine_config. "
-                "Ensure _load_engine_config() includes it from v1_multi_2026_03.json."
+                "Ensure _load_engine_config() includes it from the active production config."
             )
         # Merge gate_intelligence config so GateIntelligence receives its thresholds
         exec_planner_cfg = {

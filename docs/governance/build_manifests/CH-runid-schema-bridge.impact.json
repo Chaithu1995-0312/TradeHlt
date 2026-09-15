@@ -1,0 +1,31 @@
+{
+  "change_id": "CH-runid-schema-bridge",
+  "date_utc": "2026-09-10",
+  "objective": "Link the schema-slot bridge by run_id on the existing TRACKED_BINDING registry. run_20260909_202201.has corpus/dataset/CAD/cost/scoreboard/census pointers that the files already carry. Do not mint contract_id, mx_id, finding_id, or a provenance record_id.",
+  "change_classes": [
+    "TRACE_OBSERVATION_JOIN"
+  ],
+  "change_class_rationale": "Addressability of existing observation artifacts plus already-recorded corpus/dataset identity, keyed by run_id. No new trace field, no decision path, no MC-* seal.",
+  "affected_files": [
+    "docs/governance/run_linkage_registry.json",
+    "src/utils/run_linkage.py",
+    "tests/test_run_linkage.py",
+    "docs/governance/build_manifests/CH-runid-schema-bridge.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_crt_construction_trace.py",
+    "tests/test_crt_construction_trace_envelope.py",
+    "tests/test_resolver_metadata.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the registry schema_bridge objects, the resolve_artifacts pass-through, and the test together.",
+  "authority_granted": "User: Link this bridge by runid.",
+  "authority_NOT_granted": "No MC-* seal, no finding_id, no mx_id, no provenance record_id, no G001, no dashboard ledger fabrication, no economic_claims_allowed flip.",
+  "production_behavior_changed": "NO"
+}

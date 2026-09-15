@@ -1,0 +1,52 @@
+{
+  "change_id": "CH-analysis-trace-linkage",
+  "date_utc": "2026-09-10",
+  "objective": "Add two analysis-grain record types to the existing TRACKED_BINDING registry: _analyses (AN-*: question + claims, stable across re-measurement) and _traces (TR-*: one immutable evidence assembly of runs consumed + artifact sha256s). AN 1-N TR, so a re-measurement mints a new TR against the same AN. Claims cite a surface as '<run_id>#<surface>' resolving into that run's schema_bridge.surfaces -- a pointer, never a copy. Do not mint contract_id, mx_id, finding_id, MC-*, SEM-*, or a provenance record_id.",
+  "change_classes": [
+    "TRACE_OBSERVATION_JOIN"
+  ],
+  "change_class_rationale": "Addressability of existing observation artifacts, keyed by analysis rather than by run_id -- the analysis-grain sibling of CH-runid-schema-bridge (2026-09-10), which added schema_bridge to this same file under the same class. No new runtime trace field, no decision path, no MC-* seal, no economic claim. Additive JSON keys only; the pre-edit file is reconstructible byte-for-byte by removing the two new keys and the appended _doc sentence (sha256 5ac5d098ebfe2fc5, verified before and after).",
+  "affected_files": [
+    "docs/governance/run_linkage_registry.json",
+    "tests/test_run_linkage_traces.py",
+    "docs/governance/build_manifests/CH-analysis-trace-linkage.impact.json",
+    "docs/research/phase1_run_20260909_202201_coding_llm_context.yaml",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_crt_construction_trace.py",
+    "tests/test_crt_construction_trace_envelope.py",
+    "tests/test_resolver_metadata.py",
+    "tests/test_run_linkage.py",
+    "tests/test_run_linkage_traces.py",
+    "tests/test_gitignore_schema.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "required_checks_note": "The first three are mandated by change class TRACE_OBSERVATION_JOIN and were run green for this change, not merely listed. They concern runtime CRT trace streams -- a different sense of 'trace' than this change's analysis-grain TR-* record. The class was stretched the same way by the precedent CH-runid-schema-bridge; noted as a taxonomy homonym, not silently adopted.",
+  "unknowns": [],
+  "problem_addressed": {
+    "summary": "The phase-1 shadow-memory evidence chain is not one run. It is five run_ids (three registered, two not), two timezone conventions with no basis marker, and six of eight artifact groups carrying no run_id at all -- all presented under the single label run_20260909_202201.",
+    "why_the_previous_gate_failed": "docs/research/phase1_run_20260909_202201_coding_llm_context.yaml grew two admission mechanisms that contradict each other -- trust_table marks create_H20_context_economics VALID while forbidden_inferences lists quote_create_h20_headline -- because it is bound to a run_id. A run has no claims; an analysis does. Its trust_table is by its own header a 'strict key-copy' of schema_bridge.surfaces guarded by a STALE warning; surface_refs replace that copy with a reference, removing the staleness class structurally.",
+    "id_basis_defect": "Analysis run_ids are stamped UTC (run_20260909_190546, run_20260909_202201) while backtest run-directory ids are stamped local IST (run_20260909_224658_XAUUSD, run_20260910_010142_XAUUSD). Both use run_YYYYMMDD_HHMMSS with no marker, so a lexical sort inverts 190546 and 224658. Verified against file mtimes in both directions. Same class as F-066 one layer up: a timestamp carrying a basis different from the one its label implies."
+  },
+  "enforcement": {
+    "validator": "tests/test_run_linkage_traces.py",
+    "load_bearing_rule": "test_every_claim_names_a_registered_surface -- the superseded pack already declared claim_protocol.refuse_unnamed_surface: true but could not enforce it, because surfaces lived in the registry keyed by run while claims lived in prose. Co-location makes it a set-membership test.",
+    "boolean_filter": "schema_bridge.surfaces mixes 8 surface status tokens with rebuild_completed and join_logic_fixed_for_future_rebuild, which are run properties. Only string tokens in {VALID, INVALIDATED} count as surfaces.",
+    "negative_control": "10 mutations applied to the registry and reverted; all 10 caught by the validator (unregistered surface, boolean-as-surface, unknown trace, missing id_basis, missing sha256, nonexistent produced_by_run, ordering_key=run_id, broken backlink, unreasoned withdrawal, authority grant). Registry restored and reconstruction re-verified at sha256 5ac5d098ebfe2fc5."
+  },
+  "no_code_change": "src/utils/run_linkage.py is untouched. CH-runid-schema-bridge needed a pass-through because schema_bridge is addressable by run_id; _analyses/_traces are not. resolve_artifacts does a keyed lookup at run_linkage.py:158 and never iterates instrument keys, so underscore-prefixed siblings are unreachable from it.",
+  "residual_not_fixed": [
+    "docs/governance/run_linkage_registry.json is UNTRACKED in git, while GITIGNORE_SCHEMA.md's path table lists it as TRACKED_BINDING 'yes'. tests/test_gitignore_schema.py asserts only that the path is not ignored (_MUST_NOT_IGNORE), not that it is in the index, so the gap is invisible to the floor. Reported, not fixed -- tracking it is a separate authorized decision.",
+    "run_20260909_224658_XAUUSD and run_20260910_010142_XAUUSD remain unregistered. The trace records that fact via consumes_runs[].registered=false; it does not register them.",
+    "TR-SHADOWMEM-01's census.json sha256 is UNRECOVERABLE (the file was overwritten in place by the rebuild). Recorded rather than dropped."
+  ],
+  "rollback_boundary": "Remove XAUUSD._analyses and XAUUSD._traces and the appended _doc sentence, delete tests/test_run_linkage_traces.py, and revert the SUPERSEDED_BY marker on the context pack, together. The registry then reconstructs to sha256 5ac5d098ebfe2fc5.",
+  "authority_granted": "User: put traces inside run_linkage_registry.json; TR linking AN. User ruling 2026-09-10: forbidden_inferences outranks trust_table for run_20260909_202201.",
+  "authority_NOT_granted": "No MC-* seal, no finding_id, no F-*, no mx_id, no SEM-* node, no provenance record_id, no G001, no promotion, no economic_claims_allowed flip, no registration of the two unregistered run_ids, no TTL/config/spine change.",
+  "production_behavior_changed": "NO"
+}

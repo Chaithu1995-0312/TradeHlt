@@ -193,6 +193,19 @@ class BacktestConfig:
     # a live from_active_config() projection rather than leaving it blank.
     strategy_id: str = ""
 
+    # ── [G2 2026-09-10] HTF reset-clock basis ──────────────────────
+    # "count" (default, byte-identical to pre-G2 behaviour) | "calendar" (config-gated,
+    # PIT-clean H1/H4/D1 boundaries via features.calendar_periods.period_key — see
+    # HTFBuilder). Read with a Python-level default rather than a strict required key: this
+    # is a NEW optional instrumentation flag on ~20 production configs (most archived,
+    # never to be edited per §6.2 rule 4), matching how this same module already reads the
+    # optional `parent_crt` section elsewhere (try/except -> {} / `.get("enabled", False)`)
+    # rather than the strict `_require()` treatment given to the pre-existing required keys
+    # below. Not a silently-defaulted BEHAVIORAL VALUE in the F-018 sense — "count" is not a
+    # guessed number standing in for a missing mandatory section, it is the documented,
+    # unchanged legacy behaviour every config already exhibits today.
+    htf_clock_basis: str = "count"
+
     @classmethod
     def from_prod_config(
         cls,
@@ -229,6 +242,14 @@ class BacktestConfig:
                 "Add them to configs/production/v1_multi_2026_03.json."
             )
 
+        # [G2] optional, Python-level default — see the field's own docstring above.
+        htf_clock_basis = str(cfg.get("htf_clock_basis", "count"))
+        if htf_clock_basis not in ("count", "calendar"):
+            raise ValueError(
+                f"BacktestConfig: backtest.htf_clock_basis={htf_clock_basis!r} is not "
+                "one of ('count', 'calendar')."
+            )
+
         return cls(
             htf_candles_per_range = int(cfg["htf_candles_per_range"]),
             warmup_candles        = int(cfg["warmup_candles"]),
@@ -245,6 +266,7 @@ class BacktestConfig:
             instrument            = instrument,
             pip_size              = pip_size,
             crt_config            = crt_config,
+            htf_clock_basis       = htf_clock_basis,
         )
 
 
@@ -883,9 +905,29 @@ class CandleLoader:
 # ─────────────────────────────────────────────────────────────────
 
 class HTFBuilder:
-    def __init__(self, candles_per_htf: int, instrument: str = "UNKNOWN"):
+    def __init__(self, candles_per_htf: int, instrument: str = "UNKNOWN", *,
+                 clock_basis: str = "count", calendar_rule: Optional[str] = None):
+        # G2 (2026-09-10): config-gated clock basis, default "count" (byte-identical to
+        # pre-G2 behaviour — a pure bar counter, `current_htf_id` flips every Nth pushed
+        # candle regardless of what timeframe that count is meant to represent). "calendar"
+        # derives the id from `features.calendar_periods.period_key` instead — PIT-clean
+        # (a pure function of the current bar's own timestamp; no lookahead) and immune to
+        # the count clock's measured phase drift (a trading day's bar count need not be a
+        # multiple of `candles_per_htf` — XAUUSD M15 is 92 bars/day, and 92 mod 16 = 12, so
+        # the count clock never re-tiles the day and rollovers drift across all 24 hours).
+        # Only `current_htf_id`/`completed_window`/`seed_candles()` change meaning under
+        # "calendar" — every existing "count" consumer is untouched.
+        if clock_basis not in ("count", "calendar"):
+            raise ValueError(
+                f"HTFBuilder: unknown clock_basis {clock_basis!r} (expected 'count' or 'calendar')"
+            )
+        if clock_basis == "calendar" and not calendar_rule:
+            raise ValueError("HTFBuilder: clock_basis='calendar' requires calendar_rule")
         self.candles_per_htf = candles_per_htf
         self.instrument      = instrument
+        self._clock_basis    = clock_basis
+        self._calendar_rule  = calendar_rule
+        self._cal_key        = None   # calendar basis only; mirrors ParentCandleBuilder._cur_key
         self._buffer:      list[Candle] = []
         self._htf_idx:     int  = 0
         self._complete:    list[Candle] = []
@@ -900,6 +942,28 @@ class HTFBuilder:
         return self._complete[:]
 
     def push(self, candle: Candle) -> bool:
+        if self._clock_basis == "calendar":
+            # Mirrors features.parent_candle.ParentCandleBuilder.push() exactly: the first
+            # candle only seeds `_cal_key` (no spurious "closed" signal on a 1-candle
+            # buffer); a period boundary closes the PRIOR buffer and starts a fresh one
+            # with the boundary-crossing candle.
+            from features.calendar_periods import period_key
+            key = period_key(candle.timestamp, self._calendar_rule)
+            if self._cal_key is None:
+                self._cal_key = key
+                self._buffer  = [candle]
+                return False
+            if key != self._cal_key:
+                self._htf_idx    += 1
+                self._complete    = self._buffer[:]
+                self._complete_id = f"{self.instrument}-HTFCAL-{self._cal_key.isoformat()}"
+                self._cal_key     = key
+                self._buffer      = [candle]
+                return True
+            self._buffer.append(candle)
+            return False
+
+        # count basis (unchanged, byte-identical to pre-G2 behaviour)
         self._buffer.append(candle)
         if len(self._buffer) >= self.candles_per_htf:
             self._htf_idx    += 1
@@ -1273,6 +1337,14 @@ class BacktestMetrics:
     trades_per_month:      float = 0.0   # span-derived frequency (Goal Layer)
     funnel_counts:         dict  = field(default_factory=dict)   # CRT-state funnel
 
+    # ── [G3 2026-09-10] resolved HTF-clock provenance ──────────────────────────
+    # The RUN's own resolved config values — not the module-level PROD_VERSION/
+    # ACTIVE_VERSION, which can differ from what a specific archived run actually used
+    # (see G4: the chart tab was stamping the CURRENT active config's version+hash on
+    # states produced by a run recorded under a different config).
+    htf_candles_per_range: int   = 0
+    htf_clock_basis:       str   = "count"
+
     @property
     def win_rate(self) -> float:
         t = self.wins + self.losses
@@ -1323,6 +1395,8 @@ class BacktestMetrics:
             "gross_loss_rr":         round(self.gross_loss_rr, 4),
             "funnel_counts":         dict(self.funnel_counts),
             "config_version":      PROD_VERSION,
+            "htf_candles_per_range": self.htf_candles_per_range,   # [G3]
+            "htf_clock_basis":       self.htf_clock_basis,         # [G3]
         }
 
 
@@ -1345,6 +1419,58 @@ def _v2_percentile(xs: list[float], p: float) -> Optional[float]:
     hi = min(lo + 1, len(s) - 1)
     frac = rank - lo
     return float(s[lo] + (s[hi] - s[lo]) * frac)
+
+
+def _resolve_exit(
+    action: str, t, trade_status: str, candle: "Candle",
+    partial_tp_enabled: bool, partial_tp_fraction: float,
+) -> tuple[float, str]:
+    """Resolve (exit_raw, reason) for a closing TRADE_* action from CRTEngine.process_candle.
+
+    Exact-matched on `action == "TRADE_STOPPED_STRUCTURAL"` first — NOT folded into the
+    substring-matched "STOPPED" branch below — because a structural kill
+    (ExecutionEngine.close_structural(), crt_engine_v2.py:2523-2547, the SEM-021
+    displacement-origin-invalidation exit) is a materially different event from an ordinary
+    stop-loss touch (ExecutionEngine.update_trade()). close_structural's own docstring is
+    explicit that it "Books at exit_price (the bar CLOSE), never at the displacement origin —
+    booking at the origin would assume a fill at a level the bar may never have offered"; the SL
+    price is exactly that kind of assumed level for this exit type, so booking a structural kill
+    at t.sl_price under the reason "STOPPED" would both misprice it and erase the distinction
+    from the ledger. Extracted to a pure function so this dispatch logic is unit-testable
+    without a full BacktestRunner loop — see tests/test_displacement_origin_kill.py.
+    """
+    if action == "TRADE_STOPPED_STRUCTURAL":
+        if trade_status == "TP1" and partial_tp_enabled:
+            # Mirrors close_structural's own TP1-status accounting (crt_engine_v2.py:2537-2539):
+            # the partial fill is kept, only the runner is closed — at the bar's close.
+            exit_raw = (
+                partial_tp_fraction * t.tp1_price
+                + (1.0 - partial_tp_fraction) * candle.close
+            )
+            return exit_raw, "TP1_STRUCTURAL_STOP"
+        return candle.close, "STOPPED_STRUCTURAL"
+    if "STOPPED" in action:
+        if trade_status == "TP1" and partial_tp_enabled:
+            # Runner stopped at breakeven; blend exit = f@TP1 + (1-f)@entry.
+            # f is execution_planner.partial_tp_fraction (was a hardcoded 0.5
+            # while the config key was strict-read at :1854 and then discarded —
+            # a config illusion: editing the key had zero effect on output).
+            exit_raw = (
+                partial_tp_fraction * t.tp1_price
+                + (1.0 - partial_tp_fraction) * t.sl_price
+            )
+            return exit_raw, "TP1_BE_STOP"
+        return t.sl_price, "STOPPED"
+    if "TP2" in action:
+        if trade_status == "TP1" and partial_tp_enabled:
+            # Runner reached TP2; blend exit = f@TP1 + (1-f)@TP2 (same key as above)
+            exit_raw = (
+                partial_tp_fraction * t.tp1_price
+                + (1.0 - partial_tp_fraction) * t.tp2_price
+            )
+            return exit_raw, "TP1_TP2"
+        return t.tp2_price, "TP2"
+    return t.tp1_price, "TP1"
 
 
 def _planned_rr(t) -> Optional[float]:
@@ -1373,11 +1499,14 @@ class MetricsEngine:
     def compute(
         self, journal: TradeJournal, capital: CapitalCurve,
         total_candles: int, state_counts: dict, gap_resets: int,
+        htf_candles_per_range: int = 0, htf_clock_basis: str = "count",
     ) -> BacktestMetrics:
         trades = journal.closed
         m = BacktestMetrics(instrument=self.instrument)
         m.total_candles    = total_candles
         m.gap_resets       = gap_resets
+        m.htf_candles_per_range = htf_candles_per_range   # [G3]
+        m.htf_clock_basis       = htf_clock_basis         # [G3]
         m.approved_trades  = len(trades)
         m.rejected_trades  = len(journal.rejections)
         m.total_setups     = m.approved_trades + m.rejected_trades
@@ -1562,37 +1691,49 @@ class ReportWriter:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def write_all(self, metrics: BacktestMetrics, journal: TradeJournal,
-                  events: list[dict]) -> dict[str, str]:
+                  events: list[dict], run_id: Optional[str] = None) -> dict[str, str]:
+        """`run_id` (2026-09-16, user-authorized): the canonical output-content id — see the
+        call site's own comment in `BacktestRunner.run()` (F-101 context). Optional so any other
+        existing caller of `write_all` is unaffected (stamps nothing when omitted)."""
         paths = {}
-        paths["summary"]    = self._write_summary(metrics)
-        paths["trades_csv"] = self._write_trades(journal)
-        paths["events"]     = self._write_events(events)
+        paths["summary"]    = self._write_summary(metrics, run_id)
+        paths["trades_csv"] = self._write_trades(journal, run_id)
+        paths["events"]     = self._write_events(events, run_id)
         paths["report"]     = self._write_report(metrics)
         return paths
 
-    def _write_summary(self, m: BacktestMetrics) -> str:
+    def _write_summary(self, m: BacktestMetrics, run_id: Optional[str] = None) -> str:
         p = self.output_dir / f"{self.instrument}_summary.json"
+        d = m.to_dict()
+        if run_id is not None:
+            d["run_id"] = run_id
         with open(p, "w", encoding="utf-8") as f:
-            json.dump(m.to_dict(), f, indent=2)
+            json.dump(d, f, indent=2)
         return str(p)
 
-    def _write_trades(self, journal: TradeJournal) -> str:
+    def _write_trades(self, journal: TradeJournal, run_id: Optional[str] = None) -> str:
         rows = journal.to_csv_rows()
         if not rows:
             return ""
+        if run_id is not None:
+            # Appended as the LAST key on each row dict — DictWriter derives its header
+            # from rows[0].keys(), so this becomes the last CSV column, never shifting
+            # any existing column's position for a by-header (or even positional) reader.
+            rows = [dict(r, run_id=run_id) for r in rows]
         p = self.output_dir / f"{self.instrument}_trades.csv"
         with open(p, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=rows[0].keys())
             w.writeheader(); w.writerows(rows)
         return str(p)
 
-    def _write_events(self, events: list[dict]) -> str:
+    def _write_events(self, events: list[dict], run_id: Optional[str] = None) -> str:
         if not events:
             return ""
         p = self.output_dir / f"{self.instrument}_events.jsonl"
         with open(p, "w", encoding="utf-8") as f:
             for ev in events:
-                f.write(json.dumps(ev) + "\n")
+                rec = dict(ev, run_id=run_id) if run_id is not None else ev
+                f.write(json.dumps(rec) + "\n")
         return str(p)
 
     def _write_report(self, m: BacktestMetrics) -> str:
@@ -2106,6 +2247,87 @@ class BacktestRunner:
         except Exception:  # noqa: BLE001
             return ""
 
+    def _build_layer_trace_emitter(self, report_writer_run_id: str):
+        """Construct the cross-layer LayerProof emitter, or None when not enabled.
+
+        Mirrors `_build_bar_structure_emitter`'s discipline exactly: returns None on ANY
+        problem (section absent, disabled, construction error) after logging, and never lets
+        an observation sidecar take the backtest down with it. Absent `layer_trace` section is
+        the normal path for every config as of this module's introduction.
+        """
+        try:
+            from datetime import datetime, timezone
+            from runtime.layer_trace import LayerTraceConfig, LayerTraceEmitter, mint_run_id
+            from runtime.bar_structure_snapshot import corpus_sha256
+            from utils.logging_config import RUN_ID as _preexisting_logging_run_id
+
+            cfg = LayerTraceConfig.from_prod_config()
+            if cfg is None:
+                return None
+
+            from features.feature_schema import SCHEMA_HASH
+
+            run_id = mint_run_id(self.cfg.instrument, datetime.now(timezone.utc))
+            emitter = LayerTraceEmitter(
+                cfg,
+                run_id=run_id,
+                instrument=self.cfg.instrument,
+                timeframe="M15",
+                active_version=PROD_VERSION,
+                config_hash=self._bar_structure_config_hash(),
+                schema_hash=SCHEMA_HASH,
+                dataset_id=getattr(self, "dataset_id", "") or "",
+                corpus_path=str(self.csv_path or ""),
+                corpus_rows=int(getattr(self, "total_candles", 0) or 0),
+                corpus_sha256=(corpus_sha256(self.csv_path) if self.csv_path else "NO_CORPUS_FILE"),
+                code_sha=self._layer_trace_code_sha(),
+                tree_dirty=self._layer_trace_tree_dirty(),
+                rail="backtest",
+                preexisting_run_ids={
+                    "utils.logging_config.RUN_ID": _preexisting_logging_run_id,
+                    "runtime.ReportWriter.run_id": report_writer_run_id,
+                },
+            )
+            self.log.info(
+                "LayerTrace ENABLED (observation only) | run_id=%s | -> %s",
+                run_id, emitter.path,
+            )
+            return emitter
+        except Exception as exc:  # noqa: BLE001
+            self.log.debug(
+                "LayerTrace disabled (construction failed, backtest unaffected): %s", exc,
+            )
+            return None
+
+    @staticmethod
+    def _layer_trace_code_sha() -> str:
+        """Best-effort `git rev-parse HEAD` — H1 evidence, never fatal. `"UNKNOWN"` on any
+        failure (git absent, not a repo, subprocess error)."""
+        try:
+            import subprocess
+
+            out = subprocess.run(
+                ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5,
+            )
+            return out.stdout.strip() if out.returncode == 0 else "UNKNOWN"
+        except Exception:  # noqa: BLE001
+            return "UNKNOWN"
+
+    @staticmethod
+    def _layer_trace_tree_dirty() -> bool:
+        """Best-effort `git status --porcelain` non-emptiness — H1/preflight evidence, never
+        fatal. `True` (conservative) on any failure so a check-failure never silently reads as
+        clean."""
+        try:
+            import subprocess
+
+            out = subprocess.run(
+                ["git", "status", "--porcelain"], capture_output=True, text=True, timeout=5,
+            )
+            return bool(out.stdout.strip()) if out.returncode == 0 else True
+        except Exception:  # noqa: BLE001
+            return True
+
     def _bar_structure_choch_inputs(self, candle):
         """`(break_of_structure, trend_bias)` for this bar, JOINED from the canonical 48-dim
         vector — never re-derived.
@@ -2248,16 +2470,28 @@ class BacktestRunner:
 
     # Ensure vectors is a list of lists (or numpy array)
         engine  = CRTEngine(self.crt_cfg, sweep_tracer=self._sweep_tracer)
-        htf     = HTFBuilder(self.cfg.htf_candles_per_range, self.cfg.instrument)
         # F-075 caller: calendar-true parent CRT. None when parent_crt.enabled is
         # false (v2_multi_2026_04 stays parent_state=None). Pushed on every child
         # bar including warmup so C1/C2/C3 exist before the first process_candle.
+        # Constructed BEFORE `htf` (moved up from its original position) because [G2]
+        # "calendar" clock basis reuses `parent_feed.rule` as HTFBuilder's calendar_rule
+        # rather than re-reading `parent_crt.timeframe` a third time.
         parent_feed = ParentCRTFeed.from_prod_config()
         if parent_feed is not None:
             self.log.info(
                 "ParentCRT feed wired | timeframe=%s | gate=reject_on_mismatch",
                 parent_feed.rule,
             )
+        if self.cfg.htf_clock_basis == "calendar" and parent_feed is None:
+            raise ValueError(
+                "BacktestConfig.htf_clock_basis='calendar' requires parent_crt.enabled=true "
+                "(no timeframe to derive the calendar clock from)."
+            )
+        htf = HTFBuilder(
+            self.cfg.htf_candles_per_range, self.cfg.instrument,
+            clock_basis=self.cfg.htf_clock_basis,
+            calendar_rule=parent_feed.rule if parent_feed is not None else None,
+        )
         slip    = SlippageModel(
             self.cfg.slippage_atr_fraction if self.cfg.slippage_enabled else 0.0,
             self.cfg.slippage_seed,
@@ -2274,6 +2508,18 @@ class BacktestRunner:
         gap_det = GapDetector(self.cfg.gap_reset_minutes, self.cfg.gap_reset_enabled)
         met_eng = MetricsEngine(self.cfg.instrument)
         writer  = ReportWriter(output_dir, self.cfg.instrument)
+
+        # ── Canonical output-content run_id (2026-09-16, user-authorized) ──────
+        # Distinct from `writer.run_id` (F-101: one of THREE independently-minted,
+        # mutually-inconsistent identifiers already carried by this run — see
+        # docs/current-findings.md F-101). That split is NOT fixed here — this mints
+        # a NEW, separate id and stamps it into the always-on core output CONTENT
+        # (summary.json / trades.csv / events.jsonl / crt_telemetry.jsonl), which
+        # today carry no run identity at all (confirmed: none of those four files
+        # mention "run_id" anywhere in their own content). UTC, minted once, used
+        # for every core-file stamp below — always-on, additive field, no config gate
+        # (pure identity metadata, not a decision input).
+        _canonical_run_id = datetime.now(timezone.utc).strftime("run_%Y%m%d_%H%M%S")
 
         # ── CH-v3-unified-market-structure-v1: BarStructureSnapshot ─────────
         # OBSERVATION ONLY. `_bar_structure` is None unless the ACTIVE config carries
@@ -2301,6 +2547,42 @@ class BacktestRunner:
         # (crt_engine_v2.py:2856), so the object is reusable across the whole run.
         if _gate_hooks is not None:
             engine.baseline_trace = _gate_hooks
+
+        # ── layer_trace: cross-layer LayerProof identity spine ──────────────
+        # OBSERVATION ONLY, same discipline as `_bar_structure`/`_construction_trace` above.
+        # `None` unless `layer_trace.enabled: true` (absent from every config as of this
+        # module's introduction). Construction failure NEVER breaks a backtest.
+        _layer_trace = self._build_layer_trace_emitter(writer.run_id)
+        if _layer_trace is not None:
+            # L0/L1 are run-scoped facts already established in __init__ (corpus admission via
+            # `validate_dataset`/`CandleLoader`, batch `FeaturePipeline` build) — recorded once
+            # here rather than re-asserted every bar.
+            _lt_run_scoped_id = f"{_layer_trace.run_id}:RUN_SCOPED"
+            _layer_trace.emit(
+                trace_id=_lt_run_scoped_id, bar_idx=-1, bar_ts=None,
+                layer="L0", module="data_ingestion.ohlcv_schema+dataset_integrity+corpus_gate",
+                status="PASS",
+                artifact_path=str(self.csv_path or ""),
+                note=f"corpus admitted for this run: {self.cfg.instrument} rows≈{getattr(self, 'total_candles', 'UNKNOWN')}",
+            )
+            _layer_trace.emit(
+                trace_id=_lt_run_scoped_id, bar_idx=-1, bar_ts=None,
+                layer="L1", module="features.feature_pipeline",
+                status=("PASS" if self.feature_vectors is not None else "NOT_REACHED"),
+                note=(
+                    "FeaturePipeline built (batch, whole corpus, in __init__)"
+                    if self.feature_vectors is not None else
+                    "skip_features=True or no csv_path — FeaturePipeline never built for this run"
+                ),
+            )
+            _layer_trace.emit_not_reached_once(
+                layer="L7", module="config_layer.execution_planner+core.ultron_risk_gate",
+                note=(
+                    "backtest_v2 does not import ExecutionPlannerV1_2 or UltronRiskGate — "
+                    "only runtime.live_engine_hook / runtime.live_rail_orchestrator do. "
+                    "Execution plane is unreachable on this rail (plan Layer 7)."
+                ),
+            )
 
         state_counts:   dict[str, int] = defaultdict(int)
         candle_idx      = 0
@@ -2530,7 +2812,9 @@ class BacktestRunner:
                         "GAP_RESET_CLOSE", candle, candle_idx,
                         engine.state.atr_abs, spread_half,
                     )
-                    # Phase D: attach strategy memory fields
+                    # Phase D: attach strategy memory fields. Best-effort — the trade is
+                    # already closed above; a failure here must never undo or block that
+                    # close, only leave these optional research fields at their defaults.
                     if _gap_closed is not None and _phase_d_available:
                         try:
                             _gap_closed.winning_strategy_id = _last_strategy_id
@@ -2622,6 +2906,40 @@ class BacktestRunner:
                     transitions=_transitions,
                 )
 
+            # ── layer_trace: L3 (CRT) + L4 (HTF/parent) proof rows ──────────────────
+            # Same placement discipline as `_bar_structure`/`_construction_trace` immediately
+            # above: AFTER `process_candle` has returned, decision already final. Reads only
+            # values already computed for this bar (`result`, `parent_state`, `parent_objective`,
+            # `parent_feed`) — no new computation.
+            _lt_trace_id = None
+            if _layer_trace is not None:
+                from runtime.layer_trace import make_trace_id as _lt_make_trace_id
+
+                _lt_trace_id = _lt_make_trace_id(
+                    _layer_trace.run_id, self.cfg.instrument, candle.timestamp
+                )
+                _lt_action = result.get("action", "NONE")
+                _lt_rejected = ("REJECTED" in _lt_action) or (_lt_action == "NONE" and bool(result.get("reason")))
+                _lt_status = "REJECT" if _lt_rejected else "PASS"
+                _layer_trace.emit(
+                    trace_id=_lt_trace_id, bar_idx=candle_idx - 1, bar_ts=candle.timestamp,
+                    layer="L3", module="config_layer.crt_engine_v2", status=_lt_status,
+                    output_hash=curr_state,
+                    note=f"action={_lt_action} reason={result.get('reason')} transition={prev_state}->{curr_state}",
+                )
+                _layer_trace.emit(
+                    trace_id=_lt_trace_id, bar_idx=candle_idx - 1, bar_ts=candle.timestamp,
+                    layer="L4", module="runtime.parent_crt_feed+config_layer.htf_state",
+                    status=("PASS" if parent_feed is not None else "NOT_REACHED"),
+                    output_hash=(getattr(parent_state, "name", None) if parent_state is not None else None),
+                    note=(
+                        f"htf_state={getattr(parent_feed.htf_state, 'name', None)} "
+                        f"objective={getattr(parent_objective, 'name', None)}"
+                        if parent_feed is not None else
+                        "parent_crt.enabled=false for this config — HTF context absent, not rejected"
+                    ),
+                )
+
             action = result.get("action", "NONE")
             # [Phase 0b] Stamp HTF position on displacement events
             if action == "DISPLACEMENT_CONFIRMED":
@@ -2635,6 +2953,22 @@ class BacktestRunner:
                 _shadow_leak_count += 1
 
             if "TRADE_OPENED" in action and engine.state.active_trade:
+                # ── layer_trace: L8 (runtime ledger — trade birth on the backtest rail) ──
+                # Placed at the TOP of this block, so it reflects `engine.state.active_trade`
+                # as CRTEngine.process_candle built it, before any of this block's own
+                # bookkeeping runs. Read-only; contributes nothing back into `_trade`.
+                if _layer_trace is not None and _lt_trace_id is not None:
+                    _lt_at = engine.state.active_trade
+                    _layer_trace.emit(
+                        trace_id=_lt_trace_id, bar_idx=candle_idx - 1, bar_ts=candle.timestamp,
+                        layer="L8", module="config_layer.crt_engine_v2.Trade", status="PASS",
+                        output_hash=getattr(_lt_at, "id", None),
+                        note=(
+                            f"birth_site=crt_engine_v2.TRADE_OPENED direction={getattr(getattr(_lt_at, 'direction', None), 'name', None)} "
+                            f"entry={getattr(_lt_at, 'entry_price', None)} sl={getattr(_lt_at, 'sl_price', None)} "
+                            f"tp1={getattr(_lt_at, 'tp1_price', None)} tp2={getattr(_lt_at, 'tp2_price', None)}"
+                        ),
+                    )
                 last_risk_score = engine.state.risk_score.final \
                                   if engine.state.risk_score else 0.0
                 last_session = self._session(candle.timestamp)
@@ -2776,8 +3110,11 @@ class BacktestRunner:
                                     "FeatureMonitor: soft drift at candle %d (%s).",
                                     candle_idx, self.cfg.instrument,
                                 )
-                        except Exception:
-                            pass
+                        except Exception as _fm_drift_exc:
+                            self.log.debug(
+                                "FeatureMonitor drift update failed at candle %d (non-fatal): %s",
+                                candle_idx, _fm_drift_exc,
+                            )
 
                 # ── EngineRunner gate (adapter / fusion / dual / decision) ──
                 _engine_vetoed = False
@@ -2811,8 +3148,12 @@ class BacktestRunner:
                                 _feat_map_er["direction"]    = int(_dir_int)
                                 _feat_map_er["signal_dir"]   = int(_dir_int)
                                 _feat_map_er["trade_direction"] = int(_dir_int)
-                            except Exception:
-                                pass
+                            except Exception as _dir_cast_exc:
+                                self.log.debug(
+                                    "EngineRunner direction feature cast failed at candle %d "
+                                    "(non-fatal, _feat_map_er direction left unset): %s",
+                                    candle_idx, _dir_cast_exc,
+                                )
                         # ── StrategyOrchestrator consensus (runs once per candle) ──
                         _strat_consensus_score = -1.0
                         _strat_consensus_dir = 0
@@ -2879,9 +3220,37 @@ class BacktestRunner:
                                 f"engine_runner:{_stage}:{_reason}", candle.timestamp
                             )
                             state_path = []
+                        # ── layer_trace: L5/L6 (EngineRunner evidence + fusion/decision) ──
+                        if _layer_trace is not None and _lt_trace_id is not None:
+                            _layer_trace.emit(
+                                trace_id=_lt_trace_id, bar_idx=candle_idx - 1, bar_ts=candle.timestamp,
+                                layer="L5", module="core.engine_runner.EngineRunner",
+                                status=("REJECT" if _engine_vetoed else "PASS"),
+                                output_hash=str(_decision) or None,
+                                note=f"stage={_stage} reason={_reason} bypass_zone={_bypass_zone}",
+                            )
+                            _layer_trace.emit(
+                                trace_id=_lt_trace_id, bar_idx=candle_idx - 1, bar_ts=candle.timestamp,
+                                layer="L6", module="core.fusion_engine+core.decision_engine",
+                                status=("REJECT" if _engine_vetoed else "PASS"),
+                                output_hash=None,
+                                note=f"veto_mode=post_commit engine_gate_enabled=true decision={_decision}",
+                            )
                     except Exception as _er_exc:
                         # Fail-soft: log but allow trade through
                         self.log.debug(f"EngineRunner gate exception (allow): {_er_exc}")
+                        # ── layer_trace H2: EngineRunner errored, trade allowed through ──
+                        # `_engine_vetoed` stays False on this path (see the caller's `if not
+                        # _p5_rejected and not _drift_vetoed and not _engine_vetoed:` below) —
+                        # this row is the ONLY record of that fact; nothing else distinguishes
+                        # "engine approved" from "engine never ran due to an exception".
+                        if _layer_trace is not None and _lt_trace_id is not None:
+                            _layer_trace.emit(
+                                trace_id=_lt_trace_id, bar_idx=candle_idx - 1, bar_ts=candle.timestamp,
+                                layer="L5", module="core.engine_runner.EngineRunner",
+                                status="EXCEPTION",
+                                note=f"fail-soft: {type(_er_exc).__name__}: {_er_exc} — trade allowed through unvetoed",
+                            )
 
                 if not _p5_rejected and not _drift_vetoed and not _engine_vetoed:
                     # BitNet score recorded at approval time. crt_engine_v2 sets
@@ -3006,37 +3375,19 @@ class BacktestRunner:
                             t.id, t.partial_pnl, t.sl_price,
                         )
                     else:
-                        if "STOPPED" in action:
-                            if _trade_status == "TP1" and _partial_tp_enabled:
-                                # Runner stopped at breakeven; blend exit = f@TP1 + (1-f)@entry.
-                                # f is execution_planner.partial_tp_fraction (was a hardcoded 0.5
-                                # while the config key was strict-read at :1854 and then discarded —
-                                # a config illusion: editing the key had zero effect on output).
-                                exit_raw = (
-                                    _partial_tp_fraction * t.tp1_price
-                                    + (1.0 - _partial_tp_fraction) * t.sl_price
-                                )
-                                reason = "TP1_BE_STOP"
-                            else:
-                                exit_raw, reason = t.sl_price, "STOPPED"
-                        elif "TP2" in action:
-                            if _trade_status == "TP1" and _partial_tp_enabled:
-                                # Runner reached TP2; blend exit = f@TP1 + (1-f)@TP2 (same key as above)
-                                exit_raw = (
-                                    _partial_tp_fraction * t.tp1_price
-                                    + (1.0 - _partial_tp_fraction) * t.tp2_price
-                                )
-                                reason = "TP1_TP2"
-                            else:
-                                exit_raw, reason = t.tp2_price, "TP2"
-                        else:
-                            exit_raw, reason = t.tp1_price, "TP1"
+                        exit_raw, reason = _resolve_exit(
+                            action, t, _trade_status, candle,
+                            _partial_tp_enabled, _partial_tp_fraction,
+                        )
                         _closed = journal.on_trade_closed(
                             t, exit_raw, reason,
                             candle, candle_idx, engine.state.atr_abs, spread_half,
                         )
                     if _closed is not None:
-                        # Phase D: attach strategy memory fields before any downstream read
+                        # Phase D: attach strategy memory fields before any downstream read.
+                        # Best-effort — the trade is already closed above; a failure here must
+                        # never undo or block that close, only leave these optional research
+                        # fields at their defaults.
                         if _phase_d_available:
                             try:
                                 _closed.winning_strategy_id = _last_strategy_id
@@ -3089,7 +3440,9 @@ class BacktestRunner:
                     engine.state.atr_abs, spread_half,
                 )
                 if _closed is not None:
-                    # Phase D: attach strategy memory fields
+                    # Phase D: attach strategy memory fields. Best-effort — the trade is
+                    # already closed above; a failure here must never undo or block that
+                    # close, only leave these optional research fields at their defaults.
                     if _phase_d_available:
                         try:
                             _closed.winning_strategy_id = _last_strategy_id
@@ -3136,6 +3489,14 @@ class BacktestRunner:
                 _ct_manifest["rows"], _ct_manifest["agreement_rate"], _ct_manifest["path"],
             )
             self._construction_trace_manifest = _ct_manifest
+
+        if _layer_trace is not None:
+            _lt_manifest = _layer_trace.close()
+            self.log.info(
+                "LayerTrace | rows=%d | run_id=%s | %s",
+                _lt_manifest["rows"], _layer_trace.run_id, _lt_manifest["path"],
+            )
+            self._layer_trace_manifest = _lt_manifest
         # Detach so a later run in the SAME process (e.g. MultiInstrumentRunner) never
         # inherits a stale hooks object across a different engine instance.
         if _gate_hooks is not None:
@@ -3171,9 +3532,15 @@ class BacktestRunner:
         # M1 — episode summarizer: flush any open episode at run end
         self._episode_summarizer.flush()
 
-        m = met_eng.compute(journal, cap, candle_idx, state_counts, gap_resets)
+        m = met_eng.compute(
+            journal, cap, candle_idx, state_counts, gap_resets,
+            htf_candles_per_range=self.cfg.htf_candles_per_range,   # [G3]
+            htf_clock_basis=self.cfg.htf_clock_basis,               # [G3]
+        )
 
-        # Phase 2: attach drift monitor stats to distribution summary
+        # Phase 2: attach drift monitor stats to distribution summary. Best-effort —
+        # metrics `m` are already fully computed above; a failure here must never lose
+        # the run's metrics, only leave `feature_drift` absent from the summary.
         if self._monitor_available and self._monitor is not None:
             try:
                 drift_stats = self._monitor.stats()
@@ -3187,7 +3554,7 @@ class BacktestRunner:
         # Phase 4: attach hard drift pause count
         m.hard_drift_pauses = _hard_drift_pauses
 
-        paths = writer.write_all(m, journal, flushed_events)
+        paths = writer.write_all(m, journal, flushed_events, run_id=_canonical_run_id)
 
         # [TELEMETRY] Write Phase-0 CRT funnel telemetry sidecar
         try:
@@ -3196,7 +3563,7 @@ class BacktestRunner:
                 _tel_path = writer.output_dir / f"{self.cfg.instrument}_crt_telemetry.jsonl"
                 with open(_tel_path, "w", encoding="utf-8") as _tf:
                     for _rec in _tel_records:
-                        _tf.write(json.dumps(_rec, default=str) + "\n")
+                        _tf.write(json.dumps(dict(_rec, run_id=_canonical_run_id), default=str) + "\n")
                 self.log.info("Telemetry: %s (%d records)", _tel_path, len(_tel_records))
         except Exception as _tel_exc:
             self.log.warning("Telemetry write failed (non-fatal): %s", _tel_exc)
@@ -3328,6 +3695,71 @@ def _preflight_dataset(csv_path: str, instrument: str, log: logging.Logger) -> b
             csv_path, instrument, "; ".join(rep.get("warnings", [])),
         )
     return True
+
+
+def _validate_htf_clock(cfg: "BacktestConfig", csv_path: str, log: logging.Logger) -> None:
+    """G1 (2026-09-10) — fail loud when `backtest.htf_candles_per_range` does not match
+    the declared `parent_crt.timeframe` at this corpus's ACTUAL (measured) bar size.
+
+    Closes a silent-gap class: legacy `v2_multi_2026_04.json` held
+    `htf_candles_per_range=4` (a 1H-equivalent count on M15 bars) under a
+    `parent_crt.timeframe="H4"` declaration for four months (2026-04-30 -> 2026-09-09,
+    fixed in commit 63562ab) with nothing catching the mismatch — `HTFBuilder`'s reset
+    clock never tracked the declared HTF at all, four times too fast. `HTFBuilder` is a
+    pure bar counter (`current_htf_id` flips every Nth pushed candle); it has no notion
+    of what timeframe that count is supposed to represent, so nothing upstream of this
+    check could have caught it.
+
+    Skipped (not failed) when `parent_crt` is absent/disabled — no declared HTF intent
+    to validate against — or when `timeframe` is a calendar-only rule (D1/W1/MN1 are
+    not a fixed 'N candles per window' count in the same sense H1/H4 are).
+
+    `csv_path` must be the POST-ADMISSION path (`CandleLoader.filepath`), not the raw
+    `--csv` argument — R3 dataset admission (`admit_csv_path`) can silently substitute a
+    different physical file for an XAUUSD-M15-shaped request, and validating the wrong
+    file's bar size would be worse than not validating at all.
+    """
+    from config_layer.production_config import get_prod_section
+    from features.calendar_periods import HOUR_GRID_HOURS
+
+    try:
+        parent_cfg = get_prod_section("parent_crt")
+    except (RuntimeError, KeyError):
+        return  # no parent_crt section declared -- nothing to validate the clock against
+    if not bool(parent_cfg.get("enabled", False)):
+        log.info("[htf_clock] G1 skipped: parent_crt.enabled=false (no declared HTF intent).")
+        return
+
+    timeframe = parent_cfg.get("timeframe")
+    if timeframe not in HOUR_GRID_HOURS:
+        return  # D1/W1/MN1 (or unset) aren't a fixed 'N candles per window' rule
+
+    try:
+        adm = admit_corpus(
+            csv_path, cfg.instrument, enforce=False, check_plausibility=False, log=log,
+        )
+    except (DatasetAdmissionError, Phase1CandidateError):
+        return  # admission already succeeded once to reach this point; treat as advisory
+    bar_minutes = adm.report.get("modal_delta_minutes")
+    if not bar_minutes:
+        log.warning(
+            "[htf_clock] G1 skipped: could not measure a modal bar interval for %s.", csv_path,
+        )
+        return
+
+    expected = HOUR_GRID_HOURS[timeframe] * 60 // bar_minutes
+    if cfg.htf_candles_per_range != expected:
+        raise ValueError(
+            f"G1 HTF-clock mismatch: backtest.htf_candles_per_range="
+            f"{cfg.htf_candles_per_range} does not match parent_crt.timeframe="
+            f"{timeframe!r} at this corpus's measured {bar_minutes}-minute bars "
+            f"(expected {expected}). HTFBuilder's reset clock would not track the "
+            f"declared HTF at all -- fix configs/production/*.json before running."
+        )
+    log.info(
+        "[htf_clock] G1 OK: htf_candles_per_range=%d matches parent_crt.timeframe=%s "
+        "at %d-minute bars.", cfg.htf_candles_per_range, timeframe, bar_minutes,
+    )
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -3545,6 +3977,14 @@ def main():
             bt_log.error("Aborting single-instrument backtest: dataset rejected.")
             sys.exit(1)
         loader = CandleLoader(str(csv_path), cfg.instrument)
+        # G1 (2026-09-10): fail loud on a mismatched HTF reset clock. Checked against
+        # loader.filepath (post-admission) — not the raw --csv arg — since R3 admission
+        # may have substituted a different physical file.
+        try:
+            _validate_htf_clock(cfg, loader.filepath, bt_log)
+        except ValueError as exc:
+            bt_log.error("Aborting: %s", exc)
+            sys.exit(1)
         runner = BacktestRunner(cfg, csv_path=str(csv_path), overrides=_cli_overrides)
         runner.run(loader.stream(), loader.count(), args.output)
         

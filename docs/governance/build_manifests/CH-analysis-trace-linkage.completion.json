@@ -1,0 +1,79 @@
+{
+  "change_id": "CH-analysis-trace-linkage",
+  "date_utc": "2026-09-10",
+  "completion_status": "BLOCKED_ON_FOREIGN_TREE_STATE",
+  "completion_status_note": "The declared work is finished and every declared check passed; see checks_executed. This field deliberately does NOT say COMPLETE, because construction_protocol.py mechanically DENIES completion while undeclared governed surfaces are dirty (docs/governance/REPOSITORY_CONSTRUCTION_PROTOCOL.md, CLAUDE.md 3.3b). The dirty surfaces belong to concurrent sessions, not to this change — see validator_blocked_on_foreign_tree_state. Asserting COMPLETE against a DENY would be exactly the prose-over-mechanism claim the protocol exists to reject. Flip to COMPLETE only from an isolated worktree, or after the owning session declares its files.",
+  "repo_state_hash": "61094ea6ff4f+9662f0c2c2f1",
+  "declared_files": [
+    "docs/governance/run_linkage_registry.json",
+    "tests/test_run_linkage_traces.py",
+    "docs/governance/build_manifests/CH-analysis-trace-linkage.impact.json",
+    "docs/governance/build_manifests/CH-analysis-trace-linkage.completion.json",
+    "docs/research/phase1_run_20260909_202201_coding_llm_context.yaml",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    {
+      "check": "tests/test_run_linkage_traces.py",
+      "result": "PASS",
+      "detail": "20 passed — new floor for the AN-*/TR-* records."
+    },
+    {
+      "check": "tests/test_run_linkage.py",
+      "result": "PASS",
+      "detail": "Existing registry consumer floor unaffected."
+    },
+    {
+      "check": "tests/test_gitignore_schema.py",
+      "result": "PASS",
+      "detail": "Registry stays in its declared TRACKED_BINDING class; no .gitignore edit made."
+    },
+    {
+      "check": "tests/test_construction_protocol.py",
+      "result": "PASS",
+      "detail": "Ran in the combined targeted batch: 43 passed."
+    },
+    {
+      "check": "tests/test_crt_construction_trace.py + _envelope.py + tests/test_resolver_metadata.py",
+      "result": "PASS",
+      "detail": "43 passed. Mandated by change class TRACE_OBSERVATION_JOIN; executed, not merely acknowledged."
+    },
+    {
+      "check": "scripts/maintenance/check_governance_invariants.py --all",
+      "result": "NO_REGRESSION",
+      "detail": "Baseline captured BEFORE any edit: 12 failed / 554 passed / 1 skipped. After the change: the identical 12 failures, 554 passed, 1 skipped. Zero new failures. Pre-existing reds: test_current_findings, test_doc_citations, test_session_log, test_feature_math_lint, test_geometry_census x2, test_model_paths_literals x3, test_script_registry x2, test_corpus_read_lint."
+    },
+    {
+      "check": "additivity proof",
+      "result": "PASS",
+      "detail": "Removing exactly XAUUSD._analyses, XAUUSD._traces and the appended _doc sentence reconstructs the pre-edit registry at sha256 5ac5d098ebfe2fc5. Verified three times: before the edit (round-trip identity), after the edit, and after the negative control restored the file."
+    },
+    {
+      "check": "negative control (E-001: a test that cannot fail is not enforcement)",
+      "result": "PASS",
+      "detail": "10 mutations applied and reverted; 10/10 caught by tests/test_run_linkage_traces.py — unregistered surface, boolean-as-surface, unknown trace reference, missing id_basis, missing sha256, nonexistent produced_by_run, ordering_key=run_id, broken AN/TR backlink, unreasoned withdrawal, authority grant."
+    },
+    {
+      "check": "consumer safety",
+      "result": "PASS",
+      "detail": "Repo-wide search found exactly one code consumer, src/utils/run_linkage.py. resolve_artifacts does a keyed .get(run_id) lookup at :158 and never iterates instrument keys, so underscore-prefixed siblings are unreachable from it. File left untouched."
+    }
+  ],
+  "validator_blocked_on_foreign_tree_state": {
+    "status": "EXPECTED_BLOCK",
+    "surfaces_reported_undeclared": [
+      "configs/research/research_config_xauusd_month.json",
+      "scripts/analysis/build_resolver_overlay.py",
+      "scripts/analysis/corpus_read_census.py",
+      "scripts/analysis/corpus_read_lint.py",
+      "scripts/analysis/feature_38_lineage_census.py",
+      "scripts/analysis/feature_pipeline_fc05_closure.py",
+      "scripts/analysis/phase1_resolver_replay_evidence.py",
+      "scripts/analysis/phase1_resolver_replay_sample_acquisition.py"
+    ],
+    "attribution": "None of these were touched by this change. All eight carry mtimes between 2026-09-09 23:27 and 2026-09-10 11:15, before this session's first action; feature_38_lineage_census.py and feature_pipeline_fc05_closure.py appear as 'M' in this session's own starting git status snapshot, and the other six are pre-existing untracked paths from concurrent work. They are NOT added to declared_files, because declaring a file this change did not modify would be a false completion claim.",
+    "consequence": "validate-completion reports BLOCKED on UNDECLARED governed surfaces. The block reflects a shared dirty working tree (CLAUDE.md 1.5 Working Tree Preflight: this repo routinely has concurrent Claude sessions writing to it), not an incomplete change. Resolving it requires either an isolated worktree or the owning session declaring its own files."
+  },
+  "authority_NOT_granted": "No MC-* seal, no finding_id, no F-*, no mx_id, no SEM-* node, no provenance record_id, no G001, no promotion, no economic_claims_allowed flip, no registration of the two unregistered run_ids, no TTL/config/spine change.",
+  "production_behavior_changed": "NO"
+}
