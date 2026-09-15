@@ -49,8 +49,7 @@ from scripts.governance.rr_l1_freeze_certificate import (  # noqa: E402
 )
 
 
-def _utc_now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+from research.provenance import utc_now_iso as _utc_now  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _norm_ts(ts: str) -> str:

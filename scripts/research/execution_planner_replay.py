@@ -63,17 +63,32 @@ def _norm_ts(s: str) -> str:
     return str(s).replace("T", " ").split("+")[0].split("Z")[0].strip()[:19]
 
 
-def _run_backtest(instrument: str, csv: str, out_dir: Path) -> tuple[Path, Path, object]:
+def _run_backtest(
+    instrument: str, csv: str, out_dir: Path, htf_clock_basis: str | None = None,
+) -> tuple[Path, Path, object]:
     """Run one deterministic backtest on the ACTIVE prod config; return (telemetry, trades_csv, metrics).
 
     Faithful construction (mirrors phase6e_shadow_ab): load the registry crt_engine values + apply the
     market router via ConfigBuilder.from_existing. BacktestConfig.from_prod_config(instrument) ALONE
     rebuilds a CRTConfig from flat params/defaults (the session-sweep.md construction caveat) and would
     silently drop the v4 all-sessions override.
+
+    `htf_clock_basis`: optional research-only override of BacktestConfig.htf_clock_basis
+    ("count" | "calendar", backtest_v2.py:207/246). None (default) leaves the field exactly as
+    from_prod_config() read it from the active config's `backtest` section — byte-identical to
+    every other caller of this function. BacktestConfig is a plain (non-frozen) @dataclass, so
+    this is a post-construction field override here in the research script, not a config-file
+    or engine change — parent_crt.enabled=true on v2_htfcrt_2026_08 means ParentCRTFeed is
+    already constructed unconditionally inside BacktestRunner.run() (backtest_v2.py:2334), so
+    the calendar arm's own requirement (parent_feed is not None) is already satisfied.
     """
     base = load_prod_config_from_registry(PROD_VERSION, instrument)
     crt = ConfigBuilder.from_existing(instrument, base)
     cfg = BacktestConfig.from_prod_config(instrument=instrument, crt_config=crt)
+    if htf_clock_basis is not None:
+        if htf_clock_basis not in ("count", "calendar"):
+            raise ValueError(f"htf_clock_basis override must be 'count' or 'calendar', got {htf_clock_basis!r}")
+        cfg.htf_clock_basis = htf_clock_basis
     loader = CandleLoader(csv, instrument)
     runner = BacktestRunner(cfg, csv_path=csv)
     m = runner.run(loader.stream(), loader.count(), str(out_dir))
@@ -164,6 +179,9 @@ def main(argv=None) -> int:
     ap.add_argument("--instrument", default="BNBUSDT")
     ap.add_argument("--csv", default=None, help="default data/<INSTR>_M15.csv")
     ap.add_argument("--output-dir", default="results/execution_planner_replay")
+    ap.add_argument("--htf-clock-basis", default=None, choices=["count", "calendar"],
+                     help="Research-only override of BacktestConfig.htf_clock_basis "
+                          "(backtest_v2.py:207). Default: leave as read from the active config.")
     args = ap.parse_args(argv)
 
     instrument = args.instrument
@@ -177,7 +195,7 @@ def main(argv=None) -> int:
         max_candles = 100
 
     # 1) one deterministic backtest -> RETEST_REPLAY telemetry + real trades
-    tel_path, trd_path, metrics = _run_backtest(instrument, csv, out / "_run")
+    tel_path, trd_path, metrics = _run_backtest(instrument, csv, out / "_run", args.htf_clock_basis)
     replay = _load_replay(tel_path)
     if not replay:
         raise SystemExit("no RETEST_REPLAY records found — is the additive telemetry wired?")
@@ -196,6 +214,7 @@ def main(argv=None) -> int:
     }
     exp = {k: v["expectancy_rr"] for k, v in cells.items()}
     attribution = compute_attribution(exp)
+    by_reject_reason = compute_by_reject_reason(replay, candle_idx, candles, max_candles)
 
     # ── Trust gate = STRUCTURAL fidelity (not net-number match) ──────────────
     # All four cells share the simplified simulate_exit model (TP2>SL>TP1, no 0.5R trail,
@@ -242,6 +261,7 @@ def main(argv=None) -> int:
     payload = {
         "prod_version": PROD_VERSION,
         "instrument": instrument,
+        "htf_clock_basis_override": args.htf_clock_basis,
         "seed": SEED,
         "max_candles": max_candles,
         "vanilla_def": {"sl_atr": VANILLA_SL_ATR, "tp_atr": VANILLA_TP_ATR},
@@ -255,6 +275,7 @@ def main(argv=None) -> int:
         "cells": cells,
         "expectancy": {k: round(v, 4) for k, v in exp.items()},
         "attribution": attribution,
+        "by_reject_reason": by_reject_reason,
         "anchors": {
             "cell_B_structure_selected_gross": cell_b,
             "real_executed_mean_rr_net": real_rr,
@@ -288,6 +309,11 @@ def main(argv=None) -> int:
     print(f"  context: cell B gross {cell_b:+.3f}  |  real executed net {real_rr}  "
           f"(gap = trail+partial+cost, constant across cells)")
     print(f"  VERDICT: dominant effect = {dominant.upper()}  (selection {sel:+.3f} vs SL/TP {sltp:+.3f})")
+    print("  by_reject_reason (force-approved, structure SL/TP):")
+    print(f"    {'reason':<18}{'n':>5}{'win_rate':>10}{'expectancy_rr':>16}{'avg_realized_rr':>18}")
+    for reason, agg in sorted(by_reject_reason.items(), key=lambda kv: -kv[1]["total_trades"]):
+        print(f"    {reason:<18}{agg['total_trades']:>5}{agg['win_rate']:>10.3f}"
+              f"{agg['expectancy_rr']:>16.4f}{agg['avg_realized_rr']:>18.4f}")
     print(f"  wrote {out / 'replay_bnbusdt.json'}")
     return 0 if anchor_ok else 2
 
@@ -297,6 +323,39 @@ def _reason_counts(records: list[dict]) -> dict:
     for r in records:
         k = r.get("reject_reason") or "none"
         out[k] = out.get(k, 0) + 1
+    return out
+
+
+def compute_by_reject_reason(
+    replay: list[dict], candle_idx: dict, candles: list[dict], max_candles: int,
+) -> dict:
+    """Additive breakdown: forward-simulate EVERY RETEST candidate — accepted AND every
+    rejected reason — under the SAME structure SL/TP (_structure_levels, the real build_trade
+    formula). This is "force-approve every candidate" for the rejected buckets: each one is
+    walked forward exactly as if it had opened a real trade. Buckets are apples-to-apples with
+    each other and with the real executed trades (ACCEPTED bucket == cell B).
+
+    Does not touch the existing A/B/C/D cells — those still lump all rejected candidates
+    together for the 2x2 attribution. This is a separate, finer-grained view."""
+    buckets: dict[str, list[dict]] = {}
+    for r in replay:
+        key = "ACCEPTED" if r["accepted"] else (r.get("reject_reason") or "UNKNOWN")
+        buckets.setdefault(key, []).append(r)
+
+    out: dict[str, dict] = {}
+    for reason, records in buckets.items():
+        sim = _simulate_cell(records, _structure_levels, candle_idx, candles, max_candles)
+        agg = _aggregate_variant_results(sim)
+        out[reason] = {
+            "total_trades":   agg["total_trades"],
+            "win_rate":       agg["win_rate"],
+            "expectancy_rr":  agg["expectancy_rr"],
+            "avg_realized_rr": agg["avg_realized_rr"],
+            "tp1_rate":       agg["tp1_rate"],
+            "tp2_rate":       agg["tp2_rate"],
+            "sl_rate":        agg["sl_rate"],
+            "timeout_rate":   agg["timeout_rate"],
+        }
     return out
 
 

@@ -1,0 +1,37 @@
+{
+  "change_id": "CH-probes-extract-phase1-2026-09-14",
+  "title": "Extract shared probe helpers into src/research/probes (Phase-1 first)",
+  "when_utc": "2026-09-14T10:38:13Z",
+  "policy": "no_deletes; pre-edit copies archived with MANIFEST",
+  "archive_batch": "archive/probes_extraction_phase1_2026-09-14/",
+  "created": [
+    "src/research/probes/__init__.py",
+    "src/research/probes/corpus.py",
+    "src/research/probes/governance.py",
+    "src/research/probes/horizon.py",
+    "src/research/probes/scoreboard.py",
+    "src/research/probes/costs_path.py",
+    "src/research/probes/shadow_collapse.py"
+  ],
+  "edited_in_place": [
+    "scripts/analysis/p001_excursion_probe.py",
+    "scripts/analysis/sweep_structure_economic_probe.py",
+    "scripts/analysis/phase1_resolver_replay_evidence.py"
+  ],
+  "archived_pre_edit": [
+    "scripts/analysis/phase1_resolver_replay_evidence.py",
+    "scripts/analysis/sweep_structure_economic_probe.py",
+    "scripts/analysis/p001_excursion_probe.py",
+    "scripts/analysis/shadow_cross_range_restoration_probe.py"
+  ],
+  "behavior": "MEASURE-ONLY paths preserved; Phase-1 standing contract unchanged; importlib sibling loads removed for Phase-1/sep/p001 shared helpers",
+  "deferred": "Phase-1 local _Capture / shadow-collapse monkeypatches remain in CLI; shadow_collapse.py is placeholder",
+  "checks": [
+    "python -c import research.probes (PYTHONPATH=src)",
+    "py_compile phase1 / sep / p001",
+    "phase1 --help"
+  ],
+  "manifest_csv": "archive/probes_extraction_phase1_2026-09-14/MANIFEST.csv",
+  "completion_status": "COMPLETE_LOCAL",
+  "note": "Applied on D:\\Tradelatest working tree; GitHub SCM not connected for cloud PR at apply time."
+}

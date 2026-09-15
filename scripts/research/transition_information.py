@@ -157,12 +157,7 @@ def _pooled(symbols: list[str], loaded: dict, builder, n_perm: int, label: str) 
     return out
 
 
-def _git_commit() -> str:
-    try:
-        return subprocess.check_output(["git", "rev-parse", "HEAD"],
-                                       stderr=subprocess.DEVNULL).decode().strip()
-    except Exception:
-        return "unknown"
+from research.provenance import git_commit as _git_commit  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def main(argv=None) -> int:

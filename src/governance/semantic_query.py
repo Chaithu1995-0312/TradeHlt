@@ -24,7 +24,7 @@ Usage:
 """
 from __future__ import annotations
 
-import importlib.util
+from research.probes.scriptmod import load_py
 import json
 import re
 from dataclasses import dataclass, field
@@ -121,11 +121,7 @@ def _load_feature_surface() -> tuple[Any, Optional[str]]:
     if not _FEATURE_SURFACE.is_file():
         return None, "feature_surface_query.py not found"
     try:
-        spec = importlib.util.spec_from_file_location("_fsq", _FEATURE_SURFACE)
-        if spec is None or spec.loader is None:
-            return None, "spec could not be created"
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        module = load_py(_FEATURE_SURFACE, "_fsq")
         return module.FeatureSurfaceIndex.load(), None
     except Exception as exc:  # noqa: BLE001
         return None, f"{type(exc).__name__}: {exc}"

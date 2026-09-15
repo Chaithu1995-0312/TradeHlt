@@ -294,12 +294,7 @@ def _selfcheck(version: str, root: Path, instrument: str = "BNBUSDT") -> dict:
             "byte_identical": ok, "trades": l_un["approved_trades"]}
 
 
-def _git_commit() -> str:
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
-    except Exception:
-        return "unknown"
+from research.provenance import git_commit as _git_commit  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _delta(cell_m: dict, base_m: dict) -> dict:

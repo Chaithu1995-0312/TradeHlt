@@ -42,12 +42,7 @@ from features import derived_math as dm  # noqa: E402
 from features import candle_math as cm  # noqa: E402
 
 
-def _sha(p: Path) -> str:
-    h = hashlib.sha256()
-    with open(p, "rb") as f:
-        for c in iter(lambda: f.read(1 << 20), b""):
-            h.update(c)
-    return h.hexdigest()
+from research.provenance import sha256_file as _sha  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _now() -> str:
@@ -1090,8 +1085,21 @@ def main() -> int:
     )
 
     print("P4 volatility_regime...")
-    df = pd.read_csv(ROOT / PHASE1_PHYSICAL_PATH)
-    df.columns = [c.strip().lower() for c in df.columns]
+    # CORPUS-READ-SEAM P3: migrated off bare `pd.read_csv(PHASE1_PHYSICAL_PATH)` (no identity
+    # check at all before this read) onto `corpus_store` (full admit_corpus chain: R3 identity
+    # + L2 sequence + D-1 plausibility, cached). `frozen_corpus_binding` below is left
+    # unchanged -- it references the static PHASE1_* constants, not this read.
+    from data_ingestion import corpus_store
+    corpus_store.ensure_fresh("XAUUSD", "M15")
+    _read = corpus_store.read("XAUUSD", "M15")
+    df = pd.DataFrame({
+        "timestamp": [c.timestamp for c in _read.candles],
+        "open":      [c.open for c in _read.candles],
+        "high":      [c.high for c in _read.candles],
+        "low":       [c.low for c in _read.candles],
+        "close":     [c.close for c in _read.candles],
+        "volume":    [c.volume for c in _read.candles],
+    })
     vr = vol_regime_adjudication(df)
     (GOV / f"volatility_regime_semantic_adjudication_fc05-{DATE}.json").write_text(
         json.dumps(vr, indent=2) + "\n", encoding="utf-8"

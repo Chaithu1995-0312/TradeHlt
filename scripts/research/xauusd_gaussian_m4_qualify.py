@@ -62,16 +62,10 @@ HYPOTHESES = (
 CONTROL_ARM = "random_match_n"
 
 
-def _sha256_file(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
+from research.provenance import sha256_file as _sha256_file  # noqa: E402 — research-framework Phase 1 dedup
 
 
-def _utc() -> str:
-    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+from research.provenance import utc_stamp_compact as _utc  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _load_jsonl(path: Path) -> list[dict]:

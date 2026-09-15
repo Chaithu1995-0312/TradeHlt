@@ -192,12 +192,7 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def _git_commit() -> str:
-    try:
-        return subprocess.check_output(["git", "rev-parse", "HEAD"],
-                                       stderr=subprocess.DEVNULL).decode().strip()
-    except Exception:
-        return "unknown"
+from research.provenance import git_commit as _git_commit  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _print(report: dict) -> None:

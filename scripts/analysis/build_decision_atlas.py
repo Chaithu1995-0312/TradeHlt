@@ -49,7 +49,6 @@ corpus without a rewrite.
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import sys
 from datetime import datetime
@@ -62,10 +61,15 @@ sys.path.insert(0, str(ROOT / "src"))
 # Reuse P-001's verified loaders/guards rather than copying them -- the timestamp join and its
 # float32-relative OHLC tolerance are the parts most likely to drift, and they are already
 # proven on this exact pair of files.
-_P001 = ROOT / "scripts" / "analysis" / "p001_excursion_probe.py"
-_spec = importlib.util.spec_from_file_location("p001_excursion_probe", _P001)
-p001 = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(p001)
+from research.probes.corpus import (  # noqa: E402
+    join_and_verify,
+    load_corpus,
+    load_live_rows,
+)
+from research.probes.governance import assert_no_claim_keys  # noqa: E402
+
+# excursion() still on p001 until forward_walk extraction.
+from research.probes.excursion import excursion  # noqa: E402
 
 HORIZONS = (20, 40, 80)
 
@@ -302,6 +306,12 @@ def build(live: list[dict], bstruct: dict[int, dict], joined: list[dict],
                 "resolver_state": r.get("ontology_state"),
                 "resolver_site": r.get("resolver.projected_site"),
                 "agree": r.get("agree"),
+                # Pass-through only, never recomputed. crt_construction_trace.py:51 emits
+                # this "so a reader cannot mistake that feature-conditioned diagnostic for
+                # a verdict on engine truth" -- dropping it here was the defect (F-069's
+                # re-measurement showed both constructions moved; agree_scope is the field
+                # that says which construction basis `agree` was computed under).
+                "agree_scope": r.get("agree_scope"),
             })
             prior_pos = pos
 
@@ -311,7 +321,7 @@ def build(live: list[dict], bstruct: dict[int, dict], joined: list[dict],
         atr = (live[d["pos"]].get("engine.live_context") or {}).get("live_atr")
         ci = joined[d["pos"]]["bar"]["index"]
         for H in HORIZONS:
-            ex = p001.excursion(corpus, ci, float(atr), H) if atr else None
+            ex = excursion(corpus, ci, float(atr), H) if atr else None
             row = {
                 "decision_id": d["decision_id"], "horizon": H,
                 "truncated": ex is None,
@@ -344,6 +354,8 @@ def build(live: list[dict], bstruct: dict[int, dict], joined: list[dict],
             "engine_state": r.get("engine.crt_state"),
             "resolver_state": r.get("ontology_state"),
             "agree": r.get("agree"),
+            # Pass-through only -- see the transition_decision table above for why.
+            "agree_scope": r.get("agree_scope"),
             "projected_site": r.get("resolver.projected_site"),
             "live_atr": (r.get("engine.live_context") or {}).get("live_atr"),
             "open": j["open"], "high": j["high"], "low": j["low"], "close": j["close"],
@@ -394,10 +406,10 @@ def main() -> int:
                           "parity) are enforced regardless -- this flag can never waive them."))
     args = ap.parse_args()
 
-    corpus = p001.load_corpus(ROOT / args.csv)
-    live = p001.load_live_rows(ROOT / args.stream)
+    corpus = load_corpus(ROOT / args.csv)
+    live = load_live_rows(ROOT / args.stream)
     bstruct = load_bar_structure(ROOT / args.bar_structure)
-    joined, integrity = p001.join_and_verify(live, corpus)
+    joined, integrity = join_and_verify(live, corpus)
     if integrity["ohlc_mismatches"] or integrity["unmatched"]:
         print(f"FATAL: join integrity failed: {integrity}")
         return 1
@@ -467,7 +479,7 @@ def main() -> int:
     }
     (ROOT / args.out / "atlas_manifest.json").write_text(
         json.dumps(meta, indent=2), encoding="utf-8")
-    p001.assert_no_claim_keys(meta)
+    assert_no_claim_keys(meta)
     print(f"\nmanifest: {ROOT / args.out / 'atlas_manifest.json'}")
     print("DESCRIPTIVE ONLY -- no significance, no economic claim, no finding id.")
     return 0

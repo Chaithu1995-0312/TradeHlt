@@ -71,12 +71,7 @@ PARTITIONS: list[dict[str, Any]] = [
 ]
 
 
-def _sha256_file(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
+from research.provenance import sha256_file as _sha256_file  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _git_meta(root: Path) -> dict[str, Any]:

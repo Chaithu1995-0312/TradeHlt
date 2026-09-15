@@ -60,30 +60,10 @@ GROUPS = {
 }
 
 
-def _csv_map(cfg: ResearchConfig, instruments: list[str]) -> dict[str, str]:
-    keep = set(instruments)
-    out: dict[str, str] = {}
-    for p in sorted(Path(cfg.data_dir).glob(cfg.pattern)):
-        inst = p.stem.split("_")[0]
-        if inst in keep:
-            out[inst] = str(p)
-    return out
+from research.qualify_matrix import csv_map as _csv_map  # noqa: E402 — research-framework Phase 1 dedup
 
 
-def _winning_control(per_by_hyp, control_names, scope_instruments, agg, cost):
-    win_name, win_rrs, win_exp = "none", [], float("-inf")
-    for name in sorted(control_names):
-        per = {i: per_by_hyp[name][i] for i in scope_instruments}
-        rrs: list[float] = []
-        for outs in per.values():
-            rrs.extend(_net_rrs(outs, cost))
-        rep = agg.aggregate(name, sorted(scope_instruments),
-                            [o for outs in per.values() for o in outs], cost_model=cost)
-        if rep.expectancy_rr > win_exp:
-            win_name, win_rrs, win_exp = name, rrs, rep.expectancy_rr
-    if win_exp == float("-inf"):
-        win_name, win_rrs, win_exp = "none", [], 0.0
-    return win_name, win_rrs, win_exp
+from research.qualify_matrix import winning_control as _winning_control  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _fill_telemetry(cfg: ResearchConfig, csv_map: dict[str, str]) -> dict:
@@ -94,7 +74,7 @@ def _fill_telemetry(cfg: ResearchConfig, csv_map: dict[str, str]) -> dict:
     runner = HypothesisRunner(cfg)
     out: dict[str, dict] = {}
     for inst in sorted(csv_map):
-        candles = runner._load_candles(csv_map[inst], inst)
+        candles, _in_window = runner._load_candles(csv_map[inst], inst)
         armed = 0
         ctx = {"instrument": inst}
         for i in range(cfg.warmup, len(candles)):
@@ -114,6 +94,19 @@ def _run_group(cfg_path: str, instruments: list[str]) -> tuple[ResearchConfig, d
     csv_map = _csv_map(cfg, instruments)
     if not csv_map:
         raise SystemExit(f"No CSVs matched {cfg.pattern} in {cfg.data_dir} for {instruments}")
+    from runtime.backtest_v2 import CandleLoader
+    from data_ingestion.ohlcv_schema import ClockProvenanceError, DatasetIntegrityError
+    exclusions: dict[str, str] = {}
+    admitted: dict[str, str] = {}
+    for inst, path in csv_map.items():
+        try:
+            CandleLoader(path, inst)
+            admitted[inst] = path
+        except (DatasetIntegrityError, ClockProvenanceError) as exc:
+            exclusions[inst] = f"{type(exc).__name__}: {exc}"
+    csv_map = admitted
+    if not csv_map:
+        raise SystemExit(f"All CSVs excluded by corpus admission for {instruments}: {exclusions}")
     control_names = sorted(n for n, h in HYPOTHESIS_REGISTRY.items() if h.family == "control")
 
     per_by_hyp: dict[str, dict] = {}
@@ -153,15 +146,10 @@ def _run_group(cfg_path: str, instruments: list[str]) -> tuple[ResearchConfig, d
                 "pf_ge_1_3": bool(final.profit_factor >= 1.3),   # reporting flag only
             },
         }
-    return cfg, result, fills
+    return cfg, result, fills, exclusions
 
 
-def _git_commit() -> str:
-    try:
-        return subprocess.check_output(["git", "rev-parse", "HEAD"],
-                                       stderr=subprocess.DEVNULL).decode().strip()
-    except Exception:
-        return "unknown"
+from research.provenance import git_commit as _git_commit  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def main(argv=None) -> int:
@@ -173,10 +161,11 @@ def main(argv=None) -> int:
     groups: dict[str, dict] = {}
     cfg_ref = None
     for gname, (cfg_path, instruments) in GROUPS.items():
-        cfg, res, fills = _run_group(cfg_path, instruments)
+        cfg, res, fills, exclusions = _run_group(cfg_path, instruments)
         cfg_ref = cfg_ref or cfg
         groups[gname] = {"config_path": cfg_path, "config_sha256": cfg.sha256(),
-                         "fill_telemetry": fills, "scopes": res}
+                         "fill_telemetry": fills, "scopes": res,
+                         "universe_exclusions": exclusions}
 
     body = {
         "candidate": CANDIDATE,

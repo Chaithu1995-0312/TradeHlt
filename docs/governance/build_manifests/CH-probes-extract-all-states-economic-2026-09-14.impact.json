@@ -1,0 +1,18 @@
+{
+  "change_id": "CH-probes-extract-all-states-economic-2026-09-14",
+  "title": "Migrate all_states_economic_probe to research.probes; extract load_cost_model",
+  "when_utc": "2026-09-14T10:38:13Z",
+  "archive_batch": "archive/probes_extraction_all_states_economic_2026-09-14/",
+  "created_or_extended": [
+    "src/research/probes/costs_path.py (load_cost_model)",
+    "src/research/probes/__init__.py exports"
+  ],
+  "edited_in_place": [
+    "scripts/analysis/all_states_economic_probe.py",
+    "scripts/analysis/sweep_structure_economic_probe.py",
+    "src/research/probes/costs_path.py",
+    "src/research/probes/__init__.py"
+  ],
+  "depends_on": "CH-probes-extract-phase1-2026-09-14",
+  "completion_status": "COMPLETE_LOCAL"
+}

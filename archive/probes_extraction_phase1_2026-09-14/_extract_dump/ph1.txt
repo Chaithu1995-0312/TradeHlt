@@ -1,0 +1,99 @@
+### _profit_factor
+def _profit_factor(xs: list[float]) -> float:
+    gp = sum(x for x in xs if x > 0)
+    gl = -sum(x for x in xs if x < 0)
+    if gl <= 0:
+        return PF_CAP if gp > 0 else 0.0
+    return min(gp / gl, PF_CAP)
+
+
+### _scoreboard_row
+def _scoreboard_row(
+    name: str,
+    net_rs: list[float],
+    *,
+    n_universe: int,
+    n_eligible: int,
+) -> dict:
+    n = len(net_rs)
+    coverage = (100.0 * n / n_universe) if n_universe else 0.0
+    if n == 0:
+        return {
+            "arm": name,
+            "n": 0,
+            "n_universe": n_universe,
+            "n_eligible_direction": n_eligible,
+            "coverage_pct": round(coverage, 4),
+            "expectancy": None,
+            "PF": None,
+            "win_rate": None,
+            "power": "EMPTY",
+        }
+    wins = sum(1 for x in net_rs if x > 0)
+    return {
+        "arm": name,
+        "n": n,
+        "n_universe": n_universe,
+        "n_eligible_direction": n_eligible,
+        "coverage_pct": round(coverage, 4),
+        "expectancy": round(st.mean(net_rs), 6),
+        "PF": round(_profit_factor(net_rs), 4),
+        "win_rate": round(wins / n, 6),
+        "power": "INSUFFICIENT" if n < MIN_N_LABEL else "WEAK",
+    }
+
+
+### _net_r
+def _net_r(
+    corpus: list[dict],
+    bar_index: int,
+    direction: str,
+    atr: float,
+    cost_model: ComponentCostModel,
+) -> Optional[float]:
+    gross = sep.close_at_horizon(corpus, bar_index, direction, atr, HORIZON)
+    if gross is None:
+        return None
+    side = "long" if direction == "LONG" else "short"
+    cost_r = cost_model.cost_price(exit_kind="TIMEOUT", direction=side, nights_held=0) / atr
+    return gross - cost_r
+
+
+### _install_collapse_capture
+def _install_collapse_capture():
+    """Capture pending_displacement_dir at ENGINE SHADOW→EXP collapse.
+
+    Kept for sample_acquisition.py. This is NOT the frozen four-arm resolver object.
+    """
+    orig = StateMachine.try_shadow_pending_to_expansion
+
+    def patched(self, state, candle, ev_logger=None):
+        pending_dir = state.pending_displacement_dir
+        pending_formed = state.pending_displacement_formed_idx
+        pending_src = state.pending_displacement_source_htf
+        atr_abs = getattr(state, "atr_abs", None)
+        ok = orig(self, state, candle, ev_logger)
+        if ok:
+            _Capture.collapses.append(
+                {
+                    "candle_index": int(candle.index),
+                    "timestamp": str(getattr(candle, "timestamp", "")),
+                    "pending_displacement_dir": (
+                        pending_dir.name if pending_dir is not None else "NONE"
+                    ),
+                    "pending_displacement_formed_idx": pending_formed,
+                    "pending_displacement_source_htf": pending_src or None,
+                    "atr_abs": float(atr_abs) if atr_abs else None,
+                    "action": "SHADOW_EXPANSION_CONFIRMED",
+                }
+            )
+        return ok
+
+    StateMachine.try_shadow_pending_to_expansion = patched
+
+    def restore():
+        StateMachine.try_shadow_pending_to_expansion = orig
+
+    return restore
+
+

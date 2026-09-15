@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import importlib.util
 import json
 import sys
 from datetime import datetime, timezone
@@ -32,6 +31,7 @@ from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_ROOT / "src"))
+from research.probes.scriptmod import load_py  # noqa: E402
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -54,10 +54,7 @@ _RAW = {"open", "high", "low", "close", "volume", "timestamp"}
 
 def _load_dag() -> dict:
     probe = _ROOT / "scripts" / "analysis" / "feature_dag_layers.py"
-    spec = importlib.util.spec_from_file_location("feature_dag_layers", probe)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules["feature_dag_layers"] = mod
-    spec.loader.exec_module(mod)
+    mod = load_py(probe, "feature_dag_layers")
     return mod.build_dag()
 
 

@@ -79,12 +79,7 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _sha(p: Path) -> str:
-    h = hashlib.sha256()
-    with open(p, "rb") as f:
-        for c in iter(lambda: f.read(1 << 20), b""):
-            h.update(c)
-    return h.hexdigest()
+from research.provenance import sha256_file as _sha  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _git() -> tuple[str, bool]:

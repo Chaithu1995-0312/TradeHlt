@@ -19,7 +19,8 @@ DEFINES truth (see docs/research-readiness/README.md Test-Authority Ladder).
 """
 from __future__ import annotations
 
-import importlib.util
+from research.probes.scriptmod import load_py
+
 import json
 import sys
 from pathlib import Path
@@ -35,9 +36,7 @@ _NON_MODEL_KEYS = {"meta", "philosophy"}
 def _load_config_reachability():
     """Import the sibling analyzer by path (same importlib idiom as test_config_reachability.py)."""
     tool = Path(__file__).with_name("config_reachability.py")
-    spec = importlib.util.spec_from_file_location("config_reachability", tool)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    mod = load_py(tool, "config_reachability")
     return mod
 
 

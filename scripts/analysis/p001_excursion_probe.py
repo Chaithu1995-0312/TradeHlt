@@ -78,124 +78,45 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from research.contracts import Signal  # noqa: E402
+from research.probes.corpus import (  # noqa: E402
+    join_and_verify,
+    load_corpus,
+    load_live_rows,
+)
+from research.probes.governance import (  # noqa: E402
+    FORBIDDEN_KEYS,
+    assert_no_claim_keys,
+)
+
 from research.measurement.forward_walk import forward_walk  # noqa: E402
+from research.probes.excursion import (  # noqa: E402
+    UNREACHABLE_ATR_MULT,
+    Bar as _Bar,
+    excursion,
+)
 
 HORIZONS = (20, 40, 80)
 #: SL/TP multiples large enough that the walk can never exit, turning forward_walk into a pure
 #: excursion tracker over the full horizon. Certified against the naive twin.
-UNREACHABLE_ATR_MULT = 1e9
 #: A forward window whose bar spacing exceeds this is spanning a session/weekend gap.
 GAP_THRESHOLD = timedelta(minutes=30)
 BAR_SPACING = timedelta(minutes=15)
 
 
-class _Bar:
-    """Minimal bar for forward_walk (reads .high/.low/.close/.index only)."""
-
-    __slots__ = ("high", "low", "close", "index")
-
-    def __init__(self, high: float, low: float, close: float, index: int) -> None:
-        self.high, self.low, self.close, self.index = high, low, close, index
 
 
 # ── io ────────────────────────────────────────────────────────────────────────────────────
-def load_corpus(path: Path) -> list[dict]:
-    rows = []
-    with path.open(encoding="utf-8", newline="") as fh:
-        for i, r in enumerate(csv.DictReader(fh)):
-            rows.append({
-                "index": i,
-                "ts": datetime.strptime(r["timestamp"], "%Y-%m-%d %H:%M:%S"),
-                "open": float(r["open"]), "high": float(r["high"]),
-                "low": float(r["low"]), "close": float(r["close"]),
-            })
-    return rows
+
+# load_corpus imported from research.probes.corpus
 
 
-def load_live_rows(path: Path) -> list[dict]:
-    out = []
-    with path.open(encoding="utf-8") as fh:
-        for line in fh:
-            rec = json.loads(line)
-            if rec.get("phase") == "LIVE":
-                out.append(rec)
-    return out
+
 
 
 # ── join + integrity ──────────────────────────────────────────────────────────────────────
-def join_and_verify(live: list[dict], corpus: list[dict]) -> tuple[list[dict], dict]:
-    """Join envelope rows to corpus bars BY TIMESTAMP and verify the OHLC agrees.
-
-    The feature pipeline drops warmup bars and resets its index, so a POSITIONAL join is exactly
-    the alignment bug that has bitten this corpus before. Timestamp is the key; the OHLC compare
-    is the guard that proves the key was right.
-    """
-    by_ts = {c["ts"]: c for c in corpus}
-    joined, mismatches, unmatched = [], 0, 0
-    for rec in live:
-        ts = datetime.fromisoformat(rec["timestamp"])
-        bar = by_ts.get(ts)
-        if bar is None:
-            unmatched += 1
-            continue
-        fv = rec.get("resolver.feature_vector") or {}
-        for field in ("open", "high", "low", "close"):
-            if field not in fv:
-                continue
-            # RELATIVE tolerance: the canonical vector stores prices as float32, so at XAUUSD's
-            # ~4,000 level it round-trips as 4155.47021484375 vs the CSV's 4155.47 -- ~2e-4 of
-            # representation noise. 1e-6 relative (~0.004 here) sits ~20x above that noise and
-            # orders of magnitude below any real misalignment, which would differ by whole
-            # dollars. An ABSOLUTE 1e-6 flagged all 2,222 rows and was a bug in this guard.
-            if abs(float(fv[field]) - bar[field]) > 1e-6 * max(1.0, abs(bar[field])):
-                mismatches += 1
-                break
-        joined.append({"rec": rec, "bar": bar})
-    return joined, {"unmatched": unmatched, "ohlc_mismatches": mismatches}
 
 
 # ── excursion ─────────────────────────────────────────────────────────────────────────────
-def excursion(corpus: list[dict], i: int, atr: float, horizon: int) -> Optional[dict]:
-    """Uncapped (up, down) excursion in ATR units over bars i+1 .. i+horizon.
-
-    Returns None when the window is truncated by corpus end (reported, never silently short).
-    """
-    future = corpus[i + 1: i + 1 + horizon]
-    if len(future) < horizon:
-        return None
-    entry = corpus[i + 1]["open"]
-
-    sig = Signal(
-        instrument="XAUUSD", timestamp=corpus[i]["ts"], entry_index=i, direction="long",
-        entry=entry, sl_atr_mult=UNREACHABLE_ATR_MULT, tp_atr_mult=UNREACHABLE_ATR_MULT, atr=atr,
-    )
-    bars = [_Bar(b["high"], b["low"], b["close"], b["index"]) for b in future]
-    oc = forward_walk(sig, bars, max_forward=horizon, exit_model="intrabar_fixed")
-    if oc.outcome != "TIMEOUT":
-        raise AssertionError(
-            f"forward_walk exited ({oc.outcome}) despite unreachable barriers at bar {i} -- the "
-            "excursion object is not what this probe declares. Refusing to report."
-        )
-
-    # Independent naive twin (F-088 certification pattern): a private max/min, computed without
-    # the kernel, must agree to 1e-10 or the reuse is not the object it claims to be.
-    twin_up = max(b["high"] for b in future) - entry
-    twin_down = entry - min(b["low"] for b in future)
-    if abs(oc.mfe - twin_up) > 1e-10 or abs(-oc.mae - twin_down) > 1e-10:
-        raise AssertionError(
-            f"twin certification FAILED at bar {i}: kernel up={oc.mfe} down={-oc.mae} vs "
-            f"naive up={twin_up} down={twin_down}"
-        )
-
-    spans_gap = any(
-        future[k + 1]["ts"] - future[k]["ts"] > GAP_THRESHOLD for k in range(len(future) - 1)
-    ) or (future[0]["ts"] - corpus[i]["ts"] > GAP_THRESHOLD)
-
-    return {
-        "up": oc.mfe / atr,
-        "down": twin_down / atr,
-        "spans_gap": spans_gap,
-    }
 
 
 # ── populations ───────────────────────────────────────────────────────────────────────────
@@ -457,19 +378,12 @@ def episode_inventory(joined: list[dict], corpus: list[dict] | None = None,
     }
 
 
-FORBIDDEN_KEYS = ("p_value", "pvalue", "ci", "conf_int", "verdict", "significant", "decision")
+# FORBIDDEN_KEYS imported from research.probes.governance
 
 
-def assert_no_claim_keys(obj: Any, path: str = "") -> None:
-    """A number that does not exist cannot be quoted. Enforce that mechanically."""
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            if k.lower() in FORBIDDEN_KEYS:
-                raise AssertionError(f"forbidden claim key '{k}' at {path}")
-            assert_no_claim_keys(v, f"{path}/{k}")
-    elif isinstance(obj, list):
-        for j, v in enumerate(obj):
-            assert_no_claim_keys(v, f"{path}[{j}]")
+
+# assert_no_claim_keys imported from research.probes.governance
+
 
 
 def assert_tail_has_concentration(obj: dict) -> None:

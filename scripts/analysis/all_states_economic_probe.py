@@ -30,7 +30,6 @@ behaviour -- it is E4 again.
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import statistics as st
 import sys
@@ -40,10 +39,10 @@ from typing import Optional
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-_SEP = ROOT / "scripts" / "analysis" / "sweep_structure_economic_probe.py"
-_spec = importlib.util.spec_from_file_location("sweep_structure_economic_probe", _SEP)
-sep = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(sep)
+from research.probes.corpus import load_corpus  # noqa: E402
+from research.probes.costs_path import load_cost_model  # noqa: E402
+from research.probes.governance import assert_no_claim_keys  # noqa: E402
+from research.probes.horizon import close_at_horizon  # noqa: E402
 
 HORIZONS = (20, 40, 80)
 STATES = ("SWEEP", "DISPLACEMENT", "EXPANSION")
@@ -72,14 +71,14 @@ def main() -> int:
     ap.add_argument("--out", default="results/decision_atlas_full/all_states_economic_probe.json")
     args = ap.parse_args()
 
-    cost_model = sep.load_cost_model()
+    cost_model = load_cost_model()
     print(f"cost model provenance: {json.dumps(cost_model.provenance(), indent=2)}")
 
     import pyarrow.parquet as pq
     atlas = Path(ROOT / args.atlas)
     dec = pq.read_table(atlas / "transition_decision.parquet").to_pylist()
     atr_by_bar = {b["bar_index"]: b["live_atr"] for b in pq.read_table(atlas / "envelope_bar.parquet").to_pylist()}
-    corpus = sep.p001.load_corpus(ROOT / args.csv)
+    corpus = load_corpus(ROOT / args.csv)
 
     by_state = {s: [d for d in dec if d["to_state"] == s and d["direction"]
                     and not d["is_self_transition"]] for s in STATES}
@@ -95,7 +94,7 @@ def main() -> int:
                 atr = atr_by_bar.get(d["bar_index"])
                 if not atr:
                     continue
-                gross = sep.close_at_horizon(corpus, d["bar_index"], d["direction"], atr, H)
+                gross = close_at_horizon(corpus, d["bar_index"], d["direction"], atr, H)
                 if gross is None:
                     continue
                 direction = "long" if d["direction"] == "LONG" else "short"
@@ -130,7 +129,7 @@ def main() -> int:
         "cost_model_provenance": cost_model.provenance(),
         "results": results,
     }
-    sep.p001.assert_no_claim_keys(artifact)
+    assert_no_claim_keys(artifact)
     out = ROOT / args.out
     out.write_text(json.dumps(artifact, indent=2), encoding="utf-8")
 

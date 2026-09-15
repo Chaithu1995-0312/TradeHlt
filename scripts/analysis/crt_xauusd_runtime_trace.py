@@ -27,12 +27,7 @@ os.chdir(ROOT)
 os.environ.setdefault("BACKTEST_ENGINE_GATE", "0")
 
 
-def _sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
+from research.provenance import sha256_file as _sha256  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _run_backtest(output_dir: str, enable_trace: bool, trace_path: Path | None) -> dict:

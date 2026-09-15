@@ -46,12 +46,7 @@ N_ARM_B_PER_STRATUM = 10  # x3 strata = 30
 N_ARM_C = 10
 
 
-def _sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
+from research.provenance import sha256_file as _sha256  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _load_frame(csv_path: Path) -> tuple[pd.DataFrame, str, str]:

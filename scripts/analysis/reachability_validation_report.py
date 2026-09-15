@@ -16,7 +16,8 @@ reports/framework_registry_report.md. Regenerate:
 """
 from __future__ import annotations
 
-import importlib.util
+from research.probes.scriptmod import load_py
+
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -35,9 +36,7 @@ _GUARD_SUITE = [
 
 
 def _load(mod_path: Path, name: str):
-    spec = importlib.util.spec_from_file_location(name, mod_path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    mod = load_py(mod_path, name)
     return mod
 
 

@@ -1,0 +1,107 @@
+{
+  "_doc": "Band-table registry — DATA, not ontology (CLAUDE.md 6.6 reserves configs/formulas/market_ontology.yaml for market SEMANTICS; a partition of a stored float's axis is not a market concept and does not belong there). This file registers versioned, named, machine-checkable band tables so that a value's band membership is a recomputable arithmetic fact, never a hand-maintained label. Step 3 of the layered-outcome-ontology plan (C:\\Users\\Hi\\.claude\\plans\\i-have-everything-i-crispy-dawn.md), gated behind SEM-037 (scanner_trailing_exit_kernel) and SEM-020 v2 (exit_capture_decomposition), both registered in market_ontology.yaml first. A band id is a NUMBER-WORD (RR_1_TO_2, RR_EQ_NEG1) per the one architectural rule of that plan; no table in this file may carry a WORLD-WORD (WIN, LOSS as a verdict, PROFIT, TARGET, BREAKEVEN) because none of these tables have a cost model behind them (see BT-RR-ECON-V1.cost_basis) and CC-OPP-BAND-NOT-ECONOMIC (step 4, not yet registered) exists to refuse exactly that reading.",
+  "schema_version": "1.0.0",
+  "tables": {
+    "BT-RR-STAGE1-V1": {
+      "_doc": "The INCUMBENT rr_achieved partition, described as-is. NOT modified, NOT renamed, NOT reconciled with BT-RR-ECON-V1's boundaries — the declared collision (both band the same rr_achieved axis under different vocabularies) is a recorded fact, not something this table fixes. A training-dataset schema depends on this exact shape; changing it is a behavior change on that schema, out of scope for this registration.",
+      "status": "INCUMBENT_DESCRIBED",
+      "owner": "training",
+      "table_kind": "single_axis_interval",
+      "source": {
+        "module": "src/training/stage1_dataset_builder.py",
+        "constant": "RR_BUCKETS",
+        "verified_at": "2026-09-14",
+        "note": "The module's own docstring calls this 'Static buckets, bucket_version=1' — this table entry is that same bucket_version=1, restated as data so it can be referenced by id. The Python tuple in stage1_dataset_builder.py remains authoritative for the running code; this entry is a description of it, not a second implementation."
+      },
+      "axis": "rr_achieved",
+      "unit": "R_multiple",
+      "domain": "real_plus_nan",
+      "on_nan_or_inf": {"band_id": -1, "band_name": "INVALID"},
+      "first_match_wins": true,
+      "exhaustive": true,
+      "mutually_exclusive": true,
+      "cost_basis": "NONE",
+      "bands": [
+        {"band_id": 0, "name": "LOSS",    "lo": null,  "lo_inclusive": false, "hi": 0.0,   "hi_inclusive": false, "kind": "interval"},
+        {"band_id": 1, "name": "SCRATCH", "lo": 0.0,   "lo_inclusive": true,  "hi": 1.0,   "hi_inclusive": false, "kind": "interval"},
+        {"band_id": 2, "name": "BASE",    "lo": 1.0,   "lo_inclusive": true,  "hi": 2.0,   "hi_inclusive": false, "kind": "interval"},
+        {"band_id": 3, "name": "STRONG",  "lo": 2.0,   "lo_inclusive": true,  "hi": 3.0,   "hi_inclusive": false, "kind": "interval"},
+        {"band_id": 4, "name": "OUTLIER", "lo": 3.0,   "lo_inclusive": true,  "hi": null,  "hi_inclusive": false, "kind": "interval"}
+      ]
+    },
+    "BT-RR-ECON-V1": {
+      "_doc": "The corrected rr_achieved partition for the layered-outcome-ontology Layer 2 (plan section 'Layer 2 — RR bands'). Half-open [lo,hi), ordered, first match wins. Exhaustive over the reals plus NaN — unlike the user's original 4-band draft, which overlapped at (-0.05,0) and had no edge below -1 or above 2. RR_EQ_NEG1 and RR_GE_2 are declared ATOMS because they are measured single-value populations on the SEM-037 kernel (30,797 rows at exactly -1.0000 and 1,344 at exactly 2.0000, verified 2026-09-14) — an atom band still matches by ordinary [lo,hi) containment (a degenerate closed interval), the 'kind: atom' tag exists only so a consumer reports a tie-count rather than a distribution for that band, per SEM-037's own validation rule that an atom average is not a finding. RR_BELOW_NEG1 and RR_NEG1_TO_0 are declared STRUCTURALLY_UNREACHABLE on this kernel specifically (SEM-037: the scanner has no adverse fill, so a stop can never book below -1.0, and the arming identity mfe_r>=0.5 <=> rr>-1.0 makes strictly-between-(-1,0) impossible) — they are NOT removed from the table, because F-084 measured a comparable object booking as low as -1.3425R under SEM-016 adverse fill, and a table that cannot represent that value is not reusable on that object. A band with zero population on one artifact is a fact about the artifact, never a reason to omit the band from the table.",
+      "status": "ACTIVE",
+      "owner": "research-measurement",
+      "governed_by": ["SEM-037", "SEM-020"],
+      "table_kind": "single_axis_interval",
+      "axis": "rr_achieved",
+      "unit": "R_multiple",
+      "domain": "real_plus_nan",
+      "on_nan_or_inf": {"band_id": -1, "band_name": "RR_UNDEFINED"},
+      "first_match_wins": true,
+      "exhaustive": true,
+      "mutually_exclusive": true,
+      "cost_basis": "NONE",
+      "cost_basis_note": "rr_achieved on the SEM-037 kernel is GROSS with no cost model applied anywhere in that kernel (SEM-037 validation_rules). A band id in this table is therefore a statement about a stored float, never an economic verdict; see CC-OPP-BAND-RESTATEMENT (CAN) and CC-OPP-BAND-NOT-ECONOMIC (CANNOT), step 4.",
+      "bands": [
+        {"band_id": 0, "name": "RR_BELOW_NEG1",  "lo": null, "lo_inclusive": false, "hi": -1.0, "hi_inclusive": false, "kind": "interval", "note": "STRUCTURALLY_UNREACHABLE on the SEM-037 kernel (no adverse fill). Reachable under SEM-016 adverse fill on a different object (F-084 measured -1.3425R)."},
+        {"band_id": 1, "name": "RR_EQ_NEG1",     "lo": -1.0, "lo_inclusive": true,  "hi": -1.0, "hi_inclusive": true,  "kind": "atom",     "note": "The never-armed full stop-out. Measured n=30,797 of 94,332 on run 20260913_130531 (33.1% of SL_HIT). Report a tie-count, not a mean."},
+        {"band_id": 2, "name": "RR_NEG1_TO_0",   "lo": -1.0, "lo_inclusive": false, "hi": 0.0,  "hi_inclusive": false, "kind": "interval", "note": "CORRECTED 2026-09-14 (E-001 self-caught: the first version of this note claimed STRUCTURALLY_UNREACHABLE / 0 rows for the whole band, conflating 'unreachable for SL_HIT' with 'unreachable for every outcome the kernel emits' -- a direct re-scan caught it before it propagated). Reachable via TIMEOUT ONLY: measured n=33 of 94,332, outcome breakdown {TIMEOUT: 33, SL_HIT: 0}. TIMEOUT's mark-to-last-close valuation (SEM-037 mathematical_definition, fourth return site) is not subject to the trail/arming identity at all. UNREACHABLE FOR SL_HIT SPECIFICALLY, and this narrower claim is correct: once armed, trail_stop = peak - trail_dist >= entry (because arming requires peak >= entry + trail_dist), so rr = (trail_stop-entry)/risk_distance >= 0 for every armed exit; combined with the -1.0 atom for the never-armed case, SL_HIT contributes zero mass to this interval by construction, independently verified by direct scan (0 of 94,332 SL_HIT rows here) and by this derivation from the kernel's own trail formula."},
+        {"band_id": 3, "name": "RR_0_TO_1",      "lo": 0.0,  "lo_inclusive": true,  "hi": 1.0,  "hi_inclusive": false, "kind": "interval", "note": "CORRECTED 2026-09-14 (E-001 self-caught: an earlier draft of this note carried an unverified n=60,774 inherited from a different, unchecked count). Re-derived directly from the artifact: n=56,869 of 94,332, outcome breakdown {SL_HIT: 56,851, TIMEOUT: 18}. The 18 TIMEOUT rows are the mark-to-close outcomes whose measured range (-0.8363..0.5543) happens to land non-negative; the remaining 33 TIMEOUT rows land in RR_NEG1_TO_0 (33+18=51, the full TIMEOUT population, verified)."},
+        {"band_id": 4, "name": "RR_1_TO_2",      "lo": 1.0,  "lo_inclusive": true,  "hi": 2.0,  "hi_inclusive": false, "kind": "interval", "note": "CORRECTED 2026-09-14 (E-001 self-caught: an earlier draft of this note used n=1,366 for the WHOLE band, which is actually a different measured quantity -- see below). Re-derived directly from the artifact: n=5,289 of 94,332, outcome breakdown {SL_HIT: 5,289, TIMEOUT: 0} (TP_HIT cannot appear here: it is degenerate at exactly 2.0, see RR_GE_2). Of those 5,289, exactly 1,366 (25.8%) are the SEM-037 stop-first-tie-break-defect rows whose own recorded path separately reached mfe_r>=2.0 before the trail caught them -- confirmed by re-deriving the 1,366 figure's band membership directly rather than assuming it: all 1,366 land in this band, none elsewhere."},
+        {"band_id": 5, "name": "RR_GE_2",        "lo": 2.0,  "lo_inclusive": true,  "hi": null, "hi_inclusive": false, "kind": "atom",     "note": "Degenerate under the fixed 2:1 ATR bracket the SEM-037 kernel simulates: measured n=1,344 of 94,332, ALL at exactly 2.0000 on the reference run (0 rows above 2.0000). An atom in PRACTICE on this kernel, an open interval in the table so a different bracket ratio remains representable."}
+      ]
+    },
+    "BT-CAPTURE-V1": {
+      "_doc": "Classification for SEM-020 v2's exit_bounded_capture = rr_achieved / mfe_r (EXIT_TRUNCATED basis, SEM-037). UNLIKE BT-RR-ECON-V1 this is NOT a flat single-axis interval partition -- capture depends JOINTLY on mfe_r and rr_achieved (undefined when mfe_r is ~0; sign-flipped when rr is negative while mfe_r is positive), so forcing it into the plain `bands` shape would misrepresent what is actually a two-stage classifier. STAGE 1 (guards, evaluated in the declared order, first match wins) answers 'is a capture ratio even meaningful here'; STAGE 2 (bands) answers 'how good was it', applied ONLY when every guard passed. Every threshold below is a DECLARED VALUE, never a Python literal (CLAUDE.md 6.5 no-magic-numbers rule) -- src/research/band_tables.py reads them from this file. PRIORITY WAS AN OPEN AMBIGUITY IN THE PLAN, RESOLVED HERE WITH EVIDENCE (2026-09-14): on the reference run, all 4,007 CAPTURE_UNSTABLE rows are ALSO CAPTURE_NEGATIVE (100% overlap, verified) -- structurally forced, because mfe_r in (0, unstable_threshold) is only reachable via the SEM-037 never-armed atom (rr=-1.0 exactly), which is negative by construction. Guard order UNDEFINED > UNSTABLE > NEGATIVE > VIOLATION was chosen because it answers numerical validity before economic sign, and is stated as a decision, not left implicit.",
+      "status": "ACTIVE",
+      "owner": "research-measurement",
+      "governed_by": ["SEM-020", "SEM-037"],
+      "table_kind": "guarded_two_stage",
+      "axis": "exit_bounded_capture",
+      "inputs": ["mfe_r", "rr_achieved"],
+      "unit": "dimensionless_ratio",
+      "first_match_wins": true,
+      "exhaustive": true,
+      "mutually_exclusive": true,
+      "cost_basis": "NONE",
+      "guards": [
+        {
+          "name": "CAPTURE_UNDEFINED",
+          "priority": 0,
+          "condition": "mfe_r <= epsilon",
+          "params": {"epsilon": 1e-9},
+          "note": "A path that was never favorably in profit offers no capture to measure. Measured n=1,491 of 94,332 (mfe_r exactly 0)."
+        },
+        {
+          "name": "CAPTURE_UNSTABLE",
+          "priority": 1,
+          "condition": "epsilon < mfe_r < unstable_threshold",
+          "params": {"unstable_threshold": 0.05},
+          "note": "The ratio is numerically unstable against a near-zero denominator. Measured n=4,007 of 94,332, and on THIS kernel these are exactly the never-armed -1.0R atom's small-mfe tail (100% also satisfy CAPTURE_NEGATIVE below; this guard fires first by declared priority so the numerical-validity reading wins over the sign reading)."
+        },
+        {
+          "name": "CAPTURE_NEGATIVE",
+          "priority": 2,
+          "condition": "mfe_r >= unstable_threshold and rr_achieved < 0",
+          "params": {},
+          "note": "A favorable move that reversed into a negative realized value -- economically OPPOSITE to a small-but-positive value in the CAPTURE_GIVEBACK band below, and must never be pooled with it. Measured n=25,332 of 94,332 AFTER the CAPTURE_UNSTABLE guard removes its 4,007-row overlap (29,339 total rows satisfy the raw mfe_r>0-and-rr<0 condition before that subtraction)."
+        },
+        {
+          "name": "CAPTURE_VIOLATION",
+          "priority": 3,
+          "condition": "capture > violation_threshold",
+          "params": {"violation_threshold": 1.0},
+          "note": "Arithmetically impossible for a single trade on a correct join (SEM-020 known_invariants) -- a defect signal, never a finding. Measured n=0 of 94,332 on the reference run: zero violations, i.e. the join is clean on this artifact."
+        }
+      ],
+      "bands": [
+        {"band_id": 0, "name": "CAPTURE_GIVEBACK",  "lo": 0.0, "lo_inclusive": true, "hi": 0.2,  "hi_inclusive": false, "kind": "interval", "note": "Domain for banding is capture in [0,1]: CAPTURE_NEGATIVE already removed every row with capture<0, CAPTURE_VIOLATION already removed every row with capture>1."},
+        {"band_id": 1, "name": "CAPTURE_MODERATE",  "lo": 0.2, "lo_inclusive": true, "hi": 0.5,  "hi_inclusive": false, "kind": "interval"},
+        {"band_id": 2, "name": "CAPTURE_GOOD",       "lo": 0.5, "lo_inclusive": true, "hi": 0.8,  "hi_inclusive": false, "kind": "interval"},
+        {"band_id": 3, "name": "CAPTURE_EFFICIENT",  "lo": 0.8, "lo_inclusive": true, "hi": null, "hi_inclusive": false, "kind": "interval", "note": "Open-ended for schema consistency; practically capped at 1.0 since CAPTURE_VIOLATION already excludes anything above it."}
+      ]
+    }
+  }
+}

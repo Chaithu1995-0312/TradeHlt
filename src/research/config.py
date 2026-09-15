@@ -62,6 +62,21 @@ class ResearchConfig:
     # Like `entry_ttl` above, this enters `meaningful` ONLY when the JSON declares it,
     # so every pre-existing config keeps its published config_sha256 byte-identical.
     cost_model: str = "flat_bps"
+    # Path to the `mt5_cost_calibration` manifest `cost_model="component_measured"` binds
+    # to. Required together with cost_model=="component_measured" (validated in from_dict);
+    # ignored/absent otherwise. Same sha-parity precedent as `cost_model` itself — enters
+    # `meaningful` only when declared, and only ever declared alongside a non-default
+    # cost_model, so no pre-existing flat-bps config's hash moves.
+    cost_model_manifest_path: str | None = None
+    # Optional [start, end) sub-window of the instrument's full corpus, with symmetric
+    # lead-in/tail buffers so bars just inside the window still get a full detect window
+    # behind them and a full forward-walk future ahead of them (never right- or
+    # left-censored by the slice boundary). None (default) = load the whole corpus,
+    # byte-identical to every config written before this field existed — same sha-parity
+    # precedent as `entry_ttl`/`cost_model`. Consumed by `HypothesisRunner._load_candles`
+    # via `data_ingestion.corpus_store.read`; the plain `CandleLoader` path is untouched
+    # when this is absent.
+    window: dict | None = None
 
     @classmethod
     def from_dict(cls, d: dict) -> "ResearchConfig":
@@ -127,6 +142,34 @@ class ResearchConfig:
                 "an unrecognised value must never silently fall back to the flat haircut)."
             )
 
+        cost_model_manifest_path = costs.get("cost_model_manifest_path")
+        if cost_model == "component_measured" and not cost_model_manifest_path:
+            raise ValueError(
+                "ResearchConfig: cost_model='component_measured' requires "
+                "costs.cost_model_manifest_path (the mt5_cost_calibration manifest to bind) "
+                "— refusing to silently fall back to an unmeasured default."
+            )
+        if cost_model_manifest_path is not None:
+            meaningful["costs"]["cost_model_manifest_path"] = str(cost_model_manifest_path)
+
+        window_raw = d.get("window")
+        window: dict | None = None
+        if window_raw is not None:
+            missing = [k for k in ("start", "end") if k not in window_raw]
+            if missing:
+                raise ValueError(
+                    f"ResearchConfig.window is missing required key(s) {missing} "
+                    "(a window needs both a start and an end — an open-ended window "
+                    "is not supported, it would silently read to the corpus's own edge)."
+                )
+            window = {
+                "start": str(window_raw["start"]),
+                "end": str(window_raw["end"]),
+                "lead_in_bars": int(window_raw.get("lead_in_bars", 120)),
+                "tail_bars": int(window_raw.get("tail_bars", 60)),
+            }
+            meaningful["window"] = dict(window)
+
         job_kind = str(d.get("job_kind", "unspecified"))
         _valid_job_kinds = {"threshold_search", "model_retrain", "unspecified"}
         if job_kind not in _valid_job_kinds:
@@ -160,6 +203,10 @@ class ResearchConfig:
             _canonical=json.dumps(meaningful, sort_keys=True, separators=(",", ":")),
             job_kind=job_kind,
             cost_model=cost_model,
+            cost_model_manifest_path=(
+                str(cost_model_manifest_path) if cost_model_manifest_path is not None else None
+            ),
+            window=window,
         )
 
     @classmethod

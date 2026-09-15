@@ -2,10 +2,11 @@
 from datetime import datetime
 
 from research.contracts import Outcome, Signal
-from research.costs import ZERO_COST
+from research.costs import ZERO_COST, ComponentCostModel
 from research.measurement.metrics import EdgeAggregator
 from research.qualification import (
     QualConfig,
+    _net_rrs,
     benjamini_hochberg,
     evaluate_pre_bh,
     finalize,
@@ -150,3 +151,43 @@ def test_passed_gates_but_bh_rejects():
     final = finalize(st, bh_survivors=set(), qcfg=_QCFG)
     assert final.verdict == "REJECT"
     assert final.reject_reasons[0].startswith("FAILED_gate7_bh")
+
+
+def _component_model() -> ComponentCostModel:
+    return ComponentCostModel(
+        half_spread=0.045, commission=0.04, entry_slippage=0.09, stop_slippage=0.09,
+        swap_long_per_night=None, swap_short_per_night=None,
+        instrument="XAUUSD", source="synthetic-test", status="MEASURED",
+    )
+
+
+def test_net_rrs_is_exit_kind_aware_for_component_cost_model():
+    """Regression: `_net_rrs` used to call `cost.net_rr(...)` positionally with no
+    `exit_kind`, so a `ComponentCostModel` (which defaults `exit_kind="SL_HIT"`) priced
+    EVERY outcome as a stop exit -- charging stop_slippage on take-profit outcomes that
+    never touched a stop. `EdgeAggregator.aggregate` was already exit-aware; only this
+    function's positional call was not. Gate 6 (permutation) is the only consumer of
+    `_net_rrs`'s output, so this bug would have silently mispriced the significance test
+    whenever a `component_measured` cost model reached the M4 gate."""
+    tp = _o(2.0, 1)     # outcome == "TP_HIT" per _o()'s own construction
+    sl = _o(-1.0, 2)    # outcome == "SL_HIT"
+    cm = _component_model()
+
+    fixed = _net_rrs([tp, sl], cm)
+    naive = [cm.net_rr(o.rr_achieved, o.signal.entry, o.signal.sl_atr_mult * o.signal.atr)
+             for o in (tp, sl)]
+
+    assert fixed[0] != naive[0], (
+        "TP_HIT must NOT be priced as a stop exit — if this is equal, the exit_kind "
+        "duck-typing regressed and every TP outcome is being charged stop_slippage again"
+    )
+    assert fixed[1] == naive[1]   # SL_HIT: both paths agree (exit_kind="SL_HIT" either way)
+
+
+def test_net_rrs_flat_model_unchanged():
+    """The flat CostModel path (no `exit_kind` parameter) must stay byte-identical --
+    the duck-typing added for ComponentCostModel must never touch this branch."""
+    tp = _o(2.0, 1)
+    assert _net_rrs([tp], ZERO_COST) == [
+        ZERO_COST.net_rr(tp.rr_achieved, tp.signal.entry, tp.signal.sl_atr_mult * tp.signal.atr)
+    ]

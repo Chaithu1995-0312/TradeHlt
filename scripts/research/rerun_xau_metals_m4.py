@@ -2,7 +2,6 @@
 """Re-run M4 only for xau_metals_protocol_v1 from frozen units_scored.jsonl."""
 from __future__ import annotations
 
-import importlib.util
 import json
 import sys
 from collections import defaultdict
@@ -10,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
+from research.probes.scriptmod import load_py  # noqa: E402
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -17,14 +17,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 def _load_runner():
     path = ROOT / "scripts/research/run_xau_metals_protocol_v1.py"
-    name = "run_xau_metals_v1"
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    # Py3.14 dataclasses require module registered before @dataclass executes
-    sys.modules[name] = mod
-    assert spec.loader is not None
-    spec.loader.exec_module(mod)
-    return mod
+    return load_py(path, "run_xau_metals_v1")
 
 
 def main() -> int:

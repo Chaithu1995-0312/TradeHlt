@@ -58,8 +58,9 @@ F-036 (dG001 == 0), F-041B (0/8 zones honest E>0). Writes only under docs/analys
 
 from __future__ import annotations
 
+from research.probes.scriptmod import load_py
+
 import argparse
-import importlib.util
 import json
 import sys
 from collections import Counter
@@ -105,9 +106,7 @@ ANOMALY_ENRICHMENT_X = 5.0     # or enrichment > 5x its runtime marginal
 def _load_kmeans_mirror():
     """Import the proven-equivalent vectorised Lloyd from the provenance probe."""
     path = Path(__file__).resolve().parent / "zone_registry_provenance_probe.py"
-    spec = importlib.util.spec_from_file_location("_zrpp", path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    mod = load_py(path, "_zrpp")
     return mod
 
 

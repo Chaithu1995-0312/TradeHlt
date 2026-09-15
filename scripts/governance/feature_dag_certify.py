@@ -32,7 +32,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import importlib.util
 import json
 import sys
 from datetime import datetime, timezone
@@ -40,16 +39,14 @@ from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_ROOT / "src"))
+from research.probes.scriptmod import load_py  # noqa: E402
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 # reuse the ledger + resolver from the sibling module
 _STATE_PATH = _ROOT / "scripts" / "governance" / "feature_certification_state.py"
-_spec = importlib.util.spec_from_file_location("feature_certification_state", _STATE_PATH)
-_fcs = importlib.util.module_from_spec(_spec)
-sys.modules["feature_certification_state"] = _fcs
-_spec.loader.exec_module(_fcs)
+_fcs = load_py(_STATE_PATH, "feature_certification_state")
 
 LEDGER = _fcs.LEDGER
 _RAW = _fcs._RAW

@@ -53,12 +53,21 @@ class EdgeAggregator:
         n = len(outs)
 
         if n == 0:
+            # `round_trip_bps` is a field of the flat model only (see the n>0 branch's own
+            # comment below). A component model with ZERO outcomes has no trades to average
+            # an effective bps over, so unlike the n>0 branch there is no realized value to
+            # report -- 0.0 (the EdgeReport field's own class default, contracts.py:115) is
+            # the honest value: no trades were charged any cost. Previously this read
+            # `cost_model.round_trip_bps` unconditionally, which raised AttributeError for
+            # any component-measured cost model producing zero outcomes -- a foreseeable and
+            # reproduced failure mode, not a hypothetical one.
             return EdgeReport(
                 hypothesis=hypothesis, instruments=list(instruments), n=0,
                 wins=0, losses=0, win_rate=0.0, profit_factor=0.0, expectancy_rr=0.0,
                 mfe_p50=0.0, mfe_p90=0.0, mae_p50=0.0, mae_p90=0.0,
                 median_time_to_failure=0.0, continuation_prob=0.0, max_drawdown_rr=0.0,
-                round_trip_bps=cost_model.round_trip_bps, reject_reasons=["no_outcomes"],
+                round_trip_bps=getattr(cost_model, "round_trip_bps", 0.0),
+                reject_reasons=["no_outcomes"],
             )
 
         # NET every gross R by the round-trip cost — all gates qualify on NET.

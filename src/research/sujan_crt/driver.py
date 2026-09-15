@@ -5,8 +5,6 @@ F-083: split, embargo, purge, and controls are executed here, not merely declare
 """
 from __future__ import annotations
 
-import csv
-import hashlib
 import json
 import math
 import random
@@ -16,9 +14,13 @@ from typing import Any
 
 from data_ingestion.dataset_integrity import validate_dataset
 from research.contracts import Signal
-from research.costs import ComponentCostModel
+from research.costs import xau_measured_cost_model
 from research.indicators import atr as research_atr
-from research.measurement.forward_walk import AdverseFill, forward_walk
+from research.mc_kit.bars import load_bars as _kit_load_bars, parse_ts_iso19 as _parse_ts
+from research.mc_kit.stats import trade_stats as _stats
+from research.mc_kit.trade import exit_kind as _exit_kind, walk_horizon
+from research.measurement.forward_walk import AdverseFill
+from research.provenance import sha256_file as _sha256
 from research.sujan_crt.geometry import Bar, VetoParams
 from research.sujan_crt.vetoes import SujanCandidate, detect_funnel_entries
 
@@ -41,49 +43,14 @@ PARAMS = VetoParams(
     max_return_age_bars=20,
 )
 
-_XAU_COST = ComponentCostModel(
-    half_spread=0.045,
-    commission=0.040,
-    entry_slippage=0.090,
-    stop_slippage=0.090,
-    swap_long_per_night=None,
-    swap_short_per_night=None,
-    instrument="XAUUSD",
-    source="F-082 measured broker calibration; SEM-015 diagnostic net only",
-    status="MEASURED",
-    entry_slippage_basis="PROXY_FROM_STOP",
-)
-
-
-def _parse_ts(raw: str) -> datetime:
-    s = raw.strip().replace("T", " ")
-    return datetime.fromisoformat(s[:19])
-
-
-def _sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
+# research-framework consolidation Phase 3 (2026-09-14): the byte-identical duplicate of this
+# ComponentCostModel literal in mother_range/driver.py is now research.costs.xau_measured_cost_model()
+# (see archive/research_framework_phase3*_2026-09-14/ for the pre-edit originals).
+_XAU_COST = xau_measured_cost_model()
 
 
 def load_bars(path: Path) -> list[Bar]:
-    rows = list(csv.DictReader(path.open(encoding="utf-8")))
-    bars: list[Bar] = []
-    for i, row in enumerate(rows):
-        bars.append(
-            Bar(
-                timestamp=_parse_ts(row["timestamp"]),
-                open=float(row["open"]),
-                high=float(row["high"]),
-                low=float(row["low"]),
-                close=float(row["close"]),
-                volume=float(row.get("volume") or 0.0),
-                index=i,
-            )
-        )
-    return bars
+    return _kit_load_bars(path, Bar, parse_ts=_parse_ts, volume="zero_default")
 
 
 def _atr_series(bars: list[Bar]) -> list[float]:
@@ -107,33 +74,7 @@ def _signal(c: SujanCandidate, instrument: str) -> Signal:
 
 
 def _walk(sig: Signal, bars: list[Bar], adverse: AdverseFill) -> Any:
-    future = [b for b in bars if b.index > sig.entry_index][:HORIZON_BARS]
-    if not future:
-        return None
-    return forward_walk(
-        sig, future, max_forward=HORIZON_BARS, exit_model="intrabar_fixed",
-        adverse_fill=adverse,
-    )
-
-
-def _stats(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    n = len(rows)
-    if n == 0:
-        return {"n": 0, "gross_mean": None, "net_mean": None, "win_rate": None, "pf": None}
-    gross = [float(r["y_R_gross"]) for r in rows]
-    net = [float(r["y_R_net"]) for r in rows]
-    wins = [g for g in gross if g > 0]
-    losses = [g for g in gross if g < 0]
-    gp = sum(wins)
-    gl = abs(sum(losses))
-    pf = (gp / gl) if gl > 0 else (float("inf") if gp > 0 else 0.0)
-    return {
-        "n": n,
-        "gross_mean": sum(gross) / n,
-        "net_mean": sum(net) / n,
-        "win_rate": sum(1 for g in gross if g > 0) / n,
-        "pf": pf,
-    }
+    return walk_horizon(sig, bars, horizon_bars=HORIZON_BARS, adverse=adverse)
 
 
 def _lag1_corr(xs: list[float]) -> float | None:
@@ -161,10 +102,8 @@ def _effective_n(n: int, rho: float | None) -> float | None:
 
 def _row(c: SujanCandidate, out: Any, split: str) -> dict[str, Any]:
     risk = abs(c.entry - c.stop)
-    exit_kind = "SL_HIT" if out.outcome == "SL_HIT" else (
-        "TP_HIT" if out.outcome == "TP_HIT" else "TIMEOUT"
-    )
-    net = _XAU_COST.net_rr(out.rr_achieved, c.entry, risk, exit_kind=exit_kind, direction=c.direction)
+    net = _XAU_COST.net_rr(out.rr_achieved, c.entry, risk, exit_kind=_exit_kind(out.outcome),
+                           direction=c.direction)
     ts = c.timestamp.isoformat(sep=" ") if isinstance(c.timestamp, datetime) else str(c.timestamp)
     return {
         "split": split,
@@ -273,9 +212,7 @@ def run(
                     continue
                 nets.append(_XAU_COST.net_rr(
                     out.rr_achieved, entry, risk,
-                    exit_kind="SL_HIT" if out.outcome == "SL_HIT" else (
-                        "TP_HIT" if out.outcome == "TP_HIT" else "TIMEOUT"
-                    ),
+                    exit_kind=_exit_kind(out.outcome),
                     direction=direction,
                 ))
             if not nets:
@@ -307,9 +244,7 @@ def run(
             continue
         long_only_nets.append(_XAU_COST.net_rr(
             out.rr_achieved, entry, risk,
-            exit_kind="SL_HIT" if out.outcome == "SL_HIT" else (
-                "TP_HIT" if out.outcome == "TP_HIT" else "TIMEOUT"
-            ),
+            exit_kind=_exit_kind(out.outcome),
             direction="long",
         ))
     lo_mean = (sum(long_only_nets) / len(long_only_nets)) if long_only_nets else None

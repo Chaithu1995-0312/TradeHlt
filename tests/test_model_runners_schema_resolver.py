@@ -37,9 +37,10 @@ def _full_features() -> dict[str, float]:
 
 # ── registry shape ───────────────────────────────────────────────────────────
 
-def test_registry_has_the_three_known_generations():
+def test_registry_has_the_known_generations():
     assert set(SCHEMA_REGISTRY) == {
         "canonical_39",
+        "canonical_39_v4",
         "legacy_38_env",
         "canonical_38_v3",
     }
@@ -52,6 +53,23 @@ def test_canonical_39_is_the_live_schema():
     assert s.dim == CANONICAL_FEATURE_DIM == 48
     assert list(s.live_names) == list(CANONICAL_FEATURES)
     assert s.renames == {}
+
+
+def test_canonical_39_v4_is_the_39_dim_v4_generation():
+    from research.model_runners.schema_resolver import _V5_ONLY_FEATURES
+
+    s = resolve_named("canonical_39_v4")
+    assert s.dim == 39
+    assert s.renames == {}
+    # v4 = live canonical minus the 9 v5.0-only dims; it keeps the MACD split.
+    assert list(s.live_names) == [
+        n for n in CANONICAL_FEATURES if n not in _V5_ONLY_FEATURES
+    ]
+    assert "macd_hist_raw" in s.live_names
+    assert "macd_hist_z" in s.live_names
+    for v5 in ("order_block_distance", "fvg_distance", "change_of_character"):
+        assert v5 not in s.live_names
+
 
 
 def test_both_38_dim_schemas_share_live_names_but_differ_on_trained_names():

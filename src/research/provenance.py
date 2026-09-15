@@ -20,6 +20,11 @@ provenance is best-effort and must never block a research run.
 
 from __future__ import annotations
 
+import hashlib
+import subprocess
+from datetime import datetime, timezone
+from os import PathLike
+
 # Execution-reality standard shared with the live spine's governed exit model.
 # Bump when exit geometry / slippage model / tie-break changes.
 TRUTH_STANDARD_VERSION = "2.0"
@@ -100,6 +105,44 @@ def production_config_block() -> dict:
         "config_hash": config_hash,
         "feature_schema_hash": feature_schema_hash,
     }
+
+
+# ── run-manifest primitives ───────────────────────────────────────────────────────────────────
+# Research-framework consolidation Phase 1 (2026-09-14): these replace byte-for-byte copies that
+# lived as private helpers in scripts/analysis + scripts/research (`_git_commit` ×18,
+# `_sha256`/`_sha256_file`/`_sha` ×33, `_utc` ×4, `_utc_now` ×4). Each keeps the EXACT behavior of
+# the copies it replaces — pinned by tests/research/test_provenance_helpers.py against those
+# originals — so a script importing it under its old private name is behavior-identical.
+# Originals: archive/research_framework_phase1*_2026-09-14/. Variants that differed (e.g. a
+# `_git_commit` with `cwd=_ROOT` + timeout) were deliberately NOT folded in.
+
+
+def git_commit() -> str:
+    """HEAD commit of the git repo containing the process cwd, or ``"unknown"`` on any failure."""
+    try:
+        return subprocess.check_output(["git", "rev-parse", "HEAD"],
+                                       stderr=subprocess.DEVNULL).decode().strip()
+    except Exception:
+        return "unknown"
+
+
+def sha256_file(path: str | PathLike) -> str:
+    """Streaming SHA-256 hex digest of a file (1 MiB chunks; corpora are large)."""
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def utc_stamp_compact() -> str:
+    """UTC wall clock as ``YYYYMMDDTHHMMSSZ`` (run-directory / run-id stamp)."""
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+
+def utc_now_iso() -> str:
+    """UTC wall clock as ``YYYY-MM-DDTHH:MM:SSZ`` (manifest ``generated_at`` stamp)."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def provenance_block(

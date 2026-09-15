@@ -33,7 +33,6 @@ authority.
 """
 from __future__ import annotations
 
-import importlib.util
 import sys
 from collections import Counter
 from dataclasses import dataclass, field
@@ -41,20 +40,14 @@ from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence
 
 _REPO = Path(__file__).resolve().parents[2]
+if str(_REPO / "src") not in sys.path:
+    sys.path.insert(0, str(_REPO / "src"))
+from research.probes.scriptmod import load_py  # noqa: E402
 
 
 def _load_sibling(name: str):
     """Load a sibling research module by path (they are scripts, not a package)."""
-    if name in sys.modules:
-        return sys.modules[name]
-    spec = importlib.util.spec_from_file_location(
-        name, _REPO / "scripts" / "research" / f"{name}.py"
-    )
-    mod = importlib.util.module_from_spec(spec)
-    assert spec.loader is not None
-    sys.modules[name] = mod          # register BEFORE exec: dataclasses need it
-    spec.loader.exec_module(mod)
-    return mod
+    return load_py(_REPO / "scripts" / "research" / f"{name}.py", name)
 
 
 # -- Declared inputs ----------------------------------------------------------

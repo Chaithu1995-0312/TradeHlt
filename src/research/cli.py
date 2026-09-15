@@ -22,7 +22,6 @@ from research.registry import HYPOTHESIS_REGISTRY, get_hypothesis
 from research.runner import HypothesisRunner, edge_report_json, run_result_to_dict
 from research.provenance import provenance_block
 from research.measurement.metrics import EdgeAggregator
-from research.costs import CostModel
 from research.qualification import (
     BH_METHOD_VERSION,
     PERMUTATION_METHOD_VERSION,
@@ -48,12 +47,7 @@ def _build_csv_map(cfg: ResearchConfig) -> dict[str, str]:
     return csv_map
 
 
-def _git_commit() -> str:
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
-    except Exception:
-        return "unknown"
+from research.provenance import git_commit as _git_commit  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _which_hypotheses(arg: str, include_controls: bool) -> list[str]:
@@ -100,6 +94,11 @@ def cmd_run(args: argparse.Namespace) -> int:
             "hypothesis_sha256": rr.hypothesis_sha256,
             "instruments": sorted(csv_map),
         }
+        # Corpus identity proof: which exact admitted bytes a windowed run actually read.
+        # Empty for a config with no `window` declared — the plain CandleLoader path
+        # carries no such object today (see HypothesisRunner.corpus_provenance's docstring).
+        if runner.corpus_provenance:
+            manifest["corpus_provenance"] = runner.corpus_provenance
         (out_dir / "run_manifest.json").write_text(
             json.dumps(manifest, sort_keys=True, indent=2), encoding="utf-8")
 
@@ -149,7 +148,13 @@ def cmd_qualify(args: argparse.Namespace) -> int:
         return 1
 
     runner = HypothesisRunner(cfg)
-    cost = CostModel(cfg.round_trip_bps)
+    # Reuse the SAME binding `runner` just made (not a second, independently-hardcoded
+    # `CostModel(cfg.round_trip_bps)`) — that second construction used to always be flat
+    # bps regardless of `cfg.cost_model`, so the actual M4 verdict (this function) silently
+    # ignored a component-measured cost model even when `HypothesisRunner` was correctly
+    # bound to one. Two cost-model instances measuring the same config must never disagree.
+    cost = runner.cost_model
+    cost_provenance = runner.cost_model_provenance
     agg = EdgeAggregator()
     qcfg = QualConfig.from_research_config(cfg)
 
@@ -189,7 +194,11 @@ def cmd_qualify(args: argparse.Namespace) -> int:
         "permutation_method_version": PERMUTATION_METHOD_VERSION,
         "permutation_count": qcfg.n_permutations,   # method vs count, separated
         "bh_method_version": BH_METHOD_VERSION,
-        **provenance_block(cfg.exit_model, cfg.round_trip_bps),
+        # `cfg.round_trip_bps` stays positional even for a component model -- per
+        # `truth_standard_block`'s own doc, it is retained as "what WOULD have been
+        # charged" for side-by-side comparison; `cost_model=` is what actually overrides
+        # `slippage_model` to the real component id when one is bound.
+        **provenance_block(cfg.exit_model, cfg.round_trip_bps, cost_model=cost_provenance),
         "config_sha256": cfg.sha256(),
         "winning_control": win_name,
         "alpha": qcfg.significance_alpha,

@@ -51,12 +51,7 @@ from research.episode_propositions import build_propositions, propositions_to_js
 from runtime.backtest_v2 import HTFBuilder  # noqa: E402
 
 
-def _sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
+from research.provenance import sha256_file as _sha256  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _load_csv(path: Path) -> pd.DataFrame:

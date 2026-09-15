@@ -58,12 +58,7 @@ TRAINED_PATH = "models/rr_model.json"
 REGISTRY_ACTIVE_PATH = "models/rr_model_202605_bnb_v2.json"
 
 
-def _sha256_file(path: Path) -> str:
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
+from research.provenance import sha256_file as _sha256_file  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _stats(arr) -> dict:

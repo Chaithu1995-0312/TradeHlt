@@ -61,14 +61,7 @@ FAMILIES = [
 ]
 
 
-def _csv_map(cfg: ResearchConfig, instruments: list[str]) -> dict[str, str]:
-    keep = set(instruments)
-    out: dict[str, str] = {}
-    for p in sorted(Path(cfg.data_dir).glob(cfg.pattern)):
-        inst = p.stem.split("_")[0]
-        if inst in keep:
-            out[inst] = str(p)
-    return out
+from research.qualify_matrix import csv_map as _csv_map  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _load_candles(csv_path: str, instrument: str) -> list:
@@ -131,12 +124,7 @@ def _run_family(cfg_path: str, consumer_names: list[str], csv_map_majors,
     return cfg, family
 
 
-def _git_commit() -> str:
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
-    except Exception:
-        return "unknown"
+from research.provenance import git_commit as _git_commit  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _print_table(doc: dict) -> None:

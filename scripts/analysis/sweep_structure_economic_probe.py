@@ -54,7 +54,6 @@ USAGE
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import statistics as st
 import sys
@@ -66,10 +65,11 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from research.costs import ComponentCostModel, UnmeasuredCostError  # noqa: E402
 
-_P001 = ROOT / "scripts" / "analysis" / "p001_excursion_probe.py"
-_spec = importlib.util.spec_from_file_location("p001_excursion_probe", _P001)
-p001 = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(p001)
+from research.probes import corpus as p001  # noqa: E402
+from research.probes.governance import assert_no_claim_keys  # noqa: E402
+from research.probes.horizon import close_at_horizon  # noqa: E402
+from research.probes.costs_path import load_cost_model as _load_cost_model_shared  # noqa: E402
+p001.assert_no_claim_keys = assert_no_claim_keys  # type: ignore[attr-defined]
 
 HORIZONS = (20, 40, 80)
 MANIFEST_PATH = (
@@ -79,22 +79,13 @@ MANIFEST_PATH = (
 
 
 def load_cost_model() -> ComponentCostModel:
-    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    return ComponentCostModel.from_manifest(
-        manifest, instrument="XAUUSD", source=f"{MANIFEST_PATH.name}",
-    )
+    return _load_cost_model_shared()
 
 
-def close_at_horizon(corpus: list[dict], bar_index: int, direction: str, atr: float,
-                     horizon: int) -> Optional[float]:
-    """gross_R for a hold-to-horizon, no-TP/SL object. None if the window is truncated."""
-    future = corpus[bar_index + 1: bar_index + 1 + horizon]
-    if len(future) < horizon:
-        return None
-    entry = corpus[bar_index + 1]["open"]
-    exit_price = future[-1]["close"]
-    sign = 1.0 if direction == "LONG" else -1.0
-    return sign * (exit_price - entry) / atr
+
+
+# close_at_horizon imported from research.probes.horizon
+
 
 
 def cell(r: dict) -> str:

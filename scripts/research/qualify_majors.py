@@ -69,32 +69,10 @@ TOY_CANDIDATES = ["expansion_breakout", "mean_reversion"]
 SPINE_CANDIDATES = ["spine"]
 
 
-def _csv_map(cfg: ResearchConfig, instruments: list[str]) -> dict[str, str]:
-    data_dir = Path(cfg.data_dir)
-    keep = set(instruments)
-    out: dict[str, str] = {}
-    for p in sorted(data_dir.glob(cfg.pattern)):
-        inst = p.stem.split("_")[0]
-        if inst in keep:
-            out[inst] = str(p)
-    return out
+from research.qualify_matrix import csv_map as _csv_map  # noqa: E402 — research-framework Phase 1 dedup
 
 
-def _winning_control(per_by_hyp, control_names, scope_instruments, agg, cost):
-    """Highest pooled NET-expectancy control over the scope (== cli.cmd_qualify semantics)."""
-    win_name, win_rrs, win_exp = "none", [], float("-inf")
-    for name in sorted(control_names):
-        per = {i: per_by_hyp[name][i] for i in scope_instruments}
-        rrs: list[float] = []
-        for outs in per.values():
-            rrs.extend(_net_rrs(outs, cost))
-        rep = agg.aggregate(name, sorted(scope_instruments),
-                            [o for outs in per.values() for o in outs], cost_model=cost)
-        if rep.expectancy_rr > win_exp:
-            win_name, win_rrs, win_exp = name, rrs, rep.expectancy_rr
-    if win_exp == float("-inf"):
-        win_name, win_rrs, win_exp = "none", [], 0.0
-    return win_name, win_rrs, win_exp
+from research.qualify_matrix import winning_control as _winning_control  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _run_family(cfg_path: str, candidate_names: list[str]) -> tuple[ResearchConfig, dict]:
@@ -143,12 +121,7 @@ def _run_family(cfg_path: str, candidate_names: list[str]) -> tuple[ResearchConf
     return cfg, family
 
 
-def _git_commit() -> str:
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
-    except Exception:
-        return "unknown"
+from research.provenance import git_commit as _git_commit  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _print_table(report_doc: dict) -> None:

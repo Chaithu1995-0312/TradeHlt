@@ -658,21 +658,36 @@ def main() -> int:
         raise SystemExit(f"LINEAGE table mismatch missing={missing} extra={extra}")
 
     # Optional smoke: build features on frozen XAU
+    # CORPUS-READ-SEAM P3: migrated off `require_phase1_frozen_candidate` + bare `pd.read_csv`
+    # (identity-only, no L2 sequence/D-1 plausibility) onto `corpus_store` (the full
+    # admit_corpus chain: R3 identity + L2 sequence + D-1 plausibility, cached). Same XAUUSD
+    # M15 corpus either way -- verified: row count matches (47,275) and the resulting
+    # `enriched`/`present`/`missing_columns` are unchanged (see migration verification note
+    # in the session log).
     smoke = {"status": "SKIPPED"}
     try:
-        from data_ingestion.xauusd_phase1_candidate import require_phase1_frozen_candidate
+        from data_ingestion import corpus_store
         from features.feature_pipeline import FeaturePipeline
         import pandas as pd
 
-        require_phase1_frozen_candidate(repo_root=ROOT)
-        df = pd.read_csv(ROOT / "data/mt5/XAUUSD_M15.csv")
-        df.columns = [c.strip().lower() for c in df.columns]
+        corpus_store.ensure_fresh("XAUUSD", "M15")
+        read = corpus_store.read("XAUUSD", "M15")
+        df = pd.DataFrame({
+            "timestamp": [c.timestamp for c in read.candles],
+            "open":      [c.open for c in read.candles],
+            "high":      [c.high for c in read.candles],
+            "low":       [c.low for c in read.candles],
+            "close":     [c.close for c in read.candles],
+            "volume":    [c.volume for c in read.candles],
+        })
         pipe = FeaturePipeline(df)
         enriched, vectors = pipe.run()
         present = [f for f in CANONICAL_FEATURES if f in enriched.columns]
         smoke = {
             "status": "PASS",
-            "corpus": "data/mt5/XAUUSD_M15.csv",
+            "corpus": read.csv_path,
+            "corpus_sha256": read.csv_sha256,
+            "corpus_dataset_id": read.dataset_id,
             "rows_out": len(enriched),
             "vector_rows": len(vectors) if vectors is not None else 0,
             "canonical_columns_present": f"{len(present)}/{CANONICAL_FEATURE_DIM}",

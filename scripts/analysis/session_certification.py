@@ -37,6 +37,7 @@ import pandas as pd
 
 _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_ROOT / "src"))
+from research.probes.scriptmod import load_py  # noqa: E402
 
 LEDGER = _ROOT / "docs" / "governance" / "feature_certification_ledger.jsonl"
 EVIDENCE = _ROOT / "docs" / "governance" / "session_certification-2026-07-14.json"
@@ -115,8 +116,7 @@ def pipeline_session_from_timestamps(timestamps) -> np.ndarray:
 
 def resolve_frontier() -> dict:
     from collections import Counter
-    from importlib.util import spec_from_file_location, module_from_spec
-
+    
     events = []
     for ln in LEDGER.read_text(encoding="utf-8").splitlines():
         if not ln.strip():
@@ -124,11 +124,7 @@ def resolve_frontier() -> dict:
         e = json.loads(ln)
         if e.get("feature_name") or e.get("target_feature"):
             events.append(e)
-    spec = spec_from_file_location(
-        "feature_dag_layers", _ROOT / "scripts" / "analysis" / "feature_dag_layers.py"
-    )
-    mod = module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    mod = load_py(_ROOT / "scripts" / "analysis" / "feature_dag_layers.py", "feature_dag_layers")
     dag = mod.build_dag()
     deps_of = {nd["name"]: nd["deps"] for nd in dag["nodes"]}
     RAW = {"open", "high", "low", "close", "volume", "timestamp"}

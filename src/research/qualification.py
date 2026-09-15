@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import dataclasses
 import hashlib
+import inspect
 from dataclasses import dataclass
 
 from research.contracts import EdgeReport, Outcome
@@ -66,8 +67,20 @@ class QualConfig:
 
 # ── numeric helpers (pure) ───────────────────────────────────────────────────
 def _net_rrs(outcomes: list[Outcome], cost: CostModel) -> list[float]:
+    """Net every outcome's gross R by `cost`. `exit_kind`/`direction` are passed only to a
+    cost model that accepts them (SEM-015 `ComponentCostModel`, exit-aware: charges stop
+    slippage on a stop exit and NOT on a take-profit) — mirrors
+    `EdgeAggregator.aggregate`'s exact duck-typing (`metrics.py`). Calling a component
+    model's `net_rr` positionally (its old form here) would silently default EVERY outcome
+    to `exit_kind="SL_HIT"` pricing regardless of the outcome's real exit — a real mispricing
+    bug for the permutation test (gate 6) specifically, since gates 1-5 already route through
+    `EdgeAggregator.aggregate`, which was already fixed."""
+    _exit_aware = "exit_kind" in inspect.signature(cost.net_rr).parameters
     return [
-        cost.net_rr(o.rr_achieved, o.signal.entry, o.signal.sl_atr_mult * o.signal.atr)
+        cost.net_rr(
+            o.rr_achieved, o.signal.entry, o.signal.sl_atr_mult * o.signal.atr,
+            **({"exit_kind": o.outcome, "direction": o.signal.direction} if _exit_aware else {}),
+        )
         for o in outcomes
     ]
 

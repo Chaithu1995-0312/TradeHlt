@@ -22,6 +22,7 @@ import pandas as pd
 
 _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_ROOT / "src"))
+from research.probes.scriptmod import load_py  # noqa: E402
 
 LEDGER = _ROOT / "docs" / "governance" / "feature_certification_ledger.jsonl"
 EVIDENCE = _ROOT / "docs" / "governance" / "fm021_retest_depth_certification-2026-07-14.json"
@@ -109,13 +110,8 @@ def resolve_frontier() -> dict:
         if e.get("feature_name") or e.get("target_feature"):
             events.append(e)
     # live DAG (authoritative after M10 dep correction)
-    from importlib.util import spec_from_file_location, module_from_spec
-
-    spec = spec_from_file_location(
-        "feature_dag_layers", _ROOT / "scripts" / "analysis" / "feature_dag_layers.py"
-    )
-    mod = module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    
+    mod = load_py(_ROOT / "scripts" / "analysis" / "feature_dag_layers.py", "feature_dag_layers")
     dag = mod.build_dag()
     deps_of = {nd["name"]: nd["deps"] for nd in dag["nodes"]}
     RAW = {"open", "high", "low", "close", "volume", "timestamp"}

@@ -34,9 +34,13 @@ from research.model_runners.substrate import BarContext
 
 # Artifact-declared feature_schema string -> resolver schema id.
 # Strict: an artifact declaring anything else raises (no default generation).
+# "canonical_39" is freeze-pinned as the LIVE schema (now 48-dim). A trained
+# artifact declaring "canonical_39" is the 39-dim v4 generation, so route it to
+# the dedicated 39-dim registry schema. If a future artifact declaring the same
+# string is actually 48-dim, its width check fails closed (no silent pad).
 _ARTIFACT_SCHEMA_TO_ID: dict[str, str] = {
     "canonical_38": "canonical_38_v3",
-    "canonical_39": "canonical_39",
+    "canonical_39": "canonical_39_v4",
 }
 
 

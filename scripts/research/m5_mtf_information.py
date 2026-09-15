@@ -205,12 +205,7 @@ def _pooled(symbols: list[str], loaded: dict, builder, n_perm: int, label: str) 
     return out
 
 
-def _git_commit() -> str:
-    try:
-        return subprocess.check_output(["git", "rev-parse", "HEAD"],
-                                       stderr=subprocess.DEVNULL).decode().strip()
-    except Exception:
-        return "unknown"
+from research.provenance import git_commit as _git_commit  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def main(argv=None) -> int:
@@ -224,16 +219,33 @@ def main(argv=None) -> int:
         CandleStateEncoder(atr_period=ATR_PERIOD),
         rules=M5_RULES, base_label=M5_BASE_LABEL)
 
-    loaded = {sym: _load(sym) for sym in CRYPTO + FX}
-    per_instrument: dict[str, dict] = {}
+    loaded: dict = {}
+    universe_exclusions: dict = {}
     for sym in CRYPTO + FX:
+        try:
+            loaded[sym] = _load(sym)
+        except Exception as exc:  # noqa: BLE001 — record and continue; never silent-drop
+            universe_exclusions[sym] = {
+                "error_type": type(exc).__name__,
+                "message": str(exc)[:800],
+            }
+            safe_print(f"  EXCLUDED {sym}: {type(exc).__name__}")
+
+    crypto_loaded = [s for s in CRYPTO if s in loaded]
+    fx_loaded = [s for s in FX if s in loaded]
+    if not crypto_loaded:
+        raise SystemExit("no crypto M5 corpora admitted — cannot run Stage-1 primary group")
+    if not fx_loaded:
+        raise SystemExit("no FX M5 corpora admitted — cannot run Stage-1 robustness group")
+    per_instrument: dict[str, dict] = {}
+    for sym in crypto_loaded + fx_loaded:
         safe_print(f"  analyzing {sym} ...")
         per_instrument[sym] = _analyze(sym, loaded[sym], builder, args.permutations)
 
     safe_print("  pooling crypto ...")
-    crypto_pool = _pooled(CRYPTO, loaded, builder, args.permutations, "crypto")
+    crypto_pool = _pooled(crypto_loaded, loaded, builder, args.permutations, "crypto")
     safe_print("  pooling fx ...")
-    fx_pool = _pooled(FX, loaded, builder, args.permutations, "fx")
+    fx_pool = _pooled(fx_loaded, loaded, builder, args.permutations, "fx")
 
     # Cross-market verdict per program (pooled-group Stage-1 A-AND-B pass).
     cross: dict[str, str] = {}
@@ -255,6 +267,10 @@ def main(argv=None) -> int:
         "rules": list(M5_RULES),
         "crypto_symbols": CRYPTO,
         "fx_symbols": FX,
+        "crypto_symbols_loaded": crypto_loaded,
+        "fx_symbols_loaded": fx_loaded,
+        "universe_exclusions": universe_exclusions,
+        "universe_complete": not universe_exclusions,
         "per_instrument": per_instrument,
         "pooled": {"crypto": crypto_pool, "fx": fx_pool},
         "cross_market": cross,

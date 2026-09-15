@@ -4,7 +4,6 @@ Geometry is frozen. Do not retune after seeing y.
 """
 from __future__ import annotations
 
-import csv
 import json
 from datetime import datetime
 from pathlib import Path
@@ -12,8 +11,11 @@ from typing import Any
 
 from data_ingestion.dataset_integrity import validate_dataset
 from research.contracts import Signal
-from research.costs import ComponentCostModel
-from research.measurement.forward_walk import AdverseFill, forward_walk
+from research.costs import xau_measured_cost_model
+from research.mc_kit.bars import load_bars as _kit_load_bars, parse_ts_iso19 as _parse_ts
+from research.mc_kit.stats import trade_stats as _stats
+from research.mc_kit.trade import exit_kind as _exit_kind, walk_horizon
+from research.measurement.forward_walk import AdverseFill
 from research.mother_range.geometry import Bar, InsideCloseEntry, detect_inside_close_entries
 
 CONTRACT_ID = "MC-MRANGE-XAUUSD-M15-V1"
@@ -23,41 +25,14 @@ HOLDOUT_START = datetime(2025, 12, 24, 19, 15, 0)
 CORPUS = Path("data/mt5/XAUUSD_M15.csv")
 CORPUS_SHA = "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
 
-_XAU_COST = ComponentCostModel(
-    half_spread=0.045,
-    commission=0.040,
-    entry_slippage=0.090,
-    stop_slippage=0.090,
-    swap_long_per_night=None,
-    swap_short_per_night=None,
-    instrument="XAUUSD",
-    source="F-082 measured broker calibration; SEM-015 diagnostic net only",
-    status="MEASURED",
-    entry_slippage_basis="PROXY_FROM_STOP",
-)
-
-
-def _parse_ts(raw: str) -> datetime:
-    s = raw.strip().replace("T", " ")
-    return datetime.fromisoformat(s[:19])
+# research-framework consolidation Phase 3 (2026-09-14): the byte-identical duplicate of this
+# ComponentCostModel literal in sujan_crt/driver.py is now research.costs.xau_measured_cost_model()
+# (see archive/research_framework_phase3*_2026-09-14/ for the pre-edit originals).
+_XAU_COST = xau_measured_cost_model()
 
 
 def load_bars(path: Path) -> list[Bar]:
-    rows = list(csv.DictReader(path.open(encoding="utf-8")))
-    bars: list[Bar] = []
-    for i, row in enumerate(rows):
-        bars.append(
-            Bar(
-                timestamp=_parse_ts(row["timestamp"]),
-                open=float(row["open"]),
-                high=float(row["high"]),
-                low=float(row["low"]),
-                close=float(row["close"]),
-                volume=float(row["volume"]),
-                index=i,
-            )
-        )
-    return bars
+    return _kit_load_bars(path, Bar, parse_ts=_parse_ts, volume="required")
 
 
 def _signal(entry: InsideCloseEntry, instrument: str) -> Signal:
@@ -81,13 +56,7 @@ def _signal(entry: InsideCloseEntry, instrument: str) -> Signal:
 
 
 def _walk(sig: Signal, bars: list[Bar], adverse: AdverseFill) -> Any:
-    future = [b for b in bars if b.index > sig.entry_index][:HORIZON_BARS]
-    if not future:
-        return None
-    return forward_walk(
-        sig, future, max_forward=HORIZON_BARS, exit_model="intrabar_fixed",
-        adverse_fill=adverse,
-    )
+    return walk_horizon(sig, bars, horizon_bars=HORIZON_BARS, adverse=adverse)
 
 
 def run(
@@ -114,12 +83,9 @@ def run(
             continue
         open_until = ev.entry_index + out.duration_candles
         split = "holdout" if ev.timestamp >= holdout_start else "train"
-        exit_kind = "SL_HIT" if out.outcome == "SL_HIT" else (
-            "TP_HIT" if out.outcome == "TP_HIT" else "TIMEOUT"
-        )
         net = _XAU_COST.net_rr(
             out.rr_achieved, ev.entry, ev.risk,
-            exit_kind=exit_kind, direction=ev.direction,
+            exit_kind=_exit_kind(out.outcome), direction=ev.direction,
         )
         ledger.append({
             "split": split,
@@ -141,25 +107,6 @@ def run(
 
     holdout = [r for r in ledger if r["split"] == "holdout"]
     train = [r for r in ledger if r["split"] == "train"]
-
-    def _stats(rows: list[dict[str, Any]]) -> dict[str, Any]:
-        n = len(rows)
-        if n == 0:
-            return {"n": 0, "gross_mean": None, "net_mean": None, "win_rate": None, "pf": None}
-        gross = [float(r["y_R_gross"]) for r in rows]
-        net = [float(r["y_R_net"]) for r in rows]
-        wins = [g for g in gross if g > 0]
-        losses = [g for g in gross if g < 0]
-        gp = sum(wins)
-        gl = abs(sum(losses))
-        pf = (gp / gl) if gl > 0 else (float("inf") if gp > 0 else 0.0)
-        return {
-            "n": n,
-            "gross_mean": sum(gross) / n,
-            "net_mean": sum(net) / n,
-            "win_rate": sum(1 for g in gross if g > 0) / n,
-            "pf": pf,
-        }
 
     long_only_rows = []
     for r in holdout:

@@ -7,7 +7,6 @@ Not SEM-026 trade ledger (no walk, no SL/TP).
 """
 from __future__ import annotations
 
-import csv
 import hashlib
 import json
 from datetime import datetime, timedelta
@@ -26,7 +25,9 @@ from research.evidence.asymmetry_contract import (
 from research.evidence.catalog import SURFACES
 from research.evidence.driver import _load_cols
 from research.evidence.magnitude_prior import _sign, _tb_sign, _agree
-from research.evidence.queries import _as_float_y, _col, _mean
+from research.evidence.queries import _as_float_y, _col
+from research.mc_kit.bars import load_bars as _kit_load_bars
+from research.mc_kit.stats import arm_cells as _arm_cells
 from research.mother_range.geometry import Bar, detect_inside_close_entries
 
 CONTRACT_ID = "MC-MRPRIOR-XAUUSD-M15-V1"
@@ -36,19 +37,7 @@ _BAR_MINUTES = 15
 
 
 def load_bars(path: Path) -> list[Bar]:
-    rows = list(csv.DictReader(path.open(encoding="utf-8")))
-    bars: list[Bar] = []
-    for i, row in enumerate(rows):
-        bars.append(Bar(
-            timestamp=_parse_ts(row["timestamp"]),
-            open=float(row["open"]),
-            high=float(row["high"]),
-            low=float(row["low"]),
-            close=float(row["close"]),
-            volume=float(row["volume"]),
-            index=i,
-        ))
-    return bars
+    return _kit_load_bars(path, Bar, parse_ts=_parse_ts, volume="required")
 
 
 def _ts(ts: Any) -> str:
@@ -128,38 +117,6 @@ def split_rows(rows: list[dict[str, Any]]) -> tuple[list[dict], list[dict], dict
         "sparse_signal_is_sem026_entries": True,
     }
     return train, hold, manifest
-def _arm_cells(rows: list[dict], y_key: str) -> dict[str, Any]:
-    agree_xs: list[float] = []
-    disag_xs: list[float] = []
-    n_zero = 0
-    n_null_y = 0
-    for r in rows:
-        y = r.get(y_key)
-        if y is None:
-            n_null_y += 1
-            continue
-        if r.get("agree") is None:
-            n_zero += 1
-            continue
-        (agree_xs if r["agree"] else disag_xs).append(float(y))
-    ea, ed = _mean(agree_xs), _mean(disag_xs)
-    return {
-        "agree": {
-            "n": len(agree_xs),
-            "mean": ea,
-            "p_gt_0": (sum(1 for x in agree_xs if x > 0) / len(agree_xs)) if agree_xs else None,
-            "e_given_gt_0": _mean([x for x in agree_xs if x > 0]),
-        },
-        "disagree": {
-            "n": len(disag_xs),
-            "mean": ed,
-            "p_gt_0": (sum(1 for x in disag_xs if x > 0) / len(disag_xs)) if disag_xs else None,
-            "e_given_gt_0": _mean([x for x in disag_xs if x > 0]),
-        },
-        "contrast": None if ea is None or ed is None else ea - ed,
-        "n_trend_zero_or_unknown": n_zero,
-        "n_null_y": n_null_y,
-    }
 
 
 def verdict(train_c: dict, hold_c: dict) -> str:

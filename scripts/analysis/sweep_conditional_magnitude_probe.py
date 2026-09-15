@@ -29,7 +29,6 @@ WITHIN each subset.
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import statistics as st
 import sys
@@ -39,15 +38,10 @@ from typing import Optional
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-_SPP = ROOT / "scripts" / "analysis" / "sweep_state_persistence_probe.py"
-_spec = importlib.util.spec_from_file_location("sweep_state_persistence_probe", _SPP)
-spp = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(spp)
-
-_SEP = ROOT / "scripts" / "analysis" / "sweep_structure_economic_probe.py"
-_spec2 = importlib.util.spec_from_file_location("sweep_structure_economic_probe", _SEP)
-sep = importlib.util.module_from_spec(_spec2)
-_spec2.loader.exec_module(sep)
+from research.probes.corpus import load_corpus  # noqa: E402
+from research.probes.costs_path import load_cost_model  # noqa: E402
+from research.probes.horizon import close_at_horizon  # noqa: E402
+from research.probes.persistence import walk_episode_chain  # noqa: E402
 
 HORIZON = 20
 
@@ -90,8 +84,8 @@ def main() -> int:
     atr_by_bar = {b["bar_index"]: b["live_atr"] for b in pq.read_table(atlas / "envelope_bar.parquet").to_pylist()}
     exc_by_dh = {(e["decision_id"], e["horizon"]): e
                  for e in pq.read_table(atlas / "excursion.parquet").to_pylist()}
-    corpus = sep.p001.load_corpus(ROOT / args.csv)
-    cost_model = sep.load_cost_model()
+    corpus = load_corpus(ROOT / args.csv)
+    cost_model = load_cost_model()
 
     def cell(r: dict) -> str:
         return ("T" if r["breaker_present"] else "F") + ("T" if r["ob_present"] else "F")
@@ -103,12 +97,12 @@ def main() -> int:
         k = ep_index.get(eid)
         if k is None or episodes[k]["state"] != "SWEEP":
             continue
-        walk = spp.walk_episode_chain(episodes, k, HORIZON)
+        walk = walk_episode_chain(episodes, k, HORIZON)
         atr = atr_by_bar.get(r["bar_index"])
         exc = exc_by_dh.get((r["decision_id"], HORIZON)) or {}
         if not atr or exc.get("truncated"):
             continue
-        gross = sep.close_at_horizon(corpus, r["bar_index"], d["direction"], atr, HORIZON)
+        gross = close_at_horizon(corpus, r["bar_index"], d["direction"], atr, HORIZON)
         if gross is None:
             continue
         direction = "long" if d["direction"] == "LONG" else "short"

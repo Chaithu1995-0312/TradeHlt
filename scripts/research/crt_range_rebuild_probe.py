@@ -31,6 +31,7 @@ from typing import Any, Optional
 _ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_ROOT))
 sys.path.insert(0, str(_ROOT / "src"))
+from research.probes.scriptmod import load_py  # noqa: E402
 
 # SK-1 (2026-08-19): SP-001 single implementation. Imported AFTER the sys.path setup above,
 # which is why this is not at module top (the repo has no installed package).
@@ -120,19 +121,8 @@ def load_events(path: Path) -> list[dict[str, Any]]:
 
 def _load_confusion_helpers():
     """Import reconstruct_engine_timeline without requiring scripts/ as a package."""
-    import importlib.util
-
     path = _ROOT / "scripts" / "research" / "crt_state_confusion_matrix.py"
-    name = "crt_state_confusion_matrix_probe"
-    if name in sys.modules:
-        return sys.modules[name]
-    spec = importlib.util.spec_from_file_location(name, path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Cannot load {path}")
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod  # required before exec for @dataclass on 3.12+
-    spec.loader.exec_module(mod)
-    return mod
+    return load_py(path, "crt_state_confusion_matrix_probe")
 
 
 def reconstruct_engine_range_timeline(

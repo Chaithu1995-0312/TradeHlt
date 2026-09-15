@@ -1,0 +1,34 @@
+{
+  "change_id": "CH-probes-extract-phase1-2026-09-14",
+  "change_classes": [
+    "REFACTOR_EXTRACT",
+    "NO_BEHAVIOR_CHANGE_INTENDED"
+  ],
+  "declared_files": [
+    "src/research/probes/__init__.py",
+    "src/research/probes/corpus.py",
+    "src/research/probes/governance.py",
+    "src/research/probes/horizon.py",
+    "src/research/probes/scoreboard.py",
+    "src/research/probes/costs_path.py",
+    "src/research/probes/shadow_collapse.py",
+    "scripts/analysis/p001_excursion_probe.py",
+    "scripts/analysis/sweep_structure_economic_probe.py",
+    "scripts/analysis/phase1_resolver_replay_evidence.py",
+    "archive/probes_extraction_phase1_2026-09-14/MANIFEST.csv",
+    "archive/probes_extraction_phase1_2026-09-14/MANIFEST.md",
+    "archive/ARCHIVE_INDEX.md",
+    "docs/governance/build_manifests/CH-probes-extract-phase1-2026-09-14.impact.json",
+    "docs/governance/build_manifests/CH-probes-extract-phase1-2026-09-14.completion.json",
+    "docs/research/probes_extraction_audit_2026-09-14.md"
+  ],
+  "checks_executed": [
+    "python -c import research.probes (PYTHONPATH=src)",
+    "py_compile phase1 / sep / p001",
+    "phase1 --help"
+  ],
+  "completion_status": "COMPLETE_LOCAL",
+  "behavior_evidence": "Import surface moved to research.probes; CLI entrypoints and artifact paths unchanged. Full Phase-1 scoreboard golden re-run not executed in this session (expensive); import/compile/--help green.",
+  "residual_disclosure": "Many other scripts still importlib-load siblings (queued). load_cost_model still lived on sep until CH-probes-extract-all-states-economic.",
+  "archive_policy": "no deletes; see MANIFEST.csv actions copied_before_edit|created|edited_in_place|moved_to_archive"
+}

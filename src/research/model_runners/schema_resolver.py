@@ -192,6 +192,32 @@ def _build_canonical_39() -> ResolvedSchema:
     )
 
 
+def _build_canonical_39_v4() -> ResolvedSchema:
+    """The 39-dim v4 generation (MACD split retained; v5.0 distance/CoC excluded).
+
+    Distinct from ``canonical_39``, which is freeze-pinned as the LIVE schema
+    (now 48-dim under CH-htfcrt-parent-candle-smc-v1, 2026-08-15). v4 (the
+    2026-07-28 training generation) = v3 + the MACD-histogram split; v5.0 later
+    appended the 9 order-block/FVG/breaker/PDR/EQH/CoC dimensions. An rr_trained
+    artifact declaring ``canonical_39`` is this 39-dim v4 generation, so it is
+    routed here (see rr_trained._ARTIFACT_SCHEMA_TO_ID).
+    """
+    result = [n for n in CANONICAL_FEATURES if n not in _V5_ONLY_FEATURES]
+    if len(result) != 39:
+        raise SchemaResolutionError(
+            f"_build_canonical_39_v4: expected 39 names after excluding the "
+            f"v5.0-only dims, got {len(result)} (live dim={CANONICAL_FEATURE_DIM}). "
+            f"Update schema_resolver."
+        )
+    names = tuple(result)
+    return ResolvedSchema(
+        schema_id="canonical_39_v4",
+        trained_names=names,
+        live_names=names,
+        source="registry",
+    )
+
+
 def _build_legacy_38_env() -> ResolvedSchema:
     """Envelope / clean-labels convention: drop the v4-only feature, no renames."""
     live = tuple(_canonical_minus_v4_only())
@@ -227,6 +253,7 @@ SCHEMA_REGISTRY: dict[str, ResolvedSchema] = {
     s.schema_id: s
     for s in (
         _build_canonical_39(),
+        _build_canonical_39_v4(),
         _build_legacy_38_env(),
         _build_canonical_38_v3(),
     )

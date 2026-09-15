@@ -42,7 +42,6 @@ USAGE
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import sys
 from pathlib import Path
@@ -52,10 +51,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 # Reuse the atlas builder's own loader rather than re-parsing the JSONL a second way.
-_BDA = ROOT / "scripts" / "analysis" / "build_decision_atlas.py"
-_spec = importlib.util.spec_from_file_location("build_decision_atlas", _BDA)
-bda = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(bda)
+from research.probes.atlas_io import load_bar_structure  # noqa: E402
 
 #: (present_field, distance_field, output_name) -- the four liquidity levels + three SMC zones.
 _GATED_FIELDS: tuple[tuple[str, str, str], ...] = (
@@ -114,7 +110,7 @@ def main() -> int:
     sweeps = [d for d in dec if d["to_state"] == args.to_state and d["direction"]]
     bar_idx = {d["bar_index"] for d in sweeps}
 
-    bstruct = bda.load_bar_structure(ROOT / args.bar_structure)
+    bstruct = load_bar_structure(ROOT / args.bar_structure)
     missing = bar_idx - set(bstruct)
     if missing:
         print(f"FATAL: {len(missing)} decision bar_index(es) absent from bar_structure -- "

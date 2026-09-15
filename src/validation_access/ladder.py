@@ -19,6 +19,8 @@ _SRC = _ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
+from research.probes.scriptmod import load_py  # noqa: E402
+
 DESIGN_ID = "VA-XAUUSD-M15"
 INSTRUMENT = "XAUUSD"
 TIMEFRAME = "M15"
@@ -270,15 +272,8 @@ def _run_i(root: Path, *, live_impl: bool) -> RungResult:
     if live_impl:
         try:
             # Import harness module by path to avoid package pollution
-            import importlib.util
             mod_path = root / "scripts" / "analysis" / "implementation_model_validation_xauusd.py"
-            spec = importlib.util.spec_from_file_location(
-                "implementation_model_validation_xauusd", mod_path
-            )
-            if spec is None or spec.loader is None:
-                raise ImportError(f"cannot load {mod_path}")
-            mod = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(mod)
+            mod = load_py(mod_path, "implementation_model_validation_xauusd")
             rc = int(mod.main())
             latest = root / IMPL_LATEST_REL
             if latest.is_file():
@@ -329,16 +324,14 @@ def _run_i(root: Path, *, live_impl: bool) -> RungResult:
 def _run_f(root: Path) -> RungResult:
     name = "feature_cert_ontology_surface"
     try:
-        # feature_surface_query is a script module — import via governance dir on sys.path
-        gov_dir = str(root / "scripts" / "governance")
-        if gov_dir not in sys.path:
-            sys.path.insert(0, gov_dir)
-        # Drop stale broken module if a prior importlib load left a shell
+        # feature_surface_query is a script module — load via shared choke-point
+        mod_path = root / "scripts" / "governance" / "feature_surface_query.py"
+        # Drop stale broken module if a prior load left a shell
         if "feature_surface_query" in sys.modules:
             mod = sys.modules["feature_surface_query"]
             if not hasattr(mod, "FeatureSurfaceIndex"):
                 del sys.modules["feature_surface_query"]
-        import feature_surface_query as fsq  # type: ignore
+        fsq = load_py(mod_path, "feature_surface_query")
 
         idx = fsq.FeatureSurfaceIndex.load(root)
         summary = idx.summary()

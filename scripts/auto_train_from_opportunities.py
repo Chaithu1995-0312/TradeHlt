@@ -42,7 +42,9 @@ def _run(cmd: list[str]) -> int:
 def _scan_instrument(data_dir: Path, instrument: str, output_dir: Path,
                      max_forward_candles: int, warmup_candles: int,
                      trail_mult: float = 0.5,
-                     run_id: str = "") -> Path | None:
+                     run_id: str = "",
+                     trace_id: str = "",
+                     analysis_id: str = "") -> Path | None:
     csv_path = data_dir / f"{instrument}_M15.csv"
     if not csv_path.exists():
         _LOG.warning("Skip %s: %s not found", instrument, csv_path)
@@ -57,6 +59,8 @@ def _scan_instrument(data_dir: Path, instrument: str, output_dir: Path,
         "--output-dir", str(output_dir),
         "--trail-mult", str(trail_mult),
         "--run-id", run_id,
+        "--trace-id", trace_id,
+        "--analysis-id", analysis_id,
     ])
     if rc != 0:
         _LOG.error("Scanner failed for %s (rc=%d)", instrument, rc)
@@ -215,9 +219,12 @@ def main(argv=None) -> int:
                     help="Extra args forwarded verbatim to phase5_calibration.py "
                          "(e.g. --tradenet  or  --feature-subset retest_depth,...)")
     ap.add_argument("--run-id", default=None,
-                    help="Shared run identifier for this pipeline run. "
-                         "Auto-generates YYYYMMDD_HHMMSS if not provided. "
-                         "Scopes all outputs to {dir}/{instrument}/{run_id}/.")
+                    help="Shared run identifier for this pipeline run (UTC if omitted). "
+                         "Child of --trace-id. Scopes outputs to {dir}/{instrument}/{run_id}/.")
+    ap.add_argument("--trace-id", required=True,
+                    help="Campaign TraceID (TR-*). Fail-closed; inherited by scanner.")
+    ap.add_argument("--analysis-id", default="",
+                    help="Stable analysis id (AN-*). Forwarded to scanner run_header.")
     args = ap.parse_args(argv)
 
     logging.basicConfig(
@@ -227,9 +234,15 @@ def main(argv=None) -> int:
 
     sys.path.insert(0, str(_REPO_ROOT / "src"))
 
-    run_id     = args.run_id or time.strftime("%Y%m%d_%H%M%S")
-    version    = args.model_version or f"v5_auto_{time.strftime('%Y%m%d')}"
-    _LOG.info("Pipeline run_id=%s  version=%s", run_id, version)
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    run_id     = args.run_id or now.strftime("%Y%m%d_%H%M%S")
+    trace_id   = (args.trace_id or "").strip()
+    if not trace_id:
+        raise SystemExit("trace_id is required (fail-closed; campaign TraceID, not run_id)")
+    analysis_id = (args.analysis_id or "").strip()
+    version    = args.model_version or f"v5_auto_{now.strftime('%Y%m%d')}"
+    _LOG.info("Pipeline run_id=%s  trace_id=%s  version=%s", run_id, trace_id, version)
     output_dir = args.output_logs
     output_dir.mkdir(parents=True, exist_ok=True)
     args.results_dir.mkdir(parents=True, exist_ok=True)
@@ -244,6 +257,8 @@ def main(argv=None) -> int:
             args.max_forward_candles, args.warmup_candles,
             trail_mult=args.trail_mult,
             run_id=run_id,
+            trace_id=trace_id,
+            analysis_id=analysis_id,
         )
         if p is not None and p.exists():
             scanned.append((instr, p))
@@ -275,6 +290,7 @@ def main(argv=None) -> int:
             entry = {
                 "instrument":    instr,
                 "run_id":        run_id,
+                "trace_id":      trace_id,
                 "opportunities": str(opp_path),
                 "report":        report,
                 "rc":            rc_train,
@@ -364,6 +380,8 @@ def main(argv=None) -> int:
     any_failure = any(e["rc"] != 0 for e in results_summary)
     summary_payload = {
         "run_id":                 run_id,
+        "trace_id":               trace_id,
+        "analysis_id":            analysis_id or None,
         "version":                version,
         "per_instrument":         args.per_instrument,
         "instruments_attempted":  args.instruments,

@@ -1,0 +1,29 @@
+{
+  "change_id": "CH-phase1-fourarm-replay",
+  "date_utc": "2026-09-10",
+  "objective": "Authorized four-arm Phase-1 H20 + SEM-015 replay: Engine atlas direction, Resolver-Memory (SHADOW→EXP + pending_displacement_dir, strict_memory), Resolver-TrendBias, Always-Long. Analysis-only. Bind a run_id. No production behavior change.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE"
+  ],
+  "change_class_rationale": "Extends the already-registered diagnostic scripts/analysis/phase1_resolver_replay_evidence.py (SCR-451) from the engine-shadow n=6 capture to the frozen four-arm object. No new script path, no SITS reclassification, no ontology/config/spine edit. Results are descriptive-only (economic_claims_allowed=false).",
+  "affected_files": [
+    "scripts/analysis/phase1_resolver_replay_evidence.py",
+    "docs/research/phase1_resolver_replay_evidence_note.md",
+    "docs/governance/build_manifests/CH-phase1-fourarm-replay.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert scripts/analysis/phase1_resolver_replay_evidence.py and docs/research/phase1_resolver_replay_evidence_note.md together. The prior engine-shadow n=6 artifacts under results/analysis/phase1_resolver_replay/ and docs/research/phase1_resolver_replay_n6_funnel_diagnostic.md stay as a different object (do not delete).",
+  "authority_granted": "User authorized the frozen four-arm replay (Engine atlas / Resolver-Memory / Resolver-TrendBias / Always-Long) on Phase-1 XAUUSD, H20, SEM-015 TIMEOUT, and required a run_id in the response.",
+  "authority_NOT_granted": "No continuous_disp_to_expansion flip; no CHoCH wire; no occupancy reopen; no parity optimize; no April off-session reclassify; no TV forensic as occupancy adjudicator; no economic promotion; no G001; no production config/spine change; P-GOAL-04 still blocks Sense B money.",
+  "production_behavior_changed": "NO"
+}

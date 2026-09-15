@@ -28,7 +28,6 @@ Usage
 """
 from __future__ import annotations
 
-import importlib.util
 import json
 import sys
 from datetime import datetime, timezone
@@ -38,6 +37,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
+from research.probes.scriptmod import load_py  # noqa: E402
 
 from config_layer.production_config import _compute_params_hash  # noqa: E402
 
@@ -46,10 +46,7 @@ SOURCE_VERSION = "v2_htfcrt_2026_08"
 
 
 def _load_module(name: str, path: Path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return load_py(path, name)
 
 
 def build_declared_params_47() -> dict:

@@ -1,0 +1,34 @@
+{
+  "change_id": "CH-coding-llm-context-pack-has",
+  "date_utc": "2026-09-10",
+  "objective": "Add the coding-LLM reasoning context pack as a registry-addressable has pointer on run_20260909_202201 and pin pack<->registry equality in the floor. Successor LLMs resolve the load-first YAML via schema_bridge.has.coding_llm_context_pack; surfaces stay four-arm/lifecycle VALID and CREATE session/hour/HTF/parent/H20 INVALIDATED; rebuild stays unauthorized.",
+  "change_classes": [
+    "TRACE_OBSERVATION_JOIN"
+  ],
+  "change_class_rationale": "Addressability of an existing observation artifact (the loadable context pack) keyed by run_id, same class as CH-runid-schema-bridge. No new trace field stream, no decision path, no config, no MC-* seal. Production behavior unchanged.",
+  "depends_on": "CH-coding-llm-context-pack-yaml (PR-1, DOCUMENTATION_ONLY, landed)",
+  "affected_files": [
+    "docs/governance/run_linkage_registry.json",
+    "tests/test_run_linkage.py",
+    "docs/research/phase1_run_20260909_202201_coding_llm_context.yaml",
+    "docs/governance/build_manifests/CH-coding-llm-context-pack-has.impact.json",
+    "docs/governance/build_manifests/CH-coding-llm-context-pack-has.completion.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_run_linkage.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the schema_bridge.has.coding_llm_context_pack pointer, the YAML registry_has key, and the test pins together.",
+  "authority_granted": "User: land PR-3 (has pointer + floor pin).",
+  "authority_NOT_granted": "No CREATE-context timestamp-join rebuild (option 2). No MC-* seal. No finding_id. No mx_id. No provenance record_id. No G001. No economic_claims_allowed flip. No production/config/spine.",
+  "production_behavior_changed": "NO"
+}

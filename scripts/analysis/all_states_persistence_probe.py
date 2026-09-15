@@ -25,7 +25,6 @@ into progressed / reverted / still_dwelling buckets and reports net_R per bucket
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import statistics as st
 import sys
@@ -35,10 +34,10 @@ from typing import Optional
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-_SEP = ROOT / "scripts" / "analysis" / "sweep_structure_economic_probe.py"
-_spec = importlib.util.spec_from_file_location("sweep_structure_economic_probe", _SEP)
-sep = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(sep)
+from research.probes.corpus import load_corpus  # noqa: E402
+from research.probes.costs_path import load_cost_model  # noqa: E402
+from research.probes.horizon import close_at_horizon  # noqa: E402
+from research.probes.persistence import walk_episode_chain  # noqa: E402
 
 # CRT construction order. RANGE is the universal "reset" boundary -- reaching it always ends
 # a walk, regardless of where it started (matches the SWEEP-specific probe's own rule).
@@ -83,10 +82,6 @@ def verify_matches_sweep_specific(atlas: Path) -> None:
     probe's reached_displacement rate exactly (both mean 'reached a state further along the
     construction'). If it does not, the generalization is wrong -- abort before trusting it on
     DISPLACEMENT/EXPANSION."""
-    _SPP = ROOT / "scripts" / "analysis" / "sweep_state_persistence_probe.py"
-    spec2 = importlib.util.spec_from_file_location("sweep_state_persistence_probe", _SPP)
-    spp = importlib.util.module_from_spec(spec2)
-    spec2.loader.exec_module(spp)
 
     import pyarrow.parquet as pq
     lf = pq.read_table(atlas / "sweep_liquidity_fact.parquet").to_pylist()
@@ -101,7 +96,7 @@ def verify_matches_sweep_specific(atlas: Path) -> None:
         k = ep_index.get(d["episode_id"])
         if k is None or episodes[k]["state"] != "SWEEP":
             continue
-        old = spp.walk_episode_chain(episodes, k, 20)
+        old = walk_episode_chain(episodes, k, 20)
         new = walk_generalized(episodes, k, 20)
         old_rate += old["reached_displacement"]
         new_rate += new["reached_progress"]
@@ -124,14 +119,14 @@ def main() -> int:
     atlas = Path(ROOT / args.atlas)
     verify_matches_sweep_specific(atlas)
 
-    cost_model = sep.load_cost_model()
+    cost_model = load_cost_model()
     import pyarrow.parquet as pq
     dec = {d["decision_id"]: d for d in pq.read_table(atlas / "transition_decision.parquet").to_pylist()}
     episodes = pq.read_table(atlas / "episode.parquet").to_pylist()
     episodes.sort(key=lambda e: e["episode_id"])
     ep_index = {e["episode_id"]: k for k, e in enumerate(episodes)}
     atr_by_bar = {b["bar_index"]: b["live_atr"] for b in pq.read_table(atlas / "envelope_bar.parquet").to_pylist()}
-    corpus = sep.p001.load_corpus(ROOT / args.csv)
+    corpus = load_corpus(ROOT / args.csv)
 
     STATE_TABLES = {"SWEEP": "sweep_liquidity_fact.parquet",
                     "DISPLACEMENT": "displacement_liquidity_fact.parquet",
@@ -161,7 +156,7 @@ def main() -> int:
                 atr = atr_by_bar.get(r["bar_index"])
                 if not atr:
                     continue
-                gross = sep.close_at_horizon(corpus, r["bar_index"], d["direction"], atr, H)
+                gross = close_at_horizon(corpus, r["bar_index"], d["direction"], atr, H)
                 if gross is None:
                     continue
                 direction = "long" if d["direction"] == "LONG" else "short"

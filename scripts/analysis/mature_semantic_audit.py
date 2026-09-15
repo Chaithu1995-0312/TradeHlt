@@ -64,12 +64,7 @@ INTERNAL_COLS = ["prev_close", "last_swing_high_price", "last_swing_low_price",
                  "ma_20", "ma_slope_20", "delta_close"]
 
 
-def _sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
+from research.provenance import sha256_file as _sha256  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _native(v):

@@ -1,0 +1,28 @@
+{
+  "change_id": "CH-coding-llm-context-pack-has",
+  "date_utc": "2026-09-10",
+  "declared_files": [
+    "docs/governance/run_linkage_registry.json",
+    "tests/test_run_linkage.py",
+    "docs/research/phase1_run_20260909_202201_coding_llm_context.yaml",
+    "docs/governance/build_manifests/CH-coding-llm-context-pack-has.impact.json",
+    "docs/governance/build_manifests/CH-coding-llm-context-pack-has.completion.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_run_linkage.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "repo_state_hash": "PENDING",
+  "completion_status": "BLOCKED_PREEXISTING_DIRTY_TREE",
+  "completion_note": "PR-3 change-specific work done: schema_bridge.has.coding_llm_context_pack added for run_20260909_202201; test_run_linkage.py pins the pointer, the omitted-ID rule, and pack<->surfaces equality; pack registry_has updated to the strict key-copy. Focused floor: test_run_linkage.py + test_construction_protocol.py = 24 passed; doc floors 16 passed with 1 pre-existing calendar failure (test_current_findings.py::test_nonterminal_findings_are_fresh F-016/F-017 Revalidate-by=2026-09-09, unrelated to these files). validate-completion cannot claim COMPLETE on this branch: the whole-porcelain construction_protocol check returns RED on pre-existing concurrent-session debt (findings calendar staleness F-016/F-017, geometry-census freshness) that none of the PR-3 files touch; per CH-trace-parquet-duckdb-query precedent those failures are recorded, not absorbed. No CREATE-context rebuild (option 2). No MC-*/F-*/mx_id/contract_id mint. production_behavior_changed=NO.",
+  "production_behavior_changed": "NO",
+  "evidence": {
+    "focused_floor": "test_run_linkage + test_construction_protocol = 24 passed",
+    "doc_floors": "test_doc_citations + test_topic_docs = 24 passed; test_current_findings = 16 passed + 1 pre-existing calendar staleness",
+    "registry_pointer": "resolve_artifacts(XAUUSD, run_20260909_202201)[schema_bridge][has][coding_llm_context_pack] resolves"
+  }
+}

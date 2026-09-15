@@ -11,7 +11,7 @@ CRT is intentionally NOT consulted. The output is the unbiased ground truth
 that breaks the recursive training loop.
 
 Output JSONL (one record per direction per candle):
-  {timestamp, instrument, direction, entry, sl, tp, outcome, rr_achieved,
+  {timestamp, instrument, trace_id, direction, entry, sl, tp, outcome, rr_achieved,
    duration_candles, mfe, mae, features: {...35 canonical features...}}
   rr_achieved spans [-1.0, 2.0] via 0.5R trailing stop (covers all 4 Gaussian classes).
 
@@ -152,15 +152,22 @@ def _simulate(direction: str, entry: float, sl: float, tp: float,
 def scan(csv_path: Path, instrument: str, *, tp_atr_mult: float = 2.0,
          sl_atr_mult: float = 1.0, max_forward_candles: int = 40,
          warmup_candles: int = 30, output_dir: Path = Path("logs"),
-         trail_mult: float = 0.5, run_id: str = "") -> Path:
+         trail_mult: float = 0.5, run_id: str = "",
+         trace_id: str = "", analysis_id: str = "") -> Path:
     """Scan csv_path and write opportunities JSONL.
 
     Output is run-scoped: {output_dir}/{instrument}/{run_id}/opportunities.jsonl
     The first line of the JSONL is a run_header record for downstream inheritance.
-    run_id defaults to YYYYMMDD_HHMMSS if not provided.
+    run_id defaults to UTC YYYYMMDD_HHMMSS if not provided.
+    trace_id is required (campaign TR-*, fail-closed). It is not a run_id.
     """
-    import time as _time
-    _run_id = run_id or _time.strftime("%Y%m%d_%H%M%S")
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    _run_id = run_id or now.strftime("%Y%m%d_%H%M%S")
+    _trace_id = (trace_id or "").strip()
+    if not _trace_id:
+        raise SystemExit("trace_id is required (fail-closed; campaign TraceID, not run_id)")
+    _analysis_id = (analysis_id or "").strip()
 
     if instrument.upper() == "XAUUSD":
         from data_ingestion.xauusd_phase1_candidate import guard_xauusd_csv_path
@@ -186,10 +193,13 @@ def scan(csv_path: Path, instrument: str, *, tp_atr_mult: float = 2.0,
     with out_path.open("w", encoding="utf-8") as fout:
         # First line: run_header — inherited by phase5 and compress_logs
         run_header = {
-            "type":       "run_header",
-            "run_id":     _run_id,
-            "instrument": instrument,
-            "started_at": _time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "type":        "run_header",
+            "run_id":      _run_id,
+            "trace_id":    _trace_id,
+            "analysis_id": _analysis_id or None,
+            "instrument":  instrument,
+            "csv_path":    str(csv_path),
+            "started_at":  now.strftime("%Y-%m-%dT%H:%M:%SZ"),
         }
         fout.write(json.dumps(run_header) + "\n")
         for idx in range(start, n - 1):
@@ -219,6 +229,7 @@ def scan(csv_path: Path, instrument: str, *, tp_atr_mult: float = 2.0,
                 record = {
                     "timestamp": ts,
                     "instrument": instrument,
+                    "trace_id": _trace_id,
                     "direction": direction,
                     "entry": float(entry),
                     "sl": float(sl),
@@ -235,8 +246,8 @@ def scan(csv_path: Path, instrument: str, *, tp_atr_mult: float = 2.0,
                 counts[result["outcome"]] += 1
 
     logger.info(
-        "OpportunityScanner: wrote %s | run_id=%s | long=%d short=%d | TP_HIT=%d SL_HIT=%d TIMEOUT=%d",
-        out_path, _run_id, counts["long"], counts["short"],
+        "OpportunityScanner: wrote %s | run_id=%s | trace_id=%s | long=%d short=%d | TP_HIT=%d SL_HIT=%d TIMEOUT=%d",
+        out_path, _run_id, _trace_id, counts["long"], counts["short"],
         counts["TP_HIT"], counts["SL_HIT"], counts["TIMEOUT"],
     )
     return out_path
@@ -257,17 +268,21 @@ def main(argv=None) -> int:
                     help="Trailing stop distance as multiple of risk_distance "
                          "(default=0.5; 0.5R trail populates Gaussian classes 1+2)")
     ap.add_argument("--run-id", default=None,
-                    help="Run identifier for output scoping. "
-                         "Auto-generates YYYYMMDD_HHMMSS if not provided. "
+                    help="Run identifier for output scoping (UTC YYYYMMDD_HHMMSS if omitted). "
+                         "Child of --trace-id. "
                          "Output: {output-dir}/{instrument}/{run-id}/opportunities.jsonl")
+    ap.add_argument("--trace-id", required=True,
+                    help="Campaign TraceID (TR-*). Fail-closed; not a run_id.")
+    ap.add_argument("--analysis-id", default="",
+                    help="Stable analysis id (AN-*). Stamped on run_header.")
     args = ap.parse_args(argv)
 
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
     )
-    import time as _time
-    run_id = args.run_id or _time.strftime("%Y%m%d_%H%M%S")
+    from datetime import datetime, timezone
+    run_id = args.run_id or datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     out_path = scan(
         args.csv, args.instrument,
         tp_atr_mult=args.tp_atr_mult,
@@ -277,8 +292,11 @@ def main(argv=None) -> int:
         output_dir=args.output_dir,
         trail_mult=args.trail_mult,
         run_id=run_id,
+        trace_id=args.trace_id,
+        analysis_id=args.analysis_id,
     )
     print(f"OUTPUT:run_id:{run_id}")
+    print(f"OUTPUT:trace_id:{args.trace_id}")
     print(f"OUTPUT:opportunities:{out_path.resolve()}")
     return 0
 

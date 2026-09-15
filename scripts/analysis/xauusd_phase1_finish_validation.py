@@ -44,12 +44,7 @@ OUT_JSON = ROOT / "docs" / "governance" / "xauusd_phase1_validation_report-2026-
 OUT_MD = ROOT / "docs" / "governance" / "xauusd_phase1_validation_report-2026-07-10.md"
 
 
-def _sha(p: Path) -> str:
-    h = hashlib.sha256()
-    with open(p, "rb") as f:
-        for c in iter(lambda: f.read(1 << 20), b""):
-            h.update(c)
-    return h.hexdigest()
+from research.provenance import sha256_file as _sha  # noqa: E402 — research-framework Phase 1 dedup
 
 
 def _load_rows(path: Path):

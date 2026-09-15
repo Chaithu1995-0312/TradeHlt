@@ -1,0 +1,14 @@
+{
+  "change_id": "CH-probes-extract-replay-excursion-2026-09-14",
+  "when_utc": "2026-09-14T10:54:50Z",
+  "completion_status": "COMPLETE_LOCAL",
+  "created": [
+    "src/research/probes/excursion.py",
+    "src/research/probes/phase1_replay.py"
+  ],
+  "importlib_removed_from": [
+    "phase1_resolver_replay_sample_acquisition.py",
+    "build_decision_atlas.py",
+    "phase1_shadow_create_economic_census.py"
+  ]
+}
