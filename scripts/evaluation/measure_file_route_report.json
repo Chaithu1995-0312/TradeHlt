@@ -1,0 +1,2891 @@
+{
+  "results": [
+    {
+      "kind": "original",
+      "gold_path": "D:\\Tradelatest\\scripts\\evaluation\\benchmark_100.original.json",
+      "n": 95,
+      "mean_file_recall_at_5": 0.07192982456140351,
+      "pct_questions_any_gold_in_top5": 0.08421052631578947,
+      "median_latency_s": 1.051081895828247,
+      "p95_latency_s": 1.8690521717071533,
+      "n_details": 95
+    },
+    {
+      "kind": "remapped",
+      "gold_path": "D:\\Tradelatest\\scripts\\evaluation\\benchmark_100.remapped.json",
+      "n": 95,
+      "mean_file_recall_at_5": 0.06666666666666667,
+      "pct_questions_any_gold_in_top5": 0.08421052631578947,
+      "median_latency_s": 1.052962303161621,
+      "p95_latency_s": 1.6037778854370117,
+      "n_details": 95
+    }
+  ],
+  "flips_sample": [],
+  "full": [
+    {
+      "kind": "original",
+      "gold_path": "D:\\Tradelatest\\scripts\\evaluation\\benchmark_100.original.json",
+      "n": 95,
+      "mean_file_recall_at_5": 0.07192982456140351,
+      "pct_questions_any_gold_in_top5": 0.08421052631578947,
+      "median_latency_s": 1.051081895828247,
+      "p95_latency_s": 1.8690521717071533,
+      "details": [
+        {
+          "id": 1,
+          "question": "What is the overall architecture of the trading system?",
+          "expected": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+          ],
+          "top_files": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+            "docs/architecture/architecture-memory.md"
+          ],
+          "matched": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+          ],
+          "recall": 1.0
+        },
+        {
+          "id": 2,
+          "question": "Which document defines the system architecture?",
+          "expected": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+          ],
+          "top_files": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+            "docs/architecture/architecture-memory.md"
+          ],
+          "matched": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+          ],
+          "recall": 1.0
+        },
+        {
+          "id": 3,
+          "question": "How does data flow from OHLCV to trade decision?",
+          "expected": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+            "docs/architecture/opportunity-episode-platform-design.md"
+          ],
+          "top_files": [
+            "tests/test_ultron_risk_gate.py",
+            "src/config_layer/crt_engine_v2.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 4,
+          "question": "Which components make up the feature engineering pipeline?",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "src/features/fm_resolve.py",
+            "src/features/crt_state_resolver.py"
+          ],
+          "top_files": [
+            "tests/test_gate_intelligence.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 5,
+          "question": "What are the major runtime engines in production?",
+          "expected": [
+            "active_models.yaml",
+            "src/engines/crt_engine.py",
+            "src/engines/llm_engine.py",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "docs/architecture/codebase-wiring-guide.md",
+            "docs/analysis/codebase-analysis.md",
+            "docs/book/encyclopedia/E1-spine-implementation.md",
+            "docs/governance/who_numeric_dependency_census-2026-07-11.json"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 6,
+          "question": "How is the ontology layer separated from implementation?",
+          "expected": [
+            "docs/analysis/ONTOLOGY_RUNTIME_REACHABILITY.md",
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+          ],
+          "top_files": [
+            "src/research/synthetic/ontology.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 7,
+          "question": "Which modules consume canonical features?",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "src/engines/crt_engine.py",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "src/features/crt_state_resolver.py",
+            "src/features/crt_feature_builder.py",
+            "src/features/feature_monitor.py",
+            "src/features/market_context.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 8,
+          "question": "Where is the execution pipeline defined?",
+          "expected": [
+            "src/runtime/backtest_v2.py",
+            "src/strategies/s01_crt_wrapper.py"
+          ],
+          "top_files": [
+            "src/execution/__init__.py",
+            "tests/test_feature_pipeline.py",
+            "docs/governance/crt_formula_contract.json"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 9,
+          "question": "Which files describe system wiring?",
+          "expected": [
+            "docs/architecture/EXISTING_TO_FRAMEWORK_MAP.md",
+            "docs/architecture/opportunity-episode-platform-design.md"
+          ],
+          "top_files": [
+            "src/research/oracle/stop_policy.py",
+            "src/control_plane/server.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 10,
+          "question": "How are production models loaded during startup?",
+          "expected": [
+            "active_models.yaml",
+            "src/control_plane/registry.py"
+          ],
+          "top_files": [
+            "src/control_plane/server.py",
+            "tests/test_active_models_registry.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 11,
+          "question": "How many production Python files exist?",
+          "expected": [
+            "python_source_static_census.jsonl",
+            "python_source_static_census_summary.json"
+          ],
+          "top_files": [
+            "docs/reference/bash-command-catalog.md",
+            "scripts/data/prepare_data.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 12,
+          "question": "Which directories contain production code?",
+          "expected": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+          ],
+          "top_files": [
+            "tests/test_pattern_hasher.py",
+            "docs/governance/crt_adversarial_validation.md",
+            "src/research/adapters/spine_signal_source.py",
+            "tests/test_semantic_os_objects.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 13,
+          "question": "Which directory contains governance documents?",
+          "expected": [],
+          "top_files": [
+            "docs/governance/ANALYTICS_NOUN_PARITY_L003M.md",
+            "docs/governance/who_numeric_dependency_census-2026-07-11.json",
+            "docs/memory/ARCHITECTURE_MEMORY_POLICY.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 14,
+          "question": "Which directory contains research artifacts?",
+          "expected": [],
+          "top_files": [
+            "docs/architecture/opportunity-episode-research-substrate.md",
+            "src/research/envelope_offline/__init__.py",
+            "tests/research/test_exit_model_reconcile.py",
+            "docs/intent_to_code_map.md",
+            "src/control_plane/report_api.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 15,
+          "question": "Where are implementation plans stored?",
+          "expected": [
+            "docs/implementation_plan/001_FRAMEWORK_REGISTRY.md",
+            "docs/implementation_plan/FULL_BUILD_SPECIFICATION.md"
+          ],
+          "top_files": [
+            "tests/test_behavioral_constant_authority_trace.py",
+            "tests/test_zone_label_audit.py",
+            "src/research/regime_conditioning.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 16,
+          "question": "Which files describe project history?",
+          "expected": [
+            "docs/PROJECT_HISTORY.md"
+          ],
+          "top_files": [
+            "src/research/oracle/stop_policy.py",
+            "scripts/analysis/src_business_functionality_inventory.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 17,
+          "question": "Which files describe system knowledge?",
+          "expected": [
+            "docs/knowledge-map.md"
+          ],
+          "top_files": [
+            "src/research/oracle/stop_policy.py",
+            "src/control_plane/server.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 18,
+          "question": "Which files contain architectural decisions?",
+          "expected": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+            "docs/architecture/opportunity-episode-platform-design.md"
+          ],
+          "top_files": [
+            "src/multi_llm/discussion.py",
+            "docs/governance/geometry_static_lineage_report.md",
+            "tests/test_dataset_integrity.py",
+            "docs/architecture/intelligence-compounding.md",
+            "src/research/adapters/spine_signal_source.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 19,
+          "question": "Which files contain operational documentation?",
+          "expected": [
+            "docs/operations/CURRENT_STATE.md",
+            "docs/operations/KNOWN_ILLUSIONS.md",
+            "docs/operations/DEPENDENCY_GRAPH.md",
+            "docs/operations/TRUST_TIER_INDEX.md"
+          ],
+          "top_files": [
+            "docs/governance/geometry_static_lineage_report.md",
+            "tests/exec_telemetry/test_report.py",
+            "src/research/adapters/spine_signal_source.py",
+            "docs/governance/REPOSITORY_COVERAGE_DASHBOARD.md",
+            "docs/reference/testing.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 20,
+          "question": "What documents explain repository organization?",
+          "expected": [
+            "README.md",
+            "CLAUDE.md"
+          ],
+          "top_files": [
+            "src/interpreters/reference.py",
+            "src/interpreters/contract.py",
+            "docs/memory/ARCHITECTURE_MEMORY_POLICY.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 21,
+          "question": "How is FeaturePipeline implemented?",
+          "expected": [
+            "src/features/registry/__init__.py"
+          ],
+          "top_files": [
+            "src/features/feature_pipeline.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 22,
+          "question": "How is ATR calculated?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/features/derived_math.py",
+            "tests/test_gd004_gd005_identity_closure.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 23,
+          "question": "How is ATR normalized?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py"
+          ],
+          "top_files": [
+            "tests/test_stage1_dataset_builder.py",
+            "src/features/derived_math.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 24,
+          "question": "What is body_ratio?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/config_layer/crt_engine_v2.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 25,
+          "question": "How is displacement strength calculated?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/config_layer/crt_engine_v2.py",
+            "tests/test_crt_state_resolver_gate_parity.py",
+            "scripts/analysis/phase1_shadow_memory_subsystem_probe.py",
+            "src/features/crt_state_resolver.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 26,
+          "question": "How is retest_depth computed?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_finalize_survivorship.py",
+            "tests/test_derived_math.py",
+            "tests/test_crt_state_resolver_gate_parity.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 27,
+          "question": "Which features are normalized by ATR?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_stage1_dataset_builder.py",
+            "src/features/derived_math.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 28,
+          "question": "Which features remain absolute values?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "scripts/research/momentum_continuation_bnbusdt.py",
+            "src/features/feature_schema.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 29,
+          "question": "How are canonical features produced?",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "src/features/fm_resolve.py"
+          ],
+          "top_files": [
+            "src/features/crt_state_resolver.py",
+            "tests/test_live_rail_replay_cert.py",
+            "src/features/crt_feature_builder.py",
+            "src/features/feature_monitor.py",
+            "src/features/market_context.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 30,
+          "question": "Which file owns feature registration?",
+          "expected": [
+            "src/features/registry/__init__.py"
+          ],
+          "top_files": [
+            "docs/human-language-analysis/src-features-feedback-governance-inout.md",
+            "docs/governance/EPISTEMIC_INTEGRITY.md",
+            "active_models.yaml",
+            "docs/intent_to_code_map.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 31,
+          "question": "Which file defines derived feature math?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "docs/memory/feature-memory.md",
+            "tests/test_semantic_identity.py",
+            "src/research/episodes/schema.py",
+            "docs/human-language-analysis/src-features-feedback-governance-inout.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 32,
+          "question": "How are base OHLCV columns transformed?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py"
+          ],
+          "top_files": [
+            "tests/research/episodes/test_flat_and_tensors.py",
+            "scripts/analysis/zone_registry_builder.py",
+            "tests/research/episodes/test_query_engine.py",
+            "tests/test_crt_parity_sweep.py",
+            "tests/test_trade_provenance_ledger.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 33,
+          "question": "What is the canonical feature vector?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/features/schema_validator.py",
+            "src/features/feature_states.py",
+            "docs/governance/MODEL_INTENT_AUTHORITY_REGISTER.md",
+            "src/features/market_context.py",
+            "docs/book/07-feature-pipeline.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 34,
+          "question": "How many canonical features exist?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/features/crt_state_resolver.py",
+            "src/features/crt_feature_builder.py",
+            "src/features/feature_monitor.py",
+            "src/features/market_context.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 35,
+          "question": "How are missing features handled?",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "src/features/fm_resolve.py"
+          ],
+          "top_files": [
+            "src/core/feature_store.py",
+            "src/features/feature_states.py",
+            "src/features/magnitude_states.py",
+            "tests/test_feature_pipeline.py",
+            "src/features/crt_state_resolver.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 36,
+          "question": "Where is CRT Engine implemented?",
+          "expected": [
+            "src/engines/crt_engine.py"
+          ],
+          "top_files": [
+            "tests/research/episodes/test_event_engine.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 37,
+          "question": "What CRT states exist?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/engines/crt_engine.py"
+          ],
+          "top_files": [
+            "src/features/crt_state_resolver.py",
+            "configs/formulas/market_crt_states.yaml",
+            "tests/test_market_context.py",
+            "docs/book/encyclopedia/E1b-features-registry.md"
+          ],
+          "matched": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "recall": 0.5
+        },
+        {
+          "id": 38,
+          "question": "How does RANGE transition to SWEEP?",
+          "expected": [
+            "src/engines/crt_engine.py",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/governance/test_crt_variant_surface.py",
+            "tests/test_crt_construction_trace_envelope.py",
+            "tests/test_chart_series.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 39,
+          "question": "How does SWEEP transition to DISPLACEMENT?",
+          "expected": [
+            "src/engines/crt_engine.py",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/config_layer/crt_engine_v2.py",
+            "docs/governance/crt_xauusd_funnel_diagnostic-2026-07-14.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 40,
+          "question": "How is EXPANSION detected?",
+          "expected": [
+            "src/engines/crt_engine.py",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_chart_series.py",
+            "src/expansion/llm_pattern_extractor.py",
+            "src/expansion/policy_schema.py",
+            "tests/test_crt_parity_classifier.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 41,
+          "question": "How is RETEST detected?",
+          "expected": [
+            "src/engines/crt_engine.py",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_crt_parity_classifier.py",
+            "src/research/visual_crt/retest.py",
+            "docs/governance/crt_executable_state_graph.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 42,
+          "question": "How is EXECUTION detected?",
+          "expected": [
+            "src/engines/crt_engine.py",
+            "src/strategies/s01_crt_wrapper.py"
+          ],
+          "top_files": [
+            "tests/Grok/test_I_parent_htf_journeys.py",
+            "src/features/crt_state_resolver.py",
+            "docs/governance/MODEL_INTENT_AUTHORITY_REGISTER.md",
+            "tests/test_crt_state_resolver_gate_parity.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 43,
+          "question": "Which predicates gate DISPLACEMENT?",
+          "expected": [
+            "src/engines/crt_engine.py",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_ultron_risk_gate.py",
+            "src/features/crt_state_resolver.py",
+            "src/config_layer/crt_engine_v2.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 44,
+          "question": "Which unit tests validate CRT transitions?",
+          "expected": [
+            "tests/test_retrieval_pipeline.py"
+          ],
+          "top_files": [
+            "src/research/ic003b_sequence_geometry/build_all.py",
+            "tests/test_crt_zone_crosstab.py",
+            "tests/test_rare_zone_context_filter_eval.py",
+            "tests/test_rare_zone_fa_characterization.py",
+            "scripts/research/xauusd_gaussian_econ_ledger.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 45,
+          "question": "Which document explains CRT lineage?",
+          "expected": [
+            "docs/analysis/CRT_AUDIT_REPORT.md",
+            "docs/analysis/ONTOLOGY_RUNTIME_REACHABILITY.md"
+          ],
+          "top_files": [
+            "src/control_plane/server.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 46,
+          "question": "How does crt_engine_v2 differ from crt_engine?",
+          "expected": [
+            "src/config_layer/crt_engine_v2.py",
+            "src/engines/crt_engine.py"
+          ],
+          "top_files": [
+            "src/engines/crt_engine.py",
+            "src/config_layer/crt_engine_v2.py"
+          ],
+          "matched": [
+            "src/config_layer/crt_engine_v2.py",
+            "src/engines/crt_engine.py"
+          ],
+          "recall": 1.0
+        },
+        {
+          "id": 47,
+          "question": "What caused the wick_size bug?",
+          "expected": [
+            "docs/current-findings.md",
+            "docs/analysis/CRT_AUDIT_REPORT.md"
+          ],
+          "top_files": [
+            "tests/test_crt_state_resolver_displacement_gate.py",
+            "src/config_layer/crt_engine_v2.py",
+            "tests/test_disp_strength_filter.py",
+            "docs/governance/SEMANTIC_REVIEW_PROTOCOL.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 48,
+          "question": "How was the candle_range migration handled?",
+          "expected": [
+            "docs/current-findings.md",
+            "docs/governance/fm026_session_log-2026-07-13.json"
+          ],
+          "top_files": [
+            "scripts/analysis/semantic_layer_validation.py",
+            "src/features/candle_math.py",
+            "tests/test_fm_resolution_phase2.py",
+            "src/research/sujan_manipulation/bulk_proxy.py",
+            "scripts/analysis/crt_xauusd_runtime_trace.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 49,
+          "question": "Which parity tests validate CRT behavior?",
+          "expected": [
+            "tests/test_retrieval_pipeline.py"
+          ],
+          "top_files": [
+            "docs/governance/msip_shadow_implementation_plan_v1/G_IMPL_01_EVIDENCE_PACKAGE_V1.md",
+            "docs/governance/phase_2_fm_resolution_design.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 50,
+          "question": "What evidence certifies CRT correctness?",
+          "expected": [
+            "docs/governance/fm026_certification-2026-07-13.json",
+            "docs/analysis/CRT_AUDIT_REPORT.md"
+          ],
+          "top_files": [
+            "docs/governance/crt_architecture_adjudication_v1/WHAT_HOW_WHO_EXECUTABLE_BOUNDARY_MAP_V1.md",
+            "tests/test_model_evidence.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 51,
+          "question": "Which models are currently active?",
+          "expected": [
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "src/control_plane/server.py",
+            "src/control_plane/dashboard_api.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 52,
+          "question": "Which YAML defines active models?",
+          "expected": [
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "src/control_plane/server.py",
+            "src/control_plane/dashboard_api.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 53,
+          "question": "Which models are production enabled?",
+          "expected": [
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "tests/test_active_models_registry.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 54,
+          "question": "Which models are experimental?",
+          "expected": [
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "tests/test_active_models_registry.py",
+            "src/control_plane/server.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 55,
+          "question": "What is BitNet's purpose?",
+          "expected": [
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "src/bitnet/_smoke_test.py",
+            "src/bitnet/backbones.py",
+            "src/bitnet/adapters.py",
+            "src/bitnet/bitnet_inference.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 56,
+          "question": "What is ZoneGate responsible for?",
+          "expected": [
+            "active_models.yaml",
+            "docs/analysis/ZONEGATE_AUDIT_REPORT.md"
+          ],
+          "top_files": [
+            "src/research/model_runners/adapters/zone_gate.py",
+            "docs/architecture/services/_template.md",
+            "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 57,
+          "question": "How does RR Engine operate?",
+          "expected": [
+            "active_models.yaml",
+            "docs/analysis/COMPLETE_MODEL_LAYER_AUDIT.md"
+          ],
+          "top_files": [
+            "tests/research/episodes/test_event_engine.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 58,
+          "question": "What does Gaussian Engine classify?",
+          "expected": [
+            "active_models.yaml",
+            "docs/analysis/GAUSSIAN_AUDIT_REPORT.md"
+          ],
+          "top_files": [
+            "tests/research/episodes/test_event_engine.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 59,
+          "question": "Which model consumes retest_depth?",
+          "expected": [
+            "active_models.yaml",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_finalize_survivorship.py",
+            "tests/test_derived_math.py",
+            "tests/test_bitnet_inference.py",
+            "tests/test_trainer.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 60,
+          "question": "Which model consumes body_ratio?",
+          "expected": [
+            "active_models.yaml",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/config_layer/crt_engine_v2.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 61,
+          "question": "Which model consumes ema_spread_atr?",
+          "expected": [
+            "active_models.yaml",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_bitnet_inference.py",
+            "tests/test_trainer.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 62,
+          "question": "Which model consumes momentum_score_atr?",
+          "expected": [
+            "active_models.yaml",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_bitnet_inference.py",
+            "src/features/derived_math.py",
+            "tests/test_trainer.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 63,
+          "question": "Which models are disabled?",
+          "expected": [
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "src/engines/live_engine.py",
+            "src/msip/interpretation_config.py",
+            "tests/test_active_models_registry.py",
+            "src/config_layer/goal_schema.py",
+            "docs/governance/geometry_static_lineage_report.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 64,
+          "question": "Which model determines execution intent?",
+          "expected": [
+            "active_models.yaml",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "docs/governance/MODEL_INTENT_AUTHORITY_REGISTER.md",
+            "tests/test_p4_observability.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 65,
+          "question": "How are model versions managed?",
+          "expected": [
+            "active_models.yaml",
+            "docs/governance/fm026_certification-2026-07-13.json"
+          ],
+          "top_files": [
+            "src/bitnet/bitnet_registry.py",
+            "tests/test_bitnet_inference.py",
+            "tests/test_trainer.py",
+            "src/core/model_registry.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 66,
+          "question": "Which production configuration is active?",
+          "expected": [
+            "configs/production/ACTIVE_VERSION"
+          ],
+          "top_files": [
+            "docs/governance/behavioral_constant_authority_trace-2026-07-11.json",
+            "active_models.yaml",
+            "docs/human-language-analysis/src-features-feedback-governance-inout.md",
+            "tests/test_context_compiler.py",
+            "src/utils/logging_config.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 67,
+          "question": "What is v2_multi_2026_04?",
+          "expected": [
+            "configs/production/ACTIVE_VERSION"
+          ],
+          "top_files": [
+            "configs/production/v2_multi_2026_04.json",
+            "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md",
+            "tests/test_config_integrity.py",
+            "docs/governance/config_authority_matrix.md",
+            "docs/book/13-execution-planner.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 68,
+          "question": "Which configuration keys are mandatory?",
+          "expected": [
+            "configs/market_reality/market_reality_v1.yaml"
+          ],
+          "top_files": [
+            "tests/test_crt_parity_classifier.py",
+            "src/bitnet/zone_cosine_searcher.py",
+            "src/features/feature_schema.py",
+            "src/research/evidence/queries.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 69,
+          "question": "How is feature configuration validated?",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "docs/governance/MARKET_ONTOLOGY_EVOLUTION_CONTRACT.md",
+            "src/utils/logging_config.py",
+            "src/features/schema_validator.py",
+            "src/retrieval/divergence.py",
+            "src/features/market_shape.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 70,
+          "question": "What happens when configuration is missing?",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "src/features/fm_resolve.py"
+          ],
+          "top_files": [
+            "src/utils/sweep_trace_logger.py",
+            "tests/test_crt_parity_classifier.py",
+            "src/core/feature_store.py",
+            "tests/test_handoff_state.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 71,
+          "question": "Which YAML files control runtime?",
+          "expected": [
+            "active_models.yaml",
+            "configs/market_reality/market_reality_v1.yaml",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "docs/governance/three_authority_drift_adjudication-2026-07-11.md",
+            "docs/governance/who_numeric_dependency_census-2026-07-11.json",
+            "tests/test_crt_state_identity.py",
+            "tests/test_crt_state_invariants.py",
+            "tests/test_feature_spec_schema.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 72,
+          "question": "How are defaults prevented?",
+          "expected": [
+            "docs/behavior_contracts.md"
+          ],
+          "top_files": [
+            "docs/governance/who_numeric_dependency_census-2026-07-11.md",
+            "docs/human-language-analysis/src-features-feedback-governance-inout.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 73,
+          "question": "How are schemas enforced?",
+          "expected": [
+            "docs/behavior_contracts.md"
+          ],
+          "top_files": [
+            "docs/reference/schemas.md",
+            "src/config_layer/goal_validator.py",
+            "tests/test_goal_validator.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 74,
+          "question": "Where is configuration built?",
+          "expected": [
+            "src/control_plane/registry.py"
+          ],
+          "top_files": [
+            "tests/test_crt_parity_classifier.py",
+            "src/utils/logging_config.py",
+            "docs/governance/INFRA_CHART_PAPER_COMPARE_V1.md",
+            "docs/architecture/architecture-memory.md",
+            "src/engines/live_engine.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 75,
+          "question": "Which files define runtime contracts?",
+          "expected": [
+            "docs/behavior_contracts.md",
+            "docs/intent/100_execution.md"
+          ],
+          "top_files": [
+            "tests/test_semantic_os.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 76,
+          "question": "What is the purpose of PROJECT_HISTORY.md?",
+          "expected": [
+            "docs/PROJECT_HISTORY.md"
+          ],
+          "top_files": [
+            "docs/PROJECT_HISTORY.md"
+          ],
+          "matched": [
+            "docs/PROJECT_HISTORY.md"
+          ],
+          "recall": 1.0
+        },
+        {
+          "id": 77,
+          "question": "What is documented in knowledge-map.md?",
+          "expected": [
+            "docs/knowledge-map.md"
+          ],
+          "top_files": [
+            "docs/governance/crt_architecture_adjudication_v1/WHAT_HOW_WHO_EXECUTABLE_BOUNDARY_MAP_V1.md",
+            "docs/book/03-how-this-book-fits.md",
+            "docs/knowledge-map.md",
+            "docs/architecture/entry-exit-map.md",
+            "docs/architecture/intelligence-compounding.md"
+          ],
+          "matched": [
+            "docs/knowledge-map.md"
+          ],
+          "recall": 1.0
+        },
+        {
+          "id": 78,
+          "question": "What is the purpose of behavior_contracts.md?",
+          "expected": [
+            "docs/behavior_contracts.md"
+          ],
+          "top_files": [
+            "docs/behavior_contracts.md"
+          ],
+          "matched": [
+            "docs/behavior_contracts.md"
+          ],
+          "recall": 1.0
+        },
+        {
+          "id": 79,
+          "question": "Which document defines semantic adjudication?",
+          "expected": [
+            "docs/governance/EPISTEMIC_INTEGRITY.md"
+          ],
+          "top_files": [
+            "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md",
+            "docs/governance/geometry_static_lineage_report.md",
+            "src/control_plane/server.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 80,
+          "question": "Which document defines family registry?",
+          "expected": [
+            "docs/implementation_plan/001_FRAMEWORK_REGISTRY.md"
+          ],
+          "top_files": [
+            "tests/test_ohlcv_clock_provenance.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 81,
+          "question": "What is the lineage audit process?",
+          "expected": [
+            "docs/governance/geometry_static_lineage_report.md",
+            "docs/governance/finding_dependency_audit.md"
+          ],
+          "top_files": [
+            "docs/governance/zonegate_lineage_audit.md",
+            "docs/governance/gaussian_lineage_audit.md",
+            "docs/governance/tradenet_lineage_audit.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 82,
+          "question": "How are implementation changes tracked?",
+          "expected": [
+            "docs/governance/fm026_session_log-2026-07-13.json",
+            "docs/PROJECT_HISTORY.md"
+          ],
+          "top_files": [
+            "scripts/analysis/research_dag_provenance.py",
+            "tests/test_gitignore_schema.py",
+            "docs/governance/phase_2_fm_resolution_design.md",
+            "docs/governance/SEMANTIC_REVIEW_PROTOCOL.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 83,
+          "question": "What governance documents define authority?",
+          "expected": [
+            "CLAUDE.md",
+            "docs/governance/EPISTEMIC_INTEGRITY.md"
+          ],
+          "top_files": [
+            "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md",
+            "docs/governance/msip_shadow_design_v1/MSIP_DECISION_C_FROZEN_POSTURE_V1.md",
+            "docs/governance/DOCUMENTATION_DRIFT_PROTOCOL.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 84,
+          "question": "Which files certify implementation completeness?",
+          "expected": [
+            "docs/governance/fm026_certification-2026-07-13.json",
+            "docs/governance/phase1_run1_feature_producer_consumer_graph-2026-07-10.json"
+          ],
+          "top_files": [
+            "tests/test_market_context.py",
+            "scripts/analysis/crt_config_completeness_census.py",
+            "docs/intent_to_code_map.md",
+            "src/control_plane/server.py",
+            "scripts/analysis/python_source_static_census.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 85,
+          "question": "How are architectural decisions recorded?",
+          "expected": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+            "docs/architecture/opportunity-episode-platform-design.md"
+          ],
+          "top_files": [
+            "src/multi_llm/discussion.py",
+            "tests/test_validator_session_overrides.py",
+            "src/multi_llm/turn_ledger.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 86,
+          "question": "Trace body_ratio from ontology to production inference.",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py",
+            "src/engines/crt_engine.py",
+            "active_models.yaml",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "src/research/synthetic/ontology.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 87,
+          "question": "Trace ATR from OHLCV through FeaturePipeline into model inputs.",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py",
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "tests/test_execution_planner.py",
+            "src/features/feature_pipeline.py",
+            "docs/governance/xauusd_apr2026_ohlcv_terminal_consumers-2026-07-10.json",
+            "src/core/feature_store.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 88,
+          "question": "Trace retest_depth from computation to model consumption.",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py",
+            "src/engines/crt_engine.py",
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "scripts/research/_build_xauusd_library_and_eval.py",
+            "tests/test_finalize_survivorship.py",
+            "tests/test_derived_math.py",
+            "src/research/sujan_manipulation/state.py",
+            "tests/test_trainer.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 89,
+          "question": "Explain how canonical features reach BitNet.",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "active_models.yaml",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "src/bitnet/bitnet_inference.py",
+            "src/bitnet/_smoke_test.py",
+            "src/bitnet/backbones.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 90,
+          "question": "Explain how configuration reaches FeaturePipeline.",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py",
+            "src/control_plane/registry.py"
+          ],
+          "top_files": [
+            "src/features/feature_pipeline.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 91,
+          "question": "Explain how active_models controls runtime.",
+          "expected": [
+            "active_models.yaml",
+            "src/control_plane/registry.py",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "active_models.yaml"
+          ],
+          "matched": [
+            "active_models.yaml"
+          ],
+          "recall": 0.3333333333333333
+        },
+        {
+          "id": 92,
+          "question": "Trace CRT states from ontology through execution.",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/engines/crt_engine.py",
+            "src/strategies/s01_crt_wrapper.py",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "src/features/crt_state_resolver.py",
+            "src/research/synthetic/ontology.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 93,
+          "question": "Explain how governance validates implementation.",
+          "expected": [
+            "docs/governance/EPISTEMIC_INTEGRITY.md",
+            "docs/governance/fm026_certification-2026-07-13.json",
+            "scripts/governance/construction_protocol.py"
+          ],
+          "top_files": [
+            "src/interpreters/contract.py",
+            "src/interpreters/reference.py",
+            "docs/governance/SEMANTIC_REVIEW_PROTOCOL.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 94,
+          "question": "Explain how lineage connects research to production.",
+          "expected": [
+            "docs/PROJECT_HISTORY.md",
+            "docs/governance/fm026_session_log-2026-07-13.json",
+            "docs/analysis/CRT_AUDIT_REPORT.md",
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "src/interpreters/contract.py",
+            "src/interpreters/reference.py",
+            "docs/research/JOINT_STATE_EXPLAINABILITY.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 95,
+          "question": "Explain the complete decision path from OHLCV to trade output.",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py",
+            "src/engines/crt_engine.py",
+            "active_models.yaml",
+            "src/core/fusion_engine.py",
+            "src/strategies/s01_crt_wrapper.py"
+          ],
+          "top_files": [
+            "src/interpreters/contract.py",
+            "tests/test_ultron_risk_gate.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        }
+      ]
+    },
+    {
+      "kind": "remapped",
+      "gold_path": "D:\\Tradelatest\\scripts\\evaluation\\benchmark_100.remapped.json",
+      "n": 95,
+      "mean_file_recall_at_5": 0.06666666666666667,
+      "pct_questions_any_gold_in_top5": 0.08421052631578947,
+      "median_latency_s": 1.052962303161621,
+      "p95_latency_s": 1.6037778854370117,
+      "details": [
+        {
+          "id": 1,
+          "question": "What is the overall architecture of the trading system?",
+          "expected": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+            "docs/architecture/goal.md"
+          ],
+          "top_files": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+            "docs/architecture/architecture-memory.md"
+          ],
+          "matched": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+          ],
+          "recall": 0.5
+        },
+        {
+          "id": 2,
+          "question": "Which document defines the system architecture?",
+          "expected": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+          ],
+          "top_files": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+            "docs/architecture/architecture-memory.md"
+          ],
+          "matched": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+          ],
+          "recall": 1.0
+        },
+        {
+          "id": 3,
+          "question": "How does data flow from OHLCV to trade decision?",
+          "expected": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+            "docs/architecture/opportunity-episode-platform-design.md"
+          ],
+          "top_files": [
+            "tests/test_ultron_risk_gate.py",
+            "src/config_layer/crt_engine_v2.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 4,
+          "question": "Which components make up the feature engineering pipeline?",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "src/features/fm_resolve.py",
+            "src/features/crt_state_resolver.py"
+          ],
+          "top_files": [
+            "tests/test_gate_intelligence.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 5,
+          "question": "What are the major runtime engines in production?",
+          "expected": [
+            "active_models.yaml",
+            "src/engines/crt_engine.py",
+            "src/engines/llm_engine.py",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "docs/architecture/codebase-wiring-guide.md",
+            "docs/analysis/codebase-analysis.md",
+            "docs/book/encyclopedia/E1-spine-implementation.md",
+            "docs/governance/who_numeric_dependency_census-2026-07-11.json"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 6,
+          "question": "How is the ontology layer separated from implementation?",
+          "expected": [
+            "docs/analysis/ONTOLOGY_RUNTIME_REACHABILITY.md",
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+          ],
+          "top_files": [
+            "src/research/synthetic/ontology.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 7,
+          "question": "Which modules consume canonical features?",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "src/engines/crt_engine.py",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "src/features/crt_state_resolver.py",
+            "src/features/crt_feature_builder.py",
+            "src/features/feature_monitor.py",
+            "src/features/market_context.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 8,
+          "question": "Where is the execution pipeline defined?",
+          "expected": [
+            "src/runtime/backtest_v2.py",
+            "src/strategies/s01_crt_wrapper.py"
+          ],
+          "top_files": [
+            "src/execution/__init__.py",
+            "tests/test_feature_pipeline.py",
+            "docs/governance/crt_formula_contract.json"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 9,
+          "question": "Which files describe system wiring?",
+          "expected": [
+            "docs/architecture/EXISTING_TO_FRAMEWORK_MAP.md",
+            "docs/architecture/opportunity-episode-platform-design.md"
+          ],
+          "top_files": [
+            "src/research/oracle/stop_policy.py",
+            "src/control_plane/server.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 10,
+          "question": "How are production models loaded during startup?",
+          "expected": [
+            "active_models.yaml",
+            "src/control_plane/registry.py"
+          ],
+          "top_files": [
+            "src/control_plane/server.py",
+            "tests/test_active_models_registry.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 11,
+          "question": "How many production Python files exist?",
+          "expected": [
+            "docs/analysis/feature_state_lineage_census.md"
+          ],
+          "top_files": [
+            "docs/reference/bash-command-catalog.md",
+            "scripts/data/prepare_data.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 12,
+          "question": "Which directories contain production code?",
+          "expected": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+          ],
+          "top_files": [
+            "tests/test_pattern_hasher.py",
+            "docs/governance/crt_adversarial_validation.md",
+            "src/research/adapters/spine_signal_source.py",
+            "tests/test_semantic_os_objects.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 13,
+          "question": "Which directory contains governance documents?",
+          "expected": [],
+          "top_files": [
+            "docs/governance/ANALYTICS_NOUN_PARITY_L003M.md",
+            "docs/governance/who_numeric_dependency_census-2026-07-11.json",
+            "docs/memory/ARCHITECTURE_MEMORY_POLICY.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 14,
+          "question": "Which directory contains research artifacts?",
+          "expected": [],
+          "top_files": [
+            "docs/architecture/opportunity-episode-research-substrate.md",
+            "src/research/envelope_offline/__init__.py",
+            "tests/research/test_exit_model_reconcile.py",
+            "docs/intent_to_code_map.md",
+            "src/control_plane/report_api.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 15,
+          "question": "Where are implementation plans stored?",
+          "expected": [
+            "docs/implementation_plan/001_FRAMEWORK_REGISTRY.md",
+            "docs/implementation_plan/FULL_BUILD_SPECIFICATION.md"
+          ],
+          "top_files": [
+            "tests/test_behavioral_constant_authority_trace.py",
+            "tests/test_zone_label_audit.py",
+            "src/research/regime_conditioning.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 16,
+          "question": "Which files describe project history?",
+          "expected": [
+            "docs/PROJECT_HISTORY.md"
+          ],
+          "top_files": [
+            "src/research/oracle/stop_policy.py",
+            "scripts/analysis/src_business_functionality_inventory.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 17,
+          "question": "Which files describe system knowledge?",
+          "expected": [
+            "docs/knowledge-map.md"
+          ],
+          "top_files": [
+            "src/research/oracle/stop_policy.py",
+            "src/control_plane/server.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 18,
+          "question": "Which files contain architectural decisions?",
+          "expected": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+            "docs/architecture/opportunity-episode-platform-design.md"
+          ],
+          "top_files": [
+            "src/multi_llm/discussion.py",
+            "docs/governance/geometry_static_lineage_report.md",
+            "tests/test_dataset_integrity.py",
+            "docs/architecture/intelligence-compounding.md",
+            "src/research/adapters/spine_signal_source.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 19,
+          "question": "Which files contain operational documentation?",
+          "expected": [
+            "docs/operations/CURRENT_STATE.md",
+            "docs/operations/KNOWN_ILLUSIONS.md",
+            "docs/operations/DEPENDENCY_GRAPH.md",
+            "docs/operations/TRUST_TIER_INDEX.md"
+          ],
+          "top_files": [
+            "docs/governance/geometry_static_lineage_report.md",
+            "tests/exec_telemetry/test_report.py",
+            "src/research/adapters/spine_signal_source.py",
+            "docs/governance/REPOSITORY_COVERAGE_DASHBOARD.md",
+            "docs/reference/testing.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 20,
+          "question": "What documents explain repository organization?",
+          "expected": [
+            "README.md",
+            "CLAUDE.md"
+          ],
+          "top_files": [
+            "src/interpreters/reference.py",
+            "src/interpreters/contract.py",
+            "docs/memory/ARCHITECTURE_MEMORY_POLICY.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 21,
+          "question": "How is FeaturePipeline implemented?",
+          "expected": [
+            "src/features/registry/__init__.py"
+          ],
+          "top_files": [
+            "src/features/feature_pipeline.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 22,
+          "question": "How is ATR calculated?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/features/derived_math.py",
+            "tests/test_gd004_gd005_identity_closure.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 23,
+          "question": "How is ATR normalized?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py"
+          ],
+          "top_files": [
+            "tests/test_stage1_dataset_builder.py",
+            "src/features/derived_math.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 24,
+          "question": "What is body_ratio?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/config_layer/crt_engine_v2.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 25,
+          "question": "How is displacement strength calculated?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/config_layer/crt_engine_v2.py",
+            "tests/test_crt_state_resolver_gate_parity.py",
+            "scripts/analysis/phase1_shadow_memory_subsystem_probe.py",
+            "src/features/crt_state_resolver.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 26,
+          "question": "How is retest_depth computed?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_finalize_survivorship.py",
+            "tests/test_derived_math.py",
+            "tests/test_crt_state_resolver_gate_parity.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 27,
+          "question": "Which features are normalized by ATR?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_stage1_dataset_builder.py",
+            "src/features/derived_math.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 28,
+          "question": "Which features remain absolute values?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "scripts/research/momentum_continuation_bnbusdt.py",
+            "src/features/feature_schema.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 29,
+          "question": "How are canonical features produced?",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "src/features/fm_resolve.py"
+          ],
+          "top_files": [
+            "src/features/crt_state_resolver.py",
+            "tests/test_live_rail_replay_cert.py",
+            "src/features/crt_feature_builder.py",
+            "src/features/feature_monitor.py",
+            "src/features/market_context.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 30,
+          "question": "Which file owns feature registration?",
+          "expected": [
+            "src/features/registry/__init__.py"
+          ],
+          "top_files": [
+            "docs/human-language-analysis/src-features-feedback-governance-inout.md",
+            "docs/governance/EPISTEMIC_INTEGRITY.md",
+            "active_models.yaml",
+            "docs/intent_to_code_map.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 31,
+          "question": "Which file defines derived feature math?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "docs/memory/feature-memory.md",
+            "tests/test_semantic_identity.py",
+            "src/research/episodes/schema.py",
+            "docs/human-language-analysis/src-features-feedback-governance-inout.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 32,
+          "question": "How are base OHLCV columns transformed?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py"
+          ],
+          "top_files": [
+            "tests/research/episodes/test_flat_and_tensors.py",
+            "scripts/analysis/zone_registry_builder.py",
+            "tests/research/episodes/test_query_engine.py",
+            "tests/test_crt_parity_sweep.py",
+            "tests/test_trade_provenance_ledger.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 33,
+          "question": "What is the canonical feature vector?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/features/schema_validator.py",
+            "src/features/feature_states.py",
+            "docs/governance/MODEL_INTENT_AUTHORITY_REGISTER.md",
+            "src/features/market_context.py",
+            "docs/book/07-feature-pipeline.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 34,
+          "question": "How many canonical features exist?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/features/crt_state_resolver.py",
+            "src/features/crt_feature_builder.py",
+            "src/features/feature_monitor.py",
+            "src/features/market_context.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 35,
+          "question": "How are missing features handled?",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "src/features/fm_resolve.py"
+          ],
+          "top_files": [
+            "src/core/feature_store.py",
+            "src/features/feature_states.py",
+            "src/features/magnitude_states.py",
+            "tests/test_feature_pipeline.py",
+            "src/features/crt_state_resolver.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 36,
+          "question": "Where is CRT Engine implemented?",
+          "expected": [
+            "src/engines/crt_engine.py"
+          ],
+          "top_files": [
+            "tests/research/episodes/test_event_engine.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 37,
+          "question": "What CRT states exist?",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/engines/crt_engine.py"
+          ],
+          "top_files": [
+            "src/features/crt_state_resolver.py",
+            "configs/formulas/market_crt_states.yaml",
+            "tests/test_market_context.py",
+            "docs/book/encyclopedia/E1b-features-registry.md"
+          ],
+          "matched": [
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "recall": 0.5
+        },
+        {
+          "id": 38,
+          "question": "How does RANGE transition to SWEEP?",
+          "expected": [
+            "src/engines/crt_engine.py",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/governance/test_crt_variant_surface.py",
+            "tests/test_crt_construction_trace_envelope.py",
+            "tests/test_chart_series.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 39,
+          "question": "How does SWEEP transition to DISPLACEMENT?",
+          "expected": [
+            "src/engines/crt_engine.py",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/config_layer/crt_engine_v2.py",
+            "docs/governance/crt_xauusd_funnel_diagnostic-2026-07-14.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 40,
+          "question": "How is EXPANSION detected?",
+          "expected": [
+            "src/engines/crt_engine.py",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_chart_series.py",
+            "src/expansion/llm_pattern_extractor.py",
+            "src/expansion/policy_schema.py",
+            "tests/test_crt_parity_classifier.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 41,
+          "question": "How is RETEST detected?",
+          "expected": [
+            "src/engines/crt_engine.py",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_crt_parity_classifier.py",
+            "src/research/visual_crt/retest.py",
+            "docs/governance/crt_executable_state_graph.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 42,
+          "question": "How is EXECUTION detected?",
+          "expected": [
+            "src/engines/crt_engine.py",
+            "src/strategies/s01_crt_wrapper.py"
+          ],
+          "top_files": [
+            "tests/Grok/test_I_parent_htf_journeys.py",
+            "src/features/crt_state_resolver.py",
+            "docs/governance/MODEL_INTENT_AUTHORITY_REGISTER.md",
+            "tests/test_crt_state_resolver_gate_parity.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 43,
+          "question": "Which predicates gate DISPLACEMENT?",
+          "expected": [
+            "src/engines/crt_engine.py",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_ultron_risk_gate.py",
+            "src/features/crt_state_resolver.py",
+            "src/config_layer/crt_engine_v2.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 44,
+          "question": "Which unit tests validate CRT transitions?",
+          "expected": [
+            "tests/test_retrieval_pipeline.py"
+          ],
+          "top_files": [
+            "src/research/ic003b_sequence_geometry/build_all.py",
+            "tests/test_crt_zone_crosstab.py",
+            "tests/test_rare_zone_context_filter_eval.py",
+            "tests/test_rare_zone_fa_characterization.py",
+            "scripts/research/xauusd_gaussian_econ_ledger.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 45,
+          "question": "Which document explains CRT lineage?",
+          "expected": [
+            "docs/analysis/CRT_AUDIT_REPORT.md",
+            "docs/analysis/ONTOLOGY_RUNTIME_REACHABILITY.md"
+          ],
+          "top_files": [
+            "src/control_plane/server.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 46,
+          "question": "How does crt_engine_v2 differ from crt_engine?",
+          "expected": [
+            "src/config_layer/crt_engine_v2.py",
+            "src/engines/crt_engine.py"
+          ],
+          "top_files": [
+            "src/engines/crt_engine.py",
+            "src/config_layer/crt_engine_v2.py"
+          ],
+          "matched": [
+            "src/config_layer/crt_engine_v2.py",
+            "src/engines/crt_engine.py"
+          ],
+          "recall": 1.0
+        },
+        {
+          "id": 47,
+          "question": "What caused the wick_size bug?",
+          "expected": [
+            "docs/current-findings.md",
+            "docs/analysis/CRT_AUDIT_REPORT.md"
+          ],
+          "top_files": [
+            "tests/test_crt_state_resolver_displacement_gate.py",
+            "src/config_layer/crt_engine_v2.py",
+            "tests/test_disp_strength_filter.py",
+            "docs/governance/SEMANTIC_REVIEW_PROTOCOL.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 48,
+          "question": "How was the candle_range migration handled?",
+          "expected": [
+            "docs/current-findings.md",
+            "docs/governance/fm026_session_log-2026-07-13.json"
+          ],
+          "top_files": [
+            "scripts/analysis/semantic_layer_validation.py",
+            "src/features/candle_math.py",
+            "tests/test_fm_resolution_phase2.py",
+            "src/research/sujan_manipulation/bulk_proxy.py",
+            "scripts/analysis/crt_xauusd_runtime_trace.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 49,
+          "question": "Which parity tests validate CRT behavior?",
+          "expected": [
+            "tests/test_retrieval_pipeline.py"
+          ],
+          "top_files": [
+            "docs/governance/msip_shadow_implementation_plan_v1/G_IMPL_01_EVIDENCE_PACKAGE_V1.md",
+            "docs/governance/phase_2_fm_resolution_design.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 50,
+          "question": "What evidence certifies CRT correctness?",
+          "expected": [
+            "docs/governance/fm026_certification-2026-07-13.json",
+            "docs/analysis/CRT_AUDIT_REPORT.md"
+          ],
+          "top_files": [
+            "docs/governance/crt_architecture_adjudication_v1/WHAT_HOW_WHO_EXECUTABLE_BOUNDARY_MAP_V1.md",
+            "tests/test_model_evidence.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 51,
+          "question": "Which models are currently active?",
+          "expected": [
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "src/control_plane/server.py",
+            "src/control_plane/dashboard_api.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 52,
+          "question": "Which YAML defines active models?",
+          "expected": [
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "src/control_plane/server.py",
+            "src/control_plane/dashboard_api.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 53,
+          "question": "Which models are production enabled?",
+          "expected": [
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "tests/test_active_models_registry.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 54,
+          "question": "Which models are experimental?",
+          "expected": [
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "tests/test_active_models_registry.py",
+            "src/control_plane/server.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 55,
+          "question": "What is BitNet's purpose?",
+          "expected": [
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "src/bitnet/_smoke_test.py",
+            "src/bitnet/backbones.py",
+            "src/bitnet/adapters.py",
+            "src/bitnet/bitnet_inference.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 56,
+          "question": "What is ZoneGate responsible for?",
+          "expected": [
+            "active_models.yaml",
+            "docs/analysis/ZONEGATE_AUDIT_REPORT.md"
+          ],
+          "top_files": [
+            "src/research/model_runners/adapters/zone_gate.py",
+            "docs/architecture/services/_template.md",
+            "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 57,
+          "question": "How does RR Engine operate?",
+          "expected": [
+            "active_models.yaml",
+            "docs/analysis/COMPLETE_MODEL_LAYER_AUDIT.md"
+          ],
+          "top_files": [
+            "tests/research/episodes/test_event_engine.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 58,
+          "question": "What does Gaussian Engine classify?",
+          "expected": [
+            "active_models.yaml",
+            "docs/analysis/GAUSSIAN_AUDIT_REPORT.md"
+          ],
+          "top_files": [
+            "tests/research/episodes/test_event_engine.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 59,
+          "question": "Which model consumes retest_depth?",
+          "expected": [
+            "active_models.yaml",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_finalize_survivorship.py",
+            "tests/test_derived_math.py",
+            "tests/test_bitnet_inference.py",
+            "tests/test_trainer.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 60,
+          "question": "Which model consumes body_ratio?",
+          "expected": [
+            "active_models.yaml",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "src/config_layer/crt_engine_v2.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 61,
+          "question": "Which model consumes ema_spread_atr?",
+          "expected": [
+            "active_models.yaml",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_bitnet_inference.py",
+            "tests/test_trainer.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 62,
+          "question": "Which model consumes momentum_score_atr?",
+          "expected": [
+            "active_models.yaml",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "tests/test_bitnet_inference.py",
+            "src/features/derived_math.py",
+            "tests/test_trainer.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 63,
+          "question": "Which models are disabled?",
+          "expected": [
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "src/engines/live_engine.py",
+            "src/msip/interpretation_config.py",
+            "tests/test_active_models_registry.py",
+            "src/config_layer/goal_schema.py",
+            "docs/governance/geometry_static_lineage_report.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 64,
+          "question": "Which model determines execution intent?",
+          "expected": [
+            "active_models.yaml",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "docs/governance/MODEL_INTENT_AUTHORITY_REGISTER.md",
+            "tests/test_p4_observability.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 65,
+          "question": "How are model versions managed?",
+          "expected": [
+            "active_models.yaml",
+            "docs/governance/fm026_certification-2026-07-13.json"
+          ],
+          "top_files": [
+            "src/bitnet/bitnet_registry.py",
+            "tests/test_bitnet_inference.py",
+            "tests/test_trainer.py",
+            "src/core/model_registry.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 66,
+          "question": "Which production configuration is active?",
+          "expected": [
+            "configs/production/ACTIVE_VERSION"
+          ],
+          "top_files": [
+            "docs/governance/behavioral_constant_authority_trace-2026-07-11.json",
+            "active_models.yaml",
+            "docs/human-language-analysis/src-features-feedback-governance-inout.md",
+            "tests/test_context_compiler.py",
+            "src/utils/logging_config.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 67,
+          "question": "What is v2_multi_2026_04?",
+          "expected": [
+            "configs/production/ACTIVE_VERSION"
+          ],
+          "top_files": [
+            "configs/production/v2_multi_2026_04.json",
+            "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md",
+            "tests/test_config_integrity.py",
+            "docs/governance/config_authority_matrix.md",
+            "docs/book/13-execution-planner.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 68,
+          "question": "Which configuration keys are mandatory?",
+          "expected": [
+            "configs/market_reality/market_reality_v1.yaml"
+          ],
+          "top_files": [
+            "tests/test_crt_parity_classifier.py",
+            "src/bitnet/zone_cosine_searcher.py",
+            "src/features/feature_schema.py",
+            "src/research/evidence/queries.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 69,
+          "question": "How is feature configuration validated?",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "docs/governance/MARKET_ONTOLOGY_EVOLUTION_CONTRACT.md",
+            "src/utils/logging_config.py",
+            "src/features/schema_validator.py",
+            "src/retrieval/divergence.py",
+            "src/features/market_shape.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 70,
+          "question": "What happens when configuration is missing?",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "src/features/fm_resolve.py"
+          ],
+          "top_files": [
+            "src/utils/sweep_trace_logger.py",
+            "tests/test_crt_parity_classifier.py",
+            "src/core/feature_store.py",
+            "tests/test_handoff_state.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 71,
+          "question": "Which YAML files control runtime?",
+          "expected": [
+            "active_models.yaml",
+            "configs/market_reality/market_reality_v1.yaml",
+            "configs/formulas/market_crt_states.yaml"
+          ],
+          "top_files": [
+            "docs/governance/three_authority_drift_adjudication-2026-07-11.md",
+            "docs/governance/who_numeric_dependency_census-2026-07-11.json",
+            "tests/test_crt_state_identity.py",
+            "tests/test_crt_state_invariants.py",
+            "tests/test_feature_spec_schema.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 72,
+          "question": "How are defaults prevented?",
+          "expected": [
+            "docs/behavior_contracts.md"
+          ],
+          "top_files": [
+            "docs/governance/who_numeric_dependency_census-2026-07-11.md",
+            "docs/human-language-analysis/src-features-feedback-governance-inout.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 73,
+          "question": "How are schemas enforced?",
+          "expected": [
+            "docs/behavior_contracts.md"
+          ],
+          "top_files": [
+            "docs/reference/schemas.md",
+            "src/config_layer/goal_validator.py",
+            "tests/test_goal_validator.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 74,
+          "question": "Where is configuration built?",
+          "expected": [
+            "src/control_plane/registry.py"
+          ],
+          "top_files": [
+            "tests/test_crt_parity_classifier.py",
+            "src/utils/logging_config.py",
+            "docs/governance/INFRA_CHART_PAPER_COMPARE_V1.md",
+            "docs/architecture/architecture-memory.md",
+            "src/engines/live_engine.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 75,
+          "question": "Which files define runtime contracts?",
+          "expected": [
+            "docs/behavior_contracts.md",
+            "docs/intent/100_execution.md"
+          ],
+          "top_files": [
+            "tests/test_semantic_os.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 76,
+          "question": "What is the purpose of PROJECT_HISTORY.md?",
+          "expected": [
+            "docs/PROJECT_HISTORY.md"
+          ],
+          "top_files": [
+            "docs/PROJECT_HISTORY.md"
+          ],
+          "matched": [
+            "docs/PROJECT_HISTORY.md"
+          ],
+          "recall": 1.0
+        },
+        {
+          "id": 77,
+          "question": "What is documented in knowledge-map.md?",
+          "expected": [
+            "docs/knowledge-map.md"
+          ],
+          "top_files": [
+            "docs/governance/crt_architecture_adjudication_v1/WHAT_HOW_WHO_EXECUTABLE_BOUNDARY_MAP_V1.md",
+            "docs/book/03-how-this-book-fits.md",
+            "docs/knowledge-map.md",
+            "docs/architecture/entry-exit-map.md",
+            "docs/architecture/intelligence-compounding.md"
+          ],
+          "matched": [
+            "docs/knowledge-map.md"
+          ],
+          "recall": 1.0
+        },
+        {
+          "id": 78,
+          "question": "What is the purpose of behavior_contracts.md?",
+          "expected": [
+            "docs/behavior_contracts.md"
+          ],
+          "top_files": [
+            "docs/behavior_contracts.md"
+          ],
+          "matched": [
+            "docs/behavior_contracts.md"
+          ],
+          "recall": 1.0
+        },
+        {
+          "id": 79,
+          "question": "Which document defines semantic adjudication?",
+          "expected": [
+            "docs/governance/EPISTEMIC_INTEGRITY.md"
+          ],
+          "top_files": [
+            "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md",
+            "docs/governance/geometry_static_lineage_report.md",
+            "src/control_plane/server.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 80,
+          "question": "Which document defines family registry?",
+          "expected": [
+            "docs/implementation_plan/001_FRAMEWORK_REGISTRY.md"
+          ],
+          "top_files": [
+            "tests/test_ohlcv_clock_provenance.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 81,
+          "question": "What is the lineage audit process?",
+          "expected": [
+            "docs/governance/geometry_static_lineage_report.md",
+            "docs/governance/finding_dependency_audit.md"
+          ],
+          "top_files": [
+            "docs/governance/zonegate_lineage_audit.md",
+            "docs/governance/gaussian_lineage_audit.md",
+            "docs/governance/tradenet_lineage_audit.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 82,
+          "question": "How are implementation changes tracked?",
+          "expected": [
+            "docs/governance/fm026_session_log-2026-07-13.json",
+            "docs/PROJECT_HISTORY.md"
+          ],
+          "top_files": [
+            "scripts/analysis/research_dag_provenance.py",
+            "tests/test_gitignore_schema.py",
+            "docs/governance/phase_2_fm_resolution_design.md",
+            "docs/governance/SEMANTIC_REVIEW_PROTOCOL.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 83,
+          "question": "What governance documents define authority?",
+          "expected": [
+            "CLAUDE.md",
+            "docs/governance/EPISTEMIC_INTEGRITY.md"
+          ],
+          "top_files": [
+            "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md",
+            "docs/governance/msip_shadow_design_v1/MSIP_DECISION_C_FROZEN_POSTURE_V1.md",
+            "docs/governance/DOCUMENTATION_DRIFT_PROTOCOL.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 84,
+          "question": "Which files certify implementation completeness?",
+          "expected": [
+            "docs/governance/fm026_certification-2026-07-13.json",
+            "docs/governance/phase1_run1_feature_producer_consumer_graph-2026-07-10.json"
+          ],
+          "top_files": [
+            "tests/test_market_context.py",
+            "scripts/analysis/crt_config_completeness_census.py",
+            "docs/intent_to_code_map.md",
+            "src/control_plane/server.py",
+            "scripts/analysis/python_source_static_census.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 85,
+          "question": "How are architectural decisions recorded?",
+          "expected": [
+            "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+            "docs/architecture/opportunity-episode-platform-design.md"
+          ],
+          "top_files": [
+            "src/multi_llm/discussion.py",
+            "tests/test_validator_session_overrides.py",
+            "src/multi_llm/turn_ledger.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 86,
+          "question": "Trace body_ratio from ontology to production inference.",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py",
+            "src/engines/crt_engine.py",
+            "active_models.yaml",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "src/research/synthetic/ontology.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 87,
+          "question": "Trace ATR from OHLCV through FeaturePipeline into model inputs.",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py",
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "tests/test_execution_planner.py",
+            "src/features/feature_pipeline.py",
+            "docs/governance/xauusd_apr2026_ohlcv_terminal_consumers-2026-07-10.json",
+            "src/core/feature_store.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 88,
+          "question": "Trace retest_depth from computation to model consumption.",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py",
+            "src/engines/crt_engine.py",
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "scripts/research/_build_xauusd_library_and_eval.py",
+            "tests/test_finalize_survivorship.py",
+            "tests/test_derived_math.py",
+            "src/research/sujan_manipulation/state.py",
+            "tests/test_trainer.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 89,
+          "question": "Explain how canonical features reach BitNet.",
+          "expected": [
+            "src/features/registry/__init__.py",
+            "active_models.yaml",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "src/bitnet/bitnet_inference.py",
+            "src/bitnet/_smoke_test.py",
+            "src/bitnet/backbones.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 90,
+          "question": "Explain how configuration reaches FeaturePipeline.",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py",
+            "src/control_plane/registry.py"
+          ],
+          "top_files": [
+            "src/features/feature_pipeline.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 91,
+          "question": "Explain how active_models controls runtime.",
+          "expected": [
+            "active_models.yaml",
+            "src/control_plane/registry.py",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "active_models.yaml"
+          ],
+          "matched": [
+            "active_models.yaml"
+          ],
+          "recall": 0.3333333333333333
+        },
+        {
+          "id": 92,
+          "question": "Trace CRT states from ontology through execution.",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/engines/crt_engine.py",
+            "src/strategies/s01_crt_wrapper.py",
+            "src/core/fusion_engine.py"
+          ],
+          "top_files": [
+            "src/features/crt_state_resolver.py",
+            "src/research/synthetic/ontology.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 93,
+          "question": "Explain how governance validates implementation.",
+          "expected": [
+            "docs/governance/EPISTEMIC_INTEGRITY.md",
+            "docs/governance/fm026_certification-2026-07-13.json",
+            "scripts/governance/construction_protocol.py"
+          ],
+          "top_files": [
+            "src/interpreters/contract.py",
+            "src/interpreters/reference.py",
+            "docs/governance/SEMANTIC_REVIEW_PROTOCOL.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 94,
+          "question": "Explain how lineage connects research to production.",
+          "expected": [
+            "docs/PROJECT_HISTORY.md",
+            "docs/governance/fm026_session_log-2026-07-13.json",
+            "docs/analysis/CRT_AUDIT_REPORT.md",
+            "active_models.yaml"
+          ],
+          "top_files": [
+            "src/interpreters/contract.py",
+            "src/interpreters/reference.py",
+            "docs/research/JOINT_STATE_EXPLAINABILITY.md"
+          ],
+          "matched": [],
+          "recall": 0.0
+        },
+        {
+          "id": 95,
+          "question": "Explain the complete decision path from OHLCV to trade output.",
+          "expected": [
+            "configs/formulas/market_crt_states.yaml",
+            "src/features/registry/__init__.py",
+            "src/engines/crt_engine.py",
+            "active_models.yaml",
+            "src/core/fusion_engine.py",
+            "src/strategies/s01_crt_wrapper.py"
+          ],
+          "top_files": [
+            "src/interpreters/contract.py",
+            "tests/test_ultron_risk_gate.py"
+          ],
+          "matched": [],
+          "recall": 0.0
+        }
+      ]
+    }
+  ]
+}

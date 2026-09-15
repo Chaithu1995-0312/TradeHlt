@@ -275,7 +275,19 @@ class Chunker:
     # ── JSON chunking ──────────────────────────────────────────────────────
 
     def _chunk_json(self, doc: Document, lines: list[str]) -> list[Chunk]:
-        """Chunk JSONL (one JSON object per line) or JSON array at top-level."""
+        """Chunk JSONL/JSON. Registry JSONL files are typed records via index_store ? not per-line chunks."""
+        # Registries are typed records (see RetrievalConfig.registry_sources).
+        # Per-line chunking here produced the 85% governance-JSONL index skew.
+        try:
+            rel = doc.path.relative_to(self.config.repo_root).as_posix()
+        except ValueError:
+            rel = doc.metadata.get("filepath", "")
+        registry = set(getattr(self.config, "registry_sources", []) or [])
+        if rel in registry:
+            return []  # handled by IndexStore._load_registry_records
+        # Also skip if corpus already excluded registries; belt-and-braces for direct callers.
+        if rel.endswith(".jsonl") and any(rel.endswith(Path(r).name) or rel == r for r in registry):
+            return []
         chunks: list[Chunk] = []
         for i, line in enumerate(lines, 1):
             stripped = line.strip()

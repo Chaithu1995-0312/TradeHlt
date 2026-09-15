@@ -1,95 +1,99 @@
 """
-retrieval/ — Enterprise RAG system for the Tradelatest codebase.
+retrieval/ — Truth-tier lexical RAG for the Tradelatest corpus.
 
-Provides semantic chunking, embedding, vector storage (ChromaDB), and hybrid
-retrieval (semantic + keyword + structural metadata). Integrates with Claude Code
-so every implementation, review, and debugging task is grounded in retrieved evidence.
-
-Authority model:
-  - Source documents are NEVER modified by the RAG pipeline — they are read-only.
-  - The vector store is a DERIVED VIEW (like context/*.md — gitignored, regenerable).
-  - Chunk boundaries follow language constructs (class/function/enum/doctstring), NOT
-    fixed token sizes (CLAUDE.md §6.5 — evidence > doctrine: the code's own structure
-    is the evidence for chunk boundaries, not a heuristic token budget).
-
-Domains ingested (see also knowledge-map.md):
-  - source_code  : Python source under src/ (docstrings + signatures + class bodies)
-  - architecture  : docs/architecture/*.md — design decisions, signal flow, maps
-  - governance    : docs/governance/*.md, *.json, *.jsonl — contracts, audits, lineage
-  - analysis      : docs/analysis/*.md — point-in-time studies (evidence side of F-0xx)
-  - intent        : docs/intent/*.md — behavioral contracts, intent-to-code alignment
-  - operations    : docs/operations/*.md — runtime state, known illusions, dependency graph
-  - config        : configs/**/*.yaml, configs/**/*.json — production config, formulas
-  - tests         : tests/**/*.py — test code (guardrails and invariants)
-  - research      : results/research/**/*.md, docs/research/**/*.md — frozen experiments
-
-Usage:
-    from retrieval import RetrievalPipeline
-    pipe = RetrievalPipeline()               # loads existing index or creates one
-    docs = pipe.retrieve("CRT state machine behaviour", top_k=5)
-    pipe.index()                              # (re)build the full index
-    pipe.metrics()                            # index latency, recall@K, MRR
+DuckDB/Parquet lexical query core (hand-rolled BM25; no fts extension).
+JSONL under data/rag/ is the build system-of-record; LexicalIndex queries
+Parquet sidecars at search time and does not load the corpus into Python dicts.
+Dense/Chroma is optional Phase-5 only. Results are partitioned by truth class;
+divergence is surfaced, never adjudicated.
 """
 
 from __future__ import annotations
 
 from retrieval.config import RetrievalConfig, build_default_config
 from retrieval.chunking import Chunker, Chunk, chunk_document
-from retrieval.embedding import Embedder
-from retrieval.vector_store import VectorStore, SearchResult
 from retrieval.corpus import CorpusDiscoverer, Document
-from retrieval.retriever import Retriever, HybridResult
+from retrieval.retriever import Retriever, HybridResult, ContextAssembly
 from retrieval.monitor import Monitor, MetricsSnapshot
+from retrieval.index_store import IndexStore, IndexBuildReport
+from retrieval.lexical import LexicalIndex, LexicalHit
+from retrieval.divergence import DivergenceFlag, detect_divergences
+from retrieval.truth_tier import (
+    classify_path,
+    classify_status,
+    extract_ids,
+    TierAssignment,
+    StatusAssignment,
+)
+
+# Legacy exports (still importable; Chroma path is fail-loud / unused by pipeline)
+try:
+    from retrieval.embedding import Embedder
+except Exception:  # pragma: no cover
+    Embedder = None  # type: ignore
+try:
+    from retrieval.vector_store import VectorStore, SearchResult
+except Exception:  # pragma: no cover
+    VectorStore = None  # type: ignore
+    SearchResult = None  # type: ignore
 
 __all__ = [
-    "RetrievalConfig", "build_default_config",
-    "Chunker", "Chunk", "chunk_document",
+    "RetrievalConfig",
+    "build_default_config",
+    "Chunker",
+    "Chunk",
+    "chunk_document",
+    "CorpusDiscoverer",
+    "Document",
+    "Retriever",
+    "HybridResult",
+    "ContextAssembly",
+    "Monitor",
+    "MetricsSnapshot",
+    "IndexStore",
+    "IndexBuildReport",
+    "LexicalIndex",
+    "LexicalHit",
+    "DivergenceFlag",
+    "detect_divergences",
+    "classify_path",
+    "classify_status",
+    "extract_ids",
+    "TierAssignment",
+    "StatusAssignment",
     "Embedder",
-    "VectorStore", "SearchResult",
-    "CorpusDiscoverer", "Document",
-    "Retriever", "HybridResult",
-    "Monitor", "MetricsSnapshot",
+    "VectorStore",
+    "SearchResult",
+    "RetrievalPipeline",
 ]
 
 
 class RetrievalPipeline:
-    """Top-level RAG pipeline: discover → chunk → embed → index → retrieve.
-
-    Usage::
-
-        pipe = RetrievalPipeline()
-        pipe.index()                          # one-time build
-        results = pipe.retrieve("CRT state machine")
-        pipe.monitor.metrics()                # accuracy/latency snapshot
-    """
+    """Truth-tier pipeline: discover → chunk → index (JSONL/Parquet) → retrieve."""
 
     def __init__(self, config: RetrievalConfig | None = None) -> None:
         self.config = config or build_default_config()
         self.corpus = CorpusDiscoverer(self.config)
         self.chunker = Chunker(self.config)
-        self.embedder = Embedder(self.config)
-        self.store = VectorStore(self.config)
+        self.index_store = IndexStore(self.config)
+        self.lexical = LexicalIndex(self.config)
         self.monitor = Monitor(self.config)
+        self.retriever = Retriever(self.lexical, self.config)
+        # Legacy attribute kept so old callers referencing pipe.store don't crash
+        # on attribute access; hybrid_search will fail loud if invoked.
+        self.store = None
+        if VectorStore is not None:
+            try:
+                self.store = VectorStore(self.config)
+            except Exception:
+                self.store = None
 
-    # ── lifecycle ──────────────────────────────────────────────────────────
-
-    def index(self) -> int:
-        """Discover all source documents, chunk, embed, and persist to vector store.
-
-        Returns the total number of chunks indexed.
-        """
-        docs = self.corpus.discover()
-        total = 0
-        for doc in docs:
-            chunks = self.chunker.chunk(doc)
-            if not chunks:
-                continue
-            embeddings = self.embedder.embed_batch([c.text for c in chunks])
-            self.store.add_chunks(chunks, embeddings, doc)
-            total += len(chunks)
-        self.store.persist()
-        self.monitor.record_index(len(docs), total)
-        return total
+    def index(self, *, rebuild: bool = False) -> int:
+        report = self.index_store.build(rebuild=rebuild)
+        self.monitor.record_index(report.docs, report.chunks)
+        # Force reload on next query
+        self.lexical._loaded = False
+        return report.chunks
 
     def retrieve(
         self,
@@ -97,13 +101,28 @@ class RetrievalPipeline:
         top_k: int = 10,
         domain_filter: str | None = None,
     ) -> list[HybridResult]:
-        """Hybrid retrieval across all domains.
+        ctx = self.retriever.retrieve(
+            query, top_k=top_k, domain_filter=domain_filter
+        )
+        self.monitor.record_query(query, len(ctx.chunks))
+        return ctx.chunks
 
-        Returns results ranked by fusion score (semantic + keyword + structural boost).
-        """
-        results = self.store.hybrid_search(query, top_k=top_k, domain_filter=domain_filter)
-        self.monitor.record_query(query, len(results))
-        return results
+    def retrieve_assembly(
+        self,
+        query: str,
+        top_k: int = 10,
+        domain_filter: str | None = None,
+        max_tokens: int | None = None,
+    ) -> ContextAssembly:
+        ctx = self.retriever.retrieve(
+            query,
+            top_k=top_k,
+            domain_filter=domain_filter,
+            max_tokens=max_tokens,
+        )
+        self.monitor.record_query(query, len(ctx.chunks))
+        self.monitor.record_query_latency(query, ctx.retrieval_time_ms / 1000.0)
+        return ctx
 
     def metrics(self) -> MetricsSnapshot:
         return self.monitor.snapshot()

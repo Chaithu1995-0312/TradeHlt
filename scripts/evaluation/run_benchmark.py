@@ -311,22 +311,30 @@ def main() -> None:
     if args.rebuild_index:
         print("Rebuilding index...")
         t0 = time.time()
-        total = pipe.index()
+        total = pipe.index(rebuild=True)
         elapsed = time.time() - t0
         print(f"  Indexed {total} chunks in {elapsed:.2f}s")
     else:
-        # Check if index exists
+        # Check if lexical index exists (data/rag)
         try:
-            count = pipe.store.count()
-            print(f"  Existing index has {count} chunks")
-        except Exception:
-            print("  No existing index found. Building...")
+            st = pipe.index_store.status()
+            man = st.get("manifest") or {}
+            count = int(man.get("chunks") or 0)
+            print(f"  Lexical index has {count} chunks (ok={st.get('ok')})")
+            if not st.get("ok") or count == 0:
+                print("  Index missing/empty ? rebuilding...")
+                t0 = time.time()
+                total = pipe.index(rebuild=True)
+                elapsed = time.time() - t0
+                print(f"  Indexed {total} chunks in {elapsed:.2f}s")
+        except Exception as e:
+            print(f"  Could not open index ({e}) ? rebuilding...")
             t0 = time.time()
-            total = pipe.index()
+            total = pipe.index(rebuild=True)
             elapsed = time.time() - t0
             print(f"  Indexed {total} chunks in {elapsed:.2f}s")
 
-    retriever = Retriever(pipe.store, pipe.config)
+    retriever = pipe.retriever  # truth-tier lexical Retriever (DuckDB/Parquet)
 
     # 3. Evaluate each question
     print(f"\nEvaluating {len(questions)} questions (top_k={args.top_k})...")

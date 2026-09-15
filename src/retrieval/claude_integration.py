@@ -1,50 +1,31 @@
 """
-retrieval/claude_integration.py — Integration with Claude Code for RAG-grounded tasks.
+retrieval/claude_integration.py — Claude / control-plane integration for truth-tier RAG.
 
-This module provides:
-  1. A `RAGContextProvider` that Claude Code can call before task execution to
-     retrieve relevant context from the codebase.
-  2. A `get_context()` function that returns structured context for any query.
-  3. A constraint enforcer that ensures code generation and architectural
-     recommendations are restricted to retrieved context in enterprise mode.
-
-Architecture:
-  - Claude Code calls `get_context(query)` at task start.
-  - The context is prepended to the system prompt.
-  - `EnterpriseGate.verify()` is called before any code generation to ensure
-    the output is grounded in retrieved evidence.
+Retrieval is NOT grounding. Optional --ground routes asserted ids through
+src/governance/semantic_grounding.py and surfaces statuses verbatim
+(GROUNDED / UNKNOWN / AMBIGUOUS / UNANSWERABLE / REFUSED). REFUSED is never
+smoothed into prose.
 """
 
 from __future__ import annotations
 
 import os
-import time
-from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
-from retrieval import RetrievalPipeline, HybridResult
-from retrieval.config import RetrievalConfig, build_default_config
+from retrieval import RetrievalPipeline
+from retrieval.config import build_default_config
 from retrieval.retriever import ContextAssembly, Retriever
+from retrieval.truth_tier import extract_ids
 
-
-# ── environment flag for enterprise mode ───────────────────────────────────
 _ENTERPRISE_MODE = os.environ.get("RAG_ENTERPRISE_MODE", "1") == "1"
-
-
-# ── singleton pipeline ─────────────────────────────────────────────────────
 _pipeline: RetrievalPipeline | None = None
 
 
 def _get_pipeline() -> RetrievalPipeline:
-    """Get or initialize the singleton RetrievalPipeline."""
     global _pipeline
     if _pipeline is None:
-        cfg = build_default_config()
-        _pipeline = RetrievalPipeline(cfg)
+        _pipeline = RetrievalPipeline(build_default_config())
     return _pipeline
-
-
-# ── public API ─────────────────────────────────────────────────────────────
 
 
 def get_context(
@@ -54,47 +35,20 @@ def get_context(
     max_tokens: int = 2000,
     ensure_domains: list[str] | None = None,
 ) -> ContextAssembly:
-    """Retrieve relevant context for a Claude Code task.
-
-    This is the primary entry point. Call it at the start of any task to
-    ground the LLM in retrieved evidence from the codebase.
-
-    Args:
-        query: The task description or question to search for.
-        top_k: Number of chunks to retrieve.
-        domain_filter: Optional domain to restrict search.
-        max_tokens: Maximum estimated tokens for the context block.
-        ensure_domains: Guarantee coverage from these domains.
-
-    Returns:
-        ContextAssembly ready for formatting.
-    """
     pipe = _get_pipeline()
-    retriever = Retriever(pipe.store, pipe.config)
-    return retriever.retrieve(
+    return pipe.retrieve_assembly(
         query=query,
         top_k=top_k or pipe.config.top_k_default,
         domain_filter=domain_filter,
         max_tokens=max_tokens,
-        ensure_domains=ensure_domains or ["source_code", "architecture", "governance"],
     )
 
 
 def format_context(ctx: ContextAssembly, compact: bool = False) -> str:
-    """Format a ContextAssembly as a string for inclusion in an LLM prompt.
-
-    Args:
-        ctx: The context to format.
-        compact: If True, use compact format (for system prompts).
-
-    Returns:
-        Formatted markdown string.
-    """
     pipe = _get_pipeline()
-    retriever = Retriever(pipe.store, pipe.config)
     if compact:
-        return retriever.format_compact(ctx)
-    return retriever.format_for_claude(ctx)
+        return pipe.retriever.format_compact(ctx)
+    return pipe.retriever.format_for_claude(ctx)
 
 
 def get_formatted_context(
@@ -104,118 +58,144 @@ def get_formatted_context(
     max_tokens: int = 2000,
     compact: bool = False,
 ) -> str:
-    """Convenience: retrieve AND format context in one call."""
     ctx = get_context(query, top_k, domain_filter, max_tokens)
     return format_context(ctx, compact=compact)
 
 
-# ── enterprise mode: constraint enforcement ────────────────────────────────
+def _ground_ids(ids: list[str]) -> list[dict[str, Any]]:
+    """Route each id through semantic_grounding; never invent a status."""
+    results: list[dict[str, Any]] = []
+    try:
+        from governance import semantic_grounding as sg  # type: ignore
+    except Exception as exc:  # noqa: BLE001
+        return [
+            {
+                "id": i,
+                "status": "UNANSWERABLE",
+                "detail": f"semantic_grounding import failed: {exc}",
+            }
+            for i in ids
+        ]
+
+    # Prefer a public API if present; otherwise report UNKNOWN rather than faking.
+    ground_fn = None
+    for name in ("ground", "ground_id", "verify_id", "lookup", "adjudicate"):
+        cand = getattr(sg, name, None)
+        if callable(cand):
+            ground_fn = cand
+            break
+
+    for i in ids:
+        if ground_fn is None:
+            results.append(
+                {
+                    "id": i,
+                    "status": "UNKNOWN",
+                    "detail": "semantic_grounding has no callable ground/lookup API",
+                }
+            )
+            continue
+        try:
+            raw = ground_fn(i)
+        except Exception as exc:  # noqa: BLE001
+            results.append({"id": i, "status": "UNANSWERABLE", "detail": str(exc)})
+            continue
+
+        status = None
+        detail = ""
+        if isinstance(raw, dict):
+            status = (
+                raw.get("status")
+                or raw.get("verdict")
+                or raw.get("grounding_status")
+            )
+            detail = str(raw.get("detail") or raw.get("reason") or raw)
+        else:
+            status = str(raw)
+            detail = str(raw)
+        status_u = str(status or "UNKNOWN").upper()
+        # Never smooth REFUSED
+        if "REFUSED" in status_u:
+            status_u = "REFUSED"
+        results.append({"id": i, "status": status_u, "detail": detail, "raw": raw})
+    return results
 
 
-class EnterpriseGate:
-    """Verifies that code generation and recommendations are grounded in evidence.
-
-    In enterprise mode (`RAG_ENTERPRISE_MODE=1`), this gate is called before
-    any code generation or architectural recommendation to ensure the output
-    cites retrieved context.
-    """
+class GroundingGate:
+    """Real grounding join — replaces filepath-substring EnterpriseGate theater."""
 
     def __init__(self, pipeline: RetrievalPipeline | None = None) -> None:
         self.pipeline = pipeline or _get_pipeline()
 
     @staticmethod
     def is_active() -> bool:
-        """Check if enterprise constraint mode is active."""
         return _ENTERPRISE_MODE
 
-    def verify(
-        self,
-        task_description: str,
-        proposed_code_or_recommendation: str,
-        min_chunks: int = 1,
-    ) -> dict:
-        """Verify that a code/recommendation is grounded in retrieved evidence.
+    def verify(self, query: str, ground: bool = True) -> dict[str, Any]:
+        ctx = self.pipeline.retrieve_assembly(query, top_k=10)
+        ids: list[str] = []
+        for ch in ctx.chunks:
+            ids.extend([x for x in (ch.ids or "").split(",") if x])
+        ids.extend(extract_ids(query))
+        # de-dupe preserve order
+        seen: set[str] = set()
+        uniq: list[str] = []
+        for i in ids:
+            if i not in seen:
+                seen.add(i)
+                uniq.append(i)
 
-        Args:
-            task_description: The original task that prompted this work.
-            proposed_code_or_recommendation: The code or recommendation text.
-            min_chunks: Minimum number of context chunks required for grounding.
-
-        Returns:
-            dict with:
-              - grounded: bool — whether the proposal is sufficiently grounded.
-              - retrieved_chunks: list of chunk IDs used.
-              - score: average relevance score.
-              - reason: explanation string.
-        """
-        if not _ENTERPRISE_MODE:
-            return {"grounded": True, "retrieved_chunks": [], "score": 1.0,
-                    "reason": "Enterprise mode disabled — no constraint enforced."}
-
-        # Retrieve context for the task
-        ctx = get_context(task_description, top_k=10, max_tokens=4000)
-        chunk_ids = [c.chunk_id for c in ctx.chunks]
-        avg_score = sum(c.score for c in ctx.chunks) / max(len(ctx.chunks), 1)
-
-        if len(ctx.chunks) < min_chunks:
-            return {
-                "grounded": False,
-                "retrieved_chunks": chunk_ids,
-                "score": avg_score,
-                "reason": (
-                    f"Insufficient evidence: only {len(ctx.chunks)} chunks retrieved "
-                    f"(need ≥{min_chunks}). Add authoritative documentation before "
-                    f"proceeding. Retrieved from: {', '.join(sorted(ctx.domains_covered))}."
-                ),
-            }
-
-        # Verify the proposal references at least one chunk by filename
-        proposal_lower = proposed_code_or_recommendation.lower()
-        referenced = [c for c in ctx.chunks if c.filepath.lower() in proposal_lower
-                      or (c.heading and c.heading.lower() in proposal_lower)]
-
-        if not referenced:
-            return {
-                "grounded": False,
-                "retrieved_chunks": chunk_ids,
-                "score": avg_score,
-                "reason": (
-                    "Proposed code/recommendation does not explicitly reference "
-                    "any retrieved source file. In enterprise mode, all code "
-                    "generation must cite its evidence. Include file paths or "
-                    "section names from the retrieved context."
-                ),
-            }
-
+        grounded = _ground_ids(uniq) if ground and uniq else []
+        refused = [g for g in grounded if g.get("status") == "REFUSED"]
         return {
-            "grounded": True,
-            "retrieved_chunks": [r.chunk_id for r in referenced],
-            "score": avg_score,
-            "reason": f"Verified: grounded in {len(referenced)} chunks from retrieved context.",
+            "ok": True,
+            "query": query,
+            "spans": len(ctx.chunks),
+            "truth_classes": sorted(ctx.domains_covered),
+            "divergence_flags": [
+                {"kind": f.kind, "detail": f.detail, "symbol_or_id": f.symbol_or_id}
+                for f in ctx.divergence_flags
+            ],
+            "ids": uniq,
+            "grounding": grounded,
+            "refused": refused,
+            "note": (
+                "REFUSED must never be smoothed into prose"
+                if refused
+                else "retrieval is not grounding; statuses are verbatim"
+            ),
         }
 
 
-# ── task decorator ─────────────────────────────────────────────────────────
+# Back-compat alias — old name still importable
+class EnterpriseGate(GroundingGate):
+    """Deprecated alias for GroundingGate."""
+
+    def verify(  # type: ignore[override]
+        self,
+        task_description: str,
+        proposed_code_or_recommendation: str = "",
+        min_chunks: int = 1,
+        ground: bool = True,
+    ) -> dict:
+        result = GroundingGate.verify(self, task_description, ground=ground)
+        # Preserve old keys for callers that still expect them
+        result["grounded"] = not bool(result.get("refused")) and result.get("spans", 0) >= min_chunks
+        result["retrieved_chunks"] = [c.chunk_id for c in self.pipeline.retrieve_assembly(task_description).chunks]
+        result["score"] = 1.0 if result["grounded"] else 0.0
+        result["reason"] = result.get("note", "")
+        _ = proposed_code_or_recommendation  # intentionally unused — substring theater removed
+        return result
 
 
 def rag_grounded(task_fn: Callable) -> Callable:
-    """Decorator that automatically retrieves context before task execution.
-
-    Usage::
-
-        @rag_grounded
-        def implement_crt_state_machine(task_description: str) -> str:
-            # The function receives `_rag_context` as an extra keyword argument
-            ...
-    """
     import functools
 
     @functools.wraps(task_fn)
     def wrapper(*args, **kwargs):
-        # Extract task description from args or kwargs
         task_desc = kwargs.get("task_description", args[0] if args else "")
         if task_desc:
-            ctx = get_context(task_desc)
+            ctx = get_context(str(task_desc))
             kwargs["_rag_context"] = ctx
             kwargs["_rag_context_str"] = format_context(ctx)
         else:

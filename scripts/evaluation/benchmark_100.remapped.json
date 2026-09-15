@@ -24,7 +24,8 @@
       "missing_authoritative_file": 0
     },
     "validation_notes": [
-      "2026-09-11 truth-tier rewrite: expected_domains still use pre-rewrite topic labels (architecture/source_code/config/...). Retriever now emits truth_class in chunk.domain (CURRENT/INTENDED/RECORDED/REFERENCE/HISTORICAL). Domain-coverage scoring is informational only and is excluded from pass/fail until gold domains are remapped. File-path recall remains the primary gate."
+      "2026-09-11 truth-tier rewrite: expected_domains still use pre-rewrite topic labels (architecture/source_code/config/...). Retriever now emits truth_class in chunk.domain (CURRENT/INTENDED/RECORDED/REFERENCE/HISTORICAL). Domain-coverage scoring is informational only and is excluded from pass/fail until gold domains are remapped. File-path recall remains the primary gate.",
+      "2026-09-13T10:11:34Z: expected_domains remapped to truth classes; legacy kept in expected_domains_legacy. Absent census JSON dropped/replaced. Basename twins added for HISTORICAL/plan refs when CURRENT exists."
     ],
     "gold_validated_at": "2026-09-11",
     "gold_validation": {
@@ -50,6 +51,15 @@
         }
       ],
       "expected_domains_status": "STALE_TOPIC_LABELS_INFORMATIONAL_ONLY"
+    },
+    "gold_remapped_at": "2026-09-13T10:11:34Z",
+    "gold_remap": {
+      "source": "benchmark_100.json",
+      "original_preserved": "scripts/evaluation/benchmark_100.original.json",
+      "questions_changed": 2,
+      "unmatched_refs": 0,
+      "index_files": 2943,
+      "census_replacement": "docs/analysis/feature_state_lineage_census.md"
     }
   },
   "questions": [
@@ -58,15 +68,19 @@
       "category": "architecture",
       "question": "What is the overall architecture of the trading system?",
       "expected_files": [
-        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+        "docs/architecture/goal.md"
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "architecture"
+        "INTENDED"
       ],
       "expected_answer_summary": "The system uses a layered architecture with ontology, feature pipeline, CRT engine, model inference, and execution layers.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "architecture"
+      ]
     },
     {
       "id": 2,
@@ -77,11 +91,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "architecture"
+        "INTENDED"
       ],
       "expected_answer_summary": "TRADING_SYSTEM_FRAMEWORK.md defines the system architecture.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "architecture"
+      ]
     },
     {
       "id": 3,
@@ -93,11 +110,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "architecture"
+        "INTENDED"
       ],
       "expected_answer_summary": "OHLCV data flows through feature engineering (ATR normalization, body_ratio, displacement) into CRT state resolution, then model inference (BitNet, ZoneGate, RR, Gaussian), and finally execution via fusion engine.",
       "is_hallucination_test": false,
-      "multi_hop": true
+      "multi_hop": true,
+      "expected_domains_legacy": [
+        "architecture"
+      ]
     },
     {
       "id": 4,
@@ -114,11 +134,14 @@
         "CRTStateResolver"
       ],
       "expected_domains": [
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "FeatureRegistry, fm_resolve, CRTStateResolver, and derived feature math functions.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code"
+      ]
     },
     {
       "id": 5,
@@ -136,12 +159,15 @@
         "FusionEngine"
       ],
       "expected_domains": [
-        "source_code",
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "CRT Engine, LLM Engine, Fusion Engine, BitNet, ZoneGate, RR Engine, Gaussian Engine.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code",
+        "config"
+      ]
     },
     {
       "id": 6,
@@ -153,12 +179,16 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "analysis",
-        "architecture"
+        "HISTORICAL",
+        "INTENDED"
       ],
       "expected_answer_summary": "Ontology is defined in configs/formulas/ and docs/architecture/, separate from runtime implementation in src/. The ontology defines concepts; implementation realizes them.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "analysis",
+        "architecture"
+      ]
     },
     {
       "id": 7,
@@ -175,11 +205,14 @@
         "FusionEngine"
       ],
       "expected_domains": [
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "CRT Engine, Fusion Engine, and model engines (BitNet, ZoneGate, RR, Gaussian) consume canonical features.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code"
+      ]
     },
     {
       "id": 8,
@@ -194,11 +227,14 @@
         "S01CRTWrapper"
       ],
       "expected_domains": [
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "The execution pipeline is defined in backtest_v2.py and s01_crt_wrapper.py.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code"
+      ]
     },
     {
       "id": 9,
@@ -210,11 +246,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "architecture"
+        "INTENDED"
       ],
       "expected_answer_summary": "EXISTING_TO_FRAMEWORK_MAP.md and opportunity-episode-platform-design.md describe system wiring.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "architecture"
+      ]
     },
     {
       "id": 10,
@@ -228,28 +267,33 @@
         "Registry"
       ],
       "expected_domains": [
-        "config",
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "active_models.yaml defines which models are enabled; the control plane registry loads them at startup.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config",
+        "source_code"
+      ]
     },
     {
       "id": 11,
       "category": "repository_structure",
       "question": "How many production Python files exist?",
       "expected_files": [
-        "python_source_static_census.jsonl",
-        "python_source_static_census_summary.json"
+        "docs/analysis/feature_state_lineage_census.md"
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "analysis"
+        "HISTORICAL"
       ],
       "expected_answer_summary": "The static census files in the repo root document the count of production Python files.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "analysis"
+      ]
     },
     {
       "id": 12,
@@ -260,11 +304,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "architecture"
+        "INTENDED"
       ],
       "expected_answer_summary": "src/, configs/, scripts/, tests/ contain production code.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "architecture"
+      ]
     },
     {
       "id": 13,
@@ -298,11 +345,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "architecture"
+        "INTENDED"
       ],
       "expected_answer_summary": "docs/implementation_plan/ contains implementation plans.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "architecture"
+      ]
     },
     {
       "id": 16,
@@ -313,11 +363,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "governance"
+        "RECORDED"
       ],
       "expected_answer_summary": "PROJECT_HISTORY.md describes project history.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "governance"
+      ]
     },
     {
       "id": 17,
@@ -328,11 +381,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "governance"
+        "RECORDED"
       ],
       "expected_answer_summary": "knowledge-map.md describes system knowledge.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "governance"
+      ]
     },
     {
       "id": 18,
@@ -344,11 +400,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "architecture"
+        "INTENDED"
       ],
       "expected_answer_summary": "Architecture documents in docs/architecture/ contain architectural decisions.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "architecture"
+      ]
     },
     {
       "id": 19,
@@ -361,12 +420,13 @@
         "docs/operations/TRUST_TIER_INDEX.md"
       ],
       "expected_symbols": [],
-      "expected_domains": [
-        "operations"
-      ],
+      "expected_domains": [],
       "expected_answer_summary": "docs/operations/ contains operational documentation including CURRENT_STATE.md, KNOWN_ILLUSIONS.md, DEPENDENCY_GRAPH.md, TRUST_TIER_INDEX.md.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "operations"
+      ]
     },
     {
       "id": 20,
@@ -378,11 +438,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "governance"
+        "RECORDED"
       ],
       "expected_answer_summary": "README.md and CLAUDE.md explain repository organization.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "governance"
+      ]
     },
     {
       "id": 21,
@@ -395,11 +458,14 @@
         "FeatureRegistry"
       ],
       "expected_domains": [
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "FeaturePipeline is implemented via FeatureRegistry in src/features/registry/__init__.py which registers and resolves features.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code"
+      ]
     },
     {
       "id": 22,
@@ -410,11 +476,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "ATR is calculated as a rolling mean of true range over a configurable period, defined in market_crt_states.yaml.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 23,
@@ -426,12 +495,15 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config",
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "ATR is normalized by dividing features by ATR value to produce ATR-normalized features like body_ratio, displacement_strength_atr, retest_depth_atr.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config",
+        "source_code"
+      ]
     },
     {
       "id": 24,
@@ -442,11 +514,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "body_ratio is the ratio of candle body to total range (|close - open| / (high - low)), normalized by ATR.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 25,
@@ -457,11 +532,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "Displacement strength measures the directional movement relative to ATR, calculated as the ratio of price displacement to ATR over a lookback period.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 26,
@@ -472,11 +550,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "retest_depth measures how far price retraces into a previously established range, normalized by ATR.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 27,
@@ -487,11 +568,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "body_ratio, displacement_strength, retest_depth, and momentum_score are normalized by ATR.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 28,
@@ -502,11 +586,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "Base OHLCV values (open, high, low, close, volume) and raw ATR remain as absolute values.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 29,
@@ -521,11 +608,14 @@
         "fm_resolve"
       ],
       "expected_domains": [
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "Canonical features are produced by FeatureRegistry which resolves feature formulas from config and computes derived features through fm_resolve.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code"
+      ]
     },
     {
       "id": 30,
@@ -538,11 +628,14 @@
         "FeatureRegistry"
       ],
       "expected_domains": [
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "src/features/registry/__init__.py owns feature registration via FeatureRegistry.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code"
+      ]
     },
     {
       "id": 31,
@@ -553,11 +646,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "configs/formulas/market_crt_states.yaml defines derived feature math.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 32,
@@ -569,12 +665,15 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config",
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "OHLCV columns are transformed through ATR normalization, ratio calculations (body_ratio), and derived metrics (displacement, retest_depth).",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config",
+        "source_code"
+      ]
     },
     {
       "id": 33,
@@ -585,11 +684,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "The canonical feature vector includes ATR-normalized features (body_ratio_atr, displacement_strength_atr, retest_depth_atr, momentum_score_atr) and absolute features (ATR, volume).",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 34,
@@ -600,11 +702,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "The exact count is defined in market_crt_states.yaml; approximately 8-12 canonical features.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 35,
@@ -619,11 +724,14 @@
         "fm_resolve"
       ],
       "expected_domains": [
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "Missing features are handled through fm_resolve which checks for feature availability and falls back to defaults or raises errors.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code"
+      ]
     },
     {
       "id": 36,
@@ -636,11 +744,14 @@
         "CRTEngine"
       ],
       "expected_domains": [
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "CRT Engine is implemented in src/engines/crt_engine.py.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code"
+      ]
     },
     {
       "id": 37,
@@ -652,12 +763,15 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config",
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "CRT states include RANGE, SWEEP, DISPLACEMENT, EXPANSION, RETEST, and EXECUTION.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config",
+        "source_code"
+      ]
     },
     {
       "id": 38,
@@ -671,12 +785,15 @@
         "CRTEngine"
       ],
       "expected_domains": [
-        "source_code",
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "RANGE transitions to SWEEP when price breaks beyond the established range boundaries with sufficient momentum.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code",
+        "config"
+      ]
     },
     {
       "id": 39,
@@ -690,12 +807,15 @@
         "CRTEngine"
       ],
       "expected_domains": [
-        "source_code",
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "SWEEP transitions to DISPLACEMENT when the sweep exceeds a displacement threshold, confirmed by ATR-normalized displacement strength.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code",
+        "config"
+      ]
     },
     {
       "id": 40,
@@ -709,12 +829,15 @@
         "CRTEngine"
       ],
       "expected_domains": [
-        "source_code",
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "EXPANSION is detected when volatility expands beyond a threshold, typically measured by ATR expansion relative to the range.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code",
+        "config"
+      ]
     },
     {
       "id": 41,
@@ -728,12 +851,15 @@
         "CRTEngine"
       ],
       "expected_domains": [
-        "source_code",
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "RETEST is detected when price returns to a previously established level after displacement, measured by retest_depth.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code",
+        "config"
+      ]
     },
     {
       "id": 42,
@@ -748,11 +874,14 @@
         "S01CRTWrapper"
       ],
       "expected_domains": [
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "EXECUTION is detected when CRT state conditions align with model signals, triggering trade execution through the strategy wrapper.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code"
+      ]
     },
     {
       "id": 43,
@@ -766,12 +895,15 @@
         "CRTEngine"
       ],
       "expected_domains": [
-        "source_code",
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "DISPLACEMENT is gated by displacement strength threshold, ATR confirmation, and trend direction predicates.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code",
+        "config"
+      ]
     },
     {
       "id": 44,
@@ -781,12 +913,13 @@
         "tests/test_retrieval_pipeline.py"
       ],
       "expected_symbols": [],
-      "expected_domains": [
-        "tests"
-      ],
+      "expected_domains": [],
       "expected_answer_summary": "CRT transition tests are in the test suite; specific CRT engine tests validate state transitions.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "tests"
+      ]
     },
     {
       "id": 45,
@@ -798,11 +931,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "analysis"
+        "HISTORICAL"
       ],
       "expected_answer_summary": "CRT_AUDIT_REPORT.md and ONTOLOGY_RUNTIME_REACHABILITY.md explain CRT lineage.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "analysis"
+      ]
     },
     {
       "id": 46,
@@ -816,11 +952,14 @@
         "CRTEngine"
       ],
       "expected_domains": [
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "crt_engine_v2 is a config-layer variant that may differ in state transition logic or feature consumption from the original crt_engine.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code"
+      ]
     },
     {
       "id": 47,
@@ -832,11 +971,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "analysis"
+        "HISTORICAL"
       ],
       "expected_answer_summary": "The wick_size bug was caused by incorrect calculation of candle wick proportions in CRT state detection.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "analysis"
+      ]
     },
     {
       "id": 48,
@@ -848,12 +990,16 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "analysis",
-        "governance"
+        "HISTORICAL",
+        "RECORDED"
       ],
       "expected_answer_summary": "The candle_range migration was handled through a controlled change process documented in governance session logs.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "analysis",
+        "governance"
+      ]
     },
     {
       "id": 49,
@@ -863,12 +1009,13 @@
         "tests/test_retrieval_pipeline.py"
       ],
       "expected_symbols": [],
-      "expected_domains": [
-        "tests"
-      ],
+      "expected_domains": [],
       "expected_answer_summary": "Parity tests for CRT behavior are in the test suite, validating that engine outputs match expected state transitions.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "tests"
+      ]
     },
     {
       "id": 50,
@@ -880,12 +1027,16 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "governance",
-        "analysis"
+        "RECORDED",
+        "HISTORICAL"
       ],
       "expected_answer_summary": "CRT correctness is certified by fm026_certification-2026-07-13.json and CRT_AUDIT_REPORT.md which document audit results and validation.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "governance",
+        "analysis"
+      ]
     },
     {
       "id": 51,
@@ -896,11 +1047,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "active_models.yaml defines the currently active models including BitNet, ZoneGate, RR Engine, Gaussian Engine.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 52,
@@ -911,11 +1065,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "active_models.yaml defines active models.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 53,
@@ -926,11 +1083,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "Production-enabled models are those with production: true in active_models.yaml.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 54,
@@ -941,11 +1101,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "Experimental models are those with experimental: true in active_models.yaml.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 55,
@@ -956,11 +1119,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "BitNet is a binary neural network model for trade signal generation.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 56,
@@ -972,12 +1138,16 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config",
-        "analysis"
+        "CURRENT",
+        "HISTORICAL"
       ],
       "expected_answer_summary": "ZoneGate is responsible for zone-based trade filtering and execution gating.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config",
+        "analysis"
+      ]
     },
     {
       "id": 57,
@@ -989,12 +1159,16 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config",
-        "analysis"
+        "CURRENT",
+        "HISTORICAL"
       ],
       "expected_answer_summary": "RR Engine operates on risk-reward ratio calculations to determine trade viability.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config",
+        "analysis"
+      ]
     },
     {
       "id": 58,
@@ -1006,12 +1180,16 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config",
-        "analysis"
+        "CURRENT",
+        "HISTORICAL"
       ],
       "expected_answer_summary": "Gaussian Engine classifies market regimes using Gaussian mixture models.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config",
+        "analysis"
+      ]
     },
     {
       "id": 59,
@@ -1023,11 +1201,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "Models that consume retest_depth include those that use CRT state features, likely BitNet and ZoneGate.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 60,
@@ -1039,11 +1220,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "Models that consume body_ratio include those using candle structure features, likely BitNet and Gaussian Engine.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 61,
@@ -1055,11 +1239,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "Models consuming ema_spread_atr include trend-following models like ZoneGate.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 62,
@@ -1071,11 +1258,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "Models consuming momentum_score_atr include momentum-sensitive models like BitNet and RR Engine.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 63,
@@ -1086,11 +1276,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "active_models.yaml lists disabled models with enabled: false.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 64,
@@ -1104,12 +1297,15 @@
         "FusionEngine"
       ],
       "expected_domains": [
-        "config",
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "FusionEngine determines execution intent by combining signals from all active models.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config",
+        "source_code"
+      ]
     },
     {
       "id": 65,
@@ -1121,12 +1317,16 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config",
-        "governance"
+        "CURRENT",
+        "RECORDED"
       ],
       "expected_answer_summary": "Model versions are managed through active_models.yaml with version fields and certified through governance certification documents.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config",
+        "governance"
+      ]
     },
     {
       "id": 66,
@@ -1137,12 +1337,15 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "The active production configuration is defined in configs/production/.",
       "is_hallucination_test": false,
       "multi_hop": false,
-      "_gold_set_note": "2026-09-11: expected_files configs/production/ (directory) replaced with configs/production/ACTIVE_VERSION — directory is not a retrievable file."
+      "_gold_set_note": "2026-09-11: expected_files configs/production/ (directory) replaced with configs/production/ACTIVE_VERSION — directory is not a retrievable file.",
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 67,
@@ -1153,12 +1356,15 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "v2_multi_2026_04 is a production configuration version for multi-asset trading, dated April 2026.",
       "is_hallucination_test": false,
       "multi_hop": false,
-      "_gold_set_note": "2026-09-11: expected_files configs/production/ (directory) replaced with configs/production/ACTIVE_VERSION — directory is not a retrievable file."
+      "_gold_set_note": "2026-09-11: expected_files configs/production/ (directory) replaced with configs/production/ACTIVE_VERSION — directory is not a retrievable file.",
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 68,
@@ -1169,11 +1375,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "Mandatory configuration keys are defined in the market_reality config and schema files.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 69,
@@ -1187,12 +1396,15 @@
         "FeatureRegistry"
       ],
       "expected_domains": [
-        "source_code",
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "Feature configuration is validated by FeatureRegistry which checks config keys against expected schema.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code",
+        "config"
+      ]
     },
     {
       "id": 70,
@@ -1207,11 +1419,14 @@
         "fm_resolve"
       ],
       "expected_domains": [
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "Missing configuration raises validation errors or falls back to defaults depending on the component.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code"
+      ]
     },
     {
       "id": 71,
@@ -1224,11 +1439,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "active_models.yaml, market_reality configs, and formula configs control runtime behavior.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "config"
+      ]
     },
     {
       "id": 72,
@@ -1239,11 +1457,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "intent"
+        "INTENDED"
       ],
       "expected_answer_summary": "Defaults are prevented through explicit configuration requirements defined in behavior_contracts.md.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "intent"
+      ]
     },
     {
       "id": 73,
@@ -1254,11 +1475,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "intent"
+        "INTENDED"
       ],
       "expected_answer_summary": "Schemas are enforced through validation contracts defined in behavior_contracts.md.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "intent"
+      ]
     },
     {
       "id": 74,
@@ -1271,11 +1495,14 @@
         "Registry"
       ],
       "expected_domains": [
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "Configuration is built by the control plane Registry in src/control_plane/registry.py.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "source_code"
+      ]
     },
     {
       "id": 75,
@@ -1287,11 +1514,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "intent"
+        "INTENDED"
       ],
       "expected_answer_summary": "behavior_contracts.md and intent documents define runtime contracts.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "intent"
+      ]
     },
     {
       "id": 76,
@@ -1302,11 +1532,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "governance"
+        "RECORDED"
       ],
       "expected_answer_summary": "PROJECT_HISTORY.md documents the chronological history of the project including major changes and decisions.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "governance"
+      ]
     },
     {
       "id": 77,
@@ -1317,11 +1550,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "governance"
+        "RECORDED"
       ],
       "expected_answer_summary": "knowledge-map.md documents the system knowledge domains, their relationships, and where each is implemented.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "governance"
+      ]
     },
     {
       "id": 78,
@@ -1332,11 +1568,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "intent"
+        "INTENDED"
       ],
       "expected_answer_summary": "behavior_contracts.md defines behavioral contracts that govern system behavior and enforce constraints.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "intent"
+      ]
     },
     {
       "id": 79,
@@ -1347,11 +1586,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "governance"
+        "RECORDED"
       ],
       "expected_answer_summary": "EPISTEMIC_INTEGRITY.md defines semantic adjudication principles.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "governance"
+      ]
     },
     {
       "id": 80,
@@ -1362,11 +1604,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "architecture"
+        "INTENDED"
       ],
       "expected_answer_summary": "001_FRAMEWORK_REGISTRY.md defines the family registry for framework components.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "architecture"
+      ]
     },
     {
       "id": 81,
@@ -1378,11 +1623,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "governance"
+        "RECORDED"
       ],
       "expected_answer_summary": "The lineage audit process is documented in geometry_static_lineage_report.md and finding_dependency_audit.md.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "governance"
+      ]
     },
     {
       "id": 82,
@@ -1394,11 +1642,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "governance"
+        "RECORDED"
       ],
       "expected_answer_summary": "Implementation changes are tracked through session logs (fm026_session_log) and PROJECT_HISTORY.md.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "governance"
+      ]
     },
     {
       "id": 83,
@@ -1410,11 +1661,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "governance"
+        "RECORDED"
       ],
       "expected_answer_summary": "CLAUDE.md and EPISTEMIC_INTEGRITY.md define authority structures for the project.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "governance"
+      ]
     },
     {
       "id": 84,
@@ -1426,11 +1680,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "governance"
+        "RECORDED"
       ],
       "expected_answer_summary": "Certification JSON files in docs/governance/ certify implementation completeness.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "governance"
+      ]
     },
     {
       "id": 85,
@@ -1442,11 +1699,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "architecture"
+        "INTENDED"
       ],
       "expected_answer_summary": "Architectural decisions are recorded in architecture documents in docs/architecture/.",
       "is_hallucination_test": false,
-      "multi_hop": false
+      "multi_hop": false,
+      "expected_domains_legacy": [
+        "architecture"
+      ]
     },
     {
       "id": 86,
@@ -1465,12 +1725,15 @@
         "FusionEngine"
       ],
       "expected_domains": [
-        "config",
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "body_ratio is defined in market_crt_states.yaml ontology, computed by FeatureRegistry, consumed by CRT Engine for state detection, passed to active models (BitNet, ZoneGate), and fused by FusionEngine for trade decisions.",
       "is_hallucination_test": false,
-      "multi_hop": true
+      "multi_hop": true,
+      "expected_domains_legacy": [
+        "config",
+        "source_code"
+      ]
     },
     {
       "id": 87,
@@ -1485,12 +1748,15 @@
         "FeatureRegistry"
       ],
       "expected_domains": [
-        "config",
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "ATR is computed from OHLCV in FeaturePipeline, used to normalize features (body_ratio_atr, displacement_strength_atr), and these normalized features become inputs to models defined in active_models.yaml.",
       "is_hallucination_test": false,
-      "multi_hop": true
+      "multi_hop": true,
+      "expected_domains_legacy": [
+        "config",
+        "source_code"
+      ]
     },
     {
       "id": 88,
@@ -1507,12 +1773,15 @@
         "CRTEngine"
       ],
       "expected_domains": [
-        "config",
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "retest_depth is computed in FeaturePipeline from market_crt_states.yaml formulas, used by CRT Engine for RETEST state detection, and consumed by models that use CRT state features.",
       "is_hallucination_test": false,
-      "multi_hop": true
+      "multi_hop": true,
+      "expected_domains_legacy": [
+        "config",
+        "source_code"
+      ]
     },
     {
       "id": 89,
@@ -1528,12 +1797,15 @@
         "FusionEngine"
       ],
       "expected_domains": [
-        "source_code",
-        "config"
+        "CURRENT"
       ],
       "expected_answer_summary": "Canonical features are produced by FeatureRegistry, passed through the feature pipeline, and consumed by BitNet (defined in active_models.yaml) via FusionEngine which routes features to active models.",
       "is_hallucination_test": false,
-      "multi_hop": true
+      "multi_hop": true,
+      "expected_domains_legacy": [
+        "source_code",
+        "config"
+      ]
     },
     {
       "id": 90,
@@ -1549,12 +1821,15 @@
         "Registry"
       ],
       "expected_domains": [
-        "config",
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "Configuration from market_crt_states.yaml is loaded by the control plane Registry and passed to FeatureRegistry which uses it to configure feature computation.",
       "is_hallucination_test": false,
-      "multi_hop": true
+      "multi_hop": true,
+      "expected_domains_legacy": [
+        "config",
+        "source_code"
+      ]
     },
     {
       "id": 91,
@@ -1570,12 +1845,15 @@
         "FusionEngine"
       ],
       "expected_domains": [
-        "config",
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "active_models.yaml is read by the control plane Registry which loads enabled models and configures FusionEngine to route features and signals to the appropriate models.",
       "is_hallucination_test": false,
-      "multi_hop": true
+      "multi_hop": true,
+      "expected_domains_legacy": [
+        "config",
+        "source_code"
+      ]
     },
     {
       "id": 92,
@@ -1593,12 +1871,15 @@
         "FusionEngine"
       ],
       "expected_domains": [
-        "config",
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "CRT states are defined in market_crt_states.yaml ontology, computed by CRTEngine, wrapped by S01CRTWrapper for strategy integration, and signals are fused by FusionEngine for execution.",
       "is_hallucination_test": false,
-      "multi_hop": true
+      "multi_hop": true,
+      "expected_domains_legacy": [
+        "config",
+        "source_code"
+      ]
     },
     {
       "id": 93,
@@ -1611,11 +1892,14 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "governance"
+        "RECORDED"
       ],
       "expected_answer_summary": "Governance validates implementation through EPISTEMIC_INTEGRITY.md principles, certification documents (fm026_certification), and the construction_protocol.py script which enforces change lifecycle rules.",
       "is_hallucination_test": false,
-      "multi_hop": true
+      "multi_hop": true,
+      "expected_domains_legacy": [
+        "governance"
+      ]
     },
     {
       "id": 94,
@@ -1629,13 +1913,18 @@
       ],
       "expected_symbols": [],
       "expected_domains": [
-        "governance",
-        "analysis",
-        "config"
+        "RECORDED",
+        "HISTORICAL",
+        "CURRENT"
       ],
       "expected_answer_summary": "Lineage connects research to production through PROJECT_HISTORY.md tracking decisions, session logs documenting implementation steps, audit reports validating correctness, and active_models.yaml promoting models to production.",
       "is_hallucination_test": false,
-      "multi_hop": true
+      "multi_hop": true,
+      "expected_domains_legacy": [
+        "governance",
+        "analysis",
+        "config"
+      ]
     },
     {
       "id": 95,
@@ -1656,12 +1945,15 @@
         "S01CRTWrapper"
       ],
       "expected_domains": [
-        "config",
-        "source_code"
+        "CURRENT"
       ],
       "expected_answer_summary": "OHLCV → FeaturePipeline computes features (ATR, body_ratio, etc.) → CRT Engine detects market state → Models (BitNet, ZoneGate, RR, Gaussian) generate signals → FusionEngine combines signals → S01CRTWrapper executes trade decision.",
       "is_hallucination_test": false,
-      "multi_hop": true
+      "multi_hop": true,
+      "expected_domains_legacy": [
+        "config",
+        "source_code"
+      ]
     },
     {
       "id": 96,

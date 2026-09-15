@@ -26,6 +26,8 @@ live_rail = ["websockets>=12"]
 # MT5-first analytics subsystem (mt5_analytics/). Foundation/kernel needs only
 # MetaTrader5 (behind an import guard); the rest support later phases (storage,
 # dashboard, research).
+# Phase-5 optional dense rerank (lexical core remains mandatory).
+retrieval = ["sentence-transformers", "torch"]
 mt5_analytics = [
     "MetaTrader5",
     "pandas",

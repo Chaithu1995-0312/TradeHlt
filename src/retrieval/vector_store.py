@@ -64,6 +64,24 @@ class VectorStore:
         self._total_docs = 0
         self._total_chunks = 0
 
+    def _require_keyword_index_loaded(self) -> None:
+        """Fail loud when hybrid search would silently degrade to semantic-only.
+
+        `_chunk_texts` / `_keyword_index` are only populated in `add_chunks()` +
+        `persist()`. A fresh process that opens an on-disk Chroma collection has
+        neither, so `_keyword_search` returned {} and results were labelled
+        "hybrid" while being semantic-only. That defect must never be invisible.
+        """
+        if not self._chunk_texts or not self._keyword_index:
+            raise RuntimeError(
+                "VectorStore keyword index is not loaded in this process. "
+                "hybrid_search would silently degrade to semantic-only. "
+                "Rebuild via add_chunks()+persist(), or use the DuckDB/Parquet "
+                "lexical index (retrieval.index_store / lexical). "
+                f"chunk_texts={len(self._chunk_texts)} "
+                f"keyword_terms={len(self._keyword_index)}"
+            )
+
     # ── lifecycle ──────────────────────────────────────────────────────────
 
     def add_chunks(
@@ -138,6 +156,7 @@ class VectorStore:
         Returns:
             Ranked list of SearchResult objects.
         """
+        self._require_keyword_index_loaded()
         collection = self._get_collection()
 
         # 1. Semantic search via ChromaDB (use our own embedder for query encoding)

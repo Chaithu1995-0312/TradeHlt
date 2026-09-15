@@ -51,7 +51,8 @@ class Monitor:
         self._index_events: list[dict] = []
         self._start_time = time.time()
         self._indexed_commit = self._get_current_commit()
-        self._log_path = config.repo_root / "data" / "rag_metrics.jsonl"
+        # Honour overridden roots so tests never write into the real repo.
+        self._log_path = config.resolved_metrics_log()
 
     # ── recording ──────────────────────────────────────────────────────────
 

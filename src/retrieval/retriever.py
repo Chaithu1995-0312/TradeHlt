@@ -1,91 +1,101 @@
 """
-retrieval/retriever.py — The Retriever: high-level retrieval interface with context assembly.
+retrieval/retriever.py — Truth-tier retrieval + context assembly.
 
-Assembles retrieved chunks into a structured context payload suitable for
-inclusion in Claude Code prompts. Supports domain filtering, relevance thresholds,
-and dynamic context windowing.
+Returns verbatim spans partitioned by truth class. Never blends CURRENT /
+INTENDED / RECORDED into one paragraph. Divergence flags are first-class.
 """
 
 from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Sequence
+from typing import Any, Sequence
 
-from retrieval.config import RetrievalConfig
-from retrieval.vector_store import VectorStore, SearchResult
+from retrieval.config import RetrievalConfig, build_default_config
+from retrieval.divergence import DivergenceFlag, detect_divergences
+from retrieval.lexical import LexicalHit, LexicalIndex
 
 
 @dataclass
 class HybridResult:
-    """A single retrieval result with hybrid score and provenance.
+    """A single retrieval hit with provenance and truth-tier fields."""
 
-    Attributes:
-        chunk_id: Unique chunk identifier.
-        text: The text content of the chunk.
-        score: Combined hybrid score (semantic + keyword + structural).
-        semantic_score: Raw semantic similarity score.
-        keyword_score: Raw keyword match score.
-        structural_boost: Boost from exact structural matches.
-        domain: Document domain.
-        filepath: Relative file path.
-        heading: Section heading or construct name.
-        start_line: Start line in the source document.
-        end_line: End line in the source document.
-        metadata: All metadata from the chunk.
-    """
     chunk_id: str
     text: str
     score: float
     semantic_score: float = 0.0
     keyword_score: float = 0.0
     structural_boost: float = 0.0
-    domain: str = ""
+    domain: str = ""  # alias of truth_class for back-compat
     filepath: str = ""
     heading: str = ""
     start_line: int = 0
     end_line: int = 0
+    truth_class: str = ""
+    authority_rank: int = 99
+    lifecycle_status: str = "LIVE"
+    status_evidence: str = ""
+    content_sha: str = ""
+    confidence: str = ""
+    validated: str = ""
+    revalidate_by: str = ""
+    ids: str = ""
+    symbols: str = ""
     metadata: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
 class ContextAssembly:
-    """A structured context payload for LLM consumption.
+    """Tier-partitioned context payload for LLM / control-plane consumption."""
 
-    Attributes:
-        query: The original query.
-        chunks: Retrieved chunks ordered by relevance.
-        total_chunks: Total number of relevant chunks found.
-        total_tokens: Estimated token count for the assembled context.
-        retrieval_time_ms: Time taken for the retrieval in milliseconds.
-        domains_covered: Set of domains represented in the results.
-    """
     query: str
     chunks: list[HybridResult]
     total_chunks: int
     total_tokens: int = 0
     retrieval_time_ms: float = 0.0
     domains_covered: set[str] = field(default_factory=set)
+    by_truth_class: dict[str, list[HybridResult]] = field(default_factory=dict)
+    divergence_flags: list[DivergenceFlag] = field(default_factory=list)
+    registry_hits: list[dict[str, Any]] = field(default_factory=list)
+
+
+def _hit_to_hybrid(h: LexicalHit) -> HybridResult:
+    return HybridResult(
+        chunk_id=h.chunk_id,
+        text=h.text,
+        score=h.score,
+        keyword_score=h.bm25,
+        domain=h.truth_class,
+        filepath=h.filepath,
+        heading=h.heading,
+        start_line=h.start_line,
+        end_line=h.end_line,
+        truth_class=h.truth_class,
+        authority_rank=h.authority_rank,
+        lifecycle_status=h.lifecycle_status,
+        status_evidence=h.status_evidence,
+        content_sha=h.content_sha,
+        confidence=h.confidence,
+        validated=h.validated,
+        revalidate_by=h.revalidate_by,
+        ids=h.ids,
+        symbols=h.symbols,
+        metadata=h.metadata,
+    )
 
 
 class Retriever:
-    """High-level retriever with context assembly for LLM consumption.
-
-    Wraps VectorStore.hybrid_search() and adds:
-      - Result formatting for Claude Code prompts
-      - Relevance threshold filtering
-      - Token-aware context windowing
-      - Per-domain result guarantees (at least N results from each domain)
-    """
+    """Lexical truth-tier retriever with divergence envelope."""
 
     def __init__(
         self,
-        vector_store: VectorStore,
+        lexical_index: LexicalIndex | None = None,
         config: RetrievalConfig | None = None,
+        vector_store: Any = None,  # accepted for back-compat; unused
     ) -> None:
-        from retrieval.config import build_default_config
-        self.store = vector_store
         self.config = config or build_default_config()
+        self.index = lexical_index or LexicalIndex(self.config)
+        self.store = vector_store  # legacy attribute; prefer self.index
 
     def retrieve(
         self,
@@ -95,147 +105,152 @@ class Retriever:
         min_score: float = 0.0,
         max_tokens: int | None = None,
         ensure_domains: list[str] | None = None,
+        include_historical: bool = True,
     ) -> ContextAssembly:
-        """Retrieve and assemble context for the given query.
-
-        Args:
-            query: The search query.
-            top_k: Number of results to return (default: config.top_k_default).
-            domain_filter: Optional domain filter.
-            min_score: Minimum combined score threshold.
-            max_tokens: Maximum tokens for the assembled context (approximate).
-            ensure_domains: Guarantee at least 1 result from each of these domains.
-
-        Returns:
-            ContextAssembly with ranked results and metadata.
-        """
         t0 = time.time()
         k = top_k or self.config.top_k_default
 
-        # 1. Main retrieval
-        results = self.store.hybrid_search(query, top_k=k, domain_filter=domain_filter)
+        hits = self.index.search(
+            query,
+            top_k=k * 2 if ensure_domains else k,
+            truth_class_filter=domain_filter,
+            include_historical=include_historical,
+        )
+        hybrid = [_hit_to_hybrid(h) for h in hits]
 
-        # 2. Filter by score threshold
         if min_score > 0.0:
-            results = [r for r in results if r.score >= min_score]
+            hybrid = [h for h in hybrid if h.score >= min_score]
 
-        # 3. Domain guarantees
         if ensure_domains:
-            results = self._ensure_domains(results, query, ensure_domains, k)
+            present = {h.truth_class for h in hybrid}
+            for tc in ensure_domains:
+                if tc in present:
+                    continue
+                extra = self.index.search(
+                    query, top_k=1, truth_class_filter=tc, include_historical=True
+                )
+                hybrid.extend(_hit_to_hybrid(h) for h in extra)
+            hybrid.sort(key=lambda r: -r.score)
+            hybrid = hybrid[:k]
+        else:
+            hybrid = hybrid[:k]
 
-        # 4. Convert to HybridResult
-        hybrid_results = [
-            HybridResult(
-                chunk_id=r.chunk_id,
-                text=r.text,
-                score=r.score,
-                domain=r.domain,
-                filepath=r.filepath,
-                heading=r.heading,
-                metadata=r.metadata,
-            )
-            for r in results
-        ]
-
-        # 5. Token-aware truncation
         total_tokens = 0
         truncated: list[HybridResult] = []
-        for hr in hybrid_results:
-            estimated_tokens = len(hr.text) // 4  # rough estimate
-            if max_tokens and total_tokens + estimated_tokens > max_tokens:
+        for hr in hybrid:
+            estimated = max(len(hr.text) // 4, 1)
+            if max_tokens and total_tokens + estimated > max_tokens:
                 break
-            total_tokens += estimated_tokens
+            total_tokens += estimated
             truncated.append(hr)
 
-        elapsed = time.time() - t0
-        domains = {r.domain for r in truncated}
+        by_class: dict[str, list[HybridResult]] = {}
+        for hr in truncated:
+            by_class.setdefault(hr.truth_class or hr.domain or "UNKNOWN", []).append(hr)
 
+        flags = detect_divergences(truncated, repo_root=self.config.repo_root)
+        registry_hits = self.index.lookup_records(query)
+
+        elapsed = time.time() - t0
         return ContextAssembly(
             query=query,
             chunks=truncated,
             total_chunks=len(truncated),
             total_tokens=total_tokens,
             retrieval_time_ms=round(elapsed * 1000, 2),
-            domains_covered=domains,
+            domains_covered=set(by_class),
+            by_truth_class=by_class,
+            divergence_flags=flags,
+            registry_hits=registry_hits,
         )
 
     def format_for_claude(self, ctx: ContextAssembly) -> str:
-        """Format a ContextAssembly into a prompt block for Claude Code.
-
-        The output is a structured markdown section with file references,
-        scores, and excerpted text — designed to be prepended to any
-        Claude Code task prompt.
-        """
+        """Tier-partitioned prompt block — never a blended paragraph."""
         lines = [
-            "## Retrieved Context (RAG)",
+            "## Retrieved Context (truth-tier RAG)",
             "",
             f"Query: `{ctx.query}`",
-            f"Domains: {', '.join(sorted(ctx.domains_covered))}",
+            f"Truth classes: {', '.join(sorted(ctx.domains_covered))}",
             f"Retrieval time: {ctx.retrieval_time_ms}ms",
-            f"Total chunks: {ctx.total_chunks}  ·  ~{ctx.total_tokens} tokens",
-            "",
-            "---",
+            f"Total spans: {ctx.total_chunks}  ·  ~{ctx.total_tokens} tokens",
             "",
         ]
-
-        for i, chunk in enumerate(ctx.chunks, 1):
-            lines.append(f"### [{i}] {chunk.filepath}")
-            if chunk.heading:
-                lines.append(f"**Section:** {chunk.heading}")
-            lines.append(f"**Domain:** {chunk.domain}  ·  **Score:** {chunk.score:.3f}")
-            lines.append(f"**Lines:** {chunk.start_line}–{chunk.end_line}")
+        if ctx.divergence_flags:
+            lines.append("### Divergence flags")
+            for fl in ctx.divergence_flags:
+                lines.append(
+                    f"- **{fl.kind}**: {fl.detail or fl.symbol_or_id} "
+                    f"(classes={fl.truth_classes})"
+                )
             lines.append("")
-            lines.append("```" + self._suffix(chunk.filepath))
-            lines.append(chunk.text[:600])  # truncate excerpt
-            if len(chunk.text) > 600:
-                lines.append("... (truncated)")
-            lines.append("```")
+
+        order = ["CURRENT", "RECORDED", "INTENDED", "REFERENCE", "HISTORICAL"]
+        seen = set()
+        for tc in order + sorted(ctx.by_truth_class):
+            if tc in seen or tc not in ctx.by_truth_class:
+                continue
+            seen.add(tc)
+            lines.append(f"### Truth class: {tc}")
+            lines.append("")
+            for i, chunk in enumerate(ctx.by_truth_class[tc], 1):
+                marker = ""
+                if chunk.lifecycle_status and chunk.lifecycle_status != "LIVE":
+                    marker = f"  ·  **{chunk.lifecycle_status}**"
+                lines.append(f"#### [{tc}:{i}] `{chunk.filepath}`{marker}")
+                if chunk.heading:
+                    lines.append(f"**Section:** {chunk.heading}")
+                lines.append(
+                    f"**Score:** {chunk.score:.3f}  ·  "
+                    f"**Lines:** {chunk.start_line}–{chunk.end_line}  ·  "
+                    f"**sha:** `{chunk.content_sha[:12]}`"
+                )
+                if chunk.confidence:
+                    lines.append(f"**Confidence:** {chunk.confidence}")
+                lines.append("")
+                lines.append("```" + self._suffix(chunk.filepath))
+                lines.append(chunk.text[:800])
+                if len(chunk.text) > 800:
+                    lines.append("... (truncated)")
+                lines.append("```")
+                lines.append("")
+
+        if ctx.registry_hits:
+            lines.append("### Registry records (exact)")
+            for rec in ctx.registry_hits[:10]:
+                lines.append(
+                    f"- `{rec.get('id')}` [{rec.get('type')}] "
+                    f"status={rec.get('status')} — {str(rec.get('conclusion', ''))[:160]}"
+                )
             lines.append("")
 
         return "\n".join(lines)
 
     def format_compact(self, ctx: ContextAssembly) -> str:
-        """Format a compact context block (for system prompts with limited space)."""
         lines = [
             "## RAG: " + ctx.query,
-            f"({ctx.total_chunks} chunks from {', '.join(sorted(ctx.domains_covered))}, "
-            f"{ctx.retrieval_time_ms}ms)",
+            (
+                f"({ctx.total_chunks} spans / {', '.join(sorted(ctx.domains_covered))}, "
+                f"{ctx.retrieval_time_ms}ms, flags={len(ctx.divergence_flags)})"
+            ),
             "",
         ]
         for i, chunk in enumerate(ctx.chunks[:5], 1):
             excerpt = chunk.text[:200].replace("\n", " ")
-            lines.append(f"{i}. `{chunk.filepath}` [{chunk.heading}] — {excerpt}…")
+            marker = (
+                f" [{chunk.lifecycle_status}]"
+                if chunk.lifecycle_status not in ("", "LIVE")
+                else ""
+            )
+            lines.append(
+                f"{i}. `{chunk.filepath}` [{chunk.truth_class}]{marker} "
+                f"L{chunk.start_line}-{chunk.end_line} — {excerpt}…"
+            )
         if len(ctx.chunks) > 5:
             lines.append(f"… and {len(ctx.chunks) - 5} more")
         return "\n".join(lines)
 
-    # ── private helpers ────────────────────────────────────────────────────
-
-    def _ensure_domains(
-        self,
-        results: list[SearchResult],
-        query: str,
-        domains: list[str],
-        k: int,
-    ) -> list[SearchResult]:
-        """Guarantee at least one result per specified domain."""
-        present = {r.domain for r in results}
-        missing = [d for d in domains if d not in present]
-        if not missing:
-            return results
-
-        # Fetch additional results for missing domains
-        for domain in missing:
-            extra = self.store.hybrid_search(query, top_k=1, domain_filter=domain)
-            results.extend(extra)
-
-        # Re-sort and truncate
-        results.sort(key=lambda r: -r.score)
-        return results[:k]
-
     @staticmethod
     def _suffix(filepath: str) -> str:
-        """Get the file extension suffix for syntax highlighting."""
         ext = filepath.rsplit(".", 1)[-1].lower() if "." in filepath else ""
         return {
             "py": "python",
