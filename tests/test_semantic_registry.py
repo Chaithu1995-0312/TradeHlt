@@ -209,3 +209,71 @@ def test_sem_032_visual_crt_prior_present_and_characterized(ont):
     rules = " ".join(node["validation_rules"])
     assert "not SEM-030 mother-range" in rules
     assert "not F-081 walk R" in rules
+
+
+def test_sem_037_scanner_exit_kernel_present_and_carries_its_defects(ont):
+    """SEM-037 exists to carry two defects + the no-economic-reading bound.
+
+    Pinned because the node's whole value is those clauses: a future edit that
+    softens them would leave the ontology "valid" while licensing exactly the
+    reading (SL_HIT == loss, rr_achieved == realized economics) the node was
+    registered to refuse.
+    """
+    node = ont["execution_behaviours"].get("scanner_trailing_exit_kernel")
+    assert node is not None, "SEM-037 scanner_trailing_exit_kernel must be registered"
+    assert node["id"] == "SEM-037"
+    assert node["semantic_category"] == "ExecutionBehaviour"
+    assert node["knowledge_status"] == "MATHEMATICALLY_DEFINED"
+    # SEM-019 owns the causality constraint this kernel violates; SEM-020 owns the
+    # capture basis it cannot supply; SEM-017 is the two-target object it is NOT.
+    for dep in ("SEM-017", "SEM-019", "SEM-020"):
+        assert dep in node["dependencies"], f"SEM-037 must depend on {dep}"
+    assert node["producers"] == ["scripts/research/opportunity_scanner.py"]
+    assert node["traceability"].startswith("scripts/research/opportunity_scanner.py")
+
+    rules = " ".join(node["validation_rules"])
+    assert "NON-CAUSAL ARMING" in rules          # defect 1 (SEM-019 violation)
+    assert "STOP-FIRST TIE-BREAK" in rules       # defect 2 (SL_HIT on a >=2R path)
+    assert "EXIT-TRUNCATED" in rules             # why it cannot feed SEM-020
+    assert "rr_achieved IS GROSS" in rules       # no cost model -> no economic word
+    assert "horizon_excursion" in rules          # names the correct substitute
+
+    # The arming identity is what makes the Phase-1 exit_mechanism derivation exact.
+    invariants = " ".join(node["epistemic"]["known_invariants"])
+    assert "mfe_r >= 0.5" in invariants
+    assert "0 rows" in invariants
+
+    # This node grants nothing. Guard against a future edit quietly promoting it.
+    assert "grants NO authority" in node["notes"]
+
+
+def test_sem_020_requires_an_explicit_mfe_basis(ont):
+    """SEM-020 v2: capture_ratio is defined against a HORIZON_AGNOSTIC denominator only.
+
+    Without this pin, a truncated-basis capture can inherit the name `capture_ratio`
+    and silently redefine a MATHEMATICALLY_DEFINED identity in place (CLAUDE.md 6.6).
+    The refinement is in-place by contract: identity, category and knowledge_status
+    must NOT move, only `version` and the rules.
+    """
+    node = ont["execution_behaviours"].get("exit_capture_decomposition")
+    assert node is not None, "SEM-020 exit_capture_decomposition must be registered"
+    assert node["id"] == "SEM-020"
+    # Refined IN PLACE -- these three are what "in place" means.
+    assert node["semantic_category"] == "ValidationRule"
+    assert node["knowledge_status"] == "MATHEMATICALLY_DEFINED"
+    assert node["version"] >= 2, "the mfe_basis refinement is v2; version must not regress"
+
+    assert "mfe_basis" in node["required_inputs"], (
+        "mfe_basis must be a declared input, not an optional annotation")
+
+    rules = " ".join(node["validation_rules"])
+    assert "HORIZON_AGNOSTIC" in rules and "EXIT_TRUNCATED" in rules
+    assert "exit_bounded_capture" in rules, (
+        "the truncated-basis quantity must be named, so it cannot borrow this node's name")
+    # The four degenerate states must stay distinct from a low capture band.
+    for state in ("CAPTURE_UNDEFINED", "CAPTURE_UNSTABLE", "CAPTURE_NEGATIVE"):
+        assert state in rules, f"{state} must remain a counted state, not a band"
+
+    invariants = " ".join(node["epistemic"]["known_invariants"])
+    assert "FLATTERS" in invariants, (
+        "the direction of the truncation bias is the point; a basis note without it is decorative")

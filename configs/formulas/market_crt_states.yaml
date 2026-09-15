@@ -91,6 +91,12 @@ feature_states:
   # DISPLACEMENT:VolumeSpike:ANNOTATION_ONLY, gate UNUSED. Still NOT a when:
   # predicate, hard gate, or soft gate.
   volume_spike: [NoSpike, VolumeSpike]
+  # LINK-001 (crt_resolver_links.yaml, 2026-09-11): FM-083 change_of_character is
+  # vector-bound (idx 47) and the only feature separating a reversal (break AGAINST
+  # the prevailing trend) from ordinary continuation BOS. Declared here so the
+  # DISPLACEMENT `when:` clause below can name it; predicate validation runs on the
+  # UNFILTERED config, so this declaration is checked regardless of link state.
+  change_of_character: [NoCHoCH, BullishCHoCH, BearishCHoCH]
 
 # ───────────────────────────────────────────────────────────────────────────
 # CRT STATE DEFINITIONS
@@ -157,8 +163,20 @@ states:
     description: "SWEEP→DISPLACEMENT only — engine try_sweep_to_displacement gates"
     requires_memory: true
     # Soft feature corroboration; hard authority = funnel + continuous gates.
+    # NOTE: this block is continuous-gate-owned on FOUNDING entry (funnel_displacement,
+    # crt_state_resolver.py:1493-1496, cur=="SWEEP" -> "DISPLACEMENT") -- under
+    # thresholds.sweep_geometry=htf_range this when: block is only actually evaluated
+    # while DWELLING (cur=="DISPLACEMENT" already), per the states-loop Skip-2 rule.
+    # Unlike EXPANSION's B1f dwell-hold, DISPLACEMENT has no unconditional early-return
+    # before the states loop -- verified 2026-09-11 (retest_divergence_probe session)
+    # before adding LINK-001 here, specifically to avoid repeating that blind spot.
     when:
       displacement_flag: [Displacement]
+      # LINK-001 (crt_resolver_links.yaml): tests whether requiring an actual
+      # reversal-type structural break (vs ordinary continuation, vs no break at
+      # all) during DISPLACEMENT dwell changes resolver/engine agreement. AND'd
+      # with displacement_flag above -- a dwell bar must show BOTH.
+      change_of_character: {states: [BullishCHoCH, BearishCHoCH], link: LINK-001}
     notes: >
       ENGINE ENTRY (try_sweep_to_displacement): ONLY from SWEEP.
         1. abs(close-open) >= atr_min_displacement * atr_abs

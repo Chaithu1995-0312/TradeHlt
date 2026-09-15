@@ -225,6 +225,26 @@
     {
       "claim": "F-088",
       "reason": "Architecture — multi_tp_walk vs forward_walk object gap; measurement-kernel identity, not a market-object cell."
+    },
+    {
+      "claim": "F-101",
+      "reason": "Governance — split run-identity minting (three independent ids, one run); observability/provenance infrastructure, not a market object."
+    },
+    {
+      "claim": "F-102",
+      "reason": "Risk — EngineRunner post-commit gate fail-soft on exception; a code-execution-safety property, not a market object."
+    },
+    {
+      "claim": "F-103",
+      "reason": "Architecture — backtest vs live rail decision-plane reachability (import-graph fact); not a market object."
+    },
+    {
+      "claim": "F-104",
+      "reason": "Architecture — FeaturePipeline mid-file-drop measurement on one corpus; a data-pipeline integrity property, not a market object."
+    },
+    {
+      "claim": "F-105",
+      "reason": "Governance — census of silent except-blocks in the backtest loop; code-hygiene inventory, not a market object."
     }
   ],
   "families": [

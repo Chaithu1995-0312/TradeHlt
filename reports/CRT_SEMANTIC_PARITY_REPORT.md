@@ -5,6 +5,15 @@
 
 ## 1. Baseline agreement
 
+> **EPOCH-SCOPED (2026-09-10, CH-f069-epoch-scope):** the figures below are valid for their
+> 2026-08-05 measurement and do not reproduce on a 2026-09-06 re-measurement over the same
+> full 47,197-bar corpus (`run_20260906_013609`, same `injection=none` scope) —
+> `results/decision_atlas_full/envelope_bar.parquet` measures **68.69%** (32,418/47,197), with
+> both the engine and resolver state distributions materially changed, not just the agreement
+> rate. This is a scope correction, not a reversal — see `docs/current-findings.md` F-069's
+> Note for the full state-by-state comparison and the unisolated candidate drivers
+> (F-074/F-075/F-068). Numbers below are preserved unedited (§6.2 rule 4).
+
 Config-only (`injection=none`, `engine_mode=exit`), XAUUSD M15, 47,197 aligned bars: **88.1560%** (41,607/47,197).
 
 | State | Engine n | Resolver n | TP | Recall | Powered |

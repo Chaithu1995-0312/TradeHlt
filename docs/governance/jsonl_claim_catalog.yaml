@@ -32,15 +32,43 @@ streams:
     family: runtime_untracked
     layer: L5
     catalog_stream_status: CONTAMINATED
-    allowed_cc: [CC-ENVELOPE-SHAPE]
-    forbidden_cc: [CC-F022-CONTAMINATED, CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG]
+    allowed_cc: [CC-ENVELOPE-SHAPE, CC-OPP-BAND-RESTATEMENT]
+    forbidden_cc: [CC-F022-CONTAMINATED, CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG, CC-OPP-BAND-NOT-ECONOMIC]
     meaning_authority: INVENTORY_NOT_MARKET
     identity_notes: >-
       F-022 DETECTION stream, not a trade ledger: outcome / rr_achieved are only 36.8%
       self-consistent (SL_HIT on paths that never touched the stop) and are not L5 of
       engine_trade. 139,942 detections is not 13 spine trades (frequency illusion).
+      2026-09-14: CC-OPP-BAND-RESTATEMENT added to allowed_cc (the ONLY new CAN this stream
+      gets, layered-outcome-ontology plan step 4) - a band-table lookup on rr_achieved is a
+      recomputable arithmetic fact about this stream's own field, distinct from the economic
+      reading CC-F022-CONTAMINATED and the new CC-OPP-BAND-NOT-ECONOMIC both still refuse.
     findings: [F-022]
     primary_source: null
+
+  - id: STR-OPP-RR-BAND-SIDECAR
+    path: "logs/**/opportunities_rr_bands.jsonl"
+    family: runtime_untracked
+    layer: L5
+    catalog_stream_status: CONTAMINATED
+    allowed_cc: [CC-ENVELOPE-SHAPE, CC-OPP-BAND-RESTATEMENT]
+    forbidden_cc: [CC-F022-CONTAMINATED, CC-PRESENCE-NOT-G001, CC-MEANING-NOT-LOG, CC-OPP-BAND-NOT-ECONOMIC]
+    meaning_authority: INVENTORY_NOT_MARKET
+    identity_notes: >-
+      Declared 2026-09-14, BEFORE the Phase-1 deriver that will populate it (SEM-018 / SEM-019
+      precedent, CLAUDE.md 6.6). No file exists at this path yet. Registered NOW specifically so
+      the deriver's output cannot ground UNKNOWN (which reads as a pass) the moment it is written
+      - the contamination-laundering-by-path-rename trap the layered-outcome-ontology plan step 4
+      names explicitly. Every field this stream will carry (exit_mechanism, trail_state, rr_band,
+      risk_distance, mfe_r/mae_r tagged EXIT_TRUNCATED, exit_bounded_capture + state) is a pure
+      function of STR-F022-OPPORTUNITIES's own contaminated columns (SEM-037, SEM-020 v2), so it
+      inherits catalog_stream_status CONTAMINATED and INVENTORY_NOT_MARKET identically - a
+      colocated filename is a derivation, never a second authority. primary_source points at the
+      true source of record for the reference run this registration is anchored to (the run this
+      whole plan measured, per SEM-037's own evidence citation), not a glob - every other
+      primary_source in this file is an exact path and this stays consistent with that.
+    findings: [F-022]
+    primary_source: "logs/XAUUSD/20260913_130531/opportunities.jsonl"
 
   - id: STR-CRT-TRANSITIONS-GLOBAL
     path: "logs/crt_transitions.jsonl"
@@ -398,6 +426,22 @@ claim_classes:
     findings: [F-088]
     meaning_authority: []
 
+  - id: CC-OPP-BAND-NOT-ECONOMIC
+    polarity: CANNOT
+    llm_claim: "Therefore this detection won / lost / hit full target / captured its move / the win rate is X"
+    against: "any band, bucket or label derived from opportunities.jsonl rr_achieved / mfe / mae, including any BT-RR-ECON-V1 band"
+    why: >-
+      F-022 CONTAMINATED plus INVENTORY_NOT_MARKET (CC-F022-CONTAMINATED) - banding a
+      contaminated number preserves its contamination and adds a name that reads as a verdict.
+      SEM-037's exit kernel is non-causal (arms from a bar's own high, tests that same bar's own
+      low against it) and rr_achieved is GROSS with no cost model anywhere in the kernel, so
+      neither a win/loss word nor a profitability word is available even in principle. A
+      derived sidecar (STR-OPP-RR-BAND-SIDECAR) does not escape this refusal by living at a
+      different path - see the paired CC-ILLEGAL-JOIN forbidden_joins rows.
+    catalog_stream_status: CONTAMINATED
+    findings: [F-022]
+    meaning_authority: [SEM-037, SEM-020]
+
   # ---- CAN -----------------------------------------------------------------------------------
   - id: CC-FINDING-EXPORT
     polarity: CAN
@@ -573,6 +617,21 @@ claim_classes:
     findings: []
     meaning_authority: []
 
+  - id: CC-OPP-BAND-RESTATEMENT
+    polarity: CAN
+    llm_claim: "The stored rr_achieved on this row falls in half-open band B of band table BT-RR-ECON-V1"
+    against: "opportunities.jsonl rr_achieved (STR-F022-OPPORTUNITIES) or its sidecar (STR-OPP-RR-BAND-SIDECAR)"
+    why: >-
+      A deterministic, recomputable partition of a stored float under a versioned band table
+      (configs/research/band_tables.json, BT-RR-ECON-V1 - exhaustive, mutually exclusive, proven
+      by a dense arithmetic scan, not merely claimed). Closes NOTHING about the trade: not
+      profitability, not exit quality, not that the number is a correct realized R. The CAN is
+      about a NUMBER and a TABLE; CC-OPP-BAND-NOT-ECONOMIC is about the WORLD - that boundary is
+      the whole point of registering this class rather than widening CC-F022-CONTAMINATED itself.
+    catalog_stream_status: CONTAMINATED
+    findings: [F-022]
+    meaning_authority: [SEM-037, SEM-020]
+
 
 forbidden_joins:
   - source_str: "producer:engine"
@@ -596,6 +655,14 @@ forbidden_joins:
     cc_id: CC-ILLEGAL-JOIN
 
   - source_str: "STR-F022-OPPORTUNITIES"
+    target_str: "STR-BACKTEST-TRADES"
+    cc_id: CC-ILLEGAL-JOIN
+
+  - source_str: "STR-OPP-RR-BAND-SIDECAR"
+    target_str: "family:committed_audit"
+    cc_id: CC-ILLEGAL-JOIN
+
+  - source_str: "STR-OPP-RR-BAND-SIDECAR"
     target_str: "STR-BACKTEST-TRADES"
     cc_id: CC-ILLEGAL-JOIN
 

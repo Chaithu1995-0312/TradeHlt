@@ -36,6 +36,7 @@ from config_layer.crt_engine_v2 import (  # noqa: E402
     Trade,
 )
 from config_layer.state_identity import CRTConfig  # noqa: E402
+from runtime.backtest_v2 import _resolve_exit  # noqa: E402
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────────────
@@ -210,3 +211,87 @@ def test_the_arm_is_reachable_only_from_a_non_promoted_shadow_config():
         Path("configs/production/v2_dispkill_shadow_2026_08.json").read_text(encoding="utf-8")
     )
     assert shadow["crt_engine"]["displacement_origin_kill_enabled"] is True
+
+
+# ── backtest_v2._resolve_exit: STOPPED_STRUCTURAL must not collapse into STOPPED ──────
+# close_structural() emits action="TRADE_STOPPED_STRUCTURAL". "TRADE_STOPPED" is a substring
+# of that, so a naive `"STOPPED" in action` dispatch (the pre-fix bug) silently mislabels and
+# misprices it as an ordinary SL touch. These pin the fix at the dispatch layer directly,
+# without booting a full BacktestRunner loop.
+
+def test_structural_stop_books_at_candle_close_not_sl_price():
+    t = _trade(Direction.LONG, origin=99.5, status="OPEN")
+    c = _candle(100.5, 100.8, 100.2, 100.6)   # close=100.6, distinct from sl_price=99.0
+    exit_raw, reason = _resolve_exit(
+        "TRADE_STOPPED_STRUCTURAL", t, "OPEN", c,
+        partial_tp_enabled=False, partial_tp_fraction=0.5,
+    )
+    assert reason == "STOPPED_STRUCTURAL"
+    assert exit_raw == pytest.approx(c.close)
+    assert exit_raw != pytest.approx(t.sl_price)
+
+
+def test_structural_stop_after_tp1_blends_toward_candle_close_not_sl_price():
+    t = _trade(Direction.LONG, origin=99.5, status="TP1")
+    c = _candle(100.5, 100.8, 100.2, 100.6)
+    exit_raw, reason = _resolve_exit(
+        "TRADE_STOPPED_STRUCTURAL", t, "TP1", c,
+        partial_tp_enabled=True, partial_tp_fraction=0.5,
+    )
+    assert reason == "TP1_STRUCTURAL_STOP"
+    expected = 0.5 * t.tp1_price + 0.5 * c.close
+    assert exit_raw == pytest.approx(expected)
+    # the pre-fix behaviour would have blended toward sl_price instead of candle.close
+    assert exit_raw != pytest.approx(0.5 * t.tp1_price + 0.5 * t.sl_price)
+
+
+def test_genuine_stop_is_unaffected_by_the_structural_branch():
+    """The real TRADE_STOPPED path (ExecutionEngine.update_trade) must be byte-identical."""
+    t = _trade(Direction.LONG, origin=None, status="OPEN")
+    c = _candle(100.5, 100.8, 100.2, 100.6)
+    exit_raw, reason = _resolve_exit(
+        "TRADE_STOPPED", t, "OPEN", c,
+        partial_tp_enabled=False, partial_tp_fraction=0.5,
+    )
+    assert (exit_raw, reason) == (t.sl_price, "STOPPED")
+
+
+def test_genuine_stop_after_tp1_still_blends_toward_sl_price():
+    t = _trade(Direction.LONG, origin=None, status="TP1")
+    c = _candle(100.5, 100.8, 100.2, 100.6)
+    exit_raw, reason = _resolve_exit(
+        "TRADE_STOPPED", t, "TP1", c,
+        partial_tp_enabled=True, partial_tp_fraction=0.5,
+    )
+    assert reason == "TP1_BE_STOP"
+    assert exit_raw == pytest.approx(0.5 * t.tp1_price + 0.5 * t.sl_price)
+
+
+@pytest.mark.parametrize(
+    "action,trade_status,partial_tp_enabled,expected_exit_attr,expected_reason",
+    [
+        ("TRADE_TP2", "OPEN", False, "tp2_price", "TP2"),
+        ("TRADE_TP1", "OPEN", False, "tp1_price", "TP1"),
+    ],
+)
+def test_tp_paths_unaffected_by_the_extraction(
+    action, trade_status, partial_tp_enabled, expected_exit_attr, expected_reason,
+):
+    t = _trade(Direction.LONG, origin=None, status=trade_status)
+    c = _candle(100.5, 100.8, 100.2, 100.6)
+    exit_raw, reason = _resolve_exit(
+        action, t, trade_status, c,
+        partial_tp_enabled=partial_tp_enabled, partial_tp_fraction=0.5,
+    )
+    assert (exit_raw, reason) == (getattr(t, expected_exit_attr), expected_reason)
+
+
+def test_tp2_after_tp1_blends_toward_tp2_unchanged():
+    t = _trade(Direction.LONG, origin=None, status="TP1")
+    c = _candle(100.5, 100.8, 100.2, 100.6)
+    exit_raw, reason = _resolve_exit(
+        "TRADE_TP2", t, "TP1", c,
+        partial_tp_enabled=True, partial_tp_fraction=0.5,
+    )
+    assert reason == "TP1_TP2"
+    assert exit_raw == pytest.approx(0.5 * t.tp1_price + 0.5 * t.tp2_price)

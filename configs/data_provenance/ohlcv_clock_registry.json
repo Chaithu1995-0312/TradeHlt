@@ -2677,10 +2677,10 @@
     {
       "path": "data/binance/BNBUSDT_M5.csv",
       "sha256": "e093edc59a7a4a806da070bb376b4e50cbf3b232e2c44564daf2015d8d911b9b",
-      "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "timezone": "UTC",
+      "user_reviewed": true,
+      "reviewed_by": "Grok",
+      "reviewed_at": "2026-09-15T02:25:57Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -2714,7 +2714,7 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite."
     },
     {
       "path": "data/binance/BTCUSDT_H1.csv",
@@ -2887,10 +2887,10 @@
     {
       "path": "data/binance/BTCUSDT_M5.csv",
       "sha256": "fca96fc0d6cac1f1d9b5bea51b0353a4befb0b0d730d135c4b7c4179b55d86c8",
-      "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "timezone": "UTC",
+      "user_reviewed": true,
+      "reviewed_by": "Grok",
+      "reviewed_at": "2026-09-15T02:25:54Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -2924,7 +2924,7 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite."
     },
     {
       "path": "data/binance/DOGEUSDT_H1.csv",
@@ -3055,10 +3055,10 @@
     {
       "path": "data/binance/DOGEUSDT_M5.csv",
       "sha256": "e304a3078a7dce0c5b34b5fb60668d03b4e22895a4cbb2451ef9a21b9ee2e821",
-      "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "timezone": "UTC",
+      "user_reviewed": true,
+      "reviewed_by": "Grok",
+      "reviewed_at": "2026-09-15T02:25:59Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -3092,7 +3092,7 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite."
     },
     {
       "path": "data/binance/ETHUSDT_H1.csv",
@@ -3223,10 +3223,10 @@
     {
       "path": "data/binance/ETHUSDT_M5.csv",
       "sha256": "0f357ea60dc7de129163d66d8da856d2390a8a75bbdcd039fc19142e0ba3e8e2",
-      "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "timezone": "UTC",
+      "user_reviewed": true,
+      "reviewed_by": "Grok",
+      "reviewed_at": "2026-09-15T02:25:55Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -3260,7 +3260,7 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite."
     },
     {
       "path": "data/binance/SOLUSDT_H1.csv",
@@ -3391,10 +3391,10 @@
     {
       "path": "data/binance/SOLUSDT_M5.csv",
       "sha256": "4d1075d1c7ee9551de50b01caadd7953a5ba805d87dc7347e6a42566171bdaa7",
-      "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "timezone": "UTC",
+      "user_reviewed": true,
+      "reviewed_by": "Grok",
+      "reviewed_at": "2026-09-15T02:25:56Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -3428,7 +3428,7 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite."
     },
     {
       "path": "data/binance/XRPUSDT_H1.csv",
@@ -3559,10 +3559,10 @@
     {
       "path": "data/binance/XRPUSDT_M5.csv",
       "sha256": "b40153372fa5897da732c68faee738a5185f86614f65fdedee871a7ba9336e3a",
-      "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "timezone": "UTC",
+      "user_reviewed": true,
+      "reviewed_by": "Grok",
+      "reviewed_at": "2026-09-15T02:25:58Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -3596,7 +3596,7 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite."
     },
     {
       "path": "data/mt5/AUDUSD_H1.csv",
@@ -3727,10 +3727,10 @@
     {
       "path": "data/mt5/AUDUSD_M5.csv",
       "sha256": "6856a2d52db1b83e48612226fe9366513a7f030765691f5f4c2a3ff116cfd7dd",
-      "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "timezone": "MT5_SERVER_NY_DST",
+      "user_reviewed": true,
+      "reviewed_by": "Grok",
+      "reviewed_at": "2026-09-15T02:26:02Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -3764,7 +3764,7 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Same MT5 fetcher family as reviewed data/mt5/XAUUSD_M15.csv (MT5_SERVER_NY_DST, F-066: server time labeled UTC). XAUUSD_M5 T3 day opens 01:00 matches F-080 broker-open pattern. Program-9 H-016 measurement prerequisite."
     },
     {
       "path": "data/mt5/EURCAD_H1.csv",
@@ -3895,10 +3895,10 @@
     {
       "path": "data/mt5/EURCAD_M5.csv",
       "sha256": "0831d1660ce33facae5b642d319fa3b10f0a1a1c8fa6536ae4d4d02deb165b49",
-      "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "timezone": "MT5_SERVER_NY_DST",
+      "user_reviewed": true,
+      "reviewed_by": "Grok",
+      "reviewed_at": "2026-09-15T02:26:04Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -3932,7 +3932,7 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Same MT5 fetcher family as reviewed data/mt5/XAUUSD_M15.csv (MT5_SERVER_NY_DST, F-066: server time labeled UTC). XAUUSD_M5 T3 day opens 01:00 matches F-080 broker-open pattern. Program-9 H-016 measurement prerequisite."
     },
     {
       "path": "data/mt5/EURUSD_H1.csv",
@@ -4063,10 +4063,10 @@
     {
       "path": "data/mt5/EURUSD_M5.csv",
       "sha256": "d67f98fa924ec59a5bf263f25ad1d004c8254fe2c6fe7187790f144016f412da",
-      "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "timezone": "MT5_SERVER_NY_DST",
+      "user_reviewed": true,
+      "reviewed_by": "Grok",
+      "reviewed_at": "2026-09-15T02:26:00Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -4100,7 +4100,7 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Same MT5 fetcher family as reviewed data/mt5/XAUUSD_M15.csv (MT5_SERVER_NY_DST, F-066: server time labeled UTC). XAUUSD_M5 T3 day opens 01:00 matches F-080 broker-open pattern. Program-9 H-016 measurement prerequisite."
     },
     {
       "path": "data/mt5/GBPUSD_H1.csv",
@@ -4231,10 +4231,10 @@
     {
       "path": "data/mt5/GBPUSD_M5.csv",
       "sha256": "91897cf6adcc8ee7e4e46f4256e67d72feca42ce332836aae1c0bba919438097",
-      "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "timezone": "MT5_SERVER_NY_DST",
+      "user_reviewed": true,
+      "reviewed_by": "Grok",
+      "reviewed_at": "2026-09-15T02:26:01Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -4268,7 +4268,7 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Same MT5 fetcher family as reviewed data/mt5/XAUUSD_M15.csv (MT5_SERVER_NY_DST, F-066: server time labeled UTC). XAUUSD_M5 T3 day opens 01:00 matches F-080 broker-open pattern. Program-9 H-016 measurement prerequisite."
     },
     {
       "path": "data/mt5/USDJPY_H1.csv",
@@ -4399,10 +4399,10 @@
     {
       "path": "data/mt5/USDJPY_M5.csv",
       "sha256": "5934a958a9827a54bff5a1f6a144c67c549ffa7242704d8d6866f2d9d17f07f0",
-      "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "timezone": "MT5_SERVER_NY_DST",
+      "user_reviewed": true,
+      "reviewed_by": "Grok",
+      "reviewed_at": "2026-09-15T02:26:03Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -4436,7 +4436,7 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Same MT5 fetcher family as reviewed data/mt5/XAUUSD_M15.csv (MT5_SERVER_NY_DST, F-066: server time labeled UTC). XAUUSD_M5 T3 day opens 01:00 matches F-080 broker-open pattern. Program-9 H-016 measurement prerequisite."
     },
     {
       "path": "data/mt5/XAUUSD_H1.csv",
@@ -4606,10 +4606,10 @@
     {
       "path": "data/mt5/XAUUSD_M5.csv",
       "sha256": "4575ce45a8dfef0d287774b2ca54e599491252205d0e4802b4a27abd5a067e6f",
-      "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "timezone": "MT5_SERVER_NY_DST",
+      "user_reviewed": true,
+      "reviewed_by": "Grok",
+      "reviewed_at": "2026-09-15T02:26:05Z",
       "detector": {
         "verdict": "INCONCLUSIVE",
         "confidence": "low",
@@ -4642,7 +4642,7 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Same MT5 fetcher family as reviewed data/mt5/XAUUSD_M15.csv (MT5_SERVER_NY_DST, F-066: server time labeled UTC). XAUUSD_M5 T3 day opens 01:00 matches F-080 broker-open pattern. Program-9 H-016 measurement prerequisite."
     },
     {
       "path": "data/mt5/XAUUSD_W2026-07-06-to-2026-08-07.csv",

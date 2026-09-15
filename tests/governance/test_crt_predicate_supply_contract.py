@@ -17,8 +17,16 @@ Two things had no test at all before this file:
 
 The ratchet below is deliberately NOT the naive invariant
 ``set(resolver_vocab) == set(features_with_vector_key)``, which is false in both
-directions: volatility_regime and volume_spike are declared-but-never-named, and
-change_of_character (FM-083) is vector-bound but legitimately unnamed.
+directions: volatility_regime and volume_spike are declared-but-never-named (a
+`when:` block names none of them), and the vocabulary itself is a strict
+superset of the vector-bound set because retest_flag/displacement_flag/
+rsi_state are named by `when:` blocks yet carry no vector slot at all.
+
+(FM-083 change_of_character was the third "vector-bound but legitimately
+unnamed" case until 2026-09-11 (LINK-001, crt_resolver_links.yaml): it is now
+DECLARED in feature_states: and named by a link-gated DISPLACEMENT clause --
+see test_the_naive_invariant_is_false_in_both_directions for the updated,
+still-asymmetric picture.)
 
 Authority: research/governance only. Grants nothing.
 """
@@ -117,8 +125,12 @@ def test_feature_states_naming_an_unknown_ontology_state_raises(tmp_path):
 
 
 def test_when_naming_a_feature_outside_the_vocabulary_raises(tmp_path):
+    """Uses a fabricated name, not a real ontology identity -- the original
+    example (change_of_character) was declared for real 2026-09-11 (LINK-001),
+    which is exactly the kind of thing that makes a real-feature example go
+    stale. A synthetic name can't go stale the same way."""
     cfg = _states_cfg()
-    _state(cfg, "RANGE")["when"]["change_of_character"] = ["NoCHoCH"]
+    _state(cfg, "RANGE")["when"]["not_a_real_feature"] = ["SomeState"]
     with pytest.raises(PredicateValidationError, match="not in feature_states block"):
         CRTStateResolver(config_path=_write(tmp_path, cfg))
 
@@ -167,14 +179,33 @@ def test_the_naive_invariant_is_false_in_both_directions():
     """Pins WHY the obvious `resolver_vocab == vector_keys` test is not written:
     it would fail on legitimate cases in both directions. If this ever stops
     being true, the simpler invariant becomes available and should replace the
-    ratchet above."""
+    ratchet above.
+
+    Narrowed 2026-09-11 (LINK-001): `change_of_character` used to be the live
+    example of "vector-bound but legitimately absent from vocab" -- it no
+    longer is (declared for real now). `vector_bound - vocab` is genuinely
+    EMPTY today (asserted below, not assumed) -- that specific asymmetry is
+    CLOSED. The invariant is still false overall for a DIFFERENT, untouched
+    reason: `vocab` names retest_flag/displacement_flag/rsi_state, none of
+    which carry a vector slot, so `vocab` is not a subset of `vector_bound`
+    either. Both directions still fail; the counter-examples changed."""
     r = CRTStateResolver()
     vocab = set(r._config["feature_states"])
     vector_bound = set(r._encoder.vector_bound_features)
-    # Declared in the vocabulary, named by no predicate (dead permission).
-    assert {"volatility_regime", "volume_spike"} <= vocab - set(r.required_when_features)
-    # Vector-bound and stateful, but legitimately absent from the vocabulary.
-    assert "change_of_character" in vector_bound - vocab
+    # Direction 1 -- vocab not subset of required (declared, named by no
+    # predicate the default/link-off resolver requires -- dead permission).
+    # change_of_character joins this bucket now: declared, but its one
+    # predicate is LINK-001-gated off by default.
+    assert {"volatility_regime", "volume_spike", "change_of_character"} <= (
+        vocab - set(r.required_when_features)
+    )
+    # Direction 2 -- vector_bound not subset of vocab is CLOSED (was the
+    # change_of_character asymmetry; verify it stays closed, don't just assume).
+    assert vector_bound <= vocab
+    # The invariant is still false in the OTHER direction, for an unrelated,
+    # pre-existing reason: vocab contains non-vector-bound names.
+    assert not (vocab <= vector_bound)
+    assert (vocab - vector_bound) & set(_NON_VECTOR_SUPPLY_CONTRACT)
 
 
 # == 3. The strict supply check ================================================

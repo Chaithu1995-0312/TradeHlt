@@ -78,7 +78,21 @@ def _shape_names_from_prefix(raw: pd.DataFrame, upto: int) -> dict[int, str]:
 
 def test_shape_identity_is_prefix_invariant():
     """The shape at bar p must not change when future bars are added — no lookahead."""
-    raw = pd.read_csv("data/mt5/XAUUSD_M15.csv")
+    # CORPUS-READ-SEAM P3: migrated off bare `pd.read_csv` onto `corpus_store` (full
+    # admit_corpus chain: R3 identity + L2 sequence + D-1 plausibility, cached). This read is
+    # plain data input to FeaturePipeline (not an independent oracle verifying a loader --
+    # contrast tests/test_chart_series.py's deliberately-unmigrated raw read, which IS one).
+    from data_ingestion import corpus_store
+    corpus_store.ensure_fresh("XAUUSD", "M15")
+    _read = corpus_store.read("XAUUSD", "M15")
+    raw = pd.DataFrame({
+        "timestamp": [c.timestamp for c in _read.candles],
+        "open":      [c.open for c in _read.candles],
+        "high":      [c.high for c in _read.candles],
+        "low":       [c.low for c in _read.candles],
+        "close":     [c.close for c in _read.candles],
+        "volume":    [c.volume for c in _read.candles],
+    })
     short = _shape_names_from_prefix(raw, 1500)      # bars 0..1499
     long_ = _shape_names_from_prefix(raw, 2200)      # bars 0..2199
     checked = 0

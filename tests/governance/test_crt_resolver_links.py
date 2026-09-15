@@ -88,12 +88,31 @@ def test_base_variant_is_behaviourally_the_default():
         assert sd_a.get("when") == sd_b.get("when")
 
 
-def test_shipped_when_blocks_survive_filtering_unchanged():
-    """With no links enabled, filtering must be a provable no-op against the
-    raw YAML -- otherwise the mechanism itself changed behaviour."""
-    raw = {s["name"]: (s.get("when") or {}) for s in _states_cfg()["states"]}
-    got = {s["name"]: (s.get("when") or {}) for s in CRTStateResolver()._config["states"]}
-    assert raw == got
+def test_shipped_untagged_clauses_survive_filtering_unchanged():
+    """With no links enabled, every UNTAGGED (baseline) clause must be a provable
+    no-op against the raw YAML -- otherwise the mechanism itself changed
+    behaviour for the clauses that were never opted into gating.
+
+    Narrowed from an exact-dict comparison (`raw == got`) once a link was bound
+    in the shipped config -- a bound link's tagged clause is EXPECTED to differ
+    (present in raw, absent from the default-off resolver), and that is the
+    mechanism working, not it breaking. What must still hold unconditionally is
+    that untagged clauses are never touched by the filter."""
+    for state_def in _states_cfg()["states"]:
+        raw_when = state_def.get("when") or {}
+        untagged = {
+            fname: clause for fname, clause in raw_when.items()
+            if not (isinstance(clause, dict) and clause.get("link"))
+        }
+        if not untagged:
+            continue
+        got_state = _state(CRTStateResolver()._config, state_def["name"])
+        got_when = got_state.get("when") or {}
+        for fname, clause in untagged.items():
+            assert got_when.get(fname) == clause, (
+                f"{state_def['name']!r}: untagged clause {fname!r} changed under "
+                "link filtering with every link off"
+            )
 
 
 def test_shipped_registry_declares_no_canonical_variant():
@@ -165,9 +184,19 @@ def test_tagged_clause_is_present_when_its_link_is_on(tmp_path):
 
 def test_requirement_set_moves_with_the_link_set(tmp_path):
     """The set is computed AFTER filtering, so it is variant-dependent. A set
-    frozen before link resolution would be wrong for some variants."""
-    off = _resolver(tmp_path, _tagged_states(), _links_cfg())
-    on = _resolver(tmp_path, _tagged_states(), _links_cfg(), links=["LINK-001"])
+    frozen before link resolution would be wrong for some variants.
+
+    Uses LINK-002 (still `status: declared`, zero real clauses) rather than the
+    fixture default LINK-001 -- LINK-001 was BOUND for real 2026-09-11 (a
+    DISPLACEMENT clause on change_of_character), so `_tagged_states()`'s default
+    id would now toggle TWO features (the synthetic RANGE one this fixture adds
+    + the real DISPLACEMENT one), not one. Testing on an independently-unbound
+    link keeps this test's exact-delta assertion meaningful without entangling
+    it with LINK-001's real production semantics."""
+    off = _resolver(tmp_path, _tagged_states(link_id="LINK-002"), _links_cfg())
+    on = _resolver(
+        tmp_path, _tagged_states(link_id="LINK-002"), _links_cfg(), links=["LINK-002"]
+    )
     assert on.required_when_features - off.required_when_features == {"volume_spike"}
     assert len(on.required_when_features) == len(off.required_when_features) + 1
 
@@ -261,10 +290,35 @@ def test_variant_naming_an_unknown_link_raises(tmp_path):
 
 
 def test_absent_registry_is_legitimate_but_malformed_one_is_not(tmp_path):
-    """The resolver predates links; a missing registry means 'no links'."""
-    states = _write(tmp_path, "states.yaml", _states_cfg())
+    """A registry-free STATES CONFIG (no link-tagged clause at all) tolerates a
+    missing registry file -- 'no links' is a legitimate reading, not an error.
+
+    Narrowed 2026-09-11: the ORIGINAL premise ("the resolver predates links")
+    is no longer true of the raw shipped config once LINK-001 was bound for
+    real (a DISPLACEMENT clause) -- validation is deliberately UNFILTERED
+    (test_typo_in_a_disabled_links_clause_still_raises is the reason why), so a
+    config that genuinely NAMES a link now correctly REQUIRES a registry that
+    declares it, absent or not. That is the mechanism working, not breaking.
+    This test now verifies the invariant on a config stripped of the one real
+    tagged clause, which is what 'registry-free' actually means once any link
+    is bound."""
+    cfg = _states_cfg()
+    del _state(cfg, "DISPLACEMENT")["when"]["change_of_character"]
+    states = _write(tmp_path, "states.yaml", cfg)
     r = CRTStateResolver(config_path=states, links_config_path=tmp_path / "nope.yaml")
     assert r.enabled_links == frozenset()
+
+
+def test_absent_registry_raises_when_shipped_config_names_a_real_link(tmp_path):
+    """The flip side of the test above, made explicit rather than left as a
+    surprising failure: the ACTUAL shipped config (LINK-001 bound) does NOT
+    tolerate an absent registry, because predicate validation is unfiltered by
+    design. A future link binding that regresses this into a silent pass would
+    be the exact class of defect the unfiltered-validation guard exists to
+    prevent."""
+    states = _write(tmp_path, "states.yaml", _states_cfg())
+    with pytest.raises(PredicateValidationError, match="LINK-001"):
+        CRTStateResolver(config_path=states, links_config_path=tmp_path / "nope.yaml")
 
     bad = _write(tmp_path, "bad.yaml", {"links": ["not", "a", "mapping"]})
     with pytest.raises(ConfigLoadError, match="must be a mapping"):

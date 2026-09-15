@@ -40,7 +40,7 @@ max_live_variants: 8
 links:
   LINK-001:
     name: change_of_character_predicate
-    status: declared
+    status: bound
     rationale: >
       FM-083 change_of_character is vector-bound (CANONICAL_FEATURES idx 47) and
       is the only feature that separates a reversal (break AGAINST the prevailing
@@ -48,6 +48,15 @@ links:
       predicate and is absent from the vocabulary entirely. Tests whether giving
       the resolver access to the reversal/continuation distinction changes which
       bars it disagrees with the engine about.
+      BOUND 2026-09-11: tagged on DISPLACEMENT (requires [BullishCHoCH,
+      BearishCHoCH], AND'd with the existing displacement_flag clause), not
+      RANGE/RETEST/SWEEP or EXECUTION where break_of_structure/trend_bias are
+      already baseline clauses -- tagging there would double-count the same
+      underlying break. Verified before binding: DISPLACEMENT has no
+      EXPANSION-style (B1f) unconditional dwell-hold early-return, so this
+      when: block is genuinely reached while cur=="DISPLACEMENT" (dwell only --
+      continuous-gate-owned on founding entry per Skip-2, so the clause does not
+      gate the SWEEP->DISPLACEMENT transition itself).
     surfaces:
       - configs/formulas/market_crt_states.yaml:feature_states
       - configs/formulas/market_crt_states.yaml:states
@@ -75,6 +84,17 @@ links:
       declared twice on the live path and consumed by neither). Same test as
       LINK-002 on an independent feature, so a null result on one does not have
       to stand alone.
+      SCOPE LIMIT (recorded 2026-09-11, not yet acted on): on MT5-sourced
+      FX/metals corpora `volume` is TICK_VOLUME_APPROXIMATE, not CONFIRMED
+      (F-099 -- real_volume=0, ~0.6% directional gap vs independently-counted
+      ticks) and the underlying tick-flag vocabulary is non-stationary across
+      sessions (F-100, failed an independent holdout 3/4). Binding this link on
+      an MT5 corpus (e.g. the standing XAUUSD probe) would measure QUOTE
+      ACTIVITY, not participation. Defer to a venue with real traded volume
+      (e.g. a reviewed Binance corpus) -- and even then, do not bind in the
+      same variant as LINK-001: LINK-001 is venue-agnostic pure price
+      structure, LINK-003 is venue-dependent and should be evaluated on its
+      own so a venue-specific null cannot be misread as a structural one.
     surfaces:
       - configs/formulas/market_crt_states.yaml:states
     supply_cost: none
@@ -92,3 +112,18 @@ variants:
       The fixed reference every inert-link ablation is measured against; also
       reproduces the F-069 config-only figure (41607/47197) so a drift in the
       surface itself is detectable.
+
+  choch:
+    canonical: false
+    links: [LINK-001]
+    rationale: >
+      Enables LINK-001 only (change_of_character on DISPLACEMENT). Measures
+      whether requiring an actual reversal-type structural break during
+      DISPLACEMENT dwell -- as opposed to ordinary continuation or no break at
+      all -- changes the resolver/engine confusion matrix versus `base`, on the
+      same XAUUSD corpus/events used by base's own F-069 reference figure.
+      Grants no authority regardless of result (wiring-phase rule above);
+      informs only whether LINK-001 is worth a future BOUND-status economic
+      probe. Does not enable LINK-002/LINK-003 -- neither is scoped for this
+      corpus (LINK-003's F-099/F-100 tick-volume limit; LINK-002 untested by
+      this variant deliberately, to keep this a single-link measurement).
