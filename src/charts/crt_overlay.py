@@ -256,13 +256,50 @@ def run_spine_for_states(
     return events
 
 
+def track_from_events(
+    events_path: str | Path,
+    base_ts: Sequence[datetime],
+    version_label: str,
+) -> CRTTrack:
+    """Build a CRTTrack from an ALREADY-PRODUCED `<INSTR>_events.jsonl`.
+
+    Extracted from `resolve_states` (2026-09-10, CH-trade-chart-tab) so a caller that
+    already has a run's events file — the dashboard reading a selected run — never
+    triggers a fresh spine run to get it. `version_label` is provenance-only text
+    folded into `CRTTrack.source`; it is NOT re-validated against ACTIVE_VERSION here
+    (the run directory the events came from already pins that).
+    """
+    try:
+        evs = _parse_state_events(Path(events_path))
+        placed = _bar_positions(evs, base_ts)
+        states = _forward_fill(placed, len(base_ts))
+        diag = index_shift_diagnostic(evs, base_ts)
+    except Exception as exc:                                     # noqa: BLE001
+        log.warning("CRT overlay: alignment failed (%s)", exc)
+        return unavailable(f"alignment failed ({exc})", len(base_ts))
+
+    return CRTTrack(
+        states=states,
+        source=f"RESOLVED:{version_label}",
+        version=version_label,
+        transitions=len(evs),
+        offset=diag.get("modal_shift"),
+    )
+
+
 def resolve_states(
     instrument: str,
     csv_path: str | Path,
     base_ts: Sequence[datetime],
     version: Optional[str] = None,
 ) -> CRTTrack:
-    """Resolve the per-base-bar CRT track, degrading honestly on any failure."""
+    """Resolve the per-base-bar CRT track, degrading honestly on any failure.
+
+    Runs the spine (via `run_spine_for_states`) to PRODUCE the events, then delegates
+    the parse/align/fill work to `track_from_events`. A caller that already holds a
+    run's events file should call `track_from_events` directly instead — this function
+    always (re)runs or reuses a spine-cache entry, never a caller-supplied run.
+    """
     try:
         import config_layer.production_config as _pc
         ver = version or _pc.get_active_version()
@@ -275,19 +312,4 @@ def resolve_states(
         log.warning("CRT overlay: spine run failed (%s)", exc)
         return unavailable(f"spine run failed ({type(exc).__name__}: {exc})", len(base_ts))
 
-    try:
-        evs = _parse_state_events(events)
-        placed = _bar_positions(evs, base_ts)
-        states = _forward_fill(placed, len(base_ts))
-        diag = index_shift_diagnostic(evs, base_ts)
-    except Exception as exc:                                     # noqa: BLE001
-        log.warning("CRT overlay: alignment failed (%s)", exc)
-        return unavailable(f"alignment failed ({exc})", len(base_ts))
-
-    return CRTTrack(
-        states=states,
-        source=f"RESOLVED:{ver}",
-        version=ver,
-        transitions=len(evs),
-        offset=diag.get("modal_shift"),
-    )
+    return track_from_events(events, base_ts, ver)

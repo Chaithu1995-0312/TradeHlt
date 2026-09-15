@@ -1,9 +1,9 @@
 // Page 4 — Trades / Trade Analytics & Journal
 
-function TradesPage({ activeSub, trades, tradeKpis, equity, selectedInstrument }) {
+function TradesPage({ activeSub, trades, tradeKpis, equity, selectedInstrument, selectedRun, runs }) {
   const k = tradeKpis || {};
-  const TABS = ["Trade Explorer","Trade Trace","Rejections","Session Analysis"];
-  const SUB_TO_TAB = { TradeTrace:"Trade Trace", Rejections:"Rejections", SessionAnalysis:"Session Analysis" };
+  const TABS = ["Trade Explorer","Trade Trace","Rejections","Session Analysis","Trade Chart"];
+  const SUB_TO_TAB = { TradeTrace:"Trade Trace", Rejections:"Rejections", SessionAnalysis:"Session Analysis", TradeChart:"Trade Chart" };
   const [activeTab, setActiveTab] = React.useState(() => SUB_TO_TAB[activeSub] || "Trade Explorer");
 
   return (
@@ -181,6 +181,15 @@ function TradesPage({ activeSub, trades, tradeKpis, equity, selectedInstrument }
             </table>
           </div>
         </div>
+      )}
+
+      {/* ── Trade Chart ──────────────────────────────────────────────── */}
+      {activeTab === "Trade Chart" && (
+        <TradeChartPanel
+          selectedInstrument={selectedInstrument}
+          selectedRun={selectedRun}
+          runs={runs}
+        />
       )}
     </div>
   );

@@ -1,31 +1,72 @@
 // Page 0 — Executive Overview (default landing page)
 
-function ExecutivePage({ status, equity, oppStats, selectedInstrument }) {
-  // Build executive KPIs from backend props
+// Formats a run_id ("run_20260812_113506_XAUUSD") into a readable
+// timestamp ("2026-08-12 11:35"). Falls back to the raw id for any run_id
+// that doesn't match the expected results/run_<ts>_<INSTR> shape.
+function runLabel(runId) {
+  if (!runId) return "—";
+  const m = /^run_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})_/.exec(runId);
+  if (!m) return runId;
+  const [, yr, mo, da, hh, mm] = m;
+  return `${yr}-${mo}-${da} ${hh}:${mm}`;
+}
+
+function ExecutivePage({ status, executive, execReady, selectedInstrument, selectedRun }) {
   const s = status || {};
-  const o = oppStats || {};
-  const dist = (o.outcome_distribution || {});
-  const tp   = dist.TP_HIT || dist.TP || 0;
-  const tot  = Math.max(1, o.total_sampled || 1);
-  const wl   = o.win_rate_by_direction || {};
-  const winRate = (((wl.long || 0) + (wl.short || 0)) / 2 * 100) || (tp / tot * 100);
+
+  // Gate: Executive is only enabled once an instrument AND a run are selected.
+  if (!execReady || !executive || executive.ok !== true) {
+    return (
+      <div>
+        <div className="page-header">
+          <div>
+            <div className="page-title">Executive Overview</div>
+            <div className="page-sub">Select an instrument and a run to enable the Executive Overview.</div>
+          </div>
+        </div>
+        <div className="card" style={{ padding: "44px 24px", textAlign: "center" }}>
+          <div style={{ fontSize: 30, marginBottom: 10 }}>📊</div>
+          <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>
+            Select an instrument and a run to enable Executive Overview
+          </div>
+          <div className="muted" style={{ fontSize: 12, lineHeight: 1.5 }}>
+            Choose <b>Instrument</b> and then a <b>Run</b> from the top bar.<br />
+            Every metric below is scoped to a single backtest run.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const kpis = executive.kpis || {};
+  const nTrd = kpis.n_trades || 0;
+  const fmtPnl = (v) => v == null ? "—" : ((v >= 0 ? "+" : "") + v.toFixed(2));
 
   const k = {
-    totalPnl:     "+356.42",  // TODO: from /api/equity_curve summary
-    totalPnlDelta:"↑ 1.62%",
-    winRate:       winRate > 0 ? winRate.toFixed(2) + "%" : "54.37%",
-    winRateDelta: "↑ 2.18%",
-    profitFactor: "1.38",
-    pfDelta:      "↑ 0.11",
-    avgRR:        "1.62 / -1.03",
-    avgRRDelta:   "↑ 0.07",
-    expectancy:   o.avg_rr != null ? (+o.avg_rr).toFixed(2) : "0.42",
-    expDelta:     "↑ 0.04",
+    totalPnl:     fmtPnl(kpis.total_pnl_rr_net),
+    totalPnlDelta: runLabel(executive.run_id),
+    winRate:      kpis.win_rate_pct != null ? kpis.win_rate_pct.toFixed(2) + "%" : "—",
+    winRateDelta: `${nTrd} trades`,
+    profitFactor: kpis.profit_factor != null ? kpis.profit_factor.toFixed(2) : "—",
+    pfDelta:      "gross R",
+    avgRR:        `${kpis.avg_rr_win != null ? kpis.avg_rr_win.toFixed(2) : "—"} / -${kpis.avg_rr_loss != null ? kpis.avg_rr_loss.toFixed(2) : "—"}`,
+    avgRRDelta:   "avg W/L",
+    expectancy:   kpis.expectancy_rr != null ? kpis.expectancy_rr.toFixed(2) : "—",
+    expDelta:     "avg R/trade",
   };
 
-  const eq     = equity || [];
-  const alerts = window.ALERTS || [];
-  const sp     = window.SESSION_PNL || [];
+  const eq   = (executive.pnl_over_time || []).map(p => p.cumulative_pnl_rr);
+  const se   = executive.session_equity || {};
+  const wrs  = executive.win_rate_by_session || {};
+  const sessionPnl = [
+    { label: "Asian",   value: wrs.asian   != null ? Math.round(wrs.asian)   : 0, color: "#22d3ee" },
+    { label: "London",  value: wrs.london  != null ? Math.round(wrs.london)  : 0, color: "#a78bfa" },
+    { label: "NY",      value: wrs.ny      != null ? Math.round(wrs.ny)      : 0, color: "#22c55e" },
+    { label: "Overlap", value: wrs.overlap != null ? Math.round(wrs.overlap) : 0, color: "#facc15" },
+  ];
+  const density = executive.opportunity_density || [];
+  const alerts  = (executive.alerts || {});
+  const alertsStatus = alerts.status || "yet_to_integrate";
 
   return (
     <div>
@@ -33,9 +74,9 @@ function ExecutivePage({ status, equity, oppStats, selectedInstrument }) {
         <div>
           <div className="page-title">Executive Overview</div>
           <div className="page-sub">
-            Live System Pulse · Portfolio Performance · Alert Summary
-            {selectedInstrument && (
-              <span style={{ marginLeft:8, color:"var(--accent)" }}>· {selectedInstrument}</span>
+            Run-Scoped Performance · {selectedInstrument}
+            {selectedRun && (
+              <span style={{ marginLeft:8, color:"var(--accent)" }}>· {selectedRun}</span>
             )}
           </div>
         </div>
@@ -92,14 +133,14 @@ function ExecutivePage({ status, equity, oppStats, selectedInstrument }) {
               ))}
             </div>
           </div>
-          <SessionEquityChart height={120} />
+          <SessionEquityChart se={se} height={120} />
         </div>
 
         {/* Win Rate by Session */}
         <div className="card">
           <div className="card-title">Win Rate by Session (%)</div>
           <VerticalBars
-            data={sp.map(s => ({ label: s.label, value: s.value, color: s.color }))}
+            data={sessionPnl}
             height={120} maxVal={100}
           />
         </div>
@@ -110,27 +151,17 @@ function ExecutivePage({ status, equity, oppStats, selectedInstrument }) {
         <div className="card">
           <div className="card-title">Opportunity Density</div>
           <Heatmap
-            rows={window.MONTHLY_RETURNS || []}
+            rows={density.length ? density : [{ year: 2024, cells: Array.from({length:12}, () => 0) }]}
             colLabels={["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]}
           />
         </div>
         <div className="card">
           <div className="card-title">
-            Alerts <span className="right" style={{ color:"var(--bad)" }}>{alerts.length} Active</span>
+            Alerts <span className="right" style={{ color:"var(--bad)" }}>Yet to integrate</span>
           </div>
-          {alerts.length === 0
-            ? <div className="muted" style={{ fontSize:12, padding:"12px 0" }}>No active alerts</div>
-            : alerts.map((a, i) => (
-              <div key={i} className="alert-item">
-                <div className="alert-icon">{a.icon}</div>
-                <div style={{ flex:1 }}>
-                  <div className="alert-title">{a.title}</div>
-                  <div className="alert-sub">{a.sub}</div>
-                </div>
-                <div className="alert-age">{a.age}</div>
-              </div>
-            ))
-          }
+          <div className="muted" style={{ fontSize:12, padding:"12px 0" }}>
+            Run-invariant alerts (drawdown threshold, drift flag, low-sample warning) are a future phase.
+          </div>
         </div>
       </div>
 
@@ -144,8 +175,8 @@ function ExecutivePage({ status, equity, oppStats, selectedInstrument }) {
           </div>
         </div>
         <div className="ss-item">
-          <div className="ss-label">Promotion Guard</div>
-          <div className="ss-value">KMeans Clustering</div>
+          <div className="ss-label">Run</div>
+          <div className="ss-value">{runLabel(executive.run_id || selectedRun)}</div>
         </div>
         <div className="ss-item">
           <div className="ss-label">Schema</div>
@@ -161,8 +192,8 @@ function ExecutivePage({ status, equity, oppStats, selectedInstrument }) {
 }
 
 // ── SessionEquityChart — 4-series multi-line SVG ──────────────
-function SessionEquityChart({ height = 120 }) {
-  const se = window.SESSION_EQUITY || { asian:[], london:[], ny:[], overlap:[] };
+function SessionEquityChart({ se, height = 120 }) {
+  se = se || { asian:[], london:[], ny:[], overlap:[] };
   const W = 340, H = height;
   const SERIES = [
     { key:"asian",  color:"#22d3ee" },

@@ -184,7 +184,7 @@ function SectionTitle({ children, right }) {
   );
 }
 
-function InspectorPanel({ run, artifacts, monitors, onReport, onContext }) {
+function InspectorPanel({ run, artifacts, monitors, onReport, onContext, commands }) {
   const [synth, setSynth] = useStateI("idle"); // "idle"|"loading"|"done"|"error"
 
   const onSynthesize = () => {
@@ -203,13 +203,13 @@ function InspectorPanel({ run, artifacts, monitors, onReport, onContext }) {
 
   if (!run) {
     return (
-      <Panel title="Run Inspector" id="inspectorPanel">
-        <div style={{ fontSize: 12, color: "#9fb0c8" }}>No run selected. Click a row in Run History to inspect.</div>
+      <Panel title="Closure Inspector" id="inspectorPanel">
+        <div style={{ fontSize: 12, color: "#9fb0c8" }}>No run selected. Click a row in Run History, or open <span style={{ fontFamily: "ui-monospace,Menlo,monospace" }}>?run=&#123;run_id&#125;</span>.</div>
       </Panel>
     );
   }
   return (
-    <Panel title="Run Inspector" id="inspectorPanel">
+    <Panel title="Closure Inspector" id="inspectorPanel">
       <RunSummary run={run} />
       <div style={{ display: "flex", gap: 8, margin: "10px 0 4px" }}>
         <Button onClick={() => onReport && onReport(run.run_id)}>📋 Report</Button>
@@ -225,6 +225,47 @@ function InspectorPanel({ run, artifacts, monitors, onReport, onContext }) {
           }}>
           {synth === "loading" ? "..." : synth === "done" ? "[+] Synthesized" : synth === "error" ? "[!] Failed" : "Synthesize"}
         </Button>
+      </div>
+
+
+      <SectionTitle>Closure</SectionTitle>
+      <div style={{ background: "#0f1b2e", border: "1px solid #23364e", borderRadius: 10, padding: 10, marginBottom: 10, fontSize: 12 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginBottom: 8 }}>
+          <span style={{ color: "#9fb0c8" }}>run_id</span>
+          <span style={{ fontFamily: "ui-monospace,Menlo,monospace", color: "#e6edf7", wordBreak: "break-all" }}>{run.run_id}</span>
+          <CopyBtn text={run.run_id} />
+          <span style={{ color: "#9fb0c8" }}>short</span>
+          <span style={{ fontFamily: "ui-monospace,Menlo,monospace", color: "#0ea5a3" }}>{(run.run_id || "").slice(0, 8)}</span>
+          <CopyBtn text={(run.run_id || "").slice(0, 8)} />
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 8 }}>
+          <span style={{ color: "#9fb0c8" }}>deep link</span>
+          <span style={{ fontFamily: "ui-monospace,Menlo,monospace", color: "#e6edf7", wordBreak: "break-all", fontSize: 11 }}>
+            {typeof window !== "undefined" ? `${window.location.pathname}?run=${run.run_id}` : `?run=${run.run_id}`}
+          </span>
+          <CopyBtn text={typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}?run=${run.run_id}` : `?run=${run.run_id}`} />
+        </div>
+        {(() => {
+          const cmd = (commands || []).find(c => c.id === run.command_id);
+          const script = cmd && (cmd.script || cmd.path || "");
+          return script ? (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+              <span style={{ color: "#9fb0c8" }}>code</span>
+              <span style={{ fontFamily: "ui-monospace,Menlo,monospace", color: "#0ea5a3", wordBreak: "break-all" }}>{script}</span>
+              <CopyBtn text={script} />
+              <span style={{ color: "#6b7a93", fontSize: 11 }}>({cmd.mode || "python-file"})</span>
+            </div>
+          ) : (
+            <div style={{ color: "#6b7a93", fontSize: 11 }}>No command registry script for <span style={{ fontFamily: "ui-monospace,Menlo,monospace" }}>{run.command_id}</span>.</div>
+          );
+        })()}
+        {run.log_paths && run.log_paths.state && (
+          <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center" }}>
+            <span style={{ color: "#9fb0c8" }}>state</span>
+            <span style={{ fontFamily: "ui-monospace,Menlo,monospace", color: "#e6edf7", wordBreak: "break-all", fontSize: 11 }}>{run.log_paths.state}</span>
+            <CopyBtn text={run.log_paths.state} />
+          </div>
+        )}
       </div>
 
       <SectionTitle right={<CopyBtn text={run.cmdline || ""} />}>Resolved Command</SectionTitle>

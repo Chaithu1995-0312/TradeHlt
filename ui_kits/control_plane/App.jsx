@@ -12,6 +12,29 @@ function App() {
   const [contextCommandId, setContextCommandId] = useState(null);
   const [exploreFlow, setExploreFlow] = useState(null);
 
+  // Closure deep-link: /ui_kits/control_plane/?run={run_id}
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const rid = params.get("run");
+      if (rid) {
+        setView("runs");
+        setSelectedRunId(rid);
+        mockApi.getRun(rid);
+      }
+    } catch (_) { /* noop */ }
+  }, []);
+
+  const selectRun = (runId) => {
+    setSelectedRunId(runId);
+    try {
+      const url = new URL(window.location.href);
+      if (runId) url.searchParams.set("run", runId);
+      else url.searchParams.delete("run");
+      window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+    } catch (_) { /* noop */ }
+  };
+
   const data = mockApi.commands();
   const runs = mockApi.listRuns(search).runs;
   const dashEntries = mockApi.dashboard().commands;
@@ -30,7 +53,7 @@ function App() {
   const onRun = (cmd, args, cmdline) => {
     const { run } = mockApi.createRun(cmd.id, args, cmdline);
     setLatestRunId(run.run_id);
-    setSelectedRunId(run.run_id);
+    selectRun(run.run_id);
   };
   const onStop = () => { if (latestRunId) mockApi.stop(latestRunId); };
   const onJump = (id) => { /* no-op stub: would scroll launcher */ };
@@ -55,13 +78,13 @@ function App() {
             setSearch={setSearch}
             onRun={onRun}
             onStop={onStop}
-            onInspect={setSelectedRunId}
+            onInspect={selectRun}
             selectedRunId={selectedRunId}
             onCommandComplete={(id) => setCompleted(c => ({ ...c, [id]: true }))}
             onReport={onReport}
             onContext={onContext}
           />
-          <InspectorPanel run={selectedRun} artifacts={arts} monitors={mons} onReport={onReport} onContext={onContext} />
+          <InspectorPanel run={selectedRun} artifacts={arts} monitors={mons} onReport={onReport} onContext={onContext} commands={data.commands} />
         </main>
       ) : view === "dashboard" ? (
         <main style={{ padding: 14 }}>

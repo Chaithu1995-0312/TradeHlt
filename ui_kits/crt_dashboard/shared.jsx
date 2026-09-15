@@ -1,5 +1,21 @@
 // Sub-components shared by panels — Sidebar, KPI strip, common pills.
 
+// Builds a readable run-dropdown label from a /api/runs entry, e.g.
+// "2026-08-12 11:35 · 1 trade · -0.04R". Falls back to the bare run_id
+// when the run has no summary JSON (metrics is null) or an unparseable id.
+function runOptionLabel(r) {
+  const m = /^run_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})_/.exec(r.run_id || "");
+  const ts = m ? `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}` : r.run_id;
+  const met = r.metrics;
+  if (!met) return ts;
+  const n = met.approved_trades;
+  const pnl = met.total_pnl_rr_net;
+  const parts = [ts];
+  if (n != null) parts.push(`${n} trade${n === 1 ? "" : "s"}`);
+  if (pnl != null) parts.push(`${pnl >= 0 ? "+" : ""}${(+pnl).toFixed(2)}R`);
+  return parts.join(" · ");
+}
+
 function Sidebar({ active, footer }) {
   const items = [
     { id: "Runtime",   icon: "M4 11 L10 5 L16 11 V16 H4 Z" },
@@ -71,7 +87,7 @@ const TOP_TABS = [
   "Executive","Runtime","Trades","Models","Backtests","System","Intelligence","Replay Lab"
 ];
 
-function TopBar({ activePage, onNav, instruments, selectedInstrument, instrumentLoading, status, onInstrumentChange }) {
+function TopBar({ activePage, onNav, instruments, selectedInstrument, instrumentLoading, status, onInstrumentChange, runs, selectedRun, runLoading, onRunChange, execDisabled }) {
   const modelVer = (status && status.active_model_version) ? status.active_model_version : "—";
 
   return (
@@ -87,6 +103,9 @@ function TopBar({ activePage, onNav, instruments, selectedInstrument, instrument
         {TOP_TABS.map(t => (
           <button key={t}
             className={`top-bar-tab${activePage === t ? " active" : ""}`}
+            disabled={t === "Executive" && !!execDisabled}
+            title={t === "Executive" && execDisabled ? "Select an instrument and a run to enable Executive Overview" : ""}
+            style={t === "Executive" && execDisabled ? { opacity: 0.45, cursor: "not-allowed" } : {}}
             onClick={() => onNav(t)}
           >{t}</button>
         ))}
@@ -120,6 +139,35 @@ function TopBar({ activePage, onNav, instruments, selectedInstrument, instrument
             {(instruments || ["EURUSD"]).map(inst => (
               <option key={inst} value={inst}>{inst}</option>
             ))}
+          </select>
+        </div>
+
+        {/* ── Run selector (per instrument) ── */}
+        <div style={{ display:"flex", alignItems:"center", gap:6, marginRight:4 }}>
+          {runLoading && (
+            <span style={{
+              display:"inline-block", width:13, height:13, borderRadius:"50%",
+              border:"2px solid rgba(34,211,238,0.25)", borderTopColor:"#22d3ee",
+              animation:"tb-spin 0.7s linear infinite",
+            }} />
+          )}
+          <select
+            value={selectedRun || ""}
+            disabled={runLoading}
+            onChange={(e) => onRunChange && onRunChange(e.target.value)}
+            style={{
+              background:"#0f1e30", color:"#e6edf7", border:"1px solid #23364e",
+              borderRadius:6, padding:"4px 10px", fontSize:11, fontWeight:600,
+              cursor: runLoading ? "not-allowed" : "pointer",
+              opacity: runLoading ? 0.6 : 1,
+              outline:"none", appearance:"none", WebkitAppearance:"none",
+              paddingRight:22, backgroundImage:
+                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237f8da6'/%3E%3C/svg%3E\")",
+              backgroundRepeat:"no-repeat", backgroundPosition:"right 7px center",
+            }}
+          >
+            <option value="" disabled={runLoading}>{runLoading ? "Loading runs…" : "Select a run"}</option>
+            {(runs || []).map(r => <option key={r.run_id} value={r.run_id}>{runOptionLabel(r)}</option>)}
           </select>
         </div>
 
@@ -171,6 +219,7 @@ const SIDEBAR_SECTIONS = [
     { id:"TradeTrace",     label:"Trade Trace",     icon:"🔍", isNew:true },
     { id:"Rejections",     label:"Rejections",      icon:"✗"  },
     { id:"SessionAnalysis",label:"Session Analysis",icon:"⏱" },
+    { id:"TradeChart",     label:"Trade Chart",     icon:"📈", isNew:true },
   ]},
   { header:"BACKTESTS", items:[
     { id:"Backtests",   label:"Backtest Lab", icon:"🧪" },
@@ -184,6 +233,9 @@ const SIDEBAR_SECTIONS = [
     { id:"LogsAudit",  label:"Logs & Audit",   icon:"📄" },
     { id:"Settings",   label:"Settings",       icon:"⚙"  },
   ]},
+  { header:"KNOWLEDGE", items:[
+    { id:"Knowledge", label:"Truth-tier RAG", icon:"📚", isNew:true },
+  ]},
 ];
 
 const SIDEBAR_PAGE_MAP = {
@@ -191,12 +243,13 @@ const SIDEBAR_PAGE_MAP = {
   Runtime:"Runtime", EventPipeline:"Runtime", SignalFlow:"Runtime", Alerts:"Runtime",
   Research:"Research", Clusters:"Research", SeqPatterns:"Intelligence", RegimeMap:"Research", OppMap:"Research",
   Models:"Models", Lineage:"Models", DriftMonitor:"Models", ShadowCompare:"Models", Promotions:"Models",
-  Trades:"Trades", TradeTrace:"Trades", Rejections:"Trades", SessionAnalysis:"Trades",
+  Trades:"Trades", TradeTrace:"Trades", Rejections:"Trades", SessionAnalysis:"Trades", TradeChart:"Trades",
   Backtests:"Backtests", WalkForward:"Backtests", StressTests:"Backtests", MonteCarlo:"Backtests",
   System:"System", DataQuality:"System", LogsAudit:"System", Settings:"System",
+  Knowledge:"Knowledge",
 };
 
-function SidebarNew({ activePage, activeSub, onNav, onSubNav }) {
+function SidebarNew({ activePage, activeSub, onNav, onSubNav, execDisabled }) {
   return (
     <nav className="sidebar-new">
       {SIDEBAR_SECTIONS.map(sec => (
@@ -206,10 +259,13 @@ function SidebarNew({ activePage, activeSub, onNav, onSubNav }) {
             const isActive = activeSub === item.id ||
               (!activeSub && activePage === item.id) ||
               (!activeSub && item.id === "Executive" && activePage === "Executive");
+            const isExecDisabled = item.id === "Executive" && !!execDisabled;
             return (
               <div key={item.id}
-                className={`sidebar-item${isActive ? " active" : ""}`}
+                className={`sidebar-item${isActive ? " active" : ""}${isExecDisabled ? " disabled" : ""}`}
+                style={isExecDisabled ? { opacity: 0.45, cursor: "not-allowed" } : {}}
                 onClick={() => {
+                  if (isExecDisabled) return;
                   const page = SIDEBAR_PAGE_MAP[item.id] || item.id;
                   onNav(page);
                   onSubNav(item.id);

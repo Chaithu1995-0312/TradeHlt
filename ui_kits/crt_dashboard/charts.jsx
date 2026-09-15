@@ -48,9 +48,12 @@ function LineChart({ values, data, width = 380, height = 150, color = "#22d3ee",
   const innerH = height - t - b;
   const min = Math.min(...pts);
   const max = Math.max(...pts);
-  const yMin = min - (max - min) * 0.08;
-  const yMax = max + (max - min) * 0.08;
-  const fx = (i) => l + (i / (pts.length - 1)) * innerW;
+  // A single point, or every value identical, collapses the range to 0 —
+  // guard both divisions (0/0 -> NaN) rather than letting the SVG go blank.
+  const range = max - min;
+  const yMin = range === 0 ? min - (Math.abs(min) || 1) * 0.08 : min - range * 0.08;
+  const yMax = range === 0 ? max + (Math.abs(max) || 1) * 0.08 : max + range * 0.08;
+  const fx = (i) => pts.length === 1 ? l + innerW / 2 : l + (i / (pts.length - 1)) * innerW;
   const fy = (v) => t + (1 - (v - yMin) / (yMax - yMin)) * innerH;
   const path = pts.map((v, i) => `${i === 0 ? "M" : "L"}${fx(i).toFixed(1)},${fy(v).toFixed(1)}`).join(" ");
   const area = `${path} L${fx(pts.length - 1).toFixed(1)},${t + innerH} L${fx(0).toFixed(1)},${t + innerH} Z`;

@@ -15,8 +15,10 @@ import sys as _sys; _sys.path.insert(0, str(Path(__file__).resolve().parents[2])
 from src.control_plane.jobs import JobManager
 from src.control_plane.registry import REPO_ROOT, command_spec_to_json, workflow_stage_order
 from src.control_plane.dashboard_api import TradingDashboardAPI
+from src.charts.chart_api import chart_payload
 from src.control_plane.report_api import RunReportAPI
 from src.control_plane.context_report import ContextReportAPI
+from src.control_plane.retrieval_api import KnowledgeAPI
 from src.control_plane.code_context_extractor import extract_code_context
 from src.control_plane.dot_graph_context import (
     extract_graph_context, resolve_flow_for_command, build_flow_code_context,
@@ -1577,7 +1579,7 @@ setInterval(loadStatus, 10000);
 """
 
 
-def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_api: RunReportAPI | None = None, context_api: ContextReportAPI | None = None):
+def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_api: RunReportAPI | None = None, context_api: ContextReportAPI | None = None, knowledge_api: KnowledgeAPI | None = None):
     import logging as _logging
 
     _req_log_path  = REPO_ROOT / "logs" / "control_plane" / "requests.log"
@@ -1710,15 +1712,39 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                     except (ValueError, IndexError):
                         page, per_page = 1, 50
                     instrument = query.get("instrument", ["EURUSD"])[0]
+                    run_id     = query.get("run_id", [""])[0] or None
                     self._send_json(HTTPStatus.OK, dash_api.trades_payload(
-                        instrument, page, per_page))
+                        instrument, page, per_page, run_id))
                     return
                 if path == "/api/equity_curve":
                     instrument = query.get("instrument", ["EURUSD"])[0]
-                    self._send_json(HTTPStatus.OK, dash_api.equity_curve_payload(instrument))
+                    run_id     = query.get("run_id", [""])[0] or None
+                    self._send_json(HTTPStatus.OK, dash_api.equity_curve_payload(instrument, run_id))
+                    return
+                if path == "/api/runs":
+                    instrument = query.get("instrument", ["EURUSD"])[0]
+                    self._send_json(HTTPStatus.OK, dash_api.runs_payload(instrument))
+                    return
+                if path == "/api/executive":
+                    instrument = query.get("instrument", ["EURUSD"])[0]
+                    run_id     = query.get("run_id", [""])[0] or None
+                    self._send_json(HTTPStatus.OK, dash_api.executive_payload(instrument, run_id))
                     return
                 if path == "/api/backtest_history":
                     self._send_json(HTTPStatus.OK, dash_api.backtest_history_payload())
+                    return
+                if path == "/api/chart_series":
+                    instrument = query.get("instrument", ["EURUSD"])[0]
+                    run_id     = query.get("run_id", [""])[0] or None
+                    timeframe  = query.get("timeframe", ["M15"])[0]
+                    from_ts    = query.get("from", [""])[0] or None
+                    to_ts      = query.get("to", [""])[0] or None
+                    try:
+                        limit = int(query.get("limit", ["1500"])[0])
+                    except (ValueError, IndexError):
+                        limit = 1500
+                    self._send_json(HTTPStatus.OK, chart_payload(
+                        instrument, run_id, timeframe, limit, from_ts, to_ts))
                     return
                 # ── Agent panel endpoints (read-only JSONL tails) ─────────────
                 if path == "/api/agent/findings":
@@ -1779,6 +1805,27 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                     })
                     return
                 # ── ui_kits/ static file serving (React UI kits) ─────────────
+
+                if path == "/api/knowledge/search":
+                    q = query.get("q", [""])[0]
+                    top_k = int(query.get("top_k", ["10"])[0] or 10)
+                    truth_class = query.get("truth_class", [None])[0] or None
+                    include_historical = query.get("include_historical", ["1"])[0] not in ("0", "false", "False")
+                    explain = query.get("explain", ["0"])[0] in ("1", "true", "True")
+                    if knowledge_api is None:
+                        self._send_json(HTTPStatus.SERVICE_UNAVAILABLE, {"ok": False, "error": "KnowledgeAPI not initialised"})
+                        return
+                    self._send_json(HTTPStatus.OK, knowledge_api.search_payload(
+                        q, top_k=top_k, truth_class=truth_class,
+                        include_historical=include_historical, explain=explain,
+                    ))
+                    return
+                if path == "/api/knowledge/status":
+                    if knowledge_api is None:
+                        self._send_json(HTTPStatus.SERVICE_UNAVAILABLE, {"ok": False, "error": "KnowledgeAPI not initialised"})
+                        return
+                    self._send_json(HTTPStatus.OK, knowledge_api.status_payload())
+                    return
                 if path.startswith("/ui_kits/"):
                     _MIME = {
                         ".html": "text/html; charset=utf-8",
@@ -2164,6 +2211,7 @@ class ControlPlaneServer:
         self._dash_api = TradingDashboardAPI()
         self._report_api = RunReportAPI()
         self._context_api = ContextReportAPI()
+        self._knowledge_api = KnowledgeAPI()
         self._httpd: ThreadingHTTPServer | None = None
         self._thread: threading.Thread | None = None
 
@@ -2184,7 +2232,7 @@ class ControlPlaneServer:
     def start(self) -> None:
         if self._httpd is not None:
             return
-        handler = create_handler(self._api, self._dash_api, self._report_api, self._context_api)
+        handler = create_handler(self._api, self._dash_api, self._report_api, self._context_api, self._knowledge_api)
         self._httpd = ThreadingHTTPServer((self._host, self._port), handler)
         self._thread = threading.Thread(target=self._httpd.serve_forever, daemon=True)
         self._thread.start()

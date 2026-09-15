@@ -40,6 +40,106 @@ def _read_json(path: Path) -> dict | list | None:
         return None
 
 
+# Documents a resolved backtest run on disk (results/run_<ts>_<INSTR>/).
+class RunContext:
+    """Minimal immutable handle to a resolved backtest run directory.
+
+    Backs run-scoped dashboard reads. ``run_id`` is the parent directory name
+    (e.g. ``run_20260724_034227_XAUUSD``); it uniquely identifies a run on disk.
+    """
+
+    __slots__ = ("run_id", "instrument", "run_dir", "summary_path", "trades_path", "events_path")
+
+    def __init__(self, run_dir: Path, instrument: str) -> None:
+        self.run_dir: Path = run_dir
+        self.instrument: str = instrument
+        self.run_id: str = run_dir.name
+        self.summary_path: Path = run_dir / f"{instrument}_summary.json"
+        self.trades_path: Path = run_dir / f"{instrument}_trades.csv"
+        self.events_path: Path = run_dir / f"{instrument}_events.jsonl"
+
+    def __repr__(self) -> str:  # pragma: no cover - debug aid
+        return f"RunContext(run_id={self.run_id!r}, instrument={self.instrument!r})"
+
+
+def _iter_run_dirs(instrument: str):
+    """Yield RunContext for every results/run_<ts>_<INSTR>/ dir (oldest first).
+
+    Guard on the directory name suffix ``_<INSTR>`` so the run belongs to the
+    selected instrument (prevents cross-coin runid confusion). Backtest dirs are
+    named ``run_YYYYMMDD_HHMMSS_<INSTR>`` so lexicographic order = chronological.
+    """
+    glob = f"run_*_{instrument}/"
+    # dirs whose name ends with _<INSTR> (the guaranteed backtest shape)
+    for d in sorted(RESULTS_DIR.glob(glob)):
+        if not d.is_dir():
+            continue
+        # A trades csv (or summary json) confirms this is a real backtest run.
+        if (d / f"{instrument}_trades.csv").exists() or (d / f"{instrument}_summary.json").exists():
+            yield RunContext(d, instrument)
+
+
+def _resolve_run(instrument: str, run_id: str | None = None) -> RunContext | None:
+    """Resolve a backtest run for an instrument.
+
+    * run_id None   -> lexicographically latest (today's 'latest run' behavior).
+    * run_id given  -> the run whose directory name == run_id. The id must belong
+      to ``instrument`` (the address is ``results/run_*_<INSTR>/<run_id>``); a
+      foreign runid resolves to None so callers fail-closed.
+    """
+    runs = list(_iter_run_dirs(instrument))
+    if not runs:
+        return None
+    if run_id is None:
+        return runs[-1]
+    for r in runs:
+        if r.run_id == run_id:
+            return r
+    return None
+
+
+def _instruments_from_disk() -> set[str]:
+    """Discover instrument names from on-disk artifacts (backtest runs, logs dirs, M15 data).
+
+    Doesn't require the active config to know about a symbol — an instrument
+    becomes selectable as soon as it has produced any of:
+      * results/run_*_<INSTR>/           (backtest run)
+      * logs/<INSTR>/                     (scanner run / opportunities)
+      * data/<INSTR>_M15.<csv|parquet>    (ingested market data)
+    """
+    names: set[str] = set()
+
+    # results/run_<ts>_<INSTR>/  -> suffix after last '_'.
+    for d in RESULTS_DIR.glob("run_*"):
+        if d.is_dir():
+            parts = d.name.split("_")
+            if len(parts) >= 3:  # run_YYYYMMDD_HHMMSS_<INSTR>
+                names.add(parts[-1])
+
+    def _is_symbol(n: str) -> bool:
+        # Symbols are uppercase alphanumerics ending in a quote currency
+        # (EURUSD, XAUUSD, BTCUSDT, ...). This excludes run-timeframe tails
+        # ("M15" from run_*_BNBUSDT_M15) and non-instrument dirs ("AGENT").
+        return bool(n) and n.isalnum() and n.isupper() and (
+            n in KNOWN_INSTRUMENTS or n.endswith(("USDT", "USD", "EUR", "GBP",
+                                                   "JPY", "CHF", "CAD", "AUD", "NZD"))
+        )
+
+    # logs/<INSTR>/ top-level dirs — keep only plausible symbol names.
+    for d in LOGS_DIR.glob("*"):
+        if d.is_dir() and _is_symbol(d.name):
+            names.add(d.name)
+
+    # data/<INSTR>_M15.<csv|parquet>
+    data_dir = REPO_ROOT / "data"
+    for f in data_dir.glob("*_M15.*"):
+        stem = f.stem
+        if stem.endswith("_M15"):
+            names.add(stem[:-4])
+
+    return {n for n in names if _is_symbol(n)}
+
+
 def _iso_now() -> datetime:
     return datetime.now(tz=timezone.utc)
 
@@ -843,15 +943,18 @@ class TradingDashboardAPI:
         instrument: str = "EURUSD",
         page: int = 1,
         per_page: int = 50,
+        run_id: str | None = None,
     ) -> dict[str, Any]:
         """
-        Paginated trade journal from the most recent INSTRUMENT_trades.csv.
-        Returns a subset of columns suitable for the dashboard table.
+        Paginated trade journal from a run's INSTRUMENT_trades.csv.
+        ``run_id`` selects a specific backtest run; when omitted the latest run
+        is used (backward compatible).
         """
         empty = {"records": [], "page": page, "per_page": per_page, "total_count": 0}
-        csv_path = _find_latest_trades_csv(instrument)
-        if csv_path is None:
-            return empty
+        run = _resolve_run(instrument, run_id)
+        if run is None or not run.trades_path.exists():
+            return {**empty, "run_id": run_id, "error": "run not found"}
+        csv_path = run.trades_path
 
         rows: list[dict] = []
         try:
@@ -867,6 +970,8 @@ class TradingDashboardAPI:
                             "exit_reason":  row.get("exit_reason", ""),
                             "session":      row.get("session", ""),
                             "capital_after": _safe_float(row.get("capital_after")),
+                            "risk_score":   _safe_float(row.get("risk_score")),
+                            "volatility_regime_label": _volatility_regime_label(row.get("volatility_regime")),
                         })
                     except Exception:
                         continue
@@ -882,18 +987,21 @@ class TradingDashboardAPI:
             "page":        page,
             "per_page":    per_page,
             "total_count": total,
+            "run_id":      run.run_id,
         }
 
     # ── Equity curve ──────────────────────────────────────────────────────────
 
-    def equity_curve_payload(self, instrument: str = "EURUSD") -> dict[str, Any]:
+    def equity_curve_payload(self, instrument: str = "EURUSD", run_id: str | None = None) -> dict[str, Any]:
         """
-        Cumulative PnL curve from the most recent INSTRUMENT_trades.csv.
-        Downsampled to last-value-per-date (caps at ~500 chart points).
+        Cumulative PnL curve from a run's INSTRUMENT_trades.csv.
+        ``run_id`` selects a specific backtest run; when omitted the latest run
+        is used (backward compatible). Downsampled to last-value-per-date.
         """
-        csv_path = _find_latest_trades_csv(instrument)
-        if csv_path is None:
-            return {"curve": []}
+        run = _resolve_run(instrument, run_id)
+        if run is None or not run.trades_path.exists():
+            return {"curve": [], "run_id": run_id}
+        csv_path = run.trades_path
 
         rows = []
         try:
@@ -927,7 +1035,161 @@ class TradingDashboardAPI:
             {"date": d, "cumulative_pnl_rr": v[0], "capital": v[1]}
             for d, v in sorted(by_date.items())
         ]
-        return {"curve": curve}
+        return {"curve": curve, "run_id": run.run_id}
+
+    # ── Runs (run dropdown) ───────────────────────────────────────────────────
+
+    def runs_payload(self, instrument: str = "EURUSD") -> dict[str, Any]:
+        """
+        List every backtest run for an instrument (newest first), each carrying a
+        lightweight metrics preview so the run dropdown can show result context.
+
+        A run is the `results/run_<ts>_<INSTR>/` directory; ``run_id`` is the
+        directory name (e.g. ``run_20260812_113506_XAUUSD``).
+        """
+        runs = list(_iter_run_dirs(instrument))
+        runs.reverse()  # newest first
+        out = []
+        for r in runs:
+            summary = _read_json(r.summary_path) if r.summary_path.exists() else None
+            s = summary if isinstance(summary, dict) else {}
+            out.append({
+                "run_id":    r.run_id,
+                "instrument": instrument,
+                "dir":       str(r.run_dir),
+                "started_at": r.run_id.replace("run_", "", 1) if r.run_id.startswith("run_") else r.run_id,
+                "source":    "results",
+                "has_trades": r.trades_path.exists(),
+                "has_summary": r.summary_path.exists(),
+                "has_events": r.events_path.exists(),
+                "metrics": {
+                    "approved_trades":   s.get("approved_trades"),
+                    "win_rate":          s.get("win_rate"),
+                    "avg_rr_net":        s.get("avg_rr_net"),
+                    "total_pnl_rr_net":  s.get("total_pnl_rr_net"),
+                    "max_drawdown_pct":  s.get("max_drawdown_pct"),
+                    "config_version":    s.get("config_version"),
+                } if s else None,
+            })
+        return {"instrument": instrument, "runs": out, "total": len(out)}
+
+    # ── Executive Overview (run-scoped) ───────────────────────────────────────
+
+    def executive_payload(self, instrument: str = "EURUSD", run_id: str | None = None) -> dict[str, Any]:
+        """
+        Consolidated read-only payload for the Executive Overview page, computed
+        from a SINGLE backtest run's trades + summary.
+
+        ``run_id`` selects the run (default: latest). The alerts block is marked
+        ``yet_to_integrate`` — deriving alerts from run invariants is a future
+        phase per product decision.
+        """
+        run = _resolve_run(instrument, run_id)
+        if run is None:
+            return {
+                "instrument": instrument, "run_id": run_id, "ok": False,
+                "error": "no backtest run found for this instrument/run_id",
+            }
+
+        # Load trades into simple dicts (small run corpora).
+        trades: list[dict] = []
+        if run.trades_path.exists():
+            try:
+                with open(run.trades_path, newline="", encoding="utf-8") as f:
+                    for row in csv.DictReader(f):
+                        trades.append(row)
+            except Exception:
+                trades = []
+
+        pnl = [float(_safe_float(t.get("pnl_rr_net"), 0.0) or 0.0) for t in trades]
+        n       = len(pnl)
+        gross_w = sum(p for p in pnl if p > 0)
+        gross_l = abs(sum(p for p in pnl if p < 0))
+        wins    = sum(1 for p in pnl if p > 0)
+        losses  = n - wins
+        avg_w   = (gross_w / wins) if wins else 0.0
+        avg_l   = (gross_l / losses) if losses else 0.0
+        total   = sum(pnl)
+
+        kpis = {
+            "total_pnl_rr_net": round(total, 4),
+            "win_rate_pct":     round(wins / n * 100, 2) if n else None,
+            "profit_factor":    round(gross_w / gross_l, 4) if gross_l > 0 else None,
+            "avg_rr_win":       round(avg_w, 4),
+            "avg_rr_loss":      round(avg_l, 4),
+            "expectancy_rr":    round(total / n, 4) if n else None,
+            "n_trades":         n,
+        }
+
+        # PnL over time (cumulative, last-value-per-date).
+        cum = 0.0
+        by_date: dict[str, float] = {}
+        for i, p in enumerate(pnl):
+            cum += p
+            d = (trades[i].get("opened_at") or "")[:10]
+            by_date[d] = round(cum, 4)
+        pnl_over_time = [{"date": d, "cumulative_pnl_rr": v} for d, v in sorted(by_date.items())]
+
+        # Session equity + win rate by session (buckets: asian/london/ny/overlap).
+        bucket_pnl:   dict[str, list[float]] = {k: [] for k in ("asian", "london", "ny", "overlap")}
+        bucket_win:   dict[str, int] = {k: 0 for k in bucket_pnl}
+        bucket_total: dict[str, int] = {k: 0 for k in bucket_pnl}
+        for i, p in enumerate(pnl):
+            b = _session_bucket_ui(trades[i].get("session"))
+            if b is None:
+                continue
+            bucket_pnl[b].append(p)
+            bucket_total[b] += 1
+            if p > 0:
+                bucket_win[b] += 1
+
+        session_equity = {
+            k: [round(sum(vals[: i + 1]), 4) for i in range(len(vals))]
+            for k, vals in bucket_pnl.items()
+        }
+        win_rate_by_session = {
+            k: round(bucket_win[k] / bucket_total[k] * 100, 2) if bucket_total[k] else None
+            for k in bucket_pnl
+        }
+
+        # Opportunity density heatmap rows [{year, cells:[12]}] from summary monthly_pnl.
+        summary = _read_json(run.summary_path) if run.summary_path.exists() else {}
+        monthly = (summary or {}).get("monthly_pnl", {}) if isinstance(summary, dict) else {}
+        cell_by_year_month: dict[str, dict[int, float]] = {}
+        if isinstance(monthly, dict):
+            for ym, v in monthly.items():
+                if isinstance(ym, str) and len(ym) >= 7 and ym[:4].isdigit():
+                    year = int(ym[:4])
+                    mon  = int(ym[5:7])
+                    if 1 <= mon <= 12 and isinstance(v, (int, float)):
+                        cell_by_year_month.setdefault(str(year), {})[mon - 1] = float(v)
+        opportunity_density = []
+        for year in sorted(cell_by_year_month, reverse=True):
+            cells = [round(cell_by_year_month[year].get(m, 0.0), 1) for m in range(12)]
+            opportunity_density.append({"year": int(year), "cells": cells})
+
+        # Linked logs/parquet artifacts (runid -> logs/trace/parquet).
+        linked = None
+        try:
+            from utils.run_linkage import resolve_artifacts  # noqa: F401
+            linked = resolve_artifacts(instrument, run.run_id)
+            linked.pop("resolved_run", None)
+        except Exception:
+            linked = None
+
+        return {
+            "instrument": instrument,
+            "run_id":     run.run_id,
+            "ok":         True,
+            "kpis":                 kpis,
+            "pnl_over_time":        pnl_over_time,
+            "session_equity":       session_equity,
+            "win_rate_by_session":  win_rate_by_session,
+            "opportunity_density":  opportunity_density,
+            # Alerts derived from run invariants — FUTURE PHASE (product decision).
+            "alerts":               {"status": "yet_to_integrate", "items": []},
+            "linkage":              linked,
+        }
 
     # ── Backtest history ──────────────────────────────────────────────────────
 
@@ -972,21 +1234,35 @@ class TradingDashboardAPI:
 
     def instruments_payload(self) -> dict[str, Any]:
         """
-        Return instruments sourced from the active production config.
-        Combines data_ingestion.pairs (forex) + inout.scanner.allowed_symbols (crypto).
-        Falls back to KNOWN_INSTRUMENTS if the config cannot be read.
+        Return instruments sourced from the active production config PLUS any
+        instrument that has produced a run / logs / parquet / market symbol map
+        entry on disk.
+
+        Combines: data_ingestion.pairs (forex) + inout.scanner.allowed_symbols
+        (crypto) + market_router.symbol_map keys + instruments with a
+        results/run_*_<INSTR>/, logs/<INSTR>/, or data/*_M15.* presence.
+
+        Why on-disk discovery: the active production config is authorative for
+        config *parameters* but is NOT the complete set of tradable symbols.
+        XAUUSD, for example, has backtest runs under results/run_*_XAUUSD and a
+        market-router FOREX entry, yet is absent from the active config's
+        `pairs` / `allowed_symbols` — so a config-only union hides it from the
+        instrument dropdown.
         """
+        names: set[str] = set()
         try:
-            active_ver  = ACTIVE_VERSION_FILE.read_text(encoding="utf-8").strip()
-            cfg_path    = PROD_CONFIG_DIR / f"{active_ver}.json"
-            cfg         = _read_json(cfg_path) or {}
-            pairs       = cfg.get("data_ingestion", {}).get("pairs", [])
-            syms        = cfg.get("inout", {}).get("scanner", {}).get("allowed_symbols", [])
-            merged      = sorted(set(pairs) | set(syms))
-            if merged:
-                return {"instruments": merged}
+            active_ver = ACTIVE_VERSION_FILE.read_text(encoding="utf-8").strip()
         except Exception:
-            pass
+            active_ver = None
+        if active_ver:
+            cfg     = _read_json(PROD_CONFIG_DIR / f"{active_ver}.json") or {}
+            names  |= set(cfg.get("data_ingestion", {}).get("pairs", []) or [])
+            names  |= set(cfg.get("inout", {}).get("scanner", {}).get("allowed_symbols", []) or [])
+            names  |= set((cfg.get("market_router", {}).get("symbol_map", {}) or {}).keys())
+        names |= _instruments_from_disk()
+        names |= set(KNOWN_INSTRUMENTS)
+        if names:
+            return {"instruments": sorted(names)}
         # Fallback: return first two known instruments
         return {"instruments": KNOWN_INSTRUMENTS[:2]}
 
@@ -1064,6 +1340,51 @@ class TradingDashboardAPI:
 
 
 # ── Private helpers ───────────────────────────────────────────────────────────
+
+# Maps a session label/value to the Executive UI's 4-session bucket keys.
+# Trades carry the session as either an ordinal float (1.0 -> LONDON) or an
+# upper-case name ("NEWYORK"); older records may spell it "NEW_YORK".
+_SESSION_UI_NAME = {
+    "ASIA":     "asian",
+    "LONDON":   "london",
+    "NEWYORK":  "ny",
+    "NEW_YORK": "ny",
+    "OVERLAP":  "overlap",
+}
+_SESSION_ORDINAL_TO_NAME = {0: "ASIA", 1: "LONDON", 2: "NEWYORK", 3: "OVERLAP", 4: "CLOSED"}
+
+
+def _session_bucket_ui(value: Any) -> str | None:
+    """Map a trade's session field to an Executive UI bucket ('asian'/'london'/'ny'/'overlap')."""
+    if value is None:
+        return None
+    s = str(value).strip()
+    if s == "":
+        return None
+    # Ordinal float (e.g. "1.0") -> name.
+    try:
+        s = _SESSION_ORDINAL_TO_NAME.get(int(float(s)), s)
+    except (ValueError, TypeError):
+        pass
+    return _SESSION_UI_NAME.get(s.upper().replace(" ", ""))
+
+
+# Maps the trade CSV's volatility_regime tercile ordinal to a UI label.
+# Source-verified against src/features/feature_pipeline.py::compute_volatility_regime
+# (_tercile): atr_pct < tercile_low -> 0, < tercile_high -> 1, else -> 2.
+_VOLATILITY_REGIME_LABEL = {0: "LOW", 1: "NORMAL", 2: "HIGH"}
+
+
+def _volatility_regime_label(value: Any) -> str | None:
+    """Map a trade's volatility_regime ordinal (0/1/2, possibly float-stringed
+    like session) to 'LOW'/'NORMAL'/'HIGH'. None/unrecognized -> None."""
+    if value is None or value == "":
+        return None
+    try:
+        return _VOLATILITY_REGIME_LABEL.get(int(float(value)))
+    except (TypeError, ValueError):
+        return None
+
 
 def _safe_float(value: Any, default: float | None = None) -> float | None:
     """Cast value to float, return default on failure."""

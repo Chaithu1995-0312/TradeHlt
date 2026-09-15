@@ -15,6 +15,15 @@ function CrtDashboard() {
   );
   const [instrumentLoading, setInstrumentLoading] = React.useState(true);
 
+  // ── Run state (per-instrument backtest runs) ──────────────────────────────
+  const [runs,              setRuns]              = React.useState([]);
+  const [selectedRun,       setSelectedRun]       = React.useState(
+    () => localStorage.getItem("crt_run") || ""
+  );
+  const [runLoading,        setRunLoading]        = React.useState(false);
+  // Consolidated Executive Overview payload for (instrument, run).
+  const [executive,         setExecutive]         = React.useState(null);
+
   // ── Runtime data state ────────────────────────────────────────────────────
   const [status,         setStatus]         = React.useState(null);
   const [trades,         setTrades]         = React.useState([]);
@@ -43,6 +52,8 @@ function CrtDashboard() {
       result:     (t.exit_reason || "").toUpperCase().includes("TP") ? "TP" : "SL",
       session:    t.session    || "—",
       exitReason: t.exit_reason|| "—",
+      conf:       t.risk_score != null ? +t.risk_score : null,
+      regime:     t.volatility_regime_label || "—",
     }));
   }
 
@@ -87,6 +98,7 @@ function CrtDashboard() {
   // ── On mount + instrument change: full data reload ────────────────────────
   React.useEffect(() => {
     setInstrumentLoading(true);
+    setRunLoading(true);
     localStorage.setItem("crt_instrument", selectedInstrument);
 
     Promise.allSettled([
@@ -101,7 +113,8 @@ function CrtDashboard() {
       window.ApiClient.fetchBacktestHistory(),
       window.ApiClient.fetchScanJobs(selectedInstrument),
       window.ApiClient.fetchOpportunityAnalytics(selectedInstrument),
-    ]).then(([sR, tR, eR, oR, mR, zgR, rrR, tnR, btR, sjR, oaR]) => {
+      window.ApiClient.fetchRuns(selectedInstrument),
+    ]).then(([sR, tR, eR, oR, mR, zgR, rrR, tnR, btR, sjR, oaR, rR]) => {
       if (sR.status === "fulfilled") setStatus(sR.value);
 
       if (tR.status === "fulfilled") {
@@ -182,6 +195,25 @@ function CrtDashboard() {
       if (sjR.status === "fulfilled") setScanJobs(sjR.value.jobs || []);
       if (oaR.status === "fulfilled") setOpportunityAnalytics(oaR.value);
 
+      if (rR.status === "fulfilled") {
+        const list = rR.value.runs || [];
+        setRuns(list);
+        const ids = list.map(r => r.run_id);
+        const stored = localStorage.getItem("crt_run");
+        // Keep a stored run only if it belongs to this instrument; else reset.
+        if (stored && ids.includes(stored)) {
+          setSelectedRun(stored);
+        } else if (!stored && ids.length) {
+          localStorage.setItem("crt_run", ids[0]);
+          setSelectedRun(ids[0]);
+        } else if (!ids.includes(selectedRun)) {
+          setSelectedRun("");
+        }
+      } else {
+        setRuns([]);
+      }
+      setRunLoading(false);
+
       setInstrumentLoading(false);
     });
   }, [selectedInstrument]);
@@ -206,11 +238,25 @@ function CrtDashboard() {
     return function () { clearInterval(id); };
   }, [selectedInstrument]);
 
+  // ── Executive Overview (run-scoped): fetch when both instrument + run set ──
+  const execReady = !!selectedInstrument && !!selectedRun;
+  React.useEffect(() => {
+    if (!execReady) { setExecutive(null); return; }
+    window.ApiClient.fetchExecutive(selectedInstrument, selectedRun)
+      .then(d => { setExecutive(d); localStorage.setItem("crt_run", selectedRun); })
+      .catch(() => { setExecutive(null); });
+  }, [selectedInstrument, selectedRun]);
+
   // ── Shared runtime props (passed to every page) ───────────────────────────
   const runtimeProps = {
     selectedInstrument,
     instruments,
     instrumentLoading,
+    runs,
+    selectedRun,
+    runLoading,
+    execReady,
+    executive,
     status,
     trades,
     tradeKpis,
@@ -241,6 +287,7 @@ function CrtDashboard() {
     { id: "System",       Component: SystemPage       },
     { id: "Intelligence", Component: IntelligencePage },
     { id: "Replay Lab",   Component: ReplayPage       },
+    { id: "Knowledge",    Component: KnowledgePage    },
   ];
   const active = PAGES.find(p => p.id === activePage) || PAGES[0];
 
@@ -248,19 +295,25 @@ function CrtDashboard() {
     <div className="app-shell">
       <TopBar
         activePage={activePage}
-        onNav={(p) => { setActivePage(p); setActiveSub(p); }}
+        onNav={(p) => { if (p === "Executive" && !execReady) return; setActivePage(p); setActiveSub(p); }}
         instruments={instruments}
         selectedInstrument={selectedInstrument}
         instrumentLoading={instrumentLoading}
         status={status}
-        onInstrumentChange={(inst) => setSelectedInstrument(inst)}
+        onInstrumentChange={(inst) => { setSelectedInstrument(inst); setSelectedRun(""); }}
+        runs={runs}
+        selectedRun={selectedRun}
+        runLoading={runLoading}
+        onRunChange={(r) => setSelectedRun(r)}
+        execDisabled={!execReady}
       />
       <div className="app-body">
         <SidebarNew
           activePage={activePage}
           activeSub={activeSub}
-          onNav={setActivePage}
+          onNav={(p) => { if (p === "Executive" && !execReady) return; setActivePage(p); }}
           onSubNav={setActiveSub}
+          execDisabled={!execReady}
         />
         <div className="content-area">
           <active.Component

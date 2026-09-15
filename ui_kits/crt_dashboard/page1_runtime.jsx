@@ -185,7 +185,7 @@ function RuntimePage({ activeSub, status, equity, trades, selectedInstrument }) 
                 <td className="mono">{t.exit}</td>
                 <td className={`mono ${t.rr > 0 ? "pos" : "neg"}`}>{t.rr > 0 ? "+" : ""}{t.rr.toFixed(2)}</td>
                 <td><span className={`tag ${t.result === "TP" ? "tp" : "sl"}`}>{t.result}</span></td>
-                <td className="mono">{t.conf.toFixed(2)}</td>
+                <td className="mono">{t.conf != null ? t.conf.toFixed(2) : "—"}</td>
                 <td><span className="tag normal">{t.regime}</span></td>
               </tr>
             ))}

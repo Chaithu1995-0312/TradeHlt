@@ -10,6 +10,8 @@
 <script src="vendor/react.development.js"></script>
 <script src="vendor/react-dom.development.js"></script>
 <script src="vendor/babel.min.js"></script>
+<!-- lightweight-charts v4.2.0 (TradingView, Apache-2.0) — sets window.LightweightCharts; see vendor/README.md -->
+<script src="vendor/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
 <div id="root"></div>
@@ -24,11 +26,13 @@
 <script type="text/babel" src="page1_runtime.jsx"></script>
 <script type="text/babel" src="page2_research.jsx"></script>
 <script type="text/babel" src="page3_models.jsx"></script>
+<script type="text/babel" src="page4_trade_chart.jsx"></script>
 <script type="text/babel" src="page4_trades.jsx"></script>
 <script type="text/babel" src="page5_backtests.jsx"></script>
 <script type="text/babel" src="page6_system.jsx"></script>
 <script type="text/babel" src="page7_intelligence.jsx"></script>
 <script type="text/babel" src="page8_replay.jsx"></script>
+<script type="text/babel" src="page9_knowledge.jsx"></script>
 <!-- app.jsx defines window.CrtDashboard; does NOT mount when _REAL_DATA_LOADING is set -->
 <script type="text/babel" src="app.jsx"></script>
 <!-- Mount-failure safety net: shows diagnostic banner if React never mounts after 5s -->

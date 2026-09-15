@@ -279,7 +279,17 @@ def test_series_csv_roundtrips_floats_exactly(tmp_path):
 # ── A-AC1: real corpus parity ──────────────────────────────────────────────────
 @pytest.mark.skipif(not CORPUS.is_file(), reason="XAUUSD corpus not present")
 def test_aac1_exported_m15_bars_match_source_csv_exactly():
-    """A-AC1: sample N>=50 exported bars must equal the source rows byte-for-value."""
+    """A-AC1: sample N>=50 exported bars must equal the source rows byte-for-value.
+
+    CORPUS-READ-SEAM P3 (adjudicated, deliberately NOT migrated): the raw `csv.DictReader`
+    read below is an INDEPENDENT ORACLE, not a redundant data load. `cs.load_base_candles`
+    already goes through `CandleLoader` (chart_series.py's own docstring: "so the XAUUSD
+    fail-closed identity guard stays on the load path"). This test exists specifically to
+    prove that gated path didn't silently mangle a value — routing this read through the
+    SAME `corpus_store`/`admit_corpus` chain the gated loader itself uses would make the
+    comparison tautological (two paths converging on the same parser, testing nothing).
+    Pinned in docs/governance/corpus_read_allowlist.json with a matching `note`.
+    """
     base = cs.load_base_candles(CORPUS, "XAUUSD")
     with open(CORPUS, newline="", encoding="utf-8-sig") as f:
         src = list(csv.DictReader(f))

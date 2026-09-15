@@ -173,8 +173,23 @@ def sha256_file(path: str | Path) -> str:
     return h.hexdigest()
 
 
-def build_config_pin(instrument: str, csv_path: str | Path) -> dict:
-    """ACTIVE_VERSION + config hash + corpus identity.
+def build_config_pin(
+    instrument: str, csv_path: str | Path, *,
+    run_config_version: str | None = None,
+    run_htf_clock_basis: str | None = None,
+    run_htf_candles_per_range: int | None = None,
+) -> dict:
+    """ACTIVE_VERSION + config hash + corpus identity, PLUS (G4, 2026-09-10) the
+    displayed RUN's own recorded config provenance.
+
+    `active_version` is read live from `configs/production/ACTIVE_VERSION` — it answers
+    "what config governs the system right now", nothing more. It is NOT the config that
+    produced the states this chart is drawing when the run predates a later config change
+    (an archived run's `events.jsonl` records CRT states under whatever config was active
+    when it ran). The `run_*` fields carry THAT run's own `summary.json` values instead —
+    callers pass them explicitly (this function does no run resolution of its own) so a
+    stale legend reads as `active_version != run_config_version` rather than silently
+    implying the current config governs archived states.
 
     Best-effort per field, but every field records WHY it is absent rather than silently
     omitting itself — an unresolved pin must be visible, not invisible (the silent-gap
@@ -187,6 +202,9 @@ def build_config_pin(instrument: str, csv_path: str | Path) -> dict:
         "corpus_sha256": None,
         "instrument": instrument,
         "session_timestamp_basis": None,
+        "run_config_version": run_config_version,
+        "run_htf_clock_basis": run_htf_clock_basis,
+        "run_htf_candles_per_range": run_htf_candles_per_range,
     }
     try:
         from config_layer.production_config import get_active_version
@@ -344,7 +362,10 @@ def write_export(series: ChartSeries, out_dir: str | Path,
         f"- Bars: **{len(series.bars)}**",
         f"- Range: `{series.start}` -> `{series.end}`",
         f"- CRT state source: `{series.crt_state_source}`",
-        f"- ACTIVE_VERSION: `{series.config_pin.get('active_version')}`",
+        f"- ACTIVE_VERSION (current, may differ from this run): `{series.config_pin.get('active_version')}`",
+        f"- Run config_version (governs the states drawn): `{series.config_pin.get('run_config_version')}`",
+        f"- Run HTF clock basis: `{series.config_pin.get('run_htf_clock_basis')}` "
+        f"({series.config_pin.get('run_htf_candles_per_range')} candles/window)",
         f"- Corpus sha256: `{series.config_pin.get('corpus_sha256')}`",
         f"- Clock basis: `{series.config_pin.get('session_timestamp_basis')}` (F-066)",
         "",

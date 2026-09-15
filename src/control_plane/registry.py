@@ -27,6 +27,7 @@ WORKFLOW_STAGE_ORDER: tuple[str, ...] = (
 )
 
 _WORKFLOW_STAGE_BY_COMMAND: dict[str, str] = {
+    "knowledge.rag_index": "Research & Analysis",
     "data.prepare_data": "Data Prep",
     "data.unified_data_builder": "Data Prep",
     "data.fetch_alphavantage": "Data Prep",
@@ -55,6 +56,10 @@ _WORKFLOW_STAGE_BY_COMMAND: dict[str, str] = {
 }
 
 _QUICKSTART_NOTES_BY_COMMAND: dict[str, tuple[str, ...]] = {
+    "knowledge.rag_index": (
+        "Builds the truth-tier DuckDB/Parquet lexical index under data/rag/.",
+        "Query with: python scripts/rag_index.py query \"why is rr_fusion disabled\" --explain",
+    ),
     "data.prepare_data": (
         "Start here when converting raw source files to normalized M15 CSV outputs.",
         "Use --validate-only first when ingesting a new provider format.",
@@ -172,6 +177,7 @@ _QUICKSTART_NOTES_BY_COMMAND: dict[str, tuple[str, ...]] = {
 }
 
 _RECOMMENDED_NEXT_BY_COMMAND: dict[str, tuple[str, ...]] = {
+    "knowledge.rag_index": (),
     "data.prepare_data": ("data.unified_data_builder", "tuning.auto_tuner_multi"),
     "data.unified_data_builder": ("tuning.auto_tuner_multi",),
     "data.fetch_alphavantage": ("data.prepare_data",),
@@ -1114,6 +1120,22 @@ def core_command_specs() -> tuple[CommandSpec, ...]:
                 ),
             ),
             artifacts=("data/script_registry.jsonl",),
+        ),
+
+        CommandSpec(
+            id="knowledge.rag_index",
+            title="Truth-tier RAG index",
+            description=(
+                "Build or query the truth-tier lexical RAG index (DuckDB/Parquet). "
+                "Surfaces CURRENT/INTENDED/RECORDED divergence; never blends tiers."
+            ),
+            category="Research & Analysis",
+            mode="python-file",
+            script="scripts/rag_index.py",
+            args_schema=(
+                ArgSpec("rebuild", flag="--rebuild", kind="bool", default=False, help="Full rebuild"),
+            ),
+            artifacts=("data/rag/chunks.jsonl", "data/rag/postings.jsonl", "data/rag/index_manifest.json"),
         ),
     )
     enriched: list[CommandSpec] = []
