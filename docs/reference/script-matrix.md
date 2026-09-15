@@ -12,7 +12,7 @@ python scripts/analysis/generate_script_matrix.py
 Authority: **inventory only** (no promote power). Thin-wrapper purity is **not**
 CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` only.
 
-**Records:** 448
+**Records:** 470
 
 | ID | Category | Lifecycle | Impl status | Path | Purpose |
 |---|---|---|---|---|---|
@@ -236,7 +236,7 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-218` | ORPHAN | ACTIVE | LOGIC_IN_SCRIPT | `scripts/misc/trade_replay_validator.py` | GRANDFATHER_UNCLASSIFIED |
 | `SCR-219` | CANONICAL_CLI | ACTIVE | LOGIC_IN_SCRIPT | `scripts/multi_llm/initiate_plan.py` | Prepare model-separated PROPOSAL + plan-design PROMPT + curated CONTEXT_BUNDL... |
 | `SCR-220` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/portfolio/replay_allocator.py` | GRANDFATHER_UNCLASSIFIED |
-| `SCR-221` | ORPHAN | ACTIVE | LOGIC_IN_SCRIPT | `scripts/rag_index.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-221` | CANONICAL_CLI | ACTIVE | LOGIC_IN_SCRIPT | `scripts/rag_index.py` | Build or query the truth-tier lexical RAG index (DuckDB/Parquet). Surfaces CU... |
 | `SCR-222` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/_build_xauusd_library_and_eval.py` | GRANDFATHER_UNCLASSIFIED |
 | `SCR-223` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/_corpus_inspect.py` | GRANDFATHER_UNCLASSIFIED |
 | `SCR-224` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/_enrich_xauusd_corpus.py` | GRANDFATHER_UNCLASSIFIED |
@@ -464,6 +464,28 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-446` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/jse003_engine_context_history_path_geometry.py` | JSE-003 measure-only: engine_context_history vs path geometry (BNB-only). Com... |
 | `SCR-447` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/l003h_trail_exit_transition_replay.py` | L-003H measure-only candle replay for trail/exit transition events (standalon... |
 | `SCR-448` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/l003i_trail_baseline_inversion.py` | L-003I measure-only baseline direction / base-rate inversion derived from L-0... |
+| `SCR-449` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/corpus_read_census.py` | PHASE 0 census (single-corpus-read-seam program): AST scan of src/scripts/too... |
+| `SCR-450` | GOVERNANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/corpus_read_lint.py` | PHASE 3 enforcement (single-corpus-read-seam program): shrink-only ratchet ov... |
+| `SCR-451` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/phase1_resolver_replay_evidence.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-452` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/phase1_resolver_replay_sample_acquisition.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-453` | DATA | ACTIVE | EXTRACTED_TO_SRC | `scripts/analysis/build_resolver_overlay.py` | Precompute the CRTStateResolver per-bar track over a full M15 corpus (Feature... |
+| `SCR-454` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/phase1_shadow_memory_subsystem_probe.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-455` | PROBE | EPHEMERAL | LOGIC_IN_SCRIPT | `_build_run_story.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-456` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/phase1_shadow_create_economic_census.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-457` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/phase1_shadow_memory_create_expire_mine.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-458` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/phase1_shadow_memory_timing_race_mine.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-459` | PROBE | EPHEMERAL | LOGIC_IN_SCRIPT | `_candidate_gen_experiments.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-460` | PROBE | EPHEMERAL | LOGIC_IN_SCRIPT | `_demotion_ab.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-461` | PROBE | EPHEMERAL | LOGIC_IN_SCRIPT | `_phase5_ranking_experiment.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-462` | PROBE | EPHEMERAL | LOGIC_IN_SCRIPT | `_truth_rank_census.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-463` | ORPHAN | ACTIVE | LOGIC_IN_SCRIPT | `scripts/_tmp_measure_rag_ranking.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-464` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/evaluation/gold_remap.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-465` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/ab_rr_slot_xauusd.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-466` | RESEARCH_RUNNER | ACTIVE | EXTRACTED_TO_SRC | `scripts/research/derive_opportunity_rr_bands.py` | Phase 1 of the layered-outcome-ontology plan: a READ-ONLY arithmetic deriver ... |
+| `SCR-467` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/discriminator_analysis_xauusd.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-468` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/link001_choch_measurement.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-469` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/retest_divergence_probe.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-470` | GOVERNANCE | ACTIVE | EXTRACTED_TO_SRC | `scripts/maintenance/verify_archive_manifests.py` | Archive ledger verifier (zero-loss promise of the research-framework consolid... |
 
 ---
 

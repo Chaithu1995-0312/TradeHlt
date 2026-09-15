@@ -49,6 +49,13 @@ GOVERNED_PREFIXES: tuple[str, ...] = (
     # Scoped to instances/ only — profiles, drafts and the parent-dir CPR contract are
     # out of the scan universe and must not pay the pre-commit tax.
     "configs/research/measurement_contracts/instances/",
+    # CORPUS-READ-SEAM P3: corpus_store.py is the sole sanctioned corpus-read gateway
+    # (dataset_registry/corpus_gate/clock_detector live here too) — an edit to this
+    # directory must run the corpus_read_lint ratchet + corpus_store parity floor.
+    "src/data_ingestion/",
+    # Research-framework consolidation (2026-09-14): archived originals + their SHA-256 manifests are
+    # the zero-loss record — any staged change under archive/ must run the archive-ledger floor.
+    "archive/",
 )
 
 # Exact files (not under a governed prefix) that also pull in the gate.
@@ -71,6 +78,7 @@ GOVERNED_FILES: tuple[str, ...] = (
     "src/governance/jsonl_claim_catalog.py",
     "src/governance/semantic_grounding.py",  # PR-2: the grounder the surface extends
     "src/governance/measurement_result_log.py",  # PR-3: the module, NOT the log file
+    "src/governance/archive_manifest.py",  # archive ledger verifier (floor: tests/governance/)
 )
 
 # The curated, currently-green pytest target list — the SINGLE source of truth shared by
@@ -109,6 +117,9 @@ GREEN_FLOOR: tuple[str, ...] = (
     "tests/test_jsonl_claim_grounding.py",
     # PR-3: a sealed contract claiming a non-UNRUN mt00 needs a real result line (F-083).
     "tests/test_measurement_result_log.py",
+    # CORPUS-READ-SEAM P3: shrink-only ratchet over direct (ungated) OHLCV corpus reads.
+    "tests/test_corpus_store.py",
+    "tests/test_corpus_read_lint.py",
 )
 
 

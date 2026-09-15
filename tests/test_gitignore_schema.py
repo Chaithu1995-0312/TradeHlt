@@ -48,6 +48,7 @@ _MUST_NOT_IGNORE = (
     "docs/research-readiness/sujan_crt/mc_sujan_xauusd_m15_v1/metrics.json",
     "configs/production/ACTIVE_VERSION",
     "configs/research/measurement_result_log.jsonl",
+    "docs/governance/run_linkage_registry.json",
     "src/identity/store.py",
     "data/README.md",
     "logs/README.md",

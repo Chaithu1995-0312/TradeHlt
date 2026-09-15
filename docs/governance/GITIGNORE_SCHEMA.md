@@ -75,6 +75,7 @@ Every path is exactly one class. Mixing occupancy into a tracked class is a sche
 | `docs/governance/xauusd_m15_phase1_frozen_candidate.json` | TRACKED_BINDING | yes | `content_hash_sha256` |
 | `docs/research-readiness/` | TRACKED_BINDING | yes | sealed `MC-*` evidence; **not** `results/` |
 | `configs/research/measurement_result_log.jsonl` | TRACKED_BINDING | yes | append-only measurement audit |
+| `docs/governance/run_linkage_registry.json` | TRACKED_BINDING | yes | run_id → logs/parquet paths (not logs/ occupancy) |
 | `data/` | LOCAL_BLOB | **no** (README + `.gitkeep` only) | Dataset Identity / frozen-candidate hash |
 | `models/` | LOCAL_MODEL | **no** for *new* files | `active_models.yaml` path + registry; **MIXED_RESIDUE** below |
 | `results/` | LOCAL_RUN | **no** (README + `.gitkeep` only) | `docs/research-readiness/` or a finding's tracked Evidence |

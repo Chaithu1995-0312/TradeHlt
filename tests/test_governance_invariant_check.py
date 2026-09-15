@@ -76,6 +76,10 @@ def test_policy_constants_are_named_and_typed() -> None:
     assert "configs/research/measurement_contracts/instances/" in chk.GOVERNED_PREFIXES
     assert "configs/research/measurement_result_log.jsonl" not in chk.GOVERNED_FILES
     assert "tests/test_measurement_result_log.py" in chk.GREEN_FLOOR
+    # Research-framework consolidation: archive ledger (floor rides the tests/governance/ entry)
+    assert "archive/" in chk.GOVERNED_PREFIXES
+    assert "src/governance/archive_manifest.py" in chk.GOVERNED_FILES
+    assert "tests/governance/" in chk.GREEN_FLOOR
     assert chk.requires_run(["scripts/probes/foo.py"])
     assert chk.requires_run(["scripts/tmp/scratch.py"])
 

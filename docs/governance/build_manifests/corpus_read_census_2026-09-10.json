@@ -1,0 +1,2460 @@
+{
+  "counts": {
+    "CORPUS": 6,
+    "DERIVED": 35,
+    "GATED": 19,
+    "UNKNOWN": 212
+  },
+  "files_scanned": 1614,
+  "findings": [
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "durable_key": "6d8fca7f73b00993",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "analyze_crt_pipeline.py",
+      "line": 228,
+      "qualname": "step6_final_trade_output"
+    },
+    {
+      "call": "<syntax-error>",
+      "class": "UNKNOWN",
+      "durable_key": "bfdfc9e1f4856d9e",
+      "evidence": "unexpected character after line continuation character (audit.py, line 2)",
+      "file": "audit.py",
+      "line": 2,
+      "qualname": "<module>"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "79e43dd14d892c1a",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "build_zone_registry_forced.py",
+      "line": 24,
+      "qualname": "collect_profitable_vectors"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "8873ef3bded95584",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "build_zone_registry_from_trades.py",
+      "line": 39,
+      "qualname": "collect_profitable_vectors"
+    },
+    {
+      "call": "<syntax-error>",
+      "class": "UNKNOWN",
+      "durable_key": "f196070535f4c018",
+      "evidence": "unexpected character after line continuation character (count_audit_tmp.py, line 4)",
+      "file": "count_audit_tmp.py",
+      "line": 4,
+      "qualname": "<module>"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "4056bdc0efdc61ba",
+      "evidence": "unresolvable path expression (names=['XLSX'])",
+      "file": "reports/xauusd_retest_pathb_counterfactual_probe.py",
+      "line": 75,
+      "qualname": "_load_candles"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "de0341f7a6e15250",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/all_states_economic_probe.py",
+      "line": 80,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "d643d2e2c544a6ac",
+      "evidence": "literal path: ['envelope_bar.parquet']",
+      "file": "scripts/analysis/all_states_economic_probe.py",
+      "line": 81,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "94d1ed4073262abe",
+      "evidence": "literal path: ['sweep_liquidity_fact.parquet']",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 92,
+      "qualname": "verify_matches_sweep_specific"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "fda4cb0df995eabe",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 93,
+      "qualname": "verify_matches_sweep_specific"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "60330c974acbb002",
+      "evidence": "literal path: ['episode.parquet']",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 94,
+      "qualname": "verify_matches_sweep_specific"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "076d6d7eaf316a2c",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 129,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "ec2f166fb9d7a15a",
+      "evidence": "literal path: ['episode.parquet']",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 130,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "86a62138cc83ecb5",
+      "evidence": "literal path: ['envelope_bar.parquet']",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 133,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "UNKNOWN",
+      "durable_key": "e6e8420abdd6ffc8",
+      "evidence": "unresolvable path expression (names=['atlas', 'fname'])",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 142,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "46f19a00ad22f68e",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/b2a_feature_candidate_certification.py",
+      "line": 105,
+      "qualname": "_load_corpus"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "34005ef00341431b",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/blind_label_sample.py",
+      "line": 58,
+      "qualname": "_load_frame"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "20dae7a12cc140fa",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/analysis/blind_label_score.py",
+      "line": 61,
+      "qualname": "_load_labels"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "5d2e15d1e7cd71b4",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/analysis/bnbusdt_trade_anatomy.py",
+      "line": 91,
+      "qualname": "load_candles"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "413bb7a0ce77f37e",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/analysis/bnbusdt_trade_anatomy.py",
+      "line": 113,
+      "qualname": "load_spine"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "0e610139a9929e1c",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/build_sweep_liquidity_fact.py",
+      "line": 113,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "55bd7d28dabfb559",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/crt_episode_number_trace.py",
+      "line": 182,
+      "qualname": "build_ftr_context"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "336acdfd55a5078d",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/crt_local_math_authority_probe.py",
+      "line": 27,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "17936832ec922dd8",
+      "evidence": "unresolvable path expression (names=['CSV'])",
+      "file": "scripts/analysis/crt_state_transition_audit_4m.py",
+      "line": 465,
+      "qualname": "main"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "11f2afabc9cf0f2b",
+      "evidence": "unresolvable path expression (names=['open', 'trades_csv'])",
+      "file": "scripts/analysis/early_invalidation_exectrade_ab.py",
+      "line": 105,
+      "qualname": "run"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "d61e8fdd4c1a6340",
+      "evidence": "traced to seam via 'csv_path'",
+      "file": "scripts/analysis/export_xauusd_window.py",
+      "line": 95,
+      "qualname": "export_window"
+    },
+    {
+      "call": "read_csv",
+      "class": "CORPUS",
+      "durable_key": "15504f35023a6810",
+      "evidence": "literal path: ['data/mt5/XAUUSD_M15.csv']",
+      "file": "scripts/analysis/feature_38_lineage_census.py",
+      "line": 668,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "8a9bf40e6e7dc2d6",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/feature_dag_rolling_certification.py",
+      "line": 58,
+      "qualname": "_load"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "58e6120976da099a",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/feature_dag_structural_certification.py",
+      "line": 153,
+      "qualname": "_load"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "13f9dd14f48e987d",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+      "line": 150,
+      "qualname": "run_probe"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "e6c139f4c6966b21",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/feature_math_drift_probe.py",
+      "line": 86,
+      "qualname": "run_probe"
+    },
+    {
+      "call": "read_csv",
+      "class": "CORPUS",
+      "durable_key": "042100aac7ac6da7",
+      "evidence": "corpus constant: ['PHASE1_PHYSICAL_PATH']",
+      "file": "scripts/analysis/feature_pipeline_fc05_closure.py",
+      "line": 1093,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "7f7f086073197115",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/feature_semantic_adjudication_pass_a.py",
+      "line": 54,
+      "qualname": "_load_ohlcv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "d9efbbb14ab0aca5",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/feature_trace_report.py",
+      "line": 997,
+      "qualname": "main"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "41157b329a01263b",
+      "evidence": "unresolvable path expression (names=['cands', 'open'])",
+      "file": "scripts/analysis/gate_contribution_audit.py",
+      "line": 96,
+      "qualname": "load_exec_trades"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "c47674c508459cb1",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/gd004_disp_rescale_probe.py",
+      "line": 67,
+      "qualname": "run_probe"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "202e0faf03ed865f",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/analysis/gen_dummy_trades.py",
+      "line": 12,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "f372dbe128166018",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/implementation_model_validation_xauusd.py",
+      "line": 239,
+      "qualname": "load_corpus"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "cb70d5b41a81b59c",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/legacy_feature_fingerprint.py",
+      "line": 56,
+      "qualname": "build_fingerprint"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "9edafcc16c05e8b1",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/mature_semantic_audit.py",
+      "line": 130,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "194614b0939742dd",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/mother_range_inside_close.py",
+      "line": 297,
+      "qualname": "main"
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "durable_key": "7faa4238d2b039c0",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/analysis/ohlcv_census.py",
+      "line": 199,
+      "qualname": "_scan_csv"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "fd20ec8aff640ab9",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/analysis/p001_excursion_probe.py",
+      "line": 105,
+      "qualname": "load_corpus"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "1672f34d83bae1ad",
+      "evidence": "unresolvable path expression (names=['args', 'data'])",
+      "file": "scripts/analysis/p3b_gate_expired_counterfactual_rr.py",
+      "line": 277,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "f03c7625d03ecde1",
+      "evidence": "unresolvable path expression (names=['args', 'trades'])",
+      "file": "scripts/analysis/p3b_gate_expired_counterfactual_rr.py",
+      "line": 285,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "UNKNOWN",
+      "durable_key": "c35212b00511428e",
+      "evidence": "unresolvable path expression (names=['bar_matrix_path'])",
+      "file": "scripts/analysis/phase1_resolver_replay_evidence.py",
+      "line": 214,
+      "qualname": "_load_trend_bias_by_ts"
+    },
+    {
+      "call": "<syntax-error>",
+      "class": "UNKNOWN",
+      "durable_key": "36f1592c7ee958cd",
+      "evidence": "invalid non-printable character U+FEFF (phase1_resolver_replay_sample_acquisition.py, line 1)",
+      "file": "scripts/analysis/phase1_resolver_replay_sample_acquisition.py",
+      "line": 1,
+      "qualname": "<module>"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "d0ee99843260aaf7",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/phase1_run1_feature_truth.py",
+      "line": 134,
+      "qualname": "verify_legacy_baseline"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "1225a343d9877570",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/pit_phaseC_feature_certification.py",
+      "line": 62,
+      "qualname": "_load_corpus"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "ea935807b5aa892c",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/pit_swing_blast_radius.py",
+      "line": 203,
+      "qualname": "_load_corpus"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "26039c32be5a7578",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/pit_swing_gateon_ab.py",
+      "line": 121,
+      "qualname": "prove_corpus_parity"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "588566d7dda07bb8",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/pit_swing_gateon_ab.py",
+      "line": 132,
+      "qualname": "prove_intervention_isolation"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "6673ed6ebc698a13",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/pit_swing_gateon_ab.py",
+      "line": 197,
+      "qualname": "prove_pc1_local_channel"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "ef517b6dada4588b",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/analysis/pit_swing_gateon_ab.py",
+      "line": 333,
+      "qualname": "_load_ledger"
+    },
+    {
+      "call": "read_excel",
+      "class": "UNKNOWN",
+      "durable_key": "d2f60edb9b27a334",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/purge_delay_scan.py",
+      "line": 41,
+      "qualname": "_load_ohlcv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "ade6f3b8670df4b8",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/purge_delay_scan.py",
+      "line": 43,
+      "qualname": "_load_ohlcv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "af1c0884514020ab",
+      "evidence": "unresolvable path expression (names=['p'])",
+      "file": "scripts/analysis/purge_slice.py",
+      "line": 52,
+      "qualname": "load_corpus"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "751971dbba4a9a70",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/run_crt_local_math_parity_audit.py",
+      "line": 41,
+      "qualname": "_load_ohlcv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "6952210b5fe55e65",
+      "evidence": "unresolvable path expression (names=['d'])",
+      "file": "scripts/analysis/run_crt_trace_workflow.py",
+      "line": 159,
+      "qualname": "summarize_locate"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "20f0035ad9f39a69",
+      "evidence": "traced to seam via 'corpus'",
+      "file": "scripts/analysis/run_gaussian_xauusd_2m.py",
+      "line": 104,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "ab5dc88823ad602d",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/run_msip_shadow.py",
+      "line": 68,
+      "qualname": "_load_ohlcv"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "55dce08699e91e99",
+      "evidence": "traced to seam via 'corpus'",
+      "file": "scripts/analysis/run_rr_xauusd_2m.py",
+      "line": 216,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "c5e4769c24d926bf",
+      "evidence": "traced to seam via 'corpus'",
+      "file": "scripts/analysis/run_zonegate_xauusd_2m.py",
+      "line": 113,
+      "qualname": "main"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "06a548b260ca4d66",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/analysis/schema_audit.py",
+      "line": 25,
+      "qualname": "_read_csv_schema"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "ed84e14fdef97b8a",
+      "evidence": "traced to seam via 'src'",
+      "file": "scripts/analysis/search_xauusd_candidate_window.py",
+      "line": 173,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "e545b0aa74d43f7c",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/semantic_layer_validation.py",
+      "line": 397,
+      "qualname": "main"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "1362150af96569e3",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/analysis/session_cost_audit.py",
+      "line": 23,
+      "qualname": "load_trades"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "1c823a3dae135e53",
+      "evidence": "literal path: ['sweep_liquidity_fact.parquet']",
+      "file": "scripts/analysis/sweep_conditional_magnitude_probe.py",
+      "line": 85,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "55eabaeef4259852",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/sweep_conditional_magnitude_probe.py",
+      "line": 86,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "4303999fbfb14eef",
+      "evidence": "literal path: ['episode.parquet']",
+      "file": "scripts/analysis/sweep_conditional_magnitude_probe.py",
+      "line": 87,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "82ebb5c25346bbff",
+      "evidence": "literal path: ['envelope_bar.parquet']",
+      "file": "scripts/analysis/sweep_conditional_magnitude_probe.py",
+      "line": 90,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "62ddca9e13ee0449",
+      "evidence": "literal path: ['excursion.parquet']",
+      "file": "scripts/analysis/sweep_conditional_magnitude_probe.py",
+      "line": 92,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "bb05fa6a22af0edc",
+      "evidence": "literal path: ['sweep_liquidity_fact.parquet']",
+      "file": "scripts/analysis/sweep_state_persistence_probe.py",
+      "line": 113,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "781d0087a670b353",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/sweep_state_persistence_probe.py",
+      "line": 114,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "2fcc55144cf8e7ab",
+      "evidence": "literal path: ['episode.parquet']",
+      "file": "scripts/analysis/sweep_state_persistence_probe.py",
+      "line": 115,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "c63336bf2d7029fe",
+      "evidence": "literal path: ['sweep_liquidity_fact.parquet']",
+      "file": "scripts/analysis/sweep_structure_economic_probe.py",
+      "line": 129,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "f384b98bac564f9e",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/sweep_structure_economic_probe.py",
+      "line": 130,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "1b04bced2de9a71c",
+      "evidence": "literal path: ['envelope_bar.parquet']",
+      "file": "scripts/analysis/sweep_structure_economic_probe.py",
+      "line": 131,
+      "qualname": "main"
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "durable_key": "3d5370181f8dd751",
+      "evidence": "literal path: ['excursion.parquet']",
+      "file": "scripts/analysis/sweep_structure_economic_probe.py",
+      "line": 133,
+      "qualname": "main"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "a1ccd910327e10d6",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/test_functionality_excel.py",
+      "line": 896,
+      "qualname": "openpyxl_load"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "8515425355b0e4b1",
+      "evidence": "unresolvable path expression (names=['fa'])",
+      "file": "scripts/analysis/v3_config_parity.py",
+      "line": 153,
+      "qualname": "_compare_trades"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "0e9cd8cbdef06afd",
+      "evidence": "unresolvable path expression (names=['fb'])",
+      "file": "scripts/analysis/v3_config_parity.py",
+      "line": 153,
+      "qualname": "_compare_trades"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "27b6f13404409eec",
+      "evidence": "traced to seam via 'csv_path'",
+      "file": "scripts/analysis/xauusd_crt_baseline_trace.py",
+      "line": 118,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "b9c943e8af0f662c",
+      "evidence": "traced to seam via 'csv_path'",
+      "file": "scripts/analysis/xauusd_crt_transition_trace.py",
+      "line": 287,
+      "qualname": "main"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "c593d5a2d37a52c8",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/xauusd_excel_feature_state_trace.py",
+      "line": 188,
+      "qualname": "load_from_xlsx"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "a89126e0ce51d05d",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/xauusd_excel_feature_state_trace.py",
+      "line": 208,
+      "qualname": "load_from_csv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "2f066766423b6b48",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/zone_registry_builder.py",
+      "line": 16,
+      "qualname": "load_trades"
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "durable_key": "319b233a2be7836a",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/backtest/manual_backtest.py",
+      "line": 206,
+      "qualname": "load_csv"
+    },
+    {
+      "call": "read_csv",
+      "class": "DERIVED",
+      "durable_key": "29b2a956035a7075",
+      "evidence": "literal path: ['results/manual/manual_trades.csv']",
+      "file": "scripts/backtest/manual_backtest.py",
+      "line": 751,
+      "qualname": "<module>"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "f876af0b5984966b",
+      "evidence": "unresolvable path expression (names=['args', 'csv'])",
+      "file": "scripts/backtest/manual_backtest.py",
+      "line": 757,
+      "qualname": "<module>"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "de723b3abd3ec1aa",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/build_m15_unified.py",
+      "line": 73,
+      "qualname": "load_files"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "a04265aef87cb4f7",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/build_m15_unified.py",
+      "line": 86,
+      "qualname": "load_files"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "c6bf8e4c324ec370",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/build_rr_dataset.py",
+      "line": 189,
+      "qualname": "_load_csv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "a392860f185179a8",
+      "evidence": "unresolvable path expression (names=['inst'])",
+      "file": "scripts/data/check_availability.py",
+      "line": 9,
+      "qualname": "<module>"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "03f2f41507787642",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/convert_binance_m1_to_m15.py",
+      "line": 13,
+      "qualname": "<module>"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "ebc4f6425e4397a1",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/data/csv_to_excel.py",
+      "line": 15,
+      "qualname": "<module>"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "27cecf4145cbd54a",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/data/fetch_crypto_ccxt.py",
+      "line": 146,
+      "qualname": "_to_excel"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "7296916d1897f0f0",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/data/fetch_forex_yfinance.py",
+      "line": 168,
+      "qualname": "fetch_instrument"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "5c0d61ead62dca07",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/data/fetch_forex_yfinance.py",
+      "line": 188,
+      "qualname": "_to_excel"
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "durable_key": "42592f75c787d782",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/prepare_data.py",
+      "line": 73,
+      "qualname": "parse_binance"
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "durable_key": "e21d412d206b6ae6",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/prepare_data.py",
+      "line": 119,
+      "qualname": "parse_standard"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "84e0fcbe13e39f67",
+      "evidence": "unresolvable path expression (names=['file_path'])",
+      "file": "scripts/data/split_bnb_excel.py",
+      "line": 7,
+      "qualname": "split_csv_to_excel"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "af4630e31571859f",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/verify_output.py",
+      "line": 7,
+      "qualname": "<module>"
+    },
+    {
+      "call": "read_excel",
+      "class": "UNKNOWN",
+      "durable_key": "4675afff464ea5b5",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/verify_output.py",
+      "line": 14,
+      "qualname": "<module>"
+    },
+    {
+      "call": "<syntax-error>",
+      "class": "UNKNOWN",
+      "durable_key": "84fd4c069d0307db",
+      "evidence": "invalid non-printable character U+FEFF (build_g001_consumer_attribution.py, line 1)",
+      "file": "scripts/governance/build_g001_consumer_attribution.py",
+      "line": 1,
+      "qualname": "<module>"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "8879b002cf804233",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/governance/enrich_workbooks_with_semantic_identity.py",
+      "line": 186,
+      "qualname": "enrich_scripts_workbook"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "384ca8f76d733f32",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/governance/enrich_workbooks_with_semantic_identity.py",
+      "line": 279,
+      "qualname": "enrich_src_workbook"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "e955bba3f072e08e",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/governance/enrich_workbooks_with_semantic_identity.py",
+      "line": 331,
+      "qualname": "enrich_tests_workbook"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "e88395315149db4f",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/governance/enrich_workbooks_with_semantic_identity.py",
+      "line": 384,
+      "qualname": "main"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "b25f5843ecbf1e57",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/groq_bridge/prepare_retrospective.py",
+      "line": 153,
+      "qualname": "_load_trades_csv"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "9abb38f6fa858d29",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/groq_bridge/prepare_retrospective.py",
+      "line": 168,
+      "qualname": "_load_legacy_csv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "a9fdc9c85f3d7c9b",
+      "evidence": "unresolvable path expression (names=['trade_csv'])",
+      "file": "scripts/misc/build_zone_registry_from_trades.py",
+      "line": 74,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "096de134d2f2cd26",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/misc/resample_m1_to_m15.py",
+      "line": 30,
+      "qualname": "<module>"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "ca9773e135015938",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/_enrich_xauusd_corpus.py",
+      "line": 41,
+      "qualname": "load_ohlcv"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "60228d35b34f3777",
+      "evidence": "unresolvable path expression (names=['fp', 'open'])",
+      "file": "scripts/research/accepted_trade_attribution.py",
+      "line": 43,
+      "qualname": "load_accepted"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "2f2efb35dc222ff2",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/research/bnbusdt_analyze_report.py",
+      "line": 27,
+      "qualname": "<module>"
+    },
+    {
+      "call": "open",
+      "class": "CORPUS",
+      "durable_key": "a897410bbfb02348",
+      "evidence": "module constant CANDLES_CSV = 'data/BNBUSDT_M15.csv'",
+      "file": "scripts/research/bnbusdt_enrich_trades.py",
+      "line": 33,
+      "qualname": "<module>"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "864e483acbb5bb5c",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/research/bnbusdt_enrich_trades.py",
+      "line": 34,
+      "qualname": "<module>"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "864e483acbb5bb5c-occ1",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/research/bnbusdt_enrich_trades.py",
+      "line": 57,
+      "qualname": "<module>"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "46319c83146f54e8",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/build_bar_matrix.py",
+      "line": 154,
+      "qualname": "build_bar_matrix"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "d05b9c0e46a638ea",
+      "evidence": "traced to seam via 'guarded'",
+      "file": "scripts/research/certify_xauusd_corpus.py",
+      "line": 57,
+      "qualname": "certify"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "c673a8515c8ba097",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/crt_range_rebuild_probe.py",
+      "line": 96,
+      "qualname": "load_ohlcv"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "9caf102d76912db3",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/research/crt_resolver_economic_comparison.py",
+      "line": 124,
+      "qualname": "load_engine_trades"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "f49b39240426cd40",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_resolver_economic_comparison.py",
+      "line": 235,
+      "qualname": "drive_resolver_with_memory"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "f5055cfe78ef387b",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_state_confusion_matrix.py",
+      "line": 109,
+      "qualname": "remap_event_indices_to_ohlcv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "034cad426558874a",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_state_confusion_matrix.py",
+      "line": 281,
+      "qualname": "compute_enriched_frame"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "10b2c84348b00b19",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_state_confusion_matrix.py",
+      "line": 364,
+      "qualname": "build_resolver_timeline"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "8bdb8e7b0d35b7cf",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_state_confusion_matrix.py",
+      "line": 1068,
+      "qualname": "prepare_engine_context"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "162606e98a0305c5",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_state_window_trace.py",
+      "line": 100,
+      "qualname": "_frame_definition"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "45f4c40a1538be80",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_state_window_trace.py",
+      "line": 137,
+      "qualname": "_engine_to_raw_offsets"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "e5c77956c033b2e0",
+      "evidence": "unresolvable path expression (names=['open', 'trd_path'])",
+      "file": "scripts/research/execution_planner_replay.py",
+      "line": 211,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "a549190e4d5afe8e",
+      "evidence": "unresolvable path expression (names=['matrix_csv'])",
+      "file": "scripts/research/exit_geometry_scan.py",
+      "line": 99,
+      "qualname": "_load_inputs"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "6d4654525c12e203",
+      "evidence": "unresolvable path expression (names=['Path', 'bm_manifest'])",
+      "file": "scripts/research/exit_geometry_scan.py",
+      "line": 100,
+      "qualname": "_load_inputs"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "ce0dd8ef63b51c5c",
+      "evidence": "unresolvable path expression (names=['CSV_PATH'])",
+      "file": "scripts/research/gaussian_rr_scatter.py",
+      "line": 69,
+      "qualname": "main"
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "durable_key": "ea895e7a0bcb2e4c",
+      "evidence": "module constant CANDIDATES_PARQUET = 'xauusd_m15_candidates.parquet'",
+      "file": "scripts/research/high_acceptance_activity_conditioning.py",
+      "line": 296,
+      "qualname": "persistent_scores"
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "durable_key": "20b51b0b64460b8a",
+      "evidence": "module constant FEATURES_PARQUET = 'xauusd_m15_structural_features.parquet'",
+      "file": "scripts/research/high_acceptance_activity_conditioning.py",
+      "line": 303,
+      "qualname": "main"
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "durable_key": "a07b4082ce440aa0",
+      "evidence": "module constant RAW_PARQUET = 'xauusd_m15.parquet'",
+      "file": "scripts/research/high_acceptance_gap_policy.py",
+      "line": 62,
+      "qualname": "load_raw"
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "durable_key": "255a005c36b4feba",
+      "evidence": "module constant FEATURES_PARQUET = 'xauusd_m15_structural_features.parquet'",
+      "file": "scripts/research/high_acceptance_group_ablation.py",
+      "line": 89,
+      "qualname": "load_frame"
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "durable_key": "caa22a071cf1a8ae",
+      "evidence": "module constant RAW_PARQUET = 'xauusd_m15.parquet'",
+      "file": "scripts/research/high_acceptance_group_ablation.py",
+      "line": 90,
+      "qualname": "load_frame"
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "durable_key": "9a7d2967643bb583",
+      "evidence": "module constant FEATURES_PARQUET = 'xauusd_m15_structural_features.parquet'",
+      "file": "scripts/research/high_acceptance_multivariate_model.py",
+      "line": 73,
+      "qualname": "load_matrix"
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "durable_key": "ca7e7f0d459b4c32",
+      "evidence": "module constant FEATURES_PARQUET = 'xauusd_m15_structural_features.parquet'",
+      "file": "scripts/research/high_acceptance_normalization_control.py",
+      "line": 105,
+      "qualname": "load_with_stable_target"
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "durable_key": "f668ca41413e2271",
+      "evidence": "module constant RAW_PARQUET = 'xauusd_m15.parquet'",
+      "file": "scripts/research/high_acceptance_normalization_control.py",
+      "line": 106,
+      "qualname": "load_with_stable_target"
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "durable_key": "553f2f3fac5d5d7b",
+      "evidence": "module constant FEATURES_PARQUET = 'xauusd_m15_structural_features.parquet'",
+      "file": "scripts/research/high_acceptance_regime_stability.py",
+      "line": 112,
+      "qualname": "load_frame"
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "durable_key": "24e373cf52ff63a7",
+      "evidence": "module constant RAW_PARQUET = 'xauusd_m15.parquet'",
+      "file": "scripts/research/high_acceptance_regime_stability.py",
+      "line": 113,
+      "qualname": "load_frame"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "a74392d921f5fb17",
+      "evidence": "unresolvable path expression (names=['SRC_CSV'])",
+      "file": "scripts/research/high_acceptance_scan.py",
+      "line": 64,
+      "qualname": "load_raw"
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "durable_key": "93461bbb7a38bf34",
+      "evidence": "module constant RAW_PARQUET = 'xauusd_m15.parquet'",
+      "file": "scripts/research/high_acceptance_structural_scan.py",
+      "line": 70,
+      "qualname": "load_inputs"
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "durable_key": "a47fbd3d65684349",
+      "evidence": "module constant CANDIDATES_PARQUET = 'xauusd_m15_candidates.parquet'",
+      "file": "scripts/research/high_acceptance_structural_scan.py",
+      "line": 71,
+      "qualname": "load_inputs"
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "durable_key": "f8e4e6654800d57f",
+      "evidence": "module constant RAW_PARQUET = 'xauusd_m15.parquet'",
+      "file": "scripts/research/high_acceptance_structural_scan.py",
+      "line": 92,
+      "qualname": "build_structural_features"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "c15f217f9d19530c",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/research/ingest_live_outcomes.py",
+      "line": 103,
+      "qualname": "_load_outcomes"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "ad6168f3a3c15421",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/research/inspect_old_runs.py",
+      "line": 14,
+      "qualname": "<module>"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "aafdba48158dbc50",
+      "evidence": "unresolvable path expression (names=['anatomy_path'])",
+      "file": "scripts/research/jse001_crt_context_join.py",
+      "line": 215,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "012a4ef98dff0553",
+      "evidence": "unresolvable path expression (names=['anatomy_path'])",
+      "file": "scripts/research/jse002_engine_state_path_geometry.py",
+      "line": 328,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "953a5461950c862a",
+      "evidence": "unresolvable path expression (names=['l003h_path'])",
+      "file": "scripts/research/jse002_engine_state_path_geometry.py",
+      "line": 341,
+      "qualname": "main"
+    },
+    {
+      "call": "<syntax-error>",
+      "class": "UNKNOWN",
+      "durable_key": "dc4add3d5a03ff7e",
+      "evidence": "invalid non-printable character U+FEFF (jse003_engine_context_history_path_geometry.py, line 1)",
+      "file": "scripts/research/jse003_engine_context_history_path_geometry.py",
+      "line": 1,
+      "qualname": "<module>"
+    },
+    {
+      "call": "<syntax-error>",
+      "class": "UNKNOWN",
+      "durable_key": "bc45f07e7c3c400c",
+      "evidence": "invalid non-printable character U+FEFF (l003h_trail_exit_transition_replay.py, line 1)",
+      "file": "scripts/research/l003h_trail_exit_transition_replay.py",
+      "line": 1,
+      "qualname": "<module>"
+    },
+    {
+      "call": "<syntax-error>",
+      "class": "UNKNOWN",
+      "durable_key": "2ab232ceb042bff8",
+      "evidence": "invalid non-printable character U+FEFF (l003i_trail_baseline_inversion.py, line 1)",
+      "file": "scripts/research/l003i_trail_baseline_inversion.py",
+      "line": 1,
+      "qualname": "<module>"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "e42c315be6a40966",
+      "evidence": "unresolvable path expression (names=['open', 'path'])",
+      "file": "scripts/research/live_path_replay.py",
+      "line": 101,
+      "qualname": "_load_trades"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "dfbd395ddafdf226",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/mc_cpr_l0_residual_harness.py",
+      "line": 60,
+      "qualname": "_load_ohlcv"
+    },
+    {
+      "call": "read_csv",
+      "class": "CORPUS",
+      "durable_key": "2207673aaf57eabd",
+      "evidence": "module constant CANDLES_CSV = 'data/BNBUSDT_M15.csv'",
+      "file": "scripts/research/momentum_continuation_bnbusdt.py",
+      "line": 969,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "833e813c0626e454",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/opportunity_scanner.py",
+      "line": 43,
+      "qualname": "_load_csv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "09f239e8b9877b0a",
+      "evidence": "unresolvable path expression (names=['matrix_csv'])",
+      "file": "scripts/research/oracle_pattern_scan.py",
+      "line": 123,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "04f571acfedb4aa5",
+      "evidence": "unresolvable path expression (names=['labels_csv'])",
+      "file": "scripts/research/oracle_pattern_scan.py",
+      "line": 124,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "404ef86cb6e894aa",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/p_struct_01_displacement_evidence.py",
+      "line": 151,
+      "qualname": "official_volume_by_ts"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "47772d18082e13a9",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/rr_l2_feature_truth.py",
+      "line": 82,
+      "qualname": "_load_candles"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "f42821e2639f6511",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/research/rr_l3_label_generation.py",
+      "line": 63,
+      "qualname": "_load_candles"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "d608ba13895b9274",
+      "evidence": "traced to seam via 'ADMISSION'",
+      "file": "scripts/research/run_crt_state_on_mt5_xauusd.py",
+      "line": 54,
+      "qualname": "load_ohlcv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "662104db467978d8",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/run_h_g001_001_sweep_veto.py",
+      "line": 115,
+      "qualname": "_load_ohlcv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "26bcda69c09174d2",
+      "evidence": "unresolvable path expression (names=['corpus'])",
+      "file": "scripts/research/run_h_msip_001.py",
+      "line": 185,
+      "qualname": "build_panel"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "5adc7d231c0284f7",
+      "evidence": "traced to seam via 'corpus'",
+      "file": "scripts/research/run_xau_metals_protocol_v1.py",
+      "line": 1039,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "fdcacea93d376db5",
+      "evidence": "unresolvable path expression (names=['args', 'csv'])",
+      "file": "scripts/research/shape_statistics_survey.py",
+      "line": 37,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "7a9418c28fe963c0",
+      "evidence": "unresolvable path expression (names=['args', 'csv'])",
+      "file": "scripts/research/smc_feature_month_extract.py",
+      "line": 94,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "682aaf680f7aff1a",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/smc_visual_verification.py",
+      "line": 130,
+      "qualname": "load_bars"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "59bed96bbf31872d",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/trace_sweep_geometry.py",
+      "line": 223,
+      "qualname": "analyze"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "369bd94a7bd5e7dc",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/trace_zone_gate_xauusd.py",
+      "line": 79,
+      "qualname": "main"
+    },
+    {
+      "call": "read_parquet",
+      "class": "UNKNOWN",
+      "durable_key": "094047932eb392e0",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/validate_crt_state_resolver.py",
+      "line": 409,
+      "qualname": "_load_dataframe"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "fe24832211c7aeac",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/validate_crt_state_resolver.py",
+      "line": 411,
+      "qualname": "_load_dataframe"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "d5f14f81e752a651",
+      "evidence": "unresolvable path expression (names=['args', 'csv'])",
+      "file": "scripts/research/validate_fm030_bands.py",
+      "line": 55,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "72e6284a848a51c6",
+      "evidence": "unresolvable path expression (names=['matrix_csv'])",
+      "file": "scripts/research/validate_oracle_harness.py",
+      "line": 249,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "65ae7e52d6164ecd",
+      "evidence": "unresolvable path expression (names=['labels_csv'])",
+      "file": "scripts/research/validate_oracle_harness.py",
+      "line": 250,
+      "qualname": "main"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "f6754e037f3765ff",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/research/visual_state_sample.py",
+      "line": 205,
+      "qualname": "load_csv_rows"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "11350f570aa5a857",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/xauusd_episode_semantic_reconstruction.py",
+      "line": 63,
+      "qualname": "_load_csv"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "844e2499f0b2a37e",
+      "evidence": "traced to seam via 'guarded'",
+      "file": "scripts/research/xauusd_gaussian_econ_ledger.py",
+      "line": 175,
+      "qualname": "load_bars"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "4599a791fbfa3495",
+      "evidence": "traced to seam via 'guarded'",
+      "file": "scripts/research/xauusd_gaussian_econ_units.py",
+      "line": 192,
+      "qualname": "build_feature_lookup"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "d5dc8c1d932a4166",
+      "evidence": "traced to seam via 'path'",
+      "file": "scripts/research/xauusd_price_cost_trace.py",
+      "line": 134,
+      "qualname": "case_walk"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "0cdb1184801a2638",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/zone_x_o4_gap_study.py",
+      "line": 113,
+      "qualname": "load_ohlcv"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "ded5e821e3b6ab5b",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/training/phase5_calibration.py",
+      "line": 340,
+      "qualname": "TradeDataset.from_backtest_results"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "96e37c50601cb937",
+      "evidence": "traced to seam via 'csv_path'",
+      "file": "scripts/training/train_bitnet.py",
+      "line": 96,
+      "qualname": "build_dataset"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "84e4c57f76f096f4",
+      "evidence": "traced to seam via 'corpus'",
+      "file": "scripts/training/train_gaussian_xauusd.py",
+      "line": 582,
+      "qualname": "main"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "12a8983cbb136e59",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/analytics/sl_tp_comparator.py",
+      "line": 493,
+      "qualname": "SLTPComparator.load_candles_from_csv"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "8b6823f686a1c396",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/analytics/sl_tp_comparator.py",
+      "line": 555,
+      "qualname": "_load_trades_from_csv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "ab6588fd06d0b6d4",
+      "evidence": "unresolvable path expression (names=['p'])",
+      "file": "src/bitnet/contract_c_trainer.py",
+      "line": 177,
+      "qualname": "build_dataset_from_csv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "ba27aad376fb743d",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "src/bitnet/population_label_audit.py",
+      "line": 136,
+      "qualname": "audit_csv"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "e83a00e0dd0e1c14",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/control_plane/dashboard_api.py",
+      "line": 252,
+      "qualname": "TradingDashboardAPI.status_payload"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "2ca16a296c86d96d",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/control_plane/dashboard_api.py",
+      "line": 962,
+      "qualname": "TradingDashboardAPI.trades_payload"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "85af4cf19b0b51a0",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/control_plane/dashboard_api.py",
+      "line": 1009,
+      "qualname": "TradingDashboardAPI.equity_curve_payload"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "7fb1894605c3b520",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/control_plane/dashboard_api.py",
+      "line": 1099,
+      "qualname": "TradingDashboardAPI.executive_payload"
+    },
+    {
+      "call": "read_excel",
+      "class": "UNKNOWN",
+      "durable_key": "eea42c7dcbd8c141",
+      "evidence": "unresolvable path expression (names=['p'])",
+      "file": "src/data_ingestion/clock_detector.py",
+      "line": 110,
+      "qualname": "load_raw_ohlcv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "39cc79f211b58a5b",
+      "evidence": "unresolvable path expression (names=['p'])",
+      "file": "src/data_ingestion/clock_detector.py",
+      "line": 117,
+      "qualname": "load_raw_ohlcv"
+    },
+    {
+      "call": "read_table",
+      "class": "UNKNOWN",
+      "durable_key": "3461332d7f0e18dd",
+      "evidence": "unresolvable path expression (names=['ppath'])",
+      "file": "src/data_ingestion/corpus_store.py",
+      "line": 330,
+      "qualname": "read"
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "durable_key": "098b5e1ea78b33b6",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/data_ingestion/dataset_integrity.py",
+      "line": 536,
+      "qualname": "_stream_candles"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "ba8b0da63b852b20",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/data_ingestion/historical_fetcher.py",
+      "line": 509,
+      "qualname": "HistoricalFetcher._load_from_csv"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "60a5bd4acc8561fa",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/governance/portfolio_validation.py",
+      "line": 493,
+      "qualname": "_patch_runner_for_journal_access.patched_run"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "da9eafe4615b0ada",
+      "evidence": "unresolvable path expression (names=['self', 'trades_path'])",
+      "file": "src/governance/reflection_buffer_advanced.py",
+      "line": 41,
+      "qualname": "ReflectionBuffer.load_and_merge"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "1071060dfd8decb6",
+      "evidence": "unresolvable path expression (names=['output_csv', 'self'])",
+      "file": "src/governance/shadow_promotion_gate.py",
+      "line": 180,
+      "qualname": "ShadowPromotionGate.execute_shadow_test"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "9d9a2eff1e69b629",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/governance/strategy_backtest.py",
+      "line": 147,
+      "qualname": "StrategyBacktester.run"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "e5153584c16db845",
+      "evidence": "unresolvable path expression (names=['splitlines', 'text'])",
+      "file": "src/identity/certify.py",
+      "line": 97,
+      "qualname": "run_certification"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "957e6dcb45dcb03e",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/inout/live_rail/ohlcv_replay_port.py",
+      "line": 59,
+      "qualname": "read_corpus_rows"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "c14acd5a469483ef",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/llm_research/forward_tester.py",
+      "line": 223,
+      "qualname": "_read_csv"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "1e2ef43213a0ba2a",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/llm_research/pattern_extractor.py",
+      "line": 95,
+      "qualname": "_load_trades"
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "durable_key": "be79bc7aa04e70dc",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/replay/timing_reconstructor.py",
+      "line": 188,
+      "qualname": "load_candles"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "635377398d3591bc",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/research/adapters/spine_signal_source.py",
+      "line": 203,
+      "qualname": "ProductionSpineSource._parse_trades"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "2e332bdb9013f83f",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/cross_sectional.py",
+      "line": 86,
+      "qualname": "_read_perp"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "2e332bdb9013f83f-occ1",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/cross_sectional.py",
+      "line": 95,
+      "qualname": "_read_perp"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "f04b929615a50d1d",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/episodes/flat.py",
+      "line": 153,
+      "qualname": "read_flat"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "c13416848a598e76",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/episodes/projectors/spine.py",
+      "line": 64,
+      "qualname": "read_ledger"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "790cce71cb4a9964",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/evidence/context_attribution.py",
+      "line": 250,
+      "qualname": "unit_rows"
+    },
+    {
+      "call": "read_table",
+      "class": "UNKNOWN",
+      "durable_key": "247aa4fae78111a5",
+      "evidence": "unresolvable path expression (names=['parquet_path'])",
+      "file": "src/research/evidence/driver.py",
+      "line": 43,
+      "qualname": "_read_parquet_cols"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "505b32a658596ab0",
+      "evidence": "unresolvable path expression (names=['open', 'path'])",
+      "file": "src/research/evidence/mother_range_prior.py",
+      "line": 39,
+      "qualname": "load_bars"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "663f4b20155605fc",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/research/goal_alignment.py",
+      "line": 42,
+      "qualname": "corpus_span_months"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "9c76b0996d01e489",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "src/research/ic002_entry_evolution/build_trajectories.py",
+      "line": 32,
+      "qualname": "_load_ohlcv_df"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "8bddf4a24bb90771",
+      "evidence": "unresolvable path expression (names=['ohlcv_csv'])",
+      "file": "src/research/model_runners/adapters/crt_state_machine.py",
+      "line": 49,
+      "qualname": "CrtStateMachineAdapter.__init__"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "c5be678231fd70ce",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/research/model_runners/substrate.py",
+      "line": 84,
+      "qualname": "load_ohlcv_csv"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "e28f9a6d6ffba4f7",
+      "evidence": "unresolvable path expression (names=['open', 'path'])",
+      "file": "src/research/mother_range/driver.py",
+      "line": 46,
+      "qualname": "load_bars"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "aecf5ff858abc5b0",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/ohlcv_volume_semantics.py",
+      "line": 424,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "f3d7e899d8e64bd4",
+      "evidence": "unresolvable path expression (names=['matrix_csv'])",
+      "file": "src/research/oracle/labeler.py",
+      "line": 293,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "f6a4164113e2473d",
+      "evidence": "unresolvable path expression (names=['Path', 'bm_manifest'])",
+      "file": "src/research/oracle/labeler.py",
+      "line": 296,
+      "qualname": "main"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "76d5d534f85785d5",
+      "evidence": "unresolvable path expression (names=['corpus'])",
+      "file": "src/research/rc003_distinct_object/driver.py",
+      "line": 98,
+      "qualname": "build_populations"
+    },
+    {
+      "call": "read_excel",
+      "class": "UNKNOWN",
+      "durable_key": "2677c24c654f4d28",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "src/research/secondlow_v1/detector.py",
+      "line": 47,
+      "qualname": "load_ohlcv"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "89172d39eee71e3e",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "src/research/secondlow_v1/detector.py",
+      "line": 49,
+      "qualname": "load_ohlcv"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "58376739b48ff600",
+      "evidence": "unresolvable path expression (names=['open', 'path'])",
+      "file": "src/research/sujan_crt/driver.py",
+      "line": 72,
+      "qualname": "load_bars"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "48e7c36ffc0c5c22",
+      "evidence": "unresolvable path expression (names=['open', 'path'])",
+      "file": "src/research/sujan_manipulation/driver.py",
+      "line": 76,
+      "qualname": "load_bars"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "a994f1beb744fee8",
+      "evidence": "unresolvable path expression (names=['splitlines', 'text'])",
+      "file": "src/research/sujan_manipulation/parent.py",
+      "line": 185,
+      "qualname": "load_parent_timestamps"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "3c86be92afc75934",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/visual_crt/driver.py",
+      "line": 116,
+      "qualname": "load_bars"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "7ce64a607e5d67e0",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/research/zone_mapping/build_corpus_zone_map.py",
+      "line": 60,
+      "qualname": "map_corpus_frame"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "92858fcf695ce238",
+      "evidence": "traced to seam via 'guarded'",
+      "file": "src/research/zone_mapping/collect_trade_opened_features.py",
+      "line": 117,
+      "qualname": "collect_xauusd_trade_opened_features"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "bf2f5e31154680b3",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/research/zone_mapping/crt_zone_crosstab.py",
+      "line": 80,
+      "qualname": "collect_crt_zone_joint_labels"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "ee0aade2eacacea8",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/research/zone_mapping/gaussian_family_shadow_eval.py",
+      "line": 174,
+      "qualname": "collect_gaussian_shadow_bars"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "f638a16580e08061",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/research/zone_mapping/gaussian_family_shadow_eval.py",
+      "line": 673,
+      "qualname": "_load_candles"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "a0af04f26cbf9c66",
+      "evidence": "unresolvable path expression (names=['data_path'])",
+      "file": "src/runtime/backtest_bitnet.py",
+      "line": 199,
+      "qualname": "run_backtest"
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "durable_key": "e463b68aa8cef8fe",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/runtime/backtest_v2.py",
+      "line": 782,
+      "qualname": "CandleLoader.stream"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "84e51a7a10a7d0cc",
+      "evidence": "traced to seam via 'self.csv_path'",
+      "file": "src/runtime/backtest_v2.py",
+      "line": 1878,
+      "qualname": "BacktestRunner.__init__"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "786c716c31d4ad3c",
+      "evidence": "traced to seam via 'csv_path'",
+      "file": "src/runtime/backtest_v2.py",
+      "line": 3584,
+      "qualname": "run_backtest"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "751a14c0bccc632b",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/runtime/exit_model_band.py",
+      "line": 39,
+      "qualname": "_read_rr"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "d9eb7dd3c7ae085e",
+      "evidence": "unresolvable path expression (names=['data_path'])",
+      "file": "src/runtime/unified_replay_harness.py",
+      "line": 73,
+      "qualname": "_materialize_month_window_csv"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "8a48cc5bd6d5c3cf",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "tests/analytics/test_metrics_oracle_parity.py",
+      "line": 57,
+      "qualname": "_read_ledger"
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "durable_key": "d91184e59b2dd856",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "tests/research/episodes/test_spine_projector.py",
+      "line": 257,
+      "qualname": "test_real_ledger_has_no_path_oracle_columns"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "2766aabff90557ca",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "tests/research/test_sujan_crt_contract.py",
+      "line": 285,
+      "qualname": "test_declared_corpus_window_is_measured_not_asserted"
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "durable_key": "55b18cab4e2c63eb",
+      "evidence": "traced to seam via 'guarded'",
+      "file": "tests/research/test_xauusd_qualification_smoke.py",
+      "line": 37,
+      "qualname": "test_research_pass_runs_and_is_non_promotable"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "2825a73abe951591",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "tests/test_chart_series.py",
+      "line": 272,
+      "qualname": "test_series_csv_roundtrips_floats_exactly"
+    },
+    {
+      "call": "open",
+      "class": "CORPUS",
+      "durable_key": "1a872c9fd1f4b9ac",
+      "evidence": "corpus constant: ['CORPUS']",
+      "file": "tests/test_chart_series.py",
+      "line": 284,
+      "qualname": "test_aac1_exported_m15_bars_match_source_csv_exactly"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "13e1514e42cb45ab",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "tests/test_chart_series.py",
+      "line": 285,
+      "qualname": "test_aac1_exported_m15_bars_match_source_csv_exactly"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "2179fdf1fd8db9a3",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "tests/test_claude_intent_workbook.py",
+      "line": 33,
+      "qualname": "_sheet_rows"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "3dab6a34146ec85d",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "tests/test_feature_layer_freeze.py",
+      "line": 123,
+      "qualname": "_run_vector"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "5343052d21b8f162",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "tests/test_fm030_031_implementation_validation.py",
+      "line": 165,
+      "qualname": "test_basis_reaches_pipeline_via_prod_version_path"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "9073eced18e339ab",
+      "evidence": "unresolvable path expression (names=['CSV'])",
+      "file": "tests/test_fm030_031_normalization_basis.py",
+      "line": 54,
+      "qualname": "raw"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "9fae618fa3f37efa",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "tests/test_grok_intent_workbook.py",
+      "line": 31,
+      "qualname": "_sheet_rows"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "23060b8850a20ac6",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "tests/test_phase1_duplicate_formula_identity_closure.py",
+      "line": 90,
+      "qualname": "test_source_tick_volume_identity_on_xauusd"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "5a12b7655f4f27dd",
+      "evidence": "unresolvable path expression (names=['_CSV', 'open'])",
+      "file": "tests/test_predicate_definition_binding.py",
+      "line": 51,
+      "qualname": "bars"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "9770023cb60acf66",
+      "evidence": "unresolvable path expression (names=['_WB_SCRIPTS'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 59,
+      "qualname": "test_scripts_workbook_headers_appended_not_inserted"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "f3508bc5dc78befe",
+      "evidence": "unresolvable path expression (names=['_WB_SRC'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 69,
+      "qualname": "test_src_workbook_headers_appended_not_inserted"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "c799106da4fa50b7",
+      "evidence": "unresolvable path expression (names=['_WB_TESTS'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 79,
+      "qualname": "test_tests_workbook_headers_appended_not_inserted"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "0b0a35eb9ca86af8",
+      "evidence": "unresolvable path expression (names=['_WB_TESTS'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 94,
+      "qualname": "test_tests_workbook_has_no_own_identity_column"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "a9a888ff683a770b",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 128,
+      "qualname": "test_join_rate_meets_floor_on_scripts_and_src"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "b580f0f818009972",
+      "evidence": "unresolvable path expression (names=['tmp_path'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 157,
+      "qualname": "test_enrichment_is_idempotent_on_a_copy"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "b580f0f818009972-occ1",
+      "evidence": "unresolvable path expression (names=['tmp_path'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 166,
+      "qualname": "test_enrichment_is_idempotent_on_a_copy"
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "durable_key": "29122281cd048a9e",
+      "evidence": "unresolvable path expression (names=['_WB_TESTS'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 182,
+      "qualname": "test_covers_semantic_id_join_method_is_honest"
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "durable_key": "6e8490649a070667",
+      "evidence": "unresolvable path expression (names=['CSV'])",
+      "file": "tests/test_session_timestamp_basis.py",
+      "line": 55,
+      "qualname": "raw"
+    },
+    {
+      "call": "read_csv",
+      "class": "CORPUS",
+      "durable_key": "389797414ee101da",
+      "evidence": "literal path: ['data/mt5/XAUUSD_M15.csv']",
+      "file": "tests/test_shape_hypothesis_pit.py",
+      "line": 81,
+      "qualname": "test_shape_identity_is_prefix_invariant"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "51a60a291dbfb5ef",
+      "evidence": "unresolvable path expression (names=['_CSV', 'open'])",
+      "file": "tests/test_structure_predicates.py",
+      "line": 62,
+      "qualname": "bars"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "f86548fe6f5020ab",
+      "evidence": "unresolvable path expression (names=['csv_path', 'open'])",
+      "file": "tests/test_tv_forensic_smoke.py",
+      "line": 637,
+      "qualname": "test_month_legible_preset_tiles_the_corpus_at_legible_width"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "e75eb2985673f34b",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "tools/btcusdt_crt_v3_replay.py",
+      "line": 121,
+      "qualname": "load_csv"
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "durable_key": "c2eb495dcb1ffb8d",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "tools/tv_forensic/build_disp_exp_plan.py",
+      "line": 65,
+      "qualname": "main"
+    }
+  ],
+  "script_version": "1.0.0"
+}

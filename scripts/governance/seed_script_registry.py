@@ -26,6 +26,32 @@ OUT = _ROOT / "data" / "script_registry.jsonl"
 
 # PRIMARY curated refinements (K11). Match by path or id. Overlay fields win.
 OVERLAYS: list[dict[str, Any]] = [
+    # CH-trade-chart-tab: offline precompute for the dashboard's Trade Chart tab.
+    {
+        "path": "scripts/analysis/build_resolver_overlay.py",
+        "category": "DATA",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "EXTRACTED_TO_SRC",
+        "logic_in_script": False,
+        "dest_modules": ["src/charts/resolver_overlay.py"],
+        "purpose": (
+            "Precompute the CRTStateResolver per-bar track over a full M15 corpus "
+            "(FeaturePipeline + CRTStateResolver, multi-minute pass) and cache it under "
+            "results/charts/_resolver_cache/<INSTR>__<corpus_sha8>__<variant>/. "
+            "src/control_plane/server.py's /api/chart_series endpoint (charts.chart_api."
+            "chart_payload) reads this cache to render the dashboard's Trade Chart tab "
+            "resolver ribbon; it NEVER computes the track in-request. The cache is keyed "
+            "on the corpus's sha256, so re-run this after the corpus file changes."
+        ),
+        "task_refs": ["CH-trade-chart-tab", "F-069", "SITS"],
+        "notes": (
+            "Thin wrapper — all logic lives in src/charts/resolver_overlay.py (PR-6 "
+            "pattern). Descriptive only, no economic claim, no G001, no promotion "
+            "(CLAUDE.md §6.5). The resolver track is a DIFFERENT CONSTRUCTION from the "
+            "engine (spine) track the same tab also shows — F-069 measured only 88.16% "
+            "agreement / 10.77% EXPANSION recall between the two; never merge them."
+        ),
+    },
     # CH-semantic-os-v2: Semantic OS build 1 (L1 concept/boundary/journey registry).
     {
         "path": "scripts/governance/seed_semantic_os.py",
@@ -517,6 +543,25 @@ OVERLAYS: list[dict[str, Any]] = [
         ),
     },
 
+    # -- 2026-09-14 research-framework consolidation Phase 0: archive ledger verifier --
+    {
+        "path": "scripts/maintenance/verify_archive_manifests.py",
+        "category": "GOVERNANCE",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "EXTRACTED_TO_SRC",
+        "logic_in_script": False,
+        "dest_modules": ["src/governance/archive_manifest.py"],
+        "config_keys": [],
+        "tests": ["tests/governance/test_archive_manifests.py"],
+        "purpose": (
+            "Archive ledger verifier (zero-loss promise of the research-framework consolidation): "
+            "every file under archive/ must be named by a SHA-256-matching archive-copy manifest row, "
+            "no live original may disappear, every batch dir must be in archive/ARCHIVE_INDEX.md. "
+            "`backfill [--apply]` appends rows for archived files that have none (append-only). "
+            "Thin CLI; logic in src/governance/archive_manifest.py. Grants no authority."
+        ),
+    },
+
     # -- 2026-09-09 overlay clear: classify census-fresh scripts (purpose ≠ GRANDFATHER_UNCLASSIFIED) --
     {
         "path": "scripts/analysis/analytics_evidence_class_census.py",
@@ -591,7 +636,68 @@ OVERLAYS: list[dict[str, Any]] = [
         ),
         "task_refs": ["L-003I"],
     },
-
+    {
+        "path": "scripts/analysis/corpus_read_census.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": (
+            "PHASE 0 census (single-corpus-read-seam program): AST scan of src/scripts/"
+            "tools/tests for direct OHLCV-corpus reads (read_csv/read_excel/load_workbook/"
+            "csv.reader/open), classified CORPUS/DERIVED/GATED/UNKNOWN via literal-path "
+            "rules plus intra-function/self-attr taint tracing back to corpus_gate."
+            "admit_corpus / dataset_registry.admit_csv_path. Read-only; writes only its "
+            "own JSON manifest under docs/governance/build_manifests/. No src/ edits, no "
+            "corpus mutation, no migration performed."
+        ),
+        "task_refs": ["CORPUS-READ-SEAM-P0"],
+    },
+    {
+        "path": "scripts/analysis/corpus_read_lint.py",
+        "category": "GOVERNANCE",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": (
+            "PHASE 3 enforcement (single-corpus-read-seam program): shrink-only ratchet "
+            "over corpus_read_census.py's CORPUS/UNKNOWN findings against the frozen "
+            "docs/governance/corpus_read_allowlist.json snapshot, matched by durable_key "
+            "(AST-content hash, not line number). Fails only on a genuinely NEW direct "
+            "corpus read; a migrated/reclassified site is reported SHRUNK, never a "
+            "failure. --regenerate re-snapshots the allowlist after a real migration. "
+            "Wired into scripts/maintenance/check_governance_invariants.py GREEN_FLOOR."
+        ),
+        "task_refs": ["CORPUS-READ-SEAM-P3"],
+    },
+    {
+        "path": "scripts/research/derive_opportunity_rr_bands.py",
+        "category": "RESEARCH_RUNNER",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "EXTRACTED_TO_SRC",
+        "logic_in_script": False,
+        "dest_modules": ["src/research/opportunity_bands.py", "src/research/band_tables.py"],
+        "purpose": (
+            "Phase 1 of the layered-outcome-ontology plan: a READ-ONLY arithmetic deriver "
+            "over an existing opportunity_scanner.py (SEM-037) run. Writes the sidecar "
+            "opportunities_rr_bands.jsonl (registered STR-OPP-RR-BAND-SIDECAR, "
+            "docs/governance/jsonl_claim_catalog.yaml) carrying exit_mechanism/trail_state/"
+            "risk_distance/mfe_r/mae_r/exit_bounded_capture/capture_state/rr_band, every "
+            "field CC-OPP-BAND-RESTATEMENT admissible and CC-OPP-BAND-NOT-ECONOMIC refuses "
+            "any economic reading of. Does not re-simulate the kernel; does not touch the "
+            "source file (verified: source sha256 unchanged, matches run_linkage_registry.json "
+            "A1). Fails closed on an unknown outcome literal, a non-positive risk_distance, "
+            "or an SL_HIT row with rr_achieved < -1.0 (adverse fill outside the documented "
+            "arming identity) rather than silently mislabeling it."
+        ),
+        "task_refs": ["SEM-037", "SEM-020", "CC-OPP-BAND-RESTATEMENT", "SITS"],
+        "notes": (
+            "Thin wrapper — all classification logic lives in src/research/opportunity_bands.py "
+            "and src/research/band_tables.py (PR-6 pattern). Descriptive only, no economic "
+            "claim, no G001, no promotion (CLAUDE.md 6.5). economic_claims_allowed stays false "
+            "on AN-PIPEB-STRAT-XAUUSD-M15-V1; this script does not change that."
+        ),
+    },
 ]
 
 
