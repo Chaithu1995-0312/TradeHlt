@@ -815,5 +815,15 @@
       "DOGEUSDT": "CRYPTO",
       "XRPUSDT": "CRYPTO"
     }
+  },
+  "layer_trace": {
+    "_comment": "OBSERVATION ONLY (CLAUDE.md 6.5). Default ON (2026-09-16). Read by src/runtime/layer_trace.py ONLY — no engine/gate/fusion/risk reads this. Hash-neutral (params-only config_hash). Set enabled:false to opt out.",
+    "enabled": true,
+    "schema_version": "1.0.0",
+    "authority": "OBSERVATION_ONLY",
+    "decision_neutral": true,
+    "output_dir": "results/layer_trace",
+    "filename_suffix": "_layer_trace.jsonl",
+    "flush_every": 200
   }
 }

@@ -16,6 +16,14 @@
 #   Enforced rule: a registered quantity may only ORIGINATE from a registered implementation.
 #
 # LAYER SEPARATION (the wick_size lesson, 2026-07-05; extended to derived metrics 2026-07-06):
+#   - `source_inputs` (2026-09-16, FEATURE-NAME-IDENTITY-BINDING Step 1) are the raw OHLCV columns
+#     as ingested — no computation, no transform. They were canonical vector slots 0-4 with NO
+#     ontology identity before this section existed (present only as unstructured names in the
+#     flat `base_inputs` DAG-root list below). Like `rolling_indicators`/`temporal_context`/
+#     `structural_states`, there is no scalar callable to resolve (there is nothing to compute);
+#     `impl` names the ingestion authority instead. Coexists with — does NOT replace — the flat
+#     `base_inputs` list, which stays the DAG-root declaration every dependency chain grounds out
+#     at; this section adds the SAME 5 names as first-class, fully-specified identities.
 #   - `primitives` are mathematical IDENTITIES over OHLC — immutable, never configurable
 #     (like area = pi*r*r). They live in src/features/candle_math.py.
 #   - `feature_compositions` are trading INTERPRETATIONS (which numerator/denominator a
@@ -106,6 +114,8 @@ spec_schema:
       consumed_by:      "SCALAR consumers only (named call sites reading this feature alone), or [UNKNOWN]"
       vector_key:       "CANONICAL_FEATURES name, or [] when the feature has no vector slot"
       vector_index:     "index into CANONICAL_FEATURES, or [] when unbound"
+      scope:            "OPTIONAL (2026-09-16, CH-intent-schema-alignment). EPISODE when the quantity is defined only inside a CRT episode (it pairs specific candles held by the state machine) and therefore CANNOT be a per-bar vector slot. Absent = BAR, the default for every pipeline-emitted feature."
+    defaults:          "OPTIONAL (2026-09-16, CH-derive-declare-windows). Map of config_key -> declared DEFAULT literal for catalog/audit. Config remains source of truth at compute/warmup; these values are NOT canonical feature dims and MUST NOT be promoted into CANONICAL_FEATURES. Prefer dotted keys matching config_keys; use quoted keys when an index appears (e.g. feature_pipeline.ma_periods[0]). Absent = no structured default declared (formula comment may still mention defaults)."
   # The market domain. Chosen by WHAT QUESTION THE FEATURE ANSWERS, not by what its inputs are:
   # volatility_ratio consumes candle geometry but answers a volatility question -> Volatility.
   category_vocabulary:
@@ -368,6 +378,143 @@ base_inputs:
   - prev_day_low               # most recently closed D1 parent candle's low
   - eqh_level                  # nearest equal-highs cluster price (features.smc.levels)
   - eql_level                  # nearest equal-lows cluster price
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SOURCE INPUTS (2026-09-16, FEATURE-NAME-IDENTITY-BINDING Step 1)
+# ═══════════════════════════════════════════════════════════════════════════
+# The raw OHLCV columns as ingested — no computation. First-class identities for canonical vector
+# slots 0-4, which had NO ontology identity before this section (present only as unstructured
+# names in the flat `base_inputs:` list above). SOURCE-impl exemption (same pattern as
+# rolling_indicators/temporal_context/structural_states): no scalar callable exists because there
+# is nothing to compute; `impl` names the ingestion authority instead of a FORMULA_REGISTRY entry.
+# `depends_on: []` — these ARE the DAG roots, not derived from anything.
+source_inputs:
+  open:
+    id:        FM-085
+    version:   1
+    lifecycle: registered
+    computation_class: source
+    formula:   "identity — raw bar-open price as ingested from the broker/data feed; no transform"
+    impl:      feature_pipeline.FeaturePipeline
+    depends_on: []
+    active:    true
+    taxonomy:
+      category:        Price
+      knowledge_class: Primitive
+    semantics:
+      description:   "The bar's opening trade price, as received from the data source."
+      why_it_exists: "The reference point every candle-geometry primitive (body_size, upper_wick) measures FROM. Without it there is no candle, only a high/low/close range."
+      interpretation:
+        high: "Not applicable — a raw price level, not a signal; read relative to close/high/low, never alone."
+        low:  "Not applicable — same."
+    states: []
+    lineage:
+      derivation_depth: 0
+      produced_by:      feature_pipeline.FeaturePipeline
+      consumed_by:      [UNKNOWN]
+      vector_key:       open
+      vector_index:     0
+  high:
+    id:        FM-086
+    version:   1
+    lifecycle: registered
+    computation_class: source
+    formula:   "identity — raw bar-high price as ingested from the broker/data feed; no transform"
+    impl:      feature_pipeline.FeaturePipeline
+    depends_on: []
+    active:    true
+    taxonomy:
+      category:        Price
+      knowledge_class: Primitive
+    semantics:
+      description:   "The bar's highest traded price, as received from the data source."
+      why_it_exists: "The upper bound of the bar's opportunity span — the denominator of candle_range and the reference wicks/sweeps/breaks measure against."
+      interpretation:
+        high: "Not applicable — a raw price level, not a signal."
+        low:  "Not applicable — same."
+    states: []
+    lineage:
+      derivation_depth: 0
+      produced_by:      feature_pipeline.FeaturePipeline
+      consumed_by:      [UNKNOWN]
+      vector_key:       high
+      vector_index:     1
+  low:
+    id:        FM-087
+    version:   1
+    lifecycle: registered
+    computation_class: source
+    formula:   "identity — raw bar-low price as ingested from the broker/data feed; no transform"
+    impl:      feature_pipeline.FeaturePipeline
+    depends_on: []
+    active:    true
+    taxonomy:
+      category:        Price
+      knowledge_class: Primitive
+    semantics:
+      description:   "The bar's lowest traded price, as received from the data source."
+      why_it_exists: "The lower bound of the bar's opportunity span — the mirror of high, and the other half of candle_range."
+      interpretation:
+        high: "Not applicable — a raw price level, not a signal."
+        low:  "Not applicable — same."
+    states: []
+    lineage:
+      derivation_depth: 0
+      produced_by:      feature_pipeline.FeaturePipeline
+      consumed_by:      [UNKNOWN]
+      vector_key:       low
+      vector_index:     2
+  close:
+    id:        FM-088
+    version:   1
+    lifecycle: registered
+    computation_class: source
+    formula:   "identity — raw bar-close price as ingested from the broker/data feed; no transform"
+    impl:      feature_pipeline.FeaturePipeline
+    depends_on: []
+    active:    true
+    taxonomy:
+      category:        Price
+      knowledge_class: Primitive
+    semantics:
+      description:   "The bar's final traded price, as received from the data source."
+      why_it_exists: "The most-referenced price in the whole ontology — every ATR-normalized, EMA-based, and structural-break feature is ultimately anchored to close. It is also the price used to derive close-relative ATR (FM-041) from absolute ATR (FM-074)."
+      interpretation:
+        high: "Not applicable — a raw price level, not a signal."
+        low:  "Not applicable — same."
+    states: []
+    lineage:
+      derivation_depth: 0
+      produced_by:      feature_pipeline.FeaturePipeline
+      consumed_by:      [UNKNOWN]
+      vector_key:       close
+      vector_index:     3
+  volume:
+    id:        FM-089
+    version:   1
+    lifecycle: registered
+    computation_class: source
+    formula:   "identity — raw bar volume as ingested from the broker/data feed; no transform"
+    impl:      feature_pipeline.FeaturePipeline
+    depends_on: []
+    active:    true
+    taxonomy:
+      category:        Volume
+      knowledge_class: Primitive
+    semantics:
+      description:   "The bar's traded size, as received from the data source."
+      why_it_exists: "The base quantity volume_ratio (FM-062) and volume_spike (FM-063) normalize against."
+      interpretation:
+        high: "Not applicable — a raw magnitude, not a signal; read relative to its own trailing average (volume_ratio), never alone."
+        low:  "Not applicable — same."
+        caveat: "F-099: on MT5-sourced corpora this is TICK_VOLUME_APPROXIMATE, not confirmed real traded volume (H_REAL rejected, real_volume=0 on the measured sample). A consistent directional gap (~0.6%) vs independently-counted ticks was measured; BC-4 attribution stays a blocker. Do not read this as executed contract volume."
+    states: []
+    lineage:
+      derivation_depth: 0
+      produced_by:      feature_pipeline.FeaturePipeline
+      consumed_by:      [UNKNOWN]
+      vector_key:       volume
+      vector_index:     4
 
 primitives:
   body_size:
@@ -957,7 +1104,7 @@ derived_metrics:
       vector_index:     37
   displacement_retrace:
     id:          FM-027
-    version:     1
+    version:     2
     lifecycle:   registered      # F-050 remediation CH-001: the CROSS-CANDLE quantity historically
                                  # EMITTED under the name "retest_depth" by the CRT engine/scorer.
     formula:     "clip(|retest_close - disp_open| / |disp_close - disp_open|, 0.0, 1.0); disp body 0 -> skip"
@@ -965,12 +1112,27 @@ derived_metrics:
     depends_on:  [retest_close, disp_open, disp_close]
     clip:        [0.0, 1.0]
     active:      true
-    source_of_truth: crt_engine_v2.py:1372   # + crt_gaussian_scorer.py:190 ("to match CRTGaussianScorer")
+    source_of_truth: crt_engine_v2.py:1771   # CORRECTED 2026-09-16 (was :1372, stale) -- cache build in try_expansion_to_retest; + crt_gaussian_scorer.py:202 fallback
     note: >
       CROSS-CANDLE retracement (retest close vs displacement open, normalized by displacement body) —
       a DISTINCT quantity from FM-021 retest_depth (same-candle EMA/ATR). The math is internally
       INTENTIONAL (F-050 lineage); the defect was the NAME collision. Emission-key rename is CH-002
       (MODEL_INPUT_CHANGE: consumers stage1_dataset_builder/trainer/rr_fusion + historical artifacts).
+      EPISODE SCOPE MADE EXPLICIT 2026-09-16 (CH-intent-schema-alignment, version 1->2, formula and
+      identity UNCHANGED). This quantity pairs ONE displacement candle with ONE retest candle, and
+      that pairing exists only in the CRT state machine (state.displacement_candle /
+      state.retest_candle); it is computed once, at retest confirmation. It is therefore deliberately
+      NOT a CANONICAL_FEATURES slot, and cannot become one by adding a column: feature_pipeline.py
+      has no displacement/retest candle pairing at all (zero occurrences of disp_open / disp_close /
+      displacement_candle), and its own `retest_flag` is a stateless per-bar predicate that
+      disagrees with the engine's RETEST (retest_flag==1 on 58.07% of XAUUSD M15 bars, yet 0 on 4 of
+      the 6 bars where the engine confirmed RETEST). Promoting it to a vector slot would require
+      settling WHICH episode definition is canonical first.
+      DISTINCTNESS FROM FM-021 (made explicit, not merely "distinct"): FM-021 retest_depth is
+      `retest_flag==1 ? |close - ema_fast| / atr_abs : 0.0` -- distance from price to the 9-EMA on
+      the CURRENT bar, masked to a 0.0 "no retest" sentinel. It is not a retrace depth. The two are
+      NOT variants of one concept; a reader substituting one for the other gates a different
+      question. Evidence: docs/analysis/trade-intent-caller-census-2026-09-16.md §2, §9.
     taxonomy:
       category:        Retest
       knowledge_class: Derived
@@ -987,16 +1149,17 @@ derived_metrics:
       consumed_by:      [crt_gaussian_scorer, crt_engine_v2, bitnet.encoders]
       vector_key:       []
       vector_index:     []
+      scope:            EPISODE
   displacement_atr_ratio:
     id:          FM-028
-    version:     1
+    version:     2
     lifecycle:   registered      # F-050 sibling (CH-001): range-ATR multiple emitted as "disp_str"/
                                  # "disp_strength" by CRT sites — distinct from FM-020 body/(atr*close).
     formula:     "candle_range / atr_abs; atr_abs<=0 -> 0.0  # atr_abs = SMA(period) of true_range, ABSOLUTE price units (state.atr_abs, now registered as FM-074 atr_absolute), NOT the close-relative FM-041 `atr`"
     impl:        derived_math.displacement_atr_ratio
     depends_on:  [candle_range, atr_absolute]
     active:      true
-    source_of_truth: crt_engine_v2.py:1355   # family: :1560 score_breakout, crt_gaussian_scorer:194
+    source_of_truth: crt_engine_v2.py:1776   # CORRECTED 2026-09-16 (was :1355, stale) -- cache build; also :1723 overextension guard, both in try_expansion_to_retest; crt_gaussian_scorer.py:208 fallback
     note: >
       FAM-06 range-ATR multiple (structural displacement magnitude in ATR units). Collides in NAME
       with FM-020 disp_strength on the cached-features/telemetry path; registration separates the
@@ -1012,6 +1175,20 @@ derived_metrics:
       absolute-ATR intermediate) let an equivalent unit-mismatch defect reach a THIRD site
       (compute_crt_levels / gate_intelligence.py, F-072) undetected. `depends_on` now points
       directly at FM-074 rather than its ancestor true_range (FM-040).
+      EPISODE SCOPE MADE EXPLICIT 2026-09-16 (CH-intent-schema-alignment, version 1->2, formula and
+      identity UNCHANGED). Stated precisely, because it differs from FM-027: the FORMULA
+      `candle_range / atr_abs` is computable on any bar, but THIS identity is bound to the
+      DISPLACEMENT candle -- its only production callers apply it to state.displacement_candle inside
+      try_expansion_to_retest (:1723 overextension guard, :1776 cache). A bar-scoped "range in ATR
+      units" would therefore be a DIFFERENT identity, not a vector slot for this one. Deliberately
+      not a CANONICAL_FEATURES slot for the same reason as FM-027.
+      DISTINCTNESS FROM FM-020 (made explicit): FM-020 disp_strength is
+      `clip(body_size / atr_abs, 0.0, 3.0)` of the CURRENT bar. It differs from FM-028 on TWO axes at
+      once -- numerator (BODY vs full RANGE, so FM-020 <= FM-028 on the same candle) and subject
+      (current bar vs displacement candle). Measured at the 6 XAUUSD CRT retest confirmations:
+      FM-028 1.43/0.98/1.17/1.31/1.46/1.73 vs FM-020 0.52/0.08/0.18/0.77/1.07/0.33, so a 1.5
+      breakout threshold passes FM-028 once and FM-020 never. Evidence:
+      docs/analysis/trade-intent-caller-census-2026-09-16.md §9.
     taxonomy:
       category:        Volatility
       knowledge_class: Derived
@@ -1028,6 +1205,7 @@ derived_metrics:
       consumed_by:      [crt_engine_v2, crt_gaussian_scorer, bitnet.encoders]
       vector_key:       []
       vector_index:     []
+      scope:            EPISODE
   disp_strength_atr_rescale:
     id:          FM-029
     version:     1
@@ -1733,6 +1911,10 @@ rolling_indicators:
     computation_class: rolling
     formula:   "rolling(<feature_pipeline.zscore_window>) z-score of SMA(<feature_pipeline.trend_strength_window>) of diff(SMA(<feature_pipeline.ma_periods[0]>) of close)  # defaults 50, 10, 20"
     config_keys: [feature_pipeline.zscore_window, feature_pipeline.trend_strength_window, feature_pipeline.ma_periods]
+    defaults:
+      feature_pipeline.zscore_window: 50
+      feature_pipeline.trend_strength_window: 10
+      "feature_pipeline.ma_periods[0]": 20
     impl:      feature_pipeline.compute_normalization
     depends_on: [trend_strength_raw]
     active:    true
@@ -1790,6 +1972,9 @@ rolling_indicators:
     computation_class: rolling
     formula:   "SMA(<feature_pipeline.trend_strength_window>) of diff(SMA(<feature_pipeline.ma_periods[0]>) of close)  # defaults 10, 20"
     config_keys: [feature_pipeline.trend_strength_window, feature_pipeline.ma_periods]
+    defaults:
+      feature_pipeline.trend_strength_window: 10
+      "feature_pipeline.ma_periods[0]": 20
     impl:      feature_pipeline.compute_trend_features
     depends_on: [close]
     active:    true

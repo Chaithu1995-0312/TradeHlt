@@ -245,6 +245,10 @@
     {
       "claim": "F-105",
       "reason": "Governance — census of silent except-blocks in the backtest loop; code-hygiene inventory, not a market object."
+    },
+    {
+      "claim": "F-108",
+      "reason": "Architecture — live-rail ExecutionPlannerV1_2 intent classifier lacked a with-trend label (UNKNOWN reject hole) and was fixed by adding CONTINUATION; a software labelling defect on a decision surface, not a market object."
     }
   ],
   "families": [
@@ -509,7 +513,7 @@
       "runner": null,
       "cells": {
         "L0": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-029", "F-051", "F-065"] },
-        "L1": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-046", "F-047", "F-050", "F-053", "F-054", "F-063"] },
+        "L1": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-046", "F-047", "F-050", "F-053", "F-054", "F-063", "F-107"] },
         "L2": { "evidence_mass": "none", "status": "GAP", "claims": [] },
         "L3": { "evidence_mass": "none", "status": "GAP", "claims": [] },
         "L4": { "evidence_mass": "none", "status": "GAP", "claims": [] },

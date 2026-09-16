@@ -116,6 +116,137 @@ deliberate horizon split, **not** a collision. `(→x)` = consumed only as an in
 > **No expansion is admitted on this matrix alone.** A `CAND·B` cell becomes REQ/BEN only if it
 > clears the Net-Contribution rule (A ∧ B ∧ C ∧ M4 ∧ ΔG001>0; else KEEP SPECIALIZED) — see the plan.
 
+## Technical implementation (one model at a time, 2026-09-16)
+
+This section joins **Question A (this topic)** to the Grok design
+[`docs/implementation_plan/model-parquet-column-binding.md`](../implementation_plan/model-parquet-column-binding.md).
+It does **not** rewrite the 38-slot matrix above (that picture is the ownership census;
+live emit is schema **v6.0 / 48-dim**). Live names used here: `trend_strength_z`,
+`candles_since_sweep`, `candle_range`, `macd_hist_raw`/`macd_hist_z`. Full column lists
+and fail-closed rules stay in the design. Production spine is still the in-memory dict
+(Alt A). Parquet/DuckDB is research SELECT (Alt B). No G001.
+
+Excel/Parquet source: `results/research/bar_matrix/XAUUSD_M15/` — **95** feature columns
+(`features.xlsx` / `features.parquet`) + **19** `state__*` on `bar_matrix.parquet`.
+Three state columns are UNUSABLE (all-null): `state__displacement_flag`,
+`state__retest_flag`, `state__rsi_state` — bind the RAW value columns instead.
+
+### 1. CRT — three implementations, one MIAR question
+
+**Intent (this topic):** structural state machine. Owns body/disp/retest/atr/sweep/double_sweep
++ raw OHLC + *internal* EMA(2,5)/ATR(14). Canonical EMA(9,21) is Gaussian's, not CRT's.
+
+**How it actually runs:**
+
+1. **Engine FSM** (`crt_engine_v2.process_candle`) — occupancy. Reads a `Candle`, not the
+   95-col Parquet. **No Excel bind** (`crt_engine_occupancy` refuse). Grain =
+   `events` / `crt_construction`.
+2. **Fusion scorer** (`engines.crt_engine.compute` → `scoring_engine.compute_scores`) —
+   seven **values**: `body_ratio`, `disp_strength` (as `move`), `atr`, `retest_depth`,
+   `candles_since_sweep`, `sweep_detected`, `double_sweep`, plus config
+   `score_component_weights` (not a parquet column). Bind id `crt_score`.
+3. **Resolver** (`CRTStateResolver`) — 13 **value** `when:` names, output
+   `crt_state_resolved` on `bar_matrix`. Not the engine. F-069 /
+   `CC-L3-FORBIDDEN-JOIN`. Bind ids `resolver` / `crt_resolver_occupancy`.
+
+**States:** none as CRT *inputs*. Do not treat `state__sweep_detected` as CRTState.
+`trade_intent` on `bar_matrix` is CRT-rail **output**, not an FSM input.
+
+### 2. Gaussian heuristic — live `gaussian_impl`
+
+**Intent:** narrow momentum vote (`ema_fast`, `ema_slow`, `momentum_score`). KEEP SPECIALIZED
+on structure.
+
+**How it runs:** `HeuristicGaussianEngine.compute` KeyError-fails on those 3, but also
+asserts `len(input_data) >= 48`. Query SELECT is the 3; feeding a 3-col frame back into
+`compute()` asserts. **Serve presence ≠ query columns.** States: none. F-060 inert
+(~0.8825); F-061/F-064 `momentum_score` saturates on XAUUSD.
+
+### 3. Gaussian ML — same intent, different loader
+
+**Intent:** same conformity question. **CURRENT:** not the active `gaussian_impl`.
+`MLGaussianEngine` extracts **by trained name order**; load remaps **V3 aliases only**
+(`wick_size`→`candle_range`, `macd_hist`→`macd_hist_z`). V5 aliases are **not** remapped.
+v1 CLI: always refuse (`gaussian_ml`). Do not pretend a 38-dim NB scores the 48-col Excel.
+
+### 4. ZoneGate — full-vector contract, 38-name scoring order
+
+**Intent:** ALL canonical keys (this topic still says 38; live filter is **48**).
+`filter_canonical_inputs` requires every canonical key; `_extract_vector` then scores by
+registry `feature_order` **by name**. Active artifact:
+`models/zone_registry_v4_2026_07.json` (38 live v6 names, all in the 95). Non-active
+`zone_registry.json` (`wick_size`/`macd_hist`) is **not** a v1 bind. Bind ids
+`zone_gate_v4_38` (default CLI) and `zone_gate_48` (serve presence). States: none.
+F-036 non-pivotal.
+
+### 5. RR Engine — polarity, not economic RR
+
+**Intent:** `close`, `high`, `low` only. KEEP SPECIALIZED.
+
+**How it runs:** `RREngine.compute` — candle polarity. `rr_fusion.enabled: false`, so this
+**is** the live RR slot (F-038). Query = those 3. Serve = those 3. States: none. Economic
+min_rr is Ultron (F-048), not this engine.
+
+### 6. Regime / dual — weight voters, not `regime_label`
+
+**Intent:** `ema_spread`, `momentum_score`, `volatility_ratio` + breakout/trap adjuncts
+(`trend_bias`, `sweep_detected`, `disp_strength`).
+
+**How it runs:** `detect_regime` / `breakout_engine` / `trap_engine` in `engine_runner`.
+Production `.get` defaults (F-018); adapter would require all 6. **Do not bind**
+`bar_matrix.regime_label` (`C`/`N`/`E`) as this output — different producer. F-061 pins
+`"trend"` on XAUUSD.
+
+### 7. TradeNet — unwired vector model
+
+**Intent:** expected milestones. SchemaObject auto-tracks 48 `CANONICAL_FEATURES`.
+**CURRENT:** UNWIRED (F-005). Honest research SELECT = 48 canonical names. Scoring a
+pre-v4 `.pth` against that 48 is a dim mismatch, not a bind. v1 CLI: not included.
+States: none.
+
+### 8. RR trained — unbindable
+
+**Intent:** learned reward, distinct from RR Engine polarity.
+
+**How it runs:** `models/rr_model.json` is positional 38-dim, `incompatible_with_schema: "4.0"`.
+Cannot map onto the 95-col Excel by position (v4 inserted `macd_hist_z` at index 19).
+Bind: **refuse**. Do not SELECT the first 38 canonical names.
+
+### 9. BitNet — 6-key veto, off
+
+**Intent:** hard-reject (`score < 0.55` when enabled). This topic still lists
+`candles_since_retest`; **live code** `LEGACY6_KEYS` is `candles_since_sweep`. Catalog /
+`active_models.yaml` leftover is DOC_DRIFT, not a seventh Excel column.
+
+**How it runs:** `bitnet_score` / composition. `use_bitnet: false` (F-004/F-055). Query =
+`body_ratio`, `retest_depth`, `disp_strength`, `atr`, `candles_since_sweep`, `double_sweep`.
+States: none. Parquet values are pipeline FM-021/FM-020, not CRT-local FM-027/FM-028.
+
+### 10. Fusion + DecisionEngine — scores in, features out
+
+**Intent:** approve. Reads engine **scores**, not the Excel vector. Completeness set
+`{crt, gaussian, zone_gate, rr}`. No economic RR (F-048). `disp_str` is not a parquet
+column and not a V3/V5 alias — refuse. v1 bind: refuse (`decision_fusion`). Compose/
+`compute()` harness is not v1.
+
+### 11. Execution planner — 13 keys after approval
+
+**Intent:** SL/TP/TTL/size for an **already approved** trade.
+
+**How it runs:** `ExecutionPlannerV1_2._REQUIRED_FEATURE_KEYS` (13 names, all in the 95).
+`plan()` missing-keys → `reject_invalid` (does not raise). Adapter would raise.
+Optional `atr_abs` = `atr * close` (FM-074 extra). **`trade_intent` column is not an
+input** — CRT-rail classifier output, rail-disjoint from the planner (F-103). States: none.
+
+### Shadow (not MIAR models, not on the spine)
+
+**Resolver** — 13 value `when:` names (RAW `displacement_flag` / `retest_flag` / `rsi_state`
+are populated). LINK-001 adds `change_of_character`, **not** `volume_spike` (that is
+LINK-003, declared-not-bound). Output `crt_state_resolved`.
+
+**FeatureStateEncoder** — 13 vector-bound values → 16 usable `state__*`. Three UNUSABLE
+null columns. Spine consumes nothing of this output.
+
 ## Feature Lineage Matrix (OHLCV → Formula → State → consumers → fusion weight)
 
 The ownership matrix above answers *designed-to-read*. This one answers the orthogonal, fully
@@ -338,3 +469,4 @@ Sits at the engine-scoring layer of [`docs/architecture/signal-flow.md`](../arch
 - **Enhancements:** 2026-07-11 (FC1-A `CH-fc1a-swing-causal` + FC1-D `CH-fc1d-volregime-causal`, audited) — **production feature-vector semantics changed for 11 of 38 dims.** The 10-dim structure closure (double_sweep, sweep_detected, liquidity_sweep, break_of_structure, swing_high/low, higher_high, lower_low, liquidity_distance/pressure) now publishes CAUSAL DELAYED (centered pivot shifted k=SWING_WINDOW=2; F-051 blast radius: ~63% of bars differed any-of-10, live path was zero-fed) — batch in `feature_pipeline.compute_structure_liquidity`, live via new `src/features/causal_structure.py` in FeatureStore (parity-tested all 10 columns incl. liquidity dims on the finite domain). `volatility_regime` binds ROLLING_CAUSAL N=200 (FC-0.5 semantic: local ATR-percentile context, NOT Regime Detection; N confirmed structural 2026-07-11 with revision trigger). Centered/global identities remain research-only `*_centered_batch` / `volatility_regime_global_batch` columns. **rr_model + zone_registry are PIT_UNCLEAN** (trained on centered-swings + global-batch-volregime era; `models/*.provenance.json`): no promote/re-enable/economic use without causal re-dataset→retrain→revalidation; no immediate retrain (rr_fusion disabled F-038, marginal value unproven). F-029's gate-OFF ledger claim held under replay (refined, not reversed); gate-ON A/B 11≡11 / 6≡6 is PC-2-bounded (INCONCLUSIVE about structural importance, not "insensitive"). Machine sync: `active_models.yaml` feature_lineage `pit_note` + rows 22/23/29 + zone/rr `pit_provenance`.
 - **Enhancements:** 2026-07-22 (F-061, program `FM-030-031-DIMENSIONAL-MIX-MIGRATION`) — the B0/B1 dimensional mix is reclassified from a **representational** defect to a **decision-surface** one, and the correction is made reachable. `legacy ≡ corrected × close` (closed form, verified to 9.9e-08), so the emitted magnitude of FM-022/FM-023 is the instrument's price level: median `|ema_spread|` 320 on BNBUSDT and 38,110 on BTCUSDT versus 0.53 on EURUSD, against `dual_engine` thresholds of 0.15/0.3. Consequence on crypto — `detect_regime` → `"trend"` on **98.86%/99.94%** of bars, `breakout_engine` score pinned at **1.0** on ~100%, `tanh(momentum_score)` saturated on **98.78%/99.94%** (this is F-060's Gaussian mechanism, now shown to be one instance of a four-consumer pattern), and `gate_intelligence`'s REVERSAL score constant **0.0**. Under FM-030/031 all three instruments converge (trend 52.7/52.8/50.1%, pinned 6.8/6.8/7.2%) — the corrected identity discriminates and is instrument-invariant. Three sign-only consumers (`execution_planner._derive_intent`, `crt_engine_v2:2138`, `sl_tp_comparator`) are unaffected. **Remediation is additive and inactive:** FM-030/031 promoted out of the ontology's `migration_candidates:` prose into first-class registered identities (`derived_math.ema_spread_atr` / `momentum_score_atr`, registry-dispatched), selected by a new strict `feature_pipeline.normalization_basis`; the default `atr_relative` arm is the legacy math verbatim and the XAUUSD freeze-pin vector SHA is **unchanged**. Floor: `tests/test_fm030_031_normalization_basis.py` (12 assertions incl. the pinned defect — 100× price must still multiply FM-022/023 by 100 — and fail-closed config discipline). Economic question routed to `scripts/research/dimensional_mix_shadow_diagnostic.py` (gate-ON forced, F-036 method); prior F-019…F-043 predicts null and spine n is below the 30-sample floor. **DESCRIPTIVE only, grants no activation authority (§6.5)**; `ACTIVE_VERSION` unchanged; the four degenerate consumers untouched. Scope: batch-pipeline path only — the live `FeatureStore` ingress is separate M16 consumer-alignment work.
 - **Enhancements:** 2026-09-16 (Grok window `parquet-model-binding`, `CH-model-parquet-binding-docs`) — research/LLM column picks for each model are now bound to names that exist on the live XAUUSD_M15 Excel / `features.parquet` (95 cols, schema 6.0) plus documented `bar_matrix` extras. Pointer only: [`docs/implementation_plan/model-parquet-column-binding.md`](../implementation_plan/model-parquet-column-binding.md) and the owning parquet spec [`docs/research/parquet_evidence_layer.md`](../research/parquet_evidence_layer.md) § Model × Parquet name authority. This topic remains the feature×model **ownership** authority; the new table is a **query-name** binding, not a new ownership matrix and not a live-spine change. RR trained is unbindable; three `state__*` columns are UNUSABLE (all-null). No G001, no retrain.
+- **Enhancements:** 2026-09-16 — **Technical implementation (one model at a time)** section added on this topic: each MIAR/topic model walked as CURRENT code path × live v6 Excel names × design-plan bind id. The 38-slot ownership matrix above is **not** rewritten this turn (name drift `candles_since_retest`/`trend_strength`/`wick_size`/`macd_hist` vs v6 is recorded, not silently patched — that rewrite is schema-v6 citation sync, adjacent). CRT is three implementations (FSM / fusion scorer / resolver). Gaussian query columns ≠ serve presence. ZoneGate 48-key filter vs 38-name score order. BitNet binds `candles_since_sweep` (code), not the catalog leftover. Fusion consumes scores not features. Planner 13 keys; `trade_intent` is CRT-rail output.

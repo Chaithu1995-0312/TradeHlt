@@ -42,7 +42,7 @@ inside it.
    degrades the join to the fallback correlation `(symbol, entry_time≈, entry_price≈, volume)`.
    Identity is authoritative; transport is disposable.
 6. **`execution_id` is not identity.** `execution_id` (`EX_` + md5 of `symbol_intent_price_dir`,
-   `src/config_layer/execution_planner.py:280`) is a lossy content-hash (collides across time). It is
+   `src/config_layer/execution_planner.py:286`) is a lossy content-hash (collides across time). It is
    a `TradeExecutionLinkV1` attribute, never the identity.
 
 ## Where each fact lives (bounded contexts)

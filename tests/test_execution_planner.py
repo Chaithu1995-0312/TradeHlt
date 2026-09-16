@@ -305,27 +305,98 @@ def test_missing_selected_direction_fails_loud():
 
 def test_reject_unknown_intent_by_default():
     p = _planner()
-    # Features that match no pattern
+    # Features that match no pattern. CORRECTED 2026-09-16 (CH-intent-schema-alignment): this
+    # fixture used ema_fast=100.0 / ema_slow=99.0 with a LONG and the comment "fast > slow,
+    # direction=1 -> not REVERSAL" -- i.e. it encoded a with-trend entry AS the canonical "no
+    # pattern" case, which was the classifier hole itself. With-trend is now CONTINUATION, so the
+    # only input still reaching UNKNOWN is an exact EMA tie. The property under test is unchanged.
     f = _base_features(
         sweep_detected=False, double_sweep=False,
         retest_depth=0.0, candles_since_sweep=99, momentum_score=0.0,
         body_ratio=0.2, disp_strength=0.5,
-        ema_fast=100.0, ema_slow=99.0,   # fast > slow, direction=1 → not REVERSAL
+        ema_fast=100.0, ema_slow=100.0,   # exact tie: neither REVERSAL nor CONTINUATION
     )
     r = p.plan(_engine(1), f, _context())
     assert r["decision"] == "reject_unknown_intent"
 
 def test_allow_unknown_intent_when_configured():
     p = _planner(reject_unknown_intent=False)
+    # EMA tie so this still exercises UNKNOWN (see test_reject_unknown_intent_by_default). With the
+    # old fast>slow LONG fixture it would pass VACUOUSLY on a CONTINUATION after the classifier fix.
     f = _base_features(
         sweep_detected=False, double_sweep=False,
         retest_depth=0.0, candles_since_sweep=99, momentum_score=0.0,
         body_ratio=0.2, disp_strength=0.5,
-        ema_fast=100.0, ema_slow=99.0,
+        ema_fast=100.0, ema_slow=100.0,
     )
     r = p.plan(_engine(1), f, _context())
+    assert r["trace"]["intent"] == "UNKNOWN"
     # UNKNOWN intent proceeds to gate; gate may reject since intent_score=0
     assert r["decision"] in ("execute", "reject_gate", "reject_invalid")
+
+
+# ── CONTINUATION (CH-intent-schema-alignment, 2026-09-16) ─────────────────────
+# REVERSAL tests only ONE half of EMA-vs-direction. Before this change every with-trend entry that
+# was not a sweep/pullback/breakout fell through to UNKNOWN and was rejected -- 40.70% (LONG) /
+# 31.97% (SHORT) of XAUUSD M15 bars. These pin the split so it cannot silently regress.
+
+_NO_PATTERN = dict(
+    sweep_detected=False, double_sweep=False,
+    retest_depth=0.0, candles_since_sweep=99, momentum_score=0.0,
+    body_ratio=0.2, disp_strength=0.5,
+)
+
+def test_intent_classification_continuation_long():
+    """LONG with ema_fast > ema_slow is WITH-trend -> CONTINUATION (was UNKNOWN)."""
+    r = _planner().plan(_engine(1), _base_features(**_NO_PATTERN, ema_fast=100.0, ema_slow=99.0), _context())
+    assert r["trace"]["intent"] == "CONTINUATION"
+
+def test_intent_classification_continuation_short():
+    """SHORT with ema_fast < ema_slow is WITH-trend -> CONTINUATION (the symmetric half of the hole)."""
+    r = _planner().plan(_engine(-1), _base_features(**_NO_PATTERN, ema_fast=99.0, ema_slow=100.0), _context())
+    assert r["trace"]["intent"] == "CONTINUATION"
+
+def test_with_trend_entry_is_no_longer_rejected_as_unknown():
+    """Regression pin: the exact fixture that used to define 'no pattern' must not reach
+    reject_unknown_intent any more."""
+    r = _planner().plan(_engine(1), _base_features(**_NO_PATTERN, ema_fast=100.0, ema_slow=99.0), _context())
+    assert r["decision"] != "reject_unknown_intent"
+
+@pytest.mark.parametrize("ema_fast,ema_slow,direction,expected", [
+    (100.0, 99.0,  1, "CONTINUATION"),
+    (100.0, 99.0, -1, "REVERSAL"),
+    (99.0, 100.0,  1, "REVERSAL"),
+    (99.0, 100.0, -1, "CONTINUATION"),
+    (100.0, 100.0,  1, "UNKNOWN"),
+    (100.0, 100.0, -1, "UNKNOWN"),
+])
+def test_reversal_and_continuation_partition_ema_relationship(ema_fast, ema_slow, direction, expected):
+    """REVERSAL and CONTINUATION together cover every non-tie EMA-vs-direction case; only an exact
+    tie reaches UNKNOWN. Guards against either half being dropped again."""
+    p = _planner()
+    intent, _ = p._derive_intent(
+        _base_features(**_NO_PATTERN, ema_fast=ema_fast, ema_slow=ema_slow), _engine(direction)
+    )
+    assert intent == expected
+
+def test_ttl_continuation_is_required_and_mapped():
+    """CONTINUATION has its own strictly-required TTL key (no silent fallback to ttl_unknown_sec)."""
+    from config_layer.execution_planner import REQUIRED_CONFIG_KEYS, _TTL_MAP
+    assert _TTL_MAP["CONTINUATION"] == "ttl_continuation_sec"
+    assert "ttl_continuation_sec" in REQUIRED_CONFIG_KEYS
+    # Parity, not tuning: CONTINUATION inherits the TTL of the UNKNOWN entries it took over.
+    assert DEFAULT_CONFIG["ttl_continuation_sec"] == DEFAULT_CONFIG["ttl_unknown_sec"]
+
+def test_continuation_gate_score_is_deliberately_zero():
+    """GUARD, not a bug report. The user chose a CLASSIFIER-ONLY fix (2026-09-16):
+    GateIntelligence has no CONTINUATION branch and scores it 0.0 via its 'unrecognised'
+    fallthrough. Do NOT "fix" this by copying REVERSAL's `1 - min(1, |momentum_score|)` -- that
+    inherits F-061 magnitude saturation (~0 on nearly every bar). A sign-only confirmation measured
+    ~37% approval on XAUUSD M15. Changing this score is a separate, evidence-gated live-rail
+    decision; if it is authorized, update this test in the same change."""
+    from core.gate_intelligence import GateIntelligence
+    g = GateIntelligence(DEFAULT_CONFIG)
+    assert g._intent_score(_base_features(**_NO_PATTERN), "CONTINUATION") == 0.0
 
 def test_gate_reject_weak_signal():
     """Very high threshold forces gate rejection on an otherwise valid signal."""
@@ -557,6 +628,12 @@ if __name__ == "__main__":
         test_reject_invalid_direction_value,
         test_reject_unknown_intent_by_default,
         test_allow_unknown_intent_when_configured,
+        # CONTINUATION (the parametrized partition test runs under pytest only -- it takes args)
+        test_intent_classification_continuation_long,
+        test_intent_classification_continuation_short,
+        test_with_trend_entry_is_no_longer_rejected_as_unknown,
+        test_ttl_continuation_is_required_and_mapped,
+        test_continuation_gate_score_is_deliberately_zero,
         test_gate_reject_weak_signal,
         # intent classification
         test_intent_classification_breakout,

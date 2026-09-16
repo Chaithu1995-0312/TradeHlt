@@ -1,0 +1,73 @@
+{
+  "change_id": "CH-feature-name-identity-binding-step1",
+  "date_utc": "2026-09-16",
+  "objective": "Step 1 of the FEATURE-NAME-IDENTITY-BINDING program: register the 5 base inputs (open/high/low/close/volume) as first-class ontology identities (FM-085..FM-089), then GENERATE CANONICAL_FEATURES from the ontology instead of a hand-written literal tuple, asserted equal to the prior literal so no hash moves. Add an identity namespace (F.FM_0NN -> current name, feature_name(fm_id)) so a future rename touches only the ontology. No feature is added, removed, or reordered; no formula changes; no value changes.",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE",
+    "DATASET_SCHEMA_CHANGE"
+  ],
+  "change_class_rationale": "FEATURE_IDENTITY_CHANGE: mints 5 new governed feature identities (FM-085..FM-089) for open/high/low/close/volume, previously present only as an unstructured base_inputs DAG-root list with no id/formula/semantics/lineage. DATASET_SCHEMA_CHANGE: CANONICAL_FEATURES in src/features/feature_schema.py changes from a literal tuple to a generated one -- the file that defines the feature vector schema is edited, even though the resulting 48-name tuple and its order are asserted byte-identical to today's.",
+  "affected_files": [
+    "configs/formulas/market_ontology.yaml",
+    "src/features/registry/__init__.py",
+    "src/features/feature_schema.py",
+    "scripts/analysis/feature_math_lint.py",
+    "tests/test_feature_lineage.py",
+    "docs/governance/feature-layer-freeze-pin-2026-07-20.json",
+    "docs/governance/build_manifests/CH-feature-name-identity-binding-step1.impact.json",
+    "docs/governance/build_manifests/CH-feature-name-identity-binding-step1.completion.json",
+    "docs/topics/feature-schema.md",
+    "assistant_project.md"
+  ],
+  "affected_files_amendment": "scripts/analysis/feature_math_lint.py added mid-implementation (not pre-declared): registering source_inputs made _registered_names() (which derives from _ITERATED_SECTIONS by design, per that function's own comments) start policing open/high/low/close/volume for 're-derivation outside the registry' -- a real regression (tests/test_feature_math_lint.py::test_floor_is_green flipped from passing to 7 violations, all raw-column TRANSPORT reads misclassified as derivation because the AST classifier's bare-helper-call fallback cannot distinguish a transport helper like _require_ohlcv_value from a math one). Fixed by excluding source_inputs from the policed set, for the same stated reason semantic_registry.canonical_unknowns/structural_walks are already excluded from the sibling loop: there is no formula to diverge from. docs/reference/schemas.md was REMOVED from the original affected_files pre-declaration: on inspection its 39-dim CANONICAL_FEATURES table is pre-existing staleness (predates even the v5.0 SMC dimension bump), unrelated to and not made worse by this change; left untouched per scope discipline rather than folded into an unrelated doc-drift fix.",
+  "affected_files_note": "PRE-DECLARATION -- edits not yet made. The working tree currently carries TWO other uncommitted, unrelated edits to market_ontology.yaml in the same shared clone: (a) this session's own still-uncommitted CH-intent-schema-alignment Part-1 edits (FM-027/FM-028 EPISODE scope, already pinned in this file's waiver_log under that program_id), and (b) a CONCURRENT session's CH-derive-declare-windows additions (a `defaults:` field documented in spec_schema.additive_spec_blocks.lineage plus two `defaults:` blocks on rolling_indicators entries, declaring config-default literals for catalog/audit; verified via full hunk-by-hunk diff against HEAD, 10 hunks total, 3 of which are this foreign delta). Neither is touched, reverted, or laundered by this change; both are declared in the post-edit waiver_log entry per CLAUDE.md 6.2 rule 4.",
+  "affected_feature_ids": [
+    "FM-085",
+    "FM-086",
+    "FM-087",
+    "FM-088",
+    "FM-089"
+  ],
+  "affected_feature_ids_note": "New identities only (open/high/low/close/volume respectively). No existing FM id is renamed, retired, or has its formula/impl changed. FM-085..089 are the next free ids (highest in use before this change is FM-084).",
+  "affected_models": "none -- no model artifact, feature_order list, or training pipeline is touched.",
+  "affected_production_config": "none -- configs/production/* is untouched. ACTIVE_VERSION unchanged. params hash unaffected (this change touches no params block).",
+  "ontology_nodes_added": [
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume"
+  ],
+  "ontology_nodes_added_note": "Added under a NEW section `source_inputs`, added to _ITERATED_SECTIONS in src/features/registry/__init__.py with its own validate_registry exemption branch (computation_class: source; formula + impl required but impl is NOT required to resolve in FORMULA_REGISTRY -- there is no scalar callable, these are raw ingested columns -- the same exemption pattern already used for rolling_indicators/temporal_context/structural_states). The existing flat `base_inputs:` list (DAG roots, read by build_lineage_graph/test_dependency_graph_acyclic_and_grounded) is left untouched; the new section is additive and coexists with it. volume's semantics.interpretation.caveat states the F-099 caveat (MT5 source = tick-volume-approximate, real_volume unconfirmed).",
+  "required_checks_ack": [
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_feature_pipeline.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_feature_spec_schema.py",
+    "tests/test_feature_layer_freeze.py",
+    "tests/test_semantic_registry.py"
+  ],
+  "required_checks_note": "First four: FEATURE_IDENTITY_CHANGE. Next two: DATASET_SCHEMA_CHANGE. test_feature_spec_schema.py and test_feature_layer_freeze.py added because this touches the ontology spec_schema surface and the freeze pin. test_semantic_registry.py added as a sibling floor over the same ontology file. BASELINE: check_governance_invariants.py --all measured before this change (see the completion manifest for the exact count and names).",
+  "unknowns": [],
+  "problem_addressed": {
+    "summary": "Feature NAMES are the one attribute of the feature layer not bound to ontology identity. Formula math (fm_resolve/FORMULA_REGISTRY) and indicator periods (feature_pipeline config, CLAUDE.md 6.5 exception) are identity-bound; CANONICAL_FEATURES is a hand-written literal that the ontology's lineage.vector_key only mirrors, and ~575 production src/ call sites read canonical names by string literal in ~60 files. This is why an agreed 22-name rename touches ~5,900 tracked sites instead of one registry edit.",
+    "measured_cost": "Of 5,895 quoted-key sites across git-tracked src/tests/scripts/configs plus 4 model registries: 2,800 in one generated fixture (tests/fixtures/test_vectors.json, regenerable), 308 in model feature_order name lists (script-remappable), ~2,787 hand edits (scripts ~1,190, hand-written tests ~822, src/research 184, production src/ ~575 in ~60 files, configs ~19). results/ was never scanned (likely larger). Several high-count names are homonyms of DIFFERENT quantities that must NOT be renamed alongside the canonical column (double_sweep = CRT episode cache key vs FM-060 rolling window; body_ratio = displacement-candle Candle property vs FM-010 current-bar composition; retest_depth/disp_strength = legacy BitNet model input names; atr = CRT engine state/local variables)."
+  },
+  "enforcement": {
+    "why_generate_not_hand_sync": "A hand-written tuple that the ontology 'mirrors' (checked by a test comparing the two) can drift silently if the test is weakened or skipped; a GENERATED tuple cannot drift from its own source by construction. This is the same class of fix FEATURE_ORDER_HASH itself applies one level down (detect drift by hashing, not by trusting).",
+    "why_fm_id_not_readable_alias": "User-selected (AskUserQuestion): F.FM_021 rather than F.RETEST_DEPTH. A readable alias's own NAME goes stale after a rename (the mismatch just moves into one module); an id-keyed reference has nothing that can go stale.",
+    "base_input_identity_gap": "open/high/low/close/volume were canonical vector slots 0-4 with NO ontology identity (no id, no formula, no semantics, no lineage block) -- present only as unstructured strings in the flat `base_inputs` DAG-root list. Undetected by the existing 48/48 'canonical coverage' floor (test_feature_spec_schema.py::test_canonical_coverage_is_near_complete), because that test only checks NAME PRESENCE in base_inputs, not identity completeness. This is gap G1 from the user's requested gap census; closing it is a precondition for generating CANONICAL_FEATURES from the ontology, since generation requires every canonical slot to have a lineage.vector_key."
+  },
+  "residual_not_fixed": [
+    "The 43 consumed_by: [UNKNOWN] lineage markers on the other 43 canonical identities (gap G6) -- filling them needs a consumer census, which Step 2 will produce as a side effect; filling is a separate, later program.",
+    "Step 2 (migrating ~575 production call sites to the identity namespace) and Step 3 (the 22 agreed renames) are NOT part of this change set.",
+    "Value-level issues found during the gap census (retest_depth's 0.0 sentinel, the SMC distances' 0.0 'no zone' ambiguity, session/hour_of_day UTC-vs-broker-time text per F-066) -- naming/identity gaps only, not value changes, out of scope here."
+  ],
+  "rollback_boundary": "Single change set: freeze-pin waiver + ontology source_inputs section + registry_init.py exemption branch + feature_schema.py generation + test_feature_lineage.py retarget revert together. The schema hash is asserted unchanged, so a partial revert leaves no dangling hash mismatch either way.",
+  "authority_granted": "User 2026-09-16, AskUserQuestion: 'Bind names to identity first' (over 'only Step 1' and 'direct renames, no indirection'); call-site reference style 'By FM id: F.FM_021' (over readable role constants or a bare function call). Plan approved via ExitPlanMode the same session.",
+  "authority_NOT_granted": "No Step 2 (call-site migration), no Step 3 (the 22 renames), no CANONICAL_FEATURES membership/order change, no schema version bump, no retrain, no promotion, no ACTIVE_VERSION change, no G001, no economic claim.",
+  "production_behavior_changed": "NO -- declared parity contract is STRICT: the generated CANONICAL_FEATURES tuple equals the prior literal byte-for-byte, SCHEMA_HASH and FEATURE_ORDER_HASH are asserted unchanged, and no consumer is edited in this step (Step 2 is separate). Proof obligation: hash equality assertion at import (fail-closed) plus the full governance floor re-run."
+}

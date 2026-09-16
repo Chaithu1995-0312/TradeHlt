@@ -72,6 +72,7 @@ _TTL_MAP: dict[str, str] = {
     "PULLBACK": "ttl_pullback_sec",
     "REVERSAL": "ttl_reversal_sec",
     "LIQ_SWEEP": "ttl_liq_sweep_sec",
+    "CONTINUATION": "ttl_continuation_sec",
     "UNKNOWN": "ttl_unknown_sec",
 }
 
@@ -81,6 +82,7 @@ REQUIRED_CONFIG_KEYS: tuple[str, ...] = (
     "ttl_pullback_sec",
     "ttl_reversal_sec",
     "ttl_liq_sweep_sec",
+    "ttl_continuation_sec",
     "ttl_unknown_sec",
     "risk_percent",
     "precision_default",
@@ -101,6 +103,9 @@ DEFAULT_CONFIG: dict = {
     "ttl_pullback_sec":        300,
     "ttl_reversal_sec":        120,
     "ttl_liq_sweep_sec":       240,
+    # == ttl_unknown_sec: CONTINUATION takes over exactly the entries that used to be UNKNOWN,
+    # so inheriting UNKNOWN's TTL keeps their validity window unchanged (parity, not a tuning).
+    "ttl_continuation_sec":    180,
     "ttl_unknown_sec":         180,
     "risk_percent":            0.5,
     "precision_default":       8,
@@ -340,8 +345,29 @@ class ExecutionPlannerV1_2:
             1. LIQ_SWEEP  — sweep_detected or double_sweep
             2. PULLBACK   — retest_depth in [0.3, 0.7], recent, positive momentum
             3. BREAKOUT   — strong body + strong displacement
-            4. REVERSAL   — counter-trend (EMA vs direction)
-            5. UNKNOWN    — no clear pattern
+            4. REVERSAL     — counter-trend (EMA against direction)
+            5. CONTINUATION — with-trend (EMA with direction)
+            6. UNKNOWN      — no clear pattern (after 4/5, only an exact ema_fast == ema_slow tie)
+
+        CONTINUATION (CH-intent-schema-alignment, 2026-09-16): REVERSAL tests only ONE half of the
+        EMA-vs-direction relationship, so every with-trend entry that was not a sweep, pullback or
+        breakout used to fall through to UNKNOWN and be rejected by `reject_unknown_intent` --
+        measured on XAUUSD M15 at 40.70% of bars for LONG and 31.97% for SHORT. That was a missing
+        label, not an absent pattern. Splitting the test gives with-trend entries their own label and
+        leaves UNKNOWN meaning what its reason string says.
+
+        This is a CLASSIFIER change only, by explicit user decision. GateIntelligence._intent_score
+        has no CONTINUATION branch and scores it 0.0 (its "unrecognised" fallthrough). On the XAUUSD
+        M15 corpus that MEASURED 0.0% gate approval over a 3,000-bar sample per direction, so these
+        entries are still rejected there -- now as `reject_gate` with an honest label instead of
+        `reject_unknown_intent`. That is a measurement, NOT a structural guarantee: with the intent
+        component at 0.0 the other three weights still sum to 0.65, above the 0.55 threshold, so a
+        CONTINUATION can be approved when vol/liquidity/structure are all strong. On production
+        features `volume_ma20` is never emitted (F-065 H7), which plausibly holds approval down;
+        supplying it would change that. Giving CONTINUATION a gate score is a separate,
+        evidence-gated decision: REVERSAL's formula `1 - min(1, |momentum_score|)` would inherit
+        F-061's magnitude saturation (~0 on nearly every bar), and a sign-only confirmation would
+        approve ~37%.
         """
         direction = int(engine_result["selected_direction"])  # RR-002/003: canonical field, fail-loud on absence
 
@@ -372,6 +398,11 @@ class ExecutionPlannerV1_2:
             ema_fast < ema_slow and direction == 1
         ):
             return "REVERSAL", "counter-trend signal (EMA vs direction)"
+
+        if (ema_fast > ema_slow and direction == 1) or (
+            ema_fast < ema_slow and direction == -1
+        ):
+            return "CONTINUATION", "with-trend signal (EMA vs direction)"
 
         return "UNKNOWN", "no clear pattern"
 
@@ -488,8 +519,11 @@ if __name__ == "__main__":
         "double_sweep": False,
         "retest_depth": 0.0,
         "candles_since_sweep": 99,
+        # Exact EMA tie: the only input that still reaches UNKNOWN once REVERSAL and CONTINUATION
+        # cover both halves of EMA-vs-direction. (Was fast=100.0/slow=99.0 with a LONG -- a
+        # with-trend entry, i.e. CONTINUATION since CH-intent-schema-alignment.)
         "ema_fast": 100.0,
-        "ema_slow": 99.0,
+        "ema_slow": 100.0,
     }
     result3 = planner.plan(engine_result, features_unknown, context)
     print("\n=== Test 3: UNKNOWN intent rejection ===")

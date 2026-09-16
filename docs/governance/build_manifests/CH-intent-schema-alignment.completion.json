@@ -1,0 +1,152 @@
+{
+  "change_id": "CH-intent-schema-alignment",
+  "date_utc": "2026-09-16",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE",
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "PRODUCTION_CONFIG_CHANGE"
+  ],
+  "completion_status": "BLOCKED_ON_SHARED_UNCOMMITTED_TREE",
+  "validator_result": {
+    "verdict": "COMPLETION: BLOCKED",
+    "run_utc": "2026-09-16",
+    "repo_state": "d33b46210839+acd773c3c5d2",
+    "reason_1_undeclared_surfaces": "110 governed files changed but not declared here. Every one attributed, zero unattributed: 108 are listed in CH-schema-v6-normalization-identity.completion.json declared_files (that change set is uncommitted in the same tree); 1 is scripts/analysis/trade_intent_ownership_shadow.py (SCR-472, the census shadow probe from earlier this session, a separate OBSERVATION_ONLY deliverable); 1 is src/runtime/backtest_v2.py (another session's CH-cost-model-identity-stamp). Declaring any of them here would falsely attribute them to this change, so they are not declared.",
+    "reason_2_required_checks": "6 failed / 112 passed. All six pre-existing and independent of this change: test_reachability_golden x2 (golden describes v2_multi_2026_04, stale since the ACTIVE_VERSION switch at 218b9ae), test_geometry_census x2, test_feature_math_lint::test_universe_reconciliation_with_census, test_current_findings::test_nonterminal_findings_are_fresh -- the last four are in the recorded 12-failure floor baseline.",
+    "what_would_clear_it": "Committing CH-schema-v6-normalization-identity first (so its 108 files leave the uncommitted set), the other session landing or reverting its backtest_v2.py edit, and the pre-existing reds being addressed. None of that is in this change's scope or authority."
+  },
+  "completion_status_note": "All declared work is finished and every check below was EXECUTED this session. The status field is set from construction_protocol.py validate-completion's actual verdict after it runs, never pre-filled. Known in advance: the working tree also carries the uncommitted CH-schema-v6-normalization-identity change set and another session's in-progress CH-cost-model-identity-stamp edit to src/runtime/backtest_v2.py, and the validator attributes every uncommitted file to whichever manifest it is checking. Those files are NOT declared here, because declaring them would falsely attribute them to this change.",
+  "declared_files": [
+    "configs/formulas/market_ontology.yaml",
+    "src/config_layer/execution_planner.py",
+    "src/analytics/sl_tp_comparator.py",
+    "configs/production/v2_htfcrt_2026_08.json",
+    "docs/governance/feature-layer-freeze-pin-2026-07-20.json",
+    "docs/governance/build_manifests/CH-intent-schema-alignment.impact.json",
+    "docs/governance/build_manifests/CH-intent-schema-alignment.completion.json",
+    "docs/governance/build_manifests/CH-schema-v6-normalization-identity.completion.json",
+    "tests/test_execution_planner.py",
+    "tests/test_sl_tp_comparator.py",
+    "docs/analysis/trade-intent-caller-census-2026-09-16.md",
+    "docs/analysis/readme.md",
+    "docs/topics/execution-planning.md",
+    "docs/topics/analytics-sltp.md",
+    "docs/topics/readme.md",
+    "docs/architecture/codebase-state-map.md",
+    "docs/architecture/service-boundary-map.md",
+    "docs/architecture/services/decision-spine.md",
+    "docs/reference/trade_identity_contract.md",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/governance/research_family_registry.json",
+    "assistant_project.md"
+  ],
+  "declared_files_note": "Grew from the impact pre-declaration by: src/analytics/sl_tp_comparator.py + tests/test_sl_tp_comparator.py (a third copy of the intent classifier, found during implementation, that claims to mirror the planner exactly); tests/test_execution_planner.py (fixtures that had encoded the hole); five docs whose path:line citations shifted (CLAUDE.md 6.3); docs/topics/execution-planning.md + analytics-sltp.md (6.4); and CH-schema-v6-normalization-identity.completion.json, which received a CORRECTED marker for a stale freeze-pin claim discovered here. Several of these files ALSO carry uncommitted edits from CH-schema-v6-normalization-identity; only this change's hunks belong to this manifest.",
+  "checks_executed": [
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_current_findings.py",
+    "tests/test_config_reachability.py",
+    "tests/test_reachability_golden.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_feature_spec_schema.py",
+    "tests/test_feature_layer_freeze.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_execution_planner.py",
+    "tests/test_gate_intelligence.py",
+    "tests/test_sl_tp_comparator.py",
+    "tests/test_model_runners_execution_plan.py",
+    "tests/test_breakout_disp_threshold.py",
+    "tests/test_execution_contract_v1.py",
+    "tests/test_f057_f058_config_authority.py"
+  ],
+  "checks_detail": [
+    {
+      "check": "Part 1 -- ontology validators",
+      "result": "PASS",
+      "detail": "validate_registry() -> [] and validate_semantic_registry() -> [] with FM-027/FM-028 at version 2 and lineage.scope: EPISODE. Formula, impl and depends_on strings byte-identical."
+    },
+    {
+      "check": "Part 1 -- freeze pin and value regression",
+      "result": "PASS",
+      "detail": "tests/test_feature_layer_freeze.py + test_feature_spec_schema.py + test_feature_lineage.py + test_formula_registry.py + test_semantic_registry.py: 65 passed, including test_xauusd_window_vector_regression (hashes emitted VALUES). market_ontology.yaml pin refreshed via waiver_log with MEASURED attribution: inverting this change's edits in memory re-hashes to exactly the prior pin 9be0e6a6...."
+    },
+    {
+      "check": "Part 1 -- no certification cascade from the version bump",
+      "result": "PASS",
+      "detail": "scripts/governance/feature_dag_certify.py:75 compute_formula_hash hashes {formula_id, witness, sorted deps} from the DAG spine; the ontology version is not an input."
+    },
+    {
+      "check": "Schema unchanged",
+      "result": "PASS",
+      "detail": "SCHEMA_VERSION 6.0, 48 dims, SCHEMA_HASH d40e7c7d5b624ef6d27670255ad95a35 and FEATURE_ORDER_HASH 7901bb0d34f3d0af captured before editing; CANONICAL_FEATURES and feature_schema.py untouched (freeze pin confirms feature_schema.py SHA unchanged)."
+    },
+    {
+      "check": "Part 2 -- corpus re-measurement with the REAL classifier",
+      "result": "PASS",
+      "detail": "ExecutionPlannerV1_2._derive_intent called on all 47,197 XAUUSD M15 bar-matrix rows per direction. UNKNOWN LONG 19,209 (40.70%) -> 2 (0.004%); SHORT 15,088 (31.97%) -> 2 (0.004%). CONTINUATION == old UNKNOWN - new UNKNOWN exactly (19,207 / 15,086). LIQ_SWEEP 8,939, PULLBACK 2,767, BREAKOUT 1,196 and REVERSAL unchanged. The corpus has 3 exact EMA ties; one is caught by an earlier branch."
+    },
+    {
+      "check": "Part 2 -- gate effect measured before choosing scope",
+      "result": "PASS",
+      "detail": "GateIntelligence.decide on a seeded 3,000-bar sample per direction of CONTINUATION bars: intent_score 0.0 (gate as-is) -> 0.0% approved; sign-only momentum confirmation -> ~37%; upper bound 1.0 -> ~66%. User chose classifier-only with the gate untouched. Recorded as a MEASUREMENT, not a structural guarantee: the three non-intent weights sum to 0.65 > 0.55 threshold."
+    },
+    {
+      "check": "Part 2 -- planner and consumer tests",
+      "result": "PASS",
+      "detail": "test_execution_planner 57 passed (incl. 5 new CONTINUATION pins + parametrized partition), test_gate_intelligence 34 passed, test_sl_tp_comparator 44 passed (incl. mirror-agrees-with-planner check), test_breakout_disp_threshold 5, test_execution_contract_v1 15, test_model_runners_execution_plan all passed (ran with the planner change in place; 17 min is FeaturePipeline substrate rebuilds). Planner __main__ self-test 4/4 under PYTHONIOENCODING=utf-8 (the cp1252 console crash on the checkmark glyph is pre-existing)."
+    },
+    {
+      "check": "Part 2 -- hash neutrality",
+      "result": "PASS",
+      "detail": "scripts/maintenance/_compute_hash.py (print-only) before and after adding execution_planner.ttl_continuation_sec: 7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613 both times, matching promotion_log. Config JSON parses."
+    },
+    {
+      "check": "Blast radius -- live rail only (STRUCTURAL)",
+      "result": "PASS",
+      "detail": "Transitive AST import closure over src/ including lazy function-level imports: runtime.backtest_v2 (140 modules) reaches NONE of config_layer.execution_planner, analytics.sl_tp_comparator, core.gate_intelligence. Positive control: the same method finds execution_planner and gate_intelligence from runtime.live_engine_hook (152 modules)."
+    },
+    {
+      "check": "Blast radius -- XAUUSD backtest ledger diff (EMPIRICAL)",
+      "result": "BLOCKED",
+      "detail": "Not run. src/runtime/backtest_v2.py raises at import (dataclass BacktestConfig: 'non-default argument initial_capital follows default argument', :190) from another session's in-progress CH-cost-model-identity-stamp edit (mtime 14:50, +76 lines). Superseded as evidence by the structural closure above, which proves the ledger cannot move; recorded as BLOCKED rather than PASS."
+    },
+    {
+      "check": "Governance floor",
+      "result": "UNMEASURABLE_AS_A_GATE -- NET-ZERO ON RECONCILIATION",
+      "detail": "check_governance_invariants.py --all aborts at collection: tests/governance/test_bar_structure_grounding.py transitively imports the broken backtest_v2. Re-run over the SAME GREEN_FLOOR targets with --continue-on-collection-errors: 14 failed / 559 passed / 1 error. All 12 baseline names still fail and no others from this change. The 3 additions are all foreign: the collection ERROR itself; test_corpus_store::test_full_corpus_read_matches_candleloader_byte_identical (from runtime.backtest_v2 import CandleLoader); test_doc_citations::test_every_code_citation_resolves (docs/architecture/entry-exit-map.md:44 -> backtest_v2.py:1708 _write_trades, now :1773 because that file gained +76 lines). Pass count reconciles exactly: 567 baseline - 2 newly failing foreign - 6 tests in the uncollectable file = 559."
+    },
+    {
+      "check": "Required checks outside the floor",
+      "result": "PASS_WITH_PRE_EXISTING_RED",
+      "detail": "test_config_reachability 2 passed; test_active_models_registry 22 passed; test_feature_spec_schema 14 passed. test_reachability_golden 2 failed PRE-EXISTING: its committed golden describes active_version v2_multi_2026_04 (206 READ_AND_USED keys) while ACTIVE_VERSION has been v2_htfcrt_2026_08 since commit 218b9ae (338); ttl_continuation_sec is in neither dead_keys nor tooling_only_keys. test_f057_f058_config_authority 2 failed on the foreign backtest_v2 import."
+    }
+  ],
+  "finding_registered": {
+    "id": "F-108",
+    "why_registered": "The impact/plan made a finding conditional on the corpus re-measurement confirming the UNKNOWN collapse; it did (40.70%/31.97% -> 0.004%). Registered ARCHITECTURE / Certain, Family explicitly excluded as not a market object (same treatment as F-103), bound in research_family_registry.json excluded_claims. Evidence cites TRACKED paths only; the census write-up is untracked and is named in prose, not cited.",
+    "also_corrected": "F-107 Note item (1) carried the single-cause 'sweep counter' phrasing; a CORRECTED clause was appended (original retained). F-107 was also unbound in the family registry; now bound in RF-FEATURE-ONTOLOGY L1 beside F-063.",
+    "pre_existing_left_alone": "test_research_family_registry::test_every_indexed_finding_is_bound_or_explicitly_excluded still lists F-096..F-100 and F-106 -- other work, red before this change."
+  },
+  "incidental_fixes": [
+    "SELF-INFLICTED stale freeze pin from CH-schema-v6-normalization-identity: feature_pipeline.py was edited at 04:45:28Z/04:45:30Z (F-064 warning text 99.70% -> 99.81%) AFTER the ~04:32Z pin refresh. Proven from the session transcript by inverting exactly those two edits to reproduce the stale pin. Pin refreshed with a waiver_log entry; the v6 completion manifest's 'freeze test green' claim marked CORRECTED_2026_09_16 at source.",
+    "Seven path:line citations into execution_planner.py (+8 lines) and sl_tp_comparator.py (+8 lines) updated to exact positions per CLAUDE.md 6.3, including two that were already stale against HEAD.",
+    "FM-027/FM-028 source_of_truth citations corrected (:1372 -> :1771, :1355 -> :1776)."
+  ],
+  "residual_not_fixed": [
+    "GateIntelligence scores CONTINUATION at 0.0 by user decision; giving it a score is a separate evidence-gated live-rail call. Pinned by test_continuation_gate_score_is_deliberately_zero.",
+    "retest_flag (58.07% of bars) vs the CRT engine's RETEST disagreement -- recorded, its own adjudication.",
+    "retest_depth's 0.0 'no retest' sentinel inside a numeric band predicate -- latent hazard for any future lower-bounded predicate; recorded, not changed.",
+    "src/runtime/backtest_v2.py import break and the entry-exit-map.md:44 citation it shifted -- another session's change set, deliberately untouched.",
+    "tests/test_reachability_golden.py stale since the ACTIVE_VERSION switch at 218b9ae -- pre-existing.",
+    "scripts/research/live_path_replay.py counts planner_reject_unknown_intent; its future outputs will report those entries as GATE_REJECT and are not comparable with earlier runs. Research tooling, not updated.",
+    "Planner __main__ self-test crashes on a cp1252 console printing a checkmark glyph -- pre-existing, CLAUDE.md 4 Windows encoding constraint."
+  ],
+  "authority_granted": "User 2026-09-16: align by IDENTITY, fix the classifier (AskUserQuestion); ExitPlanMode approval of the identity-without-vector-membership substitution; then, after the gate measurement, 'Classifier-only, gate untouched'.",
+  "authority_NOT_granted": "No CANONICAL_FEATURES change, no schema v7.0, no gate scoring change, no relaxation of reject_unknown_intent, no promotion, no ACTIVE_VERSION change, no G001, no economic claim.",
+  "production_behavior_changed": "LIVE RAIL LABELS ONLY. With-trend entries are labelled CONTINUATION instead of UNKNOWN and proceed to the gate instead of being rejected early; on the XAUUSD M15 corpus the gate rejects all of them (0.0% measured), so no approval decision changed there. Not structurally guaranteed. The backtest rail cannot reach any changed module. F-073: no production live rail exists.",
+  "repo_state_hash": "d33b46210839+acd773c3c5d2"
+}

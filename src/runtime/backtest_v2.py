@@ -145,6 +145,48 @@ def _require_bt_cfg(cfg: dict, key: str, section: str) -> object:
     return cfg[key]
 
 
+# ─────────────────────────────────────────────────────────────────
+# COST-MODEL IDENTITY (CH-cost-model-identity-stamp, TRACE_OBSERVATION_JOIN)
+# ─────────────────────────────────────────────────────────────────
+# The production backtest charges cost via two G1/G2 knobs (spread via
+# simulated_spread_pct, slippage via slippage_atr_fraction) plus the symmetric
+# pip grid. These constants stamp every trade record / summary with WHICH cost
+# surface and WHICH R-denominator produced pnl_rr_*. Pure additive metadata —
+# no PnL math changes.
+#
+# Decisions (impact manifest CH-cost-model-identity-stamp):
+#   * pip_size belongs to risk_denominator_id, NOT the cost hash.
+#   * ids are versioned; a denominator formula change emits a NEW id.
+#   * backtest_zero_cost is reserve-only and NEVER generated.
+#   * derivation is single-valued: with the knobs present, cost_model_id is
+#     always BACKTEST_COST_MODEL_ID (a zero-cost config merely yields a distinct
+#     params hash, because the knobs are still false/0 inside the hash).
+#   * reads are STRICT (cfg[k]) — a missing knob raises KeyError, never a silent
+#     .get default. `_cost_params_hash` is a pure function over parsed knobs.
+BACKTEST_COST_MODEL_ID = "backtest_g1g2_v2"                  # the G1/G2 surface
+BACKTEST_COST_MODEL_ID_ZERO_RESERVED = "backtest_zero_cost"  # reserved, never generated
+BACKTEST_RISK_DENOM_ID = "entry_fill_to_sl__v1"              # = |entry_fill - sl|/pip_size
+
+
+def _cost_params_hash(slippage_enabled, slippage_atr_fraction,
+                      slippage_seed, simulated_spread_pct) -> str:
+    """Deterministic identity of the FOUR cost knobs actually in force.
+
+    Deliberately EXCLUDES pip_size (it is the R-denominator grid, owned by
+    risk_denominator_id — see the manifest decision). Pure function of the
+    parsed knobs; 16-hex sha256. Callers must already have required the keys
+    (from_prod_config _requires them), so a missing knob cannot reach here.
+    """
+    import hashlib
+    payload = json.dumps({
+        "slippage_enabled":      bool(slippage_enabled),
+        "slippage_atr_fraction": float(slippage_atr_fraction),
+        "slippage_seed":          int(slippage_seed),
+        "simulated_spread_pct":  float(simulated_spread_pct),
+    }, sort_keys=True)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
 @dataclass
 class BacktestConfig:
     # ── HTF ──────────────────────────────────────────────────────
@@ -186,6 +228,11 @@ class BacktestConfig:
 
     # ── Scorer mode ───────────────────────────────────────────────
     scorer_mode: str = "calibrated"   # "calibrated" | "static"
+
+    # ── Cost-model identity (CH-cost-model-identity-stamp) ─────────
+    # Derived in from_prod_config; defaulted so direct constructions elsewhere stay valid.
+    cost_model_id:           str = ""
+    cost_model_params_hash:  str = ""
 
     # ── Strategy Registry pin (instance-specific; §13.5/§8) ────────
     # Names WHICH StrategyPackage this run claims to execute (strategies.
@@ -257,6 +304,13 @@ class BacktestConfig:
             slippage_atr_fraction = float(cfg["slippage_atr_fraction"]),
             slippage_seed         = int(cfg["slippage_seed"]),
             simulated_spread_pct  = float(cfg["simulated_spread_pct"]),
+            cost_model_id         = BACKTEST_COST_MODEL_ID,
+            cost_model_params_hash = _cost_params_hash(
+                bool(cfg["slippage_enabled"]),
+                float(cfg["slippage_atr_fraction"]),
+                int(cfg["slippage_seed"]),
+                float(cfg["simulated_spread_pct"]),
+            ),
             initial_capital       = float(cfg["initial_capital"]),
             risk_pct_per_trade    = float(cfg["risk_pct_per_trade"]),
             use_compounding       = bool(cfg["use_compounding"]),
@@ -377,6 +431,12 @@ class TradeRecord:
     bitnet_score_at_entry:    float = 0.0
     bitnet_decision_at_entry: str   = ""   # "ACCEPT" | "REJECT" | "" (not evaluated)
     config_version:         str   = field(default_factory=lambda: PROD_VERSION)
+    # ── [CH-cost-model-identity-stamp] ───────────────────────────────────
+    # Cost/denominator identity on the trade record. Which cost model and which
+    # R-denominator produced pnl_rr_net. Pure additive metadata; no PnL change.
+    cost_model_id:          str   = ""
+    cost_model_params_hash: str   = ""
+    risk_denominator_id:    str   = ""
     # ── [Phase D] Strategy memory fields ─────────────────────────────────────
     # Populated at trade close by BacktestRunner._on_trade_close().
     # winning_strategy_id: strategy that produced the top signal (from OrchestratorResult).
@@ -1019,6 +1079,9 @@ class TradeJournal:
         self, instrument: str, pip_size: float,
         slippage: SlippageModel, capital_curve: CapitalCurve,
         sl_atr_buffer: float,
+        cost_model_id: str = "",
+        cost_model_params_hash: str = "",
+        risk_denominator_id: str = "",
     ):
         self.instrument    = instrument
         self.pip_size      = pip_size
@@ -1029,6 +1092,10 @@ class TradeJournal:
         # match crt_engine.sl_atr_buffer but did not READ it — editing the config key
         # silently desynchronized the two. Now threaded from the resolved CRTConfig.
         self.sl_atr_buffer = float(sl_atr_buffer)
+        # ── [CH-cost-model-identity-stamp] ─────────────────────────────
+        self.cost_model_id           = str(cost_model_id)
+        self.cost_model_params_hash  = str(cost_model_params_hash)
+        self.risk_denominator_id     = str(risk_denominator_id)
         self.open_trade:   Optional[TradeRecord] = None
         self.closed:       list[TradeRecord] = []
         self.rejections:   list[RejectionRecord] = []
@@ -1143,6 +1210,10 @@ class TradeJournal:
             bitnet_decision_at_entry = str(bitnet_decision),
             shadow_used              = shadow_used,
         )
+        # ── [CH-cost-model-identity-stamp] ─────────────────────────────
+        self.open_trade.cost_model_id           = self.cost_model_id
+        self.open_trade.cost_model_params_hash  = self.cost_model_params_hash
+        self.open_trade.risk_denominator_id     = self.risk_denominator_id
 
     def on_trade_closed(
         self, trade: Trade, exit_price_raw: float,
@@ -1293,6 +1364,9 @@ class TradeJournal:
             row["bitnet_decision_at_entry"] = r.bitnet_decision_at_entry
             row["config_version"]       = r.config_version
             row["shadow_used"]          = int(r.shadow_used)
+            row["cost_model_id"]        = r.cost_model_id
+            row["cost_model_params_hash"] = r.cost_model_params_hash
+            row["risk_denominator_id"]  = r.risk_denominator_id
             rows.append(row)
         return rows
 
@@ -1691,22 +1765,36 @@ class ReportWriter:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def write_all(self, metrics: BacktestMetrics, journal: TradeJournal,
-                  events: list[dict], run_id: Optional[str] = None) -> dict[str, str]:
+                  events: list[dict], run_id: Optional[str] = None,
+                  cost_model_id: str = "", cost_model_params_hash: str = "",
+                  risk_denominator_id: str = "") -> dict[str, str]:
         """`run_id` (2026-09-16, user-authorized): the canonical output-content id — see the
         call site's own comment in `BacktestRunner.run()` (F-101 context). Optional so any other
-        existing caller of `write_all` is unaffected (stamps nothing when omitted)."""
+        existing caller of `write_all` is unaffected (stamps nothing when omitted).
+
+        `cost_model_id` / `cost_model_params_hash` / `risk_denominator_id`
+        (CH-cost-model-identity-stamp): stamped onto summary.json and report.txt.
+        Optional/empty defaults keep any other caller unaffected."""
         paths = {}
-        paths["summary"]    = self._write_summary(metrics, run_id)
+        paths["summary"]    = self._write_summary(metrics, run_id, cost_model_id,
+                                                  cost_model_params_hash, risk_denominator_id)
         paths["trades_csv"] = self._write_trades(journal, run_id)
         paths["events"]     = self._write_events(events, run_id)
-        paths["report"]     = self._write_report(metrics)
+        paths["report"]     = self._write_report(metrics, cost_model_id)
         return paths
 
-    def _write_summary(self, m: BacktestMetrics, run_id: Optional[str] = None) -> str:
+    def _write_summary(self, m: BacktestMetrics, run_id: Optional[str] = None,
+                       cost_model_id: str = "", cost_model_params_hash: str = "",
+                       risk_denominator_id: str = "") -> str:
         p = self.output_dir / f"{self.instrument}_summary.json"
         d = m.to_dict()
         if run_id is not None:
             d["run_id"] = run_id
+        # ── [CH-cost-model-identity-stamp] run-level cost/denominator identity ──
+        if cost_model_id:
+            d["cost_model_id"]           = cost_model_id
+            d["cost_model_params_hash"]  = cost_model_params_hash
+            d["risk_denominator_id"]     = risk_denominator_id
         with open(p, "w", encoding="utf-8") as f:
             json.dump(d, f, indent=2)
         return str(p)
@@ -1736,7 +1824,7 @@ class ReportWriter:
                 f.write(json.dumps(rec) + "\n")
         return str(p)
 
-    def _write_report(self, m: BacktestMetrics) -> str:
+    def _write_report(self, m: BacktestMetrics, cost_model_id: str = "") -> str:
         d = m.distribution
         cost = d.get("cost_analysis", {})
         cap  = m.capital_curve
@@ -1776,6 +1864,7 @@ class ReportWriter:
             f"  Total spread:                {cost.get('total_spread_pips', 0):>10.1f} pips",
             f"  Avg cost per trade:          {cost.get('avg_cost_per_trade', 0):>10.1f} pips",
             f"  Raw vs Net PnL delta:        {cost.get('raw_vs_net_pnl_rr_delta', 0):>+10.2f}R",
+            f"  Cost model applied:          {cost_model_id or '(unset)'}",
             "",
             "── SESSION BREAKDOWN ─────────────────────────────────────────",
         ]
@@ -2504,6 +2593,9 @@ class BacktestRunner:
         journal = TradeJournal(
             self.cfg.instrument, self.cfg.pip_size, slip, cap,
             sl_atr_buffer=self.crt_cfg.sl_atr_buffer,
+            cost_model_id=self.cfg.cost_model_id,
+            cost_model_params_hash=self.cfg.cost_model_params_hash,
+            risk_denominator_id=BACKTEST_RISK_DENOM_ID,
         )
         gap_det = GapDetector(self.cfg.gap_reset_minutes, self.cfg.gap_reset_enabled)
         met_eng = MetricsEngine(self.cfg.instrument)
@@ -2550,7 +2642,7 @@ class BacktestRunner:
 
         # ── layer_trace: cross-layer LayerProof identity spine ──────────────
         # OBSERVATION ONLY, same discipline as `_bar_structure`/`_construction_trace` above.
-        # `None` unless `layer_trace.enabled: true` (absent from every config as of this
+        # `None` only when `layer_trace.enabled: false` (absent section defaults ON as of
         # module's introduction). Construction failure NEVER breaks a backtest.
         _layer_trace = self._build_layer_trace_emitter(writer.run_id)
         if _layer_trace is not None:
@@ -3554,7 +3646,30 @@ class BacktestRunner:
         # Phase 4: attach hard drift pause count
         m.hard_drift_pauses = _hard_drift_pauses
 
-        paths = writer.write_all(m, journal, flushed_events, run_id=_canonical_run_id)
+        paths = writer.write_all(
+            m, journal, flushed_events, run_id=_canonical_run_id,
+            cost_model_id=self.cfg.cost_model_id,
+            cost_model_params_hash=self.cfg.cost_model_params_hash,
+            risk_denominator_id=BACKTEST_RISK_DENOM_ID,
+        )
+        try:
+            from utils.run_id_last_ran import record_run_last_ran
+            record_run_last_ran(
+                _canonical_run_id,
+                source="backtest_v2",
+                instrument=getattr(self.cfg, "instrument", "") or "",
+                artifact_path=str(paths.get("summary") or paths.get("trades") or ""),
+            )
+            _lt = getattr(self, "_layer_trace", None)
+            if _lt is not None and getattr(_lt, "run_id", None):
+                record_run_last_ran(
+                    _lt.run_id,
+                    source="layer_trace",
+                    instrument=getattr(self.cfg, "instrument", "") or "",
+                    artifact_path=str(getattr(_lt, "path", "") or ""),
+                )
+        except Exception:
+            pass
 
         # [TELEMETRY] Write Phase-0 CRT funnel telemetry sidecar
         try:

@@ -31,7 +31,7 @@ Turn a scored market bar into an approved, sized trade plan — or a reasoned re
    `DecisionResult` (`decision`, `reason`, `confidence`, `threshold_used`,
    `reject_stage`).
 4. **`ExecutionPlannerV1_2.plan(engine_result, features, context)`**
-   (`config_layer/execution_planner.py:129`) classifies intent and derives entry + TTL
+   (`config_layer/execution_planner.py:137`) classifies intent and derives entry + TTL
    + `execution_id`. SL/TP/RR are injected afterward via `compute_crt_levels`
    (`core/gate_intelligence.py`).
 5. **`UltronRiskGate.evaluate(trade, portfolio_state)`**

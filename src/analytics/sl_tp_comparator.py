@@ -57,6 +57,7 @@ _INTENT_LIQ_SWEEP = "LIQ_SWEEP"
 _INTENT_PULLBACK  = "PULLBACK"
 _INTENT_BREAKOUT  = "BREAKOUT"
 _INTENT_REVERSAL  = "REVERSAL"
+_INTENT_CONTINUATION = "CONTINUATION"
 _INTENT_UNKNOWN   = "UNKNOWN"
 
 # -- Legacy TP multiplier map by intent ---------------------------------------
@@ -65,6 +66,9 @@ _DEFAULT_LEGACY_TP_MULTS: dict[str, str] = {
     _INTENT_PULLBACK:  "legacy_tp_atr_mult_pullback",
     _INTENT_REVERSAL:  "legacy_tp_atr_mult_reversal",
     _INTENT_LIQ_SWEEP: "legacy_tp_atr_mult_sweep",
+    # CONTINUATION takes over exactly the entries that used to classify as UNKNOWN, so it keeps
+    # UNKNOWN's breakout fallback: comparator LEVELS for those trades are unchanged, only the label.
+    _INTENT_CONTINUATION: "legacy_tp_atr_mult_breakout",
     _INTENT_UNKNOWN:   "legacy_tp_atr_mult_breakout",  # fallback
 }
 
@@ -96,6 +100,10 @@ def derive_intent_from_features(features: dict, direction: int) -> str:
         return _INTENT_BREAKOUT
     if (ema_fast > ema_slow and direction == -1) or (ema_fast < ema_slow and direction == 1):
         return _INTENT_REVERSAL
+    # Kept in lock-step with ExecutionPlannerV1_2._derive_intent (CH-intent-schema-alignment):
+    # without this branch the "mirrors exactly" claim above would silently become false.
+    if (ema_fast > ema_slow and direction == 1) or (ema_fast < ema_slow and direction == -1):
+        return _INTENT_CONTINUATION
     return _INTENT_UNKNOWN
 
 

@@ -1,0 +1,350 @@
+{
+  "probe": "TRADE_INTENT_OWNERSHIP_SHADOW",
+  "version": "1.0.0",
+  "task_class": "OBSERVATION_ONLY",
+  "generated_utc": "2026-09-16T06:35:43.366939+00:00",
+  "instrument": "XAUUSD",
+  "csv_path": "data\\mt5\\XAUUSD_M15.csv",
+  "csv_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "active_version": "v2_htfcrt_2026_08",
+  "schema_version": "6.0",
+  "breakout_disp_threshold": 1.5,
+  "reject_unknown_intent": true,
+  "n_candles": 47275,
+  "n_records": 6,
+  "n_trade_opens": 2,
+  "feature_lookup_misses": 0,
+  "arm_current_distribution": {
+    "reversal": 5,
+    "breakout": 1
+  },
+  "arm_c_distribution": {
+    "REVERSAL": 4,
+    "UNKNOWN": 1,
+    "LIQ_SWEEP": 1
+  },
+  "confusion_matrix": {
+    "breakout -> REVERSAL": 1,
+    "reversal -> LIQ_SWEEP": 1,
+    "reversal -> REVERSAL": 3,
+    "reversal -> UNKNOWN": 1
+  },
+  "n_labels_disagree": 3,
+  "n_tp1_multiplier_changes": 3,
+  "n_arm_c_unknown": 1,
+  "n_arm_c_would_reject": 1,
+  "pullback_band_occupancy": {
+    "note": "How many records sit in the 0.3-0.7 pullback depth band under EACH depth quantity. Option A/B keeps FM-027 (displacement_retrace, cross-candle retrace of the displacement body); option C switches to FM-021 (retest_depth, the pipeline quantity). A divergence here means the two options are not interchangeable.",
+    "fm027_displacement_retrace_in_band": 3,
+    "fm021_retest_depth_in_band": 0,
+    "n": 6
+  },
+  "trade_open_subset": [
+    {
+      "timestamp": "2024-10-08 15:45:00",
+      "arm_current": "reversal",
+      "arm_c": "REVERSAL",
+      "tp1_current": 1.0,
+      "tp1_arm_c": 1.0,
+      "would_reject": false
+    },
+    {
+      "timestamp": "2025-07-02 13:15:00",
+      "arm_current": "breakout",
+      "arm_c": "REVERSAL",
+      "tp1_current": 1.5,
+      "tp1_arm_c": 1.0,
+      "would_reject": false
+    }
+  ],
+  "predictions": {
+    "P1_current_reversal_ge_90pct": "Arm CURRENT is `reversal` on >= 90% of records",
+    "P2_current_zero_pullback": "Arm CURRENT emits ZERO `pullback`",
+    "P3_argC_some_pullback": "Arm C emits at least one `PULLBACK`",
+    "P4_argC_some_unknown": "Arm C emits at least one `UNKNOWN` (new reject path)",
+    "P5_n_insufficient": "n < 30 (economically INSUFFICIENT)"
+  },
+  "prediction_results": {
+    "P1_current_reversal_ge_90pct": false,
+    "P2_current_zero_pullback": true,
+    "P3_argC_some_pullback": false,
+    "P4_argC_some_unknown": true,
+    "P5_n_insufficient": true
+  },
+  "predictions_passed": 3,
+  "predictions_total": 5,
+  "authority": "NONE. Mechanism observation only; no economic claim, no G001, no config change.",
+  "limitations": [
+    "L1 n is tiny -- measures MECHANISM, never economics.",
+    "L2 disagreement is PARTLY DEFINITIONAL: FM-027/FM-028 vs FM-021/FM-020, and body_ratio differs in SUBJECT (displacement candle vs current bar).",
+    "L3 _derive_intent called directly, bypassing plan().",
+    "L4 XAUUSD only.",
+    "L5 both arms share the engine's resolved breakout_disp_threshold."
+  ],
+  "records": [
+    {
+      "timestamp": "2024-07-09 08:45:00",
+      "crt_state": "RETEST",
+      "direction": "SHORT",
+      "is_trade_open": false,
+      "arm_current": {
+        "intent": "reversal",
+        "tp1_atr_multiplier": 1.0,
+        "cache_keys": [
+          "body_ratio",
+          "displacement_atr_ratio",
+          "displacement_retrace",
+          "double_sweep",
+          "retest_index",
+          "session"
+        ],
+        "inputs": {
+          "rd_fm027_displacement_retrace": 0.4007220216606984,
+          "disp_fm028_displacement_atr_ratio": 1.4272790535837636,
+          "body_ratio_displacement_candle": 0.9453924914676234,
+          "double_sweep": false
+        }
+      },
+      "arm_c": {
+        "intent": "REVERSAL",
+        "reason": "counter-trend signal (EMA vs direction)",
+        "tp1_atr_multiplier": 1.0,
+        "is_unknown": false,
+        "would_reject": false,
+        "inputs": {
+          "sweep_detected": 0.0,
+          "double_sweep": 0.0,
+          "retest_depth": 0.0,
+          "candles_since_sweep": 10.0,
+          "momentum_score": -1232.4776611328125,
+          "body_ratio": 0.5691489577293396,
+          "disp_strength": 0.5212247967720032,
+          "ema_fast": 2365.78466796875,
+          "ema_slow": 2364.939208984375
+        }
+      },
+      "labels_agree": true,
+      "tp1_changes": false
+    },
+    {
+      "timestamp": "2024-08-21 22:15:00",
+      "crt_state": "RETEST",
+      "direction": "LONG",
+      "is_trade_open": false,
+      "arm_current": {
+        "intent": "reversal",
+        "tp1_atr_multiplier": 1.0,
+        "cache_keys": [
+          "body_ratio",
+          "displacement_atr_ratio",
+          "displacement_retrace",
+          "double_sweep",
+          "retest_index",
+          "session"
+        ],
+        "inputs": {
+          "rd_fm027_displacement_retrace": 0.40594059405944605,
+          "disp_fm028_displacement_atr_ratio": 0.9822459893047653,
+          "body_ratio_displacement_candle": 0.9237804878048721,
+          "double_sweep": false
+        }
+      },
+      "arm_c": {
+        "intent": "UNKNOWN",
+        "reason": "no clear pattern",
+        "tp1_atr_multiplier": null,
+        "is_unknown": true,
+        "would_reject": true,
+        "inputs": {
+          "sweep_detected": 0.0,
+          "double_sweep": 0.0,
+          "retest_depth": 0.0949983298778534,
+          "candles_since_sweep": 6.0,
+          "momentum_score": -218.2056884765625,
+          "body_ratio": 0.11157024651765823,
+          "disp_strength": 0.08085561543703079,
+          "ema_fast": 2512.9072265625,
+          "ema_slow": 2510.741943359375
+        }
+      },
+      "labels_agree": false,
+      "tp1_changes": true
+    },
+    {
+      "timestamp": "2024-10-08 15:45:00",
+      "crt_state": "RETEST",
+      "direction": "SHORT",
+      "is_trade_open": true,
+      "arm_current": {
+        "intent": "reversal",
+        "tp1_atr_multiplier": 1.0,
+        "cache_keys": [
+          "body_ratio",
+          "displacement_atr_ratio",
+          "displacement_retrace",
+          "double_sweep",
+          "retest_index",
+          "session"
+        ],
+        "inputs": {
+          "rd_fm027_displacement_retrace": 0.08968609865472818,
+          "disp_fm028_displacement_atr_ratio": 1.1723619977469169,
+          "body_ratio_displacement_candle": 1.0,
+          "double_sweep": false
+        }
+      },
+      "arm_c": {
+        "intent": "REVERSAL",
+        "reason": "counter-trend signal (EMA vs direction)",
+        "tp1_atr_multiplier": 1.0,
+        "is_unknown": false,
+        "would_reject": false,
+        "inputs": {
+          "sweep_detected": 0.0,
+          "double_sweep": 0.0,
+          "retest_depth": 0.0,
+          "candles_since_sweep": 15.0,
+          "momentum_score": -479.89849853515625,
+          "body_ratio": 0.1631205677986145,
+          "disp_strength": 0.18137438595294952,
+          "ema_fast": 2647.096435546875,
+          "ema_slow": 2644.60693359375
+        }
+      },
+      "labels_agree": true,
+      "tp1_changes": false
+    },
+    {
+      "timestamp": "2024-12-17 10:15:00",
+      "crt_state": "RETEST",
+      "direction": "LONG",
+      "is_trade_open": false,
+      "arm_current": {
+        "intent": "reversal",
+        "tp1_atr_multiplier": 1.0,
+        "cache_keys": [
+          "body_ratio",
+          "displacement_atr_ratio",
+          "displacement_retrace",
+          "double_sweep",
+          "retest_index",
+          "session"
+        ],
+        "inputs": {
+          "rd_fm027_displacement_retrace": 0.3029411764705052,
+          "disp_fm028_displacement_atr_ratio": 1.3145681134507503,
+          "body_ratio_displacement_candle": 0.7780320366133125,
+          "double_sweep": false
+        }
+      },
+      "arm_c": {
+        "intent": "REVERSAL",
+        "reason": "counter-trend signal (EMA vs direction)",
+        "tp1_atr_multiplier": 1.0,
+        "is_unknown": false,
+        "would_reject": false,
+        "inputs": {
+          "sweep_detected": 0.0,
+          "double_sweep": 0.0,
+          "retest_depth": 0.0,
+          "candles_since_sweep": 2.0,
+          "momentum_score": -2047.08740234375,
+          "body_ratio": 0.5109780430793762,
+          "disp_strength": 0.7700902819633484,
+          "ema_fast": 2651.38330078125,
+          "ema_slow": 2652.175048828125
+        }
+      },
+      "labels_agree": true,
+      "tp1_changes": false
+    },
+    {
+      "timestamp": "2025-05-06 18:00:00",
+      "crt_state": "RETEST",
+      "direction": "SHORT",
+      "is_trade_open": false,
+      "arm_current": {
+        "intent": "reversal",
+        "tp1_atr_multiplier": 1.0,
+        "cache_keys": [
+          "body_ratio",
+          "displacement_atr_ratio",
+          "displacement_retrace",
+          "double_sweep",
+          "retest_index",
+          "session"
+        ],
+        "inputs": {
+          "rd_fm027_displacement_retrace": 0.07435653002857272,
+          "disp_fm028_displacement_atr_ratio": 1.4612266022599698,
+          "body_ratio_displacement_candle": 0.8669421487603567,
+          "double_sweep": false
+        }
+      },
+      "arm_c": {
+        "intent": "LIQ_SWEEP",
+        "reason": "sweep detected",
+        "tp1_atr_multiplier": 1.2,
+        "is_unknown": false,
+        "would_reject": false,
+        "inputs": {
+          "sweep_detected": 1.0,
+          "double_sweep": 1.0,
+          "retest_depth": 0.7988464832305908,
+          "candles_since_sweep": 0.0,
+          "momentum_score": 3620.435546875,
+          "body_ratio": 0.8876630067825317,
+          "disp_strength": 1.0687483549118042,
+          "ema_fast": 3388.60498046875,
+          "ema_slow": 3385.150634765625
+        }
+      },
+      "labels_agree": false,
+      "tp1_changes": true
+    },
+    {
+      "timestamp": "2025-07-02 13:15:00",
+      "crt_state": "RETEST",
+      "direction": "SHORT",
+      "is_trade_open": true,
+      "arm_current": {
+        "intent": "breakout",
+        "tp1_atr_multiplier": 1.5,
+        "cache_keys": [
+          "body_ratio",
+          "displacement_atr_ratio",
+          "displacement_retrace",
+          "double_sweep",
+          "retest_index",
+          "session"
+        ],
+        "inputs": {
+          "rd_fm027_displacement_retrace": 0.035460992907822765,
+          "disp_fm028_displacement_atr_ratio": 1.7301251203079988,
+          "body_ratio_displacement_candle": 0.6588785046728926,
+          "double_sweep": false
+        }
+      },
+      "arm_c": {
+        "intent": "REVERSAL",
+        "reason": "counter-trend signal (EMA vs direction)",
+        "tp1_atr_multiplier": 1.0,
+        "is_unknown": false,
+        "would_reject": false,
+        "inputs": {
+          "sweep_detected": 0.0,
+          "double_sweep": 0.0,
+          "retest_depth": 0.0,
+          "candles_since_sweep": 19.0,
+          "momentum_score": 1090.1632080078125,
+          "body_ratio": 0.4689922332763672,
+          "disp_strength": 0.3260827660560608,
+          "ema_fast": 3339.437744140625,
+          "ema_slow": 3337.797119140625
+        }
+      },
+      "labels_agree": false,
+      "tp1_changes": true
+    }
+  ]
+}

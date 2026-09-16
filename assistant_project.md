@@ -1594,3 +1594,84 @@ Open Questions: CH-intent-schema-alignment still uncommitted (CONTINUATION + F-1
 Next Step: report the commit SHA and leftover dirty set; do not start the intent commit unless asked.
 ---
 
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Schema v7.0 candidate keyword list (proposal only; no identity change made)
+Decision/Output: User asked for v7.0 keywords to add against the v6.0 48-slot surface. Verified every candidate against CANONICAL_FEATURES, the ontology and actual emitters/consumers before proposing. Proposed 8 keywords in three readiness tiers: (A, ready) ema_spread_atr FM-030 + momentum_score_atr FM-031 — registered scale-invariant identities, bar-computable, currently only reachable by swapping slot 9/12 VALUES via normalization_basis; (B, register + define first) sweep_extent_low_atr / sweep_extent_high_atr — the normalized form of what GateIntelligence._liquidity_score computes, no FM id yet [CORRECTED 2026-09-16, next turn: sweep_extent_* -> range_low/high_breach_atr (same math, honest name) OR sweep_depth_low/high_atr (FM-058-consistent math). The proposed definition was NOT a sweep: FM-058 liquidity_sweep requires close back inside a prior SWING level; this measured a rolling-20-bar breach with no rejection condition, so a breakdown scored as a "sweep". "In ATR" must mean atr_absolute FM-074 — the gate divides a price difference by close-relative FM-041 `atr`, a dormant dimensional mix]; (C, episode definition first) crt_episode_active validity flag + displacement_retrace FM-027 + displacement_atr_ratio FM-028 + candles_since_retest_state FM-070. Explicitly NOT proposed, each with evidence: volume_ma20 (slot 5 volume_ratio FM-062 already equals volume/SMA20 — consumer rewire instead), trend_strength_raw FM-084 and atr_absolute FM-074 (price-unit, user's own prior exclusion rule), retest_flag FM-061 (0 on 4 of 6 engine RETEST bars) and displacement_flag FM-069, raw lowest_low_*/highest_high_* (price-unit), lowest_low_3/highest_high_3/touches_high_20/touches_low_20 (declared optional in execution_planner, zero readers in src). Two discoveries: (1) GateIntelligence._liquidity_score is a structural 0.0 on the live rail in BOTH halves — F-065 H7 recorded only the volume half; lowest_low_20/5 and highest_high_20/5 are emitted by nothing (pipeline, feature_store, live hook); (2) the sweep half is <= 0 BY CONSTRUCTION under any inclusive window (a 20-bar low that includes the last 5 bars can never exceed the 5-bar low); even the test fixture yields -3.5 -> 0. Also noted: pipeline comments call retest_flag/displacement_flag "no FM id" but both are registered (FM-061/FM-069) — DOC_DRIFT, not fixed this turn.
+Belief Update / ROI / Goal:
+  Goal: give the user an addition list that will survive an identity change, not a wishlist.
+  Belief: most "missing features" are consumer-side defects, not schema gaps — volume_ma20 is already slot 5 under another name, and the sweep extent is dead by construction before it is dead by absence. Only 2 of 8 candidates are ready without a definitional decision.
+  Knowledge ROI: high — checking consumers before proposing slots removed one false candidate and surfaced a construction-level zero in a live gate component.
+  Action: sharpen F-108's gate note: on the live rail's current feature supply, an intent-0 CONTINUATION is capped at 0.20 + 0 + 0.25 = 0.45 < 0.55, so it cannot pass — structural on that supply, not merely measured. Not edited this turn (user asked for the list); flagged.
+Open Questions: episode definition for tier C (engine RETEST vs pipeline retest_flag)? window convention for the sweep-extent pair? additive FM-030/031 slots vs in-place value swap via normalization_basis? update F-108's note with the 0.45 live-supply cap and extend F-065 to the sweep half?
+Next Step: user builds the v6 -> v7 addition list; no identity change until then.
+---
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Correction — proposed v7 keyword `sweep_extent_low_atr` was not semantically a sweep
+Decision/Output: User challenged whether the name `sweep_extent_low_atr` matched its stated meaning ("how far the latest 5-bar low pushed below the prior 20-bar low, in ATR"). Verified against the ontology: it does NOT. FM-058 `liquidity_sweep` (slot 21) = `-1 if low < ref_low and close >= ref_low`, ref_low = prev(last_swing_low_price) — "price traded THROUGH a structural reference but closed back inside it". The proposal differed on (1) no close-back-inside condition — a breakdown scores as a "sweep"; (2) rolling 20-bar low, not a structural swing level; (3) a 5-bar window min, not a single breach event. Plus (4) unit: "in ATR" must be atr_absolute FM-074, while GateIntelligence._liquidity_score divides a price difference by close-relative FM-041 `atr` — a dormant F-061/F-072-class dimensional mix (~2,000–4,000x on XAUUSD). Offered two honest replacements: A `range_low/high_breach_atr` (keep math, honest name, breach without rejection) or B `sweep_depth_low/high_atr` (keep name, FM-058-consistent: wick depth through ref swing level on sweep bars / atr_absolute, genuine 0 when no stop-run). Recommended B. Prior log entry's candidate line marked CORRECTED at source.
+Belief Update / ROI / Goal:
+  Goal: a v7 addition list whose names state what the values are — the v6 rename's whole point.
+  Belief: I reproduced the exact naming-trap class v6 fixed, inherited from the gate's own docstring ("positive = sweep below 20-bar low") instead of checking the registered FM-058 definition. Verifying consumers was not enough; names must be checked against the ontology's definition of the word.
+  Knowledge ROI: high — caught before it reached the addition list; also surfaced a dormant ATR unit mix in the gate.
+  Action: every proposed keyword name must be grounded against an existing ontology term's registered meaning before it enters the list.
+Open Questions: option A vs B for the pair? correct the gate docstring mislabel and the dormant unit mix (separate, authorized change)?
+Next Step: user chooses A or B; addition list built from the corrected names.
+---
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Full feature-identity listing for a user semantic-equality review (schema v6.0)
+Decision/Output: Generated (not hand-typed) every feature identity from configs/formulas/market_ontology.yaml + CANONICAL_FEATURES: 48 canonical slots (43 FM-registered, 5 base inputs open/high/low/close/volume with no FM node, 0 unregistered) and 23 registered FM identities outside the vector (2 with lineage.scope EPISODE). Registered formula + description text reproduced verbatim; full columns delivered as xlsx + md (scratchpad, not committed to the repo). Before flagging anything, verified one suspected pattern instead of asserting it: SMC distances FM-075..FM-082 register `/ atr` while older ATR-normalized features register `/(atr*close)` — the implementation passes ABSOLUTE ATR (feature_pipeline.py:1258-1260), so the registered TEXT is underspecified, the math is correct. Pointers offered for the review, each tied to existing evidence: retest_depth (registered meaning is distance-to-9-EMA masked by retest_flag), session/hour_of_day (description says UTC; F-066 broker time), ema_spread/momentum_score (F-061/F-064), disp_strength (any bar's body, not a displacement), double_sweep (homonym with the CRT cache key), FM-028 description generic vs displacement-candle identity, body_ratio blank formula (compositions register numerator/denominator — structural, not missing).
+Belief Update / ROI / Goal:
+  Goal: let the user adjudicate name-vs-meaning across the whole surface before any v7 identity change.
+  Belief: the registered TEXT and the implementation can diverge in precision without a math defect (SMC `/ atr`); a name review must read code for unit claims, not just ontology text.
+  Knowledge ROI: medium-high — one suspected 8-slot unit defect ruled out before it was claimed.
+  Action: user reviews; findings from the review get recorded and fixed in the owning ontology nodes.
+Open Questions: which names the user judges semantically unequal; whether to tighten the SMC formula text to say atr_absolute.
+Next Step: await the user's review results.
+---
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Schema v7.0 rename list — names derived from registered identity (identity -> name), user-selected rules
+Decision/Output: User asked that v7.0 names be semantically equal to identity (derived FROM formula + intent), with old name, new name, identity and the verbatim formula + semantic intent per slot. Proposed a 5-tag rule set over the verbatim ontology text of all 48 v6.0 slots; user applied UNEQUAL + AMBIGUOUS + UNIT + TRANSFORM, dropped INTERPRETIVE (trend_bias, trend_strength_z, volatility_ratio, liquidity_pressure_score keep names), and kept the Wilder distinction in names. FINAL: 22 renamed, 26 unchanged — double_sweep->two_sided_sweep_recent, ema_spread->ema_spread_atr_rel, momentum_score->close_change_atr_rel, atr->atr_sma_rel, rsi_14->rsi_sma, swing_high/low->*_confirmed, higher_high->high_above_last_swing_high, lower_low->low_below_last_swing_low, body_ratio->body_to_range_ratio, volatility_regime->atr_percentile_tercile, disp_strength->body_size_atr, retest_depth->retest_ema_fast_distance_atr, liquidity_distance->structure_level_distance_atr, and the 8 SMC *_distance->*_distance_tanh. Verified programmatically: every old name/FM id matches CANONICAL_FEATURES and the ontology, 48 unique names, 0 collisions against all 71 existing names. Saved as schema_v7_rename_list.md + .csv in the session scratchpad and sent. No schema/ontology/code/config change.
+Belief Update / ROI / Goal:
+  Goal: a v7 name list where each name states its registered identity, before any identity change.
+  Belief: 22 of 48 slot names drift from their identity on a mechanical rule; the drift concentrates in ATR-basis/smoothing (atr, rsi_14, ema_spread, momentum_score), PIT timing (swing_*), structure vocabulary (higher_high/lower_low), and transformed-value naming (the 8 SMC tanh distances).
+  Knowledge ROI: medium-high — the list is now adjudicable row by row with its evidence attached.
+  Action: user builds the v6->v7 list; implementation, if any, goes through the v6.0 governance path.
+Correction: the plan text said "no collision with any of the 71 registered identity names"; the ontology holds 66 FM identities — 71 counted the 5 unregistered base inputs. The collision check was re-run against all 71 existing names and still found 0.
+Recorded consequences: slot 36 renamed while its consumer slot 37 keeps `liquidity_pressure_score`; registered text naming old names needs text-only updates; FM-031/FM-068/FM-074 fall out of step; slots 39-46 keep the 0.0 ambiguity.
+Open Questions: rename the non-vector siblings alongside? keep the 36/37 pair mismatch?
+Next Step: await the user's v6 -> v7 addition/rename list.
+---
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: FEATURE-NAME-IDENTITY-BINDING Step 1 — CANONICAL_FEATURES generated from the ontology; base inputs registered FM-085..089
+Decision/Output: Implemented the plan approved via ExitPlanMode. (1) Registered open/high/low/close/volume as first-class ontology identities (FM-085..FM-089) in a new `source_inputs` section, added to `_ITERATED_SECTIONS` with its own SOURCE-impl exemption branch in `validate_registry()` (mirrors rolling_indicators/temporal_context/structural_states — no scalar callable exists, `impl` names the ingestion authority). Coexists with the untouched flat `base_inputs` DAG-root list. (2) `CANONICAL_FEATURES` in `feature_schema.py` is now GENERATED at import — every `_ITERATED_SECTIONS` entry with a `lineage.vector_key` placed at its `lineage.vector_index`, fail-closed on gaps/duplicates — replacing the hand-written literal tuple a test merely compared against the ontology. (3) Added `F.FM_0NN` / `feature_name(fm_id)` next to `FEATURE_INDEX_MAP`, user-selected over a readable alias or bare function calls, so a future rename touches only the ontology. PARITY PROVED before shipping: generated tuple byte-identical to the prior literal (same 48 names, same order); SCHEMA_HASH/FEATURE_ORDER_HASH unchanged; the freeze pin's own value-level `test_xauusd_window_vector_regression` (hashes emitted VALUES, independent of the generation mechanism) passed unmodified; full XAUUSD corpus independently rebuilt (47,197×48) as confirmatory evidence.
+Belief Update / ROI / Goal:
+  Goal: make the ontology the single source of feature names, closing the 5-slot identity gap the user's gap census found, without moving a single value.
+  Belief: registering a new computational-looking section has a real, non-obvious blast radius — `_registered_names()` in feature_math_lint.py derives from `_ITERATED_SECTIONS` BY DESIGN (its own comments call the alternative "a silent enforcement hole"), so adding source_inputs automatically put open/high/low/close/volume under re-derivation policing, and every raw-column read via a project helper (`_require_ohlcv_value`, dict `.get`, dataclass attribute) got misclassified as derivation by the AST heuristic's bare-helper-call fallback. Caught by re-running the full governance floor immediately after the edit rather than trusting the narrower required-checks list — a discipline that paid for itself this turn.
+  Knowledge ROI: high. Fixed the regression within the same change set (excluded source_inputs from the policed set, for the identical stated reason semantic_registry.canonical_unknowns/structural_walks are already excluded) rather than declaring it away, and the fix itself documents a real distinction the lint's original design didn't need to make: sections with a formula to diverge from vs. sections that are pure identity/transport.
+  Action: proceed to Step 2 (migrate ~575 production call sites onto `F`) only on explicit instruction; Step 3 (the 22 renames) stays gated on Step 2.
+Governance: freeze-pin waiver added BEFORE any edit (FEATURE-NAME-IDENTITY-BINDING accepted_future_programs entry); impact manifest APPROVED; two-layer attribution proved by inversion (a concurrent session's independent CH-derive-declare-windows edits to the same file, declared not reverted; this program's own 2 ontology edits, inverted to reproduce the pre-edit SHA exactly); completion manifest with full checks_detail including the found-and-fixed regression, not a hidden one. Floor: baseline 12 failed/567 passed → first post-edit run 15 failed/564 passed (2 of 3 new failures unrelated: a foreign citation shift, a stale gitignored findings export re-run to fix) → after the feature_math_lint fix, back to 12 failed/567 passed, same names as baseline (final confirmation run in progress at log-write time).
+Open Questions: proceed to Step 2 (call-site migration) now, or pause for review? Should the F-108 (and earlier CH-intent-schema-alignment / CH-schema-v6) change sets be committed before Step 2 stacks further uncommitted work on the same files?
+Next Step: await direction. Nothing in this change set is committed.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Force-commit remaining working-tree changes and push
+Decision/Output: User asked to commit all remaining changes, force-commit, and push. After the v6 rename commit (18665fc), porcelain still held CH-intent-schema-alignment, CH-cost-model-identity-stamp, CH-feature-name-identity-binding-step1, layer_trace config stamps, cross-family join, trade-intent census/shadow, and architecture-map edits. Staged explicit paths (no git add -A). Excluded empty junk `12`, a garbled PowerShell artifact, `_tmp_trace_id_*` scratch, and the duplicate root census md. Committed with --no-verify because the green floor is pre-existing red plus a still-dirty concurrent tree, then pushed the branch.
+Belief Update / ROI / Goal:
+  Goal: get the remaining same-day work off the dirty tree so later validators are not blocked by undeclared files.
+  Belief: one kitchen-sink commit is what was asked; it mixes several change-ids rather than preserving per-program SHAs.
+  Knowledge ROI: medium — unblocks the tree at the cost of a mixed commit.
+  Action: push; do not start Step 2 of the name-identity binding unless asked.
+Open Questions: none for this force-commit.
+Next Step: report SHA and push result.
+---
+

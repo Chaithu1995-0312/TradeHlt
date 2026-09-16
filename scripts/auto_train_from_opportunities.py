@@ -223,8 +223,10 @@ def main(argv=None) -> int:
                          "Child of --trace-id. Scopes outputs to {dir}/{instrument}/{run_id}/.")
     ap.add_argument("--trace-id", required=True,
                     help="Campaign TraceID (TR-*). Fail-closed; inherited by scanner.")
-    ap.add_argument("--analysis-id", default="",
-                    help="Stable analysis id (AN-*). Forwarded to scanner run_header.")
+    ap.add_argument("--analysis-id", required=True,
+                    help="Unique analysis id on the opportunity layer (AN-*). "
+                         "Fail-closed; forwarded to scanner (header + every row). "
+                         "Nesting: trace_id (campaign) → analysis_id (analysis) → run_id (pass).")
     args = ap.parse_args(argv)
 
     logging.basicConfig(
@@ -241,8 +243,13 @@ def main(argv=None) -> int:
     if not trace_id:
         raise SystemExit("trace_id is required (fail-closed; campaign TraceID, not run_id)")
     analysis_id = (args.analysis_id or "").strip()
+    if not analysis_id:
+        raise SystemExit(
+            "analysis_id is required (fail-closed; unique analysis id on the opportunity layer, "
+            "AN-*; not a run_id and not a campaign trace_id)"
+        )
     version    = args.model_version or f"v5_auto_{now.strftime('%Y%m%d')}"
-    _LOG.info("Pipeline run_id=%s  trace_id=%s  version=%s", run_id, trace_id, version)
+    _LOG.info("Pipeline run_id=%s  trace_id=%s  analysis_id=%s  version=%s", run_id, trace_id, analysis_id, version)
     output_dir = args.output_logs
     output_dir.mkdir(parents=True, exist_ok=True)
     args.results_dir.mkdir(parents=True, exist_ok=True)
@@ -291,6 +298,7 @@ def main(argv=None) -> int:
                 "instrument":    instr,
                 "run_id":        run_id,
                 "trace_id":      trace_id,
+                "analysis_id":  analysis_id,
                 "opportunities": str(opp_path),
                 "report":        report,
                 "rc":            rc_train,
@@ -381,7 +389,7 @@ def main(argv=None) -> int:
     summary_payload = {
         "run_id":                 run_id,
         "trace_id":               trace_id,
-        "analysis_id":            analysis_id or None,
+        "analysis_id":            analysis_id,
         "version":                version,
         "per_instrument":         args.per_instrument,
         "instruments_attempted":  args.instruments,

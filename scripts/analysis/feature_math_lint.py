@@ -253,9 +253,27 @@ def _registered_names(ont: dict | None = None) -> set[str]:
     # definition and `structural_walks` entries are sequencing, not arithmetic — policing them
     # would assert a math contract that does not exist. The ontology declares the intent; this
     # function derives it, so a new computational section is policed on arrival.
+    #
+    # EXCEPTION (2026-09-16, FEATURE-NAME-IDENTITY-BINDING Step 1): `source_inputs`
+    # (open/high/low/close/volume) is deliberately EXCLUDED here, for the same reason
+    # `semantic_registry.canonical_unknowns`/`structural_walks` are excluded from the OTHER
+    # policed-section loop below — "policing them would assert a math contract that does not
+    # exist." source_inputs entries have NO formula and NO FORMULA_REGISTRY impl (the SOURCE-impl
+    # exemption in validate_registry(); `impl` names the ingestion authority, not a callable) —
+    # there is nothing for a re-derivation to DIVERGE FROM. Every read of `close`/`open`/etc.
+    # throughout the codebase (dict `.get`, dataclass attribute, a project helper like
+    # `_require_ohlcv_value`) is TRANSPORT by construction, not derivation; the AST classifier's
+    # "unknown bare helper call = assume derivation" fallback (`_classify_rhs`, the `np.divide(...),
+    # a bare helper() that computes` branch) cannot tell a transport helper from a math one by name
+    # alone, so registering these 5 names here would flag every ordinary raw-column read in the
+    # repo as a false-positive ownership violation. This is not "un-flaggable by construction" in
+    # the sense the notes above warn against (that phrase describes a computational section that
+    # SHOULD be policed and silently wasn't); it is a section with no computation to police.
     from features.registry import _ITERATED_SECTIONS
 
     for section in _ITERATED_SECTIONS:
+        if section == "source_inputs":
+            continue
         names |= set((ont.get(section) or {}).keys())
 
     _sr = (ont.get("spec_schema") or {}).get("semantic_registry") or {}

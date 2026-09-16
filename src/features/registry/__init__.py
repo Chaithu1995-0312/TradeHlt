@@ -38,8 +38,8 @@ __all__ = [
 ]
 
 
-_ITERATED_SECTIONS = ("primitives", "feature_compositions", "derived_metrics", "rolling_indicators",
-                      "temporal_context", "structural_states")
+_ITERATED_SECTIONS = ("source_inputs", "primitives", "feature_compositions", "derived_metrics",
+                      "rolling_indicators", "temporal_context", "structural_states")
 
 
 def _iter_entries(ont: dict):
@@ -89,6 +89,17 @@ def validate_registry(ontology: dict | None = None) -> list[str]:
                 ref = spec.get(side)
                 if ref not in PRIMITIVE_SHORTNAME:
                     problems.append(f"composition '{name}': {side} {ref!r} not a known primitive")
+        elif section == "source_inputs":
+            # SOURCE-impl exemption (2026-09-16, FEATURE-NAME-IDENTITY-BINDING Step 1): raw
+            # OHLCV columns as ingested. No scalar callable exists (there is nothing to compute),
+            # so like rolling_indicators/temporal_context/structural_states these are exempt from
+            # FORMULA_REGISTRY resolution; `impl` names the ingestion authority.
+            if not str(spec.get("formula", "")).strip():
+                problems.append(f"source_inputs '{name}': missing formula declaration")
+            if not str(spec.get("impl", "")).strip():
+                problems.append(f"source_inputs '{name}': missing impl (ingestion authority)")
+            if spec.get("computation_class") != "source":
+                problems.append(f"source_inputs '{name}': missing computation_class source")
         elif section == "rolling_indicators":
             # WINDOWED-impl exemption: no scalar callable exists (the pipeline is the computation
             # authority). Require a formula + a named computation authority + the class marker.

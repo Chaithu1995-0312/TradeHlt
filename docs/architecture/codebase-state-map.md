@@ -87,7 +87,7 @@ dicts** — they are already microservice-shaped.
 | Orchestrate | `EngineRunner` (`core/engine_runner.py:285`) | `run(input_data, context, actual_pnl=None)` (`:546`) | features + context → decision + 4 engine scores + fusion + regime |
 | Fuse | `FusionEngine` (`core/fusion_engine.py:253`) | `compute(engine_results, trade, weights, regime)` (`:290`); `evaluate(...)` (`:551`) | engine scores → `final_score`, `normalized_score`, RR, `weak_component`, `zone_gate_dead` |
 | Decide | `DecisionEngine` (`core/decision_engine.py:85`) | `evaluate(score, p_win, zone_gate, fusion, config)` (`:104`) | fused score → `DecisionResult` (decision/reason/confidence/threshold_used/reject_stage) |
-| Plan | `ExecutionPlannerV1_2` (`config_layer/execution_planner.py:129`) | `plan(engine_result, features, context)` (`:156`) | accepted signal → intent, entry, TTL, execution_id (SL/TP injected after via `compute_crt_levels`) |
+| Plan | `ExecutionPlannerV1_2` (`config_layer/execution_planner.py:137`) | `plan(engine_result, features, context)` (`:164`) | accepted signal → intent, entry, TTL, execution_id (SL/TP injected after via `compute_crt_levels`) |
 | Approve | `UltronRiskGate` (`core/ultron_risk_gate.py:69`) | `evaluate(trade, portfolio_state)` (`:156`) | plan + portfolio → approval + `final_position_size` + risk_reason |
 
 `GateResult` decision contract: `"APPROVE" | "REJECT"` (`core/types.py:95`, checked at
@@ -112,7 +112,7 @@ dicts** — they are already microservice-shaped.
    model registry; engines can't ship as a standalone lib without it.
 3. **Upward governance/analytics → `runtime.backtest_v2`** —
    `governance/portfolio_validation.py:28`, `config_layer/config_validator.py:146`,
-   `analytics/sl_tp_comparator.py:589` all import `BacktestRunner`. Wrong dependency
+   `analytics/sl_tp_comparator.py:606` all import `BacktestRunner`. Wrong dependency
    direction for a service split (governance should not depend on the runtime impl).
 4. **`live_engine_hook` module-level singletons** —
    `runtime/live_engine_hook.py:85` (`_ENGINE_CONFIG_CACHE`) and `:90–96`

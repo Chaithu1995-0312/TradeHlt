@@ -118,12 +118,44 @@ class TestDeriveIntent:
         assert derive_intent_from_features(f, 1) == "REVERSAL"
 
     def test_unknown(self):
+        # CORRECTED 2026-09-16 (CH-intent-schema-alignment): this used ema_fast=99.5 > ema_slow=98.5
+        # with direction=1 -- a WITH-trend entry, which is exactly the classifier hole that fix
+        # closed (now CONTINUATION). An exact EMA tie is the only input still reaching UNKNOWN.
+        f = _breakout_features(body_ratio=0.1, disp_strength=0.3,
+                                sweep_detected=False, double_sweep=False,
+                                ema_fast=99.5, ema_slow=99.5,
+                                retest_depth=0.1, candles_since_sweep=10,
+                                momentum_score=0.0)
+        assert derive_intent_from_features(f, 1) == "UNKNOWN"
+
+    def test_continuation_long(self):
+        # The pre-fix "unknown" fixture: with-trend LONG -> CONTINUATION, mirroring the planner.
         f = _breakout_features(body_ratio=0.1, disp_strength=0.3,
                                 sweep_detected=False, double_sweep=False,
                                 ema_fast=99.5, ema_slow=98.5,
                                 retest_depth=0.1, candles_since_sweep=10,
                                 momentum_score=0.0)
-        assert derive_intent_from_features(f, 1) == "UNKNOWN"
+        assert derive_intent_from_features(f, 1) == "CONTINUATION"
+
+    def test_continuation_keeps_unknown_legacy_tp_fallback(self):
+        # CONTINUATION took over the old UNKNOWN entries, so comparator LEVELS must not move.
+        from analytics.sl_tp_comparator import _DEFAULT_LEGACY_TP_MULTS
+        assert _DEFAULT_LEGACY_TP_MULTS["CONTINUATION"] == _DEFAULT_LEGACY_TP_MULTS["UNKNOWN"]
+
+    def test_mirror_agrees_with_planner(self):
+        # The module docstring claims it "mirrors ExecutionPlannerV1_2._derive_intent exactly".
+        # Make that a checked fact rather than a comment: both classifiers agree on every
+        # EMA-vs-direction case, including the new CONTINUATION half.
+        from config_layer.execution_planner import ExecutionPlannerV1_2
+        p = ExecutionPlannerV1_2()
+        for fast, slow in ((99.5, 98.5), (98.5, 99.5), (99.5, 99.5)):
+            for d in (1, -1):
+                f = _breakout_features(body_ratio=0.1, disp_strength=0.3,
+                                        sweep_detected=False, double_sweep=False,
+                                        ema_fast=fast, ema_slow=slow,
+                                        retest_depth=0.1, candles_since_sweep=10,
+                                        momentum_score=0.0)
+                assert derive_intent_from_features(f, d) == p._derive_intent(f, {"selected_direction": d})[0]
 
 
 class TestComputeLegacyLevels:

@@ -14,6 +14,8 @@ import hashlib
 import json
 import logging as _logging
 
+from features.registry import _ITERATED_SECTIONS, load_ontology
+
 FEATURE_SCHEMA = {
     "atr": float,
     "rsi": float,
@@ -84,46 +86,57 @@ FEATURE_SCHEMA = {
 #   Index 45: eqh_distance                — signed ATR distance to nearest equal-highs cluster
 #   Index 46: eql_distance                — signed ATR distance to nearest equal-lows cluster
 #   Index 47: change_of_character         — signed {-1,0,+1}, derived from break_of_structure x trend_bias
-# The v2.0/v3.0/v4.0 index comments below are NOT updated in place: they record what the layout WAS.
-CANONICAL_FEATURES = tuple([
-    # ── indices 0-17 (unchanged since v2.0) ──────────────────────────────────
-    "open", "high", "low", "close", "volume",
-    "volume_ratio",
-    "double_sweep",
-    "ema_fast", "ema_slow", "ema_spread",
-    "trend_bias", "trend_strength_z",   # index 11 — v6.0 rename of `trend_strength`; always was the z-score
-    "momentum_score",
-    "atr", "volatility_ratio",
-    "rsi_14",
-    "macd_line", "macd_signal",
-    # ── v4.0: the MACD histogram split (was the single `macd_hist` at index 18) ──
-    "macd_hist_raw",            # index 18 — macd_line - macd_signal (the DECLARED formula)
-    "macd_hist_z",              # index 19 — rolling z-score of the above (what v3.0 actually emitted)
-    # ── indices 20-35 (v2.0 tail, shifted +1 by the MACD split) ──────────────
-    "sweep_detected", "liquidity_sweep", "break_of_structure",
-    "swing_high", "swing_low", "higher_high", "lower_low",
-    "body_size",
-    "candle_range",             # index 28 — v4.0 rename of `wick_size`; always was high - low
-    "body_ratio",
-    "volatility_regime",
-    "session", "hour_of_day",   # index 31 — v4.0 domain {0..4}, see session_classifier
-    # index 35 — v6.0 rename of `candles_since_retest`; always counted bars since the last SWEEP
-    "disp_strength", "retest_depth", "candles_since_sweep",
-    # ── indices 36-38 (added in v3.0) ─────────────────────────────────────────
-    "liquidity_distance",       # ATR-normalised distance to nearest liq level
-    "liquidity_pressure_score", # composite proximity score [0, 1]
-    "volume_spike",             # promoted from internal, int8 {0, 1}
-    # ── indices 39-47 (added in v5.0 — SMC primitives, see block comment above) ─────
-    "order_block_distance",
-    "fvg_distance",
-    "breaker_distance",
-    "mitigation_block_distance",
-    "pdh_distance",
-    "pdl_distance",
-    "eqh_distance",
-    "eql_distance",
-    "change_of_character",
-])
+# The v2.0/v3.0/v4.0 index comments above are NOT updated in place: they record what the layout WAS.
+#
+# ── SCHEMA v6.0+ (2026-09-16, FEATURE-NAME-IDENTITY-BINDING Step 1) — GENERATED, not literal ──
+# CANONICAL_FEATURES is now DERIVED from configs/formulas/market_ontology.yaml: every ontology
+# entry across `_ITERATED_SECTIONS` (including the new `source_inputs` section registering
+# open/high/low/close/volume as first-class identities, closing a prior gap — those 5 slots had
+# NO ontology identity before this change) that declares a string `lineage.vector_key` is placed
+# at its declared `lineage.vector_index`. A hand-written literal tuple could silently drift from
+# the ontology it claims to mirror (caught only by a test that compares the two, and only if that
+# test is run); a GENERATED tuple cannot drift from its own source by construction.
+#
+# Fail-closed at import: indices must be exactly 0..N-1 with no gaps or duplicates, and no two
+# entries may claim the same vector_key (both already guarded at the ontology level by
+# tests/test_feature_spec_schema.py::test_vector_keys_are_unique, re-asserted here because this
+# module has no dependency on the test suite running first).
+#
+# PARITY PROOF (verified 2026-09-16, before this change shipped): the generated tuple is
+# BYTE-IDENTICAL, name-for-name and position-for-position, to the literal tuple it replaces.
+# SCHEMA_HASH and FEATURE_ORDER_HASH (both derived from these names below) are therefore
+# unchanged by this step — this is a construction-method change, not a schema change.
+def _generate_canonical_features() -> tuple:
+    ont = load_ontology()
+    slots: dict = {}
+    for section in _ITERATED_SECTIONS:
+        for name, spec in (ont.get(section) or {}).items():
+            lin = spec.get("lineage") or {}
+            vk, vi = lin.get("vector_key"), lin.get("vector_index")
+            if not isinstance(vk, str) or not vk:
+                continue
+            if not isinstance(vi, int):
+                raise RuntimeError(
+                    f"feature_schema: ontology entry {section}.{name} declares vector_key "
+                    f"{vk!r} but vector_index is not an int ({vi!r})."
+                )
+            if vi in slots:
+                raise RuntimeError(
+                    f"feature_schema: vector_index {vi} claimed by both "
+                    f"{slots[vi]!r} ({section}.{name}'s predecessor) and {vk!r} ({section}.{name})."
+                )
+            slots[vi] = vk
+    n = len(slots)
+    missing = [i for i in range(n) if i not in slots]
+    if missing:
+        raise RuntimeError(
+            f"feature_schema: ontology vector_index is not contiguous 0..{n - 1} — "
+            f"missing indices {missing}. Every canonical slot must declare a vector_key."
+        )
+    return tuple(slots[i] for i in range(n))
+
+
+CANONICAL_FEATURES = _generate_canonical_features()
 
 # Read-side aliases: v3.0 name -> v4.0 canonical name. For DECODING historical records
 # (opportunities.jsonl, stored training sets, old model metadata) only. NEVER emit these names.
@@ -430,6 +443,66 @@ def assert_schema_version(model_type: str, version: str) -> None:
 
 # ── FEATURE_INDEX_MAP: maps each canonical feature name to its index ──────────
 FEATURE_INDEX_MAP: dict = {name: i for i, name in enumerate(CANONICAL_FEATURES)}
+
+# ── Identity namespace (2026-09-16, FEATURE-NAME-IDENTITY-BINDING Step 1) ─────
+# `F.FM_021` resolves to the CURRENT name of a canonical (vector-bound) feature identity,
+# by its stable ontology id rather than its current name. A production call site written as
+# `features[F.FM_021]` survives a future rename of that identity's NAME without editing the
+# call site — only the ontology moves. User-selected over a readable alias (whose own NAME would
+# go stale the same way the old string literal did) and over a bare `feature_name(...)` call at
+# every site (this is the same value, computed once at import instead of on every access).
+#
+# Scope: ONLY identities bound to a canonical vector slot (the 48 in CANONICAL_FEATURES). A
+# non-vector identity (e.g. FM-027, EPISODE-scoped, `lineage.vector_key: []`) has no schema NAME
+# to hand out here — it is not a feature_schema concept, and Step 2 does not migrate its readers.
+def _build_fm_id_to_name() -> dict:
+    ont = load_ontology()
+    out: dict = {}
+    for section in _ITERATED_SECTIONS:
+        for name, spec in (ont.get(section) or {}).items():
+            vk = (spec.get("lineage") or {}).get("vector_key")
+            fid = spec.get("id")
+            if isinstance(vk, str) and vk and isinstance(fid, str) and fid:
+                out[fid] = vk
+    return out
+
+
+_FM_ID_TO_NAME: dict = _build_fm_id_to_name()
+assert set(_FM_ID_TO_NAME.values()) == set(CANONICAL_FEATURES), (
+    "feature_schema: every canonical feature must have exactly one FM id bound to it — "
+    f"mismatch: {set(CANONICAL_FEATURES) ^ set(_FM_ID_TO_NAME.values())}"
+)
+
+
+def feature_name(fm_id: str) -> str:
+    """Current canonical name for a vector-bound feature identity, e.g. feature_name('FM-021').
+
+    Raises KeyError (loud, not a default) if `fm_id` is unknown or is not bound to a vector slot —
+    a caller reaching for a name that does not exist has a bug, not a value to fall back on.
+    """
+    try:
+        return _FM_ID_TO_NAME[fm_id]
+    except KeyError:
+        raise KeyError(
+            f"feature_name: {fm_id!r} is not a vector-bound canonical feature identity "
+            f"(known: {sorted(_FM_ID_TO_NAME)})"
+        ) from None
+
+
+class _FeatureIdentity:
+    """Attribute access to `feature_name`, e.g. `F.FM_021 == 'retest_depth'`.
+
+    Built once at import from `_FM_ID_TO_NAME`; read-only in spirit (nothing writes to it after
+    construction). `F.FM_021` is a plain string — safe to use as a dict key, an f-string, or a
+    dataframe column selector exactly like the literal it replaces.
+    """
+
+    def __init__(self, mapping: dict):
+        for fid, name in mapping.items():
+            setattr(self, fid.replace("-", "_"), name)
+
+
+F = _FeatureIdentity(_FM_ID_TO_NAME)
 
 # ── Session ordinal encoding ───────────────────────────────────────────────────
 # DERIVED from features/session_classifier.py, the single owner (v4.0). Previously a hand-written

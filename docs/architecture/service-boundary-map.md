@@ -25,7 +25,7 @@ Ingestion → Features → Scoring → Decision Spine → Execution/Risk
 **Hard rule:** dependencies point *down* the decision flow and *out* to the event bus.
 Governance, analytics, and the agent must **not** import `runtime.backtest_v2` directly
 (today they do — `governance/portfolio_validation.py:28`,
-`config_layer/config_validator.py:146`, `analytics/sl_tp_comparator.py:589`). The fix
+`config_layer/config_validator.py:146`, `analytics/sl_tp_comparator.py:606`). The fix
 (Trd-M4) is an abstract `BacktestRunner` interface that `runtime` implements and the others
 depend on.
 

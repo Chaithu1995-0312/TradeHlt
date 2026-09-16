@@ -11,8 +11,14 @@ CRT is intentionally NOT consulted. The output is the unbiased ground truth
 that breaks the recursive training loop.
 
 Output JSONL (one record per direction per candle):
-  {timestamp, instrument, trace_id, direction, entry, sl, tp, outcome, rr_achieved,
-   duration_candles, mfe, mae, features: {...35 canonical features...}}
+  {timestamp, instrument, trace_id, analysis_id, direction, entry, sl, tp, outcome, rr_achieved,
+   duration_candles, mfe, mae, features: {...canonical features...}}
+
+Identity nesting (opportunity layer):
+  trace_id    = campaign (TR-*), required
+  analysis_id = unique analysis within the opportunity layer (AN-*), required
+  run_id      = this scan pass (folder scope), auto or --run-id
+
   rr_achieved spans [-1.0, 2.0] via 0.5R trailing stop (covers all 4 Gaussian classes).
 
 Consumed by: scripts/training/phase5_calibration.py --opportunities
@@ -160,6 +166,7 @@ def scan(csv_path: Path, instrument: str, *, tp_atr_mult: float = 2.0,
     The first line of the JSONL is a run_header record for downstream inheritance.
     run_id defaults to UTC YYYYMMDD_HHMMSS if not provided.
     trace_id is required (campaign TR-*, fail-closed). It is not a run_id.
+    analysis_id is required (unique analysis on the opportunity layer, AN-*, fail-closed).
     """
     from datetime import datetime, timezone
     now = datetime.now(timezone.utc)
@@ -168,6 +175,11 @@ def scan(csv_path: Path, instrument: str, *, tp_atr_mult: float = 2.0,
     if not _trace_id:
         raise SystemExit("trace_id is required (fail-closed; campaign TraceID, not run_id)")
     _analysis_id = (analysis_id or "").strip()
+    if not _analysis_id:
+        raise SystemExit(
+            "analysis_id is required (fail-closed; unique analysis id on the opportunity layer, "
+            "AN-*; not a run_id and not a campaign trace_id)"
+        )
 
     if instrument.upper() == "XAUUSD":
         from data_ingestion.xauusd_phase1_candidate import guard_xauusd_csv_path
@@ -196,7 +208,7 @@ def scan(csv_path: Path, instrument: str, *, tp_atr_mult: float = 2.0,
             "type":        "run_header",
             "run_id":      _run_id,
             "trace_id":    _trace_id,
-            "analysis_id": _analysis_id or None,
+            "analysis_id": _analysis_id,
             "instrument":  instrument,
             "csv_path":    str(csv_path),
             "started_at":  now.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -230,6 +242,7 @@ def scan(csv_path: Path, instrument: str, *, tp_atr_mult: float = 2.0,
                     "timestamp": ts,
                     "instrument": instrument,
                     "trace_id": _trace_id,
+                    "analysis_id": _analysis_id,
                     "direction": direction,
                     "entry": float(entry),
                     "sl": float(sl),
@@ -245,9 +258,35 @@ def scan(csv_path: Path, instrument: str, *, tp_atr_mult: float = 2.0,
                 counts[direction] += 1
                 counts[result["outcome"]] += 1
 
+    finished_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Trailer: last-ran / finish time for this run_id (header already has started_at).
+    with out_path.open("a", encoding="utf-8") as fout:
+        fout.write(json.dumps({
+            "type": "run_footer",
+            "run_id": _run_id,
+            "trace_id": _trace_id,
+            "analysis_id": _analysis_id,
+            "instrument": instrument,
+            "started_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "finished_at": finished_at,
+            "last_ran_at": finished_at,
+        }) + "\n")
+    try:
+        from utils.run_id_last_ran import record_run_last_ran
+        record_run_last_ran(
+            _run_id,
+            when=finished_at,
+            source="opportunity_scanner",
+            instrument=instrument,
+            artifact_path=str(out_path),
+            started_at=now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        )
+    except Exception:  # noqa: BLE001 — index is fail-open
+        pass
+
     logger.info(
-        "OpportunityScanner: wrote %s | run_id=%s | trace_id=%s | long=%d short=%d | TP_HIT=%d SL_HIT=%d TIMEOUT=%d",
-        out_path, _run_id, _trace_id, counts["long"], counts["short"],
+        "OpportunityScanner: wrote %s | run_id=%s | trace_id=%s | analysis_id=%s | last_ran_at=%s | long=%d short=%d | TP_HIT=%d SL_HIT=%d TIMEOUT=%d",
+        out_path, _run_id, _trace_id, _analysis_id, finished_at, counts["long"], counts["short"],
         counts["TP_HIT"], counts["SL_HIT"], counts["TIMEOUT"],
     )
     return out_path
@@ -273,8 +312,11 @@ def main(argv=None) -> int:
                          "Output: {output-dir}/{instrument}/{run-id}/opportunities.jsonl")
     ap.add_argument("--trace-id", required=True,
                     help="Campaign TraceID (TR-*). Fail-closed; not a run_id.")
-    ap.add_argument("--analysis-id", default="",
-                    help="Stable analysis id (AN-*). Stamped on run_header.")
+    ap.add_argument("--analysis-id", required=True,
+                    help="Unique analysis id on the opportunity layer (AN-*). "
+                         "Fail-closed; not a run_id and not a campaign trace_id. "
+                         "Stamped on run_header and every opportunity row. "
+                         "Nesting: trace_id (campaign) → analysis_id (analysis) → run_id (pass).")
     args = ap.parse_args(argv)
 
     logging.basicConfig(
@@ -297,7 +339,15 @@ def main(argv=None) -> int:
     )
     print(f"OUTPUT:run_id:{run_id}")
     print(f"OUTPUT:trace_id:{args.trace_id}")
+    print(f"OUTPUT:analysis_id:{args.analysis_id}")
     print(f"OUTPUT:opportunities:{out_path.resolve()}")
+    try:
+        from utils.run_id_last_ran import get_run_last_ran
+        _lr = get_run_last_ran(run_id) or {}
+        if _lr.get("last_ran_at"):
+            print(f"OUTPUT:last_ran_at:{_lr['last_ran_at']}")
+    except Exception:
+        pass
     return 0
 
 

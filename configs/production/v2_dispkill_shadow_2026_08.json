@@ -71,7 +71,7 @@
     }
   },
   "sl_tp_comparison": {
-    "_comment": "Reference params for legacy SL/TP method \u2014 used ONLY by SLTPComparator, never in live path",
+    "_comment": "Reference params for legacy SL/TP method — used ONLY by SLTPComparator, never in live path",
     "legacy_sl_atr_mult": 1.0,
     "legacy_tp_atr_mult_breakout": 2.0,
     "legacy_tp_atr_mult_pullback": 1.5,
@@ -826,7 +826,7 @@
         "2026-04-03",
         "2026-07-04"
       ],
-      "_known_gaps_doc": "Reviewed, timestamp-RANGE accept-list for genuine intraday broker feed outages (a few bars) that are NOT full-day closures \u2014 so the good bars that day are kept (unlike whole-day holidays). Each entry: {symbol?(optional; omit=all), from, to (half-open UTC ISO), reason}. A bar inside any applicable range is treated as non-tradable (accepted). EMPTY DEFAULT = byte-parity; entries are added ONLY by reviewed decision after the strict gate surfaces a hole confirmed to be a broker outage (not corruption). Populated 2026-07-02 from the IC-Markets bulk-fetch review: broker-wide multi-symbol windows are global; single-symbol holes are scoped; XAUUSD 2026-05-25/06-19 are US-holiday early-closes (gold) not yet in the holidays list.",
+      "_known_gaps_doc": "Reviewed, timestamp-RANGE accept-list for genuine intraday broker feed outages (a few bars) that are NOT full-day closures — so the good bars that day are kept (unlike whole-day holidays). Each entry: {symbol?(optional; omit=all), from, to (half-open UTC ISO), reason}. A bar inside any applicable range is treated as non-tradable (accepted). EMPTY DEFAULT = byte-parity; entries are added ONLY by reviewed decision after the strict gate surfaces a hole confirmed to be a broker outage (not corruption). Populated 2026-07-02 from the IC-Markets bulk-fetch review: broker-wide multi-symbol windows are global; single-symbol holes are scoped; XAUUSD 2026-05-25/06-19 are US-holiday early-closes (gold) not yet in the holidays list.",
       "known_gaps": [
         {
           "symbol": "EURCAD",
@@ -1028,5 +1028,15 @@
       "XRPUSDT": "CRYPTO"
     }
   },
-  "_shadow_note": "SEM-021 displacement-origin-kill SHADOW. NOT PROMOTED, NOT ACTIVE_VERSION. Sole delta vs v2_htfcrt_2026_08: crt_engine.displacement_origin_kill_enabled true (default is false) and displacement_origin_kill_precedence. Exists so the arm is reachable for measurement without touching the active config or its params hash. Grants no authority (CLAUDE.md 6.5); flip precedence to 'absolute' for the second, declared-weaker arm. See docs/governance/build_manifests/CH-DISP-ORIGIN-KILL.impact.json."
+  "_shadow_note": "SEM-021 displacement-origin-kill SHADOW. NOT PROMOTED, NOT ACTIVE_VERSION. Sole delta vs v2_htfcrt_2026_08: crt_engine.displacement_origin_kill_enabled true (default is false) and displacement_origin_kill_precedence. Exists so the arm is reachable for measurement without touching the active config or its params hash. Grants no authority (CLAUDE.md 6.5); flip precedence to 'absolute' for the second, declared-weaker arm. See docs/governance/build_manifests/CH-DISP-ORIGIN-KILL.impact.json.",
+  "layer_trace": {
+    "_comment": "OBSERVATION ONLY (CLAUDE.md 6.5). Default ON (2026-09-16). Read by src/runtime/layer_trace.py ONLY — no engine/gate/fusion/risk reads this. Hash-neutral (params-only config_hash). Set enabled:false to opt out.",
+    "enabled": true,
+    "schema_version": "1.0.0",
+    "authority": "OBSERVATION_ONLY",
+    "decision_neutral": true,
+    "output_dir": "results/layer_trace",
+    "filename_suffix": "_layer_trace.jsonl",
+    "flush_every": 200
+  }
 }

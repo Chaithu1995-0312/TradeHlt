@@ -7,7 +7,7 @@ see the module's own docstring for why that is a separate, not-yet-built artifac
 DOES pin, at the unit level, backs the decision-neutrality CLAIM without yet being the full proof:
 
   - `emit()` / `emit_not_reached_once()` never raise on a well-formed call and return None;
-  - a disabled emitter (`enabled=False`) writes nothing, so a config predating this feature is a
+  - a disabled emitter (`enabled=False`) writes nothing, so explicit opt-out stays a
     complete no-op;
   - every record carries the identity block (`run_id`/`trace_id`/`span_id`) required to join rows
     across layers, which is this module's entire reason to exist (plan §5 item 1);
@@ -167,13 +167,42 @@ def test_every_record_carries_the_full_identity_block(tmp_path):
     assert row["run_id"] != row["preexisting_run_ids"]["utils.logging_config.RUN_ID"]
 
 
-def test_from_prod_config_returns_none_when_section_absent(monkeypatch):
-    """Absent `layer_trace` section = predates this feature (mirrors `SnapshotConfig.
-    from_prod_config` / `ConstructionTraceConfig.from_prod_config` exactly)."""
+def test_from_prod_config_defaults_on_when_section_absent(monkeypatch):
+    """Absent `layer_trace` section → default ON with module DEFAULT_* (2026-09-16)."""
     import config_layer.production_config as prod_cfg
+    from runtime.layer_trace import (
+        DEFAULT_FILENAME_SUFFIX,
+        DEFAULT_FLUSH_EVERY,
+        DEFAULT_OUTPUT_DIR,
+        TRACE_SCHEMA_VERSION,
+    )
 
     def _raise(*a, **k):
         raise KeyError("layer_trace")
 
     monkeypatch.setattr(prod_cfg, "get_prod_section", _raise)
+    cfg = LayerTraceConfig.from_prod_config()
+    assert cfg is not None
+    assert cfg.enabled is True
+    assert cfg.schema_version == TRACE_SCHEMA_VERSION
+    assert cfg.output_dir == DEFAULT_OUTPUT_DIR
+    assert cfg.filename_suffix == DEFAULT_FILENAME_SUFFIX
+    assert cfg.flush_every == DEFAULT_FLUSH_EVERY
+
+
+def test_from_prod_config_returns_none_when_explicitly_disabled(monkeypatch):
+    """Present section with enabled:false remains the opt-out."""
+    import config_layer.production_config as prod_cfg
+
+    monkeypatch.setattr(
+        prod_cfg,
+        "get_prod_section",
+        lambda *a, **k: {
+            "enabled": False,
+            "schema_version": "1.0.0",
+            "output_dir": "results/layer_trace",
+            "filename_suffix": "_layer_trace.jsonl",
+            "flush_every": 200,
+        },
+    )
     assert LayerTraceConfig.from_prod_config() is None

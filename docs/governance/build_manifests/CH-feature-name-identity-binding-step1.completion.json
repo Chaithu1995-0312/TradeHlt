@@ -1,0 +1,90 @@
+{
+  "change_id": "CH-feature-name-identity-binding-step1",
+  "date_utc": "2026-09-16",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE",
+    "DATASET_SCHEMA_CHANGE"
+  ],
+  "completion_status": "BLOCKED_ON_SHARED_UNCOMMITTED_TREE",
+  "completion_status_note": "All declared work is finished, value-neutrality is proved (not asserted), and the one floor regression this change itself caused (feature_math_lint) was found and fixed within this same change set -- see checks_detail for the sequence: FAIL -> diagnosed -> fixed -> re-verified PASS, net-zero against baseline. The mechanical validator still returns BLOCKED, for reasons unrelated to this change's own correctness (see validator_result below), matching the precedent already recorded in CH-intent-schema-alignment.completion.json for the same class of problem in the same shared working tree.",
+  "validator_result": {
+    "verdict": "COMPLETION: BLOCKED",
+    "run_utc": "2026-09-16",
+    "repo_state": "18665fcba355+1bf6d32ccf52",
+    "reason_1_undeclared_surfaces": "40 governed files changed but not declared here, NONE of them touched by this change set (verified: zero overlap with this manifest's own declared_files, and none were edited by any tool call in this program's implementation). 4 are CH-intent-schema-alignment's declared files (src/analytics/sl_tp_comparator.py, src/config_layer/execution_planner.py, tests/test_execution_planner.py, tests/test_sl_tp_comparator.py -- that change set is uncommitted in the same tree). 1 is SCR-472 (scripts/analysis/trade_intent_ownership_shadow.py, this session's shadow probe). 2 are declared by CH-cost-model-identity-stamp's OWN impact manifest (src/runtime/backtest_v2.py, tests/test_cost_model_stamped.py). The remaining 33 (24 configs/production/*.json + scripts/auto_train_from_opportunities.py + scripts/research/opportunity_scanner.py + src/research/cross_family_join.py + src/runtime/layer_trace.py + src/utils/run_id_last_ran.py + tests/test_cross_family_run_join.py + tests/test_layer_trace.py + tests/test_run_id_last_ran.py) do NOT appear in CH-cost-model-identity-stamp's declared_files either -- UNVERIFIED provenance, most plausibly other concurrent sessions' uncommitted work (this repo routinely runs ~15 concurrent Claude sessions). Full individual-file forensic attribution (as was done for the ontology SHA via edit-inversion) was judged disproportionate to this step's scope and was not attempted; stated as UNVERIFIED per CLAUDE.md 1.1 rather than invented.",
+    "reason_2_sits_false_trigger": "The validator's belt-and-suspenders SITS check fires on ANY declared scripts/ path, without distinguishing a NEW script (needing registration) from an EDIT to an already-registered one. scripts/analysis/feature_math_lint.py is pre-existing and already SITS-registered; this change adds an 18-line exception to one function, not a new script. tests/test_script_registry.py was run directly (see checks_executed) and shows its 3 pre-existing failures only, none naming feature_math_lint.py -- confirming no SITS regression, addressed by evidence rather than by mis-declaring this a SCRIPT_LIFECYCLE_CHANGE.",
+    "reason_3_required_checks": "test_geometry_census.py x2 failed on re-run, as declared and expected: both are in the recorded 12-failure baseline (measured before this change's first edit) and were independently re-confirmed as caused by an unrelated concurrent session's scripts/analysis/phase1_shadow_create_economic_census.py (see this file's own checks_detail entry).",
+    "what_would_clear_it": "Committing this change set (and CH-intent-schema-alignment, and whatever owns the 33 unattributed files) so the tree stops mixing uncommitted change sets on shared files, plus the pre-existing test_geometry_census staleness being addressed by whoever owns phase1_shadow_create_economic_census.py. Neither is in this step's scope or authority."
+  },
+  "declared_files": [
+    "configs/formulas/market_ontology.yaml",
+    "src/features/registry/__init__.py",
+    "src/features/feature_schema.py",
+    "scripts/analysis/feature_math_lint.py",
+    "tests/test_feature_lineage.py",
+    "docs/governance/feature-layer-freeze-pin-2026-07-20.json",
+    "docs/governance/build_manifests/CH-feature-name-identity-binding-step1.impact.json",
+    "docs/governance/build_manifests/CH-feature-name-identity-binding-step1.completion.json",
+    "docs/topics/feature-schema.md",
+    "assistant_project.md"
+  ],
+  "declared_files_note": "Matches the impact manifest's amended affected_files list exactly (feature_math_lint.py added mid-implementation with a recorded amendment note; docs/reference/schemas.md removed as pre-existing unrelated staleness, left untouched). No other governed surface changed.",
+  "checks_executed": [
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_feature_spec_schema.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_layer_freeze.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_script_registry.py",
+    "check_governance_invariants.py --all (x3: baseline pre-edit, post-edit v1, post-fix v2)"
+  ],
+  "checks_detail": [
+    {
+      "check": "Parity proof -- CANONICAL_FEATURES generated equals prior literal",
+      "result": "PASS",
+      "detail": "Verified BEFORE shipping: walking _ITERATED_SECTIONS for every lineage.vector_key ordered by lineage.vector_index reproduces the 48-name tuple byte-for-byte, name-for-name, in the same order as the literal it replaces. Indices 0..47 contiguous, no duplicates (both asserted fail-closed at import). SCHEMA_HASH d40e7c7d5b624ef6d27670255ad95a35 and FEATURE_ORDER_HASH 7901bb0d34f3d0af UNCHANGED (verified equal to the values already recorded in the freeze pin's own schema block, which this change does not touch)."
+    },
+    {
+      "check": "Ontology validators",
+      "result": "PASS",
+      "detail": "validate_registry() -> [] and validate_semantic_registry() -> [] with the new source_inputs section (5 entries, FM-085..FM-089) in place, exercising the new SOURCE-impl exemption branch."
+    },
+    {
+      "check": "Value-level regression (the load-bearing proof)",
+      "result": "PASS",
+      "detail": "tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression PASSED -- this hashes EMITTED VALUES on the pinned XAUUSD window, independent of the name-generation mechanism, so it is proof the values did not move, not merely that the construction method claims they didn't. Additionally rebuilt the FULL XAUUSD corpus independently (47,197 x 48, matching the row count cited throughout this session's other work) as confirmatory (not comparative -- no pre-Step-1 full-corpus hash was on record to diff against; the pinned-window regression is the authoritative bound)."
+    },
+    {
+      "check": "Full ontology/schema floor",
+      "result": "PASS",
+      "detail": "tests/test_feature_lineage.py + test_feature_spec_schema.py + test_formula_registry.py + test_semantic_registry.py: 65 passed. tests/test_feature_layer_freeze.py: 65 passed / 1 pre-existing failure (test_source_file_pins_match on active_config/v2_multi_2026_04.json, drifted since commit 218b9ae, already declared in CH-schema-v6-normalization-identity's own manifest -- confirmed present BEFORE this change's first edit, unrelated)."
+    },
+    {
+      "check": "Freeze-pin waiver with measured attribution",
+      "result": "PASS",
+      "detail": "Two layers of attribution proved by inversion, not asserted: (1) the working tree carried a CONCURRENT session's independent CH-derive-declare-windows edits to market_ontology.yaml at the time this program started (3 of 10 diff hunks against HEAD) -- isolated via full hunk-by-hunk diff, declared and left untouched, not reverted or laundered; (2) this program's OWN 2 edits to market_ontology.yaml were inverted (exact old_string/new_string match) and reproduce the pre-edit live SHA 342d9c70... exactly. feature_schema.py and registry_init.py were confirmed byte-identical to their pins immediately before editing (no drift to attribute), so their deltas are entirely this program's own."
+    },
+    {
+      "check": "Governance floor -- regression found and fixed within this change set",
+      "result": "PASS (after an in-scope fix); net one KNOWN, UNRELATED foreign addition remains",
+      "detail": "Baseline (captured before this program's first edit): 12 failed / 567 passed. First post-edit run: 15 failed / 564 passed -- 3 new: (a) test_doc_citations (the OTHER concurrent session's backtest_v2.py edit shifting a cited line, not caused by this program, already declared elsewhere this session); (b) test_findings_export::test_on_disk_export_is_not_hand_edited (data/findings.jsonl -- a GITIGNORED generated artifact -- had gone stale since an earlier export this session; re-ran scripts/governance/export_findings.py, resolved, not a code defect); (c) test_feature_math_lint::test_floor_is_green -- a REAL regression this program caused: registering source_inputs made _registered_names() (which derives from _ITERATED_SECTIONS BY DESIGN) start policing open/high/low/close/volume for re-derivation, and every raw-column TRANSPORT read in the repo (dict .get, dataclass attribute, project helpers like _require_ohlcv_value) got misclassified as derivation by the AST heuristic's bare-helper-call fallback, because there is no formula for source inputs to diverge from. FIXED (not declared away) by excluding source_inputs from the policed set, mirroring the existing, differently-scoped exclusion of semantic_registry.canonical_unknowns/structural_walks for the identical stated reason. FINAL confirmation run: 13 failed / 566 passed = exactly the 12-name baseline PLUS test_doc_citations (b and the math-lint regression both confirmed gone, not merely expected to be). The +1 over baseline is the SAME foreign, already-declared cause as the first run's (a); this program introduces ZERO net-new failures."
+    }
+  ],
+  "incidental_fixes": [
+    "scripts/analysis/feature_math_lint.py: excluded source_inputs from _registered_names()'s policed set (the regression above)."
+  ],
+  "residual_not_fixed": [
+    "The 43 consumed_by: [UNKNOWN] lineage markers on the OTHER 43 canonical identities (gap G6, unrelated to this step) -- a consumer census is a separate, later program; Step 2 (call-site migration) will produce most of that evidence as a side effect.",
+    "docs/reference/schemas.md's 39-dim CANONICAL_FEATURES table -- found pre-existing (predates the v5.0 SMC bump), left untouched, out of scope for this step.",
+    "Informal (non-dual-form, not enforced by test_doc_citations.py) `feature_schema.py:46` mentions in docs/topics/readme.md and docs/topics/model-intent-and-feature-ownership.md are now further off from the new CANONICAL_FEATURES definition site (:139) -- checked against the enforced citation regex (requires `path:line · Symbol`), confirmed these do NOT match it and were ALREADY stale (the old definition was at :88, also >30 lines from :46) before this change, so not a citation-sync obligation; left as pre-existing.",
+    "Step 2 (migrate ~575 production call sites onto the F identity namespace) and Step 3 (apply the 22 agreed renames) are NOT part of this change set -- separate future programs, each requiring its own freeze-pin authorization."
+  ],
+  "authority_granted": "User 2026-09-16, AskUserQuestion: 'Bind names to identity first'; call-site reference style 'By FM id: F.FM_021'. Plan approved via ExitPlanMode the same session.",
+  "authority_NOT_granted": "No Step 2, no Step 3 (the 22 renames), no CANONICAL_FEATURES membership/order change, no schema version bump, no retrain, no promotion, no ACTIVE_VERSION change, no G001, no economic claim.",
+  "production_behavior_changed": "NO -- proved, not asserted: SCHEMA_HASH/FEATURE_ORDER_HASH unchanged, generated tuple byte-identical to the prior literal, and the freeze pin's own value-level vector regression (hashes emitted VALUES) passed unmodified.",
+  "repo_state_hash": "18665fcba355+1bf6d32ccf52"
+}

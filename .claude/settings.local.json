@@ -133,7 +133,8 @@
       "Bash(python -m pytest tests/test_zone_gate_min_samples.py -v)",
       "Bash(python scripts/maintenance/gen_crt_state_identity.py)",
       "Bash(git diff *)",
-      "Bash(python mermaid_boxes.py)"
+      "Bash(python mermaid_boxes.py)",
+      "Bash(venv/Scripts/python.exe -c ' *)"
     ]
   },
   "hooks": {

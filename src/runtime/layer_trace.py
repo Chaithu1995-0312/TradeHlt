@@ -21,8 +21,9 @@ lack, following the exact "JOIN, do not re-derive" discipline both already estab
 
 OBSERVATION ONLY — the invariant this module exists under
 -----------------------------------------------------------
-- `layer_trace.enabled` defaults to **false** (absent section = predates this feature, same
-  discipline as `SnapshotConfig.from_prod_config` / `ConstructionTraceConfig.from_prod_config`).
+- `layer_trace.enabled` defaults to **true** (2026-09-16 user decision): absent section uses
+  module DEFAULTS (still observation-only). Present section with `enabled: false` opts out.
+  Present-but-incomplete still fails fast via `_require` (no silent partial config).
 - Every `emit()` call happens AFTER the layer's own decision is already final. Nothing produced
   here is read back into `EngineRunner`, `FusionEngine`, `DecisionEngine`, or the CRT state
   machine. `emit()` returns None; no caller consumes a value from it.
@@ -66,6 +67,14 @@ logger = logging.getLogger("CRT.LayerTrace")
 TRACE_SCHEMA_VERSION = "1.0.0"
 EMITTED_BY = "runtime.layer_trace"
 
+# Default-ON values when the production config has no `layer_trace` section (user 2026-09-16).
+# A PRESENT section must still declare every key explicitly — these are NOT silent fills for a
+# half-written section.
+DEFAULT_OUTPUT_DIR = "results/layer_trace"
+DEFAULT_FILENAME_SUFFIX = "_layer_trace.jsonl"
+DEFAULT_FLUSH_EVERY = 200
+
+
 #: The four planes a layer belongs to (plan §9). Fixed vocabulary — a `plane` outside this set
 #: is a construction error in the caller, not a new plane to silently accept.
 PLANES = frozenset({"observation", "evidence", "execution", "measurement"})
@@ -108,15 +117,24 @@ class LayerTraceConfig:
 
     @classmethod
     def from_prod_config(cls, version: Optional[str] = None) -> Optional["LayerTraceConfig"]:
-        """None when the section is absent (every config as of this module's introduction) or
-        `enabled` is false. Mirrors `SnapshotConfig.from_prod_config` / `ConstructionTraceConfig.
-        from_prod_config` exactly: absent section -> None, present-but-incomplete -> fail fast."""
+        """Default ON (2026-09-16).
+
+        - Absent `layer_trace` section → enabled with module DEFAULT_* (observation-only).
+        - Present + `enabled: false` → None (explicit opt-out).
+        - Present + `enabled: true` → every key required via `_require` (fail fast on incomplete).
+        """
         from config_layer.production_config import get_prod_section
 
         try:
             section = get_prod_section("layer_trace", version=version)
         except (RuntimeError, KeyError):
-            return None
+            return cls(
+                enabled=True,
+                schema_version=TRACE_SCHEMA_VERSION,
+                output_dir=DEFAULT_OUTPUT_DIR,
+                filename_suffix=DEFAULT_FILENAME_SUFFIX,
+                flush_every=DEFAULT_FLUSH_EVERY,
+            )
         if not bool(_require(section, "enabled")):
             return None
         declared = str(_require(section, "schema_version"))

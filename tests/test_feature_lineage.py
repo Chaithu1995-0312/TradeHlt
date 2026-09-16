@@ -106,8 +106,8 @@ def test_registered_plus_resolve_impl(ont):
     for section, name, spec in _entries(ont):
         if section == "feature_compositions":
             continue  # compositions resolve via primitives (checked by validate_registry)
-        if section in ("rolling_indicators", "temporal_context", "structural_states"):
-            continue  # windowed/calendar/event — no scalar callable; impl names the pipeline computation authority
+        if section in ("source_inputs", "rolling_indicators", "temporal_context", "structural_states"):
+            continue  # raw/windowed/calendar/event — no scalar callable; impl names the pipeline computation authority
         if _at_least(spec["lifecycle"], "registered"):
             assert spec.get("impl") in fr.FORMULA_REGISTRY, f"{name}: impl not in FORMULA_REGISTRY"
 

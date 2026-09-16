@@ -4,7 +4,7 @@
 > placement methods on the *same* trade entries to see which structure actually wins. Tooling, not
 > on the live path.
 >
-> Created: 2026-06-05 · Updated: 2026-06-05 · Status: living
+> Created: 2026-06-05 · Updated: 2026-09-16 · Status: living
 
 ## In plain language
 Given a set of trades that already happened, this asks a clean what-if: if we'd placed stops/targets
@@ -14,9 +14,9 @@ expectancy, drawdown) plus a recommended winner. It's an analysis aid for tuning
 after a backtest — it never touches live trading.
 
 ## Code covered
-- [`src/analytics/sl_tp_comparator.py:300`](../../src/analytics/sl_tp_comparator.py) — `SLTPComparator` — `compare()` at :327 → `ComparisonReport`.
-- [`src/analytics/sl_tp_comparator.py:248`](../../src/analytics/sl_tp_comparator.py) — `ComparisonReport` — aggregate + per-trade result container.
-- [`src/analytics/sl_tp_comparator.py:133`](../../src/analytics/sl_tp_comparator.py) — `simulate_exit` — forward-walk exit (TP2→SL→TP1) → realized RR.
+- [`src/analytics/sl_tp_comparator.py:309`](../../src/analytics/sl_tp_comparator.py) — `SLTPComparator` — `compare()` at :336 → `ComparisonReport`.
+- [`src/analytics/sl_tp_comparator.py:258`](../../src/analytics/sl_tp_comparator.py) — `ComparisonReport` — aggregate + per-trade result container.
+- [`src/analytics/sl_tp_comparator.py:149`](../../src/analytics/sl_tp_comparator.py) — `simulate_exit` — forward-walk exit (TP2→SL→TP1) → realized RR.
 - `src/analytics/clustering.py`, `performance.py` — trade clustering + performance helpers.
 
 ## Ins / Outs
@@ -38,3 +38,4 @@ Offline analysis tooling feeding the execution-planning discussion ([`execution-
 ## Discussion (filled in-session)
 - **Challenges:** 2026-06-05 — `run_comparison_from_backtest()` imports `runtime.backtest_v2` (an upward dependency) — a known hidden-coupling decoupling blocker. The core `compare()` is decoupled; only the convenience wrapper couples.
 - **Risks:** 2026-06-05 — offline tooling; results inform but don't gate anything live. Treat as advisory analysis.
+- **2026-09-16 — intent classifier kept in lock-step with the planner (CH-intent-schema-alignment).** `derive_intent_from_features` gained the `CONTINUATION` (with-trend) branch the planner gained, so its "mirrors ExecutionPlannerV1_2._derive_intent exactly" claim stays true; `test_mirror_agrees_with_planner` now checks that claim instead of trusting the docstring. `CONTINUATION` maps to the same legacy TP fallback UNKNOWN used (`legacy_tp_atr_mult_breakout`), so comparator LEVELS for those trades are unchanged — only the label moved. The old `test_unknown` fixture was itself a with-trend entry; it now uses an exact EMA tie. See [`execution-planning.md`](execution-planning.md) Discussion 2026-09-16.

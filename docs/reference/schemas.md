@@ -105,7 +105,24 @@ Multi-instrument `aggregate_summary.json` additionally carries `trades_per_symbo
 recomputed by `analytics/metrics_oracle.py` (Oracle V2 + V3: efficiency / symbol-attribution /
 concentration) for the parity gate.
 
-### 2.2b Interpreter Contract — `src/interpreters/contract.py` (Schema 1.0)
+### 2.2c Cost-model identity stamping — `src/runtime/backtest_v2.py` (CH-cost-model-identity-stamp)
+
+Every `XAUUSD_trades.csv` row and `XAUUSD_summary.json` now carries an auditable
+cost/denominator identity alongside `config_version`/`run_id`, so `pnl_rr_net` is
+readable without the sidecar config dump. Pure additive metadata — no PnL math changes.
+
+| Field | Meaning | Derivation |
+|---|---|---|
+| `cost_model_id` | Which cost surface produced `pnl_rr_*` | `backtest_g1g2_v2` (the production G1/G2 spread+slippage surface). `flat_12bps` / `metals_mt5_v1` / `backtest_zero_cost` are reserved ids, not reachable on the production path. |
+| `cost_model_params_hash` | Deterministic identity of the 4 cost knobs (`slippage_enabled`, `slippage_atr_fraction`, `slippage_seed`, `simulated_spread_pct`) | `sha256(canonical_json(knobs))[:16]` — excludes `pip_size` (owned by the R-denominator). |
+| `risk_denominator_id` | Which R-unit `pnl_rr_*` was divided by | `entry_fill_to_sl__v1` = `|entry_fill - sl| / pip_size`. Versioned: a formula change emits a NEW id. |
+
+- On `trades.csv`: three new columns (constant across rows), added after `config_version`.
+- On `summary.json`: three new keys.
+- On `report.txt`: one new line in the `TRADE COSTS` block — `Cost model applied: <id>`.
+- Strict reads: a missing cost knob raises `KeyError` at `BacktestConfig.from_prod_config`
+  (never a silent default or an empty hash).
+
 
 An **Interpreter** is an event/feature producer (Level 4), distinct from a research `Hypothesis`
 (trade emitter). Measured by bridging to a `Hypothesis` via `adapter.InterpreterHypothesis` →
