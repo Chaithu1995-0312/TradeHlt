@@ -1,0 +1,39 @@
+{
+  "change_id": "CH-model-parquet-binding-docs",
+  "date_utc": "2026-09-16",
+  "agent": "Grok",
+  "parallel_window": "parquet-model-binding",
+  "parallel_leave_alone": [
+    "docs/implementation_plan/cost-model-identity-stamping.md",
+    "Claude UNKNOWN / construction-UNKNOWN surfaces"
+  ],
+  "objective": "PR-1 of the approved Model × Parquet column-binding design: land the reviewed design in docs/implementation_plan/, extend the owning parquet evidence-layer spec with the name-authority rule and binding_id index, and add a pointer on the model-intent topic. No src/, no config, no ontology, no change_contracts class yet (that is PR-2).",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Docs and comments only — no behavior surface. Owning living spec is docs/research/parquet_evidence_layer.md (existing-doc-first). The full binding table is the implementation-plan file. NOT RESEARCH_QUERY_BINDING (class does not exist yet; PR-2). NOT TRACE_OBSERVATION_JOIN. NOT MODEL_INPUT_CHANGE (no train/serve feature set changes). NOT RUNTIME_DECISION_PATH_CHANGE.",
+  "affected_files": [
+    "docs/governance/build_manifests/CH-model-parquet-binding-docs.impact.json",
+    "docs/governance/build_manifests/CH-model-parquet-binding-docs.completion.json",
+    "docs/implementation_plan/model-parquet-column-binding.md",
+    "docs/research/parquet_evidence_layer.md",
+    "docs/topics/model-intent-and-feature-ownership.md",
+    ".grok/GROK_WINDOW_PARQUET_BINDING.md",
+    "assistant_project.md"
+  ],
+  "affected_files_note": "PRE-DECLARATION. Explicitly NOT in this change: docs/implementation_plan/cost-model-identity-stamping.md (DeepSeek parallel window); configs/formulas/market_ontology.yaml; change_contracts.json; src/; query_trace.py; schema-v6 working-tree residue.",
+  "affected_feature_ids": [],
+  "affected_models": "none — binding table is documentation of CURRENT reads; no artifact rewrite",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit; revert the four docs + grok window marker + this pair of manifests",
+  "authority_granted": "User 2026-09-16: continue the parquet/DuckDB model-binding design (PR-1 docs) and record it as Grok changes in a parallel window; DeepSeek cost-model and Claude UNKNOWN are out of this window.",
+  "authority_NOT_granted": "No query_trace --model. No RESEARCH_QUERY_BINDING class. No retrain, no promote, no ACTIVE_VERSION, no G001, no live-spine swap, no fill of null state__* trio, no CRT-rail intent ownership cut.",
+  "production_behavior_changed": "NO"
+}

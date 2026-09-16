@@ -1264,7 +1264,7 @@ Topic: Pattern pass over bar_matrix_features (91 cols x 47,197 XAUUSD M15 bars) 
 Decision/Output: Two read-only scratchpad runners (feature_patterns.py / feature_patterns2.py) over utils.duckdb_query.open_views on features.parquet; every identity checked by SQL AND against its definition in src. Confirmed exact identities: atr_14 == atr_14_raw; volume_range_proxy == candle_range (high-low, feature_pipeline.py:515-516); sweep_detected == (liquidity_sweep != 0) (:1002); retest_depth>0 <=> retest_flag=1; trend_bias == sign(ema_fast-ema_slow) (:993); atr*close == atr_14 (relerr 6e-8); momentum_score == delta_close/atr and ema_spread == (ema_fast-ema_slow)/atr, legacy/corrected == close within 6e-8; rsi_state cuts at 30/70; displacement_flag == body_ratio > 0.6 with no size condition (:1006-1013). Aliases: swing_high/low + last_swing_*_price == *_causal_confirmed on 100% of bars (centered_batch 73%), every centered swing confirmed causally exactly 2 bars later (6,364/6,364); volatility_regime == rolling_causal 100% (global_batch 44.8%). Naming traps (§6.8 observations, no defect verdict): price_vs_ma20/price_vs_ma50/bb_width/trend_strength are rolling z-scores in place (NORMALIZE_COLS :348-353; bb_width negative on 56.6% of bars); candles_since_retest == bars since last SWEEP on 47,183/47,183 (:1097-1106, F-063 at data level); retest_flag fires on 93.7% of sweep bars themselves because the rolling lookback includes the current bar (:1021-1030). F-064 dimensional mix on the full corpus: |tanh(momentum_score)|>0.999 on 99.81%, |ema_spread|>0.15 on 99.99% (F-064 recorded 99.70%/99.99% on 19,922 bars). SMC: pdh/pdl |tanh|>=0.995 (>=3 ATR) on 70%/80% of bars -- tanh(dist/atr_abs) with price-unit ATR (:1281, _geometry.py:104-115), a scale choice not a unit bug. Calendar: hours 1-23 only (no 00:xx, F-080), broker-hour session map ASIA 1-6 / LONDON 7-11 / OVERLAP 12-15 / NEWYORK 16-20 / CLOSED 21-23 (F-066 broker-local); 495 full 92-bar days. Non-stationarity: close 2287->5586, median atr_14 2.44->14.48, 27 price-level columns r>=0.998 (one dimension), _pos r=0.958 with price. Ruled out: breaker_distance==0 and volatility_regime==0 share count 15,928 by coincidence (overlap 5,721 vs 5,375 expected under independence). E-001 correction applied same turn to the previous entry: session 2/4 = NEWYORK/CLOSED not LONDON/OVERLAP, finding F-066 not F-106. No src/doc/finding edits.
 Belief Update / ROI / Goal:
   Goal: make the 91-col feature surface legible so later research doesn't mis-read column names as their definitions.
-  Belief: ~15 of 91 columns are exact duplicates/aliases/deterministic transforms of others; several names describe a different quantity than emitted (z-scores, since-sweep counter, range-as-volume). F-064 holds on the full 2-year corpus.
+  Belief: ~15 of 91 columns are exact duplicates/aliases/deterministic transforms of others; several names describe a different quantity than emitted (z-scores, since-sweep counter, range-as-volume -- CORRECTED 2026-09-16: "range-as-volume" overstated it. `volume_range_proxy`'s name says "proxy", the separation from volume_ratio/volume_spike is explicit, log-announced (feature_pipeline.py:505-540) and documented at market_ontology.yaml:1861 "deliberately NOT this feature"; §6.8 verdict INTENTIONAL SEMANTIC SEPARATION, not a naming trap). F-064 holds on the full 2-year corpus.
   Knowledge ROI: medium-high -- prevents a class of silent mis-specification (e.g. treating bb_width as a width, retest_flag as a post-sweep event) in any model/probe built on this table.
   Action: report; offer F-064 evidence refresh and a feature-schema.md naming-trap note as separate authorized edits.
 Open Questions: refresh F-064 with the 47,197-bar numbers? add a naming-trap table to docs/topics/feature-schema.md? fix all-null state__ columns (still open)?
@@ -1294,4 +1294,185 @@ Belief Update / ROI / Goal:
 Open Questions: triage the 12 green-floor failures before merging this branch?
 Next Step: await user direction.
 ---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Reported the stored Parquet/DuckDB schema (read from the files, not memory)
+Decision/Output: DuckDB DESCRIBE on both views + pyarrow file metadata + manifest. features.parquet = 91 cols x 47,197 rows (SNAPPY, 1 row group); bar_matrix.parquet = the same 91 in the same order + 33 (atr_abs, 19 state__*, 7 CRT/parent/HTF context, 6 candle/regime/intent labels) = 124. Types: timestamp TIMESTAMP; OHLC + most indicators DOUBLE; the pipeline's float32 block (body_ratio..change_of_character) FLOAT; flags/ordinals TINYINT; volume/_pos BIGINT; candles_since_retest SMALLINT; state/labels VARCHAR. state__displacement_flag/retest_flag/rsi_state surface as INTEGER only because Arrow stored them as type null (the known all-null defect). 48 canonical columns marked from feature_schema.CANONICAL_FEATURES. Manifest pins schema_version 5.0, feature_order_hash 160c96c52b198a16, schema_hash f52bf5d3..., corpus_sha256 4d73f5ce..., git_sha 5c571c1 (tree_dirty true). DuckDB side is in-memory views over read_parquet, no .db file.
+Belief Update / ROI / Goal: none (reference lookup).
+Open Questions: none new.
+Next Step: await user direction.
 ---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: §6.8 semantic discussion of the three "name != content" columns — ontology checked, one of my own framings retracted
+Decision/Output: Checked each against the ontology (authority #1, §6.6) rather than against the name. (1) trend_strength FM-064 (market_ontology.yaml:1730-1760) declares the z-score EXPLICITLY in its formula ("rolling(zscore_window) z-score of SMA(trend_strength_window) of diff(SMA(ma_periods[0]) of close)") and its semantics line; candles_since_retest FM-065 (:1914-1923) declares "cumcount of bars since the last liquidity_sweep event". Both are therefore DOCUMENTATION-honest: no DOC_DRIFT, the trap exists only at the bare-column-name level for a reader who never opens the registry. bb_width / price_vs_ma20 / price_vs_ma50 have NO ontology entry at all (grep empty) — consistent with being non-canonical pipeline intermediates. (2) E-001 CORRECTION to my own prior turn: I called volume_range_proxy a naming trap; source says otherwise — the name carries "proxy", the pipeline REFUSES same-name substitution even on dead-volume feeds and logs that refusal (feature_pipeline.py:505-540), volume_ratio/volume_spike bind to source volume only, and market_ontology.yaml:1861 states the high-low proxy "is deliberately NOT this feature". Verdict INTENTIONAL SEMANTIC SEPARATION (the anti-silent-substitution discipline of the F-056 class). Corrected at source in the two prior entries, not only in chat. (3) Raw stages are RECOVERABLE from emitted columns in all three z-scored cases (raw trend_strength = rolling(trend_strength_window).mean of the emitted ma_slope_20; raw bb_width = bb_upper-bb_lower; raw price_vs_ma* = close-ma_*), so this is name occupancy, not information loss. (4) Synthesis: the pipeline runs TWO normalization strategies against the same non-stationarity problem — rolling z-score (price_vs_ma*, bb_width, trend_strength, macd_hist_z: measured mean~0, std~1.2-1.34, stationary) and ATR-division (ema_spread/momentum_score: the F-061/F-064 dimensional-mix defect, saturated on 99.8-99.99% of bars). The "confusingly named" family is the HEALTHY one. (5) Low-stakes DOCUMENTATION GAP surfaced not resolved (§6.2 rule 3): FM-064's note cites FM-049/FM-053 macd_hist_raw/macd_hist_z as "the SAME two-stage split", but macd keeps TWO canonical slots while trend_strength keeps one (the z) — the c.f. is imprecise. No code, config, ontology or finding edited.
+Belief Update / ROI / Goal:
+  Goal: know whether these columns are a real defect surface before anything is built on the parquet.
+  Belief: CHANGED — I had these filed as latent defects; the ontology already establishes the meaning for the two canonical ones, and volume_range_proxy is a governed decision I mis-called. Real residual risk is narrow: a reader of features.parquet/xlsx sees bare names with no registry attached, and two near-identical names (FM-065 vector slot vs FM-070 CRT-engine quantity) mean different things.
+  Knowledge ROI: medium-high — prevents a pointless "fix the names" program against pipeline code that is already correct and documented, and redirects to the cheap additive fix (ship the formula text WITH the artifact).
+  Action: offer a data-dictionary sidecar (Parquet column metadata or an xlsx sheet carrying each column's FM id + ontology formula); no pipeline rename.
+Open Questions: ship the data dictionary with the artifacts? raise the FM-064-vs-FM-049 note imprecision as a doc fix?
+Next Step: await user direction.
+---
+---
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: PRODUCTION FIX — renamed feature columns to match their formulas (schema v5.0 -> v6.0, CH-schema-v6-normalization-identity)
+Decision/Output: User authorized a production rename after the naming discussion; four AskUserQuestion decisions (all five columns / split raw+z / raw stays OUT of the vector / hard rename / rewrite the registry JSONs) and ExitPlanMode approval. GOVERNANCE FIRST: the feature-layer mutation freeze forbids renaming canonical keys without a named user-approved program, so `SCHEMA-V6-NORMALIZATION-IDENTITY-FIX` was added to the pin's accepted_future_programs BEFORE any code edit, then the impact manifest (FEATURE_IDENTITY_CHANGE + DATASET_SCHEMA_CHANGE) passed `validate-impact` -> IMPACT: APPROVED. ONTOLOGY NEXT: FM-064 -> `trend_strength_z` and FM-065 -> `candles_since_sweep` refined IN PLACE (ids kept, version bumped, provenance notes preserved+extended); new FM-084 `trend_strength_raw` registered NON-canonically (FM-071 was my first pick and was already taken -- caught before it propagated). CODE: CANONICAL_FEATURES index 11/35 renamed (48 dims, order unchanged), SCHEMA_VERSION 6.0, read-side SCHEMA_V5_ALIASES added beside SCHEMA_V3_ALIASES (never emitted); all four remaining in-place z-scores moved into NORMALIZE_TO_NEW_COL so NORMALIZE_COLS is now EMPTY -- the v3.0 macd_hist defect can no longer recur; 105 consumer files / 738 word-boundary occurrences renamed by a reviewed migration script with explicit exclusions (the BitNet `_bn_in["candles_since_retest"]` alias key and the SCHEMA_V5_ALIASES keys deliberately keep the old names). MODELS: scripts/governance/remap_registries_v6.py (new, SCR-471, modelled on remap_zone_registry_v4.py) relabelled the stored feature_order/feature_schema lists in 4 registries with ALIGNMENT_REMAP provenance, asserting nothing outside those lists moved. LEDGER: 4 events APPENDED (181->185) -- SUPERSEDED+SEEDED per rename, mirroring ema_spread->ema_spread_atr; `reseed` deliberately NOT used because it OVERWRITES and would have destroyed 181 historical events. PARITY PROVED TWICE: (1) the 48-dim vector compared BY POSITION over all 47,197 XAUUSD bars is bit-identical (np.array_equal True) and both renamed columns carry identical values; the freeze pin's vector_sha256 regression -- which hashes VALUES, untouched by me -- still matches; (2) a full XAUUSD backtest before/after gives 3 trades both sides with ZERO differing cells in every shared column, 7,112 events in identical sequence, and an identical summary.json minus run_id. Docs synced same turn: F-107 registered, CLAUDE.md index row, schemas.md, topics/feature-schema.md, completion manifest with the reconciled 135-file list.
+Belief Update / ROI / Goal:
+  Goal: make every emitted feature name state the quantity it carries, without moving a single value.
+  Belief: the rename is safe BECAUSE of the _raw/_z suffixing decision -- had the raw value kept the bare name, every missed call site would have silently returned a different quantity instead of raising KeyError. That choice, not the rename itself, is what made a 105-file mechanical change verifiable.
+  Knowledge ROI: high -- closes the pin's long-deferred T-19 item, kills the in-place-normalization defect class at the mechanism level (NORMALIZE_COLS is empty and commented as such), and the two parity proofs are reusable evidence for any future schema-identity change.
+  Action: report; the pre-existing defects surfaced along the way (dead _derive_trade_intent read, fc05's dead wick_size dep, uat monte_carlo's malformed log format) are recorded, and only the one-word fc05 stale name was fixed.
+Open Questions: fix the dead `_derive_trade_intent` sweep-counter read (needs its own authorization -- it WOULD change TP selection)? rebuild results/research/bar_matrix/XAUUSD_M15/ so the parquet/xlsx carry v6 headers? re-run baseline_capture for the v6 schema hash?
+Next Step: await user direction.
+---
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: TRADE_INTENT_CALLER_CENSUS_V1 — `cached_features` producer vs its consumers (OBSERVATION_ONLY)
+Decision/Output: User rejected my first proposal (correct the dead-read comment) and redirected to an observation layer FIRST: census every `_derive_trade_intent` caller, trace the cache's origin, measure which gate dominates, and look for the same pattern elsewhere. Executed all four read-only. PRODUCER: `cached_features` is built at exactly two sites (crt_engine_v2.py:1764 zeroed 3-key floor / :1781 populated 6-key), only at RETEST confirmation, nulled on every reset (:1930), copied onto the Trade (:2453); values from FORMULA_REGISTRY FM-027/FM-028 plus the FM-010 body_ratio of the DISPLACEMENT candle. ROOT OBJECT (better than "a dead key"): every name `_derive_trade_intent` reads is CANONICAL except the two it actually receives (`displacement_retrace`/`displacement_atr_ratio`, both CRT-local) — producer and consumer overlap on only `body_ratio` and `double_sweep`. So `pullback` is dead on TWO independent conditions (csr≡99 AND mom≡0.0) and `liq_sweep` rests on `double_sweep` alone. TWO CLASSIFIERS, RAIL-DISJOINT: `ExecutionPlannerV1_2._derive_intent` (execution_planner.py:331) has byte-identical thresholds/order but reads all 9 CANONICAL names; backtest_v2.py:2581 self-documents that it never imports the planner, and live_engine_hook has no CRT ExecutionEngine import (consistent with F-103) — so neither rail runs both, and the CRT rail's is the starved one. DIRECTION OF THE MISMATCH IDENTIFIED: `promotion_dryrun.py:104` exists to assert the two classifiers agree and its fixture is written in CANONICAL vocabulary; CH-002's fallback chains bridged only the two keys that had FM counterparts. GATE DOMINANCE (bar matrix, non-liq_sweep remainder n=38,258): rd band passes 20.3%, csr<=5 45.9%, mom>0 52.0% — the retest-depth band dominates and the two missing keys remove comparable amounts (2,403/2,614), so no single-key fix is load-bearing. PLAN D: `fusion_engine.py:234` documents an `atr_vol` key no build site writes (DOCUMENTATION GAP); `gate_intelligence` is fed the canonical dict on the live rail and is NOT a second F-065 instance; `CRTGaussianScorer.compute` is the only cache-authored consumer and the only one that works unaided. Determination per §6.8: TEST / CONTRACT GAP. NO finding registered — the evidence establishes the mismatch but not who should own intent on the CRT rail. Wrote docs/analysis/trade-intent-caller-census-2026-09-16.md + index row; rewrote the crt_engine_v2.py:2336 note (same 8 lines, so no citation-window drift); amended the completion manifest's residual_not_fixed[0] with a CORRECTED marker preserving the original phrasing (§6.2 rule 4).
+Belief Update / ROI / Goal:
+  Goal: decide correctly whether the runtime intent path is deliberately restricted or accidentally starved, BEFORE proposing any behavioural fix.
+  Belief: accidentally starved — but the remedy is NOT "add the missing keys". The object is a producer never contracted against its consumers' vocabulary, and the live rail already owns a correct classifier, so this is an ownership adjudication of the F-048 kind, not a missing-key fix.
+  Knowledge ROI: high, and it came from being redirected — my own first framing ("same function, two callers, 2,767 vs 0") was not apples-to-apples (the bar matrix has no displacement_retrace/displacement_atr_ratio columns, so rd/disp resolve through the legacy fallbacks to FM-021/FM-020, and its body_ratio is the current bar's). Caught me overclaiming; corrected at all three recorded surfaces, not just in chat (E-001).
+  Action: do not wire the cache. Leave the ownership question open and explicitly unauthorized.
+Open Questions: who owns intent on the CRT rail — bind the cache to the canonical vocabulary, or delete the CRT classifier and let ExecutionPlannerV1_2 own it (the F-048 treatment)? Still unanswered from the prior turn: commit/push the v6.0 rename?
+Next Step: await user direction on the ownership adjudication; nothing is committed.
+---
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: TRADE_INTENT_OWNERSHIP_SHADOW — measured what option C would do, before authorizing it (OBSERVATION_ONLY)
+Decision/Output: User chose option C (F-048 treatment: delete the CRT classifier, let ExecutionPlannerV1_2 own intent) as the target and shadow-measurement first as the method. FEASIBILITY ANSWERED FIRST: every module needed already exists and is already exercised — backtest_v2 materializes the whole canonical frame in __init__ (:2034) plus a timestamp index (:2003), the per-bar loop builds a canonical dict three times (:3057/:3125/:3163), `_construction_trace_feature_dict` (:2396) is a ready-made per-bar helper, and the T-16 block (:2995-3015) is the hardened fail-closed lookup. The ONLY gap is a seam: process_candle is called at :2844 but the row is not resolved until :3015, and build_trade runs inside process_candle at crt_engine_v2.py:3471. Built `scripts/analysis/trade_intent_ownership_shadow.py` (SCR-472, PROBE, no src/ edit so ledger identity is STRUCTURAL) reusing FeaturePipeline.run() + backtest_v2's exact ts-key shape + the crt_episode_number_trace build_trade interception idiom. RESULTS (XAUUSD, schema 6.0, v2_htfcrt_2026_08): n=6 retest confirmations, 2 trade-opens, 0 lookup misses. Arm CURRENT reversal 5 / breakout 1; Arm C REVERSAL 4 / LIQ_SWEEP 1 / UNKNOWN 1. 3/6 labels disagree, 3/6 TP1 multipliers change, 1/6 would `reject_unknown_intent`. Trade-open subset: one unchanged, one changes TP1 1.5 -> 1.0. TWO DECISION-BEARING RESULTS: (a) the UNKNOWN is a trend-ALIGNED LONG (ema_fast>ema_slow, dir=+1) — the planner's REVERSAL is an EMA-vs-direction test, so it has NO label for a trend-aligned non-breakout entry and falls through to UNKNOWN, which rejects by default; option C would reject trades the CRT rail currently opens, and that hole must be fixed before C ships. (b) pullback-band occupancy is FM-027 3/6 vs FM-021 0/6, so options A/B (keep displacement_retrace) and C (switch to retest_depth) gate pullback on DIFFERENT QUANTITIES and are not interchangeable — L2 turned out load-bearing, not a footnote. Predictions 3/5; P1 and P3 FAILED and are reported as failures. P3's failure is the informative one: none of the corpus-wide 2,767 bar-matrix pullbacks lands on a CRT retest bar, so "binding the missing keys unlocks pullback" is FALSIFIED on this population. Also fixed a real bug in my own probe mid-run: `is_trade_open` was tested during the loop, but build_trade fires on a LATER bar than the retest confirmation, so the first run reported 0 trade-opens; resolved after the loop instead. Synced: census §9, docs/analysis/readme.md row, SITS (stub appended as a single row, NOT a bulk --write-stubs merge, which would have absorbed other sessions' unregistered scripts).
+Belief Update / ROI / Goal:
+  Goal: know what option C actually does before authorizing a ledger-changing edit.
+  Belief: option C as it stands is NOT safe to ship — not because of the label churn (3/6, expected) but because its fallthrough rejects trend-aligned entries, a case the CRT classifier has always covered. And the A/B-vs-C choice is a choice of depth DEFINITION, which nobody had framed that way.
+  Knowledge ROI: high. n=6 is useless for economics and decisive for mechanism — exactly what the shadow was scoped to deliver. Two sealed predictions failed and both failures carried more information than the passes.
+  Action: do not cut the seam. Resolve the UNKNOWN-reject hole and the FM-027-vs-FM-021 depth question first; both are design decisions, not measurements.
+Open Questions: should option C's UNKNOWN fallthrough be given a trend-aligned label (or reject_unknown_intent be set false) before the seam is cut? which depth quantity should gate pullback — FM-027 or FM-021? Still unanswered: commit/push the v6.0 rename?
+Next Step: await direction on the two design questions; nothing committed.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Listed schema-dependent models that need no Python writes (OBSERVATION_ONLY)
+Decision/Output: `_SCHEMA_REGISTRY` has exactly two SchemaObjects, both auto-derived from `CANONICAL_FEATURES` (`src/features/feature_schema.py:322-325`): tradenet, gaussian. JSON ALIGNMENT_REMAP (no loader rewrite) already applied to zone_registry.json, zone_registry_v4_2026_07.json, zone_gate_registry.json, gaussian_registry.json. Live heuristic Gaussian and base RR read names that did not change. Residual: bitnet_registry.json still stores `candles_since_retest` (not in remap TARGETS); rr_model.json is v3 positional and quarantined (cannot remap); SCHEMA_V5_ALIASES is defined but unused outside feature_schema.py. No src/ edit this turn.
+Belief Update / ROI / Goal:
+  Goal: know which model families stay schema-aligned without writing code.
+  Belief: only tradenet+gaussian SchemaObjects auto-track; zone/zone_gate/gaussian JSON were remapped; BitNet catalog and RR trained artifact are the leftovers.
+  Knowledge ROI: medium — prevents treating "six stale families" as one write class.
+  Action: none; listing only.
+Open Questions: remap bitnet_registry.json as a follow-on ALIGNMENT_REMAP? commit/push the v6.0 rename?
+Next Step: await user direction.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: DESIGN ONLY — Model × Parquet column binding (MIAR intents → 95-col Excel names)
+Decision/Output: Wrote design to C:\Users\Hi\AppData\Local\Temp\grok-Hi\grok-design-doc-16473bd4.md and summary to grok-design-summary-16473bd4.md. No src/, no ACTIVE_VERSION, no ontology, no findings, no retrain. Verified live build results/research/bar_matrix/XAUUSD_M15: schema 6.0, features 95, bar_matrix 128, state__displacement_flag/retest_flag/rsi_state 47197/47197 null with RAW columns fully populated. Bound all Stage 1–5 MIAR models + resolver + FeatureStateEncoder. RR trained UNBINDABLE (positional 38, incompatible_with_schema 4.0). BitNet binds candles_since_sweep (Excel + LEGACY6_KEYS); catalog leftover candles_since_retest named not silently picked. CRT engine occupancy is not in features.parquet; resolver occupancy is crt_state_resolved. Recommend Alt B (query_trace --model) for research; Alt A stays production; Alt C unauthorized. Construction class: new RESEARCH_QUERY_BINDING, not TRACE_OBSERVATION_JOIN. 7-PR plan. Open questions: model-set scope; rebuild-as-gate; null-trio follow-on.
+Belief Update / ROI / Goal:
+  Goal: stop invented column names so an LLM/research query can only SELECT what the Excel actually stores.
+  Belief: the 95-col DESCRIBE is sufficient name authority for a research adapter; three state__ columns are unusable until classify_value is authorized; CRT engine state cannot be “picked” from this Parquet.
+  Knowledge ROI: high — one measured null trio + one honest unbindable (RR trained) prevent two classes of silent wrong SELECT.
+  Action: do not implement until the user answers the three open questions.
+Open Questions: (1) all MIAR models or a subset? (2) rebuild features.xlsx after every schema change as a gate? (3) null state__ trio in this program or follow-on? CRT-rail trade_intent ownership still open from earlier today.
+Next Step: await user direction; implementation is a separate authorized turn through construction protocol.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Design review — Model × Parquet Column Binding (no src/ edits)
+Decision/Output: Wrote review to C:\Users\Hi\AppData\Local\Temp\grok-Hi\grok-design-review-16473bd4.md. Verdict: needs revision. Source-verified: 95/128 columns, null-trio 47197/47197, TRACE_OBSERVATION_JOIN is the wrong class, RR trained unbindable, BitNet LEGACY6_KEYS vs catalog leftover, planner 13 keys, detect_regime reads, resolver default 13 required_when_features. Blocking fixes: invented CC-ENGINE-RESOLVER-UNJOINABLE (real CC-L3-FORBIDDEN-JOIN); LINK-001 adds change_of_character not volume_spike; get_binding(miar_id) cannot key 13 rows; PR-2 required_checks file does not exist yet (construction wellformed floor); adapter V3+V5 aliases vs gaussian_schema_contract V3-only; SELECT≠compute() for PR-7; fail-closed UNUSABLE/grain not on default --sql path; CSV-wins unenforceable on DuckDB-parquet.
+Belief Update / ROI / Goal:
+  Goal: freeze an implementable research-query binding without invented names or false CC ids.
+  Belief: the design's lane and refuse/unbindable calls are right; two CURRENT facts are wrong (CC id, LINK-001) and the registry/PR-2/fail-closed surfaces are not yet specific enough to code.
+  Knowledge ROI: high — catching invented CC-* and the LINK-001/volume_spike swap before implementation prevents a false resolver contract.
+  Action: do not implement; writer revises those majors.
+Open Questions: none from this review beyond the design's Q1 (CLI subset) once the factual errors are fixed.
+Next Step: writer revises; implementation stays unauthorized.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Re-review Model × Parquet binding design rev 2
+Decision/Output: Rewrote C:\Users\Hi\AppData\Local\Temp\grok-Hi\grok-design-review-16473bd4.md. Prior 16 issues addressed. Verdict still needs revision: Issue 17 (wick_size --sql raise vs policy A decode vs tests 5/6); Issue 18 (grain gate uses catalog id telemetry not FAMILY_GLOBS crt_telemetry; PR-4 omits crt_construction). Minors: gaussian_ml CLI three-way; UNUSABLE WARN|refuse; Q1 subset vs PR-4 wired set. No src/ edits.
+Belief Update / ROI / Goal:
+  Goal: an engineer can implement the adapter without guessing alias or grain rules.
+  Belief: rev 2 fixed the invented CC id, LINK-001, binding_id, and PR-2 floor; remaining holes are --sql alias policy and view-name tokens.
+  Knowledge ROI: medium — catching FAMILY_GLOBS vs catalog id mismatch prevents a gate that never fires.
+  Action: writer unifies alias/--sql rule and freeze refuse set as FAMILY_GLOBS names.
+Open Questions: none new beyond the design's Q1 once Issues 17–18 close.
+Next Step: writer patch; implementation still unauthorized.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: DESIGN REV 2 — addressed 16 review issues on Model × Parquet binding
+Decision/Output: Revised grok-design-doc-16473bd4.md and grok-design-summary-16473bd4.md. Review file: all 16 Status: addressed + Revision Summary. No src/, no ACTIVE_VERSION, no ontology, no findings. Fixes: CC-L3-FORBIDDEN-JOIN; LINK-001=change_of_character; binding_id key; PR-2 existing checks + ratchet 19; gaussian_ml V3-only vs Excel V3+V5; query vs serve split, PR-7 dropped; --sql grain/UNUSABLE in PR-4 not catalog.assert_join; CSV=rebuild source; one 6-PR plan with BitNet in PR-4; Q1 only blocking; JOIN helper is new; no SITS unless new script; planner reject_invalid vs adapter raise; class artifacts_to_update+rollback_boundary; V5 not remapped at ML load; disp_str NO_ALIAS_REFUSE.
+Belief Update / ROI / Goal:
+  Goal: an engineer can implement from the design without guessing keys or inventing CC ids.
+  Belief: v1 is SELECT-only over Excel names; serve harness is a later program; default --sql was the real UNUSABLE/grain hole.
+  Knowledge ROI: high — LINK-001 and gaussian_ml V5 were silent CURRENT vs INTENDED collapses.
+  Action: still do not implement until Q1 is answered (recommended default: registry=all, CLI=EXPECTED_ENGINES+resolver occupancy).
+Open Questions: Q1 (CLI subset) remains blocking; Q2–Q5 recorded defaults.
+Next Step: await user on Q1; implementation is a separate authorized turn.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: DESIGN REV 3 — Issues 17–21 on Model × Parquet binding
+Decision/Output: Revised grok-design-doc-16473bd4.md / summary / review. No src/. (17) `--model` rewrites aliases to live names; raw `--sql` not rewritten; ZoneGate non-active registry is not a v1 binding_id. (18) GRAIN_REFUSE_FAMILIES = FAMILY_GLOBS names including crt_telemetry, crt_construction, bar_structure; no view telemetry. (19) gaussian_ml v1 always UnbindableModelError. (20) --sql UNUSABLE refuse via identifier scan / json_serialize_sql, not WARN. (21) Q1 not blocking; v1 CLI is PR-4 single-view list; crt_resolver_occupancy stays PR-5.
+Belief Update / ROI / Goal:
+  Goal: one implementable rule per surface so tests 5 and 6 do not contradict.
+  Belief: result schema never contains historical aliases; DuckDB unknown-column is the right raw `--sql` failure; grain tokens must be FAMILY_GLOBS keys.
+  Knowledge ROI: high — catalog id `telemetry` vs view `crt_telemetry` would have missed the join gate.
+  Action: still do not implement until user authorizes; Q1 is no longer blocking.
+Open Questions: none blocking.
+Next Step: await authorization to implement PR-1/2 via construction protocol.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Re-review Model × Parquet binding design rev 3
+Decision/Output: Rewrote C:\Users\Hi\AppData\Local\Temp\grok-Hi\grok-design-review-16473bd4.md. Verdict: approve. 0 open issues. Issues 17–21 addressed (alias surfaces split; GRAIN_REFUSE_FAMILIES = FAMILY_GLOBS names; gaussian_ml always refuse; UNUSABLE refuse; Q1 not blocking). Residual only: one stale NotAFeatureModelError on row 10 — implementers use UnbindableModelError from the API block. No src/ edits.
+Belief Update / ROI / Goal:
+  Goal: freeze an implementable research-query binding.
+  Belief: the design is specific enough to code; construction class and fail-closed surfaces are named.
+  Knowledge ROI: medium — closing FAMILY_GLOBS vs catalog-id mismatch was the last load-bearing hole.
+  Action: implementation remains a separate authorized turn (PR-1 DOCUMENTATION_ONLY, PR-2 RESEARCH_QUERY_BINDING).
+Open Questions: none.
+Next Step: user authorizes construction protocol if they want PRs.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Design skill complete — Model × Parquet/DuckDB binding (0 review issues)
+Decision/Output: Orchestrated writer/reviewer to consensus (3 review rounds, 21 issues closed). Deliverable: C:\Users\Hi\AppData\Local\Temp\grok-Hi\grok-design-doc-16473bd4.md. Live artifact is 95-col features.xlsx/parquet (user's 91 was pre-v6) + 19 state__* on bar_matrix (3 UNUSABLE). Models SELECT Excel-legal names via existing query_trace DuckDB views; production spine untouched. No src/, no ACTIVE_VERSION, no G001. Cleanup deleted summary/review scratch files; design doc kept.
+Belief Update / ROI / Goal:
+  Goal: models pick feature and state names from the Excel/Parquet, not invented columns.
+  Belief: Alt B (research DuckDB binding) is the right next program; CRT engine occupancy is not in this Parquet; RR trained cannot bind.
+  Knowledge ROI: high — one name-authority rule stops wick_size / candles_since_retest emit keys.
+  Action: wait for user to authorize PR-1 (docs) / PR-2 (change class) or copy the design into docs/implementation_plan/.
+Open Questions: none blocking. User may override recorded defaults (CLI subset, rebuild-as-gate, null-trio follow-on, CRT-rail intent ownership).
+Next Step: user says implement (construction protocol) or copy the design in-repo.
+---
+
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Design skill complete — Model × Parquet/DuckDB binding (0 review issues)
+Decision/Output: Orchestrated writer/reviewer to consensus (3 review rounds, 21 issues closed). Deliverable: C:\Users\Hi\AppData\Local\Temp\grok-Hi\grok-design-doc-16473bd4.md. Live artifact is 95-col features.xlsx/parquet (user's 91 was pre-v6) + 19 state__* on bar_matrix (3 UNUSABLE). Models SELECT Excel-legal names via existing query_trace DuckDB views; production spine untouched. No src/, no ACTIVE_VERSION, no G001. Cleanup deleted summary/review scratch files; design doc kept.
+Belief Update / ROI / Goal:
+  Goal: models pick feature and state names from the Excel/Parquet, not invented columns.
+  Belief: Alt B (research DuckDB binding) is the right next program; CRT engine occupancy is not in this Parquet; RR trained cannot bind.
+  Knowledge ROI: high — one name-authority rule stops wick_size / candles_since_retest emit keys.
+  Action: wait for user to authorize PR-1 (docs) / PR-2 (change class) or copy the design into docs/implementation_plan/.
+Open Questions: none blocking. User may override recorded defaults (CLI subset, rebuild-as-gate, null-trio follow-on, CRT-rail intent ownership).
+Next Step: user says implement (construction protocol) or copy the design in-repo.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: PR-1 Grok window — Model × Parquet binding docs landed (DOCUMENTATION_ONLY)
+Decision/Output: Peeked parallel windows: DeepSeek owns docs/implementation_plan/cost-model-identity-stamping.md (left alone); Claude UNKNOWN / ontology / dirty schema-v6 tree left alone. IMPACT APPROVED CH-model-parquet-binding-docs. Landed: docs/implementation_plan/model-parquet-column-binding.md (reviewed design), parquet_evidence_layer.md name-authority section, model-intent topic Discussion pointer, .grok/GROK_WINDOW_PARQUET_BINDING.md. completion_status BLOCKED_PREEXISTING_DIRTY_TREE (foreign porcelain). Doc floors: test_doc_citations + test_topic_docs 6 passed; test_current_findings freshness is pre-existing red (findings file not edited). No src/, no cost-model, no UNKNOWN.
+Belief Update / ROI / Goal:
+  Goal: persist Grok's binding table so other windows do not invent columns or collide.
+  Belief: PR-1 docs are enough for an LLM to SELECT Excel-legal names; --model CLI is still unauthorized.
+  Knowledge ROI: medium — window marker is the anti-collision artifact.
+  Action: commit Grok-only paths if hooks allow; do not stage DeepSeek/Claude files.
+Open Questions: none blocking.
+Next Step: PR-2 RESEARCH_QUERY_BINDING class only after user authorizes; not this turn.
+---
+

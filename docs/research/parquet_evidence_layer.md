@@ -225,3 +225,36 @@ envelope even on this route — that is load metadata, not a used join.
 ## LLM / Parquet-bot consumer
 
 A Grok bot with file access is an intended reader of these projections (P-FLOW-04 / P-FLOW-07), not a second authority. Before querying columns, it must consume the findings that bind to each surface. Operating brief (paste-pack, not this spec): [`.grok/PARQUET_BOT_BRIEF.md`](../../.grok/PARQUET_BOT_BRIEF.md). That brief does not grant G001 and does not turn Parquet into L0–L5 identity storage.
+
+## Model × Parquet name authority (2026-09-16, Grok window)
+
+**Owning spec for this layer remains this file.** The reviewed binding table lives at [`docs/implementation_plan/model-parquet-column-binding.md`](../implementation_plan/model-parquet-column-binding.md) (`CH-model-parquet-binding-docs`, DOCUMENTATION_ONLY). No `query_trace --model` yet.
+
+Name rule: a research SELECT may only use names from this build's `manifest.feature_columns` (the Excel / `features.parquet` DESCRIBE) or the documented `bar_matrix` extras (`state__*` and context/HTF/label columns). Historical aliases (`wick_size`, `macd_hist`, `trend_strength`, `candles_since_retest`) are not emit keys.
+
+Live XAUUSD_M15 artifact (`results/research/bar_matrix/XAUUSD_M15/`, schema 6.0): **95** feature columns (the user's "91" was pre-v6: 90 pipeline + `_pos`), **128** `bar_matrix` columns. JSONL stays system of record.
+
+| binding_id | Query columns (Excel names) | State / extra | v1 CLI (not built) |
+|---|---|---|---|
+| `crt_score` | `body_ratio`, `disp_strength`, `atr`, `retest_depth`, `candles_since_sweep`, `sweep_detected`, `double_sweep` | none | planned |
+| `crt_resolver_occupancy` | — | `crt_state_resolved` | PR-5 |
+| `crt_engine_occupancy` | none in this Parquet | engine grain (`events` / `crt_construction`) | refuse |
+| `gaussian_heuristic` | `ema_fast`, `ema_slow`, `momentum_score` | none | planned |
+| `gaussian_ml` | — | — | refuse |
+| `zone_gate_v4_38` | 38 live `feature_order` names ⊆ 95 | none | planned |
+| `zone_gate_48` | 48 canonical ⊆ 95 | none | planned |
+| `rr_engine` | `close`, `high`, `low` | none | planned |
+| `regime` | `ema_spread`, `momentum_score`, `volatility_ratio`, `trend_bias`, `sweep_detected`, `disp_strength` | not `regime_label` | planned |
+| `tradenet` | 48 canonical | none | not v1 CLI |
+| `rr_trained` | — | — | refuse (positional 38) |
+| `bitnet` | `body_ratio`, `retest_depth`, `disp_strength`, `atr`, `candles_since_sweep`, `double_sweep` | none | planned |
+| `decision_fusion` | none (consumes engine scores) | none | refuse |
+| `execution_planner` | 13 `_REQUIRED_FEATURE_KEYS` | `trade_intent` is CRT-rail **output** | planned |
+| `resolver` | 13 `when:` **values** (RAW `displacement_flag` / `retest_flag` / `rsi_state`) | occupancy extra separate | registry |
+| `feature_states` | 13 vector-bound values | 16 usable `state__*`; 3 UNUSABLE | PR-5 |
+
+UNUSABLE (do not predicate on): `state__displacement_flag`, `state__retest_flag`, `state__rsi_state` — all-null in this build; bind the RAW value columns instead.
+
+CRT engine occupancy is not a column on `features.parquet`. Resolver occupancy is `crt_state_resolved`. Do not join them as equal (`CC-L3-FORBIDDEN-JOIN`, F-069).
+
+Does **not** grant G001, retrain, `--model` CLI, or a live-spine DuckDB swap. Alternative A (in-memory `FeaturePipeline` dict) stays production.
