@@ -1,0 +1,251 @@
+{
+  "ts": "2026-09-16T18:51:22.631261+00:00",
+  "paper_run_dir": "results/live_rail_crt_sidecar_8k_20260916",
+  "audit_lines": 831,
+  "audit_kinds": {
+    "NO_ORDER": 831
+  },
+  "last3": [
+    {
+      "kind": "NO_ORDER",
+      "decision": "skipped",
+      "reason": "planner_did_not_execute",
+      "ts": "2026-09-16T17:01:08.730091+00:00"
+    },
+    {
+      "kind": "NO_ORDER",
+      "decision": "skipped",
+      "reason": "planner_did_not_execute",
+      "ts": "2026-09-16T17:01:18.925108+00:00"
+    },
+    {
+      "kind": "NO_ORDER",
+      "decision": "skipped",
+      "reason": "planner_did_not_execute",
+      "ts": "2026-09-16T17:01:29.568024+00:00"
+    }
+  ],
+  "summary_exists": false,
+  "architecture": {
+    "workflow_stage": "Live Runner",
+    "command": "live.inout_runner",
+    "flow": "runtime",
+    "urls": {
+      "control_plane": "http://127.0.0.1:8787/ui_kits/control_plane/",
+      "node_context": "http://127.0.0.1:8787/workflow/nodes/live.inout_runner/context",
+      "flow_context": "http://127.0.0.1:8787/flows/runtime/context",
+      "this_monitor": "http://127.0.0.1:8787/ui_kits/live_monitor/",
+      "trade_chart": "http://127.0.0.1:8787/ui_kits/crt_dashboard/",
+      "live_chart_schema": "docs/schemas/live_chart_bind_v1.json"
+    },
+    "cloud_agent": "UNAVAILABLE on plan",
+    "chart_status": "BOUND_ENGINE_VIA_live_chart_bind_v1"
+  },
+  "backtest_identity_stamp_path": "results/run_fresh_stamp_20260916_2250_XAUUSD/FRESH_STAMP_VERIFY.json",
+  "backtest_cost_model_id": "backtest_g1g2_v2",
+  "backtest_cost_model_params_hash": "8239f7adde53080c",
+  "backtest_risk_denominator_id": "entry_fill_to_sl__v1",
+  "trusted_backtest_folder": "results/run_20260916_225925_XAUUSD",
+  "content_run_id": "run_20260916_172925",
+  "cost_model_id": "backtest_g1g2_v2",
+  "stamp_trust": "FRESH_EMIT_VERIFIED",
+  "schema_id": "live_chart_bind_v1",
+  "live_chart_schema_path": "docs/schemas/live_chart_bind_v1.json",
+  "run_id": "run_20260916_225925_XAUUSD",
+  "chart_bound": true,
+  "chart_unbound_reason": null,
+  "chart_bind": {
+    "instrument": "XAUUSD",
+    "api_run_id": "run_20260916_225925_XAUUSD",
+    "content_run_id": "run_20260916_172925",
+    "constructor_id": "engine",
+    "run_dir": "results/run_20260916_225925_XAUUSD",
+    "api": "/api/chart_series?instrument=XAUUSD&run_id=run_20260916_225925_XAUUSD&timeframe=M15&limit=1500",
+    "schema_id": "live_chart_bind_v1",
+    "chart_payload_ok": true
+  },
+  "live_rail_chart_bound": true,
+  "live_rail_chart_unbound_reason": null,
+  "alert_schema_id": "live_alert_v1",
+  "alerts_open": 4,
+  "alerts_n": 34,
+  "alerts_kinds": {
+    "STAMP_TRUST_OK": 1,
+    "BLOCKER_OPEN": 2,
+    "EXPANSION_ORANGE_DEATH": 27,
+    "A_SETUP_CANDIDATE": 3,
+    "EXECUTION_RARE": 1
+  },
+  "alerts_last": [
+    {
+      "schema_id": "live_alert_v1",
+      "kind": "A_SETUP_CANDIDATE",
+      "severity": "action",
+      "instrument": "XAUUSD",
+      "constructor_id": "engine",
+      "api_run_id": "live_rail_crt_sidecar_8k_20260916",
+      "content_run_id": "run_20260916_181031",
+      "bar_ts": "2024-06-03T14:30:00",
+      "candle_index": 718,
+      "direction": "SHORT",
+      "message": "PLAYBOOK costume S\u2192D\u2192E(32\u22658)\u2192R",
+      "evidence": {
+        "expansion_bars": 32,
+        "expansion_start": "2024-06-03T06:30:00",
+        "sweep_ts": "2024-06-03T04:15:00",
+        "direction": "SHORT",
+        "playbook": "S\u2192D\u2192E\u22658\u2192R"
+      },
+      "remediation_id": null,
+      "ts_utc": "2026-09-16T18:21:38.749604+00:00"
+    },
+    {
+      "schema_id": "live_alert_v1",
+      "kind": "A_SETUP_CANDIDATE",
+      "severity": "action",
+      "instrument": "XAUUSD",
+      "constructor_id": "engine",
+      "api_run_id": "live_rail_crt_sidecar_8k_20260916",
+      "content_run_id": "run_20260916_181031",
+      "bar_ts": "2024-06-04T18:30:00",
+      "candle_index": 826,
+      "direction": "LONG",
+      "message": "PLAYBOOK costume S\u2192D\u2192E(11\u22658)\u2192R",
+      "evidence": {
+        "expansion_bars": 11,
+        "expansion_start": "2024-06-04T15:45:00",
+        "sweep_ts": "2024-06-04T14:00:00",
+        "direction": "LONG",
+        "playbook": "S\u2192D\u2192E\u22658\u2192R"
+      },
+      "remediation_id": null,
+      "ts_utc": "2026-09-16T18:21:38.749809+00:00"
+    },
+    {
+      "schema_id": "live_alert_v1",
+      "kind": "EXPANSION_ORANGE_DEATH",
+      "severity": "watch",
+      "instrument": "XAUUSD",
+      "constructor_id": "engine",
+      "api_run_id": "live_rail_crt_sidecar_8k_20260916",
+      "content_run_id": "run_20260916_181031",
+      "bar_ts": "2024-09-12T15:30:00",
+      "candle_index": 7408,
+      "direction": "LONG",
+      "message": "Expansion died via RESET after 2 bars (before RETEST)",
+      "evidence": {
+        "expansion_bars": 2,
+        "expansion_start": "2024-09-12T15:00:00",
+        "reason": "1.618 extension hit @ 2522.87744",
+        "direction": "LONG",
+        "continuous": false
+      },
+      "remediation_id": null,
+      "ts_utc": "2026-09-16T18:21:38.756169+00:00"
+    },
+    {
+      "schema_id": "live_alert_v1",
+      "kind": "EXPANSION_ORANGE_DEATH",
+      "severity": "watch",
+      "instrument": "XAUUSD",
+      "constructor_id": "engine",
+      "api_run_id": "live_rail_crt_sidecar_8k_20260916",
+      "content_run_id": "run_20260916_181031",
+      "bar_ts": "2024-09-16T01:00:00",
+      "candle_index": 7596,
+      "direction": "LONG",
+      "message": "Expansion died via RESET after 93 bars (before RETEST)",
+      "evidence": {
+        "expansion_bars": 93,
+        "expansion_start": "2024-09-13T16:15:00",
+        "reason": "Session gap detected: 2955min > 120min (2024-09-16 01:00 \u2192 2024-09-16 01:00)",
+        "direction": "LONG",
+        "continuous": false
+      },
+      "remediation_id": null,
+      "ts_utc": "2026-09-16T18:21:38.756338+00:00"
+    },
+    {
+      "schema_id": "live_alert_v1",
+      "kind": "BLOCKER_OPEN",
+      "severity": "blocker",
+      "instrument": "XAUUSD",
+      "constructor_id": "engine",
+      "api_run_id": "live_rail_crt_sidecar_8k_20260916",
+      "content_run_id": null,
+      "bar_ts": null,
+      "candle_index": null,
+      "direction": null,
+      "message": "Ultron gates gross RR; ledger nets G1+G2",
+      "evidence": {},
+      "remediation_id": "REM-SOFT-01",
+      "ts_utc": "2026-09-16T18:21:38.756481+00:00"
+    },
+    {
+      "schema_id": "live_alert_v1",
+      "kind": "BLOCKER_OPEN",
+      "severity": "blocker",
+      "instrument": "XAUUSD",
+      "constructor_id": "engine",
+      "api_run_id": "live_rail_crt_sidecar_8k_20260916",
+      "content_run_id": null,
+      "bar_ts": null,
+      "candle_index": null,
+      "direction": null,
+      "message": "Paper side-car exists; streaming/orchestrator density still research-open",
+      "evidence": {},
+      "remediation_id": "REM-CRT-02",
+      "ts_utc": "2026-09-16T18:21:38.756481+00:00"
+    }
+  ],
+  "alerts_snapshot_path": "ui_kits/live_monitor/alerts.json",
+  "rem_crt_02": {
+    "status": "SIDECAR_8K_PASS",
+    "authority": "RESEARCH_ONLY",
+    "report_dir": "results/live_rail_crt_sidecar_8k_20260916",
+    "events_path": "results/live_rail_crt_sidecar_8k_20260916/crt_occupancy/XAUUSD_events.jsonl",
+    "audit_path": "results/live_rail_crt_sidecar_8k_20260916/audit.jsonl",
+    "alerts_dir": "results/live_alerts_sidecar_8k_20260916",
+    "alerts_snapshot": "results/live_alerts_sidecar_8k_20260916/alerts_snapshot.json",
+    "n_events": 1095,
+    "n_action": 2,
+    "n_action_a_setup": 2,
+    "n_a_setup_candidate": 3,
+    "n_orange": 27,
+    "arm": "tickdb",
+    "limit": 8000,
+    "flag": "--crt-occupancy-sidecar",
+    "cli": "scripts/live/run_live_rail.py --paper --config configs/experimental/spec/live_rail_tickdb_paper_run.json --arm tickdb --limit 8000 --report-dir results/live_rail_crt_sidecar_8k_20260916 --crt-occupancy-sidecar",
+    "desk_summary_ref_n_action": 19
+  },
+  "feeder_chart_bound": true,
+  "rem_alert_01": "APPLIED",
+  "watch_routine": "xauusd-trade-chart-a-setup-watch \u2192 live_alert_resolver (updated)",
+  "rem_cost_04": {
+    "status": "IMPLEMENTED",
+    "cost_model_ids_added": [
+      "backtest_g1g2_v2",
+      "backtest_zero_cost"
+    ]
+  },
+  "rem_soft_01": {
+    "status": "SHADOW_MEASURED",
+    "path": "docs/research/REM_SOFT_01_ULTRON_GROSS_VS_LEDGER_NET_2026-09-16.md",
+    "shadow": "results/run_20260916_225925_XAUUSD/cost_audit/ultron_sem_r_shadow.json",
+    "n_flip_vs_gross": 2,
+    "ultron_tax": "DORMANT"
+  },
+  "rem_tg_01": {
+    "status": "DRY_RUN_PASS",
+    "script": "scripts/research/live_alert_telegram_bridge.py",
+    "verify": "results/live_alert_telegram_dryrun_20260917/REM_TG_01_VERIFY.json"
+  },
+  "rem_tg_05": {
+    "status": "ENV_WIRED",
+    "vars": [
+      "TELEGRAM_BOT_TOKEN",
+      "TELEGRAM_CHAT_ID"
+    ],
+    "live_default": "force_dry_run"
+  }
+}

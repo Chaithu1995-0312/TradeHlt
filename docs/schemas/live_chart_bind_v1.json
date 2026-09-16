@@ -1,0 +1,62 @@
+{
+  "schema_id": "live_chart_bind_v1",
+  "authority": "RESEARCH_ONLY \u2014 implements LIVE_CHART_STATE_MONITOR_ARCHITECTURE + INFRA-CPC-V1 A0",
+  "parents": [
+    "docs/architecture/LIVE_CHART_STATE_MONITOR_ARCHITECTURE_2026-09-16.md",
+    "docs/governance/INFRA_CHART_PAPER_COMPARE_V1.md",
+    "docs/research/LIVE_CHART_MONITOR_REMEDIATIONS_2026-09-16.md"
+  ],
+  "join_keys": [
+    "run_id",
+    "instrument",
+    "bar_ts"
+  ],
+  "views": {
+    "trade_chart": {
+      "role": "L5a desk chart",
+      "constructor_id": "engine",
+      "occupancy_source": "XAUUSD_events.jsonl",
+      "api": "/api/chart_series",
+      "forbidden": [
+        "merge_engine_resolver",
+        "color_from_ohlc_direction",
+        "fake_colors_from_fusion"
+      ]
+    },
+    "state_monitor": {
+      "role": "L5b ops monitor",
+      "occupancy_source": null,
+      "live_rail_note": "paper rail does not call process_candle \u2014 chart_unbound on rail until REM-CRT-02"
+    }
+  },
+  "bind": {
+    "instrument": "XAUUSD",
+    "run_dir": "results/run_20260916_225925_XAUUSD",
+    "content_run_id": "run_20260916_172925",
+    "cost_model_id": "backtest_g1g2_v2",
+    "cost_model_params_hash": "8239f7adde53080c",
+    "risk_denominator_id": "entry_fill_to_sl__v1",
+    "chart_bound": true,
+    "constructor_id": "engine",
+    "stamp_trust": "FRESH_EMIT_VERIFIED",
+    "summary_cost_model_id": "backtest_g1g2_v2",
+    "summary_cost_model_params_hash": "8239f7adde53080c",
+    "summary_risk_denominator_id": "entry_fill_to_sl__v1",
+    "has_events": true,
+    "has_trades": true,
+    "api_run_id": "run_20260916_225925_XAUUSD",
+    "folder_run_id": "run_20260916_225925_XAUUSD",
+    "f101_note": "API/dropdown use folder name; summary.run_id is content mint (F-101)",
+    "chart_payload_ok": true
+  },
+  "ui": {
+    "trade_chart_url": "http://127.0.0.1:8787/ui_kits/crt_dashboard/",
+    "live_monitor_url": "http://127.0.0.1:8787/ui_kits/live_monitor/",
+    "select": {
+      "instrument": "XAUUSD",
+      "run_id_from_summary": true
+    },
+    "api_example": "/api/chart_series?instrument=XAUUSD&run_id=run_20260916_225925_XAUUSD&timeframe=M15&limit=1500"
+  },
+  "generated_utc": "2026-09-16T17:44:25.204642+00:00"
+}
