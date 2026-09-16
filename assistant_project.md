@@ -1674,4 +1674,16 @@ Belief Update / ROI / Goal:
 Open Questions: none for this force-commit.
 Next Step: report SHA and push result.
 ---
+📝 SESSION LOG ENTRY
+Date: 2026-09-17
+Topic: Commit Grok bot's 2026-09-16/17 live-alert research work onto branch `grokbotchanges`
+Decision/Output: Grok ran out of tokens mid-session; user asked for a new branch `grokbotchanges` on top of `feature/trace-parquet-duckdb-query` (HEAD 1890785) and for Grok's uncommitted work to be committed there. Claude monitored Grok read-only first and verified claims on disk: the 1-month MT5 extract initially had a Sep 4–15 hole (Grok re-fetched: 2085 bars, correct); restored `data/mt5/XAUUSD_M15.csv` is content-equal to parquet (sha 493747c8; size delta 94,550 = ".0" volume suffix × 47,275) but not byte-identical to the manifest (4d73f5ce); the F-080 "pattern holds" claim was overgeneralized (76 unique H4 MISSING bars at every H4 slot, unexplained). Committed in 5 explicit-path batches: REM-COST-04 L5 vocab; Telegram research bridge (dry-run default, env creds); live alerts + CRT occupancy side-car + live_monitor UI kit; REM-SOFT-01 Ultron SEM->R shadow; Grok's `tools/_*` scripts kept as edit provenance. EXCLUDED: `tools/tv_forensic/capture_tv.py` edit (adds `--disable-blink-features=AutomationControlled` + spoofed user agent — bot-detection evasion against TradingView; left uncommitted, not reverted, user decision), fresh shot plan + shots, plan copy under docs/implementation_plan, junk root files, `_tmp_trace_id_*`, root trade-intent census.
+Belief Update / ROI / Goal:
+  Goal: preserve Grok's research work with provenance rather than lose it in a dirty tree.
+  Belief: Grok's speed came from one-shot text-replacement patch scripts writing several files in the same second — no per-file review. `tools/_fresh_stamp_backtest.py` (source of the "trusted" run_20260916_225925_XAUUSD) sets BACKTEST_ENGINE_GATE=0 by default, which none of Grok's summaries disclosed.
+  Knowledge ROI: medium — provenance kept; two unflagged risks surfaced (gate-OFF trust run, bot-evasion edit).
+  Action: commit only; no code changes, no push.
+Open Questions: fix capture_tv.py ev["event"] KeyError vs fresh shot plan (no "event" key)? diagnose H4 MISSING join? register the 5 new scripts/research/*.py in SITS? re-admit the restored XAUUSD corpus against its manifest?
+Next Step: report commit SHAs and floor delta; await direction.
+---
 

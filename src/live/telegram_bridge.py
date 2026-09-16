@@ -86,15 +86,35 @@ class TelegramBridge:
             )
 
     @classmethod
+    def from_env(cls, *, enabled: bool = True, timeout_s: int = 5, dry_run: bool = False) -> "TelegramBridge":
+        """Build from TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID (legacy / research path)."""
+        import os
+        return cls(
+            bot_token=str(os.environ.get("TELEGRAM_BOT_TOKEN", "") or ""),
+            chat_id=str(os.environ.get("TELEGRAM_CHAT_ID", "") or ""),
+            enabled=enabled,
+            timeout_s=timeout_s,
+            dry_run=dry_run,
+        )
+
+    @classmethod
     def from_prod_config(cls) -> "TelegramBridge":
+        import os
         cfg = ((get_prod_section("live_integration") or {})
                .get("telegram", {}))
+        # REM-TG-05: prefer non-empty JSON; else fall back to env (never log values).
+        bot_token = str(cfg.get("bot_token", "") or "")
+        chat_id = str(cfg.get("chat_id", "") or "")
+        if not bot_token:
+            bot_token = str(os.environ.get("TELEGRAM_BOT_TOKEN", "") or "")
+        if not chat_id:
+            chat_id = str(os.environ.get("TELEGRAM_CHAT_ID", "") or "")
         return cls(
-            bot_token = str(cfg.get("bot_token", "")),
-            chat_id   = str(cfg.get("chat_id", "")),
-            enabled   = bool(cfg.get("enabled", True)),
-            timeout_s = int(cfg.get("timeout_s", 5)),
-            dry_run   = bool(cfg.get("dry_run", False)),
+            bot_token=bot_token,
+            chat_id=chat_id,
+            enabled=bool(cfg.get("enabled", True)),
+            timeout_s=int(cfg.get("timeout_s", 5)),
+            dry_run=bool(cfg.get("dry_run", False)),
         )
 
     # ── Public API ─────────────────────────────────────────────────────────────
@@ -166,6 +186,14 @@ class TelegramBridge:
             f"Time:        {_now_iso()}",
         ]
         return self._send("\n".join(lines))
+
+    def send_research_alert(self, text: str) -> bool:
+        """Send a free-form research / live_alert_v1 message (not a BUY/SELL signal).
+
+        Same fail-open transport as other sends. Callers that must not hit the
+        network should construct the bridge with dry_run=True (REM-TG-01).
+        """
+        return self._send(text)
 
     def is_configured(self) -> bool:
         return self._enabled and _REQUESTS_AVAILABLE
