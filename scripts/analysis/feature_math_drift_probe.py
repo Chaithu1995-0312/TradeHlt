@@ -63,7 +63,7 @@ def _crt_score(feat_row: dict, body_ratio: float) -> float:
         "disp_strength": feat_row["disp_strength"],
         "atr": feat_row["atr"],
         "retest_depth": feat_row["retest_depth"],
-        "candles_since_retest": int(feat_row.get("candles_since_retest", 0)),
+        "candles_since_sweep": int(feat_row.get("candles_since_sweep", 0)),
         "sweep_detected": bool(feat_row.get("sweep_detected", 0)),
         "double_sweep": bool(feat_row.get("double_sweep", 0)),
     }

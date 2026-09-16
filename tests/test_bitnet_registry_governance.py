@@ -64,7 +64,7 @@ def test_composition_default_resolves_to_legacy_model_json():
         "retest_depth": 0.3,
         "disp_strength": 0.5,
         "atr": 0.01,
-        "candles_since_retest": 2.0,
+        "candles_since_sweep": 2.0,
         "double_sweep": 0.0,
     }).confidence)
     assert 0.0 <= score <= 1.0

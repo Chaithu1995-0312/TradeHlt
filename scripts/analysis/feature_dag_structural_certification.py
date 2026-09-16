@@ -53,8 +53,8 @@ _MAJORS = ("BNBUSDT", "BTCUSDT", "ETHUSDT", "SOLUSDT")
 _FLAGS = ("higher_high", "lower_low", "break_of_structure", "liquidity_sweep")
 # derived-of-liquidity_sweep quantities (projections of the oracle-derived liquidity_sweep, not the
 # pipeline's — genuinely independent). sweep_detected = same-bar presence; double_sweep = trailing
-# 5-bar directional conjunction; candles_since_retest = bars-since-sweep counter (int16).
-_DERIVED_FLAGS = ("sweep_detected", "double_sweep", "candles_since_retest")
+# 5-bar directional conjunction; candles_since_sweep = bars-since-sweep counter (int16).
+_DERIVED_FLAGS = ("sweep_detected", "double_sweep", "candles_since_sweep")
 # float-valued FM-025: certified via the registry-authoritative scalar derived_math.liquidity_distance
 # fed with independently-reconstructed promoted levels (NOT a copy of the pipeline vectorized min).
 _DERIVED_FLOAT = ("liquidity_distance",)
@@ -190,7 +190,7 @@ def _oracle_centered(raw: pd.DataFrame) -> pd.DataFrame:
     ref_low = last_low.shift(1).to_numpy("float64")
     flags = _flags_from_refs(high.to_numpy(), low.to_numpy(), close.to_numpy(), ref_high, ref_low)
     flags["double_sweep"] = _double_sweep(flags["liquidity_sweep"])
-    flags["candles_since_retest"] = _candles_since_retest(flags["liquidity_sweep"])
+    flags["candles_since_sweep"] = _candles_since_retest(flags["liquidity_sweep"])
     out = pd.DataFrame({**flags, "ref_high": ref_high, "ref_low": ref_low})
     out.index = pd.Index(pd.to_datetime(df["timestamp"]), name="timestamp")
     return out
@@ -217,7 +217,7 @@ def _oracle_causal_online(raw: pd.DataFrame) -> pd.DataFrame:
     ref_low = pd.Series(last_l).shift(1).to_numpy("float64")
     flags = _flags_from_refs(high, low, close, ref_high, ref_low)
     flags["double_sweep"] = _double_sweep(flags["liquidity_sweep"])
-    flags["candles_since_retest"] = _candles_since_retest(flags["liquidity_sweep"])
+    flags["candles_since_sweep"] = _candles_since_retest(flags["liquidity_sweep"])
     out = pd.DataFrame({**flags, "ref_high": ref_high, "ref_low": ref_low})
     out.index = pd.Index(pd.to_datetime(df["timestamp"]), name="timestamp")
     return out
@@ -301,7 +301,7 @@ def build_report(limit: int, include_corpus: bool = True) -> dict:
             "liquidity_sweep": "+1 (high>ref_high & close<=ref_high) / -1 (low<ref_low & close>=ref_low) / 0 (INCLUSIVE close-return)",
             "sweep_detected": "int8 {0,1}: (liquidity_sweep != 0) — direction-agnostic sweep presence (feature_pipeline.py:590)",
             "double_sweep": "int8 {0,1}: seen_up(rolling5 liq>0) AND seen_down(rolling5 liq<0) — trailing 5-bar directional conjunction, NOT a count (feature_pipeline.py:612-626)",
-            "candles_since_retest": "int16 >=0: bars since last liquidity_sweep!=0 (grouped cumcount; sweep bar=0, +1 per non-sweep bar, 0 pre-first-sweep). MISNOMER: resets on SWEEP not retest_flag (feature_pipeline.py:655-672)",
+            "candles_since_sweep": "int16 >=0: bars since last liquidity_sweep!=0 (grouped cumcount; sweep bar=0, +1 per non-sweep bar, 0 pre-first-sweep). MISNOMER: resets on SWEEP not retest_flag (feature_pipeline.py:655-672)",
             "liquidity_distance": "FM-025 float32 >=0: min_k |close-level_k|/(atr*close) over {ref_high, ref_low, bos_level}, clipped >=0; NaN if atr*close<=0 or no finite level. Certified via derived_math.liquidity_distance (registry authority) + oracle-reconstructed levels (feature_pipeline.py:692-718)",
         },
         "candles_since_retest_fallback": {
@@ -309,7 +309,7 @@ def build_report(limit: int, include_corpus: bool = True) -> dict:
             "authority": "non_authoritative",
             "reason": "the retest_flag branch (feature_pipeline.py:665-666) is reached only when the "
                       "liquidity_sweep column is ABSENT; run() computes liquidity_sweep (:896) before "
-                      "candles_since_retest (:905), so it is unreachable in production. Certified "
+                      "candles_since_sweep (:905), so it is unreachable in production. Certified "
                       "contract = the liquidity_sweep branch ONLY. Fenced by runtime + branch-discrimination tests.",
         },
         "pit_evidence": {

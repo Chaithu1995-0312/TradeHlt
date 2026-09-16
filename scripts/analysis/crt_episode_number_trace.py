@@ -90,7 +90,7 @@ CRT_CONSUMED = [
     "momentum_score",           # _derive_trade_intent `mom`
     "ema_spread",               # soft-confirmation trend spread
     "trend_bias",
-    "candles_since_retest",     # _derive_trade_intent `csr`
+    "candles_since_sweep",     # _derive_trade_intent `csr`
     "volume_spike",
     "rsi_14",
     "session",                  # FM-052 (feature label; the GATE uses its own window match)
@@ -192,7 +192,7 @@ def build_ftr_context(csv_path: Path, n_bars: int) -> dict[str, Any]:
         if stage == "compute_volume_features":
             snap_vol_seed = pipe.df["volume_spike"].iloc[:n_bars].copy()
         elif stage == "compute_trend_features":
-            snap_pre_norm_trend = pipe.df["trend_strength"].iloc[:n_bars].copy()
+            snap_pre_norm_trend = pipe.df["trend_strength_z"].iloc[:n_bars].copy()
         col_sets.append(set(pipe.df.columns))
         window_snaps.append(pipe.df.iloc[:n_bars].copy())
 

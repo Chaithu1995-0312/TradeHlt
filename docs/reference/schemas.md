@@ -247,7 +247,7 @@ CANONICAL_FEATURES: tuple[str, ...] = (
     "volume_ratio",                                        # 5
     "double_sweep",                                         # 6
     "ema_fast", "ema_slow", "ema_spread",                  # 7-9
-    "trend_bias", "trend_strength",                        # 10-11
+    "trend_bias", "trend_strength_z",                      # 10-11 (v6.0: renamed from "trend_strength" — the slot always carried the rolling z-score; the raw chain is the non-canonical "trend_strength_raw")
     "momentum_score",                                       # 12
     "atr", "volatility_ratio",                             # 13-14
     "rsi_14",                                               # 15
@@ -258,7 +258,7 @@ CANONICAL_FEATURES: tuple[str, ...] = (
     "body_size", "candle_range", "body_ratio",             # 27-29 (v4.0: "candle_range" renamed from v3.0 "wick_size")
     "volatility_regime",                                    # 30
     "session", "hour_of_day",                              # 31-32
-    "disp_strength", "retest_depth", "candles_since_retest",  # 33-35
+    "disp_strength", "retest_depth", "candles_since_sweep",  # 33-35 (v6.0: renamed from "candles_since_retest" — always counted bars since the last liquidity sweep)
     "liquidity_distance", "liquidity_pressure_score", "volume_spike",  # 36-38
 )
 

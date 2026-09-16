@@ -34,7 +34,7 @@ DERIVED: dict[str, Callable] = {
     "derived_math.ema_spread_atr":            derived_math.ema_spread_atr,
     "derived_math.momentum_score_atr":        derived_math.momentum_score_atr,
     # FM-070 (2026-07-31): CRT engine's live bars-since-retest-candle count, registered to
-    # resolve the FM-065 candles_since_retest name collision (see that entry's note).
+    # resolve the FM-065 candles_since_sweep name collision (see that entry's note).
     "derived_math.candles_since_retest_state": derived_math.candles_since_retest_state,
     # FM-075..FM-082 (2026-08-15, CH-htfcrt-parent-candle-smc-v1): the 8 SMC distance
     # primitives. Unlike every entry above, these are NOT in derived_math — they live in the

@@ -22,7 +22,7 @@ TRAJECTORY_FEATURE_IDS: tuple[str, ...] = (
     "lower_low",
     "sweep_detected",
     "liquidity_distance",
-    "candles_since_retest",
+    "candles_since_sweep",
 )
 
 D: int = len(TRAJECTORY_FEATURE_IDS)

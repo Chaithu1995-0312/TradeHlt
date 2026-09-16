@@ -714,7 +714,7 @@ def _crt_full(feat_row: dict, sweep_detected: bool, double_sweep: bool) -> dict:
         "disp_strength": float(feat_row["disp_strength"]),
         "atr": float(feat_row["atr"]),
         "retest_depth": float(feat_row["retest_depth"]),
-        "candles_since_retest": int(feat_row.get("candles_since_retest", 0)),
+        "candles_since_sweep": int(feat_row.get("candles_since_sweep", 0)),
         "sweep_detected": sweep_detected,
         "double_sweep": double_sweep,
     }
@@ -724,7 +724,7 @@ def _crt_full(feat_row: dict, sweep_detected: bool, double_sweep: bool) -> dict:
         move=float(feat_row["disp_strength"]),
         atr=float(feat_row["atr"]),
         retest_depth=float(feat_row["retest_depth"]),
-        candles_since_retest=int(feat_row.get("candles_since_retest", 0)),
+        candles_since_sweep=int(feat_row.get("candles_since_sweep", 0)),
         sweep_detected=sweep_detected,
         double_sweep=double_sweep,
     )

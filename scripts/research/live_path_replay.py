@@ -72,7 +72,7 @@ from runtime.backtest_v2 import (                               # noqa: E402
 # 13 hard-required planner feature keys (execution_planner._REQUIRED_FEATURE_KEYS).
 _FEATURE_KEYS = (
     "close", "high", "low", "atr", "body_ratio", "disp_strength", "sweep_detected",
-    "double_sweep", "retest_depth", "candles_since_retest", "ema_fast", "ema_slow",
+    "double_sweep", "retest_depth", "candles_since_sweep", "ema_fast", "ema_slow",
     "momentum_score",
 )
 _OPTIONAL_KEYS = ("volume", "swing_high", "swing_low", "higher_high", "lower_low")
@@ -139,7 +139,7 @@ def _features_from_row(row: dict) -> dict:
     # sweep flags are stored as float 0.0/1.0 → planner casts via bool(); preserve truthiness.
     feats["sweep_detected"] = bool(_f(row, "sweep_detected"))
     feats["double_sweep"] = bool(_pref(row, "cached_double_sweep", "double_sweep"))
-    feats["candles_since_retest"] = int(_f(row, "candles_since_retest", 99))
+    feats["candles_since_sweep"] = int(_f(row, "candles_since_sweep", 99))
     for k in _OPTIONAL_KEYS:
         if k in row:
             feats[k] = _f(row, k)
@@ -278,7 +278,7 @@ def _mirror_intent(feats: dict, direction: int) -> str:
     sweep = bool(feats.get("sweep_detected", False))
     dsweep = bool(feats.get("double_sweep", False))
     depth = float(feats.get("retest_depth", 0.0))
-    csr = int(feats.get("candles_since_retest", 99))
+    csr = int(feats.get("candles_since_sweep", 99))
     mom = float(feats.get("momentum_score", 0.0))
     body = float(feats.get("body_ratio", 0.0))
     disp = float(feats.get("disp_strength", 0.0))
@@ -300,7 +300,7 @@ def _unknown_diag(u: dict) -> dict:
     f = u["feats"]
     d = int(u["direction"])
     body = float(f.get("body_ratio", 0.0)); disp = float(f.get("disp_strength", 0.0))
-    depth = float(f.get("retest_depth", 0.0)); csr = int(f.get("candles_since_retest", 99))
+    depth = float(f.get("retest_depth", 0.0)); csr = int(f.get("candles_since_sweep", 99))
     mom = float(f.get("momentum_score", 0.0)); atr = float(f.get("atr", 0.0))
     ef = float(f.get("ema_fast", 0.0)); es = float(f.get("ema_slow", 0.0))
     ema_dir = "fast>slow" if ef > es else ("fast<slow" if ef < es else "flat")
@@ -354,7 +354,7 @@ def _make_derive_intent(disp_thresh: float):
         if bool(features.get("sweep_detected", False)) or bool(features.get("double_sweep", False)):
             return "LIQ_SWEEP", "sweep detected"
         depth = float(features.get("retest_depth", 0.0))
-        csr = int(features.get("candles_since_retest", 99))
+        csr = int(features.get("candles_since_sweep", 99))
         mom = float(features.get("momentum_score", 0.0))
         if 0.3 <= depth <= 0.7 and csr <= 5 and mom > 0:
             return "PULLBACK", "retest depth within 0.3-0.7, recent, positive momentum"
@@ -407,7 +407,7 @@ def _make_crt_intent(disp_thresh: float):
         if features.get("sweep_detected") or features.get("double_sweep"):
             return "liq_sweep"
         rd = float(features.get("retest_depth", 0.0))
-        csr = int(features.get("candles_since_retest", 99))
+        csr = int(features.get("candles_since_sweep", 99))
         mom = float(features.get("momentum_score", 0.0))
         if 0.3 <= rd <= 0.7 and csr <= 5 and mom > 0:
             return "pullback"

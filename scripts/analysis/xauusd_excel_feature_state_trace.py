@@ -521,9 +521,9 @@ DEFAULT_Z_SL_BUF = (0.1, 0.2, 0.3, 0.5)
 
 # Feature columns stamped on each setup at its own bar (config is constant; values are not).
 SETUP_FEATURE_WATCH = (
-    "body_ratio", "atr", "ema_spread", "momentum_score", "trend_strength",
+    "body_ratio", "atr", "ema_spread", "momentum_score", "trend_strength_z",
     "rsi_14", "session", "hour_of_day", "retest_depth", "disp_strength",
-    "displacement_retrace", "displacement_atr_ratio", "candles_since_retest",
+    "displacement_retrace", "displacement_atr_ratio", "candles_since_sweep",
     "volatility_ratio", "volume_ratio",
 )
 

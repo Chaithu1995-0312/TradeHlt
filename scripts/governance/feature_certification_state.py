@@ -104,7 +104,7 @@ def _intended_quantities(dag: dict) -> dict[str, str]:
         "liquidity_sweep": "int8 {-1,0,1}: +1 (high>ref_high AND close<=ref_high) sweep_high, -1 (low<ref_low AND close>=ref_low) sweep_low, else 0 — close-return INCLUSIVE <=/>=",
         "sweep_detected": "int8 {0,1}: 1 iff a liquidity sweep occurred this bar (liquidity_sweep != 0), else 0 — direction-agnostic sweep-presence flag over the directional liquidity_sweep; same-bar (feature_pipeline.py:590)",
         "double_sweep": "int8 {0,1}: 1 iff BOTH a bullish-side sweep (liquidity_sweep>0) AND a bearish-side sweep (liquidity_sweep<0) occurred within the trailing 5-bar window (rolling(5,min_periods=1).max) — a DIRECTIONAL CONJUNCTION, NOT a count threshold (two same-direction sweeps => 0); causal trailing window (feature_pipeline.py:612-626)",
-        "candles_since_retest": "int16 >=0: bars since the last liquidity_sweep!=0 event (grouped cumcount) — SWEEP bar publishes 0, each non-sweep bar +1, 0 before the first sweep. NAME MISNOMER: resets on the SWEEP, NOT on retest_flag (feature_pipeline.py:655-672). Certified contract = PRODUCTION liquidity_sweep branch ONLY; the retest_flag fallback (col-absent) is NON-AUTHORITATIVE / unreachable in production (class B). No cap; causal; int16",
+        "candles_since_sweep": "int16 >=0: bars since the last liquidity_sweep!=0 event (grouped cumcount) — SWEEP bar publishes 0, each non-sweep bar +1, 0 before the first sweep. NAME MISNOMER: resets on the SWEEP, NOT on retest_flag (feature_pipeline.py:655-672). Certified contract = PRODUCTION liquidity_sweep branch ONLY; the retest_flag fallback (col-absent) is NON-AUTHORITATIVE / unreachable in production (class B). No cap; causal; int16",
         "liquidity_distance": "FM-025 float32 >=0: ATR-normalized distance from close to the NEAREST of {prior swing-high ref, prior swing-low ref, last BOS level} = min_k |close-level_k|/(atr*close), clipped >=0; NaN when atr*close<=0 or no finite level. Dimensionless / scale-invariant; causal. Authoritative impl = derived_math.liquidity_distance (registry); level resolution pipeline-owned (feature_pipeline.py:692-718)",
         # M10 / F-054-RD IDENTITY_SPLIT: canonical retest_depth is GATED production composition;
         # FM-021 is the on-gate mathematical KERNEL only (derived_math.retest_depth), NOT the series.
@@ -158,7 +158,7 @@ def _intended_quantities(dag: dict) -> dict[str, str]:
             "feature_pipeline.py:615-631 (compute_context) + features/session_classifier.py"
         ),
         # M13B: nested rolling of close — SMA10(diff(SMA20(close)))
-        "trend_strength": (
+        "trend_strength_z": (
             "signed float64 nested trailing rolling metric over close at canonical idx 11: "
             "SMA20(close) window=20/min_periods=20, then one-bar first difference of that SMA, "
             "then SMA10 of the slope window=10/min_periods=10; no normalization, clipping, fill, "

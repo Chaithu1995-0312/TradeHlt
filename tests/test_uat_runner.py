@@ -191,7 +191,7 @@ NEUTRAL_FEATURES = {
     "higher_high": False, "lower_low": False,
     "swing_high": 1.1050, "swing_low": 1.0950,
     "disp_strength": 0.3, "retest_depth": 0.2,
-    "candles_since_retest": 5, "body_ratio": 0.3,
+    "candles_since_sweep": 5, "body_ratio": 0.3,
     "liquidity_sweep": False, "double_sweep": False,
     "volume_ratio": 1.0, "momentum_score": 0.0,
     "bb_upper": 1.1050, "bb_lower": 1.0950,
@@ -201,7 +201,7 @@ NEUTRAL_FEATURES = {
     "wick_size": 0.0010, "pattern_score": 0.5,
     "session": "london", "hour_of_day": 10.0,
     "macd_line": 0.0, "macd_signal": 0.0, "macd_hist": 0.0,
-    "zone_strength": 0.5, "trend_strength": 0.5,
+    "zone_strength": 0.5, "trend_strength_z": 0.5,
     "volatility_ratio": 1.0, "volatility_regime": "RANGING",
     "spread_pct": 0.0001,
 }

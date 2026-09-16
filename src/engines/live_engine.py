@@ -964,7 +964,7 @@ class LiveEngine:
 
         # ── Step 7: Format message ────────────────────────────────────────────
         time_decay = float(trade_data.get("time_decay_feature",
-                    math.exp(-0.05 * int(trade_data.get("candles_since_retest", 0)))))
+                    math.exp(-0.05 * int(trade_data.get("candles_since_sweep", 0)))))
 
         message = format_alert_message(
             symbol        = symbol,

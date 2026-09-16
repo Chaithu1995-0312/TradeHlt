@@ -385,14 +385,14 @@ def test_normalized_features_mean_std():
 
     # Only columns in NORMALIZE_COLS are z-score normalized — atr_14 is NOT.
     cols = [
-        "price_vs_ma20",
-        "price_vs_ma50",
-        "bb_width",
+        "price_vs_ma20_z",
+        "price_vs_ma50_z",
+        "bb_width_z",
         # v4.0: `macd_hist_z` is the normalized column. `macd_hist_raw` is deliberately NOT here —
         # it is the un-normalized macd_line - macd_signal, and asserting z-score properties on it
         # would re-assert the exact conflation the split removed.
         "macd_hist_z",
-        "trend_strength",
+        "trend_strength_z",
     ]
 
     for col in cols:

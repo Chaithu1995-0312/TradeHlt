@@ -107,7 +107,7 @@ class MarketStateClusterEngine:
                          volatility_ratio, sweep_detected, double_sweep,
                          break_of_structure, disp_strength, liquidity_distance,
                          liquidity_pressure_score, volume_spike, atr,
-                         retest_depth, candles_since_retest.
+                         retest_depth, candles_since_sweep.
         cluster_stats  : ClusterStats object from ReplayMemoryEngine (optional).
                          When None, uses neutral statistical defaults.
         replay_features: dict from ReplayMemoryEngine.get_replay_features() (optional).
@@ -156,7 +156,7 @@ class MarketStateClusterEngine:
         liquidity_pressure   = float(features.get("liquidity_pressure_score",   0.3))
         vol_spike            = float(features.get("volume_spike",               0.0))
         atr                  = float(features.get("atr",                        0.001))
-        candles_since_retest = float(features.get("candles_since_retest",       0.0))
+        candles_since_sweep = float(features.get("candles_since_sweep",       0.0))
 
         # ── Extract cluster/replay statistics ─────────────────────────────────
         cs = cluster_stats
@@ -214,7 +214,7 @@ class MarketStateClusterEngine:
                                        sweep_detected),
             BREAKOUT_CONTINUATION: self._score_breakout_continuation(
                                        hist_winrate, hist_mean_rr, bos,
-                                       disp_strength, candles_since_retest),
+                                       disp_strength, candles_since_sweep),
             VOLATILE_REVERSAL:     self._score_volatile_reversal(
                                        hist_std_rr, sweep_detected, double_sweep,
                                        vol_spike, vol_profile),
@@ -306,14 +306,14 @@ class MarketStateClusterEngine:
         mean_rr: float,
         bos: float,
         disp: float,
-        candles_since_retest: float,
+        candles_since_sweep: float,
     ) -> float:
         score  = 0.35 * win_rate
         score += 0.25 * max(0.0, mean_rr / 2.0)
         score += 0.20 * abs(bos)
         score += 0.20 * min(1.0, disp)
         # Recency bonus: fresh retest (≤10 bars) boosts breakout continuation
-        if 0 < candles_since_retest <= 10:
+        if 0 < candles_since_sweep <= 10:
             score += 0.10
         return max(0.0, min(1.0, score))
 

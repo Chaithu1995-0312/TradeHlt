@@ -7,15 +7,15 @@ the architecture study (2026-05-22).
 
 Two bugs identified and fixed in p4_execution_intent_attribution.py:
 
-Bug 1 — candles_since_retest sentinel (P5):
-  SYMPTOM:  All groups reported candles_since_retest = 99.
-  CAUSE:    feats.get("candles_since_retest", 99) where feats=state.cached_features.
+Bug 1 — candles_since_sweep sentinel (P5):
+  SYMPTOM:  All groups reported candles_since_sweep = 99.
+  CAUSE:    feats.get("candles_since_sweep", 99) where feats=state.cached_features.
             The key is ABSENT from cached_features (it is computed dynamically in
             scoring as state.current_candle_index - state.retest_candle_index).
             The .get() default always fired.
   FIX:      Derive from engine state indices directly; return None if either
             index is missing (not 0 — avoids silent missing→0 encoding).
-  RESULT:   All groups show candles_since_retest = 1 (flat → DISCARD feature).
+  RESULT:   All groups show candles_since_sweep = 1 (flat → DISCARD feature).
 
 Bug 2 — mean=0.0 → 'n/a' falsy evaluation:
   SYMPTOM:  double_sweep showed 'n/a' instead of '0.000' in feature comparison
@@ -40,12 +40,12 @@ import pytest
 
 
 # ---------------------------------------------------------------------------
-# candles_since_retest derivation logic
+# candles_since_sweep derivation logic
 # ---------------------------------------------------------------------------
 
 def _derive_csr(current_candle_index, retest_candle_index):
     """
-    Corrected candles_since_retest derivation.
+    Corrected candles_since_sweep derivation.
 
     Returns None if either index is missing (avoids silent missing→0 encoding).
     Returns max(0, cur - ret) otherwise (non-negative: current is always >= retest).
@@ -56,7 +56,7 @@ def _derive_csr(current_candle_index, retest_candle_index):
 
 
 class TestCanglesSinceRetest:
-    """Bug 1: candles_since_retest derivation must not produce the sentinel 99."""
+    """Bug 1: candles_since_sweep derivation must not produce the sentinel 99."""
 
     OLD_SENTINEL = 99   # the value produced by the buggy .get() default
 
@@ -106,7 +106,7 @@ class TestCanglesSinceRetest:
 
     def test_missing_key_from_dict_yields_none(self):
         """
-        Core of Bug 1: feats.get("candles_since_retest", 99) always returned 99
+        Core of Bug 1: feats.get("candles_since_sweep", 99) always returned 99
         because the key is absent from state.cached_features.
 
         The correct pattern is to derive from engine state, not from cached_features.
@@ -117,7 +117,7 @@ class TestCanglesSinceRetest:
             "retest_index": 5, "session": 1, "double_sweep": False,
         }
         # The key is absent — .get() with sentinel is the WRONG approach
-        buggy_result  = cached_features.get("candles_since_retest", 99)
+        buggy_result  = cached_features.get("candles_since_sweep", 99)
         assert buggy_result == 99, "Key should be absent; demonstrates the original bug"
 
         # The correct approach: derive from engine indices

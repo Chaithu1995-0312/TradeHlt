@@ -184,7 +184,7 @@ def target_a(df: pd.DataFrame) -> dict:
         "liquidity_pressure_score",
     ]
     # retest chain depends on liquidity_sweep → centered swings
-    via_retest = ["retest_depth", "candles_since_retest"]
+    via_retest = ["retest_depth", "candles_since_sweep"]
     all_struct = direct + via_last + via_retest
 
     # sample every ~200 bars in second half for speed
@@ -286,7 +286,7 @@ def target_a(df: pd.DataFrame) -> dict:
             "FeatureMonitor (retest_depth/disp_strength/body_ratio)",
             "liquidity_distance uses last_swing_* .shift(1)",
             "BOS/sweep/double_sweep structure",
-            "retest_flag/retest_depth/candles_since_retest via liquidity_sweep",
+            "retest_flag/retest_depth/candles_since_sweep via liquidity_sweep",
         ],
         "verdict": verdict,
         "evidence_type": "STATIC_AND_EXECUTED",

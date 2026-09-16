@@ -1,6 +1,6 @@
 {
   "_doc": "FC-0.5 formula identity census",
-  "generated_at_utc": "2026-07-10T15:48:17Z",
+  "generated_at_utc": "2026-09-16T04:36:47Z",
   "quantities": [
     {
       "id": "Q-VOL-TICK",
@@ -247,7 +247,7 @@
         "retest_depth",
         "disp_strength",
         "atr",
-        "candles_since_retest",
+        "candles_since_sweep",
         "double_sweep"
       ],
       "formula": "BitNet hard-reject; CRT may alias FM-027/028 into names",
@@ -294,6 +294,11 @@
       "lineno": 50
     },
     {
+      "file": "src/features/candle_math.py",
+      "function": "body_to_total_wick_ratio",
+      "lineno": 64
+    },
+    {
       "file": "src/features/derived_math.py",
       "function": "disp_strength",
       "lineno": 31
@@ -301,160 +306,200 @@
     {
       "file": "src/features/derived_math.py",
       "function": "retest_depth",
-      "lineno": 45
+      "lineno": 56
     },
     {
       "file": "src/features/derived_math.py",
       "function": "ema_spread",
-      "lineno": 58
-    },
-    {
-      "file": "src/features/derived_math.py",
-      "function": "momentum_score",
-      "lineno": 65
-    },
-    {
-      "file": "src/features/derived_math.py",
-      "function": "volatility_ratio",
       "lineno": 76
     },
     {
       "file": "src/features/derived_math.py",
+      "function": "momentum_score",
+      "lineno": 83
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "ema_spread_atr",
+      "lineno": 108
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "momentum_score_atr",
+      "lineno": 120
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "volatility_ratio",
+      "lineno": 132
+    },
+    {
+      "file": "src/features/derived_math.py",
       "function": "liquidity_distance",
-      "lineno": 88
+      "lineno": 144
     },
     {
       "file": "src/features/derived_math.py",
       "function": "displacement_retrace",
-      "lineno": 106
+      "lineno": 162
     },
     {
       "file": "src/features/derived_math.py",
       "function": "displacement_atr_ratio",
-      "lineno": 123
+      "lineno": 179
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "disp_strength_atr_rescale",
+      "lineno": 190
     },
     {
       "file": "src/features/derived_math.py",
       "function": "liquidity_pressure_score",
-      "lineno": 134
+      "lineno": 205
+    },
+    {
+      "file": "src/features/derived_math.py",
+      "function": "candles_since_retest_state",
+      "lineno": 223
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "resolve_swing_window",
+      "lineno": 257
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "resolve_double_sweep_window",
+      "lineno": 276
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "required_warmup_rows",
+      "lineno": 291
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "build_features",
-      "lineno": 75
+      "lineno": 372
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "build_feature_vector",
-      "lineno": 116
+      "lineno": 413
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_price_features",
-      "lineno": 179
+      "lineno": 486
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_volume_features",
-      "lineno": 202
+      "lineno": 511
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_indicators",
-      "lineno": 238
+      "lineno": 558
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_trend_features",
-      "lineno": 290
+      "lineno": 636
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_volatility_regime",
-      "lineno": 303
+      "lineno": 651
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_context",
-      "lineno": 334
+      "lineno": 715
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_structure_liquidity",
-      "lineno": 353
+      "lineno": 750
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_normalization",
-      "lineno": 422
+      "lineno": 849
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_canonical_price_features",
-      "lineno": 439
+      "lineno": 883
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_canonical_volatility_features",
-      "lineno": 464
+      "lineno": 912
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_canonical_ema_features",
-      "lineno": 488
+      "lineno": 939
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_canonical_trend_features",
-      "lineno": 509
+      "lineno": 994
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_canonical_structure_features",
-      "lineno": 517
+      "lineno": 1002
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_canonical_temporal_features",
-      "lineno": 559
+      "lineno": 1057
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_liquidity_distance",
-      "lineno": 605
+      "lineno": 1112
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "promote_volume_spike",
-      "lineno": 660
+      "lineno": 1171
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "compute_canonical_session",
-      "lineno": 692
+      "lineno": 1205
+    },
+    {
+      "file": "src/features/feature_pipeline.py",
+      "function": "compute_smc_features",
+      "lineno": 1210
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "finalize",
-      "lineno": 700
+      "lineno": 1319
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "log_critical_feature_health",
-      "lineno": 739
+      "lineno": 1367
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "build_feature_vector",
-      "lineno": 773
+      "lineno": 1401
     },
     {
       "file": "src/features/feature_pipeline.py",
       "function": "run",
-      "lineno": 811
+      "lineno": 1441
     }
   ],
-  "n_ast_defs": 38,
+  "n_ast_defs": 47,
   "counts": {
     "UNIQUE_CANONICAL_IDENTITY": 3,
     "FORMULA_COLLISION": 3,

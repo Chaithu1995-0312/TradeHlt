@@ -21,7 +21,7 @@ def _feats():
         "volatility_ratio": 1.1,
         "session": 1,
         "hour_of_day": 11,
-        "trend_strength": 0.01,
+        "trend_strength_z": 0.01,
         "trend_bias": 0,
         "ema_fast": 5.0,
         "ema_slow": 5.1,

@@ -319,7 +319,7 @@ def build_design_docs(crt_baseline: dict) -> None:
             },
             {
                 "id": "OQ-006",
-                "question": "How are known consumer encoding debts (session 0/1/2 vs SESSION_MAP; trend_strength name collision; volatility_regime int8 vs s05 strings) handled before MSIP activation?",
+                "question": "How are known consumer encoding debts (session 0/1/2 vs SESSION_MAP; trend_strength_z name collision; volatility_regime int8 vs s05 strings) handled before MSIP activation?",
                 "status": "OPEN",
                 "related_evidence": "docs/governance/feature_completion_alignment_census-2026-07-14.json",
             },
@@ -396,14 +396,14 @@ def build_design_docs(crt_baseline: dict) -> None:
             {
                 "dimension_id": "MSD-TREND",
                 "name": "trend_state",
-                "semantic": "Canonical trend_strength nested rolling + optional trend_bias sign",
-                "candidate_features": ["trend_strength", "trend_bias", "ema_fast", "ema_slow"],
+                "semantic": "Canonical trend_strength_z nested rolling + optional trend_bias sign",
+                "candidate_features": ["trend_strength_z", "trend_bias", "ema_fast", "ema_slow"],
                 "candidate_fm": ["FM-043", "FM-044"],
                 "output_type": "signed_float_plus_sign",
                 "config_semantics": "windows currently structural",
                 "proposed_consumers": ["telemetry", "research"],
                 "depends_on_crt": False,
-                "notes": "NAME COLLISION: dual_engine local trend_strength = abs(ema_spread) — different quantity",
+                "notes": "NAME COLLISION: dual_engine local trend_strength_z = abs(ema_spread) — different quantity",
             },
             {
                 "dimension_id": "MSD-CRT_PHASE",
@@ -757,7 +757,7 @@ def build_design_docs(crt_baseline: dict) -> None:
         From M15 completion census and certification artifacts:
 
         - session encoding multi-surface mismatch
-        - trend_strength name collision with dual_engine
+        - trend_strength_z name collision with dual_engine
         - volatility_regime int8 vs s05 strings
         - FM-025 provenance unresolved (does not auto-taint FM-026)
         - SUPERSEDED ema_spread/momentum_score still in 38-vector; successors unbound

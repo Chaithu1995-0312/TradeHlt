@@ -168,7 +168,7 @@ def _citation_for(name: str, ontology_index: dict) -> dict:
 # ontology's declared `depends_on` lists and ground in its declared `base_inputs`.
 #
 # IMPORTANT SEMANTIC CAVEAT (surfaced in the report header, not just here): the ontology's
-# depends_on is a SEMANTIC lineage, not always a column-level one. `trend_strength` declares
+# depends_on is a SEMANTIC lineage, not always a column-level one. `trend_strength_z` declares
 # `close` directly even though the pipeline materializes ma_20 -> ma_slope_20 in between. So the
 # DAG shows DECLARED lineage; the Pipeline Stage Column Ledger shows ACTUAL materialization.
 # Neither is presented as the other.
@@ -337,7 +337,7 @@ def _normalization_method(name: str, cfg: dict) -> str:
         return f"ROLLING_RANK_TERCILE (window={cfg['volatility_percentile_window']})"
     if name == "volume_ratio":
         return "RATIO_TO_ROLLING_MEAN (volume / volume_ma20), not further scaled"
-    if name == "candles_since_retest":
+    if name == "candles_since_sweep":
         return "NONE (raw bar count since the last liquidity sweep)"
     if name == "hour_of_day":
         return "NONE (raw calendar integer 0-23, cyclic not linear)"
@@ -388,9 +388,9 @@ def _dependency_value(dep: str, row: "pd.Series"):
 # first_valid_index (the binding constraint), and the remainder is this feature's OWN rolling
 # contribution. Measured examples on the active config: disp_strength/ema_spread/momentum_score/
 # liquidity_distance add +0 of their own (pure `atr` inheritance); atr adds +13 over true_range;
-# rsi_14 +14 over close; macd_hist_z +49 over macd_hist_raw; trend_strength +78 over close.
+# rsi_14 +14 over close; macd_hist_z +49 over macd_hist_raw; trend_strength_z +78 over close.
 #
-# HONESTY CONSTRAINT: an "own contribution" spanning a multi-stage chain (trend_strength's +78 is
+# HONESTY CONSTRAINT: an "own contribution" spanning a multi-stage chain (trend_strength_z's +78 is
 # ma_20 -> diff -> rolling(10) -> z-score(50), across TWO pipeline functions) must NOT be collapsed
 # into a single window number. It is reported as a multi-stage chain citing every relevant config
 # key, because the ontology's declared depends_on for that feature is semantic (`close`) and skips
@@ -401,7 +401,7 @@ def _dependency_value(dep: str, row: "pd.Series"):
 # per-entry `config_key`/`config_keys` already declares. Only needed where the declared
 # dependency chain is semantic rather than column-level.
 _EXTRA_WINDOW_CONFIG_KEYS = {
-    "trend_strength": ("ma_periods", "trend_strength_window", "zscore_window"),
+    "trend_strength_z": ("ma_periods", "trend_strength_window", "zscore_window"),
     "macd_hist_z": ("zscore_window",),
 }
 
@@ -739,7 +739,7 @@ def _build_feature_entry(name: str, row: "pd.Series", ontology_index: dict, rank
         "modified_by_stages": prov["rewritten_by"],
         "birth_certificate": birth_cert,
     }
-    if name == "trend_strength" and snap_pre_norm_trend is not None:
+    if name == "trend_strength_z" and snap_pre_norm_trend is not None:
         entry["pre_normalization_raw_value"] = _to_native(snap_pre_norm_trend.iloc[row.name])
     if name == "volume_spike" and snap_vol_seed is not None:
         entry["pre_normalization_seed_value"] = _to_native(snap_vol_seed.iloc[row.name])
@@ -942,9 +942,9 @@ def _render_header(args, csv_path: Path, csv_sha256: str, prod_version: str, fir
         "**Two DISTINCT lineage views in this report -- do not conflate them.** The per-feature "
         "*dependency tree* below is the ontology's DECLARED (semantic) lineage: what a feature "
         "means it depends on. The *Pipeline Stage Column Ledger* right below is the ACTUAL column "
-        "materialization order. These can differ: `trend_strength` declares `close` directly (the "
+        "materialization order. These can differ: `trend_strength_z` declares `close` directly (the "
         "semantic dependency), but the pipeline actually computes it through the materialized chain "
-        "`ma_20 -> ma_slope_20 -> trend_strength` across two separate stage functions. Presenting "
+        "`ma_20 -> ma_slope_20 -> trend_strength_z` across two separate stage functions. Presenting "
         "either view as the other would be exactly the kind of overclaim this report exists to avoid."
     )
     lines.append("")
@@ -1014,7 +1014,7 @@ def main() -> int:
         if stage == "compute_volume_features":
             snap_vol_seed = pipe.df["volume_spike"].iloc[:args.end_bar].copy()
         elif stage == "compute_trend_features":
-            snap_pre_norm_trend = pipe.df["trend_strength"].iloc[:args.end_bar].copy()
+            snap_pre_norm_trend = pipe.df["trend_strength_z"].iloc[:args.end_bar].copy()
         col_sets.append(set(pipe.df.columns))
         window_snaps.append(pipe.df.iloc[:args.end_bar].copy())
 

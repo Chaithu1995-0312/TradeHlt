@@ -45,7 +45,7 @@ FIELD_AUTHORITY: dict[str, dict[str, str]] = {
         "session_policy_label": AUTHORITY_HOW,
     },
     "trend_state": {
-        "trend_strength": "DETERMINISTIC_DERIVED_WHAT",
+        "trend_strength_z": "DETERMINISTIC_DERIVED_WHAT",
         "trend_bias": "DETERMINISTIC_DERIVED_WHAT",
         "ema_fast": "DETERMINISTIC_DERIVED_WHAT",
         "ema_slow": "DETERMINISTIC_DERIVED_WHAT",

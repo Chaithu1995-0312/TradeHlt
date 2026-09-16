@@ -60,12 +60,12 @@ IMPL_PATHS = [
 FEATUREISH_NAMES = {
     "open", "high", "low", "close", "volume", "volume_ratio", "volume_spike",
     "double_sweep", "ema_fast", "ema_slow", "ema_spread", "trend_bias",
-    "trend_strength", "momentum_score", "atr", "atr_14", "volatility_ratio",
+    "trend_strength_z", "momentum_score", "atr", "atr_14", "volatility_ratio",
     "rsi_14", "macd_line", "macd_signal", "macd_hist", "sweep_detected",
     "liquidity_sweep", "break_of_structure", "swing_high", "swing_low",
     "higher_high", "lower_low", "body_size", "wick_size", "body_ratio",
     "volatility_regime", "session", "hour_of_day", "disp_strength",
-    "retest_depth", "candles_since_retest", "liquidity_distance",
+    "retest_depth", "candles_since_sweep", "liquidity_distance",
     "liquidity_pressure_score", "displacement_retrace", "displacement_atr_ratio",
     "volume_range_proxy", "last_swing_high", "last_swing_low",
     "last_swing_high_price", "last_swing_low_price", "retest_flag",
@@ -464,7 +464,7 @@ def build_quantities_from_authorities() -> list[dict]:
     add(id="Q-MACD-S", names=["macd_signal"], source_fields=["close"], formula="EMA9 of macd_line", parameters={}, temporal="t", normalization=None, fallback=None, units="price", impl=["FeaturePipeline"], class_="UNIQUE_CANONICAL_CANDIDATE", evidence=[])
     add(id="Q-MACD-H", names=["macd_hist"], source_fields=["close"], formula="macd_line-macd_signal", parameters={}, temporal="t", normalization=None, fallback=None, units="price", impl=["FeaturePipeline"], class_="UNIQUE_CANONICAL_CANDIDATE", evidence=[])
     add(id="Q-TREND-BIAS", names=["trend_bias"], source_fields=["close"], formula="sign(ema_fast-ema_slow)", parameters={}, temporal="t", normalization=None, fallback=None, units="sign", impl=["FeaturePipeline"], class_="UNIQUE_CANONICAL_CANDIDATE", evidence=[])
-    add(id="Q-TREND-STR", names=["trend_strength"], source_fields=["close"], formula="ma slope / atr style", parameters={"ma": 20}, temporal="t", normalization=None, fallback=None, units="ratio", impl=["FeaturePipeline"], class_="UNIQUE_CANONICAL_CANDIDATE", evidence=[])
+    add(id="Q-TREND-STR", names=["trend_strength_z"], source_fields=["close"], formula="ma slope / atr style", parameters={"ma": 20}, temporal="t", normalization=None, fallback=None, units="ratio", impl=["FeaturePipeline"], class_="UNIQUE_CANONICAL_CANDIDATE", evidence=[])
     add(id="Q-VOLATILITY-RATIO", names=["volatility_ratio"], source_fields=["high", "low", "close"], formula="atr / close or related", parameters={}, temporal="t", normalization=None, fallback=None, units="ratio", impl=["FeaturePipeline"], class_="UNIQUE_CANONICAL_CANDIDATE", evidence=[])
 
     # Swings temporal family
@@ -499,7 +499,7 @@ def build_quantities_from_authorities() -> list[dict]:
     for n in (
         "higher_high", "lower_low", "break_of_structure", "liquidity_sweep",
         "sweep_detected", "double_sweep", "liquidity_distance",
-        "liquidity_pressure_score", "candles_since_retest",
+        "liquidity_pressure_score", "candles_since_sweep",
     ):
         add(
             id=f"Q-STRUCT-{n.upper()}",
@@ -582,7 +582,7 @@ def build_quantities_from_authorities() -> list[dict]:
     # Model-local
     add(id="Q-GAUSS-3", names=["ema_fast", "ema_slow", "momentum_score"], source_fields=["close"], formula="live heuristic 3-feature vote", parameters={}, temporal="t", normalization=None, fallback=None, units="score", impl=["heuristic_gaussian_engine"], class_="MODEL_LOCAL_DUPLICATE", evidence=["active_models gaussian live"])
     add(id="Q-GAUSS-38", names=["CANONICAL_FEATURES"], source_fields=["pipeline vector"], formula="38-dim NB experimental", parameters={}, temporal="unknown train", normalization="artifact scaler", fallback=None, units="vector", impl=["gaussian registry"], class_="UNKNOWN", evidence=["train lineage not recovered in RUN1"])
-    add(id="Q-BITNET-6", names=["body_ratio", "retest_depth", "disp_strength", "atr", "candles_since_retest", "double_sweep"], source_fields=["mixed"], formula="BitNet hard-reject inputs; CRT may alias FM-027/028 into names", parameters={}, temporal="CRT", normalization=None, fallback=None, units="mixed", impl=["BitNetZoneGate", "crt bitnet map"], class_="UNINTENTIONAL_ALIAS", evidence=["use_bitnet false", "FC-0.5"])
+    add(id="Q-BITNET-6", names=["body_ratio", "retest_depth", "disp_strength", "atr", "candles_since_sweep", "double_sweep"], source_fields=["mixed"], formula="BitNet hard-reject inputs; CRT may alias FM-027/028 into names", parameters={}, temporal="CRT", normalization=None, fallback=None, units="mixed", impl=["BitNetZoneGate", "crt bitnet map"], class_="UNINTENTIONAL_ALIAS", evidence=["use_bitnet false", "FC-0.5"])
     add(id="Q-RR-POLARITY", names=["rr_ratio"], source_fields=["OHLC"], formula="candle polarity index misnamed RR", parameters={}, temporal="t", normalization=None, fallback=None, units="index_0_1", impl=["rr_engine"], class_="MODEL_LOCAL_DUPLICATE", evidence=["F-048"])
     add(id="Q-RR-FUSION-38", names=["CANONICAL_FEATURES"], source_fields=["pipeline"], formula="Mahalanobis 38-dim path historical", parameters={}, temporal="unknown train", normalization="model mean/cov", fallback="gaussian bypass F-044", units="vector", impl=["rr_fusion"], class_="UNKNOWN", evidence=["enabled:false", "F-044/045"])
     add(id="Q-TRADENET", names=["CANONICAL_FEATURES"], source_fields=["pipeline intended"], formula="TradeNet fusion slot", parameters={}, temporal="unknown train", normalization=None, fallback=None, units="vector", impl=["tradenet"], class_="UNKNOWN", evidence=["F-005 unwired"])

@@ -17,7 +17,7 @@ from config_layer.execution_planner import ExecutionPlannerV1_2, DEFAULT_CONFIG
 # classified "breakout" at threshold 1.3, "reversal" at 1.5.
 _FEATS = {
     "body_ratio": 0.80, "disp_strength": 1.40, "retest_depth": 0.90,
-    "candles_since_retest": 9, "momentum_score": 0.0,
+    "candles_since_sweep": 9, "momentum_score": 0.0,
     "sweep_detected": False, "double_sweep": False, "ema_fast": 1.0, "ema_slow": 2.0,
 }
 _ENGINE_RESULT = {"decision": "execute", "selected_direction": 1}

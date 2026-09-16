@@ -1475,4 +1475,122 @@ Belief Update / ROI / Goal:
 Open Questions: none blocking.
 Next Step: PR-2 RESEARCH_QUERY_BINDING class only after user authorizes; not this turn.
 ---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Topic discussion — per-model technical implementation vs Parquet design
+Decision/Output: Added "Technical implementation (one model at a time, 2026-09-16)" to docs/topics/model-intent-and-feature-ownership.md joining Question A to CH-model-parquet-binding-docs. Walked CRT (3 implementations), Gaussian heuristic/ML, ZoneGate, RR engine, regime/dual, TradeNet, RR trained, BitNet, Fusion/Decision, Execution planner, resolver, FeatureStateEncoder. Did not rewrite the 38-slot matrix (v6 name drift recorded, not silently patched). Did not touch cost-model or ontology. test_topic_docs green; test_doc_citations red on entry-exit-map.md:_write_trades (foreign, DeepSeek cost-model surface) — left alone.
+Belief Update / ROI / Goal:
+  Goal: each model's implementation is discussable from the ownership topic without inventing columns.
+  Belief: CRT is three objects; query columns ≠ serve presence is the load-bearing implementation fact for Gaussian/ZoneGate.
+  Knowledge ROI: high — stops collapsing FSM occupancy with fusion score and with resolver labels.
+  Action: discussion is on the topic; --model CLI still unauthorized.
+Open Questions: whether to rewrite the 38-slot matrix to v6 names (adjacent to schema-v6 / Claude window).
+Next Step: await which model to go deeper on, or a Grok-only commit of the topic delta.
+---
+
+
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Discussion-only schema design — link cost-identity stamp, intent-schema alignment and Parquet column binding to the run_id workflow
+Decision/Output: No code or config touched. Read schema surfaces only (schemas.md §9.4/§9.7/§9.17, F-101, cost-stamp plan, parquet_evidence_layer.md, committed run_id/bar_matrix plan) plus artifact headers of run_20260916_101942_XAUUSD. Measured: folder name run_20260916_101942 (local) != in-file run_id run_20260916_044942 (UTC) on trades/events/telemetry/summary/config-dump (F-101 still live at folder level); run artifacts carry no git_sha/tree_dirty/corpus_sha256/feature_order_hash while bar_matrix manifest does; trades.csv (87 cols) has no trade_intent, no candidate_id, and cached_retest_depth/cached_disp_strength are episode quantities (FM-027/FM-028) under bar-level names. Proposed: one run_manifest.json as run-grain identity root (canonical UTC run_id + aliases, corpus/schema/stack/git/cost/intent identity, artifact list with sha+rows+grain), a grain-keyed table set (run / bar / event / telemetry / episode / trade / planner-decision / label), a columns dictionary (name, fm_id, scope, grain, producer, basis) as the machine form of the PR-1 binding table, and explicit legal/forbidden joins. run_manifest.json is NEW scope beyond the approved CH-cost-model-identity-stamp manifest.
+Belief Update / ROI / Goal:
+  Goal: make every research/backtest result joinable to exactly one code+corpus+cost+intent identity.
+  Belief: the three pending changes are one missing run-grain identity record, not three independent stamps; stamping columns without a run manifest re-creates F-101 at a new layer.
+  Knowledge ROI: medium-high — prevents three parallel windows from each inventing a partial identity.
+  Action: user decides canonical run_id format and whether run_manifest.json is its own change class before any implementation.
+Open Questions: candle_idx == bar_matrix._pos UNVERIFIED; TRADE_OPENED metadata.id == telemetry candidate_id UNVERIFIED; run_id collision risk under concurrent sessions.
+Next Step: user picks run_id canon + manifest scope; then a PLAN doc + impact manifest (TRACE_OBSERVATION_JOIN) for run_manifest.json.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Discussion-only: where trace_id fits in the run_id schema design
+Decision/Output: Grep + artifact inspection only. trace_id is a homonym with 4 meanings: (1) runtime.layer_trace per-bar id f"{run_id}:{instrument}:{bar_ts}" + span_id per layer, minting its own FOURTH run_id lt_YYYYMMDD_HHMMSS_INSTR (UTC) and recording only 2 of the 3 preexisting ids; (2) interpreter reading id {NAME}-v{ver}-{ts}; (3) opportunity_scanner campaign TR-* (explicitly not a run_id); (4) governance report name. layer_trace (enabled:false in all configs; one probe file results/layer_trace_h2, 94,406 rows, 47,198 distinct trace_ids) already carries most of the proposed run_manifest identity block on every row, with defects: corpus_rows=0, dataset_id empty, mojibake note, no candidate_id/trade_id link. CORRECTION to prior turn: run_manifest.json proposal partly re-invented layer_trace identity; revised design promotes that block to the manifest instead of a new schema. Revised hierarchy: run_id -> trace_id (bar) -> span_id (bar x layer); episode/trade as objects spanning trace_ids; separate run-independent bar_key (corpus_sha256, bar_ts) for cross-run joins.
+Belief Update / ROI / Goal:
+  Goal: one joinable identity from run to bar to layer to episode to trade.
+  Belief: the identity spine exists (layer_trace) but is opt-in, mints its own run_id, and does not reach events/telemetry/trades; the missing piece is FK propagation, not a new id scheme.
+  Knowledge ROI: high - avoids a fifth run-id scheme.
+  Action: user decides whether layer_trace run_id becomes THE run_id.
+Open Questions: bar_idx basis (layer_trace candle_idx-1 vs trades candle_idx vs bar_matrix _pos) UNVERIFIED; layer_trace decision-neutrality parity run not executed (per its docstring).
+Next Step: user decision on canonical run_id owner; then plan doc.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Grep audit of run_id/trace_id/span_id/candidate_id/cost_model_id/layer_trace keywords + E-001 correction of prior-turn design
+Decision/Output: Read-only grep, no edits. File-count results: trace_id 30, run_id 391, span_id 4, candidate_id 27, cost_model_id 62, risk_denominator_id 3, crt_state_resolved 14, trade_intent 28, cached_retest_depth/disp_strength/body_ratio 24, layer_trace 26. CORRECTION (E-001, verify-source-not-comments class): commit 5db2d03 (already on HEAD of this branch, dated 2026-09-16 02:28 IST, BEFORE this conversation started) already ships everything my earlier turns proposed building: src/runtime/layer_trace.py (identity block + trace_id/span_id, L0-L9), scripts/analysis/layer_trace/h1_run_identity.py..h7_config_message_drift.py (the probes that PRODUCED F-101..F-105 -- these are not new findings I surfaced, they were already registered), src/utils/run_linkage.py::resolve_artifacts + docs/governance/run_linkage_registry.json (instrument->run_id->artifact resolution, exactly the --run-id lookup my rejected plan proposed re-building in query_trace.py), and ReportWriter now stamps one canonical UTC run_id into summary.json/trades.csv/events.jsonl/crt_telemetry.jsonl (tests/test_report_writer_run_id_stamp.py). My first-turn framing of run_manifest.json as new scope, and the plan-mode Phase A design of query_trace.py --run-id/--trace-id resolution, both substantially duplicate this already-committed infra. Also found: my own plan-mode file was mirrored untracked to docs/implementation_plan/using-trace-id-i-need-elegant-seahorse.md (git status: ??) -- not another session, this session own artifact; flagged, not deleted (not my call as an untracked doc, no source touched).
+Belief Update / ROI / Goal:
+  Goal: avoid re-proposing infra that already exists.
+  Belief REVISED: the run_id/trace_id/layer identity spine is already built and tested, not a future change. The remaining gap is narrower than previously framed -- likely just reading run_linkage.py/layer_trace.py output through a CLI, and linking the cost-stamp + intent-schema fields into the same identity block once those two land.
+  Knowledge ROI: high -- prevented rebuilding src/utils/run_linkage.py under a different name inside query_trace.py.
+  Action: read src/utils/run_linkage.py + docs/governance/run_linkage_registry.json + tests/test_run_linkage.py + tests/test_run_linkage_traces.py fully before any further design; do not restate the rejected plan.
+Open Questions: whether run_linkage.py already exposes a --trace-id-equivalent per-bar dossier (not yet checked); whether H4-H7 findings (rail reachability, feature alignment, silent-except census, config-message drift) map onto F-102..F-105 1:1.
+Next Step: read run_linkage.py/registry/tests in full on user request before any new design.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16 17:07
+Topic: Census: how many modules src/utils/run_linkage.py touches
+Decision/Output: Read-only. run_linkage.py imports 0 repo modules (stdlib only: json, pathlib, typing). Production consumer: 1 (control_plane.dashboard_api, lazy import of resolve_artifacts). Test that imports the module: 1 (tests/test_run_linkage.py). test_run_linkage_traces.py reads the registry JSON and does not import the module. Docstring's "delegated to utils.duckdb_query.open_views" is DOC_DRIFT — no such import exists. Generated code-map edge is only dashboard_api --> run_linkage. Public API is one function (resolve_artifacts). Registry currently has 3 XAUUSD run_id rows.
+Belief Update / ROI / Goal:
+  Goal: know the blast radius of run_linkage before any further identity-spine design.
+  Belief: run_linkage is a leaf resolver (paths in, dict out), not a query engine and not wired to duckdb_query.
+  Knowledge ROI: high — stops treating run_linkage as a multi-module join layer.
+  Action: none unless user asks to wire duckdb_query or add callers.
+Open Questions: none for the module-count; the docstring duckdb_query claim is unclassified DOC_DRIFT (no edit this turn).
+Next Step: none unless user asks to expand the census (artifacts/run_ids) or to fix the docstring.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16 17:12
+Topic: Schema census: run_linkage vs retrieval/lexical
+Decision/Output: They do not share a schema. run_linkage is an untyped path-resolution dict (run_id/instrument/resolved_run/logs/parquet/method + optional scoreboard_dir/source_run_id/schema_bridge) plus registry JSON (instrument→run_id, schema_bridge.has/surfaces, AN/TR grains). lexical is RAG: chunks.jsonl/parquet (IndexedChunk 18 cols), postings {term,chunk_id,tf}, records {id,type,status,...}, query output LexicalHit. Neither is in docs/reference/schemas.md. lexical uses duckdb_query.open_views; run_linkage does not.
+Belief Update / ROI / Goal:
+  Goal: know whether run_linkage and lexical are the same join/query surface.
+  Belief: two unrelated schemas; only shared helper is duckdb_query, and only lexical actually calls it.
+  Knowledge ROI: high — stops joining them as one identity/query layer.
+  Action: none unless user asks to document either in schemas.md.
+Open Questions: none.
+Next Step: none unless asked.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: CH-intent-schema-alignment — Schema A vs Schema C compared, UNKNOWN traced, FM-027/FM-028 episode identity + planner CONTINUATION label (F-108)
+Decision/Output: Compared the two intent schemas from the ontology, not key names: they share NO quantity (FM-027 retrace-into-displacement vs FM-021 distance-to-9-EMA masked to a 0.0 "no retest" sentinel; FM-028 displacement-candle range vs FM-020 current-bar body; body_ratio same formula different subject; double_sweep same name only). Traced the UNKNOWN (2024-08-21 22:15 LONG) branch by branch: REVERSAL is strictly counter-trend, so with-trend entries fall through — 40.70% LONG / 31.97% SHORT of the corpus. Also found retest_flag==1 on 58.07% of bars yet 0 on 4 of 6 engine RETEST bars. User chose align-by-identity + fix-the-classifier. PART 1: a vector slot proved NOT constructible (feature_pipeline.py has zero disp_open/disp_close/displacement_candle), so FM-027/FM-028 were refined in place with lineage.scope: EPISODE (declared in spec_schema additive blocks), distinctness notes, corrected source_of_truth; validators [], 65 ontology/freeze tests green; freeze-pin waiver with MEASURED attribution (in-memory inversion re-hashes to the prior pin; a first LF-only inversion failed because the file is CRLF — a bug in my check, not drift). PART 2: before coding, measured that GateIntelligence scores any new label 0.0 → 0.0% approval, so a classifier fix alone would move the reject downstream, while a gate score swings approval 0–66%; asked, user chose classifier-only/gate untouched. Added CONTINUATION (ttl_continuation_sec 180 = ttl_unknown_sec), updated a third classifier copy in sl_tp_comparator, and fixed three test fixtures that had encoded the hole as "no pattern" (kept their properties via exact EMA ties, retained old fixtures as CONTINUATION pins, added a guard pinning the deliberate 0.0 gate score). Re-measured with the REAL classifier: UNKNOWN → 0.004% (2 ties/direction), CONTINUATION = old UNKNOWN − new exactly, no other label moved. Params hash 7de09f62… unchanged. Blast radius proved STRUCTURALLY: transitive AST closure (lazy imports included) — backtest_v2's 140 modules reach none of planner/gate/comparator; live_engine_hook reaches planner+gate (positive control). Registered F-108; bound F-107/F-108 in the family registry; corrected F-107's single-cause Note. Seven shifted path:line citations updated; execution-planning + analytics-sltp topics synced.
+Belief Update / ROI / Goal:
+  Goal: align the intent schemas without canonicalizing the wrong episode definition, and stop the planner rejecting a third of all bars for a missing label.
+  Belief: (1) the two schemas are two measurement frames, not dialects — identity and vector membership are separable, and only identity was constructible; (2) "fix the classifier" alone changes no decision on this corpus, because the gate is what decides — I nearly shipped a fix that did nothing and would have called it a fix; (3) the tests themselves defined the defect as correct behaviour, which is why nothing caught it.
+  Knowledge ROI: high. Measuring the gate BEFORE coding turned a silent no-op into an explicit user decision, and measuring corpus counts with the real classifier (not a reimplementation) made the collapse a fact rather than an estimate.
+  Action: gate scoring for CONTINUATION stays an open, evidence-gated decision; nothing committed.
+Two self-caught corrections this turn: (a) my planner docstring first said "No approval decision changes" — an overclaimed structural guarantee; the non-intent gate weights sum to 0.65 > 0.55, so it is a measurement, now stated as such everywhere. (b) A freeze-pin failure on feature_pipeline.py was MY stale pin from the v6 rename: two 04:45Z edits to the F-064 warning text came after the 04:32Z refresh; proven by inverting exactly those edits from the session transcript; pin refreshed and the v6 completion manifest's "freeze test green" claim marked CORRECTED at source.
+Blocked, not passed: another session's in-progress CH-cost-model-identity-stamp edit (+76 lines, mtime 14:50) leaves src/runtime/backtest_v2.py failing at import — blocking the empirical ledger diff, the shadow re-run, test_f057_f058, and collection of the governance floor itself. Untouched. Floor re-run past the collection error: 14 failed / 559 passed / 1 error; all 12 baseline names, and the 3 additions are all foreign; pass count reconciles exactly (567 − 2 − 6 = 559). validate-completion: BLOCKED — 110 undeclared files, every one attributed (108 v6 rename, 1 SCR-472 probe, 1 foreign backtest_v2), zero unattributed; 6 required-check failures all pre-existing. Recorded as returned, not declared away.
+Open Questions: should CONTINUATION get a gate score (sign-only ≈37% approval, upper bound ≈66%) — evidence-gated live-rail decision? Is a real FM-027 vector slot (schema v7.0) still wanted, and which episode definition is canonical? Commit the v6 rename first so its 108 files stop blocking later validators?
+Next Step: await direction; the other session's backtest_v2.py break should be surfaced to whoever owns CH-cost-model-identity-stamp.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-16
+Topic: Commit CH-schema-v6-normalization-identity (names only) so its files stop blocking later validators
+Decision/Output: User asked to commit the v6 rename first. Working tree also carries same-day CH-intent-schema-alignment (CONTINUATION / FM-027-028 episode scope) and a foreign CH-cost-model-identity-stamp break in src/runtime/backtest_v2.py. Committed v6 via a private index + commit-tree (HEAD moved, working tree not reset) so parallel-session files stay unstaged. Mixed files were split: v6 hunks (rename + F-107 + freeze-pin schema 6.0 + FM-064/065/084) went into the commit; CONTINUATION / F-108 / FM-027-028 episode-scope hunks stay dirty for the later change. Ontology v6-only blob is hash-checked against the pre-intent pin SHA 9be0e6a6 (the inversion recorded in the intent waiver). Foreign paths left alone: backtest_v2.py, v2_htfcrt_2026_08.json, architecture maps, cost-model plan, junk files.
+Belief Update / ROI / Goal:
+  Goal: unblock later validate-completion runs that were seeing ~108 undeclared v6 files.
+  Belief: a mixed commit would have swallowed CONTINUATION into a "names-only" SHA and made the later change's remaining diff look incomplete; splitting the blobs is the load-bearing move.
+  Knowledge ROI: high — one commit clears the undeclared-file wall without granting the later change any authority.
+  Action: later validators re-run against the leftover intent-only porcelain; do not touch backtest_v2.py.
+Open Questions: CH-intent-schema-alignment still uncommitted (CONTINUATION + F-108). backtest_v2.py still import-broken by the other session.
+Next Step: report the commit SHA and leftover dirty set; do not start the intent commit unless asked.
+---
 

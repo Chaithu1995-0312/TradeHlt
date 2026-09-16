@@ -129,8 +129,8 @@ def test_consumable_are_in_feature_vector(ont):
 
 
 # Canonical slots with NO ontology identity. This set may only ever SHRINK — it is a ratchet, not
-# a parking lot. RESOLVED 2026-07-31 (both entries): `trend_strength` is registered as FM-064
-# (engine_runner.py:151's colliding local renamed to `ema_spread_abs`); `candles_since_retest` is
+# a parking lot. RESOLVED 2026-07-31 (both entries): `trend_strength_z` is registered as FM-064
+# (engine_runner.py:151's colliding local renamed to `ema_spread_abs`); `candles_since_sweep` is
 # registered as FM-065, with the CRT engine's distinct bars-since-RETEST-CANDLE quantity
 # registered separately as FM-070 `candles_since_retest_state` and the crt_engine_v2.py emission
 # sites renamed, aliased to the legacy key only at the BitNet call boundary (CH-002 pattern).

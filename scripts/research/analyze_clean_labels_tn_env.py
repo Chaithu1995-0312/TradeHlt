@@ -87,8 +87,8 @@ PRIMARY_Y = [
 # Feature indices for light predictability probes
 PROBE_FEATS = [
     "atr", "body_ratio", "disp_strength", "retest_depth", "momentum_score",
-    "ema_spread", "volatility_ratio", "volume_ratio", "rsi_14", "trend_strength",
-    "session", "hour_of_day", "candles_since_retest",
+    "ema_spread", "volatility_ratio", "volume_ratio", "rsi_14", "trend_strength_z",
+    "session", "hour_of_day", "candles_since_sweep",
 ]
 
 

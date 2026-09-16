@@ -30,7 +30,7 @@ SPECIAL = {
         "FM-021 pipeline; BitNet may alias FM-027",
         0,
     ),
-    "candles_since_retest": ("LEAKING", "depends on liquidity_sweep groups", 2),
+    "candles_since_sweep": ("LEAKING", "depends on liquidity_sweep groups", 2),
     "volume": (
         "SEMANTICALLY_DIVERGENT",
         "TICK_VOLUME on XAU; T-003 same-name proxy if all-zero",

@@ -95,7 +95,7 @@ def main() -> int:
 
     # CRT==Planner per symbol on the PROMOTED v5
     rows = []
-    feats = {"body_ratio": 0.8, "disp_strength": 1.4, "retest_depth": 0.9, "candles_since_retest": 9,
+    feats = {"body_ratio": 0.8, "disp_strength": 1.4, "retest_depth": 0.9, "candles_since_sweep": 9,
              "momentum_score": 0.0, "sweep_detected": False, "double_sweep": False,
              "ema_fast": 1.0, "ema_slow": 2.0}
     er = {"decision": "execute", "direction": 1}

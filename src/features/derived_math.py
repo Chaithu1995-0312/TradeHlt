@@ -224,8 +224,8 @@ def candles_since_retest_state(current_candle_index: float, retest_candle_index:
     """
     FM-070 — CRT engine's live bars-since-the-RETEST-CANDLE count. Registered 2026-07-31 to
     resolve the FM-065 name collision: this is a DISTINCT quantity from FM-065
-    `candles_since_retest` (the pipeline's bars-since-SWEEP canonical vector column), despite
-    historically sharing the bare name `candles_since_retest` in config_layer/crt_engine_v2.py's
+    `candles_since_sweep` (the pipeline's bars-since-SWEEP canonical vector column), despite
+    historically sharing the bare name `candles_since_sweep` in config_layer/crt_engine_v2.py's
     approve() / approve_with_soft_conf().
 
     Verbatim transcription of the pre-existing inline expression — no guard, since none existed

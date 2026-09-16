@@ -210,7 +210,7 @@ def prove_pc1_local_channel(csv_path: Path, limit: int = 5000) -> dict:
             move=float(row["disp_strength"]),
             atr=float(row["atr"]),
             retest_depth=float(row["retest_depth"]),
-            candles_since_retest=int(row.get("candles_since_retest", 0)),
+            candles_since_sweep=int(row.get("candles_since_sweep", 0)),
             sweep_detected=False,
             double_sweep=False,
         )
@@ -219,7 +219,7 @@ def prove_pc1_local_channel(csv_path: Path, limit: int = 5000) -> dict:
             move=float(row["disp_strength"]),
             atr=float(row["atr"]),
             retest_depth=float(row["retest_depth"]),
-            candles_since_retest=int(row.get("candles_since_retest", 0)),
+            candles_since_sweep=int(row.get("candles_since_sweep", 0)),
             sweep_detected=True,
             double_sweep=True,
         )

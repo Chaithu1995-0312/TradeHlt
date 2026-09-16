@@ -62,7 +62,7 @@ NON_CANONICAL_EVIDENCE = ["upper_wick", "lower_wick", "price_position", "candle_
 SEMANTIC_FAMILIES = {
     "Primitive Geometry": ["open", "high", "low", "close", "volume"],
     "Candle Geometry": ["body_size", "candle_range", "body_ratio"],
-    "Trend": ["ema_fast", "ema_slow", "ema_spread", "trend_bias", "trend_strength"],
+    "Trend": ["ema_fast", "ema_slow", "ema_spread", "trend_bias", "trend_strength_z"],
     "Momentum": ["momentum_score", "rsi_14", "macd_line", "macd_signal",
                  "macd_hist_raw", "macd_hist_z"],
     "Volatility": ["atr", "volatility_ratio", "volatility_regime"],
@@ -70,7 +70,7 @@ SEMANTIC_FAMILIES = {
                          "break_of_structure"],
     "Liquidity": ["liquidity_sweep", "sweep_detected", "double_sweep",
                   "liquidity_distance", "liquidity_pressure_score"],
-    "Retest": ["retest_depth", "candles_since_retest", "disp_strength"],
+    "Retest": ["retest_depth", "candles_since_sweep", "disp_strength"],
     "Volume": ["volume_ratio", "volume_spike"],
     "Temporal Context": ["session", "hour_of_day"],
 }

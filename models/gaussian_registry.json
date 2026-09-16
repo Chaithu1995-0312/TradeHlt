@@ -14,7 +14,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -37,7 +37,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "schema_version": "2.0",
     "metrics": {
@@ -65,7 +65,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -88,7 +88,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "schema_version": "2.0",
     "metrics": {
@@ -116,7 +116,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -139,7 +139,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "schema_version": "2.0",
     "metrics": {
@@ -169,7 +169,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -192,7 +192,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "schema_version": "2.0",
     "metrics": {
@@ -222,7 +222,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -245,7 +245,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "schema_version": "2.0",
     "metrics": {
@@ -274,7 +274,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -297,7 +297,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "schema_version": "2.0",
     "metrics": {
@@ -326,7 +326,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -349,7 +349,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "schema_version": "2.0",
     "metrics": {
@@ -378,7 +378,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -401,7 +401,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "schema_version": "2.0",
     "metrics": {
@@ -430,7 +430,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -453,7 +453,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "schema_version": "2.0",
     "metrics": {
@@ -482,7 +482,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -505,7 +505,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "schema_version": "2.0",
     "metrics": {
@@ -541,7 +541,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -564,7 +564,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest",
+      "candles_since_sweep",
       "liquidity_distance",
       "liquidity_pressure_score",
       "volume_spike"
@@ -598,7 +598,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -622,7 +622,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest",
+      "candles_since_sweep",
       "liquidity_distance",
       "liquidity_pressure_score",
       "volume_spike"
@@ -654,7 +654,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -678,7 +678,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest",
+      "candles_since_sweep",
       "liquidity_distance",
       "liquidity_pressure_score",
       "volume_spike"

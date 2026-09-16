@@ -20,7 +20,7 @@ Two-layer design:
 
 Confidence:
   base = 0.55
-  + 0.15 if trend_strength > 0.7
+  + 0.15 if trend_strength_z > 0.7
   + 0.10 if momentum_score confirms direction
   + 0.10 if break_of_structure=True
   + 0.05 if volume_ratio > 1.2
@@ -111,7 +111,7 @@ class S07NewsSentiment(BaseStrategy):
         # Layer 2: zone-confirmed trend
         trend = str(features.get("trend_bias", "neutral")).lower()
         zone_strength = float(features.get("zone_strength", 0.0))
-        trend_strength = float(features.get("trend_strength", 0.0))
+        trend_strength_z = float(features.get("trend_strength_z", 0.0))
         momentum = float(features.get("momentum_score", 0.0))
         bos = bool(features.get("break_of_structure", False))
         volume_ratio = float(features.get("volume_ratio", 1.0))
@@ -128,7 +128,7 @@ class S07NewsSentiment(BaseStrategy):
             return self._no_trade("RANGING")
 
         confidence = 0.55
-        if trend_strength > 0.7:
+        if trend_strength_z > 0.7:
             confidence += 0.15
         if signal == "BUY" and momentum > 0.3:
             confidence += 0.10
@@ -164,7 +164,7 @@ class S07NewsSentiment(BaseStrategy):
 
         sl_inr = self._calc_sl_inr(close, sl, lot)
         tp_inr = self._calc_tp_inr(close, tp, lot)
-        score = min(zone_strength * trend_strength, 1.0) if trend_strength > 0 else zone_strength
+        score = min(zone_strength * trend_strength_z, 1.0) if trend_strength_z > 0 else zone_strength
 
         result = StrategyResult(
             score=score,

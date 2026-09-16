@@ -138,7 +138,7 @@ def build_bitnet_features(trade: dict, candle: dict, state: dict) -> dict:
             "encode an unknown label as a real reading."
         )
     features["trend_bias"]         = TREND_MAP[_trend_key]
-    features["trend_strength"]     = float(_require(state, "trend_strength", "state"))
+    features["trend_strength_z"]     = float(_require(state, "trend_strength_z", "state"))
 
     # --------------------------
     # Momentum
@@ -239,7 +239,7 @@ def build_bitnet_features(trade: dict, candle: dict, state: dict) -> dict:
     # --------------------------
     features["disp_strength"]      = float(_require(state, "disp_strength", "state"))
     features["retest_depth"]       = float(_require(state, "retest_depth", "state"))
-    features["candles_since_retest"] = float(_require(state, "candles_since_retest", "state"))
+    features["candles_since_sweep"] = float(_require(state, "candles_since_sweep", "state"))
 
     # --------------------------
     # Liquidity / Volume (schema v3.0 tail, indices 36-38)

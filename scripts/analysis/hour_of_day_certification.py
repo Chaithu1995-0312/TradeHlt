@@ -320,7 +320,7 @@ def build_artifact(checkpoint: dict, battery: dict) -> dict:
             "research/governance only — descriptive certification; grants no runtime "
             "authority (§6.5)"
         ),
-        "scope_boundary": "hour_of_day only. session/trend_strength/volatility_regime untouched.",
+        "scope_boundary": "hour_of_day only. session/trend_strength_z/volatility_regime untouched.",
     }
 
 

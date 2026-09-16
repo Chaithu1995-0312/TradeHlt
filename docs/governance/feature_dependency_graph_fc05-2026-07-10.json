@@ -1,6 +1,6 @@
 {
   "_doc": "FC-0.5 feature dependency graph \u2014 code-derived, not empty contract arrays.",
-  "generated_at_utc": "2026-07-10T15:48:17Z",
+  "generated_at_utc": "2026-09-16T04:36:47Z",
   "swing_window": 2,
   "rolling_width": 5,
   "intermediates": {
@@ -441,9 +441,9 @@
       "unknowns": []
     },
     {
-      "feature_id": "FEAT-TREND_STRENGTH",
-      "feature_name": "trend_strength",
-      "formula_id": "FORMULA-LEGACY-TREND_STRENGTH",
+      "feature_id": "FEAT-TREND_STRENGTH_Z",
+      "feature_name": "trend_strength_z",
+      "formula_id": "FORMULA-LEGACY-TREND_STRENGTH_Z",
       "implementation_refs": [
         "src/features/feature_pipeline.py",
         "src/features/feature_pipeline.py"
@@ -701,37 +701,65 @@
       "unknowns": []
     },
     {
-      "feature_id": "FEAT-MACD_HIST",
-      "feature_name": "macd_hist",
-      "formula_id": "FORMULA-LEGACY-MACD_HIST",
+      "feature_id": "FEAT-MACD_HIST_RAW",
+      "feature_name": "macd_hist_raw",
+      "formula_id": "FORMULA-LEGACY-MACD_HIST_RAW",
       "implementation_refs": [
         "src/features/feature_pipeline.py",
         "src/features/feature_pipeline.py"
       ],
       "source_ohlcv_fields": [
-        "close"
+        "ohlcv"
       ],
-      "direct_feature_dependencies": [
-        "macd_line",
-        "macd_signal"
-      ],
-      "transitive_feature_dependencies": [
-        "macd_line",
-        "macd_signal"
-      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
       "direct_intermediate_dependencies": [],
-      "lookback": 35,
+      "lookback": "unknown",
       "lookahead": 0,
       "value_timestamp_semantic": "bar t",
-      "available_at_timestamp_semantic": "t",
+      "available_at_timestamp_semantic": "t?",
       "publication_delay": 0,
       "statefulness": "batch DataFrame",
       "warmup": "ATR14/MA200 as applicable",
       "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
       "fallback_policy": "implementation-defined",
       "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
-      "PIT_local_status": "CAUSAL_DERIVED",
-      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "PIT_local_status": "UNADJUDICATED",
+      "PIT_transitive_status": "UNPROVEN",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-MACD_HIST_Z",
+      "feature_name": "macd_hist_z",
+      "formula_id": "FORMULA-LEGACY-MACD_HIST_Z",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "ohlcv"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": "unknown",
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t?",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "UNADJUDICATED",
+      "PIT_transitive_status": "UNPROVEN",
       "semantic_variants_by_call_site": "default pipeline",
       "evidence": [
         "src/features/feature_pipeline.py",
@@ -1050,9 +1078,9 @@
       "unknowns": []
     },
     {
-      "feature_id": "FEAT-WICK_SIZE",
-      "feature_name": "wick_size",
-      "formula_id": "FORMULA-LEGACY-WICK_SIZE",
+      "feature_id": "FEAT-CANDLE_RANGE",
+      "feature_name": "candle_range",
+      "formula_id": "FORMULA-LEGACY-CANDLE_RANGE",
       "implementation_refs": [
         "src/features/feature_pipeline.py",
         "src/features/feature_pipeline.py"
@@ -1100,11 +1128,11 @@
       ],
       "direct_feature_dependencies": [
         "body_size",
-        "wick_size"
+        "candle_range"
       ],
       "transitive_feature_dependencies": [
         "body_size",
-        "wick_size"
+        "candle_range"
       ],
       "direct_intermediate_dependencies": [],
       "lookback": 0,
@@ -1319,9 +1347,9 @@
       "unknowns": []
     },
     {
-      "feature_id": "FEAT-CANDLES_SINCE_RETEST",
-      "feature_name": "candles_since_retest",
-      "formula_id": "FORMULA-LEGACY-CANDLES_SINCE_RETEST",
+      "feature_id": "FEAT-CANDLES_SINCE_SWEEP",
+      "feature_name": "candles_since_sweep",
+      "formula_id": "FORMULA-LEGACY-CANDLES_SINCE_SWEEP",
       "implementation_refs": [
         "src/features/feature_pipeline.py",
         "src/features/feature_pipeline.py"
@@ -1479,6 +1507,312 @@
       "unknowns": []
     },
     {
+      "feature_id": "FEAT-ORDER_BLOCK_DISTANCE",
+      "feature_name": "order_block_distance",
+      "formula_id": "FORMULA-LEGACY-ORDER_BLOCK_DISTANCE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "ohlcv"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": "unknown",
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t?",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "UNADJUDICATED",
+      "PIT_transitive_status": "UNPROVEN",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-FVG_DISTANCE",
+      "feature_name": "fvg_distance",
+      "formula_id": "FORMULA-LEGACY-FVG_DISTANCE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "ohlcv"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": "unknown",
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t?",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "UNADJUDICATED",
+      "PIT_transitive_status": "UNPROVEN",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-BREAKER_DISTANCE",
+      "feature_name": "breaker_distance",
+      "formula_id": "FORMULA-LEGACY-BREAKER_DISTANCE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "ohlcv"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": "unknown",
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t?",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "UNADJUDICATED",
+      "PIT_transitive_status": "UNPROVEN",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-MITIGATION_BLOCK_DISTANCE",
+      "feature_name": "mitigation_block_distance",
+      "formula_id": "FORMULA-LEGACY-MITIGATION_BLOCK_DISTANCE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "ohlcv"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": "unknown",
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t?",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "UNADJUDICATED",
+      "PIT_transitive_status": "UNPROVEN",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-PDH_DISTANCE",
+      "feature_name": "pdh_distance",
+      "formula_id": "FORMULA-LEGACY-PDH_DISTANCE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "ohlcv"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": "unknown",
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t?",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "UNADJUDICATED",
+      "PIT_transitive_status": "UNPROVEN",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-PDL_DISTANCE",
+      "feature_name": "pdl_distance",
+      "formula_id": "FORMULA-LEGACY-PDL_DISTANCE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "ohlcv"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": "unknown",
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t?",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "UNADJUDICATED",
+      "PIT_transitive_status": "UNPROVEN",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-EQH_DISTANCE",
+      "feature_name": "eqh_distance",
+      "formula_id": "FORMULA-LEGACY-EQH_DISTANCE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "ohlcv"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": "unknown",
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t?",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "UNADJUDICATED",
+      "PIT_transitive_status": "UNPROVEN",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-EQL_DISTANCE",
+      "feature_name": "eql_distance",
+      "formula_id": "FORMULA-LEGACY-EQL_DISTANCE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "ohlcv"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": "unknown",
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t?",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "UNADJUDICATED",
+      "PIT_transitive_status": "UNPROVEN",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-CHANGE_OF_CHARACTER",
+      "feature_name": "change_of_character",
+      "formula_id": "FORMULA-LEGACY-CHANGE_OF_CHARACTER",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "ohlcv"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": "unknown",
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t?",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "UNADJUDICATED",
+      "PIT_transitive_status": "UNPROVEN",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
       "feature_id": "FEAT-VOLUME_RANGE_PROXY",
       "feature_name": "volume_range_proxy",
       "formula_id": "FORMULA-T003-RANGE-PROXY",
@@ -1585,27 +1919,28 @@
     }
   ],
   "counts": {
-    "contract_entries": 41,
-    "complete_direct_bindings": 41,
-    "with_nonempty_direct_deps": 21,
-    "with_nonempty_transitive_deps": 21,
-    "pit_local_causal_or_raw": 27,
+    "contract_entries": 51,
+    "complete_direct_bindings": 51,
+    "with_nonempty_direct_deps": 20,
+    "with_nonempty_transitive_deps": 20,
+    "pit_local_causal_or_raw": 26,
     "pit_transitive": {
-      "PIT_LOCAL_OK": 25,
+      "PIT_LOCAL_OK": 24,
       "SEMANTIC_RISK": 3,
       "LEAKING": 12,
+      "UNPROVEN": 11,
       "GLOBAL_FIT_DEPENDENCE": 1
     },
     "leaking": 12,
     "global_fit_dependent": 1,
     "semantic_risk": 3,
-    "pit_safe_transitive": 25,
-    "unknown_or_unproven": 0
+    "pit_safe_transitive": 24,
+    "unknown_or_unproven": 11
   },
   "critical_discoveries": [
     "Contract empty direct_feature_dependencies arrays are incomplete; 12+ structure features inherit swing lookahead",
     "liquidity_distance uses shift(1) on last_swing but last_swing is still non-causal under default center=True",
-    "retest_depth/candles_since_retest inherit liquidity_sweep \u2192 swing leak",
+    "retest_depth/candles_since_sweep inherit liquidity_sweep \u2192 swing leak",
     "volatility_regime global rank is GLOBAL_FIT independent of swing",
     "volume T-003 mutates source identity before volume_ratio/spike",
     "disp_strength (FM-020) is causal; retest_depth inherits swing leak via liquidity_sweep",
@@ -1613,7 +1948,7 @@
   ],
   "downstream_closure_of_swing": [
     "break_of_structure",
-    "candles_since_retest",
+    "candles_since_sweep",
     "double_sweep",
     "higher_high",
     "liquidity_distance",

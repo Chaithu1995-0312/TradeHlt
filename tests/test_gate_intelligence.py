@@ -44,7 +44,7 @@ def _breakout_features() -> dict:
         "sweep_detected":     False,
         "double_sweep":       False,
         "retest_depth":       0.1,
-        "candles_since_retest": 12,
+        "candles_since_sweep": 12,
         "ema_fast":           100.5,
         "ema_slow":           99.0,
         "momentum_score":     0.6,
@@ -228,8 +228,8 @@ class TestComponents:
     def test_intent_pullback_perfect_depth_scores_highest(self):
         """retest_depth=0.5 (peak of triangular function) should outscore 0.1."""
         g = _gate()
-        f_far  = {**_breakout_features(), "retest_depth": 0.1,  "candles_since_retest": 1}
-        f_peak = {**_breakout_features(), "retest_depth": 0.5,  "candles_since_retest": 1}
+        f_far  = {**_breakout_features(), "retest_depth": 0.1,  "candles_since_sweep": 1}
+        f_peak = {**_breakout_features(), "retest_depth": 0.5,  "candles_since_sweep": 1}
         r_far  = g.decide(f_far,  "PULLBACK", 1)
         r_peak = g.decide(f_peak, "PULLBACK", 1)
         assert r_peak["components"]["intent_score"] > r_far["components"]["intent_score"]
@@ -341,7 +341,7 @@ class TestComponents:
             "close": 100.0, "high": 102.0, "low": 98.0, "atr": 2.0,
             "body_ratio": 0.7, "disp_strength": 2.0,
             "sweep_detected": False, "double_sweep": False,
-            "retest_depth": 0.5, "candles_since_retest": 3,
+            "retest_depth": 0.5, "candles_since_sweep": 3,
             "ema_fast": 100.5, "ema_slow": 99.0, "momentum_score": 0.3,
             # Intentionally omitting volume, volume_ma20, highest_high_*, lowest_low_*
         }

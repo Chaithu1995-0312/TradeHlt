@@ -102,7 +102,7 @@ DEPS: dict[str, dict] = {
         "pit_local": "CAUSAL_DERIVED",
         "avail": "t",
     },
-    "trend_strength": {
+    "trend_strength_z": {
         "src": ["close"],
         "deps": [],
         "lookback": 30,
@@ -248,7 +248,7 @@ DEPS: dict[str, dict] = {
         "avail": "via retest_flag via liquidity_sweep",
         "formula": "FM-021 gated",
     },
-    "candles_since_retest": {
+    "candles_since_sweep": {
         "src": [],
         "deps": ["liquidity_sweep"],
         "lookback": "stateful",
@@ -273,7 +273,11 @@ DEPS: dict[str, dict] = {
         "pit_local": "RAW",
         "avail": "t",
     },
-    "wick_size": {
+    # v4.0 renamed `wick_size` -> `candle_range` (FM-002: the property always was high - low).
+    # This table still declared the dead v3.0 name, which only stopped being invisible when the
+    # generated graph was regenerated under CH-schema-v6-normalization-identity — the same
+    # stale-name-in-a-hand-maintained-table class as F-062.
+    "candle_range": {
         "src": ["high", "low"],
         "deps": [],
         "lookback": 0,
@@ -283,7 +287,7 @@ DEPS: dict[str, dict] = {
     },
     "body_ratio": {
         "src": ["open", "high", "low", "close"],
-        "deps": ["body_size", "wick_size"],
+        "deps": ["body_size", "candle_range"],
         "lookback": 0,
         "lookahead": 0,
         "pit_local": "RAW",
@@ -581,7 +585,7 @@ def build_dependency_graph(contract: dict) -> dict:
         "critical_discoveries": [
             "Contract empty direct_feature_dependencies arrays are incomplete; 12+ structure features inherit swing lookahead",
             "liquidity_distance uses shift(1) on last_swing but last_swing is still non-causal under default center=True",
-            "retest_depth/candles_since_retest inherit liquidity_sweep → swing leak",
+            "retest_depth/candles_since_sweep inherit liquidity_sweep → swing leak",
             "volatility_regime global rank is GLOBAL_FIT independent of swing",
             "volume T-003 mutates source identity before volume_ratio/spike",
             "disp_strength (FM-020) is causal; retest_depth inherits swing leak via liquidity_sweep",
@@ -616,7 +620,7 @@ def formula_identity_census() -> dict:
         {"id": "Q-VR-ROLL", "names": ["volatility_regime"], "formula": "rolling(200) atr rank", "params": {"env": "rolling", "N": 200}, "temporal": "causal rolling", "norm": None, "fallback": None, "impl": ["feature_pipeline env"], "class": "CONFIG_DEPENDENT_IDENTITY"},
         {"id": "Q-GAUSS-3", "names": ["ema_fast", "ema_slow", "momentum_score"], "formula": "live heuristic 3-feature", "params": {}, "temporal": "t", "norm": None, "fallback": None, "impl": ["heuristic_gaussian_engine"], "class": "MODEL_LOCAL_DUPLICATE"},
         {"id": "Q-GAUSS-38", "names": ["CANONICAL_FEATURES"], "formula": "38-dim NB v4_mirrored unwired", "params": {}, "temporal": "unknown train", "norm": "scaler in artifact", "fallback": None, "impl": ["models/gaussian_registry"], "class": "UNKNOWN"},
-        {"id": "Q-BITNET-6", "names": ["body_ratio", "retest_depth", "disp_strength", "atr", "candles_since_retest", "double_sweep"], "formula": "BitNet hard-reject; CRT may alias FM-027/028 into names", "params": {}, "temporal": "CRT retest", "norm": None, "fallback": None, "impl": ["live_engine BitNetZoneGate", "crt bitnet map"], "class": "UNINTENTIONAL_ALIAS"},
+        {"id": "Q-BITNET-6", "names": ["body_ratio", "retest_depth", "disp_strength", "atr", "candles_since_sweep", "double_sweep"], "formula": "BitNet hard-reject; CRT may alias FM-027/028 into names", "params": {}, "temporal": "CRT retest", "norm": None, "fallback": None, "impl": ["live_engine BitNetZoneGate", "crt bitnet map"], "class": "UNINTENTIONAL_ALIAS"},
     ]
     # AST scan for def names in features + crt
     defs = []
@@ -712,7 +716,7 @@ def consumer_bindings() -> dict:
             "type": "trained_model",
             "active": False,
             "entrypoint": "src/engines/live_engine.py BitNetZoneGate",
-            "features": ["body_ratio", "retest_depth", "disp_strength", "atr", "candles_since_retest", "double_sweep"],
+            "features": ["body_ratio", "retest_depth", "disp_strength", "atr", "candles_since_sweep", "double_sweep"],
             "artifact": "models/bitnet/",
             "current_formula_binding": "ARTIFACT_BINDING_UNKNOWN for train-time; CRT maps FM-027/028 to retest_depth/disp_strength names at execute",
             "compatibility_verdict": "ARTIFACT_BINDING_UNKNOWN",

@@ -705,7 +705,7 @@ import math as _math
 # Direction-mirroring constants (must match phase5_calibration._MIRROR_*).
 # Applied at inference time for short trades when the model was trained in long perspective.
 _GMIRROR_NEGATE: frozenset = frozenset({
-    "ema_spread", "trend_bias", "trend_strength", "momentum_score",
+    "ema_spread", "trend_bias", "trend_strength_z", "momentum_score",
     "rsi_14", "macd_line", "macd_signal", "macd_hist_raw", "macd_hist_z",
     "break_of_structure", "liquidity_sweep",
 })

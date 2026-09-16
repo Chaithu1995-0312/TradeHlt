@@ -12,7 +12,7 @@ Labels
 Features (6)
 ------------
   body_ratio, retest_depth, disp_strength,
-  atr, candles_since_retest, double_sweep
+  atr, candles_since_sweep, double_sweep
 
 Training
 --------
@@ -54,7 +54,7 @@ MAX_FWD  = 40
 
 FEATURE_KEYS = [
     "body_ratio", "retest_depth", "disp_strength",
-    "atr", "candles_since_retest", "double_sweep",
+    "atr", "candles_since_sweep", "double_sweep",
 ]
 
 
@@ -125,7 +125,7 @@ def build_dataset(csv_paths: list[str]) -> tuple[list[list[float]], list[float]]
                 float(row.get("retest_depth",         0.0)),
                 float(row.get("disp_strength",        0.0)),
                 atr,
-                float(row.get("candles_since_retest", 0.0)),
+                float(row.get("candles_since_sweep", 0.0)),
                 float(bool(float(row.get("double_sweep", 0.0)) > 0.5)),
             ]
 

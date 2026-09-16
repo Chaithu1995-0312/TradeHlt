@@ -1,7 +1,7 @@
 {
   "contract_id": "FEATURE-CONTRACT-V1",
   "schema_version": "1.0.0",
-  "created_utc": "2026-07-10T15:37:36Z",
+  "created_utc": "2026-09-16T04:35:58Z",
   "production_remediation_started": false,
   "economic_claims_allowed": false,
   "legacy_freeze_ref": "docs/governance/legacy_feature_semantics_v1-2026-07-10.json",
@@ -28,14 +28,15 @@
     "FEAT-EMA_SLOW",
     "FEAT-EMA_SPREAD",
     "FEAT-TREND_BIAS",
-    "FEAT-TREND_STRENGTH",
+    "FEAT-TREND_STRENGTH_Z",
     "FEAT-MOMENTUM_SCORE",
     "FEAT-ATR",
     "FEAT-VOLATILITY_RATIO",
     "FEAT-RSI_14",
     "FEAT-MACD_LINE",
     "FEAT-MACD_SIGNAL",
-    "FEAT-MACD_HIST",
+    "FEAT-MACD_HIST_RAW",
+    "FEAT-MACD_HIST_Z",
     "FEAT-SWEEP_DETECTED",
     "FEAT-LIQUIDITY_SWEEP",
     "FEAT-BREAK_OF_STRUCTURE",
@@ -44,17 +45,26 @@
     "FEAT-HIGHER_HIGH",
     "FEAT-LOWER_LOW",
     "FEAT-BODY_SIZE",
-    "FEAT-WICK_SIZE",
+    "FEAT-CANDLE_RANGE",
     "FEAT-BODY_RATIO",
     "FEAT-VOLATILITY_REGIME",
     "FEAT-SESSION",
     "FEAT-HOUR_OF_DAY",
     "FEAT-DISP_STRENGTH",
     "FEAT-RETEST_DEPTH",
-    "FEAT-CANDLES_SINCE_RETEST",
+    "FEAT-CANDLES_SINCE_SWEEP",
     "FEAT-LIQUIDITY_DISTANCE",
     "FEAT-LIQUIDITY_PRESSURE_SCORE",
-    "FEAT-VOLUME_SPIKE"
+    "FEAT-VOLUME_SPIKE",
+    "FEAT-ORDER_BLOCK_DISTANCE",
+    "FEAT-FVG_DISTANCE",
+    "FEAT-BREAKER_DISTANCE",
+    "FEAT-MITIGATION_BLOCK_DISTANCE",
+    "FEAT-PDH_DISTANCE",
+    "FEAT-PDL_DISTANCE",
+    "FEAT-EQH_DISTANCE",
+    "FEAT-EQL_DISTANCE",
+    "FEAT-CHANGE_OF_CHARACTER"
   ],
   "explicit_separations": [
     {
@@ -740,11 +750,11 @@
       "planned_canonical_intent": "retain; FC-2 full adjudication"
     },
     {
-      "feature_name": "trend_strength",
-      "feature_id": "FEAT-TREND_STRENGTH",
-      "formula_id": "FORMULA-LEGACY-TREND_STRENGTH",
+      "feature_name": "trend_strength_z",
+      "feature_id": "FEAT-TREND_STRENGTH_Z",
+      "formula_id": "FORMULA-LEGACY-TREND_STRENGTH_Z",
       "formula_version": "legacy-v1",
-      "formula_definition": "Legacy pipeline semantics for trend_strength",
+      "formula_definition": "Legacy pipeline semantics for trend_strength_z",
       "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
       "implementation_authority": "src/features/feature_pipeline.py",
       "source_fields": [
@@ -1160,11 +1170,11 @@
       "planned_canonical_intent": "retain; FC-2 full adjudication"
     },
     {
-      "feature_name": "macd_hist",
-      "feature_id": "FEAT-MACD_HIST",
-      "formula_id": "FORMULA-LEGACY-MACD_HIST",
+      "feature_name": "macd_hist_raw",
+      "feature_id": "FEAT-MACD_HIST_RAW",
+      "formula_id": "FORMULA-LEGACY-MACD_HIST_RAW",
       "formula_version": "legacy-v1",
-      "formula_definition": "Legacy pipeline semantics for macd_hist",
+      "formula_definition": "Legacy pipeline semantics for macd_hist_raw",
       "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
       "implementation_authority": "src/features/feature_pipeline.py",
       "source_fields": [
@@ -1192,6 +1202,66 @@
       "bounds": null,
       "units": null,
       "output_order": 18,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "macd_hist_z",
+      "feature_id": "FEAT-MACD_HIST_Z",
+      "formula_id": "FORMULA-LEGACY-MACD_HIST_Z",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for macd_hist_z",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 19,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -1251,7 +1321,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 19,
+      "output_order": 20,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -1311,7 +1381,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 20,
+      "output_order": 21,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -1371,7 +1441,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 21,
+      "output_order": 22,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -1431,7 +1501,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 22,
+      "output_order": 23,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -1491,7 +1561,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 23,
+      "output_order": 24,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -1551,7 +1621,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 24,
+      "output_order": 25,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -1611,7 +1681,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 25,
+      "output_order": 26,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -1671,7 +1741,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 26,
+      "output_order": 27,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -1700,11 +1770,11 @@
       "planned_canonical_intent": "retain; FC-2 full adjudication"
     },
     {
-      "feature_name": "wick_size",
-      "feature_id": "FEAT-WICK_SIZE",
-      "formula_id": "FORMULA-LEGACY-WICK_SIZE",
+      "feature_name": "candle_range",
+      "feature_id": "FEAT-CANDLE_RANGE",
+      "formula_id": "FORMULA-LEGACY-CANDLE_RANGE",
       "formula_version": "legacy-v1",
-      "formula_definition": "Legacy pipeline semantics for wick_size",
+      "formula_definition": "Legacy pipeline semantics for candle_range",
       "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
       "implementation_authority": "src/features/feature_pipeline.py",
       "source_fields": [
@@ -1731,7 +1801,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 27,
+      "output_order": 28,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -1791,7 +1861,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 28,
+      "output_order": 29,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -1851,7 +1921,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 29,
+      "output_order": 30,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -1911,7 +1981,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 30,
+      "output_order": 31,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -1971,7 +2041,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 31,
+      "output_order": 32,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -2031,7 +2101,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 32,
+      "output_order": 33,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -2091,7 +2161,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 33,
+      "output_order": 34,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -2120,9 +2190,9 @@
       "planned_canonical_intent": "canonical FM-021; CRT uses FEAT-DISPLACEMENT_RETRACE"
     },
     {
-      "feature_name": "candles_since_retest",
-      "feature_id": "FEAT-CANDLES_SINCE_RETEST",
-      "formula_id": "FORMULA-LEGACY-CANDLES_SINCE_RETEST",
+      "feature_name": "candles_since_sweep",
+      "feature_id": "FEAT-CANDLES_SINCE_SWEEP",
+      "formula_id": "FORMULA-LEGACY-CANDLES_SINCE_SWEEP",
       "formula_version": "legacy-v1",
       "formula_definition": "depends on liquidity_sweep groups",
       "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
@@ -2151,7 +2221,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 34,
+      "output_order": 35,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -2211,7 +2281,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 35,
+      "output_order": 36,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -2271,7 +2341,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 36,
+      "output_order": 37,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -2331,7 +2401,7 @@
       "dtype": "float32 in vector",
       "bounds": null,
       "units": null,
-      "output_order": 37,
+      "output_order": 38,
       "active_consumers": [
         "FeaturePipeline vector"
       ],
@@ -2358,6 +2428,546 @@
       "is_vector_member": true,
       "is_synthetic": false,
       "planned_canonical_intent": "retain with FC-1/FC-2 remediation"
+    },
+    {
+      "feature_name": "order_block_distance",
+      "feature_id": "FEAT-ORDER_BLOCK_DISTANCE",
+      "formula_id": "FORMULA-LEGACY-ORDER_BLOCK_DISTANCE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for order_block_distance",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 39,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "fvg_distance",
+      "feature_id": "FEAT-FVG_DISTANCE",
+      "formula_id": "FORMULA-LEGACY-FVG_DISTANCE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for fvg_distance",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 40,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "breaker_distance",
+      "feature_id": "FEAT-BREAKER_DISTANCE",
+      "formula_id": "FORMULA-LEGACY-BREAKER_DISTANCE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for breaker_distance",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 41,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "mitigation_block_distance",
+      "feature_id": "FEAT-MITIGATION_BLOCK_DISTANCE",
+      "formula_id": "FORMULA-LEGACY-MITIGATION_BLOCK_DISTANCE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for mitigation_block_distance",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 42,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "pdh_distance",
+      "feature_id": "FEAT-PDH_DISTANCE",
+      "formula_id": "FORMULA-LEGACY-PDH_DISTANCE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for pdh_distance",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 43,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "pdl_distance",
+      "feature_id": "FEAT-PDL_DISTANCE",
+      "formula_id": "FORMULA-LEGACY-PDL_DISTANCE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for pdl_distance",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 44,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "eqh_distance",
+      "feature_id": "FEAT-EQH_DISTANCE",
+      "formula_id": "FORMULA-LEGACY-EQH_DISTANCE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for eqh_distance",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 45,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "eql_distance",
+      "feature_id": "FEAT-EQL_DISTANCE",
+      "formula_id": "FORMULA-LEGACY-EQL_DISTANCE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for eql_distance",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 46,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "change_of_character",
+      "feature_id": "FEAT-CHANGE_OF_CHARACTER",
+      "formula_id": "FORMULA-LEGACY-CHANGE_OF_CHARACTER",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for change_of_character",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 47,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
     },
     {
       "feature_name": "volume_range_proxy",

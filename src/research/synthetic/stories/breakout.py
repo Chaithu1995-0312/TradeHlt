@@ -31,7 +31,7 @@ _breakout_long = StorySpec(
     signal=EntrySignal(direction="long", entry_rel_index=6, entry_price=101.30,
                        atr=1.0, sl_atr_mult=1.0, tp_atr_mult=2.0),
     contract=EntryContract(
-        disp_strength=2.50, atr=1.0, retest_depth=0.5, candles_since_retest=1,
+        disp_strength=2.50, atr=1.0, retest_depth=0.5, candles_since_sweep=1,
         sweep_detected=True, double_sweep=False, ema_fast=101.5, ema_slow=100.5,
         momentum_score=0.7, zone_distance=0.10, zone_freshness=0.90, zone_strength=0.80),
     expected_market_states=(
@@ -66,7 +66,7 @@ _ascending_triangle = StorySpec(
     signal=EntrySignal(direction="long", entry_rel_index=5, entry_price=101.20,
                        atr=1.0, sl_atr_mult=1.0, tp_atr_mult=2.0),
     contract=EntryContract(
-        disp_strength=2.30, atr=1.0, retest_depth=0.5, candles_since_retest=1,
+        disp_strength=2.30, atr=1.0, retest_depth=0.5, candles_since_sweep=1,
         sweep_detected=True, double_sweep=False, ema_fast=101.4, ema_slow=100.5,
         momentum_score=0.65, zone_distance=0.10, zone_freshness=0.90, zone_strength=0.80),
     expected_market_states=(
@@ -101,7 +101,7 @@ _breakout_timeout = StorySpec(
     signal=EntrySignal(direction="long", entry_rel_index=5, entry_price=101.20,
                        atr=1.0, sl_atr_mult=1.0, tp_atr_mult=2.0),
     contract=EntryContract(
-        disp_strength=1.50, atr=1.0, retest_depth=0.5, candles_since_retest=1,
+        disp_strength=1.50, atr=1.0, retest_depth=0.5, candles_since_sweep=1,
         sweep_detected=True, double_sweep=False, ema_fast=101.3, ema_slow=100.6,
         momentum_score=0.5, zone_distance=0.10, zone_freshness=0.90, zone_strength=0.80),
     expected_market_states=(

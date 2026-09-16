@@ -109,7 +109,7 @@ def test_double_sweep_prefix_invariant_explicit(probe, synth):
                               full.loc[shared, "double_sweep"].to_numpy()), "double_sweep prefix-VARIANT"
 
 
-# ── candles_since_retest counter property battery (each pinned separately) ──────────
+# ── candles_since_sweep counter property battery (each pinned separately) ──────────
 
 def test_csr_before_first_sweep_all_zeros(probe):
     import numpy as np
@@ -146,13 +146,13 @@ def test_csr_multiple_separated_events_reset_each(probe):
 def test_csr_prefix_invariant_and_dtype(probe, synth):
     import numpy as np
     full = probe._oracle_causal_online(synth)
-    assert full["candles_since_retest"].to_numpy().dtype == np.int16
+    assert full["candles_since_sweep"].to_numpy().dtype == np.int16
     for frac in (0.5, 0.8):
         m = int(len(synth) * frac)
         pref = probe._oracle_causal_online(synth.head(m))
         shared = pref.index.intersection(full.index)
-        assert np.array_equal(pref.loc[shared, "candles_since_retest"].to_numpy(),
-                              full.loc[shared, "candles_since_retest"].to_numpy()), "csr prefix-VARIANT"
+        assert np.array_equal(pref.loc[shared, "candles_since_sweep"].to_numpy(),
+                              full.loc[shared, "candles_since_sweep"].to_numpy()), "csr prefix-VARIANT"
 
 
 # ── class-B fallback fence (runtime-first) ──────────────────────────────────────────
@@ -160,7 +160,7 @@ def test_csr_prefix_invariant_and_dtype(probe, synth):
 def test_csr_runtime_production_path_uses_liquidity_sweep(probe, monkeypatch):
     """PRIMARY fence: instrument (test-layer only) the actual run() control flow — at
     compute_canonical_temporal_features ENTRY, liquidity_sweep must exist (int8, domain ⊆{-1,0,1}),
-    and the emitted candles_since_retest must equal the online recurrence over it (production branch)."""
+    and the emitted candles_since_sweep must equal the online recurrence over it (production branch)."""
     import numpy as np
     from features.feature_pipeline import FeaturePipeline
     cap = {}
@@ -171,7 +171,7 @@ def test_csr_runtime_production_path_uses_liquidity_sweep(probe, monkeypatch):
         cap["dtype"] = str(self.df["liquidity_sweep"].dtype) if cap["has_liq"] else None
         cap["liq"] = self.df["liquidity_sweep"].to_numpy().copy() if cap["has_liq"] else None
         r = orig(self)
-        cap["csr"] = self.df["candles_since_retest"].to_numpy().copy()
+        cap["csr"] = self.df["candles_since_sweep"].to_numpy().copy()
         return r
 
     monkeypatch.setattr(FeaturePipeline, "compute_canonical_temporal_features", spy)
@@ -180,7 +180,7 @@ def test_csr_runtime_production_path_uses_liquidity_sweep(probe, monkeypatch):
     assert cap["dtype"] == "int8"
     assert set(np.unique(cap["liq"])).issubset({-1, 0, 1}), "liquidity_sweep domain contract violated"
     assert np.array_equal(probe._candles_since_retest(cap["liq"]), cap["csr"]), (
-        "emitted candles_since_retest != online recurrence over liquidity_sweep — production branch not taken"
+        "emitted candles_since_sweep != online recurrence over liquidity_sweep — production branch not taken"
     )
 
 
@@ -189,7 +189,7 @@ def test_csr_source_order_secondary_guard():
     src = (Path(__file__).resolve().parents[1] / "src" / "features" / "feature_pipeline.py").read_text(encoding="utf-8")
     i_struct = src.index("self.compute_structure_liquidity()")
     i_temporal = src.index("self.compute_canonical_temporal_features()")
-    assert i_struct < i_temporal, "run() must compute liquidity_sweep before candles_since_retest"
+    assert i_struct < i_temporal, "run() must compute liquidity_sweep before candles_since_sweep"
 
 
 def test_csr_branch_discrimination_deterministic(probe):

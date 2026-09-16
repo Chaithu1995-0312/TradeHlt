@@ -117,10 +117,10 @@ def collect(
         "context": {
             "gaussian_score": gaussian_score,
             "p_win": p_win,
-            "candles_since_retest": _to_int(
+            "candles_since_sweep": _to_int(
                 context.get(
-                    "candles_since_retest",
-                    features.get("candles_since_retest", 0),
+                    "candles_since_sweep",
+                    features.get("candles_since_sweep", 0),
                 ),
                 0,
             ),

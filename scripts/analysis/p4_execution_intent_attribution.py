@@ -15,7 +15,7 @@ Goal:
     - retest_depth (from cached_features)
     - disp_strength (from cached_features)
     - body_ratio (from cached_features)
-    - candles_since_retest (from cached_features)
+    - candles_since_sweep (from cached_features)
     - soft_conf_candle_at_approval (how many candles into window before score crossed)
 
 No filter changes. No threshold tuning. Observation only.
@@ -124,7 +124,7 @@ def _capture_state(state, label: str, candle=None) -> dict:
 
     rs = state.risk_score
 
-    # candles_since_retest: NOT stored in cached_features — computed from engine state.
+    # candles_since_sweep: NOT stored in cached_features — computed from engine state.
     # Using None (not 0) when either index is unavailable to avoid silently encoding missing→0.
     _cur_idx = getattr(state, "current_candle_index", None)
     _ret_idx = getattr(state, "retest_candle_index",  None)
@@ -150,11 +150,11 @@ def _capture_state(state, label: str, candle=None) -> dict:
         "risk_score_decay":    round(rs.decay_factor, 4)   if rs else None,
         # Canonical features from cached_features (see crt_engine_v2.py:737-744)
         # Present: retest_depth, body_ratio, disp_strength, double_sweep, session, retest_index
-        # Absent:  momentum_score, volume_ratio, volume_spike, sweep_detected, candles_since_retest
+        # Absent:  momentum_score, volume_ratio, volume_spike, sweep_detected, candles_since_sweep
         "retest_depth":        float(feats.get("retest_depth",  0.0)) if "retest_depth"  in feats else None,
         "disp_strength":       float(feats.get("disp_strength", 0.0)) if "disp_strength" in feats else None,
         "body_ratio":          float(feats.get("body_ratio",    0.0)) if "body_ratio"    in feats else None,
-        "candles_since_retest": _csr,  # derived from engine state, NOT cached_features
+        "candles_since_sweep": _csr,  # derived from engine state, NOT cached_features
         "double_sweep":        _ds,    # stored as bool in cached_features; None if absent
         # Genuinely absent from cached_features (show None so _stat() reports 'n/a' correctly)
         "momentum_score":      None,
@@ -417,14 +417,14 @@ print()
 # Notes on feature availability in state.cached_features (crt_engine_v2.py:737-744):
 #   PRESENT:  retest_depth, body_ratio, disp_strength, double_sweep, session, retest_index
 #   ABSENT:   momentum_score, volume_ratio, volume_spike, sweep_detected
-#   DERIVED:  candles_since_retest (from engine state, not cached_features)
+#   DERIVED:  candles_since_sweep (from engine state, not cached_features)
 print("-- Canonical Feature Comparison --")
 print(f"  {'Feature':<24} {'Exec mean':>10} {'Zone mean':>10} {'Sess mean':>10}  source")
 _feat_source = {
     "retest_depth":         "cached",
     "disp_strength":        "cached",
     "body_ratio":           "cached",
-    "candles_since_retest": "state",
+    "candles_since_sweep": "state",
     "double_sweep":         "cached",
     "momentum_score":       "absent",
     "volume_ratio":         "absent",
@@ -475,7 +475,7 @@ if executed:
         print(f"      retest_d : {_fmt(r.get('retest_depth'))}")
         print(f"      disp_str : {_fmt(r.get('disp_strength'))}")
         print(f"      body_rt  : {_fmt(r.get('body_ratio'))}")
-        print(f"      csr      : {r.get('candles_since_retest','?')}")
+        print(f"      csr      : {r.get('candles_since_sweep','?')}")
         print(f"      vol_rat  : {_fmt(r.get('volume_ratio'))}")
         print(f"      risk_pct : {r.get('risk_pct','?')}")
         print()

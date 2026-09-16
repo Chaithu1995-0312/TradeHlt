@@ -2,34 +2,34 @@
   "_doc": "FC-0.5 search coverage. Shallow text hits \u2260 semantic coverage.",
   "directories": {
     "src": {
-      "files": 937,
-      "py": 305,
-      "json_yaml": 5
+      "files": 1873,
+      "py": 627,
+      "json_yaml": 4
     },
     "scripts": {
-      "files": 229,
-      "py": 176,
-      "json_yaml": 0
+      "files": 753,
+      "py": 451,
+      "json_yaml": 5
     },
     "models": {
-      "files": 41,
+      "files": 60,
       "py": 0,
-      "json_yaml": 37
+      "json_yaml": 53
     },
     "configs": {
-      "files": 47,
+      "files": 99,
       "py": 0,
-      "json_yaml": 43
+      "json_yaml": 93
     },
     "docs/governance": {
-      "files": 96,
+      "files": 618,
       "py": 0,
-      "json_yaml": 47
+      "json_yaml": 416
     },
     "tests": {
-      "files": 700,
-      "py": 233,
-      "json_yaml": 3
+      "files": 2027,
+      "py": 570,
+      "json_yaml": 4
     }
   },
   "methods": [

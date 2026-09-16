@@ -222,7 +222,7 @@ def _compute_trades_stats(rows: list[dict], summary: dict | None) -> dict[str, A
     feature_keys = [
         "body_ratio", "disp_strength", "retest_depth",
         "momentum_score", "risk_score", "volatility_ratio",
-        "atr", "rsi_14", "trend_bias", "trend_strength",
+        "atr", "rsi_14", "trend_bias", "trend_strength_z",
     ]
     feature_delta = {}
     for k in feature_keys:

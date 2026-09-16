@@ -37,7 +37,7 @@ DEFAULT_DIMENSION_SOURCES: dict[str, list[str]] = {
         "hour_of_day",
     ],
     "trend_state": [
-        "trend_strength",
+        "trend_strength_z",
         "trend_bias",
         "ema_fast",
         "ema_slow",
@@ -80,8 +80,8 @@ HOW_LABEL_SPEC: dict[str, dict[str, Any]] = {
     },
     "trend_state": {
         "label_field": "trend_band_label",
-        "primary_feature": "trend_strength",
-        "continuous_twins": ["trend_strength", "trend_bias"],
+        "primary_feature": "trend_strength_z",
+        "continuous_twins": ["trend_strength_z", "trend_bias"],
     },
     "candle_quality_state": {
         "label_field": "candle_quality_label",

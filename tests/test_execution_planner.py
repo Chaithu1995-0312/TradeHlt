@@ -56,7 +56,7 @@ def _base_features(**overrides) -> dict:
         "sweep_detected":       False,
         "double_sweep":         False,
         "retest_depth":         0.1,
-        "candles_since_retest": 10,
+        "candles_since_sweep": 10,
         "ema_fast":             99.5,
         "ema_slow":             98.5,
         "momentum_score":       0.7,
@@ -105,7 +105,7 @@ def test_pullback_long_approve():
     f = _base_features(
         sweep_detected=False,
         retest_depth=0.5,
-        candles_since_retest=3,
+        candles_since_sweep=3,
         momentum_score=0.5,
         body_ratio=0.3,
         disp_strength=1.0,
@@ -124,7 +124,7 @@ def test_pullback_short_approve():
     f = _base_features(
         sweep_detected=False,
         retest_depth=0.5,
-        candles_since_retest=3,
+        candles_since_sweep=3,
         momentum_score=0.5,
         body_ratio=0.3,
         disp_strength=1.0,
@@ -198,7 +198,7 @@ def test_reversal_long_when_ema_fast_lt_ema_slow():
         body_ratio=0.3,
         disp_strength=1.0,
         retest_depth=0.0,
-        candles_since_retest=99,
+        candles_since_sweep=99,
         ema_fast=98.0,
         ema_slow=100.0,
         momentum_score=0.0,  # low momentum needed for REVERSAL intent_score
@@ -218,7 +218,7 @@ def test_reversal_short_when_ema_fast_gt_ema_slow():
         body_ratio=0.3,
         disp_strength=1.0,
         retest_depth=0.0,
-        candles_since_retest=99,
+        candles_since_sweep=99,
         ema_fast=100.0,
         ema_slow=98.0,
         momentum_score=0.0,  # low momentum needed for REVERSAL intent_score
@@ -308,7 +308,7 @@ def test_reject_unknown_intent_by_default():
     # Features that match no pattern
     f = _base_features(
         sweep_detected=False, double_sweep=False,
-        retest_depth=0.0, candles_since_retest=99, momentum_score=0.0,
+        retest_depth=0.0, candles_since_sweep=99, momentum_score=0.0,
         body_ratio=0.2, disp_strength=0.5,
         ema_fast=100.0, ema_slow=99.0,   # fast > slow, direction=1 → not REVERSAL
     )
@@ -319,7 +319,7 @@ def test_allow_unknown_intent_when_configured():
     p = _planner(reject_unknown_intent=False)
     f = _base_features(
         sweep_detected=False, double_sweep=False,
-        retest_depth=0.0, candles_since_retest=99, momentum_score=0.0,
+        retest_depth=0.0, candles_since_sweep=99, momentum_score=0.0,
         body_ratio=0.2, disp_strength=0.5,
         ema_fast=100.0, ema_slow=99.0,
     )
@@ -347,7 +347,7 @@ def test_intent_classification_breakout():
 
 def test_intent_classification_pullback():
     f = _base_features(
-        sweep_detected=False, retest_depth=0.5, candles_since_retest=3,
+        sweep_detected=False, retest_depth=0.5, candles_since_sweep=3,
         momentum_score=0.5, body_ratio=0.3, disp_strength=1.0,
     )
     p = _planner()
@@ -372,7 +372,7 @@ def test_intent_classification_reversal():
     f = _base_features(
         sweep_detected=False, body_ratio=0.3, disp_strength=1.0,
         ema_fast=98.0, ema_slow=100.0,
-        retest_depth=0.0, candles_since_retest=99,
+        retest_depth=0.0, candles_since_sweep=99,
     )
     r = p.plan(_engine(1), f, _context())
     if r["decision"] in ("execute", "reject_gate"):

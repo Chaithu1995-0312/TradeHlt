@@ -124,7 +124,7 @@ FEATURE_FLOWS: dict[str, dict] = {
             "atr",
             "retest_depth",
             "double_sweep",
-            "candles_since_retest",
+            "candles_since_sweep",
             "sweep_detected",
         ],
         "derived": [
@@ -132,7 +132,7 @@ FEATURE_FLOWS: dict[str, dict] = {
             "s_sweep from sweep_detected/double_sweep",
             "s_breakout = 0.5*body + 0.5*min(disp_rescale/2,1)",
             "s_retest = exp(-((depth-0.5)^2)/0.04)",
-            "s_time = exp(-lambda * candles_since_retest)",
+            "s_time = exp(-lambda * candles_since_sweep)",
             "final = weighted sum via crt_engine.score_component_weights",
         ],
         "outputs": ["score"],
@@ -154,7 +154,7 @@ FEATURE_FLOWS: dict[str, dict] = {
             "retest_depth",
             "disp_strength",
             "atr",
-            "candles_since_retest",
+            "candles_since_sweep",
             "double_sweep",
         ],
         "derived": [

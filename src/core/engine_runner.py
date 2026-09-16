@@ -148,9 +148,9 @@ def _signed_direction(value: float) -> int:
 
 
 def detect_regime(features: dict, cfg: dict) -> str:
-    # NOTE (2026-07-31): local named `ema_spread_abs`, NOT `trend_strength` — this is abs(ema_spread),
+    # NOTE (2026-07-31): local named `ema_spread_abs`, NOT `trend_strength_z` — this is abs(ema_spread),
     # an unrelated regime-detection quantity distinct from the ontology's registered FM-064
-    # `trend_strength` (a rolling z-score of the ma_20 slope). The two shared a bare name before
+    # `trend_strength_z` (a rolling z-score of the ma_20 slope). The two shared a bare name before
     # FM-064 was registered; renaming this local resolves that collision (zero behavior change —
     # only the local variable's name differs, not its value or the threshold comparison below).
     ema_spread_abs = abs(_safe_float(features.get("ema_spread"), 0.0))

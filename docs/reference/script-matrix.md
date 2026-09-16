@@ -12,7 +12,7 @@ python scripts/analysis/generate_script_matrix.py
 Authority: **inventory only** (no promote power). Thin-wrapper purity is **not**
 CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` only.
 
-**Records:** 470
+**Records:** 472
 
 | ID | Category | Lifecycle | Impl status | Path | Purpose |
 |---|---|---|---|---|---|
@@ -486,6 +486,8 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-468` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/link001_choch_measurement.py` | GRANDFATHER_UNCLASSIFIED |
 | `SCR-469` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/retest_divergence_probe.py` | GRANDFATHER_UNCLASSIFIED |
 | `SCR-470` | GOVERNANCE | ACTIVE | EXTRACTED_TO_SRC | `scripts/maintenance/verify_archive_manifests.py` | Archive ledger verifier (zero-loss promise of the research-framework consolid... |
+| `SCR-471` | GOVERNANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/remap_registries_v6.py` | Relabel trend_strength -> trend_strength_z and candles_since_retest -> candle... |
+| `SCR-472` | PROBE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/trade_intent_ownership_shadow.py` | Shadow-measure trade-intent ownership: CRT-local cache classifier vs canonica... |
 
 ---
 

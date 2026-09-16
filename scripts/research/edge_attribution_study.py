@@ -44,7 +44,7 @@ NF = len(FEATURES)
 # Feature taxonomy (for the "where the edge lives" verdict — descriptive only, NOT used to gate)
 GEOMETRY = {"sweep_detected","liquidity_sweep","break_of_structure","swing_high","swing_low",
             "higher_high","lower_low","body_size","wick_size","body_ratio","disp_strength",
-            "retest_depth","candles_since_retest","liquidity_distance","liquidity_pressure_score"}
+            "retest_depth","candles_since_sweep","liquidity_distance","liquidity_pressure_score"}
 PRICE = {"open","high","low","close","volume"}
 def _family(f): return "geometry" if f in GEOMETRY else ("price" if f in PRICE else "state")
 
@@ -420,7 +420,7 @@ def write_md(meta, rows, interactions):
              "cluster-space / a TradeNet that scores raw setups) is unlikely to add edge on this evidence — the "
              "demonstrated lever remains **throughput/selection policy** (the session change that moved BNB "
              "+4.91%→+20.59%). Invest there before more feature-cluster intelligence.")
-    L.append("- The only features with any unique, broadly-supported, stable effect are **candles_since_retest** "
+    L.append("- The only features with any unique, broadly-supported, stable effect are **candles_since_sweep** "
              "(retest timing) and **volatility_ratio** — and even these are modest (marginal ΔR² ≤ 0.0024). "
              "Interactions (Phase 2) are at best 'regime-conditional' with best-cell PF≈1.25 — positive but not "
              "a strong, standalone edge.\n")

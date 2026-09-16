@@ -26,7 +26,7 @@ def _features(**over):
         "volatility_ratio": 1.2,
         "session": 0,
         "hour_of_day": 8,
-        "trend_strength": 0.1,
+        "trend_strength_z": 0.1,
         "trend_bias": 1,
         "ema_fast": 10.0,
         "ema_slow": 9.0,

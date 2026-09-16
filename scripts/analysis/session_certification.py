@@ -515,7 +515,7 @@ def build_artifact(checkpoint: dict, battery: dict) -> dict:
             "research/governance only — descriptive certification; grants no runtime authority (§6.5)"
         ),
         "scope_boundary": (
-            "canonical FeaturePipeline session only; trend_strength/volatility_regime untouched"
+            "canonical FeaturePipeline session only; trend_strength_z/volatility_regime untouched"
         ),
     }
 

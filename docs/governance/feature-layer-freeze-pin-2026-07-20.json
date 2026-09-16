@@ -1,5 +1,5 @@
 {
-  "_doc": "Feature-layer GOVERNANCE freeze pin + XAUUSD-only regression benchmark (2026-07-20, scoped 2026-07-20b). Not a scientific claim that feature research is complete. Do not hand-edit vector hashes — regenerate with FeaturePipeline on the pinned CSV. BNB and multi-instrument runtime benchmarks are deferred to R-1/R-2 runtime suite, not this pin. Mutation of frozen surfaces requires an accepted future-program waiver.",
+  "_doc": "Feature-layer GOVERNANCE freeze pin + XAUUSD-only regression benchmark (2026-07-20, scoped 2026-07-20b). Not a scientific claim that feature research is complete. Do not hand-edit vector hashes \u2014 regenerate with FeaturePipeline on the pinned CSV. BNB and multi-instrument runtime benchmarks are deferred to R-1/R-2 runtime suite, not this pin. Mutation of frozen surfaces requires an accepted future-program waiver.",
   "schema_version": "1.1.0",
   "freeze_id": "FEATURE-LAYER-MUTATION-FREEZE-2026-07-20",
   "status_token": "FEATURE_LAYER_MUTATION_FREEZE = ACTIVE",
@@ -8,8 +8,8 @@
   "active_config_version": "v2_multi_2026_04",
   "prod_version_constant": "v2_multi_2026_04",
   "schema": {
-    "schema_version": "5.0",
-    "schema_hash": "f52bf5d3f2ae6ddb75e8a35e9c323e07",
+    "schema_version": "6.0",
+    "schema_hash": "d40e7c7d5b624ef6d27670255ad95a35",
     "feature_dim": 48,
     "feature_count": 48,
     "canonical_features": [
@@ -24,7 +24,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -48,7 +48,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest",
+      "candles_since_sweep",
       "liquidity_distance",
       "liquidity_pressure_score",
       "volume_spike",
@@ -66,23 +66,23 @@
   "source_file_pins": {
     "market_ontology.yaml": {
       "path": "configs/formulas/market_ontology.yaml",
-      "sha256": "d2a6577e7bdc4d908067005ea53790350cd5d6386d0b145cef03669d57b71fbb"
+      "sha256": "9be0e6a6672351661a80cdb6beeb54149370697d8d84c5cb3d546880c1fa7d76"
     },
     "active_config": {
       "path": "configs/production/v2_multi_2026_04.json",
-      "sha256": "a9507d6c2e5658caf831f9bb2618116b9d4ba23edaa6aff49804c81098b2a74a"
+      "sha256": "87e0251583e4f62cd30c38b39b20b7d0dbda33193f9c346e1f2c7c33f07d503d"
     },
     "ACTIVE_VERSION": {
       "path": "configs/production/ACTIVE_VERSION",
-      "sha256": "4bd5912b8195855d0ccc346938ca90a376b617a1f7d639259f233ee348fb3acb"
+      "sha256": "23f20fbfb4f5925c729eccb84850dc315647c181af117032fcd8fc30401eb889"
     },
     "feature_pipeline.py": {
       "path": "src/features/feature_pipeline.py",
-      "sha256": "40d3fed6cac0baf24538b68bfc5e0296f25cace1308ab23296e0b8af2860c8f8"
+      "sha256": "466180716eb9ac8694b80bde4ba9ab642bd21c5a067f14ba0af53db1719cb60a"
     },
     "feature_schema.py": {
       "path": "src/features/feature_schema.py",
-      "sha256": "d418cac53ed5444bedbf550f398904810eda76adb22d31c329be245566f51530"
+      "sha256": "9cd612698e863e93c15773589e47d355e5adb1e3d9d80081ac7831602bba5a75"
     },
     "candle_math.py": {
       "path": "src/features/candle_math.py",
@@ -90,7 +90,7 @@
     },
     "derived_math.py": {
       "path": "src/features/derived_math.py",
-      "sha256": "55a8dd08f94600e3b93e0ced66f862ab795ab7cf823282f651a1d37b557c84d6"
+      "sha256": "2739faccef2c15b27e71283a89ec34aaae1321575712c4da84feff4e2f9e508d"
     },
     "causal_structure.py": {
       "path": "src/features/causal_structure.py",
@@ -98,7 +98,7 @@
     },
     "registry_init.py": {
       "path": "src/features/registry/__init__.py",
-      "sha256": "daf5142ebcdb864c93546fbb0a3618c37a45c65647817a1ff1a26a414ee6084e"
+      "sha256": "f500598f0057a1863bac083fe28e3b10373064f0d36569776a6638726f7d9766"
     }
   },
   "regression_benchmarks": {
@@ -145,7 +145,7 @@
         "feature_rows_out": 3871,
         "warmup_drop": 78,
         "trade_count": null,
-        "trade_count_note": "Not part of this benchmark. Related XAUUSD 2-month BACKTEST (separate artifact) had 0 trades / 3 session-filtered retests — see results/XAUUSD/backtests/run_20260719_021925_XAUUSD/ and tracker section 13. That is runtime evidence, not a feature-matrix pin field.",
+        "trade_count_note": "Not part of this benchmark. Related XAUUSD 2-month BACKTEST (separate artifact) had 0 trades / 3 session-filtered retests \u2014 see results/XAUUSD/backtests/run_20260719_021925_XAUUSD/ and tracker section 13. That is runtime evidence, not a feature-matrix pin field.",
         "related_runtime_artifact": "results/XAUUSD/backtests/run_20260719_021925_XAUUSD/"
       }
     }
@@ -224,18 +224,18 @@
       "note": "user-authorized 2026-07-22. Three changes to CANONICAL_FEATURES: (1) macd_hist -> macd_hist_raw + macd_hist_z, ending the in-place z-score overwrite that made the emitted value differ from the declared formula (FM-049's own note warned of this); (2) wick_size -> candle_range, the honest name for high-low, which the ontology already declares as FM-002's semantic_quantity with wick_size as misnomer_alias; (3) FM-052 session domain {0,1,2} hour-partition -> {0..4} window model incl. OVERLAP and CLOSED. SCHEMA_HASH and FEATURE_ORDER_HASH are computed over feature NAMES (feature_schema.py:111,122), so (1) and (2) invalidate every stored schema hash with zero math change; (3) changes emitted values on slot 30. Requires baseline recapture and per-artifact reconciliation.",
       "supersedes_or_absorbs": [
         "M16-WU-SUPERSEDED-VECTOR-MIGRATION (this IS the explicit migration plan + retrain gates it required; still no silent dim swap)",
-        "M16-WU-SESSION-ENCODING (P1, BLOCKS_ACTIVATION — the canonical-vs-consumer session encoding permutation is resolved by the single owning module)",
-        "T-17 (macd_hist z-score semantics revisit — resolved by splitting raw from normalized)",
-        "T-19 (naming revisit — same class of fix as the candle_range rename)"
+        "M16-WU-SESSION-ENCODING (P1, BLOCKS_ACTIVATION \u2014 the canonical-vs-consumer session encoding permutation is resolved by the single owning module)",
+        "T-17 (macd_hist z-score semantics revisit \u2014 resolved by splitting raw from normalized)",
+        "T-19 (naming revisit \u2014 same class of fix as the candle_range rename)"
       ],
       "_supersession_note": "The absorbed ids are RETAINED in this list above, not deleted (CLAUDE.md 6.2 rule 4). They record what was planned and when; this entry records how it was discharged.",
-      "parity_contract": "NONE — PRODUCTION_BEHAVIOR_CHANGED = YES. The XAUUSD vector SHA, schema hash, feature_dim and canonical_features WILL move and must be regenerated by running the pipeline, never hand-edited. The binding requirement is instead ATTRIBUTION: the gate-ON BNBUSDT ledger delta must be fully explained by the three sub-changes measured independently. An unattributed delta means stop.",
+      "parity_contract": "NONE \u2014 PRODUCTION_BEHAVIOR_CHANGED = YES. The XAUUSD vector SHA, schema hash, feature_dim and canonical_features WILL move and must be regenerated by running the pipeline, never hand-edited. The binding requirement is instead ATTRIBUTION: the gate-ON BNBUSDT ledger delta must be fully explained by the three sub-changes measured independently. An unattributed delta means stop.",
       "prerequisite": "ZONEGATE-ALIGNMENT-SAFETY-NET must be green FIRST (tests/test_zone_gate_alignment.py). ZoneGate is the only live hard gate (F-041) and consumed the vector POSITIONALLY while silently truncating over-length vectors; migrating the schema before closing that path would have mis-scored silently."
     },
     {
       "id": "ZONEGATE-ALIGNMENT-SAFETY-NET",
       "phase": "fail-closed vector alignment; prerequisite of SCHEMA-V4-VECTOR-MIGRATION",
-      "note": "2026-07-22. models/zone_registry.json always stored a top-level `feature_order` and nothing read it; zone_gate_engine._extract_vector built from the ambient CANONICAL_FEATURE_ORDER and silently truncated over-length vectors (a v2.0(35)->v3.0(38) back-compat path). Fixed: scoring is now name-anchored to the registry's own feature_order, truncation raises, and a registry naming a feature absent from the live schema raises ZoneFeatureOrderError at LOAD (never fail-open — a hard gate scoring a misaligned vector is worse than no gate).",
+      "note": "2026-07-22. models/zone_registry.json always stored a top-level `feature_order` and nothing read it; zone_gate_engine._extract_vector built from the ambient CANONICAL_FEATURE_ORDER and silently truncated over-length vectors (a v2.0(35)->v3.0(38) back-compat path). Fixed: scoring is now name-anchored to the registry's own feature_order, truncation raises, and a registry naming a feature absent from the live schema raises ZoneFeatureOrderError at LOAD (never fail-open \u2014 a hard gate scoring a misaligned vector is worse than no gate).",
       "parity_contract": "MUST be a no-op at v3.0: name-anchored extraction == positional extraction while feature_order == CANONICAL_FEATURE_ORDER, and the gate-ON BNBUSDT ledger stays 9bcba138775d4109."
     },
     {
@@ -243,6 +243,14 @@
       "phase": "active-arm feature-schema migration (v4.0/39dim -> v5.0/48dim) + new CRTState members; NOT parity-preserving by design",
       "note": "2026-08-15. Adds a real calendar-true HTF parent candle + 3-candle CRT (C1 range/C2 manipulation/C3 distribution) as new CRTState members RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3 (disjoint sub-graph, parent-timeframe scoped), and registers 9 previously-ABSENT SMC primitives (order block, FVG, breaker, mitigation block, PDH/PDL, EQH/EQL, CHoCH) as canonical vector features. Ships on new active version v2_htfcrt_2026_08 with the arm ON, by explicit user decision accepting a ledger change (not a byte-identity migration like SCHEMA-V4-VECTOR-MIGRATION or FM-030/031).",
       "parity_contract": "NONE -- PRODUCTION_BEHAVIOR_CHANGED = YES, declared intent. Acceptance bar is fully-attributed ledger diff (every changed trade maps to a named mechanism), not byte-identity. See docs/implementation_plan/study-sujantrader-docs-composed-snowflake.md Phase 6 Verification."
+    },
+    {
+      "id": "SCHEMA-V6-NORMALIZATION-IDENTITY-FIX",
+      "phase": "naming-identity correction (v5.0 -> v6.0); dimension-preserving, value-preserving by contract",
+      "note": "2026-09-16. Renames emitted columns so each name states the quantity it carries, the same defect class SCHEMA-V4-VECTOR-MIGRATION fixed for macd_hist/wick_size. Canonical vector stays 48 dims and keeps its ordering: index 11 trend_strength -> trend_strength_z (the value has always been a rolling z-score, NORMALIZE_COLS overwrote the raw chain in place), index 35 candles_since_retest -> candles_since_sweep (the value has always counted bars since the last liquidity_sweep, verified 47,183/47,183 on the XAUUSD M15 corpus and 0 on exactly the 7,542 sweep bars). Three non-canonical columns move from in-place z-scoring to the existing NORMALIZE_TO_NEW_COL raw/z split: bb_width, price_vs_ma20, price_vs_ma50 each become *_raw + *_z, and trend_strength's raw stage is emitted as trend_strength_raw (non-canonical, NOT a new vector slot, by explicit user decision -- a price-unit non-stationary dim is not added to the model vector). FM-064 and FM-065 refine IN PLACE (same FM ids, version bumped). candles_since_retest_state (FM-070) is a different quantity and keeps its name, including its BitNet call-boundary alias key.",
+      "parity_contract": "STRICT -- PRODUCTION_BEHAVIOR_CHANGED = NO. Names move, values do not. Acceptance bar: (a) the 48-dim vector compared BY POSITION pre/post on data/mt5/XAUUSD_M15.csv is bit-identical; (b) trend_strength_z post == trend_strength pre and candles_since_sweep post == candles_since_retest pre elementwise; (c) a XAUUSD backtest ledger (trades.csv + events.jsonl state sequence + rejection set) is byte-identical modulo run_id. SCHEMA_HASH and FEATURE_ORDER_HASH DO change -- they are derived from the names -- so this pin's schema block and results/baseline are regenerated by running the pipeline, never hand-edited.",
+      "user_authorization": "AskUserQuestion answers 2026-09-16: scope=all five columns; z-scored columns=split raw + z; raw trend_strength stays OUT of the canonical vector; old names=hard rename (no dual-emit); model feature_order JSONs=rewrite the stored lists. Plan approved via ExitPlanMode the same session.",
+      "impact_manifest": "docs/governance/build_manifests/CH-schema-v6-normalization-identity.impact.json"
     }
   ],
   "engineering_focus_after_freeze": "docs/implementation_plan/backtest-runtime-roadmap-2026-07-20.md",
@@ -450,15 +458,35 @@
       },
       "bounding_evidence": "tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression PASSED under the PROJECT interpreter venv/Scripts/python.exe with the amended file in place (vector_sha256 3d133d81e085f09b... unchanged, 48-dim float32). validate_semantic_registry() -> []. 156 semantic/isolation/relations tests green; measurement-contract floor 16/16.",
       "authority": "Research-lane semantic amendment only. No promotion, no G001, no ACTIVE_VERSION change, no feature activation. economic_claims_allowed remains false on MC-VCRT-XAUUSD-M15-V1."
+    },
+    {
+      "date_utc": "2026-09-16",
+      "program_id": "SCHEMA-V6-NORMALIZATION-IDENTITY-FIX (correction, discovered during CH-intent-schema-alignment)",
+      "source_sha_refresh": "feature_pipeline.py",
+      "why_this_refresh_exists": "SELF-INFLICTED STALE PIN, not foreign drift. During CH-schema-v6-normalization-identity the pin's source SHAs were refreshed at ~04:32Z, and THEN two further edits were made to feature_pipeline.py at 04:45:28Z and 04:45:30Z (updating the F-064 startup-warning text 99.70% -> 99.81%) without re-refreshing. tests/test_feature_layer_freeze.py is NOT in the GREEN_FLOOR, so the governance floor could not catch it; it surfaced only when CH-intent-schema-alignment ran that test directly.",
+      "attribution_measured": {
+        "_doc": "FULLY attributed, measured from the session transcript rather than inferred. Exactly two Edit calls touched feature_pipeline.py between 04:30Z and 05:00Z; reversing both on an in-memory copy of the live file re-hashes to exactly the stale pinned value 380d2dce.... Line endings ruled out first: the live file is LF-only and neither LF nor CRLF variants of the live file or the HEAD blob match the pin.",
+        "feature_pipeline.py": {
+          "pinned_stale": "380d2dce1be5536e9cdc016d1710dcae3433de82601b4a8f71257837edfd5609",
+          "live": "466180716eb9ac8694b80bde4ba9ab642bd21c5a067f14ba0af53db1719cb60a",
+          "live_with_the_two_0445Z_edits_inverted": "380d2dce1be5536e9cdc016d1710dcae3433de82601b4a8f71257837edfd5609"
+        },
+        "edits": [
+          "04:45:28Z -- a logger string literal: '... |tanh(momentum_score)|>0.999 on 99.70 pct ' -> '... on 99.81 pct '",
+          "04:45:30Z -- a source comment: '... saturates (>0.999) on 99.70% of bars, and the' -> '... on 99.81% of bars (F-064 re-measured 2026-09-16 on the full 47,197-bar corpus; the earlier 99.70% was n=19,922), and the'"
+        ]
+      },
+      "value_neutrality": "Both edits are a log-message literal and a comment; neither can change an emitted feature value. Bounded mechanically: test_xauusd_window_vector_regression PASSED with this file in place (vector_sha256 unchanged).",
+      "authority": "Pin-hygiene correction only. Corrects the recorded state of a prior change set; grants nothing."
     }
   ],
   "runtime_benchmarks": {
     "status": "NOT_YET_OPENED",
     "opens_with": "docs/implementation_plan/backtest-runtime-roadmap-2026-07-20.md R-1/R-2",
     "planned_examples": [
-      "Runtime Benchmark 1 — BNB Gate ON/OFF",
-      "Runtime Benchmark 2 — Multi-instrument execution",
-      "Runtime Benchmark 3 — Trade ledger parity"
+      "Runtime Benchmark 1 \u2014 BNB Gate ON/OFF",
+      "Runtime Benchmark 2 \u2014 Multi-instrument execution",
+      "Runtime Benchmark 3 \u2014 Trade ledger parity"
     ],
     "note": "Deliberately separate from feature freeze pin so feature parity is not confused with execution-path coverage."
   }

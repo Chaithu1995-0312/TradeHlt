@@ -81,7 +81,7 @@ def derive_intent_from_features(features: dict, direction: int) -> str:
     sweep         = bool(features.get("sweep_detected", False))
     double_sweep  = bool(features.get("double_sweep",   False))
     retest_depth  = float(features.get("retest_depth",  0.0))
-    csr           = int(  features.get("candles_since_retest", 99))
+    csr           = int(  features.get("candles_since_sweep", 99))
     momentum      = float(features.get("momentum_score", 0.0))
     body_ratio    = float(features.get("body_ratio",     0.0))
     disp_strength = float(features.get("disp_strength",  0.0))

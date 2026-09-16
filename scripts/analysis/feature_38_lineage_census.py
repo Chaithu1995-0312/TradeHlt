@@ -171,7 +171,7 @@ LINEAGE: dict[str, dict] = {
         "pit_class": "CAUSAL_DERIVED",
         "consumers": ["FeaturePipeline vector", "Gaussian/BitNet inputs"],
     },
-    "trend_strength": {
+    "trend_strength_z": {
         "source_ohlcv": ["close"],
         "formula": "rolling mean of ma_20.diff()",
         "formula_id": "DERIVED-TREND",
@@ -460,7 +460,7 @@ LINEAGE: dict[str, dict] = {
         "pit_class": "CAUSAL_DERIVED",
         "consumers": ["FeaturePipeline", "CRT", "FeatureMonitor"],
     },
-    "candles_since_retest": {
+    "candles_since_sweep": {
         "source_ohlcv": ["high", "low", "close"],
         "formula": "bars since last retest event flag",
         "formula_id": "STRUCT-COUNT",

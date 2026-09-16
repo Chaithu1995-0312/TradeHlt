@@ -1,9 +1,9 @@
 {
-  "_doc": "M13B trend_strength nested rolling certification.",
+  "_doc": "M13B trend_strength_raw nested rolling certification.",
   "schema_version": "1.0",
-  "generated_at": "2026-07-14T06:30:17.664505+00:00",
+  "generated_at": "2026-09-16T04:43:12.778520+00:00",
   "session_program": "M13B",
-  "TARGET_FEATURE": "trend_strength",
+  "TARGET_FEATURE": "trend_strength_raw",
   "TARGET_IDENTITY": "NESTED_ROLLING_CAUSAL_METRIC",
   "FORMULA": "SMA10(diff(SMA20(close)))",
   "ROOT_DEPENDENCY": "close",
@@ -36,9 +36,9 @@
   "INTERMEDIATES_PUBLISHED_AS_DAG_NODES": "NO",
   "CERTIFICATION_AUTHORITY_DEPENDENCY": "close only",
   "checkpoint": {
-    "PROMOTED_PRODUCTION": 44,
+    "PROMOTED_PRODUCTION": 45,
     "READY_TO_CERTIFY": 2,
-    "SUPERSEDED": 2
+    "SUPERSEDED": 6
   },
   "probes": {
     "clean_finite": {
@@ -97,14 +97,14 @@
       "forbidden_hits": [],
       "canonical_ne_abs_ema_spread": "PASS",
       "const_series_strength_zero": "PASS",
-      "deferred_debt": "dual_engine detect_regime uses abs(ema_spread) under local name trend_strength"
+      "deferred_debt": "dual_engine detect_regime uses abs(ema_spread) under local name trend_strength_z"
     },
     "overall_verdict": "CERTIFIED",
     "all_probes_pass": true,
     "oracle_source_sha256": "258996cbeb4198768e9f653ef2769f674ab5d66a06545e390228a08787714a0b"
   },
   "KNOWN_DEBT": [
-    "dual_engine local variable trend_strength derives from abs(ema_spread)",
+    "dual_engine local variable trend_strength_z derives from abs(ema_spread)",
     "scale-dependent consumer thresholds (s07/s08)",
     "no ontology/FM registration"
   ],
@@ -112,5 +112,5 @@
   "PRODUCTION_BEHAVIOR_CHANGED": "NO",
   "CANONICAL_VECTOR_DIMENSION": 38,
   "authority": "research/governance only \u2014 descriptive certification; grants no runtime authority (\u00a76.5)",
-  "scope_boundary": "trend_strength only; volatility_regime untouched"
+  "scope_boundary": "trend_strength_z only; volatility_regime untouched"
 }

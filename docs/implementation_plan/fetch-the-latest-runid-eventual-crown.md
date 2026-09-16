@@ -1,90 +1,123 @@
-# Full-corpus XAUUSD feature frame → Parquet + DuckDB views + .xlsx
+# TRADE_INTENT_OWNERSHIP_SHADOW — measure option C before authorizing it
+
+`OBSERVATION_ONLY` per `docs/governance/TASK_CLASSIFICATION_BEHAVIOR_POLICY.md`.
+**No `src/` edit at all** (the F-067 probe precedent), so ledger identity is structural, not merely
+measured. No config, no registry, no promotion, no G001.
 
 ## Context
-User wants the entire XAUUSD M15 feature frame (all 91 pipeline columns, full corpus) saved as
-Parquet, queryable in DuckDB, and as an Excel file. Exploration found most of this already exists:
-`scripts/research/build_bar_matrix.py` (SCR-412) wrote
-`results/research/bar_matrix/XAUUSD_M15/bar_matrix.parquet` on 2026-09-09 — 47,197 rows × 124 cols,
-manifest-pinned (`corpus_sha256 4d73f5ce…`, schema v5.0, `feature_order_hash 160c96c52b198a16`,
-`parquet_written: true`), already a `bar_matrix` family in `scripts/analysis/query_trace.py`.
-Its first 91 columns ARE the pipeline block (90 feature cols + `_pos`, the raw-corpus position it
-attaches before `FeaturePipeline.run()`); the other 33 are `atr_abs`, 19 `state__*`, CRT/parent/
-candle/regime/intent. A read-only check matched my fresh pipeline run on the first 50 rows exactly,
-but `src/features/` has commits since 09-09, so that is not full-corpus proof.
 
-User decisions (AskUserQuestion): (1) rebuild bar_matrix + verify the full corpus, AND (3) a separate
-features-only Parquet; DuckDB = views over Parquet (repo convention, no .db file); install openpyxl
-and write a full .xlsx.
+The caller census (`docs/analysis/trade-intent-caller-census-2026-09-16.md`) established that
+`ExecutionEngine._derive_trade_intent` reads a CANONICAL vocabulary but is fed a 6-key CRT-local
+`cached_features`, overlapping on only `body_ratio` and `double_sweep`. `pullback` is therefore dead
+on two independent conditions and `liq_sweep` rests on `double_sweep` alone. Determination was
+`TEST / CONTRACT GAP`, with the ownership question left open.
 
-Also owed (E-001 correction, this session): I told the user `trades.csv` had "90 cols" and wrote that
-into `docs/topics/feature-schema.md`; the header actually has **86**. And "91 columns" for my scratch
-dump was 90 + my own `row_after_warmup` index (the bar_matrix pipeline block is genuinely 91 because
-of `_pos`).
+User has now chosen the target architecture — **option C, the F-048 treatment**: delete the CRT
+classifier and let `ExecutionPlannerV1_2._derive_intent` own intent — and chosen to **measure it in
+shadow first** before any ledger-changing edit.
 
-## Approach — extend the existing builder, no new script
+**The feasibility question is answered: yes, from modules already built.** Nothing new is needed to
+produce the data:
 
-### 1. `scripts/research/build_bar_matrix.py` (one pipeline pass, three outputs)
-- In `build_bar_matrix()`, right after the pipeline checks (~line 183, before `atr_abs` is added at
-  :187), snapshot `feature_cols = list(enriched.columns)` (the 91-col block). Record in manifest:
-  `feature_columns`, `feature_column_count`.
-- Add code identity to the manifest (concurrent sessions + dirty tree make "which code built this"
-  otherwise unanswerable): `git_sha` and `tree_dirty` via existing `utils.run_manifest._git`
-  (`src/utils/run_manifest.py:49`).
-- In `main()`, after the existing `bar_matrix.parquet` write (:368-373), mirror its exact
-  optional-writer pattern:
-  - `frame[feature_cols].to_parquet(out_dir / "features.parquet", index=False)` →
-    `features_parquet_written` / `features_parquet_skipped_reason`.
-  - New opt-in flag `--xlsx` (default off, so smoke/limit runs stay fast and default outputs are
-    unchanged): `frame[feature_cols].to_excel(out_dir / "features.xlsx", index=False,
-    sheet_name="features")` inside try/except → `features_xlsx_written` /
-    `features_xlsx_skipped_reason` (missing openpyxl or >1,048,575 rows recorded, never raised).
-- No change to bar_matrix.csv / bar_matrix.parquet content or column order.
+| Piece | Already exists | Where |
+|---|---|---|
+| Whole canonical frame, precomputed up front | yes | `backtest_v2.py:2034` (`enriched_df, self.feature_vectors = pipeline.run()`) |
+| Timestamp → row index | yes | `backtest_v2.py:2003` `feature_ts_to_idx` |
+| Hardened fail-closed row lookup | yes | T-16 block, `backtest_v2.py:2995-3015` |
+| Canonical name→value dict for a bar | yes | `_construction_trace_feature_dict()` `backtest_v2.py:2396` |
+| Canonical frame builder for a probe | yes | `crt_episode_number_trace.py:177` `build_ftr_context` / `:223` `full_feature_record` |
+| Engine replay with `build_trade` interception | yes | `crt_episode_number_trace.py:305` `replay` / `:370` `build_trade_traced` |
+| A working canonical-vocabulary classifier | yes | `ExecutionPlannerV1_2._derive_intent`, `execution_planner.py:331` |
 
-### 2. `scripts/analysis/query_trace.py` (DuckDB views)
-- Add family `"bar_matrix_features": ("results/research/bar_matrix/**/features.parquet",)` and add it
-  to `_NON_PROJECTION_FAMILIES`.
-- Generalize `_bar_matrix_parquet_ok(projection)` to pick the manifest flag by filename
-  (`bar_matrix.parquet` → `parquet_written`, `features.parquet` → `features_parquet_written`), so a
-  skipped features write is REFUSED exactly like a skipped bar_matrix write.
-- Lineage (`assert_view_lineage`, ~:292): `if fam in _NON_PROJECTION_FAMILIES` instead of
-  `== "bar_matrix"` — both read `corpus_sha256` from the same sibling `manifest.json`.
-- `tests/test_query_trace.py`: add `test_bar_matrix_features_refused_when_parquet_not_written`,
-  modelled on the existing `test_bar_matrix_refused_when_parquet_not_written` (:244).
+The only true gap is a **seam**, not a module: `process_candle` (`crt_engine_v2.py:2850`) is called
+at `backtest_v2.py:2844`, but the canonical row for that same bar is not looked up until `:3015`,
+and `build_trade` runs deep inside `process_candle` at `crt_engine_v2.py:3471`. The frame is fully
+materialized in `__init__`, so moving a dict lookup earlier introduces no lookahead — the seam is
+wiring, and this shadow does not cut it.
 
-### 3. Environment
-- `venv/Scripts/python.exe -m pip install openpyxl` (user-authorized). Not adding a pyproject extra:
-  `pyproject.toml` has another session's uncommitted edits; the writer is optional-guarded anyway.
+Intended outcome: know what option C would actually do to intent labels and TP-multiplier selection
+— **including whether it introduces a new reject path** — before anyone authorizes the edit.
 
-### 4. Build (background, ~6–10 min; prior build 321 s + xlsx)
-- Preflight per CLAUDE.md: `git status --porcelain`, confirm `sys.prefix` = `D:\Tradelatest\venv`.
-- Move the 09-09 artifacts aside (reversible, not deleted): copy `bar_matrix.parquet` +
-  `manifest.json` to the scratchpad as `*_20260909` for the old-vs-new diff.
-- `venv/Scripts/python.exe scripts/research/build_bar_matrix.py --instrument XAUUSD --timeframe M15 --xlsx`
+## The specific risk this must surface
 
-### 5. Doc sync + log
-- `docs/topics/feature-schema.md` Discussion entry: `trades.csv (90 cols` →
-  `trades.csv (86 cols; CORRECTED 2026-09-16: was "90")`; add one dated line naming `features.parquet`
-  / `features.xlsx` / the `bar_matrix_features` query family.
-- Append a SESSION LOG ENTRY to `assistant_project.md` (Edit-append only; concurrently modified file).
+The two classifiers are not label-compatible:
 
-## Verification
-1. **Full-corpus independent check** (scratchpad script, separate process): fresh
-   `FeaturePipeline(raw_with__pos).run()` vs `features.parquet` over all 47,197 rows × 91 cols —
-   numeric `allclose(rtol=1e-9, equal_nan)`, strings/timestamps exact; `_pos` strictly increasing;
-   48/48 `CANONICAL_FEATURES` present, no NaN.
-2. **Old vs new bar_matrix**: column-by-column diff of the 09-09 copy vs rebuilt parquet → report which
-   columns (if any) changed, i.e. whether the 09-09 artifact was stale.
-3. **features.parquet == bar_matrix.parquet[:91 cols]** exactly (same pass, must be identical).
-4. **DuckDB**: `venv/Scripts/python.exe scripts/analysis/query_trace.py --family bar_matrix_features
-   --sql "select count(*), count(distinct _pos), min(timestamp), max(timestamp) from bar_matrix_features"`
-   → 47197 / 47197 / 2024-05-22 20:30:00 / 2026-05-21 23:45:00; also a two-view query joining
-   `bar_matrix` ⋈ `bar_matrix_features` on `_pos` (lineage banner must pass, same corpus_sha256).
-5. **xlsx**: reopen with openpyxl `read_only=True` → 47,198 rows (incl. header) × 91 cols; first and
-   last data rows equal the parquet.
-6. **Floors**: `pytest tests/test_query_trace.py -q` and
-   `pytest tests/test_topic_docs.py tests/test_doc_citations.py -q` green.
-7. Send `features.xlsx` path + DuckDB query output to the user (SendUserFile for the xlsx, ~40MB).
+- CRT returns 4 lowercase outcomes and **always classifies** (fallthrough `reversal`).
+- The planner returns 5 UPPERCASE outcomes; its fallthrough is **`UNKNOWN`**, and `plan()` turns
+  that into `{"decision": "reject_unknown_intent"}` when the config flag is set
+  (`execution_planner.py:233-238`). Its `REVERSAL` is also a different test — EMA-vs-direction, not
+  a fallthrough.
+
+So option C can **reject trades the CRT rail currently opens**. That is the headline number.
+
+## Build
+
+One new file: **`scripts/analysis/trade_intent_ownership_shadow.py`**, reusing
+`crt_episode_number_trace`'s `build_ftr_context` / `full_feature_record` (canonical row by bar) and
+its `replay` + `build_trade_traced` interception pattern rather than re-deriving either.
+
+At every RETEST confirmation (wherever `cached_features` is populated — a larger population than
+trade-opens) record a paired observation:
+
+- **Arm CURRENT** — `ExecutionEngine._derive_trade_intent(state.cached_features, cfg.breakout_disp_threshold)`,
+  then `tp1_mult = getattr(cfg, f"tp1_atr_multiplier_{intent}", cfg.tp1_atr_multiplier)`.
+- **Arm C** — `ExecutionPlannerV1_2._derive_intent(canonical_row, {"selected_direction": +1/-1})`
+  with the bar's canonical row, direction mapped from `state.direction`; same `getattr` on the
+  lowercased label.
+
+Per record: timestamp, bar index, CRT state, direction, both intents, both multipliers, agreement
+flag, and an `is_unknown` flag. Also read and report the active
+`execution_planner.reject_unknown_intent` value rather than assuming it.
+
+**Pre-registration (sealed in the script docstring before any result is read), per E-001:**
+Arm CURRENT is predicted to be `reversal` on nearly every record; Arm C is predicted to produce a
+non-trivial `PULLBACK` share and a non-zero `UNKNOWN` count; n is predicted to be small enough to be
+economically INSUFFICIENT.
+
+## Declared limitations — to be written into the artifact, not discovered afterwards
+
+1. **n will be tiny.** XAUUSD on the active config yields ~3 trade-opens and a small retest
+   population. This measures **mechanism** (does the label move, does a new reject appear), never
+   economics. No expectancy claim is derivable and none will be made.
+2. **A label difference is partly definitional, not only coverage.** Arm CURRENT's `rd`/`disp` are
+   FM-027/FM-028; Arm C's `retest_depth`/`disp_strength` are FM-021/FM-020 — different quantities —
+   and `body_ratio` differs in subject (displacement candle vs current bar). Disagreement must be
+   reported as *both* causes, not attributed to coverage alone. (This is the exact trap the census
+   already corrected once.)
+3. Calling `_derive_intent` directly bypasses `plan()`; declared, since only the classifier is
+   under test.
+4. XAUUSD only, per standing constraint.
+
+## Outputs
+
+1. `scripts/analysis/trade_intent_ownership_shadow.py` — registered the same turn via SITS
+   (`script_census.py --write-stubs` → `seed_script_registry.py` → `generate_script_matrix.py`,
+   §3.1b). Append a single stub row; do **not** bulk-merge, which would absorb other sessions'
+   unregistered scripts.
+2. `docs/governance/trade_intent_ownership_shadow.LATEST.json` — immutable artifact (b2a precedent),
+   carrying the confusion matrix, the UNKNOWN count, the TP-multiplier change count, and the sealed
+   predictions with their pass/fail.
+3. `docs/analysis/trade-intent-caller-census-2026-09-16.md` — append a `## 9. Shadow measurement
+   (option C)` section. The census is the owning doc; no new doc.
+4. `assistant_project.md` SESSION LOG entry.
+5. **No finding** unless the mechanism result is decisive. A small-n mechanism observation does not
+   earn an F-id; if it lands, it is a Note, not a new row.
 
 ## Out of scope
-No change to FeaturePipeline, schema, active config, or bar_matrix column content. No persistent
-.duckdb file. No commit unless asked.
+
+- Cutting the seam. No `process_candle` signature change, no engine setter, no removal of
+  `_derive_trade_intent`. Option C is the *measured target*, not this turn's edit.
+- Any retrain, promotion, `ACTIVE_VERSION` change, or corpus expansion beyond XAUUSD.
+
+## Verification
+
+1. `venv/Scripts/python.exe -m pytest -q tests/test_breakout_disp_threshold.py tests/test_execution_contract_v1.py`
+   — the two floors that pin `_derive_trade_intent`; green proves the probe changed no behaviour.
+2. `venv/Scripts/python.exe -m pytest -q tests/test_script_registry.py tests/test_script_matrix_sync.py`
+   — SITS registration. `test_script_registry` has 3 pre-existing failures in the baseline; confirm
+   they are byte-identical and do not name the new script.
+3. `venv/Scripts/python.exe scripts/maintenance/check_governance_invariants.py --all` — must stay at
+   **12 failed / 567 passed**, same twelve names. Any new red is this change's regression.
+4. Non-vacuity: assert the probe actually recorded > 0 paired observations and that both arms ran on
+   every record — a shadow that silently measured nothing is the F-079/F-083 silent-gap class, and
+   must fail loudly rather than report agreement.

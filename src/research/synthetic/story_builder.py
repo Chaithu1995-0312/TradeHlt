@@ -93,7 +93,7 @@ def _design_features(spec: StorySpec, entry_bar: _Bar) -> dict[str, Any]:
         "open": entry_bar.open, "high": entry_bar.high, "low": entry_bar.low, "close": entry_bar.close,
         "body_ratio": float(cm_body_ratio(entry_bar.open, entry_bar.high, entry_bar.low, entry_bar.close)),
         "disp_strength": float(c.disp_strength), "atr": float(c.atr),
-        "retest_depth": float(c.retest_depth), "candles_since_retest": int(c.candles_since_retest),
+        "retest_depth": float(c.retest_depth), "candles_since_sweep": int(c.candles_since_sweep),
         "sweep_detected": bool(c.sweep_detected), "double_sweep": bool(c.double_sweep),
         "ema_fast": float(c.ema_fast), "ema_slow": float(c.ema_slow),
         "momentum_score": float(c.momentum_score),
@@ -108,7 +108,7 @@ def _intended_scores(spec: StorySpec, feats: dict[str, Any]) -> dict[str, float]
     crt_parts = compute_scores(
         body_ratio=float(feats["body_ratio"]), move=float(feats["disp_strength"]),
         atr=float(feats["atr"]), retest_depth=float(feats["retest_depth"]),
-        candles_since_retest=int(feats["candles_since_retest"]),
+        candles_since_sweep=int(feats["candles_since_sweep"]),
         sweep_detected=bool(feats["sweep_detected"]), double_sweep=bool(feats["double_sweep"]),
         score_weights=tuple(feats["score_component_weights"]),
     )
@@ -130,7 +130,7 @@ def _produced_scores(spec: StorySpec, feats: dict[str, Any], entry_bar: _Bar) ->
     crt_out = crt_compute(spec.id, {
         "body_ratio": feats["body_ratio"], "disp_strength": feats["disp_strength"],
         "atr": feats["atr"], "retest_depth": feats["retest_depth"],
-        "candles_since_retest": feats["candles_since_retest"],
+        "candles_since_sweep": feats["candles_since_sweep"],
         "sweep_detected": feats["sweep_detected"], "double_sweep": feats["double_sweep"],
     }, {"score_component_weights": list(c.score_component_weights)})
     rr_out = RREngine({}).compute(

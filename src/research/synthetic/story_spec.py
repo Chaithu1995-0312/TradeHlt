@@ -46,7 +46,7 @@ class EntryContract:
     disp_strength: float
     atr: float
     retest_depth: float
-    candles_since_retest: int
+    candles_since_sweep: int
     sweep_detected: bool
     double_sweep: bool
     ema_fast: float

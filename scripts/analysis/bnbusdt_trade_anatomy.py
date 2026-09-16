@@ -46,15 +46,15 @@ PEAK_HORIZON = 96                      # exit-agnostic peak-timing window (24 h)
 SURVIVAL_K = [1, 2, 3, 4, 6, 8, 12, 24]
 THE_38 = [  # canonical feature order present in opportunities.jsonl features{}
     "open", "high", "low", "close", "volume", "volume_ratio", "double_sweep",
-    "ema_fast", "ema_slow", "ema_spread", "trend_bias", "trend_strength", "momentum_score",
+    "ema_fast", "ema_slow", "ema_spread", "trend_bias", "trend_strength_z", "momentum_score",
     "atr", "volatility_ratio", "rsi_14", "macd_line", "macd_signal", "macd_hist",
     "sweep_detected", "liquidity_sweep", "break_of_structure", "swing_high", "swing_low",
     "higher_high", "lower_low", "body_size", "wick_size", "body_ratio", "volatility_regime",
-    "session", "hour_of_day", "disp_strength", "retest_depth", "candles_since_retest",
+    "session", "hour_of_day", "disp_strength", "retest_depth", "candles_since_sweep",
     "liquidity_distance", "liquidity_pressure_score", "volume_spike",
 ]
 CLUSTER_FEATS = ["ema_spread", "volume_ratio", "volatility_ratio", "body_ratio",
-                 "momentum_score", "trend_strength", "disp_strength", "retest_depth", "atr"]
+                 "momentum_score", "trend_strength_z", "disp_strength", "retest_depth", "atr"]
 
 
 # ── helpers ────────────────────────────────────────────────────────────────────

@@ -42,7 +42,7 @@ KNOWN_SWING_DEPENDENTS = {
     "liquidity_distance",
     "liquidity_pressure_score",
     "retest_depth",
-    "candles_since_retest",
+    "candles_since_sweep",
 }
 
 

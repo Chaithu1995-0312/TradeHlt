@@ -603,7 +603,7 @@ def adjudicate_ast(q: dict) -> dict:
 
     # Pipeline intermediates that DO feed other pipeline columns in the same module.
     # ma_200 is deliberately NOT in this set (T-13 2026-07-20): it has zero consumers —
-    # ma_20 feeds price_vs_ma20 / ma_slope_20 -> trend_strength; ma_50 feeds price_vs_ma50;
+    # ma_20 feeds price_vs_ma20_z / ma_slope_20 -> trend_strength_z; ma_50 feeds price_vs_ma50_z;
     # ma_200 is computed and dropped on the floor. See dedicated branch below.
     if name in (
         "atr_14_raw",
@@ -611,7 +611,7 @@ def adjudicate_ast(q: dict) -> dict:
         "candle_body",
         "bb_lower",
         "bb_upper",
-        "bb_width",
+        "bb_width_z",
         "bb_position",
         "prev_close",
         "delta_close",
@@ -622,8 +622,8 @@ def adjudicate_ast(q: dict) -> dict:
         "ma_20",
         "ma_50",
         "ma_slope_20",
-        "price_vs_ma20",
-        "price_vs_ma50",
+        "price_vs_ma20_z",
+        "price_vs_ma50_z",
         "rsi_state",
         "day_of_week",
     ):
@@ -656,8 +656,8 @@ def adjudicate_ast(q: dict) -> dict:
             notes=(
                 "Computed in FeaturePipeline (ma_periods includes 200) but not a "
                 "CANONICAL_FEATURES member and has ZERO consumers — unlike ma_20 "
-                "(price_vs_ma20 / ma_slope_20 -> trend_strength) and ma_50 "
-                "(price_vs_ma50). Does not drive finalize() drop (dropna uses "
+                "(price_vs_ma20_z / ma_slope_20 -> trend_strength_z) and ma_50 "
+                "(price_vs_ma50_z). Does not drive finalize() drop (dropna uses "
                 "CANONICAL_FEATURES only). Corrected T-13 2026-07-20; prior claim "
                 "'downstream pipeline features within same module' was false."
             ),

@@ -60,7 +60,7 @@ _REQUIRED_FEATURE_KEYS: tuple[str, ...] = (
     "sweep_detected",
     "double_sweep",
     "retest_depth",
-    "candles_since_retest",
+    "candles_since_sweep",
     "ema_fast",
     "ema_slow",
     "momentum_score",
@@ -348,7 +348,7 @@ class ExecutionPlannerV1_2:
         sweep_detected = bool(features.get("sweep_detected", False))
         double_sweep = bool(features.get("double_sweep", False))
         retest_depth = float(features.get("retest_depth", 0.0))
-        candles_since_retest = int(features.get("candles_since_retest", 99))
+        candles_since_sweep = int(features.get("candles_since_sweep", 99))
         momentum_score = float(features.get("momentum_score", 0.0))
         body_ratio = float(features.get("body_ratio", 0.0))
         disp_strength = float(features.get("disp_strength", 0.0))
@@ -360,7 +360,7 @@ class ExecutionPlannerV1_2:
 
         if (
             0.3 <= retest_depth <= 0.7
-            and candles_since_retest <= 5
+            and candles_since_sweep <= 5
             and momentum_score > 0
         ):
             return "PULLBACK", "retest depth within 0.3-0.7, recent, positive momentum"
@@ -442,7 +442,7 @@ if __name__ == "__main__":
         "sweep_detected": False,
         "double_sweep": False,
         "retest_depth": 0.2,
-        "candles_since_retest": 10,
+        "candles_since_sweep": 10,
         "ema_fast": 99.5,
         "ema_slow": 98.5,
         "momentum_score": 0.7,
@@ -487,7 +487,7 @@ if __name__ == "__main__":
         "sweep_detected": False,
         "double_sweep": False,
         "retest_depth": 0.0,
-        "candles_since_retest": 99,
+        "candles_since_sweep": 99,
         "ema_fast": 100.0,
         "ema_slow": 99.0,
     }

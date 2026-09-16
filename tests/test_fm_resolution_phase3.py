@@ -58,7 +58,7 @@ def test_compute_scores_uses_fm029_math():
         move=1.0,
         atr=0.5,
         retest_depth=0.5,
-        candles_since_retest=0,
+        candles_since_sweep=0,
         sweep_detected=False,
         double_sweep=False,
         lambda_decay=0.05,

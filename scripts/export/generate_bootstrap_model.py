@@ -23,7 +23,7 @@ from bitnet.model_contract import feature_order_hash
 
 random.seed(42)
 
-IN_DIM  = 6    # body_ratio, retest_depth, disp_strength, atr, candles_since_retest, double_sweep
+IN_DIM  = 6    # body_ratio, retest_depth, disp_strength, atr, candles_since_sweep, double_sweep
 H1      = 16
 H2      = 8
 OUT     = 1
@@ -41,7 +41,7 @@ lo_w, lo_b = _layer(H2, OUT)
 
 _FEATURE_ORDER = [
     "body_ratio", "retest_depth", "disp_strength",
-    "atr", "candles_since_retest", "double_sweep",
+    "atr", "candles_since_sweep", "double_sweep",
 ]
 
 model = {

@@ -15,7 +15,7 @@ L0..L6 (the bottom-up certification order):
   L1 rolling indicators  atr/rsi/ema/macd + causal swing publication
   L2 direct derived      body_ratio/volatility_ratio/disp_strength/ema_spread/momentum/...
   L3 structural / event  HH/LL/BOS/sweep/retest/liquidity_distance
-  L4 composite / context trend_strength/volatility_regime/liquidity_pressure/session
+  L4 composite / context trend_strength_z/volatility_regime/liquidity_pressure/session
   L5 temporal market-reality  (compression/expansion/... — none in the current canonical vector)
   L6 models / thresholds / decisions  (not features)
 
@@ -133,7 +133,7 @@ _NODES: dict[str, tuple[list[str], int, str | None]] = {
     # M10 / F-054-RD: gated production composition — close is a direct executable dep
     # (near_fast_ema + FM-021 kernel); retest_flag is intermediate, NOT a DAG node.
     "retest_depth":       (["liquidity_sweep", "ema_fast", "atr", "close"], 3, "FM-021"),
-    "candles_since_retest": (["liquidity_sweep"], 3, "FM-065"),
+    "candles_since_sweep": (["liquidity_sweep"], 3, "FM-065"),
     "liquidity_distance": (["close", "atr", "swing_high", "swing_low", "break_of_structure"], 3, "FM-025"),
     "displacement_retrace": (["close", "open"], 3, "FM-027"),
     # L4 composite / context
@@ -146,7 +146,7 @@ _NODES: dict[str, tuple[list[str], int, str | None]] = {
     # M14B's conclusion is UNCHANGED -- true_range IS the absolute chain; only the granularity
     # of the recorded edge changed. atr_14 = SMA(14) of true_range.
     "volatility_regime":        (["true_range"], 4, "FM-050"),
-    "trend_strength":           (["close"], 4, "FM-064"),
+    "trend_strength_z":           (["close"], 4, "FM-064"),
     # Item-2 (2026-07-19): registered as temporal_context FM-052/FM-051. `session` derives from
     # hour_of_day (not timestamp directly) — matches feature_pipeline.compute_context and keeps the
     # ontology<->DAG crosscheck divergence-free.

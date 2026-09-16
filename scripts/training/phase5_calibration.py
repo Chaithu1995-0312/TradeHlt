@@ -174,7 +174,7 @@ def _resolve_subset_indices(subset_names: list[str]) -> list[int]:
 # can serve both directions. Features that encode bullish/bearish bias are negated;
 # paired binary features (higher_high↔lower_low) are swapped.
 _MIRROR_NEGATE_FEATURES = frozenset({
-    "ema_spread", "trend_bias", "trend_strength", "momentum_score",
+    "ema_spread", "trend_bias", "trend_strength_z", "momentum_score",
     "rsi_14", "macd_line", "macd_signal", "macd_hist",
     "break_of_structure", "liquidity_sweep",
 })

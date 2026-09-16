@@ -476,7 +476,7 @@ def _build_engine_input(trade_data: dict) -> dict:
         "body_ratio": _require_feature_value(trade_data, "body_ratio"),
         "disp_strength": _require_feature_value(trade_data, "disp_strength"),
         "retest_depth": _require_feature_value(trade_data, "retest_depth"),
-        "candles_since_retest": int(_require_feature_value(trade_data, "candles_since_retest")),
+        "candles_since_sweep": int(_require_feature_value(trade_data, "candles_since_sweep")),
     }
 
 
@@ -547,7 +547,7 @@ def _build_ohlcv_and_auxiliary(trade_data: dict) -> tuple[dict, dict]:
         "ema_spread":           _req(trade_data, "ema_spread"),
         "session":              _derive_session(trade_data),
         "trend_bias":           _req(trade_data, "trend_bias"),
-        "trend_strength":       _req(trade_data, "trend_strength"),
+        "trend_strength_z":       _req(trade_data, "trend_strength_z"),
         "momentum_score":       _req(trade_data, "momentum_score"),
         "volatility_ratio":     _req(trade_data, "volatility_ratio"),
         # Volume
@@ -594,7 +594,7 @@ def _build_ohlcv_and_auxiliary(trade_data: dict) -> tuple[dict, dict]:
         # CRT trade-specific
         "disp_strength":        _req(trade_data, "disp_strength"),
         "retest_depth":         _req(trade_data, "retest_depth"),
-        "candles_since_retest": int(_req(trade_data, "candles_since_retest")),
+        "candles_since_sweep": int(_req(trade_data, "candles_since_sweep")),
         # Schema v5.0 remainder (F-076, CH-htfcrt-parent-candle-smc-v1). This literal predated
         # v5.0 while the docstring above already promised "all remaining CANONICAL_FEATURES",
         # so FeatureStore rejected every live bar for 12 missing canonical keys. MANDATORY via
@@ -898,7 +898,7 @@ class HookedLiveEngine(LiveEngine):
             # engine_input — the same value could be real in one path and defaulted in the
             # other. double_sweep in particular is history-derived by FeatureStore, so the
             # feeder's raw value was the wrong source regardless.
-            "candles_since_retest": int(engine_input["candles_since_retest"]),
+            "candles_since_sweep": int(engine_input["candles_since_sweep"]),
             "sweep_detected": bool(engine_input["sweep_detected"]),
             "double_sweep": bool(engine_input["double_sweep"]),
             "symbol": str(trade_data.get("symbol", "UNKNOWN")),

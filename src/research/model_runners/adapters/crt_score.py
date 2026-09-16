@@ -47,7 +47,7 @@ class CrtScoreAdapter:
             "atr",
             "retest_depth",
             "double_sweep",
-            "candles_since_retest",
+            "candles_since_sweep",
             "sweep_detected",
         )
         require_feature_keys(bar.features, keys)
@@ -57,7 +57,7 @@ class CrtScoreAdapter:
             "atr": float(bar.features["atr"]),
             "retest_depth": float(bar.features["retest_depth"]),
             "double_sweep": float(bar.features["double_sweep"]),
-            "candles_since_retest": float(bar.features["candles_since_retest"]),
+            "candles_since_sweep": float(bar.features["candles_since_sweep"]),
             "sweep_detected": float(bar.features["sweep_detected"]),
         }
         trade_id = f"offline:{bar.bar_index}"

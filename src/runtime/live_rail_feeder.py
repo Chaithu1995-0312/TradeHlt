@@ -37,7 +37,7 @@ _HOOK_REQ_FROM_PIPELINE = (
     "ema_slow",
     "ema_spread",
     "trend_bias",
-    "trend_strength",
+    "trend_strength_z",
     "momentum_score",
     "volatility_ratio",
     "volume_ratio",
@@ -56,7 +56,7 @@ _HOOK_REQ_FROM_PIPELINE = (
     "hour_of_day",
     "disp_strength",
     "retest_depth",
-    "candles_since_retest",
+    "candles_since_sweep",
 )
 
 # Schema v5 remainder the existing hook auxiliary does NOT emit (landmine, not a new F-id).

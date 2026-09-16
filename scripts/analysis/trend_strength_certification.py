@@ -1,5 +1,5 @@
 """
-M13B / F-054-TS-CERT — trend_strength certification.
+M13B / F-054-TS-CERT — trend_strength_z certification.
 
 Governed identity: SMA10(diff(SMA20(close))) from raw close only.
 No pandas rolling/diff in the oracle. PRODUCTION_BEHAVIOR_CHANGED = NO.
@@ -82,7 +82,7 @@ def production_formula_trend_strength(close: np.ndarray) -> np.ndarray:
     Exact production formula lines (feature_pipeline.py:249,307-308):
       ma_20 = close.rolling(20).mean()
       ma_slope_20 = ma_20.diff()
-      trend_strength = ma_slope_20.rolling(10).mean()
+      trend_strength_raw = ma_slope_20.rolling(10).mean()
 
     Used for NaN/Inf mask parity of the formula. FeaturePipeline rejects NaN OHLCV
     at input validation; formula semantics still govern the rolling implementation.
@@ -122,7 +122,11 @@ def pipeline_trend_strength(close: np.ndarray) -> np.ndarray:
     fp.compute_volume_features()
     fp.compute_indicators()
     fp.compute_trend_features()
-    return fp.df["trend_strength"].to_numpy(dtype=np.float64)
+    # This probe deliberately stops before compute_normalization, so the quantity it certifies is
+    # the RAW nested-rolling chain (FM-084 `trend_strength_raw`), not the z-scored canonical slot
+    # (FM-064 `trend_strength_z`). Pre-v6.0 both lived under the bare name `trend_strength` and
+    # only the call order distinguished them.
+    return fp.df["trend_strength_raw"].to_numpy(dtype=np.float64)
 
 
 def resolve_frontier() -> dict:
@@ -172,14 +176,14 @@ def resolve_frontier() -> dict:
     counts = Counter(s["effective_state"] for s in explicit.values())
     return {
         "counts": dict(sorted(counts.items())),
-        "trend_strength": explicit["trend_strength"],
+        "trend_strength_z": explicit["trend_strength_z"],
         "close": explicit["close"]["effective_state"],
         "ready": sorted(
             n for n, s in explicit.items() if s["effective_state"] == "READY_TO_CERTIFY"
         ),
         "ledger_bytes": len(LEDGER.read_bytes()),
         "ledger_sha256": hashlib.sha256(LEDGER.read_bytes()).hexdigest(),
-        "dag_deps": deps_of["trend_strength"],
+        "dag_deps": deps_of["trend_strength_z"],
     }
 
 
@@ -224,7 +228,7 @@ def oracle_independence_ok() -> dict:
         "detect_regime",
         "ma_slope_20",
         '["ma_20"]',
-        '["trend_strength"]',
+        '["trend_strength_z"]',
     ]
     hits = [t for t in forbidden if t in body]
     return {"ok": len(hits) == 0, "hits": hits}
@@ -477,17 +481,17 @@ def run_battery() -> dict:
 
     # ── Name collision isolation ────────────────────────────────────────────
     indep = oracle_independence_ok()
-    # Discrimination: constant → trend_strength finite zeros; not interchangeable with abs(ema_spread)
-    # (dual_engine uses abs(ema_spread) under the local name trend_strength).
+    # Discrimination: constant → trend_strength_z finite zeros; not interchangeable with abs(ema_spread)
+    # (dual_engine uses abs(ema_spread) under the local name trend_strength_z).
     # while abs(ema_spread) on a non-flat series is typically nonzero after EMA warmup
     o_const = oracle_trend_strength(np.full(80, 100.0))
     # abs(ema_spread) for linear trend series is not all zeros at finite points
     # Construct ema_spread-like quantity independently for discrimination only (not as oracle)
     close_lin = 100.0 + np.arange(80, dtype=np.float64)
-    # production dual_engine uses abs(ema_spread); show trend_strength (const) != typical abs spreads
+    # production dual_engine uses abs(ema_spread); show trend_strength_z (const) != typical abs spreads
     ts_const_finite = o_const[np.isfinite(o_const)]
     ne2 = bool(np.allclose(ts_const_finite, 0.0, atol=1e-12))  # const → 0
-    # irregular series trend_strength varies; not identical to a flat abs(ema) pattern
+    # irregular series trend_strength_z varies; not identical to a flat abs(ema) pattern
     o_irr = oracle_trend_strength(synth[:80])
     ne = ne2 and (float(np.nanstd(o_irr)) > 1e-9 or float(np.nanmax(np.abs(o_irr))) > 1e-9)
 
@@ -496,7 +500,7 @@ def run_battery() -> dict:
         "forbidden_hits": indep["hits"],
         "canonical_ne_abs_ema_spread": _pass(ne),
         "const_series_strength_zero": _pass(ne2),
-        "deferred_debt": "dual_engine detect_regime uses abs(ema_spread) under local name trend_strength",
+        "deferred_debt": "dual_engine detect_regime uses abs(ema_spread) under local name trend_strength_z",
     }
     results["name_collision"] = collision
     all_ok &= indep["ok"] and ne
@@ -515,11 +519,14 @@ def run_battery() -> dict:
 
 def build_artifact(checkpoint: dict, battery: dict) -> dict:
     return {
-        "_doc": "M13B trend_strength nested rolling certification.",
+        "_doc": "M13B trend_strength_raw nested rolling certification.",
         "schema_version": "1.0",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "session_program": "M13B",
-        "TARGET_FEATURE": "trend_strength",
+        # v6.0: this probe stops before compute_normalization, so its subject is the RAW chain
+        # (FM-084). Pre-v6.0 this field read "trend_strength", the bare name that then carried
+        # the raw value at this point in the call order.
+        "TARGET_FEATURE": "trend_strength_raw",
         "TARGET_IDENTITY": "NESTED_ROLLING_CAUSAL_METRIC",
         "FORMULA": "SMA10(diff(SMA20(close)))",
         "ROOT_DEPENDENCY": "close",
@@ -543,7 +550,7 @@ def build_artifact(checkpoint: dict, battery: dict) -> dict:
         "checkpoint": checkpoint["counts"],
         "probes": battery,
         "KNOWN_DEBT": [
-            "dual_engine local variable trend_strength derives from abs(ema_spread)",
+            "dual_engine local variable trend_strength_z derives from abs(ema_spread)",
             "scale-dependent consumer thresholds (s07/s08)",
             "no ontology/FM registration",
         ],
@@ -553,7 +560,7 @@ def build_artifact(checkpoint: dict, battery: dict) -> dict:
         "authority": (
             "research/governance only — descriptive certification; grants no runtime authority (§6.5)"
         ),
-        "scope_boundary": "trend_strength only; volatility_regime untouched",
+        "scope_boundary": "trend_strength_z only; volatility_regime untouched",
     }
 
 
@@ -561,14 +568,14 @@ def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     print("=" * 72)
-    print("M13B — trend_strength CERTIFICATION PROBE")
+    print("M13B — trend_strength_z CERTIFICATION PROBE")
     print("=" * 72)
 
     cp = resolve_frontier()
     print("FRONTIER", cp["counts"])
-    print("trend_strength", cp["trend_strength"]["effective_state"], "deps", cp["dag_deps"])
+    print("trend_strength_z", cp["trend_strength_z"]["effective_state"], "deps", cp["dag_deps"])
     print("close", cp["close"])
-    if cp["trend_strength"]["effective_state"] != "READY_TO_CERTIFY":
+    if cp["trend_strength_z"]["effective_state"] != "READY_TO_CERTIFY":
         print("REFUSED: not READY")
         return 2
     if cp["dag_deps"] != ["close"] or cp["close"] != "PROMOTED_PRODUCTION":
@@ -597,7 +604,7 @@ def main() -> int:
         return 4
     print("ARTIFACT", EVIDENCE.relative_to(_ROOT))
     print("SHA256", sha)
-    print("ALL PROBES PASS — trend_strength CERTIFIABLE")
+    print("ALL PROBES PASS — trend_strength_z CERTIFIABLE")
     return 0
 
 

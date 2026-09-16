@@ -28,7 +28,7 @@ def compute(trade_id: str, features: dict, context: dict) -> dict:
             move=float(features["disp_strength"]),
             atr=float(features["atr"]),
             retest_depth=float(features["retest_depth"]),
-            candles_since_retest=int(features.get("candles_since_retest", context.get("candles_since_retest", 0))),
+            candles_since_sweep=int(features.get("candles_since_sweep", context.get("candles_since_sweep", 0))),
             sweep_detected=bool(features.get("sweep_detected", context.get("sweep_detected", False))),
             double_sweep=bool(features["double_sweep"]),
             score_weights=_score_weights,

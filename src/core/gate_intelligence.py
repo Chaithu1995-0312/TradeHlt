@@ -213,7 +213,7 @@ class GateIntelligence:
         body   = float(features.get("body_ratio",          0.0))
         disp   = float(features.get("disp_strength",        0.0))
         depth  = float(features.get("retest_depth",         0.0))
-        csr    = int(  features.get("candles_since_retest", 99))
+        csr    = int(  features.get("candles_since_sweep", 99))
         mom    = float(features.get("momentum_score",       0.0))
         sweep  = bool( features.get("sweep_detected",       False))
         dsweep = bool( features.get("double_sweep",         False))

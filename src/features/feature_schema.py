@@ -91,7 +91,7 @@ CANONICAL_FEATURES = tuple([
     "volume_ratio",
     "double_sweep",
     "ema_fast", "ema_slow", "ema_spread",
-    "trend_bias", "trend_strength",
+    "trend_bias", "trend_strength_z",   # index 11 — v6.0 rename of `trend_strength`; always was the z-score
     "momentum_score",
     "atr", "volatility_ratio",
     "rsi_14",
@@ -107,7 +107,8 @@ CANONICAL_FEATURES = tuple([
     "body_ratio",
     "volatility_regime",
     "session", "hour_of_day",   # index 31 — v4.0 domain {0..4}, see session_classifier
-    "disp_strength", "retest_depth", "candles_since_retest",
+    # index 35 — v6.0 rename of `candles_since_retest`; always counted bars since the last SWEEP
+    "disp_strength", "retest_depth", "candles_since_sweep",
     # ── indices 36-38 (added in v3.0) ─────────────────────────────────────────
     "liquidity_distance",       # ATR-normalised distance to nearest liq level
     "liquidity_pressure_score", # composite proximity score [0, 1]
@@ -129,6 +130,17 @@ CANONICAL_FEATURES = tuple([
 SCHEMA_V3_ALIASES: dict = {
     "wick_size": "candle_range",
     "macd_hist": "macd_hist_z",   # v3.0's emitted value was the z-scored one, not the raw diff
+}
+
+# Read-side aliases: <=v5.0 name -> v6.0 canonical name. Same contract as SCHEMA_V3_ALIASES —
+# for DECODING records written before the v6.0 rename (opportunities.jsonl, stored training sets
+# such as data/master_crypto_training.jsonl, prior bar_matrix/features parquet builds, archived
+# model metadata). NEVER emit these names. Both are pure renames: the VALUE under the old name is
+# the value under the new one (proved by a by-position vector comparison over the XAUUSD M15
+# corpus), so decoding needs no transformation, only relabelling.
+SCHEMA_V5_ALIASES: dict = {
+    "trend_strength": "trend_strength_z",         # the emitted value was always the rolling z-score
+    "candles_since_retest": "candles_since_sweep",  # always counted bars since the last liquidity sweep
 }
 
 # v2.0 backward-compat sentinel — model loaders that stored 35 features slice to this.
@@ -289,7 +301,7 @@ class SchemaObject:
 
 # ── Schema versioning (required by model_registry.py and training/trainer.py) ──
 
-SCHEMA_VERSION: str = "5.0"   # v2.0 = 35 feats; v3.0 = 38; v4.0 = 39 (MACD split + candle_range rename + FM-052 domain); v5.0 = 48 (+9 SMC primitives, CH-htfcrt-parent-candle-smc-v1)
+SCHEMA_VERSION: str = "6.0"   # v2.0 = 35 feats; v3.0 = 38; v4.0 = 39 (MACD split + candle_range rename + FM-052 domain); v5.0 = 48 (+9 SMC primitives, CH-htfcrt-parent-candle-smc-v1); v6.0 = 48 (NAMES ONLY: trend_strength -> trend_strength_z, candles_since_retest -> candles_since_sweep; CH-schema-v6-normalization-identity)
 
 # TradeNet — uses full canonical vector (n_features computed dynamically from CANONICAL_FEATURES).
 TRADENET_SCHEMA = SchemaObject(

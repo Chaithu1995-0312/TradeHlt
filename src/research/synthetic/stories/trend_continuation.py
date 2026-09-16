@@ -32,7 +32,7 @@ _bull_flag = StorySpec(
     signal=EntrySignal(direction="long", entry_rel_index=7, entry_price=101.80,
                        atr=1.0, sl_atr_mult=1.0, tp_atr_mult=2.0),
     contract=EntryContract(
-        disp_strength=3.1, atr=1.0, retest_depth=0.5, candles_since_retest=1,
+        disp_strength=3.1, atr=1.0, retest_depth=0.5, candles_since_sweep=1,
         sweep_detected=True, double_sweep=False, ema_fast=102.2, ema_slow=101.0,
         momentum_score=0.7, zone_distance=0.10, zone_freshness=0.90, zone_strength=0.80),
     expected_market_states=(
@@ -40,7 +40,7 @@ _bull_flag = StorySpec(
         "uptrend", "bull_flag", "trend_pullback", "momentum_increasing", "target_hit"),
     expected_crt_states=_GOLDEN_CRT,
     expected_feature_signature=(
-        "ema_fast", "ema_slow", "disp_strength", "retest_depth", "body_ratio", "trend_strength",
+        "ema_fast", "ema_slow", "disp_strength", "retest_depth", "body_ratio", "trend_strength_z",
         "momentum_score"),
     expected_engine_signature={"crt": "high", "gaussian": "high", "zone": "high", "rr": "moderate"},
     expected_outcome="TP_HIT",
@@ -70,7 +70,7 @@ _bear_flag = StorySpec(
     signal=EntrySignal(direction="short", entry_rel_index=7, entry_price=98.20,
                        atr=1.0, sl_atr_mult=1.0, tp_atr_mult=2.0),
     contract=EntryContract(
-        disp_strength=3.3, atr=1.0, retest_depth=0.5, candles_since_retest=1,
+        disp_strength=3.3, atr=1.0, retest_depth=0.5, candles_since_sweep=1,
         sweep_detected=True, double_sweep=False, ema_fast=97.8, ema_slow=99.0,
         momentum_score=-0.7, zone_distance=0.10, zone_freshness=0.90, zone_strength=0.80),
     expected_market_states=(
@@ -78,7 +78,7 @@ _bear_flag = StorySpec(
         "downtrend", "bear_flag", "trend_pullback", "momentum_decreasing", "target_hit"),
     expected_crt_states=_GOLDEN_CRT,
     expected_feature_signature=(
-        "ema_fast", "ema_slow", "disp_strength", "retest_depth", "body_ratio", "trend_strength",
+        "ema_fast", "ema_slow", "disp_strength", "retest_depth", "body_ratio", "trend_strength_z",
         "momentum_score"),
     expected_engine_signature={"crt": "high", "gaussian": "high", "zone": "high", "rr": "moderate"},
     expected_outcome="TP_HIT",
@@ -108,7 +108,7 @@ _ema_pullback = StorySpec(
     signal=EntrySignal(direction="long", entry_rel_index=7, entry_price=101.60,
                        atr=1.0, sl_atr_mult=1.0, tp_atr_mult=2.0),
     contract=EntryContract(
-        disp_strength=2.55, atr=1.0, retest_depth=0.5, candles_since_retest=1,
+        disp_strength=2.55, atr=1.0, retest_depth=0.5, candles_since_sweep=1,
         sweep_detected=True, double_sweep=False, ema_fast=101.8, ema_slow=101.0,
         momentum_score=0.6, zone_distance=0.10, zone_freshness=0.90, zone_strength=0.80),
     expected_market_states=(

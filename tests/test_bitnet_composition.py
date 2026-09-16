@@ -35,7 +35,7 @@ LEGACY_KEYS = [
     "retest_depth",
     "disp_strength",
     "atr",
-    "candles_since_retest",
+    "candles_since_sweep",
     "double_sweep",
 ]
 
@@ -46,7 +46,7 @@ def _legacy_features(seed: float = 0.1) -> dict:
         "retest_depth": 0.2 + seed * 0.1,
         "disp_strength": 1.1 + seed,
         "atr": 12.5 + seed,
-        "candles_since_retest": 3.0,
+        "candles_since_sweep": 3.0,
         "double_sweep": 0.0,
     }
 
@@ -122,7 +122,7 @@ def test_crt_serve_aliases():
         "displacement_retrace": 0.25,
         "displacement_atr_ratio": 1.5,
         "atr_abs": 10.0,
-        "candles_since_retest": 2,
+        "candles_since_sweep": 2,
         "double_sweep": 1.0,
     }
     mapped = apply_crt_serve_aliases(raw)

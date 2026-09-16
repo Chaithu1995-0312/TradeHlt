@@ -1,0 +1,86 @@
+{
+  "change_id": "CH-schema-v6-normalization-identity",
+  "date_utc": "2026-09-16",
+  "objective": "Rename emitted feature columns so each name states the quantity it carries, without changing any value. Canonical vector index 11 trend_strength -> trend_strength_z and index 35 candles_since_retest -> candles_since_sweep (48 dims and ordering unchanged); the three non-canonical in-place z-scored columns (bb_width, price_vs_ma20, price_vs_ma50) move to the existing NORMALIZE_TO_NEW_COL raw/z split, and trend_strength's raw stage is emitted as trend_strength_raw as a NON-canonical column. Do not mint a new FM id (FM-064/FM-065 refine in place), do not touch candles_since_retest_state (FM-070) or its BitNet call-boundary alias key, do not change normalization_basis, do not retrain, do not promote a config, do not change ACTIVE_VERSION.",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE",
+    "DATASET_SCHEMA_CHANGE"
+  ],
+  "change_class_rationale": "FEATURE_IDENTITY_CHANGE is the declared class for 'Add/rename/retire a governed feature identity (FM-id, lifecycle, name)' -- this renames two governed identities (FM-064, FM-065) and registers four new non-canonical ones (trend_strength_raw, bb_width_raw/_z siblings). DATASET_SCHEMA_CHANGE applies because CANONICAL_FEATURES itself changes, which moves SCHEMA_HASH and FEATURE_ORDER_HASH (both are derived from the NAMES) and therefore requires a baseline_capture rerun. MODEL_INPUT_CHANGE was considered and deliberately NOT declared: no model input VALUE or ordering changes; the stored feature_order name lists in models/*.json are migrated as strings so the existing fail-closed loader keeps passing, and all six model families remain exactly as stale/inert as F-076/F-004/F-036/F-038/F-055/F-060 already record.",
+  "affected_files": [
+    "docs/governance/feature-layer-freeze-pin-2026-07-20.json",
+    "docs/governance/build_manifests/CH-schema-v6-normalization-identity.impact.json",
+    "docs/governance/build_manifests/CH-schema-v6-normalization-identity.completion.json",
+    "configs/formulas/market_ontology.yaml",
+    "src/features/feature_schema.py",
+    "src/features/feature_pipeline.py",
+    "src/core/gate_intelligence.py",
+    "src/core/collector.py",
+    "src/core/model_registry.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/runtime/live_engine_hook.py",
+    "src/features/crt_feature_builder.py",
+    "scripts/analysis/feature_dag_layers.py",
+    "models/zone_registry.json",
+    "models/gaussian_registry.json",
+    "models/zone_gate_registry.json",
+    "tests/fixtures/test_vectors.json",
+    "docs/reference/schemas.md",
+    "docs/topics/feature-schema.md",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "assistant_project.md"
+  ],
+  "affected_files_note": "PRE-DECLARATION -- edits not yet made. A repo-wide word-boundary census found 37 src/ files and 28 tests/ files referencing the five bare names; the list above names the load-bearing ones plus the governance/doc surfaces. The complete, reconciled file list is recorded in the completion manifest and is what validate-completion diffs against. The census deliberately used word boundaries so that trend_strength_threshold (an unrelated engine_runner.dual_engine config key over ema_spread_abs), trend_strength_window (FM-064's own config key, unchanged) and candles_since_retest_state (FM-070, a different quantity) are NOT matches and are NOT renamed.",
+  "affected_feature_ids": [
+    "FM-064",
+    "FM-065"
+  ],
+  "affected_feature_ids_note": "Both refine IN PLACE per MARKET_ONTOLOGY_EVOLUTION_CONTRACT (identity never changes, no duplicate node): same FM ids, name + vector_key updated, version bumped, provenance notes preserved and extended. FM-070 candles_since_retest_state is explicitly NOT affected.",
+  "affected_models": "models/zone_registry.json, models/gaussian_registry.json, models/zone_gate_registry.json -- stored feature_order NAME STRINGS are migrated by script so BitNetZoneGate._validate_feature_order keeps passing. No weights, no zone geometry, no mu/sigma, no ordering changes. These lists are already stale (zone_registry.json carries a 38-name v3-era order including macd_hist and wick_size); migrating two names makes the loader honest, it does NOT make the models valid.",
+  "affected_production_config": "none -- configs/production/* is untouched. ACTIVE_VERSION stays v2_htfcrt_2026_08. params hash unchanged (feature_pipeline is non-params).",
+  "ontology_nodes_added": [
+    "trend_strength_raw"
+  ],
+  "ontology_nodes_added_note": "Only trend_strength_raw is registered (FM-084, the next free id -- FM-071 was already taken by an unrelated node, caught before it propagated). It MUST be registered because FM-064 now declares depends_on: [trend_strength_raw]. The bb_width / price_vs_ma20 / price_vs_ma50 raw and z columns are deliberately NOT registered: they carry no ontology entry TODAY either (they are non-canonical pipeline intermediates), so registering them is adjacent work this change does not need, and minting four new identities would newly expose them to the feature_math_lint ownership floor -- the exact collision that blocked FM-064/FM-065 for a week in 2026-07 (F-063). Their rename is a pure column-name change with no identity implication.",
+  "required_checks_ack": [
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_feature_pipeline.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_feature_layer_freeze.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_zone_manifest_runtime_parity.py"
+  ],
+  "required_checks_note": "The first four are mandated by FEATURE_IDENTITY_CHANGE, the next three by DATASET_SCHEMA_CHANGE (test_feature_lineage.py is shared). test_feature_layer_freeze.py, test_semantic_registry.py and test_zone_manifest_runtime_parity.py are added because this change touches the freeze pin, the semantic registry and the zone-registry sha256 parity invariant (F-041A) respectively. BASELINE: scripts/maintenance/check_governance_invariants.py --all was measured at 12 failed / 567 passed BEFORE this change (test_current_findings::test_nonterminal_findings_are_fresh, test_session_log::test_session_log_entry_count_is_bounded, test_feature_math_lint::test_universe_reconciliation_with_census, test_geometry_census x2, test_model_paths_literals x3, test_script_registry x3, test_corpus_read_lint). Any of those still failing after is not this change's regression; a 13th is.",
+  "unknowns": [],
+  "problem_addressed": {
+    "summary": "Five emitted columns carry names that contradict their values. The ontology already declares the true formulas, so this is not documentation drift -- the names themselves are the defect, and they travel into features.parquet / bar_matrix.parquet / the xlsx / model feature_order lists / the 48-dim vector where no registry is attached to correct them.",
+    "trend_strength": "feature_pipeline.py computes the raw chain ma_20 -> ma_slope_20 -> rolling mean, then the NORMALIZE_COLS loop z-scores it IN PLACE, so the emitted canonical value at index 11 is a rolling z-score. FM-064's formula text already says so.",
+    "candles_since_retest": "feature_pipeline.py groups by (liquidity_sweep != 0).cumsum(), so the emitted canonical value at index 35 counts bars since the last SWEEP. FM-065's formula text already says so. Measured on the full XAUUSD M15 corpus: equals a recomputed bars-since-sweep on 47,183/47,183 rows and is 0 on exactly the 7,542 sweep bars. A separate quantity that really does mean bars-since-retest-candle exists as FM-070 candles_since_retest_state.",
+    "non_canonical_three": "bb_width, price_vs_ma20, price_vs_ma50 are z-scored in place by the same loop. bb_width is negative on 56.6% of bars and therefore cannot be read as a width."
+  },
+  "enforcement": {
+    "why_raw_suffix": "The raw stages are emitted as *_raw rather than reusing the bare name. If trend_strength survived as the raw column, any call site missed during the rename would keep working and silently return a DIFFERENT quantity (price-unit raw instead of a z-score). Suffixing both sides converts every missed reader into a loud KeyError. This is the single most important safety property of the change and it matches the macd_hist_raw precedent.",
+    "silent_consumers": "Four consumers read these names with a defaulted .get() and would degrade silently rather than raise: gate_intelligence.py (.get('candles_since_retest', 99)), crt_engine_v2.py _derive_trade_intent (same default), core/collector.py (.get(..., 0)), and core/model_registry.py _GMIRROR_NEGATE (a frozenset containing 'trend_strength'; a stale entry silently stops short-trade sign mirroring). All four are mandatory edits in the same change.",
+    "read_side_aliases": "A SCHEMA_V5_ALIASES map (old -> new) is added beside the existing SCHEMA_V3_ALIASES in feature_schema.py, read-side only and never emitted, so historical records written under the old names (opportunities.jsonl, data/master_crypto_training.jsonl, archived configs, prior bar_matrix builds) stay decodable. This is not a dual-emit shim: emission is a hard rename."
+  },
+  "absorbed_pre_existing_drift_declared": {
+    "_doc": "Declared, not silent (CLAUDE.md 6.2 rule 4). Refreshing the freeze pin's source_file_pins from live bytes also updated TWO entries this change never touched: active_config (configs/production/v2_multi_2026_04.json) and ACTIVE_VERSION. Their pinned SHAs had been stale since commit 218b9ae repointed ACTIVE_VERSION to v2_htfcrt_2026_08 without refreshing the pin; configs/production/ is clean against HEAD, so nothing in this change modified them. tests/test_feature_layer_freeze.py is NOT part of the GREEN_FLOOR (check_governance_invariants.py has no reference to it), which is why that staleness never showed up in the 12-failure baseline. The pin now describes reality; the alternative was to knowingly re-record two values as wrong.",
+    "entries": ["active_config", "ACTIVE_VERSION"],
+    "not_caused_by_this_change": true
+  },
+  "residual_not_fixed": [
+    "data/master_crypto_training.jsonl stays on its pre-rename schema vintage and is not regenerated; SCHEMA_V5_ALIASES covers reading it.",
+    "The six model families remain stale/inert (F-076 and friends). Migrating their feature_order name strings is a loader-honesty fix, not a revalidation, and grants no authority.",
+    "models/zone_registry.json's order remains a 38-name v3-era list after migration -- pre-existing staleness, explicitly not corrected here.",
+    "volume_range_proxy is NOT renamed: its name is accurate and its separation from volume_ratio/volume_spike is deliberate and documented (market_ontology.yaml).",
+    "displacement_flag / retest_flag definitional looseness (a flag firing on 32% / 58% of bars) is a semantics question, not a naming one, and is out of scope."
+  ],
+  "rollback_boundary": "Single commit: ontology + feature_schema.py + feature_pipeline.py + consumers + regenerated artifacts + model feature_order migration revert together. The schema hash is load-bearing, so a partial revert is not valid -- baseline_capture must be rerun on whichever side is landed.",
+  "authority_granted": "User 2026-09-16: 'I need production fix fine to rename as per formula', plus the four AskUserQuestion decisions (scope=all five, split raw+z, raw stays out of the vector, hard rename, rewrite the registry JSONs) and ExitPlanMode approval of the written plan.",
+  "authority_NOT_granted": "No retrain, no model promotion, no ACTIVE_VERSION change, no normalization_basis activation (F-064 stays atr_relative), no new F-id economic claim, no G001, no CRT re-certification, no lifting of the feature-layer freeze beyond this one named program.",
+  "production_behavior_changed": "NO -- declared parity contract is STRICT value-identity; names move, values do not. Proof obligation: 48-dim vector compared BY POSITION pre/post is bit-identical, and a XAUUSD backtest ledger is byte-identical modulo run_id."
+}

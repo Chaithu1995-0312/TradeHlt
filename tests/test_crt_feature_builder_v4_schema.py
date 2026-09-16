@@ -38,11 +38,11 @@ def _inputs() -> tuple[dict, dict, dict]:
         "hour_of_day": 15.0, "session": "london", "volume_spike": 1.0,
     }
     state = {
-        "trend_bias": "bullish", "trend_strength": 2.42, "momentum_score": 1155.82,
+        "trend_bias": "bullish", "trend_strength_z": 2.42, "momentum_score": 1155.82,
         "volatility_ratio": 0.9736, "volatility_regime": 1.0, "double_sweep": 0.0,
         "sweep_detected": 0.0, "liquidity_sweep": 0.0, "break_of_structure": -1.0,
         "swing_high": 0.0, "swing_low": 1.0, "higher_high": 0.0, "lower_low": 1.0,
-        "disp_strength": 0.4845, "retest_depth": 0.3011, "candles_since_retest": 2.0,
+        "disp_strength": 0.4845, "retest_depth": 0.3011, "candles_since_sweep": 2.0,
         "liquidity_distance": 0.1384, "liquidity_pressure_score": 0.9331,
         # CH-htfcrt-parent-candle-smc-v1 (2026-08-15): schema v5.0 tail (indices 39-47).
         "order_block_distance": 0.0, "fvg_distance": 0.0, "breaker_distance": 0.0,

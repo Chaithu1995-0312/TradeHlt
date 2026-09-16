@@ -31,7 +31,7 @@ FEATURE_ORDER = [
     "open", "high", "low", "close", "volume",
     "volume_ratio", "double_sweep",
     "ema_fast", "ema_slow", "ema_spread",
-    "trend_bias", "trend_strength",
+    "trend_bias", "trend_strength_z",
     "momentum_score",
     "atr", "volatility_ratio",
     "rsi_14",
@@ -41,7 +41,7 @@ FEATURE_ORDER = [
     "body_size", "wick_size", "body_ratio",
     "volatility_regime",
     "session", "hour_of_day",
-    "disp_strength", "retest_depth", "candles_since_retest"
+    "disp_strength", "retest_depth", "candles_since_sweep"
 ]
 
 assert len(FEATURE_ORDER) == INPUT_DIM, (

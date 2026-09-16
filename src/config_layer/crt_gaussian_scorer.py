@@ -102,12 +102,12 @@ class CRTGaussianScorer:
             features.get("disp_str", features.get("disp_strength", 0.0)),
         )
         print(f"[DEBUG] r={r:.3f}, b={b:.3f}, d={d:.3f}")
-        # Use retest_index from cached features; fall back to candles_since_retest
+        # Use retest_index from cached features; fall back to candles_since_sweep
         retest_idx = features.get("retest_index", 0)
         t = (
             max(0, candle_idx - retest_idx)
             if candle_idx > 0
-            else features.get("candles_since_retest", 0)
+            else features.get("candles_since_sweep", 0)
         )
 
         # Hard filters - capital protection

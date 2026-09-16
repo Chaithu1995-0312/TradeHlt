@@ -69,7 +69,7 @@ def _base_features(**overrides) -> dict:
         "volume_spike":              0.0,
         "atr":                       0.001,
         "retest_depth":              0.3,
-        "candles_since_retest":      5.0,
+        "candles_since_sweep":      5.0,
     }
     base.update(overrides)
     return base
@@ -81,7 +81,7 @@ def test_trend_expansion_from_stats():
     """TREND_EXPANSION wins when:
       - mean_rr is high (≥2.0 saturates the 0.35*(rr/2) term to 0.35)
       - disp_strength is 0 (BREAKOUT_CONTINUATION gains more from disp: 0.20 vs 0.10)
-      - candles_since_retest=0 (suppresses the +0.10 recency bonus in BREAKOUT)
+      - candles_since_sweep=0 (suppresses the +0.10 recency bonus in BREAKOUT)
     Scores with these inputs: TREND=0.7325, BREAKOUT=0.7125  (margin +0.02)
     """
     engine = MarketStateClusterEngine(min_cluster_samples=5, cooldown_bars=0)
@@ -91,8 +91,8 @@ def test_trend_expansion_from_stats():
     features = _base_features(
         break_of_structure=1.0,
         # disp_strength=0.0 (default) — avoids BREAKOUT's 0.20*disp advantage
-        # candles_since_retest=0 — suppresses BREAKOUT's +0.10 recency bonus
-        candles_since_retest=0,
+        # candles_since_sweep=0 — suppresses BREAKOUT's +0.10 recency bonus
+        candles_since_sweep=0,
     )
     result = engine.classify(features, cluster_stats=cs)
     assert result.market_state == TREND_EXPANSION, (

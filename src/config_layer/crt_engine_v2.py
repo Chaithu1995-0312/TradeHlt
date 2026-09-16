@@ -2141,7 +2141,8 @@ class UltronRiskEngine:
         # expects legacy training names (retest_depth/disp_strength). Map only at
         # the BitNet call boundary — do not re-emit collision keys on the cache.
         # FM-070 (2026-07-31): same pattern for candles_since_retest_state, which resolves the
-        # candles_since_retest name collision with the pipeline's FM-065 (bars-since-SWEEP).
+        # name collision with the pipeline's FM-065 (bars-since-SWEEP, renamed to
+        # `candles_since_sweep` at schema v6.0 — the two names are now disjoint at the source).
         required = ["body_ratio", "displacement_retrace", "displacement_atr_ratio"]
 
         if state.cached_features and all(k in state.cached_features for k in required):
@@ -2222,7 +2223,7 @@ class UltronRiskEngine:
         # -----------------------------
         # BitNet Validation Layer
         # -----------------------------
-        # FM-070 (2026-07-31): candles_since_retest_state resolves the candles_since_retest name
+        # FM-070 (2026-07-31): candles_since_retest_state resolves the historical name
         # collision with the pipeline's FM-065 (bars-since-SWEEP) — same CH-002 alias pattern.
         required = ["body_ratio", "displacement_retrace", "displacement_atr_ratio"]
 
@@ -2332,7 +2333,15 @@ class ExecutionEngine:
                 features.get("retest_depth", 0.0),
             )
         )
-        csr = int(features.get("candles_since_retest", 99))
+        # NOTE (CH-schema-v6-normalization-identity + caller census, both 2026-09-16): renamed with
+        # the pipeline's FM-065 column. Behaviour-neutral here: `cached_features` has a fixed 6-key
+        # CRT-local shape, so `pullback` fails on TWO independent conditions — csr is always the 99
+        # default AND `momentum_score` is absent too, so mom is always 0.0. `sweep_detected` is also
+        # absent, leaving `liq_sweep` resting on `double_sweep` alone. Binding any ONE key would NOT
+        # make the branch reachable; the real object is a producer/consumer vocabulary mismatch.
+        # Deliberately NOT fixed: it would change intent -> TP multiplier, i.e. a ledger change.
+        # Full map: docs/analysis/trade-intent-caller-census-2026-09-16.md (TEST / CONTRACT GAP).
+        csr = int(features.get("candles_since_sweep", 99))
         mom = float(features.get("momentum_score", 0.0))
         if 0.3 <= rd <= 0.7 and csr <= 5 and mom > 0:
             return "pullback"

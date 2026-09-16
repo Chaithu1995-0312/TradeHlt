@@ -25,7 +25,7 @@ _fade_short = StorySpec(
     signal=EntrySignal(direction="short", entry_rel_index=3, entry_price=100.30,
                        atr=0.20, sl_atr_mult=1.5, tp_atr_mult=2.0),
     contract=EntryContract(
-        disp_strength=0.10, atr=0.20, retest_depth=0.0, candles_since_retest=5,
+        disp_strength=0.10, atr=0.20, retest_depth=0.0, candles_since_sweep=5,
         sweep_detected=False, double_sweep=False, ema_fast=100.02, ema_slow=100.00,
         momentum_score=0.05, zone_distance=0.10, zone_freshness=0.90, zone_strength=0.80),
     expected_market_states=(
@@ -55,7 +55,7 @@ _fade_long = StorySpec(
     signal=EntrySignal(direction="long", entry_rel_index=3, entry_price=99.70,
                        atr=0.20, sl_atr_mult=1.5, tp_atr_mult=2.0),
     contract=EntryContract(
-        disp_strength=0.10, atr=0.20, retest_depth=0.0, candles_since_retest=5,
+        disp_strength=0.10, atr=0.20, retest_depth=0.0, candles_since_sweep=5,
         sweep_detected=False, double_sweep=False, ema_fast=99.98, ema_slow=100.00,
         momentum_score=-0.05, zone_distance=0.10, zone_freshness=0.90, zone_strength=0.80),
     expected_market_states=(
@@ -85,7 +85,7 @@ _failed_break = StorySpec(
     signal=EntrySignal(direction="long", entry_rel_index=3, entry_price=100.70,
                        atr=0.40, sl_atr_mult=1.0, tp_atr_mult=2.0),
     contract=EntryContract(
-        disp_strength=0.90, atr=0.40, retest_depth=0.0, candles_since_retest=1,
+        disp_strength=0.90, atr=0.40, retest_depth=0.0, candles_since_sweep=1,
         sweep_detected=True, double_sweep=False, ema_fast=100.40, ema_slow=100.10,
         momentum_score=0.30, zone_distance=0.10, zone_freshness=0.90, zone_strength=0.80),
     expected_market_states=(

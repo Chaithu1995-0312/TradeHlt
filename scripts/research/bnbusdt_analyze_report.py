@@ -144,7 +144,7 @@ def median_feature(trade_list, feature):
     return median(vals)
 
 feature_comparison = [
-    'volume_ratio', 'ema_spread', 'trend_strength', 'momentum_score',
+    'volume_ratio', 'ema_spread', 'trend_strength_z', 'momentum_score',
     'atr', 'volatility_ratio', 'rsi_14', 'body_size', 'body_ratio',
     'volatility_regime', 'disp_strength', 'retest_depth',
     'liquidity_distance', 'liquidity_pressure_score', 'double_sweep',

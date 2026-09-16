@@ -53,7 +53,7 @@ _FC1A_STRUCTURE = frozenset({
     "swing_high", "swing_low", "higher_high", "lower_low",
     "liquidity_distance", "liquidity_pressure_score",
 })
-_FC1A_RETEST_SECONDARIES = frozenset({"retest_depth", "candles_since_retest"})
+_FC1A_RETEST_SECONDARIES = frozenset({"retest_depth", "candles_since_sweep"})
 
 
 def _load_json(rel: str) -> Any:
@@ -500,7 +500,7 @@ def run_audit() -> dict:
     families = {
         "ohlcv_raw": ["open", "high", "low", "close", "volume"],
         "volume_derived": ["volume_ratio", "volume_spike"],
-        "ema_trend": ["ema_fast", "ema_slow", "ema_spread", "trend_bias", "trend_strength", "momentum_score"],
+        "ema_trend": ["ema_fast", "ema_slow", "ema_spread", "trend_bias", "trend_strength_z", "momentum_score"],
         "volatility": ["atr", "volatility_ratio", "volatility_regime"],
         "momentum_indicators": ["rsi_14", "macd_line", "macd_signal", "macd_hist"],
         "structure_fc1a": sorted(_FC1A_STRUCTURE),

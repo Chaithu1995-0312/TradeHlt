@@ -15,13 +15,13 @@ Detection logic:
     1. higher_high=True AND sweep_detected=True  (price swept above swing_high)
     2. Close < swing_high  (reversal — price returned inside range)
     3. body_ratio >= reversal_body_ratio  (strong reversal candle)
-    4. candles_since_retest <= max_candles_since_sweep  (fresh signal)
+    4. candles_since_sweep <= max_candles_since_sweep  (fresh signal)
 
   Bear Trap (BUY signal):
     1. lower_low=True AND sweep_detected=True  (price swept below swing_low)
     2. Close > swing_low  (reversal — price returned inside range)
     3. body_ratio >= reversal_body_ratio
-    4. candles_since_retest <= max_candles_since_sweep
+    4. candles_since_sweep <= max_candles_since_sweep
 
 Confidence scoring:
   base = 0.55
@@ -105,7 +105,7 @@ class S10TrapStrategy(BaseStrategy):
         double_sweep = bool(features.get("double_sweep", False))
         body_ratio = float(features.get("body_ratio", 0.0))
         disp_strength = float(features.get("disp_strength", 0.0))
-        candles_since = int(features.get("candles_since_retest", 0))
+        candles_since = int(features.get("candles_since_sweep", 0))
         volume_ratio = float(features.get("volume_ratio", 1.0))
 
         swing_high = float(features.get("swing_high", 0.0))

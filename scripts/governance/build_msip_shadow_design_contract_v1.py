@@ -123,7 +123,7 @@ def main() -> int:
             "semantic": "Canonical trend strength + bias; not dual_engine abs(ema_spread)",
             "dtype": "object",
             "encoding": {
-                "trend_strength": "float32_signed",
+                "trend_strength_z": "float32_signed",
                 "trend_bias": "int8_neg1_0_1",
                 "ema_fast": "float32",
                 "ema_slow": "float32",
@@ -131,8 +131,8 @@ def main() -> int:
             "nullability": "warmup NaN for nested rolling strength",
             "temporal": "rolling causal",
             "confidence_representation": "1.0 finite; 0.5 warmup",
-            "what_feed_candidates": ["trend_strength", "trend_bias", "ema_fast", "ema_slow"],
-            "not_in_vector": ["dual_engine local trend_strength", "CRT EMA until parity PASS"],
+            "what_feed_candidates": ["trend_strength_z", "trend_bias", "ema_fast", "ema_slow"],
+            "not_in_vector": ["dual_engine local trend_strength_z", "CRT EMA until parity PASS"],
             "parity_gate": "CRT_LOCAL_MATH_PARITY_AUDIT_V1 for ema_fast/ema_slow",
         },
         {

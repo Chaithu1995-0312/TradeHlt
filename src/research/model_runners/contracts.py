@@ -71,7 +71,7 @@ MODEL_CATALOG: dict[str, ModelContract] = {
                 "atr",
                 "retest_depth",
                 "double_sweep",
-                "candles_since_retest",
+                "candles_since_sweep",
                 "sweep_detected",
             }
         ),
@@ -104,7 +104,7 @@ MODEL_CATALOG: dict[str, ModelContract] = {
                 "retest_depth",
                 "disp_strength",
                 "atr",
-                "candles_since_retest",
+                "candles_since_sweep",
                 "double_sweep",
             }
         ),

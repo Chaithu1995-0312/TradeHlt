@@ -19,7 +19,7 @@ LEGACY6_KEYS = (
     "retest_depth",
     "disp_strength",
     "atr",
-    "candles_since_retest",
+    "candles_since_sweep",
     "double_sweep",
 )
 

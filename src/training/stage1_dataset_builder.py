@@ -333,8 +333,8 @@ def regime_for(features: dict) -> str:
     try:
         atr = float(features.get("atr", 0.5) or 0.0)
         # The runtime classifier reads ``trend_score``; our canonical schema
-        # uses ``trend_strength`` (signed). Use |trend_strength| as proxy.
-        trend_score = abs(float(features.get("trend_strength", 0.5) or 0.0))
+        # uses ``trend_strength_z`` (signed). Use |trend_strength_z| as proxy.
+        trend_score = abs(float(features.get("trend_strength_z", 0.5) or 0.0))
     except (TypeError, ValueError):
         return "RANGING"
     if atr > _ATR_HIGH:

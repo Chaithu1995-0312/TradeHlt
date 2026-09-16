@@ -97,7 +97,7 @@ def test_score_override_still_wins():
 
 def test_engines_path_default_parity():
     base = dict(body_ratio=0.62, move=0.5, atr=0.004, retest_depth=0.41,
-                candles_since_retest=3, sweep_detected=True, double_sweep=False)
+                candles_since_sweep=3, sweep_detected=True, double_sweep=False)
     default = compute_scores(**base)
     explicit = compute_scores(**base, score_weights=_LEGACY)
     assert default == explicit
@@ -105,13 +105,13 @@ def test_engines_path_default_parity():
 
 def test_engines_path_dynamism_via_context():
     features = {"body_ratio": 0.62, "disp_strength": 0.5, "atr": 0.004,
-                "retest_depth": 0.41, "candles_since_retest": 3,
+                "retest_depth": 0.41, "candles_since_sweep": 3,
                 "sweep_detected": True, "double_sweep": False}
     # legacy reference: compute_scores with default weights (CODE-level default)
     from engines.scoring_engine import compute_scores
     legacy_score = compute_scores(
         body_ratio=0.62, move=0.5, atr=0.004, retest_depth=0.41,
-        candles_since_retest=3, sweep_detected=True, double_sweep=False
+        candles_since_sweep=3, sweep_detected=True, double_sweep=False
     )["final"]
     # explicit legacy weights via crt_engine.compute must match
     legacy = crt_engine.compute("t", dict(features),

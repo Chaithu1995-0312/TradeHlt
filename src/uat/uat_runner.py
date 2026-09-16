@@ -419,7 +419,7 @@ class UATRunner:
             "higher_high": False, "lower_low": False,
             "swing_high": 1.1050, "swing_low": 1.0950,
             "disp_strength": 0.0, "retest_depth": 0.0,
-            "candles_since_retest": 0, "body_ratio": 0.5,
+            "candles_since_sweep": 0, "body_ratio": 0.5,
             "liquidity_sweep": False, "double_sweep": False,
             "volume_ratio": 1.0, "momentum_score": 0.0,
             "bb_upper": 1.1050, "bb_lower": 1.0950,
@@ -429,7 +429,7 @@ class UATRunner:
             "wick_size": 0.0010, "pattern_score": 0.5,
             "session": "london", "hour_of_day": 10.0,
             "macd_line": 0.0, "macd_signal": 0.0, "macd_hist": 0.0,
-            "zone_strength": 0.5, "trend_strength": 0.5,
+            "zone_strength": 0.5, "trend_strength_z": 0.5,
             "volatility_ratio": 1.0, "volatility_regime": "RANGING",
             "spread_pct": 0.0001,
         }
@@ -453,9 +453,9 @@ class UATRunner:
             # EC-05: outside trading hours → S6 scalping blocks
             ("EC-05_off_hours",
              {**base, "hour_of_day": 3.0}, base_candle, "ANY"),
-            # EC-06: candles_since_retest > max_age → S10 should not fire
+            # EC-06: candles_since_sweep > max_age → S10 should not fire
             ("EC-06_stale_sweep",
-             {**base, "sweep_detected": True, "candles_since_retest": 99}, base_candle, "ANY"),
+             {**base, "sweep_detected": True, "candles_since_sweep": 99}, base_candle, "ANY"),
             # EC-07: sl_inr would exceed 25K — lot sizer must cap it
             ("EC-07_sl_inr_cap",
              {**base, "atr": 0.5, "trend_bias": "bullish",

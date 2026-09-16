@@ -211,7 +211,7 @@ def test_depends_on_is_referentially_intact(ont, entries):
 
 def test_canonical_coverage_is_near_complete(entries, ont):
     """Coverage is a number worth pinning: v1.4 took it from 23/39 to 37/39; 2026-08-01 (FM-064
-    trend_strength + FM-065 candles_since_retest registered) closed the gap to 39/39 -- full
+    trend_strength_z + FM-065 candles_since_sweep registered) closed the gap to 39/39 -- full
     coverage, matching _UNREGISTERED_VECTOR_SLOTS now being empty in test_feature_lineage.py.
     2026-08-15 (CH-htfcrt-parent-candle-smc-v1): 9 new SMC primitives registered FM-075..FM-083,
     raising full coverage to 48/48."""

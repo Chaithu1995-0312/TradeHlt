@@ -16,7 +16,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -39,7 +39,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "trained_at": "2026-05-18T06:33:38Z",
     "active": false
@@ -61,7 +61,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -84,7 +84,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "trained_at": "2026-05-18T06:33:38Z",
     "active": false
@@ -106,7 +106,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -129,7 +129,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "trained_at": "2026-05-19T06:28:01Z",
     "active": false
@@ -151,7 +151,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -174,7 +174,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest"
+      "candles_since_sweep"
     ],
     "trained_at": "2026-05-19T08:01:02Z",
     "active": false
@@ -196,7 +196,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -219,7 +219,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest",
+      "candles_since_sweep",
       "liquidity_distance",
       "liquidity_pressure_score",
       "volume_spike"
@@ -244,7 +244,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -267,7 +267,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest",
+      "candles_since_sweep",
       "liquidity_distance",
       "liquidity_pressure_score",
       "volume_spike"
@@ -294,7 +294,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -317,7 +317,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest",
+      "candles_since_sweep",
       "liquidity_distance",
       "liquidity_pressure_score",
       "volume_spike"
@@ -347,7 +347,7 @@
       "ema_slow",
       "ema_spread",
       "trend_bias",
-      "trend_strength",
+      "trend_strength_z",
       "momentum_score",
       "atr",
       "volatility_ratio",
@@ -370,7 +370,7 @@
       "hour_of_day",
       "disp_strength",
       "retest_depth",
-      "candles_since_retest",
+      "candles_since_sweep",
       "liquidity_distance",
       "liquidity_pressure_score",
       "volume_spike"

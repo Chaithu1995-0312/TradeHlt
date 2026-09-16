@@ -33,8 +33,8 @@ Edge Cases:
       retest_depth) emit NaN during the 14-bar ATR warmup; finalize()
       drops those rows cleanly.
     - Warmup NaNs: finalize() drops all NaN rows. Empirically ~78 rows for the 38
-      canonical columns, driven by the rolling(50) z-score stacked on trend_strength/
-      macd_hist. NOT driven by ma_200: that column has a 199-row NaN tail but is not
+      canonical columns, driven by the rolling(50) z-score stacked on trend_strength_raw/
+      macd_hist_raw. NOT driven by ma_200: that column has a 199-row NaN tail but is not
       a canonical feature, so it never reaches finalize()'s dropna subset.
       Callers must ensure sufficient history.
 
@@ -158,7 +158,8 @@ _SESSION_TIMESTAMP_BASES = ("broker_local", "utc_corrected")
 # selects FM-022/FM-023, which the feature certification ledger marks SUPERSEDED by FM-030/031
 # (2026-07-31 re-certification) -- yet it remains the ACTIVE default. Measured on XAUUSD
 # (data/mt5/XAUUSD_M15.csv, n=19,922): |ema_spread| exceeds the dual_engine trend threshold
-# (0.15) on 99.99% of bars, |tanh(momentum_score)| saturates (>0.999) on 99.70% of bars, and the
+# (0.15) on 99.99% of bars, |tanh(momentum_score)| saturates (>0.999) on 99.81% of bars (F-064
+# re-measured 2026-09-16 on the full 47,197-bar corpus; the earlier 99.70% was n=19,922), and the
 # emitted magnitude scales exactly 100x under a 100x price shift (vs. 1.000x for every other
 # ATR-normalized dim) -- confirming the dimensional-mix defect on a non-crypto instrument.
 # Log-only: fires once per process, does not change normalization_basis or any emitted value.
@@ -175,7 +176,7 @@ def _warn_once_if_superseded_basis(basis: str) -> None:
             "feature_pipeline.normalization_basis='atr_relative': binding FM-022 ema_spread / "
             "FM-023 momentum_score, both marked SUPERSEDED in the feature certification ledger "
             "(superseded by FM-030/FM-031). Measured decision-surface cost on XAUUSD: "
-            "|ema_spread|>0.15 on 99.99 pct of bars, |tanh(momentum_score)|>0.999 on 99.70 pct "
+            "|ema_spread|>0.15 on 99.99 pct of bars, |tanh(momentum_score)|>0.999 on 99.81 pct "
             "of bars (C2, extends F-061). This is the ACTIVE default and no config was changed "
             "by this warning -- see market_ontology.yaml FM-022/FM-023 for the correction path."
         )
@@ -292,12 +293,12 @@ def required_warmup_rows(cfg: Optional[dict] = None) -> int:
     """THE single source of truth for the canonical feature warmup (rows `finalize()` drops).
 
     `finalize()` drops every row carrying NaN in ANY column of ``CANONICAL_FEATURES``. Exactly one
-    canonical column sets that floor — ``trend_strength`` — through a four-stage rolling chain:
+    canonical column sets that floor — ``trend_strength_z`` — through a four-stage rolling chain:
 
         ma_20          = close.rolling(ma_periods[0]).mean()      first valid @ ma_periods[0] - 1
         ma_slope_20    = ma_20.diff()                             first valid @ ma_periods[0]
-        trend_strength = ma_slope_20.rolling(trend_window).mean() first valid @ + trend_window - 1
-        z-score        = .rolling(zscore_window).mean()/.std()    first valid @ + zscore_window - 1
+        trend_strength_raw = ma_slope_20.rolling(trend_window).mean()  first valid @ + trend_window - 1
+        trend_strength_z   = .rolling(zscore_window).mean()/.std()     first valid @ + zscore_window - 1
 
     The first VALID index is therefore ``(ma_periods[0] - 1) + 1 + (trend_window - 1) +
     (zscore_window - 1)``, and rows ``0..first_valid-1`` are dropped — so the DROP COUNT equals
@@ -309,7 +310,7 @@ def required_warmup_rows(cfg: Optional[dict] = None) -> int:
     only because the drop is a prefix; `tests/test_feature_warmup_coupling.py` pins this against
     the real pipeline so the identity cannot drift into an off-by-one.)
 
-    NOT the longest NaN prefix in the frame — ``price_vs_ma50`` z-scores out to 98 and ``ma_200``
+    NOT the longest NaN prefix in the frame — ``price_vs_ma50_z`` z-scores out to 98 and ``ma_200``
     to 199 — but neither is canonical, so neither reaches this dropna. ``macd_hist_z`` clears at 49
     because MACD uses ``ewm(adjust=False)`` (valid from row 0).
 
@@ -343,21 +344,25 @@ def __getattr__(name: str):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-# Columns subject to rolling z-score normalization (MUST NOT include
-# categoricals, RSI, volume_ratio, or placeholder scalars)
-NORMALIZE_COLS = [
-    "price_vs_ma20",
-    "price_vs_ma50",
-    "bb_width",
-    "trend_strength",
-]
+# In-place rolling z-scoring is RETIRED as of v6.0 — every normalized quantity now writes to its
+# own `_z` column via NORMALIZE_TO_NEW_COL below, so no column name ever carries a value other
+# than the one it names. Kept as an empty list because it is part of this module's public surface
+# (imported by probes/tests); anything appended here re-introduces the v3.0 `macd_hist` defect.
+NORMALIZE_COLS: list = []
 
-# v4.0 MACD split: columns z-scored into a NEW column instead of being overwritten in place.
-# v3.0 listed `macd_hist` in NORMALIZE_COLS, so the emitted `macd_hist` was the z-score, not the
-# `macd_line - macd_signal` its ontology formula declared (FM-049's note warned about exactly
-# this). Both quantities now have their own canonical slot.
+# Columns z-scored into a NEW column instead of being overwritten in place.
+# v4.0 introduced this for the MACD split: v3.0 listed `macd_hist` in NORMALIZE_COLS, so the
+# emitted `macd_hist` was the z-score, not the `macd_line - macd_signal` its ontology formula
+# declared (FM-049's note warned about exactly this).
+# v6.0 (CH-schema-v6-normalization-identity) moved the remaining four here for the same reason:
+# `trend_strength` (canonical index 11, now `trend_strength_z`), plus the three non-canonical
+# `bb_width` / `price_vs_ma20` / `price_vs_ma50`. Each raw stage keeps its own `_raw` name.
 NORMALIZE_TO_NEW_COL = {
     "macd_hist_raw": "macd_hist_z",
+    "trend_strength_raw": "trend_strength_z",   # FM-084 -> FM-064 (canonical index 11)
+    "bb_width_raw": "bb_width_z",
+    "price_vs_ma20_raw": "price_vs_ma20_z",
+    "price_vs_ma50_raw": "price_vs_ma50_z",
 }
 
 
@@ -613,8 +618,8 @@ class FeaturePipeline:
         bb_std = df["close"].rolling(_bb_p).std(ddof=1)
         df["bb_upper"] = bb_ma + _bb_std_mult * bb_std
         df["bb_lower"] = bb_ma - _bb_std_mult * bb_std
-        df["bb_width"] = df["bb_upper"] - df["bb_lower"]
-        df["bb_position"] = (df["close"] - df["bb_lower"]) / (df["bb_width"] + 1e-9)
+        df["bb_width_raw"] = df["bb_upper"] - df["bb_lower"]
+        df["bb_position"] = (df["close"] - df["bb_lower"]) / (df["bb_width_raw"] + 1e-9)
 
         # ── MACD ─────────────────────────────────────────────────────
         # Fast/slow/signal spans are config-driven (feature_pipeline.macd_fast/slow/signal).
@@ -634,10 +639,10 @@ class FeaturePipeline:
         # Window is config-driven (feature_pipeline.trend_strength_window).
         _trend_window = self._fp_cfg["trend_strength_window"]
 
-        df["price_vs_ma20"] = df["close"] - df["ma_20"]
-        df["price_vs_ma50"] = df["close"] - df["ma_50"]
+        df["price_vs_ma20_raw"] = df["close"] - df["ma_20"]
+        df["price_vs_ma50_raw"] = df["close"] - df["ma_50"]
         df["ma_slope_20"] = df["ma_20"].diff()
-        df["trend_strength"] = df["ma_slope_20"].rolling(_trend_window).mean()
+        df["trend_strength_raw"] = df["ma_slope_20"].rolling(_trend_window).mean()   # FM-084
 
         self.df = df
 
@@ -1014,7 +1019,7 @@ class FeaturePipeline:
 
         # Retest: after a sweep, price returns close to fast EMA within ATR-based band.
         # Rolling window so retests up to N bars after the sweep are captured (was a 1-bar
-        # .shift(1) which forced candles_since_retest=1 always).
+        # .shift(1) which forced the counter to 1 always).
         # Config: feature_pipeline.retest_lookback / retest_atr_band_mult (Tier 3 —
         # `retest_flag` is an internal column, no FM id).
         _RETEST_LOOKBACK = self._fp_cfg["retest_lookback"]
@@ -1051,7 +1056,7 @@ class FeaturePipeline:
         df["double_sweep"] = (seen_up & seen_down).astype(np.int8)
 
     def compute_canonical_temporal_features(self) -> None:
-        """Compute candles_since_retest, retest_depth, disp_strength."""
+        """Compute candles_since_sweep, retest_depth, disp_strength."""
         df = self.df
 
         # np.nan fallbacks — finalize() drops these rows; 0.0 would silently
@@ -1099,7 +1104,7 @@ class FeaturePipeline:
         else:
             sweep_groups = df["retest_flag"].eq(1).cumsum()
         bars_since_sweep = df.groupby(sweep_groups).cumcount()
-        df["candles_since_retest"] = np.where(
+        df["candles_since_sweep"] = np.where(
             sweep_groups > 0,
             bars_since_sweep,
             0,
@@ -1340,7 +1345,7 @@ class FeaturePipeline:
         # CORRECTED 2026-07-18: the old rationale here ("ma_200(200) + z-score(50) +
         # swing edges(4) = ~300") was never load-bearing — ma_200 is NOT a canonical
         # column, so its 199-row NaN tail never reached this dropna. MEASURED canonical
-        # warmup is 78 rows (rolling(50) z-score stacked on trend_strength/macd_hist),
+        # warmup is 78 rows (rolling(50) z-score stacked on trend_strength_raw/macd_hist_raw),
         # constant across dataset sizes (verified at 3,949 / 47,275 / 50,169 rows).
         # 300 is therefore a deliberately generous ceiling, NOT a derived sum.
         # T-16 (2026-07-23): that measured 78 now has a DERIVED source —

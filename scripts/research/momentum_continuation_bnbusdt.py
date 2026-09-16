@@ -62,7 +62,7 @@ COMPARE_FEATURES = [
     "atr_pct",
     "body_pct",
     "rsi_14",
-    "trend_strength",
+    "trend_strength_z",
     "session",
     "regime",
     "hour",
@@ -185,7 +185,7 @@ def compute_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["rsi_14"] = 100 - (100 / (1 + rs))
 
     # Trend strength (ADX-like: abs(close - ema20) / atr)
-    df["trend_strength"] = np.abs(closes - ema20) / np.maximum(df["atr"].values, 1e-10)
+    df["trend_strength_z"] = np.abs(closes - ema20) / np.maximum(df["atr"].values, 1e-10)
 
     # Session detection (UTC)
     # Asia: 0-8, London: 8-16, New York: 16-24
@@ -321,7 +321,7 @@ def generate_signals(df: pd.DataFrame, min_idx: int = 60) -> dict[str, list[dict
                     "atr": row["atr"],
                     "body_pct": row["body_pct"],
                     "rsi_14": row["rsi_14"],
-                    "trend_strength": row["trend_strength"],
+                    "trend_strength_z": row["trend_strength_z"],
                     "session": row["session"],
                     "regime": row["regime"],
                     "hour": row["hour"],

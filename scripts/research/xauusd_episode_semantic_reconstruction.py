@@ -305,7 +305,7 @@ def _select_episodes(
 def _continuous_snapshot(feat: dict[str, float]) -> dict[str, float]:
     keys = [
         "body_ratio", "candle_range", "atr", "rsi_14", "ema_spread", "momentum_score",
-        "trend_strength", "disp_strength", "retest_depth", "volume_ratio",
+        "trend_strength_z", "disp_strength", "retest_depth", "volume_ratio",
         "macd_hist_raw", "liquidity_distance",
     ]
     out = {}

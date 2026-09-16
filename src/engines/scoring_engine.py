@@ -21,7 +21,7 @@ def compute_scores(
     move: float,
     atr: float,
     retest_depth: float,
-    candles_since_retest: int,
+    candles_since_sweep: int,
     sweep_detected: bool,
     double_sweep: bool,
     lambda_decay: float = 0.05,
@@ -46,7 +46,7 @@ def compute_scores(
 
     s_breakout = 0.5 * min(body_ratio, 1.0) + 0.5 * min(disp_strength_atr_rescale / 2.0, 1.0)
     s_retest = math.exp(-((retest_depth - 0.5) ** 2) / 0.04)
-    s_time = math.exp(-lambda_decay * max(0, candles_since_retest))
+    s_time = math.exp(-lambda_decay * max(0, candles_since_sweep))
 
     w_sweep, w_breakout, w_retest, w_time = score_weights
     s_final = w_sweep * s_sweep + w_breakout * s_breakout + w_retest * s_retest + w_time * s_time

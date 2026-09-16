@@ -1726,17 +1726,17 @@ rolling_indicators:
       consumed_by:      [UNKNOWN]
       vector_key:       macd_hist_z
       vector_index:     19
-  trend_strength:
+  trend_strength_z:
     id:        FM-064
-    version:   1
+    version:   2
     lifecycle: registered
     computation_class: rolling
     formula:   "rolling(<feature_pipeline.zscore_window>) z-score of SMA(<feature_pipeline.trend_strength_window>) of diff(SMA(<feature_pipeline.ma_periods[0]>) of close)  # defaults 50, 10, 20"
     config_keys: [feature_pipeline.zscore_window, feature_pipeline.trend_strength_window, feature_pipeline.ma_periods]
-    impl:      feature_pipeline.compute_trend_features
-    depends_on: [close]
+    impl:      feature_pipeline.compute_normalization
+    depends_on: [trend_strength_raw]
     active:    true
-    vector_key: trend_strength     # canonical index 11 (unchanged across v3.0/v4.0)
+    vector_key: trend_strength_z   # canonical index 11 (slot unchanged across v3.0/v4.0/v5.0; RENAMED at v6.0)
     note: >
       REGISTERED 2026-07-31 (closes the last of two canonical slots with no ontology identity,
       the other being FM-065 candles_since_retest below). Was reserved as FM-064 since ontology
@@ -1748,11 +1748,24 @@ rolling_indicators:
       `detect_regime`'s threshold comparison are unchanged, only the local variable's name
       differs) so the two quantities can no longer collide under one name.
       `compute_trend_features` computes the raw four-stage chain (`ma_20 -> ma_slope_20 ->
-      rolling-mean trend_strength`); `compute_normalization` then z-scores it in place — the
-      SAME two-stage split every other rolling+normalized feature in this ontology already
-      documents (c.f. FM-049/FM-053 macd_hist_raw/macd_hist_z). `trend_strength_window` also
-      sets the canonical ~78-row warmup jointly with `zscore_window` and `ma_periods[0]`
+      rolling-mean trend_strength_raw`); `compute_normalization` then z-scores it. `trend_strength_window`
+      also sets the canonical ~78-row warmup jointly with `zscore_window` and `ma_periods[0]`
       (`required_warmup_rows()`, feature_pipeline.py).
+
+      RENAMED 2026-09-16 `trend_strength` -> `trend_strength_z` (program
+      SCHEMA-V6-NORMALIZATION-IDENTITY-FIX, schema v5.0 -> v6.0). Refined IN PLACE: FM-064 keeps
+      its id and canonical index 11; only the emitted name changes, the value does not (proved by
+      a by-position vector comparison on the XAUUSD M15 corpus). WHY: the emitted value had always
+      been the z-score — `compute_normalization` overwrote the raw chain under the raw chain's own
+      name — so the bare column name contradicted the value everywhere it travelled without this
+      registry attached (features.parquet, bar_matrix, the 48-dim vector, model feature_order
+      lists). CORRECTED the previous note's claim that this was "the SAME two-stage split ...
+      (c.f. FM-049/FM-053 macd_hist_raw/macd_hist_z)": it was not the same — macd_hist keeps BOTH
+      a raw and a z slot, while trend_strength kept only one name carrying the z value. It is the
+      same split NOW: the raw stage is emitted as `trend_strength_raw` (registered below,
+      NON-canonical — it is deliberately NOT given a vector slot, because a price-unit
+      non-stationary dim is exactly the F-061/F-064 defect class and must not enter the model
+      vector by explicit user decision).
     taxonomy:
       category:        Trend
       knowledge_class: Statistical
@@ -1768,8 +1781,44 @@ rolling_indicators:
       derivation_depth: 4
       produced_by:      feature_pipeline.compute_normalization
       consumed_by:      [UNKNOWN]
-      vector_key:       trend_strength
+      vector_key:       trend_strength_z
       vector_index:     11
+  trend_strength_raw:
+    id:        FM-084
+    version:   1
+    lifecycle: registered
+    computation_class: rolling
+    formula:   "SMA(<feature_pipeline.trend_strength_window>) of diff(SMA(<feature_pipeline.ma_periods[0]>) of close)  # defaults 10, 20"
+    config_keys: [feature_pipeline.trend_strength_window, feature_pipeline.ma_periods]
+    impl:      feature_pipeline.compute_trend_features
+    depends_on: [close]
+    active:    true
+    note: >
+      REGISTERED 2026-09-16 (program SCHEMA-V6-NORMALIZATION-IDENTITY-FIX). This is the RAW
+      stage that FM-064 z-scores — the quantity `compute_trend_features` has always computed and
+      that `compute_normalization` previously overwrote in place, making it unobservable. It is
+      now emitted under its own name, the same raw/z pairing FM-049/FM-053 use for the MACD
+      histogram. Deliberately NOT given a canonical vector slot: it is in price units and
+      therefore non-stationary across epochs (the XAUUSD corpus alone spans close 2287 -> 5586),
+      which is the F-061/F-064 dimensional-mix defect class; the canonical vector carries the
+      standardized FM-064 value only. The canonical vector stays 48 dims.
+    taxonomy:
+      category:        Trend
+      knowledge_class: Statistical
+    semantics:
+      description:   "The 10-bar smoothed slope of the 20-bar moving average of close, in price units per bar."
+      why_it_exists: "Makes FM-064's input observable and auditable instead of being destroyed by in-place normalization; also lets research inspect the un-standardized trend slope directly."
+      interpretation:
+        high: "The 20-bar moving average is rising steeply in price units."
+        low:  "Flat or falling 20-bar moving average."
+        caveat: "NOT comparable across instruments or epochs — it scales with price level. Use FM-064 trend_strength_z for any cross-epoch comparison or model input."
+    states: []
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_trend_features
+      consumed_by:      [trend_strength_z]
+      vector_key:       []
+      vector_index:     []
   volatility_regime:
     id:        FM-050
     version:   1
@@ -1910,9 +1959,9 @@ rolling_indicators:
       NoSpike/VolumeSpike are this entry's existing states. Not a CRTState,
       not a market_crt_states when: predicate, not high_volume, not
       economic. Formula and FeaturePipeline emission unchanged.
-  candles_since_retest:
+  candles_since_sweep:
     id:        FM-065
-    version:   1
+    version:   2
     lifecycle: registered
     computation_class: rolling_stateful
     formula:   "cumcount of bars since the last liquidity_sweep event (groupby (liquidity_sweep != 0).cumsum()); 0 before the first sweep. Falls back to a retest_flag-keyed grouping ONLY when liquidity_sweep is absent from the frame (feature_pipeline.py:988-991) — non-authoritative, unreachable in production per the certification ledger."
@@ -1920,7 +1969,7 @@ rolling_indicators:
     depends_on: [liquidity_sweep]
     units:     bars
     active:    true
-    vector_key: candles_since_retest   # canonical index 35
+    vector_key: candles_since_sweep    # canonical index 35 (slot unchanged; RENAMED at v6.0)
     note: >
       REGISTERED 2026-07-31, closing a MODEL_INTENT_CHANGE-free path that was blocked on
       2026-07-24 (see FM-070 below for the resolution). This entry is the PIPELINE's canonical
@@ -1939,6 +1988,19 @@ rolling_indicators:
       change: the value fed to BitNet under the legacy key is numerically identical
       (`current_candle_index - retest_candle_index`, unchanged); `use_bitnet` stays false on the
       active config (F-004) so the path is presently inert either way.
+
+      RENAMED 2026-09-16 `candles_since_retest` -> `candles_since_sweep` (program
+      SCHEMA-V6-NORMALIZATION-IDENTITY-FIX, schema v5.0 -> v6.0). Refined IN PLACE: FM-065 keeps
+      its id and canonical index 35; only the emitted name changes, the value does not. This
+      finally closes the collision the 2026-07-31 registration could only DOCUMENT: the two
+      quantities no longer share a bare name at all — the pipeline's sweep-anchored counter is
+      `candles_since_sweep` (FM-065) and the CRT engine's retest-anchored one stays
+      `candles_since_retest_state` (FM-070). The BitNet legacy alias key
+      (`_bn_in["candles_since_retest"]`) is deliberately UNCHANGED: it names a model-input slot in
+      the legacy-6 encoder's own namespace, not this pipeline column, and renaming it would be an
+      unrelated MODEL_INPUT_CHANGE. Measured before the rename on the full XAUUSD M15 corpus: the
+      emitted value equals a recomputed bars-since-sweep on 47,183/47,183 rows and is 0 on exactly
+      the 7,542 sweep bars — i.e. the name was the only thing that was wrong.
     taxonomy:
       category:        Retest
       knowledge_class: Statistical
@@ -1954,7 +2016,7 @@ rolling_indicators:
       derivation_depth: 3
       produced_by:      feature_pipeline.compute_canonical_temporal_features
       consumed_by:      [UNKNOWN]
-      vector_key:       candles_since_retest
+      vector_key:       candles_since_sweep
       vector_index:     35
   # ── FM-065/FM-070 resolution history (2026-07-24 → 2026-07-31) ─────────────────────────────
   # DISCOVERED BY REGISTRATION, then withdrawn on 2026-07-24. Registering the name turned

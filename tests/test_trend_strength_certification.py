@@ -1,4 +1,4 @@
-"""Floor: M13B trend_strength nested rolling certification."""
+"""Floor: M13B trend_strength_z nested rolling certification."""
 from __future__ import annotations
 
 import hashlib
@@ -34,7 +34,7 @@ def test_dag_deps_close_only():
     )
     mod = module_from_spec(spec)
     spec.loader.exec_module(mod)
-    nd = next(n for n in mod.build_dag()["nodes"] if n["name"] == "trend_strength")
+    nd = next(n for n in mod.build_dag()["nodes"] if n["name"] == "trend_strength_z")
     assert nd["deps"] == ["close"]
     assert nd["canonical_index"] == 11
 
@@ -52,7 +52,7 @@ def test_intended_quantity_pinned():
     )
     smod = module_from_spec(fcs)
     fcs.loader.exec_module(smod)
-    iq = smod._intended_quantities(fmod.build_dag())["trend_strength"]
+    iq = smod._intended_quantities(fmod.build_dag())["trend_strength_z"]
     assert "UNADJUDICATED" not in iq
     assert "SMA20" in iq or "window=20" in iq
     assert "index 29" in iq
@@ -138,7 +138,7 @@ def test_evidence_when_present():
     raw = _EVIDENCE.read_bytes()
     assert len(hashlib.sha256(raw).hexdigest()) == 64
     art = json.loads(raw.decode("utf-8"))
-    assert art["TARGET_FEATURE"] == "trend_strength"
+    assert art["TARGET_FEATURE"] == "trend_strength_raw"
     assert art["FIRST_FINITE_INDEX_FINITE_INPUT"] == 29
     assert art["CURRENT_DAG_DEPS"] == ["close"]
     assert art["PER_NODE_VERDICT"] == "CERTIFIED"

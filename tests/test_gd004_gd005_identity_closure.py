@@ -69,7 +69,7 @@ def test_compute_scores_byte_identical(move, atr, sweep_detected, double_sweep):
 
     got = compute_scores(
         body_ratio=body_ratio, move=move, atr=atr, retest_depth=retest_depth,
-        candles_since_retest=csr, sweep_detected=sweep_detected, double_sweep=double_sweep,
+        candles_since_sweep=csr, sweep_detected=sweep_detected, double_sweep=double_sweep,
         lambda_decay=lam, score_weights=weights,
     )
     assert got == expected

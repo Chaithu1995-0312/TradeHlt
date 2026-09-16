@@ -38,7 +38,7 @@ _anchor = StorySpec(
     signal=EntrySignal(direction="long", entry_rel_index=9, entry_price=102.00,
                        atr=1.0, sl_atr_mult=1.0, tp_atr_mult=2.0),
     contract=EntryContract(
-        disp_strength=4.7, atr=1.0, retest_depth=0.5, candles_since_retest=1,
+        disp_strength=4.7, atr=1.0, retest_depth=0.5, candles_since_sweep=1,
         sweep_detected=True, double_sweep=False, ema_fast=102.5, ema_slow=100.5,
         momentum_score=0.8, zone_distance=0.10, zone_freshness=0.90, zone_strength=0.80),
     expected_market_states=(
@@ -79,7 +79,7 @@ _buyside_short = StorySpec(
     signal=EntrySignal(direction="short", entry_rel_index=8, entry_price=98.00,
                        atr=1.0, sl_atr_mult=1.0, tp_atr_mult=2.0),
     contract=EntryContract(
-        disp_strength=4.7, atr=1.0, retest_depth=0.5, candles_since_retest=1,
+        disp_strength=4.7, atr=1.0, retest_depth=0.5, candles_since_sweep=1,
         sweep_detected=True, double_sweep=False, ema_fast=97.5, ema_slow=99.5,
         momentum_score=-0.8, zone_distance=0.10, zone_freshness=0.90, zone_strength=0.80),
     expected_market_states=(
@@ -119,7 +119,7 @@ _stop_hunt_long = StorySpec(
     signal=EntrySignal(direction="long", entry_rel_index=8, entry_price=102.00,
                        atr=1.0, sl_atr_mult=1.0, tp_atr_mult=2.0),
     contract=EntryContract(
-        disp_strength=4.6, atr=1.0, retest_depth=0.5, candles_since_retest=1,
+        disp_strength=4.6, atr=1.0, retest_depth=0.5, candles_since_sweep=1,
         sweep_detected=True, double_sweep=True, ema_fast=102.5, ema_slow=100.5,
         momentum_score=0.8, zone_distance=0.10, zone_freshness=0.90, zone_strength=0.80),
     expected_market_states=(

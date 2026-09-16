@@ -16,7 +16,7 @@ Two-tier design with optional BitNet inference:
       momentum_score = |momentum_score|              (from feature)
       macd_score     = tanh(macd_hist / atr)        (normalised MACD)
       volume_score   = min(volume_ratio / 2.0, 1.0) (volume confirmation)
-      trend_score    = trend_strength                (from feature)
+      trend_score    = trend_strength_z                (from feature)
 
     Weighted sum → ensemble_score ∈ [0, 1].
 
@@ -120,7 +120,7 @@ class S08MLEnsemble(BaseStrategy):
                     "retest_depth":        float(features.get("retest_depth", 0.0)),
                     "disp_strength":       float(features.get("disp_strength", 0.0)),
                     "atr":                 atr,
-                    "candles_since_retest": int(features.get("candles_since_retest", 0)),
+                    "candles_since_sweep": int(features.get("candles_since_sweep", 0)),
                     "double_sweep":        float(bool(features.get("double_sweep", False))),
                 })
                 bn_val = float(raw) if isinstance(raw, (int, float)) else float(raw.get("score", 0.5))
@@ -201,14 +201,14 @@ class S08MLEnsemble(BaseStrategy):
         momentum = float(features.get("momentum_score", 0.0))
         macd_hist = float(features.get("macd_hist_z", 0.0))   # v4.0: v3.0 emitted the z-score under `macd_hist`
         volume_ratio = float(features.get("volume_ratio", 1.0))
-        trend_strength = float(features.get("trend_strength", 0.0))
+        trend_strength_z = float(features.get("trend_strength_z", 0.0))
 
         rsi_score = abs(rsi - 50.0) / 50.0
         mom_score = min(abs(momentum), 1.0)
         # MACD hist is ~100x smaller than ATR; scale divisor accordingly
         macd_score = abs(math.tanh(macd_hist / (atr * 0.1))) if atr > 0 else 0.0
         vol_score = min(volume_ratio / 2.0, 1.0)
-        trend_score = min(abs(trend_strength), 1.0)
+        trend_score = min(abs(trend_strength_z), 1.0)
 
         return (w_rsi * rsi_score + w_mom * mom_score + w_macd * macd_score
                 + w_vol * vol_score + w_trend * trend_score)

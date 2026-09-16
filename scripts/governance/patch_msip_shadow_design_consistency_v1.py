@@ -187,9 +187,9 @@ def main() -> int:
         "MSD-TREND": {
             "dimension_authority_class": "MIXED_WHAT_FIELDS",
             "fields": {
-                "trend_strength": {
+                "trend_strength_z": {
                     "authority_class": "DETERMINISTIC_DERIVED_WHAT",
-                    "source_feature": "trend_strength",
+                    "source_feature": "trend_strength_z",
                     "value_kind": "CONTINUOUS_VALUE",
                     "how_provenance_required": False,
                 },
@@ -220,7 +220,7 @@ def main() -> int:
                     "optional": True,
                     "value_kind": "CATEGORICAL_LABEL",
                     "how_provenance_required": True,
-                    "continuous_twins_required": ["trend_strength", "trend_bias"],
+                    "continuous_twins_required": ["trend_strength_z", "trend_bias"],
                 },
             },
         },

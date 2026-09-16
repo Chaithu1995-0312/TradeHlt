@@ -1476,7 +1476,7 @@ def validate_bitnet(records: List[dict], reports: List[ModelReport]) -> np.ndarr
             r.status = "EXECUTED_DISABLED_ON_SPINE"
             # feature contract for legacy 6-input
             r.feature_alignment = {
-                "legacy_6_input": ["body_ratio", "retest_depth", "disp_strength", "atr", "candles_since_retest", "double_sweep"],
+                "legacy_6_input": ["body_ratio", "retest_depth", "disp_strength", "atr", "candles_since_sweep", "double_sweep"],
                 "model_json_feature_order": json.loads(P("model.json").read_text(encoding="utf-8")).get("feature_order")
                 if P("model.json").exists() else None,
                 "export_input_dim": json.loads(P("results/model_export_format.json").read_text(encoding="utf-8")).get("input_dim")
@@ -1504,7 +1504,7 @@ def validate_bitnet(records: List[dict], reports: List[ModelReport]) -> np.ndarr
                 r.load_detail["BitNetModel_model_json"] = "OK"
                 r.load_detail["input_dim"] = getattr(bm, "input_dim", None) or getattr(bm, "n_features", None)
                 # legacy 6
-                keys = ["body_ratio", "retest_depth", "disp_strength", "atr", "candles_since_retest", "double_sweep"]
+                keys = ["body_ratio", "retest_depth", "disp_strength", "atr", "candles_since_sweep", "double_sweep"]
                 exceptions = 0
                 for i, feat in enumerate(records):
                     try:

@@ -49,13 +49,13 @@ PRIMITIVE_COLS = ["body_size", "candle_range", "body_ratio",
 
 DERIVED_COLS = ["atr", "atr_14", "atr_14_raw", "true_range", "rsi_14", "rsi_state",
                 "ema_fast", "ema_slow", "ema_spread", "macd_line", "macd_signal",
-                "macd_hist_raw", "macd_hist_z", "momentum_score", "trend_strength",
+                "macd_hist_raw", "macd_hist_z", "momentum_score", "trend_strength_z",
                 "volatility_ratio", "range_size", "disp_strength",
                 "volume_ratio", "volume_spike", "volume_ma20", "volume_range_proxy"]
 
 STRUCTURE_COLS = ["swing_high", "swing_low", "higher_high", "lower_low", "break_of_structure",
                   "liquidity_sweep", "sweep_detected", "double_sweep", "retest_flag",
-                  "retest_depth", "liquidity_distance", "candles_since_retest",
+                  "retest_depth", "liquidity_distance", "candles_since_sweep",
                   "volatility_regime", "trend_bias", "session", "hour_of_day",
                   "displacement_flag"]
 

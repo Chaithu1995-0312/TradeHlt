@@ -40,7 +40,7 @@ def _breakout_features(**ov):
         "close": 100.0, "high": 102.0, "low": 98.0, "atr": 2.0,
         "body_ratio": 0.8, "disp_strength": 2.2,
         "sweep_detected": False, "double_sweep": False,
-        "retest_depth": 0.1, "candles_since_retest": 10,
+        "retest_depth": 0.1, "candles_since_sweep": 10,
         "ema_fast": 99.5, "ema_slow": 98.5, "momentum_score": 0.7,
     }
     f.update(ov)
@@ -98,7 +98,7 @@ class TestDeriveIntent:
         assert derive_intent_from_features(f, 1) == "LIQ_SWEEP"
 
     def test_pullback(self):
-        f = _breakout_features(retest_depth=0.5, candles_since_retest=3,
+        f = _breakout_features(retest_depth=0.5, candles_since_sweep=3,
                                 momentum_score=0.3, body_ratio=0.3, disp_strength=0.5,
                                 sweep_detected=False, double_sweep=False)
         assert derive_intent_from_features(f, 1) == "PULLBACK"
@@ -106,7 +106,7 @@ class TestDeriveIntent:
     def test_breakout(self):
         f = _breakout_features(body_ratio=0.85, disp_strength=2.5,
                                 sweep_detected=False, double_sweep=False,
-                                retest_depth=0.1, candles_since_retest=10)
+                                retest_depth=0.1, candles_since_sweep=10)
         assert derive_intent_from_features(f, 1) == "BREAKOUT"
 
     def test_reversal_long(self):
@@ -114,14 +114,14 @@ class TestDeriveIntent:
         f = _breakout_features(body_ratio=0.2, disp_strength=0.3,
                                 sweep_detected=False, double_sweep=False,
                                 ema_fast=98.0, ema_slow=100.0, retest_depth=0.0,
-                                candles_since_retest=10, momentum_score=-0.1)
+                                candles_since_sweep=10, momentum_score=-0.1)
         assert derive_intent_from_features(f, 1) == "REVERSAL"
 
     def test_unknown(self):
         f = _breakout_features(body_ratio=0.1, disp_strength=0.3,
                                 sweep_detected=False, double_sweep=False,
                                 ema_fast=99.5, ema_slow=98.5,
-                                retest_depth=0.1, candles_since_retest=10,
+                                retest_depth=0.1, candles_since_sweep=10,
                                 momentum_score=0.0)
         assert derive_intent_from_features(f, 1) == "UNKNOWN"
 
@@ -159,7 +159,7 @@ class TestComputeLegacyLevels:
         assert result["risk_dist"] > 0
 
     def test_pullback_uses_lower_tp_mult(self):
-        f = _breakout_features(retest_depth=0.5, candles_since_retest=3,
+        f = _breakout_features(retest_depth=0.5, candles_since_sweep=3,
                                 momentum_score=0.3, body_ratio=0.3, disp_strength=0.5,
                                 sweep_detected=False, double_sweep=False)
         result = compute_legacy_levels(100.0, 1, f, _BASE_CFG)

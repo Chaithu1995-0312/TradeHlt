@@ -48,7 +48,7 @@ def test_nan_feature_is_partial_not_invented():
         "volatility_ratio": 1.0,
         "session": 1,
         "hour_of_day": 12,
-        "trend_strength": 0.0,
+        "trend_strength_z": 0.0,
         "trend_bias": 0,
         "ema_fast": 1.0,
         "ema_slow": 1.0,
