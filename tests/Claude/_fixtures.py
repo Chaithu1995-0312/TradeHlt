@@ -9,7 +9,15 @@ from config_layer.state_identity import CRTConfig, CRTState, Direction
 # Permissive thresholds so a rejection is always attributable to the geometry
 # contract under test, never to body_ratio / ATR sizing. Mirrors the shape of
 # tests/test_directional_displacement.py::_sm_in_sweep.
-PERMISSIVE = dict(body_ratio_min=0.50, atr_min_displacement=0.5, atr_multiplier_min=0.5)
+PERMISSIVE = dict(
+    body_ratio_min=0.50,
+    atr_min_displacement=0.5,
+    atr_multiplier_min=0.5,
+    # Not exercised by SWEEP->DISPLACEMENT geometry tests;
+    # present only to satisfy required-key construction post Path-A.
+    retest_depth_max=1.0,
+    expansion_atr_min_distance=0.0,
+)
 
 
 def bar(o: float, h: float, l: float, c: float, *, idx: int = 2) -> Candle:

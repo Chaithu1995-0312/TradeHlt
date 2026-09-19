@@ -136,10 +136,12 @@ _VALID_KILL_PRECEDENCE = frozenset({"after_resting_fills", "absolute"})
 @dataclass(frozen=True)
 class CRTConfig:
     """Frozen configuration for CRT engine — fail-fast validation in __post_init__."""
-    # State machine thresholds
-    body_ratio_min:        float = 0.70
-    atr_multiplier_min:    float = 1.50
-    retest_depth_max:      float = 0.25    # [PATCH 5] now used as ceiling only
+    # Fail-closed required thresholds (no dataclass defaults — prod/YAML/router must supply).
+    # Authority (prod params): 0.65 / 1.0 / 0.15 / 0.30. FOREX/CRYPTO router values are Overrides.
+    body_ratio_min:        float
+    atr_multiplier_min:    float
+    retest_depth_max:      float    # [PATCH 5] now used as ceiling only
+    expansion_atr_min_distance: float   # [PATCH 3] close must be > disp_close + this * ATR
 
     # [PATCH 1] Bounded ATR buffer
     atr_period:            int   = 14
@@ -147,9 +149,6 @@ class CRTConfig:
 
     # [PATCH 2] Sweep age constraint
     max_sweep_age_candles: int   = 20      # sweep invalidated after N candles
-
-    # [PATCH 3] Expansion quality
-    expansion_atr_min_distance: float = 0.20   # close must be > disp_close + 0.2 * ATR
 
     # [PATCH 5] Adaptive retest depth
     retest_atr_depth_fraction: float = 0.50   # adaptive ceiling = 0.5 * ATR

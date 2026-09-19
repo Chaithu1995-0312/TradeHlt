@@ -11,6 +11,7 @@ import pytest
 from config_layer.state_identity import CRTConfig
 
 from tests.Grok._fixtures import engine_ready_long, engine_ready_short, executor
+from tests.helpers.crt_config import crt_config_for_test
 
 
 def _short_sl(disp_high: float, atr: float, buf: float) -> float:
@@ -132,8 +133,8 @@ def test_stale_config_buffer_on_executor_is_the_one_that_binds():
     from tests.Grok._fixtures import candle
 
     st.retest_candle = candle(datetime(2026, 7, 22, 19, 0, 0), 4141, 4142, 4139, 4140.0, idx=72)
-    t0 = executor(CRTConfig(sl_atr_buffer=0.2)).build_trade(st)
-    t1 = executor(CRTConfig(sl_atr_buffer=1.0)).build_trade(st)
+    t0 = executor(crt_config_for_test(sl_atr_buffer=0.2)).build_trade(st)
+    t1 = executor(crt_config_for_test(sl_atr_buffer=1.0)).build_trade(st)
     assert t0 is not None and t1 is not None
     assert t1.sl_price - t0.sl_price == pytest.approx((1.0 - 0.2) * st.atr_abs)
 

@@ -1,5 +1,6 @@
 """P1 observe floors for CRTConfig construction provenance (F-057 class)."""
 from __future__ import annotations
+from tests.helpers.crt_config import crt_config_for_test
 
 import os
 
@@ -116,7 +117,7 @@ def test_assert_product_allows_production_merged():
 def test_mark_explicit_makes_product_admissible():
     from config_layer.crt_config_provenance import assert_product_crt_config, mark_explicit
 
-    cfg = mark_explicit(CRTConfig(body_ratio_min=0.55), instrument="TEST")
+    cfg = mark_explicit(crt_config_for_test(body_ratio_min=0.55), instrument="TEST")
     mode = assert_product_crt_config(cfg, context="unit", allow_router_base=False)
     assert mode == ConstructionMode.EXPLICIT
     assert cfg.body_ratio_min == 0.55

@@ -1595,7 +1595,7 @@ class CRTStateResolver:
             return self._expansion_entry_allowed(raw)
 
         if state_name in ("RETEST", "EXECUTION"):
-            depth_max = float(thr.get("retest_depth_max", 0.25))
+            depth_max = float(thr["retest_depth_max"])
             depth = raw.get("retest_depth")
             if depth is not None and depth > depth_max:
                 return False
@@ -1800,7 +1800,7 @@ class CRTStateResolver:
 
         # (3) body_ratio
         body = raw.get("body_ratio")
-        body_min = float(thr.get("body_ratio_min", 0.70))
+        body_min = float(thr["body_ratio_min"])
         if body is not None and float(body) < body_min:
             return False
 
@@ -1817,7 +1817,7 @@ class CRTStateResolver:
         # genuinely absent (partial synthetic vector) ⇒ skip.
         candle_range = raw.get("candle_range", raw.get("wick_size"))
         if candle_range is not None:
-            wick_min = float(thr.get("atr_multiplier_min", 1.5)) * atr_abs
+            wick_min = float(thr["atr_multiplier_min"]) * atr_abs
             if float(candle_range) < wick_min:
                 return False
 
@@ -1884,7 +1884,7 @@ class CRTStateResolver:
         atr_abs = self._atr_abs(raw)
         if atr_abs is None or atr_abs <= 0:
             return False
-        min_dist = float(thr.get("expansion_atr_min_distance", 0.20)) * atr_abs
+        min_dist = float(thr["expansion_atr_min_distance"]) * atr_abs
         if abs(close - disp_close) < min_dist:
             return False
 

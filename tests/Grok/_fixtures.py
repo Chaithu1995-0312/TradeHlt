@@ -1,5 +1,6 @@
 """Minimal CRT fixtures for semantic-auditor tests. No production math."""
 from __future__ import annotations
+from tests.helpers.crt_config import crt_config_for_test
 
 from datetime import datetime, time
 
@@ -92,7 +93,7 @@ def engine_ready_long(
 
 
 def executor(cfg: CRTConfig | None = None) -> ExecutionEngine:
-    return ExecutionEngine(cfg or CRTConfig())
+    return ExecutionEngine(cfg or crt_config_for_test())
 
 
 def filter_session_name(cfg: CRTConfig, t: time) -> str:

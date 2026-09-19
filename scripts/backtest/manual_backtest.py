@@ -45,10 +45,11 @@ ATR_PERIOD           = 14
 HTF_CANDLES          = 16
 SWEEP_MAX_AGE        = 30
 DISP_MIN_MOVE_ATR    = 1.2
-DISP_BODY_MIN        = 0.70
-DISP_WICK_MIN_ATR    = 1.5
-EXPANSION_ATR_MIN    = 0.20
-RETEST_RANGE_FRAC    = 0.25
+# authority (prod params) — no silent fallback-class literals
+DISP_BODY_MIN        = 0.65
+DISP_WICK_MIN_ATR    = 1.0
+EXPANSION_ATR_MIN    = 0.30
+RETEST_RANGE_FRAC    = 0.15
 RETEST_ATR_FRAC      = 0.50
 CONF_BODY_MIN        = 0.60
 SL_BUFFER_ATR        = 0.20

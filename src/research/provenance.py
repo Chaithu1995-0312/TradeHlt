@@ -21,9 +21,11 @@ provenance is best-effort and must never block a research run.
 from __future__ import annotations
 
 import hashlib
+import json
 import subprocess
 from datetime import datetime, timezone
 from os import PathLike
+from pathlib import Path
 
 # Execution-reality standard shared with the live spine's governed exit model.
 # Bump when exit geometry / slippage model / tie-break changes.
@@ -113,6 +115,22 @@ def production_config_block() -> dict:
 # `_sha256`/`_sha256_file`/`_sha` ×33, `_utc` ×4, `_utc_now` ×4). Each keeps the EXACT behavior of
 # the copies it replaces — pinned by tests/research/test_provenance_helpers.py against those
 # originals — so a script importing it under its old private name is behavior-identical.
+#
+# Phase 4 (2026-09-17): migrated the 3 remaining genuine `sha256_file` stragglers found by a fresh
+# sweep (`build_bar_matrix.py`, `xauusd_mt5_cost_calibration.py`, `zone_x_o4_gap_study.py`) and
+# added `write_report()` below, centralizing the report.json + `{stem}_manifest.json` split
+# several scripts had independently hand-written identically. Deliberately did NOT build a generic
+# `ScriptRunner`/base-class framework across all ~163 `scripts/research/*.py` files, or migrate
+# every script to `write_report()` — reading `research.mc_kit`'s own "SCOPE HONESTY" lesson (Phase
+# 3, same date) first: many scripts differ by design (different output shapes, some write
+# Markdown/HTML alongside JSON, not a manifest), and forcing them into one template would either
+# silently drop a real distinction or need a risky one-size-fits-all DSL. Two candidates found in
+# the same sweep were deliberately NOT migrated for the identical reason: `path_ambiguity_census.py`
+# `_git_commit` pins `cwd=_ROOT` (a real behavioral difference from `git_commit()` below, not a
+# duplicate); `run_h_msip_002.py`'s `_git_meta`/`_sha256_bytes` are genuinely distinct helpers (a
+# dirty-tree-flag dict; hashing in-memory bytes rather than a file path). Migrating the remaining
+# non-piloted scripts onto `write_report()` is left as future, optional, one-script-at-a-time,
+# parity-proven cleanup — not committed work.
 # Originals: archive/research_framework_phase1*_2026-09-14/. Variants that differed (e.g. a
 # `_git_commit` with `cwd=_ROOT` + timeout) were deliberately NOT folded in.
 
@@ -143,6 +161,48 @@ def utc_stamp_compact() -> str:
 def utc_now_iso() -> str:
     """UTC wall clock as ``YYYY-MM-DDTHH:MM:SSZ`` (manifest ``generated_at`` stamp)."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def write_report(
+    out_dir: Path,
+    stem: str,
+    body: dict,
+    *,
+    extra_manifest: dict | None = None,
+    include_body_sha256: bool = True,
+) -> "tuple[Path, Path]":
+    """Write `body` -> `{stem}.json` (deterministic, sort_keys, indent=2 — no wall-clock, safe
+    to byte-compare across runs) plus a sibling `{stem}_manifest.json` carrying `generated_at`
+    (`datetime.now(timezone.utc).isoformat()`) + `git_commit()` + (by default) the report's own
+    `body_sha256`, merged with any caller-supplied `extra_manifest` fields.
+
+    Research-framework consolidation Phase 4 (2026-09-17): centralizes a report+manifest split
+    already hand-written IDENTICALLY in `ablate_zone_thr_xauusd_fusion.py`,
+    `diagnose_gaussian_pivotality.py`, and (minus `body_sha256`, hence the opt-out flag)
+    `transition_information.py`. `generated_at` deliberately uses the same raw
+    `datetime.now(timezone.utc).isoformat()` those scripts (and `research.cli.cmd_run`) already
+    use — NOT `utc_now_iso()` above, which is a different, more compact format used elsewhere —
+    so migrating a script onto this function does not change its manifest's timestamp shape.
+
+    Returns `(report_path, manifest_path)`.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    body_json = json.dumps(body, sort_keys=True, indent=2)
+    report_path = out_dir / f"{stem}.json"
+    report_path.write_text(body_json, encoding="utf-8")
+
+    manifest: dict = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "git_commit": git_commit(),
+    }
+    if include_body_sha256:
+        manifest["body_sha256"] = hashlib.sha256(body_json.encode("utf-8")).hexdigest()
+    if extra_manifest:
+        manifest.update(extra_manifest)
+
+    manifest_path = out_dir / f"{stem}_manifest.json"
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True, indent=2), encoding="utf-8")
+    return report_path, manifest_path
 
 
 def provenance_block(

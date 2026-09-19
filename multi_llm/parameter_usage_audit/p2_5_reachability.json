@@ -1,0 +1,281 @@
+{
+  "mission": "P2.5_reachability",
+  "generated_at_ist": "2026-09-19 22:21 IST",
+  "git_sha_audit_mirror": "1890785daf31e9376c59b27e9f4d0e0998b99377",
+  "active_version": "v2_htfcrt_2026_08",
+  "verdict": {
+    "path": "A",
+    "label": "Path A (dormant in prod)",
+    "reason": "Live CRTEngine never calls thr.get for these four keys (uses self.config.* from get_prod_config/authority); stock CRTStateResolver loads market_crt_states.yaml which already declares all four at authority, so .get second-args are unreachable on prod/review dual-construction. manual_backtest hardcodes fallback-class constants on a non-prod path.",
+    "mixed_notes": [
+      "manual_backtest.py actively uses fallback-class hardcodes (not thr.get) \u2014 Defect on manual_backtest path only",
+      "FOREX/CRYPTO market_router.classes values are Overrides (legitimate), not defects",
+      "Bare CRTConfig() dataclass defaults remain Defect surface in tests/provenance, not live"
+    ]
+  },
+  "authority": {
+    "body_ratio_min": 0.65,
+    "atr_multiplier_min": 1.0,
+    "expansion_atr_min_distance": 0.3,
+    "retest_depth_max": 0.15
+  },
+  "illegal_fallback_class": {
+    "body_ratio_min": 0.7,
+    "atr_multiplier_min": 1.5,
+    "expansion_atr_min_distance": 0.2,
+    "retest_depth_max": 0.25
+  },
+  "overrides": {
+    "FOREX": {
+      "body_ratio_min": 0.6,
+      "atr_multiplier_min": 1.5,
+      "expansion_atr_min_distance": 0.08,
+      "retest_depth_max": 0.35
+    },
+    "CRYPTO": {
+      "body_ratio_min": 0.5,
+      "atr_multiplier_min": 1.0,
+      "expansion_atr_min_distance": 0.15,
+      "retest_depth_max": 0.25
+    }
+  },
+  "live_hits_thr_get_fallback": false,
+  "manual_backtest": {
+    "constructs_crtconfig": false,
+    "constructs_resolver": false,
+    "hardcodes": {
+      "DISP_BODY_MIN": {
+        "line": 48,
+        "value": 0.7,
+        "param": "body_ratio_min"
+      },
+      "DISP_WICK_MIN_ATR": {
+        "line": 49,
+        "value": 1.5,
+        "param": "atr_multiplier_min"
+      },
+      "EXPANSION_ATR_MIN": {
+        "line": 50,
+        "value": 0.2,
+        "param": "expansion_atr_min_distance"
+      },
+      "RETEST_RANGE_FRAC": {
+        "line": 51,
+        "value": 0.25,
+        "param": "retest_depth_max"
+      }
+    },
+    "path_class": "manual_backtest",
+    "answer": "Constructs neither Config nor Resolver; hardcodes fallback-class 0.70/1.5/0.20/0.25 at lines 48-51."
+  },
+  "counts": {
+    "prod_with_governed_config": ">=5 primary sites",
+    "prod_without_config_hitting_thr_get": 0,
+    "test_bare_CRTConfig": 70,
+    "test_bare_CRTStateResolver": 41,
+    "research_without_governed_config_notable": [
+      "scripts/backtest/manual_backtest.py",
+      "scripts/research/retest_divergence_probe.py"
+    ]
+  },
+  "rows": [
+    {
+      "id": "R01",
+      "file": "src/config_layer/production_config.py",
+      "line": 254,
+      "constructs": "Config (via ConfigBuilder.build / PRODUCTION_MERGED)",
+      "passes_four_keys": "yes",
+      "runtime": {
+        "body_ratio_min": "authority",
+        "atr_multiplier_min": "authority",
+        "expansion_atr_min_distance": "authority",
+        "retest_depth_max": "authority"
+      },
+      "path_class": "prod",
+      "notes": "get_prod_config \u2192 load_prod_config_from_registry; params win; ACTIVE params = authority. Live/backtest governed path.",
+      "hits_thr_get_fallback": false
+    },
+    {
+      "id": "R02",
+      "file": "src/runtime/backtest_v2.py",
+      "line": 2049,
+      "constructs": "Config (load_prod_config_from_registry) then CRTEngine(self.crt_cfg) @2561",
+      "passes_four_keys": "yes",
+      "runtime": {
+        "body_ratio_min": "authority",
+        "atr_multiplier_min": "authority",
+        "expansion_atr_min_distance": "authority",
+        "retest_depth_max": "authority"
+      },
+      "path_class": "backtest",
+      "notes": "F-057: refuses bare router; assert_product_crt_config. Engine gates use self.config.* not thr.get.",
+      "hits_thr_get_fallback": false
+    },
+    {
+      "id": "R03",
+      "file": "src/config_layer/crt_engine_v2.py",
+      "line": 1335,
+      "constructs": "Consumer (CRTEngine gates); does not construct Config",
+      "passes_four_keys": "yes (via injected CRTConfig)",
+      "runtime": {
+        "body_ratio_min": "authority (when cfg from get_prod_config)",
+        "atr_multiplier_min": "authority (when cfg from get_prod_config)",
+        "expansion_atr_min_distance": "authority (when cfg from get_prod_config)",
+        "retest_depth_max": "authority (when cfg from get_prod_config)"
+      },
+      "path_class": "prod",
+      "notes": "body_ratio_min@1335, atr_multiplier_min@1367, expansion_atr_min_distance@1551, retest_depth_max@1633/1989/2083. NEVER calls thr.get.",
+      "hits_thr_get_fallback": false
+    },
+    {
+      "id": "R04",
+      "file": "src/runtime/crt_construction_trace.py",
+      "line": 236,
+      "constructs": "Resolver (CRTStateResolver(config_path=cfg.ontology_source))",
+      "passes_four_keys": "yes (via market_crt_states.yaml thresholds)",
+      "runtime": {
+        "body_ratio_min": "authority (YAML thr; .get 2nd arg dormant)",
+        "atr_multiplier_min": "authority (YAML thr; .get 2nd arg dormant)",
+        "expansion_atr_min_distance": "authority (YAML thr; .get 2nd arg dormant)",
+        "retest_depth_max": "authority (YAML thr; .get 2nd arg dormant)"
+      },
+      "path_class": "prod",
+      "notes": "Review/dual-construction OBSERVATION path. ontology_source=configs/formulas/market_crt_states.yaml (v4 dual JSON:1083). Keys present at authority \u2192 thr.get fallbacks NOT taken. Not execution authority.",
+      "hits_thr_get_fallback": false
+    },
+    {
+      "id": "R05",
+      "file": "src/features/crt_state_resolver.py",
+      "line": 1803,
+      "constructs": "Resolver definition sites for thr.get",
+      "passes_four_keys": "depends on loaded YAML",
+      "runtime": {
+        "body_ratio_min": "fallback 0.70 ONLY if key missing (line 1803)",
+        "atr_multiplier_min": "fallback 1.5 ONLY if key missing (line 1820)",
+        "expansion_atr_min_distance": "fallback 0.20 ONLY if key missing (line 1887)",
+        "retest_depth_max": "fallback 0.25 ONLY if key missing (line 1598)"
+      },
+      "path_class": "other",
+      "notes": "Illegal silent .get defaults exist in source. Default _CRT_STATES_CONFIG and dual-construction ontology both declare all four at authority \u2192 dormant on stock paths.",
+      "hits_thr_get_fallback": "conditional_key_missing"
+    },
+    {
+      "id": "R06",
+      "file": "src/config_layer/market_router.py",
+      "line": 116,
+      "constructs": "Config (CRTConfig(**classes[market_type]))",
+      "passes_four_keys": "yes (FOREX/CRYPTO class profiles)",
+      "runtime": {
+        "body_ratio_min": "OVERRIDE FOREX=0.6 / CRYPTO=0.5 (then params merge may replace)",
+        "atr_multiplier_min": "OVERRIDE FOREX=1.5 / CRYPTO=1.0",
+        "expansion_atr_min_distance": "OVERRIDE FOREX=0.08 / CRYPTO=0.15",
+        "retest_depth_max": "OVERRIDE FOREX=0.35 / CRYPTO=0.25"
+      },
+      "path_class": "prod",
+      "notes": "LEGITIMATE Overrides \u2014 NOT defects. get_prod_config then overlays params (authority) so product CRTConfig ends at authority for ACTIVE.",
+      "hits_thr_get_fallback": false,
+      "classification": "Override"
+    },
+    {
+      "id": "R07",
+      "file": "src/config_layer/state_identity.py",
+      "line": 140,
+      "constructs": "Config dataclass field defaults",
+      "passes_four_keys": "defaults only (no loaded keys)",
+      "runtime": {
+        "body_ratio_min": "dataclass default = fallback 0.7",
+        "atr_multiplier_min": "dataclass default = fallback 1.5",
+        "expansion_atr_min_distance": "dataclass default = fallback 0.2",
+        "retest_depth_max": "dataclass default = fallback 0.25"
+      },
+      "path_class": "other",
+      "notes": "CRTConfig() bare \u2192 fallback-class values. Forbidden in app code (config_builder); used in tests + provenance fingerprint.",
+      "hits_thr_get_fallback": false,
+      "classification": "Defect (silent default)"
+    },
+    {
+      "id": "R08",
+      "file": "scripts/backtest/manual_backtest.py",
+      "line": 48,
+      "constructs": "Neither Config nor Resolver \u2014 standalone hardcoded constants",
+      "passes_four_keys": "no",
+      "runtime": {
+        "body_ratio_min": "hardcode DISP_BODY_MIN=0.70 (=fallback class)",
+        "atr_multiplier_min": "hardcode DISP_WICK_MIN_ATR=1.5 (=fallback class)",
+        "expansion_atr_min_distance": "hardcode EXPANSION_ATR_MIN=0.20 (=fallback class)",
+        "retest_depth_max": "hardcode RETEST_RANGE_FRAC=0.25 (=fallback class)"
+      },
+      "path_class": "manual_backtest",
+      "notes": "CRITICAL CELL: does NOT construct CRTConfig/CRTStateResolver; hardcodes schema/fallback-class values. Active on this script path only \u2014 not live engine.",
+      "hits_thr_get_fallback": false,
+      "classification": "Defect (hardcoded shadow)"
+    },
+    {
+      "id": "R09",
+      "file": "scripts/research/retest_divergence_probe.py",
+      "line": 135,
+      "constructs": "Resolver + local thr.get('retest_depth_max', 0.25)",
+      "passes_four_keys": "partial (retest via thr; others via resolver YAML)",
+      "runtime": {
+        "retest_depth_max": "authority if YAML present else fallback 0.25",
+        "body_ratio_min": "via resolver YAML / thr.get inside resolver",
+        "atr_multiplier_min": "via resolver",
+        "expansion_atr_min_distance": "via resolver"
+      },
+      "path_class": "research",
+      "notes": "Duplicates illegal .get pattern for retest_depth_max outside class.",
+      "hits_thr_get_fallback": "conditional_key_missing"
+    },
+    {
+      "id": "R10",
+      "file": "tests/* (aggregate)",
+      "line": 0,
+      "constructs": "CRTConfig() bare (~70) and CRTStateResolver() bare (~41)",
+      "passes_four_keys": "no for bare CRTConfig(); yes for bare Resolver (default YAML)",
+      "runtime": {
+        "body_ratio_min": "CRTConfig()\u21920.70 fallback; Resolver\u21920.65 authority from YAML",
+        "atr_multiplier_min": "CRTConfig()\u21921.50; Resolver\u21921.0",
+        "expansion_atr_min_distance": "CRTConfig()\u21920.20; Resolver\u21920.30",
+        "retest_depth_max": "CRTConfig()\u21920.25; Resolver\u21920.15"
+      },
+      "path_class": "test",
+      "notes": "Test-only; not production.",
+      "hits_thr_get_fallback": false
+    },
+    {
+      "id": "R11",
+      "file": "src/agent/modes/pipeline_mode.py / copilot_mode.py",
+      "line": 137,
+      "constructs": "Config via get_prod_config",
+      "passes_four_keys": "yes",
+      "runtime": {
+        "body_ratio_min": "authority",
+        "atr_multiplier_min": "authority",
+        "expansion_atr_min_distance": "authority",
+        "retest_depth_max": "authority"
+      },
+      "path_class": "prod",
+      "notes": "Agent modes load governed prod config.",
+      "hits_thr_get_fallback": false
+    },
+    {
+      "id": "R12",
+      "file": "src/runtime/live_engine_hook.py",
+      "line": 302,
+      "constructs": "Reads get_prod_metadata/crt_engine section (execution planner); CRT thresholds via engine CRTConfig elsewhere",
+      "passes_four_keys": "partial (SL/TP atr multipliers; four Tier-1 gates are on CRTEngine.config)",
+      "runtime": {
+        "body_ratio_min": "N/A at this file \u2014 gates live on CRTEngine.self.config from get_prod_config path",
+        "atr_multiplier_min": "N/A at this file \u2014 gates live on CRTEngine.self.config from get_prod_config path",
+        "expansion_atr_min_distance": "N/A at this file \u2014 gates live on CRTEngine.self.config from get_prod_config path",
+        "retest_depth_max": "N/A at this file \u2014 gates live on CRTEngine.self.config from get_prod_config path"
+      },
+      "path_class": "prod",
+      "notes": "No thr.get for the four keys. Confirms live path does not hit resolver .get fallbacks for Tier-1 gates.",
+      "hits_thr_get_fallback": false
+    }
+  ],
+  "blockers": [
+    "ListMachines/cursor MCP unavailable to this subagent; used tradelatest_audit mirror"
+  ]
+}
