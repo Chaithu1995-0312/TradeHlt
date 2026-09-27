@@ -1675,3 +1675,12 @@ Open Questions: none for this force-commit.
 Next Step: report SHA and push result.
 ---
 
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: Fix 1/7 — test_doc_citations::test_every_code_citation_resolves
+Decision/Output: docs/architecture/entry-exit-map.md:44 cited backtest_v2.py:1708/:1702/:1718 for _write_trades/_write_summary/_write_events; functions now at 1802/1786/1817 (+94/+84/+99 lines since the 2026-09-15 re-verification). Updated citation line numbers and the drift note. tests/test_doc_citations.py now 3/3 passing.
+Open Questions: None for this item.
+Next Step: Fix test_feature_math_lint (gate_intelligence.py atr formula-registry routing).
+---
