@@ -27,7 +27,7 @@ DESIGN
 
 USAGE
 -----
-    resolver = CRTStateResolver()
+    resolver = CRTStateResolver(instrument="XAUUSD")
     state = resolver.resolve(feature_vector, timestamp=ts)  # returns CRT state name
     counts = resolver.counts                  # per-state bar count
 
@@ -95,6 +95,60 @@ logger = logging.getLogger("CRT_STATE_RESOLVER")
 # ── Config path (resolved relative to project root) ──────────────
 _CRT_STATES_CONFIG = Path("configs/formulas/market_crt_states.yaml")
 
+# YAML names the resolver already reads. Values come from CRTConfig; a literal
+# left in market_crt_states.yaml is a second copy and is rejected.
+SHARED_THRESHOLD_TO_CRT: dict[str, str] = {
+    "range_atr_period": "atr_period",
+    "body_ratio_min": "body_ratio_min",
+    "atr_multiplier_min": "atr_multiplier_min",
+    "atr_min_displacement": "atr_min_displacement",
+    "expansion_atr_min_distance": "expansion_atr_min_distance",
+    "retest_depth_max": "retest_depth_max",
+    "max_sweep_age_candles": "max_sweep_age_candles",
+    "max_expansion_age_candles": "max_expansion_age_candles",
+    "max_expansion_age_hours": "max_expansion_age_hours",
+    "score_threshold": "score_threshold",
+    "soft_conf_max_candles": "soft_conf_max_candles",
+}
+SHARED_LIFECYCLE_TO_CRT: dict[str, str] = {
+    "pending_displacement_ttl_candles": "pending_displacement_ttl_candles",
+}
+_CRT_INT_FIELDS = frozenset({
+    "atr_period",
+    "max_sweep_age_candles",
+    "max_expansion_age_candles",
+    "max_expansion_age_hours",
+    "soft_conf_max_candles",
+    "pending_displacement_ttl_candles",
+})
+
+
+def _crt_config_version(cfg: object) -> str | None:
+    """Version stamped on the object, or on its provenance record when the
+    frozen CRTConfig itself has no version field."""
+    direct = getattr(cfg, "version", None)
+    if direct:
+        return str(direct)
+    try:
+        from config_layer.crt_config_provenance import get_provenance
+        from config_layer.state_identity import CRTConfig
+    except ImportError:
+        return None
+    if not isinstance(cfg, CRTConfig):
+        return None
+    version = get_provenance(cfg).version
+    return str(version) if version else None
+
+
+def coerce_crt_field(field: str, value: object) -> object:
+    if isinstance(value, bool):
+        return value
+    if field in _CRT_INT_FIELDS:
+        return int(value)  # type: ignore[arg-type]
+    if isinstance(value, (int, float)):
+        return float(value)
+    return value
+
 
 # ── Exception types ──────────────────────────────────────────────
 
@@ -133,6 +187,8 @@ class ResolverMetadata:
     projected_funnel_site: Optional[str]  # `_resolve_from_features` site AT CURRENT MEMORY
     supply_ok: bool
     missing_when: tuple[str, ...]       # required `when:` names neither supplied nor waived
+    config_source: str                  # instrument name, or "caller-supplied"
+    config_version: Optional[str]       # set when the CRTConfig carries a version
 
 
 @dataclass
@@ -317,16 +373,37 @@ class CRTStateResolver:
         config_path: Path | str | None = None,
         ontology: dict | None = None,
         *,
+        instrument: str | None = None,
+        crt_config: "CRTConfig | None" = None,
         variant: str | None = None,
         links: Iterable[str] | None = None,
         links_config_path: Path | str | None = None,
         allow_missing_when_features: Iterable[str] | None = None,
     ):
+        if instrument is None and crt_config is None:
+            raise ConfigLoadError(
+                "CRTStateResolver requires instrument= or crt_config=; neither was given"
+            )
+        if instrument is not None and crt_config is not None:
+            raise ConfigLoadError(
+                "CRTStateResolver received both instrument= and crt_config=; "
+                "pass exactly one"
+            )
+        if crt_config is None:
+            from config_layer.production_config import get_prod_config
+            crt_config = get_prod_config(str(instrument))
+            self._config_source = str(instrument)
+        else:
+            self._config_source = "caller-supplied"
+        self._crt_config = crt_config
+        self._config_version = _crt_config_version(crt_config)
         self._config_path = Path(config_path) if config_path else _CRT_STATES_CONFIG
         self._links_config_path = (
             Path(links_config_path) if links_config_path else _LINKS_CONFIG
         )
         self._config = self._load_config()
+        self._reject_shared_yaml_literals()
+        self._install_crtconfig_thresholds()
         self._encoder = FeatureStateEncoder(ontology or load_ontology())
         # Registry loads BEFORE validation so a clause's `link:` id is checked
         # against real links rather than accepted on faith.
@@ -373,13 +450,61 @@ class CRTStateResolver:
         self._last_injection_site: str | None = None
         # Engine CRTConfig.atr_period — used to rebuild active_range on HTF/gap reset
         # (crt_engine_v2.process_candle:2656-2658 uses candle_buffer[-atr_period:]).
-        self._range_atr_period = int(thr0.get("range_atr_period", 14))
+        self._range_atr_period = int(thr0["range_atr_period"])
         if self._range_atr_period < 1:
             raise ConfigLoadError("thresholds.range_atr_period must be >= 1")
         # Cap OHLC buffer (engine uses atr_period * atr_buffer_multiplier; 14*3=42)
         self._ohlc_buffer_cap = max(self._range_atr_period * 3, 48)
 
+    def _reject_shared_yaml_literals(self) -> None:
+        """A shared key still sitting in the YAML is a second copy. Fail closed."""
+        thr = self._config.get("thresholds") or {}
+        life = thr.get("lifecycle") or {}
+        present = [k for k in SHARED_THRESHOLD_TO_CRT if k in thr]
+        present += [
+            f"lifecycle.{k}" for k in SHARED_LIFECYCLE_TO_CRT if isinstance(life, dict) and k in life
+        ]
+        if present:
+            raise ConfigLoadError(
+                "market_crt_states.yaml thresholds still contain shared CRTConfig "
+                f"keys {present}; delete the literals — the resolver reads CRTConfig"
+            )
+
+    def _install_crtconfig_thresholds(self) -> None:
+        """Copy CRTConfig fields into the resolver's existing threshold names."""
+        thr = self._config.setdefault("thresholds", {})
+        life = thr.setdefault("lifecycle", {})
+        cfg = self._crt_config
+        for yaml_key, field_name in SHARED_THRESHOLD_TO_CRT.items():
+            thr[yaml_key] = getattr(cfg, field_name)
+        for yaml_key, field_name in SHARED_LIFECYCLE_TO_CRT.items():
+            life[yaml_key] = getattr(cfg, field_name)
+
+    def apply_crt_config(self, crt_config: object, *, source: str | None = None) -> None:
+        """Point this instance at a new CRTConfig and refresh the cached reads."""
+        self._crt_config = crt_config
+        if source is not None:
+            self._config_source = source
+        self._config_version = _crt_config_version(crt_config)
+        self._install_crtconfig_thresholds()
+        self._lifecycle = self._load_lifecycle()
+        thr0 = self._config.get("thresholds", {})
+        self._range_atr_period = int(thr0["range_atr_period"])
+        if self._range_atr_period < 1:
+            raise ConfigLoadError("thresholds.range_atr_period must be >= 1")
+        self._ohlc_buffer_cap = max(self._range_atr_period * 3, 48)
+
     # ── public API ───────────────────────────────────────────────
+
+    @property
+    def config_source(self) -> str:
+        """``instrument`` string, or ``caller-supplied`` when crt_config= was passed."""
+        return self._config_source
+
+    @property
+    def config_version(self) -> str | None:
+        """Production version when the loaded object carries one. None otherwise."""
+        return self._config_version
 
     @property
     def variant_id(self) -> str | None:
@@ -893,6 +1018,8 @@ class CRTStateResolver:
             projected_funnel_site=projected,
             supply_ok=not missing,
             missing_when=tuple(sorted(missing)),
+            config_source=self._config_source,
+            config_version=self._config_version,
         )
 
     # ── lifecycle (HTF / gap) ─────────────────────────────────────
@@ -914,7 +1041,7 @@ class CRTStateResolver:
                 life.get("shadow_on_htf_displacement_reset", True)
             ),
             "pending_displacement_ttl_candles": int(
-                life.get("pending_displacement_ttl_candles", 4)
+                life["pending_displacement_ttl_candles"]
             ),
         }
 
@@ -1613,7 +1740,7 @@ class CRTStateResolver:
             # rarest state and must not fire on retest_flag alone.
             if state_name == "EXECUTION":
                 score = raw.get("score", raw.get("risk_score", raw.get("crt_score")))
-                score_thr = float(thr.get("score_threshold", 0.45))
+                score_thr = float(thr["score_threshold"])
                 if score is None:
                     return False  # fail closed: no score ⇒ no EXECUTION
                 if score < score_thr:
@@ -1794,7 +1921,7 @@ class CRTStateResolver:
 
         # (2) min body move in price units
         move = abs(float(close) - float(open_))
-        min_move = float(thr.get("atr_min_displacement", 1.2)) * atr_abs
+        min_move = float(thr["atr_min_displacement"]) * atr_abs
         if move < min_move:
             return False
 
@@ -1988,7 +2115,7 @@ class CRTStateResolver:
 
         if state == "SWEEP":
             # Engine: age > max_sweep_age_candles (strict greater-than)
-            max_age = int(thr.get("max_sweep_age_candles", 20))
+            max_age = int(thr["max_sweep_age_candles"])
             if self._memory.sweep_candle_index < 0:
                 return True
             return (idx - self._memory.sweep_candle_index) > max_age
@@ -2004,14 +2131,14 @@ class CRTStateResolver:
 
         if state == "RETEST":
             # Soft-confirm window: soft_conf_max_candles (default 3)
-            max_age = int(thr.get("soft_conf_max_candles", 3))
+            max_age = int(thr["soft_conf_max_candles"])
             if self._memory.retest_candle_index < 0:
                 return True
             return (idx - self._memory.retest_candle_index) >= max_age
 
         if state == "EXECUTION":
             # Without full trade lifecycle, cap EXECUTION at soft-confirm window
-            max_age = int(thr.get("soft_conf_max_candles", 3))
+            max_age = int(thr["soft_conf_max_candles"])
             # Use retest index as proxy entry if no dedicated execution index
             entry = self._memory.retest_candle_index
             if entry < 0:
@@ -2092,8 +2219,8 @@ class CRTStateResolver:
         or too many hours.
         """
         thresholds = self._config.get("thresholds", {})
-        max_candles = thresholds.get("max_expansion_age_candles", 495)
-        max_hours = thresholds.get("max_expansion_age_hours", 124)
+        max_candles = thresholds["max_expansion_age_candles"]
+        max_hours = thresholds["max_expansion_age_hours"]
 
         # Check candle-based TTL
         if max_candles > 0:
@@ -2186,11 +2313,23 @@ def build_htf_id_timeline(
 def create_resolver(
     config_path: Optional[Path | str] = None,
     ontology_path: Optional[Path | str] = None,
+    *,
+    instrument: str | None = None,
+    crt_config: object | None = None,
 ) -> CRTStateResolver:
-    """Create a configured CRTStateResolver with optional overrides."""
+    """Create a configured CRTStateResolver with optional overrides.
+
+    Pass exactly one of ``instrument`` or ``crt_config`` (same rule as
+    CRTStateResolver).
+    """
     ontology = None
     if ontology_path:
         import yaml as _yaml
         with open(ontology_path, "r", encoding="utf-8") as fh:
             ontology = _yaml.safe_load(fh)
-    return CRTStateResolver(config_path=config_path, ontology=ontology)
+    return CRTStateResolver(
+        config_path=config_path,
+        ontology=ontology,
+        instrument=instrument,
+        crt_config=crt_config,
+    )

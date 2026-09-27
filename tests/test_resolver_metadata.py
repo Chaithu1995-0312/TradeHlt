@@ -97,14 +97,14 @@ def test_behavior_neutral(record_evidence):
     """
     bars = _bars()
 
-    control = CRTStateResolver()
+    control = CRTStateResolver(instrument="XAUUSD")
     control.record_resolver_evidence = record_evidence
     control_states, control_snaps = [], []
     for b in bars:
         control_states.append(control.resolve(b))
         control_snaps.append(_snapshot(control))
 
-    subject = CRTStateResolver()
+    subject = CRTStateResolver(instrument="XAUUSD")
     subject.record_resolver_evidence = record_evidence
     subject_states, subject_snaps = [], []
     for b in bars:
@@ -120,7 +120,7 @@ def test_behavior_neutral(record_evidence):
 
 def test_metadata_does_not_advance_memory_on_its_own():
     """Called alone, `resolve_metadata()` leaves memory byte-identical (no candle_index tick)."""
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     before = _snapshot(r)
     for b in _bars(25):
         r.resolve_metadata(b)
@@ -130,7 +130,7 @@ def test_metadata_does_not_advance_memory_on_its_own():
 # ── shape ─────────────────────────────────────────────────────────────────────────────────
 def test_l2_map_has_19_keys():
     """The full L2 map, not `classify()`'s 13 vector-bound subset."""
-    md = CRTStateResolver().resolve_metadata(_bar(3))
+    md = CRTStateResolver(instrument="XAUUSD").resolve_metadata(_bar(3))
     assert set(md.l2_map) == set(_ENCODER.stateful_features)
     assert len(md.l2_map) == 19
 
@@ -139,20 +139,20 @@ def test_l2_map_is_wider_than_classify_alone():
     """Pins the two-step construction: `classify()` alone would silently return 13."""
     feat = _bar(3)
     assert len(_ENCODER.classify(feat)) == 13
-    assert len(CRTStateResolver().resolve_metadata(feat).l2_map) == 19
+    assert len(CRTStateResolver(instrument="XAUUSD").resolve_metadata(feat).l2_map) == 19
 
 
 def test_feature_vector_contains_canonical_48():
     """The 48 canonical names are a SUBSET — the echoed dict also carries non-vector extras."""
-    md = CRTStateResolver().resolve_metadata(_bar(1))
+    md = CRTStateResolver(instrument="XAUUSD").resolve_metadata(_bar(1))
     assert CANONICAL_FEATURE_DIM == 48
     assert set(CANONICAL_FEATURES).issubset(md.feature_vector)
     assert set(_NON_VECTOR).issubset(md.feature_vector)
 
 
 def test_affinity_and_gate_keys_are_declared_states():
-    md = CRTStateResolver().resolve_metadata(_bar(2))
-    declared = {s["name"] for s in CRTStateResolver()._config["states"]}
+    md = CRTStateResolver(instrument="XAUUSD").resolve_metadata(_bar(2))
+    declared = {s["name"] for s in CRTStateResolver(instrument="XAUUSD")._config["states"]}
     assert set(md.predicate_affinity) <= declared
     assert set(md.continuous_passed) <= declared
     assert all(isinstance(v, bool) for v in md.predicate_affinity.values())
@@ -168,7 +168,7 @@ def test_returns_no_state_label():
 
 def test_projected_site_is_a_known_funnel_site_or_none():
     sites = set()
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     for b in _bars(40):
         sites.add(r.resolve_metadata(b).projected_funnel_site)
         r.resolve(b)
@@ -186,7 +186,7 @@ def _enforceable_non_vector(r: CRTStateResolver) -> list[str]:
 
 
 def test_missing_vector_bound_feature_fails_closed_in_classify():
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     feat = _bar(1)
     feat.pop("break_of_structure")
     with pytest.raises(PredicateValidationError, match="required stateful features absent"):
@@ -194,7 +194,7 @@ def test_missing_vector_bound_feature_fails_closed_in_classify():
 
 
 def test_supply_contract_enforces_by_default():
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     required = _enforceable_non_vector(r)
     if not required:
         pytest.skip("no enforceable non-vector when:-named features on this variant")
@@ -205,7 +205,7 @@ def test_supply_contract_enforces_by_default():
 
 
 def test_supply_contract_can_report_instead_of_raising():
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     required = _enforceable_non_vector(r)
     if not required:
         pytest.skip("no enforceable non-vector when:-named features on this variant")
@@ -219,6 +219,6 @@ def test_supply_contract_can_report_instead_of_raising():
 
 
 def test_supply_ok_when_fully_supplied():
-    md = CRTStateResolver().resolve_metadata(_bar(1))
+    md = CRTStateResolver(instrument="XAUUSD").resolve_metadata(_bar(1))
     assert md.supply_ok is True
     assert md.missing_when == ()

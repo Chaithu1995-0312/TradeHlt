@@ -27,7 +27,7 @@ from features.crt_state_resolver import CRTStateResolver  # noqa: E402
 
 def _sweep_resolver() -> CRTStateResolver:
     """Resolver with memory forced into a fresh (non-stale) SWEEP so the funnel is open."""
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     r._memory.current_state = "SWEEP"
     r._memory.candle_index = 10
     r._memory.sweep_candle_index = 10  # age 0 ≤ max_sweep_age_candles → not stale

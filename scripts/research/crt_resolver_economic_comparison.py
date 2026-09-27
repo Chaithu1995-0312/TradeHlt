@@ -241,7 +241,7 @@ def drive_resolver_with_memory(
     enriched = compute_enriched_frame(ohlcv_path, fp_cfg=None, _df=df)
     source_indices = [int(v) for v in enriched["_src_idx"].tolist()]
 
-    resolver = CRTStateResolver(config_path=config_path)
+    resolver = CRTStateResolver(instrument=instrument, config_path=config_path)
     thr = resolver._config.get("thresholds", {})
     thr_defaults = {"rsi_overbought": 70.0, "rsi_oversold": 30.0}
     rsi_ob = float(thr.get("rsi_overbought", thr_defaults["rsi_overbought"]))

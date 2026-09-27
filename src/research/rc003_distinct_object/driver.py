@@ -123,7 +123,7 @@ def build_populations(corpus: str | Path, instrument: str = "XAUUSD") -> Populat
         if col not in enriched.columns:
             enriched[col] = 0
 
-    resolver = CRTStateResolver()
+    resolver = CRTStateResolver(instrument=instrument)
     resolver.reset_counts()
     resolver.reset_memory()
     resolver.record_resolver_evidence = True  # RC-003 capture — read-only, decision-neutral

@@ -32,7 +32,7 @@ from features.crt_state_resolver import CRTStateResolver  # noqa: E402
 
 
 def _resolver(state: str = "RANGE") -> CRTStateResolver:
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     r._memory.current_state = state
     r._memory.candle_index = 10
     return r

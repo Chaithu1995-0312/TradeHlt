@@ -108,7 +108,7 @@ def test_the_nine_declared_states_are_exactly_the_non_parent_crt_states() -> Non
 def test_resolver_constructs_cleanly_against_the_real_config() -> None:
     """Inert-today proof: the new fail-closed guard must not raise on the unmodified,
     currently-valid config."""
-    CRTStateResolver()  # raises on failure; no assertion needed beyond "did not raise"
+    CRTStateResolver(instrument="XAUUSD")  # raises on failure; no assertion needed beyond "did not raise"
 
 
 def test_load_time_guard_rejects_an_unknown_state_name() -> None:
@@ -129,7 +129,7 @@ def test_load_time_guard_rejects_an_unknown_state_name() -> None:
         yaml.safe_dump(doc, tmp)
         tmp.close()
         with pytest.raises(PredicateValidationError, match="RNAGE"):
-            CRTStateResolver(config_path=tmp.name)
+            CRTStateResolver(instrument="XAUUSD", config_path=tmp.name)
     finally:
         os.unlink(tmp.name)
 
@@ -148,6 +148,6 @@ def test_load_time_guard_rejects_a_duplicate_state_name() -> None:
         yaml.safe_dump(doc, tmp)
         tmp.close()
         with pytest.raises(PredicateValidationError, match="declared more than once"):
-            CRTStateResolver(config_path=tmp.name)
+            CRTStateResolver(instrument="XAUUSD", config_path=tmp.name)
     finally:
         os.unlink(tmp.name)

@@ -20,6 +20,14 @@ sys.path.insert(0, str(ROOT / "src"))
 from features.crt_state_resolver import CRTStateResolver  # noqa: E402
 
 
+def _atr_period_4():
+    """The old YAML literal range_atr_period=4, now a CRTConfig.atr_period override."""
+    from dataclasses import replace
+    from config_layer.production_config import get_prod_config
+    return replace(get_prod_config("XAUUSD"), atr_period=4)
+
+
+
 def _base_features(**overrides) -> dict:
     """Minimal feature dict accepted by FeatureStateEncoder.classify()."""
     fv = {
@@ -64,7 +72,6 @@ def _write_cfg(tmp_path: Path, sweep_geometry: str) -> Path:
         (ROOT / "configs/formulas/market_crt_states.yaml").read_text(encoding="utf-8")
     )
     base["thresholds"]["sweep_geometry"] = sweep_geometry
-    base["thresholds"]["range_atr_period"] = 4
     base["thresholds"]["lifecycle"]["htf_candles_per_range"] = 4
     out = tmp_path / f"crt_states_{sweep_geometry}.yaml"
     out.write_text(yaml.dump(base, default_flow_style=False, sort_keys=False), encoding="utf-8")
@@ -73,7 +80,7 @@ def _write_cfg(tmp_path: Path, sweep_geometry: str) -> Path:
 
 def test_htf_range_sweep_high_founding(tmp_path):
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     # Seed a tight range [100, 110]
     for o, h, l, c in [
         (105, 110, 104, 106),
@@ -107,7 +114,7 @@ def test_htf_range_sweep_high_founding(tmp_path):
 
 def test_htf_range_no_sweep_when_close_outside(tmp_path):
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     for o, h, l, c in [
         (105, 110, 104, 106),
         (106, 109, 103, 105),
@@ -135,7 +142,7 @@ def test_htf_range_no_sweep_when_close_outside(tmp_path):
 
 def test_pipeline_swing_still_uses_liquidity_sweep(tmp_path):
     cfg = _write_cfg(tmp_path, "pipeline_swing")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     # No range seed needed — pipeline path
     state = r.resolve(
         _base_features(
@@ -148,7 +155,7 @@ def test_pipeline_swing_still_uses_liquidity_sweep(tmp_path):
 
 def test_detect_htf_range_sweep_unit(tmp_path):
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     r._memory.range_h_ref = 2000.0
     r._memory.range_l_ref = 1900.0
     r._memory.range_ready = True
@@ -162,7 +169,7 @@ def test_detect_htf_range_sweep_unit(tmp_path):
 def test_seed_uses_completed_htf_window_not_tail(tmp_path):
     """B1b: final seed = last completed HTFBuilder window, not buffer[-cph:]."""
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     # Window 0: lows=10 highs=20
     for o, h, l, c in [
         (15, 20, 14, 16),
@@ -184,7 +191,7 @@ def test_seed_uses_completed_htf_window_not_tail(tmp_path):
 def test_shadow_path_collapses_to_expansion(tmp_path):
     """B1d: DISPLACEMENT + HTF reset → pending; confirming sweep → SHADOW → EXP."""
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     for o, h, l, c in [
         (105, 110, 104, 106),
         (106, 109, 103, 105),
@@ -235,7 +242,7 @@ def test_shadow_path_collapses_to_expansion(tmp_path):
 def test_displacement_has_no_sticky_age_kill(tmp_path):
     """B1e: DISPLACEMENT must not age-out (engine has no DISP TTL)."""
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     r._memory.current_state = "DISPLACEMENT"
     r._memory.displacement_candle_index = 1
     r._memory.candle_index = 100  # age 99
@@ -256,7 +263,7 @@ def test_displacement_has_no_sticky_age_kill(tmp_path):
 def test_sweep_plus_pending_does_not_auto_expand(tmp_path):
     """B1g: SWEEP+stale pending must not jump to EXPANSION (FP over-hold source)."""
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     r._memory.current_state = "SWEEP"
     r._memory.sweep_candle_index = 10
     r._memory.candle_index = 10
@@ -277,7 +284,7 @@ def test_sweep_plus_pending_does_not_auto_expand(tmp_path):
 def test_engine_state_to_exp_requires_legal_from(tmp_path):
     """B1g: bare/illegal FROM must not promote SWEEP→EXP via inject."""
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     r._memory.current_state = "SWEEP"
     r._memory.sweep_candle_index = 10
     r._memory.candle_index = 10
@@ -292,7 +299,7 @@ def test_engine_state_to_exp_requires_legal_from(tmp_path):
     )
     assert st != "EXPANSION"
     # Legal DISPLACEMENT>EXPANSION
-    r2 = CRTStateResolver(config_path=cfg)
+    r2 = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     r2._memory.current_state = "DISPLACEMENT"
     r2._memory.displacement_candle_close = 2000.0
     r2._memory.displacement_direction = 1
@@ -307,7 +314,7 @@ def test_engine_state_to_exp_requires_legal_from(tmp_path):
 def test_expansion_mid_dwell_ignores_pipeline_retest_flag(tmp_path):
     """B1f: sticky EXP must not leave on pipeline retest_flag alone."""
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     r._memory.current_state = "EXPANSION"
     r._memory.expansion_entry_index = 1
     r._memory.expansion_entry_ts = None
@@ -333,7 +340,7 @@ def test_expansion_mid_dwell_ignores_pipeline_retest_flag(tmp_path):
 def test_engine_state_to_exits_expansion(tmp_path):
     """B1e: engine STATE_TRANSITION leaving EXP ends sticky over-hold."""
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     r._memory.current_state = "EXPANSION"
     r._memory.expansion_entry_index = 1
     r._memory.range_ready = True
@@ -352,7 +359,7 @@ def test_engine_state_to_exits_expansion(tmp_path):
 def test_engine_state_to_promotes_disp_to_expansion(tmp_path):
     """B1e: engine transition to EXPANSION promotes from DISPLACEMENT."""
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     r._memory.current_state = "DISPLACEMENT"
     r._memory.displacement_candle_close = 2000.0
     r._memory.displacement_direction = 1
@@ -368,7 +375,7 @@ def test_engine_state_to_promotes_disp_to_expansion(tmp_path):
 def test_htf_engine_reset_suppressed_in_expansion(tmp_path):
     """B1d: HTF engine_reset must not kill EXPANSION (engine protect)."""
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     r._memory.current_state = "EXPANSION"
     r._memory.expansion_entry_index = 5
     r._memory.range_ready = True
@@ -392,11 +399,9 @@ def test_funnel_sweep_to_displacement_bypasses_pipeline_flag(tmp_path):
     # Align with production-ish gates used in market_crt_states after B1c
     import yaml
     base = yaml.safe_load(cfg.read_text(encoding="utf-8"))
-    base["thresholds"]["body_ratio_min"] = 0.65
-    base["thresholds"]["atr_multiplier_min"] = 1.0
     cfg.write_text(yaml.dump(base, default_flow_style=False, sort_keys=False), encoding="utf-8")
 
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     for o, h, l, c in [
         (105, 110, 104, 106),
         (106, 109, 103, 105),
@@ -434,7 +439,7 @@ def test_funnel_sweep_to_displacement_bypasses_pipeline_flag(tmp_path):
 def test_engine_reset_rebuilds_range_from_buffer(tmp_path):
     """B1b: engine_reset=True rebuilds h_ref/l_ref from buffer[-atr_period:]."""
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     # Seed + set a known range
     for o, h, l, c in [
         (100, 110, 90, 105),
@@ -462,7 +467,7 @@ def test_engine_reset_rebuilds_range_from_buffer(tmp_path):
 def test_protected_htf_keeps_stale_range_id_then_resets(tmp_path):
     """B1b: EXPANSION protects HTF reset; range_htf_id stays stale until exit."""
     cfg = _write_cfg(tmp_path, "htf_range")
-    r = CRTStateResolver(config_path=cfg)
+    r = CRTStateResolver(config_path=cfg, crt_config=_atr_period_4())
     for o, h, l, c in [
         (105, 110, 104, 106),
         (106, 109, 103, 105),

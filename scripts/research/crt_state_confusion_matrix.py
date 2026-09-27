@@ -302,6 +302,62 @@ def compute_enriched_frame(
     return enriched
 
 
+
+def _resolver_for_timeline(config_path, instrument: str):
+    """Build a resolver for one sweep candidate.
+
+    Shared CRTConfig keys written into a candidate YAML are lifted onto
+    crt_config and stripped out of a temp copy. The tracked YAML is not modified.
+    Dead keys (rsi_*, retest_atr_depth_fraction) are dropped from that copy and
+    are not applied: the resolver never read them.
+    """
+    import os
+    import tempfile
+    from dataclasses import replace
+    from pathlib import Path
+
+    import yaml
+    from config_layer.production_config import get_prod_config
+    from features.crt_state_resolver import (
+        CRTStateResolver,
+        SHARED_LIFECYCLE_TO_CRT,
+        SHARED_THRESHOLD_TO_CRT,
+        _CRT_INT_FIELDS,
+    )
+
+    if config_path is None:
+        return CRTStateResolver(instrument=instrument)
+    doc = yaml.safe_load(Path(config_path).read_text(encoding="utf-8"))
+    thr = doc.setdefault("thresholds", {})
+    life = thr.setdefault("lifecycle", {})
+    overrides = {}
+    for yaml_key, field in SHARED_THRESHOLD_TO_CRT.items():
+        if yaml_key in thr:
+            overrides[field] = thr.pop(yaml_key)
+    for yaml_key, field in SHARED_LIFECYCLE_TO_CRT.items():
+        if yaml_key in life:
+            overrides[field] = life.pop(yaml_key)
+    for dead in ("retest_atr_depth_fraction", "rsi_overbought", "rsi_oversold"):
+        thr.pop(dead, None)
+    if not overrides:
+        return CRTStateResolver(config_path=config_path, instrument=instrument)
+    clean = {}
+    for field, value in overrides.items():
+        if field in _CRT_INT_FIELDS:
+            clean[field] = int(value)
+        elif isinstance(value, bool):
+            clean[field] = value
+        elif isinstance(value, (int, float)):
+            clean[field] = float(value)
+        else:
+            clean[field] = value
+    crt = replace(get_prod_config(instrument), **clean)
+    fd, name = tempfile.mkstemp(prefix="wpj83_", suffix=".yaml")
+    os.close(fd)
+    Path(name).write_text(yaml.safe_dump(doc, sort_keys=False), encoding="utf-8")
+    return CRTStateResolver(config_path=name, crt_config=crt)
+
+
 def build_resolver_timeline(
     ohlcv_path: Path,
     config_path: Optional[Path] = None,
@@ -379,7 +435,7 @@ def build_resolver_timeline(
     source_indices = [int(v) for v in enriched["_src_idx"].tolist()]
 
     thr_defaults = {"rsi_overbought": 70.0, "rsi_oversold": 30.0}
-    resolver = CRTStateResolver(config_path=config_path)
+    resolver = _resolver_for_timeline(config_path, instrument)
     # CH-resolution-site: turn the (default-OFF, decision-neutral) RC-003 capture on
     # so every bar carries WHICH branch produced its state. F-069 classified the
     # residual by mismatch CELL only, which cannot separate a TTL expiry from a

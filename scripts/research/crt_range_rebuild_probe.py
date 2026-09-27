@@ -267,7 +267,7 @@ def run_resolver_range_timeline(
     enriched, _ = pipe.run()
     source_indices = [int(v) for v in enriched["_src_idx"].tolist()]
 
-    resolver = CRTStateResolver(config_path=config_path)
+    resolver = CRTStateResolver(instrument=instrument, config_path=config_path)
     thr = resolver._config.get("thresholds", {})
     rsi_ob = float(thr.get("rsi_overbought", 70.0))
     rsi_os = float(thr.get("rsi_oversold", 30.0))

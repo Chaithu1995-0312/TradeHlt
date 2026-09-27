@@ -18,7 +18,7 @@ WHY A NEW SCRIPT INSTEAD OF crt_parity_sweep.py / e1_retest_depth_max_probe.py
 ---------------------------------------------------------------------------------
 `crt_state_confusion_matrix.run_once(config_path=...)` -- the kernel both of
 those scripts drive -- predates the LINK/variant system: it constructs
-`CRTStateResolver(config_path=config_path)` with no `variant=`/`links=`
+`CRTStateResolver(instrument=INSTRUMENT, config_path=config_path)` with no `variant=`/`links=`
 passthrough. Extending that shared kernel's signature is a larger, separately-
 reviewable change; this script instead reuses its LOWER-level, already-public
 building blocks directly -- `prepare_engine_context` (frozen events.jsonl
@@ -138,7 +138,7 @@ def main() -> int:
     results = {}
     for variant in ("base", "choch"):
         print(f"[3/4] Sequential resolve() pass -- variant={variant!r} ...")
-        resolver = CRTStateResolver(variant=variant)
+        resolver = CRTStateResolver(instrument=INSTRUMENT, variant=variant)
         thr = resolver._config.get("thresholds", {})
         rsi_ob = float(thr.get("rsi_overbought", 70.0))
         rsi_os = float(thr.get("rsi_oversold", 30.0))

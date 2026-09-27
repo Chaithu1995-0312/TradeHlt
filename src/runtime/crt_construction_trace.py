@@ -233,7 +233,7 @@ class ConstructionTraceEmitter:
         from features.crt_state_resolver import CRTStateResolver
 
         self.cfg = cfg
-        self._resolver = CRTStateResolver(config_path=cfg.ontology_source)
+        self._resolver = CRTStateResolver(instrument=instrument, config_path=cfg.ontology_source)
         self._path = Path(cfg.output_dir) / f"{instrument}{cfg.filename_suffix}"
         self._identity = OrderedDict(
             [

@@ -476,7 +476,7 @@ def build_bar_matrix(
         n_raw, candles_per_htf=htf_candles, instrument=instrument
     )
     htf_aligned = [htf_timeline[p] for p in pos]
-    resolver = create_resolver()
+    resolver = create_resolver(instrument=instrument)
     # C2 (CH-oracle-join-spine): `ontology_state` (this column) and `engine_state_after`
     # (stamped below by the trace join) are DIFFERENT quantities that must never share a
     # column name again (F-069: divergent construction, not a lag). Both names are reused

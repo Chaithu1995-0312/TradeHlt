@@ -112,7 +112,7 @@ def main():
     # and .update()s over classify()'s output, that made feature_states a function
     # of the caller. resolver_supply sources canonical names from the vector,
     # non-vector `when:` features from the enriched frame, and passes nothing else.
-    resolver = CRTStateResolver()
+    resolver = CRTStateResolver(instrument="XAUUSD")
     global SUPPLY_STATS
     supply_rows, supply_stats = build_resolver_supply(resolver, enriched, vectors)
     SUPPLY_STATS = supply_stats
