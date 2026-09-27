@@ -1684,3 +1684,12 @@ Decision/Output: docs/architecture/entry-exit-map.md:44 cited backtest_v2.py:170
 Open Questions: None for this item.
 Next Step: Fix test_feature_math_lint (gate_intelligence.py atr formula-registry routing).
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: Fix 2/7 — test_model_paths_literals (3 tests)
+Decision/Output: src/retrieval/truth_tier.py:146 regex `r"^active_models\.yaml$"` tripped scan_model_paths_literals.py's naive backslash->slash normalization (`\.` -> `/.`), producing a spurious "models/" substring hit — a false positive, not an actual filesystem path (module is documented PURE, no filesystem access). Rewrote as `r"^active_models[.]yaml$"` (identical regex semantics, character-class dot instead of escaped dot) to dodge the normalization without adding a debt-file exception for a non-issue. Verified classify_path('active_models.yaml') still resolves INTENDED/rule intended.active_models unchanged, and a non-matching name still falls through to unclassified. Also reclassified tests/test_feature_math_lint.py::test_universe_reconciliation_with_census as Gate-2B-adjudication scope (~40 files across the repo needing geometry-census sign-off), not the gate_intelligence.py:270 fix originally reported for a different branch — folded into the excluded Gate-2B item, not attempted here.
+Open Questions: None for this item.
+Next Step: Fix test_corpus_read_lint (BOM strip + f-string syntax fixes).
+---

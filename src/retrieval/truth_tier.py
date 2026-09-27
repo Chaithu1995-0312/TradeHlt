@@ -143,7 +143,12 @@ _RULES: tuple[tuple[str, str, str, int], ...] = (
     ("intended.miar",          r"^docs/governance/MODEL_INTENT_AUTHORITY_REGISTER\.md$", "INTENDED", 3),
     ("intended.miar_registry", r"^docs/governance/miar_registry\.json$",  "INTENDED",  4),
     ("intended.contracts",     r"^docs/governance/[^/]*(CONTRACT|PROTOCOL|POLICY|CHARTER)[^/]*\.(md|json)$", "INTENDED", 5),
-    ("intended.active_models", r"^active_models\.yaml$",                  "INTENDED",  6),
+    # `[.]` (not `\.`) deliberately: scan_model_paths_literals.py normalizes `\`
+    # to `/` before matching, which turns `\.` into a spurious `models/` hit on
+    # this literal ("active_models\.yaml" -> "active_models/.yaml"). `[.]yaml$`
+    # is an identical regex (a one-char class matching a literal dot) that
+    # doesn't trip the false positive.
+    ("intended.active_models", r"^active_models[.]yaml$",                 "INTENDED",  6),
     ("intended.intent_docs",   r"^docs/intent/",                          "INTENDED",  7),
 
     # ---- RECORDED: registered conclusions, carrying Confidence. ------------
