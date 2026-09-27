@@ -4142,3 +4142,13 @@ Belief Update / ROI / Goal: Goal: honest v5 base. Belief: all BNBUSDT label sets
 Open Questions: 83.3 section-10 questions (9) for user before WP-K; owner of section-8 overlay parity script; census rows #13/#14 fix.
 Next Step: user restores data\mt5; Claude verifies hashes; issue WP-E (83.5).
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: EPIC-83 Wave 2 prepared — WP-E worktree + prompt; DeepSeek turn logged
+Decision/Output: Worktree D:\Tradelatest-wt-wpE-v5-config on lane/wpE-v5-config from 17e21de (no data junction). Prompt multi_llm/wave2_prompts_2026-09-27.md (+ Desktop copy): v5 = active A + 42 SOT-only params (verified count; S has 47, A 5) at ACTIVE-resolved values + D's 4 sidecar sections switched off + every K23 key present at A's value; acceptance CRTConfig(A)==CRTConfig(v5), no unknown keys, hash --write on v5 only; hard no-delete rule in common rules. DeepSeek 83.3 report logged via log_turn.py (t00001_0860988e; text is Claude's condensed transcription, not byte-verbatim). Grok turns not ledger-loggable (log_turn actor set excludes Grok). Plan correction: XAUUSD path guard pins <module root>/data/mt5, so WP-F will get a COPY of the corpus in its worktree, never a junction.
+Belief Update / ROI / Goal: Goal: v5 superset with zero behaviour change. Belief: the risk in WP-E is SOT param values that differ from what active resolves today — the prompt forces a per-key table. Knowledge ROI: medium. Action: relay WP-E once user OKs.
+Open Questions: data\mt5 restore (user); 83.3 section-10 questions.
+Next Step: user relays WP-E; user restores data\mt5; Claude verifies hashes.
+---
