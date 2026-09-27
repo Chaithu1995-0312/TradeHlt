@@ -4112,3 +4112,33 @@ Belief Update / ROI / Goal: Goal: clean v5 base for WP-E. Belief: v4_dual's "REG
 Open Questions: (1) append a REGISTERED line for v4_dual or correct its note? (2) write completion manifests for k23 F2/F3/F4 + own manifests for the v4 configs? F-002/F-010 note text still pending.
 Next Step: user decisions on D2; issue WP-E (STORY-83.5); review 83.3 spec; wait for 83.2.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: INCIDENT — git worktree remove deleted D:\Tradelatest\data\mt5 through the worktree junction
+Decision/Output: After merging STORY-83.1, Claude ran `git worktree remove D:/Tradelatest-wt-wpA-s0-stamp`. The worktree's data\mt5 was a junction to D:\Tradelatest\data\mt5; git recursed through it and deleted every file in the real data\mt5 (19:19 IST). Registered lost set includes XAUUSD_{M15,M5,H1,H4}.csv, 5 FX majors x {M5,M15,H1,H4}, W2021-12-01_to_2023-01-31, W2026-08-03_to_2026-09-23/24, recent_2026_09, _rejected, XAUUSD_W2026-07-06-to-2026-08-07.csv, XAUUSD_M15_second_low_scan.csv. Found an exact copy of the pinned XAUUSD M15 corpus: copiedSrcFiles/XAUUSD_M15.csv full sha 4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56 (matches 17 registry references), 47,276 lines. Restore copy was blocked by the permission classifier; left for the user. Also fixed a queue slip: substring match marked STORY-83.5 done; reverted to pending (83.1 = done).
+Belief Update / ROI / Goal: Goal: protect the corpus. Belief: a junction inside a worktree makes `git worktree remove` destructive to its target. Knowledge ROI: high (costly). Action: never `git worktree remove` a worktree with a junction; `rmdir` the junction first (removes the link only).
+Open Questions: are other lost files recoverable from backups or an MT5 re-fetch? wpB/wpC worktrees still hold junctions to data\mt5.
+Next Step: user restores XAUUSD_M15.csv (copy from copiedSrcFiles) and decides on the rest; STORY-83.2 results since 19:19 must be treated as suspect.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: data\mt5 recovery survey + user rule "never delete, archive"
+Decision/Output: Coin data NOT affected (28 USDT files in data/ root + data/binance, data/perp intact). Found 3 identical full copies of data/mt5 (97 files, 192M, snapshot 2026-09-03) at logs/dual_construction/scratch_roots/{arm_a_v2_baseline,arm_b_v4_off,arm_c_v4_on}/data/mt5; XAUUSD_M15.csv there = pinned sha 4d73f5ce. Not covered (created after 09-03): data/mt5/W2021-12-01_to_2023-01-31/XAUUSD_H1.csv, W2026-08-03_to_2026-09-23/XAUUSD_M15.csv, W2026-08-03_to_2026-09-24/XAUUSD_M15.csv, recent_2026_09/XAUUSD_M15.csv (hashes registered in configs/data_provenance/ohlcv_clock_registry.json; re-fetchable from ICMarketsSC-Demo). Restore left to user (classifier blocked Claude's copy). Memory: feedback_never_delete_archive.
+Belief Update / ROI / Goal: Belief: the loss is ~all recoverable; only 4 recent XAUUSD window files need an MT5 re-fetch. Action: user runs the no-clobber restore.
+Open Questions: user approval of restore; re-fetch of the 4 windows.
+Next Step: after restore, verify every restored file against the registry hashes.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: EPIC-83 Wave 1 closed — 83.2/83.3 merged, v4_dual note corrected, junctions unlinked
+Decision/Output: Reviewed 83.2 (c9ffca1, 1 file) and 83.3 (3bb1b2e, 1 file); spot-checked m4 duration_candles=0 at xauusd_gaussian_m4_qualify.py:176 (true); census doc worktree vs main differs only by CRLF. Merged both lanes --no-ff. User decisions: (1) v4_dual_construction_2026_09 notes line 558 appended "CORRECTED 2026-09-27: NOT REGISTERED" (promotion_log L16=v3, L17=v4_crt_sot; params hash re-verified match YES, no --write; ACTIVE_VERSION v2_htfcrt_2026_08 untouched); (2) k23 completion manifests deferred -> new STORY-83.13 (depends 83.6). Queue: 83.1/83.2/83.3 done. Unlinked data\mt5 junctions in wpB/wpC via cmd rmdir (link only; target was already empty). Worktrees kept (user rule: archive, never delete). data\mt5 still empty — awaiting user restore.
+Belief Update / ROI / Goal: Goal: honest v5 base. Belief: all BNBUSDT label sets (RR L3, clean_labels incl LATEST, gate0, episodes) rest on an unreviewed-clock corpus; the 3 "shadow walks" are forward_walk consumers (SL-first), so census rows #13/#14 are DOC_DRIFT; m4 EdgeReport mfe/ttf/continuation are placeholders. Knowledge ROI: high. Action: feed Q2 into WP-G; fix census rows later.
+Open Questions: 83.3 section-10 questions (9) for user before WP-K; owner of section-8 overlay parity script; census rows #13/#14 fix.
+Next Step: user restores data\mt5; Claude verifies hashes; issue WP-E (83.5).
+---
