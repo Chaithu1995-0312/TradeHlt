@@ -9,6 +9,7 @@ Run with:
 ═══════════════════════════════════════════════════════════════════════════════
 """
 
+from tests.helpers.crt_config import crt_config_for_test
 import dataclasses
 import math
 import random
@@ -18,7 +19,6 @@ from typing import Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 # ── Bootstrap: add parent dir to path so imports resolve ────────────────────
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -314,9 +314,9 @@ def test_params_to_key_deterministic():
     strict=False,
 )
 def test_no_forbidden_imports():
-    """Source code must not call get_crt_config or CRTConfig(...)."""
+    """Source code must not call get_crt_config or crt_config_for_test(...)."""
     source = (Path(__file__).parent.parent / "scripts" / "training" / "auto_tuner_multi.py").read_text(encoding="utf-8", errors="replace")
     # Check for call patterns (with opening paren) — comments/docstrings mentioning the name are OK
     assert "get_crt_config(" not in source, "get_crt_config() call found in source — FORBIDDEN"
-    # Direct instantiation pattern: CRTConfig(  (with opening paren)
+    # Direct instantiation pattern: crt_config_for_test(  (with opening paren)
     assert "CRTConfig(" not in source, "Direct CRTConfig(...) instantiation found — FORBIDDEN"

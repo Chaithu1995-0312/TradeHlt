@@ -1,3 +1,4 @@
+from tests.helpers.crt_config import crt_config_for_test
 # -*- coding: utf-8 -*-
 """
 test_execution_contract_v1.py
@@ -40,7 +41,7 @@ from config_layer.crt_engine_v2 import (
 
 def _make_engine() -> ExecutionEngine:
     """Minimal engine using all-default CRTConfig. No external deps."""
-    return ExecutionEngine(CRTConfig())
+    return ExecutionEngine(crt_config_for_test())
 
 
 def _make_full_state() -> EngineState:
@@ -168,6 +169,72 @@ class TestBuildTradeGuards:
         result = _make_engine().build_trade(state)
         # No assertion on value — just verify it doesn't raise
         assert result is None or result is not None   # "no exception" is the contract
+
+
+class TestBuildAttempt:
+    """Side channel on the executor. Does not replace EngineState fields."""
+
+    def test_missing_range_sets_reason_without_entry(self):
+        state = _make_full_state()
+        state.active_range = None
+        eng = _make_engine()
+        assert eng.build_trade(state) is None
+        attempt = eng.last_build_attempt
+        assert attempt.result == "REJECTED"
+        assert attempt.reason == "missing_range_or_sweep"
+        assert attempt.entry is None
+        assert attempt.direction is None
+        assert attempt.computed_sl is None
+
+    def test_last_build_attempt_cleared_on_every_call(self):
+        eng = _make_engine()
+        opened = eng.build_trade(_make_full_state())
+        assert opened is not None
+        assert eng.last_build_attempt.result == "OPENED"
+        assert eng.last_build_attempt.computed_sl is not None
+        empty = _make_full_state()
+        empty.active_range = None
+        assert eng.build_trade(empty) is None
+        attempt = eng.last_build_attempt
+        assert attempt.reason == "missing_range_or_sweep"
+        assert attempt.entry is None
+        assert attempt.computed_sl is None
+
+    def test_inverted_sl_short_sets_reason_and_sl(self):
+        state = _make_full_state()
+        state.direction = Direction.SHORT
+        state.retest_candle = SimpleNamespace(close=100.0, open=100.0, high=101.0, low=99.0)
+        state.displacement_candle = SimpleNamespace(low=80.0, high=90.0, open=90.0, close=85.0)
+        state.atr_abs = 1.0
+        eng = _make_engine()
+        assert eng.build_trade(state) is None
+        attempt = eng.last_build_attempt
+        assert attempt.reason == "inverted_sl_short"
+        assert attempt.direction == "SHORT"
+        assert attempt.entry == 100.0
+        assert attempt.computed_sl == 90.2
+
+    def test_invalid_direction_records_the_enum_name(self):
+        state = _make_full_state()
+        state.direction = Direction.NONE
+        eng = _make_engine()
+        assert eng.build_trade(state) is None
+        attempt = eng.last_build_attempt
+        assert attempt.reason == "invalid_direction"
+        assert attempt.direction == "NONE"
+        assert attempt.computed_sl is None
+        assert attempt.entry == 2020.0
+
+    def test_success_sets_opened_and_clears_reason(self):
+        eng = _make_engine()
+        trade = eng.build_trade(_make_full_state())
+        assert trade is not None
+        attempt = eng.last_build_attempt
+        assert attempt.result == "OPENED"
+        assert attempt.reason is None
+        assert attempt.direction == "LONG"
+        assert attempt.entry == 2020.0
+        assert attempt.computed_sl == trade.sl_price
 
 
 # ---------------------------------------------------------------------------

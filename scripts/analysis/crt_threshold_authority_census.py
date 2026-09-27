@@ -95,6 +95,7 @@ import sys
 from pathlib import Path
 
 import yaml
+from tests.helpers.crt_config import crt_config_for_test
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
@@ -182,7 +183,7 @@ def build_census() -> dict:
         if not isinstance(v, dict)  # skip the nested `lifecycle` block
     }
 
-    bare = CRTConfig()
+    bare = crt_config_for_test()
     resolved_ref = load_prod_config_from_registry(active_version, REFERENCE_INSTRUMENT)
     resolved_cross = load_prod_config_from_registry(active_version, CROSS_CLASS_INSTRUMENT)
 

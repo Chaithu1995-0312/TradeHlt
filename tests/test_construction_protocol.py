@@ -67,7 +67,7 @@ def _completion(tmp_path, tool, **overrides):
 
 def test_contracts_registry_wellformed(tool):
     c = json.loads(_CONTRACTS.read_text(encoding="utf-8"))["change_classes"]
-    assert len(c) == 18  # + TRACE_OBSERVATION_JOIN (CH-resolver-engine-envelope, 2026-09-05)
+    assert len(c) == 19  # + RUN_IDENTITY_CHANGE (EFAP run-identity surface, 2026-09-19)
     assert "SCRIPT_LIFECYCLE_CHANGE" in c
     assert "IDENTITY_STORE_CHANGE" in c
     assert "CORPUS_AUTHORITY_CHANGE" in c

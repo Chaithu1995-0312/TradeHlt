@@ -1,0 +1,102 @@
+{
+  "change_id": "CH-run-identity-efap",
+  "artifact_type": "acceptance-evidence",
+  "date_utc": "2026-09-20",
+  "objective": "EFAP run-identity join-gate acceptance evidence. Milestone A completes the full gate matrix (UNVERIFIED_OPERAND, RUN_ID_MISMATCH, CONFIG_HASH_MISMATCH) using genuine mints and the real CLI. CONFIG_HASH_MISMATCH is labeled constructed because every real run mints with the single active registry config_hash and run_id mismatch is evaluated first, so that gate branch can only be reached by a constructed same-run_id/different-config pair.",
+  "audits": [
+    {
+      "code": "UNVERIFIED_OPERAND",
+      "left": {
+        "artifact": "logs/scratch_efap_audit/1_unverified_left_VERIFIED.json",
+        "run_id": "run_20260919_194832_UNV_L",
+        "config_version": "v2_htfcrt_2026_08",
+        "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613",
+        "dataset_hash": "083f2bdf32b917648f36bd7596c97c0b5702c06aebef7b80df80219618bcddce",
+        "status": "VERIFIED",
+        "mint": "genuine - registry config_hash + SHA-256(data/BNBUSDT_M15.csv) via dataset_hash()"
+      },
+      "right": {
+        "artifact": "logs/dual_construction/scratch_roots/arm_a_v2_baseline/results/run_20260903_161258_XAUUSD/XAUUSD_events.jsonl",
+        "run_id": "run_20260903_161258_XAUUSD",
+        "config_hash": "",
+        "dataset_hash": "",
+        "status": "UNVERIFIED",
+        "note": "historic run predates run-identity; no identity recorded. Labeled UNVERIFIED honestly, no hash invented (RECOMPUTE != RECOVER)."
+      },
+      "invocation": "python -m governance.run_identity validate-join <left> <right>",
+      "result": {
+        "exit_code": 1,
+        "reason": "JOIN DENIED [UNVERIFIED_OPERAND]: right artifact identity_status=UNVERIFIED (not VERIFIED)"
+      },
+      "verdict": "PASS"
+    },
+    {
+      "code": "RUN_ID_MISMATCH",
+      "left": {
+        "artifact": "logs/scratch_efap_audit/2_runid_left_A.json",
+        "run_id": "run_20260919_194832_RA",
+        "config_version": "v2_htfcrt_2026_08",
+        "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613",
+        "dataset_hash": "083f2bdf32b917648f36bd7596c97c0b5702c06aebef7b80df80219618bcddce",
+        "status": "VERIFIED",
+        "mint": "genuine - active registry config_hash + SHA-256(data/BNBUSDT_M15.csv)"
+      },
+      "right": {
+        "artifact": "logs/scratch_efap_audit/2_runid_right_B.json",
+        "run_id": "run_20260919_194832_RB",
+        "config_version": "v2_htfcrt_2026_08",
+        "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613",
+        "dataset_hash": "594aa7f5d0e22e7c28b4629705901174bd7910df461202779bd88046d42a7877",
+        "status": "VERIFIED",
+        "mint": "genuine - active registry config_hash + SHA-256(data/DOGEUSDT_M15.csv)"
+      },
+      "invocation": "python -m governance.run_identity validate-join <left> <right>",
+      "result": {
+        "exit_code": 1,
+        "reason": "JOIN DENIED [RUN_ID_MISMATCH]: cross-run join 'run_20260919_194832_RA' != 'run_20260919_194832_RB'"
+      },
+      "verdict": "PASS"
+    },
+    {
+      "code": "CONFIG_HASH_MISMATCH",
+      "left": {
+        "artifact": "logs/scratch_efap_audit/3_cfgleft_ACTIVE_hash.json",
+        "run_id": "run_20260919_194832_CFH",
+        "config_version": "v2_htfcrt_2026_08",
+        "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613",
+        "dataset_hash": "083f2bdf32b917648f36bd7596c97c0b5702c06aebef7b80df80219618bcddce",
+        "status": "VERIFIED"
+      },
+      "right": {
+        "artifact": "logs/scratch_efap_audit/3_cfgright_v4_hash.json",
+        "run_id": "run_20260919_194832_CFH",
+        "config_version": "v4_multi_2026_06",
+        "config_hash": "c2568b6afb4a9eed3a4beb293b2806583410c60375b3ac5bd87596f4260bcba7",
+        "dataset_hash": "083f2bdf32b917648f36bd7596c97c0b5702c06aebef7b80df80219618bcddce",
+        "status": "VERIFIED",
+        "note": "constructed evidence, not naturally-occurring: it models a mis-recorded artifact (same run_id, divergent real config_hash). Both hashes are REAL registry values - 7de09f62... (active v2_htfcrt_2026_08) and c2568b6a... (v4_multi_2026_06) - captured via the canonical _compute_params_hash(params). No hash is invented."
+      },
+      "invocation": "python -m governance.run_identity validate-join <left> <right>",
+      "result": {
+        "exit_code": 1,
+        "reason": "JOIN DENIED [CONFIG_HASH_MISMATCH]: config_hash mismatch 7de09f62 != c2568b6a"
+      },
+      "verdict": "PASS"
+    }
+  ],
+  "acceptance_scope": {
+    "proves": [
+      "UNVERIFIED_OPERAND denial via real CLI (real VERIFIED x historic bare artifact) - executed acceptance evidence",
+      "RUN_ID_MISMATCH denial between two VERIFIED runs via real CLI - executed acceptance evidence",
+      "CONFIG_HASH_MISMATCH denial via real CLI using two REAL registry config hashes - executed acceptance evidence (constructed fixture, real hash values)",
+      "full gate matrix: UNVERIFIED_OPERAND -> RUN_ID_MISMATCH -> CONFIG_HASH_MISMATCH are all denied before ALLOW",
+      "VERIFIED/UNVERIFIED separation enforced by the gate"
+    ],
+    "mechanism_proven_only": [
+      "ALLOW (JOIN_ALLOWED) path - validated by unit tests; not a standalone real-artifact audit"
+    ],
+    "does_not_prove": [
+      "Phase 2 provenance-chain behavior (derived_from propagation) - OPEN"
+    ]
+  }
+}

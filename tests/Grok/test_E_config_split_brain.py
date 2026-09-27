@@ -6,6 +6,7 @@ Ordinary tests check that a builder stamps provenance, not that two session
 lists / two ATR names cannot be swapped.
 """
 from __future__ import annotations
+from tests.helpers.crt_config import crt_config_for_test
 
 from datetime import datetime, time
 
@@ -64,8 +65,8 @@ def test_session_windows_override_also_moves_time_score():
     Source: UltronRiskEngine.score_time reads the same session_windows.
     Trace: time_score 0.0 → 0.8 when windows are opened.
     """
-    closed = CRTConfig()  # 19:15 is outside default bands
-    opened = CRTConfig(
+    closed = crt_config_for_test()  # 19:15 is outside default bands
+    opened = crt_config_for_test(
         session_windows={
             "ASIA": (time(0, 0), time(9, 0)),
             "LONDON": (time(7, 0), time(16, 0)),

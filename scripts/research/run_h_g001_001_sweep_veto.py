@@ -46,6 +46,7 @@ from research.config import ResearchConfig  # noqa: E402
 from research.costs import CostModel  # noqa: E402
 from research.hypotheses.spine_hypothesis import SpineHypothesis  # noqa: E402
 from research.measurement.metrics import EdgeAggregator  # noqa: E402
+from governance.measurement_basis import TIE_BREAK_PRODUCTION  # noqa: E402
 from research.provenance import provenance_block  # noqa: E402
 from research.qualification import (  # noqa: E402
     BH_METHOD_VERSION,
@@ -423,7 +424,7 @@ def run(
         "n_permutations": qcfg.n_permutations,
         "exit_model": cfg.exit_model,
         "round_trip_bps": cfg.round_trip_bps,
-        **provenance_block(cfg.exit_model, cfg.round_trip_bps),
+        **provenance_block(cfg.exit_model, cfg.round_trip_bps, tie_break=TIE_BREAK_PRODUCTION),
         "non_promotable": True,
         "ontology_edits": False,
         "fm_math_edits": False,

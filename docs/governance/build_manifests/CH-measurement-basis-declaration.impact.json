@@ -1,0 +1,69 @@
+{
+ "change_id": "CH-measurement-basis-declaration",
+ "objective": "Declare the measurement basis of every outcome-bearing row on both outcome ledgers (trades.csv, labels.csv) so a spine number and a labeler number stop being silently treated as comparable when they were produced under different rulers. New module src/governance/measurement_basis.py defines two NEW closed axes (tie_break: production/optimistic/close_only_no_tiebreak; reference_level: displacement_extreme/signal_bar_extreme/entry_close_atr) plus re-exports the THREE existing axes from identity.tokens (walk_kernel, cost_model_id, fill_model_id) rather than re-declaring them. Alias tables (COST_MODEL_ALIASES, TIE_BREAK_ALIASES) canonicalise every known spelling of the same model (5 unreconciled spellings of the component cost model were found at source) onto the ONE member identity.tokens already recognises -- canonicalise() never guesses; an unrecognised spelling becomes UNSTAMPED. can_compare(a, b) is STRICTER than identity.tokens.L5_BASIS equality: it also refuses on tie_break and reference_level mismatch, which L5 equality today cannot see (L5_BASIS is deliberately left unchanged per tokens.py:55's own 'do not change L5 equality' comment -- extending it is separate, deferred, breaking work, tracked in the follow-up backlog). Both ledgers gain the axes they are missing: labels.csv gains cost_model_id/walk_kernel/fill_model_id/reference_level (it already has sl_geom/tie_break); trades.csv gains walk_kernel/fill_model_id/tie_break/reference_level/sl_refloored (it already has cost_model_id/cost_model_params_hash/risk_denominator_id from the prior CH-cost-model-identity-stamp change). provenance.py's truth_standard_block gains a REQUIRED tie_break parameter (was hardcoded 'SL_before_TP' with no parameter, an unguarded declaration that could not track the optimistic arm) -- canonicalised through the same alias table, no default; ~15 research call sites updated to pass their own value. New invariant I9 (verify_basis_declaration) in identity_chain.py checks every outcome-bearing row carries all five axes as closed-vocabulary members (free text FAILs) and that can_compare over every pair of distinct bases in a file returns a named verdict, never crashes. One new ontology node SEM-038 MEASUREMENT_BASIS_DECLARATION; SEM-015/SEM-017/SEM-018 refined in place (version bump, no duplicate) to name the enum members their mathematical_definition already referenced abstractly. Declaration only: no trading decision, no PnL, no cost arithmetic, no risk_distance, no label VALUE, no CANONICAL_FEATURES/SCHEMA_HASH, no config key, no ACTIVE_VERSION changes -- proved by byte-identity tests on both ledgers, not merely asserted. This closes the DECLARE half of the originating thread's E1-E3 parity contracts; the UNIFY half (making the rulers agree, not merely naming them) is separate, deferred, breaking work (re-bases every existing outcome-bearing number in the repository) tracked in the follow-up backlog.",
+ "change_classes": [
+  "TRACE_OBSERVATION_JOIN",
+  "SEMANTIC_REGISTRY_CHANGE"
+ ],
+ "affected_files": [
+  "src/governance/measurement_basis.py",
+  "tests/test_measurement_basis.py",
+  "src/research/oracle/labeler.py",
+  "tests/research/test_oracle_labeler.py",
+  "src/runtime/backtest_v2.py",
+  "src/config_layer/crt_engine_v2.py",
+  "src/research/provenance.py",
+  "src/governance/identity_chain.py",
+  "tests/test_identity_chain.py",
+  "configs/formulas/market_ontology.yaml",
+  "tests/test_semantic_registry.py",
+  "docs/reference/schemas.md",
+  "docs/memory/identity-chain-memory.md",
+  "docs/topics/feature-schema.md",
+  "docs/governance/build_manifests/CH-measurement-basis-declaration.impact.json",
+  "docs/governance/build_manifests/CH-measurement-basis-declaration.completion.json",
+  "assistant_project.md"
+ ],
+ "required_checks_ack": [
+  "tests/test_crt_construction_trace.py",
+  "tests/test_crt_construction_trace_envelope.py",
+  "tests/test_resolver_metadata.py",
+  "tests/test_construction_protocol.py",
+  "tests/test_semantic_registry.py",
+  "tests/test_feature_lineage.py",
+  "tests/test_semantic_grounding.py"
+ ],
+ "unknowns": [
+  {
+   "id": "U1",
+   "blocking": false,
+   "question": "Whether extending identity.tokens.L5_BASIS from 3 to 5 axes (adding tie_break/reference_level to the closed L5-equality tuple) belongs in this change.",
+   "resolution": "NO (design decision) -- tokens.py:55 explicitly says 'Do not change L5 equality'; extending it is a deliberate SCHEMA_EVOLUTION_CONTRACT-governed break, not additive metadata, and is out of scope here. can_compare() being stricter than raw L5 equality is the intended interim state; tracked as follow-up backlog item 2."
+  },
+  {
+   "id": "U2",
+   "blocking": false,
+   "question": "Whether can_compare()'s first-mismatch-wins ordering (walk_kernel checked before cost_model_id) could report a misleading verdict when multiple axes differ simultaneously (e.g. spine vs labeler rows, which differ on 3 of 5 axes at once).",
+   "resolution": "Deliberate: walk_kernel is checked first because a different trade OBJECT (F-088: single-target vs. dual-target-plus-trail) makes every finer-grained axis moot -- naming the root disagreement is more honest than naming whichever axis a different ordering would surface first. Verified by test_spine_vs_labeler_row_denies_on_walk_kernel_first."
+  },
+  {
+   "id": "U3",
+   "blocking": false,
+   "question": "The disp_bar sl_geom arm in labeler.py anchors to the ENTRY bar's own low/high (bar_t.low/high), not the engine's displacement_candle -- so it canonicalises to reference_level=signal_bar_extreme, not displacement_extreme, despite the misleading name.",
+   "resolution": "Declared, not renamed in this change -- renaming disp_bar itself (or building a true displacement-anchored oracle arm) is deferred (follow-up backlog item 3). This change's job is to name what each arm ALREADY does, not to fix a misleading label; §6.8 forbids concluding 'defect' from a name mismatch alone without a separate authorized rename turn."
+  },
+  {
+   "id": "U4",
+   "blocking": false,
+   "question": "~15 existing research call sites of provenance.truth_standard_block/provenance_block pass no tie_break today (relying on the hardcoded default). Making the parameter required is a signature-breaking change to all of them in one commit.",
+   "resolution": "Accepted as in-scope (user decision 2026-09-23): the hardcoded literal is the same unguarded-declaration defect class E2 exists to close, so shipping the contract beside it would be incoherent. Every caller passes its own actual value (forward_walk callers -> production; a caller that cannot name its basis passes UNSTAMPED explicitly, never a plausible-looking guess)."
+  },
+  {
+   "id": "U5",
+   "blocking": false,
+   "question": "Whether SEM-038 was still an unreserved id at implementation time (checked free in configs/ and src/ 2026-09-23, before this change's own edits).",
+   "resolution": "Re-verified immediately before writing the ontology node (concurrent-session risk, same class as R6 in the join-spine plan's blockers)."
+  }
+ ],
+ "rollback_boundary": "Single commit. The new module (measurement_basis.py) and its test file, the 4/3 new columns on labels.csv/trades.csv respectively, the sl_refloored disclosure field, the required tie_break parameter on provenance.truth_standard_block and its ~15 call-site updates, invariant I9, and the SEM-038 node plus the in-place refinements of SEM-015/017/018 revert together. Reverting must not leave a producer emitting the new columns while a reader (I9, can_compare) no longer recognises them, must not leave provenance.py's signature changed without its callers reverted in the same commit, and must not orphan the SEM-038 registration in test_semantic_registry.py's pins. No config, no ACTIVE_VERSION, no config_hash, no CANONICAL_FEATURES, no promotion, and no identity.tokens.L5_BASIS change is in this boundary. Artifacts under results/ are gitignored; existing labels.csv/trades.csv on disk are declared UNSTAMPED on read, not migrated."
+}

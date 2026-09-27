@@ -38,6 +38,7 @@ from research.candle_state import reporting                         # noqa: E402
 from research.config import ResearchConfig                          # noqa: E402
 from research.costs import CostModel                                # noqa: E402
 from research.measurement.metrics import EdgeAggregator             # noqa: E402
+from governance.measurement_basis import TIE_BREAK_PRODUCTION  # noqa: E402
 from research.provenance import provenance_block                    # noqa: E402
 from research.qualification import (                                # noqa: E402
     BH_METHOD_VERSION, PERMUTATION_METHOD_VERSION, QUALIFICATION_VERSION,
@@ -127,7 +128,7 @@ def main(argv=None) -> int:
         "qualification_version": QUALIFICATION_VERSION,
         "permutation_method_version": PERMUTATION_METHOD_VERSION,
         "bh_method_version": BH_METHOD_VERSION,
-        **provenance_block(cfg_ref.exit_model, cfg_ref.round_trip_bps),
+        **provenance_block(cfg_ref.exit_model, cfg_ref.round_trip_bps, tie_break=TIE_BREAK_PRODUCTION),
         "groups": groups,
     }
 

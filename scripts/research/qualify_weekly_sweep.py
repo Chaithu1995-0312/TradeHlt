@@ -61,6 +61,7 @@ from research.config import ResearchConfig                              # noqa: 
 from research.costs import CostModel                                    # noqa: E402
 from research.hypotheses.weekly_sweep_reversal import WeeklySweepReversal  # noqa: E402
 from research.measurement.metrics import EdgeAggregator                 # noqa: E402
+from governance.measurement_basis import TIE_BREAK_PRODUCTION  # noqa: E402
 from research.provenance import provenance_block                        # noqa: E402
 from research.qualification import (                                    # noqa: E402
     BH_METHOD_VERSION, PERMUTATION_METHOD_VERSION, QUALIFICATION_VERSION,
@@ -245,7 +246,7 @@ def main(argv: list[str] | None = None) -> int:
         "scope_order": SCOPES,
         "universe": FX,
         "candidate": CANDIDATE,
-        **provenance_block(cfg.exit_model, cfg.round_trip_bps),
+        **provenance_block(cfg.exit_model, cfg.round_trip_bps, tie_break=TIE_BREAK_PRODUCTION),
         "config_path": CONFIG_PATH,
         "config_sha256": cfg.sha256(),
         "weekly_sweep_params": {k: v for k, v in ws_cfg.items() if k != "_doc"},

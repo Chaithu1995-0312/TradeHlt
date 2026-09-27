@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from config_layer.crt_engine_v2 import (
+from tests.helpers.crt_config import crt_config_for_test
     CRTConfig,
     CRTState,
     Candle,
@@ -120,7 +121,7 @@ def test_adversarial_crt_cache_emission_uses_derived_math_keys():
     from config_layer.crt_engine_v2 import CRTConfig, EngineState, StateMachine, Range, Direction, Candle
     from datetime import datetime
 
-    cfg = CRTConfig(
+    cfg = crt_config_for_test(
         retest_depth_max=1.0,
         retest_atr_depth_fraction=1.0,
         max_displacement_strength=10.0,
@@ -189,7 +190,7 @@ def test_control_valid_transitions_cover_exactly_nine_states():
 # ── 4. Illegal mutation / transition bypass ──────────────────────────────
 
 def test_adversarial_illegal_transition_does_not_mutate_state():
-    sm = StateMachine(CRTConfig())
+    sm = StateMachine(crt_config_for_test())
     st = EngineState()
     st.current_state = CRTState.RANGE
     ok = sm._transition(st, CRTState.EXECUTION, "adversarial skip")
@@ -198,7 +199,7 @@ def test_adversarial_illegal_transition_does_not_mutate_state():
 
 
 def test_control_legal_range_to_sweep_mutates():
-    sm = StateMachine(CRTConfig())
+    sm = StateMachine(crt_config_for_test())
     st = EngineState()
     c = _candle()
     sw = SweepEvent(
@@ -222,7 +223,7 @@ def test_adversarial_direct_state_assign_not_via_public_transition_api_is_docume
 # ── 5. Reset cleanup completeness ────────────────────────────────────────
 
 def test_adversarial_reset_must_clear_cached_features_and_soft_conf():
-    sm = StateMachine(CRTConfig())
+    sm = StateMachine(crt_config_for_test())
     st = EngineState()
     st.current_state = CRTState.RETEST
     st.cached_features = {"retest_depth": 0.9, "body_ratio": 0.8, "disp_strength": 1.2}
@@ -331,7 +332,7 @@ def test_adversarial_active_authority_remains_unique():
 
 def test_adversarial_displacement_rejects_low_body_ratio():
     """Control+adversarial: body_ratio_min gate rejects weak body candles."""
-    cfg = CRTConfig(body_ratio_min=0.70, atr_min_displacement=0.0, atr_multiplier_min=0.0)
+    cfg = crt_config_for_test(body_ratio_min=0.70, atr_min_displacement=0.0, atr_multiplier_min=0.0)
     sm = StateMachine(cfg)
     st = EngineState()
     st.current_state = CRTState.SWEEP
@@ -348,7 +349,7 @@ def test_adversarial_displacement_rejects_low_body_ratio():
 
 
 def test_control_displacement_accepts_strong_body_with_move():
-    cfg = CRTConfig(body_ratio_min=0.50, atr_min_displacement=0.5, atr_multiplier_min=0.5)
+    cfg = crt_config_for_test(body_ratio_min=0.50, atr_min_displacement=0.5, atr_multiplier_min=0.5)
     sm = StateMachine(cfg)
     st = EngineState()
     st.current_state = CRTState.SWEEP

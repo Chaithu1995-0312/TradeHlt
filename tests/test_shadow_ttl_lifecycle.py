@@ -15,11 +15,12 @@ assertion for the exact pre-fix sequence it would have produced.
 
 These tests drive a real `CRTEngine.process_candle()` through the actual
 `ResetLogic.should_reset` -> `reset_to_range` -> RANGE-branch fall-through path (not a
-reimplementation of the guard logic), using `CRTConfig()` constructed directly — legitimate
+reimplementation of the guard logic), using `crt_config_for_test()` constructed directly — legitimate
 for a unit test even though production code requires the market-router path
 (`ConfigBuilder.build`).
 """
 from __future__ import annotations
+from tests.helpers.crt_config import crt_config_for_test
 
 from datetime import datetime, timedelta, timezone
 
@@ -37,7 +38,7 @@ def _candle(i: int, o: float, h: float, l: float, c: float) -> Candle:
 
 
 def _engine(ttl: int) -> CRTEngine:
-    return CRTEngine(CRTConfig(pending_displacement_ttl_candles=ttl))
+    return CRTEngine(crt_config_for_test(pending_displacement_ttl_candles=ttl))
 
 
 def _seed_displacement(

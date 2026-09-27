@@ -27,6 +27,8 @@ from datetime import datetime, timezone
 from os import PathLike
 from pathlib import Path
 
+from governance.measurement_basis import canonicalise
+
 # Execution-reality standard shared with the live spine's governed exit model.
 # Bump when exit geometry / slippage model / tie-break changes.
 TRUTH_STANDARD_VERSION = "2.0"
@@ -42,19 +44,31 @@ def truth_standard_block(
     exit_model: str,
     round_trip_bps: float,
     *,
+    tie_break: str,
     cost_model: dict | None = None,
     fill_model: dict | None = None,
 ) -> dict:
     """The execution-reality stamp for a research artifact.
 
     `cost_model` / `fill_model` are optional and ADDITIVE: when both are omitted the
-    returned dict is byte-identical to the pre-2026-08-19 shape, so every existing
-    artifact keeps its provenance unchanged.
+    returned dict is byte-identical to the pre-2026-08-19 shape (except for `tie_break`
+    — see below), so every existing artifact keeps its provenance unchanged.
 
     Supply them when a run uses the SEM-015 component cost model or the SEM-016
     adverse-fill model, so a result carries the ruler that produced it. A result whose
     measurement basis cannot be recovered from its own artifact is precisely the gap
     MEASUREMENT_CONTRACT.md was written about.
+
+    `tie_break` is REQUIRED, no default (CH-measurement-basis-declaration). Before this
+    change the field was hardcoded `"SL_before_TP"` with no parameter at all — happened
+    to be accurate for every current caller (all measure via `forward_walk`, which
+    hardcodes the SL-first convention in both exit models), but was a structurally
+    unguarded declaration: it could not have tracked a caller using the `optimistic`
+    arm, which exists and is reachable (`multi_tp_walk`/`reference_walker`). Pass the
+    governance.measurement_basis constant your caller actually measured under; a caller
+    that genuinely cannot name its own basis passes `UNSTAMPED` explicitly — never a
+    plausible-looking guess. Canonicalised through the same alias table `can_compare`
+    uses, so `"SL_before_TP"` (the historical literal) still resolves to `"production"`.
 
     Args:
         cost_model: e.g. `ComponentCostModel.provenance()` — model id, instrument,
@@ -63,11 +77,18 @@ def truth_standard_block(
             `{"model": "adverse_fill", "ontology_id": "SEM-016",
               "stop_slippage": 0.09, "model_gaps": True}`.
     """
+    _tie_break = canonicalise("tie_break", tie_break)
+    if _tie_break is None:
+        raise ValueError(
+            f"truth_standard_block: tie_break={tie_break!r} is not a recognised "
+            "measurement_basis.TIE_BREAKS member or alias — pass UNSTAMPED explicitly "
+            "if the caller genuinely cannot name its basis, never a guess."
+        )
     block = {
         "version": TRUTH_STANDARD_VERSION,
         "exit_geometry": exit_model,
         "slippage_model": f"flat_{round_trip_bps:g}bps",
-        "tie_break": "SL_before_TP",
+        "tie_break": _tie_break,
     }
     if cost_model is not None:
         # The flat bps figure is retained above as provenance of what WOULD have been
@@ -209,17 +230,21 @@ def provenance_block(
     exit_model: str,
     round_trip_bps: float,
     *,
+    tie_break: str,
     cost_model: dict | None = None,
     fill_model: dict | None = None,
 ) -> dict:
     """Realism + cost-model + production-truth provenance (M4 adds qual/method versions).
 
-    `cost_model` / `fill_model` pass through to `truth_standard_block`; omitting both
-    reproduces the historical block exactly.
+    `tie_break` is REQUIRED (CH-measurement-basis-declaration) — see
+    `truth_standard_block`'s docstring for the rationale and the `UNSTAMPED` escape
+    hatch. `cost_model` / `fill_model` pass through to `truth_standard_block`; omitting
+    both reproduces the historical block exactly (aside from the now-required tie_break).
     """
     return {
         "truth_standard": truth_standard_block(
-            exit_model, round_trip_bps, cost_model=cost_model, fill_model=fill_model
+            exit_model, round_trip_bps, tie_break=tie_break,
+            cost_model=cost_model, fill_model=fill_model,
         ),
         "research_cost_model_version": RESEARCH_COST_MODEL_VERSION,
         "spine_cost_model_version": SPINE_COST_MODEL_VERSION,

@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
+from tests.helpers.crt_config import crt_config_for_test
 
 _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_ROOT / "src"))
@@ -308,7 +309,7 @@ def run_battery() -> dict:
         SweepEvent,
     )
 
-    cfg = CRTConfig(
+    cfg = crt_config_for_test(
         retest_depth_max=1.0,
         retest_atr_depth_fraction=1.0,
         max_displacement_strength=10.0,

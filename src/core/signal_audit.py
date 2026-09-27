@@ -44,13 +44,53 @@ class SignalAuditRecorder:
     All public methods are no-ops when debug_mode=False.
     """
 
+    _REQUIRED_KEYS = ("zone_pass_warn", "fusion_pass_warn", "trade_rate_warn")
+
+    @classmethod
+    def from_prod_config(
+        cls,
+        debug_mode: bool = True,
+        log_path: str = DEFAULT_LOG_PATH,
+    ) -> "SignalAuditRecorder":
+        """Production constructor — fail-fast. Strict-reads the three leak-detection thresholds
+        from the ``signal_audit`` section; a missing section or key raises (§6.5 A1)."""
+        from config_layer.production_config import get_prod_section
+        section = get_prod_section("signal_audit")
+        if not isinstance(section, dict):
+            raise KeyError(
+                "Required config section 'signal_audit' missing. Add it to the production "
+                "config (config-first doctrine: no silent defaults)."
+            )
+        for key in cls._REQUIRED_KEYS:
+            if key not in section:
+                raise KeyError(
+                    f"Required config key '{key}' missing from 'signal_audit' section. "
+                    f"Add it to the production config (config-first doctrine: no silent defaults)."
+                )
+        return cls(
+            debug_mode=debug_mode,
+            log_path=log_path,
+            zone_pass_warn=float(section["zone_pass_warn"]),
+            fusion_pass_warn=float(section["fusion_pass_warn"]),
+            trade_rate_warn=float(section["trade_rate_warn"]),
+        )
+
     def __init__(
         self,
         debug_mode: bool = True,
         log_path: str = DEFAULT_LOG_PATH,
+        # Two-tier (mirrors AcceptanceController): these module-constant defaults are the TEST /
+        # programmatic seam. The live path supplies all three via from_prod_config (fail-fast).
+        zone_pass_warn: float = _ZONE_PASS_WARN,
+        fusion_pass_warn: float = _FUSION_PASS_WARN,
+        trade_rate_warn: float = _TRADE_RATE_WARN,
     ) -> None:
         self.debug_mode = debug_mode
         self.log_path   = log_path
+
+        self._zone_pass_warn   = float(zone_pass_warn)
+        self._fusion_pass_warn = float(fusion_pass_warn)
+        self._trade_rate_warn  = float(trade_rate_warn)
 
         # Per-bar accumulator (reset by start_bar)
         self._current: dict[str, Any] = {}
@@ -178,20 +218,20 @@ class SignalAuditRecorder:
         fusion_rate = self._fusion_passes / n
         trade_rate  = self._trade_count   / n
 
-        if zone_rate > _ZONE_PASS_WARN:
+        if zone_rate > self._zone_pass_warn:
             warnings.append(
                 f"LEAK: zone passing {zone_rate:.1%} of bars "
-                f"(threshold {_ZONE_PASS_WARN:.0%}) — check ZoneGateEngine thresholds"
+                f"(threshold {self._zone_pass_warn:.0%}) — check ZoneGateEngine thresholds"
             )
-        if fusion_rate > _FUSION_PASS_WARN:
+        if fusion_rate > self._fusion_pass_warn:
             warnings.append(
                 f"LEAK: fusion passing {fusion_rate:.1%} of bars "
-                f"(threshold {_FUSION_PASS_WARN:.0%}) — check FusionEngine calibration"
+                f"(threshold {self._fusion_pass_warn:.0%}) — check FusionEngine calibration"
             )
-        if trade_rate > _TRADE_RATE_WARN:
+        if trade_rate > self._trade_rate_warn:
             warnings.append(
                 f"LEAK: trade rate {trade_rate:.1%} of bars "
-                f"(threshold {_TRADE_RATE_WARN:.0%}) — acceptance rate too high"
+                f"(threshold {self._trade_rate_warn:.0%}) — acceptance rate too high"
             )
 
         if self._flush_errors > 0:

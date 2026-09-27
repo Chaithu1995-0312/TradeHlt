@@ -125,10 +125,16 @@ def test_utc_stamps_keep_their_exact_formats() -> None:
 
 
 def test_existing_provenance_block_shape_unchanged() -> None:
-    """Adding the helpers must not alter the historical stamp shape."""
-    blk = prov.truth_standard_block("intrabar_fixed", 12.0)
+    """Adding the helpers must not alter the historical stamp shape.
+
+    `tie_break` became a required parameter under CH-measurement-basis-declaration;
+    passing the historical literal "SL_before_TP" and getting the canonicalised
+    "production" back proves the SHAPE is unchanged even though the VALUE's spelling is
+    now normalised.
+    """
+    blk = prov.truth_standard_block("intrabar_fixed", 12.0, tie_break="SL_before_TP")
     assert blk == {"version": prov.TRUTH_STANDARD_VERSION, "exit_geometry": "intrabar_fixed",
-                   "slippage_model": "flat_12bps", "tie_break": "SL_before_TP",
+                   "slippage_model": "flat_12bps", "tie_break": "production",
                    "fill_model": "perfect_stop_fill"}
 
 

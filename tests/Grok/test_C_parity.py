@@ -5,6 +5,7 @@ filter; inclusive vs half-open; ATR absolute vs FM-041 relative.
 Ordinary tests pin each surface in isolation.
 """
 from __future__ import annotations
+from tests.helpers.crt_config import crt_config_for_test
 
 from datetime import datetime, time
 
@@ -56,7 +57,7 @@ def test_nineteen_hundred_is_feature_newyork_and_filter_off_session():
     hour = 19
     t = time(19, 15)
     feat = classify_session_feature(hour, get_prod_section("feature_pipeline"))
-    filt = filter_session_name(CRTConfig(), t)
+    filt = filter_session_name(crt_config_for_test(), t)
     assert feat == int(SessionOrdinal.NEWYORK)
     assert filt == "OFF_SESSION"
 
@@ -68,13 +69,13 @@ def test_score_time_counts_matching_windows_on_the_same_key():
             vs first-match name lookup. Does not claim whether matches>=2
             (score 1.0) must be reachable under the active window set.
     """
-    risk = UltronRiskEngine(CRTConfig())
+    risk = UltronRiskEngine(crt_config_for_test())
     in_london = datetime(2026, 7, 22, 8, 30, 0)
     assert risk.score_time(in_london) == pytest.approx(0.8)
-    assert filter_session_name(CRTConfig(), in_london.time()) == "LONDON"
+    assert filter_session_name(crt_config_for_test(), in_london.time()) == "LONDON"
     evening = datetime(2026, 7, 22, 19, 15, 0)
     assert risk.score_time(evening) == pytest.approx(0.0)
-    assert filter_session_name(CRTConfig(), evening.time()) == "OFF_SESSION"
+    assert filter_session_name(crt_config_for_test(), evening.time()) == "OFF_SESSION"
 
 
 def test_inclusive_filter_vs_half_open_feature_at_end_plus_one_minute():
@@ -84,7 +85,7 @@ def test_inclusive_filter_vs_half_open_feature_at_end_plus_one_minute():
     """
     t = time(10, 1)
     feat = classify_session_feature(10, get_prod_section("feature_pipeline"))
-    filt = filter_session_name(CRTConfig(), t)
+    filt = filter_session_name(crt_config_for_test(), t)
     assert feat == int(SessionOrdinal.LONDON)
     assert filt == "OFF_SESSION"
 
@@ -95,7 +96,7 @@ def test_engine_atr_is_absolute_sma_not_close_relative():
     Source: crt_engine_v2.py:869-882 vs market ontology FM-041
     A 100× price scale must scale absolute ATR ~100× and leave relative ATR ~unchanged.
     """
-    det = RangeDetector(CRTConfig())
+    det = RangeDetector(crt_config_for_test())
     bars_lo = [
         candle(datetime(2026, 1, 1, 0, i, 0), 100 + i, 101 + i, 99 + i, 100 + i, idx=i)
         for i in range(16)

@@ -62,6 +62,7 @@ from research.config import ResearchConfig                         # noqa: E402
 from research.costs import CostModel                               # noqa: E402
 from research.hypotheses.spine_hypothesis import SpineHypothesis   # noqa: E402
 from research.measurement.metrics import EdgeAggregator            # noqa: E402
+from governance.measurement_basis import TIE_BREAK_PRODUCTION  # noqa: E402
 from research.provenance import provenance_block                   # noqa: E402
 from research.qualification import (                               # noqa: E402
     BH_METHOD_VERSION, PERMUTATION_METHOD_VERSION, QUALIFICATION_VERSION,
@@ -402,7 +403,7 @@ def main(argv: list[str] | None = None) -> int:
         "permutation_count": rc.q_n_permutations,
         "alpha": rc.q_significance_alpha,
         "spine_config_sha256": rc.sha256(),
-        **provenance_block(rc.exit_model, rc.round_trip_bps),
+        **provenance_block(rc.exit_model, rc.round_trip_bps, tie_break=TIE_BREAK_PRODUCTION),
         "selfcheck": selfcheck,
         "cells": cell_results,
     }

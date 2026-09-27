@@ -8,6 +8,7 @@ does not veto.
 """
 
 from __future__ import annotations
+from tests.helpers.crt_config import crt_config_for_test
 
 import inspect
 from datetime import datetime, timedelta, timezone
@@ -34,7 +35,7 @@ def test_backtest_run_constructs_feed_and_threads_parent_state():
 
 def _engine_at_soft_conf_long_discount() -> tuple[CRTEngine, Candle]:
     """Plant RETEST + evaluating_soft_conf + LONG in discount. Zone check passes."""
-    eng = CRTEngine(CRTConfig())
+    eng = CRTEngine(crt_config_for_test())
     eng._parent_crt_enabled = True
     rng = Range(
         h_ref=110.0, l_ref=100.0, equilibrium=105.0,

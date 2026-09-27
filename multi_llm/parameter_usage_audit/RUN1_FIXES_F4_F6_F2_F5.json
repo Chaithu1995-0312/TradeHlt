@@ -1,0 +1,89 @@
+{
+  "id": "RUN1_FIXES_F4_F6_F2_F5",
+  "applied_at_utc": "2026-09-22T04:15:21Z",
+  "order": [
+    "F4",
+    "F6",
+    "F2",
+    "F5"
+  ],
+  "results": {
+    "F4": {
+      "title": "2-bar transition gap",
+      "reads": {
+        "n_L3": 47197,
+        "bar_idx_span": 47197,
+        "gap_vs_span": 0,
+        "L3_without_transition": 0,
+        "first_note": "action=NONE reason=None transition=RANGE->RANGE",
+        "last_note": "action=NONE reason=None transition=RANGE->RANGE",
+        "n_distinct_pairs": 17,
+        "unlisted_pairs_vs_prior_matrix": []
+      },
+      "verdict": "MATRIX_COMPLETE",
+      "rule_match": "All L3 notes carry transition=; span==n; no unlisted pairs. Prior '2-bar gap' is not a missing-transition hole.",
+      "leaf_update": "L-FN-EDGE note: accounting closed \u2014 47197/47197 notes parse; gap_vs_span=0"
+    },
+    "F6": {
+      "title": "BitNet wiring",
+      "reads": {
+        "config_use_bitnet": false,
+        "config_bitnet_main_threshold": 0.55,
+        "engine_calls_bitnet_score": true,
+        "engine_sets_bitnet_main_score": true,
+        "backtest_defaults_None_to_0_empty": true,
+        "backtest_comment": "absent attr \u2192 BitNet was not evaluated \u2192 \"\" decision"
+      },
+      "verdict": "INTENTIONAL_OFF",
+      "rule_match": "use_bitnet:false \u2192 intentional-off \u00b7 document \u00b7 no fix",
+      "leaf_update": "L-FT-BITNET: stub is expected when use_bitnet=false; not a wiring bug on this run"
+    },
+    "F2": {
+      "title": "parent_bias count",
+      "reads": {
+        "death_reason_FILTER_REJECTED": 15,
+        "death_reason_has_PARENT_BIAS_bucket": false,
+        "L3_RETEST_to_RANGE_reasons": {
+          "off_session:OFF_SESSION": 15,
+          "Against parent-timeframe bias (LONG)": 2,
+          "Against parent-timeframe bias (SHORT)": 2,
+          "None": 1
+        }
+      },
+      "verdict": "LEAF_FORMULA_CORRECT_VIA_L3",
+      "rule_match": "PARENT_BIAS_LONG:2 + SHORT:2 on L3; lifecycle death_reason collapses to FILTER_REJECTED without subtype",
+      "leaf_update": "L-FN-FILTER: keep parent_bias LONG:2+SHORT:2 from L3; note CANDIDATE_LIFECYCLE lacks bias subtype"
+    },
+    "F5": {
+      "title": "PARKED status consumers",
+      "reads": {
+        "card_audit_track_matches": "decorative status strings only",
+        "src_match": "data_ingestion/clock_registry.py prose 'parked the session FILTER' \u2014 unrelated",
+        "scripts_match": [],
+        "equals_PARKED_consumer": false,
+        "enum_schema_consumer": false
+      },
+      "verdict": "SAFE_DECORATIVE",
+      "rule_match": "Only card+audit+track (+ unrelated prose). No == \"PARKED\" consumer.",
+      "leaf_update": "none \u2014 PARKED remains decorative status string"
+    }
+  },
+  "n1_n2_cleanup": {
+    "closed_at_utc": "2026-09-22T04:18:04Z",
+    "N1": "L-FN-FILTER formula \u2192 reason_None:1; CONFIRMATION_FAILED companion note",
+    "N2": "L-FN-EDGE run1_ref expanded to all 17 pairs",
+    "added_pairs_vs_prior_6": {
+      "RANGE->RANGE": 20387,
+      "SWEEP->SWEEP": 13795,
+      "EXPANSION->EXPANSION": 8520,
+      "DISPLACEMENT->DISPLACEMENT": 380,
+      "DISPLACEMENT->RANGE": 256,
+      "EXPANSION->RANGE": 88,
+      "RETEST->RANGE": 20,
+      "RANGE->SHADOW_PENDING": 6,
+      "SHADOW_PENDING->EXPANSION": 6,
+      "EXECUTION->RANGE": 4,
+      "RETEST->RETEST": 2
+    }
+  }
+}

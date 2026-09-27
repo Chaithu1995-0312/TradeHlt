@@ -1,0 +1,11 @@
+Good evening. Ontology briefing for gold futures, continuous contract G C equals F, last three sessions. Observation labels only. Not signals. Not edge. Dry run.
+
+First, the map. Our market ontology layers primitives into compositions, rolling context, then structural states. Time runs session T minus two, T minus one, and T zero. Every pin is a label at a clock time — never a trade instruction.
+
+Session two thousand twenty six, September fifteenth. A T R regime: typical. A swing low appears near nine hundred hours Eastern. Swing highs near fourteen hundred and nineteen hundred. At nineteen hundred, price prints a higher high after a prior swing high — Market Structure observation only, not a certified break engine verdict.
+
+Session September sixteenth. A T R regime: elevated. Volatility envelope expands. Swing high near seventeen hundred. Swing low near nineteen hundred. At nineteen hundred, a lower low after a prior swing low — again, structure observation, fail closed, no order intent.
+
+Session September seventeenth. A T R regime: compressed. Swing markers near seven hundred, ten hundred, twelve hundred, and fifteen hundred. At twelve hundred, a higher high observation forms near the session high region. Labels only.
+
+Closing doctrine. Temporal context tags the session. A T R family tags volatility state. Market Structure tags swings. Hot path remains sealed. No fabricated edge. Standing by for your next instruction.

@@ -1,7 +1,8 @@
 # Model Intent Authority Register (MIAR)
 
 **Status:** AUTHORITATIVE for model *intent* (why each component exists, boundaries, relations)  
-**Created:** 2026-07-28 · **Updated:** 2026-07-28 (stage separation + locked vocabulary)  
+**Created:** 2026-07-28 · **Updated:** 2026-09-23 (Phase 0 model-registry join — `semantic_ids`
+back-ref field added to all 17 entries + 21 new `design_only_concepts` rows; see §7)  
 **Machine-readable twin:** [`miar_registry.json`](miar_registry.json)  
 **Enforcement (floor):** `tests/test_miar_registry.py`  
 
@@ -757,10 +758,21 @@ zero-authority rule is enforced mechanically by `tests/test_miar_registry.py`
 
 ## 7. Related documents
 
+**Phase 0 model-registry join (2026-09-23).** Every entry above now carries a `semantic_ids`
+field (empty list if none) back-referencing `src/research/model_runners/contracts.py`
+`MODEL_CATALOG` rows by their own `semantic_id` (`M{tier}_{BLOCK}_{FAMILY}_{ARM}`, tier ∈
+{M0 spine engine, M1 block specialist, M2 state specialist, M3 temporal tracker, M4
+arbiter/fusion, M9 orchestration}). `design_only_concepts` gained 21 new rows for the Phase 3
+19-block ensemble + tracker + arbiter (not yet built in code) — see
+`docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md`. MODEL_CATALOG is the hub:
+the only one of the three declaring surfaces bound to code. Grants no production authority
+(§6.5) — declarative only. Enforced by `tests/test_model_registry_join.py`.
+
 | Doc | Role vs MIAR |
 |---|---|
 | `configs/formulas/market_ontology.yaml` | Tier 1 — meaning of concepts |
 | `src/features/feature_schema.py` | Tier 2 — vector law |
+| `src/research/model_runners/contracts.py` | Phase 0 registry hub — code-bound `semantic_id`/`authority`/`serve_domain` per model |
 | `active_models.yaml` | Runtime/evidence mirror; subordinate on intent |
 | `docs/topics/model-intent-and-feature-ownership.md` | Feature ownership matrices |
 | `docs/analysis/model-intent-hypothesis-ontology-consumer-trace-2026-07-28.md` | Point-in-time deep trace |

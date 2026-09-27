@@ -110,6 +110,45 @@ class OffsetResult:
 _CROSS_TIMEFRAME_EVENTS = frozenset({"H4_C3"})
 
 
+# A shot plan entry carries its name under one of two keys. `shot_plan.json`
+# (the hand-transcribed CRT pack) uses `event`; `shot_plan_fresh_month_*.json`
+# uses `label` and adds `kind`. Both resolvers live here, next to the validator,
+# so there is exactly ONE definition of "what names an entry" -- capture_tv.py,
+# annotate.py and the tests all import this module, and a second local
+# reimplementation is how the two schemas diverged unnoticed in the first place.
+_NAME_KEYS = ("event", "label")
+
+
+def event_name(ev: dict) -> str | None:
+    """Resolve a plan entry's name across both shot_plan schemas.
+
+    Tolerant: returns None rather than raising, so validate_engine_events keeps
+    its never-raises contract and can report an unnamed entry as a problem."""
+    for key in _NAME_KEYS:
+        value = ev.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def require_event_name(ev: dict) -> str:
+    """Strict form, for the emit path.
+
+    A plan entry with no usable name is a malformed plan, and it must fail
+    closed saying WHICH entry -- a bare KeyError at the call site names the
+    missing key but not the record, which is how the fresh month's plan crashed
+    capture_tv 200 lines after the pre-flight had already walked the same list.
+    """
+    name = event_name(ev)
+    if name is None:
+        raise ValueError(
+            "engine_events entry carries no name: expected one of "
+            f"{list(_NAME_KEYS)}, got keys {sorted(ev)} "
+            f"(time={ev.get('time')!r}, kind={ev.get('kind')!r})"
+        )
+    return name
+
+
 def validate_engine_events(
     events: list[dict], engine_bars: dict[datetime, "Bar"],
 ) -> list[dict]:
@@ -118,18 +157,32 @@ def validate_engine_events(
     callers decide whether a problem is fatal."""
     problems: list[dict] = []
     for ev in events:
+        # Resolved once per entry so every problem row below NAMES its entry.
+        # Reporting `None` (which is what a bare ev.get("event") does to a
+        # `label`-schema plan) tells a caller that something is wrong but not
+        # which of 12 anchors it was -- the silent-gap class F-079 exists for.
+        name = event_name(ev)
+        if name is None:
+            problems.append({
+                "event": None, "time": ev.get("time"),
+                "problem": "UNNAMED_EVENT",
+                "detail": (
+                    f"no {' / '.join(_NAME_KEYS)} key; keys present: {sorted(ev)}"
+                ),
+            })
+            continue
         try:
             ts = datetime.strptime(ev["time"], "%Y-%m-%d %H:%M")
         except (KeyError, ValueError) as exc:
             problems.append({
-                "event": ev.get("event"), "time": ev.get("time"),
+                "event": name, "time": ev.get("time"),
                 "problem": "UNPARSEABLE_TIME", "detail": str(exc),
             })
             continue
         bar = engine_bars.get(ts)
         if bar is None:
             problems.append({
-                "event": ev.get("event"), "time": ev["time"],
+                "event": name, "time": ev["time"],
                 "problem": "MISSING_BAR",
                 "detail": f"no engine bar at {ev['time']} broker time",
             })
@@ -137,12 +190,12 @@ def validate_engine_events(
         level = ev.get("level")
         if level is None:
             continue
-        if ev.get("event") in _CROSS_TIMEFRAME_EVENTS:
+        if name in _CROSS_TIMEFRAME_EVENTS:
             continue  # exempted, not skipped silently -- see module note above
         lo, hi = min(bar.o, bar.h, bar.l, bar.c), max(bar.o, bar.h, bar.l, bar.c)
         if not (lo <= level <= hi):
             problems.append({
-                "event": ev.get("event"), "time": ev["time"],
+                "event": name, "time": ev["time"],
                 "problem": "LEVEL_OUT_OF_RANGE",
                 "detail": (
                     f"level={level} outside this bar's O/H/L/C envelope "

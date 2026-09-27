@@ -68,7 +68,9 @@ _CONTAMINATION_NOTES = {
     "ema_spread": "FM-022 dimensional mix: saturates, may look inert for a units reason",
     "momentum_score": "FM-023 dimensional mix: saturates, may look inert for a units reason",
     "state__momentum_magnitude": "derived from FM-023, which saturates on this basis",
-    "crt_state_resolved": "declarative resolver, NOT the CRT engine; see harness report",
+    "ontology_state": "declarative resolver, NOT the CRT engine; see harness report",
+    "engine_state_after": "the CRT engine's own state -- DIFFERENT quantity from "
+                           "ontology_state (F-069); never read the two as one field",
 }
 
 

@@ -75,7 +75,8 @@
         "src/features/registry/"
       ],
       "stage": "substrate",
-      "stage_order": 0
+      "stage_order": 0,
+      "semantic_ids": []
     },
     {
       "id": "feature_pipeline",
@@ -111,7 +112,8 @@
         "src/features/feature_schema.py"
       ],
       "stage": "substrate",
-      "stage_order": 0
+      "stage_order": 0,
+      "semantic_ids": []
     },
     {
       "id": "crt",
@@ -151,7 +153,11 @@
         "src/engines/scoring_engine.py"
       ],
       "stage": "market_understanding",
-      "stage_order": 1
+      "stage_order": 1,
+      "semantic_ids": [
+        "M0_SPINE_CRT_FUSION_SCORER",
+        "M0_SPINE_CRT_STATE_MACHINE"
+      ]
     },
     {
       "id": "gaussian",
@@ -188,7 +194,11 @@
         "src/engines/ml_gaussian_engine.py"
       ],
       "stage": "market_understanding",
-      "stage_order": 2
+      "stage_order": 2,
+      "semantic_ids": [
+        "M0_SPINE_GAUSSIAN_HEURISTIC",
+        "M0_SPINE_GAUSSIAN_ML_NB"
+      ]
     },
     {
       "id": "zone_gate",
@@ -224,7 +234,10 @@
         "src/engines/live_engine.py"
       ],
       "stage": "market_understanding",
-      "stage_order": 3
+      "stage_order": 3,
+      "semantic_ids": [
+        "M0_SPINE_ZONE_GATE_CLUSTER"
+      ]
     },
     {
       "id": "tradenet",
@@ -261,7 +274,10 @@
         "src/training/trade_net_v2.py"
       ],
       "stage": "opportunity_understanding",
-      "stage_order": 6
+      "stage_order": 6,
+      "semantic_ids": [
+        "M0_SPINE_TRADENET_MULTIHEAD"
+      ]
     },
     {
       "id": "rr_engine",
@@ -296,7 +312,10 @@
         "src/engines/rr_engine.py"
       ],
       "stage": "market_understanding",
-      "stage_order": 4
+      "stage_order": 4,
+      "semantic_ids": [
+        "M0_SPINE_RR_POLARITY"
+      ]
     },
     {
       "id": "rr_trained",
@@ -338,7 +357,10 @@
       ],
       "notes": "RRPatternMiner-as-historical-retrieval is DESIGN_ONLY (no class, no retrieval).",
       "stage": "opportunity_understanding",
-      "stage_order": 7
+      "stage_order": 7,
+      "semantic_ids": [
+        "M0_SPINE_RR_TRAINED_NANO"
+      ]
     },
     {
       "id": "bitnet",
@@ -376,7 +398,10 @@
         "src/bitnet/bitnet_inference.py"
       ],
       "stage": "safety",
-      "stage_order": 8
+      "stage_order": 8,
+      "semantic_ids": [
+        "M0_SPINE_BITNET_LEGACY6"
+      ]
     },
     {
       "id": "trap",
@@ -410,7 +435,10 @@
         "src/engines/trap_validator_engine.py"
       ],
       "stage": "market_understanding",
-      "stage_order": null
+      "stage_order": null,
+      "semantic_ids": [
+        "M0_SPINE_TRAP_VOTER"
+      ]
     },
     {
       "id": "breakout",
@@ -443,7 +471,10 @@
         "src/core/engine_runner.py:breakout_engine"
       ],
       "stage": "market_understanding",
-      "stage_order": null
+      "stage_order": null,
+      "semantic_ids": [
+        "M0_SPINE_BREAKOUT_VOTER"
+      ]
     },
     {
       "id": "regime",
@@ -478,7 +509,10 @@
         "src/regime/regime_classifier.py"
       ],
       "stage": "market_understanding",
-      "stage_order": 5
+      "stage_order": 5,
+      "semantic_ids": [
+        "M0_SPINE_REGIME_DETECTOR"
+      ]
     },
     {
       "id": "execution_intent",
@@ -510,7 +544,10 @@
         "src/config_layer/execution_planner.py"
       ],
       "stage": "execution",
-      "stage_order": 10
+      "stage_order": 10,
+      "semantic_ids": [
+        "M4_ARBITER_EXECUTION_PLAN"
+      ]
     },
     {
       "id": "decision_fusion",
@@ -553,7 +590,12 @@
         "src/core/engine_runner.py"
       ],
       "stage": "decision",
-      "stage_order": 9
+      "stage_order": 9,
+      "semantic_ids": [
+        "M4_ARBITER_FUSION_COMPUTE",
+        "M4_ARBITER_DECISION_APPROVAL",
+        "M9_ORCH_ENGINE_RUNNER"
+      ]
     },
     {
       "id": "qualification_gate",
@@ -589,7 +631,8 @@
         "src/research/qualification.py"
       ],
       "stage": "measurement",
-      "stage_order": null
+      "stage_order": null,
+      "semantic_ids": []
     },
     {
       "id": "backtest",
@@ -628,7 +671,8 @@
         "src/runtime/backtest_v2.py"
       ],
       "stage": "measurement",
-      "stage_order": null
+      "stage_order": null,
+      "semantic_ids": []
     },
     {
       "id": "research_runner",
@@ -667,7 +711,8 @@
         "src/research/qualification.py"
       ],
       "stage": "measurement",
-      "stage_order": null
+      "stage_order": null,
+      "semantic_ids": []
     }
   ],
   "sidecar_authority": {
@@ -929,6 +974,321 @@
         "Never synthesise a composite score across heads"
       ],
       "authority_boundary": "research/observation only; grants no fusion, sizing, or production authority (CLAUDE.md 6.5)"
+    },
+    {
+      "name": "GEOMETRY_block_specialist",
+      "semantic_id": "M1_BLOCK_GEOMETRY_CANDLE_QUALITY_HEURISTIC",
+      "tier": "M1",
+      "input_dag_layer": "L2",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the GEOMETRY feature block (n=7 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 7 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "FLOW_block_specialist",
+      "semantic_id": "M1_BLOCK_FLOW_VOLUME_DYNAMICS_HEURISTIC",
+      "tier": "M1",
+      "input_dag_layer": "L2",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the FLOW feature block (n=3 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 3 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "TREND_block_specialist",
+      "semantic_id": "M1_BLOCK_TREND_EMA_CONFORMITY_HEURISTIC",
+      "tier": "M1",
+      "input_dag_layer": "L2",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the TREND feature block (n=6 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 6 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "OSCILLATOR_block_specialist",
+      "semantic_id": "M1_BLOCK_OSCILLATOR_MOMENTUM_CONFORMITY_HEURISTIC",
+      "tier": "M1",
+      "input_dag_layer": "L2",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the OSCILLATOR feature block (n=5 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 5 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "VOLATILITY_block_specialist",
+      "semantic_id": "M1_BLOCK_VOLATILITY_REGIME_DENSITY_HEURISTIC",
+      "tier": "M1",
+      "input_dag_layer": "L4",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the VOLATILITY feature block (n=3 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 3 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "STRUCTURE_block_specialist",
+      "semantic_id": "M1_BLOCK_STRUCTURE_SWING_TOPOLOGY_DENSITY",
+      "tier": "M1",
+      "input_dag_layer": "L3",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the STRUCTURE feature block (n=6 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 6 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "LIQUIDITY_block_specialist",
+      "semantic_id": "M1_BLOCK_LIQUIDITY_PRESSURE_DENSITY",
+      "tier": "M1",
+      "input_dag_layer": "L4",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the LIQUIDITY feature block (n=5 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 5 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "SMC_block_specialist",
+      "semantic_id": "M1_BLOCK_SMC_ZONE_PROXIMITY_DENSITY",
+      "tier": "M1",
+      "input_dag_layer": "L3",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the SMC feature block (n=8 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 8 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "TEMPORAL_block_specialist",
+      "semantic_id": "M1_BLOCK_TEMPORAL_DISPLACEMENT_CYCLE_HEURISTIC",
+      "tier": "M1",
+      "input_dag_layer": "L3",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the TEMPORAL feature block (n=3 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 3 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "CONTEXT_block_specialist",
+      "semantic_id": "M1_BLOCK_CONTEXT_SESSION_CLOCK_HEURISTIC",
+      "tier": "M1",
+      "input_dag_layer": "L4",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the CONTEXT feature block (n=2 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 2 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "MICROSTRUCTURE_block_specialist",
+      "semantic_id": "M1_BLOCK_MICROSTRUCTURE_CANDLE_ANATOMY_HEURISTIC",
+      "tier": "M1",
+      "input_dag_layer": "L0",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the MICROSTRUCTURE feature block (n=8 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 8 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "TREND_BASELINE_block_specialist",
+      "semantic_id": "M1_BLOCK_TREND_BASELINE_MA_DISTANCE_HEURISTIC",
+      "tier": "M1",
+      "input_dag_layer": "L1",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the TREND_BASELINE feature block (n=9 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 9 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "VOLATILITY_BAND_block_specialist",
+      "semantic_id": "M1_BLOCK_VOLATILITY_BAND_CONFORMITY_HEURISTIC",
+      "tier": "M1",
+      "input_dag_layer": "L1",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the VOLATILITY_BAND feature block (n=8 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 8 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "VOLATILITY_SPECTRUM_block_specialist",
+      "semantic_id": "M1_BLOCK_VOLATILITY_SPECTRUM_DISAGREEMENT_DENSITY",
+      "tier": "M1",
+      "input_dag_layer": "L1",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the VOLATILITY_SPECTRUM feature block (n=3 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 3 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "SWING_LINEAGE_block_specialist",
+      "semantic_id": "M1_BLOCK_SWING_LINEAGE_BATCH_CAUSAL_DENSITY",
+      "tier": "M1",
+      "input_dag_layer": "L1",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the SWING_LINEAGE feature block (n=10 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 10 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "VOLUME_PROXY_block_specialist",
+      "semantic_id": "M1_BLOCK_VOLUME_PROXY_DYNAMICS_HEURISTIC",
+      "tier": "M1",
+      "input_dag_layer": "L1",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Conditional-expectancy stratifier: does the VOLUME_PROXY feature block (n=3 canonical features) carry information about forward net R, conditioned on CRT state -- never selected on it (the F-086/F-097 selection-on-DV discipline).",
+      "note": "Block specialist over 3 canonical features. Needs no label and no training -- a declared subset + a heuristic combiner. Part of the 16-block canonical-feature partition (10 base + 6 extended) that is the measurement instrument for the Phase 4 conditional-expectancy table, not a book improver. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never select bars on the outcome it is measuring (F-086 discipline)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "state_transition_kernel_heuristic_specialist",
+      "semantic_id": "M2_STATE_TRANSITION_KERNEL_HEURISTIC",
+      "tier": "M2",
+      "input_dag_layer": "L3",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "State-surface stratifier over: prev_state, curr_state, action, reason.",
+      "note": "Reads the L3 layer_trace/CRT-engine state surface (prev_state/curr_state/action/reason, bars_in_state/age_ratio/TTL, or parent HTF bias/objective) rather than the canonical feature vector -- the state surface is currently UNGOVERNED (no version, no hash; tracker K8). Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never claim authority over the engine-runtime state surface it reads (K8 stays open)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "state_occupancy_cycle_heuristic_specialist",
+      "semantic_id": "M2_STATE_OCCUPANCY_CYCLE_HEURISTIC",
+      "tier": "M2",
+      "input_dag_layer": "L3",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "State-surface stratifier over: bars_in_state, age_ratio, TTL.",
+      "note": "Reads the L3 layer_trace/CRT-engine state surface (prev_state/curr_state/action/reason, bars_in_state/age_ratio/TTL, or parent HTF bias/objective) rather than the canonical feature vector -- the state surface is currently UNGOVERNED (no version, no hash; tracker K8). Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never claim authority over the engine-runtime state surface it reads (K8 stays open)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "state_parent_htf_context_heuristic_specialist",
+      "semantic_id": "M2_STATE_PARENT_HTF_CONTEXT_HEURISTIC",
+      "tier": "M2",
+      "input_dag_layer": "L4",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "State-surface stratifier over: htf_id, parent bias/objective.",
+      "note": "Reads the L3 layer_trace/CRT-engine state surface (prev_state/curr_state/action/reason, bars_in_state/age_ratio/TTL, or parent HTF bias/objective) rather than the canonical feature vector -- the state surface is currently UNGOVERNED (no version, no hash; tracker K8). Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never claim authority over the engine-runtime state surface it reads (K8 stays open)",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "schema_ensemble_temporal_tracker",
+      "semantic_id": "M3_TEMPORAL_SCHEMA_ENSEMBLE_TRACKER",
+      "tier": "M3",
+      "input_dag_layer": "L5",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Do the 19 specialists' outputs disagree over time (disagreement_index) or drift (drift_flag)? A tracker over the ensemble's own outputs, not over market features.",
+      "note": "Consumed by BitNet's Option B (toxicity veto, tranquil-pretzel.md) as one borrowed input alongside drift_flag -- BitNet reads this tracker's output but is NOT stacked on the ensemble (parallel, not sequential; see the plan's \u00a713 discussion). Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never itself score a market state -- scores the ensemble's agreement/stability only",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
+    },
+    {
+      "name": "fusion_schema_ensemble_arbiter",
+      "semantic_id": "M4_ARBITER_SCHEMA_ENSEMBLE_FUSION",
+      "tier": "M4",
+      "input_dag_layer": "L6",
+      "alignment": "DESIGN_ONLY",
+      "registered": "2026-09-23",
+      "market_question": "Combined view across all 19 specialists + the M3 temporal tracker -- research-only arbiter, distinct from the production M4_ARBITER_FUSION_COMPUTE/DECISION_APPROVAL rows which already exist and run live.",
+      "note": "Research-only by design (Phase 3, \u00a76.5 rung 1: information, not authority). Never wired to the live fusion_compute/decision rows without a separate, later, explicitly-authorized qualification step. Registered here rather than as an 18th+ MIAR entry per the envelope precedent (design_only_concepts.envelope_post_entry_continuous_bounds) -- no code exists yet, no wired consumer, no MIAR owner row, no measured G001. Origin: the pasted session summary \u00a711-\u00a712 (2026-09-23 model-layer investigation) via docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md Phase 3. Reopen as a full entry only once code exists and via a qualification protocol + measured \u0394G001 (TN_QUAL_V1 precedent).",
+      "primary_code": [],
+      "explicit_non_goals": [
+        "never be wired into the live decision_fusion path without a separate authorized step",
+        "never enter fusion/production authority without measured \u0394G001 (\u00a76.5)"
+      ]
     }
   ],
   "stages": [

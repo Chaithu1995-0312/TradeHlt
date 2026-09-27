@@ -3798,7 +3798,7 @@ execution_behaviours:
       - "F-025 / F-035 / F-081 (docs/current-findings.md): the recorded pattern of cost-dominated magnitude claims that this node explains."
     origin: "Registered 2026-08-19 (CH-cost-model-broker-truth) after the attached feature/state inventory prompted an execution-realism review of the measurement spine. The measurement predates the node by ~2 weeks; the node is the missing semantic identity, not a new observation."
     status: active
-    version: 1
+    version: 2
     owner: research-measurement
     traceability:
       manifest: docs/governance/build_manifests/CH-cost-model-broker-truth.impact.json
@@ -3934,12 +3934,12 @@ execution_behaviours:
       - "Ledger fixture: XAUUSD TRADE_OPENED CRT-0001 (entry 2318.21, atr_abs 2.16714286) reproduces risk_dist 0.7534285714, tp1 2319.3401428571 at tp1_mult 1.5 breakout intent, tp2 2319.7168571429 at tp2_mult 2.0 -- arithmetic confirmed against the on-disk events.jsonl row."
     origin: "Registered 2026-08-20 (profitable-entry oracle program) BEFORE the kernel that implements it, per CLAUDE.md 6.6. Discovered while establishing what the Entry/SL/TP1/TP2 logic in the codebase actually is: the two-target partial-exit behaviour is load-bearing in production and was entirely unregistered, and the research measurement kernel cannot represent it."
     status: active
-    version: 1
+    version: 2
     owner: research-measurement
     traceability:
       manifest: UNKNOWN
       implements: src/research/oracle/multi_tp_walk.py
-    notes: "Registering this node makes explicit a gap that was previously invisible: production trades a two-target partial-exit object while research measures a single-target one. This node grants NO authority and asserts nothing about which object is better -- it only names the difference so a measurement can declare which one it used. The half-way trail is reproduced as-is under the program explicit assume-happy-flow scope; whether it SHOULD be breakeven is a separate adjudication, not this node claim."
+    notes: "Registering this node makes explicit a gap that was previously invisible: production trades a two-target partial-exit object while research measures a single-target one. This node grants NO authority and asserts nothing about which object is better -- it only names the difference so a measurement can declare which one it used. The half-way trail is reproduced as-is under the program explicit assume-happy-flow scope; whether it SHOULD be breakeven is a separate adjudication, not this node claim. REFINED IN PLACE 2026-09-23 (CH-measurement-basis-declaration, v1->v2, no identity change): the tie_break this node's mathematical_definition calls 'production'/'optimistic' abstractly now has a named, closed-vocabulary home -- SEM-038's tie_break axis, canonicalised via governance.measurement_basis. This node's own construction and measurements are unchanged; SEM-038 only names the enum member this node already used as a string."
     epistemic:
       known_invariants:
         - "A trade that reaches TP1 and then stops out is profitable, not flat: the realised blend is strictly above the entry for any partial_fraction above 0 and any positive tp1_mult."
@@ -3998,12 +3998,12 @@ execution_behaviours:
       - "src/research/measurement/forward_walk.py: the no-lookahead contract this label walk inherits -- bars strictly after the entry index, guarded rather than assumed."
     origin: "Registered 2026-08-20 (profitable-entry oracle program) BEFORE the labeler that implements it, per CLAUDE.md 6.6. Created to name the outcome-first construction explicitly so it cannot be confused with a detector result, and so the lookahead inherent in selecting bars by their future is recorded on the node rather than living only in a report caveats."
     status: active
-    version: 1
+    version: 2
     owner: research-measurement
     traceability:
       manifest: UNKNOWN
       implements: src/research/oracle/labeler.py
-    notes: "This node grants NO authority. It defines a measurement object, not a strategy, and it deliberately encodes its own principal weakness -- selection on the future -- as a validation rule rather than as prose that can be dropped when results are summarised. The program that introduces it treats prior registered findings as unverified rather than as priors, so this label set is independent evidence and neither confirms nor overturns any existing finding."
+    notes: "This node grants NO authority. It defines a measurement object, not a strategy, and it deliberately encodes its own principal weakness -- selection on the future -- as a validation rule rather than as prose that can be dropped when results are summarised. The program that introduces it treats prior registered findings as unverified rather than as priors, so this label set is independent evidence and neither confirms nor overturns any existing finding. REFINED IN PLACE 2026-09-23 (CH-measurement-basis-declaration, v1->v2, no identity change): this node's mathematical_definition already named sl_geom/tie_break as 'a declared' axis abstractly -- SEM-038 now gives cost_model_id/walk_kernel/fill_model_id/reference_level the same closed-vocabulary treatment sl_geom/tie_break already had, and declares all five together as one comparable Basis. No label value, geometry, or cost arithmetic changes."
     epistemic:
       known_invariants:
         - "The label is a deterministic function of the corpus and the declared geometry: given the same bars and the same declared parameters it reproduces exactly, with no seed dependence."
@@ -4436,6 +4436,55 @@ execution_behaviours:
         - "The claim that this node describes the kernel behind a given artifact is falsified if the artifact's producing code cannot be identified -- TR-PIPEB-STRAT-01 currently carries an unidentified code state, so this node describes the kernel AS READ AT HEAD 2026-09-14, not provably the one that wrote the 20260913_130531 rows."
     traceability:           "scripts/research/opportunity_scanner.py:53-149 (_simulate) -> logs/<instrument>/<run_id>/opportunities.jsonl -> STR-F022-OPPORTUNITIES. Constrained by SEM-019 (causality), bounded by SEM-020 (capture basis), disjoint from SEM-017 (two-target production object)."
     notes:                  "This node grants NO authority and licenses NO economic reading. It names a kernel and records two defects so that downstream labels can be honest about what they restate: per CLAUDE.md 6.5 only a measured G001 improvement grants authority, and per F-022 this stream carries inventory authority only. Naming SL_HIT as an exit mechanism is a correction of READING, not a claim that the reading was previously wrong in a way that changes any registered finding. The node also does NOT reopen F-022: the 36.8 pct self-consistency figure was measured on a different corpus and is not re-derived here."
+
+  measurement_basis_declaration:
+    id:                     SEM-038
+    canonical_name:         MEASUREMENT_BASIS_DECLARATION
+    aliases:                ["the 5-axis basis", "can_compare", "the declare half of E1-E3"]
+    semantic_category:      ValidationRule
+    knowledge_status:       CHARACTERIZED
+    description:            "The declared measurement basis of one outcome-bearing row: which walk kernel (SEM-017/SEM-037 family), cost model (SEM-015), fill model (SEM-016), same-bar tie-break, and stop reference level produced it. Two rows can name the SAME bar (via the CH-oracle-join-spine identity) and still be non-comparable, because the number on each was produced under a different ruler. This node names the ruler so a comparison can be mechanically ALLOWED or mechanically REFUSED, instead of silently assumed."
+    observed_behaviour:     "Before this node, identity.tokens.L5_BASIS already declared a 3-axis basis (walk_kernel, cost_model_id, fill_model_id) enforced as a closed vocabulary -- but two axes that actually move the outcome number were invisible to it: tie_break (SEM-017 measured +0.0866R differing on 6.81 pct of 188,628 units between the production and optimistic conventions) and reference_level (moves risk_distance directly, hence every R on the row). So two L5 records could carry an IDENTICAL declared basis and still be non-comparable -- declared-equal was not actually-equal. Verified at source 2026-09-23: the spine ledger (trades.csv) already stamped cost_model_id (CH-cost-model-identity-stamp) but not tie_break/reference_level/walk_kernel/fill_model_id; the oracle labeler (labels.csv) already stamped sl_geom/tie_break but not cost_model_id (the id lived only in a sidecar manifest.json, under yet another of five unreconciled spellings of the same SEM-015 component model)."
+    mathematical_definition: "A Basis is the 5-tuple (walk_kernel, cost_model_id, fill_model_id, tie_break, reference_level), each canonicalised through a closed vocabulary + alias table (never a guess -- an unrecognised spelling resolves to UNSTAMPED, never inferred). can_compare(a, b) returns ALLOW_SAME_BASIS iff all five axes canonicalise equal; otherwise it returns the FIRST-mismatching axis's named DENY verdict, checked in the fixed priority order (walk_kernel, reference_level, fill_model_id, cost_model_id, tie_break) -- walk_kernel first because a different trade OBJECT (single-target vs. dual-target-plus-trail) makes every finer-grained axis moot. Any UNSTAMPED operand on any axis denies before any mismatch check (DENY_UNSTAMPED_OPERAND) -- a basis is never inferred from a row that did not record it."
+    units:                  "categorical (5 closed-vocabulary axes); no numeric unit. sl_refloored is a row-level boolean DISCLOSURE, not part of the compare key."
+    formula:                "can_compare(a,b) = ALLOW_SAME_BASIS if all(a.axis == b.axis for axis in AXES) else DENY_<FIRST_MISMATCHING_AXIS>_MISMATCH, checked walk_kernel > reference_level > fill_model_id > cost_model_id > tie_break; DENY_UNSTAMPED_OPERAND pre-empts all of the above."
+    dependencies:           [SEM-015, SEM-016, SEM-017, SEM-018]
+    required_inputs:        ["labels.csv row (sl_geom/tie_break/cost_model_id/walk_kernel/fill_model_id/reference_level)", "trades.csv row (cost_model_id/cost_model_params_hash/risk_denominator_id/walk_kernel/reference_level/fill_model_id/tie_break/sl_refloored)"]
+    produced_outputs:       ["Basis", "can_compare verdict + rationale string naming the SEM/F id that measured the gap"]
+    producers:              ["src/research/oracle/labeler.py", "src/runtime/backtest_v2.py", "src/config_layer/crt_engine_v2.py (intrabar_exits property)"]
+    consumers:              ["src/governance/identity_chain.py (invariant I9)", "src/research/provenance.py (truth_standard_block's required tie_break parameter)"]
+    transitions:            []
+    validation_rules:
+        - "canonicalise() never guesses: an unrecognised or blank spelling on any axis becomes UNSTAMPED, never inferred from context or defaulted to a plausible-looking value"
+        - "walk_kernel/cost_model_id/fill_model_id are RE-EXPORTED from identity.tokens, never re-declared -- a second copy would recreate the exact two-quantities-one-name failure this node exists to close"
+        - "sl_refloored (backtest_v2.py's [FIX-SL] floor) is a row-level disclosure, never part of the compare key -- it varies within one run's population, so per-row denial on it would be incoherent"
+        - "can_compare must never raise -- it is a read-side analytic and one bad operand must not abort a caller reading many rows; require_comparable is the separate gated surface that raises"
+        - "this node's can_compare is STRICTER than identity.tokens.L5_BASIS equality (L5_BASIS itself is unextended -- tokens.py's own comment says 'do not change L5 equality'), so two records can be L5-equal and still can_compare-DENY; this is the intended interim state, not a defect"
+        - "additive-only: no trading decision, PnL, cost arithmetic, risk_distance, label value, CANONICAL_FEATURES, or config key may change as a result of declaring this basis -- proved by byte-identity tests on both ledgers, not asserted"
+    confidence:             Certain
+    evidence:
+        - "src/identity/tokens.py:29-36,54-55 -- the pre-existing L5_BASIS 3-axis closed vocabulary and its own 'do not change L5 equality' comment, verified at source 2026-09-23"
+        - "SEM-017 epistemic block (this ontology) -- measured tie_break gap +0.0866R on 6.81 pct of 188,628 XAUUSD M15 units, 2026-08-20"
+        - "src/research/oracle/labeler.py:71-73,185-189 -- sl_geom's disp_bar arm anchors to the CURRENT bar's own low/high (signal_bar_extreme), not the engine's displacement_candle (displacement_extreme), despite the name -- a measured naming gap this node declares rather than silently fixes"
+        - "tests/test_measurement_basis.py, tests/test_identity_chain.py (I9), tests/research/test_oracle_labeler.py, tests/test_cost_model_stamped.py, tests/test_exit_model.py -- the full test floor for this node's implementation"
+    origin:                 "Registered 2026-09-23 (CH-measurement-basis-declaration), the DECLARE half of the originating XAUUSD layer-trace thread's E1-E3 parity-contract item. Created after CH-oracle-join-spine made a spine bar and a labelled unit JOINABLE via a shared identity (lt_id/trace_id/bar_open_ts) but not COMPARABLE -- this node is the precondition the join spine's own follow-up backlog named as its recommended next item."
+    status:                 active
+    version:                1
+    owner:                  research-measurement
+    traceability:
+      manifest: docs/governance/build_manifests/CH-measurement-basis-declaration.impact.json
+      implements: src/governance/measurement_basis.py
+    notes:                  "This node declares the ruler; it does NOT unify it. Making the rulers agree (one cost model, one tie-break, one stop reference across spine and research) is separate, deferred, breaking work that re-bases every existing outcome-bearing number in the repository -- tracked as the UNIFY half of E1-E3, not this change. Grants no economic, production, or G001 authority (CLAUDE.md 6.5) -- it is a declaration and comparator, not a strategy or a claim that any two rows SHOULD agree."
+    epistemic:
+      known_invariants:
+        - "identity.tokens.L5_BASIS's 3 axes are insufficient to guarantee comparability: two L5-equal records can differ on tie_break or reference_level, both of which measurably move the outcome number (SEM-017)."
+        - "Five distinct spellings of the SAME component cost model existed in the repo before this node (sem015_component_xauusd / CM-XAUUSD-COMPONENT-MEASURED-V1 / component_measured.v1 / CM-XAUUSD-COMPONENT-MEASURED / component_measured), verified at source 2026-09-23."
+      unknown_mechanism: "Whether unifying the five axes (rather than merely declaring them) would move any existing registered finding -- unmeasured, and explicitly out of scope for this node (the UNIFY half is separate work)."
+      candidate_hypotheses:
+        - "UNTESTED: unifying reference_level onto a single displacement-anchored geometry would change SEM-017's measured tie-break gap, since the two axes interact (a different stop distance changes which bars span both a target and the stop)."
+      resolution_metric: "The UNIFY-half change (follow-up backlog item 1): re-measure every registered outcome under one cost model / one tie-break / one reference level and report which findings move."
+      falsification_conditions:
+        - "This node's own comparator crashing on any real pair of distinct bases present in a corpus (verified never to happen on the golden fixture and the synthetic test corpus; NOT yet verified against a real multi-run results/ directory -- tracked in the follow-up backlog alongside I8's identical gap)."
 
 risk_behaviours:
 

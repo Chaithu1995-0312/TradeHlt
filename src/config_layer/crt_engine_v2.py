@@ -667,15 +667,32 @@ class TelemetryCollector:
         self,
         candle_index:          int,
         score_at_approval:     float = 0.0,
+        candle_ts:             Optional[datetime] = None,   # Phase 3 — bar-open clock (ACCEPTED)
+        trade_id:              Optional[str] = None,        # Phase 3 — Option-A row trade_id
         shadow_context:        Optional[dict] = None,   # Phase 4b
         shadow_displacement_br: float = 0.0,            # Phase 4b — body_ratio of pending disp candle
-    ) -> None:
-        """Called when TRADE_OPENED fires — candidate lifecycle ends as ACCEPTED."""
+    ) -> Optional[str]:
+        """Called when TRADE_OPENED fires — candidate lifecycle ends as ACCEPTED.
+
+        Phase 3 additive fields: ``candle_ts`` (bar-open clock, so the ACCEPTED row resolves to
+        the frozen PK) and ``trade_id`` (the engine's Option-A CRT-{seq} row id, so the
+        lifecycle record joins to trades.csv and L8 without a lookup). Returns the closed
+        candidate_id so the runner can stamp it on the trade row (trades.csv.candidate_id ->
+        lifecycle bidirectional closure, chain invariants 4/5).
+        """
         if self._active_candidate is not None:
             self._active_candidate["score_at_approval"]      = score_at_approval
             self._active_candidate["shadow_context"]         = shadow_context or {}   # Phase 4b
             self._active_candidate["shadow_displacement_br"] = shadow_displacement_br  # Phase 4b
+            self._active_candidate["trade_id"]               = trade_id
+            self._active_candidate["bar_ts"]                 = (
+                candle_ts.isoformat() if candle_ts is not None else None
+            )
+            cid = self._active_candidate["candidate_id"]
+        else:
+            cid = None
         self._close_candidate("ACCEPTED", candle_index)
+        return cid
 
     def _close_candidate(self, death_reason: str, candle_index: int) -> None:
         if self._active_candidate is None:
@@ -694,6 +711,8 @@ class TelemetryCollector:
             "score_at_approval":    c.get("score_at_approval"),    # None if not accepted
             "shadow_context":       c.get("shadow_context", {}),   # Phase 4b — age/penalty/alignment
             "shadow_displacement_br": c.get("shadow_displacement_br", 0.0),  # Phase 4b
+            "trade_id":             c.get("trade_id"),        # Phase 3 — only non-None when ACCEPTED
+            "bar_ts":               c.get("bar_ts"),          # Phase 3 — bar-open clock (ACCEPTED)
             "death_reason":         death_reason,
         })
         self._active_candidate = None
@@ -708,6 +727,7 @@ class TelemetryCollector:
         accepted: bool,
         rejection_reason: str,
         soft_conf_candle_num: int,
+        candle_ts: Optional[datetime] = None,   # Phase 3 — bar-open clock for the frozen PK
     ) -> None:
         """Called after every S-score computation inside the soft-conf window."""
         self._decision_records.append({
@@ -717,6 +737,7 @@ class TelemetryCollector:
                 self._active_candidate["candidate_id"]
                 if self._active_candidate else None
             ),
+            "bar_ts":             (candle_ts.isoformat() if candle_ts is not None else None),
             "score_actual":       score_actual,
             "score_threshold":    score_threshold,
             "decision_distance":  abs(score_actual - score_threshold),
@@ -1951,6 +1972,9 @@ class UltronRiskEngine:
         self.log = logging.getLogger("CRT.UltronRisk")
         self._news_active      = False
         self._current_spread_pct = 0.0
+        # [K23 F2] None = legacy static broker-time windows (config.session_windows).
+        # Set by CRTEngine when backtest.session_window_basis == "exchange_local".
+        self.exchange_windows = None
 
     def set_news_flag(self, active: bool) -> None:
         self._news_active = active
@@ -1994,8 +2018,12 @@ class UltronRiskEngine:
         return score
 
     def score_time(self, timestamp: datetime) -> float:
-        t = timestamp.time()
-        matches = sum(1 for start, end in self.config.session_windows.values() if start <= t <= end)
+        if self.exchange_windows is not None:   # [K23 F2] exact per-date exchange windows
+            from features.broker_clock import exchange_sessions_at
+            matches = len(exchange_sessions_at(timestamp, self.exchange_windows))
+        else:
+            t = timestamp.time()
+            matches = sum(1 for start, end in self.config.session_windows.values() if start <= t <= end)
         if matches >= 2:
             return 1.0
         if matches == 1:
@@ -2287,12 +2315,46 @@ class UltronRiskEngine:
 # MODULE 4 — EXECUTION ENGINE
 # ─────────────────────────────────────────────────────────────────
 
+@dataclass(frozen=True)
+class BuildAttempt:
+    """Why the last build_trade call opened or refused. Not an EngineState field."""
+
+    result: str
+    reason: Optional[str]
+    computed_sl: Optional[float]
+    entry: Optional[float]
+    direction: Optional[str]
+
+
 class ExecutionEngine:
 
-    def __init__(self, config: CRTConfig):
+    def __init__(self, config: CRTConfig, sl_anchor: str = "displacement"):
         self.config = config
+        # [K23 F3] Not a CRTConfig field (census pins); fed from backtest.sl_anchor.
+        # "displacement" = legacy; "sweep_extreme" = swept wick extreme -/+ sl_atr_buffer*atr.
+        if sl_anchor not in ("displacement", "sweep_extreme"):
+            raise ValueError(f"sl_anchor must be 'displacement' or 'sweep_extreme', got {sl_anchor!r}")
+        self.sl_anchor = sl_anchor
         self.log = logging.getLogger("CRT.Execution")
         self._trade_counter = 0
+        self.last_build_attempt: Optional[BuildAttempt] = None
+
+    def _remember_build(
+        self,
+        result: str,
+        reason: Optional[str],
+        computed_sl: Optional[float],
+        entry: Optional[float],
+        direction: Optional[Direction],
+    ) -> None:
+        name = direction.name if isinstance(direction, Direction) else None
+        self.last_build_attempt = BuildAttempt(
+            result=result,
+            reason=reason,
+            computed_sl=computed_sl,
+            entry=entry,
+            direction=name,
+        )
 
     def _next_id(self) -> str:
         """Fallback sequential ID — used internally before entry price is known."""
@@ -2359,8 +2421,10 @@ class ExecutionEngine:
     def build_trade(
         self, state: EngineState, risk_engine: Optional[UltronRiskEngine] = None
     ) -> Optional[Trade]:
+        self.last_build_attempt = None
         if state.active_range is None or state.sweep_event is None:
             self.log.error("Cannot build trade: missing range or sweep.")
+            self._remember_build("REJECTED", "missing_range_or_sweep", None, None, None)
             return None
 
         rng       = state.active_range
@@ -2376,9 +2440,19 @@ class ExecutionEngine:
         # CRT doctrine: SL beyond the displacement candle = trade is structurally invalid.
         if state.displacement_candle is None:
             self.log.error("Cannot build trade: no displacement candle.")
+            self._remember_build("REJECTED", "missing_displacement", None, entry, direction)
             return None
 
-        if direction == Direction.LONG:
+        if self.sl_anchor == "sweep_extreme":
+            # [K23 F3] Stop where the sweep idea is invalidated: beyond the swept wick extreme.
+            if state.sweep_event is None or direction not in (Direction.LONG, Direction.SHORT):
+                self.log.error("Cannot build trade: sweep_extreme anchor needs a sweep event.")
+                self._remember_build("REJECTED", "missing_sweep_extreme", None, entry, direction)
+                return None
+            _sc = state.sweep_event.candle
+            sl = (_sc.low - self.config.sl_atr_buffer * atr) if direction == Direction.LONG \
+                else (_sc.high + self.config.sl_atr_buffer * atr)
+        elif direction == Direction.LONG:
             # Swept LOW → displaced UP → SL below displacement candle low
             sl  = state.displacement_candle.low  - self.config.sl_atr_buffer * atr
             # [Phase-2] TP levels anchored to actual risk distance (1R and 2R)
@@ -2390,6 +2464,7 @@ class ExecutionEngine:
             sl  = state.displacement_candle.high + self.config.sl_atr_buffer * atr
         else:
             self.log.error("Cannot build trade: direction NONE.")
+            self._remember_build("REJECTED", "invalid_direction", None, entry, direction)
             return None
 
         # ── Inverted SL guard ──────────────────────────────────────────────
@@ -2401,12 +2476,14 @@ class ExecutionEngine:
                 f"Trade REJECTED: inverted SL on LONG "
                 f"(entry={entry:.5f} sl={sl:.5f} sweep={state.sweep_event.price:.5f})"
             )
+            self._remember_build("REJECTED", "inverted_sl_long", sl, entry, direction)
             return None
         if direction == Direction.SHORT and sl <= entry:
             self.log.warning(
                 f"Trade REJECTED: inverted SL on SHORT "
                 f"(entry={entry:.5f} sl={sl:.5f} sweep={state.sweep_event.price:.5f})"
             )
+            self._remember_build("REJECTED", "inverted_sl_short", sl, entry, direction)
             return None
 
         # [Phase-2] Anchor TP1 and TP2 to actual risk distance (R-multiples)
@@ -2461,6 +2538,7 @@ class ExecutionEngine:
             f"Entry={entry:.5f} SL={sl:.5f} TP1={tp1:.5f} TP2={tp2:.5f} "
             f"RR={trade.risk_reward_tp1:.2f} risk_pct={risk_pct:.3f}"
         )
+        self._remember_build("OPENED", None, sl, entry, direction)
         return trade
 
     def open_trade(self, trade: Trade, timestamp: datetime) -> None:
@@ -2564,8 +2642,11 @@ class ExecutionEngine:
 
 class ResetLogic:
 
-    def __init__(self, config: CRTConfig):
+    def __init__(self, config: CRTConfig, htf_reset_exempt_sweep: bool = False):
         self.config = config
+        # [K23 F4] Not a CRTConfig field (that census pins every field): sourced from
+        # backtest.htf_reset_exempt_sweep via CRTEngine. False = legacy rule.
+        self.htf_reset_exempt_sweep = bool(htf_reset_exempt_sweep)
         self.log = logging.getLogger("CRT.Reset")
 
     def should_reset(
@@ -2588,6 +2669,8 @@ class ResetLogic:
         if current_htf_id != state.active_range.clock_id:
             if state.current_state in [CRTState.EXPANSION, CRTState.RETEST]:
                 return False, ""  # DO NOT INTERRUPT ACTIVE SETUP
+            if self.htf_reset_exempt_sweep and state.current_state == CRTState.SWEEP:
+                return False, ""  # [K23 F4] SWEEP survives the HTF flip; other resets still apply
             return True, f"HTF changed: {state.active_range.clock_id} → {current_htf_id}"
 
         price = current_candle.close
@@ -2635,7 +2718,10 @@ class CRTEngine:
 
     def __init__(self, config: Optional[CRTConfig] = None,
                  sweep_tracer: Optional[SweepTraceLogger] = None,
-                 intrabar_exits: Optional[bool] = None):
+                 intrabar_exits: Optional[bool] = None,
+                 htf_reset_exempt_sweep: bool = False,
+                 sl_anchor: str = "displacement",
+                 exchange_session_windows: Optional[dict] = None):
         # Config MUST be provided via ConfigBuilder.build(instrument).
         # Direct CRTConfig() fallback is forbidden — it bypasses the market router.
         if config is None:
@@ -2672,8 +2758,25 @@ class CRTEngine:
             self.config, self.telemetry, valid_transitions=self.runtime_transitions
         )
         self.risk      = UltronRiskEngine(self.config)
-        self.executor = ExecutionEngine(self.config)
-        self.reset_lg = ResetLogic(self.config)
+        self.executor = ExecutionEngine(self.config, sl_anchor=sl_anchor)  # [K23 F3]
+        self.reset_lg = ResetLogic(self.config, htf_reset_exempt_sweep=htf_reset_exempt_sweep)
+        # [K23 F2] Not a CRTConfig field (census pins); fed from backtest.exchange_session_windows.
+        # None = legacy static windows. Set = each session is defined in its own exchange zone
+        # and resolved per date via features.broker_clock (filter AND score_time share it).
+        self._exchange_windows = None
+        if exchange_session_windows is not None:
+            from features.broker_clock import parse_exchange_session_windows
+            self._exchange_windows = parse_exchange_session_windows(exchange_session_windows)
+            # Fail-closed: an allowed session that no window can ever produce would silently
+            # never admit. OVERLAP is exempt — a derived name the legacy filter never emits
+            # either (only session_windows keys are matched), so it is inert in both modes.
+            _unproducible = [s for s in self.config.allowed_sessions
+                             if s not in self._exchange_windows and s != "OVERLAP"]
+            if _unproducible:
+                raise ValueError(
+                    f"allowed_sessions {_unproducible} have no exchange_session_windows entry "
+                    f"(declared: {list(self._exchange_windows)}); they could never be admitted.")
+            self.risk.exchange_windows = self._exchange_windows
         self.state    = EngineState()
         self.ev_log   = EventLogger(self.state)    # [PATCH 4]
         self.candle_buffer: list[Candle] = []
@@ -2699,6 +2802,18 @@ class CRTEngine:
         self._objective_gate_mode = str(_og["mode"])
 
     # ── Public API ────────────────────────────────────────────
+
+    @property
+    def intrabar_exits(self) -> bool:
+        """The RESOLVED exit-trigger model this instance actually runs (read-only).
+
+        [CH-measurement-basis-declaration] Exposes ``self._intrabar_exits`` (resolved
+        once at construction — see the precedence comment above) so a caller can
+        declare the same tie_break the engine actually applied, rather than assuming
+        it from the config's own ``exit_model`` key, which the env-var override can
+        silently disagree with.
+        """
+        return self._intrabar_exits
 
     def get_state_contract(self, state_id: Optional[str] = None):
         """Return the Phase-1 StateContract for ``state_id`` or the current SM state.
@@ -2857,6 +2972,8 @@ class CRTEngine:
         Both default None. Bias veto requires parent_crt.enabled.
         Objective activation requires parent_crt.objective_gate.enabled (default
         false — unused kwarg is ledger-neutral)."""
+        # Drop the previous bar's build attempt before any early return.
+        self.executor.last_build_attempt = None
         # Optional baseline trace: capture state_before (no behavior change when None/disabled).
         _bt = self.baseline_trace
         if _bt is not None and getattr(_bt, "enabled", False):
@@ -3337,6 +3454,7 @@ class CRTEngine:
                     reason.value if reason else ("APPROVED" if approved else "UNKNOWN")
                 ),
                 soft_conf_candle_num=self.state.soft_conf_candles,
+                candle_ts=candle.timestamp,   # Phase 3 — bar-open clock for the frozen PK
             )
 
             if approved:
@@ -3420,16 +3538,24 @@ class CRTEngine:
                     # the UTC-converted timestamp when the operator has opted in via the same
                     # feature_pipeline.session_timestamp_basis key the FM-052 feature already
                     # uses (default "broker_local" = byte-identical prior behavior).
-                    if self._session_ts_basis == "utc_corrected":
-                        from features import broker_clock as _bc
-                        _ts_time = _bc.mt5_server_to_utc_scalar(candle.timestamp).time()
-                    else:
-                        _ts_time = candle.timestamp.time()
                     _sess_name = "OFF_SESSION"
-                    for _name, (_start, _end) in self.config.session_windows.items():
-                        if _start <= _ts_time <= _end:
-                            _sess_name = _name
-                            break
+                    if self._exchange_windows is not None:
+                        # [K23 F2] exact per-date exchange windows; first declared match wins
+                        # (so a London/NY overlap resolves to the earlier-declared session).
+                        from features.broker_clock import exchange_sessions_at as _esa
+                        _hits = _esa(candle.timestamp, self._exchange_windows)
+                        if _hits:
+                            _sess_name = _hits[0]
+                    else:
+                        if self._session_ts_basis == "utc_corrected":
+                            from features import broker_clock as _bc
+                            _ts_time = _bc.mt5_server_to_utc_scalar(candle.timestamp).time()
+                        else:
+                            _ts_time = candle.timestamp.time()
+                        for _name, (_start, _end) in self.config.session_windows.items():
+                            if _start <= _ts_time <= _end:
+                                _sess_name = _name
+                                break
                     if _sess_name not in self.config.allowed_sessions:
                         self.ev_log.record(
                             "FILTER_REJECTED", candle,
@@ -3493,13 +3619,20 @@ class CRTEngine:
                         # Embed live engine state so the backtest never needs to
                         # reach back into a static batch array for audit columns.
                         action["live_metrics"] = self.get_live_metrics()
-                        # [TELEMETRY] Close candidate as ACCEPTED — Phase 4b: include shadow_context
-                        self.telemetry.on_candidate_accepted(
+                        # [TELEMETRY] Close candidate as ACCEPTED — Phase 4b: include shadow_context; Phase 3:
+                        # candle_ts + trade_id so the ACCEPTED row resolves to the frozen PK and
+                        # joins to trades.csv / L8; the returned candidate_id rides on `action`
+                        # so the runner can stamp trades.csv.candidate_id (chain invariant 4/5).
+                        _acc_cid = self.telemetry.on_candidate_accepted(
                             candle.index,
                             score_at_approval=_effective_S,
+                            candle_ts=candle.timestamp,
+                            trade_id=trade.id,
                             shadow_context=_shadow_ctx if self.state._came_from_shadow else {},
                             shadow_displacement_br=_shadow_disp_br,
                         )
+                        if _acc_cid is not None:
+                            action["candidate_id"] = _acc_cid
                         self._emit_retest_replay(candle, _effective_S, accepted=True,
                                                  reject_reason=None)
 

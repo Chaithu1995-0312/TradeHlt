@@ -10,6 +10,42 @@ It is not a playbook, not a `SEM-*`, not a measurement contract.
 
 ---
 
+## Record 7 — 2026-09-26 — Five mechanical proxies measured as "Sujan" without identity review (DRIFT)
+
+**Kind:** unapproved semantic replacements, recorded after the fact. **Not** a freeze. **Not** an identity certification.
+**Lane:** measurement (research-only scripts under `results/pdh_pdl_weekly_open/2026-09-25/`, `results/user_rules_sleeve/2026-09-25/`).
+**Named by:** human bridge, 2026-09-26: "The report successfully falsified several simplified versions of the idea, but it did not yet test the complete causal chain that Sujan claims to use."
+**What went wrong:** this charter was not loaded before the 2026-09-25 tests. Test *designs* were bridge-approved as plans, but the equivalence of each proxy to Sujan's concept was never reviewed, and the published report (https://claude.ai/artifact/DwR7b67EdJhSMoc4d4UyB2, v1–v5) labelled results as Sujan's method. That breaks the Measurement Firewall (`:276-294`). CORRECTED in the report 2026-09-26 (scope banner + section 25).
+
+### New Level-1 Sujan statements (relayed by the bridge, 2026-09-25; chat text, not transcripts)
+
+- 15:55: "Upper line (PDH) & lower line (PDL) · RED LINE (WEEKLY OPEN) · every time, we need to see PDH & PDL (range) · Up/down - weekly open (key level) - location important." Plus: "Htf resistance - weekly open discuss on this first."
+- XAU reference map (screenshot, Level 2): HTF resistance 4399–4404 → SWEEP (4435 possibly) → bearish reaction → 5m/15m displacement → RETEST → SHORT 4045 → 3942 | BREAK → ACCEPT 4481 → 4548. "Vol 100 - sell (distribution)".
+- 21:02–21:05: "Put 1 hr candle close after sweep, not 15 min … we are trading daily range acting as a weekly open key level, so 1 hr confirmation require … 15 min data is good 3% per month profitability."
+- 21:29–21:36: "1 hr crt happening in xau gold … 3rd candle distribution candle is happening … C1 accumulation, C2 manipulation done & closed inside first range … & C3 distribution candle … tats all we need to automate … C2 manipulation must occur at htf location." Live trade screenshot: BUY 0.4 @ 4276.30, SL 4269, TP 4299; TradingView "XAUUSD (1H) 1H-1D Model · Bias: Bullish · SMT: —".
+- Note vs `:205`: C1/C2/C3/manipulation now appear in Sujan's own words. That does **not** make them equal to `ParentCRTTrack`'s C1/C2/C3 (F-077 still holds until reviewed).
+
+### Proxies used (all UNVALIDATED; results apply to the proxy only)
+
+| Sujan concept | Proxy measured | Approved as identity? | Status |
+|---|---|---|---|
+| PDH / PDL "range" | last closed broker-day D1 high/low | N | UNVALIDATED |
+| Weekly open (red line) | open of first M15 bar of the ISO week (broker time). His chart's red lines 4309.273 / 4255.613 do NOT equal it (4373.77 for w/c 21 Sep) | N | UNVALIDATED — likely WRONG object |
+| "Location important" | two readings, premium/discount vs trend side; later L1 (C2 wick swept PDH/PDL) and L2 (+weekly/day open) | N | UNVALIDATED |
+| Sweep → reaction → displacement → retest → entry | single M15 (or H1) sweep bar, entry next open; displacement and retest DROPPED | N | UNVALIDATED (chain truncated) |
+| Break → accept | two consecutive M15 (or H1) closes beyond | N | UNVALIDATED |
+| C1 / C2 / C3 | `ParentCRTTrack` on closed H1; C2 close strictly inside C1; entry = C3 open; target = C1 far side; stop = C2 wick ± 0.50 or midpoint | N | UNVALIDATED |
+
+### Dropped, not proxied (never measured)
+
+HTF resistance zone construction · 5m/15m displacement · retest object · 5m entry trigger · stop rule (his 4269 is not C2's wick) · target rule (4045 → 3942 is not C1's far side) · "Vol 100 – distribution" · 1H-1D Model bias · SMT · invalidation / no-trade rules.
+
+### Measurement Firewall statement
+
+All 2026-09-25 results (15m sweep ~0R; break = gold drift; 1H variants; CRT proxy 57–62% wins below a 60–64% breakeven) are attached to the proxies above. They do **not** travel to "Sujan CRT." Identity: NOT YET FROZEN.
+
+---
+
 ## Record 6 — 2026-08-29 — Bulk-candle proxy APPROVED (SEM-034), UNK-007 stays open
 
 **Kind:** approved mechanical proxy. **Not** an identity certification and **not** a resolution of UNK-007.

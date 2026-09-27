@@ -48,7 +48,7 @@ Every path is exactly one class. Mixing occupancy into a tracked class is a sche
 | Class | Git | What it is | What it is not |
 |---|---|---|---|
 | **TRACKED_CODE** | tracked | Importable source, tests, scripts, production config | A candle, a model weight, a log line |
-| **TRACKED_MEANING** | tracked | Ontology, findings, contracts, topic docs, this schema | Occupancy of any L0–L5 layer |
+| **TRACKED_MEANING** | tracked | Ontology, findings, contracts, topic docs, this schema, `context/*.md` (Portable Mind, reclassified 2026-09-17) | Occupancy of any L0–L5 layer |
 | **TRACKED_BINDING** | tracked | Class C: PK → content hash → authority status. Dataset Identity records. Sealed `MC-*` evidence under `docs/research-readiness/` | The bytes the hash is over |
 | **LOCAL_BLOB** | ignored | Corpus bytes (INV-050). `data/` | Dataset Identity; `FEATURE_ORDER_HASH` snapshots in git |
 | **LOCAL_MODEL** | ignored | Serialized inference artifacts (INV-051). `models/` | `active_models.yaml`; zone-manifest *pointers* in docs |
@@ -56,7 +56,7 @@ Every path is exactly one class. Mixing occupancy into a tracked class is a sche
 | **LOCAL_TELEMETRY** | ignored | Append-only JSONL streams (INV-053). `logs/`, `runtime/exec_telemetry/` | The JSONL *claim catalog* (`CC-*`); envelope *shape* |
 | **LOCAL_IDENTITY** | ignored | Identity-store Class A snapshots + Class B record files | Class C under `docs/governance/identity_bindings/` |
 | **LOCAL_SECRET** | ignored | Credentials | Config knobs |
-| **LOCAL_CACHE** | ignored | `__pycache__/`, `venv/`, generated `context/` | Hand-authored docs |
+| **LOCAL_CACHE** | ignored | `__pycache__/`, `venv/` | Hand-authored docs |
 | **MIXED_RESIDUE** | named, not silently rewritten | Already-tracked files that sit inside an ignore rule | A grant to add more of the same |
 
 `.gitignore` section headers **must** use these class names. `tests/test_gitignore_schema.py` pins that.
@@ -69,6 +69,7 @@ Every path is exactly one class. Mixing occupancy into a tracked class is a sche
 |---|---|---|---|
 | `src/` `scripts/` `tests/` `configs/` | TRACKED_CODE | yes | — |
 | `docs/` (except generated scratch) | TRACKED_MEANING | yes | — |
+| `context/*.md` (Portable Mind) | TRACKED_MEANING | yes | **RECLASSIFIED 2026-09-17** (was LOCAL_CACHE): user decision — this is now the whole-codebase context handoff for any LLM without repo access (STORY-19.10 `multi_llm/build_queue.jsonl`), so it must travel with the repo, not be regenerated blind per clone. Still built by `scripts/context/build_context.py` (the `Compile` trigger); still never hand-edited. |
 | `docs/governance/datasets/` | TRACKED_BINDING | yes | `canonical_artifact.sha256` |
 | `docs/governance/dataset_identity_registry.json` | TRACKED_BINDING | yes | dataset_id → record |
 | `docs/governance/identity_bindings/` | TRACKED_BINDING | yes (dir exists; ledgers still empty) | Class C JSONL when written |
@@ -84,7 +85,7 @@ Every path is exactly one class. Mixing occupancy into a tracked class is a sche
 | `runtime/exec_telemetry/` | LOCAL_TELEMETRY | **no** | recapture via `--exec-log` |
 | `objects/` `records/` `identity_store/` | LOCAL_IDENTITY | **no** | Class C hash in `identity_bindings/` |
 | `.env` | LOCAL_SECRET | **no** | never |
-| `venv/` `__pycache__/` `context/` | LOCAL_CACHE | **no** | regenerate |
+| `venv/` `__pycache__/` | LOCAL_CACHE | **no** | regenerate |
 
 `exec_telemetry/` at repo root is **TRACKED_CODE** (Python package). `runtime/exec_telemetry/` is **LOCAL_TELEMETRY**. Same noun, two classes — do not collapse.
 

@@ -8,6 +8,8 @@ The user wants two ways into backtest results:
   telemetry and trades.
 - **`--trace-id X`**: every recorded observation for one bar of one run, across all outputs, so
   they can dig into any single result.
+- **`--run-id X --from TS --to TS`** (added 2026-09-17): the same run card, cut to a time
+  range, so one session or one move on a chart can be read without the whole run (A3b).
 
 Measured facts this plan rests on (2026-09-16, read-only):
 
@@ -84,6 +86,59 @@ Sections, each printed with its source path and row count:
 4. **Trades and rejections**, each with its ready-to-paste `trace_id`, built from `opened_at` /
    the event `timestamp`.
 
+### A3b. `--from TS --to TS`: time range on the run card (added 2026-09-17)
+Measured basis (read-only, 2026-09-17, `results/run_20260916_225925_XAUUSD` +
+`results/layer_trace/XAUUSD_layer_trace.jsonl`): every artifact writes **naive ISO timestamps with
+no zone** (`2024-11-12T15:30:00`) — `trades.opened_at/closed_at`, `events.timestamp`, the
+`layer_trace` `trace_id` suffix. Those stamps are **broker server time**, not UTC (F-066).
+
+**Flag contract**
+- Both flags take the same naive ISO form the artifacts use. Accept `YYYY-MM-DD` as a
+  shorthand for `T00:00:00` (`--from`) / `T23:45:00` (`--to`) on M15.
+- **Clock basis is broker server time, and the card says so.** No zone conversion, no
+  `--tz` flag (F-066/F-101: never do time arithmetic across clock bases). A value with a zone
+  suffix (`Z`, `+03:00`) → `REFUSED (range must be broker-local naive; see F-066)`.
+- **Inclusive on both ends, by bar open time.** A bar is in range when `from ≤ bar_open_ts ≤ to`.
+- `--from` alone = from that bar to the end of the run; `--to` alone = from the start to that bar.
+- `from > to` → exit 1 `REFUSED (empty range: from > to)`.
+- **Mutually exclusive with `--trace-id`.** `--window N` already defines the bar-dossier
+  neighbourhood in bars; two range definitions on one command would disagree at gaps.
+
+**Resolving the range to rows (once, then reused by every section)**
+- Read the run's corpus (A2 identity; refuse on `corpus_sha256` mismatch, same as A4). Map the
+  range to `[row_from, row_to]` = first and last corpus rows whose timestamp is inside it.
+- The card header prints: requested `from`/`to`, first and last bar actually in range, the row
+  range, the bar count, and `clock=broker_local`.
+- Range entirely outside the corpus span → `REFUSED (range outside corpus [first_ts, last_ts])`.
+- Range inside the corpus span but with **no bars** (weekend, holiday, the 00:00–00:45 daily-open
+  gap on the MT5 XAUUSD corpus, F-080) → `0 bars in range` in the header and every section prints
+  `0 rows (range=…, no bars)` — a distinct state, never read as "nothing happened".
+
+**Filter per section (same keys as A4, widened to a range)**
+
+| Section | Range filter |
+|---|---|
+| Layers (`layer_trace`) | `bar_idx BETWEEN row_from AND row_to` (cross-check: `trace_id` suffix inside range) |
+| Bar structure / CRT construction | `bar_index BETWEEN row_from AND row_to` |
+| Events | `timestamp BETWEEN from AND to` |
+| Telemetry with `timestamp` | `timestamp BETWEEN from AND to` |
+| Telemetry with only `candle_index` | translate the range ends through the run's events (`candle_index ↔ timestamp`); if either end has no event anchor → `UNRESOLVED (no engine index anchor at range end)`; run-level aggregates (e.g. `TRANSITION_COUNTER`) → `NOT RANGEABLE (run aggregate)`, never silently shown as if in range |
+| Episodes alive (`CANDIDATE_LIFECYCLE`) | overlap: `first_seen_idx ≤ i_to AND last_seen_idx ≥ i_from` in engine numbering; basis checked in A6, else `UNVERIFIED` |
+| Trades | three counts printed separately: **opened in range**, **closed in range**, **open at any point in range** (`opened_at ≤ to AND closed_at ≥ from`); the listing uses "open at any point", each row flagged `opened_before` / `closes_after` when it crosses a boundary |
+| Features (`bar_matrix_features`) | `timestamp BETWEEN from AND to`, same `corpus_sha256` + `schema_hash` gate as A4 |
+| Research labels (`clean_labels`) | `timestamp BETWEEN from AND to`, labelled research cost world |
+
+- Layer / event / telemetry counts in the card are **the range's counts**; the header also
+  prints the whole-run totals beside them, so a range count is never mistaken for the run's.
+- `--layer` / `--status` / `--section` / `--json` combine with the range unchanged.
+- **Trades and rejections keep their ready-to-paste `trace_id`**, so a range read hands off
+  directly to A4 for any single bar.
+
+**Why a range and not a clock conversion.** The use case is "read this part of the run next to a
+chart". Charts (TradingView) display UTC or a chosen zone; artifacts are broker-local. The tool
+stays in the artifact's clock and prints the basis; converting a chart time to broker time is the
+reader's step (measured offset, e.g. F-080's `+3h` in summer on OANDA↔MT5), not the tool's.
+
 ### A4. `--trace-id RUN:INSTR:TS`: bar dossier
 - Parse with `split(":", 2)`, because the timestamp itself contains `:`. Resolve the run
   (A2). Convert the timestamp to a raw CSV row from the run's corpus, and refuse if the
@@ -133,6 +188,13 @@ Build small fixtures in `tmp_path`: a run folder with `trades.csv`/`events`/`tel
   telemetry with no event anchor → `UNRESOLVED`.
 - A corpus `sha256` mismatch refuses the dossier.
 - `bar_structure.bar_index == layer_trace.bar_idx` on the same bar.
+- **Time range (A3b):** both ends inclusive; `--from` only and `--to` only; date shorthand;
+  `from > to` refuses; a zoned value (`Z`, `+03:00`) refuses; range outside the corpus refuses;
+  a range with no bars (fixture gap) prints `0 bars in range` and `0 rows (range=…, no bars)` in
+  every section; a trade opened before `--from` and closed inside is listed and flagged
+  `opened_before`, and counted in "closed in range" but not "opened in range";
+  `TRANSITION_COUNTER` prints `NOT RANGEABLE`; `--from` with `--trace-id` exits with a usage
+  error; range counts and whole-run totals both appear and differ on the fixture.
 
 ## Phase B — switch `layer_trace` on in a shadow config (separate change, after A)
 
@@ -169,6 +231,11 @@ Build small fixtures in `tmp_path`: a run folder with `trades.csv`/`events`/`tel
      spans, the TRADE_OPENED event, trade `CRT-0001` (`candle_idx` 11427), features row
      `_pos` 11426 or `REFUSED` with both schema hashes.
    - `query_trace.py --run-id run_20260916_044942` → layers `NOT RECORDED`, trades with trace_ids.
+   - `query_trace.py --run-id run_20260915_222314 --from 2024-11-12T14:00:00 --to 2024-11-12T17:00:00`
+     → header `clock=broker_local`, 13 bars in range; trades: `CRT-0001` opened and closed in
+     range (15:30 → 15:45); range layer counts ≤ whole-run totals, both printed.
+   - `query_trace.py --run-id run_20260915_222314 --from 2024-11-16 --to 2024-11-17` (a weekend)
+     → `0 bars in range`, every section `0 rows (range=…, no bars)`.
 4. `python scripts/maintenance/check_governance_invariants.py --all` — no new failures beyond the
    pre-existing baseline captured in step 1.
 5. `construction_protocol.py validate-completion` on the manifest, then `check`.

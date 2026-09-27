@@ -409,6 +409,17 @@ Written by `PromotionManager._execute_promotion()` on every successful promote.
 
 ✅ **Runtime status**: Confirmed consumed by `src/runtime/backtest_v2.py` via `BacktestConfig.from_prod_config()`.
 
+**Optional K23 keys** (read with a Python-level legacy default, not `_require`d; deliberately *not* `CRTConfig` fields; all default OFF so existing configs are byte-identical; each is stamped into `summary.json`):
+
+| Key                        | Type | Default            | Effect                                                                 |
+| -------------------------- | ---- | ------------------ | ---------------------------------------------------------------------- |
+| `htf_reset_exempt_sweep`   | bool | `false`            | F4: an HTF-window flip no longer resets SWEEP (EXPANSION/RETEST already exempt). |
+| `sl_anchor`                | str  | `"displacement"`   | F3: `"sweep_extreme"` puts the stop beyond the swept wick extreme -/+ `crt_engine.sl_atr_buffer * atr`; also switches the stamped `reference_level` to `sweep_extreme`. Any other value raises. |
+| `session_window_basis`     | str  | `"broker_static"`  | F2: `"exchange_local"` resolves each session in its own exchange zone per date (`features.broker_clock.exchange_sessions_at`), for the CRT session filter, `score_time` and the range-init label. Requires `exchange_session_windows`. MT5-sourced corpora only. Any other value raises. |
+| `exchange_session_windows` | dict | absent             | F2: `{"LONDON": {"tz": "Europe/London", "open": "08:00", "close": "17:00"}, ...}`, half-open `[open, close)` in the zone's own local time. Required (no guessed hours) when `session_window_basis="exchange_local"`; tz/HH:MM validated at load; every `allowed_sessions` name except `OVERLAP` must have an entry. |
+
+Manifests: `CH-k23-f4-sweep-htf-exempt`, `CH-k23-f3-sl-anchor-sweep-extreme`, `CH-k23-f3-oracle-arm-stamping`, `CH-k23-f2-exchange-session-windows` under `docs/governance/build_manifests/`.
+
 ---
 
 ## `feature_monitor` — Drift Detector
@@ -686,3 +697,135 @@ SQLite-like trade store for live mode: `path`, `wal_mode`, `timeout`.
 | `src/bitnet/quality_check.py` | BitNet quality check | Utility file, no runtime dependency. |
 | `src/bitnet/bitnet_tools.py` | BitNet utilities | Utility file, no runtime dependency. |
 | `src/bitnet/benchmark.py` | BitNet benchmark | Utility file, no runtime dependency. |
+
+---
+
+## Appendix T: Threshold & Parameter Registry (STORY-25.33)
+
+> **Audit only — no value in this table was changed by the audit that produced it.**
+> Measured 2026-09-18 against `ACTIVE_VERSION` = `v2_htfcrt_2026_08` (§4.0 `ORIENT_RUNTIME`),
+> the post-correction `behavior_census.py` report, and each consumer's source. Scope is the
+> surfaces STORY-25.33 names — RSI/ATR · BitNet · RR · ZoneGate · the decision surfaces they
+> feed — plus the residual hard-coded debt listed after the table.
+>
+> **The `Authority` column is the §6.5 Authority Ladder, not an importance ranking.** It records
+> what each knob has actually *earned*: `Information` = the phenomenon is detected/tunable but no
+> measured ΔG001 benefit exists · `Economic` = measured ΔG001 benefit · `Authority` = permitted to
+> influence production · `INERT` = measured non-pivotal, retained. **Config-driving a knob grants
+> tunability, never authority** — F-036 is the standing precedent (ZoneGate's knobs were
+> externalized, then measured to change nothing).
+
+| Threshold | Module | Config key | Value | Authority |
+|---|---|---|---|---|
+| `rsi_period` | `features/feature_pipeline.py` | `feature_pipeline.rsi_period` | `14` | Authority — live feature input; §6.5 EXCEPTION 2026-07-18, parity-proven |
+| `rsi_overbought` / `rsi_oversold` | `features/feature_pipeline.py` | `feature_pipeline.rsi_overbought` / `.rsi_oversold` | `70` / `30` | Authority — live |
+| `atr_period` | `features/feature_pipeline.py` | `feature_pipeline.atr_period` | `14` | Authority — live; FM-041 registered identity |
+| `ema_fast_span` / `ema_slow_span` | `features/feature_pipeline.py` | `feature_pipeline.ema_fast_span` / `.ema_slow_span` | `9` / `21` | Authority — 38-dim vector EMA (distinct from `crt_engine.ema_fast/slow` = 2/5, the soft-confirmation EMA) |
+| `macd_fast/slow/signal` | `features/feature_pipeline.py` | `feature_pipeline.macd_*` | `12` / `26` / `9` | Authority — live |
+| `bb_period` / `bb_std` | `features/feature_pipeline.py` | `feature_pipeline.bb_period` / `.bb_std` | `20` / `2.0` | Authority — live |
+| `swing_window` | `features/feature_pipeline.py` | `feature_pipeline.swing_window` | `2` | Authority — **highest blast radius**; sets the FC1-A causal publication delay, not just pivot width. Changing it invalidates every artifact certified against the old value |
+| `normalization_basis` | `features/feature_pipeline.py` | `feature_pipeline.normalization_basis` | `atr_relative` | Information — identity selector, not a period. F-061/F-064: the default arm carries a measured decision-surface cost; the corrected arm has **no** production authority |
+| `session_timestamp_basis` | `features/feature_pipeline.py` | `feature_pipeline.session_timestamp_basis` | `broker_local` | Information — F-066: 53.36% of XAUUSD bars carry the wrong session label under the default; flipping is a separately gated decision |
+| `atr_multiplier_min` | `config_layer/state_identity.py` | `params.atr_multiplier_min` | `1.5` | Authority — **hashed** (`params` tier) |
+| `body_ratio_min` | `config_layer/state_identity.py` | `params.body_ratio_min` | `0.7` | Authority — **hashed** |
+| `retest_depth_max` | `config_layer/state_identity.py` | `params.retest_depth_max` | `0.25` | Authority — **hashed** |
+| `score_threshold` | `config_layer/state_identity.py` | `crt_engine.score_threshold` | `0.45` | Authority — live spine gate; **not** hash-covered (see note below) |
+| `tier_1_threshold` / `tier_2_threshold` | `config_layer/state_identity.py` | `crt_engine.tier_1_threshold` / `.tier_2_threshold` | `0.75` / `0.3` | Authority — live sizing tiers; not hash-covered |
+| `tp1_atr_multiplier` / `tp2_atr_multiplier` | `config_layer/state_identity.py` | `crt_engine.tp1_atr_multiplier` / `.tp2_atr_multiplier` | `1.0` / `2.0` | Authority — live exit geometry; not hash-covered. F-087: the exit is **not** the binding constraint |
+| `tp1_atr_multiplier_breakout/_pullback/_reversal` | `config_layer/state_identity.py` | `crt_engine.tp1_atr_multiplier_*` | `1.5` / `0.8` / `1.0` | Authority — intent-specific; not hash-covered |
+| `conf_alpha` / `conf_beta` / `conf_floor` / `conf_weights` | `config_layer/state_identity.py` | `crt_engine.conf_*` | `0.7` / `0.3` / `0.2` / `[0.35,0.35,0.15,0.15]` | Authority — live confirmation scoring; not hash-covered |
+| `score_component_weights` | `config_layer/state_identity.py` | `crt_engine.score_component_weights` | `[0.35,0.25,0.2,0.2]` | Authority — F-052: missing key now **fail-closed**, the CODE fallback was removed |
+| `max_spread_pct` | `config_layer/state_identity.py` | `crt_engine.max_spread_pct` | `0.05` | Authority — live execution guard |
+| `soft_conf_max_candles` | `config_layer/state_identity.py` | `crt_engine.soft_conf_max_candles` | `3` | Authority — live; F-067 measured the double-EMA interaction as ledger-neutral (n=17) |
+| `bitnet_main_threshold` | `config_layer/state_identity.py` | `crt_engine.bitnet_main_threshold` | `0.55` | **INERT** — F-004: `use_bitnet:false` on the active config, so the gate never fires. F-055: enabling it measured ΔE = −0.13R, 0/4 majors improve |
+| `top_k` / `cluster_min_n` / `cluster_spread_max` | `core/engine_runner.py` → `engines/zone_gate_engine.py` | `engine_runner.zone_gate.*` | `3` / `2` / `0.15` | **INERT** — F-036: ΔG001 ≡ 0, byte-identical entries ∀ `top_k` across BNB/ETH/BTC/SOL. Tunable, non-pivotal |
+| `zone_cluster_threshold` / `zone_min_samples` | `core/engine_runner.py` | `engine_runner.zone_cluster_threshold` / `.zone_min_samples` | `0.25` / `50` | Information — F-041B: 0/8 zones clear honest E>0; gate is geometric, no live risk |
+| `confidence_bypass_threshold` | `config_layer/rr/rr_pattern_miner.py` | `rr_model.confidence_bypass_threshold` | `0.3` | **INERT / mis-specified** — F-044: 100% in-sample bypass; the gate is mis-scaled for a rank-27 Mahalanobis form. `rr_fusion.enabled:false` per F-038 |
+| `drift_threshold` | `config_layer/rr/` | `rr_model.drift_threshold` | `1.5` | Information — RR path inert while `rr_fusion` disabled |
+| `min_samples` / `dataset_min_samples` | `config_layer/rr/` | `rr_model.min_samples` / `.dataset_min_samples` | `20` / `20` | Authority — training-time admission gate |
+| `rr_threshold` | `core/decision_engine.py` | `decision_engine.rr_threshold` | `1.5` | **RETIRED but retained** — F-048: the DecisionEngine RR gate was removed; economic RR is owned solely by `UltronRiskGate.min_rr_ratio`. Key kept hash-neutral so nobody "restores" it |
+| `p_win_threshold` / `score_threshold` / `weak_component_threshold` | `core/decision_engine.py` | `decision_engine.*` | `0.4` / `0.45` / `0.4` | Authority — live semantic-approval gates |
+| `threshold_min` / `threshold_max` / `threshold_percentile` | `core/dynamic_threshold.py` | `decision_engine.threshold_*` | `0.45` / `0.65` / `85` | Authority — fully CONFIG_DRIVEN (census-pinned; zero code constants) |
+| `weight_crt` / `weight_gaussian` / `weight_zone_gate` / `weight_rr` | `core/fusion_engine.py` | `fusion_engine.weight_*` | `0.4` / `0.2` / `0.2` / `0.2` | Authority — live fusion. F-070: the gate vetoed 0/30 CRT entries on the active epoch |
+| `tier_full` / `tier_half` / `tier_quarter` | `core/fusion_engine.py` | `fusion_engine.tier_*` | `0.75` / `0.6` / `0.5` | Authority — live |
+| `min_consensus_agreement` / `min_consensus_signals` | `core/fusion_engine.py` | `fusion_engine.min_consensus_*` | `0.6` / `2` | **Dormant** — consensus gate is NULL on the live path (live gate is `tier_*`) |
+| `gaussian_weight` / calibration constants | `config_layer/crt_gaussian_scorer.py` | `gaussian_scorer.*` | see §`gaussian_scorer` | **INERT** — F-060: the live Gaussian channel degenerates to a near-constant ≈0.8825; all 3 ablation cells byte-identical |
+| `min_rr_ratio` | `core/ultron_risk_gate.py` | `ultron_risk_gate.min_rr_ratio` | `1.5` | Authority — the **sole** owner of economic reward:risk since F-048 |
+| `max_risk_per_trade_pct` / `max_daily_loss_pct` / `max_portfolio_risk_pct` / `max_trades_per_day` | `core/ultron_risk_gate.py` | `ultron_risk_gate.*` | `1.0` / `3.0` / `5.0` / `10` | Authority — live risk caps |
+| `spread_pips` / `slippage_pips` / `min_sl_pips` | `core/ultron_risk_gate.py` | `ultron_risk_gate.*` | `0.0` / `0.0` / `0.0` | **Dormant** — F-082 declared these 4 keys at their exact in-code defaults behind `>0` guards that are false; the cost tax is declared, not activated |
+| `soft_drift_z` / `hard_drift_z` / `window_size` | `features/feature_monitor.py` | `feature_monitor.*` | `2.5` / `3.0` / `500` | Information — F-008: drift is DETECTED but not acted on (no block / size-down) |
+
+### Note on hash coverage (open `TruthConflict`, §6.2 rule 3 — not resolved by this audit)
+
+`scripts/maintenance/_compute_hash.py:70-76` hashes **only** the `params` block. On the active
+config that is **5 keys**; the `crt_engine` section carries **45** more (37 numeric scalars +
+8 structured: `conf_weights`, `risk_score_weights`, `score_component_weights`, `sizing_bands`,
+`session_windows`, `exit_model`, `use_bitnet`, `shadow_advisory_only`) that
+<!-- CORRECTED 2026-09-18: was "41" — re-counted at source against the active config
+     (v2_htfcrt_2026_08); the two key sets are fully DISJOINT there, so all 50 keys reach
+     CRTConfig and only 5 are hash-covered. -->
+
+`production_config.py:356-366` merges into the same `CRTConfig`
+(`merged = {**coerced, **params}` — `crt_engine` = defaults, `params` = tuned overrides, params
+wins). Every row above marked *"not hash-covered"* can therefore be edited without changing the
+config hash that `promotion_log.jsonl` records.
+
+Two defensible readings — **this audit deliberately does not pick one**: *intentional tiering*
+(`production_config.py:358` declares the precedence in-source; §6.5 states top-level sections are
+hash-neutral by design; `ConfigBuilder._validate_override_keys` still rejects unknown keys in both
+tiers) versus *F-018/F-056 silent-config gap* (the hash is the promotion audit token). Recorded in
+STORY-20.32's evidence for a user ruling.
+
+### Residual hard-coded debt (9 modules, 10 knobs)
+
+Measured by `behavior_census.py` after its 2026-09-18 classifier correction (which removed 6
+false positives — zero-initialised dataclass *result* fields were being counted as knobs).
+Current maturity: `CONFIG_DRIVEN 47 · CONFIG_WIRED 9 · HARD_CODED 9`.
+
+Each was then triaged against its actual call sites. **Only 4 of the 10 are genuine debt** — the
+census links a constant to config by *name*, so it cannot see a constant that serves as a
+documented signature default whose callers strict-read a *differently-named* config key.
+
+| Knob | Module | Triage verdict |
+|---|---|---|
+| `DEFAULT_DRIFT_THRESHOLD = 2.5` | `features/feature_monitor.py:60` | **NOT DEBT** — signature default at `:137`; both production callers strict-read `feature_monitor.soft_drift_z` (`backtest_v2.py:2193`, `live_engine_hook.py:392`). Same documented-default pattern STORY-2.6 was closed on |
+| `_DEFAULT_WEIGHTS` | `core/hierarchical_meta_fusion.py:127` | **NOT DEBT (inert)** — constructor-overridable at `:142`; F-012 records HMF as sidecar-only with zero spine consumption |
+| `LAMBDA_DECAY_DEFAULT = 0.0` | `features/dataset_builder.py:185` | **NOT DEBT** — no consumer in `src/`; value `0.0` = disabled |
+| `SUMMARY_50_MAX` / `SUMMARY_200_MAX` | `governance/semantic_os.py:124-125` | **STRUCTURAL** — doc-summary length bounds, not trading behavior |
+| `_WARMUP = 60` | `governance/strategy_backtest.py:50` | **BORDERLINE** — signature default at `:131`, fed only internally from `multi_strategy_validator.py:118`. Arguably STRUCTURAL (a warmup window) |
+| `_DEFAULT_DECAY = 0.7` (+ `_DEFAULT_HIGH_CONVICTION`, `_DEFAULT_MIN_CONFIRMS`) | `core/signal_belief_tracker.py:76-78` | **GENUINE — and a live §6.5 A1 violation.** Read at `:82-84` as `cfg.get(key, literal)`, the soft-default form §6.5 deprecates. `SignalBeliefTracker` is a **live post-fusion gate** (`engine_runner.py:517`), and `signal_belief` is **`null` on the active config**, so these defaults are what actually runs — the F-018 class |
+| `_TRADE_RATE_WARN = 0.3` | `core/signal_audit.py:36` | **GENUINE** — consumed directly in a comparison at `:191`; no config key, no override parameter. `SignalAuditRecorder` is constructed on the live path (`engine_runner.py:507`) |
+| `MAX_CORRUPTION_RATIO = 0.1` | `journal/trade_logger.py:25` | **GENUINE + DUPLICATED** — direct comparison at `:108`, and `replay/replay_memory_engine.py:41` defines its own identical copy used at `:402`. Two sources of one truth (§6.2 rule 5) |
+| `_MIN_PORTFOLIO_WIN_RATE = 0.3` | `governance/multi_strategy_validator.py:57` | **GENUINE** — signature default at `:70`; no caller feeds it from config, so it is effectively hard-coded |
+
+### Migration outcome — STORY-18.15 (2026-09-18)
+
+All four genuine sites were migrated in a separately authorized turn, as **whole sibling groups**
+(13 knobs), because this census matches by name and had flagged only one member of each group.
+Every site uses the `AcceptanceController.from_prod_config` two-tier idiom
+(`src/core/acceptance_controller.py:67-101`): a `from_prod_config()` that strict-reads a
+required-key list and raises, over an `__init__` whose module constants remain the test seam.
+
+| Section | Keys | Note |
+|---|---|---|
+| `engine_runner.signal_belief` | `decay` `high_conviction_threshold` `min_confirmations` (+`enabled`) | **Restored** — already present in `v1_multi_2026_03` / `v3_multi_2026_06` with byte-identical values. `enabled` stays `false`: knobs declared, gate not armed |
+| `signal_audit` | `zone_pass_warn` `fusion_pass_warn` `trade_rate_warn` | new top-level |
+| `trade_journal` | `max_corruption_ratio` | new top-level; **one home** for a value `trade_logger.py` and `replay_memory_engine.py` each used to define (§6.2 rule 5) |
+| `multi_strategy_validator` | `min_strategy_trades` `min_portfolio_win_rate` `max_portfolio_drawdown` `warmup` `max_forward_candles` | new top-level; the last two were **bare signature literals**, declared nowhere |
+
+**Hash-neutral** — no key touches `params`; `_compute_hash.py` re-verified `match: YES`.
+**No value changed:** 14/14 value-equality checks passed with exact type match. **Fail-fast proven
+reachable:** for each section a key was removed and the reader confirmed to raise — a strict read
+that cannot be *shown* to raise is the F-079/F-083 silent-gap class. 60 existing tests pass
+unedited; census `HARD_CODED 9 → 5`, all four modules now `CONFIG_WIRED` and pinned in
+`_MIGRATED_WIRED`.
+
+Design note worth keeping: strictness for `signal_belief` sits in `BeliefRegistry.get()`, **not**
+the constructor — `backtest_v2.py:2227-2239` wraps registry construction in a `try/except` that
+degrades to "belief gate DISABLED", so a constructor raise would have become a silent fail-open,
+strictly worse than the soft default it replaced.
+
+The 5 knobs still reported `HARD_CODED` are exactly the not-debt / borderline / structural rows
+above and are **intentionally** left: `feature_monitor` (documented signature default),
+`hierarchical_meta_fusion` (F-012 sidecar), `dataset_builder` (`0.0` = disabled), `semantic_os`
+(doc tooling), `strategy_backtest._WARMUP` (borderline).

@@ -157,7 +157,7 @@ def run_certification(corpus_path: Path, store_root: Path) -> dict[str, Any]:
             raise _Skip("L1/L2 already present")
         import pandas as pd
         from features.feature_pipeline import FeaturePipeline
-        from features.feature_schema import CANONICAL_FEATURES
+        from features.feature_schema import CANONICAL_FEATURES, SCHEMA_VERSION
         from features.feature_states import FeatureStateEncoder
 
         pdf = pd.DataFrame(rows)
@@ -191,9 +191,9 @@ def run_certification(corpus_path: Path, store_root: Path) -> dict[str, Any]:
             values = [float(erow[n]) for n in names]
             l1 = {
                 **l0_base,
-                "schema_version": "5.0",
+                "schema_version": SCHEMA_VERSION,
                 "FEATURE_ORDER_HASH": order_hash,
-                "feature_dim": 48,
+                "feature_dim": len(names),
                 "values": values,
             }
             r = store.write("L1", l1, {"feature_order": order_bytes})

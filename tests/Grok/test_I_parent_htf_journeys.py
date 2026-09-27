@@ -10,6 +10,7 @@ They do not ask the M15 StateMachine to take a parent hop, and they do not
 treat DISTRIBUTION vs DISTRIBUTION_C3 as a journey collision.
 """
 from __future__ import annotations
+from tests.helpers.crt_config import crt_config_for_test
 
 from datetime import datetime
 
@@ -38,7 +39,7 @@ _PARENT_SPINE = (
 
 
 def _sm() -> StateMachine:
-    return StateMachine(CRTConfig())
+    return StateMachine(crt_config_for_test())
 
 
 def test_parent_spine_edges_are_in_valid_transitions():

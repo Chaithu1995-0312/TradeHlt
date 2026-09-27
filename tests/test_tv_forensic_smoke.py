@@ -264,6 +264,115 @@ def test_engine_data_validate_engine_events_real_shot_plan_is_clean():
     assert problems == [], f"unexpected engine_events problems: {problems}"
 
 
+# ── STORY-13.20 — two shot_plan schemas name an entry differently ────────────
+#
+# `shot_plan.json` names an engine_events entry `event`; the later
+# `shot_plan_fresh_month_20260917.json` names it `label` (and adds `kind`).
+# capture_tv.build_events hard-read `ev["event"]` and died with KeyError on the
+# newer plan, while validate_engine_events read it defensively and so reported
+# all 12 problems as `event: None` -- wrong in opposite directions, both fixed
+# by one resolver in engine_data (the module both sides already import).
+
+
+def test_engine_data_event_name_resolves_both_plan_schemas():
+    _add_tool_dir_to_path()
+    import engine_data as ed
+
+    assert ed.event_name({"event": "SWEEP"}) == "SWEEP"          # shot_plan.json
+    assert ed.event_name({"label": "anchor_0"}) == "anchor_0"    # fresh-month plan
+    assert ed.event_name({"event": "  SWEEP  "}) == "SWEEP"
+    # `event` wins when a plan somehow carries both, so the legacy pack's
+    # transcription is never silently relabelled by an added `label`.
+    assert ed.event_name({"event": "SWEEP", "label": "anchor_0"}) == "SWEEP"
+    # Tolerant by contract: None, never a raise, so the validator below can
+    # report an unnamed entry instead of blowing up mid-list.
+    assert ed.event_name({"time": "2026-08-17 01:00"}) is None
+    assert ed.event_name({"event": "   "}) is None
+
+
+def test_engine_data_require_event_name_fails_closed_naming_the_entry():
+    """A malformed entry must say WHICH entry. The original KeyError named the
+    missing key and nothing else, which is why the fresh plan's failure could
+    not be traced to one of its 12 anchors without a debugger."""
+    _add_tool_dir_to_path()
+    import engine_data as ed
+
+    assert ed.require_event_name({"label": "anchor_7"}) == "anchor_7"
+
+    with pytest.raises(ValueError) as exc:
+        ed.require_event_name({"time": "2026-08-17 01:00", "kind": "CLOCK_ANCHOR"})
+    msg = str(exc.value)
+    assert "2026-08-17 01:00" in msg, f"failure does not name the entry: {msg}"
+    assert "CLOCK_ANCHOR" in msg
+
+
+def test_engine_data_validate_reports_unnamed_entry_without_raising():
+    _add_tool_dir_to_path()
+    import engine_data as ed
+
+    ts = datetime(2026, 7, 28, 4, 0, 0)
+    engine_bars = {ts: ed.Bar(ts, o=4058.07, h=4060.32, l=4053.91, c=4058.08)}
+
+    unnamed = [{"time": "2026-07-28 04:00", "level": 4053.91}]
+    problems = ed.validate_engine_events(unnamed, engine_bars)
+    assert len(problems) == 1 and problems[0]["problem"] == "UNNAMED_EVENT"
+
+    # A `label`-schema entry is ordinary input, not a problem.
+    labelled = [{"label": "anchor_0", "time": "2026-07-28 04:00", "level": 4053.91}]
+    assert ed.validate_engine_events(labelled, engine_bars) == []
+
+    # And a problem on a `label` entry carries the name, not None -- the half of
+    # the defect that produced 12 rows of `event: None` on the fresh plan.
+    missing = [{"label": "anchor_0", "time": "2026-07-28 04:07"}]
+    problems = ed.validate_engine_events(missing, engine_bars)
+    assert len(problems) == 1 and problems[0]["event"] == "anchor_0"
+
+
+def test_every_on_disk_shot_plan_entry_resolves_a_name():
+    """Both plans that ship in the tool, straight off disk. The fresh-month plan
+    is the one that crashed capture_tv; this fails if a third schema appears."""
+    _add_tool_dir_to_path()
+    import engine_data as ed
+
+    plans = sorted(_TOOL_DIR.glob("shot_plan*.json"))
+    assert len(plans) >= 2, f"expected both shot plans on disk, found {plans}"
+    for path in plans:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        for i, ev in enumerate(doc.get("engine_events", [])):
+            assert ed.event_name(ev), f"{path.name} entry {i} has no name: {sorted(ev)}"
+
+
+def test_capture_tv_build_events_handles_the_label_schema_plan():
+    """End-to-end reproduction of STORY-13.20: build_events over the real
+    fresh-month plan. Raised KeyError('event') before the fix."""
+    pytest.importorskip(
+        "playwright.sync_api", reason="capture_tv imports playwright at module level"
+    )
+    _add_tool_dir_to_path()
+    import capture_tv as ct
+
+    plan_path = _TOOL_DIR / "shot_plan_fresh_month_20260917.json"
+    if not plan_path.exists():
+        pytest.skip(f"{plan_path.name} not present in this environment")
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+
+    class _Snap:  # one bar wide enough to contain the stub epoch
+        bars = [{"t": 0, "x": 100.0, "o": 1.0, "h": 2.0, "l": 0.5, "c": 1.5}]
+
+    class _Clock:
+        def epoch(self, broker):
+            return 0
+
+    events = ct.build_events(plan, _Snap(), _Clock(), {}, "15")
+    assert len(events) == len(plan["engine_events"])
+    for rec in events:
+        assert rec["event"], f"record emitted with no event name: {rec}"
+        # `kind` is carried through untouched. CLOCK_ANCHOR entries are still
+        # emitted -- whether annotate.py should DRAW them is an open semantic
+        # question, deliberately not decided by this bugfix.
+        assert "kind" in rec
+
+
 # ── D-6 (2026-08-16 review) — stagger() no longer collides same-named events ─
 
 def test_annotate_stagger_keys_on_event_and_broker_not_event_alone():

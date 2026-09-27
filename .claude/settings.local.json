@@ -134,7 +134,8 @@
       "Bash(python scripts/maintenance/gen_crt_state_identity.py)",
       "Bash(git diff *)",
       "Bash(python mermaid_boxes.py)",
-      "Bash(venv/Scripts/python.exe -c ' *)"
+      "Bash(venv/Scripts/python.exe -c ' *)",
+      "Bash(git config *)"
     ]
   },
   "hooks": {

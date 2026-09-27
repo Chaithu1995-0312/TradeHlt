@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Communication board</title>
+<style>
+  :root {
+    --ink: #1c1915;
+    --muted: #6b645c;
+    --line: #e4ddd2;
+    --paper: #f7f3ec;
+    --card: #fffdf8;
+    --read: #1f6b4a;
+    --write: #8a4b12;
+    --done: #1f6b4a;
+    --open: #8a4b12;
+    --hold: #6b645c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 15px/1.45 "Segoe UI", sans-serif;
+  }
+  header {
+    padding: 22px 28px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  header h1 { font-size: 22px; font-weight: 650; margin: 0 0 4px; }
+  header p { margin: 0; color: var(--muted); max-width: 68ch; }
+  main {
+    display: grid;
+    grid-template-columns: 280px 1fr 320px;
+    gap: 16px;
+    padding: 16px 20px 28px;
+  }
+  section {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  h2 { font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  .track { border-top: 1px solid var(--line); padding: 10px 0; }
+  .track:first-of-type { border-top: 0; padding-top: 0; }
+  .track b { display: block; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .pill {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 99px;
+    padding: 2px 7px;
+    margin-top: 4px;
+  }
+  .done { color: var(--done); background: #e7f4ec; }
+  .open { color: var(--open); background: #f8efe4; }
+  .hold { color: var(--hold); background: #eeeae4; }
+  .group { margin-bottom: 12px; }
+  .group h3 { font-size: 12px; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+  button.trigger {
+    display: block;
+    width: 100%;
+    text-align: left;
+    margin: 0 0 6px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+    font: inherit;
+  }
+  button.trigger .kind { float: right; font-size: 11px; color: var(--muted); }
+  button.trigger.read .kind { color: var(--read); }
+  button.trigger.write .kind { color: var(--write); }
+  button.trigger.on { border-color: var(--ink); background: #fff8ee; }
+  ol.seq { margin: 0; padding-left: 18px; }
+  ol.seq li { margin: 6px 0; }
+  .word {
+    font-family: Consolas, monospace;
+    font-size: 18px;
+    margin: 0 0 8px;
+  }
+  .source { color: var(--muted); font-size: 12px; margin-top: 12px; }
+  .rail { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .rail span {
+    font-size: 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3px 6px;
+  }
+  .rail span.here { background: #1c1915; color: #fff; border-color: #1c1915; }
+  @media (max-width: 980px) {
+    main { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Communication board</h1>
+  <p>Chat is not the tracker. Pick a trigger. The board shows the sequence that word already means. Nothing here sends a message.</p>
+</header>
+<main>
+  <section>
+    <h2>Tracks so far</h2>
+    <div class="track">
+      <b>Design links</b>
+      <div class="meta">Five folders. Originals stayed put.</div>
+      <span class="pill done">recorded</span>
+    </div>
+    <div class="track">
+      <b>Flow check</b>
+      <div class="meta">ChatGPT pick to PPTX. Path is not connected. No private LLM in it.</div>
+      <span class="pill done">recorded</span>
+    </div>
+    <div class="track">
+      <b>PPTX on P0–P8</b>
+      <div class="meta">Local paint only. AI image and enhance refused. No ACTIVE_VERSION.</div>
+      <span class="pill done">recorded</span>
+    </div>
+    <div class="track">
+      <b>Ownership audit</b>
+      <div class="meta">WORKFLOW_RECORD.md exists. Audit trigger has not been run.</div>
+      <span class="pill open">open</span>
+    </div>
+    <div class="track">
+      <b>Trade outer ring</b>
+      <div class="meta">Not this board. That ring is trade strategy, not these tracks.</div>
+      <span class="pill hold">out of scope</span>
+    </div>
+  </section>
+  <section>
+    <h2>Triggers</h2>
+    <div class="group">
+      <h3>Tier 1</h3>
+      <div id="tier1"></div>
+    </div>
+    <div class="group">
+      <h3>Tier 2</h3>
+      <div id="tier2"></div>
+    </div>
+  </section>
+  <section>
+    <h2>What the word does</h2>
+    <div class="word" id="word">Orient</div>
+    <div class="meta" id="blurb"></div>
+    <ol class="seq" id="seq"></ol>
+    <div class="rail" id="rail"></div>
+    <p class="source">Working copy in workspaces/grok-bot. Words copied from docs/architecture/trigger-vocabulary.md. The JarvisUI file is the earlier copy and was not moved.</p>
+  </section>
+</main>
+<script>
+const TRIGGERS = [
+  { name: "Continue", tier: 1, kind: "write", blurb: "Resume the active track and advance one step.", seq: ["Orient", "Map", "Next step", "Validate", "Log"] },
+  { name: "Next step", tier: 1, kind: "write", blurb: "Stay inside the current milestone. Do the next discrete step.", seq: ["Load the step", "Make the change", "Score the Five Questions", "Log"] },
+  { name: "Next plan", tier: 1, kind: "write", blurb: "Validate the current milestone, then enter the next one.", seq: ["Validate current milestone", "Map", "Enter next milestone", "Log"] },
+  { name: "Validate", tier: 1, kind: "read", blurb: "Read-only gate. Does not edit code.", seq: ["pytest per testing.md", "Replay check", "Five Questions", "Log"] },
+  { name: "Implement", tier: 1, kind: "write", blurb: "Only after a plan is approved. Then validate.", seq: ["Exit plan mode", "Additive edits", "Validate", "Log"] },
+  { name: "Orient", tier: 2, kind: "read", blurb: "One screen. Plan, log, memory. Also called Status.", seq: ["Read findings", "Read plan", "Read session log", "Read memory", "One-screen report"] },
+  { name: "Map", tier: 2, kind: "read", blurb: "Where a change lands. Read-only.", seq: ["Codebase state map", "Service boundary map", "Event taxonomy", "Signal flow"] },
+  { name: "Plan", tier: 2, kind: "write", blurb: "Writes a plan under docs/plans. Does not implement.", seq: ["Explore", "Design", "Write docs/plans", "Exit plan mode"] },
+  { name: "Audit", tier: 2, kind: "write", blurb: "Docs only. The open track on this board.", seq: ["Read architecture docs", "Diff against code", "Additive doc fixes", "Log"] },
+  { name: "Sync", tier: 2, kind: "write", blurb: "One topic file only.", seq: ["Read touched code", "Update that topic file", "Bump Updated", "Log"] },
+  { name: "Log", tier: 2, kind: "write", blurb: "Append-only session log.", seq: ["Append the session log entry"] },
+  { name: "Register scripts", tier: 2, kind: "write", blurb: "SITS only. Used when a new script lands.", seq: ["write-stubs", "Seed overlay", "Seed", "Matrix", "Validate SITS floors", "Log"] }
+];
+const PHASES = ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8"];
+function draw(name) {
+  const t = TRIGGERS.find(x => x.name === name);
+  document.getElementById("word").textContent = t.name;
+  document.getElementById("blurb").textContent = t.blurb + (t.kind === "read" ? " Read-only." : " Additive.");
+  const ol = document.getElementById("seq");
+  ol.innerHTML = "";
+  t.seq.forEach(step => {
+    const li = document.createElement("li");
+    li.textContent = step;
+    ol.appendChild(li);
+  });
+  document.querySelectorAll("button.trigger").forEach(b => b.classList.toggle("on", b.dataset.name === name));
+}
+function mount(id, tier) {
+  const host = document.getElementById(id);
+  TRIGGERS.filter(t => t.tier === tier).forEach(t => {
+    const b = document.createElement("button");
+    b.className = "trigger " + t.kind;
+    b.dataset.name = t.name;
+    b.innerHTML = t.name + '<span class="kind">' + (t.kind === "read" ? "read" : "writes") + "</span>";
+    b.onclick = () => draw(t.name);
+    host.appendChild(b);
+  });
+}
+const rail = document.getElementById("rail");
+PHASES.forEach((p, i) => {
+  const s = document.createElement("span");
+  s.textContent = p;
+  if (i === 7) s.className = "here";
+  rail.appendChild(s);
+});
+mount("tier1", 1);
+mount("tier2", 2);
+draw("Audit");
+</script>
+</body>
+</html>

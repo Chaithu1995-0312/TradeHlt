@@ -1,0 +1,218 @@
+[
+  {
+    "class": "BridgeStory",
+    "id": "STORY-5.2",
+    "in_degree": 4,
+    "layer": "core",
+    "out_degree": 29,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-13.16",
+    "in_degree": 1,
+    "layer": "operator",
+    "out_degree": 25,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-38.1",
+    "in_degree": 3,
+    "layer": "operator",
+    "out_degree": 6,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-20.10",
+    "in_degree": 3,
+    "layer": "sidecar",
+    "out_degree": 24,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-20.11",
+    "in_degree": 2,
+    "layer": "sidecar",
+    "out_degree": 115,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-41.21",
+    "in_degree": 1,
+    "layer": "research",
+    "out_degree": 121,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-36.7",
+    "in_degree": 1,
+    "layer": "research",
+    "out_degree": 37,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-36.9",
+    "in_degree": 3,
+    "layer": "sidecar",
+    "out_degree": 65,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-36.11",
+    "in_degree": 1,
+    "layer": "sidecar",
+    "out_degree": 79,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-41.29",
+    "in_degree": 2,
+    "layer": "research",
+    "out_degree": 130,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-20.23",
+    "in_degree": 1,
+    "layer": "sidecar",
+    "out_degree": 1,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-41.32",
+    "in_degree": 2,
+    "layer": "sidecar",
+    "out_degree": 63,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-33.13",
+    "in_degree": 3,
+    "layer": "governance",
+    "out_degree": 5,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-35.1",
+    "in_degree": 3,
+    "layer": "governance",
+    "out_degree": 65,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-29.7",
+    "in_degree": 2,
+    "layer": "operator",
+    "out_degree": 24,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-41.57",
+    "in_degree": 4,
+    "layer": "governance",
+    "out_degree": 69,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-38.5",
+    "in_degree": 4,
+    "layer": "governance",
+    "out_degree": 35,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-42.4",
+    "in_degree": 3,
+    "layer": "sidecar",
+    "out_degree": 53,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-36.25",
+    "in_degree": 3,
+    "layer": "research",
+    "out_degree": 27,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-25.36",
+    "in_degree": 1,
+    "layer": "research",
+    "out_degree": 3,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-59.11",
+    "in_degree": 1,
+    "layer": "operator",
+    "out_degree": 134,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-59.22",
+    "in_degree": 1,
+    "layer": "operator",
+    "out_degree": 8,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-59.5",
+    "in_degree": 2,
+    "layer": "operator",
+    "out_degree": 97,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-60.10",
+    "in_degree": 4,
+    "layer": "data_ingestion",
+    "out_degree": 13,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-60.33",
+    "in_degree": 1,
+    "layer": "sidecar",
+    "out_degree": 30,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-63.4",
+    "in_degree": 2,
+    "layer": "sidecar",
+    "out_degree": 7,
+    "runtime_reachable": true
+  },
+  {
+    "class": "BridgeStory",
+    "id": "STORY-63.5",
+    "in_degree": 1,
+    "layer": "sidecar",
+    "out_degree": 7,
+    "runtime_reachable": true
+  }
+]

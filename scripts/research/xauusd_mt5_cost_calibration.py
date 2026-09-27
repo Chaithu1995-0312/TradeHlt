@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import hashlib
 import json
 import sys
 from pathlib import Path
@@ -48,12 +47,7 @@ from research.mt5_cost_calibration import (  # noqa: E402
     write_swap_json,
 )
 from mt5_analytics.core.mt5_adapter import MT5Adapter  # noqa: E402
-
-
-def _sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    h.update(path.read_bytes())
-    return h.hexdigest()
+from research.provenance import sha256_file as _sha256  # noqa: E402 — research-framework Phase 4 dedup
 
 
 def parse_args() -> argparse.Namespace:

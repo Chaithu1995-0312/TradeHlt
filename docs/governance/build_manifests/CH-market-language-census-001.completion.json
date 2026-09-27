@@ -1,0 +1,26 @@
+{
+  "change_id": "CH-market-language-census-001",
+  "change_classes": ["SCRIPT_LIFECYCLE_CHANGE"],
+  "declared_files": [
+    "scripts/analysis/market_language_census.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/research-readiness/market_language_census_report.json",
+    "docs/research-readiness/market_language_census_report.md",
+    "docs/governance/build_manifests/CH-market-language-census-001.impact.json",
+    "docs/governance/build_manifests/CH-market-language-census-001.completion.json"
+  ],
+  "checks_executed": [
+    "python scripts/analysis/market_language_census.py (emits S1..S8 report; deterministic)",
+    "python -m py_compile scripts/analysis/market_language_census.py (PASS)",
+    "python scripts/governance/seed_script_registry.py (runs; overlay warning: no base stub row)",
+    "python scripts/governance/construction_protocol.py validate-impact ... (APPROVED)",
+    "python -m pytest tests/test_script_registry.py (RAN; 3 pre-existing failures NOT caused by this change)"
+  ],
+  "repo_state_hash": "PENDING",
+  "completion_status": "PENDING",
+  "blockers": [
+    "test_script_registry.py already red on this branch (16+ unregistered WIP scripts + grandfather-pin drift) -- pre-existing, not introduced here",
+    "validate-completion declared-vs-actual gate sees the whole pre-existing uncommitted WIP (hundreds of governed files) as undeclared",
+    "completion_status is PENDING by design: this turn delivers the census + governance artifacts; it does not claim a mechanically-green COMPLETE while the branch carries unrelated in-flight WIP"
+  ]
+}

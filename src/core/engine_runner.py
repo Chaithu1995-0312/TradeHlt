@@ -504,7 +504,9 @@ class EngineRunner:
 
         # Observability + adaptive control
         debug_mode = bool(_cfg_require(config, "debug_mode", "engine_runner"))
-        self._audit      = SignalAuditRecorder(debug_mode=debug_mode)
+        # Config-first: the three leak-detection thresholds read fail-fast from the
+        # signal_audit section (§6.5 A1); debug_mode stays engine_runner-scoped.
+        self._audit      = SignalAuditRecorder.from_prod_config(debug_mode=debug_mode)
         # Config-first: theta bounds / min-history / fusion-percentile read fail-fast from the
         # acceptance_controller section (merged into the base engine config).
         self._acceptance = AcceptanceController.from_prod_config(config)

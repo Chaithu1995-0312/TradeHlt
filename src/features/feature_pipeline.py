@@ -5,8 +5,9 @@ Production-grade feature engineering pipeline for M15 OHLCV data.
 
 Produces a deterministic feature vector of length ``CANONICAL_FEATURE_DIM`` aligned to
 CANONICAL_FEATURES from features.feature_schema.py (the single source of truth).
-That dim is **39** under schema v4.0 — quote the constant, not the number: this docstring
-carried a stale "32" and "38" simultaneously across the v2->v3->v4 migrations.
+That dim is **48** under schema v6.0 — quote the constant, not the number: this docstring
+has previously carried stale "32", "38", and "39" counts across the v2->v3->v4->v5->v6
+migrations (see feature_schema.py's SCHEMA_VERSION comment for the full history).
 
 Only pandas + numpy are used (no TA-lib or other external TA libraries).
 
@@ -32,8 +33,8 @@ Edge Cases:
       ATR-gated features (ema_spread, momentum_score, disp_strength,
       retest_depth) emit NaN during the 14-bar ATR warmup; finalize()
       drops those rows cleanly.
-    - Warmup NaNs: finalize() drops all NaN rows. Empirically ~78 rows for the 38
-      canonical columns, driven by the rolling(50) z-score stacked on trend_strength_raw/
+    - Warmup NaNs: finalize() drops all NaN rows. Empirically ~78 rows for the 48
+      canonical columns (schema v6.0), driven by the rolling(50) z-score stacked on trend_strength_raw/
       macd_hist_raw. NOT driven by ma_200: that column has a 199-row NaN tail but is not
       a canonical feature, so it never reaches finalize()'s dropna subset.
       Callers must ensure sufficient history.
@@ -377,7 +378,8 @@ def build_features(row: "pd.Series") -> dict:
     The row MUST come from a DataFrame that has been processed by
     FeaturePipeline.run() — i.e., all intermediate columns must be present.
 
-    CANONICAL_FEATURES is the SINGLE SOURCE OF TRUTH (48 names under schema v5.0, F-076).
+    CANONICAL_FEATURES is the SINGLE SOURCE OF TRUTH (48 names; dim fixed at v5.0, F-076;
+    current schema is v6.0 — two slots renamed in place, F-107, dim unchanged).
     This function returns EXACTLY those keys — no more, no less.
 
     Args:
@@ -959,7 +961,7 @@ class FeaturePipeline:
 
         Scalar equivalents: derived_math.ema_spread / momentum_score (legacy) and
         derived_math.ema_spread_atr / momentum_score_atr (corrected). Column NAMES and the
-        canonical vector (39-dim, schema v4.0) are the same under either basis -- this selects
+        canonical vector (48-dim, schema v6.0) are the same under either basis -- this selects
         the math, not the schema.
         """
         df = self.df
@@ -1402,8 +1404,8 @@ class FeaturePipeline:
     def build_feature_vector(self) -> np.ndarray:
         """
         Build the (N, len(CANONICAL_FEATURES)) feature matrix from the enriched DataFrame
-        (48 under schema v5.0, F-076; the docstring no longer hardcodes the dim -- see the v3.0/v4.0
-        migration note on CANONICAL_FEATURES in features/feature_schema.py).
+        (48 under schema v6.0; dim fixed at v5.0, F-076; the docstring no longer hardcodes the
+        dim -- see the SCHEMA_VERSION migration history in features/feature_schema.py).
 
         Uses CANONICAL_FEATURES from features.feature_schema — NOT a local list.
         """
@@ -1447,7 +1449,7 @@ class FeaturePipeline:
         -------
         df : pd.DataFrame
             Enriched, NaN-free DataFrame with all len(CANONICAL_FEATURES) canonical features
-            (48 under schema v5.0, F-076).
+            (48 under schema v6.0; dim fixed at v5.0, F-076).
         vectors : np.ndarray, shape (N, len(CANONICAL_FEATURES)), dtype float32
             Feature matrix in canonical CANONICAL_FEATURES order.
         """

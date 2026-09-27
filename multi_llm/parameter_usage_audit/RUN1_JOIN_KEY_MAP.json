@@ -1,0 +1,360 @@
+{
+  "XAUUSD_trades.csv": {
+    "id_like_columns": [
+      "trade_id",
+      "duration_candles",
+      "htf_id",
+      "candle_idx",
+      "liquidity_sweep",
+      "candle_range",
+      "candles_since_sweep",
+      "liquidity_distance",
+      "liquidity_pressure_score",
+      "cost_model_id",
+      "risk_denominator_id",
+      "run_id"
+    ],
+    "sample": [
+      {
+        "trade_id": "CRT-0001",
+        "duration_candles": "1",
+        "htf_id": "XAUUSD-HTF-000714",
+        "candle_idx": "11427",
+        "liquidity_sweep": "0.0",
+        "candle_range": "8.850000381469727",
+        "candles_since_sweep": "8.0",
+        "liquidity_distance": "1.2716033458709717",
+        "liquidity_pressure_score": "0.5295107960700989",
+        "cost_model_id": "backtest_g1g2_v2",
+        "risk_denominator_id": "entry_fill_to_sl__v1",
+        "run_id": "run_20260916_172925"
+      },
+      {
+        "trade_id": "CRT-0002",
+        "duration_candles": "1",
+        "htf_id": "XAUUSD-HTF-000729",
+        "candle_idx": "11672",
+        "liquidity_sweep": "0.0",
+        "candle_range": "5.71999979019165",
+        "candles_since_sweep": "15.0",
+        "liquidity_distance": "3.431417942047119",
+        "liquidity_pressure_score": "0.1798361837863922",
+        "cost_model_id": "backtest_g1g2_v2",
+        "risk_denominator_id": "entry_fill_to_sl__v1",
+        "run_id": "run_20260916_172925"
+      },
+      {
+        "trade_id": "CRT-0003",
+        "duration_candles": "2",
+        "htf_id": "XAUUSD-HTF-001130",
+        "candle_idx": "18092",
+        "liquidity_sweep": "0.0",
+        "candle_range": "4.980000019073486",
+        "candles_since_sweep": "11.0",
+        "liquidity_distance": "0.08385808765888214",
+        "liquidity_pressure_score": "0.9589378237724304",
+        "cost_model_id": "backtest_g1g2_v2",
+        "risk_denominator_id": "entry_fill_to_sl__v1",
+        "run_id": "run_20260916_172925"
+      }
+    ],
+    "has": {
+      "trade_id": true,
+      "run_id": true,
+      "trace_id": false,
+      "bar_idx": false,
+      "candle_idx": true,
+      "candle_index": false
+    }
+  },
+  "XAUUSD_summary.json": {
+    "has": {
+      "trade_id": false,
+      "run_id": true,
+      "trace_id": false,
+      "bar_idx": false
+    },
+    "run_id": "run_20260916_172925",
+    "keys_with_id": [
+      "run_id",
+      "cost_model_id",
+      "risk_denominator_id"
+    ]
+  },
+  "XAUUSD_events.jsonl": {
+    "key_presence_counts": {
+      "run_id": 7112,
+      "candle_index": 7112,
+      "metadata.id": 3
+    },
+    "trade_opened_samples": [
+      {
+        "envelope_run_id": "run_20260916_172925",
+        "candle_index": 11364,
+        "metadata": {
+          "id": "CRT-0001",
+          "session_name": "NEWYORK",
+          "S_score": 0.5728457169016976,
+          "sl": 2610.0475714285712,
+          "tp1": 2618.872428571429,
+          "tp2": 2623.2848571428576,
+          "risk_pct": 0.005
+        }
+      },
+      {
+        "envelope_run_id": "run_20260916_172925",
+        "candle_index": 11609,
+        "metadata": {
+          "id": "CRT-0002",
+          "session_name": "LONDON",
+          "S_score": 0.4871316574775695,
+          "sl": 2564.559857142857,
+          "tp1": 2566.860214285715,
+          "tp2": 2567.3202857142865,
+          "risk_pct": 0.005
+        }
+      },
+      {
+        "envelope_run_id": "run_20260916_172925",
+        "candle_index": 18029,
+        "metadata": {
+          "id": "CRT-0003",
+          "session_name": "NEWYORK",
+          "S_score": 0.5649299316624503,
+          "sl": 2933.209857142857,
+          "tp1": 2936.1602142857146,
+          "tp2": 2936.750285714286,
+          "risk_pct": 0.005
+        }
+      }
+    ],
+    "has_envelope": {
+      "run_id": true,
+      "trace_id": false,
+      "bar_idx": false,
+      "candle_index": true,
+      "trade_id": false
+    }
+  },
+  "XAUUSD_crt_telemetry.jsonl": {
+    "id_like_key_counts": {
+      "run_id": 4883,
+      "episode_start_idx": 148,
+      "episode_end_idx": 148,
+      "duration_candles": 148,
+      "candidate_age_at_entry": 148,
+      "max_retrace_depth_abs": 148,
+      "time_to_max_retrace_candles": 148,
+      "candle_index": 2936,
+      "state_age_candles": 2887,
+      "candidate_id": 4711,
+      "first_seen_idx": 1798,
+      "last_seen_idx": 1798,
+      "age_candles": 1798,
+      "soft_conf_candle_num": 26
+    },
+    "samples": [
+      {
+        "kind": "CANDIDATE_LIFECYCLE",
+        "candidate_id": "CAND-34",
+        "first_seen_idx": 34,
+        "last_seen_idx": 43,
+        "age_candles": 9,
+        "max_score_seen": 0.0,
+        "score_at_approval": null,
+        "run_id": "run_20260916_172925"
+      },
+      {
+        "kind": "CANDIDATE_LIFECYCLE",
+        "candidate_id": "CAND-44",
+        "first_seen_idx": 44,
+        "last_seen_idx": 49,
+        "age_candles": 5,
+        "max_score_seen": 0.0,
+        "score_at_approval": null,
+        "run_id": "run_20260916_172925"
+      },
+      {
+        "kind": "CANDIDATE_LIFECYCLE",
+        "candidate_id": "CAND-84",
+        "first_seen_idx": 84,
+        "last_seen_idx": 90,
+        "age_candles": 6,
+        "max_score_seen": 0.0,
+        "score_at_approval": null,
+        "run_id": "run_20260916_172925"
+      }
+    ],
+    "has": {
+      "run_id": true,
+      "trace_id": false,
+      "bar_idx": false,
+      "candle_index": true,
+      "trade_id": false,
+      "candidate_id": true
+    }
+  },
+  "LIVE_CHART_BIND_V1.json": {
+    "join_keys": [
+      "run_id",
+      "instrument",
+      "bar_ts"
+    ],
+    "bind_id_fields": {
+      "run_dir": "results/run_20260916_225925_XAUUSD",
+      "content_run_id": "run_20260916_172925",
+      "cost_model_id": "backtest_g1g2_v2",
+      "risk_denominator_id": "entry_fill_to_sl__v1",
+      "constructor_id": "engine",
+      "summary_cost_model_id": "backtest_g1g2_v2",
+      "summary_risk_denominator_id": "entry_fill_to_sl__v1",
+      "api_run_id": "run_20260916_225925_XAUUSD",
+      "folder_run_id": "run_20260916_225925_XAUUSD"
+    },
+    "has": {
+      "trade_id": false,
+      "run_id": true,
+      "trace_id": false,
+      "bar_idx": false
+    }
+  },
+  "chart_payload_smoke.json": {
+    "top_run_id": "run_20260916_225925_XAUUSD",
+    "trades_sample_keys": null,
+    "bars_sample_keys": "str"
+  },
+  "cost_audit/ultron_sem_r_shadow.csv": {
+    "columns": [
+      "trade_id",
+      "direction",
+      "exit_reason",
+      "planned_rr_raw_tp1",
+      "pnl_rr_raw_ledger",
+      "pnl_rr_net_g1g2",
+      "sem_cost_r_sl_assumption",
+      "sem_cost_r_actual_exit",
+      "gate_rr_sem_shadow",
+      "min_rr",
+      "admit_gross_none",
+      "admit_sem_shadow",
+      "flip_vs_gross",
+      "cost_model_id",
+      "risk_denominator_id"
+    ],
+    "sample": [
+      {
+        "trade_id": "CRT-0001",
+        "direction": "long",
+        "exit_reason": "STOPPED",
+        "planned_rr_raw_tp1": "1.0",
+        "pnl_rr_raw_ledger": "-0.8763",
+        "pnl_rr_net_g1g2": "-1.0547",
+        "sem_cost_r_sl_assumption": "0.0793",
+        "sem_cost_r_actual_exit": "0.0793",
+        "gate_rr_sem_shadow": "0.9207",
+        "min_rr": "1.5",
+        "admit_gross_none": "False",
+        "admit_sem_shadow": "False",
+        "flip_vs_gross": "False",
+        "cost_model_id": "backtest_g1g2_v2",
+        "risk_denominator_id": "entry_fill_to_sl__v1"
+      },
+      {
+        "trade_id": "CRT-0002",
+        "direction": "long",
+        "exit_reason": "STOPPED",
+        "planned_rr_raw_tp1": "1.5",
+        "pnl_rr_raw_ledger": "-0.7449",
+        "pnl_rr_net_g1g2": "-1.2504",
+        "sem_cost_r_sl_assumption": "0.3804",
+        "sem_cost_r_actual_exit": "0.3804",
+        "gate_rr_sem_shadow": "1.1196",
+        "min_rr": "1.5",
+        "admit_gross_none": "True",
+        "admit_sem_shadow": "False",
+        "flip_vs_gross": "True",
+        "cost_model_id": "backtest_g1g2_v2",
+        "risk_denominator_id": "entry_fill_to_sl__v1"
+      },
+      {
+        "trade_id": "CRT-0003",
+        "direction": "long",
+        "exit_reason": "TP2",
+        "planned_rr_raw_tp1": "1.5",
+        "pnl_rr_raw_ledger": "1.2994",
+        "pnl_rr_net_g1g2": "0.6128",
+        "sem_cost_r_sl_assumption": "0.2966",
+        "sem_cost_r_actual_exit": "0.2203",
+        "gate_rr_sem_shadow": "1.2034",
+        "min_rr": "1.5",
+        "admit_gross_none": "True",
+        "admit_sem_shadow": "False",
+        "flip_vs_gross": "True",
+        "cost_model_id": "backtest_g1g2_v2",
+        "risk_denominator_id": "entry_fill_to_sl__v1"
+      }
+    ],
+    "has": {
+      "trade_id": true,
+      "run_id": false,
+      "trace_id": false,
+      "bar_idx": false
+    }
+  },
+  "config_dump": {
+    "run_id": "run_20260916_172925",
+    "has": {
+      "trade_id": false,
+      "run_id": true,
+      "trace_id": false,
+      "bar_idx": false
+    }
+  },
+  "layer_trace_slice": {
+    "filter_run_id": "lt_20260916_172925_XAUUSD",
+    "key_counts_in_slice_scan": {
+      "run_id": 94400,
+      "config_hash": 94400,
+      "dataset_id": 94400,
+      "trace_id": 94400,
+      "span_id": 94400,
+      "bar_idx": 94400
+    },
+    "trade_id_nonnull": 0,
+    "sample_L3": {
+      "run_id": "lt_20260916_172925_XAUUSD",
+      "trace_id": "lt_20260916_172925_XAUUSD:XAUUSD:2024-05-22T20:30:00",
+      "span_id": "lt_20260916_172925_XAUUSD:XAUUSD:2024-05-22T20:30:00:L3",
+      "bar_idx": 78,
+      "bar_ts": "2024-05-22T20:30:00",
+      "layer": "L3",
+      "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613",
+      "dataset_id": ""
+    },
+    "has": {
+      "run_id": true,
+      "trace_id": true,
+      "bar_idx": true,
+      "trade_id": false,
+      "span_id": true
+    }
+  },
+  "value_alignment": {
+    "summary.run_id": "run_20260916_172925",
+    "trades.run_id_unique": [
+      "run_20260916_172925"
+    ],
+    "events.run_id_unique": [
+      "run_20260916_172925"
+    ],
+    "config.run_id": "run_20260916_172925",
+    "layer_trace.run_id_filter": "lt_20260916_172925_XAUUSD",
+    "folder_name": "run_20260916_225925_XAUUSD",
+    "canonical_claimed": "run_20260916_172925",
+    "trades.trade_id": [
+      "CRT-0001",
+      "CRT-0002",
+      "CRT-0003"
+    ]
+  }
+}

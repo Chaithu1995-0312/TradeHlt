@@ -51,6 +51,7 @@ import research.hypotheses  # noqa: F401  (register hypotheses, incl. spine)
 from research.config import ResearchConfig                       # noqa: E402
 from research.costs import CostModel                             # noqa: E402
 from research.measurement.metrics import EdgeAggregator          # noqa: E402
+from governance.measurement_basis import TIE_BREAK_PRODUCTION  # noqa: E402
 from research.provenance import provenance_block                 # noqa: E402
 from research.qualification import (                             # noqa: E402
     BH_METHOD_VERSION, PERMUTATION_METHOD_VERSION, QUALIFICATION_VERSION,
@@ -170,7 +171,7 @@ def main(argv: list[str] | None = None) -> int:
         "alpha": toy_cfg.q_significance_alpha,
         "scope_order": SCOPES,
         "universe": FX,
-        **provenance_block(toy_cfg.exit_model, toy_cfg.round_trip_bps),
+        **provenance_block(toy_cfg.exit_model, toy_cfg.round_trip_bps, tie_break=TIE_BREAK_PRODUCTION),
         "families": {
             "toy": {
                 "config_path": TOY_CONFIG,

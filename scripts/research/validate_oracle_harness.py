@@ -24,12 +24,12 @@ BLOCKING CHECKS
 
 REPORTED, NOT GATING
 --------------------
-  resolver_dwell   The per-bar CRT state distribution this run produces, against the
-                   engine reference pinned in market_crt_states.yaml. This characterises
-                   the RESOLVER, not this harness, so it does not gate — but it is
-                   reported because any pattern keyed on `crt_state_resolved` is a
+  resolver_dwell   The per-bar `ontology_state` distribution this run produces, against
+                   the engine reference pinned in market_crt_states.yaml. This
+                   characterises the RESOLVER, not this harness, so it does not gate —
+                   but it is reported because any pattern keyed on `ontology_state` is a
                    statement about the resolver until an engine re-measurement says
-                   otherwise.
+                   otherwise (`engine_state_after` is the DIFFERENT quantity, F-069).
 
 Usage:
     python scripts/research/validate_oracle_harness.py --instrument XAUUSD
@@ -199,7 +199,7 @@ def run_checks(labels: pd.DataFrame, matrix: pd.DataFrame, *, horizon: int, seed
         }}
 
     # ── REPORTED: resolver dwell vs the engine reference ────────────────────
-    dwell = matrix["crt_state_resolved"].value_counts().to_dict()
+    dwell = matrix["ontology_state"].value_counts().to_dict()
     comparison = {}
     for state, ref in _ENGINE_DWELL_REFERENCE.items():
         got = int(dwell.get(state, 0))
@@ -212,8 +212,9 @@ def run_checks(labels: pd.DataFrame, matrix: pd.DataFrame, *, horizon: int, seed
             "note": ("Characterises the RESOLVER, not this harness. The reference is a "
                      "different epoch's ENGINE run pinned in market_crt_states.yaml, so a "
                      "divergence here is expected and is not evidence of a harness fault. "
-                     "It is reported because any pattern keyed on crt_state_resolved is a "
-                     "statement about the resolver until an engine re-measurement is run."),
+                     "It is reported because any pattern keyed on ontology_state is a "
+                     "statement about the resolver until an engine re-measurement is run "
+                     "(engine_state_after is the DIFFERENT quantity, F-069)."),
             "resolver_distribution": {k: int(v) for k, v in dwell.items()},
             "comparison": comparison,
             "states_never_produced": sorted(

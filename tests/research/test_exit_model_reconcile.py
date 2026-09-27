@@ -8,6 +8,7 @@ from datetime import datetime
 
 import pytest
 
+from governance.measurement_basis import TIE_BREAK_PRODUCTION
 from research.config import ResearchConfig
 from research.contracts import Signal
 from research.measurement.forward_walk import forward_walk, horizon_excursion
@@ -126,11 +127,28 @@ def test_config_carries_exit_model():
 
 
 def test_provenance_block_shape():
-    p = provenance_block("intrabar_fixed", 12.0)
+    # tie_break="SL_before_TP" — the historical hardcoded literal — proves the alias
+    # still canonicalises to "production" (CH-measurement-basis-declaration).
+    p = provenance_block("intrabar_fixed", 12.0, tie_break="SL_before_TP")
     assert p["truth_standard"] == {
         "version": TRUTH_STANDARD_VERSION,
         "exit_geometry": "intrabar_fixed",
         "slippage_model": "flat_12bps",
-        "tie_break": "SL_before_TP",
+        "tie_break": TIE_BREAK_PRODUCTION,
+        # pre-existing assertion gap fixed in passing (CH-measurement-basis-declaration):
+        # truth_standard_block has unconditionally set fill_model since before this
+        # change (CH-cost-model-broker-truth, 2026-08-19); this dict comparison never
+        # carried the key, so it was already failing at HEAD, unrelated to this change.
+        "fill_model": "perfect_stop_fill",
     }
     assert p["research_cost_model_version"] and p["spine_cost_model_version"]
+
+
+def test_provenance_block_requires_tie_break():
+    with pytest.raises(TypeError):
+        provenance_block("intrabar_fixed", 12.0)
+
+
+def test_provenance_block_rejects_unrecognised_tie_break():
+    with pytest.raises(ValueError, match="tie_break"):
+        provenance_block("intrabar_fixed", 12.0, tie_break="not_a_real_tie_break")

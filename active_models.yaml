@@ -81,6 +81,9 @@ meta:
 # 1. CRT ENGINE — Deterministic Market-Structure State Machine
 # ───────────────────────────────────────────────────────────────────
 crt:
+  semantic_ids: [M0_SPINE_CRT_FUSION_SCORER, M0_SPINE_CRT_STATE_MACHINE]  # Phase 0 join,
+    # 2026-09-23 -- src/research/model_runners/contracts.py MODEL_CATALOG rows crt_score /
+    # crt_state_machine. tests/test_model_registry_join.py. Grants no authority (§6.5).
   intent:
     question: "Is the market structure valid? (institutional liquidity events)"
     description: >
@@ -478,6 +481,8 @@ crt:
 # 2. GAUSSIAN — Directional-Momentum Scorer  (⚠ runtime ≠ trained model)
 # ───────────────────────────────────────────────────────────────────
 gaussian:
+  semantic_ids: [M0_SPINE_GAUSSIAN_HEURISTIC, M0_SPINE_GAUSSIAN_ML_NB]  # Phase 0 join,
+    # 2026-09-23 -- MODEL_CATALOG rows gaussian / gaussian_ml. Grants no authority (§6.5).
   intent:
     question: "Is this historically profitable? (probability-of-success match)"
     description: >
@@ -620,6 +625,8 @@ gaussian:
 # 3. BITNET — Market-State Hard-Reject Gate
 # ───────────────────────────────────────────────────────────────────
 bitnet:
+  semantic_ids: [M0_SPINE_BITNET_LEGACY6]  # Phase 0 join, 2026-09-23 -- MODEL_CATALOG row
+    # "bitnet". Grants no authority (§6.5).
   intent:
     question: "Is this market state acceptable?"
     description: >
@@ -630,7 +637,9 @@ bitnet:
     file: src/bitnet/bitnet_inference.py:317 · bitnet_score
     integration: "UltronRiskEngine.approve() / approve_with_soft_conf(); live check via BitNetZoneGate — src/engines/live_engine.py:278 · check"
     input_source: "cached_features at RETEST + state.atr"
-    features: [body_ratio, retest_depth, disp_strength, atr, candles_since_retest, double_sweep]
+    features: [body_ratio, retest_depth, disp_strength, atr, candles_since_sweep, double_sweep]
+    # 2026-09-23: corrected from "candles_since_retest" — LEGACY6_KEYS (bitnet/defaults.py)
+    # requires candles_since_sweep (see evidence.notes for the KeyError this was masking).
     threshold: 0.55
     enabled: false                                          # gated by CRT threshold use_bitnet (default false)
     active: false
@@ -653,6 +662,12 @@ bitnet:
       n<30) — it acts as a state-machine-perturbing VETO, not a filter (a reject resets the CRT
       state machine). No ΔG001 ⇒ no authority (§6.5); use_bitnet stays false; retrain NOT warranted.
       Carries the F-050 train/serve skew + a raw/unnormalized `atr` input (not scale-invariant).
+      2026-09-23: the enable path (use_bitnet=true, never exercised in production — dormant on
+      every historical run) was confirmed BROKEN — apply_crt_serve_aliases (bitnet/encoders.py)
+      was missing the FM-070 rename (crt_engine_v2's emitted `candles_since_retest_state` ->
+      LEGACY6_KEYS's `candles_since_sweep`), so every serve call raised KeyError. Fixed additively
+      (one alias line + 3 new tests, incl. an end-to-end use_bitnet=true probe that previously did
+      not exist); no economic claim, no authority change, use_bitnet stays false.
 
   reachability:
     config_sections: [crt_engine, engine_runner]   # use_bitnet + bitnet_main_threshold / zone_cluster_threshold
@@ -705,6 +720,8 @@ bitnet:
 # 4. ZONE GATE — Historical Feature-Space Quality Estimator
 # ───────────────────────────────────────────────────────────────────
 zone_gate:
+  semantic_ids: [M0_SPINE_ZONE_GATE_CLUSTER]  # Phase 0 join, 2026-09-23 -- MODEL_CATALOG row
+    # "zone_gate". Grants no authority (§6.5).
   intent:
     question: "Is this feature-space neighbourhood historically good?"
     description: >
@@ -808,6 +825,8 @@ zone_gate:
 # 5. RR — Reward-Risk / Candle-Polarity Structural Filter
 # ───────────────────────────────────────────────────────────────────
 rr_model:
+  semantic_ids: [M0_SPINE_RR_POLARITY, M0_SPINE_RR_TRAINED_NANO]  # Phase 0 join, 2026-09-23 --
+    # MODEL_CATALOG rows rr / rr_trained. Grants no authority (§6.5).
   intent:
     question: "Is the reward-risk economically viable?"
     description: >
@@ -901,6 +920,8 @@ rr_model:
 # 5b. TRADENET — Fusion neural slot (UNWIRED; F-005)
 # ───────────────────────────────────────────────────────────────────
 tradenet:
+  semantic_ids: [M0_SPINE_TRADENET_MULTIHEAD]  # Phase 0 join, 2026-09-23 -- MODEL_CATALOG row
+    # "tradenet". Grants no authority (§6.5).
   intent:
     question: "What is the capital quality of this setup?"
     description: >
@@ -972,6 +993,8 @@ tradenet:
 #     no identity block (models/envelope_registry.json does not exist).
 # ───────────────────────────────────────────────────────────────────
 envelope:
+  semantic_ids: [M0_SPINE_ENVELOPE_MFE_MAE]  # Phase 0 join, 2026-09-23 -- MODEL_CATALOG row
+    # "envelope". Grants no authority (§6.5).
   intent:
     question: "What price–time operating envelope does this trade live in after entry?"
     description: >
@@ -1061,6 +1084,8 @@ envelope:
 # 6. STRATEGY MODULES (S1–S10) — ⚠ ORPHANED SIDECAR, NOT THE LIVE SPINE
 # ───────────────────────────────────────────────────────────────────
 strategies:
+  semantic_ids: [M9_ORCH_STRATEGIES_SIDECAR]  # Phase 0 join, 2026-09-23 -- MODEL_CATALOG row
+    # "strategies". Grants no authority (§6.5).
   intent:
     description: >
       Ten pluggable strategies aggregated by StrategyOrchestrator into a
@@ -1118,6 +1143,8 @@ strategies:
 # 7. ENGINE RUNNER — Runtime Orchestration
 # ───────────────────────────────────────────────────────────────────
 engine_runner:
+  semantic_ids: [M9_ORCH_ENGINE_RUNNER]  # Phase 0 join, 2026-09-23 -- MODEL_CATALOG row
+    # "engine_runner". Grants no authority (§6.5).
   intent:
     description: "Four mandatory engines run per candle, fused, then a single decision authority emits execute/reject."
 

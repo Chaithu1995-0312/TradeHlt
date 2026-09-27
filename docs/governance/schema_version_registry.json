@@ -1,0 +1,122 @@
+{
+  "_doc": "Schema Evolution & Preservation Workflow — machine-readable slot registry. Full procedure: docs/governance/SCHEMA_EVOLUTION_CONTRACT.md. Every versioned schema in this repo is a declaration token plus a set of downstream slots; every slot is exactly one of four kinds and the kind fixes its obligation on a version bump: TRACKS_HEAD (must equal current_version), ACCUMULATES (must contain every version ever declared, never shrink), FROZEN (must never change — it records history), DERIVED (recomputed from the declaration, must match). Enforced by tests/governance/test_schema_version_registry.py. This file is NOT itself a preservation proof — STORAGE_PRESERVATION_CONTRACT.md / CANONICAL_LAYER_IDENTITY_CONTRACT.md remain authoritative for what preservation means; this registry only tracks whether a version DECLARATION has propagated to every place that depends on it.",
+  "schema_version": "1.0.0",
+  "generated_at_utc": "2026-09-18T00:00:00Z",
+  "seed_reason": "F-107 (CH-schema-v6-normalization-identity) bumped feature_schema.SCHEMA_VERSION 5.0->6.0 (names-only rename, dim unchanged) but did not propagate to identity/tokens.py's ACCUMULATES vocabulary or identity/certify.py's TRACKS_HEAD emission — discovered 2026-09-18, no floor caught it because none existed. This registry + floor is the fix.",
+  "locator_kinds": [
+    "python_symbol",
+    "ast_no_literal_dict_value",
+    "text_contains",
+    "text_last_corrected_marker",
+    "frozen_unchanged"
+  ],
+  "excluded_infrastructure_symbols": [
+    {
+      "path": "src/identity/tokens.py",
+      "symbol": "SCHEMA_VERSIONS",
+      "reason": "this IS the ACCUMULATES slot for FEATURE_CANONICAL below, not an independent schema declaration — excluded from the completeness ratchet so it is not double-counted as its own unregistered schema_id."
+    }
+  ],
+  "schemas": [
+    {
+      "schema_id": "FEATURE_CANONICAL",
+      "declaration": {
+        "locator": {"kind": "python_symbol", "module": "features.feature_schema", "symbol": "SCHEMA_VERSION"}
+      },
+      "current_version": "6.0",
+      "history": ["2.0", "3.0", "4.0", "5.0", "6.0"],
+      "owning_contract": "docs/governance/STORAGE_PRESERVATION_CONTRACT.md (frozen v1.0.0, 2026-08-23); process doc docs/governance/SCHEMA_EVOLUTION_CONTRACT.md",
+      "derived": [
+        {
+          "locator": {"kind": "python_symbol", "module": "features.feature_schema", "symbol": "SCHEMA_HASH"},
+          "over": "hashlib.md5('' .join(CANONICAL_FEATURES)) — legacy, retained for backward compat",
+          "recompute": "md5_join"
+        },
+        {
+          "locator": {"kind": "python_symbol", "module": "features.feature_schema", "symbol": "FEATURE_ORDER_HASH"},
+          "over": "features.feature_schema._feature_order_hash(CANONICAL_FEATURES) — sha256[:16] of json.dumps(list(names))",
+          "recompute": "sha256_ordered_names_16"
+        }
+      ],
+      "slots": [
+        {
+          "kind": "ACCUMULATES",
+          "locator": {"kind": "python_symbol", "module": "identity.tokens", "symbol": "SCHEMA_VERSIONS"},
+          "note": "closed vocabulary consumed by identity/check.py's L1 IDENTITY_MISMATCH/UNIDENTIFIED logic. Must be a superset of history ∪ {current_version}; versions are ADDED, never removed — removing one orphans every archive record already written under it (§6.2 rule 4)."
+        },
+        {
+          "kind": "TRACKS_HEAD",
+          "locator": {
+            "kind": "ast_no_literal_dict_value",
+            "path": "src/identity/certify.py",
+            "dict_key": "schema_version",
+            "requires_import": {"module": "features.feature_schema", "symbol": "SCHEMA_VERSION"}
+          },
+          "note": "L1 write-time producer (certify.py is the write-time exemption from FORBIDDEN_RUNTIME_MODULES — see its own docstring and tests/test_identity_store.py::test_no_recompute_producer_imports, whose parametrize list is [check.py, store.py, query.py, outcome.py] and deliberately excludes certify.py). Enforced structurally: the emitted schema_version must come from an imported SCHEMA_VERSION name, never a hardcoded string literal, so it cannot silently go stale on the next bump."
+        },
+        {
+          "kind": "TRACKS_HEAD",
+          "locator": {
+            "kind": "text_last_corrected_marker",
+            "path": "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+            "marker_regex": "CORRECTED \\d{4}-\\d{2}-\\d{2}[^\\n]*?FEATURE_CANONICAL[^\\n]*?\\bactive\\b[^\\n]*?\\b(?P<version>\\d+\\.\\d+)\\b"
+          },
+          "note": "Contract is CLOSED / FROZEN v1.0.0, user-accepted 2026-08-23 — the original '5.0 active' sentence is NOT edited in place (that would need its own §6.2 gate). Corrections land as an appended, dated CORRECTED marker per the pattern above; the floor reads the LAST such marker in the file and compares its version to current_version. See frozen_unchanged sibling slot below, which guards the original sentence stays byte-identical."
+        },
+        {
+          "kind": "FROZEN",
+          "locator": {
+            "kind": "frozen_unchanged",
+            "path": "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+            "pattern": "\\| `schema_version` \\| Family token \\(`5\\.0` active; `2\\.0` / `3\\.0` / `4\\.0` archive\\) \\|"
+          },
+          "note": "the original frozen-contract sentence itself — must remain byte-identical (§6.2 rule 4: preserve history, correct via appended note, never overwrite). This slot existing and passing is what proves the correction above was additive, not a silent rewrite of a closed contract."
+        },
+        {
+          "kind": "TRACKS_HEAD",
+          "locator": {
+            "kind": "text_contains",
+            "path": "src/features/feature_schema.py",
+            "pattern": "n_features=len\\(CANONICAL_FEATURES\\),   # 48 \\(schema v6\\.0\\)"
+          },
+          "note": "TRADENET_SCHEMA / GAUSSIAN_SCHEMA inline comments. Comment-only (not machine-derived from SCHEMA_VERSION), so this is a plain text_contains check, not a python_symbol one — the dimension itself (48) is DERIVED-stable across v5.0->v6.0 since the bump was names-only, only the version label in the comment needed to move."
+        },
+        {
+          "kind": "FROZEN",
+          "locator": {
+            "kind": "text_contains",
+            "path": "tests/test_identity_store.py",
+            "pattern": "synthetic non-HEAD fixture"
+          },
+          "note": "the six 'schema_version\": \"5.0\"' literals in this file build a SYNTHETIC 48-dim record (NAMES is a local ['open','high','low','close', f0..f43] list, never imported from CANONICAL_FEATURES) to test IdentityStore/identity_check MECHANICS generically — they do not assert 'this is the current HEAD schema' and are deliberately left at 5.0 (still a valid, permanently-ACCUMULATES-covered token). This slot only checks that the file-top comment explaining that non-obvious decision is present, so a future reader does not mistake it for drift."
+        }
+      ]
+    }
+  ],
+  "unregistered_pinned": [
+    {"path": "src/bitnet/model_contract.py", "symbol": "CANONICAL_MODEL_SCHEMA_VERSION"},
+    {"path": "src/config_layer/state_contract.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/data_ingestion/clock_registry.py", "symbol": "REGISTRY_SCHEMA_VERSION"},
+    {"path": "src/execution/execution_intent_v1_0.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/governance/jsonl_claim_catalog.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/governance/semantic_os.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/interpreters/contract.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/journal/trade_execution_link_v1_0.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/journal/trade_identity_v1_0.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/journal/trade_provenance_v1_0.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/msip/interpretation_config.py", "symbol": "SCHEMA_VERSION_PIN"},
+    {"path": "src/msip/market_state_vector.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/research/episodes/protocol.py", "symbol": "OBSERVATION_SCHEMA_VERSION"},
+    {"path": "src/research/episodes/schema.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/research/zone_mapping/gaussian_delta_gap_eval.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/research/zone_mapping/gaussian_family_shadow_eval.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/research/zone_mapping/historical_zone_mapper.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/runtime/bar_structure_snapshot.py", "symbol": "SNAPSHOT_SCHEMA_VERSION"},
+    {"path": "src/runtime/crt_baseline_trace.py", "symbol": "TRACE_SCHEMA_VERSION"},
+    {"path": "src/runtime/crt_construction_trace.py", "symbol": "TRACE_SCHEMA_VERSION"},
+    {"path": "src/runtime/layer_trace.py", "symbol": "TRACE_SCHEMA_VERSION"},
+    {"path": "src/training/bar_semantic_tracker.py", "symbol": "SCHEMA_VERSION"},
+    {"path": "src/training/trade_net_v2.py", "symbol": "SCHEMA_VERSION_V2"}
+  ],
+  "config_schema_version_note": "configs/production/*.json each carry a top-level schema_version (1.3 x21, 1.2 x1, 1.0 x2, absent x1 — measured 2026-09-18) with NO code declaration site tying them together. Deliberately NOT registered as a schema_id in this pass — which version is authoritative, and whether the split is intentional per-generation tiering or drift, is an open user question (§6.2 rule 3), separate from the FEATURE_CANONICAL fix this registry seeds."
+}

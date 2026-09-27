@@ -17,6 +17,7 @@ Per E-001 (a test that cannot fail is not enforcement): test 2 and test 3 below 
 concrete numeric values / exact equality, not just "no exception raised".
 """
 from __future__ import annotations
+from tests.helpers.crt_config import crt_config_for_test
 
 import importlib.util
 import sys
@@ -133,7 +134,7 @@ def test_double_update_compresses_spread_in_monotone_trend():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _make_fixture(direction=Direction.LONG, atr=2.0, ema_fast=101.0, ema_slow=100.0):
-    cfg = CRTConfig()
+    cfg = crt_config_for_test()
     risk = UltronRiskEngine(cfg)
 
     rng = Range(

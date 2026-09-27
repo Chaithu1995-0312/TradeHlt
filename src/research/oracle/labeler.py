@@ -36,6 +36,15 @@ produces bar-local (tight) stops, so it pays several times more cost in R than t
 on every row: net is the honest definition of "profitable", but a net figure dominated by
 a tight stop describes the geometry, not the market.
 
+DECLARED MEASUREMENT BASIS (CH-measurement-basis-declaration)
+---------------------------------------------------------------
+Every row also carries `reference_level` / `walk_kernel` / `fill_model_id` /
+`cost_model_id` alongside the existing `sl_geom` / `tie_break` — the full 5-axis basis
+`governance.measurement_basis` declares, so a row here and a row on the spine's
+`trades.csv` can be mechanically compared (or mechanically refused) via
+`measurement_basis.can_compare` rather than assumed comparable because both name the
+same bar.
+
 Usage:
     python -m research.oracle.labeler --instrument XAUUSD --timeframe M15
 """
@@ -60,6 +69,13 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from config_layer.production_config import get_prod_section  # noqa: E402
+from governance.measurement_basis import (  # noqa: E402
+    REF_LEVEL_ENTRY_CLOSE_ATR,
+    REF_LEVEL_SIGNAL_BAR_EXTREME,
+    REF_LEVEL_SWEEP_EXTREME,
+    UNSTAMPED,
+    canonicalise,
+)
 from research.costs import ComponentCostModel  # noqa: E402
 from research.measurement.forward_walk import AdverseFill  # noqa: E402
 from research.oracle.multi_tp_walk import (  # noqa: E402
@@ -70,7 +86,29 @@ from research.oracle.multi_tp_walk import (  # noqa: E402
 
 SL_GEOM_DISP_BAR = "disp_bar"
 SL_GEOM_FIXED_ATR = "fixed_atr"
-SL_GEOMETRIES = (SL_GEOM_DISP_BAR, SL_GEOM_FIXED_ATR)
+# [K23 F3] Oracle counterpart of the engine's `sl_anchor="sweep_extreme"`. Most bars have no
+# engine sweep, so the anchor is a PROXY: the trailing N-bar extreme (window includes bar t,
+# so it is never tighter than disp_bar). Exact engine parity holds only where the engine's
+# sweep candle IS that extreme — a robustness arm, never PRIMARY_ARM.
+SL_GEOM_SWEEP_EXTREME = "sweep_extreme"
+SL_GEOMETRIES = (SL_GEOM_DISP_BAR, SL_GEOM_FIXED_ATR, SL_GEOM_SWEEP_EXTREME)
+
+_REFERENCE_LEVEL_BY_GEOM = {
+    SL_GEOM_DISP_BAR: REF_LEVEL_SIGNAL_BAR_EXTREME,
+    SL_GEOM_FIXED_ATR: REF_LEVEL_ENTRY_CLOSE_ATR,
+    SL_GEOM_SWEEP_EXTREME: REF_LEVEL_SWEEP_EXTREME,
+}
+
+
+def sweep_extreme_stop(window_bars, atr_abs: float, sl_atr_buffer: float, is_long: bool) -> float:
+    """Stop beyond the trailing-window extreme, -/+ `sl_atr_buffer * atr_abs`.
+
+    Same arithmetic as `ExecutionEngine.build_trade`'s `sl_anchor="sweep_extreme"` branch
+    (swept candle low/high -/+ buffer*atr); only the choice of candle differs.
+    """
+    if is_long:
+        return min(b.low for b in window_bars) - sl_atr_buffer * atr_abs
+    return max(b.high for b in window_bars) + sl_atr_buffer * atr_abs
 TIE_BREAKS = (TIE_BREAK_PRODUCTION, TIE_BREAK_OPTIMISTIC)
 
 # The PRIMARY arm. The other three are declared robustness arms, not three extra shots at
@@ -128,10 +166,29 @@ def label_corpus(
     trail_fraction: float = 0.5,
     crt_cfg: dict | None = None,
     charge_swap: bool = True,
+    sweep_lookback: int | None = None,
 ) -> tuple[pd.DataFrame, dict]:
     """Label every (bar, direction, sl_geom, tie_break) unit. Returns (labels, stats)."""
     t0 = time.time()
     crt_cfg = crt_cfg or {}
+    # [K23 F3] None = the sweep_extreme arm is not produced (legacy 8-unit-per-bar output,
+    # byte-identical). Set = trailing window length N in bars, window includes bar t.
+    if sweep_lookback is not None and int(sweep_lookback) < 1:
+        raise ValueError(f"sweep_lookback must be >= 1 or None, got {sweep_lookback!r}")
+    geometries = SL_GEOMETRIES if sweep_lookback is not None else (
+        SL_GEOM_DISP_BAR, SL_GEOM_FIXED_ATR)
+
+    # [CH-measurement-basis-declaration] the file-uniform third of the basis: which cost
+    # model and fill model actually ran THIS invocation. Derived from what ran, not typed
+    # in — cost_model.provenance()['cost_model_id'] is the object's own self-description
+    # (costs.py:330), canonicalised through the alias table rather than re-literalled here.
+    # walk_kernel is a definitional constant of THIS file (the same way layer_trace.py
+    # hardcodes its own layer names), not something read back off a runtime value.
+    _basis_cost_model_id = canonicalise(
+        "cost_model_id", cost_model.provenance().get("cost_model_id")
+    ) or UNSTAMPED
+    _basis_fill_model_id = "sem016_adverse" if adverse_fill is not None else "touch_exact"
+    _basis_walk_kernel = "multi_tp_walk"
 
     bars = [
         Bar(high=float(h), low=float(lo), close=float(c), open=float(o), index=int(i))
@@ -146,6 +203,13 @@ def label_corpus(
     close_list = matrix["close"].astype(float).tolist()
     atr_abs_list = matrix["atr_abs"].astype(float).tolist()
     intent_list = matrix["trade_intent"].tolist()
+    # [CH-oracle-join-spine] identity columns, INHERITED by row_i — never re-derived, never
+    # minted here. Presence is enforced by the caller (`main`'s fail-closed matrix read);
+    # this function stays usable on an in-memory synthetic matrix that never went through
+    # that gate (test fixtures), so a bare KeyError here would be the wrong failure mode.
+    lt_id_list = matrix["lt_id"].tolist() if "lt_id" in matrix.columns else None
+    trace_id_list = matrix["trace_id"].tolist() if "trace_id" in matrix.columns else None
+    bar_open_ts_list = matrix["bar_open_ts"].tolist() if "bar_open_ts" in matrix.columns else None
 
     tp1_cache = {i: _tp1_multiplier(crt_cfg, i) for i in set(intent_list)}
 
@@ -170,8 +234,14 @@ def label_corpus(
 
         for direction in ("long", "short"):
             is_long = direction == "long"
-            for geom in SL_GEOMETRIES:
-                if geom == SL_GEOM_DISP_BAR:
+            for geom in geometries:
+                if geom == SL_GEOM_SWEEP_EXTREME:
+                    if p < sweep_lookback - 1:
+                        rejects["insufficient_sweep_lookback"] += 1
+                        continue
+                    sl = sweep_extreme_stop(
+                        bars[p - sweep_lookback + 1 : p + 1], atr_abs, sl_atr_buffer, is_long)
+                elif geom == SL_GEOM_DISP_BAR:
                     # Bar t acts as the displacement candle: the same construction
                     # `build_trade` uses, with this bar standing in for the one a CRT
                     # sequence would have supplied.
@@ -212,9 +282,27 @@ def label_corpus(
                     out_rows.append({
                         "_pos": p,
                         "timestamp": entry_ts,
+                        # [CH-oracle-join-spine] inherited from the matrix by row_i — the
+                        # SAME index already used for close_list/atr_abs_list/intent_list
+                        # above. All 8 units of this bar share these three values.
+                        "lt_id": lt_id_list[row_i] if lt_id_list is not None else None,
+                        "trace_id": trace_id_list[row_i] if trace_id_list is not None else None,
+                        "bar_open_ts": (
+                            bar_open_ts_list[row_i] if bar_open_ts_list is not None else None
+                        ),
                         "direction": direction,
                         "sl_geom": geom,
                         "tie_break": tie,
+                        # [CH-measurement-basis-declaration] the declared measurement
+                        # basis (E1-E3 declare half). reference_level names what sl_geom
+                        # already anchors to: disp_bar is the CURRENT bar's own low/high
+                        # (signal_bar_extreme), NOT the engine's displacement_candle —
+                        # see the plan's correction 4 on why disp_bar's name is
+                        # misleading. fixed_atr anchors to entry (entry_close_atr).
+                        "reference_level": _REFERENCE_LEVEL_BY_GEOM[geom],
+                        "walk_kernel": _basis_walk_kernel,
+                        "fill_model_id": _basis_fill_model_id,
+                        "cost_model_id": _basis_cost_model_id,
                         "intent": intent_list[row_i],
                         "entry": entry,
                         "sl": sl,
@@ -291,6 +379,25 @@ def main(argv=None) -> int:
     bm_manifest = json.loads((matrix_dir / "manifest.json").read_text(encoding="utf-8"))
 
     matrix = pd.read_csv(matrix_csv, parse_dates=["timestamp"])
+    # [CH-oracle-join-spine] fail-closed, not `if col in df.columns`: a matrix built
+    # before this change carries none of these, and silently labeling it produces a
+    # labels.csv that identity_chain I8 will fail anyway — better to refuse now with the
+    # exact regenerate command than to let it surface later as an opaque chain failure.
+    _missing_identity_cols = [
+        c for c in ("lt_id", "trace_id", "bar_open_ts") if c not in matrix.columns
+    ]
+    if _missing_identity_cols:
+        print(
+            f"[FATAL] {matrix_csv} lacks join-spine identity columns {_missing_identity_cols} "
+            "-- this bar matrix is STALE (built before CH-oracle-join-spine).\n"
+            "        Regenerate: python scripts/research/build_bar_matrix.py "
+            f"--instrument {args.instrument} --timeframe {args.timeframe} --lt-id <LT_ID>"
+        )
+        return 2
+    if matrix["lt_id"].nunique() > 1:
+        print(f"[FATAL] {matrix_csv} mixes {matrix['lt_id'].nunique()} lt_ids -- a bar "
+              "matrix must come from exactly one build_bar_matrix.py run")
+        return 2
     if args.limit_bars:
         matrix = matrix.head(args.limit_bars)
     raw = pd.read_csv(Path(bm_manifest["corpus_path"]), parse_dates=["timestamp"])
@@ -299,6 +406,9 @@ def main(argv=None) -> int:
     crt_cfg = get_prod_section("crt_engine")
     ep_cfg = get_prod_section("execution_planner")
     slt_cfg = get_prod_section("sl_tp_comparison")
+    # [K23 F3] strict read, no default: the HTF range length is the trailing window for the
+    # sweep_extreme proxy arm. A missing key raises KeyError rather than silently changing N.
+    sweep_lookback = int(get_prod_section("backtest")["htf_candles_per_range"])
 
     manifest_glob = sorted(glob.glob(
         str(_ROOT / "results" / "research" / "xauusd_mt5_cost_calibration"
@@ -314,6 +424,17 @@ def main(argv=None) -> int:
     adverse = None if args.no_adverse_fill else AdverseFill(
         stop_slippage=cost_model.stop_slippage, model_gaps=True)
 
+    # ── [Phase 3] label-lineage identity: dataset_hash (registered formula, single
+    # authority — never re-inlined), one run_id per label invocation, and the UTC stamp.
+    from governance.run_identity import dataset_hash as _rh_dataset_hash
+    _label_run_id = f"LABEL_{tag}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+    _label_generated_utc = datetime.now(timezone.utc).isoformat()
+    try:
+        _corpus_file = Path(bm_manifest["corpus_path"])
+        _ds_hash = _rh_dataset_hash(_corpus_file) if _corpus_file.exists() else "NO_CORPUS_FILE"
+    except Exception:  # noqa: BLE001 — lineage is provenance, never a label quantity
+        _ds_hash = "NO_CORPUS_FILE"
+
     labels, stats = label_corpus(
         matrix, raw,
         cost_model=cost_model,
@@ -325,8 +446,16 @@ def main(argv=None) -> int:
         partial_fraction=float(ep_cfg["partial_tp_fraction"]),
         trail_fraction=0.5,
         crt_cfg=crt_cfg,
+        sweep_lookback=sweep_lookback,
     )
 
+    # [Phase 3] label-lineage columns appended at the END (never shifting an existing
+    # column for a positional reader; pandas read_csv uses names anyway). These make every
+    # label row self-describing: which corpus bytes (dataset_hash), which labeling run
+    # (run_id), and when (label_generated_utc) produced it -> chain invariant 7 join key.
+    labels["dataset_hash"]        = _ds_hash
+    labels["label_run_id"]        = _label_run_id
+    labels["label_generated_utc"] = _label_generated_utc
     labels.to_csv(out_dir / "labels.csv", index=False)
     arms = _arm_summary(labels)
 
@@ -339,6 +468,25 @@ def main(argv=None) -> int:
         "timeframe": args.timeframe,
         "declares": ["SEM-017 exit geometry", "SEM-018 oracle label"],
         "authority": "research_diagnostic_only",
+        "identity": {
+            # [Phase 3] label-lineage identity — recorded so the chain checker can bind
+            # every label row to its corpus bytes and invocation (invariant 7).
+            # `label_run_id` (renamed from `run_id`, CH-oracle-join-spine) scopes the
+            # LABELING invocation; `lt_id` on labels.csv itself (inherited from the
+            # matrix) scopes the SPINE walk — two differently-scoped ids, two names.
+            "dataset_hash":        _ds_hash,
+            "label_run_id":        _label_run_id,
+            "label_generated_utc": _label_generated_utc,
+            "lt_id":               matrix["lt_id"].iloc[0] if "lt_id" in matrix.columns else None,
+        },
+        # [CH-measurement-basis-declaration] the file-uniform axes of the declared
+        # measurement basis (the per-row columns carry sl_geom/tie_break/reference_level,
+        # which vary by arm — this block is the manifest-level summary of the OTHER two).
+        "measurement_basis": {
+            "walk_kernel":    labels["walk_kernel"].iloc[0] if len(labels) else None,
+            "cost_model_id":  labels["cost_model_id"].iloc[0] if len(labels) else None,
+            "fill_model_id":  labels["fill_model_id"].iloc[0] if len(labels) else None,
+        },
         "economic_claims_allowed": False,
         "bar_matrix_manifest": bm_manifest,
         "geometry": {
@@ -351,6 +499,7 @@ def main(argv=None) -> int:
             "partial_tp_fraction": float(ep_cfg["partial_tp_fraction"]),
             "trail_fraction": 0.5,
             "max_forward": args.max_forward,
+            "sweep_extreme_lookback_bars": sweep_lookback,
         },
         "cost_model": {
             "id": "CM-XAUUSD-COMPONENT-MEASURED-V1",
@@ -382,6 +531,10 @@ def main(argv=None) -> int:
             "more cost-dominated than fixed_atr. Gross is carried on every row for this reason.",
             "nights_held counts stamped date boundaries as a declared proxy; the broker's "
             "true rollover hour is not recorded in this repository.",
+            "The sweep_extreme arm anchors to the trailing N-bar extreme (N = "
+            "backtest.htf_candles_per_range, window includes bar t), a PROXY for the engine's "
+            "swept wick. Most bars have no engine sweep; exact engine parity holds only where "
+            "the engine's sweep candle is that extreme. It is a robustness arm, not PRIMARY_ARM.",
         ],
     }
     (out_dir / "manifest.json").write_text(

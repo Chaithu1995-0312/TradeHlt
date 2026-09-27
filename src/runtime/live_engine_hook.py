@@ -371,6 +371,16 @@ def _load_engine_config() -> dict:
     merged["fusion_engine"] = fusion_cfg
     merged["ultron_risk_gate"] = ultron_cfg
     merged["execution_planner"] = exec_planner_cfg
+    # F-109 (2026-09-25): gate_intelligence was never loaded here, so the planner's merge at
+    # process() read {} and GateIntelligence silently ran on its in-code defaults (equal to the
+    # config's values today, so this load is byte-identical). Now required like its siblings.
+    gate_cfg = metadata.get("gate_intelligence")
+    if not isinstance(gate_cfg, dict):
+        raise RuntimeError(
+            "LIVE_HOOK: 'gate_intelligence' section missing from production config. "
+            "Add it to the active production config (configs/production/ACTIVE_VERSION)."
+        )
+    merged["gate_intelligence"] = gate_cfg
     merged["crt_engine"] = crt_cfg
 
     # Initialize FeatureMonitor from config
@@ -1002,6 +1012,14 @@ class HookedLiveEngine(LiveEngine):
             raise RuntimeError(
                 "LIVE_HOOK: 'execution_planner' section missing from engine_config. "
                 "Ensure _load_engine_config() includes it from the active production config."
+            )
+        # F-109: the vol-score ATR basis is a behaviour-bearing knob — no silent default at the
+        # production boundary. A config without it fails closed here.
+        _gi_cfg = engine_config.get("gate_intelligence")
+        if not isinstance(_gi_cfg, dict) or "gate_vol_atr_basis" not in _gi_cfg:
+            raise RuntimeError(
+                "LIVE_HOOK: 'gate_intelligence.gate_vol_atr_basis' missing from engine_config "
+                "(declare 'legacy_relative' or 'absolute'; see F-109)."
             )
         # Merge gate_intelligence config so GateIntelligence receives its thresholds
         exec_planner_cfg = {

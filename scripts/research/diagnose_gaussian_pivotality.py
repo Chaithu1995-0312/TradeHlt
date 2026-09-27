@@ -89,7 +89,6 @@ import logging
 import math
 import os
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[2]
@@ -107,7 +106,8 @@ os.environ["BACKTEST_ENGINE_GATE"] = "1"
 # Reuse the F-036 harness verbatim (keeps spine-run semantics byte-identical to qualify_zone_topk).
 import qualify_zone_topk as qz                                        # noqa: E402
 from engines.heuristic_gaussian_engine import HeuristicGaussianEngine  # noqa: E402
-from research.provenance import provenance_block                     # noqa: E402
+from governance.measurement_basis import TIE_BREAK_PRODUCTION  # noqa: E402
+from research.provenance import provenance_block, write_report       # noqa: E402
 from research.config import ResearchConfig                           # noqa: E402
 from research.qualification import QUALIFICATION_VERSION             # noqa: E402
 from utils.console_safe import safe_print                            # noqa: E402
@@ -283,7 +283,7 @@ def main(argv: list[str] | None = None) -> int:
         "prod_version": version,
         "qualification_version": QUALIFICATION_VERSION,
         "spine_config_sha256": rc.sha256(),
-        **provenance_block(rc.exit_model, rc.round_trip_bps),
+        **provenance_block(rc.exit_model, rc.round_trip_bps, tie_break=TIE_BREAK_PRODUCTION),
         "selfcheck": selfcheck,
         "per_instrument": per_inst,
         "pooled_baseline_trades": pooled_n,
@@ -295,16 +295,11 @@ def main(argv: list[str] | None = None) -> int:
         "authority_granted": authority,
         "production_behavior_changed": "NO",
     }
-    body_json = json.dumps(body, sort_keys=True, indent=2)
-    body_sha = hashlib.sha256(body_json.encode("utf-8")).hexdigest()
-    (out_dir / "gaussian_pivotality.json").write_text(body_json, encoding="utf-8")
-    (out_dir / "gaussian_pivotality_manifest.json").write_text(json.dumps({
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "git_commit": qz._git_commit(),
-        "body_sha256": body_sha,
-        "spine_config_sha256": rc.sha256(),
-        "backtest_engine_gate": gate,
-    }, sort_keys=True, indent=2), encoding="utf-8")
+    body_sha = hashlib.sha256(json.dumps(body, sort_keys=True, indent=2).encode("utf-8")).hexdigest()
+    write_report(
+        out_dir, "gaussian_pivotality", body,
+        extra_manifest={"spine_config_sha256": rc.sha256(), "backtest_engine_gate": gate},
+    )
 
     safe_print(f"\nVERDICT: {verdict}")
     safe_print(f"information channel changed entries: {info_change}")

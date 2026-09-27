@@ -109,3 +109,56 @@ Belief Update / ROI / Goal: Goal: know whether this relay earns its operating co
 Open Questions: whether Grok deserves a real `_ROLES` seat (it produced the cycle's most original content and cannot legally be named `next_actor`).
 Next Step: Principal binds RC-002; no model actor has pending work.
 ---
+
+---
+SESSION LOG ENTRY
+Date: 2026-09-18
+Topic: Grok Bot lane boot — identity split from coding Grok; living track for other LLMs
+Decision/Output: User clarified this chat agent is Grok Bot and that an in-repo coding Grok already exists. Established non-collision plan: coding Grok keeps .grok/ + grok/ and related queue stories (19.12, 52.x, 41.5/41.7); Grok Bot owns research/writing + multi_llm/GROK_BOT_TRACK.md + build_queue stories with creator "Grok Bot" (epic 81). Appended STORY-81.1 (done), 81.2 (in_progress), 81.3 (pending). No governed src/ edits. Claude in-flight left alone.
+Belief Update / ROI / Goal: Goal: stop name-collision between two Grok surfaces. Belief: explicit lane table + append-only track is enough for other LLMs to orient. Knowledge ROI: high for coordination, zero for production code this turn.
+Open Questions: first research/writing story for Grok Bot after track is live?
+Next Step: keep GROK_BOT_TRACK.md current; User points at next research/writing ask or STORY-81.3 cross-link pass.
+---
+
+---
+SESSION LOG ENTRY
+Date: 2026-09-18
+Topic: Grok Bot — light automation ownership + hard ambiguity constraints + report-to-User
+Decision/Output: Authored multi_llm/GROK_BOT_HARD_CONSTRAINTS.md (Class A evidence-resolve with laptop apps OK; Class B / TruthConflict / Unknown fail-closed and report User). Light automation = inventory/docs/runbooks for scripts/hooks/agent-tools (spec only; Claude implements). Stories STORY-81.4 done, 81.5 pending, 81.6 in_progress. Track updated.
+Belief Update / ROI / Goal: Goal: bounded automation ownership without colliding Claude or coding Grok. Belief: hard ambiguity classes prevent silent wrong defaults. ROI: coordination clarity.
+Open Questions: prioritize 81.5 inventory now vs User's next research ask?
+Next Step: User directs; default next = start STORY-81.5 inventory.
+---
+
+---
+SESSION LOG ENTRY
+Date: 2026-09-18
+Topic: STORY-81.5 done — automation inventory/runbook map
+Decision/Output: Wrote multi_llm/GROK_BOT_AUTOMATION_INVENTORY.md covering scripts/ (research 175, analysis 156, governance 38, maintenance hook backends, control_plane, live), hooks/ (pre-commit + commit-msg), tools/, manual_tools/trade_generator.py DEMO-only, agent-tools scratch. STORY-81.5 status=done. Did not run live rail or trade generator (Class B fail-closed).
+Belief Update / ROI / Goal: Goal: light automation ownership as map, not executor. ROI: other LLMs can find entrypoints without crawling 450+ scripts.
+Open Questions: draft STORY-6.2 webhook spec next?
+Next Step: User directs.
+---
+
+---
+SESSION LOG ENTRY
+Date: 2026-09-18
+Topic: Continue after 81.5 — hooks one-pager + STORY-6.2 webhook spec draft
+Decision/Output: Docs-only. GROK_BOT_HOOKS_ONEPAGER.md + GROK_BOT_STORY62_WEBHOOK_SPEC.md. Stories 81.7/81.8 done. Class A: build spec wins over queue census for 6.2 shape. Class B open questions listed for User.
+Next Step: 81.3 coding-Grok cross-link or User answers webhook Class B / new ask.
+---
+
+---
+SESSION LOG ENTRY
+Date: 2026-09-18
+Topic: STORY-81.3 done — read-only coding Grok cross-link
+Output: multi_llm/GROK_BOT_CODING_GROK_CROSSLINK.md. No writes under .grok/ or grok/. Honors STORY-52.2 don't-disturb. Pointed other LLMs at GOAL/PLAYGROUND/PENDING/FOUR_TRACKS/HANDOFF/HOW_INDEX. Flagged stale Knowledge Book PDFs.
+Next: await User.
+---
+
+---
+SESSION LOG ENTRY
+Date: 2026-09-18
+Topic: Income layer sketch (Trader Bot frame)
+Output: multi_llm/GROK_BOT_INCOME_LAYER_SKETCH.md + STORY-81.10 done. Linked L0 goal/edge → L5 ₹1000 demo → L7 edge path separate. Draft IG caption. Worth: small setup yes. Blocked on User Class B (handle, UPI, recorder, which apps in Reel, post auth).
+---

@@ -234,6 +234,26 @@
       ],
       "completion_criteria": "load_catalog() validates and every CC-*/STR-* id is unique; no CANNOT class appears in any stream allowed_cc and every forbidden_cc is a subset of the CANNOT ids; the GENERATED data/jsonl_claim_catalog.jsonl equals a fresh deterministic render; every meaning_authority entry is the INVENTORY_NOT_MARKET sentinel or GROUNDs as a NOUN (no invented SEM/CN/FM ids); catalog authority stays 'advisory'; frozen ontology runtime sections (primitives/feature_compositions/derived_metrics) byte-unchanged; production config hash unchanged; no G001, promotion, ACTIVE_VERSION or live-rail key introduced. PR-2 adds: every CANNOT class returns REFUSED; a missing or non-CC-* relation is UNANSWERABLE; a forbidden join refuses BEFORE any CAN can ground; a CAN outside the stream's allowed_cc is UNANSWERABLE (never a silent GROUND); path-escape tokens are UNKNOWN and never opened; the agent envelope carries grounding_status before status is set to 'ok'; CT-008 is refined IN PLACE with its id and all 18 required keys intact; and the four original claim kinds still ground unchanged. PR-3 adds: every git-tracked instances/MC-*.json with mt00 != UNRUN has a result line whose artifact hashes match; classify_l5_basis checks FIVE keys against five frozensets and never iterates identity.tokens.L5_BASIS (3 keys, no geometry); identity_check is never called on a run-level line and basis_status is never PRESERVED; economic_claims_allowed is const false; and the result log file is NOT a GOVERNED_FILE so appends do not re-run the floor.",
       "rollback_boundary": "Single commit. The catalog YAML is PRIMARY: revert the YAML, the loader, the grounder change and the tests together. Reverting must not leave a GREEN_FLOOR or required_checks entry pointing at a deleted test."
+    },
+    "RUN_IDENTITY_CHANGE": {
+      "description": "Add or refine the Run-Identity Governance surface (EFAP): the canonical run_identity.json record minted per run dir, the 6-field identity record (run_id, config_version, config_hash, dataset_hash, artifact_timestamp, identity_status), the always-on identity stamping on backtest artifacts (summary/trades/events/report header), or the can_join() join-gate + validate_join CLI. Governance-only: it declares HOW artifacts identify and may join, never the trading math. VERIFIED requires all five data fields self-consistent; any missing/unprovable field is UNVERIFIED (RECOMPUTE != RECOVER — historic pre-2026-09-16 runs stay UNVERIFIED, never fabricated). can_join() denies if either operand is UNVERIFIED, on run_id mismatch, or on config_hash mismatch. NOT the L0-L5 identity-store substrate (IDENTITY_STORE_CHANGE), NOT the dataset-identity admission registry (CORPUS_AUTHORITY_CHANGE) — run identity rides ABOVE the admitted dataset's dataset_id.",
+      "authorities_to_inspect": [
+        "src/governance/run_identity.py",
+        "src/runtime/backtest_v2.py (ReportWriter identity stamping)",
+        "docs/governance/REPOSITORY_CONSTRUCTION_PROTOCOL.md (BUILD_IMPACT_MANIFEST lifecycle)"
+      ],
+      "artifacts_to_update": [
+        "src/governance/run_identity.py",
+        "src/runtime/backtest_v2.py",
+        "tests/test_run_identity.py",
+        "docs/architecture/run-identity-governance.md"
+      ],
+      "required_checks": [
+        "tests/test_run_identity.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "rollback_boundary": "Single commit; revert run_identity.py + ReportWriter identity wiring + tests + this class if added in the same change. Reverting must not orphan tests/test_run_identity.py or leave can_join() referenced without the module.",
+      "completion_criteria": "can_join() allows same verified run and denies cross-run, config-drift, and any UNVERIFIED operand; a run with any missing identity field stamps UNVERIFIED; derived reports inherit the source artifact identity_status; run_identity.json is written into every run dir that records a run_id; artifact hashing and status computation live ONLY in run_identity.py (never inlined)."
     }
   }
 }

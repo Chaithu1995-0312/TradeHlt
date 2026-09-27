@@ -120,6 +120,14 @@ class GateIntelligence:
         "gate_approval_threshold": 0.55,
     }
 
+    # F-109 (2026-09-25): basis of the ATR that `_vol_score` divides the dollar bar range by.
+    #   legacy_relative — canonical FM-041 `atr` as passed (close-relative on the Engine rail ⇒ r≈3,000,
+    #                     score 0). Byte-identical to the pre-F-109 behaviour.
+    #   absolute        — FM-074 `atr_absolute` = atr * close, the same conversion the planner and
+    #                     `live_engine_hook` already apply for `compute_crt_levels` (F-072).
+    # The production boundary (`live_engine_hook`) requires the key; this class only validates it.
+    VOL_ATR_BASES: tuple[str, ...] = ("legacy_relative", "absolute")
+
     def __init__(self, config: dict[str, Any] | None = None) -> None:
         m: dict[str, Any] = {**self._CONFIG_DEFAULTS}
         if isinstance(config, dict):
@@ -129,6 +137,11 @@ class GateIntelligence:
         self._w_liquidity = float(m["gate_weight_liquidity"])
         self._w_structure = float(m["gate_weight_structure"])
         self._threshold   = float(m["gate_approval_threshold"])
+        self._vol_atr_basis = str(m.get("gate_vol_atr_basis", "legacy_relative"))
+        if self._vol_atr_basis not in self.VOL_ATR_BASES:
+            raise ValueError(
+                f"gate_vol_atr_basis must be one of {self.VOL_ATR_BASES}, got {self._vol_atr_basis!r}"
+            )
 
     # ── Public entry point ────────────────────────────────────────────────────
 
@@ -250,6 +263,11 @@ class GateIntelligence:
         atr = float(features.get("atr", 0.0))
         if atr <= 0:
             return 0.0
+        if self._vol_atr_basis == "absolute":
+            close = float(features.get("close", 0.0))
+            if close <= 0:
+                return 0.0
+            atr = atr * close  # FM-074 atr_absolute (F-109)
         bar_range = float(features.get("high", 0.0)) - float(features.get("low", 0.0))
         if bar_range <= 0:
             return 0.0

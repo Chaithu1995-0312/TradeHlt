@@ -1,0 +1,81 @@
+{
+  "death_reason_pct": {
+    "RESET_HTF": {
+      "n": 1442,
+      "pct": 80.2
+    },
+    "RESET_RETRACE": {
+      "n": 166,
+      "pct": 9.23
+    },
+    "RESET_EXTENSION": {
+      "n": 109,
+      "pct": 6.06
+    },
+    "RESET_OTHER": {
+      "n": 62,
+      "pct": 3.45
+    },
+    "FILTER_REJECTED": {
+      "n": 15,
+      "pct": 0.83
+    },
+    "ACCEPTED": {
+      "n": 3,
+      "pct": 0.17
+    },
+    "SOFT_CONF_TIMEOUT": {
+      "n": 1,
+      "pct": 0.06
+    }
+  },
+  "n_candidates": 1798,
+  "expansion_qualified": {
+    "false": 124,
+    "true": 24
+  },
+  "expansion_fail_outcomes": [
+    [
+      "RESET_EXTENSION",
+      53
+    ],
+    [
+      "RESET_OTHER",
+      36
+    ],
+    [
+      "RESET_RETRACE",
+      35
+    ]
+  ],
+  "decision_unique_approved": [
+    "CAND-10439",
+    "CAND-11282",
+    "CAND-11592",
+    "CAND-12790",
+    "CAND-14329",
+    "CAND-16450",
+    "CAND-18007",
+    "CAND-18424",
+    "CAND-26790",
+    "CAND-29106",
+    "CAND-30713",
+    "CAND-3410",
+    "CAND-36677",
+    "CAND-41219",
+    "CAND-43015",
+    "CAND-44939",
+    "CAND-45014",
+    "CAND-47157",
+    "CAND-677",
+    "CAND-8025",
+    "CAND-808",
+    "CAND-8946",
+    "CAND-9894"
+  ],
+  "decision_unique_rejected": [
+    "CAND-17925"
+  ],
+  "n_decision_approved_unique": 23,
+  "n_decision_rejected_unique": 1
+}

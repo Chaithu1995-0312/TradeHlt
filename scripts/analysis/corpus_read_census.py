@@ -398,7 +398,16 @@ def _unparseable_key(rel: str, marker: str, evidence: str) -> str:
 
 def scan_file(path: Path) -> list[dict]:
     try:
-        src = path.read_text(encoding="utf-8")
+        # utf-8-sig, not utf-8: CPython's own tokenizer accepts a leading BOM in source, so a
+        # BOM'd file is valid Python and must be ANALYSED, not reported. Reading it as plain
+        # utf-8 made ast.parse raise on the U+FEFF and the file surfaced as a <syntax-error>
+        # UNKNOWN -- i.e. as an unresolved corpus read -- when the scanner had in fact never
+        # looked inside it. 56 tracked files carry a BOM (PowerShell's Out-File default), so
+        # that false-positive class was large. This is a scanner-correctness fix and is NOT
+        # the taint-precision fix (with-statement / argparse resolution) that the Phase 3 plan
+        # deliberately declined: that one re-classifies REAL reads, this one stops inventing
+        # findings for files that were never parsed. A genuine SyntaxError still reports.
+        src = path.read_text(encoding="utf-8-sig")
     except (OSError, UnicodeDecodeError) as exc:
         rel = path.relative_to(_ROOT).as_posix()
         evidence = f"read error: {exc}"

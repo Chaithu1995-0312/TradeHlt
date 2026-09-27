@@ -1,0 +1,39 @@
+{
+  "schema": "dependency-ontology/1",
+  "title": "Tradelatest Codebase Dependency Ontology (FROZEN)",
+  "generated_by": "Phase C",
+  "frozen": true,
+  "ladder": [
+    {"level": 0, "name": "File Exists", "authority": "Census", "strength": 100},
+    {"level": 1, "name": "AST Import Dependency", "authority": "AST", "strength": 85},
+    {"level": 2, "name": "Call Dependency", "authority": "CallGraph", "strength": 90},
+    {"level": 3, "name": "Config Dependency", "authority": "Config", "strength": 60},
+    {"level": 4, "name": "Data Dependency", "authority": "DataScan", "strength": 40},
+    {"level": 5, "name": "Runtime Reachability", "authority": "RuntimeReachability", "strength": 100},
+    {"level": 6, "name": "Story Dependency", "authority": "Derived", "strength": null},
+    {"level": 7, "name": "Layer Dependency", "authority": "Derived", "strength": null}
+  ],
+  "authority_strength": {
+    "Census": 100, "RuntimeReachability": 100, "CallGraph": 90, "AST": 85,
+    "Config": 60, "DataScan": 40, "Heuristic": 20
+  },
+  "edge_identity": {
+    "pair_id": "sha256(source|target)",
+    "edge_id": "sha256(source|target|authority)"
+  },
+  "stores": {
+    "existence": "multi_llm/dependency_graph/edges_existence.jsonl",
+    "support": "multi_llm/dependency_graph/edges_support.jsonl",
+    "runtime": "multi_llm/dependency_graph/runtime_reachability.jsonl",
+    "story_deps": "multi_llm/story_dependency_graph.jsonl",
+    "layer_deps": "multi_llm/layer_dependency_graph.jsonl"
+  },
+  "authority_edges": {
+    "AST": "multi_llm/dependency_graph/ast_edges.jsonl",
+    "CallGraph": "multi_llm/dependency_graph/call_edges.jsonl",
+    "Config": "multi_llm/dependency_graph/config_edges.jsonl",
+    "DataScan": "multi_llm/dependency_graph/data_edges.jsonl"
+  },
+  "promotion_rule": "at least one authority with strength >= 90",
+  "discipline": "facts only; every edge carries authority + evidence; inferred never presented as observed"
+}

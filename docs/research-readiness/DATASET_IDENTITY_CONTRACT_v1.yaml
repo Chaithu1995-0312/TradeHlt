@@ -1,0 +1,335 @@
+# DATASET_IDENTITY_CONTRACT_v1
+#
+# Single authority document for the Dataset Identity layer (L2).
+# Status: DRAFT - frozen contract fields only; implementation pending.
+# See: market_language_schema.json (L4/L5 Semantic Trace vocabulary, already drafted).
+#
+# Architecture ladder (authority order, top = closest to storage/preservation):
+#   L0 Storage Preservation
+#       |
+#   L1 Run Identity        - which execution produced this artifact?
+#       |
+#   L2 Dataset Identity    - which market dataset was consumed?   <- THIS CONTRACT
+#       |
+#   L3 Dataset Integrity  - can this dataset be trusted?
+#       |
+#   L4 Feature Authority
+#       |
+#   L5 Semantic Authority
+#
+# Hidden distinction (within L2):
+#   Dataset Identity
+#       |
+#   Dataset Trace        <- lineage, assigned, meaning-carrying
+#       |
+#   Dataset Integrity    <- content, derived, re-verifiable
+#
+# dataset_trace_id and dataset_hash are NOT the same thing.
+#   - same trace / different hash : content changed, lineage preserved
+#   - same hash  / different trace : re-released under a new lineage label
+# The contract permits both; it does NOT collapse them.
+
+version: 1
+status: DRAFT
+name: DATASET_IDENTITY_CONTRACT
+domain: market-data identity and lineage
+
+purpose: |
+  Define the authoritative Dataset Identity layer contract: the canonical record fields, the
+  three load-bearing governance decisions (minting authority, hash scope, run-dataset cardinality),
+  and the bridge between Dataset Trace (lineage) and Semantic Trace state-machine reasoning (L4/L5).
+
+  This contract is load-bearing: everything downstream (Parquet storage, FeaturePipeline execution,
+  Semantic Trace instances, CRT lineage, research provenance) builds on top of it. The contract is
+  intentionally minimal - it contains ONLY the canonical record plus the three decisions the entire
+  layer rests on.
+
+---
+
+## Canonical record (single dataset identity)
+
+The authoritative fields of one dataset identity. A dataset identity is frozen when it is consumed
+by a run and recorded in a run artifact, OR registered as a standalone lineage entry.
+
+dataset_trace_id:               # ASSIGNED authority (see Contract 1)
+  description: "Human-meaning-carrying lineage label for the dataset instance."
+  example: "TRACE-XAUUSD-M15-ICM-20260521-001"
+  rule: "Assigned, not hash-derived. Communicates symbol, timeframe, broker, lineage ordinal."
+  mutable: false   # lineage label is stable once assigned
+
+dataset_hash:                   # DERIVED authority (see Contract 1 + Contract 2)
+  description: "Content proof - SHA of the dataset AS CONSUMED by FeaturePipeline."
+  example: "sha256(...)"
+  rule: "Computed, not assigned. Re-verifiable by any consumer holding the same dataset."
+  mutable: false   # content hash is stable for a given consumed dataset
+
+symbol:
+  description: "Symbol of the market dataset (e.g. XAUUSD)."
+  example: "XAUUSD"
+
+timeframe:
+  description: "Candle timeframe of the dataset (e.g. M15)."
+  example: "M15"
+
+broker:
+  description: "Broker / feed identity the dataset originated from."
+  example: "ICMarketsSC-Demo"
+
+timezone:
+  description: "Timezone the dataset bars are normalized/expressed in."
+  example: "UTC+3"
+
+schema:
+  description: "Schema of the dataset (e.g. OHLCV)."
+  example: "OHLCV"
+
+row_count:
+  description: "Number of rows (candles) in the consumed dataset."
+  example: 47275
+
+start_time:
+  description: "Start time of the dataset contents (normalized TZ)."
+  example: "2024-11-12T00:00:00"
+
+end_time:
+  description: "End time of the dataset contents (normalized TZ)."
+  example: "2026-05-21T23:45:00"
+
+identity_status:
+  description: "Lifecycle status of the dataset identity."
+  allowed: ["UNFROZEN", "FROZEN", "VERIFIED", "MISSING", "UNKNOWN", "REJECTED"]
+  rule: "FROZEN = recorded in a run artifact; VERIFIED = admitted by L3 Integrity; MISSING/REJECTED = no admissible dataset."
+  example: "VERIFIED"
+
+---
+
+## Contract 1 - Minting Authority
+
+dataset_trace_id = ASSIGNED authority      (meaning-carrying: TRACE-XAUUSD-M15-ICM-001)
+dataset_hash     = DERIVED authority       (sha256 of consumed dataset)
+
+Rationale:
+  - dataset_trace_id is readable across the research lineage (symbol, timeframe, broker,
+    lineage ordinal). A SHA-derived trace id would not communicate meaning.
+  - dataset_hash is a re-verifiable content proof; it is derived from the dataset, not assigned
+    by a human.
+  - This asymmetry mirrors the Run Identity design: assigned run ids (meaning-carrying) +
+    derived content proofs.
+
+Consequence:
+  - Two runs consuming the same dataset instance share the same dataset_trace_id and the same
+    dataset_hash (same lineage, same content).
+  - A regenerated dataset file may keep the same dataset_trace_id with a different dataset_hash
+    if content changed, or keep the same dataset_hash under a new dataset_trace_id if lineage was
+    re-issued - both are legal under this contract.
+
+---
+
+## Contract 2 - Hash Scope
+
+dataset_hash = hash(normalized OHLCV dataset CONSUMED BY FeaturePipeline)
+
+What the hash covers:
+  - The normalized OHLCV dataset as FeaturePipeline actually consumes it.
+  - NOT raw CSV bytes.
+  - NOT parquet bytes.
+  - NOT a filename.
+
+Rationale:
+  - FeaturePipeline is the consumer. Dataset Identity should represent what the engine actually
+    sees. A CSV->parquet conversion that does not change the consumed data must not change the
+    hash; a conversion that changes the consumed data (normalization, alignment, NaN handling,
+    bar boundaries, timezone) must change the hash - because the engine sees different data.
+
+Load-bearing requirement (pin the normalization recipe):
+  - "normalized OHLCV consumed by FeaturePipeline" is only well-defined if the normalization
+    recipe itself is governed and pinned. If normalization is underspecified, then:
+      - two pipelines normalizing "the same dataset" differently get different hashes for
+        arguably-the-same lineage (legal under the contract, but ambiguous without a pinned recipe),
+        and
+      - L3 Dataset Integrity re-verification cannot be deterministic.
+  - Therefore the hash scope MUST reference the authority that defines the normalization recipe
+    (or the recipe must be inlined here in a future contract revision). Until then, hash scope is
+    "normalized OHLCV as defined by the FeaturePipeline normalization authority."
+
+---
+
+## Contract 3 - Run-Dataset Cardinality
+
+A run does NOT assume a 1:1 relationship to a dataset.
+
+  run_id:
+    run_20260916_225925_XAUUSD
+
+  datasets:
+    - dataset_trace_id: TRACE-XAUUSD-M15-ICM-001
+      dataset_hash: sha256(...)
+      identity_status: VERIFIED
+    - dataset_trace_id: TRACE-XAUUSD-H1-ICM-002        # HTF context dataset
+      dataset_hash: sha256(...)
+      identity_status: VERIFIED
+
+Rationale:
+  - Future research already hints at multiple datasets per run (M15 price, H1, HTF context).
+  - The canonical record for a run carries a datasets[] list, not a single dataset_trace_id.
+  - Each dataset instance in the list is independently identified (trace + hash + status).
+
+Consequence for the bridge:
+  - Dataset Trace -> Semantic Trace is per-dataset. Each dataset instance a run consumes can produce
+    its own set of semantic trace instances from the state-machine execution over that dataset.
+
+---
+
+## Bridge to Semantic Trace (L4/L5)
+
+The bridge between Dataset Identity (L2) and Semantic Trace (L5) separates two relations that must
+NOT be collapsed:
+
+capability_link (static):
+  dataset_trace_id -- enables vocabulary --> semantic vocabulary
+
+  - The dataset (schema, timeframe, symbol, normalization) is what makes a given semantic
+    vocabulary applicable. E.g. an M15 OHLCV dataset enables the M15 feature pipeline, which enables
+    the CRT states and feature enums.
+  - This is a CAPABILITY claim: "this dataset can feed this vocabulary." It is NOT an instance claim.
+
+instance_link (dynamic):
+  run over dataset -- produces --> semantic trace instances
+
+  - A specific run over a specific dataset instance produces specific semantic trace instances
+    (e.g. crt::SWEEP residence episodes with specific gate fingerprints during that run).
+  - This is an INSTANCE claim: "this run over this dataset trace produced these semantic traces."
+
+Therefore:
+  - "produces" is really  run-over-dataset -> semantic-trace-instances,  NOT  dataset -> semantic trace.
+  - Dataset Identity (L2) is the capability+lineage anchor.
+  - Run Identity (L1) is the execution anchor.
+  - Semantic Trace (L5) is the instance anchor.
+  - A dataset trace does NOT by itself imply a semantic trace exists - only a completed run over it
+    can produce semantic traces.
+
+---
+
+## Bridge to Feature Authority (L4) and Semantic Authority (L5) vocabulary
+
+The Semantic Trace vocabulary is already drafted in market_language_schema.json (v1,
+DRAFT_DETERMINISTIC_FIRST, PROPOSAL_AWAITING_ENGINE_CONSUMER):
+
+  trace_id:
+    purpose: contiguous CRT-machine residence episode
+    value_domain: crt_machine canonical state (one of 12) + feature_enum gate fingerprint
+    grounded_in: [crt_machine, feature_enum]
+
+  can_join:
+    purpose: predicate-level joinability - do observed gates satisfy the target state?
+    value_domain: predicate over the activation_condition gate keys for the specific crt_machine
+      state being traced (14 distinct gate keys exist across all 12 states; each state's fingerprint
+      uses the subset that state checks)
+    grounded_in: [feature_enum, crt_to_predicate_gating_edge]
+
+The full gate vocabulary across all crt_machine states (14 keys from market_crt_states.yaml
+`states[].when` blocks across the 9 predicate-bearing states; RANGE checks exactly the 10 below):
+  liquidity_sweep, break_of_structure, sweep_detected, displacement_flag,
+  double_sweep, higher_high, lower_low, retest_flag, swing_high, swing_low,
+  change_of_character, session, rsi_state, trend_bias
+
+Example gate fingerprint (RANGE state, from market_crt_states.yaml:235-251 - states.RANGE.when):
+  liquidity_sweep: [NoSweep]
+  break_of_structure: [NoBreak]
+  sweep_detected: [NoSweep]
+  displacement_flag: [NoDisplacement]
+  double_sweep: [NoDoubleSweep]
+  higher_high: [NoHigherHigh]
+  lower_low: [NoLowerLow]
+  retest_flag: [NoRetest]
+  swing_high: [NoSwingHigh]
+  swing_low: [NoSwingLow]
+
+So a semantic_trace_id instance would read, e.g.:
+  semantic_trace_id:
+    crt::RANGE
+    gates::NoSweep|NoBreak|NoSweep|NoDisplacement|NoDoubleSweep|NoHigherHigh|NoLowerLow|NoRetest|NoSwingHigh|NoSwingLow
+
+Note: the gate fingerprint must use the EXACT enum values from market_crt_states.yaml
+`states[].when` blocks (the detection predicates for each CRT state), not a reworded shorthand,
+so the trace remains authority-grounded.
+
+
+Authority notes for the Semantic Trace bridge (from the two CRT YAML files):
+
+  - 12 crt_machine states are declared in crt_state_identity.yaml identity.states (Tier 1 semantic
+    core). 9 of them carry detection predicates in market_crt_states.yaml states[].when; the other 3
+    (RANGE_C1, DISTRIBUTION_C3, MANIPULATION_C2) are identity/classification metadata only with no
+    when-block - a Semantic Trace instance for those states would carry an empty gate fingerprint.
+  - EXECUTION has a 4-gate predicate in market_crt_states.yaml (retest_flag, trend_bias, rsi_state,
+    session) but crt_state_identity.yaml marks it reachable: false (structurally unreachable). The
+    predicate exists; the identity declares the state not currently reachable by the constructor.
+  - RANGE is the ground state with the largest fingerprint (10 gates). It is the default/ground: bars
+    that fail every predicate set still fall through to RANGE (resolver default, market_crt_states.yaml).
+  - 3 crt_machine states carry empty when-blocks (SHADOW_PENDING, EXPIRED, RESOLUTION): they are either
+    temporal (EXPIRED/RESOLUTION, require TTL or trade-state memory) or memory-only (SHADOW_PENDING).
+
+This is why the Semantic Trace contract says each state's fingerprint is the subset that state checks -
+not every state has the same gates, and the completeness of a state's fingerprint is itself an
+authority-grounded quantity.
+
+
+
+---
+
+## Orphan classification (Sept-19 test case)
+
+A dataset identity + integrity layer classifies orphans before any strategy conclusions are allowed.
+Example: the config-only run with no paired output.
+
+  run_id: run_20260919_175341
+
+  dataset_identity_status: MISSING      # no dataset_trace_id was frozen
+  dataset_integrity_status: UNKNOWN     # no dataset_hash was recorded
+  admissibility: REJECTED              # no admissible dataset -> no strategy conclusions
+
+This is why the layer matters: a config dump exists, but the system cannot answer:
+  - which dataset was consumed?
+  - was the dataset admissible?
+  - did semantic traces ever exist?
+
+Under this contract, the run is classified MISSING/UNKNOWN/REJECTED before any strategy reasoning is
+allowed, rather than silently orphaned.
+
+---
+
+## Scope boundary (what this contract does NOT contain)
+
+Everything below is intentionally deferred - it builds on top of this contract later:
+
+  - Parquet / storage format decisions (L0/L3 implementation detail)
+  - FeaturePipeline execution mechanics (L4 implementation detail)
+  - Semantic Trace instance records and CRT lineage (L5 - vocabulary is drafted, instances come later)
+  - Research provenance chains (L5 reasoning/retrieval; authority remains codebase/implementation)
+  - Normalization recipe inlining (deferred to a future contract revision that pins it)
+
+This contract contains ONLY:
+  - the canonical dataset identity record fields,
+  - the three load-bearing decisions (minting authority, hash scope, run-dataset cardinality),
+  - the bridge-contract note (capability vs instance),
+  - and the orphan-classification example.
+
+---
+
+## Appendix: relationship to existing artifacts
+
+  L4/L5 Semantic Trace vocabulary:
+    docs/research-readiness/market_language_schema.json
+      (DRAFT_DETERMINISTIC_FIRST - trace_id / can_join proposals, 10-gate edge, DISPLACEMENT
+      disambiguation, sweep 6-way overlap preserved)
+
+  L1 Run Identity (physical run-id minting):
+    scripts/analysis/layer_trace/h1_run_identity.py
+      (existing hypothesis-test script; not yet resolved into an authoritative run-id contract)
+
+  Market-language census (deterministic vocabulary extractor feeding the above):
+    scripts/analysis/market_language_census.py  ->  market_language_census_report.{json,md}
+
+The Dataset Identity layer (this contract) sits between Run Identity (L1) and Feature/Semantic
+Authority (L4/L5), and bridges Dataset Trace (assigned lineage) to Semantic Trace (derived
+state-machine reasoning) without absorbing either.

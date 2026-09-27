@@ -33,7 +33,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
 from dataclasses import asdict, dataclass
@@ -51,6 +50,8 @@ sys.path.insert(0, str(ROOT))
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+from research.provenance import sha256_file as _sha256  # noqa: E402 — research-framework Phase 4 dedup
+
 # ── v0.8 frozen constants (cited, not renegotiated) ───────────────────────────
 L = 12
 H = 12
@@ -67,13 +68,6 @@ C_EMPIRICAL = 0.0238
 C_DESIGN = 0.055
 C_LEGACY = 0.070
 EPS_GAP_USD = 1e-9  # open != prev_close
-
-
-def _sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    h.update(path.read_bytes())
-    return h.hexdigest()
-
 
 def _stats(xs: np.ndarray) -> dict[str, Any]:
     a = np.asarray(xs, dtype=float)

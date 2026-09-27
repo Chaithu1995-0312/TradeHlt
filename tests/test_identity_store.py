@@ -46,6 +46,12 @@ L0 = {
     "bar_open_ts": "2025-01-01T10:00:00",
     "open": 2600.0, "high": 2601.0, "low": 2599.0, "close": 2600.5, "volume": 10.0,
 }
+# synthetic non-HEAD fixture: NAMES/STATES below are NOT imported from
+# features.feature_schema.CANONICAL_FEATURES — the "schema_version": "5.0" literals
+# used throughout this file test IdentityStore/identity_check MECHANICS generically
+# against an arbitrary valid closed-vocabulary token, not "this is the current HEAD
+# schema". Left at 5.0 deliberately (schema_version_registry.json FEATURE_CANONICAL
+# slot for this file) — do not "helpfully" bump these to 6.0 on a future schema move.
 NAMES = ["open", "high", "low", "close"] + [f"f{i}" for i in range(44)]  # 48 names
 assert len(NAMES) == 48
 STATES = [{"value": 0, "name": "NoSpike"}, {"value": 1, "name": "VolumeSpike"}]

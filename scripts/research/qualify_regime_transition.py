@@ -45,6 +45,7 @@ from interpreters.regime_observer import MarkovRegimeForecaster, RegimeLabeler  
 from research.config import ResearchConfig                        # noqa: E402
 from research.costs import CostModel                              # noqa: E402
 from research.process_characterization import characterize        # noqa: E402
+from governance.measurement_basis import TIE_BREAK_PRODUCTION  # noqa: E402
 from research.provenance import provenance_block                  # noqa: E402
 from research.qualification import (                              # noqa: E402
     BH_METHOD_VERSION, PERMUTATION_METHOD_VERSION, QUALIFICATION_VERSION, QualConfig,
@@ -222,7 +223,7 @@ def main(argv: list[str] | None = None) -> int:
             "redundant_tol": rcfg.redundant_tol,
         },
         "markov_params": mcfg,
-        **provenance_block(cfgs["toy"].exit_model, cfgs["toy"].round_trip_bps),
+        **provenance_block(cfgs["toy"].exit_model, cfgs["toy"].round_trip_bps, tie_break=TIE_BREAK_PRODUCTION),
         "calibration": calibration,
         "families": {
             "toy": {"config_path": TOY_CONFIG, "config_sha256": cfgs["toy"].sha256(),

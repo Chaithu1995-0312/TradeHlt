@@ -11,6 +11,7 @@ Guarantees:
 Does not claim mass externalization of other HOW candidates.
 """
 from __future__ import annotations
+from tests.helpers.crt_config import crt_config_for_test
 
 import math
 from datetime import datetime
@@ -35,7 +36,7 @@ def _min_depth_floor(cfg: CRTConfig, atr: float) -> float:
 
 
 def test_dataclass_default_is_legacy_tenth():
-    cfg = CRTConfig()
+    cfg = crt_config_for_test()
     assert cfg.retest_min_depth_atr_fraction == pytest.approx(0.10)
 
 
@@ -43,18 +44,18 @@ def test_default_parity_matches_legacy_literal():
     """Omitted/default HOW value must equal the pre-migration 0.1 * atr floor."""
     atr = 2.5
     legacy = 0.1 * atr
-    cfg = CRTConfig()  # missing production override → dataclass default
+    cfg = crt_config_for_test()  # missing production override → dataclass default
     assert _min_depth_floor(cfg, atr) == pytest.approx(legacy)
-    cfg_explicit = CRTConfig(retest_min_depth_atr_fraction=0.10)
+    cfg_explicit = crt_config_for_test(retest_min_depth_atr_fraction=0.10)
     assert _min_depth_floor(cfg_explicit, atr) == pytest.approx(legacy)
 
 
 def test_dynamism_how_value_changes_floor():
     """Changing only retest_min_depth_atr_fraction must change min_depth."""
     atr = 2.0
-    floor_default = _min_depth_floor(CRTConfig(), atr)
-    floor_tight = _min_depth_floor(CRTConfig(retest_min_depth_atr_fraction=0.5), atr)
-    floor_off = _min_depth_floor(CRTConfig(retest_min_depth_atr_fraction=0.0), atr)
+    floor_default = _min_depth_floor(crt_config_for_test(), atr)
+    floor_tight = _min_depth_floor(crt_config_for_test(retest_min_depth_atr_fraction=0.5), atr)
+    floor_off = _min_depth_floor(crt_config_for_test(retest_min_depth_atr_fraction=0.0), atr)
     assert floor_default == pytest.approx(0.2)
     assert floor_tight == pytest.approx(1.0)
     assert floor_off == pytest.approx(0.0)
@@ -64,11 +65,11 @@ def test_dynamism_how_value_changes_floor():
 
 def test_fail_closed_rejects_negative_and_non_finite():
     with pytest.raises(ValueError, match="retest_min_depth_atr_fraction"):
-        CRTConfig(retest_min_depth_atr_fraction=-0.01)
+        crt_config_for_test(retest_min_depth_atr_fraction=-0.01)
     with pytest.raises(ValueError, match="retest_min_depth_atr_fraction"):
-        CRTConfig(retest_min_depth_atr_fraction=float("nan"))
+        crt_config_for_test(retest_min_depth_atr_fraction=float("nan"))
     with pytest.raises(ValueError, match="retest_min_depth_atr_fraction"):
-        CRTConfig(retest_min_depth_atr_fraction=float("inf"))
+        crt_config_for_test(retest_min_depth_atr_fraction=float("inf"))
 
 
 def test_config_builder_override_and_default():
@@ -95,7 +96,7 @@ def test_try_expansion_to_retest_default_parity_vs_dynamism():
     # use 1.05 so default floor 1.0 admits, tight floor 5.0 rejects.
     # Actually depth_abs must also clear adaptive ceiling — set ceiling loose.
     def _sm(frac: float) -> tuple[StateMachine, EngineState, Candle]:
-        cfg = CRTConfig(
+        cfg = crt_config_for_test(
             retest_min_depth_atr_fraction=frac,
             retest_depth_max=1.0,
             retest_atr_depth_fraction=1.0,
@@ -150,4 +151,4 @@ def test_try_expansion_to_retest_default_parity_vs_dynamism():
 
 
 def test_zero_atr_floor_is_zero():
-    assert _min_depth_floor(CRTConfig(), 0.0) == 0.0
+    assert _min_depth_floor(crt_config_for_test(), 0.0) == 0.0

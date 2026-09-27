@@ -1,0 +1,108 @@
+TRIAGE_CMD D:\Tradelatest\.venv\Scripts\python.exe -m pytest tests/ -q --tb=no --no-header --timeout=30 --timeout-method=thread -p no:cacheprovider
+.............F.......................................................... [  1%]
+........................................................................ [  2%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  5%]
+............EEEEEEEEE...........FF...................................... [  6%]
+.......................................................F................ [  7%]
+........................................................................ [  8%]
+.........................s.............................................. [  9%]
+....F.............................FFF.......FFF......................... [ 10%]
+........................................................................ [ 11%]
+.....................................FFFF..F..........s................. [ 12%]
+.........F.............................................................. [ 13%]
+........................................................................ [ 14%]
+........................................................................ [ 15%]
+.F...................................................................... [ 16%]
+.............................................FFFF....................... [ 17%]
+.F...................................................F.................. [ 18%]
+......................................F................................. [ 19%]
+...F.................................................................... [ 20%]
+........................................................................ [ 21%]
+........................................................................ [ 22%]
+........................FFFFFF.......................................... [ 23%]
+.......................................FF........................FF..... [ 24%]
+........................................................................ [ 25%]
+.....................................F+++++++++++++++++++++++++++++++++++ Timeout +++++++++++++++++++++++++++++++++++
+~~~~~~~~~~~~~~~~~~~~~~~~~ Stack of MainThread (12924) ~~~~~~~~~~~~~~~~~~~~~~~~~
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "D:\Tradelatest\.venv\Lib\site-packages\pytest\__main__.py", line 9, in <module>
+    raise SystemExit(_console_main())
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\config\__init__.py", line 253, in _console_main
+    code = _main(prog=_get_prog_name(sys.argv))
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\config\__init__.py", line 229, in _main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\main.py", line 377, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\main.py", line 330, in wrap_session
+    session.exitstatus = doit(config, session) or 0
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\main.py", line 384, in _main
+    config.hook.pytest_runtestloop(session=session)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\main.py", line 408, in pytest_runtestloop
+    item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\runner.py", line 118, in pytest_runtest_protocol
+    runtestprotocol(item, nextitem=nextitem)
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\runner.py", line 139, in runtestprotocol
+    reports.append(call_and_report(item, "call", log))
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\runner.py", line 249, in call_and_report
+    call = CallInfo.from_call(
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\runner.py", line 361, in from_call
+    result: TResult | None = func()
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\runner.py", line 250, in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\runner.py", line 184, in pytest_runtest_call
+    item.runtest()
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\python.py", line 1707, in runtest
+    self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "D:\Tradelatest\.venv\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "D:\Tradelatest\.venv\Lib\site-packages\_pytest\python.py", line 167, in pytest_pyfunc_call
+    result = testfunction(**testargs)
+  File "D:\Tradelatest\tests\research\test_trace_corpus.py", line 62, in test_pit_alignment_features_join_by_stream_position
+    by_pos = drv._feature_lookup(candles)
+  File "D:\Tradelatest\scripts\research\build_trace_corpus.py", line 60, in _feature_lookup
+    enriched, _ = FeaturePipeline(df).run()
+  File "D:\Tradelatest\src\features\feature_pipeline.py", line 1474, in run
+    self.compute_smc_features()           # v5.0: indices 39-47 (9 SMC primitives)
+  File "D:\Tradelatest\src\features\feature_pipeline.py", line 1290, in compute_smc_features
+    brk_d[i] = breaker_distance(window, k, atr_i)
+  File "D:\Tradelatest\src\features\smc\breaker.py", line 80, in breaker_distance
+    zone = find_active_breaker(window, k, break_events)
+  File "D:\Tradelatest\src\features\smc\breaker.py", line 43, in find_active_breaker
+    events = _find_break_events(bars, k) if break_events is None else break_events
+  File "D:\Tradelatest\src\features\smc\order_block.py", line 47, in _find_break_events
+    sh, sl = detect_causal_swings(bars[:i], k)
+  File "D:\Tradelatest\src\features\smc\_geometry.py", line 71, in detect_causal_swings
+    last_high = SwingPoint(index=bars[j].index, price=bars[j].high, kind="high")
+  File "<string>", line 2, in __init__
++++++++++++++++++++++++++++++++++++ Timeout +++++++++++++++++++++++++++++++++++

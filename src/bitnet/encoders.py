@@ -63,7 +63,19 @@ class Legacy6Encoder:
 
 
 class Canonical38Encoder:
-    """CONTRACT-B 38-dim encoder with optional mean/std normalize."""
+    """CONTRACT-B canonical-vector encoder with optional mean/std normalize.
+
+    Id/name mismatch (pinned, not renamed — RR Contract-A pattern, corrected 2026-09-23):
+    ``ENC_CANONICAL38_ID`` = ``"enc_canonical38_v1"`` names a fixed 38, but ``dim()`` always
+    resolves to ``len(feature_names)`` if given, else ``len(CANONICAL_FEATURES)`` — the LIVE
+    canonical schema, currently 48-dim/v6.0 (F-076/F-107). The id is historical (frozen at the
+    v3.0/38-dim schema this encoder was first built against) and is kept as-is per the repo's
+    pin-don't-rename doctrine (identity separation, §6.2/§6.5) rather than silently reinterpreted
+    or "fixed" to match its own name. A composition built with an explicit 38-length
+    ``feature_names`` (e.g. an R2.5 bundle) still binds at 38 and fails closed on width mismatch
+    against its backbone (``composition.py`` ``encoder.dim() != backbone.input_dim``) exactly as
+    before — this class never pads or truncates to make dims agree.
+    """
 
     id_ = ENC_CANONICAL38_ID
 
@@ -76,9 +88,6 @@ class Canonical38Encoder:
         feature_order_hash: str = "",
     ):
         names = list(feature_names) if feature_names is not None else list(CANONICAL_FEATURES)
-        if len(names) != 38 and feature_names is None and CANONICAL_FEATURES:
-            # Prefer live schema; allow override for tests with explicit names.
-            pass
         if not names:
             raise ValueError("Canonical38Encoder: empty feature_names")
         self._names = names
@@ -134,10 +143,19 @@ class Canonical38Encoder:
 
 
 def apply_crt_serve_aliases(features: Mapping[str, object]) -> Dict[str, object]:
-    """Map CRT cache FM-027/028 (+ atr_abs) into legacy bitnet_score keys.
+    """Map CRT cache FM-027/028/070 (+ atr_abs) into legacy bitnet_score keys.
 
     Pure dict transform for Adapter / CRT call-site documentation.
     Does not invent missing keys; only renames when source present.
+
+    The fourth rename (FM-070) was missing until 2026-09-23: the CRT call site
+    (``crt_engine_v2.py``) emits the bars-since-sweep quantity under the key
+    ``candles_since_retest_state``, but ``LEGACY6_KEYS`` (defaults.py) requires
+    ``candles_since_sweep`` — the same name the live 48-dim canonical vector uses
+    for this slot since the v6.0 rename (F-107). Without this line, every
+    ``use_bitnet=true`` serve call raised ``KeyError: 'candles_since_sweep'`` in
+    ``Legacy6Encoder.encode`` (dormant defect — the active config carries
+    ``use_bitnet: false``, so this path is never exercised in production today).
     """
     out: Dict[str, object] = dict(features)
     if "displacement_retrace" in features and "retest_depth" not in out:
@@ -146,4 +164,6 @@ def apply_crt_serve_aliases(features: Mapping[str, object]) -> Dict[str, object]
         out["disp_strength"] = features["displacement_atr_ratio"]
     if "atr_abs" in features and "atr" not in out:
         out["atr"] = features["atr_abs"]
+    if "candles_since_retest_state" in features and "candles_since_sweep" not in out:
+        out["candles_since_sweep"] = features["candles_since_retest_state"]
     return out

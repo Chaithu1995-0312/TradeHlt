@@ -15,6 +15,7 @@ from types import MappingProxyType
 import pytest
 
 from config_layer.crt_engine_v2 import (
+from tests.helpers.crt_config import crt_config_for_test
     CRTConfig,
     CRTEngine,
     CRTState,
@@ -53,7 +54,7 @@ def test_build_graph_from_production_bundle():
 
 
 def test_crt_engine_injects_who_topology():
-    eng = CRTEngine(config=CRTConfig())
+    eng = CRTEngine(config=crt_config_for_test())
     assert eng.runtime_transitions is not None
     assert eng.sm.valid_transitions is eng.runtime_transitions
     assert graphs_equal(eng.runtime_transitions, VALID_TRANSITIONS)
@@ -74,7 +75,7 @@ def test_restricted_graph_blocks_legal_module_edge():
         CRTState.EXECUTION: (CRTState.RESOLUTION,),
         CRTState.RESOLUTION: (CRTState.RANGE,),
     }
-    sm = StateMachine(CRTConfig(), valid_transitions=MappingProxyType(restricted))
+    sm = StateMachine(crt_config_for_test(), valid_transitions=MappingProxyType(restricted))
     st = EngineState()
     assert st.current_state == CRTState.RANGE
     # Module seed would allow SHADOW_PENDING; instance graph must reject
@@ -111,7 +112,7 @@ def test_process_candle_dual_run_behavior_parity():
 
     def _fingerprint() -> str:
         clear_state_contract_cache()
-        eng = CRTEngine(config=CRTConfig())
+        eng = CRTEngine(config=crt_config_for_test())
         base = datetime(2024, 1, 1, 0, 0, 0)
         candles = [
             Candle(
@@ -138,5 +139,5 @@ def test_process_candle_dual_run_behavior_parity():
 
 
 def test_legacy_sm_without_graph_uses_module_seed():
-    sm = StateMachine(CRTConfig())
+    sm = StateMachine(crt_config_for_test())
     assert graphs_equal(sm.valid_transitions, VALID_TRANSITIONS)

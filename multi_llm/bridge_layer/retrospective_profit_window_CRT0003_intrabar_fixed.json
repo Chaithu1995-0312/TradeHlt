@@ -1,0 +1,299 @@
+{
+  "artifact_type": "retrospective_specimen_measurement_pick",
+  "economic_claims_allowed": false,
+  "disclaimer": "RETROSPECTIVE SPECIMEN / MEASUREMENT PICK ONLY. No edge claim. Not a live order recommendation. Not trading education. economic_claims_allowed remains false.",
+  "approach": "A_replay_known_Run1_trades",
+  "active_config": "v2_htfcrt_2026_08",
+  "geometry_source": "Run1 opportunity geometry (XAUUSD_trades.csv CRT build_trade levels)",
+  "exit_family": "intrabar_fixed_sl_tp",
+  "exit_authority": "forward_walk.exit_model=intrabar_fixed (oracle / MC-JOINT)",
+  "modifications": [
+    "use tp2 as single TP for research single-TP contract (Run1 exit_reason=TP2); tp1 also walked",
+    "profit criterion under cost_model_id=backtest_g1g2_v2 (Run1 stamped); flat_12bps reported as research comparator (tight-stop R-cost large on XAU)"
+  ],
+  "cost_models_reported": {
+    "profit_authority": {
+      "cost_model_id": "backtest_g1g2_v2",
+      "source": "Run1 trades.csv stamped"
+    },
+    "research_comparator": {
+      "cost_model_id": "flat_12bps",
+      "round_trip_bps": 12.0,
+      "source": "src/research/costs.py DEFAULT_COST_MODEL"
+    },
+    "info_only_gross": {
+      "cost_model_id": "none_gross",
+      "note": "path gross_R before costs"
+    }
+  },
+  "flat_12bps_any_run1_net_positive": false,
+  "picked_trade_id": "CRT-0003",
+  "time_range": {
+    "start_ts": "2025-02-25 15:45:00",
+    "end_ts": "2025-02-25 16:00:00",
+    "start_bar_idx": 18091,
+    "end_bar_idx": 18092,
+    "bars_held_post_entry": 1,
+    "inclusive": true
+  },
+  "placement": {
+    "direction": "LONG",
+    "entry": 2934.39,
+    "sl": 2933.209857142857,
+    "tp": 2936.750285714286,
+    "tp_label": "tp2",
+    "tp1_also": 2936.1602142857146,
+    "tp2_schema": 2936.750285714286,
+    "source": "Run1 CRT-0003 trades.csv (entry=retest close; SL/TP crt_engine v2_htfcrt_2026_08)"
+  },
+  "path": {
+    "barrier_hit_first": "TP",
+    "path_outcome": "TP",
+    "bars_held": 1,
+    "gross_R_none_cost": 2.0,
+    "cost_R_flat_12bps": 2.983764,
+    "net_R_flat_12bps": -0.983764,
+    "run1_ledger_gross_R": 1.2994,
+    "run1_ledger_net_R": 0.6128,
+    "run1_ledger_cost_model_id": "backtest_g1g2_v2",
+    "pnl_unit": "R",
+    "profit_under_authority_cost": true
+  },
+  "birth_note": {
+    "birth_close_gt_entry": true,
+    "birth_ohlc": {
+      "o": 2934.39,
+      "h": 2938.05,
+      "l": 2933.07,
+      "c": 2937.51
+    },
+    "entry_bar_forensic_touches": {
+      "sl": true,
+      "tp1": true,
+      "tp2": true
+    },
+    "path_authority": "forward_walk excludes birth/entry bar; first evaluated = birth_idx+1; TP hit before SL on that bar"
+  },
+  "capital_stamp_optional": {
+    "currency": "INR",
+    "total_capital_inr": 100000,
+    "per_trade_investment_inr": 10000,
+    "sizing_mode": "fixed_investment_inr",
+    "note": "from config capital_management; specimen PnL reported in R not currency"
+  },
+  "all_run1_replay": [
+    {
+      "trade_id": "CRT-0001",
+      "direction": "LONG",
+      "entry_raw": 2614.46,
+      "sl": 2610.0475714285712,
+      "tp1": 2618.872428571429,
+      "tp2": 2623.2848571428576,
+      "risk_distance": 4.412428571428791,
+      "birth_bar_idx": 11426,
+      "birth_ts": "2024-11-12 15:30:00",
+      "birth_ohlc": {
+        "o": 2614.42,
+        "h": 2614.85,
+        "l": 2606.0,
+        "c": 2606.32
+      },
+      "birth_close_gt_entry": false,
+      "entry_bar_forensic_touches": {
+        "sl": true,
+        "tp1": false,
+        "tp2": false
+      },
+      "run1_ledger": {
+        "exit_reason": "STOPPED",
+        "opened_at": "2024-11-12T15:30:00",
+        "closed_at": "2024-11-12T15:45:00",
+        "duration_candles": 1,
+        "pnl_rr_raw": -0.8763,
+        "pnl_rr_net": -1.0547,
+        "cost_model_id": "backtest_g1g2_v2",
+        "exit_fill": 2609.772004593011
+      },
+      "forward_walk_intrabar_fixed": {
+        "tp1": {
+          "path_outcome": "SL",
+          "barrier_first": "SL",
+          "bars_held": 1,
+          "exit_bar_idx": 11427,
+          "exit_ts": "2024-11-12 15:45:00",
+          "exit_price": 2610.0475714285712,
+          "gross_R": -1.0,
+          "tp_used": 2618.872428571429,
+          "tp_label": "tp1",
+          "cost_R_flat_12bps": 0.7110261274969698,
+          "net_R_flat_12bps": -1.7110261274969698
+        },
+        "tp2": {
+          "path_outcome": "SL",
+          "barrier_first": "SL",
+          "bars_held": 1,
+          "exit_bar_idx": 11427,
+          "exit_ts": "2024-11-12 15:45:00",
+          "exit_price": 2610.0475714285712,
+          "gross_R": -1.0,
+          "tp_used": 2623.2848571428576,
+          "tp_label": "tp2",
+          "cost_R_flat_12bps": 0.7110261274969698,
+          "net_R_flat_12bps": -1.7110261274969698
+        }
+      },
+      "cost_R_flat_12bps": 0.7110261274969698
+    },
+    {
+      "trade_id": "CRT-0002",
+      "direction": "LONG",
+      "entry_raw": 2565.48,
+      "sl": 2564.559857142857,
+      "tp1": 2566.860214285715,
+      "tp2": 2567.3202857142865,
+      "risk_distance": 0.9201428571432189,
+      "birth_bar_idx": 11671,
+      "birth_ts": "2024-11-15 07:45:00",
+      "birth_ohlc": {
+        "o": 2565.48,
+        "h": 2565.48,
+        "l": 2559.76,
+        "c": 2559.94
+      },
+      "birth_close_gt_entry": false,
+      "entry_bar_forensic_touches": {
+        "sl": true,
+        "tp1": false,
+        "tp2": false
+      },
+      "run1_ledger": {
+        "exit_reason": "STOPPED",
+        "opened_at": "2024-11-15T07:45:00",
+        "closed_at": "2024-11-15T08:00:00",
+        "duration_candles": 1,
+        "pnl_rr_raw": -0.7449,
+        "pnl_rr_net": -1.2504,
+        "cost_model_id": "backtest_g1g2_v2",
+        "exit_fill": 2564.250491678453
+      },
+      "forward_walk_intrabar_fixed": {
+        "tp1": {
+          "path_outcome": "SL",
+          "barrier_first": "SL",
+          "bars_held": 1,
+          "exit_bar_idx": 11672,
+          "exit_ts": "2024-11-15 08:00:00",
+          "exit_price": 2564.559857142857,
+          "gross_R": -1.0,
+          "tp_used": 2566.860214285715,
+          "tp_label": "tp1",
+          "cost_R_flat_12bps": 3.34575873311466,
+          "net_R_flat_12bps": -4.3457587331146605
+        },
+        "tp2": {
+          "path_outcome": "SL",
+          "barrier_first": "SL",
+          "bars_held": 1,
+          "exit_bar_idx": 11672,
+          "exit_ts": "2024-11-15 08:00:00",
+          "exit_price": 2564.559857142857,
+          "gross_R": -1.0,
+          "tp_used": 2567.3202857142865,
+          "tp_label": "tp2",
+          "cost_R_flat_12bps": 3.34575873311466,
+          "net_R_flat_12bps": -4.3457587331146605
+        }
+      },
+      "cost_R_flat_12bps": 3.34575873311466
+    },
+    {
+      "trade_id": "CRT-0003",
+      "direction": "LONG",
+      "entry_raw": 2934.39,
+      "sl": 2933.209857142857,
+      "tp1": 2936.1602142857146,
+      "tp2": 2936.750285714286,
+      "risk_distance": 1.1801428571429824,
+      "birth_bar_idx": 18091,
+      "birth_ts": "2025-02-25 15:45:00",
+      "birth_ohlc": {
+        "o": 2934.39,
+        "h": 2938.05,
+        "l": 2933.07,
+        "c": 2937.51
+      },
+      "birth_close_gt_entry": true,
+      "entry_bar_forensic_touches": {
+        "sl": true,
+        "tp1": true,
+        "tp2": true
+      },
+      "run1_ledger": {
+        "exit_reason": "TP2",
+        "opened_at": "2025-02-25T15:45:00",
+        "closed_at": "2025-02-25T16:15:00",
+        "duration_candles": 2,
+        "pnl_rr_raw": 1.2994,
+        "pnl_rr_net": 0.6128,
+        "cost_model_id": "backtest_g1g2_v2",
+        "exit_fill": 2936.1394100255275
+      },
+      "forward_walk_intrabar_fixed": {
+        "tp1": {
+          "path_outcome": "TP",
+          "barrier_first": "TP",
+          "bars_held": 1,
+          "exit_bar_idx": 18092,
+          "exit_ts": "2025-02-25 16:00:00",
+          "exit_price": 2936.1602142857146,
+          "gross_R": 1.5000000000001927,
+          "tp_used": 2936.1602142857146,
+          "tp_label": "tp1",
+          "cost_R_flat_12bps": 2.9837641931966323,
+          "net_R_flat_12bps": -1.4837641931964396
+        },
+        "tp2": {
+          "path_outcome": "TP",
+          "barrier_first": "TP",
+          "bars_held": 1,
+          "exit_bar_idx": 18092,
+          "exit_ts": "2025-02-25 16:00:00",
+          "exit_price": 2936.750285714286,
+          "gross_R": 2.0,
+          "tp_used": 2936.750285714286,
+          "tp_label": "tp2",
+          "cost_R_flat_12bps": 2.9837641931966323,
+          "net_R_flat_12bps": -0.9837641931966323
+        }
+      },
+      "cost_R_flat_12bps": 2.9837641931966323
+    }
+  ],
+  "window_bars": [
+    {
+      "index": 18091,
+      "timestamp": "2025-02-25 15:45:00",
+      "open": 2934.39,
+      "high": 2938.05,
+      "low": 2933.07,
+      "close": 2937.51
+    },
+    {
+      "index": 18092,
+      "timestamp": "2025-02-25 16:00:00",
+      "open": 2937.52,
+      "high": 2940.51,
+      "low": 2937.35,
+      "close": 2939.86
+    }
+  ],
+  "sources": {
+    "trades": "D:\\Tradelatest\\results\\run_20260916_225925_XAUUSD\\XAUUSD_trades.csv",
+    "corpus": "D:\\Tradelatest\\data\\mt5\\XAUUSD_M15.csv",
+    "forward_walk": "src/research/measurement/forward_walk.py",
+    "costs": "src/research/costs.py",
+    "config": "configs/production/v2_htfcrt_2026_08.json",
+    "run_folder": "results/run_20260916_225925_XAUUSD"
+  },
+  "generated_at_local": "2026-09-25 01:05:18 Asia/Calcutta"
+}

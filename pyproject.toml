@@ -27,7 +27,7 @@ live_rail = ["websockets>=12"]
 # MetaTrader5 (behind an import guard); the rest support later phases (storage,
 # dashboard, research).
 # Phase-5 optional dense rerank (lexical core remains mandatory).
-retrieval = ["sentence-transformers", "torch"]
+retrieval = ["sentence-transformers", "torch", "chromadb"]
 mt5_analytics = [
     "MetaTrader5",
     "pandas",

@@ -40,6 +40,7 @@ completed:
   - STORY-1.4: gaussian impl switch — stale env-var tests -> config-first (§6.5); ml_gaussian docstring synced (test+doc only)
   - STORY-1.5: replay zone-registry key drift — _build_cluster_stats schema_version dispatch (_zone_cluster_id, fail-fast, no silent default). PLUS re-applied the patch-branch _assign_cluster center/feature_weights repair -> test_assign_cluster 12/12 green
   - STORY-1.6: feature-schema TruthConflict — kept fail_closed=True (test updated to expect False) + wired check_compatibility into MLGaussianEngine (register hash at load, equal-length/order-mismatch guard at compute)
+parallel_program: "DOC-REDUCTION (lossless) Layer 0 DONE 2026-09-17 — next STORY-11.8; epics 11-13 in multi_llm/build_queue.jsonl; spec docs/implementation_plan/doc-reduction-program-2026-09-17.md; tracking docs/governance/DOC_TRACKING_INDEX.xlsx. RC-003 state above untouched."
 blocked: []
 verification:
   - Gate A: 40/40 target tests green (was 4 failing)

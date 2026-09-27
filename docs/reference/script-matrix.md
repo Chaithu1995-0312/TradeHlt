@@ -12,7 +12,7 @@ python scripts/analysis/generate_script_matrix.py
 Authority: **inventory only** (no promote power). Thin-wrapper purity is **not**
 CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` only.
 
-**Records:** 472
+**Records:** 492
 
 | ID | Category | Lifecycle | Impl status | Path | Purpose |
 |---|---|---|---|---|---|
@@ -488,6 +488,26 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-470` | GOVERNANCE | ACTIVE | EXTRACTED_TO_SRC | `scripts/maintenance/verify_archive_manifests.py` | Archive ledger verifier (zero-loss promise of the research-framework consolid... |
 | `SCR-471` | GOVERNANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/remap_registries_v6.py` | Relabel trend_strength -> trend_strength_z and candles_since_retest -> candle... |
 | `SCR-472` | PROBE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/trade_intent_ownership_shadow.py` | Shadow-measure trade-intent ownership: CRT-local cache classifier vs canonica... |
+| `SCR-473` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/asset_writer_census.py` | AST census of write-shaped calls in src/ and scripts/ (open in write mode, wr... |
+| `SCR-474` | GOVERNANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/seed_asset_coverage.py` | PRIMARY seed for asset_coverage_v1. Writes the eight hand rows RTC-001..RTC-0... |
+| `SCR-475` | PROBE | EPHEMERAL | LOGIC_IN_SCRIPT | `_milestone_a_driver.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-476` | PROBE | EPHEMERAL | LOGIC_IN_SCRIPT | `_read_m5_smoke.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-477` | ORPHAN | ACTIVE | LOGIC_IN_SCRIPT | `mermaid_boxes.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-478` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/layer_trace/h1_run_identity.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-479` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/layer_trace/h2_engine_runner_failsoft.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-480` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/layer_trace/h2b_synthetic_injection.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-481` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/layer_trace/h3_crt_htf_decision_grid.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-482` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/layer_trace/h4_rail_reachability.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-483` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/layer_trace/h5_feature_alignment.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-484` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/layer_trace/h6_silent_except_census.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-485` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/layer_trace/h7_config_message_drift.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-486` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/market_language_census.py` | Deterministic read-only census of the EXISTING market-language vocabulary acr... |
+| `SCR-487` | GOVERNANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/identity_chain_check.py` | Thin CLI wrapper (report-only authority) over governance.identity_chain.check... |
+| `SCR-488` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/crt_occupancy_feeder_smoke.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-489` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/crt_occupancy_lib.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-490` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/live_alert_resolver.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-491` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/live_alert_telegram_bridge.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-492` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/ultron_sem_r_shadow.py` | GRANDFATHER_UNCLASSIFIED |
 
 ---
 

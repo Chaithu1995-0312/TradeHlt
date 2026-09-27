@@ -43,6 +43,7 @@ from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
+from tests.helpers.crt_config import crt_config_for_test
 
 # ── Path setup ───────────────────────────────────────────────────────────────
 _SRC = Path(__file__).resolve().parent.parent.parent / "src"
@@ -307,7 +308,7 @@ def _run_single_instrument(
         if len(valid_params) != len(params):
             invalid = set(params) - set(valid_params)
             tuner_log.warning(f"[{instrument}] Invalid params filtered: {invalid}")
-        # ── Config via ConfigBuilder ONLY — no CRTConfig(), no get_crt_config() ──
+        # ── Config via ConfigBuilder ONLY — no crt_config_for_test(), no get_crt_config() ──
         cfg: CRTConfig = ConfigBuilder.build(instrument, overrides=valid_params)
         config_snapshot: dict = dataclasses.asdict(cfg)
 

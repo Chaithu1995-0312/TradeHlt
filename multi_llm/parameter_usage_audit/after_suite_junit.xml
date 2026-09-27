@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="20" failures="0" skipped="1" tests="21" time="30.115" timestamp="2026-09-19T22:36:04.473311+05:30" hostname="DESKTOP-UC5M671"><testcase classname="" name="tests.Grok.test_A_crt_journeys" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:188: in exec_module
+    exec(co, module.__dict__)
+tests\Grok\test_A_crt_journeys.py:16: in &lt;module&gt;
+    from tests.Grok._fixtures import candle, engine_ready_long, engine_ready_short, executor
+E     File "D:\Tradelatest\tests\Grok\_fixtures.py", line 7
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.Grok.test_B_provenance" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:188: in exec_module
+    exec(co, module.__dict__)
+tests\Grok\test_B_provenance.py:13: in &lt;module&gt;
+    from tests.Grok._fixtures import engine_ready_long, engine_ready_short, executor
+E     File "D:\Tradelatest\tests\Grok\_fixtures.py", line 7
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.Grok.test_C_parity" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\Grok\test_C_parity.py", line 14
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.Grok.test_E_config_split_brain" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\Grok\test_E_config_split_brain.py", line 17
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.Grok.test_F_unit_scale" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:188: in exec_module
+    exec(co, module.__dict__)
+tests\Grok\test_F_unit_scale.py:16: in &lt;module&gt;
+    from tests.Grok._fixtures import candle, engine_ready_short, executor
+E     File "D:\Tradelatest\tests\Grok\_fixtures.py", line 7
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.Grok.test_G_time_semantics" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:188: in exec_module
+    exec(co, module.__dict__)
+tests\Grok\test_G_time_semantics.py:15: in &lt;module&gt;
+    from tests.Grok._fixtures import filter_session_name
+E     File "D:\Tradelatest\tests\Grok\_fixtures.py", line 7
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.Grok.test_I_parent_htf_journeys" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\Grok\test_I_parent_htf_journeys.py", line 21
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.test_auto_tuner_multi" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\test_auto_tuner_multi.py", line 323
+E       assert "CRTConfig(" not in source, "Direct CRTConfig(...) instantiation found — FORBIDDEN")ORBIDDEN")ORBIDDEN"
+E                                                                                                 ^
+E   SyntaxError: unmatched ')'</error></testcase><testcase classname="" name="tests.test_crt_adversarial_closure" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\test_crt_adversarial_closure.py", line 27
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.test_crt_config_provenance" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\test_crt_config_provenance.py", line 10
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.test_crt_states_yaml_transition_parity" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\test_crt_states_yaml_transition_parity.py", line 50
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.test_directional_displacement" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\test_directional_displacement.py", line 14
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.test_fm_resolution_phase2" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\test_fm_resolution_phase2.py", line 15
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.test_parent_crt_wiring" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\test_parent_crt_wiring.py", line 16
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.test_plan001_retest_min_depth_how" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\test_plan001_retest_min_depth_how.py", line 22
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.test_retrace_reset_direction" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\test_retrace_reset_direction.py", line 7
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.test_retrieval_lexical_parquet" time="0.000"><skipped message="collection skipped">('D:\\Tradelatest\\tests\\test_retrieval_lexical_parquet.py', 19, "Skipped: could not import 'duckdb': No module named 'duckdb'")</skipped></testcase><testcase classname="" name="tests.test_shadow_ttl_lifecycle" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\test_shadow_ttl_lifecycle.py", line 29
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.test_soft_conf_ema_probe" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\test_soft_conf_ema_probe.py", line 29
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.test_state_contracts" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\test_state_contracts.py", line 18
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase><testcase classname="" name="tests.test_state_topology_phase" time="0.000"><error message="collection failure">.venv\Lib\site-packages\_pytest\python.py:508: in importtestmodule
+    mod = import_path(
+.venv\Lib\site-packages\_pytest\pathlib.py:596: in import_path
+    importlib.import_module(module_name)
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1398: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1371: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1342: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:938: in _load_unlocked
+    ???
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:179: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\_pytest\assertion\rewrite.py:348: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Hi\AppData\Local\Python\pythoncore-3.14-64\Lib\ast.py:46: in parse
+    return compile(source, filename, mode, flags,
+E     File "D:\Tradelatest\tests\test_state_topology_phase.py", line 18
+E       from tests.helpers.crt_config import crt_config_for_test
+E       ^^^^
+E   SyntaxError: invalid syntax</error></testcase></testsuite></testsuites>

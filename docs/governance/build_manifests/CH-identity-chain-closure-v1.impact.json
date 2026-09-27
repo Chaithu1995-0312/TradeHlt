@@ -1,0 +1,50 @@
+{
+  "change_id": "CH-identity-chain-closure-v1",
+  "date_utc": "2026-09-22",
+  "objective": "Phase 3 closed identity chain: fix partial joins and semantic key drift across the Spine journal, Oracle labeler, layer-trace, journal, and engine telemetry via ONE canonical bar-clock bridge (`bar_identity.jsonl`). Deliverables: (1) src/governance/identity_spine.py — key hierarchy, bar-alias spec (bar_index/engine_candle_index/bar_idx/_pos/candle_index/candle_open + timestamp/bar_ts/opened_at/first_seen_ts), id-mint authority table, allowed-vs-illegal join table, resolve_bar() helper; (2) bar-clock bridge emitter (src/runtime/bar_clock_bridge.py) writing per-run bar_identity.jsonl in backtest_v2 post-run; (3) engine telemetry closure — CANDIDATE_LIFECYCLE ACCEPTED rows gain named trade_id + bar_ts, DECISION_DISTANCE rows gain bar_ts, and the runner stamps a uniform identity envelope on crt_telemetry.jsonl; (4) layer_trace L8 rows gain a named trade_id column; (5) TradeRecord/trades.csv gain additive candidate_id + execution_intent_id columns without shifting any existing column; (6) Oracle labeler lineage columns (dataset_hash, run_id, label_generated_utc) + manifest identity block; (7) scripts/governance/identity_chain_check.py — 7-invariant fail-loud checker (telemetry envelope uniformity, ACCEPTED field completeness, bridge monotonicity, trades.csv<->lifecycle strict bidirectional closure, STRICT ACCEPTED.trade_id resolves to both trades.csv AND L8 on the same bar_ts, L8 set closure, label provenance); (8) docs (identity-chain-memory.md, schemas.md) + golden-fixture test run. Governance-only: every addition is identity/provenance/telemetry metadata — no decision-path, registry, ontology, or trading-math surface changes; join-fix math is the registered bar-clock alias spec, never inlined.",
+  "change_classes": [
+    "TRACE_OBSERVATION_JOIN",
+    "SCRIPT_LIFECYCLE_CHANGE"
+  ],
+  "change_class_rationale": "TRACE_OBSERVATION_JOIN: every code change extends an OBSERVATION-ONLY runtime/telemetry/layer-trace/research-label stream with ADDITIVE joined or derived metadata fields (trade_id, bar_ts, candidate_id, execution_intent_id, identity envelope, dataset_hash lineage) or adds a new observation sidecar (bar-clock bridge). None feeds a decision, gate, or price quantity. SCRIPT_LIFECYCLE_CHANGE: registers the new scripts/governance/identity_chain_check.py path in the SITS registry (stubs + seed + matrix regeneration). The identity sequence mints for run_id/trade_id/execution_intent_id are recorded (id-mint authority table) — never re-minted or collapsed.",
+  "affected_files": [
+    "src/governance/identity_spine.py",
+    "src/governance/identity_chain.py",
+    "src/runtime/bar_clock_bridge.py",
+    "src/runtime/backtest_v2.py",
+    "src/runtime/layer_trace.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/research/oracle/labeler.py",
+    "scripts/governance/identity_chain_check.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "docs/reference/schemas.md",
+    "docs/memory/identity-chain-memory.md",
+    "docs/governance/build_manifests/CH-identity-chain-closure-v1.impact.json",
+    "docs/governance/build_manifests/CH-identity-chain-closure-v1.completion.json",
+    "tests/test_identity_spine.py",
+    "tests/test_bar_clock_bridge.py",
+    "tests/test_layer_trace_trade_id.py",
+    "tests/test_telemetry_identity_closure.py",
+    "tests/test_identity_chain.py"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_crt_construction_trace.py",
+    "tests/test_crt_construction_trace_envelope.py",
+    "tests/test_resolver_metadata.py",
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "declared_governed_math": "No formula registry change, no CANONICAL_FEATURES change, no decision-path change. New math: (a) bar-clock bridge — canonical bar_open_ts normalization (UTC 'YYYY-MM-DD HH:MM:SS') from 6 index + 4 timestamp field aliases (single spec in identity_spine.py, the authority, never inlined), (b) frozen PK (instrument, timeframe, bar_open_ts, corpus_sha256) — a tuple-of-strings identity keyspace, no arithmetic, (c) derived execution_intent_id = TradeIdentityV1.new(alert_id=engine CRT trade_id).trade_id (uuid4 hex, canonical journal minter) — a 1:1 derived identifier, not a quantity.",
+  "unknowns": [],
+  "rollback_boundary": "Single commit. Revert together: src/governance/identity_spine.py, src/governance/identity_chain.py, src/runtime/bar_clock_bridge.py, edits in src/runtime/backtest_v2.py, src/runtime/layer_trace.py, src/config_layer/crt_engine_v2.py, src/research/oracle/labeler.py, the SITS registration (stubs lines + script-matrix.md), the 5 new test files, the two memory/schema doc updates, and this manifest. Reverting must not orphan references: the bar-clock config/emitter is referenced only from backtest_v2._build_bar_clock_bridge (guarded by section-present + try/except, None-safe like its siblings), the checker imports only new modules, and labeler insertion is end-position only (pandas by-name). Pre-existing EFAP run_identity/report-writer stamping and existing layer-trace rows are NOT rolled back. Baseline construction floor remains the recorded RED (6 pre-existing failures incl. test_doc_citations + test_session_log); this change must not add failures.",
+  "completion_criteria": "All 5 new test files green (identity_spine, bar_clock_bridge, layer_trace_trade_id, telemetry_identity_closure, identity_chain incl. golden fixture + per-invariant negative fixtures); required contract checks green (test_crt_construction_trace.py, test_crt_construction_trace_envelope.py, test_resolver_metadata.py, test_script_registry.py, test_script_matrix_sync.py, test_construction_protocol.py); no regression vs recorded baseline floor (construction_protocol.py check: failures identical to the pre-change RED set or strictly fewer); script matrix regenerated deterministically; validate-completion FULLY validated by construction_protocol.py with repo-state hash bound.",
+  "authority_granted": "Plan approved; user toggled to Act mode. Phase 3 closed identity chain eight workstreams A-H with the 7-invariant checker suite folded in (incl. lifecycle resolution and strict bidirectional trade closure). Trade-ID fork resolved as Option A: engine CRT-{seq:04d} stays row trade_id; journal uuid = derived execution_intent_id.",
+  "authority_NOT_granted": "No production approval, no promotion, no ACTIVE_VERSION change, no G001, no backfill/recovery of historic run hashes, no change to trading math, engine decision path, or dataset-admission behavior.",
+  "production_behavior_changed": "NO"
+}

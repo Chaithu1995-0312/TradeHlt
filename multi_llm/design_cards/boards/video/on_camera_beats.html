@@ -1,0 +1,32 @@
+﻿<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><title>Grok Bot Reel Beats</title>
+<style>
+body{margin:0;background:#0b0d12;color:#e8eaef;font-family:Segoe UI,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh}
+.wrap{max-width:980px;padding:48px}
+h1{font-size:42px;margin:0 0 12px}
+.sub{opacity:.75;margin-bottom:28px}
+.beat{font-size:28px;padding:18px 22px;margin:12px 0;border-left:4px solid #5b8cff;background:#151a24;border-radius:8px}
+.tag{display:inline-block;padding:4px 10px;border-radius:999px;background:#1e2a1e;color:#8dffb0;font-size:14px;margin-right:8px}
+.warn{color:#ff8d8d}
+#clock{position:fixed;top:16px;right:20px;opacity:.5}
+</style></head><body>
+<div id="clock"></div>
+<div class="wrap">
+  <div class="tag">DryRun only</div><div class="tag">No live orders</div><div class="tag warn">No fake edge</div>
+  <h1>Multi-agent trading infra</h1>
+  <div class="sub">Grok Bot + Claude · local plane · setup demo (₹1000 call later)</div>
+  <div class="beat" id="b">0–5s · HOOK — trading infra on a real laptop</div>
+</div>
+<script>
+const beats=[
+"0–5s · HOOK — multi-agent trading infra",
+"5–15s · ASK Grok Bot — spin desk agents (DryRun)",
+"15–25s · Claude opens — implementer lane",
+"25–35s · Local plane / track — DryRun only",
+"35–50s · Split Grok Bot + Claude — no live orders",
+"50–60s · CTA — Live setup demo ₹1000 (link in bio later)"
+];
+let i=0; const el=document.getElementById('b');
+setInterval(()=>{i=(i+1)%beats.length; el.textContent=beats[i];},8000);
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString();},500);
+</script></body></html>

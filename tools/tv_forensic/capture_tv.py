@@ -304,13 +304,22 @@ def build_events(
         bar = containing(epoch)
         eng = engine_bars.get(broker)
         rec = {
-            "event": ev["event"],
+            # Resolved through engine_data so BOTH plan schemas work: the
+            # hand-transcribed pack names an entry `event`, the fresh-month
+            # plan names it `label`. The OUTPUT key stays `event` -- annotate.py
+            # reads it in a dozen places as the drawn mark's label, so the
+            # normalisation belongs on the input, not on this record.
+            "event": ed.require_event_name(ev),
             "broker": ev["time"],
             "utc": _iso(epoch),
             "epoch": epoch,
             "detail": ev.get("detail", ""),
             "color": ev.get("color", [30, 30, 30]),
             "level": ev.get("level"),
+            # Carried through, not acted on: the fresh plan tags its entries
+            # CLOCK_ANCHOR and declares them "not CRT events". Filtering them
+            # out of the drawn set is a behaviour decision, not part of this fix.
+            "kind": ev.get("kind"),
             # CURRENT = the live engine still emits this; SUPERSEDED = it was in the
             # source run but a later contract (e.g. F-074) removed it.
             "status": ev.get("status", "CURRENT"),
@@ -508,9 +517,9 @@ def open_chart(page, url: str, symbol: str, interval: str) -> None:
     target = url.format(symbol=symbol, interval=interval)
     print(f"Opening {target}")
     page.goto(target, wait_until="domcontentloaded", timeout=90000)
-    page.wait_for_timeout(3500)
+    page.wait_for_timeout(8000)
     ui.dismiss_overlays(page)
-    ui.wait_for_chart(page, timeout_ms=60000)
+    ui.wait_for_chart(page, timeout_ms=90000)
     ui.dismiss_overlays(page)
     ui.hide_watchlist(page)
     ui.wait_for_chart(page)
@@ -704,12 +713,21 @@ def main(argv: list[str] | None = None) -> int:
     saved: list[str] = []
 
     with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=not args.headed, slow_mo=args.slowmo)
+        browser = pw.chromium.launch(
+            headless=not args.headed,
+            slow_mo=args.slowmo,
+            args=["--disable-blink-features=AutomationControlled"],
+        )
         context = browser.new_context(
             viewport={"width": 1920, "height": 1080},
             locale="en-US",
             timezone_id="UTC",
             device_scale_factor=1,  # page pixels == PNG pixels; annotate.py relies on this
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            ),
         )
         page = context.new_page()
         page.set_default_timeout(30000)

@@ -22,6 +22,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Sequence
 
+from governance.measurement_basis import TIE_BREAK_PRODUCTION
 from research.costs import ComponentCostModel
 from research.measurement.forward_walk import AdverseFill
 from research.provenance import provenance_block
@@ -300,8 +301,11 @@ def run_contract(contract_path: str | Path, out_dir: str | Path) -> dict:
         if all(a["verdict"].startswith("REJECT") for a in metrics["arms"].values())
         else "AT LEAST ONE ARM DID NOT REJECT — investigate before registering anything."
     )
+    # tie_break=TIE_BREAK_PRODUCTION: this driver measures via forward_walk, which
+    # hardcodes the SL-first convention (CH-measurement-basis-declaration).
     metrics["provenance"] = provenance_block(
         "intrabar_fixed", 12.0,
+        tie_break=TIE_BREAK_PRODUCTION,
         cost_model=cost_prov if isinstance(cost_prov, dict) else None,
         fill_model=fill_prov if isinstance(fill_prov, dict) else None,
     )

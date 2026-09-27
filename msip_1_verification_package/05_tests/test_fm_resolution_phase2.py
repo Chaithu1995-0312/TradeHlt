@@ -12,6 +12,7 @@ import pytest
 from features import candle_math as _cm
 from features import derived_math as _dm
 from features.fm_resolve import (
+from tests.helpers.crt_config import crt_config_for_test
     PHASE2_CRT_FM_IDS,
     FMResolveError,
     assert_fm_in_contract,
@@ -157,7 +158,7 @@ def test_process_candle_dual_run_behavior_parity():
     def _fingerprint() -> str:
         clear_fm_resolve_cache()
         clear_state_contract_cache()
-        eng = CRTEngine(config=CRTConfig())
+        eng = CRTEngine(config=crt_config_for_test())
         base = datetime(2024, 1, 1, 0, 0, 0)
         candles = [
             Candle(
@@ -184,7 +185,7 @@ def test_process_candle_dual_run_behavior_parity():
 
 
 def test_crt_engine_imports_and_loads_contracts():
-    eng = CRTEngine(config=CRTConfig())
+    eng = CRTEngine(config=crt_config_for_test())
     assert eng.state_contracts is not None
     assert set(eng.state_contracts.contracts) == {
         "RANGE",

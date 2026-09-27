@@ -7,6 +7,7 @@ Pins the Jul 28 XAUUSD forensic case: the 01:15 UTC dump after a LONG sweep
 is no longer a legal DISPLACEMENT.
 """
 from __future__ import annotations
+from tests.helpers.crt_config import crt_config_for_test
 
 from datetime import datetime
 
@@ -29,7 +30,7 @@ def _candle(o: float, h: float, l: float, c: float, idx: int = 2) -> Candle:
 
 
 def _sm_in_sweep(direction: Direction, sweep_price: float) -> tuple[StateMachine, EngineState]:
-    cfg = CRTConfig(body_ratio_min=0.50, atr_min_displacement=0.5, atr_multiplier_min=0.5)
+    cfg = crt_config_for_test(body_ratio_min=0.50, atr_min_displacement=0.5, atr_multiplier_min=0.5)
     sm = StateMachine(cfg)
     st = EngineState()
     st.current_state = CRTState.SWEEP
@@ -85,7 +86,7 @@ def test_short_accepts_bearish_impulse_away_from_sweep():
 
 
 def test_missing_direction_fail_closed():
-    cfg = CRTConfig(body_ratio_min=0.50, atr_min_displacement=0.5, atr_multiplier_min=0.5)
+    cfg = crt_config_for_test(body_ratio_min=0.50, atr_min_displacement=0.5, atr_multiplier_min=0.5)
     sm = StateMachine(cfg)
     st = EngineState()
     st.current_state = CRTState.SWEEP

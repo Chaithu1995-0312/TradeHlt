@@ -698,6 +698,103 @@ OVERLAYS: list[dict[str, Any]] = [
             "on AN-PIPEB-STRAT-XAUUSD-M15-V1; this script does not change that."
         ),
     },
+
+    # STORY-12.3: asset-coverage census + PRIMARY seed (P0, no src/ edit).
+    {
+        "path": "scripts/analysis/asset_writer_census.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "dest_modules": [],
+        "purpose": (
+            "AST census of write-shaped calls in src/ and scripts/ "
+            "(open in write mode, write_text, write_bytes, dump, to_csv, to_parquet, writelines). "
+            "Emits the writer-symbol set the asset-coverage UNREGISTERED pin is checked against. "
+            "Observation only. Does not register coverage rows and does not edit src/."
+        ),
+        "task_refs": ["STORY-12.3"],
+        "tests": ["tests/test_asset_coverage.py"],
+        "notes": (
+            "P0 of docs/implementation_plan/run-trace-coverage-schema-2026-09-17.md. "
+            "Stdout is JSONL. The count comment goes to stderr."
+        ),
+    },
+    {
+        "path": "scripts/governance/seed_asset_coverage.py",
+        "category": "GOVERNANCE",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "dest_modules": [],
+        "purpose": (
+            "PRIMARY seed for asset_coverage_v1. Writes the eight hand rows RTC-001..RTC-008 "
+            "(backtest writers plus the paper-rail audit writer) and fills evidence lines from the AST. "
+            "data/asset_coverage.jsonl is generated. Do not hand-edit it."
+        ),
+        "task_refs": ["STORY-12.3"],
+        "tests": ["tests/test_asset_coverage.py"],
+        "notes": (
+            "Register this script and scripts/analysis/asset_writer_census.py the same turn "
+            "or the SITS disk-coverage floor fails."
+        ),
+    },
+    # Market-language census: deterministic vocabulary extractor (S1..S8) for the
+    # Run/Trace identity design — no new engineering words, every row is cited to an authority.
+    {
+        "path": "scripts/analysis/market_language_census.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "dest_modules": [],
+        "purpose": (
+            "Deterministic read-only census of the EXISTING market-language vocabulary across "
+            "the five authority files (market_ontology.yaml, market_crt_states.yaml, "
+            "crt_state_identity.yaml, market_shapes.yaml, feature_schema.py) plus the trade "
+            "sources (src/journal/schema.py, execution_planner.py, crt_engine_v2.py). Emits "
+            "S1 feature schema, S2 four DISTINCT state vocabularies (crt_machine / "
+            "feature_enum / smc_choch / trade_execution), S3 hierarchy, S4 trade schema, S5 "
+            "traceable ontology, S6 exact + concept-token overlaps (e.g. the sweep 3+ way "
+            "overlap), S7 orphans, S8 canonical vocabulary table to "
+            "docs/research-readiness/market_language_census_report.json(.md). Never invents "
+            "or normalises a word; used to fix the Run/Trace identity vocabulary."
+        ),
+        "task_refs": ["RUN-TRACE-IDENTITY", "MARKET-LANGUAGE-CENSUS"],
+        "tests": [],
+        "notes": (
+            "Volatile (opinionated analysis report) surface — census output is not a governed "
+            "schema, only a citation-backed inventory. No G001, no promotion, no production "
+            "behaviour. See docs/governance/REPOSITORY_CONSTRUCTION_PROTOCOL.md."
+        ),
+    },
+    # CH-identity-chain-closure-v1: Phase 3 closed identity chain, 7-invariant checker CLI.
+    {
+        "path": "scripts/governance/identity_chain_check.py",
+        "category": "GOVERNANCE",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": False,
+        "dest_modules": ["src/governance/identity_chain.py", "src/governance/identity_spine.py"],
+        "purpose": (
+            "Thin CLI wrapper (report-only authority) over governance.identity_chain.check_run: "
+            "verifies the 7 closed-identity-chain invariants (telemetry envelope uniformity, "
+            "ACCEPTED lifecycle completeness, bar-clock monotonicity, trades<->lifecycle "
+            "bidirectional closure, strict ACCEPTED.trade_id resolution across trades.csv AND "
+            "L8 on the same bar_open_ts, L8 set closure, label provenance) across the Spine "
+            "journal, Oracle labeler, layer-trace, and engine telemetry streams, joined only "
+            "through the canonical bar-clock bridge (bar_identity.jsonl). --require-all treats "
+            "every SKIP (an invariant whose input was not supplied) as a violation; without it, "
+            "a partially-wired run can still exit 0, and the printed summary discloses that "
+            "partiality explicitly (\"PARTIAL\") so the exit code is never misread alone."
+        ),
+        "task_refs": ["CH-identity-chain-closure-v1"],
+        "tests": ["tests/test_identity_chain.py"],
+        "notes": (
+            "Grants nothing and changes nothing — verifies identity joins only, no market "
+            "quantity. production_behavior_changed: NO."
+        ),
+    },
 ]
 
 

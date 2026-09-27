@@ -1,0 +1,21 @@
+{
+  "change_id": "CH-run-identity-range-folder-manifest",
+  "objective": "Replace the five-mint F-101 identity confusion with ONE traceable canonical id that 1) is minted UTC BEFORE the ReportWriter exists so the run FOLDER name and the run CONTENT stamp derive from the same id, 2) embeds the corpus time range + config version/hash in the folder name so same-range-different-config runs are separable at a glance, 3) records the corpus range (walked first/last candle) on summary.json + reports, and 4) writes a per-run run_manifest.json consolidating every recorded id (logging RUN_ID, ReportWriter id, config-dump id, canonical id, layer-trace id), the config/dataset fingerprint, the walked corpus range, and the artifact paths. Governance-only: nothing here feeds a decision, gate, or price quantity; all additions are identity/corpus metadata (RUN_IDENTITY_CHANGE contract: declares HOW artifacts identify and may join, never the trading math).",
+  "change_classes": ["RUN_IDENTITY_CHANGE"],
+  "affected_files": [
+    "src/runtime/backtest_v2.py",
+    "tests/test_report_writer_run_id_stamp.py",
+    "docs/architecture/run-identity-governance.md",
+    "docs/governance/build_manifests/CH-run-identity-range-folder-manifest.impact.json",
+    "docs/governance/build_manifests/CH-run-identity-range-folder-manifest.completion.json",
+    "assistant_project.md"
+  ],
+  "required_checks_ack": [
+    "tests/test_run_identity.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "declared_governed_math": "none — no formula, no CANONICAL_FEATURES change, no decision-path change. New quantities: (a) corpus_start/corpus_end (walked candle timestamps recorded verbatim, existing per-run data, no math), (b) folder stem recipe (string concatenation of existing identity fields), (c) run_manifest.json (identity join/record file). All three are identity/provenance metadata owned by the run-identity surface; the only registered formula referenced is run_identity.dataset_hash (single authority, never inlined).",
+  "unknowns": [],
+  "rollback_boundary": "Revert src/runtime/backtest_v2.py (ReportWriter folder stem + canonical mint move + manifest write + layer-trace canonical record) together with tests/test_report_writer_run_id_stamp.py and this manifest in ONE commit; pre-existing EFAP ReportWriter stamping (run_identity.json/identity_status rows) predates this change and is NOT rolled back by it. Reverting must not orphan the run_manifest references or the new test nodes.",
+  "completion_criteria": "tests/test_run_identity.py + tests/test_construction_protocol.py green; test_report_writer_run_id_stamp.py green (folder suffix, legacy folder shape, manifest verbatim, corpus range helper, summary corpus fields, end-to-end canonical folder==content==manifest wiring); no regression vs the recorded baseline floor (6 pre-existing reds unchanged); repo-state hash bound; completion manifest FULLY validated by construction_protocol.py validate-completion."
+}

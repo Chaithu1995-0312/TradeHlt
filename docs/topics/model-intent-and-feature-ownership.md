@@ -6,7 +6,7 @@
 > This is the **canonical authority** the feature-expansion program (plan
 > `d-tradelatest-reports-ohlcv-lineage…`) defers to. Link, don't inline.
 >
-> Created: 2026-06-27 · Updated: 2026-09-16 · Status: living
+> Created: 2026-06-27 · Updated: 2026-09-23 · Status: living
 >
 > **Intent authority (higher than this topic for *why* engines exist):**  
 > [`docs/governance/MODEL_INTENT_AUTHORITY_REGISTER.md`](../governance/MODEL_INTENT_AUTHORITY_REGISTER.md)
@@ -470,3 +470,26 @@ Sits at the engine-scoring layer of [`docs/architecture/signal-flow.md`](../arch
 - **Enhancements:** 2026-07-22 (F-061, program `FM-030-031-DIMENSIONAL-MIX-MIGRATION`) — the B0/B1 dimensional mix is reclassified from a **representational** defect to a **decision-surface** one, and the correction is made reachable. `legacy ≡ corrected × close` (closed form, verified to 9.9e-08), so the emitted magnitude of FM-022/FM-023 is the instrument's price level: median `|ema_spread|` 320 on BNBUSDT and 38,110 on BTCUSDT versus 0.53 on EURUSD, against `dual_engine` thresholds of 0.15/0.3. Consequence on crypto — `detect_regime` → `"trend"` on **98.86%/99.94%** of bars, `breakout_engine` score pinned at **1.0** on ~100%, `tanh(momentum_score)` saturated on **98.78%/99.94%** (this is F-060's Gaussian mechanism, now shown to be one instance of a four-consumer pattern), and `gate_intelligence`'s REVERSAL score constant **0.0**. Under FM-030/031 all three instruments converge (trend 52.7/52.8/50.1%, pinned 6.8/6.8/7.2%) — the corrected identity discriminates and is instrument-invariant. Three sign-only consumers (`execution_planner._derive_intent`, `crt_engine_v2:2138`, `sl_tp_comparator`) are unaffected. **Remediation is additive and inactive:** FM-030/031 promoted out of the ontology's `migration_candidates:` prose into first-class registered identities (`derived_math.ema_spread_atr` / `momentum_score_atr`, registry-dispatched), selected by a new strict `feature_pipeline.normalization_basis`; the default `atr_relative` arm is the legacy math verbatim and the XAUUSD freeze-pin vector SHA is **unchanged**. Floor: `tests/test_fm030_031_normalization_basis.py` (12 assertions incl. the pinned defect — 100× price must still multiply FM-022/023 by 100 — and fail-closed config discipline). Economic question routed to `scripts/research/dimensional_mix_shadow_diagnostic.py` (gate-ON forced, F-036 method); prior F-019…F-043 predicts null and spine n is below the 30-sample floor. **DESCRIPTIVE only, grants no activation authority (§6.5)**; `ACTIVE_VERSION` unchanged; the four degenerate consumers untouched. Scope: batch-pipeline path only — the live `FeatureStore` ingress is separate M16 consumer-alignment work.
 - **Enhancements:** 2026-09-16 (Grok window `parquet-model-binding`, `CH-model-parquet-binding-docs`) — research/LLM column picks for each model are now bound to names that exist on the live XAUUSD_M15 Excel / `features.parquet` (95 cols, schema 6.0) plus documented `bar_matrix` extras. Pointer only: [`docs/implementation_plan/model-parquet-column-binding.md`](../implementation_plan/model-parquet-column-binding.md) and the owning parquet spec [`docs/research/parquet_evidence_layer.md`](../research/parquet_evidence_layer.md) § Model × Parquet name authority. This topic remains the feature×model **ownership** authority; the new table is a **query-name** binding, not a new ownership matrix and not a live-spine change. RR trained is unbindable; three `state__*` columns are UNUSABLE (all-null). No G001, no retrain.
 - **Enhancements:** 2026-09-16 — **Technical implementation (one model at a time)** section added on this topic: each MIAR/topic model walked as CURRENT code path × live v6 Excel names × design-plan bind id. The 38-slot ownership matrix above is **not** rewritten this turn (name drift `candles_since_retest`/`trend_strength`/`wick_size`/`macd_hist` vs v6 is recorded, not silently patched — that rewrite is schema-v6 citation sync, adjacent). CRT is three implementations (FSM / fusion scorer / resolver). Gaussian query columns ≠ serve presence. ZoneGate 48-key filter vs 38-name score order. BitNet binds `candles_since_sweep` (code), not the catalog leftover. Fusion consumes scores not features. Planner 13 keys; `trade_intent` is CRT-rail output.
+- **Enhancements:** 2026-09-23 (Phase 0 model-registry join) — the three surfaces that each
+  independently named these models (`MODEL_CATALOG` in `src/research/model_runners/contracts.py`,
+  `miar_registry.json` entries, `active_models.yaml` sections) now share one `semantic_id` per
+  model, closing the exact defect this topic's own 2026-09-16 entry recorded and left open: the
+  same reward-risk engine was `rr` in the catalog, `rr_engine` in MIAR, and `rr_model` in
+  active_models.yaml, with nothing checking they were the same model. `MODEL_CATALOG` is now the
+  hub (19 rows, the only surface bound to code — `entry_point`/`required_feature_keys`/
+  `spine_active`); MIAR and active_models.yaml carry `semantic_ids` back-refs. Seven new
+  `ModelContract` fields (`semantic_id`, `tier`, `miar_id`, `active_models_key`, `serve_domain`,
+  `scale_type`, `authority`) are declarative only — no runner reads them, runtime behaviour is
+  byte-unchanged. `authority` is derived mechanically from `spine_active` + membership in
+  `core.engine_runner.EXPECTED_ENGINES` (`{"crt","gaussian","zone_gate","rr"}`), never a per-row
+  guess. `design_only_concepts` gained 21 rows for the Phase 3 19-block conditional-expectancy
+  ensemble + temporal tracker + arbiter (not yet built in code) via the existing envelope
+  precedent, with a distinct `M{tier}_` id prefix chosen specifically to NOT collide with the
+  feature-DAG's `L0-L6` or `layer_trace`'s `L0-L9` vocabularies — the original design's
+  `L5_SCHEMA_ENSEMBLE_TEMPORAL_TRACKER`/`L6_FUSION_SCHEMA_ENSEMBLE_ARBITER` naming would have
+  conflated three different meanings of "L5"/"L6". This floor test caught one real bug before it
+  shipped: the Gaussian ML variant's declared `active_models.yaml` path
+  (`gaussian.trained_registry.v4_mirrored`) was one level too shallow — the real nested key is
+  `gaussian.trained_registry.entries.v4_mirrored`. Declarative only, grants no production
+  authority (§6.5). Floor: `tests/test_model_registry_join.py`. Plan:
+  `docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md`.

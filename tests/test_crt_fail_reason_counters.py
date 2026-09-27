@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
+from tests.helpers.crt_config import crt_config_for_test
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -15,7 +16,7 @@ def _engine():
     sys.path.insert(0, str(ROOT / "src"))
     from config_layer.crt_engine_v2 import CRTConfig, CRTEngine, Candle
 
-    return CRTEngine(CRTConfig()), Candle, datetime
+    return CRTEngine(crt_config_for_test()), Candle, datetime
 
 
 def _candles(n: int, Candle, datetime):

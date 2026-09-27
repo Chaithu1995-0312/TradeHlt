@@ -26,7 +26,8 @@ from bitnet.composition import (
     load_legacy_composition,
     reset_default_composition,
 )
-from bitnet.encoders import Legacy6Encoder, apply_crt_serve_aliases
+from bitnet.encoders import Canonical38Encoder, Legacy6Encoder, apply_crt_serve_aliases
+from features.feature_schema import CANONICAL_FEATURES
 from bitnet.layers import sigmoid
 
 
@@ -129,6 +130,109 @@ def test_crt_serve_aliases():
     assert mapped["retest_depth"] == 0.25
     assert mapped["disp_strength"] == 1.5
     assert mapped["atr"] == 10.0
+
+
+def test_crt_serve_aliases_fm070_candles_since_retest_state():
+    """The 4th rename (2026-09-23 fix): FM-070's emitted key is
+    ``candles_since_retest_state`` (see crt_engine_v2.py), not ``candles_since_sweep``
+    (LEGACY6_KEYS). Before this fix, apply_crt_serve_aliases silently dropped this
+    rename and Legacy6Encoder.encode raised KeyError('candles_since_sweep')."""
+    raw = {
+        "body_ratio": 0.6,
+        "displacement_retrace": 0.25,
+        "displacement_atr_ratio": 1.5,
+        "atr_abs": 10.0,
+        "candles_since_retest_state": 4.0,
+        "double_sweep": 1.0,
+    }
+    mapped = apply_crt_serve_aliases(raw)
+    assert mapped["candles_since_sweep"] == 4.0
+
+
+def test_crt_serve_aliases_does_not_overwrite_existing_candles_since_sweep():
+    """If a caller already supplies the canonical key directly, the FM-070 alias
+    must not clobber it (same not-in-out guard as the other three renames)."""
+    raw = {
+        "candles_since_sweep": 9.0,
+        "candles_since_retest_state": 4.0,
+    }
+    mapped = apply_crt_serve_aliases(raw)
+    assert mapped["candles_since_sweep"] == 9.0
+
+
+def test_use_bitnet_true_end_to_end_no_keyerror(legacy_model_path, monkeypatch):
+    """End-to-end use_bitnet=true serve path (the missing test that let the FM-070
+    KeyError through, per the 2026-09-23 gap audit). Builds the feature dict exactly
+    as crt_engine_v2.py's compute_score/approve BitNet call sites do — state.cached_features
+    plus atr_abs and the FM-070 bars-since-sweep quantity under its real emitted key —
+    and drives it through the production facade (bitnet_score -> get_default_composition
+    -> Legacy6Encoder, with apply_crt_serve_aliases applied by the composition itself).
+    Asserts no KeyError and a finite [0, 1] confidence. Grants no authority — use_bitnet
+    stays false on every production config; this only proves the enable path no longer
+    crashes if ever flipped on."""
+    reset_default_composition()
+    from bitnet import composition as comp_mod
+
+    monkeypatch.setattr(
+        comp_mod,
+        "get_default_composition",
+        lambda model_path=legacy_model_path: load_legacy_composition(legacy_model_path),
+    )
+
+    # Shape matches crt_engine_v2.py:2170-2190 / :2252-2262 exactly:
+    #   features = state.cached_features.copy(); features["atr"] = state.atr_abs;
+    #   features["candles_since_retest_state"] = FM-070(...)
+    # cached_features carries the canonical (pre-v6.0-rename-agnostic) engine names.
+    crt_cached_features = {
+        "body_ratio": 0.62,
+        "double_sweep": 0.0,
+        "displacement_retrace": 0.30,
+        "displacement_atr_ratio": 1.1,
+    }
+    features = dict(crt_cached_features)
+    features["atr"] = 12.5  # state.atr_abs
+    features["candles_since_retest_state"] = 3.0  # FM-070(...)
+
+    score = bitnet_score(features)
+    assert 0.0 <= score <= 1.0
+    reset_default_composition()
+
+
+def test_canonical38_encoder_dim_pinned_to_live_schema():
+    """Gap 2 guard (2026-09-23): enc_canonical38_v1's id says 38 but Canonical38Encoder()
+    (default feature_names=None) must always resolve to the LIVE canonical schema, so a future
+    schema bump that silently breaks this id<->dim binding fails loudly here instead of
+    re-drifting the way the id itself already has (P3: identity by name, not by hope)."""
+    enc = Canonical38Encoder()
+    assert enc.dim() == len(CANONICAL_FEATURES)
+    assert enc.id() == "enc_canonical38_v1"  # id is pinned (misleading, documented), not renamed
+
+
+def test_canonical38_encoder_explicit_38dim_bundle_still_binds_at_38():
+    """An old R2.5-style bundle that declares its OWN 38-length feature_names must still bind
+    at exactly 38 (never silently widened to the live 48-dim schema) — this is what makes the
+    fail-closed width check in load_bitlinear_composition meaningful."""
+    names_38 = [f"f{i}" for i in range(38)]
+    enc = Canonical38Encoder(feature_names=names_38)
+    assert enc.dim() == 38
+    feats = {n: float(i) for i, n in enumerate(names_38)}
+    out = enc.encode(feats)
+    assert out.dim == 38
+
+
+def test_r25_38dim_bundle_still_fails_closed_on_backbone_width_mismatch():
+    """Gap 2 regression guard: an explicit 38-dim R2.5-style encoder against a differently-sized
+    backbone must still refuse at composition.py's encoder.dim() != backbone.input_dim check —
+    never silently padded or truncated to make the dims agree.
+
+    build_synthetic_bitlinear_envelope() auto-corrects a feature_names/input_dim length
+    mismatch (test-helper convenience), so the envelope is built by hand here to actually reach
+    load_bitlinear_composition's real fail-closed check rather than the helper's silent repair.
+    """
+    env = build_synthetic_bitlinear_envelope(input_dim=8, feature_names=[f"f{i}" for i in range(8)])
+    env["encoder"]["feature_names"] = [f"f{i}" for i in range(38)]  # deliberate mismatch vs backbone's input_dim=8
+    with pytest.raises(ValueError, match="encoder dim"):
+        load_bitlinear_composition(env)
 
 
 def test_bitlinear_defaults_profile_forward():

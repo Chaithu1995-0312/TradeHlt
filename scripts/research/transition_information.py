@@ -19,10 +19,8 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import json
 import subprocess
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -157,7 +155,7 @@ def _pooled(symbols: list[str], loaded: dict, builder, n_perm: int, label: str) 
     return out
 
 
-from research.provenance import git_commit as _git_commit  # noqa: E402 — research-framework Phase 1 dedup
+from research.provenance import write_report  # noqa: E402 — research-framework Phase 4 dedup
 
 
 def main(argv=None) -> int:
@@ -196,12 +194,7 @@ def main(argv=None) -> int:
     }
 
     out_dir = Path(args.out)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "transition_information.json").write_text(
-        json.dumps(body, sort_keys=True, indent=2), encoding="utf-8")
-    (out_dir / "transition_information_manifest.json").write_text(
-        json.dumps({"generated_at": datetime.now(timezone.utc).isoformat(),
-                    "git_commit": _git_commit()}, sort_keys=True, indent=2), encoding="utf-8")
+    write_report(out_dir, "transition_information", body, include_body_sha256=False)
 
     # Console summary.
     safe_print("\nSTAGE-1 INFORMATION GATE — pooled cross-market verdict (frozen thresholds)\n")

@@ -38,6 +38,9 @@ _DEFAULT_MIN_CLUSTER_SAMPLES     = 5
 _DEFAULT_STALENESS_THRESHOLD_DAYS = 90.0
 
 # Threshold above which opportunity JSONL files are flagged systemically corrupted.
+# Canonical default for unit-test / programmatic construction ONLY. The governed value lives in
+# ONE place — trade_journal.max_corruption_ratio, read via journal.trade_logger.TradeLogger
+# .from_prod_config (§6.2 rule 5: this module no longer owns a second copy of that truth).
 MAX_CORRUPTION_RATIO: float = 0.10
 
 try:
@@ -151,10 +154,14 @@ class ReplayMemoryEngine:
         decay_half_life_days:     float        = _DEFAULT_DECAY_HALF_LIFE_DAYS,
         min_cluster_samples:      int          = _DEFAULT_MIN_CLUSTER_SAMPLES,
         staleness_threshold_days: float        = _DEFAULT_STALENESS_THRESHOLD_DAYS,
+        # Two-tier: test / programmatic seam. The production value comes from the SAME config key
+        # as TradeLogger's (trade_journal.max_corruption_ratio) — see the constant's note below.
+        max_corruption_ratio:     float        = MAX_CORRUPTION_RATIO,
     ):
         self._opps_dir        = Path(opportunities_dir)
         self._zone_path       = Path(zone_registry_path)
         self._max_records     = max_records
+        self._max_corruption_ratio = float(max_corruption_ratio)
         self._decay_lambda    = math.log(2.0) / max(decay_half_life_days, 1.0)
         self._min_cluster_samples = min_cluster_samples
         self._staleness_threshold = staleness_threshold_days
@@ -399,7 +406,7 @@ class ReplayMemoryEngine:
                 if got is not None:
                     records.append(got)
         total = malformed + valid
-        if total and (malformed / total) > MAX_CORRUPTION_RATIO:
+        if total and (malformed / total) > self._max_corruption_ratio:
             emit_integrity_event(
                 "JSONL_CORRUPTION_THRESHOLD_EXCEEDED",
                 "ERROR",

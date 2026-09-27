@@ -101,7 +101,7 @@ class CRTGaussianScorer:
             "displacement_atr_ratio",
             features.get("disp_str", features.get("disp_strength", 0.0)),
         )
-        print(f"[DEBUG] r={r:.3f}, b={b:.3f}, d={d:.3f}")
+        self._log.debug("r=%.3f, b=%.3f, d=%.3f", r, b, d)
         # Use retest_index from cached features; fall back to candles_since_sweep
         retest_idx = features.get("retest_index", 0)
         t = (
@@ -135,9 +135,9 @@ class CRTGaussianScorer:
             * (s_disp ** 0.20)
             * (s_time ** 0.15)
         )
-        print(
-            f"[GAUSS] s_r={s_retest:.3f}, s_b={s_body:.3f}, "
-            f"s_d={s_disp:.3f}, final={final_score:.4f}"
+        self._log.debug(
+            "s_r=%.3f, s_b=%.3f, s_d=%.3f, final=%.4f",
+            s_retest, s_body, s_disp, final_score,
         )
 
         components = {

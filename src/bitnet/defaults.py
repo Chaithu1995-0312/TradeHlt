@@ -24,6 +24,15 @@ LEGACY6_KEYS = (
 )
 
 # Backbone defaults (L2)
+# CONTRACT-B synthetic/bootstrap backbone-build default only (build_default_bitlinear_stages,
+# build_default_backbone_envelope, TrainerConfig.input_dim) — NOT a claim about the live
+# canonical feature schema, which is 48-dim/v6.0 (see features/feature_schema.py). A real
+# CONTRACT-B artifact always self-describes its own dim (envelope["backbone"]["input_dim"]);
+# this constant only fires when nothing else specifies one, e.g. an un-declared synthetic
+# envelope or a trainer run that doesn't override it (the R2.5 bundles trained at this
+# historical default). Corrected 2026-09-23 — previously undocumented, so it read as a stale
+# echo of the pre-F-076 38-dim schema (ENC_CANONICAL38_ID carries the same misleading name;
+# see Canonical38Encoder's docstring).
 DEFAULT_INPUT_DIM = 38
 DEFAULT_HIDDEN_DIM = 64
 DEFAULT_LATENT_DIM = 32

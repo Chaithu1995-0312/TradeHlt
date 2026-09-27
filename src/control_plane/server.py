@@ -1839,6 +1839,17 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                         ".md":   "text/plain; charset=utf-8",
                     }
                     _fp = REPO_ROOT / path.lstrip("/")
+                    # Directory without trailing slash → redirect, so the page's
+                    # relative <script src> resolve inside the directory.
+                    if _fp.is_dir() and not path.endswith("/"):
+                        self.send_response(HTTPStatus.FOUND)
+                        self.send_header(
+                            "Location", path + "/" + ("?" + parsed.query if parsed.query else "")
+                        )
+                        self.send_header("Content-Length", "0")
+                        self.send_header("Access-Control-Allow-Origin", "*")
+                        self.end_headers()
+                        return
                     # Trailing slash or directory → serve index.html
                     if _fp.is_dir():
                         _fp = _fp / "index.html"

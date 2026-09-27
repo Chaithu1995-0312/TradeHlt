@@ -4,11 +4,12 @@ from datetime import datetime, time
 import pytest
 
 from config_layer.state_identity import CRTConfig
+from tests.helpers.crt_config import crt_config_for_test
 
 
 def test_crtconfig_default_allowed_sessions():
     """CRTConfig default mirrors v2_multi_2026_04 production allowed_sessions."""
-    cfg = CRTConfig()
+    cfg = crt_config_for_test()
     assert "LONDON" in cfg.allowed_sessions
     assert "NEWYORK" in cfg.allowed_sessions
     assert "ASIA" not in cfg.allowed_sessions
@@ -16,7 +17,7 @@ def test_crtconfig_default_allowed_sessions():
 
 def test_session_resolution_london():
     """A 08:30 UTC timestamp resolves to LONDON via session_windows lookup."""
-    cfg = CRTConfig()
+    cfg = crt_config_for_test()
     t = time(8, 30)
     matched = next(
         (name for name, (s, e) in cfg.session_windows.items() if s <= t <= e),
@@ -28,7 +29,7 @@ def test_session_resolution_london():
 
 def test_session_resolution_asia_blocked():
     """A 02:00 UTC timestamp resolves to ASIA, which is NOT in allowed_sessions."""
-    cfg = CRTConfig()
+    cfg = crt_config_for_test()
     t = time(2, 0)
     matched = next(
         (name for name, (s, e) in cfg.session_windows.items() if s <= t <= e),
@@ -40,7 +41,7 @@ def test_session_resolution_asia_blocked():
 
 def test_session_resolution_off_session_blocked():
     """A 11:30 UTC timestamp falls outside all windows → OFF_SESSION → blocked."""
-    cfg = CRTConfig()
+    cfg = crt_config_for_test()
     t = time(11, 30)
     matched = next(
         (name for name, (s, e) in cfg.session_windows.items() if s <= t <= e),
@@ -53,7 +54,7 @@ def test_session_resolution_off_session_blocked():
 def test_allowed_sessions_normalization_via_dataclass_replace():
     """allowed_sessions field accepts tuple of uppercase strings via dataclass replace."""
     from dataclasses import replace
-    cfg = CRTConfig()
+    cfg = crt_config_for_test()
     new_cfg = replace(cfg, allowed_sessions=("LONDON",))
     assert new_cfg.allowed_sessions == ("LONDON",)
     assert "NEWYORK" not in new_cfg.allowed_sessions
@@ -84,7 +85,7 @@ def test_session_filter_utc_corrected_can_disagree_with_broker_local():
     """
     from features import broker_clock as bc
 
-    cfg = CRTConfig()
+    cfg = crt_config_for_test()
 
     def resolve(t):
         return next(

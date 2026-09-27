@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session conversation — verbatim — 2026-09-22</title>
+<style>
+  :root { --bg:#f4f1ea; --ink:#1c1915; --muted:#5c564c; --line:#ddd6c8; --user:#fff; --agent:#eef3f4; --accent:#8c3a2f; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 "Segoe UI", Candara, sans-serif; }
+  header, main { max-width:54rem; margin:0 auto; padding:1.25rem; }
+  header { border-bottom:1px solid var(--line); }
+  h1 { font-size:1.4rem; margin:0 0 .35rem; }
+  .meta { color:var(--muted); margin:0; }
+  article { margin:1rem 0; padding:.75rem .9rem .9rem; border:1px solid var(--line); border-radius:8px; background:var(--agent); }
+  article.user { background:var(--user); }
+  .who { font-size:.75rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:.35rem; }
+  article.user .who { color:var(--accent); }
+  pre { margin:0; white-space:pre-wrap; word-wrap:break-word; font:15px/1.45 Consolas, "Cascadia Mono", monospace; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Session conversation — verbatim</h1>
+  <p class="meta">2026-09-22. Each block is one sent message, in order. Not a summary. <code>userinvestigation/session_conversation.html</code></p>
+</header>
+<main id="log">
+<article class="user">
+  <div class="who">user</div>
+  <pre>i want you to run xauusd full corpus</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>You want the XAUUSD full-corpus run. I&#x27;ll locate the standing command, the corpus path, and whether the dirty tree blocks a comparison against recorded results before writing the plan.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre># Run the XAUUSD full corpus
+
+## What this is
+
+One spine backtest of the canonical 2-year XAUUSD M15 file. Not a bar-matrix rebuild, not a research contract driver, not a finding, and not a promotion.
+
+Lane: measurement / evidence. No code or config edits.
+
+## Corpus (verified this turn)
+
+| Item | Value |
+|---|---|
+| Path | `data/mt5/XAUUSD_M15.csv` |
+| Rows | 47,275 |
+| Range | 2024-05-22 01:00:00 → 2026-05-21 23:45:00 |
+| Bytes | 2,715,565 |
+| sha256 | `4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56` |
+| Interpreter | `venv\Scripts\python.exe` (`D:\Tradelatest\venv`) |
+| Active version file | `v2_htfcrt_2026_08` |
+| Declared gate | `backtest.engine_gate_enabled: true`, parent CRT `H4`, `htf_candles_per_range: 16` |
+
+The hash matches the Phase-1 frozen candidate in `HANDOFF.md`. No sliced CSV. No `--htf`, `--threshold`, `--capital`, or `--config` overrides. `--config` does not load the production file; it relabels the version `CUSTOM`.
+
+## Working-tree warning (do not compare)
+
+Branch `grokbotchanges` at `09ffcb1`. Stash `stash@{0}` exists and will not be applied.
+
+These files the runner actually loads are already modified:
+
+- `src/runtime/backtest_v2.py` — about +401 / −33
+- `src/core/engine_runner.py` — 4 lines
+- `configs/production/v2_htfcrt_2026_08.json` — uncommitted INR sizing (`currency`, `per_trade_investment_inr: 10000`, `sizing_mode: fixed_investment_inr`) plus declared-but-off `signal_belief` and audit/journal sections
+
+This run is the current working tree, not HEAD and not the tree behind older findings. Report it as an observation. Do not register a finding, do not claim parity with `results/run_20260915_221633_XAUUSD` or any recorded book, and do not rehash or promote.
+
+## Command
+
+From `D:\Tradelatest`, background, log to a file:
+
+```
+venv\Scripts\python.exe src/runtime/backtest_v2.py --csv data/mt5/XAUUSD_M15.csv --instrument XAUUSD --output results
+```
+
+Echo the path, row count, and sha on the first line of the log before the process starts. Do not start the full pytest suite.
+
+## After it exits
+
+Read the new `results/run_*_XAUUSD/` summary (and `run_identity.json` if the writer emitted one). Report only what the artifacts say:
+
+- candle count and timestamp span
+- config version actually loaded
+- trade count, win rate, and the summary&#x27;s own net/gross fields if present
+- the three run ids if the log prints the F-101 split, plus any canonical `run_id`
+- that `src/` and the active config were dirty
+
+If admission substitutes a different file, or the sha/row count is not the table above, stop and report. Do not retry against another CSV.
+
+Append one session-log entry to `assistant_project.md` after the numbers are read from the artifacts. No other doc edits.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The plan is approved. I&#x27;ll start the full-corpus backtest on the frozen XAUUSD file and keep the log tied to that exact path, row count, and hash.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The backtest exited after about five minutes with a failure. I&#x27;ll read the log and see whether it rejected the corpus or died inside the run.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The candle walk finished on the frozen file, then the report writer crashed: the run folder is created lazily and nothing calls that step, so `run_identity.json` had no directory. I&#x27;ll rerun the same spine and only create that folder at write time, without changing the trading code.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The full frozen XAUUSD M15 corpus ran to completion. The book is 3 trades, win rate 33.3%, net **−1.69R**. This is a working-tree observation, not a comparison with older results, and it is not a finding.
+
+| | |
+|---|---|
+| File | `data/mt5/XAUUSD_M15.csv` |
+| Rows | 47,275 (2024-05-22 01:00:00 → 2026-05-21 23:45:00) |
+| sha256 | `4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56` |
+| Config | `v2_htfcrt_2026_08`, hash `7de09f62…` |
+| Run | `run_20260922_044800` |
+| Folder | `results/run_20260922_044800_XAUUSD_v2_htfcrt_2026_08_7de09f62/` |
+
+Admission kept that same file. The engine gate was on, parent CRT was H4, and `htf_candles_per_range` was 16. The feature pipeline dropped 78 warmup rows and scored 47,197. The summary&#x27;s own goal check is FAIL and is not enforced.
+
+| Trade | Open (broker time) | Exit | Net R |
+|---|---|---|---|
+| CRT-0001 LONG | 2024-11-12 15:30 | STOPPED | −1.0547 |
+| CRT-0002 LONG | 2024-11-15 07:45 | STOPPED | −1.2504 |
+| CRT-0003 LONG | 2025-02-25 15:45 | TP2 | +0.6128 |
+
+Gross was −0.32R. Costs took the net to −1.69R. Profit factor 0.27. Max drawdown 2.3%. Final capital in the summary is 98,306.80 from 100,000.
+
+The plain command died after the walk. The report writer is built with a lazy folder and never creates it, so `run_identity.json` raised `FileNotFoundError`. The numbers above are from a second run of the same code that only creates that folder before writing. No trading code or config was edited. The branch is `grokbotchanges` at `09ffcb1`, and `backtest_v2.py`, `engine_runner.py`, and the active config were already modified, including the uncommitted INR sizing.
+
+Identity status `VERIFIED` means the config and dataset hashes resolved. It does not mean the tree is clean. Two ids were minted: logging id `20260922_101344` at process start, and `run_20260922_044800` on the summary, config dump, and layer trace `lt_20260922_044800_XAUUSD`.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: XAUUSD full-corpus spine backtest on the frozen M15 file (working tree, observation only).
+Decision/Output: Walked data/mt5/XAUUSD_M15.csv (47,275 rows, 2024-05-22 01:00:00 → 2026-05-21 23:45:00, sha256 4d73f5ce…). Plain CLI exited 1 because the lazy report folder is never created. Reran with a mkdir-only wrapper. Summary: 3 trades, win rate 0.3333, net −1.6923R, goal_report FAIL not enforced. Artifacts under results/run_20260922_044800_XAUUSD_v2_htfcrt_2026_08_7de09f62/. Dirty tree. No finding, no promotion.
+Belief Update / ROI / Goal: Goal: see the current spine on the full frozen corpus. Belief: 3 trades, net negative, n=3 is not an edge. Knowledge ROI: medium. Action: do not compare this run to recorded findings.
+Open Questions: whether to call finalize_folder so the plain CLI can write its folder.
+Next Step: none unless you want that writer fix.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>Gather layertrace+id for this run and list all artifacts/results genertead for this run</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>I&#x27;ll collect the layer-trace file and run id from the finished XAUUSD run, then list every artifact that run actually wrote.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The shared layer-trace file starts with an older run id. I&#x27;ll check whether today&#x27;s trace was appended to it or written somewhere else.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The run id is `run_20260922_044800`. Its layer-trace id is `lt_20260922_044800_XAUUSD`. Those two are the same walk: every layer-trace row carries the canonical id in `preexisting_run_ids`.
+
+The writer does not give this run its own layer-trace file. It appends into `results/layer_trace/XAUUSD_layer_trace.jsonl` (323,294 rows, several runs). This run is 94,406 of those rows. I copied only those rows next to the identity:
+
+`results/run_20260922_044800_XAUUSD_v2_htfcrt_2026_08_7de09f62/XAUUSD_layer_trace.jsonl` (114,479,882 bytes)
+
+| Layer | Rows |
+|---|---:|
+| L0 corpus admit | 1 |
+| L1 feature pipeline | 1 |
+| L3 | 47,197 |
+| L4 | 47,197 |
+| L5 engine gate | 3 |
+| L6 | 3 |
+| L7 execution plane | 1, status `NOT_REACHED` |
+| L8 trade opened | 3 |
+
+Status on those rows: PASS 94,386, REJECT 19, NOT_REACHED 1. The trace header says `tree_dirty: true` and `code_sha` `09ffcb11c6946c83fe8d984fa967a64952db234c`. Identity status on `run_identity.json` is `VERIFIED` (config hash `7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613`, dataset hash `4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56`). I did not rewrite `run_manifest.json`, so that file still does not list the extracted copy.
+
+**This run**
+
+| Artifact | What it is |
+|---|---|
+| `results/run_20260922_044800_XAUUSD_v2_htfcrt_2026_08_7de09f62/run_identity.json` | 6-field identity, 349 bytes |
+| `.../run_manifest.json` | Pointer and the five ids, 2,044 bytes |
+| `.../XAUUSD_summary.json` | 3 trades, net −1.6923R, 5,909 bytes |
+| `.../XAUUSD_trades.csv` | 3 trade rows, 4,396 bytes |
+| `.../XAUUSD_events.jsonl` | 7,112 events, 2,326,987 bytes |
+| `.../XAUUSD_report.txt` | Text report, 4,106 bytes |
+| `.../XAUUSD_crt_telemetry.jsonl` | 4,883 telemetry rows, 1,832,690 bytes |
+| `.../XAUUSD_layer_trace.jsonl` | Extract of this run only |
+| `logs/config_dumps/XAUUSD_run_20260922_044800_config.json` | Config dump, 7,207 bytes |
+| `logs/execution/runs/20260922_101344/sweep_trace.jsonl` | 1,792 sweep rows, keyed by logging id `20260922_101344` |
+| `logs/index/run_id_last_ran.json` and `.jsonl` | Last-ran rows for both `run_20260922_044800` and `lt_20260922_044800_XAUUSD` |
+
+The other ids on this process are logging `20260922_101344` (minted at start) and config-dump `run_20260922_044800` (same as the canonical id).
+
+**Not this run.** The shared layer-trace file also holds the aborted CLI attempt `lt_20260922_044055_XAUUSD` (another 94,406 rows, no report folder) and older runs. `logs/execution/runs/20260922_100653/` is that aborted process. `results/_xauusd_full_corpus_20260922_rerun.log` and `results/_run_xauusd_full_once.py` are the operator log and the folder-create wrapper, not spine outputs.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Inventory of run_20260922_044800 artifacts; layer trace extracted out of the shared append file.
+Decision/Output: Canonical id run_20260922_044800. Layer-trace id lt_20260922_044800_XAUUSD (94,406 rows). Copied only this run&#x27;s rows to the run folder. Shared file left untouched. Manifest not rewritten.
+Belief Update / ROI / Goal: Goal: one place that holds this run&#x27;s layer trace with its id. Belief: the shared layer-trace file is not a per-run artifact. Knowledge ROI: medium. Action: use the extracted copy.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>results/layer_trace/XAUUSD_layer_trace.jsonl  Extract schema for this</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>I&#x27;ll read the layer-trace writer and check the file itself so the schema matches what those rows actually contain.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>`results/layer_trace/XAUUSD_layer_trace.jsonl` is one flat JSON object per line. All 323,294 rows use schema `1.0.0` and the same 28 keys in the same order. There is no header row. The identity block is copied onto every row.
+
+| # | Field | Type in this file | Nulls |
+|---|---|---|---:|
+| 1 | `schema_version` | string, always `&quot;1.0.0&quot;` | 0 |
+| 2 | `run_id` | string, `lt_YYYYMMDD_HHMMSS_XAUUSD` | 0 |
+| 3 | `rail` | string, always `&quot;backtest&quot;` | 0 |
+| 4 | `instrument` | string, always `&quot;XAUUSD&quot;` | 0 |
+| 5 | `timeframe` | string, always `&quot;M15&quot;` | 0 |
+| 6 | `active_version` | string, always `&quot;v2_htfcrt_2026_08&quot;` | 0 |
+| 7 | `config_hash` | string, always `7de09f62…` | 0 |
+| 8 | `schema_hash` | string, always `d40e7c7d5b624ef6d27670255ad95a35` | 0 |
+| 9 | `dataset_id` | string, always `&quot;&quot;` | 0 |
+| 10 | `corpus_path` | string; `&quot;&quot;` on 22,541 rows | 0 |
+| 11 | `corpus_rows` | int, always `0` | 0 |
+| 12 | `corpus_sha256` | string | 0 |
+| 13 | `code_sha` | string (2 distinct values) | 0 |
+| 14 | `tree_dirty` | bool, always `true` | 0 |
+| 15 | `preexisting_run_ids` | object of strings | 0 |
+| 16 | `trace_id` | string | 0 |
+| 17 | `span_id` | string, `trace_id + &quot;:&quot; + layer` | 0 |
+| 18 | `bar_idx` | int; `-1` on the 27 run-scoped rows | 0 |
+| 19 | `bar_ts` | string or null | 27 |
+| 20 | `emitted_by` | string, always `&quot;runtime.layer_trace&quot;` | 0 |
+| 21 | `plane` | string | 0 |
+| 22 | `layer` | string | 0 |
+| 23 | `module` | string | 0 |
+| 24 | `status` | string | 0 |
+| 25 | `input_hash` | null | 323,294 |
+| 26 | `output_hash` | string or null | 33 |
+| 27 | `artifact_path` | string or null | 323,285 |
+| 28 | `note` | string, never empty | 0 |
+
+`output_hash` is not a digest. It is null on L0, L1, L6, and L7. Where it is set it holds a layer payload: L3 the CRT state name, L4 the parent-state name, L5 the engine decision string, L8 the trade id. `input_hash` is unused. `artifact_path` is set only on the 9 L0 rows (3 of those are `&quot;&quot;`). `corpus_rows` is not the corpus length. The emitter reads `total_candles` before that count exists, so every row stores `0`.
+
+`preexisting_run_ids` has two shapes:
+
+- 206,353 rows: `utils.logging_config.RUN_ID`, `runtime.ReportWriter.run_id`, `runtime.BacktestRunner.canonical_run_id`
+- 116,941 older rows: the first two only
+
+Ids:
+
+- Run-scoped row (`bar_idx` `-1`, `bar_ts` null): `trace_id` is `{run_id}:RUN_SCOPED`. That is L0, L1, and L7.
+- Bar row: `trace_id` is `{run_id}:XAUUSD:{bar_ts}`, with `bar_ts` like `2026-05-21T23:45:00`.
+
+Layers actually in the file:
+
+| Layer | Plane | Module | Rows | Status |
+|---|---|---|---:|---|
+| L0 | observation | `data_ingestion.ohlcv_schema+dataset_integrity+corpus_gate` | 9 | PASS |
+| L1 | observation | `features.feature_pipeline` | 9 | PASS 6, NOT_REACHED 3 |
+| L3 | observation | `config_layer.crt_engine_v2` | 161,623 | PASS 161,560, REJECT 63 |
+| L4 | observation | `runtime.parent_crt_feed+config_layer.htf_state` | 161,623 | PASS |
+| L5 | evidence | `core.engine_runner.EngineRunner` | 6 | PASS |
+| L6 | evidence | `core.fusion_engine+core.decision_engine` | 6 | PASS |
+| L7 | execution | `config_layer.execution_planner+core.ultron_risk_gate` | 9 | NOT_REACHED |
+| L8 | observation | `config_layer.crt_engine_v2.Trade` | 9 | PASS |
+
+The writer in `src/runtime/layer_trace.py` also allows L2, L9, status `EXCEPTION` and `UNVERIFIED`, and plane `measurement`. None of those appear in this file. L5 and L6 exist only on bars where the engine gate ran, which is why this file has 6 of each rather than one per bar.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Schema of results/layer_trace/XAUUSD_layer_trace.jsonl, counted on all 323,294 rows.
+Decision/Output: 28 keys, one order, schema 1.0.0. output_hash is a layer payload, not a digest. corpus_rows is 0 on every row. L2/L9/EXCEPTION/UNVERIFIED are declared and absent here.
+Belief Update / ROI / Goal: Goal: know the record shape before joining. Belief: output_hash is not a hash in this file. Knowledge ROI: medium. Action: join on run_id + trace_id + layer; do not read corpus_rows as the corpus length.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>How you are declaring pass for each Layer?</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>PASS in that file is whatever the backtest wrote into `status`. I&#x27;ll read each layer&#x27;s emit site and state the exact condition, not the row counts.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>I am not assigning `PASS`. `LayerTraceEmitter` only checks that `status` is one of `PASS`, `REJECT`, `NOT_REACHED`, `EXCEPTION`, or `UNVERIFIED`. `BacktestRunner` in `src/runtime/backtest_v2.py` passes the string in. The counts in the schema were a tally of that string. `PASS` here is not a quality grade and not an economic claim.
+
+| Layer | When a row is written | What `PASS` means |
+|---|---|---|
+| L0 | Once per run, after the walk has already started | The literal `&quot;PASS&quot;`. The admission verdict is not copied. Warnings still produce `PASS`. A failed admission never gets this far, so there is no `REJECT` row for L0. |
+| L1 | Once per run, same site | `PASS` only if `self.feature_vectors is not None`. Otherwise `NOT_REACHED`. |
+| L3 | Every bar after `process_candle` returns | `PASS` unless `action` contains `&quot;REJECTED&quot;`, or `action` is `&quot;NONE&quot;` and `reason` is non-empty. Sweep, displacement, and trade-open are `PASS`. |
+| L4 | Same bar as L3 | `PASS` if `parent_feed is not None`. Otherwise `NOT_REACHED`. The parent-state name is stored in `output_hash` and is not part of the test. |
+| L5 | Only if the bar was not already rejected by the phase-5 or drift veto, and an `EngineRunner` exists | `PASS` if that call returns and `_engine_vetoed` stays false. `REJECT` if the decision is `REJECT`, `REJECTED`, or `HOLD` and the zone bypass does not apply. An exception writes `EXCEPTION` and lets the trade through. |
+| L6 | Same successful `EngineRunner.run` as L5 | Same veto flag as L5. `output_hash` is always `null`, so `PASS` does not mean fusion returned a score. The exception path writes L5 only, not L6. |
+| L7 | Once per run | Never `PASS`. `emit_not_reached_once` always writes `NOT_REACHED`. |
+| L8 | Only when `action` contains `&quot;TRADE_OPENED&quot;` and `engine.state.active_trade` is set | The literal `&quot;PASS&quot;`. No trade means no L8 row, not a failed row. |
+
+L2 and L9 are never emitted on this rail, so they have no status in the file.
+
+The L3 test is the one that inflates `PASS`. A bar is `REJECT` only for those two action shapes. Everything else, including an ordinary `RANGE` bar, is `PASS`.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: What status=PASS means on each layer_trace row in backtest_v2.
+Decision/Output: The census did not assign PASS. The emitter only checks the vocabulary. backtest_v2.py sets the string. L0 and L8 are literal PASS. L1 is feature_vectors is not None. L3 is the action/reason test. L4 is parent_feed is not None. L5/L6 follow _engine_vetoed. L7 is always NOT_REACHED. L2 and L9 are never emitted.
+Belief Update / ROI / Goal: Goal: not read the trace status as a quality grade. Belief: L3/L4 PASS is a string test, not a certification. Knowledge ROI: high. Action: read note and output_hash for the payload.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>How self.feature_vectors are we getting ?</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>L1 calls the row `PASS` when `self.feature_vectors` is already set. I&#x27;ll trace where that object is built and what it holds.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>`self.feature_vectors` is the batch feature matrix built once in `BacktestRunner.__init__`, before the candle walk. L1 only checks that this object exists.
+
+It starts as `None`. On the command you ran, a CSV path is set and `skip_features` stays false, so `__init__` does this:
+
+1. `pd.read_csv` on `data/mt5/XAUUSD_M15.csv` (the whole file, not one bar).
+2. `FeaturePipeline(raw_df).run()`.
+3. `enriched_df, self.feature_vectors = pipeline.run()`.
+
+`FeaturePipeline.run()` computes the price, volume, indicator, trend, volatility, context, structure, and canonical features, including the nine SMC columns. `finalize()` turns infinities into NaN and drops any row that is NaN in a `CANONICAL_FEATURES` column. `build_feature_vector()` then takes those columns, in `CANONICAL_FEATURES` order, as a `float32` array of shape `(N, len(CANONICAL_FEATURES))`. That array is `self.feature_vectors`.
+
+On this corpus the log recorded 47,275 CSV rows in and 47,197 rows after `finalize()` dropped 78 warmup rows. A timestamp-to-row map, `feature_ts_to_idx`, is built beside the matrix. During the walk a bar does not recompute features. It looks up its timestamp and takes `self.feature_vectors[idx]`.
+
+L1 is written later, inside `run()`, and the test is only `self.feature_vectors is not None`. It does not check the row count, the join, or a single value. `skip_features=True` or no CSV path leaves the attribute `None`, and that same line writes `NOT_REACHED` instead.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Where BacktestRunner.feature_vectors comes from.
+Decision/Output: Built once in BacktestRunner.__init__ from FeaturePipeline.run() on the whole CSV. float32 matrix of CANONICAL_FEATURES after finalize() drops NaN rows. This corpus 47,275 → 47,197. L1 PASS only tests that the object is not None. The walk joins by timestamp.
+Belief Update / ROI / Goal: Goal: know what L1&#x27;s PASS is pointing at. Belief: the matrix is a batch product built before the candle walk. Knowledge ROI: medium. Action: do not treat L1 PASS as a per-bar join check.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>i want you to build an html file that should record omgoing conversation</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The chat so far is only in this session. I&#x27;ll write a single HTML log of those turns and keep appending to that same file.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The conversation log is `results/session_conversation.html`. It contains this chat through the current turn: the full-corpus run, the layer-trace gather, the schema, how `PASS` is set, where `feature_vectors` comes from, and this request.
+
+Later turns in this session will be appended to that same file, newest last. It does not watch the chat on its own. `results/` is gitignored, so the file is not a source change.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: HTML log of this chat at results/session_conversation.html.
+Decision/Output: Wrote results/session_conversation.html with turns 1–6. No src or config edit. Later turns append to the same file.
+Belief Update / ROI / Goal: Goal: keep this conversation readable outside the chat window. Belief: one append-only HTML file is enough; it does not capture turns by itself. Knowledge ROI: low. Action: append the next turn to the same file.
+Open Questions: none.
+Next Step: append the next user turn to results/session_conversation.html.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre> enriched_df, self.feature_vectors   what schema does both contain</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>`enriched_df` and `self.feature_vectors` come back from the same `pipeline.run()` call. I&#x27;ll read what each one actually holds after `finalize()`.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>They are the same rows. `enriched_df` is the wide table. `self.feature_vectors` is only the 48 canonical columns of that table, cast to `float32`.
+
+`finalize()` drops rows that are NaN in any canonical column, then both objects are built from that frame. On this corpus that is 47,275 rows in and 47,197 rows out. Row `i` of the matrix is row `i` of the frame. The matrix has no timestamp column. The walk joins with `feature_ts_to_idx`, which is built from `enriched_df[&quot;timestamp&quot;]`.
+
+**`self.feature_vectors`** is a `numpy.ndarray` of shape `(N, 48)`, dtype `float32`. Schema version `6.0`. `SCHEMA_HASH` is `d40e7c7d5b624ef6d27670255ad95a35`. Order is `CANONICAL_FEATURES`. Integer flags such as `session` and `volume_spike` are cast to float here.
+
+| # | Column | # | Column |
+|---|---|---|---|
+| 0 | `open` | 24 | `swing_low` |
+| 1 | `high` | 25 | `higher_high` |
+| 2 | `low` | 26 | `lower_low` |
+| 3 | `close` | 27 | `body_size` |
+| 4 | `volume` | 28 | `candle_range` |
+| 5 | `volume_ratio` | 29 | `body_ratio` |
+| 6 | `double_sweep` | 30 | `volatility_regime` |
+| 7 | `ema_fast` | 31 | `session` |
+| 8 | `ema_slow` | 32 | `hour_of_day` |
+| 9 | `ema_spread` | 33 | `disp_strength` |
+| 10 | `trend_bias` | 34 | `retest_depth` |
+| 11 | `trend_strength_z` | 35 | `candles_since_sweep` |
+| 12 | `momentum_score` | 36 | `liquidity_distance` |
+| 13 | `atr` | 37 | `liquidity_pressure_score` |
+| 14 | `volatility_ratio` | 38 | `volume_spike` |
+| 15 | `rsi_14` | 39 | `order_block_distance` |
+| 16 | `macd_line` | 40 | `fvg_distance` |
+| 17 | `macd_signal` | 41 | `breaker_distance` |
+| 18 | `macd_hist_raw` | 42 | `mitigation_block_distance` |
+| 19 | `macd_hist_z` | 43 | `pdh_distance` |
+| 20 | `sweep_detected` | 44 | `pdl_distance` |
+| 21 | `liquidity_sweep` | 45 | `eqh_distance` |
+| 22 | `break_of_structure` | 46 | `eql_distance` |
+| 23 | `swing_high` | 47 | `change_of_character` |
+
+**`enriched_df`** is a pandas `DataFrame` with those 48 columns plus the columns the pipeline still needs. Dtypes stay mixed (`datetime64` for `timestamp`, `int8` for several flags, `float32` or `float64` for the rest). The 48 canonical columns are also on this frame, before the float32 cast.
+
+Always present besides the 48:
+
+- Identity: `timestamp`
+- Price work: `prev_close`, `delta_close`, `candle_body`, `upper_wick`, `lower_wick`, `direction`, `body_size` is already in the 48, plus `price_position`, `range_size`
+- Volume work: `volume_range_proxy`, `volume_ma20`, `volume_range_proxy_ratio`
+- Indicators that are not slots: `ma_20`, `ma_50`, `ma_200`, `rsi_state`, `true_range`, `atr_14_raw`, `atr_14`, `bb_upper`, `bb_lower`, `bb_width_raw`, `bb_position`, `price_vs_ma20_raw`, `price_vs_ma50_raw`, `ma_slope_20`, `trend_strength_raw`
+- Volatility ranks: `volatility_regime_global_batch`, `volatility_regime_expanding_causal`, `volatility_regime_rolling_causal` (`volatility_regime` in the vector is the rolling one)
+- Time: `day_of_week` (not a vector slot; `hour_of_day` and `session` are)
+- Swings: `swing_high_centered_batch`, `swing_low_centered_batch`, `last_swing_high_price_centered_batch`, `last_swing_low_price_centered_batch`, `swing_high_causal_confirmed`, `swing_low_causal_confirmed`, `last_swing_high_price_causal`, `last_swing_low_price_causal`, `last_swing_high_price`, `last_swing_low_price`
+- Resolver-only flags, copied off this frame and not in the matrix: `displacement_flag`, `retest_flag`, `rsi_state`
+
+Three columns are added only when an environment variable is set. This run&#x27;s command did not set them: `volatility_regime_research_view` if `TRUST_VOLREGIME_CAUSAL` is set, and `swing_high_research_view` / `swing_low_research_view` if `TRUST_SWING_CAUSAL=1`.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Schema of enriched_df versus self.feature_vectors.
+Decision/Output: Same post-finalize rows (this run 47,197). feature_vectors is float32 (N, 48) = CANONICAL_FEATURES schema v6.0, SCHEMA_HASH d40e7c7d5b624ef6d27670255ad95a35. enriched_df is that frame plus timestamp and the non-vector working columns. displacement_flag, retest_flag, rsi_state are frame-only. Turn 7 appended to results/session_conversation.html.
+Belief Update / ROI / Goal: Goal: know which object is the model vector. Belief: the frame is the superset; the matrix is the 48-name projection. Knowledge ROI: medium. Action: join by row position or timestamp, not by assuming the frame has 48 columns.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>Html should be exact replica copy for our conversation</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>`results/session_conversation.html` is now a verbatim copy of this chat. The previous file was a summary. That summary is gone.
+
+Each block below the header is one message, in order, with the wording that was sent. User lines are copied as typed, including spelling. Assistant lines include the progress lines and the session-log block that closed each reply. The approved plan is included as the text that was shown for approval. This paragraph is the last message in the file.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Replaced the conversation HTML with a verbatim transcript.
+Decision/Output: results/session_conversation.html rewritten. Prior summary version removed. Messages are the sent text, in order. No src or config edit.
+Belief Update / ROI / Goal: Goal: the HTML matches the chat. Belief: a summary is not a copy. Knowledge ROI: low, mechanical. Action: append later turns as verbatim messages, not digests.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>Extrct  CANONICAL_FEATURES into seperate html as well And enriched_df into seperate html as well</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>results/CANONICAL_FEATURES.html is the 48-name vector. Schema 6.0, SCHEMA_HASH d40e7c7d5b624ef6d27670255ad95a35. Index 0–47 is the column order of self.feature_vectors. Every vector value is float32. The page also shows the dtype of that column on the frame before the cast.
+
+results/enriched_df.html is the DataFrame, 94 columns in frame order. 48 are canonical slots. The other 46 are not copied into the matrix. timestamp is column 0 and is not in the vector.
+
+Both pages were filled by running FeaturePipeline.run() on the first 400 bars of data/mt5/XAUUSD_M15.csv. That is the same pipeline the backtest uses. The full-corpus frame has these columns and 47,197 rows. The three environment-gated columns were not created.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Separate HTML pages for CANONICAL_FEATURES and enriched_df.
+Decision/Output: results/CANONICAL_FEATURES.html has the 48 vector names, schema 6.0, hash d40e7c7d5b624ef6d27670255ad95a35, frame dtype and float32 vector dtype. results/enriched_df.html has the 94-column frame in order. Measured by FeaturePipeline.run() on the first 400 bars of the same CSV. Full-corpus row count remains 47,197. Env-gated research columns were not created. No src or config edit.
+Belief Update / ROI / Goal: Goal: see the two objects as their own pages. Belief: the vector is a 48-column projection of the 94-column frame, not the frame itself. Knowledge ROI: medium. Action: use the vector index only for feature_vectors.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>do we have same values in enriched_df and  CANONICAL_FEATURES for common keys how each layer is prodcuing it  ?</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The common keys are the same cells. The matrix does not calculate them again.
+
+CANONICAL_FEATURES is the 48 names. The numbers sit in self.feature_vectors. FeaturePipeline.build_feature_vector takes those 48 columns off the post-finalize enriched_df and casts each one to float32. Same rows, same order. Measured on the first 2,000 bars of data/mt5/XAUUSD_M15.csv: 2,000 in, 78 warmup rows dropped, 1,922 kept. After the cast, 0 of 1,922 x 48 cells disagreed.
+
+Before the cast, 13 float64 columns are not bit-identical. On this slice the OHLC gap is at most 0.0001171875. Example: frame open 2389.44, vector open 2389.43994140625. The other rounded columns are volume_ratio, rsi_14, macd_line, macd_signal, macd_hist_raw, macd_hist_z, trend_strength_z, body_size, and candle_range. Their gaps are much smaller than the price gap (rsi_14 at most about 3.8e-6; the rest about 1e-7). Volume and every column already stored as float32 or as a small integer matched exactly. Volume max on this slice was 6,547. The full 47,197-row frame was not re-measured this turn. The copy is the same function the backtest calls.
+
+A name that exists only on the frame is not a common key. atr_14, trend_strength_raw, the centered swing columns, displacement_flag, retest_flag, and rsi_state are not in the vector. macd_hist_raw and macd_hist_z are both common keys and they are different numbers.
+
+The feature DAG layer classifies the identity. It is not a second writer. L5 and L6 write none of the 48. The cell both objects share is the last assignment in feature_pipeline.py.
+
+| Layer | Common keys | Last writer of the shared cell |
+|---|---|---|
+| RAW | open, high, low, close, volume | CSV columns, coerced numeric in FeaturePipeline._validate_input. Not recomputed. |
+| L0 | body_size, candle_range | compute_canonical_price_features. abs(close-open) and high-low. |
+| L1 | rsi_14, macd_line, macd_signal | compute_indicators. |
+| L1 | ema_fast, ema_slow | compute_canonical_ema_features. Spans come from feature_pipeline, not the CRT 2/5 pair. |
+| L1 | atr | compute_canonical_volatility_features. This slot is atr_14_raw/close. The absolute SMA stays on the frame as atr_14 and is not copied. |
+| L1 | swing_high, swing_low | compute_structure_liquidity. The causal confirmed swing, not the centered batch columns. |
+| L2 | body_ratio | compute_canonical_price_features. body_size/candle_range. |
+| L2 | volatility_ratio | compute_canonical_volatility_features. |
+| L2 | ema_spread, momentum_score | compute_canonical_ema_features. Active basis is atr_relative: numerator divided by close-relative atr. |
+| L2 | volume_ratio | compute_volume_features. source volume / its rolling mean. |
+| L2 | volume_spike | promote_volume_spike. This overwrites the earlier fixed-threshold seed. |
+| L2 | trend_bias | compute_canonical_trend_features. Sign of ema_fast versus ema_slow. |
+| L2 | macd_hist_raw | compute_indicators. macd_line minus macd_signal. |
+| L2 | macd_hist_z | compute_normalization. Rolling z-score of macd_hist_raw, written to a new column. |
+| L2 | disp_strength | compute_canonical_temporal_features. body_size / (atr * close), then clipped. |
+| L3 | higher_high, lower_low, break_of_structure, liquidity_sweep | compute_structure_liquidity. |
+| L3 | sweep_detected, double_sweep | compute_canonical_structure_features. |
+| L3 | retest_depth, candles_since_sweep | compute_canonical_temporal_features. retest_depth is 0 unless retest_flag is 1. retest_flag itself is not copied. candles_since_sweep counts bars since the liquidity_sweep event. |
+| L3 | liquidity_distance | compute_liquidity_distance. |
+| L3 | order_block_distance, fvg_distance, breaker_distance, mitigation_block_distance, pdh_distance, pdl_distance, eqh_distance, eql_distance, change_of_character | compute_smc_features. change_of_character is a function of break_of_structure and trend_bias. |
+| L4 | liquidity_pressure_score | compute_liquidity_distance. exp decay of liquidity_distance. |
+| L4 | volatility_regime | compute_volatility_regime. Copy of volatility_regime_rolling_causal, not the global or expanding columns. |
+| L4 | trend_strength_z | compute_normalization. Z-score of frame-only trend_strength_raw. |
+| L4 | hour_of_day, session | compute_context, from the raw timestamp as broker-local time. compute_canonical_session only recasts session to int8. |
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Common-key values of enriched_df and the canonical vector, and which stage writes each.
+Decision/Output: FeaturePipeline.build_feature_vector copies the 48 CANONICAL_FEATURES columns off the post-finalize frame and casts them to float32. It does not recalculate them. Measured on the first 2,000 bars of data/mt5/XAUUSD_M15.csv (1,922 rows after the 78-row drop): 0 cells disagreed after the cast. Thirteen float64 columns are not bit-identical before the cast; OHLC max abs diff on this slice was 0.0001171875 (open 2389.44 stored as 2389.43994140625). Integer and already-float32 columns matched exactly, including volume (max 6547). DAG layers L5 and L6 write none of the 48. The shared cell is the last assignment in feature_pipeline.py, notably promote_volume_spike over the earlier volume_spike seed, and atr as atr_14_raw/close rather than the frame-only atr_14. No src or config edit. Turn appended verbatim to results/session_conversation.html.
+Belief Update / ROI / Goal: Goal: know whether the two objects can be joined by name. Belief: one producer writes the frame; the matrix is that slice plus a float32 cast. Knowledge ROI: high for any later join. Action: compare common keys only after the cast, and do not treat atr_14, trend_strength_raw, or the centered swing columns as the vector.
+Open Questions: full 47,197-row frame was not re-measured this turn. The copy rule is the same function.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>why float32 conversion ? are we mainitaing same datatype for common keys in both schemas ?frame open 2389.44, vector open 2389.43994140625 will it poullte results as these are foudations of entire architecture ?</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>No. The two schemas do not keep the same datatype. The traded price is not that rounded open.
+
+The frame keeps whatever dtype wrote the column: float64 for open, high, low, close, rsi, MACD, and the z-scores; float32 for ema, atr, body_ratio, and the SMC distances; int8 or int16 for the flags. The matrix is one numpy array, so it can hold only one numeric dtype. build_feature_vector forces float32. The source line does not give an economic reason. Several writers already store float32 on the frame before that cast. The cast is what also narrows the float64 columns and the integers.
+
+2389.44 and 2389.43994140625 are the same quote stored two ways. Float32 around this price steps by about 0.000244. The gap is inside one step. Rounded back to two decimals, both are 2389.44.
+
+I checked the cast on every OHLC value in data/mt5/XAUUSD_M15.csv, all 47,275 bars. Largest absolute gap: 0.000234375. Prices that change when rounded to a cent: 0. Bars where float32 high, close, and low break high then close then low order: 0.
+
+CRT does not take the entry from the vector. entry_price is retest_candle.close. That candle is built by CandleLoader from the CSV text with Python float(), which is float64. Stop, targets, and the discount/premium check use that same candle. Feature formulas also run on the frame's float64 prices first. The vector open is a copy made after those formulas, not an input to them.
+
+The gate does see the narrowed prices. The feature map is filled from the vector, and setdefault only fills close, high, low, and open when those keys are absent. They are never absent, so the candle price does not replace the vector price. EngineRunner's audit price is that vector close. RREngine's polarity uses vector high, close, and low, then rounds to 4 decimals. On these 47,275 bars that rounded polarity differs on 11,228 bars. The largest difference is 0.0007. That number is a candle-shape score inside fusion. It is not the trade's R. Ultron's reward-to-risk uses the planner levels from the candle trade, not this score. I did not re-score the three trades to see whether any fusion threshold sat within 0.0007 of a flip.
+
+So the price foundation is intact at the quoted cent. The dtype contract is deliberately not shared. The only measured movement is under one float32 step on price, and under 0.001 on the polarity score that re-reads those prices.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Why the canonical vector is float32, and whether the open rounding pollutes prices.
+Decision/Output: Dtypes are not the same. enriched_df keeps each writer's dtype. build_feature_vector casts the 48 columns to one float32 matrix; the source line states no economic reason. Feature formulas run on the frame first. CRT entry_price is retest_candle.close from CandleLoader float(), not the vector. On all 47,275 XAUUSD bars the float32 OHLC cast moves no price at two decimals (max abs 0.000234375) and breaks high/close/low order on 0 bars. RREngine polarity, which does read those vector prices and rounds to 4 decimals, differs on 11,228 bars by at most 0.0007. That is not trade R. No src or config edit.
+Belief Update / ROI / Goal: Goal: know if 2389.44 vs 2389.43994140625 corrupts the book. Belief: it is one float32 ulp of the same cent quote. The traded candle is a different object. Knowledge ROI: high. Action: do not treat vector open as the fill price; do not treat the two schemas as one dtype.
+Open Questions: whether any fusion threshold on this run sat within 0.0007 of the RR polarity change was not measured.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>Based on the evidence you've collected, **both are used, but for different purposes.**
+
+Think of the pipeline like this:
+
+```text id="6m0j06"
+Raw OHLCV
+    ↓
+FeaturePipeline
+    ↓
+enriched_df (47,197 rows)
+    ↓
+feature_vectors (47,197 x 48)
+```
+
+The key question is:
+
+&gt; What does the next layer consume?
+
+The answer depends on the layer.
+
+### CRT / State Resolution path
+
+The codebase is heavily DataFrame-oriented.
+
+Many computations use columns that are **not in the 48 canonical vector**:
+
+```text id="l7zwws"
+timestamp
+displacement_flag
+retest_flag
+rsi_state
+atr_14
+trend_strength_raw
+causal swing columns
+```
+
+Those only exist on:
+
+```text id="9j5rvg"
+enriched_df
+```
+
+So CRT/state logic cannot operate solely from the 48-vector.
+
+---
+
+### ML / Model path
+
+ML wants:
+
+```text id="hk1pce"
+feature_vectors
+```
+
+because models expect:
+
+```text id="8qjlwm"
+[N x 48]
+```
+
+numeric arrays.
+
+This is why `feature_vectors` exists.
+
+---
+
+### Your Layer Trace clues
+
+Look at L3:
+
+```text id="kml5if"
+config_layer.crt_engine_v2
+47,197 rows
+```
+
+L3 produces CRT states.
+
+CRT states need:
+
+```text id="vycok8"
+timestamp mapping
+sweeps
+retests
+resolver flags
+```
+
+and your own investigation found:
+
+```text id="4zch1r"
+feature_ts_to_idx
+built from enriched_df["timestamp"]
+```
+
+That is a strong signal that the walk is anchored to the DataFrame population.
+
+---
+
+### Practical mental model
+
+For your architecture, think:
+
+| Object            | Purpose                            |
+| ----------------- | ---------------------------------- |
+| `enriched_df`     | Source of truth feature population |
+| `feature_vectors` | ML/model projection                |
+| Layer Trace       | Observations emitted from the walk |
+| CRT Engine        | Mostly DataFrame semantics         |
+| ML Engine         | Mostly vector semantics            |
+
+---
+
+### The investigation question I would now ask
+
+Don't ask:
+
+&gt; "Does L3 use DataFrame or vector?"
+
+Ask:
+
+&gt; "For each layer (L3, L4, L5, L6), what exact object is passed in?"
+
+Because the codebase may do:
+
+```python id="j4ifg8"
+row_from_dataframe
+```
+
+for CRT,
+
+then later:
+
+```python id="uqj8c4"
+feature_vectors[idx]
+```
+
+for ML,
+
+on the **same bar**.
+
+That's the next piece of evidence I'd want before declaring which representation is authoritative at each layer. Right now the evidence supports:
+
+```text id="9r8g4z"
+enriched_df = semantic authority
+
+feature_vectors = 48-feature projection used by model consumers
+```
+
+not that the entire downstream pipeline switched to vectors after FeaturePipeline.
+</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The split is real. The arrow in that diagram is not. The walk never receives enriched_df.
+
+FeaturePipeline.run() builds both objects in BacktestRunner.__init__. The DataFrame is a local variable. What is kept is the float32 matrix, a timestamp-to-row dict taken from enriched_df["timestamp"], and three numpy columns: displacement_flag, retest_flag, rsi_state. After __init__ returns, nothing in the walk holds the DataFrame.
+
+The spine loop is for candle in candle_source. main() passes CandleLoader.stream(). Each item is a Candle parsed from the CSV with Python float(), not a frame row.
+
+L3, on every bar that gets past warmup. This config's backtest.warmup_candles is 78. The loop skips 77 bars, then one more bar while the engine initialises, then calls process_candle. 47,275 minus 78 is 47,197. That is why L3 has 47,197 rows. It matches the frame length because both skip the same warmup. It is not a loop over the frame.
+
+The object passed into L3 is:
+
+engine.process_candle(candle, htf.current_htf_id, parent_state, parent_objective)
+
+candle is the loader candle. parent_state is ParentCRTFeed.bias. parent_objective is the feed's objective status. crt_engine_v2.py does not mention enriched_df, feature_vectors, displacement_flag, or retest_flag. Sweeps and retests are computed inside the engine from its own candle buffer. The trace then writes the state name the engine already decided. output_hash is that state name.
+
+L4 is the same bar, not a second population. ParentCRTFeed.push(candle) was called earlier in the iteration with that same Candle. The trace only reads the feed's bias and objective. No frame column is involved.
+
+L5 and L6 do not run on those 47,197 bars. They sit inside the TRADE_OPENED block, after CRT has already opened the trade. This run wrote 3 of each, one per trade.
+
+L5's input is a dict. It is zipped from feature_vectors[idx], where idx comes from feature_ts_to_idx of the candle's timestamp. That dict is what EngineRunner.run receives. setdefault adds candle open, high, low, close, volume, and the engine's absolute ATR only when the key is missing. open, high, low, close, volume, and atr are already in the vector, so the candle values do not replace them. Direction is copied from engine.state. L6 is not given another object. It is a second trace line on the same EngineRunner result. Its output_hash is null.
+
+So on a trade bar the order is: Candle into CRT, then, only because a trade opened, the vector row into the gate. Not a dataframe row first and a vector later.
+
+The columns that exist only on the frame are not the engine's inputs. atr_14, trend_strength_raw, and the centered swing columns are pipeline working columns. The three resolver flags are copied to numpy and handed to CRTStateResolver by the construction-trace sidecar, and that emit is after process_candle has returned. It records an ontology label. It does not decide the CRT state. feature_ts_to_idx is the join key for the vector lookup and for that sidecar. It anchors a lookup to the candle clock. It does not make the walk a dataframe walk.
+
+There is a second function, run_backtest(), later in the same file. That one does iterate enriched_df and also passes vectors[i] to BitNet. The layer trace was not produced by that function. The CLI path calls runner.run(loader.stream()).
+
+enriched_df is the authority for the feature population, and only until __init__ extracts the matrix and the three sidecar columns. It is not the authority for L3. The Candle plus CRTEngine state is. feature_vectors is the projection the post-commit gate reads, on trade-open bars only, not the representation the rest of the walk switched to.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: What object L3, L4, L5, and L6 actually receive.
+Decision/Output: The spine does not pass enriched_df downstream. The walk is CandleLoader candles. enriched_df dies in BacktestRunner.__init__ after the matrix, the timestamp index, and three resolver columns are kept. L3 receives Candle plus HTF id plus parent bias and objective. crt_engine_v2 has no enriched_df or feature_vectors reference. L4 receives the same Candle via ParentCRTFeed.push. L5 and L6 fire only on TRADE_OPENED (3 rows this run). L5's input is a dict zipped from feature_vectors[idx] into EngineRunner.run. L6 is that same result logged again. Resolver flags are a post-decision sidecar, not the engine. run_backtest() does iterate the frame; that is not this layer trace. No src or config edit.
+Belief Update / ROI / Goal: Goal: name the object each layer consumes. Belief: enriched_df is the feature-frame authority, not the CRT-state authority. The vector is the post-commit gate's input, not the walk. Knowledge ROI: high. Action: stop treating 47,197 L3 rows as proof the walk iterates the dataframe.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>Trace How Candle is converting to CRT</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>A Candle becomes a CRT state inside CRTEngine.process_candle. The feature frame is not on that path.
+
+1. The CSV row becomes a Candle. CandleLoader.stream reads one line and does float() on open, high, low, close, and volume. That object is what main() passes into runner.run.
+
+2. The walk hands that same Candle to two clocks, then to the engine. HTFBuilder.push(candle) updates the HTF id. ParentCRTFeed.push(candle) updates parent bias. The first 77 bars return before the engine. Bar 78 initialises the range and also returns. From bar 79 on, the call is engine.process_candle(candle, htf.current_htf_id, parent_feed.bias, parent objective).
+
+3. Every bar, before any state test, the engine does four things with the candle itself. It stamps candle.index. It appends the candle to candle_buffer. It sets state.atr_abs from that buffer (an absolute SMA of true range, not the feature-vector atr). It updates the CRT EMAs from candle.close using crt_engine.ema_fast and ema_slow, the 2/5 pair, not the feature pipeline's 9/21 pair.
+
+4. The branch is EngineState.current_state, not a column. An ordinary bar is already RANGE, detect_sweep returns nothing, action stays NONE, and the state stays RANGE. L3 records that state name.
+
+The conversion at each state uses the candle's own prices plus memory from earlier candles:
+
+- RANGE. detect_sweep calls swept_high(candle.high, candle.close, range.h_ref) and swept_low(candle.low, candle.close, range.l_ref). A high sweep is high above h_ref and close back below it, direction SHORT. A low sweep is the mirror, direction LONG. That calls try_range_to_sweep. State becomes SWEEP. If a pending shadow matches the sweep direction, the state becomes SHADOW_PENDING instead.
+
+- SWEEP, next bar. try_sweep_to_displacement. LONG must be a bullish bar whose close is above the sweep price. SHORT must be bearish and close below the sweep price. The body abs(close-open) must also clear atr_min_displacement times atr_abs. Pass means state becomes DISPLACEMENT. Age past max_sweep_age_candles resets to RANGE.
+
+- DISPLACEMENT, next bar. try_displacement_to_expansion. The close must keep the direction and extend past the displacement candle's close by the configured ATR fraction. Pass means state becomes EXPANSION.
+
+- EXPANSION. try_expansion_to_retest measures candle.close against the range boundary, with an ATR floor and ceiling. Pass sets state to RETEST and raises evaluating_soft_conf. The same candle does not enter the confirmation block, because that test is a later elif. Fail on age past the expansion TTL sets EXPIRED for one bar, and the next bar resets to RANGE.
+
+- RETEST has no branch of its own. The following bars hit elif evaluating_soft_conf. That block calls update_emas(candle.close) a second time, then approve_with_soft_conf(state, candle). If approved, entry_price is retest_candle.close, not this bar's close. Discount, premium, parent bias, parent objective, and session can still send it back to RANGE. If none reject, try_retest_to_execution sets EXECUTION and build_trade opens the trade from the engine state. The action string becomes TRADE_OPENED. That is the first moment the feature vector is read, and it is the gate after the CRT decision, not the conversion.
+
+- While a trade is open, the next candle is handled before the state branch. High and low (or close, if the exit mode is close_only) are tested against SL and TP. A close moves EXECUTION to RESOLUTION and then resets to RANGE on that same candle.
+
+What does not happen: nothing reads enriched_df, feature_vectors, displacement_flag, or retest_flag in order to choose the CRT state. Those flags belong to the construction-trace sidecar, which runs after process_candle returns.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: How a loader Candle becomes a CRT state.
+Decision/Output: Traced CandleLoader.stream float() Candle into BacktestRunner.run, then CRTEngine.process_candle. The engine appends the candle, computes its own absolute ATR and 2/5 EMAs, then branches on EngineState.current_state. RANGE calls detect_sweep (structure.predicates.swept_high/swept_low against active_range). Later states call try_sweep_to_displacement, try_displacement_to_expansion, try_expansion_to_retest. RETEST has no state branch; the next bars use evaluating_soft_conf. Entry is retest_candle.close. The feature matrix is not an input. No src or config edit.
+Belief Update / ROI / Goal: Goal: see the candle-to-CRT conversion. Belief: CRT state is a state-machine result on the Candle and engine memory, not a column of enriched_df. Knowledge ROI: high. Action: read process_candle when asking what a bar's CRT state means.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre> read process_candle when asking what a bar's CRT state means</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>A bar does not have one CRT state. process_candle keeps two clocks, and the recorders do not use the same one.
+
+Arrival is the state at the call. BacktestRunner reads engine.state.current_state.name into prev_state, then calls process_candle. After the call it does state_counts[prev_state] += 1. The summary's state_distribution is that counter. A bar is counted under the state it inherited. That is the state whose rule was tested: a RANGE arrival is the bar on which detect_sweep ran, even if the sweep succeeded and the machine left RANGE.
+
+Inside the function, action["state"] is that same arrival name, copied once, before the reset check. Reset does not rewrite it. So after a reset the dict can still say DISPLACEMENT while the branch that runs is RANGE.
+
+Departure is the state when process_candle returns. The runner reads engine.state.current_state.name into curr_state. L3 output_hash is curr_state. The note's transition is only prev_state to curr_state. That departure name is the next bar's arrival.
+
+The two names differ exactly when this bar moved the machine. They are the same when the bar did nothing, which is the ordinary RANGE bar: action stays NONE, state stays RANGE.
+
+One call can pass through states that neither clock keeps. A trade close calls try_execution_to_resolution and then reset_to_range before it returns. RESOLUTION exists only between those two lines. The bar's departure is RANGE, and L3 says EXECUTION to RANGE. The waypoint is in the transition log, not in the state name. A reset that then detects a sweep on the same candle likewise ends on SWEEP. L3 shows the old state pointing at SWEEP and skips the RANGE that the reset just wrote.
+
+What each departure name means, as the function leaves it:
+
+- RANGE. No live sweep, displacement, or retest. The next bar will run detect_sweep. This is also where a close, an expiry's following bar, a failed confirmation, and a filter rejection end.
+- SWEEP. This bar, or an earlier one still inside max_sweep_age_candles, stored a sweep and displacement has not passed. The next bar will run try_sweep_to_displacement.
+- DISPLACEMENT. The directional impulse was accepted. The next bar will run try_displacement_to_expansion.
+- EXPANSION. The impulse extended. The next bar will try the retest, and only if that fails will it consider the TTL.
+- EXPIRED. The expansion TTL fired on this bar. The function does not reset in the same call, because s was copied before the branch. The next bar arrives in EXPIRED and that bar's branch calls reset_to_range.
+- RETEST. try_expansion_to_retest succeeded on an earlier bar and evaluating_soft_conf is still true. There is no elif on the name RETEST. The next bar enters the soft-confirmation block because of the flag, not because of the enum.
+- EXECUTION. A trade is open. The next bar handles stop and target before it ever looks at the enum. If the trade does not close, the enum is unchanged, there is no EXECUTION branch, and the bar leaves still in EXECUTION.
+- RESOLUTION is not a state a finished bar is left in. The close path writes it and then reset_to_range replaces it with RANGE before return.
+- SHADOW_PENDING. A sweep matched pending displacement memory. The next bar either confirms the shadow expansion or leaks back to RANGE.
+
+So "this bar is SWEEP" is ambiguous until the clock is named. In the summary histogram it means the bar arrived in SWEEP. In L3 it means the bar ended in SWEEP. The candle's own open, high, low, and close were the inputs to the test. They are not the state.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: What a bar's CRT state name means inside process_candle.
+Decision/Output: Two clocks. The runner snapshots prev_state before process_candle and increments state_counts with it; summary state_distribution is arrival occupancy. After return, curr_state is engine.state.current_state and L3 output_hash is that departure name, which is also the next bar's arrival. action["state"] is frozen at entry, before any reset, and is not rewritten. One call can pass through waypoints (EXECUTION to RESOLUTION to RANGE on a close; reset then sweep) and only the ends are in the L3 note. RESOLUTION is overwritten by reset_to_range before return, so a finished bar is not left in RESOLUTION. EXPIRED is a real departure; the next bar resets it. RETEST is not a branch; the soft-conf elif runs because evaluating_soft_conf is true. No src or config edit.
+Belief Update / ROI / Goal: Goal: read a bar's CRT state without mixing the two clocks. Belief: L3's state is where the bar ended, and the summary histogram is where the bar started. Knowledge ROI: high. Action: quote prev_state or curr_state explicitly; do not say "the bar's state" alone.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre> quote prev_state or curr_state explicitly; do not say "the bar's state" alone</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>prev_state is the name read before process_candle. curr_state is the name read after it returns. L3 output_hash is curr_state. On this run it matches the right-hand side of the note's transition on all 47,197 L3 rows. state_distribution and funnel_counts are prev_state. They are not curr_state.
+
+Counted from results/run_20260922_044800_XAUUSD_v2_htfcrt_2026_08_7de09f62/XAUUSD_layer_trace.jsonl and XAUUSD_summary.json.
+
+| name | prev_state | curr_state |
+|---|---:|---:|
+| RANGE | 22185 | 22127 |
+| SWEEP | 15566 | 15587 |
+| DISPLACEMENT | 778 | 779 |
+| EXPANSION | 8632 | 8668 |
+| RETEST | 26 | 26 |
+| EXECUTION | 4 | 4 |
+| SHADOW_PENDING | 6 | 6 |
+
+prev_state differs from curr_state on 4,113 rows. The other 43,084 rows have the same name on both clocks. Neither clock contains EXPIRED or RESOLUTION in this file.
+
+Rows where the name changed:
+
+| prev_state to curr_state | rows |
+|---|---:|
+| RANGE to SWEEP | 1792 |
+| SWEEP to RANGE | 1372 |
+| SWEEP to DISPLACEMENT | 399 |
+| DISPLACEMENT to RANGE | 256 |
+| DISPLACEMENT to EXPANSION | 142 |
+| EXPANSION to RANGE | 88 |
+| EXPANSION to RETEST | 24 |
+| RETEST to RANGE | 20 |
+| RANGE to SHADOW_PENDING | 6 |
+| SHADOW_PENDING to EXPANSION | 6 |
+| RETEST to EXECUTION | 4 |
+| EXECUTION to RANGE | 4 |
+
+The four RETEST to EXECUTION rows are not four trades. Three have action TRADE_OPENED. One has action NONE: curr_state became EXECUTION without a journal trade. The four EXECUTION to RANGE rows are two TRADE_STOPPED, one TRADE_TP1, and one RESET. The RESET is the row that follows that action-NONE execution. The book remains the three trades already reported.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Named prev_state and curr_state on this run's 47,197 L3 rows.
+Decision/Output: state_distribution and funnel_counts are prev_state (RANGE 22185, SWEEP 15566, DISPLACEMENT 778, EXPANSION 8632, RETEST 26, EXECUTION 4, SHADOW_PENDING 6). L3 output_hash is curr_state and matches the note's right-hand side on all 47,197 rows (RANGE 22127, SWEEP 15587, DISPLACEMENT 779, EXPANSION 8668, RETEST 26, EXECUTION 4, SHADOW_PENDING 6). prev_state != curr_state on 4,113 rows. Neither name is EXPIRED or RESOLUTION on this file. RETEST->EXECUTION is 3 TRADE_OPENED plus 1 action NONE. EXECUTION->RANGE is 2 TRADE_STOPPED, 1 TRADE_TP1, 1 RESET. No src or config edit.
+Belief Update / ROI / Goal: Goal: stop saying the bar's state. Belief: the summary and L3 are different clocks and the counts are not equal. Knowledge ROI: high. Action: say prev_state for the histogram and curr_state for L3 output_hash.
+Open Questions: what the single RETEST->EXECUTION action NONE bar did inside build_trade was not opened.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre> single RETEST->EXECUTION action NONE bar did inside build_trade was not opened</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>build_trade returned None. The state move had already happened.
+
+The row is 2024-06-03 14:45:00. L3 bar_idx is 781. The engine's own candle_index is 719. prev_state is RETEST. curr_state is EXECUTION. action is NONE. reason is None. L3 status is PASS.
+
+process_candle calls try_retest_to_execution first. That writes curr_state EXECUTION and the event reason "Risk approved → entering execution". Then it calls build_trade. TRADE_OPENED is assigned only inside `if trade`. This call took the other branch.
+
+build_trade has four ways to return None: no range or sweep, no displacement candle, direction neither LONG nor SHORT, or an inverted stop. This run's log has one rejection and it is the fourth. The rerun log says: Trade REJECTED: inverted SL on SHORT (entry=2329.94000 sl=2327.80657 sweep=2331.07000). No other "Cannot build trade" or "inverted SL" line is in that log.
+
+The prices match this episode in XAUUSD_events.jsonl and the CSV.
+
+- 04:15 sweep, direction SHORT, price 2331.07. That is the sweep printed in the warning.
+- 06:15 displacement candle, CSV open 2327.29, high 2327.30, low 2323.77, close 2323.96. Bearish.
+- 06:30 expansion, bearish close 2323.07.
+- 14:30 retest. CSV close 2329.94. That close is stored as retest_candle and becomes the entry. The debug print on that bar is disp_open=2327.29000 disp_close=2323.96000 retest=2329.94000.
+- 14:45 is the soft-confirmation bar. CSV close is 2330.03. build_trade does not use that close. It uses the retest close, 2329.94.
+
+SHORT stop is displacement high plus sl_atr_buffer times atr_abs. The config value used is 0.2. atr_abs on this call, from the transition event, is 2.532857142857178. 2327.30 + 0.2 * 2.532857142857178 = 2327.80657. That is the logged stop. A SHORT stop must be above the entry. 2327.80657 is below 2329.94, so the guard at build_trade returns None. The retest close had already traded back above the displacement high. The retest test compares close to the range boundary, not to that high, so it had allowed the retest. The stop check is the first place that geometry is refused.
+
+Nothing was opened. active_trade stays unset. The next row is 15:00, prev_state EXECUTION, curr_state RANGE, action RESET, reason HTF changed from XAUUSD-HTF-000046 to XAUUSD-HTF-000048. That reset is what clears the execution that never got a trade.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Why the RETEST to EXECUTION action NONE row built no trade.
+Decision/Output: Timestamp 2024-06-03 14:45, L3 bar_idx 781, engine candle_index 719. try_retest_to_execution set curr_state EXECUTION before build_trade. build_trade returned None on the inverted-SL guard: SHORT entry 2329.94 (retest close at 14:30) and sl 2327.80657 (displacement high 2327.30 plus 0.2 times atr 2.532857). The only such warning in the rerun log. Sweep was 2331.07 at 04:15. No active_trade, so action stayed NONE and L3 status stayed PASS. The next row, 15:00, is prev_state EXECUTION to curr_state RANGE with action RESET because the HTF id changed. No src or config edit.
+Belief Update / ROI / Goal: Goal: explain the action NONE execution row. Belief: curr_state EXECUTION is not a trade. The transition is written before the stop geometry is checked. Knowledge ROI: high. Action: do not count RETEST to EXECUTION rows as trades.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>I remember we are Placing trade in evry row not on only on TRADE_OPEENED And calculating CostModel And reverse engineering states</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>That program exists. It is not the spine that wrote this run.
+
+The spine journals a trade only when build_trade returns a Trade. That is the TRADE_OPENED path. The 14:45 row never entered it. prev_state RETEST became curr_state EXECUTION, then build_trade returned None, and no journal row was written.
+
+The program you are remembering is the outcome-first oracle, and it is two scripts.
+
+scripts/research/build_bar_matrix.py writes one row per feature bar. On each row it calls CRTStateResolver.resolve_batch and stores the name in crt_state_resolved. The script's own comment says that column is the declarative resolver, not the engine. The resolver reads the feature row and market_crt_states.yaml and picks a state. It does not read prev_state or curr_state. F-069 already measured that those two constructions do not agree, and the script says a pattern keyed on crt_state_resolved is a statement about the resolver until re-measured.
+
+research.oracle.labeler then takes that matrix and, for every surviving row, walks a hypothetical trade in both directions. Entry is that row's close. Stop is either the row standing in as the displacement candle, or a fixed ATR distance. It uses the same inverted-stop refusal as build_trade: if the stop is on the wrong side of entry, the unit is counted as a reject and not walked. The ones that pass go through multi_tp_walk, which is the partial-at-TP1 then runner geometry. Cost is ComponentCostModel.cost_r, cost in price divided by the stop distance, not the flat 12 bps CostModel. The labeler's own header says about 47,200 XAUUSD bars become about 378,000 labelled units, because each bar is crossed with long and short, two stop geometries, and two tie-breaks.
+
+So "a trade on every row" means a label on every row. It is not an order, and it is not curr_state EXECUTION. The 2026-09-22 spine run did not call either script. Its three journal trades are still only the three TRADE_OPENED rows.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: The every-row trade is the oracle labeler, not the spine.
+Decision/Output: BacktestRunner journals a trade only when build_trade returns one, which is the TRADE_OPENED path. The remembered program is separate: scripts/research/build_bar_matrix.py writes crt_state_resolved from CRTStateResolver on every feature row, and research.oracle.labeler then walks a hypothetical trade on every surviving row in both directions under ComponentCostModel. The resolver is not prev_state and not curr_state. The 2026-09-22 spine run did not execute that program. The labeler uses the same inverted-SL refusal as build_trade. No src or config edit.
+Belief Update / ROI / Goal: Goal: not mix the journal with the every-row label. Belief: both exist and they answer different questions. Knowledge ROI: high. Action: name the program before quoting a trade count.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>Which id i need to mint to trace this entire layer</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>Mint the layer-trace id. That is the only id written on every layer row.
+
+layer_trace.mint_run_id builds it once per walk, in UTC: lt_ plus the timestamp plus the instrument. This walk already minted lt_20260922_044800_XAUUSD. You do not mint another one to read it. Filter results/layer_trace/XAUUSD_layer_trace.jsonl on run_id equal to that string. The copy in the run folder is already that filter. The file on disk is append-only and holds other walks.
+
+Inside that id:
+
+- One bar, every layer that fired: trace_id is lt_20260922_044800_XAUUSD:XAUUSD: plus the bar timestamp. The 14:45 row is lt_20260922_044800_XAUUSD:XAUUSD:2024-06-03T14:45:00. L3 and L4 share it. L5, L6, and L8 share it only when that bar opened a trade.
+- One layer of that bar: span_id is the trace_id plus the layer name.
+- L0, L1, and L7 are not bars. Their trace_id is lt_20260922_044800_XAUUSD:RUN_SCOPED.
+
+Do not mint the other clocks for this trace. run_20260922_044800 is the journal and the summary. 20260922_101344 is the logging id, local time, minted at import. Both are stored on each layer row under preexisting_run_ids so you can walk from the folder to the layer file. They are not the JSONL run_id. L2 and L9 are never emitted, so this id does not contain them. The every-row oracle labeler is a different program and is not under this id.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Which id joins every layer of one spine walk.
+Decision/Output: Mint layer_trace mint_run_id, format lt_YYYYMMDD_HHMMSS_INSTRUMENT. That string is the run_id on every L0-L8 row. This walk already has lt_20260922_044800_XAUUSD. A bar across layers is trace_id lt_...:XAUUSD:bar_ts. One layer of that bar is span_id trace_id:layer. L0, L1, and L7 use lt_...:RUN_SCOPED. canonical run_20260922_044800 and logging 20260922_101344 are recorded beside it and do not filter the JSONL. The oracle labeler is not on this id. No src or config edit.
+Belief Update / ROI / Goal: Goal: one id for the whole layer stack. Belief: the lt_ id is the spine; the run_ folder id is the journal. Knowledge ROI: high. Action: filter the shared JSONL on run_id, then a bar on trace_id.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>## Verdict
+
+**Two coupled fixes:** (1) layer trace becomes per-run (file system change), (2) oracle labeler joins the `lt_` spine (contract change). Then (3) three parity contracts must be frozen before labels are comparable to trades. Below is the design — code-shaped, migration-ordered.
+
+---
+
+## 1 · The two problems as one
+
+The shared trace file is not just a maintenance problem — it's **why the labeler is on a different ID space**. The labeler reads `build_bar_matrix.py`'s output; that script reads the shared trace. Because the shared file interleaves runs, the script can't stamp which `lt_` a given matrix row came from. So it doesn't stamp any.
+
+**Fix the trace file → the labeler can carry the spine ID → parity becomes checkable.**
+
+One change unblocks the other.
+
+---
+
+## 2 · Layer trace — run-specific design
+
+### Current
+```
+results/layer_trace/XAUUSD_layer_trace.jsonl      # append-only, 323K+ rows, all walks
+results/run_&lt;id&gt;_XAUUSD_.../XAUUSD_layer_trace.jsonl   # manual extract, no manifest pointer
+```
+
+### Proposed
+```
+results/layer_trace/runs/&lt;lt_id&gt;.jsonl             # one file per walk
+results/layer_trace/XAUUSD_layer_trace.jsonl       # frozen legacy, read-only, no new writes
+results/layer_trace/index.jsonl                    # {lt_id, start_utc, end_utc, rows, sha256}
+```
+
+**Why per-run-in-shared-dir and not inside the run folder:**
+- Layer trace starts writing at L0, *before* the run folder exists (lazy-folder design)
+- Placing it under `results/layer_trace/runs/` decouples from folder lifecycle
+- Still discoverable: `Get-ChildItem results\layer_trace\runs\lt_*.jsonl`
+- The run folder can still receive a copy (or symlink) post-walk — but that's an optional convenience, not the source of truth
+
+### Emitter change (design, not code)
+
+```python
+class LayerTraceEmitter:
+    def __init__(self, cfg, run_id, instrument):
+        if cfg.get("per_run_files", True):          # new default
+            self._path = ROOT / "layer_trace" / "runs" / f"{run_id}.jsonl"
+        else:
+            self._path = ROOT / "layer_trace" / f"{instrument}_layer_trace.jsonl"  # legacy
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+```
+
+One flag, default flipped. Legacy path preserved for one release cycle, then removed.
+
+### Concurrency
+Today: two concurrent walks interleave rows in one file — no locking. Per-run files eliminate the interleave. No locking needed.
+
+### Maintenance
+- **Rotation:** delete `runs/lt_*.jsonl` older than N days (configurable, default 90)
+- **Index:** `index.jsonl` append-only, one line per walk close. Greppable, small.
+- **Manifest pointer:** `run_manifest.json` already exists — add `layer_trace_path: "results/layer_trace/runs/lt_..._XAUUSD.jsonl"`. The manifest becomes the single lookup from canonical → trace file. Closes the earlier "which file is this run's trace?" gap.
+
+---
+
+## 3 · Oracle labeler — ID unification
+
+### Current
+```
+build_bar_matrix.py  → matrix with crt_state_resolved (resolver, not engine)
+research.oracle.labeler  → ~378K labeled units, no lt_, no trace_id
+```
+
+### Proposed
+
+**Contract:** every labeled unit carries the spine ID of the bar it was derived from.
+
+```python
+@dataclass
+class LabelUnit:
+    lt_id: str                 # lt_20260922_044800_XAUUSD
+    trace_id: str              # lt_...:XAUUSD:2024-06-03T14:45:00
+    bar_ts: str
+    direction: str             # LONG | SHORT
+    stop_geometry: str         # "displacement_candle" | "atr_fixed"
+    tie_break: str             # "tp1_first" | "tp2_first"
+    cost_model_id: str         # "component_cost_v1"
+    # ... label fields
+```
+
+### How the labeler gets the IDs
+
+`build_bar_matrix.py` reads the spine trace once per walk, builds a `bar_ts → trace_id` map, stamps every matrix row. Labeler propagates from matrix to unit. **No new ID minted** — the labeler inherits.
+
+### Verification invariant
+
+For every `trace_id` in the labeler output, there exists a matching L3 row in `results/layer_trace/runs/&lt;lt_id&gt;.jsonl`. A one-pass join; if it fails, the labeler is out of sync.
+
+---
+
+## 4 · The three parity contracts
+
+Once labels carry `lt_` + `trace_id`, the three divergences become **measurable**. Freeze each as a contract.
+
+### Contract 1 — Cost model
+
+| Side | Currently |
+|---|---|
+| Spine | flat `CostModel` (bps) |
+| Labeler | `ComponentCostModel.cost_r` (price ÷ stop-distance) |
+
+### Contract 2 — Tie-break
+
+| Side | Currently |
+|---|---|
+| Spine | none (single SL/TP path) |
+| Labeler | two tie-breaks (TP1-first, TP2-first) |
+
+### Contract 3 — Stop geometry
+
+| Side | Currently |
+|---|---|
+| Spine `build_trade` | stop = displacement_high + buffer (references displacement) |
+| Labeler | stop = displacement_high OR fixed ATR (two geometries) |
+| Retest validator | references range boundary (third reference) |
+
+**Required:** unified `reference_level` field. The 14:45 orphan disappears when retest and stop use the same level.
+
+---
+
+## 5 · Migration order
+
+Steps 1–6 additive. Steps 7–9 breaking.
+
+## 6 · What this achieves
+
+Per-run files, labels carry lt_ and trace_id, parity joinable.
+
+## 7 · What I need to write step 1
+
+Paste the LayerTraceEmitter constructor and I'll write step 1 as a patch.
+
+**Make the trace file run-specific; the labeler can then inherit the spine ID; parity becomes measurable.**
+</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>Splitting the file does not give the labeler an lt_ id. build_bar_matrix.py never reads the trace. A search of that script for layer_trace and lt_ returns nothing. It rebuilds the feature frame from the CSV and calls CRTStateResolver.resolve_batch. The labeler then reads that matrix. The shared file already writes run_id on every row, so a walk can be selected today with run_id == lt_20260922_044800_XAUUSD. Interleaving is a storage problem. It is not why the matrix has no trace_id.
+
+The constructor the patch has to change is this. The design's three-argument version is not the one in source.
+
+class LayerTraceEmitter:
+    def __init__(
+        self,
+        cfg: LayerTraceConfig,
+        *,
+        run_id: str,
+        instrument: str,
+        timeframe: str,
+        active_version: str,
+        config_hash: str,
+        schema_hash: str,
+        dataset_id: str,
+        corpus_path: str,
+        corpus_rows: int,
+        corpus_sha256: str,
+        code_sha: str,
+        tree_dirty: bool,
+        rail: str,
+        preexisting_run_ids: dict,
+    ) -&gt; None:
+        self.cfg = cfg
+        self.run_id = run_id
+        self._path = Path(cfg.output_dir) / f"{instrument}{cfg.filename_suffix}"
+
+cfg is LayerTraceConfig, loaded by _require. It is not a dict, and a new key cannot arrive through cfg.get("per_run_files", True). Active config sets output_dir to results/layer_trace and filename_suffix to _layer_trace.jsonl, so the path is results/layer_trace/XAUUSD_layer_trace.jsonl. __init__ does not open the file and does not mkdir. flush() does both: parent.mkdir, then open(self._path, "a"). close() returns path, rows, schema_version, and the identity dict. It does not write index.jsonl.
+
+L0 is emitted at the start of the walk, and the report folder is created only inside write_all, so a per-run file under results/layer_trace/runs/ is independent of the lazy folder. That part of the placement argument holds. run_manifest.json already records layer_trace_id. It does not record a path, because this run's folder copy was extracted by hand.
+
+The three parity tables do not match the code, so they should not be frozen as written.
+
+Cost. backtest_v2.py does not import CostModel or ComponentCostModel. The journal uses the runner's spread and slippage. The flat 12 bps CostModel is the research forward_walk default. The labeler uses ComponentCostModel. That is three pricers, not a spine-versus-labeler pair.
+
+Tie-break. The labeler constants are production and optimistic, not tp1_first and tp2_first. production tests the stop before either target, and the comment points at crt_engine_v2._intrabar_trigger_price. That arm is already the spine's same-bar order. optimistic is the other arm.
+
+Stop. build_trade puts a SHORT stop at the displacement candle's high plus sl_atr_buffer times atr_abs. The labeler's disp_bar arm uses the labelled row as that candle, not the engine's displacement candle. The retest test uses the range boundary. The 14:45 row is curr_state EXECUTION with no trade because try_retest_to_execution runs before build_trade, and the stop then falls below the retest close. Pointing both checks at sweep_price would change which rows pass. It would not, by itself, stop the state write from happening before the None return.
+
+Step 1 is a file-layout change. It is reversible and it stops two walks sharing one append. It does not stamp the labeler. Stamping is a separate read: filter this lt_ id, map bar_ts to trace_id, and write those fields in the matrix. No patch was written.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Per-run layer-trace design checked against the emitter and the labeler.
+Decision/Output: Did not write a patch. build_bar_matrix.py has zero references to layer_trace or lt_. The shared JSONL already stamps run_id on every row, so interleaving does not block a join. LayerTraceEmitter writes Path(output_dir)/f"{instrument}{filename_suffix}" and opens it append in flush(), which mkdirs. Active config output_dir is results/layer_trace, suffix _layer_trace.jsonl. Spine backtest_v2 does not import CostModel. Labeler tie-breaks are production and optimistic; production tests the stop first, matching _intrabar_trigger_price. No src or config edit.
+Belief Update / ROI / Goal: Goal: not build step 1 on a false unblock. Belief: a per-run file is a storage change. The labeler lacks lt_ because it never reads the trace. Knowledge ROI: high. Action: stamp trace_id by filtering the existing run_id, or by an explicit join in step 4, not by splitting the file first.
+Open Questions: none until a step-1 patch is requested against the real constructor.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>filter this lt_ id, map bar_ts to trace_id, and write those fields in the matrix.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The stamp is on a copy. The 16 September matrix was not overwritten, and its other columns were not recomputed.
+
+Filtered L3 rows with run_id lt_20260922_044800_XAUUSD from the run-folder extract. That is 47,197 rows, 47,197 distinct bar_ts, and no timestamp pointed at two trace ids. Each matrix timestamp was matched to that bar_ts. All 47,197 matrix rows received a trace_id. None were left blank, and no L3 timestamp was left over.
+
+Wrote three files next to the original:
+
+- results/research/bar_matrix/XAUUSD_M15/bar_matrix_lt_20260922_044800_XAUUSD.csv
+- results/research/bar_matrix/XAUUSD_M15/bar_matrix_lt_20260922_044800_XAUUSD.parquet
+- results/research/bar_matrix/XAUUSD_M15/bar_matrix_lt_20260922_044800_XAUUSD.json
+
+The new columns sit immediately after timestamp: lt_id, bar_ts, trace_id. lt_id is lt_20260922_044800_XAUUSD on every row. trace_id was copied from the L3 row, not minted again. The 14:45 row is trace_id lt_20260922_044800_XAUUSD:XAUUSD:2024-06-03T14:45:00, and its existing _pos is 781, the same index as that L3 bar_idx. The first stamped row is 2024-05-22 20:30:00, _pos 78, which is the first L3 bar of this walk.
+
+crt_state_resolved in this copy is still the resolver column from the 16 September build. It is not curr_state.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Stamped lt_id and trace_id onto a copy of the XAUUSD bar matrix.
+Decision/Output: Filtered L3 rows of lt_20260922_044800_XAUUSD from the run-folder extract. 47,197 unique bar_ts, 0 conflicts. Joined onto results/research/bar_matrix/XAUUSD_M15/bar_matrix.parquet (written 2026-09-16, not recomputed) by timestamp. 47,197 of 47,197 rows received a trace_id. Wrote bar_matrix_lt_20260922_044800_XAUUSD.csv, .parquet, and .json beside the original. The 2024-06-03 14:45 row carries trace_id lt_20260922_044800_XAUUSD:XAUUSD:2024-06-03T14:45:00 and _pos 781. Original bar_matrix.csv was left unchanged. No src or config edit.
+Belief Update / ROI / Goal: Goal: put the spine id on the matrix without a new mint. Belief: this corpus joins 1:1 on bar timestamp. Knowledge ROI: high. Action: use the stamped copy when a label must name its L3 row.
+Open Questions: crt_state_resolved on that copy is still the 2026-09-16 resolver column, not curr_state.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>The stamp is clean. Name the two state columns before anyone reads them as one field. Then trace the 14:45 orphan and the 2024-11-12 15:30 trade across matrix, L3, L4, events, and telemetry. Do not write an L3_COMMIT emit yet.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>crt_state_resolved is the resolver. L3 output_hash is curr_state. The stamped matrix contains the first and only a pointer to the second. On both bars they are different names.
+
+Bar A, 2024-06-03 14:45:00. trace_id lt_20260922_044800_XAUUSD:XAUUSD:2024-06-03T14:45:00.
+
+- Matrix: _pos 781. Open 2329.95, high 2330.85, low 2329.27, close 2330.03. crt_state_resolved is SWEEP. parent_bias NONE, htf_state DISTRIBUTION, objective_status NONE. htf_window_id is XAUUSD-HTF-000048. That window id is from the 16 September matrix, not from this walk's event.
+- L3: bar_idx 781, status PASS, output_hash EXECUTION. prev_state RETEST, curr_state EXECUTION, action NONE.
+- L4: same trace_id, output_hash NONE, note htf_state DISTRIBUTION, objective NONE. That matches the matrix parent strings. It does not match crt_state_resolved.
+- L5, L6, L8: no row. No trade was opened, so those emits did not run.
+- Events: one line, engine candle_index 719, RETEST to EXECUTION, reason "Risk approved → entering execution". No TRADE_OPENED.
+- The next event, 15:00, engine index 720, is prev_state EXECUTION to RANGE, reason HTF changed from XAUUSD-HTF-000046 to XAUUSD-HTF-000048. So the engine records the move into 000048 on the following bar. The matrix already labels 14:45 as 000048.
+- Telemetry: no row contains this timestamp. The file is episode records keyed by engine index, with run_id run_20260922_044800. The expansion episode that ends at engine index 718, the retest bar before this one, is EXPANSION_RETRACE_CHECK, outcome QUALIFIED. That is the preceding episode, not a 14:45 row.
+- build_trade's None return is still only the log line. It is not in the trace.
+
+Bar B, 2024-11-12 15:30:00. trace_id lt_20260922_044800_XAUUSD:XAUUSD:2024-11-12T15:30:00. This is CRT-0001.
+
+- Matrix: _pos 11426. Open 2614.42, high 2614.85, low 2606.00, close 2606.32. crt_state_resolved is DISPLACEMENT. parent_bias NONE, htf_state EXPANSION, objective NONE, htf_window_id XAUUSD-HTF-000714.
+- L3: bar_idx 11426, status PASS, output_hash EXECUTION. prev_state RETEST, curr_state EXECUTION, action TRADE_OPENED.
+- L4: output_hash NONE, note htf_state EXPANSION, objective NONE. Same parent strings as the matrix. Resolver name is still DISPLACEMENT, not EXECUTION.
+- L8: output_hash CRT-0001. LONG, entry 2614.46, sl 2610.0475714285712, tp1 2618.872428571429, tp2 2623.2848571428576.
+- L5: status PASS, output_hash reject, note stage=decision reason=zone_gate_invalid bypass_zone=True. The reject was bypassed. Status PASS means the trade was not vetoed.
+- L6: status PASS, output_hash null, note decision=reject, veto_mode=post_commit. Same decision, no second object.
+- Events: engine candle_index 11364, RETEST to EXECUTION, then TRADE_OPENED LONG at 2614.46.
+- Journal: CRT-0001, opened 15:30, closed 15:45, STOPPED, net -1.0547R. cost_model_id is backtest_g1g2_v2. candle_idx 11427, which is this L3 bar_idx plus one. run_id is run_20260922_044800, the journal id, not the lt_ id.
+- Telemetry: no row contains this timestamp.
+
+On these two bars, matrix _pos equals L3 bar_idx. The engine's candle_index is 62 below that bar_idx (719 and 11364). That offset is observed here, not claimed for every row.
+
+The trace_id reaches the matrix, L3, L4, and, when a trade opened, L5, L6, L8, the events file, and the journal. It does not reach telemetry, and it does not reach the build_trade refusal. No emit was added.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: End-to-end read of the 14:45 non-trade and CRT-0001 through the stamp.
+Decision/Output: Both bars join on trace_id. 2024-06-03 14:45 has matrix crt_state_resolved SWEEP and L3 curr_state EXECUTION action NONE. No L5, L6, L8, or TRADE_OPENED. 2024-11-12 15:30 has crt_state_resolved DISPLACEMENT and L3 curr_state EXECUTION action TRADE_OPENED. L8 is CRT-0001. L5 records decision reject with zone bypass, status PASS, and the journal trade exists: STOPPED, net -1.0547R, cost_model_id backtest_g1g2_v2. Telemetry has no bar timestamp, so trace_id does not find it. The matrix does not contain curr_state. No src edit. No L3_COMMIT emit.
+Belief Update / ROI / Goal: Goal: see one id across producers. Belief: the stamp joins the rows, and the resolver name is a different object from curr_state. On these two bars they disagree. Knowledge ROI: high. Action: read crt_state_resolved as the 16 September resolver and L3 output_hash as curr_state.
+Open Questions: L3_COMMIT was not written.
+Next Step: none until that emit is requested.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>The join works. Four findings from the two bars: resolver one state behind the engine, HTF window one bar ahead, L5 output_hash reject on an opened trade, and three index clocks. Write is not requested yet. Paste try_retest_to_execution and build_trade so an L3_COMMIT emit can be specified.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The join is real. Two of the four readings are stronger than the two bars support, and no emit was written.
+
+Resolver versus engine. On these bars crt_state_resolved is SWEEP and DISPLACEMENT, and L3 output_hash is EXECUTION both times. That is disagreement. It is not "one state behind." The engine's own path from SWEEP to EXECUTION still passes DISPLACEMENT, EXPANSION, and RETEST. DISPLACEMENT to EXECUTION still passes EXPANSION and RETEST. The column is also the 16 September resolver, not a resolver run against this walk.
+
+HTF window. The matrix says XAUUSD-HTF-000048 at 14:45. The engine event at 15:00 says the id changed from 000046 to 000048. So on this bar the matrix shows the id the engine announces on the next bar, and the engine reason also skips 000047. That is one observation. build_htf_id_timeline claims to match HTFBuilder at the end of the same raw candle. One mismatched bar does not establish that the matrix clock leads by one bar on the corpus.
+
+L5. status PASS means the veto flag stayed false. output_hash reject is the decision string. The note says zone_gate_invalid and bypass_zone=True. The trade was born anyway, which L8 and the journal both show. A reader who uses only output_hash will misread it. The row already carries the distinction. Changing output_hash to the final gate would be a new meaning for that field, not a correction this join forced.
+
+Indexes. Journal candle_idx is the runner's stream index. The layer trace stores bar_idx as that index minus one, so journal candle_idx = L3 bar_idx + 1 by construction. CRT-0001 is 11427 and 11426. Event candle_index is candle.index, the engine's own tick, assigned inside process_candle and copied by EventLogger.record. On these two bars that tick is bar_idx minus 62 (719 and 11364). Two bars do not make 62 a constant.
+
+The emit does not belong inside try_retest_to_execution. That function only writes the transition, before anyone knows whether a trade exists:
+
+def try_retest_to_execution(self, state, candle=None, ev_logger=None) -&gt; bool:
+    return self._transition(
+        state, CRTState.EXECUTION,
+        "Risk approved → entering execution",
+        candle, ev_logger,
+    )
+
+The attempt is the next lines in process_candle. build_trade is called after the state has already moved. TRADE_OPENED is set only when build_trade returns a Trade. A None return leaves action at NONE. That is Bar A.
+
+self.sm.try_retest_to_execution(self.state, candle, self.ev_log)
+trade = self.executor.build_trade(self.state, self.risk)
+if trade:
+    self.executor.open_trade(trade, candle.timestamp)
+    self.state.active_trade = trade
+    action["action"] = "TRADE_OPENED"
+    # sl, tp1, tp2 are recorded on the TRADE_OPENED event
+
+build_trade returns None in four places: missing range or sweep, missing displacement candle, direction neither LONG nor SHORT, and the inverted-stop guard. The guard that fired for Bar A is:
+
+if direction == Direction.SHORT and sl &lt;= entry:
+    self.log.warning(
+        "Trade REJECTED: inverted SL on SHORT "
+        f"(entry={entry:.5f} sl={sl:.5f} sweep={state.sweep_event.price:.5f})"
+    )
+    return None
+
+Entry is state.retest_candle.close. For a SHORT, sl is the displacement candle's high plus sl_atr_buffer times atr_abs. The warning is the only record of that refusal. An emit that wants the attempt has to sit after this return, at the call site, and it has to record the None as well as the Trade. No patch was written.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Corrected the two-bar join claims and pasted the commit call site.
+Decision/Output: Did not write an L3_COMMIT emit. Resolver names on the two bars are SWEEP and DISPLACEMENT against curr_state EXECUTION, which is not a one-state lag. The 14:45 matrix window id 000048 is the id the engine announces at 15:00, and that event skips 000047. That is one bar, not a measured clock. L5 status is the veto flag and output_hash is the raw decision. Journal candle_idx is the runner index, so it is L3 bar_idx plus one by construction. Event candle_index is the engine tick. The bar_idx minus 62 offset is two bars, not a corpus constant. The emit site is process_candle after try_retest_to_execution and build_trade, not inside the transition helper. No src edit.
+Belief Update / ROI / Goal: Goal: not freeze a two-bar sample as architecture. Belief: the trace joins. The four findings are not all rules yet. Knowledge ROI: high. Action: count the index offset and the HTF id shift before calling them clocks.
+Open Questions: L3_COMMIT still unwritten.
+Next Step: none until that emit is explicitly requested as a patch.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>All four corrections taken. Paste build_trade, all return None sites and the local names, so Shape 2 can be written against the body. Do not write the patch.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>There are five return None lines, not four. sl does not exist for the first three. No patch was written.
+
+ExecutionEngine.build_trade is src/config_layer/crt_engine_v2.py lines 2359-2464. The call is process_candle lines 3470-3471. TRADE_OPENED is assigned only inside if trade, at line 3490.
+
+The locals, in order:
+
+- 2366 rng = state.active_range. Not used for the stop.
+- 2367 direction = state.direction
+- 2369 atr = state.atr_abs
+- 2370 entry = state.retest_candle.close. This is unguarded. If retest_candle is None it raises AttributeError. That failure is not one of the None returns.
+- 2383 sl = displacement_candle.low minus sl_atr_buffer times atr. LONG only.
+- 2390 sl = displacement_candle.high plus sl_atr_buffer times atr. SHORT only.
+- There is no local named disp_high. The attribute is state.displacement_candle.high, and only the SHORT branch reads it. LONG reads .low.
+
+The five returns:
+
+| Line | Condition | What already exists |
+|---|---|---|
+| 2364 | active_range is None or sweep_event is None | Nothing local. entry and sl are not assigned. sweep_event.price is unsafe when sweep_event is None. |
+| 2379 | displacement_candle is None | direction, atr, entry. sl is not assigned. displacement high and low do not exist. |
+| 2393 | direction is neither LONG nor SHORT | direction, atr, entry, and the displacement candle. sl was not assigned, because neither branch ran. |
+| 2404 | LONG and sl &gt;= entry | sl, entry, direction, sweep_event.price |
+| 2410 | SHORT and sl &lt;= entry | same. This is the 14:45 warning. |
+
+Lines 2404 and 2410 are one reason, inverted stop, with the side in the message. The other three reasons are different, and two of them happen before sl exists. A last_computed_sl attribute has to stay unset on 2364, 2379, and 2393. Reading it there would be the previous call's value unless it is cleared at the top of build_trade.
+
+The success path returns trade at line 2464. Stop, entry, tp1, and tp2 are on that object as sl_price, entry_price, tp1_price, tp2_price. The call site does not need a side channel for an opened trade. It needs one only for the None returns.
+
+def build_trade(self, state, risk_engine=None) -&gt; Optional[Trade]:
+    if state.active_range is None or state.sweep_event is None:
+        return None                                          # 2364
+    direction = state.direction
+    atr = state.atr_abs
+    entry = state.retest_candle.close                        # 2370, unguarded
+    if state.displacement_candle is None:
+        return None                                          # 2379
+    if direction == Direction.LONG:
+        sl = state.displacement_candle.low - self.config.sl_atr_buffer * atr
+    elif direction == Direction.SHORT:
+        sl = state.displacement_candle.high + self.config.sl_atr_buffer * atr
+    else:
+        return None                                          # 2393
+    if direction == Direction.LONG and sl &gt;= entry:
+        return None                                          # 2404
+    if direction == Direction.SHORT and sl &lt;= entry:
+        return None                                          # 2410
+    return trade                                             # 2464
+
+build_trade is called from tests as well as from process_candle. tests/test_execution_contract_v1.py asserts the None returns and asserts that build_trade does not replace EngineState fields. A reason stored on the executor, self inside build_trade, is not one of those fields. The emit in process_candle would read self.executor, not self.
+
+No patch was written.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Pasted ExecutionEngine.build_trade with every None return.
+Decision/Output: No patch. build_trade is crt_engine_v2.py 2359-2464. Five return None lines, not four: 2364 missing range or sweep, before entry and sl; 2379 no displacement, after unguarded retest_candle.close, before sl; 2393 direction NONE, sl never assigned; 2404 LONG inverted; 2410 SHORT inverted. Local sl exists only after 2383 or 2390. LONG uses displacement low, SHORT uses displacement high. Call site remains process_candle 3470-3471, and TRADE_OPENED is only inside if trade. Setting a reason on the executor does not mutate EngineState. No src edit.
+Belief Update / ROI / Goal: Goal: specify an emit against the real returns. Belief: a single last_computed_sl cannot be filled on the first three Nones. Knowledge ROI: high. Action: record reason per return, and leave computed_sl null when sl was never assigned.
+Open Questions: none until a patch is requested.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>Patch drafted against the real build_trade body. Confirm the emitter interface before any diff. The draft calls self._layer_trace.current_trace_id and emit_l3_commit from inside process_candle.</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>Those two methods do not exist, and process_candle does not hold the tracer. No patch was written.
+
+LayerTraceEmitter public writers are emit and emit_not_reached_once. make_trace_id is a function in layer_trace.py, not a method:
+
+def make_trace_id(run_id, instrument, bar_timestamp) -&gt; str:
+    return f"{run_id}:{instrument}:{bar_timestamp.isoformat()}"
+
+emit takes keyword-only trace_id, bar_idx, bar_ts, layer, module, status, and optional input_hash, output_hash, artifact_path, note. It returns None. layer must be in LAYERS, which is L0 through L9. status must be PASS, REJECT, NOT_REACHED, EXCEPTION, or UNVERIFIED. Any other layer or status raises ValueError before a row is written. There is no current_trace_id and no emit_l3_commit. Passing layer L3_COMMIT would raise.
+
+The emitter lives on BacktestRunner as self._layer_trace. crt_engine_v2.py has no _layer_trace. process_candle is an engine method, so self._layer_trace there is an AttributeError. The runner builds the bar trace_id after process_candle returns, with make_trace_id(emitter.run_id, instrument, candle.timestamp), and that string is what L3 and L4 already use.
+
+The attempt record on the executor is still the right channel. The row has to be written by the runner, next to the existing L3 emit, and only when this call set last_build_attempt. Clear it at the start of process_candle, not only at the start of build_trade. Otherwise a bar that never calls build_trade still holds the previous attempt, and the runner would emit Bar A's rejection again.
+
+Put the attempt in note. Do not invent a status. OPENED and REJECTED are not in STATUSES. Use the existing status field for whether the row was written, and put result, reason, entry, direction, and computed_sl in the note. computed_sl stays null on the three returns that happen before sl exists.
+
+No patch was written.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Layer-trace emit surface versus the proposed L3_COMMIT call.
+Decision/Output: No patch. LayerTraceEmitter has emit and emit_not_reached_once. It has no current_trace_id and no emit_l3_commit. make_trace_id is a module function. LAYERS is L0-L9 only. emit raises ValueError on any other layer name, and STATUSES is PASS, REJECT, NOT_REACHED, EXCEPTION, UNVERIFIED. crt_engine_v2 has no _layer_trace. The emitter is BacktestRunner._layer_trace, and the bar trace_id is built after process_candle returns. A commit row has to be emitted from the runner, using the existing emit, with the attempt in note. No src edit.
+Belief Update / ROI / Goal: Goal: not call a tracer the engine does not hold. Belief: the attempt object can live on the executor. The row has to be written by the runner. Knowledge ROI: high. Action: clear last_build_attempt at the start of process_candle, then emit from the runner only when it is set.
+Open Questions: none until a patch is requested.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>patch</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The attempt is recorded. The trade return is unchanged. No new layer was added, and this run's existing trace file was not rewritten.
+
+ExecutionEngine.build_trade now writes last_build_attempt, a BuildAttempt on the executor, not on EngineState. The first line clears it. The five None returns set result REJECTED. The Trade return sets result OPENED and reason None. invalid_direction stores the direction name NONE, because that value is already in hand. computed_sl is set only after sl exists, which is the two inverted-stop returns and the success return.
+
+process_candle sets last_build_attempt to None before anything else. A bar that never calls build_trade cannot keep the previous bar's attempt.
+
+The runner does not call a new emitter method. After process_candle returns it appends five tokens to the existing L3 note: build_result, build_reason, build_entry, build_direction, build_sl. When this bar did not call build_trade, those tokens are None. The L3 status and output_hash are unchanged. span_id is still trace_id plus L3.
+
+tests/test_execution_contract_v1.py: 20 passed, including the missing-range, stale-call, inverted-short, invalid-direction, and success cases.
+
+lt_20260922_044800_XAUUSD was written before this patch. Its L3 notes do not contain build_reason. The 14:45 refusal becomes queryable on the next walk.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Recorded build_trade attempts on the executor and on the L3 note.
+Decision/Output: BuildAttempt is a frozen dataclass on ExecutionEngine, not EngineState. build_trade clears it first, then sets it on all five None returns and on the Trade return. invalid_direction stores direction name NONE. process_candle clears it on entry so a later bar cannot reuse it. The runner appends build_result, build_reason, build_entry, build_direction, and build_sl to the existing L3 note. No new layer. No second span. tests/test_execution_contract_v1.py: 20 passed. The 2026-09-22 layer file was not rewritten. No construction manifest.
+Belief Update / ROI / Goal: Goal: make the 14:45 refusal a trace field. Belief: the next walk's L3 note will carry it. This file does not. Knowledge ROI: high. Action: read build_reason on the next run, not on lt_20260922_044800_XAUUSD.
+Open Questions: none.
+Next Step: none until a new walk is requested.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>The telemetry file (XAUUSD_crt_telemetry.jsonl) still has no bar_ts — the episode records key on engine index. The trace reaches it only via the index-basis join, which is one bar of evidence, not a validated constant. That's a separate observability gap;</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>That gap is still open. The build-attempt note does not close it.
+
+EXPANSION_RETRACE_CHECK is appended with episode_start_idx and episode_end_idx. Both are the engine's candle index, the same tick EventLogger stores as candle_index. The record has no bar_ts. age_hours_actual is a duration, and it is null when the caller did not pass a timestamp. It is not an identity for the bar.
+
+When the runner writes XAUUSD_crt_telemetry.jsonl it adds run_id, and that value is the journal id run_20260922_044800, not lt_20260922_044800_XAUUSD. So the file is not on the layer-trace id either.
+
+On the two bars we read, engine index was L3 bar_idx minus 62. That is two observations. It is not a join key. A telemetry row cannot be selected by trace_id until the record carries a timestamp, or until the offset is counted across the walk and shown to be constant. Neither has been done.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Telemetry stays outside the bar trace.
+Decision/Output: Confirmed, no code change. EXPANSION_RETRACE_CHECK records episode_start_idx and episode_end_idx from the engine candle index. The dict has no bar_ts. Flush adds run_id run_20260922_044800, the journal id, not the lt_ id. The build_attempt tokens on the L3 note do not join this file. The bar_idx minus 62 reading is still two bars. No src edit.
+Belief Update / ROI / Goal: Goal: keep the telemetry gap separate from the commit note. Belief: an engine index is not a bar timestamp. Knowledge ROI: high. Action: do not join telemetry to trace_id until a timestamp is on the record.
+Open Questions: none.
+Next Step: none.
+---</pre>
+</article>
+<article class="user">
+  <div class="who">user</div>
+  <pre>Walk me thriugh entire conversation</pre>
+</article>
+<article class="assistant">
+  <div class="who">assistant</div>
+  <pre>The conversation is one XAUUSD walk, then a set of questions about what that walk actually stored. Nothing here was promoted, and the working tree was already dirty, so the three trades are an observation of that tree, not a comparison with an older book.
+
+1. You asked for the full XAUUSD corpus. The spine ran data/mt5/XAUUSD_M15.csv, 47,275 bars, active config v2_htfcrt_2026_08. The plain CLI died at the end because the report folder is lazy and was never created. A wrapper only created the folder. The successful walk is run_20260922_044800. Its layer-trace id is lt_20260922_044800_XAUUSD. The logging id is 20260922_101344. The book is 3 trades, net negative. Feature warmup dropped 78 rows, leaving 47,197.
+
+2. You asked for the layer trace, the ids, and every artifact. The shared file results/layer_trace/XAUUSD_layer_trace.jsonl is append-only and holds many walks. This walk was copied out into the run folder. L0 through L8 appear. L2 and L9 are declared and never written. L7 is NOT_REACHED. PASS is the caller's predicate, not a quality grade. L3 PASS means the action was not a rejection. An ordinary RANGE bar is PASS.
+
+3. You asked where self.feature_vectors comes from. BacktestRunner reads the CSV once, calls FeaturePipeline.run(), and keeps the float32 matrix. enriched_df is the wider frame and is not kept after init. The vector is those 48 CANONICAL_FEATURES columns cast to float32. Two HTML pages record that schema. The conversation HTML is a verbatim copy under results/.
+
+4. You asked whether the common keys have the same values, and which layer writes them. They are the same cells. The matrix does not recompute them. After the float32 cast, a 2,000-bar check had 0 mismatched cells. Thirteen float64 columns are not bit-identical before the cast. The feature DAG layer names the identity. The last assignment in feature_pipeline.py writes the cell. L5 and L6 of that DAG write none of the 48.
+
+5. You asked why float32, and whether 2389.44 versus 2389.43994140625 pollutes the book. The two schemas do not share a dtype. The matrix must be one numeric type, and the code forces float32. On all 47,275 bars the OHLC cast moves 0 prices at two decimals and breaks high/close/low order on 0 bars. CRT entry is the loader Candle, not the vector open. RREngine polarity, which does read the vector prices, differs on 11,228 bars by at most 0.0007 after four-decimal rounding. That is not the trade's R.
+
+6. You described the frame as what CRT consumes and the vector as what the model consumes. The split is real, but the walk does not receive the frame. The loop is CandleLoader candles. L3 is process_candle(candle, htf id, parent bias, parent objective). crt_engine_v2 does not mention enriched_df or feature_vectors. L4 is the same Candle pushed into ParentCRTFeed. L5 and L6 run only after TRADE_OPENED. This run wrote 3 of each. L5's input is a dict zipped from the vector. The resolver flags are a sidecar after the decision. A second function, run_backtest(), does iterate the frame. This layer trace did not.
+
+7. You asked how a Candle becomes a CRT state. The CSV line becomes a Candle via float(). The engine appends it, computes its own absolute ATR and the 2/5 EMAs, then branches on current_state. RANGE calls detect_sweep. Later states call the displacement, expansion, and retest checks. RETEST has no branch of its own. The following bars use evaluating_soft_conf. Entry, if a trade is built, is retest_candle.close.
+
+8. You asked what a bar's CRT state means. There are two clocks. prev_state is read before process_candle. The summary histogram counts it. curr_state is read after return. L3 output_hash is curr_state. On this walk they differ on 4,113 of 47,197 L3 rows. Neither name is EXPIRED or RESOLUTION in this file. RESOLUTION is overwritten by reset before return.
+
+9. One of the four RETEST to EXECUTION rows has action NONE. That bar is 2024-06-03 14:45. try_retest_to_execution writes EXECUTION first. build_trade then returns None because the SHORT stop, 2327.80657, is below the retest close, 2329.94. The displacement high was 2327.30. The next bar, 15:00, resets that execution because the HTF id changed. No journal trade.
+
+10. You remembered a trade on every row, a cost model, and reverse-engineered states. That is the oracle, not this spine. build_bar_matrix.py writes crt_state_resolved from CRTStateResolver. The labeler then walks a hypothetical trade on every surviving row in both directions under ComponentCostModel. The spine journals a trade only when build_trade returns one. This walk did not call either script.
+
+11. You asked which id traces the whole layer. Mint, or rather read, lt_20260922_044800_XAUUSD. A bar is that id plus :XAUUSD: plus the timestamp. L0, L1, and L7 use :RUN_SCOPED. run_20260922_044800 is the journal. It does not filter the JSONL.
+
+12. A design said the shared file is why the labeler has no lt_ id, and proposed per-run files plus three parity contracts. build_bar_matrix.py never reads the trace. The shared file already has run_id on every row. The spine does not use the flat research CostModel. The labeler tie-breaks are production and optimistic, and production already tests the stop first. No per-run-file patch was written.
+
+13. You asked to stamp this lt_ id onto the matrix. A copy of the 16 September bar matrix received lt_id, bar_ts, and trace_id. 47,197 of 47,197 rows matched. The original matrix was not overwritten. crt_state_resolved in that copy is still the resolver, not curr_state.
+
+14. Two bars were read end to end. 14:45: resolver says SWEEP, curr_state is EXECUTION, action NONE, no L5, L6, or L8. 15:30: resolver says DISPLACEMENT, curr_state is EXECUTION, action TRADE_OPENED. That is CRT-0001, LONG, stopped, net -1.0547R, cost_model_id backtest_g1g2_v2. L5 says reject and status PASS because the zone bypass let the trade through. Later readings that called the resolver "one state behind," the HTF id "a clock that leads by one bar," and "bar_idx minus 62" a constant were corrected. Each was a two-bar observation or a misreading.
+
+15. You asked for the patch. build_trade now stores a BuildAttempt on the executor. process_candle clears it on entry. The runner appends build_result, build_reason, build_entry, build_direction, and build_sl to the existing L3 note. No new layer. The contract tests passed, 20 of 20. The file for lt_20260922_044800_XAUUSD was written before that code, so its notes do not contain those tokens.
+
+16. Telemetry is the remaining gap. XAUUSD_crt_telemetry.jsonl keys episodes by the engine candle index. It has no bar_ts. Its run_id is the journal id. The index offset was seen on two bars and was not shown to be constant. The new L3 tokens do not join that file.
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-22
+Topic: Walkthrough of the XAUUSD corpus conversation.
+Decision/Output: Restated the session in order. Spine run run_20260922_044800 / lt_20260922_044800_XAUUSD on the dirty tree, 3 journal trades. Feature matrix is a float32 cast of 48 frame columns. CRT state comes from the Candle inside process_candle. prev_state is the summary. curr_state is L3. The 14:45 row is an inverted SHORT stop with no trade. The every-row program is the oracle labeler, not this spine. The matrix copy is stamped 47197/47197. BuildAttempt is now written into the next walk's L3 note. Telemetry still has no bar_ts. No new src edit this turn.
+Belief Update / ROI / Goal: Goal: keep one account of what was shown. Belief: the journal, the resolver, and the labeler are three objects. Knowledge ROI: high. Action: use lt_ for the layer file and run_ for the journal.
+Open Questions: telemetry timestamp, and a fresh walk so the new L3 tokens exist on disk.
+Next Step: none until one of those is requested.
+---</pre>
+</article>
+</main>
+</body>
+</html>

@@ -4,6 +4,7 @@ Phase-2 FM resolution Option A — registry identity, composition parity, contra
 Does not auto-execute required_fm. Does not change thresholds or transitions.
 """
 from __future__ import annotations
+from tests.helpers.crt_config import crt_config_for_test
 
 from datetime import datetime, timedelta
 
@@ -157,7 +158,7 @@ def test_process_candle_dual_run_behavior_parity():
     def _fingerprint() -> str:
         clear_fm_resolve_cache()
         clear_state_contract_cache()
-        eng = CRTEngine(config=CRTConfig())
+        eng = CRTEngine(config=crt_config_for_test())
         base = datetime(2024, 1, 1, 0, 0, 0)
         candles = [
             Candle(
@@ -184,7 +185,7 @@ def test_process_candle_dual_run_behavior_parity():
 
 
 def test_crt_engine_imports_and_loads_contracts():
-    eng = CRTEngine(config=CRTConfig())
+    eng = CRTEngine(config=crt_config_for_test())
     assert eng.state_contracts is not None
     assert set(eng.state_contracts.contracts) == {
         "RANGE",

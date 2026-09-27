@@ -40,7 +40,13 @@ for _p in (ROOT / "src", ROOT):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from utils.duckdb_query import duckdb_available, open_views  # noqa: E402
+from utils.duckdb_query import (  # noqa: E402
+    LineageConflictError as _LibLineageConflictError,
+    check_lineage_conflicts as _lib_check_lineage_conflicts,
+    duckdb_available,
+    open_views,
+    read_view_lineage as _lib_read_view_lineage,
+)
 
 # Family key -> glob(s) that locate Parquet projections under logs/ and results/.
 # Keys align with FAMILY_DEFAULTS vocabulary (suffix without leading underscore /
@@ -293,6 +299,15 @@ def assert_view_lineage(con, selected: dict[str, Path]) -> dict:
     paths, not on the data inside them). This function is the check that operates on the
     data.
 
+    STORY-43.2: the generic per-view read + the conflict-detection algorithm now live in
+    `utils.duckdb_query` (`read_view_lineage` / `check_lineage_conflicts`) so every
+    `open_views` caller shares ONE definition of "is this a lineage conflict" -- not just
+    this CLI. This function is now a thin wrapper: it adds the one thing the generic library
+    version cannot know -- `bar_matrix`'s lineage lives in a sidecar `manifest.json`, not in
+    Parquet columns -- then delegates the actual conflict check, and re-raises the library's
+    `RuntimeError`-based `LineageConflictError` as THIS module's `SystemExit`-based one (same
+    message) so every existing caller/test of this CLI is unaffected.
+
     Returns a lineage report `{fam: {"run_ids": [...], "corpus_shas": [...],
     "attributable": bool}}`. Raises `LineageConflictError` (refuses to proceed) when:
       * any single view spans MORE THAN ONE run_id or corpus_sha256 (a directory that
@@ -305,71 +320,13 @@ def assert_view_lineage(con, selected: dict[str, Path]) -> dict:
     for fam, path in selected.items():
         if fam in _NON_PROJECTION_FAMILIES:
             report[fam] = _bar_matrix_lineage(path)
-            continue
-        cols = {r[0] for r in con.execute(f"describe {fam}").fetchall()}
-        run_ids: list[str] = []
-        shas: list[str] = []
-        if "run_id" in cols:
-            run_ids = [
-                r[0] for r in con.execute(
-                    f"select distinct run_id from {fam} where run_id is not null"
-                ).fetchall()
-            ]
-        if "corpus_sha256" in cols:
-            shas = [
-                r[0] for r in con.execute(
-                    f"select distinct corpus_sha256 from {fam} where corpus_sha256 is not null"
-                ).fetchall()
-            ]
-        report[fam] = {
-            "run_ids": run_ids,
-            "corpus_shas": shas,
-            "attributable": bool(run_ids or shas),
-        }
+        else:
+            report[fam] = _lib_read_view_lineage(con, fam)
 
-    # 1. a single view spanning more than one run_id or corpus_sha256.
-    internally_split = {
-        fam: r for fam, r in report.items()
-        if len(r["run_ids"]) > 1 or len(r["corpus_shas"]) > 1
-    }
-    if internally_split:
-        lines = [
-            f"    {fam}: run_ids={r['run_ids']} corpus_shas={r['corpus_shas']}"
-            for fam, r in internally_split.items()
-        ]
-        raise LineageConflictError(
-            "view(s) span MORE THAN ONE run -- a family's projection directory holds "
-            "records from different emits:\n" + "\n".join(lines) +
-            "\n  --run-dir alone cannot catch this; it scopes by PATH, not by the "
-            "run_id/corpus_sha256 actually inside the files."
-        )
-
-    # 2. two attributable views disagreeing on run_id or corpus_sha256.
-    attributable = {fam: r for fam, r in report.items() if r["attributable"]}
-    run_id_sets = {fam: frozenset(r["run_ids"]) for fam, r in attributable.items() if r["run_ids"]}
-    sha_sets = {fam: frozenset(r["corpus_shas"]) for fam, r in attributable.items() if r["corpus_shas"]}
-    if len(set(run_id_sets.values())) > 1:
-        raise LineageConflictError(
-            "attributable views disagree on run_id:\n" +
-            "\n".join(f"    {fam}: {sorted(v)}" for fam, v in run_id_sets.items()) +
-            "\n  Views from different runs do not join on (run_id, bar_index) -- the "
-            "join would return rows silently pairing the wrong bars, or zero rows, "
-            "either way without saying so."
-        )
-    if len(set(sha_sets.values())) > 1:
-        raise LineageConflictError(
-            "attributable views disagree on corpus_sha256:\n" +
-            "\n".join(f"    {fam}: {sorted(v)}" for fam, v in sha_sets.items())
-        )
-
-    unattributable = sorted(fam for fam, r in report.items() if not r["attributable"])
-    run_id = next(iter(next(iter(run_id_sets.values()), frozenset())), None)
-    corpus = next(iter(next(iter(sha_sets.values()), frozenset())), None)
-    print(
-        f"lineage: run_id={run_id or 'n/a'}  corpus={((corpus or '')[:12] + '...') if corpus else 'n/a'}"
-        f"  views={','.join(sorted(attributable))}"
-    )
-    print(f"         UNATTRIBUTABLE (no run identity in-record): {','.join(unattributable) or '(none)'}")
+    try:
+        _lib_check_lineage_conflicts(report, verbose=True)
+    except _LibLineageConflictError as exc:
+        raise LineageConflictError(str(exc)) from exc
     return report
 
 
@@ -468,7 +425,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"view {fam}: {path.relative_to(ROOT).as_posix()}")
     table_globs = {fam: _read_parquet_glob(p) for fam, p in selected.items()}
 
-    con = open_views(table_globs, read_only=True)
+    # check_lineage=False: this CLI runs its OWN richer, family-aware check right below
+    # (bar_matrix's sidecar-manifest lineage, which the generic library check cannot see).
+    # Leaving the default True here would raise `open_views`'s RuntimeError-based
+    # LineageConflictError before this CLI's SystemExit-based one ever got a chance to run.
+    con = open_views(table_globs, read_only=True, check_lineage=False)
     assert_view_lineage(con, selected)
 
     if args.sql:

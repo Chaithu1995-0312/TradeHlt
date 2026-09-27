@@ -429,14 +429,37 @@ def controls(
     return out
 
 
+#: `crt_state_resolved` was renamed `ontology_state` (CH-oracle-join-spine, C2 — F-069:
+#: the resolver's state and the CRT engine's own `engine_state_after` are DIFFERENT
+#: quantities and must never share a column name). A tolerant `if extra in df.columns`
+#: here would silently drop the resolver stratum from every downstream scan under the new
+#: name -- the exact F-056/F-079/F-083/F-085 class this catalog is written to avoid.
+_RETIRED_COLUMNS = {"crt_state_resolved": "ontology_state"}
+
+#: Every column this scan REQUIRES on the bar matrix. Absence is a fail-closed error, not
+#: a silently-shrunk feature list.
+_REQUIRED_STATE_COLUMNS = (
+    "ontology_state", "parent_track_state", "parent_bias", "htf_state",
+    "objective_status", "candle_direction", "candle_vol", "candle_structure",
+    "candle_trend", "regime_label", "trade_intent",
+)
+
+
 def state_columns(df: pd.DataFrame) -> list[str]:
-    """Every declared state family carried on the bar matrix."""
+    """Every declared state family carried on the bar matrix. Fail-closed: a matrix built
+    before CH-oracle-join-spine (still carrying `crt_state_resolved`) is a STALE artifact,
+    not a smaller one — regenerate it rather than silently scanning a reduced surface."""
+    for old, new in _RETIRED_COLUMNS.items():
+        if old in df.columns:
+            raise RuntimeError(
+                f"state_columns: bar matrix carries retired column {old!r} -- regenerate "
+                f"via scripts/research/build_bar_matrix.py (renamed to {new!r})"
+            )
+    missing = [c for c in _REQUIRED_STATE_COLUMNS if c not in df.columns]
+    if missing:
+        raise RuntimeError(f"state_columns: bar matrix missing required columns: {missing}")
     cols = [c for c in df.columns if c.startswith("state__")]
-    for extra in ("crt_state_resolved", "parent_track_state", "parent_bias", "htf_state",
-                  "objective_status", "candle_direction", "candle_vol", "candle_structure",
-                  "candle_trend", "regime_label", "trade_intent"):
-        if extra in df.columns:
-            cols.append(extra)
+    cols.extend(_REQUIRED_STATE_COLUMNS)
     return cols
 
 

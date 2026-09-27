@@ -14,6 +14,7 @@ from config_layer.crt_engine_v2 import EngineState, StateMachine
 from config_layer.state_identity import CRTConfig, CRTState, Direction, VALID_TRANSITIONS
 
 from tests.Grok._fixtures import candle, engine_ready_long, engine_ready_short, executor
+from tests.helpers.crt_config import crt_config_for_test
 
 
 # Golden path declared by the auditor prompt (EXPANSION is optional).
@@ -28,7 +29,7 @@ _DECLARED_SPINE = (
 
 
 def _sm() -> StateMachine:
-    return StateMachine(CRTConfig())
+    return StateMachine(crt_config_for_test())
 
 
 def test_declared_spine_edges_are_in_valid_transitions():

@@ -120,6 +120,9 @@ GREEN_FLOOR: tuple[str, ...] = (
     # CORPUS-READ-SEAM P3: shrink-only ratchet over direct (ungated) OHLCV corpus reads.
     "tests/test_corpus_store.py",
     "tests/test_corpus_read_lint.py",
+    # Phase 0 model-registry join (2026-09-23): MODEL_CATALOG <-> miar_registry.json <->
+    # active_models.yaml now share one semantic_id; this is the floor that keeps them agreeing.
+    "tests/test_model_registry_join.py",
 )
 
 

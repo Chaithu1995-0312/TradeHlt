@@ -10,6 +10,7 @@ from datetime import datetime
 from dataclasses import replace
 
 from config_layer.crt_engine_v2 import CRTConfig, CRTEngine, EngineState, StateMachine
+from tests.helpers.crt_config import crt_config_for_test
 
 
 # ── Minimal helpers ──────────────────────────────────────────────────────────
@@ -28,7 +29,7 @@ def _default_cfg(**kwargs) -> CRTConfig:
     """Return a CRTConfig with test-friendly defaults."""
     base = {"max_displacement_strength": 2.0}
     base.update(kwargs)
-    return replace(CRTConfig(), **base)
+    return replace(crt_config_for_test(), **base)
 
 
 # ── StateMachine unit tests ───────────────────────────────────────────────────
@@ -139,12 +140,12 @@ class TestDispStrengthFilter:
 class TestCRTConfigDispStrengthField:
     def test_default_value(self):
         """CRTConfig.max_displacement_strength defaults to 2.0."""
-        cfg = CRTConfig()
+        cfg = crt_config_for_test()
         assert cfg.max_displacement_strength == 2.0
 
     def test_override_via_replace(self):
         """Field is overridable via dataclasses.replace."""
-        cfg = replace(CRTConfig(), max_displacement_strength=1.5)
+        cfg = replace(crt_config_for_test(), max_displacement_strength=1.5)
         assert cfg.max_displacement_strength == 1.5
 
     def test_prod_config_loads_field(self):

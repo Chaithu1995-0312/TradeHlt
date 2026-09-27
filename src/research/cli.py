@@ -20,6 +20,7 @@ import research.hypotheses  # noqa: F401
 from research.config import DEFAULT_CONFIG_PATH, ResearchConfig
 from research.registry import HYPOTHESIS_REGISTRY, get_hypothesis
 from research.runner import HypothesisRunner, edge_report_json, run_result_to_dict
+from governance.measurement_basis import TIE_BREAK_PRODUCTION
 from research.provenance import provenance_block
 from research.measurement.metrics import EdgeAggregator
 from research.qualification import (
@@ -198,7 +199,11 @@ def cmd_qualify(args: argparse.Namespace) -> int:
         # `truth_standard_block`'s own doc, it is retained as "what WOULD have been
         # charged" for side-by-side comparison; `cost_model=` is what actually overrides
         # `slippage_model` to the real component id when one is bound.
-        **provenance_block(cfg.exit_model, cfg.round_trip_bps, cost_model=cost_provenance),
+        # tie_break=TIE_BREAK_PRODUCTION: this qualification measures via forward_walk,
+        # which hardcodes the SL-first convention in both exit models (CH-measurement-
+        # basis-declaration) — declaring what actually ran, not a guess.
+        **provenance_block(cfg.exit_model, cfg.round_trip_bps,
+                           tie_break=TIE_BREAK_PRODUCTION, cost_model=cost_provenance),
         "config_sha256": cfg.sha256(),
         "winning_control": win_name,
         "alpha": qcfg.significance_alpha,

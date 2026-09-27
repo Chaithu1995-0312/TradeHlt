@@ -288,6 +288,7 @@ function CrtDashboard() {
     { id: "Intelligence", Component: IntelligencePage },
     { id: "Replay Lab",   Component: ReplayPage       },
     { id: "Knowledge",    Component: KnowledgePage    },
+    { id: "Admin",        Component: AdminPage        },
   ];
   const active = PAGES.find(p => p.id === activePage) || PAGES[0];
 

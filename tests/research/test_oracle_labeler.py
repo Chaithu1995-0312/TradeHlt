@@ -97,7 +97,9 @@ def test_unit_count_is_the_declared_cartesian_product():
     matrix, raw = _synthetic(n=200)
     labels, stats = label_corpus(matrix, raw, cost_model=_cost_model(),
                                  adverse_fill=None, max_forward=40, crt_cfg=_CRT_CFG)
-    per_bar = 2 * len(SL_GEOMETRIES) * len(TIE_BREAKS)
+    # sweep_lookback=None (default) = the legacy two-geometry output; the K23 F3
+    # sweep_extreme arm is opt-in and covered in test_sl_anchor_oracle_parity.py.
+    per_bar = 2 * (len(SL_GEOMETRIES) - 1) * len(TIE_BREAKS)
     assert per_bar == 8
     assert len(labels) == stats["bars_labelled"] * per_bar
     # Bars without a full forward window are excluded and COUNTED, not silently dropped.
@@ -160,6 +162,177 @@ def test_nights_held_counts_date_boundaries():
     assert _nights_held(a, a + timedelta(minutes=30)) == 1
     assert _nights_held(a, a + timedelta(minutes=10)) == 0
     assert _nights_held(a, a + timedelta(days=2)) == 2
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CH-oracle-join-spine: identity inheritance (C+D)
+# ─────────────────────────────────────────────────────────────────────────────
+def test_labels_inherit_lt_id_trace_id_bar_open_ts_from_the_matrix():
+    matrix, raw = _synthetic(n=150)
+    matrix["lt_id"] = "lt_20260922_044800_XAUUSD"
+    matrix["trace_id"] = [
+        f"lt_20260922_044800_XAUUSD:XAUUSD:{ts.isoformat()}" for ts in matrix["timestamp"]
+    ]
+    matrix["bar_open_ts"] = matrix["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    labels, _ = label_corpus(matrix, raw, cost_model=_cost_model(), adverse_fill=None,
+                             max_forward=40, crt_cfg=_CRT_CFG)
+    assert set(labels["lt_id"].unique()) == {"lt_20260922_044800_XAUUSD"}
+    for _, r in labels.sample(20, random_state=9).iterrows():
+        want = matrix.loc[matrix["_pos"] == r["_pos"]].iloc[0]
+        assert r["trace_id"] == want["trace_id"]
+        assert r["bar_open_ts"] == want["bar_open_ts"]
+
+
+def test_labeler_mints_no_new_bar_identifier():
+    """The identity columns are a straight row_i copy — never a re-derivation from the
+    label's own timestamp/direction/geometry, which would be a second mint."""
+    matrix, raw = _synthetic(n=120)
+    matrix["lt_id"] = "lt_X"
+    matrix["trace_id"] = "SENTINEL_" + matrix["_pos"].astype(str)
+    matrix["bar_open_ts"] = "SENTINEL_TS_" + matrix["_pos"].astype(str)
+    labels, _ = label_corpus(matrix, raw, cost_model=_cost_model(), adverse_fill=None,
+                             max_forward=40, crt_cfg=_CRT_CFG)
+    for _, r in labels.iterrows():
+        assert r["trace_id"] == f"SENTINEL_{r['_pos']}"
+        assert r["bar_open_ts"] == f"SENTINEL_TS_{r['_pos']}"
+
+
+def test_all_eight_units_of_a_bar_carry_the_same_trace_id():
+    matrix, raw = _synthetic(n=100)
+    matrix["lt_id"] = "lt_X"
+    matrix["trace_id"] = "T_" + matrix["_pos"].astype(str)
+    matrix["bar_open_ts"] = matrix["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    labels, _ = label_corpus(matrix, raw, cost_model=_cost_model(), adverse_fill=None,
+                             max_forward=40, crt_cfg=_CRT_CFG)
+    for pos, g in labels.groupby("_pos"):
+        assert g["trace_id"].nunique() == 1
+        assert len(g) == 8   # 2 direction x 2 sl_geom x 2 tie_break
+
+
+def test_label_values_are_byte_identical_with_and_without_the_identity_columns():
+    """Additive-only proof: the identity columns must not perturb a single label value."""
+    matrix, raw = _synthetic(n=150)
+    plain, _ = label_corpus(matrix, raw, cost_model=_cost_model(), adverse_fill=None,
+                             max_forward=40, crt_cfg=_CRT_CFG)
+    stamped = matrix.copy()
+    stamped["lt_id"] = "lt_X"
+    stamped["trace_id"] = "T_" + stamped["_pos"].astype(str)
+    stamped["bar_open_ts"] = stamped["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    with_ids, _ = label_corpus(stamped, raw, cost_model=_cost_model(), adverse_fill=None,
+                               max_forward=40, crt_cfg=_CRT_CFG)
+    value_cols = [c for c in plain.columns if c not in ("lt_id", "trace_id", "bar_open_ts")]
+    pd.testing.assert_frame_equal(plain[value_cols], with_ids[value_cols])
+
+
+def test_matrix_without_identity_columns_labels_null_not_crash():
+    """A synthetic matrix with no identity columns (as every existing test above uses)
+    must still label — the inheritance is best-effort at this layer; the CLI's fail-closed
+    read (main()) is the actual gate, tested separately via source inspection."""
+    matrix, raw = _synthetic(n=80)
+    labels, _ = label_corpus(matrix, raw, cost_model=_cost_model(), adverse_fill=None,
+                             max_forward=40, crt_cfg=_CRT_CFG)
+    assert labels["lt_id"].isna().all()
+    assert labels["trace_id"].isna().all()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CH-measurement-basis-declaration: the declared 5-axis basis (E1-E3 declare half)
+# ─────────────────────────────────────────────────────────────────────────────
+def test_labels_carry_all_five_basis_axes_as_closed_vocabulary_members():
+    from governance.measurement_basis import AXIS_VOCAB, BASIS_AXES
+
+    matrix, raw = _synthetic(n=120)
+    labels, _ = label_corpus(matrix, raw, cost_model=_cost_model(), adverse_fill=None,
+                             max_forward=40, crt_cfg=_CRT_CFG)
+    assert set(BASIS_AXES) <= set(labels.columns)
+    for axis in BASIS_AXES:
+        assert set(labels[axis].unique()) <= AXIS_VOCAB[axis], axis
+
+
+def test_reference_level_matches_sl_geom():
+    from governance.measurement_basis import REF_LEVEL_ENTRY_CLOSE_ATR, REF_LEVEL_SIGNAL_BAR_EXTREME
+
+    matrix, raw = _synthetic(n=120)
+    labels, _ = label_corpus(matrix, raw, cost_model=_cost_model(), adverse_fill=None,
+                             max_forward=40, crt_cfg=_CRT_CFG)
+    disp = labels[labels["sl_geom"] == "disp_bar"]
+    fixed = labels[labels["sl_geom"] == "fixed_atr"]
+    assert (disp["reference_level"] == REF_LEVEL_SIGNAL_BAR_EXTREME).all()
+    assert (fixed["reference_level"] == REF_LEVEL_ENTRY_CLOSE_ATR).all()
+
+
+def test_walk_kernel_is_multi_tp_walk_uniformly():
+    matrix, raw = _synthetic(n=100)
+    labels, _ = label_corpus(matrix, raw, cost_model=_cost_model(), adverse_fill=None,
+                             max_forward=40, crt_cfg=_CRT_CFG)
+    assert set(labels["walk_kernel"].unique()) == {"multi_tp_walk"}
+
+
+def test_fill_model_id_reflects_adverse_fill_argument():
+    from research.measurement.forward_walk import AdverseFill
+
+    matrix, raw = _synthetic(n=80)
+    no_fill, _ = label_corpus(matrix, raw, cost_model=_cost_model(), adverse_fill=None,
+                              max_forward=40, crt_cfg=_CRT_CFG)
+    assert set(no_fill["fill_model_id"].unique()) == {"touch_exact"}
+    with_fill, _ = label_corpus(
+        matrix, raw, cost_model=_cost_model(),
+        adverse_fill=AdverseFill(stop_slippage=0.09, model_gaps=True),
+        max_forward=40, crt_cfg=_CRT_CFG,
+    )
+    assert set(with_fill["fill_model_id"].unique()) == {"sem016_adverse"}
+
+
+def test_cost_model_id_canonicalises_from_the_provenance_spelling():
+    """`ComponentCostModel.provenance()['cost_model_id']` returns 'component_measured.v1'
+    (costs.py:330) — a spelling distinct from identity.tokens' canonical member. The
+    labeler must canonicalise it, never emit the raw provenance spelling."""
+    matrix, raw = _synthetic(n=80)
+    labels, _ = label_corpus(matrix, raw, cost_model=_cost_model(), adverse_fill=None,
+                             max_forward=40, crt_cfg=_CRT_CFG)
+    assert _cost_model().provenance()["cost_model_id"] == "component_measured.v1"
+    assert set(labels["cost_model_id"].unique()) == {"sem015_component_xauusd"}
+
+
+def test_basis_columns_are_byte_identical_with_and_without_identity_columns():
+    """Additive-only proof extended to the basis columns: they must not depend on
+    whether the join-spine identity columns are present."""
+    matrix, raw = _synthetic(n=150)
+    plain, _ = label_corpus(matrix, raw, cost_model=_cost_model(), adverse_fill=None,
+                             max_forward=40, crt_cfg=_CRT_CFG)
+    stamped = matrix.copy()
+    stamped["lt_id"] = "lt_X"
+    stamped["trace_id"] = "T_" + stamped["_pos"].astype(str)
+    stamped["bar_open_ts"] = stamped["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    with_ids, _ = label_corpus(stamped, raw, cost_model=_cost_model(), adverse_fill=None,
+                               max_forward=40, crt_cfg=_CRT_CFG)
+    from governance.measurement_basis import BASIS_AXES
+    pd.testing.assert_frame_equal(plain[list(BASIS_AXES)], with_ids[list(BASIS_AXES)])
+
+
+def test_two_labeler_rows_of_the_same_arm_are_mutually_comparable():
+    from governance.measurement_basis import ALLOW_SAME_BASIS, basis_from_row, can_compare
+
+    matrix, raw = _synthetic(n=150)
+    labels, _ = label_corpus(matrix, raw, cost_model=_cost_model(), adverse_fill=None,
+                             max_forward=40, crt_cfg=_CRT_CFG)
+    primary = labels[(labels["sl_geom"] == "disp_bar") & (labels["tie_break"] == "production")]
+    a = basis_from_row(primary.iloc[0].to_dict())
+    b = basis_from_row(primary.iloc[1].to_dict())
+    verdict, _ = can_compare(a, b)
+    assert verdict == ALLOW_SAME_BASIS
+
+
+def test_two_labeler_rows_of_different_arms_are_refused():
+    from governance.measurement_basis import DENY_TIE_BREAK_MISMATCH, basis_from_row, can_compare
+
+    matrix, raw = _synthetic(n=150)
+    labels, _ = label_corpus(matrix, raw, cost_model=_cost_model(), adverse_fill=None,
+                             max_forward=40, crt_cfg=_CRT_CFG)
+    prod = labels[(labels["sl_geom"] == "disp_bar") & (labels["tie_break"] == "production")].iloc[0]
+    opt = labels[(labels["sl_geom"] == "disp_bar") & (labels["tie_break"] == "optimistic")].iloc[0]
+    verdict, _ = can_compare(basis_from_row(prod.to_dict()), basis_from_row(opt.to_dict()))
+    assert verdict == DENY_TIE_BREAK_MISMATCH
 
 
 # ─────────────────────────────────────────────────────────────────────────────

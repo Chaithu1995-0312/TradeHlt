@@ -181,7 +181,7 @@ states:
       ENGINE ENTRY (try_sweep_to_displacement): ONLY from SWEEP.
         1. abs(close-open) >= atr_min_displacement * atr_abs
         2. sweep age <= max_sweep_age_candles (else expire → RANGE)
-        3. body_ratio >= body_ratio_min (0.70)
+        3. body_ratio >= body_ratio_min (0.65 authority)
         4. candle_range (v4.0 rename of wick_size; high-low) >= atr_multiplier_min * atr_abs (1.5)
       Depends on faithful SWEEP dwell (implement SWEEP before tuning this).
 

@@ -10,6 +10,7 @@ import math
 from pathlib import Path
 
 import pytest
+from tests.helpers.crt_config import crt_config_for_test
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -21,7 +22,7 @@ def _make_engine():
     from config_layer.crt_engine_v2 import CRTConfig, CRTEngine, Candle
     from datetime import datetime
 
-    eng = CRTEngine(CRTConfig())
+    eng = CRTEngine(crt_config_for_test())
     return eng, Candle, datetime
 
 

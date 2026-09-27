@@ -59,6 +59,7 @@ os.chdir(_ROOT)
 
 # Reuse the F-036 harness verbatim (keeps spine-run semantics byte-identical to qualify_zone_topk).
 import qualify_zone_topk as qz                                        # noqa: E402
+from governance.measurement_basis import TIE_BREAK_PRODUCTION  # noqa: E402
 from research.provenance import provenance_block                     # noqa: E402
 from research.config import ResearchConfig                           # noqa: E402
 from research.qualification import (                                  # noqa: E402
@@ -343,7 +344,7 @@ def main(argv: list[str] | None = None) -> int:
         "permutation_method_version": PERMUTATION_METHOD_VERSION,
         "bh_method_version": BH_METHOD_VERSION,
         "spine_config_sha256": rc.sha256(),
-        **provenance_block(rc.exit_model, rc.round_trip_bps),
+        **provenance_block(rc.exit_model, rc.round_trip_bps, tie_break=TIE_BREAK_PRODUCTION),
         "selfcheck": selfcheck,
         "any_entry_change": any_change,
         "verdict": verdict,

@@ -22,6 +22,9 @@ except Exception:
     _COLLECTOR_AVAILABLE = False
 
 # Threshold above which trade_journal.jsonl is flagged as systemically corrupted.
+# Canonical default for unit-test / programmatic construction ONLY — the production path reads
+# trade_journal.max_corruption_ratio via TradeLogger.from_prod_config (§6.5 A1). This module is
+# the single home for the threshold; replay.replay_memory_engine reads the same config key.
 MAX_CORRUPTION_RATIO: float = 0.10
 
 try:
@@ -39,8 +42,33 @@ class TradeLogger:
     trail in logs/collector.jsonl stays complete (integration rule §6.7).
     """
 
-    def __init__(self, log_path: Optional[str] = None):
+    @classmethod
+    def from_prod_config(cls, log_path: Optional[str] = None) -> "TradeLogger":
+        """Production constructor — fail-fast. Strict-reads ``trade_journal.max_corruption_ratio``
+        (§6.5 A1). The import is lazy so importing this module stays config-dependency-free.
+
+        This is the single source of truth for the corruption threshold:
+        ``replay.replay_memory_engine`` reads the SAME key rather than keeping its own copy
+        (§6.2 rule 5 — one truth, one home)."""
+        from config_layer.production_config import get_prod_section
+        section = get_prod_section("trade_journal")
+        if not isinstance(section, dict) or "max_corruption_ratio" not in section:
+            raise KeyError(
+                "Required config key 'max_corruption_ratio' missing from 'trade_journal' "
+                "section. Add it to the production config (config-first doctrine: no silent "
+                "defaults)."
+            )
+        return cls(log_path=log_path, max_corruption_ratio=float(section["max_corruption_ratio"]))
+
+    def __init__(
+        self,
+        log_path: Optional[str] = None,
+        # Two-tier: this module-constant default is the TEST / programmatic seam; the live path
+        # supplies the value via from_prod_config (fail-fast, no silent config default).
+        max_corruption_ratio: float = MAX_CORRUPTION_RATIO,
+    ):
         self._path = Path(log_path) if log_path else _DEFAULT_LOG
+        self._max_corruption_ratio = float(max_corruption_ratio)
 
     def log(self, record: TradeRecord) -> None:
         # Primary write — outcome-level JSONL (trade_journal.jsonl)
@@ -105,7 +133,7 @@ class TradeLogger:
                         },
                     )
         total = malformed + valid
-        if total and (malformed / total) > MAX_CORRUPTION_RATIO:
+        if total and (malformed / total) > self._max_corruption_ratio:
             emit_integrity_event(
                 "JSONL_CORRUPTION_THRESHOLD_EXCEEDED",
                 "ERROR",

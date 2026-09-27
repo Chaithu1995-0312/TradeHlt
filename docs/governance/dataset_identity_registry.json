@@ -16,6 +16,12 @@
       "record": "docs/governance/datasets/XAUUSD_MT5_TVWINDOW_20260706_20260807.json",
       "symbol": "XAUUSD",
       "canonical_timeframe": "M15"
+    },
+    {
+      "dataset_id": "XAUUSD_MT5_W20260803_20260923",
+      "record": "docs/governance/datasets/XAUUSD_MT5_W20260803_20260923.json",
+      "symbol": "XAUUSD",
+      "canonical_timeframe": "M15"
     }
   ]
 }

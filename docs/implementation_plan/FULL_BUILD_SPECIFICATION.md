@@ -2696,3 +2696,900 @@ Story 10.3 → Continuous validation pipeline (3h)
 ---
 
 **End of specification. Hand this document to Claude LLM for implementation.**
+
+---
+
+# Coverage: Implementation Ownership (DeepSeek promotion)
+
+> Generated from a coverage census of tracked files not referenced by the 460-story backlog.
+> These cover real engineering assets only (Class A). Governance/artifact classes live in
+> the sidecar `multi_llm/coverage_inventory.jsonl`.
+
+# 59. Epic 59: Coverage: scripts/ Ownership & Cleanup
+
+## Story 59.1: Own scripts/__init__.py/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/__init__.py`
+
+## Story 59.10: Own scripts/analysis/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/analysis/layer_trace/h4_rail_reachability.py`, `scripts/analysis/layer_trace/h5_feature_alignment.py`, `scripts/analysis/layer_trace/h6_silent_except_census.py`, `scripts/analysis/layer_trace/h7_config_message_drift.py`, `scripts/analysis/legacy_feature_fingerprint.py`, `scripts/analysis/ohlcv_census.py`, `scripts/analysis/phase1_duplicate_formula_identity_closure.py`
+
+## Story 59.11: Own scripts/analysis/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/analysis/phase1_resolver_replay_evidence.py`, `scripts/analysis/phase1_resolver_replay_sample_acquisition.py`, `scripts/analysis/phase1_shadow_memory_create_expire_mine.py`, `scripts/analysis/phase1_shadow_memory_subsystem_probe.py`, `scripts/analysis/phase1_shadow_memory_timing_race_mine.py`, `scripts/analysis/pit_phaseC_feature_certification.py`, `scripts/analysis/pit_swing_blast_radius.py`
+
+## Story 59.12: Own scripts/analysis/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/analysis/pit_swing_gateon_ab.py`, `scripts/analysis/process_diagnostics.py`, `scripts/analysis/purge_slice.py`, `scripts/analysis/run_gaussian_xauusd_2m.py`, `scripts/analysis/run_rr_xauusd_2m.py`, `scripts/analysis/run_zonegate_xauusd_2m.py`, `scripts/analysis/search_xauusd_candidate_window.py`
+
+## Story 59.13: Own scripts/analysis/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/analysis/session_certification.py`, `scripts/analysis/session_override_scoping_proof.py`, `scripts/analysis/sweep_conditional_magnitude_probe.py`, `scripts/analysis/sweep_state_persistence_probe.py`, `scripts/analysis/sweep_structure_economic_probe.py`, `scripts/analysis/trade_intent_ownership_shadow.py`, `scripts/analysis/trend_strength_certification.py`
+
+## Story 59.14: Own scripts/analysis/ (6 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/analysis/volatility_regime_certification.py`, `scripts/analysis/xauusd_corpus_timestamp_gap_analysis.py`, `scripts/analysis/xauusd_crt_baseline_trace.py`, `scripts/analysis/xauusd_crt_transition_trace.py`, `scripts/analysis/xauusd_phase1_finish_validation.py`, `scripts/analysis/xauusd_strict_reject_forensic.py`
+
+## Story 59.15: Own scripts/build_consolidated_docs.py/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/build_consolidated_docs.py`
+
+## Story 59.16: Own scripts/data/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/data/check_availability.py`, `scripts/data/check_yfinance.py`, `scripts/data/convert_bnb_to_csv.py`, `scripts/data/csv_to_excel.py`, `scripts/data/fetch_and_verify_binance.py`, `scripts/data/split_bnb_excel.py`, `scripts/data/test_yf_periods.py`
+
+## Story 59.17: Own scripts/data/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/data/verify_output.py`
+
+## Story 59.18: Own scripts/evaluation/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/evaluation/__init__.py`, `scripts/evaluation/benchmark_100.active`, `scripts/evaluation/benchmark_100.original.json`, `scripts/evaluation/benchmark_100.remapped.json`, `scripts/evaluation/gold_remap.py`, `scripts/evaluation/gold_remap_report.json`, `scripts/evaluation/measure_file_route_report.json`
+
+## Story 59.19: Own scripts/evaluation/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/evaluation/report.py`
+
+## Story 59.2: Own scripts/_gate5_compliance_pass.py/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/_gate5_compliance_pass.py`
+
+## Story 59.20: Own scripts/export_model_registry.py/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/export_model_registry.py`
+
+## Story 59.21: Own scripts/extract_folder_structure.py/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/extract_folder_structure.py`
+
+## Story 59.22: Own scripts/governance/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/governance/behavioral_constant_authority_trace.py`, `scripts/governance/build_crt_architecture_adjudication_v1.py`, `scripts/governance/build_fm_ownership_matrix.py`, `scripts/governance/build_msip_shadow_design_contract_v1.py`, `scripts/governance/patch_msip_shadow_design_consistency_v1.py`, `scripts/governance/provenance_query.py`, `scripts/governance/rr_l1_freeze_certificate.py`
+
+## Story 59.23: Own scripts/governance/ (2 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/governance/scan_model_paths_literals.py`, `scripts/governance/three_authority_surplus_census.py`
+
+## Story 59.24: Own scripts/maintenance/ (5 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/maintenance/_promote_v4_bnb_cutover.py`, `scripts/maintenance/check_consolidation_due.py`, `scripts/maintenance/g1_build_v4_crt_sot_config.py`, `scripts/maintenance/g2_v4_crt_sot_parity.py`, `scripts/maintenance/g3_append_v4_crt_sot_registration.py`
+
+## Story 59.25: Own scripts/multi_llm/ (6 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/multi_llm/chatgpt.ps1`, `scripts/multi_llm/claude.ps1`, `scripts/multi_llm/deepseek.ps1`, `scripts/multi_llm/gemini.ps1`, `scripts/multi_llm/grok.ps1`, `scripts/multi_llm/initiate_plan.py`
+
+## Story 59.26: Own scripts/research/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/research/ab_rr_slot_xauusd.py`, `scripts/research/accepted_trade_attribution.py`, `scripts/research/bitnet_population_label_audit.py`, `scripts/research/crt_occupancy_feeder_smoke.py`, `scripts/research/crt_variant_surface.py`, `scripts/research/discriminator_analysis_xauusd.py`, `scripts/research/emit_dual_construction_trace.py`
+
+## Story 59.27: Own scripts/research/ (6 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/research/gaussian_rr_scatter.py`, `scripts/research/link001_choch_measurement.py`, `scripts/research/phase0_economic_edge_diagnosis.py`, `scripts/research/promotion_dryrun.py`, `scripts/research/run_envelope_shadow_weight0.py`, `scripts/research/smc_feature_month_extract.py`
+
+## Story 59.28: Own scripts/tmp_cert_worktrees.py/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/tmp_cert_worktrees.py`
+
+## Story 59.29: Own scripts/training/ (4 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/training/_write_hashes_closure_narrative.py`, `scripts/training/show_xauusd_gaussian_promotion.py`, `scripts/training/train_bitnet_contract_c.py`, `scripts/training/train_gaussian_xauusd.py`
+
+## Story 59.3: Own scripts/_tmp_measure_rag_ranking.py/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/_tmp_measure_rag_ranking.py`
+
+## Story 59.4: Own scripts/analysis/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/analysis/all_states_economic_probe.py`, `scripts/analysis/all_states_persistence_probe.py`, `scripts/analysis/analytics_evidence_class_census.py`, `scripts/analysis/b2a_feature_candidate_certification.py`, `scripts/analysis/blind_label_rasterize.py`, `scripts/analysis/bnb_ema_gate_ab.py`, `scripts/analysis/build_crt_input_authority_matrix.py`
+
+## Story 59.5: Own scripts/analysis/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/analysis/build_feature_contract_v1_seed.py`, `scripts/analysis/build_sweep_liquidity_fact.py`, `scripts/analysis/compare_guard_ablation_datasets.py`, `scripts/analysis/consensus_sweep.py`, `scripts/analysis/corpus_read_census.py`, `scripts/analysis/crt_config_completeness_census.py`, `scripts/analysis/crt_declare_all_knobs_parity.py`
+
+## Story 59.6: Own scripts/analysis/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/analysis/crt_guard_ablation_6m.py`, `scripts/analysis/crt_guard_ablation_run.py`, `scripts/analysis/crt_local_math_authority_probe.py`, `scripts/analysis/crt_state_transition_audit_4m.py`, `scripts/analysis/crt_xauusd_runtime_trace.py`, `scripts/analysis/detection_sweep.py`, `scripts/analysis/early_invalidation_ab.py`
+
+## Story 59.7: Own scripts/analysis/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/analysis/early_invalidation_exectrade_ab.py`, `scripts/analysis/exit_model_band.py`, `scripts/analysis/f048_decision_probe.py`, `scripts/analysis/feature_math_decision_flip_probe.py`, `scripts/analysis/feature_pipeline_fc05_closure.py`, `scripts/analysis/feature_semantic_adjudication_pass_a.py`, `scripts/analysis/feature_surface_closure_audit.py`
+
+## Story 59.8: Own scripts/analysis/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/analysis/feature_trace_report.py`, `scripts/analysis/fm021_retest_depth_certification.py`, `scripts/analysis/fm027_displacement_retrace_certification.py`, `scripts/analysis/funnel_xauusd_4m.py`, `scripts/analysis/gate2b_adjudication.py`, `scripts/analysis/gd004_disp_rescale_probe.py`, `scripts/analysis/gen_html_explorer.py`
+
+## Story 59.9: Own scripts/analysis/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `scripts/analysis/geometry_census.py`, `scripts/analysis/hour_of_day_certification.py`, `scripts/analysis/implementation_model_validation_xauusd.py`, `scripts/analysis/layer_trace/h1_run_identity.py`, `scripts/analysis/layer_trace/h2_engine_runner_failsoft.py`, `scripts/analysis/layer_trace/h2b_synthetic_injection.py`, `scripts/analysis/layer_trace/h3_crt_htf_decision_grid.py`
+
+# 60. Epic 60: Coverage: src/ Module Ownership
+
+## Story 60.1: Own src/__init__.py/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/__init__.py`
+
+## Story 60.10: Own src/data_ingestion/ (3 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/data_ingestion/__init__.py`, `src/data_ingestion/corpus_store.py`, `src/data_ingestion/session_autoderive.py`
+
+## Story 60.11: Own src/engines/ (2 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/engines/__init__.py`, `src/engines/trap_validator_engine.py`
+
+## Story 60.12: Own src/execution/ (2 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/execution/__init__.py`, `src/execution/alert_manager.py`
+
+## Story 60.13: Own src/expansion/ (5 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/expansion/__init__.py`, `src/expansion/config_mutator.py`, `src/expansion/evaluator.py`, `src/expansion/llm_pattern_extractor.py`, `src/expansion/policy_schema.py`
+
+## Story 60.14: Own src/features/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/features/__init__.py`, `src/features/feature_identity.py`, `src/features/market_reality_contract.py`, `src/features/registry/composition_registry.py`, `src/features/registry/derived_registry.py`, `src/features/registry/primitive_registry.py`, `src/features/schema_validator.py`
+
+## Story 60.15: Own src/features/ (3 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/features/session_classifier.py`, `src/features/smc/__init__.py`, `src/features/smc/levels.py`
+
+## Story 60.16: Own src/feedback/ (2 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/feedback/__init__.py`, `src/feedback/ai_feedback.py`
+
+## Story 60.17: Own src/governance/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/governance/__init__.py`, `src/governance/archive_manifest.py`, `src/governance/module_attribution.py`, `src/governance/module_census.py`, `src/governance/multi_strategy_validator.py`, `src/governance/provenance_derivation.py`, `src/governance/provenance_record.py`
+
+## Story 60.18: Own src/governance/ (2 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/governance/provenance_resolver.py`, `src/governance/script_census.py`
+
+## Story 60.19: Own src/identity/ (3 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/identity/__init__.py`, `src/identity/hashes.py`, `src/identity/outcome.py`
+
+## Story 60.2: Own src/agent/ (6 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/agent/goal_loop.py`, `src/agent/modes/__init__.py`, `src/agent/modes/ops_mode.py`, `src/agent/recipes/__init__.py`, `src/agent/recipes/ops_diagnose.py`, `src/agent/recipes/truth_janitor.py`
+
+## Story 60.20: Own src/interpreters/ (2 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/interpreters/point_and_figure.py`, `src/interpreters/reference.py`
+
+## Story 60.21: Own src/journal/ (2 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/journal/__init__.py`, `src/journal/trade_execution_link_v1_0.py`
+
+## Story 60.22: Own src/live/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/live/__init__.py`
+
+## Story 60.23: Own src/llm_research/ (4 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/llm_research/__init__.py`, `src/llm_research/evaluator.py`, `src/llm_research/forward_tester.py`, `src/llm_research/pattern_extractor.py`
+
+## Story 60.24: Own src/monitoring/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/monitoring/__init__.py`
+
+## Story 60.25: Own src/msip/ (5 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/msip/__init__.py`, `src/msip/interpretation_config.py`, `src/msip/isolation.py`, `src/msip/market_state_vector.py`, `src/msip/shadow_emitter.py`
+
+## Story 60.26: Own src/multi_llm/ (4 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/multi_llm/__init__.py`, `src/multi_llm/context_pack.py`, `src/multi_llm/discussion.py`, `src/multi_llm/tokens.py`
+
+## Story 60.27: Own src/portfolio/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/portfolio/exposure_tracker.py`
+
+## Story 60.28: Own src/regime/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/regime/config_router.py`
+
+## Story 60.29: Own src/replay/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/replay/timing_advisor.py`
+
+## Story 60.3: Own src/analytics/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/analytics/__init__.py`
+
+## Story 60.30: Own src/retrieval/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/retrieval/corpus.py`
+
+## Story 60.31: Own src/runtime/ (3 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/runtime/__init__.py`, `src/runtime/crt_fail_reason_counters.py`, `src/runtime/exit_model_band.py`
+
+## Story 60.32: Own src/scanner/ (3 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/scanner/__init__.py`, `src/scanner/ranker.py`, `src/scanner/spine_adapter.py`
+
+## Story 60.33: Own src/search/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/search/regime_weight_searcher.py`
+
+## Story 60.34: Own src/strategies/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/strategies/__init__.py`
+
+## Story 60.35: Own src/structure/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/structure/__init__.py`
+
+## Story 60.36: Own src/tradelatest.egg-info/ (5 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/tradelatest.egg-info/PKG-INFO`, `src/tradelatest.egg-info/SOURCES.txt`, `src/tradelatest.egg-info/dependency_links.txt`, `src/tradelatest.egg-info/requires.txt`, `src/tradelatest.egg-info/top_level.txt`
+
+## Story 60.37: Own src/training/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/training/bar_semantic_tracker.py`
+
+## Story 60.38: Own src/uat/ (3 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/uat/__init__.py`, `src/uat/monte_carlo.py`, `src/uat/uat_runner.py`
+
+## Story 60.39: Own src/ui/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/ui/__init__.py`
+
+## Story 60.4: Own src/bitnet/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/bitnet/__init__.py`, `src/bitnet/adapters.py`, `src/bitnet/backbones.py`, `src/bitnet/composition.py`, `src/bitnet/contract_c_trainer.py`, `src/bitnet/encoders.py`, `src/bitnet/heads.py`
+
+## Story 60.40: Own src/utils/ (3 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/utils/config_dumper.py`, `src/utils/registry_refresh.py`, `src/utils/run_id_last_ran.py`
+
+## Story 60.41: Own src/validation_access/ (3 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/validation_access/__init__.py`, `src/validation_access/ladder.py`, `src/validation_access/surfaces.py`
+
+## Story 60.5: Own src/bitnet/ (6 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/bitnet/label_contracts.py`, `src/bitnet/layers.py`, `src/bitnet/model_bundle.py`, `src/bitnet/population_label_audit.py`, `src/bitnet/runtime_types.py`, `src/bitnet/zone_validator.py`
+
+## Story 60.6: Own src/charts/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/charts/__init__.py`
+
+## Story 60.7: Own src/config_layer/ (5 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/config_layer/__init__.py`, `src/config_layer/crt_config_completeness.py`, `src/config_layer/llm_narrative.py`, `src/config_layer/model_paths.py`, `src/config_layer/rr/__init__.py`
+
+## Story 60.8: Own src/control_plane/ (3 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/control_plane/__init__.py`, `src/control_plane/monitors.py`, `src/control_plane/report_api.py`
+
+## Story 60.9: Own src/core/ (3 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `src/core/__init__.py`, `src/core/governance_mode.py`, `src/core/types.py`
+
+# 62. Epic 62: Coverage: oss_lab/ OSS Adapters & Benchmarks
+
+## Story 62.1: Own oss_lab/__init__.py/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/__init__.py`
+
+## Story 62.10: Own oss_lab/governance/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/governance/semantic_os_mapping.json`
+
+## Story 62.11: Own oss_lab/manifests/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/manifests/.gitkeep`
+
+## Story 62.12: Own oss_lab/metrics/ (2 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/metrics/__init__.py`, `oss_lab/metrics/canonical.py`
+
+## Story 62.13: Own oss_lab/registry/ (5 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/registry/__init__.py`, `oss_lab/registry/_append_monitor_candidates.py`, `oss_lab/registry/loader.py`, `oss_lab/registry/oss_capabilities.jsonl`, `oss_lab/registry/schema.json`
+
+## Story 62.14: Own oss_lab/reports/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/reports/comparison_matrix_template.json`
+
+## Story 62.15: Own oss_lab/reproducibility/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/reproducibility/.gitkeep`
+
+## Story 62.16: Own oss_lab/runners/ (5 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/runners/__init__.py`, `oss_lab/runners/lookahead_cert.py`, `oss_lab/runners/normalize_demo.py`, `oss_lab/runners/repo_intel_qa_run.py`, `oss_lab/runners/ri_sos_compat_run.py`
+
+## Story 62.17: Own oss_lab/scenarios/ (5 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/scenarios/bm_execution_three_way.json`, `oss_lab/scenarios/bm_repo_intel_head_to_head.json`, `oss_lab/scenarios/bm_xauusd_m15_phase1.json`, `oss_lab/scenarios/repo_intel_qa_corpus_v1.json`, `oss_lab/scenarios/ri_sos_compat_corpus_v1.json`
+
+## Story 62.2: Own oss_lab/adapters/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/adapters/__init__.py`, `oss_lab/adapters/codebase_memory/__init__.py`, `oss_lab/adapters/codebase_memory/adapter.py`, `oss_lab/adapters/codebase_memory/lab.cbmignore`, `oss_lab/adapters/finrlx/__init__.py`, `oss_lab/adapters/finrlx/adapter.py`, `oss_lab/adapters/infigraph/__init__.py`
+
+## Story 62.3: Own oss_lab/adapters/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/adapters/infigraph/adapter.py`, `oss_lab/adapters/lean/__init__.py`, `oss_lab/adapters/lean/adapter.py`, `oss_lab/adapters/nautilus/__init__.py`, `oss_lab/adapters/nautilus/adapter.py`, `oss_lab/adapters/qlib/__init__.py`, `oss_lab/adapters/qlib/adapter.py`
+
+## Story 62.4: Own oss_lab/adapters/ (4 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/adapters/tradelatest/__init__.py`, `oss_lab/adapters/tradelatest/adapter.py`, `oss_lab/adapters/vectorbt/__init__.py`, `oss_lab/adapters/vectorbt/adapter.py`
+
+## Story 62.5: Own oss_lab/contracts/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/contracts/__init__.py`, `oss_lab/contracts/dataset_manifest.py`, `oss_lab/contracts/fill_model.py`, `oss_lab/contracts/metric_cell.py`, `oss_lab/contracts/presence.py`, `oss_lab/contracts/run_manifest.py`, `oss_lab/contracts/structural_fact.py`
+
+## Story 62.6: Own oss_lab/contracts/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/contracts/trade_record.py`
+
+## Story 62.7: Own oss_lab/datasets/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/datasets/.gitkeep`
+
+## Story 62.8: Own oss_lab/evidence/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/evidence/.gitkeep`, `oss_lab/evidence/repo_intel/codebase_memory_v0.10.2/G1_G3_gate_evidence.json`, `oss_lab/evidence/repo_intel/codebase_memory_v0.10.2/G4_G6_gate_evidence.json`, `oss_lab/evidence/repo_intel/codebase_memory_v0.10.2/LICENSE`, `oss_lab/evidence/repo_intel/codebase_memory_v0.10.2/REPO_INTEL_RUN_MANIFEST_PLAN.json`, `oss_lab/evidence/repo_intel/codebase_memory_v0.10.2/checksums.txt`, `oss_lab/evidence/repo_intel/codebase_memory_v0.10.2/sbom.json`
+
+## Story 62.9: Own oss_lab/evidence/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `oss_lab/evidence/repo_intel/codebase_memory_v0.10.2/virustotal-evidence-checksums.txt`
+
+# 63. Epic 63: Coverage: mt5_analytics/ Subsystem
+
+## Story 63.1: Own mt5_analytics/analytics/ (2 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `mt5_analytics/analytics/__init__.py`, `mt5_analytics/analytics/insight_report.py`
+
+## Story 63.10: Own mt5_analytics/registry/ (2 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `mt5_analytics/registry/__init__.py`, `mt5_analytics/registry/engine_registry.py`
+
+## Story 63.11: Own mt5_analytics/schemas/ (5 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `mt5_analytics/schemas/__init__.py`, `mt5_analytics/schemas/feature_v1_0.py`, `mt5_analytics/schemas/position_episode_v1_0.py`, `mt5_analytics/schemas/run_summary_v1_0.py`, `mt5_analytics/schemas/verification_report_v1_0.py`
+
+## Story 63.12: Own mt5_analytics/storage/ (3 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `mt5_analytics/storage/__init__.py`, `mt5_analytics/storage/manifest_builder.py`, `mt5_analytics/storage/partition_writer.py`
+
+## Story 63.13: Own mt5_analytics/ui/ (3 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `mt5_analytics/ui/__init__.py`, `mt5_analytics/ui/dashboard_data.py`, `mt5_analytics/ui/streamlit_dashboard.py`
+
+## Story 63.2: Own mt5_analytics/analytics_config.py/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `mt5_analytics/analytics_config.py`
+
+## Story 63.3: Own mt5_analytics/config/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `mt5_analytics/config/analytics.json`
+
+## Story 63.4: Own mt5_analytics/core/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `mt5_analytics/core/__init__.py`, `mt5_analytics/core/audit.py`, `mt5_analytics/core/checkpoint.py`, `mt5_analytics/core/coverage.py`, `mt5_analytics/core/daemon.py`, `mt5_analytics/core/mt5_adapter.py`, `mt5_analytics/core/rebuild.py`
+
+## Story 63.5: Own mt5_analytics/core/ (3 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `mt5_analytics/core/shared_pipeline.py`, `mt5_analytics/core/triggers.py`, `mt5_analytics/core/verify.py`
+
+## Story 63.6: Own mt5_analytics/engines/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `mt5_analytics/engines/__init__.py`, `mt5_analytics/engines/deal_characterizer.py`, `mt5_analytics/engines/entry_tracker.py`, `mt5_analytics/engines/features/__init__.py`, `mt5_analytics/engines/features/_bars.py`, `mt5_analytics/engines/features/duration_metrics.py`, `mt5_analytics/engines/features/feature_engine.py`
+
+## Story 63.7: Own mt5_analytics/engines/ (6 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `mt5_analytics/engines/features/feature_record_builder.py`, `mt5_analytics/engines/features/mfe_mae_engine.py`, `mt5_analytics/engines/features/regime_engine.py`, `mt5_analytics/engines/features/rr_engine.py`, `mt5_analytics/engines/features/session_metrics.py`, `mt5_analytics/engines/position_reconstructor.py`
+
+## Story 63.8: Own mt5_analytics/evaluate_bar_features_outcome.py/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `mt5_analytics/evaluate_bar_features_outcome.py`
+
+## Story 63.9: Own mt5_analytics/providers/ (4 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `mt5_analytics/providers/__init__.py`, `mt5_analytics/providers/candle_provider.py`, `mt5_analytics/providers/fixture_provider.py`, `mt5_analytics/providers/mt5_provider.py`
+
+# 65. Epic 65: Coverage: configs/ Production & Experimental
+
+## Story 65.1: Own configs/control_plane/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `configs/control_plane/monitors.json`
+
+## Story 65.2: Own configs/experimental/ (5 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `configs/experimental/config/output_format.json`, `configs/experimental/spec/config/drift_thresholds.json`, `configs/experimental/spec/config/feature_schema.json`, `configs/experimental/spec/config/llm_schema.json`, `configs/experimental/spec/live_rail_tickdb_paper_run.json`
+
+## Story 65.3: Own configs/production/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `configs/production/regime_map.json`, `configs/production/v1_multi_2026_03_force_accept.json`, `configs/production/v2_htfcrt_objgate_shadow_2026_08.json`, `configs/production/v2_multi_2026_04_archived_20260430_080821.json`, `configs/production/v2_multi_2026_04_archived_20260430_111839.json`, `configs/production/v2_multi_2026_04_archived_20260501_100005.json`, `configs/production/v2_multi_2026_04_archived_20260501_183742.json`
+
+## Story 65.4: Own configs/production/ (7 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `configs/production/v2_multi_2026_04_archived_20260502_181418.json`, `configs/production/v2_multi_2026_04_archived_20260506_115338.json`, `configs/production/v2_multi_2026_04_archived_20260506_193401.json`, `configs/production/v2_multi_2026_04_deepdeektry_archived_20260627_160227.json`, `configs/production/v2_multi_2026_04_v3session_probe.json`, `configs/production/v2_multi_dimfix_shadow_2026_07.json`, `configs/production/v2_test.json`
+
+## Story 65.5: Own configs/production/ (2 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `configs/production/v2_test_archived_20260411_200110.json`, `configs/production/v4_crt_sot_2026_08.json`
+
+## Story 65.6: Own configs/promotion_log.jsonl/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `configs/promotion_log.jsonl`
+
+# 76. Epic 76: Coverage: exec_telemetry/ Schemas
+
+## Story 76.1: Own exec_telemetry/schemas/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `exec_telemetry/schemas/__init__.py`
+
+# 78. Epic 78: Coverage: manual_tools/ Utility Scripts
+
+## Story 78.1: Own manual_tools/trade_generator.py/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `manual_tools/trade_generator.py`
+
+# 80. Epic 80: Coverage: tools/ Utility Scripts
+
+## Story 80.1: Own tools/btcusdt_crt_v3_replay.py/ (1 files): implementation ownership coverage
+
+**Confidence:** 65%
+**Creator:** DeepSeek
+**Kind:** implementation
+
+**Files:** `tools/btcusdt_crt_v3_replay.py`
+

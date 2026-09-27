@@ -132,7 +132,7 @@ def main() -> int:
     print("[3/5] Constructing resolver (shipped config, base variant == default) ...")
     resolver = CRTStateResolver()
     thr = resolver._config.get("thresholds", {})
-    depth_max = float(thr.get("retest_depth_max", 0.25))
+    depth_max = float(thr["retest_depth_max"])
     # Declared in market_crt_states.yaml but NOT read by the resolver (confirmed
     # 0 occurrences by grep before this script existed) -- read directly off the
     # loaded config for the "what-if" arithmetic only. Never fed back into the

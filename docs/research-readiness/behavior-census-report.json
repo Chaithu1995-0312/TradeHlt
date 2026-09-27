@@ -1,19 +1,17 @@
 {
   "future_config_opportunities": [
     "core/hierarchical_meta_fusion.py:127 _DEFAULT_WEIGHTS={...numeric...}",
-    "core/signal_audit.py:36 _TRADE_RATE_WARN=0.3",
-    "core/signal_belief_tracker.py:76 _DEFAULT_DECAY=0.7",
     "features/dataset_builder.py:185 LAMBDA_DECAY_DEFAULT=0.0",
     "features/feature_monitor.py:60 DEFAULT_DRIFT_THRESHOLD=2.5",
-    "governance/multi_strategy_validator.py:57 _MIN_PORTFOLIO_WIN_RATE=0.3",
-    "governance/strategy_backtest.py:50 _WARMUP=60",
-    "journal/trade_logger.py:25 MAX_CORRUPTION_RATIO=0.1"
+    "governance/semantic_os.py:124 SUMMARY_50_MAX=320",
+    "governance/semantic_os.py:125 SUMMARY_200_MAX=1400",
+    "governance/strategy_backtest.py:50 _WARMUP=60"
   ],
-  "generated_at": "2026-07-29T05:17:49.387395+00:00",
+  "generated_at": "2026-09-18T07:16:53.615260+00:00",
   "maturity_summary": {
-    "CONFIG_DRIVEN": 32,
-    "CONFIG_WIRED": 10,
-    "HARD_CODED": 8
+    "CONFIG_DRIVEN": 47,
+    "CONFIG_WIRED": 13,
+    "HARD_CODED": 5
   },
   "modules": {
     "config_layer/config_validator.py": {
@@ -32,60 +30,77 @@
       "structural": [],
       "unclassified": []
     },
-    "config_layer/crt_engine_v2.py": {
+    "config_layer/crt_config_provenance.py": {
       "behavioral": [],
       "config_wired": false,
       "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>._MAX_OBSERVE_EVENTS=5000 (L23)"
+      ]
+    },
+    "config_layer/crt_engine_v2.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
       "function_behavioral": [
-        "def UltronRiskEngine.approve.penalty=0.0 (L2064)",
-        "def ExecutionEngine.build_trade.risk_pct=0.005 (L2239)",
-        "def ExecutionEngine.build_trade.risk_pct=0.005 (L2245)",
-        "def CRTEngine.process_candle._body_ratio=0.0 (L2899)",
-        "def CRTEngine.process_candle._freshness_mult=1.0 (L2975)"
+        "def UltronRiskEngine.approve.penalty=0.0 (L2253)",
+        "def ExecutionEngine.build_trade.risk_pct=0.005 (L2436)",
+        "def ExecutionEngine.build_trade.risk_pct=0.005 (L2442)",
+        "def CRTEngine.process_candle._body_ratio=0.0 (L3215)",
+        "def CRTEngine.process_candle._freshness_mult=1.0 (L3291)"
       ],
       "function_constants": [
-        "def TelemetryCollector.on_reset._would_expand_score=0.0 (L582)",
-        "def UltronRiskEngine.score_sweep.base=0.6 (L1784)",
-        "def UltronRiskEngine.approve.penalty=0.0 (L2064)",
-        "def UltronRiskEngine.approve.bonus=0.0 (L2065)",
-        "def ExecutionEngine.build_trade.risk_pct=0.005 (L2239)",
-        "def ExecutionEngine.build_trade.risk_pct=0.005 (L2245)",
-        "def CRTEngine.process_candle._body_ratio=0.0 (L2899)",
-        "def CRTEngine.process_candle._freshness_mult=1.0 (L2975)",
-        "def CRTEngine.process_candle._shadow_disp_br=0.0 (L2977)",
-        "def CRTEngine.process_candle._shadow_disp_br=0.0 (L3010)"
+        "def TelemetryCollector.on_reset._would_expand_score=0.0 (L584)",
+        "def UltronRiskEngine.score_sweep.base=0.6 (L1966)",
+        "def UltronRiskEngine.approve.penalty=0.0 (L2253)",
+        "def UltronRiskEngine.approve.bonus=0.0 (L2254)",
+        "def ExecutionEngine.build_trade.risk_pct=0.005 (L2436)",
+        "def ExecutionEngine.build_trade.risk_pct=0.005 (L2442)",
+        "def ResetLogic.should_reset.retrace=0.0 (L2601)",
+        "def CRTEngine.process_candle._body_ratio=0.0 (L3215)",
+        "def CRTEngine.process_candle._freshness_mult=1.0 (L3291)",
+        "def CRTEngine.process_candle._shadow_disp_br=0.0 (L3293)",
+        "def CRTEngine.process_candle._shadow_disp_br=0.0 (L3326)"
       ],
       "goal_seeking": [
-        "RiskScore.sweep_score=0.0 (L185)",
-        "EngineState._expansion_entry_idx=0 (L278)"
+        "RiskScore.sweep_score=0.0 (L175)",
+        "EngineState._expansion_entry_idx=0 (L280)"
       ],
       "hardcoded": [],
       "is_goal_seeking": true,
       "maturity": "CONFIG_DRIVEN",
       "structural": [
-        "Candle.volume=0.0 (L81)",
-        "Candle.index=0 (L82)",
-        "SweepEvent.candle_index=0 (L175)",
-        "RiskScore.breakout_score=0.0 (L186)",
-        "RiskScore.retest_score=0.0 (L187)",
-        "RiskScore.time_score=0.0 (L188)",
-        "RiskScore.decay_factor=1.0 (L189)",
-        "RiskScore.weights=[0.35, 0.25, 0.2, 0.2] (L195)",
-        "Trade.risk_pct=0.01 (L219)",
-        "Trade.pnl=0.0 (L223)",
-        "Trade.partial_pnl=0.0 (L224)",
-        "Trade.open_candle_index=0 (L227)",
-        "EngineState.atr_abs=0.0 (L249)",
-        "EngineState.retest_candle_index=0 (L252)",
-        "EngineState.current_candle_index=0 (L253)",
-        "EngineState.soft_conf_candles=0 (L258)",
-        "EngineState.ema_fast_val=0.0 (L261)",
-        "EngineState.ema_slow_val=0.0 (L262)",
-        "EngineState.htf_remaining_candles=0 (L264)",
-        "EngineState._displacement_entry_idx=0 (L265)",
-        "EngineState.pending_displacement_ttl=0 (L269)",
-        "EngineState.pending_displacement_formed_idx=0 (L271)",
-        "EngineState.pending_displacement_age_at_reset=0 (L272)"
+        "Candle.volume=0.0 (L94)",
+        "Candle.index=0 (L95)",
+        "SweepEvent.candle_index=0 (L165)",
+        "RiskScore.breakout_score=0.0 (L176)",
+        "RiskScore.retest_score=0.0 (L177)",
+        "RiskScore.time_score=0.0 (L178)",
+        "RiskScore.decay_factor=1.0 (L179)",
+        "RiskScore.weights=[0.35, 0.25, 0.2, 0.2] (L185)",
+        "Trade.risk_pct=0.01 (L209)",
+        "Trade.pnl=0.0 (L213)",
+        "Trade.partial_pnl=0.0 (L214)",
+        "Trade.open_candle_index=0 (L217)",
+        "EngineState.atr_abs=0.0 (L246)",
+        "EngineState.retest_candle_index=0 (L249)",
+        "EngineState.current_candle_index=0 (L250)",
+        "EngineState.soft_conf_candles=0 (L255)",
+        "EngineState.ema_fast_val=0.0 (L258)",
+        "EngineState.ema_slow_val=0.0 (L259)",
+        "EngineState.htf_remaining_candles=0 (L261)",
+        "EngineState._displacement_entry_idx=0 (L262)",
+        "EngineState.pending_displacement_ttl=0 (L266)",
+        "EngineState.pending_displacement_formed_idx=0 (L268)",
+        "EngineState.pending_displacement_age_at_reset=0 (L269)",
+        "EngineState.pending_displacement_created_idx=0 (L275)"
       ],
       "unclassified": []
     },
@@ -156,6 +171,21 @@
         "<module>.FAIL_COUNT=0 (L49)"
       ]
     },
+    "config_layer/m15_structural_range.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "M15StructuralLiquidityRange.child_count=0 (L46)"
+      ]
+    },
     "config_layer/rr/rr_dataset_builder.py": {
       "behavioral": [],
       "config_wired": false,
@@ -199,93 +229,108 @@
       "structural": [],
       "unclassified": []
     },
+    "config_layer/stack_version.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def resolve_epoch.max_epoch=0 (L321)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
     "config_layer/state_identity.py": {
       "behavioral": [
-        "CRTConfig.body_ratio_min=0.7 (L90)",
-        "CRTConfig.atr_multiplier_min=1.5 (L91)",
-        "CRTConfig.retest_depth_max=0.25 (L92)",
-        "CRTConfig.risk_score_weights=[0.35, 0.25, 0.2, 0.2] (L120)",
-        "CRTConfig.score_component_weights=[0.35, 0.25, 0.2, 0.2] (L121)",
-        "CRTConfig.score_decay_lambda=0.05 (L132)",
-        "CRTConfig.score_threshold=0.45 (L135)",
-        "CRTConfig.max_spread_pct=0.05 (L136)",
-        "CRTConfig.confirmation_body_min=0.6 (L139)",
-        "CRTConfig.tp1_atr_multiplier=1.0 (L141)",
-        "CRTConfig.tp2_atr_multiplier=2.0 (L142)",
-        "CRTConfig.breakout_disp_threshold=1.5 (L152)",
-        "CRTConfig.tp1_atr_multiplier_breakout=1.5 (L154)",
-        "CRTConfig.tp1_atr_multiplier_pullback=0.8 (L155)",
-        "CRTConfig.tp1_atr_multiplier_reversal=1.0 (L157)",
-        "CRTConfig.bitnet_main_threshold=0.55 (L158)",
-        "CRTConfig.retrace_reset_pct=0.5 (L174)",
-        "CRTConfig.conf_alpha=0.7 (L181)",
-        "CRTConfig.conf_beta=0.3 (L182)",
-        "CRTConfig.conf_weights=[0.35, 0.35, 0.15, 0.15] (L183)",
-        "CRTConfig.conf_floor=0.2 (L184)",
-        "CRTConfig.weak_link_weight=0.3 (L185)",
-        "CRTConfig.tier_1_threshold=0.75 (L190)",
-        "CRTConfig.tier_2_threshold=0.3 (L191)",
-        "CRTConfig.soft_conf_max_candles=3 (L192)",
-        "CRTConfig.shadow_age_penalty_lambda=0.0 (L213)"
+        "CRTConfig.body_ratio_min=0.7 (L140)",
+        "CRTConfig.atr_multiplier_min=1.5 (L141)",
+        "CRTConfig.retest_depth_max=0.25 (L142)",
+        "CRTConfig.risk_score_weights=[0.35, 0.25, 0.2, 0.2] (L170)",
+        "CRTConfig.score_component_weights=[0.35, 0.25, 0.2, 0.2] (L171)",
+        "CRTConfig.score_decay_lambda=0.05 (L182)",
+        "CRTConfig.score_threshold=0.45 (L185)",
+        "CRTConfig.max_spread_pct=0.05 (L186)",
+        "CRTConfig.confirmation_body_min=0.6 (L189)",
+        "CRTConfig.tp1_atr_multiplier=1.0 (L191)",
+        "CRTConfig.tp2_atr_multiplier=2.0 (L192)",
+        "CRTConfig.breakout_disp_threshold=1.5 (L202)",
+        "CRTConfig.tp1_atr_multiplier_breakout=1.5 (L204)",
+        "CRTConfig.tp1_atr_multiplier_pullback=0.8 (L205)",
+        "CRTConfig.tp1_atr_multiplier_reversal=1.0 (L207)",
+        "CRTConfig.bitnet_main_threshold=0.55 (L208)",
+        "CRTConfig.retrace_reset_pct=0.5 (L226)",
+        "CRTConfig.conf_alpha=0.7 (L233)",
+        "CRTConfig.conf_beta=0.3 (L234)",
+        "CRTConfig.conf_weights=[0.35, 0.35, 0.15, 0.15] (L235)",
+        "CRTConfig.conf_floor=0.2 (L236)",
+        "CRTConfig.weak_link_weight=0.3 (L237)",
+        "CRTConfig.tier_1_threshold=0.75 (L242)",
+        "CRTConfig.tier_2_threshold=0.3 (L243)",
+        "CRTConfig.soft_conf_max_candles=3 (L244)",
+        "CRTConfig.shadow_age_penalty_lambda=0.0 (L289)"
       ],
       "config_wired": false,
       "externally_wired": [
-        "CRTConfig.body_ratio_min=0.7 (L90)",
-        "CRTConfig.atr_multiplier_min=1.5 (L91)",
-        "CRTConfig.retest_depth_max=0.25 (L92)",
-        "CRTConfig.risk_score_weights=[0.35, 0.25, 0.2, 0.2] (L120)",
-        "CRTConfig.score_component_weights=[0.35, 0.25, 0.2, 0.2] (L121)",
-        "CRTConfig.score_decay_lambda=0.05 (L132)",
-        "CRTConfig.score_threshold=0.45 (L135)",
-        "CRTConfig.max_spread_pct=0.05 (L136)",
-        "CRTConfig.confirmation_body_min=0.6 (L139)",
-        "CRTConfig.tp1_atr_multiplier=1.0 (L141)",
-        "CRTConfig.tp2_atr_multiplier=2.0 (L142)",
-        "CRTConfig.breakout_disp_threshold=1.5 (L152)",
-        "CRTConfig.tp1_atr_multiplier_breakout=1.5 (L154)",
-        "CRTConfig.tp1_atr_multiplier_pullback=0.8 (L155)",
-        "CRTConfig.tp1_atr_multiplier_reversal=1.0 (L157)",
-        "CRTConfig.bitnet_main_threshold=0.55 (L158)",
-        "CRTConfig.retrace_reset_pct=0.5 (L174)",
-        "CRTConfig.conf_alpha=0.7 (L181)",
-        "CRTConfig.conf_beta=0.3 (L182)",
-        "CRTConfig.conf_weights=[0.35, 0.35, 0.15, 0.15] (L183)",
-        "CRTConfig.conf_floor=0.2 (L184)",
-        "CRTConfig.weak_link_weight=0.3 (L185)",
-        "CRTConfig.tier_1_threshold=0.75 (L190)",
-        "CRTConfig.tier_2_threshold=0.3 (L191)",
-        "CRTConfig.soft_conf_max_candles=3 (L192)",
-        "CRTConfig.shadow_age_penalty_lambda=0.0 (L213)"
+        "CRTConfig.body_ratio_min=0.7 (L140)",
+        "CRTConfig.atr_multiplier_min=1.5 (L141)",
+        "CRTConfig.retest_depth_max=0.25 (L142)",
+        "CRTConfig.risk_score_weights=[0.35, 0.25, 0.2, 0.2] (L170)",
+        "CRTConfig.score_component_weights=[0.35, 0.25, 0.2, 0.2] (L171)",
+        "CRTConfig.score_decay_lambda=0.05 (L182)",
+        "CRTConfig.score_threshold=0.45 (L185)",
+        "CRTConfig.max_spread_pct=0.05 (L186)",
+        "CRTConfig.confirmation_body_min=0.6 (L189)",
+        "CRTConfig.tp1_atr_multiplier=1.0 (L191)",
+        "CRTConfig.tp2_atr_multiplier=2.0 (L192)",
+        "CRTConfig.breakout_disp_threshold=1.5 (L202)",
+        "CRTConfig.tp1_atr_multiplier_breakout=1.5 (L204)",
+        "CRTConfig.tp1_atr_multiplier_pullback=0.8 (L205)",
+        "CRTConfig.tp1_atr_multiplier_reversal=1.0 (L207)",
+        "CRTConfig.bitnet_main_threshold=0.55 (L208)",
+        "CRTConfig.retrace_reset_pct=0.5 (L226)",
+        "CRTConfig.conf_alpha=0.7 (L233)",
+        "CRTConfig.conf_beta=0.3 (L234)",
+        "CRTConfig.conf_weights=[0.35, 0.35, 0.15, 0.15] (L235)",
+        "CRTConfig.conf_floor=0.2 (L236)",
+        "CRTConfig.weak_link_weight=0.3 (L237)",
+        "CRTConfig.tier_1_threshold=0.75 (L242)",
+        "CRTConfig.tier_2_threshold=0.3 (L243)",
+        "CRTConfig.soft_conf_max_candles=3 (L244)",
+        "CRTConfig.shadow_age_penalty_lambda=0.0 (L289)"
       ],
       "function_behavioral": [],
       "function_constants": [],
       "goal_seeking": [
-        "CRTConfig.max_sweep_age_candles=20 (L99)",
-        "CRTConfig.expansion_atr_min_distance=0.2 (L102)",
-        "CRTConfig.tp1_atr_multiplier_liq_sweep=1.2 (L156)",
-        "CRTConfig.max_expansion_age_candles=495 (L204)",
-        "CRTConfig.max_expansion_age_hours=124 (L205)",
-        "CRTConfig.expansion_age_warn_candles=342 (L206)"
+        "CRTConfig.max_sweep_age_candles=20 (L149)",
+        "CRTConfig.expansion_atr_min_distance=0.2 (L152)",
+        "CRTConfig.tp1_atr_multiplier_liq_sweep=1.2 (L206)",
+        "CRTConfig.max_expansion_age_candles=495 (L280)",
+        "CRTConfig.max_expansion_age_hours=124 (L281)",
+        "CRTConfig.expansion_age_warn_candles=342 (L282)"
       ],
       "hardcoded": [],
       "is_goal_seeking": true,
       "maturity": "CONFIG_WIRED",
       "structural": [
-        "CRTConfig.atr_period=14 (L95)",
-        "CRTConfig.atr_buffer_multiplier=3 (L96)",
-        "CRTConfig.sl_atr_buffer=0.2 (L140)"
+        "CRTConfig.atr_period=14 (L145)",
+        "CRTConfig.atr_buffer_multiplier=3 (L146)",
+        "CRTConfig.sl_atr_buffer=0.2 (L190)"
       ],
       "unclassified": [
-        "CRTConfig.retest_atr_depth_fraction=0.5 (L105)",
-        "CRTConfig.retest_min_depth_atr_fraction=0.1 (L110)",
-        "CRTConfig.max_displacement_strength=2.0 (L129)",
-        "CRTConfig.atr_min_displacement=1.2 (L138)",
-        "CRTConfig.extension_reset_fib=1.618 (L175)",
-        "CRTConfig.news_blackout_minutes=15 (L178)",
-        "CRTConfig.ema_fast=2 (L186)",
-        "CRTConfig.ema_slow=5 (L187)",
-        "CRTConfig.pending_displacement_ttl_candles=4 (L197)",
-        "CRTConfig.shadow_age_norm_candles=0 (L220)"
+        "CRTConfig.retest_atr_depth_fraction=0.5 (L155)",
+        "CRTConfig.retest_min_depth_atr_fraction=0.1 (L160)",
+        "CRTConfig.max_displacement_strength=2.0 (L179)",
+        "CRTConfig.atr_min_displacement=1.2 (L188)",
+        "CRTConfig.extension_reset_fib=1.618 (L227)",
+        "CRTConfig.news_blackout_minutes=15 (L230)",
+        "CRTConfig.ema_fast=2 (L238)",
+        "CRTConfig.ema_slow=5 (L239)",
+        "CRTConfig.pending_displacement_ttl_candles=4 (L250)",
+        "CRTConfig.shadow_age_norm_candles=0 (L296)"
       ]
     },
     "core/acceptance_controller.py": {
@@ -366,11 +411,11 @@
       "externally_wired": [],
       "function_behavioral": [],
       "function_constants": [
-        "def breakout_engine.direction=0 (L174)",
-        "def trap_engine.direction=0 (L207)",
-        "def EngineRunner._compute_weighted_vote.total=0.0 (L607)",
-        "def EngineRunner._evaluate_fusion_path.candle_idx=0 (L624)",
-        "def EngineRunner.run._dir_raw=1 (L727)"
+        "def breakout_engine.direction=0 (L179)",
+        "def trap_engine.direction=0 (L212)",
+        "def EngineRunner._compute_weighted_vote.total=0.0 (L614)",
+        "def EngineRunner._evaluate_fusion_path.candle_idx=0 (L631)",
+        "def EngineRunner.run._dir_raw=1 (L734)"
       ],
       "goal_seeking": [],
       "hardcoded": [],
@@ -516,16 +561,14 @@
       "behavioral": [
         "<module>._TRADE_RATE_WARN=0.3 (L36)"
       ],
-      "config_wired": false,
+      "config_wired": true,
       "externally_wired": [],
       "function_behavioral": [],
       "function_constants": [],
       "goal_seeking": [],
-      "hardcoded": [
-        "<module>._TRADE_RATE_WARN=0.3 (L36)"
-      ],
+      "hardcoded": [],
       "is_goal_seeking": false,
-      "maturity": "HARD_CODED",
+      "maturity": "CONFIG_WIRED",
       "structural": [],
       "unclassified": [
         "<module>._ZONE_PASS_WARN=0.8 (L34)",
@@ -534,23 +577,38 @@
     },
     "core/signal_belief_tracker.py": {
       "behavioral": [
-        "SignalBeliefTracker._DEFAULT_DECAY=0.7 (L76)"
+        "SignalBeliefTracker._DEFAULT_DECAY=0.7 (L79)"
       ],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_WIRED",
+      "structural": [],
+      "unclassified": [
+        "SignalBeliefTracker._DEFAULT_HIGH_CONVICTION=0.65 (L80)",
+        "SignalBeliefTracker._DEFAULT_MIN_CONFIRMS=2 (L81)"
+      ]
+    },
+    "core/ultron_live_adapter.py": {
+      "behavioral": [],
       "config_wired": false,
       "externally_wired": [],
       "function_behavioral": [],
       "function_constants": [],
       "goal_seeking": [],
-      "hardcoded": [
-        "SignalBeliefTracker._DEFAULT_DECAY=0.7 (L76)"
-      ],
+      "hardcoded": [],
       "is_goal_seeking": false,
-      "maturity": "HARD_CODED",
-      "structural": [],
-      "unclassified": [
-        "SignalBeliefTracker._DEFAULT_HIGH_CONVICTION=0.65 (L77)",
-        "SignalBeliefTracker._DEFAULT_MIN_CONFIRMS=2 (L78)"
-      ]
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "LivePosition.unrealized_pct=0.0 (L25)",
+        "LivePortfolioState.realized_pnl=0.0 (L36)",
+        "LivePortfolioState.equity=0.0 (L37)"
+      ],
+      "unclassified": []
     },
     "core/ultron_risk_gate_wrapper.py": {
       "behavioral": [],
@@ -569,17 +627,17 @@
     },
     "engines/live_engine.py": {
       "behavioral": [
-        "LiveEngineConfig.rr_threshold=1.5 (L469)",
-        "LiveEngineConfig.confidence_min=0.55 (L470)",
-        "LiveEngineConfig.ml_override_threshold=0.75 (L472)"
+        "LiveEngineConfig.rr_threshold=1.5 (L466)",
+        "LiveEngineConfig.confidence_min=0.55 (L467)",
+        "LiveEngineConfig.ml_override_threshold=0.75 (L469)"
       ],
       "config_wired": true,
       "externally_wired": [],
       "function_behavioral": [],
       "function_constants": [
-        "def BitNetZoneGate.check.best_score=0.0 (L359)",
-        "def BitNetZoneGate.check.best_thresh=0.0 (L361)",
-        "def _maybe_telegram_training_alert._BYPASS_CHECK_COUNTER=0 (L738)"
+        "def BitNetZoneGate.check.best_score=0.0 (L356)",
+        "def BitNetZoneGate.check.best_thresh=0.0 (L358)",
+        "def _maybe_telegram_training_alert._BYPASS_CHECK_COUNTER=0 (L735)"
       ],
       "goal_seeking": [],
       "hardcoded": [],
@@ -587,11 +645,11 @@
       "maturity": "CONFIG_WIRED",
       "structural": [],
       "unclassified": [
-        "LiveEngineConfig.confidence_strong=0.6 (L471)",
-        "LiveEngineConfig.alert_cooldown_seconds=60 (L473)",
-        "LiveEngineConfig.dedup_candles=4 (L474)",
-        "<module>._BYPASS_CHECK_COUNTER=0 (L717)",
-        "<module>._BYPASS_CHECK_EVERY_N=50 (L718)"
+        "LiveEngineConfig.confidence_strong=0.6 (L468)",
+        "LiveEngineConfig.alert_cooldown_seconds=60 (L470)",
+        "LiveEngineConfig.dedup_candles=4 (L471)",
+        "<module>._BYPASS_CHECK_COUNTER=0 (L714)",
+        "<module>._BYPASS_CHECK_EVERY_N=50 (L715)"
       ]
     },
     "engines/rr_engine.py": {
@@ -647,6 +705,21 @@
       "structural": [],
       "unclassified": []
     },
+    "features/calendar_periods.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>.HOUR_GRID_HOURS={...numeric...} (L61)"
+      ]
+    },
     "features/causal_structure.py": {
       "behavioral": [],
       "config_wired": false,
@@ -668,7 +741,7 @@
       "externally_wired": [],
       "function_behavioral": [],
       "function_constants": [
-        "def build_bitnet_features._nan_replaced=0 (L253)"
+        "def build_bitnet_features._nan_replaced=0 (L273)"
       ],
       "goal_seeking": [],
       "hardcoded": [],
@@ -683,31 +756,35 @@
       "externally_wired": [],
       "function_behavioral": [],
       "function_constants": [
-        "def build_htf_id_timeline.buffer_len=0 (L1116)",
-        "def build_htf_id_timeline.htf_idx=0 (L1117)",
-        "def build_htf_id_timeline.buffer_len=0 (L1124)"
+        "def CRTStateResolver.seed_ohlc.cph=1 (L478)",
+        "def build_htf_id_timeline.buffer_len=0 (L2171)",
+        "def build_htf_id_timeline.htf_idx=0 (L2172)",
+        "def build_htf_id_timeline.buffer_len=0 (L2179)"
       ],
       "goal_seeking": [
-        "CRTStateMemory.sweep_candle_index=-1 (L108)",
-        "CRTStateMemory.expansion_entry_index=-1 (L113)"
+        "CRTStateMemory.sweep_candle_index=-1 (L146)",
+        "CRTStateMemory.expansion_entry_index=-1 (L151)"
       ],
       "hardcoded": [],
       "is_goal_seeking": true,
       "maturity": "CONFIG_DRIVEN",
       "structural": [
-        "CRTStateMemory.htf_bars_in_window=0 (L123)"
+        "CRTStateMemory.htf_bars_in_window=0 (L162)"
       ],
       "unclassified": [
-        "CRTStateMemory.displacement_candle_index=-1 (L109)",
-        "CRTStateMemory.displacement_candle_close=0.0 (L110)",
-        "CRTStateMemory.displacement_direction=0 (L111)",
-        "CRTStateMemory.retest_candle_index=-1 (L112)",
-        "CRTStateMemory.pending_displacement_formed_idx=-1 (L116)",
-        "CRTStateMemory.pending_displacement_ttl=0 (L118)",
-        "CRTStateMemory.candle_index=0 (L120)",
-        "CRTStateMemory.htf_reset_count=0 (L126)",
-        "CRTStateMemory.gap_reset_count=0 (L127)",
-        "CRTStateMemory.forced_reset_count=0 (L128)"
+        "CRTStateMemory.displacement_candle_index=-1 (L147)",
+        "CRTStateMemory.displacement_candle_close=0.0 (L148)",
+        "CRTStateMemory.displacement_direction=0 (L149)",
+        "CRTStateMemory.retest_candle_index=-1 (L150)",
+        "CRTStateMemory.pending_displacement_formed_idx=-1 (L154)",
+        "CRTStateMemory.pending_displacement_ttl=0 (L156)",
+        "CRTStateMemory.pending_displacement_created_idx=-1 (L157)",
+        "CRTStateMemory.candle_index=0 (L159)",
+        "CRTStateMemory.htf_reset_count=0 (L165)",
+        "CRTStateMemory.gap_reset_count=0 (L166)",
+        "CRTStateMemory.forced_reset_count=0 (L167)",
+        "CRTStateMemory.range_h_ref=0.0 (L170)",
+        "CRTStateMemory.range_l_ref=0.0 (L171)"
       ]
     },
     "features/dataset_builder.py": {
@@ -781,11 +858,11 @@
       "config_wired": true,
       "externally_wired": [],
       "function_behavioral": [
-        "def FeaturePipeline.finalize._warmup_budget=300 (L1136)"
+        "def FeaturePipeline.finalize._warmup_budget=300 (L1356)"
       ],
       "function_constants": [
-        "def FeaturePipeline.finalize._warmup_budget=300 (L1136)",
-        "def FeaturePipeline.run.n_drift=0 (L1263)"
+        "def FeaturePipeline.finalize._warmup_budget=300 (L1356)",
+        "def FeaturePipeline.run.n_drift=0 (L1487)"
       ],
       "goal_seeking": [],
       "hardcoded": [],
@@ -805,14 +882,32 @@
       "is_goal_seeking": false,
       "maturity": "CONFIG_DRIVEN",
       "structural": [
-        "<module>.SCHEMA_V2_FEATURE_DIM=35 (L108)",
-        "<module>.CANONICAL_FEATURE_DIM=39 (L114)",
-        "<module>.SCHEMA_V3_FEATURE_DIM=38 (L117)"
+        "<module>.SCHEMA_V2_FEATURE_DIM=35 (L160)",
+        "<module>.CANONICAL_FEATURE_DIM=48 (L166)",
+        "<module>.SCHEMA_V3_FEATURE_DIM=38 (L169)",
+        "<module>.SCHEMA_V4_FEATURE_DIM=39 (L176)"
       ],
       "unclassified": [
-        "<module>.SESSION_UNKNOWN=-1.0 (L167)",
-        "<module>.TREND_MAP={...numeric...} (L169)"
+        "<module>.SESSION_UNKNOWN=-1.0 (L226)",
+        "<module>.TREND_MAP={...numeric...} (L228)"
       ]
+    },
+    "features/market_context.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def MarketContextBuilder.build.known_vector_bound=0 (L302)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "MarketContext.completeness_ratio=0.0 (L166)"
+      ],
+      "unclassified": []
     },
     "features/model_evidence.py": {
       "behavioral": [],
@@ -825,8 +920,23 @@
       "is_goal_seeking": false,
       "maturity": "CONFIG_DRIVEN",
       "structural": [
-        "<module>._VALUE_PRECISION=6 (L64)"
+        "<module>._VALUE_PRECISION=6 (L82)"
       ],
+      "unclassified": []
+    },
+    "features/resolver_supply.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def build_supply_rows.fval=0.0 (L221)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
       "unclassified": []
     },
     "features/session_classifier.py": {
@@ -848,6 +958,23 @@
         "SessionOrdinal.CLOSED=4 (L63)",
         "<module>.DEFAULT_SESSION_WINDOWS_UTC={...numeric...} (L91)"
       ]
+    },
+    "governance/archive_manifest.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "Report.rows=0 (L133)",
+        "Report.manifests=0 (L134)",
+        "Report.archive_files=0 (L135)"
+      ],
+      "unclassified": []
     },
     "governance/expansion_integration.py": {
       "behavioral": [],
@@ -883,24 +1010,40 @@
         "<module>._TYPE_LEVEL={...numeric...} (L44)"
       ]
     },
+    "governance/module_census.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def write_stubs.max_n=0 (L177)",
+        "def census_report.inits=0 (L225)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
     "governance/multi_strategy_validator.py": {
       "behavioral": [
-        "<module>._MIN_PORTFOLIO_WIN_RATE=0.3 (L57)"
+        "<module>._MIN_PORTFOLIO_WIN_RATE=0.3 (L58)",
+        "<module>._WARMUP_CANDLES=60 (L60)"
       ],
-      "config_wired": false,
+      "config_wired": true,
       "externally_wired": [],
       "function_behavioral": [],
       "function_constants": [],
       "goal_seeking": [],
-      "hardcoded": [
-        "<module>._MIN_PORTFOLIO_WIN_RATE=0.3 (L57)"
-      ],
+      "hardcoded": [],
       "is_goal_seeking": false,
-      "maturity": "HARD_CODED",
+      "maturity": "CONFIG_WIRED",
       "structural": [],
       "unclassified": [
-        "<module>._MIN_STRATEGY_TRADES=5 (L56)",
-        "<module>._MAX_PORTFOLIO_DRAWDOWN=75000000.0 (L58)"
+        "<module>._MIN_STRATEGY_TRADES=5 (L57)",
+        "<module>._MAX_PORTFOLIO_DRAWDOWN=75000000.0 (L59)",
+        "<module>._MAX_FORWARD_CANDLES=40 (L61)"
       ]
     },
     "governance/portfolio_validation.py": {
@@ -934,8 +1077,8 @@
       "function_behavioral": [],
       "function_constants": [
         "def PromotionManager._execute_promotion.score_std_dev=0.0 (L389)",
-        "def PromotionManager._write_to_registry.W=60 (L582)",
-        "def PromotionManager._fail.W=60 (L615)"
+        "def PromotionManager._write_to_registry.W=60 (L585)",
+        "def PromotionManager._fail.W=60 (L618)"
       ],
       "goal_seeking": [],
       "hardcoded": [],
@@ -943,6 +1086,76 @@
       "maturity": "CONFIG_DRIVEN",
       "structural": [],
       "unclassified": []
+    },
+    "governance/script_census.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def write_stubs.max_n=0 (L203)",
+        "def census_report.env_hits=0 (L248)",
+        "def census_report.main_hits=0 (L249)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>.THIN_MAX_NON_IMPORT_LOC=40 (L34)"
+      ]
+    },
+    "governance/script_seed.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def apply_control_plane_links.linked=0 (L61)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "governance/semantic_os.py": {
+      "behavioral": [
+        "<module>.SUMMARY_50_MAX=320 (L124)",
+        "<module>.SUMMARY_200_MAX=1400 (L125)"
+      ],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [
+        "<module>.SUMMARY_50_MAX=320 (L124)",
+        "<module>.SUMMARY_200_MAX=1400 (L125)"
+      ],
+      "is_goal_seeking": false,
+      "maturity": "HARD_CODED",
+      "structural": [
+        "<module>._DRIFT_WINDOW=30 (L224)"
+      ],
+      "unclassified": []
+    },
+    "governance/semantic_query.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>._CLASS_RANK={...numeric...} (L42)"
+      ]
     },
     "governance/shadow_promotion_gate.py": {
       "behavioral": [],
@@ -961,13 +1174,10 @@
     },
     "governance/strategy_backtest.py": {
       "behavioral": [
-        "<module>._WARMUP=60 (L50)",
-        "StrategyMetrics.win_rate=0.0 (L66)"
+        "<module>._WARMUP=60 (L50)"
       ],
       "config_wired": false,
-      "externally_wired": [
-        "StrategyMetrics.win_rate=0.0 (L66)"
-      ],
+      "externally_wired": [],
       "function_behavioral": [],
       "function_constants": [],
       "goal_seeking": [],
@@ -976,10 +1186,7 @@
       ],
       "is_goal_seeking": false,
       "maturity": "HARD_CODED",
-      "structural": [],
-      "unclassified": [
-        "<module>._USD_TO_INR=84.0 (L49)",
-        "<module>._MAX_FWD=40 (L51)",
+      "structural": [
         "StrategyMetrics.trade_count=0 (L58)",
         "StrategyMetrics.win_count=0 (L59)",
         "StrategyMetrics.loss_count=0 (L60)",
@@ -988,9 +1195,14 @@
         "StrategyMetrics.gross_profit=0.0 (L63)",
         "StrategyMetrics.gross_loss=0.0 (L64)",
         "StrategyMetrics.max_drawdown=0.0 (L65)",
+        "StrategyMetrics.win_rate=0.0 (L66)",
         "StrategyMetrics.profit_factor=0.0 (L67)",
         "StrategyMetrics.expectancy_inr=0.0 (L68)",
         "StrategyMetrics.score=0.0 (L69)"
+      ],
+      "unclassified": [
+        "<module>._USD_TO_INR=84.0 (L49)",
+        "<module>._MAX_FWD=40 (L51)"
       ]
     },
     "journal/schema.py": {
@@ -1017,21 +1229,19 @@
     },
     "journal/trade_logger.py": {
       "behavioral": [
-        "<module>.MAX_CORRUPTION_RATIO=0.1 (L25)"
+        "<module>.MAX_CORRUPTION_RATIO=0.1 (L28)"
       ],
-      "config_wired": false,
+      "config_wired": true,
       "externally_wired": [],
       "function_behavioral": [],
       "function_constants": [
-        "def TradeLogger.load_all.malformed=0 (L84)",
-        "def TradeLogger.load_all.valid=0 (L85)"
+        "def TradeLogger.load_all.malformed=0 (L112)",
+        "def TradeLogger.load_all.valid=0 (L113)"
       ],
       "goal_seeking": [],
-      "hardcoded": [
-        "<module>.MAX_CORRUPTION_RATIO=0.1 (L25)"
-      ],
+      "hardcoded": [],
       "is_goal_seeking": false,
-      "maturity": "HARD_CODED",
+      "maturity": "CONFIG_WIRED",
       "structural": [],
       "unclassified": []
     },
@@ -1082,109 +1292,124 @@
       "unclassified": []
     },
     "runtime/backtest_v2.py": {
-      "behavioral": [
-        "BacktestMetrics.max_drawdown_pct=0.0 (L1190)",
-        "BacktestMetrics.total_return_pct=0.0 (L1205)",
-        "BacktestMetrics.annualized_return_pct=0.0 (L1206)"
-      ],
+      "behavioral": [],
       "config_wired": true,
-      "externally_wired": [
-        "BacktestMetrics.max_drawdown_pct=0.0 (L1190)",
-        "BacktestMetrics.total_return_pct=0.0 (L1205)"
-      ],
+      "externally_wired": [],
       "function_behavioral": [],
       "function_constants": [
-        "def CapitalCurve.max_drawdown_pct.max_dd=0.0 (L438)",
-        "def CandleLoader.stream._candle_pos=0 (L779)",
-        "def MetricsEngine._max_dd_rr.eq=0.0 (L1469)",
-        "def MetricsEngine._max_dd_rr.peak=0.0 (L1469)",
-        "def MetricsEngine._max_dd_rr.dd=0.0 (L1469)",
-        "def MetricsEngine._streaks.mw=0 (L1477)",
-        "def MetricsEngine._streaks.ml=0 (L1477)",
-        "def MetricsEngine._streaks.cw=0 (L1477)",
-        "def MetricsEngine._streaks.cl=0 (L1477)",
-        "def MetricsEngine._streaks.cl=0 (L1479)",
-        "def MetricsEngine._streaks.cw=0 (L1480)",
-        "def BacktestRunner.run.candle_idx=0 (L1990)",
-        "def BacktestRunner.run.gap_resets=0 (L1993)",
-        "def BacktestRunner.run.last_risk_score=0.0 (L1996)",
-        "def BacktestRunner.run._drift_pause_remaining=0 (L2020)",
-        "def BacktestRunner.run._hard_drift_pauses=0 (L2021)",
-        "def BacktestRunner.run._engine_rejected_count=0 (L2087)",
-        "def BacktestRunner.run._htf_pos=0 (L2108)",
-        "def BacktestRunner.run._shadow_sweep_count=0 (L2112)",
-        "def BacktestRunner.run._shadow_expansion_count=0 (L2113)",
-        "def BacktestRunner.run._shadow_leak_count=0 (L2114)",
-        "def BacktestRunner.run._htf_pos=1 (L2130)",
-        "def BacktestRunner.run._strat_consensus_score=-1.0 (L2404)",
-        "def BacktestRunner.run._strat_consensus_dir=0 (L2405)",
-        "def BacktestRunner.run._bn_score_val=0.0 (L2480)"
+        "def CapitalCurve.max_drawdown_pct.max_dd=0.0 (L528)",
+        "def CandleLoader.stream._candle_pos=0 (L890)",
+        "def MetricsEngine._max_dd_rr.eq=0.0 (L1737)",
+        "def MetricsEngine._max_dd_rr.peak=0.0 (L1737)",
+        "def MetricsEngine._max_dd_rr.dd=0.0 (L1737)",
+        "def MetricsEngine._streaks.mw=0 (L1745)",
+        "def MetricsEngine._streaks.ml=0 (L1745)",
+        "def MetricsEngine._streaks.cw=0 (L1745)",
+        "def MetricsEngine._streaks.cl=0 (L1745)",
+        "def MetricsEngine._streaks.cl=0 (L1747)",
+        "def MetricsEngine._streaks.cw=0 (L1748)",
+        "def BacktestRunner.run.candle_idx=0 (L2680)",
+        "def BacktestRunner.run.gap_resets=0 (L2683)",
+        "def BacktestRunner.run.last_risk_score=0.0 (L2686)",
+        "def BacktestRunner.run._drift_pause_remaining=0 (L2710)",
+        "def BacktestRunner.run._hard_drift_pauses=0 (L2711)",
+        "def BacktestRunner.run._engine_rejected_count=0 (L2777)",
+        "def BacktestRunner.run._htf_pos=0 (L2798)",
+        "def BacktestRunner.run._shadow_sweep_count=0 (L2802)",
+        "def BacktestRunner.run._shadow_expansion_count=0 (L2803)",
+        "def BacktestRunner.run._shadow_leak_count=0 (L2804)",
+        "def BacktestRunner.run._htf_pos=1 (L2827)",
+        "def BacktestRunner.run._strat_consensus_score=-1.0 (L3250)",
+        "def BacktestRunner.run._strat_consensus_dir=0 (L3251)",
+        "def BacktestRunner.run._bn_score_val=0.0 (L3354)"
       ],
       "goal_seeking": [],
       "hardcoded": [],
       "is_goal_seeking": false,
-      "maturity": "CONFIG_WIRED",
+      "maturity": "CONFIG_DRIVEN",
       "structural": [
-        "TradePathStats.mfe_price=0.0 (L262)",
-        "TradePathStats.mae_price=0.0 (L263)",
-        "TradePathStats.bars_to_peak=0 (L264)",
-        "TradePathStats.bars_to_trough=0 (L265)",
-        "TradePathStats.bars_observed=0 (L266)",
-        "TradePathStats.mfe_rr=0.0 (L268)",
-        "TradePathStats.mae_rr=0.0 (L269)",
-        "TradeRecord.entry_price_fill=0.0 (L302)",
-        "TradeRecord.exit_price_fill=0.0 (L303)",
-        "TradeRecord.candle_open=0 (L307)",
-        "TradeRecord.candle_close=0 (L308)",
-        "TradeRecord.pnl_pips_raw=0.0 (L310)",
-        "TradeRecord.pnl_pips_net=0.0 (L311)",
-        "TradeRecord.pnl_rr_raw=0.0 (L312)",
-        "TradeRecord.pnl_rr_net=0.0 (L313)",
-        "TradeRecord.slippage_pips=0.0 (L314)",
-        "TradeRecord.spread_pips=0.0 (L315)",
-        "TradeRecord.capital_before=0.0 (L317)",
-        "TradeRecord.capital_after=0.0 (L318)",
-        "TradeRecord.position_size=0.0 (L319)",
-        "TradeRecord.risk_score=0.0 (L321)",
-        "TradeRecord.risk_pct=0.0 (L322)",
-        "TradeRecord.week_of_year=0 (L327)",
-        "TradeRecord.day_of_week=0 (L328)",
-        "TradeRecord.hour_of_day=0 (L329)",
-        "TradeRecord.live_atr=0.0 (L335)",
-        "TradeRecord.live_ema_fast=0.0 (L336)",
-        "TradeRecord.live_ema_slow=0.0 (L337)",
-        "TradeRecord.cached_retest_depth=0.0 (L338)",
-        "TradeRecord.cached_body_ratio=0.0 (L339)",
-        "TradeRecord.cached_disp_strength=0.0 (L340)",
-        "TradeRecord.bitnet_score_at_entry=0.0 (L347)",
-        "RejectionRecord.risk_score=0.0 (L379)"
+        "TradePathStats.mfe_price=0.0 (L346)",
+        "TradePathStats.mae_price=0.0 (L347)",
+        "TradePathStats.bars_to_peak=0 (L348)",
+        "TradePathStats.bars_to_trough=0 (L349)",
+        "TradePathStats.bars_observed=0 (L350)",
+        "TradePathStats.mfe_rr=0.0 (L352)",
+        "TradePathStats.mae_rr=0.0 (L353)",
+        "TradeRecord.entry_price_fill=0.0 (L386)",
+        "TradeRecord.exit_price_fill=0.0 (L387)",
+        "TradeRecord.candle_open=0 (L391)",
+        "TradeRecord.candle_close=0 (L392)",
+        "TradeRecord.pnl_pips_raw=0.0 (L394)",
+        "TradeRecord.pnl_pips_net=0.0 (L395)",
+        "TradeRecord.pnl_rr_raw=0.0 (L396)",
+        "TradeRecord.pnl_rr_net=0.0 (L397)",
+        "TradeRecord.slippage_pips=0.0 (L398)",
+        "TradeRecord.spread_pips=0.0 (L399)",
+        "TradeRecord.capital_before=0.0 (L401)",
+        "TradeRecord.capital_after=0.0 (L402)",
+        "TradeRecord.position_size=0.0 (L403)",
+        "TradeRecord.risk_score=0.0 (L405)",
+        "TradeRecord.risk_pct=0.0 (L406)",
+        "TradeRecord.week_of_year=0 (L411)",
+        "TradeRecord.day_of_week=0 (L412)",
+        "TradeRecord.hour_of_day=0 (L413)",
+        "TradeRecord.live_atr=0.0 (L419)",
+        "TradeRecord.live_ema_fast=0.0 (L420)",
+        "TradeRecord.live_ema_slow=0.0 (L421)",
+        "TradeRecord.cached_retest_depth=0.0 (L422)",
+        "TradeRecord.cached_body_ratio=0.0 (L423)",
+        "TradeRecord.cached_disp_strength=0.0 (L424)",
+        "TradeRecord.bitnet_score_at_entry=0.0 (L431)",
+        "RejectionRecord.risk_score=0.0 (L469)",
+        "BacktestMetrics.total_candles=0 (L1381)",
+        "BacktestMetrics.gap_resets=0 (L1382)",
+        "BacktestMetrics.total_setups=0 (L1383)",
+        "BacktestMetrics.approved_trades=0 (L1384)",
+        "BacktestMetrics.rejected_trades=0 (L1385)",
+        "BacktestMetrics.wins=0 (L1386)",
+        "BacktestMetrics.losses=0 (L1387)",
+        "BacktestMetrics.tp1_hits=0 (L1388)",
+        "BacktestMetrics.tp2_hits=0 (L1389)",
+        "BacktestMetrics.total_pnl_rr_raw=0.0 (L1390)",
+        "BacktestMetrics.total_pnl_rr_net=0.0 (L1391)",
+        "BacktestMetrics.max_drawdown_rr=0.0 (L1392)",
+        "BacktestMetrics.max_drawdown_pct=0.0 (L1393)",
+        "BacktestMetrics.max_win_streak=0 (L1394)",
+        "BacktestMetrics.max_loss_streak=0 (L1395)",
+        "BacktestMetrics.avg_trade_duration=0.0 (L1396)",
+        "BacktestMetrics.hard_drift_pauses=0 (L1402)",
+        "BacktestMetrics.gross_win_rr=0.0 (L1405)",
+        "BacktestMetrics.gross_loss_rr=0.0 (L1406)",
+        "BacktestMetrics.profit_factor=0.0 (L1407)",
+        "BacktestMetrics.total_return_pct=0.0 (L1408)",
+        "BacktestMetrics.annualized_return_pct=0.0 (L1409)",
+        "BacktestMetrics.return_to_max_dd=0.0 (L1410)",
+        "BacktestMetrics.trades_per_month=0.0 (L1411)",
+        "BacktestMetrics.htf_candles_per_range=0 (L1419)"
       ],
       "unclassified": [
-        "<module>._ROI_DEFAULTS={...numeric...} (L123)",
-        "BacktestConfig.pip_size=0.0001 (L174)",
-        "BacktestMetrics.total_candles=0 (L1178)",
-        "BacktestMetrics.gap_resets=0 (L1179)",
-        "BacktestMetrics.total_setups=0 (L1180)",
-        "BacktestMetrics.approved_trades=0 (L1181)",
-        "BacktestMetrics.rejected_trades=0 (L1182)",
-        "BacktestMetrics.wins=0 (L1183)",
-        "BacktestMetrics.losses=0 (L1184)",
-        "BacktestMetrics.tp1_hits=0 (L1185)",
-        "BacktestMetrics.tp2_hits=0 (L1186)",
-        "BacktestMetrics.total_pnl_rr_raw=0.0 (L1187)",
-        "BacktestMetrics.total_pnl_rr_net=0.0 (L1188)",
-        "BacktestMetrics.max_drawdown_rr=0.0 (L1189)",
-        "BacktestMetrics.max_win_streak=0 (L1191)",
-        "BacktestMetrics.max_loss_streak=0 (L1192)",
-        "BacktestMetrics.avg_trade_duration=0.0 (L1193)",
-        "BacktestMetrics.hard_drift_pauses=0 (L1199)",
-        "BacktestMetrics.gross_win_rr=0.0 (L1202)",
-        "BacktestMetrics.gross_loss_rr=0.0 (L1203)",
-        "BacktestMetrics.profit_factor=0.0 (L1204)",
-        "BacktestMetrics.return_to_max_dd=0.0 (L1207)",
-        "BacktestMetrics.trades_per_month=0.0 (L1208)",
-        "MultiInstrumentRunner.INSTRUMENT_PIP={...numeric...} (L2888)"
+        "<module>._ROI_DEFAULTS={...numeric...} (L127)",
+        "BacktestConfig.pip_size=0.0001 (L220)",
+        "MultiInstrumentRunner.INSTRUMENT_PIP={...numeric...} (L3885)"
       ]
+    },
+    "runtime/bar_structure_snapshot.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def BarStructureEmitter._level_block.pdh_d=0.0 (L612)",
+        "def BarStructureEmitter._level_block.pdl_d=0.0 (L612)",
+        "def BarStructureEmitter._level_block.eqh_d=0.0 (L612)",
+        "def BarStructureEmitter._level_block.eql_d=0.0 (L612)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
     },
     "runtime/crt_fail_reason_counters.py": {
       "behavioral": [],
@@ -1200,6 +1425,21 @@
       "unclassified": [
         "CRTFailReasonCounters.evaluations=0 (L38)",
         "CRTFailReasonCounters.events_at_start=0 (L47)"
+      ]
+    },
+    "runtime/layer_trace.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>.DEFAULT_FLUSH_EVERY=200 (L75)"
       ]
     },
     "runtime/unified_replay_harness.py": {
@@ -1232,9 +1472,9 @@
     }
   },
   "summary": {
-    "BEHAVIORAL": 75,
+    "BEHAVIORAL": 74,
     "GOAL_SEEKING": 14,
-    "STRUCTURAL": 87,
-    "UNCLASSIFIED": 99
+    "STRUCTURAL": 134,
+    "UNCLASSIFIED": 77
   }
 }

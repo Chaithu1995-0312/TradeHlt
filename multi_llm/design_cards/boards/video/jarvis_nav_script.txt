@@ -1,0 +1,13 @@
+Good evening. I am your local operations guide — think Jarvis for this trading desk.
+
+Tonight we navigate the infrastructure only. Dry run. No live orders. No fabricated edge.
+
+First stop: the system map. Design memory informs Grok Bot. Grok Bot supervises the local control plane on your laptop — port eight seven eight seven. AWS and hot execution remain deferred.
+
+Second: the fail-closed spine. Market data becomes features. Ultron handles risk mathematics. Sherlock and Saul advise. Jarvis — the gate — grants or denies permission. Decision is not execution. Any failure means no trade.
+
+Third: mode lock. Dry run and shadow are permitted. Hot is forbidden until you explicitly unlock it. Fail closed defaults to deny.
+
+Fourth: the reel path. We show Grok Bot and Claude coordinating the desk. Then a live setup walkthrough may be offered for one thousand rupees — clarity of rails, not a promise of profit.
+
+That concludes the navigation. Local plane ready. Hot sealed. Standing by for your next instruction.

@@ -79,7 +79,7 @@ class RegimeWeightSearcher:
         
         # Load and filter trades
         if trades is None:
-            trades = TradeLogger().load_all()
+            trades = TradeLogger.from_prod_config().load_all()
             
         regime_trades = [t for t in trades if t.get("regime") == regime]
         

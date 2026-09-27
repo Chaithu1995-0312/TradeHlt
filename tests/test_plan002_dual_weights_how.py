@@ -28,6 +28,7 @@ from config_layer.crt_engine_v2 import CRTConfig, RiskScore, UltronRiskEngine
 from config_layer.production_config import get_prod_config, get_prod_section
 from engines import crt_engine
 from engines.scoring_engine import compute_scores
+from tests.helpers.crt_config import crt_config_for_test
 
 _LEGACY = (0.35, 0.25, 0.20, 0.20)
 
@@ -35,7 +36,7 @@ _LEGACY = (0.35, 0.25, 0.20, 0.20)
 # ── 1. defaults are the legacy literals ──────────────────────────────────────
 
 def test_dataclass_defaults_are_legacy():
-    cfg = CRTConfig()
+    cfg = crt_config_for_test()
     assert tuple(cfg.risk_score_weights) == pytest.approx(_LEGACY)
     assert tuple(cfg.score_component_weights) == pytest.approx(_LEGACY)
     assert tuple(RiskScore().weights) == pytest.approx(_LEGACY)
@@ -43,7 +44,7 @@ def test_dataclass_defaults_are_legacy():
 
 def test_conf_weights_not_aliased():
     """conf_weights is a DIFFERENT semantic (soft-confirmation) — must stay untouched."""
-    assert tuple(CRTConfig().conf_weights) == pytest.approx((0.35, 0.35, 0.15, 0.15))
+    assert tuple(crt_config_for_test().conf_weights) == pytest.approx((0.35, 0.35, 0.15, 0.15))
 
 
 # ── 2. Ultron path: RiskScore.final ─────────────────────────────────────────
@@ -70,7 +71,7 @@ def test_riskscore_dynamism_and_engine_injection():
                    time_score=0.0, weights=(1.0, 0.0, 0.0, 0.0))
     assert rs.final == 1.0
     # engine injection: compute_score builds RiskScore with config weights
-    cfg = CRTConfig(risk_score_weights=[0.0, 1.0, 0.0, 0.0])
+    cfg = crt_config_for_test(risk_score_weights=[0.0, 1.0, 0.0, 0.0])
     assert tuple(cfg.risk_score_weights) == (0.0, 1.0, 0.0, 0.0)  # list→tuple coercion
     eng = UltronRiskEngine(cfg)
 
@@ -133,7 +134,7 @@ def test_engines_path_dynamism_via_context():
 # ── 4. NO aliasing between the two identities ────────────────────────────────
 
 def test_no_aliasing_between_paths():
-    cfg = CRTConfig(risk_score_weights=[0.9, 0.1, 0.0, 0.0])
+    cfg = crt_config_for_test(risk_score_weights=[0.9, 0.1, 0.0, 0.0])
     # Ultron path moved…
     rs = RiskScore(sweep_score=1.0, breakout_score=1.0, retest_score=1.0, time_score=1.0,
                    weights=tuple(cfg.risk_score_weights))
@@ -141,7 +142,7 @@ def test_no_aliasing_between_paths():
     # …engines-path key is untouched by construction
     assert tuple(cfg.score_component_weights) == pytest.approx(_LEGACY)
     # and vice versa
-    cfg2 = CRTConfig(score_component_weights=[0.0, 0.0, 0.0, 1.0])
+    cfg2 = crt_config_for_test(score_component_weights=[0.0, 0.0, 0.0, 1.0])
     assert tuple(cfg2.risk_score_weights) == pytest.approx(_LEGACY)
 
 
@@ -160,7 +161,7 @@ def test_no_aliasing_between_paths():
 ])
 def test_fail_closed(key, bad):
     with pytest.raises(ValueError):
-        CRTConfig(**{key: bad})
+        crt_config_for_test(**{key: bad})
 
 
 # ── 6. production load exposes both keys (HOW ownership) ────────────────────

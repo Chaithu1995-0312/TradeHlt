@@ -72,12 +72,48 @@ class SignalBeliefTracker:
             production JSON.  Falls back to class-level defaults when absent.
     """
 
-    # Class-level defaults — overridden by config at construction time.
+    # Canonical defaults for unit-test / programmatic construction ONLY. The production path
+    # goes through from_prod_config(), which strict-reads every key and raises on a missing one
+    # (§6.5 A1: no silent config defaults). These literals are mirrored byte-for-byte by
+    # engine_runner.signal_belief in the production JSON.
     _DEFAULT_DECAY           = 0.70
     _DEFAULT_HIGH_CONVICTION = 0.65
     _DEFAULT_MIN_CONFIRMS    = 2
 
+    _REQUIRED_KEYS = ("decay", "high_conviction_threshold", "min_confirmations")
+
+    @classmethod
+    def from_prod_config(cls, base_config: dict | None = None) -> "SignalBeliefTracker":
+        """Production constructor — fail-fast. Strict-reads every knob from
+        ``engine_runner.signal_belief`` (nested, not top-level); a missing section or key raises.
+
+        Reached only when the gate is enabled: EngineRunner checks ``_belief_enabled`` before
+        asking the registry for a tracker (engine_runner.py), and BeliefRegistry creates trackers
+        lazily — so this never raises for the 20 production configs that omit the section while
+        leaving the gate off.
+        """
+        from config_layer.production_config import get_prod_section
+        section = (get_prod_section("engine_runner") or {}).get("signal_belief")
+        if not isinstance(section, dict):
+            raise KeyError(
+                "Required config section 'engine_runner.signal_belief' missing. "
+                "Add it to the production config (config-first doctrine: no silent defaults)."
+            )
+        for key in cls._REQUIRED_KEYS:
+            if key not in section:
+                raise KeyError(
+                    f"Required config key '{key}' missing from 'engine_runner.signal_belief' "
+                    f"section. Add it to the production config (config-first doctrine: no "
+                    f"silent defaults)."
+                )
+        merged = dict(base_config or {})
+        merged.update({k: section[k] for k in cls._REQUIRED_KEYS})
+        return cls(merged)
+
     def __init__(self, config: dict | None = None) -> None:
+        # Two-tier (mirrors AcceptanceController): these .get() fallbacks are the TEST /
+        # programmatic seam, never the production path — the live path supplies every key via
+        # from_prod_config (fail-fast, no silent config default).
         cfg = config or {}
         self._decay           = float(cfg.get("decay",                    self._DEFAULT_DECAY))
         self._high_conviction = float(cfg.get("high_conviction_threshold", self._DEFAULT_HIGH_CONVICTION))
@@ -169,9 +205,27 @@ class BeliefRegistry:
         self._trackers: dict[str, SignalBeliefTracker] = {}
 
     def get(self, instrument: str, timeframe: str) -> SignalBeliefTracker:
-        """Return (or lazily create) the tracker for this instrument+timeframe pair."""
+        """Return (or lazily create) the tracker for this instrument+timeframe pair.
+
+        Fail-fast when the gate is ARMED: if the config says ``enabled``, every behavioral knob
+        must be present or this raises (§6.5 A1). Validating here rather than in ``__init__`` is
+        deliberate — BacktestRunner wraps registry CONSTRUCTION in a try/except that degrades to
+        "belief gate DISABLED", so a constructor raise would be swallowed into a fail-open. This
+        method is called from EngineRunner instead, outside that guard, so the error is fatal.
+        An unarmed or bare registry (every unit test, and the 20 production configs that omit the
+        section) is untouched.
+        """
         key = f"{instrument}:{timeframe}"
         if key not in self._trackers:
+            if bool(self._config.get("enabled", False)):
+                missing = [k for k in SignalBeliefTracker._REQUIRED_KEYS if k not in self._config]
+                if missing:
+                    raise KeyError(
+                        f"Required config key(s) {missing} missing from "
+                        f"'engine_runner.signal_belief' while the belief gate is enabled. "
+                        f"Add them to the production config (config-first doctrine: no silent "
+                        f"defaults)."
+                    )
             self._trackers[key] = SignalBeliefTracker(self._config)
         return self._trackers[key]
 

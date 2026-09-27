@@ -14,6 +14,7 @@ from config_layer.crt_engine_v2 import Range, RangeDetector
 from config_layer.state_identity import CRTConfig, Direction
 
 from tests.Grok._fixtures import candle, engine_ready_short, executor
+from tests.helpers.crt_config import crt_config_for_test
 
 
 def test_relative_atr_as_sl_operand_is_not_a_protective_buffer():
@@ -87,7 +88,7 @@ def test_hundred_x_price_scale_blows_relative_formula_if_abs_expected():
     If a consumer multiplies sl_atr_buffer * (atr_rel) * close they get the
     absolute buffer; if they forget `* close` the buffer vanishes at high prices.
     """
-    det = RangeDetector(CRTConfig())
+    det = RangeDetector(crt_config_for_test())
 
     def series(px: float):
         return [

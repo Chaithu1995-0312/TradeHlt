@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+from tests.helpers.crt_config import crt_config_for_test
 
 _ROOT = Path(__file__).resolve().parents[1]
 _PROBE = _ROOT / "scripts" / "analysis" / "fm027_displacement_retrace_certification.py"
@@ -154,7 +155,7 @@ def test_crt_emission_parity(probe):
     )
     from features import derived_math as dm
 
-    cfg = CRTConfig(
+    cfg = crt_config_for_test(
         retest_depth_max=1.0,
         retest_atr_depth_fraction=1.0,
         max_displacement_strength=10.0,

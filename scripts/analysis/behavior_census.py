@@ -123,6 +123,13 @@ _MIGRATED_WIRED = (
     "core/regime_governor.py",
     "core/convergence_controller.py",
     "core/acceptance_controller.py",
+    # Phase 3 (2026-09-18): migrated as whole sibling groups, because this census matches
+    # constants by NAME and so flagged only one member of each group (e.g. _TRADE_RATE_WARN but
+    # not the two identical-purpose thresholds three lines away).
+    "core/signal_audit.py",
+    "core/signal_belief_tracker.py",
+    "governance/multi_strategy_validator.py",
+    "journal/trade_logger.py",
 )
 
 
@@ -167,8 +174,18 @@ def _numeric_repr(node: ast.AST) -> str | None:
 # crt_engine_v2 whose field defaults the actual tunable knobs already govern from config
 # (e.g. RiskScore.decay_factor←score_decay_lambda, Trade.risk_pct←sizing_bands,
 #  EngineState.soft_conf_candles←soft_conf_max_candles).
-_RESULT_SCHEMA_RE = re.compile(r"(Result|Record|Stats|Snapshot|Report|Output|State)$")
-_RUNTIME_STATE_CLASSES = {"Trade", "RiskScore", "Candle", "SweepEvent"}
+# `Metrics` added 2026-09-18: a *Metrics container is a computed OUTPUT by definition, so its
+# zero-initialised field defaults (win_rate=0.0, max_drawdown_pct=0.0) are accumulator seeds, not
+# knobs. Verified safe: StrategyMetrics / BacktestMetrics / HeadMetrics are the only *Metrics
+# classes in src/, and all three are result containers. `Context` was deliberately NOT added to
+# this regex — 8 classes carry that suffix and some could hold a genuine knob, so the two known
+# result-shaped ones are curated below instead.
+_RESULT_SCHEMA_RE = re.compile(r"(Result|Record|Stats|Metrics|Snapshot|Report|Output|State)$")
+_RUNTIME_STATE_CLASSES = {"Trade", "RiskScore", "Candle", "SweepEvent",
+                          # 2026-09-18: live-position record (unrealized_pct=0.0 is filled from
+                          # the broker) and the computed context record (completeness_ratio=0.0 is
+                          # derived from dimension_records) — outputs, not tunables.
+                          "LivePosition", "MarketContext"}
 
 
 def _classify(name: str, rel: str, scope: str = "<module>") -> str:

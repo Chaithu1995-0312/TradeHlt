@@ -10,6 +10,7 @@ Covers:
 
 import sys
 from pathlib import Path
+from tests.helpers.crt_config import crt_config_for_test
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
@@ -72,7 +73,7 @@ def test_funnel_counts_populated_from_external_dict():
 
 @requires_tp3
 def test_crt_config_tp3_defaults_off():
-    cfg = CRTConfig()
+    cfg = crt_config_for_test()
     assert cfg.tp3_enabled is False
     assert cfg.tp3_atr_multiplier == 3.0
 
@@ -95,7 +96,7 @@ def test_trade_tp3_price_default_zero():
 # ─────────────────────────────────────────────────────────────────
 
 def _make_executor(tp3_enabled: bool = False) -> ExecutionEngine:
-    cfg = CRTConfig(tp3_enabled=tp3_enabled, tp3_atr_multiplier=3.0)
+    cfg = crt_config_for_test(tp3_enabled=tp3_enabled, tp3_atr_multiplier=3.0)
     return ExecutionEngine(cfg)
 
 

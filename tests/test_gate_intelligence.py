@@ -362,3 +362,42 @@ class TestComponents:
     def test_final_score_is_float(self):
         r = _gate().decide(_breakout_features(), "BREAKOUT", 1)
         assert isinstance(r["final_score"], float)
+
+
+# ── F-109: vol-score ATR basis ───────────────────────────────────────────────
+
+class TestVolAtrBasisF109:
+    """The Engine rail passes the canonical close-relative `atr` (FM-041). Dividing a dollar bar
+    range by it gives r ≈ thousands → vol_score 0 (legacy_relative, byte-identical). `absolute`
+    converts to FM-074 atr*close first."""
+
+    @staticmethod
+    def _gold_bar() -> dict:
+        # XAUUSD-like: close 2330, range $3.00, relative atr 0.00109 (≈ $2.54 absolute)
+        return {"close": 2330.0, "high": 2331.5, "low": 2328.5, "atr": 0.00109}
+
+    def test_default_basis_is_legacy_relative(self):
+        assert _gate()._vol_atr_basis == "legacy_relative"
+
+    def test_legacy_relative_scores_zero_on_relative_atr(self):
+        assert _gate({"gate_vol_atr_basis": "legacy_relative"})._vol_score(self._gold_bar()) == 0.0
+
+    def test_absolute_scores_the_real_range_to_atr_ratio(self):
+        f = self._gold_bar()
+        r = (f["high"] - f["low"]) / (f["atr"] * f["close"])  # ≈ 1.18 → tent ≈ 0.91
+        expected = 1.0 - (r - 1.0) / 2.0
+        got = _gate({"gate_vol_atr_basis": "absolute"})._vol_score(f)
+        assert got == pytest.approx(expected, abs=1e-12)
+        assert 0.85 < got < 0.95
+
+    def test_absolute_without_close_scores_zero(self):
+        f = {**self._gold_bar(), "close": 0.0}
+        assert _gate({"gate_vol_atr_basis": "absolute"})._vol_score(f) == 0.0
+
+    def test_unknown_basis_fails_closed(self):
+        with pytest.raises(ValueError, match="gate_vol_atr_basis"):
+            _gate({"gate_vol_atr_basis": "price_units"})
+
+    def test_legacy_output_unchanged_on_existing_fixture(self):
+        f = _breakout_features()
+        assert _gate().decide(f, "BREAKOUT", 1) == _gate({"gate_vol_atr_basis": "legacy_relative"}).decide(f, "BREAKOUT", 1)

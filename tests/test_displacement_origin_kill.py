@@ -24,6 +24,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tests.helpers.crt_config import crt_config_for_test
 
 _SRC = Path(__file__).resolve().parents[1] / "src"
 if str(_SRC) not in sys.path:
@@ -115,7 +116,7 @@ def test_close_exactly_at_the_origin_does_not_fire():
 
 # ── DEFAULT-INERT ────────────────────────────────────────────────────────────────────
 def test_disabled_by_default_and_inert_even_on_a_violating_bar():
-    assert CRTConfig().displacement_origin_kill_enabled is False
+    assert crt_config_for_test().displacement_origin_kill_enabled is False
     r = _Runner(_cfg())  # defaults
     t = _trade(Direction.LONG, origin=99.5)
     assert r._displacement_origin_kill(t, _candle(100.0, 100.2, 98.0, 99.0)) is False
@@ -151,7 +152,7 @@ def test_displacement_origin_is_a_trade_field_not_an_engine_state_read():
 def test_structural_close_books_at_the_bar_close_not_at_the_origin():
     """Booking at the origin would assume a fill at a level the bar may never have offered
     after the trigger became knowable -- lookahead wearing a structural argument."""
-    ex = ExecutionEngine(CRTConfig())
+    ex = ExecutionEngine(crt_config_for_test())
     t = _trade(Direction.LONG, origin=99.5)
     assert ex.close_structural(t, 99.0) == "STOPPED_STRUCTURAL"
     assert t.pnl == pytest.approx(99.0 - 100.0)   # close, not origin (which would be -0.5)
@@ -161,7 +162,7 @@ def test_structural_close_books_at_the_bar_close_not_at_the_origin():
 def test_structural_close_after_tp1_keeps_the_partial_and_only_kills_the_runner():
     """This is what 'preempts the SEM-017 trail' means concretely: the TP1 fill genuinely
     happened and is kept; only the runner that the half-way trail would have carried is cut."""
-    ex = ExecutionEngine(CRTConfig())
+    ex = ExecutionEngine(crt_config_for_test())
     t = _trade(Direction.LONG, origin=99.5, status="TP1")
     t.partial_pnl = 1.0
     assert ex.close_structural(t, 99.0) == "STOPPED_STRUCTURAL"
@@ -169,7 +170,7 @@ def test_structural_close_after_tp1_keeps_the_partial_and_only_kills_the_runner(
 
 
 def test_structural_close_is_a_noop_on_an_already_closed_trade():
-    ex = ExecutionEngine(CRTConfig())
+    ex = ExecutionEngine(crt_config_for_test())
     t = _trade(Direction.LONG, origin=99.5, status="STOPPED")
     assert ex.close_structural(t, 99.0) == "UNCHANGED"
 
@@ -182,7 +183,7 @@ def test_both_precedence_arms_are_constructible_and_distinct():
 
 
 def test_default_precedence_is_after_resting_fills():
-    assert CRTConfig().displacement_origin_kill_precedence == "after_resting_fills"
+    assert crt_config_for_test().displacement_origin_kill_precedence == "after_resting_fills"
 
 
 def test_unknown_precedence_fails_closed():

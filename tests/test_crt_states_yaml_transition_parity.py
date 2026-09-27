@@ -39,6 +39,7 @@ resolver's *construction* matches the engine's (it does not; see F-069 and ontol
 UNK-006, which stays open).
 """
 from __future__ import annotations
+from tests.helpers.crt_config import crt_config_for_test
 
 from datetime import datetime
 from pathlib import Path
@@ -146,7 +147,7 @@ def test_allowance_is_grounded_in_engine_behaviour() -> None:
     Behavioural, not textual. F-068's lesson was that a code comment cited as evidence did
     not exist in source; an allowance justified only by a comment is worth nothing.
     """
-    cfg = CRTConfig()
+    cfg = crt_config_for_test()
     sm = StateMachine(cfg)
     st = EngineState()
     st.current_state = CRTState.SHADOW_PENDING

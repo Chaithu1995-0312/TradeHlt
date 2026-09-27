@@ -1,0 +1,1002 @@
+# State Machine Workflow — Enter, Work, Exit
+
+For each state: entry trigger, checks performed, data held, exit conditions. Numbers from the reference run (47,275 bars).
+
+---
+
+## RANGE
+
+**Entry**
+- Initial state at startup
+- Reset from any state via HTF / gap / forced / age
+- RESOLUTION → RANGE (post-trade)
+- EXPIRED → RANGE
+
+**Work**
+- Default state. Nothing held except the rolling OHLC buffer (last 14 bars for range rebuild).
+- Continuous monitor: `_detect_htf_range_sweep(raw)` runs every bar
+- If pending shadow memory is active (from prior DISPLACEMENT reset), also monitors for direction-matching sweep
+
+**Checks before exit**
+- `sweep_sig != 0` AND `_sweep_entry_allowed(raw)` (current in RANGE → allowed)
+- If `pending_displacement_active` AND `_shadow_dir_matches(sweep_sig)` → SHADOW_PENDING path
+- Else → SWEEP founding
+
+**Exit paths**
+| To | Condition | Reference count |
+|---|---|---|
+| SWEEP | HTF range sweep detected, no pending shadow | 1,792 |
+| SHADOW_PENDING | Sweep + pending memory + direction matches | 6 |
+
+**Data written on exit**
+- SWEEP entry sets `sweep_candle_index`, derives `displacement_direction` from sweep side
+
+**Observed deaths from RANGE**
+- HTF_changed: 1,025
+- SESSION_GAP: 63
+- Post-resolution: 1
+- Total: 1,089
+
+---
+
+## SHADOW_PENDING
+
+**Entry**
+- From RANGE, when `pending_displacement_active=True` and a matching sweep fires
+- Set by `_force_range_reset` when HTF reset happens from DISPLACEMENT
+
+**Work**
+- Hold the pending displacement memory across the HTF boundary
+- TTL counts down: `pending_displacement_ttl_candles = 4`
+- Creating bar does NOT tick TTL
+
+**Checks before exit**
+- If `pending_displacement_active` still true → collapse to EXPANSION (shadow resume)
+- If TTL expired → leak to RANGE
+
+**Exit paths**
+| To | Condition | Reference count |
+|---|---|---|
+| SWEEP | (declared; 0 observed in reference run) | 0 |
+| EXPANSION | `pending_displacement_active` still true on next bar | 0 observed |
+| RANGE | Shadow leaked / TTL expired | 0 observed |
+
+**Data cleared on exit**
+- EXPANSION entry clears pending memory
+- RANGE entry clears pending memory
+
+**Note:** All three exits sum to 0 in the reference run. SHADOW_PENDING was entered 6 times, all of which immediately went to SWEEP (via `_advance_htf` + `_shadow_dir_matches` path). The declared EXPANSION and RANGE exits never fired.
+
+---
+
+## SWEEP
+
+**Entry**
+- From RANGE: founding detection via `_detect_htf_range_sweep`
+- From SHADOW_PENDING: confirming sweep
+- HTF reset protection: SWEEP is **not** in `htf_protect_states` — a reset during SWEEP kills it
+
+**Work**
+- Hold `sweep_candle_index`
+- Hold `displacement_direction` from sweep side (high → SHORT, low → LONG)
+- Age window: `max_sweep_age_candles = 20` — but HTF clock fires at 4
+- Evaluate `_displacement_entry_allowed(raw)` every bar
+
+**Checks before exit to DISPLACEMENT**
+All of the following must pass:
+1. Directional contract: LONG → close > open; SHORT → close < open
+2. Sweep age ≤ max_sweep_age_candles (rarely the binding constraint)
+3. `abs(close − open) ≥ atr_min_displacement × atr_abs` (currently 1.2)
+4. `body_ratio ≥ body_ratio_min` (currently 0.65)
+5. `candle_range ≥ atr_multiplier_min × atr_abs` (currently 1.0)
+
+**Exit paths**
+| To | Condition | Reference count |
+|---|---|---|
+| DISPLACEMENT | All 5 gates pass | 399 |
+| EXPANSION | `pending_displacement_active` + shadow resume | 6 |
+| RANGE | Age expired OR HTF reset OR gap OR forced | 1,393 |
+
+**Deaths breakdown (1,393)**
+| Reason | Count | % |
+|---|---|---|
+| HTF_changed | 1,372 | 98.5% |
+| Session gap | 21 | 1.5% |
+| Geometry failure | **0** | 0% |
+
+**The critical observation:** No SWEEP in the reference run died because the displacement gates failed. Every death was a clock kill. The `atr_min_displacement`, `body_ratio_min`, `atr_multiplier_min` gates never had a chance to bind.
+
+---
+
+## DISPLACEMENT
+
+**Entry**
+- From SWEEP when all 5 displacement gates pass
+
+**Work**
+- Hold `displacement_candle_index`, `displacement_candle_close`, `displacement_direction`
+- **No age kill.** Engine has no `max_displacement_age_candles` binding
+- Evaluate `_expansion_entry_allowed(raw)` every bar
+
+**Checks before exit to EXPANSION**
+1. Direction matches displacement
+2. Close extends beyond `displacement_candle_close` in the direction
+3. `abs(close − disp_close) ≥ expansion_atr_min_distance × atr_abs` (currently 0.30)
+
+**Exit paths**
+| To | Condition | Reference count |
+|---|---|---|
+| EXPANSION | All 3 gates pass | 142 |
+| RANGE | HTF reset (creates shadow memory) OR gap OR forced | 257 |
+
+**Deaths breakdown (257)**
+| Reason | Count | % |
+|---|---|---|
+| 50% retrace hit | 131 | **51%** |
+| HTF_changed | 69 | 27% |
+| 1.618 extension hit | 56 | 22% |
+| Session gap | 1 | <1% |
+
+**The critical observation:** The 50% retrace kill fires on 131 displacements. Real-market retracements routinely reach 50% before continuing. This kill is inside the normal pullback band.
+
+**Side effect of HTF death:** If HTF reset happens from DISPLACEMENT, `pending_displacement_active=True` is set with a 4-bar TTL — the setup carries into the next window.
+
+---
+
+## EXPANSION
+
+**Entry**
+- From DISPLACEMENT (extension confirmed)
+- From SWEEP or SHADOW_PENDING via shadow resume
+
+**Work**
+- Hold `expansion_entry_index`, `expansion_entry_ts`
+- TTL: `max_expansion_age_candles = 495` (candles) OR `max_expansion_age_hours = 124` (hours)
+- **Protected from HTF reset** (in `htf_protect_states`)
+- Evaluate `retest_flag` on every bar
+
+**Checks before exit to RETEST**
+1. `retest_flag = RetestActive` (rolling OR of recent sweep + EMA proximity)
+2. `retest_depth ≤ retest_depth_max` (0.15)
+3. Current state is EXPANSION (arrive via funnel, not cold-start)
+
+**Exit paths**
+| To | Condition | Reference count |
+|---|---|---|
+| RETEST | retest_flag fires + depth check passes | 24 |
+| EXPIRED | TTL exceeded | 0 |
+| RANGE | Reset (only via gap or forced; HTF is suppressed) | 124 |
+
+**Deaths breakdown (124)**
+| Reason | Count | % |
+|---|---|---|
+| 1.618 extension hit | 53 | 43% |
+| Session gap | 36 | 29% |
+| 50% retrace hit | 35 | 28% |
+
+**Observation:** EXPANSION dies three ways — extension targets hit (win-ish), gap resets (out of session), or retrace (thesis invalidated). No deaths by TTL; the 495-candle limit is decorative.
+
+---
+
+## EXPIRED
+
+**Entry**
+- EXPANSION TTL exceeded (either 495 candles or 124 hours)
+
+**Work**
+- Soft archive. Lasts exactly one bar.
+- Cannot be detected from features alone
+
+**Exit paths**
+| To | Condition |
+|---|---|
+| RANGE | Always, next bar |
+
+**Reference count:** 0 — never entered in the reference run.
+
+---
+
+## RETEST
+
+**Entry**
+- From EXPANSION when `retest_flag = RetestActive` and depth check passes
+
+**Work**
+- Hold `retest_candle_index`
+- Age window: `soft_conf_max_candles = 3`
+- Evaluate all execution gates every bar
+
+**Checks before exit to EXECUTION**
+1. Session allowed (`allowed_sessions = [london, new_york, overlap]`)
+2. Parent-CRT bias matches direction (`parent_crt.bias_gate_mode = reject_on_mismatch`)
+3. Soft confirmation within 3 candles
+4. Risk score available and ≥ `score_threshold = 0.45`
+5. `retest_depth ≤ retest_depth_max` re-checked
+
+**Exit paths**
+| To | Condition | Reference count |
+|---|---|---|
+| EXECUTION | All 5 gates pass | 4 |
+| RANGE | Any gate fails OR age expires | 20 |
+
+**Deaths breakdown (20)**
+| Reason | Count | % |
+|---|---|---|
+| off_session | 15 | **75%** |
+| Against parent-timeframe bias | 4 | 20% |
+| Soft confirmation timeout | 1 | 5% |
+
+**The critical observation:** 75% of RETEST deaths are because the setup matured outside the 3-hour session bands. The setup was valid; the clock said no.
+
+---
+
+## EXECUTION
+
+**Entry**
+- From RETEST when all 5 gates pass
+- Sets `trade_active = True`
+
+**Work**
+- Trade open. CRT engine manages lifecycle.
+- **Trade-level actions:**
+  - `update_trade` runs per bar: priority TP2 > SL > TP1
+  - TP1 hit → book 50%, move stop to `entry + 0.5 × (TP1 − entry)`
+  - SL after TP1 → runner to BE, status `TP1_BE_STOP`
+  - SL before TP1 → full loss, status `STOPPED`
+  - TP2 → runner closes, status `TP2`
+  - Structural exit → close at bar close, status `STOPPED_STRUCTURAL`
+- Resolver age cap: `soft_conf_max_candles = 3` (uses `retest_candle_index` as proxy entry)
+
+**Exit paths**
+| To | Condition | Reference count |
+|---|---|---|
+| RESOLUTION | Trade closes (any reason) | 3 |
+| RANGE | Age cap exceeded (uses RETEST index) | 1 |
+
+**Deaths:** 1 — likely a resolver-side age cap firing before the actual trade closed (proxy index issue noted in code).
+
+---
+
+## RESOLUTION
+
+**Entry**
+- From EXECUTION when trade closes
+
+**Work**
+- Terminal state. Lasts one bar.
+- `trade_active = False`
+
+**Exit paths**
+| To | Condition | Reference count |
+|---|---|---|
+| RANGE | Always, next bar | 3 |
+
+---
+
+## Full Workflow — One Diagram
+
+```
+                        ┌─────────────────────────────────────┐
+                        │            (startup)                │
+                        └──────────────────┬──────────────────┘
+                                           ▼
+                        ┌─────────────────────────────────────┐
+             ┌─────────▶│              RANGE                  │◀────────┐
+             │          │  monitors for founding sweep        │         │
+             │          └──┬───────────────────────┬──────────┘         │
+             │             │ sweep                 │ sweep + pending    │
+             │             ▼                       ▼                    │
+             │   ┌──────────────────┐    ┌──────────────────┐           │
+             │   │      SWEEP       │    │  SHADOW_PENDING  │           │
+             │   │  5 gates eval    │    │  hold memory     │           │
+             │   │  max 20 (4 eff)  │    │  TTL 4 bars      │           │
+             │   └──┬────────┬──────┘    └──┬───────────────┘           │
+             │      │        │              │                           │
+             │      │ pass   │ fail/clock   │ collapse                  │
+             │      ▼        └──────────────┼───────────────────────────┤
+             │   ┌──────────────────┐       │                           │
+             │   │  DISPLACEMENT    │◀──────┘                           │
+             │   │  no age kill     │                                   │
+             │   │  3 gates eval    │                                   │
+             │   └──┬────────┬──────┘                                   │
+             │      │ pass   │ retrace/HTF                              │
+             │      ▼        └──────────────────────────────────────────┤
+             │   ┌──────────────────┐                                   │
+             │   │   EXPANSION      │   HTF-protected                   │
+             │   │   TTL 495c/124h  │                                   │
+             │   │   waits retest   │                                   │
+             │   └──┬────┬─────┬────┘                                   │
+             │      │    │     │                                        │
+             │ retest   │     │ gap/reset                              │
+             │      ▼    │     └────────────────────────────────────────┤
+             │   ┌──────────────────┐         TTL exceeded             │
+             │   │     RETEST       │              │                   │
+             │   │  5 gates eval    │              ▼                   │
+             │   │  3-bar window    │        ┌──────────┐              │
+             │   └──┬────────┬──────┘        │ EXPIRED  │              │
+             │      │ pass   │ session/etc   └────┬─────┘              │
+             │      ▼        └────────────────────┼───────────────────┤
+             │   ┌──────────────────┐             │                   │
+             │   │   EXECUTION      │             │                   │
+             │   │  trade open      │             │                   │
+             │   │  TP1/SL/TP2      │             │                   │
+             │   └──┬───────────────┘             │                   │
+             │      │ trade closes                │                   │
+             │      ▼                             │                   │
+             │   ┌──────────────────┐             │                   │
+             │   │   RESOLUTION     │             │                   │
+             │   └──┬───────────────┘             │                   │
+             │      │                             │                   │
+             └──────┴─────────────────────────────┴───────────────────┘
+                          (all paths return to RANGE)
+```
+
+---
+
+## Reference-run numbers at a glance
+
+| Transition | Count | Gate type |
+|---|---|---|
+| RANGE → SWEEP | 1,792 | sweep detected |
+| RANGE → SHADOW_PENDING | 6 | sweep + memory |
+| SHADOW_PENDING → SWEEP | 6 | confirming sweep |
+| SWEEP → DISPLACEMENT | 399 | 5 geometry gates |
+| SWEEP → EXPANSION | 6 | shadow resume |
+| SWEEP → RANGE | 1,393 | **98.5% clock** |
+| DISPLACEMENT → EXPANSION | 142 | 3 geometry gates |
+| DISPLACEMENT → RANGE | 257 | **51% retrace** |
+| EXPANSION → RETEST | 24 | retest flag |
+| EXPANSION → RANGE | 124 | 1.618 / gap / retrace |
+| EXPANSION → EXPIRED | 0 | — |
+| RETEST → EXECUTION | 4 | 5 gates |
+| RETEST → RANGE | 20 | **75% off-session** |
+| EXECUTION → RESOLUTION | 3 | trade close |
+| EXECUTION → RANGE | 1 | age cap |
+| RESOLUTION → RANGE | 3 | — |
+
+**The pattern:** every stage's dominant death cause is a **clock or filter**, not a market-condition failure.
+
+- SWEEP dies on HTF clock
+- DISPLACEMENT dies on an overly tight retrace
+- EXPANSION dies on extension/gap/retrace
+- RETEST dies on 3-hour session windows
+
+No stage dies because the market said "this setup is wrong." Every stage dies because the code's own thresholds fired.
+
+That is the workflow. That is also the diagnosis.# Fixes to Align the State Machine with Market Conditions
+
+Design-only. Each fix: what's wrong, what the market does, what to change, what it buys. Ranked by impact on expectancy.
+
+---
+
+## The structural problem
+
+Every stage in the state machine dies to a **code threshold**, not a **market condition**. That is the pattern. The fixes below replace code-triggered exits with market-triggered exits.
+
+---
+
+## Fix 1 — Replace the HTF reset clock with a structural break trigger
+
+**What's wrong**
+
+`htf_candles_per_range = 4` fires every 4 bars regardless of price. It kills 98.5% of SWEEPs (1,372 of 1,393). No SWEEP in the reference run died because the displacement gates failed — every one died because the clock ran out.
+
+**What the market does**
+
+A sweep of a significant level resolves over 10–30 M15 bars. It either displaces (confirming the sweep) or price closes back through the sweep level (invalidating it). The market resolves the question with price, not with time.
+
+**The fix**
+
+Replace `htf_reset_enabled` clock with a **structural invalidate** trigger:
+
+```
+SWEEP invalidated when:
+  - close crosses back through the sweep level in the opposite direction, OR
+  - max_sweep_age_candles (20) is genuinely exceeded
+```
+
+Keep the HTF ID concept for **bias context** — but it no longer forces a reset.
+
+**What it changes**
+
+| Metric | Current | Expected |
+|---|---|---|
+| SWEEP → DISP | 22.2% | 40–60% |
+| SWEEP deaths by clock | 98.5% | 0% |
+| SWEEP deaths by geometry | 0% | the actual failure mode |
+
+**Governed change:** yes. Touches `market_crt_states.yaml`, `crt_state_resolver.py`. Needs `BUILD_IMPACT_MANIFEST`.
+
+**Priority:** critical.
+
+---
+
+## Fix 2 — Widen the 50% retrace kill to 0.65–0.70
+
+**What's wrong**
+
+DISPLACEMENT dies when price retraces 50% of the displacement. 131 of 399 displacements (51% of deaths) die this way. The kill fires inside the normal pullback band.
+
+**What the market does**
+
+Displacement retracements routinely reach 50% before continuing. The Fibonacci band 38.2–61.8% is normal healthy pullback. Only breaks below 78.6% invalidate the displacement thesis.
+
+**The fix**
+
+Move the retrace kill from 0.50 to **0.65 or 0.70**. The config-alignment design identified ~0.65–0.70 as the range where DISPLACEMENT's RR floor (47.1% hit rate) becomes achievable.
+
+**What it changes**
+
+| Metric | Current | Expected |
+|---|---|---|
+| DISP → EXP | 35.6% | 45–55% |
+| Retrace kills | 131 | ~80–90 (the ones that go deeper) |
+
+**Governed change:** yes. Touches `crt_engine_v2.py` (retrace check).
+
+**Priority:** critical.
+
+---
+
+## Fix 3 — Widen session windows to real sessions
+
+**What's wrong**
+
+Session windows are 3-hour bands: LONDON 07–10, NY 13–16, ASIA 00–03 UTC. 15 of 20 RETEST deaths (75%) are because the setup matured outside these bands.
+
+**What the market does**
+
+London session runs 07:00–16:00 UTC (9 hours). NY runs 13:00–22:00 UTC (9 hours). Asia runs 23:00–08:00 UTC (9 hours). The current bands cover only the opens.
+
+**The fix**
+
+Widen `session_windows` to real session hours. Include the LONDON-NY overlap (13:00–16:00 UTC) as its own high-liquidity window.
+
+**What it changes**
+
+| Metric | Current | Expected |
+|---|---|---|
+| RETEST → EXEC | 16.7% | 40–60% |
+| off_session deaths | 15/20 | ~0 |
+
+**Governed change:** yes. Touches `configs/production/v2_htfcrt_2026_08.json` and `market_crt_states.yaml`.
+
+**Priority:** high.
+
+---
+
+## Fix 4 — Make SL structural, not ATR-fixed
+
+**What's wrong**
+
+`sl = low − 0.2 × atr_abs` is the same rule for every state, every intent, every setup. It's an ATR buffer off the current bar's extreme — not a structural stop.
+
+**What the market does**
+
+A structural stop respects the level the strategy is trading:
+- SWEEP → stop beyond the sweep wick
+- DISPLACEMENT → stop beyond the displacement origin
+- RETEST → stop beyond the retest swing
+
+The current stop gets hit by noise that a structural stop would survive. A 0.2 ATR buffer is ~1 pip on XAUUSD at typical M15 ATR — inside the market's normal bar noise.
+
+**The fix**
+
+Per-state stop placement:
+
+```
+SWEEP:        stop = sweep_extreme ± 0.3 × atr_abs    (beyond the wick)
+DISPLACEMENT: stop = displacement_origin ± 0.2 × atr_abs
+RETEST:       stop = retest_swing ± 0.3 × atr_abs
+```
+
+`sl_atr_buffer` becomes per-state, not global.
+
+**What it changes**
+
+- SL distances widen from ~0.2 ATR to ~1.0–1.5 ATR
+- Position size shrinks proportionally (risk stays at 0.5%)
+- **Hit rate rises** because trades survive noise
+- RR profile unchanged (TP is still `tp1_mult × risk_dist`)
+
+**Governed change:** yes. Touches `gate_intelligence.compute_crt_levels` and every caller.
+
+**Priority:** high.
+
+**Why this matters most:** Fix 4 is the one that addresses the *root* problem. Fixes 1–3 remove code-based deaths; Fix 4 makes the surviving trades actually profitable by not getting stopped on noise.
+
+---
+
+## Fix 5 — Add a regime filter at RANGE
+
+**What's wrong**
+
+Every RANGE bar is eligible to detect a sweep. No upstream check on whether the market is in a condition where the sweep-displacement thesis works.
+
+**What the market does**
+
+Sweeps in a ranging market produce fades that work ~50% of the time. Sweeps in a trending market produce continuations. Fading a trend loses. Following a range loses. The thesis depends on the regime.
+
+**The fix**
+
+Add a regime gate at RANGE → SWEEP:
+
+```
+SWEEP allowed only when:
+  - trend_strength_z < 2 (not a strong trend), OR
+  - volatility_regime = HighVolatility (sweeps in high-vol are meaningful)
+```
+
+Or the mirror: disable LIQ_SWEEP fade in strong trends, disable BREAKOUT in ranges. The gate direction depends on the intent.
+
+**What it changes**
+
+- SWEEP attempts drop (fewer false positives)
+- SWEEP → DISP conversion rises (surviving sweeps are in favorable regimes)
+- Net trade count may drop; expectancy per trade rises
+
+**Governed change:** yes. Touches `market_crt_states.yaml` RANGE state.
+
+**Priority:** high.
+
+---
+
+## Fix 6 — Align intent to state
+
+**What's wrong**
+
+The intent derivation (`_derive_intent`) runs in priority order independent of CRT state:
+
+1. LIQ_SWEEP (if sweep_detected)
+2. PULLBACK (if retest_depth in band)
+3. BREAKOUT (if body_ratio + disp)
+4. REVERSAL (EMA against direction)
+5. CONTINUATION (EMA with direction)
+
+A DISPLACEMENT-state bar can be labeled PULLBACK (0.8R) if it happens to satisfy the pullback conditions. The state machine says "this is a breakout setup"; the intent says "this is a pullback." The RR assigned is wrong for the state.
+
+**What the market does**
+
+The setup's character determines its expected RR profile. A displacement is a momentum continuation (1.5R). A retest is a pullback (0.8R). The intent should be **derived from state**, not classified independently.
+
+**The fix**
+
+Make intent a function of CRT state:
+
+```
+SWEEP state        → intent = LIQ_SWEEP      (TP1 1.2R)
+DISPLACEMENT state → intent = BREAKOUT       (TP1 1.5R)
+EXPANSION state    → intent = BREAKOUT       (TP1 1.5R)
+RETEST state       → intent = PULLBACK       (TP1 0.8R)
+```
+
+The other intents (REVERSAL, CONTINUATION) become fallbacks only when state is ambiguous.
+
+**What it changes**
+
+- No more state/intent mismatch
+- RR assigned matches the setup's character
+- Downstream analytics become interpretable (a "BREAKOUT trade" actually started from a displacement)
+
+**Governed change:** yes. Touches `execution_planner.py`.
+
+**Priority:** medium-high.
+
+---
+
+## Fix 7 — Fix the `GateIntelligence` ATR dimension bug
+
+**What's wrong**
+
+`_vol_score` and `_liquidity_score` divide price-unit quantities by close-relative ATR. On real data, `_vol_score ≡ 0` and `_liquidity_score ≡ 0.5` (volume half is dead via SEM-004). Effective weighted sum is 0.70, not 1.00.
+
+**What the market does**
+
+Vol and liquidity are real signals. They should be measured on the same units as the gate uses.
+
+**The fix**
+
+`atr_abs = atr × close` inside the two methods — the same correction `live_engine_hook` already applies for levels.
+
+**What it changes**
+
+- `_vol_score` becomes a real score (0–1 band)
+- `_liquidity_score` sweep half stays saturated but volume half contributes if wired
+- Effective weight recovers to 0.90 (SEM-004 still caps liquidity at 0.5 contribution)
+- **Threshold `0.55` needs re-tuning** against the new denominator — separate story
+
+**Governed change:** yes. Live-path only. Does not affect backtest.
+
+**Priority:** medium (live-path only; does not gate backtest n).
+
+---
+
+## Fix 8 — Address REVERSAL and CONTINUATION unreachability
+
+**What's wrong**
+
+`_intent_score` for REVERSAL returns `1 − min(1, |momentum_score|)`. On real data, `|momentum_score| ≫ 1`, so score saturates at 0. REVERSAL is structurally unreachable. CONTINUATION has no branch — score is 0.0 by construction.
+
+**What the market does**
+
+Reversal setups exist. Continuation setups exist. They should be tradeable.
+
+**The fix**
+
+- REVERSAL: use a sign-based or z-normalized momentum measure, not absolute magnitude
+- CONTINUATION: add an explicit branch. Proposed: same as BREAKOUT but with a lower disp_strength threshold
+
+**Governed change:** yes.
+
+**Priority:** medium. The states exist but never fire today; fixing this expands the tradeable surface.
+
+---
+
+## Fix 9 — Remove decorative parameters
+
+**What's wrong**
+
+Several parameters are declared but never bind:
+
+| Param | Status |
+|---|---|
+| `max_sweep_age_candles = 20` | Decorative — clock fires at 4 |
+| `max_expansion_age_candles = 495` | Decorative — never observed to bind |
+| `max_expansion_age_hours = 124` | Masked by the candle limit |
+| `retest_depth_max = 0.15` | Dead — RETEST branch rarely entered |
+| `retest_atr_depth_fraction = 0.50` | Dead — never read |
+| `max_displacement_age_candles = 3` | Dead — engine has no age kill |
+
+**The fix**
+
+After Fix 1 (clock removed), `max_sweep_age_candles` becomes real. After Fix 3 (sessions widened), `retest_depth_max` might bind. The others should be removed from the YAML, not left as decorative.
+
+**Governed change:** yes, minor.
+
+**Priority:** low. Cleanup, not behavior.
+
+---
+
+## The compounded effect
+
+Fixes 1, 2, 3 stacked:
+
+```
+Current chain:  0.222 × 0.356 × 0.162 × 0.167 × 0.75 = 0.0017 (0.17%)
+After 1+2+3:    0.50  × 0.50  × 0.30  × 0.50  × 0.75 = 0.028  (2.8%)
+```
+
+**16× more trades.** On the reference window: 3 → ~50 trades. Still below n≥200, but the strategy becomes measurable rather than anecdotal.
+
+Fix 4 (structural SL) doesn't change trade count but raises hit rate — the difference between the strategy losing and the strategy breaking even.
+
+---
+
+## Ranked by impact
+
+| # | Fix | Priority | Trade count effect | Hit rate effect |
+|---|---|---|---|---|
+| 1 | Remove HTF clock | Critical | +3× | 0 |
+| 2 | Widen retrace kill 0.5 → 0.65 | Critical | +1.5× | 0 |
+| 3 | Widen sessions | High | +3× | 0 |
+| 4 | Structural SL | High | 0 | **+15–25%** |
+| 5 | Regime filter at RANGE | High | −20% | +10% |
+| 6 | Align intent to state | Medium | 0 | +5% |
+| 7 | Gate ATR fix | Medium (live only) | 0 | — |
+| 8 | REVERSAL/CONTINUATION | Medium | +small | — |
+| 9 | Remove decorative params | Low | 0 | 0 |
+
+---
+
+## What must be measured first
+
+Fixes 1, 2, and 4 all require **measurement** before being authorized. Two reads:
+
+| Read | Decides |
+|---|---|
+| **M5** — retrace distribution | Whether 0.65 or 0.70 is right, or whether 0.5 was correctly calibrated |
+| **M6** — SWEEP dwell distribution | What the true SWEEP lifetime is without the clock |
+
+Both are read-only, from existing `XAUUSD_events.jsonl`. One script. ~1 hour.
+
+Fix 3 (sessions) doesn't need measurement — the session times are published, not inferred.
+
+Fix 4 (structural SL) needs the adverse-excursion distribution — how far price typically pulls back before the thesis plays out. New read.
+
+---
+
+## Sequence
+
+1. **M5 + M6 + adverse-excursion read** (read-only, ~2 hours)
+2. **Authorize Fixes 1 + 2 + 4 together** as one governed change (they interact)
+3. **Authorize Fix 3** (sessions — independent)
+4. **Re-run** on the same window
+5. **Measure the delta** — trade count, hit rate, expectancy
+6. **Then** decide on Fixes 5, 6, 7, 8
+
+Fixes 1, 2, 4 are not independent. Fix 1 admits more sweeps; Fix 2 keeps more displacements alive; Fix 4 lets them survive to profitability. Together they convert the strategy from "3 trades in 16 months" to "~50 trades with measurable expectancy."
+
+---
+
+## Sign-off
+
+| # | Question |
+|---|---|
+| **F1** | Run M5 + M6 + adverse-excursion reads first? |
+| **F2** | Is the fix order correct — 1+2+4 together, then 3, then the rest? |
+| **F3** | Is Fix 4 (structural SL) authorized as a scope, or does it need its own design pass? |
+| **F4** | Are Fixes 5–8 in scope for this cycle or deferred? |
+
+**F1 is the load-bearing ask.** Everything else depends on the measurement.
+
+No edits. Design only.
+# Linking Cost Model to Market State
+
+The cost model isn't just a tax on R. It's a **continuous readout of market conditions**. Spread and slippage widen when liquidity thins, when volatility rises, when news hits. That makes cost a *state signal* independent of the CRT labels.
+
+Linking cost to state transitions tells us which states the strategy actually works in — and re-ranks the fixes by whether they recover edge or just recover trades.
+
+---
+
+## 1. What cost already measures
+
+From `backtest_v2.py`:
+
+```
+entry_fill = entry_raw + e_slip + spread_half
+exit_fill  = exit_raw  + x_slip − spread_half
+
+slippage_pips  = (|entry_fill − entry_raw − spread_half| + |x_slip|) / pip_size
+spread_pips    = (2 × spread_half) / pip_size
+```
+
+Per-trade cost in pips: `spread_pips + slippage_pips`
+
+Per-trade cost in R: `(spread_pips + slippage_pips) × pip_size × position_size / risk_dist`
+
+Reference run:
+- total spread = 162.24 pips
+- total slippage = 114.75 pips
+- avg cost per trade = 92.33 pips
+- raw − net R delta = **+1.3706 R** across 3 trades
+
+92 pips on a 500-pip risk distance = **0.18R average tax**. On a 1.5R TP, that's 12% of the gross target lost to friction.
+
+---
+
+## 2. The insight — cost is a market-state instrument
+
+Cost is not uniform. It varies systematically:
+
+| Condition | Spread | Slippage | Cost signal |
+|---|---|---|---|
+| London open, trending | Tight | Low | Low cost, high edge |
+| NY overlap | Tightest | Low | Best execution window |
+| Asia session | Wide | Medium | Cost drag |
+| Pre-news (30 min before NFP/CPI) | Widens | High | Cost spike |
+| News event | Wide | Very high | Cost shock |
+| Illiquid hour (rollover) | Widest | Highest | Cost blowout |
+| High volatility (expansion) | Wide | Medium | Medium cost |
+
+So cost at entry is a **direct observation of market state** that doesn't depend on the CRT state machine at all. It's the market telling you what it is, in pips.
+
+Linking cost to CRT state gives:
+
+```
+cost_at_entry × crt_state × exit_reason × pnl_rr_net
+```
+
+That cross-tab answers: **in which market states (as measured by cost) do the CRT states actually produce edge?**
+
+---
+
+## 3. The three joins
+
+### Join A — Cost vs state
+
+For every trade:
+
+| Field | Source |
+|---|---|
+| `crt_state_at_entry` | resolver (via candle_idx join to telemetry) |
+| `spread_pips` | trade row |
+| `slippage_pips` | trade row |
+| `cost_pips = spread + slippage` | computed |
+| `session` | trade row |
+| `hour_of_day` | trade row |
+
+Cross-tab: `cost_pips` binned (quartiles) × `crt_state_at_entry` × `session`.
+
+Output: **which states trade in low-cost vs high-cost environments.**
+
+### Join B — Cost vs outcome
+
+For every trade:
+
+| Field | Source |
+|---|---|
+| `cost_pips` (binned) | computed |
+| `exit_reason` | trade row |
+| `pnl_rr_net` | trade row |
+
+Cross-tab: `cost_bin` × `exit_reason` → mean `pnl_rr_net`.
+
+Output: **whether trades in high-cost environments underperform.**
+
+### Join C — Cost vs MFE / MAE
+
+This requires MFE/MAE columns, which may not be on the row yet. If not present, we infer from `exit_fill` and `entry_fill`:
+
+- For winners: `MFE ≥ |exit_fill − entry_fill|`
+- For losers: `MAE ≥ |exit_fill − entry_fill|`
+
+Weak proxy but sufficient to ask: **do high-cost trades have less room before stop-out?**
+
+Output: **whether cost eats into the stop buffer on the losing side.**
+
+---
+
+## 4. What the joins produce
+
+The central artifact:
+
+| Cost bin | Trades | Mean R | Hit rate | Dominant state | Dominant session |
+|---|---|---|---|---|---|
+| Q1 (tightest) | n | mean_rr_net | wins/n | ? | ? |
+| Q2 | n | ... | ... | ? | ? |
+| Q3 | n | ... | ... | ? | ? |
+| Q4 (widest) | n | ... | ... | ? | ? |
+
+If Q1 shows positive expectancy and Q4 negative, then **cost is a filter** — an extra gate that says "don't trade when market state is expensive." That's a new, cheap filter that uses data already on the row.
+
+If all four quartiles look the same, cost is a uniform tax and doesn't discriminate. Then it's not a state signal.
+
+If Q4 has fewer trades but higher per-trade R, then the strategy is doing something right — it trades selectively in high-cost, high-volatility environments. That's the opposite of a filter.
+
+---
+
+## 5. Re-ranking the fixes by cost sensitivity
+
+The fixes from the prior session change the trade count. But cost determines whether the *new* trades are worth taking. Re-ranked:
+
+### Fix 1 — Remove HTF clock
+
+**Cost interaction:** High. Removing the clock lets SWEEP live longer, which means sweeps that resolve during session transitions now get a chance. Some of those transitions happen right when spread widens (London→NY gaps, session closes). Without a cost gate, the fix could produce *more trades in worse conditions*.
+
+**Required pairing:** Fix 1 should ship with a **cost ceiling at entry**.
+
+```
+if spread_pips + slippage_pips > cost_ceiling_pips:
+    reject
+```
+
+The ceiling value comes from Join B — pick the bin where expectancy crosses zero.
+
+**Net effect:** fewer than the +3× projected, but the surviving trades are in the recoverable band.
+
+### Fix 2 — Widen retrace kill to 0.65
+
+**Cost interaction:** Low. Retrace is a price-distance signal, independent of spread. Widening the retrace kill recovers trades that stopped out on noise. Cost doesn't interact much.
+
+**Net effect:** +1.5× trade count, minimal cost drag.
+
+### Fix 3 — Widen sessions
+
+**Cost interaction:** High, and **positive**. Widening sessions recovers trades in real London and NY hours — the *lowest-cost* windows. Currently, the 3-hour bands cover the opens (when spreads are typically tighter than mid-session, but the bands miss the highest-liquidity portion). Real London 07–16 UTC includes the tightest-spread window (NY overlap 13–16).
+
+**Net effect:** +3× trade count, and the added trades are in **better-than-average cost conditions**.
+
+### Fix 4 — Structural SL
+
+**Cost interaction:** Critical, **adverse on trade count, positive on hit rate**. Wider stops mean:
+- The SL distance increases → position size decreases for the same risk → cost per trade in pips stays the same but as a fraction of R, cost stays the same
+- BUT the wider stop means a trade that would have stopped out on a 0.2 ATR wiggle now survives — including cases where cost would have eaten 30–50% of the stop buffer
+
+**Net effect:** fewer stop-outs (survive noise), same R magnitude, higher hit rate. The cost saving is indirect: fewer trades, each with a larger stop cushion.
+
+**This is why Fix 4 pairs with Fix 1.** Removing the clock admits more sweeps; structural SL ensures those sweeps have room to develop.
+
+### Fix 5 — Regime filter at RANGE
+
+**Cost interaction:** Medium. Regime and cost are correlated (trending = tighter spread, ranging = wider spread, high vol = wider spread). The regime filter and the cost ceiling are **partially redundant** — one is a categorical version of the other.
+
+**Recommendation:** ship the cost ceiling first (Fix 1's pairing). If it works, the regime filter becomes optional.
+
+### Fixes 6–9 — Cost interaction: low
+
+Intent alignment, gate ATR fix, REVERSAL/CONTINUATION, decorative params — none interact with cost materially.
+
+---
+
+## 6. The re-ranked fix table
+
+| # | Fix | Cost sensitivity | Pairing required | Adjusted effect |
+|---|---|---|---|---|
+| 1 | Remove HTF clock | High | **+ cost ceiling** | +2× (down from +3×) |
+| 2 | Widen retrace 0.5 → 0.65 | Low | none | +1.5× |
+| 3 | Widen sessions | High (positive) | none | +3× in better cost env |
+| 4 | Structural SL | Critical | none | hit rate +15–25%, same R |
+| 5 | Regime filter | Medium | redundant if cost ceiling ships | +10% (or skip) |
+
+**The pairing of Fix 1 with a cost ceiling is the load-bearing change.** Without it, the fix recovers trades indiscriminately. With it, the fix recovers trades in the market states where the strategy actually has edge.
+
+---
+
+## 7. The measurement that decides
+
+Before any fix, one read decides the whole thing:
+
+**M8 — Cost × expectancy cross-tab.**
+
+For the reference run:
+1. Bin cost into quartiles.
+2. For each bin, compute mean `pnl_rr_net`, hit rate, n.
+3. If Q1 > Q4 materially, cost is a filter.
+4. If Q1 ≈ Q4, cost is a uniform tax.
+
+Then for the **projected post-fix run**:
+1. Estimate trade count per cost bin if Fixes 1–3 land.
+2. Apply the ceiling from M8.
+3. Report the delta.
+
+**M8 is one script over existing artifacts.** ~30 min. It decides whether the cost ceiling is required or optional.
+
+---
+
+## 8. The market-state definition
+
+Combining everything, the "market state" for any given trade is:
+
+```
+market_state = (
+    crt_state_at_entry,      # what the resolver thinks
+    session,                 # when it's happening
+    cost_bin,                # how expensive it is to trade right now
+    volatility_regime,       # how volatile it is
+    trend_strength_z         # how trending it is
+)
+```
+
+Five dimensions. The CRT state is the *internal* view. The other four are the *market's* view of itself.
+
+Every trade can be classified into this 5-tuple. Every state transition happens in a market state. Every exit reason is correlated with a market state.
+
+The full analysis: for each market state, what is the empirical expectancy? That table is what should drive the fixes.
+
+---
+
+## 9. Deliverable shape
+
+Two artifacts:
+
+**`market_state_expectancy.md`** — the cross-tab of market state × mean R.
+
+**`market_state_expectancy.json`** — machine-readable, per-trade market state tuple + pnl_rr_net, so downstream filters can be built.
+
+Plus the **cost ceiling** derived from the JSON: the bin where expectancy crosses zero.
+
+---
+
+## 10. Sequence
+
+1. **M8 read** — cost × expectancy cross-tab from existing trades. ~30 min.
+2. **If cost discriminates:** derive the ceiling; add it as Fix 1's pairing.
+3. **If cost does not discriminate:** ship Fixes 1, 2, 3, 4 without the ceiling; the cost model stays a tax, not a filter.
+4. **Then** the rest of the fixes.
+
+M8 decides whether Fix 1 becomes "remove the clock" or "remove the clock + add a cost gate."
+
+---
+
+## 11. Sign-off
+
+| # | Question |
+|---|---|
+| **CS1** | Is cost-as-market-state the right frame? |
+| **CS2** | Run M8 first, or ship the fixes and measure after? |
+| **CS3** | If M8 shows discrimination: cost ceiling as a hard gate, or a soft score? |
+| **CS4** | Is `market_state = (crt_state, session, cost_bin, volatility_regime, trend_strength_z)` the right tuple, or add/remove dimensions? |
+
+**CS2 is the load-bearing one.** Running M8 first costs 30 minutes and decides whether Fix 1 needs a companion gate. Not running it risks shipping a fix that adds trades the strategy can't afford.
+
+No edits. Design only.

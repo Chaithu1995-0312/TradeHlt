@@ -22,9 +22,19 @@ keys — it links to the docs that already do.
 
 ## 1. The CRT Spine (per-candle, synchronous)
 
-The spine runs once per candle, in order, with no skipped steps. Each step
-discloses its module, entry point, config dependency, emitted object, failure
-mode (per [`CONVENTIONS.md`](CONVENTIONS.md) §3), and cross-references.
+The spine below is the **intended full walk**. Each step discloses its module, entry point,
+config dependency, emitted object, failure mode (per [`CONVENTIONS.md`](CONVENTIONS.md) §3),
+and cross-references.
+
+> **Rail split (F-103, F-073 — CORRECTED 2026-09-18, closes §6.2 TruthConflict P-FLOW-14):**
+> Steps 1–4 run on both rails. Steps 5–7 (ExecutionPlanner → UltronRiskGate → Execution) run
+> **only on the live/research rail** (`runtime/live_engine_hook.py`,
+> `runtime/live_rail_orchestrator.py`) — an AST import-graph assertion confirms
+> `src/runtime/backtest_v2.py` never imports `config_layer.execution_planner` or
+> `core.ultron_risk_gate`. The backtest rail terminates at Step 4's `DecisionResult` and
+> produces its own SL/TP geometry (`sl_atr_buffer` / `tp1_price` / `tp2_price`) directly,
+> **not** an `ExecutionPlan`. Every backtest-geometry finding (F-019…F-097) was measured on
+> that backtest-native geometry, not planner geometry. See the rail-boundary note after Step 4.
 
 ### Step 1 — DATA INGEST
 
@@ -103,7 +113,16 @@ integrity net (F-039). Making `stream()` permissive removes that net on those pa
 - **Cross-ref:**   `SCHEMAS.md §5` (`DecisionResult`, `RejectReason`),
                    `CONFIG_REFERENCE.md` → `fusion_engine` / `decision_engine` / `llama_gate`
 
-### Step 5 — EXECUTION PLANNER
+> **Rail boundary (F-103 · F-073).** `backtest_v2.py` consumes `DecisionResult` here and stops
+> — it never imports `execution_planner` or `ultron_risk_gate` (AST import-graph assertion,
+> 2026-09-15). On `TRADE_OPENED` it computes its own SL/TP directly (`sl_atr_buffer`,
+> `tp1_price`, `tp2_price`), bypassing Steps 5–6 entirely; that backtest-native geometry, not an
+> `ExecutionPlan`, is what the F-019…F-097 research corpus was measured against. Steps 5–7 below
+> describe the live/research rail (`live_engine_hook.py`, `live_rail_orchestrator.py`), which
+> has no CRT state machine / ParentCRT / HTFState anywhere in its own call graph (F-103) — the
+> two rails share Steps 1–4 only, then diverge in both directions.
+
+### Step 5 — EXECUTION PLANNER *(live/research rail only — not reachable from `backtest_v2`)*
 
 - **Module:**      `src/config_layer/execution_planner.py`
 - **Entry point:** `ExecutionPlannerV1_2.plan(decision)` (only when Step 4 = GO)
@@ -115,7 +134,7 @@ integrity net (F-039). Making `stream()` permissive removes that net on those pa
                     invalid SL geometry (TP below entry on long, etc.)
 - **Cross-ref:**   `SCHEMAS.md §6` (`ExecutionPlan`), `CONFIG_REFERENCE.md` → `execution_planner`
 
-### Step 6 — ULTRON RISK GATE
+### Step 6 — ULTRON RISK GATE *(live/research rail only — not reachable from `backtest_v2`)*
 
 - **Module:**      `src/core/ultron_risk_gate.py`
 - **Entry point:** `UltronRiskGate.evaluate(plan, portfolio_state)`
@@ -132,8 +151,12 @@ integrity net (F-039). Making `stream()` permissive removes that net on those pa
 
 - **Module:**      `src/execution/` (broker stub) / live order loop in `src/inout/executor.py`
 - **Entry point:** order dispatcher (broker-stub or live)
-- **Reads from:**  approved `GateResult` + `ExecutionPlan`
-- **Emits:**       `TRADE_OPENED` JSONL line (consumed by `FeatureMonitor` for drift)
+- **Reads from:**  approved `GateResult` + `ExecutionPlan` *(live/research rail path)*
+- **Emits:**       `TRADE_OPENED` JSONL line (consumed by `FeatureMonitor` for drift). On the
+                   **backtest rail** this same JSONL line is emitted directly from
+                   `backtest_v2.py` off its own Step-4 `DecisionResult` + backtest-native
+                   geometry — reachable, but via the separate producer noted above, not via
+                   Steps 5–6.
 - **Failure mode:** fail-fast on broker-API error; the dispatched order is the
                     sole side-effect of the spine
 - **Cross-ref:**   `SCHEMAS.md §9` (JSONL line schemas)
@@ -214,15 +237,18 @@ INOUT is governed by the `inout` section of the production config. Adding it to
 
 ## 3. Cross-reference matrix
 
-| Step | Module                                  | Config section in `v1_multi_2026_03.json` | `SCHEMAS.md` anchor    | `TESTING.md` domain | Write authority             |
-| ---- | --------------------------------------- | ----------------------------------------- | ---------------------- | ------------------- | --------------------------- |
-| 1    | `src/runtime/backtest_v2.py`            | `backtest`, `feature_monitor`             | `Candle`               | runtime             | dev (no governance)         |
-| 2    | `src/features/feature_pipeline.py`      | (schema-driven; no config keys)           | `CANONICAL_FEATURES`   | features            | dev + baseline rehash       |
-| 3    | `src/core/engine_runner.py`             | `engine_runner`, `crt_engine`, `gaussian_scorer`, `rr_model` | `CRTState`, `Direction` | engines | governance only (config) |
-| 4    | `src/core/fusion_engine.py`, `src/core/decision_engine.py` | `fusion_engine`, `decision_engine`, `llama_gate` | `DecisionResult`, `RejectReason` | core | governance only (config) |
-| 5    | `src/config_layer/execution_planner.py` | `execution_planner`                       | `ExecutionPlan`        | execution_planner   | governance only             |
-| 6    | `src/core/ultron_risk_gate.py`          | `ultron_risk_gate`, `portfolio`           | `GateResult`           | risk_gate           | governance only             |
-| 7    | `src/execution/`, `src/inout/executor.py` | (broker adapter; no config keys here)   | JSONL `TRADE_OPENED`   | execution           | dev                         |
+**Rail column (F-103):** `both` = shared by backtest and live/research; `live/research` = not
+reachable from `backtest_v2.py` (no import of that step's module — AST-verified 2026-09-15).
+
+| Step | Module                                  | Config section in `v1_multi_2026_03.json` | `SCHEMAS.md` anchor    | `TESTING.md` domain | Write authority             | Rail          |
+| ---- | --------------------------------------- | ----------------------------------------- | ---------------------- | ------------------- | --------------------------- | ------------- |
+| 1    | `src/runtime/backtest_v2.py`            | `backtest`, `feature_monitor`             | `Candle`               | runtime             | dev (no governance)         | both          |
+| 2    | `src/features/feature_pipeline.py`      | (schema-driven; no config keys)           | `CANONICAL_FEATURES`   | features            | dev + baseline rehash       | both          |
+| 3    | `src/core/engine_runner.py`             | `engine_runner`, `crt_engine`, `gaussian_scorer`, `rr_model` | `CRTState`, `Direction` | engines | governance only (config) | both          |
+| 4    | `src/core/fusion_engine.py`, `src/core/decision_engine.py` | `fusion_engine`, `decision_engine`, `llama_gate` | `DecisionResult`, `RejectReason` | core | governance only (config) | both          |
+| 5    | `src/config_layer/execution_planner.py` | `execution_planner`                       | `ExecutionPlan`        | execution_planner   | governance only             | live/research |
+| 6    | `src/core/ultron_risk_gate.py`          | `ultron_risk_gate`, `portfolio`           | `GateResult`           | risk_gate           | governance only             | live/research |
+| 7    | `src/execution/`, `src/inout/executor.py` | (broker adapter; no config keys here)   | JSONL `TRADE_OPENED`   | execution           | dev                         | both (separate producer on backtest — see Step 7) |
 
 ---
 
@@ -230,12 +256,13 @@ INOUT is governed by the `inout` section of the production config. Adding it to
 
 ```mermaid
 flowchart LR
-    subgraph SPINE["CRT Spine (per-candle, synchronous)"]
+    subgraph SPINE["CRT Spine (per-candle, synchronous) — Steps 1-4 shared by both rails (F-103)"]
         direction LR
         S1[1. Ingest] --> S2[2. FeaturePipeline]
         S2 --> S3[3. EngineRunner<br/>crt · gaussian · zone_gate · rr]
         S3 --> S4[4. FusionEngine →<br/>DecisionEngine]
-        S4 -->|GO| S5[5. ExecutionPlannerV1_2]
+        S4 -->|GO, live/research rail| S5[5. ExecutionPlannerV1_2]
+        S4 -->|GO, backtest rail| S7B[7. Execution<br/>backtest-native SL/TP geometry]
         S4 -->|PASS / REJECT| STOP([no order])
         S5 --> S6[6. UltronRiskGate]
         S6 -->|APPROVE| S7[7. Execution]

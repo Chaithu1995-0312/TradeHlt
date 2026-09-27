@@ -15,6 +15,7 @@ import pytest
 import yaml
 
 from config_layer.crt_engine_v2 import (
+from tests.helpers.crt_config import crt_config_for_test
     CRTConfig,
     CRTEngine,
     CRTState,
@@ -163,7 +164,7 @@ def test_no_parallel_python_state_contract_constants():
 
 
 def test_crt_engine_loads_contracts_non_mutating():
-    cfg = CRTConfig()
+    cfg = crt_config_for_test()
     eng = CRTEngine(config=cfg)
     assert eng.state_contracts is not None
     assert len(eng.state_contracts.contracts) == 9
@@ -182,7 +183,7 @@ def test_process_candle_dual_run_behavior_parity():
 
     def _fingerprint() -> str:
         clear_state_contract_cache()
-        eng = CRTEngine(config=CRTConfig())
+        eng = CRTEngine(config=crt_config_for_test())
         base = datetime(2024, 1, 1, 0, 0, 0)
         candles = [
             Candle(

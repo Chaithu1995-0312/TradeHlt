@@ -16,6 +16,7 @@ import dataclasses
 import statistics
 from collections import Counter, defaultdict
 
+from governance.measurement_basis import TIE_BREAK_PRODUCTION
 from research.config import ResearchConfig
 from research.costs import CostModel
 from research.indicators import sma
@@ -386,7 +387,9 @@ def build_report(behaviors: dict[str, list[dict]], cfg: ResearchConfig) -> dict:
     rep = {
         "forensics_version": FORENSICS_VERSION,
         "note": "close_only rows are the optimistic MEASURE-ONLY bound; intrabar_fixed governs.",
-        **provenance_block(cfg.exit_model, cfg.round_trip_bps),
+        # tie_break=TIE_BREAK_PRODUCTION: forward_walk hardcodes the SL-first
+        # convention in both exit models (CH-measurement-basis-declaration).
+        **provenance_block(cfg.exit_model, cfg.round_trip_bps, tie_break=TIE_BREAK_PRODUCTION),
         "config_sha256": cfg.sha256(),
         "behaviors": {b: aggregate(b, recs, cfg) for b, recs in behaviors.items()},
     }

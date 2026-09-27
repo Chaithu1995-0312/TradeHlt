@@ -35,9 +35,10 @@ UTC epoch timestamps and must NEVER be passed through this conversion.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, time as dtime, timedelta, timezone
 from functools import lru_cache
-from zoneinfo import ZoneInfo
+from typing import Mapping, NamedTuple
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import numpy as np
 import pandas as pd
@@ -95,3 +96,74 @@ def mt5_server_to_utc_scalar(ts: datetime) -> datetime:
     """
     offset_h = 3 if _ny_is_dst_on_date(ts.date()) else 2
     return ts - timedelta(hours=offset_h)
+
+
+# --------------------------------------------------------------------------- #
+# K23 F2 — exact per-date exchange-session windows
+# --------------------------------------------------------------------------- #
+class ExchangeWindow(NamedTuple):
+    """One session defined in its OWN exchange time zone, half-open [open, close)."""
+
+    tz: ZoneInfo
+    open: dtime
+    close: dtime
+
+
+def _parse_hhmm(name: str, key: str, raw) -> dtime:
+    try:
+        h, m = str(raw).split(":")
+        return dtime(int(h), int(m))
+    except (ValueError, TypeError) as exc:
+        raise ValueError(
+            f"exchange_session_windows[{name!r}].{key}={raw!r} must be 'HH:MM'."
+        ) from exc
+
+
+def parse_exchange_session_windows(raw: Mapping[str, Mapping[str, str]]) -> dict[str, ExchangeWindow]:
+    """Validate + parse `backtest.exchange_session_windows`. Fail-closed: never guesses.
+
+    Shape: ``{"LONDON": {"tz": "Europe/London", "open": "08:00", "close": "17:00"}, ...}``.
+    Raises ValueError on an empty mapping, a missing key, an unknown tz, a bad HH:MM, or a
+    window that wraps midnight in its own zone (open >= close).
+    """
+    if not isinstance(raw, Mapping) or not raw:
+        raise ValueError("exchange_session_windows must be a non-empty mapping.")
+    out: dict[str, ExchangeWindow] = {}
+    for name, spec in raw.items():
+        if not isinstance(spec, Mapping) or not {"tz", "open", "close"} <= set(spec):
+            raise ValueError(
+                f"exchange_session_windows[{name!r}] needs keys tz/open/close, got {spec!r}.")
+        try:
+            tz = ZoneInfo(str(spec["tz"]))
+        except (ZoneInfoNotFoundError, ValueError) as exc:
+            raise ValueError(
+                f"exchange_session_windows[{name!r}].tz={spec['tz']!r} is not a known time zone."
+            ) from exc
+        o, c = _parse_hhmm(name, "open", spec["open"]), _parse_hhmm(name, "close", spec["close"])
+        if not o < c:
+            raise ValueError(
+                f"exchange_session_windows[{name!r}]: open {o} must be < close {c} "
+                "(local-day windows only).")
+        out[str(name)] = ExchangeWindow(tz, o, c)
+    return out
+
+
+def exchange_sessions_at(
+    broker_ts: datetime, windows: Mapping[str, ExchangeWindow]
+) -> tuple[str, ...]:
+    """Names of every session whose EXCHANGE-local window contains this MT5 bar, in declared order.
+
+    broker -> UTC via `mt5_server_to_utc_scalar` (the one NY-DST rule) -> each session's own
+    zone, so the London/EU-DST and NY/US-DST shifts (and the US/EU mismatch weeks) are exact
+    per date. Half-open ``open <= t < close`` because MT5 stamps are bar OPEN (F-098): the bar
+    opening at the close time belongs to the next period. MT5-corpus only (module SCOPE).
+    """
+    utc = mt5_server_to_utc_scalar(broker_ts)
+    if utc.tzinfo is None:
+        utc = utc.replace(tzinfo=timezone.utc)
+    hits = []
+    for name, w in windows.items():
+        local_t = utc.astimezone(w.tz).time()
+        if w.open <= local_t < w.close:
+            hits.append(name)
+    return tuple(hits)

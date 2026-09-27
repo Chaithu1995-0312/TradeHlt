@@ -77,6 +77,7 @@ Index how research artifacts become (or fail to become) production config/models
 | [`agent-memory.md`](agent-memory.md) | Agent triggers |
 | [`runtime-memory.md`](runtime-memory.md) | Validation backtests |
 | [`architecture-memory.md`](architecture-memory.md) | Layer placement |
+| [`identity-chain-memory.md`](identity-chain-memory.md) | Closed identity chain (bar-clock bridge, 7-invariant checker) |
 
 ## Known coverage
 

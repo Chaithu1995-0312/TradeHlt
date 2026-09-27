@@ -34,6 +34,7 @@ from research.config import ResearchConfig                         # noqa: E402
 from research.cross_sectional import (                             # noqa: E402
     CROSS_SECTIONAL_VERSION, Interpreter, XSQualConfig, load_panel, qualify,
 )
+from governance.measurement_basis import TIE_BREAK_PRODUCTION  # noqa: E402
 from research.provenance import provenance_block                   # noqa: E402
 from utils.console_safe import safe_print                          # noqa: E402
 
@@ -104,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
         "cross_sectional_version": CROSS_SECTIONAL_VERSION,
         "config_path": args.config,
         "config_sha256": cfg.sha256(),
-        **provenance_block(cfg.exit_model, cfg.round_trip_bps),
+        **provenance_block(cfg.exit_model, cfg.round_trip_bps, tie_break=TIE_BREAK_PRODUCTION),
         **result,
     }
 

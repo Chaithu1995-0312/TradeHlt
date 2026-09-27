@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 from config_layer.crt_engine_v2 import Candle, CRTConfig, CRTEngine, CRTState, Direction, Range
 from config_layer.htf_state import ObjectiveStatus
+from tests.helpers.crt_config import crt_config_for_test
 
 
 _T0 = datetime(2026, 1, 1, tzinfo=timezone.utc)
@@ -16,7 +17,7 @@ def _candle(i, o, h, l, c) -> Candle:
 
 
 def _engine_at_soft_conf() -> CRTEngine:
-    eng = CRTEngine(CRTConfig())
+    eng = CRTEngine(crt_config_for_test())
     eng._parent_crt_enabled = True
     rng = Range(
         h_ref=110.0, l_ref=100.0, equilibrium=105.0,
@@ -87,5 +88,5 @@ def test_gate_on_allows_exists(monkeypatch):
 
 
 def test_active_config_objective_gate_defaults_off():
-    eng = CRTEngine(CRTConfig())
+    eng = CRTEngine(crt_config_for_test())
     assert eng._objective_gate_enabled is False

@@ -52,10 +52,13 @@ from utils.logging_config import get_flow_logger                               #
 
 logger = get_flow_logger("COLLECTOR")
 
-# Hard gate thresholds
+# Hard gate thresholds. Canonical defaults for unit-test / programmatic construction ONLY —
+# the production path reads the multi_strategy_validator section via from_prod_config (§6.5 A1).
 _MIN_STRATEGY_TRADES       = 5
 _MIN_PORTFOLIO_WIN_RATE    = 0.30
 _MAX_PORTFOLIO_DRAWDOWN    = 75_000_000.0   # INR  (75 M)
+_WARMUP_CANDLES            = 60
+_MAX_FORWARD_CANDLES       = 40
 
 
 class MultiStrategyValidator:
@@ -64,13 +67,51 @@ class MultiStrategyValidator:
     a governance ValidationReport.
     """
 
+    _REQUIRED_KEYS = (
+        "min_strategy_trades", "min_portfolio_win_rate", "max_portfolio_drawdown",
+        "warmup", "max_forward_candles",
+    )
+
+    @classmethod
+    def from_prod_config(cls) -> "MultiStrategyValidator":
+        """Production constructor — fail-fast. Strict-reads every hard-gate threshold from the
+        ``multi_strategy_validator`` section; a missing section or key raises (§6.5 A1).
+
+        The keyword signature below is deliberately preserved: it is the test seam
+        (tests/test_sprint7_governance.py constructs with explicit overrides)."""
+        from config_layer.production_config import get_prod_section
+        section = get_prod_section("multi_strategy_validator")
+        if not isinstance(section, dict):
+            raise KeyError(
+                "Required config section 'multi_strategy_validator' missing. Add it to the "
+                "production config (config-first doctrine: no silent defaults)."
+            )
+        for key in cls._REQUIRED_KEYS:
+            if key not in section:
+                raise KeyError(
+                    f"Required config key '{key}' missing from 'multi_strategy_validator' "
+                    f"section. Add it to the production config (config-first doctrine: no "
+                    f"silent defaults)."
+                )
+        return cls(
+            min_strategy_trades=int(section["min_strategy_trades"]),
+            min_portfolio_win_rate=float(section["min_portfolio_win_rate"]),
+            max_portfolio_drawdown=float(section["max_portfolio_drawdown"]),
+            warmup=int(section["warmup"]),
+            max_forward_candles=int(section["max_forward_candles"]),
+        )
+
     def __init__(
         self,
+        # Two-tier: these module-constant defaults are the TEST / programmatic seam; the live
+        # path supplies every knob via from_prod_config (fail-fast, no silent config default).
+        # warmup / max_forward_candles were bare literals here until 2026-09-18 — undeclared,
+        # so config_reachability could not see them at all.
         min_strategy_trades: int   = _MIN_STRATEGY_TRADES,
         min_portfolio_win_rate: float = _MIN_PORTFOLIO_WIN_RATE,
         max_portfolio_drawdown: float = _MAX_PORTFOLIO_DRAWDOWN,
-        warmup: int = 60,
-        max_forward_candles: int = 40,
+        warmup: int = _WARMUP_CANDLES,
+        max_forward_candles: int = _MAX_FORWARD_CANDLES,
     ) -> None:
         self._min_trades    = min_strategy_trades
         self._min_wr        = min_portfolio_win_rate

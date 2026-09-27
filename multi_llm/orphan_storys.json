@@ -1,0 +1,2666 @@
+[
+  {
+    "class": "OrphanStory",
+    "id": "STORY-1.5",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-1.6",
+    "in_degree": 0,
+    "layer": "features",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-2.2",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-3.5",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-3.6",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-4.1",
+    "in_degree": 0,
+    "layer": "core",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-5.1",
+    "in_degree": 0,
+    "layer": "core",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-5.3",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-6.1",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-6.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-6.4",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-6.5",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-7.1",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-7.2",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-8.1",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-9.2",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-9.3",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-9.4",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-10.1",
+    "in_degree": 0,
+    "layer": "data_ingestion",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.3",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.4",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.5",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.6",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.7",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.9",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.10",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.11",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.12",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.13",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.14",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-12.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-12.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-12.3",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-12.6",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-12.8",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.3",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.5",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.6",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.7",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.8",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.9",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.10",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.11",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.12",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.13",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.14",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.15",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.18",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.19",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.20",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.21",
+    "in_degree": 0,
+    "layer": "data_ingestion",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.22",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-13.23",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-19.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-20.3",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.3",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-33.4",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.5",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.7",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.9",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-20.8",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-20.9",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.12",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.14",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.15",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.18",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-25.7",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.19",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-20.15",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.20",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-25.10",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-23.5",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.22",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.23",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.25",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.27",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.28",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-36.13",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-31.15",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-31.17",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-18.4",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.35",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.37",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-33.12",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.42",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.43",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.45",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.47",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-25.31",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.48",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.49",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-19.5",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-31.26",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.53",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.54",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-19.6",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-41.58",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-42.1",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-42.3",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-43.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-44.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-45.3",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-45.4",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-46.2",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-46.3",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-47.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-48.1",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-48.4",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-42.5",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-42.6",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-42.7",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-19.10",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-49.1",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-49.3",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-50.1",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-51.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-51.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-52.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-52.2",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-53.1",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-53.2",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-55.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-55.2",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-19.11",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-11.15",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-36.24",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-20.35",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-19.12",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-57.1",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-57.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-57.3",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-52.3",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-52.4",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-51.4",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-51.6",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-56.1",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-56.2",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-59.1",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-59.15",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-59.17",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-59.18",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-59.19",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-59.2",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-59.20",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-59.21",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-59.23",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-59.25",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-59.28",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-59.3",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.1",
+    "in_degree": 0,
+    "layer": "core",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.12",
+    "in_degree": 0,
+    "layer": "live_rail",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.16",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.21",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.22",
+    "in_degree": 0,
+    "layer": "live_rail",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.23",
+    "in_degree": 0,
+    "layer": "research",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.24",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.27",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.32",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.35",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.36",
+    "in_degree": 0,
+    "layer": "core",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.37",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.39",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.8",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-60.9",
+    "in_degree": 0,
+    "layer": "core",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-62.1",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-62.10",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-62.11",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-62.13",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-62.14",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-62.15",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-62.17",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-62.7",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-62.8",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-62.9",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-63.3",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-63.8",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-65.1",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-65.2",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-65.3",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-65.4",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-65.5",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-65.6",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-76.1",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-78.1",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.10",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.11",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.12",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.13",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.14",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.15",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.16",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.17",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.18",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.19",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.20",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.21",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.22",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.23",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.24",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.25",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.26",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.27",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.28",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.29",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.3",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.30",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.31",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.32",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.33",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.34",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.35",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.36",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.37",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.38",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.39",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.4",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.40",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.41",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.42",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.43",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.44",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.45",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.47",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.48",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.49",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.5",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.50",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.51",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.6",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.7",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.8",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-58.9",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-61.1",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-61.10",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-61.11",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-61.12",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-61.13",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-61.14",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-61.16",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-61.17",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-61.2",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-61.3",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-61.5",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-61.7",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-61.9",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.10",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.11",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.12",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.13",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.14",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.15",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.16",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.17",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.18",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.19",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.20",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.21",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.22",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.23",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.24",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.25",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.26",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.27",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.28",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.29",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.3",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.30",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.31",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.32",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.4",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.5",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.6",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.7",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.8",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-64.9",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-66.1",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-66.2",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-66.3",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-66.4",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-66.5",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-66.6",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-66.7",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-66.8",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-66.9",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.10",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.11",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.12",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.13",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.14",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.15",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.16",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.18",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.3",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.4",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.5",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.6",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.7",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.8",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-67.9",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-68.1",
+    "in_degree": 0,
+    "layer": "research",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-68.2",
+    "in_degree": 0,
+    "layer": "research",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-69.1",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-69.2",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-69.3",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-69.4",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-69.5",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-69.6",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-70.1",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-70.2",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-70.3",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-70.4",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-70.5",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-70.6",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-71.1",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-71.2",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-72.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-73.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-73.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-74.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-75.1",
+    "in_degree": 0,
+    "layer": "data_ingestion",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-77.1",
+    "in_degree": 0,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "OrphanStory",
+    "id": "STORY-79.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  }
+]

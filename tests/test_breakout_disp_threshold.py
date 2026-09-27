@@ -11,6 +11,7 @@ Covers the deployment of `breakout_disp_threshold` (default 1.5; per-instrument 
 from config_layer.production_config import resolve_breakout_disp_threshold
 from config_layer.crt_engine_v2 import CRTConfig, ExecutionEngine
 from config_layer.execution_planner import ExecutionPlannerV1_2, DEFAULT_CONFIG
+from tests.helpers.crt_config import crt_config_for_test
 
 
 # A breakout-shaped feature vector whose disp (1.4) sits BETWEEN 1.3 and 1.5 → the decisive case:
@@ -28,7 +29,7 @@ _CRT_SECTION = {"breakout_disp_threshold": 1.5,
 
 def test_config_defaults_are_1_5_noop():
     """Migration is a no-op by default: both config defaults == historical hardcoded 1.5."""
-    assert CRTConfig().breakout_disp_threshold == 1.5
+    assert crt_config_for_test().breakout_disp_threshold == 1.5
     assert DEFAULT_CONFIG["breakout_disp_threshold"] == 1.5
 
 

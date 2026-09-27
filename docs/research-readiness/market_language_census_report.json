@@ -1,0 +1,4058 @@
+{
+  "generated_at": "2026-09-19T21:00:11.494921+00:00",
+  "census": "market_language",
+  "version": "1.0",
+  "authority_files": [
+    "configs/formulas/market_ontology.yaml",
+    "configs/formulas/market_crt_states.yaml",
+    "configs/formulas/crt_state_identity.yaml",
+    "configs/formulas/market_shapes.yaml",
+    "src/features/feature_schema.py"
+  ],
+  "S1_feature_schema": {
+    "header": {
+      "schema_vector_derived_from": "configs/formulas/market_ontology.yaml",
+      "schema_hash_md5": "d40e7c7d5b624ef6d27670255ad95a35",
+      "feature_order_hash_sha256_16": "7901bb0d34f3d0af",
+      "dim": 48,
+      "schema_hash_formula": "md5(concat(names)) + sha256(json).hex[:16] mirror of src/features/feature_schema.py:237/243-248 (v6.0 generated vector)"
+    },
+    "rows": [
+      {
+        "name": "open",
+        "fm_id": "FM-085",
+        "section": "source_inputs",
+        "lifecycle": "registered",
+        "formula_or_source": "identity \u2014 raw bar-open price as ingested from the broker/data feed; no transform",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "open",
+        "vector_index": 0,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "high",
+        "fm_id": "FM-086",
+        "section": "source_inputs",
+        "lifecycle": "registered",
+        "formula_or_source": "identity \u2014 raw bar-high price as ingested from the broker/data feed; no transform",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "high",
+        "vector_index": 1,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "low",
+        "fm_id": "FM-087",
+        "section": "source_inputs",
+        "lifecycle": "registered",
+        "formula_or_source": "identity \u2014 raw bar-low price as ingested from the broker/data feed; no transform",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "low",
+        "vector_index": 2,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "close",
+        "fm_id": "FM-088",
+        "section": "source_inputs",
+        "lifecycle": "registered",
+        "formula_or_source": "identity \u2014 raw bar-close price as ingested from the broker/data feed; no transform",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "close",
+        "vector_index": 3,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "volume",
+        "fm_id": "FM-089",
+        "section": "source_inputs",
+        "lifecycle": "registered",
+        "formula_or_source": "identity \u2014 raw bar volume as ingested from the broker/data feed; no transform",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "volume",
+        "vector_index": 4,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "body_size",
+        "fm_id": "FM-001",
+        "section": "primitives",
+        "lifecycle": "consumable",
+        "formula_or_source": "abs(close - open)",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "body_size",
+        "vector_index": 27,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "candle_range",
+        "fm_id": "FM-002",
+        "section": "primitives",
+        "lifecycle": "consumable",
+        "formula_or_source": "high - low",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "candle_range",
+        "vector_index": 28,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "upper_wick",
+        "fm_id": "FM-003",
+        "section": "primitives",
+        "lifecycle": "parity_verified",
+        "formula_or_source": "high - max(open, close)",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "lower_wick",
+        "fm_id": "FM-004",
+        "section": "primitives",
+        "lifecycle": "parity_verified",
+        "formula_or_source": "min(open, close) - low",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "total_wick",
+        "fm_id": "FM-005",
+        "section": "primitives",
+        "lifecycle": "parity_verified",
+        "formula_or_source": "upper_wick + lower_wick",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "body_ratio",
+        "fm_id": "FM-010",
+        "section": "feature_compositions",
+        "lifecycle": "consumable",
+        "formula_or_source": "body_size/candle_range",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "body_ratio",
+        "vector_index": 29,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "body_to_total_wick_ratio",
+        "fm_id": "FM-013",
+        "section": "feature_compositions",
+        "lifecycle": "registered",
+        "formula_or_source": "candle_math.body_to_total_wick_ratio",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "upper_wick_ratio",
+        "fm_id": "FM-011",
+        "section": "feature_compositions",
+        "lifecycle": "research",
+        "formula_or_source": "upper_wick/candle_range",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "lower_wick_ratio",
+        "fm_id": "FM-012",
+        "section": "feature_compositions",
+        "lifecycle": "research",
+        "formula_or_source": "lower_wick/candle_range",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "disp_strength",
+        "fm_id": "FM-020",
+        "section": "derived_metrics",
+        "lifecycle": "parity_verified",
+        "formula_or_source": "clip(body_size / (atr * close), <feature_pipeline.disp_strength_clip_low>, <feature_pipeline.disp_strength_clip_high>) if atr>0 and close>0 else nan  # defaults 0.0, 3.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "disp_strength",
+        "vector_index": 33,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "retest_depth",
+        "fm_id": "FM-021",
+        "section": "derived_metrics",
+        "lifecycle": "parity_verified",
+        "formula_or_source": "clip(abs(close - ema_fast) / (atr * close), <feature_pipeline.retest_depth_clip_low>, <feature_pipeline.retest_depth_clip_high>) if retest_flag==1 and atr>0 and close>0 else 0.0  # defaults 0.0, 1.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "retest_depth",
+        "vector_index": 34,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "ema_spread",
+        "fm_id": "FM-022",
+        "section": "derived_metrics",
+        "lifecycle": "parity_verified",
+        "formula_or_source": "(ema_fast - ema_slow) / atr if atr>0 else nan   # emitted only when <feature_pipeline.normalization_basis> == 'atr_relative' (the default); 'atr_absolute' selects FM-030 instead",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "ema_spread",
+        "vector_index": 9,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "momentum_score",
+        "fm_id": "FM-023",
+        "section": "derived_metrics",
+        "lifecycle": "parity_verified",
+        "formula_or_source": "close_delta / atr if atr>0 else nan   # close_delta = close.diff(); emitted only when <feature_pipeline.normalization_basis> == 'atr_relative' (the default); 'atr_absolute' selects FM-031 instead",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "momentum_score",
+        "vector_index": 12,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "ema_spread_atr",
+        "fm_id": "FM-030",
+        "section": "derived_metrics",
+        "lifecycle": "parity_verified",
+        "formula_or_source": "(ema_fast - ema_slow) / (atr * close) if atr>0 and close>0 else nan   # emitted only when <feature_pipeline.normalization_basis> == 'atr_absolute'; the default 'atr_relative' selects FM-022 instead",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "momentum_score_atr",
+        "fm_id": "FM-031",
+        "section": "derived_metrics",
+        "lifecycle": "parity_verified",
+        "formula_or_source": "close_delta / (atr * close) if atr>0 and close>0 else nan   # close_delta = close.diff(); emitted only when <feature_pipeline.normalization_basis> == 'atr_absolute'; the default 'atr_relative' selects FM-023 instead",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "volatility_ratio",
+        "fm_id": "FM-024",
+        "section": "derived_metrics",
+        "lifecycle": "parity_verified",
+        "formula_or_source": "(high - low) / (atr * close) if atr>0 and close>0 else 1.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "volatility_ratio",
+        "vector_index": 14,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "liquidity_distance",
+        "fm_id": "FM-025",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "min over levels of abs(close - level) / (atr * close), clipped >= 0; nan if atr*close<=0 or no finite level",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "liquidity_distance",
+        "vector_index": 36,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "liquidity_pressure_score",
+        "fm_id": "FM-026",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "clip(exp(<feature_pipeline.liquidity_decay_coeff> * liquidity_distance), 0.0, 1.0); nan distance -> treated as <feature_pipeline.liquidity_nan_sentinel>  # defaults -0.5, 10.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "liquidity_pressure_score",
+        "vector_index": 37,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "displacement_retrace",
+        "fm_id": "FM-027",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "clip(|retest_close - disp_open| / |disp_close - disp_open|, 0.0, 1.0); disp body 0 -> skip",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "displacement_atr_ratio",
+        "fm_id": "FM-028",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "candle_range / atr_abs; atr_abs<=0 -> 0.0  # atr_abs = SMA(period) of true_range, ABSOLUTE price units (state.atr_abs, now registered as FM-074 atr_absolute), NOT the close-relative FM-041 `atr`",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "disp_strength_atr_rescale",
+        "fm_id": "FM-029",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "disp_strength / atr; atr<=0 -> 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "candles_since_retest_state",
+        "fm_id": "FM-070",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "current_candle_index - retest_candle_index",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "order_block_distance",
+        "fm_id": "FM-075",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "tanh(sign * (close - order_block_zone_edge) / atr); 0.0 if no active OB or atr<=0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "order_block_distance",
+        "vector_index": 39,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "fvg_distance",
+        "fm_id": "FM-076",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "tanh(sign * (close - fvg_zone_edge) / atr); 0.0 if no active FVG or atr<=0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "fvg_distance",
+        "vector_index": 40,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "breaker_distance",
+        "fm_id": "FM-077",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "tanh(sign * (close - breaker_zone_edge) / atr); 0.0 if no active breaker or atr<=0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "breaker_distance",
+        "vector_index": 41,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "mitigation_block_distance",
+        "fm_id": "FM-078",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "tanh(sign * (close - mitigation_zone_edge) / atr); 0.0 if no live mitigation block or atr<=0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "mitigation_block_distance",
+        "vector_index": 42,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "pdh_distance",
+        "fm_id": "FM-079",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "tanh(-(close - prev_day_high) / atr); 0.0 if no closed D1 parent yet or atr<=0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "pdh_distance",
+        "vector_index": 43,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "pdl_distance",
+        "fm_id": "FM-080",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "tanh((close - prev_day_low) / atr); 0.0 if no closed D1 parent yet or atr<=0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "pdl_distance",
+        "vector_index": 44,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "eqh_distance",
+        "fm_id": "FM-081",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "tanh(-(close - eqh_level) / atr); 0.0 if no equal-highs cluster found or atr<=0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "eqh_distance",
+        "vector_index": 45,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "eql_distance",
+        "fm_id": "FM-082",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "tanh((close - eql_level) / atr); 0.0 if no equal-lows cluster found or atr<=0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "eql_distance",
+        "vector_index": 46,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "true_range",
+        "fm_id": "FM-040",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "max(high - low, abs(high - prev_close), abs(low - prev_close))",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "atr",
+        "fm_id": "FM-041",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "SMA(<feature_pipeline.atr_period>) of true_range, close-relative: atr_14_raw / close (atr_14_raw = true_range.rolling(<feature_pipeline.atr_period>).mean())  # default 14",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "atr",
+        "vector_index": 13,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "atr_absolute",
+        "fm_id": "FM-074",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "SMA(<feature_pipeline.atr_period>) of true_range, ABSOLUTE price units (no division by close): true_range.rolling(<feature_pipeline.atr_period>).mean()  # default 14",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "rsi_14",
+        "fm_id": "FM-042",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "100 - 100/(1+RS); RS = SMA(<feature_pipeline.rsi_period>) gain / (SMA(<feature_pipeline.rsi_period>) loss + 1e-9); clipped [0,100]  # default period 14",
+        "activation_condition": "[0, 100]",
+        "n_states": 0,
+        "vector_key": "rsi_14",
+        "vector_index": 15,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "ema_fast",
+        "fm_id": "FM-043",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "close.ewm(span=<feature_pipeline.ema_fast_span>, adjust=False).mean()  # default 9",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "ema_fast",
+        "vector_index": 7,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "ema_slow",
+        "fm_id": "FM-044",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "close.ewm(span=<feature_pipeline.ema_slow_span>, adjust=False).mean()  # default 21",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "ema_slow",
+        "vector_index": 8,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "swing_high",
+        "fm_id": "FM-045",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "causal DELAYED publication of a centered rolling-max swing high over width 2k+1 (FC1-A: math at t, published with k-bar delay, available_at = t+k); k = <feature_pipeline.swing_window>  # default 2",
+        "activation_condition": "",
+        "n_states": 2,
+        "vector_key": "swing_high",
+        "vector_index": 23,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "swing_low",
+        "fm_id": "FM-046",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "causal DELAYED publication of a centered rolling-min swing low over width 2k+1 (FC1-A); k = <feature_pipeline.swing_window>  # default 2",
+        "activation_condition": "",
+        "n_states": 2,
+        "vector_key": "swing_low",
+        "vector_index": 24,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "macd_line",
+        "fm_id": "FM-047",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "close.ewm(span=<feature_pipeline.macd_fast>, adjust=False).mean() - close.ewm(span=<feature_pipeline.macd_slow>, adjust=False).mean()  # defaults 12, 26",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "macd_line",
+        "vector_index": 16,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "macd_signal",
+        "fm_id": "FM-048",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "macd_line.ewm(span=<feature_pipeline.macd_signal>, adjust=False).mean()  # default 9",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "macd_signal",
+        "vector_index": 17,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "macd_hist_raw",
+        "fm_id": "FM-049",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "macd_line - macd_signal",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "macd_hist_raw",
+        "vector_index": 18,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "macd_hist_z",
+        "fm_id": "FM-053",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "rolling(<feature_pipeline.zscore_window>) z-score of macd_hist_raw  # default 50",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "macd_hist_z",
+        "vector_index": 19,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "trend_strength_z",
+        "fm_id": "FM-064",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "rolling(<feature_pipeline.zscore_window>) z-score of SMA(<feature_pipeline.trend_strength_window>) of diff(SMA(<feature_pipeline.ma_periods[0]>) of close)  # defaults 50, 10, 20",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "trend_strength_z",
+        "vector_index": 11,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "trend_strength_raw",
+        "fm_id": "FM-084",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "SMA(<feature_pipeline.trend_strength_window>) of diff(SMA(<feature_pipeline.ma_periods[0]>) of close)  # defaults 10, 20",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "volatility_regime",
+        "fm_id": "FM-050",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "tercile(atr_14.rolling(<feature_pipeline.volatility_percentile_window>, min_periods=1).rank(pct=True)); atr_14 = SMA(14) of true_range (ABSOLUTE); cuts at <feature_pipeline.volatility_tercile_low>/<feature_pipeline.volatility_tercile_high> -> int8 {0,1,2}  # defaults 200, 0.33/0.66",
+        "activation_condition": "{0, 1, 2}",
+        "n_states": 3,
+        "vector_key": "volatility_regime",
+        "vector_index": 30,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "volume_ratio",
+        "fm_id": "FM-062",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "volume / SMA(volume, <feature_pipeline.volume_ma_window>); 1.0 where the moving average is <= 0  # default 20",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "volume_ratio",
+        "vector_index": 5,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "volume_spike",
+        "fm_id": "FM-063",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "volume_ratio > rolling(<feature_pipeline.volume_spike_adaptive_window>, min_periods=<feature_pipeline.volume_spike_min_samples>).quantile(<feature_pipeline.volume_spike_percentile>/100); where that threshold is NaN fall back to <feature_pipeline.volume_spike_fixed_fallback> -> int8 {0, 1}  # defaults 50, 20, 75, 1.5",
+        "activation_condition": "{0, 1}",
+        "n_states": 2,
+        "vector_key": "volume_spike",
+        "vector_index": 38,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "candles_since_sweep",
+        "fm_id": "FM-065",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "cumcount of bars since the last liquidity_sweep event (groupby (liquidity_sweep != 0).cumsum()); 0 before the first sweep. Falls back to a retest_flag-keyed grouping ONLY when liquidity_sweep is absent from the frame (feature_pipeline.py:988-991) \u2014 non-authoritative, unreachable in production per the certification ledger.",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "candles_since_sweep",
+        "vector_index": 35,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "last_swing_high_price",
+        "fm_id": "FM-066",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "forward-fill of high where the centered swing-high pivot fired, then shifted by k = <feature_pipeline.swing_window> (FC1-A causal publication)  # default 2",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "last_swing_low_price",
+        "fm_id": "FM-067",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "forward-fill of low where the centered swing-low pivot fired, then shifted by k = <feature_pipeline.swing_window> (FC1-A causal publication)  # default 2",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "hour_of_day",
+        "fm_id": "FM-051",
+        "section": "temporal_context",
+        "lifecycle": "registered",
+        "formula_or_source": "timestamp.dt.hour -> int8",
+        "activation_condition": "[0, 23]",
+        "n_states": 0,
+        "vector_key": "hour_of_day",
+        "vector_index": 32,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "session",
+        "fm_id": "FM-052",
+        "section": "temporal_context",
+        "lifecycle": "registered",
+        "formula_or_source": "window model over <feature_pipeline.session_windows_utc>, half-open [start, end): OVERLAP if in LONDON and NEWYORK; else NEWYORK; else LONDON; else ASIA; else CLOSED -> int8  # defaults ASIA [0,9) LONDON [7,16) NEWYORK [12,21)",
+        "activation_condition": "{0, 1, 2, 3, 4}",
+        "n_states": 5,
+        "vector_key": "session",
+        "vector_index": 31,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "trend_bias",
+        "fm_id": "FM-054",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "sign(ema_fast - ema_slow) -> float32 {-1, 0, +1}",
+        "activation_condition": "{-1, 0, 1}",
+        "n_states": 3,
+        "vector_key": "trend_bias",
+        "vector_index": 10,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "higher_high",
+        "fm_id": "FM-055",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "high > prev(last_swing_high_price) -> int8 {0, 1}; NaN reference compares False",
+        "activation_condition": "{0, 1}",
+        "n_states": 2,
+        "vector_key": "higher_high",
+        "vector_index": 25,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "lower_low",
+        "fm_id": "FM-056",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "low < prev(last_swing_low_price) -> int8 {0, 1}; NaN reference compares False",
+        "activation_condition": "{0, 1}",
+        "n_states": 2,
+        "vector_key": "lower_low",
+        "vector_index": 26,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "break_of_structure",
+        "fm_id": "FM-057",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "+1 if close > prev(last_swing_high_price); -1 if close < prev(last_swing_low_price); else 0 -> int8",
+        "activation_condition": "{-1, 0, 1}",
+        "n_states": 3,
+        "vector_key": "break_of_structure",
+        "vector_index": 22,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "liquidity_sweep",
+        "fm_id": "FM-058",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "+1 if high > ref_high and close <= ref_high; -1 if low < ref_low and close >= ref_low; else 0 -> int8   # ref_* = prev(last_swing_*_price)",
+        "activation_condition": "{-1, 0, 1}",
+        "n_states": 3,
+        "vector_key": "liquidity_sweep",
+        "vector_index": 21,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "sweep_detected",
+        "fm_id": "FM-059",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "liquidity_sweep != 0 -> int8 {0, 1}",
+        "activation_condition": "{0, 1}",
+        "n_states": 2,
+        "vector_key": "sweep_detected",
+        "vector_index": 20,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "double_sweep",
+        "fm_id": "FM-060",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "any(liquidity_sweep > 0) and any(liquidity_sweep < 0) over rolling(<feature_pipeline.double_sweep_window>, min_periods=1) -> int8 {0, 1}  # default 5",
+        "activation_condition": "{0, 1}",
+        "n_states": 2,
+        "vector_key": "double_sweep",
+        "vector_index": 6,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "retest_flag",
+        "fm_id": "FM-061",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "rolling_any(liquidity_sweep != 0, <feature_pipeline.retest_lookback>) and abs(close - ema_fast) <= <feature_pipeline.retest_atr_band_mult> * atr * close -> int8 {0, 1}  # defaults 10, 1.0",
+        "activation_condition": "{0, 1}",
+        "n_states": 2,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "rsi_state",
+        "fm_id": "FM-068",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "+1 if rsi_14 > <feature_pipeline.rsi_overbought>; -1 if rsi_14 < <feature_pipeline.rsi_oversold>; else 0 -> int8  # defaults 70, 30",
+        "activation_condition": "{-1, 0, 1}",
+        "n_states": 3,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "displacement_flag",
+        "fm_id": "FM-069",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "body_size > candle_range * <feature_pipeline.displacement_strong_body_mult> and atr > 0 -> int8 {0, 1}  # default 0.6",
+        "activation_condition": "{0, 1}",
+        "n_states": 2,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "body_commitment",
+        "fm_id": "FM-071",
+        "section": "structural_states",
+        "lifecycle": "research",
+        "formula_or_source": "bin(body_ratio; band_edges) -> int8 {0,1,2}  # identity transform; edges ontology-owned",
+        "activation_condition": "{0, 1, 2}",
+        "n_states": 3,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "atr_magnitude",
+        "fm_id": "FM-072",
+        "section": "structural_states",
+        "lifecycle": "research",
+        "formula_or_source": "bin(percentile_rank(atr | series); band_edges) -> int8 {0,1,2}  # series percentile of FM-041 relative atr",
+        "activation_condition": "{0, 1, 2}",
+        "n_states": 3,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "momentum_magnitude",
+        "fm_id": "FM-073",
+        "section": "structural_states",
+        "lifecycle": "research",
+        "formula_or_source": "bin(percentile_rank(|momentum_score| | series); band_edges) -> int8 {0,1,2}  # F-061: never fixed abs edges on legacy FM-023",
+        "activation_condition": "{0, 1, 2}",
+        "n_states": 3,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "change_of_character",
+        "fm_id": "FM-083",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "break_of_structure if sign(break_of_structure) != sign(trend_bias) and both nonzero, else 0",
+        "activation_condition": "{-1, 0, 1}",
+        "n_states": 3,
+        "vector_key": "change_of_character",
+        "vector_index": 47,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      }
+    ],
+    "_n": 71
+  },
+  "S2_state_schema": {
+    "vocabularies": {
+      "crt_machine": {
+        "note": "CRT engine/resolver lifecycle states (constructor-neutral identity).",
+        "rows": [
+          {
+            "state_name": "RANGE",
+            "parent": null,
+            "defined": null,
+            "sticky": null,
+            "reachable": null,
+            "activation_condition": {
+              "liquidity_sweep": [
+                "NoSweep"
+              ],
+              "break_of_structure": [
+                "NoBreak"
+              ],
+              "sweep_detected": [
+                "NoSweep"
+              ],
+              "displacement_flag": [
+                "NoDisplacement"
+              ],
+              "double_sweep": [
+                "NoDoubleSweep"
+              ],
+              "higher_high": [
+                "NoHigherHigh"
+              ],
+              "lower_low": [
+                "NoLowerLow"
+              ],
+              "retest_flag": [
+                "NoRetest"
+              ],
+              "swing_high": [
+                "NoSwingHigh"
+              ],
+              "swing_low": [
+                "NoSwingLow"
+              ]
+            },
+            "predicate_source": null,
+            "source_file": "configs/formulas/crt_state_identity.yaml"
+          },
+          {
+            "state_name": "SHADOW_PENDING",
+            "parent": null,
+            "defined": null,
+            "sticky": null,
+            "reachable": null,
+            "activation_condition": null,
+            "predicate_source": null,
+            "source_file": "configs/formulas/crt_state_identity.yaml"
+          },
+          {
+            "state_name": "SWEEP",
+            "parent": null,
+            "defined": null,
+            "sticky": null,
+            "reachable": null,
+            "activation_condition": {
+              "liquidity_sweep": [
+                "SellSideSweep",
+                "BuySideSweep"
+              ],
+              "break_of_structure": [
+                "NoBreak"
+              ],
+              "displacement_flag": [
+                "NoDisplacement"
+              ]
+            },
+            "predicate_source": null,
+            "source_file": "configs/formulas/crt_state_identity.yaml"
+          },
+          {
+            "state_name": "DISPLACEMENT",
+            "parent": null,
+            "defined": null,
+            "sticky": null,
+            "reachable": null,
+            "activation_condition": {
+              "displacement_flag": [
+                "Displacement"
+              ],
+              "change_of_character": {
+                "states": [
+                  "BullishCHoCH",
+                  "BearishCHoCH"
+                ],
+                "link": "LINK-001"
+              }
+            },
+            "predicate_source": null,
+            "source_file": "configs/formulas/crt_state_identity.yaml"
+          },
+          {
+            "state_name": "EXPANSION",
+            "parent": null,
+            "defined": null,
+            "sticky": null,
+            "reachable": null,
+            "activation_condition": {
+              "displacement_flag": [
+                "Displacement"
+              ]
+            },
+            "predicate_source": null,
+            "source_file": "configs/formulas/crt_state_identity.yaml"
+          },
+          {
+            "state_name": "EXPIRED",
+            "parent": null,
+            "defined": null,
+            "sticky": null,
+            "reachable": null,
+            "activation_condition": null,
+            "predicate_source": null,
+            "source_file": "configs/formulas/crt_state_identity.yaml"
+          },
+          {
+            "state_name": "RETEST",
+            "parent": null,
+            "defined": null,
+            "sticky": null,
+            "reachable": null,
+            "activation_condition": {
+              "retest_flag": [
+                "RetestActive"
+              ],
+              "sweep_detected": [
+                "SweepDetected"
+              ],
+              "break_of_structure": [
+                "NoBreak"
+              ]
+            },
+            "predicate_source": null,
+            "source_file": "configs/formulas/crt_state_identity.yaml"
+          },
+          {
+            "state_name": "EXECUTION",
+            "parent": null,
+            "defined": null,
+            "sticky": null,
+            "reachable": null,
+            "activation_condition": {
+              "retest_flag": [
+                "RetestActive"
+              ],
+              "trend_bias": [
+                "Bullish",
+                "Bearish"
+              ],
+              "rsi_state": [
+                "NeutralMomentum"
+              ],
+              "session": [
+                "LONDON",
+                "NEWYORK",
+                "OVERLAP"
+              ]
+            },
+            "predicate_source": null,
+            "source_file": "configs/formulas/crt_state_identity.yaml"
+          },
+          {
+            "state_name": "RESOLUTION",
+            "parent": null,
+            "defined": null,
+            "sticky": null,
+            "reachable": null,
+            "activation_condition": null,
+            "predicate_source": null,
+            "source_file": "configs/formulas/crt_state_identity.yaml"
+          },
+          {
+            "state_name": "RANGE_C1",
+            "parent": null,
+            "defined": null,
+            "sticky": null,
+            "reachable": null,
+            "activation_condition": null,
+            "predicate_source": null,
+            "source_file": "configs/formulas/crt_state_identity.yaml"
+          },
+          {
+            "state_name": "MANIPULATION_C2",
+            "parent": null,
+            "defined": null,
+            "sticky": null,
+            "reachable": null,
+            "activation_condition": null,
+            "predicate_source": null,
+            "source_file": "configs/formulas/crt_state_identity.yaml"
+          },
+          {
+            "state_name": "DISTRIBUTION_C3",
+            "parent": null,
+            "defined": null,
+            "sticky": null,
+            "reachable": null,
+            "activation_condition": null,
+            "predicate_source": null,
+            "source_file": "configs/formulas/crt_state_identity.yaml"
+          }
+        ],
+        "_n": 12
+      },
+      "feature_enum": {
+        "note": "Feature-value -> meaning map declared in ontology states blocks (name/value/condition/description shape).",
+        "rows": [
+          {
+            "state_name": "Bearish",
+            "parent": "trend_bias",
+            "fm_id": "FM-054",
+            "value": -1,
+            "activation_condition": "ema_fast < ema_slow",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "Neutral",
+            "parent": "trend_bias",
+            "fm_id": "FM-054",
+            "value": 0,
+            "activation_condition": "ema_fast == ema_slow",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "Bullish",
+            "parent": "trend_bias",
+            "fm_id": "FM-054",
+            "value": 1,
+            "activation_condition": "ema_fast > ema_slow",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NoHigherHigh",
+            "parent": "higher_high",
+            "fm_id": "FM-055",
+            "value": 0,
+            "activation_condition": "high <= previous last_swing_high_price, or no reference exists yet",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "HigherHigh",
+            "parent": "higher_high",
+            "fm_id": "FM-055",
+            "value": 1,
+            "activation_condition": "high > previous last_swing_high_price",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NoLowerLow",
+            "parent": "lower_low",
+            "fm_id": "FM-056",
+            "value": 0,
+            "activation_condition": "low >= previous last_swing_low_price, or no reference exists yet",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "LowerLow",
+            "parent": "lower_low",
+            "fm_id": "FM-056",
+            "value": 1,
+            "activation_condition": "low < previous last_swing_low_price",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "BearishBreak",
+            "parent": "break_of_structure",
+            "fm_id": "FM-057",
+            "value": -1,
+            "activation_condition": "close < previous last_swing_low_price",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NoBreak",
+            "parent": "break_of_structure",
+            "fm_id": "FM-057",
+            "value": 0,
+            "activation_condition": "close within the prior structural range",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "BullishBreak",
+            "parent": "break_of_structure",
+            "fm_id": "FM-057",
+            "value": 1,
+            "activation_condition": "close > previous last_swing_high_price",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "SellSideSweep",
+            "parent": "liquidity_sweep",
+            "fm_id": "FM-058",
+            "value": -1,
+            "activation_condition": "low < ref_low and close >= ref_low",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NoSweep",
+            "parent": "liquidity_sweep",
+            "fm_id": "FM-058",
+            "value": 0,
+            "activation_condition": "neither sweep condition met",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "BuySideSweep",
+            "parent": "liquidity_sweep",
+            "fm_id": "FM-058",
+            "value": 1,
+            "activation_condition": "high > ref_high and close <= ref_high",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NoSweep",
+            "parent": "sweep_detected",
+            "fm_id": "FM-059",
+            "value": 0,
+            "activation_condition": "liquidity_sweep == 0",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "SweepDetected",
+            "parent": "sweep_detected",
+            "fm_id": "FM-059",
+            "value": 1,
+            "activation_condition": "liquidity_sweep != 0",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NoDoubleSweep",
+            "parent": "double_sweep",
+            "fm_id": "FM-060",
+            "value": 0,
+            "activation_condition": "at most one sweep direction present in the trailing window",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "DoubleSweep",
+            "parent": "double_sweep",
+            "fm_id": "FM-060",
+            "value": 1,
+            "activation_condition": "both a positive and a negative liquidity_sweep within the trailing window",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NoRetest",
+            "parent": "retest_flag",
+            "fm_id": "FM-061",
+            "value": 0,
+            "activation_condition": "no sweep within retest_lookback bars, or |close - ema_fast| outside the ATR band",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "RetestActive",
+            "parent": "retest_flag",
+            "fm_id": "FM-061",
+            "value": 1,
+            "activation_condition": "sweep within retest_lookback bars AND |close - ema_fast| <= retest_atr_band_mult * atr * close",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "Oversold",
+            "parent": "rsi_state",
+            "fm_id": "FM-068",
+            "value": -1,
+            "activation_condition": "rsi_14 < rsi_oversold",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NeutralMomentum",
+            "parent": "rsi_state",
+            "fm_id": "FM-068",
+            "value": 0,
+            "activation_condition": "rsi_oversold <= rsi_14 <= rsi_overbought",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "Overbought",
+            "parent": "rsi_state",
+            "fm_id": "FM-068",
+            "value": 1,
+            "activation_condition": "rsi_14 > rsi_overbought",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NoDisplacement",
+            "parent": "displacement_flag",
+            "fm_id": "FM-069",
+            "value": 0,
+            "activation_condition": "body_size <= candle_range * displacement_strong_body_mult, or atr <= 0",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "Displacement",
+            "parent": "displacement_flag",
+            "fm_id": "FM-069",
+            "value": 1,
+            "activation_condition": "body_size > candle_range * displacement_strong_body_mult and atr > 0",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "LowCommitment",
+            "parent": "body_commitment",
+            "fm_id": "FM-071",
+            "value": 0,
+            "activation_condition": "body_ratio < band_edges[0] (default 0.33)",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "MediumCommitment",
+            "parent": "body_commitment",
+            "fm_id": "FM-071",
+            "value": 1,
+            "activation_condition": "band_edges[0] <= body_ratio < band_edges[1]",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "HighCommitment",
+            "parent": "body_commitment",
+            "fm_id": "FM-071",
+            "value": 2,
+            "activation_condition": "body_ratio >= band_edges[1] (default 0.70, CRT displacement-coherent)",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "LowAtrMagnitude",
+            "parent": "atr_magnitude",
+            "fm_id": "FM-072",
+            "value": 0,
+            "activation_condition": "percentile_rank(atr) < band_edges[0]",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "MediumAtrMagnitude",
+            "parent": "atr_magnitude",
+            "fm_id": "FM-072",
+            "value": 1,
+            "activation_condition": "band_edges[0] <= percentile_rank(atr) < band_edges[1]",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "HighAtrMagnitude",
+            "parent": "atr_magnitude",
+            "fm_id": "FM-072",
+            "value": 2,
+            "activation_condition": "percentile_rank(atr) >= band_edges[1]",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "LowMomentumMagnitude",
+            "parent": "momentum_magnitude",
+            "fm_id": "FM-073",
+            "value": 0,
+            "activation_condition": "percentile_rank(|momentum_score|) < band_edges[0]",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "MediumMomentumMagnitude",
+            "parent": "momentum_magnitude",
+            "fm_id": "FM-073",
+            "value": 1,
+            "activation_condition": "band_edges[0] <= percentile_rank(|momentum_score|) < band_edges[1]",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "HighMomentumMagnitude",
+            "parent": "momentum_magnitude",
+            "fm_id": "FM-073",
+            "value": 2,
+            "activation_condition": "percentile_rank(|momentum_score|) >= band_edges[1]",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "BearishCHoCH",
+            "parent": "change_of_character",
+            "fm_id": "FM-083",
+            "value": -1,
+            "activation_condition": "break_of_structure < 0 and trend_bias > 0",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NoCHoCH",
+            "parent": "change_of_character",
+            "fm_id": "FM-083",
+            "value": 0,
+            "activation_condition": "break_of_structure == 0 or trend_bias == 0 or sign(break_of_structure) == sign(trend_bias)",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "BullishCHoCH",
+            "parent": "change_of_character",
+            "fm_id": "FM-083",
+            "value": 1,
+            "activation_condition": "break_of_structure > 0 and trend_bias < 0",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          }
+        ],
+        "_n": 36
+      },
+      "smc_choch": {
+        "note": "SMC structural signal (CHoCH) \u2014 a signed combination, NOT a state machine.",
+        "rows": [
+          {
+            "state_name": "change_of_character",
+            "parent": null,
+            "domain": "{-1, 0, +1}",
+            "activation_condition": "break_of_structure != 0 and trend_bias != 0 and sign(break_of_structure) != sign(trend_bias)",
+            "source_file": "src/features/smc/choch.py",
+            "note": "Pure signed operation over registered features (BOS x trend_bias); the ontology explicitly excludes BOS/CHOCH detection state-machines (market_ontology.yaml:32)."
+          }
+        ],
+        "_n": 1
+      },
+      "trade_execution": {
+        "note": "Trade/execution record + intent + geometry vocabulary.",
+        "rows": [
+          {
+            "name": "trade_id",
+            "definition": "opaque execution-intent id (authoritative identity)",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "timestamp",
+            "definition": "entry timestamp",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "symbol",
+            "definition": "instrument symbol",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "regime",
+            "definition": "market regime classification",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "config_profile",
+            "definition": "config profile reference",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "confidence",
+            "definition": "decision confidence",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "rr",
+            "definition": "reward-to-risk ratio",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "zone",
+            "definition": "zone-gate value",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "allocated_risk",
+            "definition": "allocated risk capital",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "portfolio_exposure_before",
+            "definition": "portfolio exposure before entry",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "engine_action",
+            "definition": "engine decision action",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "override_action",
+            "definition": "override action",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "result",
+            "definition": "WIN | LOSS | BREAKEVEN (outcome after close)",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "pnl",
+            "definition": "realised pnl",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "duration_candles",
+            "definition": "trade duration in candles",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "drawdown_at_entry",
+            "definition": "drawdown at entry",
+            "source_file": "src/journal/schema.py",
+            "parent": null,
+            "vocabulary": "record_field"
+          },
+          {
+            "name": "Trade",
+            "definition": "CRT trade geometry: id, direction, entry_price, sl_price, tp1_price",
+            "source_file": "src/config_layer/crt_engine_v2.py",
+            "parent": null,
+            "vocabulary": "geometry"
+          },
+          {
+            "name": "entry_price",
+            "definition": "trade price level (crt_engine_v2.py Trade)",
+            "source_file": "src/config_layer/crt_engine_v2.py",
+            "parent": "Trade",
+            "vocabulary": "geometry"
+          },
+          {
+            "name": "sl_price",
+            "definition": "trade price level (crt_engine_v2.py Trade)",
+            "source_file": "src/config_layer/crt_engine_v2.py",
+            "parent": "Trade",
+            "vocabulary": "geometry"
+          },
+          {
+            "name": "tp1_price",
+            "definition": "trade price level (crt_engine_v2.py Trade)",
+            "source_file": "src/config_layer/crt_engine_v2.py",
+            "parent": "Trade",
+            "vocabulary": "geometry"
+          },
+          {
+            "name": "entry_price_fill",
+            "definition": "filled entry price (backtest position record)",
+            "source_file": "src/runtime/backtest_v2.py",
+            "parent": "Trade",
+            "vocabulary": "geometry"
+          },
+          {
+            "name": "tp2_price",
+            "definition": "second take-profit level (backtest position record)",
+            "source_file": "src/runtime/backtest_v2.py",
+            "parent": "Trade",
+            "vocabulary": "geometry"
+          },
+          {
+            "name": "risk_pct",
+            "definition": "gate-adjusted risk percentage",
+            "source_file": "src/runtime/backtest_v2.py",
+            "parent": "Trade",
+            "vocabulary": "geometry"
+          },
+          {
+            "name": "rr_ratio",
+            "definition": "reward/risk ratio on the record",
+            "source_file": "src/runtime/backtest_v2.py",
+            "parent": "Trade",
+            "vocabulary": "geometry"
+          },
+          {
+            "name": "BREAKOUT",
+            "definition": "ExecutionPlannerV1_2 trade-intent class",
+            "source_file": "src/config_layer/execution_planner.py",
+            "parent": "intent",
+            "vocabulary": "intent"
+          },
+          {
+            "name": "PULLBACK",
+            "definition": "ExecutionPlannerV1_2 trade-intent class",
+            "source_file": "src/config_layer/execution_planner.py",
+            "parent": "intent",
+            "vocabulary": "intent"
+          },
+          {
+            "name": "LIQ_SWEEP",
+            "definition": "ExecutionPlannerV1_2 trade-intent class",
+            "source_file": "src/config_layer/execution_planner.py",
+            "parent": "intent",
+            "vocabulary": "intent"
+          },
+          {
+            "name": "REVERSAL",
+            "definition": "ExecutionPlannerV1_2 trade-intent class",
+            "source_file": "src/config_layer/execution_planner.py",
+            "parent": "intent",
+            "vocabulary": "intent"
+          },
+          {
+            "name": "CONTINUATION",
+            "definition": "ExecutionPlannerV1_2 trade-intent class",
+            "source_file": "src/config_layer/execution_planner.py",
+            "parent": "intent",
+            "vocabulary": "intent"
+          },
+          {
+            "name": "UNKNOWN",
+            "definition": "ExecutionPlannerV1_2 trade-intent class",
+            "source_file": "src/config_layer/execution_planner.py",
+            "parent": "intent",
+            "vocabulary": "intent"
+          },
+          {
+            "name": "entry_price_plan",
+            "definition": "entry price derived by planner; SL/TP delegated to compute_crt_levels",
+            "source_file": "src/config_layer/execution_planner.py",
+            "parent": "intent",
+            "vocabulary": "intent"
+          }
+        ],
+        "_n": 31
+      }
+    }
+  },
+  "S3_hierarchical_state_tree": {
+    "crt_machine_transition_edges": [
+      {
+        "parent": "RANGE",
+        "child": "SWEEP"
+      },
+      {
+        "parent": "RANGE",
+        "child": "SHADOW_PENDING"
+      },
+      {
+        "parent": "SHADOW_PENDING",
+        "child": "SWEEP"
+      },
+      {
+        "parent": "SHADOW_PENDING",
+        "child": "RANGE"
+      },
+      {
+        "parent": "SWEEP",
+        "child": "DISPLACEMENT"
+      },
+      {
+        "parent": "SWEEP",
+        "child": "EXPANSION"
+      },
+      {
+        "parent": "SWEEP",
+        "child": "RANGE"
+      },
+      {
+        "parent": "DISPLACEMENT",
+        "child": "EXPANSION"
+      },
+      {
+        "parent": "DISPLACEMENT",
+        "child": "RANGE"
+      },
+      {
+        "parent": "EXPANSION",
+        "child": "RETEST"
+      },
+      {
+        "parent": "EXPANSION",
+        "child": "EXPIRED"
+      },
+      {
+        "parent": "EXPANSION",
+        "child": "RANGE"
+      },
+      {
+        "parent": "EXPIRED",
+        "child": "RANGE"
+      },
+      {
+        "parent": "RETEST",
+        "child": "EXECUTION"
+      },
+      {
+        "parent": "RETEST",
+        "child": "RANGE"
+      },
+      {
+        "parent": "EXECUTION",
+        "child": "RESOLUTION"
+      },
+      {
+        "parent": "RESOLUTION",
+        "child": "RANGE"
+      },
+      {
+        "parent": "RANGE_C1",
+        "child": "MANIPULATION_C2"
+      },
+      {
+        "parent": "RANGE_C1",
+        "child": "RANGE_C1"
+      },
+      {
+        "parent": "MANIPULATION_C2",
+        "child": "DISTRIBUTION_C3"
+      },
+      {
+        "parent": "MANIPULATION_C2",
+        "child": "RANGE_C1"
+      },
+      {
+        "parent": "DISTRIBUTION_C3",
+        "child": "RANGE_C1"
+      }
+    ],
+    "crt_parent_timeframe_states": [
+      "RANGE_C1",
+      "MANIPULATION_C2",
+      "DISTRIBUTION_C3"
+    ],
+    "feature_enum_feature_to_state": [
+      {
+        "parent": "trend_bias",
+        "child": "Bearish"
+      },
+      {
+        "parent": "trend_bias",
+        "child": "Neutral"
+      },
+      {
+        "parent": "trend_bias",
+        "child": "Bullish"
+      },
+      {
+        "parent": "higher_high",
+        "child": "NoHigherHigh"
+      },
+      {
+        "parent": "higher_high",
+        "child": "HigherHigh"
+      },
+      {
+        "parent": "lower_low",
+        "child": "NoLowerLow"
+      },
+      {
+        "parent": "lower_low",
+        "child": "LowerLow"
+      },
+      {
+        "parent": "break_of_structure",
+        "child": "BearishBreak"
+      },
+      {
+        "parent": "break_of_structure",
+        "child": "NoBreak"
+      },
+      {
+        "parent": "break_of_structure",
+        "child": "BullishBreak"
+      },
+      {
+        "parent": "liquidity_sweep",
+        "child": "SellSideSweep"
+      },
+      {
+        "parent": "liquidity_sweep",
+        "child": "NoSweep"
+      },
+      {
+        "parent": "liquidity_sweep",
+        "child": "BuySideSweep"
+      },
+      {
+        "parent": "sweep_detected",
+        "child": "NoSweep"
+      },
+      {
+        "parent": "sweep_detected",
+        "child": "SweepDetected"
+      },
+      {
+        "parent": "double_sweep",
+        "child": "NoDoubleSweep"
+      },
+      {
+        "parent": "double_sweep",
+        "child": "DoubleSweep"
+      },
+      {
+        "parent": "retest_flag",
+        "child": "NoRetest"
+      },
+      {
+        "parent": "retest_flag",
+        "child": "RetestActive"
+      },
+      {
+        "parent": "rsi_state",
+        "child": "Oversold"
+      },
+      {
+        "parent": "rsi_state",
+        "child": "NeutralMomentum"
+      },
+      {
+        "parent": "rsi_state",
+        "child": "Overbought"
+      },
+      {
+        "parent": "displacement_flag",
+        "child": "NoDisplacement"
+      },
+      {
+        "parent": "displacement_flag",
+        "child": "Displacement"
+      },
+      {
+        "parent": "body_commitment",
+        "child": "LowCommitment"
+      },
+      {
+        "parent": "body_commitment",
+        "child": "MediumCommitment"
+      },
+      {
+        "parent": "body_commitment",
+        "child": "HighCommitment"
+      },
+      {
+        "parent": "atr_magnitude",
+        "child": "LowAtrMagnitude"
+      },
+      {
+        "parent": "atr_magnitude",
+        "child": "MediumAtrMagnitude"
+      },
+      {
+        "parent": "atr_magnitude",
+        "child": "HighAtrMagnitude"
+      },
+      {
+        "parent": "momentum_magnitude",
+        "child": "LowMomentumMagnitude"
+      },
+      {
+        "parent": "momentum_magnitude",
+        "child": "MediumMomentumMagnitude"
+      },
+      {
+        "parent": "momentum_magnitude",
+        "child": "HighMomentumMagnitude"
+      },
+      {
+        "parent": "change_of_character",
+        "child": "BearishCHoCH"
+      },
+      {
+        "parent": "change_of_character",
+        "child": "NoCHoCH"
+      },
+      {
+        "parent": "change_of_character",
+        "child": "BullishCHoCH"
+      }
+    ],
+    "note": "crt_machine edges are transition edges from crt_state_identity.yaml valid_transitions (implementation-evidence), not an inferred hierarchy."
+  },
+  "S4_trade_schema": [
+    {
+      "name": "trade_id",
+      "definition": "opaque execution-intent id (authoritative identity)",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "timestamp",
+      "definition": "entry timestamp",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "symbol",
+      "definition": "instrument symbol",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "regime",
+      "definition": "market regime classification",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "config_profile",
+      "definition": "config profile reference",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "confidence",
+      "definition": "decision confidence",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "rr",
+      "definition": "reward-to-risk ratio",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "zone",
+      "definition": "zone-gate value",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "allocated_risk",
+      "definition": "allocated risk capital",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "portfolio_exposure_before",
+      "definition": "portfolio exposure before entry",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "engine_action",
+      "definition": "engine decision action",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "override_action",
+      "definition": "override action",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "result",
+      "definition": "WIN | LOSS | BREAKEVEN (outcome after close)",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "pnl",
+      "definition": "realised pnl",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "duration_candles",
+      "definition": "trade duration in candles",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "drawdown_at_entry",
+      "definition": "drawdown at entry",
+      "source_file": "src/journal/schema.py",
+      "parent": null,
+      "vocabulary": "record_field"
+    },
+    {
+      "name": "Trade",
+      "definition": "CRT trade geometry: id, direction, entry_price, sl_price, tp1_price",
+      "source_file": "src/config_layer/crt_engine_v2.py",
+      "parent": null,
+      "vocabulary": "geometry"
+    },
+    {
+      "name": "entry_price",
+      "definition": "trade price level (crt_engine_v2.py Trade)",
+      "source_file": "src/config_layer/crt_engine_v2.py",
+      "parent": "Trade",
+      "vocabulary": "geometry"
+    },
+    {
+      "name": "sl_price",
+      "definition": "trade price level (crt_engine_v2.py Trade)",
+      "source_file": "src/config_layer/crt_engine_v2.py",
+      "parent": "Trade",
+      "vocabulary": "geometry"
+    },
+    {
+      "name": "tp1_price",
+      "definition": "trade price level (crt_engine_v2.py Trade)",
+      "source_file": "src/config_layer/crt_engine_v2.py",
+      "parent": "Trade",
+      "vocabulary": "geometry"
+    },
+    {
+      "name": "entry_price_fill",
+      "definition": "filled entry price (backtest position record)",
+      "source_file": "src/runtime/backtest_v2.py",
+      "parent": "Trade",
+      "vocabulary": "geometry"
+    },
+    {
+      "name": "tp2_price",
+      "definition": "second take-profit level (backtest position record)",
+      "source_file": "src/runtime/backtest_v2.py",
+      "parent": "Trade",
+      "vocabulary": "geometry"
+    },
+    {
+      "name": "risk_pct",
+      "definition": "gate-adjusted risk percentage",
+      "source_file": "src/runtime/backtest_v2.py",
+      "parent": "Trade",
+      "vocabulary": "geometry"
+    },
+    {
+      "name": "rr_ratio",
+      "definition": "reward/risk ratio on the record",
+      "source_file": "src/runtime/backtest_v2.py",
+      "parent": "Trade",
+      "vocabulary": "geometry"
+    },
+    {
+      "name": "BREAKOUT",
+      "definition": "ExecutionPlannerV1_2 trade-intent class",
+      "source_file": "src/config_layer/execution_planner.py",
+      "parent": "intent",
+      "vocabulary": "intent"
+    },
+    {
+      "name": "PULLBACK",
+      "definition": "ExecutionPlannerV1_2 trade-intent class",
+      "source_file": "src/config_layer/execution_planner.py",
+      "parent": "intent",
+      "vocabulary": "intent"
+    },
+    {
+      "name": "LIQ_SWEEP",
+      "definition": "ExecutionPlannerV1_2 trade-intent class",
+      "source_file": "src/config_layer/execution_planner.py",
+      "parent": "intent",
+      "vocabulary": "intent"
+    },
+    {
+      "name": "REVERSAL",
+      "definition": "ExecutionPlannerV1_2 trade-intent class",
+      "source_file": "src/config_layer/execution_planner.py",
+      "parent": "intent",
+      "vocabulary": "intent"
+    },
+    {
+      "name": "CONTINUATION",
+      "definition": "ExecutionPlannerV1_2 trade-intent class",
+      "source_file": "src/config_layer/execution_planner.py",
+      "parent": "intent",
+      "vocabulary": "intent"
+    },
+    {
+      "name": "UNKNOWN",
+      "definition": "ExecutionPlannerV1_2 trade-intent class",
+      "source_file": "src/config_layer/execution_planner.py",
+      "parent": "intent",
+      "vocabulary": "intent"
+    },
+    {
+      "name": "entry_price_plan",
+      "definition": "entry price derived by planner; SL/TP delegated to compute_crt_levels",
+      "source_file": "src/config_layer/execution_planner.py",
+      "parent": "intent",
+      "vocabulary": "intent"
+    }
+  ],
+  "S5_traceable_ontology": {
+    "chain": [
+      {
+        "layer": "OHLCV (source_inputs)",
+        "names": [
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume"
+        ]
+      },
+      {
+        "layer": "Features (S1)",
+        "count": 71
+      },
+      {
+        "layer": "Feature identities referenced by CRT predicates",
+        "names": [
+          "break_of_structure",
+          "change_of_character",
+          "displacement_flag",
+          "double_sweep",
+          "higher_high",
+          "liquidity_sweep",
+          "lower_low",
+          "retest_flag",
+          "rsi_state",
+          "session",
+          "sweep_detected",
+          "swing_high",
+          "swing_low",
+          "trend_bias"
+        ],
+        "not_grounded": []
+      },
+      {
+        "layer": "Feature identities referenced by Shape predicates",
+        "names": [
+          "break_of_structure",
+          "double_sweep",
+          "higher_high",
+          "liquidity_sweep",
+          "lower_low",
+          "volatility_regime"
+        ],
+        "not_grounded": []
+      },
+      {
+        "layer": "Trade-planner required feature keys",
+        "names": [
+          "atr",
+          "body_ratio",
+          "candles_since_sweep",
+          "close",
+          "disp_strength",
+          "double_sweep",
+          "ema_fast",
+          "ema_slow",
+          "high",
+          "low",
+          "momentum_score",
+          "retest_depth",
+          "sweep_detected"
+        ]
+      }
+    ],
+    "note": "Code relationships, not prose: a feature is bound to a vector slot (S1); feature-enum states are declared in ontology states blocks (S2b); CRT/Shape predicates reference those state names (verified above); the planner consumes the features (required-keys)."
+  },
+  "S6_duplicates_overlaps": {
+    "exact_name_overlaps": [
+      {
+        "kind": "exact_name",
+        "word": "DISPLACEMENT",
+        "appears_in": [
+          "state/crt_machine",
+          "state/feature_enum"
+        ]
+      }
+    ],
+    "concept_token_overlaps": [
+      {
+        "kind": "concept_token",
+        "stem": "atr",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "feature/rolling_indicators",
+          "feature/structural_states",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "atr",
+          "atr_absolute",
+          "atr_magnitude",
+          "disp_strength_atr_rescale",
+          "displacement_atr_ratio",
+          "ema_spread_atr",
+          "highatrmagnitude",
+          "lowatrmagnitude",
+          "mediumatrmagnitude",
+          "momentum_score_atr"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "bearish",
+        "vocabularies": [
+          "shape/shape_layer",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "bearish",
+          "bearishbreak",
+          "bearishbreakoutexpansion",
+          "bearishchoch",
+          "bearishstructuralbreak"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "body",
+        "vocabularies": [
+          "feature/feature_compositions",
+          "feature/primitives",
+          "feature/structural_states"
+        ],
+        "member_words": [
+          "body_commitment",
+          "body_ratio",
+          "body_size",
+          "body_to_total_wick_ratio"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "break",
+        "vocabularies": [
+          "feature/structural_states",
+          "shape/shape_layer",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "bearishbreak",
+          "bearishstructuralbreak",
+          "break_of_structure",
+          "bullishbreak",
+          "bullishstructuralbreak",
+          "nobreak"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "breakout",
+        "vocabularies": [
+          "shape/shape_layer",
+          "trade/intent"
+        ],
+        "member_words": [
+          "bearishbreakoutexpansion",
+          "breakout",
+          "bullishbreakoutexpansion"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "bullish",
+        "vocabularies": [
+          "shape/shape_layer",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "bullish",
+          "bullishbreak",
+          "bullishbreakoutexpansion",
+          "bullishchoch",
+          "bullishstructuralbreak"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "buy",
+        "vocabularies": [
+          "shape/shape_layer",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "buysideliquiditygrab",
+          "buysidesweep"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "candles",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "feature/rolling_indicators",
+          "trade/record_field"
+        ],
+        "member_words": [
+          "candles_since_retest_state",
+          "candles_since_sweep",
+          "duration_candles"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "commitment",
+        "vocabularies": [
+          "feature/structural_states",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "body_commitment",
+          "highcommitment",
+          "lowcommitment",
+          "mediumcommitment"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "detected",
+        "vocabularies": [
+          "feature/structural_states",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "sweep_detected",
+          "sweepdetected"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "displacement",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "feature/structural_states",
+          "state/crt_machine",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "displacement",
+          "displacement_atr_ratio",
+          "displacement_flag",
+          "displacement_retrace",
+          "nodisplacement"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "double",
+        "vocabularies": [
+          "feature/structural_states",
+          "shape/shape_layer",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "double_sweep",
+          "doublesweep",
+          "doublesweeptrap",
+          "nodoublesweep"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "ema",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "feature/rolling_indicators"
+        ],
+        "member_words": [
+          "ema_fast",
+          "ema_slow",
+          "ema_spread",
+          "ema_spread_atr"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "entry",
+        "vocabularies": [
+          "trade/geometry",
+          "trade/intent",
+          "trade/record_field"
+        ],
+        "member_words": [
+          "drawdown_at_entry",
+          "entry_price",
+          "entry_price_fill",
+          "entry_price_plan"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "expansion",
+        "vocabularies": [
+          "shape/shape_layer",
+          "state/crt_machine"
+        ],
+        "member_words": [
+          "bearishbreakoutexpansion",
+          "bullishbreakoutexpansion",
+          "expansion"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "high",
+        "vocabularies": [
+          "feature/rolling_indicators",
+          "feature/source_inputs",
+          "feature/structural_states",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "high",
+          "highatrmagnitude",
+          "highcommitment",
+          "higher_high",
+          "higherhigh",
+          "highmomentummagnitude",
+          "last_swing_high_price",
+          "nohigherhigh",
+          "swing_high"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "higher",
+        "vocabularies": [
+          "feature/structural_states",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "higher_high",
+          "higherhigh",
+          "nohigherhigh"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "liquidity",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "feature/structural_states",
+          "shape/shape_layer"
+        ],
+        "member_words": [
+          "buysideliquiditygrab",
+          "liquidity_distance",
+          "liquidity_pressure_score",
+          "liquidity_sweep",
+          "sellsideliquiditygrab"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "low",
+        "vocabularies": [
+          "feature/rolling_indicators",
+          "feature/source_inputs",
+          "feature/structural_states",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "last_swing_low_price",
+          "low",
+          "lowatrmagnitude",
+          "lowcommitment",
+          "lower_low",
+          "lowerlow",
+          "lowmomentummagnitude",
+          "nolowerlow",
+          "swing_low"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "lower",
+        "vocabularies": [
+          "feature/feature_compositions",
+          "feature/primitives",
+          "feature/structural_states",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "lower_low",
+          "lower_wick",
+          "lower_wick_ratio",
+          "lowerlow",
+          "nolowerlow"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "magnitude",
+        "vocabularies": [
+          "feature/structural_states",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "atr_magnitude",
+          "highatrmagnitude",
+          "highmomentummagnitude",
+          "lowatrmagnitude",
+          "lowmomentummagnitude",
+          "mediumatrmagnitude",
+          "mediummomentummagnitude",
+          "momentum_magnitude"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "momentum",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "feature/structural_states",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "highmomentummagnitude",
+          "lowmomentummagnitude",
+          "mediummomentummagnitude",
+          "momentum_magnitude",
+          "momentum_score",
+          "momentum_score_atr",
+          "neutralmomentum"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "of",
+        "vocabularies": [
+          "feature/structural_states",
+          "feature/temporal_context",
+          "state/smc_choch"
+        ],
+        "member_words": [
+          "break_of_structure",
+          "change_of_character",
+          "hour_of_day"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "price",
+        "vocabularies": [
+          "feature/rolling_indicators",
+          "trade/geometry",
+          "trade/intent"
+        ],
+        "member_words": [
+          "entry_price",
+          "entry_price_fill",
+          "entry_price_plan",
+          "last_swing_high_price",
+          "last_swing_low_price",
+          "sl_price",
+          "tp1_price",
+          "tp2_price"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "range",
+        "vocabularies": [
+          "feature/primitives",
+          "feature/rolling_indicators",
+          "state/crt_machine"
+        ],
+        "member_words": [
+          "candle_range",
+          "range",
+          "range_c1",
+          "true_range"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "ratio",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "feature/feature_compositions",
+          "feature/rolling_indicators",
+          "trade/geometry"
+        ],
+        "member_words": [
+          "body_ratio",
+          "body_to_total_wick_ratio",
+          "displacement_atr_ratio",
+          "lower_wick_ratio",
+          "rr_ratio",
+          "upper_wick_ratio",
+          "volatility_ratio",
+          "volume_ratio"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "regime",
+        "vocabularies": [
+          "feature/rolling_indicators",
+          "trade/record_field"
+        ],
+        "member_words": [
+          "regime",
+          "volatility_regime"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "retest",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "feature/structural_states",
+          "state/crt_machine",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "candles_since_retest_state",
+          "noretest",
+          "retest",
+          "retest_depth",
+          "retest_flag",
+          "retestactive"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "risk",
+        "vocabularies": [
+          "trade/geometry",
+          "trade/record_field"
+        ],
+        "member_words": [
+          "allocated_risk",
+          "risk_pct"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "rr",
+        "vocabularies": [
+          "trade/geometry",
+          "trade/record_field"
+        ],
+        "member_words": [
+          "rr",
+          "rr_ratio"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "rsi",
+        "vocabularies": [
+          "feature/rolling_indicators",
+          "feature/structural_states"
+        ],
+        "member_words": [
+          "rsi_14",
+          "rsi_state"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "sell",
+        "vocabularies": [
+          "shape/shape_layer",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "sellsideliquiditygrab",
+          "sellsidesweep"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "side",
+        "vocabularies": [
+          "shape/shape_layer",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "buysideliquiditygrab",
+          "buysidesweep",
+          "sellsideliquiditygrab",
+          "sellsidesweep"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "since",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "feature/rolling_indicators"
+        ],
+        "member_words": [
+          "candles_since_retest_state",
+          "candles_since_sweep"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "state",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "feature/structural_states"
+        ],
+        "member_words": [
+          "candles_since_retest_state",
+          "rsi_state"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "strength",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "feature/rolling_indicators"
+        ],
+        "member_words": [
+          "disp_strength",
+          "disp_strength_atr_rescale",
+          "trend_strength_raw",
+          "trend_strength_z"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "sweep",
+        "vocabularies": [
+          "feature/rolling_indicators",
+          "feature/structural_states",
+          "shape/shape_layer",
+          "state/crt_machine",
+          "state/feature_enum",
+          "trade/intent"
+        ],
+        "member_words": [
+          "buysidesweep",
+          "candles_since_sweep",
+          "double_sweep",
+          "doublesweep",
+          "doublesweeptrap",
+          "liq_sweep",
+          "liquidity_sweep",
+          "nodoublesweep",
+          "nosweep",
+          "sellsidesweep",
+          "sweep",
+          "sweep_detected",
+          "sweepdetected"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "total",
+        "vocabularies": [
+          "feature/feature_compositions",
+          "feature/primitives"
+        ],
+        "member_words": [
+          "body_to_total_wick_ratio",
+          "total_wick"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "trade",
+        "vocabularies": [
+          "trade/geometry",
+          "trade/record_field"
+        ],
+        "member_words": [
+          "trade",
+          "trade_id"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "trend",
+        "vocabularies": [
+          "feature/rolling_indicators",
+          "feature/structural_states"
+        ],
+        "member_words": [
+          "trend_bias",
+          "trend_strength_raw",
+          "trend_strength_z"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "upper",
+        "vocabularies": [
+          "feature/feature_compositions",
+          "feature/primitives"
+        ],
+        "member_words": [
+          "upper_wick",
+          "upper_wick_ratio"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "volatility",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "feature/rolling_indicators"
+        ],
+        "member_words": [
+          "volatility_ratio",
+          "volatility_regime"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "volume",
+        "vocabularies": [
+          "feature/rolling_indicators",
+          "feature/source_inputs"
+        ],
+        "member_words": [
+          "volume",
+          "volume_ratio",
+          "volume_spike"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "wick",
+        "vocabularies": [
+          "feature/feature_compositions",
+          "feature/primitives"
+        ],
+        "member_words": [
+          "body_to_total_wick_ratio",
+          "lower_wick",
+          "lower_wick_ratio",
+          "total_wick",
+          "upper_wick",
+          "upper_wick_ratio"
+        ]
+      }
+    ]
+  },
+  "S7_orphans": {
+    "features_with_no_state": [
+      "atr",
+      "atr_absolute",
+      "body_ratio",
+      "body_size",
+      "body_to_total_wick_ratio",
+      "breaker_distance",
+      "candle_range",
+      "candles_since_retest_state",
+      "candles_since_sweep",
+      "disp_strength",
+      "disp_strength_atr_rescale",
+      "displacement_atr_ratio",
+      "displacement_retrace",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "ema_spread_atr",
+      "eqh_distance",
+      "eql_distance",
+      "fvg_distance",
+      "hour_of_day",
+      "last_swing_high_price",
+      "last_swing_low_price",
+      "liquidity_distance",
+      "liquidity_pressure_score",
+      "lower_wick",
+      "lower_wick_ratio",
+      "macd_hist_raw",
+      "macd_hist_z",
+      "macd_line",
+      "macd_signal",
+      "mitigation_block_distance",
+      "momentum_score",
+      "momentum_score_atr",
+      "order_block_distance",
+      "pdh_distance",
+      "pdl_distance",
+      "retest_depth",
+      "rsi_14",
+      "total_wick",
+      "trend_strength_raw",
+      "trend_strength_z",
+      "true_range",
+      "upper_wick",
+      "upper_wick_ratio",
+      "volatility_ratio",
+      "volume_ratio"
+    ],
+    "states_with_no_feature_parent": [],
+    "shape_predicate_keys_referencing_undefined_feature_state": [
+      {
+        "shape": "BearishBreakoutExpansion",
+        "ref_key": "break_of_structure"
+      },
+      {
+        "shape": "BearishBreakoutExpansion",
+        "ref_key": "volatility_regime"
+      },
+      {
+        "shape": "BearishStructuralBreak",
+        "ref_key": "break_of_structure"
+      },
+      {
+        "shape": "BullishBreakoutExpansion",
+        "ref_key": "break_of_structure"
+      },
+      {
+        "shape": "BullishBreakoutExpansion",
+        "ref_key": "volatility_regime"
+      },
+      {
+        "shape": "BullishStructuralBreak",
+        "ref_key": "break_of_structure"
+      },
+      {
+        "shape": "BuySideLiquidityGrab",
+        "ref_key": "liquidity_sweep"
+      },
+      {
+        "shape": "Compression",
+        "ref_key": "break_of_structure"
+      },
+      {
+        "shape": "Compression",
+        "ref_key": "double_sweep"
+      },
+      {
+        "shape": "Compression",
+        "ref_key": "higher_high"
+      },
+      {
+        "shape": "Compression",
+        "ref_key": "liquidity_sweep"
+      },
+      {
+        "shape": "Compression",
+        "ref_key": "lower_low"
+      },
+      {
+        "shape": "Compression",
+        "ref_key": "volatility_regime"
+      },
+      {
+        "shape": "DoubleSweepTrap",
+        "ref_key": "double_sweep"
+      },
+      {
+        "shape": "SellSideLiquidityGrab",
+        "ref_key": "liquidity_sweep"
+      }
+    ],
+    "note": "Orphans are reported, never silently normalised. A shape.when key that is not a declared feature-enum state is a linkage gap to surface."
+  },
+  "S8_canonical_vocabulary": [
+    {
+      "word": "allocated_risk",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "atr",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "atr_absolute",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "atr_magnitude",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "Bearish",
+      "type": "state",
+      "parent": "trend_bias",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "BearishBreak",
+      "type": "state",
+      "parent": "break_of_structure",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "BearishBreakoutExpansion",
+      "type": "shape",
+      "parent": "BreakoutExpansion",
+      "vocabulary": "shape_layer",
+      "source_file": "configs/formulas/market_shapes.yaml"
+    },
+    {
+      "word": "BearishCHoCH",
+      "type": "state",
+      "parent": "change_of_character",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "BearishStructuralBreak",
+      "type": "shape",
+      "parent": "StructuralBreak",
+      "vocabulary": "shape_layer",
+      "source_file": "configs/formulas/market_shapes.yaml"
+    },
+    {
+      "word": "body_commitment",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "body_ratio",
+      "type": "feature",
+      "parent": "feature_compositions",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "body_size",
+      "type": "feature",
+      "parent": "primitives",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "body_to_total_wick_ratio",
+      "type": "feature",
+      "parent": "feature_compositions",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "breaker_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "BREAKOUT",
+      "type": "trade",
+      "parent": "intent",
+      "vocabulary": "trade/intent",
+      "source_file": "src/config_layer/execution_planner.py"
+    },
+    {
+      "word": "break_of_structure",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "Bullish",
+      "type": "state",
+      "parent": "trend_bias",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "BullishBreak",
+      "type": "state",
+      "parent": "break_of_structure",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "BullishBreakoutExpansion",
+      "type": "shape",
+      "parent": "BreakoutExpansion",
+      "vocabulary": "shape_layer",
+      "source_file": "configs/formulas/market_shapes.yaml"
+    },
+    {
+      "word": "BullishCHoCH",
+      "type": "state",
+      "parent": "change_of_character",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "BullishStructuralBreak",
+      "type": "shape",
+      "parent": "StructuralBreak",
+      "vocabulary": "shape_layer",
+      "source_file": "configs/formulas/market_shapes.yaml"
+    },
+    {
+      "word": "BuySideLiquidityGrab",
+      "type": "shape",
+      "parent": "LiquidityGrab",
+      "vocabulary": "shape_layer",
+      "source_file": "configs/formulas/market_shapes.yaml"
+    },
+    {
+      "word": "BuySideSweep",
+      "type": "state",
+      "parent": "liquidity_sweep",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "candles_since_retest_state",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "candles_since_sweep",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "candle_range",
+      "type": "feature",
+      "parent": "primitives",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "change_of_character",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "change_of_character",
+      "type": "state",
+      "parent": "",
+      "vocabulary": "smc_choch",
+      "source_file": "src/features/smc/choch.py"
+    },
+    {
+      "word": "close",
+      "type": "feature",
+      "parent": "source_inputs",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "Compression",
+      "type": "shape",
+      "parent": "Compression",
+      "vocabulary": "shape_layer",
+      "source_file": "configs/formulas/market_shapes.yaml"
+    },
+    {
+      "word": "confidence",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "config_profile",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "CONTINUATION",
+      "type": "trade",
+      "parent": "intent",
+      "vocabulary": "trade/intent",
+      "source_file": "src/config_layer/execution_planner.py"
+    },
+    {
+      "word": "DISPLACEMENT",
+      "type": "state",
+      "parent": "",
+      "vocabulary": "crt_machine",
+      "source_file": "configs/formulas/crt_state_identity.yaml"
+    },
+    {
+      "word": "Displacement",
+      "type": "state",
+      "parent": "displacement_flag",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "displacement_atr_ratio",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "displacement_flag",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "displacement_retrace",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "disp_strength",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "disp_strength_atr_rescale",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "DISTRIBUTION_C3",
+      "type": "state",
+      "parent": "",
+      "vocabulary": "crt_machine",
+      "source_file": "configs/formulas/crt_state_identity.yaml"
+    },
+    {
+      "word": "DoubleSweep",
+      "type": "state",
+      "parent": "double_sweep",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "DoubleSweepTrap",
+      "type": "shape",
+      "parent": "LiquidityTrap",
+      "vocabulary": "shape_layer",
+      "source_file": "configs/formulas/market_shapes.yaml"
+    },
+    {
+      "word": "double_sweep",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "drawdown_at_entry",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "duration_candles",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "ema_fast",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "ema_slow",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "ema_spread",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "ema_spread_atr",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "engine_action",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "entry_price",
+      "type": "trade",
+      "parent": "Trade",
+      "vocabulary": "trade/geometry",
+      "source_file": "src/config_layer/crt_engine_v2.py"
+    },
+    {
+      "word": "entry_price_fill",
+      "type": "trade",
+      "parent": "Trade",
+      "vocabulary": "trade/geometry",
+      "source_file": "src/runtime/backtest_v2.py"
+    },
+    {
+      "word": "entry_price_plan",
+      "type": "trade",
+      "parent": "intent",
+      "vocabulary": "trade/intent",
+      "source_file": "src/config_layer/execution_planner.py"
+    },
+    {
+      "word": "eqh_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "eql_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "EXECUTION",
+      "type": "state",
+      "parent": "",
+      "vocabulary": "crt_machine",
+      "source_file": "configs/formulas/crt_state_identity.yaml"
+    },
+    {
+      "word": "EXPANSION",
+      "type": "state",
+      "parent": "",
+      "vocabulary": "crt_machine",
+      "source_file": "configs/formulas/crt_state_identity.yaml"
+    },
+    {
+      "word": "EXPIRED",
+      "type": "state",
+      "parent": "",
+      "vocabulary": "crt_machine",
+      "source_file": "configs/formulas/crt_state_identity.yaml"
+    },
+    {
+      "word": "fvg_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "high",
+      "type": "feature",
+      "parent": "source_inputs",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "HighAtrMagnitude",
+      "type": "state",
+      "parent": "atr_magnitude",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "HighCommitment",
+      "type": "state",
+      "parent": "body_commitment",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "HigherHigh",
+      "type": "state",
+      "parent": "higher_high",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "higher_high",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "HighMomentumMagnitude",
+      "type": "state",
+      "parent": "momentum_magnitude",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "hour_of_day",
+      "type": "feature",
+      "parent": "temporal_context",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "last_swing_high_price",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "last_swing_low_price",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "liquidity_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "liquidity_pressure_score",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "liquidity_sweep",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "LIQ_SWEEP",
+      "type": "trade",
+      "parent": "intent",
+      "vocabulary": "trade/intent",
+      "source_file": "src/config_layer/execution_planner.py"
+    },
+    {
+      "word": "low",
+      "type": "feature",
+      "parent": "source_inputs",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "LowAtrMagnitude",
+      "type": "state",
+      "parent": "atr_magnitude",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "LowCommitment",
+      "type": "state",
+      "parent": "body_commitment",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "LowerLow",
+      "type": "state",
+      "parent": "lower_low",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "lower_low",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "lower_wick",
+      "type": "feature",
+      "parent": "primitives",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "lower_wick_ratio",
+      "type": "feature",
+      "parent": "feature_compositions",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "LowMomentumMagnitude",
+      "type": "state",
+      "parent": "momentum_magnitude",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "macd_hist_raw",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "macd_hist_z",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "macd_line",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "macd_signal",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "MANIPULATION_C2",
+      "type": "state",
+      "parent": "",
+      "vocabulary": "crt_machine",
+      "source_file": "configs/formulas/crt_state_identity.yaml"
+    },
+    {
+      "word": "MediumAtrMagnitude",
+      "type": "state",
+      "parent": "atr_magnitude",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "MediumCommitment",
+      "type": "state",
+      "parent": "body_commitment",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "MediumMomentumMagnitude",
+      "type": "state",
+      "parent": "momentum_magnitude",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "mitigation_block_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "momentum_magnitude",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "momentum_score",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "momentum_score_atr",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "Neutral",
+      "type": "state",
+      "parent": "trend_bias",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NeutralMomentum",
+      "type": "state",
+      "parent": "rsi_state",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NoBreak",
+      "type": "state",
+      "parent": "break_of_structure",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NoCHoCH",
+      "type": "state",
+      "parent": "change_of_character",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NoDisplacement",
+      "type": "state",
+      "parent": "displacement_flag",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NoDoubleSweep",
+      "type": "state",
+      "parent": "double_sweep",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NoHigherHigh",
+      "type": "state",
+      "parent": "higher_high",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NoLowerLow",
+      "type": "state",
+      "parent": "lower_low",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NoRetest",
+      "type": "state",
+      "parent": "retest_flag",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NoSweep",
+      "type": "state",
+      "parent": "liquidity_sweep",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NoSweep",
+      "type": "state",
+      "parent": "sweep_detected",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "open",
+      "type": "feature",
+      "parent": "source_inputs",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "order_block_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "Overbought",
+      "type": "state",
+      "parent": "rsi_state",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "override_action",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "Oversold",
+      "type": "state",
+      "parent": "rsi_state",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "pdh_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "pdl_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "pnl",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "portfolio_exposure_before",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "PULLBACK",
+      "type": "trade",
+      "parent": "intent",
+      "vocabulary": "trade/intent",
+      "source_file": "src/config_layer/execution_planner.py"
+    },
+    {
+      "word": "RANGE",
+      "type": "state",
+      "parent": "",
+      "vocabulary": "crt_machine",
+      "source_file": "configs/formulas/crt_state_identity.yaml"
+    },
+    {
+      "word": "RANGE_C1",
+      "type": "state",
+      "parent": "",
+      "vocabulary": "crt_machine",
+      "source_file": "configs/formulas/crt_state_identity.yaml"
+    },
+    {
+      "word": "regime",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "RESOLUTION",
+      "type": "state",
+      "parent": "",
+      "vocabulary": "crt_machine",
+      "source_file": "configs/formulas/crt_state_identity.yaml"
+    },
+    {
+      "word": "result",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "RETEST",
+      "type": "state",
+      "parent": "",
+      "vocabulary": "crt_machine",
+      "source_file": "configs/formulas/crt_state_identity.yaml"
+    },
+    {
+      "word": "RetestActive",
+      "type": "state",
+      "parent": "retest_flag",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "retest_depth",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "retest_flag",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "REVERSAL",
+      "type": "trade",
+      "parent": "intent",
+      "vocabulary": "trade/intent",
+      "source_file": "src/config_layer/execution_planner.py"
+    },
+    {
+      "word": "risk_pct",
+      "type": "trade",
+      "parent": "Trade",
+      "vocabulary": "trade/geometry",
+      "source_file": "src/runtime/backtest_v2.py"
+    },
+    {
+      "word": "rr",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "rr_ratio",
+      "type": "trade",
+      "parent": "Trade",
+      "vocabulary": "trade/geometry",
+      "source_file": "src/runtime/backtest_v2.py"
+    },
+    {
+      "word": "rsi_14",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "rsi_state",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "SellSideLiquidityGrab",
+      "type": "shape",
+      "parent": "LiquidityGrab",
+      "vocabulary": "shape_layer",
+      "source_file": "configs/formulas/market_shapes.yaml"
+    },
+    {
+      "word": "SellSideSweep",
+      "type": "state",
+      "parent": "liquidity_sweep",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "session",
+      "type": "feature",
+      "parent": "temporal_context",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "SHADOW_PENDING",
+      "type": "state",
+      "parent": "",
+      "vocabulary": "crt_machine",
+      "source_file": "configs/formulas/crt_state_identity.yaml"
+    },
+    {
+      "word": "sl_price",
+      "type": "trade",
+      "parent": "Trade",
+      "vocabulary": "trade/geometry",
+      "source_file": "src/config_layer/crt_engine_v2.py"
+    },
+    {
+      "word": "SWEEP",
+      "type": "state",
+      "parent": "",
+      "vocabulary": "crt_machine",
+      "source_file": "configs/formulas/crt_state_identity.yaml"
+    },
+    {
+      "word": "SweepDetected",
+      "type": "state",
+      "parent": "sweep_detected",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "sweep_detected",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "swing_high",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "swing_low",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "symbol",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "timestamp",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "total_wick",
+      "type": "feature",
+      "parent": "primitives",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "tp1_price",
+      "type": "trade",
+      "parent": "Trade",
+      "vocabulary": "trade/geometry",
+      "source_file": "src/config_layer/crt_engine_v2.py"
+    },
+    {
+      "word": "tp2_price",
+      "type": "trade",
+      "parent": "Trade",
+      "vocabulary": "trade/geometry",
+      "source_file": "src/runtime/backtest_v2.py"
+    },
+    {
+      "word": "Trade",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/geometry",
+      "source_file": "src/config_layer/crt_engine_v2.py"
+    },
+    {
+      "word": "trade_id",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    },
+    {
+      "word": "trend_bias",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "trend_strength_raw",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "trend_strength_z",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "true_range",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "UNKNOWN",
+      "type": "trade",
+      "parent": "intent",
+      "vocabulary": "trade/intent",
+      "source_file": "src/config_layer/execution_planner.py"
+    },
+    {
+      "word": "upper_wick",
+      "type": "feature",
+      "parent": "primitives",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "upper_wick_ratio",
+      "type": "feature",
+      "parent": "feature_compositions",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "volatility_ratio",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "volatility_regime",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "volume",
+      "type": "feature",
+      "parent": "source_inputs",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "volume_ratio",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "volume_spike",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "zone",
+      "type": "trade",
+      "parent": "",
+      "vocabulary": "trade/record_field",
+      "source_file": "src/journal/schema.py"
+    }
+  ]
+}

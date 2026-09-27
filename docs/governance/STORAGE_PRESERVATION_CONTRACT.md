@@ -201,6 +201,8 @@ slot:   + (fm_id, vector_index)
 | payload | The ordered vector of `feature_dim` floats |
 | slot (if stored) | `fm_id` + `vector_index` |
 
+> **CORRECTED 2026-09-18** (append-only per §6.2 rule 4, table row above left byte-identical — this contract is CLOSED / FROZEN v1.0.0, user-accepted 2026-08-23): FEATURE_CANONICAL's currently active family is `6.0` (F-107, names-only rename, `feature_dim` unchanged at 48); `5.0`/`4.0`/`3.0`/`2.0` are now archive. Tracking: `docs/governance/schema_version_registry.json` + `docs/governance/SCHEMA_EVOLUTION_CONTRACT.md`.
+
 **Must enforce**
 
 - `FEATURE_ORDER_HASH` validated on load against the stored name order, not against HEAD `CANONICAL_FEATURES`.

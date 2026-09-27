@@ -125,8 +125,26 @@ def _pref(row: dict, runtime_key: str, batch_key: str) -> float:
     return _f(row, batch_key)
 
 
+_FEATURE_SOURCE = "canonical"  # set from --feature-source in main()
+
+
 def _features_from_row(row: dict) -> dict:
     feats = {k: _f(row, k) for k in _FEATURE_KEYS}
+    if _FEATURE_SOURCE == "canonical":
+        # 2026-09-25: the Engine rail's LiveRailFeeder hands the planner the CANONICAL pipeline
+        # columns (atr = FM-041 close-relative; the planner derives FM-074 atr_abs = atr*close itself
+        # since F-072). Feeding the price-unit `live_atr` here would scale every offset by ~close.
+        feats["sweep_detected"] = bool(_f(row, "sweep_detected"))
+        feats["double_sweep"] = bool(_f(row, "double_sweep"))
+        feats["candles_since_sweep"] = int(_f(row, "candles_since_sweep", 99))
+        for k in _OPTIONAL_KEYS:
+            if k in row:
+                feats[k] = _f(row, k)
+        vr = _f(row, "volume_ratio")
+        if vr > 0:
+            feats["volume_ma20"] = _f(row, "volume") / vr
+        return feats
+    # --feature-source runtime: the pre-F-072 behaviour below (CRT-engine runtime copies).
     # ── Use the RUNTIME values the engine/gate actually consumed (cached_/live_), not the
     #    post-hoc batch columns. Critically, the plain "atr" column is FeaturePipeline's NORMALISED
     #    atr (~0.001); the gate/CRT use price-unit atr = live_atr (~1.0). Wrong scale → vol_score=0. ──
@@ -475,7 +493,8 @@ def _planned_rr(intent: str, crt_cfg: dict, planner_cfg: dict) -> float:
     return (ptf * tp1m + (1.0 - ptf) * tp2m) if partial_on else tp2m
 
 
-def _replay(rows, planner_cfg, ultron_cfg, crt_cfg, regime, initial_balance, *, control=False):
+def _replay(rows, planner_cfg, ultron_cfg, crt_cfg, regime, initial_balance, *, control=False,
+            ultron_only=False):
     """Run every backtest trade through the real plan()+evaluate() path, threading portfolio state.
 
     control=True → pass-through (Ultron disabled, planner filtering ignored): used by the trust gate
@@ -508,6 +527,7 @@ def _replay(rows, planner_cfg, ultron_cfg, crt_cfg, regime, initial_balance, *, 
         direction = _direction(row)
         engine_result = {
             "decision": "execute",
+            "selected_direction": direction,  # canonical typed field (core/types.py); planner KeyErrors without it
             "direction": direction,
             "confidence": _f(row, "risk_score"),
             "regime": regime,
@@ -519,7 +539,14 @@ def _replay(rows, planner_cfg, ultron_cfg, crt_cfg, regime, initial_balance, *, 
             "account_balance": balance,
         }
 
-        if not control:
+        if ultron_only and not control:
+            # Rail-bridge arm (2026-09-25): the CRT rail's decision skips the Engine rail's planner
+            # gate (GateIntelligence is part of the Engine decider, S3/S4) and meets only the shared
+            # risk stage (S6). Planned RR = the trade's own geometry measured from the FILL.
+            plan = {"decision": "execute", "execution_id": row.get("trade_id", "X"),
+                    "trade_intent": "CRT", "direction": direction,
+                    "entry_price": _f(row, "entry_fill"), "symbol": context["symbol"]}
+        elif not control:
             plan = planner.plan(engine_result, feats, context)
             if plan.get("decision") != "execute":
                 bump("planner_" + str(plan.get("decision")), _f(row, "pnl_rr_net"))
@@ -540,7 +567,10 @@ def _replay(rows, planner_cfg, ultron_cfg, crt_cfg, regime, initial_balance, *, 
         plan["stop_loss"] = sl
         plan["take_profit_1"] = _f(row, "tp1")
         plan["take_profit_2"] = _f(row, "tp2")
-        plan["rr_ratio"] = _planned_rr(plan.get("trade_intent"), crt_cfg, planner_cfg)  # mirrors live hook :799
+        if ultron_only and not control:
+            plan["rr_ratio"] = abs(_f(row, "tp2") - entry) / risk_dist if risk_dist > 0 else 0.0
+        else:
+            plan["rr_ratio"] = _planned_rr(plan.get("trade_intent"), crt_cfg, planner_cfg)  # mirrors live hook :799
         plan["risk_percent"] = risk_percent
         plan["symbol"] = context["symbol"]
         plan["position_size_hint"] = (
@@ -595,7 +625,17 @@ def main(argv=None) -> int:
                     help="run the BREAKOUT disp_strength sensitivity sweep (gate-admission, CRT reused)")
     ap.add_argument("--disp-sweep-full", action="store_true",
                     help="full-backtest disp sweep: re-run backtest per threshold (captures TP1->exit)")
+    ap.add_argument("--trades-csv", default=None,
+                    help="reuse an existing run's <INSTR>_trades.csv instead of re-running the backtest")
+    ap.add_argument("--feature-source", default="canonical", choices=["canonical", "runtime"],
+                    help="canonical = what the Engine rail feeder passes (default); runtime = CRT-engine copies")
+    ap.add_argument("--vol-atr-basis", default=None, choices=["legacy_relative", "absolute"],
+                    help="override gate_intelligence.gate_vol_atr_basis for this run (F-109 A/B)")
+    ap.add_argument("--start", default=None, help="keep trades opened_at >= this (YYYY-MM-DD); time-range subset")
+    ap.add_argument("--end", default=None, help="keep trades opened_at < this (YYYY-MM-DD)")
     args = ap.parse_args(argv)
+    global _FEATURE_SOURCE
+    _FEATURE_SOURCE = args.feature_source
 
     instrument = args.instrument
     csv = args.csv or f"data/{instrument}_M15.csv"
@@ -609,14 +649,26 @@ def main(argv=None) -> int:
         planner_cfg.update(get_prod_section("gate_intelligence"))  # live hook merges these (:752)
     except (RuntimeError, KeyError):
         pass
+    if args.vol_atr_basis:
+        planner_cfg["gate_vol_atr_basis"] = args.vol_atr_basis
     ultron_cfg = dict(get_prod_section("ultron_risk_gate"))
     crt_cfg = dict(get_prod_section("crt_engine"))  # tp1/tp2 multipliers for the planned-RR mirror
 
     # 1) faithful backtest on ACTIVE config
-    trades_csv, metrics = _run_backtest(instrument, csv, out / "_run")
+    if args.trades_csv:
+        trades_csv, metrics = Path(args.trades_csv), None
+    else:
+        trades_csv, metrics = _run_backtest(instrument, csv, out / "_run")
     rows = _load_trades(trades_csv)
+    if args.start:
+        rows = [r for r in rows if str(r.get("opened_at", "")) >= args.start]
+    if args.end:
+        rows = [r for r in rows if str(r.get("opened_at", "")) < args.end]
     if not rows:
         raise SystemExit("no executed trades in backtest — cannot measure live path")
+    print(f"## trades_csv={trades_csv} rows={len(rows)} window=[{args.start},{args.end}) "
+          f"feature_source={args.feature_source} "
+          f"gate_vol_atr_basis={planner_cfg.get('gate_vol_atr_basis', '<absent>')}")
 
     initial_balance = _f(rows[0], "capital_before", 100000.0)
     bt_rr = [_f(r, "pnl_rr_net") for r in rows]
@@ -633,6 +685,13 @@ def main(argv=None) -> int:
 
     # 3) LIVE PATH
     live = _replay(rows, planner_cfg, ultron_cfg, crt_cfg, args.regime, initial_balance, control=False)
+
+    # 3b) RAIL-BRIDGE ARM — CRT decisions through the shared risk stage only (no planner gate)
+    ultron_only = _replay(rows, planner_cfg, ultron_cfg, crt_cfg, args.regime, initial_balance,
+                          ultron_only=True)
+    print(f"## ultron_only arm: trades={ultron_only['trades']}/{len(rows)} pf={ultron_only['pf']} "
+          f"avg_r={ultron_only['avg_r']} return_pct={ultron_only['total_return_pct']} "
+          f"rejects={json.dumps(ultron_only['rejects'])}")
 
     # 4) PLANNER REJECTION ATTRIBUTION (measure-only) — accepted vs rejected expectancy by reason
     attribution = _attribution(live.get("rr_by_reason", {}))
@@ -658,6 +717,7 @@ def main(argv=None) -> int:
         },
         "backtest": backtest,
         "live_path": live,
+        "ultron_only_arm": ultron_only,
         "planner_attribution": attribution,
         "unknown_intent_attribution": unknown_attr,
         "disp_sweep": disp_sweep,

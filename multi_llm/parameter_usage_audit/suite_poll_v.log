@@ -1,0 +1,8 @@
+23:51:53 tests/research/test_band_validation.py::test_vectorized_persistence_matches_canonical_primitive PASSED [ 16%]
+23:52:23 tests/research/test_resample.py::test_unsupported_rule_raises PASSED     [ 22%]
+23:52:53 tests/research/test_runner_oco_routing.py::test_market_direction_reports_identical_with_and_without_entry_ttl[always_long] PASSED [ 22%]
+23:53:23 tests/research/test_trace_corpus.py::test_corpus_schema_and_no_edge_field FAILED [ 25%]
+23:53:54 tests/research/test_trace_corpus.py::test_corpus_schema_and_no_edge_field FAILED [ 25%]
+23:54:24 tests/research/test_trace_corpus.py::test_corpus_schema_and_no_edge_field FAILED [ 25%]
+23:54:54 tests/research/test_trace_corpus.py::test_corpus_schema_and_no_edge_field FAILED [ 25%]
+23:55:24 

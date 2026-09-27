@@ -1,0 +1,248 @@
+{
+  "artifact_id": "DC-HTF-AUTHORITY-01_LOCK_DECISIONS",
+  "card_id": "DC-HTF-AUTHORITY-01",
+  "purpose": "Audit trail of lock options presented and User freezes (D1\u2013D3). Does not authorize patch apply.",
+  "locks": {
+    "D1": {
+      "lock": "D1",
+      "leaf_id": "L-HTF-DIR",
+      "keyword": "HTF_BREAK_DIRECTIONALITY",
+      "choice": "REPLACE_CLOCK \u00d7 SYMMETRIC",
+      "mode": "REPLACE_CLOCK",
+      "sense": "SYMMETRIC",
+      "formula_frozen": "DIR := REPLACE_CLOCK \u00d7 SYMMETRIC; break := (close > h_ref) \u2228 (close < l_ref); clock_flip \u2209 reset_causes; clock_id retained for telemetry/sync only",
+      "options_presented": [
+        {
+          "id": "REPLACE_SYMMETRIC",
+          "label": "REPLACE \u00d7 SYMMETRIC",
+          "value": "D1: REPLACE_CLOCK \u00d7 SYMMETRIC",
+          "meaning": "Clock-flip stops being a reset cause; break if close > h_ref OR close < l_ref; clock_id telemetry/sync only",
+          "recommended": true,
+          "chosen": true
+        },
+        {
+          "id": "REPLACE_DIRECTIONAL",
+          "label": "REPLACE \u00d7 DIRECTIONAL",
+          "value": "D1: REPLACE_CLOCK \u00d7 DIRECTIONAL",
+          "meaning": "Clock out of reset causes; break only through the active sweep side",
+          "recommended": false,
+          "chosen": false
+        },
+        {
+          "id": "ADD_SYMMETRIC",
+          "label": "ADD \u00d7 SYMMETRIC",
+          "value": "D1: ADD_TO_CLOCK \u00d7 SYMMETRIC",
+          "meaning": "Break OR clock-flip can reset; symmetric close-beyond",
+          "recommended": false,
+          "chosen": false
+        },
+        {
+          "id": "ADD_DIRECTIONAL",
+          "label": "ADD \u00d7 DIRECTIONAL",
+          "value": "D1: ADD_TO_CLOCK \u00d7 DIRECTIONAL",
+          "meaning": "Dual reset causes + one-sided break",
+          "recommended": false,
+          "chosen": false
+        }
+      ],
+      "options_not_chosen": [
+        "REPLACE_DIRECTIONAL",
+        "ADD_SYMMETRIC",
+        "ADD_DIRECTIONAL"
+      ],
+      "frozen_by": "User",
+      "frozen_at_ist": "2026-09-22",
+      "source_answer": "D1: REPLACE_CLOCK \u00d7 SYMMETRIC",
+      "status": "FROZEN",
+      "choice_id": "REPLACE_SYMMETRIC",
+      "does_not_authorize": [
+        "ResetLogic.should_reset edit",
+        "resolver mirror edit",
+        "patch un-park"
+      ],
+      "frozen_at_utc": "2026-09-22T04:26:16Z"
+    },
+    "D2": {
+      "lock": "D2",
+      "leaf_id": "L-HTF-PROT",
+      "keyword": "HTF_BREAK_PROTECT_PARITY",
+      "choice": "KEEP",
+      "protects": [
+        "EXPANSION",
+        "RETEST",
+        "OPEN",
+        "TP1"
+      ],
+      "formula_frozen": "PROT := KEEP_BASELINE; break_suppressed_when \u2208 {EXPANSION, RETEST, OPEN, TP1}; same parity as prior clock-flip protects",
+      "options_presented": [
+        {
+          "id": "KEEP",
+          "label": "KEEP baseline",
+          "value": "D2: KEEP baseline (EXPANSION / RETEST / OPEN / TP1)",
+          "meaning": "Structural break may not fire in EXPANSION, RETEST, OPEN, or TP1 (same holds as prior clock protects)",
+          "recommended": true,
+          "chosen": true
+        },
+        {
+          "id": "EXTEND",
+          "label": "EXTEND",
+          "value": "D2: EXTEND (baseline + extras \u2014 name them)",
+          "meaning": "Keep the four baseline protects and add named extra states/flags",
+          "recommended": false,
+          "chosen": false
+        },
+        {
+          "id": "DROP",
+          "label": "DROP",
+          "value": "D2: DROP protects for structural break",
+          "meaning": "Structural break may fire even mid-setup / mid-trade",
+          "recommended": false,
+          "chosen": false
+        }
+      ],
+      "options_not_chosen": [
+        "EXTEND",
+        "DROP"
+      ],
+      "mates_with_D1": "REPLACE_CLOCK \u00d7 SYMMETRIC",
+      "does_not_authorize": [
+        "ResetLogic.should_reset edit",
+        "resolver mirror edit",
+        "patch un-park"
+      ],
+      "frozen_at_utc": "2026-09-22T04:20:56Z",
+      "frozen_at_ist": "2026-09-22",
+      "frozen_by": "User",
+      "source_answer": "D2: KEEP baseline EXPANSION / RETEST / OPEN / TP1",
+      "status": "FROZEN",
+      "choice_id": "KEEP"
+    },
+    "D3": {
+      "lock": "D3",
+      "leaf_id": "L-HTF-ORD",
+      "keyword": "HTF_BREAK_CHECK_ORDER",
+      "choice": "BREAK_ONLY",
+      "eval_order": "BREAK_ONLY",
+      "winner_rule": "structural_break is sole HTF reset predicate; clock_flip never wins as reset cause",
+      "formula_frozen": "ORD := BREAK_ONLY; eval_order := [structural_break]; clock_flip \u2209 reset_predicates; winner := first true in eval_order else none",
+      "options_presented": [
+        {
+          "id": "BREAK_ONLY",
+          "label": "BREAK_ONLY",
+          "value": "D3: BREAK_ONLY",
+          "meaning": "Structural break is the only HTF reset cause; clock-flip never resets",
+          "recommended": true,
+          "chosen": true,
+          "mates_D1": true
+        },
+        {
+          "id": "BREAK_THEN_CLOCK",
+          "label": "BREAK_THEN_CLOCK",
+          "value": "D3: BREAK_THEN_CLOCK",
+          "meaning": "Evaluate break first; clock only if break false (conflicts with REPLACE unless D1 reopened to ADD)",
+          "recommended": false,
+          "chosen": false
+        },
+        {
+          "id": "CLOCK_THEN_BREAK",
+          "label": "CLOCK_THEN_BREAK",
+          "value": "D3: CLOCK_THEN_BREAK",
+          "meaning": "Clock first; break only if clock false",
+          "recommended": false,
+          "chosen": false
+        },
+        {
+          "id": "CLOCK_ONLY",
+          "label": "CLOCK_ONLY",
+          "value": "D3: CLOCK_ONLY",
+          "meaning": "Keep clock-only reset (rejects structural break)",
+          "recommended": false,
+          "chosen": false
+        }
+      ],
+      "options_not_chosen": [
+        "BREAK_THEN_CLOCK",
+        "CLOCK_THEN_BREAK",
+        "CLOCK_ONLY"
+      ],
+      "mates_with": {
+        "D1": "REPLACE_CLOCK \u00d7 SYMMETRIC",
+        "D2": "KEEP baseline EXPANSION/RETEST/OPEN/TP1"
+      },
+      "consistent_with_D1": true,
+      "does_not_authorize": [
+        "ResetLogic.should_reset edit",
+        "resolver mirror edit",
+        "patch un-park",
+        "counterfactual skip"
+      ],
+      "frozen_at_utc": "2026-09-22T04:25:09Z",
+      "frozen_at_ist": "2026-09-22",
+      "frozen_by": "User",
+      "source_answer": "D3: BREAK_ONLY",
+      "status": "FROZEN",
+      "choice_id": "BREAK_ONLY"
+    }
+  },
+  "summary": {
+    "D1": "FROZEN REPLACE_CLOCK \u00d7 SYMMETRIC",
+    "D2": "FROZEN KEEP baseline (EXPANSION / RETEST / OPEN / TP1)",
+    "D3": "FROZEN BREAK_ONLY",
+    "locks_closed": true,
+    "W1_counterfactual": "NOT_STARTED \u2014 HARD GATE still open",
+    "patch": "PARKED_PENDING_COUNTERFACTUAL_GATE",
+    "note": "All three design locks frozen. Patch still requires W1 counterfactual fate table on the 1442.",
+    "updated_at_utc": "2026-09-22T04:26:16Z"
+  },
+  "updated_at_utc": "2026-09-22T04:26:16Z",
+  "policy_bundle": {
+    "DIR": "REPLACE_CLOCK \u00d7 SYMMETRIC",
+    "PROT": "KEEP {EXPANSION, RETEST, OPEN, TP1}",
+    "ORD": "BREAK_ONLY",
+    "break_predicate": "(close > h_ref) OR (close < l_ref)",
+    "clock_role": "telemetry/sync only \u2014 not a reset cause"
+  },
+  "choice_matrix": {
+    "D1": {
+      "chosen": "REPLACE_SYMMETRIC",
+      "from_options": [
+        "REPLACE_SYMMETRIC",
+        "REPLACE_DIRECTIONAL",
+        "ADD_SYMMETRIC",
+        "ADD_DIRECTIONAL"
+      ]
+    },
+    "D2": {
+      "chosen": "KEEP",
+      "from_options": [
+        "KEEP",
+        "EXTEND",
+        "DROP"
+      ]
+    },
+    "D3": {
+      "chosen": "BREAK_ONLY",
+      "from_options": [
+        "BREAK_ONLY",
+        "BREAK_THEN_CLOCK",
+        "CLOCK_THEN_BREAK",
+        "CLOCK_ONLY"
+      ]
+    }
+  },
+  "audit_complete": {
+    "all_locks_have_options_and_choice": true,
+    "D1_options": 4,
+    "D2_options": 3,
+    "D3_options": 4,
+    "verified_at_utc": "2026-09-22T04:26:16Z"
+  },
+  "related_decisions": {
+    "E_TRACE_LAYOUT": {
+      "choice": "A_PER_RUN_FILES",
+      "artifact": "LAYER_TRACE_LAYOUT_DECISION_01.json",
+      "orthogonal_to_htf_patch": true,
+      "frozen_at_utc": "2026-09-22T19:40:46Z"
+    }
+  }
+}

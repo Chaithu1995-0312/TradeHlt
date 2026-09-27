@@ -30,6 +30,7 @@ from datetime import datetime
 from pathlib import Path
 
 from research.config import ResearchConfig
+from governance.measurement_basis import TIE_BREAK_PRODUCTION
 from research.contracts import EdgeReport, Outcome
 from research.costs import ComponentCostModel, CostModel
 from research.measurement.forward_walk import forward_walk, forward_walk_oco
@@ -279,7 +280,12 @@ def run_result_to_dict(rr: RunResult) -> dict:
     # every report before component costs existed — `truth_standard_block` treats an omitted
     # `cost_model` kwarg and an explicit `None` identically) and the full SEM-015 component
     # breakdown otherwise.
-    d.update(provenance_block(rr.exit_model, rr.round_trip_bps, cost_model=rr.cost_model_provenance))
+    # tie_break=TIE_BREAK_PRODUCTION: this runner measures via forward_walk/
+    # forward_walk_oco, both hardcoding the SL-first convention (CH-measurement-
+    # basis-declaration).
+    d.update(provenance_block(rr.exit_model, rr.round_trip_bps,
+                              tie_break=TIE_BREAK_PRODUCTION,
+                              cost_model=rr.cost_model_provenance))
     return d
 
 

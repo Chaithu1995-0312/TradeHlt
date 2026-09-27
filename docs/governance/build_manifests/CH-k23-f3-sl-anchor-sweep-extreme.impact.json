@@ -1,0 +1,31 @@
+{
+  "change_id": "CH-k23-f3-sl-anchor-sweep-extreme",
+  "date_utc": "2026-09-24",
+  "objective": "K23 fix F3: opt-in structural stop anchored at the swept wick extreme -/+ sl_atr_buffer*atr, instead of the displacement-candle extreme. Default is the legacy anchor, so every existing config is byte-identical.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE"
+  ],
+  "change_class_rationale": "Changes ExecutionEngine.build_trade stop geometry only when backtest.sl_anchor='sweep_extreme'. Read as an optional backtest-section key with a legacy default and passed BacktestRunner -> CRTEngine -> ExecutionEngine as a constructor argument. Deliberately NOT a CRTConfig field (census pins every field; same reasoning as CH-k23-f4). No feature math, model, ontology formula or production config edit.",
+  "affected_files": [
+    "src/config_layer/crt_engine_v2.py",
+    "src/runtime/backtest_v2.py",
+    "tests/test_sl_anchor_sweep_extreme.py",
+    "docs/governance/build_manifests/CH-k23-f3-sl-anchor-sweep-extreme.impact.json"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_sl_anchor_sweep_extreme.py",
+    "tests/test_htf_reset_sweep_exempt.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Remove the sl_anchor argument from ExecutionEngine/CRTEngine, the BacktestConfig field/parse/plumbing, the test file and this manifest. With the default the behaviour is the pre-change behaviour.",
+  "authority_granted": "User 2026-09-24: K23 fix-first, F3 = swept extreme + 0.2 ATR, oracle must use the same geometry.",
+  "authority_NOT_granted": "No shadow config created, no ACTIVE_VERSION change, no promotion, no G001, no claim the anchor improves anything (F-081/F-086 nulls stand). DEFERRED (not this change): oracle labeler swept-extreme sl_geom arm and engine-vs-oracle parity test (F-088 class) are UNPROVEN; sl_anchor is not stamped into BacktestMetrics. [SUPERSEDED 2026-09-24 by CH-k23-f3-oracle-arm-stamping: the labeler arm, parity test and sl_anchor/reference_level stamping now exist; spine-vs-table equality on a real run remains UNMEASURED.]",
+  "production_behavior_changed": "NO"
+}

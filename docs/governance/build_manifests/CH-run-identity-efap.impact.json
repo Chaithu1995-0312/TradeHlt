@@ -1,0 +1,31 @@
+{
+  "change_id": "CH-run-identity-efap",
+  "date_utc": "2026-09-19",
+  "objective": "Run Identity Governance (EFAP): prevent cross-run data contamination via a canonical identity authority (src/governance/run_identity.py), always-on artifact identity stamping (run_id/config_version/config_hash/dataset_hash/artifact_timestamp/identity_status) in ReportWriter, a run_identity.json manifest per run dir, and a can_join() join-gate + validate-join CLI that DENIES any join involving an UNVERIFIED operand, a cross-run mismatch, or a config_hash drift. Historic pre-2026-09-16 artifacts are never backfilled (RECOMPUTE != RECOVER): they remain UNVERIFIED.",
+  "change_classes": [
+    "RUN_IDENTITY_CHANGE"
+  ],
+  "change_class_rationale": "Adds the Run-Identity Governance surface (EFAP) — a new change class covering the canonical identity authority, always-on stamping, the run_identity.json manifest, and the can_join() gate + CLI. Purely additive: the writer's new run_identity param defaults to None so every pre-existing write_all caller is unaffected. Does NOT touch trading math, the L0-L5 identity-store substrate (IDENTITY_STORE_CHANGE), or the dataset-admission registry (CORPUS_AUTHORITY_CHANGE).",
+  "affected_files": [
+    "src/governance/run_identity.py",
+    "src/runtime/backtest_v2.py",
+    "tests/test_run_identity.py",
+    "tests/test_construction_protocol.py",
+    "docs/governance/change_contracts.json",
+    "docs/architecture/run-identity-governance.md",
+    "docs/governance/build_manifests/CH-run-identity-efap.impact.json"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_run_identity.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Single commit; revert run_identity.py + ReportWriter identity wiring + tests + change_contracts.json RUN_IDENTITY_CHANGE + this manifest together. Reverting must not orphan tests/test_run_identity.py or leave can_join() referenced without the module.",
+  "authority_granted": "User toggled to Act mode 2026-09-19; approved Phase 1 execution of the Run Identity Governance plan.",
+  "authority_NOT_granted": "No production approval, no promotion, no ACTIVE_VERSION change, no G001, no backfill/recovery of historic run hashes, no change to trading math or dataset-admission behavior.",
+  "production_behavior_changed": "NO"
+}

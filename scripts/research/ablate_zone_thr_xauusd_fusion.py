@@ -23,7 +23,6 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[2]
@@ -44,7 +43,8 @@ os.environ.setdefault(
 import qualify_zone_topk as qz  # noqa: E402
 import config_layer.production_config as _pc  # noqa: E402
 from research.config import ResearchConfig  # noqa: E402
-from research.provenance import provenance_block  # noqa: E402
+from governance.measurement_basis import TIE_BREAK_PRODUCTION  # noqa: E402
+from research.provenance import provenance_block, write_report  # noqa: E402
 from research.qualification import (  # noqa: E402
     BH_METHOD_VERSION,
     PERMUTATION_METHOD_VERSION,
@@ -281,7 +281,7 @@ def main(argv=None) -> int:
         "permutation_method_version": PERMUTATION_METHOD_VERSION,
         "bh_method_version": BH_METHOD_VERSION,
         "spine_config_sha256": rc.sha256(),
-        **provenance_block(rc.exit_model, rc.round_trip_bps),
+        **provenance_block(rc.exit_model, rc.round_trip_bps, tie_break=TIE_BREAK_PRODUCTION),
         "selfcheck": selfcheck,
         "any_entry_change": any_change,
         "verdict": verdict,
@@ -299,26 +299,15 @@ def main(argv=None) -> int:
             ),
         },
     }
-    body_json = json.dumps(body, sort_keys=True, indent=2)
-    body_sha = hashlib.sha256(body_json.encode("utf-8")).hexdigest()
-    (out_dir / "zone_thr_ablation_xauusd_fusion.json").write_text(
-        body_json, encoding="utf-8"
-    )
-    (out_dir / "zone_thr_ablation_xauusd_fusion_manifest.json").write_text(
-        json.dumps(
-            {
-                "generated_at": datetime.now(timezone.utc).isoformat(),
-                "git_commit": qz._git_commit(),
-                "body_sha256": body_sha,
-                "spine_config_sha256": rc.sha256(),
-                "instrument": INSTRUMENT,
-                "any_entry_change": any_change,
-                "verdict": verdict,
-            },
-            sort_keys=True,
-            indent=2,
-        ),
-        encoding="utf-8",
+    body_sha = hashlib.sha256(json.dumps(body, sort_keys=True, indent=2).encode("utf-8")).hexdigest()
+    write_report(
+        out_dir, "zone_thr_ablation_xauusd_fusion", body,
+        extra_manifest={
+            "spine_config_sha256": rc.sha256(),
+            "instrument": INSTRUMENT,
+            "any_entry_change": any_change,
+            "verdict": verdict,
+        },
     )
 
     # Compact table for console

@@ -243,6 +243,7 @@ class LayerTraceEmitter:
         output_hash: Optional[str] = None,
         artifact_path: Optional[str] = None,
         note: Optional[str] = None,
+        trade_id: Optional[str] = None,   # Phase 3: named trade_id for L8 (runtime ledger) rows
     ) -> None:
         """Write one proof row. Called AFTER the named layer's own decision is already final —
         this is a read-only observation of a result already produced elsewhere, never a
@@ -260,6 +261,7 @@ class LayerTraceEmitter:
         rec["span_id"] = f"{trace_id}:{layer}"
         rec["bar_idx"] = int(bar_idx)
         rec["bar_ts"] = bar_ts.isoformat() if bar_ts is not None else None
+        rec["trade_id"] = trade_id
         rec["emitted_by"] = EMITTED_BY
         rec["plane"] = LAYER_PLANE[layer]
         rec["layer"] = layer
@@ -282,6 +284,7 @@ class LayerTraceEmitter:
         rec["span_id"] = f"{self.run_id}:RUN_SCOPED:{layer}"
         rec["bar_idx"] = -1
         rec["bar_ts"] = None
+        rec["trade_id"] = None
         rec["emitted_by"] = EMITTED_BY
         rec["plane"] = LAYER_PLANE[layer]
         rec["layer"] = layer

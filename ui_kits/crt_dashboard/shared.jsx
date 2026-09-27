@@ -236,6 +236,9 @@ const SIDEBAR_SECTIONS = [
   { header:"KNOWLEDGE", items:[
     { id:"Knowledge", label:"Truth-tier RAG", icon:"📚", isNew:true },
   ]},
+  { header:"ADMIN", items:[
+    { id:"HistoricalRun", label:"Historical Run", icon:"\u{1F570}" },
+  ]},
 ];
 
 const SIDEBAR_PAGE_MAP = {
@@ -247,6 +250,7 @@ const SIDEBAR_PAGE_MAP = {
   Backtests:"Backtests", WalkForward:"Backtests", StressTests:"Backtests", MonteCarlo:"Backtests",
   System:"System", DataQuality:"System", LogsAudit:"System", Settings:"System",
   Knowledge:"Knowledge",
+  HistoricalRun:"Admin",
 };
 
 function SidebarNew({ activePage, activeSub, onNav, onSubNav, execDisabled }) {

@@ -319,7 +319,7 @@ SCHEMA_VERSION: str = "6.0"   # v2.0 = 35 feats; v3.0 = 38; v4.0 = 39 (MACD spli
 # TradeNet — uses full canonical vector (n_features computed dynamically from CANONICAL_FEATURES).
 TRADENET_SCHEMA = SchemaObject(
     name="tradenet",
-    n_features=len(CANONICAL_FEATURES),   # 48 (schema v5.0)
+    n_features=len(CANONICAL_FEATURES),   # 48 (schema v6.0)
     version="3.0",
     features=list(CANONICAL_FEATURES),
 )
@@ -327,7 +327,7 @@ TRADENET_SCHEMA = SchemaObject(
 # Gaussian NB — uses full canonical vector.
 GAUSSIAN_SCHEMA = SchemaObject(
     name="gaussian",
-    n_features=len(CANONICAL_FEATURES),   # 48 (schema v5.0)
+    n_features=len(CANONICAL_FEATURES),   # 48 (schema v6.0)
     version="3.0",
     features=list(CANONICAL_FEATURES),
 )
@@ -356,7 +356,7 @@ class FeatureSchemaRegistry:
     Usage
     -----
     # At model save time (in trainer.py):
-        FeatureSchemaRegistry.register(version="gaussian_v6", hash=FEATURE_ORDER_HASH)
+        FeatureSchemaRegistry.register(version="gaussian_v6", feature_order_hash=FEATURE_ORDER_HASH)
 
     # At inference time (in ml_gaussian_engine.py, zone_gate_engine.py, etc.):
         compatible = FeatureSchemaRegistry.check_compatibility("gaussian_v6")

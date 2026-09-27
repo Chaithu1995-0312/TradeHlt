@@ -248,16 +248,24 @@ EXPECTED_ENGINES: set[str] = {"crt", "gaussian", "zone_gate", "rr"}
 
 ## 4. Feature Schema
 
-### 4.1 Canonical 39-dim vector — `src/features/feature_schema.py`
+### 4.1 Canonical 48-dim vector — `src/features/feature_schema.py`
 
-> Schema v4.0 = **39** features. Corrected 2026-08-07 (was documented here as 38-dim/v3.0; code
-> moved to 39-dim/v4.0 in F-062, 2026-07-31 — this table had drifted, not the code). `feature_schema.py`
-> is authoritative; quote `CANONICAL_FEATURE_DIM` from the module, not a number from this doc.
-> `SCHEMA_V2_FEATURE_DIM = 35` and `SCHEMA_V3_FEATURE_DIM = 38` remain as backward-compat sentinels
-> for models storing an earlier layout.
+> **Schema v6.0 = 48 features** (`SCHEMA_VERSION`, `CANONICAL_FEATURE_DIM`, source-verified
+> 2026-09-23). Corrected from a stale 39-name/v4.0 table below — this doc had drifted twice:
+> once to 38-dim/v3.0 (corrected 2026-08-07), then again past the v5.0 SMC addition (F-076,
+> 39→48) and the v6.0 name-only rename (F-107, `trend_strength`→`trend_strength_z`,
+> `candles_since_retest`→`candles_since_sweep`) without this table following either. Both
+> corrections are DOC_DRIFT (§6.2 rule 2) — code and the F-076/F-107 finding rows were already
+> right; only this table was stale. `feature_schema.py` is authoritative; quote
+> `CANONICAL_FEATURE_DIM`/`SCHEMA_VERSION` from the module, not a number from this doc.
+> `SCHEMA_V2_FEATURE_DIM = 35` and `SCHEMA_V3_FEATURE_DIM = 38` remain as backward-compat
+> sentinels for models storing an earlier layout.
 
 ```python
-CANONICAL_FEATURE_DIM = 39   # == len(CANONICAL_FEATURES); hard-asserted at import
+CANONICAL_FEATURE_DIM = 48   # == len(CANONICAL_FEATURES); hard-asserted at import
+SCHEMA_VERSION = "6.0"       # v2.0=35; v3.0=38; v4.0=39 (MACD split + candle_range rename +
+                              # FM-052 domain); v5.0=48 (+9 SMC primitives, F-076); v6.0=48
+                              # (NAMES ONLY — F-107, see indices 11 and 35 below)
 
 CANONICAL_FEATURES: tuple[str, ...] = (
     "open", "high", "low", "close", "volume",             # 0-4
@@ -277,6 +285,9 @@ CANONICAL_FEATURES: tuple[str, ...] = (
     "session", "hour_of_day",                              # 31-32
     "disp_strength", "retest_depth", "candles_since_sweep",  # 33-35 (v6.0: renamed from "candles_since_retest" — always counted bars since the last liquidity sweep)
     "liquidity_distance", "liquidity_pressure_score", "volume_spike",  # 36-38
+    "order_block_distance", "fvg_distance", "breaker_distance",       # 39-41 (v5.0: SMC primitives, F-076)
+    "mitigation_block_distance", "pdh_distance", "pdl_distance",      # 42-44 (v5.0: SMC primitives, F-076)
+    "eqh_distance", "eql_distance", "change_of_character",            # 45-47 (v5.0: SMC primitives, F-076)
 )
 
 FEATURE_SCHEMA: dict[str, type]   # name → type (float | int | str | bool | dict)
@@ -285,6 +296,12 @@ FEATURE_SCHEMA: dict[str, type]   # name → type (float | int | str | bool | di
 SCHEMA_V3_ALIASES: dict[str, str] = {
     "wick_size": "candle_range",
     "macd_hist": "macd_hist_z",   # v3.0's single field was the z-scored value, not the raw diff
+}
+
+# Read-side only — decodes <=v5.0 records; never emitted by new code (v6.0, F-107):
+SCHEMA_V5_ALIASES: dict[str, str] = {
+    "trend_strength": "trend_strength_z",
+    "candles_since_retest": "candles_since_sweep",
 }
 ```
 
@@ -903,4 +920,224 @@ Build with `scripts/maintenance/jsonl_to_parquet.py`; query with
 `scripts/analysis/query_trace.py` (`--family crt_construction`) via
 `src/utils/duckdb_query.open_views`. JSONL remains system of record; measured columns TBD —
 no production `enabled:true` run yet.
+
+## 9.18 `results/bar_clock/{instrument}_bar_identity.jsonl` — bar-clock bridge (`CH-identity-chain-closure-v1`)
+
+Observation-only sidecar, change class `TRACE_OBSERVATION_JOIN`. Emitter:
+`src/runtime/bar_clock_bridge.py` (`BarClockBridgeEmitter`), wired post-run from
+`backtest_v2`. One row per bar in the run, resolving every alias in
+`src/governance/identity_spine.py`'s `INDEX_ALIASES` / `BAR_TS_ALIASES` to a single
+canonical clock. This is the ONLY stream whose rows may be joined position-to-position
+against another stream by `bar_index` — every other cross-stream join goes through
+`bar_open_ts` (see `identity_spine.JOIN_TABLE`; `docs/memory/identity-chain-memory.md`).
+
+```python
+BarIdentityLine = {
+    "bar_index":            int,        # canonical position in this run's stream
+    "engine_candle_index":  int,        # the CRT engine's own index for the same bar (alias)
+    "bar_ts":                str,        # legacy alias, equals bar_open_ts
+    "bar_open_ts":           str,        # canonical clock: "%Y-%m-%d %H:%M:%S" UTC
+    "run_id":                str,        # frozen-PK companion, not part of the PK itself
+    "instrument":            str,        # frozen PK field
+    "timeframe":             str,        # frozen PK field
+    "corpus_sha256":         str,        # frozen PK field
+}
+```
+
+Frozen PK (join/identity key across the whole chain, not just this sidecar):
+`(instrument, timeframe, bar_open_ts, corpus_sha256)` — a tuple of strings, no arithmetic.
+
+**Additive columns on existing streams (same change, no column shifts existing position):**
+
+| Stream | New column(s) | Meaning |
+|---|---|---|
+| `crt_telemetry.jsonl` `CANDIDATE_LIFECYCLE` rows, `death_reason=="ACCEPTED"` | `trade_id`, `bar_ts` | named trade identity + canonical clock at acceptance |
+| `{instrument}_layer_trace.jsonl`, `layer=="L8"` rows | `trade_id` | the same engine trade_id, joinable to the ACCEPTED lifecycle row on `bar_ts` |
+| `{instrument}_trades.csv` (`TradeRecord`) | `candidate_id`, `execution_intent_id` | `candidate_id` back-joins to the lifecycle row (§9.4 event fabric); `execution_intent_id` is the journal's derived uuid (Option A — see below), never the row `trade_id` |
+| Oracle labeler `labels.csv` (`src/research/oracle/labeler.py`) | `dataset_hash`, `label_run_id` (renamed from `run_id`, §9.19), `label_generated_utc` | provenance lineage, checked by invariant I7 |
+
+**Trade-ID identity (Option A, user-decided):** the engine's `CRT-{seq:04d}` stays the
+row `trade_id` everywhere (telemetry, L8, `trades.csv`). The journal's uuid is a
+*derived*, 1:1 `execution_intent_id = TradeIdentityV1.new(alert_id=trade_id).trade_id` —
+a second name for the same trade, never a second identity, never re-minted.
+
+**Verification:** `scripts/governance/identity_chain_check.py` (7 invariants, §see
+`docs/memory/identity-chain-memory.md`). Report-only — grants nothing, changes nothing.
+
+## 9.19 Oracle join spine — `bar_matrix.csv` / `labels.csv` identity columns (`CH-oracle-join-spine`)
+
+Observation-only, change class `TRACE_OBSERVATION_JOIN` + `RUN_IDENTITY_CHANGE`. Makes
+every labelled unit carry the identity of the bar it was derived from, closing the
+precondition for any spine↔labeler comparison (parity itself — cost model / tie-break /
+stop geometry — remains separate, unstarted work). Verified invariant: **I8**
+`label_trace_resolution` (`src/governance/identity_chain.py`).
+
+**`results/research/bar_matrix/{instrument}_{timeframe}/bar_matrix.csv`** — 8 new columns,
+inherited from the layer-trace L3 rows of ONE `lt_id` (`scripts/research/build_bar_matrix.py`,
+`--lt-id`, MANDATORY unless `--no-trace-join`):
+
+```python
+JoinSpineColumns = {
+    "lt_id":                str,   # the requested layer-trace run_id, inherited verbatim
+    "trace_id":              str,   # L3's own trace_id ("{lt_id}:{instrument}:{bar_ts.isoformat()}")
+    "bar_open_ts":           str,   # canonical clock ("%Y-%m-%d %H:%M:%S"), via identity_spine.resolve_bar
+    "engine_state_after":    str,   # CRT engine's curr_state, read from L3 output_hash
+                                    # ("CRTState.<NAME>" stripped to "<NAME>") -- NOT ontology_state
+    "trace_join_status":     str,   # "JOINED" | "NO_L3_ROW" | "DECLINED" -- never blank
+    "instrument":            str,   # frozen PK field, stamped per row
+    "timeframe":             str,   # frozen PK field, stamped per row
+    "corpus_sha256":         str,   # frozen PK field, stamped per row
+}
+```
+
+**Renamed (not duplicated):** `crt_state_resolved` → **`ontology_state`** (values
+byte-identical by position — F-107 pattern). `ontology_state` (the `CRTStateResolver`'s
+declarative label) and `engine_state_after` (the engine's own state machine) are DIFFERENT
+quantities (F-069: divergent construction, not a lag) — both names are reused verbatim from
+`src/runtime/crt_construction_trace.py`, which already emits exactly these two
+producer-qualified fields for these two producers. Never read as one field; the forbidden
+join is catalogued as `CC-L3-FORBIDDEN-JOIN` (`docs/governance/jsonl_claim_catalog.yaml`).
+`bar_idx` is deliberately **not** written (would invite `identity_spine.DENY_RAW_INDEX`).
+
+Every miss case is a declared status or a refusal, never a silent skip (F-056/F-079/F-083/
+F-085 class): an absent `--lt-id` refuses and lists the ids present in the shared trace; a
+matrix bar with no L3 row refuses unless `--allow-unjoined-bars` (writes `NO_L3_ROW`,
+`"NOT_JOINED"` — never blank); an L3 bar with no matrix row refuses unless
+`--allow-trace-only-bars`; a duplicate `bar_open_ts` under one `lt_id` always raises
+(`mint_run_id` has 1-second resolution, so same-second same-instrument runs can collide in
+the shared append-only file).
+
+**`results/research/oracle_labels/{instrument}_{timeframe}/labels.csv`** — 3 new columns,
+**inherited from the matrix by row index — never re-derived, never minted**:
+
+| Column | Meaning |
+|---|---|
+| `lt_id` | copied from the matrix's `lt_id` — all 8 units of a bar share the same value |
+| `trace_id` | copied from the matrix's `trace_id` |
+| `bar_open_ts` | copied from the matrix's `bar_open_ts` |
+
+**Renamed:** the labeler's own `run_id` column → **`label_run_id`** — it scopes the
+*labeling invocation* (`LABEL_{tag}_{UTC}`), a different-scoped id than `lt_id` (the *spine
+walk*); keeping both under one generic name would recreate the two-quantities-one-name
+problem this same change fixes for `ontology_state`/`engine_state_after`, one artifact
+over. `identity_chain.py`'s I7 (`label_provenance`) checks `label_run_id` by name.
+
+**A bar matrix built before this change is STALE, not smaller.** The labeler's matrix read
+fails closed on the 3 identity columns' absence (never `if col in df.columns`) and prints
+the exact regenerate command; there is no migration or back-fill of pre-existing
+`labels.csv`/`bar_matrix.csv` artifacts (`results/` is gitignored — nothing tracked cites
+those bytes).
+
+**Fail-closed reader fix (same commit, not optional):** `src/research/oracle/scan.py`
+`state_columns()`, `scripts/research/oracle_pattern_scan.py`, and
+`scripts/research/validate_oracle_harness.py` all read `crt_state_resolved` with a tolerant
+`if extra in df.columns` — under the rename that would *silently drop the resolver stratum*
+from every downstream scan, reproducing the F-056/F-079/F-083/F-085 class inside the change
+meant to close it. All three now require `ontology_state` (raise on absence) and raise by
+name if the retired column is ever seen again.
+
+**Verification:** `src/governance/identity_chain.py` invariant I8; new
+`tests/research/test_bar_matrix_trace_stamp.py`; extended
+`tests/research/test_oracle_labeler.py` (incl. a byte-identity proof that the identity
+columns do not perturb a single label value). See
+[`docs/memory/identity-chain-memory.md`](../memory/identity-chain-memory.md).
+
+## 9.20 Measurement basis declaration — `labels.csv` / `trades.csv` (`CH-measurement-basis-declaration`)
+
+Declaration-only, change classes `TRACE_OBSERVATION_JOIN` + `SEMANTIC_REGISTRY_CHANGE`. The
+join spine (§9.19) made a labelled unit and a spine bar JOINABLE (same `lt_id`/`trace_id`/
+`bar_open_ts`); joinable is not comparable — two rows can name the same bar and still be two
+different measurements, produced under a different cost model, tie-break, or stop-reference
+level. This section declares the ruler; it does **not** unify it (see the follow-up backlog).
+Verified invariant: **I9** `basis_declaration` (`src/governance/identity_chain.py`).
+
+**The vocabulary** — `src/governance/measurement_basis.py`. Five axes, three re-exported
+verbatim from the pre-existing `identity.tokens.L5_BASIS` (never re-declared — a second copy
+would recreate the two-quantities-one-name failure §9.19 already closed once):
+
+```python
+BASIS_AXES = ("walk_kernel", "reference_level", "fill_model_id", "cost_model_id", "tie_break")
+
+# re-exported, not re-declared:
+walk_kernel    in identity.tokens.WALK_KERNELS      # {"forward_walk_intrabar_fixed", "multi_tp_walk", "backtest_ledger", "detection_stream"}
+cost_model_id  in identity.tokens.COST_MODEL_IDS    # {"flat_12bps", "sem015_component_xauusd", "none_gross", "backtest_g1g2_v2", "backtest_zero_cost"}
+fill_model_id  in identity.tokens.FILL_MODEL_IDS    # {"touch_exact", "sem016_adverse", "engine_intrabar"}
+
+# new this change:
+tie_break        in {"production", "optimistic", "close_only_no_tiebreak"}
+reference_level  in {"displacement_extreme", "signal_bar_extreme", "entry_close_atr"}
+```
+
+`UNSTAMPED` is a first-class sentinel (never a blank, never inferred) — a value that is
+blank, absent, or an unrecognised spelling canonicalises to `UNSTAMPED`, which is always a
+comparator DENY. `canonicalise(axis, value)` never guesses: alias tables
+(`COST_MODEL_ALIASES`, `TIE_BREAK_ALIASES`) reconcile every known spelling of the SAME model
+onto ONE canonical member — 5 unreconciled spellings of the component cost model were found
+at source (`sem015_component_xauusd` / `CM-XAUUSD-COMPONENT-MEASURED-V1` /
+`component_measured.v1` / `CM-XAUUSD-COMPONENT-MEASURED` / `component_measured`).
+
+**`can_compare(a, b) -> (verdict, rationale)`** is STRICTER than raw `L5_BASIS` equality —
+it also refuses on `tie_break`/`reference_level` mismatch, which the pre-existing 3-axis
+tuple could not see even though both measurably move the outcome number (SEM-017: +0.0866R
+on 6.81% of units from tie_break; `reference_level` moves `risk_distance`, hence every R).
+Checked in a fixed priority order — `walk_kernel` first, because a different trade OBJECT
+(single-target vs. dual-target-plus-trail) makes every finer-grained axis moot:
+
+```python
+ALLOW_SAME_BASIS                  # all five axes canonicalise equal
+DENY_UNSTAMPED_OPERAND             # any axis UNSTAMPED on either operand -- checked FIRST
+DENY_WALK_KERNEL_MISMATCH          # F-088: different trade objects
+DENY_REFERENCE_LEVEL_MISMATCH      # SEM-017: moves risk_distance
+DENY_FILL_MODEL_MISMATCH           # SEM-016
+DENY_COST_MODEL_MISMATCH           # SEM-015: ~11x measured gap on XAUUSD
+DENY_TIE_BREAK_MISMATCH            # SEM-017: +0.0866R / 6.81% of units
+```
+
+`can_compare` never raises (a read-side analytic reading many rows must not abort on one bad
+operand); `require_comparable(a, b)` is the gated counterpart that raises.
+
+**`results/research/oracle_labels/{instrument}_{timeframe}/labels.csv`** — 4 new columns
+(it already carries `sl_geom`/`tie_break`, §9.18 predates this section):
+
+| Column | Meaning |
+|---|---|
+| `cost_model_id` | canonicalised from `ComponentCostModel.provenance()['cost_model_id']` — never the raw provenance spelling |
+| `walk_kernel` | `"multi_tp_walk"` — a definitional constant of this file |
+| `fill_model_id` | `"sem016_adverse"`, or `"touch_exact"` under `--no-adverse-fill` |
+| `reference_level` | derived from `sl_geom`: `disp_bar` → `signal_bar_extreme`, `fixed_atr` → `entry_close_atr` |
+
+**`disp_bar`'s name is misleading — declared, not fixed.** It anchors to the CURRENT bar's
+own low/high (`labeler.py:185-186`), not the engine's `displacement_candle`, so it
+canonicalises to `signal_bar_extreme`, **not** `displacement_extreme`. The oracle has never
+measured the engine's actual displacement-anchored stop geometry despite the name implying
+it (follow-up backlog item 3).
+
+**`results/{run}/{instrument}_trades.csv`** — 4 new columns plus a disclosure flag (it
+already carries `cost_model_id`/`cost_model_params_hash`/`risk_denominator_id` from
+`CH-cost-model-identity-stamp`):
+
+| Column | Meaning |
+|---|---|
+| `walk_kernel` | `"backtest_ledger"` — a definitional constant |
+| `reference_level` | `"displacement_extreme"` — a definitional constant |
+| `fill_model_id` | `"engine_intrabar"` — a definitional constant |
+| `tie_break` | resolved from `CRTEngine.intrabar_exits` (new public property) — `production` when intrabar, `close_only_no_tiebreak` otherwise; NEVER re-derived from config alone, because the `TRUST_INTRABAR_TOUCH` env override can disagree |
+| `sl_refloored` | bool DISCLOSURE, not part of the compare key — whether `backtest_v2.py`'s `[FIX-SL]` floor fired on this row (a log line before this change, not an artifact) |
+
+**`src/research/provenance.py`'s `truth_standard_block`/`provenance_block`** gain a REQUIRED
+`tie_break` parameter (previously hardcoded `"SL_before_TP"` with no parameter — a
+structurally unguarded declaration that could not track the `optimistic` arm). ~21 call
+sites across `src/research/` and `scripts/research/` updated in the same commit to pass
+`TIE_BREAK_PRODUCTION` — verified correct for every current caller, since all measure via
+`forward_walk`, which hardcodes the SL-first convention in both exit models.
+
+**Additive-only.** No label value, PnL, cost arithmetic, `risk_distance`,
+`CANONICAL_FEATURES`/`SCHEMA_HASH`, config key, or `ACTIVE_VERSION` changes — proved by
+byte-identity tests on both ledgers (`test_oracle_labeler.py`, `test_cost_model_stamped.py`).
+
+**Verification:** `src/governance/identity_chain.py` invariant I9; new
+`tests/test_measurement_basis.py` (42 tests); extended `tests/research/test_oracle_labeler.py`,
+`tests/test_cost_model_stamped.py`, `tests/test_exit_model.py`,
+`tests/research/test_exit_model_reconcile.py`, `tests/research/test_provenance_helpers.py`.
+See [`docs/memory/identity-chain-memory.md`](../memory/identity-chain-memory.md).
 

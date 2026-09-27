@@ -51,7 +51,7 @@ def main() -> None:
     print(f"{'='*_W}\n")
 
     # Step 1 — Validate
-    validator = MultiStrategyValidator()
+    validator = MultiStrategyValidator.from_prod_config()
     report = validator.validate(csv_paths=CSV_PATHS, config_id=args.config_id)
 
     decision     = report.get("decision", "REJECT")

@@ -1,0 +1,24 @@
+{
+  "change_id": "CH-market-language-census-001",
+  "objective": "Build a deterministic market-language vocabulary census (scripts/analysis/market_language_census.py) that walks the five authority files plus trade sources and emits the S1..S8 taxonomy (feature schema, four distinct state vocabularies, hierarchy, trade schema, traceable ontology, exact + concept-token overlaps, orphans, canonical vocabulary table). This is the deterministic-first foundation for the Run/Trace identity design: field names downstream follow from the canonical vocabulary, and the four state vocabularies (crt_machine / feature_enum / smc_choch / trade_execution) are kept separate, never merged.",
+  "change_classes": ["SCRIPT_LIFECYCLE_CHANGE"],
+  "affected_files": [
+    "scripts/analysis/market_language_census.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/research-readiness/market_language_census_report.json",
+    "docs/research-readiness/market_language_census_report.md"
+  ],
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [
+    {
+      "blocking": false,
+      "item": "SITS floor pre-existing RED",
+      "detail": "tests/test_script_registry.py has 3 failures on this branch BEFORE this change (17-38 unregistered/unclassified on-disk scripts -- layer_trace/*, live_alert_*, ultron_sem_r_shadow.py, phase1_shadow_*, grandfather-pin drift vs stubs). The census script adds one entry to the unregistered list but does not cause the failure; declaring this change COMPLETE is therefore dishonest until the unrelated WIP scripts are registered + the grandfather pin is re-synced (a separate, out-of-scope change)."
+    }
+  ],
+  "rollback_boundary": "Single commit: revert scripts/analysis/market_language_census.py + the seed overlay block in scripts/governance/seed_script_registry.py + the two report files together. Removing the overlay restores the SITS overlay list; re-running seed_script_registry.py re-derives data/script_registry.jsonl deterministically."
+}

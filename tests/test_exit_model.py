@@ -65,6 +65,28 @@ def test_exit_model_env_overrides_config(monkeypatch):
     assert CRTEngine(_cfg("close_only"))._intrabar_exits is True
 
 
+# ── CH-measurement-basis-declaration: intrabar_exits public property ────────
+# TradeJournal reads .intrabar_exits (not the private attribute) to resolve
+# which tie_break it declares — this is the read-only surface it depends on.
+def test_intrabar_exits_property_mirrors_private_attribute(monkeypatch):
+    monkeypatch.delenv("TRUST_INTRABAR_TOUCH", raising=False)
+    engine = CRTEngine(_cfg("intrabar_touch"))
+    assert engine.intrabar_exits is True
+    assert engine.intrabar_exits == engine._intrabar_exits
+
+
+def test_intrabar_exits_property_reflects_close_only(monkeypatch):
+    monkeypatch.delenv("TRUST_INTRABAR_TOUCH", raising=False)
+    engine = CRTEngine(_cfg("close_only"))
+    assert engine.intrabar_exits is False
+
+
+def test_intrabar_exits_property_is_read_only():
+    engine = CRTEngine(_cfg("intrabar_touch"))
+    with __import__("pytest").raises(AttributeError):
+        engine.intrabar_exits = False
+
+
 # ── dual-bound band: structure + guarded inflation_ratio ─────────────────────
 def _m(pf: float) -> dict:
     return {"pf": pf, "expectancy": 0.1, "win_rate": 0.5,

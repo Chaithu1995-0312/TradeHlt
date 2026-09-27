@@ -48,7 +48,14 @@
     "fusion_compare_evaluate": true,
     "fusion_use_evaluate": false,
     "ultron_gate_enabled": false,
-    "zone_min_samples": 50
+    "zone_min_samples": 50,
+    "signal_belief": {
+      "_comment": "SignalBeliefTracker knobs (src/core/signal_belief_tracker.py). Restored 2026-09-18: the section was present in v1_multi_2026_03/v3_multi_2026_06 but absent here, so the code's .get(key, literal) fallbacks silently supplied it (the F-018 class). Values equal the class defaults byte-for-byte. enabled:false preserves current behavior -- the gate stays OFF; this declares the knobs, it does not arm anything.",
+      "enabled": false,
+      "decay": 0.7,
+      "high_conviction_threshold": 0.65,
+      "min_confirmations": 2
+    }
   },
   "execution_planner": {
     "ttl_breakout_sec": 300,
@@ -87,7 +94,9 @@
     "gate_weight_vol": 0.2,
     "gate_weight_liquidity": 0.2,
     "gate_weight_structure": 0.25,
-    "gate_approval_threshold": 0.55
+    "gate_approval_threshold": 0.55,
+    "_comment_gate_vol_atr_basis": "F-109 (2026-09-25, user-approved key). Basis of the ATR that GateIntelligence._vol_score divides the dollar bar range by. legacy_relative = canonical close-relative atr as passed (vol_score is structurally 0 on the Engine rail; byte-identical to before). absolute = FM-074 atr*close. Switching to absolute is a separate decision.",
+    "gate_vol_atr_basis": "legacy_relative"
   },
   "ultron_risk_gate": {
     "disabled": false,
@@ -391,7 +400,10 @@
     "risk_pct": 0.01,
     "slippage_atr_fraction": 0.08,
     "warmup_candles": 100,
-    "output_dir": "results/portfolio"
+    "output_dir": "results/portfolio",
+    "currency": "INR",
+    "per_trade_investment_inr": 10000.0,
+    "sizing_mode": "fixed_investment_inr"
   },
   "llama_gate": {
     "server_url": "http://127.0.0.1:8080/completion",
@@ -479,7 +491,9 @@
     "gap_reset_minutes": 120,
     "event_flush_every": 100,
     "_comment_bypass_zone_invalid": "F-058-class fix (2026-07-29, target-strategy-architecture.md sec13 item2). Backtest-mode bypass for the zone_gate_invalid EngineRunner rejection: that rule is production-only (requires a populated zone_registry.json; backtest sees <=5 zones, treated as \"no zones\"). Was os.getenv(\"BACKTEST_BYPASS_ZONE_INVALID\", \"1\"), declared in no config -- same undeclared-env-truth class as F-058's engine_gate_enabled. Declared here as the authority (true = current behavior, byte-identical); the env var remains an explicit override and logs at WARNING when it disagrees.",
-    "bypass_zone_invalid": true
+    "bypass_zone_invalid": true,
+    "per_trade_investment_inr": 10000.0,
+    "sizing_mode": "fixed_investment_inr"
   },
   "feature_monitor": {
     "window_size": 500,
@@ -556,7 +570,7 @@
     "_comment_smc_max_window": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Trailing-candle-buffer bound for compute_smc_features's OB/FVG/breaker/mitigation scanners -- a performance/scope bound, not a registered identity parameter. Reuses swing_window above for the causal swing half-window k (no duplicate key).",
     "smc_max_window": 100
   },
-  "notes": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15, user-authorized). Real calendar-true HTF parent candles (H4/D1/W1/MN1) + 3-candle parent-timeframe CRT (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3, disjoint sub-graph) + 9 SMC primitives (order block, FVG, breaker, mitigation block, PDH/PDL, EQH/EQL, change-of-character) as canonical vector features (39->48, schema v5.0). parent_crt.enabled=true (arm ON per user decision) -- the M15 EXECUTION-gate bias check in crt_engine_v2.process_candle is live IN CODE. CH-parent-crt-caller-wire (2026-08-16): BacktestRunner now constructs runtime.parent_crt_feed.ParentCRTFeed and threads feed.bias into process_candle (pushed on every child bar including warmup). Live still has no process_candle loop (F-073). Research/analysis process_candle call sites still default parent_state=None. params UNCHANGED from v2_multi_2026_04 (config_hash identical, no rehash needed). MODEL-ARTIFACT STATUS: zone_gate/rr_fusion/gaussian/bitnet/tradenet are ALL trained on <=39-dim schemas and were ALREADY degrading (zone_gate: pre-existing feature_order drift, KeyError on legacy macd_hist name, fail-closed BLOCK) before this program -- verified via direct integration test that this promotion does not make it worse (BLOCK/refuse-load, never silent truncate, identical failure mode to today). Retraining all 6 model families is a separate, explicitly deferred, compute-bound activity; per user decision (\"Promote now, gates inert\"), this promotion does not block on that retrain. PROMOTION PATH: NOT via PromotionManager.promote_* (would silently strip parent_crt and every other new top-level section by overlaying only _METADATA_KEYS onto the v1_multi_2026_03 base). ConfigValidator.validate() was ATTEMPTED first (the real governance gate, not bypassed for convenience) and found REJECTing with hard_failure 'F-057 product gate: CRTConfig mode UNKNOWN' -- confirmed via a control run that this rejection is PRE-EXISTING and unrelated to this program: the unchanged, currently-active v2_multi_2026_04 params produce the IDENTICAL rejection today, because ConfigValidator does not stamp CRTConfig with an allowed construction-provenance mode before calling BacktestRunner. This is a real, separate defect worth its own governed fix, not patched here. Promoted via the governed manual-write shape (matching scripts/maintenance/_promote_v4_bnb_cutover.py's own precedent for when PromotionManager.promote_* cannot carry a full-config change): write config, flip ACTIVE_VERSION, append PROMOTED log entry with params_fingerprint freshness anchor, verify via PromotionManager.load_version + config_integrity.audit. User confirmed this exact write+flip explicitly before it was executed.",
+  "notes": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15, user-authorized). Real calendar-true HTF parent candles (H4/D1/W1/MN1) + 3-candle parent-timeframe CRT (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3, disjoint sub-graph) + 9 SMC primitives (order block, FVG, breaker, mitigation block, PDH/PDL, EQH/EQL, change-of-character) as canonical vector features (39->48, schema v5.0). parent_crt.enabled=true (arm ON per user decision) -- the M15 EXECUTION-gate bias check in crt_engine_v2.process_candle is live IN CODE. CH-parent-crt-caller-wire (2026-08-16): BacktestRunner now constructs runtime.parent_crt_feed.ParentCRTFeed and threads feed.bias into process_candle (pushed on every child bar including warmup). Live still has no process_candle loop (F-073). Research/analysis process_candle call sites still default parent_state=None. params UNCHANGED from v2_multi_2026_04 (config_hash identical, no rehash needed). MODEL-ARTIFACT STATUS: zone_gate/rr_fusion/gaussian/bitnet/tradenet are ALL trained on <=39-dim schemas and were ALREADY degrading (zone_gate: pre-existing feature_order drift, KeyError on legacy macd_hist name, fail-closed BLOCK) before this program -- verified via direct integration test that this promotion does not make it worse (BLOCK/refuse-load, never silent truncate, identical failure mode to today). Retraining all 6 model families is a separate, explicitly deferred, compute-bound activity; per user decision (\"Promote now, gates inert\"), this promotion does not block on that retrain. PROMOTION PATH: NOT via PromotionManager.promote_* (would silently strip parent_crt and every other new top-level section by overlaying only _METADATA_KEYS onto the v1_multi_2026_03 base). ConfigValidator.validate() was ATTEMPTED first (the real governance gate, not bypassed for convenience) and found REJECTing with hard_failure 'F-057 product gate: CRTConfig mode UNKNOWN' -- confirmed via a control run that this rejection is PRE-EXISTING and unrelated to this program: the unchanged, currently-active v2_multi_2026_04 params produce the IDENTICAL rejection today, because ConfigValidator does not stamp CRTConfig with an allowed construction-provenance mode before calling BacktestRunner. This is a real, separate defect worth its own governed fix, not patched here. Promoted via the governed manual-write shape (matching scripts/maintenance/_promote_v4_bnb_cutover.py's own precedent for when PromotionManager.promote_* cannot carry a full-config change): write config, flip ACTIVE_VERSION, append PROMOTED log entry with params_fingerprint freshness anchor, verify via PromotionManager.load_version + config_integrity.audit. User confirmed this exact write+flip explicitly before it was executed.\n2026-09-19: capital_management + portfolio/backtest sized to INR 1L capital / INR 10k per trade (user). Live MT5 lots unchanged.\n2026-09-19b: clarified INR sizing — capital 1L; per_trade_investment_inr=10000 (investment/notional). Risk caps restored separate from investment. Live lots unchanged.",
   "schema_version": "1.3",
   "inout": {
     "scanner": {
@@ -644,7 +658,12 @@
       "AUDUSD": 10.0,
       "USDCAD": 7.7,
       "NZDUSD": 10.0
-    }
+    },
+    "currency": "INR",
+    "_comment_user_sizing_2026_09_19": "User lock (INR): total capital 100000 (1 lakh). per_trade_investment_inr=10000 = capital allocated/invested per trade (notional), NOT max loss risk. max_risk_per_trade_* remain separate risk ceilings. Live MT5 lots unchanged; no live orders.",
+    "per_trade_investment_inr": 10000,
+    "per_trade_investment_pct": 0.1,
+    "sizing_mode": "fixed_investment_inr"
   },
   "data_ingestion": {
     "db_url": "postgresql://localhost/tradelatest",
@@ -823,7 +842,8 @@
         "2026-01-19",
         "2026-02-16",
         "2026-04-03",
-        "2026-07-04"
+        "2026-07-04",
+        "2026-09-07"
       ],
       "_known_gaps_doc": "Reviewed, timestamp-RANGE accept-list for genuine intraday broker feed outages (a few bars) that are NOT full-day closures — so the good bars that day are kept (unlike whole-day holidays). Each entry: {symbol?(optional; omit=all), from, to (half-open UTC ISO), reason}. A bar inside any applicable range is treated as non-tradable (accepted). EMPTY DEFAULT = byte-parity; entries are added ONLY by reviewed decision after the strict gate surfaces a hole confirmed to be a broker outage (not corruption). Populated 2026-07-02 from the IC-Markets bulk-fetch review: broker-wide multi-symbol windows are global; single-symbol holes are scoped; XAUUSD 2026-05-25/06-19 are US-holiday early-closes (gold) not yet in the holidays list.",
       "known_gaps": [
@@ -1036,5 +1056,23 @@
     "output_dir": "results/layer_trace",
     "filename_suffix": "_layer_trace.jsonl",
     "flush_every": 200
+  },
+  "signal_audit": {
+    "_comment": "SignalAuditRecorder leak-detection thresholds (src/core/signal_audit.py). Warning-text only -- these gate no decision. Migrated 2026-09-18 as a coherent group: the behavior census flagged only trade_rate_warn (name-regex match) while its two identical-purpose siblings three lines away were invisible to it. Values equal the prior module constants.",
+    "zone_pass_warn": 0.8,
+    "fusion_pass_warn": 0.5,
+    "trade_rate_warn": 0.3
+  },
+  "trade_journal": {
+    "_comment": "JSONL integrity threshold. SINGLE HOME for a value that was defined twice in code (journal/trade_logger.py and replay/replay_memory_engine.py each carried their own MAX_CORRUPTION_RATIO=0.10) -- CLAUDE.md 6.2 rule 5. Value equals both prior literals.",
+    "max_corruption_ratio": 0.1
+  },
+  "multi_strategy_validator": {
+    "_comment": "MultiStrategyValidator hard gates (src/governance/multi_strategy_validator.py). warmup and max_forward_candles were BARE literals in the __init__ signature until 2026-09-18 -- undeclared anywhere, so config_reachability could not see them. Values equal the prior literals; max_portfolio_drawdown is INR.",
+    "min_strategy_trades": 5,
+    "min_portfolio_win_rate": 0.3,
+    "max_portfolio_drawdown": 75000000.0,
+    "warmup": 60,
+    "max_forward_candles": 40
   }
 }
