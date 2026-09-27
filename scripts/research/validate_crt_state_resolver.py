@@ -47,7 +47,10 @@ _ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_ROOT))
 sys.path.insert(0, str(_ROOT / "src"))
 
-from features.crt_state_resolver import CRTStateResolver, CRTStateResolverError
+from features.crt_state_resolver import (
+    CRTStateResolver, CRTStateResolverError,
+    SHARED_LIFECYCLE_TO_CRT, SHARED_THRESHOLD_TO_CRT, coerce_crt_field,
+)
 # CLAUDE.md §4: non-ASCII console output must go through console_safe (cp1252
 # fallback). print_report emits U+2713/U+2717 tick marks, which raised
 # UnicodeEncodeError on a stock Windows console before this was routed.
@@ -594,12 +597,28 @@ def interactive_tune(resolver: CRTStateResolver, feature_vectors: list[dict[str,
             except ValueError:
                 print(f"Invalid value: {parts[2]}")
                 continue
-            if "thresholds" not in resolver._config:
-                resolver._config["thresholds"] = {}
-            resolver._config["thresholds"][key] = value
-            print(f"Set {key} = {value}")
+            field = SHARED_THRESHOLD_TO_CRT.get(key)
+            if field is None and key in SHARED_LIFECYCLE_TO_CRT:
+                field = SHARED_LIFECYCLE_TO_CRT[key]
+            if field is None and key.startswith("lifecycle."):
+                sub = key.split(".", 1)[1]
+                field = SHARED_LIFECYCLE_TO_CRT.get(sub)
+            if field is not None:
+                from dataclasses import replace
+                new_cfg = replace(
+                    resolver._crt_config, **{field: coerce_crt_field(field, value)}
+                )
+                resolver.apply_crt_config(new_cfg, source="caller-supplied")
+                print(f"Set {key} = {getattr(new_cfg, field)} via crt_config.{field}")
+            else:
+                if "thresholds" not in resolver._config:
+                    resolver._config["thresholds"] = {}
+                resolver._config["thresholds"][key] = value
+                print(f"Set {key} = {value}")
         elif action == "reload":
             resolver._config = resolver._load_config()
+            resolver._reject_shared_yaml_literals()
+            resolver.apply_crt_config(resolver._crt_config, source=resolver.config_source)
             print("Config reloaded.")
         elif action == "run":
             resolver.reset_counts()
@@ -687,7 +706,7 @@ def main():
     # Create resolver
     print("Initializing CRT State Resolver...")
     try:
-        resolver = CRTStateResolver(config_path=args.config)
+        resolver = CRTStateResolver(instrument="XAUUSD", config_path=args.config)
         print(f"  Config: {resolver._config_path}")
         print(f"  States defined: {[s['name'] for s in resolver._config['states']]}")
         print(f"  Stateful features: {len(resolver._encoder.stateful_features)}")

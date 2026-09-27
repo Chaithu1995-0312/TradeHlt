@@ -130,7 +130,7 @@ def main() -> int:
     source_indices = [int(v) for v in enriched["_src_idx"].tolist()]
 
     print("[3/5] Constructing resolver (shipped config, base variant == default) ...")
-    resolver = CRTStateResolver()
+    resolver = CRTStateResolver(instrument=INSTRUMENT)
     thr = resolver._config.get("thresholds", {})
     depth_max = float(thr["retest_depth_max"])
     # Declared in market_crt_states.yaml but NOT read by the resolver (confirmed

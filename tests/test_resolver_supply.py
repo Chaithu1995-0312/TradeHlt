@@ -41,7 +41,7 @@ from features.resolver_supply import (  # noqa: E402
 
 @pytest.fixture(scope="module")
 def resolver():
-    return CRTStateResolver()
+    return CRTStateResolver(instrument="XAUUSD")
 
 
 def _enriched(n: int = 4, **extra) -> pd.DataFrame:

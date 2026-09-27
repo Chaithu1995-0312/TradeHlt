@@ -76,23 +76,55 @@ def doc():
     return _load_market_crt_states(_REPO)
 
 
-def test_thresholds_block_is_byte_identical_to_pre_phase_d(doc):
-    """The whole point of Phase D: adding threshold_refs must not change one digit of what the
-    resolver actually reads."""
-    assert doc["thresholds"] == _THRESHOLDS_SNAPSHOT
+_P1_REMOVED_TOP = {
+    "range_atr_period", "body_ratio_min", "atr_multiplier_min", "atr_min_displacement",
+    "expansion_atr_min_distance", "retest_depth_max", "retest_atr_depth_fraction",
+    "max_sweep_age_candles", "max_expansion_age_candles", "max_expansion_age_hours",
+    "score_threshold", "soft_conf_max_candles", "rsi_overbought", "rsi_oversold",
+}
+
+
+def test_remaining_thresholds_match_the_pre_p1_snapshot(doc):
+    """STORY-83.10 removed the shared CRTConfig literals and the three dead keys.
+    Every key that stayed must still equal the pre-phase-D snapshot."""
+    live = doc["thresholds"]
+    for key in _P1_REMOVED_TOP:
+        assert key not in live
+    assert "pending_displacement_ttl_candles" not in live["lifecycle"]
+    for key, value in _THRESHOLDS_SNAPSHOT.items():
+        if key == "lifecycle" or key in _P1_REMOVED_TOP:
+            continue
+        assert live[key] == value
+    for key, value in _THRESHOLDS_SNAPSHOT["lifecycle"].items():
+        if key == "pending_displacement_ttl_candles":
+            continue
+        assert live["lifecycle"][key] == value
 
 
 def test_validator_accepts_the_real_file_clean(doc):
     assert validate_crt_threshold_refs(doc) == []
 
 
+_P1_CRTCONFIG_READ = {
+    "range_atr_period", "body_ratio_min", "atr_multiplier_min", "atr_min_displacement",
+    "expansion_atr_min_distance", "retest_depth_max", "max_sweep_age_candles",
+    "max_expansion_age_candles", "max_expansion_age_hours", "score_threshold",
+    "soft_conf_max_candles", "lifecycle.pending_displacement_ttl_candles",
+}
+
+
 def test_every_thresholds_key_has_exactly_one_refs_entry(doc):
     scalar_keys = {k for k in doc["thresholds"] if k != "lifecycle"}
     lifecycle_keys = {f"lifecycle.{k}" for k in doc["thresholds"]["lifecycle"]}
     expected = scalar_keys | lifecycle_keys
-    actual = set(doc["threshold_refs"]["refs"])
-    assert actual == expected
-    assert len(expected) == 26
+    refs = doc["threshold_refs"]["refs"]
+    actual = set(refs)
+    read_keys = {k for k, v in refs.items() if v["kind"] == "crtconfig_read"}
+    assert expected <= actual
+    assert read_keys == _P1_CRTCONFIG_READ
+    assert actual - expected == read_keys
+    assert len(expected) == 11
+    assert len(actual) == 23
 
 
 def test_classification_counts_match_the_measured_source_audit(doc):
@@ -101,12 +133,13 @@ def test_classification_counts_match_the_measured_source_audit(doc):
     from collections import Counter
     refs = doc["threshold_refs"]["refs"]
     counts = Counter(v["kind"] for v in refs.values())
-    assert counts["crtconfig_duplicate"] == 11
-    assert counts["crtconfig_duplicate_dead"] == 1
-    assert counts["name_alias_documented"] == 3
+    assert counts["crtconfig_read"] == 12
+    assert counts["crtconfig_duplicate"] == 0
+    assert counts["crtconfig_duplicate_dead"] == 0
+    assert counts["name_alias_documented"] == 2
     assert counts["resolver_only"] == 8
-    assert counts["dead_unconsumed"] == 3
-    assert sum(counts.values()) == 26
+    assert counts["dead_unconsumed"] == 1
+    assert sum(counts.values()) == 23
 
 
 def test_consumed_flags_match_the_verified_grep_audit(doc):
@@ -115,12 +148,7 @@ def test_consumed_flags_match_the_verified_grep_audit(doc):
     self._lifecycle[<key>] occurrences)."""
     refs = doc["threshold_refs"]["refs"]
     unconsumed = {k for k, v in refs.items() if v["consumed"] is False}
-    assert unconsumed == {
-        "retest_atr_depth_fraction",
-        "max_displacement_age_candles",
-        "rsi_overbought",
-        "rsi_oversold",
-    }
+    assert unconsumed == {"max_displacement_age_candles"}
 
 
 # ── Mutation tests: prove the validator actually rejects, not just accepts ──────────────────
@@ -128,9 +156,9 @@ def test_consumed_flags_match_the_verified_grep_audit(doc):
 def test_rejects_a_missing_entry(doc):
     import copy
     d = copy.deepcopy(doc)
-    del d["threshold_refs"]["refs"]["body_ratio_min"]
+    del d["threshold_refs"]["refs"]["sweep_geometry"]
     problems = validate_crt_threshold_refs(d)
-    assert any("missing entries" in p and "body_ratio_min" in p for p in problems)
+    assert any("missing entries" in p and "sweep_geometry" in p for p in problems)
 
 
 def test_rejects_a_fabricated_crtconfig_ref(doc):
@@ -181,3 +209,53 @@ def test_no_arg_call_resolves_repo_root_from_file_location_not_cwd():
         assert validate_crt_threshold_refs() == []  # no-arg call too
     finally:
         os.chdir(prev_cwd)
+
+
+def test_resolver_requires_exactly_one_config_source():
+    from features.crt_state_resolver import CRTStateResolver, ConfigLoadError
+    from config_layer.production_config import get_prod_config
+
+    with pytest.raises(ConfigLoadError, match="neither"):
+        CRTStateResolver()
+    cfg = get_prod_config("XAUUSD")
+    with pytest.raises(ConfigLoadError, match="both"):
+        CRTStateResolver(instrument="XAUUSD", crt_config=cfg)
+
+
+def test_yaml_carrying_a_shared_key_is_rejected(tmp_path):
+    import yaml
+    from features.crt_state_resolver import CRTStateResolver, ConfigLoadError
+
+    doc = _load_market_crt_states(_REPO)
+    doc["thresholds"]["body_ratio_min"] = 0.5
+    path = tmp_path / "states.yaml"
+    path.write_text(yaml.safe_dump(doc), encoding="utf-8")
+    with pytest.raises(ConfigLoadError, match="body_ratio_min"):
+        CRTStateResolver(config_path=path, instrument="XAUUSD")
+
+
+def test_instrument_thresholds_equal_prod_config():
+    from features.crt_state_resolver import CRTStateResolver, SHARED_THRESHOLD_TO_CRT, SHARED_LIFECYCLE_TO_CRT
+    from config_layer.production_config import get_prod_config
+
+    resolver = CRTStateResolver(instrument="XAUUSD")
+    cfg = get_prod_config("XAUUSD")
+    thr = resolver._config["thresholds"]
+    for yaml_key, field_name in SHARED_THRESHOLD_TO_CRT.items():
+        assert thr[yaml_key] == getattr(cfg, field_name)
+    life = thr["lifecycle"]
+    for yaml_key, field_name in SHARED_LIFECYCLE_TO_CRT.items():
+        assert life[yaml_key] == getattr(cfg, field_name)
+    assert resolver.config_source == "XAUUSD"
+    assert resolver.config_version == "v2_htfcrt_2026_08"
+
+
+def test_replaced_crt_config_reaches_the_threshold():
+    from dataclasses import replace
+    from features.crt_state_resolver import CRTStateResolver
+    from config_layer.production_config import get_prod_config
+
+    cfg = replace(get_prod_config("XAUUSD"), body_ratio_min=0.9)
+    resolver = CRTStateResolver(crt_config=cfg)
+    assert resolver._config["thresholds"]["body_ratio_min"] == 0.9
+    assert resolver.config_source == "caller-supplied"

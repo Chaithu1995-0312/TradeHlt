@@ -108,7 +108,7 @@ def build_and_cache(
             f"htf_id timeline length {len(htf_ids)} != enriched row count {total_enriched}"
         )
 
-    resolver = CRTStateResolver()
+    resolver = CRTStateResolver(instrument=instrument)
     supply_rows, supply_stats = build_resolver_supply(resolver, enriched_df, vectors)
     resolver.reset_counts()
     resolver.reset_memory()

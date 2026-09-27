@@ -567,6 +567,7 @@ _CRT_STATES_YAML_PATH = _Path("configs/formulas/market_crt_states.yaml")
 _VALID_THRESHOLD_REF_KINDS = frozenset({
     "crtconfig_duplicate",
     "crtconfig_duplicate_dead",
+    "crtconfig_read",
     "name_alias_documented",
     "resolver_only",
     "dead_unconsumed",
@@ -599,10 +600,11 @@ def validate_crt_threshold_refs(
     [] == satisfied. Checks:
       1. every `thresholds` key (including `lifecycle.<subkey>`, dot-qualified) has EXACTLY one
          `threshold_refs.refs` entry -- no silent gap, no orphaned ref for a retired key;
-      2. every entry's `kind` is one of the 5 declared values;
+      2. every entry's `kind` is one of the declared values;
       3. every entry naming a `ref` under kind crtconfig_duplicate / crtconfig_duplicate_dead
-         names a REAL CRTConfig field (cross-checked against
+         / crtconfig_read names a REAL CRTConfig field (cross-checked against
          config_layer.crt_config_completeness.all_crtconfig_fields(), not hand-maintained twice);
+      3b. a crtconfig_read key is absent from `thresholds:` (the literal must not come back);
       4. no `resolver_only` / `dead_unconsumed` entry carries a non-null `ref` (that would be a
          fabricated reference to nothing);
       5. `crtconfig_duplicate` / `crtconfig_duplicate_dead` / `name_alias_documented` entries
@@ -633,10 +635,17 @@ def validate_crt_threshold_refs(
     if missing:
         problems.append(f"threshold_refs.refs: missing entries for {sorted(missing)}")
     if orphaned:
-        problems.append(
-            f"threshold_refs.refs: entries for keys not in thresholds: {sorted(orphaned)} "
-            "(a threshold was renamed/retired without updating this section)"
-        )
+        bad_orphans = []
+        for name in sorted(orphaned):
+            entry = refs.get(name)
+            kind = entry.get("kind") if isinstance(entry, dict) else None
+            if kind != "crtconfig_read":
+                bad_orphans.append(name)
+        if bad_orphans:
+            problems.append(
+                f"threshold_refs.refs: entries for keys not in thresholds: {bad_orphans} "
+                "(a threshold was renamed/retired without updating this section)"
+            )
 
     try:
         from config_layer.crt_config_completeness import all_crtconfig_fields
@@ -660,12 +669,19 @@ def validate_crt_threshold_refs(
         else:
             if not ref:
                 problems.append(f"{where}: kind={kind} requires a non-null ref")
-            elif kind in ("crtconfig_duplicate", "crtconfig_duplicate_dead") and crt_fields is not None:
+            elif (
+                kind in ("crtconfig_duplicate", "crtconfig_duplicate_dead", "crtconfig_read")
+                and crt_fields is not None
+            ):
                 if ref not in crt_fields:
                     problems.append(
                         f"{where}: ref {ref!r} is not a real CRTConfig field name "
                         "(fabricated or renamed reference)"
                     )
+            if kind == "crtconfig_read" and name in expected_keys:
+                problems.append(
+                    f"{where}: kind=crtconfig_read must be absent from thresholds"
+                )
         if "consumed" not in entry or not isinstance(entry.get("consumed"), bool):
             problems.append(f"{where}: consumed must be present and a bool")
 

@@ -634,7 +634,7 @@ def run_resolver_memory_replay(run_dir: Path) -> tuple[list[dict], dict]:
     n_err = 0
     first_mismatch = None
     try:
-        resolver = CRTStateResolver(config_path=cfg_path)
+        resolver = CRTStateResolver(instrument="XAUUSD", config_path=cfg_path)
         resolver.reset_memory()
         resolver.reset_counts()
         for row in rows:

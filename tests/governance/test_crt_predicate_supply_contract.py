@@ -107,21 +107,21 @@ def _full_features(**overrides):
 def test_shipped_config_constructs_clean():
     """Positive control: the negative tests below must be failing for their
     stated reason, not because construction is broken generally."""
-    assert CRTStateResolver() is not None
+    assert CRTStateResolver(instrument="XAUUSD") is not None
 
 
 def test_feature_states_naming_a_non_stateful_feature_raises(tmp_path):
     cfg = _states_cfg()
     cfg["feature_states"]["close"] = ["Whatever"]     # continuous, not stateful
     with pytest.raises(PredicateValidationError, match="not a declared stateful feature"):
-        CRTStateResolver(config_path=_write(tmp_path, cfg))
+        CRTStateResolver(instrument="XAUUSD", config_path=_write(tmp_path, cfg))
 
 
 def test_feature_states_naming_an_unknown_ontology_state_raises(tmp_path):
     cfg = _states_cfg()
     cfg["feature_states"]["retest_flag"] = ["NoRetest", "NotAnOntologyState"]
     with pytest.raises(PredicateValidationError, match="not found in ontology"):
-        CRTStateResolver(config_path=_write(tmp_path, cfg))
+        CRTStateResolver(instrument="XAUUSD", config_path=_write(tmp_path, cfg))
 
 
 def test_when_naming_a_feature_outside_the_vocabulary_raises(tmp_path):
@@ -132,14 +132,14 @@ def test_when_naming_a_feature_outside_the_vocabulary_raises(tmp_path):
     cfg = _states_cfg()
     _state(cfg, "RANGE")["when"]["not_a_real_feature"] = ["SomeState"]
     with pytest.raises(PredicateValidationError, match="not in feature_states block"):
-        CRTStateResolver(config_path=_write(tmp_path, cfg))
+        CRTStateResolver(instrument="XAUUSD", config_path=_write(tmp_path, cfg))
 
 
 def test_when_naming_an_invalid_state_for_that_feature_raises(tmp_path):
     cfg = _states_cfg()
     _state(cfg, "RANGE")["when"]["retest_flag"] = ["RetestActive", "Bogus"]
     with pytest.raises(PredicateValidationError, match="not valid for feature"):
-        CRTStateResolver(config_path=_write(tmp_path, cfg))
+        CRTStateResolver(instrument="XAUUSD", config_path=_write(tmp_path, cfg))
 
 
 # == 2. Supply-contract ratchet (two-sided, shrink-only) =======================
@@ -150,7 +150,7 @@ def _non_vector_when_features(r: CRTStateResolver) -> set[str]:
 def test_every_non_vector_when_feature_is_adjudicated():
     """A NEW non-vector `when:` name must be declared here, not defaulted."""
     undeclared = sorted(
-        _non_vector_when_features(CRTStateResolver()) - set(_NON_VECTOR_SUPPLY_CONTRACT)
+        _non_vector_when_features(CRTStateResolver(instrument="XAUUSD")) - set(_NON_VECTOR_SUPPLY_CONTRACT)
     )
     assert not undeclared, (
         f"`when:`-named features with no vector slot and no declared supply "
@@ -161,7 +161,7 @@ def test_every_non_vector_when_feature_is_adjudicated():
 
 def test_no_stale_supply_contract_entries():
     """An entry that became vector-bound is dead weight -- shrink-only."""
-    stale = sorted(set(_NON_VECTOR_SUPPLY_CONTRACT) - _non_vector_when_features(CRTStateResolver()))
+    stale = sorted(set(_NON_VECTOR_SUPPLY_CONTRACT) - _non_vector_when_features(CRTStateResolver(instrument="XAUUSD")))
     assert not stale, (
         f"_NON_VECTOR_SUPPLY_CONTRACT names {stale}, which are no longer "
         "non-vector `when:` features. Delete the entry."
@@ -189,7 +189,7 @@ def test_the_naive_invariant_is_false_in_both_directions():
     reason: `vocab` names retest_flag/displacement_flag/rsi_state, none of
     which carry a vector slot, so `vocab` is not a subset of `vector_bound`
     either. Both directions still fail; the counter-examples changed."""
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     vocab = set(r._config["feature_states"])
     vector_bound = set(r._encoder.vector_bound_features)
     # Direction 1 -- vocab not subset of required (declared, named by no
@@ -212,7 +212,7 @@ def test_the_naive_invariant_is_false_in_both_directions():
 def test_vector_only_caller_now_raises_naming_all_three():
     """The defect this closes: a CANONICAL_FEATURES-only dict silently produced
     a degraded run. It must now fail on bar 0."""
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     with pytest.raises(PredicateValidationError) as ei:
         r.resolve({n: 0.0 for n in CANONICAL_FEATURES})
     msg = str(ei.value)
@@ -221,7 +221,7 @@ def test_vector_only_caller_now_raises_naming_all_three():
 
 
 def test_error_names_the_requiring_states_and_the_producer():
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     feats = _full_features()
     del feats["rsi_state"]
     with pytest.raises(PredicateValidationError) as ei:
@@ -235,7 +235,7 @@ def test_error_names_the_requiring_states_and_the_producer():
 
 def test_complete_input_resolves_normally():
     """The green half: the check must not fire on an honest caller."""
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     assert r.resolve(_full_features()) in set(r._config["feature_states"]) | {
         s["name"] for s in r._config["states"]
     }
@@ -245,14 +245,14 @@ def test_out_of_domain_value_is_a_value_failure_not_a_supply_failure():
     """A garbage VALUE must not be reported as a missing feature. classify_value
     returns an X_UNMAPPED marker, which fails the predicate normally -- the two
     failure modes must stay distinguishable."""
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     state = r.resolve(_full_features(rsi_state=0.5))   # 0.5 maps to no state
     assert isinstance(state, str) and state
 
 
 # == 4. Escape hatch ===========================================================
 def test_waiver_restores_the_previous_tolerance():
-    r = CRTStateResolver(allow_missing_when_features=["rsi_state"])
+    r = CRTStateResolver(instrument="XAUUSD", allow_missing_when_features=["rsi_state"])
     feats = _full_features()
     del feats["rsi_state"]
     assert isinstance(r.resolve(feats), str)          # no raise
@@ -261,7 +261,7 @@ def test_waiver_restores_the_previous_tolerance():
 
 def test_waiver_is_narrow_not_a_blanket():
     """Waiving one feature must not tolerate the others going missing."""
-    r = CRTStateResolver(allow_missing_when_features=["rsi_state"])
+    r = CRTStateResolver(instrument="XAUUSD", allow_missing_when_features=["rsi_state"])
     feats = _full_features()
     del feats["rsi_state"]
     del feats["retest_flag"]
@@ -273,18 +273,18 @@ def test_stale_waiver_raises_at_construction():
     """The anti-parking-lot ratchet: waiving something that is not `when:`-named
     is refused, so a waiver cannot outlive the predicate it was written for."""
     with pytest.raises(ConfigLoadError, match="not `when:`-named"):
-        CRTStateResolver(allow_missing_when_features=["change_of_character"])
+        CRTStateResolver(instrument="XAUUSD", allow_missing_when_features=["change_of_character"])
 
 
 def test_waived_feature_still_fails_its_predicate_rather_than_defaulting():
     """A waiver restores the OLD behaviour for that name and nothing more: the
     feature does not acquire a default value, and its predicate still fails."""
-    r = CRTStateResolver(allow_missing_when_features=["rsi_state"])
+    r = CRTStateResolver(instrument="XAUUSD", allow_missing_when_features=["rsi_state"])
     assert r._predicates_match({"rsi_state": ["NeutralMomentum"]}, {}) is False
 
 
 def test_no_waiver_is_the_default():
-    assert CRTStateResolver().waived_when_features == frozenset()
+    assert CRTStateResolver(instrument="XAUUSD").waived_when_features == frozenset()
 
 
 # == 5. Red/green proof ========================================================
@@ -296,7 +296,7 @@ def test_red_green_guard_proof():
     RANGE `when:` block simply never matches on its retest_flag/
     displacement_flag clauses and the run looks clean.
     """
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     vector_only = {n: 0.0 for n in CANONICAL_FEATURES}
 
     # Guarded: raises.
@@ -305,6 +305,7 @@ def test_red_green_guard_proof():
 
     # Unguarded equivalent: waive exactly what the check would have caught.
     lax = CRTStateResolver(
+        instrument="XAUUSD",
         allow_missing_when_features=["retest_flag", "displacement_flag", "rsi_state"]
     )
     silent = lax.resolve(dict(vector_only))

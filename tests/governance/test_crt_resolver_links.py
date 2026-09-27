@@ -61,6 +61,7 @@ def _resolver(tmp_path, states, links_registry, **kw):
     """`links_registry` is the REGISTRY file contents; `links=` in **kw is the
     enabled-link set passed to the resolver. Distinct things, distinct names."""
     return CRTStateResolver(
+        instrument="XAUUSD",
         config_path=_write(tmp_path, "states.yaml", states),
         links_config_path=_write(tmp_path, "links.yaml", links_registry),
         **kw,
@@ -69,20 +70,20 @@ def _resolver(tmp_path, states, links_registry, **kw):
 
 # -- Shipped registry ---------------------------------------------------------
 def test_default_is_every_link_off():
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     assert r.enabled_links == frozenset()
     assert r.variant_id is None
 
 
 def test_base_variant_enables_nothing():
-    r = CRTStateResolver(variant="base")
+    r = CRTStateResolver(instrument="XAUUSD", variant="base")
     assert r.variant_id == "base"
     assert r.enabled_links == frozenset()
 
 
 def test_base_variant_is_behaviourally_the_default():
     """`base` must be the untouched shipped config, or it is not a baseline."""
-    a, b = CRTStateResolver(), CRTStateResolver(variant="base")
+    a, b = CRTStateResolver(instrument="XAUUSD"), CRTStateResolver(instrument="XAUUSD", variant="base")
     assert a.required_when_features == b.required_when_features
     for sd_a, sd_b in zip(a._config["states"], b._config["states"]):
         assert sd_a.get("when") == sd_b.get("when")
@@ -106,7 +107,7 @@ def test_shipped_untagged_clauses_survive_filtering_unchanged():
         }
         if not untagged:
             continue
-        got_state = _state(CRTStateResolver()._config, state_def["name"])
+        got_state = _state(CRTStateResolver(instrument="XAUUSD")._config, state_def["name"])
         got_when = got_state.get("when") or {}
         for fname, clause in untagged.items():
             assert got_when.get(fname) == clause, (
@@ -305,7 +306,7 @@ def test_absent_registry_is_legitimate_but_malformed_one_is_not(tmp_path):
     cfg = _states_cfg()
     del _state(cfg, "DISPLACEMENT")["when"]["change_of_character"]
     states = _write(tmp_path, "states.yaml", cfg)
-    r = CRTStateResolver(config_path=states, links_config_path=tmp_path / "nope.yaml")
+    r = CRTStateResolver(instrument="XAUUSD", config_path=states, links_config_path=tmp_path / "nope.yaml")
     assert r.enabled_links == frozenset()
 
 
@@ -318,8 +319,8 @@ def test_absent_registry_raises_when_shipped_config_names_a_real_link(tmp_path):
     prevent."""
     states = _write(tmp_path, "states.yaml", _states_cfg())
     with pytest.raises(PredicateValidationError, match="LINK-001"):
-        CRTStateResolver(config_path=states, links_config_path=tmp_path / "nope.yaml")
+        CRTStateResolver(instrument="XAUUSD", config_path=states, links_config_path=tmp_path / "nope.yaml")
 
     bad = _write(tmp_path, "bad.yaml", {"links": ["not", "a", "mapping"]})
     with pytest.raises(ConfigLoadError, match="must be a mapping"):
-        CRTStateResolver(config_path=states, links_config_path=bad)
+        CRTStateResolver(instrument="XAUUSD", config_path=states, links_config_path=bad)

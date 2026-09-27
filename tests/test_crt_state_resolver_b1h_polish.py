@@ -15,7 +15,7 @@ from features.crt_state_resolver import CRTStateResolver  # noqa: E402
 
 def test_continuous_disp_to_expansion_default_off():
     """Default continuous_disp_to_expansion=false → DISPLACEMENT dwell stays DISP."""
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     assert r._config["thresholds"].get("continuous_disp_to_expansion", False) is False
     r._memory.current_state = "DISPLACEMENT"
     r._memory.candle_index = 10
@@ -40,7 +40,7 @@ def test_continuous_disp_to_expansion_default_off():
 
 
 def test_continuous_disp_to_expansion_opt_in():
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     r._config["thresholds"]["continuous_disp_to_expansion"] = True
     r._memory.current_state = "DISPLACEMENT"
     r._memory.candle_index = 10
@@ -63,7 +63,7 @@ def test_continuous_disp_to_expansion_opt_in():
 
 def test_engine_inject_shadow_pending_overrides_sweep():
     """RANGE + engine RANGE>SHADOW_PENDING → SHADOW_PENDING (not plain SWEEP)."""
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     r._memory.current_state = "RANGE"
     r._memory.candle_index = 5
     # Minimal resolve path: force features via a no-op encoder classify by
@@ -96,7 +96,7 @@ def test_engine_inject_shadow_pending_overrides_sweep():
 
 def test_engine_inject_sweep_to_exp_from_shadow():
     """Engine logs SWEEP>EXPANSION while resolver is in SHADOW_PENDING → EXP."""
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     r._memory.current_state = "SHADOW_PENDING"
     r._memory.pending_displacement_active = True
     r._memory.candle_index = 6
@@ -126,7 +126,7 @@ def test_engine_inject_sweep_to_exp_from_shadow():
 
 
 def test_engine_inject_disp_to_exp_still_works():
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     r._memory.current_state = "DISPLACEMENT"
     r._memory.displacement_candle_close = 2000.0
     r._memory.displacement_direction = 1

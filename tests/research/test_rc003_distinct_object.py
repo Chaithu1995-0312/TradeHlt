@@ -107,7 +107,7 @@ def test_resolver_evidence_capture_is_default_off() -> None:
     sys.path.insert(0, str(REPO / "src"))
     from features.crt_state_resolver import CRTStateResolver
 
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     assert r.record_resolver_evidence is False
     assert r.last_resolver_evidence is None
 
@@ -277,7 +277,7 @@ def test_resolution_site_is_not_published_when_capture_is_off() -> None:
     sys.path.insert(0, str(REPO / "src"))
     from features.crt_state_resolver import CRTStateResolver
 
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     assert r.record_resolver_evidence is False
     assert r.last_resolver_evidence is None
     r._publish_resolution_evidence(
@@ -294,7 +294,7 @@ def test_injection_precedence_beats_validity_and_funnel() -> None:
     sys.path.insert(0, str(REPO / "src"))
     from features.crt_state_resolver import CRTStateResolver
 
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     r.record_resolver_evidence = True
 
     # stage 3 rewrote the funnel's answer
@@ -339,7 +339,7 @@ def test_injection_that_changed_the_answer_without_a_site_is_named_not_silent() 
     sys.path.insert(0, str(REPO / "src"))
     from features.crt_state_resolver import CRTStateResolver
 
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     r.record_resolver_evidence = True
     r.last_resolver_evidence = {}
     r._last_funnel_site = "predicate_match"
@@ -377,7 +377,7 @@ def test_resolve_end_to_end_populates_a_declared_resolution_site() -> None:
         "session": 1.0, "change_of_character": 0.0, "rsi_state": 0.0,
         "rsi_14": 50.0,
     }
-    r = CRTStateResolver()
+    r = CRTStateResolver(instrument="XAUUSD")
     r.record_resolver_evidence = True
     state = r.resolve(fv, timestamp=None)
     ev = r.last_resolver_evidence

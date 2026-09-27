@@ -216,7 +216,7 @@ def _resolver_binding(root: Path) -> tuple[dict[str, dict], dict]:
         sys.path.insert(0, str(root / "src"))
         from features.crt_state_resolver import CRTStateResolver  # noqa: PLC0415
 
-        res = CRTStateResolver()
+        res = CRTStateResolver(instrument="XAUUSD")
         required = set(res.required_when_features)
         waived = set(res.waived_when_features)
     except Exception as exc:  # noqa: BLE001
