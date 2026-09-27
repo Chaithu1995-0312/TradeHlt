@@ -631,6 +631,32 @@ a time?
 **Q9. Does a Setup re-state the K23 keys or inherit them?** i.e. is F1/F2/F4 part of the Setup's own
 declaration (the §3.2 reading), or is v5's K23 value simply the baseline that a Setup may override?
 
+### Decisions (user, 2026-09-28)
+
+| Q | Decision |
+|---|---|
+| Q1 | **Option A** — one new top-level `setup` section holds keys 2–4. `backtest` stays K23-only; a Setup is a distinct concept. |
+| Q2a | Only TP2 moves; TP1 stays R-based (`tp1_atr_multiplier_<intent>`). |
+| Q2b | An inverted/degenerate structural TP2 **rejects the trade** (same treatment as any other pre-trade geometry rejection). No silent fallback to `fixed_r`. |
+| Q2c | The range frozen at build time (`state.active_range`), consistent with `ResetLogic`'s existing protection of an open trade from a reset. |
+| Q3a | `N` value: not fixed here — start the config at a placeholder (`null`/inert) until a real value is chosen via the S4 grid or a direct decision. |
+| Q3b | Engine-side seam (`ExecutionEngine.update_trade`, §6.2 table row 1) — one decision, engine/ledger/resolver stay in agreement. |
+| Q3c | `TIMEOUT_MARK_TO_CLOSE` — matches "default = today's behaviour" (today there is no trail-to-expiry to default to); `TIMEOUT_TRAIL` stays available as an explicit non-default choice. |
+| Q3d | `N` counts the entry bar, not the exit bar — TTL of `N` forces closure going into bar `entry_idx + N` if still open (matches `pending_displacement_ttl_candles`'s counting convention, F-068). |
+| Q3e | A flat/zero TIMEOUT counts as a loss — no exemption from the existing `pnl_rr_net <= 0` rule. |
+| Q4a | Cached `states.csv` (offline resolver run), not an in-walk resolver call. |
+| Q4b | Per-arm switch only — one arm, one decider. |
+| Q4c | Join key = same bar (timestamp). |
+| Q5 | `backtest.risk_pct_per_trade` (the fraction) is the comparison unit — not `sizing_mode="fixed_investment_inr"`. |
+| Q6 | No separate `setup_id`. Identity = `(config version, config sha256)`. Not registered anywhere until S5. |
+| Q7 | WP-K owns the §8 parity harness — whoever builds the overlay proves it inert. |
+| Q8 | First grid = `sl_anchor × target_policy`, TTL on, everything else at default. `decider`, `retrace_reset_pct`, `session_window_basis` are separate axes, not in the first grid. |
+| Q9 | Inherit. A Setup only declares what it overrides from v5's K23 baseline; K23 keys are not re-stated. |
+
+**Scope decision (user, 2026-09-28):** STORY-83.11 (WP-K) implements all three new behaviours —
+`target_policy`, `trade_ttl_candles`, `decider = "resolver"` (mode C) — in one story, one worktree,
+one PR, per the master plan's WP-K row. Assignee: Claude, direct in-session (not relayed).
+
 ---
 
 ## 11. Verified / UNVERIFIED ledger
