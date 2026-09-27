@@ -4102,3 +4102,13 @@ Belief Update / ROI / Goal: Goal: parallel build without drift. Belief: two hidd
 Open Questions: F-002/F-010 note text (user yes pending).
 Next Step: review 83.1/83.2/83.3 outputs as they return; issue WP-E after 83.1 merges.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: EPIC-83 Wave 1 review — STORY-83.1 merged
+Decision/Output: Reviewed lane/wpA-s0-stamp c7499be: diff = configs/production/v4_dual_construction_2026_09.json line 2 only ("version" v3_unified_market_structure_2026_09 -> v4_dual_construction_2026_09). Reran _compute_hash.py --version v4_dual_construction_2026_09 (verify-only): computed == stored 7de09f62...d613, match YES (hash covers params only). Merged into grokbotchanges. D2 report (Grok): 4 k23 impact manifests have no completion manifest (validate-completion --no-run BLOCKED x4); v4_dual has no own manifest and no promotion_log REGISTERED line although its notes (line 558) claim one; v4_crt_sot has promotion_log L17 only. STORY-83.3 spec committed on lane/wpC-setup-spec 3bb1b2e (684 lines), awaiting Claude review + user confirmation. STORY-83.2 still running.
+Belief Update / ROI / Goal: Goal: clean v5 base for WP-E. Belief: v4_dual's "REGISTERED" note is a false claim in the config itself — its promotion status is unregistered. Knowledge ROI: medium. Action: user decides the two D2 items; WP-E can start.
+Open Questions: (1) append a REGISTERED line for v4_dual or correct its note? (2) write completion manifests for k23 F2/F3/F4 + own manifests for the v4 configs? F-002/F-010 note text still pending.
+Next Step: user decisions on D2; issue WP-E (STORY-83.5); review 83.3 spec; wait for 83.2.
+---
