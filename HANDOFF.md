@@ -6,7 +6,7 @@
 
 ```yaml
 current_actor:   Claude (Executor)
-current_story:   EPIC-83 Wave 4 — 83.7 DONE (merged 0715bdc, allowlist 217->215); 83.8 (DeepSeek, replay +multi_tp_walk arm, lane/wpH-replay-walk) in progress; 83.13 done (BLOCKED_PREEXISTING_RED_FLOOR); 83.9 deferred; 83.11 waits on 83.3 section-10 answers
+current_story:   EPIC-83 Wave 4 DONE — 83.7 merged 0715bdc (allowlist 217->215), 83.8 merged b0aec6a (replay gated + multi_tp_walk arm, XAUUSD; BNBUSDT later after clock review); 83.13 done (BLOCKED_PREEXISTING_RED_FLOOR); 83.9 deferred; next = 83.10 / 83.12; 83.11 waits on 83.3 section-10 answers
 standing_rules:
   # All XAUUSD M15 analysis/backtest/live CSV loads → Phase-1 frozen candidate only (fail-closed)
   canonical_corpus: data/mt5/XAUUSD_M15.csv  # sha256 4d73f5cebe33ec91…b26aba56; range ..2026-05-21T23:45:00
@@ -46,7 +46,7 @@ verification:
   - Gate A: 40/40 target tests green (was 4 failing)
   - Gate B: golden-ledger + oracle + invariants + replay-determinism 180/180 byte-identical (spine-neutral; active gaussian_impl=heuristic)
   - Gate C: full suite 1787 passed / 10 failed — ZERO new failures; remaining 10 all pre-existing (timing_reconstructor volume-fixture, agents_path_alignment) — assign_cluster 8 now FIXED
-next_actor:      DeepSeek  # 83.8 report pending (wave4 Prompt 2); 83.7 merged 2026-09-28
+next_actor:      Claude  # write Wave 5 prompts (83.10, 83.12) on user go; 2026-09-28
 next_prompt: |
   RC-003 is executed. Phase-1 ADMITTED corpus (47,275 bars, sha 4d73f5ce), n=553 violating /
   1,100 control, both far past the declared floor of 150. PRIMARY (close beyond the swept extreme,

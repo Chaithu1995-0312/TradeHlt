@@ -4282,3 +4282,13 @@ Belief Update / ROI / Goal: Goal: no label set built on an unreviewed clock. Bel
 Open Questions: who owns the 35 NEW corpus reads; BNBUSDT clock review stays a human decision.
 Next Step: review DeepSeek 83.8 (lane/wpH-replay-walk) when relayed.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: STORY-83.8 reviewed, committed (bc63625), merged (b0aec6a); Wave 4 complete
+Decision/Output: execution_planner_replay.py gates its candle load (admit_corpus) and reports a multi_tp_walk arm beside simulate_exit. Claude re-ran the unmodified adba177 script vs the new one on full XAUUSD: arm-1 replay_bnbusdt.json byte-identical; admission WARN, rewritten=False, sha 4d73f5ce. Trust gate OK (3==3). Cell B gross: simulate_exit 0.0000R, multi_tp_walk -0.1667R; real net -0.5641R; C/D -1.0R (20/20 stopped). Own error caught: first comparison ran the main-tree script as "new" (background chain lost cd/PYTHONPATH) -> void, archived to scratch, re-run. User: XAUUSD now, BNBUSDT later (needs clock review).
+Belief Update / ROI / Goal: Goal: measure the trade object production actually trades. Belief: on the 3 selected XAUUSD trades the production object is 0.17R worse gross than the whole-position exit (banking half at TP1 shrinks the one winner); n=3 carries no economic weight. Knowledge ROI: low-medium (instrument built, sample tiny). Action: none on economics; next EPIC-83 stories.
+Open Questions: BNBUSDT clock review (human); 83.3 section-10 answers (gate 83.11).
+Next Step: user go for Wave 5 prompts (83.10 resolver P-1, 83.12).
+---
