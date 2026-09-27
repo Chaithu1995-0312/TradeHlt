@@ -32,6 +32,12 @@ from features import candle_math as _cm  # single source of truth for candle geo
 # FM-027/028 CRT emission identities (CH-002 / F-050) resolve through FORMULA_REGISTRY here.
 from features.fm_resolve import bind_phase2_crt_callables
 _FM_CRT: dict = bind_phase2_crt_callables()  # FM-002/010/027/028 callables
+from config_layer.retest_geometry import (  # noqa: E402  [STORY-83.11a] shared with the resolver
+    FAIL_DEPTH_ABOVE_CEILING,
+    FAIL_DEPTH_BELOW_MIN,
+    FAIL_OVEREXTENDED_DISPLACEMENT,
+    evaluate_retest_geometry,
+)
 from config_layer.state_identity import CRTState, Direction, RejectReason, VALID_TRANSITIONS, CRTConfig
 from config_layer.crt_sweep_taxonomy import classify_sweep as _classify_sweep_geometry
 # SK-1 (2026-08-19): SP-001 single implementation (ontology structural_predicates). The three
@@ -1650,28 +1656,33 @@ class StateMachine:
 
         rng = state.active_range
 
-        # [PATCH 5] Adaptive ceiling
-        static_ceiling  = self.config.retest_depth_max * rng.size
-        atr_ceiling      = self.config.retest_atr_depth_fraction * atr if atr > 0 else static_ceiling
-        adaptive_ceiling = max(static_ceiling, atr_ceiling)
-
-        # Distance from boundary
-        if state.direction == Direction.LONG:
-            depth_abs = candle.close - rng.l_ref
-        else:
-            depth_abs = rng.h_ref - candle.close
-        
-        # IC-007 PLAN-001: HOW-owned floor (default 0.10 preserves legacy 0.1 * ATR)
-        min_depth = (
-            self.config.retest_min_depth_atr_fraction * atr if atr > 0 else 0.0
+        # [STORY-83.11a] The geometry test ([PATCH 5] adaptive ceiling, [IC-007] min-depth floor,
+        # [PATCH 7] displacement strength) lives in config_layer.retest_geometry so the resolver
+        # calls the SAME rule. This method keeps tracing/telemetry/state commits; the numbers and
+        # the check order are the extracted function's, unchanged.
+        _disp_check = state.displacement_candle
+        _geo = evaluate_retest_geometry(
+            is_long=(state.direction == Direction.LONG),
+            close=candle.close, h_ref=rng.h_ref, l_ref=rng.l_ref, atr=atr,
+            displacement_range=(_disp_check.wick_size if _disp_check is not None else None),
+            displacement_atr=state.atr_abs,
+            retest_depth_max=self.config.retest_depth_max,
+            retest_atr_depth_fraction=self.config.retest_atr_depth_fraction,
+            retest_min_depth_atr_fraction=self.config.retest_min_depth_atr_fraction,
+            max_displacement_strength=self.config.max_displacement_strength,
         )
+        static_ceiling   = _geo.static_ceiling
+        atr_ceiling      = _geo.atr_ceiling
+        adaptive_ceiling = _geo.adaptive_ceiling
+        depth_abs        = _geo.depth_abs
+        min_depth        = _geo.min_depth
         # [TELEMETRY] Track every retrace attempt regardless of outcome (RC1: pass candle_ts)
         if self.telemetry:
             self.telemetry.on_expansion_retrace_check(
                 state.current_candle_index, depth_abs, adaptive_ceiling,
                 candle_ts=candle.timestamp,
             )
-        if depth_abs < min_depth:
+        if _geo.failure_reason == FAIL_DEPTH_BELOW_MIN:
             self._trace_guard(
                 guard_id="G_EXP_RET_MIN_DEPTH",
                 guard_name="retest_min_depth_floor",
@@ -1700,7 +1711,7 @@ class StateMachine:
             return False
 
         # Existing ceiling check
-        if depth_abs > adaptive_ceiling:
+        if _geo.failure_reason == FAIL_DEPTH_ABOVE_CEILING:
             self._trace_guard(
                 guard_id="G_EXP_RET_CEILING",
                 guard_name="retest_adaptive_ceiling",
@@ -1737,12 +1748,12 @@ class StateMachine:
         # Check BEFORE committing retest state (cheap early exit).
         # displacement_atr_ratio (FM-028: wick_size ≡ candle_range per F-046, / ATR) >
         # max_displacement_strength → overextended move. GD-005 closure: math owned by derived_math.
-        _disp_check = state.displacement_candle
-        _atr_check  = state.atr_abs
-        if _disp_check is not None and _atr_check > 0:
-            # Phase-2: FM-028 via FORMULA_REGISTRY (identity == derived_math.displacement_atr_ratio).
-            _displacement_atr_ratio = _FM_CRT["FM-028"](_disp_check.wick_size, _atr_check)
-            if _displacement_atr_ratio > self.config.max_displacement_strength:
+        # FM-028 ratio computed inside evaluate_retest_geometry via the same registered callable
+        # (features.fm_resolve FM-028, identity == derived_math.displacement_atr_ratio); None when
+        # skipped (no displacement candle or atr_abs <= 0), exactly the prior guard.
+        if _geo.displacement_atr_ratio is not None:
+            _displacement_atr_ratio = _geo.displacement_atr_ratio
+            if _geo.failure_reason == FAIL_OVEREXTENDED_DISPLACEMENT:
                 self._trace_guard(
                     guard_id="G_EXP_RET_DISP_STRENGTH",
                     guard_name="max_displacement_strength",

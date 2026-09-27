@@ -109,6 +109,11 @@ SHARED_THRESHOLD_TO_CRT: dict[str, str] = {
     "max_expansion_age_hours": "max_expansion_age_hours",
     "score_threshold": "score_threshold",
     "soft_conf_max_candles": "soft_conf_max_candles",
+    # STORY-83.11a: the engine's EXPANSION->RETEST geometry (config_layer.retest_geometry)
+    # is reused by the resolver, so its remaining three thresholds are read here too.
+    "retest_atr_depth_fraction": "retest_atr_depth_fraction",
+    "retest_min_depth_atr_fraction": "retest_min_depth_atr_fraction",
+    "max_displacement_strength": "max_displacement_strength",
 }
 SHARED_LIFECYCLE_TO_CRT: dict[str, str] = {
     "pending_displacement_ttl_candles": "pending_displacement_ttl_candles",
@@ -202,6 +207,9 @@ class CRTStateMemory:
     sweep_candle_index: int = -1           # last sweep candle index
     displacement_candle_index: int = -1    # last displacement candle index
     displacement_candle_close: float = 0.0  # displacement close price
+    # STORY-83.11a: displacement candle high-low (engine Candle.wick_size), for the reused
+    # [PATCH 7] strength check. 0.0 = unknown -> strength check skipped (engine semantics).
+    displacement_candle_range: float = 0.0
     displacement_direction: int = 0        # +1 LONG / -1 SHORT at DISPLACEMENT entry
     retest_candle_index: int = -1          # last retest candle index
     expansion_entry_index: int = -1        # candle index when EXPANSION was entered
@@ -209,6 +217,9 @@ class CRTStateMemory:
     pending_displacement_active: bool = False  # cross-window shadow memory
     pending_displacement_formed_idx: int = -1
     pending_displacement_dir: str = "NONE"
+    # STORY-83.11a: engine keeps the whole pending_displacement_candle; the resolver keeps the
+    # one field the reused RETEST geometry needs (high-low), restored on shadow resume.
+    pending_displacement_range: float = 0.0
     pending_displacement_ttl: int = 0      # bars remaining for shadow memory
     pending_displacement_created_idx: int = -1  # skip TTL tick on create bar (engine)
     trade_active: bool = False             # EXECUTION → RESOLUTION tracking
@@ -282,6 +293,7 @@ _RESOLUTION_SITES: tuple[str, ...] = (
     "lifecycle_reset_range",
     # stage 2 - funnel, pre-predicate (decided before any `when:` is evaluated)
     "ttl_expiry",
+    "expansion_retest_geometry",   # STORY-83.11a: engine EXPANSION->RETEST rule, reused
     "expansion_dwell_hold",
     "execution_resolution",
     "execution_age_resolution",
@@ -313,6 +325,7 @@ _RESOLUTION_SITES: tuple[str, ...] = (
 _PRE_PREDICATE_SITES: frozenset[str] = frozenset({
     "lifecycle_reset_range",
     "ttl_expiry",
+    "expansion_retest_geometry",
     "expansion_dwell_hold",
     "execution_resolution",
     "execution_age_resolution",
@@ -1175,6 +1188,8 @@ class CRTStateResolver:
             self._memory.pending_displacement_dir = (
                 "LONG" if d > 0 else ("SHORT" if d < 0 else "NONE")
             )
+            # Engine: pending_displacement_candle = state.displacement_candle (:1931)
+            self._memory.pending_displacement_range = self._memory.displacement_candle_range
             # Engine skips TTL countdown on the creating bar (fall-through same candle)
             self._memory.pending_displacement_created_idx = self._memory.candle_index
         elif kind in ("gap", "forced"):
@@ -1183,6 +1198,7 @@ class CRTStateResolver:
             self._memory.pending_displacement_ttl = 0
             self._memory.pending_displacement_formed_idx = -1
             self._memory.pending_displacement_dir = "NONE"
+            self._memory.pending_displacement_range = 0.0
             self._memory.pending_displacement_created_idx = -1
 
         if prev != "RANGE":
@@ -1192,6 +1208,7 @@ class CRTStateResolver:
         self._memory.sweep_candle_index = -1
         self._memory.displacement_candle_index = -1
         self._memory.displacement_candle_close = 0.0
+        self._memory.displacement_candle_range = 0.0
         self._memory.displacement_direction = 0
         self._memory.retest_candle_index = -1
         self._memory.expansion_entry_index = -1
@@ -1224,6 +1241,7 @@ class CRTStateResolver:
                 self._memory.pending_displacement_active = False
                 self._memory.pending_displacement_formed_idx = -1
                 self._memory.pending_displacement_dir = "NONE"
+                self._memory.pending_displacement_range = 0.0
                 self._memory.pending_displacement_created_idx = -1
 
     # ── config loading ───────────────────────────────────────────
@@ -1537,15 +1555,19 @@ class CRTStateResolver:
 
         # Check memory-only states first (these check current memory, not features)
         if self._memory.current_state == "EXPANSION":
+            # STORY-83.11a: the engine's own strict geometry, reused (config_layer.retest_geometry).
+            # Checked BEFORE the TTL expiry, the engine's order ("RC-Closure: RETEST has
+            # priority=4 > EXPIRED priority=3", crt_engine_v2 EXPANSION branch).
+            if self._retest_entry_allowed(raw):
+                self._last_funnel_site = "expansion_retest_geometry"
+                return "RETEST"
             if self._check_expired(timestamp):
                 self._last_funnel_site = "ttl_expiry"
                 return "EXPIRED"
             # B1f: continuous mid-dwell hold. Engine stays in EXPANSION until
-            # try_expansion_to_retest (strict geometry) or TTL/RESET — NOT until
-            # pipeline retest_flag (fires on a large fraction of bars and was
-            # promoting EXP→RETEST→RANGE mid-episode, opening ~2k FN holes).
-            # Research RETEST/RANGE exits still apply via engine_state_to inject
-            # after this return path is overridden in resolve().
+            # try_expansion_to_retest (strict geometry — now reused above, STORY-83.11a) or
+            # TTL/RESET — NOT until pipeline retest_flag (fires on a large fraction of bars and
+            # was promoting EXP→RETEST→RANGE mid-episode, opening ~2k FN holes).
             self._last_funnel_site = "expansion_dwell_hold"
             return "EXPANSION"
 
@@ -2034,6 +2056,47 @@ class CRTStateResolver:
             return float(atr) * float(close)
         return float(atr)
 
+    def _retest_entry_allowed(self, raw: Mapping[str, float]) -> bool:
+        """EXPANSION -> RETEST by the engine's OWN rule (STORY-83.11a).
+
+        Calls ``config_layer.retest_geometry.evaluate_retest_geometry``, the function
+        ``StateMachine.try_expansion_to_retest`` itself calls, so there is one rule, not two.
+        Inputs come from resolver memory (the frozen range, the displacement direction and
+        range) and this bar (close, atr). Fail-closed when any is missing: no range, unknown
+        direction, no close, no ATR -> not a retest. Differences from the engine that remain
+        and are declared, not hidden: ATR is the vector's ``atr`` (x close) rather than the
+        engine's own ``atr_abs``; and on a shadow-resume EXPANSION the displacement range is
+        unknown (memory was reset), so the [PATCH 7] strength check is skipped.
+        """
+        from config_layer.retest_geometry import evaluate_retest_geometry
+
+        mem = self._memory
+        if not mem.range_ready:
+            return False
+        direction = mem.displacement_direction
+        if direction == 0:
+            return False
+        close = raw.get("close")
+        if close is None:
+            return False
+        atr_abs = self._atr_abs(raw)
+        if atr_abs is None:
+            return False
+        thr = self._config.get("thresholds", {})
+        disp_range = mem.displacement_candle_range if mem.displacement_candle_range > 0 else None
+        geo = evaluate_retest_geometry(
+            is_long=(direction > 0),
+            close=float(close), h_ref=mem.range_h_ref, l_ref=mem.range_l_ref,
+            atr=atr_abs,
+            displacement_range=disp_range,
+            displacement_atr=atr_abs,
+            retest_depth_max=float(thr["retest_depth_max"]),
+            retest_atr_depth_fraction=float(thr["retest_atr_depth_fraction"]),
+            retest_min_depth_atr_fraction=float(thr["retest_min_depth_atr_fraction"]),
+            max_displacement_strength=float(thr["max_displacement_strength"]),
+        )
+        return geo.passed
+
     def _predicates_match(
         self,
         when: dict[str, list[str]],
@@ -2174,6 +2237,12 @@ class CRTStateResolver:
         if resolved == "DISPLACEMENT" and entered:
             self._memory.displacement_candle_index = self._memory.candle_index
             self._memory.displacement_candle_close = float(features.get("close", 0.0) or 0.0)
+            # STORY-83.11a: high-low of the displacement bar (engine Candle.wick_size), kept in
+            # memory because EXPANSION can outlast the OHLC buffer. Unknown -> 0.0 (check skipped).
+            _h, _l = features.get("high"), features.get("low")
+            self._memory.displacement_candle_range = (
+                float(_h) - float(_l) if _h is not None and _l is not None else 0.0
+            )
             # Direction from candle body (engine Direction.LONG/SHORT); keep
             # sweep-direction fallback already stored at SWEEP entry.
             o = features.get("open")
@@ -2191,10 +2260,20 @@ class CRTStateResolver:
             self._memory.expansion_entry_ts = timestamp
             # Shadow resume consumes pending displacement (engine clears on confirm)
             if self._memory.pending_displacement_active:
+                # STORY-83.11a: engine try_shadow_pending_to_expansion (crt_engine_v2.py:1118-1119)
+                # RESTORES state.displacement_candle and state.direction from the pending memory
+                # before collapsing to EXPANSION. The resolver used to discard them here, leaving
+                # direction 0 for the whole shadow-resumed EXPANSION, so the reused RETEST geometry
+                # could never be evaluated. Restore the two fields that geometry reads.
+                _pdir = self._memory.pending_displacement_dir
+                if _pdir in ("LONG", "SHORT"):
+                    self._memory.displacement_direction = 1 if _pdir == "LONG" else -1
+                self._memory.displacement_candle_range = self._memory.pending_displacement_range
                 self._memory.pending_displacement_active = False
                 self._memory.pending_displacement_ttl = 0
                 self._memory.pending_displacement_formed_idx = -1
                 self._memory.pending_displacement_dir = "NONE"
+                self._memory.pending_displacement_range = 0.0
 
         if resolved == "RETEST" and entered:
             self._memory.retest_candle_index = self._memory.candle_index

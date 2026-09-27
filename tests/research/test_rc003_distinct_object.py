@@ -190,7 +190,10 @@ def test_every_funnel_return_sets_a_resolution_site() -> None:
 
 
 def test_funnel_site_count_matches_the_declared_vocabulary() -> None:
-    """The 16 funnel returns must be covered by exactly the 16 funnel site ids."""
+    """The 17 funnel returns must be covered by exactly the 17 funnel site ids.
+
+    16 -> 17 on 2026-09-28 (STORY-83.11a): `expansion_retest_geometry`, the EXPANSION->RETEST
+    return that calls the engine's reused geometry (config_layer.retest_geometry)."""
     import ast
     import sys
 
@@ -203,8 +206,8 @@ def test_funnel_site_count_matches_the_declared_vocabulary() -> None:
         if isinstance(n, ast.FunctionDef) and n.name == "_resolve_from_features"
     )
     returns = [r for r in ast.walk(fn) if isinstance(r, ast.Return)]
-    assert len(returns) == 16, (
-        f"_resolve_from_features has {len(returns)} returns, expected 16. If a branch was "
+    assert len(returns) == 17, (
+        f"_resolve_from_features has {len(returns)} returns, expected 17. If a branch was "
         "added or removed, update _RESOLUTION_SITES and this count together."
     )
 
@@ -218,8 +221,8 @@ def test_funnel_site_count_matches_the_declared_vocabulary() -> None:
     }
     undeclared = assigned - set(_RESOLUTION_SITES)
     assert not undeclared, f"funnel assigns undeclared site id(s): {sorted(undeclared)}"
-    assert len(assigned) == 16, (
-        f"expected 16 DISTINCT funnel site ids, got {len(assigned)}: {sorted(assigned)}. "
+    assert len(assigned) == 17, (
+        f"expected 17 DISTINCT funnel site ids, got {len(assigned)}: {sorted(assigned)}. "
         "Two returns sharing an id destroys the measurement — `sweep_age_expiry` and "
         "`ground_state_fallthrough` both return RANGE for opposite reasons."
     )

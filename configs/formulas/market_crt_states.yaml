@@ -129,16 +129,24 @@ states:
       Limited to high-liquidity sessions (LONDON, NEWYORK, OVERLAP).
 
   - name: RETEST
-    description: "Price returned to fast EMA after a sweep — retest is active"
+    description: "Price pulled back toward the swept range edge after EXPANSION, within the engine's depth band — the CRT engine's EXPANSION→RETEST transition"
     requires_memory: true
     when:
       retest_flag: [RetestActive]
       sweep_detected: [SweepDetected]
       break_of_structure: [NoBreak]
     notes: >
-      retest_flag (FM-061) requires a sweep within retest_lookback bars AND
-      close within ATR band of fast EMA. This is the CRT engine's
-      EXPANSION→RETEST transition point.
+      This is the CRT engine's EXPANSION→RETEST transition point. ENTRY (STORY-83.11a,
+      2026-09-28) is owned by the EXPANSION funnel hold, which calls the engine's own rule
+      (config_layer.retest_geometry.evaluate_retest_geometry — the function
+      StateMachine.try_expansion_to_retest calls): from EXPANSION, depth from the swept edge
+      (LONG close−l_ref / SHORT h_ref−close) within [retest_min_depth_atr_fraction·atr,
+      max(retest_depth_max·range_size, retest_atr_depth_fraction·atr)] and displacement
+      range/atr ≤ max_displacement_strength. The `when:` block above is therefore NOT the entry
+      rule; it is only the dwell-bar predicate affinity. CORRECTED: the old description ("Price
+      returned to fast EMA after a sweep") was the pipeline retest_flag (FM-061, EMA-band)
+      reading, a different quantity (market_ontology.yaml FM-027 note); with it, the resolver
+      reached RETEST on 0 of 47,197 XAUUSD bars without engine injection.
 
   - name: EXPANSION
     description: "Post-displacement extension — engine DISPLACEMENT→EXPANSION (or shadow resume)"
@@ -369,7 +377,8 @@ thresholds:
 # VALIDATOR: features.registry.validate_crt_threshold_refs (closed contract: every remaining
 # `thresholds:` key appears here exactly once; a `crtconfig_read` row names a shared key that
 # is absent from `thresholds:` and whose `ref` is a real CRTConfig field).
-# AUTHORITY: none. Wiring is DONE for the 12 shared keys (`kind: crtconfig_read`): the literals
+# AUTHORITY: none. Wiring is DONE for the 15 shared keys (`kind: crtconfig_read`; 12 from
+# STORY-83.10, +3 retest-geometry keys from STORY-83.11a): the literals
 # are not in `thresholds:`, and CRTStateResolver copies CRTConfig.<ref> in at construction.
 # A YAML that still carries one of those keys is rejected. The other rows stay declaration-only.
 #
@@ -441,6 +450,23 @@ threshold_refs:
     retest_depth_max:
       kind: crtconfig_read
       ref: retest_depth_max
+      consumed: true
+
+    # STORY-83.11a: the rest of the engine's EXPANSION->RETEST geometry, read by the resolver
+    # through config_layer.retest_geometry (the same function the engine calls).
+    retest_atr_depth_fraction:
+      kind: crtconfig_read
+      ref: retest_atr_depth_fraction
+      consumed: true
+
+    retest_min_depth_atr_fraction:
+      kind: crtconfig_read
+      ref: retest_min_depth_atr_fraction
+      consumed: true
+
+    max_displacement_strength:
+      kind: crtconfig_read
+      ref: max_displacement_strength
       consumed: true
 
     max_sweep_age_candles:

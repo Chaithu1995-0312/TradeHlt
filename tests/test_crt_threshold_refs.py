@@ -110,6 +110,8 @@ _P1_CRTCONFIG_READ = {
     "expansion_atr_min_distance", "retest_depth_max", "max_sweep_age_candles",
     "max_expansion_age_candles", "max_expansion_age_hours", "score_threshold",
     "soft_conf_max_candles", "lifecycle.pending_displacement_ttl_candles",
+    # STORY-83.11a: rest of the reused engine EXPANSION->RETEST geometry
+    "retest_atr_depth_fraction", "retest_min_depth_atr_fraction", "max_displacement_strength",
 }
 
 
@@ -124,7 +126,7 @@ def test_every_thresholds_key_has_exactly_one_refs_entry(doc):
     assert read_keys == _P1_CRTCONFIG_READ
     assert actual - expected == read_keys
     assert len(expected) == 11
-    assert len(actual) == 23
+    assert len(actual) == 26
 
 
 def test_classification_counts_match_the_measured_source_audit(doc):
@@ -133,13 +135,13 @@ def test_classification_counts_match_the_measured_source_audit(doc):
     from collections import Counter
     refs = doc["threshold_refs"]["refs"]
     counts = Counter(v["kind"] for v in refs.values())
-    assert counts["crtconfig_read"] == 12
+    assert counts["crtconfig_read"] == 15
     assert counts["crtconfig_duplicate"] == 0
     assert counts["crtconfig_duplicate_dead"] == 0
     assert counts["name_alias_documented"] == 2
     assert counts["resolver_only"] == 8
     assert counts["dead_unconsumed"] == 1
-    assert sum(counts.values()) == 23
+    assert sum(counts.values()) == 26
 
 
 def test_consumed_flags_match_the_verified_grep_audit(doc):
