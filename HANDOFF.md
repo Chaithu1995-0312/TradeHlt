@@ -6,7 +6,7 @@
 
 ```yaml
 current_actor:   Claude (Executor)
-current_story:   EPIC-83 Wave 5 DONE — 83.10 merged ebe847f (resolver reads CRTConfig for the 12 shared thresholds; instrument= required; states.csv byte-identical 79351e4c...; floor 19F/581P identical before/after; Grok's codemod drafted but not applied, Claude applied + fixed missed build_bar_matrix.py:479 caller); 83.11 waits on 83.3 section-10 answers; 83.12 needs 83.11 keys; 83.9 deferred
+current_story:   EPIC-83 — 83.10 merged ebe847f (resolver P-1); 83.3 §10 decisions recorded 813875f9; 83.11 merged 63d4c436 (Setup overlay: target_policy + trade_ttl_candles implemented+verified on short-window fixture per 2026-09-28 hard constraint; decider='resolver' declared but raises NotImplementedError -- cached states.csv lacks the memory snapshot mode C needs, follow-up STORY-83.11b opened); 83.12 (WP-L first grid) can now start, keys exist; 83.9 deferred
 standing_rules:
   # All XAUUSD M15 analysis/backtest/live CSV loads → Phase-1 frozen candidate only (fail-closed)
   canonical_corpus: data/mt5/XAUUSD_M15.csv  # sha256 4d73f5cebe33ec91…b26aba56; range ..2026-05-21T23:45:00
@@ -46,7 +46,7 @@ verification:
   - Gate A: 40/40 target tests green (was 4 failing)
   - Gate B: golden-ledger + oracle + invariants + replay-determinism 180/180 byte-identical (spine-neutral; active gaussian_impl=heuristic)
   - Gate C: full suite 1787 passed / 10 failed — ZERO new failures; remaining 10 all pre-existing (timing_reconstructor volume-fixture, agents_path_alignment) — assign_cluster 8 now FIXED
-next_actor:      Claude  # 83.11 (WP-K Setup overlay) blocked on user answers to setup-overlay-spec-2026-09.md §10; 2026-09-28
+next_actor:      Claude  # 83.12 (WP-L first grid: sl_anchor x target_policy, TTL on) is unblocked; 83.11b (mode C) needs an assignee decision; 2026-09-28
 next_prompt: |
   RC-003 is executed. Phase-1 ADMITTED corpus (47,275 bars, sha 4d73f5ce), n=553 violating /
   1,100 control, both far past the declared floor of 150. PRIMARY (close beyond the swept extreme,
