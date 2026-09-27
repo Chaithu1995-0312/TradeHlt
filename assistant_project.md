@@ -4172,3 +4172,33 @@ Belief Update / ROI / Goal: Goal: full turn history for all six models. Belief: 
 Open Questions: add a ROLE_GROK.md card? (not requested)
 Next Step: unchanged — data\mt5 restore, relay WP-E.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: User asked why the data\mt5 restore is needed
+Decision/Output: Explained: Claude's worktree removal wiped data\mt5; the XAUUSD path guard only admits data/mt5/XAUUSD_M15.csv (sha 4d73f5ce); data/ is gitignored so git cannot recover it; the backtest, parity run (WP-F) and research all read it; Claude's own copy was blocked by the permission check.
+Belief Update / ROI / Goal: none (explanation)
+Open Questions: none new
+Next Step: user restores; Claude verifies hashes.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: data\mt5 partial restore verified — XAUUSD M15 back
+Decision/Output: data/mt5/XAUUSD_M15.csv restored by user: full sha 4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56 (== registered), 47,276 lines (47,275 rows + header), guard_xauusd_csv_path accepts it. Only this 1 file restored; the other 26 files (FX majors M5/M15/H1/H4, XAUUSD M5/H1/H4, second_low scans/events/metrics, XAUUSD_W2026-07-06-to-2026-08-07) are still absent — backup at logs/dual_construction/scratch_roots/arm_a_v2_baseline/data/mt5.
+Belief Update / ROI / Goal: Goal: unblock WP-F. Belief: the canonical corpus is byte-identical to the pinned one; WP-F gate cleared. Knowledge ROI: high. Action: offer robocopy for the rest.
+Open Questions: restore the other 26 files? re-fetch the 4 post-snapshot windows?
+Next Step: relay WP-E; after it merges, issue WP-F with a corpus COPY in its worktree.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: STORY-83.5 reviewed+merged; STORY-83.6 (WP-F parity) issued
+Decision/Output: Claude re-ran WP-E acceptance in the worktree: CRTConfig(v2_htfcrt_2026_08)==CRTConfig(v5) 53/53; full JSON diff = only declared additions (42 params, 4 backtest K23 keys at reader defaults backtest_v2.py:331/338/345/351, 4 dual sidecar sections off) + version/config_id/notes/config_hash; hash match YES. Grok had not committed — Claude committed f2004bb on lane, merged 49c227a. ACTIVE_VERSION untouched. Grok turn t00004 logged. WP-F worktree D:\Tradelatest-wt-wpF-parity-v5 (6f32d42, no data). Prompt multi_llm/wave3_prompts_2026-09-27.md (+ Desktop): reuse isolated_config_root.build_config_root/run_backtest + v3_config_parity.compare; data by COPY; short reviewed window XAUUSD_W2026-07-06-to-2026-08-07 (backup sha dcaf88a7 == registry) first, then full corpus; resolver cache-key trap (resolver_overlay.py:35,49-50 — keyed by corpus sha+variant, not config) → run per arm root.
+Belief Update / ROI / Goal: Goal: prove v5 is a zero-behaviour superset before any Setup work. Belief: params-hash differs (7de09f62 vs e496a94c) — any consumer of config_hash is the most likely parity break. Knowledge ROI: high. Action: user restores the short window file, relays WP-F.
+Open Questions: does anything decision-bearing read config_hash?
+Next Step: user robocopy (brings back the short window) + relay WP-F.
+---
