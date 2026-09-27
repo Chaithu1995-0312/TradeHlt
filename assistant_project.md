@@ -4292,3 +4292,13 @@ Belief Update / ROI / Goal: Goal: measure the trade object production actually t
 Open Questions: BNBUSDT clock review (human); 83.3 section-10 answers (gate 83.11).
 Next Step: user go for Wave 5 prompts (83.10 resolver P-1, 83.12).
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: Wave 5 issued — STORY-83.10 (WP-J, resolver reads CRTConfig); 83.12 cannot run before 83.11
+Decision/Output: Wave 5 = 83.10 only. 83.12 needs target_policy/trade_ttl_candles, which are new keys from 83.11 (setup-overlay-spec §3.2), so HANDOFF's "83.10 / 83.12" was wrong; 83.11 waits on the 83.3 §10 answers. Verified the 12 shared resolver thresholds equal get_prod_config('XAUUSD') on ACTIVE_VERSION v2_htfcrt_2026_08 (retest_atr_depth_fraction 0.50 vs 0.3 is the dead copy). Production values are per-instrument (market_router classes differ) and the resolver has no instrument; user decided: no config passed -> instrument= required. Scope therefore = resolver + yaml + registry validator + 12 caller files + 11 test files (73 test constructions). Worktree D:\Tradelatest-wt-wpJ-resolver-p1 (lane/wpJ-resolver-p1 from 2ed75cc), corpus copied, sha 4d73f5ce. Prompt multi_llm/wave5_prompts_2026-09-28.md (+Desktop). Queue 83.10 in_progress (1 row); HANDOFF next_actor Grok coding (test_handoff_state 5/5).
+Belief Update / ROI / Goal: Goal: one number per shared engine/resolver quantity so a shadow config moves both tracks. Belief: P-1 is not a 2-file change once the instrument is explicit; the F-069 sweep script and validate_crt_state_resolver's "set" command are the places where yaml-tuning of shared keys must move to crt_config. Knowledge ROI: medium. Action: relay prompt.
+Open Questions: 83.3 §10 answers (gate 83.11).
+Next Step: user relays the 83.10 prompt to Grok coding; Claude reviews states.csv byte-identity + test counts on return.
+---
