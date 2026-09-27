@@ -282,6 +282,17 @@ class BacktestConfig:
     # `exchange_session_windows`. MT5-sourced corpora only. Default legacy, so no config changes.
     session_window_basis: str = "broker_static"
     exchange_session_windows: Optional[dict] = None
+    # [STORY-83.11 §3.2 key 2] Optional, from the NEW `setup` section (not `backtest` — §10 Q1
+    # Option A). "fixed_r" = legacy R-multiple TP1/TP2. "structural_tp2" = TP2 is the opposite
+    # side of the active range; TP1 unchanged. Default legacy, so no existing config changes.
+    target_policy: str = "fixed_r"
+    # [STORY-83.11 §3.2 key 3] Optional, `setup` section. None = no time-stop = today. An int
+    # N >= 1 closes a still-open trade no later than bar open_candle_index + N (§6, §10 Q3).
+    trade_ttl_candles: Optional[int] = None
+    # [STORY-83.11 §3.2 key 4] Optional, `setup` section. "engine" (default) = today. "resolver"
+    # (mode C, §5) is declared+validated but CRTEngine raises NotImplementedError at
+    # construction if it is actually requested -- see crt_engine_v2.py's CRTEngine.__init__.
+    decider: str = "engine"
 
     @classmethod
     def from_prod_config(
@@ -359,6 +370,35 @@ class BacktestConfig:
             parse_exchange_session_windows(cfg["exchange_session_windows"])  # fail at LOAD
             exchange_session_windows = dict(cfg["exchange_session_windows"])
 
+        # [STORY-83.11 §3.2 keys 2-3] Optional `setup` section (§10 Q1 Option A — NOT `backtest`).
+        # Absent entirely = both new keys at default (config_layer.setup.Setup shares this exact
+        # validation, kept independently here so BacktestConfig.from_prod_config needs no
+        # cross-module dependency, matching every other read in this function).
+        try:
+            from config_layer.production_config import get_prod_section as _gps
+            setup_cfg = _gps("setup")
+        except RuntimeError:
+            setup_cfg = {}
+        target_policy = setup_cfg.get("target_policy", "fixed_r")
+        if target_policy not in ("fixed_r", "structural_tp2"):
+            raise ValueError(
+                f"BacktestConfig: setup.target_policy={target_policy!r} must be "
+                "'fixed_r' or 'structural_tp2'."
+            )
+        trade_ttl_candles = setup_cfg.get("trade_ttl_candles", None)
+        if trade_ttl_candles is not None and (
+            not isinstance(trade_ttl_candles, int)
+            or isinstance(trade_ttl_candles, bool)
+            or trade_ttl_candles < 1
+        ):
+            raise ValueError(
+                "BacktestConfig: setup.trade_ttl_candles must be an int >= 1 or null, got "
+                f"{trade_ttl_candles!r}."
+            )
+        decider = setup_cfg.get("decider", "engine")
+        if decider not in ("engine", "resolver"):
+            raise ValueError(f"BacktestConfig: setup.decider={decider!r} must be 'engine' or 'resolver'.")
+
         return cls(
             htf_candles_per_range = int(cfg["htf_candles_per_range"]),
             warmup_candles        = int(cfg["warmup_candles"]),
@@ -387,6 +427,9 @@ class BacktestConfig:
             sl_anchor = sl_anchor,
             session_window_basis = session_window_basis,
             exchange_session_windows = exchange_session_windows,
+            target_policy = target_policy,
+            trade_ttl_candles = trade_ttl_candles,
+            decider = decider,
         )
 
 
@@ -1544,6 +1587,8 @@ class BacktestMetrics:
     htf_reset_exempt_sweep: bool = False   # [K23 F4] stamped so a run is self-describing
     sl_anchor:              str  = "displacement"   # [K23 F3] stamped so a run is self-describing
     session_window_basis:   str  = "broker_static"  # [K23 F2] stamped so a run is self-describing
+    target_policy:          str  = "fixed_r"        # [STORY-83.11] stamped so a run is self-describing
+    trade_ttl_candles:      Optional[int] = None    # [STORY-83.11] stamped so a run is self-describing
 
     # ── [CH-run-identity-range-folder-manifest] corpus time range consumed ──────
     # First/last walked candle timestamps (as streamed, warmup included), so the
@@ -1606,6 +1651,8 @@ class BacktestMetrics:
             "htf_reset_exempt_sweep": self.htf_reset_exempt_sweep, # [K23 F4]
             "sl_anchor":             self.sl_anchor,               # [K23 F3]
             "session_window_basis":  self.session_window_basis,    # [K23 F2]
+            "target_policy":         self.target_policy,           # [STORY-83.11]
+            "trade_ttl_candles":     self.trade_ttl_candles,       # [STORY-83.11]
             "corpus_start":          self.corpus_start,            # [CH-run-identity-range-folder-manifest]
             "corpus_end":            self.corpus_end,
         }
@@ -1660,6 +1707,18 @@ def _resolve_exit(
             )
             return exit_raw, "TP1_STRUCTURAL_STOP"
         return candle.close, "STOPPED_STRUCTURAL"
+    if action == "TRADE_TIMEOUT":
+        # [STORY-83.11 §6, §10 Q3c] TIMEOUT_MARK_TO_CLOSE: books at the bar's own close, exactly
+        # like STOPPED_STRUCTURAL — a deadline is not a level the market ever quoted, so there
+        # is no "exit price" to blend toward other than the close itself. Same TP1-partial
+        # accounting as STOPPED_STRUCTURAL: the partial stays booked, only the runner leg blends.
+        if trade_status == "TP1" and partial_tp_enabled:
+            exit_raw = (
+                partial_tp_fraction * t.tp1_price
+                + (1.0 - partial_tp_fraction) * candle.close
+            )
+            return exit_raw, "TP1_TIMEOUT"
+        return candle.close, "TIMEOUT"
     if "STOPPED" in action:
         if trade_status == "TP1" and partial_tp_enabled:
             # Runner stopped at breakeven; blend exit = f@TP1 + (1-f)@entry.
@@ -1714,6 +1773,8 @@ class MetricsEngine:
         htf_reset_exempt_sweep: bool = False,
         sl_anchor: str = "displacement",
         session_window_basis: str = "broker_static",
+        target_policy: str = "fixed_r",
+        trade_ttl_candles: Optional[int] = None,
     ) -> BacktestMetrics:
         trades = journal.closed
         m = BacktestMetrics(instrument=self.instrument)
@@ -1724,6 +1785,8 @@ class MetricsEngine:
         m.htf_reset_exempt_sweep = htf_reset_exempt_sweep  # [K23 F4]
         m.sl_anchor              = sl_anchor               # [K23 F3]
         m.session_window_basis   = session_window_basis    # [K23 F2]
+        m.target_policy          = target_policy           # [STORY-83.11]
+        m.trade_ttl_candles      = trade_ttl_candles       # [STORY-83.11]
         m.approved_trades  = len(trades)
         m.rejected_trades  = len(journal.rejections)
         m.total_setups     = m.approved_trades + m.rejected_trades
@@ -3001,6 +3064,9 @@ class BacktestRunner:
             exchange_session_windows=(                                # [K23 F2]
                 self.cfg.exchange_session_windows
                 if self.cfg.session_window_basis == "exchange_local" else None),
+            target_policy=self.cfg.target_policy,                     # [STORY-83.11]
+            trade_ttl_candles=self.cfg.trade_ttl_candles,             # [STORY-83.11]
+            decider=self.cfg.decider,                                 # [STORY-83.11]
         )
         # F-075 caller: calendar-true parent CRT. None when parent_crt.enabled is
         # false (v2_multi_2026_04 stays parent_state=None). Pushed on every child
@@ -4023,7 +4089,10 @@ class BacktestRunner:
                         )
                     state_path = []
 
-            elif "TRADE_STOPPED" in action or "TRADE_TP2" in action or "TRADE_TP1" in action:
+            elif (
+                "TRADE_STOPPED" in action or "TRADE_TP2" in action or "TRADE_TP1" in action
+                or "TRADE_TIMEOUT" in action  # [STORY-83.11 §6]
+            ):
                 if journal.open_trade and engine.state.active_trade:
                     t = engine.state.active_trade
                     _closed = None
@@ -4208,6 +4277,8 @@ class BacktestRunner:
             htf_reset_exempt_sweep=self.cfg.htf_reset_exempt_sweep, # [K23 F4]
             sl_anchor=self.cfg.sl_anchor,                           # [K23 F3]
             session_window_basis=self.cfg.session_window_basis,     # [K23 F2]
+            target_policy=self.cfg.target_policy,                   # [STORY-83.11]
+            trade_ttl_candles=self.cfg.trade_ttl_candles,           # [STORY-83.11]
         )
 
         # Phase 2: attach drift monitor stats to distribution summary. Best-effort —

@@ -2328,13 +2328,26 @@ class BuildAttempt:
 
 class ExecutionEngine:
 
-    def __init__(self, config: CRTConfig, sl_anchor: str = "displacement"):
+    def __init__(
+        self,
+        config: CRTConfig,
+        sl_anchor: str = "displacement",
+        target_policy: str = "fixed_r",
+    ):
         self.config = config
         # [K23 F3] Not a CRTConfig field (census pins); fed from backtest.sl_anchor.
         # "displacement" = legacy; "sweep_extreme" = swept wick extreme -/+ sl_atr_buffer*atr.
         if sl_anchor not in ("displacement", "sweep_extreme"):
             raise ValueError(f"sl_anchor must be 'displacement' or 'sweep_extreme', got {sl_anchor!r}")
         self.sl_anchor = sl_anchor
+        # [STORY-83.11 §3.2 key 2] Not a CRTConfig field; fed from setup.target_policy.
+        # "fixed_r" = legacy (TP1/TP2 as R-multiples). "structural_tp2" = TP2 is the opposite
+        # side of the active range (§3.4 key 2); TP1 stays R-based either way (§10 Q2a).
+        if target_policy not in ("fixed_r", "structural_tp2"):
+            raise ValueError(
+                f"target_policy must be 'fixed_r' or 'structural_tp2', got {target_policy!r}"
+            )
+        self.target_policy = target_policy
         self.log = logging.getLogger("CRT.Execution")
         self._trade_counter = 0
         self.last_build_attempt: Optional[BuildAttempt] = None
@@ -2502,6 +2515,33 @@ class ExecutionEngine:
             tp1 = entry - _tp1_mult * risk_dist
             tp2 = entry - _tp2_mult * risk_dist
 
+        # [STORY-83.11 §3.2 key 2 / §3.4 key 2] structural_tp2: TP2 = the opposite side of the
+        # range frozen at build time (§10 Q2c — `rng` is already bound above, the same object
+        # ResetLogic protects from a reset on an open trade). TP1 is UNCHANGED (§10 Q2a — only
+        # TP2 moves). No inverted-TP guard exists for `fixed_r`'s TP2 today because a fixed
+        # R-multiple can never invert; a structural level CAN (entry already past the opposite
+        # side, or a range narrower than the risk leg) — §10 Q2b: reject rather than clamp or
+        # silently fall back to fixed_r, which would make one label cover two policies.
+        if self.target_policy == "structural_tp2":
+            if direction == Direction.LONG:
+                _structural_tp2 = rng.h_ref
+                _inverted = _structural_tp2 <= entry
+                _too_close = (_structural_tp2 - entry) < risk_dist
+            else:
+                _structural_tp2 = rng.l_ref
+                _inverted = _structural_tp2 >= entry
+                _too_close = (entry - _structural_tp2) < risk_dist
+            if _inverted or _too_close:
+                _reason = "structural_tp2_inverted" if _inverted else "structural_tp2_too_close"
+                self.log.warning(
+                    f"Trade REJECTED: {_reason} "
+                    f"(entry={entry:.5f} structural_tp2={_structural_tp2:.5f} "
+                    f"risk_dist={risk_dist:.5f} h_ref={rng.h_ref:.5f} l_ref={rng.l_ref:.5f})"
+                )
+                self._remember_build("REJECTED", _reason, sl, entry, direction)
+                return None
+            tp2 = _structural_tp2
+
         # [PATCH: Proportional sizing — priority order]
         # 1. Gaussian scorer already wrote risk_pct onto the Trade object via runner
         #    (runner calls engine.state.active_trade.risk_pct = ... before journaling)
@@ -2633,7 +2673,30 @@ class ExecutionEngine:
         )
         return "STOPPED_STRUCTURAL"
 
-        return "UNCHANGED"
+    def close_timeout(self, trade: Trade, exit_price: float) -> str:
+        """[STORY-83.11 §6] Terminate a trade whose `trade_ttl_candles` window has elapsed.
+
+        Books at `exit_price` — the bar CLOSE (§10 Q3c: TIMEOUT_MARK_TO_CLOSE is the default;
+        `TIMEOUT_TRAIL` is a declared non-default that this method does not implement — a
+        caller wanting it passes a different `exit_price`, this method's contract is just
+        "book at whatever price the caller resolved").
+
+        Mirrors `close_structural`'s TP1-partial accounting exactly: a runner that already
+        banked its TP1 partial keeps it, and only the still-open leg is closed here.
+        """
+        if trade.status not in ("OPEN", "TP1"):
+            return "UNCHANGED"
+        pnl_direction = 1 if trade.direction == Direction.LONG else -1
+        if trade.status == "TP1":
+            runner_pnl = 0.5 * pnl_direction * (exit_price - trade.entry_price)
+            trade.pnl = trade.partial_pnl + runner_pnl
+        else:
+            trade.pnl = pnl_direction * (exit_price - trade.entry_price)
+        trade.status = "TIMEOUT"
+        self.log.info(
+            f"Trade TIMEOUT | {trade.id} | close={exit_price:.5f} PnL={trade.pnl:.5f}"
+        )
+        return "TIMEOUT"
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -2721,7 +2784,10 @@ class CRTEngine:
                  intrabar_exits: Optional[bool] = None,
                  htf_reset_exempt_sweep: bool = False,
                  sl_anchor: str = "displacement",
-                 exchange_session_windows: Optional[dict] = None):
+                 exchange_session_windows: Optional[dict] = None,
+                 target_policy: str = "fixed_r",
+                 trade_ttl_candles: Optional[int] = None,
+                 decider: str = "engine"):
         # Config MUST be provided via ConfigBuilder.build(instrument).
         # Direct CRTConfig() fallback is forbidden — it bypasses the market router.
         if config is None:
@@ -2758,7 +2824,43 @@ class CRTEngine:
             self.config, self.telemetry, valid_transitions=self.runtime_transitions
         )
         self.risk      = UltronRiskEngine(self.config)
-        self.executor = ExecutionEngine(self.config, sl_anchor=sl_anchor)  # [K23 F3]
+        self.executor = ExecutionEngine(
+            self.config, sl_anchor=sl_anchor, target_policy=target_policy,  # [K23 F3] / [83.11]
+        )
+        # [STORY-83.11 §3.2 key 3] Not a CRTConfig field; fed from setup.trade_ttl_candles.
+        # None (default) = no time-stop = today. See §6 for the seam/pricing/counting contract
+        # (§10 Q3): checked here in process_candle (§6.2 engine-side seam), NOT inside
+        # ExecutionEngine.update_trade — that signature is deliberately kept stable because
+        # research parity floors bind to it (see the SEM-021 kill comment just above its call
+        # site). A dedicated `close_timeout` mirrors `close_structural`'s shape instead.
+        if trade_ttl_candles is not None and (
+            not isinstance(trade_ttl_candles, int)
+            or isinstance(trade_ttl_candles, bool)
+            or trade_ttl_candles < 1
+        ):
+            raise ValueError(
+                f"trade_ttl_candles must be an int >= 1 or None, got {trade_ttl_candles!r}"
+            )
+        self.trade_ttl_candles = trade_ttl_candles
+        # [STORY-83.11 §3.2 key 4 / §5] Not a CRTConfig field; fed from setup.decider.
+        # "engine" (default) = today: the state machine founds the trade. "resolver" = mode C,
+        # the CRTStateResolver founds it instead (engine keeps geometry/exits, §5). NOT
+        # IMPLEMENTED YET: founding a trade from the resolver's decision needs the four objects
+        # in §5's handover table (active range, sweep/displacement/retest candles), and the
+        # resolver's Q4a-decided CACHED `states.csv` (charts/resolver_overlay.py) carries only
+        # [timestamp, state] today -- no memory snapshot to materialize those objects from. That
+        # cache-format extension is real, additive, separately-scoped work (recorded as a
+        # follow-up, not silently faked here). Raises AT CONSTRUCTION (fail-closed, §3.6 rule 1)
+        # rather than accepting the value and doing the wrong thing mid-walk.
+        if decider not in ("engine", "resolver"):
+            raise ValueError(f"decider must be 'engine' or 'resolver', got {decider!r}")
+        if decider == "resolver":
+            raise NotImplementedError(
+                "CRTEngine(decider='resolver') (mode C) is declared and validated but not yet "
+                "implemented -- see docs/implementation_plan/setup-overlay-spec-2026-09.md §5 "
+                "and the STORY-83.11 completion notes for the discovered cache-format gap."
+            )
+        self.decider = decider
         self.reset_lg = ResetLogic(self.config, htf_reset_exempt_sweep=htf_reset_exempt_sweep)
         # [K23 F2] Not a CRTConfig field (census pins); fed from backtest.exchange_session_windows.
         # None = legacy static windows. Set = each session is defined in its own exchange zone
@@ -3066,7 +3168,21 @@ class CRTEngine:
                 if _kill and result in ("UNCHANGED", "TP1"):
                     result = self.executor.close_structural(_t, candle.close)
 
-            if result in ("STOPPED", "TP2", "TP1", "STOPPED_STRUCTURAL"):
+            # [STORY-83.11 §6] Trade TTL. Checked LAST, only if nothing else fired this bar
+            # (result == "UNCHANGED"): a real SL/TP/structural-kill fill that happens to land
+            # on the deadline bar still wins, because it is a fill the market actually offered,
+            # not a deadline. `trade_ttl_candles is None` (default) skips this entirely --
+            # byte-identical to before this key existed (§6.4 parity requirement). §10 Q3c:
+            # TIMEOUT_MARK_TO_CLOSE — books at the bar's own close, never a trail.
+            if (
+                result == "UNCHANGED"
+                and self.trade_ttl_candles is not None
+                and (self.state.current_candle_index - _t.open_candle_index)
+                    >= self.trade_ttl_candles
+            ):
+                result = self.executor.close_timeout(_t, candle.close)
+
+            if result in ("STOPPED", "TP2", "TP1", "STOPPED_STRUCTURAL", "TIMEOUT"):
                 self.ev_log.record(
                     f"TRADE_{result}", candle,
                     reason=f"Trade {self.state.active_trade.id} closed: {result}",
@@ -3598,6 +3714,10 @@ class CRTEngine:
 
                     if trade:
                         self.executor.open_trade(trade, candle.timestamp)
+                        # [STORY-83.11 §10 Q3d] N counts the entry bar: a TTL of N forces
+                        # closure going into bar open_candle_index + N (matches
+                        # pending_displacement_ttl_candles's counting convention, F-068).
+                        trade.open_candle_index = self.state.current_candle_index
                         self.state.active_trade = trade
                         self.ev_log.record(
                             "TRADE_OPENED", candle,
