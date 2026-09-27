@@ -4364,3 +4364,13 @@ Belief Update / ROI / Goal: Goal: a mode C that can actually found trades. Belie
 Open Questions: 83.11a assignee/go; whether dropping break_of_structure from RETEST (engine doesn't check it) is acceptable -- in plan as a drop.
 Next Step: user says go on 83.11a (or assigns it).
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: CORRECTION -- "re-implementing the risk layer is forbidden" was wrong framing; and the geometry<->feature-schema param join does not unblock the resolver's RETEST
+Decision/Output: Caught me overclaiming; I owe you a correction. CORRECTED: the prior entry's "re-implementing it is forbidden by spec sec 1/8" -> reusing an existing authority (UltronRiskEngine, build_trade, a registered formula) from another track is allowed whenever its meaning matches the intended flow; only a second re-implemented copy is the defect (user 2026-09-28). Fixed at source: STORY-83.11b lifecycle (CORRECTED line), plan file, new memory feedback_reuse_when_semantics_match.md. Mode C design itself is unchanged (handover at resolver RETEST; the engine's own risk gate decides execution = reuse). 83.11a revised from "mirror the engine rule" (which would have been a second copy) to "extract the engine's EXPANSION->RETEST geometry test into one registered function; engine and resolver both call it; engine ledger byte-identical". Param join check (STATIC): the 2026-09-27 geometry<->feature-schema join coupled shared threshold NUMBERS only (delivered in 83.10). It cannot supply the engine's RETEST: market_ontology.yaml FM-027 note -- the engine's retest episode exists only in the CRT state machine, feature_pipeline has no displacement/retest pairing, retest_flag (FM-061) is 0 on 4 of the 6 engine-confirmed RETEST bars while firing on 58.07% of bars, and FM-021 retest_depth is EMA distance, not retrace depth. So no canonical 48-dim feature carries the engine's RETEST meaning. Also found: RETEST's yaml node is internally split -- description "Price returned to fast EMA" (EMA-band reading) vs notes "This is the CRT engine's EXPANSION->RETEST transition point" (engine reading); 83.11a takes the notes' intent and fixes the description.
+Belief Update / ROI / Goal: Goal: resolver RETEST reachable without duplicated geometry. Belief: the fix must come from reusing the engine's own retest rule, not from any existing feature; "forbidden" was a category error (reuse != re-implement). Knowledge ROI: high. Action: 83.11a = extract-and-reuse.
+Open Questions: 83.11a go.
+Next Step: user go on 83.11a.
+---
