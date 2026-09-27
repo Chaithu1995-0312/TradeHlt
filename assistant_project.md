@@ -4374,3 +4374,13 @@ Belief Update / ROI / Goal: Goal: resolver RETEST reachable without duplicated g
 Open Questions: 83.11a go.
 Next Step: user go on 83.11a.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: STORY-83.11a done (ad088def, merged) -- resolver reaches RETEST via the engine's reused geometry; alignment on two short windows
+Decision/Output: New config_layer/retest_geometry.evaluate_retest_geometry(), extracted from StateMachine.try_expansion_to_retest and called by BOTH engine and resolver (reuse, not a copy). Engine byte-identical on W2026-07-06..08-07 (events 279/279, telemetry 193/193, summary identical; other files differ only by run ids/timestamps). Resolver: EXPANSION hold checks the reused geometry before TTL (engine order); 3 thresholds added via the P-1 crtconfig_read path; displacement_candle_range memory. Found and fixed: on shadow resume the resolver discarded the pending direction (engine restores it at crt_engine_v2.py:1118-1119), so direction was 0 on all 74 shadow-resumed EXPANSION bars and the geometry was never evaluated. Alignment (entry decisions, both short windows): engine RETEST 4 (07-15 17:15, 07-24 11:15, 08-27 15:30, 09-16 18:00); resolver RETEST 1 (09-21 07:15, first ever without injection); matched 0. Upstream: engine 20 EXPANSION entries, all DISPLACEMENT->EXPANSION; resolver 2 unique EXPANSION entries, both via SHADOW_PENDING, 0 from DISPLACEMENT. CORRECTED: commit ad088def's message said "~3 vs 21"; the counts are 2 unique resolver entries vs 20 engine entries. Tests: only pre-existing reds (14 stale-fixture displacement_origin_kill + 1 sweep_geometry). feature_math_lint unchanged. Governance floor was still running at commit time; result appended when it finishes.
+Belief Update / ROI / Goal: Goal: a mode C that can found trades. Belief: RETEST was dead for two reasons (missing strict geometry in the EXPANSION hold; direction lost on shadow resume) -- both fixed; but the dominant gap is the resolver's DISPLACEMENT->EXPANSION entry, which fired 0 times vs the engine's 20 on these windows. Mode C on top of this would be nearly empty. Knowledge ROI: high. Action: decide whether to fix DISPLACEMENT->EXPANSION next (same reuse pattern: engine try_displacement_to_expansion) before 83.11b.
+Open Questions: fix the resolver's DISPLACEMENT->EXPANSION entry next (reuse engine rule)? full-corpus counts?
+Next Step: user decision on the EXPANSION entry fix vs going straight to 83.11b.
+---
