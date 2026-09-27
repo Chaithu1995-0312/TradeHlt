@@ -4272,3 +4272,13 @@ Belief Update / ROI / Goal: Goal: honest governance on k23 before Setup work. Be
 Open Questions: 83.3 section-10 answers (gates 83.11); geometry census debt owner.
 Next Step: user relays Wave 4 prompts; review 83.7 / 83.8 on return.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: STORY-83.7 reviewed, merged (0715bdc); corpus-read allowlist shrunk 217->215
+Decision/Output: Grok 2724924 routes rr_l3_label_generation._load_candles and bnbusdt_trade_anatomy.load_candles through admit_corpus (symbol from filename stem). Claude re-ran: XAUUSD candles/ts_to_idx/closes equal to adba177 (47,275 bars); BNBUSDT raises ClockProvenanceError; 4 importers import; lint SHRUNK 9->11, NEW 35->35 (no new red). Removed the 2 pinned keys (5d2e15d1e7cd71b4, f42821e2639f6511) + entry_count, not --regenerate (would absorb 35 other-session reads). test_corpus_read_lint 1 failed / 3 passed = baseline. Queue 83.7 done; HANDOFF next_actor DeepSeek.
+Belief Update / ROI / Goal: Goal: no label set built on an unreviewed clock. Belief: both label loaders now refuse BNBUSDT and reproduce XAUUSD exactly; any BNB label rebuild now needs a real clock review first. Knowledge ROI: medium. Action: wait for 83.8.
+Open Questions: who owns the 35 NEW corpus reads; BNBUSDT clock review stays a human decision.
+Next Step: review DeepSeek 83.8 (lane/wpH-replay-walk) when relayed.
+---

@@ -84,14 +84,6 @@
     {
       "call": "DictReader",
       "class": "UNKNOWN",
-      "durable_key": "5d2e15d1e7cd71b4",
-      "file": "scripts/analysis/bnbusdt_trade_anatomy.py",
-      "line": 91,
-      "qualname": "load_candles"
-    },
-    {
-      "call": "DictReader",
-      "class": "UNKNOWN",
       "durable_key": "413bb7a0ce77f37e",
       "file": "scripts/analysis/bnbusdt_trade_anatomy.py",
       "line": 113,
@@ -958,14 +950,6 @@
       "qualname": "_load_candles"
     },
     {
-      "call": "DictReader",
-      "class": "UNKNOWN",
-      "durable_key": "f42821e2639f6511",
-      "file": "scripts/research/rr_l3_label_generation.py",
-      "line": 63,
-      "qualname": "_load_candles"
-    },
-    {
       "call": "read_csv",
       "class": "UNKNOWN",
       "durable_key": "662104db467978d8",
@@ -1745,7 +1729,7 @@
       "qualname": "main"
     }
   ],
-  "entry_count": 217,
+  "entry_count": 215,
   "frozen_at": "2026-09-10T00:00:00Z",
   "match_key": "durable_key",
   "source_census": "docs/governance/build_manifests/corpus_read_census_2026-09-10.json",
