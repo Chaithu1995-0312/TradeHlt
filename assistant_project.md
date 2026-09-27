@@ -288,3 +288,12 @@ Net this session: 4 of 7 planned mechanical fixes fully closed (doc citations, m
 Open Questions: Who should classify/verify the ~25 unregistered scripts and locate/regenerate the 4 missing H-017/H-018 evidence files? GitHub push still blocked by 403 (Claude Code GitHub App lacks repo access) — all commits so far are local only on claude/test-failures-preexisting-debt-rxwzo2.
 Next Step: User restores GitHub access so these commits can push; user decides how to route the 3 remaining domain-review items (script registry, hypothesis evidence, corpus-read sites) — none attempted further without that input.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: Gate-2B geometry-census refresh (test_geometry_census x2, test_feature_math_lint::test_universe_reconciliation_with_census)
+Decision/Output: Regenerated census (246 governed derivations). 44 unadjudicated = 43 line-drift + 1 new. gate2b_adjudication.py table T matches on exact line; each of the 43 sites' source line verified byte-identical to adjudicated revision 64034e8 before remapping the key (evidence/verdicts untouched, incl. live spine feature_pipeline.py / crt_engine_v2.py / live_engine_hook.py). New site phase1_shadow_create_economic_census.py:360 body_ratio = _finite() READ of pipeline value -> NO_GOVERNED_COUNTERPART / V-transport, per existing precedent (live_path_replay.py:137, live_engine_hook.py:459); _COERCION_LEAVES not widened. gate2b_adjudication.py: 246/246, 0 missing. Diff vs HEAD adjudication: 0 dropped, 1 added, 0 verdict fields changed.
+Open Questions: pytest run for the 3 target test files was blocked by the auto-mode permission classifier — changes committed UNVERIFIED by tests. Needs user permission to run them.
+Next Step: Run tests/test_geometry_census.py tests/test_feature_math_lint.py tests/test_gate2b_closure.py; revert this commit if any fail.
+---
