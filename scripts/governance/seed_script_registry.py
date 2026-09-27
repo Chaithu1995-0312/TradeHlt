@@ -112,6 +112,24 @@ OVERLAYS: list[dict[str, Any]] = [
         "task_refs": ["F-069", "SITS"],
         "notes": "wontfix:reason=research economic comparison, no promotion authority, n expected tiny",
     },
+    # EPIC-83 STORY-83.6 (WP-F): five-way parity of the v5 shadow config vs the active config.
+    {
+        "path": "scripts/research/parity_v5.py",
+        "category": "RESEARCH_RUNNER",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "ttl_days": 90,
+        "purpose": (
+            "Five-way XAUUSD parity of configs/production/v5_htfcrt_sot_dual_k23_2026_09 vs the "
+            "active v2_htfcrt_2026_08: trade ledger, engine events/telemetry, resolver states.csv, "
+            "layer_trace, oracle labels. Each arm runs in its own isolated_config_root (own "
+            "ACTIVE_VERSION copy); reuses v3_config_parity.compare. Declared/volatile fields: "
+            "config_hash, run_id, artifact_timestamp, resolver meta built_at/corpus_path, "
+            "execution_intent_id (uuid minted per trade)."
+        ),
+        "task_refs": ["STORY-83.6", "EPIC-83", "SITS"],
+        "notes": "wontfix:reason=parity instrument only, no economic claim, no promotion authority",
+    },
     {
         "path": "scripts/governance/construction_protocol.py",
         "implementation_status": "ACCEPTED_COLOCATED",

@@ -12,7 +12,7 @@ python scripts/analysis/generate_script_matrix.py
 Authority: **inventory only** (no promote power). Thin-wrapper purity is **not**
 CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` only.
 
-**Records:** 492
+**Records:** 494
 
 | ID | Category | Lifecycle | Impl status | Path | Purpose |
 |---|---|---|---|---|---|
@@ -508,6 +508,8 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-490` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/live_alert_resolver.py` | GRANDFATHER_UNCLASSIFIED |
 | `SCR-491` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/live_alert_telegram_bridge.py` | GRANDFATHER_UNCLASSIFIED |
 | `SCR-492` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/ultron_sem_r_shadow.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-493` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/gen_bridge_layer.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-494` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/parity_v5.py` | Five-way XAUUSD parity of configs/production/v5_htfcrt_sot_dual_k23_2026_09 v... |
 
 ---
 

@@ -6,7 +6,7 @@
 
 ```yaml
 current_actor:   Claude (Executor)
-current_story:   EPIC-83 — Wave 1 + STORY-83.5 (v5 shadow config, merge 49c227a) DONE; STORY-83.6 (WP-F five-way parity v5 vs active, Grok coding) issued
+current_story:   EPIC-83 — S0/S1/S2 DONE: v5 shadow config == active on full XAUUSD five-way parity (merge 093e6d3). Next: Wave 4 (83.7 loaders->corpus_gate, 83.8 execution_planner_replay->multi_tp_walk, 83.9 ATR copies) + 83.10 resolver P-1 + 83.13 k23 manifests; 83.11 waits on user answers to 83.3 spec section 10
 standing_rules:
   # All XAUUSD M15 analysis/backtest/live CSV loads → Phase-1 frozen candidate only (fail-closed)
   canonical_corpus: data/mt5/XAUUSD_M15.csv  # sha256 4d73f5cebe33ec91…b26aba56; range ..2026-05-21T23:45:00
@@ -46,7 +46,7 @@ verification:
   - Gate A: 40/40 target tests green (was 4 failing)
   - Gate B: golden-ledger + oracle + invariants + replay-determinism 180/180 byte-identical (spine-neutral; active gaussian_impl=heuristic)
   - Gate C: full suite 1787 passed / 10 failed — ZERO new failures; remaining 10 all pre-existing (timing_reconstructor volume-fixture, agents_path_alignment) — assign_cluster 8 now FIXED
-next_actor:      Grok  # coding LLM: STORY-83.6 WP-F parity (multi_llm/wave3_prompts_2026-09-27.md), 2026-09-27
+next_actor:      Claude  # write Wave 4 prompts after user OK, 2026-09-27
 next_prompt: |
   RC-003 is executed. Phase-1 ADMITTED corpus (47,275 bars, sha 4d73f5ce), n=553 violating /
   1,100 control, both far past the declared floor of 150. PRIMARY (close beyond the swept extreme,
