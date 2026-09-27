@@ -4172,3 +4172,63 @@ Belief Update / ROI / Goal: Goal: full turn history for all six models. Belief: 
 Open Questions: add a ROLE_GROK.md card? (not requested)
 Next Step: unchanged — data\mt5 restore, relay WP-E.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: User asked why the data\mt5 restore is needed
+Decision/Output: Explained: Claude's worktree removal wiped data\mt5; the XAUUSD path guard only admits data/mt5/XAUUSD_M15.csv (sha 4d73f5ce); data/ is gitignored so git cannot recover it; the backtest, parity run (WP-F) and research all read it; Claude's own copy was blocked by the permission check.
+Belief Update / ROI / Goal: none (explanation)
+Open Questions: none new
+Next Step: user restores; Claude verifies hashes.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: data\mt5 partial restore verified — XAUUSD M15 back
+Decision/Output: data/mt5/XAUUSD_M15.csv restored by user: full sha 4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56 (== registered), 47,276 lines (47,275 rows + header), guard_xauusd_csv_path accepts it. Only this 1 file restored; the other 26 files (FX majors M5/M15/H1/H4, XAUUSD M5/H1/H4, second_low scans/events/metrics, XAUUSD_W2026-07-06-to-2026-08-07) are still absent — backup at logs/dual_construction/scratch_roots/arm_a_v2_baseline/data/mt5.
+Belief Update / ROI / Goal: Goal: unblock WP-F. Belief: the canonical corpus is byte-identical to the pinned one; WP-F gate cleared. Knowledge ROI: high. Action: offer robocopy for the rest.
+Open Questions: restore the other 26 files? re-fetch the 4 post-snapshot windows?
+Next Step: relay WP-E; after it merges, issue WP-F with a corpus COPY in its worktree.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: STORY-83.5 reviewed+merged; STORY-83.6 (WP-F parity) issued
+Decision/Output: Claude re-ran WP-E acceptance in the worktree: CRTConfig(v2_htfcrt_2026_08)==CRTConfig(v5) 53/53; full JSON diff = only declared additions (42 params, 4 backtest K23 keys at reader defaults backtest_v2.py:331/338/345/351, 4 dual sidecar sections off) + version/config_id/notes/config_hash; hash match YES. Grok had not committed — Claude committed f2004bb on lane, merged 49c227a. ACTIVE_VERSION untouched. Grok turn t00004 logged. WP-F worktree D:\Tradelatest-wt-wpF-parity-v5 (6f32d42, no data). Prompt multi_llm/wave3_prompts_2026-09-27.md (+ Desktop): reuse isolated_config_root.build_config_root/run_backtest + v3_config_parity.compare; data by COPY; short reviewed window XAUUSD_W2026-07-06-to-2026-08-07 (backup sha dcaf88a7 == registry) first, then full corpus; resolver cache-key trap (resolver_overlay.py:35,49-50 — keyed by corpus sha+variant, not config) → run per arm root.
+Belief Update / ROI / Goal: Goal: prove v5 is a zero-behaviour superset before any Setup work. Belief: params-hash differs (7de09f62 vs e496a94c) — any consumer of config_hash is the most likely parity break. Knowledge ROI: high. Action: user restores the short window file, relays WP-F.
+Open Questions: does anything decision-bearing read config_hash?
+Next Step: user robocopy (brings back the short window) + relay WP-F.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: data\mt5 full restore verified against the clock registry
+Decision/Output: User robocopy from logs/dual_construction/scratch_roots/arm_a_v2_baseline/data/mt5. data/mt5 now 97 files. Registry check (configs/data_provenance/ohlcv_clock_registry.json, path+sha256): 95 OK, 0 MISMATCH, 4 MISSING — exactly the post-2026-09-03 items (W2021-12-01_to_2023-01-31/XAUUSD_H1, W2026-08-03_to_2026-09-23/XAUUSD_M15, W2026-08-03_to_2026-09-24/XAUUSD_M15, recent_2026_09/XAUUSD_M15 [FORENSIC]). 2 on-disk files are unregistered (XAUUSD_M15_second_low_events/metrics.csv) — present in the backup, so they were in the folder before. WP-F relayed to Grok coding.
+Belief Update / ROI / Goal: Goal: undo the 19:19 data loss. Belief: every restored file is byte-identical to its registered record; only 4 need an MT5 re-fetch. Knowledge ROI: high. Action: re-fetch is the user's call.
+Open Questions: re-fetch the 4 windows from ICMarketsSC-Demo?
+Next Step: wait for WP-F §3 report; review.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: Lost MT5 windows reconstructed byte-exact by re-fetch; WP-F unblocked
+Decision/Output: WP-F (Grok, 1d04fcf) blocked: dataset_integrity R3 admission rejects ALL XAUUSD while any bound dataset's canonical file is missing (dataset_registry.py:196/:245) — data/mt5/W2026-08-03_to_2026-09-23/XAUUSD_M15.csv (lost 19:19). No disk copy existed (searched D:, C:\Users\Hi). Re-fetched from MT5 ICMarketsSC-Demo via .venv scripts/data/fetch_and_verify_mt5.py into scratch (M15 2026-08-01..2026-09-25; H1 2021-11-30..2023-02-01), cut to the registered ranges: W2026-08-03_to_2026-09-23 3,486 rows sha 783f4ebf…a655 EXACT; W2026-08-03_to_2026-09-24 3,578 rows sha abdad91e…3448 EXACT; W2021-12-01_to_2023-01-31/XAUUSD_H1 6,873 rows sha 3b78a12b…5aec EXACT. Placed with cp -n into the (new) dirs. load_bound_datasets() -> 3 records OK. Only recent_2026_09/XAUUSD_M15.csv (FORENSIC flawed first fetch, not bound) remains unrecoverable.
+Belief Update / ROI / Goal: Goal: undo the data loss. Belief: MT5 history for these windows is byte-stable — a re-fetch + range cut reproduces registered bytes exactly; the registry's sha records made that provable. Knowledge ROI: high. Action: WP-F rerun must also copy the 09-23 window into its worktree (registry validates every bound record per root).
+Open Questions: none for data.
+Next Step: user relays the WP-F rerun note.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: WP-F unblock — models copied into worktree; run_backtest result-dir glob fixed (CODE_DRIFT)
+Decision/Output: Grok rerun blocked on gitignored models/zone_registry_v4_2026_07.json (model_resolver.py:347). Claude copied models/ into D:\Tradelatest-wt-wpF-parity-v5\models with cp -rn (no clobber; zone registry sha 144a0c3f both sides). Claude's own short run then showed the backtest SUCCEEDS but isolated_config_root.run_backtest raised "no result directory": its glob `*_{instrument}` (isolated_config_root.py:143) predates backtest_v2._folder_stem (:1990) range+config suffix (CH-run-identity-range-folder-manifest, run_<ts>_<INSTR>__<s>..<e>_<cfg>). Fixed to match both shapes, dirs only (so results/layer_trace is not picked). CODE_DRIFT, affects every harness caller (parity_v5, emit_dual_construction_trace, crt_declare_all_knobs_parity). tests/test_crt_construction_trace.py 15/15. No §3.3b manifest written (research utility, no production path) — flagged.
+Belief Update / ROI / Goal: Goal: run five-way parity. Belief: the isolated-root harness has been silently broken since 2026-09-16 for every caller. Knowledge ROI: medium. Action: merge fix into lane/wpF-parity-v5 and rerun short.
+Open Questions: none.
+Next Step: rerun parity short in the worktree.
+---

@@ -140,7 +140,13 @@ def run_backtest(
             f"backtest failed in {root.name} (exit {proc.returncode})\n"
             f"{proc.stdout[-4000:]}\n{proc.stderr[-4000:]}"
         )
-    runs = sorted((root / "results").glob(f"*_{instrument}"))
+    # Run folders are `run_<ts>_<INSTR>` (legacy) or, since CH-run-identity-range-folder-manifest,
+    # `run_<ts>_<INSTR>__<start>..<end>_<config>` (backtest_v2 `_folder_stem`). Match both.
+    runs = sorted(
+        p for p in (root / "results").glob(f"run_*_{instrument}*")
+        if p.is_dir() and (p.name.endswith(f"_{instrument}") or f"_{instrument}__" in p.name
+                           or f"_{instrument}_" in p.name)
+    )
     if not runs:
         raise RuntimeError(f"no result directory produced in {root.name}")
     return runs[-1]
