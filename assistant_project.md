@@ -297,3 +297,12 @@ Decision/Output: Regenerated census (246 governed derivations). 44 unadjudicated
 Open Questions: pytest run for the 3 target test files was blocked by the auto-mode permission classifier — changes committed UNVERIFIED by tests. Needs user permission to run them.
 Next Step: Run tests/test_geometry_census.py tests/test_feature_math_lint.py tests/test_gate2b_closure.py; revert this commit if any fail.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: Gate-2B fix VERIFIED — tests green
+Decision/Output: Permission granted this turn; ran tests/test_geometry_census.py tests/test_feature_math_lint.py tests/test_gate2b_closure.py -> 60/60 passed. Full 12-file targeted sweep re-run: 9 failed / 207 passed (down from 12 failed), no regressions. Remaining 9 failures are exactly the 3 categories the user already said someone else owns (archive hashes, MC evidence hashes x2, stale findings) plus the 3 items still open for discussion: test_script_registry (3), test_hypothesis_registry (1), test_corpus_read_lint (1, 22 sites).
+Open Questions: none for Gate-2B, closed.
+Next Step: discuss items 5 (script registry), 6 (hypothesis evidence), 7 (corpus-read lint) per user's "discuss one by one" request.
+---
