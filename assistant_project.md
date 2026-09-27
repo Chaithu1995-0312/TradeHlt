@@ -4152,3 +4152,23 @@ Belief Update / ROI / Goal: Goal: v5 superset with zero behaviour change. Belief
 Open Questions: data\mt5 restore (user); 83.3 section-10 questions.
 Next Step: user relays WP-E; user restores data\mt5; Claude verifies hashes.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: System blueprint drawn (current flow, target flow, build state)
+Decision/Output: Published a private artifact "Tradelatest System Blueprint" (https://claude.ai/artifact/7MNSUvBKMwQa44crfJwoYF). Sheet 1: rails x layers L0-L9 as built, with evidence grade per cell (RUNTIME 7/20, STATIC 5/20, gap 8/20, end-to-end 0). Sheet 2: target, one L0-L9 path parameterised by a Setup (v5 + overlay: decider, sl_anchor, target policy, trade TTL, K23), lab rows R0/R1/R4/R5, L10 operator. Sheet 3: EPIC-83 waves and status. No repo file changed; SYSTEM_FLOW.md is still deferred to Step 11.
+Belief Update / ROI / Goal: Goal: shared picture for the user and the relayed LLMs. Belief: unchanged. Knowledge ROI: medium (alignment, not new evidence). Action: none.
+Open Questions: F-002/F-010 note text; whether to commit the blueprint as docs/architecture/SYSTEM_FLOW.md now or at Step 11.
+Next Step: review the Wave 1 replies.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: Grok added as a multi-LLM actor (turn ledger + HANDOFF floor)
+Decision/Output: src/multi_llm/turn_ledger.py:31 ROLES += "Grok" (canonical casing + §3 next_actor parsing at :79); tests/test_handoff_state.py:20 _ROLES += "Grok" (HANDOFF next_actor may now be Grok). Logged Grok turns t00002 (STORY-83.1, grok-coding) and t00003 (STORY-83.2, grok-bot) — texts are Claude's condensed transcriptions of the relayed reports. 22/22 tests (handoff_state, turn_ledger, discussion, context_compiler). CORRECTED: earlier claim "log_turn rejects Grok" was wrong — _canon_actor (:49-50) passes unknown actors through; the real exclusions were next_actor parsing and the HANDOFF test.
+Belief Update / ROI / Goal: Goal: full turn history for all six models. Belief: the ledger never enforced the actor set; only the handoff floor did. Knowledge ROI: low-medium. Action: no ROLE_GROK.md card yet (not required by any floor).
+Open Questions: add a ROLE_GROK.md card? (not requested)
+Next Step: unchanged — data\mt5 restore, relay WP-E.
+---

@@ -17,7 +17,7 @@ _QUEUE = _REPO_ROOT / "multi_llm" / "build_queue.jsonl"
 _PROTOCOL = _REPO_ROOT / "multi_llm" / "MULTI_LLM_PROTOCOL.md"
 _ROLES_DIR = _REPO_ROOT / "multi_llm" / "roles"
 
-_ROLES = {"DeepSeek", "Gemini", "ChatGPT", "Claude"}
+_ROLES = {"DeepSeek", "Gemini", "ChatGPT", "Claude", "Grok"}
 _REQUIRED_KEYS = ("current_actor", "current_story", "completed", "blocked",
                   "next_actor", "next_prompt", "confirmation")
 _KEY_RE = re.compile(r"^\s{0,4}([a-z_]+):\s*(.*)$")

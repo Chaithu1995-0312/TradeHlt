@@ -28,7 +28,7 @@ from events.event_fabric import make_event_envelope, EventType
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _DEFAULT_ROOT = _REPO_ROOT / "multi_llm"
 
-ROLES = ("DeepSeek", "Gemini", "ChatGPT", "Claude")
+ROLES = ("DeepSeek", "Gemini", "ChatGPT", "Claude", "Grok")  # Grok: bot + coding LLM (use --model-version to tell apart)
 _ROLE_LOOKUP = {r.lower(): r for r in ROLES}
 
 # §3 mandatory-block labels (MULTI_LLM_PROTOCOL.md §3) + a few lenient aliases.
