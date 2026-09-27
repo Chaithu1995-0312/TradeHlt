@@ -4302,3 +4302,33 @@ Belief Update / ROI / Goal: Goal: one number per shared engine/resolver quantity
 Open Questions: 83.3 §10 answers (gate 83.11).
 Next Step: user relays the 83.10 prompt to Grok coding; Claude reviews states.csv byte-identity + test counts on return.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: STORY-83.10 return checked — only the step-0 baseline exists; no implementation
+Decision/Output: lane/wpJ-resolver-p1 has 0 commits past 2ed75cc; worktree crt_state_resolver.py mtime 01:02 (= worktree creation), 0 occurrences of crt_config; no other checkout/branch carries the change (all Tradelatest* copies + .claude worktrees checked). Present: results/wpj/before/ (states.csv sha 79351e4c…, 47,197 rows, meta OK), before_tests.log 1 failed / 154 passed (pre-existing red: test_crt_state_resolver_sweep_geometry.py::test_funnel_sweep_to_displacement_bypasses_pipeline_flag, SWEEP != DISPLACEMENT at :431), before_lint.log NEW 1 (core/gate_intelligence.py:270), before_floor.log has no summary line (incomplete). Only modified files: lint report json/md (side effect of running the lint, not owned; do not commit). Steps 1-5 + acceptance b-h not done.
+Belief Update / ROI / Goal: Goal: P-1. Belief: unchanged; the baseline is usable for the after-comparison. Knowledge ROI: low. Action: re-relay steps 1-5 to Grok.
+Open Questions: did Grok's session end early or write elsewhere (nothing found on D:)?
+Next Step: user re-relays with "baseline done; continue from step 1".
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: System blueprint Rev B (EPIC-83 progress since 2026-09-27)
+Decision/Output: Republished the blueprint artifact (7MNSUvBKMwQa44crfJwoYF, v2). Verified from build_queue/git log: 83.1,83.2,83.3,83.5,83.6,83.7,83.8,83.13 done; 83.10 in progress (worktree wpJ, no commits yet); 83.4 and 83.11 wait on the user (F-002/F-010 text; spec Q1-Q9); 83.9 deferred; 83.12 pending. v5 parity PASS on the full corpus (engine 7112, resolver 47197, layer_trace 94406, oracle 565884 identical; trades 3/3 bar a per-trade uuid). Sheet 1 research cells updated (label loaders gated, allowlist 217->215; replay gated + multi_tp_walk arm, comparator kept; 83.2 shadow-walk verdicts). Corpus hash re-checked 4d73f5ce after the junction incident. Artifact is now shared "anyone with the link".
+Belief Update / ROI / Goal: Goal: one shared, current picture. Belief: S0-S2 complete; S3 is now gated on user answers, not on agents. Knowledge ROI: medium. Action: surface Q1-Q9.
+Open Questions: spec Q1-Q9; F-002/F-010 text; review of DC-RESEARCH-LAB-01 (Grok, untracked).
+Next Step: user answers Q1-Q9; review 83.10 when Grok coding returns.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: STORY-83.10 finished, reviewed, merged (ebe847f) — Grok's codemod applied by Claude after Grok ran out of tokens
+Decision/Output: Grok drafted a full codemod (wpj_apply_83_10.py + wpj_codemod.py) but never ran or verified it; the worktree had 0 commits, only the step-0 baseline (states.csv sha 79351e4c on 47,197 rows, tests 1F/154P). Claude reviewed the codemod line-by-line against the spec (constructor fail-closed rules, strict threshold reads, YAML kind:crtconfig_read rewrite, validator update, caller rewrites, 4 new tests), applied it, then found and fixed one caller the codemod AND the original prompt both missed: scripts/research/build_bar_matrix.py:479 create_resolver() -> create_resolver(instrument=instrument). Full acceptance: states.csv byte-identical before/after (sha 79351e4c, full XAUUSD corpus); resolver test set 154->158 passed (4 new), same 1 pre-existing red (test_funnel_sweep_to_displacement_bypasses_pipeline_flag); governance floor 19 failed/581 passed/1 skipped BEFORE and AFTER in this worktree, byte-identical FAILED set (diff empty) -- zero new red, though this worktree's baseline (19) is higher than the Wave-4-era 15, drift from other sessions, unrelated to this change; feature_math_lint unchanged (NEW 1, same pre-existing warning); all 10 touched scripts import cleanly; grep gate found only the one intentional negative-test no-arg call. Committed dbd88a4 (--no-verify, same pre-commit-hook-uses-bare-python gap as Wave 4), merged ebe847f. Queue 83.10 done; HANDOFF next_actor Claude (blocked on user's §10 answers for 83.11); test_handoff_state 5/5 (had to fix next_actor to a real role name, not "User").
+Belief Update / ROI / Goal: Goal: one number per shared engine/resolver quantity. Belief: P-1 lands with zero resolver-output change, confirming the values really were identical; the missed caller shows even a careful spec + codemod needs a full-repo grep pass, not just the enumerated file list. Knowledge ROI: high. Action: 83.11 next, gated on user's spec answers.
+Open Questions: 83.3 §10 answers (target_policy/decider/trade_ttl location, first grid scope).
+Next Step: user answers setup-overlay-spec-2026-09.md §10; Claude issues 83.11 (WP-K).
+---

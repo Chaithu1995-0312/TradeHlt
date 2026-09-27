@@ -6,7 +6,7 @@
 
 ```yaml
 current_actor:   Claude (Executor)
-current_story:   EPIC-83 Wave 5 ISSUED — 83.10 (WP-J resolver reads CRTConfig, instrument= required) to Grok coding in D:\Tradelatest-wt-wpJ-resolver-p1 (BASE 2ed75cc); 83.11 waits on 83.3 section-10 answers + 83.10; 83.12 needs 83.11 keys; 83.9 deferred
+current_story:   EPIC-83 Wave 5 DONE — 83.10 merged ebe847f (resolver reads CRTConfig for the 12 shared thresholds; instrument= required; states.csv byte-identical 79351e4c...; floor 19F/581P identical before/after; Grok's codemod drafted but not applied, Claude applied + fixed missed build_bar_matrix.py:479 caller); 83.11 waits on 83.3 section-10 answers; 83.12 needs 83.11 keys; 83.9 deferred
 standing_rules:
   # All XAUUSD M15 analysis/backtest/live CSV loads → Phase-1 frozen candidate only (fail-closed)
   canonical_corpus: data/mt5/XAUUSD_M15.csv  # sha256 4d73f5cebe33ec91…b26aba56; range ..2026-05-21T23:45:00
@@ -46,7 +46,7 @@ verification:
   - Gate A: 40/40 target tests green (was 4 failing)
   - Gate B: golden-ledger + oracle + invariants + replay-determinism 180/180 byte-identical (spine-neutral; active gaussian_impl=heuristic)
   - Gate C: full suite 1787 passed / 10 failed — ZERO new failures; remaining 10 all pre-existing (timing_reconstructor volume-fixture, agents_path_alignment) — assign_cluster 8 now FIXED
-next_actor:      Grok coding  # STORY-83.10 per multi_llm/wave5_prompts_2026-09-28.md; Claude reviews + merges; 2026-09-28
+next_actor:      Claude  # 83.11 (WP-K Setup overlay) blocked on user answers to setup-overlay-spec-2026-09.md §10; 2026-09-28
 next_prompt: |
   RC-003 is executed. Phase-1 ADMITTED corpus (47,275 bars, sha 4d73f5ce), n=553 violating /
   1,100 control, both far past the declared floor of 150. PRIMARY (close beyond the swept extreme,
