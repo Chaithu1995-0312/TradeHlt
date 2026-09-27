@@ -6,7 +6,7 @@
 
 ```yaml
 current_actor:   Claude (Executor)
-current_story:   RC-003 EXECUTED on the Phase-1 admitted corpus — first non-null on this population; awaiting Principal
+current_story:   EPIC-83 signal-flow build (S0-S5) — Wave 1 issued (STORY-83.1 Grok coding, 83.2 Grok bot, 83.3 DeepSeek); BASE d318f13; Claude reviews+merges
 standing_rules:
   # All XAUUSD M15 analysis/backtest/live CSV loads → Phase-1 frozen candidate only (fail-closed)
   canonical_corpus: data/mt5/XAUUSD_M15.csv  # sha256 4d73f5cebe33ec91…b26aba56; range ..2026-05-21T23:45:00
@@ -46,7 +46,7 @@ verification:
   - Gate A: 40/40 target tests green (was 4 failing)
   - Gate B: golden-ledger + oracle + invariants + replay-determinism 180/180 byte-identical (spine-neutral; active gaussian_impl=heuristic)
   - Gate C: full suite 1787 passed / 10 failed — ZERO new failures; remaining 10 all pre-existing (timing_reconstructor volume-fixture, agents_path_alignment) — assign_cluster 8 now FIXED
-next_actor:      DeepSeek
+next_actor:      DeepSeek  # + Grok coding (83.1) and Grok bot (83.2) in parallel via User bridge, 2026-09-27
 next_prompt: |
   RC-003 is executed. Phase-1 ADMITTED corpus (47,275 bars, sha 4d73f5ce), n=553 violating /
   1,100 control, both far past the declared floor of 150. PRIMARY (close beyond the swept extreme,

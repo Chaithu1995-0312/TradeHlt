@@ -4092,3 +4092,13 @@ Belief Update / ROI / Goal: Goal: finish the signal flow with parallel agents an
 Open Questions: XAUUSD path guard with absolute paths from worktrees; whether _compute_hash.py writes the active file; F-002/F-010 note text.
 Next Step: verify the two UNVERIFIED items, then issue Wave 1 prompts.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: EPIC-83 Wave 1 issued — worktrees, tracking, prompts; WP-D ontology prose
+Decision/Output: Snapshot commit d318f13 (488 paths). Worktrees D:\Tradelatest-wt-{wpA-s0-stamp,wpB-research-q2q4,wpC-setup-spec} on lane/* from d318f13, each with junction data\mt5 -> main corpus (the XAUUSD path guard pins <module root>/data/mt5; verified guard resolves + hash-checks from worktree). _compute_hash.py verified verify-only by default (--write writes only the --version file). build_queue.jsonl epic 83: STORY-83.1..83.12 (83.1-83.3 in_progress). HANDOFF current_story/next_actor updated (test_handoff_state 5/5). Prompts: multi_llm/wave1_prompts_2026-09-27.md. WP-D: market_ontology.yaml:671 prose 0.70 -> params.body_ratio_min (0.65), band_edges untouched; semantic/formula registry tests 30/30.
+Belief Update / ROI / Goal: Goal: parallel build without drift. Belief: two hidden collision paths (editable-install src, gitignored corpus under the path guard) would have made worktree runs silently test main-tree code or fail closed; both are neutralised at setup. Knowledge ROI: high. Action: relay Wave 1.
+Open Questions: F-002/F-010 note text (user yes pending).
+Next Step: review 83.1/83.2/83.3 outputs as they return; issue WP-E after 83.1 merges.
+---

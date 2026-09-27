@@ -668,7 +668,8 @@ feature_compositions:
     depends_on:  [body_size, candle_range]
     note: >
       CANONICAL body_to_range_ratio. Identity FEAT-BODY_TO_RANGE_RATIO / FORMULA-BODY-TO-RANGE.
-      The CRT displacement gate `body_ratio >= 0.70` is coherent ONLY against this bounded [0,1]
+      The CRT displacement gate `body_ratio >= params.body_ratio_min` (0.65 on active
+      v2_htfcrt_2026_08; CORRECTED 2026-09-27: was written as 0.70) is coherent ONLY against this bounded [0,1]
       definition. Verified 2026-07-05 that the CRT Candle property and the batch pipeline both
       compute this. Distinct from body_to_total_wick_ratio (FM-013).
     taxonomy:
