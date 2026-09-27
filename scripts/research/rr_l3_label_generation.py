@@ -57,9 +57,20 @@ def _norm_ts(ts: str) -> str:
 
 
 def _load_candles(csv_path: Path):
+    # Neither this function nor its caller passes an instrument. Take the symbol
+    # from the requested filename stem before the first "_" (XAUUSD_M15.csv -> XAUUSD).
+    instrument = Path(csv_path).stem.split("_", 1)[0]
+    from data_ingestion.corpus_gate import admit_corpus
+    adm = admit_corpus(csv_path, instrument, write_report=False)
+    csv_path = Path(adm.filepath)
     candles, ts_to_idx = [], {}
-    with csv_path.open(encoding="utf-8") as fh:
-        for i, row in enumerate(csv.DictReader(fh)):
+    # DictReader's argument has to be the admission object's path on this same
+    # line. corpus_read_census taints `adm.filepath` and a same-line open(); it
+    # does not follow Path() or a `with ... as fh` name, so the old DictReader(fh)
+    # site would stay an ungated UNKNOWN.
+    _fh = None
+    try:
+        for i, row in enumerate(csv.DictReader(_fh := open(adm.filepath, encoding="utf-8"))):
             ts = _norm_ts(row["timestamp"])
             c = Candle(
                 timestamp=datetime.fromisoformat(ts.replace(" ", "T")),
@@ -72,6 +83,9 @@ def _load_candles(csv_path: Path):
             )
             candles.append(c)
             ts_to_idx[ts] = i
+    finally:
+        if _fh is not None:
+            _fh.close()
     return candles, ts_to_idx
 
 

@@ -86,10 +86,18 @@ def _safe_div(a, b):
 
 def load_candles(csv_path: Path):
     """Return (candles list with .index, ts→index dict, close-by-index list)."""
+    # No instrument argument on this function. Symbol is the filename stem
+    # before the first "_" (BNBUSDT_M15.csv -> BNBUSDT, XAUUSD_M15.csv -> XAUUSD).
+    instrument = Path(csv_path).stem.split("_", 1)[0]
+    from data_ingestion.corpus_gate import admit_corpus
+    adm = admit_corpus(csv_path, instrument, write_report=False)
+    csv_path = Path(adm.filepath)
     candles, ts_to_idx, closes = [], {}, []
-    with csv_path.open(encoding="utf-8") as fh:
-        rd = csv.DictReader(fh)
-        for i, row in enumerate(rd):
+    # Same census constraint as rr_l3_label_generation._load_candles: the
+    # DictReader call is gated only when its argument opens adm.filepath.
+    _fh = None
+    try:
+        for i, row in enumerate(csv.DictReader(_fh := open(adm.filepath, encoding="utf-8"))):
             ts = _norm_ts(row["timestamp"])
             c = Candle(
                 timestamp=datetime.fromisoformat(ts.replace(" ", "T")),
@@ -100,6 +108,9 @@ def load_candles(csv_path: Path):
             candles.append(c)
             ts_to_idx[ts] = i
             closes.append(c.close)
+    finally:
+        if _fh is not None:
+            _fh.close()
     return candles, ts_to_idx, closes
 
 
