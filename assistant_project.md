@@ -4354,3 +4354,13 @@ Belief Update / ROI / Goal: Goal: EPIC-83 S0-S4 reaches a real run, engine-decid
 Open Questions: who takes 83.11b; whether/when to run setup_grid_s4 --full-corpus for a real (non-vacuous) verdict; the rate-limited agent's partial worktree state (untouched, not chased).
 Next Step: user decides on 83.11b assignee and/or a full-corpus grid run; re-attempt the 3 mechanical test fixes after 2026-09-29 20:30 IST if still wanted.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: Mode C (83.11b) design rewind -- blocked by resolver never reaching RETEST/EXECUTION; redesigned as 83.11a (resolver RETEST fix) -> 83.11b (hand over at resolver RETEST)
+Decision/Output: RUNTIME: STORY-83.10's full-corpus resolver states.csv (47,197 bars, injection off) has RETEST=0 and EXECUTION=0 (RANGE 21745, SWEEP 15186, EXPANSION 7092, DISPLACEMENT 3127, SHADOW_PENDING 47). Cause (STATIC): RETEST when: requires sweep_detected on the same bar as retest_flag while memory is in EXPANSION (market_crt_states.yaml:131-141), and the continuous gate tests the pipeline's EMA-band retest_depth (FM-021), not the engine's range-depth geometry (crt_state_resolver.py:1724-1735); EXECUTION additionally needs a score feature that is never supplied (:1741-1747) -- the engine's real gate is UltronRiskEngine.approve_with_soft_conf. So mode C as specified (found at resolver EXECUTION) = 0 trades. User decisions: (1) fix resolver RETEST first; (2) mode C hands over at resolver RETEST, engine's own soft-conf/risk approval decides execution (no risk-layer re-implementation, consistent with spec §5's risk_score-stays-engine-side table). Queue: new STORY-83.11a (resolver RETEST mirrors engine try_expansion_to_retest, crt_engine_v2.py:1627; 4 thresholds via 83.10's crtconfig_read incl. re-adding retest_atr_depth_fraction as a real read; new memory field displacement_candle_range; declared blast radius: states.csv, oracle ontology_state column, F-069 numbers move); 83.11b revised to depend on 83.11a. Plan file shared with another session (it wrote a full-corpus setup_grid_s4 plan on top and marked mine parked); left its section intact, appended this design at the end.
+Belief Update / ROI / Goal: Goal: a mode C that can actually found trades. Belief: the resolver's RETEST/EXECUTION were dead states on the non-injected path all along (the Phase E1 note already said so for RETEST); mode C would have shipped an empty arm. Knowledge ROI: high -- caught before building the cache extension. Action: 83.11a first, results shown before 83.11b.
+Open Questions: 83.11a assignee/go; whether dropping break_of_structure from RETEST (engine doesn't check it) is acceptable -- in plan as a drop.
+Next Step: user says go on 83.11a (or assigns it).
+---
