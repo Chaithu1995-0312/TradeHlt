@@ -1,0 +1,45 @@
+{
+  "change_id": "CH-k23-f3-oracle-arm-stamping",
+  "date_utc": "2026-09-27",
+  "story": "STORY-83.13",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE"
+  ],
+  "declared_files": [
+    "src/governance/measurement_basis.py",
+    "src/runtime/backtest_v2.py",
+    "src/research/oracle/labeler.py",
+    "tests/test_measurement_basis.py",
+    "tests/research/test_oracle_labeler.py",
+    "tests/research/test_sl_anchor_oracle_parity.py",
+    "docs/governance/build_manifests/CH-k23-f3-oracle-arm-stamping.impact.json",
+    "docs/governance/build_manifests/CH-k23-f3-oracle-arm-stamping.completion.json"
+  ],
+  "checks_executed": [
+    "tests/test_measurement_basis.py",
+    "tests/research/test_oracle_labeler.py",
+    "tests/research/test_sl_anchor_oracle_parity.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py"
+  ],
+  "check_results_venv_2026_09_27": {
+    "tests/test_measurement_basis.py": "42 passed",
+    "tests/research/test_oracle_labeler.py": "26 passed",
+    "tests/research/test_sl_anchor_oracle_parity.py": "9 passed",
+    "tests/test_feature_math_lint.py": "2 failed, 12 passed (NEW derivations only in scripts/analysis/phase1_shadow_create_economic_census.py and tests/test_gate_intelligence.py)",
+    "tests/test_geometry_census.py": "2 failed, 39 passed (stale census: same 3 NEW derivations + 171 unadjudicated GEO-O ids)",
+    "tests/test_current_findings.py": "1 failed, 10 passed (23 findings F-016..F-041 past Revalidate-by)"
+  },
+  "repo_state_hash": "PENDING",
+  "completion_status": "BLOCKED_PREEXISTING_RED_FLOOR",
+  "completion_note": "Written retrospectively for a change already on grokbotchanges (STORY-83.1 D2 found impact-only; user decision 2026-09-27: write after v5 parity). The change's own tests pass (77). The three RUNTIME_DECISION_PATH_CHANGE required checks are red for reasons outside this change's declared files: none of the failing items names measurement_basis.py, backtest_v2.py or labeler.py. Already red before this story: STORY-83.1 ran validate-completion at c7499be (= BASE d318f13 + a 1-line version stamp in a non-active config): geometry-census failures, 5 failed / 61 passed. Other sessions' files are not added to declared_files and the census is not regenerated here. Parity proof = STORY-83.6 (see evidence); the oracle labels surface there is exactly this change's output. repo_state_hash PENDING per the CH-resolver-engine-envelope precedent.",
+  "production_behavior_changed": "NO",
+  "evidence": {
+    "default_off_parity": "STORY-83.6 (merge 093e6d3): oracle labels (research.oracle.labeler) IDENTICAL between v5 and active v2_htfcrt_2026_08 on full XAUUSD M15: 565,884 / 565,884 rows (lt_id/trace_id carry each arm's run id, declared); engine 7,112 events, resolver 47,197, layer_trace 94,406 identical",
+    "can_compare": "measurement_basis.can_compare(displacement_extreme, sweep_extreme) -> DENY_REFERENCE_LEVEL_MISMATCH (executed by DeepSeek in STORY-83.3)",
+    "unit_tests": "77 passed across the three own test files (venv 3.12, 2026-09-27)",
+    "active_version": "configs/production/ACTIVE_VERSION = v2_htfcrt_2026_08"
+  },
+  "validate_completion_verdict": "validate-completion (full mode, venv 3.12, 2026-09-27, repo_state adba177748ac+a6a2d3fabed5): COMPLETION: BLOCKED - required checks FAILED: tests/test_geometry_census.py::test_geometry_census_is_fresh, ::test_adjudication_closed_against_fresh_census; 5 failed, 61 passed (identical to the 5 failed / 61 passed STORY-83.1 observed at c7499be). NOTE: an earlier run WITHOUT change_classes in this file returned COMPLETE vacuously (validator derives required checks only from the completion manifest's change_classes, construction_protocol.py:188-189) - that result is void; gap filed as a separate task."
+}
