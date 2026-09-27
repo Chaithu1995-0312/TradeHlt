@@ -226,8 +226,9 @@ def _print(report: dict) -> None:
                    f"{'n/a' if struct is None else f'{struct:+.4f} R'}")
         safe_print(f"  PERFECT INFORMATION CEILING : "
                    f"{'n/a' if perfect is None else f'{perfect:+.4f} R'}")
-        safe_print(f"  REALITY GAP                 : "
-                   f"{'n/a' if c['reality_gap'] is None else f'{c['reality_gap']:+.4f} R'}")
+        reality_gap = c["reality_gap"]
+        reality_gap_str = "n/a" if reality_gap is None else f"{reality_gap:+.4f} R"
+        safe_print(f"  REALITY GAP                 : {reality_gap_str}")
         safe_print(f"  CEILING UTILIZATION         : {_pct(c['ceiling_utilization'])}")
         safe_print(f"  INTERPRETATION  value lost to entries: {_pct(v_entries)}  "
                    f"value lost to exits: {'n/a' if v_entries is None else f'{100*(1-v_entries):.0f}%'}")

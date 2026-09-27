@@ -1,4 +1,4 @@
-﻿"""phase1_shadow_memory_timing_race_mine.py
+"""phase1_shadow_memory_timing_race_mine.py
 
 DESCRIPTIVE ONLY. economic_claims_allowed=false.
 No TTL flip. No freeze work. No economic promotion.

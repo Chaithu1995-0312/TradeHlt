@@ -260,10 +260,12 @@ def main() -> None:
             if not s["n_evaluated"]:
                 print(f"  {n:>5} {0:>10} {'--':>7} {'--':>9} {'--':>9} {'--':>7} {'--':>7}")
                 continue
+            share = s["last_slot_share_of_accepted"]
+            share_str = "--" if share is None else f"{share:.2f}"
             print(f"  {n:>5} {s['n_evaluated']:>10} {s['eligible_fraction_of_corpus']*100:>6.1f}% "
                   f"{s['n_accepted']:>9} {s['acceptance_rate_pct']:>9.5f} "
                   f"{s['n_accepted_on_last_slot']:>7} "
-                  f"{('--' if s['last_slot_share_of_accepted'] is None else f'{s['last_slot_share_of_accepted']:.2f}'):>7}")
+                  f"{share_str:>7}")
         p = r["persistence"]
         print(f"  persistence: n_all_horizons={p['n_candidates_all_horizons']} "
               f"score>=1: {p['n_score_ge_1']}  score==7: {p['n_score_7']}"

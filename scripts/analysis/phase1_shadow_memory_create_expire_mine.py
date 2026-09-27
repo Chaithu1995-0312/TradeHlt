@@ -1,4 +1,4 @@
-﻿"""Mine prior memory_subsystem probe artifacts -> create/expire census.
+"""Mine prior memory_subsystem probe artifacts -> create/expire census.
 Descriptive only. economic_claims_allowed=false. No BT re-run. No freeze/TTL flip.
 """
 from __future__ import annotations

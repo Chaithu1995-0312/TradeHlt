@@ -1,4 +1,4 @@
-﻿"""
+"""
 phase1_shadow_memory_subsystem_probe.py
 =======================================
 MEASURE-ONLY probe (no src/ edits): census Phase-1 XAUUSD shadow displacement

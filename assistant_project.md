@@ -1693,3 +1693,12 @@ Decision/Output: src/retrieval/truth_tier.py:146 regex `r"^active_models\.yaml$"
 Open Questions: None for this item.
 Next Step: Fix test_corpus_read_lint (BOM strip + f-string syntax fixes).
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-27
+Topic: Fix 3/7 (partial) — test_corpus_read_lint::test_floor_is_green
+Decision/Output: Stripped UTF-8 BOM from 3 files (phase1_shadow_memory_create_expire_mine.py, phase1_shadow_memory_subsystem_probe.py, phase1_shadow_memory_timing_race_mine.py — all now compile). Fixed 2 pre-3.12 f-string syntax errors (nested f-string reusing the same quote char, then backslash-in-expression on the first fix attempt) in high_acceptance_gap_policy.py:266 and phase_d_exit_grid.py:230 by hoisting the conditional to a plain variable before the print — no output change. This drops the lint's failure count from 24 to 22, but the remaining 22 are NOT mechanical: they're "unresolvable path expression" hits the tool's own static analysis can't classify (e.g. archive_manifest.py reading its own governance CSV manifest, not market data — likely a false positive, but needs per-site confirmation same as the others). Routing 22 sites through corpus_store/corpus_gate or reclassifying them each needs domain review, not a mechanical fix — leaving test_floor_is_green failing and flagging this explicitly rather than guessing.
+Open Questions: Should I do the per-site corpus-read review as a follow-up (22 sites, mix of real reads to route + likely false positives to reclassify with evidence)?
+Next Step: Fix test_script_registry (unregistered scripts).
+---
