@@ -6,12 +6,14 @@ Each arm runs in its own isolated config root (src/utils/isolated_config_root.py
 Ledger comparison is scripts/analysis/v3_config_parity.py:compare. This file does
 not reimplement that comparison and does not edit any production config.
 
-Known non-decision differences, declared in every verdict's ignored_fields:
-config_version, version, config_id, config_hash, active_version, run_id (and
-label_run_id / preexisting_run_ids / trace_id / span_id, which embed a run id),
-plus the clock stamps compare() already skips (timestamp, generated_at,
-started_at, finished_at, duration_sec, and the same class: generated_utc,
-label_generated_utc, built_at).
+Known non-decision differences, listed in verdict.json:
+  ignored: config_version, version, config_id, active_version, run_id (and
+  label_run_id / preexisting_run_ids / trace_id / span_id), clock stamps
+  (timestamp, generated_at, started_at, finished_at, duration_sec,
+  generated_utc, label_generated_utc, built_at, summary artifact_timestamp),
+  and resolver meta.json corpus_path. states.csv is the resolver surface.
+  config_hash is a DECLARED difference (A 7de09f62... vs B e496a94c...),
+  reported under declared_differences, never as DIFFERS.
 
 USAGE
     python scripts/research/parity_v5.py --window short
@@ -24,6 +26,7 @@ import csv
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -59,22 +62,34 @@ WINDOWS = {
     },
 }
 
-# Declared non-decision fields. Anything else that differs is a FINDING.
+# Non-decision fields. config_hash is NOT in this set: it is reported separately.
 IGNORE_KEYS = set(VOLATILE_SUMMARY_KEYS) | {
     VERSION_STAMP_COLUMN,
     "version",
     "config_id",
-    "config_hash",
     "active_version",
     "run_id",
     "label_run_id",
     "preexisting_run_ids",
     "trace_id",
     "span_id",
+    # layer-trace run id copied onto every label row (lt_<utc>_<instrument>)
+    "lt_id",
     "generated_utc",
     "label_generated_utc",
     "built_at",
+    "artifact_timestamp",
 }
+# resolver meta.json only. states.csv is the resolver surface.
+RESOLVER_META_IGNORE = IGNORE_KEYS | {"corpus_path"}
+# Arm scratch paths and elapsed-time stamps inside the oracle manifest.
+ORACLE_IGNORE = IGNORE_KEYS | {
+    "artifact_path", "trace_source_path", "build_seconds", "elapsed_seconds",
+}
+DECLARED_HASH_WHY = (
+    "DECLARED difference: params hash. A is 7de09f62... (5 params); "
+    "B is e496a94c... (47 params). Not a behavior diff."
+)
 
 
 def _sha256(path: Path) -> str:
@@ -128,27 +143,52 @@ def _run(cmd: list[str], cwd: Path, label: str) -> subprocess.CompletedProcess:
     return proc
 
 
-def _deep_diffs(a, b, path: str, out: list, limit: int = 5) -> None:
+def _declare_hash(declared: list, path: str, a, b) -> None:
+    if a == b:
+        return
+    sig = (str(a), str(b))
+    for item in declared:
+        if item.get("_sig") == sig:
+            item["occurrences"] = item.get("occurrences", 1) + 1
+            return
+    declared.append({
+        "field": "config_hash",
+        "path": path,
+        "a": a,
+        "b": b,
+        "occurrences": 1,
+        "why": DECLARED_HASH_WHY,
+        "_sig": sig,
+    })
+
+
+def _deep_diffs(a, b, path: str, out: list, limit: int = 5,
+                ignore: set | None = None, declared: list | None = None) -> None:
     if len(out) >= limit:
         return
+    skip = IGNORE_KEYS if ignore is None else ignore
     if isinstance(a, dict) and isinstance(b, dict):
         for key in sorted(set(a) | set(b)):
-            if key in IGNORE_KEYS:
-                continue
             child = f"{path}.{key}" if path else key
+            if key == "config_hash":
+                if declared is not None:
+                    _declare_hash(declared, child, a.get(key), b.get(key))
+                continue
+            if key in skip:
+                continue
             if key not in a or key not in b:
                 out.append({"path": child, "a": a.get(key), "b": b.get(key)})
                 if len(out) >= limit:
                     return
                 continue
-            _deep_diffs(a[key], b[key], child, out, limit)
+            _deep_diffs(a[key], b[key], child, out, limit, skip, declared)
         return
     if isinstance(a, list) and isinstance(b, list):
         if len(a) != len(b):
             out.append({"path": path, "a_len": len(a), "b_len": len(b)})
             return
         for i, (x, y) in enumerate(zip(a, b)):
-            _deep_diffs(x, y, f"{path}[{i}]", out, limit)
+            _deep_diffs(x, y, f"{path}[{i}]", out, limit, skip, declared)
             if len(out) >= limit:
                 return
         return
@@ -166,8 +206,17 @@ def _load_jsonl(path: Path) -> list:
     return rows
 
 
+def _public_declared(declared: list) -> list:
+    out = []
+    for item in declared:
+        cleaned = {k: v for k, v in item.items() if k != "_sig"}
+        out.append(cleaned)
+    return out
+
+
 def _verdict(surface: str, path_a, path_b, n_a: int, n_b: int,
-             diffs: list, extra: dict | None = None) -> dict:
+             diffs: list, extra: dict | None = None,
+             ignored: set | None = None) -> dict:
     rec = {
         "surface": surface,
         "arm_a_path": str(path_a),
@@ -175,7 +224,7 @@ def _verdict(surface: str, path_a, path_b, n_a: int, n_b: int,
         "n_rows_a": n_a,
         "n_rows_b": n_b,
         "verdict": "IDENTICAL" if not diffs and n_a == n_b else "DIFFERS",
-        "ignored_fields": sorted(IGNORE_KEYS),
+        "ignored_fields": sorted(IGNORE_KEYS if ignored is None else ignored),
         "first_diffs": diffs[:5],
     }
     if extra:
@@ -205,6 +254,7 @@ def _surface_ledger(run_a: Path, run_b: Path) -> list[dict]:
     trades_b = run_b / f"{INSTRUMENT}_trades.csv"
     ra = _csv_rows(trades_a) if trades_a.exists() else []
     rb = _csv_rows(trades_b) if trades_b.exists() else []
+    declared: list = []
     trade_diffs: list = []
     if len(ra) != len(rb):
         trade_diffs.append({"path": "<row count>", "a": len(ra), "b": len(rb)})
@@ -212,6 +262,9 @@ def _surface_ledger(run_a: Path, run_b: Path) -> list[dict]:
         cols = sorted((set(ra[0]) | set(rb[0])) if ra else [])
         for i, (xa, xb) in enumerate(zip(ra, rb)):
             for col in cols:
+                if col == "config_hash":
+                    _declare_hash(declared, f"trades[{i}].config_hash", xa.get(col), xb.get(col))
+                    continue
                 if col in IGNORE_KEYS:
                     continue
                 if xa.get(col) != xb.get(col):
@@ -226,6 +279,10 @@ def _surface_ledger(run_a: Path, run_b: Path) -> list[dict]:
         "trade_ledger", run_a, run_b, len(ra), len(rb), trade_diffs,
         {"compare_returned": compare_ok},
     )
+    if len(ra) == 0 and len(rb) == 0:
+        ledger["note"] = (
+            "0 trades on this window. The trade-ledger check proves nothing here."
+        )
 
     ev_a = _load_jsonl(run_a / f"{INSTRUMENT}_events.jsonl")
     ev_b = _load_jsonl(run_b / f"{INSTRUMENT}_events.jsonl")
@@ -236,7 +293,7 @@ def _surface_ledger(run_a: Path, run_b: Path) -> list[dict]:
         state_diffs.append({"path": "events.len", "a": len(ev_a), "b": len(ev_b)})
     else:
         for i, (xa, xb) in enumerate(zip(ev_a, ev_b)):
-            _deep_diffs(xa, xb, f"events[{i}]", state_diffs)
+            _deep_diffs(xa, xb, f"events[{i}]", state_diffs, declared=declared)
             if len(state_diffs) >= 5:
                 break
     if len(tel_a) != len(tel_b):
@@ -244,7 +301,7 @@ def _surface_ledger(run_a: Path, run_b: Path) -> list[dict]:
     else:
         for i, (xa, xb) in enumerate(zip(tel_a, tel_b)):
             before = len(state_diffs)
-            _deep_diffs(xa, xb, f"telemetry[{i}]", state_diffs)
+            _deep_diffs(xa, xb, f"telemetry[{i}]", state_diffs, declared=declared)
             if len(state_diffs) > before and len(state_diffs) >= 5:
                 break
     state = _verdict(
@@ -256,13 +313,17 @@ def _surface_ledger(run_a: Path, run_b: Path) -> list[dict]:
     sum_a = json.loads((run_a / f"{INSTRUMENT}_summary.json").read_text(encoding="utf-8"))
     sum_b = json.loads((run_b / f"{INSTRUMENT}_summary.json").read_text(encoding="utf-8"))
     sum_diffs: list = []
-    _deep_diffs(sum_a, sum_b, "summary", sum_diffs)
+    _deep_diffs(sum_a, sum_b, "summary", sum_diffs, declared=declared)
     # summary is part of the trade-ledger surface. Fold any non-ignored summary
     # diff into that surface so it cannot pass on trades alone.
+    # artifact_timestamp is in IGNORE_KEYS. config_hash is declared, not a diff.
     if sum_diffs:
         ledger["first_diffs"] = (ledger["first_diffs"] + sum_diffs)[:5]
         ledger["verdict"] = "DIFFERS"
         print(f"trade_ledger: summary added {len(sum_diffs)} diffs -> DIFFERS", flush=True)
+    if declared:
+        ledger["declared_differences"] = _public_declared(declared)
+        state["declared_differences"] = _public_declared(declared)
     return [ledger, state]
 
 
@@ -299,11 +360,20 @@ def _surface_resolver(root_a: Path, root_b: Path, corpus_rel: str) -> dict:
     meta_a = json.loads((caches["a"] / "meta.json").read_text(encoding="utf-8"))
     meta_b = json.loads((caches["b"] / "meta.json").read_text(encoding="utf-8"))
     meta_diffs: list = []
-    _deep_diffs(meta_a, meta_b, "meta", meta_diffs)
+    _deep_diffs(meta_a, meta_b, "meta", meta_diffs, ignore=RESOLVER_META_IGNORE)
     diffs.extend(meta_diffs)
+    ignored_obs = []
+    for key in ("built_at", "corpus_path"):
+        if meta_a.get(key) != meta_b.get(key):
+            ignored_obs.append({
+                "field": f"meta.{key}", "a": meta_a.get(key), "b": meta_b.get(key),
+            })
     return _verdict(
         "resolver_states", caches["a"], caches["b"], len(ra), len(rb), diffs[:5],
-        {"states_csv_byte_equal": byte_equal},
+        {"states_csv_byte_equal": byte_equal,
+         "surface_file": "states.csv",
+         "ignored_observations": ignored_obs},
+        ignored=RESOLVER_META_IGNORE,
     )
 
 
@@ -355,8 +425,18 @@ def _surface_layer_trace(root_a: Path, root_b: Path) -> dict:
             rec.get("module"), rec.get("status"),
         )
 
+    declared: list = []
+    if rows_a and rows_b:
+        _declare_hash(
+            declared, "config_hash",
+            rows_a[0].get("config_hash"), rows_b[0].get("config_hash"),
+        )
+
     def canon(rec: dict) -> str:
-        cleaned = {k: v for k, v in rec.items() if k not in IGNORE_KEYS}
+        cleaned = {
+            k: v for k, v in rec.items()
+            if k not in IGNORE_KEYS and k != "config_hash"
+        }
         return json.dumps(cleaned, sort_keys=True, default=str)
 
     from collections import defaultdict
@@ -375,11 +455,32 @@ def _surface_layer_trace(root_a: Path, root_b: Path) -> dict:
             })
             if len(diffs) >= 5:
                 break
+    extra = {
+        "enabled_a": en_a, "enabled_b": en_b,
+        "join": "trade_id+layer+bar_ts when trade_id is set; else bar_ts+bar_idx+layer+module+status",
+    }
+    if declared:
+        extra["declared_differences"] = _public_declared(declared)
     return _verdict(
-        "layer_trace", path_a, path_b, len(rows_a), len(rows_b), diffs,
-        {"enabled_a": en_a, "enabled_b": en_b,
-         "join": "trade_id+layer+bar_ts when trade_id is set; else bar_ts+bar_idx+layer+module+status"},
+        "layer_trace", path_a, path_b, len(rows_a), len(rows_b), diffs, extra,
     )
+
+
+def _install_cost_calibration(root: Path) -> None:
+    """Copy the SEM-015 calibration tree into this arm.
+
+    labeler.py:413-418 globs ``<root>/results/research/xauusd_mt5_cost_calibration/*manifest_LATEST.json``.
+    ``_ROOT`` there is the module repo (labeler.py:66). The arm's ``src`` junction
+    resolves back to the worktree, so the worktree copy is what the glob hits.
+    Each arm still receives its own copy, as specified.
+    """
+    src = REPO / "results" / "research" / "xauusd_mt5_cost_calibration"
+    dst = root / "results" / "research" / "xauusd_mt5_cost_calibration"
+    if not src.is_dir():
+        raise RuntimeError(f"cost calibration dir missing: {src}")
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(src, dst, dirs_exist_ok=True)
+    print(f"cost calibration -> {dst}", flush=True)
 
 
 def _surface_oracle(root_a: Path, root_b: Path, corpus_rel: str,
@@ -409,6 +510,7 @@ def _surface_oracle(root_a: Path, root_b: Path, corpus_rel: str,
         else:
             cmd.append("--no-trace-join")
         _run(cmd, root, f"bar_matrix {name}")
+        _install_cost_calibration(root)
         _run([
             py, "-m", "research.oracle.labeler",
             "--instrument", INSTRUMENT, "--timeframe", "M15",
@@ -429,7 +531,7 @@ def _surface_oracle(root_a: Path, root_b: Path, corpus_rel: str,
             cols = sorted(set(ra[0]) | set(rb[0])) if ra else []
             for i, (xa, xb) in enumerate(zip(ra, rb)):
                 for col in cols:
-                    if col in IGNORE_KEYS:
+                    if col in ORACLE_IGNORE:
                         continue
                     if xa.get(col) != xb.get(col):
                         diffs.append({
@@ -443,11 +545,32 @@ def _surface_oracle(root_a: Path, root_b: Path, corpus_rel: str,
     man_a = json.loads((outs["a"] / "manifest.json").read_text(encoding="utf-8"))
     man_b = json.loads((outs["b"] / "manifest.json").read_text(encoding="utf-8"))
     man_diffs: list = []
-    _deep_diffs(man_a, man_b, "manifest", man_diffs)
+    declared: list = []
+    _deep_diffs(man_a, man_b, "manifest", man_diffs, ignore=ORACLE_IGNORE, declared=declared)
     diffs.extend(man_diffs)
+    ignored_obs = []
+
+    def _find(obj, key, acc):
+        if isinstance(obj, dict):
+            if key in obj:
+                acc.append(obj[key])
+            for v in obj.values():
+                _find(v, key, acc)
+        elif isinstance(obj, list):
+            for v in obj:
+                _find(v, key, acc)
+    for key in ("artifact_path", "trace_source_path", "build_seconds", "elapsed_seconds", "lt_id"):
+        fa, fb = [], []
+        _find(man_a, key, fa)
+        _find(man_b, key, fb)
+        if fa != fb:
+            ignored_obs.append({"field": f"manifest.{key}", "a": fa[:2], "b": fb[:2]})
+    extra = {"labels_csv_byte_equal": byte_equal, "ignored_observations": ignored_obs}
+    if declared:
+        extra["declared_differences"] = _public_declared(declared)
     return _verdict(
-        "oracle_labels", outs["a"], outs["b"], len(ra), len(rb), diffs[:5],
-        {"labels_csv_byte_equal": byte_equal},
+        "oracle_labels", outs["a"], outs["b"], len(ra), len(rb), diffs[:5], extra,
+        ignored=ORACLE_IGNORE,
     )
 
 
