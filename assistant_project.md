@@ -4424,3 +4424,13 @@ Belief Update / ROI / Goal: Goal: no silent defaults. Belief: CRTConfig can no l
 Open Questions: L-E lane must rebase over the 3 zone_mapping one-line changes.
 Next Step: full parity verdict -> merge; A2.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: EPIC-84 L-A A1 merged
+Decision/Output: Full-corpus parity_v5 baseline 3f12289b vs lane/wp84-la 0b05362e: PASS (trades 3/3, engine 7112, resolver 47197, layer_trace 94406, oracle 565884 identical). Merged 9fde1358; 150 related tests pass on main.
+Belief Update / ROI / Goal: Goal: no silent defaults. Belief: CRTConfig defaults removal is behaviour-neutral on the production path, proven on the full corpus. Knowledge ROI: high. Action: A2.
+Open Questions: L-E rebase over zone_mapping edits; Wave 1 lanes should base their parity on 9fde1358 when they rebase.
+Next Step: A2 execution_planner DEFAULT_CONFIG.
+---
