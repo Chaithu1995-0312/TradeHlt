@@ -32,6 +32,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from utils.logging_config import get_flow_logger
 from core.gate_intelligence import GateIntelligence
+from config_layer.strict_config import require_all, require_section
 
 logger = get_flow_logger("EXECUTION_PLANNER")
 
@@ -89,6 +90,9 @@ REQUIRED_CONFIG_KEYS: tuple[str, ...] = (
     "precision_overrides",
     "default_account_balance",
     "reject_unknown_intent",
+    # BREAKOUT-vs-REVERSAL intent boundary. Resolved per symbol from crt_engine by
+    # planner_config_from_production so CRT engine and planner can never diverge.
+    "breakout_disp_threshold",
     # Gate intelligence keys (merged from gate_intelligence config section)
     "gate_weight_intent",
     "gate_weight_vol",
@@ -97,31 +101,32 @@ REQUIRED_CONFIG_KEYS: tuple[str, ...] = (
     "gate_approval_threshold",
 )
 
-# ── Default config (mirrors configs/production/v1_multi_2026_03.json values) ─
-DEFAULT_CONFIG: dict = {
-    "ttl_breakout_sec":        180,
-    "ttl_pullback_sec":        300,
-    "ttl_reversal_sec":        120,
-    "ttl_liq_sweep_sec":       240,
-    # == ttl_unknown_sec: CONTINUATION takes over exactly the entries that used to be UNKNOWN,
-    # so inheriting UNKNOWN's TTL keeps their validity window unchanged (parity, not a tuning).
-    "ttl_continuation_sec":    180,
-    "ttl_unknown_sec":         180,
-    "risk_percent":            0.5,
-    "precision_default":       8,
-    "precision_overrides":     {"XAUUSD": 2, "BTCUSDT": 2, "ETHUSDT": 2},
-    "default_account_balance": 10_000.0,
-    "reject_unknown_intent":   True,
-    # BREAKOUT-vs-REVERSAL intent boundary; must match the CRT engine's resolved
-    # value for a symbol (production_config.resolve_breakout_disp_threshold).
-    "breakout_disp_threshold": 1.5,
-    # Gate intelligence defaults
-    "gate_weight_intent":      0.35,
-    "gate_weight_vol":         0.20,
-    "gate_weight_liquidity":   0.20,
-    "gate_weight_structure":   0.25,
-    "gate_approval_threshold": 0.55,
-}
+# EPIC-84 (user rule 2026-09-28: no defaults, no fallbacks): the former module-level
+# DEFAULT_CONFIG (merged UNDER every config, so a missing key silently took a code value) is
+# gone. Every key in REQUIRED_CONFIG_KEYS must be declared. Production callers build the
+# config with planner_config_from_production(); the former values live only in the test
+# fixture tests/helpers/planner_config.py (LEGACY_PLANNER_VALUES_2026_09_28).
+
+
+def planner_config_from_production(prod_config: dict, symbol: str) -> dict:
+    """The planner config for ``symbol`` from a loaded production config (fail closed).
+
+    execution_planner section  ∪  gate_intelligence section  ∪  breakout_disp_threshold
+    resolved per symbol from crt_engine (the SAME resolver the CRT engine uses, so the two
+    intent classifiers cannot diverge). Any missing section or key raises
+    ConfigKeyMissingError.
+    """
+    from config_layer.production_config import resolve_breakout_disp_threshold
+
+    consumer = "planner_config_from_production"
+    ep = require_section(prod_config, "execution_planner", consumer=consumer)
+    gi = require_section(prod_config, "gate_intelligence", consumer=consumer)
+    crt = require_section(prod_config, "crt_engine", consumer=consumer)
+    return {
+        **dict(ep),
+        **dict(gi),
+        "breakout_disp_threshold": resolve_breakout_disp_threshold(crt, symbol),
+    }
 
 
 def _planner_require(config: dict, key: str) -> Any:
@@ -148,16 +153,15 @@ class ExecutionPlannerV1_2:
 
     Parameters
     ----------
-    config : dict, optional
-        Overrides for DEFAULT_CONFIG keys.
+    config : dict
+        Every key in REQUIRED_CONFIG_KEYS (EPIC-84: no defaults). Build it with
+        planner_config_from_production(prod_config, symbol).
     """
 
-    def __init__(self, config: dict[str, Any] | None = None) -> None:
-        # Merge with DEFAULT_CONFIG so callers can pass None or a partial dict
-        merged: dict[str, Any] = {**DEFAULT_CONFIG}
-        if isinstance(config, dict):
-            merged.update(config)
-        self.config = merged
+    def __init__(self, config: dict[str, Any]) -> None:
+        require_all(config, REQUIRED_CONFIG_KEYS,
+                    section_name="execution_planner", consumer="ExecutionPlannerV1_2")
+        self.config: dict[str, Any] = dict(config)
 
     # ── Public entry point ────────────────────────────────────────────────────
 
@@ -454,7 +458,8 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
 
-    planner = ExecutionPlannerV1_2()
+    from config_layer.production_config import get_full_config_dict as _gfc
+    planner = ExecutionPlannerV1_2(planner_config_from_production(_gfc(), "EURUSD"))
 
     # ── Test 1: Happy path — BREAKOUT ────────────────────────────────────────
     engine_result = {

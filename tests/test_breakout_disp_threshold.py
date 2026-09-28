@@ -10,7 +10,10 @@ Covers the deployment of `breakout_disp_threshold` (default 1.5; per-instrument 
 """
 from config_layer.production_config import resolve_breakout_disp_threshold
 from config_layer.crt_engine_v2 import CRTConfig, ExecutionEngine
-from config_layer.execution_planner import ExecutionPlannerV1_2, DEFAULT_CONFIG
+from config_layer.execution_planner import ExecutionPlannerV1_2
+from config_layer.strict_config import ConfigKeyMissingError
+from tests.helpers.planner_config import planner_test_config
+import pytest
 from tests.helpers.crt_config import crt_config_for_test
 
 
@@ -30,15 +33,18 @@ _CRT_SECTION = {"breakout_disp_threshold": 1.5,
 def test_config_defaults_are_1_5_noop():
     """Migration is a no-op by default: both config defaults == historical hardcoded 1.5."""
     assert crt_config_for_test().breakout_disp_threshold == 1.5
-    assert DEFAULT_CONFIG["breakout_disp_threshold"] == 1.5
+    assert planner_test_config()["breakout_disp_threshold"] == 1.5  # fixture = former default
 
 
 def test_resolver_global_override_caseinsensitive_fallback():
     assert resolve_breakout_disp_threshold(_CRT_SECTION, "BNBUSDT") == 1.3
     assert resolve_breakout_disp_threshold(_CRT_SECTION, "bnbusdt") == 1.3   # case-insensitive
     assert resolve_breakout_disp_threshold(_CRT_SECTION, "BTCUSDT") == 1.5   # global default
-    assert resolve_breakout_disp_threshold(None, "BNBUSDT") is None          # no section
-    assert resolve_breakout_disp_threshold({}, "BNBUSDT") is None            # no keys → caller keeps default
+    # EPIC-84: no section / no global key fails closed (was: None -> caller kept its 1.5)
+    with pytest.raises(ConfigKeyMissingError):
+        resolve_breakout_disp_threshold(None, "BNBUSDT")
+    with pytest.raises(ConfigKeyMissingError):
+        resolve_breakout_disp_threshold({}, "BNBUSDT")
 
 
 def test_crt_intent_honors_threshold_and_static_caller_unchanged():
@@ -49,8 +55,8 @@ def test_crt_intent_honors_threshold_and_static_caller_unchanged():
 
 
 def test_planner_intent_honors_threshold():
-    assert ExecutionPlannerV1_2({})._derive_intent(_FEATS, _ENGINE_RESULT)[0] == "REVERSAL"      # default 1.5
-    assert ExecutionPlannerV1_2({"breakout_disp_threshold": 1.3})._derive_intent(
+    assert ExecutionPlannerV1_2(planner_test_config())._derive_intent(_FEATS, _ENGINE_RESULT)[0] == "REVERSAL"  # 1.5
+    assert ExecutionPlannerV1_2(planner_test_config(breakout_disp_threshold=1.3))._derive_intent(
         _FEATS, _ENGINE_RESULT)[0] == "BREAKOUT"
 
 
@@ -59,10 +65,9 @@ def test_cross_component_consistency_invariant():
     same per-symbol resolved threshold. Guards the named failure mode (backtest 1.3 / live 1.5)."""
     for symbol in ("BNBUSDT", "BTCUSDT", "ETHUSDT", "SOLUSDT"):
         thr = resolve_breakout_disp_threshold(_CRT_SECTION, symbol)
-        thr = 1.5 if thr is None else thr
         crt_is_breakout = ExecutionEngine._derive_trade_intent(_FEATS, thr) == "breakout"
         planner_is_breakout = ExecutionPlannerV1_2(
-            {"breakout_disp_threshold": thr})._derive_intent(_FEATS, _ENGINE_RESULT)[0] == "BREAKOUT"
+            planner_test_config(breakout_disp_threshold=thr))._derive_intent(_FEATS, _ENGINE_RESULT)[0] == "BREAKOUT"
         assert crt_is_breakout == planner_is_breakout, f"{symbol}: CRT/Planner disagree at thr={thr}"
     # And the resolved values are exactly what we expect (BNB lowered, others default).
     assert resolve_breakout_disp_threshold(_CRT_SECTION, "BNBUSDT") == 1.3

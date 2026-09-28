@@ -92,6 +92,7 @@
     "zone_min_samples": 50
   },
   "execution_planner": {
+    "ttl_continuation_sec": 180,
     "ttl_breakout_sec": 300,
     "ttl_pullback_sec": 420,
     "ttl_reversal_sec": 180,

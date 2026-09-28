@@ -20,6 +20,7 @@ from config_layer.config_validator import ConfigValidator
 from config_layer.production_config import resolve_breakout_disp_threshold
 from config_layer.crt_engine_v2 import ExecutionEngine
 from config_layer.execution_planner import ExecutionPlannerV1_2
+from config_layer.execution_planner import planner_config_from_production
 
 REAL = Path("configs/production")
 OVERRIDE = {"breakout_disp_threshold": 1.5, "breakout_disp_threshold_overrides": {"BNBUSDT": 1.3}}
@@ -91,7 +92,7 @@ def main() -> int:
     v5_secs = _secs(v5)
     resurrected = sorted(v5_secs - v4_secs)
     lost = sorted(v4_secs - v5_secs)
-    v5_crt = v5.get("crt_engine", {})
+    v5_crt = v5["crt_engine"]
 
     # CRT==Planner per symbol on the PROMOTED v5
     rows = []
@@ -100,9 +101,11 @@ def main() -> int:
              "ema_fast": 1.0, "ema_slow": 2.0}
     er = {"decision": "execute", "direction": 1}
     for s in SYMS:
-        thr = resolve_breakout_disp_threshold(v5_crt, s); thr = 1.5 if thr is None else thr
+        thr = resolve_breakout_disp_threshold(v5_crt, s)  # EPIC-84: raises if undeclared
         crt_bo = ExecutionEngine._derive_trade_intent(feats, thr) == "breakout"
-        pl_bo = ExecutionPlannerV1_2({"breakout_disp_threshold": thr})._derive_intent(feats, er)[0] == "BREAKOUT"
+        pl_bo = ExecutionPlannerV1_2(
+            planner_config_from_production(v5, s)
+        )._derive_intent(feats, er)[0] == "BREAKOUT"
         rows.append((s, thr, "PASS" if crt_bo == pl_bo else "FAIL"))
 
     # ── Write LINEAGE_PROOF.md ────────────────────────────────────────────────

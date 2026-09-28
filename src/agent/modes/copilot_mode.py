@@ -84,12 +84,18 @@ def _fusion_explain(instrument: str, engine_result: str = "") -> dict:
 )
 def _planner_plan(instrument: str, decision_json: str = "", features_json: str = "") -> dict:
     try:
-        from config_layer.execution_planner import ExecutionPlannerV1_2
-        from config_layer.production_config import get_prod_config
+        from config_layer.execution_planner import (
+            ExecutionPlannerV1_2,
+            planner_config_from_production,
+        )
+        from config_layer.production_config import get_full_config_dict, get_prod_config
         cfg      = get_prod_config(instrument)
         decision = json.loads(decision_json) if decision_json else {}
         features = json.loads(features_json) if features_json else {}
-        planner  = ExecutionPlannerV1_2(cfg)
+        # EPIC-84: the planner's own declared section. Before, this passed a CRTConfig object,
+        # which is not a dict, so the planner ran on DEFAULT_CONFIG code values entirely.
+        planner  = ExecutionPlannerV1_2(
+            planner_config_from_production(get_full_config_dict(), instrument))
         plan     = planner.plan(decision, features, cfg)
         return plan if isinstance(plan, dict) else {"status": "ok", "plan": str(plan)}
     except Exception as exc:

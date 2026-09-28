@@ -132,8 +132,12 @@ class ExecutionPlanAdapter:
 
         # GateIntelligence thresholds are merged into the planner config live
         # (live_engine_hook :843-846) — mirror that, strictly.
-        gi = require_section(prod_config, "gate_intelligence")
-        self._planner_cfg: dict[str, Any] = {**dict(ep), **dict(gi)}
+        require_section(prod_config, "gate_intelligence")
+        # EPIC-84: same assembler as the live hook (adds the CRT-resolved breakout threshold,
+        # which the planner used to take from its DEFAULT_CONFIG).
+        from config_layer.execution_planner import planner_config_from_production
+        self._planner_cfg: dict[str, Any] = planner_config_from_production(
+            prod_config, instrument)
         self._planner = ExecutionPlannerV1_2(self._planner_cfg)
 
         crt = require_section(prod_config, "crt_engine")
