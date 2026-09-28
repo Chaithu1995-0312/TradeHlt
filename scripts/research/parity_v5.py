@@ -87,6 +87,8 @@ IGNORE_KEYS = set(VOLATILE_SUMMARY_KEYS) | {
     "label_generated_utc",
     "built_at",
     "artifact_timestamp",
+    # uuid4 minted per trade at TRADE_OPENED (STORY-83.6 finding): provenance, never behaviour
+    "execution_intent_id",
 }
 # resolver meta.json only. states.csv is the resolver surface.
 RESOLVER_META_IGNORE = IGNORE_KEYS | {"corpus_path"}
@@ -95,7 +97,7 @@ ORACLE_IGNORE = IGNORE_KEYS | {
     "artifact_path", "trace_source_path", "build_seconds", "elapsed_seconds",
 }
 #: Provenance fields that differ only because the arms run from different code trees.
-CODE_TREE_PROVENANCE = {"corpus_path", "git_sha", "code_sha"}
+CODE_TREE_PROVENANCE = {"corpus_path", "git_sha", "code_sha", "artifact_path"}
 
 DECLARED_HASH_WHY = (
     "DECLARED difference: params hash. A is 7de09f62... (5 params); "
