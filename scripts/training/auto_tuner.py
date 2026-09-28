@@ -226,8 +226,8 @@ def run_backtest(
     Returns metrics dict. On exception returns error dict with score=-999.
     """
     try:
-        # ConfigBuilder.build() is the ONLY valid config source.
-        crt_cfg = ConfigBuilder.build(instrument, overrides=params)
+        # ConfigBuilder.from_production() is the ONLY valid config source.
+        crt_cfg = ConfigBuilder.from_production(instrument, overrides=params)
 
         if base_bt_config is not None:
             bt_cfg = deepcopy(base_bt_config)
@@ -705,7 +705,7 @@ class AutoTuner:
             print(f"\n  BEST CONFIG (score={best.score:+.4f})")
             print(f"  {'─'*40}")
             for k, v in best.params.items():
-                default = getattr(ConfigBuilder.build(instrument), k, "?")
+                default = getattr(ConfigBuilder.from_production(instrument), k, "?")
                 changed = " *" if v != default else ""
                 print(f"    {k:<35} = {v}{changed}")
             print(f"\n  Metrics:")

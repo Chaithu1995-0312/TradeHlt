@@ -88,10 +88,10 @@ def classify_market(instrument: str) -> str:
 
 def get_crt_config(instrument: str) -> CRTConfig:
     """
-    INTERNAL USE ONLY — called exclusively by config_builder.ConfigBuilder.build().
-
-    Direct calls from application code are FORBIDDEN.
-    Use ConfigBuilder.build(instrument) instead.
+    INTERNAL USE ONLY. NOT CALLED since EPIC-84 (2026-09-28): ConfigBuilder no longer uses a
+    router base, because a class profile is a partial field set and CRTConfig has no code
+    defaults to fill the rest. Constructing from an incomplete profile raises TypeError.
+    Use ConfigBuilder.from_production(instrument) instead. Kept (never delete) for history.
     """
     import traceback
     stack = traceback.extract_stack()

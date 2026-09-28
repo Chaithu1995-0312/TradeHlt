@@ -71,20 +71,9 @@ def _crt_config_from_prod(instrument: str = "XAUUSD"):
     Does NOT bulk-apply ``crt_engine`` JSON — session_windows / weight tuples from raw
     JSON can leave string times and break ``start <= t <= end`` comparisons.
     """
-    from config_layer.crt_engine_v2 import CRTConfig
-    from config_layer.production_config import get_prod_section
-
-    crt_field_names = {f.name for f in fields(CRTConfig)}
-    overrides: dict[str, Any] = {}
-    try:
-        params = get_prod_section("params")
-    except Exception:
-        params = {}
-    if isinstance(params, dict):
-        for k, v in params.items():
-            if k in crt_field_names and isinstance(v, (int, float)) and not isinstance(v, bool):
-                overrides[k] = v
-    base = ConfigBuilder.build(instrument, overrides=overrides or None)
+    # EPIC-84 (no defaults): the full production config (crt_engine + params, coerced by the
+    # loader), not "router base + params" whose other fields came from CRTConfig code defaults.
+    base = ConfigBuilder.from_production(instrument)
     return _harden_crt_config(base)
 
 
@@ -158,7 +147,7 @@ def collect_xauusd_trade_opened_features(
     if use_prod_crt_config:
         crt_cfg = _crt_config_from_prod("XAUUSD")
     else:
-        crt_cfg = _harden_crt_config(ConfigBuilder.build("XAUUSD"))
+        crt_cfg = _harden_crt_config(ConfigBuilder.from_production("XAUUSD"))
 
     engine = CRTEngine(crt_cfg)
     htf = HTFBuilder(htf_candles_per_range, "XAUUSD")

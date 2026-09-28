@@ -54,6 +54,9 @@ class _StubConfigBuilder:
                 if hasattr(cfg, k):
                     setattr(cfg, k, v)
         return cfg
+
+    # EPIC-84: the tuner now builds via from_production (production base + overrides).
+    from_production = build
 cb_module.ConfigBuilder = _StubConfigBuilder
 sys.modules["config_builder"] = cb_module
 

@@ -109,7 +109,7 @@ def test_crtengine_resolves_session_ts_basis_from_feature_pipeline_config():
     from config_layer.config_builder import ConfigBuilder
     from config_layer.crt_engine_v2 import CRTEngine
 
-    cfg = ConfigBuilder.build("XAUUSD")
+    cfg = crt_config_for_test()
 
     engine_default = CRTEngine(cfg)
     assert engine_default._session_ts_basis == "broker_local"

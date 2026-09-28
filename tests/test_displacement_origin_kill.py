@@ -72,7 +72,7 @@ class _Runner:
 
 
 def _cfg(**kw) -> CRTConfig:
-    return CRTConfig(**kw)
+    return crt_config_for_test(**kw)
 
 
 # ── CLOSE-TRIGGERED: the load-bearing property ───────────────────────────────────────

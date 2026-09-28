@@ -6,7 +6,7 @@ Ordinary tests check that a builder stamps provenance, not that two session
 lists / two ATR names cannot be swapped.
 """
 from __future__ import annotations
-from tests.helpers.crt_config import crt_config_for_test
+from tests.helpers.crt_config import crt_config_for_test, crt_test_fields
 
 from datetime import datetime, time
 
@@ -38,7 +38,7 @@ def test_bare_builder_is_not_the_production_runtime_object():
     Already visible via fingerprint; this test requires the *session* surface to differ
     or be proven equal — session is the decision-facing field.
     """
-    router = ConfigBuilder.build("XAUUSD")
+    router = ConfigBuilder.build("XAUUSD", overrides=crt_test_fields())
     prod = load_prod_config_from_registry(get_active_version(), "XAUUSD")
     assert get_provenance(router).mode == ConstructionMode.ROUTER_BASE
     assert get_provenance(prod).mode == ConstructionMode.PRODUCTION_MERGED

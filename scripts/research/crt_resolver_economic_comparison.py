@@ -162,7 +162,7 @@ def resolve_engine_ledger(
     from config_layer.config_builder import ConfigBuilder
     from runtime.backtest_v2 import BacktestConfig, BacktestRunner, CandleLoader, MultiInstrumentRunner
 
-    crt_cfg = ConfigBuilder.build(instrument)
+    crt_cfg = ConfigBuilder.from_production(instrument)
     cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
     cfg.instrument = instrument
     cfg.pip_size = MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.01)
@@ -743,7 +743,7 @@ def main() -> int:
     print(f"  n_bars_resolved={len(states)}")
 
     from config_layer.config_builder import ConfigBuilder
-    crt_cfg = ConfigBuilder.build(args.instrument)
+    crt_cfg = ConfigBuilder.from_production(args.instrument)
 
     print("Building EXPANSION-entry signals...")
     signals, resolver_counters = build_expansion_entry_signals(

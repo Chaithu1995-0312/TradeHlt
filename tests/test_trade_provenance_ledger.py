@@ -17,7 +17,8 @@ from __future__ import annotations
 import dataclasses
 import json
 
-from config_layer.config_builder import ConfigBuilder
+from config_layer.config_builder import ConfigBuilder  # noqa: F401
+from tests.helpers.crt_config import crt_config_for_test
 from utils.trade_logger import TradeLogger
 
 
@@ -87,7 +88,7 @@ def test_gates_fired_crtconfig_snapshot_survives_json_round_trip(tmp_path):
     TypeError, which TradeLogger._write swallows — silently deleting the ENTRY
     record with no traceback. gates_fired must already be JSON-safe by the time
     it reaches log_entry."""
-    crt_cfg = ConfigBuilder.build("XAUUSD")
+    crt_cfg = crt_config_for_test()
     raw = dataclasses.asdict(crt_cfg)
     assert any(
         hasattr(v, "hour") or (isinstance(v, dict) and any(hasattr(x, "hour") for x in _flatten(v)))

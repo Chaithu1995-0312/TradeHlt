@@ -22,7 +22,7 @@ for instr in INSTRUMENTS:
     print(f"{'='*62}")
     # ConfigBuilder picks FOREX or CRYPTO base automatically for each instrument,
     # then layers in the shared debug overrides. wide_sessions override is applied too.
-    crt_cfg = ConfigBuilder.build(
+    crt_cfg = ConfigBuilder.from_production(
         instr["name"],
         overrides={
             "score_threshold":        0.70,

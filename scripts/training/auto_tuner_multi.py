@@ -6,7 +6,7 @@ CRT Engine — Multi-Instrument Deterministic Optimizer  (Ultron Phase-7)
 ARCHITECTURE UPGRADE (v3):
   - True multi-instrument optimization: every param set scored across ALL
     instruments simultaneously (not primary + post-hoc validation).
-  - ConfigBuilder.build() enforced — zero direct CRTConfig/get_crt_config usage.
+  - ConfigBuilder.from_production() enforced (EPIC-84: production base, no code defaults).
   - Consistency penalty: configs that only work on one market are penalised.
   - Replay-safe: every result carries a full config_snapshot per instrument.
   - Deterministic: fixed seeds, no global mutable state, same input → same output.
@@ -296,7 +296,7 @@ def _run_single_instrument(
     """
     try:
         # Build base config to get valid keys
-        base_cfg = ConfigBuilder.build(instrument)
+        base_cfg = ConfigBuilder.from_production(instrument)
 
         # Filter only valid override keys
         valid_params = {
@@ -309,7 +309,7 @@ def _run_single_instrument(
             invalid = set(params) - set(valid_params)
             tuner_log.warning(f"[{instrument}] Invalid params filtered: {invalid}")
         # ── Config via ConfigBuilder ONLY — no crt_config_for_test(), no get_crt_config() ──
-        cfg: CRTConfig = ConfigBuilder.build(instrument, overrides=valid_params)
+        cfg: CRTConfig = ConfigBuilder.from_production(instrument, overrides=valid_params)
         config_snapshot: dict = dataclasses.asdict(cfg)
 
         pip_size = INSTRUMENT_PIP.get(instrument, 0.0001)
