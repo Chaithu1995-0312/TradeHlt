@@ -4414,3 +4414,13 @@ Belief Update / ROI / Goal: Goal: no silent defaults anywhere. Belief: the CRT k
 Open Questions: L-D waits for the other session's backtest_v2/bar_structure_snapshot/server edits; pre-existing citation drift from 83.11a (test_doc_citations) unowned.
 Next Step: Claude does L-A (M2b) in wp84-w0 lineage; review lanes as they return.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: EPIC-84 L-A step A1 — CRTConfig has no code defaults; ConfigBuilder builds only from declared fields
+Decision/Output: Worktree D:\Tradelatest-wt-wp84-la (lane/wp84-la from 75918f50). Commit 0b05362e: all 49 CRTConfig field defaults removed (53/53 required); ConfigBuilder.build/from_existing construct only from a complete field set (ConfigKeyMissingError lists every missing field); router base removed (class profiles are partial -> they filled the rest from code); new ConfigBuilder.from_production(instrument, version, overrides); compare_surfaces reports class profile vs prod; config_validator validates candidate params on top of each instrument's production config (behaviour change for the promotion validator: unnamed fields now come from production, not code); 3 src/research/zone_mapping modules + 6 scripts moved to from_production (research tools/tuners now base on the real production config). Test fixture tests/helpers/crt_config.py declares LEGACY_CODE_VALUES_2026_09_28 (proven equal to the old dataclass defaults, 49/49) + crt_test_fields(). Evidence: CRT test set 19 failed vs baseline 33 (0 new; 14 kill tests fixed); new test_config_builder_no_defaults.py 58 pass; parity_v5 short identical on trades/engine/resolver/layer_trace/oracle rows. Full-corpus parity running.
+Belief Update / ROI / Goal: Goal: no silent defaults. Belief: CRTConfig can no longer be built from code values anywhere; the production path is unchanged (it already declared all 53). Knowledge ROI: high. Action: merge A1 after full parity; then A2 (execution_planner DEFAULT_CONFIG).
+Open Questions: L-E lane must rebase over the 3 zone_mapping one-line changes.
+Next Step: full parity verdict -> merge; A2.
+---
