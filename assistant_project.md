@@ -4454,3 +4454,13 @@ Belief Update / ROI / Goal: Goal: no silent defaults. Belief: planner strictness
 Open Questions: overrides-map optionality (user call).
 Next Step: A3 crt_engine_v2 fallback sites.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: EPIC-84 L-A — O1 (mandatory per-symbol breakout override) + A3a (crt_engine_v2 defaults)
+Decision/Output: lane/wp84-la commits ee1bf8bd (O1) and 24202416 (A3a). O1 (user decision): crt_engine.breakout_disp_threshold_overrides required ({} declared in 12 in-use configs); loader strips it and writes the resolved per-symbol value into CRTConfig (symbol > params > crt_engine), so engine and planner share one value; conflict with instrument_overrides fails closed. A3a: CRTEngine/ExecutionEngine/ResetLogic behaviour args keyword-only required; CRTEngine.from_production/from_setup; Setup strict (DEFAULTS -> V5_BASELINE comparison only); internal method defaults removed; RETEST zero-cache fallback replaced by guard G_EXP_RET_CACHE_INPUTS (reject retest); build_trade requires cache; journal cached_* None pre-RETEST; instrument_overrides and allowed_sessions_overrides also mandatory. Configs declare backtest K23 keys + setup section at today's values. Found: RETEST_REPLAY telemetry intent was '' on every row (EngineState has no intent attr) -> execution_planner_replay (83.8) inputs were empty-intent; fixed. Found: 6 F3-fallout E2E tests (partial registries) had been red since Wave 0 merge; fixed. CRT test set 17 failed vs baseline 39 (0 new, 22 fixed). Full-corpus parity running.
+Belief Update / ROI / Goal: Goal: no silent defaults. Belief: engine behaviour is now fully config-declared; two hidden defects surfaced (empty replay intent; F3 E2E reds). Knowledge ROI: high. Action: merge after parity; then A3b (behaviour change, user reviews ledger diff).
+Open Questions: A3b needs backtest_v2 edit (other session WIP still uncommitted).
+Next Step: parity verdict -> merge; A3b build in a separate worktree.
+---
