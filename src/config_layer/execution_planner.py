@@ -122,10 +122,11 @@ def planner_config_from_production(prod_config: dict, symbol: str) -> dict:
     ep = require_section(prod_config, "execution_planner", consumer=consumer)
     gi = require_section(prod_config, "gate_intelligence", consumer=consumer)
     crt = require_section(prod_config, "crt_engine", consumer=consumer)
+    params = require_section(prod_config, "params", consumer=consumer)
     return {
         **dict(ep),
         **dict(gi),
-        "breakout_disp_threshold": resolve_breakout_disp_threshold(crt, symbol),
+        "breakout_disp_threshold": resolve_breakout_disp_threshold(crt, symbol, params),
     }
 
 

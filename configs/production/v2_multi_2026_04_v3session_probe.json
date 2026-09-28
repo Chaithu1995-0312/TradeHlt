@@ -207,6 +207,7 @@
     ]
   },
   "crt_engine": {
+    "breakout_disp_threshold_overrides": {},
     "displacement_origin_kill_enabled": false,
     "displacement_origin_kill_precedence": "after_resting_fills",
     "score_decay_lambda": 0.05,
