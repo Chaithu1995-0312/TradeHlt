@@ -112,6 +112,23 @@ OVERLAYS: list[dict[str, Any]] = [
         "task_refs": ["F-069", "SITS"],
         "notes": "wontfix:reason=research economic comparison, no promotion authority, n expected tiny",
     },
+    # EPIC-84 F2: census of every silent default / fallback in src/ (no-defaults rule 2026-09-28).
+    {
+        "path": "scripts/analysis/config_fallback_census.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "ttl_days": 90,
+        "purpose": (
+            "AST census of every site in src/ where a value can come from a code literal instead "
+            "of a loaded config (.get/getattr defaults, DEFAULT_* merges, `or` literals, "
+            "config-dataclass field defaults, env defaults), classified CONFIG/PARAM_DEFAULT/ENV/"
+            "DATA/UNCLASSIFIED. Writes docs/research-readiness/config-fallback-census.{json,md}; "
+            "the EPIC-84 lane work list and (Wave 2) the blocking ratchet input."
+        ),
+        "task_refs": ["EPIC-84", "SITS"],
+        "notes": "wontfix:reason=read-only census, no economic claim, no promotion authority",
+    },
     # EPIC-83 STORY-83.6 (WP-F): five-way parity of the v5 shadow config vs the active config.
     {
         "path": "scripts/research/parity_v5.py",
