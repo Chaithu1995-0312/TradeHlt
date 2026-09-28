@@ -143,7 +143,12 @@ def run(csv_path: Path, out_path: Path) -> dict[str, Any]:
     thr = float(cfg.breakout_disp_threshold)
 
     # L5: both arms share the engine's resolved threshold.
-    planner = ExecutionPlannerV1_2({"breakout_disp_threshold": thr})
+    # EPIC-84: complete planner config from production; the threshold is the engine's.
+    from config_layer.execution_planner import planner_config_from_production
+    from config_layer.production_config import get_full_config_dict
+    planner = ExecutionPlannerV1_2(
+        {**planner_config_from_production(get_full_config_dict(), INSTRUMENT),
+         "breakout_disp_threshold": thr})
     reject_unknown = bool(planner.config["reject_unknown_intent"])
 
     missing = [k for k in PLANNER_KEYS if k not in CANONICAL_FEATURES]

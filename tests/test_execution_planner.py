@@ -30,7 +30,9 @@ import sys
 import traceback
 import pytest
 
-from config_layer.execution_planner import ExecutionPlannerV1_2, DEFAULT_CONFIG
+from config_layer.execution_planner import ExecutionPlannerV1_2
+from config_layer.strict_config import ConfigKeyMissingError
+from tests.helpers.planner_config import LEGACY_PLANNER_VALUES_2026_09_28 as DEFAULT_CONFIG
 
 # ── Shared fixtures ───────────────────────────────────────────────────────────
 
@@ -532,15 +534,38 @@ def test_execution_id_starts_with_EX():
 
 # ── 7. CONFIG OVERRIDES ──────────────────────────────────────────────────────
 
-def test_defaults_preserved_when_no_config():
-    p = ExecutionPlannerV1_2()
-    assert p.config["risk_percent"]           == 0.5
-    assert p.config["gate_approval_threshold"] == 0.55
+def test_no_config_fails_closed():
+    """UPDATED 2026-09-28 (EPIC-84, no defaults): was test_defaults_preserved_when_no_config."""
+    with pytest.raises(TypeError):
+        ExecutionPlannerV1_2()
+    with pytest.raises(ConfigKeyMissingError):
+        ExecutionPlannerV1_2(None)
 
-def test_partial_config_preserves_remaining_defaults():
-    p = ExecutionPlannerV1_2({"risk_percent": 2.0})
-    assert p.config["risk_percent"]            == 2.0
-    assert p.config["gate_approval_threshold"] == 0.55  # default preserved
+def test_partial_config_fails_closed_listing_every_missing_key():
+    """UPDATED 2026-09-28 (EPIC-84): was test_partial_config_preserves_remaining_defaults."""
+    from config_layer.execution_planner import REQUIRED_CONFIG_KEYS
+    with pytest.raises(ConfigKeyMissingError) as ei:
+        ExecutionPlannerV1_2({"risk_percent": 2.0})
+    assert set(ei.value.missing) == set(REQUIRED_CONFIG_KEYS) - {"risk_percent"}
+
+@pytest.mark.parametrize("key", sorted(DEFAULT_CONFIG))
+def test_each_required_key_missing_fails_closed(key):
+    cfg = dict(DEFAULT_CONFIG)
+    cfg.pop(key)
+    with pytest.raises(ConfigKeyMissingError) as ei:
+        ExecutionPlannerV1_2(cfg)
+    assert ei.value.missing == (key,)
+
+def test_planner_config_from_production_is_complete_and_uses_crt_threshold():
+    from config_layer.execution_planner import planner_config_from_production
+    from config_layer.production_config import get_full_config_dict
+    prod = get_full_config_dict()
+    cfg = planner_config_from_production(prod, "XAUUSD")
+    ExecutionPlannerV1_2(cfg)  # complete
+    assert cfg["breakout_disp_threshold"] == float(prod["crt_engine"]["breakout_disp_threshold"])
+    broken = {k: v for k, v in prod.items() if k != "gate_intelligence"}
+    with pytest.raises(ConfigKeyMissingError):
+        planner_config_from_production(broken, "XAUUSD")
 
 def test_gate_threshold_override():
     """Lowering gate threshold allows signals that the default would reject."""

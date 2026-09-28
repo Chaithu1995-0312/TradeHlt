@@ -147,7 +147,8 @@ class TestDeriveIntent:
         # Make that a checked fact rather than a comment: both classifiers agree on every
         # EMA-vs-direction case, including the new CONTINUATION half.
         from config_layer.execution_planner import ExecutionPlannerV1_2
-        p = ExecutionPlannerV1_2()
+        from tests.helpers.planner_config import planner_test_config
+        p = ExecutionPlannerV1_2(planner_test_config())
         for fast, slow in ((99.5, 98.5), (98.5, 99.5), (99.5, 99.5)):
             for d in (1, -1):
                 f = _breakout_features(body_ratio=0.1, disp_strength=0.3,

@@ -196,24 +196,30 @@ def resolve_breakout_disp_threshold(
 
     A per-instrument entry in `crt_engine.breakout_disp_threshold_overrides`
     (case-insensitive) wins over the global `crt_engine.breakout_disp_threshold`.
-    Returns None when neither is present so the caller keeps its own default
-    (historical 1.5). Shared by the CRT engine and ExecutionPlanner so backtest
-    and live can never diverge on intent classification.
+    Shared by the CRT engine and ExecutionPlanner so backtest and live can never
+    diverge on intent classification.
+
+    EPIC-84 (no defaults): the global `breakout_disp_threshold` is REQUIRED -- a missing
+    section or key raises ConfigKeyMissingError (it used to return None so each caller
+    picked its own 1.5). `breakout_disp_threshold_overrides` is an OPTIONAL declared map:
+    absent means "no per-instrument override", never a substituted value.
     """
+    from config_layer.strict_config import ConfigKeyMissingError, require
+
     if not isinstance(crt_engine_cfg, dict):
-        return None
-
-    overrides = crt_engine_cfg.get("breakout_disp_threshold_overrides") or {}
-    if isinstance(overrides, dict) and overrides:
+        raise ConfigKeyMissingError(
+            ["<section>"], section="crt_engine", consumer="resolve_breakout_disp_threshold",
+        )
+    if "breakout_disp_threshold_overrides" in crt_engine_cfg:
+        overrides = crt_engine_cfg["breakout_disp_threshold_overrides"]
+        if not isinstance(overrides, dict):
+            raise TypeError("crt_engine.breakout_disp_threshold_overrides must be a mapping")
         lut = {str(k).upper(): v for k, v in overrides.items()}
-        hit = lut.get(str(instrument).upper())
-        if hit is not None:
-            return float(hit)
+        if str(instrument).upper() in lut:
+            return float(lut[str(instrument).upper()])
 
-    if "breakout_disp_threshold" in crt_engine_cfg:
-        return float(crt_engine_cfg["breakout_disp_threshold"])
-
-    return None
+    return float(require(crt_engine_cfg, "breakout_disp_threshold", section_name="crt_engine",
+                         consumer="resolve_breakout_disp_threshold"))
 
 
 def resolve_instrument_overrides(

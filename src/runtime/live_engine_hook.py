@@ -1021,11 +1021,10 @@ class HookedLiveEngine(LiveEngine):
                 "LIVE_HOOK: 'gate_intelligence.gate_vol_atr_basis' missing from engine_config "
                 "(declare 'legacy_relative' or 'absolute'; see F-109)."
             )
-        # Merge gate_intelligence config so GateIntelligence receives its thresholds
-        exec_planner_cfg = {
-            **exec_planner_cfg,
-            **engine_config.get("gate_intelligence", {}),
-        }
+        # EPIC-84: execution_planner ∪ gate_intelligence ∪ the CRT-resolved per-symbol
+        # breakout_disp_threshold (was: planner DEFAULT_CONFIG's 1.5), fail closed.
+        from config_layer.execution_planner import planner_config_from_production
+        exec_planner_cfg = planner_config_from_production(engine_config, trade_data["symbol"])
         # account_balance must be supplied by caller; no inline default
         if "account_balance" not in trade_data:
             raise KeyError(

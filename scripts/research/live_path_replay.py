@@ -504,7 +504,7 @@ def _replay(rows, planner_cfg, ultron_cfg, crt_cfg, regime, initial_balance, *, 
     gate.reset_kill_switch()  # clean run (state file already redirected under output dir)
     wrapper = UltronRiskGateWrapper(gate, regime_factors=ultron_cfg.get("regime_factors"))
     planner = ExecutionPlannerV1_2(planner_cfg)
-    risk_percent = float(planner_cfg.get("risk_percent", 0.5))
+    risk_percent = float(planner_cfg["risk_percent"])
 
     balance = initial_balance
     equity = []
@@ -644,11 +644,11 @@ def main(argv=None) -> int:
     # Redirect kill-switch persistence under the output dir (measure-only side-effect isolation).
     _urg._KS_STATE_PATH = out / "_ks_state.json"
 
-    planner_cfg = {**get_prod_section("execution_planner")}
-    try:
-        planner_cfg.update(get_prod_section("gate_intelligence"))  # live hook merges these (:752)
-    except (RuntimeError, KeyError):
-        pass
+    # EPIC-84: the live hook's own assembler (execution_planner ∪ gate_intelligence ∪
+    # CRT-resolved breakout threshold), fail closed -- no silent skip of a missing section.
+    from config_layer.execution_planner import planner_config_from_production
+    from config_layer.production_config import get_full_config_dict
+    planner_cfg = planner_config_from_production(get_full_config_dict(), instrument)
     if args.vol_atr_basis:
         planner_cfg["gate_vol_atr_basis"] = args.vol_atr_basis
     ultron_cfg = dict(get_prod_section("ultron_risk_gate"))
