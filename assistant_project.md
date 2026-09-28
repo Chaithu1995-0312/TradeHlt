@@ -4434,3 +4434,13 @@ Belief Update / ROI / Goal: Goal: no silent defaults. Belief: CRTConfig defaults
 Open Questions: L-E rebase over zone_mapping edits; Wave 1 lanes should base their parity on 9fde1358 when they rebase.
 Next Step: A2 execution_planner DEFAULT_CONFIG.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: EPIC-84 L-A step A2 — ExecutionPlanner has no DEFAULT_CONFIG
+Decision/Output: Commit 7ab3f8ec on lane/wp84-la. DEFAULT_CONFIG merge removed; planner requires every REQUIRED_CONFIG_KEYS key incl. breakout_disp_threshold. New execution_planner.planner_config_from_production(prod_config, symbol) (execution_planner ∪ gate_intelligence ∪ CRT-resolved per-symbol breakout threshold), used by live_engine_hook (was the planner's own 1.5), model_runners adapter, copilot_mode, forward_tester and 4 scripts. resolve_breakout_disp_threshold now raises on a missing global key (overrides map stays optional-declared). Found: copilot_mode passed a CRTConfig to the planner (not a dict) so its planner ran entirely on code defaults; forward_tester passed the whole config. 9 in-use configs declare execution_planner.ttl_continuation_sec=180 (value that ran; equals ttl_unknown_sec). Test fixture tests/helpers/planner_config.py == old DEFAULT_CONFIG (verified). Planner test set 6 failed == baseline 6, 0 new. Full-corpus parity running (backtest rail does not import the planner; run confirms nothing else moved).
+Belief Update / ROI / Goal: Goal: no silent defaults. Belief: the live planner's breakout threshold is now the CRT engine's declared value, not a coincidentally-equal literal; two callers were running on pure code defaults. Knowledge ROI: high. Action: merge after parity; A3 crt_engine_v2.
+Open Questions: L-D lane owns the rest of live_engine_hook (symbol/signal .get fallbacks); L-F owns copilot/forward_tester beyond this one-site fix.
+Next Step: parity verdict -> merge; A3.
+---
