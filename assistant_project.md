@@ -4404,3 +4404,13 @@ Belief Update / ROI / Goal: Goal: know each state by its trade. Belief: RETEST -
 Open Questions: re-run the trace with sl_anchor=sweep_extreme for RETEST; OOS split for resolver DISPLACEMENT; model the engine's one-bar execution delay in the trace; whether mode C (83.11b) still makes sense (resolver RETEST is 23/26 inverted).
 Next Step: user decides which of those to run.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: EPIC-84 Wave 0 merged (no defaults / fallbacks; missing key fails closed); Wave 1 issued
+Decision/Output: Merge 3f12289b (lane/wp84-f3). F0 src/config_layer/strict_config.py (ConfigKeyMissingError, require/require_all/require_section, trade-time missing_reason; 7 tests). F1 D1 (user): active v2_htfcrt_2026_08 crt_engine declares displacement_origin_kill_enabled=true, precedence=after_resting_fills (hash-neutral); measured baseline-tree vs D1-tree with parity_v5 (new --arm-a/--arm-b/--code-b/--label; exit 2 on DIFFERS, was always 0): full XAUUSD 47,275 bars engine 7112/7112, resolver 47197/47197, layer_trace 94406/94406, oracle 565884/565884 identical, trades 3/3 identical, kill event never fires -> decision-neutral on this corpus. F2 scripts/analysis/config_fallback_census.py (SITS): 3,557 sites (CONFIG 451, PARAM_DEFAULT 215, ENV 24, DATA 1,408, UNCLASSIFIED 1,459); all known hotspots captured. F3 load_prod_config_from_registry: params/crt_engine/engine_runner required, every CRTConfig field must be declared else ConfigKeyMissingError; M2a provenance schema surface = field names+types; 8 in-use configs completed at the values that ran (kill false); 14 legacy files refuse (D2). 74 new loader tests (every one of 53 fields removed -> raises). Floor: baseline 18 red == F3 18 red (+1 env-only: no models/ copy in that tree). Worktree setup facts: models/ and results/research/xauusd_mt5_cost_calibration are gitignored and must be copied into a worktree; harness code-tree mode ignores tree path/git_sha/artifact_path and execution_intent_id (uuid). Wave 1 lanes created from 3f12289b: wp84-lb/lc/le/lf; baseline tree wp84-base at 3f12289b; prompts multi_llm/wave84_1_prompts_2026-09-28.md; stories 84.0-84.7.
+Belief Update / ROI / Goal: Goal: no silent defaults anywhere. Belief: the CRT key surface is now fail-closed; the remaining 3,557 sites are a mechanical, parity-checked migration split into disjoint lanes. D1 changes no XAUUSD decision today (kill never triggers on 3 trades). Knowledge ROI: high. Action: relay Wave 1.
+Open Questions: L-D waits for the other session's backtest_v2/bar_structure_snapshot/server edits; pre-existing citation drift from 83.11a (test_doc_citations) unowned.
+Next Step: Claude does L-A (M2b) in wp84-w0 lineage; review lanes as they return.
+---
