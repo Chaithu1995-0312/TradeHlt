@@ -18,6 +18,10 @@ Known non-decision differences, listed in verdict.json:
 USAGE
     python scripts/research/parity_v5.py --window short
     python scripts/research/parity_v5.py --window full
+    # any two configs (EPIC-84 F1):
+    python scripts/research/parity_v5.py --window short --arm-b v2_dispkill_shadow_2026_08 --label dispkill
+    # same config, two code trees (EPIC-84 lane review): arm B runs from another worktree
+    python scripts/research/parity_v5.py --window short --arm-b v2_htfcrt_2026_08 --code-b D:/Tradelatest-wt-<lane> --label <lane>
 """
 from __future__ import annotations
 
@@ -49,6 +53,10 @@ ARM_A = "v2_htfcrt_2026_08"
 ARM_B = "v5_htfcrt_sot_dual_k23_2026_09"
 INSTRUMENT = "XAUUSD"
 
+#: Code tree each arm runs from, keyed by the arm's isolated root (set in run_window).
+#: Arm A always runs from REPO; arm B from REPO or from --code-b.
+_ARM_REPO: dict = {}
+
 WINDOWS = {
     "short": {
         "csv": "data/mt5/XAUUSD_W2026-07-06-to-2026-08-07.csv",
@@ -79,6 +87,8 @@ IGNORE_KEYS = set(VOLATILE_SUMMARY_KEYS) | {
     "label_generated_utc",
     "built_at",
     "artifact_timestamp",
+    # uuid4 minted per trade at TRADE_OPENED (STORY-83.6 finding): provenance, never behaviour
+    "execution_intent_id",
 }
 # resolver meta.json only. states.csv is the resolver surface.
 RESOLVER_META_IGNORE = IGNORE_KEYS | {"corpus_path"}
@@ -86,6 +96,9 @@ RESOLVER_META_IGNORE = IGNORE_KEYS | {"corpus_path"}
 ORACLE_IGNORE = IGNORE_KEYS | {
     "artifact_path", "trace_source_path", "build_seconds", "elapsed_seconds",
 }
+#: Provenance fields that differ only because the arms run from different code trees.
+CODE_TREE_PROVENANCE = {"corpus_path", "git_sha", "code_sha", "artifact_path"}
+
 DECLARED_HASH_WHY = (
     "DECLARED difference: params hash. A is 7de09f62... (5 params); "
     "B is e496a94c... (47 params). Not a behavior diff."
@@ -122,9 +135,9 @@ def _check_corpus(window: str) -> str:
     return spec["csv"]
 
 
-def _env() -> dict:
+def _env(repo: Path) -> dict:
     env = dict(os.environ)
-    env["PYTHONPATH"] = str(REPO / "src")
+    env["PYTHONPATH"] = str(repo / "src")
     env["PYTHONIOENCODING"] = "utf-8"
     return env
 
@@ -132,7 +145,7 @@ def _env() -> dict:
 def _run(cmd: list[str], cwd: Path, label: str) -> subprocess.CompletedProcess:
     print(f"  $ {' '.join(cmd)}  (cwd={cwd})", flush=True)
     proc = subprocess.run(
-        cmd, cwd=str(cwd), env=_env(), capture_output=True, text=True,
+        cmd, cwd=str(cwd), env=_env(_ARM_REPO[Path(cwd)]), capture_output=True, text=True,
     )
     tail = ((proc.stdout or "") + "\n" + (proc.stderr or ""))[-4000:]
     if proc.returncode != 0:
@@ -384,10 +397,10 @@ def _layer_trace_paths(root: Path) -> Path:
 def _surface_layer_trace(root_a: Path, root_b: Path) -> dict:
     # Both configs carry layer_trace.enabled true. Cite the active file; v5 is the copy.
     cfg_a = json.loads(
-        (REPO / "configs" / "production" / f"{ARM_A}.json").read_text(encoding="utf-8")
+        (_ARM_REPO[root_a] / "configs" / "production" / f"{ARM_A}.json").read_text(encoding="utf-8")
     )
     cfg_b = json.loads(
-        (REPO / "configs" / "production" / f"{ARM_B}.json").read_text(encoding="utf-8")
+        (_ARM_REPO[root_b] / "configs" / "production" / f"{ARM_B}.json").read_text(encoding="utf-8")
     )
     en_a = bool(cfg_a.get("layer_trace", {}).get("enabled", True))
     en_b = bool(cfg_b.get("layer_trace", {}).get("enabled", True))
@@ -500,7 +513,7 @@ def _surface_oracle(root_a: Path, root_b: Path, corpus_rel: str,
             if first:
                 lt_id = first[0].get("run_id")
         cmd = [
-            py, str(REPO / "scripts" / "research" / "build_bar_matrix.py"),
+            py, str(_ARM_REPO[root] / "scripts" / "research" / "build_bar_matrix.py"),
             "--instrument", INSTRUMENT, "--timeframe", "M15",
             "--csv", str(root / corpus_rel),
             "--out-dir", str(matrix_dir),
@@ -574,17 +587,20 @@ def _surface_oracle(root_a: Path, root_b: Path, corpus_rel: str,
     )
 
 
-def run_window(window: str) -> int:
+def run_window(window: str, code_b: Path, label: str) -> int:
     corpus_rel = _check_corpus(window)
     scratch = Path(tempfile.mkdtemp(prefix=f"parity_v5_{window}_"))
     print(f"scratch {scratch}", flush=True)
+    print(f"arm A {ARM_A} code {REPO}; arm B {ARM_B} code {code_b}", flush=True)
     root_a = build_config_root(REPO, scratch / "arm_a", ARM_A)
-    root_b = build_config_root(REPO, scratch / "arm_b", ARM_B)
+    root_b = build_config_root(code_b, scratch / "arm_b", ARM_B)
+    _ARM_REPO[root_a] = REPO
+    _ARM_REPO[root_b] = code_b
     print("backtest arm A", flush=True)
     run_a = run_backtest(REPO, root_a, corpus_rel, INSTRUMENT, python=sys.executable)
     print(f"  -> {run_a}", flush=True)
     print("backtest arm B", flush=True)
-    run_b = run_backtest(REPO, root_b, corpus_rel, INSTRUMENT, python=sys.executable)
+    run_b = run_backtest(code_b, root_b, corpus_rel, INSTRUMENT, python=sys.executable)
     print(f"  -> {run_b}", flush=True)
 
     surfaces = _surface_ledger(run_a, run_b)
@@ -595,13 +611,15 @@ def run_window(window: str) -> int:
         _layer_trace_paths(root_a), _layer_trace_paths(root_b),
     ))
 
-    out_dir = REPO / "results" / "parity_v5" / window
+    out_dir = REPO / "results" / "parity_v5" / (window if label == "v5" else f"{label}_{window}")
     out_dir.mkdir(parents=True, exist_ok=True)
     payload = {
         "window": window,
         "corpus": corpus_rel,
         "arm_a": ARM_A,
         "arm_b": ARM_B,
+        "code_a": str(REPO),
+        "code_b": str(code_b),
         "scratch": str(scratch),
         "surfaces": surfaces,
     }
@@ -609,18 +627,36 @@ def run_window(window: str) -> int:
     dest.write_text(json.dumps(payload, indent=2, default=str) + "\n", encoding="utf-8")
     print(f"wrote {dest}", flush=True)
     failed = [s["surface"] for s in surfaces if s["verdict"] == "DIFFERS"]
-    return 0 if not failed else 0
+    print(f"verdict: {'PASS' if not failed else 'DIFFERS ' + ','.join(failed)}", flush=True)
+    return 0 if not failed else 2
 
 
 def main() -> int:
+    global ARM_A, ARM_B
     print(f"self-check runtime.backtest_v2={_bt_mod.__file__}", flush=True)
     if REPO.resolve() not in Path(_bt_mod.__file__).resolve().parents:
         raise SystemExit(f"PYTHONPATH is not this worktree: {_bt_mod.__file__}")
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--window", required=True, choices=sorted(WINDOWS))
+    ap.add_argument("--arm-a", default=ARM_A, help="config version for arm A")
+    ap.add_argument("--arm-b", default=ARM_B, help="config version for arm B")
+    ap.add_argument("--code-b", default=None,
+                    help="code tree (worktree root) arm B runs from; default this repo")
+    ap.add_argument("--label", default="v5", help="results/parity_v5/<label>_<window>")
     args = ap.parse_args()
+
+    ARM_A, ARM_B = args.arm_a, args.arm_b
+    code_b = Path(args.code_b).resolve() if args.code_b else REPO
+    if not (code_b / "src" / "runtime" / "backtest_v2.py").exists():
+        raise SystemExit(f"--code-b is not a code tree: {code_b}")
+    if code_b != REPO.resolve():
+        # Two code trees: each arm stamps its own tree path and git sha into provenance
+        # fields. Those are environment identity, not behaviour; ignore them (listed in
+        # verdict.json as ignored_fields). Decision rows are still compared in full.
+        IGNORE_KEYS.update(CODE_TREE_PROVENANCE)
+        ORACLE_IGNORE.update(CODE_TREE_PROVENANCE | {"source"})
     try:
-        return run_window(args.window)
+        return run_window(args.window, code_b, args.label)
     except Exception as exc:  # noqa: BLE001 — surface the arm failure and stop
         print(f"ERROR: {exc}", flush=True)
         return 1

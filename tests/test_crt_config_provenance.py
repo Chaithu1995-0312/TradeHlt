@@ -2,6 +2,7 @@
 from __future__ import annotations
 from tests.helpers.crt_config import crt_config_for_test
 
+import dataclasses
 import os
 
 import pytest
@@ -57,7 +58,10 @@ def test_fingerprint_diverges_router_vs_prod_xauusd():
     router = ConfigBuilder.build("XAUUSD")
     prod = load_prod_config_from_registry(ver, "XAUUSD")
     assert fingerprint(router) != fingerprint(prod)
-    assert fingerprint(prod) != schema_fingerprint()
+    # EPIC-84: the schema surface is field names + types (no values exist without a config).
+    schema = schema_fingerprint()
+    assert len(schema) == len(dataclasses.fields(type(prod)))
+    assert all(isinstance(n, str) and isinstance(t, str) for n, t in schema)
 
 
 def test_compare_surfaces_structure():
@@ -65,6 +69,8 @@ def test_compare_surfaces_structure():
     assert report["router_equals_prod"] is False
     assert report["production_merged"]["mode"] == ConstructionMode.PRODUCTION_MERGED.value
     assert report["router_base"]["mode"] == ConstructionMode.ROUTER_BASE.value
+    assert report["schema"]["n_fields"] == len(report["schema"]["fields"])
+    assert report["prod_declares_schema_fields"] is True
 
 
 def test_require_mode_non_strict_warns_only():

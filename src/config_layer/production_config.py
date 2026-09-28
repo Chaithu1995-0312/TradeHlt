@@ -25,7 +25,7 @@ Usage:
     cfg = get_prod_config("BTCUSDT")  # CRYPTO profile + prod overrides
 
     # Historical replay
-    cfg = load_prod_config_from_registry("v1_multi_2026_03", "EURUSD")
+    cfg = load_prod_config_from_registry("v2_htfcrt_2026_08", "XAUUSD")  # incomplete configs refuse (EPIC-84)
 ═══════════════════════════════════════════════════════════════════════════════
 """
 
@@ -42,6 +42,7 @@ import logging as _logging
 
 from config_layer.config_builder import ConfigBuilder, _validate_override_keys
 from config_layer.state_identity import CRTConfig
+from config_layer.strict_config import ConfigKeyMissingError, require_section
 
 _log = _logging.getLogger(__name__)
 
@@ -295,6 +296,27 @@ def get_prod_metadata() -> dict:
         return json.load(f)
 
 
+def _require_crt_complete(crt_engine: dict, params: dict, engine_runner: dict, *,
+                          consumer: str, version: str, source: str) -> None:
+    """Raise ConfigKeyMissingError naming every CRTConfig field not declared in its owning
+    section (crt_engine / params / engine_runner). Reuses crt_config_completeness."""
+    from config_layer.crt_config_completeness import (
+        missing_externally_owned_fields,
+        missing_nonscalar_fields,
+        missing_scalar_fields,
+    )
+
+    missing = sorted(
+        {f"crt_engine|params:{k}" for k in missing_scalar_fields(crt_engine, params)}
+        | {f"crt_engine:{k}" for k in missing_nonscalar_fields(crt_engine)}
+        | {f"engine_runner:{k}" for k in missing_externally_owned_fields(engine_runner)}
+    )
+    if missing:
+        raise ConfigKeyMissingError(
+            missing, section="CRTConfig", consumer=consumer, version=version, source=source,
+        )
+
+
 def load_prod_config_from_registry(
     version: str,
     instrument: str,
@@ -334,7 +356,12 @@ def load_prod_config_from_registry(
     with open(registry_path, encoding="utf-8") as f:
         data = json.load(f)
 
-    params = data.get("params", {})
+    if "params" not in data:
+        raise ConfigKeyMissingError(
+            ["params"], section="<root>", consumer="load_prod_config_from_registry",
+            version=version, source=str(registry_path),
+        )
+    params = data["params"]
     if not params:
         raise RuntimeError(
             f"Production registry {registry_path} has no 'params' key.\n"
@@ -356,22 +383,25 @@ def load_prod_config_from_registry(
     # ── Merge crt_engine section into overrides ────────────────────────────
     # crt_engine.* fields map 1-to-1 with CRTConfig fields. params section
     # wins over crt_engine defaults (tuned params take precedence).
-    crt_engine = data.get("crt_engine", {})
-    if crt_engine:
-        coerced = _coerce_crt_engine(crt_engine)
-        # `instrument_overrides` is a meta sub-dict (handled by
-        # resolve_instrument_overrides below from the raw crt_engine), NOT a
-        # CRTConfig field — strip it so ConfigBuilder key-validation doesn't reject.
-        coerced.pop("instrument_overrides", None)
-        merged = {**coerced, **params}   # params (tuned) wins over crt_engine defaults
-    else:
-        merged = dict(params)
+    # EPIC-84: no defaults, no fallbacks. Both sections are required, and every CRTConfig
+    # field must be declared (crt_engine / params / engine_runner) before the build, so a
+    # missing key fails closed here instead of silently taking the CRTConfig code value.
+    _where = dict(consumer="load_prod_config_from_registry", version=version,
+                  source=str(registry_path))
+    crt_engine = require_section(data, "crt_engine", **_where)
+    _er = require_section(data, "engine_runner", **_where)
+    _require_crt_complete(crt_engine, params, _er, **_where)
+    coerced = _coerce_crt_engine(crt_engine)
+    # `instrument_overrides` is a meta sub-dict (handled by
+    # resolve_instrument_overrides below from the raw crt_engine), NOT a
+    # CRTConfig field — strip it so ConfigBuilder key-validation doesn't reject.
+    coerced.pop("instrument_overrides", None)
+    merged = {**coerced, **params}   # params (tuned) wins over crt_engine
 
     # ── Resolve allowed_sessions (global + per-instrument override) ─────────
     # JSON stores lowercase ("london", "new_york"); the engine wants canonical
     # keys ("LONDON", "NEWYORK", "OFF_SESSION"). resolve_allowed_sessions is the
     # single source of truth shared with ConfigValidator and the sweeps.
-    _er = data.get("engine_runner", {})
     _sessions = resolve_allowed_sessions(_er, instrument)
     if _sessions is not None:
         merged["allowed_sessions"] = _sessions

@@ -207,6 +207,8 @@
     ]
   },
   "crt_engine": {
+    "displacement_origin_kill_enabled": false,
+    "displacement_origin_kill_precedence": "after_resting_fills",
     "score_decay_lambda": 0.05,
     "max_spread_pct": 0.05,
     "atr_period": 14,

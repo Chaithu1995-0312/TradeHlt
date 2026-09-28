@@ -12,7 +12,7 @@ python scripts/analysis/generate_script_matrix.py
 Authority: **inventory only** (no promote power). Thin-wrapper purity is **not**
 CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` only.
 
-**Records:** 495
+**Records:** 496
 
 | ID | Category | Lifecycle | Impl status | Path | Purpose |
 |---|---|---|---|---|---|
@@ -511,6 +511,7 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-493` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/gen_bridge_layer.py` | GRANDFATHER_UNCLASSIFIED |
 | `SCR-494` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/parity_v5.py` | Five-way XAUUSD parity of configs/production/v5_htfcrt_sot_dual_k23_2026_09 v... |
 | `SCR-495` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/setup_grid_s4.py` | GRANDFATHER_UNCLASSIFIED |
+| `SCR-496` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/config_fallback_census.py` | AST census of every site in src/ where a value can come from a code literal i... |
 
 ---
 
