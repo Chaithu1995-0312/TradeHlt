@@ -1,4 +1,5 @@
 {
+  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine"},
   "version": "v4_dual_construction_2026_09",
   "config_id": "v4_dual_construction_2026_09_registered",
   "created_at": "2026-08-29T00:00:00+00:00",
@@ -11,6 +12,7 @@
     "expansion_atr_min_distance": 0.3
   },
   "engine_runner": {
+    "allowed_sessions_overrides": {},
     "model_path": "results/model_export_format.json",
     "min_atr": 0.0003,
     "allowed_sessions": [
@@ -216,6 +218,8 @@
     "params_fingerprint": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613"
   },
   "crt_engine": {
+    "instrument_overrides": {},
+    "breakout_disp_threshold_overrides": {},
     "displacement_origin_kill_enabled": false,
     "displacement_origin_kill_precedence": "after_resting_fills",
     "score_decay_lambda": 0.05,
@@ -464,6 +468,10 @@
     }
   },
   "backtest": {
+    "sl_anchor": "displacement",
+    "htf_reset_exempt_sweep": false,
+    "session_window_basis": "broker_static",
+    "htf_clock_basis": "count",
     "_comment_htf_candles_per_range": "M15 bars per completed HTF window (HTFBuilder). 4 = 1H, 16 = 4H. The ONLY effect is how often current_htf_id flips, which ResetLogic.should_reset compares to active_range.htf_candle_id (DISPLACEMENT/SWEEP/RANGE/SHADOW_PENDING reset; EXPANSION/RETEST exempt). Independent of crt_engine.pending_displacement_ttl_candles, retrace_reset_pct, sessions, and TP. Changing this key does not change those rules.",
     "htf_candles_per_range": 16,
     "_comment_warmup_candles": "T-16 (2026-07-23): raised 30 -> 78 to match the feature pipeline's CANONICAL warmup, which FeaturePipeline.finalize() drops. 78 is DERIVED, not chosen: feature_pipeline.ma_periods[0](20) + 1 (ma_slope diff) + trend_strength_window(10) - 1 + zscore_window(50) - 1, resolved by features.feature_pipeline.required_warmup_rows(). At 30 the replay loop ran candles 30..77 through the CRT state machine with NO feature row behind them, and a trade opened there silently received a zero vector. BacktestRunner now refuses to start when this value is below the derived one, so changing any of those three feature_pipeline windows without raising this key FAILS LOUDLY instead of reopening the gap.",

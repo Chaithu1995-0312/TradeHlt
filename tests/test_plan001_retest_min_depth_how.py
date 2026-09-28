@@ -108,6 +108,15 @@ def test_try_expansion_to_retest_default_parity_vs_dynamism():
             "config_layer.crt_engine_v2", fromlist=["CRTState"]
         ).CRTState.EXPANSION
         st.atr = atr
+        # EPIC-84: the RETEST guard needs the engine's real ATR field and a sweep event
+        # (`st.atr` above is not an EngineState field; atr_abs stayed 0).
+        st.atr_abs = atr
+        from config_layer.crt_engine_v2 import SweepEvent as _SE
+        st.sweep_event = _SE(
+            candle=Candle(timestamp=datetime(2024, 1, 1, 11, 0), open=101, high=101, low=99.5,
+                          close=100.5, volume=1, index=4),
+            price=99.5, direction=Direction.LONG, candle_index=4, double_confirmed=False,
+        )
         st.direction = Direction.LONG
         st.active_range = Range(
             h_ref=120.0,

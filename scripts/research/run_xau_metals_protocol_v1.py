@@ -151,7 +151,7 @@ def stream_retest_candidates(
     from runtime.backtest_v2 import CandleLoader, HTFBuilder
 
     crt_cfg = ConfigBuilder().build(instrument=INSTRUMENT)
-    engine = CRTEngine(config=crt_cfg)
+    engine = CRTEngine.from_production(crt_cfg)
     corpus_path = guard_xauusd_csv_path("data/mt5/XAUUSD_M15.csv", INSTRUMENT)
     loader = CandleLoader(str(corpus_path), instrument=INSTRUMENT)
     htf_n = 4

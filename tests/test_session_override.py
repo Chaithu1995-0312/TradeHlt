@@ -12,6 +12,17 @@ import json
 
 import pytest
 
+
+def _active_registry_dict() -> dict:
+    """The ACTIVE production config as a dict: a COMPLETE registry (EPIC-84 -- a minimal
+    hand-written registry is incomplete and now fails closed at load)."""
+    import json as _json
+    from pathlib import Path as _P
+    root = _P(__file__).resolve().parents[1] if (_P(__file__).resolve().parents[1] / "configs").exists() \
+        else _P(__file__).resolve().parents[2]
+    ver = (root / "configs" / "production" / "ACTIVE_VERSION").read_text(encoding="utf-8").strip()
+    return _json.loads((root / "configs" / "production" / f"{ver}.json").read_text(encoding="utf-8"))
+
 from config_layer.production_config import (
     _canon_session,
     load_prod_config_from_registry,
@@ -23,7 +34,8 @@ from config_layer.production_config import (
 # Reused by both load_prod_config_from_registry and ConfigValidator.
 
 def test_resolve_global_only_canonicalizes():
-    er = {"allowed_sessions": ["london", "new_york", "off_session"]}
+    er = {"allowed_sessions": ["london", "new_york", "off_session"],
+          "allowed_sessions_overrides": {}}   # EPIC-84: the map is mandatory ({} = none)
     assert resolve_allowed_sessions(er, "ETHUSDT") == ("LONDON", "NEWYORK", "OFF_SESSION")
 
 
@@ -43,13 +55,17 @@ def test_resolve_unlisted_instrument_falls_back_to_global():
     assert resolve_allowed_sessions(er, "ETHUSDT") == ("LONDON", "NEWYORK", "OVERLAP")
 
 
-def test_resolve_returns_none_when_nothing_applies():
-    assert resolve_allowed_sessions(None, "BNBUSDT") is None
-    assert resolve_allowed_sessions({}, "BNBUSDT") is None
-    # override map present but no match and no global → None (leave untouched)
-    assert resolve_allowed_sessions(
-        {"allowed_sessions_overrides": {"SOLUSDT": ["asia"]}}, "BNBUSDT"
-    ) is None
+def test_resolve_fails_closed_when_nothing_is_declared():
+    """UPDATED 2026-09-28 (EPIC-84): was test_resolve_returns_none_when_nothing_applies. The
+    section, the per-symbol map and the global list are all required."""
+    from config_layer.strict_config import ConfigKeyMissingError
+    with pytest.raises(ConfigKeyMissingError):
+        resolve_allowed_sessions(None, "BNBUSDT")
+    with pytest.raises(ConfigKeyMissingError):
+        resolve_allowed_sessions({}, "BNBUSDT")
+    # override map present but no match and no global -> fail closed (was: None)
+    with pytest.raises(ConfigKeyMissingError):
+        resolve_allowed_sessions({"allowed_sessions_overrides": {"SOLUSDT": ["asia"]}}, "BNBUSDT")
 
 
 # ── _canon_session: the bug-fix core ───────────────────────────────────────
@@ -75,15 +91,14 @@ def test_canon_session(raw, expected):
 
 
 def _write_registry(tmp_path, allowed, overrides=None):
-    """Write a minimal, hash-free registry file and return its dir."""
-    engine_runner = {"allowed_sessions": allowed}
-    if overrides is not None:
-        engine_runner["allowed_sessions_overrides"] = overrides
-    reg = {
-        # params must be truthy and contain only valid CRTConfig field names.
-        "params": {"tier_1_threshold": 0.75},
-        "engine_runner": engine_runner,
-    }
+    """Write a hash-free registry file and return its dir.
+
+    EPIC-84: the complete active config with this test's engine_runner session values (a
+    minimal partial registry now fails closed at load). overrides=None = declared empty map.
+    """
+    reg = _active_registry_dict()
+    reg["engine_runner"]["allowed_sessions"] = allowed
+    reg["engine_runner"]["allowed_sessions_overrides"] = overrides if overrides is not None else {}
     (tmp_path / "v_test.json").write_text(json.dumps(reg), encoding="utf-8")
     return str(tmp_path)
 
@@ -126,7 +141,8 @@ def test_override_lookup_is_case_insensitive_on_instrument(tmp_path):
 
 
 def test_absent_override_map_is_noop(tmp_path):
-    """No allowed_sessions_overrides key → global behavior unchanged (regression)."""
+    """Declared-empty allowed_sessions_overrides → global behavior unchanged (regression).
+    (EPIC-84: an ABSENT map now fails closed -- see test_resolve_fails_closed_when_nothing_is_declared.)"""
     reg_dir = _write_registry(tmp_path, ["london", "new_york", "overlap"])
     cfg = _load(reg_dir, "BNBUSDT")
     assert cfg.allowed_sessions == ("LONDON", "NEWYORK", "OVERLAP")

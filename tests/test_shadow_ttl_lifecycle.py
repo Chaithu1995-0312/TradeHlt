@@ -29,6 +29,7 @@ import pytest
 from config_layer.crt_engine_v2 import (
     Candle, CRTConfig, CRTEngine, CRTState, Direction, Range, SweepEvent,
 )
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
 
 _T0 = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
@@ -38,7 +39,7 @@ def _candle(i: int, o: float, h: float, l: float, c: float) -> Candle:
 
 
 def _engine(ttl: int) -> CRTEngine:
-    return CRTEngine(crt_config_for_test(pending_displacement_ttl_candles=ttl))
+    return crt_engine_for_test(crt_config_for_test(pending_displacement_ttl_candles=ttl))
 
 
 def _seed_displacement(

@@ -35,6 +35,7 @@ from config_layer.state_topology import (
     graphs_equal,
     module_seed_transition_graph,
 )
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
 
 
 @pytest.fixture(autouse=True)
@@ -54,7 +55,7 @@ def test_build_graph_from_production_bundle():
 
 
 def test_crt_engine_injects_who_topology():
-    eng = CRTEngine(config=crt_config_for_test())
+    eng = crt_engine_for_test(crt_config_for_test())
     assert eng.runtime_transitions is not None
     assert eng.sm.valid_transitions is eng.runtime_transitions
     assert graphs_equal(eng.runtime_transitions, VALID_TRANSITIONS)
@@ -112,7 +113,7 @@ def test_process_candle_dual_run_behavior_parity():
 
     def _fingerprint() -> str:
         clear_state_contract_cache()
-        eng = CRTEngine(config=crt_config_for_test())
+        eng = crt_engine_for_test(crt_config_for_test())
         base = datetime(2024, 1, 1, 0, 0, 0)
         candles = [
             Candle(

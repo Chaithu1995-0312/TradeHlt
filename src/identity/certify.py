@@ -249,7 +249,7 @@ def run_certification(corpus_path: Path, store_root: Path) -> dict[str, Any]:
             f"L3 CRTConfig version={PROD_VERSION} mode={crt_prov.mode.value} "
             f"instrument={crt_prov.instrument}"
         )
-        engine = CRTEngine(crt_cfg)
+        engine = CRTEngine.from_production(crt_cfg, PROD_VERSION)
         bt_sec = get_prod_section("backtest")
         htf_n = int(bt_sec["htf_candles_per_range"])
         warmup_n = int(bt_sec["warmup_candles"])

@@ -38,7 +38,7 @@ def run_once(*, enable_counters: bool, max_process: int) -> tuple[list[tuple], d
     csv_path = guard_xauusd_csv_path(str(ROOT / "data/XAUUSD_M15.csv"), "XAUUSD")
     crt_cfg = load_prod_config_from_registry(PROD_VERSION, "XAUUSD")
     bt_cfg = BacktestConfig.from_prod_config(instrument="XAUUSD", crt_config=crt_cfg)
-    engine = CRTEngine(crt_cfg)
+    engine = CRTEngine.from_production(crt_cfg)
     counters = CRTFailReasonCounters()
     if enable_counters:
         engine.baseline_trace = counters

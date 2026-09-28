@@ -8,6 +8,17 @@ import json
 
 import pytest
 
+
+def _active_registry_dict() -> dict:
+    """The ACTIVE production config as a dict: a COMPLETE registry (EPIC-84 -- a minimal
+    hand-written registry is incomplete and now fails closed at load)."""
+    import json as _json
+    from pathlib import Path as _P
+    root = _P(__file__).resolve().parents[1] if (_P(__file__).resolve().parents[1] / "configs").exists() \
+        else _P(__file__).resolve().parents[2]
+    ver = (root / "configs" / "production" / "ACTIVE_VERSION").read_text(encoding="utf-8").strip()
+    return _json.loads((root / "configs" / "production" / f"{ver}.json").read_text(encoding="utf-8"))
+
 from config_layer.production_config import (
     load_prod_config_from_registry,
     resolve_instrument_overrides,
@@ -33,9 +44,15 @@ def test_resolver_miss_returns_empty():
 
 
 def test_resolver_no_block_returns_empty():
-    assert resolve_instrument_overrides({}, "BNBUSDT") == {}
-    assert resolve_instrument_overrides(None, "BNBUSDT") == {}
+    """UPDATED 2026-09-28 (EPIC-84): the map is mandatory. A declared empty map (or one with no
+    entry for the symbol) returns {}; an absent map or section fails closed."""
+    from config_layer.strict_config import ConfigKeyMissingError
     assert resolve_instrument_overrides({"instrument_overrides": {}}, "BNBUSDT") == {}
+    assert resolve_instrument_overrides({"instrument_overrides": {"SOLUSDT": {}}}, "BNBUSDT") == {}
+    with pytest.raises(ConfigKeyMissingError):
+        resolve_instrument_overrides({}, "BNBUSDT")
+    with pytest.raises(ConfigKeyMissingError):
+        resolve_instrument_overrides(None, "BNBUSDT")
 
 
 def test_resolver_unknown_key_raises():
@@ -50,16 +67,18 @@ def test_resolver_unknown_key_raises():
 def temp_registry(tmp_path):
     """Minimal but hash-valid-free registry: load with verify_hash=False."""
     def _build(instrument_overrides):
-        data = {
-            "params": {"score_threshold": 0.45, "body_ratio_min": 0.70},
-            "crt_engine": {
-                "ema_fast": 2, "ema_slow": 5,
-                "conf_weights": [0.35, 0.35, 0.15, 0.15],
-                "weak_link_weight": 0.30,
-            },
-        }
-        if instrument_overrides is not None:
-            data["crt_engine"]["instrument_overrides"] = instrument_overrides
+        # EPIC-84: start from the complete active config, then apply this test's values
+        # (was a minimal partial registry, which now fails closed at load).
+        data = _active_registry_dict()
+        data["params"].update({"score_threshold": 0.45, "body_ratio_min": 0.70})
+        data["crt_engine"].update({
+            "ema_fast": 2, "ema_slow": 5,
+            "conf_weights": [0.35, 0.35, 0.15, 0.15],
+            "weak_link_weight": 0.30,
+        })
+        # the per-symbol map is mandatory: None here means "declared empty"
+        data["crt_engine"]["instrument_overrides"] = (
+            instrument_overrides if instrument_overrides is not None else {})
         p = tmp_path / "v_test.json"
         p.write_text(json.dumps(data), encoding="utf-8")
         return p

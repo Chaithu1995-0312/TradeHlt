@@ -162,35 +162,36 @@ def _canon_session(raw: str) -> str:
 
 def resolve_allowed_sessions(
     engine_runner_cfg: Optional[dict], instrument: str
-) -> Optional[tuple[str, ...]]:
+) -> tuple[str, ...]:
     """
     Resolve the canonical allowed-session tuple for an instrument.
 
     A per-instrument entry in `engine_runner.allowed_sessions_overrides` (matched
     case-insensitively) wins over the global `engine_runner.allowed_sessions`.
 
-    Returns None when nothing applies (no override match AND no global key) so the
-    caller leaves the config's existing sessions untouched.
+    EPIC-84 (no defaults): the section, the per-symbol map (`{}` = no symbol differs) and the
+    global list are all REQUIRED -- missing raises ConfigKeyMissingError (it used to return
+    None so the caller kept whatever sessions it already had).
     """
+    from config_layer.strict_config import ConfigKeyMissingError, require
+
+    consumer = "resolve_allowed_sessions"
     if not isinstance(engine_runner_cfg, dict):
-        return None
-
-    overrides = engine_runner_cfg.get("allowed_sessions_overrides") or {}
-    if isinstance(overrides, dict) and overrides:
-        lut = {str(k).upper(): v for k, v in overrides.items()}
-        hit = lut.get(str(instrument).upper())
-        if hit is not None:
-            return tuple(_canon_session(s) for s in hit)
-
-    if "allowed_sessions" in engine_runner_cfg:
-        return tuple(_canon_session(s) for s in engine_runner_cfg["allowed_sessions"])
-
-    return None
+        raise ConfigKeyMissingError(["<section>"], section="engine_runner", consumer=consumer)
+    overrides = require(engine_runner_cfg, "allowed_sessions_overrides",
+                        section_name="engine_runner", consumer=consumer)
+    if not isinstance(overrides, dict):
+        raise TypeError("engine_runner.allowed_sessions_overrides must be a mapping")
+    lut = {str(k).upper(): v for k, v in overrides.items()}
+    if str(instrument).upper() in lut:
+        return tuple(_canon_session(s) for s in lut[str(instrument).upper()])
+    return tuple(_canon_session(s) for s in require(
+        engine_runner_cfg, "allowed_sessions", section_name="engine_runner", consumer=consumer))
 
 
 def resolve_breakout_disp_threshold(
-    crt_engine_cfg: Optional[dict], instrument: str
-) -> Optional[float]:
+    crt_engine_cfg: Optional[dict], instrument: str, params: Optional[dict] = None
+) -> float:
     """
     Resolve the per-symbol BREAKOUT displacement threshold.
 
@@ -199,27 +200,29 @@ def resolve_breakout_disp_threshold(
     Shared by the CRT engine and ExecutionPlanner so backtest and live can never
     diverge on intent classification.
 
-    EPIC-84 (no defaults): the global `breakout_disp_threshold` is REQUIRED -- a missing
-    section or key raises ConfigKeyMissingError (it used to return None so each caller
-    picked its own 1.5). `breakout_disp_threshold_overrides` is an OPTIONAL declared map:
-    absent means "no per-instrument override", never a substituted value.
+    EPIC-84 (no defaults; user decision O1 2026-09-28): BOTH keys are REQUIRED in crt_engine:
+    `breakout_disp_threshold_overrides` (a mapping, `{}` = no symbol differs) and the global
+    `breakout_disp_threshold`. Missing -> ConfigKeyMissingError (it used to return None so each
+    caller picked its own 1.5). The global value follows the loader's precedence: a `params`
+    entry wins over `crt_engine`. The loader writes this result into CRTConfig, so the CRT
+    engine and the ExecutionPlanner use the identical per-symbol value.
     """
     from config_layer.strict_config import ConfigKeyMissingError, require
 
+    consumer = "resolve_breakout_disp_threshold"
     if not isinstance(crt_engine_cfg, dict):
-        raise ConfigKeyMissingError(
-            ["<section>"], section="crt_engine", consumer="resolve_breakout_disp_threshold",
-        )
-    if "breakout_disp_threshold_overrides" in crt_engine_cfg:
-        overrides = crt_engine_cfg["breakout_disp_threshold_overrides"]
-        if not isinstance(overrides, dict):
-            raise TypeError("crt_engine.breakout_disp_threshold_overrides must be a mapping")
-        lut = {str(k).upper(): v for k, v in overrides.items()}
-        if str(instrument).upper() in lut:
-            return float(lut[str(instrument).upper()])
-
+        raise ConfigKeyMissingError(["<section>"], section="crt_engine", consumer=consumer)
+    overrides = require(crt_engine_cfg, "breakout_disp_threshold_overrides",
+                        section_name="crt_engine", consumer=consumer)
+    if not isinstance(overrides, dict):
+        raise TypeError("crt_engine.breakout_disp_threshold_overrides must be a mapping")
+    lut = {str(k).upper(): v for k, v in overrides.items()}
+    if str(instrument).upper() in lut:
+        return float(lut[str(instrument).upper()])
+    if isinstance(params, dict) and "breakout_disp_threshold" in params:
+        return float(params["breakout_disp_threshold"])
     return float(require(crt_engine_cfg, "breakout_disp_threshold", section_name="crt_engine",
-                         consumer="resolve_breakout_disp_threshold"))
+                         consumer=consumer))
 
 
 def resolve_instrument_overrides(
@@ -234,21 +237,29 @@ def resolve_instrument_overrides(
     against the CRTConfig schema (fail-fast on typos); values are coerced to
     CRTConfig types (e.g. conf_weights list → tuple) via `_coerce_crt_engine`.
 
-    Returns {} when no override applies, so the caller leaves config untouched.
+    EPIC-84 (no defaults): `crt_engine.instrument_overrides` is REQUIRED (`{}` = no symbol
+    differs); missing raises ConfigKeyMissingError. Returns {} only when the declared map has
+    no entry for this instrument.
 
     This is the governed per-instrument deployment vehicle — the SAME pattern as
     `resolve_allowed_sessions`, and the ONLY supported place for instrument-scoped
     CRT param divergence. Never hardcode per-instrument params in market_router.
     """
+    from config_layer.strict_config import ConfigKeyMissingError, require
+
+    consumer = "resolve_instrument_overrides"
     if not isinstance(crt_engine_cfg, dict):
-        return {}
-    overrides = crt_engine_cfg.get("instrument_overrides") or {}
-    if not isinstance(overrides, dict) or not overrides:
-        return {}
+        raise ConfigKeyMissingError(["<section>"], section="crt_engine", consumer=consumer)
+    overrides = require(crt_engine_cfg, "instrument_overrides",
+                        section_name="crt_engine", consumer=consumer)
+    if not isinstance(overrides, dict):
+        raise TypeError("crt_engine.instrument_overrides must be a mapping")
     lut = {str(k).upper(): v for k, v in overrides.items()}
-    hit = lut.get(str(instrument).upper())
-    if not isinstance(hit, dict) or not hit:
+    if str(instrument).upper() not in lut:
         return {}
+    hit = lut[str(instrument).upper()]
+    if not isinstance(hit, dict):
+        raise TypeError(f"crt_engine.instrument_overrides[{instrument!r}] must be a mapping")
     coerced = _coerce_crt_engine(hit)
     _validate_override_keys(coerced)  # ValueError on unknown CRTConfig field
     return coerced
@@ -402,15 +413,18 @@ def load_prod_config_from_registry(
     # resolve_instrument_overrides below from the raw crt_engine), NOT a
     # CRTConfig field — strip it so ConfigBuilder key-validation doesn't reject.
     coerced.pop("instrument_overrides", None)
+    # `breakout_disp_threshold_overrides` is a per-symbol meta map (O1, mandatory): resolved
+    # below into CRTConfig.breakout_disp_threshold, never a CRTConfig field itself.
+    coerced.pop("breakout_disp_threshold_overrides", None)
     merged = {**coerced, **params}   # params (tuned) wins over crt_engine
+    merged["breakout_disp_threshold"] = resolve_breakout_disp_threshold(
+        crt_engine, instrument, params)
 
     # ── Resolve allowed_sessions (global + per-instrument override) ─────────
     # JSON stores lowercase ("london", "new_york"); the engine wants canonical
     # keys ("LONDON", "NEWYORK", "OFF_SESSION"). resolve_allowed_sessions is the
     # single source of truth shared with ConfigValidator and the sweeps.
-    _sessions = resolve_allowed_sessions(_er, instrument)
-    if _sessions is not None:
-        merged["allowed_sessions"] = _sessions
+    merged["allowed_sessions"] = resolve_allowed_sessions(_er, instrument)
 
     # ── Per-instrument CRT overrides (governed; applied LAST so they win) ────
     # The ONLY supported place for instrument-scoped CRT param divergence.
@@ -418,6 +432,15 @@ def load_prod_config_from_registry(
     # silently overwritten (the failure mode of hardcoding in market_router).
     _inst_over = resolve_instrument_overrides(crt_engine, instrument)
     if _inst_over:
+        if ("breakout_disp_threshold" in _inst_over
+                and float(_inst_over["breakout_disp_threshold"])
+                != merged["breakout_disp_threshold"]):
+            raise ValueError(
+                f"{registry_path}: breakout_disp_threshold for {instrument} is set by both "
+                f"crt_engine.instrument_overrides ({_inst_over['breakout_disp_threshold']}) and "
+                f"the resolved breakout_disp_threshold_overrides/global "
+                f"({merged['breakout_disp_threshold']}). Declare it in one place (EPIC-84 O1)."
+            )
         merged.update(_inst_over)
 
     from config_layer.crt_config_provenance import ConstructionMode

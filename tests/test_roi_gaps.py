@@ -21,6 +21,7 @@ import pytest
 
 from runtime.backtest_v2 import BacktestMetrics
 from config_layer.crt_engine_v2 import CRTConfig, Trade, Direction, ExecutionEngine
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -97,7 +98,7 @@ def test_trade_tp3_price_default_zero():
 
 def _make_executor(tp3_enabled: bool = False) -> ExecutionEngine:
     cfg = crt_config_for_test(tp3_enabled=tp3_enabled, tp3_atr_multiplier=3.0)
-    return ExecutionEngine(cfg)
+    return execution_engine_for_test(cfg)
 
 
 def _long_trade(tp3_price: float = 0.0) -> Trade:

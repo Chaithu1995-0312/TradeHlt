@@ -311,7 +311,7 @@ def replay(candles: list[Candle], arm, instrument: str) -> tuple[list[dict[str, 
         over["session_windows"] = arm.session_windows
     cfg = dataclasses.replace(base, **over) if over else base
 
-    engine = CRTEngine(cfg)
+    engine = CRTEngine.from_production(cfg)
     engine._session_ts_basis = arm.ts_basis
     htf = HTFBuilder(4, instrument)
     initialized = False

@@ -17,6 +17,7 @@ from config_layer.crt_engine_v2 import (
     Candle, CRTConfig, CRTEngine, CRTState, Direction, Range,
 )
 from runtime.backtest_v2 import BacktestRunner
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
 
 _T0 = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
@@ -35,7 +36,7 @@ def test_backtest_run_constructs_feed_and_threads_parent_state():
 
 def _engine_at_soft_conf_long_discount() -> tuple[CRTEngine, Candle]:
     """Plant RETEST + evaluating_soft_conf + LONG in discount. Zone check passes."""
-    eng = CRTEngine(crt_config_for_test())
+    eng = crt_engine_for_test(crt_config_for_test())
     eng._parent_crt_enabled = True
     rng = Range(
         h_ref=110.0, l_ref=100.0, equilibrium=105.0,

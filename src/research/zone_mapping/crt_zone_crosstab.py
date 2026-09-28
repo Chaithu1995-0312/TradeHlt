@@ -116,7 +116,7 @@ def collect_crt_zone_joint_labels(
     cfg = zone_config or ZoneMapConfig.from_prod_engine_runner()
     mapper = HistoricalZoneMapper(cfg)
     crt_cfg = _harden_crt_config(ConfigBuilder.from_production(instrument))
-    engine = CRTEngine(crt_cfg)
+    engine = CRTEngine.from_production(crt_cfg)
     htf = HTFBuilder(htf_candles_per_range, instrument)
 
     labels: list[BarJointLabel] = []

@@ -33,6 +33,7 @@ from config_layer.crt_engine_v2 import (
     EngineState,
     Direction,
 )
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
 
 
 # ---------------------------------------------------------------------------
@@ -41,7 +42,7 @@ from config_layer.crt_engine_v2 import (
 
 def _make_engine() -> ExecutionEngine:
     """Minimal engine using all-default CRTConfig. No external deps."""
-    return ExecutionEngine(crt_config_for_test())
+    return execution_engine_for_test(crt_config_for_test())
 
 
 def _make_full_state() -> EngineState:

@@ -92,7 +92,7 @@ def _feat_map_at(df: pd.DataFrame, arr: np.ndarray, key_to_i: dict[str, int], ro
 def _run_crt(df: pd.DataFrame) -> tuple[list[dict], list[str], dict[int, dict]]:
     """Return (events, state_path per bar index raw, event_by_idx)."""
     cfg = load_prod_config_from_registry(get_active_version(), "XAUUSD")
-    engine = CRTEngine(cfg)
+    engine = CRTEngine.from_production(cfg)
     htf = HTFBuilder(4, "XAUUSD")
     init = False
     state_by_idx: dict[int, str] = {}

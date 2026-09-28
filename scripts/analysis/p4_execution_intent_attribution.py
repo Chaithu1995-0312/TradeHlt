@@ -118,7 +118,7 @@ def _capture_state(state, label: str, candle=None) -> dict:
     # Intent
     _intent = "n/a"
     try:
-        _intent = ExecutionEngine._derive_trade_intent(feats)
+        _intent = ExecutionEngine._derive_trade_intent(feats, crt_cfg.breakout_disp_threshold)
     except Exception:
         pass
 

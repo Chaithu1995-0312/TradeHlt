@@ -85,7 +85,7 @@ def main() -> int:
     candles = list(loader.stream())
     total = len(candles)
 
-    engine = CRTEngine(crt_cfg)
+    engine = CRTEngine.from_production(crt_cfg)
     hooks = CRTBaselineTraceHooks()
     hooks.enabled = True
     # Permanent attach: process_candle sets sm.trace_hooks = baseline_trace when enabled

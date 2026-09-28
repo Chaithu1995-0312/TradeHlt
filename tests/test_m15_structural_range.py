@@ -64,8 +64,8 @@ def test_detect_legacy_name_is_same_object():
     det = RangeDetector(config=None)  # type: ignore[arg-type]
     det.config = type("C", (), {})()
     kids = [_c(0, 5.0, 1.0), _c(1, 6.0, 2.0)]
-    a = det.detect_m15_structural_range(kids, "CLK-2")
-    b = det.detect_htf_range(kids, "CLK-2")
+    a = det.detect_m15_structural_range(kids, "CLK-2", "UNKNOWN")
+    b = det.detect_htf_range(kids, "CLK-2", "UNKNOWN")
     assert type(a) is M15StructuralLiquidityRange
     assert type(b) is M15StructuralLiquidityRange
     assert (a.h_ref, a.l_ref, a.clock_id) == (b.h_ref, b.l_ref, b.clock_id) == (6.0, 1.0, "CLK-2")

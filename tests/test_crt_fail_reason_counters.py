@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from tests.helpers.crt_config import crt_config_for_test
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -16,7 +17,7 @@ def _engine():
     sys.path.insert(0, str(ROOT / "src"))
     from config_layer.crt_engine_v2 import CRTConfig, CRTEngine, Candle
 
-    return CRTEngine(crt_config_for_test()), Candle, datetime
+    return crt_engine_for_test(crt_config_for_test()), Candle, datetime
 
 
 def _candles(n: int, Candle, datetime):

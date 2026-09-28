@@ -264,7 +264,7 @@ def replay_crt(
     """Replay CRTEngine bar by bar; return one record per bar (index-aligned)."""
     if crt_cfg is None:
         crt_cfg = load_prod_config_from_registry(get_active_version(), instrument)
-    engine = CRTEngine(crt_cfg)
+    engine = CRTEngine.from_production(crt_cfg)
     htf = HTFBuilder(htf_bars, instrument)
     initialized = False
 

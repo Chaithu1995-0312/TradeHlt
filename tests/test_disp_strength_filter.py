@@ -71,9 +71,11 @@ class TestDispStrengthFilter:
         # Use l=0.0 so that high - low = wick_size - 0.0 is exact in float
         # (avoids (1.08 + x) - 1.08 ≠ x rounding artifact).
         # Division wick_size/atr is also exact when wick_size = N * atr (power-of-2 multiple).
+        # EPIC-84: a real displacement has a body (the RETEST guard rejects a doji); open at the
+        # low keeps wick_size = high - low exactly as before.
         state.displacement_candle = _make_candle(
             "2024-01-01T08:00:00",
-            o=wick_size, h=wick_size, l=0.0, c=wick_size,
+            o=0.0, h=wick_size, l=0.0, c=wick_size,
         )
 
         # Fake sweep event (required)

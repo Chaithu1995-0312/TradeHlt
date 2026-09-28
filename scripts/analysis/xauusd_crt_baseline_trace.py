@@ -136,7 +136,7 @@ def main() -> int:
     target_set = set(target_ts)
 
     # CRT engine + HTF like backtest
-    engine = CRTEngine(crt_cfg)
+    engine = CRTEngine.from_production(crt_cfg)
     hooks = CRTBaselineTraceHooks()
     engine.baseline_trace = hooks
     htf = HTFBuilder(bt_cfg.htf_candles_per_range, "XAUUSD")

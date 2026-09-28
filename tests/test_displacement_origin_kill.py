@@ -38,6 +38,7 @@ from config_layer.crt_engine_v2 import (  # noqa: E402
 )
 from config_layer.state_identity import CRTConfig  # noqa: E402
 from runtime.backtest_v2 import _resolve_exit  # noqa: E402
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────────────
@@ -152,7 +153,7 @@ def test_displacement_origin_is_a_trade_field_not_an_engine_state_read():
 def test_structural_close_books_at_the_bar_close_not_at_the_origin():
     """Booking at the origin would assume a fill at a level the bar may never have offered
     after the trigger became knowable -- lookahead wearing a structural argument."""
-    ex = ExecutionEngine(crt_config_for_test())
+    ex = execution_engine_for_test(crt_config_for_test())
     t = _trade(Direction.LONG, origin=99.5)
     assert ex.close_structural(t, 99.0) == "STOPPED_STRUCTURAL"
     assert t.pnl == pytest.approx(99.0 - 100.0)   # close, not origin (which would be -0.5)
@@ -162,7 +163,7 @@ def test_structural_close_books_at_the_bar_close_not_at_the_origin():
 def test_structural_close_after_tp1_keeps_the_partial_and_only_kills_the_runner():
     """This is what 'preempts the SEM-017 trail' means concretely: the TP1 fill genuinely
     happened and is kept; only the runner that the half-way trail would have carried is cut."""
-    ex = ExecutionEngine(crt_config_for_test())
+    ex = execution_engine_for_test(crt_config_for_test())
     t = _trade(Direction.LONG, origin=99.5, status="TP1")
     t.partial_pnl = 1.0
     assert ex.close_structural(t, 99.0) == "STOPPED_STRUCTURAL"
@@ -170,7 +171,7 @@ def test_structural_close_after_tp1_keeps_the_partial_and_only_kills_the_runner(
 
 
 def test_structural_close_is_a_noop_on_an_already_closed_trade():
-    ex = ExecutionEngine(crt_config_for_test())
+    ex = execution_engine_for_test(crt_config_for_test())
     t = _trade(Direction.LONG, origin=99.5, status="STOPPED")
     assert ex.close_structural(t, 99.0) == "UNCHANGED"
 
