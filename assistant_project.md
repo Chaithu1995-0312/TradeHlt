@@ -4444,3 +4444,13 @@ Belief Update / ROI / Goal: Goal: no silent defaults. Belief: the live planner's
 Open Questions: L-D lane owns the rest of live_engine_hook (symbol/signal .get fallbacks); L-F owns copilot/forward_tester beyond this one-site fix.
 Next Step: parity verdict -> merge; A3.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: EPIC-84 L-A A2 merged
+Decision/Output: Full-corpus parity_v5 baseline 3f12289b vs lane/wp84-la (A1+A2): PASS on all five surfaces (trades 3/3, engine 7112, resolver 47197, layer_trace 94406, oracle 565884). Merged 7c23b9b8; 212 related tests pass on main.
+Belief Update / ROI / Goal: Goal: no silent defaults. Belief: planner strictness is behaviour-neutral on the backtest rail; the live-rail change is the declared breakout threshold (1.5 == 1.5 today). Knowledge ROI: medium. Action: A3.
+Open Questions: overrides-map optionality (user call).
+Next Step: A3 crt_engine_v2 fallback sites.
+---
