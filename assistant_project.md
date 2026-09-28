@@ -4464,3 +4464,13 @@ Belief Update / ROI / Goal: Goal: no silent defaults. Belief: engine behaviour i
 Open Questions: A3b needs backtest_v2 edit (other session WIP still uncommitted).
 Next Step: parity verdict -> merge; A3b build in a separate worktree.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-28
+Topic: EPIC-84 L-A — O1 + A3a merged; found and fixed a real RETEST_REPLAY telemetry bug during parity verification
+Decision/Output: Merged f687f161 (lane/wp84-la: ee1bf8bd O1, 24202416 A3a, 7efc64dc follow-up). During full-corpus re-verification of O1+A3a, parity_v5 caught engine_state.telemetry.len differing (4883 vs 4863 RETEST_REPLAY rows). Root cause: 7 of 8 _emit_retest_replay() call sites in crt_engine_v2.process_candle called reset_to_range() BEFORE emitting telemetry; reset_to_range nulls displacement_candle/retest_candle/cached_features, so the pre-A3a getattr/"if x else 0.0" fallbacks were silently fabricating plausible-looking rows (direction/geometry/intent all wrong, same defect class as the empty-intent bug found earlier in A3a). A3a's strict reads correctly refused to fabricate and instead dropped the row (swallowed exception, now logged). Fixed by reordering: emit telemetry while the rejecting bar's geometry is still live, then reset. Verified: full-corpus parity vs active code now differs on exactly 1 of 4863 RETEST_REPLAY rows (the previously-corrupted one), showing correct real values (direction=1 vs stale -1, real disp_high/low/entry vs 0.0, intent='reversal' vs ''). trade_ledger/resolver_states/layer_trace stayed byte-identical throughout -- the stream is off-spine (execution_planner_replay.py research input only), never the trading decision path. 224 related tests green on main post-merge.
+Belief Update / ROI / Goal: Goal: no silent defaults, and use their absence as a bug detector. Belief: confirmed -- strict-read migrations are finding real latent defects (2 in this stream alone), not just formalizing known-good behavior. Knowledge ROI: high. Action: A3b next (supply the engine's 3 never-produced intent keys; real ledger-affecting change, needs user review of the diff before merge).
+Open Questions: none blocking A3b start.
+Next Step: build A3b in a fresh worktree off f687f161; measure with parity_v5; present the ledger diff for user review before merging.
+---
