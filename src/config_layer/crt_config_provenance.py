@@ -232,7 +232,15 @@ def mark_explicit(
 
 
 def schema_fingerprint() -> tuple:
-    return fingerprint(CRTConfig())
+    """The CRTConfig SCHEMA surface: field names and declared types, no values.
+
+    EPIC-84 (no defaults): a schema has no threshold values to fingerprint -- CRTConfig
+    fields carry no code defaults, so ``CRTConfig()`` is not constructible. The schema
+    surface is therefore the declared field set itself.
+    """
+    import dataclasses
+
+    return tuple((f.name, str(f.type)) for f in dataclasses.fields(CRTConfig))
 
 
 def compare_surfaces(instrument: str, version: Optional[str] = None) -> dict[str, Any]:
@@ -241,7 +249,7 @@ def compare_surfaces(instrument: str, version: Optional[str] = None) -> dict[str
     from config_layer.production_config import get_active_version, load_prod_config_from_registry
 
     ver = version or get_active_version()
-    schema = CRTConfig()
+    schema_fields = schema_fingerprint()
     router = ConfigBuilder.build(instrument)
     prod = load_prod_config_from_registry(ver, instrument)
     return {
@@ -249,9 +257,8 @@ def compare_surfaces(instrument: str, version: Optional[str] = None) -> dict[str
         "version": ver,
         "schema": {
             "mode": ConstructionMode.SCHEMA.value,
-            "fp": list(fingerprint(schema)),
-            "body_ratio_min": schema.body_ratio_min,
-            "expansion_atr_min_distance": schema.expansion_atr_min_distance,
+            "n_fields": len(schema_fields),
+            "fields": [name for name, _ in schema_fields],
         },
         "router_base": {
             "mode": get_provenance(router).mode.value,
@@ -266,5 +273,8 @@ def compare_surfaces(instrument: str, version: Optional[str] = None) -> dict[str
             "expansion_atr_min_distance": prod.expansion_atr_min_distance,
         },
         "router_equals_prod": fingerprint(router) == fingerprint(prod),
-        "schema_equals_prod": fingerprint(schema) == fingerprint(prod),
+        # Values live only in configs now; the schema can match prod only on field set.
+        "prod_declares_schema_fields": all(
+            hasattr(prod, name) for name, _ in schema_fields
+        ),
     }

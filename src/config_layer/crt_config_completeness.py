@@ -44,7 +44,15 @@ Scope: 47 of 53 fields checked against crt_engine/params, 5 checked against crt_
     entirely — the same class of error the Phase A census corrected once already, for
     `crt_engine`/`market_router.classes`, recurring on one specific field.)
 
-NOT wired into the production loader's hot path
+WIRED into the production loader (UPDATED 2026-09-28, EPIC-84 F3)
+    `production_config.load_prod_config_from_registry` now calls this module's three
+    `missing_*` functions before `ConfigBuilder.build` and raises
+    `strict_config.ConfigKeyMissingError` naming every undeclared field (user rule: no
+    defaults, a missing key fails closed). In-use configs were completed; the 14 remaining
+    incomplete files refuse to load (user decision D2). The paragraph below is the
+    2026-08-31 history that led to this decision, kept for the record.
+
+HISTORY (2026-08-31): NOT wired into the production loader's hot path
     `require_complete()` is NOT called anywhere in `production_config.py` or
     `config_builder.py`. Deliberately: a census across all 24 files under
     `configs/production/*.json` (2026-08-31) found most declare only the 5 legacy `params` keys,
@@ -134,8 +142,8 @@ def require_complete(
     currently-correct location. `externally_owned_sections` are the real owning section(s) for
     EXTERNALLY_OWNED_FIELDS (e.g. pass `engine_runner`); omit to skip that check (backward
     compatible with callers that only care about the crt_engine/params surface). Read-only: takes
-    plain dicts, mutates nothing, calls nothing else. Not wired into the production loader -- see
-    module docstring."""
+    plain dicts, mutates nothing, calls nothing else. The loader uses the same `missing_*`
+    functions (and raises ConfigKeyMissingError instead of ValueError) -- see module docstring."""
     missing_scalar = missing_scalar_fields(crt_engine, params)
     missing_nonscalar = missing_nonscalar_fields(crt_engine)
     missing_external = (

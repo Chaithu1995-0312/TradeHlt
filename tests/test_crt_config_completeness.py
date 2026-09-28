@@ -70,24 +70,21 @@ def _load_active_config() -> dict:
     )
 
 
-def test_active_config_is_currently_incomplete_non_vacuity():
-    """The real active config, unmodified, must currently FAIL this check -- proves the checker
-    is non-vacuous. If this ever goes green because someone declared the params for real, that
-    is GOOD NEWS but this test must be consciously updated to reflect it, not left passing on a
-    premise that no longer holds.
-
-    CORRECTED 2026-08-31 (Phase E0 / CR-1): `allowed_sessions` was previously asserted as one of
-    the 3 missing fields -- wrong, it is declared via `engine_runner.allowed_sessions` and is now
-    excluded from `scalar_required_fields()` entirely (checked separately below and by
-    `test_allowed_sessions_satisfies_the_externally_owned_check`)."""
+def test_active_config_is_complete_and_check_is_non_vacuous():
+    """UPDATED 2026-09-28 (EPIC-84 F3): the active config now declares every CRTConfig field
+    (the 2 displacement_origin_kill_* fields were declared per user decision D1), so the check
+    PASSES on it -- the good news the previous version of this test asked to be told about.
+    Non-vacuity is kept by mutation: remove one declared field from a copy and the check fires.
+    History: until 2026-09-28 the active config was missing exactly
+    {displacement_origin_kill_enabled, displacement_origin_kill_precedence}."""
     cfg = _load_active_config()
-    missing = missing_scalar_fields(cfg.get("crt_engine", {}), cfg.get("params", {}))
-    assert missing == {
-        "displacement_origin_kill_enabled",
-        "displacement_origin_kill_precedence",
-    }
+    assert missing_scalar_fields(cfg["crt_engine"], cfg["params"]) == frozenset()
+    require_complete(cfg["crt_engine"], cfg["params"], cfg["engine_runner"], context="active config")
+    ce = dict(cfg["crt_engine"])
+    ce.pop("displacement_origin_kill_enabled")
+    assert missing_scalar_fields(ce, cfg["params"]) == {"displacement_origin_kill_enabled"}
     with pytest.raises(ValueError, match="undeclared in crt_engine/params"):
-        require_complete(cfg.get("crt_engine", {}), cfg.get("params", {}), context="active config")
+        require_complete(ce, cfg["params"], context="active config minus one field")
 
 
 def test_active_config_nonscalar_fields_are_all_declared_via_crt_engine():
@@ -103,14 +100,12 @@ def test_allowed_sessions_satisfies_the_externally_owned_check():
     just an absent one."""
     cfg = _load_active_config()
     assert missing_externally_owned_fields(cfg.get("engine_runner", {})) == frozenset()
-    # And require_complete, given the real owning section, raises ONLY on the 2 genuinely
-    # undeclared fields -- allowed_sessions must not appear in the error at all.
-    with pytest.raises(ValueError) as exc_info:
-        require_complete(
-            cfg.get("crt_engine", {}), cfg.get("params", {}), cfg.get("engine_runner", {}),
-            context="active config, externally-owned section supplied",
-        )
-    assert "allowed_sessions" not in str(exc_info.value)
+    # And require_complete, given the real owning section, passes: allowed_sessions is
+    # satisfied by engine_runner (the active config is complete since 2026-09-28, EPIC-84 F3).
+    require_complete(
+        cfg["crt_engine"], cfg["params"], cfg["engine_runner"],
+        context="active config, externally-owned section supplied",
+    )
 
 
 def test_missing_externally_owned_fields_detects_a_genuine_absence():

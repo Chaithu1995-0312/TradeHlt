@@ -28,10 +28,12 @@ def report():
     return _load_tool().build_census()
 
 
-def test_census_covers_24_production_config_files(report):
+def test_census_covers_27_production_config_files(report):
     # If this drifts, a config file was added/removed/archived since this floor was authored --
     # re-run and read the new numbers before touching this test.
-    assert report["total_files"] == 24
+    # UPDATED 2026-09-28 (EPIC-84 F3): 24 -> 27 (v2_htfcrt_k23_shadow, v4_dual_construction and
+    # v5_htfcrt_sot_dual_k23 were added since 2026-08-31).
+    assert report["total_files"] == 27
 
 
 def test_zero_files_currently_pass_the_completeness_check(report):
@@ -46,8 +48,13 @@ def test_zero_files_currently_pass_the_completeness_check(report):
     `engine_runner` section, `v2_dispkill_shadow_2026_08.json` (47 crt_engine keys, the previous
     "best case 1 missing" file) genuinely clears all 47 scalar-required fields AND declares
     engine_runner.allowed_sessions -- it is legitimately COMPLETE, not a bug in the census."""
-    assert report["complete"] == 1
-    assert report["incomplete"] == 22
+    # UPDATED 2026-09-28 (EPIC-84 F3): require_complete() IS now wired into the loader (user
+    # rule: no defaults, missing key fails closed). User decision D2: every in-use config was
+    # completed at the values that ran before (kill keys false/after_resting_fills; the active
+    # v2_htfcrt_2026_08 declares kill enabled=true per D1); the 14 files below stay on disk,
+    # untouched, and refuse to load. Was complete=1 / incomplete=22.
+    assert report["complete"] == 12
+    assert report["incomplete"] == 14
     assert report["skipped_or_unreadable"] == 1  # regime_map.json, a non-CRTConfig-shaped file
 
 
@@ -76,19 +83,16 @@ def test_worst_and_best_case_missing_counts(report):
     worst = max(r["missing_scalar_count"] for r in by_file.values())
     best = min(r["missing_scalar_count"] for r in by_file.values())
     assert worst == 43
-    assert best == 2
+    assert best == 7  # UPDATED 2026-09-28: the 2-short files were completed (EPIC-84 F3)
     assert by_file["v2_test.json"]["missing_scalar_count"] == 43
     assert by_file["v2_test_archived_20260411_200110.json"]["missing_scalar_count"] == 43
 
 
 def test_active_config_matches_the_single_file_completeness_floor(report):
-    """Cross-check against tests/test_crt_config_completeness.py's own direct measurement of the
-    active config -- both must agree on the same 2-field gap (corrected from 3; allowed_sessions
-    is declared via engine_runner, not genuinely missing)."""
+    """Cross-check against tests/test_crt_config_completeness.py: both agree the active config
+    is COMPLETE. UPDATED 2026-09-28 (EPIC-84 F3): was a 2-field gap
+    (displacement_origin_kill_enabled / _precedence), declared per user decision D1."""
     row = next(r for r in report["results"] if r["file"] == "v2_htfcrt_2026_08.json")
-    assert row["missing_scalar_count"] == 2
-    assert set(row["missing_scalar_fields"]) == {
-        "displacement_origin_kill_enabled",
-        "displacement_origin_kill_precedence",
-    }
+    assert row["status"] == "COMPLETE"
+    assert row["missing_scalar_count"] == 0
     assert row["missing_externally_owned_fields"] == []
