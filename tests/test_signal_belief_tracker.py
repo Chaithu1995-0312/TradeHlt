@@ -19,6 +19,7 @@ Coverage:
 from __future__ import annotations
 
 import pytest
+from config_layer.strict_config import ConfigKeyMissingError
 from core.signal_belief_tracker import (
     BeliefState,
     BeliefRegistry,
@@ -26,13 +27,22 @@ from core.signal_belief_tracker import (
     SignalBeliefTracker,
 )
 
+# EPIC-84 STORY-84.2: no class defaults. Explicit config = the active-config
+# engine_runner.signal_belief values.
+_KNOBS = {"decay": 0.70, "high_conviction_threshold": 0.65, "min_confirmations": 2}
+_SECTION = {"enabled": False, **_KNOBS}
+
+
+def _registry() -> BeliefRegistry:
+    return BeliefRegistry(dict(_SECTION))
+
 
 # ─── Fixtures ──────────────────────────────────────────────────────────────────
 
 @pytest.fixture
 def tracker() -> SignalBeliefTracker:
-    """Default-config tracker."""
-    return SignalBeliefTracker()
+    """Active-config tracker."""
+    return SignalBeliefTracker(dict(_KNOBS))
 
 
 @pytest.fixture
@@ -167,19 +177,19 @@ class TestReset:
 
 class TestBeliefRegistry:
     def test_different_keys_return_different_trackers(self):
-        reg = BeliefRegistry()
+        reg = _registry()
         t1 = reg.get("BTCUSDT", "M15")
         t2 = reg.get("EURUSD", "H1")
         assert t1 is not t2
 
     def test_same_key_returns_same_tracker(self):
-        reg = BeliefRegistry()
+        reg = _registry()
         t1 = reg.get("BTCUSDT", "M15")
         t2 = reg.get("BTCUSDT", "M15")
         assert t1 is t2
 
     def test_state_isolated_between_keys(self):
-        reg = BeliefRegistry()
+        reg = _registry()
         reg.get("BTCUSDT", "M15").update(0.9, 1)
         reg.get("BTCUSDT", "M15").update(0.9, 1)
         # EURUSD tracker should start fresh
@@ -187,7 +197,7 @@ class TestBeliefRegistry:
         assert state.confirm_count == 1
 
     def test_len_tracks_unique_keys(self):
-        reg = BeliefRegistry()
+        reg = _registry()
         assert len(reg) == 0
         reg.get("A", "M15")
         reg.get("B", "H1")
@@ -195,7 +205,7 @@ class TestBeliefRegistry:
         assert len(reg) == 2
 
     def test_config_passed_to_trackers(self):
-        cfg = {"decay": 0.50, "high_conviction_threshold": 0.10, "min_confirmations": 1}
+        cfg = {"enabled": True, "decay": 0.50, "high_conviction_threshold": 0.10, "min_confirmations": 1}
         reg = BeliefRegistry(config=cfg)
         tracker = reg.get("X", "M1")
         assert tracker._decay == 0.50
@@ -207,14 +217,14 @@ class TestBeliefRegistry:
 
 class TestRuntimeContext:
     def test_holds_belief_registry(self):
-        reg = BeliefRegistry()
+        reg = _registry()
         ctx = RuntimeContext(belief_registry=reg)
         assert ctx.belief_registry is reg
 
     def test_parallel_isolation(self):
         """Two RuntimeContext instances must share NO state."""
-        ctx_a = RuntimeContext(belief_registry=BeliefRegistry())
-        ctx_b = RuntimeContext(belief_registry=BeliefRegistry())
+        ctx_a = RuntimeContext(belief_registry=_registry())
+        ctx_b = RuntimeContext(belief_registry=_registry())
         ctx_a.belief_registry.get("BTCUSDT", "M15").update(0.9, 1)
         ctx_a.belief_registry.get("BTCUSDT", "M15").update(0.9, 1)
         # ctx_b tracker should be pristine
@@ -223,25 +233,33 @@ class TestRuntimeContext:
         assert state_b.approved is False
 
     def test_two_contexts_different_registries(self):
-        ctx_a = RuntimeContext(belief_registry=BeliefRegistry())
-        ctx_b = RuntimeContext(belief_registry=BeliefRegistry())
+        ctx_a = RuntimeContext(belief_registry=_registry())
+        ctx_b = RuntimeContext(belief_registry=_registry())
         assert ctx_a.belief_registry is not ctx_b.belief_registry
 
 
 # ─── Config defaults ───────────────────────────────────────────────────────────
 
 class TestConfigDefaults:
-    def test_default_decay(self):
-        t = SignalBeliefTracker()
-        assert t._decay == 0.70
+    """Rewritten (EPIC-84): absent knobs no longer yield 0.70 / 0.65 / 2 — they raise."""
 
-    def test_default_high_conviction(self):
-        t = SignalBeliefTracker()
-        assert t._high_conviction == 0.65
+    def test_no_config_raises(self):
+        with pytest.raises(ConfigKeyMissingError):
+            SignalBeliefTracker(None)
 
-    def test_default_min_confirms(self):
-        t = SignalBeliefTracker()
-        assert t._min_confirms == 2
+    @pytest.mark.parametrize("key", sorted(_KNOBS))
+    def test_missing_knob_raises(self, key):
+        with pytest.raises(ConfigKeyMissingError) as ei:
+            SignalBeliefTracker({k: v for k, v in _KNOBS.items() if k != key})
+        assert ei.value.missing == (key,)
+
+    def test_active_values(self):
+        t = SignalBeliefTracker(dict(_KNOBS))
+        assert (t._decay, t._high_conviction, t._min_confirms) == (0.70, 0.65, 2)
+
+    def test_registry_without_config_raises_on_get(self):
+        with pytest.raises(ConfigKeyMissingError):
+            BeliefRegistry(None).get("X", "M1")
 
     def test_config_override(self):
         t = SignalBeliefTracker(config={

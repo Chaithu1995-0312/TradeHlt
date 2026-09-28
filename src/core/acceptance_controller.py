@@ -30,22 +30,22 @@ from typing import Optional
 
 import numpy as np
 
-# Hard bounds on all thresholds
-_THETA_MIN = 0.50
-_THETA_MAX = 0.95
+from config_layer.strict_config import require_all
 
-# Minimum samples before adaptive control engages
-_MIN_HISTORY = 10
+# EPIC-84 STORY-84.2: the module constants _THETA_MIN/_THETA_MAX/_MIN_HISTORY and the _DEFAULTS
+# dict are gone. Every knob is a required key (see AcceptanceController._REQUIRED_KEYS).
 
-# Default config values (used when history is insufficient or config is missing)
-_DEFAULTS = {
-    "score_threshold":  0.45,
-    "engine_threshold": 0.60,
-    "fusion_threshold": 0.65,
-}
+#: Keys strict-read from the ``acceptance_controller`` section by from_prod_config.
+_SECTION_KEYS: tuple[str, ...] = (
+    "theta_min", "theta_max", "min_history", "fusion_percentile",
+    "acceptance_alpha", "acceptance_target_low", "acceptance_target_high",
+    "acceptance_k_sigma", "acceptance_window",
+    # cold-path thresholds (formerly _DEFAULTS["engine_threshold"/"fusion_threshold"])
+    "engine_threshold", "fusion_threshold",
+)
 
 
-def _clamp(v: float, lo: float = _THETA_MIN, hi: float = _THETA_MAX) -> float:
+def _clamp(v: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, float(v)))
 
 
@@ -72,44 +72,41 @@ class AcceptanceController:
         from config_layer.production_config import get_prod_section
         s = get_prod_section("acceptance_controller")
         merged = dict(base_config or {})
-        # T-22 (2026-07-19): the five integral-control params were MISSING from this list, so
-        # they were never strict-read nor injected — __init__ then fell back to its code
-        # literals and the live adaptive threshold ran on values absent from the production
-        # config entirely (undeclared, unhashable, invisible to config_reachability). The
-        # two-tier design was correct; the required list was simply incomplete.
-        for key in (
-            "theta_min", "theta_max", "min_history", "fusion_percentile",
-            "acceptance_alpha", "acceptance_target_low", "acceptance_target_high",
-            "acceptance_k_sigma", "acceptance_window",
-        ):
-            if key not in s:
-                raise KeyError(
-                    f"Required config key '{key}' missing from 'acceptance_controller' section. "
-                    f"Add it to the production config (config-first doctrine: no silent defaults)."
-                )
-            merged[key] = s[key]
+        # T-22 (2026-07-19) + EPIC-84 STORY-84.2: every section knob is strict-read in one pass
+        # (a single error lists all absent keys). score_threshold comes from base_config
+        # (decision_engine keys merged into the EngineRunner config) and is required by __init__.
+        merged.update(require_all(
+            s, _SECTION_KEYS,
+            section_name="acceptance_controller", consumer="AcceptanceController",
+        ))
         return cls(merged)
 
-    def __init__(self, config: Optional[dict] = None) -> None:
-        cfg = config or {}
+    #: Every key __init__ reads — the section knobs plus the decision_engine score_threshold.
+    _REQUIRED_KEYS: tuple[str, ...] = _SECTION_KEYS + ("score_threshold",)
 
-        # BEHAVIORAL bounds/knobs — canonical defaults for unit-test / standalone construction;
-        # the live path supplies them via from_prod_config (fail-fast, no silent config default).
-        self._theta_min         = float(cfg.get("theta_min", _THETA_MIN))
-        self._theta_max         = float(cfg.get("theta_max", _THETA_MAX))
-        self._min_history       = int(cfg.get("min_history", _MIN_HISTORY))
-        self._fusion_percentile = float(cfg.get("fusion_percentile", 85))
+    def __init__(self, config: dict) -> None:
+        # EPIC-84 STORY-84.2: no two-tier .get() defaults — one require_all, then index.
+        cfg = require_all(
+            config, self._REQUIRED_KEYS,
+            section_name="acceptance_controller", consumer="AcceptanceController",
+        )
+
+        # BEHAVIORAL bounds/knobs
+        self._theta_min         = float(cfg["theta_min"])
+        self._theta_max         = float(cfg["theta_max"])
+        self._min_history       = int(cfg["min_history"])
+        self._fusion_percentile = float(cfg["fusion_percentile"])
 
         # Integral control parameters
-        self._alpha        = float(cfg.get("acceptance_alpha", 0.01))
-        self._target_low   = float(cfg.get("acceptance_target_low",  0.05))
-        self._target_high  = float(cfg.get("acceptance_target_high", 0.15))
-        self._k_sigma      = float(cfg.get("acceptance_k_sigma",     1.0))
-        self._window_size  = int(cfg.get("acceptance_window",        200))
+        self._alpha        = float(cfg["acceptance_alpha"])
+        self._target_low   = float(cfg["acceptance_target_low"])
+        self._target_high  = float(cfg["acceptance_target_high"])
+        self._k_sigma      = float(cfg["acceptance_k_sigma"])
+        self._window_size  = int(cfg["acceptance_window"])
 
         # Current theta (score_threshold fed to DecisionEngine)
         # Store raw config value separately so cold-path returns it unchanged
-        self._cold_score_threshold = float(cfg.get("score_threshold", _DEFAULTS["score_threshold"]))
+        self._cold_score_threshold = float(cfg["score_threshold"])
         self._theta = _clamp(self._cold_score_threshold, self._theta_min, self._theta_max)
 
         # Rolling history windows
@@ -121,8 +118,8 @@ class AcceptanceController:
         # Use the raw (pre-clamp) score_threshold so config values < _THETA_MIN are preserved
         self._cfg_defaults = {
             "score_threshold":  self._cold_score_threshold,
-            "engine_threshold": float(cfg.get("engine_threshold", _DEFAULTS["engine_threshold"])),
-            "fusion_threshold": float(cfg.get("fusion_threshold", _DEFAULTS["fusion_threshold"])),
+            "engine_threshold": float(cfg["engine_threshold"]),
+            "fusion_threshold": float(cfg["fusion_threshold"]),
         }
 
     # ------------------------------------------------------------------

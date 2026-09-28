@@ -24,8 +24,10 @@ Architecture principle:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field, asdict
-from typing import Optional, Callable
+from dataclasses import dataclass, asdict
+from typing import Callable, Optional
+
+from config_layer.strict_config import ConfigKeyMissingError, require_all
 
 logger = logging.getLogger("FusionEngine")
 
@@ -132,48 +134,83 @@ class FusionConfig:
     """
     Controls layer weights and LLM activation band.
 
-    Defaults mirror configs/production/v1_multi_2026_03.json fusion_engine section.
-    Override individual fields as needed for testing or experimental configs.
+    EPIC-84 STORY-84.2: NO field defaults. Every field is a declared key of the
+    ``fusion_engine`` config section; build it with ``FusionConfig.from_section(section)``
+    (one ``require_all`` — a missing key raises ``ConfigKeyMissingError`` naming it).
     """
     # Layer weights
-    gaussian_weight: float = 0.6
-    neural_weight:   float = 0.4
-    llm_weight:      float = 0.2
-    llm_lower_band:  float = 0.45
-    llm_upper_band:  float = 0.65
-    enable_llm:      bool  = True
+    gaussian_weight: float
+    neural_weight:   float
+    llm_weight:      float
+    llm_lower_band:  float
+    llm_upper_band:  float
+    enable_llm:      bool
 
     # Risk tiers — map final_score to risk multiplier
-    tier_full:    float = 0.75  # score >= tier_full  → risk 1.0×
-    tier_half:    float = 0.60  # score >= tier_half  → risk 0.5×
-    tier_quarter: float = 0.50  # score >= tier_quarter → risk 0.25×
+    tier_full:    float  # score >= tier_full  → risk 1.0×
+    tier_half:    float  # score >= tier_half  → risk 0.5×
+    tier_quarter: float  # score >= tier_quarter → risk 0.25×
 
     # Per-engine weights used by compute() to aggregate multi-engine scores.
-    weight_crt:                  float = 0.30
-    weight_gaussian:             float = 0.25
-    weight_zone_gate:            float = 0.25
-    weight_rr:                   float = 0.20
-    # 5th engine — StrategyOrchestrator consensus.  Default 0.0 means disabled;
-    # set to e.g. 0.10 in production config to activate.
-    weight_strategy_consensus:   float = 0.0
+    weight_crt:                  float
+    weight_gaussian:             float
+    weight_zone_gate:            float
+    weight_rr:                   float
+    # 5th engine — StrategyOrchestrator consensus. 0.0 means disabled.
+    weight_strategy_consensus:   float
 
     # Regime-aware weight profiles. compute() looks these up by normalised
     # regime label ONLY when an explicit `regime=` argument is passed.
-    # UNKNOWN mirrors the scalar weight_* defaults above so a degraded-regime
-    # path matches the no-regime-arg path exactly.
-    regime_fusion_weights: dict = field(default_factory=lambda: {
-        "TRENDING": {"crt": 0.38, "gaussian": 0.20, "zone_gate": 0.12, "rr": 0.20, "strategy_consensus": 0.10},
-        "RANGING":  {"crt": 0.18, "gaussian": 0.32, "zone_gate": 0.15, "rr": 0.25, "strategy_consensus": 0.10},
-        "VOLATILE": {"crt": 0.28, "gaussian": 0.14, "zone_gate": 0.12, "rr": 0.16, "strategy_consensus": 0.30},
-        "UNKNOWN":  {"crt": 0.30, "gaussian": 0.25, "zone_gate": 0.25, "rr": 0.20, "strategy_consensus": 0.00},
-    })
+    regime_fusion_weights: dict
 
     # Consensus gates for fuse_strategy_results()
-    min_consensus_signals:   int   = 2     # completeness gate: minimum actionable strategies
-    min_consensus_agreement: float = 0.60  # fraction of actionable that must agree
+    min_consensus_signals:   int    # completeness gate: minimum actionable strategies
+    min_consensus_agreement: float  # fraction of actionable that must agree
 
     # Conflict resolution policy — "conservative" or "majority"
-    conflict_resolution_policy: str = "conservative"
+    conflict_resolution_policy: str
+
+    #: Every key the ``fusion_engine`` section must declare (== the dataclass fields).
+    # (plain class attribute, not annotated -> not a dataclass field)
+    REQUIRED_KEYS = (
+        "gaussian_weight", "neural_weight", "llm_weight", "llm_lower_band",
+        "llm_upper_band", "enable_llm", "tier_full", "tier_half", "tier_quarter",
+        "weight_crt", "weight_gaussian", "weight_zone_gate", "weight_rr",
+        "weight_strategy_consensus", "regime_fusion_weights",
+        "min_consensus_signals", "min_consensus_agreement", "conflict_resolution_policy",
+    )
+
+    @classmethod
+    def from_section(cls, section: dict) -> "FusionConfig":
+        """Strict constructor from the ``fusion_engine`` config section (no defaults)."""
+        v = require_all(section, cls.REQUIRED_KEYS,
+                        section_name="fusion_engine", consumer="FusionConfig")
+        rfw = v["regime_fusion_weights"]
+        if not isinstance(rfw, dict):
+            raise TypeError(
+                "fusion_engine.regime_fusion_weights must be a mapping, got "
+                f"{type(rfw).__name__}"
+            )
+        return cls(
+            gaussian_weight=float(v["gaussian_weight"]),
+            neural_weight=float(v["neural_weight"]),
+            llm_weight=float(v["llm_weight"]),
+            llm_lower_band=float(v["llm_lower_band"]),
+            llm_upper_band=float(v["llm_upper_band"]),
+            enable_llm=bool(v["enable_llm"]),
+            tier_full=float(v["tier_full"]),
+            tier_half=float(v["tier_half"]),
+            tier_quarter=float(v["tier_quarter"]),
+            weight_crt=float(v["weight_crt"]),
+            weight_gaussian=float(v["weight_gaussian"]),
+            weight_zone_gate=float(v["weight_zone_gate"]),
+            weight_rr=float(v["weight_rr"]),
+            weight_strategy_consensus=float(v["weight_strategy_consensus"]),
+            regime_fusion_weights={str(k): dict(w) for k, w in rfw.items()},
+            min_consensus_signals=int(v["min_consensus_signals"]),
+            min_consensus_agreement=float(v["min_consensus_agreement"]),
+            conflict_resolution_policy=str(v["conflict_resolution_policy"]),
+        )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -277,7 +314,10 @@ class FusionEngine:
         convergence_controller=None,
     ) -> None:
         if config is None:
-            config = FusionConfig()
+            # EPIC-84 STORY-84.2: no FusionConfig() default — the fusion_engine section is required.
+            raise ConfigKeyMissingError(
+                ["<section>"], section="fusion_engine", consumer="FusionEngine",
+            )
         self.gaussian     = gaussian_adapter
         self.neural       = neural_fn
         self.llm_fn       = llm_fn
@@ -322,7 +362,7 @@ class FusionEngine:
         # scalar config defaults (preserved for callers that pass neither).
         regime_weights = None
         if weights is None and regime is not _REGIME_NOT_PROVIDED:
-            regime_weights_table = getattr(self.cfg, "regime_fusion_weights", {}) or {}
+            regime_weights_table = self.cfg.regime_fusion_weights
             regime_key = _REGIME_NORM.get(str(regime).lower().strip(), "UNKNOWN")
             regime_weights = regime_weights_table.get(regime_key)
             if regime_weights is not None:

@@ -27,6 +27,9 @@ _DE_CFG = {
     "threshold_percentile": 85,
     "threshold_min": 0.45,
     "threshold_max": 0.65,
+    # EPIC-84 STORY-84.2: required (were the keyword default 1000 / module constant 3).
+    "threshold_window": 1000,
+    "fallback_top_n": 3,
 }
 
 
@@ -89,13 +92,25 @@ def test_low_rr_reason_is_never_emitted_by_decision_engine():
 def test_ultron_risk_gate_owns_economic_rr():
     """Contract D: the economic RR floor lives in UltronRiskGate, cost-taxed."""
     from core.ultron_risk_gate import UltronRiskGate
-    gate = UltronRiskGate({"min_rr_ratio": 1.5, "pip_size": 0.0001})
+    # EPIC-84 STORY-84.2: complete config + complete payload (missing values now REJECT with
+    # config_key_missing, which would mask the RR check this test is about).
+    gate = UltronRiskGate({
+        "disabled": False, "max_risk_per_trade_pct": 1.0, "max_portfolio_risk_pct": 5.0,
+        "max_trades_per_day": 10, "max_daily_loss_pct": 3.0, "min_rr_ratio": 1.5,
+        "spread_pips": 0.0, "slippage_pips": 0.0, "pip_size": 0.0001, "min_sl_pips": 0.0,
+    })
+    gate._kill_switch_tripped = False
     trade = {
         "execution_id": "T1", "symbol": "XAUUSD",
         "entry_price": 100.0, "stop_loss": 99.0, "take_profit": 101.0,
         "rr_ratio": 1.0,   # below the 1.5 floor
+        "risk_percent": 0.5,
     }
-    result = gate.evaluate(trade, {})
+    portfolio = {
+        "account_balance": 10_000.0, "total_open_risk_pct": 0.0, "trades_today": 0,
+        "daily_loss_pct": 0.0, "open_positions": 0,
+    }
+    result = gate.evaluate(trade, portfolio)
     assert result.get("decision") == "reject"
     assert "rr_too_low_after_costs" in str(result.get("risk_reason", ""))
 

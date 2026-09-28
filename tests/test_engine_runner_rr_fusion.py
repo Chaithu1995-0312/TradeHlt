@@ -153,6 +153,7 @@ def _build_runner(rr_fusion, fusion_compare=False, fusion_use=False, eval_score=
 
 def _input_data():
     return {
+        "direction": 1,  # EPIC-84 STORY-84.2: per-trade value, required (no fallback to long)
         "close": 100.0,
         "high": 101.0,
         "low": 99.0,
@@ -252,19 +253,20 @@ def test_rr_fusion_disabled_is_base_rr_identity(monkeypatch):
 
 
 def test_weighted_vote_falls_back_when_fusion_cfg_missing():
+    """Rewritten (EPIC-84 STORY-84.2): a fusion without cfg no longer falls back to literal
+    weights (0.30/0.25/0.25/0.20) — the weights come only from FusionConfig, so it raises."""
+    import pytest
     runner = er.EngineRunner.__new__(er.EngineRunner)
     runner.fusion = type("_FusionNoCfg", (), {})()
-    vote = runner._compute_weighted_vote(
-        {
-            "crt": {"score": 0.7},
-            "gaussian": {"score": 0.6},
-            "zone_gate": {"score": 0.8},
-            "rr": {"score": 0.55},
-        }
-    )
-    assert isinstance(vote, float)
-    assert vote == vote  # NaN guard
-    assert 0.0 <= vote <= 1.0
+    with pytest.raises(AttributeError):
+        runner._compute_weighted_vote(
+            {
+                "crt": {"score": 0.7},
+                "gaussian": {"score": 0.6},
+                "zone_gate": {"score": 0.8},
+                "rr": {"score": 0.55},
+            }
+        )
 
 
 def test_fusion_compare_mode_records_evaluate_shadow(monkeypatch):
@@ -306,3 +308,46 @@ def test_fusion_use_evaluate_overrides_final_score(monkeypatch):
     assert abs(result["final_score"] - 0.12) < 1e-9
     fusion_payload = runner.collector.records[-1]["fusion"]
     assert fusion_payload["evaluate_used"] is True
+
+
+# ── EPIC-84 STORY-84.2: direction is a per-trade value -> REJECT, never "long" ──
+
+def _stub_zone(monkeypatch):
+    monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
+    monkeypatch.setattr(
+        er,
+        "score_zone_cluster",
+        lambda *_a, **_k: {"score": 0.8, "passed": True, "meta": {"score": 0.8, "passed": True}},
+    )
+
+
+def test_missing_direction_rejects_with_config_key_missing(monkeypatch):
+    _stub_zone(monkeypatch)
+    runner = _build_runner(rr_fusion=None)
+    data = _input_data()
+    del data["direction"]
+    out = runner.run(data, {"symbol": "AUDUSD"})
+    assert out["decision"] == "REJECT"
+    assert out["reason"] == "config_key_missing:input_data.direction"
+    assert runner.fusion.last is None  # rejected before fusion — no "long" substitution
+    # the engine keeps running: the next candle with a direction proceeds normally
+    out2 = runner.run(_input_data(), {"symbol": "AUDUSD"})
+    assert out2["decision"] == "execute"
+
+
+def test_zero_direction_rejects_invalid(monkeypatch):
+    _stub_zone(monkeypatch)
+    runner = _build_runner(rr_fusion=None)
+    out = runner.run({**_input_data(), "direction": 0}, {"symbol": "AUDUSD"})
+    assert out["decision"] == "REJECT"
+    assert out["reason"] == "input_data_invalid_direction"
+
+
+def test_signal_dir_alias_still_accepted(monkeypatch):
+    _stub_zone(monkeypatch)
+    runner = _build_runner(rr_fusion=None)
+    data = _input_data()
+    del data["direction"]
+    data["signal_dir"] = -1
+    out = runner.run(data, {"symbol": "AUDUSD"})
+    assert out["decision"] == "execute"

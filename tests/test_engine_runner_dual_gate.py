@@ -64,7 +64,14 @@ def _make_runner():
     runner._fusion_use_evaluate = False
     runner._fusion_compare_evaluate = False
     from core.acceptance_controller import AcceptanceController
-    runner._acceptance = AcceptanceController({})
+    # EPIC-84 STORY-84.2: AcceptanceController has no defaults — explicit complete config
+    # (active-config values + declared cold-path thresholds).
+    runner._acceptance = AcceptanceController({
+        "theta_min": 0.5, "theta_max": 0.95, "min_history": 10, "fusion_percentile": 85,
+        "acceptance_alpha": 0.01, "acceptance_target_low": 0.05, "acceptance_target_high": 0.15,
+        "acceptance_k_sigma": 1.0, "acceptance_window": 200,
+        "engine_threshold": 0.60, "fusion_threshold": 0.65, "score_threshold": 0.45,
+    })
     from core.convergence_controller import ConvergenceController
     runner._convergence = ConvergenceController(window_size=500)
     # PLAN-002: engines-path weights — test uses legacy defaults
@@ -85,6 +92,7 @@ def test_dual_gate_trend_selects_breakout(monkeypatch):
     runner = _make_runner()
 
     input_data = {
+        "direction": 1,  # EPIC-84: per-trade value, required (no fallback to long)
         "trend_bias": 1.0,
         "ema_spread": 0.9,
         "momentum_score": 0.8,
@@ -106,6 +114,7 @@ def test_dual_gate_range_selects_trap(monkeypatch):
     runner = _make_runner()
 
     input_data = {
+        "direction": 1,  # EPIC-84: per-trade value, required (no fallback to long)
         "trend_bias": -1.0,
         "ema_spread": 0.05,
         "momentum_score": 0.1,
@@ -127,6 +136,7 @@ def test_dual_gate_neutral_low_confidence_rejects(monkeypatch):
     runner = _make_runner()
 
     input_data = {
+        "direction": 1,  # EPIC-84: per-trade value, required (no fallback to long)
         "trend_bias": 0.0,
         "ema_spread": 0.02,
         "momentum_score": 0.02,
@@ -147,6 +157,7 @@ def test_layered_flow_fusion_runs_before_dual_veto(monkeypatch):
     runner = _make_runner()
 
     input_data = {
+        "direction": 1,  # EPIC-84: per-trade value, required (no fallback to long)
         "trend_bias": 0.0,
         "ema_spread": 0.02,
         "momentum_score": 0.02,
@@ -159,3 +170,4 @@ def test_layered_flow_fusion_runs_before_dual_veto(monkeypatch):
     assert runner.fusion.called is True
     assert set(runner.fusion.last.keys()) == {"crt", "gaussian", "zone_gate", "rr"}
     assert out["decision"] == "REJECT"
+

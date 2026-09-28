@@ -129,11 +129,21 @@ def test_ml_engine_fallback_no_model(feature_dict_32):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def test_engine_runner_default_is_heuristic():
+    """Rewritten (EPIC-84 STORY-84.2): gaussian_impl absent no longer defaults to
+    'heuristic' — it raises ConfigKeyMissingError naming engine_runner.gaussian_impl.
+    gaussian_impl is checked first in _get_gaussian_engine, before instrument, so this
+    still raises even with instrument supplied."""
+    import pytest
+    from config_layer.strict_config import ConfigKeyMissingError
     os.environ.pop("GAUSSIAN_IMPL", None)
-    from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
     from core.engine_runner import EngineRunner
-    engine = EngineRunner._get_gaussian_engine({"instrument": "XAUUSD"})
-    assert isinstance(engine, HeuristicGaussianEngine)
+    with pytest.raises(ConfigKeyMissingError) as ei:
+        EngineRunner._get_gaussian_engine({})
+    assert ei.value.missing == ("gaussian_impl",)
+    assert "engine_runner.gaussian_impl" in str(ei.value)
+    with pytest.raises(ConfigKeyMissingError) as ei:
+        EngineRunner._get_gaussian_engine({"instrument": "XAUUSD"})
+    assert ei.value.missing == ("gaussian_impl",)
 
 
 def test_engine_runner_ml_impl():

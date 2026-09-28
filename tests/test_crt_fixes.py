@@ -49,6 +49,9 @@ _CFG = {
     "threshold_percentile":     _TEST_PERCENTILE,
     "threshold_min":            _TEST_T_MIN,
     "threshold_max":            _TEST_T_MAX,
+    # EPIC-84 STORY-84.2: required keys (were threshold_window=1000 kwarg / _FALLBACK_TOP_N=3).
+    "threshold_window":         1000,
+    "fallback_top_n":           3,
 }
 
 

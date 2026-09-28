@@ -35,6 +35,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from utils.logging_config import get_flow_logger
+from config_layer.strict_config import (
+    ConfigKeyMissingError,  # noqa: F401  (re-exported for callers/tests)
+    missing_keys,
+    missing_reason,
+    require_all,
+)
 
 logger = get_flow_logger("ULTRON_RISK_GATE")
 
@@ -43,27 +49,13 @@ logger = get_flow_logger("ULTRON_RISK_GATE")
 # Lives outside the registry dir so it survives config reloads.
 _KS_STATE_PATH = Path("logs") / "kill_switch_state.json"
 
-# ── Default config (mirrors configs/production/v1_multi_2026_03.json values) ─
-DEFAULT_CONFIG: dict = {
-    "disabled":              False,
-    "max_risk_per_trade_pct": 1.0,
-    "max_portfolio_risk_pct": 5.0,
-    "max_trades_per_day":    10,
-    "max_daily_loss_pct":    3.0,
-    "min_rr_ratio":          1.5,
-    # Execution cost tax (audit fix 2026-05-14):
-    # The min_rr_ratio check uses the raw CRT-derived RR.  In live trading the
-    # spread and expected slippage reduce the realised RR.  These two config keys
-    # let the gate reject trades whose post-cost RR falls below min_rr_ratio,
-    # even if the gross RR passes.  Set both to 0.0 to disable (backtest default).
-    "spread_pips":           0.0,  # broker spread in pips (e.g. 1.5 for EURUSD ECN)
-    "slippage_pips":         0.0,  # expected slippage in pips (e.g. 0.5)
-    "pip_size":              0.0001,  # value of 1 pip in price units (0.0001 for FX majors)
-    # FRAG-6 fix: minimum SL distance enforcement.
-    # 0.0 = disabled (backtest default).  Set to e.g. 5.0 for live FX to
-    # prevent orders where slippage would consume the entire stop distance.
-    "min_sl_pips":           0.0,
-}
+# EPIC-84 STORY-84.2: the module-level DEFAULT_CONFIG and its merge are gone. Every key in
+# ``UltronRiskGate._REQUIRED_KEYS`` must be declared in the ``ultron_risk_gate`` config section;
+# a missing key raises ``ConfigKeyMissingError`` at construction. Per-trade / portfolio payload
+# values listed in ``_REQUIRED_TRADE_KEYS`` / ``_REQUIRED_PORTFOLIO_KEYS`` that are absent at
+# trade time REJECT that one trade with reason ``config_key_missing:<payload>.<key>`` (the
+# engine keeps running) instead of substituting a literal (was: risk_percent 0.5,
+# account_balance 10000.0, rr_ratio/entry/stop 0.0, counters 0).
 
 
 class UltronRiskGate:
@@ -86,28 +78,50 @@ class UltronRiskGate:
         result = gate.evaluate(trade, portfolio_state)
     """
 
-    # ── Required configuration keys (all must be in v1_multi_2026_03.json) ─────
+    # ── Required configuration keys (ultron_risk_gate section; no defaults) ──
     _REQUIRED_KEYS: tuple[str, ...] = (
+        "disabled",
         "max_risk_per_trade_pct",
         "max_portfolio_risk_pct",
         "max_trades_per_day",
         "max_daily_loss_pct",
         "min_rr_ratio",
-        "disabled",
+        # Execution cost tax (audit fix 2026-05-14): 0.0 / 0.0 disables the tax.
+        "spread_pips",
+        "slippage_pips",
+        "pip_size",
+        # FRAG-6 minimum SL distance: 0.0 disables the guard.
+        "min_sl_pips",
     )
 
-    def __init__(self, config: dict[str, Any] | None = None) -> None:
+    # ── Per-trade payload values: absent at trade time -> REJECT (never a literal) ──
+    _REQUIRED_TRADE_KEYS: tuple[str, ...] = (
+        "rr_ratio",
+        "entry_price",
+        "stop_loss",
+        "risk_percent",
+    )
+    _REQUIRED_PORTFOLIO_KEYS: tuple[str, ...] = (
+        "account_balance",
+        "total_open_risk_pct",
+        "trades_today",
+        "daily_loss_pct",
+        "open_positions",
+    )
+
+    def __init__(self, config: dict[str, Any]) -> None:
         """
         Parameters
         ----------
-        config : dict, optional
-            Overrides for DEFAULT_CONFIG keys. Missing keys fall back to
-            DEFAULT_CONFIG values. Pass None or omit to use all defaults.
+        config : dict
+            The ``ultron_risk_gate`` config section. Every key in ``_REQUIRED_KEYS``
+            must be present; a missing key raises ``ConfigKeyMissingError`` naming it.
         """
-        effective: dict[str, Any] = {**DEFAULT_CONFIG}
-        if isinstance(config, dict):
-            effective.update(config)
-        self.config: dict[str, Any] = effective
+        require_all(
+            config, self._REQUIRED_KEYS,
+            section_name="ultron_risk_gate", consumer="UltronRiskGate",
+        )
+        self.config: dict[str, Any] = dict(config)
         # FRAG-1 fix: load persisted kill-switch state from disk so the gate
         # cannot be bypassed across instantiations by resetting daily_loss_pct.
         self._kill_switch_tripped: bool = self._load_ks_state()
@@ -191,13 +205,17 @@ class UltronRiskGate:
             portfolio_state    : dict with updated total_risk and open_positions
         """
         # ── Gate disabled (backtest / testing bypass) ────────────────────────
-        if self.config.get("disabled", False):
+        if self.config["disabled"]:
             logger.info("UltronRiskGate: DISABLED — pass-through (no risk checks applied)")
+            # The pass-through size is a per-trade value: absent -> REJECT, never 0.0.
+            _missing_size = missing_keys(trade, ("position_size",))
+            if _missing_size:
+                return self._reject(trade, missing_reason("trade", _missing_size), portfolio_state)
             return {
                 "decision": "approve",
                 "risk_reason": "gate_disabled",
                 "execution_id": trade.get("execution_id", "UNKNOWN"),
-                "final_position_size": float(trade.get("position_size", 0.0)),
+                "final_position_size": float(trade["position_size"]),
                 "portfolio_state": portfolio_state,
             }
 
@@ -215,6 +233,18 @@ class UltronRiskGate:
             )
             return self._reject(trade, "kill_switch_active", portfolio_state)
 
+        # ── Check 0b: per-trade payload completeness (EPIC-84 STORY-84.2) ────
+        # A value the trade or portfolio snapshot must carry is never substituted by a
+        # literal: the trade is REJECTED with a named reason; the engine keeps running.
+        _missing_trade = missing_keys(trade, self._REQUIRED_TRADE_KEYS)
+        if _missing_trade:
+            return self._reject(trade, missing_reason("trade", _missing_trade), portfolio_state)
+        _missing_ps = missing_keys(portfolio_state, self._REQUIRED_PORTFOLIO_KEYS)
+        if _missing_ps:
+            return self._reject(
+                trade, missing_reason("portfolio_state", _missing_ps), portfolio_state,
+            )
+
         # ── Check 1: TTL ─────────────────────────────────────────────────────
         expires_at_raw = trade.get("expires_at")
         if expires_at_raw:
@@ -231,17 +261,17 @@ class UltronRiskGate:
                 return self._reject(trade, "malformed_expires_at", portfolio_state)
 
         # ── Check 2: RR floor (with spread+slippage tax) ────────────────────
-        rr_ratio   = float(trade.get("rr_ratio", 0.0))
+        rr_ratio   = float(trade["rr_ratio"])
         min_rr     = float(self.config["min_rr_ratio"])
         # Execution cost tax: deduct spread+slippage as a fraction of sl_distance.
         # Only applied when both pip_size > 0 and cost pips > 0.
-        spread_pips   = float(self.config.get("spread_pips",   0.0))
-        slippage_pips = float(self.config.get("slippage_pips", 0.0))
-        pip_size      = float(self.config.get("pip_size",      0.0001))
+        spread_pips   = float(self.config["spread_pips"])
+        slippage_pips = float(self.config["slippage_pips"])
+        pip_size      = float(self.config["pip_size"])
         total_cost_pips = spread_pips + slippage_pips
         if total_cost_pips > 0 and pip_size > 0:
-            entry = float(trade.get("entry_price", 0.0))
-            sl    = float(trade.get("stop_loss",   0.0))
+            entry = float(trade["entry_price"])
+            sl    = float(trade["stop_loss"])
             sl_distance = abs(entry - sl)
             if sl_distance > 0:
                 cost_as_rr_fraction = (total_cost_pips * pip_size) / sl_distance
@@ -263,12 +293,12 @@ class UltronRiskGate:
                 return self._reject(trade, "position_already_open", portfolio_state)
 
         # ── Check 3: Daily trade limit ────────────────────────────────────────
-        trades_today = int(portfolio_state.get("trades_today", 0))
+        trades_today = int(portfolio_state["trades_today"])
         if trades_today >= int(self.config["max_trades_per_day"]):
             return self._reject(trade, "daily_limit", portfolio_state)
 
         # ── Check 4: Kill switch (daily loss) ────────────────────────────────
-        daily_loss = float(portfolio_state.get("daily_loss_pct", 0.0))
+        daily_loss = float(portfolio_state["daily_loss_pct"])
         if daily_loss >= float(self.config["max_daily_loss_pct"]):
             # FRAG-1: persist flag so subsequent calls are blocked even if the
             # caller resets daily_loss_pct to 0.  Cleared only by reset_kill_switch().
@@ -288,8 +318,8 @@ class UltronRiskGate:
             return self._reject(trade, "kill_switch", portfolio_state)
 
         # ── Check 5: Portfolio exposure cap ──────────────────────────────────
-        open_risk = float(portfolio_state.get("total_open_risk_pct", 0.0))
-        risk_percent = float(trade.get("risk_percent", 0.5))
+        open_risk = float(portfolio_state["total_open_risk_pct"])
+        risk_percent = float(trade["risk_percent"])
         max_risk_trade = float(self.config["max_risk_per_trade_pct"])
         # Cap the allowed risk to max per-trade limit
         allowed_risk = min(risk_percent, max_risk_trade)
@@ -299,8 +329,8 @@ class UltronRiskGate:
             return self._reject(trade, "over_exposure", portfolio_state)
 
         # ── Check 6: Valid SL distance ────────────────────────────────────────
-        entry = float(trade.get("entry_price", 0.0))
-        sl = float(trade.get("stop_loss", 0.0))
+        entry = float(trade["entry_price"])
+        sl = float(trade["stop_loss"])
         risk_per_unit = abs(entry - sl)
         if risk_per_unit == 0.0:
             return self._reject(trade, "invalid_sl_distance", portfolio_state)
@@ -309,7 +339,7 @@ class UltronRiskGate:
         # Prevents trades where the SL is so tight that spread + slippage
         # would consume the entire risk distance.  Only enforced when
         # min_sl_pips > 0 and pip_size > 0 (0.0 = disabled, backtest default).
-        min_sl_pips = float(self.config.get("min_sl_pips", 0.0))
+        min_sl_pips = float(self.config["min_sl_pips"])
         if min_sl_pips > 0 and pip_size > 0:
             sl_pips = risk_per_unit / pip_size
             # Effective minimum: the larger of min_sl_pips and 2× spread
@@ -324,7 +354,7 @@ class UltronRiskGate:
                 return self._reject(trade, "sl_distance_too_tight", portfolio_state)
 
         # ── Check 7: Position sizing (final) ──────────────────────────────────
-        balance = float(portfolio_state.get("account_balance", 10000.0))
+        balance = float(portfolio_state["account_balance"])
         risk_usd = balance * (allowed_risk / 100.0)
         max_size_by_risk = risk_usd / risk_per_unit
 
@@ -352,7 +382,7 @@ class UltronRiskGate:
             "allowed_risk_pct":    allowed_risk,
             "portfolio_state": {
                 "total_risk":     round(open_risk + allowed_risk, 4),
-                "open_positions": int(portfolio_state.get("open_positions", 0)),
+                "open_positions": int(portfolio_state["open_positions"]),
             },
         }
 
@@ -440,7 +470,12 @@ class UltronRiskGate:
 if __name__ == "__main__":
     from datetime import timedelta
 
-    gate = UltronRiskGate()
+    # Explicit config: the values of the active ultron_risk_gate section (no defaults).
+    gate = UltronRiskGate({
+        "disabled": False, "max_risk_per_trade_pct": 1.0, "max_portfolio_risk_pct": 5.0,
+        "max_trades_per_day": 10, "max_daily_loss_pct": 3.0, "min_rr_ratio": 1.5,
+        "spread_pips": 0.0, "slippage_pips": 0.0, "pip_size": 0.0001, "min_sl_pips": 0.0,
+    })
 
     base_trade = {
         "execution_id":        "EX_abc123def456",
@@ -476,7 +511,7 @@ if __name__ == "__main__":
     # Test 3: RR too low
     low_rr_trade = {**base_trade, "rr_ratio": 1.0}
     r3 = gate.evaluate(low_rr_trade, base_portfolio)
-    assert r3["decision"] == "reject" and r3["risk_reason"] == "rr_too_low"
+    assert r3["decision"] == "reject" and r3["risk_reason"] == "rr_too_low_after_costs"
     print(f"Test 3 PASS: {r3['risk_reason']}")
 
     # Test 4: Kill switch

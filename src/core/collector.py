@@ -10,6 +10,7 @@ from pathlib import Path
 
 Path("logs").mkdir(exist_ok=True)
 from utils.logging_config import get_flow_logger
+from config_layer.strict_config import ConfigKeyMissingError, require
 from config_layer.production_config import PROD_VERSION as _COLLECTOR_PROD_VERSION
 _log = get_flow_logger("COLLECTOR")
 
@@ -50,8 +51,33 @@ def _engine_value(engine_payload, keys: tuple[str, ...], default: float = 0.0) -
     return default
 
 
+_ZONEGATE_SCORE_KEY_CACHE: str | None = None
+
+
+def _declared_zonegate_score_key() -> str:
+    """The declared ``collector.zonegate_score_key`` (EPIC-84 STORY-84.2: was the literal
+    env default 'zone'). A missing section/key raises ConfigKeyMissingError. Cached per process."""
+    global _ZONEGATE_SCORE_KEY_CACHE
+    if _ZONEGATE_SCORE_KEY_CACHE is None:
+        from config_layer.production_config import get_prod_section
+        try:
+            section = get_prod_section("collector")
+        except RuntimeError as exc:  # section absent from the production config
+            raise ConfigKeyMissingError(
+                ["collector"], section="<root>", consumer="Collector",
+            ) from exc
+        _ZONEGATE_SCORE_KEY_CACHE = str(require(
+            section, "zonegate_score_key", section_name="collector", consumer="Collector",
+        ))
+    return _ZONEGATE_SCORE_KEY_CACHE
+
+
 def _zonegate_value_keys() -> tuple[str, str]:
-    preferred = str(os.environ.get("COLLECTOR_ZONEGATE_SCORE_KEY", "zone")).strip().lower()
+    # COLLECTOR_ZONEGATE_SCORE_KEY stays an explicit operator override; when it is NOT set the
+    # declared config key is the authority (no literal default).
+    override = os.environ.get("COLLECTOR_ZONEGATE_SCORE_KEY")
+    raw = override if override is not None else _declared_zonegate_score_key()
+    preferred = str(raw).strip().lower()
     if preferred in {"score", "zonegate.score"}:
         return ("score", "zone")
     return ("zone", "score")

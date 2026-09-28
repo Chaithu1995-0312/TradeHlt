@@ -3,7 +3,7 @@
 Invariant (user doctrine, CLAUDE.md §6.5 "NO silent config defaults"): production fusion
 weights are POLICY and must come from configs/production/*.json. A missing
 `fusion_engine.weight_*` must RAISE at EngineRunner construction — never fall back to a
-code-embedded constant (the `FusionConfig` dataclass defaults `0.30/0.25/0.25/0.20` and the
+code-embedded constant (the `FusionConfig` dataclass has NO field defaults since EPIC-84; the
 `ENGINE_RUNNER_DEFAULTS` test fixture are a second authority reachable ONLY by direct
 construction in tests, never by the runtime path).
 
@@ -33,16 +33,30 @@ def test_cfg_require_raises_on_missing_weight():
 
 
 def test_runtime_reads_each_weight_via_cfg_require_not_get():
-    """Source floor: every fusion weight is read strictly, never via a defaulted .get()."""
+    """Source floor: every fusion weight is read strictly, never via a defaulted .get().
+
+    EPIC-84 STORY-84.2: EngineRunner now builds the whole FusionConfig through ONE strict
+    read, ``FusionConfig.from_section`` (``require_all`` over every field; the dataclass has
+    no field defaults). The floor pins that path instead of the per-key ``_cfg_require``."""
     src = (_REPO / "src" / "core" / "engine_runner.py").read_text(encoding="utf-8")
+    assert re.search(r"FusionConfig\.from_section\(\s*_fusion_cfg_dict\s*\)", src), (
+        "EngineRunner must build FusionConfig strictly via FusionConfig.from_section"
+    )
+    fsrc = (_REPO / "src" / "core" / "fusion_engine.py").read_text(encoding="utf-8")
+    assert "require_all(section, cls.REQUIRED_KEYS" in fsrc
+    from core.fusion_engine import FusionConfig
     for w in _WEIGHTS:
-        assert re.search(rf'_cfg_require\(\s*_fusion_cfg_dict,\s*"{w}"', src), (
-            f"{w} must be read via _cfg_require (fail-fast), not a silent default"
-        )
+        assert w in FusionConfig.REQUIRED_KEYS, f"{w} must be a required fusion_engine key"
         # And it must NOT be read through a defaulted .get() on the fusion dict.
         assert not re.search(rf'_fusion_cfg_dict\.get\(\s*"{w}"', src), (
             f"{w} must not use _fusion_cfg_dict.get(...) — that reintroduces a silent default"
         )
+    from config_layer.strict_config import ConfigKeyMissingError
+    full = {k: 0.0 for k in FusionConfig.REQUIRED_KEYS}
+    full.update(regime_fusion_weights={}, enable_llm=False, conflict_resolution_policy="conservative")
+    for w in _WEIGHTS:
+        with pytest.raises(ConfigKeyMissingError):
+            FusionConfig.from_section({k: v for k, v in full.items() if k != w})
 
 
 def test_active_production_config_supplies_all_fusion_weights():

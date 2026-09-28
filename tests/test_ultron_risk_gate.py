@@ -23,7 +23,27 @@ import sys
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from core.ultron_risk_gate import UltronRiskGate, DEFAULT_CONFIG as _URG_DEFAULTS
+from config_layer.strict_config import ConfigKeyMissingError
+from core.ultron_risk_gate import UltronRiskGate
+
+# EPIC-84 STORY-84.2: no DEFAULT_CONFIG. Tests pass an explicit, complete ultron_risk_gate
+# section (the values of the active config v2_htfcrt_2026_08) and override per test.
+_CFG = {
+    "disabled":               False,
+    "max_risk_per_trade_pct": 1.0,
+    "max_portfolio_risk_pct": 5.0,
+    "max_trades_per_day":     10,
+    "max_daily_loss_pct":     3.0,
+    "min_rr_ratio":           1.5,
+    "spread_pips":            0.0,
+    "slippage_pips":          0.0,
+    "pip_size":               0.0001,
+    "min_sl_pips":            0.0,
+}
+
+
+def _mk(overrides: dict | None = None) -> UltronRiskGate:
+    return UltronRiskGate({**_CFG, **(overrides or {})})
 
 
 # ── Kill-switch isolation fixture ─────────────────────────────────────────────
@@ -34,7 +54,7 @@ from core.ultron_risk_gate import UltronRiskGate, DEFAULT_CONFIG as _URG_DEFAULT
 @pytest.fixture(autouse=True)
 def _reset_kill_switch():
     """Reset UltronRiskGate kill switch before and after every test in this file."""
-    _gate = UltronRiskGate({})
+    _gate = _mk()
     _gate.reset_kill_switch()
     yield
     _gate.reset_kill_switch()
@@ -81,7 +101,7 @@ def _portfolio(**overrides) -> dict:
 
 def test_happy_path_approve():
     """All checks pass → approve with correct position size."""
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(expires_at=_future_ts(), risk_percent=0.5, position_size_hint=None)
     result = gate.evaluate(trade, _portfolio())
 
@@ -94,7 +114,7 @@ def test_happy_path_approve():
 
 def test_approve_updates_portfolio_state():
     """Returned portfolio_state reflects new total_risk."""
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(expires_at=_future_ts(), risk_percent=0.5)
     ps = _portfolio(total_open_risk_pct=1.0)
     result = gate.evaluate(trade, ps)
@@ -104,13 +124,13 @@ def test_approve_updates_portfolio_state():
 
 def test_approve_no_expires_at():
     """Missing expires_at skips TTL check — should still approve."""
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(expires_at=None)
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "approve"
 
 def test_approve_execution_id_propagated():
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(execution_id="EX_unique_XYZ")
     result = gate.evaluate(trade, _portfolio())
     assert result["execution_id"] == "EX_unique_XYZ"
@@ -119,7 +139,7 @@ def test_approve_execution_id_propagated():
 # ── 2. TTL ENFORCEMENT ────────────────────────────────────────────────────────
 
 def test_reject_expired_signal():
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(expires_at=_past_ts(60))
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "reject"
@@ -127,7 +147,7 @@ def test_reject_expired_signal():
 
 def test_reject_malformed_expires_at():
     """Unparseable timestamp is treated as expired for safety."""
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(expires_at="not-a-date")
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "reject"
@@ -135,14 +155,14 @@ def test_reject_malformed_expires_at():
 
 def test_approve_signal_just_not_expired():
     """Signal expiring in 1 second should pass."""
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(expires_at=_future_ts(1))
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "approve"
 
 def test_naive_datetime_treated_as_utc():
     """Naive ISO timestamp (no tz suffix) is accepted as UTC."""
-    gate = UltronRiskGate()
+    gate = _mk()
     future_naive = (datetime.utcnow() + timedelta(hours=1)).isoformat()  # no tz suffix
     trade = _trade(expires_at=future_naive)
     result = gate.evaluate(trade, _portfolio())
@@ -152,27 +172,27 @@ def test_naive_datetime_treated_as_utc():
 # ── 3. RR FLOOR ──────────────────────────────────────────────────────────────
 
 def test_reject_rr_below_minimum():
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(rr_ratio=1.0)  # default min is 1.5
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "reject"
     assert result["risk_reason"] in ("rr_too_low", "rr_too_low_after_costs")
 
 def test_reject_rr_exactly_below_minimum():
-    gate = UltronRiskGate({"min_rr_ratio": 2.0})
+    gate = _mk({"min_rr_ratio": 2.0})
     trade = _trade(rr_ratio=1.99)
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "reject"
     assert result["risk_reason"] in ("rr_too_low", "rr_too_low_after_costs")
 
 def test_approve_rr_exactly_at_minimum():
-    gate = UltronRiskGate({"min_rr_ratio": 2.0})
+    gate = _mk({"min_rr_ratio": 2.0})
     trade = _trade(rr_ratio=2.0)
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "approve"
 
 def test_approve_rr_above_minimum():
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(rr_ratio=3.5)
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "approve"
@@ -181,14 +201,14 @@ def test_approve_rr_above_minimum():
 # ── 4. DAILY TRADE LIMIT ─────────────────────────────────────────────────────
 
 def test_reject_daily_limit_reached():
-    gate = UltronRiskGate({"max_trades_per_day": 5})
+    gate = _mk({"max_trades_per_day": 5})
     ps = _portfolio(trades_today=5)   # at the limit
     result = gate.evaluate(BASE_TRADE, ps)
     assert result["decision"] == "reject"
     assert result["risk_reason"] == "daily_limit"
 
 def test_reject_daily_limit_exceeded():
-    gate = UltronRiskGate({"max_trades_per_day": 5})
+    gate = _mk({"max_trades_per_day": 5})
     ps = _portfolio(trades_today=10)
     result = gate.evaluate(BASE_TRADE, ps)
     assert result["decision"] == "reject"
@@ -196,14 +216,14 @@ def test_reject_daily_limit_exceeded():
 
 def test_approve_one_below_daily_limit():
     """trades_today = limit - 1 should pass."""
-    gate = UltronRiskGate({"max_trades_per_day": 5})
+    gate = _mk({"max_trades_per_day": 5})
     ps = _portfolio(trades_today=4)
     result = gate.evaluate(BASE_TRADE, ps)
     assert result["decision"] == "approve"
 
 def test_daily_reset_zero_trades():
     """At start of day (trades_today=0) should never reject on this check alone."""
-    gate = UltronRiskGate()
+    gate = _mk()
     ps = _portfolio(trades_today=0)
     result = gate.evaluate(BASE_TRADE, ps)
     assert result["decision"] == "approve"
@@ -212,27 +232,27 @@ def test_daily_reset_zero_trades():
 # ── 5. KILL SWITCH — DRAWDOWN BREACH ─────────────────────────────────────────
 
 def test_reject_kill_switch_exact_threshold():
-    gate = UltronRiskGate({"max_daily_loss_pct": 3.0})
+    gate = _mk({"max_daily_loss_pct": 3.0})
     ps = _portfolio(daily_loss_pct=3.0)
     result = gate.evaluate(BASE_TRADE, ps)
     assert result["decision"] == "reject"
     assert result["risk_reason"] == "kill_switch"
 
 def test_reject_kill_switch_above_threshold():
-    gate = UltronRiskGate()
+    gate = _mk()
     ps = _portfolio(daily_loss_pct=5.0)
     result = gate.evaluate(BASE_TRADE, ps)
     assert result["decision"] == "reject"
     assert result["risk_reason"] == "kill_switch"
 
 def test_approve_daily_loss_below_threshold():
-    gate = UltronRiskGate({"max_daily_loss_pct": 3.0})
+    gate = _mk({"max_daily_loss_pct": 3.0})
     ps = _portfolio(daily_loss_pct=2.99)
     result = gate.evaluate(BASE_TRADE, ps)
     assert result["decision"] == "approve"
 
 def test_approve_zero_daily_loss():
-    gate = UltronRiskGate()
+    gate = _mk()
     ps = _portfolio(daily_loss_pct=0.0)
     result = gate.evaluate(BASE_TRADE, ps)
     assert result["decision"] == "approve"
@@ -242,7 +262,7 @@ def test_approve_zero_daily_loss():
 
 def test_reject_over_exposure_exact():
     """open_risk + allowed_risk > max_portfolio_risk_pct → reject."""
-    gate = UltronRiskGate({"max_portfolio_risk_pct": 5.0})
+    gate = _mk({"max_portfolio_risk_pct": 5.0})
     ps = _portfolio(total_open_risk_pct=4.8)
     trade = _trade(risk_percent=0.5)  # 4.8 + 0.5 = 5.3 > 5.0
     result = gate.evaluate(trade, ps)
@@ -250,14 +270,14 @@ def test_reject_over_exposure_exact():
     assert result["risk_reason"] == "over_exposure"
 
 def test_reject_over_exposure_already_at_cap():
-    gate = UltronRiskGate({"max_portfolio_risk_pct": 5.0})
+    gate = _mk({"max_portfolio_risk_pct": 5.0})
     ps = _portfolio(total_open_risk_pct=5.0)
     result = gate.evaluate(BASE_TRADE, ps)
     assert result["decision"] == "reject"
     assert result["risk_reason"] == "over_exposure"
 
 def test_approve_exposure_just_under_cap():
-    gate = UltronRiskGate({"max_portfolio_risk_pct": 5.0})
+    gate = _mk({"max_portfolio_risk_pct": 5.0})
     ps = _portfolio(total_open_risk_pct=4.4)
     trade = _trade(risk_percent=0.5)  # 4.4 + 0.5 = 4.9 <= 5.0
     result = gate.evaluate(trade, ps)
@@ -265,7 +285,7 @@ def test_approve_exposure_just_under_cap():
 
 def test_exposure_risk_capped_at_per_trade_max():
     """risk_percent > max_risk_per_trade_pct → allowed_risk is capped."""
-    gate = UltronRiskGate({"max_risk_per_trade_pct": 1.0, "max_portfolio_risk_pct": 5.0})
+    gate = _mk({"max_risk_per_trade_pct": 1.0, "max_portfolio_risk_pct": 5.0})
     ps = _portfolio(total_open_risk_pct=4.2)
     # risk_percent=2.0 but cap is 1.0 → allowed=1.0; 4.2+1.0=5.2 > 5.0
     trade = _trade(risk_percent=2.0)
@@ -274,7 +294,7 @@ def test_exposure_risk_capped_at_per_trade_max():
     assert result["risk_reason"] == "over_exposure"
 
 def test_exposure_cap_allows_capped_risk():
-    gate = UltronRiskGate({"max_risk_per_trade_pct": 1.0, "max_portfolio_risk_pct": 5.0})
+    gate = _mk({"max_risk_per_trade_pct": 1.0, "max_portfolio_risk_pct": 5.0})
     ps = _portfolio(total_open_risk_pct=3.5)
     # risk_percent=3.0 capped to 1.0 → 3.5+1.0=4.5 <= 5.0
     trade = _trade(risk_percent=3.0)
@@ -285,21 +305,21 @@ def test_exposure_cap_allows_capped_risk():
 # ── 7. INVALID SL DISTANCE ───────────────────────────────────────────────────
 
 def test_reject_entry_equals_stop_loss():
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(entry_price=100.0, stop_loss=100.0)
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "reject"
     assert result["risk_reason"] == "invalid_sl_distance"
 
 def test_accept_sl_below_entry():
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(entry_price=100.0, stop_loss=97.0)
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "approve"
 
 def test_accept_sl_above_entry_short():
     """For short trades SL is above entry; abs() should handle correctly."""
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(entry_price=100.0, stop_loss=103.0)
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "approve"
@@ -309,7 +329,7 @@ def test_accept_sl_above_entry_short():
 
 def test_position_size_no_hint():
     """No hint → final_size = balance * risk% / risk_per_unit."""
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(entry_price=100.0, stop_loss=98.0, risk_percent=1.0,
                    position_size_hint=None)
     ps = _portfolio(account_balance=10_000.0)
@@ -320,7 +340,7 @@ def test_position_size_no_hint():
 
 def test_position_size_hint_smaller_than_max():
     """Hint smaller than max_by_risk → hint wins."""
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(entry_price=100.0, stop_loss=98.0, risk_percent=1.0,
                    position_size_hint=10.0)   # max would be 50.0
     ps = _portfolio(account_balance=10_000.0)
@@ -330,7 +350,7 @@ def test_position_size_hint_smaller_than_max():
 
 def test_position_size_hint_larger_than_max():
     """Hint larger than max_by_risk → max_by_risk wins (risk cap enforced)."""
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(entry_price=100.0, stop_loss=98.0, risk_percent=1.0,
                    position_size_hint=200.0)  # max is 50.0
     ps = _portfolio(account_balance=10_000.0)
@@ -340,7 +360,7 @@ def test_position_size_hint_larger_than_max():
 
 def test_reject_position_size_zero_from_zero_balance():
     """account_balance=0 → risk_usd=0 → size=0 → reject."""
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(entry_price=100.0, stop_loss=98.0, risk_percent=1.0)
     ps = _portfolio(account_balance=0.0)
     result = gate.evaluate(trade, ps)
@@ -349,7 +369,7 @@ def test_reject_position_size_zero_from_zero_balance():
 
 def test_reject_negative_hint_produces_size_zero():
     """Negative hint → min(negative, positive) < 0 → size_zero reject."""
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(entry_price=100.0, stop_loss=98.0, risk_percent=1.0,
                    position_size_hint=-5.0)
     ps = _portfolio(account_balance=10_000.0)
@@ -358,7 +378,7 @@ def test_reject_negative_hint_produces_size_zero():
     assert result["risk_reason"] == "position_size_zero"
 
 def test_reject_hint_size_zero():
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(entry_price=100.0, stop_loss=98.0, risk_percent=1.0,
                    position_size_hint=0.0)
     ps = _portfolio(account_balance=10_000.0)
@@ -370,7 +390,7 @@ def test_reject_hint_size_zero():
 # ── 9. REJECTION RESPONSE STRUCTURE ─────────────────────────────────────────
 
 def test_reject_returns_zero_size():
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(rr_ratio=0.5)   # RR too low
     result = gate.evaluate(trade, _portfolio())
     assert result["decision"] == "reject"
@@ -379,7 +399,7 @@ def test_reject_returns_zero_size():
 
 def test_reject_preserves_portfolio_state():
     """On reject, portfolio_state returned is the input (unchanged)."""
-    gate = UltronRiskGate()
+    gate = _mk()
     ps = _portfolio(total_open_risk_pct=4.9)
     trade = _trade(rr_ratio=0.0)
     result = gate.evaluate(trade, ps)
@@ -391,7 +411,7 @@ def test_reject_preserves_portfolio_state():
 # ── 10. CONFIG OVERRIDES ─────────────────────────────────────────────────────
 
 def test_custom_config_overrides_defaults():
-    gate = UltronRiskGate({
+    gate = _mk({
         "max_risk_per_trade_pct": 2.0,
         "max_portfolio_risk_pct": 10.0,
         "max_trades_per_day": 20,
@@ -404,30 +424,81 @@ def test_custom_config_overrides_defaults():
     result = gate.evaluate(trade, ps)
     assert result["decision"] == "approve"
 
-def test_defaults_preserved_when_no_config():
-    gate = UltronRiskGate()
-    assert gate.config["max_risk_per_trade_pct"] == 1.0
-    assert gate.config["min_rr_ratio"] == 1.5
-    assert gate.config["max_daily_loss_pct"] == 3.0
+def test_no_config_raises():
+    """Rewritten (EPIC-84): no config no longer yields defaults — it fails closed."""
+    with pytest.raises(ConfigKeyMissingError):
+        UltronRiskGate(None)
 
-def test_partial_config_preserves_remaining_defaults():
-    gate = UltronRiskGate({"max_trades_per_day": 3})
-    assert gate.config["max_trades_per_day"] == 3
-    assert gate.config["max_risk_per_trade_pct"] == 1.0   # default preserved
+def test_partial_config_raises_naming_missing():
+    """Rewritten (EPIC-84): a partial config no longer fills in defaults — it raises
+    ConfigKeyMissingError listing every absent key."""
+    with pytest.raises(ConfigKeyMissingError) as ei:
+        UltronRiskGate({"max_trades_per_day": 3})
+    missing = set(ei.value.missing)
+    assert missing == set(_CFG) - {"max_trades_per_day"}
+
+
+@pytest.mark.parametrize("key", sorted(_CFG))
+def test_missing_required_config_key_raises(key):
+    cfg = {k: v for k, v in _CFG.items() if k != key}
+    with pytest.raises(ConfigKeyMissingError) as ei:
+        UltronRiskGate(cfg)
+    assert ei.value.missing == (key,)
+    assert ei.value.section == "ultron_risk_gate"
+    assert f"ultron_risk_gate.{key}" in str(ei.value)
+
+
+# ── 10b. PER-TRADE MISSING VALUES -> REJECT (never a literal) ────────────────
+
+@pytest.mark.parametrize("key", sorted(UltronRiskGate._REQUIRED_TRADE_KEYS))
+def test_missing_trade_value_rejects(key):
+    """risk_percent (was 0.5), rr_ratio/entry/stop (was 0.0) absent -> REJECT, engine keeps running."""
+    trade = {k: v for k, v in _trade().items() if k != key}
+    result = _mk().evaluate(trade, _portfolio())
+    assert result["decision"] == "reject"
+    assert result["risk_reason"] == f"config_key_missing:trade.{key}"
+    assert result["final_position_size"] == 0.0
+
+@pytest.mark.parametrize("key", sorted(UltronRiskGate._REQUIRED_PORTFOLIO_KEYS))
+def test_missing_portfolio_value_rejects(key):
+    """account_balance (was 10000.0) and the counters (were 0) absent -> REJECT."""
+    ps = {k: v for k, v in _portfolio().items() if k != key}
+    result = _mk().evaluate(_trade(), ps)
+    assert result["decision"] == "reject"
+    assert result["risk_reason"] == f"config_key_missing:portfolio_state.{key}"
+    assert result["risk_reason"].startswith("config_key_missing")
+
+def test_missing_values_reject_lists_all_and_gate_keeps_running():
+    gate = _mk()
+    trade = {k: v for k, v in _trade().items() if k not in ("risk_percent", "rr_ratio")}
+    r1 = gate.evaluate(trade, _portfolio())
+    assert r1["decision"] == "reject"
+    assert r1["risk_reason"] == "config_key_missing:trade.rr_ratio,trade.risk_percent"
+    # the next complete trade is still approved — no raise, no stuck state
+    r2 = gate.evaluate(_trade(), _portfolio())
+    assert r2["decision"] == "approve"
+
+def test_disabled_gate_missing_position_size_rejects():
+    gate = _mk({"disabled": True})
+    r = gate.evaluate(_trade(), _portfolio())
+    assert r["decision"] == "reject"
+    assert r["risk_reason"] == "config_key_missing:trade.position_size"
+    r2 = gate.evaluate(_trade(position_size=3.0), _portfolio())
+    assert r2["decision"] == "approve" and r2["final_position_size"] == 3.0
 
 
 # ── 11. ORDERING: FIRST FAILURE WINS ─────────────────────────────────────────
 
 def test_ttl_check_before_rr_check():
     """Expired signal rejects before RR is evaluated."""
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(expires_at=_past_ts(60), rr_ratio=0.0)
     result = gate.evaluate(trade, _portfolio())
     assert result["risk_reason"] == "expired_signal"
 
 def test_rr_check_before_daily_limit():
     """Low RR rejects before daily limit is evaluated."""
-    gate = UltronRiskGate()
+    gate = _mk()
     trade = _trade(rr_ratio=0.5)
     ps = _portfolio(trades_today=99)
     result = gate.evaluate(trade, ps)
@@ -435,14 +506,14 @@ def test_rr_check_before_daily_limit():
 
 def test_daily_limit_before_kill_switch():
     """Daily limit rejects before kill switch is evaluated."""
-    gate = UltronRiskGate({"max_trades_per_day": 5})
+    gate = _mk({"max_trades_per_day": 5})
     ps = _portfolio(trades_today=5, daily_loss_pct=99.0)
     result = gate.evaluate(BASE_TRADE, ps)
     assert result["risk_reason"] == "daily_limit"
 
 def test_kill_switch_before_exposure():
     """Kill switch rejects before exposure check."""
-    gate = UltronRiskGate({"max_daily_loss_pct": 3.0})
+    gate = _mk({"max_daily_loss_pct": 3.0})
     ps = _portfolio(daily_loss_pct=3.5, total_open_risk_pct=0.0)
     result = gate.evaluate(BASE_TRADE, ps)
     assert result["risk_reason"] == "kill_switch"
@@ -501,8 +572,8 @@ if __name__ == "__main__":
         test_reject_preserves_portfolio_state,
         # config
         test_custom_config_overrides_defaults,
-        test_defaults_preserved_when_no_config,
-        test_partial_config_preserves_remaining_defaults,
+        test_no_config_raises,
+        test_partial_config_raises_naming_missing,
         # ordering
         test_ttl_check_before_rr_check,
         test_rr_check_before_daily_limit,

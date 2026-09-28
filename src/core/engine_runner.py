@@ -37,6 +37,13 @@ from core.convergence_controller import ConvergenceController
 from core.collector import Collector
 from engines.live_engine import get_zone_gate
 from utils.logging_config import get_flow_logger
+from config_layer.strict_config import (
+    ConfigKeyMissingError,  # noqa: F401  (re-exported for callers/tests)
+    missing_keys,
+    missing_reason,
+    require,
+    require_all,
+)
 # RegimeGovernor = Step-6 signal-quality filter (canonical name).
 # UltronGovernor = backward-compat alias for the same class.
 # NOT the capital-protection layer — that is UltronRiskGate (ultron_risk_gate.py).
@@ -115,6 +122,30 @@ ENGINE_RUNNER_DEFAULTS: dict = {
         "weight_zone_gate": 0.2, "weight_rr": 0.1,
     },
 }
+
+
+#: Every ``engine_runner`` config key EngineRunner itself reads (EPIC-84 STORY-84.2). Checked
+#: once, all together, at construction by ``require_all`` — one error lists every absent key.
+#: (Engine-owned keys such as min_atr / allowed_sessions are validated by their engines.)
+_ENGINE_RUNNER_REQUIRED_KEYS: tuple[str, ...] = (
+    "gaussian_impl",
+    "rr_fusion",
+    "convergence_window",
+    "fusion_engine",
+    "dual_engine",
+    "fusion_use_evaluate",
+    "fusion_compare_evaluate",
+    "zone_registry_path",
+    "zone_min_samples",
+    "zone_gate",
+    "zone_cluster_threshold",
+    "zone_gate_execution_mode",
+    "zone_mode",
+    "debug_mode",
+    "ultron_gate_enabled",
+    "signal_belief",
+    "cognitive_layer",
+)
 
 
 def _cfg_require(cfg: dict, key: str, section: str = "") -> object:
@@ -310,8 +341,8 @@ class EngineRunner:
           "shadow_ml"  → HeuristicGaussianEngine (production score);
                          MLGaussianEngine runs as shadow via _get_shadow_gaussian_engine()
         """
-        cfg_impl = config.get("gaussian_impl", "heuristic") if isinstance(config, dict) else "heuristic"
-        impl = cfg_impl.lower()
+        cfg_impl = require(config, "gaussian_impl", section_name="engine_runner", consumer="EngineRunner")
+        impl = str(cfg_impl).lower()
 
         if impl == "ml":
             logger.info("EngineRunner: using MLGaussianEngine (config: gaussian_impl=ml)")
@@ -334,8 +365,8 @@ class EngineRunner:
         The shadow engine's score is logged to engines_raw["gaussian"]["shadow"] but
         never enters engine_results["gaussian"]["score"] — FusionEngine is unaffected.
         """
-        cfg_impl = config.get("gaussian_impl", "") if isinstance(config, dict) else ""
-        if cfg_impl.lower() == "shadow_ml":
+        cfg_impl = require(config, "gaussian_impl", section_name="engine_runner", consumer="EngineRunner")
+        if str(cfg_impl).lower() == "shadow_ml":
             logger.info("EngineRunner: shadow MLGaussianEngine instantiated (shadow_ml mode)")
             return MLGaussianEngine(config)
         return None
@@ -343,6 +374,9 @@ class EngineRunner:
     def __init__(self, config: dict):
         if not isinstance(config, dict):
             raise TypeError("EngineRunner requires a dict config. Got: %s" % type(config))
+        # EPIC-84 STORY-84.2: every engine_runner key is required up front — no literal defaults.
+        require_all(config, _ENGINE_RUNNER_REQUIRED_KEYS,
+                    section_name="engine_runner", consumer="EngineRunner")
         self.config = config
 
         self.adapter = TrapValidatorEngine(config)
@@ -358,8 +392,11 @@ class EngineRunner:
         rr_fusion_cfg = _cfg_require(config, "rr_fusion", "engine_runner")
         # F-038 Fix A (configurable): when true, feed rr_fusion the FULL canonical feature vector
         # (via RRFusionLayer.score) instead of the 3-feature score_dict stub that starves the model
-        # (→ confidence≈1e-88 → 100% gaussian bypass). Soft default False = byte-identical legacy path.
-        self._rr_fusion_full_vector = bool(rr_fusion_cfg.get("full_feature_vector", False))
+        # (→ confidence≈1e-88 → 100% gaussian bypass). Required key (EPIC-84: no soft default).
+        self._rr_fusion_full_vector = bool(require(
+            rr_fusion_cfg, "full_feature_vector",
+            section_name="engine_runner.rr_fusion", consumer="EngineRunner",
+        ))
         self._rr_resolved = None
         if bool(_cfg_require(rr_fusion_cfg, "enabled", "engine_runner.rr_fusion")):
             if RRFusionLayer is None:
@@ -420,32 +457,9 @@ class EngineRunner:
 
         _fusion_cfg_dict = _cfg_require(config, "fusion_engine", "engine_runner")
         from core.fusion_engine import FusionConfig
-        _fusion_config = FusionConfig(
-            weight_crt=float(_cfg_require(_fusion_cfg_dict, "weight_crt", "fusion_engine")),
-            weight_gaussian=float(_cfg_require(_fusion_cfg_dict, "weight_gaussian", "fusion_engine")),
-            weight_zone_gate=float(_cfg_require(_fusion_cfg_dict, "weight_zone_gate", "fusion_engine")),
-            weight_rr=float(_cfg_require(_fusion_cfg_dict, "weight_rr", "fusion_engine")),
-            conflict_resolution_policy=str(_cfg_require(_fusion_cfg_dict, "conflict_resolution_policy", "fusion_engine")),
-            gaussian_weight=float(_cfg_require(_fusion_cfg_dict, "gaussian_weight", "fusion_engine")),
-            neural_weight=float(_cfg_require(_fusion_cfg_dict, "neural_weight", "fusion_engine")),
-            llm_weight=float(_cfg_require(_fusion_cfg_dict, "llm_weight", "fusion_engine")),
-            llm_lower_band=float(_cfg_require(_fusion_cfg_dict, "llm_lower_band", "fusion_engine")),
-            llm_upper_band=float(_cfg_require(_fusion_cfg_dict, "llm_upper_band", "fusion_engine")),
-            enable_llm=bool(_cfg_require(_fusion_cfg_dict, "enable_llm", "fusion_engine")),
-            tier_full=float(_cfg_require(_fusion_cfg_dict, "tier_full", "fusion_engine")),
-            tier_half=float(_cfg_require(_fusion_cfg_dict, "tier_half", "fusion_engine")),
-            tier_quarter=float(_cfg_require(_fusion_cfg_dict, "tier_quarter", "fusion_engine")),
-            # T-22 (2026-07-19): these two were the ONLY .get(default) reads in this constructor —
-            # the six keys above already used the strict _cfg_require. Now declared in config and
-            # read strictly. consensus_sweep.py injects them via a get_prod_section monkeypatch,
-            # so the sweep path still supplies them explicitly and remains unaffected.
-            min_consensus_signals=int(
-                _cfg_require(_fusion_cfg_dict, "min_consensus_signals", "fusion_engine")
-            ),
-            min_consensus_agreement=float(
-                _cfg_require(_fusion_cfg_dict, "min_consensus_agreement", "fusion_engine")
-            ),
-        )
+        # EPIC-84 STORY-84.2: one strict read of the whole fusion_engine section (all 18 keys,
+        # incl. weight_strategy_consensus + regime_fusion_weights, formerly dataclass defaults).
+        _fusion_config = FusionConfig.from_section(_fusion_cfg_dict)
         self.fusion = FusionEngine(
             gaussian_adapter=self._gaussian_adapter,
             convergence_controller=self._convergence,
@@ -518,8 +532,11 @@ class EngineRunner:
 
         # SignalBeliefTracker gate — accumulates post-fusion conviction over consecutive candles.
         # Registry injected by BacktestRunner/LiveRunner — EngineRunner reads only, never owns.
-        _belief_cfg = config.get("signal_belief", {})
-        self._belief_enabled = bool(_belief_cfg.get("enabled", False))
+        _belief_cfg = config["signal_belief"]
+        self._belief_enabled = bool(require(
+            _belief_cfg, "enabled",
+            section_name="engine_runner.signal_belief", consumer="EngineRunner",
+        ))
 
         # ── Cognitive Bus (async, advisory only — steps 8-10) ─────────────────
         # Runs in a background daemon thread. NEVER blocks the execution path.
@@ -528,8 +545,11 @@ class EngineRunner:
         self._cognitive_bus: Optional["CognitiveBus"] = None
         # M2 — last emitted regime, for on-change REGIME_CLASSIFICATION telemetry.
         self._last_regime: Optional[str] = None
-        _cognitive_cfg = config.get("cognitive_layer", {})
-        if bool(_cognitive_cfg.get("enabled", False)):
+        _cognitive_cfg = config["cognitive_layer"]
+        if bool(require(
+            _cognitive_cfg, "enabled",
+            section_name="engine_runner.cognitive_layer", consumer="EngineRunner",
+        )):
             try:
                 from cognitive.cognitive_bus import CognitiveBus as _CognitiveBus  # noqa
                 self._cognitive_bus = _CognitiveBus(config)
@@ -604,12 +624,12 @@ class EngineRunner:
         fusion result unless config["use_weighted_vote"] is True.
         Weights are read from FusionConfig so they stay in sync with compute().
         """
-        cfg = getattr(self.fusion, "cfg", None)
+        cfg = self.fusion.cfg  # FusionConfig — every weight is a required field (EPIC-84)
         weights = {
-            "crt": _safe_float(getattr(cfg, "weight_crt", 0.30), 0.30),
-            "gaussian": _safe_float(getattr(cfg, "weight_gaussian", 0.25), 0.25),
-            "zone_gate": _safe_float(getattr(cfg, "weight_zone_gate", 0.25), 0.25),
-            "rr": _safe_float(getattr(cfg, "weight_rr", 0.20), 0.20),
+            "crt": float(cfg.weight_crt),
+            "gaussian": float(cfg.weight_gaussian),
+            "zone_gate": float(cfg.weight_zone_gate),
+            "rr": float(cfg.weight_rr),
         }
         total = 0.0
         for name, w in weights.items():
@@ -726,12 +746,31 @@ class EngineRunner:
         # Extract CRT-determined direction so the gaussian engine can apply
         # feature mirroring for short trades (MLGaussianEngine / direction-aware path).
         # input_data["direction"] is an int (1=LONG, -1=SHORT) set by backtest_v2.py
-        # lines 1639-1641 before calling engine_runner.run().  Falls back to "long"
-        # when direction is absent (live path without explicit direction injection).
-        try:
-            _dir_raw = int(input_data.get("direction", input_data.get("signal_dir", 1)) or 1)
-        except (TypeError, ValueError):
-            _dir_raw = 1
+        # lines 1639-1641 before calling engine_runner.run().
+        # EPIC-84 STORY-84.2: direction is a per-trade value. It no longer falls back to
+        # "long" when absent/unusable — the candle is REJECTED with a named reason and the
+        # engine keeps running (``signal_dir`` remains the accepted alias).
+        _dir_key = "direction" if "direction" in input_data else "signal_dir"
+        if not missing_keys(input_data, (_dir_key,)):
+            try:
+                _dir_raw = int(input_data[_dir_key])
+            except (TypeError, ValueError):
+                _dir_raw = 0
+        else:
+            _dir_raw = None
+        if not _dir_raw:
+            reason = (
+                missing_reason("input_data", ["direction"]) if _dir_raw is None
+                else "input_data_invalid_direction"
+            )
+            self._audit.finalize("REJECT", reason)
+            self._audit.flush()
+            return self._reject(
+                reason,
+                input_data=input_data,
+                actual_pnl=actual_pnl,
+                adapter_result=adapter_result,
+            )
         _gauss_dir = "short" if _dir_raw < 0 else "long"
         gaussian_result = self.gaussian.compute(input_data, direction=_gauss_dir)
 
@@ -1046,7 +1085,7 @@ class EngineRunner:
 
         # Inject adaptive thresholds into config — DecisionEngine reads from config
         adaptive_thresholds = self._acceptance.get_thresholds()
-        effective_config = {**(self.config or {}), **adaptive_thresholds}
+        effective_config = {**self.config, **adaptive_thresholds}
 
         decision_result = self.decision.evaluate(
             score=final_score,
