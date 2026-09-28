@@ -294,7 +294,7 @@ def main() -> int:
     }
 
     # ── Pass 1: find first RANGE→SWEEP index and first occurrence of each family ──
-    engine = CRTEngine(crt_cfg)
+    engine = CRTEngine.from_production(crt_cfg)
     htf = HTFBuilder(bt_cfg.htf_candles_per_range, "XAUUSD")
     loader = CandleLoader(str(csv_path), "XAUUSD")
 
@@ -396,7 +396,7 @@ def main() -> int:
             role_by_idx[h["candle_idx"]] = "POST_CONTEXT"
 
     # ── Pass 2: replay with trace ON only for window ──
-    engine2 = CRTEngine(crt_cfg)
+    engine2 = CRTEngine.from_production(crt_cfg)
     hooks = CRTBaselineTraceHooks()
     engine2.baseline_trace = hooks
     htf2 = HTFBuilder(bt_cfg.htf_candles_per_range, "XAUUSD")

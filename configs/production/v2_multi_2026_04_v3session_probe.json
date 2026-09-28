@@ -1,4 +1,5 @@
 {
+  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine"},
   "version": "v2_multi_2026_04",
   "config_id": "v2_multi_2026_04_candidate_1",
   "created_at": "2026-05-06T19:34:01.007073+00:00",
@@ -11,6 +12,7 @@
     "expansion_atr_min_distance": 0.3
   },
   "engine_runner": {
+    "allowed_sessions_overrides": {},
     "model_path": "results/model_export_format.json",
     "min_atr": 0.0003,
     "allowed_sessions": [
@@ -207,6 +209,7 @@
     ]
   },
   "crt_engine": {
+    "instrument_overrides": {},
     "breakout_disp_threshold_overrides": {},
     "displacement_origin_kill_enabled": false,
     "displacement_origin_kill_precedence": "after_resting_fills",
@@ -436,6 +439,10 @@
     }
   },
   "backtest": {
+    "sl_anchor": "displacement",
+    "htf_reset_exempt_sweep": false,
+    "session_window_basis": "broker_static",
+    "htf_clock_basis": "count",
     "htf_candles_per_range": 4,
     "_comment_warmup_candles": "T-16 (2026-07-23): raised 30 -> 78 to match the feature pipeline CANONICAL warmup that FeaturePipeline.finalize() drops. DERIVED, not chosen: feature_pipeline.ma_periods[0](20) + trend_strength_window(10) - 1 + zscore_window(50) - 1, resolved by features.feature_pipeline.required_warmup_rows(). BacktestRunner refuses to start below the derived value, so this key must accompany any change to those three windows.",
     "warmup_candles": 78,

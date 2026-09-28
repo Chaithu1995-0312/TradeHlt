@@ -32,6 +32,7 @@ from config_layer.state_contract_loader import (
     clear_state_contract_cache,
     load_and_validate_state_contracts,
 )
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
 
 _ROOT = Path(__file__).resolve().parents[1]
 _AM = _ROOT / "active_models.yaml"
@@ -167,7 +168,7 @@ def test_no_parallel_python_state_contract_constants():
 
 def test_crt_engine_loads_contracts_non_mutating():
     cfg = crt_config_for_test()
-    eng = CRTEngine(config=cfg)
+    eng = crt_engine_for_test(cfg)
     assert eng.state_contracts is not None
     assert len(eng.state_contracts.contracts) == 12   # see test_load_production_active_models_succeeds
     c = eng.get_state_contract("RETEST")
@@ -185,7 +186,7 @@ def test_process_candle_dual_run_behavior_parity():
 
     def _fingerprint() -> str:
         clear_state_contract_cache()
-        eng = CRTEngine(config=crt_config_for_test())
+        eng = crt_engine_for_test(crt_config_for_test())
         base = datetime(2024, 1, 1, 0, 0, 0)
         candles = [
             Candle(

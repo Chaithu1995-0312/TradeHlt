@@ -29,8 +29,10 @@ SL_ANCHORS = ("displacement", "sweep_extreme")
 #: §3.2 key 6 / K23 F2 allowed values (existing).
 SESSION_WINDOW_BASES = ("broker_static", "exchange_local")
 
-#: §3.2 DEFAULT column — every key's default equals today's behaviour, byte-for-byte.
-DEFAULTS: dict = {
+#: The v5 baseline value of every §3.2 key. EPIC-84 (no defaults): this is NOT a fallback --
+#: every key must be declared in the config. It is used only by `non_default_keys()` to
+#: describe which declared values differ from the v5 baseline (§3.7 stamping).
+V5_BASELINE: dict = {
     "sl_anchor": "displacement",
     "target_policy": "fixed_r",
     "trade_ttl_candles": None,
@@ -63,29 +65,33 @@ class Setup:
     retrace_reset_pct: float
     session_window_basis: str
     htf_reset_exempt_sweep: bool
+    #: Required when session_window_basis == "exchange_local"; None (declared "off") otherwise.
+    exchange_session_windows: Optional[dict]
 
     @classmethod
     def from_prod_config(cls, version: str) -> "Setup":
         """Build a Setup for `version`.
 
-        §3.6 load rules: an absent key resolves to its §3.2 DEFAULT; a present key is strictly
-        validated and raises **at load**, never at first use. `setup` is itself an optional
-        section — absent entirely means every new key (2-4) is at default.
+        EPIC-84 (user rule 2026-09-28: no defaults, no fallbacks): the `setup`, `backtest` and
+        `crt_engine` sections and every key read here are REQUIRED. A missing section or key
+        raises (ConfigKeyMissingError / RuntimeError) at load; a present key is validated.
         """
         from config_layer.production_config import get_prod_section
+        from config_layer.strict_config import require
 
-        try:
-            setup_section = get_prod_section("setup", version=version)
-        except RuntimeError:
-            setup_section = {}
+        setup_section = get_prod_section("setup", version=version)
 
-        target_policy = setup_section.get("target_policy", DEFAULTS["target_policy"])
+        def _req(section: dict, name: str, key: str):
+            return require(section, key, section_name=name, consumer="Setup.from_prod_config",
+                           version=version)
+
+        target_policy = _req(setup_section, "setup", "target_policy")
         if target_policy not in TARGET_POLICIES:
             raise ValueError(
                 f"Setup: setup.target_policy={target_policy!r} must be one of {TARGET_POLICIES}"
             )
 
-        trade_ttl_candles = setup_section.get("trade_ttl_candles", DEFAULTS["trade_ttl_candles"])
+        trade_ttl_candles = _req(setup_section, "setup", "trade_ttl_candles")
         if trade_ttl_candles is not None:
             if (
                 not isinstance(trade_ttl_candles, int)
@@ -97,25 +103,21 @@ class Setup:
                     f"got {trade_ttl_candles!r}"
                 )
 
-        decider = setup_section.get("decider", DEFAULTS["decider"])
+        decider = _req(setup_section, "setup", "decider")
         if decider not in DECIDERS:
             raise ValueError(f"Setup: setup.decider={decider!r} must be one of {DECIDERS}")
 
         backtest = get_prod_section("backtest", version=version)
-        sl_anchor = backtest.get("sl_anchor", DEFAULTS["sl_anchor"])
+        sl_anchor = _req(backtest, "backtest", "sl_anchor")
         if sl_anchor not in SL_ANCHORS:
             raise ValueError(f"Setup: backtest.sl_anchor={sl_anchor!r} must be one of {SL_ANCHORS}")
-        session_window_basis = backtest.get(
-            "session_window_basis", DEFAULTS["session_window_basis"]
-        )
+        session_window_basis = _req(backtest, "backtest", "session_window_basis")
         if session_window_basis not in SESSION_WINDOW_BASES:
             raise ValueError(
                 f"Setup: backtest.session_window_basis={session_window_basis!r} must be "
                 f"one of {SESSION_WINDOW_BASES}"
             )
-        htf_reset_exempt_sweep = backtest.get(
-            "htf_reset_exempt_sweep", DEFAULTS["htf_reset_exempt_sweep"]
-        )
+        htf_reset_exempt_sweep = _req(backtest, "backtest", "htf_reset_exempt_sweep")
         if not isinstance(htf_reset_exempt_sweep, bool):
             raise ValueError(
                 "Setup: backtest.htf_reset_exempt_sweep must be a JSON boolean, got "
@@ -123,7 +125,7 @@ class Setup:
             )
 
         crt_engine = get_prod_section("crt_engine", version=version)
-        retrace_reset_pct = crt_engine.get("retrace_reset_pct", DEFAULTS["retrace_reset_pct"])
+        retrace_reset_pct = _req(crt_engine, "crt_engine", "retrace_reset_pct")
         if (
             not isinstance(retrace_reset_pct, (int, float))
             or isinstance(retrace_reset_pct, bool)
@@ -132,6 +134,13 @@ class Setup:
             raise ValueError(
                 f"Setup: crt_engine.retrace_reset_pct={retrace_reset_pct!r} must be in (0, 1]"
             )
+
+        exchange_session_windows = None
+        if session_window_basis == "exchange_local":
+            from features.broker_clock import parse_exchange_session_windows
+            exchange_session_windows = dict(
+                _req(backtest, "backtest", "exchange_session_windows"))
+            parse_exchange_session_windows(exchange_session_windows)  # fail at LOAD
 
         return cls(
             version=version,
@@ -142,10 +151,11 @@ class Setup:
             retrace_reset_pct=float(retrace_reset_pct),
             session_window_basis=session_window_basis,
             htf_reset_exempt_sweep=htf_reset_exempt_sweep,
+            exchange_session_windows=exchange_session_windows,
         )
 
     def non_default_keys(self) -> dict:
-        """§3.7 stamping: every overlay key whose value differs from its §3.2 DEFAULT.
+        """§3.7 stamping: every overlay key whose declared value differs from the v5 baseline.
 
         A run must stamp this in its own summary — an empty dict means the Setup is v5 itself
         (§8 P-1 inertness); a non-empty dict names exactly what makes this run not reproducible
@@ -153,6 +163,6 @@ class Setup:
         """
         return {
             key: getattr(self, key)
-            for key, default in DEFAULTS.items()
-            if getattr(self, key) != default
+            for key, baseline in V5_BASELINE.items()
+            if getattr(self, key) != baseline
         }

@@ -163,7 +163,7 @@ def build_training_units(
     from training.bar_semantic_tracker import ReasonCode
 
     crt_cfg = ConfigBuilder().build(instrument=INSTRUMENT)
-    engine = CRTEngine(config=crt_cfg)
+    engine = CRTEngine.from_production(crt_cfg)
 
     from data_ingestion.xauusd_phase1_candidate import guard_xauusd_csv_path
 

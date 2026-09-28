@@ -43,7 +43,7 @@ class CrtStateMachineAdapter:
         if "version" in prod_config:
             version = str(prod_config["version"])
         crt_cfg = load_prod_config_from_registry(version, instrument)
-        self._engine = CRTEngine(crt_cfg)
+        self._engine = CRTEngine.from_production(crt_cfg, version)
 
         # Seed range from first N candles of the CSV (engine requires initialise_range).
         df = pd.read_csv(ohlcv_csv)

@@ -34,7 +34,7 @@ def _state(direction: Direction, disp: Candle) -> EngineState:
 
 
 def _check(direction: Direction, disp: Candle, close: float) -> tuple[bool, str]:
-    return ResetLogic(crt_config_for_test()).should_reset(
+    return reset_logic_for_test(crt_config_for_test()).should_reset(
         _state(direction, disp), _candle(close), _HTF,
     )
 
@@ -75,3 +75,4 @@ def test_direction_none_does_not_use_this_rule():
     assert fired is False
     assert "retrace" not in reason
 from tests.helpers.crt_config import crt_config_for_test
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401

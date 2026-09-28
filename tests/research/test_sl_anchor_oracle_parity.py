@@ -28,6 +28,8 @@ from research.oracle.labeler import (  # noqa: E402
 )
 from tests.helpers.crt_config import crt_config_for_test  # noqa: E402
 from tests.research.test_oracle_labeler import _CRT_CFG, _cost_model, _synthetic  # noqa: E402
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
+from tests.helpers.crt_config import retest_cache_for_test  # noqa: E402
 
 _T0 = datetime(2026, 1, 1, tzinfo=timezone.utc)
 _ATR = 2.0
@@ -53,12 +55,13 @@ def _engine_state(direction: Direction, sweep_low: float, sweep_high: float) -> 
     st.displacement_candle = _c(90, 96, 88.0, 95) if direction == Direction.LONG else _c(110, 112, 104, 105)
     st.retest_candle = _c(94, 95, 92, 93) if direction == Direction.LONG else _c(106, 108, 105, 106)
     st.current_state = CRTState.RETEST
+    st.cached_features = retest_cache_for_test()
     return st
 
 
 def _engine_sl(direction, sweep_low, sweep_high):
     cfg = crt_config_for_test()
-    ex = ExecutionEngine(cfg, sl_anchor="sweep_extreme")
+    ex = execution_engine_for_test(cfg, sl_anchor="sweep_extreme")
     ex.build_trade(_engine_state(direction, sweep_low, sweep_high), None)
     return cfg, ex.last_build_attempt
 

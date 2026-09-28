@@ -12,6 +12,8 @@ from config_layer.crt_engine_v2 import (
     SweepEvent,
 )
 from config_layer.state_identity import CRTConfig, CRTState, Direction
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
+from tests.helpers.crt_config import retest_cache_for_test  # noqa: E402
 
 
 def candle(
@@ -62,6 +64,7 @@ def engine_ready_short(
     st.sweep_event = SweepEvent(
         direction=Direction.SHORT, price=sweep_price, candle=sweep_bar, candle_index=65
     )
+    st.cached_features = retest_cache_for_test()
     return st
 
 
@@ -89,11 +92,12 @@ def engine_ready_long(
     st.sweep_event = SweepEvent(
         direction=Direction.LONG, price=sweep_price, candle=sweep_bar, candle_index=384
     )
+    st.cached_features = retest_cache_for_test()
     return st
 
 
 def executor(cfg: CRTConfig | None = None) -> ExecutionEngine:
-    return ExecutionEngine(cfg or crt_config_for_test())
+    return execution_engine_for_test(cfg or crt_config_for_test())
 
 
 def filter_session_name(cfg: CRTConfig, t: time) -> str:

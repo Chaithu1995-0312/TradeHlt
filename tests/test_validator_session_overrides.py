@@ -73,5 +73,5 @@ def test_validator_without_engine_runner_is_unchanged(tmp_path, monkeypatch):
     recorded = _patch_runner(monkeypatch)
     a = tmp_path / "BNBUSDT.csv"; a.write_text("x", encoding="utf-8")
     cv.ConfigValidator.validate(params={}, csv_paths={"BNBUSDT": str(a)}, config_id="t")
-    base = cv._params_to_crt_config({})
+    base = cv._params_to_crt_config({}, "BNBUSDT")  # EPIC-84 A1: production base per instrument
     assert recorded["BNBUSDT"] == tuple(base.allowed_sessions)

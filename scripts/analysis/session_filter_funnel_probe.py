@@ -205,7 +205,7 @@ def replay_arm(candles: list[Candle], arm: Arm, instrument: str) -> dict[str, An
         overrides["session_windows"] = arm.session_windows
     cfg = dataclasses.replace(base, **overrides) if overrides else base
 
-    engine = CRTEngine(cfg)
+    engine = CRTEngine.from_production(cfg)
     # Process-local clock override. The attribute is assigned from config at
     # crt_engine_v2.py:2483; reassigning the instance attribute changes nothing on disk.
     engine._session_ts_basis = arm.ts_basis

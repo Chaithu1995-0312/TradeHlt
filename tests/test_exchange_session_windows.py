@@ -15,6 +15,7 @@ from features.broker_clock import (
     exchange_sessions_at, parse_exchange_session_windows,
 )
 from tests.helpers.crt_config import crt_config_for_test
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
 
 RAW = {
     "TOKYO":   {"tz": "Asia/Tokyo",       "open": "09:00", "close": "18:00"},
@@ -87,19 +88,19 @@ def test_bad_windows_are_rejected(bad):
 def _engine(windows, allowed=("LONDON", "NEWYORK", "TOKYO")):
     from config_layer.crt_engine_v2 import CRTEngine
     cfg = dataclasses.replace(crt_config_for_test(), allowed_sessions=allowed)
-    return CRTEngine(cfg, exchange_session_windows=windows)
+    return crt_engine_for_test(cfg, exchange_session_windows=windows)
 
 
 def test_default_engine_is_legacy_static():
     from config_layer.crt_engine_v2 import CRTEngine
-    eng = CRTEngine(crt_config_for_test())
+    eng = crt_engine_for_test(crt_config_for_test())
     assert eng._exchange_windows is None and eng.risk.exchange_windows is None
 
 
 def test_flag_off_score_time_is_the_legacy_static_computation():
     from config_layer.crt_engine_v2 import CRTEngine
     cfg = crt_config_for_test()
-    eng = CRTEngine(cfg)
+    eng = crt_engine_for_test(cfg)
     for h in range(24):
         ts = _at(2025, 7, 16, h, 30)
         n = sum(1 for s, e in cfg.session_windows.values() if s <= ts.time() <= e)

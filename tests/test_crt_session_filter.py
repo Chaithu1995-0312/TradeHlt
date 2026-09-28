@@ -5,6 +5,7 @@ import pytest
 
 from config_layer.state_identity import CRTConfig
 from tests.helpers.crt_config import crt_config_for_test
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
 
 
 def test_crtconfig_default_allowed_sessions():
@@ -111,7 +112,7 @@ def test_crtengine_resolves_session_ts_basis_from_feature_pipeline_config():
 
     cfg = crt_config_for_test()
 
-    engine_default = CRTEngine(cfg)
+    engine_default = crt_engine_for_test(cfg)
     assert engine_default._session_ts_basis == "broker_local"
 
     from config_layer.production_config import get_prod_section as _real_gps
@@ -126,5 +127,5 @@ def test_crtengine_resolves_session_ts_basis_from_feature_pipeline_config():
     # get_prod_section` (resolved once at construction, not a module-level name in
     # crt_engine_v2) — patch the source module so the fresh import picks up the override.
     with patch("config_layer.production_config.get_prod_section", _gps_utc_corrected):
-        engine_utc = CRTEngine(cfg)
+        engine_utc = crt_engine_for_test(cfg)
     assert engine_utc._session_ts_basis == "utc_corrected"

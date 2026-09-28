@@ -17,7 +17,7 @@ from governance.identity_spine import normalize_bar_ts, stamp_telemetry_envelope
 
 def _collector():
     c = TelemetryCollector()
-    c.on_candidate_opened("CAND-7", 7, "2026-09-22 09:00:00")
+    c.on_candidate_opened("CAND-7", 7, "2026-09-22 09:00:00", shadow=False)
     return c
 
 
@@ -28,8 +28,7 @@ class TestAcceptedLifecycleClosure:
             9,
             score_at_approval=0.8,
             candle_ts=dt.datetime(2026, 9, 22, 9, 0, 0),
-            trade_id="CRT-0001",
-        )
+            trade_id="CRT-0001", shadow_context={}, shadow_displacement_br=0.0)
         assert cid == "CAND-7"
         records = c.flush()
         accepted = [r for r in records if r.get("kind") == "CANDIDATE_LIFECYCLE"
@@ -42,11 +41,11 @@ class TestAcceptedLifecycleClosure:
 
     def test_accepted_without_active_candidate_returns_none(self):
         c = TelemetryCollector()
-        assert c.on_candidate_accepted(3, trade_id="CRT-9999") is None
+        assert c.on_candidate_accepted(3, trade_id="CRT-9999", score_at_approval=0.0, candle_ts=None, shadow_context={}, shadow_displacement_br=0.0) is None
 
     def test_decision_distance_carries_bar_ts(self):
         c = TelemetryCollector()
-        c.on_candidate_opened("CAND-1", 1, "2026-09-22 09:00:00")
+        c.on_candidate_opened("CAND-1", 1, "2026-09-22 09:00:00", shadow=False)
         c.on_decision_distance(
             2, score_actual=0.5, score_threshold=0.6, accepted=False,
             rejection_reason="LOW_SCORE", soft_conf_candle_num=1,
@@ -60,7 +59,7 @@ class TestAcceptedLifecycleClosure:
 
     def test_non_accepted_lifecycle_has_null_trade_fields(self):
         c = _collector()
-        c.on_candidate_opened("CAND-8", 8, "2026-09-22 09:00:00")
+        c.on_candidate_opened("CAND-8", 8, "2026-09-22 09:00:00", shadow=False)
         # soft-conf expiry closes the candidate without an acceptance
         c._close_candidate("SOFT_CONF_TIMEOUT", 20)
         rows = c.flush()
@@ -93,7 +92,7 @@ class TestTelemetryEnvelope:
 
     def test_first_invariant_holds_on_real_collector_output(self):
         c = _collector()
-        c.on_candidate_accepted(9, candle_ts=dt.datetime(2026, 9, 22, 9, 0, 0), trade_id="CRT-0001")
+        c.on_candidate_accepted(9, candle_ts=dt.datetime(2026, 9, 22, 9, 0, 0), trade_id="CRT-0001", score_at_approval=0.0, shadow_context={}, shadow_displacement_br=0.0)
         stamped = stamp_telemetry_envelope(
             c.flush(), run_id="r", instrument="XAUUSD", timeframe="M15",
             corpus_sha256="h" * 64,

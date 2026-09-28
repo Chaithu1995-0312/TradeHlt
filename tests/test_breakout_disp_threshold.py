@@ -48,8 +48,10 @@ def test_resolver_global_override_caseinsensitive_fallback():
 
 
 def test_crt_intent_honors_threshold_and_static_caller_unchanged():
-    # static caller (no 2nd arg) keeps historical 1.5 behavior
-    assert ExecutionEngine._derive_trade_intent(_FEATS) == "reversal"
+    # EPIC-84: the threshold is a required argument (was: defaulted to 1.5)
+    import pytest as _pt
+    with _pt.raises(TypeError):
+        ExecutionEngine._derive_trade_intent(_FEATS)
     assert ExecutionEngine._derive_trade_intent(_FEATS, 1.5) == "reversal"
     assert ExecutionEngine._derive_trade_intent(_FEATS, 1.3) == "breakout"
 

@@ -18,6 +18,7 @@ from config_layer.config_builder import ConfigBuilder  # noqa: F401
 from tests.helpers.crt_config import crt_config_for_test
 from config_layer.crt_engine_v2 import CRTEngine, Direction
 from runtime.exit_model_band import _band_from_models
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
 
 
 def _cfg(exit_model: str = "intrabar_touch"):
@@ -45,25 +46,25 @@ def test_intrabar_trigger_no_touch_returns_close():
 # ── exit-model resolution precedence: arg > env > config > default ───────────
 def test_exit_model_default_is_intrabar(monkeypatch):
     monkeypatch.delenv("TRUST_INTRABAR_TOUCH", raising=False)
-    assert CRTEngine(_cfg("intrabar_touch"))._intrabar_exits is True
+    assert crt_engine_for_test(_cfg("intrabar_touch"))._intrabar_exits is True
 
 
 def test_exit_model_config_close_only(monkeypatch):
     monkeypatch.delenv("TRUST_INTRABAR_TOUCH", raising=False)
-    assert CRTEngine(_cfg("close_only"))._intrabar_exits is False
+    assert crt_engine_for_test(_cfg("close_only"))._intrabar_exits is False
 
 
 def test_exit_model_explicit_arg_wins(monkeypatch):
     monkeypatch.setenv("TRUST_INTRABAR_TOUCH", "0")
     # explicit arg beats env and config
-    assert CRTEngine(_cfg("close_only"), intrabar_exits=True)._intrabar_exits is True
+    assert crt_engine_for_test(_cfg("close_only"), intrabar_exits=True)._intrabar_exits is True
 
 
 def test_exit_model_env_overrides_config(monkeypatch):
     monkeypatch.setenv("TRUST_INTRABAR_TOUCH", "0")
-    assert CRTEngine(_cfg("intrabar_touch"))._intrabar_exits is False
+    assert crt_engine_for_test(_cfg("intrabar_touch"))._intrabar_exits is False
     monkeypatch.setenv("TRUST_INTRABAR_TOUCH", "1")
-    assert CRTEngine(_cfg("close_only"))._intrabar_exits is True
+    assert crt_engine_for_test(_cfg("close_only"))._intrabar_exits is True
 
 
 # ── CH-measurement-basis-declaration: intrabar_exits public property ────────
@@ -71,19 +72,19 @@ def test_exit_model_env_overrides_config(monkeypatch):
 # which tie_break it declares — this is the read-only surface it depends on.
 def test_intrabar_exits_property_mirrors_private_attribute(monkeypatch):
     monkeypatch.delenv("TRUST_INTRABAR_TOUCH", raising=False)
-    engine = CRTEngine(_cfg("intrabar_touch"))
+    engine = crt_engine_for_test(_cfg("intrabar_touch"))
     assert engine.intrabar_exits is True
     assert engine.intrabar_exits == engine._intrabar_exits
 
 
 def test_intrabar_exits_property_reflects_close_only(monkeypatch):
     monkeypatch.delenv("TRUST_INTRABAR_TOUCH", raising=False)
-    engine = CRTEngine(_cfg("close_only"))
+    engine = crt_engine_for_test(_cfg("close_only"))
     assert engine.intrabar_exits is False
 
 
 def test_intrabar_exits_property_is_read_only():
-    engine = CRTEngine(_cfg("intrabar_touch"))
+    engine = crt_engine_for_test(_cfg("intrabar_touch"))
     with __import__("pytest").raises(AttributeError):
         engine.intrabar_exits = False
 

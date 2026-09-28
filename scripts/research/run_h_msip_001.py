@@ -198,7 +198,7 @@ def build_panel() -> tuple[list[BarRec], dict[str, Any], dict[str, Any]]:
 
     # CRT co-run
     crt_cfg: CRTConfig = get_prod_config("XAUUSD")
-    engine = CRTEngine(crt_cfg)
+    engine = CRTEngine.from_production(crt_cfg)
     htf = HTFBuilder(HTF_CANDLES, "XAUUSD")
     _prev_htf = ""
     _htf_remaining = HTF_CANDLES

@@ -97,6 +97,59 @@ def crt_config_for_test(**overrides) -> CRTConfig:
     return CRTConfig(**crt_test_fields(**overrides))
 
 
+#: The engine behaviour arguments as they ran before EPIC-84 A3a removed their defaults
+#: (legacy / v5-baseline values). TEST FIXTURE: production uses CRTEngine.from_production.
+ENGINE_TEST_KWARGS = dict(
+    htf_reset_exempt_sweep=False,
+    sl_anchor="displacement",
+    exchange_session_windows=None,
+    target_policy="fixed_r",
+    trade_ttl_candles=None,
+    decider="engine",
+)
+
+
+def crt_engine_for_test(cfg=None, sweep_tracer=None, intrabar_exits=None, **kw):
+    """CRTEngine with every behaviour argument declared (overridable)."""
+    from config_layer.crt_engine_v2 import CRTEngine
+
+    return CRTEngine(cfg if cfg is not None else crt_config_for_test(), sweep_tracer,
+                     intrabar_exits, **{**ENGINE_TEST_KWARGS, **kw})
+
+
+def execution_engine_for_test(cfg=None, **kw):
+    """ExecutionEngine with sl_anchor / target_policy declared (overridable)."""
+    from config_layer.crt_engine_v2 import ExecutionEngine
+
+    base = {"sl_anchor": ENGINE_TEST_KWARGS["sl_anchor"],
+            "target_policy": ENGINE_TEST_KWARGS["target_policy"]}
+    return ExecutionEngine(cfg if cfg is not None else crt_config_for_test(), **{**base, **kw})
+
+
+def reset_logic_for_test(cfg=None, **kw):
+    """ResetLogic with htf_reset_exempt_sweep declared (overridable)."""
+    from config_layer.crt_engine_v2 import ResetLogic
+
+    base = {"htf_reset_exempt_sweep": ENGINE_TEST_KWARGS["htf_reset_exempt_sweep"]}
+    return ResetLogic(cfg if cfg is not None else crt_config_for_test(), **{**base, **kw})
+
+
+def retest_cache_for_test(**overrides) -> dict:
+    """The six-key RETEST cache a real engine always writes before build_trade (EPIC-84 A3a:
+    build_trade refuses a state without it). Zeroed geometry = intent "reversal", exactly what
+    the removed `cached_features or {}` fallback produced for these unit tests."""
+    cache = {
+        "displacement_retrace": 0.0,
+        "body_ratio": 0.0,
+        "displacement_atr_ratio": 0.0,
+        "retest_index": 0,
+        "session": "UNKNOWN",
+        "double_sweep": False,
+    }
+    cache.update(overrides)
+    return cache
+
+
 def _check_complete() -> None:
     names = {f.name for f in dataclasses.fields(CRTConfig)}
     have = set(LEGACY_CODE_VALUES_2026_09_28) | set(_AUTHORITY)

@@ -158,7 +158,7 @@ def run(csv_path: Path, out_path: Path) -> dict[str, Any]:
     candles, _ = load_from_csv(csv_path)
     ts_to_idx, feature_vectors, _ = build_canonical_frame(csv_path)
 
-    engine = CRTEngine(cfg)
+    engine = CRTEngine.from_production(cfg)
     htf = HTFBuilder(4, INSTRUMENT)
     initialized = False
 

@@ -19,6 +19,7 @@ from config_layer.crt_engine_v2 import (
     ResetLogic,
 )
 from tests.helpers.crt_config import crt_config_for_test
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
 
 _T0 = datetime(2026, 1, 1, tzinfo=timezone.utc)
 _OLD, _NEW = "HTF-1", "HTF-2"
@@ -40,17 +41,17 @@ def _state(current: CRTState) -> EngineState:
 
 
 def _reset(exempt: bool, current: CRTState, htf_id: str = _NEW) -> tuple[bool, str]:
-    logic = ResetLogic(crt_config_for_test(), htf_reset_exempt_sweep=exempt)
+    logic = reset_logic_for_test(crt_config_for_test(), htf_reset_exempt_sweep=exempt)
     return logic.should_reset(_state(current), _candle(), htf_id)
 
 
 def test_default_is_legacy_false():
-    assert ResetLogic(crt_config_for_test()).htf_reset_exempt_sweep is False
-    assert CRTEngine(crt_config_for_test()).reset_lg.htf_reset_exempt_sweep is False
+    assert reset_logic_for_test(crt_config_for_test()).htf_reset_exempt_sweep is False
+    assert crt_engine_for_test(crt_config_for_test()).reset_lg.htf_reset_exempt_sweep is False
 
 
 def test_engine_kwarg_reaches_reset_logic():
-    eng = CRTEngine(crt_config_for_test(), htf_reset_exempt_sweep=True)
+    eng = crt_engine_for_test(crt_config_for_test(), htf_reset_exempt_sweep=True)
     assert eng.reset_lg.htf_reset_exempt_sweep is True
 
 

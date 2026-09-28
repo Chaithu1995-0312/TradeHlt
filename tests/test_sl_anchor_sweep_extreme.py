@@ -9,6 +9,8 @@ from config_layer.crt_engine_v2 import (
     Candle, CRTEngine, CRTState, Direction, EngineState, ExecutionEngine, Range, SweepEvent,
 )
 from tests.helpers.crt_config import crt_config_for_test
+from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
+from tests.helpers.crt_config import retest_cache_for_test  # noqa: E402
 
 _T0 = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
@@ -28,34 +30,35 @@ def _state(direction: Direction) -> EngineState:
     st.displacement_candle = _c(90, 96, 88.0, 95) if direction == Direction.LONG else _c(110, 112, 104, 105)
     st.retest_candle = _c(94, 95, 92, 93) if direction == Direction.LONG else _c(106, 108, 105, 106)
     st.current_state = CRTState.RETEST
+    st.cached_features = retest_cache_for_test()
     return st
 
 
 def _sl(anchor, direction):
     cfg = crt_config_for_test()
-    ex = ExecutionEngine(cfg, sl_anchor=anchor)
+    ex = execution_engine_for_test(cfg, sl_anchor=anchor)
     trade = ex.build_trade(_state(direction), None)
     return cfg, trade
 
 
 def test_default_is_legacy():
-    assert ExecutionEngine(crt_config_for_test()).sl_anchor == "displacement"
-    assert CRTEngine(crt_config_for_test()).executor.sl_anchor == "displacement"
+    assert execution_engine_for_test(crt_config_for_test()).sl_anchor == "displacement"
+    assert crt_engine_for_test(crt_config_for_test()).executor.sl_anchor == "displacement"
 
 
 def test_engine_kwarg_reaches_executor():
-    assert CRTEngine(crt_config_for_test(), sl_anchor="sweep_extreme").executor.sl_anchor == "sweep_extreme"
+    assert crt_engine_for_test(crt_config_for_test(), sl_anchor="sweep_extreme").executor.sl_anchor == "sweep_extreme"
 
 
 @pytest.mark.parametrize("bad", ["", "swept", None])
 def test_invalid_anchor_rejected(bad):
     with pytest.raises(ValueError):
-        ExecutionEngine(crt_config_for_test(), sl_anchor=bad)
+        execution_engine_for_test(crt_config_for_test(), sl_anchor=bad)
 
 
 def test_long_sl_uses_sweep_low_when_gated():
     cfg = crt_config_for_test()
-    ex = ExecutionEngine(cfg, sl_anchor="sweep_extreme")
+    ex = execution_engine_for_test(cfg, sl_anchor="sweep_extreme")
     st = _state(Direction.LONG)
     ex.build_trade(st, None)
     assert ex.last_build_attempt is not None
@@ -63,7 +66,7 @@ def test_long_sl_uses_sweep_low_when_gated():
 
 def _computed_sl(anchor, direction):
     cfg = crt_config_for_test()
-    ex = ExecutionEngine(cfg, sl_anchor=anchor)
+    ex = execution_engine_for_test(cfg, sl_anchor=anchor)
     st = _state(direction)
     try:
         ex.build_trade(st, None)
