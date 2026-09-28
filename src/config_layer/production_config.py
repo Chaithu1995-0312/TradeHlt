@@ -25,7 +25,7 @@ Usage:
     cfg = get_prod_config("BTCUSDT")  # CRYPTO profile + prod overrides
 
     # Historical replay
-    cfg = load_prod_config_from_registry("v1_multi_2026_03", "EURUSD")
+    cfg = load_prod_config_from_registry("v2_htfcrt_2026_08", "XAUUSD")  # incomplete configs refuse (EPIC-84)
 ═══════════════════════════════════════════════════════════════════════════════
 """
 
