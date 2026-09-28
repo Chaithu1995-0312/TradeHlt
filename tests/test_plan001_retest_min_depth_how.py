@@ -28,6 +28,7 @@ from config_layer.crt_engine_v2 import (
     StateMachine,
 )
 from config_layer.production_config import PROD_VERSION, load_prod_config_from_registry
+from tests.helpers.crt_config import bar_features_for_test  # noqa: E402,F401
 
 
 def _min_depth_floor(cfg: CRTConfig, atr: float) -> float:
@@ -104,6 +105,7 @@ def test_try_expansion_to_retest_default_parity_vs_dynamism():
         )
         sm = StateMachine(cfg)
         st = EngineState()
+        st.bar_features = bar_features_for_test()  # EPIC-84 A3b: the RETEST bar's canonical features
         st.current_state = __import__(
             "config_layer.crt_engine_v2", fromlist=["CRTState"]
         ).CRTState.EXPANSION

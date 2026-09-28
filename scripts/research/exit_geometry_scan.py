@@ -287,9 +287,10 @@ def stage_sweep(args) -> int:
     pos_list = matrix["_pos"].astype(int).tolist()
     close_list = matrix["close"].astype(float).tolist()
     atr_list = matrix["atr_abs"].astype(float).tolist()
-    intent_list = matrix["trade_intent"].tolist()
-    tp1_cache = {i: _tp1_multiplier(crt_cfg, i) for i in set(intent_list)}
-    tp1_mult_list = [tp1_cache[i] for i in intent_list]
+    # EPIC-84 A3b: intent (hence TP1) is per side
+    _intents = {d: matrix[f"trade_intent_{d}"].tolist() for d in ("long", "short")}
+    tp1_cache = {i: _tp1_multiplier(crt_cfg, i) for d in _intents for i in set(_intents[d])}
+    tp1_by_side = {d: [tp1_cache[i] for i in _intents[d]] for d in _intents}
 
     adverse = AdverseFill(stop_slippage=cost_model.stop_slippage, model_gaps=True)
     grid = {p.name: p for p in default_policy_grid()}
@@ -314,7 +315,7 @@ def stage_sweep(args) -> int:
             for direction in ("long", "short"):
                 common = dict(
                     bars=bars, pos_list=pos_list, close_list=close_list,
-                    atr_list=atr_list, tp1_mult_list=tp1_mult_list,
+                    atr_list=atr_list, tp1_mult_list=tp1_by_side[direction],
                     ts_by_pos=ts_by_pos, direction=direction, sl_variant=variant,
                     horizon=horizon, tp2_mult=tp2_mult, partial_fraction=partial,
                     sl_atr_buffer=sl_atr_buffer, cost_model=cost_model,
@@ -453,9 +454,10 @@ def stage_interaction(args) -> int:
     pos_list = matrix["_pos"].astype(int).tolist()
     close_list = matrix["close"].astype(float).tolist()
     atr_list = matrix["atr_abs"].astype(float).tolist()
-    intent_list = matrix["trade_intent"].tolist()
-    tp1_cache = {i: _tp1_multiplier(crt_cfg, i) for i in set(intent_list)}
-    tp1_mult_list = [tp1_cache[i] for i in intent_list]
+    # EPIC-84 A3b: intent (hence TP1) is per side
+    _intents = {d: matrix[f"trade_intent_{d}"].tolist() for d in ("long", "short")}
+    tp1_cache = {i: _tp1_multiplier(crt_cfg, i) for d in _intents for i in set(_intents[d])}
+    tp1_by_side = {d: [tp1_cache[i] for i in _intents[d]] for d in _intents}
 
     adverse = AdverseFill(stop_slippage=cost_model.stop_slippage, model_gaps=True)
     grid = {p.name: p for p in default_policy_grid()}
@@ -470,7 +472,7 @@ def stage_interaction(args) -> int:
         for direction in ("long", "short"):
             common = dict(
                 bars=bars, pos_list=pos_list, close_list=close_list,
-                atr_list=atr_list, tp1_mult_list=tp1_mult_list, ts_by_pos=ts_by_pos,
+                atr_list=atr_list, tp1_mult_list=tp1_by_side[direction], ts_by_pos=ts_by_pos,
                 direction=direction, sl_variant=geom, horizon=h,
                 tp2_mult=float(crt_cfg["tp2_atr_multiplier"]),
                 partial_fraction=float(ep_cfg["partial_tp_fraction"]),

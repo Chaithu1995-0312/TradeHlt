@@ -180,6 +180,8 @@ def run(csv_path: Path, out_path: Path) -> dict[str, Any]:
     lookup_misses = 0
     prev_cache_id: int | None = None
 
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_candles(candles)
     for candle in candles:
         completed = htf.push(candle)
         if not initialized:
@@ -188,7 +190,7 @@ def run(csv_path: Path, out_path: Path) -> dict[str, Any]:
                 initialized = True
             continue
 
-        engine.process_candle(candle, htf.current_htf_id)
+        engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
 
         cache = engine.state.cached_features
         if cache is None:
@@ -210,7 +212,7 @@ def run(csv_path: Path, out_path: Path) -> dict[str, Any]:
         direction = engine.state.direction
         dir_int = 1 if direction == Direction.LONG else (-1 if direction == Direction.SHORT else 0)
 
-        intent_current = ExecutionEngine._derive_trade_intent(cache, thr)
+        intent_current = ExecutionEngine._derive_trade_intent(cache, thr, direction)  # EPIC-84 A3b
         intent_c, reason_c = planner._derive_intent(crow, {"selected_direction": dir_int})
 
         records.append({

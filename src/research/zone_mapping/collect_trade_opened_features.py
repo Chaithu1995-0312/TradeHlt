@@ -120,6 +120,9 @@ def collect_xauusd_trade_opened_features(
 
     pipeline = FeaturePipeline(raw)
     enriched, feature_vectors = pipeline.run()
+
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_enriched(enriched, feature_vectors)
     ts_series = pd.to_datetime(enriched["timestamp"])
     ts_to_idx = {
         ts_series.iloc[i].strftime("%Y-%m-%d %H:%M:%S"): i
@@ -178,7 +181,8 @@ def collect_xauusd_trade_opened_features(
                 initialised = True
             continue
 
-        result = engine.process_candle(candle, htf.current_htf_id)
+        result = engine.process_candle(candle, htf.current_htf_id,
+                                       bar_features=_bar_frame.for_candle(candle))
         action = str(result.get("action", "NONE"))
         if "TRADE_OPENED" not in action or engine.state.active_trade is None:
             continue

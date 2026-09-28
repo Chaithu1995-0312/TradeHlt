@@ -37,6 +37,7 @@ from config_layer.crt_engine_v2 import (
 )
 from features import candle_math as cm
 from features import derived_math as dm
+from tests.helpers.crt_config import bar_features_for_test  # noqa: E402,F401
 
 _ROOT = Path(__file__).resolve().parents[1]
 _GOV = _ROOT / "docs" / "governance"
@@ -128,6 +129,7 @@ def test_adversarial_crt_cache_emission_uses_derived_math_keys():
     )
     sm = StateMachine(cfg)
     st = EngineState()
+    st.bar_features = bar_features_for_test()  # EPIC-84 A3b: the RETEST bar's canonical features
     st.current_state = CRTState.EXPANSION
     # PRE-EXISTING BUG FIXED 2026-08-01: EngineState has no field named `atr` (deliberately --
     # see crt_engine_v2.py:244-249, the bare name collided with two other quantities historically).
@@ -200,6 +202,7 @@ def test_control_valid_transitions_cover_exactly_twelve_states():
 def test_adversarial_illegal_transition_does_not_mutate_state():
     sm = StateMachine(crt_config_for_test())
     st = EngineState()
+    st.bar_features = bar_features_for_test()  # EPIC-84 A3b: the RETEST bar's canonical features
     st.current_state = CRTState.RANGE
     ok = sm._transition(st, CRTState.EXECUTION, "adversarial skip")
     assert ok is False
@@ -209,6 +212,7 @@ def test_adversarial_illegal_transition_does_not_mutate_state():
 def test_control_legal_range_to_sweep_mutates():
     sm = StateMachine(crt_config_for_test())
     st = EngineState()
+    st.bar_features = bar_features_for_test()  # EPIC-84 A3b: the RETEST bar's canonical features
     c = _candle()
     sw = SweepEvent(
         direction=Direction.LONG, price=c.low, candle=c,
@@ -233,6 +237,7 @@ def test_adversarial_direct_state_assign_not_via_public_transition_api_is_docume
 def test_adversarial_reset_must_clear_cached_features_and_soft_conf():
     sm = StateMachine(crt_config_for_test())
     st = EngineState()
+    st.bar_features = bar_features_for_test()  # EPIC-84 A3b: the RETEST bar's canonical features
     st.current_state = CRTState.RETEST
     st.cached_features = {"retest_depth": 0.9, "body_ratio": 0.8, "disp_strength": 1.2}
     st.evaluating_soft_conf = True
@@ -343,6 +348,7 @@ def test_adversarial_displacement_rejects_low_body_ratio():
     cfg = crt_config_for_test(body_ratio_min=0.70, atr_min_displacement=0.0, atr_multiplier_min=0.0)
     sm = StateMachine(cfg)
     st = EngineState()
+    st.bar_features = bar_features_for_test()  # EPIC-84 A3b: the RETEST bar's canonical features
     st.current_state = CRTState.SWEEP
     st.atr = 1.0
     # weak body: open 100 close 101, range 100 points → body_ratio ~0.01
@@ -360,6 +366,7 @@ def test_control_displacement_accepts_strong_body_with_move():
     cfg = crt_config_for_test(body_ratio_min=0.50, atr_min_displacement=0.5, atr_multiplier_min=0.5)
     sm = StateMachine(cfg)
     st = EngineState()
+    st.bar_features = bar_features_for_test()  # EPIC-84 A3b: the RETEST bar's canonical features
     st.current_state = CRTState.SWEEP
     st.atr = 1.0
     # strong body candle

@@ -135,7 +135,10 @@ class CrtStateMachineAdapter:
             volume=float(o["volume"]),
             index=idx,
         )
-        result = self._engine.process_candle(candle, htf_candle_id="offline")
+        # [EPIC-84 A3b] the substrate's canonical features for this bar (the engine reads the
+        # three intent keys at RETEST; a missing key rejects that retest -- never a fallback).
+        result = self._engine.process_candle(candle, htf_candle_id="offline",
+                                             bar_features=dict(bar.features))
         if not isinstance(result, dict):
             raise TypeError(f"process_candle must return dict, got {type(result)}")
         if "action" not in result:

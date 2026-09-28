@@ -277,6 +277,19 @@ def fitness_multi(
 # 4. SINGLE-INSTRUMENT BACKTEST WORKER (process-safe)
 # ═══════════════════════════════════════════════════════════════════════════
 
+# [EPIC-84 A3b] The CRT engine reads three canonical bar features at every RETEST, so a run
+# can no longer skip the FeaturePipeline. The pipeline is param-invariant for a CSV, so it is
+# built ONCE per CSV (per process) and reused by every trial via `prebuilt_features`.
+_PREBUILT_FEATURES: dict = {}
+
+
+def _prebuilt_features(bt_cfg, csv_path):
+    key = str(csv_path)
+    if key not in _PREBUILT_FEATURES:
+        _PREBUILT_FEATURES[key] = BacktestRunner(bt_cfg, csv_path=csv_path).export_features()
+    return _PREBUILT_FEATURES[key]
+
+
 def _run_single_instrument(
     params:        dict,
     csv_path:      str,
@@ -345,11 +358,9 @@ def _run_single_instrument(
                 bt_cfg.debug_mode = False
 
         loader = CandleLoader(csv_path, instrument)
-        # skip_features=True: FeaturePipeline is param-invariant for a given CSV
-        # (OHLCV → indicators has no dependency on CRT params).  The tuner fitness
-        # function only reads metric scalars so feature columns in _trades.csv are
-        # not required here.  Full-feature runs use the default BacktestRunner path.
-        runner = BacktestRunner(bt_cfg, csv_path=csv_path, skip_features=True)
+        # EPIC-84 A3b: the pipeline is param-invariant for a CSV -> built once, reused.
+        runner = BacktestRunner(bt_cfg, csv_path=csv_path,
+                                prebuilt_features=_prebuilt_features(bt_cfg, csv_path))
         stream = loader.stream()
         total_candles = loader.count()
 

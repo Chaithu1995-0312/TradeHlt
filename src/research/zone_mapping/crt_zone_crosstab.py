@@ -89,6 +89,9 @@ def collect_crt_zone_joint_labels(
 
     pipeline = FeaturePipeline(raw)
     enriched, vectors = pipeline.run()
+
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_enriched(enriched, vectors)
     ts_series = pd.to_datetime(enriched["timestamp"])
     ts_to_idx = {
         ts_series.iloc[i].strftime("%Y-%m-%d %H:%M:%S"): i
@@ -145,7 +148,8 @@ def collect_crt_zone_joint_labels(
                 initialised = True
             continue
 
-        result = engine.process_candle(candle, htf.current_htf_id)
+        result = engine.process_candle(candle, htf.current_htf_id,
+                                       bar_features=_bar_frame.for_candle(candle))
         action = str(result.get("action", "NONE"))
         state_name = engine.state.current_state.name
 

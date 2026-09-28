@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 from tests.helpers.crt_config import crt_config_for_test
 from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
+from tests.helpers.crt_config import bar_features_for_test  # noqa: E402,F401
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -53,7 +54,7 @@ def _seed_engine(eng, Candle, datetime, n: int = 40):
     eng.initialise_range(candles[:14], "HTF-0", session)
     actions = []
     for c in candles[14:]:
-        actions.append(eng.process_candle(c, "HTF-0"))
+        actions.append(eng.process_candle(c, "HTF-0", bar_features=bar_features_for_test()))
     return actions
 
 
@@ -100,7 +101,7 @@ def test_trace_on_off_action_parity():
     actions_on = []
     for c in candles[14:]:
         hooks.enabled = True
-        actions_on.append(eng_on.process_candle(c, "HTF-0"))
+        actions_on.append(eng_on.process_candle(c, "HTF-0", bar_features=bar_features_for_test()))
 
     def _norm(a):
         return {
@@ -151,7 +152,7 @@ def test_short_circuit_does_not_false_evaluate_later_guards():
     # force SWEEP state by minimal setup if possible — if not, still check hooks work
     hooks.enabled = True
     for c in candles[14:20]:
-        eng.process_candle(c, "HTF-0")
+        eng.process_candle(c, "HTF-0", bar_features=bar_features_for_test())
     # If any G_SWEEP_DISP_MOVE failed, no G_SWEEP_DISP_BODY should follow in same try call order
     # Collect per-bar is reset — check overall: body guard only after move pass
     # This is a soft structural test: when MOVE fail is recorded, BODY is not same evaluation chain without MOVE pass first

@@ -2441,12 +2441,17 @@ _TREND_BIAS_IDX = _FEATURE_INDEX_MAP["trend_bias"]
 
 class BacktestRunner:
     def __init__(self, bt_config: BacktestConfig, csv_path: str = None,
-                 skip_features: bool = False, overrides: dict | None = None):
+                 skip_features: bool = False, overrides: dict | None = None,
+                 prebuilt_features: tuple | None = None):
         """
-        skip_features=True  — skips FeaturePipeline entirely (csv_path still recorded
-        but not processed).  Use for tuner workers where fitness is derived from
-        metric scalars only and feature columns in _trades.csv are not needed.
-        All other behaviour (candle loop, CRT engine, metrics) is unchanged.
+        skip_features=True  — REFUSED since EPIC-84 A3b: the CRT engine reads three canonical
+        bar features (sweep_detected / candles_since_sweep / momentum_score) at every RETEST,
+        so a run without the feature frame would silently reject every retest. Tuner workers
+        pass `prebuilt_features` instead (build once per CSV with `export_features()`).
+
+        prebuilt_features — the tuple returned by another runner's `export_features()` for the
+        SAME csv_path: (feature_vectors, feature_ts_to_idx, resolver_extra_arrays). The
+        FeaturePipeline is param-invariant for a CSV, so tuners compute it once and reuse it.
 
         overrides — dict of CLI flags that were explicitly set (e.g. {"--threshold": "0.75"}).
                     Recorded in the per-run config dump for full auditability.
@@ -2523,8 +2528,20 @@ class BacktestRunner:
         #                               from a caller-supplied iterator and never builds a frame
         # The __init__ warmup assert below is likewise scoped to the expected case, so the
         # replay-loop predicate must match it exactly or the two disagree.
-        self._features_expected = bool(self.csv_path) and not skip_features
-        if self.csv_path and not skip_features:
+        if skip_features:
+            raise ValueError(
+                "BacktestRunner(skip_features=True) is refused (EPIC-84 A3b): the CRT engine needs "
+                "each bar's canonical features at RETEST. Build the frame once with "
+                "BacktestRunner(cfg, csv_path=...).export_features() and pass it as "
+                "prebuilt_features= to every trial."
+            )
+        self._features_expected = bool(self.csv_path)
+        if prebuilt_features is not None:
+            if not self.csv_path:
+                raise ValueError("prebuilt_features requires the csv_path it was built from")
+            (self.feature_vectors, self.feature_ts_to_idx,
+             self._resolver_extra_arrays) = prebuilt_features
+        elif self.csv_path:
             try:
                 from features.feature_pipeline import FeaturePipeline
                 require_reviewed_clock(self.csv_path,
@@ -3007,6 +3024,31 @@ class BacktestRunner:
             return feat
         except Exception:  # noqa: BLE001
             return None
+
+    def export_features(self) -> tuple:
+        """The built feature frame, for reuse by other runners on the SAME csv_path
+        (`prebuilt_features=`). Raises when this runner has none."""
+        if self.feature_vectors is None:
+            raise RuntimeError("export_features(): this runner has no feature frame (no csv_path)")
+        return (self.feature_vectors, self.feature_ts_to_idx,
+                getattr(self, "_resolver_extra_arrays", None))
+
+    def _bar_features_for(self, candle: Candle) -> Optional[dict]:
+        """[EPIC-84 A3b] The CRT engine's per-bar canonical features (intent keys only).
+
+        A run with no feature frame at all is refused (never a silent zero-trade run). A bar
+        with no row returns None: the engine then rejects a RETEST on that bar (user rule D7).
+        """
+        if self.feature_vectors is None:
+            raise RuntimeError(
+                "EPIC-84 A3b: the CRT engine needs each bar's canonical features, but this run "
+                "has no feature frame (no csv_path). Construct BacktestRunner with the csv_path "
+                "or prebuilt_features."
+            )
+        if getattr(self, "_bar_feature_frame", None) is None:
+            from features.bar_feature_frame import BarFeatureFrame
+            self._bar_feature_frame = BarFeatureFrame(self.feature_vectors, self.feature_ts_to_idx)
+        return self._bar_feature_frame.for_candle(candle)
 
     def run(self, candle_source: Iterator[Candle], total_candles: int,
             output_dir: str = "results") -> BacktestMetrics:
@@ -3496,6 +3538,7 @@ class BacktestRunner:
                 candle, htf.current_htf_id,
                 parent_state=parent_state,
                 parent_objective=parent_objective,
+                bar_features=self._bar_features_for(candle),   # [EPIC-84 A3b]
             )
             curr_state = engine.state.current_state.name
             state_counts[prev_state] += 1

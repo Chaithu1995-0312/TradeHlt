@@ -18,7 +18,7 @@ import governance.promotion_manager as PM
 from governance.promotion_manager import PromotionManager
 from config_layer.config_validator import ConfigValidator
 from config_layer.production_config import resolve_breakout_disp_threshold
-from config_layer.crt_engine_v2 import ExecutionEngine
+from config_layer.crt_engine_v2 import Direction, ExecutionEngine
 from config_layer.execution_planner import ExecutionPlannerV1_2
 from config_layer.execution_planner import planner_config_from_production
 
@@ -98,11 +98,13 @@ def main() -> int:
     rows = []
     feats = {"body_ratio": 0.8, "disp_strength": 1.4, "retest_depth": 0.9, "candles_since_sweep": 9,
              "momentum_score": 0.0, "sweep_detected": False, "double_sweep": False,
-             "ema_fast": 1.0, "ema_slow": 2.0}
+             "ema_fast": 1.0, "ema_slow": 2.0,
+             # EPIC-84 A3b: the engine's intent contract keys (same values as the planner's)
+             "displacement_retrace": 0.9, "displacement_atr_ratio": 1.4}
     er = {"decision": "execute", "direction": 1}
     for s in SYMS:
         thr = resolve_breakout_disp_threshold(v5_crt, s)  # EPIC-84: raises if undeclared
-        crt_bo = ExecutionEngine._derive_trade_intent(feats, thr) == "breakout"
+        crt_bo = ExecutionEngine._derive_trade_intent(feats, thr, Direction.LONG) == "breakout"
         pl_bo = ExecutionPlannerV1_2(
             planner_config_from_production(v5, s)
         )._derive_intent(feats, er)[0] == "BREAKOUT"

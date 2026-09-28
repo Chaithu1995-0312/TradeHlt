@@ -218,6 +218,8 @@ def build_training_units(
 
     n_streamed = 0
     prev_state = None
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_csv(str(loader.filepath))
     for candle in loader.stream():
         n_streamed += 1
         htf.push(candle)
@@ -259,7 +261,7 @@ def build_training_units(
                 continue
 
         try:
-            out = engine.process_candle(candle, htf.current_htf_id)
+            out = engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
         except Exception as exc:
             skips["crt_exception"] += 1
             if tracker is not None:

@@ -33,6 +33,7 @@ from config_layer.state_contract_loader import (
     load_and_validate_state_contracts,
 )
 from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
+from tests.helpers.crt_config import bar_features_for_test  # noqa: E402,F401
 
 _ROOT = Path(__file__).resolve().parents[1]
 _AM = _ROOT / "active_models.yaml"
@@ -203,7 +204,7 @@ def test_process_candle_dual_run_behavior_parity():
         eng.initialise_range(candles[:10], htf_candle_id="H0", session="LONDON")
         actions = []
         for c in candles[10:]:
-            a = eng.process_candle(c, htf_candle_id="H0")
+            a = eng.process_candle(c, htf_candle_id="H0", bar_features=bar_features_for_test())
             actions.append(
                 {k: a.get(k) for k in ("action", "state", "state_after", "reason")}
             )

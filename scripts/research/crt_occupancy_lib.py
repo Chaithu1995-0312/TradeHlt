@@ -102,7 +102,6 @@ def run_crt_occupancy_feeder(
     csv: str = CSV_DEFAULT,
     instrument: str = INSTRUMENT_DEFAULT,
     version: str = VERSION_DEFAULT,
-    skip_features: bool = True,
     source: str = "dual_write_smoke",
     verify: bool = True,
 ) -> dict[str, Any]:
@@ -146,19 +145,19 @@ def run_crt_occupancy_feeder(
         total_available = loader.count()
         n = min(int(limit), total_available)
         logger.info(
-            "REM-CRT-02 feeder | ver=%s | limit=%d (csv=%d) | skip_features=%s | gate=%s | out=%s",
+            "REM-CRT-02 feeder | ver=%s | limit=%d (csv=%d) | gate=%s | out=%s",
             version,
             n,
             total_available,
-            skip_features,
             os.environ.get("BACKTEST_ENGINE_GATE"),
             out_dir,
         )
 
         runner = BacktestRunner(
             cfg,
-            csv_path=csv if not skip_features else None,
-            skip_features=skip_features,
+            # EPIC-84 A3b: the CRT engine needs each bar's canonical features, so the
+            # FeaturePipeline always runs on the CSV (skip_features was removed).
+            csv_path=csv,
             overrides={
                 "_research_feeder": REMEDIATION,
                 "_authority": "RESEARCH_ONLY",
@@ -190,7 +189,7 @@ def run_crt_occupancy_feeder(
         "csv": csv,
         "limit": n,
         "candles_available": total_available,
-        "skip_features": skip_features,
+        "features": "FeaturePipeline (EPIC-84 A3b: always built)",
         "backtest_engine_gate": "0",
         "events_path": str(events_path).replace("\\", "/"),
         "n_events": n_lines,

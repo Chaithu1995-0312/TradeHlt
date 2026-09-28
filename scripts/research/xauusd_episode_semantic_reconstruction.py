@@ -99,6 +99,8 @@ def _run_crt(df: pd.DataFrame) -> tuple[list[dict], list[str], dict[int, dict]]:
     events: list[dict] = []
     action_by_idx: dict[int, dict] = {}
 
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_ohlcv_df(df)
     for i, row in df.iterrows():
         candle = Candle(
             timestamp=row["timestamp"].to_pydatetime()
@@ -120,7 +122,7 @@ def _run_crt(df: pd.DataFrame) -> tuple[list[dict], list[str], dict[int, dict]]:
                 state_by_idx[int(i)] = "WARMUP"
                 continue
         before = engine.state.current_state.name
-        action = engine.process_candle(candle, htf.current_htf_id)
+        action = engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
         after = engine.state.current_state.name
         state_by_idx[int(i)] = after
         act = action.get("action") if isinstance(action, dict) else str(action)

@@ -385,6 +385,8 @@ def validate_crt(enriched: pd.DataFrame, reports: List[ModelReport]) -> np.ndarr
         initialised = False
         warmup_n = int(getattr(bt_cfg, "warmup_candles", 64) or 64)
 
+        from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+        _bar_frame = BarFeatureFrame.from_csv(str(loader.filepath))
         for candle in loader.stream():
             n_streamed += 1
             htf.push(candle)
@@ -408,7 +410,7 @@ def validate_crt(enriched: pd.DataFrame, reports: List[ModelReport]) -> np.ndarr
                     continue
 
             try:
-                out = engine.process_candle(candle, htf.current_htf_id)
+                out = engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
                 n_exec += 1
                 st = getattr(engine.state, "current_state", None)
                 idx = min(n_exec - 1, n_feat - 1)

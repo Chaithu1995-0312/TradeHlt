@@ -145,9 +145,22 @@ def retest_cache_for_test(**overrides) -> dict:
         "retest_index": 0,
         "session": "UNKNOWN",
         "double_sweep": False,
+        # [EPIC-84 A3b] the three canonical bar features the engine now caches at RETEST
+        "sweep_detected": False,
+        "candles_since_sweep": 99,
+        "momentum_score": 0.0,
     }
     cache.update(overrides)
     return cache
+
+
+def bar_features_for_test(**overrides) -> dict:
+    """A bar's canonical intent features (EPIC-84 A3b: process_candle requires them). The values
+    are exactly what the removed engine fallbacks supplied (no sweep, 99 bars since, 0 momentum),
+    so tests that never exercised intent keep their inputs; override to exercise it."""
+    feats = {"sweep_detected": 0, "candles_since_sweep": 99, "momentum_score": 0.0}
+    feats.update(overrides)
+    return feats
 
 
 def _check_complete() -> None:

@@ -152,6 +152,8 @@ def main() -> int:
     state_at_target_end = None
     tracing = False
 
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_csv(str(loader.filepath))
     for candle in loader.stream():
         candle_idx += 1
         htf.push(candle)
@@ -183,7 +185,7 @@ def main() -> int:
             engine.sm.trace_hooks = None
 
         events_before = len(engine.state.event_log)
-        result = engine.process_candle(candle, htf.current_htf_id)
+        result = engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
         events_after = list(engine.state.event_log[events_before:])
 
         if not (tracing and is_target):

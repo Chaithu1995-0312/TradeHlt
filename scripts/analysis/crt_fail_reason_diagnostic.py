@@ -52,6 +52,8 @@ def run_once(*, enable_counters: bool, max_process: int) -> tuple[list[tuple], d
     initialised = False
     processed = 0
 
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_csv(str(loader.filepath))
     for candle in loader.stream():
         candle_idx += 1
         htf.push(candle)
@@ -68,7 +70,7 @@ def run_once(*, enable_counters: bool, max_process: int) -> tuple[list[tuple], d
         if enable_counters:
             counters.enabled = True
         sb = engine.state.current_state.name
-        result = engine.process_candle(candle, htf.current_htf_id)
+        result = engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
         sa = engine.state.current_state.name
         seq.append((sb, sa, result.get("action", "NONE")))
         processed += 1

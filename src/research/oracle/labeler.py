@@ -202,7 +202,9 @@ def label_corpus(
     pos_list = matrix["_pos"].astype(int).tolist()
     close_list = matrix["close"].astype(float).tolist()
     atr_abs_list = matrix["atr_abs"].astype(float).tolist()
-    intent_list = matrix["trade_intent"].tolist()
+    # EPIC-84 A3b: intent is per side (direction-aware pullback)
+    intent_by_side = {"long": matrix["trade_intent_long"].tolist(),
+                      "short": matrix["trade_intent_short"].tolist()}
     # [CH-oracle-join-spine] identity columns, INHERITED by row_i — never re-derived, never
     # minted here. Presence is enforced by the caller (`main`'s fail-closed matrix read);
     # this function stays usable on an in-memory synthetic matrix that never went through
@@ -211,7 +213,8 @@ def label_corpus(
     trace_id_list = matrix["trace_id"].tolist() if "trace_id" in matrix.columns else None
     bar_open_ts_list = matrix["bar_open_ts"].tolist() if "bar_open_ts" in matrix.columns else None
 
-    tp1_cache = {i: _tp1_multiplier(crt_cfg, i) for i in set(intent_list)}
+    tp1_cache = {i: _tp1_multiplier(crt_cfg, i)
+                 for i in set(intent_by_side["long"]) | set(intent_by_side["short"])}
 
     out_rows = []
     rejects = Counter()
@@ -227,13 +230,13 @@ def label_corpus(
         if not (atr_abs > 0):
             rejects["non_positive_atr"] += 1
             continue
-        tp1_mult = tp1_cache[intent_list[row_i]]
         bar_t = bars[p]
         future = bars[p + 1 : p + 1 + max_forward]
         entry_ts = ts_by_pos[p]
 
         for direction in ("long", "short"):
             is_long = direction == "long"
+            tp1_mult = tp1_cache[intent_by_side[direction][row_i]]
             for geom in geometries:
                 if geom == SL_GEOM_SWEEP_EXTREME:
                     if p < sweep_lookback - 1:
@@ -303,7 +306,7 @@ def label_corpus(
                         "walk_kernel": _basis_walk_kernel,
                         "fill_model_id": _basis_fill_model_id,
                         "cost_model_id": _basis_cost_model_id,
-                        "intent": intent_list[row_i],
+                        "intent": intent_by_side[direction][row_i],
                         "entry": entry,
                         "sl": sl,
                         "tp1": tp1,
@@ -493,7 +496,8 @@ def main(argv=None) -> int:
             "sl_atr_buffer": float(crt_cfg["sl_atr_buffer"]),
             "tp2_atr_multiplier": float(crt_cfg["tp2_atr_multiplier"]),
             "tp1_multipliers_by_intent": {
-                i: _tp1_multiplier(crt_cfg, i) for i in sorted(set(matrix["trade_intent"]))
+                i: _tp1_multiplier(crt_cfg, i)
+                for i in sorted(set(matrix["trade_intent_long"]) | set(matrix["trade_intent_short"]))
             },
             "fixed_sl_atr_mult": float(slt_cfg["legacy_sl_atr_mult"]),
             "partial_tp_fraction": float(ep_cfg["partial_tp_fraction"]),

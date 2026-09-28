@@ -76,7 +76,9 @@ def _synthetic(n=300, seed=7):
     raw["_pos"] = range(n)
     matrix = pd.DataFrame({
         "_pos": raw["_pos"], "timestamp": raw["timestamp"], "close": raw["close"],
-        "atr_abs": np.full(n, 2.0), "trade_intent": ["breakout"] * n,
+        "atr_abs": np.full(n, 2.0),
+        # EPIC-84 A3b: intent is per side (direction-aware pullback)
+        "trade_intent_long": ["breakout"] * n, "trade_intent_short": ["breakout"] * n,
     })
     return matrix, raw
 

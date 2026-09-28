@@ -9,7 +9,7 @@ Covers the deployment of `breakout_disp_threshold` (default 1.5; per-instrument 
     threshold for a symbol → they can never diverge (the original two-hardcoded-copies bug class).
 """
 from config_layer.production_config import resolve_breakout_disp_threshold
-from config_layer.crt_engine_v2 import CRTConfig, ExecutionEngine
+from config_layer.crt_engine_v2 import CRTConfig, Direction, ExecutionEngine
 from config_layer.execution_planner import ExecutionPlannerV1_2
 from config_layer.strict_config import ConfigKeyMissingError
 from tests.helpers.planner_config import planner_test_config
@@ -23,6 +23,8 @@ _FEATS = {
     "body_ratio": 0.80, "disp_strength": 1.40, "retest_depth": 0.90,
     "candles_since_sweep": 9, "momentum_score": 0.0,
     "sweep_detected": False, "double_sweep": False, "ema_fast": 1.0, "ema_slow": 2.0,
+    # EPIC-84 A3b: the engine's strict intent contract keys (same quantities as above)
+    "displacement_retrace": 0.90, "displacement_atr_ratio": 1.40,
 }
 _ENGINE_RESULT = {"decision": "execute", "selected_direction": 1}
 # Staged candidate config block (what the v5 promotion would carry).
@@ -52,8 +54,8 @@ def test_crt_intent_honors_threshold_and_static_caller_unchanged():
     import pytest as _pt
     with _pt.raises(TypeError):
         ExecutionEngine._derive_trade_intent(_FEATS)
-    assert ExecutionEngine._derive_trade_intent(_FEATS, 1.5) == "reversal"
-    assert ExecutionEngine._derive_trade_intent(_FEATS, 1.3) == "breakout"
+    assert ExecutionEngine._derive_trade_intent(_FEATS, 1.5, Direction.LONG) == "reversal"
+    assert ExecutionEngine._derive_trade_intent(_FEATS, 1.3, Direction.LONG) == "breakout"
 
 
 def test_planner_intent_honors_threshold():
@@ -67,7 +69,7 @@ def test_cross_component_consistency_invariant():
     same per-symbol resolved threshold. Guards the named failure mode (backtest 1.3 / live 1.5)."""
     for symbol in ("BNBUSDT", "BTCUSDT", "ETHUSDT", "SOLUSDT"):
         thr = resolve_breakout_disp_threshold(_CRT_SECTION, symbol)
-        crt_is_breakout = ExecutionEngine._derive_trade_intent(_FEATS, thr) == "breakout"
+        crt_is_breakout = ExecutionEngine._derive_trade_intent(_FEATS, thr, Direction.LONG) == "breakout"
         planner_is_breakout = ExecutionPlannerV1_2(
             planner_test_config(breakout_disp_threshold=thr))._derive_intent(_FEATS, _ENGINE_RESULT)[0] == "BREAKOUT"
         assert crt_is_breakout == planner_is_breakout, f"{symbol}: CRT/Planner disagree at thr={thr}"

@@ -258,6 +258,8 @@ def replay_arm(candles: list[Candle], arm: Arm, instrument: str) -> dict[str, An
     engine.executor.build_trade = build_trade_traced  # type: ignore[method-assign]
 
     counts: Counter[str] = Counter()
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_candles(candles)
     for candle in candles:
         completed = htf.push(candle)
         if not initialized:
@@ -269,7 +271,7 @@ def replay_arm(candles: list[Candle], arm: Arm, instrument: str) -> dict[str, An
         bar_reasons.clear()
         build_stats["this_bar"] = 0
         state_before = engine.state.current_state.name
-        result = engine.process_candle(candle, htf.current_htf_id)
+        result = engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
         action = result.get("action") if isinstance(result, dict) else str(result)
         hour = candle.timestamp.hour
 

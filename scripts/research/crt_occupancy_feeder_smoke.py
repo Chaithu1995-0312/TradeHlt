@@ -45,23 +45,11 @@ def _parse_args() -> argparse.Namespace:
     ap.add_argument("--csv", type=str, default=CSV_DEFAULT)
     ap.add_argument("--instrument", type=str, default=INSTRUMENT_DEFAULT)
     ap.add_argument("--version", type=str, default=VERSION_DEFAULT)
-    ap.add_argument(
-        "--skip-features",
-        action="store_true",
-        default=True,
-        help="Skip FeaturePipeline (default True — occupancy events need engine only)",
-    )
-    ap.add_argument(
-        "--with-features",
-        action="store_true",
-        help="Build FeaturePipeline on full CSV (slower; still limited stream)",
-    )
     return ap.parse_args()
 
 
 def main() -> int:
     args = _parse_args()
-    skip_features = bool(args.skip_features) and not bool(args.with_features)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
     log = logging.getLogger("crt_occupancy_feeder_smoke")
 
@@ -71,7 +59,6 @@ def main() -> int:
         csv=args.csv,
         instrument=args.instrument,
         version=args.version,
-        skip_features=skip_features,
         source="dual_write_smoke",
         verify=True,
     )
