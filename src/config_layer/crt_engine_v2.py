@@ -3677,17 +3677,19 @@ class CRTEngine:
                 mid = (rng.h_ref + rng.l_ref) / 2
                 if self.state.direction == Direction.LONG and entry_price > mid:
                     self.ev_log.record("FILTER_REJECTED", candle, reason="Not in discount zone")
+                    # EPIC-84: telemetry BEFORE reset_to_range -- the reset nulls the geometry
+                    # this record needs (displacement/retest/cached_features).
+                    self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="ZONE")
                     self.sm.reset_to_range(self.state, "Not in discount zone", candle, self.ev_log)
                     action["action"] = "FILTER_REJECTED"
                     action["reason"] = "Not in discount zone"
-                    self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="ZONE")
 
                 elif self.state.direction == Direction.SHORT and entry_price < mid:
                     self.ev_log.record("FILTER_REJECTED", candle, reason="Not in premium zone")
+                    self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="ZONE")
                     self.sm.reset_to_range(self.state, "Not in premium zone", candle, self.ev_log)
                     action["action"] = "FILTER_REJECTED"
                     action["reason"] = "Not in premium zone"
-                    self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="ZONE")
 
                 # ── Parent-timeframe bias gate (CH-htfcrt-parent-candle-smc-v1, 2026-08-15) ──
                 # Fires only when parent_crt.enabled is true AND a caller passed a
@@ -3704,13 +3706,13 @@ class CRTEngine:
                         "FILTER_REJECTED", candle,
                         reason=f"Against parent-timeframe bias ({parent_state.value})",
                     )
+                    self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="PARENT_BIAS")
                     self.sm.reset_to_range(
                         self.state, f"Against parent-timeframe bias ({parent_state.value})",
                         candle, self.ev_log,
                     )
                     action["action"] = "FILTER_REJECTED"
                     action["reason"] = f"Against parent-timeframe bias ({parent_state.value})"
-                    self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="PARENT_BIAS")
 
                 elif (
                     self._objective_gate_enabled
@@ -3721,6 +3723,9 @@ class CRTEngine:
                         "FILTER_REJECTED", candle,
                         reason=f"Against parent-timeframe objective ({parent_objective.value})",
                     )
+                    self._emit_retest_replay(
+                        candle, _effective_S, accepted=False, reject_reason="PARENT_OBJECTIVE",
+                    )
                     self.sm.reset_to_range(
                         self.state,
                         f"Against parent-timeframe objective ({parent_objective.value})",
@@ -3729,9 +3734,6 @@ class CRTEngine:
                     action["action"] = "FILTER_REJECTED"
                     action["reason"] = (
                         f"Against parent-timeframe objective ({parent_objective.value})"
-                    )
-                    self._emit_retest_replay(
-                        candle, _effective_S, accepted=False, reject_reason="PARENT_OBJECTIVE",
                     )
 
                 else:
@@ -3773,6 +3775,8 @@ class CRTEngine:
                             reason=f"off_session:{_sess_name}",
                             metadata={"session_name": _sess_name},
                         )
+                        self._emit_retest_replay(candle, _effective_S, accepted=False,
+                                                 reject_reason="OFF_SESSION")
                         self.sm.reset_to_range(
                             self.state, "off_session_filter",
                             candle, self.ev_log,
@@ -3780,8 +3784,6 @@ class CRTEngine:
                         action["action"] = "FILTER_REJECTED"
                         action["reason"] = f"off_session:{_sess_name}"
                         action["state_after"] = self.state.current_state.name
-                        self._emit_retest_replay(candle, _effective_S, accepted=False,
-                                                 reject_reason="OFF_SESSION")
                         return self._baseline_trace_finish(action)
 
                     # ── Phase 4b: shadow_advisory_only hard block ─────────────
@@ -3795,12 +3797,12 @@ class CRTEngine:
                             "htf_alignment":        self.state._shadow_htf_alignment,
                             "candle_index":         candle.index,
                         })
+                        self._emit_retest_replay(candle, _effective_S, accepted=False,
+                                                 reject_reason="SHADOW_ADVISORY")
                         self.sm.reset_to_range(
                             self.state, "shadow_advisory_only", candle, self.ev_log
                         )
                         action["action"] = "SHADOW_ADVISORY_BLOCK"
-                        self._emit_retest_replay(candle, _effective_S, accepted=False,
-                                                 reject_reason="SHADOW_ADVISORY")
                         return self._baseline_trace_finish(action)
                     # ─────────────────────────────────────────────────────────
 
@@ -3895,12 +3897,12 @@ class CRTEngine:
                     "CONFIRMATION_FAILED", candle,
                     reason=f"Soft confirmation not met within {self.config.soft_conf_max_candles} candles"
                 )
+                self._emit_retest_replay(candle, _effective_S, accepted=False,
+                                         reject_reason="LOW_SCORE")
                 self.sm.reset_to_range(
                     self.state, "Soft confirmation timeout", candle, self.ev_log
                 )
                 action["action"] = "CONFIRMATION_FAILED"
-                self._emit_retest_replay(candle, _effective_S, accepted=False,
-                                         reject_reason="LOW_SCORE")
 
             else:
                 # Still within window — continue evaluating
