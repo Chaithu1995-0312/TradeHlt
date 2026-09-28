@@ -94,6 +94,9 @@ RESOLVER_META_IGNORE = IGNORE_KEYS | {"corpus_path"}
 ORACLE_IGNORE = IGNORE_KEYS | {
     "artifact_path", "trace_source_path", "build_seconds", "elapsed_seconds",
 }
+#: Provenance fields that differ only because the arms run from different code trees.
+CODE_TREE_PROVENANCE = {"corpus_path", "git_sha", "code_sha"}
+
 DECLARED_HASH_WHY = (
     "DECLARED difference: params hash. A is 7de09f62... (5 params); "
     "B is e496a94c... (47 params). Not a behavior diff."
@@ -644,6 +647,12 @@ def main() -> int:
     code_b = Path(args.code_b).resolve() if args.code_b else REPO
     if not (code_b / "src" / "runtime" / "backtest_v2.py").exists():
         raise SystemExit(f"--code-b is not a code tree: {code_b}")
+    if code_b != REPO.resolve():
+        # Two code trees: each arm stamps its own tree path and git sha into provenance
+        # fields. Those are environment identity, not behaviour; ignore them (listed in
+        # verdict.json as ignored_fields). Decision rows are still compared in full.
+        IGNORE_KEYS.update(CODE_TREE_PROVENANCE)
+        ORACLE_IGNORE.update(CODE_TREE_PROVENANCE | {"source"})
     try:
         return run_window(args.window, code_b, args.label)
     except Exception as exc:  # noqa: BLE001 — surface the arm failure and stop
