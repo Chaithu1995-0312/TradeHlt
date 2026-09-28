@@ -14,13 +14,14 @@ _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from config_layer.config_builder import ConfigBuilder
+from config_layer.config_builder import ConfigBuilder  # noqa: F401
+from tests.helpers.crt_config import crt_config_for_test
 from config_layer.crt_engine_v2 import CRTEngine, Direction
 from runtime.exit_model_band import _band_from_models
 
 
 def _cfg(exit_model: str = "intrabar_touch"):
-    base = ConfigBuilder.build("BNBUSDT")
+    base = crt_config_for_test()
     return dataclasses.replace(base, exit_model=exit_model)
 
 

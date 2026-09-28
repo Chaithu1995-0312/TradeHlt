@@ -502,7 +502,7 @@ def run_stage_b(
 
     engine_runs_dir = (sweep_root / "engine_runs").resolve()
     engine_runs_dir.mkdir(parents=True, exist_ok=True)
-    base_crt_cfg = ConfigBuilder.build(instrument)
+    base_crt_cfg = ConfigBuilder.from_production(instrument)
 
     iter_num = 0
     n_candidates = 0

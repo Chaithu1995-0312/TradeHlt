@@ -218,9 +218,9 @@ def run_backtest(
     """Isolated worker function. Safe for multiprocessing multiprocessing."""
     try:
 
-        # ConfigBuilder.build() is the ONLY valid config source.
+        # ConfigBuilder.from_production() is the ONLY valid config source.
         # Overrides are passed directly — frozen dataclass cannot use setattr.
-        crt_cfg = ConfigBuilder.build(instrument, overrides=params)
+        crt_cfg = ConfigBuilder.from_production(instrument, overrides=params)
 
         if base_bt_config is not None:
             bt_cfg = deepcopy(base_bt_config)

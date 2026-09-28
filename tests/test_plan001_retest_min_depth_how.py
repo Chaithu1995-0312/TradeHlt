@@ -73,9 +73,9 @@ def test_fail_closed_rejects_negative_and_non_finite():
 
 
 def test_config_builder_override_and_default():
-    base = ConfigBuilder.build("BNBUSDT")
+    base = ConfigBuilder.from_production("BNBUSDT")
     assert base.retest_min_depth_atr_fraction == pytest.approx(0.10)
-    tight = ConfigBuilder.build(
+    tight = ConfigBuilder.from_production(
         "BNBUSDT", overrides={"retest_min_depth_atr_fraction": 0.25}
     )
     assert tight.retest_min_depth_atr_fraction == pytest.approx(0.25)

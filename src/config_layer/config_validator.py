@@ -102,13 +102,21 @@ def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return max(lo, min(hi, v))
 
 
-def _params_to_crt_config(params: dict):
-    """Map a flat params dict to CRTConfig, ignoring unknown keys."""
+def _params_to_crt_config(params: dict, instrument: str):
+    """Candidate params ON TOP OF the production config for ``instrument``.
+
+    EPIC-84 (no defaults): before, the fields a candidate did not name came from CRTConfig
+    code defaults. Now they come from the active production config -- the candidate is
+    judged against the declared config it would replace. Unknown keys are still ignored
+    (the params dict also carries non-CRT knobs); session_windows/conf_weights/sizing_bands
+    are never taken from a flat params dict.
+    """
+    from config_layer.config_builder import ConfigBuilder
     from config_layer.state_identity import CRTConfig
     known = {f.name for f in CRTConfig.__dataclass_fields__.values()
              if f.name not in ("session_windows", "conf_weights", "sizing_bands")}
     kwargs = {k: v for k, v in params.items() if k in known}
-    return CRTConfig(**kwargs)
+    return ConfigBuilder.from_production(instrument, overrides=kwargs or None)
 
 
 def _fitness_score(
@@ -379,14 +387,8 @@ class ConfigValidator:
                 hard_failures=["No CSV paths provided -- nothing to validate."],
             )
 
-        # Build CRTConfig from params (unknown keys silently ignored)
-        try:
-            crt_config = _params_to_crt_config(params)
-        except Exception as exc:
-            return ConfigValidator._reject(
-                config_id, params,
-                hard_failures=[f"Failed to build CRTConfig from params: {exc}"],
-            )
+        # EPIC-84: the CRTConfig is built per instrument (candidate params on top of that
+        # instrument's production config) inside the loop below.
 
         W = 60
         print(f"\n{'='*W}")
@@ -401,6 +403,16 @@ class ConfigValidator:
                 return ConfigValidator._reject(
                     config_id, params,
                     hard_failures=[f"CSV not found for {inst}: {csv_path}"],
+                )
+
+            # Build CRTConfig: candidate params on top of this instrument's production config
+            # (unknown keys ignored; EPIC-84 -- no code defaults fill unnamed fields).
+            try:
+                crt_config = _params_to_crt_config(params, inst)
+            except Exception as exc:
+                return ConfigValidator._reject(
+                    config_id, params,
+                    hard_failures=[f"Failed to build CRTConfig from params for {inst}: {exc}"],
                 )
 
             # Apply per-instrument session override so an ROI gain that comes

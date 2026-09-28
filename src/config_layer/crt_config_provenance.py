@@ -248,10 +248,18 @@ def compare_surfaces(instrument: str, version: Optional[str] = None) -> dict[str
     from config_layer.config_builder import ConfigBuilder
     from config_layer.production_config import get_active_version, load_prod_config_from_registry
 
+    from config_layer.market_router import classify_market
+    from config_layer.production_config import get_prod_section
+
+    del ConfigBuilder  # EPIC-84: no router-built config exists any more (profiles are partial)
     ver = version or get_active_version()
     schema_fields = schema_fingerprint()
-    router = ConfigBuilder.build(instrument)
     prod = load_prod_config_from_registry(ver, instrument)
+    market_class = classify_market(instrument)
+    profile = dict(get_prod_section("market_router")["classes"][market_class])
+    differs = {
+        k: (v, getattr(prod, k)) for k, v in profile.items() if getattr(prod, k) != v
+    }
     return {
         "instrument": instrument,
         "version": ver,
@@ -260,11 +268,13 @@ def compare_surfaces(instrument: str, version: Optional[str] = None) -> dict[str
             "n_fields": len(schema_fields),
             "fields": [name for name, _ in schema_fields],
         },
-        "router_base": {
-            "mode": get_provenance(router).mode.value,
-            "fp": list(fingerprint(router)),
-            "body_ratio_min": router.body_ratio_min,
-            "expansion_atr_min_distance": router.expansion_atr_min_distance,
+        # The market_router class profile is a PARTIAL declared field set. Before EPIC-84 it
+        # was the base of ConfigBuilder.build(instrument) and every undeclared field came from
+        # a CRTConfig code default; now it is reported only as declared values vs production.
+        "router_profile": {
+            "class": market_class,
+            "n_declared": len(profile),
+            "differs_from_prod": {k: list(v) for k, v in differs.items()},
         },
         "production_merged": {
             "mode": get_provenance(prod).mode.value,
@@ -272,7 +282,7 @@ def compare_surfaces(instrument: str, version: Optional[str] = None) -> dict[str
             "body_ratio_min": prod.body_ratio_min,
             "expansion_atr_min_distance": prod.expansion_atr_min_distance,
         },
-        "router_equals_prod": fingerprint(router) == fingerprint(prod),
+        "router_equals_prod": not differs,
         # Values live only in configs now; the schema can match prod only on field set.
         "prod_declares_schema_fields": all(
             hasattr(prod, name) for name, _ in schema_fields

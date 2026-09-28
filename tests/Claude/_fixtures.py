@@ -5,6 +5,7 @@ from datetime import datetime
 
 from config_layer.crt_engine_v2 import Candle, EngineState, StateMachine, SweepEvent
 from config_layer.state_identity import CRTConfig, CRTState, Direction
+from tests.helpers.crt_config import crt_config_for_test
 
 # Permissive thresholds so a rejection is always attributable to the geometry
 # contract under test, never to body_ratio / ATR sizing. Mirrors the shape of
@@ -40,7 +41,7 @@ def swept(
     make EngineState.direction and SweepEvent.direction disagree (the
     provenance probe).
     """
-    sm = StateMachine(CRTConfig(**PERMISSIVE))
+    sm = StateMachine(crt_config_for_test(**PERMISSIVE))
     st = EngineState()
     st.current_state = CRTState.SWEEP
     st.direction = sweep_direction if state_direction is None else state_direction

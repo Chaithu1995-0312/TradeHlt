@@ -1,6 +1,6 @@
 """P1 observe floors for CRTConfig construction provenance (F-057 class)."""
 from __future__ import annotations
-from tests.helpers.crt_config import crt_config_for_test
+from tests.helpers.crt_config import crt_config_for_test, crt_test_fields
 
 import dataclasses
 import os
@@ -29,7 +29,7 @@ def _clear_prov():
 
 
 def test_builder_stamps_router_base():
-    cfg = ConfigBuilder.build("XAUUSD")
+    cfg = ConfigBuilder.build("XAUUSD", overrides=crt_test_fields())
     prov = get_provenance(cfg)
     assert prov.mode == ConstructionMode.ROUTER_BASE
     assert prov.instrument == "XAUUSD"
@@ -45,7 +45,7 @@ def test_prod_registry_restamps_production_merged():
 
 
 def test_from_existing_stamps_explicit():
-    base = ConfigBuilder.build("XAUUSD")
+    base = ConfigBuilder.build("XAUUSD", overrides=crt_test_fields())
     out = ConfigBuilder.from_existing("XAUUSD", base, extra_overrides={"body_ratio_min": 0.55})
     prov = get_provenance(out)
     assert prov.mode == ConstructionMode.EXPLICIT
@@ -55,7 +55,7 @@ def test_from_existing_stamps_explicit():
 def test_fingerprint_diverges_router_vs_prod_xauusd():
     """F-057 visibility: bare builder ≠ production merge on XAUUSD."""
     ver = get_active_version()
-    router = ConfigBuilder.build("XAUUSD")
+    router = ConfigBuilder.build("XAUUSD", overrides=crt_test_fields())
     prod = load_prod_config_from_registry(ver, "XAUUSD")
     assert fingerprint(router) != fingerprint(prod)
     # EPIC-84: the schema surface is field names + types (no values exist without a config).
@@ -66,15 +66,17 @@ def test_fingerprint_diverges_router_vs_prod_xauusd():
 
 def test_compare_surfaces_structure():
     report = compare_surfaces("XAUUSD")
+    # EPIC-84: the class profile is reported as declared values vs production (no router base).
     assert report["router_equals_prod"] is False
     assert report["production_merged"]["mode"] == ConstructionMode.PRODUCTION_MERGED.value
-    assert report["router_base"]["mode"] == ConstructionMode.ROUTER_BASE.value
+    assert report["router_profile"]["class"] == "FOREX"
+    assert report["router_profile"]["differs_from_prod"]
     assert report["schema"]["n_fields"] == len(report["schema"]["fields"])
     assert report["prod_declares_schema_fields"] is True
 
 
 def test_require_mode_non_strict_warns_only():
-    cfg = ConfigBuilder.build("XAUUSD")
+    cfg = ConfigBuilder.build("XAUUSD", overrides=crt_test_fields())
     # Should not raise without CRT_CONFIG_STRICT
     os.environ.pop("CRT_CONFIG_STRICT", None)
     mode = require_mode(
@@ -87,7 +89,7 @@ def test_require_mode_non_strict_warns_only():
 
 def test_require_mode_strict_raises(monkeypatch):
     monkeypatch.setenv("CRT_CONFIG_STRICT", "1")
-    cfg = ConfigBuilder.build("XAUUSD")
+    cfg = ConfigBuilder.build("XAUUSD", overrides=crt_test_fields())
     with pytest.raises(RuntimeError, match="F-057"):
         require_mode(
             cfg,
@@ -99,7 +101,7 @@ def test_require_mode_strict_raises(monkeypatch):
 def test_assert_product_rejects_router_base():
     from config_layer.crt_config_provenance import assert_product_crt_config
 
-    cfg = ConfigBuilder.build("XAUUSD")
+    cfg = ConfigBuilder.build("XAUUSD", overrides=crt_test_fields())
     with pytest.raises(RuntimeError, match="ROUTER_BASE"):
         assert_product_crt_config(cfg, context="unit", allow_router_base=False)
 
@@ -107,7 +109,7 @@ def test_assert_product_rejects_router_base():
 def test_assert_product_allows_router_with_escape():
     from config_layer.crt_config_provenance import assert_product_crt_config
 
-    cfg = ConfigBuilder.build("XAUUSD")
+    cfg = ConfigBuilder.build("XAUUSD", overrides=crt_test_fields())
     mode = assert_product_crt_config(cfg, context="unit", allow_router_base=True)
     assert mode == ConstructionMode.ROUTER_BASE
 

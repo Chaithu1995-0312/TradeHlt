@@ -2799,12 +2799,12 @@ class CRTEngine:
                  target_policy: str = "fixed_r",
                  trade_ttl_candles: Optional[int] = None,
                  decider: str = "engine"):
-        # Config MUST be provided via ConfigBuilder.build(instrument).
-        # Direct CRTConfig() fallback is forbidden — it bypasses the market router.
+        # Config MUST be provided (ConfigBuilder.from_production / load_prod_config_from_registry).
+        # There is no fallback config (EPIC-84: no defaults).
         if config is None:
             raise ValueError(
                 "CRTEngine requires an explicit CRTConfig. "
-                "Use ConfigBuilder.build(instrument) to create one."
+                "Use ConfigBuilder.from_production(instrument) to create one."
             )
         self.config    = config
         # [trust-layer F2] Resolve the exit-trigger model ONCE (not per candle).

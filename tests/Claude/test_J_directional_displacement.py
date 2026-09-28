@@ -20,6 +20,7 @@ from config_layer.crt_engine_v2 import StateMachine
 from config_layer.state_identity import CRTConfig, CRTState, Direction, VALID_TRANSITIONS
 
 from tests.Claude._fixtures import PERMISSIVE, bar, swept
+from tests.helpers.crt_config import crt_config_for_test
 
 
 def test_sweep_to_displacement_edge_is_legal_but_geometry_still_refuses():
@@ -139,7 +140,7 @@ def test_direction_none_fails_closed_without_a_sweep_event():
     Failure mode: an unresolved direction is treated as LONG, so a bullish bar with
     no sweep behind it opens the displacement path.
     """
-    sm = StateMachine(CRTConfig(**PERMISSIVE))
+    sm = StateMachine(crt_config_for_test(**PERMISSIVE))
     _, st = swept(Direction.NONE, sweep_price=0.0, with_sweep_event=False)
     assert st.sweep_event is None
     assert st.direction is Direction.NONE

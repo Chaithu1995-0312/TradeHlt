@@ -44,9 +44,14 @@ def test_classify_market_tolerates_filename_derived_hints():
 
 
 def test_bare_config_builder_now_matches_governed_profile_class():
-    """get_crt_config's base profile is config-driven from the same market_router
-    section classify_market reads — BNBUSDT's base is now the CRYPTO profile."""
-    bare = ConfigBuilder.build("BNBUSDT")
+    """UPDATED 2026-09-28 (EPIC-84, no defaults): there is no router base any more -- a bare
+    ConfigBuilder.build(instrument) fails closed (the class profile is a partial field set and
+    CRTConfig has no code defaults). The governed path and the CRYPTO classification stand."""
+    from config_layer.strict_config import ConfigKeyMissingError
+
+    assert classify_market("BNBUSDT") == "CRYPTO"
+    with pytest.raises(ConfigKeyMissingError):
+        ConfigBuilder.build("BNBUSDT")
     governed = load_prod_config_from_registry(PROD_VERSION, "BNBUSDT")
     # The 5 router-profile keys are overridden by `params` on the governed path (this is
     # F-057's "latent on the governed path" note) — assert governed matches the ACTIVE
@@ -57,8 +62,7 @@ def test_bare_config_builder_now_matches_governed_profile_class():
         assert getattr(governed, k) == params[k]
     # And the bare-builder base (no params/crt_engine merge) is the CRYPTO profile, not FOREX.
     crypto_profile = get_prod_section("market_router")["classes"]["CRYPTO"]
-    for k, v in crypto_profile.items():
-        assert getattr(bare, k) == v
+    assert crypto_profile  # still declared in config; reported by compare_surfaces, not built
 
 
 def test_backtest_runner_fallback_resolves_governed_config_not_bare_router():
