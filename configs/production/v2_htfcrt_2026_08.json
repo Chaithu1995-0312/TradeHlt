@@ -981,10 +981,6 @@
       "slippage": 3
     }
   },
-  "trap_validator": {
-    "min_atr": 0.0005,
-    "allowed_sessions": ["asia", "london", "new_york"]
-  },
   "uat": {
     "kill_switch": {
       "loss_threshold_r": 5.0,

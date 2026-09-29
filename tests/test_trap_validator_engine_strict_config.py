@@ -1,11 +1,14 @@
 """EPIC-84 L-C (src/engines): TrapValidatorEngine has no code defaults.
 
 min_atr/allowed_sessions used to fall back to code literals (0.0005 /
-[asia, london, new_york]) whenever the passed-in config lacked a
-`trap_validator` section — which it always did on the real production spine
-(engine_runner.py constructs TrapValidatorEngine(config) with the full prod
-config dict, which declares no such section). Both are now DECLARED under
-`trap_validator` and required at construction.
+[asia, london, new_york]) whenever the passed-in config lacked them. `config`
+here is NOT the full production config — engine_runner.py's real caller
+(backtest_v2.py: `_er_cfg = dict(get_prod_section("engine_runner"))`) passes
+the flattened `engine_runner` section, so both keys are read at the top
+level of `config`, matching `engine_runner.min_atr` / `engine_runner.
+allowed_sessions` in configs/production/*.json — both already declared there
+(0.0003 / [london, new_york, overlap]; the old code literals never actually
+fired on the real call path). Both are now required at construction.
 """
 from __future__ import annotations
 
@@ -20,7 +23,7 @@ sys.path.insert(0, str(_ROOT / "src"))
 from config_layer.strict_config import ConfigKeyMissingError  # noqa: E402
 from engines.trap_validator_engine import TrapValidatorEngine  # noqa: E402
 
-_TRAP_SECTION = {"min_atr": 0.0005, "allowed_sessions": ["asia", "london", "new_york"]}
+_ER_CFG = {"min_atr": 0.0005, "allowed_sessions": ["asia", "london", "new_york"]}
 
 _VALID_INPUT = {
     "_data_integrity": "real",
@@ -30,8 +33,8 @@ _VALID_INPUT = {
 }
 
 
-def _engine(section=None) -> TrapValidatorEngine:
-    return TrapValidatorEngine({"trap_validator": section if section is not None else dict(_TRAP_SECTION)})
+def _engine(cfg=None) -> TrapValidatorEngine:
+    return TrapValidatorEngine(dict(cfg) if cfg is not None else dict(_ER_CFG))
 
 
 def test_construction_reads_declared_values():
@@ -40,19 +43,13 @@ def test_construction_reads_declared_values():
     assert eng.allowed_sessions == ["asia", "london", "new_york"]
 
 
-def test_construction_missing_section_raises():
-    with pytest.raises(ConfigKeyMissingError) as ei:
-        TrapValidatorEngine({})
-    assert ei.value.missing == ("trap_validator",)
-
-
-@pytest.mark.parametrize("key", sorted(_TRAP_SECTION))
+@pytest.mark.parametrize("key", sorted(_ER_CFG))
 def test_construction_missing_key_raises_naming_it(key):
-    section = {k: v for k, v in _TRAP_SECTION.items() if k != key}
+    cfg = {k: v for k, v in _ER_CFG.items() if k != key}
     with pytest.raises(ConfigKeyMissingError) as ei:
-        _engine(section)
+        _engine(cfg)
     assert key in ei.value.missing
-    assert ei.value.section == "trap_validator"
+    assert ei.value.section == "engine_runner"
 
 
 def test_compute_passes_valid_input():
@@ -73,3 +70,13 @@ def test_compute_uses_declared_allowed_sessions():
     eng = _engine({"min_atr": 0.0005, "allowed_sessions": ["london"]})
     result = eng.compute(dict(_VALID_INPUT))
     assert result["reason"] == "invalid_session:asia"
+
+
+def test_engine_runner_section_shape_matches_active_config():
+    """Parity guard: the active production config's engine_runner section
+    already declares both keys (this fix needed no new DECLARATIONS)."""
+    from config_layer.production_config import get_prod_section
+    er = get_prod_section("engine_runner")
+    eng = TrapValidatorEngine(dict(er))
+    assert eng.min_atr == er["min_atr"]
+    assert eng.allowed_sessions == er["allowed_sessions"]
