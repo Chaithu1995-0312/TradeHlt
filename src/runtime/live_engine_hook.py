@@ -1005,6 +1005,11 @@ class HookedLiveEngine(LiveEngine):
         engine_input["signal_dir"]       = _dir_val
         engine_input["trade_direction"]  = _dir_val
 
+        # Instrument-aware Gaussian lookup (mirrors backtest_v2.py's
+        # `_er_cfg["instrument"] = self.cfg.instrument`, ~:3352). Without this, EngineRunner ->
+        # HeuristicGaussianEngine fell through to its "EURUSD" default on every live symbol,
+        # so e.g. XAUUSD silently scored against the EURUSD registry entry.
+        engine_config["instrument"] = _orch_pair
         engine_outputs = EngineRunner(engine_config).run(engine_input, context)
 
         exec_planner_cfg = engine_config.get("execution_planner")

@@ -183,7 +183,13 @@ def run_backtest(
     if gate_mode not in {"hard_gate", "score_only_audit", "force_accept_baseline"}:
         raise ValueError(f"Unsupported gate_mode: {gate_mode}")
 
-    runner = EngineRunner(_build_engine_runner_config(config))
+    # Instrument-aware Gaussian lookup (mirrors backtest_v2.py's
+    # `_er_cfg["instrument"] = self.cfg.instrument`, ~:3352) — symbol is derived early so it
+    # can be threaded into the EngineRunner config.
+    symbol = _derive_symbol_from_data_path(data_path)
+    _engine_runner_cfg = _build_engine_runner_config(config)
+    _engine_runner_cfg["instrument"] = symbol
+    runner = EngineRunner(_engine_runner_cfg)
     # Shared collector so exception records appear in the same audit file
     # as all accept/reject decisions written by engine_runner.
     collector = runner.collector
@@ -191,7 +197,6 @@ def run_backtest(
 
     # Create unique decision log file for this run
     timestamp = time.strftime("%Y%m%d_%H%M%S")
-    symbol = _derive_symbol_from_data_path(data_path)
     log_filename = f"logs/backtest_decisions_{symbol}_{timestamp}.jsonl"
     decision_log = open(log_filename, 'w', encoding='utf-8')
     logger.info("Writing all decision records to: %s", log_filename)

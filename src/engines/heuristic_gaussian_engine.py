@@ -71,7 +71,7 @@ class GaussianRegistry:
 
     def __init__(self, registry_path: str = GAUSSIAN_REGISTRY_PATH,
                  models_dir: str = GAUSSIAN_MODELS_DIR,
-                 instrument: str = "EURUSD"):
+                 *, instrument: str):
         self.registry_path = registry_path
         self.models_dir = models_dir
         self.instrument = instrument
@@ -204,7 +204,15 @@ class HeuristicGaussianEngine:
     def __init__(self, config: dict, *, instrument: Optional[str] = None,
                  preload_registry: bool = False):
         self.config = config
-        self._instrument: str = instrument or config.get("instrument", "EURUSD")
+        _resolved_instrument = instrument or (config.get("instrument") if isinstance(config, dict) else None)
+        if not _resolved_instrument:
+            raise ValueError(
+                "HeuristicGaussianEngine: no instrument supplied — pass instrument=<symbol> "
+                "or include config['instrument']. No default is substituted (T-11 "
+                "no-silent-fallback rule): a fabricated instrument would load the wrong "
+                "Gaussian registry entry (mu/sigma) for this symbol."
+            )
+        self._instrument: str = _resolved_instrument
         self._registry: Optional[GaussianRegistry] = None
         self._loaded_version: Optional[str] = None
         # P1 2026-07-22: cache load outcome so a failed lookup (e.g. XAUUSD with
