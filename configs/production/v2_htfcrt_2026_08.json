@@ -975,8 +975,15 @@
       "password": "",
       "lot_min": 0.01,
       "lot_max": 10.0,
-      "dry_run": true
+      "dry_run": true,
+      "magic": 20260501,
+      "deviation": 20,
+      "slippage": 3
     }
+  },
+  "trap_validator": {
+    "min_atr": 0.0005,
+    "allowed_sessions": ["asia", "london", "new_york"]
   },
   "uat": {
     "kill_switch": {
