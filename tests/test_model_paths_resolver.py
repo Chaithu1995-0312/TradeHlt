@@ -114,6 +114,7 @@ def test_engine_runner_zone_gate_uses_resolver() -> None:
     er_cfg.setdefault("fusion_engine", dict(gps("fusion_engine")))
     for k, v in dict(gps("decision_engine")).items():
         er_cfg.setdefault(k, v)
+    er_cfg["instrument"] = "XAUUSD"
     runner = EngineRunner(er_cfg)
 
     assert hasattr(runner, "_zone_resolved")

@@ -103,7 +103,7 @@ def test_gaussian_engine_is_heuristic_alias():
 
 def test_heuristic_engine_compute_32dim(feature_dict_32):
     from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
-    engine = HeuristicGaussianEngine(config={"gaussian_mu": 0.0, "gaussian_sigma": 1.0})
+    engine = HeuristicGaussianEngine(config={"gaussian_mu": 0.0, "gaussian_sigma": 1.0}, instrument="XAUUSD")
     result = engine.compute(feature_dict_32)
     assert "score" in result
     assert 0.0 <= result["score"] <= 1.0
@@ -132,7 +132,7 @@ def test_engine_runner_default_is_heuristic():
     os.environ.pop("GAUSSIAN_IMPL", None)
     from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
     from core.engine_runner import EngineRunner
-    engine = EngineRunner._get_gaussian_engine({})
+    engine = EngineRunner._get_gaussian_engine({"instrument": "XAUUSD"})
     assert isinstance(engine, HeuristicGaussianEngine)
 
 
@@ -149,7 +149,7 @@ def test_engine_runner_heuristic_explicit():
     # Config-first (§6.5): explicit "heuristic" via config, not env var.
     from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
     from core.engine_runner import EngineRunner
-    engine = EngineRunner._get_gaussian_engine({"gaussian_impl": "heuristic"})
+    engine = EngineRunner._get_gaussian_engine({"gaussian_impl": "heuristic", "instrument": "XAUUSD"})
     assert isinstance(engine, HeuristicGaussianEngine)
 
 

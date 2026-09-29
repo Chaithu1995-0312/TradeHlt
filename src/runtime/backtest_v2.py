@@ -4894,6 +4894,11 @@ def run_backtest(config: dict, csv_path: str) -> list:
     enriched_df, vectors = pipeline.run()
 
     model  = BitNetModel(config["model_path"])
+    # Instrument-aware Gaussian lookup (mirrors the main _gate_enabled path's
+    # `_er_cfg["instrument"] = self.cfg.instrument`, ~:3352) — symbol_hint is already
+    # derived above from the CSV filename.
+    config = dict(config)
+    config["instrument"] = symbol_hint
     runner = EngineRunner(config)
 
     # Symbol from filename: "data/AUDUSD_M15.csv" → "AUDUSD"
