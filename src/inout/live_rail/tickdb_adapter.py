@@ -35,7 +35,12 @@ class TickDBAdapter:
             # basis= is feature_pipeline.session_timestamp_basis, NOT ClockBasis.
             from config_layer.production_config import get_prod_section
 
-            fp = get_prod_section("feature_pipeline") or {}
+            # EPIC-84: get_prod_section() already raises RuntimeError if the
+            # section is absent from the registry — no `or {}` fallback needed
+            # (no config declares this section as JSON null either).
+            fp = get_prod_section("feature_pipeline")
+            # session_timestamp_basis is a genuinely optional opt-in key (F-066):
+            # absence means the byte-identical broker_local default applies.
             session_basis = fp.get("session_timestamp_basis")
             if session_basis is None:
                 require_reviewed_clock(self._path)
@@ -94,10 +99,15 @@ class TickDBAdapter:
                 bid=float(raw["bid"]),
                 ask=float(raw["ask"]),
                 last=float(raw["last"]),
+                # EPIC-84 KEPT: size legitimately absent on a quote/book tick
+                # (not every record is a sized trade) — same convention as
+                # binance_ws_adapter's book-tick handling.
                 size=float(raw.get("size", 0.0)),
                 seq=int(raw["seq"]) if raw.get("seq") is not None else None,
                 clock_basis=ClockBasis(str(raw["clock_basis"])),
                 venue=VenueName.TICKDB,
+                # EPIC-84 KEPT: this IS the tickdb replay adapter — a record with
+                # no explicit tag is self-evidently replay data by construction.
                 raw_kind=str(raw.get("raw_kind", "replay")),
             )
         except (KeyError, ValueError) as exc:

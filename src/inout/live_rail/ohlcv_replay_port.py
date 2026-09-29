@@ -57,6 +57,9 @@ def read_corpus_rows(path: Path, limit: int | None = None) -> list[dict[str, Any
     rows: list[dict[str, Any]] = []
     with path.open("r", encoding="utf-8", newline="") as fh:
         reader = csv.DictReader(fh)
+        # EPIC-84 KEPT: csv.DictReader.fieldnames is None only on a fully empty
+        # file; normalizing to [] makes every required column correctly report
+        # "missing" below and raise — not a config fallback.
         missing = [c for c in _REQUIRED_COLUMNS if c not in (reader.fieldnames or [])]
         if missing:
             raise ValueError(
