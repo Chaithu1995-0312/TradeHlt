@@ -10,6 +10,7 @@ import json
 
 import pytest
 
+from config_layer.strict_config import ConfigKeyMissingError
 from governance.promotion_manager import PromotionManager
 
 # Branch-lineage fencing (F-016): the promotion-engine crt_engine-override feature
@@ -67,23 +68,29 @@ def _write(p, obj):
 
 
 @requires_promo_overrides
-def test_merge_base_prefers_active_with_sentinel_even_if_not_v1_superset(tmp_path):
-    """ODL-G3a fix: a full ACTIVE (has engine_runner) that PRUNED sections (not a v1 superset) is still
-    chosen as base — the old superset guard wrongly rebased it onto v1."""
+def test_merge_base_loads_declared_version_even_if_not_v1_superset(tmp_path):
+    """The declared promotion_base_version file is the base, including a pruned full config."""
     _write(tmp_path / "v1_multi_2026_03.json",
            {"engine_runner": {}, "params": {}, "crt_engine": {}, "extra_section": {}, "config_id": "v1"})
     _write(tmp_path / "pruned.json",
-           {"engine_runner": {}, "params": {}, "crt_engine": {}, "config_id": "pruned"})  # no extra_section
-    (tmp_path / "ACTIVE_VERSION").write_text("pruned\n", encoding="utf-8")
-    base = PromotionManager._load_full_base_config(tmp_path)
-    assert base is not None and base.get("config_id") == "pruned"
+           {"engine_runner": {}, "params": {}, "crt_engine": {}, "config_id": "pruned"})
+    base = PromotionManager._load_full_base_config(
+        tmp_path, governance={"promotion_base_version": "pruned"},
+    )
+    assert base.get("config_id") == "pruned"
 
 
 def test_merge_base_falls_back_when_active_sparse(tmp_path):
-    """ACTIVE without the engine_runner sentinel → fall back to a full baseline (never base on sparse)."""
+    """A missing promotion_base_version raises. A declared file without engine_runner raises."""
     _write(tmp_path / "v1_multi_2026_03.json",
            {"engine_runner": {}, "params": {}, "config_id": "baseline_full"})
-    _write(tmp_path / "sparse.json", {"params": {}, "config_id": "sparse"})  # no engine_runner
-    (tmp_path / "ACTIVE_VERSION").write_text("sparse\n", encoding="utf-8")
-    base = PromotionManager._load_full_base_config(tmp_path)
-    assert base is not None and base.get("config_id") == "baseline_full"
+    _write(tmp_path / "sparse.json", {"params": {}, "config_id": "sparse"})
+    with pytest.raises(ConfigKeyMissingError) as missing:
+        PromotionManager._load_full_base_config(tmp_path, governance={})
+    assert "promotion_base_version" in missing.value.missing
+    assert "governance.promotion_base_version" in str(missing.value)
+    with pytest.raises(ConfigKeyMissingError) as sparse:
+        PromotionManager._load_full_base_config(
+            tmp_path, governance={"promotion_base_version": "sparse"},
+        )
+    assert "engine_runner" in sparse.value.missing

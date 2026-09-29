@@ -22,7 +22,6 @@ from bitnet.defaults import (
     AD_CRT_GATE_ID,
     BB_BITLINEAR_RES_ID,
     BB_LEGACY_MLP_ID,
-    DEFAULTS_PROFILE,
     ENC_CANONICAL38_ID,
     ENC_LEGACY6_ID,
     HD_CONFIDENCE_ID,
@@ -36,6 +35,7 @@ from bitnet.encoders import (
 )
 from bitnet.heads import ConfidenceSigmoidHead, MultiHead, random_linear_head
 from bitnet.runtime_types import ModelMetadata, Prediction
+from config_layer.strict_config import require
 
 
 @runtime_checkable
@@ -196,13 +196,19 @@ def load_bitlinear_composition(envelope: Dict[str, Any]) -> BitNetComposition:
         heads_id = HD_CONFIDENCE_ID
         adapter_cls = CrtGateAdapter
 
-    enc_sec = envelope.get("encoder") or {}
+    enc_sec = require(
+        envelope, "encoder", section_name="bitnet.envelope",
+        consumer="load_bitlinear_composition",
+    )
     feature_names = enc_sec.get("feature_names")
     encoder = Canonical38Encoder(
         feature_names=feature_names,
         mean=enc_sec.get("mean"),
         std=enc_sec.get("std"),
-        feature_order_hash=str(enc_sec.get("feature_order_hash") or ""),
+        feature_order_hash=str(require(
+            enc_sec, "feature_order_hash",
+            section_name="bitnet.encoder", consumer="load_bitlinear_composition",
+        )),
     )
     if encoder.dim() != backbone.input_dim:
         raise ValueError(
@@ -227,7 +233,10 @@ def load_bitlinear_composition(envelope: Dict[str, Any]) -> BitNetComposition:
         backbone_id=BB_BITLINEAR_RES_ID,
         heads_id=heads_id,
         adapter_id=adapter.id(),
-        defaults_profile=str(bb_sec.get("defaults_profile") or DEFAULTS_PROFILE),
+        defaults_profile=str(require(
+            bb_sec, "defaults_profile",
+            section_name="bitnet.backbone", consumer="load_bitlinear_composition",
+        )),
         label_contract_id=str(
             (envelope.get("metadata") or {}).get("label_contract_id") or ""
         ),

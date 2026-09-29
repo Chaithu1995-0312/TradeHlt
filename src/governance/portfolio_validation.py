@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Optional
 
 sys.path.insert(0, os.path.dirname(__file__))
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
 from runtime.backtest_v2 import (
     BacktestConfig, BacktestMetrics, BacktestRunner,
     CandleLoader, TradeRecord,
@@ -38,11 +39,11 @@ try:
 except Exception:
     _PV_CFG = {}
 
-_DEFAULT_INITIAL_CAPITAL:    float = _PV_CFG.get("initial_capital",       100_000.0)
-_DEFAULT_OUTPUT_DIR:         str   = _PV_CFG.get("output_dir",            "results/portfolio")
-_DEFAULT_RISK_PCT:           float = _PV_CFG.get("risk_pct",              0.01)
-_DEFAULT_SLIPPAGE_FRACTION:  float = _PV_CFG.get("slippage_atr_fraction", 0.08)
-_DEFAULT_WARMUP_CANDLES:     int   = _PV_CFG.get("warmup_candles",        100)
+_DEFAULT_INITIAL_CAPITAL:    float = require(_PV_CFG, "initial_capital", section_name="portfolio", consumer="portfolio_validation")
+_DEFAULT_OUTPUT_DIR:         str   = require(_PV_CFG, "output_dir", section_name="portfolio", consumer="portfolio_validation")
+_DEFAULT_RISK_PCT:           float = require(_PV_CFG, "risk_pct", section_name="portfolio", consumer="portfolio_validation")
+_DEFAULT_SLIPPAGE_FRACTION:  float = require(_PV_CFG, "slippage_atr_fraction", section_name="portfolio", consumer="portfolio_validation")
+_DEFAULT_WARMUP_CANDLES:     int   = require(_PV_CFG, "warmup_candles", section_name="portfolio", consumer="portfolio_validation")
 
 # ─────────────────────────────────────────────────────────────────
 # INSTRUMENT REGISTRY
@@ -54,18 +55,20 @@ class InstrumentConfig:
     csv_path:       str
     pip_size:       float
     spread_pct:     float   # simulated spread as % of price
-    htf_candles:    int = 16
-    warmup:         int = _DEFAULT_WARMUP_CANDLES
+    htf_candles:    int
+    warmup:         int
+
+_HTF_CANDLES = 16  # running value; declared portfolio.htf_candles for Claude
 
 INSTRUMENTS = [
-    InstrumentConfig("EURUSD",  "data/EURUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0002),
-    InstrumentConfig("GBPUSD",  "data/GBPUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0003),
-    InstrumentConfig("USDJPY",  "data/USDJPY_M15.csv",  pip_size=0.01,   spread_pct=0.0002),
-    InstrumentConfig("AUDUSD",  "data/AUDUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0003),
-    InstrumentConfig("EURCAD",  "data/EURCAD_M15.csv",  pip_size=0.0001, spread_pct=0.0003),
-    InstrumentConfig("XAUUSD",  "data/XAUUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0003),
-    InstrumentConfig("BTCUSDT", "data/BTCUSDT_M15.csv", pip_size=1.0,    spread_pct=0.0008),
-    InstrumentConfig("ETHUSDT", "data/ETHUSDT_M15.csv", pip_size=1.0,    spread_pct=0.0008),
+    InstrumentConfig("EURUSD",  "data/EURUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0002, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("GBPUSD",  "data/GBPUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0003, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("USDJPY",  "data/USDJPY_M15.csv",  pip_size=0.01,   spread_pct=0.0002, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("AUDUSD",  "data/AUDUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0003, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("EURCAD",  "data/EURCAD_M15.csv",  pip_size=0.0001, spread_pct=0.0003, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("XAUUSD",  "data/XAUUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0003, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("BTCUSDT", "data/BTCUSDT_M15.csv", pip_size=1.0,    spread_pct=0.0008, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("ETHUSDT", "data/ETHUSDT_M15.csv", pip_size=1.0,    spread_pct=0.0008, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
 ]
 
 # ─────────────────────────────────────────────────────────────────

@@ -38,6 +38,7 @@ if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
 from config_layer.production_config import get_prod_section   # type: ignore
+from config_layer.strict_config import ConfigKeyMissingError, require_all
 from strategies.base_strategy import BaseStrategy              # type: ignore
 from strategies.strategy_result import StrategyResult          # type: ignore
 from utils.logging_config import get_flow_logger               # type: ignore
@@ -45,12 +46,18 @@ from utils.logging_config import get_flow_logger               # type: ignore
 logger = get_flow_logger("STRATEGY_ENGINE")
 
 
+_S09PatternRecog_KEYS = ("hammer_wick_mult", "engulf_body_mult", "sl_atr_mult", "tp_rr_ratio", "min_confidence")
+
 def _load_s9_cfg() -> dict:
-    se = get_prod_section("strategy_engine") or {}
-    cfg = se.get("s09_pattern_recog", {})
-    if not cfg:
-        logger.warning("strategy_engine.s09_pattern_recog missing — using defaults")
-    return cfg
+    se = get_prod_section("strategy_engine")
+    if "s09_pattern_recog" not in se:
+        raise ConfigKeyMissingError(
+            ["s09_pattern_recog"], section="strategy_engine", consumer="S09PatternRecog",
+        )
+    return require_all(
+        se["s09_pattern_recog"], _S09PatternRecog_KEYS,
+        section_name="strategy_engine.s09_pattern_recog", consumer="S09PatternRecog",
+    )
 
 
 class S09PatternRecog(BaseStrategy):
@@ -72,8 +79,15 @@ class S09PatternRecog(BaseStrategy):
     ) -> None:
         super().__init__(pair, timeframe, config)
         self._candle_buf: deque = deque(maxlen=3)
-        if not S09PatternRecog._cfg_s9:
-            S09PatternRecog._cfg_s9 = _load_s9_cfg()
+        if config is not None:
+            self._cfg_s9 = require_all(
+                config, _S09PatternRecog_KEYS,
+                section_name="strategy_engine.s09_pattern_recog", consumer="S09PatternRecog",
+            )
+        else:
+            if not S09PatternRecog._cfg_s9:
+                S09PatternRecog._cfg_s9 = _load_s9_cfg()
+            self._cfg_s9 = S09PatternRecog._cfg_s9
 
     @property
     def strategy_id(self) -> str:
@@ -85,11 +99,11 @@ class S09PatternRecog(BaseStrategy):
         self._candle_buf.append(candle)
 
         cfg = self._cfg_s9
-        wick_mult: float = float(cfg.get("hammer_wick_mult", 2.0))
-        engulf_mult: float = float(cfg.get("engulf_body_mult", 1.1))
-        sl_mult: float = float(cfg.get("sl_atr_mult", 1.2))
-        tp_rr: float = float(cfg.get("tp_rr_ratio", 1.8))
-        min_conf: float = float(cfg.get("min_confidence", 0.50))
+        wick_mult: float = float(cfg["hammer_wick_mult"])
+        engulf_mult: float = float(cfg["engulf_body_mult"])
+        sl_mult: float = float(cfg["sl_atr_mult"])
+        tp_rr: float = float(cfg["tp_rr_ratio"])
+        min_conf: float = float(cfg["min_confidence"])
 
         pattern, signal, base_conf = self._detect_pattern(
             candle, features, wick_mult, engulf_mult

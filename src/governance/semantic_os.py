@@ -910,14 +910,17 @@ class SemanticOSRegistry:
         for rid, contract in sorted(self.contracts.items()):
             if contract.get("status") in TERMINAL_STATUS:
                 continue
-            for cid in contract.get("governs_concepts") or []:
+            governed = contract.get("governs_concepts")
+            for cid in governed if isinstance(governed, list) else []:
                 if cid not in self.concepts:
                     errors.append(ValidationError(rid, "fk", f"unknown governs_concepts entry: {cid}"))
-            for bid in contract.get("governs_boundaries") or []:
+            bounds = contract.get("governs_boundaries")
+            for bid in bounds if isinstance(bounds, list) else []:
                 if bid not in self.boundaries:
                     errors.append(ValidationError(rid, "fk", f"unknown governs_boundaries entry: {bid}"))
             _check_set(rid, contract.get("findings"), findings, "finding")
-            for test_path in contract.get("enforced_by_tests") or []:
+            tests = contract.get("enforced_by_tests")
+            for test_path in tests if isinstance(tests, list) else []:
                 _check_path(rid, test_path, "enforced_by_tests")
             if contract.get("closure_surface_id") and surfaces and contract["closure_surface_id"] not in surfaces:
                 errors.append(

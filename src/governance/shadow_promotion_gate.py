@@ -42,6 +42,7 @@ from pathlib import Path
 from typing import Optional
 
 import pandas as pd
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
 
 log = logging.getLogger("ShadowPromotionGate")
 
@@ -78,10 +79,10 @@ class ShadowPromotionGate:
             governance_config = self._load_governance_config()
 
         self.min_shadow_trades: int = self._validate_min_shadow_trades(
-            governance_config.get("min_shadow_trades", _DEFAULT_MIN_SHADOW_TRADES)
+            require(governance_config, "min_shadow_trades", section_name="governance", consumer="shadow_promotion_gate")
         )
-        self.data_csv    = str(governance_config.get("shadow_data_csv",  "data/AUDUSD_M15.csv"))
-        self.output_csv  = str(governance_config.get("shadow_output_csv", "results/shadow_trades.csv"))
+        self.data_csv    = str(require(governance_config, "shadow_data_csv", section_name="governance", consumer="shadow_promotion_gate"))
+        self.output_csv  = str(require(governance_config, "shadow_output_csv", section_name="governance", consumer="shadow_promotion_gate"))
 
         log.info(
             "ShadowPromotionGate initialised: min_shadow_trades=%d data=%s output=%s",
@@ -101,7 +102,7 @@ class ShadowPromotionGate:
         try:
             with open(self.active_config_path, encoding="utf-8") as f:
                 cfg = json.load(f)
-            return cfg.get("governance", {})
+            return require(cfg, "governance", section_name="governance", consumer="shadow_promotion_gate")
         except Exception as e:
             log.warning(
                 "ShadowPromotionGate: failed to load governance config (%s). "

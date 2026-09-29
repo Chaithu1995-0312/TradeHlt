@@ -44,6 +44,7 @@ if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
 from config_layer.production_config import get_prod_section   # type: ignore
+from config_layer.strict_config import ConfigKeyMissingError, require_all
 from strategies.base_strategy import BaseStrategy              # type: ignore
 from strategies.strategy_result import StrategyResult          # type: ignore
 from utils.logging_config import get_flow_logger               # type: ignore
@@ -51,12 +52,18 @@ from utils.logging_config import get_flow_logger               # type: ignore
 logger = get_flow_logger("STRATEGY_ENGINE")
 
 
+_S06Scalping_KEYS = ("macd_hist_min", "momentum_min", "sl_atr_mult", "tp_rr_ratio", "min_confidence", "session_hours_start", "session_hours_end", "max_spread_pct")
+
 def _load_s6_cfg() -> dict:
-    se = get_prod_section("strategy_engine") or {}
-    cfg = se.get("s06_scalping", {})
-    if not cfg:
-        logger.warning("strategy_engine.s06_scalping missing — using defaults")
-    return cfg
+    se = get_prod_section("strategy_engine")
+    if "s06_scalping" not in se:
+        raise ConfigKeyMissingError(
+            ["s06_scalping"], section="strategy_engine", consumer="S06Scalping",
+        )
+    return require_all(
+        se["s06_scalping"], _S06Scalping_KEYS,
+        section_name="strategy_engine.s06_scalping", consumer="S06Scalping",
+    )
 
 
 class S06Scalping(BaseStrategy):
@@ -77,8 +84,15 @@ class S06Scalping(BaseStrategy):
     ) -> None:
         super().__init__(pair, timeframe, config)
         self._macd_buf: deque = deque(maxlen=2)
-        if not S06Scalping._cfg_s6:
-            S06Scalping._cfg_s6 = _load_s6_cfg()
+        if config is not None:
+            self._cfg_s6 = require_all(
+                config, _S06Scalping_KEYS,
+                section_name="strategy_engine.s06_scalping", consumer="S06Scalping",
+            )
+        else:
+            if not S06Scalping._cfg_s6:
+                S06Scalping._cfg_s6 = _load_s6_cfg()
+            self._cfg_s6 = S06Scalping._cfg_s6
 
     @property
     def strategy_id(self) -> str:
@@ -86,14 +100,14 @@ class S06Scalping(BaseStrategy):
 
     def compute(self, features: dict, candle: dict) -> StrategyResult:
         cfg = self._cfg_s6
-        macd_min: float = float(cfg.get("macd_hist_min", 0.00002))
-        mom_min: float = float(cfg.get("momentum_min", 0.3))
-        sl_mult: float = float(cfg.get("sl_atr_mult", 0.5))
-        tp_rr: float = float(cfg.get("tp_rr_ratio", 1.5))
-        min_conf: float = float(cfg.get("min_confidence", 0.55))
-        hour_start: int = int(cfg.get("session_hours_start", 7))
-        hour_end: int = int(cfg.get("session_hours_end", 17))
-        max_spread: float = float(cfg.get("max_spread_pct", 0.0003))
+        macd_min: float = float(cfg["macd_hist_min"])
+        mom_min: float = float(cfg["momentum_min"])
+        sl_mult: float = float(cfg["sl_atr_mult"])
+        tp_rr: float = float(cfg["tp_rr_ratio"])
+        min_conf: float = float(cfg["min_confidence"])
+        hour_start: int = int(cfg["session_hours_start"])
+        hour_end: int = int(cfg["session_hours_end"])
+        max_spread: float = float(cfg["max_spread_pct"])
 
         hour = float(features.get("hour_of_day", 12.0))
         spread_pct = float(features.get("spread_pct", 0.0))

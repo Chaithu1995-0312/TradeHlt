@@ -39,6 +39,7 @@ if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
 from config_layer.production_config import get_prod_section   # type: ignore
+from config_layer.strict_config import ConfigKeyMissingError, require_all  # type: ignore
 from strategies.base_strategy import BaseStrategy              # type: ignore
 from strategies.intent_builder import StrategyIntentBuilder    # type: ignore
 from strategies.strategy_intent import StrategyIntent          # type: ignore
@@ -72,14 +73,28 @@ _STRATEGY_CLASSES: Dict[str, type] = {
 }
 
 
+_ORCH_KEYS = (
+    "fail_open",
+    "min_signal_strategies",
+    "min_agreement_ratio",
+    "weights",
+    "enabled_strategies",
+)
+
+
 def _load_orch_cfg() -> dict:
     try:
-        cfg = get_prod_section("strategy_orchestrator") or {}
-    except RuntimeError:
-        cfg = {}
-    if not cfg:
-        logger.warning("strategy_orchestrator section missing — using defaults")
-    return cfg
+        cfg = get_prod_section("strategy_orchestrator")
+    except RuntimeError as exc:
+        raise ConfigKeyMissingError(
+            ["strategy_orchestrator"],
+            section="<root>",
+            consumer="StrategyOrchestrator",
+        ) from exc
+    return require_all(
+        cfg, _ORCH_KEYS,
+        section_name="strategy_orchestrator", consumer="StrategyOrchestrator",
+    )
 
 
 _AUDIT_PATH = _ROOT / "logs" / "strategy_audit.jsonl"
@@ -215,7 +230,13 @@ class StrategyOrchestrator:
     ) -> None:
         self.pair      = pair.upper().replace("/", "")
         self.timeframe = timeframe.upper()
-        self._cfg      = config or self._load_cfg()
+        if config is None:
+            self._cfg = self._load_cfg()
+        else:
+            self._cfg = require_all(
+                config, _ORCH_KEYS,
+                section_name="strategy_orchestrator", consumer="StrategyOrchestrator",
+            )
         self._strategies: Dict[str, BaseStrategy] = self._build_strategies()
 
         from config_layer.production_config import PROD_VERSION as _pv
@@ -237,7 +258,7 @@ class StrategyOrchestrator:
             try:
                 result = strategy.compute(features, candle)
             except Exception as exc:
-                if self._cfg.get("fail_open", True):
+                if self._cfg["fail_open"]:
                     logger.warning("Strategy %s raised %s — substituting NO_TRADE", sid, exc)
                     result = StrategyResult.no_trade(
                         strategy_id=sid, pair=self.pair, timeframe=self.timeframe
@@ -262,9 +283,9 @@ class StrategyOrchestrator:
         features: Optional[dict] = None,
     ) -> OrchestratorResult:
         cfg = self._cfg
-        min_signals: int = int(cfg.get("min_signal_strategies", 2))
-        min_agree: float = float(cfg.get("min_agreement_ratio", 0.60))
-        weights: dict = cfg.get("weights", {})
+        min_signals: int = int(cfg["min_signal_strategies"])
+        min_agree: float = float(cfg["min_agreement_ratio"])
+        weights: dict = cfg["weights"]
 
         actionable = [r for r in all_results if r.is_actionable()]
         active_count = len(all_results)
@@ -365,9 +386,7 @@ class StrategyOrchestrator:
         return StrategyOrchestrator._orch_cfg
 
     def _build_strategies(self) -> Dict[str, BaseStrategy]:
-        enabled: List[str] = self._cfg.get(
-            "enabled_strategies", list(_STRATEGY_CLASSES.keys())
-        )
+        enabled: List[str] = list(self._cfg["enabled_strategies"])
         strategies: Dict[str, BaseStrategy] = {}
         for sid in enabled:
             cls = _STRATEGY_CLASSES.get(sid)
@@ -378,6 +397,6 @@ class StrategyOrchestrator:
                 strategies[sid] = cls(pair=self.pair, timeframe=self.timeframe)
             except Exception as exc:
                 logger.error("Failed to instantiate %s: %s", sid, exc)
-                if not self._cfg.get("fail_open", True):
+                if not self._cfg["fail_open"]:
                     raise
         return strategies

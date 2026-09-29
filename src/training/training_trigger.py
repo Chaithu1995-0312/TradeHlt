@@ -67,19 +67,16 @@ from typing import Iterable, Optional
 
 _LOG = logging.getLogger("TrainingTrigger")
 
-# Module-level defaults — used when the production config section is absent
-# or partially populated.
-_DEFAULTS = {
-    "min_new_samples":       500,
-    "drift_window_hours":    24,
-    "drift_event_threshold": 5,
-    "cooldown_hours":        6.0,
-    "marker_path":           "results/training_trigger.json",
-    "opportunity_glob":      "logs/**/opportunities.jsonl",
-    "integrity_log":         "logs/integrity_events.jsonl",
-    "drift_event_kinds":     ["RR_BYPASS", "RR_LLM_FALLBACK",
-                              "PROMOTION_FAILED"],
-}
+_TRIGGER_KEYS = (
+    "min_new_samples",
+    "drift_window_hours",
+    "drift_event_threshold",
+    "cooldown_hours",
+    "marker_path",
+    "opportunity_glob",
+    "integrity_log",
+    "drift_event_kinds",
+)
 
 
 @dataclass
@@ -95,16 +92,20 @@ class TrainingTriggerConfig:
 
     @classmethod
     def from_section(cls, section: dict) -> "TrainingTriggerConfig":
-        s = section or {}
+        from config_layer.strict_config import require_all
+        s = require_all(
+            section, _TRIGGER_KEYS,
+            section_name="training_trigger", consumer="TrainingTriggerConfig",
+        )
         return cls(
-            min_new_samples       = int(s.get("min_new_samples",       _DEFAULTS["min_new_samples"])),
-            drift_window_hours    = float(s.get("drift_window_hours",  _DEFAULTS["drift_window_hours"])),
-            drift_event_threshold = int(s.get("drift_event_threshold", _DEFAULTS["drift_event_threshold"])),
-            cooldown_hours        = float(s.get("cooldown_hours",      _DEFAULTS["cooldown_hours"])),
-            marker_path           = Path(s.get("marker_path",          _DEFAULTS["marker_path"])),
-            opportunity_glob      = str(s.get("opportunity_glob",      _DEFAULTS["opportunity_glob"])),
-            integrity_log         = Path(s.get("integrity_log",        _DEFAULTS["integrity_log"])),
-            drift_event_kinds     = tuple(s.get("drift_event_kinds",   _DEFAULTS["drift_event_kinds"])),
+            min_new_samples       = int(s["min_new_samples"]),
+            drift_window_hours    = float(s["drift_window_hours"]),
+            drift_event_threshold = int(s["drift_event_threshold"]),
+            cooldown_hours        = float(s["cooldown_hours"]),
+            marker_path           = Path(s["marker_path"]),
+            opportunity_glob      = str(s["opportunity_glob"]),
+            integrity_log         = Path(s["integrity_log"]),
+            drift_event_kinds     = tuple(s["drift_event_kinds"]),
         )
 
 
@@ -112,19 +113,26 @@ class TrainingTrigger:
     """Three-gate decision: only fire when samples + drift + cooldown all open."""
 
     def __init__(self, config: Optional[TrainingTriggerConfig] = None):
-        self.cfg = config or TrainingTriggerConfig.from_section({})
+        if config is None:
+            self.cfg = TrainingTrigger.from_prod_config().cfg
+        else:
+            self.cfg = config
 
     # ── Construction helpers ─────────────────────────────────────────────────
 
     @classmethod
     def from_prod_config(cls) -> "TrainingTrigger":
-        """Load config from production config; fall back to defaults if absent."""
+        """Load config from production. A missing section fails closed."""
+        from config_layer.production_config import get_prod_section  # type: ignore
+        from config_layer.strict_config import ConfigKeyMissingError
         try:
-            from config_layer.production_config import get_prod_section  # type: ignore
-            section = get_prod_section("training_trigger") or {}
-        except Exception as exc:  # noqa: BLE001 — never block the trigger on config
-            _LOG.debug("TrainingTrigger: prod config unavailable (%s); using defaults", exc)
-            section = {}
+            section = get_prod_section("training_trigger")
+        except Exception as exc:
+            raise ConfigKeyMissingError(
+                ["training_trigger"],
+                section="<root>",
+                consumer="TrainingTrigger",
+            ) from exc
         return cls(TrainingTriggerConfig.from_section(section))
 
     # ── Public API ───────────────────────────────────────────────────────────

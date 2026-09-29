@@ -4,12 +4,13 @@ R2.5 kill-test harness unit tests.
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
 import pytest
 
-from bitnet.contract_c_trainer import TrainerConfig
+from bitnet.contract_c_trainer import TrainerConfig, running_trainer_config
 from bitnet.r25_kill_test import (
     R25Config,
     R25_THRESHOLDS,
@@ -20,7 +21,7 @@ from bitnet.r25_kill_test import (
 
 
 def _small_trainer(**kw) -> TrainerConfig:
-    base = dict(
+    fields = dict(
         epochs=20,
         lr=0.05,
         hidden_dim=12,
@@ -30,8 +31,8 @@ def _small_trainer(**kw) -> TrainerConfig:
         seed=0,
         holdout_fraction=0.25,
     )
-    base.update(kw)
-    return TrainerConfig(**base)
+    fields.update(kw)
+    return replace(running_trainer_config(), **fields)
 
 
 def test_ece_perfect_and_worst():
@@ -49,6 +50,7 @@ def test_r25_strong_signal_earns_pass(tmp_path: Path):
         synthetic=True,
         synthetic_n=300,
         synthetic_signal="strong",
+        csv_paths=None,
         out_dir=str(tmp_path),
         run_name="strong_pass",
     )
@@ -76,6 +78,7 @@ def test_r25_no_signal_overall_does_not_earn_r3(tmp_path: Path):
         synthetic=True,
         synthetic_n=500,
         synthetic_signal="none",
+        csv_paths=None,
         out_dir=str(tmp_path),
         run_name="no_signal",
     )

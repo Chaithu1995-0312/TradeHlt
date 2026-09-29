@@ -136,7 +136,7 @@ def command_specs_by_script(
         specs = _load_core_command_specs()()
     out: dict[str, str] = {}
     for spec in specs:
-        script = normalize_posix(getattr(spec, "script", "") or "")
+        script = normalize_posix(spec.script)
         if not script:
             continue
         # Skip module mode / dotted package runners without a path segment

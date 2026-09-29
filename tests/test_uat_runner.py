@@ -46,7 +46,12 @@ def _trades(pnls):
 
 
 def test_mc_insufficient_data():
-    engine = MonteCarloEngine(n_simulations=100)
+    engine = MonteCarloEngine(
+        n_simulations=100,
+        initial_capital_inr=100_000.0,
+        ruin_threshold_pct=0.50,
+        random_seed=42,
+    )
     result = engine.run(_trades([100.0, -50.0, 80.0]), strategy_id="S1")
     assert result.status == "INSUFFICIENT_DATA"
     assert result.n_simulations == 0
@@ -54,7 +59,12 @@ def test_mc_insufficient_data():
 
 def test_mc_all_wins():
     pnls = [500.0] * 50
-    engine = MonteCarloEngine(n_simulations=200, random_seed=0)
+    engine = MonteCarloEngine(
+        n_simulations=200,
+        initial_capital_inr=100_000.0,
+        ruin_threshold_pct=0.50,
+        random_seed=0,
+    )
     result = engine.run(_trades(pnls), strategy_id="S1")
     assert result.p_ruin == 0.0
     assert result.p_ruin_pass is True
@@ -79,7 +89,12 @@ def test_mc_all_losses_high_ruin():
 
 def test_mc_mixed_trades_structure():
     pnls = [800.0, -300.0, 600.0, -400.0, 900.0, -200.0] * 5  # 30 trades, net positive
-    engine = MonteCarloEngine(n_simulations=500, random_seed=42)
+    engine = MonteCarloEngine(
+        n_simulations=500,
+        initial_capital_inr=100_000.0,
+        ruin_threshold_pct=0.50,
+        random_seed=42,
+    )
     result = engine.run(_trades(pnls), strategy_id="ALL")
     assert 0 <= result.p_ruin <= 1.0
     assert result.n_trades == 30
@@ -92,7 +107,12 @@ def test_mc_mixed_trades_structure():
 
 def test_mc_to_llm_logger_dict_keys():
     pnls = [500.0, -200.0, 400.0, -300.0] * 5
-    engine = MonteCarloEngine(n_simulations=100, random_seed=0)
+    engine = MonteCarloEngine(
+        n_simulations=100,
+        initial_capital_inr=100_000.0,
+        ruin_threshold_pct=0.50,
+        random_seed=0,
+    )
     result = engine.run(_trades(pnls), strategy_id="S10")
     d = result.to_llm_logger_dict()
     required_keys = set(MonteCarloRecord.__dataclass_fields__.keys())
@@ -216,6 +236,13 @@ def runner(tmp_path):
                         "state_file": str(tmp_path / "ks.json"), "telegram_notify": False},
         "signal_accuracy": {"min_win_rate": 0.35, "min_trades": 2},
         "output_dir": str(tmp_path / "uat_out"),
+        "strategy_orchestrator": {
+            "fail_open": True,
+            "min_signal_strategies": 2,
+            "min_agreement_ratio": 0.60,
+            "weights": {},
+            "enabled_strategies": [],
+        },
     }
     return UATRunner(pair=PAIR, timeframe=TF,
                      output_dir=tmp_path / "uat_out", config=cfg)

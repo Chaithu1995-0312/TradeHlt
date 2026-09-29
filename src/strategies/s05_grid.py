@@ -38,6 +38,7 @@ if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
 from config_layer.production_config import get_prod_section   # type: ignore
+from config_layer.strict_config import ConfigKeyMissingError, require_all
 from strategies.base_strategy import BaseStrategy              # type: ignore
 from strategies.strategy_result import StrategyResult          # type: ignore
 from utils.logging_config import get_flow_logger               # type: ignore
@@ -45,12 +46,18 @@ from utils.logging_config import get_flow_logger               # type: ignore
 logger = get_flow_logger("STRATEGY_ENGINE")
 
 
+_S05Grid_KEYS = ("n_levels", "proximity_atr_mult", "sl_atr_mult", "tp_rr_ratio", "min_confidence", "min_range_atr")
+
 def _load_s5_cfg() -> dict:
-    se = get_prod_section("strategy_engine") or {}
-    cfg = se.get("s05_grid", {})
-    if not cfg:
-        logger.warning("strategy_engine.s05_grid missing — using defaults")
-    return cfg
+    se = get_prod_section("strategy_engine")
+    if "s05_grid" not in se:
+        raise ConfigKeyMissingError(
+            ["s05_grid"], section="strategy_engine", consumer="S05Grid",
+        )
+    return require_all(
+        se["s05_grid"], _S05Grid_KEYS,
+        section_name="strategy_engine.s05_grid", consumer="S05Grid",
+    )
 
 
 class S05Grid(BaseStrategy):
@@ -70,8 +77,15 @@ class S05Grid(BaseStrategy):
         config: Optional[dict] = None,
     ) -> None:
         super().__init__(pair, timeframe, config)
-        if not S05Grid._cfg_s5:
-            S05Grid._cfg_s5 = _load_s5_cfg()
+        if config is not None:
+            self._cfg_s5 = require_all(
+                config, _S05Grid_KEYS,
+                section_name="strategy_engine.s05_grid", consumer="S05Grid",
+            )
+        else:
+            if not S05Grid._cfg_s5:
+                S05Grid._cfg_s5 = _load_s5_cfg()
+            self._cfg_s5 = S05Grid._cfg_s5
 
     @property
     def strategy_id(self) -> str:
@@ -79,12 +93,12 @@ class S05Grid(BaseStrategy):
 
     def compute(self, features: dict, candle: dict) -> StrategyResult:
         cfg = self._cfg_s5
-        n_levels: int = int(cfg.get("n_levels", 5))
-        prox_mult: float = float(cfg.get("proximity_atr_mult", 0.4))
-        sl_mult: float = float(cfg.get("sl_atr_mult", 0.8))
-        tp_rr: float = float(cfg.get("tp_rr_ratio", 1.2))
-        min_conf: float = float(cfg.get("min_confidence", 0.50))
-        min_range_atr: float = float(cfg.get("min_range_atr", 3.0))
+        n_levels: int = int(cfg["n_levels"])
+        prox_mult: float = float(cfg["proximity_atr_mult"])
+        sl_mult: float = float(cfg["sl_atr_mult"])
+        tp_rr: float = float(cfg["tp_rr_ratio"])
+        min_conf: float = float(cfg["min_confidence"])
+        min_range_atr: float = float(cfg["min_range_atr"])
 
         swing_high = float(features.get("swing_high", 0.0))
         swing_low = float(features.get("swing_low", 0.0))

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 import sys as _sys; _sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
 from src.control_plane.jobs import JobManager
 from src.control_plane.registry import REPO_ROOT, command_spec_to_json, workflow_stage_order
 from src.control_plane.dashboard_api import TradingDashboardAPI
@@ -27,16 +28,22 @@ from src.control_plane.dot_graph_context import (
 
 
 def _resolve_context_provider() -> str:
-    """Zero-cost by default: env CONTEXT_REPORT_PROVIDER → prod config → 'export'."""
+    """CONTEXT_REPORT_PROVIDER overrides when set. Otherwise context_report.provider."""
     import os as _os
-    p = _os.environ.get("CONTEXT_REPORT_PROVIDER", "").strip()
-    if p:
-        return p
+    if "CONTEXT_REPORT_PROVIDER" in _os.environ:
+        present = str(_os.environ["CONTEXT_REPORT_PROVIDER"]).strip()
+        if present:
+            return present
+    from src.config_layer.production_config import get_prod_section
     try:
-        from src.config_layer.production_config import get_prod_section
-        return str((get_prod_section("context_report") or {}).get("provider", "export"))
-    except Exception:
-        return "export"
+        section = get_prod_section("context_report")
+    except Exception as exc:
+        raise ConfigKeyMissingError(
+            ["context_report"], section="<root>", consumer="server",
+        ) from exc
+    return str(require(
+        section, "provider", section_name="context_report", consumer="server",
+    ))
 
 
 def _make_llm_caller(provider: str):
@@ -1930,8 +1937,8 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                     command_id = path[len("/workflow/nodes/"):-len("/context")]
                     from pathlib import Path as _Path
                     _repo_root = _Path(__file__).resolve().parents[2]
-                    spec = getattr(api.manager, "_spec_by_id", {}).get(command_id)
-                    script = getattr(spec, "script", None) if spec else None
+                    spec = api.manager._spec_by_id.get(command_id)
+                    script = spec.script if spec else None
                     flow_man = resolve_flow_for_command(command_id, _repo_root, script=script)
                     # Architecture/code context for the node's flow (export by default — $0).
                     architecture: dict[str, Any] = {"available": False}
@@ -1968,7 +1975,7 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                         latest_run = None
                     self._send_json(HTTPStatus.OK, {
                         "command":      command_id,
-                        "title":        getattr(spec, "title", command_id) if spec else command_id,
+                        "title":        spec.title if spec else command_id,
                         "flow":         flow_man["flow"] if flow_man else None,
                         "flow_title":   flow_man.get("title") if flow_man else None,
                         "doc":          flow_man.get("doc") if flow_man else None,
@@ -2203,7 +2210,7 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
             import sys
             msg = fmt % args
             print(f"[CRT] {self.address_string()} {msg}", file=sys.stderr, flush=True)
-            path = getattr(self, "path", "") or ""
+            path = self.path
             is_poll = "/monitors" in path or path.startswith("/runs?") or path == "/monitors/dashboard"
             if is_poll:
                 _poll_logger.info("%s %s", self.address_string(), msg)

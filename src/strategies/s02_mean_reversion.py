@@ -39,6 +39,7 @@ if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
 from config_layer.production_config import get_prod_section   # type: ignore
+from config_layer.strict_config import ConfigKeyMissingError, require_all
 from strategies.base_strategy import BaseStrategy              # type: ignore
 from strategies.strategy_result import StrategyResult          # type: ignore
 from utils.logging_config import get_flow_logger               # type: ignore
@@ -46,12 +47,18 @@ from utils.logging_config import get_flow_logger               # type: ignore
 logger = get_flow_logger("STRATEGY_ENGINE")
 
 
+_S02MeanReversion_KEYS = ("rsi_oversold", "rsi_overbought", "bb_proximity_pct", "sl_atr_mult", "tp_rr_ratio", "min_confidence")
+
 def _load_s2_cfg() -> dict:
-    se = get_prod_section("strategy_engine") or {}
-    cfg = se.get("s02_mean_reversion", {})
-    if not cfg:
-        logger.warning("strategy_engine.s02_mean_reversion missing — using defaults")
-    return cfg
+    se = get_prod_section("strategy_engine")
+    if "s02_mean_reversion" not in se:
+        raise ConfigKeyMissingError(
+            ["s02_mean_reversion"], section="strategy_engine", consumer="S02MeanReversion",
+        )
+    return require_all(
+        se["s02_mean_reversion"], _S02MeanReversion_KEYS,
+        section_name="strategy_engine.s02_mean_reversion", consumer="S02MeanReversion",
+    )
 
 
 class S02MeanReversion(BaseStrategy):
@@ -71,8 +78,15 @@ class S02MeanReversion(BaseStrategy):
         config: Optional[dict] = None,
     ) -> None:
         super().__init__(pair, timeframe, config)
-        if not S02MeanReversion._cfg_s2:
-            S02MeanReversion._cfg_s2 = _load_s2_cfg()
+        if config is not None:
+            self._cfg_s2 = require_all(
+                config, _S02MeanReversion_KEYS,
+                section_name="strategy_engine.s02_mean_reversion", consumer="S02MeanReversion",
+            )
+        else:
+            if not S02MeanReversion._cfg_s2:
+                S02MeanReversion._cfg_s2 = _load_s2_cfg()
+            self._cfg_s2 = S02MeanReversion._cfg_s2
 
     @property
     def strategy_id(self) -> str:
@@ -80,12 +94,12 @@ class S02MeanReversion(BaseStrategy):
 
     def compute(self, features: dict, candle: dict) -> StrategyResult:
         cfg = self._cfg_s2
-        rsi_os: float = float(cfg.get("rsi_oversold", 30.0))
-        rsi_ob: float = float(cfg.get("rsi_overbought", 70.0))
-        bb_prox: float = float(cfg.get("bb_proximity_pct", 0.002))
-        sl_mult: float = float(cfg.get("sl_atr_mult", 1.5))
-        tp_rr: float = float(cfg.get("tp_rr_ratio", 1.5))
-        min_conf: float = float(cfg.get("min_confidence", 0.55))
+        rsi_os: float = float(cfg["rsi_oversold"])
+        rsi_ob: float = float(cfg["rsi_overbought"])
+        bb_prox: float = float(cfg["bb_proximity_pct"])
+        sl_mult: float = float(cfg["sl_atr_mult"])
+        tp_rr: float = float(cfg["tp_rr_ratio"])
+        min_conf: float = float(cfg["min_confidence"])
 
         rsi = float(features.get("rsi_14", 50.0))
         trend = str(features.get("trend_bias", "neutral")).lower()

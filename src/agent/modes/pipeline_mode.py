@@ -243,7 +243,7 @@ def _live_dry_run(
             "need": feeder.warmup_rows + 1,
         }
 
-    ep = get_prod_section("execution_planner") or {}
+    ep = get_prod_section("execution_planner")
     if "default_account_balance" not in ep:
         return {
             "status": "error",

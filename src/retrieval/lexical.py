@@ -282,15 +282,15 @@ class LexicalIndex:
         return Path(self.config.index_dir)
 
     def _chunks_jsonl(self) -> Path:
-        fn = getattr(self.config, "chunks_jsonl", None)
+        fn = self.config.chunks_jsonl
         return Path(fn()) if callable(fn) else self._index_dir() / "chunks.jsonl"
 
     def _postings_jsonl(self) -> Path:
-        fn = getattr(self.config, "postings_jsonl", None)
+        fn = self.config.postings_jsonl
         return Path(fn()) if callable(fn) else self._index_dir() / "postings.jsonl"
 
     def _records_jsonl(self) -> Path:
-        fn = getattr(self.config, "records_jsonl", None)
+        fn = self.config.records_jsonl
         return Path(fn()) if callable(fn) else self._index_dir() / "records.jsonl"
 
     def _chunks_parquet(self) -> Path:
@@ -441,7 +441,7 @@ class LexicalIndex:
         b = self.config.bm25_b
         N = max(self._n_docs, 1)
         avgdl = self._avgdl or 1.0
-        candidate_n = max(int(getattr(self.config, "candidate_n", 600) or 600), k)
+        candidate_n = max(int(self.config.candidate_n), k)
 
         q_terms = tokenize(query)
         q_ids = set(_ID_IN_QUERY.findall(query))
@@ -662,22 +662,22 @@ class LexicalIndex:
         if stems and path_parts and (stems & path_parts):
             # Prefer living code/docs whose basename matches a query token
             # over 1-line JSON keys that only share the token in text.
-            score += float(getattr(self.config, "stem_boost", 4.0))
+            score += float(self.config.stem_boost)
 
         if routed_files:
             fp_key = _norm_path_key(filepath)
             if fp_key and fp_key in routed_files:
-                score += float(getattr(self.config, "file_route_boost", 7.0))
+                score += float(self.config.file_route_boost)
 
-        max_tok = int(getattr(self.config, "short_chunk_max_tokens", 16) or 16)
+        max_tok = int(self.config.short_chunk_max_tokens)
         tok = _as_int(chunk.get("token_count"), 0)
         stem_hit = bool(stems and path_parts and (stems & path_parts))
         if _is_json_record_noise(chunk, max_tok):
-            score *= float(getattr(self.config, "json_record_penalty", 0.35))
+            score *= float(self.config.json_record_penalty)
         elif 0 < tok <= max_tok and not stem_hit:
             # Demote short non-stem snippets (config keys) without punishing
             # living modules whose basename already matched the query.
-            score *= float(getattr(self.config, "short_chunk_penalty", 0.4))
+            score *= float(self.config.short_chunk_penalty)
 
         rank = _as_int(chunk.get("authority_rank"), 99)
         score *= 1.0 / (1.0 + 0.03 * rank)
@@ -748,8 +748,8 @@ class LexicalIndex:
         matches so architecture questions reach TRADING_SYSTEM_FRAMEWORK.md.
         """
         stems, route_ids = extract_file_route_signals(query)
-        max_files = int(getattr(self.config, "file_route_max_files", 8) or 8)
-        per_file = int(getattr(self.config, "file_route_chunks_per_file", 6) or 6)
+        max_files = int(self.config.file_route_max_files)
+        per_file = int(self.config.file_route_chunks_per_file)
         if max_files <= 0 or per_file <= 0:
             return {}, set()
 
@@ -913,7 +913,7 @@ class LexicalIndex:
         sweep showed symbol/ID routing was cheap (+1.1% at N=500) but unused at
         query time — wire it here as adds only.
         """
-        limit = int(getattr(self.config, "routing_extra_limit", 120) or 120)
+        limit = int(self.config.routing_extra_limit)
         extra: dict[str, dict[str, Any]] = {}
         route_terms: list[str] = []
         for t in list(q_stems) + list(q_terms):
@@ -1010,7 +1010,7 @@ class LexicalIndex:
 
         Stray JSONL one-liners rarely co-occur; living modules / findings docs do.
         """
-        boost = float(getattr(self.config, "file_agg_boost", 0.35) or 0.0)
+        boost = float(self.config.file_agg_boost)
         if boost <= 0.0 or len(hits) < 2:
             return hits
         by_fp: dict[str, list[LexicalHit]] = {}

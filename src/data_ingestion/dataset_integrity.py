@@ -65,6 +65,7 @@ def _utcnow_naive() -> datetime:
     """Naive UTC 'now' (parsed CSV timestamps are tz-naive, assumed UTC)."""
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
 from data_ingestion.ohlcv_schema import (
     DatasetIntegrityError,  # re-exported: callers import it from here OR ohlcv_schema
     parse_ohlcv_timestamp,
@@ -112,12 +113,38 @@ class MarketType(Enum):
     WEEKDAY = "weekday"
 
 
+_SC_KEYS = (
+    "crypto_quote_suffixes",
+    "weekday_open_hour",
+    "weekday_close_hour",
+    "weekday_daily_break_hours",
+    "holidays",
+    "known_gaps",
+)
+
+
+def _session_calendar(cfg: dict) -> dict:
+    """Required session_calendar block. Missing keys fail closed."""
+    if "session_calendar" not in cfg:
+        raise ConfigKeyMissingError(
+            ["session_calendar"],
+            section="dataset_integrity",
+            consumer="dataset_integrity",
+        )
+    return require_all(
+        cfg["session_calendar"],
+        _SC_KEYS,
+        section_name="dataset_integrity.session_calendar",
+        consumer="dataset_integrity",
+    )
+
+
 def classify_market(symbol: Optional[str], cfg: dict) -> MarketType:
     """Classify by symbol: a stablecoin-quoted pair (…USDT/USDC/BUSD) is 24x7
     crypto; everything else (FX, metals like XAUUSD) follows the weekday session."""
     s = (symbol or "").upper()
-    sc = cfg.get("session_calendar", {})
-    for suf in sc.get("crypto_quote_suffixes", ["USDT", "USDC", "BUSD"]):
+    sc = _session_calendar(cfg)
+    for suf in sc["crypto_quote_suffixes"]:
         if s.endswith(suf):
             return MarketType.CRYPTO
     return MarketType.WEEKDAY
@@ -185,9 +212,15 @@ def _is_tradable(dt: datetime, market: MarketType, sc: dict) -> bool:
         return True   # 24x7 spot crypto trades through TradFi holidays → holidays do NOT apply
     if holidays and dt.date().isoformat() in holidays:
         return False
-    open_h = int(sc.get("weekday_open_hour", 22))
-    close_h = int(sc.get("weekday_close_hour", 21))
-    break_hours = set(sc.get("weekday_daily_break_hours", [21]))
+    hours = require_all(
+        sc,
+        ("weekday_open_hour", "weekday_close_hour", "weekday_daily_break_hours"),
+        section_name="dataset_integrity.session_calendar",
+        consumer="_is_tradable",
+    )
+    open_h = int(hours["weekday_open_hour"])
+    close_h = int(hours["weekday_close_hour"])
+    break_hours = set(hours["weekday_daily_break_hours"])
     wd = dt.weekday()  # Mon=0 … Sun=6
     if wd == 5:                     # Saturday — closed
         return False
@@ -297,11 +330,11 @@ def validate_dataset(
         bar_minutes = _TF_MINUTES.get((tf or "").upper()) or int(
             _require(cfg, "default_bar_minutes")
         )
-    sc = cfg.get("session_calendar", {})
+    sc = _session_calendar(cfg)
     # Normalize the (reviewed) holiday list to a set once → O(1) membership across the
     # whole-grid tradable-slot count (parity: empty list ⇒ empty set ⇒ no behavior change).
-    sc = {**sc, "holidays": set(sc.get("holidays", [])),
-          "_known_gaps": _parse_known_gaps(sc.get("known_gaps", []), symbol)}
+    sc = {**sc, "holidays": set(sc["holidays"]),
+          "_known_gaps": _parse_known_gaps(sc["known_gaps"], symbol)}
     market = classify_market(symbol, cfg)
     report["timeframe"] = tf
     report["market_type"] = market.value
@@ -390,7 +423,10 @@ def validate_dataset(
     if cfg.get("tradability_mode") == "autoderive" and all_ts and not early_break:
         from data_ingestion.session_autoderive import derive_weekly_mask
         mask = derive_weekly_mask(
-            all_ts, presence_min=float(cfg.get("autoderive_presence_min", 0.5)))
+            all_ts, presence_min=float(require(
+                cfg, "autoderive_presence_min",
+                section_name="dataset_integrity", consumer="validate_dataset",
+            )))
         sc = {**sc, "_weekly_mask": mask}
         report["tradability_mode"] = "autoderive"
         report["autoderive_mask_slots"] = len(mask)
@@ -438,7 +474,11 @@ def validate_dataset(
     report["file_hash"] = _sha256_file(path)
     report["config_hash"] = _active_config_hash()
     report["schema_hash"] = _schema_hash()
-    if write_report and bool(cfg.get("write_fingerprint_report", True)):
+    _write_fp = require_all(
+        cfg, ["write_fingerprint_report"],
+        section_name="dataset_integrity", consumer="validate_dataset",
+    )
+    if write_report and bool(_write_fp["write_fingerprint_report"]):
         _write_fingerprint(report, symbol, tf)
 
     if all_hard:
@@ -701,7 +741,10 @@ def validate_universe(data_dir: str, *, write_report: bool = True) -> dict:
     effective per-file decision is the most-severe of its L1/L2 result and any L3
     finding. Never raises (advisory by design, except the exact-dup REJECT)."""
     cfg = _cfg()
-    mode = str(cfg.get("duplicate_resolution_mode", "reject_all"))
+    mode = str(require_all(
+        cfg, ["duplicate_resolution_mode"],
+        section_name="dataset_integrity", consumer="validate_universe",
+    )["duplicate_resolution_mode"])
     if mode != "reject_all":
         logger.warning(
             "duplicate_resolution_mode '%s' not implemented — using 'reject_all'.", mode

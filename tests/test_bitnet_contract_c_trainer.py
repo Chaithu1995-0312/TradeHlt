@@ -4,14 +4,24 @@ CONTRACT-C trainer R1: bundle completeness, load-back, reproducibility seed.
 from __future__ import annotations
 
 import json
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import numpy as np
 import pytest
 
-from bitnet.contract_c_trainer import TrainerConfig, train_and_export
+from bitnet.contract_c_trainer import TrainerConfig, running_trainer_config, train_and_export
 from bitnet.model_bundle import load_composition_from_bundle, validate_model_bundle
 from bitnet.label_contracts import get_label_contract
+
+
+@pytest.mark.parametrize("key", list(asdict(running_trainer_config())))
+def test_trainer_config_omitted_field_raises(key):
+    fields = asdict(running_trainer_config())
+    del fields[key]
+    with pytest.raises(TypeError) as exc:
+        TrainerConfig(**fields)
+    assert key in str(exc.value)
 
 
 def test_label_contract_registry():
@@ -21,7 +31,8 @@ def test_label_contract_registry():
 
 
 def test_train_synthetic_bundle_contract_c(tmp_path: Path):
-    cfg = TrainerConfig(
+    cfg = replace(
+        running_trainer_config(),
         epochs=4,
         hidden_dim=8,
         latent_dim=4,
@@ -82,7 +93,8 @@ def test_train_synthetic_bundle_contract_c(tmp_path: Path):
 
 def test_train_reproducible_seed(tmp_path: Path):
     def run(seed: int, name: str):
-        cfg = TrainerConfig(
+        cfg = replace(
+            running_trainer_config(),
             epochs=3,
             hidden_dim=6,
             latent_dim=3,

@@ -33,6 +33,7 @@ from typing import Optional
 _ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all, require_section
 if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
@@ -77,9 +78,9 @@ class KillSwitch:
 
     def __init__(
         self,
-        daily_limit_inr: float = 10_000.0,
-        weekly_limit_inr: float = 25_000.0,
-        state_file: Path = Path("logs/kill_switch_state.json"),
+        daily_limit_inr: float,
+        weekly_limit_inr: float,
+        state_file: Path,
     ) -> None:
         self.daily_limit  = daily_limit_inr
         self.weekly_limit = weekly_limit_inr
@@ -89,11 +90,12 @@ class KillSwitch:
 
     @classmethod
     def from_prod_config(cls) -> "KillSwitch":
-        cfg = (get_prod_section("uat") or {}).get("kill_switch", {})
+        uat_cfg = get_prod_section("uat")
+        cfg = require_section(uat_cfg, "kill_switch", consumer="KillSwitch")
         return cls(
-            daily_limit_inr  = float(cfg.get("daily_loss_limit_inr",  10_000.0)),
-            weekly_limit_inr = float(cfg.get("weekly_loss_limit_inr", 25_000.0)),
-            state_file       = Path(cfg.get("state_file", "logs/kill_switch_state.json")),
+            daily_limit_inr  = float(require(cfg, "daily_loss_limit_inr", section_name="uat.kill_switch", consumer="kill_switch")),
+            weekly_limit_inr = float(require(cfg, "weekly_loss_limit_inr", section_name="uat.kill_switch", consumer="kill_switch")),
+            state_file       = Path(require(cfg, "state_file", section_name="uat.kill_switch", consumer="kill_switch")),
         )
 
     # ── Public API ─────────────────────────────────────────────────────────────

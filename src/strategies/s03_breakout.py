@@ -41,6 +41,7 @@ if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
 from config_layer.production_config import get_prod_section   # type: ignore
+from config_layer.strict_config import ConfigKeyMissingError, require_all
 from strategies.base_strategy import BaseStrategy              # type: ignore
 from strategies.strategy_result import StrategyResult          # type: ignore
 from utils.logging_config import get_flow_logger               # type: ignore
@@ -48,12 +49,18 @@ from utils.logging_config import get_flow_logger               # type: ignore
 logger = get_flow_logger("STRATEGY_ENGINE")
 
 
+_S03Breakout_KEYS = ("breakout_atr_mult", "min_volume_ratio", "sl_atr_mult", "tp_rr_ratio", "min_confidence")
+
 def _load_s3_cfg() -> dict:
-    se = get_prod_section("strategy_engine") or {}
-    cfg = se.get("s03_breakout", {})
-    if not cfg:
-        logger.warning("strategy_engine.s03_breakout missing — using defaults")
-    return cfg
+    se = get_prod_section("strategy_engine")
+    if "s03_breakout" not in se:
+        raise ConfigKeyMissingError(
+            ["s03_breakout"], section="strategy_engine", consumer="S03Breakout",
+        )
+    return require_all(
+        se["s03_breakout"], _S03Breakout_KEYS,
+        section_name="strategy_engine.s03_breakout", consumer="S03Breakout",
+    )
 
 
 class S03Breakout(BaseStrategy):
@@ -73,8 +80,15 @@ class S03Breakout(BaseStrategy):
         config: Optional[dict] = None,
     ) -> None:
         super().__init__(pair, timeframe, config)
-        if not S03Breakout._cfg_s3:
-            S03Breakout._cfg_s3 = _load_s3_cfg()
+        if config is not None:
+            self._cfg_s3 = require_all(
+                config, _S03Breakout_KEYS,
+                section_name="strategy_engine.s03_breakout", consumer="S03Breakout",
+            )
+        else:
+            if not S03Breakout._cfg_s3:
+                S03Breakout._cfg_s3 = _load_s3_cfg()
+            self._cfg_s3 = S03Breakout._cfg_s3
 
     @property
     def strategy_id(self) -> str:
@@ -82,11 +96,11 @@ class S03Breakout(BaseStrategy):
 
     def compute(self, features: dict, candle: dict) -> StrategyResult:
         cfg = self._cfg_s3
-        bo_atr_mult: float = float(cfg.get("breakout_atr_mult", 0.5))
-        min_vol: float = float(cfg.get("min_volume_ratio", 1.3))
-        sl_mult: float = float(cfg.get("sl_atr_mult", 1.0))
-        tp_rr: float = float(cfg.get("tp_rr_ratio", 2.5))
-        min_conf: float = float(cfg.get("min_confidence", 0.55))
+        bo_atr_mult: float = float(cfg["breakout_atr_mult"])
+        min_vol: float = float(cfg["min_volume_ratio"])
+        sl_mult: float = float(cfg["sl_atr_mult"])
+        tp_rr: float = float(cfg["tp_rr_ratio"])
+        min_conf: float = float(cfg["min_confidence"])
 
         bos = bool(features.get("break_of_structure", False))
         if not bos:

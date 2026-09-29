@@ -75,116 +75,50 @@ class RetrievalConfig:
             index skew the previous per-line chunker produced.
         max_file_bytes: Skip pathologically large files.
     """
-    repo_root: Path = _REPO_ROOT
-    index_dir: Path = _REPO_ROOT / "data" / "rag"
-    metrics_log_path: Path | None = None
-    chroma_path: Path = _REPO_ROOT / "data" / "chroma_db"
-    embedding_model: str = "all-MiniLM-L6-v2"
-    embedding_dim: int = 384
-    chunk_max_chars: int = 1500
-    chunk_overlap_chars: int = 200
-    top_k_default: int = 10
+    repo_root: Path
+    index_dir: Path
+    metrics_log_path: Path | None
+    chroma_path: Path
+    embedding_model: str
+    embedding_dim: int
+    chunk_max_chars: int
+    chunk_overlap_chars: int
+    top_k_default: int
 
     # ── lexical ranking ────────────────────────────────────────────────────
-    bm25_k1: float = 1.2
-    bm25_b: float = 0.75
-    exact_id_boost: float = 4.0
-    symbol_boost: float = 2.5
-    heading_boost: float = 1.5
+    bm25_k1: float
+    bm25_b: float
+    exact_id_boost: float
+    symbol_boost: float
+    heading_boost: float
 
     # ── truth-tier ranking ─────────────────────────────────────────────────
-    truth_class_weights: dict[str, float] = field(default_factory=lambda: {
-        "CURRENT": 1.25,     # what actually executes
-        "RECORDED": 1.20,    # registered conclusions, carrying Confidence
-        "INTENDED": 1.15,    # what things are supposed to mean
-        "REFERENCE": 1.00,   # explanatory; drifts
-        # Heavy demotion: with the full docs/ tree indexed, HISTORICAL material
-        # outnumbers living truth roughly 10:1 (200 implementation plans, 152
-        # analyses, 1,374 archived log entries vs ~40 authoritative files).
-        # Without this it drowns the corpus.
-        "HISTORICAL": 0.55,
-        "DERIVED": 0.0,      # excluded at discovery; belt-and-braces
-    })
-    non_live_penalty: float = 0.35
+    truth_class_weights: dict[str, float]
+    non_live_penalty: float
 
     # Two-stage retrieve (eval 2026-09-11): N=100→6.3% refs, N=500→23%,
     # N=5000→81% but median rank ~1119. Fetch candidate_n then rerank.
-    candidate_n: int = 600
-    stem_boost: float = 4.0
-    short_chunk_penalty: float = 0.4
-    short_chunk_max_tokens: int = 8
-    json_record_penalty: float = 0.35
-    file_agg_boost: float = 0.35
-    routing_extra_limit: int = 120
-    file_route_boost: float = 7.0
-    file_route_max_files: int = 8
-    file_route_chunks_per_file: int = 6
+    candidate_n: int
+    stem_boost: float
+    short_chunk_penalty: float
+    short_chunk_max_tokens: int
+    json_record_penalty: float
+    file_agg_boost: float
+    routing_extra_limit: int
+    file_route_boost: float
+    file_route_max_files: int
+    file_route_chunks_per_file: int
 
     # ── corpus scope ───────────────────────────────────────────────────────
-    include_patterns: list[str] = field(default_factory=lambda: [
-        # Root-level truth surface
-        "CLAUDE.md",
-        "README.md",
-        "active_models.yaml",
-        "assistant_project.md",
-        "llm_project_assistant.md",
-        # Documentation (full tree — user-selected breadth)
-        "docs/**/*.md",
-        "docs/governance/**/*.yaml",
-        "docs/governance/**/*.yml",
-        "docs/governance/**/*.json",
-        # Meaning authority
-        "configs/formulas/**/*.yaml",
-        "configs/formulas/**/*.yml",
-        # Runtime authority
-        "configs/production/ACTIVE_VERSION",
-        "configs/production/*.json",
-        "configs/**/*.yaml",
-        "configs/**/*.json",
-        # Code
-        "src/**/*.py",
-        "tests/**/*.py",
-        "scripts/**/*.py",
-    ])
+    include_patterns: list[str]
 
-    exclude_patterns: list[str] = field(default_factory=lambda: [
-        # Build / environment noise
-        "__pycache__",
-        ".git",
-        ".pytest_cache",
-        "node_modules",
-        "venv",
-        ".venv",
-        # Near-duplicate trees. Without these the same file is answered twice
-        # from two paths, and one copy is silently stale.
-        ".claude/worktrees",
-        "msip_1_verification_package",
-        "reports/_ours_backup",
-        ".grok/scratch-design",
-        # Derived views — never truth (also enforced in truth_tier).
-        "context/",
-        ".generated.md",
-        # Not a text corpus: 39 GB of runtime streams. Query these through
-        # DuckDB over Parquet (scripts/analysis/query_trace.py) instead.
-        "logs/",
-        # Derived / payload data
-        "data/chroma_db",
-        "data/rag",
-        "data/mt5",
-        "master_crypto_training",
-    ])
+    exclude_patterns: list[str]
 
-    registry_sources: list[str] = field(default_factory=lambda: [
-        "data/findings.jsonl",
-        "data/hypothesis_registry.jsonl",
-        "data/framework_registry.jsonl",
-        "data/script_registry.jsonl",
-        "data/jsonl_claim_catalog.jsonl",
-    ])
+    registry_sources: list[str]
 
-    max_file_bytes: int = 2_000_000
-    index_batch_size: int = 32
-    monitor_window: int = 1000
+    max_file_bytes: int
+    index_batch_size: int
+    monitor_window: int
 
     # ── derived paths ──────────────────────────────────────────────────────
 
@@ -218,8 +152,95 @@ class RetrievalConfig:
 
 
 def build_default_config() -> RetrievalConfig:
-    """Build a RetrievalConfig, overriding from environment variables."""
-    cfg = RetrievalConfig()
+    """Build a RetrievalConfig from the literals that ran when fields had defaults.
+
+    Environment overrides stay one-argument reads: an unset variable leaves the
+    literal. A present variable replaces that one field.
+    """
+    cfg = RetrievalConfig(
+        repo_root=_REPO_ROOT,
+        index_dir=_REPO_ROOT / "data" / "rag",
+        metrics_log_path=None,
+        chroma_path=_REPO_ROOT / "data" / "chroma_db",
+        embedding_model="all-MiniLM-L6-v2",
+        embedding_dim=384,
+        chunk_max_chars=1500,
+        chunk_overlap_chars=200,
+        top_k_default=10,
+        bm25_k1=1.2,
+        bm25_b=0.75,
+        exact_id_boost=4.0,
+        symbol_boost=2.5,
+        heading_boost=1.5,
+        truth_class_weights={
+            "CURRENT": 1.25,
+            "RECORDED": 1.20,
+            "INTENDED": 1.15,
+            "REFERENCE": 1.00,
+            "HISTORICAL": 0.55,
+            "DERIVED": 0.0,
+        },
+        non_live_penalty=0.35,
+        candidate_n=600,
+        stem_boost=4.0,
+        short_chunk_penalty=0.4,
+        short_chunk_max_tokens=8,
+        json_record_penalty=0.35,
+        file_agg_boost=0.35,
+        routing_extra_limit=120,
+        file_route_boost=7.0,
+        file_route_max_files=8,
+        file_route_chunks_per_file=6,
+        include_patterns=[
+            "CLAUDE.md",
+            "README.md",
+            "active_models.yaml",
+            "assistant_project.md",
+            "llm_project_assistant.md",
+            "docs/**/*.md",
+            "docs/governance/**/*.yaml",
+            "docs/governance/**/*.yml",
+            "docs/governance/**/*.json",
+            "configs/formulas/**/*.yaml",
+            "configs/formulas/**/*.yml",
+            "configs/production/ACTIVE_VERSION",
+            "configs/production/*.json",
+            "configs/**/*.yaml",
+            "configs/**/*.json",
+            "src/**/*.py",
+            "tests/**/*.py",
+            "scripts/**/*.py",
+        ],
+        exclude_patterns=[
+            "__pycache__",
+            ".git",
+            ".pytest_cache",
+            "node_modules",
+            "venv",
+            ".venv",
+            ".claude/worktrees",
+            "msip_1_verification_package",
+            "reports/_ours_backup",
+            ".grok/scratch-design",
+            "context/",
+            ".generated.md",
+            "logs/",
+            "data/chroma_db",
+            "data/rag",
+            "data/mt5",
+            "master_crypto_training",
+        ],
+        registry_sources=[
+            "data/findings.jsonl",
+            "data/hypothesis_registry.jsonl",
+            "data/framework_registry.jsonl",
+            "data/script_registry.jsonl",
+            "data/jsonl_claim_catalog.jsonl",
+        ],
+        max_file_bytes=2_000_000,
+        index_batch_size=32,
+        monitor_window=1000,
+    )
     if os.environ.get("RAG_INDEX_DIR"):
         cfg.index_dir = Path(os.environ["RAG_INDEX_DIR"])
     if os.environ.get("RAG_CHROMA_PATH"):

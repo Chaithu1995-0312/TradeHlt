@@ -44,6 +44,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from config_layer.production_config import get_prod_section  # type: ignore
+from config_layer.strict_config import require_all  # type: ignore
 from data_ingestion.ohlcv_schema import (  # type: ignore
     require_ohlcv_columns, require_reviewed_clock, resolve_ohlcv_headers, validate_ohlcv_row,
 )
@@ -214,13 +215,22 @@ class HistoricalFetcher:
                             start="2023-01-01", end="2024-01-01")
     """
 
+    _CFG_KEYS = (
+        "db_url", "schema", "ohlcv_table", "batch_size",
+        "connection_timeout_sec", "csv_fallback_dir",
+    )
+
     def __init__(self, config: Optional[dict] = None) -> None:
-        self._cfg     = config or _CFG
-        self._db_url  = self._cfg.get("db_url", _DB_URL)
-        self._table   = f'{self._cfg.get("schema", _SCHEMA)}.{self._cfg.get("ohlcv_table", _TABLE)}'
-        self._batch   = int(self._cfg.get("batch_size", _BATCH_SIZE))
-        self._timeout = int(self._cfg.get("connection_timeout_sec", _CONN_TIMEOUT))
-        self._csv_dir = Path(self._cfg.get("csv_fallback_dir", str(_CSV_DIR)))
+        src = _CFG if config is None else config
+        self._cfg = require_all(
+            src, self._CFG_KEYS,
+            section_name="data_ingestion", consumer="HistoricalFetcher",
+        )
+        self._db_url  = self._cfg["db_url"]
+        self._table   = f'{self._cfg["schema"]}.{self._cfg["ohlcv_table"]}'
+        self._batch   = int(self._cfg["batch_size"])
+        self._timeout = int(self._cfg["connection_timeout_sec"])
+        self._csv_dir = Path(self._cfg["csv_fallback_dir"])
 
     # ── Public API ────────────────────────────────────────────────────────────
 

@@ -10,6 +10,9 @@ import hashlib
 import json
 from dataclasses import dataclass, field
 from typing import Any, Mapping
+from config_layer.strict_config import (
+    ConfigKeyMissingError, require, require_all, require_section,
+)
 
 
 SCHEMA_VERSION_PIN = "1.0.0"
@@ -114,9 +117,9 @@ class Disabled:
 class DimensionHowConfig:
     enabled: bool
     source_features: tuple[str, ...]
-    label_bands: tuple[dict[str, Any], ...] = ()
-    instrument_overrides: Mapping[str, Any] = field(default_factory=dict)
-    timeframe_overrides: Mapping[str, Any] = field(default_factory=dict)
+    label_bands: tuple[dict[str, Any], ...]
+    instrument_overrides: Mapping[str, Any]
+    timeframe_overrides: Mapping[str, Any]
 
 
 @dataclass(frozen=True)
@@ -235,7 +238,7 @@ def load_msip_shadow_config(prod_cfg: Mapping[str, Any]) -> MsipShadowConfig | D
         return Disabled()
     if not isinstance(section, dict):
         raise TypeError("msip_shadow section must be an object")
-    if not bool(section.get("enabled", False)):
+    if not bool(require(section, "enabled", section_name="msip", consumer="interpretation_config")):
         return Disabled()
 
     config_id = str(_require(section, "config_id"))
@@ -256,26 +259,30 @@ def load_msip_shadow_config(prod_cfg: Mapping[str, Any]) -> MsipShadowConfig | D
     if not any(d.enabled for d in dimensions.values()):
         raise ValueError("enabled:true requires at least one enabled dimension")
 
-    comparison = section.get("comparison") or {}
-    if not isinstance(comparison, dict):
-        raise TypeError("msip_shadow.comparison must be an object")
-    output = section.get("output") or {}
-    if not isinstance(output, dict):
-        raise TypeError("msip_shadow.output must be an object")
+    comparison = require_section(section, "comparison", consumer="MsipShadowConfig")
+    output = require_section(section, "output", consumer="MsipShadowConfig")
 
     return MsipShadowConfig(
         enabled=True,
         config_id=config_id,
         schema_version_required=schema_ver,
         dimensions=dimensions,
-        emit_disagreement_events=bool(comparison.get("emit_disagreement_events", True)),
-        crt_phase_observation_enabled=bool(
-            comparison.get("crt_phase_observation_enabled", True)
-        ),
-        output_path_template=str(
-            output.get("path_template", "results/msip_shadow/{run_id}/market_state.jsonl")
-        ),
-        include_provenance=bool(output.get("include_provenance", True)),
+        emit_disagreement_events=bool(require(
+            comparison, "emit_disagreement_events",
+            section_name="msip_shadow.comparison", consumer="MsipShadowConfig",
+        )),
+        crt_phase_observation_enabled=bool(require(
+            comparison, "crt_phase_observation_enabled",
+            section_name="msip_shadow.comparison", consumer="MsipShadowConfig",
+        )),
+        output_path_template=str(require(
+            output, "path_template",
+            section_name="msip_shadow.output", consumer="MsipShadowConfig",
+        )),
+        include_provenance=bool(require(
+            output, "include_provenance",
+            section_name="msip_shadow.output", consumer="MsipShadowConfig",
+        )),
         config_sha256=config_section_sha256(section),
         raw_section=dict(section),
     )

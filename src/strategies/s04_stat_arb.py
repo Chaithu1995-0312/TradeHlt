@@ -35,6 +35,7 @@ if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
 from config_layer.production_config import get_prod_section   # type: ignore
+from config_layer.strict_config import ConfigKeyMissingError, require_all
 from strategies.base_strategy import BaseStrategy              # type: ignore
 from strategies.strategy_result import StrategyResult          # type: ignore
 from utils.logging_config import get_flow_logger               # type: ignore
@@ -42,12 +43,18 @@ from utils.logging_config import get_flow_logger               # type: ignore
 logger = get_flow_logger("STRATEGY_ENGINE")
 
 
+_S04StatArb_KEYS = ("z_entry_threshold", "sl_atr_mult", "tp_rr_ratio", "min_confidence", "trend_filter")
+
 def _load_s4_cfg() -> dict:
-    se = get_prod_section("strategy_engine") or {}
-    cfg = se.get("s04_stat_arb", {})
-    if not cfg:
-        logger.warning("strategy_engine.s04_stat_arb missing — using defaults")
-    return cfg
+    se = get_prod_section("strategy_engine")
+    if "s04_stat_arb" not in se:
+        raise ConfigKeyMissingError(
+            ["s04_stat_arb"], section="strategy_engine", consumer="S04StatArb",
+        )
+    return require_all(
+        se["s04_stat_arb"], _S04StatArb_KEYS,
+        section_name="strategy_engine.s04_stat_arb", consumer="S04StatArb",
+    )
 
 
 class S04StatArb(BaseStrategy):
@@ -67,8 +74,15 @@ class S04StatArb(BaseStrategy):
         config: Optional[dict] = None,
     ) -> None:
         super().__init__(pair, timeframe, config)
-        if not S04StatArb._cfg_s4:
-            S04StatArb._cfg_s4 = _load_s4_cfg()
+        if config is not None:
+            self._cfg_s4 = require_all(
+                config, _S04StatArb_KEYS,
+                section_name="strategy_engine.s04_stat_arb", consumer="S04StatArb",
+            )
+        else:
+            if not S04StatArb._cfg_s4:
+                S04StatArb._cfg_s4 = _load_s4_cfg()
+            self._cfg_s4 = S04StatArb._cfg_s4
 
     @property
     def strategy_id(self) -> str:
@@ -76,11 +90,11 @@ class S04StatArb(BaseStrategy):
 
     def compute(self, features: dict, candle: dict) -> StrategyResult:
         cfg = self._cfg_s4
-        z_entry: float = float(cfg.get("z_entry_threshold", 1.5))
-        sl_mult: float = float(cfg.get("sl_atr_mult", 1.5))
-        tp_rr: float = float(cfg.get("tp_rr_ratio", 1.5))
-        min_conf: float = float(cfg.get("min_confidence", 0.55))
-        trend_filter: bool = bool(cfg.get("trend_filter", True))
+        z_entry: float = float(cfg["z_entry_threshold"])
+        sl_mult: float = float(cfg["sl_atr_mult"])
+        tp_rr: float = float(cfg["tp_rr_ratio"])
+        min_conf: float = float(cfg["min_confidence"])
+        trend_filter: bool = bool(cfg["trend_filter"])
 
         ema_fast = float(features.get("ema_fast", 0.0))
         ema_slow = float(features.get("ema_slow", 0.0))

@@ -25,6 +25,7 @@ if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
 from config_layer.production_config import get_prod_section, get_prod_config   # type: ignore
+from config_layer.strict_config import ConfigKeyMissingError, require_all
 from engines import crt_engine                                                  # type: ignore
 from strategies.base_strategy import BaseStrategy                               # type: ignore
 from strategies.strategy_result import StrategyResult                           # type: ignore
@@ -33,12 +34,18 @@ from utils.logging_config import get_flow_logger                                
 logger = get_flow_logger("STRATEGY_ENGINE")
 
 
+_S01CRTWrapper_KEYS = ("min_score", "sl_atr_mult", "tp_rr_ratio", "confidence_scale")
+
 def _load_s1_cfg() -> dict:
-    se = get_prod_section("strategy_engine") or {}
-    cfg = se.get("s01_crt", {})
-    if not cfg:
-        logger.warning("strategy_engine.s01_crt missing — using defaults")
-    return cfg
+    se = get_prod_section("strategy_engine")
+    if "s01_crt" not in se:
+        raise ConfigKeyMissingError(
+            ["s01_crt"], section="strategy_engine", consumer="S01CRTWrapper",
+        )
+    return require_all(
+        se["s01_crt"], _S01CRTWrapper_KEYS,
+        section_name="strategy_engine.s01_crt", consumer="S01CRTWrapper",
+    )
 
 
 def _load_score_component_weights() -> tuple:
@@ -75,8 +82,15 @@ class S01CRTWrapper(BaseStrategy):
         config: Optional[dict] = None,
     ) -> None:
         super().__init__(pair, timeframe, config)
-        if not S01CRTWrapper._cfg_s1:
-            S01CRTWrapper._cfg_s1 = _load_s1_cfg()
+        if config is not None:
+            self._cfg_s1 = require_all(
+                config, _S01CRTWrapper_KEYS,
+                section_name="strategy_engine.s01_crt", consumer="S01CRTWrapper",
+            )
+        else:
+            if not S01CRTWrapper._cfg_s1:
+                S01CRTWrapper._cfg_s1 = _load_s1_cfg()
+            self._cfg_s1 = S01CRTWrapper._cfg_s1
         if not S01CRTWrapper._score_component_weights:
             S01CRTWrapper._score_component_weights = _load_score_component_weights()
 
@@ -86,10 +100,10 @@ class S01CRTWrapper(BaseStrategy):
 
     def compute(self, features: dict, candle: dict) -> StrategyResult:
         cfg = self._cfg_s1
-        min_score: float = float(cfg.get("min_score", 0.65))
-        sl_mult: float = float(cfg.get("sl_atr_mult", 1.5))
-        tp_rr: float = float(cfg.get("tp_rr_ratio", 2.0))
-        conf_scale: float = float(cfg.get("confidence_scale", 1.0))
+        min_score: float = float(cfg["min_score"])
+        sl_mult: float = float(cfg["sl_atr_mult"])
+        tp_rr: float = float(cfg["tp_rr_ratio"])
+        conf_scale: float = float(cfg["confidence_scale"])
 
         trade_id = f"S1_{self.pair}_{features.get('session', 'UNK')}"
         try:

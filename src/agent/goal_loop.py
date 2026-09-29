@@ -106,14 +106,15 @@ class GoalLoop:
                 continue
 
             schema = self._get_tool_schema(step.tool) or {}
-            filled = self._fill_args(step.tool, schema, dict(step.default_args))
+            step_args = {k: v for k, v in step.default_args.items()}
+            filled = self._fill_args(step.tool, schema, step_args)
             if filled.get("clarify"):
                 result.outcome = "clarify"
                 result.summary = str(filled["clarify"])
                 result.observations = observations
                 return result
 
-            args = filled.get("args", dict(step.default_args))
+            args = filled["args"] if "args" in filled else {k: v for k, v in step.default_args.items()}
             # Inject instruments from goal when useful
             if goal.instruments and "instrument" in (schema or {}) and not args.get("instrument"):
                 args["instrument"] = goal.instruments[0]

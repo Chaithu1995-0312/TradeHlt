@@ -119,15 +119,15 @@ _REJECTION_SAMPLE_CAP: int = 50
 
 @dataclass(frozen=True)
 class BuilderConfig:
-    jsonl_root: Path = Path("logs")
-    csv_root: Path = Path("results")
-    output_dir: Path = Path("data")
-    reports_dir: Path = Path("reports")
-    market_scope: str = "crypto"          # auto | crypto | forex | all
-    validation_level: str = "WARN"        # STRICT | WARN | LENIENT
-    strict_layout: bool = False
-    min_feature_quality: float = 0.70
-    instruments_override: Optional[tuple] = None  # tuple[str, ...] | None
+    jsonl_root: Path
+    csv_root: Path
+    output_dir: Path
+    reports_dir: Path
+    market_scope: str          # auto | crypto | forex | all
+    validation_level: str        # STRICT | WARN | LENIENT
+    strict_layout: bool
+    min_feature_quality: float
+    instruments_override: Optional[tuple]  # tuple[str, ...] | None
 
     def output_path(self, effective_scope: str | None = None) -> Path:
         scope = (effective_scope or self.market_scope)

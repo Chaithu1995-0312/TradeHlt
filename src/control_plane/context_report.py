@@ -19,6 +19,12 @@ import json
 import os
 from pathlib import Path
 from typing import Any
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
+
+def _env_required(name: str, consumer: str) -> str:
+    if name not in os.environ:
+        raise ConfigKeyMissingError([name], section="env", consumer=consumer)
+    return os.environ[name]
 
 _MODEL = "claude-haiku-4-5-20251001"
 _MAX_TOKENS = 1_024
@@ -322,7 +328,7 @@ class ContextReportAPI:
         # ── api: metered Anthropic call (opt-in) ─────────────────────────────────
         if provider == "api":
             _load_dotenv()
-            api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+            api_key = _env_required("ANTHROPIC_API_KEY", "context_report").strip()
             if not api_key:
                 return {"ok": False,
                         "error": "ANTHROPIC_API_KEY not set in environment (add to .env or export)"}

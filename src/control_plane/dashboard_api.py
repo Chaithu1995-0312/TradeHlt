@@ -16,6 +16,9 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from config_layer.strict_config import (
+    ConfigKeyMissingError, require, require_all, require_section,
+)
 
 # ── Path constants ────────────────────────────────────────────────────────────
 REPO_ROOT           = Path(__file__).resolve().parents[2]
@@ -320,23 +323,22 @@ class TradingDashboardAPI:
         Config-driven paths for zone_gate and rr_model are read from the
         active production config so the display always matches backtest reality.
         """
-        # Defaults (override from active production config below)
-        zone_path = MODELS_DIR / "zone_registry.json"
-        rr_path   = MODELS_DIR / "rr_model.json"
-        try:
-            active = ACTIVE_VERSION_FILE.read_text(encoding="utf-8").strip().split()[0]
-            cfg = _read_json(PROD_CONFIG_DIR / f"{active}.json")
-            if cfg:
-                er  = cfg.get("engine_runner", {})
-                zrp = er.get("zone_registry_path")
-                if zrp:
-                    zone_path = REPO_ROOT / zrp
-                rrf = cfg.get("rr_fusion", {}) or {}
-                rrp = rrf.get("model_path") or (cfg.get("rr_model") or {}).get("model_path")
-                if rrp:
-                    rr_path = REPO_ROOT / rrp
-        except Exception:
-            pass
+        active = ACTIVE_VERSION_FILE.read_text(encoding="utf-8").strip().split()[0]
+        cfg = _read_json(PROD_CONFIG_DIR / f"{active}.json")
+        if not isinstance(cfg, dict):
+            raise ConfigKeyMissingError(
+                ["active_config"], section="<root>", consumer="dashboard_api",
+            )
+        er = require_section(cfg, "engine_runner", consumer="dashboard_api")
+        zone_path = REPO_ROOT / require(
+            er, "zone_registry_path",
+            section_name="engine_runner", consumer="dashboard_api",
+        )
+        rrf = require_section(er, "rr_fusion", consumer="dashboard_api")
+        rr_path = REPO_ROOT / require(
+            rrf, "model_path",
+            section_name="engine_runner.rr_fusion", consumer="dashboard_api",
+        )
 
         return {
             "gaussian":  self._gaussian_model_version(),
@@ -1255,10 +1257,26 @@ class TradingDashboardAPI:
         except Exception:
             active_ver = None
         if active_ver:
-            cfg     = _read_json(PROD_CONFIG_DIR / f"{active_ver}.json") or {}
-            names  |= set(cfg.get("data_ingestion", {}).get("pairs", []) or [])
-            names  |= set(cfg.get("inout", {}).get("scanner", {}).get("allowed_symbols", []) or [])
-            names  |= set((cfg.get("market_router", {}).get("symbol_map", {}) or {}).keys())
+            cfg = _read_json(PROD_CONFIG_DIR / f"{active_ver}.json")
+            if not isinstance(cfg, dict):
+                raise ConfigKeyMissingError(
+                    ["active_config"], section="<root>", consumer="dashboard_api",
+                )
+            ingested = require_section(cfg, "data_ingestion", consumer="dashboard_api")
+            names |= set(require(
+                ingested, "pairs", section_name="data_ingestion", consumer="dashboard_api",
+            ))
+            inout = require_section(cfg, "inout", consumer="dashboard_api")
+            scanner = require_section(inout, "scanner", consumer="dashboard_api")
+            names |= set(require(
+                scanner, "allowed_symbols",
+                section_name="inout.scanner", consumer="dashboard_api",
+            ))
+            router = require_section(cfg, "market_router", consumer="dashboard_api")
+            names |= set(require(
+                router, "symbol_map",
+                section_name="market_router", consumer="dashboard_api",
+            ))
         names |= _instruments_from_disk()
         names |= set(KNOWN_INSTRUMENTS)
         if names:

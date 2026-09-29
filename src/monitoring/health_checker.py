@@ -62,7 +62,7 @@ def _collect_status() -> dict:
     # Production config version
     try:
         from config_layer.production_config import get_prod_metadata  # type: ignore
-        meta = get_prod_metadata() or {}
+        meta = get_prod_metadata()
         status["components"]["config"] = {
             "version": meta.get("version", "unknown"),
             "hash":    (meta.get("config_hash") or "")[:16],

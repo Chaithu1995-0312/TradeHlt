@@ -107,10 +107,12 @@ def _resolve_label_bands(
 ) -> tuple[dict[str, Any], ...]:
     bands = dim_cfg.label_bands
     # instrument / timeframe overrides (HOW only)
-    inst = dim_cfg.instrument_overrides.get(symbol) or {}
+    inst_map = dim_cfg.instrument_overrides
+    inst = inst_map[symbol] if symbol in inst_map else {}
     if isinstance(inst, dict) and "label_bands" in inst:
         bands = tuple(inst["label_bands"])
-    tf = dim_cfg.timeframe_overrides.get(timeframe) or {}
+    tf_map = dim_cfg.timeframe_overrides
+    tf = tf_map[timeframe] if timeframe in tf_map else {}
     if isinstance(tf, dict) and "label_bands" in tf:
         bands = tuple(tf["label_bands"])
     return bands
@@ -132,7 +134,7 @@ def build_market_state(
     Pure w.r.t. CRT — no side effects except returning a value object.
     Returns None if config is Disabled.
     """
-    if isinstance(config, Disabled) or not getattr(config, "enabled", False):
+    if isinstance(config, Disabled) or not config.enabled:
         return None
     assert isinstance(config, MsipShadowConfig)
 

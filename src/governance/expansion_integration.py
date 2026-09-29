@@ -13,6 +13,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
 
 try:
     from src.expansion.expansion_engine import ExpansionEngine
@@ -192,7 +193,7 @@ class ExpansionGovernanceBridge:
             # Persist to expansion history
             self._log_history({
                 "ts": datetime.now(timezone.utc).isoformat(),
-                "base_config_version": base_config.get("version", "unknown"),
+                "base_config_version": require(base_config, "version", section_name="governance", consumer="expansion_integration"),
                 "tier": candidate["name"],
                 "patch": patch,
                 "train_metrics": candidate.get("train_metrics", {}),
@@ -205,7 +206,7 @@ class ExpansionGovernanceBridge:
         for r in rejected:
             self._log_history({
                 "ts": datetime.now(timezone.utc).isoformat(),
-                "base_config_version": base_config.get("version", "unknown"),
+                "base_config_version": require(base_config, "version", section_name="governance", consumer="expansion_integration"),
                 "tier": r.get("name", "unknown"),
                 "patch": self._diff_from_base(r.get("config", {}), base_config),
                 "forward_metrics": r.get("forward_metrics", {}),
@@ -239,11 +240,11 @@ class ExpansionGovernanceBridge:
                 runner = BacktestRunner(cfg, csv_path=forward_csv)
                 m = runner.run(forward_csv)
                 fwd_metrics = {
-                    "trades": getattr(m, "trades", 0),
-                    "wins": getattr(m, "wins", 0),
-                    "losses": getattr(m, "losses", 0),
-                    "total_pnl": getattr(m, "total_pnl", 0.0),
-                    "max_drawdown": getattr(m, "max_drawdown", 0.0),
+                    "trades": m.trades,
+                    "wins": m.wins,
+                    "losses": m.losses,
+                    "total_pnl": m.total_pnl,
+                    "max_drawdown": m.max_drawdown,
                 }
                 if fwd_metrics["trades"] > 0:
                     fwd_metrics["win_rate"] = fwd_metrics["wins"] / fwd_metrics["trades"]
