@@ -22,6 +22,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Sequence
 
+from config_layer.strict_config import require
 from governance.measurement_basis import TIE_BREAK_PRODUCTION
 from research.costs import ComponentCostModel
 from research.measurement.forward_walk import AdverseFill
@@ -81,7 +82,8 @@ def _corpus_from_population(population: dict) -> tuple[str, str | None]:
     """
     import re
 
-    text = population.get("inclusion_rule", "")
+    text = require(population, "inclusion_rule", section_name="population",
+                   consumer="_corpus_from_population")
     path_m = re.search(r"((?:data/)[\w./-]+\.csv)", text)
     sha_m = re.search(r"sha256\s+([0-9a-f]{64})", text)
     if not path_m:
@@ -102,7 +104,11 @@ def _bind_cost_model(contract: dict):
     # recomputes is a comment, not evidence.
     import re
 
-    blob = " ".join(c.get("bps_or_formula", "") for c in costs.get("components", []))
+    components = require(costs, "components", section_name="costs", consumer="_bind_cost_model")
+    blob = " ".join(
+        require(c, "bps_or_formula", section_name="costs.components", consumer="_bind_cost_model")
+        for c in components
+    )
     path_m = re.search(r"((?:results/)[\w./-]+\.json)", blob)
     sha_m = re.search(r"sha256\s+([0-9a-f]{64})", blob)
     if not path_m or not sha_m:
@@ -130,7 +136,8 @@ def _bind_cost_model(contract: dict):
 
 def _bind_adverse_fill(contract: dict):
     """Build the fill model the contract declares. None == V1's perfect stop fill."""
-    params = contract["exits"].get("parameters") or {}
+    params = require(contract["exits"], "parameters", section_name="exits",
+                     consumer="_bind_adverse_fill")
     if "adverse_fill" not in params:
         return None, "perfect_stop_fill"
     text = str(params["adverse_fill"])
@@ -147,7 +154,8 @@ def _bind_adverse_fill(contract: dict):
         AdverseFill(stop_slippage=slip, model_gaps=gaps),
         {
             "model": "adverse_fill",
-            "ontology_id": contract["exits"].get("ontology_id", "SEM-016"),
+            "ontology_id": require(contract["exits"], "ontology_id", section_name="exits",
+                                   consumer="_bind_adverse_fill"),
             "stop_slippage": slip,
             "model_gaps": gaps,
         },
@@ -213,8 +221,9 @@ def run_contract(contract_path: str | Path, out_dir: str | Path) -> dict:
         "first_ts": bars[0].timestamp.isoformat(),
         "last_ts": bars[-1].timestamp.isoformat(),
         "l3_dataset_integrity": {"decision": l3.get("decision") if isinstance(l3, dict) else str(l3)},
-        "visual_audit_corpus_EXCLUDED": contract.get("visual_audit_corpus_EXCLUDED",
-                                                     "data/XAUUSD_M15.csv"),
+        "visual_audit_corpus_EXCLUDED": require(
+            contract, "visual_audit_corpus_EXCLUDED", section_name="contract",
+            consumer="run_contract"),
     }, indent=2) + "\n", encoding="utf-8")
 
     (out / "cost_exit_fixture.json").write_text(json.dumps({
@@ -229,8 +238,8 @@ def run_contract(contract_path: str | Path, out_dir: str | Path) -> dict:
         "contract_id": contract_id,
         "sem_012_version": 2,
         "corpus": {"path": corpus, "sha256": actual_sha, "bars": len(bars)},
-        "multiplicity": contract.get("multiplicity") or {
-            "n_variants_preregistered": 2, "control": "bonferroni", "alpha_adjusted": 0.025},
+        "multiplicity": require(contract, "multiplicity", section_name="contract",
+                                consumer="run_contract"),
         "crit_2sided": CRIT_2SIDED,
         "authority": "DIAGNOSTIC_ONLY. economic_claims_allowed="
                      f"{contract['trust_status']['economic_claims_allowed']}.",
@@ -241,7 +250,9 @@ def run_contract(contract_path: str | Path, out_dir: str | Path) -> dict:
     # configuration block, so controls are declared in `metrics.success_gate` prose — which BOTH
     # V1 and V2 carry — and seeded from `splits.seed`, the one seed the schema does allow. Running
     # V1 through here therefore also produces the controls V1 declared and never ran.
-    gate_text = str((contract.get("metrics") or {}).get("success_gate", ""))
+    metrics_block = require(contract, "metrics", section_name="contract", consumer="run_contract")
+    gate_text = str(require(metrics_block, "success_gate", section_name="metrics",
+                            consumer="run_contract"))
     ctrl_cfg = ("random_entry" in gate_text) and ("long_only" in gate_text)
     seed = int(contract["splits"]["seed"])
 

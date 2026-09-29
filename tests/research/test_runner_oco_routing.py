@@ -25,16 +25,21 @@ from research.config import ResearchConfig                                # noqa
 from research.runner import HypothesisRunner, edge_report_json            # noqa: E402
 
 _CFG = {
+    "job_kind": "unspecified",
     "harness": {"warmup": 30, "window_size": 64, "min_samples": 10},
-    "forward_walk": {"max_forward": 20, "trail_mult": 0.5},
+    "forward_walk": {"max_forward": 20, "trail_mult": 0.5, "exit_model": "intrabar_fixed"},
     "signal": {"apply_signal_defaults": True, "sl_atr_mult": 1.0, "tp_atr_mult": 2.0},
-    "costs": {"round_trip_bps": 12.0},
+    "costs": {"cost_model": "flat_bps", "round_trip_bps": 12.0},
+    "qualification": {
+        "min_samples": 30, "expectancy_min": 0.0, "pf_min": 1.0, "oos_split": 0.3,
+        "oos_retention_min": 0.5, "n_permutations": 2000, "significance_alpha": 0.05,
+    },
     "universe": {"data_dir": "data", "pattern": "*_M5.csv", "instruments": "ALL"},
 }
 
 
 def _cfg_with_ttl() -> dict:
-    d = {k: dict(v) for k, v in _CFG.items()}
+    d = {k: (dict(v) if isinstance(v, dict) else v) for k, v in _CFG.items()}
     d["forward_walk"]["entry_ttl"] = 12
     return d
 

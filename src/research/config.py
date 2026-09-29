@@ -12,7 +12,20 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from config_layer.strict_config import require, require_all, require_section
+
 DEFAULT_CONFIG_PATH = Path("configs/research/research_config.json")
+
+_CONSUMER = "ResearchConfig"
+_QUAL_KEYS = (
+    "min_samples",
+    "expectancy_min",
+    "pf_min",
+    "oos_split",
+    "oos_retention_min",
+    "n_permutations",
+    "significance_alpha",
+)
 
 
 @dataclass(frozen=True)
@@ -54,86 +67,95 @@ class ResearchConfig:
     # metadata only — deliberately OUTSIDE `meaningful`/`_canonical` so adding
     # it never changes any existing config's config_sha256 (same precedent as
     # the conditional `entry_ttl` guard below).
-    job_kind: str = "unspecified"
-    # Which cost model prices a trade. "flat_bps" (default) is the historical flat
+    job_kind: str
+    # Which cost model prices a trade. "flat_bps" is the historical flat
     # `round_trip_bps` haircut — one number for every instrument. "component_measured"
     # is the decomposed broker model (SEM-015: half-spread + commission + order-type
     # slippage + swap), usable only for an instrument with a MEASURED calibration.
-    # Like `entry_ttl` above, this enters `meaningful` ONLY when the JSON declares it,
-    # so every pre-existing config keeps its published config_sha256 byte-identical.
-    cost_model: str = "flat_bps"
+    # Required. Once present it is part of `meaningful` (a declared cost model is a
+    # different measured object). Files that omit it fail closed; they are not hashed.
+    cost_model: str
     # Path to the `mt5_cost_calibration` manifest `cost_model="component_measured"` binds
-    # to. Required together with cost_model=="component_measured" (validated in from_dict);
-    # ignored/absent otherwise. Same sha-parity precedent as `cost_model` itself — enters
-    # `meaningful` only when declared, and only ever declared alongside a non-default
-    # cost_model, so no pre-existing flat-bps config's hash moves.
-    cost_model_manifest_path: str | None = None
+    # to. Required together with cost_model=="component_measured" (validated in from_dict).
+    # Absent key → None (not a substituted path). Enters `meaningful` only when declared.
+    cost_model_manifest_path: str | None
     # Optional [start, end) sub-window of the instrument's full corpus, with symmetric
-    # lead-in/tail buffers so bars just inside the window still get a full detect window
-    # behind them and a full forward-walk future ahead of them (never right- or
-    # left-censored by the slice boundary). None (default) = load the whole corpus,
-    # byte-identical to every config written before this field existed — same sha-parity
-    # precedent as `entry_ttl`/`cost_model`. Consumed by `HypothesisRunner._load_candles`
-    # via `data_ingestion.corpus_store.read`; the plain `CandleLoader` path is untouched
-    # when this is absent.
-    window: dict | None = None
+    # lead-in/tail buffers. Absent key → None (load the whole corpus). When the key is
+    # present, start/end/lead_in_bars/tail_bars are all required.
+    window: dict | None
 
     @classmethod
     def from_dict(cls, d: dict) -> "ResearchConfig":
-        harness = d.get("harness", {})
-        fw = d.get("forward_walk", {})
-        sig = d.get("signal", {})
-        costs = d.get("costs", {})
-        q = d.get("qualification", {})
-        uni = d.get("universe", {})
+        harness = require_section(d, "harness", consumer=_CONSUMER)
+        fw = require_section(d, "forward_walk", consumer=_CONSUMER)
+        sig = require_section(d, "signal", consumer=_CONSUMER)
+        costs = require_section(d, "costs", consumer=_CONSUMER)
+        q = require_section(d, "qualification", consumer=_CONSUMER)
+        uni = require_section(d, "universe", consumer=_CONSUMER)
+        h = require_all(
+            harness, ["warmup", "window_size", "min_samples"],
+            section_name="harness", consumer=_CONSUMER,
+        )
+        fwk = require_all(
+            fw, ["max_forward", "trail_mult", "exit_model"],
+            section_name="forward_walk", consumer=_CONSUMER,
+        )
+        sg = require_all(
+            sig, ["apply_signal_defaults", "sl_atr_mult", "tp_atr_mult"],
+            section_name="signal", consumer=_CONSUMER,
+        )
+        ck = require_all(
+            costs, ["round_trip_bps", "cost_model"],
+            section_name="costs", consumer=_CONSUMER,
+        )
+        qk = require_all(q, _QUAL_KEYS, section_name="qualification", consumer=_CONSUMER)
+        uk = require_all(
+            uni, ["data_dir", "pattern", "instruments"],
+            section_name="universe", consumer=_CONSUMER,
+        )
+        job_kind = str(require(d, "job_kind", section_name="research", consumer=_CONSUMER))
 
+        cost_model = str(ck["cost_model"])
         meaningful = {
             "harness": {
-                "warmup": int(harness["warmup"]),
-                "window_size": int(harness["window_size"]),
-                "min_samples": int(harness["min_samples"]),
+                "warmup": int(h["warmup"]),
+                "window_size": int(h["window_size"]),
+                "min_samples": int(h["min_samples"]),
             },
             "forward_walk": {
-                "max_forward": int(fw["max_forward"]),
-                "trail_mult": float(fw["trail_mult"]),
-                "exit_model": str(fw.get("exit_model", "intrabar_fixed")),
+                "max_forward": int(fwk["max_forward"]),
+                "trail_mult": float(fwk["trail_mult"]),
+                "exit_model": str(fwk["exit_model"]),
             },
             "signal": {
-                "apply_signal_defaults": bool(sig["apply_signal_defaults"]),
-                "sl_atr_mult": float(sig["sl_atr_mult"]),
-                "tp_atr_mult": float(sig["tp_atr_mult"]),
+                "apply_signal_defaults": bool(sg["apply_signal_defaults"]),
+                "sl_atr_mult": float(sg["sl_atr_mult"]),
+                "tp_atr_mult": float(sg["tp_atr_mult"]),
             },
-            "costs": {"round_trip_bps": float(costs["round_trip_bps"])},
+            "costs": {
+                "round_trip_bps": float(ck["round_trip_bps"]),
+                "cost_model": cost_model,
+            },
             "qualification": {
-                "min_samples": int(q.get("min_samples", 30)),
-                "expectancy_min": float(q.get("expectancy_min", 0.0)),
-                "pf_min": float(q.get("pf_min", 1.0)),
-                "oos_split": float(q.get("oos_split", 0.3)),
-                "oos_retention_min": float(q.get("oos_retention_min", 0.5)),
-                "n_permutations": int(q.get("n_permutations", 2000)),
-                "significance_alpha": float(q.get("significance_alpha", 0.05)),
+                "min_samples": int(qk["min_samples"]),
+                "expectancy_min": float(qk["expectancy_min"]),
+                "pf_min": float(qk["pf_min"]),
+                "oos_split": float(qk["oos_split"]),
+                "oos_retention_min": float(qk["oos_retention_min"]),
+                "n_permutations": int(qk["n_permutations"]),
+                "significance_alpha": float(qk["significance_alpha"]),
             },
             "universe": {
-                "data_dir": str(uni["data_dir"]),
-                "pattern": str(uni["pattern"]),
-                "instruments": uni.get("instruments", "ALL"),
+                "data_dir": str(uk["data_dir"]),
+                "pattern": str(uk["pattern"]),
+                "instruments": uk["instruments"],
             },
         }
-        # sha-parity (load-bearing): `entry_ttl` (Program-9 OCO straddle) enters the
-        # canonical dict ONLY when the JSON carries it — every pre-existing config keeps
-        # its published config_sha256 byte-identical.
+        # `entry_ttl` enters the canonical dict only when the JSON carries it.
+        # Absence is not a substituted integer (one-arg presence check).
         if "entry_ttl" in fw:
             meaningful["forward_walk"]["entry_ttl"] = int(fw["entry_ttl"])
 
-        # sha-parity (load-bearing, same precedent as `entry_ttl` directly above):
-        # `cost_model` enters the canonical dict ONLY when the JSON carries it. All 23
-        # pre-existing ResearchConfig files omit it and keep their published
-        # config_sha256 byte-identical. A config that DOES declare it is measuring a
-        # different object and correctly gets a different hash.
-        if "cost_model" in costs:
-            meaningful["costs"]["cost_model"] = str(costs["cost_model"])
-
-        cost_model = str(costs.get("cost_model", "flat_bps"))
         _valid_cost_models = {"flat_bps", "component_measured"}
         if cost_model not in _valid_cost_models:
             raise ValueError(
@@ -142,7 +164,10 @@ class ResearchConfig:
                 "an unrecognised value must never silently fall back to the flat haircut)."
             )
 
-        cost_model_manifest_path = costs.get("cost_model_manifest_path")
+        if "cost_model_manifest_path" in costs:
+            cost_model_manifest_path = costs["cost_model_manifest_path"]
+        else:
+            cost_model_manifest_path = None
         if cost_model == "component_measured" and not cost_model_manifest_path:
             raise ValueError(
                 "ResearchConfig: cost_model='component_measured' requires "
@@ -152,25 +177,21 @@ class ResearchConfig:
         if cost_model_manifest_path is not None:
             meaningful["costs"]["cost_model_manifest_path"] = str(cost_model_manifest_path)
 
-        window_raw = d.get("window")
         window: dict | None = None
-        if window_raw is not None:
-            missing = [k for k in ("start", "end") if k not in window_raw]
-            if missing:
-                raise ValueError(
-                    f"ResearchConfig.window is missing required key(s) {missing} "
-                    "(a window needs both a start and an end — an open-ended window "
-                    "is not supported, it would silently read to the corpus's own edge)."
-                )
+        if "window" in d and d["window"] is not None:
+            window_raw = require_section(d, "window", consumer=_CONSUMER)
+            wk = require_all(
+                window_raw, ["start", "end", "lead_in_bars", "tail_bars"],
+                section_name="window", consumer=_CONSUMER,
+            )
             window = {
-                "start": str(window_raw["start"]),
-                "end": str(window_raw["end"]),
-                "lead_in_bars": int(window_raw.get("lead_in_bars", 120)),
-                "tail_bars": int(window_raw.get("tail_bars", 60)),
+                "start": str(wk["start"]),
+                "end": str(wk["end"]),
+                "lead_in_bars": int(wk["lead_in_bars"]),
+                "tail_bars": int(wk["tail_bars"]),
             }
             meaningful["window"] = dict(window)
 
-        job_kind = str(d.get("job_kind", "unspecified"))
         _valid_job_kinds = {"threshold_search", "model_retrain", "unspecified"}
         if job_kind not in _valid_job_kinds:
             raise ValueError(

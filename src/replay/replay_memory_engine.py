@@ -29,6 +29,8 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from config_layer.strict_config import missing_keys, missing_reason
+
 logger = logging.getLogger("ReplayMemoryEngine")
 
 # Config defaults (overridden via production config "replay_memory" section)
@@ -251,11 +253,11 @@ class ReplayMemoryEngine:
         """
         result = self.query([], cluster_id)
         return {
-            "historical_winrate":     result.get("historical_winrate",  0.5),
-            "historical_rr":          result.get("historical_rr",       0.0),
+            "historical_winrate":     result["historical_winrate"],
+            "historical_rr":          result["historical_rr"],
             "historical_drawdown":    self._cluster_drawdown(cluster_id),
-            "cluster_stability":      result.get("cluster_stability",   0.5),
-            "replay_density":         result.get("replay_density",      0.0),
+            "cluster_stability":      result["cluster_stability"],
+            "replay_density":         result["replay_density"],
             "failure_frequency":      self._failure_frequency(cluster_id),
             "trap_frequency":         self._trap_frequency(cluster_id),
             "transition_probability": self._transition_probability(cluster_id),
@@ -333,8 +335,15 @@ class ReplayMemoryEngine:
         try:
             if rec.get("type") == "run_header":
                 return None
-            features_dict = rec.get("features", {})
+            if "features" not in rec:
+                logger.info("%s", missing_reason("replay.record", ["features"]))
+                return None
+            features_dict = rec["features"]
             if not features_dict:
+                return None
+            absent = missing_keys(rec, ["direction", "rr_achieved"])
+            if absent:
+                logger.info("%s", missing_reason("replay.record", absent))
                 return None
 
             age_days = self._age_days(rec.get("timestamp", ""), now_ts)
@@ -347,9 +356,9 @@ class ReplayMemoryEngine:
             return ReplayRecord(
                 timestamp   = str(rec.get("timestamp", "")),
                 instrument  = str(rec.get("instrument", "")),
-                direction   = str(rec.get("direction", "long")),
+                direction   = str(rec["direction"]),
                 outcome     = str(rec.get("outcome", "UNKNOWN")),
-                rr_achieved = float(rec.get("rr_achieved", 0.0)),
+                rr_achieved = float(rec["rr_achieved"]),
                 cluster_id  = cluster_id,
                 features    = features_list,
                 age_days    = age_days,
@@ -467,29 +476,40 @@ class ReplayMemoryEngine:
         """
         if self._zone_registry is None:
             return 0
-        zones = self._zone_registry.get("zones", [])
+        if "zones" not in self._zone_registry:
+            return 0
+        zones = self._zone_registry["zones"]
         if not zones:
             return 0
 
-        feature_order = self._zone_registry.get(
-            "feature_order", list(features_dict.keys())
-        )
-        weights = self._zone_registry.get("feature_weights", [])
+        if "feature_order" not in self._zone_registry:
+            return 0
+        feature_order = self._zone_registry["feature_order"]
+        weights = self._zone_registry["feature_weights"] if "feature_weights" in self._zone_registry else []
         vec = [
-            float(features_dict.get(k, 0.0)) * (weights[i] if i < len(weights) else 1.0)
-            for i, k in enumerate(feature_order)
+            float(features_dict[k]) if k in features_dict else 0.0
+            for k in feature_order
         ]
+        if weights:
+            vec = [vec[i] * (weights[i] if i < len(weights) else 1.0) for i in range(len(vec))]
 
         best_id, best_dist = 0, float("inf")
         for zone in zones:
-            center = zone.get("center", zone.get("centroid", []))
+            if "center" in zone:
+                center = zone["center"]
+            elif "centroid" in zone:
+                center = zone["centroid"]
+            else:
+                continue
             if not center:
+                continue
+            if "zone_id" not in zone:
                 continue
             n = min(len(vec), len(center))
             d = sum((vec[i] - center[i]) ** 2 for i in range(n))
             if d < best_dist:
                 best_dist = d
-                best_id   = int(zone.get("zone_id", 0))
+                best_id   = int(zone["zone_id"])
         return best_id
 
     def _build_cluster_stats(self) -> None:

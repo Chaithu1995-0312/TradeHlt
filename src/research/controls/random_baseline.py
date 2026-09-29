@@ -14,6 +14,7 @@ from __future__ import annotations
 import random
 from typing import Sequence
 
+from config_layer.strict_config import require
 from research.contracts import Signal
 from research.indicators import atr
 
@@ -40,7 +41,8 @@ class RandomBaseline:
         a = atr(window, self.atr_period)
         if a <= 0:
             return []
-        instrument = ctx.get("instrument", "UNKNOWN")
+        instrument = require(ctx, "instrument", section_name="bar_context",
+                             consumer="RandomBaseline")
         rng = random.Random(f"{self.seed}:{instrument}:{bar.index}")
         direction = "long" if rng.random() < self.long_prob else "short"
         return [Signal(

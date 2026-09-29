@@ -16,12 +16,30 @@ from research.clean_labels.builder import (
     write_dataset_artifacts,
 )
 from research.clean_labels.protocol import (
+    COST_BPS,
+    MAX_FORWARD,
     PROTOCOL_ID,
     TP2_ATR_MULT,
     TP2_POLICY,
     compute_protocol_hash,
     freeze_block,
 )
+
+_BUILD_ENTRY = "scripts/research/build_clean_labels_tn_env.py"
+
+
+def _bc(**overrides) -> BuildConfig:
+    fields = dict(
+        instrument="TEST",
+        max_forward=MAX_FORWARD,
+        cost_bps=COST_BPS,
+        max_units=None,
+        source_path="",
+        candle_path="",
+        builder_entrypoint=_BUILD_ENTRY,
+    )
+    fields.update(overrides)
+    return BuildConfig(**fields)
 
 
 def _bar(i: int, o: float, h: float, l: float, c: float) -> Candle:
@@ -112,7 +130,7 @@ def test_label_long_tp_path():
         "mfe": 0.1,
         "features": _feats(),
     }
-    cfg = BuildConfig(instrument="TEST", source_path="test", candle_path="test")
+    cfg = _bc(source_path="test", candle_path="test")
     row, reason = label_one_unit(rec, candles, ts_to_idx, cfg)
     assert reason is None, reason
     assert row is not None
@@ -152,7 +170,7 @@ def test_tp2_stretch_harder_than_unit_tp_at_2r():
         "mfe": 2.0,
         "features": _feats(),
     }
-    cfg = BuildConfig(instrument="TEST")
+    cfg = _bc()
     row, reason = label_one_unit(rec, bars, ts_to_idx, cfg)
     assert reason is None, reason
     assert abs(row["tp1_reward_mult"] - 2.0) < 1e-9
@@ -176,7 +194,7 @@ def test_label_long_sl_path():
         "mfe": 5.0,
         "features": _feats(),
     }
-    cfg = BuildConfig(instrument="TEST")
+    cfg = _bc()
     row, reason = label_one_unit(rec, candles, ts_to_idx, cfg)
     assert reason is None, reason
     assert row["y_tp1"] == 0.0
@@ -201,7 +219,7 @@ def test_build_and_write(tmp_path: Path):
             "features": _feats(),
         }
     ]
-    cfg = BuildConfig(instrument="TEST", source_path="x", candle_path="y")
+    cfg = _bc(source_path="x", candle_path="y")
     result = build_dataset(records, candles, ts_to_idx, cfg)
     assert result.n_clean == 1
     assert result.protocol_hash
@@ -233,7 +251,7 @@ def test_skip_missing_features():
         "tp": 101.0,
         "features": {"open": 1.0},  # incomplete
     }
-    cfg = BuildConfig(instrument="TEST")
+    cfg = _bc()
     row, reason = label_one_unit(rec, candles, ts_to_idx, cfg)
     assert row is None
     assert reason == "bad_features"

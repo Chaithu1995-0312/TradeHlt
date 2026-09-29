@@ -61,7 +61,12 @@ def _normalize_session_windows(windows: dict) -> dict:
 def _harden_crt_config(cfg):
     """Return CRTConfig with normalized session_windows (and uppercase allowed_sessions)."""
     sw = _normalize_session_windows(dict(cfg.session_windows))
-    allowed = tuple(str(s).upper() for s in (cfg.allowed_sessions or ()))
+    from config_layer.strict_config import ConfigKeyMissingError
+    if cfg.allowed_sessions is None:
+        raise ConfigKeyMissingError(
+            ["allowed_sessions"], section="crt_engine", consumer="_harden_crt_config",
+        )
+    allowed = tuple(str(s).upper() for s in cfg.allowed_sessions)
     return replace(cfg, session_windows=sw, allowed_sessions=allowed)
 
 
@@ -179,8 +184,11 @@ def collect_xauusd_trade_opened_features(
             continue
 
         result = engine.process_candle(candle, htf.current_htf_id)
-        action = str(result.get("action", "NONE"))
-        if "TRADE_OPENED" not in action or engine.state.active_trade is None:
+        if (
+            "action" not in result
+            or "TRADE_OPENED" not in str(result["action"])
+            or engine.state.active_trade is None
+        ):
             continue
 
         ts_key = candle.timestamp.strftime("%Y-%m-%d %H:%M:%S")
@@ -204,7 +212,7 @@ def collect_xauusd_trade_opened_features(
         crt_dir = engine.state.direction
         if crt_dir is not None:
             try:
-                direction = int(getattr(crt_dir, "value", crt_dir))
+                direction = int(crt_dir.value if hasattr(crt_dir, "value") else crt_dir)
                 feat_map["direction"] = direction
                 feat_map["signal_dir"] = direction
                 feat_map["trade_direction"] = direction

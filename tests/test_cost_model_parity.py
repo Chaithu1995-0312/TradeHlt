@@ -23,6 +23,7 @@ _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
+from config_layer.strict_config import ConfigKeyMissingError  # noqa: E402
 from research.config import ResearchConfig  # noqa: E402
 
 CONFIG_DIR = _ROOT / "configs" / "research"
@@ -63,43 +64,75 @@ def _load(name: str) -> ResearchConfig:
     )
 
 
+def _with_declarations(raw: dict) -> dict:
+    """The literals that run today, injected because this lane does not edit JSON."""
+    out = json.loads(json.dumps(raw))
+    out["job_kind"] = "unspecified"
+    out.setdefault("costs", {})
+    out["costs"]["cost_model"] = out["costs"].get("cost_model", "flat_bps")
+    return out
+
+
 @pytest.mark.parametrize("name,expected", sorted(PRE_CHANGE_SHA.items()))
 def test_existing_config_sha_is_byte_identical(name: str, expected: str):
-    """No pre-existing config may change identity because a new key was added."""
-    assert _load(name).sha256().startswith(expected), (
-        f"{name}: config_sha256 drifted. Every EdgeReport stamped with the old hash "
-        "would silently refer to a different measured object."
-    )
+    """On-disk files omit job_kind and/or cost_model. They fail closed.
+
+    PRE_CHANGE_SHA stays as the historical identity. It is not recomputed here.
+    After the declaration commit fills those keys, this expectation has to move
+    to the new hash — a missing key must not be papered over to keep the prefix.
+    """
+    del expected  # historical pin retained in PRE_CHANGE_SHA; not a live hash
+    with pytest.raises(ConfigKeyMissingError) as ei:
+        _load(name)
+    assert ei.value.missing, name
 
 
 def test_every_parsable_config_is_pinned():
-    """A new ResearchConfig must be added to the map, not silently unguarded."""
-    unpinned = []
+    """Only the file that already declares every required key parses.
+
+    research_config_xauusd_month.json is that file. It is absent from
+    PRE_CHANGE_SHA on purpose: pinning it would retarget a hash this lane
+    did not measure. Every PRE_CHANGE_SHA name is refused.
+    """
+    parsed = []
     for path in sorted(CONFIG_DIR.glob("*.json")):
         try:
             ResearchConfig.from_dict(json.loads(path.read_text(encoding="utf-8")))
-        except (KeyError, ValueError, TypeError):
-            continue  # not a ResearchConfig document
-        if path.name not in PRE_CHANGE_SHA:
-            unpinned.append(path.name)
-    assert not unpinned, f"unpinned ResearchConfig files: {unpinned}"
+        except ConfigKeyMissingError:
+            continue
+        except (ValueError, TypeError):
+            continue
+        parsed.append(path.name)
+    assert parsed == ["research_config_xauusd_month.json"], parsed
+    for name in PRE_CHANGE_SHA:
+        with pytest.raises(ConfigKeyMissingError):
+            _load(name)
 
 
 def test_cost_model_defaults_to_flat_bps():
-    assert _load("research_config.json").cost_model == "flat_bps"
+    """A missing cost_model is an error. The running literal is flat_bps, declared."""
+    with pytest.raises(ConfigKeyMissingError) as ei:
+        _load("research_config.json")
+    assert "cost_model" in ei.value.missing
 
 
 def test_declaring_cost_model_changes_the_hash():
     """A config that opts in IS measuring a different object and must re-identify."""
-    base = json.loads((CONFIG_DIR / "research_config.json").read_text(encoding="utf-8"))
+    raw = json.loads((CONFIG_DIR / "research_config.json").read_text(encoding="utf-8"))
+    base = _with_declarations(raw)
     declared = json.loads(json.dumps(base))
     declared["costs"]["cost_model"] = "component_measured"
+    declared["costs"]["cost_model_manifest_path"] = (
+        "results/research/xauusd_mt5_cost_calibration/manifest_LATEST.json"
+    )
     assert ResearchConfig.from_dict(declared).sha256() != ResearchConfig.from_dict(base).sha256()
     assert ResearchConfig.from_dict(declared).cost_model == "component_measured"
 
 
 def test_unknown_cost_model_is_rejected_not_silently_defaulted():
-    base = json.loads((CONFIG_DIR / "research_config.json").read_text(encoding="utf-8"))
+    base = _with_declarations(
+        json.loads((CONFIG_DIR / "research_config.json").read_text(encoding="utf-8"))
+    )
     base["costs"]["cost_model"] = "flat_12bps_everywhere"
     with pytest.raises(ValueError, match="cost_model"):
         ResearchConfig.from_dict(base)

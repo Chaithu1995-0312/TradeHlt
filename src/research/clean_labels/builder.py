@@ -73,12 +73,31 @@ _TP2_STREAM = frozenset({"TP2", "TP2_HIT"})
 @dataclass
 class BuildConfig:
     instrument: str
-    max_forward: int = MAX_FORWARD
-    cost_bps: float = COST_BPS
-    max_units: int | None = None  # None = all
-    source_path: str = ""
-    candle_path: str = ""
-    builder_entrypoint: str = "scripts/research/build_clean_labels_tn_env.py"
+    max_forward: int
+    cost_bps: float
+    max_units: int | None  # None = all (declared value, not a substituted cap)
+    source_path: str
+    candle_path: str
+    builder_entrypoint: str
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "BuildConfig":
+        from config_layer.strict_config import require_all
+        k = require_all(
+            d,
+            ["instrument", "max_forward", "cost_bps", "max_units",
+             "source_path", "candle_path", "builder_entrypoint"],
+            section_name="clean_labels", consumer="BuildConfig",
+        )
+        return cls(
+            instrument=str(k["instrument"]),
+            max_forward=int(k["max_forward"]),
+            cost_bps=float(k["cost_bps"]),
+            max_units=None if k["max_units"] is None else int(k["max_units"]),
+            source_path=str(k["source_path"]),
+            candle_path=str(k["candle_path"]),
+            builder_entrypoint=str(k["builder_entrypoint"]),
+        )
 
 
 @dataclass
@@ -153,7 +172,12 @@ def _geometry(rec: dict) -> tuple[float, float, float, str] | None:
     direction = str(rec["direction"]).lower()
     if direction not in ("long", "short"):
         return None
-    tp_raw = rec.get("tp", rec.get("tp1", entry))
+    if "tp" in rec:
+        tp_raw = rec["tp"]
+    elif "tp1" in rec:
+        tp_raw = rec["tp1"]
+    else:
+        return None
     if not _finite(tp_raw):
         return None
     return entry, sl, float(tp_raw), direction

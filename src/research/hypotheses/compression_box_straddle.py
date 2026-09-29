@@ -27,6 +27,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from research.candle_state.encoder import VOL_COMPRESSION, CandleStateEncoder
+from config_layer.strict_config import require
 from research.contracts import Signal
 from research.indicators import atr
 from research.registry import register_hypothesis
@@ -77,7 +78,8 @@ class CompressionBoxStraddle:
         bar = bars[-1]
 
         return [Signal(
-            instrument=ctx.get("instrument", "UNKNOWN"), timestamp=bar.timestamp,
+            instrument=require(ctx, "instrument", section_name="bar_context",
+                               consumer="CompressionBoxStraddle"), timestamp=bar.timestamp,
             entry_index=bar.index, direction="oco",
             entry=(box_high + box_low) / 2.0,   # telemetry only; real entry = touched edge
             sl_atr_mult=self.sl_atr_mult, tp_atr_mult=self.tp_atr_mult, atr=a,

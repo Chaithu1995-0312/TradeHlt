@@ -22,15 +22,33 @@ Production safety:
   - Cooldown of 5 bars prevents regime chattering
   - Returns TRANSITIONAL_CHAOS with confidence=0 when no cluster stats available
   - All scoring functions are pure (no state); only cooldown logic is stateful
-  - Never raises; returns a valid MarketStateOutput on any input
+  - A non-mapping feature payload still returns TRANSITIONAL_CHAOS.
+  - A mapping that omits a required feature key raises ConfigKeyMissingError.
 """
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Optional
 
+from config_layer.strict_config import ConfigKeyMissingError, require_all
+
 from utils.logging_config import get_flow_logger
+
+_FEATURE_KEYS = (
+    "volatility_ratio",
+    "sweep_detected",
+    "double_sweep",
+    "break_of_structure",
+    "disp_strength",
+    "liquidity_distance",
+    "liquidity_pressure_score",
+    "volume_spike",
+    "atr",
+    "candles_since_sweep",
+)
+_REPLAY_KEYS = ("market_state_entropy", "transition_probability")
 
 logger = get_flow_logger("MARKET_STATE_CLUSTER")
 
@@ -103,21 +121,28 @@ class MarketStateClusterEngine:
 
         Parameters
         ----------
-        features       : canonical feature dict. Required keys (with fallback defaults):
+        features       : canonical feature dict. Required keys (no fallback):
                          volatility_ratio, sweep_detected, double_sweep,
                          break_of_structure, disp_strength, liquidity_distance,
                          liquidity_pressure_score, volume_spike, atr,
-                         retest_depth, candles_since_sweep.
+                         candles_since_sweep. A missing key raises
+                         ConfigKeyMissingError. retest_depth is not read.
         cluster_stats  : ClusterStats object from ReplayMemoryEngine (optional).
-                         When None, uses neutral statistical defaults.
-        replay_features: dict from ReplayMemoryEngine.get_replay_features() (optional).
+                         When None or under-sampled, the no-stats arm uses the
+                         neutral cluster statistics below.
+        replay_features: required when cluster_stats is present and n_samples
+                         clears the minimum. Keys: market_state_entropy,
+                         transition_probability.
 
         Returns
         -------
-        MarketStateOutput — always valid, never raises.
+        MarketStateOutput. ConfigKeyMissingError is re-raised. Any other
+        exception still returns the fail-open transitional output.
         """
         try:
             return self._classify_inner(features, cluster_stats, replay_features)
+        except ConfigKeyMissingError:
+            raise
         except Exception as exc:
             logger.warning(
                 "MarketStateClusterEngine.classify() failed (fail-open): %s", exc
@@ -141,29 +166,30 @@ class MarketStateClusterEngine:
         cluster_stats: Optional[object],
         replay_features: Optional[dict],
     ) -> MarketStateOutput:
-        cluster_id = (
-            getattr(cluster_stats, "cluster_id", -1)
-            if cluster_stats is not None else -1
-        )
+        cluster_id = cluster_stats.cluster_id if cluster_stats is not None else -1
 
-        # ── Extract structural signals ────────────────────────────────────────
-        volatility_ratio     = float(features.get("volatility_ratio",          1.0))
-        sweep_detected       = float(features.get("sweep_detected",             0.0))
-        double_sweep         = float(features.get("double_sweep",               0.0))
-        bos                  = float(features.get("break_of_structure",         0.0))
-        disp_strength        = float(features.get("disp_strength",              0.0))
-        liquidity_dist       = float(features.get("liquidity_distance",         5.0))
-        liquidity_pressure   = float(features.get("liquidity_pressure_score",   0.3))
-        vol_spike            = float(features.get("volume_spike",               0.0))
-        atr                  = float(features.get("atr",                        0.001))
-        candles_since_sweep = float(features.get("candles_since_sweep",       0.0))
+        if not isinstance(features, Mapping):
+            raise TypeError(
+                f"MarketStateClusterEngine features must be a mapping, got {type(features).__name__}"
+            )
+        feat = require_all(
+            features, _FEATURE_KEYS,
+            section_name="features", consumer="MarketStateClusterEngine",
+        )
+        volatility_ratio     = float(feat["volatility_ratio"])
+        sweep_detected       = float(feat["sweep_detected"])
+        double_sweep         = float(feat["double_sweep"])
+        bos                  = float(feat["break_of_structure"])
+        disp_strength        = float(feat["disp_strength"])
+        liquidity_dist       = float(feat["liquidity_distance"])
+        liquidity_pressure   = float(feat["liquidity_pressure_score"])
+        vol_spike            = float(feat["volume_spike"])
+        atr                  = float(feat["atr"])
+        candles_since_sweep = float(feat["candles_since_sweep"])
 
         # ── Extract cluster/replay statistics ─────────────────────────────────
         cs = cluster_stats
-        has_stats = (
-            cs is not None
-            and getattr(cs, "n_samples", 0) >= self._min_samples
-        )
+        has_stats = cs is not None and cs.n_samples >= self._min_samples
 
         if has_stats:
             hist_winrate    = float(cs.win_rate)
@@ -172,9 +198,13 @@ class MarketStateClusterEngine:
             trap_freq       = float(cs.trap_frequency)
             staleness       = float(cs.staleness_days)
             cluster_conf    = min(1.0, cs.n_samples / 50.0)  # saturates at 50 samples
-            rf              = replay_features or {}
-            entropy         = float(rf.get("market_state_entropy",  0.5))
-            transition_prob = float(rf.get("transition_probability", 0.2))
+            rf = require_all(
+                replay_features if isinstance(replay_features, Mapping) else None,
+                _REPLAY_KEYS,
+                section_name="replay_features", consumer="MarketStateClusterEngine",
+            )
+            entropy         = float(rf["market_state_entropy"])
+            transition_prob = float(rf["transition_probability"])
         else:
             hist_winrate, hist_mean_rr, hist_std_rr = 0.5, 0.0, 1.0
             trap_freq, staleness, entropy, transition_prob = 0.3, 0.0, 0.8, 0.3

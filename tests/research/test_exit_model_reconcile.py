@@ -122,7 +122,13 @@ def test_horizon_lookahead_guard():
 
 # ── provenance / truth-standard stamp ────────────────────────────────────────
 def test_config_carries_exit_model():
-    cfg = ResearchConfig.from_file()
+    import json
+    from pathlib import Path
+    raw = json.loads(Path("configs/research/research_config.json").read_text(encoding="utf-8"))
+    raw.setdefault("job_kind", "unspecified")
+    raw.setdefault("costs", {})
+    raw["costs"].setdefault("cost_model", "flat_bps")
+    cfg = ResearchConfig.from_dict(raw)
     assert cfg.exit_model == "intrabar_fixed"
 
 

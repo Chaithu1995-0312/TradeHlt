@@ -34,6 +34,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping, Optional
 
+from config_layer.strict_config import require, require_all, require_section
+
 # How `model_selection.mode` resolves against the ProductionBundle.
 MODE_EXECUTING = "executing"   # only families whose checkpoint demonstrably runs
 MODE_SELECTED = "selected"     # registry-active versions (Selected, may not be Enabled)
@@ -181,24 +183,31 @@ class ExperimentSpec:
         except (KeyError, TypeError) as exc:
             raise ExperimentSpecError(f"invalid corpus block: {exc}") from exc
 
-        ms = d.get("model_selection") or {}
+        ms = require_section(d, "model_selection", consumer="ExperimentSpec")
+        require_all(
+            ms,
+            ["mode", "families", "versions", "include_missing_artifacts", "hypotheses"],
+            section_name="model_selection",
+            consumer="ExperimentSpec",
+        )
         selection = ModelSelectionSpec(
-            mode=str(ms.get("mode", MODE_SELECTED)),
-            families=tuple(ms.get("families") or ()),
-            versions={k: tuple(v) for k, v in (ms.get("versions") or {}).items()},
-            include_missing_artifacts=bool(ms.get("include_missing_artifacts", True)),
-            hypotheses=tuple(ms.get("hypotheses") or ()),
+            mode=str(ms["mode"]),
+            families=tuple(ms["families"]),
+            versions={k: tuple(v) for k, v in ms["versions"].items()},
+            include_missing_artifacts=bool(ms["include_missing_artifacts"]),
+            hypotheses=tuple(ms["hypotheses"]),
         )
 
-        out = d.get("output") or {}
-        try:
-            output = OutputSpec(
-                out_dir=str(out["out_dir"]),
-                artifact_name=str(out["artifact_name"]),
-                write_latest=bool(out.get("write_latest", True)),
-            )
-        except KeyError as exc:
-            raise ExperimentSpecError(f"output block requires out_dir + artifact_name: {exc}") from exc
+        out = require_section(d, "output", consumer="ExperimentSpec")
+        require_all(
+            out, ["out_dir", "artifact_name", "write_latest"],
+            section_name="output", consumer="ExperimentSpec",
+        )
+        output = OutputSpec(
+            out_dir=str(out["out_dir"]),
+            artifact_name=str(out["artifact_name"]),
+            write_latest=bool(out["write_latest"]),
+        )
 
         return cls(
             experiment_id=str(d["experiment_id"]),
@@ -210,8 +219,9 @@ class ExperimentSpec:
             production_config_ref=(
                 str(d["production_config_ref"]) if d.get("production_config_ref") else None
             ),
-            notes=str(d.get("notes", "")),
-            authority=str(d.get("authority", "NONE")),
+            notes=str(require(d, "notes", section_name="experiment", consumer="ExperimentSpec")),
+            authority=str(require(d, "authority", section_name="experiment",
+                                  consumer="ExperimentSpec")),
         )
 
     @classmethod

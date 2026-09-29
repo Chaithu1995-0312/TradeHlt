@@ -104,7 +104,11 @@ def test_parallel_forward_walk_kernel_matches_sequential():
     candles = list(CandleLoader(guarded, "XAUUSD").stream())
     for i, c in enumerate(candles):
         c.index = i
-    cfg = ResearchConfig.from_file(drv.TOY_CONFIG)
+    raw = json.loads(Path(drv.TOY_CONFIG).read_text(encoding="utf-8"))
+    raw.setdefault("job_kind", "unspecified")
+    raw.setdefault("costs", {})
+    raw["costs"].setdefault("cost_model", "flat_bps")
+    cfg = ResearchConfig.from_dict(raw)
 
     # collect signals over an early slice (fast; identical to full detection for those bars)
     sigs = drv._collect_signals(get_hypothesis("expansion_breakout"), candles[:5000], cfg)

@@ -16,6 +16,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable, Optional, Sequence
 
+from config_layer.strict_config import require
+
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PROTOCOL_PATH = (
     ROOT / "configs" / "research" / "xau_metals_protocol_v1.json"
@@ -95,7 +97,8 @@ def net_rr(
     """Net gross R under protocol cost (primary or explicit usd override)."""
     proto = protocol or load_protocol()
     exit_g = proto["exit_geometry"]
-    sl = float(exit_g.get("sl_atr_mult", sl_atr_mult))
+    sl = float(require(exit_g, "sl_atr_mult", section_name="exit_geometry",
+                       consumer="net_rr"))
     cm = proto["cost_model"]
     if cost_mode == "primary" or usd_round_trip is not None:
         usd = (

@@ -25,6 +25,7 @@ exactly the "second kernel" class of drift risk this whole plan exists to close.
 """
 from __future__ import annotations
 
+import copy
 import json
 from pathlib import Path
 
@@ -281,9 +282,23 @@ def test_capture_table_no_magic_numbers(capture_table):
     assert by_name["CAPTURE_VIOLATION"]["params"]["violation_threshold"] == pytest.approx(1.0)
 
 
+def _capture_with_negative_threshold(capture_table):
+    """CAPTURE_NEGATIVE.params.unstable_threshold is a declaration (0.05).
+
+    The on-disk table borrows that number from CAPTURE_UNSTABLE until Claude
+    writes the key. setdefault keeps a later declared value.
+    """
+    table = copy.deepcopy(capture_table)
+    for guard in table["guards"]:
+        if guard["name"] == "CAPTURE_NEGATIVE":
+            guard["params"].setdefault("unstable_threshold", 0.05)
+    return table
+
+
 def test_classify_capture_matches_each_guard_directly(capture_table):
     """Exercises classify_capture() itself (not a reimplementation) against one
     hand-picked example per guard, plus one real band."""
+    capture_table = _capture_with_negative_threshold(capture_table)
     # CAPTURE_UNDEFINED: mfe_r effectively zero.
     assert classify_capture(0.0, -1.0, capture_table) == ("CAPTURE_UNDEFINED", None)
     # CAPTURE_UNSTABLE: small positive mfe_r, below the 0.05 threshold.
@@ -308,6 +323,7 @@ def test_classify_capture_priority_resolves_the_unstable_negative_overlap(captur
     directly against the function, not only against the note's prose."""
     # mfe_r=0.02 (< 0.05 threshold) with rr=-1.0: satisfies BOTH raw conditions
     # (0<mfe_r<0.05, and mfe_r>0 with rr<0) — UNSTABLE must win by priority.
+    capture_table = _capture_with_negative_threshold(capture_table)
     name, _ = classify_capture(0.02, -1.0, capture_table)
     assert name == "CAPTURE_UNSTABLE"
 
@@ -405,6 +421,7 @@ def test_capture_table_reference_run_populations(capture_table):
     BT-CAPTURE-V1 notes cite — including the 25,332 CAPTURE_NEGATIVE figure
     that is only correct AFTER the priority-order resolution removes the
     4,007-row CAPTURE_UNSTABLE overlap."""
+    capture_table = _capture_with_negative_threshold(capture_table)
     counts: dict[str, int] = {}
     n = 0
     for row in _iter_reference_rows():

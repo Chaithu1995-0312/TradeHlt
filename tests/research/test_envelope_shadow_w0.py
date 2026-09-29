@@ -64,8 +64,14 @@ def test_shadow_weight_zero_and_complete(tmp_path: Path):
         TrainConfig(
             dataset_path=str(ds),
             out_dir=str(train_out),
+            instrument="BNBUSDT",
+            max_rows=None,
+            train_frac=0.60,
+            val_frac=0.20,
+            seed=42,
             max_depth=3,
             max_iter=30,
+            learning_rate=0.08,
             min_samples_leaf=8,
         )
     )
@@ -76,6 +82,7 @@ def test_shadow_weight_zero_and_complete(tmp_path: Path):
             dataset_path=str(ds),
             out_dir=str(shadow_out),
             instrument="TEST",
+            max_rows=None,
         )
     )
     assert summary["status"] == "SHADOW_COMPLETE"

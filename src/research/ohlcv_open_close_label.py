@@ -15,6 +15,7 @@ import hashlib
 import json
 import sys
 import time
+from config_layer.strict_config import require
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
@@ -309,12 +310,11 @@ def snap_from_dict(raw: dict) -> FetchSnap:
     skew = raw.get("wall_clock_skew_seconds")
     return FetchSnap(
         fetched_at=fetched,
-        symbol=str(raw.get("symbol") or "XAUUSD"),
+        symbol=str(require(raw, "symbol", section_name="probe_snap", consumer="snap_from_dict")),
         bars=tuple(bars),
-        clock=str(raw.get("clock") or "mt5_tick"),
-        # Fail-closed: a file that does not declare a live source is synthetic.
-        source=str(raw.get("source") or SOURCE_SYNTHETIC),
-        clock_basis=str(raw.get("clock_basis") or CLOCK_BASIS),
+        clock=str(require(raw, "clock", section_name="probe_snap", consumer="snap_from_dict")),
+        source=str(require(raw, "source", section_name="probe_snap", consumer="snap_from_dict")),
+        clock_basis=str(require(raw, "clock_basis", section_name="probe_snap", consumer="snap_from_dict")),
         terminal=raw.get("terminal"),
         wall_clock_skew_seconds=None if skew is None else float(skew),
     )

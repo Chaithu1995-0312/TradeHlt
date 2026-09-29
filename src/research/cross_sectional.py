@@ -353,8 +353,31 @@ class XSQualConfig:
     oos_retention_min: float
     n_permutations: int
     significance_alpha: float
-    round_trip_bps: float = DEFAULT_ROUND_TRIP_BPS
-    warmup: int = 0
+    round_trip_bps: float
+    warmup: int
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "XSQualConfig":
+        from config_layer.strict_config import require_all
+        k = require_all(
+            d,
+            ["k", "min_samples", "expectancy_min", "pf_min", "oos_split",
+             "oos_retention_min", "n_permutations", "significance_alpha",
+             "round_trip_bps", "warmup"],
+            section_name="cross_sectional", consumer="XSQualConfig",
+        )
+        return cls(
+            k=int(k["k"]),
+            min_samples=int(k["min_samples"]),
+            expectancy_min=float(k["expectancy_min"]),
+            pf_min=float(k["pf_min"]),
+            oos_split=float(k["oos_split"]),
+            oos_retention_min=float(k["oos_retention_min"]),
+            n_permutations=int(k["n_permutations"]),
+            significance_alpha=float(k["significance_alpha"]),
+            round_trip_bps=float(k["round_trip_bps"]),
+            warmup=int(k["warmup"]),
+        )
 
 
 # control names, in deterministic order. `equal_weight_market` is the redundancy benchmark.

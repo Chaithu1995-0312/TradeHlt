@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence
 
+from config_layer.strict_config import require, require_all
+
 from features.feature_schema import CANONICAL_FEATURE_DIM, CANONICAL_FEATURES
 from engines.live_engine import BitNetZoneGate
 from engines.zone_cluster_score import score_zone_cluster
@@ -19,12 +21,7 @@ SCHEMA_VERSION = "zone_map_v1"
 
 
 def _require(section: Mapping[str, Any], key: str, path: str) -> Any:
-    if key not in section:
-        raise KeyError(
-            f"Required key '{key}' missing from {path}. "
-            f"Declare it in production engine_runner (no silent defaults)."
-        )
-    return section[key]
+    return require(section, key, section_name=path, consumer="ZoneMapConfig")
 
 
 @dataclass(frozen=True)
@@ -36,8 +33,26 @@ class ZoneMapConfig:
     top_k: int
     cluster_min_n: int
     cluster_spread_max: float
-    zone_min_samples: int = 50
-    execution_mode: str = "normal"
+    zone_min_samples: int
+    execution_mode: str
+
+    @classmethod
+    def from_dict(cls, d: Mapping[str, Any]) -> "ZoneMapConfig":
+        k = require_all(
+            d,
+            ["registry_path", "zone_cluster_threshold", "top_k", "cluster_min_n",
+             "cluster_spread_max", "zone_min_samples", "execution_mode"],
+            section_name="engine_runner", consumer="ZoneMapConfig",
+        )
+        return cls(
+            registry_path=str(k["registry_path"]),
+            zone_cluster_threshold=float(k["zone_cluster_threshold"]),
+            top_k=int(k["top_k"]),
+            cluster_min_n=int(k["cluster_min_n"]),
+            cluster_spread_max=float(k["cluster_spread_max"]),
+            zone_min_samples=int(k["zone_min_samples"]),
+            execution_mode=str(k["execution_mode"]),
+        )
 
     @classmethod
     def from_prod_engine_runner(cls) -> "ZoneMapConfig":

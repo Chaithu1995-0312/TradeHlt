@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from research.clean_labels.builder import BuildConfig, label_one_unit
-from research.clean_labels.protocol import EXIT_MODEL, MAX_FORWARD
+from research.clean_labels.protocol import COST_BPS, EXIT_MODEL, MAX_FORWARD
 from research.episodes.policy import PolicyEvaluator
 from research.episodes.projectors.detection import project_record
 
@@ -75,7 +75,11 @@ def _units(limit: int):
 
 def test_labelsets_match_clean_labels_on_the_real_corpus(loaded):
     candles, ts_to_idx = loaded
-    cfg = BuildConfig(instrument="BNBUSDT", max_forward=MAX_FORWARD)
+    cfg = BuildConfig(
+        instrument="BNBUSDT", max_forward=MAX_FORWARD, cost_bps=COST_BPS, max_units=None,
+        source_path="", candle_path="",
+        builder_entrypoint="scripts/research/build_clean_labels_tn_env.py",
+    )
     ev = PolicyEvaluator(max_forward=MAX_FORWARD)
 
     n = 0
@@ -149,7 +153,11 @@ def test_events_agree_with_the_kernel_on_the_real_corpus(loaded):
 def test_projector_and_clean_labels_select_the_same_population(loaded):
     """Both funnels must accept the same units, or the parity test compares samples."""
     candles, ts_to_idx = loaded
-    cfg = BuildConfig(instrument="BNBUSDT", max_forward=MAX_FORWARD)
+    cfg = BuildConfig(
+        instrument="BNBUSDT", max_forward=MAX_FORWARD, cost_bps=COST_BPS, max_units=None,
+        source_path="", candle_path="",
+        builder_entrypoint="scripts/research/build_clean_labels_tn_env.py",
+    )
 
     only_incumbent, only_substrate = 0, 0
     for rec in _units(N_UNITS):

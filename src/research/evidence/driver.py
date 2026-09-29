@@ -11,6 +11,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from config_layer.strict_config import ConfigKeyMissingError, require_all
+
 from research.evidence.catalog import SURFACES, Surface, assert_join
 from research.evidence.queries import (
     answer_question,
@@ -27,10 +29,23 @@ DEFAULT_OUT = _REPO / "results/research/parquet_evidence_layer"
 
 @dataclass
 class DriverConfig:
-    out_dir: Path = DEFAULT_OUT
-    question: str | None = None
-    atlas: str | None = None
-    max_rows: int | None = None
+    out_dir: Path
+    question: str | None
+    atlas: str | None
+    max_rows: int | None
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "DriverConfig":
+        k = require_all(
+            d, ["out_dir", "question", "atlas", "max_rows"],
+            section_name="evidence.driver", consumer="DriverConfig",
+        )
+        return cls(
+            out_dir=Path(k["out_dir"]),
+            question=None if k["question"] is None else str(k["question"]),
+            atlas=None if k["atlas"] is None else str(k["atlas"]),
+            max_rows=None if k["max_rows"] is None else int(k["max_rows"]),
+        )
 
 
 def _read_parquet_cols(parquet_path: Path, max_rows: int | None) -> dict[str, list]:
@@ -93,7 +108,11 @@ def _grain_check(opp: dict[str, list], lab: dict[str, list]) -> dict[str, Any]:
 
 
 def run(cfg: DriverConfig | None = None) -> dict[str, Any]:
-    cfg = cfg or DriverConfig()
+    if cfg is None:
+        raise ConfigKeyMissingError(
+            ["out_dir", "question", "atlas", "max_rows"],
+            section="evidence.driver", consumer="DriverConfig",
+        )
     assert_join("opportunities", "clean_labels")
     assert_join("events", "telemetry")
 

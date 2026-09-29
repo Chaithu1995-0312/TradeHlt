@@ -212,18 +212,24 @@ def compute_displacement_zone_event_study(
 
 
 def event_study_to_markdown(es: Mapping[str, Any], *, title: str = "") -> str:
-    H = int(es.get("half_window", 10))
-    rare = es.get("rare_zones") or list(RARE_ZONES)
-    lags = es.get("lags") or list(range(-H, H + 1))
-    prof = es.get("lag_profiles") or {}
+    from config_layer.strict_config import require
+
+    H = int(require(es, "half_window", section_name="event_study",
+                    consumer="event_study_to_markdown"))
+    rare = require(es, "rare_zones", section_name="event_study",
+                   consumer="event_study_to_markdown")
+    lags = require(es, "lags", section_name="event_study",
+                   consumer="event_study_to_markdown")
+    prof = require(es, "lag_profiles", section_name="event_study",
+                   consumer="event_study_to_markdown")
     lines = [
         title or "# DISPLACEMENT lead/lag × rare zones",
         "",
-        f"**DISPLACEMENT starts:** {es.get('n_displacement_starts')}  ·  "
+        f"**DISPLACEMENT starts:** {require(es, 'n_displacement_starts', section_name='event_study', consumer='event_study_to_markdown')}  ·  "
         f"**Window:** [{ -H}, +{H}]  ·  "
         f"**Rare zones:** {', '.join(rare)}",
         "",
-        f"**Baseline rare-zone rate (all bars):** {100 * float(es.get('baseline_rare_zone_rate') or 0):.2f}%",
+        f"**Baseline rare-zone rate (all bars):** {100 * float(require(es, 'baseline_rare_zone_rate', section_name='event_study', consumer='event_study_to_markdown')):.2f}%",
         "",
         "## Rare-zone occupancy by lag (relative to DISPLACEMENT start t=0)",
         "",
@@ -231,16 +237,16 @@ def event_study_to_markdown(es: Mapping[str, Any], *, title: str = "") -> str:
         "|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for tau in lags:
-        r = prof.get(str(tau)) or {}
+        r = prof[str(tau)]
         lines.append(
             "| {tau:+d} | {n} | {pr:.3f} | {p1:.3f} | {p4:.3f} | {p5:.3f} | {p6:.3f} |".format(
                 tau=int(tau),
-                n=r.get("n_events_defined", 0),
-                pr=float(r.get("p_rare_union") or 0.0),
-                p1=float(r.get("p_zone_1") or 0.0),
-                p4=float(r.get("p_zone_4") or 0.0),
-                p5=float(r.get("p_zone_5") or 0.0),
-                p6=float(r.get("p_zone_6") or 0.0),
+                n=r["n_events_defined"],
+                pr=float(r["p_rare_union"]),
+                p1=float(r["p_zone_1"]),
+                p4=float(r["p_zone_4"]),
+                p5=float(r["p_zone_5"]),
+                p6=float(r["p_zone_6"]),
             )
         )
 

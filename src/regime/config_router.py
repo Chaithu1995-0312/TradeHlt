@@ -12,6 +12,8 @@ import logging
 from pathlib import Path
 from typing import Optional, Dict, Any
 
+from config_layer.strict_config import ConfigKeyMissingError
+
 from src.regime.regime_classifier import (
     REGIME_TRENDING,
     REGIME_RANGING,
@@ -52,7 +54,8 @@ class ConfigRouter:
         config = router.select_config(regime, config_dir) # → dict or None
 
     Guardrails:
-        - Unknown regime → "SAFE" (never raises)
+        - Unknown regime uses the map's DEFAULT entry (SAFE on the built-in map).
+        - A map without DEFAULT raises ConfigKeyMissingError at init.
         - Missing config file → logs warning, returns None
     """
 
@@ -72,9 +75,10 @@ class ConfigRouter:
         else:
             self._map = self._load_map(map_path or str(_DEFAULT_MAP_PATH))
 
-        # Always ensure DEFAULT exists as SAFE fallback
         if "DEFAULT" not in self._map:
-            self._map["DEFAULT"] = "SAFE"
+            raise ConfigKeyMissingError(
+                ["DEFAULT"], section="regime_map", consumer="ConfigRouter",
+            )
 
     def select_profile(self, regime: str) -> str:
         """
@@ -86,7 +90,7 @@ class ConfigRouter:
         Returns:
             Profile name string: "SAFE" | "BALANCED" | "AGGRESSIVE"
         """
-        profile = self._map.get(regime, self._map.get("DEFAULT", "SAFE"))
+        profile = self._map[regime] if regime in self._map else self._map["DEFAULT"]
         log.debug("ConfigRouter: regime=%s → profile=%s", regime, profile)
         return profile
 

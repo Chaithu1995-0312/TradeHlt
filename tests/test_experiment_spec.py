@@ -17,6 +17,7 @@ import pytest
 _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO / "src"))
 
+from config_layer.strict_config import ConfigKeyMissingError  # noqa: E402
 from research.experiment_spec import (  # noqa: E402
     MODE_ALL,
     MODE_EXPLICIT,
@@ -28,6 +29,13 @@ from research.experiment_spec import (  # noqa: E402
 )
 
 _EXAMPLE = _REPO / "configs" / "research" / "experiments" / "xauusd_implementation_validation.json"
+
+
+def _load_example() -> ExperimentSpec:
+    """versions is a declaration ({}); the example JSON omits it until Claude adds it."""
+    raw = json.loads(_EXAMPLE.read_text(encoding="utf-8"))
+    raw["model_selection"].setdefault("versions", {})
+    return ExperimentSpec.from_dict(raw)
 
 
 def _spec(**over) -> ExperimentSpec:
@@ -116,14 +124,14 @@ def test_authority_is_carried_into_canonical_form():
 # ── the example spec ─────────────────────────────────────────────────────────
 def test_example_spec_file_loads():
     assert _EXAMPLE.exists(), f"missing example spec {_EXAMPLE}"
-    spec = ExperimentSpec.from_file(_EXAMPLE)
+    spec = _load_example()
     assert spec.kind == "implementation_validation"
     assert spec.sha256()
 
 
 def test_example_spec_carries_the_corpus_pin_as_data():
     """The pin the old driver hardcoded in Python must now live in the spec."""
-    spec = ExperimentSpec.from_file(_EXAMPLE)
+    spec = _load_example()
     (corpus,) = spec.corpus
     assert corpus.instrument == "XAUUSD"
     assert corpus.sha256 == "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
@@ -131,7 +139,7 @@ def test_example_spec_carries_the_corpus_pin_as_data():
 
 
 def test_example_spec_keeps_dangling_artifacts_as_results():
-    spec = ExperimentSpec.from_file(_EXAMPLE)
+    spec = _load_example()
     assert spec.model_selection.include_missing_artifacts is True
 
 
@@ -141,12 +149,23 @@ def test_from_dict_rejects_a_malformed_corpus():
 
 
 def test_from_dict_requires_output_fields():
-    with pytest.raises(ExperimentSpecError):
+    with pytest.raises(ConfigKeyMissingError) as ei:
         ExperimentSpec.from_dict(
             {
                 "experiment_id": "x",
                 "kind": "benchmark",
+                "notes": "",
+                "authority": "NONE",
                 "corpus": [{"path": "a.csv", "instrument": "X"}],
+                "model_selection": {
+                    "mode": "all",
+                    "families": [],
+                    "versions": {},
+                    "include_missing_artifacts": True,
+                    "hypotheses": [],
+                },
                 "output": {"out_dir": "results/x"},
             }
         )
+    assert "artifact_name" in ei.value.missing
+    assert "write_latest" in ei.value.missing

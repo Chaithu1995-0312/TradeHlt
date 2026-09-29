@@ -139,7 +139,7 @@ def forward_walk(
 
     for i, bar in enumerate(bars):
         # No-lookahead guard: forward bars must come strictly after the entry bar.
-        if getattr(bar, "index", signal.entry_index + 1) <= signal.entry_index:
+        if not hasattr(bar, "index") or bar.index <= signal.entry_index:
             raise ValueError(
                 f"forward_walk lookahead: bar index {getattr(bar, 'index', None)} "
                 f"<= entry_index {signal.entry_index}"
@@ -272,7 +272,7 @@ def forward_walk_oco(
     fill_j: int | None = None
     direction = ""
     for j, bar in enumerate(bars[:entry_ttl]):
-        if getattr(bar, "index", signal.entry_index + 1) <= signal.entry_index:
+        if not hasattr(bar, "index") or bar.index <= signal.entry_index:
             raise ValueError(
                 f"forward_walk_oco lookahead: bar index {getattr(bar, 'index', None)} "
                 f"<= entry_index {signal.entry_index}")
@@ -359,7 +359,7 @@ def horizon_excursion(signal: Signal, future: Sequence, *, max_forward: int = 40
     bars_to_first_1r: int | None = None
     first_adverse_05_bar: int | None = None
     for i, bar in enumerate(list(future)[:max_forward]):
-        if getattr(bar, "index", signal.entry_index + 1) <= signal.entry_index:
+        if not hasattr(bar, "index") or bar.index <= signal.entry_index:
             raise ValueError(
                 f"horizon_excursion lookahead: bar index {getattr(bar, 'index', None)} "
                 f"<= entry_index {signal.entry_index}")
