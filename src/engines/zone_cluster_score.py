@@ -47,6 +47,12 @@ def score_zone_cluster(
     """
     check_holder: dict = {}
 
+    # EPIC-84 KEPT (this whole function): _model_fn's own except branch below
+    # is an explicit, logged fail-safe ("ZoneGate scoring fallback (0.5)");
+    # the .get() reads on zone_raw/check below extract from
+    # run_zone_gate_engine()'s own result, whose shape genuinely varies by
+    # flow path (force_pass adds keys; an early gate failure means
+    # check_holder never gets populated) — not a config-authoring gap.
     def _model_fn(vector: list) -> float:
         """Same body as former EngineRunner._zone_model_fn (mechanical extract)."""
         try:

@@ -70,6 +70,12 @@ def compute_gaussian_score(features: list, params: dict) -> float:
 
         return _cgs(features, params)
     except ImportError:
+        # EPIC-84 KEPT: this whole branch is the optional-import fail-open
+        # fallback for when bitnet.zone_cosine_searcher is unavailable (only
+        # exercised today by src/bitnet/_smoke_test.py). Forcing these to
+        # raise on absence would turn a graceful degraded-score path into a
+        # hard crash when an optional dependency is missing — contrary to
+        # this repo's documented optional-import error mode.
         mu = params.get("mu", {})
         sigma = params.get("sigma", {})
         weights = params.get("weights", {})

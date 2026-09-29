@@ -44,6 +44,16 @@ _FALLBACK_PRIORITY = ["v1", "import_fix_v1"]
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _normalize_registry_entry(version: str, entry: dict) -> dict:
+    """Normalize one on-disk registry entry (schema may predate any of these
+    fields — see F-060: all current gaussian_registry.json entries lack
+    mu/sigma, by design of this normalizer, not a bug in it).
+
+    EPIC-84 KEPT (every default below): this function's entire purpose is
+    backfilling legacy/incomplete registry-file entries with safe values —
+    not a production config read. Changing these literals would change live
+    Gaussian scoring behaviour (F-060), which needs separately authorized
+    work with measured ΔG001 (CLAUDE.md §6.5), not a mechanical L-C fix.
+    """
     model_file = entry.get("model_file") or f"{version}.json"
     return {
         "version":    entry.get("version", version),
@@ -99,6 +109,9 @@ class GaussianRegistry:
             if not v.startswith("__") and isinstance(entry, dict)
         }
 
+        # EPIC-84 KEPT: the "Legacy fallback" branch right below explicitly
+        # handles a registry with no __active__ pointer at all — a real,
+        # documented legacy-format case, not a masked required value.
         active_map = raw.get("__active__", {}) if isinstance(raw.get("__active__"), dict) else {}
         requested_version = active_map.get(self.instrument)
 
@@ -126,6 +139,10 @@ class GaussianRegistry:
         return self
 
     def _artifact_exists(self, version: str) -> bool:
+        # EPIC-84 KEPT: same legacy-registry normalization reasoning as
+        # _normalize_registry_entry above (entries here already passed
+        # through it; the `{}` fallback covers a version key not present at
+        # all, e.g. querying artifact existence for an unregistered version).
         entry = self._entries.get(version, {})
         model_file = entry.get("model_file", f"{version}.json")
         # Strip leading "models/" prefix: registry stores full path (e.g. "models/BNBUSDT/..."),
@@ -204,6 +221,12 @@ class HeuristicGaussianEngine:
     def __init__(self, config: dict, *, instrument: Optional[str] = None,
                  preload_registry: bool = False):
         self.config = config
+        # EPIC-84: L-C flagged this instrument fallback as BLOCKED (real callers outside
+        # this lane's ownership omitted instrument=). A concurrent session (a3fe94e) fixed
+        # it for real: made this strict AND threaded instrument through every real caller
+        # (live_engine_hook.py, backtest_v2.py's run_backtest(), backtest_bitnet.py's
+        # run_backtest()) plus the 4 collateral test-fixture breaks that caused. L-C's own
+        # BLOCKED note is superseded by that fix, not by this lane.
         _resolved_instrument = instrument or (config.get("instrument") if isinstance(config, dict) else None)
         if not _resolved_instrument:
             raise ValueError(
@@ -233,6 +256,10 @@ class HeuristicGaussianEngine:
         # Hot-reload: watches gaussian_registry.json mtime; reload fires once
         # per advancement at the next compute() call. Lets a successful
         # promote_gaussian() take effect mid-session without process restart.
+        # EPIC-84 KEPT: GAUSSIAN_REGISTRY_PATH is ModelPaths.GAUSSIAN_REGISTRY,
+        # the canonical, centrally-owned artifact location (same pattern as
+        # live_engine.BitNetZoneGate's T-22-adjudicated ZONE_REGISTRY_PATH) —
+        # not an arbitrary magic literal. An explicit config override still wins.
         self._watcher = RegistryWatcher(
             config.get("gaussian_registry_path", GAUSSIAN_REGISTRY_PATH)
         )
@@ -242,6 +269,7 @@ class HeuristicGaussianEngine:
             self._watcher.mark_loaded()
 
     def _load_registry(self) -> None:
+        # EPIC-84 KEPT: same canonical-default reasoning as __init__ above.
         registry_path = self.config.get("gaussian_registry_path", GAUSSIAN_REGISTRY_PATH)
         try:
             self._registry = GaussianRegistry(
@@ -268,6 +296,10 @@ class HeuristicGaussianEngine:
                 "Using config/default mu=%.2f, sigma=%.2f. "
                 "Will not retry until registry file mtime advances.",
                 self._instrument, exc,
+                # EPIC-84 KEPT: log-display only — _mu_override/_sigma_override
+                # are Optional[float] where None means "no override" (a
+                # declared value, not a default); this just renders the
+                # effective fallback scalars for the warning message.
                 self._mu_override or 0.0,
                 self._sigma_override or 1.0,
             )

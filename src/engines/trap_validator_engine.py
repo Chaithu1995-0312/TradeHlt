@@ -28,10 +28,23 @@ CRT_OPTIONAL = ["body_ratio", "disp_strength", "retest_depth"]
 
 
 class TrapValidatorEngine:
+    #: Every key this class reads from `trap_validator` (EPIC-84: declared once).
+    _CFG_KEYS = ("min_atr", "allowed_sessions")
+
     def __init__(self, config: dict):
+        """EPIC-84: min_atr/allowed_sessions used to fall back to code literals
+        (0.0005 / [asia, london, new_york]) whenever the full production config
+        dict passed in (see engine_runner.py's `TrapValidatorEngine(config)`)
+        lacked a `trap_validator` section — which it always did; neither key
+        was declared anywhere. Now DECLARED in `trap_validator` and required.
+        """
+        from config_layer.strict_config import require_all, require_section
         self.config = config
-        self.min_atr = config.get("min_atr", 0.0005)
-        self.allowed_sessions = config.get("allowed_sessions", ["asia", "london", "new_york"])
+        section = require_section(config, "trap_validator", consumer="TrapValidatorEngine")
+        cfg = require_all(section, self._CFG_KEYS, section_name="trap_validator",
+                          consumer="TrapValidatorEngine")
+        self.min_atr = cfg["min_atr"]
+        self.allowed_sessions = cfg["allowed_sessions"]
 
     def compute(self, input_data: dict) -> dict:
         # --- Gate 0: Data integrity sentinel ---

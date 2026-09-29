@@ -39,8 +39,6 @@ class RREngine:
 
     def __init__(self, config: dict):
         self.config = config
-        # min_rr retained for backward config compat; no longer used in scoring
-        self.min_rr = config.get("min_rr", 1.5)
 
     def compute(self, input_data: dict) -> dict:
         try:

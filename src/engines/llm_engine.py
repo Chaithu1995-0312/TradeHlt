@@ -21,6 +21,10 @@ def compute(trade_id: str, features: dict, context: dict) -> dict:
     except Exception as e:
         out = {"score": 0.5, "reason": str(e)}
 
+    # EPIC-84 KEPT: diagnostic log only (llm_score_safe(features) above
+    # received the full features dict — any required-field validation is its
+    # concern, out of this wrapper's scope); must not itself raise on
+    # malformed input the try/except already handled.
     _log.info(json.dumps({
         "t": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "id": trade_id,
