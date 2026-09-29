@@ -15,8 +15,13 @@ Supported operations
 
 Config section: live_integration.mt5 in production JSON.
 
-MT5 deviation: max price deviation in points for market orders (default 20).
-MT5 magic:     unique EA identifier to distinguish our orders (default 20260501).
+EPIC-84 (user rule 2026-09-28): every key this class reads is DECLARED in
+``live_integration.mt5``. There is no code default and no fallback — a missing key
+raises ``ConfigKeyMissingError`` at construction (fail closed). The values are the
+literals that ran before the migration, now declared in the registry.
+
+MT5 deviation: max price deviation in points for market orders.
+MT5 magic:     unique EA identifier to distinguish our orders.
 ================================================================================
 """
 
@@ -34,6 +39,7 @@ if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
 from config_layer.production_config import get_prod_section   # type: ignore
+from config_layer.strict_config import require, require_all     # type: ignore
 from utils.logging_config import get_flow_logger               # type: ignore
 
 logger = get_flow_logger("LIVE_HOOK")
@@ -58,16 +64,21 @@ class MT5Bridge:
     all operations log a WARNING and return None/False without raising.
     dry_run=True logs the intended order without placing it — safe for UAT.
 
-    Config keys (live_integration.mt5)
-    ------------------------------------
-    enabled       bool   — master on/off switch (default True)
-    dry_run       bool   — log only, no actual orders (default True in prod until live)
-    magic         int    — EA magic number to tag our orders (default 20260501)
-    deviation     int    — max price deviation in points (default 20)
-    slippage      int    — slippage tolerance in points (default 3)
-    lot_min       float  — minimum lot size (default 0.01)
-    lot_max       float  — maximum lot size (default 5.0)
+    Config keys (live_integration.mt5) — ALL DECLARED, no code defaults
+    -------------------------------------------------------------------
+    enabled       bool   — master on/off switch
+    dry_run       bool   — log only, no actual orders (true in prod until live)
+    magic         int    — EA magic number to tag our orders
+    deviation     int    — max price deviation in points
+    slippage      int    — slippage tolerance in points
+    lot_min       float  — minimum lot size
+    lot_max       float  — maximum lot size
     """
+
+    #: Every key this class reads from `live_integration.mt5` (EPIC-84: declared once).
+    _CFG_KEYS = ("enabled", "dry_run", "magic", "deviation", "slippage", "lot_min", "lot_max")
+    #: Config section holding the keys above.
+    _CFG_SECTION = "live_integration.mt5"
 
     # MT5 order type constants (mirrored here so tests run without MT5 installed)
     _ORDER_BUY  = 0   # mt5.ORDER_TYPE_BUY
@@ -99,16 +110,24 @@ class MT5Bridge:
 
     @classmethod
     def from_prod_config(cls) -> "MT5Bridge":
-        cfg = ((get_prod_section("live_integration") or {})
-               .get("mt5", {}))
+        """Build from the DECLARED ``live_integration.mt5`` section.
+
+        EPIC-84: all seven keys are required and read exactly once; a missing key
+        raises ``ConfigKeyMissingError`` naming every key that is absent (the
+        message carries section + consumer). No literal fallback is applied.
+        """
+        section = get_prod_section("live_integration")
+        mt5 = require(section, "mt5", section_name="live_integration", consumer="MT5Bridge")
+        cfg = require_all(mt5, cls._CFG_KEYS, section_name=cls._CFG_SECTION,
+                          consumer="MT5Bridge")
         return cls(
-            enabled   = bool(cfg.get("enabled",   True)),
-            dry_run   = bool(cfg.get("dry_run",   True)),
-            magic     = int(cfg.get("magic",       20260501)),
-            deviation = int(cfg.get("deviation",   20)),
-            slippage  = int(cfg.get("slippage",    3)),
-            lot_min   = float(cfg.get("lot_min",   0.01)),
-            lot_max   = float(cfg.get("lot_max",   5.0)),
+            enabled   = bool(cfg["enabled"]),
+            dry_run   = bool(cfg["dry_run"]),
+            magic     = int(cfg["magic"]),
+            deviation = int(cfg["deviation"]),
+            slippage  = int(cfg["slippage"]),
+            lot_min   = float(cfg["lot_min"]),
+            lot_max   = float(cfg["lot_max"]),
         )
 
     # ── Connection ─────────────────────────────────────────────────────────────

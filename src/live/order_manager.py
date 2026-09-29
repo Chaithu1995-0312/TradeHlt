@@ -6,10 +6,15 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Optional, Protocol, runtime_checkable
 
+from config_layer.strict_config import missing_keys, missing_reason
 from core.ultron_live_adapter import LivePosition
 from utils.logging_config import get_flow_logger
 
 logger = get_flow_logger("LIVE_RAIL")
+
+#: Per-trade values this module reads from the Ultron result. Absence is not a
+#: default: the trade is REJECTED with the keys named (EPIC-84 trade-time rule).
+_ULTRON_KEYS = ("decision", "final_position_size")
 
 
 @dataclass(frozen=True)
@@ -69,11 +74,20 @@ class OrderManager:
         self._working: dict[str, FillReport] = {}
 
     def submit(self, trade_plan: dict[str, Any], ultron_result: dict[str, Any]) -> FillReport:
-        if str(ultron_result.get("decision", "")).lower() != "approve":
+        # EPIC-84 trade-time rule: a missing per-trade value REJECTS this trade with
+        # the keys named; it never takes a code literal. The engine keeps running.
+        missing = missing_keys(ultron_result, _ULTRON_KEYS)
+        if missing:
+            return self._reject(trade_plan, missing_reason("ultron_result", missing))
+        if str(ultron_result["decision"]).lower() != "approve":
             return self._reject(trade_plan, "ultron_not_approved")
-        qty = float(ultron_result.get("final_position_size") or 0.0)
+        raw_size = ultron_result["final_position_size"]
+        # None is a declared value ("no size approved") — it is not a default.
+        qty = 0.0 if raw_size is None else float(raw_size)
         if qty <= 0:
             return self._reject(trade_plan, "size_not_approved")
+        if "execution_id" not in trade_plan:
+            return self._reject(trade_plan, missing_reason("trade_plan", ["execution_id"]))
         sl = float(trade_plan["stop_loss"])
         tp = float(trade_plan["take_profit_1"])
         if sl == 0.0 or tp == 0.0:
@@ -86,7 +100,7 @@ class OrderManager:
         t0 = time.monotonic()
         ticket = self._ex.send(
             symbol=symbol, side=side, qty=qty, sl=sl, tp=tp,
-            comment=str(trade_plan.get("execution_id", "tradelatest")),
+            comment=str(trade_plan["execution_id"]),
         )
         elapsed = time.monotonic() - t0
         if ticket is None:
@@ -95,7 +109,7 @@ class OrderManager:
             logger.error("OrderManager: venue timeout %.2fs — fail-closed", elapsed)
             return self._reject(trade_plan, "venue_timeout")
         report = FillReport(
-            execution_id=str(trade_plan.get("execution_id", "UNKNOWN")),
+            execution_id=str(trade_plan["execution_id"]),
             symbol=symbol,
             side=side,
             requested_qty=qty,
@@ -125,9 +139,12 @@ class OrderManager:
         )
 
     def _reject(self, trade_plan: dict[str, Any], reason: str) -> FillReport:
+        """REJECT shape. When the payload itself is missing the identity fields (that is
+        the condition being reported), they are echoed as empty — never substituted by a
+        placeholder, so the report cannot be mistaken for a known trade."""
         return FillReport(
-            execution_id=str(trade_plan.get("execution_id", "UNKNOWN")),
-            symbol=str(trade_plan.get("symbol", "")),
+            execution_id=str(trade_plan["execution_id"]) if "execution_id" in trade_plan else "",
+            symbol=str(trade_plan["symbol"]) if "symbol" in trade_plan else "",
             side="",
             requested_qty=0.0,
             filled_qty=0.0,

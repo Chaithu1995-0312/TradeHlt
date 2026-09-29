@@ -14,6 +14,12 @@ Supported alert types
   send_daily_summary  — end-of-day P&L summary
 
 Config section: live_integration.telegram in production JSON.
+
+EPIC-84 (user rule 2026-09-28): every key this class reads is DECLARED in
+``live_integration.telegram`` and read exactly once — no code default and no
+fallback. The environment is no longer a second source for the credentials:
+``from_env()`` is the explicit legacy/research path and fails closed when
+``TELEGRAM_BOT_TOKEN`` / ``TELEGRAM_CHAT_ID`` are absent.
 ================================================================================
 """
 
@@ -32,7 +38,15 @@ if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
 from config_layer.production_config import get_prod_section   # type: ignore
+from config_layer.strict_config import (                        # type: ignore
+    ConfigKeyMissingError,
+    missing_keys,
+    require,
+    require_all,
+)
 from utils.logging_config import get_flow_logger               # type: ignore
+
+_ENV_KEYS = ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID")
 
 logger = get_flow_logger("LIVE_HOOK")
 
@@ -55,16 +69,19 @@ class TelegramBridge:
     Fail-open: any network/API error is logged as WARNING and swallowed.
     Never raises — Telegram is informational, not a trading gate.
 
-    Config keys (live_integration.telegram)
-    ----------------------------------------
+    Config keys (live_integration.telegram) — ALL DECLARED, no code defaults
+    ------------------------------------------------------------------------
     bot_token        str    — Bot API token (required for live sends)
     chat_id          str    — Target chat / channel ID (required for live sends)
-    enabled          bool   — Master on/off switch (default True)
-    timeout_s        int    — HTTP timeout in seconds (default 5)
-    dry_run          bool   — Log message only, no HTTP (default False)
+    enabled          bool   — Master on/off switch
+    timeout_s        int    — HTTP timeout in seconds
+    dry_run          bool   — Log message only, no HTTP
     """
 
     _TELEGRAM_API = "https://api.telegram.org/bot{token}/sendMessage"
+
+    #: Every key this class reads from `live_integration.telegram` (EPIC-84: declared once).
+    _CFG_KEYS = ("enabled", "bot_token", "chat_id", "timeout_s", "dry_run")
 
     def __init__(
         self,
@@ -87,11 +104,22 @@ class TelegramBridge:
 
     @classmethod
     def from_env(cls, *, enabled: bool = True, timeout_s: int = 5, dry_run: bool = False) -> "TelegramBridge":
-        """Build from TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID (legacy / research path)."""
+        """Build from TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID (legacy / research path).
+
+        EPIC-84: the environment is read through the shared strict primitive. Both
+        variables must be DECLARED in the environment — absence fails closed with
+        ``ConfigKeyMissingError(section="env")`` instead of substituting ``""``.
+        The supported construction path is ``from_prod_config()``.
+        """
         import os
+        missing = missing_keys(os.environ, _ENV_KEYS)
+        if missing:
+            raise ConfigKeyMissingError(
+                missing, section="env", consumer="TelegramBridge.from_env",
+            )
         return cls(
-            bot_token=str(os.environ.get("TELEGRAM_BOT_TOKEN", "") or ""),
-            chat_id=str(os.environ.get("TELEGRAM_CHAT_ID", "") or ""),
+            bot_token=str(os.environ[_ENV_KEYS[0]]),
+            chat_id=str(os.environ[_ENV_KEYS[1]]),
             enabled=enabled,
             timeout_s=timeout_s,
             dry_run=dry_run,
@@ -99,22 +127,24 @@ class TelegramBridge:
 
     @classmethod
     def from_prod_config(cls) -> "TelegramBridge":
-        import os
-        cfg = ((get_prod_section("live_integration") or {})
-               .get("telegram", {}))
-        # REM-TG-05: prefer non-empty JSON; else fall back to env (never log values).
-        bot_token = str(cfg.get("bot_token", "") or "")
-        chat_id = str(cfg.get("chat_id", "") or "")
-        if not bot_token:
-            bot_token = str(os.environ.get("TELEGRAM_BOT_TOKEN", "") or "")
-        if not chat_id:
-            chat_id = str(os.environ.get("TELEGRAM_CHAT_ID", "") or "")
+        """Build from the DECLARED ``live_integration.telegram`` section.
+
+        EPIC-84: all five keys are required and read exactly once; a missing key
+        raises ``ConfigKeyMissingError`` naming every key that is absent. The
+        ``TELEGRAM_*`` environment fallback that used to shadow an empty JSON
+        value is gone — the declared value is the only source.
+        """
+        section = get_prod_section("live_integration")
+        tg = require(section, "telegram", section_name="live_integration",
+                     consumer="TelegramBridge")
+        cfg = require_all(tg, cls._CFG_KEYS, section_name="live_integration.telegram",
+                          consumer="TelegramBridge")
         return cls(
-            bot_token=bot_token,
-            chat_id=chat_id,
-            enabled=bool(cfg.get("enabled", True)),
-            timeout_s=int(cfg.get("timeout_s", 5)),
-            dry_run=bool(cfg.get("dry_run", False)),
+            bot_token=str(cfg["bot_token"]),
+            chat_id=str(cfg["chat_id"]),
+            enabled=bool(cfg["enabled"]),
+            timeout_s=int(cfg["timeout_s"]),
+            dry_run=bool(cfg["dry_run"]),
         )
 
     # ── Public API ─────────────────────────────────────────────────────────────
