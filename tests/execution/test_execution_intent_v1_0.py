@@ -84,3 +84,13 @@ def test_dict_round_trip_serializes_enum_values():
     # PROPOSED serializes reason as None and round-trips.
     p = ExecutionIntentV1.propose("t2", created_at="2026-07-05T00:00:00Z")
     assert ExecutionIntentV1.from_dict(p.to_dict()) == p
+
+
+@pytest.mark.parametrize("key", ["trade_id", "state", "created_at", "schema_version"])
+def test_from_dict_missing_required_field_raises(key):
+    """EPIC-84: to_dict() always emits these fields; from_dict() never reconstructs
+    a missing one (e.g. defaulting state to PROPOSED) — it raises, naming the field."""
+    d = ExecutionIntentV1.propose("t1", created_at="2026-07-05T00:00:00Z").to_dict()
+    del d[key]
+    with pytest.raises(KeyError):
+        ExecutionIntentV1.from_dict(d)

@@ -1,7 +1,15 @@
 # override_handler.py — Human-in-loop decision gate
 import logging
+import sys
 import time
+from pathlib import Path
 from typing import Optional
+
+_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(_ROOT / "src"))
+
+from config_layer.strict_config import missing_keys, missing_reason  # noqa: E402
 
 log = logging.getLogger(__name__)
 
@@ -49,7 +57,13 @@ class OverrideHandler:
             log.warning("OverrideHandler: AUTO_EXECUTE=True — bypassing human gate")
             return {"action": "EXECUTE", "factor": 1.0}
 
-        symbol = signal.get("symbol", "?")
+        # EPIC-84 trade-time rule: a signal missing its identity key is skipped, not
+        # prompted on with a placeholder — never risk a human approving a "?" trade.
+        absent = missing_keys(signal, ("symbol",))
+        if absent:
+            log.warning("OverrideHandler: %s", missing_reason("signal", absent))
+            return {"action": "TIMEOUT_SKIP", "factor": 1.0}
+        symbol = signal["symbol"]
         log.info(
             "OverrideHandler: awaiting decision for %s (timeout=%ds)",
             symbol, self.timeout,

@@ -70,6 +70,18 @@ def test_alert_stdout_print(capsys):
     assert "SOLUSDT" in captured.out
 
 
+@pytest.mark.parametrize("key", ["symbol", "action", "confidence", "rr", "risk"])
+def test_alert_send_rejects_incomplete_signal(key):
+    """EPIC-84: a signal missing a required key is REJECTED, never alerted on with
+    a '?'/0.0 placeholder."""
+    signal = {"symbol": "BTCUSDT", "action": "BUY", "confidence": 0.8, "rr": 2.5, "risk": 0.005}
+    del signal[key]
+    am = AlertManager()
+    result = am.send(signal)
+    assert result["sent"] is False
+    assert result["reason"] == f"config_key_missing:signal.{key}"
+
+
 # ── OverrideHandler tests ─────────────────────────────────────────────────────
 
 def test_override_execute_on_y():
@@ -111,6 +123,18 @@ def test_override_auto_execute_bypasses():
     # input_fn never called
     result = handler.wait_for_decision({"symbol": "BTC"})
     assert result["action"] == "EXECUTE"
+
+
+def test_override_missing_symbol_rejects_without_prompting():
+    """EPIC-84: a signal missing 'symbol' is skipped, never prompted on as '?'."""
+    calls = []
+    def input_fn(prompt):
+        calls.append(prompt)
+        return "y"
+    handler = OverrideHandler(input_fn=input_fn)
+    result = handler.wait_for_decision({})
+    assert result["action"] == "TIMEOUT_SKIP"
+    assert calls == []
 
 
 # ── ExecutionLoop tests ───────────────────────────────────────────────────────
@@ -229,6 +253,16 @@ def test_loop_no_signals_returns_empty():
     loop = _build_loop(signals=[], max_ticks=1)
     executed = loop.run()
     assert executed == []
+
+
+def test_loop_signal_missing_symbol_rejected_before_allocate():
+    """EPIC-84: a malformed scanner signal (no 'symbol') never reaches the
+    allocator/risk-gate/alert/override/executor steps."""
+    bad_signal = {"action": "BUY", "confidence": 0.8, "rr": 2.5}
+    loop = _build_loop(signals=[bad_signal], max_ticks=1)
+    executed = loop.run()
+    assert executed == []
+    loop.allocator.allocate.assert_not_called()
 
 
 def test_loop_max_ticks_terminates():

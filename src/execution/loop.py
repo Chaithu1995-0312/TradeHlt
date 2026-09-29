@@ -1,7 +1,15 @@
 # loop.py — ExecutionLoop: continuous tick-based pipeline orchestrator
 import logging
+import sys
 import time
+from pathlib import Path
 from typing import Optional, Callable
+
+_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(_ROOT / "src"))
+
+from config_layer.strict_config import missing_keys, missing_reason  # noqa: E402
 
 log = logging.getLogger(__name__)
 
@@ -142,8 +150,17 @@ class ExecutionLoop:
         return executed
 
     def _process_signal(self, signal: dict) -> Optional[dict]:
-        """Process a single signal through the full pipeline."""
-        symbol = signal.get("symbol", "?")
+        """Process a single signal through the full pipeline.
+
+        EPIC-84 trade-time rule: a scanner signal missing its identity key is
+        REJECTED here (never given a placeholder symbol and carried into the
+        risk gate / alert / execution steps below). The loop keeps running.
+        """
+        absent = missing_keys(signal, ("symbol",))
+        if absent:
+            log.info("ExecutionLoop: signal REJECTED — %s", missing_reason("signal", absent))
+            return None
+        symbol = signal["symbol"]
 
         # 4. Regime → config
         regime = self.regime_clf.classify(signal)
@@ -162,6 +179,9 @@ class ExecutionLoop:
         # 6. Risk gate (Ultron)
         if self.risk_gate is not None:
             gate_result = self.risk_gate(signal)
+            # EPIC-84 KEPT: this is the gate's own return value, not a per-trade
+            # payload field — absence already fails CLOSED (blocks the trade), so
+            # there is no unsafe silent default to remove here.
             if not gate_result.get("allow", False):
                 log.info("ExecutionLoop: %s BLOCKED by risk gate: %s", symbol, gate_result.get("reason"))
                 return None
@@ -178,12 +198,16 @@ class ExecutionLoop:
                 log.info("ExecutionLoop: %s SKIPPED by override", symbol)
                 return None
             if action == "REDUCE":
+                # EPIC-84 KEPT: OverrideHandler.wait_for_decision() sets "factor" on
+                # every return path — this default is unreachable, not a live fallback.
                 signal["risk"] *= decision.get("factor", 0.5)
 
         # 9. Execute
         if self.trade_executor is not None:
             self.trade_executor(signal, config, allocation)
 
+        # EPIC-84 KEPT: signal["risk"] is set unconditionally at step 5 above and
+        # every earlier return happens before that assignment — unreachable default.
         log.info("ExecutionLoop: EXECUTED %s risk=%.5f", symbol, signal.get("risk", 0))
         return signal
 
