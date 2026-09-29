@@ -93,7 +93,15 @@ def percentile_rank(value: float, series: Sequence[float]) -> float:
 
 
 class MagnitudeStateEncoder:
-    """Ontology-driven continuous → magnitude STATE classifier (shadow)."""
+    """Ontology-driven continuous → magnitude STATE classifier (shadow).
+
+    EPIC-84 KEPT (every `spec.get(key, default)` in __init__ below):
+    source_transform's "identity" default is a meaningful no-op transform,
+    immediately validated against _VALID_TRANSFORMS; states is immediately
+    checked non-empty; `id` absence is deferred to the dedicated
+    features.registry.validate_registry validator, not re-checked here.
+    None are silently-applied behavioral values.
+    """
 
     def __init__(
         self,

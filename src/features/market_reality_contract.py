@@ -58,7 +58,13 @@ class MarketRealityContract:
 
     def dimensions_with_evidence(self) -> list[str]:
         """Dimension names whose `evidence` list is non-empty — i.e. at least one canonical
-        or registered feature currently supports them (still `enabled: false` regardless)."""
+        or registered feature currently supports them (still `enabled: false` regardless).
+
+        EPIC-84 KEPT: a dimension with no declared `evidence` key legitimately
+        belongs in the "no evidence" bucket this method filters for — not a
+        masked required value. load_market_reality_contract() itself (below)
+        is already strict ("never repairs, never falls back to a default").
+        """
         return sorted(
             name for name, spec in self.dimensions.items()
             if (spec.get("evidence") or [])

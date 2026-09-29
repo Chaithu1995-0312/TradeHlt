@@ -62,6 +62,13 @@ def validate_registry(ontology: dict | None = None) -> list[str]:
 
     Checks: every impl resolves; primitives/derived carry a formula; compositions carry
     numerator+denominator that resolve to primitives; ids unique; version is an int; lifecycle valid.
+
+    EPIC-84 KEPT (every `spec.get(key, "")`/`spec.get(key)` below, this function and
+    `_validate_spec_schema`): this is a VALIDATOR — every safe-navigation default
+    below is immediately followed by an explicit `problems.append(...)` completeness
+    check. The `.get(key, default)` is dict-navigation safety against a genuinely
+    incomplete ontology entry (the exact thing this function exists to catch), never
+    a silently-applied behavioral value — confirmed by re-reading every branch.
     """
     ont = ontology or load_ontology()
     problems: list[str] = []
@@ -239,6 +246,10 @@ def build_lineage_graph(ontology: dict | None = None) -> dict:
     Returns {"depends_on": {name: [deps]}, "used_by": {name: [users]}, "nodes": [...],
              "base_inputs": [...]}. `used_by` is COMPUTED as the transpose of `depends_on`
     (never stored). Nodes include registered features and declared base_inputs.
+
+    EPIC-84 KEPT: an entry declaring no `depends_on` legitimately has no
+    dependencies (empty is meaningful here, same as the `states` block
+    elsewhere in this file) — not a masked required value.
     """
     ont = ontology or load_ontology()
     base_inputs = list(ont.get("base_inputs") or [])
@@ -617,6 +628,8 @@ def validate_crt_threshold_refs(
     d = doc if doc is not None else _load_market_crt_states(repo_root)
     problems: list[str] = []
 
+    # EPIC-84 KEPT: this validator's whole job is checking a YAML doc that may
+    # genuinely be incomplete — safe navigation here, not a production default.
     thresholds = d.get("thresholds") or {}
     scalar_keys = {k for k in thresholds if k != "lifecycle"}
     lifecycle_keys = {f"lifecycle.{k}" for k in (thresholds.get("lifecycle") or {})}

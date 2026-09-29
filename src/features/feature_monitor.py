@@ -94,6 +94,13 @@ class FeatureMonitor:
 
         Args:
             features: dict with keys retest_depth, body_ratio, disp_strength
+
+        EPIC-84 KEPT (here and the matching sites in detect_drift()/
+        summary() below): this class is diagnostic drift/distribution
+        monitoring only (module docstring) — never a trading decision. A
+        missing feature value degrading to 0.0 in the rolling buffer keeps
+        the monitor running rather than crashing observability on a
+        malformed input.
         """
         row = [
             features.get("retest_depth",  0.0),

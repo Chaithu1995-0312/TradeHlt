@@ -111,6 +111,9 @@ def _generate_canonical_features() -> tuple:
     slots: dict = {}
     for section in _ITERATED_SECTIONS:
         for name, spec in (ont.get(section) or {}).items():
+            # EPIC-84 KEPT: an ontology entry with no `lineage`/`vector_key`
+            # legitimately does not participate in the canonical feature
+            # vector (it's `continue`d below) — not every entry does.
             lin = spec.get("lineage") or {}
             vk, vi = lin.get("vector_key"), lin.get("vector_index")
             if not isinstance(vk, str) or not vk:
@@ -460,6 +463,8 @@ def _build_fm_id_to_name() -> dict:
     out: dict = {}
     for section in _ITERATED_SECTIONS:
         for name, spec in (ont.get(section) or {}).items():
+            # EPIC-84 KEPT: see the scope note above — a non-vector identity
+            # legitimately has no lineage.vector_key.
             vk = (spec.get("lineage") or {}).get("vector_key")
             fid = spec.get("id")
             if isinstance(vk, str) and vk and isinstance(fid, str) and fid:

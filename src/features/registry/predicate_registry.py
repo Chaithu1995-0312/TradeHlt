@@ -157,6 +157,15 @@ def evaluate_predicate(
 
     Returns `{"hit": bool, "clauses": {...}, **emitted}`. Fail-closed on every malformed or
     out-of-vocabulary construct; never returns a default on error.
+
+    EPIC-84 KEPT (every `.get(key, default)`/`or {}` below): each one either
+    feeds a value that's immediately validated when actually consumed (an
+    out-of-vocabulary token still raises), or legitimately degrades to a
+    closed/null result (hit=False when no "hit" criterion is declared,
+    select_enum/select_input fields staying None when the winning clause has
+    no mapped entry) — never a substituted decision value. Ontology-wide
+    completeness (e.g. definition.inputs non-empty) is validate_predicate_
+    definitions()'s concern, checked once at CI-time, not re-derived here.
     """
     name, spec = _get_node(semantic_id, ontology)
     definition = spec.get("definition")
@@ -217,7 +226,15 @@ def evaluate_predicate(
 
 
 def validate_predicate_definitions(ontology: dict | None = None) -> list[str]:
-    """Static validation of every `definition` block. Returns problems; [] == contract satisfied."""
+    """Static validation of every `definition` block. Returns problems; [] == contract satisfied.
+
+    EPIC-84 KEPT (every `.get(key, default)` below): this is a VALIDATOR —
+    every safe-navigation default is immediately followed by an explicit
+    `problems.append(...)` completeness check, same pattern as
+    features.registry.validate_registry. `spec.get("id", name)` at the top
+    is a legitimate identity fallback (the dict key itself), not a masked
+    required value.
+    """
     ont = ontology if ontology is not None else load_ontology()
     sr = (ont.get("spec_schema") or {}).get("semantic_registry") or {}
     deferred = dict(sr.get("definition_deferred") or {})

@@ -34,17 +34,22 @@ from features.feature_schema import validate_vector
 log = logging.getLogger("DatasetValidator")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CONFIG  (loaded from production config; hardcoded values are fallbacks)
+# CONFIG  (loaded from production config; EPIC-84: no code-literal fallback —
+# a missing "training" section or key is a config-authoring error, not a
+# silently-substituted 200/500)
 # ─────────────────────────────────────────────────────────────────────────────
 
-try:
-    from config_layer.production_config import get_prod_section as _get_section
-    _TRAIN_CFG = _get_section("training")
-except Exception:
-    _TRAIN_CFG = {}
+from config_layer.production_config import get_prod_section as _get_section
+from config_layer.strict_config import require_all as _require_all
 
-MIN_RECORDS_TO_TRAIN:  int = _TRAIN_CFG.get("min_records_to_train",  200)
-MIN_RECORDS_RECOMMEND: int = _TRAIN_CFG.get("min_records_recommend", 500)
+_TRAIN_CFG = _require_all(
+    _get_section("training"),
+    ("min_records_to_train", "min_records_recommend"),
+    section_name="training", consumer="dataset_validator",
+)
+
+MIN_RECORDS_TO_TRAIN:  int = _TRAIN_CFG["min_records_to_train"]
+MIN_RECORDS_RECOMMEND: int = _TRAIN_CFG["min_records_recommend"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -122,6 +127,13 @@ def validate_logs(
     """
     rpt = ValidationReport()
 
+    # EPIC-84 KEPT (every `.get(key, default)` in this function below): this
+    # is the log VALIDATOR (module docstring: "Validates fusion trade logs")
+    # — a raw JSONL line is untrusted input by definition; an absent/
+    # unrecognized field falls through to a skip/diagnostic-counter path
+    # (e.g. an unknown `event` matches no ENTRY/EXIT/REJECT branch and is
+    # silently not counted), never a trading decision. Robustness against
+    # malformed records is this function's job, not a config-authoring gap.
     # ── Pass 1: load all lines, split by event type ──────────────────────────
     entries: dict[str, dict] = {}   # trade_id → ENTRY record
     exits:   dict[str, dict] = {}   # trade_id → EXIT record

@@ -230,6 +230,9 @@ def build_bitnet_features(trade: dict, candle: dict, state: dict) -> dict:
                 "encoded_value": SESSION_UNKNOWN,
             },
         )
+        # EPIC-84 KEPT: opt-in debug strictness toggle (default off), not a
+        # behavioral value substitution — and this module is documented
+        # 0-caller dead code (F-046, comment above), so unreachable today.
         if os.environ.get("STRICT_SESSION_VALIDATION", "false").lower() == "true":
             raise ValueError(f"Unknown session value: {raw_session!r}")
     features["hour_of_day"]        = float(_require(candle, "hour_of_day", "candle"))
