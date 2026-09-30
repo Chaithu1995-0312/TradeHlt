@@ -31,6 +31,7 @@ from typing import Any, Mapping, Optional
 import pandas as pd
 
 from config_layer.goal_schema import GoalSpec, load_goal_spec
+from config_layer.strict_config import require_all
 from config_layer.goal_validator import GoalReport, GoalValidator
 from research.contracts import EdgeReport
 
@@ -103,27 +104,38 @@ def attach_goal_reports(
         # edge_dict is dataclasses.asdict(EdgeReport) — rebuild the minimal
         # fields goal_report_for_edge needs rather than requiring the caller to
         # keep the original EdgeReport object around.
+        require_all(
+            edge_dict,
+            ["hypothesis", "instruments", "n", "wins", "losses", "win_rate",
+             "profit_factor", "expectancy_rr", "mfe_p50", "mfe_p90", "mae_p50",
+             "mae_p90", "median_time_to_failure", "continuation_prob",
+             "max_drawdown_rr"],
+            section_name="edge_report",
+            consumer="attach_goal_reports",
+        )
         fake = EdgeReport(
-            hypothesis=edge_dict.get("hypothesis", ""),
-            instruments=edge_dict.get("instruments", []),
-            n=edge_dict.get("n", 0),
-            wins=edge_dict.get("wins", 0),
-            losses=edge_dict.get("losses", 0),
-            win_rate=edge_dict.get("win_rate", 0.0),
-            profit_factor=edge_dict.get("profit_factor", 0.0),
-            expectancy_rr=edge_dict.get("expectancy_rr", 0.0),
-            mfe_p50=edge_dict.get("mfe_p50", 0.0),
-            mfe_p90=edge_dict.get("mfe_p90", 0.0),
-            mae_p50=edge_dict.get("mae_p50", 0.0),
-            mae_p90=edge_dict.get("mae_p90", 0.0),
-            median_time_to_failure=edge_dict.get("median_time_to_failure", 0.0),
-            continuation_prob=edge_dict.get("continuation_prob", 0.0),
-            max_drawdown_rr=edge_dict.get("max_drawdown_rr", 0.0),
+            hypothesis=edge_dict["hypothesis"],
+            instruments=edge_dict["instruments"],
+            n=edge_dict["n"],
+            wins=edge_dict["wins"],
+            losses=edge_dict["losses"],
+            win_rate=edge_dict["win_rate"],
+            profit_factor=edge_dict["profit_factor"],
+            expectancy_rr=edge_dict["expectancy_rr"],
+            mfe_p50=edge_dict["mfe_p50"],
+            mfe_p90=edge_dict["mfe_p90"],
+            mae_p50=edge_dict["mae_p50"],
+            mae_p90=edge_dict["mae_p90"],
+            median_time_to_failure=edge_dict["median_time_to_failure"],
+            continuation_prob=edge_dict["continuation_prob"],
+            max_drawdown_rr=edge_dict["max_drawdown_rr"],
         )
         edge_dict["goal_report"] = goal_report_for_edge(fake, months_observed, goal_spec)
 
     if "pooled" in run_result_dict:
         _attach(run_result_dict["pooled"])
-    for v in (run_result_dict.get("per_instrument") or {}).values():
-        _attach(v)
+    per_instrument = run_result_dict.get("per_instrument")
+    if per_instrument:
+        for v in per_instrument.values():
+            _attach(v)
     return run_result_dict

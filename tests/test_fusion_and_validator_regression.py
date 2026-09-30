@@ -1,9 +1,31 @@
 from core.fusion_engine import FusionEngine, FusionConfig
 from features.schema_validator import validate_vector
 
+# EPIC-84 STORY-84.2: FusionConfig has no field defaults. This fixture holds the former
+# dataclass defaults (test values only — not a runtime authority); tests override per case.
+_FUSION_FIXTURE = {
+    "gaussian_weight": 0.6, "neural_weight": 0.4, "llm_weight": 0.2,
+    "llm_lower_band": 0.45, "llm_upper_band": 0.65, "enable_llm": True,
+    "tier_full": 0.75, "tier_half": 0.60, "tier_quarter": 0.50,
+    "weight_crt": 0.30, "weight_ema_momentum_kernel": 0.25, "weight_feature_cluster_similarity": 0.25, "weight_candle_commitment": 0.20,
+    "weight_strategy_consensus": 0.0,
+    "regime_fusion_weights": {
+        "TRENDING": {"crt": 0.38, "gaussian": 0.20, "zone_gate": 0.12, "rr": 0.20, "strategy_consensus": 0.10},
+        "RANGING":  {"crt": 0.18, "gaussian": 0.32, "zone_gate": 0.15, "rr": 0.25, "strategy_consensus": 0.10},
+        "VOLATILE": {"crt": 0.28, "gaussian": 0.14, "zone_gate": 0.12, "rr": 0.16, "strategy_consensus": 0.30},
+        "UNKNOWN":  {"crt": 0.30, "gaussian": 0.25, "zone_gate": 0.25, "rr": 0.20, "strategy_consensus": 0.00},
+    },
+    "min_consensus_signals": 2, "min_consensus_agreement": 0.60,
+    "conflict_resolution_policy": "conservative",
+}
+
+
+def _fc(**overrides):
+    return FusionConfig.from_section({**_FUSION_FIXTURE, **overrides})
+
 
 def test_fusion_accepts_engine_results_without_canonical_validation():
-    fusion = FusionEngine(gaussian_adapter=None)
+    fusion = FusionEngine(gaussian_adapter=None, config=_fc())
     engine_results = {
         "crt": {"score": 0.4, "non_canonical": "x"},
         "ema_momentum_kernel": {"score": 0.5},
@@ -59,7 +81,7 @@ def test_fusion_compute_passes_weighted_score_to_convergence():
     # weight_crt=1.0 so weighted fusion score = crt score = 0.9
     fusion_with_conv = FusionEngine(
         gaussian_adapter=None,
-        config=FusionConfig(
+        config=_fc(
             weight_crt=1.0, weight_ema_momentum_kernel=0.0,
             weight_feature_cluster_similarity=0.0, weight_candle_commitment=0.0,
         ),
@@ -67,7 +89,7 @@ def test_fusion_compute_passes_weighted_score_to_convergence():
     )
     fusion_no_conv = FusionEngine(
         gaussian_adapter=None,
-        config=FusionConfig(
+        config=_fc(
             weight_crt=1.0, weight_ema_momentum_kernel=0.0,
             weight_feature_cluster_similarity=0.0, weight_candle_commitment=0.0,
         ),
@@ -98,7 +120,7 @@ def test_fusion_weighted_score_reflects_config_weights():
     # crt=1.0, others=0.0 — with weight_crt=1.0 and all others=0.0, final must be 1.0
     fusion = FusionEngine(
         gaussian_adapter=None,
-        config=FusionConfig(
+        config=_fc(
             weight_crt=1.0, weight_ema_momentum_kernel=0.0,
             weight_feature_cluster_similarity=0.0, weight_candle_commitment=0.0,
         ),
@@ -122,14 +144,14 @@ def test_fusion_weighted_score_is_not_flat_average():
     # weighted (crt=1.0, rest=0.0) = 0.8 / 1.0 = 0.8
     fusion_flat = FusionEngine(
         gaussian_adapter=None,
-        config=FusionConfig(
+        config=_fc(
             weight_crt=0.25, weight_ema_momentum_kernel=0.25,
             weight_feature_cluster_similarity=0.25, weight_candle_commitment=0.25,
         ),
     )
     fusion_biased = FusionEngine(
         gaussian_adapter=None,
-        config=FusionConfig(
+        config=_fc(
             weight_crt=1.0, weight_ema_momentum_kernel=0.0,
             weight_feature_cluster_similarity=0.0, weight_candle_commitment=0.0,
         ),
@@ -148,24 +170,31 @@ def test_fusion_weighted_score_is_not_flat_average():
 
 
 def test_fusion_config_defaults_match_production_config():
-    """GAP-011: FusionConfig defaults must match the values in production config."""
+    """GAP-011 rewritten (EPIC-84): FusionConfig has NO defaults any more — FusionConfig()
+    fails, and the weights come only from the declared fusion_engine section."""
     import json, pathlib
+    import pytest
+    from config_layer.strict_config import ConfigKeyMissingError
     prod = json.loads(
         (pathlib.Path(__file__).parent / "production_configs" / "v1_multi_2026_03.json").read_text()
     )
     fe_cfg = prod["fusion_engine"]
-    defaults = FusionConfig()
-    assert defaults.weight_crt       == fe_cfg["weight_crt"]
-    assert defaults.weight_ema_momentum_kernel  == fe_cfg["weight_ema_momentum_kernel"]
-    assert defaults.weight_feature_cluster_similarity == fe_cfg["weight_feature_cluster_similarity"]
-    assert defaults.weight_candle_commitment        == fe_cfg["weight_candle_commitment"]
+    with pytest.raises(TypeError):
+        FusionConfig()  # type: ignore[call-arg]
+    with pytest.raises(ConfigKeyMissingError):
+        FusionConfig.from_section({k: v for k, v in fe_cfg.items() if k != "weight_crt"})
+    cfg = FusionConfig.from_section({**_FUSION_FIXTURE, **fe_cfg})
+    assert cfg.weight_crt       == fe_cfg["weight_crt"]
+    assert cfg.weight_ema_momentum_kernel  == fe_cfg["weight_ema_momentum_kernel"]
+    assert cfg.weight_feature_cluster_similarity == fe_cfg["weight_feature_cluster_similarity"]
+    assert cfg.weight_candle_commitment        == fe_cfg["weight_candle_commitment"]
 
 
 def test_fusion_conservative_rejects_directional_conflict():
     """GAP-010: conservative policy must reject when engines emit opposing directions."""
     fusion = FusionEngine(
         gaussian_adapter=None,
-        config=FusionConfig(conflict_resolution_policy="conservative"),
+        config=_fc(conflict_resolution_policy="conservative"),
     )
     engine_results = {
         "crt":       {"score": 0.7, "direction":  1},   # BUY
@@ -184,7 +213,7 @@ def test_fusion_majority_resolves_conflict():
     """GAP-010: majority policy continues when one direction dominates."""
     fusion = FusionEngine(
         gaussian_adapter=None,
-        config=FusionConfig(conflict_resolution_policy="majority"),
+        config=_fc(conflict_resolution_policy="majority"),
     )
     engine_results = {
         "crt":       {"score": 0.7, "direction":  1},   # BUY
@@ -202,7 +231,7 @@ def test_fusion_majority_tie_falls_back_to_conservative():
     """GAP-010: majority policy with exact tie must reject (conservative fallback)."""
     fusion = FusionEngine(
         gaussian_adapter=None,
-        config=FusionConfig(conflict_resolution_policy="majority"),
+        config=_fc(conflict_resolution_policy="majority"),
     )
     engine_results = {
         "crt":       {"score": 0.7, "direction":  1},
@@ -219,7 +248,7 @@ def test_fusion_no_conflict_when_directions_agree():
     """GAP-010: no conflict path triggered when all engines agree on direction."""
     fusion = FusionEngine(
         gaussian_adapter=None,
-        config=FusionConfig(conflict_resolution_policy="conservative"),
+        config=_fc(conflict_resolution_policy="conservative"),
     )
     engine_results = {
         "crt":       {"score": 0.7, "direction": 1},

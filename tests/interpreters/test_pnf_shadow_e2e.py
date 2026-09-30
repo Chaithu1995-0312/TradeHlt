@@ -59,7 +59,11 @@ def _candidate():
 
 
 def _cfg() -> ResearchConfig:
-    return dataclasses.replace(ResearchConfig.from_file(str(_CFG)), apply_signal_defaults=False)
+    raw = json.loads(_CFG.read_text(encoding="utf-8"))
+    raw.setdefault("job_kind", "unspecified")
+    raw.setdefault("costs", {})
+    raw["costs"].setdefault("cost_model", "flat_bps")
+    return dataclasses.replace(ResearchConfig.from_dict(raw), apply_signal_defaults=False)
 
 
 def test_pnf_chain_runs_on_real_data():

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
+from config_layer.strict_config import require
 from research.contracts import Signal
 from research.indicators import atr
 
@@ -34,7 +35,8 @@ class AlwaysLong:
         if a <= 0:
             return []
         return [Signal(
-            instrument=ctx.get("instrument", "UNKNOWN"), timestamp=bar.timestamp,
+            instrument=require(ctx, "instrument", section_name="bar_context",
+                               consumer="AlwaysLong"), timestamp=bar.timestamp,
             entry_index=bar.index, direction="long", entry=float(bar.close),
             sl_atr_mult=self.sl_atr_mult, tp_atr_mult=self.tp_atr_mult, atr=a,
             meta={"control": "always_long"},

@@ -18,6 +18,7 @@ from data_ingestion.ohlcv_schema import require_ohlcv_columns, validate_ohlcv_fr
 from engines.crt_engine import compute as crt_compute
 from engines.ema_momentum_kernel import EmaMomentumKernel
 from engines.candle_commitment import CandleCommitment
+from config_layer.strict_config import require
 from engines.scoring_engine import compute_scores
 from engines.feature_cluster_similarity import _compute_soft_zone_score
 from features.candle_math import body_ratio as cm_body_ratio
@@ -145,9 +146,13 @@ def _produced_scores(spec: StorySpec, feats: dict[str, Any], entry_bar: _Bar) ->
     g_input["ema_fast"], g_input["ema_slow"] = float(c.ema_fast), float(c.ema_slow)
     g_input["momentum_score"] = float(c.momentum_score)
     g_out = g_engine.compute(g_input, direction=spec.signal.direction)
-    return {"crt": round(float(crt_out.get("score", 0.0)), 4),
-            "gaussian": round(float(g_out.get("score", 0.0)), 4),
-            "zone": round(zone, 6), "rr": round(float(rr_out.get("score", 0.0)), 4)}
+    return {"crt": round(float(require(crt_out, "score", section_name="engine.crt",
+                                       consumer="_produced_scores")), 4),
+            "gaussian": round(float(require(g_out, "score", section_name="engine.gaussian",
+                                            consumer="_produced_scores")), 4),
+            "zone": round(zone, 6),
+            "rr": round(float(require(rr_out, "score", section_name="engine.rr",
+                                      consumer="_produced_scores")), 4)}
 
 
 def build_story(spec: StorySpec, ontology: StoryOntology | None = None) -> dict[str, Any]:

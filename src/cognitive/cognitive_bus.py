@@ -36,6 +36,7 @@ from pathlib import Path
 from typing import Optional
 
 from utils.logging_config import get_flow_logger
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
 
 logger = get_flow_logger("COGNITIVE_BUS")
 
@@ -81,7 +82,7 @@ class CognitiveBus:
     """
 
     def __init__(self, config: dict) -> None:
-        self._cfg = config.get("cognitive_layer", {})
+        self._cfg = require(config, "cognitive_layer", section_name="cognitive_layer", consumer="cognitive_bus")
         self._q: queue.Queue = queue.Queue(maxsize=_QUEUE_MAXSIZE)
         self._thread: Optional[threading.Thread] = None
         self._running = False
@@ -213,26 +214,26 @@ class CognitiveBus:
             from engines.tradenet_meta_engine import TradeNetMetaEngine    # noqa
             from core.hierarchical_meta_fusion import HierarchicalMetaFusion  # noqa
 
-            opps_dir = str(self._cfg.get("opportunities_dir",    "logs"))
-            zone_reg = str(self._cfg.get("feature_cluster_similarity_registry_path",   "models/zone_registry.json"))
+            opps_dir = str(require(self._cfg, "opportunities_dir", section_name="cognitive_layer", consumer="cognitive_bus"))
+            zone_reg = str(require(self._cfg, "feature_cluster_similarity_registry_path", section_name="cognitive_layer", consumer="cognitive_bus"))
 
             self._replay_memory = ReplayMemoryEngine(
                 opportunities_dir  = opps_dir,
                 feature_cluster_similarity_registry_path = zone_reg,
-                max_records        = int(self._cfg.get("max_replay_records",  50_000)),
-                decay_half_life_days = float(self._cfg.get("decay_half_life_days", 30.0)),
-                min_cluster_samples  = int(self._cfg.get("min_cluster_samples",    5)),
+                max_records        = int(require(self._cfg, "max_replay_records", section_name="cognitive_layer", consumer="cognitive_bus")),
+                decay_half_life_days = float(require(self._cfg, "decay_half_life_days", section_name="cognitive_layer", consumer="cognitive_bus")),
+                min_cluster_samples  = int(require(self._cfg, "min_cluster_samples", section_name="cognitive_layer", consumer="cognitive_bus")),
                 staleness_threshold_days = float(
-                    self._cfg.get("staleness_threshold_days", 90.0)
+                    require(self._cfg, "staleness_threshold_days", section_name="cognitive_layer", consumer="cognitive_bus")
                 ),
             )
             self._market_state = MarketStateClusterEngine(
-                min_cluster_samples = int(self._cfg.get("min_cluster_samples", 5)),
+                min_cluster_samples = int(require(self._cfg, "min_cluster_samples", section_name="cognitive_layer", consumer="cognitive_bus")),
             )
             self._tradenet_meta = TradeNetMetaEngine({}, preload=False)
             self._hmf = HierarchicalMetaFusion(
-                allow_threshold  = float(self._cfg.get("hmf_allow_threshold",  0.60)),
-                reduce_threshold = float(self._cfg.get("hmf_reduce_threshold", 0.45)),
+                allow_threshold  = float(require(self._cfg, "hmf_allow_threshold", section_name="cognitive_layer", consumer="cognitive_bus")),
+                reduce_threshold = float(require(self._cfg, "hmf_reduce_threshold", section_name="cognitive_layer", consumer="cognitive_bus")),
             )
 
             self._engines_ready = True

@@ -63,6 +63,11 @@ def _gate() -> UltronRiskGate:
         "max_daily_loss_pct": 3.0,
         "min_rr_ratio": 1.5,
         "disabled": False,
+        # EPIC-84 STORY-84.2: now required (no DEFAULT_CONFIG); active-config values.
+        "spread_pips": 0.0,
+        "slippage_pips": 0.0,
+        "pip_size": 0.0001,
+        "min_sl_pips": 0.0,
     })
     g._kill_switch_tripped = False
     g._load_ks_state = lambda: False  # type: ignore[method-assign]

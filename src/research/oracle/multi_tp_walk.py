@@ -102,7 +102,7 @@ def _stop_fill_price(bar, stop: float, is_long: bool, adverse) -> "tuple[float, 
     """
     if adverse is None:
         return stop, False
-    if getattr(adverse, "model_gaps", False):
+    if adverse.model_gaps:
         open_ = getattr(bar, "open", None)
         if open_ is None:
             # Fail closed. Silently skipping gap modelling reintroduces exactly the
@@ -117,7 +117,7 @@ def _stop_fill_price(bar, stop: float, is_long: bool, adverse) -> "tuple[float, 
             return open_, True
         if (not is_long) and open_ >= stop:
             return open_, True
-    slip = float(getattr(adverse, "stop_slippage", 0.0))
+    slip = float(adverse.stop_slippage)
     return (stop - slip if is_long else stop + slip), False
 
 
@@ -201,13 +201,13 @@ def multi_tp_walk(
     if (not is_long) and sl <= entry:
         raise ValueError(f"multi_tp_walk: short stop {sl} <= entry {entry}")
 
-    if stop_policy is not None and getattr(stop_policy, "requires_atr", False):
+    if stop_policy is not None and stop_policy.requires_atr:
         if atr is None or not (float(atr) > 0):
             # Fail loudly. A policy silently reduced to a no-op is indistinguishable from
             # one that was measured and found inert -- the exact failure class this
             # repository has hit repeatedly (declared-but-unreached surfaces).
             raise ValueError(
-                f"multi_tp_walk: stop_policy {getattr(stop_policy, 'name', stop_policy)!r} "
+                f"multi_tp_walk: stop_policy {stop_policy.name!r} "
                 f"requires a positive atr, got {atr!r}"
             )
 

@@ -47,6 +47,7 @@ if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
 from config_layer.production_config import get_prod_section   # type: ignore
+from config_layer.strict_config import ConfigKeyMissingError, require_all
 from strategies.base_strategy import BaseStrategy              # type: ignore
 from strategies.strategy_result import StrategyResult          # type: ignore
 from utils.logging_config import get_flow_logger               # type: ignore
@@ -54,12 +55,18 @@ from utils.logging_config import get_flow_logger               # type: ignore
 logger = get_flow_logger("STRATEGY_ENGINE")
 
 
+_S10TrapStrategy_KEYS = ("trap_min_disp_strength", "reversal_body_ratio", "sl_atr_mult", "tp_rr_ratio", "min_confidence", "max_candles_since_sweep")
+
 def _load_s10_cfg() -> dict:
-    se = get_prod_section("strategy_engine") or {}
-    cfg = se.get("s10_trap", {})
-    if not cfg:
-        logger.warning("strategy_engine.s10_trap missing — using defaults")
-    return cfg
+    se = get_prod_section("strategy_engine")
+    if "s10_trap" not in se:
+        raise ConfigKeyMissingError(
+            ["s10_trap"], section="strategy_engine", consumer="S10TrapStrategy",
+        )
+    return require_all(
+        se["s10_trap"], _S10TrapStrategy_KEYS,
+        section_name="strategy_engine.s10_trap", consumer="S10TrapStrategy",
+    )
 
 
 class S10TrapStrategy(BaseStrategy):
@@ -79,8 +86,15 @@ class S10TrapStrategy(BaseStrategy):
         config: Optional[dict] = None,
     ) -> None:
         super().__init__(pair, timeframe, config)
-        if not S10TrapStrategy._cfg_s10:
-            S10TrapStrategy._cfg_s10 = _load_s10_cfg()
+        if config is not None:
+            self._cfg_s10 = require_all(
+                config, _S10TrapStrategy_KEYS,
+                section_name="strategy_engine.s10_trap", consumer="S10TrapStrategy",
+            )
+        else:
+            if not S10TrapStrategy._cfg_s10:
+                S10TrapStrategy._cfg_s10 = _load_s10_cfg()
+            self._cfg_s10 = S10TrapStrategy._cfg_s10
 
     @property
     def strategy_id(self) -> str:
@@ -88,12 +102,12 @@ class S10TrapStrategy(BaseStrategy):
 
     def compute(self, features: dict, candle: dict) -> StrategyResult:
         cfg = self._cfg_s10
-        min_disp: float = float(cfg.get("trap_min_disp_strength", 0.6))
-        rev_body: float = float(cfg.get("reversal_body_ratio", 0.5))
-        sl_mult: float = float(cfg.get("sl_atr_mult", 1.0))
-        tp_rr: float = float(cfg.get("tp_rr_ratio", 2.0))
-        min_conf: float = float(cfg.get("min_confidence", 0.60))
-        max_age: int = int(cfg.get("max_candles_since_sweep", 3))
+        min_disp: float = float(cfg["trap_min_disp_strength"])
+        rev_body: float = float(cfg["reversal_body_ratio"])
+        sl_mult: float = float(cfg["sl_atr_mult"])
+        tp_rr: float = float(cfg["tp_rr_ratio"])
+        min_conf: float = float(cfg["min_confidence"])
+        max_age: int = int(cfg["max_candles_since_sweep"])
 
         sweep = bool(features.get("sweep_detected", False))
         if not sweep:

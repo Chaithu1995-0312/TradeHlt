@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 
 from research.clean_labels.builder import BuildConfig, label_one_unit
-from research.clean_labels.protocol import EXIT_MODEL, MAX_FORWARD, TP2_ATR_MULT
+from research.clean_labels.protocol import COST_BPS, EXIT_MODEL, MAX_FORWARD, TP2_ATR_MULT
 from research.contracts import Signal
 from research.episodes.builder import build_episode
 from research.episodes.policy import PolicyEvaluator
@@ -132,7 +132,11 @@ def test_labelset_equals_clean_labels_builder(seed, direction, sl, tp):
     }
 
     # incumbent path
-    cfg = BuildConfig(instrument="T", max_forward=MAX_FORWARD)
+    cfg = BuildConfig(
+        instrument="T", max_forward=MAX_FORWARD, cost_bps=COST_BPS, max_units=None,
+        source_path="", candle_path="",
+        builder_entrypoint="scripts/research/build_clean_labels_tn_env.py",
+    )
     row, skip = label_one_unit(rec, candles, ts_to_idx, cfg)
     # clean_labels requires a valid 39-dim feature vector; this synthetic record has
     # none, so it skips on features. Its WALK is what we compare — recompute it with

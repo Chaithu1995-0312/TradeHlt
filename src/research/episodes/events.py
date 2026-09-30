@@ -131,7 +131,8 @@ def _detect_reached_r(entry, steps, derived, params) -> list[tuple[str, int, dic
     """
     risk = entry.risk_distance
     out = []
-    for r in params.get("r_thresholds", ()):
+    from config_layer.strict_config import require
+    for r in require(params, "r_thresholds", section_name="episodes.rulepack", consumer="_detect_reached_r"):
         for step, d in zip(steps, derived):
             if d is None:
                 continue
@@ -171,7 +172,8 @@ def _detect_be_eligible(entry, steps, derived, params) -> list[tuple[str, int, d
     Threshold is rulepack-declared, NOT hardcoded: 'when is BE earned' is a research
     question, and different packs should be able to disagree without a code change.
     """
-    thr = params.get("be_mfe_r", 1.0)
+    from config_layer.strict_config import require
+    thr = require(params, "be_mfe_r", section_name="episodes.rulepack", consumer="_detect_be_eligible")
     risk = entry.risk_distance
     for step, d in zip(steps, derived):
         if d is None:
@@ -188,7 +190,8 @@ def _detect_sl_threat(entry, steps, derived, params) -> list[tuple[str, int, dic
     Close-based on purpose: a wick that pierces the stop is an exit question, and
     exits belong to the PolicyEvaluator. This measures pressure, not resolution.
     """
-    thr = params.get("sl_threat_r", 0.25)
+    from config_layer.strict_config import require
+    thr = require(params, "sl_threat_r", section_name="episodes.rulepack", consumer="_detect_sl_threat")
     risk = entry.risk_distance
     out = []
     for step, d in zip(steps, derived):

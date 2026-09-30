@@ -369,6 +369,10 @@ class BitNetZoneGate:
         for zone in self._zones:
             try:
                 score  = _cgs(features, zone)
+                # EPIC-84 KEPT: per the comment above, this loop's
+                # allowed/threshold/id fields feed only the standalone
+                # (non-live-consumed) return contract; also inside a
+                # try/except whose own except is a debug-log-only fallback.
                 thresh = float(zone.get("threshold", 0.7))
                 zid    = zone.get("id", "unknown")
                 all_scores.append(float(score))
@@ -460,6 +464,14 @@ class LiveEngineConfig:
         LIVE_COOLDOWN_SECONDS    : per-symbol alert cooldown (default 60)
         LIVE_DEDUP_CANDLES       : same setup dedup window in candles (default 4)
     """
+    # EPIC-84: these dataclass defaults are KEPT (not removed) — LiveEngineConfig
+    # is constructed directly with only `enabled=False` at several call sites
+    # this lane does not own (src/runtime/live_rail_orchestrator.py,
+    # src/agent/modes/pipeline_mode.py, this module's own `config or
+    # LiveEngineConfig()` at HookedLiveEngine construction) to build an inert,
+    # disabled engine for tests/paper-trading wiring, where the threshold
+    # values are irrelevant because the engine never fires. from_env() below —
+    # the one path that loads REAL values — no longer substitutes any of them.
     bot_token:              str   = ""
     chat_id:                str   = ""
     enabled:                bool  = False
@@ -470,18 +482,40 @@ class LiveEngineConfig:
     alert_cooldown_seconds: int   = 60
     dedup_candles:          int   = 4
 
+    #: Behavioural tunables from_env() requires (EPIC-84 trade-time rule does not
+    #: apply here — there is no per-trade fallback story for a magic threshold).
+    _ENV_REQUIRED = (
+        "LIVE_ENGINE_ENABLED", "LIVE_RR_THRESHOLD", "LIVE_CONF_MIN",
+        "LIVE_CONF_STRONG", "LIVE_ML_OVERRIDE", "LIVE_COOLDOWN_SECONDS",
+        "LIVE_DEDUP_CANDLES",
+    )
+
     @classmethod
     def from_env(cls) -> "LiveEngineConfig":
+        """EPIC-84: every behavioural tunable is required — a missing one used
+        to silently substitute a magic-number literal (e.g. LIVE_RR_THRESHOLD
+        absent -> 1.5); it now raises ConfigKeyMissingError naming it.
+
+        TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID stay genuinely optional: this
+        class's own validate() already documents their absence as a supported,
+        non-fatal "alerts logged only" mode (unlike TelegramBridge in
+        src/live, this module has no production config section to declare
+        them in — env is its only source).
+        """
+        from config_layer.strict_config import ConfigKeyMissingError, missing_keys
+        absent = missing_keys(os.environ, cls._ENV_REQUIRED)
+        if absent:
+            raise ConfigKeyMissingError(absent, section="env", consumer="LiveEngineConfig.from_env")
         return cls(
             bot_token              = os.environ.get("TELEGRAM_BOT_TOKEN", ""),
             chat_id                = os.environ.get("TELEGRAM_CHAT_ID",   ""),
-            enabled                = os.environ.get("LIVE_ENGINE_ENABLED", "0") == "1",
-            rr_threshold           = float(os.environ.get("LIVE_RR_THRESHOLD",    "1.5")),
-            confidence_min         = float(os.environ.get("LIVE_CONF_MIN",        "0.55")),
-            confidence_strong      = float(os.environ.get("LIVE_CONF_STRONG",     "0.60")),
-            ml_override_threshold  = float(os.environ.get("LIVE_ML_OVERRIDE",     "0.75")),
-            alert_cooldown_seconds = int(os.environ.get("LIVE_COOLDOWN_SECONDS",  "60")),
-            dedup_candles          = int(os.environ.get("LIVE_DEDUP_CANDLES",     "4")),
+            enabled                = os.environ["LIVE_ENGINE_ENABLED"] == "1",
+            rr_threshold           = float(os.environ["LIVE_RR_THRESHOLD"]),
+            confidence_min         = float(os.environ["LIVE_CONF_MIN"]),
+            confidence_strong      = float(os.environ["LIVE_CONF_STRONG"]),
+            ml_override_threshold  = float(os.environ["LIVE_ML_OVERRIDE"]),
+            alert_cooldown_seconds = int(os.environ["LIVE_COOLDOWN_SECONDS"]),
+            dedup_candles          = int(os.environ["LIVE_DEDUP_CANDLES"]),
         )
 
     def validate(self) -> list[str]:
@@ -828,8 +862,36 @@ class LiveEngine:
         -------
         dict: {decision, reason, expected_rr, confidence, ml_score, sent, suppressed_reason}
         """
-        symbol  = str(trade_data.get("symbol", "UNKNOWN"))
-        session = str(trade_data.get("session", "UNKNOWN"))
+        # EPIC-84 trade-time rule: symbol (identity) and session (a canonical
+        # feature — also hard-required by TrapValidatorEngine.CANONICAL_REQUIRED)
+        # are read before any downstream validation; a trade_data missing either
+        # is REJECTED here rather than silently alerted on as "UNKNOWN". regime
+        # stays a genuinely optional contextual tag (KEPT below — not a
+        # canonical feature, no established "always present" contract).
+        from config_layer.strict_config import missing_keys, missing_reason
+        _absent = missing_keys(trade_data, ("symbol", "session"))
+        if _absent:
+            _reason = missing_reason("trade_data", _absent)
+            log.warning(f"LiveEngine.process: REJECTED — {_reason}")
+            return {
+                "timestamp":        time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "symbol":           str(trade_data.get("symbol", "")),
+                "decision":         "BLOCK",
+                "reason":           _reason,
+                "expected_rr":      0.0,
+                "confidence":       0.0,
+                "ml_score":         None,
+                "ml_info":          None,
+                "probabilities":    None,
+                "sent":             False,
+                "suppressed_reason": None,
+            }
+
+        symbol  = str(trade_data["symbol"])
+        session = str(trade_data["session"])
+        # EPIC-84 KEPT: regime is not a canonical feature and has no
+        # established "always present" contract elsewhere — "NEUTRAL" is a
+        # legitimate catch-all classification, not a masked required value.
         regime  = str(trade_data.get("regime",  "NEUTRAL"))
 
         result = {
@@ -874,6 +936,10 @@ class LiveEngine:
             if k in trade_data
         }
         result["features"]  = feature_snapshot
+        # EPIC-84 KEPT: direction/candle_ts feed only the dedup alert_id hash
+        # and result reporting below, not the trade decision itself (that was
+        # already computed from the Gaussian model's expected_rr/confidence);
+        # neither is a canonical feature with an established required contract.
         result["direction"] = str(trade_data.get("direction", ""))
         result["candle_ts"] = trade_data.get("timestamp") or trade_data.get("candle_ts")
         # Stable per-(symbol, candle_ts, regime, direction) ID — collisions only
@@ -963,6 +1029,9 @@ class LiveEngine:
             return result
 
         # ── Step 7: Format message ────────────────────────────────────────────
+        # EPIC-84 KEPT: the trade decision (decision/reason/expected_rr/
+        # confidence) is already final by this point — time_decay only affects
+        # the displayed alert text below, not whether or what fires.
         time_decay = float(trade_data.get("time_decay_feature",
                     math.exp(-0.05 * int(trade_data.get("candles_since_sweep", 0)))))
 

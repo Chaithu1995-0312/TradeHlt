@@ -42,6 +42,7 @@ from typing import Any, Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
 # [trust-layer WS2B, 2026-06-10] R-multiple metric formulas are sourced from the
 # independent oracle so this comparator and the backtest path cannot drift. The
 # oracle is the shared authority for win-rate / expectancy / drawdown in R.
@@ -125,7 +126,7 @@ def compute_legacy_levels(
     close        = float(features.get("close", entry))
     atr          = float(features.get("atr", 0.0))
     intent       = derive_intent_from_features(features, direction)
-    sl_mult      = float(cfg.get("legacy_sl_atr_mult", 1.0))
+    sl_mult      = float(require(cfg, "legacy_sl_atr_mult", section_name="analytics", consumer="sl_tp_comparator"))
     tp_mult_key  = _DEFAULT_LEGACY_TP_MULTS.get(intent, "legacy_tp_atr_mult_breakout")
     tp_mult      = float(cfg.get(tp_mult_key, 2.0))
 
@@ -323,8 +324,8 @@ class SLTPComparator:
         cfg: contents of the "sl_tp_comparison" config section.
         """
         self._cfg            = cfg
-        self._max_candles    = int(cfg.get("max_candles_per_trade", 100))
-        self._primary_metric = str(cfg.get("primary_metric", "expectancy_rr"))
+        self._max_candles    = int(require(cfg, "max_candles_per_trade", section_name="analytics", consumer="sl_tp_comparator"))
+        self._primary_metric = str(require(cfg, "primary_metric", section_name="analytics", consumer="sl_tp_comparator"))
 
     @classmethod
     def from_prod_config(cls) -> "SLTPComparator":

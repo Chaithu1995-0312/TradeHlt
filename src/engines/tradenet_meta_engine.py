@@ -122,6 +122,12 @@ class TradeNetMetaEngine:
                 return _fallback
 
             # ── Meta-context extraction ───────────────────────────────────────
+            # EPIC-84 KEPT (this whole block): this class's own module
+            # docstring documents "Fail-safe contract: any exception returns
+            # neutral fallback" — a sibling engine's result missing a "score"
+            # key degrading to the neutral prior 0.5 (or 0.3/0.0 for the
+            # market-state/liquidity fields) is that same documented
+            # graceful-degradation contract, not a config-authoring gap.
             g_score    = float(gaussian_result.get("score",  0.5))
             rr_score   = float(rr_result.get("score",        0.5))
             zone_score = float(zone_result.get("score",      0.5))
@@ -284,6 +290,9 @@ class TradeNetMetaEngine:
                 return 0.5
 
             # Standardise
+            # EPIC-84 KEPT: identity-transform defaults (no centering/scaling)
+            # for a scaler dict missing mu/sigma — same fail-safe contract as
+            # the rest of this class (module docstring), mathematically inert.
             mu    = self._scaler.get("mu",    [0.0] * n)
             sigma = self._scaler.get("sigma", [1.0] * n)
             scaled = [

@@ -132,7 +132,7 @@ def test_prod_version_restored_after_run():
     from research.adapters.spine_signal_source import ProductionSpineSource
 
     pc_before, bt_before = pc.PROD_VERSION, bt.PROD_VERSION
-    src = ProductionSpineSource()
+    src = ProductionSpineSource(config_path="configs/research/research_config_spine.json")
     # Real instrument (CSV resolves) but a non-existent registry version, so the failure
     # lands INSIDE the try-block AFTER PROD_VERSION is set — exercising finally-restore
     # without launching a real backtest.

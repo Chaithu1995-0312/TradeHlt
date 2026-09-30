@@ -13,6 +13,7 @@
   "model_selection": {
     "mode": "all",
     "families": [],
+    "versions": {},
     "include_missing_artifacts": true,
     "hypotheses": []
   },

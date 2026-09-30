@@ -108,7 +108,14 @@ class LiveRailOrchestrator:
         breaker = CircuitBreaker(fail_count_disable=cfg.reconnect.fail_count_disable)
         if port is None:
             port = build_port(cfg, breaker, policy)
-        ultron = UltronRiskGate(get_prod_section("ultron_risk_gate"))
+        # D11 (2026-09-30): sizing bridge context -- same declared instrument_specs +
+        # deposit-currency rate live_engine_hook's construction site uses, so this
+        # paper-rail gate and the main live hook can never disagree in units.
+        ultron = UltronRiskGate(
+            get_prod_section("ultron_risk_gate"),
+            instrument_specs=get_prod_section("instrument_specs"),
+            usd_inr_rate=float(get_prod_section("capital_management")["usd_to_inr_rate"]),
+        )
         risk = UltronLiveAdapter(ultron, paper_balance=cfg.portfolio.paper_balance)
         if cfg.order_venue is not OrderVenue.PAPER:
             raise RuntimeError("factory refused non-paper order_venue")

@@ -24,12 +24,13 @@ import logging
 import time
 from pathlib import Path
 from typing import Any
+from config_layer.strict_config import (
+    ConfigKeyMissingError, require, require_all, require_section,
+)
 
 logger = logging.getLogger("FindingsSynthesizer")
 
 _FINDINGS_LOG = "logs/agent_findings.jsonl"
-_DEFAULT_LOG_TAIL = 200
-_DEFAULT_MAX_SOURCE_CHARS = 8000
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -198,11 +199,13 @@ def synthesize_finding(run_id: str) -> dict:
     # Pull config for caps
     try:
         from config_layer.production_config import get_prod_section
-        agent_cfg = get_prod_section("agent") or {}
-    except Exception:
-        agent_cfg = {}
-    findings_cfg = agent_cfg.get("findings") or {}
-    if not findings_cfg.get("enabled", True):
+        agent_cfg = get_prod_section("agent")
+    except Exception as exc:
+        raise ConfigKeyMissingError(
+            ["agent"], section="<root>", consumer="findings_synthesizer",
+        ) from exc
+    findings_cfg = require_section(agent_cfg, "findings", consumer="findings_synthesizer")
+    if not require(findings_cfg, "enabled", section_name="agent.findings", consumer="findings_synthesizer"):
         finding = {
             "ts": _now_iso(), "run_id": run_id, "status": "disabled_in_config",
             "summary": "", "anomalies": [], "recommended_next": [],
@@ -211,8 +214,18 @@ def synthesize_finding(run_id: str) -> dict:
         _append_finding(finding)
         return finding
 
-    log_tail_lines = int(findings_cfg.get("log_tail_lines", _DEFAULT_LOG_TAIL))
-    max_source_chars = int(findings_cfg.get("max_source_chars", _DEFAULT_MAX_SOURCE_CHARS))
+    log_tail_lines = int(require(
+        findings_cfg, "log_tail_lines",
+        section_name="agent.findings", consumer="findings_synthesizer",
+    ))
+    max_source_chars = int(require(
+        findings_cfg, "max_source_chars",
+        section_name="agent.findings", consumer="findings_synthesizer",
+    ))
+    groq_cfg = require_section(agent_cfg, "groq", consumer="findings_synthesizer")
+    model_name = require(
+        groq_cfg, "model", section_name="agent.groq", consumer="findings_synthesizer",
+    )
 
     # Gather context
     log_paths = run.get("log_paths") or {}
@@ -243,7 +256,7 @@ def synthesize_finding(run_id: str) -> dict:
             "summary": "", "anomalies": [], "recommended_next": [],
             "prompt_hash": _hash16(prompt),
             "response_hash": None,
-            "model": (agent_cfg.get("groq") or {}).get("model", "llama-3.1-70b-versatile"),
+            "model": model_name,
             "latency_ms": latency_ms,
             "error": "Groq client returned empty (key missing, circuit open, or network)",
         }
@@ -261,7 +274,7 @@ def synthesize_finding(run_id: str) -> dict:
         "recommended_next": [str(r)[:300] for r in (parsed.get("recommended_next") or [])][:10],
         "prompt_hash": _hash16(prompt),
         "response_hash": _hash16(response),
-        "model": (agent_cfg.get("groq") or {}).get("model", "llama-3.1-70b-versatile"),
+        "model": model_name,
         "latency_ms": latency_ms,
         "error": None if parsed else "LLM returned non-JSON or malformed JSON",
     }

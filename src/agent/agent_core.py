@@ -33,6 +33,7 @@ from .intent_router import IntentRouter
 from .plan_compiler import PlanCompiler
 from .state import AgentState
 from .tool_planner import ArgFiller
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
 
 logger = logging.getLogger("AgentCore")
 
@@ -48,25 +49,25 @@ _SKIP_RULES = [
 class AgentCore:
     def __init__(self, config: dict):
         self._cfg = config
-        audit_path  = config.get("audit_log_path", "logs/agent_audit.jsonl")
+        audit_path  = require(config, "audit_log_path", section_name="agent", consumer="agent_core")
         intent_path = "logs/agent_intent_log.jsonl"
-        self._session_dir = config.get("session_dir", "logs/agent_sessions")
-        self._max_iters   = config.get("max_iterations_per_turn", 6)
+        self._session_dir = require(config, "session_dir", section_name="agent", consumer="agent_core")
+        self._max_iters   = require(config, "max_iterations_per_turn", section_name="agent", consumer="agent_core")
 
         self.audit  = AuditLogger(audit_path=audit_path, intent_path=intent_path)
         self.state  = AgentState()
         self.executor = Executor(
             state=self.state,
             audit=self.audit,
-            write_tools_enabled=config.get("write_tools_enabled", []),
+            write_tools_enabled=require(config, "write_tools_enabled", section_name="agent", consumer="agent_core"),
         )
 
-        ir_cfg = config.get("intent_router", {})
+        ir_cfg = require(config, "intent_router", section_name="agent", consumer="agent_core")
         self.intent_router = IntentRouter(
             llm_chat_fn=self._llm_chat,
-            patterns_path=ir_cfg.get("regex_fallback_table", "src/agent/prompts/intent_patterns.json"),
-            use_llm=ir_cfg.get("use_llm", True),
-            confidence_floor=ir_cfg.get("llm_confidence_floor", 0.6),
+            patterns_path=require(ir_cfg, "regex_fallback_table", section_name="agent", consumer="agent_core"),
+            use_llm=require(ir_cfg, "use_llm", section_name="agent", consumer="agent_core"),
+            confidence_floor=require(ir_cfg, "llm_confidence_floor", section_name="agent", consumer="agent_core"),
         )
         self.arg_filler = ArgFiller(llm_chat_fn=self._llm_chat)
 
@@ -159,7 +160,7 @@ class AgentCore:
             filled = self.arg_filler.fill(
                 tool_name=step.tool,
                 args_schema=spec.args_schema,
-                current_args=dict(step.default_args),
+                current_args={k: v for k, v in step.default_args.items()},
                 conversation=self.state.messages,
             )
             if filled.get("clarify"):
@@ -233,11 +234,11 @@ class AgentCore:
             f"kind={goal.kind} instruments={goal.instruments or ['—']}"
         )
 
-        def _fill(tool_name: str, schema: dict, defaults: dict) -> dict:
+        def _fill(tool_name: str, schema: dict, base_args: dict) -> dict:
             return self.arg_filler.fill(
                 tool_name=tool_name,
                 args_schema=schema,
-                current_args=dict(defaults),
+                current_args=dict(base_args),
                 conversation=self.state.messages,
             )
 

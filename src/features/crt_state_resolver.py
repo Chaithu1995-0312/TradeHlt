@@ -438,6 +438,14 @@ class CRTStateResolver:
         self._counts: dict[str, int] = {}
         self._transition_count: int = 0
         self._lifecycle = self._load_lifecycle()
+        # EPIC-84 KEPT (this site and every other `self._config.get("thresholds",
+        # {})` in this file — 13 total, see _install_crtconfig_thresholds above,
+        # called at construction before any of them run): the outer "thresholds"
+        # key is GUARANTEED present via `self._config.setdefault("thresholds", {})`
+        # — this `{}` fallback is unreachable, not a live config gap. Individual
+        # threshold keys within `thr[...]` are already bare-indexed (raise if
+        # absent) everywhere except the two F-069-documented flags below and the
+        # nested "lifecycle" sub-block (itself also setdefault-guaranteed).
         # B1: SWEEP detector geometry (research shadow only — not production engine)
         thr0 = self._config.get("thresholds", {})
         geom = str(thr0.get("sweep_geometry", "htf_range")).strip().lower()
@@ -1274,6 +1282,9 @@ class CRTStateResolver:
         """
         stateful = set(self._encoder.stateful_features)
         declared: dict[str, set[str]] = {}
+        # EPIC-84 KEPT: "feature_states" is deliberately NOT in required_keys
+        # (_load_config below — version/states/valid_transitions/thresholds
+        # are) — a config declaring none legitimately has nothing to validate.
         for fname, snames in self._config.get("feature_states", {}).items():
             declared[fname] = set(snames)
             if fname not in stateful:
@@ -1387,6 +1398,9 @@ class CRTStateResolver:
                     f"unknown variant {variant!r}; declared: {sorted(variants) or 'none'}"
                 )
             spec = variants[variant] or {}
+            # EPIC-84 KEPT: a variant declaring no `links` legitimately enables
+            # zero optional links — a meaningful empty state, and the
+            # requested set is validated (unknown ids raise) right below.
             requested = {str(x).strip() for x in (spec.get("links") or [])}
             unknown = sorted(requested - known)
             if unknown:
@@ -1644,6 +1658,12 @@ class CRTStateResolver:
                 self._last_funnel_site = "funnel_displacement"
                 return "DISPLACEMENT"
         thr = self._config.get("thresholds", {})
+        # EPIC-84 FLAGGED, NOT FIXED: continuous_disp_to_expansion IS declared
+        # in configs/formulas/market_crt_states.yaml (currently `false`) — this
+        # is the exact flag F-069 (VALIDATED/Certain, docs/current-findings.md)
+        # documents as a settled, heavily-analyzed construction difference.
+        # Converting to strict here risks behavior on that scrutinized path;
+        # left unchanged rather than touched blind in a mechanical cleanup pass.
         if (
             cur == "DISPLACEMENT"
             and bool(thr.get("continuous_disp_to_expansion", False))
@@ -2050,6 +2070,11 @@ class CRTStateResolver:
         if atr is None:
             return None
         thr = self._config.get("thresholds", {})
+        # EPIC-84 FLAGGED, NOT FIXED: same reasoning as
+        # continuous_disp_to_expansion above — expansion_atr_is_relative IS
+        # declared in configs/formulas/market_crt_states.yaml (currently
+        # `true`, matching this default); left unchanged given F-069's
+        # documented sensitivity of this exact threshold cluster.
         relative = bool(thr.get("expansion_atr_is_relative", True))
         close = raw.get("close")
         if relative and close is not None and close > 0:

@@ -82,6 +82,9 @@ class MLGaussianEngine:
 
             reg_data = registry._load()
             entry = reg_data.get(active_version, {})
+            # EPIC-84 KEPT: legacy on-disk registry entry normalization (same
+            # pattern as ema_momentum_kernel's GaussianRegistry), not a
+            # config-authoring fallback.
             model_file = entry.get("model_file", f"{active_version}.json")
 
             # Strip leading "models/" prefix: load_gaussian_model prepends MODELS_DIR
@@ -98,6 +101,8 @@ class MLGaussianEngine:
             self._model_version = active_version
             self._load_failed = False
             if isinstance(_meta, dict):
+                # EPIC-84 KEPT: feeds the explicit refusal check immediately
+                # below ("refuse rather than truncate") — not a silent accept.
                 self._feature_schema_resolved = list(
                     _meta.get("feature_schema_resolved") or []
                 )

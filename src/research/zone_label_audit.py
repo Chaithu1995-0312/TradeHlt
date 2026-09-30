@@ -79,7 +79,9 @@ def honest_outcome(opp: dict, candles, ts_to_idx) -> object | None:
         return None
     entry = float(opp["entry"])
     sl = float(opp["sl"])
-    tp = float(opp.get("tp", entry))
+    if "tp" not in opp:
+        return None
+    tp = float(opp["tp"])
     risk = abs(entry - sl)
     if risk <= 0:
         return None

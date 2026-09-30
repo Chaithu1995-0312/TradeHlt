@@ -101,7 +101,7 @@ class AlphaVantageFetcherConfig:
     start_date: str       # "YYYY-MM-DD" inclusive
     end_date: str         # "YYYY-MM-DD" exclusive
     output_dir: Path
-    request_delay_s: float = 1.2  # delay between monthly API calls (rate limiting)
+    request_delay_s: float  # delay between monthly API calls (rate limiting)
 
     @classmethod
     def from_prod_config(cls, prod_cfg: dict) -> "AlphaVantageFetcherConfig":
@@ -120,7 +120,7 @@ class AlphaVantageFetcherConfig:
             start_date=str(_require(section, "start_date")),
             end_date=str(_require(section, "end_date")),
             output_dir=Path(str(_require(section, "output_dir"))),
-            request_delay_s=float(section.get("request_delay_s", 1.2)),
+            request_delay_s=float(_require(section, "request_delay_s")),
         )
 
 

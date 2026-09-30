@@ -12,10 +12,15 @@ from research.config import ResearchConfig
 from research.runner import HypothesisRunner, edge_report_json
 
 _CFG = {
+    "job_kind": "unspecified",
     "harness": {"warmup": 20, "window_size": 64, "min_samples": 10},
-    "forward_walk": {"max_forward": 20, "trail_mult": 0.5},
+    "forward_walk": {"max_forward": 20, "trail_mult": 0.5, "exit_model": "intrabar_fixed"},
     "signal": {"apply_signal_defaults": True, "sl_atr_mult": 1.0, "tp_atr_mult": 2.0},
-    "costs": {"round_trip_bps": 12.0},
+    "costs": {"cost_model": "flat_bps", "round_trip_bps": 12.0},
+    "qualification": {
+        "min_samples": 30, "expectancy_min": 0.0, "pf_min": 1.0, "oos_split": 0.3,
+        "oos_retention_min": 0.5, "n_permutations": 2000, "significance_alpha": 0.05,
+    },
     "universe": {"data_dir": "data", "pattern": "*_M15.csv", "instruments": "ALL"},
 }
 

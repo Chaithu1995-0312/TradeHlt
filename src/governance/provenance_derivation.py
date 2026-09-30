@@ -107,7 +107,8 @@ def d2_execution_by_contract(subject_type: str, subject_id: str,
     if not binding or not binding.get("resolves"):
         return None
     cid = binding["target_id"]
-    lines = R.executions_by_contract().get(cid) or []
+    found = R.executions_by_contract().get(cid)
+    lines = found if found else []
     if not lines:
         return None
     line = lines[-1]

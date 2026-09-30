@@ -34,6 +34,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from core.dynamic_threshold import DynamicThreshold  # noqa: F401 — re-export for backward compat
+from config_layer.strict_config import require_all
 
 log = logging.getLogger("DecisionEngine")
 
@@ -41,7 +42,8 @@ log = logging.getLogger("DecisionEngine")
 # FIX 1 — DYNAMIC THRESHOLD (implementation lives in core/dynamic_threshold.py)
 # ─────────────────────────────────────────────────────────────────────────────
 
-_FALLBACK_TOP_N = 3  # default; overridden by decision_engine.fallback_top_n in production config
+# EPIC-84 STORY-84.2: _FALLBACK_TOP_N (3) and the threshold_window=1000 keyword default are gone —
+# both are declared decision_engine keys (``fallback_top_n``, ``threshold_window``), required.
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -89,12 +91,28 @@ def _require_decision_cfg(config: Any, key: str) -> float:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class DecisionEngine:
-    def __init__(self, config=None, threshold_window: int = 1000, fallback_n: int | None = None):
+    #: Every decision_engine key read at construction (one require_all; no defaults).
+    _REQUIRED_KEYS: tuple[str, ...] = (
+        "score_threshold",
+        "p_win_threshold",
+        "weak_link_weight",
+        "weak_component_threshold",
+        "threshold_percentile",
+        "threshold_min",
+        "threshold_max",
+        "threshold_window",
+        "fallback_top_n",
+    )
+
+    def __init__(self, config=None, fallback_n: int | None = None):
         if config is None:
             raise ValueError(
                 "DecisionEngine requires a config dict. "
                 "Pass the decision_engine section from v1_multi_2026_03.json."
             )
+        if isinstance(config, dict):
+            require_all(config, self._REQUIRED_KEYS,
+                        section_name="decision_engine", consumer="DecisionEngine")
         self.config = config
         self.score_threshold          = _require_decision_cfg(config, "score_threshold")
         self.p_win_threshold          = _require_decision_cfg(config, "p_win_threshold")
@@ -106,13 +124,13 @@ class DecisionEngine:
         # BEHAVIORAL knobs read fail-fast from config (no silent defaults): the percentile
         # + clamp bounds were previously hardcoded module constants in dynamic_threshold.py.
         self._dynamic_threshold = DynamicThreshold(
-            threshold_window,
+            int(_require_decision_cfg(config, "threshold_window")),
             percentile=int(_require_decision_cfg(config, "threshold_percentile")),
             t_min=_require_decision_cfg(config, "threshold_min"),
             t_max=_require_decision_cfg(config, "threshold_max"),
         )
-        # FIX 4 — fallback_top_n: prefer config key, then explicit arg, then module default
-        _cfg_fallback_n = int(config.get("fallback_top_n", _FALLBACK_TOP_N)) if isinstance(config, dict) else _FALLBACK_TOP_N
+        # FIX 4 — fallback_top_n: explicit arg overrides the (required) config key.
+        _cfg_fallback_n = int(_require_decision_cfg(config, "fallback_top_n"))
         self._fallback_n = fallback_n if fallback_n is not None else _cfg_fallback_n
 
     # ── Single-signal evaluation ──────────────────────────────────────────────

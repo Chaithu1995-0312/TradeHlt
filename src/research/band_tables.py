@@ -153,8 +153,11 @@ def classify_capture(mfe_r: float, rr_achieved: float, table: dict[str, Any]) ->
             if eps < mfe_r < params["unstable_threshold"]:
                 return name, None
         elif name == "CAPTURE_NEGATIVE":
-            threshold = params.get("unstable_threshold",
-                                    _guard_params(guards, "CAPTURE_UNSTABLE")["unstable_threshold"])
+            from config_layer.strict_config import require
+            threshold = require(
+                params, "unstable_threshold",
+                section_name="CAPTURE_NEGATIVE.params", consumer="classify_capture",
+            )
             if mfe_r >= threshold and rr_achieved < 0:
                 return name, None
         elif name == "CAPTURE_VIOLATION":

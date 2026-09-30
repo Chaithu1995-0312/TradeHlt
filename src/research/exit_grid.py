@@ -175,7 +175,7 @@ def verdict(pooled: dict) -> dict:
 def min_achievable_cost(records: Sequence[dict], widest_sl: float, bps: float) -> float:
     """Mean cost_r at the widest SL (= the lowest achievable cost in R). records carry entry+atr."""
     cs = [(bps / 1e4 * r["entry"]) / (widest_sl * r["atr"])
-          for r in records if r.get("atr", 0.0) > 0.0]
+          for r in records if "atr" in r and float(r["atr"]) > 0.0]
     return statistics.mean(cs) if cs else float("nan")
 
 

@@ -16,8 +16,13 @@ from retrieval import RetrievalPipeline
 from retrieval.config import build_default_config
 from retrieval.retriever import ContextAssembly, Retriever
 from retrieval.truth_tier import extract_ids
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
 
-_ENTERPRISE_MODE = os.environ.get("RAG_ENTERPRISE_MODE", "1") == "1"
+def _env_required(name: str, consumer: str) -> str:
+    if name not in os.environ:
+        raise ConfigKeyMissingError([name], section="env", consumer=consumer)
+    return os.environ[name]
+
 _pipeline: RetrievalPipeline | None = None
 
 
@@ -129,7 +134,8 @@ class GroundingGate:
 
     @staticmethod
     def is_active() -> bool:
-        return _ENTERPRISE_MODE
+        # Read at use, not import: a missing var must fail the grounding call, not every importer.
+        return _env_required("RAG_ENTERPRISE_MODE", "claude_integration") == "1"
 
     def verify(self, query: str, ground: bool = True) -> dict[str, Any]:
         ctx = self.pipeline.retrieve_assembly(query, top_k=10)

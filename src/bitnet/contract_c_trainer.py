@@ -63,22 +63,44 @@ _KNOWN_FM: Dict[str, str] = {
 
 @dataclass
 class TrainerConfig:
-    label_contract_id: str = "BITNET_LABEL_ATR_RACE_BULL_V1"
-    input_dim: int = DEFAULT_INPUT_DIM
-    hidden_dim: int = DEFAULT_HIDDEN_DIM
-    latent_dim: int = DEFAULT_LATENT_DIM
-    n_residual_blocks: int = DEFAULT_N_RESIDUAL_BLOCKS
-    defaults_profile: str = DEFAULTS_PROFILE
-    warmup: int = 60
-    bar_filter_min_retest_depth: float = 0.05
-    bar_filter_id: str = "retest_depth_gt_0.05_FM021"
-    holdout_fraction: float = 0.2
-    epochs: int = 30
-    lr: float = 1e-3
-    batch_size: int = 64
-    seed: int = 42
-    weight_decay: float = 1e-4
-    max_samples: Optional[int] = None  # cap for tests / smoke
+    label_contract_id: str
+    input_dim: int
+    hidden_dim: int
+    latent_dim: int
+    n_residual_blocks: int
+    defaults_profile: str
+    warmup: int
+    bar_filter_min_retest_depth: float
+    bar_filter_id: str
+    holdout_fraction: float
+    epochs: int
+    lr: float
+    batch_size: int
+    seed: int
+    weight_decay: float
+    max_samples: Optional[int]  # cap for tests / smoke
+
+
+def running_trainer_config() -> TrainerConfig:
+    """The TrainerConfig that ``train_and_export(cfg=None)`` used to build."""
+    return TrainerConfig(
+        label_contract_id="BITNET_LABEL_ATR_RACE_BULL_V1",
+        input_dim=DEFAULT_INPUT_DIM,
+        hidden_dim=DEFAULT_HIDDEN_DIM,
+        latent_dim=DEFAULT_LATENT_DIM,
+        n_residual_blocks=DEFAULT_N_RESIDUAL_BLOCKS,
+        defaults_profile=DEFAULTS_PROFILE,
+        warmup=60,
+        bar_filter_min_retest_depth=0.05,
+        bar_filter_id="retest_depth_gt_0.05_FM021",
+        holdout_fraction=0.2,
+        epochs=30,
+        lr=1e-3,
+        batch_size=64,
+        seed=42,
+        weight_decay=1e-4,
+        max_samples=None,
+    )
 
 
 @dataclass
@@ -590,7 +612,8 @@ def train_and_export(
 
     synthetic=True builds fake data (tests only).
     """
-    cfg = cfg or TrainerConfig()
+    if cfg is None:
+        cfg = running_trainer_config()
     label = get_label_contract(cfg.label_contract_id)
 
     try:

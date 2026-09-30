@@ -37,6 +37,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Sequence
 
+from config_layer.strict_config import require_all, require_section
+
 from research.contracts import Outcome
 from research.costs import CostModel
 from research.measurement.metrics import EdgeAggregator
@@ -72,15 +74,21 @@ class RegimeConfig:
 
     @classmethod
     def from_dict(cls, d: dict) -> "RegimeConfig":
-        r = d.get("regime", {})
+        r = require_section(d, "regime", consumer="RegimeConfig")
+        k = require_all(
+            r,
+            ["atr_period", "tercile_window", "lag_k", "min_cell_samples",
+             "harmful_margin", "redundant_tol", "null_relabelings"],
+            section_name="regime", consumer="RegimeConfig",
+        )
         return cls(
-            atr_period=int(r.get("atr_period", 14)),
-            tercile_window=int(r.get("tercile_window", 480)),
-            lag_k=int(r.get("lag_k", 50)),
-            min_cell_samples=int(r.get("min_cell_samples", 30)),
-            harmful_margin=float(r.get("harmful_margin", 0.05)),
-            redundant_tol=float(r.get("redundant_tol", 0.05)),
-            null_relabelings=int(r.get("null_relabelings", 200)),
+            atr_period=int(k["atr_period"]),
+            tercile_window=int(k["tercile_window"]),
+            lag_k=int(k["lag_k"]),
+            min_cell_samples=int(k["min_cell_samples"]),
+            harmful_margin=float(k["harmful_margin"]),
+            redundant_tol=float(k["redundant_tol"]),
+            null_relabelings=int(k["null_relabelings"]),
         )
 
     @classmethod

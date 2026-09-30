@@ -13,6 +13,12 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
+
+def _env_required(name: str, consumer: str) -> str:
+    if name not in os.environ:
+        raise ConfigKeyMissingError([name], section="env", consumer=consumer)
+    return os.environ[name]
 
 _GROQ_URL     = "https://api.groq.com/openai/v1/chat/completions"
 _GROQ_MODEL   = "llama-3.1-8b-instant"   # llama3-8b-8192 decommissioned 2026-05
@@ -252,7 +258,7 @@ class RunReportAPI:
             {"ok": False, "error":    "<reason>"}           on any failure
         """
         _load_dotenv()
-        api_key = os.environ.get("GROQ_API_KEY", "").strip()
+        api_key = _env_required("GROQ_API_KEY", "report_api").strip()
         if not api_key:
             return {"ok": False, "error": "GROQ_API_KEY not set in environment (add to .env or export)"}
 

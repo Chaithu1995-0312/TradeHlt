@@ -341,13 +341,16 @@ def _q_guarantees(idx: SemanticIndex, target: str) -> Answer:
         rows.append(_row(f"{bid} protects: {boundary.get('invariant_protected')}", PROVEN,
                          ["docs/governance/semantic_os/boundaries.yaml"], bid))
         contract = boundary.get("contract") or {}
-        for guarantee in contract.get("guarantees") or []:
+        guarantees = contract.get("guarantees")
+        for guarantee in guarantees if isinstance(guarantees, list) else []:
             rows.append(_row(f"{bid} guarantees: {guarantee}", PROVEN,
                              ["docs/governance/semantic_os/boundaries.yaml"], bid))
-        for non in contract.get("non_guarantees") or []:
+        non_guarantees = contract.get("non_guarantees")
+        for non in non_guarantees if isinstance(non_guarantees, list) else []:
             rows.append(_row(f"{bid} explicitly does NOT guarantee: {non}", PROVEN,
                              ["docs/governance/semantic_os/boundaries.yaml"], bid))
-        for test_path in contract.get("enforced_by_tests") or []:
+        enforced = contract.get("enforced_by_tests")
+        for test_path in enforced if isinstance(enforced, list) else []:
             exists = (_ROOT / test_path).is_file()
             rows.append(_row(
                 f"{bid} enforced by {test_path}" + ("" if exists else " (MISSING ON DISK)"),

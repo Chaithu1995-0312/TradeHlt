@@ -8,6 +8,7 @@ from copy import deepcopy
 from pathlib import Path
 from datetime import datetime, timezone
 
+from config_layer.strict_config import require
 from src.expansion.policy_schema import (
     ExpansionPlan, ExpansionStep, ExpansionResult,
     MAX_STEPS_PER_PARAM,
@@ -261,7 +262,10 @@ def save_expansion_configs(result: ExpansionResult, output_dir: str = "results/e
     import os
     os.makedirs(output_dir, exist_ok=True)
 
-    base_version = result.baseline["config"].get("version", "unknown")
+    base_version = require(
+        result.baseline["config"], "version",
+        section_name="expansion.baseline", consumer="save_expansion_configs",
+    )
     saved = []
 
     for slot in result.configs:

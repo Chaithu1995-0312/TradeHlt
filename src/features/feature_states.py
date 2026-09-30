@@ -93,6 +93,10 @@ class FeatureStateEncoder:
                         )
                     value_to_state[value] = str(st["name"])
 
+                # EPIC-84 KEPT (both .get() below): safe navigation immediately
+                # followed by a strict check — category is required and raises
+                # if absent; a missing lineage.vector_key legitimately means
+                # "non-vector stateful identity" (index=None below).
                 category = (spec.get("taxonomy") or {}).get("category")
                 if not isinstance(category, str) or not category:
                     # Mandatory schema-wide (validate_registry enforces it too); a stateful

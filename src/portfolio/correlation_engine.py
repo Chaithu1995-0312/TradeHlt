@@ -12,6 +12,9 @@ from typing import Optional
 import numpy as np
 
 from src.utils.integrity_events import emit_integrity_event
+from config_layer.strict_config import (
+    ConfigKeyMissingError, require, require_all, require_section,
+)
 
 log = logging.getLogger(__name__)
 
@@ -23,12 +26,7 @@ _HIGH_CORR = 0.8
 _MED_CORR  = 0.4
 _LOW_CORR  = 0.2
 
-# ── Defaults (override via portfolio.correlation in prod config) ──────────────
-_DEFAULT_LOOKBACK_DAYS    = 20
-_DEFAULT_CACHE_TTL_SECS   = 3600
-_DEFAULT_MIN_OBSERVATIONS = 10
-_DEFAULT_MAX_STALENESS    = 3
-_FETCH_BUFFER_DAYS        = 10        # weekends/holidays buffer
+_FETCH_BUFFER_DAYS = 10        # weekends/holidays buffer
 
 _SOURCE = "correlation_engine"
 
@@ -64,12 +62,13 @@ class CorrelationEngine:
         fetcher=None,
     ):
         if config is None:
+            from src.config_layer.production_config import get_prod_section
             try:
-                from src.config_layer.production_config import get_prod_section
-                config = get_prod_section("portfolio") or {}
+                config = get_prod_section("portfolio")
             except Exception as exc:
-                log.warning("CorrelationEngine: prod config unavailable (%s) — using defaults", exc)
-                config = {}
+                raise ConfigKeyMissingError(
+                    ["portfolio"], section="<root>", consumer="CorrelationEngine",
+                ) from exc
         self._config = config
 
         if fetcher is None:
@@ -84,11 +83,23 @@ class CorrelationEngine:
                 fetcher = None
         self._fetcher = fetcher
 
-        corr_cfg = (config or {}).get("correlation", {})
-        self._lookback_days  = int(corr_cfg.get("lookback_days",     _DEFAULT_LOOKBACK_DAYS))
-        self._cache_ttl      = float(corr_cfg.get("cache_ttl_secs", _DEFAULT_CACHE_TTL_SECS))
-        self._min_obs        = int(corr_cfg.get("min_observations", _DEFAULT_MIN_OBSERVATIONS))
-        self._max_stale_days = int(corr_cfg.get("max_staleness_days", _DEFAULT_MAX_STALENESS))
+        corr_cfg = require_section(config, "correlation", consumer="CorrelationEngine")
+        self._lookback_days = int(require(
+            corr_cfg, "lookback_days",
+            section_name="portfolio.correlation", consumer="CorrelationEngine",
+        ))
+        self._cache_ttl = float(require(
+            corr_cfg, "cache_ttl_secs",
+            section_name="portfolio.correlation", consumer="CorrelationEngine",
+        ))
+        self._min_obs = int(require(
+            corr_cfg, "min_observations",
+            section_name="portfolio.correlation", consumer="CorrelationEngine",
+        ))
+        self._max_stale_days = int(require(
+            corr_cfg, "max_staleness_days",
+            section_name="portfolio.correlation", consumer="CorrelationEngine",
+        ))
 
         self._cache: Optional[_CorrMatrix] = None
         self._default_correlation = 0.0
@@ -143,8 +154,8 @@ class CorrelationEngine:
         No hardcoded list — automatic coverage of whatever the system trades."""
         try:
             from src.config_layer.production_config import get_prod_section
-            di    = get_prod_section("data_ingestion") or {}
-            inout = get_prod_section("inout") or {}
+            di    = get_prod_section("data_ingestion")
+            inout = get_prod_section("inout")
         except Exception as exc:
             emit_integrity_event(
                 "CORRELATION_CONFIG_UNAVAILABLE", "WARNING", _SOURCE,

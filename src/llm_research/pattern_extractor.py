@@ -49,14 +49,14 @@ RULES:
 @dataclass
 class ExtractedPolicy:
     """Policy extracted from historical trade data by LLM."""
-    rules: list[str] = field(default_factory=list)
-    filters: list[dict] = field(default_factory=list)
-    boosters: list[dict] = field(default_factory=list)
-    weights: dict = field(default_factory=dict)
-    confidence_formula: str = ""
-    tier_rules: dict = field(default_factory=dict)
-    source: str = "llm"     # "llm" | "fallback"
-    trade_count_analyzed: int = 0
+    rules: list[str]
+    filters: list[dict]
+    boosters: list[dict]
+    weights: dict
+    confidence_formula: str
+    tier_rules: dict
+    source: str     # "llm" | "fallback"
+    trade_count_analyzed: int
 
 
 def extract_patterns(

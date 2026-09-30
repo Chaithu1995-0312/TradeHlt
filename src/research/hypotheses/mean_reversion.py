@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
+from config_layer.strict_config import require
 from research.contracts import Signal
 from research.indicators import atr, sma
 from research.registry import register_hypothesis
@@ -51,7 +52,8 @@ class MeanReversion:
             return []
 
         return [Signal(
-            instrument=ctx.get("instrument", "UNKNOWN"), timestamp=bar.timestamp,
+            instrument=require(ctx, "instrument", section_name="bar_context",
+                               consumer="MeanReversion"), timestamp=bar.timestamp,
             entry_index=bar.index, direction=direction, entry=float(bar.close),
             sl_atr_mult=self.sl_atr_mult, tp_atr_mult=self.tp_atr_mult, atr=a,
             meta={"stretch_atr": round(dist / a, 4) if a else 0.0, "ma_period": self.ma_period},

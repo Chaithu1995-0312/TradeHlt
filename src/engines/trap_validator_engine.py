@@ -28,10 +28,29 @@ CRT_OPTIONAL = ["body_ratio", "disp_strength", "retest_depth"]
 
 
 class TrapValidatorEngine:
+    #: Every key this class reads from its config dict (EPIC-84: declared once).
+    _CFG_KEYS = ("min_atr", "allowed_sessions")
+
     def __init__(self, config: dict):
+        """EPIC-84: min_atr/allowed_sessions used to fall back to code literals
+        (0.0005 / [asia, london, new_york]) if absent from `config`.
+
+        `config` here is NOT the full production config — engine_runner.py's
+        real caller (backtest_v2.py: `_er_cfg = dict(get_prod_section(
+        "engine_runner"))`) passes the FLATTENED `engine_runner` section, so
+        these two keys are read at `config`'s top level, matching
+        `configs/production/*.json`'s `engine_runner.min_atr` /
+        `engine_runner.allowed_sessions` — both of which are ALREADY declared
+        there (0.0003 / [london, new_york, overlap], not the old code
+        literals, which never actually fired on this call path). No new
+        config declaration was needed for this fix.
+        """
+        from config_layer.strict_config import require_all
         self.config = config
-        self.min_atr = config.get("min_atr", 0.0005)
-        self.allowed_sessions = config.get("allowed_sessions", ["asia", "london", "new_york"])
+        cfg = require_all(config, self._CFG_KEYS, section_name="engine_runner",
+                          consumer="TrapValidatorEngine")
+        self.min_atr = cfg["min_atr"]
+        self.allowed_sessions = cfg["allowed_sessions"]
 
     def compute(self, input_data: dict) -> dict:
         # --- Gate 0: Data integrity sentinel ---

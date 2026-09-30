@@ -199,7 +199,7 @@ def run_forward_test(
         hybrid=hybrid,
         forward_rows=len(forward_rows),
         train_rows=len(train_rows),
-        policy_source=getattr(policy, "_source", "unknown"),
+        policy_source=policy._source,
     )
 
 

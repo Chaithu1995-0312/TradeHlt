@@ -29,7 +29,7 @@ import asyncio
 import datetime
 import logging
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 
@@ -168,8 +168,8 @@ class HummingbotFetcherConfig:
     start_date: str
     end_date: str
     output_dir: Path
-    instruments: List[str] = field(default_factory=list)
-    max_records_per_request: int = 500
+    instruments: List[str]
+    max_records_per_request: int
 
     @classmethod
     def from_prod_config(cls, prod_cfg: dict) -> "HummingbotFetcherConfig":
@@ -182,8 +182,8 @@ class HummingbotFetcherConfig:
             start_date=str(_require(s, "start_date")),
             end_date=str(_require(s, "end_date")),
             output_dir=Path(str(_require(s, "output_dir"))),
-            instruments=list(s.get("instruments", [])),
-            max_records_per_request=int(s.get("max_records_per_request", 500)),
+            instruments=list(_require(s, "instruments")),
+            max_records_per_request=int(_require(s, "max_records_per_request")),
         )
 
     @classmethod
@@ -196,8 +196,8 @@ class HummingbotFetcherConfig:
             start_date=str(_require(section, "start_date")),
             end_date=str(_require(section, "end_date")),
             output_dir=Path(str(_require(section, "output_dir"))),
-            instruments=list(section.get("instruments", [])),
-            max_records_per_request=int(section.get("max_records_per_request", 500)),
+            instruments=list(_require(section, "instruments")),
+            max_records_per_request=int(_require(section, "max_records_per_request")),
         )
 
 
@@ -300,6 +300,11 @@ class HummingbotCandleFetcher:
 
     def fetch_all_instruments(self) -> List[Path]:
         """Fetch candles for every instrument listed in config.instruments."""
+        # EPIC-84 KEPT: not a config read (instruments/trading_pair are already
+        # DECLARED-and-required by HummingbotFetcherConfig) — this composes two
+        # already-validated fields; an empty declared `instruments` list means
+        # "single-instrument mode", which is the documented behaviour, not a
+        # config-authoring omission.
         targets = self._cfg.instruments or [self._cfg.trading_pair]
         paths: List[Path] = []
         for instr in targets:

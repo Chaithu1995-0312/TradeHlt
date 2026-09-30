@@ -19,6 +19,7 @@ from pathlib import Path
 from statistics import median
 from typing import Any, Optional
 
+from config_layer.strict_config import require
 from research.ohlcv_probe_report import (
     CLOCK_BASIS,
     SOURCE_LIVE,
@@ -329,9 +330,9 @@ def snap_from_dict(raw: dict) -> ProbeSnapshot:
     skew = raw.get("wall_clock_skew_seconds")
     return ProbeSnapshot(
         fetched_at=datetime.fromisoformat(raw["fetched_at"]),
-        symbol=str(raw.get("symbol") or "XAUUSD"),
-        source=str(raw.get("source") or SOURCE_SYNTHETIC),
-        clock_basis=str(raw.get("clock_basis") or CLOCK_BASIS),
+        symbol=str(require(raw, "symbol", section_name="probe_snap", consumer="snap_from_dict")),
+        source=str(require(raw, "source", section_name="probe_snap", consumer="snap_from_dict")),
+        clock_basis=str(require(raw, "clock_basis", section_name="probe_snap", consumer="snap_from_dict")),
         terminal=raw.get("terminal"),
         wall_clock_skew_seconds=None if skew is None else float(skew),
         payload=raw.get("payload") or {},

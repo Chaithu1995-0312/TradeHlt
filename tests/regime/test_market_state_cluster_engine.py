@@ -57,6 +57,9 @@ def _make_cluster_stats(
     )
 
 
+_REPLAY = {"market_state_entropy": 0.5, "transition_probability": 0.2}
+
+
 def _base_features(**overrides) -> dict:
     base = {
         "volatility_ratio":          1.0,
@@ -94,7 +97,7 @@ def test_trend_expansion_from_stats():
         # candles_since_sweep=0 — suppresses BREAKOUT's +0.10 recency bonus
         candles_since_sweep=0,
     )
-    result = engine.classify(features, cluster_stats=cs)
+    result = engine.classify(features, cluster_stats=cs, replay_features=_REPLAY)
     assert result.market_state == TREND_EXPANSION, (
         f"Expected TREND_EXPANSION, got {result.market_state}"
     )
@@ -111,7 +114,7 @@ def test_range_trap_from_stats():
         sweep_detected=1.0,
         double_sweep=1.0,
     )
-    result = engine.classify(features, cluster_stats=cs)
+    result = engine.classify(features, cluster_stats=cs, replay_features=_REPLAY)
     assert result.market_state == RANGE_TRAP, (
         f"Expected RANGE_TRAP, got {result.market_state}"
     )
@@ -135,16 +138,16 @@ def test_cooldown_prevents_chattering():
     feat_trap  = _base_features(sweep_detected=1.0, double_sweep=1.0)
 
     # First call sets initial state
-    r0 = engine.classify(feat_trend, cluster_stats=cs_trend)
+    r0 = engine.classify(feat_trend, cluster_stats=cs_trend, replay_features=_REPLAY)
     initial_state = r0.market_state
 
     # Alternate inputs rapidly — state should NOT change within cooldown window
     states = [initial_state]
     for i in range(cooldown - 1):
         if i % 2 == 0:
-            r = engine.classify(feat_trap,  cluster_stats=cs_trap)
+            r = engine.classify(feat_trap,  cluster_stats=cs_trap, replay_features=_REPLAY)
         else:
-            r = engine.classify(feat_trend, cluster_stats=cs_trend)
+            r = engine.classify(feat_trend, cluster_stats=cs_trend, replay_features=_REPLAY)
         states.append(r.market_state)
 
     # All within-cooldown states should match initial (cooldown suppresses transitions)
@@ -195,7 +198,7 @@ def test_volatile_reversal():
         volume_spike=1.0,
         volatility_ratio=2.5,
     )
-    result = engine.classify(features, cluster_stats=cs)
+    result = engine.classify(features, cluster_stats=cs, replay_features=_REPLAY)
     assert result.market_state == VOLATILE_REVERSAL, (
         f"Expected VOLATILE_REVERSAL, got {result.market_state}"
     )

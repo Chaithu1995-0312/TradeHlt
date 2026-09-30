@@ -128,7 +128,12 @@ def build_dataset_entry(features: dict, label: int, meta: dict = None) -> dict:
 
 
 def build_dataset(records: list, output_path: str = None) -> list:
-    """Build full dataset from list of (features, label) tuples."""
+    """Build full dataset from list of (features, label) tuples.
+
+    EPIC-84 KEPT: grep-confirmed zero real callers repo-wide (the live
+    dataset-building path is config_layer.rr.rr_dataset_builder.build_dataset,
+    a different module) — these defaults are inert, not a live fallback.
+    """
     dataset = []
     for i, record in enumerate(records):
         if isinstance(record, dict):

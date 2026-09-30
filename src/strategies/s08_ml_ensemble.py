@@ -53,6 +53,7 @@ except Exception:
     _BITNET_AVAILABLE = False
 
 from config_layer.production_config import get_prod_section   # type: ignore
+from config_layer.strict_config import ConfigKeyMissingError, require_all
 from strategies.base_strategy import BaseStrategy              # type: ignore
 from strategies.strategy_result import StrategyResult          # type: ignore
 from utils.logging_config import get_flow_logger               # type: ignore
@@ -63,12 +64,18 @@ if not _BITNET_AVAILABLE:
     logger.warning("S8: bitnet_inference unavailable — using feature scorer only")
 
 
+_S08MLEnsemble_KEYS = ("min_score", "sl_atr_mult", "tp_rr_ratio", "min_confidence", "bitnet_weight", "feature_weight", "rsi_weight", "momentum_weight", "macd_weight", "volume_weight", "trend_weight")
+
 def _load_s8_cfg() -> dict:
-    se = get_prod_section("strategy_engine") or {}
-    cfg = se.get("s08_ml_ensemble", {})
-    if not cfg:
-        logger.warning("strategy_engine.s08_ml_ensemble missing — using defaults")
-    return cfg
+    se = get_prod_section("strategy_engine")
+    if "s08_ml_ensemble" not in se:
+        raise ConfigKeyMissingError(
+            ["s08_ml_ensemble"], section="strategy_engine", consumer="S08MLEnsemble",
+        )
+    return require_all(
+        se["s08_ml_ensemble"], _S08MLEnsemble_KEYS,
+        section_name="strategy_engine.s08_ml_ensemble", consumer="S08MLEnsemble",
+    )
 
 
 class S08MLEnsemble(BaseStrategy):
@@ -88,8 +95,15 @@ class S08MLEnsemble(BaseStrategy):
         config: Optional[dict] = None,
     ) -> None:
         super().__init__(pair, timeframe, config)
-        if not S08MLEnsemble._cfg_s8:
-            S08MLEnsemble._cfg_s8 = _load_s8_cfg()
+        if config is not None:
+            self._cfg_s8 = require_all(
+                config, _S08MLEnsemble_KEYS,
+                section_name="strategy_engine.s08_ml_ensemble", consumer="S08MLEnsemble",
+            )
+        else:
+            if not S08MLEnsemble._cfg_s8:
+                S08MLEnsemble._cfg_s8 = _load_s8_cfg()
+            self._cfg_s8 = S08MLEnsemble._cfg_s8
 
     @property
     def strategy_id(self) -> str:
@@ -97,12 +111,12 @@ class S08MLEnsemble(BaseStrategy):
 
     def compute(self, features: dict, candle: dict) -> StrategyResult:
         cfg = self._cfg_s8
-        min_score: float = float(cfg.get("min_score", 0.60))
-        sl_mult: float = float(cfg.get("sl_atr_mult", 1.5))
-        tp_rr: float = float(cfg.get("tp_rr_ratio", 2.0))
-        min_conf: float = float(cfg.get("min_confidence", 0.58))
-        bn_weight: float = float(cfg.get("bitnet_weight", 0.40))
-        feat_weight: float = float(cfg.get("feature_weight", 0.60))
+        min_score: float = float(cfg["min_score"])
+        sl_mult: float = float(cfg["sl_atr_mult"])
+        tp_rr: float = float(cfg["tp_rr_ratio"])
+        min_conf: float = float(cfg["min_confidence"])
+        bn_weight: float = float(cfg["bitnet_weight"])
+        feat_weight: float = float(cfg["feature_weight"])
 
         close = float(candle["close"])
         atr = float(features.get("atr", 0.0))
@@ -191,11 +205,11 @@ class S08MLEnsemble(BaseStrategy):
 
     def _feature_score(self, features: dict, atr: float, cfg: dict) -> float:
         """Weighted combination of five normalised sub-scores."""
-        w_rsi = float(cfg.get("rsi_weight", 0.20))
-        w_mom = float(cfg.get("momentum_weight", 0.25))
-        w_macd = float(cfg.get("macd_weight", 0.20))
-        w_vol = float(cfg.get("volume_weight", 0.15))
-        w_trend = float(cfg.get("trend_weight", 0.20))
+        w_rsi = float(cfg["rsi_weight"])
+        w_mom = float(cfg["momentum_weight"])
+        w_macd = float(cfg["macd_weight"])
+        w_vol = float(cfg["volume_weight"])
+        w_trend = float(cfg["trend_weight"])
 
         rsi = float(features.get("rsi_14", 50.0))
         momentum = float(features.get("momentum_score", 0.0))

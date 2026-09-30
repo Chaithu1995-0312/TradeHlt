@@ -29,8 +29,24 @@ class ShadowConfig:
     bundle_dir: str
     dataset_path: str
     out_dir: str
-    instrument: str = "BNBUSDT"
-    max_rows: int | None = None
+    instrument: str
+    max_rows: int | None
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "ShadowConfig":
+        from config_layer.strict_config import require_all
+        k = require_all(
+            d,
+            ["bundle_dir", "dataset_path", "out_dir", "instrument", "max_rows"],
+            section_name="envelope_offline.shadow", consumer="ShadowConfig",
+        )
+        return cls(
+            bundle_dir=str(k["bundle_dir"]),
+            dataset_path=str(k["dataset_path"]),
+            out_dir=str(k["out_dir"]),
+            instrument=str(k["instrument"]),
+            max_rows=None if k["max_rows"] is None else int(k["max_rows"]),
+        )
 
 
 def _spearman(a: np.ndarray, b: np.ndarray) -> float | None:

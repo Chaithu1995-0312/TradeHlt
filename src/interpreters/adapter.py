@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
+from config_layer.strict_config import require
 from research.contracts import Signal
 
 from interpreters.contract import Interpreter
@@ -30,7 +31,7 @@ class InterpreterHypothesis:
         # Labels for the research registry / M4.7 rationale gate (telemetry, not
         # decisions). Reading them here does not violate identity-blindness, which is
         # about detect()'s SIGNAL logic — that uses only events (see below).
-        self.name = f"interp:{getattr(interpreter, 'name', 'unknown')}"
+        self.name = f"interp:{interpreter.name}"
         self.family = family
         self.economic_rationale = getattr(interpreter, "economic_rationale", "")
 
@@ -43,7 +44,8 @@ class InterpreterHypothesis:
             return []
 
         reading = self._interp.observe(window, features, ctx)
-        instrument = ctx.get("instrument", "UNKNOWN")
+        instrument = require(ctx, "instrument", section_name="bar_context",
+                             consumer="InterpreterHypothesis")
 
         signals: list[Signal] = []
         for ev in reading.events:

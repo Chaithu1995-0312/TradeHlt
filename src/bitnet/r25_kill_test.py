@@ -25,6 +25,7 @@ import numpy as np
 
 from bitnet.contract_c_trainer import (
     TrainerConfig,
+    running_trainer_config,
     build_dataset_from_csv,
     build_synthetic_dataset,
     compute_metrics,
@@ -62,14 +63,28 @@ R25_THRESHOLDS: Dict[str, float] = {
 class R25Config:
     """Harness knobs (not threshold laws)."""
 
-    trainer: TrainerConfig = field(default_factory=TrainerConfig)
-    n_seeds: int = 3
-    synthetic: bool = True
-    synthetic_n: int = 400
-    synthetic_signal: str = "strong"  # strong | weak | none
-    csv_paths: Optional[List[str]] = None
-    out_dir: str = "results/bitnet/r25"
-    run_name: Optional[str] = None
+    trainer: TrainerConfig
+    n_seeds: int
+    synthetic: bool
+    synthetic_n: int
+    synthetic_signal: str  # strong | weak | none
+    csv_paths: Optional[List[str]]
+    out_dir: str
+    run_name: Optional[str]
+
+
+def running_r25_config() -> R25Config:
+    """The R25Config that ``run_r25_kill_test(cfg=None)`` used to build."""
+    return R25Config(
+        trainer=running_trainer_config(),
+        n_seeds=3,
+        synthetic=True,
+        synthetic_n=400,
+        synthetic_signal="strong",
+        csv_paths=None,
+        out_dir="results/bitnet/r25",
+        run_name=None,
+    )
 
 
 def expected_calibration_error(
@@ -212,7 +227,8 @@ def run_r25_kill_test(cfg: Optional[R25Config] = None) -> Dict[str, Any]:
     Execute full R2.5 suite. Returns report dict with overall_pass and per-test rows.
     Thresholds are read only from R25_THRESHOLDS (pre-registered).
     """
-    cfg = cfg or R25Config()
+    if cfg is None:
+        cfg = running_r25_config()
     thr = dict(R25_THRESHOLDS)
     X, y, ds_meta, feature_names = load_dataset(cfg)
 

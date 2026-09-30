@@ -102,12 +102,23 @@ def _label_one(
 
 @dataclass
 class AuditConfig:
-    label_contract_id: str = DEFAULT_LABEL_CONTRACT_ID
-    warmup: int = DEFAULT_WARMUP
-    bar_filter_min_retest_depth: float = DEFAULT_BAR_FILTER
-    holdout_fraction: float = DEFAULT_HOLDOUT
+    label_contract_id: str
+    warmup: int
+    bar_filter_min_retest_depth: float
+    holdout_fraction: float
     # Optional: also report mirror short ATR race (diagnostic only; not CONTRACT-C)
-    include_bearish_mirror_diagnostic: bool = True
+    include_bearish_mirror_diagnostic: bool
+
+
+def running_audit_config() -> AuditConfig:
+    """The AuditConfig that ``audit_csv(cfg=None)`` used to build."""
+    return AuditConfig(
+        label_contract_id=DEFAULT_LABEL_CONTRACT_ID,
+        warmup=DEFAULT_WARMUP,
+        bar_filter_min_retest_depth=DEFAULT_BAR_FILTER,
+        holdout_fraction=DEFAULT_HOLDOUT,
+        include_bearish_mirror_diagnostic=True,
+    )
 
 
 def audit_csv(csv_path: str | Path, cfg: Optional[AuditConfig] = None) -> Dict[str, Any]:
@@ -118,7 +129,8 @@ def audit_csv(csv_path: str | Path, cfg: Optional[AuditConfig] = None) -> Dict[s
     import pandas as pd
     from features.feature_pipeline import FeaturePipeline
 
-    cfg = cfg or AuditConfig()
+    if cfg is None:
+        cfg = running_audit_config()
     label = get_label_contract(cfg.label_contract_id)
     tp_m = float(label["tp_atr_mult"])
     sl_m = float(label["sl_atr_mult"])
@@ -384,7 +396,8 @@ def audit_many(
     cfg: Optional[AuditConfig] = None,
 ) -> Dict[str, Any]:
     """Audit multiple datasets; return combined report."""
-    cfg = cfg or AuditConfig()
+    if cfg is None:
+        cfg = running_audit_config()
     per_file: List[Dict[str, Any]] = []
     for p in csv_paths:
         log.info("Auditing %s", p)

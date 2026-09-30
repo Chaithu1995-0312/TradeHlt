@@ -61,7 +61,13 @@ def _candidate():
 
 def _cfg() -> ResearchConfig:
     # apply_signal_defaults=False → exercise the interpreter's own SL/TP geometry.
-    return dataclasses.replace(ResearchConfig.from_file(str(_CFG)), apply_signal_defaults=False)
+    # job_kind and costs.cost_model are the literals that run today; the JSON
+    # omits them until the declaration commit.
+    raw = json.loads(_CFG.read_text(encoding="utf-8"))
+    raw.setdefault("job_kind", "unspecified")
+    raw.setdefault("costs", {})
+    raw["costs"].setdefault("cost_model", "flat_bps")
+    return dataclasses.replace(ResearchConfig.from_dict(raw), apply_signal_defaults=False)
 
 
 def test_chain_runs_and_produces_edgereport():

@@ -1,4 +1,5 @@
 {
+  "job_kind": "unspecified",
   "_doc": "Program 3 (Higher-Timeframe Directional Ontology) — TOY/behaviour family x CRYPTO-MAJORS on RESAMPLED H1/H4 data. Identical to research_config_majors.json except the universe is repointed at data/resampled with a {TF} template pattern (qualify_htf substitutes H1/H4 per --tf). A NEW horizon ontology, NOT a Program-1 parameter pass.",
   "_horizon_doc": "Program 3A = BAR_COUNT_CONSTANT (PRIMARY): harness warmup/window_size/max_forward stay in BARS, so each timeframe is its own world (ATR + bar-relative horizon scale naturally). Wall-clock implication: max_forward=40 bars = 10h at M15, 40h at H1, 160h at H4. Frozen + documented so a null is interpretable as 'this bar-relative ontology failed'. Program 3B (WALL_CLOCK_CONSTANT) is pre-defined but NOT implemented; only run if 3A's verdict warrants disambiguating horizon length from timeframe structure.",
   "harness": {
@@ -17,7 +18,8 @@
     "tp_atr_mult": 2.0
   },
   "costs": {
-    "round_trip_bps": 12.0
+    "round_trip_bps": 12.0,
+    "cost_model": "flat_bps"
   },
   "qualification": {
     "min_samples": 30,

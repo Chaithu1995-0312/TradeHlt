@@ -19,13 +19,21 @@ _SRC = _ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
+from config_layer.strict_config import ConfigKeyMissingError             # noqa: E402
 from research.config import ResearchConfig                               # noqa: E402
 
+# Historical literals the old from_dict field defaults filled. job_kind stays
+# outside the hash; cost_model is required and enters the canonical dict.
 _CFG = {
+    "job_kind": "unspecified",
     "harness": {"warmup": 20, "window_size": 64, "min_samples": 10},
-    "forward_walk": {"max_forward": 20, "trail_mult": 0.5},
+    "forward_walk": {"max_forward": 20, "trail_mult": 0.5, "exit_model": "intrabar_fixed"},
     "signal": {"apply_signal_defaults": True, "sl_atr_mult": 1.0, "tp_atr_mult": 2.0},
-    "costs": {"round_trip_bps": 12.0},
+    "costs": {"cost_model": "flat_bps", "round_trip_bps": 12.0},
+    "qualification": {
+        "min_samples": 30, "expectancy_min": 0.0, "pf_min": 1.0, "oos_split": 0.3,
+        "oos_retention_min": 0.5, "n_permutations": 2000, "significance_alpha": 0.05,
+    },
     "universe": {"data_dir": "data", "pattern": "*_M15.csv", "instruments": "ALL"},
 }
 
@@ -37,7 +45,7 @@ def test_absent_entry_ttl_is_none_and_not_canonicalized():
 
 
 def test_present_entry_ttl_is_parsed_and_hashed():
-    d = {k: dict(v) for k, v in _CFG.items()}
+    d = {k: (dict(v) if isinstance(v, dict) else v) for k, v in _CFG.items()}
     d["forward_walk"]["entry_ttl"] = 12
     cfg = ResearchConfig.from_dict(d)
     assert cfg.entry_ttl == 12
@@ -52,12 +60,17 @@ def test_every_existing_research_config_stays_sha_stable():
     paths = sorted(cfg_dir.glob("*.json"))
     assert paths, f"no research configs found under {cfg_dir}"
     checked = 0
+    refused = 0
     for p in paths:
         raw = json.loads(p.read_text(encoding="utf-8"))
         if "harness" not in raw:
             continue                      # driver-specific config, not a ResearchConfig
+        try:
+            cfg = ResearchConfig.from_file(p)
+        except ConfigKeyMissingError:
+            refused += 1
+            continue
         checked += 1
-        cfg = ResearchConfig.from_file(p)
         if "entry_ttl" in raw.get("forward_walk", {}):
             assert cfg.entry_ttl == int(raw["forward_walk"]["entry_ttl"]), p.name
         else:
@@ -65,7 +78,8 @@ def test_every_existing_research_config_stays_sha_stable():
             assert "entry_ttl" not in cfg._canonical, (
                 f"{p.name}: entry_ttl leaked into the canonical hash of a config that "
                 f"does not declare it — this silently changes its published config_sha256")
-    assert checked > 0, "no ResearchConfig-format files were checked"
+    assert checked >= 1, "the one complete ResearchConfig (xauusd month) did not parse"
+    assert refused > 0, "incomplete harness files must fail closed, not fill defaults"
 
 
 def test_entry_ttl_absent_reproduces_legacy_canonical_bytes():
@@ -73,7 +87,7 @@ def test_entry_ttl_absent_reproduces_legacy_canonical_bytes():
     (regression pin: rebuilding the dict by hand yields the same canonical string)."""
     cfg = ResearchConfig.from_dict(_CFG)
     legacy = {
-        "costs": {"round_trip_bps": 12.0},
+        "costs": {"cost_model": "flat_bps", "round_trip_bps": 12.0},
         "forward_walk": {"exit_model": "intrabar_fixed", "max_forward": 20, "trail_mult": 0.5},
         "harness": {"min_samples": 10, "warmup": 20, "window_size": 64},
         "qualification": {"expectancy_min": 0.0, "min_samples": 30, "n_permutations": 2000,

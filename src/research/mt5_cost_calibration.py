@@ -85,6 +85,7 @@ except Exception:  # pragma: no cover
     pd = None  # type: ignore
     _PANDAS_AVAILABLE = False
 
+from config_layer.strict_config import ConfigKeyMissingError, require  # noqa: E402
 from mt5_analytics.core.mt5_adapter import MT5Adapter  # noqa: E402
 
 
@@ -118,18 +119,37 @@ def _worst(*statuses: Status) -> Status:
 
 @dataclass
 class CostCalibrationConfig:
-    """Value object for a cost-calibration run. No silent defaults on anything
-    that changes the economic answer -- only operational knobs get defaults."""
+    """Value object for a cost-calibration run. Every knob is explicit."""
 
-    symbol: str = "XAUUSD"
-    tick_lookback_days: int = 14
-    history_lookback_days: int = 90
-    tick_chunk_days: int = 1
-    min_stop_fills_for_confidence: int = 5   # reporting hint only -- NEVER a silent gate
-    out_dir: Path = field(
-        default_factory=lambda: _ROOT / "results" / "research" / "xauusd_mt5_cost_calibration"
-    )
-    server_utc_offset_hours: Optional[float] = None
+    symbol: str
+    tick_lookback_days: int
+    history_lookback_days: int
+    tick_chunk_days: int
+    min_stop_fills_for_confidence: int   # reporting hint only -- NEVER a silent gate
+    out_dir: Path
+    server_utc_offset_hours: Optional[float]
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "CostCalibrationConfig":
+        from config_layer.strict_config import require_all
+        k = require_all(
+            d,
+            ["symbol", "tick_lookback_days", "history_lookback_days", "tick_chunk_days",
+             "min_stop_fills_for_confidence", "out_dir", "server_utc_offset_hours"],
+            section_name="mt5_cost_calibration", consumer="CostCalibrationConfig",
+        )
+        return cls(
+            symbol=str(k["symbol"]),
+            tick_lookback_days=int(k["tick_lookback_days"]),
+            history_lookback_days=int(k["history_lookback_days"]),
+            tick_chunk_days=int(k["tick_chunk_days"]),
+            min_stop_fills_for_confidence=int(k["min_stop_fills_for_confidence"]),
+            out_dir=Path(k["out_dir"]),
+            server_utc_offset_hours=(
+                None if k["server_utc_offset_hours"] is None
+                else float(k["server_utc_offset_hours"])
+            ),
+        )
 
 
 # ── 7. MT5CostReader -- composition sibling to MT5Adapter ─────────────────────
@@ -368,7 +388,9 @@ def extract_commission(
 
     by_position: dict[int, list[dict]] = {}
     for d in deals:
-        by_position.setdefault(int(d.get("position_id", 0)), []).append(d)
+        if "position_id" not in d:
+            continue
+        by_position.setdefault(int(d["position_id"]), []).append(d)
 
     per_side_vals: list[float] = []
     per_lot_side_vals: list[float] = []
@@ -377,16 +399,17 @@ def extract_commission(
     saw_case_c = False   # commission folded onto a volume>0 leg
 
     for pid, pdeals in by_position.items():
-        total_commission = sum(float(d.get("commission", 0.0)) for d in pdeals)
-        n_sides = sum(1 for d in pdeals if float(d.get("volume", 0.0)) > 0)
+        priced = [d for d in pdeals if "commission" in d and "volume" in d]
+        total_commission = sum(float(d["commission"]) for d in priced)
+        n_sides = sum(1 for d in priced if float(d["volume"]) > 0)
         entry_volume = sum(
-            float(d.get("volume", 0.0))
-            for d in pdeals
+            float(d["volume"])
+            for d in priced
             if d.get("entry") == mt5.DEAL_ENTRY_IN
         )
-        for d in pdeals:
-            comm = float(d.get("commission", 0.0))
-            vol = float(d.get("volume", 0.0))
+        for d in priced:
+            comm = float(d["commission"])
+            vol = float(d["volume"])
             if comm != 0.0:
                 if vol == 0.0:
                     saw_case_b = True
@@ -416,7 +439,12 @@ def extract_commission(
         )
 
     info = mt5.symbol_info(symbol)
-    contract_size = float(info.trade_contract_size) if info is not None else 100.0
+    if info is None or not hasattr(info, "trade_contract_size"):
+        raise ConfigKeyMissingError(
+            ["trade_contract_size"], section="mt5.symbol_info",
+            consumer="extract_commission",
+        )
+    contract_size = float(info.trade_contract_size)
 
     per_lot_stats = _stats(per_lot_side_vals) if per_lot_side_vals else {"n": 0}
     per_oz_stats = (
@@ -505,14 +533,19 @@ def extract_slippage(
     for d in deals:
         if d.get("entry") not in (mt5.DEAL_ENTRY_IN, mt5.DEAL_ENTRY_INOUT):
             continue
-        order_ticket = int(d.get("order", 0))
+        if "order" not in d:
+            n_unmatched += 1
+            continue
+        order_ticket = int(d["order"])
         order = order_map.get(order_ticket)
         if order is None:
             n_unmatched += 1
             continue
         order_type = order.get("type")
-        price_open = float(order.get("price_open", 0.0))
-        deal_price = float(d.get("price", 0.0))
+        if "price_open" not in order or "price" not in d:
+            continue
+        price_open = float(order["price_open"])
+        deal_price = float(d["price"])
         if price_open <= 0 or deal_price <= 0:
             continue
         adverse = (deal_price - price_open) if order_type in buy_family else (price_open - deal_price)
@@ -582,11 +615,14 @@ def extract_swap(reader: MT5CostReader, symbol: str, mt5a: MT5Adapter) -> SwapRe
                  "(check --symbol; broker gold naming varies, e.g. 'GOLD', 'XAUUSD.a').",
         )
 
-    contract_size = float(info.get("trade_contract_size", 100.0))
-    point = float(info.get("point", 0.0))
+    contract_size = float(require(
+        info, "trade_contract_size", section_name="mt5.symbol_info", consumer="extract_swap"))
+    point = float(require(info, "point", section_name="mt5.symbol_info", consumer="extract_swap"))
     swap_mode = info.get("swap_mode")
-    swap_long_raw = float(info.get("swap_long", 0.0))
-    swap_short_raw = float(info.get("swap_short", 0.0))
+    swap_long_raw = float(require(
+        info, "swap_long", section_name="mt5.symbol_info", consumer="extract_swap"))
+    swap_short_raw = float(require(
+        info, "swap_short", section_name="mt5.symbol_info", consumer="extract_swap"))
 
     weekday_names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     r3d = info.get("swap_rollover3days")
@@ -669,7 +705,9 @@ def compute_c_per_side(
     # MT5 deal.commission is a signed cashflow (negative = debit/paid). Economic
     # cost per side is the absolute magnitude — never add the signed debit raw
     # or a -$0.04 commission would *reduce* reported c.
-    commission_per_oz_median = float(commission.per_oz_usd.get("p50", 0.0) or 0.0)
+    commission_per_oz_median = float(require(
+        commission.per_oz_usd, "p50", section_name="commission.per_oz_usd",
+        consumer="compose_c_per_side"))
     commission_cost = abs(commission_per_oz_median)
     half_spread = float(spread.overall_median_usd) / 2.0
     stop_slip = float(slippage.stop_slippage_median_usd)

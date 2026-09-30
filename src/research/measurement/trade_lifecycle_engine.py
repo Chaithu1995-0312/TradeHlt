@@ -1,4 +1,4 @@
-﻿"""TradeLifecycleEngine v0 — MC-JOINT-01 measurement emitter.
+"""TradeLifecycleEngine v0 — MC-JOINT-01 measurement emitter.
 
 Emit-only. Does not invent exit semantics. Wraps:
   Y_scanner  <- opportunity_scanner._simulate (trail_mult=0.5)

@@ -2,7 +2,7 @@
 governance_mode.py — Trd-M5 LLM-layer hardening: the GOVERNANCE_MODE switch.
 
 Two modes:
-  - "advisory" (default) — decision-path isolation assertions log a WARNING and
+  - "advisory" — decision-path isolation assertions log a WARNING and
     continue (preserves the fail-open doctrine: the LLM is a tie-breaker, never a
     hot-path dependency).
   - "strict" — the same assertions raise, surfacing any violation of "execution
@@ -11,32 +11,44 @@ Two modes:
 
 Resolution order (read lazily at call time — never at import, so this module adds
 no import-time config dependency):
-  1. env var ``GOVERNANCE_MODE`` (``strict`` | ``advisory``), else
-  2. production config ``governance.governance_mode``, else
-  3. ``"advisory"``.
+  1. env var ``GOVERNANCE_MODE`` (``strict`` | ``advisory``) when SET — an explicit
+     operator override, else
+  2. production config ``governance.governance_mode`` — REQUIRED (EPIC-84 STORY-84.2:
+     the literal "advisory" fallbacks and the fail-open except are gone; a missing
+     section/key raises ConfigKeyMissingError, an invalid value raises ValueError).
 """
 from __future__ import annotations
 
 import os
+
+from config_layer.strict_config import ConfigKeyMissingError, require
 
 _VALID = ("strict", "advisory")
 _CONFIG_MODE_CACHE: str | None = None
 
 
 def governance_mode() -> str:
-    """Return the active governance mode ("strict" | "advisory"). Fail-open to advisory."""
-    env = os.environ.get("GOVERNANCE_MODE", "").strip().lower()
-    if env in _VALID:
-        return env
+    """Return the active governance mode ("strict" | "advisory"). Fails closed (EPIC-84)."""
+    env = os.environ.get("GOVERNANCE_MODE")
+    if env is not None and env.strip().lower() in _VALID:
+        return env.strip().lower()
     global _CONFIG_MODE_CACHE
     if _CONFIG_MODE_CACHE is None:
+        from config_layer.production_config import get_prod_section
         try:
-            from config_layer.production_config import get_prod_section
-            gov = get_prod_section("governance") or {}
-            mode = str(gov.get("governance_mode", "advisory")).strip().lower()
-            _CONFIG_MODE_CACHE = mode if mode in _VALID else "advisory"
-        except Exception:
-            _CONFIG_MODE_CACHE = "advisory"
+            gov = get_prod_section("governance")
+        except RuntimeError as exc:  # section absent from the production config
+            raise ConfigKeyMissingError(
+                ["governance"], section="<root>", consumer="governance_mode",
+            ) from exc
+        mode = str(require(
+            gov, "governance_mode", section_name="governance", consumer="governance_mode",
+        )).strip().lower()
+        if mode not in _VALID:
+            raise ValueError(
+                f"governance.governance_mode must be one of {_VALID}, got {mode!r}"
+            )
+        _CONFIG_MODE_CACHE = mode
     return _CONFIG_MODE_CACHE
 
 

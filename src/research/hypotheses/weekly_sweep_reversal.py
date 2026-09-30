@@ -32,6 +32,7 @@ from typing import Sequence
 
 from interpreters.regime_observer import RegimeLabeler
 from research.candle_state.encoder import CandleStateEncoder
+from config_layer.strict_config import require
 from research.contracts import Signal
 from research.indicators import atr
 from research.registry import register_hypothesis
@@ -132,7 +133,8 @@ class WeeklySweepReversal:
         direction_vol_cell = f"{state.direction}/{vol_label}"
 
         return [Signal(
-            instrument=ctx.get("instrument", "UNKNOWN"),
+            instrument=require(ctx, "instrument", section_name="bar_context",
+                               consumer="WeeklySweepReversal"),
             timestamp=bar.timestamp,
             entry_index=bar.index,
             direction=ev.direction,

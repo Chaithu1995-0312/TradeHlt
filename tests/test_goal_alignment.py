@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import pytest
 
+from config_layer.strict_config import ConfigKeyMissingError
 from research.config import ResearchConfig
 from research.contracts import EdgeReport
 from research.goal_alignment import (
@@ -20,11 +21,14 @@ from research.goal_alignment import (
 
 _CFG = {
     "harness": {"warmup": 50, "window_size": 20, "min_samples": 30},
-    "forward_walk": {"max_forward": 96, "trail_mult": 1.0},
+    "forward_walk": {"max_forward": 96, "trail_mult": 1.0, "exit_model": "intrabar_fixed"},
     "signal": {"apply_signal_defaults": True, "sl_atr_mult": 1.0, "tp_atr_mult": 2.0},
-    "costs": {"round_trip_bps": 12.0},
-    "qualification": {},
-    "universe": {"data_dir": "data", "pattern": "*.csv"},
+    "costs": {"cost_model": "flat_bps", "round_trip_bps": 12.0},
+    "qualification": {
+        "min_samples": 30, "expectancy_min": 0.0, "pf_min": 1.0, "oos_split": 0.3,
+        "oos_retention_min": 0.5, "n_permutations": 2000, "significance_alpha": 0.05,
+    },
+    "universe": {"data_dir": "data", "pattern": "*.csv", "instruments": "ALL"},
 }
 
 
@@ -62,11 +66,14 @@ def test_goal_report_for_edge_returns_validator_shape():
 
 
 def test_job_kind_never_perturbs_existing_config_hash():
-    baseline = ResearchConfig.from_dict(_CFG)
-    with_kind = ResearchConfig.from_dict({**_CFG, "job_kind": "threshold_search"})
-    assert baseline.sha256() == with_kind.sha256()
-    assert with_kind.job_kind == "threshold_search"
-    assert baseline.job_kind == "unspecified"
+    unspecified = ResearchConfig.from_dict({**_CFG, "job_kind": "unspecified"})
+    threshold = ResearchConfig.from_dict({**_CFG, "job_kind": "threshold_search"})
+    assert unspecified.sha256() == threshold.sha256()
+    assert threshold.job_kind == "threshold_search"
+    assert unspecified.job_kind == "unspecified"
+    with pytest.raises(ConfigKeyMissingError) as ei:
+        ResearchConfig.from_dict(_CFG)
+    assert "job_kind" in ei.value.missing
 
 
 def test_job_kind_rejects_unknown_value():

@@ -27,6 +27,7 @@ from datetime import datetime, timezone
 from os import PathLike
 from pathlib import Path
 
+from config_layer.strict_config import require
 from governance.measurement_basis import canonicalise
 
 # Execution-reality standard shared with the live spine's governed exit model.
@@ -94,7 +95,9 @@ def truth_standard_block(
         # The flat bps figure is retained above as provenance of what WOULD have been
         # charged, so a reader can see both rulers side by side rather than only the
         # one that won.
-        block["slippage_model"] = cost_model.get("cost_model_id", "component_measured")
+        block["slippage_model"] = require(
+            cost_model, "cost_model_id", section_name="cost_model",
+            consumer="truth_standard_block")
         block["flat_bps_superseded"] = f"flat_{round_trip_bps:g}bps"
         block["cost_model"] = cost_model
     block["fill_model"] = fill_model if fill_model is not None else "perfect_stop_fill"

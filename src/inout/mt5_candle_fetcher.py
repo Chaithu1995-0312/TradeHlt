@@ -78,7 +78,10 @@ class MT5FetcherConfig:
     start_date: str        # "YYYY-MM-DD" inclusive (UTC)
     end_date: str          # "YYYY-MM-DD" exclusive (UTC)
     output_dir: Path
-    out_name: Optional[str] = None   # output stem override (canonical pair, e.g. "XAUUSD")
+    # EPIC-84: no class-level default — the sole constructor (from_section, below)
+    # always passes this explicitly. None is a declared value ("no stem override";
+    # see `stem = out_name or symbol` downstream), never a silently-applied one.
+    out_name: Optional[str]   # output stem override (canonical pair, e.g. "XAUUSD")
 
     @classmethod
     def from_section(cls, section: dict) -> "MT5FetcherConfig":
@@ -265,6 +268,10 @@ class MT5CandleFetcher:
         try:
             subs = [s.upper() for s in substrings]
             found: set = set()
+            # EPIC-84 KEPT: mt5.symbols_get() is documented to return None on a
+            # terminal-level failure (distinct from an empty tuple = no symbols);
+            # s.path is an external MT5 SymbolInfo attribute that varies by
+            # broker/symbol type. Both are external-API shape, not config.
             for s in (mt5.symbols_get() or []):
                 name = s.name.upper()
                 path = getattr(s, "path", "").upper()

@@ -75,6 +75,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 
+from config_layer.strict_config import require_all
 from data_ingestion.dataset_registry import DatasetAdmissionError, admit_csv_path
 from data_ingestion.dataset_integrity import (
     _TF_MINUTES,
@@ -305,9 +306,12 @@ def admit_corpus(
         path = Path(adm.filepath)
         _sym, tf = _parse_symbol_tf(path)
         cfg = _cfg()
-        bar_minutes = _TF_MINUTES.get((tf or "").upper()) or int(
-            cfg.get("default_bar_minutes", 15)
+        di = require_all(
+            cfg, ["default_bar_minutes"],
+            section_name="dataset_integrity", consumer="admit_corpus",
         )
+        mapped = _TF_MINUTES.get((tf or "").upper())
+        bar_minutes = int(mapped) if mapped else int(di["default_bar_minutes"])
         metrics, p_hard, p_warn = _plausibility(path, bar_minutes, cfg)
         hard.extend(p_hard)
         warns.extend(p_warn)

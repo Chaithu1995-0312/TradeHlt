@@ -42,6 +42,7 @@ if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
 from config_layer.production_config import get_prod_section   # type: ignore
+from config_layer.strict_config import ConfigKeyMissingError, require_all
 from strategies.base_strategy import BaseStrategy              # type: ignore
 from strategies.strategy_result import StrategyResult          # type: ignore
 from utils.logging_config import get_flow_logger               # type: ignore
@@ -49,12 +50,18 @@ from utils.logging_config import get_flow_logger               # type: ignore
 logger = get_flow_logger("STRATEGY_ENGINE")
 
 
+_S07NewsSentiment_KEYS = ("news_volatility_ratio", "max_spread_pct", "zone_strength_min", "sl_atr_mult", "tp_rr_ratio", "min_confidence")
+
 def _load_s7_cfg() -> dict:
-    se = get_prod_section("strategy_engine") or {}
-    cfg = se.get("s07_news_sentiment", {})
-    if not cfg:
-        logger.warning("strategy_engine.s07_news_sentiment missing — using defaults")
-    return cfg
+    se = get_prod_section("strategy_engine")
+    if "s07_news_sentiment" not in se:
+        raise ConfigKeyMissingError(
+            ["s07_news_sentiment"], section="strategy_engine", consumer="S07NewsSentiment",
+        )
+    return require_all(
+        se["s07_news_sentiment"], _S07NewsSentiment_KEYS,
+        section_name="strategy_engine.s07_news_sentiment", consumer="S07NewsSentiment",
+    )
 
 
 class S07NewsSentiment(BaseStrategy):
@@ -75,8 +82,15 @@ class S07NewsSentiment(BaseStrategy):
         config: Optional[dict] = None,
     ) -> None:
         super().__init__(pair, timeframe, config)
-        if not S07NewsSentiment._cfg_s7:
-            S07NewsSentiment._cfg_s7 = _load_s7_cfg()
+        if config is not None:
+            self._cfg_s7 = require_all(
+                config, _S07NewsSentiment_KEYS,
+                section_name="strategy_engine.s07_news_sentiment", consumer="S07NewsSentiment",
+            )
+        else:
+            if not S07NewsSentiment._cfg_s7:
+                S07NewsSentiment._cfg_s7 = _load_s7_cfg()
+            self._cfg_s7 = S07NewsSentiment._cfg_s7
 
     @property
     def strategy_id(self) -> str:
@@ -84,12 +98,12 @@ class S07NewsSentiment(BaseStrategy):
 
     def compute(self, features: dict, candle: dict) -> StrategyResult:
         cfg = self._cfg_s7
-        news_vol_ratio: float = float(cfg.get("news_volatility_ratio", 2.0))
-        max_spread: float = float(cfg.get("max_spread_pct", 0.0005))
-        zone_min: float = float(cfg.get("zone_strength_min", 0.55))
-        sl_mult: float = float(cfg.get("sl_atr_mult", 1.5))
-        tp_rr: float = float(cfg.get("tp_rr_ratio", 1.5))
-        min_conf: float = float(cfg.get("min_confidence", 0.55))
+        news_vol_ratio: float = float(cfg["news_volatility_ratio"])
+        max_spread: float = float(cfg["max_spread_pct"])
+        zone_min: float = float(cfg["zone_strength_min"])
+        sl_mult: float = float(cfg["sl_atr_mult"])
+        tp_rr: float = float(cfg["tp_rr_ratio"])
+        min_conf: float = float(cfg["min_confidence"])
 
         volatility_ratio = float(features.get("volatility_ratio", 1.0))
         spread_pct = float(features.get("spread_pct", 0.0))

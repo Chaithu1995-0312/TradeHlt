@@ -163,7 +163,10 @@ class PlanCompiler:
             return _ASK_PLAN
         return Plan(
             intent_key=intent_key,
-            steps=[ToolStep(tool=s.tool, default_args=dict(s.default_args)) for s in steps],
+            steps=[ToolStep(
+                tool=s.tool,
+                default_args={k: v for k, v in s.default_args.items()},
+            ) for s in steps],
         )
 
     @staticmethod

@@ -31,6 +31,7 @@ from typing import List, Optional
 _ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all, require_section
 if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
@@ -127,10 +128,10 @@ class MonteCarloEngine:
 
     def __init__(
         self,
-        n_simulations: int = 1000,
-        initial_capital_inr: float = 100_000.0,
-        ruin_threshold_pct: float = 0.50,
-        random_seed: Optional[int] = 42,
+        n_simulations: int,
+        initial_capital_inr: float,
+        ruin_threshold_pct: float,
+        random_seed: Optional[int],
     ) -> None:
         self.n_simulations       = n_simulations
         self.initial_capital_inr = initial_capital_inr
@@ -139,12 +140,13 @@ class MonteCarloEngine:
 
     @classmethod
     def from_prod_config(cls) -> "MonteCarloEngine":
-        cfg = (get_prod_section("uat") or {}).get("monte_carlo", {})
+        uat_cfg = get_prod_section("uat")
+        cfg = require_section(uat_cfg, "monte_carlo", consumer="MonteCarloEngine")
         return cls(
-            n_simulations       = int(cfg.get("n_simulations",       1000)),
-            initial_capital_inr = float(cfg.get("initial_capital_inr", 100_000.0)),
-            ruin_threshold_pct  = float(cfg.get("ruin_threshold_pct",  0.50)),
-            random_seed         = cfg.get("random_seed", 42),
+            n_simulations       = int(require(cfg, "n_simulations", section_name="uat.monte_carlo", consumer="monte_carlo")),
+            initial_capital_inr = float(require(cfg, "initial_capital_inr", section_name="uat.monte_carlo", consumer="monte_carlo")),
+            ruin_threshold_pct  = float(require(cfg, "ruin_threshold_pct", section_name="uat.monte_carlo", consumer="monte_carlo")),
+            random_seed         = require(cfg, "random_seed", section_name="uat.monte_carlo", consumer="monte_carlo"),
         )
 
     def run(self, trades: List[TradeOutcome], strategy_id: str = "ALL") -> MonteCarloResult:
@@ -257,7 +259,7 @@ class MonteCarloEngine:
             status=status,
         )
         logger.info(
-            "MonteCarlo %s: n=%d p_ruin=%.1%% median=INR%.0f p5=INR%.0f p95=INR%.0f status=%s",
+            "MonteCarlo %s: n=%d p_ruin=%.1f%% median=INR%.0f p5=INR%.0f p95=INR%.0f status=%s",
             strategy_id, n, p_ruin,
             result.median_equity_inr, result.pct5_equity_inr, result.pct95_equity_inr,
             status,

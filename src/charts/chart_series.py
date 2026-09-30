@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Optional, Sequence
 
 from config_layer.crt_engine_v2 import Candle
+from config_layer.strict_config import ConfigKeyMissingError, require
 from features.calendar_periods import aggregate_calendar, period_key
 from research.resample import bucket_floor, resample
 
@@ -225,10 +226,15 @@ def build_config_pin(
     # actively misleading about time.
     try:
         from config_layer.production_config import get_prod_section
-        fp = get_prod_section("feature_pipeline") or {}
-        pin["session_timestamp_basis"] = fp.get("session_timestamp_basis", "broker_local")
-    except Exception:                                           # noqa: BLE001
-        pin["session_timestamp_basis"] = "broker_local (default; config section unread)"
+        fp = get_prod_section("feature_pipeline")
+    except Exception as exc:
+        raise ConfigKeyMissingError(
+            ["feature_pipeline"], section="<root>", consumer="chart_series",
+        ) from exc
+    pin["session_timestamp_basis"] = require(
+        fp, "session_timestamp_basis",
+        section_name="feature_pipeline", consumer="chart_series",
+    )
     return pin
 
 

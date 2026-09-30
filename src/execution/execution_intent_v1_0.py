@@ -104,11 +104,19 @@ class ExecutionIntentV1:
 
     @classmethod
     def from_dict(cls, d: dict) -> "ExecutionIntentV1":
+        """Deserialize a `to_dict()` snapshot.
+
+        EPIC-84: ``to_dict()`` always emits ``state``/``created_at``/``schema_version``
+        (never omits them), so a dict missing one is a malformed/truncated record, not
+        a legitimate absence — each is read with bare indexing (raises ``KeyError``
+        naming the field), matching ``trade_id``'s existing strictness in this same
+        method rather than silently reconstructing a PROPOSED/now()/legacy snapshot.
+        """
         reason = d.get("reason")
         return cls(
             trade_id=d["trade_id"],
-            state=IntentState(d.get("state", IntentState.PROPOSED.value)),
+            state=IntentState(d["state"]),
             reason=TerminationReason(reason) if reason else None,
-            created_at=d.get("created_at", ""),
-            schema_version=d.get("schema_version", SCHEMA_VERSION),
+            created_at=d["created_at"],
+            schema_version=d["schema_version"],
         )

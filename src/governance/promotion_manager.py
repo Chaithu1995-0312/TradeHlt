@@ -83,11 +83,8 @@ VALIDATION_REJECTED_DIR:  str = "results/validation/rejected"
 # be used as a base for merging or as ACTIVE_VERSION.
 _FULL_CONFIG_SENTINEL: str = "engine_runner"
 
-# Hardcoded fallback base — always the original fully-specified config.
-# All promoted configs are merged ON TOP of this base so that every engine
-# section (engine_runner, fusion_engine, llama_gate, …) is always present
-# in the promoted file, even when the tuner only optimises the params section.
-_BASE_VERSION_FALLBACK: str = "v1_multi_2026_03"
+# Declared on governance. No scan and no v1_multi_2026_03 literal.
+_PROMOTION_BASE_KEY: str = "promotion_base_version"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -443,60 +440,45 @@ class PromotionManager:
     @staticmethod
     def _load_full_base_config(
         registry_dir: Path | None = None,
-    ) -> dict | None:
+        governance: dict | None = None,
+    ) -> dict:
         """
-        Load the best available FULL production config to use as a merge base.
+        Load the one declared full production config used as a merge base.
 
-        A "full" config is one that contains the _FULL_CONFIG_SENTINEL key
-        (``engine_runner``).  Tuner-promoted sparse configs are intentionally
-        excluded so they are never used as a base.
-
-        Search order
-        ────────────
-        1. ``_BASE_VERSION_FALLBACK`` (``v1_multi_2026_03``) — the canonical
-           baseline that always carries all engine sections.
-        2. If that file is absent or is itself sparse, scan the registry for any
-           other full config (most-recently-modified wins) to handle renamed bases.
-        3. Return ``None`` if nothing suitable is found.
-
-        Returns
-        -------
-        dict | None
-            Parsed JSON of the full base config, or None if unavailable.
+        The version file name is ``governance.promotion_base_version``. The
+        file must exist in ``registry_dir`` and contain ``engine_runner``.
+        There is no scan and no hardcoded version.
         """
+        from config_layer.production_config import get_prod_section
+        from config_layer.strict_config import ConfigKeyMissingError, require_all
+
         if registry_dir is None:
             registry_dir = Path(PRODUCTION_REGISTRY_DIR)
-
-        # ── 1. Preferred fallback ──────────────────────────────────────────
-        preferred = registry_dir / f"{_BASE_VERSION_FALLBACK}.json"
-        if preferred.exists():
-            # utf-8 explicit: production configs carry box-drawing/math glyphs in comments
-            # that break Windows' cp1252 default (the trap this session hit repeatedly
-            # elsewhere) -- bare open() here made this function unusable on Windows.
-            with open(preferred, encoding="utf-8") as f:
-                cfg = json.load(f)
-            if _FULL_CONFIG_SENTINEL in cfg:
-                return cfg
-            print(f"  ⚠️  Base fallback {_BASE_VERSION_FALLBACK}.json is itself "
-                  f"sparse (missing '{_FULL_CONFIG_SENTINEL}') — scanning registry …")
-
-        # ── 2. Scan registry for any full config ──────────────────────────
-        candidates = sorted(
-            registry_dir.glob("*.json"),
-            key=lambda p: p.stat().st_mtime,
-            reverse=True,       # newest first
-        )
-        for path in candidates:
-            # Skip archived copies and the promotion log
-            if "archived" in path.name or "promotion_log" in path.name:
-                continue
-            with open(path, encoding="utf-8") as f:
-                cfg = json.load(f)
-            if _FULL_CONFIG_SENTINEL in cfg:
-                print(f"  ℹ️  Using {path.name} as merge base (fallback scan).")
-                return cfg
-
-        return None
+        if governance is None:
+            governance = get_prod_section("governance")
+        version = str(require_all(
+            governance,
+            [_PROMOTION_BASE_KEY],
+            section_name="governance",
+            consumer="PromotionManager",
+        )[_PROMOTION_BASE_KEY])
+        path = registry_dir / f"{version}.json"
+        if not path.is_file():
+            raise ConfigKeyMissingError(
+                [_PROMOTION_BASE_KEY],
+                section="governance",
+                consumer="PromotionManager",
+            )
+        # utf-8 explicit: production configs carry glyphs that break cp1252.
+        with open(path, encoding="utf-8") as f:
+            cfg = json.load(f)
+        if _FULL_CONFIG_SENTINEL not in cfg:
+            raise ConfigKeyMissingError(
+                [_FULL_CONFIG_SENTINEL],
+                section="governance.promotion_base_version",
+                consumer="PromotionManager",
+            )
+        return cfg
 
     @staticmethod
     def _write_to_registry(entry: dict, version: str) -> dict:
@@ -532,27 +514,16 @@ class PromotionManager:
         )
 
         base_cfg = PromotionManager._load_full_base_config(registry_dir)
-        if base_cfg is not None:
-            # Deep clone base so we never mutate the loaded dict
-            merged = json.loads(json.dumps(base_cfg))
-            # Overlay only the promotion metadata — all engine sections are
-            # inherited from base and remain intact.
-            for key in _METADATA_KEYS:
-                if key in entry:
-                    merged[key] = entry[key]
-            payload = merged
-            print(f"  ℹ️  Merged promotion metadata into full base config "
-                  f"({_BASE_VERSION_FALLBACK}) — all engine sections preserved.")
-        else:
-            # No full base available — sparse write with visible warning.
-            payload = entry
-            print(
-                f"\n  ⚠️  WARNING: No full base config found "
-                f"(expected '{_BASE_VERSION_FALLBACK}.json' with "
-                f"'{_FULL_CONFIG_SENTINEL}' key).\n"
-                f"     Promoting sparse config — get_prod_section() calls for "
-                f"engine sections WILL FAIL until a full config is restored.\n"
-            )
+        # Deep clone base so we never mutate the loaded dict.
+        merged = json.loads(json.dumps(base_cfg))
+        # Overlay only the promotion metadata — all engine sections are
+        # inherited from base and remain intact.
+        for key in _METADATA_KEYS:
+            if key in entry:
+                merged[key] = entry[key]
+        payload = merged
+        print("  ℹ️  Merged promotion metadata into the declared base config "
+              "— all engine sections preserved.")
 
         if out_path.exists():
             # Archive the old version before overwriting

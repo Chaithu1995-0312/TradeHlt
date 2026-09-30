@@ -85,7 +85,7 @@
           "name": "CAPTURE_NEGATIVE",
           "priority": 2,
           "condition": "mfe_r >= unstable_threshold and rr_achieved < 0",
-          "params": {},
+          "params": {"unstable_threshold": 0.05},
           "note": "A favorable move that reversed into a negative realized value -- economically OPPOSITE to a small-but-positive value in the CAPTURE_GIVEBACK band below, and must never be pooled with it. Measured n=25,332 of 94,332 AFTER the CAPTURE_UNSTABLE guard removes its 4,007-row overlap (29,339 total rows satisfy the raw mfe_r>0-and-rr<0 condition before that subtraction)."
         },
         {

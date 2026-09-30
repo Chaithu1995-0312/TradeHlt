@@ -8,6 +8,8 @@
     "requires_mt00_pass": true,
     "note": "Lane 2 of P-CRT-LANE-02 measures POPULATION AND POWER for SEM-012 (VISUAL_CRT_TRADE_OBJECT), not economics. Sealing this JSON grants comparability only: never promotion, never fusion weight, never an Ultron or ExecutionPlanner change, never ACTIVE_VERSION control, and never G001. economic_claims_allowed stays false until mt00==PASS and mt01_matrix_coverage==COMPLETE; repo-wide that is 0/27 probes implemented and MEASUREMENT_LAYER_STATUS=OPEN. A positive diagnostic expectancy under this contract is NOT an economic validation. This contract was sealed BEFORE any detector code existed, so the definition cannot have been fitted to an observed outcome."
   },
+  "multiplicity": {"n_variants_preregistered": 2, "control": "bonferroni", "alpha_adjusted": 0.025},
+  "visual_audit_corpus_EXCLUDED": "data/XAUUSD_M15.csv",
   "population": {
     "unit_of_analysis": "trade_decision",
     "instruments": [
@@ -130,6 +132,7 @@
     "code_entrypoint": "src/research/measurement/forward_walk.py"
   },
   "exits": {
+    "ontology_id": "SEM-016",
     "exit_model_id": "EX-VCRT-INTRABAR-V1",
     "exit_family": "intrabar_fixed_sl_tp",
     "parameters": {

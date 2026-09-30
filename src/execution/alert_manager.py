@@ -6,10 +6,23 @@
 # - External hooks (Telegram, webhook) are optional and injected
 #
 import logging
+import sys
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional, Callable
 
+_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(_ROOT / "src"))
+
+from config_layer.strict_config import missing_keys, missing_reason  # noqa: E402
+
 log = logging.getLogger(__name__)
+
+#: Per-trade values this module reads from the signal payload. Absence is not a
+#: default: the alert is REJECTED with the keys named (EPIC-84 trade-time rule) —
+#: never sent with a placeholder that could be mistaken for a real signal.
+_REQUIRED_SIGNAL_KEYS = ("symbol", "action", "confidence", "rr", "risk")
 
 
 class AlertManager:
@@ -46,16 +59,25 @@ class AlertManager:
         Send a trade signal alert through all configured channels.
 
         Args:
-            signal: dict with at minimum 'symbol', 'action', 'confidence', 'rr'
+            signal: dict with required keys 'symbol', 'action', 'confidence', 'rr',
+                'risk' (EPIC-84: no field is defaulted — an incomplete signal is
+                REJECTED, never alerted on with a placeholder value)
 
         Returns:
-            dict with keys: sent (bool), message (str), symbol (str)
+            dict with keys: sent (bool), message (str), symbol (str)[, reason (str)
+            when rejected]
         """
-        symbol     = signal.get("symbol",     "?")
-        action     = signal.get("action",     "?")
-        confidence = signal.get("confidence", 0.0)
-        rr         = signal.get("rr",         0.0)
-        risk       = signal.get("risk",        0.0)
+        absent = missing_keys(signal, _REQUIRED_SIGNAL_KEYS)
+        if absent:
+            reason = missing_reason("signal", absent)
+            log.warning("AlertManager: signal REJECTED — %s", reason)
+            return {"sent": False, "message": "", "symbol": signal.get("symbol", ""), "reason": reason}
+
+        symbol     = signal["symbol"]
+        action     = signal["action"]
+        confidence = signal["confidence"]
+        rr         = signal["rr"]
+        risk       = signal["risk"]
 
         message = (
             f"TRADE SIGNAL | {symbol} | {action} | "

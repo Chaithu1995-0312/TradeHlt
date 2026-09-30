@@ -6,7 +6,10 @@
 # - Fallback: always returns SAFE-compatible regime if detection fails
 #
 import logging
+from collections.abc import Mapping
 from typing import Optional
+
+from config_layer.strict_config import ConfigKeyMissingError, require_all
 
 log = logging.getLogger(__name__)
 
@@ -67,6 +70,8 @@ class RegimeClassifier:
         """
         try:
             new_regime = self._classify_raw(features)
+        except ConfigKeyMissingError:
+            raise
         except Exception as exc:
             log.warning("RegimeClassifier: classification error (%s) — returning RANGING", exc)
             return REGIME_RANGING
@@ -95,8 +100,16 @@ class RegimeClassifier:
 
     def _classify_raw(self, features: dict) -> str:
         """Deterministic regime detection without cooldown logic."""
-        atr = float(features.get("atr", 0.5))
-        trend_score = float(features.get("trend_score", 0.5))
+        if not isinstance(features, Mapping):
+            raise TypeError(
+                f"RegimeClassifier features must be a mapping, got {type(features).__name__}"
+            )
+        vals = require_all(
+            features, ["atr", "trend_score"],
+            section_name="features", consumer="RegimeClassifier",
+        )
+        atr = float(vals["atr"])
+        trend_score = float(vals["trend_score"])
 
         # Priority 1: High volatility overrides trend detection
         if atr > self.atr_high_threshold:

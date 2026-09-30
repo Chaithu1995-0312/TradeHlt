@@ -381,7 +381,8 @@ def _script_registry_index() -> dict[str, dict]:
 
 def _config_index() -> tuple[dict[str, list[str]], dict[str, str]]:
     """file path -> config keys it consumes, plus each key's reachability verdict."""
-    graph = _read_json(_CONFIG_GRAPH) or {}
+    loaded = _read_json(_CONFIG_GRAPH)
+    graph = loaded if isinstance(loaded, dict) else {}
     verdicts: dict[str, str] = {}
     for node in graph.get("nodes") or []:
         if node.get("type") == "config_key" and node.get("id"):
@@ -549,7 +550,7 @@ def build_objects(
     if registry is not None:
         from governance.semantic_identity import derive_tier3_identities, resolve_identity_index
 
-        curated_identities = getattr(registry, "file_identities", {}) or {}
+        curated_identities = registry.file_identities
         derived_identities = derive_tier3_identities(discover_universe("code", root), curated_identities)
         identity_of = resolve_identity_index(curated_identities, derived_identities)
 

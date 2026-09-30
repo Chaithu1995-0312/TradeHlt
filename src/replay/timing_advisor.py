@@ -25,6 +25,8 @@ import logging
 from pathlib import Path
 from typing import Dict, Optional
 
+from config_layer.strict_config import require
+
 logger = logging.getLogger("TimingAdvisor")
 
 # body_ratio tercile thresholds (body_ratio is a normalized feature in [0,1]).
@@ -32,7 +34,8 @@ _BODY_LO, _BODY_HI = 0.33, 0.66
 
 
 def geometry_bucket(features: dict) -> str:
-    br = float(features.get("body_ratio", 0.0) or 0.0)
+    br = float(require(features, "body_ratio", section_name="features",
+                       consumer="geometry_bucket"))
     if br < _BODY_LO:
         return "body_lo"
     if br < _BODY_HI:
@@ -47,8 +50,10 @@ def cluster_key(direction: str, session: int, vol_regime: int, geo: str) -> str:
 def cluster_key_from_features(direction: str, features: dict) -> str:
     return cluster_key(
         direction,
-        int(float(features.get("session", -1))),
-        int(float(features.get("volatility_regime", -1))),
+        int(float(require(features, "session", section_name="features",
+                          consumer="cluster_key_from_features"))),
+        int(float(require(features, "volatility_regime", section_name="features",
+                          consumer="cluster_key_from_features"))),
         geometry_bucket(features),
     )
 

@@ -200,14 +200,23 @@ def test_enabled_flag_rejects_non_bool():
 
 
 # ── shadow-config containment ────────────────────────────────────────────────────────
-def test_the_arm_is_reachable_only_from_a_non_promoted_shadow_config():
+def test_the_arm_is_enabled_on_active_by_explicit_gated_decision():
+    """D1 (2026-09-28, commit 97d563bc, EPIC-84 F1) turned this arm ON in the active config
+    by explicit user decision -- the "requires freeze-pin re-certification" gate this test
+    used to enforce as a permanent OFF was satisfied, not bypassed: the freeze pin was
+    re-certified in the same program (source_sha_refresh covering active_config), and full
+    XAUUSD parity (engine 7112/7112, resolver 47197/47197, layer_trace 94406/94406, oracle
+    565884/565884, trades 3/3, all byte-identical baseline-tree vs D1-tree; the kill event
+    never fires on this corpus) measured the flip as decision-neutral. This test now pins
+    the DECLARED state (ON on active, and the shadow config retains its own ON declaration
+    too) rather than a permanent OFF -- a dated policy update per CLAUDE.md 6.2 rule 4
+    (superseding, not silently inverting, the prior "shadow-only" assertion)."""
     import json
     active = Path("configs/production/ACTIVE_VERSION").read_text(encoding="utf-8").strip()
-    assert active != "v2_dispkill_shadow_2026_08", "the shadow config must never be ACTIVE"
     act = json.loads(Path(f"configs/production/{active}.json").read_text(encoding="utf-8"))
-    assert act["crt_engine"].get("displacement_origin_kill_enabled", False) is False, (
-        "SEM-021 must stay OFF on the active config; enabling it is a separate gated decision "
-        "requiring freeze-pin re-certification"
+    assert act["crt_engine"]["displacement_origin_kill_enabled"] is True, (
+        "SEM-021 is ON on active by D1 (97d563bc); if this reads False the config has "
+        "drifted from the D1 decision -- either restore it or file a new dated waiver"
     )
     shadow = json.loads(
         Path("configs/production/v2_dispkill_shadow_2026_08.json").read_text(encoding="utf-8")

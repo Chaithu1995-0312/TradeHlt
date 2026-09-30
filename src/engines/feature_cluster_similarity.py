@@ -66,7 +66,13 @@ def _log_zone_debug(
     threshold: float,
     execution_mode: str,
 ) -> None:
-    """Log a structured JSON debug record at DEBUG level."""
+    """Log a structured JSON debug record at DEBUG level.
+
+    EPIC-84 KEPT (all fields below): zone_debug_config is documented as an
+    "optional dict with per-bar debug metadata" (module docstring); this
+    function only builds a DEBUG-level log record, never a trading decision —
+    absence of any field here is legitimate, not a config-authoring gap.
+    """
     record = {
         "price":              float(raw_features.get("close", raw_features.get("price", 0.0))),
         "zones_loaded":       int(zone_debug_config.get("zones_loaded_count", 0)),
@@ -95,6 +101,11 @@ def _compute_soft_zone_score(
     """
     Soft zone score: Z = w1*exp(-distance) + w2*freshness + w3*strength
     Returns float clamped to [0, 1].
+
+    EPIC-84 KEPT: neutral priors (max distance, mid freshness/strength) for
+    when zone geometry is unavailable — matches this module's own stated
+    "fail-open on registry errors" design (module docstring), not a masked
+    required config value.
     """
     distance  = float(raw_features.get("zone_distance",  1.0))
     freshness = float(raw_features.get("zone_freshness", 0.5))
@@ -295,6 +306,10 @@ def run_feature_cluster_similarity(
         _ZONE_COUNTERS["total_pass"] += 1
     else:
         _ZONE_COUNTERS["total_block"] += 1
+        # EPIC-84 KEPT: session-lifetime diagnostic counter, not a trading
+        # decision — zone_debug_config is documented optional (see module
+        # docstring); "score_below_threshold" is a sensible label for "no
+        # more specific reason was supplied", not a masked required value.
         reason = zone_debug_config.get("block_reason", "score_below_threshold") \
             if zone_debug_config else "score_below_threshold"
         _ZONE_COUNTERS["block_reason_dist"][reason] = (

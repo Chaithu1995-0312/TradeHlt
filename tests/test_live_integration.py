@@ -18,7 +18,8 @@ Tests:
     - dry_run bridge: close_position returns True
     - dry_run bridge: get_account_info returns dry_run marker
     - lot_size clamped to [lot_min, lot_max]
-    - from_prod_config() loads section without raising
+    - from_prod_config() loads the DECLARED section; a missing key raises
+      ConfigKeyMissingError (EPIC-84: no code defaults, no env fallback)
 
   register_trade_outcome
     - profit does NOT trip kill switch
@@ -31,6 +32,7 @@ Tests:
     - _get_mt5() returns MT5Bridge instance
 """
 
+import json
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -39,6 +41,10 @@ import pytest
 
 _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT / "src"))
+
+# EPIC-84: the MT5 config tests build the DECLARED section from the ACTIVE config.
+PROD = _ROOT / "configs" / "production"
+ACTIVE = (PROD / "ACTIVE_VERSION").read_text(encoding="utf-8").strip()
 
 from live.telegram_bridge import TelegramBridge
 from live.mt5_bridge import MT5Bridge
@@ -153,11 +159,31 @@ class TestMT5Bridge:
         mt5.connect()
         assert mt5.is_connected() is False
 
-    def test_from_prod_config_returns_instance(self):
-        mt5 = MT5Bridge.from_prod_config()
-        assert isinstance(mt5, MT5Bridge)
+    def test_from_prod_config_returns_instance(self, monkeypatch):
+        # EPIC-84: from_prod_config() reads the DECLARED section — it no longer
+        # substitutes code defaults, so the test supplies the declared keys.
+        data = json.loads((PROD / f"{ACTIVE}.json").read_text(encoding="utf-8"))
+        section = dict(data["live_integration"])
+        mt5 = dict(section["mt5"])
+        mt5.update({"magic": 20260501, "deviation": 20, "slippage": 3})
+        section["mt5"] = mt5
+        monkeypatch.setattr("live.mt5_bridge.get_prod_section", lambda _n: section)
+        mt5_bridge = MT5Bridge.from_prod_config()
+        assert isinstance(mt5_bridge, MT5Bridge)
         # prod config has dry_run=True and enabled=False
-        assert mt5._dry_run is True
+        assert mt5_bridge._dry_run is True
+        assert mt5_bridge._enabled is section["mt5"]["enabled"]
+
+    def test_from_prod_config_missing_key_raises(self, monkeypatch):
+        # EPIC-84: an undeclared key is a hard error, never a silent default.
+        from config_layer.strict_config import ConfigKeyMissingError
+        monkeypatch.setattr(
+            "live.mt5_bridge.get_prod_section",
+            lambda _n: {"mt5": {"enabled": False, "dry_run": True}},
+        )
+        with pytest.raises(ConfigKeyMissingError) as ei:
+            MT5Bridge.from_prod_config()
+        assert "magic" in ei.value.missing
 
 
 # ── register_trade_outcome ─────────────────────────────────────────────────────

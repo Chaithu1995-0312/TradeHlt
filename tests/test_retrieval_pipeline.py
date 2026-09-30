@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from retrieval.config import RetrievalConfig
+from retrieval.config import RetrievalConfig, build_default_config
 from retrieval.corpus import CorpusDiscoverer, Document
 from retrieval.chunking import Chunker, Chunk
 from retrieval.embedding import Embedder
@@ -35,7 +35,7 @@ from retrieval.claude_integration import EnterpriseGate
 @pytest.fixture
 def tmp_config(tmp_path: Path) -> RetrievalConfig:
     """Create a minimal config that writes to a temp directory."""
-    cfg = RetrievalConfig()
+    cfg = build_default_config()
     cfg.chroma_path = tmp_path / "chroma_db"
     cfg.repo_root = Path(__file__).resolve().parents[1]
     return cfg

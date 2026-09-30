@@ -1,4 +1,5 @@
 {
+  "job_kind": "unspecified",
   "_doc": "Edge Discovery — CRYPTO-MAJORS variant of research_config.json. Toy/behavior hypotheses + falsification controls (apply_signal_defaults=true so the runner owns SL/TP geometry). Universe pinned to the four crypto majors for the 'Run the Gate First' cross-instrument qualification (per-instrument then pooled). Spine is NOT measured here — it needs apply_signal_defaults=false; see research_config_spine_majors.json.",
   "harness": {
     "warmup": 30,
@@ -16,7 +17,8 @@
     "tp_atr_mult": 2.0
   },
   "costs": {
-    "round_trip_bps": 12.0
+    "round_trip_bps": 12.0,
+    "cost_model": "flat_bps"
   },
   "qualification": {
     "min_samples": 30,

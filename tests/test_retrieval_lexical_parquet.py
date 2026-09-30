@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import math
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Callable
 
@@ -351,9 +351,9 @@ def test_stem_boost_beats_json_record_snippet(tmp_path: Path) -> None:
     _write_parquet(cfg.chunks_jsonl().with_suffix(".parquet"), chunks)
     _write_parquet(cfg.postings_jsonl().with_suffix(".parquet"), postings)
     try:
-        from retrieval.config import RetrievalConfig
+        from retrieval.config import build_default_config
 
-        real = RetrievalConfig(index_dir=cfg.index_dir)
+        real = replace(build_default_config(), index_dir=cfg.index_dir)
         for name in (
             "bm25_k1",
             "bm25_b",
@@ -383,9 +383,9 @@ def test_candidate_pool_and_filters_still_work(tmp_path: Path) -> None:
     """Larger candidate_n keeps fixture order; filters still partition classes."""
     cfg = _materialize(tmp_path / "rag")
     try:
-        from retrieval.config import RetrievalConfig
+        from retrieval.config import build_default_config
 
-        real = RetrievalConfig(index_dir=cfg.index_dir, candidate_n=400)
+        real = replace(build_default_config(), index_dir=cfg.index_dir, candidate_n=400)
         for name in (
             "bm25_k1",
             "bm25_b",
@@ -458,9 +458,9 @@ def test_file_route_architecture_ranks_gold_first(tmp_path: Path) -> None:
     cfg = _FixtureConfig(index_dir=tmp_path / "rag-arch")
     _write_parquet(cfg.chunks_jsonl().with_suffix(".parquet"), chunks)
     _write_parquet(cfg.postings_jsonl().with_suffix(".parquet"), postings)
-    from retrieval.config import RetrievalConfig
+    from retrieval.config import build_default_config
 
-    real = RetrievalConfig(index_dir=cfg.index_dir)
+    real = replace(build_default_config(), index_dir=cfg.index_dir)
     for name in (
         "bm25_k1",
         "bm25_b",
@@ -516,9 +516,9 @@ def test_file_route_explicit_path_still_routes(tmp_path: Path) -> None:
     cfg = _FixtureConfig(index_dir=tmp_path / "rag-path")
     _write_parquet(cfg.chunks_jsonl().with_suffix(".parquet"), chunks)
     _write_parquet(cfg.postings_jsonl().with_suffix(".parquet"), postings)
-    from retrieval.config import RetrievalConfig
+    from retrieval.config import build_default_config
 
-    real = RetrievalConfig(index_dir=cfg.index_dir)
+    real = replace(build_default_config(), index_dir=cfg.index_dir)
     idx = LexicalIndex(real)
     hits = idx.search("explain src/engines/crt_engine.py behavior", top_k=5)
     assert hits

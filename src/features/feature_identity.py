@@ -84,6 +84,7 @@ def load_identity_registry(path: str | None = None) -> dict:
     if not p.is_file():
         raise FileNotFoundError(f"feature identity registry missing: {p}")
     data = _load_json(p)
+    # EPIC-84 KEPT: immediately validated below (raises if empty).
     identities = data.get("identities") or []
     if not identities:
         raise FeatureIdentityError(f"empty identities in {p}")
@@ -111,6 +112,9 @@ def load_identity_registry(path: str | None = None) -> dict:
 
 
 def _as_identity(row: dict) -> FeatureIdentity:
+    # EPIC-84 KEPT (every .get() below): core identity fields above use bare
+    # indexing (raise if absent) — these are documentation/metadata fields
+    # (descriptions, units, legacy-alias lists), deliberately optional.
     return FeatureIdentity(
         feature_id=row["feature_id"],
         canonical_name=row["canonical_name"],
@@ -160,6 +164,9 @@ def resolve_by_name(
     for ident in all_identities(path):
         if ident.canonical_name == name:
             matches.append(ident)
+        # EPIC-84 KEPT: legacy_names is always a list by construction
+        # (_as_identity above: `list(row.get("legacy_names") or [])`) —
+        # unreachable None-guard, not a live fallback.
         elif allow_legacy_alias and name in (ident.legacy_names or []):
             matches.append(ident)
     # de-dupe by feature_id
@@ -192,6 +199,8 @@ def assert_consumer_binding(
             f"{ident.formula_id}@{ident.formula_version}, "
             f"consumer requested {formula_id}@{formula_version}"
         )
+    # EPIC-84 KEPT: consumer_bindings is always a list by construction
+    # (_as_identity: `list(row.get("consumer_bindings") or [])`).
     bound = {
         c if isinstance(c, str) else c.get("consumer")
         for c in (ident.consumer_bindings or [])

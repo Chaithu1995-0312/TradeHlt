@@ -25,6 +25,7 @@ _SRC = str(Path(__file__).resolve().parent.parent)
 if _SRC not in sys.path:
     sys.path.insert(0, _SRC)
 
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
 import agent  # noqa: F401 — triggers modes import → tool registration
 
 
@@ -75,7 +76,7 @@ def main() -> None:
     args = parser.parse_args()
 
     config = _load_config()
-    if not config.get("enabled", True):
+    if not require(config, "enabled", section_name="agent", consumer="cli"):
         print("Agent disabled in config (agent.enabled=false).")
         sys.exit(0)
 
@@ -89,7 +90,7 @@ def main() -> None:
         try:
             core.state = AgentState.load(
                 args.resume,
-                session_dir=config.get("session_dir", "logs/agent_sessions"),
+                session_dir=require(config, "session_dir", section_name="agent", consumer="cli"),
             )
             print(f"[resumed session {args.resume}]")
         except FileNotFoundError:

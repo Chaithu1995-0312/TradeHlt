@@ -1,4 +1,5 @@
 {
+  "job_kind": "unspecified",
   "_doc": "Program 4b -- Forward Markov P^H regime-TRANSITION forecast (toy family). Identical harness/forward_walk/signal/cost/qualification/universe/regime blocks to research_config_regime.json (Program 4's toy config) so the toy consumers (expansion_breakout, mean_reversion) are measured in the IDENTICAL court -- the only change is which label series conditions them (predicted Sh_{t+H} via MarkovRegimeForecaster, not the contemporaneous S_t via RegimeLabeler). lag_k is set to 8 (= H, per the pre-registration's explicit hardening: 'lag_k = forecast horizon H', NOT Program 4's lag_k=50) so the lagged-regime control tests the forward forecast against a naive same-horizon-stale one. The spine consumer is measured via the EXISTING, unmodified research_config_spine_majors.json (apply_signal_defaults=false), exactly as Program 4 does. The new top-level 'markov' block is read directly by the driver (scripts/research/qualify_regime_transition.py), NOT by ResearchConfig/RegimeConfig -- same pattern as the existing 'regime' block. FROZEN parameters per docs/research-readiness/program-4b-transition-preregistration.md section 5 -- do NOT grid these after a null (anti-archaeology, ONE shot).",
   "harness": {
     "warmup": 30,
@@ -16,7 +17,8 @@
     "tp_atr_mult": 2.0
   },
   "costs": {
-    "round_trip_bps": 12.0
+    "round_trip_bps": 12.0,
+    "cost_model": "flat_bps"
   },
   "qualification": {
     "min_samples": 30,

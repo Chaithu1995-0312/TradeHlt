@@ -17,6 +17,24 @@ from research.envelope_offline.train import (
 )
 
 
+def _train(dataset_path: str, out_dir: str, **overrides) -> TrainConfig:
+    fields = dict(
+        instrument="BNBUSDT",
+        max_rows=None,
+        train_frac=0.60,
+        val_frac=0.20,
+        seed=42,
+        max_depth=6,
+        max_iter=100,
+        learning_rate=0.08,
+        min_samples_leaf=40,
+        dataset_path=dataset_path,
+        out_dir=out_dir,
+    )
+    fields.update(overrides)
+    return TrainConfig(**fields)
+
+
 def test_time_split_ordered():
     ei = np.arange(500, dtype=float)
     rng = np.random.default_rng(0)
@@ -47,7 +65,7 @@ def test_refuses_wrong_protocol(tmp_path: Path):
     (tmp_path / "dataset_meta.json").write_text(
         json.dumps({"protocol_id": "TN_ENV_CLEAN_L1"}), encoding="utf-8"
     )
-    cfg = TrainConfig(dataset_path=str(ds), out_dir=str(tmp_path / "out"))
+    cfg = _train(str(ds), str(tmp_path / "out"))
     with pytest.raises(ValueError, match="TN_ENV_CLEAN_L2"):
         run_offline_train(cfg)
 
@@ -90,12 +108,8 @@ def test_train_synthetic_signal(tmp_path: Path):
         encoding="utf-8",
     )
     out = tmp_path / "out"
-    cfg = TrainConfig(
-        dataset_path=str(ds),
-        out_dir=str(out),
-        max_depth=3,
-        max_iter=40,
-        min_samples_leaf=10,
+    cfg = _train(
+        str(ds), str(out), max_depth=3, max_iter=40, min_samples_leaf=10,
     )
     bundle = run_offline_train(cfg)
     assert bundle["charter_id"] == CHARTER_ID

@@ -45,6 +45,9 @@ def _load_capital_cfg() -> dict:
     return cfg
 
 
+from config_layer.strict_config import require as _strict_require
+
+
 def _require(cfg: dict, key: str) -> object:
     if key not in cfg:
         raise KeyError(
@@ -162,12 +165,10 @@ class BaseStrategy(ABC):
         """USD pip value per standard lot for the given pair."""
         value = _PIP_VALUE_PER_LOT.get(pair)
         if value is None:
-            logger.warning(
-                "pip_value_per_lot missing for %s — defaulting to 10.0 USD. "
-                "Add it to capital_management.pip_value_per_lot in production config.",
-                pair,
-            )
-            return 10.0
+            return float(_strict_require(
+                _CAPITAL_CFG, "unknown_pair_pip_value",
+                section_name="capital_management", consumer="BaseStrategy",
+            ))
         return float(value)
 
     def _pips_per_unit(self) -> float:

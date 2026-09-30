@@ -49,11 +49,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
+from config_layer.strict_config import (
+    ConfigKeyMissingError,
+    require,
+    require_all,
+    require_section,
+)
+
 log = logging.getLogger("research.adapters.spine")
 
-# Default spine research config (carries the `spine` + `universe` blocks this source reads).
-# Overridable via env RESEARCH_SPINE_CONFIG so `run`/`qualify`/forensics stay consistent.
-DEFAULT_SPINE_CONFIG = "configs/research/research_config_spine.json"
+_CONSUMER = "ProductionSpineSource"
 
 
 @dataclass(frozen=True)
@@ -104,7 +109,14 @@ class ProductionSpineSource:
     def __init__(self, config_path: str | None = None, *,
                  out_root: str = "results/research/_spine_entries") -> None:
         import os
-        self._config_path = config_path or os.environ.get("RESEARCH_SPINE_CONFIG", DEFAULT_SPINE_CONFIG)
+        if config_path:
+            self._config_path = config_path
+        elif "RESEARCH_SPINE_CONFIG" in os.environ:
+            self._config_path = os.environ["RESEARCH_SPINE_CONFIG"]
+        else:
+            raise ConfigKeyMissingError(
+                ["RESEARCH_SPINE_CONFIG"], section="env", consumer=_CONSUMER,
+            )
         self._out_root = Path(out_root)
         # cache keyed by (instrument, prod_version) so v2 and v4 entries coexist in one process.
         self._cache: dict[tuple[str, str], dict[int, SpineEntry]] = {}
@@ -116,15 +128,24 @@ class ProductionSpineSource:
             self._spine_cfg = json.loads(Path(self._config_path).read_text(encoding="utf-8"))
         return self._spine_cfg
 
+    def _spine_block(self) -> dict:
+        return require_section(self._cfg(), "spine", consumer=_CONSUMER)
+
     def _resolve_version(self) -> str:
-        """The production registry version to measure (spine.prod_version, else active)."""
-        from config_layer.production_config import PROD_VERSION
-        return self._cfg().get("spine", {}).get("prod_version") or PROD_VERSION
+        """The production registry version to measure (spine.prod_version)."""
+        return str(require(
+            self._spine_block(), "prod_version",
+            section_name="spine", consumer=_CONSUMER,
+        ))
 
     def _resolve_csv(self, instrument: str) -> str:
-        uni = self._cfg().get("universe", {})
-        data_dir = Path(uni.get("data_dir", "data"))
-        pattern = uni.get("pattern", "*_M15.csv")
+        uni = require_all(
+            require_section(self._cfg(), "universe", consumer=_CONSUMER),
+            ["data_dir", "pattern"],
+            section_name="universe", consumer=_CONSUMER,
+        )
+        data_dir = Path(uni["data_dir"])
+        pattern = uni["pattern"]
         for p in sorted(data_dir.glob(pattern)):
             if p.stem.split("_")[0] == instrument:
                 return str(p)
@@ -149,7 +170,7 @@ class ProductionSpineSource:
         import config_layer.production_config as _pc
         import runtime.backtest_v2 as _bt
 
-        spine_block = self._cfg().get("spine", {})
+        spine_block = self._spine_block()
         csv_path = self._resolve_csv(instrument)
         out_dir = self._out_root / f"{instrument}__{_safe_name(version)}"
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -171,7 +192,9 @@ class ProductionSpineSource:
                 pip_size=_bt.MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.0001),
                 crt_config=crt_cfg,
             )
-            cfg.scorer_mode = spine_block.get("scorer_mode", "calibrated")
+            cfg.scorer_mode = require(
+                spine_block, "scorer_mode", section_name="spine", consumer=_CONSUMER,
+            )
             loader = _bt.CandleLoader(csv_path, instrument)
             runner = _bt.BacktestRunner(cfg, csv_path=csv_path, overrides={"_spine_adapter": "1"})
             runner.run(loader.stream(), loader.count(), str(out_dir))
@@ -196,12 +219,19 @@ class ProductionSpineSource:
         # Which planned target defines the reward distance. The spine scales out (tp1=1R first
         # target, tp2=2R full target); single-TP research can't replicate scale-out, so we pick
         # one lens. Default tp2 keeps the spine in the same 2R regime as the toy hypotheses.
-        tp_col = self._cfg().get("spine", {}).get("tp_target", "tp2")
+        tp_col = require(
+            self._spine_block(), "tp_target", section_name="spine", consumer=_CONSUMER,
+        )
         if tp_col not in ("tp1", "tp2"):
-            tp_col = "tp2"
+            raise ValueError(
+                f"ProductionSpineSource: spine.tp_target={tp_col!r} is not tp1 or tp2"
+            )
         with open(path, newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
-                direction = _normalize_direction(row.get("direction", ""))
+                try:
+                    direction = _normalize_direction(row["direction"])
+                except KeyError:
+                    continue
                 if direction is None:
                     continue
                 try:

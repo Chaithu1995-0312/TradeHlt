@@ -39,6 +39,7 @@ from typing import Any, Dict, List, Optional, Tuple
 _ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all, require_section
 if str(_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_ROOT / "src"))
 
@@ -62,7 +63,7 @@ logger = get_flow_logger("COLLECTOR")
 
 
 def _load_uat_cfg() -> dict:
-    return get_prod_section("uat") or {}
+    return get_prod_section("uat")
 
 
 # ── UATRunner ─────────────────────────────────────────────────────────────────
@@ -84,17 +85,46 @@ class UATRunner:
         self,
         pair: str,
         timeframe: str,
-        output_dir: Path = Path("results/uat"),
+        output_dir: Path,
         config: Optional[dict] = None,
     ) -> None:
         self.pair       = pair.upper().replace("/", "")
         self.timeframe  = timeframe.upper()
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self._cfg       = config or _load_uat_cfg()
-        self._orch      = StrategyOrchestrator(self.pair, self.timeframe)
-        self._mc        = MonteCarloEngine.from_prod_config()
-        self._ks        = KillSwitch.from_prod_config()
+        self._cfg       = config if config is not None else _load_uat_cfg()
+        orch_cfg = (
+            self._cfg["strategy_orchestrator"]
+            if "strategy_orchestrator" in self._cfg else None
+        )
+        self._orch      = StrategyOrchestrator(self.pair, self.timeframe, config=orch_cfg)
+        mc = require_section(self._cfg, "monte_carlo", consumer="UATRunner")
+        self._mc        = MonteCarloEngine(
+            n_simulations=int(require(
+                mc, "n_simulations", section_name="uat.monte_carlo", consumer="UATRunner",
+            )),
+            initial_capital_inr=float(require(
+                mc, "initial_capital_inr", section_name="uat.monte_carlo", consumer="UATRunner",
+            )),
+            ruin_threshold_pct=float(require(
+                mc, "ruin_threshold_pct", section_name="uat.monte_carlo", consumer="UATRunner",
+            )),
+            random_seed=require(
+                mc, "random_seed", section_name="uat.monte_carlo", consumer="UATRunner",
+            ),
+        )
+        ks = require_section(self._cfg, "kill_switch", consumer="UATRunner")
+        self._ks        = KillSwitch(
+            daily_limit_inr=float(require(
+                ks, "daily_loss_limit_inr", section_name="uat.kill_switch", consumer="UATRunner",
+            )),
+            weekly_limit_inr=float(require(
+                ks, "weekly_loss_limit_inr", section_name="uat.kill_switch", consumer="UATRunner",
+            )),
+            state_file=Path(require(
+                ks, "state_file", section_name="uat.kill_switch", consumer="UATRunner",
+            )),
+        )
         self._loggers:  Dict[int, LLMStructuredLogger] = {}
 
     @classmethod
@@ -104,7 +134,7 @@ class UATRunner:
         timeframe: str = "H1",
     ) -> "UATRunner":
         cfg = _load_uat_cfg()
-        output_dir = Path(cfg.get("output_dir", "results/uat"))
+        output_dir = Path(require(cfg, "output_dir", section_name="uat", consumer="uat_runner"))
         return cls(pair=pair, timeframe=timeframe, output_dir=output_dir, config=cfg)
 
     # ── Public run API ─────────────────────────────────────────────────────────
@@ -160,9 +190,13 @@ class UATRunner:
                         "fusion_score": result.score,
                     }
                 )
-        min_trades = int(
-            (self._cfg.get("signal_accuracy") or {}).get("min_trades", 20)
+        signal_accuracy = require_section(
+            self._cfg, "signal_accuracy", consumer="UATRunner",
         )
+        min_trades = int(require(
+            signal_accuracy, "min_trades",
+            section_name="uat.signal_accuracy", consumer="UATRunner",
+        ))
         if len(log._signals) < min_trades:
             log.flag_anomaly(
                 f"Area 1: only {len(log._signals)} signals captured "

@@ -139,7 +139,8 @@ def test_qualify_is_deterministic():
     itps = [Interpreter("xs_mom_96_16", "momentum", 96, 16),
             Interpreter("xs_rev_8_8", "reversal", 8, 8)]
     qc = XSQualConfig(k=2, min_samples=10, expectancy_min=0.0, pf_min=1.0, oos_split=0.3,
-                      oos_retention_min=0.5, n_permutations=500, significance_alpha=0.05)
+                      oos_retention_min=0.5, n_permutations=500, significance_alpha=0.05,
+                      round_trip_bps=12.0, warmup=0)
     r1 = qualify(p, itps, qc)
     r2 = qualify(p, itps, qc)
     assert json.dumps(r1, sort_keys=True) == json.dumps(r2, sort_keys=True)

@@ -10,6 +10,7 @@ Marked `slow` (~30-60s for the backtest) and NOT in the default CI subset. SKIP 
 """
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 
@@ -34,7 +35,11 @@ def test_spine_collect_runs_on_frozen_candidate_without_active_version_drift(mon
     monkeypatch.setenv("RESEARCH_SPINE_CONFIG", spine_cfg)
 
     before = get_active_version()
-    cfg = ResearchConfig.from_file(spine_cfg)
+    raw = json.loads(Path(spine_cfg).read_text(encoding="utf-8"))
+    raw.setdefault("job_kind", "unspecified")
+    raw.setdefault("costs", {})
+    raw["costs"].setdefault("cost_model", "flat_bps")
+    cfg = ResearchConfig.from_dict(raw)
     runner = HypothesisRunner(cfg)
     guarded = guard_xauusd_csv_path("data/XAUUSD_M15.csv", "XAUUSD")
     assert guarded.replace("\\", "/").endswith("data/mt5/XAUUSD_M15.csv")

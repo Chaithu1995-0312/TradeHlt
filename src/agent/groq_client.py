@@ -29,6 +29,9 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Iterable
+from config_layer.strict_config import (
+    ConfigKeyMissingError, require, require_all, require_section,
+)
 
 logger = logging.getLogger("AgentGroqClient")
 
@@ -63,17 +66,18 @@ def _load_dotenv(start: Path = Path(__file__).resolve()) -> None:
 
 _load_dotenv()
 
-_DEFAULTS = {
-    "api_key_env":        "GROQ_API_KEY",
-    "model":              "llama-3.1-70b-versatile",
-    "endpoint":           "https://api.groq.com/openai/v1/chat/completions",
-    "request_timeout_s":  8.0,
-    "max_tokens":         1024,
-    "fail_count_disable": 5,
-}
-
-# Default redaction tokens — overridable from agent.findings.redact_patterns
+# redact() callers that omit patterns. GroqClient reads agent.findings.redact_patterns.
 _DEFAULT_REDACT = ("api_key", "secret", "password", "token", "AV_API_KEY", "GROQ_API_KEY")
+
+_GROQ_KEYS = (
+    "api_key_env",
+    "model",
+    "endpoint",
+    "request_timeout_s",
+    "max_tokens",
+    "fail_count_disable",
+    "temperature",
+)
 
 
 def _now_iso() -> str:
@@ -85,19 +89,24 @@ def _short_hash(s: str) -> str:
 
 
 def _load_cfg() -> dict:
-    """Resolve agent.groq subsection (or defaults if missing)."""
+    """Resolve agent.groq and agent.findings.redact_patterns. Missing section raises."""
+    from config_layer.production_config import get_prod_section
     try:
-        from config_layer.production_config import get_prod_section
-        agent_cfg = get_prod_section("agent") or {}
-    except Exception:
-        agent_cfg = {}
-    groq_cfg = dict(_DEFAULTS)
-    groq_cfg.update(agent_cfg.get("groq") or {})
-    findings_cfg = agent_cfg.get("findings") or {}
-    groq_cfg["_redact_patterns"] = tuple(
-        findings_cfg.get("redact_patterns") or _DEFAULT_REDACT
+        agent_cfg = get_prod_section("agent")
+    except Exception as exc:
+        raise ConfigKeyMissingError(
+            ["agent"], section="<root>", consumer="GroqClient",
+        ) from exc
+    groq_cfg = require_section(agent_cfg, "groq", consumer="GroqClient")
+    loaded = require_all(
+        groq_cfg, _GROQ_KEYS, section_name="agent.groq", consumer="GroqClient",
     )
-    return groq_cfg
+    findings_cfg = require_section(agent_cfg, "findings", consumer="GroqClient")
+    loaded["_redact_patterns"] = tuple(require(
+        findings_cfg, "redact_patterns",
+        section_name="agent.findings", consumer="GroqClient",
+    ))
+    return loaded
 
 
 def _compile_redactors(patterns: Iterable[str]) -> list[re.Pattern]:
@@ -145,18 +154,23 @@ class GroqClient:
 
     def __init__(self, cfg: dict | None = None):
         self.cfg = cfg if cfg is not None else _load_cfg()
-        self._api_key = os.environ.get(str(self.cfg.get("api_key_env", "GROQ_API_KEY")), "")
+        require_all(self.cfg, _GROQ_KEYS, section_name="agent.groq", consumer="GroqClient")
+        if "_redact_patterns" not in self.cfg:
+            raise ConfigKeyMissingError(
+                ["redact_patterns"], section="agent.findings", consumer="GroqClient",
+            )
+        self._api_key = os.environ.get(str(self.cfg["api_key_env"]), "")
         self._fail_count = 0
         self._missing_key_logged = False
 
     # ── internal helpers ─────────────────────────────────────────────────────
     def _circuit_open(self) -> bool:
-        return self._fail_count >= int(self.cfg.get("fail_count_disable", 5))
+        return self._fail_count >= int(require(self.cfg, "fail_count_disable", section_name="agent", consumer="groq_client"))
 
     def _key_present(self) -> bool:
         if not self._api_key:
             if not self._missing_key_logged:
-                env = self.cfg.get("api_key_env", "GROQ_API_KEY")
+                env = require(self.cfg, "api_key_env", section_name="agent", consumer="groq_client")
                 logger.warning(
                     "GroqClient: %s not set — findings synthesis disabled. "
                     "Add it to repo-root .env: %s=gsk_...",
@@ -187,11 +201,11 @@ class GroqClient:
             })
             return ""
 
-        max_tokens = int(max_tokens or self.cfg.get("max_tokens", 1024))
-        endpoint = str(self.cfg.get("endpoint", _DEFAULTS["endpoint"]))
-        model = str(self.cfg.get("model", _DEFAULTS["model"]))
-        timeout = float(self.cfg.get("request_timeout_s", _DEFAULTS["request_timeout_s"]))
-        redact_patterns = self.cfg.get("_redact_patterns") or _DEFAULT_REDACT
+        max_tokens = int(max_tokens or require(self.cfg, "max_tokens", section_name="agent", consumer="groq_client"))
+        endpoint = str(require(self.cfg, "endpoint", section_name="agent", consumer="groq_client"))
+        model = str(require(self.cfg, "model", section_name="agent", consumer="groq_client"))
+        timeout = float(require(self.cfg, "request_timeout_s", section_name="agent", consumer="groq_client"))
+        redact_patterns = self.cfg["_redact_patterns"]
 
         # Redact secrets BEFORE building payload — defence in depth.
         safe_system = redact(system or "", redact_patterns)
@@ -206,7 +220,7 @@ class GroqClient:
             "model": model,
             "messages": messages,
             "max_tokens": max_tokens,
-            "temperature": float(self.cfg.get("temperature", 0.1)),
+            "temperature": float(require(self.cfg, "temperature", section_name="agent", consumer="groq_client")),
         }).encode("utf-8")
 
         req = urllib.request.Request(
@@ -252,7 +266,7 @@ class GroqClient:
             "circuit": "OPEN" if self._circuit_open() else "CLOSED",
         })
 
-        if error and self._fail_count == int(self.cfg.get("fail_count_disable", 5)):
+        if error and self._fail_count == int(require(self.cfg, "fail_count_disable", section_name="agent", consumer="groq_client")):
             logger.warning(
                 "GroqClient: %d consecutive failures — circuit OPEN. "
                 "Future synthesis calls return empty until process restart.",

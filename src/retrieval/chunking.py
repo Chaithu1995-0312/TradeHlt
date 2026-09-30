@@ -141,7 +141,7 @@ class Chunker:
 
             chunk_lines = lines[start - 1:end]
             chunk_text = "\n".join(chunk_lines)
-            name = getattr(node, 'name', f'<line_{start}>')
+            name = node.name
 
             # Ensure unique chunk IDs by appending line number
             unique_id = f"{doc.path}::{name}::L{start}"
@@ -282,7 +282,7 @@ class Chunker:
             rel = doc.path.relative_to(self.config.repo_root).as_posix()
         except ValueError:
             rel = doc.metadata.get("filepath", "")
-        registry = set(getattr(self.config, "registry_sources", []) or [])
+        registry = set(self.config.registry_sources)
         if rel in registry:
             return []  # handled by IndexStore._load_registry_records
         # Also skip if corpus already excluded registries; belt-and-braces for direct callers.

@@ -23,6 +23,8 @@ from __future__ import annotations
 
 from typing import Sequence
 
+from config_layer.strict_config import require
+
 from research.contracts import Signal
 from research.indicators import atr
 from research.registry import register_hypothesis
@@ -59,7 +61,7 @@ class SpineHypothesis:
         if idx is None:
             return []
 
-        instrument = ctx.get("instrument", "UNKNOWN")
+        instrument = require(ctx, "instrument", section_name="bar_context", consumer="SpineHypothesis")
         entries = self._ensure_source().entries(instrument)
         e = entries.get(idx)
         if e is None:

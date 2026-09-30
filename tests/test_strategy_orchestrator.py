@@ -35,6 +35,28 @@ from strategies.s10_trap_strategy import S10TrapStrategy
 from strategies.strategy_orchestrator import StrategyOrchestrator, OrchestratorResult
 from core.fusion_engine import FusionEngine, FusionConfig, GaussianAdapter
 
+# EPIC-84 STORY-84.2: FusionConfig has no field defaults. This fixture holds the former
+# dataclass defaults (test values only — not a runtime authority); tests override per case.
+_FUSION_FIXTURE = {
+    "gaussian_weight": 0.6, "neural_weight": 0.4, "llm_weight": 0.2,
+    "llm_lower_band": 0.45, "llm_upper_band": 0.65, "enable_llm": True,
+    "tier_full": 0.75, "tier_half": 0.60, "tier_quarter": 0.50,
+    "weight_crt": 0.30, "weight_ema_momentum_kernel": 0.25, "weight_feature_cluster_similarity": 0.25, "weight_candle_commitment": 0.20,
+    "weight_strategy_consensus": 0.0,
+    "regime_fusion_weights": {
+        "TRENDING": {"crt": 0.38, "gaussian": 0.20, "zone_gate": 0.12, "rr": 0.20, "strategy_consensus": 0.10},
+        "RANGING":  {"crt": 0.18, "gaussian": 0.32, "zone_gate": 0.15, "rr": 0.25, "strategy_consensus": 0.10},
+        "VOLATILE": {"crt": 0.28, "gaussian": 0.14, "zone_gate": 0.12, "rr": 0.16, "strategy_consensus": 0.30},
+        "UNKNOWN":  {"crt": 0.30, "gaussian": 0.25, "zone_gate": 0.25, "rr": 0.20, "strategy_consensus": 0.00},
+    },
+    "min_consensus_signals": 2, "min_consensus_agreement": 0.60,
+    "conflict_resolution_policy": "conservative",
+}
+
+
+def _fc(**overrides):
+    return FusionConfig.from_section({**_FUSION_FIXTURE, **overrides})
+
 
 # ── Shared fixtures ────────────────────────────────────────────────────────────
 
@@ -295,7 +317,7 @@ class _FakeGaussian:
 def test_fuse_strategy_results_buy_consensus():
     fe = FusionEngine(
         gaussian_adapter=GaussianAdapter(_FakeGaussian()),
-        config=FusionConfig(),
+        config=_fc(),
     )
     results = [
         _make_result("S1",  "BUY", 0.75, 0.80),
@@ -314,7 +336,7 @@ def test_fuse_strategy_results_buy_consensus():
 def test_fuse_strategy_results_completeness_gate():
     fe = FusionEngine(
         gaussian_adapter=GaussianAdapter(_FakeGaussian()),
-        config=FusionConfig(),
+        config=_fc(),
     )
     results = [
         _make_result("S1", "BUY", 0.75, 0.80),
@@ -328,7 +350,7 @@ def test_fuse_strategy_results_completeness_gate():
 def test_fuse_strategy_results_conflict():
     fe = FusionEngine(
         gaussian_adapter=GaussianAdapter(_FakeGaussian()),
-        config=FusionConfig(),
+        config=_fc(),
     )
     results = [
         _make_result("S1",  "BUY",  0.70, 0.75),

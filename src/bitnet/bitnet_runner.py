@@ -24,6 +24,7 @@ import numpy as np
 from bitnet.bitnet_inference import BitNetModel
 from bitnet.model_contract import CANONICAL_MODEL_SCHEMA_VERSION
 from features.feature_schema import CANONICAL_FEATURES
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
 
 try:
     from src.utils.integrity_events import emit_integrity_event  # noqa: F401
@@ -33,8 +34,11 @@ except Exception:  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 
-# Fail-closed in production; set BITNET_DEBUG=true only in local dev/testing
-DEBUG_MODE = os.environ.get("BITNET_DEBUG", "false").lower() == "true"
+def _debug_from(config: dict) -> bool:
+    """BITNET_DEBUG overrides when the process set it. Otherwise bitnet.debug_mode."""
+    if "BITNET_DEBUG" in os.environ:
+        return os.environ["BITNET_DEBUG"].lower() == "true"
+    return bool(require(config, "debug_mode", section_name="bitnet", consumer="BitNetRunner"))
 
 
 class BitNetRunner:
@@ -55,7 +59,16 @@ class BitNetRunner:
         # Adaptive threshold context — kw-only so existing callers
         # (BitNetRunner(model_path)) keep working unchanged.
         self._instrument = instrument
-        self._config = config or {}
+        if config is None:
+            from config_layer.production_config import get_prod_section
+            try:
+                config = get_prod_section("bitnet")
+            except Exception as exc:
+                raise ConfigKeyMissingError(
+                    ["bitnet"], section="<root>", consumer="BitNetRunner",
+                ) from exc
+        self._config = config
+        self._debug = _debug_from(self._config)
         self._thresholds = self._load_thresholds()
 
         # Legacy bridge: legacy_6input models declare their own feature_order
@@ -104,9 +117,9 @@ class BitNetRunner:
     def _load_thresholds(self) -> dict:
         """Load per-instrument per-regime thresholds from bitnet_thresholds.json.
         Falls back to hardcoded 0.5 per instrument if file absent or parse fails."""
-        path = Path(self._config.get(
-            "bitnet_thresholds_path",
-            "src/bitnet/bitnet_thresholds.json",
+        path = Path(require(
+            self._config, "bitnet_thresholds_path",
+            section_name="bitnet", consumer="BitNetRunner",
         ))
         if not path.exists():
             return {}
@@ -128,7 +141,10 @@ class BitNetRunner:
     def _threshold_for(self, regime: str = "UNKNOWN") -> float:
         """Per-instrument per-regime threshold with fallback chain:
         instrument+regime → instrument+DEFAULT → __default__ → 0.5."""
-        inst_block = self._thresholds.get(self._instrument, {})
+        inst_block = (
+            self._thresholds[self._instrument]
+            if self._instrument in self._thresholds else {}
+        )
         if isinstance(inst_block, dict):
             val = inst_block.get((regime or "UNKNOWN").upper())
             if val is not None:
@@ -139,8 +155,10 @@ class BitNetRunner:
         val = self._thresholds.get("__default__")
         if val is not None:
             return float(val)
-        # Hardcoded floor — never silent
-        return 0.5
+        return float(require(
+            self._config, "default_threshold",
+            section_name="bitnet", consumer="BitNetRunner",
+        ))
 
     def predict(self, features: dict) -> dict:
         """
@@ -206,7 +224,7 @@ class BitNetRunner:
             error_msg = str(e)
             logger.error("BitNet prediction failed: %s", error_msg)
 
-            if DEBUG_MODE:
+            if self._debug:
                 # Debug mode: accept on failure to test pipeline
                 return {
                     "score":    0.5,

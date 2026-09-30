@@ -16,6 +16,7 @@ from typing import Any
 import joblib
 import numpy as np
 
+from config_layer.strict_config import require
 from features.feature_schema import SCHEMA_HASH
 from research.clean_labels.builder import LEGACY_FEATURE_NAMES
 
@@ -42,16 +43,40 @@ SEED = 42
 class TrainConfig:
     dataset_path: str
     out_dir: str
-    instrument: str = "BNBUSDT"
-    max_rows: int | None = None
-    train_frac: float = 0.60
-    val_frac: float = 0.20
+    instrument: str
+    max_rows: int | None
+    train_frac: float
+    val_frac: float
     # test = remainder
-    seed: int = SEED
-    max_depth: int = 6
-    max_iter: int = 100
-    learning_rate: float = 0.08
-    min_samples_leaf: int = 40
+    seed: int
+    max_depth: int
+    max_iter: int
+    learning_rate: float
+    min_samples_leaf: int
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "TrainConfig":
+        from config_layer.strict_config import require_all
+        k = require_all(
+            d,
+            ["dataset_path", "out_dir", "instrument", "max_rows", "train_frac",
+             "val_frac", "seed", "max_depth", "max_iter", "learning_rate",
+             "min_samples_leaf"],
+            section_name="envelope_offline.train", consumer="TrainConfig",
+        )
+        return cls(
+            dataset_path=str(k["dataset_path"]),
+            out_dir=str(k["out_dir"]),
+            instrument=str(k["instrument"]),
+            max_rows=None if k["max_rows"] is None else int(k["max_rows"]),
+            train_frac=float(k["train_frac"]),
+            val_frac=float(k["val_frac"]),
+            seed=int(k["seed"]),
+            max_depth=int(k["max_depth"]),
+            max_iter=int(k["max_iter"]),
+            learning_rate=float(k["learning_rate"]),
+            min_samples_leaf=int(k["min_samples_leaf"]),
+        )
 
 
 @dataclass
@@ -160,8 +185,10 @@ def load_l2_matrix(
             X_rows.append([float(x) for x in vec])
             for h in HEADS:
                 ys[h].append(vals[h])
-            entry_index.append(float(r.get("entry_index", n)))
-            side_long.append(1.0 if str(r.get("side", "")).lower() == "long" else 0.0)
+            if "entry_index" not in r or "side" not in r:
+                continue
+            entry_index.append(float(r["entry_index"]))
+            side_long.append(1.0 if str(r["side"]).lower() == "long" else 0.0)
             n += 1
 
     if n < 500:
@@ -330,7 +357,7 @@ def run_offline_train(cfg: TrainConfig) -> dict[str, Any]:
         "dataset_protocol_id": ds_meta.get("protocol_id"),
         "dataset_protocol_hash": ds_meta.get("protocol_hash"),
         "schema_hash": SCHEMA_HASH,
-        "pit_status": ds_meta.get("pit_status", "PIT_UNCLEAN_STORED_FEATURES"),
+        "pit_status": require(ds_meta, "pit_status", section_name="dataset_meta", consumer="TrainConfig"),
         "n_rows": int(X.shape[0]),
         "n_features": int(X.shape[1]),
         "split": {

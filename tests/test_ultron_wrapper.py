@@ -13,7 +13,12 @@ import pytest
 from unittest.mock import MagicMock, call
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from config_layer.strict_config import ConfigKeyMissingError
 from core.ultron_risk_gate_wrapper import UltronRiskGateWrapper
+
+# EPIC-84 STORY-84.2: regime_factors is the declared ultron_risk_gate.regime_factors mapping
+# (active-config values) — no in-code default table.
+_FACTORS = {"trend": 1.0, "range": 0.8, "neutral": 0.6, "uncertain": 0.5}
 
 
 def _make_gate(decision="approve"):
@@ -56,7 +61,7 @@ def _portfolio():
 
 def test_wrapper_always_calls_through_to_gate():
     gate    = _make_gate()
-    wrapper = UltronRiskGateWrapper(gate)
+    wrapper = UltronRiskGateWrapper(gate, regime_factors=_FACTORS)
 
     result = wrapper.evaluate(_trade(), _portfolio(), regime="trend")
 
@@ -66,7 +71,7 @@ def test_wrapper_always_calls_through_to_gate():
 
 def test_wrapper_calls_gate_on_rejection_too():
     gate    = _make_gate(decision="reject")
-    wrapper = UltronRiskGateWrapper(gate)
+    wrapper = UltronRiskGateWrapper(gate, regime_factors=_FACTORS)
 
     result = wrapper.evaluate(_trade(), _portfolio(), regime="range")
 
@@ -114,7 +119,7 @@ def test_wrapper_no_scaling_for_trend_regime():
 
 def test_wrapper_does_not_mutate_caller_trade_dict():
     gate    = _make_gate()
-    wrapper = UltronRiskGateWrapper(gate)
+    wrapper = UltronRiskGateWrapper(gate, regime_factors=_FACTORS)
     trade   = _trade(risk_percent=1.5)
     original_risk = trade["risk_percent"]
 
@@ -141,7 +146,7 @@ def test_wrapper_returns_gate_result_verbatim():
     gate = MagicMock()
     gate.evaluate.return_value = gate_response
 
-    wrapper = UltronRiskGateWrapper(gate)
+    wrapper = UltronRiskGateWrapper(gate, regime_factors=_FACTORS)
     result  = wrapper.evaluate(_trade(), _portfolio(), regime="trend")
 
     assert result == gate_response
@@ -161,7 +166,49 @@ def test_unknown_regime_uses_factor_one():
                     "final_position_size": 1.0, "risk_reason": "ok",
                     "allowed_risk_pct": 1.0, "portfolio_state": {}}
 
-    wrapper = UltronRiskGateWrapper(CapturingGate())
-    # "alien_regime" not in default factors → should default to 1.0
+    wrapper = UltronRiskGateWrapper(CapturingGate(), regime_factors=_FACTORS)
+    # "alien_regime" not in the declared factors → factor 1.0 (identity; KEPT, see L-B report)
     wrapper.evaluate(_trade(risk_percent=1.0), _portfolio(), regime="alien_regime")
     assert abs(captured["risk_percent"] - 1.0) < 1e-9
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# EPIC-84 STORY-84.2: strict config + per-trade missing values
+# ──────────────────────────────────────────────────────────────────────────────
+
+def test_missing_regime_factors_raises():
+    """Rewritten default: omitting regime_factors no longer falls back to a code table."""
+    with pytest.raises(ConfigKeyMissingError) as ei:
+        UltronRiskGateWrapper(_make_gate(), regime_factors=None)
+    assert ei.value.missing == ("regime_factors",)
+    assert ei.value.section == "ultron_risk_gate"
+
+
+def test_missing_risk_percent_forwarded_unscaled_and_real_gate_rejects():
+    """risk_percent absent is NOT invented as 0.0: the copy reaches the real gate without it
+    and the gate REJECTs with config_key_missing:trade.risk_percent (SR-1: wrapper never rejects)."""
+    from core.ultron_risk_gate import UltronRiskGate
+    captured = {}
+
+    class Spy(UltronRiskGate):
+        def evaluate(self, trade, portfolio_state):
+            captured["has_risk"] = "risk_percent" in trade
+            return super().evaluate(trade, portfolio_state)
+
+    gate = Spy({
+        "disabled": False, "max_risk_per_trade_pct": 1.0, "max_portfolio_risk_pct": 5.0,
+        "max_trades_per_day": 10, "max_daily_loss_pct": 3.0, "min_rr_ratio": 1.5,
+        "spread_pips": 0.0, "slippage_pips": 0.0, "pip_size": 0.0001, "min_sl_pips": 0.0,
+    })
+    gate.reset_kill_switch()
+    try:
+        trade = _trade()
+        del trade["risk_percent"]
+        result = UltronRiskGateWrapper(gate, regime_factors=_FACTORS).evaluate(
+            trade, _portfolio(), regime="range",
+        )
+        assert captured["has_risk"] is False
+        assert result["decision"] == "reject"
+        assert result["risk_reason"] == "config_key_missing:trade.risk_percent"
+    finally:
+        gate.reset_kill_switch()

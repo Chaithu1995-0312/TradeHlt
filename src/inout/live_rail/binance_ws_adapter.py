@@ -119,6 +119,10 @@ class BinanceWsAdapter:
         return datetime.fromtimestamp(int(ms) / 1000.0, tz=timezone.utc)
 
     def _coerce(self, msg: dict) -> Optional[NormalizedTick]:
+        # EPIC-84 KEPT: Binance's combined-stream envelope wraps the event under
+        # "data" with a "stream" tag; a single-stream connection sends the raw
+        # event unwrapped. Both are legitimate exchange protocol shapes, not a
+        # config fallback.
         data = msg.get("data", msg)
         stream = str(msg.get("stream", ""))
         ts = self._event_ts(data)
@@ -132,6 +136,8 @@ class BinanceWsAdapter:
             kind = "book"
         elif "trade" in stream or "p" in data:
             last = float(data["p"])
+            # EPIC-84 KEPT: exchange trade-event quantity; 0.0 is a legitimate
+            # degenerate size, matching the book-tick branch above.
             size = float(data.get("q", 0.0))
             kind = "trade"
             if self._last_bid is None or self._last_ask is None:
