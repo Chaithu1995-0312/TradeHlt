@@ -146,6 +146,7 @@ def _run(cmd: list[str], cwd: Path, label: str) -> subprocess.CompletedProcess:
     print(f"  $ {' '.join(cmd)}  (cwd={cwd})", flush=True)
     proc = subprocess.run(
         cmd, cwd=str(cwd), env=_env(_ARM_REPO[Path(cwd)]), capture_output=True, text=True,
+        encoding="utf-8", errors="replace",
     )
     tail = ((proc.stdout or "") + "\n" + (proc.stderr or ""))[-4000:]
     if proc.returncode != 0:
@@ -633,6 +634,9 @@ def run_window(window: str, code_b: Path, label: str) -> int:
 
 def main() -> int:
     global ARM_A, ARM_B
+    # Windows redirected stdout defaults to cp1252 and dies on the child tools' non-ASCII output.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
     print(f"self-check runtime.backtest_v2={_bt_mod.__file__}", flush=True)
     if REPO.resolve() not in Path(_bt_mod.__file__).resolve().parents:
         raise SystemExit(f"PYTHONPATH is not this worktree: {_bt_mod.__file__}")
