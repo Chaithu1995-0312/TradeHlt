@@ -1,0 +1,3346 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:tradelatest:design:DC-RESEARCH-LAB-01:schema:lab.v1",
+  "title": "DC-RESEARCH-LAB-01 Research Lab entity schema (lab.v1, r4: user decisions 00:21 + 00:26 + 00:30 IST)",
+  "description": "Catalog record schema for the Research Lab. Fail-closed: additionalProperties=false and every property required (no silent defaults). Observation is a Parquet row schema; Edge and Event are structural records. Design artifact only - not wired to any code. r2: UD-1 DuckDB catalog; UD-2 holdout budget per (search_family_id, hypothesis_id); UD-3 required per-metric reproduction_tolerance (no default). r3: UD-4 DecimalString/HashSafeJSON for hashed numerics; UD-5 LabManifest gc_grace_days=30; UD-6 required versioned survival_policy + minimum_criteria; UD-7 post-hoc criteria flagged, never minimum. r4: UD-8 ObservationSet ARCHIVED state + archive_uri; UD-9 READ events require consumer_id; UD-10 DECIDED 2026-09-28 01:12 IST (Dataset.transform for DERIVED: source_hash + transform_code_hash + declared params); Q7 DECIDED (UD-11, 2026-09-28 01:24 IST): PARALLEL_COMPARISON with exactly four corrections; survival governance ALL_FOUR_PASS (UD-12, 2026-09-28 01:27 IST). r9: UD-13 Dataset.usage_class FULL|SMOKE (required); Evidence.smoke_only; SURVIVING forbidden with SMOKE lineage.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Hypothesis"
+    },
+    {
+      "$ref": "#/$defs/SearchFamily"
+    },
+    {
+      "$ref": "#/$defs/Experiment"
+    },
+    {
+      "$ref": "#/$defs/Configuration"
+    },
+    {
+      "$ref": "#/$defs/CodeIdentity"
+    },
+    {
+      "$ref": "#/$defs/Dataset"
+    },
+    {
+      "$ref": "#/$defs/FeatureSchema"
+    },
+    {
+      "$ref": "#/$defs/MetricDefinition"
+    },
+    {
+      "$ref": "#/$defs/Run"
+    },
+    {
+      "$ref": "#/$defs/ObservationSet"
+    },
+    {
+      "$ref": "#/$defs/Measurement"
+    },
+    {
+      "$ref": "#/$defs/Evidence"
+    },
+    {
+      "$ref": "#/$defs/Finding"
+    },
+    {
+      "$ref": "#/$defs/Falsification"
+    },
+    {
+      "$ref": "#/$defs/Artifact"
+    },
+    {
+      "$ref": "#/$defs/Consumer"
+    },
+    {
+      "$ref": "#/$defs/HoldoutAccess"
+    },
+    {
+      "$ref": "#/$defs/CriterionAddendum"
+    },
+    {
+      "$ref": "#/$defs/LabManifest"
+    },
+    {
+      "$ref": "#/$defs/Edge"
+    },
+    {
+      "$ref": "#/$defs/Event"
+    }
+  ],
+  "$defs": {
+    "ContentId": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "sha256 over RFC 8785 (JCS) canonical JSON of the entity's identity_inputs (immutable fields + parent ids), prefixed 'sha256:'."
+    },
+    "HumanId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{2,127}$",
+      "description": "Human-readable alias (e.g. run_20260916_172925, HYP-20260928-001, F-112). Unique per entity_type; NEVER part of any hash."
+    },
+    "UtcTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$"
+    },
+    "TrustStatus": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "PASS",
+        "FAIL",
+        "PARTIAL"
+      ],
+      "description": "Fail-closed: UNKNOWN is treated exactly like FAIL by every gate/query. Never defaults to PASS."
+    },
+    "LifecycleState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "as_of_event_seq"
+      ],
+      "properties": {
+        "state": {
+          "type": "string"
+        },
+        "as_of_event_seq": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "description": "Mutable projection only; derived from the event log, never stored as source of truth in the entity row."
+    },
+    "Hypothesis": {
+      "type": "object",
+      "description": "Preregistered claim. Identity inputs: all fields above except human_id. Frozen at REGISTERED (event seq proves precedence over any Run).",
+      "additionalProperties": false,
+      "required": [
+        "author",
+        "condition",
+        "entity_type",
+        "expected_effect",
+        "falsification_criteria",
+        "forward_label",
+        "human_id",
+        "id",
+        "revises_hypothesis_id",
+        "schema_version",
+        "search_family_id",
+        "statement",
+        "trigger"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "Hypothesis"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "statement": {
+          "type": "string"
+        },
+        "search_family_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "trigger": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "lifecycle_event",
+            "config_id"
+          ],
+          "properties": {
+            "lifecycle_event": {
+              "type": "string"
+            },
+            "config_id": {
+              "$ref": "#/$defs/ContentId"
+            }
+          }
+        },
+        "condition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "smc_condition",
+            "config_id"
+          ],
+          "properties": {
+            "smc_condition": {
+              "type": "string"
+            },
+            "config_id": {
+              "$ref": "#/$defs/ContentId"
+            }
+          }
+        },
+        "forward_label": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "label_name",
+            "horizon_bars",
+            "config_id"
+          ],
+          "properties": {
+            "label_name": {
+              "type": "string"
+            },
+            "horizon_bars": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "config_id": {
+              "$ref": "#/$defs/ContentId"
+            }
+          }
+        },
+        "expected_effect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "metric_def_id",
+            "direction",
+            "min_effect"
+          ],
+          "properties": {
+            "metric_def_id": {
+              "$ref": "#/$defs/ContentId"
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "GREATER",
+                "LESS",
+                "NONZERO"
+              ]
+            },
+            "min_effect": {
+              "$ref": "#/$defs/DecimalString"
+            }
+          }
+        },
+        "falsification_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/FalsificationCriterion"
+              },
+              {
+                "properties": {
+                  "post_hoc": {
+                    "const": false
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "revises_hypothesis_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ContentId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "author": {
+          "type": "string"
+        }
+      }
+    },
+    "FalsificationCriterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added_at_event_seq",
+        "cost_model_config_id",
+        "criterion_id",
+        "kind",
+        "metric_def_id",
+        "operator",
+        "post_hoc",
+        "split_config_id",
+        "threshold"
+      ],
+      "properties": {
+        "criterion_id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "NULL_CONTROL",
+            "PERMUTATION",
+            "MULTIPLE_TESTING",
+            "PURGED_CV",
+            "COST_SENSITIVITY",
+            "STABILITY",
+            "OOS_PINNED_SHA"
+          ]
+        },
+        "metric_def_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "operator": {
+          "type": "string",
+          "enum": [
+            "<",
+            "<=",
+            ">",
+            ">=",
+            "==",
+            "!="
+          ]
+        },
+        "threshold": {
+          "$ref": "#/$defs/DecimalString"
+        },
+        "split_config_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "cost_model_config_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ContentId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "post_hoc": {
+          "type": "boolean"
+        },
+        "added_at_event_seq": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "post_hoc": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "added_at_event_seq": {
+                "type": "integer"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "added_at_event_seq": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "description": "Falsification criterion. UD-4: threshold is DecimalString. UD-7: post_hoc=false + added_at_event_seq=null for preregistered criteria (inside Hypothesis); post_hoc=true + added_at_event_seq (CRITERION_ADDED event seq) for CriterionAddendum criteria."
+    },
+    "SearchFamily": {
+      "type": "object",
+      "description": "Multiple-testing ledger root. UD-11 (Q7 decided 2026-09-28 01:24 IST): all four corrections run in parallel, each producing its own Measurement/Evidence; never merged into one verdict. Every Hypothesis/variant tested (incl. killed) counts toward realised family size.",
+      "additionalProperties": false,
+      "required": [
+        "correction_mode",
+        "corrections",
+        "declared_size",
+        "description",
+        "entity_type",
+        "human_id",
+        "id",
+        "schema_version",
+        "search_space_config_id"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "SearchFamily"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "description": {
+          "type": "string"
+        },
+        "search_space_config_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "declared_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "correction_mode": {
+          "const": "PARALLEL_COMPARISON",
+          "description": "UD-11 (2026-09-28 01:24 IST): only active mode. SINGLE_DECLARED retired (history in the card; no lab records exist yet, so removal breaks no stored history)."
+        },
+        "corrections": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/CorrectionSpec"
+          },
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "method": {
+                    "const": "BONFERRONI"
+                  }
+                },
+                "required": [
+                  "method"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "method": {
+                    "const": "HOLM"
+                  }
+                },
+                "required": [
+                  "method"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "method": {
+                    "const": "BH_FDR"
+                  }
+                },
+                "required": [
+                  "method"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "method": {
+                    "const": "WHITE_RC_SPA"
+                  }
+                },
+                "required": [
+                  "method"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            }
+          ],
+          "description": "UD-11: exactly the four methods BONFERRONI, HOLM, BH_FDR, WHITE_RC_SPA, each exactly once, each with declared alpha. Sorted by method for hashing."
+        }
+      }
+    },
+    "Experiment": {
+      "type": "object",
+      "description": "Frozen design testing exactly one Hypothesis. Identity inputs: hypothesis_id + design.",
+      "additionalProperties": false,
+      "required": [
+        "design",
+        "entity_type",
+        "human_id",
+        "hypothesis_id",
+        "id",
+        "schema_version"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "Experiment"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "hypothesis_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "design": {
+          "$ref": "#/$defs/ExperimentDesign"
+        }
+      }
+    },
+    "ExperimentDesign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dataset_ids",
+        "feature_schema_id",
+        "population_config_id",
+        "label_config_id",
+        "split_config_id",
+        "cost_model_config_ids",
+        "metric_def_ids",
+        "control_arms",
+        "holdout_dataset_ids"
+      ],
+      "properties": {
+        "dataset_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContentId"
+          },
+          "uniqueItems": true
+        },
+        "feature_schema_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "population_config_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "label_config_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "split_config_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "cost_model_config_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContentId"
+          },
+          "minItems": 1
+        },
+        "metric_def_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContentId"
+          },
+          "minItems": 1
+        },
+        "control_arms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "arm",
+              "config_id"
+            ],
+            "properties": {
+              "arm": {
+                "type": "string",
+                "enum": [
+                  "NULL_SHUFFLED_LABEL",
+                  "RANDOM_TRIGGER",
+                  "TRIGGER_ONLY_NO_CONDITION",
+                  "TIME_SHIFTED"
+                ]
+              },
+              "config_id": {
+                "$ref": "#/$defs/ContentId"
+              }
+            }
+          }
+        },
+        "holdout_dataset_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContentId"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "Configuration": {
+      "type": "object",
+      "description": "Fully-resolved declared config. Identity = sha256(JCS({kind, config_schema_id, resolved})). defaults_applied MUST be empty; a missing required key is a validation REJECT (fail-closed). cost_model_id == config id of kind COST_MODEL. UD-4: resolved must be HashSafeJSON (no JSON floats; decimals as DecimalString).",
+      "additionalProperties": false,
+      "required": [
+        "config_schema_id",
+        "declared_keys",
+        "defaults_applied",
+        "entity_type",
+        "human_id",
+        "id",
+        "kind",
+        "resolved",
+        "schema_version"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "Configuration"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "TRIGGER",
+            "CONDITION",
+            "LABEL",
+            "POPULATION",
+            "SPLIT",
+            "COST_MODEL",
+            "SEARCH_SPACE",
+            "PIPELINE",
+            "CONTROL_ARM",
+            "SLICE"
+          ]
+        },
+        "config_schema_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "resolved": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/HashSafeJSON"
+          }
+        },
+        "declared_keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "defaults_applied": {
+          "const": []
+        }
+      }
+    },
+    "CodeIdentity": {
+      "type": "object",
+      "description": "Pinned code. Identity inputs: all fields. dirty must be false (dirty tree = run REJECTED).",
+      "additionalProperties": false,
+      "required": [
+        "dirty",
+        "entity_type",
+        "env_lock_hash",
+        "git_commit",
+        "human_id",
+        "id",
+        "included_paths",
+        "platform",
+        "python_version",
+        "schema_version",
+        "tree_hash"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "CodeIdentity"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "git_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "tree_hash": {
+          "type": "string"
+        },
+        "dirty": {
+          "const": false
+        },
+        "included_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env_lock_hash": {
+          "type": "string"
+        },
+        "python_version": {
+          "type": "string"
+        },
+        "platform": {
+          "type": "string"
+        }
+      }
+    },
+    "ClockReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timezone",
+        "user_reviewed",
+        "reviewed_by",
+        "reviewed_at",
+        "detector"
+      ],
+      "properties": {
+        "timezone": {
+          "type": "string"
+        },
+        "user_reviewed": {
+          "type": "boolean"
+        },
+        "reviewed_by": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewed_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "detector": {
+          "type": "string"
+        }
+      }
+    },
+    "Dataset": {
+      "type": "object",
+      "description": "Market authority = MT5 OHLCV. Identity: MT5_OHLCV = sha256(JCS({source,symbol,timeframe,broker_server,manifest sorted by rel_path})); DERIVED (UD-10, decided 2026-09-28 01:12 IST) = sha256(JCS({source,symbol,timeframe,transform})) with manifest as bit-exact output witness. Derived M15 must come from M5 (source_timeframe=M5), never mixed with vendor/raw M15; Excel is not a source. derived_from_dataset_ids=[transform.source_hash] and derivation_code_id=transform.transform_code_hash (cross-record check). clock_review is an attribute, not identity; unreviewed clock => QUARANTINED. UD-13: usage_class (FULL|SMOKE) is required and an identity input. XAUUSD FULL = data/mt5/XAUUSD_M15.csv (raw MT5_OHLCV); XAUUSD SMOKE = data/XAUUSD_mt5_1month_latest.csv (QUARANTINED tz_unreviewed until user review).",
+      "additionalProperties": false,
+      "required": [
+        "broker_server",
+        "clock_review",
+        "derivation_code_id",
+        "derived_from_dataset_ids",
+        "entity_type",
+        "human_id",
+        "id",
+        "manifest",
+        "schema_version",
+        "source",
+        "symbol",
+        "timeframe",
+        "transform",
+        "ts_max_utc",
+        "ts_min_utc",
+        "usage_class"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "Dataset"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "MT5_OHLCV",
+            "DERIVED"
+          ]
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "timeframe": {
+          "type": "string"
+        },
+        "broker_server": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "manifest": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "rel_path",
+              "sha256",
+              "rows"
+            ],
+            "properties": {
+              "rel_path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "rows": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "ts_min_utc": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "ts_max_utc": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "clock_review": {
+          "$ref": "#/$defs/ClockReview"
+        },
+        "derived_from_dataset_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContentId"
+          },
+          "uniqueItems": true
+        },
+        "derivation_code_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ContentId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transform": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/DatasetTransform"
+            }
+          ]
+        },
+        "usage_class": {
+          "$ref": "#/$defs/UsageClass"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "DERIVED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "transform": {
+                "$ref": "#/$defs/DatasetTransform"
+              },
+              "derived_from_dataset_ids": {
+                "minItems": 1,
+                "maxItems": 1
+              },
+              "derivation_code_id": {
+                "$ref": "#/$defs/ContentId"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "transform": {
+                "type": "null"
+              },
+              "derived_from_dataset_ids": {
+                "maxItems": 0
+              },
+              "derivation_code_id": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "DERIVED"
+              },
+              "timeframe": {
+                "const": "M15"
+              }
+            },
+            "required": [
+              "source",
+              "timeframe"
+            ]
+          },
+          "then": {
+            "properties": {
+              "transform": {
+                "properties": {
+                  "params": {
+                    "properties": {
+                      "source_timeframe": {
+                        "const": "M5"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "FeatureSchema": {
+      "type": "object",
+      "description": "Column contract for Observations (names, dtypes, units, point-in-time lag). Identity = sha256(JCS(columns sorted by name)).",
+      "additionalProperties": false,
+      "required": [
+        "columns",
+        "entity_type",
+        "human_id",
+        "id",
+        "schema_version"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "FeatureSchema"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "dtype",
+              "unit",
+              "causal_lag_bars",
+              "definition_code_id"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "dtype": {
+                "type": "string"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "causal_lag_bars": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "definition_code_id": {
+                "$ref": "#/$defs/ContentId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "MetricDefinition": {
+      "type": "object",
+      "description": "Reusable metric definition (Metric entity, definition side). Identity = sha256(JCS(all fields)). UD-3: reproduction_tolerance is required and part of identity inputs (changing tolerance = new MetricDefinition id).",
+      "additionalProperties": false,
+      "required": [
+        "entity_type",
+        "formula",
+        "human_id",
+        "id",
+        "implementation_code_id",
+        "name",
+        "params_config_id",
+        "reproduction_tolerance",
+        "schema_version",
+        "unit"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "MetricDefinition"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "name": {
+          "type": "string"
+        },
+        "formula": {
+          "type": "string"
+        },
+        "implementation_code_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "params_config_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ContentId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "reproduction_tolerance": {
+          "$ref": "#/$defs/ReproductionTolerance"
+        }
+      }
+    },
+    "Run": {
+      "type": "object",
+      "description": "One execution. derivation_id = sha256(JCS(inputs + experiment_id)); id = sha256(JCS({derivation_id, attempt_seq})). Reproduction = new Run, same derivation_id; reproducible iff output_manifest_hash equal.",
+      "additionalProperties": false,
+      "required": [
+        "attempt_seq",
+        "derivation_id",
+        "entity_type",
+        "executor",
+        "experiment_id",
+        "falsification_id",
+        "human_id",
+        "id",
+        "input_checks",
+        "inputs",
+        "output_manifest_hash",
+        "purpose",
+        "schema_version",
+        "started_event_seq"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "Run"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "experiment_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "DISCOVERY",
+            "CONTROL",
+            "REPRODUCTION",
+            "FALSIFICATION"
+          ]
+        },
+        "falsification_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ContentId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "derivation_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "inputs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dataset_ids",
+            "code_id",
+            "config_ids",
+            "feature_schema_id",
+            "seed"
+          ],
+          "properties": {
+            "dataset_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContentId"
+              },
+              "uniqueItems": true
+            },
+            "code_id": {
+              "$ref": "#/$defs/ContentId"
+            },
+            "config_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContentId"
+              },
+              "uniqueItems": true
+            },
+            "feature_schema_id": {
+              "$ref": "#/$defs/ContentId"
+            },
+            "seed": {
+              "type": "integer"
+            }
+          }
+        },
+        "attempt_seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "started_event_seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "input_checks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dataset_hash",
+            "clock_reviewed",
+            "code_clean",
+            "config_complete",
+            "holdout_untouched"
+          ],
+          "properties": {
+            "dataset_hash": {
+              "$ref": "#/$defs/TrustStatus"
+            },
+            "clock_reviewed": {
+              "$ref": "#/$defs/TrustStatus"
+            },
+            "code_clean": {
+              "$ref": "#/$defs/TrustStatus"
+            },
+            "config_complete": {
+              "$ref": "#/$defs/TrustStatus"
+            },
+            "holdout_untouched": {
+              "$ref": "#/$defs/TrustStatus"
+            }
+          },
+          "description": "holdout_untouched (UD-2): no prior HOLDOUT_ACCESS for this run's (search_family_id, hypothesis_id) pair on its holdout datasets; UNKNOWN = FAIL."
+        },
+        "output_manifest_hash": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ContentId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "UD-3: hash of the manifest of object hashes (ObservationSets, Artifacts) only - bit-exact; metric values are excluded and checked under tolerance."
+        },
+        "executor": {
+          "type": "string"
+        }
+      }
+    },
+    "ObservationSet": {
+      "type": "object",
+      "description": "Physical unit of Observations. id = derivation_id-scoped: sha256(JCS({derivation_id})); content_hash = sha256 over canonical row stream (sorted by observation_key). Eviction keeps row; rematerialisation must reproduce content_hash. UD-8: storage_state/archive_uri/archived_at_event_seq are storage projections (excluded from identity). ARCHIVED requires archive_uri + archived_at_event_seq; same content_hash; RESTORED keeps the archive_uri as provenance. EVICTED forbidden while a SURVIVING Finding depends on the set (cross-record lineage check).",
+      "additionalProperties": false,
+      "required": [
+        "archive_uri",
+        "archived_at_event_seq",
+        "content_hash",
+        "derivation_id",
+        "entity_type",
+        "feature_schema_id",
+        "human_id",
+        "id",
+        "produced_by_run_id",
+        "row_count",
+        "schema_version",
+        "storage",
+        "storage_state"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "ObservationSet"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "derivation_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "produced_by_run_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "feature_schema_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "row_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "content_hash": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "storage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "uri_prefix",
+            "partitioning"
+          ],
+          "properties": {
+            "uri_prefix": {
+              "type": "string"
+            },
+            "partitioning": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "storage_state": {
+          "type": "string",
+          "enum": [
+            "MATERIALIZED",
+            "COLD",
+            "ARCHIVED",
+            "EVICTED",
+            "RESTORED",
+            "REMATERIALIZED"
+          ]
+        },
+        "archive_uri": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "archived_at_event_seq": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "storage_state": {
+                "const": "ARCHIVED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "archive_uri": {
+                "type": "string",
+                "minLength": 1
+              },
+              "archived_at_event_seq": {
+                "type": "integer"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "archive_uri": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "storage_state": {
+                "enum": [
+                  "MATERIALIZED",
+                  "COLD",
+                  "EVICTED",
+                  "REMATERIALIZED"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "archive_uri": {
+                "type": "null"
+              },
+              "archived_at_event_seq": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "observation_set_id",
+        "observation_key",
+        "symbol",
+        "event_ts_utc",
+        "trigger_event",
+        "label_value",
+        "label_known_at_utc"
+      ],
+      "properties": {
+        "observation_set_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "observation_key": {
+          "type": "string",
+          "description": "sha256(JCS({symbol,event_ts_utc,trigger_event,arm})) hex; unique within set"
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "event_ts_utc": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "trigger_event": {
+          "type": "string"
+        },
+        "arm": {
+          "type": "string"
+        },
+        "condition_true": {
+          "type": "boolean"
+        },
+        "label_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "label_known_at_utc": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      },
+      "description": "Parquet row (not a catalog entity). Extra columns governed by FeatureSchema; additionalProperties allowed only for FeatureSchema columns (validated against it)."
+    },
+    "Measurement": {
+      "type": "object",
+      "description": "Metric value over an ObservationSet slice. Identity inputs: observation_set_id, metric_def_id, slice_config_id, split, cost_model_config_id (NOT value; value is verified by recompute).",
+      "additionalProperties": false,
+      "required": [
+        "computed_by_run_id",
+        "cost_model_config_id",
+        "entity_type",
+        "human_id",
+        "id",
+        "metric_def_id",
+        "n",
+        "observation_set_id",
+        "schema_version",
+        "slice_config_id",
+        "split",
+        "trust",
+        "uncertainty",
+        "value"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "Measurement"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "observation_set_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "computed_by_run_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "metric_def_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "slice_config_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ContentId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "split": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "split_config_id",
+            "fold",
+            "segment"
+          ],
+          "properties": {
+            "split_config_id": {
+              "$ref": "#/$defs/ContentId"
+            },
+            "fold": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "segment": {
+              "type": "string",
+              "enum": [
+                "IS",
+                "OOS",
+                "CV_TRAIN",
+                "CV_TEST",
+                "HOLDOUT",
+                "FULL"
+              ]
+            }
+          }
+        },
+        "cost_model_config_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ContentId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "uncertainty": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "method",
+            "ci_low",
+            "ci_high",
+            "p_value"
+          ],
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "ci_low": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ci_high": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "p_value": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "trust": {
+          "$ref": "#/$defs/TrustStatus"
+        }
+      }
+    },
+    "Evidence": {
+      "type": "object",
+      "description": "Sealed bundle of Measurements answering a declared test. Identity = sha256(JCS({hypothesis_id,test_declaration,measurements sorted,family_accounting,artifact_ids sorted})). Shared by many Findings.",
+      "additionalProperties": false,
+      "required": [
+        "artifact_ids",
+        "entity_type",
+        "family_accounting",
+        "human_id",
+        "hypothesis_id",
+        "id",
+        "measurements",
+        "schema_version",
+        "smoke_only",
+        "test_declaration",
+        "trust"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "Evidence"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "hypothesis_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "test_declaration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "criterion_ids",
+            "decision_rule"
+          ],
+          "properties": {
+            "criterion_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "decision_rule": {
+              "type": "string"
+            }
+          }
+        },
+        "measurements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "measurement_id",
+              "role"
+            ],
+            "properties": {
+              "measurement_id": {
+                "$ref": "#/$defs/ContentId"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "PRIMARY",
+                  "CONTROL",
+                  "NULL",
+                  "OOS",
+                  "COST_SENSITIVITY",
+                  "STABILITY",
+                  "CV_FOLD"
+                ]
+              }
+            }
+          }
+        },
+        "family_accounting": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "adjusted_alpha",
+            "correction",
+            "realised_family_size",
+            "search_family_id"
+          ],
+          "properties": {
+            "search_family_id": {
+              "$ref": "#/$defs/ContentId"
+            },
+            "realised_family_size": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "adjusted_alpha": {
+              "$ref": "#/$defs/DecimalString"
+            },
+            "correction": {
+              "$ref": "#/$defs/CorrectionSpec"
+            }
+          },
+          "description": "UD-11: one correction per Evidence; four Evidence records per test (one per method). correction must match one of the SearchFamily's four (cross-record check)."
+        },
+        "artifact_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContentId"
+          },
+          "uniqueItems": true
+        },
+        "trust": {
+          "$ref": "#/$defs/TrustStatus"
+        },
+        "smoke_only": {
+          "type": "boolean",
+          "description": "UD-13: true iff any Dataset in this Evidence's ancestor lineage has usage_class SMOKE (lineage check). smoke_only Evidence never counts toward SURVIVING."
+        }
+      }
+    },
+    "Finding": {
+      "type": "object",
+      "description": "Recorded knowledge. Identity = sha256(JCS({hypothesis_id,claim,claim_scope,evidence sorted,supersedes_finding_id})). economic_claim_eligible (was economic_claims_allowed) is a derived research flag; UNKNOWN != PASS; confers no production authority. UD-6: survival_policy + minimum_criteria are identity inputs; survival_projection is a projection excluded from identity.",
+      "additionalProperties": false,
+      "required": [
+        "claim",
+        "claim_scope",
+        "economic_claim_eligible",
+        "entity_type",
+        "evidence",
+        "human_id",
+        "hypothesis_id",
+        "id",
+        "minimum_criteria",
+        "schema_version",
+        "supersedes_finding_id",
+        "survival_policy",
+        "survival_projection"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "Finding"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "hypothesis_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "claim": {
+          "type": "string"
+        },
+        "claim_scope": {
+          "type": "string",
+          "enum": [
+            "STATISTICAL",
+            "ECONOMIC"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "evidence_id",
+              "role"
+            ],
+            "properties": {
+              "evidence_id": {
+                "$ref": "#/$defs/ContentId"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "SUPPORTS",
+                  "CONTRADICTS",
+                  "CONTEXT"
+                ]
+              }
+            }
+          }
+        },
+        "supersedes_finding_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ContentId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "economic_claim_eligible": {
+          "$ref": "#/$defs/TrustStatus"
+        },
+        "survival_policy": {
+          "$ref": "#/$defs/SurvivalPolicy"
+        },
+        "minimum_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "criterion_id",
+              "post_hoc"
+            ],
+            "properties": {
+              "criterion_id": {
+                "type": "string"
+              },
+              "post_hoc": {
+                "const": false
+              }
+            }
+          },
+          "description": "UD-6/UD-7: non-empty subset of the Hypothesis's PREREGISTERED criteria. post_hoc must be false (post-hoc criteria can never be minimum). Under ALL_DECLARED_CRITERIA must list every preregistered criterion (cross-record check)."
+        },
+        "survival_projection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "untried_criteria",
+            "as_of_event_seq"
+          ],
+          "properties": {
+            "untried_criteria": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "criterion_id",
+                  "post_hoc",
+                  "is_minimum"
+                ],
+                "properties": {
+                  "criterion_id": {
+                    "type": "string"
+                  },
+                  "post_hoc": {
+                    "type": "boolean"
+                  },
+                  "is_minimum": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "as_of_event_seq": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "description": "UD-6 PROJECTION (excluded from identity, like lifecycle state): declared criteria not yet tried, as of the latest SURVIVAL_EVALUATED event."
+        }
+      }
+    },
+    "Falsification": {
+      "type": "object",
+      "description": "First-class attempt to kill a Finding. Identity = sha256(JCS({finding_id,criterion_id,kind,plan})). outcome is written once (event CONCLUDED); VOID if plan declared after any of its runs started or holdout already touched. UD-2: kind OOS_PINNED_SHA requires plan.holdout_scope = (search_family_id, hypothesis_id) of the target Finding's Hypothesis; VOID if a HoldoutAccess with access_ordinal>=2 exists for that scope+holdout before conclusion.",
+      "additionalProperties": false,
+      "required": [
+        "criterion_id",
+        "entity_type",
+        "finding_id",
+        "human_id",
+        "id",
+        "kind",
+        "outcome",
+        "plan",
+        "post_hoc",
+        "schema_version"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "Falsification"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "finding_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "criterion_id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/FalsificationCriterion/properties/kind"
+        },
+        "plan": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "config_ids",
+            "dataset_ids",
+            "declared_event_seq",
+            "experiment_id",
+            "holdout_scope",
+            "pinned_code_id",
+            "survival_policy"
+          ],
+          "properties": {
+            "experiment_id": {
+              "$ref": "#/$defs/ContentId"
+            },
+            "pinned_code_id": {
+              "$ref": "#/$defs/ContentId"
+            },
+            "dataset_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContentId"
+              },
+              "uniqueItems": true
+            },
+            "config_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContentId"
+              },
+              "uniqueItems": true
+            },
+            "declared_event_seq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "holdout_scope": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/$defs/HoldoutScope"
+                }
+              ]
+            },
+            "survival_policy": {
+              "$ref": "#/$defs/SurvivalPolicy"
+            }
+          }
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "result",
+            "evidence_id",
+            "concluded_event_seq"
+          ],
+          "properties": {
+            "result": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "SURVIVED",
+                "FALSIFIED",
+                "INCONCLUSIVE",
+                "VOID"
+              ]
+            },
+            "evidence_id": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ContentId"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "concluded_event_seq": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          }
+        },
+        "post_hoc": {
+          "type": "boolean",
+          "description": "UD-7: true iff criterion_id refers to a CriterionAddendum criterion. Post-hoc attempts can FALSIFY but never count toward SURVIVING."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "OOS_PINNED_SHA"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "plan": {
+                "properties": {
+                  "holdout_scope": {
+                    "$ref": "#/$defs/HoldoutScope"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Artifact": {
+      "type": "object",
+      "description": "Any immutable blob in CAS. id = 'sha256:'+sha256(bytes). Trace (e.g. layer_trace PER_RUN_FILE) is kind TRACE.",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "cas_uri",
+        "entity_type",
+        "human_id",
+        "id",
+        "kind",
+        "media_type",
+        "produced_by_run_id",
+        "schema_version",
+        "sha256"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "Artifact"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "TRACE",
+            "REPORT",
+            "PLOT",
+            "MODEL",
+            "LOG",
+            "MANIFEST",
+            "RAW_EXPORT",
+            "OTHER"
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "media_type": {
+          "type": "string"
+        },
+        "produced_by_run_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ContentId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cas_uri": {
+          "type": "string"
+        }
+      }
+    },
+    "Consumer": {
+      "type": "object",
+      "description": "Read-only record of who reads Findings. No write path, no decision fields. Reads are logged as READ events. UD-9: registration is mandatory for every read of views/; reads by unregistered identities are rejected (READ_REJECTED).",
+      "additionalProperties": false,
+      "required": [
+        "access",
+        "contact",
+        "entity_type",
+        "human_id",
+        "id",
+        "kind",
+        "name",
+        "schema_version"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "Consumer"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "HUMAN",
+            "SERVICE",
+            "REPORT",
+            "FUTURE_PHASE"
+          ]
+        },
+        "contact": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "access": {
+          "const": "READ_ONLY"
+        }
+      }
+    },
+    "Edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attributes",
+        "dst_id",
+        "dst_type",
+        "event_seq",
+        "rel",
+        "src_id",
+        "src_type"
+      ],
+      "properties": {
+        "src_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "src_type": {
+          "type": "string"
+        },
+        "dst_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "dst_type": {
+          "type": "string"
+        },
+        "event_seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rel": {
+          "type": "string",
+          "enum": [
+            "TESTS",
+            "EXECUTES",
+            "PRODUCED",
+            "MEASURES",
+            "COMPUTED_BY",
+            "CITES",
+            "SUPPORTED_BY",
+            "TARGETS",
+            "PRODUCES_EVIDENCE",
+            "USES_DATASET",
+            "USES_CODE",
+            "USES_CONFIG",
+            "USES_FEATURE_SCHEMA",
+            "USES_METRIC",
+            "MEMBER_OF_FAMILY",
+            "REPRODUCES",
+            "DERIVED_FROM",
+            "REVISES",
+            "SUPERSEDES",
+            "ATTACHES_ARTIFACT",
+            "READ_BY"
+          ]
+        },
+        "attributes": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/ReproductionRecord"
+            }
+          ]
+        }
+      },
+      "description": "Directed child->parent (derived -> source). Every edge is also implied by an id field inside src's identity inputs, so edges are immutable by construction and rebuildable. attributes: ReproductionRecord on REPRODUCES (UD-3), null on every other rel.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "rel": {
+                "const": "REPRODUCES"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "attributes": {
+                "$ref": "#/$defs/ReproductionRecord"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "attributes": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity_id",
+        "entity_type",
+        "hash",
+        "payload",
+        "prev_hash",
+        "scope",
+        "seq",
+        "ts_utc",
+        "type"
+      ],
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ts_utc": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "CREATED",
+            "REGISTERED",
+            "FROZEN",
+            "STATE_CHANGED",
+            "SEALED",
+            "CONCLUDED",
+            "REPRO_MATCH",
+            "REPRO_MISMATCH",
+            "EVICTED",
+            "REMATERIALIZED",
+            "HOLDOUT_ACCESS",
+            "READ",
+            "ANNOTATED",
+            "REJECTED",
+            "CRITERION_ADDED",
+            "SURVIVAL_EVALUATED",
+            "READ_REJECTED",
+            "ARCHIVED",
+            "RESTORED",
+            "ARCHIVE_RESTORE_VERIFY_FAILED"
+          ]
+        },
+        "entity_type": {
+          "type": "string"
+        },
+        "entity_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "payload": {
+          "type": "object"
+        },
+        "prev_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "sha256(prev_hash || JCS(event without hash))"
+        },
+        "scope": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/HoldoutScope"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "HOLDOUT_ACCESS"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "scope": {
+                "$ref": "#/$defs/HoldoutScope"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "REPRO_MATCH",
+                  "REPRO_MISMATCH"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/$defs/ReproductionRecord"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "SURVIVAL_EVALUATED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/$defs/SurvivalEvaluation"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "CRITERION_ADDED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "entity_type": {
+                "const": "CriterionAddendum"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "READ"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/$defs/ReadEventPayload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "READ_REJECTED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/$defs/ReadRejectedPayload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "ARCHIVED",
+                  "RESTORED",
+                  "ARCHIVE_RESTORE_VERIFY_FAILED"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/$defs/ArchiveEventPayload"
+              }
+            }
+          }
+        }
+      ],
+      "description": "Hash-chained log record. scope is required non-null for HOLDOUT_ACCESS (UD-2); payload must be a ReproductionRecord for REPRO_MATCH/REPRO_MISMATCH (UD-3)."
+    },
+    "DecimalString": {
+      "type": "string",
+      "pattern": "^(0|-?[1-9][0-9]*|-?(0|[1-9][0-9]*)\\.[0-9]*[1-9])$",
+      "description": "UD-4 canonical decimal string: plain decimal, minimal form (no exponent, no '+', no leading/trailing zeros, no '-0'). One value = one hashable spelling. Used for EVERY non-integer value in any hashed field."
+    },
+    "ReproductionTolerance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "ABSOLUTE",
+            "RELATIVE",
+            "EXACT"
+          ]
+        },
+        "value": {
+          "$ref": "#/$defs/DecimalString"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "EXACT"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "const": "0"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "ABSOLUTE",
+                  "RELATIVE"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "not": {
+                  "pattern": "^-"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "description": "UD-3. REQUIRED on every MetricDefinition, NO default. EXACT = bit-exact (value must be \"0\"). ABSOLUTE: |obs-ref| <= value. RELATIVE: |obs-ref| <= value*max(|ref|,LabManifest.relative_tolerance_epsilon (0.000000000001)). Applies ONLY to Measurement values; ObservationSet content_hash, Artifact sha256 and Run output manifest hashes are always bit-exact."
+    },
+    "ReproductionRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference_run_id",
+        "reproduction_run_id",
+        "derivation_id",
+        "bitexact_checks",
+        "measurement_checks",
+        "result"
+      ],
+      "properties": {
+        "reference_run_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "reproduction_run_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "derivation_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "bitexact_checks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "object_type",
+              "object_id",
+              "expected_hash",
+              "observed_hash",
+              "match"
+            ],
+            "properties": {
+              "object_type": {
+                "type": "string",
+                "enum": [
+                  "ObservationSet",
+                  "Artifact",
+                  "RunOutputManifest"
+                ]
+              },
+              "object_id": {
+                "$ref": "#/$defs/ContentId"
+              },
+              "expected_hash": {
+                "type": "string"
+              },
+              "observed_hash": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "match": {
+                "$ref": "#/$defs/TrustStatus"
+              }
+            }
+          }
+        },
+        "measurement_checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "measurement_id",
+              "metric_def_id",
+              "tolerance",
+              "reference_value",
+              "observed_value",
+              "abs_delta",
+              "rel_delta",
+              "within"
+            ],
+            "properties": {
+              "measurement_id": {
+                "$ref": "#/$defs/ContentId"
+              },
+              "metric_def_id": {
+                "$ref": "#/$defs/ContentId"
+              },
+              "tolerance": {
+                "$ref": "#/$defs/ReproductionTolerance"
+              },
+              "reference_value": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/DecimalString"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observed_value": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/DecimalString"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "abs_delta": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/DecimalString"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "rel_delta": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/DecimalString"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "within": {
+                "$ref": "#/$defs/TrustStatus"
+              }
+            }
+          }
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "REPRO_MATCH",
+            "REPRO_MISMATCH"
+          ]
+        }
+      },
+      "description": "UD-3. REPRO_MATCH iff every bitexact_checks[].match == PASS AND every measurement_checks[].within == PASS (UNKNOWN = FAIL). tolerance is copied from the MetricDefinition at check time and recorded here. Stored as Edge.attributes on REPRODUCES and as the REPRO_* event payload."
+    },
+    "HoldoutScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "search_family_id",
+        "hypothesis_id"
+      ],
+      "properties": {
+        "search_family_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "hypothesis_id": {
+          "$ref": "#/$defs/ContentId"
+        }
+      },
+      "description": "UD-2 (CONFIRMED 2026-09-28 00:47 IST): holdout budget is scoped per (search_family_id, hypothesis_id) pair."
+    },
+    "HoldoutAccess": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity_type",
+        "schema_version",
+        "id",
+        "human_id",
+        "scope",
+        "holdout_dataset_id",
+        "run_id",
+        "falsification_id",
+        "access_ordinal",
+        "event_seq",
+        "voids_later_oos_for_scope"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "HoldoutAccess"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "scope": {
+          "$ref": "#/$defs/HoldoutScope"
+        },
+        "holdout_dataset_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "run_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "falsification_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ContentId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "access_ordinal": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "event_seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "voids_later_oos_for_scope": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "access_ordinal": {
+                "const": 1
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "voids_later_oos_for_scope": {
+                "const": false
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "voids_later_oos_for_scope": {
+                "const": true
+              }
+            }
+          }
+        }
+      ],
+      "description": "UD-2. One record per read of a holdout Dataset. access_ordinal counts per (scope.search_family_id, scope.hypothesis_id, holdout_dataset_id). Only ordinal 1 is a valid OOS access; ordinal >= 2 VOIDs later OOS_PINNED_SHA attempts for THAT pair only. Identity = sha256(JCS({scope, holdout_dataset_id, run_id, access_ordinal}))."
+    },
+    "HashSafeJSON": {
+      "description": "UD-4: recursive JSON allowed in hashed payloads (Configuration.resolved): strings, integers, booleans, null, arrays, objects. Non-integral JSON numbers (floats) are rejected; encode them as DecimalString.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HashSafeJSON"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/HashSafeJSON"
+          }
+        }
+      ]
+    },
+    "CriterionAddendum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity_type",
+        "schema_version",
+        "id",
+        "human_id",
+        "hypothesis_id",
+        "criterion",
+        "reason"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "CriterionAddendum"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "human_id": {
+          "$ref": "#/$defs/HumanId"
+        },
+        "hypothesis_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "criterion": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/FalsificationCriterion"
+            },
+            {
+              "properties": {
+                "post_hoc": {
+                  "const": true
+                },
+                "added_at_event_seq": {
+                  "type": "integer"
+                }
+              }
+            }
+          ]
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "description": "UD-7: criterion added after the Hypothesis was REGISTERED. ALLOWED but FLAGGED (post_hoc=true, added_at_event_seq). Never changes the Hypothesis id; can never be in any Finding.minimum_criteria. Identity = sha256(JCS({hypothesis_id, criterion, reason}))."
+    },
+    "SurvivalPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy",
+        "policy_version"
+      ],
+      "properties": {
+        "policy": {
+          "type": "string",
+          "enum": [
+            "DECLARED_MINIMUM",
+            "ALL_DECLARED_CRITERIA"
+          ]
+        },
+        "policy_version": {
+          "type": "string",
+          "pattern": "^SP-[1-9][0-9]*$"
+        }
+      },
+      "description": "UD-6: declared, versioned survival policy. NO default (required wherever used). Current phase: DECLARED_MINIMUM. ALL_DECLARED_CRITERIA designed for later; switching = new policy_version, never retroactive."
+    },
+    "SurvivalEvaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "correction_results",
+        "finding_id",
+        "lineage_usage_classes",
+        "minimum_criteria",
+        "resulting_state",
+        "survival_governance",
+        "survival_policy",
+        "tried",
+        "untried_criteria"
+      ],
+      "properties": {
+        "finding_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "survival_policy": {
+          "$ref": "#/$defs/SurvivalPolicy"
+        },
+        "minimum_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "criterion_id",
+              "post_hoc"
+            ],
+            "properties": {
+              "criterion_id": {
+                "type": "string"
+              },
+              "post_hoc": {
+                "const": false
+              }
+            }
+          }
+        },
+        "tried": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "criterion_id",
+              "falsification_id",
+              "post_hoc",
+              "result"
+            ],
+            "properties": {
+              "criterion_id": {
+                "type": "string"
+              },
+              "falsification_id": {
+                "$ref": "#/$defs/ContentId"
+              },
+              "post_hoc": {
+                "type": "boolean"
+              },
+              "result": {
+                "type": "string",
+                "enum": [
+                  "SURVIVED",
+                  "FALSIFIED",
+                  "INCONCLUSIVE",
+                  "VOID",
+                  "PENDING"
+                ]
+              }
+            }
+          }
+        },
+        "untried_criteria": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "criterion_id",
+              "post_hoc",
+              "is_minimum"
+            ],
+            "properties": {
+              "criterion_id": {
+                "type": "string"
+              },
+              "post_hoc": {
+                "type": "boolean"
+              },
+              "is_minimum": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "resulting_state": {
+          "type": "string",
+          "enum": [
+            "PROPOSED",
+            "UNDER_FALSIFICATION",
+            "SURVIVING",
+            "FALSIFIED",
+            "INCONCLUSIVE"
+          ]
+        },
+        "survival_governance": {
+          "const": "ALL_FOUR_PASS",
+          "description": "UD-12 (2026-09-28 01:27 IST): SURVIVING only if all four corrections PASS, in addition to UD-6 minimum criteria and UD-7 post-hoc exclusion. UNDECIDED removed."
+        },
+        "correction_results": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/CorrectionResult"
+          },
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "method": {
+                    "const": "BONFERRONI"
+                  }
+                },
+                "required": [
+                  "method"
+                ]
+              },
+              "minContains": 0,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "method": {
+                    "const": "HOLM"
+                  }
+                },
+                "required": [
+                  "method"
+                ]
+              },
+              "minContains": 0,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "method": {
+                    "const": "BH_FDR"
+                  }
+                },
+                "required": [
+                  "method"
+                ]
+              },
+              "minContains": 0,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "method": {
+                    "const": "WHITE_RC_SPA"
+                  }
+                },
+                "required": [
+                  "method"
+                ]
+              },
+              "minContains": 0,
+              "maxContains": 1
+            }
+          ],
+          "description": "UD-12: at most one result per method (duplicates rejected). For SURVIVING: exactly four, one per method, all PASS."
+        },
+        "lineage_usage_classes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/UsageClass"
+          },
+          "description": "UD-13: set of usage_class values of all Datasets in the Finding's lineage (verified by lineage check). SURVIVING requires non-empty and FULL-only."
+        }
+      },
+      "description": "UD-6/UD-12: payload of SURVIVAL_EVALUATED events. resulting_state SURVIVING requires correction_results with all four methods PASS (schema-enforced) AND all minimum criteria tried+survived with no post-hoc minimum (cross-record lineage check). Appended on every (re-)evaluation; never rewrites earlier evaluations.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "resulting_state": {
+                "const": "SURVIVING"
+              }
+            },
+            "required": [
+              "resulting_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "correction_results": {
+                "minItems": 4,
+                "items": {
+                  "properties": {
+                    "status": {
+                      "const": "PASS"
+                    }
+                  }
+                },
+                "allOf": [
+                  {
+                    "contains": {
+                      "properties": {
+                        "method": {
+                          "const": "BONFERRONI"
+                        }
+                      },
+                      "required": [
+                        "method"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "method": {
+                          "const": "HOLM"
+                        }
+                      },
+                      "required": [
+                        "method"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "method": {
+                          "const": "BH_FDR"
+                        }
+                      },
+                      "required": [
+                        "method"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "method": {
+                          "const": "WHITE_RC_SPA"
+                        }
+                      },
+                      "required": [
+                        "method"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                ]
+              },
+              "lineage_usage_classes": {
+                "minItems": 1,
+                "items": {
+                  "const": "FULL"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "LabManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity_type",
+        "schema_version",
+        "hash_algo",
+        "canonicalisation",
+        "catalog",
+        "gc_grace_days",
+        "relative_tolerance_epsilon"
+      ],
+      "properties": {
+        "entity_type": {
+          "const": "LabManifest"
+        },
+        "schema_version": {
+          "const": "lab.v1"
+        },
+        "hash_algo": {
+          "const": "sha256"
+        },
+        "canonicalisation": {
+          "const": "RFC8785-JCS"
+        },
+        "catalog": {
+          "const": "duckdb_single_file"
+        },
+        "gc_grace_days": {
+          "const": 30
+        },
+        "relative_tolerance_epsilon": {
+          "const": "0.000000000001"
+        }
+      },
+      "description": "Declared lab constants (not defaults): UD-1 catalog, UD-5 gc_grace_days=30, UD-3 epsilon. Missing key = invalid manifest."
+    },
+    "ReadEventPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "consumer_id",
+        "view",
+        "snapshot_hash"
+      ],
+      "properties": {
+        "consumer_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "view": {
+          "type": "string",
+          "enum": [
+            "findings_v",
+            "lineage_v",
+            "falsifications_v",
+            "evidence_v"
+          ]
+        },
+        "snapshot_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "description": "UD-9: every READ of views/ carries a REGISTERED consumer_id. Read-only; no write-back."
+    },
+    "ReadRejectedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "presented_identity",
+        "view",
+        "reason"
+      ],
+      "properties": {
+        "presented_identity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "view": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "NO_CONSUMER_ID",
+            "CONSUMER_NOT_REGISTERED",
+            "CONSUMER_INACTIVE"
+          ]
+        }
+      },
+      "description": "UD-9: payload of READ_REJECTED (unregistered read attempt)."
+    },
+    "ArchiveEventPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observation_set_id",
+        "archive_uri",
+        "content_hash",
+        "verified"
+      ],
+      "properties": {
+        "observation_set_id": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "archive_uri": {
+          "type": "string",
+          "minLength": 1
+        },
+        "content_hash": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "verified": {
+          "$ref": "#/$defs/TrustStatus"
+        }
+      },
+      "description": "UD-8: payload of ARCHIVED / RESTORED / ARCHIVE_RESTORE_VERIFY_FAILED."
+    },
+    "CorrectionSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "alpha"
+      ],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "BONFERRONI",
+            "HOLM",
+            "BH_FDR",
+            "WHITE_RC_SPA"
+          ]
+        },
+        "alpha": {
+          "$ref": "#/$defs/DecimalString"
+        }
+      },
+      "description": "UD-11: one of the four mandatory parallel corrections, with an explicitly declared alpha (DecimalString, no default). WHITE_RC_SPA = White's Reality Check / Hansen SPA (one slot)."
+    },
+    "DerivationParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_timeframe",
+        "bar_boundary_anchor",
+        "timezone",
+        "partial_bar_rule"
+      ],
+      "properties": {
+        "source_timeframe": {
+          "type": "string",
+          "enum": [
+            "M1",
+            "M5",
+            "M15",
+            "H1"
+          ]
+        },
+        "bar_boundary_anchor": {
+          "type": "string",
+          "enum": [
+            "UTC_EPOCH_ALIGNED",
+            "SOURCE_CLOCK_ALIGNED"
+          ],
+          "description": "Where target bars start (e.g. :00/:15/:30/:45 on the declared timezone clock). Must be declared; no default."
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(UTC|[A-Za-z_]+/[A-Za-z_]+(/[A-Za-z_]+)?)$",
+          "description": "IANA timezone of the bar clock. Must be declared; no default."
+        },
+        "partial_bar_rule": {
+          "type": "string",
+          "enum": [
+            "DROP_INCOMPLETE",
+            "KEEP_FLAGGED_INCOMPLETE"
+          ],
+          "description": "What to do when a target bar lacks source bars. Must be declared; no default."
+        }
+      },
+      "description": "UD-10: declared resampling parameters. Every key required; missing = schema-invalid (fail-closed)."
+    },
+    "DatasetTransform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_hash",
+        "transform_code_hash",
+        "params"
+      ],
+      "properties": {
+        "source_hash": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "transform_code_hash": {
+          "$ref": "#/$defs/ContentId"
+        },
+        "params": {
+          "$ref": "#/$defs/DerivationParams"
+        }
+      },
+      "description": "UD-10: derivation record of a DERIVED Dataset. source_hash = content id of the source Dataset (MT5_OHLCV M5 for derived M15); transform_code_hash = CodeIdentity id of the resampling code. Identity input of the derived Dataset; no defaults."
+    },
+    "CorrectionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "evidence_id",
+        "status"
+      ],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "BONFERRONI",
+            "HOLM",
+            "BH_FDR",
+            "WHITE_RC_SPA"
+          ]
+        },
+        "evidence_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ContentId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "FAIL",
+            "MISSING",
+            "ERROR",
+            "UNKNOWN"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "PASS",
+                  "FAIL"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "evidence_id": {
+                "$ref": "#/$defs/ContentId"
+              }
+            }
+          }
+        }
+      ],
+      "description": "UD-12: outcome of one parallel correction for the Finding's test. PASS/FAIL require the sealed Evidence id. MISSING/ERROR/UNKNOWN = not passed (fail-closed)."
+    },
+    "UsageClass": {
+      "type": "string",
+      "enum": [
+        "FULL",
+        "SMOKE"
+      ],
+      "description": "UD-13: declared dataset usage class; required, no default. SMOKE = fast/pipeline runs only; evidence from SMOKE lineage can never count toward SURVIVING."
+    }
+  }
+}

@@ -363,7 +363,8 @@
         "try_expansion_to_retest L1416"
       ],
       "incoming_via_valid_transitions": [
-        "EXPANSION"
+        "EXPANSION",
+        "RANGE"
       ],
       "outgoing_via_valid_transitions": [
         "EXECUTION",
@@ -613,6 +614,13 @@
       "method": "try_expansion_to_retest",
       "line": 1416,
       "via": "_transition"
+    },
+    {
+      "from": "RANGE",
+      "to": "RETEST",
+      "method": "_found_retest_from_resolver",
+      "via": "_transition",
+      "note": "STORY-83.11b mode-C resolver-founding edge (decider=resolver only): reset to RANGE, install the four resolver-handed objects, commit via StateMachine._commit_retest"
     },
     {
       "from": "EXPANSION",

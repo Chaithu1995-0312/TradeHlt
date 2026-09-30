@@ -39,9 +39,12 @@ order of strength:
 - `bar_structure_snapshot.enabled` defaults to **false** in every config.
 - Emission happens **after** `CRTEngine.process_candle` has already returned. The emitter takes
   read-only views of engine/feed state and returns None; no caller consumes its output.
-- Decision-neutrality is **proven, not asserted**: `tests/test_bar_structure_decision_neutrality.py`
+- Decision-neutrality is **proven, not asserted**: `scripts/analysis/v3_config_parity.py` (arm B)
   runs the same corpus with emission ON and OFF and requires a byte-identical trade ledger and
-  event stream. That test is the gate, and softening it would void the claim.
+  event stream; `tests/test_bar_structure_snapshot.py` pins the no-mutation contract at unit level.
+  Softening either would void the claim. CORRECTED 2026-09-28: this previously cited
+  `tests/test_bar_structure_decision_neutrality.py`, which does not exist (the test file's own
+  docstring names v3_config_parity arm B as the empirical proof).
 
 Per CLAUDE.md §6.5 (Authority Ladder), observation earns *tunability*, never *authority*. A
 context family may only influence a decision after `MC-CTXATTR-XAUUSD-M15-V1` produces holdout
@@ -143,6 +146,18 @@ class SnapshotConfig:
     eqh_eql_tolerance_atr: float
     eqh_eql_max_swings: int
     memoize_break_events: bool
+    # ── Live Run Trace (optional; absent = today's behaviour, byte-identical) ──
+    # Observation-only switches for the run-trace UI (ui_kits/run_trace). Python-level
+    # defaults, not `_require`, for the same reason as backtest_v2's optional instrumentation
+    # flags: these gate WHERE and HOW MUCH an observation sidecar writes, never a decision.
+    #   per_run_dir     -> rows go to <output_dir>/<run_id>/<INSTR><suffix> plus a manifest.json
+    #                      written before the first bar (live readers never scan other runs)
+    #   include_features-> each LIVE row carries a trailing `features` block with the 48
+    #                      canonical values (families.features); WARMUP rows carry null
+    #   write_parquet   -> close() builds a parquet_store projection of the per-run JSONL
+    per_run_dir: bool = False
+    include_features: bool = False
+    write_parquet: bool = False
 
     @classmethod
     def from_prod_config(cls, version: Optional[str] = None) -> Optional["SnapshotConfig"]:
@@ -175,6 +190,14 @@ class SnapshotConfig:
                 f"module's SNAPSHOT_SCHEMA_VERSION={SNAPSHOT_SCHEMA_VERSION!r}. A schema "
                 "change is a governed edit, not a config typo."
             )
+        live = {
+            "per_run_dir": section.get("per_run_dir", False),
+            "include_features": families.get("features", False),
+            "write_parquet": section.get("write_parquet", False),
+        }
+        for k, v in live.items():
+            if not isinstance(v, bool):
+                raise TypeError(f"bar_structure_snapshot live-trace switch {k} must be a JSON boolean, got {v!r}")
         return cls(
             enabled=True,
             schema_version=declared,
@@ -186,6 +209,7 @@ class SnapshotConfig:
             eqh_eql_tolerance_atr=float(_require(smc, "eqh_eql_tolerance_atr")),
             eqh_eql_max_swings=int(_require(smc, "eqh_eql_max_swings")),
             memoize_break_events=bool(_require(smc, "memoize_break_events")),
+            **live,
         )
 
 
@@ -292,6 +316,8 @@ class BarStructureEmitter:
         htf_thresholds: Optional[dict],
         feature_schema_version: str,
         feature_schema_hash: str,
+        feature_names: Optional[tuple] = None,
+        manifest_extra: Optional[dict] = None,
     ) -> None:
         self.cfg = cfg
         self._k = int(swing_window)
@@ -300,7 +326,15 @@ class BarStructureEmitter:
         self._d1 = ParentCandleBuilder("D1", keep=2)
         self._buffer: list = []
         self._rows = 0
-        self._path = Path(cfg.output_dir) / f"{instrument}{cfg.filename_suffix}"
+        self._feature_names = tuple(feature_names) if feature_names else ()
+        if cfg.include_features and not self._feature_names:
+            raise ValueError("families.features is on but no feature_names were supplied")
+        if cfg.per_run_dir:
+            self._run_dir: Optional[Path] = Path(cfg.output_dir) / run_id
+            self._path = self._run_dir / f"{instrument}{cfg.filename_suffix}"
+        else:
+            self._run_dir = None
+            self._path = Path(cfg.output_dir) / f"{instrument}{cfg.filename_suffix}"
         self._identity = OrderedDict(
             [
                 ("schema_version", cfg.schema_version),
@@ -321,6 +355,65 @@ class BarStructureEmitter:
         self._parent_timeframe = parent_timeframe
         self._htf_thresholds = htf_thresholds
         self._parent_closed_this_bar = False
+        self._manifest: Optional[dict] = None
+        if self._run_dir is not None:
+            from datetime import datetime, timezone
+            self._manifest = {
+                "manifest_version": "1.0.0",
+                "emitted_by": EMITTED_BY,
+                "status": "running",
+                "started_at": datetime.now(timezone.utc).isoformat(),
+                "finished_at": None,
+                "rows": 0,
+                "jsonl": self._path.name,
+                "identity": dict(self._identity),
+                "feature_schema": {
+                    "version": feature_schema_version,
+                    "hash": feature_schema_hash,
+                    "names": list(self._feature_names),
+                },
+                "features_in_rows": bool(cfg.include_features),
+                "parquet": None,
+            }
+            if manifest_extra:
+                self._manifest.update(manifest_extra)
+            self._write_manifest()
+
+    def _write_manifest(self) -> None:
+        """Atomic replace so a live reader never sees a half-written manifest.
+
+        BUG FOUND 2026-09-28 (RUNTIME, full-corpus run): `Path.replace` onto an existing
+        destination can raise `PermissionError: [WinError 5]` on Windows when a concurrent
+        reader (the run-trace UI polling `/api/run_trace/meta`, an AV scanner, an indexer) has
+        the destination open at that instant -- POSIX's atomic-rename-over-an-open-file
+        guarantee does not hold there. That exception propagated out of `emit()` -> `_write()`
+        and killed the whole backtest: an observation sidecar took the real run down with it,
+        the exact failure this module's own docstring says must never happen. Retried with a
+        short backoff (transient locks clear in well under a second); if it still fails, the
+        manifest write is skipped for this flush and retried on the NEXT one -- the JSONL rows
+        (the actual data) are never affected, only the small summary manifest a live reader
+        polls. Never raises.
+        """
+        if self._run_dir is None or self._manifest is None:
+            return
+        try:
+            self._run_dir.mkdir(parents=True, exist_ok=True)
+            tmp = self._run_dir / "manifest.json.tmp"
+            tmp.write_text(json.dumps(self._manifest, indent=2, ensure_ascii=False, default=str),
+                           encoding="utf-8")
+            import time as _time
+            last_exc = None
+            for attempt in range(5):
+                try:
+                    tmp.replace(self._run_dir / "manifest.json")
+                    return
+                except OSError as exc:  # WinError 5 (locked by a reader) and friends
+                    last_exc = exc
+                    _time.sleep(0.05 * (attempt + 1))
+            logger.warning("run-trace manifest write skipped this flush (%s): %s",
+                          self._run_dir.name, last_exc)
+        except Exception as exc:  # noqa: BLE001 -- observation must never break the real run
+            logger.warning("run-trace manifest write failed (%s): %s", self._run_dir.name, exc)
 
     # ---- path / stats --------------------------------------------------------------------
 
@@ -377,6 +470,8 @@ class BarStructureEmitter:
         rec["close"] = float(candle.close)
         rec["volume"] = float(candle.volume)
         rec["atr_abs"] = None
+        if self.cfg.include_features:
+            rec["features"] = None  # warmup: no feature row exists (T-16) -- never zero-filled
         self._write(rec)
 
     def emit(
@@ -392,6 +487,7 @@ class BarStructureEmitter:
         parent_feed,
         break_of_structure: Optional[float] = None,
         trend_bias: Optional[float] = None,
+        features: Optional[Any] = None,
     ) -> None:
         """Build and write the full record for one processed bar.
 
@@ -429,6 +525,20 @@ class BarStructureEmitter:
 
         # ---- SMC ----
         rec.update(self._smc_block(close, atr_abs, bar_index, break_of_structure, trend_bias))
+
+        # ---- features (Live Run Trace; trailing so every earlier key keeps its position) ----
+        if self.cfg.include_features:
+            if features is None:
+                rec["features"] = None
+            else:
+                vals = list(features)
+                if len(vals) != len(self._feature_names):
+                    raise ValueError(
+                        f"feature vector has {len(vals)} values, schema names {len(self._feature_names)}"
+                    )
+                rec["features"] = OrderedDict(
+                    (n, float(v)) for n, v in zip(self._feature_names, vals)
+                )
 
         self._write(rec)
 
@@ -678,10 +788,32 @@ class BarStructureEmitter:
             for rec in self._buffer:
                 fh.write(json.dumps(rec, ensure_ascii=False, default=str) + "\n")
         self._buffer.clear()
+        if self._manifest is not None:
+            self._manifest["rows"] = self._rows
+            self._write_manifest()
 
     def close(self) -> dict:
         """Flush and return a small run manifest."""
         self.flush()
+        if self._manifest is not None:
+            from datetime import datetime, timezone
+            if self.cfg.write_parquet and self._rows:
+                try:
+                    from utils.parquet_store import compact_jsonl, parquet_available, projection_path
+                    if parquet_available():
+                        pm = compact_jsonl(self._path, verify=True)
+                        self._manifest["parquet"] = {
+                            "path": projection_path(self._path).name,
+                            "rows": pm.get("rows"),
+                            "verified": pm.get("verified"),
+                        }
+                except Exception as exc:  # noqa: BLE001 -- observation must never break a run
+                    logger.warning("run-trace parquet projection failed (JSONL kept): %s", exc)
+                    self._manifest["parquet"] = {"error": str(exc)}
+            self._manifest["status"] = "finished"
+            self._manifest["finished_at"] = datetime.now(timezone.utc).isoformat()
+            self._manifest["rows"] = self._rows
+            self._write_manifest()
         return {
             "path": str(self._path),
             "rows": self._rows,

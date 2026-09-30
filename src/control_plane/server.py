@@ -1753,6 +1753,25 @@ def create_handler(api: ControlPlaneAPI, dash_api: TradingDashboardAPI, report_a
                     self._send_json(HTTPStatus.OK, chart_payload(
                         instrument, run_id, timeframe, limit, from_ts, to_ts))
                     return
+                # ── Live Run Trace (read-only; ui_kits/run_trace) ─────────────
+                if path.startswith("/api/run_trace/"):
+                    from control_plane import run_trace_api as _rt
+                    _rid = query.get("run_id", [""])[0]
+                    if path == "/api/run_trace/runs":
+                        self._send_json(HTTPStatus.OK, _rt.list_runs())
+                        return
+                    if path == "/api/run_trace/meta":
+                        self._send_json(HTTPStatus.OK, _rt.run_meta(_rid))  # KeyError -> 404 below
+                        return
+                    if path == "/api/run_trace/bars":
+                        try:
+                            _off = int(query.get("offset", ["0"])[0])
+                            _lim = int(query.get("limit", ["1000"])[0])
+                        except ValueError:
+                            _off, _lim = 0, 1000
+                        _cur = query.get("cursor", ["auto"])[0]
+                        self._send_json(HTTPStatus.OK, _rt.bars(_rid, _off, _lim, cursor=_cur))
+                        return
                 # ── Agent panel endpoints (read-only JSONL tails) ─────────────
                 if path == "/api/agent/findings":
                     try:

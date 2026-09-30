@@ -3148,6 +3148,14 @@ class BacktestRunner:
             trade_ttl_candles=self.cfg.trade_ttl_candles,             # [STORY-83.11]
             decider=self.cfg.decider,                                 # [STORY-83.11]
         )
+        if self.cfg.decider == "resolver":
+            # [STORY-83.11b] Mode C: the resolver's founding sidecar for THIS corpus. Fail-closed
+            # (charts.resolver_overlay.load_founding_map) -- never silently run mode C without it.
+            if not self.csv_path:
+                raise ValueError("setup.decider='resolver' requires a corpus csv_path (founding sidecar is keyed by its sha256)")
+            from charts.resolver_overlay import load_founding_map, _sha256_file
+            engine.set_founding_map(
+                load_founding_map(self.cfg.instrument, _sha256_file(self.csv_path)))
         # F-075 caller: calendar-true parent CRT. None when parent_crt.enabled is
         # false (v2_multi_2026_04 stays parent_state=None). Pushed on every child
         # bar including warmup so C1/C2/C3 exist before the first process_candle.

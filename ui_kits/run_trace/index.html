@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Run Trace</title>
+<script src="../crt_dashboard/vendor/lightweight-charts.standalone.production.js"></script>
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--ink:#1b1f24;--muted:#5d6672;--line:#dde1e6;--accent:#2f6fde;--good:#1f9d63;--warn:#c98a0b;--bad:#d0443c;--sel:#e8f0fe;
+  --st-RANGE:#9aa4b1;--st-SWEEP:#e0a100;--st-DISPLACEMENT:#e2572c;--st-EXPANSION:#8e44ad;--st-RETEST:#2f6fde;--st-EXECUTION:#1f9d63;--st-RESOLUTION:#127a4b;--st-SHADOW_PENDING:#b39ddb;--st-EXPIRED:#6d4c41;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1216;--panel:#171b21;--ink:#e6e9ee;--muted:#98a2b0;--line:#2a3039;--accent:#5b8ff0;--sel:#1f2b40}}
+:root[data-theme="dark"]{--bg:#0f1216;--panel:#171b21;--ink:#e6e9ee;--muted:#98a2b0;--line:#2a3039;--accent:#5b8ff0;--sel:#1f2b40}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+h1{font-size:15px;margin:0 8px 0 0}
+select,input,button{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+button{cursor:pointer}
+.pill{padding:2px 8px;border-radius:999px;font-weight:600;font-size:12px}
+.pill.running{background:#fff4d6;color:#8a5a00}.pill.finished{background:#dff5e9;color:#136b43}
+.prog{flex:1;min-width:120px;max-width:260px;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.prog>div{height:100%;background:var(--accent);width:0}
+.muted{color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;padding:8px 16px;border-bottom:1px solid var(--line);font-size:12px}
+.meta b{font-weight:600}
+code{font:12px ui-monospace,Consolas,monospace}
+main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:12px;padding:12px 16px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.card h2{font-size:13px;margin:0;padding:8px 10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+#chart{height:340px}
+.tbl{max-height:320px;overflow:auto}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{padding:3px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{position:sticky;top:0;background:var(--panel);text-align:right;color:var(--muted);font-weight:600}
+td.l,th.l{text-align:left}
+tr.sel td{background:var(--sel)}
+tbody tr{cursor:pointer}
+.sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.kv{max-height:420px;overflow:auto}
+.kv table{table-layout:fixed}
+.kv table td:first-child{width:62%;text-align:left;color:var(--muted);white-space:normal;word-break:break-word}
+.kv table td:last-child{width:38%;font-family:ui-monospace,Consolas,monospace;white-space:normal;word-break:break-all;text-align:right}
+.grp td{background:var(--bg);text-align:left!important;font-weight:600;color:var(--ink)!important}
+details{padding:4px 10px}
+summary{cursor:pointer}
+#cfg{max-height:360px;overflow:auto;padding:6px 10px;font:12px ui-monospace,Consolas,monospace;white-space:pre}
+.empty{padding:24px;text-align:center;color:var(--muted)}
+.err{color:var(--bad)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Live Run Trace</h1>
+  <select id="runSel" aria-label="Run"></select>
+  <span id="status" class="pill"></span>
+  <div class="prog" title="rows / corpus rows"><div id="progBar"></div></div>
+  <span id="progTxt" class="muted"></span>
+  <span id="src" class="muted"></span>
+  <label class="muted"><input type="checkbox" id="follow" checked> follow</label>
+  <button id="pause">Pause</button>
+  <button id="theme" title="Toggle theme">◐</button>
+</header>
+<div class="meta" id="meta"><span class="muted">Loading runs…</span></div>
+<main>
+  <div class="side">
+    <div class="card"><h2>Price &amp; CRT state (engine) <span class="muted" id="legend"></span></h2><div id="chart"></div></div>
+    <div class="card"><h2>Bars <span class="muted" id="barCount"></span></h2>
+      <div class="tbl"><table><thead><tr><th class="l">#</th><th class="l">time</th><th>open</th><th>high</th><th>low</th><th>close</th><th class="l">CRT state</th><th class="l">parent</th><th class="l">phase</th></tr></thead><tbody id="rows"></tbody></table></div>
+    </div>
+  </div>
+  <div class="side">
+    <div class="card"><h2>Bar inspector <input id="featFilter" placeholder="filter…" size="10"></h2><div class="kv" id="inspect"><div class="empty">Click a bar or row.</div></div></div>
+    <div class="card"><h2>Resolved config <input id="cfgFilter" placeholder="search key…" size="12"></h2><div id="cfg" class="muted">—</div></div>
+  </div>
+</main>
+<script>
+(() => {
+  const API = "/api/run_trace";
+  const $ = (id) => document.getElementById(id);
+  const S = { runId:null, meta:null, rows:[], byTime:new Map(), offset:0, cursor:"auto", paused:false, sel:null, timer:null, chart:null, candles:null, band:null };
+  const MAX_TABLE = 400;
+
+  const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const stateColor = (s) => cssVar("--st-" + s) || "#9aa4b1";
+  const fmt = (v) => v === null || v === undefined ? "—" : (typeof v === "number" ? (Math.abs(v) >= 1000 ? v.toFixed(2) : +v.toPrecision(6)) : String(v));
+  const esc = (s) => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const toSec = (iso) => Math.floor(Date.parse(iso.endsWith("Z") || /[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z") / 1000);
+
+  async function j(url){ const r = await fetch(url, {cache:"no-store"}); if(!r.ok) throw new Error(r.status + " " + (await r.text())); return r.json(); }
+
+  function initChart(){
+    const el = $("chart");
+    S.chart = LightweightCharts.createChart(el, { height: 340, layout:{ background:{color:cssVar("--panel")}, textColor:cssVar("--ink") },
+      grid:{ vertLines:{color:cssVar("--line")}, horzLines:{color:cssVar("--line")} }, timeScale:{ timeVisible:true, secondsVisible:false }, rightPriceScale:{ scaleMargins:{top:0.05,bottom:0.18} } });
+    S.candles = S.chart.addCandlestickSeries();
+    S.band = S.chart.addHistogramSeries({ priceScaleId:"band", priceFormat:{type:"volume"}, lastValueVisible:false, priceLineVisible:false });
+    S.chart.priceScale("band").applyOptions({ scaleMargins:{ top:0.9, bottom:0 } });
+    S.chart.subscribeClick(p => { if(p && p.time && S.byTime.has(p.time)) select(S.byTime.get(p.time)); });
+    new ResizeObserver(() => S.chart.applyOptions({ width: el.clientWidth })).observe(el);
+  }
+
+  async function loadRuns(){
+    try{
+      const d = await j(API + "/runs");
+      const sel = $("runSel"), cur = sel.value;
+      sel.innerHTML = d.runs.map(r => `<option value="${esc(r.run_id)}">${esc(r.run_id)} · ${esc(r.instrument||"")} · ${esc(r.status||"")}</option>`).join("") || `<option value="">no runs in ${esc(d.root)}</option>`;
+      if(!S.runId && d.runs.length){ const live = d.runs.find(r => r.status === "running") || d.runs[0]; openRun(live.run_id); }
+      else if(cur) sel.value = cur;
+    }catch(e){ $("meta").innerHTML = `<span class="err">runs: ${esc(e.message)}</span>`; }
+  }
+
+  async function openRun(runId){
+    clearTimeout(S.timer);
+    Object.assign(S, { runId, rows:[], byTime:new Map(), offset:0, sel:null });
+    $("runSel").value = runId; $("rows").innerHTML = ""; $("inspect").innerHTML = '<div class="empty">Click a bar or row.</div>';
+    S.candles.setData([]); S.band.setData([]);
+    S.meta = await j(`${API}/meta?run_id=${encodeURIComponent(runId)}`);
+    // Pin the cursor unit for this session: a run we start tailing live stays on "byte" even after it finishes.
+    S.cursor = S.meta.status === "running" ? "byte" : "auto";
+    renderMeta(); renderConfig();
+    poll();
+  }
+
+  function renderMeta(){
+    const m = S.meta, id = m.identity || {}, fs = m.feature_schema || {};
+    $("meta").innerHTML = [
+      ["run", m.run_id], ["instrument", id.instrument], ["config", `${id.config_version} · ${id.config_hash||"—"}`],
+      ["feature schema", `v${fs.version} · ${fs.hash} · ${(fs.names||[]).length} dims`], ["features in rows", m.features_in_rows ? "yes" : "no"],
+      ["corpus", `${(id.corpus_path||"").split(/[\\/]/).pop()} · ${(id.corpus_sha256||"").slice(0,12)}`], ["started", m.started_at],
+    ].map(([k,v]) => `<span><b>${esc(k)}</b> <code>${esc(v ?? "—")}</code></span>`).join("");
+    $("status").className = "pill " + (m.status||""); $("status").textContent = m.status || "";
+  }
+
+  function renderConfig(){
+    const cfg = S.meta.config; const q = $("cfgFilter").value.trim().toLowerCase();
+    if(!cfg){ $("cfg").textContent = "not recorded in manifest"; return; }
+    if(!q){ $("cfg").textContent = JSON.stringify(cfg, null, 2); return; }
+    const out = []; (function walk(o, p){ for(const [k,v] of Object.entries(o||{})){ const path = p ? p + "." + k : k;
+      if(v && typeof v === "object" && !Array.isArray(v)) walk(v, path); else if(path.toLowerCase().includes(q)) out.push(path + " = " + JSON.stringify(v)); } })(cfg, "");
+    $("cfg").textContent = out.join("\n") || "no match";
+  }
+
+  async function poll(){
+    if(!S.runId) return;
+    const runId = S.runId;
+    try{
+      if(!S.paused){
+        const d = await j(`${API}/bars?run_id=${encodeURIComponent(runId)}&offset=${S.offset}&limit=2000&cursor=${S.cursor}`);
+        if(runId !== S.runId) return;
+        S.offset = d.next_offset; $("src").textContent = "source: " + d.source;
+        if(d.rows.length) ingest(d.rows);
+        if(d.status !== S.meta.status){ S.meta = await j(`${API}/meta?run_id=${encodeURIComponent(runId)}`); renderMeta(); }
+        const more = d.rows.length >= 2000;
+        progress(d.total_rows);
+        S.timer = setTimeout(poll, more ? 50 : (S.meta.status === "running" ? 1500 : 5000));
+        return;
+      }
+    }catch(e){ $("src").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+    S.timer = setTimeout(poll, 2000);
+  }
+
+  function progress(total){
+    const n = S.rows.length, c = S.meta.corpus_rows;
+    const pct = c ? Math.min(100, 100 * n / c) : 0;
+    $("progBar").style.width = pct.toFixed(1) + "%";
+    $("progTxt").textContent = `${n.toLocaleString()} bars` + (c ? ` / ~${c.toLocaleString()} (${pct.toFixed(0)}%)` : "");
+    $("barCount").textContent = `${n.toLocaleString()} loaded`;
+  }
+
+  function ingest(rows){
+    const cs = [], bs = [];
+    for(const r of rows){
+      S.rows.push(r);
+      if(!r.timestamp) continue;
+      const t = toSec(r.timestamp); if(S.byTime.has(t)) continue;
+      S.byTime.set(t, r);
+      cs.push({ time:t, open:r.open, high:r.high, low:r.low, close:r.close });
+      const st = r.crt_state_after || (r.phase === "WARMUP" ? "WARMUP" : null);
+      bs.push({ time:t, value:1, color: st ? stateColor(st) : "transparent" });
+    }
+    for(const c of cs) S.candles.update(c);
+    for(const b of bs) S.band.update(b);
+    renderTable();
+    const seen = new Set(S.rows.slice(-3000).map(r => r.crt_state_after).filter(Boolean));
+    $("legend").innerHTML = [...seen].map(s => `<span class="sw" style="background:${stateColor(s)}"></span>${esc(s)}`).join(" &nbsp;");
+    if($("follow").checked && !S.sel) S.chart.timeScale().scrollToRealTime();
+  }
+
+  function renderTable(){
+    const tail = S.rows.slice(-MAX_TABLE).reverse();
+    $("rows").innerHTML = tail.map(r => {
+      const st = r.crt_state_after;
+      return `<tr data-i="${r.bar_index}" class="${S.sel && S.sel.bar_index === r.bar_index ? "sel" : ""}"><td class="l">${r.bar_index}</td><td class="l">${esc(r.timestamp||"")}</td>
+        <td>${fmt(r.open)}</td><td>${fmt(r.high)}</td><td>${fmt(r.low)}</td><td>${fmt(r.close)}</td>
+        <td class="l">${st ? `<span class="sw" style="background:${stateColor(st)}"></span>${esc(st)}` : "—"}</td><td class="l">${esc(r.parent_crt_state||"—")}</td><td class="l">${esc(r.phase||"")}</td></tr>`;
+    }).join("");
+  }
+
+  function select(r){
+    S.sel = r; renderTable(); renderInspector();
+  }
+
+  function renderInspector(){
+    const r = S.sel; if(!r) return;
+    const q = $("featFilter").value.trim().toLowerCase();
+    const names = (S.meta.feature_schema||{}).names || [];
+    const rowsHtml = [];
+    const add = (k, v) => { if(!q || k.toLowerCase().includes(q)) rowsHtml.push(`<tr><td>${esc(k)}</td><td>${esc(fmt(v))}</td></tr>`); };
+    rowsHtml.push(`<tr class="grp"><td colspan="2">Features (${names.length}, schema order)</td></tr>`);
+    if(!S.meta.features_in_rows) rowsHtml.push(`<tr><td colspan="2" class="muted">run did not record features (families.features off)</td></tr>`);
+    else if(r.features === null || r.features === undefined) rowsHtml.push(`<tr><td colspan="2" class="muted">warmup — no feature row for this bar</td></tr>`);
+    else names.forEach((n, i) => add(`${String(i).padStart(2,"0")} ${n}`, r.features[n]));
+    rowsHtml.push(`<tr class="grp"><td colspan="2">Bar record</td></tr>`);
+    for(const [k,v] of Object.entries(r)){ if(k === "features" || (typeof v === "object" && v !== null)) continue; add(k, v); }
+    $("inspect").innerHTML = `<table><tbody>${rowsHtml.join("")}</tbody></table>`;
+  }
+
+  $("rows").addEventListener("click", e => { const tr = e.target.closest("tr"); if(!tr) return;
+    const i = +tr.dataset.i; const r = S.rows.find(x => x.bar_index === i); if(r){ select(r); if(r.timestamp){ const t = toSec(r.timestamp); S.chart.timeScale().setVisibleRange({from:t-3600*24, to:t+3600*6}); } } });
+  $("runSel").addEventListener("change", e => e.target.value && openRun(e.target.value));
+  $("pause").addEventListener("click", () => { S.paused = !S.paused; $("pause").textContent = S.paused ? "Resume" : "Pause"; });
+  $("featFilter").addEventListener("input", renderInspector);
+  $("cfgFilter").addEventListener("input", renderConfig);
+  $("theme").addEventListener("click", () => { const d = document.documentElement; const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+    const cur = d.dataset.theme || (dark ? "dark" : "light"); d.dataset.theme = cur === "dark" ? "light" : "dark";
+    S.chart.applyOptions({ layout:{ background:{color:cssVar("--panel")}, textColor:cssVar("--ink") }, grid:{ vertLines:{color:cssVar("--line")}, horzLines:{color:cssVar("--line")} } }); });
+
+  initChart(); loadRuns(); setInterval(loadRuns, 5000);
+})();
+</script>
+</body>
+</html>

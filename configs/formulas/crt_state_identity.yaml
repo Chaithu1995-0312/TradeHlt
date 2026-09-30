@@ -118,7 +118,7 @@ identity:
   # SWEEP -> EXPANSION inside one process_candle) and is declared ONLY as
   # constructors.resolver.projection_allowances below — never as an identity edge.
   valid_transitions:
-    RANGE:           [SWEEP, SHADOW_PENDING]
+    RANGE:           [SWEEP, SHADOW_PENDING, RETEST]   # RETEST: mode-C resolver-founding edge (STORY-83.11b)
     SHADOW_PENDING:  [SWEEP, RANGE]
     SWEEP:           [DISPLACEMENT, EXPANSION, RANGE]
     DISPLACEMENT:    [EXPANSION, RANGE]

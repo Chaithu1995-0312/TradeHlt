@@ -269,7 +269,10 @@ states:
 # Enforced by the resolver when state memory is active. A transition is valid
 # iff the target state is in the current state's allowed list.
 valid_transitions:
-  RANGE: [SWEEP, SHADOW_PENDING]
+  # RANGE -> RETEST: the ENGINE's mode-C resolver-founding edge (STORY-83.11b), mirrored here
+  # only to keep the two records of one edge set in sync (§6.2 rule 6). The resolver never
+  # emits it: its RETEST entry comes from EXPANSION (`_retest_entry_allowed`).
+  RANGE: [SWEEP, SHADOW_PENDING, RETEST]
   # B1d: engine try_shadow_pending_to_expansion does SWEEP→EXPANSION in one
   # process_candle; exit state is EXPANSION (two internal transitions).
   SHADOW_PENDING: [SWEEP, EXPANSION, RANGE]

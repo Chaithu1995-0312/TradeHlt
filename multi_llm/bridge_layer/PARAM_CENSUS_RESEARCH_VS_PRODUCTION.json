@@ -1,0 +1,2004 @@
+{
+  "title": "PARAM CENSUS - research vs production (observations only)",
+  "generated": "2026-09-27T21:31:33 IST",
+  "repo": "D:/Tradelatest",
+  "active_config": "configs/production/v2_htfcrt_2026_08.json",
+  "method": "git grep / Select-String / read-only python AST + config introspection; CRTConfig constructed without keys (read-only) confirmed required fields and defaults",
+  "counts": {
+    "params_found": 58,
+    "tuned": 29,
+    "production_consumed": 49,
+    "promotion_candidates": 4,
+    "silent_default_Y": 40,
+    "silent_default_triggered": 7,
+    "unknown": 6,
+    "by_class": {
+      "Research Only": 4,
+      "Production Policy Parameter": 44,
+      "Architectural Constant": 4,
+      "Unknown": 6
+    }
+  },
+  "directories": {
+    "missing": [
+      "analytics/",
+      "experiments/",
+      "validation/",
+      "forensics/",
+      "mc_kit/ (top-level)",
+      "src/validation"
+    ],
+    "present_substitutes": [
+      "src/analytics",
+      "src/research/mc_kit",
+      "src/research/forensics.py",
+      "src/research",
+      "scripts (incl. scripts/training, scripts/analysis, scripts/research)"
+    ],
+    "production_listed_present": [
+      "src/core",
+      "src/engines",
+      "src/execution",
+      "src/features",
+      "src/config_layer",
+      "configs/production"
+    ],
+    "production_outside_listed": [
+      "src/runtime/backtest_v2.py",
+      "src/runtime/live_engine_hook.py",
+      "src/runtime/live_rail_orchestrator.py",
+      "src/runtime/unified_replay_harness.py",
+      "src/strategies/*",
+      "src/control_plane",
+      "src/agent/modes/pipeline_mode.py"
+    ],
+    "class_locations": {
+      "CRTConfig": "src/config_layer/state_identity.py:137",
+      "crt_engine_v2": "src/config_layer/crt_engine_v2.py",
+      "crt_state_resolver": "src/features/crt_state_resolver.py",
+      "execution_planner": "src/config_layer/execution_planner.py",
+      "DecisionEngine": "src/core/decision_engine.py:91",
+      "UltronRiskGate": "src/core/ultron_risk_gate.py:69"
+    }
+  },
+  "crt_merge_chain": [
+    "CRTConfig dataclass defaults src/config_layer/state_identity.py:147-306",
+    "market_router.classes[class] (market_router.py:116)",
+    "crt_engine section (src/config_layer/production_config.py:359-366)",
+    "params section wins (src/config_layer/production_config.py:366)",
+    "engine_runner.allowed_sessions (src/config_layer/production_config.py:374-377)",
+    "crt_engine.instrument_overrides (src/config_layer/production_config.py:383-385; None)",
+    "ConfigBuilder.build (config_builder.py:99-106)",
+    "backtest CLI overrides ConfigBuilder.from_existing (backtest_v2.py:4724)"
+  ],
+  "parameters": [
+    {
+      "name": "body_ratio_min",
+      "category": "threshold",
+      "current_location": "src/config_layer/state_identity.py:141 (required, no default)",
+      "research_consumers": "auto_tuner, auto_tuner_multi, crt_parity_sweep, detection/ablation scripts; resolver copy src/features/crt_state_resolver.py",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (required CRTConfig field)",
+      "default_values": "none (construction fails without it)",
+      "active_value_v2_htfcrt_2026_08": {
+        "params": 0.65,
+        "market_router.FOREX": 0.6,
+        "market_router.CRYPTO": 0.5,
+        "resolver_yaml": 0.65
+      },
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.body_ratio_min (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.body_ratio_min (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].body_ratio_min (src/config_layer/market_router.py:116)"
+      ],
+      "runtime_authority": "CRTEngine (crt_engine_v2)",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json params (overrides market_router class values for every instrument)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/training/auto_tuner.py:116 PARAM_SPACE [0.50..0.80]",
+        "scripts/training/auto_tuner_multi.py:102",
+        "scripts/research/crt_parity_sweep.py:94 [0.55,0.70] (resolver thresholds.*)",
+        "scripts/analysis/crt_guard_ablation_6m.py:102 ablation ->0",
+        "configs/production/* version history (archived v2_multi_2026_04_*, v3/v4_multi_2026_06, v1_multi_2026_03) shows multiple values (0.3/0.65/0.75)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": "True",
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": "PERMISSIVE padding exists only as test fixture tests/Claude/_fixtures.py:12 (not production). params override market_router class values for all instruments."
+    },
+    {
+      "name": "atr_multiplier_min",
+      "category": "threshold",
+      "current_location": "src/config_layer/state_identity.py:142 (required, no default)",
+      "research_consumers": "auto_tuner, auto_tuner_multi, crt_parity_sweep, detection/ablation scripts; resolver copy src/features/crt_state_resolver.py",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (required CRTConfig field)",
+      "default_values": "none (construction fails without it)",
+      "active_value_v2_htfcrt_2026_08": {
+        "params": 1.0,
+        "market_router.FOREX": 1.5,
+        "market_router.CRYPTO": 1.0,
+        "resolver_yaml": 1.0
+      },
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.atr_multiplier_min (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.atr_multiplier_min (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].atr_multiplier_min (src/config_layer/market_router.py:116)"
+      ],
+      "runtime_authority": "CRTEngine (crt_engine_v2)",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json params (overrides market_router class values for every instrument)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/training/auto_tuner.py:117 [1.00..2.00]",
+        "scripts/training/auto_tuner_multi.py:103",
+        "scripts/research/crt_parity_sweep.py:95 [0.8,1.5]",
+        "scripts/analysis/crt_guard_ablation_6m.py:107 ablation ->0",
+        "configs/production/* version history (archived v2_multi_2026_04_*, v3/v4_multi_2026_06, v1_multi_2026_03) shows multiple values (0.6/1.0/1.2/1.5)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": "True",
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": "PERMISSIVE padding exists only as test fixture tests/Claude/_fixtures.py:12 (not production). params override market_router class values for all instruments."
+    },
+    {
+      "name": "retest_depth_max",
+      "category": "threshold",
+      "current_location": "src/config_layer/state_identity.py:143 (required, no default)",
+      "research_consumers": "auto_tuner, auto_tuner_multi, crt_parity_sweep, detection/ablation scripts; resolver copy src/features/crt_state_resolver.py",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (required CRTConfig field)",
+      "default_values": "none (construction fails without it)",
+      "active_value_v2_htfcrt_2026_08": {
+        "params": 0.15,
+        "market_router.FOREX": 0.35,
+        "market_router.CRYPTO": 0.25,
+        "resolver_yaml": 0.15
+      },
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.retest_depth_max (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.retest_depth_max (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].retest_depth_max (src/config_layer/market_router.py:116)"
+      ],
+      "runtime_authority": "CRTEngine (crt_engine_v2)",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json params (overrides market_router class values for every instrument)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/training/auto_tuner.py:114 [0.20..0.60]",
+        "scripts/training/auto_tuner_multi.py:100",
+        "scripts/research/crt_parity_sweep.py:110 [0.02,0.04,0.25]",
+        "scripts/research/e1_retest_depth_max_probe.py",
+        "configs/production/* version history (archived v2_multi_2026_04_*, v3/v4_multi_2026_06, v1_multi_2026_03) shows multiple values (0.15/0.2/0.25/0.3/0.8)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": "True",
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": "PERMISSIVE padding exists only as test fixture tests/Claude/_fixtures.py:12 (not production). params override market_router class values for all instruments."
+    },
+    {
+      "name": "expansion_atr_min_distance",
+      "category": "threshold",
+      "current_location": "src/config_layer/state_identity.py:144 (required, no default)",
+      "research_consumers": "auto_tuner, auto_tuner_multi, crt_parity_sweep, detection/ablation scripts; resolver copy src/features/crt_state_resolver.py",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (required CRTConfig field)",
+      "default_values": "none (construction fails without it)",
+      "active_value_v2_htfcrt_2026_08": {
+        "params": 0.3,
+        "market_router.FOREX": 0.08,
+        "market_router.CRYPTO": 0.15,
+        "resolver_yaml": 0.3
+      },
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.expansion_atr_min_distance (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.expansion_atr_min_distance (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].expansion_atr_min_distance (src/config_layer/market_router.py:116)"
+      ],
+      "runtime_authority": "CRTEngine (crt_engine_v2)",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json params (overrides market_router class values for every instrument)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/training/auto_tuner.py:118 [0.10..0.30]",
+        "scripts/training/auto_tuner_multi.py:104",
+        "scripts/research/crt_parity_sweep.py:90 [0.15,0.20,0.45]",
+        "scripts/analysis/detection_sweep.py:59 family expansion",
+        "configs/production/* version history (archived v2_multi_2026_04_*, v3/v4_multi_2026_06, v1_multi_2026_03) shows multiple values (0.2/0.3)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": "True",
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": "PERMISSIVE padding exists only as test fixture tests/Claude/_fixtures.py:12 (not production). params override market_router class values for all instruments."
+    },
+    {
+      "name": "retest_atr_depth_fraction",
+      "category": "threshold",
+      "current_location": "src/config_layer/state_identity.py:154",
+      "research_consumers": "auto_tuner(:115), auto_tuner_multi(:101), crt_parity_sweep(:111 [0.25])",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable",
+      "default_values": "CRTConfig 0.50",
+      "active_value_v2_htfcrt_2026_08": {
+        "params": 0.3,
+        "FOREX": 0.5,
+        "CRYPTO": 0.3,
+        "resolver_yaml": 0.5
+      },
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.retest_atr_depth_fraction (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.retest_atr_depth_fraction (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].retest_atr_depth_fraction (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:154)"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json params",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/training/auto_tuner.py:115 [0.30..1.00]",
+        "scripts/research/crt_parity_sweep.py:111",
+        "configs/production/* version history (archived v2_multi_2026_04_*, v3/v4_multi_2026_06, v1_multi_2026_03) shows multiple values (0.3/0.4/0.5)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay)",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": "Resolver YAML declares 0.5 vs production params 0.3 (divergent copies)."
+    },
+    {
+      "name": "atr_period",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:147",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": 14,
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.atr_period (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.atr_period (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].atr_period (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:147)",
+        "compute_atr(period=14) kwarg (src/config_layer/crt_engine_v2.py:903) - callers pass self.config.atr_period (src/config_layer/crt_engine_v2.py:2907, :3002), kwarg hop not reached"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep of CRTConfig.atr_period found; resolver range_atr_period swept scripts/research/crt_parity_sweep.py:107 [4,20]"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Architectural Constant",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "max_sweep_age_candles",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:151",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": 20,
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.max_sweep_age_candles (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.max_sweep_age_candles (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].max_sweep_age_candles (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:151)"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/research/crt_parity_sweep.py:91 [10,30]",
+        "scripts/analysis/crt_guard_ablation_6m.py:113 ablation 1e6",
+        "configs/production/* version history (archived v2_multi_2026_04_*, v3/v4_multi_2026_06, v1_multi_2026_03) shows multiple values (20/60)",
+        "scripts/backtest/backtest_debug_harness.py:29 (30)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "max_displacement_strength",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:178",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": 2.0,
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.max_displacement_strength (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.max_displacement_strength (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].max_displacement_strength (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:178)"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/research/crt_parity_sweep.py:446 [1.5,3.0]",
+        "crt_guard_ablation_6m.py / crt_guard_ablation_run.py"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "score_threshold (CRTConfig)",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:184",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": 0.45,
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.score_threshold (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.score_threshold (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].score_threshold (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:184)"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found; config history constant 0.45"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "atr_min_displacement",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:187",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": 1.2,
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.atr_min_displacement (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.atr_min_displacement (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].atr_min_displacement (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:187)"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/analysis/detection_sweep.py:60 [0.75x,0.50x]",
+        "scripts/research/crt_parity_sweep.py:93 [0.9,1.5]",
+        "scripts/analysis/crt_guard_ablation_6m.py:97 ablation ->0",
+        "configs/production/* version history (archived v2_multi_2026_04_*, v3/v4_multi_2026_06, v1_multi_2026_03) shows multiple values (0.8/1.2)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "confirmation_body_min",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:188",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": 0.6,
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.confirmation_body_min (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.confirmation_body_min (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].confirmation_body_min (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:188)"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/analysis/detection_sweep.py:61",
+        "configs/production/* version history (archived v2_multi_2026_04_*, v3/v4_multi_2026_06, v1_multi_2026_03) shows multiple values (0.3/0.6)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "sl_atr_buffer",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:189",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep. ALSO live: src/runtime/live_engine_hook.py:1073-1074 reads raw crt_engine section for SL/TP (tp1 .get fallback 1.0, tp2 .get fallback 2.0) [outside listed targets]",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": 0.2,
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.sl_atr_buffer (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.sl_atr_buffer (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].sl_atr_buffer (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:189)"
+      ],
+      "runtime_authority": "CRTEngine + live_engine_hook SL/TP",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/training/auto_tuner_multi.py:110 [0.1..0.75]",
+        "scripts/analysis/xauusd_excel_feature_state_trace.py:520 DEFAULT_Z_SL_BUF (0.1,0.2,0.3,0.5)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); Y live SL/TP",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "tp1_atr_multiplier (+_breakout/_pullback/_liq_sweep/_reversal)",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:190,203-206",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep. ALSO live: src/runtime/live_engine_hook.py:1073-1074 reads raw crt_engine section for SL/TP (tp1 .get fallback 1.0, tp2 .get fallback 2.0) [outside listed targets]",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": "1.0 / 1.5 / 0.8 / 1.2 / 1.0",
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.tp1_atr_multiplier (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.tp1_atr_multiplier (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].tp1_atr_multiplier (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:190,203-206)",
+        "live hook: crt_engine.tp1_atr_multiplier_<intent> -> crt_engine.tp1_atr_multiplier -> literal 1.0 (live_engine_hook.py:1073); tp2 -> 2.0 (:1074)"
+      ],
+      "runtime_authority": "CRTEngine + live_engine_hook SL/TP",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry",
+        "docs/research-readiness/h-rr-threshold-001-*"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/analysis/xauusd_excel_feature_state_trace.py:518 DEFAULT_X_TP1 (0.5..3.0)",
+        "scripts/research/h_rr_threshold_001.py + docs/research-readiness/h-rr-threshold-001-experiment-definition.json (PRODUCTION_R_THRESHOLD_TP1_AND_MIN_RR)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); Y live SL/TP",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "tp2_atr_multiplier",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:191",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep. ALSO live: src/runtime/live_engine_hook.py:1073-1074 reads raw crt_engine section for SL/TP (tp1 .get fallback 1.0, tp2 .get fallback 2.0) [outside listed targets]",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": 2.0,
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.tp2_atr_multiplier (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.tp2_atr_multiplier (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].tp2_atr_multiplier (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:191)",
+        "live hook: crt_engine.tp1_atr_multiplier_<intent> -> crt_engine.tp1_atr_multiplier -> literal 1.0 (live_engine_hook.py:1073); tp2 -> 2.0 (:1074)"
+      ],
+      "runtime_authority": "CRTEngine + live_engine_hook SL/TP",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/training/auto_tuner_multi.py:109 [1.5..3.5]",
+        "scripts/analysis/xauusd_excel_feature_state_trace.py:519 DEFAULT_Y_TP2"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); Y live SL/TP",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "soft_conf_max_candles",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:243",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": 3,
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.soft_conf_max_candles (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.soft_conf_max_candles (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].soft_conf_max_candles (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:243)"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "configs/production/* version history (archived v2_multi_2026_04_*, v3/v4_multi_2026_06, v1_multi_2026_03) shows multiple values (3/5)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "pending_displacement_ttl_candles",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:249",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": 4,
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.pending_displacement_ttl_candles (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.pending_displacement_ttl_candles (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].pending_displacement_ttl_candles (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:249)"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/research/crt_parity_sweep.py:114 [2,8] (resolver lifecycle)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "max_expansion_age_candles / max_expansion_age_hours / expansion_age_warn_candles",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:279-281",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": "495 / 124 / 342",
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.max_expansion_age_candles (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.max_expansion_age_candles (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].max_expansion_age_candles (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:279-281)"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "src/config_layer/state_identity.py:276 derived from Phase 3a P99=495, P95=342",
+        "scripts/research/crt_parity_sweep.py:98 [120,250,900], :99 [24,999]",
+        "scripts/analysis/p3b_gate_expired_counterfactual_rr.py:6 (495 TTL counterfactual)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "shadow_age_penalty_lambda / shadow_age_norm_candles",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:288,295",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": "0.0 / 0",
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.shadow_age_penalty_lambda (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.shadow_age_penalty_lambda (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].shadow_age_penalty_lambda (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:288,295)"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "src/config_layer/state_identity.py:286 comment: experiment levels 0.00|0.10|0.20|0.35; no script hits in research/scripts"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "retrace_reset_pct",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:225",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": 0.5,
+      "active_value_v2_htfcrt_2026_08": 0.5,
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.retrace_reset_pct (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.retrace_reset_pct (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].retrace_reset_pct (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:225)"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry",
+        "multi_llm/design_cards/DC-HTF-AUTHORITY-01.md (reset ownership)"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "configs/production/v2_htfcrt_k23_shadow_2026_09.json crt_engine.retrace_reset_pct=0.618"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "breakout_disp_threshold (CRTConfig)",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:201",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": 1.5,
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.breakout_disp_threshold (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.breakout_disp_threshold (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].breakout_disp_threshold (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:201)"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "conf_alpha / tier_1_threshold / sizing_bands",
+      "category": "CRT engine knob",
+      "current_location": "src/config_layer/state_identity.py:232,241,303",
+      "research_consumers": "see evidence",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable (CRTConfig default)",
+      "default_values": "0.70 / 0.75 / [(0.75,0.01),(0.55,0.005)]",
+      "active_value_v2_htfcrt_2026_08": "declared in crt_engine section at default value",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params.conf_alpha (wins, src/config_layer/production_config.py:366)",
+        "configs/production/v2_htfcrt_2026_08.json crt_engine.conf_alpha (src/config_layer/production_config.py:359-366)",
+        "market_router.classes[FOREX|CRYPTO].conf_alpha (src/config_layer/market_router.py:116)",
+        "CRTConfig dataclass default (src/config_layer/state_identity.py:232,241,303)"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json crt_engine (params wins where present)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found (read by behavior_census.py, crt_threshold_authority_census.py)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine); live CRTEngine site not found",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "displacement_origin_kill_enabled / displacement_origin_kill_precedence",
+      "category": "CRT gate",
+      "current_location": "src/config_layer/state_identity.py:264, :272",
+      "research_consumers": "configs/production/v2_dispkill_shadow_2026_08.json sets true / 'after_resting_fills'",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.; gate at src/config_layer/crt_engine_v2.py:2856",
+      "hardcoded_or_configurable": "configurable (CRTConfig field) but NOT declared in active config",
+      "default_values": "False / 'after_resting_fills'",
+      "active_value_v2_htfcrt_2026_08": "absent (params, crt_engine, market_router)",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "triggered",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json params/crt_engine: absent",
+        "market_router.classes: absent",
+        "CRTConfig default src/config_layer/state_identity.py:264 (False), :272"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "none in active config (dataclass default)",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "configs/production/v2_dispkill_shadow_2026_08.json (shadow variant enables it)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay CRTEngine)",
+      "explicit_active_production_config": false,
+      "promotion_candidate": true,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "allowed_sessions / session_windows",
+      "category": "session",
+      "current_location": "src/config_layer/state_identity.py:211, :220",
+      "research_consumers": "scripts/analysis/session_sweep.py (Phase 6c staged session sweep, results/session_sweep/*.json); scripts/analysis/session_certification.py; k23 shadow adds tokyo",
+      "production_consumers": "crt_engine_v2 CRTEngine via ConfigBuilder/load_prod_config_from_registry; instantiated in src/runtime/backtest_v2.py:2997 [outside listed production targets]. Live-hook instantiation of CRTEngine not found by git grep.",
+      "hardcoded_or_configurable": "configurable",
+      "default_values": "CRTConfig ('LONDON','NEWYORK','OVERLAP'); windows LONDON 07-10, NY 13-16, ASIA 00-03 UTC",
+      "active_value_v2_htfcrt_2026_08": [
+        "london",
+        "new_york",
+        "overlap"
+      ],
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent (registry path resolves engine_runner.allowed_sessions)",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json engine_runner.allowed_sessions (src/config_layer/production_config.py:374-377)",
+        "CRTConfig default src/config_layer/state_identity.py:220"
+      ],
+      "runtime_authority": "CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json engine_runner.allowed_sessions / crt_engine.session_windows",
+      "governance_artifacts": [
+        "docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md",
+        "docs/governance/crt_config_reachability.json",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (config_key owner 'CRTConfig/prod')",
+        "configs/production/ACTIVE_VERSION + config hash registry"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/analysis/session_sweep.py:3-26",
+        "configs/production/v2_htfcrt_k23_shadow_2026_09.json (tokyo added)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay)",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "backtest.sl_anchor",
+      "category": "K23 structural knob",
+      "current_location": "src/runtime/backtest_v2.py:338 -> dataclass :278",
+      "research_consumers": "K23 program; k23 shadow 'sweep_extreme'",
+      "production_consumers": "src/runtime/backtest_v2.py:2997-3003 -> src/config_layer/crt_engine_v2.py:2331/2446 ExecutionEngine SL placement [outside listed targets]",
+      "hardcoded_or_configurable": "configurable (backtest section) but NOT declared in active config",
+      "default_values": "'displacement'",
+      "active_value_v2_htfcrt_2026_08": "absent",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "triggered",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json backtest.sl_anchor: absent",
+        "cfg.get default src/runtime/backtest_v2.py:338",
+        "BacktestConfig dataclass default src/runtime/backtest_v2.py:278",
+        "CRTEngine kwarg default src/config_layer/crt_engine_v2.py:2722-2723"
+      ],
+      "runtime_authority": "BacktestRunner -> CRTEngine",
+      "configuration_authority": "none in active config (cfg.get literal)",
+      "governance_artifacts": [
+        "docs/governance/build_manifests/CH-k23-f3-oracle-arm-stamping.impact.json",
+        "multi_llm/design_cards/DC-HTF-AUTHORITY-01.md"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "configs/production/v2_htfcrt_k23_shadow_2026_09.json: k23 shadow 'sweep_extreme'"
+      ],
+      "influences_production_decisions": "Y (backtest/replay SL/reset/session decisions); live path not found",
+      "explicit_active_production_config": false,
+      "promotion_candidate": true,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "backtest.htf_reset_exempt_sweep",
+      "category": "K23 structural knob",
+      "current_location": "src/runtime/backtest_v2.py:331 -> dataclass :275",
+      "research_consumers": "K23 program; k23 shadow true",
+      "production_consumers": "src/runtime/backtest_v2.py:2997-3003 -> src/config_layer/crt_engine_v2.py:2645/2672 ResetLogic [outside listed targets]",
+      "hardcoded_or_configurable": "configurable (backtest section) but NOT declared in active config",
+      "default_values": "False",
+      "active_value_v2_htfcrt_2026_08": "absent",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "triggered",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json backtest.htf_reset_exempt_sweep: absent",
+        "cfg.get default src/runtime/backtest_v2.py:331",
+        "BacktestConfig dataclass default src/runtime/backtest_v2.py:275",
+        "CRTEngine kwarg default src/config_layer/crt_engine_v2.py:2722-2723"
+      ],
+      "runtime_authority": "BacktestRunner -> CRTEngine",
+      "configuration_authority": "none in active config (cfg.get literal)",
+      "governance_artifacts": [
+        "docs/governance/build_manifests/CH-k23-f3-oracle-arm-stamping.impact.json",
+        "multi_llm/design_cards/DC-HTF-AUTHORITY-01.md"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "configs/production/v2_htfcrt_k23_shadow_2026_09.json: k23 shadow true"
+      ],
+      "influences_production_decisions": "Y (backtest/replay SL/reset/session decisions); live path not found",
+      "explicit_active_production_config": false,
+      "promotion_candidate": true,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "backtest.session_window_basis (+exchange_session_windows)",
+      "category": "K23 structural knob",
+      "current_location": "src/runtime/backtest_v2.py:345 -> dataclass :283",
+      "research_consumers": "K23 program; k23 shadow 'exchange_local' + TOKYO/LONDON/NEWYORK tz windows",
+      "production_consumers": "src/runtime/backtest_v2.py:2997-3003 -> src/runtime/backtest_v2.py:3001-3003 -> CRTEngine exchange_session_windows [outside listed targets]",
+      "hardcoded_or_configurable": "configurable (backtest section) but NOT declared in active config",
+      "default_values": "'broker_static'",
+      "active_value_v2_htfcrt_2026_08": "absent",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "triggered",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json backtest.session_window_basis: absent",
+        "cfg.get default src/runtime/backtest_v2.py:345",
+        "BacktestConfig dataclass default src/runtime/backtest_v2.py:283"
+      ],
+      "runtime_authority": "BacktestRunner -> CRTEngine",
+      "configuration_authority": "none in active config (cfg.get literal)",
+      "governance_artifacts": [
+        "docs/governance/build_manifests/CH-k23-f3-oracle-arm-stamping.impact.json",
+        "multi_llm/design_cards/DC-HTF-AUTHORITY-01.md"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "configs/production/v2_htfcrt_k23_shadow_2026_09.json: k23 shadow 'exchange_local' + TOKYO/LONDON/NEWYORK tz windows"
+      ],
+      "influences_production_decisions": "Y (backtest/replay SL/reset/session decisions); live path not found",
+      "explicit_active_production_config": false,
+      "promotion_candidate": true,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "htf_candles_per_range",
+      "category": "HTF period",
+      "current_location": "src/runtime/backtest_v2.py:308/363 (strict); resolver src/features/crt_state_resolver.py:906 (.get 4)",
+      "research_consumers": "resolver trace; many scripts/analysis traces",
+      "production_consumers": "BacktestRunner HTFBuilder [outside listed targets]; no reference in live_engine_hook/live_rail_orchestrator/src/core/src/engines",
+      "hardcoded_or_configurable": "configurable (strict in backtest)",
+      "default_values": "backtest: none (required); resolver .get 4",
+      "active_value_v2_htfcrt_2026_08": {
+        "backtest": 16,
+        "resolver_yaml_lifecycle": 4
+      },
+      "silent_fallback": "N (backtest) / Y (resolver)",
+      "silent_fallback_state": "latent (resolver)",
+      "fallback_chain": [
+        "backtest: required key, KeyError if missing (backtest_v2.py:315-319)",
+        "resolver: configs/formulas/market_crt_states.yaml lifecycle.htf_candles_per_range -> .get 4 (src/features/crt_state_resolver.py:906)"
+      ],
+      "runtime_authority": "HTFBuilder (backtest_v2)",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json backtest.htf_candles_per_range",
+      "governance_artifacts": [
+        "multi_llm/design_cards/DC-HTF-AUTHORITY-01.md (LOCKS CLOSED D1-D3)",
+        "configs/research/measurement_contracts/instances/MC-CRT-SB-XAUUSD-M15-V1.json:244 (16)",
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json:395"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "configs/production/* version history (archived v2_multi_2026_04_*, v3/v4_multi_2026_06, v1_multi_2026_03) shows multiple values (4 in v1/v3/bitnet/dimfix/v3session_probe vs 16 active)"
+      ],
+      "influences_production_decisions": "Y (backtest/replay)",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": "Resolver YAML=4 vs production backtest=16; resolver docstring :2157 says 'prod default 4'."
+    },
+    {
+      "name": "warmup_candles",
+      "category": "warmup",
+      "current_location": "configs backtest.warmup_candles",
+      "research_consumers": "-",
+      "production_consumers": "backtest_v2 (strict required :308)",
+      "hardcoded_or_configurable": "configurable (strict)",
+      "default_values": "none",
+      "active_value_v2_htfcrt_2026_08": 78,
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [
+        "required key"
+      ],
+      "runtime_authority": "BacktestRunner",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json backtest",
+      "governance_artifacts": [
+        "config comment: DERIVED from feature_pipeline.required_warmup_rows()"
+      ],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep; comment states derived not chosen"
+      ],
+      "influences_production_decisions": "Y (backtest)",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Architectural Constant",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "decision_engine.score_threshold",
+      "category": "decision threshold",
+      "current_location": "src/core/decision_engine.py:99-112 (strict _require_decision_cfg)",
+      "research_consumers": "src/research/model_runners/adapters/decision.py",
+      "production_consumers": "DecisionEngine (src/core/engine_runner.py:455); live via live_engine_hook merged config",
+      "hardcoded_or_configurable": "configurable (strict)",
+      "default_values": "none (fail-fast)",
+      "active_value_v2_htfcrt_2026_08": 0.45,
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [
+        "strict read, raises if missing"
+      ],
+      "runtime_authority": "DecisionEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json decision_engine",
+      "governance_artifacts": [
+        "F-048 (rr_threshold retired) comments decision_engine.py:101"
+      ],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y (live + backtest)",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "decision_engine.p_win_threshold",
+      "category": "decision threshold",
+      "current_location": "src/core/decision_engine.py:99-112 (strict _require_decision_cfg)",
+      "research_consumers": "src/research/model_runners/adapters/decision.py",
+      "production_consumers": "DecisionEngine (src/core/engine_runner.py:455); live via live_engine_hook merged config",
+      "hardcoded_or_configurable": "configurable (strict)",
+      "default_values": "none (fail-fast)",
+      "active_value_v2_htfcrt_2026_08": 0.4,
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [
+        "strict read, raises if missing"
+      ],
+      "runtime_authority": "DecisionEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json decision_engine",
+      "governance_artifacts": [
+        "F-048 (rr_threshold retired) comments decision_engine.py:101"
+      ],
+      "tuned": false,
+      "tuning_evidence": [
+        "src/training/phase5_calibration.py:44 reads phase5_calibration (min_p_win 0.35) - calibration of p_win model, not a sweep of this key"
+      ],
+      "influences_production_decisions": "Y (live + backtest)",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "decision_engine.weak_component_threshold",
+      "category": "decision threshold",
+      "current_location": "src/core/decision_engine.py:99-112 (strict _require_decision_cfg)",
+      "research_consumers": "src/research/model_runners/adapters/decision.py",
+      "production_consumers": "DecisionEngine (src/core/engine_runner.py:455); live via live_engine_hook merged config",
+      "hardcoded_or_configurable": "configurable (strict)",
+      "default_values": "none (fail-fast)",
+      "active_value_v2_htfcrt_2026_08": 0.4,
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [
+        "strict read, raises if missing"
+      ],
+      "runtime_authority": "DecisionEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json decision_engine",
+      "governance_artifacts": [
+        "F-048 (rr_threshold retired) comments decision_engine.py:101"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "configs/production/* version history (archived v2_multi_2026_04_*, v3/v4_multi_2026_06, v1_multi_2026_03) shows multiple values (0.55/0.4)"
+      ],
+      "influences_production_decisions": "Y (live + backtest)",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "decision_engine.threshold_percentile/min/max",
+      "category": "decision threshold",
+      "current_location": "src/core/decision_engine.py:99-112 (strict _require_decision_cfg)",
+      "research_consumers": "src/research/model_runners/adapters/decision.py",
+      "production_consumers": "DecisionEngine (src/core/engine_runner.py:455); live via live_engine_hook merged config",
+      "hardcoded_or_configurable": "configurable (strict)",
+      "default_values": "none (fail-fast)",
+      "active_value_v2_htfcrt_2026_08": "85 / 0.45 / 0.65",
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [
+        "strict read, raises if missing"
+      ],
+      "runtime_authority": "DecisionEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json decision_engine",
+      "governance_artifacts": [
+        "F-048 (rr_threshold retired) comments decision_engine.py:101"
+      ],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y (live + backtest)",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "decision_engine.rr_threshold (RETIRED)",
+      "category": "RR",
+      "current_location": "configs decision_engine.rr_threshold",
+      "research_consumers": "-",
+      "production_consumers": "none (decision_engine.py:101-102 intentionally not read)",
+      "hardcoded_or_configurable": "declared, unread",
+      "default_values": "-",
+      "active_value_v2_htfcrt_2026_08": 1.5,
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [],
+      "runtime_authority": "none (economic RR = ultron_risk_gate.min_rr_ratio)",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json decision_engine (retained-but-retired)",
+      "governance_artifacts": [
+        "F-048"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "configs/production/* version history (archived v2_multi_2026_04_*, v3/v4_multi_2026_06, v1_multi_2026_03) shows multiple values (1.2/1.5)"
+      ],
+      "influences_production_decisions": "N",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Research Only",
+      "unknown_reason": "",
+      "notes": "Declared but no production consumer."
+    },
+    {
+      "name": "decision_engine.fallback_top_n",
+      "category": "decision ranking",
+      "current_location": "src/core/decision_engine.py:44 (_FALLBACK_TOP_N=3), :115",
+      "research_consumers": "-",
+      "production_consumers": "DecisionEngine batch ranking (:206)",
+      "hardcoded_or_configurable": "hardcoded module default + optional config key",
+      "default_values": "3",
+      "active_value_v2_htfcrt_2026_08": "absent",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "triggered",
+      "fallback_chain": [
+        "decision_engine.fallback_top_n: absent in active config",
+        "explicit kwarg fallback_n (decision_engine.py:92, default None)",
+        "module constant _FALLBACK_TOP_N=3 (decision_engine.py:44) via config.get (:115)"
+      ],
+      "runtime_authority": "DecisionEngine",
+      "configuration_authority": "none in active config",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y",
+      "explicit_active_production_config": false,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "DecisionEngine threshold_window",
+      "category": "dynamic threshold window",
+      "current_location": "src/core/decision_engine.py:92 kwarg default 1000",
+      "research_consumers": "-",
+      "production_consumers": "DecisionEngine DynamicThreshold (:108); constructed at engine_runner.py:455 without the kwarg",
+      "hardcoded_or_configurable": "hardcoded kwarg default",
+      "default_values": "1000",
+      "active_value_v2_htfcrt_2026_08": "not a config key",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "triggered",
+      "fallback_chain": [
+        "no config key",
+        "kwarg default threshold_window=1000 (decision_engine.py:92); caller engine_runner.py:455 passes only config"
+      ],
+      "runtime_authority": "DecisionEngine",
+      "configuration_authority": "none",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y",
+      "explicit_active_production_config": false,
+      "promotion_candidate": false,
+      "classification": "Architectural Constant",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "ultron_risk_gate.min_rr_ratio",
+      "category": "risk",
+      "current_location": "src/core/ultron_risk_gate.py:53 / :235",
+      "research_consumers": "research RR scripts",
+      "production_consumers": "UltronRiskGate.evaluate (live via live_engine_hook; engine_runner.ultron_gate_enabled=false in active config)",
+      "hardcoded_or_configurable": "configurable (DEFAULT_CONFIG merge)",
+      "default_values": 1.5,
+      "active_value_v2_htfcrt_2026_08": 1.5,
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json ultron_risk_gate.min_rr_ratio",
+        "DEFAULT_CONFIG src/core/ultron_risk_gate.py:47-53 merged at :107"
+      ],
+      "runtime_authority": "UltronRiskGate",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json ultron_risk_gate",
+      "governance_artifacts": [
+        "F-048",
+        "docs/research-readiness/h-rr-threshold-001-*"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/research/h_rr_threshold_001.py (preregistered H-RR-THRESHOLD-001 study, grids frozen in docs/research-readiness/h-rr-threshold-001-experiment-definition.json)",
+        "scripts/analysis/p3b_gate_expired_counterfactual_rr.py:244",
+        "src/expansion/policy_schema.py:60 bounds (1.50,3.00)"
+      ],
+      "influences_production_decisions": "Y (live hook calls gate; see note)",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": "engine_runner.ultron_gate_enabled=false in active config; live_engine_hook.py:1173 comment says wrapper never bypasses the gate - EngineRunner-internal gate path vs hook path not fully traced."
+    },
+    {
+      "name": "ultron_risk_gate.max_risk_per_trade_pct",
+      "category": "risk",
+      "current_location": "src/core/ultron_risk_gate.py:49 / :293",
+      "research_consumers": "research RR scripts",
+      "production_consumers": "UltronRiskGate.evaluate (live via live_engine_hook; engine_runner.ultron_gate_enabled=false in active config)",
+      "hardcoded_or_configurable": "configurable (DEFAULT_CONFIG merge)",
+      "default_values": 1.0,
+      "active_value_v2_htfcrt_2026_08": 1.0,
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/production/v2_htfcrt_2026_08.json ultron_risk_gate.max_risk_per_trade_pct",
+        "DEFAULT_CONFIG src/core/ultron_risk_gate.py:47-53 merged at :107"
+      ],
+      "runtime_authority": "UltronRiskGate",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json ultron_risk_gate",
+      "governance_artifacts": [
+        "F-048"
+      ],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y (live hook calls gate; see note)",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": "engine_runner.ultron_gate_enabled=false in active config; live_engine_hook.py:1173 comment says wrapper never bypasses the gate - EngineRunner-internal gate path vs hook path not fully traced."
+    },
+    {
+      "name": "ultron per-trade fallbacks: risk_percent / account_balance / spread_pips / slippage_pips / pip_size / min_sl_pips",
+      "category": "risk/sizing",
+      "current_location": "src/core/ultron_risk_gate.py:238-240, :292, :312, :327",
+      "research_consumers": "-",
+      "production_consumers": "UltronRiskGate.evaluate",
+      "hardcoded_or_configurable": "hardcoded .get literals on trade/portfolio dicts",
+      "default_values": "0.5 / 10000.0 / 0.0 / 0.0 / 0.0001 / 0.0",
+      "active_value_v2_htfcrt_2026_08": "config declares spread/slippage/min_sl 0.0 (2026-08-19); per-trade risk_percent from execution_planner.risk_percent; account_balance from caller",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "trade['risk_percent'] -> .get 0.5 (ultron_risk_gate.py:292)",
+        "portfolio_state['account_balance'] -> .get 10000.0 (:327)",
+        "config spread/slippage/pip_size -> .get (:238-240)",
+        "min_sl_pips .get (:312)"
+      ],
+      "runtime_authority": "UltronRiskGate",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json ultron_risk_gate + execution_planner.risk_percent",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": "live_engine_hook.py:1030-1034 requires trade_data['account_balance'] (KeyError) before gate call."
+    },
+    {
+      "name": "execution_planner.risk_percent",
+      "category": "sizing",
+      "current_location": "src/config_layer/execution_planner.py:110 (DEFAULT_CONFIG); live strict read src/runtime/live_engine_hook.py:1107",
+      "research_consumers": "src/research/model_runners/adapters/execution_plan.py:128 (require_key)",
+      "production_consumers": "live_engine_hook position_size_hint (:1107-1111); UltronRiskGate via trade.risk_percent",
+      "hardcoded_or_configurable": "configurable",
+      "default_values": "0.5",
+      "active_value_v2_htfcrt_2026_08": 0.5,
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent (ExecutionPlanner DEFAULT_CONFIG merge :157; live hook strict)",
+      "fallback_chain": [
+        "execution_planner.risk_percent",
+        "DEFAULT_CONFIG execution_planner.py:110 merged at :157 (ExecutionPlannerV1_2)"
+      ],
+      "runtime_authority": "live_engine_hook / ExecutionPlannerV1_2",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json execution_planner",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": "Four risk fractions coexist: execution_planner.risk_percent 0.5, ultron max_risk_per_trade_pct 1.0, capital_management.max_risk_per_trade_pct 0.25, backtest.risk_pct_per_trade 0.01."
+    },
+    {
+      "name": "execution_planner.default_account_balance",
+      "category": "capital",
+      "current_location": "src/config_layer/execution_planner.py:113 (DEFAULT_CONFIG 10_000.0)",
+      "research_consumers": "src/research/model_runners/adapters/execution_plan.py:126 (require_key)",
+      "production_consumers": "src/agent/modes/pipeline_mode.py:247-253 (strict); NOT read by live_engine_hook (requires trade_data account_balance, :1030)",
+      "hardcoded_or_configurable": "configurable",
+      "default_values": "10000.0",
+      "active_value_v2_htfcrt_2026_08": 10000.0,
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "execution_planner.default_account_balance",
+        "DEFAULT_CONFIG execution_planner.py:113 merged :157"
+      ],
+      "runtime_authority": "pipeline_mode / research adapter",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json execution_planner",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Unknown (live hook ignores it; pipeline_mode consumes)",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Unknown",
+      "unknown_reason": "Live hook takes balance from caller trade_data; value 10000 (unit unlabelled) coexists with capital_management.total_capital_inr 100000 and backtest.initial_capital 100000.0; which balance governs live sizing depends on the caller that builds trade_data (not traced).",
+      "notes": ""
+    },
+    {
+      "name": "execution_planner.breakout_disp_threshold",
+      "category": "intent boundary",
+      "current_location": "src/config_layer/execution_planner.py:117 (DEFAULT_CONFIG 1.5), used :394",
+      "research_consumers": "-",
+      "production_consumers": "ExecutionPlannerV1_2 intent classification (:394) - live via live_engine_hook.py:1041",
+      "hardcoded_or_configurable": "hardcoded DEFAULT_CONFIG (not in execution_planner or gate_intelligence section)",
+      "default_values": "1.5",
+      "active_value_v2_htfcrt_2026_08": "absent from execution_planner section",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "triggered",
+      "fallback_chain": [
+        "execution_planner.breakout_disp_threshold: absent",
+        "gate_intelligence merge (live_engine_hook.py:1025-1028): absent",
+        "DEFAULT_CONFIG execution_planner.py:117 merged :157"
+      ],
+      "runtime_authority": "ExecutionPlannerV1_2",
+      "configuration_authority": "none in active config (CRTConfig counterpart resolved separately via production_config.resolve_breakout_disp_threshold :190)",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found (refs in config_reachability.py, promotion_dryrun.py, build_bar_matrix.py)"
+      ],
+      "influences_production_decisions": "Y",
+      "explicit_active_production_config": false,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": "Comment execution_planner.py:115-116 states it must match the CRT engine's resolved value."
+    },
+    {
+      "name": "execution_planner.ttl_*_sec",
+      "category": "order TTL",
+      "current_location": "configs execution_planner; DEFAULT_CONFIG execution_planner.py:102-109",
+      "research_consumers": "-",
+      "production_consumers": "ExecutionPlannerV1_2",
+      "hardcoded_or_configurable": "configurable",
+      "default_values": "180/300/120/240/180/180 (DEFAULT_CONFIG)",
+      "active_value_v2_htfcrt_2026_08": "300/420/180/300/180/180",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "execution_planner.ttl_*",
+        "DEFAULT_CONFIG execution_planner.py:102-109 (differs from active values)"
+      ],
+      "runtime_authority": "ExecutionPlannerV1_2",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json execution_planner",
+      "governance_artifacts": [],
+      "tuned": true,
+      "tuning_evidence": [
+        "configs/production/* version history (archived v2_multi_2026_04_*, v3/v4_multi_2026_06, v1_multi_2026_03) shows multiple values (180->300, 300->420, 120->180, 240->300)"
+      ],
+      "influences_production_decisions": "Y",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": "DEFAULT_CONFIG comment :100 says it mirrors v1_multi_2026_03 values; active values differ."
+    },
+    {
+      "name": "gate_intelligence.gate_weight_* / gate_approval_threshold",
+      "category": "gate",
+      "current_location": "configs gate_intelligence (:92-99); DEFAULT_CONFIG execution_planner.py:119-123",
+      "research_consumers": "src/research/model_runners/adapters/execution_plan.py:135",
+      "production_consumers": "GateIntelligence via ExecutionPlannerV1_2; live hook requires section (live_engine_hook.py:377-383, F-109)",
+      "hardcoded_or_configurable": "configurable",
+      "default_values": "0.35/0.20/0.20/0.25/0.55",
+      "active_value_v2_htfcrt_2026_08": "same",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "gate_intelligence.* merged into planner cfg (live_engine_hook.py:1025-1028)",
+        "DEFAULT_CONFIG execution_planner.py:119-123"
+      ],
+      "runtime_authority": "GateIntelligence",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json gate_intelligence",
+      "governance_artifacts": [
+        "F-109"
+      ],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "live final_position_size fallback",
+      "category": "sizing",
+      "current_location": "src/runtime/live_engine_hook.py:811",
+      "research_consumers": "-",
+      "production_consumers": "MT5 order lot (live)",
+      "hardcoded_or_configurable": "hardcoded .get literal",
+      "default_values": "0.01",
+      "active_value_v2_htfcrt_2026_08": "n/a (field of ultron_result)",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "ultron_result['final_position_size'] -> .get 0.01 (live_engine_hook.py:811)"
+      ],
+      "runtime_authority": "live_engine_hook MT5 bridge",
+      "configuration_authority": "none",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y (lot sent to MT5 when key missing)",
+      "explicit_active_production_config": false,
+      "promotion_candidate": false,
+      "classification": "Unknown",
+      "unknown_reason": "Whether UltronRiskGate always populates final_position_size was not traced; fallback reachability unverified.",
+      "notes": ""
+    },
+    {
+      "name": "capital_management.total_capital_inr / max_risk_per_trade_inr / usd_to_inr_rate",
+      "category": "capital",
+      "current_location": "configs capital_management",
+      "research_consumers": "-",
+      "production_consumers": "src/strategies/base_strategy.py:58-61 (strict _require) [outside listed targets]",
+      "hardcoded_or_configurable": "configurable (strict)",
+      "default_values": "none",
+      "active_value_v2_htfcrt_2026_08": "100000 / 25000 / 84",
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [
+        "strict _require"
+      ],
+      "runtime_authority": "src/strategies base_strategy lot sizing",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json capital_management",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Unknown",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Unknown",
+      "unknown_reason": "src/strategies/* liveness (whether strategies drive live orders) not verified.",
+      "notes": ""
+    },
+    {
+      "name": "capital_management.sizing_mode / per_trade_investment_inr / per_trade_investment_pct",
+      "category": "capital",
+      "current_location": "configs capital_management",
+      "research_consumers": "-",
+      "production_consumers": "none found (git grep src: 0 consumers)",
+      "hardcoded_or_configurable": "declared, unbound",
+      "default_values": "-",
+      "active_value_v2_htfcrt_2026_08": "fixed_investment_inr / 10000 / 0.1",
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [],
+      "runtime_authority": "none",
+      "configuration_authority": "declared only",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "N (no consumer)",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Unknown",
+      "unknown_reason": "Declared in production config with zero code consumers; intended consumer unknown.",
+      "notes": ""
+    },
+    {
+      "name": "backtest.initial_capital / risk_pct_per_trade",
+      "category": "capital",
+      "current_location": "src/runtime/backtest_v2.py:311 (strict), :377, :3033; CLI override :4740",
+      "research_consumers": "-",
+      "production_consumers": "BacktestRunner sizing [outside listed targets]",
+      "hardcoded_or_configurable": "configurable (strict) + CLI override",
+      "default_values": "none",
+      "active_value_v2_htfcrt_2026_08": "100000.0 / 0.01",
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [
+        "required key; CLI --risk-pct overrides (backtest_v2.py:4740)"
+      ],
+      "runtime_authority": "BacktestRunner",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json backtest",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y (backtest)",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "engine_runner.min_atr (TrapValidatorEngine)",
+      "category": "threshold",
+      "current_location": "src/engines/trap_validator_engine.py:33",
+      "research_consumers": "-",
+      "production_consumers": "TrapValidatorEngine (engine_runner.py:348 passes merged config)",
+      "hardcoded_or_configurable": "configurable with literal fallback",
+      "default_values": "0.0005 (code) vs 0.0003 (config)",
+      "active_value_v2_htfcrt_2026_08": 0.0003,
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "engine_runner.min_atr (0.0003)",
+        "config.get('min_atr', 0.0005) trap_validator_engine.py:33"
+      ],
+      "runtime_authority": "TrapValidatorEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json engine_runner",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": "Code fallback 0.0005 differs from declared 0.0003."
+    },
+    {
+      "name": "engine_runner score weights (getattr)",
+      "category": "weights",
+      "current_location": "src/core/engine_runner.py:609-612",
+      "research_consumers": "-",
+      "production_consumers": "EngineRunner",
+      "hardcoded_or_configurable": "getattr literal fallbacks",
+      "default_values": "0.3/0.25/0.25/0.2",
+      "active_value_v2_htfcrt_2026_08": "see config",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "getattr(cfg, w, literal) engine_runner.py:609-612"
+      ],
+      "runtime_authority": "EngineRunner",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json engine_runner",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "zone_min_samples / live threshold",
+      "category": "zone",
+      "current_location": "src/engines/live_engine.py:163 (.get 50), :372 (.get 0.7)",
+      "research_consumers": "src/research/model_runners/adapters/zone_gate.py; src/research/zone_mapping/historical_zone_mapper.py",
+      "production_consumers": "live_engine",
+      "hardcoded_or_configurable": "configurable with literal fallback",
+      "default_values": "50 / 0.7",
+      "active_value_v2_htfcrt_2026_08": "zone_min_samples 50",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "engine_runner.zone_min_samples -> .get 50 (live_engine.py:163)",
+        "threshold -> .get 0.7 (:372)"
+      ],
+      "runtime_authority": "live_engine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json engine_runner",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "acceptance_controller fusion_percentile / acceptance_window",
+      "category": "acceptance",
+      "current_location": "src/core/acceptance_controller.py:101, :108",
+      "research_consumers": "-",
+      "production_consumers": "AcceptanceController",
+      "hardcoded_or_configurable": "configurable with literal fallback",
+      "default_values": "85 / 200",
+      "active_value_v2_htfcrt_2026_08": "not verified",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        ".get 85 (:101)",
+        ".get 200 (:108)"
+      ],
+      "runtime_authority": "AcceptanceController",
+      "configuration_authority": "get_prod_section (acceptance_controller.py:72)",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Unknown",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Unknown",
+      "unknown_reason": "AcceptanceController position in live decision chain not traced.",
+      "notes": ""
+    },
+    {
+      "name": "rr_engine min_rr",
+      "category": "RR",
+      "current_location": "src/engines/rr_engine.py:43 (.get 1.5)",
+      "research_consumers": "-",
+      "production_consumers": "RREngine",
+      "hardcoded_or_configurable": "configurable with literal fallback",
+      "default_values": "1.5",
+      "active_value_v2_htfcrt_2026_08": "not verified",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        ".get('min_rr',1.5) rr_engine.py:43"
+      ],
+      "runtime_authority": "RREngine",
+      "configuration_authority": "engine config",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Unknown",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Unknown",
+      "unknown_reason": "rr_engine.py:26 says its check is separate from UltronRiskGate; whether it gates live trades not traced.",
+      "notes": ""
+    },
+    {
+      "name": "crt_gaussian_scorer decay_lambda",
+      "category": "scoring",
+      "current_location": "src/config_layer/crt_gaussian_scorer.py:59 (.get 0.05)",
+      "research_consumers": "-",
+      "production_consumers": "CRT Gaussian scorer",
+      "hardcoded_or_configurable": "configurable with literal fallback",
+      "default_values": "0.05",
+      "active_value_v2_htfcrt_2026_08": "CRTConfig.score_decay_lambda 0.05 declared",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        ".get 0.05 crt_gaussian_scorer.py:59"
+      ],
+      "runtime_authority": "crt_gaussian_scorer",
+      "configuration_authority": "crt_engine.score_decay_lambda",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found"
+      ],
+      "influences_production_decisions": "Y",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "feature_pipeline periods (rsi 14, atr 14, ma 20/50/200, bb 20/2.0, macd 12/26/9, ema 9/21)",
+      "category": "indicator periods",
+      "current_location": "configs feature_pipeline; canonical ATR src/features/feature_pipeline.py:610-615",
+      "research_consumers": "scripts/analysis/semantic_layer_validation.py, crt_local_math_authority_probe.py (read only)",
+      "production_consumers": "FeaturePipeline (live + backtest)",
+      "hardcoded_or_configurable": "configurable",
+      "default_values": "see config",
+      "active_value_v2_htfcrt_2026_08": "see config",
+      "silent_fallback": "Unknown",
+      "silent_fallback_state": "not verified per key",
+      "fallback_chain": [
+        "feature_pipeline.* (per-key fallback not audited)"
+      ],
+      "runtime_authority": "FeaturePipeline",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json feature_pipeline",
+      "governance_artifacts": [
+        "docs/audits/RESEARCH_FUNCTION_CENSUS_2026-09-27.md",
+        "multi_llm/bridge_layer/ATR_PRIVATE_COPIES_INVENTORY.json"
+      ],
+      "tuned": false,
+      "tuning_evidence": [
+        "No sweep found for any indicator period"
+      ],
+      "influences_production_decisions": "Y",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Architectural Constant",
+      "unknown_reason": "",
+      "notes": "17 private ATR copies exist (prior inventory)."
+    },
+    {
+      "name": "resolver thresholds (range_atr_period, max_sweep_age, max_displacement_age, max_expansion_age, score_threshold, soft_conf, atr_min_displacement, expansion_atr_is_relative)",
+      "category": "resolver",
+      "current_location": "configs/formulas/market_crt_states.yaml thresholds; src/features/crt_state_resolver.py:376,1616,1797,1904,1991,2007,2014,2095-2096 (.get fallbacks)",
+      "research_consumers": "scripts/research/crt_parity_sweep.py (thresholds.* grids :90-114); src/research/rc003_distinct_object/driver.py",
+      "production_consumers": "src/runtime/crt_construction_trace.py:236 (OBSERVATION ONLY), src/charts/resolver_overlay.py; resolver_supply.py:42 'engine owns S_t'",
+      "hardcoded_or_configurable": "configurable (YAML) with .get literals",
+      "default_values": "14 / 20 / 3 / 495,124 / 0.45 / 3 / 1.2 / True",
+      "active_value_v2_htfcrt_2026_08": "YAML declares same values",
+      "silent_fallback": "Y",
+      "silent_fallback_state": "latent",
+      "fallback_chain": [
+        "configs/formulas/market_crt_states.yaml thresholds.<k>",
+        ".get literal in src/features/crt_state_resolver.py (lines listed)"
+      ],
+      "runtime_authority": "CRTStateResolver (observation/trace)",
+      "configuration_authority": "configs/formulas/market_crt_states.yaml (not configs/production)",
+      "governance_artifacts": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "tuned": true,
+      "tuning_evidence": [
+        "scripts/research/crt_parity_sweep.py:90-114 grids over thresholds.*"
+      ],
+      "influences_production_decisions": "N (observation-only consumers)",
+      "explicit_active_production_config": false,
+      "promotion_candidate": false,
+      "classification": "Research Only",
+      "unknown_reason": "",
+      "notes": "Located in src/features (production dir) but consumers are trace/chart/research; not a decision path."
+    },
+    {
+      "name": "tuner.* (fitness_weights, trade_count_floor/target, consistency_alpha, llm_gate)",
+      "category": "tuner",
+      "current_location": "configs/production/v2_htfcrt_2026_08.json tuner",
+      "research_consumers": "scripts/training/auto_tuner_multi.py:81, auto_tuner_gemini_gate.py:63",
+      "production_consumers": "none",
+      "hardcoded_or_configurable": "configurable",
+      "default_values": "-",
+      "active_value_v2_htfcrt_2026_08": "see config",
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [],
+      "runtime_authority": "auto_tuner scripts",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json tuner",
+      "governance_artifacts": [],
+      "tuned": false,
+      "tuning_evidence": [
+        "meta-parameters of the tuner itself"
+      ],
+      "influences_production_decisions": "N",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Research Only",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "phase5_calibration.* (val_ratio, min_p_win, max_cal_error, cv_*)",
+      "category": "calibration",
+      "current_location": "configs/production/v2_htfcrt_2026_08.json phase5_calibration",
+      "research_consumers": "src/training/phase5_calibration.py:44",
+      "production_consumers": "none (training path)",
+      "hardcoded_or_configurable": "configurable",
+      "default_values": "-",
+      "active_value_v2_htfcrt_2026_08": "see config",
+      "silent_fallback": "N",
+      "silent_fallback_state": "none",
+      "fallback_chain": [],
+      "runtime_authority": "phase5_calibration",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json phase5_calibration",
+      "governance_artifacts": [
+        "docs/topics/training-calibration.md"
+      ],
+      "tuned": false,
+      "tuning_evidence": [
+        "calibration thresholds"
+      ],
+      "influences_production_decisions": "N",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Research Only",
+      "unknown_reason": "",
+      "notes": ""
+    },
+    {
+      "name": "use_bitnet / gaussian_impl / rr_fusion.enabled",
+      "category": "engine switches",
+      "current_location": "crt_engine.use_bitnet; engine_runner.gaussian_impl, rr_fusion.enabled",
+      "research_consumers": "shadow configs v2_multi_bitnet_shadow (use_bitnet true), v4_multi (gaussian_impl ml), v1/v3 (rr_fusion true)",
+      "production_consumers": "CRTEngine / EngineRunner",
+      "hardcoded_or_configurable": "configurable",
+      "default_values": "-",
+      "active_value_v2_htfcrt_2026_08": "false / heuristic / false",
+      "silent_fallback": "Unknown",
+      "silent_fallback_state": "not verified",
+      "fallback_chain": [],
+      "runtime_authority": "EngineRunner/CRTEngine",
+      "configuration_authority": "configs/production/v2_htfcrt_2026_08.json",
+      "governance_artifacts": [],
+      "tuned": true,
+      "tuning_evidence": [
+        "configs/production shadow/archived variants"
+      ],
+      "influences_production_decisions": "Y",
+      "explicit_active_production_config": true,
+      "promotion_candidate": false,
+      "classification": "Production Policy Parameter",
+      "unknown_reason": "",
+      "notes": ""
+    }
+  ]
+}

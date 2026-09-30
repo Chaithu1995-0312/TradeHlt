@@ -4644,3 +4644,23 @@ Belief Update / ROI / Goal: Goal: close task_d0134aa6 without trusting the other
 Open Questions: none blocking. The result (`run_20260930_101500`) is not visible in the Live Run Trace UI (`localhost:8787/ui_kits/run_trace/`) because that UI reads only `logs/bar_structure/<run_id>/manifest.json`, written by `bar_structure_snapshot.py` only when `per_run_dir=true` -- absent from `v2_htfcrt_2026_08.json` entirely; unrelated to this fix, a separate still-uncommitted feature owned by another idle session.
 Next Step: none required for this fix. `src/control_plane/server.py` and `src/runtime/bar_structure_snapshot.py` remain uncommitted (Live Run Trace WIP, a different session's work) -- left untouched.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-30
+Topic: STORY-84.7 rewind; queue statuses for EPIC-84 corrected
+Decision/Output: 84.2/84.5/84.6 -> done (code merged, census 0 in their packages); 84.3 stays in_progress (residue engines 24 / features 41 / inout 1). 84.1 (config_layer 33) and 84.4 (runtime 53) pending. Earlier in-turn claim "only config_layer remains" was a truncated-output error (census script crashes on cp1252; use PYTHONIOENCODING=utf-8) and was corrected.
+Belief Update / ROI / Goal: Goal: enforce no-defaults rule. Belief: 1339/2755 census rows are UNCLASSIFIED, so a ratchet is meaningless until triaged; lane parity/missing-key evidence not re-verified. Knowledge ROI: medium. Action: 84.1 -> 84.4 -> audit 84.3 -> triage -> 84.7.
+Open Questions: does the census --print/JSON crash need a fix (encoding)?
+Next Step: user picks next item (84.1 recommended).
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-30
+Topic: STORY-84.1 merged; XAUUSD last-month backtest (2026-07-06..08-07)
+Decision/Output: ff-merged 2d7dde0 into grokbotchanges. Backtest on data/mt5/XAUUSD_W2026-07-06-to-2026-08-07.csv (2300 bars, sha dcaf88a7, ACTIVE v2_htfcrt_2026_08, main tree incl. another session's uncommitted edits): exit 0, 0 trades. Funnel RANGE->SWEEP 72, SWEEP->DISPLACEMENT 13, DISPLACEMENT->EXPANSION 4, EXPANSION->RETEST 2, both retests FILTER_REJECTED off_session. 0 config_key_missing rejects.
+Belief Update / ROI / Goal: Goal: strict config without behaviour change. Belief: strict reads introduced no new rejects on this window; the 0-trade result comes from the session filter, not 84.1. Knowledge ROI: medium. Action: 84.4 next.
+Open Questions: governance floor result vs baseline 18 (run pending at log time).
+Next Step: 84.4 L-D runtime.
+---

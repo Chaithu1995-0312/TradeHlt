@@ -110,7 +110,30 @@ def cross_check_basis_against_trades(expected: Basis, trades_csv: Path) -> None:
             )
 
 
-def run_arm(tmp: Path, sl_anchor: str, target_policy: str, ttl: int, corpus_rel: str) -> dict:
+LIVE_TRACE_DIR = REPO / "logs" / "bar_structure"
+
+
+def enable_live_trace(cfg: dict) -> None:
+    """Turn on the per-bar Live Run Trace sidecar in THIS arm's config copy only.
+
+    `output_dir` is made ABSOLUTE: the arm runs with cwd = its isolated root, whose `logs/` is a
+    fresh scratch dir, so a relative path would hide the rows from ui_kits/run_trace.
+    Observation-only (bar_structure_snapshot) -- decision neutrality is pinned by
+    tests/test_bar_structure_decision_neutrality.py.
+    """
+    bs = cfg.get("bar_structure_snapshot")
+    if not isinstance(bs, dict):
+        raise SystemExit("config has no bar_structure_snapshot section; --live-trace needs v3+")
+    bs["enabled"] = True
+    bs["output_dir"] = str(LIVE_TRACE_DIR)
+    bs["per_run_dir"] = True
+    bs["write_parquet"] = True
+    bs["flush_every"] = 50
+    bs.setdefault("families", {})["features"] = True
+
+
+def run_arm(tmp: Path, sl_anchor: str, target_policy: str, ttl: int, corpus_rel: str,
+            live_trace: bool = False) -> dict:
     name = f"{sl_anchor}__{target_policy}"
     root = tmp / name
     equity_basis: dict = {}
@@ -118,6 +141,8 @@ def run_arm(tmp: Path, sl_anchor: str, target_policy: str, ttl: int, corpus_rel:
     def mutate(cfg: dict) -> None:
         cfg.setdefault("backtest", {})["sl_anchor"] = sl_anchor
         cfg["setup"] = {"target_policy": target_policy, "trade_ttl_candles": ttl}
+        if live_trace:
+            enable_live_trace(cfg)
         # §7.3 required "equity basis" field -- read back, not guessed. Every arm shares this
         # value by construction (mutate never touches sizing), which is what Q5's fixed-ruler
         # rule requires; recorded per-arm anyway so the report proves it rather than assuming it.
@@ -203,6 +228,11 @@ def main() -> int:
                      help="Run the real 47k-bar XAUUSD_M15 corpus instead of the short-window fixture (default). NOT the default -- explicit opt-in only.")
     ap.add_argument("--ttl", type=int, default=20, help="trade_ttl_candles for every arm (default 20, see module docstring)")
     ap.add_argument("--out", default=None, help="Output dir (default: results/setup_grid_s4/<ts>)")
+    ap.add_argument("--live-trace", action="store_true",
+                     help="Stream per-bar rows (OHLC, CRT state, 48 features) + manifest to "
+                          "logs/bar_structure/<run_id>/ for ui_kits/run_trace (observation only)")
+    ap.add_argument("--arms", default=None,
+                     help="Comma list of arms to run, e.g. displacement__fixed_r (default: all 4)")
     args = ap.parse_args()
 
     corpus_rel = FULL_CORPUS if args.full_corpus else SHORT_WINDOW_CORPUS
@@ -217,10 +247,14 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="setup_grid_s4_") as tmp_s:
         tmp = Path(tmp_s)
         arms = []
+        only = set(args.arms.split(",")) if args.arms else None
         for sl_anchor in SL_ANCHORS:
             for target_policy in TARGET_POLICIES:
-                print(f"[arm] sl_anchor={sl_anchor} target_policy={target_policy} ttl={args.ttl} corpus={corpus_rel}")
-                arms.append(run_arm(tmp, sl_anchor, target_policy, args.ttl, corpus_rel))
+                if only and f"{sl_anchor}__{target_policy}" not in only:
+                    continue
+                print(f"[arm] sl_anchor={sl_anchor} target_policy={target_policy} ttl={args.ttl} corpus={corpus_rel}", flush=True)
+                arms.append(run_arm(tmp, sl_anchor, target_policy, args.ttl, corpus_rel,
+                                    live_trace=args.live_trace))
 
     report = build_report(arms)
     report["corpus"] = corpus_rel

@@ -62,6 +62,10 @@ _PRE_GENERATION_TRANSITIONS = {
     "MANIPULATION_C2": ["DISTRIBUTION_C3", "RANGE_C1"],
     "DISTRIBUTION_C3": ["RANGE_C1"],
 }
+# Edges added to the ontology (and so to the generated graph) after generation landed.
+_POST_GENERATION_EDGES: dict[tuple[str, str], str] = {
+    ("RANGE", "RETEST"): "STORY-83.11b mode-C resolver-founding edge (decider='resolver' only)",
+}
 _PRE_GENERATION_PARENT = {"RANGE_C1", "MANIPULATION_C2", "DISTRIBUTION_C3"}
 
 
@@ -81,7 +85,12 @@ def test_enum_name_to_value_map_is_unchanged_by_generation():
 def test_transition_graph_is_unchanged_by_generation():
     """Target ORDER is compared too, not just edge sets -- the generator preserves it."""
     actual = {k.name: [t.name for t in v] for k, v in VALID_TRANSITIONS.items()}
-    assert actual == _PRE_GENERATION_TRANSITIONS
+    # _PRE_GENERATION_TRANSITIONS stays the frozen pre-generation snapshot; edges added AFTER
+    # generation are declared explicitly (with the story that added them), appended in order.
+    expected = {k: list(v) for k, v in _PRE_GENERATION_TRANSITIONS.items()}
+    for (src, tgt), _story in _POST_GENERATION_EDGES.items():
+        expected[src].append(tgt)
+    assert actual == expected
 
 
 def test_partition_is_unchanged_by_generation():

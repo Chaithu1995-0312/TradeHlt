@@ -1796,7 +1796,35 @@ class StateMachine:
                 )
                 return False
 
+        # [STORY-83.11b] Everything from here on (cache inputs, retest commit, cached_features,
+        # transition) is `_commit_retest`, shared with the mode-C resolver founding path
+        # (CRTEngine._found_retest_from_resolver) -- one copy, not two. Guard operands and the
+        # transition reason are built here, from this path's own geometry, exactly as before.
+        return self._commit_retest(
+            state, candle, ev_logger,
+            reason=f"Retest | depth_abs={depth_abs:.5f} ceiling={adaptive_ceiling:.5f}",
+            guard_operands=[
+                {"name": "depth_abs", "runtime_value": depth_abs, "source_class": "CRT_LOCAL_DERIVED",
+                 "source_name": "close - range boundary", "source_location": _loc,
+                 "formula_id": None, "feature_id": None, "config_key": None},
+                {"name": "adaptive_ceiling", "runtime_value": adaptive_ceiling,
+                 "source_class": "CRT_LOCAL_DERIVED",
+                 "source_name": "max(static, atr ceiling)", "source_location": _loc,
+                 "formula_id": None, "feature_id": None, "config_key": None},
+            ],
+        )
 
+    def _commit_retest(
+        self, state: EngineState, candle: Candle,
+        ev_logger: Optional[EventLogger], *, reason: str, guard_operands: list,
+    ) -> bool:
+        """Commit a confirmed RETEST: inputs check, retest candle, cached_features, transition.
+
+        Extracted verbatim from try_expansion_to_retest (STORY-83.11b). The engine path's
+        behaviour is unchanged; the resolver-founding path calls it after installing the four
+        handed-over objects.
+        """
+        _loc = "crt_engine_v2.StateMachine.try_expansion_to_retest"
         # ── [CACHE] Features at RETEST confirmation (CH-002 / F-050).
         # Canonical identities:
         #   displacement_retrace   FM-027 — cross-candle retrace (NOT pipeline FM-021 retest_depth)
@@ -1876,22 +1904,10 @@ class StateMachine:
             guard_name="expansion_to_retest_all_pass",
             source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
             result=True, operator="ALL_PRIOR_GUARDS_PASS",
-            operands=[
-                {"name": "depth_abs", "runtime_value": depth_abs, "source_class": "CRT_LOCAL_DERIVED",
-                 "source_name": "close - range boundary", "source_location": _loc,
-                 "formula_id": None, "feature_id": None, "config_key": None},
-                {"name": "adaptive_ceiling", "runtime_value": adaptive_ceiling,
-                 "source_class": "CRT_LOCAL_DERIVED",
-                 "source_name": "max(static, atr ceiling)", "source_location": _loc,
-                 "formula_id": None, "feature_id": None, "config_key": None},
-            ],
+            operands=guard_operands,
             thresholds=[], short_circuit_status="NONE", failure_reason=None,
         )
-        return self._transition(
-            state, CRTState.RETEST,
-            f"Retest | depth_abs={depth_abs:.5f} ceiling={adaptive_ceiling:.5f}",
-            candle, ev_logger,
-        )
+        return self._transition(state, CRTState.RETEST, reason, candle, ev_logger)
 
     def try_retest_to_execution(
         self, state: EngineState, candle: Optional[Candle] = None,
@@ -2896,24 +2912,29 @@ class CRTEngine:
             )
         self.trade_ttl_candles = trade_ttl_candles
         # [STORY-83.11 §3.2 key 4 / §5] Not a CRTConfig field; fed from setup.decider.
-        # "engine" (default) = today: the state machine founds the trade. "resolver" = mode C,
-        # the CRTStateResolver founds it instead (engine keeps geometry/exits, §5). NOT
-        # IMPLEMENTED YET: founding a trade from the resolver's decision needs the four objects
-        # in §5's handover table (active range, sweep/displacement/retest candles), and the
-        # resolver's Q4a-decided CACHED `states.csv` (charts/resolver_overlay.py) carries only
-        # [timestamp, state] today -- no memory snapshot to materialize those objects from. That
-        # cache-format extension is real, additive, separately-scoped work (recorded as a
-        # follow-up, not silently faked here). Raises AT CONSTRUCTION (fail-closed, §3.6 rule 1)
-        # rather than accepting the value and doing the wrong thing mid-walk.
+        # "engine" (default) = today: the state machine founds the trade. "resolver" = mode C
+        # (STORY-83.11b): the CRTStateResolver founds the RETEST -- range, sweep, displacement
+        # and retest candle -- handed over through the founding sidecar
+        # (charts.resolver_overlay.load_founding_map -> set_founding_map), and the engine's own
+        # soft-confirmation / UltronRiskEngine.approve_with_soft_conf / build_trade path decides
+        # execution unchanged (reuse of the one risk authority, not a second copy). In this
+        # mode the engine skips its own EXPANSION->RETEST founding. A comparison arm, never a
+        # parity claim (F-069).
         if decider not in ("engine", "resolver"):
             raise ValueError(f"decider must be 'engine' or 'resolver', got {decider!r}")
-        if decider == "resolver":
-            raise NotImplementedError(
-                "CRTEngine(decider='resolver') (mode C) is declared and validated but not yet "
-                "implemented -- see docs/implementation_plan/setup-overlay-spec-2026-09.md §5 "
-                "and the STORY-83.11 completion notes for the discovered cache-format gap."
-            )
         self.decider = decider
+        # Mode C only: {bar timestamp (isoformat) -> founding row}. None until set_founding_map.
+        self._founding_map: Optional[dict] = None
+        # Candle buffer cap. "engine": atr_period * atr_buffer_multiplier (today, 42 on v5) --
+        # unchanged. "resolver": widened to also span a full SWEEP -> (DISPLACEMENT) -> EXPANSION
+        # -> RETEST lifetime, because the handed-over sweep/displacement candles are looked up
+        # here by timestamp and an EXPANSION can last up to max_expansion_age_candles. ATR is
+        # unaffected (compute_atr windows the last atr_period true ranges).
+        _atr_cap = config.atr_period * config.atr_buffer_multiplier
+        self._buffer_cap = _atr_cap if decider == "engine" else (
+            _atr_cap + config.max_sweep_age_candles + config.max_expansion_age_candles
+            + config.pending_displacement_ttl_candles
+        )
         self.reset_lg = ResetLogic(self.config, htf_reset_exempt_sweep=htf_reset_exempt_sweep)
         # [K23 F2] Not a CRTConfig field (census pins); fed from backtest.exchange_session_windows.
         # None = legacy static windows. Set = each session is defined in its own exchange zone
@@ -3091,7 +3112,7 @@ class CRTEngine:
         self.state.active_range = self.detector.detect_htf_range(candles, htf_candle_id, session)
         self.state.atr_abs = self.detector.compute_atr(candles, self.config.atr_period)
         # [PATCH 1] Bounded buffer
-        cap = self.config.atr_period * self.config.atr_buffer_multiplier
+        cap = self._buffer_cap
         self.candle_buffer = candles[-cap:]
         self.state.current_candle_index = len(candles) - 1
 
@@ -3108,6 +3129,108 @@ class CRTEngine:
     def dump_telemetry(self) -> list[dict]:
         """Return all Phase-0 telemetry records. Call once at end-of-run."""
         return self.telemetry.flush()
+
+    def set_founding_map(self, founding_map: dict) -> None:
+        """Mode C (decider="resolver"): install the resolver's founding rows.
+
+        ``founding_map`` is ``{bar timestamp isoformat: row}`` from
+        ``charts.resolver_overlay.load_founding_map``; each row carries ``direction``
+        ("LONG"/"SHORT"/"NONE"), ``h_ref``, ``l_ref`` and the ``sweep_ts`` /
+        ``displacement_ts`` timestamps. It is run input (like the corpus), not a Setup key.
+        """
+        if self.decider != "resolver":
+            raise ValueError("set_founding_map is only meaningful with decider='resolver'")
+        self._founding_map = founding_map
+
+    def _found_retest_from_resolver(self, candle: "Candle", htf_candle_id: str, action: dict) -> bool:
+        """[STORY-83.11b] Mode C founding. True iff this bar was founded as RETEST.
+
+        The resolver decided the structure on this bar; the engine installs the four objects
+        from its own candle buffer (by timestamp), commits RETEST through the SAME
+        `StateMachine._commit_retest` the engine's own founding uses, and opens the normal
+        soft-confirmation window. Everything after -- approve_with_soft_conf, build_trade,
+        exits, resets -- is the engine's unchanged path. Anything missing is a recorded
+        rejection, never a fabricated value.
+        """
+        if self._founding_map is None:
+            raise RuntimeError(
+                "CRTEngine(decider='resolver') requires set_founding_map() before process_candle"
+            )
+        row = self._founding_map.get(candle.timestamp.isoformat())
+        if row is None:
+            return False
+
+        if self.state.active_trade is not None or self.state.evaluating_soft_conf:
+            self.ev_log.record(
+                "RESOLVER_FOUNDING_SKIPPED", candle,
+                reason="resolver_founding_engine_busy",
+                metadata={"active_trade": self.state.active_trade is not None,
+                          "evaluating_soft_conf": self.state.evaluating_soft_conf},
+            )
+            return False
+
+        def _reject(reason: str, **meta) -> bool:
+            self.ev_log.record("RESOLVER_FOUNDING_REJECTED", candle, reason=reason, metadata=meta)
+            action["action"] = "RESOLVER_FOUNDING_REJECTED"
+            action["reason"] = reason
+            return False
+
+        direction = {"LONG": Direction.LONG, "SHORT": Direction.SHORT}.get(row["direction"])
+        if direction is None:
+            return _reject("resolver_founding_direction_unknown", direction=row["direction"])
+
+        by_ts = {c.timestamp.isoformat(): c for c in self.candle_buffer}
+        sweep_c = by_ts.get(row["sweep_ts"])
+        disp_c = by_ts.get(row["displacement_ts"])
+        _missing = [n for n, c in (("sweep", sweep_c), ("displacement", disp_c)) if c is None]
+        if _missing:
+            return _reject("resolver_founding_bar_missing", missing=_missing,
+                           buffer_len=len(self.candle_buffer))
+
+        prior = self.state.active_range
+        if self.state.current_state != CRTState.RANGE:
+            self.sm.reset_to_range(self.state, "resolver_founding", candle, self.ev_log)
+
+        h_ref, l_ref = float(row["h_ref"]), float(row["l_ref"])
+        self.state.direction = direction
+        self.state.active_range = Range(
+            h_ref=h_ref, l_ref=l_ref, equilibrium=(h_ref + l_ref) / 2,
+            formed_at=prior.formed_at if prior is not None else candle.timestamp,
+            htf_candle_id=htf_candle_id,
+            session=prior.session if prior is not None else "UNKNOWN",
+            child_count=prior.child_count if prior is not None else 0,
+        )
+        # The sweep candle is the resolver's; direction, wick price and range follow the same
+        # geometry detect_sweep uses (SHORT = high swept, LONG = low swept). double_confirmed
+        # is not owned by the resolver -> stays False (engine default), not inferred.
+        self.state.sweep_event = SweepEvent(
+            direction=direction,
+            price=sweep_c.high if direction == Direction.SHORT else sweep_c.low,
+            candle=sweep_c, double_confirmed=False, candle_index=sweep_c.index,
+        )
+        self.state.displacement_candle = disp_c
+
+        _loc = "crt_engine_v2.CRTEngine._found_retest_from_resolver"
+        if not self.sm._commit_retest(
+            self.state, candle, self.ev_log,
+            reason=f"Retest founded by resolver | h_ref={h_ref:.5f} l_ref={l_ref:.5f}",
+            guard_operands=[{"name": "resolver_founding_row", "runtime_value": row["timestamp"],
+                             "source_class": "RESOLVER_HANDOVER", "source_name": "founding.csv",
+                             "source_location": _loc, "formula_id": None, "feature_id": None,
+                             "config_key": None}],
+        ):
+            self.sm.reset_to_range(self.state, "resolver_founding_inputs_missing",
+                                   candle, self.ev_log)
+            return _reject("resolver_founding_inputs_missing")
+
+        action["action"] = "RETEST_CONFIRMED"
+        self.state.evaluating_soft_conf = True
+        self.state.soft_conf_candles = 0
+        self.ev_log.record(
+            "BEGIN_SOFT_CONF", candle,
+            reason="Retest founded by resolver — evaluating soft confirmation manifold"
+        )
+        return True
 
     def _emit_retest_replay(self, candle: "Candle", score: float, *,
                             accepted: bool, reject_reason: Optional[str]) -> None:
@@ -3187,7 +3310,7 @@ class CRTEngine:
         candle.index = self.state.current_candle_index
 
         # [PATCH 1] Bounded ATR buffer
-        cap = self.config.atr_period * self.config.atr_buffer_multiplier
+        cap = self._buffer_cap
         self.candle_buffer.append(candle)
         if len(self.candle_buffer) > cap:
             self.candle_buffer = self.candle_buffer[-cap:]
@@ -3289,6 +3412,12 @@ class CRTEngine:
                 action["action"] = f"TRADE_{result}"
                 action["state_after"] = self.state.current_state.name
                 return self._baseline_trace_finish(action)
+
+        # ── [STORY-83.11b] Mode C: RETEST founded by the resolver on this bar ──
+        # decider="engine" (default) never enters this block -- byte-identical to before.
+        if self.decider == "resolver" and self._found_retest_from_resolver(
+                candle, htf_candle_id, action):
+            return self._baseline_trace_finish(action)
 
         # ── State machine processing ──────────────────────────
         s = self.state.current_state
@@ -3508,7 +3637,9 @@ class CRTEngine:
             # ── RC-Closure: RETEST has priority=4 > EXPIRED priority=3.
             # Try retest FIRST so a qualifying retest always wins over TTL expiry
             # on the same candle. If retest fires, we return before the TTL check runs.
-            if self.sm.try_expansion_to_retest(self.state, candle, self.state.atr_abs, self.ev_log):
+            # [STORY-83.11b] decider="resolver": the engine does NOT found its own RETEST.
+            if self.decider == "engine" and self.sm.try_expansion_to_retest(
+                    self.state, candle, self.state.atr_abs, self.ev_log):
                 action["action"] = "RETEST_CONFIRMED"
                 # Begin soft confirmation window (replaces binary 5-candle gate)
                 self.state.evaluating_soft_conf = True

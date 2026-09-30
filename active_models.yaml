@@ -129,7 +129,10 @@ crt:
                             # parity-checked EXACTLY (edge-set equality) by
                             # state_contract_loader._validate_transition_graph at every
                             # CRTEngine() construction — must match state_identity.py verbatim.
-      RANGE:          [SWEEP, SHADOW_PENDING]
+      # RANGE -> RETEST is the mode-C resolver-founding edge (STORY-83.11b, decider="resolver"):
+      # the engine resets to RANGE, installs the four resolver-handed objects and commits RETEST
+      # (CRTEngine._found_retest_from_resolver). Never taken when decider="engine".
+      RANGE:          [SWEEP, SHADOW_PENDING, RETEST]
       SHADOW_PENDING: [SWEEP, RANGE]
       SWEEP:          [DISPLACEMENT, EXPANSION, RANGE]
       DISPLACEMENT:   [EXPANSION, RANGE]

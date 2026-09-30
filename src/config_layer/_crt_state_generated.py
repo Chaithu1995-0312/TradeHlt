@@ -47,7 +47,7 @@ class CRTState(Enum):
 
 
 VALID_TRANSITIONS: dict[CRTState, list[CRTState]] = {
-    CRTState.RANGE:           [CRTState.SWEEP, CRTState.SHADOW_PENDING],
+    CRTState.RANGE:           [CRTState.SWEEP, CRTState.SHADOW_PENDING, CRTState.RETEST],
     CRTState.SHADOW_PENDING:  [CRTState.SWEEP, CRTState.RANGE],
     CRTState.SWEEP:           [CRTState.DISPLACEMENT, CRTState.EXPANSION, CRTState.RANGE],
     CRTState.DISPLACEMENT:    [CRTState.EXPANSION, CRTState.RANGE],

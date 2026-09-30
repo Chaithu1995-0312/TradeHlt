@@ -1752,6 +1752,56 @@
       "notes": "User-authorized same-session: one-month MT5 terminal export converted from data/XAUUSD_M15_20260807_200204.xlsx (ICMarketsSC-Demo, 2026-07-07 01:00 to 2026-08-06 23:45, 2116 M15 bars). Same T3 day boundary 01:00-23:45 as reviewed data/mt5/XAUUSD_M15.csv. Clock is MT5 broker-server tracking US DST (F-066), not UTC."
     },
     {
+      "path": "data/XAUUSD_mt5_1month_latest.csv",
+      "sha256": "504f054c612e9d4a351afb1487005f9768e6ccd73ae531b4cc3247107525dd80",
+      "timezone": "MT5_SERVER_NY_DST",
+      "user_reviewed": true,
+      "reviewed_by": "user-authorized-2026-09-28",
+      "reviewed_at": "2026-09-27T20:30:49Z",
+      "detector": {
+        "verdict": "INCONCLUSIVE",
+        "confidence": "low",
+        "authority": "ADVISORY_ONLY - a human declares the clock; this never sets user_reviewed",
+        "reasoning": [
+          "T2 NO_OVERLAP: candidate and reference corpora do not overlap in time",
+          "T3: day opens 01:00"
+        ],
+        "rows_inspected": 2085,
+        "first_timestamp": "2026-08-17 01:00:00",
+        "last_timestamp": "2026-09-16 18:30:00",
+        "tests": {
+          "t1_seasonal_step": {
+            "status": "INSUFFICIENT",
+            "dst_on": {
+              "status": "NO_OVERLAP",
+              "note": "candidate and reference corpora do not overlap in time"
+            },
+            "dst_off": {
+              "status": "NO_OVERLAP",
+              "note": "candidate and reference corpora do not overlap in time"
+            },
+            "note": "one or both DST regimes lack enough overlapping data"
+          },
+          "t2_reference_xcorr": {
+            "status": "NO_OVERLAP",
+            "note": "candidate and reference corpora do not overlap in time"
+          },
+          "t3_daily_boundary": {
+            "modal_day_open": "01:00",
+            "modal_day_close": "23:45",
+            "days_observed": 23,
+            "opens_at_utc_midnight": false,
+            "note": "consistent-with only - the day boundary is expressed in the FILE's own clock, so it cannot distinguish a fixed offset from a DST-observing server"
+          },
+          "t4_ny_vs_eu": {
+            "status": "NOT_APPLICABLE",
+            "note": "only meaningful once T1 shows the feed observes DST"
+          }
+        }
+      },
+      "notes": "User-authorized 2026-09-28 01:56 IST: one-month MT5 export (2026-08-17 01:00 to 2026-09-16 18:30, 2085 M15 bars). Evidence: shift-0 exact OHLC match 2085/2085 vs reviewed data/mt5/W2026-08-03_to_2026-09-23/XAUUSD_M15.csv (sha256 783f4ebfb61fab41e5c7987c726ef0db74317bfcb18262d36ebcf905fae7a655); session shape 01:00-23:45 with 23:45-01:00 break, same T3 day boundary as reviewed data/mt5/XAUUSD_M15.csv. Clock is MT5 broker-server tracking US DST (F-066), not UTC. SMOKE-only dataset per DC-RESEARCH-LAB-01 UD-13."
+    },
+    {
       "path": "data/XRPUSDT_M15.csv",
       "sha256": "f9ce0ca4efc431c58156a71dace82281528968844d3d92703111022786b74794",
       "timezone": "",

@@ -67,6 +67,69 @@ class ResolverCacheResult:
         }
 
 
+FOUNDING_FILE = "founding.csv"
+FOUNDING_FIELDS = ["timestamp", "direction", "h_ref", "l_ref",
+                   "sweep_ts", "displacement_ts", "retest_ts"]
+_DIRECTION_NAME = {1: "LONG", -1: "SHORT"}
+
+
+def _founding_row(mem, bar_pos: int, timestamps: Sequence) -> dict:
+    """One founding row from the resolver's memory on a RETEST-entry bar.
+
+    Memory stores candle INDICES in the resolver's own counter (`_memory.candle_index`,
+    bumped once per `resolve`); they are converted to bar POSITIONS in `timestamps` with an
+    offset calibrated on the retest index itself (`retest_candle_index` is set on this very
+    bar), then to TIMESTAMPS -- the join key the engine uses. An unknown index (-1, e.g. a
+    shadow-resumed displacement) or one outside `timestamps` is written empty, never guessed.
+    """
+    offset = mem.retest_candle_index - bar_pos
+    if mem.retest_candle_index < 0:
+        raise ValueError(f"RETEST entry at bar {bar_pos} carries no retest_candle_index")
+
+    def _ts(idx: int) -> str:
+        pos = idx - offset
+        if idx < 0 or not (0 <= pos < len(timestamps)):
+            return ""
+        t = timestamps[pos]
+        return t.isoformat() if hasattr(t, "isoformat") else str(t)
+
+    return {
+        "timestamp": _ts(mem.retest_candle_index),
+        "direction": _DIRECTION_NAME.get(int(mem.displacement_direction), "NONE"),
+        "h_ref": repr(float(mem.range_h_ref)),
+        "l_ref": repr(float(mem.range_l_ref)),
+        "sweep_ts": _ts(mem.sweep_candle_index),
+        "displacement_ts": _ts(mem.displacement_candle_index),
+        "retest_ts": _ts(mem.retest_candle_index),
+    }
+
+
+def load_founding_map(instrument: str, corpus_sha256: str,
+                      variant: str = DEFAULT_VARIANT) -> dict[str, dict]:
+    """Read the mode-C founding sidecar -> {retest bar timestamp isoformat: row}.
+
+    Fail-closed (raises FileNotFoundError / ValueError): mode C must never silently run on a
+    missing, unreadable or corpus-mismatched sidecar. Never computes -- build it offline with
+    `build_and_cache` (a sidecar-less cache from before STORY-83.11b is 'not built', not empty).
+    """
+    out_dir = cache_dir(instrument, corpus_sha256, variant)
+    meta_path, founding_path = out_dir / "meta.json", out_dir / FOUNDING_FILE
+    if not meta_path.exists() or not founding_path.exists():
+        raise FileNotFoundError(
+            f"founding sidecar not built for {instrument} corpus {corpus_sha256[:8]} "
+            f"({founding_path}); run charts.resolver_overlay.build_and_cache first"
+        )
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    if meta.get("corpus_sha256") != corpus_sha256:
+        raise ValueError(f"stale founding sidecar: cached={meta.get('corpus_sha256')} "
+                         f"requested={corpus_sha256}")
+    with open(founding_path, "r", newline="", encoding="utf-8") as f:
+        rows = list(_csv.DictReader(f))
+    if len(rows) != meta.get("founding_rows"):
+        raise ValueError(f"founding sidecar row count {len(rows)} != meta {meta.get('founding_rows')}")
+    return {r["timestamp"]: r for r in rows}
+
+
 def build_and_cache(
     instrument: str,
     csv_path: str | Path,
@@ -115,8 +178,14 @@ def build_and_cache(
 
     timestamps = enriched_df["timestamp"].tolist()
     states: list[str] = []
+    founding_rows: list[dict] = []
     for i, feat_dict in enumerate(supply_rows):
-        states.append(resolver.resolve(feat_dict, timestamp=timestamps[i], htf_id=htf_ids[i]))
+        st = resolver.resolve(feat_dict, timestamp=timestamps[i], htf_id=htf_ids[i])
+        # STORY-83.11b: snapshot the resolver's memory on every RETEST ENTRY bar (state changed
+        # into RETEST). Entry decisions, never occupancy bars (entry-decisions-not-occupancy).
+        if st == "RETEST" and (not states or states[-1] != "RETEST"):
+            founding_rows.append(_founding_row(resolver._memory, i, timestamps))
+        states.append(st)
 
     out_dir = cache_dir(instrument, corpus_sha, variant)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -126,6 +195,12 @@ def build_and_cache(
         w.writerow(["timestamp", "state"])
         for ts, st in zip(timestamps, states):
             w.writerow([ts.isoformat() if hasattr(ts, "isoformat") else str(ts), st])
+
+    # STORY-83.11b founding sidecar (mode C handover). states.csv above is unchanged.
+    with open(out_dir / FOUNDING_FILE, "w", newline="", encoding="utf-8") as f:
+        w = _csv.DictWriter(f, fieldnames=FOUNDING_FIELDS)
+        w.writeheader()
+        w.writerows(founding_rows)
 
     meta = {
         "instrument": instrument,
@@ -140,6 +215,8 @@ def build_and_cache(
         "waived_when_features": sorted(resolver.waived_when_features),
         "supply_set_id": supply_stats.get("supply_set_id"),
         "supply_fingerprint": supply_stats.get("supply_fingerprint"),
+        "founding_file": FOUNDING_FILE,
+        "founding_rows": len(founding_rows),
         "built_at": datetime.now().isoformat(),
     }
     (out_dir / "meta.json").write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n",

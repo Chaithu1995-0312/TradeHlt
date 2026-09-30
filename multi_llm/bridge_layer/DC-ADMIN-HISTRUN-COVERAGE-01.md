@@ -22,7 +22,9 @@ The From/To date pickers on the Historical Run page must be bounded by the OHLCV
 | D2 | **Timeframe selector with BOTH M15 and M5.** Coverage, runnable status and TZ status are computed per (instrument, timeframe). Switching timeframe recomputes every row's state and the calendar bounds (and drops selections that become disabled). | 4, 6.1, 6.4 |
 | D3 | **Default date range = full INTERSECTION** of the selected coins' coverage (no 90-day default). Union stays opt-in with a warning. | 6.2, 6.3, 6.5 |
 | D4 | The 5 instruments with no data (ADAUSDT, EURGBP, NZDUSD, USDCAD, USDCHF) are greyed out too, in a **visually distinct** state. Two disabled states: `no_data` and `tz_unreviewed`. **Precedence: `no_data` wins** if both apply. Page shows a small legend. | 4, 6.1, 6.7 |
-| D5 | **Excel EXCLUDED** as a coverage/data source for now (interpreted from "Excel for now yes") - **confirm-if-wrong**. | 3, 9 |
+| D5 | **Excel EXCLUDED** as a coverage/data source - **CONFIRMED** 2026-09-28 01:12 IST (originally interpreted from "Excel for now yes"). | 3, 9 |
+
+> **Note (2026-09-28 01:12 IST, design only, not implemented):** M15 for non-XAUUSD instruments will come from **M5-derived datasets** per DC-RESEARCH-LAB-01 UD-10 (`multi_llm/design_cards/DC-RESEARCH-LAB-01_ARCHITECTURE.md`): a derived M15 is its own dataset, identified by source M5 hash + resampling code hash + declared params (bar-boundary anchor, timezone, partial-bar rule), and never mixed with raw/vendor M15. A coverage endpoint would report derived M15 as **distinct from raw** M15 (separate source kind), not merged into it.
 
 ### 1A.1 Per-coin runnable table (read-only check, 2026-09-25 ~02:00 IST)
 
@@ -156,7 +158,7 @@ Resolve the canonical path first (step 0), then take coverage from the first sou
 2. **corpus_store Parquet sidecar**: `status(...) == FRESH` -> rows from `ParquetFile.metadata.num_rows`, first/last from `timestamp` row-group min/max statistics (no data read). STALE/ABSENT -> skip (never serve stale). Today: XAUUSD M15 only.
 3. **Census fingerprint manifest** entry for the same `physical_path`, only if `size_bytes` == current size AND (when computed) `sha256` matches. Gives first/last/rows/gaps for free. Today: valid for all canonical mt5/binance files. Invalid for `data/XAUUSD_M15.csv` (drifted).
 4. **File scan**: stream the time column via the reused parser; compute first/last/rows/modal step/gap count. Cache by `(path, mtime_ns, size)`.
-5. **Excel**: EXCLUDED (user decision D5, confirm-if-wrong). The xlsx files are subsets/exports with unreviewed clocks and are never read for coverage.
+5. **Excel**: EXCLUDED (user decision D5, CONFIRMED 2026-09-28 01:12 IST). The xlsx files are subsets/exports with unreviewed clocks and are never read for coverage.
 
 Every response states which step answered (`coverage_source`), so the UI can show the provenance and an auditor can reproduce it.
 
@@ -320,13 +322,13 @@ using exactly the colours in 1A.2.
 
 ## 9. Open questions (for the user)
 
-Answered on 2026-09-25 01:56 IST and moved to section 1A: tz-unreviewed handling (D1), timeframes (D2), default range (D3), no-data instruments (D4), Excel (D5, confirm-if-wrong).
+Answered on 2026-09-25 01:56 IST and moved to section 1A: tz-unreviewed handling (D1), timeframes (D2), default range (D3), no-data instruments (D4), Excel (D5, CONFIRMED 2026-09-28 01:12 IST).
 
 Remaining:
 1. **Crypto canonical root**: for USDT symbols, is the backtest corpus `data/binance/{SYM}_{TF}.csv` (assumed in this card; M5 exists only there) or root `data/{SYM}_M15.csv` (byte-identical for M15 today; census calls root "AUTHORITATIVE_CANONICAL", config `dataset_integrity.canonical_data_roots=['data']`)? `corpus_store._default_csv_path` only knows `data/mt5/`.
 2. **Calendar clock**: pick dates in corpus clock (recommended; MT5 = MT5_SERVER_NY_DST, Binance M5 = UTC) or IST? Mixed-clock selections (MT5 + Binance) mean "the same date" is a different instant per coin.
 3. **XAUUSD dataset choice / XAUUSD M5**: two bound datasets exist (PHASE1 2024-05-22 -> 2026-05-21; TVWINDOW 2026-07-06 -> 2026-08-07, UNRESOLVED). Offer only PHASE1 (the `legacy_rewrite_target`), or let the user pick? And confirm XAUUSD M5 stays `no_data` (forensic per the PHASE1 record, Note X) rather than being admitted.
-4. **Excel (D5)**: confirm-if-wrong. Excluded unless you name an instrument whose truth is an xlsx.
+4. **Excel (D5)**: CONFIRMED 2026-09-28 01:12 IST - Excel excluded (resolved; kept here for numbering).
 
 ## 10. OPEN (not found / not verified)
 
