@@ -18,11 +18,12 @@
       "new_york",
       "overlap"
     ],
-    "feature_cluster_similarity_cluster_threshold": 0.25,
-    "feature_cluster_similarity_registry_path": "models/zone_registry.json",
-    "feature_cluster_similarity_execution_mode": "normal",
-    "feature_cluster_similarity_mode": "hard",
+    "zone_cluster_threshold": 0.25,
+    "zone_registry_path": "models/zone_registry.json",
+    "zone_gate_execution_mode": "normal",
+    "zone_mode": "hard",
     "debug_mode": false,
+    "gaussian_impl": "heuristic",
     "convergence_window": 500,
     "rr_fusion": {
       "enabled": true,
@@ -123,9 +124,9 @@
   },
   "fusion_engine": {
     "weight_crt": 0.4,
-    "weight_ema_momentum_kernel": 0.2,
-    "weight_feature_cluster_similarity": 0.2,
-    "weight_candle_commitment": 0.2,
+    "weight_gaussian": 0.2,
+    "weight_zone_gate": 0.2,
+    "weight_rr": 0.2,
     "conflict_resolution_policy": "conservative",
     "gaussian_weight": 0.6,
     "neural_weight": 0.4,
@@ -140,28 +141,28 @@
       "TRENDING": {
         "crt": 0.38,
         "gaussian": 0.2,
-        "feature_cluster_similarity": 0.12,
+        "zone_gate": 0.12,
         "rr": 0.2,
         "strategy_consensus": 0.1
       },
       "RANGING": {
         "crt": 0.18,
         "gaussian": 0.32,
-        "feature_cluster_similarity": 0.15,
+        "zone_gate": 0.15,
         "rr": 0.25,
         "strategy_consensus": 0.1
       },
       "VOLATILE": {
         "crt": 0.28,
         "gaussian": 0.14,
-        "feature_cluster_similarity": 0.12,
+        "zone_gate": 0.12,
         "rr": 0.16,
         "strategy_consensus": 0.3
       },
       "UNKNOWN": {
         "crt": 0.4,
         "gaussian": 0.2,
-        "feature_cluster_similarity": 0.2,
+        "zone_gate": 0.2,
         "rr": 0.2,
         "strategy_consensus": 0.0
       }
@@ -710,7 +711,7 @@
   "cognitive_layer": {
     "enabled": true,
     "opportunities_dir": "logs",
-    "feature_cluster_similarity_registry_path": "models/replay/zone_registry_BNBUSDT.json",
+    "zone_registry_path": "models/replay/zone_registry_BNBUSDT.json",
     "max_replay_records": 50000,
     "min_cluster_samples": 5,
     "hmf_allow_threshold": 0.6,

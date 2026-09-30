@@ -23,7 +23,7 @@
 | `feature_pipeline` | `src/features/feature_pipeline.py` | Batch/live feature vector producer (primary computation for series FMs) | — |
 | `causal_structure` | `src/features/causal_structure.py` | Online FC1-A structure + liquidity for FeatureStore | FM-025, FM-026 |
 | `crt_feature_builder` | `src/features/crt_feature_builder.py` | BitNet feeder transcriber (historically 0 live callers) | FM-001, FM-002, FM-010 |
-| `engine_runner_fusion` | `src/core/engine_runner.py` | Fusion of crt/gaussian/feature_cluster_similarity/rr scores (consumes scores, not raw FM math) | — |
+| `engine_runner_fusion` | `src/core/engine_runner.py` | Fusion of crt/gaussian/zone_gate/rr scores (consumes scores, not raw FM math) | — |
 | `feature_state_encoder_shadow` | `src/features/feature_states.py` | Shadow: numeric → state names (research; not trading gate) | — |
 
 ## Features

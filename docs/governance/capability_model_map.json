@@ -8,7 +8,7 @@
     {
       "capability_id": "RC-001",
       "capability_name": "statistical_structural_familiarity",
-      "model_ids": ["gaussian", "feature_cluster_similarity"],
+      "model_ids": ["gaussian", "zone_gate"],
       "overlap_declared": true,
       "overlap_rationale": "Both models' MIAR-declared market questions ('How statistically conformant is this state to previously observed states?' / 'Is this inside a valid structural zone?') are grouped under one informal 'familiarity' framing by model-design-intent.md Part VII (Authority: NONE, narrative). Whether this is a genuine shared capability or a coincidental vocabulary overlap between two structurally different mechanisms (global parametric vs local geometric) is the open question recorded in market_ontology.yaml RC-001's epistemic.unknown_mechanism - reported here, not resolved."
     }
@@ -17,7 +17,7 @@
     "market_ontology": "Substrate (Stage 0, per MIAR) - not a reasoning model; defines meaning, not a market question.",
     "feature_pipeline": "Substrate (Stage 0, per MIAR) - not a reasoning model; builds the vector, does not reason over it.",
     "crt": "Out of M1 pilot scope. NOTE: RC-001 cites CRT's internal distance-decay soft-confirmation as OBSERVED evidence (a familiarity-shaped mechanism exists inside crt_engine_v2.py), but crt's MIAR-declared PRIMARY market question is structural eligibility ('What structural state is the market in?') - a distinct, not-yet-registered capability. Mapping crt to RC-001 here would conflate its primary capability with an embedded secondary mechanism, repeating the exact models-first conflation this exercise exists to avoid.",
-    "candle_commitment": "Out of M1 pilot scope - a distinct capability (candle commitment geometry) per model-design-intent.md Part VII, not part of the familiarity cluster.",
+    "rr_engine": "Out of M1 pilot scope - a distinct capability (candle commitment geometry) per model-design-intent.md Part VII, not part of the familiarity cluster.",
     "rr_trained": "Out of M1 pilot scope.",
     "bitnet": "Out of M1 pilot scope - a distinct capability (safety veto) per MIAR stage taxonomy.",
     "tradenet": "Out of M1 pilot scope - a distinct capability (post-entry trajectory expectation), explicitly the 'healthy, complementary' pair with rr_trained per Part VII, not a familiarity surface.",

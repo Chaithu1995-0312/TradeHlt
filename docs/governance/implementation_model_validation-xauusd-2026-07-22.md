@@ -28,9 +28,9 @@
 |---|---|---|---|---|---|---|---|
 | CRT | True | True | True | True | **`PASS`** | spine_primary (deterministic state machine → TRADE | `OK` |
 | Gaussian_heuristic_live | True | True | True | True | **`DEGRADED`** | fusion slot 'gaussian' (EngineRunner; gaussian_imp | `OK` |
-| Gaussian_trained_NB | True | True | True | True | **`ORPHAN`** | NOT on live spine when removed_selector=heuristic (or | `EXECUTED_ORPHAN` |
-| ZoneGate | True | True | True | True | **`PASS`** | fusion slot 'feature_cluster_similarity' + hard gate (feature_cluster_similarity_mode=har | `OK` |
-| RR_polarity_engine | True | True | True | True | **`PASS`** | fusion slot 'rr' ALWAYS (base CandleCommitment); DecisionE | `OK` |
+| Gaussian_trained_NB | True | True | True | True | **`ORPHAN`** | NOT on live spine when gaussian_impl=heuristic (or | `EXECUTED_ORPHAN` |
+| ZoneGate | True | True | True | True | **`PASS`** | fusion slot 'zone_gate' + hard gate (zone_mode=har | `OK` |
+| RR_polarity_engine | True | True | True | True | **`PASS`** | fusion slot 'rr' ALWAYS (base RREngine); DecisionE | `OK` |
 | RR_Fusion | False | False | False | False | **`FAIL_CLOSED`** | DISABLED on active config (engine_runner.rr_fusion | `LOAD_FAIL` |
 | TradeNet | True | True | False | True | **`ORPHAN`** | ORPHAN — fusion neural slot unwired (F-005); Trade | `EXECUTED_ORPHAN` |
 | BitNet | True | True | True | True | **`DISABLED`** | CRT hard-reject gate WHEN use_bitnet=true (score<0 | `EXECUTED_DISABLED_ON_SPINE` |
@@ -91,7 +91,7 @@ Evidence: `GaussianRegistry: no active version for instrument 'XAUUSD' in models
 
 ### 5. [High] `RR_NAME_SEMANTIC_MISMATCH` — RR_polarity_engine
 
-CandleCommitment emits candle polarity ∈[0.5,1], not forward RR; DecisionEngine threshold 1.5 → structural low_rr (F-048)
+RREngine emits candle polarity ∈[0.5,1], not forward RR; DecisionEngine threshold 1.5 → structural low_rr (F-048)
 
 ```json
 {
@@ -760,12 +760,12 @@ Feature alignment noted (see detail)
 ## 4. Architecture Observations
 
 - Runtime feature schema is v4.0 (39-dim): macd_hist split + wick_size→candle_range. All 38-dim trained artifacts (ZoneGate, RR fusion, Gaussian NB) predate this migration.
-- Live Gaussian path is heuristic 3-feature kernel with mu/σ defaults — trained registry checkpoints are selected for BNB/ETH only and are not consumed when removed_selector=heuristic (F-060).
+- Live Gaussian path is heuristic 3-feature kernel with mu/σ defaults — trained registry checkpoints are selected for BNB/ETH only and are not consumed when gaussian_impl=heuristic (F-060).
 - ZoneGate is documented selected_and_enabled, but load-time ZoneFeatureOrderError now blocks EngineRunner construction under v4 — production hard-gate is currently unstartable without remap.
 - RR fusion checkpoint loads and scores, but engine_runner.rr_fusion.enabled=false (F-038); confidence gate saturates bypass (F-044); index truncation under v4 is a new misalignment class.
 - TradeNet is orphaned (F-005) — registry has an active ETH checkpoint but no spine consumer.
 - BitNet registry is empty {}; use_bitnet=false — dual schema (legacy 6 vs export 35) remains.
-- CandleCommitment polarity vs DecisionEngine rr_threshold=1.5 is a structural consumer mismatch (F-048).
+- RREngine polarity vs DecisionEngine rr_threshold=1.5 is a structural consumer mismatch (F-048).
 - CRT remains the only fully reachable, schema-independent decision generator on the spine.
 
 ## 5. Wiring Classification
@@ -927,7 +927,7 @@ Feature alignment noted (see detail)
 
 - kind: heuristic
 - loaded/executed/features_ok/healthy: True/True/True/True
-- consumer: fusion slot 'gaussian' (EngineRunner; removed_selector=heuristic)
+- consumer: fusion slot 'gaussian' (EngineRunner; gaussian_impl=heuristic)
 
 ```json
 {
@@ -952,7 +952,7 @@ Feature alignment noted (see detail)
 
 - kind: trained
 - loaded/executed/features_ok/healthy: True/True/True/True
-- consumer: NOT on live spine when removed_selector=heuristic (orphan vs selection)
+- consumer: NOT on live spine when gaussian_impl=heuristic (orphan vs selection)
 
 ```json
 {
@@ -977,7 +977,7 @@ Feature alignment noted (see detail)
 
 - kind: trained
 - loaded/executed/features_ok/healthy: True/True/True/True
-- consumer: fusion slot 'feature_cluster_similarity' + hard gate (feature_cluster_similarity_mode=hard)
+- consumer: fusion slot 'zone_gate' + hard gate (zone_mode=hard)
 
 ```json
 {
@@ -1002,7 +1002,7 @@ Feature alignment noted (see detail)
 
 - kind: rule_based
 - loaded/executed/features_ok/healthy: True/True/True/True
-- consumer: fusion slot 'rr' ALWAYS (base CandleCommitment); DecisionEngine low_rr gate (F-048)
+- consumer: fusion slot 'rr' ALWAYS (base RREngine); DecisionEngine low_rr gate (F-048)
 
 ```json
 {

@@ -31,17 +31,17 @@
       "status": "REACHABLE"
     },
     {
-      "path": "src/engines/ema_momentum_kernel.py",
+      "path": "src/engines/heuristic_gaussian_engine.py",
       "role": "GAUSSIAN_LIVE_3",
       "status": "REACHABLE"
     },
     {
-      "path": "src/engines/feature_cluster_similarity.py",
+      "path": "src/engines/zone_gate_engine.py",
       "role": "ZONE_SCORE",
       "status": "REACHABLE"
     },
     {
-      "path": "src/engines/candle_commitment.py",
+      "path": "src/engines/rr_engine.py",
       "role": "RR_POLARITY",
       "status": "REACHABLE"
     },
@@ -482,7 +482,7 @@
         "lineno": 134
       },
       {
-        "file": "tests/test_ema_momentum_kernel_slot.py",
+        "file": "tests/test_gaussian_impl_switch.py",
         "lineno": 21
       }
     ],
@@ -512,7 +512,7 @@
         "lineno": 135
       },
       {
-        "file": "tests/test_ema_momentum_kernel_slot.py",
+        "file": "tests/test_gaussian_impl_switch.py",
         "lineno": 22
       }
     ],
@@ -722,7 +722,7 @@
         "lineno": 56
       },
       {
-        "file": "tests/test_ema_momentum_kernel_slot.py",
+        "file": "tests/test_gaussian_impl_switch.py",
         "lineno": 23
       }
     ],

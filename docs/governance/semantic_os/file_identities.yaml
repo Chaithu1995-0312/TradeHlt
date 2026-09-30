@@ -1242,7 +1242,7 @@ file_identities:
 - id: engines.candle_polarity_scorer
   kind: file_identity
   semantic_name: Candle Polarity Scorer
-  physical_path: src/engines/candle_commitment.py
+  physical_path: src/engines/rr_engine.py
   status: ACTIVE
   authority: advisory
   tier: 1
@@ -1253,13 +1253,13 @@ file_identities:
   role: CANONICAL
   semantic_layer: SCORING
   filename_semantic_status: MISLEADING
-  filename_status_reason: '"rr" reads as risk:reward, which this module does not compute. candle_commitment.py:69-73
+  filename_status_reason: '"rr" reads as risk:reward, which this module does not compute. rr_engine.py:69-73
     sets polarity = max((high-close)/range, (close-low)/range); the two terms sum to 1, so the output
     is bounded [0.5, 1.0], and a degenerate/zero-range candle returns 0.0. That is a candle-shape score,
     not a forward reward ratio. The module says so itself at :81 ("semantic": "candle_structure_quality").
     Economic RR lives in src/core/ultron_risk_gate.py:230-245.'
   aliases:
-  - candle_commitment
+  - rr_engine
   - candle structure quality
   - rr_ratio
   concept_ids:
@@ -1271,11 +1271,11 @@ file_identities:
     and src/features/model_evidence.py already enforces producer-declared semantics against active_models.yaml
     for exactly this defect class.
   evidence:
-  - path: src/engines/candle_commitment.py
+  - path: src/engines/rr_engine.py
     symbol: candle_polarity
     line: 73
     type: code
-  - path: src/engines/candle_commitment.py
+  - path: src/engines/rr_engine.py
     symbol: rr_ratio
     line: 79
     type: code
@@ -1364,8 +1364,8 @@ file_identities:
   role: SHIM
   semantic_layer: SCORING
   filename_semantic_status: COMPATIBILITY
-  filename_status_reason: Self-labeled BACKWARD-COMPATIBILITY SHIM (33 lines); re-exports EmaMomentumKernel/GaussianRegistry
-    from ema_momentum_kernel.py and aliases GaussianEngine = EmaMomentumKernel. Its only importer
+  filename_status_reason: Self-labeled BACKWARD-COMPATIBILITY SHIM (33 lines); re-exports HeuristicGaussianEngine/GaussianRegistry
+    from heuristic_gaussian_engine.py and aliases GaussianEngine = HeuristicGaussianEngine. Its only importer
     is a test — production code already imports the canonical module directly.
   aliases:
   - gaussian_engine
@@ -1385,7 +1385,7 @@ file_identities:
 - id: engines.heuristic_gaussian_scorer
   kind: file_identity
   semantic_name: Heuristic Gaussian Scorer
-  physical_path: src/engines/ema_momentum_kernel.py
+  physical_path: src/engines/heuristic_gaussian_engine.py
   status: ACTIVE
   authority: advisory
   tier: 1
@@ -1399,7 +1399,7 @@ file_identities:
   filename_status_reason: 'Name matches responsibility: the live 3-feature Gaussian heuristic scorer,
     the canonical implementation gaussian_engine.py re-exports.'
   aliases:
-  - ema_momentum_kernel
+  - heuristic_gaussian_engine
   concept_ids:
   - CN-005
   miar_entry: gaussian
@@ -1407,8 +1407,8 @@ file_identities:
   why_this_identity: Distinguishing this from engines.gaussian_compat_shim and engines.ml_gaussian_scorer
     keeps the three Gaussian-named files from being read as one.
   evidence:
-  - path: src/engines/ema_momentum_kernel.py
-    symbol: EmaMomentumKernel
+  - path: src/engines/heuristic_gaussian_engine.py
+    symbol: HeuristicGaussianEngine
     line: 191
     type: code
   supersedes: null
@@ -1574,10 +1574,10 @@ file_identities:
   evidence: []
   supersedes: null
   superseded_by: null
-- id: engines.feature_cluster_similarity
+- id: engines.zone_gate_engine
   kind: file_identity
   semantic_name: Zone Gate Engine
-  physical_path: src/engines/feature_cluster_similarity.py
+  physical_path: src/engines/zone_gate_engine.py
   status: ACTIVE
   authority: advisory
   tier: 2
@@ -2114,8 +2114,8 @@ file_identities:
   - CN-001
   miar_entry: feature_pipeline
   summary_50: Enforces that a model's declared output semantic matches what a consumer expects — the mechanism
-    designed to prevent the candle_commitment defect class.
-  why_this_identity: Directly documents (and would have caught) the engines.candle_polarity_scorer / candle_commitment
+    designed to prevent the rr_engine defect class.
+  why_this_identity: Directly documents (and would have caught) the engines.candle_polarity_scorer / rr_engine
     naming defect this whole layer is built to make explicit elsewhere too.
   evidence:
   - path: src/features/model_evidence.py

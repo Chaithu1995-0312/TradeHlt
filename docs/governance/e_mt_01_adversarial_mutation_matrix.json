@@ -201,7 +201,7 @@
       "surface": "pipeline",
       "title": "RR fusion path doubles Gaussian under another name",
       "historical_anchors": ["F-038"],
-      "semantic_substitution": "base CandleCommitment → rr_fusion gaussian bypass as 'rr' score",
+      "semantic_substitution": "base RREngine → rr_fusion gaussian bypass as 'rr' score",
       "seeded_defects": [
         {
           "seed_id": "SEED-PIPE-002",
@@ -237,7 +237,7 @@
       "surface": "pipeline",
       "title": "Polarity score wired into true-RR threshold gate",
       "historical_anchors": ["F-048"],
-      "semantic_substitution": "CandleCommitment polarity∈[0.5,1] → DecisionEngine rr_threshold (e.g. 1.5) as reward/risk",
+      "semantic_substitution": "RREngine polarity∈[0.5,1] → DecisionEngine rr_threshold (e.g. 1.5) as reward/risk",
       "seeded_defects": [
         {
           "seed_id": "SEED-PIPE-004",
@@ -331,7 +331,7 @@
       "seeded_defects": [
         {
           "seed_id": "SEED-PIPE-009",
-          "mutation": "Point zone_gate_registry active to different sha than engine_runner.feature_cluster_similarity_registry_path",
+          "mutation": "Point zone_gate_registry active to different sha than engine_runner.zone_registry_path",
           "inject": "manifest active:true on file A; runtime loads file B",
           "detector_probe": "PROBE-PIPE-MANIFEST-RUNTIME",
           "expected_clean": "PASS",

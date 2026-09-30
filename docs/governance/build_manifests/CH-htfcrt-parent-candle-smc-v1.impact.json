@@ -13,7 +13,7 @@
     "PRODUCTION_CONFIG_CHANGE",
     "ACTIVE_MODEL_CHANGE"
   ],
-  "change_class_rationale": "FEATURE_IDENTITY_CHANGE + DATASET_SCHEMA_CHANGE + DERIVED_METRIC_CHANGE cover the 9 new FM-ids and the CANONICAL_FEATURES 39->48 vector growth. MODEL_INPUT_CHANGE + MODEL_TRAINING_CHANGE + MODEL_ARTIFACT_CHANGE cover the mandatory recapture/retrain of all 6 model families (feature_cluster_similarity/rr/rr_fusion/gaussian/bitnet/tradenet) once the vector dimension moves. RUNTIME_DECISION_PATH_CHANGE covers the new CRT states (9->12), VALID_TRANSITIONS extension, and the parent_state bridge into process_candle -- a declared behavior change, not a parity-preserving one, per user decision (arm ON, ledger changes accepted). PRODUCTION_CONFIG_CHANGE + ACTIVE_MODEL_CHANGE cover authoring and promoting configs/production/v2_htfcrt_2026_08.json and flipping ACTIVE_VERSION.",
+  "change_class_rationale": "FEATURE_IDENTITY_CHANGE + DATASET_SCHEMA_CHANGE + DERIVED_METRIC_CHANGE cover the 9 new FM-ids and the CANONICAL_FEATURES 39->48 vector growth. MODEL_INPUT_CHANGE + MODEL_TRAINING_CHANGE + MODEL_ARTIFACT_CHANGE cover the mandatory recapture/retrain of all 6 model families (zone_gate/rr/rr_fusion/gaussian/bitnet/tradenet) once the vector dimension moves. RUNTIME_DECISION_PATH_CHANGE covers the new CRT states (9->12), VALID_TRANSITIONS extension, and the parent_state bridge into process_candle -- a declared behavior change, not a parity-preserving one, per user decision (arm ON, ledger changes accepted). PRODUCTION_CONFIG_CHANGE + ACTIVE_MODEL_CHANGE cover authoring and promoting configs/production/v2_htfcrt_2026_08.json and flipping ACTIVE_VERSION.",
   "affected_files": [
     "src/research/resample.py",
     "src/features/calendar_periods.py",

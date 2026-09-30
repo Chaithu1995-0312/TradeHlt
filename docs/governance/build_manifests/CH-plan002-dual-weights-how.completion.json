@@ -205,7 +205,7 @@
     "src/config_layer/crt_engine_v2.py",
     "src/config_layer/goal_schema.py",
     "src/config_layer/goal_validator.py",
-    "src/config_layer/rr/rr_trained.py",
+    "src/config_layer/rr/rr_pattern_miner.py",
     "src/config_layer/state_contract.py",
     "src/config_layer/state_contract_loader.py",
     "src/config_layer/state_topology.py",

@@ -53,7 +53,7 @@
       "bytes": 943,
       "sha256": "023a6b35fb0424655c493c87b66ac7c0c3b2fe9f5e48acce01abca95da74bab5"
     },
-    "src\\engines\\ema_momentum_kernel.py": {
+    "src\\engines\\heuristic_gaussian_engine.py": {
       "bytes": 14681,
       "sha256": "476297305d8ad2711ec57bc23b9334090ea791bd8b5137d3509efc74cdaca81b"
     },
@@ -69,7 +69,7 @@
       "bytes": 9052,
       "sha256": "6959d8a7708e97683f07abc5d0c6f11fed19622d5f7a8428d6bb9ab4565660f8"
     },
-    "src\\engines\\candle_commitment.py": {
+    "src\\engines\\rr_engine.py": {
       "bytes": 4015,
       "sha256": "894d59ba1aca0dd693a1741c6e5302aa6e0eafc06cfec9c88dd78efe9fe21eec"
     },
@@ -85,7 +85,7 @@
       "bytes": 3172,
       "sha256": "53e09bf464c19c1f11fc8ec1f05d682f523e2c2ff8d630f3330a91b1262a94d0"
     },
-    "src\\engines\\feature_cluster_similarity.py": {
+    "src\\engines\\zone_gate_engine.py": {
       "bytes": 11056,
       "sha256": "7e31f99834a19e24f8b1bcbd833f8cd9ca68b3796a54d7ce357708b1eedf14fb"
     },

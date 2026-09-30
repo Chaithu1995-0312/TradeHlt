@@ -100,7 +100,7 @@
     "src/msip/market_state_vector.py",
     "src/regime/market_state_cluster_engine.py",
     "src/research/ic002_entry_evolution/schema.py",
-    "src/research/model_runners/adapters/crt_structure_rule_score.py",
+    "src/research/model_runners/adapters/crt_score.py",
     "src/research/model_runners/contracts.py",
     "src/research/synthetic/stories/breakout.py",
     "src/research/synthetic/stories/liquidity_reversal.py",

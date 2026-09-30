@@ -60,7 +60,7 @@ weight, **no** `rr_fusion` re-enable, and **no** config promote (§6.5 Authority
 
 | ID | Name | Learning? | Active on patch? | Owns |
 |----|------|-----------|------------------|------|
-| **A** | `CandleCommitment` — Candle Polarity Index | No | **YES** (fusion weight 0.2) | Structure quality score ∈[0.5,1] |
+| **A** | `RREngine` — Candle Polarity Index | No | **YES** (fusion weight 0.2) | Structure quality score ∈[0.5,1] |
 | **B** | `NanoInferenceEngine` + `RRFusionLayer` | Yes | **NO** (`rr_fusion.enabled=false`) | Trained expected_rr / p_win / confidence |
 | **C** | `DecisionEngine` economic-RR gate | N/A | Conditional | Reject `low_rr` when economic RR supplied |
 | **D** | `UltronRiskGate` + planner SL/TP RR | N/A | Separate | True forward R floor (`min_rr_ratio`) |
@@ -349,7 +349,7 @@ Only then may the owner set `RR_RESEARCH_EPOCH_STATUS   = AUTHORIZED  # not RUNN
 | **RR-IMP-002** | 3-feature starvation default | **yes** | Research never uses starvation `score_dict` path; matrix features only |
 | **RR-IMP-004** | Cross-dict `final_score` fallback (AC-003) | **yes** | Offline eval only; no EngineRunner fusion adoption for scores/labels |
 | **RR-IMP-005** | `rr_fusion` “24-feature” DOC_DRIFT | no | Accept stale docstring **or** fix in same hygiene pass |
-| **RR-IMP-006** | `CandleCommitment.min_rr` dead soft default | no | Accept dead field for R; non-blocking for labels |
+| **RR-IMP-006** | `RREngine.min_rr` dead soft default | no | Accept dead field for R; non-blocking for labels |
 | **RR-IMP-007** | Error-path missing `rr_ratio` | no | Accept shape inconsistency for R; A not on clean-label path |
 | **RR-IMP-008** | Registry n_features 35 vs 38 drift | no | Clean dataset carries own provenance; registry fix deferred |
 | **RR-CTR-001** | Legacy `rr_ratio` = polarity name | **yes** | EngineRunner semantic skip holds; B research offline / not re-wiring DE |
@@ -480,7 +480,7 @@ GATE-P is independent of “epoch begin” — epoch may run measure-only foreve
 | RR-IMP-003 | Gaussian-duplicate fusion (F-038) | — | — | **RESOLVED** | | enabled=false |
 | RR-IMP-004 | Cross-dict final_score fallback (AC-003) | **RS+PC** | — | **ACCEPTED** | | |
 | RR-IMP-005 | “24-feature” DOC_DRIFT | **RS** | — | **ACCEPTED** | | |
-| RR-IMP-006 | CandleCommitment.min_rr dead soft default | **RS** | — | **ACCEPTED** | | |
+| RR-IMP-006 | RREngine.min_rr dead soft default | **RS** | — | **ACCEPTED** | | |
 | RR-IMP-007 | Error-path missing rr_ratio | **RS** | — | **ACCEPTED** | | |
 | RR-IMP-008 | Registry n_features 35 vs 38 | **RS** | — | **ACCEPTED** | | |
 | RR-CTR-001 | Legacy rr_ratio = polarity | **RS+PC** | — | **ACCEPTED** | | partial runtime fix |
@@ -573,13 +573,13 @@ GATE-P is independent of “epoch begin” — epoch may run measure-only foreve
 | **Resolve when** | Docstring matches schema. |
 | **Accept (GATE-R)** | Hygiene deferral. |
 
-### RR-IMP-006 · `CandleCommitment.min_rr` retained, unused, soft-defaulted
+### RR-IMP-006 · `RREngine.min_rr` retained, unused, soft-defaulted
 
 | | |
 |--|--|
 | **Category** | **RS** |
 | **Status** | **ACCEPTED** (GATE-R)|
-| **Evidence** | `candle_commitment.py:42-43`. |
+| **Evidence** | `rr_engine.py:42-43`. |
 | **Accept (GATE-R)** | Dead field; non-blocking for B labels. |
 
 ### RR-IMP-007 · Error-path result shape omits `rr_ratio`
@@ -977,8 +977,8 @@ L2 feature dumps labeled clean, L3 labels, any outcome tables under a protocol_h
 | **L1 freeze package** | `docs/governance/rr_l1_freeze/` — **`RR_L1_FREEZE_CERTIFICATE`** |
 | L1 assert-signed | `scripts/governance/rr_l1_freeze_certificate.py` |
 | Lineage audit | `docs/governance/rr_lineage_audit.md` |
-| Geometry A | `src/engines/candle_commitment.py` |
-| Train/infer B | `src/config_layer/rr/rr_trained.py` |
+| Geometry A | `src/engines/rr_engine.py` |
+| Train/infer B | `src/config_layer/rr/rr_pattern_miner.py` |
 | Dataset/labels | `src/config_layer/rr/rr_dataset_builder.py` |
 | Fusion | `src/config_layer/rr/rr_fusion.py` |
 | Orchestration | `src/core/engine_runner.py` |

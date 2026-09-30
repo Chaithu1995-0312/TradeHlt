@@ -14,7 +14,7 @@
     "assistant_project.md"
   ],
   "affected_feature_ids": [],
-  "affected_models": "identity vocabulary only — feature_cluster_similarity/rr/gaussian/bitnet/tradenet",
+  "affected_models": "identity vocabulary only — zone_gate/rr/gaussian/bitnet/tradenet",
   "affected_production_config": "none",
   "required_checks_ack": [
     "tests/test_active_models_registry.py",

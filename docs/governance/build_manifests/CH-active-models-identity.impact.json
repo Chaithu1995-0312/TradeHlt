@@ -12,7 +12,7 @@
     "assistant_project.md"
   ],
   "affected_feature_ids": [],
-  "affected_models": "identity mirror only for feature_cluster_similarity, rr_model (rr_fusion), gaussian, bitnet, tradenet — no activate/deactivate/rewire",
+  "affected_models": "identity mirror only for zone_gate, rr_model (rr_fusion), gaussian, bitnet, tradenet — no activate/deactivate/rewire",
   "affected_production_config": "none — how_path_ref is parity documentation only",
   "required_checks_ack": [
     "tests/test_active_models_registry.py",

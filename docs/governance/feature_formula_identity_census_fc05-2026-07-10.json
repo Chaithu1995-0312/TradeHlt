@@ -221,7 +221,7 @@
       "norm": null,
       "fallback": null,
       "impl": [
-        "ema_momentum_kernel"
+        "heuristic_gaussian_engine"
       ],
       "class": "MODEL_LOCAL_DUPLICATE"
     },

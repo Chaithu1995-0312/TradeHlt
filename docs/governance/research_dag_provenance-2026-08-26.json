@@ -916,7 +916,7 @@
         "scripts/analysis/rr_confidence_probe.py",
         "scripts/research/rr_shadow_value.py",
         "src/core/decision_engine.py",
-        "src/engines/candle_commitment.py",
+        "src/engines/rr_engine.py",
         "tests/test_crt_fixes.py",
         "tests/test_rr_contract_wiring.py"
       ],
@@ -1022,12 +1022,12 @@
     {
       "class": "EXPLICIT",
       "dst": [
-        "tests/test_feature_cluster_similarity_cluster_threshold_rename.py"
+        "tests/test_zone_cluster_threshold_rename.py"
       ],
       "rule_id": "E2_INLINE_CITATION",
       "slot": "originating_evidence",
       "src": "D-SESSION-0029",
-      "witness": "evidence-class path cited in body and git-tracked: tests/test_feature_cluster_similarity_cluster_threshold_rename.py"
+      "witness": "evidence-class path cited in body and git-tracked: tests/test_zone_cluster_threshold_rename.py"
     },
     {
       "class": "UNKNOWN",
@@ -2514,7 +2514,7 @@
         "src/core/collector.py",
         "src/core/decision_engine.py",
         "src/core/engine_runner.py",
-        "src/engines/candle_commitment.py",
+        "src/engines/rr_engine.py",
         "src/research/adapters/spine_signal_source.py",
         "src/runtime/backtest_v2.py",
         "tests/test_crt_fixes.py",
@@ -2820,7 +2820,7 @@
         "scripts/research/diagnose_gaussian_pivotality.py",
         "scripts/training/phase5_calibration.py",
         "src/config_layer/crt_config_provenance.py",
-        "src/engines/ema_momentum_kernel.py",
+        "src/engines/heuristic_gaussian_engine.py",
         "src/features/broker_clock.py",
         "src/features/feature_pipeline.py",
         "src/inout/mt5_candle_fetcher.py",
@@ -5690,7 +5690,7 @@
         "src/config_layer/crt_engine_v2.py",
         "src/core/decision_engine.py",
         "src/core/ultron_risk_gate.py",
-        "src/engines/candle_commitment.py",
+        "src/engines/rr_engine.py",
         "src/execution/loop.py",
         "src/features/crt_state_resolver.py",
         "src/research/costs.py",
@@ -16911,7 +16911,7 @@
         "src/core/collector.py",
         "src/core/engine_runner.py",
         "src/engines/live_engine.py",
-        "src/engines/feature_cluster_similarity.py",
+        "src/engines/zone_gate_engine.py",
         "src/research/hypotheses/compression_breakout.py",
         "src/research/resample.py",
         "src/research/zone_label_audit.py",
@@ -17576,7 +17576,7 @@
       "class": "INFERRED",
       "dst": [
         "src/core/decision_engine.py",
-        "src/engines/candle_commitment.py",
+        "src/engines/rr_engine.py",
         "tests/test_crt_fixes.py",
         "tests/test_rr_contract_wiring.py"
       ],
@@ -17625,7 +17625,7 @@
         "scripts/analysis/feature_math_lint.py",
         "src/config_layer/crt_engine_v2.py",
         "src/core/decision_engine.py",
-        "src/engines/candle_commitment.py",
+        "src/engines/rr_engine.py",
         "src/features/derived_math.py",
         "src/runtime/live_engine_hook.py",
         "tests/test_crt_fixes.py",
@@ -19481,7 +19481,7 @@
       "class": "INFERRED",
       "dst": [
         "src/core/decision_engine.py",
-        "src/engines/candle_commitment.py",
+        "src/engines/rr_engine.py",
         "tests/test_crt_fixes.py",
         "tests/test_rr_contract_wiring.py"
       ],
@@ -19528,7 +19528,7 @@
         "scripts/analysis/rr_confidence_probe.py",
         "scripts/research/rr_shadow_value.py",
         "src/core/decision_engine.py",
-        "src/engines/candle_commitment.py",
+        "src/engines/rr_engine.py",
         "tests/test_crt_fixes.py",
         "tests/test_rr_contract_wiring.py"
       ],
@@ -19673,7 +19673,7 @@
         "scripts/analysis/zone_assignment_parity_probe.py",
         "scripts/research/zone_label_audit.py",
         "src/engines/live_engine.py",
-        "src/engines/feature_cluster_similarity.py",
+        "src/engines/zone_gate_engine.py",
         "src/research/zone_label_audit.py",
         "tests/test_zone_manifest_runtime_parity.py"
       ],
@@ -20620,7 +20620,7 @@
         "src/config_layer/crt_engine_v2.py",
         "src/core/decision_engine.py",
         "src/core/fusion_engine.py",
-        "src/engines/candle_commitment.py",
+        "src/engines/rr_engine.py",
         "src/research/adapters/spine_signal_source.py",
         "src/runtime/backtest_v2.py",
         "src/training/trade_net_v2.py",
@@ -25618,7 +25618,7 @@
         "scripts/research/qualify_zone_topk.py",
         "scripts/research/zone_label_audit.py",
         "src/engines/live_engine.py",
-        "src/engines/feature_cluster_similarity.py",
+        "src/engines/zone_gate_engine.py",
         "src/research/zone_label_audit.py",
         "tests/test_zone_manifest_runtime_parity.py"
       ],
@@ -25869,7 +25869,7 @@
         "docs/governance/gaussian_lineage_audit.md",
         "scripts/research/diagnose_gaussian_pivotality.py",
         "scripts/training/phase5_calibration.py",
-        "src/engines/ema_momentum_kernel.py",
+        "src/engines/heuristic_gaussian_engine.py",
         "tests/test_gaussian_live_parameterization.py"
       ],
       "rule_id": "I5_VIA_CITED_FINDING",
@@ -27965,7 +27965,7 @@
       "dst": [
         "docs/governance/MEASUREMENT_CONTRACT.md",
         "src/core/decision_engine.py",
-        "src/engines/candle_commitment.py",
+        "src/engines/rr_engine.py",
         "src/research/adapters/spine_signal_source.py",
         "src/runtime/backtest_v2.py",
         "tests/test_crt_fixes.py",
@@ -28691,7 +28691,7 @@
         "src/core/collector.py",
         "src/core/engine_runner.py",
         "src/core/fusion_engine.py",
-        "src/engines/ema_momentum_kernel.py",
+        "src/engines/heuristic_gaussian_engine.py",
         "src/runtime/backtest_v2.py",
         "src/training/trade_net_v2.py",
         "tests/test_engine_runner_rr_fusion.py",
@@ -30664,7 +30664,7 @@
       "class": "INFERRED",
       "dst": [
         "src/core/decision_engine.py",
-        "src/engines/candle_commitment.py",
+        "src/engines/rr_engine.py",
         "tests/test_crt_fixes.py",
         "tests/test_rr_contract_wiring.py"
       ],
@@ -44694,7 +44694,7 @@
       "node_id": "D-SESSION-0029",
       "source_locator": "assistant_project.md:426",
       "source_path": "assistant_project.md",
-      "title": "feature_cluster_similarity_cluster_threshold rename + Historical Zone Mapping design",
+      "title": "zone_cluster_threshold rename + Historical Zone Mapping design",
       "type": "DECISION_SESSION"
     },
     {
@@ -44892,7 +44892,7 @@
       "node_id": "D-SESSION-0051",
       "source_locator": "assistant_project.md:739",
       "source_path": "assistant_project.md",
-      "title": "Unblock envelope (XAU train+run) and nb_outcome_classifier (impl-flag independent)",
+      "title": "Unblock envelope (XAU train+run) and gaussian_ml (impl-flag independent)",
       "type": "DECISION_SESSION"
     },
     {
@@ -47898,7 +47898,7 @@
       "node_id": "D-SESSION-0385",
       "source_locator": "docs/analysis/session-log-archive/session-log-2026-06-24_to_2026-06-26.md:76",
       "source_path": "docs/analysis/session-log-archive/session-log-2026-06-24_to_2026-06-26.md",
-      "title": "Measured ΔG001 of the feature_cluster_similarity config knobs (top_k/cluster_min_n/cluster_spread_max) → F-036",
+      "title": "Measured ΔG001 of the zone_gate config knobs (top_k/cluster_min_n/cluster_spread_max) → F-036",
       "type": "DECISION_SESSION"
     },
     {

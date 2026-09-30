@@ -564,7 +564,7 @@
     "bars_scored": 9974,
     "stride": 3,
     "threshold": 0.25,
-    "feature_cluster_similarity_mode": "hard",
+    "zone_mode": "hard",
     "n_zones": 8,
     "ZONE_VALUE_EXPOSURE": {
       "definition": "per-zone feature_weights L1 mass on the 10 contaminated dims",
@@ -640,7 +640,7 @@
       }
     },
     "ZONE_GATE_EXPOSURE": {
-      "definition": "HARD pass/fail flip rate (score >= feature_cluster_similarity_cluster_threshold)",
+      "definition": "HARD pass/fail flip rate (score >= zone_cluster_threshold)",
       "centered_vs_causal_flip_rate": 0.00010026067776218167,
       "centered_vs_causal_flips": 1,
       "centered_vs_live_flip_rate": 0.0,

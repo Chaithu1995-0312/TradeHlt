@@ -19,7 +19,7 @@
 ```text
 GAUSSIAN_LINEAGE_VERDICT = DUAL_TRACK
   LIVE_RUNTIME     = ALIGNED (heuristic 3-feature; CH-002 INERT)
-  TRAINED_ARTIFACT = INERT on active config (removed_selector=heuristic)
+  TRAINED_ARTIFACT = INERT on active config (gaussian_impl=heuristic)
   CH002_IMPACT     = INERT for live score path
   REBUILD_REQUIRED = NO
   MARGINAL_OOS     = NO_AUTHORITY (no ΔG001 claim; do not retrain on rename)
@@ -36,8 +36,8 @@ GAUSSIAN_LINEAGE_VERDICT = DUAL_TRACK
 
 | Track | What it is | Active on spine? |
 |---|---|---|
-| **A — Live fusion Gaussian** | `EmaMomentumKernel` — EMA/momentum kernel, 3 features | **YES** (`removed_selector: heuristic`) |
-| **B — Trained ML Gaussian** | `GaussianNBModel` / `MLGaussianEngine` on full canonical vector | **NO** (requires `removed_selector=ml`) |
+| **A — Live fusion Gaussian** | `HeuristicGaussianEngine` — EMA/momentum kernel, 3 features | **YES** (`gaussian_impl: heuristic`) |
+| **B — Trained ML Gaussian** | `GaussianNBModel` / `MLGaussianEngine` on full canonical vector | **NO** (requires `gaussian_impl=ml`) |
 | **C — ZoneGate “gaussian score”** | Weighted Gaussian distance over zone μ/σ | **Different subsystem** (ZoneGate audit) |
 
 `active_models.yaml` already documents this split (runtime ≠ trained_registry).
@@ -84,7 +84,7 @@ no registry `mu`/`sigma` either: the defaults 0/1 are what actually run.
 
 | Track | Features |
 |---|---|
-| **A live** | `ema_fast`, `ema_slow`, `momentum_score` only (`ema_momentum_kernel.py:305-308`) |
+| **A live** | `ema_fast`, `ema_slow`, `momentum_score` only (`heuristic_gaussian_engine.py:305-308`) |
 | **B train/serve** | Full `CANONICAL_FEATURES` / registry `feature_schema` (35-dim v2 or 38-dim v3) including pipeline names `disp_strength`, `retest_depth` (FM-020/021) |
 | CRT FM-027/028 | **Not consumed** by either track |
 
@@ -112,7 +112,7 @@ no registry `mu`/`sigma` either: the defaults 0/1 are what actually run.
 | Many `active:false` entries | Historical 35/38-dim schemas with `disp_strength`/`retest_depth` | Not loaded for fusion score under heuristic |
 
 > **CORRECTED 2026-07-22 (F-060).** ~~"Heuristic loads mu/sigma from active entry."~~ It does not.
-> `_normalize_registry_entry` (`ema_momentum_kernel.py:42-53`) reads `mu`/`sigma` off the
+> `_normalize_registry_entry` (`heuristic_gaussian_engine.py:42-53`) reads `mu`/`sigma` off the
 > registry **entry**, defaulting to `mu=0.0, sigma=1.0` (`:49-50`). **All 11 entries were dumped and
 > verified: not one carries a `mu` or `sigma` key** — they carry `version`, `model_file`,
 > `feature_schema`, `schema_version`, `metrics`, `trained_at`, `active`. So the defaults fire on a
@@ -130,7 +130,7 @@ no registry `mu`/`sigma` either: the defaults 0/1 are what actually run.
 
 | Track | Loader |
 |---|---|
-| **A** | `GaussianRegistry.load()` inside `EmaMomentumKernel._load_registry` — ~~supplies `mu`/`sigma` only~~ **CORRECTED: supplies nothing; defaults 0/1 always win (slot 5)**. Fail-open on load failure (`:236-253`), so a missing registry is indistinguishable at the score. |
+| **A** | `GaussianRegistry.load()` inside `HeuristicGaussianEngine._load_registry` — ~~supplies `mu`/`sigma` only~~ **CORRECTED: supplies nothing; defaults 0/1 always win (slot 5)**. Fail-open on load failure (`:236-253`), so a missing registry is indistinguishable at the score. |
 | **B** | `MLGaussianEngine._load_model` → `GaussianModelRegistry` + `load_gaussian_model` — full model+scaler |
 
 Separate path: CRT Phase-5 scorer uses `load_active_gaussian_scorer()` → **NoOpScorer** when no active entry for that registry API (`"no active gaussian registered"` in baseline log). That gate is **orthogonal** to fusion Gaussian.
@@ -156,24 +156,25 @@ Score is a **directional-momentum / expected-RR proxy**, not a calibrated p(win)
 ### 9. Active config
 
 ```json
+"gaussian_impl": "heuristic"   // configs/production/v2_multi_2026_04.json
 ```
 
 - `engine_runner` selects via `_get_gaussian_engine` (`engine_runner.py:295-321`)
-- Fusion weight: `fusion_engine.weight_ema_momentum_kernel` (regime-weighted blend)
+- Fusion weight: `fusion_engine.weight_gaussian` (regime-weighted blend)
 - `EXPECTED_ENGINES` includes `"gaussian"`
 
 ### 10. Runtime consumption
 
 ```text
 EngineRunner.run
-  → EmaMomentumKernel.compute(pipeline features)
+  → HeuristicGaussianEngine.compute(pipeline features)
   → engine_results["gaussian"]
-  → FusionEngine (weight_ema_momentum_kernel)
+  → FusionEngine (weight_gaussian)
   → DecisionEngine (fused score threshold)
 ```
 
 Observed on post-CH-002 baseline log:  
-`EngineRunner: using EmaMomentumKernel (config: removed_selector=heuristic)`  
+`EngineRunner: using HeuristicGaussianEngine (config: gaussian_impl=heuristic)`  
 and later registry load for BNBUSDT version `p5_20260524T120449`.
 
 ### 11. Marginal OOS value
@@ -216,7 +217,7 @@ Historical ML feature schemas listing `retest_depth`/`disp_strength` refer to **
 ## Known gaps / non-blockers
 
 1. **Docstring drift:** some files still say “32-dim” / “35-dim” while schema is 38 (`ml_gaussian_engine.py` header).
-2. **Registry “active” ≠ fusion ML:** ~~BNBUSDT registry active supplies heuristic mu/sigma~~ — **CORRECTED 2026-07-22 (F-060):** it supplies nothing at all; see slot 5. Full NB weights are not used under `removed_selector=heuristic`, and neither are kernel parameters.
+2. **Registry “active” ≠ fusion ML:** ~~BNBUSDT registry active supplies heuristic mu/sigma~~ — **CORRECTED 2026-07-22 (F-060):** it supplies nothing at all; see slot 5. Full NB weights are not used under `gaussian_impl=heuristic`, and neither are kernel parameters.
 3. **Phase-5 NoOpScorer** vs fusion heuristic: two different Gaussian surfaces; baseline uses NoOp for Phase-5 p_win gate.
 4. **Label integrity** ~~for any future ML retrain~~ — **CORRECTED 2026-07-22 (F-060): CONFIRMED contaminated, not merely a risk.** `phase5_calibration.py:434` trains on raw `rr_achieved` from the F-022 stream; no `forward_walk` re-derivation exists. Re-derive before **any** economic claim about the trained track.
 5. **F-038 history:** rr_fusion previously double-weighted Gaussian; already disabled — not Gaussian-lineage defect.
@@ -248,7 +249,7 @@ silently absorb). None is on the live scoring path.
 | Action | Allowed now? | Condition |
 |---|---|---|
 | Retrain ML Gaussian because of CH-002 rename | **NO** | Live path unaffected |
-| Switch `removed_selector` to `ml` | **NO** without ΔG001 | Authority Ladder §6.5 |
+| Switch `gaussian_impl` to `ml` | **NO** without ΔG001 | Authority Ladder §6.5 |
 | Promote new registry version | **NO** without Phase-5 + PromotionManager | Existing governance |
 | Research ablation (heuristic weight / shadow_ml) | YES (measure-only) | Docs/research authority only |
 
@@ -258,7 +259,7 @@ silently absorb). None is on the live scoring path.
 
 | Role | Path |
 |---|---|
-| Live engine | `src/engines/ema_momentum_kernel.py` |
+| Live engine | `src/engines/heuristic_gaussian_engine.py` |
 | ML engine | `src/engines/ml_gaussian_engine.py` |
 | Selection | `src/core/engine_runner.py:_get_gaussian_engine` |
 | Train pipeline (unexercised) | `src/training/train_pipeline.py:run_gaussian_update` |
@@ -267,7 +268,7 @@ silently absorb). None is on the live scoring path.
 | Parameterization floor | `tests/test_gaussian_live_parameterization.py` |
 | Pivotality ablation | `scripts/research/diagnose_gaussian_pivotality.py` |
 | Registry | `models/gaussian_registry.json` |
-| Config | `configs/production/v2_multi_2026_04.json` → `removed_selector` |
+| Config | `configs/production/v2_multi_2026_04.json` → `gaussian_impl` |
 | Intent topic | `docs/topics/model-intent-and-feature-ownership.md` |
 | active_models | `active_models.yaml` → `gaussian:` |
 

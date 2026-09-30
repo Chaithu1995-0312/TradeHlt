@@ -93,7 +93,7 @@ One capability, extracted from the best-evidenced cluster in Part VII:
 
 Full node: `market_ontology.yaml` → `reasoning_capabilities.statistical_structural_familiarity`.
 Model mapping: `capability_model_map.json` → `RC-001` (maps the two MIAR-registered models,
-`gaussian` and `feature_cluster_similarity`; CRT's internal mechanism is cited as evidence inside the node but CRT
+`gaussian` and `zone_gate`; CRT's internal mechanism is cited as evidence inside the node but CRT
 itself is **not** mapped — see the map's `no_capability_reason.crt` for why conflating a primary
 capability with an embedded secondary mechanism would repeat the exact models-first error this
 exercise exists to correct).
@@ -106,7 +106,7 @@ The committed, unaltered `market_question_matrix` rows this capability relates t
 {"question": "How statistically conformant is this state to previously observed states?",
  "owner": "gaussian", "secondary_consumers": ["decision_fusion"]}
 {"question": "Is this inside a valid structural zone?",
- "owner": "feature_cluster_similarity", "secondary_consumers": ["decision_fusion"]}
+ "owner": "zone_gate", "secondary_consumers": ["decision_fusion"]}
 ```
 
 Both are pre-existing, individually valid, single-owned, and **unaltered by this pilot**.
@@ -120,7 +120,7 @@ row — one question, one owner, matching the matrix's existing schema — the c
 ```
 
 **Result: the derivation cannot complete without violating the matrix's own invariant.**
-`RC-001` has **two** MIAR-registered producers (`gaussian`, `feature_cluster_similarity`), not one.
+`RC-001` has **two** MIAR-registered producers (`gaussian`, `zone_gate`), not one.
 `test_market_question_matrix_single_owner` requires exactly one owner per question. Picking either
 model as "the" owner would misrepresent the evidence (both independently compute a
 familiarity-shaped quantity today) — exactly the kind of arbitrary, models-first ownership

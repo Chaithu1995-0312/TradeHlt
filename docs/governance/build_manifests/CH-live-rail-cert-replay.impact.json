@@ -52,7 +52,7 @@
     {
       "question": "Stale '39-dim / 39 names' claims remain in 4 more modules.",
       "blocking": false,
-      "resolution": "DECLARED RESIDUAL, deliberately not edited here: crt_state_resolver.py (:7,:65,:324,:804), feature_pipeline.py:957, gaussian_schema_contract.py (:9,:21). feature_schema.py:146-150 and rr_trained.py:446 are CORRECT as written -- they describe the v4.0/v3 era on purpose. Expanding this change into 4 more modules would dilute its boundary.",
+      "resolution": "DECLARED RESIDUAL, deliberately not edited here: crt_state_resolver.py (:7,:65,:324,:804), feature_pipeline.py:957, gaussian_schema_contract.py (:9,:21). feature_schema.py:146-150 and rr_pattern_miner.py:446 are CORRECT as written -- they describe the v4.0/v3 era on purpose. Expanding this change into 4 more modules would dilute its boundary.",
       "followup": "Separate doc-drift sweep. Recorded in the session log, not silently fixed."
     }
   ],

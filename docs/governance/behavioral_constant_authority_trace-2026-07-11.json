@@ -11446,7 +11446,7 @@
       "line": 94,
       "function_or_scope": "<module>",
       "AST_context": "inline_constant",
-      "source_line_text": "\"feature_cluster_similarity_cluster_threshold\":    0.25,",
+      "source_line_text": "\"zone_cluster_threshold\":    0.25,",
       "candidate_id": "BC-RAW-0584",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -11466,7 +11466,7 @@
       "line": 98,
       "function_or_scope": "<module>",
       "AST_context": "inline_constant",
-      "source_line_text": "\"feature_cluster_similarity_min_samples\":         50,",
+      "source_line_text": "\"zone_min_samples\":         50,",
       "candidate_id": "BC-RAW-0585",
       "scope_status": "OUT_OF_SCOPE",
       "scope_reason": "spine residual integer resolved as structural/non-behavioral under closure policy",
@@ -11485,7 +11485,7 @@
       "line": 99,
       "function_or_scope": "<module>",
       "AST_context": "inline_constant",
-      "source_line_text": "\"feature_cluster_similarity\":                {\"top_k\": 3, \"cluster_min_n\": 2, \"cluster_spread_max\": 0.15},",
+      "source_line_text": "\"zone_gate\":                {\"top_k\": 3, \"cluster_min_n\": 2, \"cluster_spread_max\": 0.15},",
       "candidate_id": "BC-RAW-0586",
       "scope_status": "OUT_OF_SCOPE",
       "scope_reason": "spine residual integer resolved as structural/non-behavioral under closure policy",
@@ -11504,7 +11504,7 @@
       "line": 99,
       "function_or_scope": "<module>",
       "AST_context": "inline_constant",
-      "source_line_text": "\"feature_cluster_similarity\":                {\"top_k\": 3, \"cluster_min_n\": 2, \"cluster_spread_max\": 0.15},",
+      "source_line_text": "\"zone_gate\":                {\"top_k\": 3, \"cluster_min_n\": 2, \"cluster_spread_max\": 0.15},",
       "candidate_id": "BC-RAW-0587",
       "scope_status": "OUT_OF_SCOPE",
       "scope_reason": "spine residual integer resolved as structural/non-behavioral under closure policy",
@@ -11523,7 +11523,7 @@
       "line": 99,
       "function_or_scope": "<module>",
       "AST_context": "inline_constant",
-      "source_line_text": "\"feature_cluster_similarity\":                {\"top_k\": 3, \"cluster_min_n\": 2, \"cluster_spread_max\": 0.15},",
+      "source_line_text": "\"zone_gate\":                {\"top_k\": 3, \"cluster_min_n\": 2, \"cluster_spread_max\": 0.15},",
       "candidate_id": "BC-RAW-0588",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -11582,7 +11582,7 @@
       "line": 113,
       "function_or_scope": "<module>",
       "AST_context": "inline_constant",
-      "source_line_text": "\"weight_crt\": 0.4, \"weight_ema_momentum_kernel\": 0.3,",
+      "source_line_text": "\"weight_crt\": 0.4, \"weight_gaussian\": 0.3,",
       "candidate_id": "BC-RAW-0591",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -11602,7 +11602,7 @@
       "line": 113,
       "function_or_scope": "<module>",
       "AST_context": "inline_constant",
-      "source_line_text": "\"weight_crt\": 0.4, \"weight_ema_momentum_kernel\": 0.3,",
+      "source_line_text": "\"weight_crt\": 0.4, \"weight_gaussian\": 0.3,",
       "candidate_id": "BC-RAW-0592",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -11622,7 +11622,7 @@
       "line": 114,
       "function_or_scope": "<module>",
       "AST_context": "inline_constant",
-      "source_line_text": "\"weight_feature_cluster_similarity\": 0.2, \"weight_candle_commitment\": 0.1,",
+      "source_line_text": "\"weight_zone_gate\": 0.2, \"weight_rr\": 0.1,",
       "candidate_id": "BC-RAW-0593",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -11642,7 +11642,7 @@
       "line": 114,
       "function_or_scope": "<module>",
       "AST_context": "inline_constant",
-      "source_line_text": "\"weight_feature_cluster_similarity\": 0.2, \"weight_candle_commitment\": 0.1,",
+      "source_line_text": "\"weight_zone_gate\": 0.2, \"weight_rr\": 0.1,",
       "candidate_id": "BC-RAW-0594",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -12491,7 +12491,7 @@
       "line": 428,
       "function_or_scope": "EngineRunner.__init__",
       "AST_context": "inline_constant",
-      "source_line_text": "_feature_cluster_similarity_min_samples  = int(config.get(\"feature_cluster_similarity_min_samples\", 50))",
+      "source_line_text": "_zone_min_samples  = int(config.get(\"zone_min_samples\", 50))",
       "candidate_id": "BC-RAW-0638",
       "scope_status": "IN_SCOPE",
       "scope_reason": "TTL/age/band integer in behavioral function __init__",
@@ -12602,7 +12602,7 @@
       "line": 560,
       "function_or_scope": "EngineRunner._compute_weighted_vote",
       "AST_context": "inline_constant",
-      "source_line_text": "\"gaussian\": _safe_float(getattr(cfg, \"weight_ema_momentum_kernel\", 0.25), 0.25),",
+      "source_line_text": "\"gaussian\": _safe_float(getattr(cfg, \"weight_gaussian\", 0.25), 0.25),",
       "candidate_id": "BC-RAW-0644",
       "scope_status": "IN_SCOPE",
       "scope_reason": "non-identity float in behavioral function _compute_weighted_vote",
@@ -12621,7 +12621,7 @@
       "line": 561,
       "function_or_scope": "EngineRunner._compute_weighted_vote",
       "AST_context": "inline_constant",
-      "source_line_text": "\"feature_cluster_similarity\": _safe_float(getattr(cfg, \"weight_feature_cluster_similarity\", 0.25), 0.25),",
+      "source_line_text": "\"zone_gate\": _safe_float(getattr(cfg, \"weight_zone_gate\", 0.25), 0.25),",
       "candidate_id": "BC-RAW-0645",
       "scope_status": "IN_SCOPE",
       "scope_reason": "non-identity float in behavioral function _compute_weighted_vote",
@@ -12640,7 +12640,7 @@
       "line": 562,
       "function_or_scope": "EngineRunner._compute_weighted_vote",
       "AST_context": "inline_constant",
-      "source_line_text": "\"rr\": _safe_float(getattr(cfg, \"weight_candle_commitment\", 0.20), 0.20),",
+      "source_line_text": "\"rr\": _safe_float(getattr(cfg, \"weight_rr\", 0.20), 0.20),",
       "candidate_id": "BC-RAW-0646",
       "scope_status": "IN_SCOPE",
       "scope_reason": "non-identity float in behavioral function _compute_weighted_vote",
@@ -13899,7 +13899,7 @@
       "line": 1088,
       "function_or_scope": "EngineRunner.run",
       "AST_context": "inline_constant",
-      "source_line_text": "engine_results.get(\"feature_cluster_similarity\", {}).get(\"cluster_id\", -1)",
+      "source_line_text": "engine_results.get(\"zone_gate\", {}).get(\"cluster_id\", -1)",
       "candidate_id": "BC-RAW-0715",
       "scope_status": "OUT_OF_SCOPE",
       "scope_reason": "identity 0/1 in behavioral function (clamp/flag bound)",
@@ -13917,7 +13917,7 @@
       "line": 1089,
       "function_or_scope": "EngineRunner.run",
       "AST_context": "inline_constant",
-      "source_line_text": "if isinstance(engine_results.get(\"feature_cluster_similarity\"), dict) else -1",
+      "source_line_text": "if isinstance(engine_results.get(\"zone_gate\"), dict) else -1",
       "candidate_id": "BC-RAW-0716",
       "scope_status": "OUT_OF_SCOPE",
       "scope_reason": "identity 0/1 in behavioral function (clamp/flag bound)",
@@ -14617,14 +14617,14 @@
       "behavior_effect": "DIRECT"
     },
     {
-      "literal_or_constant_name": "weight_ema_momentum_kernel",
+      "literal_or_constant_name": "weight_gaussian",
       "value": 0.25,
       "value_type": "float",
       "file": "src/core/fusion_engine.py",
       "line": 153,
       "function_or_scope": "FusionConfig",
       "AST_context": "ann_assign_default",
-      "source_line_text": "weight_ema_momentum_kernel:             float = 0.25",
+      "source_line_text": "weight_gaussian:             float = 0.25",
       "candidate_id": "BC-RAW-0752",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14644,7 +14644,7 @@
       "line": 153,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "weight_ema_momentum_kernel:             float = 0.25",
+      "source_line_text": "weight_gaussian:             float = 0.25",
       "candidate_id": "BC-RAW-0753",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14657,14 +14657,14 @@
       "behavior_effect": "DIRECT"
     },
     {
-      "literal_or_constant_name": "weight_feature_cluster_similarity",
+      "literal_or_constant_name": "weight_zone_gate",
       "value": 0.25,
       "value_type": "float",
       "file": "src/core/fusion_engine.py",
       "line": 154,
       "function_or_scope": "FusionConfig",
       "AST_context": "ann_assign_default",
-      "source_line_text": "weight_feature_cluster_similarity:            float = 0.25",
+      "source_line_text": "weight_zone_gate:            float = 0.25",
       "candidate_id": "BC-RAW-0754",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14684,7 +14684,7 @@
       "line": 154,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "weight_feature_cluster_similarity:            float = 0.25",
+      "source_line_text": "weight_zone_gate:            float = 0.25",
       "candidate_id": "BC-RAW-0755",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14697,14 +14697,14 @@
       "behavior_effect": "DIRECT"
     },
     {
-      "literal_or_constant_name": "weight_candle_commitment",
+      "literal_or_constant_name": "weight_rr",
       "value": 0.2,
       "value_type": "float",
       "file": "src/core/fusion_engine.py",
       "line": 155,
       "function_or_scope": "FusionConfig",
       "AST_context": "ann_assign_default",
-      "source_line_text": "weight_candle_commitment:                   float = 0.20",
+      "source_line_text": "weight_rr:                   float = 0.20",
       "candidate_id": "BC-RAW-0756",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14724,7 +14724,7 @@
       "line": 155,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "weight_candle_commitment:                   float = 0.20",
+      "source_line_text": "weight_rr:                   float = 0.20",
       "candidate_id": "BC-RAW-0757",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14784,7 +14784,7 @@
       "line": 165,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"feature_cluster_similarity\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},",
+      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"zone_gate\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},",
       "candidate_id": "BC-RAW-0760",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14804,7 +14804,7 @@
       "line": 165,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"feature_cluster_similarity\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},",
+      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"zone_gate\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},",
       "candidate_id": "BC-RAW-0761",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14824,7 +14824,7 @@
       "line": 165,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"feature_cluster_similarity\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},",
+      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"zone_gate\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},",
       "candidate_id": "BC-RAW-0762",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14844,7 +14844,7 @@
       "line": 165,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"feature_cluster_similarity\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},",
+      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"zone_gate\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},",
       "candidate_id": "BC-RAW-0763",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14864,7 +14864,7 @@
       "line": 166,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"feature_cluster_similarity\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},",
+      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"zone_gate\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},",
       "candidate_id": "BC-RAW-0764",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14884,7 +14884,7 @@
       "line": 166,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"feature_cluster_similarity\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},",
+      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"zone_gate\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},",
       "candidate_id": "BC-RAW-0765",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14904,7 +14904,7 @@
       "line": 166,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"feature_cluster_similarity\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},",
+      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"zone_gate\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},",
       "candidate_id": "BC-RAW-0766",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14924,7 +14924,7 @@
       "line": 166,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"feature_cluster_similarity\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},",
+      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"zone_gate\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},",
       "candidate_id": "BC-RAW-0767",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14944,7 +14944,7 @@
       "line": 166,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"feature_cluster_similarity\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},",
+      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"zone_gate\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},",
       "candidate_id": "BC-RAW-0768",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14964,7 +14964,7 @@
       "line": 167,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"feature_cluster_similarity\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},",
+      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"zone_gate\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},",
       "candidate_id": "BC-RAW-0769",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -14984,7 +14984,7 @@
       "line": 167,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"feature_cluster_similarity\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},",
+      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"zone_gate\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},",
       "candidate_id": "BC-RAW-0770",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -15004,7 +15004,7 @@
       "line": 167,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"feature_cluster_similarity\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},",
+      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"zone_gate\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},",
       "candidate_id": "BC-RAW-0771",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -15024,7 +15024,7 @@
       "line": 167,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"feature_cluster_similarity\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},",
+      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"zone_gate\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},",
       "candidate_id": "BC-RAW-0772",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -15044,7 +15044,7 @@
       "line": 167,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"feature_cluster_similarity\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},",
+      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"zone_gate\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},",
       "candidate_id": "BC-RAW-0773",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -15064,7 +15064,7 @@
       "line": 168,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"feature_cluster_similarity\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},",
+      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"zone_gate\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},",
       "candidate_id": "BC-RAW-0774",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -15084,7 +15084,7 @@
       "line": 168,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"feature_cluster_similarity\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},",
+      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"zone_gate\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},",
       "candidate_id": "BC-RAW-0775",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -15104,7 +15104,7 @@
       "line": 168,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"feature_cluster_similarity\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},",
+      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"zone_gate\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},",
       "candidate_id": "BC-RAW-0776",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -15124,7 +15124,7 @@
       "line": 168,
       "function_or_scope": "FusionConfig",
       "AST_context": "inline_constant",
-      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"feature_cluster_similarity\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},",
+      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"zone_gate\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},",
       "candidate_id": "BC-RAW-0777",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -15553,7 +15553,7 @@
       "line": 315,
       "function_or_scope": "FusionEngine.compute",
       "AST_context": "inline_constant",
-      "source_line_text": "\"scores\": {\"crt\": 0.0, \"gaussian\": 0.0, \"feature_cluster_similarity\": 0.0, \"rr\": 0.0},",
+      "source_line_text": "\"scores\": {\"crt\": 0.0, \"gaussian\": 0.0, \"zone_gate\": 0.0, \"rr\": 0.0},",
       "candidate_id": "BC-RAW-0799",
       "scope_status": "IN_SCOPE",
       "scope_reason": "spine residual float — treated as behavior-bearing under closure resolution policy",
@@ -15804,7 +15804,7 @@
       "line": 426,
       "function_or_scope": "FusionEngine.compute",
       "AST_context": "inline_constant",
-      "source_line_text": "\"feature_cluster_similarity\": round(score_zonegate, 4),",
+      "source_line_text": "\"zone_gate\": round(score_zonegate, 4),",
       "candidate_id": "BC-RAW-0812",
       "scope_status": "OUT_OF_SCOPE",
       "scope_reason": "spine residual integer resolved as structural/non-behavioral under closure policy",
@@ -15938,7 +15938,7 @@
       "line": 446,
       "function_or_scope": "FusionEngine.compute",
       "AST_context": "inline_constant",
-      "source_line_text": "\"feature_cluster_similarity\": round(score_zonegate, 4),",
+      "source_line_text": "\"zone_gate\": round(score_zonegate, 4),",
       "candidate_id": "BC-RAW-0819",
       "scope_status": "OUT_OF_SCOPE",
       "scope_reason": "spine residual integer resolved as structural/non-behavioral under closure policy",
@@ -16034,7 +16034,7 @@
       "line": 469,
       "function_or_scope": "FusionEngine.compute",
       "AST_context": "inline_constant",
-      "source_line_text": "\"feature_cluster_similarity\": round(score_zonegate, 4),",
+      "source_line_text": "\"zone_gate\": round(score_zonegate, 4),",
       "candidate_id": "BC-RAW-0824",
       "scope_status": "OUT_OF_SCOPE",
       "scope_reason": "spine residual integer resolved as structural/non-behavioral under closure policy",
@@ -16150,7 +16150,7 @@
       "line": 538,
       "function_or_scope": "FusionEngine.compute",
       "AST_context": "inline_constant",
-      "source_line_text": "\"feature_cluster_similarity\": round(score_zonegate,  4),",
+      "source_line_text": "\"zone_gate\": round(score_zonegate,  4),",
       "candidate_id": "BC-RAW-0830",
       "scope_status": "OUT_OF_SCOPE",
       "scope_reason": "spine residual integer resolved as structural/non-behavioral under closure policy",
@@ -35182,7 +35182,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"feature_cluster_similarity_cluster_threshold\":    0.25,"
+      "source_line_text": "\"zone_cluster_threshold\":    0.25,"
     },
     {
       "adjudication_id": "ADJ-0249",
@@ -35199,7 +35199,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"feature_cluster_similarity\":                {\"top_k\": 3, \"cluster_min_n\": 2, \"cluster_spread_max\": 0.15},"
+      "source_line_text": "\"zone_gate\":                {\"top_k\": 3, \"cluster_min_n\": 2, \"cluster_spread_max\": 0.15},"
     },
     {
       "adjudication_id": "ADJ-0250",
@@ -35233,7 +35233,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"weight_crt\": 0.4, \"weight_ema_momentum_kernel\": 0.3,"
+      "source_line_text": "\"weight_crt\": 0.4, \"weight_gaussian\": 0.3,"
     },
     {
       "adjudication_id": "ADJ-0252",
@@ -35250,7 +35250,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"weight_crt\": 0.4, \"weight_ema_momentum_kernel\": 0.3,"
+      "source_line_text": "\"weight_crt\": 0.4, \"weight_gaussian\": 0.3,"
     },
     {
       "adjudication_id": "ADJ-0253",
@@ -35267,7 +35267,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"weight_feature_cluster_similarity\": 0.2, \"weight_candle_commitment\": 0.1,"
+      "source_line_text": "\"weight_zone_gate\": 0.2, \"weight_rr\": 0.1,"
     },
     {
       "adjudication_id": "ADJ-0254",
@@ -35284,7 +35284,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"weight_feature_cluster_similarity\": 0.2, \"weight_candle_commitment\": 0.1,"
+      "source_line_text": "\"weight_zone_gate\": 0.2, \"weight_rr\": 0.1,"
     },
     {
       "adjudication_id": "ADJ-0255",
@@ -35641,7 +35641,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "_feature_cluster_similarity_min_samples  = int(config.get(\"feature_cluster_similarity_min_samples\", 50))"
+      "source_line_text": "_zone_min_samples  = int(config.get(\"zone_min_samples\", 50))"
     },
     {
       "adjudication_id": "ADJ-0276",
@@ -35675,7 +35675,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"gaussian\": _safe_float(getattr(cfg, \"weight_ema_momentum_kernel\", 0.25), 0.25),"
+      "source_line_text": "\"gaussian\": _safe_float(getattr(cfg, \"weight_gaussian\", 0.25), 0.25),"
     },
     {
       "adjudication_id": "ADJ-0278",
@@ -35692,7 +35692,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"feature_cluster_similarity\": _safe_float(getattr(cfg, \"weight_feature_cluster_similarity\", 0.25), 0.25),"
+      "source_line_text": "\"zone_gate\": _safe_float(getattr(cfg, \"weight_zone_gate\", 0.25), 0.25),"
     },
     {
       "adjudication_id": "ADJ-0279",
@@ -35709,7 +35709,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"rr\": _safe_float(getattr(cfg, \"weight_candle_commitment\", 0.20), 0.20),"
+      "source_line_text": "\"rr\": _safe_float(getattr(cfg, \"weight_rr\", 0.20), 0.20),"
     },
     {
       "adjudication_id": "ADJ-0280",
@@ -36372,7 +36372,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "weight_ema_momentum_kernel:             float = 0.25"
+      "source_line_text": "weight_gaussian:             float = 0.25"
     },
     {
       "adjudication_id": "ADJ-0319",
@@ -36389,7 +36389,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "weight_ema_momentum_kernel:             float = 0.25"
+      "source_line_text": "weight_gaussian:             float = 0.25"
     },
     {
       "adjudication_id": "ADJ-0320",
@@ -36406,7 +36406,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "weight_feature_cluster_similarity:            float = 0.25"
+      "source_line_text": "weight_zone_gate:            float = 0.25"
     },
     {
       "adjudication_id": "ADJ-0321",
@@ -36423,7 +36423,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "weight_feature_cluster_similarity:            float = 0.25"
+      "source_line_text": "weight_zone_gate:            float = 0.25"
     },
     {
       "adjudication_id": "ADJ-0322",
@@ -36440,7 +36440,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "weight_candle_commitment:                   float = 0.20"
+      "source_line_text": "weight_rr:                   float = 0.20"
     },
     {
       "adjudication_id": "ADJ-0323",
@@ -36457,7 +36457,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "weight_candle_commitment:                   float = 0.20"
+      "source_line_text": "weight_rr:                   float = 0.20"
     },
     {
       "adjudication_id": "ADJ-0324",
@@ -36508,7 +36508,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"feature_cluster_similarity\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},"
+      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"zone_gate\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},"
     },
     {
       "adjudication_id": "ADJ-0327",
@@ -36525,7 +36525,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"feature_cluster_similarity\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},"
+      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"zone_gate\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},"
     },
     {
       "adjudication_id": "ADJ-0328",
@@ -36542,7 +36542,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"feature_cluster_similarity\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},"
+      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"zone_gate\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},"
     },
     {
       "adjudication_id": "ADJ-0329",
@@ -36559,7 +36559,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"feature_cluster_similarity\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},"
+      "source_line_text": "\"TRENDING\": {\"crt\": 0.38, \"gaussian\": 0.20, \"zone_gate\": 0.12, \"rr\": 0.20, \"strategy_consensus\": 0.10},"
     },
     {
       "adjudication_id": "ADJ-0330",
@@ -36576,7 +36576,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"feature_cluster_similarity\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},"
+      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"zone_gate\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},"
     },
     {
       "adjudication_id": "ADJ-0331",
@@ -36593,7 +36593,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"feature_cluster_similarity\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},"
+      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"zone_gate\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},"
     },
     {
       "adjudication_id": "ADJ-0332",
@@ -36610,7 +36610,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"feature_cluster_similarity\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},"
+      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"zone_gate\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},"
     },
     {
       "adjudication_id": "ADJ-0333",
@@ -36627,7 +36627,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"feature_cluster_similarity\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},"
+      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"zone_gate\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},"
     },
     {
       "adjudication_id": "ADJ-0334",
@@ -36644,7 +36644,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"feature_cluster_similarity\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},"
+      "source_line_text": "\"RANGING\":  {\"crt\": 0.18, \"gaussian\": 0.32, \"zone_gate\": 0.15, \"rr\": 0.25, \"strategy_consensus\": 0.10},"
     },
     {
       "adjudication_id": "ADJ-0335",
@@ -36661,7 +36661,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"feature_cluster_similarity\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},"
+      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"zone_gate\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},"
     },
     {
       "adjudication_id": "ADJ-0336",
@@ -36678,7 +36678,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"feature_cluster_similarity\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},"
+      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"zone_gate\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},"
     },
     {
       "adjudication_id": "ADJ-0337",
@@ -36695,7 +36695,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"feature_cluster_similarity\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},"
+      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"zone_gate\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},"
     },
     {
       "adjudication_id": "ADJ-0338",
@@ -36712,7 +36712,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"feature_cluster_similarity\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},"
+      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"zone_gate\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},"
     },
     {
       "adjudication_id": "ADJ-0339",
@@ -36729,7 +36729,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"feature_cluster_similarity\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},"
+      "source_line_text": "\"VOLATILE\": {\"crt\": 0.28, \"gaussian\": 0.14, \"zone_gate\": 0.12, \"rr\": 0.16, \"strategy_consensus\": 0.30},"
     },
     {
       "adjudication_id": "ADJ-0340",
@@ -36746,7 +36746,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"feature_cluster_similarity\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},"
+      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"zone_gate\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},"
     },
     {
       "adjudication_id": "ADJ-0341",
@@ -36763,7 +36763,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"feature_cluster_similarity\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},"
+      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"zone_gate\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},"
     },
     {
       "adjudication_id": "ADJ-0342",
@@ -36780,7 +36780,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"feature_cluster_similarity\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},"
+      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"zone_gate\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},"
     },
     {
       "adjudication_id": "ADJ-0343",
@@ -36797,7 +36797,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"feature_cluster_similarity\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},"
+      "source_line_text": "\"UNKNOWN\":  {\"crt\": 0.30, \"gaussian\": 0.25, \"zone_gate\": 0.25, \"rr\": 0.20, \"strategy_consensus\": 0.00},"
     },
     {
       "adjudication_id": "ADJ-0344",
@@ -36984,7 +36984,7 @@
       "priority": "P2",
       "plan_id": "PLAN-003",
       "rationale": "Spine residual behavioral float without proven HOW key binding",
-      "source_line_text": "\"scores\": {\"crt\": 0.0, \"gaussian\": 0.0, \"feature_cluster_similarity\": 0.0, \"rr\": 0.0},"
+      "source_line_text": "\"scores\": {\"crt\": 0.0, \"gaussian\": 0.0, \"zone_gate\": 0.0, \"rr\": 0.0},"
     },
     {
       "adjudication_id": "ADJ-0355",

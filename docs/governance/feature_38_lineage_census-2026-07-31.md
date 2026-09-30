@@ -140,7 +140,7 @@ _Resync: FC1-A structure + FC1-D volregime + wick_size↔candle_range alias._
 - **Impl:** feature_pipeline.compute_indicators ewm/ma — ['src/features/feature_pipeline.py:238-284']
 - **PIT:** ewm causal (adjust=False) (`CAUSAL_EWM`)
 - **Consumers (curated):** ['FeaturePipeline', 'ema_spread', 'CRT cached']
-- **Consumers (static sample):** ['src/analytics/sl_tp_comparator.py', 'src/bitnet/contract_c_trainer.py', 'src/config_layer/crt_engine_v2.py', 'src/config_layer/execution_planner.py', 'src/config_layer/state_identity.py', 'src/core/feature_store.py', 'src/core/gate_intelligence.py', 'src/engines/ema_momentum_kernel.py', 'src/engines/trap_validator_engine.py', 'src/features/crt_feature_builder.py', 'src/features/derived_math.py', 'src/features/feature_builder.py']
+- **Consumers (static sample):** ['src/analytics/sl_tp_comparator.py', 'src/bitnet/contract_c_trainer.py', 'src/config_layer/crt_engine_v2.py', 'src/config_layer/execution_planner.py', 'src/config_layer/state_identity.py', 'src/core/feature_store.py', 'src/core/gate_intelligence.py', 'src/engines/heuristic_gaussian_engine.py', 'src/engines/trap_validator_engine.py', 'src/features/crt_feature_builder.py', 'src/features/derived_math.py', 'src/features/feature_builder.py']
 
 #### 8. `ema_slow`
 
@@ -149,7 +149,7 @@ _Resync: FC1-A structure + FC1-D volregime + wick_size↔candle_range alias._
 - **Impl:** feature_pipeline.compute_indicators — ['src/features/feature_pipeline.py:238-284']
 - **PIT:** causal rolling/ewm (`CAUSAL_EWM`)
 - **Consumers (curated):** ['FeaturePipeline', 'ema_spread']
-- **Consumers (static sample):** ['src/analytics/sl_tp_comparator.py', 'src/bitnet/contract_c_trainer.py', 'src/config_layer/crt_engine_v2.py', 'src/config_layer/execution_planner.py', 'src/config_layer/state_identity.py', 'src/core/feature_store.py', 'src/core/gate_intelligence.py', 'src/engines/ema_momentum_kernel.py', 'src/engines/trap_validator_engine.py', 'src/features/crt_feature_builder.py', 'src/features/derived_math.py', 'src/features/feature_builder.py']
+- **Consumers (static sample):** ['src/analytics/sl_tp_comparator.py', 'src/bitnet/contract_c_trainer.py', 'src/config_layer/crt_engine_v2.py', 'src/config_layer/execution_planner.py', 'src/config_layer/state_identity.py', 'src/core/feature_store.py', 'src/core/gate_intelligence.py', 'src/engines/heuristic_gaussian_engine.py', 'src/engines/trap_validator_engine.py', 'src/features/crt_feature_builder.py', 'src/features/derived_math.py', 'src/features/feature_builder.py']
 
 #### 9. `ema_spread`
 
@@ -185,7 +185,7 @@ _Resync: FC1-A structure + FC1-D volregime + wick_size↔candle_range alias._
 - **Impl:** feature_pipeline + derived_math — ['src/features/derived_math.py', 'src/features/feature_pipeline.py']
 - **PIT:** causal lookback; ATR-gated warmup NaN possible (`CAUSAL_DERIVED`)
 - **Consumers (curated):** ['FeaturePipeline vector', 'CRT telemetry']
-- **Consumers (static sample):** ['src/analytics/sl_tp_comparator.py', 'src/bitnet/contract_c_trainer.py', 'src/config_layer/crt_engine_v2.py', 'src/config_layer/execution_planner.py', 'src/core/engine_runner.py', 'src/core/gate_intelligence.py', 'src/core/model_registry.py', 'src/engines/ema_momentum_kernel.py', 'src/features/crt_feature_builder.py', 'src/features/derived_math.py', 'src/features/feature_pipeline.py', 'src/features/registry/derived_registry.py']
+- **Consumers (static sample):** ['src/analytics/sl_tp_comparator.py', 'src/bitnet/contract_c_trainer.py', 'src/config_layer/crt_engine_v2.py', 'src/config_layer/execution_planner.py', 'src/core/engine_runner.py', 'src/core/gate_intelligence.py', 'src/core/model_registry.py', 'src/engines/heuristic_gaussian_engine.py', 'src/features/crt_feature_builder.py', 'src/features/derived_math.py', 'src/features/feature_pipeline.py', 'src/features/registry/derived_registry.py']
 
 #### 13. `atr`
 
@@ -338,7 +338,7 @@ _Resync: FC1-A structure + FC1-D volregime + wick_size↔candle_range alias._
 - **Impl:** candle_math.candle_range — ['src/features/candle_math.py:30-32', 'configs/formulas/market_ontology.yaml primitives.candle_range']
 - **PIT:** same-bar (`RAW_CONTEMPORANEOUS`)
 - **Consumers (curated):** ['FeaturePipeline', 'body_ratio', 'volatility_ratio', 'displacement_atr_ratio']
-- **Consumers (static sample):** ['src/config_layer/crt_engine_v2.py', 'src/config_layer/crt_gaussian_scorer.py', 'src/engines/candle_commitment.py', 'src/features/candle_math.py', 'src/features/crt_feature_builder.py', 'src/features/crt_state_resolver.py', 'src/features/derived_math.py', 'src/features/feature_pipeline.py', 'src/features/fm_resolve.py', 'src/features/gaussian_schema_contract.py', 'src/features/registry/primitive_registry.py', 'src/governance/strategy_backtest.py']
+- **Consumers (static sample):** ['src/config_layer/crt_engine_v2.py', 'src/config_layer/crt_gaussian_scorer.py', 'src/engines/rr_engine.py', 'src/features/candle_math.py', 'src/features/crt_feature_builder.py', 'src/features/crt_state_resolver.py', 'src/features/derived_math.py', 'src/features/feature_pipeline.py', 'src/features/fm_resolve.py', 'src/features/gaussian_schema_contract.py', 'src/features/registry/primitive_registry.py', 'src/governance/strategy_backtest.py']
 - **Note:** v4.0 rename (feature_schema.py:89, Semantic Layer Certification Audit 2026-07-31, Tier 1 items 1-2): this entry was `wick_size` in v3.0 -- pure identity rename, math never changed (always high-low, never a wick magnitude -- see F-046 / candle_math.py). `wick_size` survives only as a read-side alias for historical records (SCHEMA_V3_ALIASES); never emitted.
 
 #### 29. `body_ratio`

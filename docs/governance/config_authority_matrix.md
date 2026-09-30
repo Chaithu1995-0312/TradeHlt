@@ -78,14 +78,14 @@ ACTIVE_VERSION (S4)
     ▼
 v2_multi_2026_04.json (S3)  ── HOW ── thresholds / weights / flags / paths
     │
-    ├─ engine_runner.feature_cluster_similarity_registry_path ──► zone_registry.json (S7)  [EXEC geometry]
-    ├─ engine_runner.feature_cluster_similarity_mode / feature_cluster_similarity.{top_k,cluster_*}
-    ├─ engine_runner.removed_selector=heuristic  ──► EmaMomentumKernel + gaussian_scorer
+    ├─ engine_runner.zone_registry_path ──► zone_registry.json (S7)  [EXEC geometry]
+    ├─ engine_runner.zone_mode / zone_gate.{top_k,cluster_*}
+    ├─ engine_runner.gaussian_impl=heuristic  ──► HeuristicGaussianEngine + gaussian_scorer
     │         (does NOT load S9 for live score)
     ├─ engine_runner.rr_fusion.enabled=false + model_path ──► rr_model.json
     ├─ rr_model.* (confidence_gate, model_path, dataset_path)
     ├─ crt_engine.use_bitnet=false + bitnet_main_threshold=0.55
-    ├─ engine_runner.feature_cluster_similarity_cluster_threshold=0.25
+    ├─ engine_runner.zone_cluster_threshold=0.25
     └─ params.body_ratio_min=0.65  …
 
 zone_gate_registry.json (S8) ──active:v2_gaussian_runtime_2026_07──► S7
@@ -123,7 +123,7 @@ bitnet_thresholds.json (S14) ──BitNetRunner only──► per-instrument reg
 | S3 production JSON | Yes | HOW EXEC |
 | S7 zone_registry | Yes (geometry) | ARTIFACT EXEC |
 | S8 zone_gate_registry | No scoring; yes promote/list + parity guard | MANIFEST |
-| S9 gaussian_registry | Only if `removed_selector=ml` | MANIFEST (inert today) |
+| S9 gaussian_registry | Only if `gaussian_impl=ml` | MANIFEST (inert today) |
 | S10 rr_registry | Training/promote; live fusion uses S3 path | MANIFEST |
 | `rr_model.json` | Only if `rr_fusion.enabled` | ARTIFACT DEAD (path present) |
 | S11 rr_model.meta | No | DIAGNOSTIC |
@@ -159,9 +159,9 @@ Abbreviated: `ont` S1 · `am` S2 · `prod` S3 · `AV` S4 · `plog` S5 · `spine`
 
 | # | Semantic | Live value(s) | am | prod | zreg | zman | Status | Decision (pending) |
 |---|---|---|---|---|---|---|---|---|
-| R04 | Zone geometry artifact path | `models/zone_registry.json` | DESC `registry_file` | EXEC `feature_cluster_similarity_registry_path` | EXEC file | MANIFEST active→same path | **ALIGNED** (F-041A) | KEEP + existing parity test |
+| R04 | Zone geometry artifact path | `models/zone_registry.json` | DESC `registry_file` | EXEC `zone_registry_path` | EXEC file | MANIFEST active→same path | **ALIGNED** (F-041A) | KEEP + existing parity test |
 | R05 | Zone geometry content | 8 zones, schema `v2_gaussian`, feature_order 38, per-zone threshold `0.3` | DESC | N/A | EXEC centroids | MANIFEST n_zones/feature_order | ALIGNED content via path | KEEP; provenance PIT_UNCLEAN |
-| R06 | Zone mode | `hard` | DESC | EXEC `feature_cluster_similarity_mode` | N/A | N/A | ALIGNED | KEEP |
+| R06 | Zone mode | `hard` | DESC | EXEC `zone_mode` | N/A | N/A | ALIGNED | KEEP |
 | R07 | Zone knobs top_k / cluster_* | top_k=3, cluster_min_n=2, cluster_spread_max=0.15 | DESC F-036 INERT | EXEC (tunable) | N/A | N/A | **DEAD knobs** (ΔG001≡0) | DOCUMENT_ONLY / optional RETIRE from optimization narrative |
 | R08 | Zone PIT provenance | PIT_UNCLEAN_CENTERED_SWINGS + global_batch_vol | DESC pit_provenance | N/A | sidecar | N/A | ALIGNED tag | KEEP sidecar; no promote |
 
@@ -169,7 +169,7 @@ Abbreviated: `ont` S1 · `am` S2 · `prod` S3 · `AV` S4 · `plog` S5 · `spine`
 
 | # | Semantic | Live value(s) | am | prod | greg | Status | Decision (pending) |
 |---|---|---|---|---|---|---|---|
-| R09 | Live Gaussian implementation | `heuristic` (3 features) | DESC runtime | EXEC `removed_selector` | N/A for live | **DUAL_TRACK truth** | KEEP dual-track; never merge into one “active gaussian” |
+| R09 | Live Gaussian implementation | `heuristic` (3 features) | DESC runtime | EXEC `gaussian_impl` | N/A for live | **DUAL_TRACK truth** | KEEP dual-track; never merge into one “active gaussian” |
 | R10 | Heuristic scorer params | retest/body/disp mu,s2; sigmoid; execute_p | DESC config_sections | EXEC `gaussian_scorer` | N/A | EXEC HOW | KEEP in HOW |
 | R11 | ML Gaussian active artifacts | ETH `v5_auto_2026_06_eth`, BNB `p5_20260524T120449` + `__active__` map | DESC trained_registry | N/A (impl≠ml) | MANIFEST active | **INERT on spine** | DOCUMENT_ONLY; do not treat registry active as live |
 
@@ -177,7 +177,7 @@ Abbreviated: `ont` S1 · `am` S2 · `prod` S3 · `AV` S4 · `plog` S5 · `spine`
 
 | # | Semantic | Live value(s) | am | prod | rreg | rmeta | Status | Decision (pending) |
 |---|---|---|---|---|---|---|---|---|
-| R12 | Live RR geometry | CandleCommitment polarity ∈[0.5,1] on OHLC | DESC engine | fusion weight_candle_commitment | N/A | N/A | EXEC geometry | KEEP A-contract |
+| R12 | Live RR geometry | RREngine polarity ∈[0.5,1] on OHLC | DESC engine | fusion weight_rr | N/A | N/A | EXEC geometry | KEEP A-contract |
 | R13 | RR fusion enable | `false` | DESC `rr_fusion_active:false` | EXEC `rr_fusion.enabled` | N/A | N/A | **DEAD path** (F-038) | KEEP disabled |
 | R14 | RR trained model path | config `models/rr_model.json`; registry active `…_bnb_v2.json` | DESC | EXEC path | MANIFEST different path **same bytes** | points at `rr_model.json` | **PATH_SPLIT / CONTENT_ALIGNED** | DOCUMENT_ONLY or ENFORCE_TEST hash parity (not path rename required) |
 | R15 | RR confidence bypass | `0.3` legacy_scalar; F-044 mis-scaled | DESC F-044 | EXEC `confidence_bypass_threshold` + `confidence_gate` | N/A | d_sq percentiles | **GATE_SKEW if re-enabled** | KEEP off; no re-enable without gate redesign |
@@ -191,7 +191,7 @@ Abbreviated: `ont` S1 · `am` S2 · `prod` S3 · `AV` S4 · `plog` S5 · `spine`
 |---|---|---|---|---|---|---|---|---|
 | R19 | BitNet enable | `use_bitnet: false` | DESC dormant | EXEC | N/A | empty | **INERT** (F-004) | KEEP off |
 | R20 | CRT hard-reject threshold | `bitnet_main_threshold: 0.55` | DESC `threshold: 0.55` | EXEC | N/A | N/A | DESC+EXEC align for CRT path | KEEP in HOW |
-| R21 | Zone BitNet threshold | `feature_cluster_similarity_cluster_threshold: 0.25` | DESC config_sections | EXEC | N/A | N/A | Different consumer | KEEP named distinctly |
+| R21 | Zone BitNet threshold | `zone_cluster_threshold: 0.25` | DESC config_sections | EXEC | N/A | N/A | Different consumer | KEEP named distinctly |
 | R22 | Adaptive thresholds file | defaults 0.5 all regimes | N/A | optional path override | EXEC defaults | N/A | **Third number space** (0.5 ≠ 0.55) | DOCUMENT dual-surface; no merge until re-enable design |
 | R23 | BitNet artifact registry | `{}` | N/A | N/A | N/A | EMPTY | Empty governance | DOCUMENT_ONLY / optional future manifest; **not** a new YAML authority |
 
@@ -376,8 +376,8 @@ FM math is **parity-aligned** with ontology/registry, but **runtime does not res
 | Model | Active config | Invocation |
 |---|---|---|
 | CRT scorer | always if ER.run | **Global**, feature-based — **not** SM state |
-| Gaussian heuristic | `removed_selector=heuristic` | **Global** |
-| ZoneGate | always in ER | **Global** (uses `feature_cluster_similarity_cluster_threshold` name; not BitNet model) |
+| Gaussian heuristic | `gaussian_impl=heuristic` | **Global** |
+| ZoneGate | always in ER | **Global** (uses `zone_cluster_threshold` name; not BitNet model) |
 | RR geometry | always in ER | **Global** |
 | RR fusion | `enabled:false` | **Disabled** |
 | TradeNet | unwired | **Unwired** |
@@ -408,7 +408,7 @@ FM math is **parity-aligned** with ontology/registry, but **runtime does not res
 | RETEST | MODEL | Gaussian/ZoneGate/RR/TradeNet | fusion HOW | EngineRunner | **not** SM RETEST | n/a on SM | **NO on SM**; YES on ER path only |
 | EXECUTION | CONFIG | `exit_model`, SL/TP mults | HOW | CRTConfig / trade | `update_trade` | **NO** | YES |
 | EXPIRED | CONFIG | (TTL from EXPANSION) | HOW | already applied | reset | **NO** | YES (lifecycle) |
-| * (ER) | MODEL | crt_scorer, gaussian, feature_cluster_similarity, rr | HOW engine_runner/fusion | EngineRunner.run `:597+` | fusion/decision | **NO** | YES if gate-ON; **independent of CRTState** |
+| * (ER) | MODEL | crt_scorer, gaussian, zone_gate, rr | HOW engine_runner/fusion | EngineRunner.run `:597+` | fusion/decision | **NO** | YES if gate-ON; **independent of CRTState** |
 | * (ER) | MODEL | rr_fusion | HOW enabled=false | RRFusionLayer | skipped | **NO** | NO (disabled) |
 | * (ER) | MODEL | TradeNet | F-005 unwired | — | none | **NO** | NO |
 
@@ -589,7 +589,7 @@ Also fixed `cached_features_at_retest` authoritative names → `displacement_ret
 |---|---|
 | Caller | `BacktestRunner.run` `src/runtime/backtest_v2.py:2071-2072` always calls `self._scorer.compute(..., direction=_p5_dir)` |
 | Duck-type (calibrated) | `CRTCalibratedScorer.compute(..., direction: str = "long")` `:1587-1588` → delegates |
-| Duck-type (ML/heuristic engines) | `ml_gaussian_engine.py:123`, `ema_momentum_kernel.py:271` accept `direction` |
+| Duck-type (ML/heuristic engines) | `ml_gaussian_engine.py:123`, `heuristic_gaussian_engine.py:271` accept `direction` |
 | Broken no-op | local `CRTGaussianScorer.compute(self, features, candle_idx)` **without** `direction` (`--scorer static`) |
 | Failure class | **API_DRIFT / duck-type mismatch** (stale callee signature vs call-site + sibling scorers) |
 | Pre-existing? | **YES** — same commit `b34d6a8` introduced call site + incomplete no-op signature (git show `b48d4d9:src/runtime/backtest_v2.py`); not introduced by Phase-1 |

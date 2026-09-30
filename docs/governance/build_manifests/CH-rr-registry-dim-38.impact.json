@@ -22,7 +22,7 @@
       "effective_rank": 27,
       "note": "38 - 11 zero_indices = 27, matching F-044's rank-27 Mahalanobis dof"
     },
-    "trainer_constant": "src/config_layer/rr/rr_trained.py:22 -> N_FEATURES = CANONICAL_FEATURE_DIM = 38; a re-run today would write 38",
+    "trainer_constant": "src/config_layer/rr/rr_pattern_miner.py:22 -> N_FEATURES = CANONICAL_FEATURE_DIM = 38; a re-run today would write 38",
     "pipeline_dim": 38,
     "sibling_precedent": "registry entry 202605_v1 already declares n_features:38",
     "audit_reference": "docs/governance/model_lineage_rollup.md sec 4.3a"

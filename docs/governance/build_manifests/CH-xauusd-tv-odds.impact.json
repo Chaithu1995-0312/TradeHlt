@@ -19,7 +19,7 @@
     "assistant_project.md"
   ],
   "affected_feature_ids": [],
-  "affected_models": "none — no model is read, retrained, or re-registered. F-076's 6 stale families (feature_cluster_similarity/rr/rr_fusion/gaussian/bitnet/tradenet) stay exactly as stale as they already were.",
+  "affected_models": "none — no model is read, retrained, or re-registered. F-076's 6 stale families (zone_gate/rr/rr_fusion/gaussian/bitnet/tradenet) stay exactly as stale as they already were.",
   "affected_production_config": "none — configs/production/ACTIVE_VERSION stays v2_htfcrt_2026_08 and no config file is read for write. The pinned corpus data/XAUUSD_M15.csv (2,116 bars, 2026-07-07 01:00 -> 2026-08-06 23:45 broker, sha256 478b0751...) is READ ONLY and is NOT re-fetched — a fresh MT5 pull would invalidate the clock alignment of all 10 existing shots.",
   "required_checks_ack": [
     "tests/test_script_registry.py",
