@@ -1,0 +1,48 @@
+{
+  "change_id": "CH-freeze-pin-drift-restore",
+  "date_utc": "2026-09-28",
+  "objective": "Restore tests/test_feature_layer_freeze.py to green by refreshing the 5 drifted source-file SHAs in docs/governance/feature-layer-freeze-pin-2026-07-20.json's pinned block, per the policy's own 'Bugfixes that restore the pin after accidental drift' allowance (feature-layer-mutation-freeze-2026-07-20.md:181). Attributes each drift to its originating program rather than absorbing it silently, per the policy's waiver-log discipline. Also corrects a pre-existing falsehood the pin asserted: active_config/active_config_version pointed at configs/production/v2_multi_2026_04.json while configs/production/ACTIVE_VERSION (and the vector-SHA test's own oracle) resolves through v2_htfcrt_2026_08.json -- the pin is repointed to the file it actually should be guarding (user decision, 2026-09-28). Standalone change set, deliberately staged before any identity-affecting work (Stage 0a of the D1/SEM-021/EPIC-84 program); makes no src/ or configs/ edit and changes no emitted feature value.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY",
+    "SEMANTIC_REGISTRY_CHANGE"
+  ],
+  "change_class_rationale": "DOCUMENTATION_ONLY: every edit in this change set is confined to docs/governance/feature-layer-freeze-pin-2026-07-20.json and tests/test_feature_layer_freeze.py -- no src/, no configs/production/*.json, no active runtime path. SEMANTIC_REGISTRY_CHANGE: one of the five drifted pins (market_ontology.yaml) is absorbing a new semantic-registry node (SEM-038 / CH-measurement-basis-declaration) that this change set did not author but must now attribute in the waiver log; the registry.__init__.py drift similarly absorbs STORY-83.10's validator addition. Both are feature-neutral (no derived_metrics/FM-0xx/active:/impl: line touched) -- confirmed by re-running the full 8-test freeze suite green with the XAUUSD vector SHA unchanged.",
+  "affected_files": [
+    "docs/governance/feature-layer-freeze-pin-2026-07-20.json",
+    "tests/test_feature_layer_freeze.py"
+  ],
+  "required_checks_ack": [
+    "tests/test_feature_layer_freeze.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Single commit, two files. Fully revertable via git revert; no downstream artifact regeneration is triggered (vector SHA, schema hash, and config_hash are all unchanged by this change set).",
+  "pre_existing_floor_state": {
+    "note": "CONSTRUCTION FLOOR (11-file GREEN_FLOOR, scripts/governance/construction_protocol.py check) was RED (7/137 failing) before this change began, run 2026-09-28. tests/test_feature_layer_freeze.py is NOT a member of CONSTRUCTION_FLOOR (confirmed by reading construction_protocol.py's own CONSTRUCTION_FLOOR tuple) -- it is caught only by CI, run separately here. The 7 pre-existing failures, none touching feature-layer-freeze or CANONICAL_FEATURES: tests/test_feature_math_lint.py::test_floor_is_green, tests/test_feature_math_lint.py::test_universe_reconciliation_with_census, tests/test_geometry_census.py::test_geometry_census_is_fresh, tests/test_geometry_census.py::test_adjudication_closed_against_fresh_census, tests/test_current_findings.py::test_nonterminal_findings_are_fresh, tests/test_doc_citations.py::test_every_code_citation_resolves, tests/test_session_log.py::test_session_log_entry_count_is_bounded (342 SESSION LOG entries, rotation overdue -- per project memory, rotate_session_log.py is NOT to be run casually; left untouched, out of scope). Separately: tests/test_feature_layer_freeze.py was 1 failed / 7 passed (test_source_file_pins_match, pinned market_ontology.yaml SHA 1c0fd344... vs live 132c9296...) -- this is the target this change set fixes. tests/test_displacement_origin_kill.py::test_the_arm_is_reachable_only_from_a_non_promoted_shadow_config was also observed red (SEM-021 TruthConflict against D1, commit 97d563bc) -- explicitly NOT remediated by this change set; it is Stage 1 of the same program, tracked separately.",
+    "captured_at": "2026-09-28T16:55:27Z"
+  },
+  "authority": "Bugfix-class restoration under the existing feature-layer-mutation-freeze policy's own allowance (no new authority requested or granted). Does not re-open CRT/feature closure, does not change ACTIVE_VERSION, does not claim G001/economic value. The active_config repoint is a declared truth-conflict resolution (CLAUDE.md 6.2 rule 3), not a behavior change: v2_htfcrt_2026_08 was already the config the vector-SHA test itself resolves through via ACTIVE_VERSION -- the pin's active_config field was the artifact that was wrong, not the runtime.",
+  "declared_files": [
+    "docs/governance/feature-layer-freeze-pin-2026-07-20.json",
+    "tests/test_feature_layer_freeze.py"
+  ],
+  "checks_executed": [
+    "tests/test_feature_layer_freeze.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "repo_state_hash": "PENDING",
+  "completion_status": "BLOCKED_BY_FOREIGN_TREE_STATE",
+  "completion_note": "Ran 2026-09-28: construction_protocol.py validate-completion returns COMPLETION: BLOCKED, mechanically and as expected, for two reasons neither caused by this change set: (1) 'UNDECLARED governed surfaces changed' names configs/data_provenance/ohlcv_clock_registry.json, scripts/research/setup_grid_s4.py, src/control_plane/run_trace_api.py, src/control_plane/server.py, src/runtime/backtest_v2.py, src/runtime/bar_structure_snapshot.py, tests/test_run_trace.py -- all present as dirty/untracked in git status at session start (WORKTREE PREFLIGHT), per project memory a routine symptom of concurrent Claude sessions sharing this repo; none appear in this change set's own diff. (2) 'required checks FAILED' on tests/test_current_findings.py::test_nonterminal_findings_are_fresh and tests/test_doc_citations.py::test_every_code_citation_resolves -- both are pre-existing baseline reds recorded verbatim in pre_existing_floor_state above, unrelated to docs/governance/feature-layer-freeze-pin-2026-07-20.json or tests/test_feature_layer_freeze.py. declared_files above lists only the 2 files this change set actually wrote; this change set does not touch, revert, or absorb the foreign dirty files, and does not attempt to fix the 2 pre-existing reds (out of scope, CLAUDE.md 1.2). CLAUDE.md's own text ('a completion claim with ... undeclared changed surfaces ... is DENIED by the validator regardless of prose') describes exactly this mechanism working as intended on a multi-session repo -- so completion_status is left honest (BLOCKED_BY_FOREIGN_TREE_STATE) rather than forced to COMPLETE. This change set's own correctness is independently verified: tests/test_feature_layer_freeze.py is 8/8 green (was 1 failed/7 passed), test_xauusd_window_vector_regression's vector_sha256 unchanged, and the manifest's own required_checks_ack floor is green except the 2 named pre-existing reds."
+}

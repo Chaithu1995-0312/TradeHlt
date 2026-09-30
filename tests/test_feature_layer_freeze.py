@@ -60,7 +60,10 @@ def test_freeze_pin_schema_governance_class():
     assert pin.get("freeze_id") == FREEZE_ID
     assert pin.get("status_token") == STATUS_TOKEN
     assert pin.get("freeze_class") == "GOVERNANCE_FREEZE"
-    assert pin.get("active_config_version") == "v2_multi_2026_04"
+    # repointed 2026-09-28 (CH-freeze-pin-drift-restore): ACTIVE_VERSION has read
+    # v2_htfcrt_2026_08 since commit 218b9ae2 (2026-09-09; config authored 2026-08-15); the pin's
+    # active_config field was the stale artifact, not the runtime (CLAUDE.md 6.2 rule 3).
+    assert pin.get("active_config_version") == "v2_htfcrt_2026_08"
     schema = pin["schema"]
     # 48 under schema v5.0 (was 39 pre-2026-08-15 CH-htfcrt-parent-candle-smc-v1, 38 pre-v4;
     # pin refreshed 2026-08-15 per that program's own regeneration requirement).

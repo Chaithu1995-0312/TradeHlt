@@ -5,8 +5,8 @@
   "status_token": "FEATURE_LAYER_MUTATION_FREEZE = ACTIVE",
   "frozen_at_utc": "2026-07-19T20:16:08Z",
   "policy_path": "docs/governance/feature-layer-mutation-freeze-2026-07-20.md",
-  "active_config_version": "v2_multi_2026_04",
-  "prod_version_constant": "v2_multi_2026_04",
+  "active_config_version": "v2_htfcrt_2026_08",
+  "prod_version_constant": "v2_htfcrt_2026_08",
   "schema": {
     "schema_version": "6.0",
     "schema_hash": "d40e7c7d5b624ef6d27670255ad95a35",
@@ -66,11 +66,11 @@
   "source_file_pins": {
     "market_ontology.yaml": {
       "path": "configs/formulas/market_ontology.yaml",
-      "sha256": "1c0fd344d28e28e0ea09d1a7a5f79eb43216394892397d6485042bcee6846c63"
+      "sha256": "132c92962abf97336ba943aba153785359a7b0ad2605dcbcb82f03a286e74ab9"
     },
     "active_config": {
-      "path": "configs/production/v2_multi_2026_04.json",
-      "sha256": "87e0251583e4f62cd30c38b39b20b7d0dbda33193f9c346e1f2c7c33f07d503d"
+      "path": "configs/production/v2_htfcrt_2026_08.json",
+      "sha256": "4f35cdb957997b050feb81b91513d6c6116d45030d2d870855706edbab2c9b3b"
     },
     "ACTIVE_VERSION": {
       "path": "configs/production/ACTIVE_VERSION",
@@ -78,11 +78,11 @@
     },
     "feature_pipeline.py": {
       "path": "src/features/feature_pipeline.py",
-      "sha256": "466180716eb9ac8694b80bde4ba9ab642bd21c5a067f14ba0af53db1719cb60a"
+      "sha256": "67377f36ff021e98364bfbbe1a3f49823bbcb06ef3aa9872efe91133b4a4505a"
     },
     "feature_schema.py": {
       "path": "src/features/feature_schema.py",
-      "sha256": "c354e1381a6a66546e44ea59a09e22a6979947292203da9dc12124b8d2f22eb8"
+      "sha256": "702ae29c4883e5d1b0e286939f74e194594d5160b0f5eec9a113ab5f81f3897d"
     },
     "candle_math.py": {
       "path": "src/features/candle_math.py",
@@ -98,7 +98,7 @@
     },
     "registry_init.py": {
       "path": "src/features/registry/__init__.py",
-      "sha256": "642ca6a2ca372ece98e9bd5a7763e9f0c206c9ea87e69f36816bdb51b28040cd"
+      "sha256": "6cb4d8403b766fbbf98c840395283c91d7909930c103f84d5a54988a9f7b931e"
     }
   },
   "regression_benchmarks": {
@@ -538,6 +538,41 @@
       },
       "value_neutrality": "Both edits are a log-message literal and a comment; neither can change an emitted feature value. Bounded mechanically: test_xauusd_window_vector_regression PASSED with this file in place (vector_sha256 unchanged).",
       "authority": "Pin-hygiene correction only. Corrects the recorded state of a prior change set; grants nothing."
+    },
+    {
+      "date_utc": "2026-09-28",
+      "program_id": "CH-freeze-pin-drift-restore (Stage 0a)",
+      "source_sha_refresh": "market_ontology.yaml, active_config, feature_pipeline.py, feature_schema.py, registry_init.py",
+      "why_this_refresh_exists": "tests/test_feature_layer_freeze.py::test_source_file_pins_match was red (market_ontology.yaml pinned 1c0fd344... vs live 132c9296...); the other 4 pins had also drifted but were masked by the assertion's first-failure short-circuit. Restored under the policy's own 'Bugfixes that restore the pin after accidental drift' allowance (feature-layer-mutation-freeze-2026-07-20.md:181) -- no waiver needed for the restoration itself, but each drift is attributed below per the policy's own waiver-log discipline rather than absorbed silently. Also corrects a standing falsehood: active_config/active_config_version pinned configs/production/v2_multi_2026_04.json while configs/production/ACTIVE_VERSION (the file this pin's own vector-regression test resolves its config through) has pointed at v2_htfcrt_2026_08 since commit 218b9ae2 (2026-09-09; CORRECTED 2026-09-28: was written as 'since 2026-08-15', which is when the config was authored/promoted -- the pointer flip itself is only verified committed 2026-09-09) -- the pin was asserting an active config that was not, in fact, active. Repointed by explicit user decision 2026-09-28.",
+      "attribution_measured": {
+        "_doc": "Measured via `git diff 1890785d -- <file>` (1890785d = 'land remaining 2026-09-16 workstreams', the commit nearest the pin's last recorded refresh) against the current working tree, content-diff (autocrlf-safe; raw sha256_file() on-disk hashing -- used by both this entry and the test itself -- differs from git's LF-normalized blob hashing, so blob-hash bisection was abandoned in favor of `git diff`, which is CRLF-safe). Each diff hunk was read in full, not summarized from an external report.",
+        "market_ontology.yaml": {
+          "pinned_before": "1c0fd344d28e28e0ea09d1a7a5f79eb43216394892397d6485042bcee6846c63",
+          "live_after": "132c92962abf97336ba943aba153785359a7b0ad2605dcbcb82f03a286e74ab9",
+          "diff_content": "5 hunks (CORRECTED 2026-09-28: was written as 3), verified: (1) :670-671 prose fix, `body_ratio >= 0.70` corrected to `body_ratio >= params.body_ratio_min (0.65 on active v2_htfcrt_2026_08)` -- commit 6b0ba386 EPIC-83 Wave 1 per its own subject line; (2) 3x execution_behaviours `version: 1 -> 2` + a `notes:` addendum on each (SEM-015, SEM-017, SEM-018; CORRECTED 2026-09-28: was written as 'SEM-017/018/019-family'), citing CH-measurement-basis-declaration; (3) new additive node `measurement_basis_declaration` / SEM-038 (ValidationRule, `can_compare` 5-axis basis comparator, own manifest docs/governance/build_manifests/CH-measurement-basis-declaration.impact.json). None of the 3 hunks touch a `derived_metrics`/`FM-0xx`/`active:`/`impl:` line for any CANONICAL_FEATURES member -- SEM-038's own `formula:` field defines `can_compare()`, a row-comparability predicate over research-measurement metadata, not a feature-value derivation."
+        },
+        "feature_pipeline.py": {
+          "pinned_before": "466180716eb9ac8694b80bde4ba9ab642bd21c5a067f14ba0af53db1719cb60a",
+          "live_after": "67377f36ff021e98364bfbbe1a3f49823bbcb06ef3aa9872efe91133b4a4505a",
+          "diff_content": "6 hunks (CORRECTED 2026-09-28: was written as 5), every one a docstring/comment: '39/v4.0' -> '48/v6.0' dim-count updates and a v5.0->v6.0 schema-version reference (F-107 rename). Zero code-line changes. Verified by reading the full diff, not inferred from the hunk count."
+        },
+        "feature_schema.py": {
+          "pinned_before": "c354e1381a6a66546e44ea59a09e22a6979947292203da9dc12124b8d2f22eb8",
+          "live_after": "702ae29c4883e5d1b0e286939f74e194594d5160b0f5eec9a113ab5f81f3897d",
+          "diff_content": "3 hunks: 2x comment '48 (schema v5.0)' -> '48 (schema v6.0)'; 1x docstring-example fix `hash=FEATURE_ORDER_HASH` -> `feature_order_hash=FEATURE_ORDER_HASH` (matches the real registrar kwarg name). Zero code-line changes."
+        },
+        "registry_init.py": {
+          "pinned_before": "642ca6a2ca372ece98e9bd5a7763e9f0c206c9ea87e69f36816bdb51b28040cd",
+          "live_after": "6cb4d8403b766fbbf98c840395283c91d7909930c103f84d5a54988a9f7b931e",
+          "diff_content": "Real code, commit dbd88a49 'STORY-83.10: CRTStateResolver reads shared thresholds from CRTConfig (P-1)' per its own subject line: adds a new `crtconfig_read` member to `_VALID_THRESHOLD_REF_KINDS`, extends `validate_crt_threshold_refs()`'s orphan/fabricated-ref checks to cover it, and adds a 'must be absent from thresholds:' rule for that kind. This is a genuine mutation of frozen surface #3 (src/features/registry/**) -- validator-only, no feature/formula/CANONICAL_FEATURES change, but never previously recorded against this pin. Recorded here as the attribution this entry exists to provide."
+        }
+      },
+      "active_config_repoint": {
+        "_doc": "Not a drift restoration -- a declared truth-conflict resolution (CLAUDE.md 6.2 rule 3). The pin's active_config field named v2_multi_2026_04.json, which is neither ACTIVE_VERSION's target nor the file test_xauusd_window_vector_regression's own FeaturePipeline config resolution walks through (get_prod_section -> PROD_VERSION -> ACTIVE_VERSION -> v2_htfcrt_2026_08.json, pointer flip committed 218b9ae2 2026-09-09; CORRECTED 2026-09-28: was 'verified 2026-08-15 by CH-htfcrt-parent-candle-smc-v1's own promotion', which is when the config was promoted, not when the ACTIVE_VERSION pointer commit landed). Repointed to configs/production/v2_htfcrt_2026_08.json (sha256 4f35cdb957997b050feb81b91513d6c6116d45030d2d870855706edbab2c9b3b); active_config_version and prod_version_constant top-level fields updated to v2_htfcrt_2026_08 to match; tests/test_feature_layer_freeze.py:63 updated in the same change set.",
+        "authority": "Truth-conflict resolution only. No ACTIVE_VERSION change (it already read v2_htfcrt_2026_08 before this entry) -- the pin's own field was the stale artifact, not the runtime."
+      },
+      "value_neutrality": "All 5 pinned-file diffs read in full (not summarized from an external audit) before this entry was written. None touches a CANONICAL_FEATURES entry, a derived_metrics formula, an `active:`/`impl:` binding, or feature_schema.py's SCHEMA_HASH/FEATURE_ORDER_HASH constants. Bounded mechanically: the full 8-test tests/test_feature_layer_freeze.py suite is re-run green in this change set's own verification, with test_xauusd_window_vector_regression's vector_sha256 UNCHANGED from the value already recorded in this pin's own `schema`/`regression_benchmarks` blocks.",
+      "authority": "Pin-hygiene restoration + one declared truth-conflict resolution (active_config repoint). Grants no activation authority, no G001, no ACTIVE_VERSION change, no CRT/feature closure reopening. Standalone change set (Stage 0a); the D1/SEM-021 displacement-origin-kill TruthConflict and the EPIC-84 config-missing-key lanes are separate, subsequent work."
     }
   ],
   "runtime_benchmarks": {
