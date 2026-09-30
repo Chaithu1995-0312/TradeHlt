@@ -2489,6 +2489,18 @@ _BOS_IDX = _FEATURE_INDEX_MAP["break_of_structure"]
 _TREND_BIAS_IDX = _FEATURE_INDEX_MAP["trend_bias"]
 
 
+def _crt_direction_to_int(direction: Direction) -> Optional[int]:
+    """Map CRTEngine's string-valued Direction enum to EngineRunner's signed-int
+    convention (1=LONG, -1=SHORT, None=no direction). `int(direction.value)` is a
+    latent bug — Direction.value is "LONG"/"SHORT"/"NONE", not a number — see
+    task_d0134aa6 / assistant_project.md 2026-09-30."""
+    if direction == Direction.LONG:
+        return 1
+    if direction == Direction.SHORT:
+        return -1
+    return None
+
+
 class BacktestRunner:
     def __init__(self, bt_config: BacktestConfig, csv_path: str = None,
                  skip_features: bool = False, overrides: dict | None = None):
@@ -3910,19 +3922,11 @@ class BacktestRunner:
                             _feat_map_er["_data_integrity"] = "real"
                         # Pass CRT-determined direction so ultron_gate doesn't reject
                         # with "<regime>_no_direction" when breakout/trap are tied.
-                        _crt_dir = engine.state.direction
-                        if _crt_dir is not None:
-                            _dir_int = getattr(_crt_dir, "value", _crt_dir)
-                            try:
-                                _feat_map_er["direction"]    = int(_dir_int)
-                                _feat_map_er["signal_dir"]   = int(_dir_int)
-                                _feat_map_er["trade_direction"] = int(_dir_int)
-                            except Exception as _dir_cast_exc:
-                                self.log.debug(
-                                    "EngineRunner direction feature cast failed at candle %d "
-                                    "(non-fatal, _feat_map_er direction left unset): %s",
-                                    candle_idx, _dir_cast_exc,
-                                )
+                        _dir_int = _crt_direction_to_int(engine.state.direction)
+                        if _dir_int is not None:
+                            _feat_map_er["direction"]       = _dir_int
+                            _feat_map_er["signal_dir"]      = _dir_int
+                            _feat_map_er["trade_direction"] = _dir_int
                         # ── StrategyOrchestrator consensus (runs once per candle) ──
                         _strat_consensus_score = -1.0
                         _strat_consensus_dir = 0
