@@ -44,6 +44,11 @@ def _full_backtest_cfg() -> dict:
         "gap_reset_enabled": True,
         "gap_reset_minutes": 120,
         "event_flush_every": 100,
+        "htf_clock_basis": "count",
+        "htf_reset_exempt_sweep": False,
+        "sl_anchor": "displacement",
+        "session_window_basis": "broker_static",
+        "timeframe": "M15",
     }
 
 
@@ -79,13 +84,13 @@ def test_missing_any_cost_knob_raises(monkeypatch, knob):
     cfg.pop(knob)
     monkeypatch.setattr(_pc, "get_prod_section", lambda section: cfg)
     with pytest.raises(KeyError):
-        b.BacktestConfig.from_prod_config()
+        b.BacktestConfig.from_prod_config("XAUUSD", 0.01, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
 
 
 def test_full_cfg_derives_single_valued_id(monkeypatch):
     cfg = _full_backtest_cfg()
     monkeypatch.setattr(_pc, "get_prod_section", lambda section: cfg)
-    bc = b.BacktestConfig.from_prod_config()
+    bc = b.BacktestConfig.from_prod_config("XAUUSD", 0.01, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     assert bc.cost_model_id == b.BACKTEST_COST_MODEL_ID == "backtest_g1g2_v2"
     assert bc.cost_model_params_hash == _expected_hash(True, 0.1, 42, 0.0002)
     assert len(bc.cost_model_params_hash) == 16

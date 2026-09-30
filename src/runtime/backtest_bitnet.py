@@ -238,7 +238,8 @@ def run_backtest(
     # ──────────────────────────────────────────────────────────────────────────────────
 
     # ── Load BitNet runner ───────────────────────────────────────────────────────────
-    _er_section = config.get("engine_runner") or {}
+    from config_layer.strict_config import require_section
+    _er_section = require_section(config, "engine_runner", consumer="backtest_bitnet")  # EPIC-84
     model_path = _er_section.get("model_path")
     if not model_path:
         raise KeyError(

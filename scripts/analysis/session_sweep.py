@@ -110,7 +110,7 @@ def _run_one(crt_cfg, instrument: str, csv_path: str, output_dir: str, label: st
     mirroring auto_tuner_multi._run_single_instrument so OOS semantics match the tuner.
     annualized_return_pct (and thus Expected Monthly ROI) is span-aware: it is computed
     from the candle count actually streamed, so IS and OOS rates are comparable."""
-    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
+    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg, instrument=instrument, pip_size=MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.0001), scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     cfg.instrument = instrument
     cfg.pip_size   = MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.0001)
 

@@ -78,7 +78,7 @@ def main() -> int:
         raise SystemExit(f"missing CSV: {CSV}")
 
     crt_cfg = load_prod_config_from_registry("v2_multi_2026_04", INSTRUMENT)
-    bt_cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
+    bt_cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg, instrument=INSTRUMENT, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     bt_cfg.instrument = INSTRUMENT
 
     loader = CandleLoader(str(CSV), INSTRUMENT)

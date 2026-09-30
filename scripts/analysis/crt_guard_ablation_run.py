@@ -157,7 +157,7 @@ def run_arm(
     os.environ["BACKTEST_ENGINE_GATE"] = "0"
     base = load_prod_config_from_registry("v2_multi_2026_04", instrument)
     crt_cfg = replace(base, **overrides) if overrides else base
-    bt_cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
+    bt_cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg, instrument=instrument, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     bt_cfg.instrument = instrument
 
     arm_out = out_dir / arm_id

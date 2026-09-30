@@ -69,7 +69,7 @@ _MAXDD_CEIL     = 1.25     # maxDD <= 125% of V0
 
 
 def _run_one(crt_cfg, instrument: str, csv_path: str, output_dir: str, label: str) -> dict:
-    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
+    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg, instrument=instrument, pip_size=MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.0001), scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     cfg.instrument = instrument
     cfg.pip_size = MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.0001)
     loader = CandleLoader(csv_path, instrument)

@@ -63,7 +63,7 @@ def load_crt_and_backtest_config():
     from runtime.backtest_v2 import load_prod_config_from_registry
 
     crt_cfg = load_prod_config_from_registry(PROD_VERSION, "XAUUSD")
-    bt_cfg = BacktestConfig.from_prod_config(instrument="XAUUSD", crt_config=crt_cfg)
+    bt_cfg = BacktestConfig.from_prod_config(instrument="XAUUSD", crt_config=crt_cfg, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     return bt_cfg, crt_cfg
 
 

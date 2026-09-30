@@ -117,7 +117,7 @@ def _run_backtest(
     """
     base = load_prod_config_from_registry(PROD_VERSION, instrument)
     crt = ConfigBuilder.from_existing(instrument, base)
-    cfg = BacktestConfig.from_prod_config(instrument=instrument, crt_config=crt)
+    cfg = BacktestConfig.from_prod_config(instrument=instrument, crt_config=crt, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     if htf_clock_basis is not None:
         if htf_clock_basis not in ("count", "calendar"):
             raise ValueError(f"htf_clock_basis override must be 'count' or 'calendar', got {htf_clock_basis!r}")

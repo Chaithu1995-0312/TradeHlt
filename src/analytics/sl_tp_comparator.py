@@ -606,7 +606,7 @@ def run_comparison_from_backtest(
     # Import here to avoid circular deps at module level
     from runtime.backtest_v2 import BacktestConfig, BacktestRunner, CandleLoader
 
-    bt_cfg     = BacktestConfig.from_prod_config(instrument=instrument)
+    bt_cfg     = BacktestConfig.from_prod_config(instrument=instrument, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     tmp_dir    = "results/sl_tp_comparison_tmp"
     loader     = CandleLoader(csv_path, instrument)
     runner     = BacktestRunner(bt_cfg, csv_path=csv_path)

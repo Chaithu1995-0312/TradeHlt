@@ -138,6 +138,9 @@ def run_crt_occupancy_feeder(
             instrument=instrument,
             pip_size=pip,
             crt_config=crt_cfg,
+            scorer_mode="calibrated",
+            allow_router_crt_config=False,
+            strategy_id="",
         )
         cfg.instrument = instrument
         cfg.pip_size = pip

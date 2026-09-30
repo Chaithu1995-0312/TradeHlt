@@ -84,7 +84,7 @@ _OPTIONAL_KEYS = ("volume", "swing_high", "swing_low", "higher_high", "lower_low
 def _run_backtest(instrument: str, csv: str, out_dir: Path):
     base = load_prod_config_from_registry(PROD_VERSION, instrument)
     crt = ConfigBuilder.from_existing(instrument, base)
-    cfg = BacktestConfig.from_prod_config(instrument=instrument, crt_config=crt)
+    cfg = BacktestConfig.from_prod_config(instrument=instrument, crt_config=crt, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     loader = CandleLoader(csv, instrument)
     runner = BacktestRunner(cfg, csv_path=csv)
     m = runner.run(loader.stream(), loader.count(), str(out_dir))

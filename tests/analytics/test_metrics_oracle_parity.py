@@ -40,7 +40,7 @@ def _run_capped(n: int):
 
     # P2 F-057: PRODUCTION_MERGED required on BacktestRunner product path.
     crt_cfg = load_prod_config_from_registry(get_active_version(), _INSTRUMENT)
-    cfg = BacktestConfig.from_prod_config(instrument=_INSTRUMENT, crt_config=crt_cfg)
+    cfg = BacktestConfig.from_prod_config(instrument=_INSTRUMENT, crt_config=crt_cfg, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     loader = CandleLoader(str(_CSV), _INSTRUMENT)
     out_dir = tempfile.mkdtemp(prefix="oracle_parity_")
     runner = BacktestRunner(cfg, csv_path=str(_CSV))

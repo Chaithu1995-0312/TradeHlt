@@ -97,7 +97,7 @@ def test_backtest_config_default_and_validation(monkeypatch):
         base.pop("sl_anchor", None)
         base.update(extra)
         monkeypatch.setattr(pc, "get_prod_section", lambda n: base if n == "backtest" else {})
-        return BacktestConfig.from_prod_config("XAUUSD", crt_config=crt_config_for_test())
+        return BacktestConfig.from_prod_config("XAUUSD", crt_config=crt_config_for_test(), pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
 
     assert _cfg().sl_anchor == "displacement"
     assert _cfg(sl_anchor="sweep_extreme").sl_anchor == "sweep_extreme"

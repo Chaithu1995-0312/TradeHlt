@@ -54,7 +54,7 @@ def _run_one(csv_path: str, instrument: str, env_val: str, tmp_dir: str) -> dict
     prev = os.environ.get("TRUST_INTRABAR_TOUCH")
     os.environ["TRUST_INTRABAR_TOUCH"] = env_val
     try:
-        bt_cfg = BacktestConfig.from_prod_config(instrument=instrument)
+        bt_cfg = BacktestConfig.from_prod_config(instrument=instrument, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
         loader = CandleLoader(csv_path, instrument)
         n = loader.count()
         runner = BacktestRunner(bt_cfg, csv_path=csv_path)

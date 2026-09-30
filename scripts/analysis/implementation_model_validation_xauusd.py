@@ -363,7 +363,7 @@ def validate_crt(enriched: pd.DataFrame, reports: List[ModelReport]) -> np.ndarr
 
     try:
         crt_cfg = load_prod_config_from_registry(PROD_VERSION, INSTRUMENT)
-        bt_cfg = BacktestConfig.from_prod_config(instrument=INSTRUMENT, crt_config=crt_cfg)
+        bt_cfg = BacktestConfig.from_prod_config(instrument=INSTRUMENT, crt_config=crt_cfg, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
         engine = CRTEngine.from_production(crt_cfg)
         r.loaded = True
         r.load_detail = {
