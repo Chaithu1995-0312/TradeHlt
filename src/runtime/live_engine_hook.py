@@ -22,8 +22,10 @@ from core.gate_intelligence import compute_crt_levels
 from engines.live_engine import LiveEngine, LiveEngineConfig
 from config_layer.execution_planner import ExecutionPlannerV1_2
 from config_layer.production_config import get_prod_metadata, get_prod_section
+from core.position_sizing import instrument_spec, size_trade_lots
 from core.ultron_risk_gate import UltronRiskGate
 from core.ultron_risk_gate_wrapper import UltronRiskGateWrapper
+from config_layer.strict_config import ConfigKeyMissingError
 from utils.logging_config import get_flow_logger
 
 try:
@@ -334,6 +336,31 @@ def _load_engine_config() -> dict:
             "Add it to the active production config (configs/production/ACTIVE_VERSION)."
         )
 
+    # D11 (2026-09-30): the sizing bridge (core.position_sizing.size_trade_lots) needs
+    # the top-level instrument_specs section + the deposit-currency conversion rate.
+    # Carried through engine_config so both UltronRiskGate's construction AND the
+    # position_size_hint computation below use the SAME declared values.
+    instrument_specs_cfg = metadata.get("instrument_specs")
+    if not isinstance(instrument_specs_cfg, dict):
+        raise RuntimeError(
+            "LIVE_HOOK: 'instrument_specs' section missing from production config. "
+            "Add it to the active production config (configs/production/ACTIVE_VERSION) -- "
+            "required by the sizing bridge (D11)."
+        )
+    capital_mgmt_cfg = metadata.get("capital_management")
+    if not isinstance(capital_mgmt_cfg, dict):
+        raise RuntimeError(
+            "LIVE_HOOK: 'capital_management' section missing from production config. "
+            "Add it to the active production config (configs/production/ACTIVE_VERSION)."
+        )
+    usd_to_inr_rate = capital_mgmt_cfg.get("usd_to_inr_rate")
+    if usd_to_inr_rate is None:
+        raise KeyError(
+            "Required key 'usd_to_inr_rate' missing from capital_management config -- "
+            "required by the sizing bridge (D11). "
+            "Add it to the active production config (configs/production/ACTIVE_VERSION)."
+        )
+
     # Normalize session strings in allowed_sessions
     raw_sessions = engine_cfg.get("allowed_sessions", [])
     if isinstance(raw_sessions, list) and raw_sessions:
@@ -382,6 +409,8 @@ def _load_engine_config() -> dict:
         )
     merged["gate_intelligence"] = gate_cfg
     merged["crt_engine"] = crt_cfg
+    merged["instrument_specs"] = instrument_specs_cfg
+    merged["usd_to_inr_rate"] = float(usd_to_inr_rate)
 
     # Initialize FeatureMonitor from config
     if _MONITOR_AVAILABLE and FeatureMonitor is not None:
@@ -808,7 +837,20 @@ class HookedLiveEngine(LiveEngine):
         _mt5_bridge = _get_mt5()
         if _mt5_bridge is not None:
             try:
-                _lot = float(ultron_result.get("final_position_size", 0.01))
+                # D11 (2026-09-30): no default lot. final_position_size is now set by
+                # UltronRiskGate on every approve decision (the only way this method's
+                # caller reaches here, per _may_submit); a missing value means the
+                # approve/size contract broke somewhere upstream, and the correct
+                # response is to refuse to guess a size, not silently send 0.01 lots.
+                _lot_raw = ultron_result.get("final_position_size")
+                if _lot_raw is None:
+                    logger.error(
+                        "LIVE_HOOK: MT5 order skipped -- approve decision carried no "
+                        "final_position_size (execution_id=%s). Refusing to substitute "
+                        "a default lot size.", trade_plan.get("execution_id"),
+                    )
+                    return None
+                _lot = float(_lot_raw)
                 _act = str(trade_plan.get("trade_intent", "BUY"))
                 _sl_p = float(trade_plan.get("stop_loss", trade_plan.get("sl_price", 0.0)))
                 _tp_p = float(trade_plan.get("take_profit_1", trade_plan.get("tp_price", 0.0)))
@@ -1110,11 +1152,36 @@ class HookedLiveEngine(LiveEngine):
             trade_plan["rr_source"] = "sl_tp_geometry"
             trade_plan["risk_percent"]     = float(_require_cfg(exec_planner_cfg, "risk_percent", "execution_planner"))
             _risk_dist = _crt["risk_dist"]
+            # D11 (2026-09-30): account_balance is the DEPOSIT currency (INR). The hint
+            # is now denominated in LOTS via the SAME bridge UltronRiskGate itself calls,
+            # so the two can never disagree in units. Unlike Ultron's own Check 7, a
+            # sizing-context/spec problem here does not fail the trade closed -- it just
+            # leaves the hint unset (None), which UltronRiskGate treats as "compute the
+            # size yourself"; Ultron's own strict sizing is still the authoritative gate.
             _balance   = float(trade_data["account_balance"])
-            trade_plan["position_size_hint"] = (
-                round((_balance * trade_plan["risk_percent"] / 100.0) / _risk_dist, 4)
-                if _risk_dist > 0 else None
-            )
+            _hint_lots = None
+            if _risk_dist > 0:
+                _risk_capital_inr = _balance * trade_plan["risk_percent"] / 100.0
+                try:
+                    _spec = instrument_spec(
+                        engine_config.get("instrument_specs"), trade_plan["symbol"],
+                        consumer="live_engine_hook.position_size_hint",
+                    )
+                    _hint_lots, _hint_reason = size_trade_lots(
+                        _risk_capital_inr,
+                        float(engine_config.get("usd_to_inr_rate")),
+                        _risk_dist,
+                        float(_spec["contract_size"]), float(_spec["lot_step"]),
+                        float(_spec["lot_min"]), float(_spec["lot_max"]),
+                    )
+                except (ConfigKeyMissingError, TypeError) as exc:
+                    logger.warning(
+                        "LIVE_HOOK: position_size_hint sizing bridge unavailable for "
+                        "%r (%s) -- leaving hint unset; UltronRiskGate performs its own "
+                        "authoritative sizing.", trade_plan.get("symbol"), exc,
+                    )
+                    _hint_lots = None
+            trade_plan["position_size_hint"] = _hint_lots
             logger.info(
                 "CRT levels: sl=%.5f tp1=%.5f tp2=%.5f risk_dist=%.5f rr_tp1=%.4f rr_tp2=%.4f (D/SL-TP)",
                 trade_plan["stop_loss"],
@@ -1178,7 +1245,11 @@ class HookedLiveEngine(LiveEngine):
                 # by regime factor before delegating unconditionally to gate.evaluate()).
                 # regime is set by EngineRunner.run() Step 6/7 and is always present.
                 _regime = str(engine_outputs.get("regime", "neutral"))
-                gate = self._ultron_gate if self._ultron_gate is not None else UltronRiskGate(ultron_cfg)
+                gate = self._ultron_gate if self._ultron_gate is not None else UltronRiskGate(
+                    ultron_cfg,
+                    instrument_specs=engine_config.get("instrument_specs"),
+                    usd_inr_rate=engine_config.get("usd_to_inr_rate"),
+                )
                 wrapper = UltronRiskGateWrapper(
                     gate,
                     regime_factors=ultron_cfg.get("regime_factors"),  # from ultron_risk_gate config

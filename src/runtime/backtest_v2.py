@@ -37,6 +37,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pandas as pd  # top-level so tests can monkeypatch backtest_v2.pd
 
+from core.position_sizing import (
+    has_instrument_spec,
+    instrument_spec,
+    legacy_oz_size_units,
+    size_trade_lots,
+    usd_quote_pnl_inr,
+)
 from features.feature_schema import CANONICAL_FEATURES
 from data_ingestion.ohlcv_schema import (
     DatasetIntegrityError,
@@ -611,9 +618,22 @@ class CapitalCurve:
     """
     Tracks equity curve tick-by-tick.
     Computes: peak equity, drawdown in both R and % terms.
+
+    D11 (2026-09-30): this rail is INDEPENDENT of UltronRiskGate (F-103, confirmed —
+    backtest never calls it) so it resolves its own sizing basis at construction via
+    the SAME shared bridge (core.position_sizing). An instrument with a declared
+    ``instrument_specs`` entry AND a usable ``usd_inr_rate`` books an honest INR money
+    curve (``sizing_basis="lots_inr"``); an instrument with neither keeps the PRE-D11
+    ounce math byte-identical (``sizing_basis="legacy_oz"``) so existing corpora are
+    unaffected until their instrument is explicitly declared.
     """
 
-    def __init__(self, initial_capital: float, risk_pct: float, compounding: bool):
+    def __init__(
+        self, initial_capital: float, risk_pct: float, compounding: bool, *,
+        instrument: str | None = None,
+        instrument_specs: dict | None = None,
+        usd_inr_rate: float | None = None,
+    ):
         self.initial_capital  = initial_capital
         self.current_capital  = initial_capital
         self.risk_pct         = risk_pct
@@ -622,28 +642,58 @@ class CapitalCurve:
         self.equity_curve:    list[float] = [initial_capital]
         self._log = logging.getLogger("CRT.CapitalCurve")
 
+        self.instrument = instrument
+        self._usd_inr_rate = usd_inr_rate
+        self._spec: dict | None = None
+        self.sizing_basis = "legacy_oz"
+        if instrument and usd_inr_rate and has_instrument_spec(instrument_specs, instrument):
+            self._spec = instrument_spec(instrument_specs, instrument, consumer="CapitalCurve")
+            self.sizing_basis = "lots_inr"
+        elif instrument:
+            self._log.warning(
+                "CapitalCurve: no declared instrument_specs entry for %r (or no "
+                "usd_inr_rate) -- keeping pre-D11 ounce math (sizing_basis=legacy_oz). "
+                "This run's capital curve is NOT the honest INR conversion.", instrument,
+            )
+
     @property
     def current_risk_amount(self) -> float:
-        """Dollar amount at risk per trade (respects compounding)."""
+        """Amount at risk per trade in the curve's own currency (respects compounding)."""
         base = self.current_capital if self.use_compounding else self.initial_capital
         return base * self.risk_pct
 
     def position_size(self, entry: float, sl: float, pip_size: float) -> float:
         """
-        Lot size (units) to risk exactly `current_risk_amount` on this trade.
-        risk_amount = position_size × |entry - sl|
+        Size to risk exactly `current_risk_amount` on this trade.
+
+        With a declared instrument spec: broker LOTS via the shared sizing bridge
+        (``size_trade_lots`` — floors to the lot step, rejects below lot_min to 0.0,
+        never rounds up). Without one: the pre-D11 raw-unit math, unchanged.
         """
         risk_distance = abs(entry - sl)
         if risk_distance == 0:
             return 0.0
-        return self.current_risk_amount / risk_distance
+        if self._spec is not None:
+            lots, _reason = size_trade_lots(
+                self.current_risk_amount, float(self._usd_inr_rate), risk_distance,
+                float(self._spec["contract_size"]), float(self._spec["lot_step"]),
+                float(self._spec["lot_min"]), float(self._spec["lot_max"]),
+            )
+            return lots if lots is not None else 0.0
+        return legacy_oz_size_units(self.current_risk_amount, risk_distance)
 
     def apply_trade(self, pnl_per_unit: float, position_size: float) -> float:
         """
         Record a closed trade. Returns new capital.
         pnl_per_unit: (exit_fill - entry_fill) × direction_sign, per unit held.
         """
-        dollar_pnl = pnl_per_unit * position_size
+        if self._spec is not None:
+            dollar_pnl = usd_quote_pnl_inr(
+                pnl_per_unit, float(self._spec["contract_size"]), position_size,
+                float(self._usd_inr_rate),
+            )
+        else:
+            dollar_pnl = pnl_per_unit * position_size
         self.current_capital += dollar_pnl
         self.peak_capital = max(self.peak_capital, self.current_capital)
         self.equity_curve.append(self.current_capital)
@@ -3094,10 +3144,28 @@ class BacktestRunner:
             self.cfg.slippage_atr_fraction if self.cfg.slippage_enabled else 0.0,
             self.cfg.slippage_seed,
         )
+        # D11 (2026-09-30): sizing-bridge context for this instrument, resolved once
+        # here (not inside CapitalCurve, which stays a plain arithmetic tracker with
+        # no config-loading of its own). Absence is an explicit, logged fallback to
+        # the pre-D11 ounce math (see CapitalCurve's own docstring) -- NOT a silent
+        # default: only instruments with a declared instrument_specs entry AND a
+        # usable usd_inr_rate switch to the honest INR conversion.
+        from config_layer.production_config import get_prod_section as _gps_sizing
+        try:
+            _instrument_specs_cfg = _gps_sizing("instrument_specs")
+        except RuntimeError:
+            _instrument_specs_cfg = None
+        try:
+            _usd_inr_rate_cfg = float(_gps_sizing("capital_management")["usd_to_inr_rate"])
+        except (RuntimeError, KeyError, TypeError):
+            _usd_inr_rate_cfg = None
         cap     = CapitalCurve(
             self.cfg.initial_capital,
             self.cfg.risk_pct_per_trade,
             self.cfg.use_compounding,
+            instrument=self.cfg.instrument,
+            instrument_specs=_instrument_specs_cfg,
+            usd_inr_rate=_usd_inr_rate_cfg,
         )
         journal = TradeJournal(
             self.cfg.instrument, self.cfg.pip_size, slip, cap,

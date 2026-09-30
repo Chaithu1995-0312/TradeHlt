@@ -21,10 +21,13 @@ Architecture position:
 
 Design principles:
     - Deterministic: same inputs always produce same output.
-    - No external dependencies (only datetime, typing).
+    - No external dependencies (only datetime, typing) + the sizing bridge.
     - Pure class with config injected at construction.
     - Hard-reject on any limit breach; no partial overrides.
     - Separation of concerns: position sizing is FINAL here, not in planner.
+    - Sizing is risk-based in the DEPOSIT currency (INR) and emits broker LOTS via
+      core.position_sizing.size_trade_lots (D11, 2026-09-30). Below the broker's
+      minimum lot the trade is REJECTED ("size_below_min_lot") — never rounded up.
 """
 
 from __future__ import annotations
@@ -40,6 +43,17 @@ from config_layer.strict_config import (
     missing_keys,
     missing_reason,
     require_all,
+)
+# D11 (2026-09-30): sizing no longer happens here. The ONE sizing bridge is
+# core.position_sizing.size_trade_lots — Ultron's final size, the live hook's
+# position_size_hint and the backtest CapitalCurve all call it, so the three rails
+# cannot disagree in units. `final_position_size` therefore means LOTS, not ounces.
+from core.position_sizing import (
+    REASON_SIZE_BELOW_MIN_LOT,  # noqa: F401  (re-exported for callers/tests)
+    SPEC_SECTION,
+    floor_to_lot_step,
+    instrument_spec,
+    size_trade_lots,
 )
 
 logger = get_flow_logger("ULTRON_RISK_GATE")
@@ -70,7 +84,9 @@ class UltronRiskGate:
         4. Kill switch        — daily loss limit breached?
         5. Portfolio exposure — would exceed max_portfolio_risk_pct?
         6. SL distance        — entry == SL? (divide-by-zero guard)
-        7. Position sizing    — compute final_position_size
+        7. Position sizing    — compute final_position_size in BROKER LOTS
+                                (risk-INR -> USD -> units -> lots; below the broker
+                                minimum lot REJECTS with "size_below_min_lot")
 
     Usage
     -----
@@ -109,19 +125,46 @@ class UltronRiskGate:
         "open_positions",
     )
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        config: dict[str, Any],
+        *,
+        instrument_specs: dict[str, Any] | None = None,
+        usd_inr_rate: float | None = None,
+    ) -> None:
         """
         Parameters
         ----------
         config : dict
             The ``ultron_risk_gate`` config section. Every key in ``_REQUIRED_KEYS``
             must be present; a missing key raises ``ConfigKeyMissingError`` naming it.
+        instrument_specs : dict | None
+            The TOP-LEVEL ``instrument_specs`` section (broker contract facts:
+            contract_size / lot_step / lot_min / lot_max). Required to size anything:
+            absent/unresolved -> each trade REJECTS with
+            ``config_key_missing:instrument_specs...`` (never a literal size).
+        usd_inr_rate : float | None
+            The declared ``capital_management.usd_to_inr_rate``. REQUIRED here rather
+            than re-declared in this section. Absent -> per-trade REJECT.
+
+        Construction deliberately does NOT require the two sizing inputs: callers that
+        only exercise non-sizing checks (RR floor, TTL, kill switch, exposure) keep
+        working unchanged, and the sizing step fails closed on its own.
         """
         require_all(
             config, self._REQUIRED_KEYS,
             section_name="ultron_risk_gate", consumer="UltronRiskGate",
         )
         self.config: dict[str, Any] = dict(config)
+        # D11 sizing context (top-level instrument_specs + capital_management rate).
+        # Kept as a plain dict / float; validated per trade so a config regression
+        # REJECTS the trade instead of taking down the engine (STORY-84.2 shape).
+        self._instrument_specs: dict[str, Any] = (
+            dict(instrument_specs) if isinstance(instrument_specs, dict) else {}
+        )
+        self._usd_inr_rate: float | None = (
+            None if usd_inr_rate is None else float(usd_inr_rate)
+        )
         # FRAG-1 fix: load persisted kill-switch state from disk so the gate
         # cannot be bypassed across instantiations by resetting daily_loss_pct.
         self._kill_switch_tripped: bool = self._load_ks_state()
@@ -200,7 +243,7 @@ class UltronRiskGate:
         dict with keys:
             decision           : "approve" | "reject"
             execution_id       : str
-            final_position_size: float  (0.0 on reject)
+            final_position_size: float  (BROKER LOTS; 0.0 on reject)
             risk_reason        : str
             portfolio_state    : dict with updated total_risk and open_positions
         """
@@ -353,23 +396,88 @@ class UltronRiskGate:
                 )
                 return self._reject(trade, "sl_distance_too_tight", portfolio_state)
 
-        # ── Check 7: Position sizing (final) ──────────────────────────────────
-        balance = float(portfolio_state["account_balance"])
-        risk_usd = balance * (allowed_risk / 100.0)
-        max_size_by_risk = risk_usd / risk_per_unit
+        # ── Check 7: Position sizing (final, in BROKER LOTS) ──────────────────
+        # D11 (2026-09-30): the risk budget is in the DEPOSIT currency (INR). It is
+        # converted USD-side, turned into instrument units and then into LOTS by the
+        # ONE shared bridge — the same function the live hook's position_size_hint and
+        # the backtest CapitalCurve call. A budget that cannot buy the broker's
+        # minimum lot REJECTS this trade; it is never rounded up.
+        balance = float(portfolio_state["account_balance"])   # INR (deposit currency)
+        risk_capital_inr = balance * (allowed_risk / 100.0)
+        if risk_capital_inr <= 0:
+            return self._reject(trade, "position_size_zero", portfolio_state)
 
+        # `missing_keys` only checks key PRESENCE — self._usd_inr_rate/_instrument_specs
+        # are always present as attributes (possibly None/{}), so it would never catch
+        # an unconfigured gate and Check 7 would crash on float(None) below instead of
+        # rejecting. Check the actual sizing-context values directly.
+        missing_sizing = [
+            name for name, value in (
+                ("usd_inr_rate", self._usd_inr_rate),
+                ("instrument_specs", self._instrument_specs),
+            ) if not value
+        ]
+        if missing_sizing:
+            return self._reject(
+                trade, missing_reason("sizing", missing_sizing), portfolio_state,
+            )
+        instrument = str(trade.get("symbol", trade.get("instrument", "")))
+        try:
+            spec = instrument_spec(
+                self._instrument_specs, instrument, consumer="UltronRiskGate",
+            )
+        except (ConfigKeyMissingError, TypeError) as exc:
+            # An undeclared instrument fails CLOSED: a size is never guessed from a
+            # missing contract spec (F-110). Reason names the exact key.
+            logger.error(
+                "UltronRiskGate: no declared broker contract spec for %r — rejecting "
+                "(sizing is never guessed). %s", instrument, exc,
+            )
+            keys = list(getattr(exc, "missing", ()) or ()) or [instrument or "<instrument>"]
+            return self._reject(trade, missing_reason(SPEC_SECTION, keys), portfolio_state)
+
+        lots, size_reason = size_trade_lots(
+            risk_capital_inr,
+            float(self._usd_inr_rate),
+            risk_per_unit,
+            float(spec["contract_size"]),
+            float(spec["lot_step"]),
+            float(spec["lot_min"]),
+            float(spec["lot_max"]),
+        )
+        if lots is None:
+            logger.warning(
+                "UltronRiskGate: sizing REJECT (%s) — execution_id=%s instrument=%s "
+                "risk=%.2f INR (=%.4f USD) stop_distance=%.6f contract_size=%s "
+                "lot_min=%s. Below the broker minimum lot is never rounded up.",
+                size_reason, execution_id, instrument, risk_capital_inr,
+                risk_capital_inr / float(self._usd_inr_rate), risk_per_unit,
+                spec["contract_size"], spec["lot_min"],
+            )
+            return self._reject(
+                trade, size_reason or REASON_SIZE_BELOW_MIN_LOT, portfolio_state,
+            )
+
+        # A caller-supplied hint is a CEILING — it may only REDUCE the size — and it is
+        # denominated in LOTS by the same bridge (live hook: position_size_hint). It is
+        # floored onto the broker's step grid here so a sub-step hint can never be
+        # rounded UP by the venue's own lot rounding.
+        final_size = lots
         hint = trade.get("position_size_hint")
         if hint is not None:
             try:
                 hint = float(hint)
-                final_size = min(hint, max_size_by_risk)
             except (TypeError, ValueError):
-                final_size = max_size_by_risk
-        else:
-            final_size = max_size_by_risk
-
-        if final_size <= 0:
-            return self._reject(trade, "position_size_zero", portfolio_state)
+                hint = None
+            if hint is not None:
+                if hint <= 0:
+                    return self._reject(trade, "position_size_zero", portfolio_state)
+                hint_lots = floor_to_lot_step(hint, float(spec["lot_step"]))
+                if hint_lots < float(spec["lot_min"]):
+                    return self._reject(
+                        trade, REASON_SIZE_BELOW_MIN_LOT, portfolio_state,
+                    )
+                final_size = min(hint_lots, lots)
 
         final_size = round(final_size, 6)
 
@@ -412,8 +520,11 @@ class UltronRiskGate:
 # Assumptions
 # -----------
 # - `expires_at` is an ISO-8601 string (with or without timezone suffix).
-# - `account_balance` is in base currency units consistent with `risk_per_unit`.
-# - `position_size_hint` from the planner is denominated in the same units.
+# - `account_balance` is the account's DEPOSIT currency (INR) — NOT the instrument's.
+# - `position_size_hint` from the planner is denominated in LOTS, by the same bridge
+#   (core.position_sizing.size_trade_lots); it can only REDUCE the risk-derived size.
+# - `instrument_specs` (top-level) and `capital_management.usd_to_inr_rate` are the
+#   only brokers/currency facts the sizing step needs, injected at construction.
 # - `total_open_risk_pct` accumulates monotonically until Ultron deducts it.
 #
 # Edge Cases
@@ -421,26 +532,35 @@ class UltronRiskGate:
 # - expires_at missing/None → TTL check skipped (no rejection).
 # - expires_at malformed string → treated as expired → reject.
 # - risk_per_unit == 0 → reject with "invalid_sl_distance".
-# - position_size_hint is None → max_size_by_risk used directly.
-# - position_size_hint is negative → min(negative, max) = negative → reject "position_size_zero".
+# - position_size_hint is None → the risk-derived lot size is used directly.
+# - position_size_hint <= 0 → reject "position_size_zero" (unchanged semantics).
+# - position_size_hint > 0 but below lot_min → reject "size_below_min_lot".
+# - instrument not declared in instrument_specs → reject
+#   "config_key_missing:instrument_specs.<SYM>" (fail closed, never guessed).
+# - usd_inr_rate / instrument_specs not injected → reject "config_key_missing:sizing.*".
 # - allowed_risk capped at max_risk_per_trade_pct but never raises its own reject.
 #
 # Failure Modes
 # -------------
-# - account_balance = 0 → risk_usd = 0 → max_size_by_risk = 0 → reject.
-# - Float precision: risk_per_unit near machine-epsilon could produce huge size.
-#   Mitigation: planner already validates entry != sl; Ultron guards abs() > 0.
+# - account_balance = 0 → risk_capital_inr = 0 → reject "position_size_zero".
+# - Risk budget below the cheapest broker lot → reject "size_below_min_lot"
+#   (measured XAUUSD case: 0.5% of INR 1L with a stop wider than ~5.95 USD).
+# - Float precision: risk_per_unit near machine-epsilon could produce a huge unit
+#   count, but lots are clamped to the declared lot_max.
 # - Clock skew: if system clock is behind the signal clock, a valid signal may
 #   appear expired. Mitigation: accept ±0s margin (caller responsibility).
 #
 # Test Cases (example)
 # --------------------
-# 1. Happy path: trade with rr=2.0, trades_today=3, open_risk=1.5%, balance=10000
-#    → approve, final_size = 10000*0.5%/risk_per_unit
+# 1. Happy path: XAUUSD, balance=100000 INR (1 lakh), risk=0.5%, entry-sl=5.0351,
+#    rate=84, contract_size=100, step/min=0.01, max=10
+#    → risk 500 INR = 5.9524 USD → 1.1822 oz → 0.01 lots → approve size=0.01
 # 2. Expired: expires_at in the past → reject "expired_signal"
 # 3. Over exposure: open_risk=4.8%, allowed_risk=0.5% → 5.3 > 5.0 → reject "over_exposure"
 # 4. Kill switch: daily_loss_pct=3.1 → reject "kill_switch"
-# 5. Hint smaller than max: hint=0.05, max=0.10 → final_size=0.05
+# 5. Hint smaller than the risk size: hint=0.01 lot < 0.02 lot → final_size=0.01
+# 6. Wide stop: same budget with entry-sl=12.0 → 0.0049 lots → reject
+#    "size_below_min_lot" (never rounded up to 0.01)
 #
 # Risks
 # -----
@@ -475,32 +595,47 @@ if __name__ == "__main__":
         "disabled": False, "max_risk_per_trade_pct": 1.0, "max_portfolio_risk_pct": 5.0,
         "max_trades_per_day": 10, "max_daily_loss_pct": 3.0, "min_rr_ratio": 1.5,
         "spread_pips": 0.0, "slippage_pips": 0.0, "pip_size": 0.0001, "min_sl_pips": 0.0,
-    })
+    },
+        # D11: the top-level instrument_specs section + the REUSED
+        # capital_management.usd_to_inr_rate (never re-declared in this section).
+        instrument_specs={
+            "XAUUSD": {
+                "contract_size": 100.0, "lot_step": 0.01, "lot_min": 0.01, "lot_max": 10.0,
+            },
+        },
+        usd_inr_rate=84.0,
+    )
 
     base_trade = {
         "execution_id":        "EX_abc123def456",
-        "entry_price":         100.0,
-        "stop_loss":           98.0,
-        "take_profit_1":       104.0,
+        "symbol":              "XAUUSD",
+        "entry_price":         2600.0,
+        "stop_loss":           2594.9649,   # risk distance 5.0351 USD/oz
+        "take_profit_1":       2610.0702,
         "rr_ratio":            2.0,
         "risk_percent":        0.5,
-        "position_size_hint":  25.0,
+        "position_size_hint":  None,
         "expires_at":          (datetime.now(timezone.utc) + timedelta(seconds=300)).isoformat(),
     }
 
     base_portfolio = {
-        "account_balance":      10000.0,
+        "account_balance":      100000.0,   # INR — the DEPOSIT currency (1 lakh)
         "total_open_risk_pct":  1.0,
         "trades_today":         2,
         "daily_loss_pct":       0.5,
         "open_positions":       2,
     }
 
-    # Test 1: Happy path
+    # The kill switch PERSISTS to disk (logs/kill_switch_state.json). Clear it first so
+    # this harness is re-runnable: a previous run's trip would otherwise block Test 1.
+    gate.reset_kill_switch()
+
+    # Test 1: Happy path — 0.5% of 1 lakh = 500 INR = 5.9524 USD over a 5.0351 stop
+    #         = 1.1822 oz = 0.011822 lots → floored to 0.01 lots.
     r1 = gate.evaluate(base_trade, base_portfolio)
     assert r1["decision"] == "approve", f"Expected approve, got {r1}"
-    assert r1["final_position_size"] > 0
-    print(f"Test 1 PASS: approve, size={r1['final_position_size']}")
+    assert abs(r1["final_position_size"] - 0.01) < 1e-9, r1
+    print(f"Test 1 PASS: approve, size={r1['final_position_size']} LOTS")
 
     # Test 2: Expired signal
     expired_trade = {**base_trade, "expires_at": "2020-01-01T00:00:00+00:00"}
@@ -527,9 +662,23 @@ if __name__ == "__main__":
     print(f"Test 5 PASS: {r5['risk_reason']}")
 
     # Test 6: Invalid SL distance (entry == stop_loss)
-    bad_sl_trade = {**base_trade, "stop_loss": 100.0}
+    bad_sl_trade = {**base_trade, "stop_loss": 2600.0}
     r6 = gate.evaluate(bad_sl_trade, base_portfolio)
     assert r6["decision"] == "reject" and r6["risk_reason"] == "invalid_sl_distance"
     print(f"Test 6 PASS: {r6['risk_reason']}")
+
+    # Test 7: Risk budget below the broker minimum lot → REJECT, never rounded up.
+    #         500 INR = 5.9524 USD over a 12.0 stop = 0.00496 lots < lot_min 0.01.
+    wide_stop_trade = {**base_trade, "stop_loss": 2588.0}
+    r7 = gate.evaluate(wide_stop_trade, base_portfolio)
+    assert r7["decision"] == "reject" and r7["risk_reason"] == "size_below_min_lot", r7
+    print(f"Test 7 PASS: {r7['risk_reason']}")
+
+    # Test 8: An instrument with no declared broker spec fails CLOSED (never guessed).
+    undeclared_trade = {**base_trade, "symbol": "EURUSD"}
+    r8 = gate.evaluate(undeclared_trade, base_portfolio)
+    assert r8["decision"] == "reject"
+    assert r8["risk_reason"] == "config_key_missing:instrument_specs.EURUSD", r8
+    print(f"Test 8 PASS: {r8['risk_reason']}")
 
     print("\n=== All UltronRiskGate tests passed ===")

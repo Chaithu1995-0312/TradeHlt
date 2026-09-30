@@ -736,6 +736,15 @@
     "per_trade_investment_pct": 0.1,
     "sizing_mode": "fixed_investment_inr"
   },
+  "instrument_specs": {
+    "_comment_instrument_specs_2026_09_30": "Broker contract facts per instrument. Declared TOP-LEVEL (parallel to capital_management) because sizing is risk-based in the DEPOSIT currency (INR, user lock 2026-09-30) and must convert INR risk -> USD -> instrument units -> LOTS. The USD/INR rate is deliberately NOT re-declared: it is REUSED from capital_management.usd_to_inr_rate (84.0). Consumer: src/core/position_sizing.py size_trade_lots(), called by UltronRiskGate.evaluate() (final_position_size, now LOTS not ounces), live_engine_hook's position_size_hint, and backtest_v2's CapitalCurve (INR money curve). XAUUSD contract_size 100.0 oz/lot is MEASURED, not assumed: the repo's own MT5 calibration report results/research/xauusd_mt5_cost_calibration/swap_LATEST.json (status MEASURED, 2026-08-06) records contract_size=100.0 and point=0.01. lot_min 0.01 / lot_max 10.0 mirror live_integration.mt5 on this same config (same broker, same values). lot_step 0.01 is NOT broker-measured anywhere in the repo: it mirrors mt5_bridge's round(lot_size, 2) and the MT5 volume-step convention (F-110 UNVERIFIED until mt5.symbol_info.volume_step is recorded). An instrument with NO entry here keeps the pre-2026-09-30 ounce math on the BACKTEST rail only (loud WARNING + summary stamp sizing_basis=legacy_oz) and is REJECTED on the live rail (reason config_key_missing:instrument_specs.<SYM>), never silently sized.",
+    "XAUUSD": {
+      "contract_size": 100.0,
+      "lot_step": 0.01,
+      "lot_min": 0.01,
+      "lot_max": 10.0
+    }
+  },
   "data_ingestion": {
     "db_url": "postgresql://localhost/tradelatest",
     "schema": "public",

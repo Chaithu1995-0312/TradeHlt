@@ -41,9 +41,26 @@ _CFG = {
     "min_sl_pips":            0.0,
 }
 
+# D11 (2026-09-30): sizing (Check 7) now converts an INR risk budget into broker LOTS
+# via core.position_sizing.size_trade_lots, which needs an instrument spec + a USD/INR
+# rate injected at construction. This test-only spec is an IDENTITY conversion
+# (contract_size=1, rate=1.0, a lot_step fine enough not to perturb any pre-D11 test
+# number) so every existing test's numeric assertion (e.g. "size = balance * risk% /
+# risk_per_unit = 25.0") keeps meaning oz-for-oz — this suite is testing Ultron's risk
+# arithmetic, not the lot-conversion arithmetic (that lives in test_position_sizing.py).
+_TEST_SYMBOL = "TEST"
+_TEST_INSTRUMENT_SPECS = {
+    _TEST_SYMBOL: {"contract_size": 1.0, "lot_step": 0.0001, "lot_min": 0.0001, "lot_max": 1e9},
+}
+_TEST_USD_INR_RATE = 1.0
 
-def _mk(overrides: dict | None = None) -> UltronRiskGate:
-    return UltronRiskGate({**_CFG, **(overrides or {})})
+
+def _mk(overrides: dict | None = None, *, instrument_specs=_TEST_INSTRUMENT_SPECS,
+        usd_inr_rate: float | None = _TEST_USD_INR_RATE) -> UltronRiskGate:
+    return UltronRiskGate(
+        {**_CFG, **(overrides or {})},
+        instrument_specs=instrument_specs, usd_inr_rate=usd_inr_rate,
+    )
 
 
 # ── Kill-switch isolation fixture ─────────────────────────────────────────────
@@ -70,6 +87,7 @@ def _past_ts(seconds: int = 60) -> str:
 
 BASE_TRADE = {
     "execution_id":       "EX_test001",
+    "symbol":             _TEST_SYMBOL,
     "entry_price":        100.0,
     "stop_loss":          98.0,       # risk_per_unit = 2.0
     "take_profit_1":      104.0,
@@ -385,6 +403,47 @@ def test_reject_hint_size_zero():
     result = gate.evaluate(trade, ps)
     assert result["decision"] == "reject"
     assert result["risk_reason"] == "position_size_zero"
+
+
+# ── 8b. SIZING BRIDGE (D11, 2026-09-30) ──────────────────────────────────────
+# core.position_sizing.size_trade_lots is exercised directly in
+# tests/test_position_sizing.py; these cover its wiring INTO UltronRiskGate.
+
+def test_reject_size_below_broker_min_lot():
+    """A risk budget too small to buy even lot_min -> reject, never rounded up."""
+    gate = _mk(instrument_specs={
+        _TEST_SYMBOL: {"contract_size": 1.0, "lot_step": 0.01, "lot_min": 1.0, "lot_max": 1e9},
+    })
+    # risk_capital_inr = 4.0 * 0.5% = 0.02 -> risk_usd 0.02 (rate 1.0) -> size_units
+    # 0.02/2.0 = 0.01 -> floored lots 0.01, which is below this spec's lot_min=1.0.
+    trade = _trade(entry_price=100.0, stop_loss=98.0, risk_percent=0.5, position_size_hint=None)
+    ps = _portfolio(account_balance=4.0)
+    result = gate.evaluate(trade, ps)
+    assert result["decision"] == "reject"
+    assert result["risk_reason"] == "size_below_min_lot"
+    assert result["final_position_size"] == 0.0
+
+def test_reject_undeclared_instrument_never_guesses_a_size():
+    """An instrument with no declared instrument_specs entry fails CLOSED."""
+    gate = _mk()
+    trade = _trade(symbol="UNDECLARED_SYM")
+    result = gate.evaluate(trade, _portfolio())
+    assert result["decision"] == "reject"
+    assert result["risk_reason"] == "config_key_missing:instrument_specs.UNDECLARED_SYM"
+
+def test_reject_missing_usd_inr_rate_at_construction():
+    """usd_inr_rate not injected (instrument_specs present) -> fails closed on the rate."""
+    gate = _mk(usd_inr_rate=None)
+    result = gate.evaluate(_trade(), _portfolio())
+    assert result["decision"] == "reject"
+    assert result["risk_reason"] == "config_key_missing:sizing.usd_inr_rate"
+
+def test_reject_no_instrument_specs_at_construction():
+    """instrument_specs not injected at all -> fails closed before any lookup."""
+    gate = _mk(instrument_specs=None)
+    result = gate.evaluate(_trade(), _portfolio())
+    assert result["decision"] == "reject"
+    assert result["risk_reason"] == "config_key_missing:sizing.instrument_specs"
 
 
 # ── 9. REJECTION RESPONSE STRUCTURE ─────────────────────────────────────────
