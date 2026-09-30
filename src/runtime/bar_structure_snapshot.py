@@ -584,6 +584,18 @@ class BarStructureEmitter:
         out["crt_htf_remaining_candles"] = getattr(st, "htf_remaining_candles", None)
         out["crt_evaluating_soft_conf"] = getattr(st, "evaluating_soft_conf", None)
         out["crt_trade_open"] = bool(getattr(st, "active_trade", None))
+        # Run Trace (2026-09-30): the open trade's planned geometry, read-only from the engine's
+        # Trade object (null when flat). Engine prices, not fills (slippage lives in the journal).
+        at = getattr(st, "active_trade", None)
+        out["crt_trade_id"] = getattr(at, "id", None) if at is not None else None
+        out["crt_trade_direction"] = (
+            getattr(getattr(at, "direction", None), "name", None) if at is not None else None
+        )
+        out["crt_trade_entry"] = getattr(at, "entry_price", None) if at is not None else None
+        out["crt_trade_sl"] = getattr(at, "sl_price", None) if at is not None else None
+        out["crt_trade_tp1"] = getattr(at, "tp1_price", None) if at is not None else None
+        out["crt_trade_tp2"] = getattr(at, "tp2_price", None) if at is not None else None
+        out["crt_trade_status"] = getattr(at, "status", None) if at is not None else None
         return out
 
     def _parent_block(self, feed) -> "OrderedDict[str, Any]":

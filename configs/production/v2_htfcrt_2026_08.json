@@ -542,6 +542,41 @@
       "no_prediction": true
     }
   },
+  "bar_structure_snapshot": {
+    "_comment": "CH-v3-unified-market-structure-v1. OBSERVATION ONLY (CLAUDE.md 6.5 Authority Ladder). Default OFF. Read by src/runtime/bar_structure_snapshot.py ONLY -- no engine, gate, planner, fusion or risk module reads this section. Hash-neutral: config_hash covers `params` only (production_config.py:89-92).",
+    "enabled": true,
+    "schema_version": "1.0.0",
+    "authority": "OBSERVATION_ONLY",
+    "decision_neutral": true,
+    "emit_on_warmup_bars": true,
+    "output_dir": "logs/bar_structure",
+    "filename_suffix": "_bar_structure.jsonl",
+    "flush_every": 500,
+    "families": {
+      "crt": true,
+      "parent_crt": true,
+      "htf": true,
+      "objective": true,
+      "fvg": true,
+      "order_block": true,
+      "breaker": true,
+      "mitigation": true,
+      "choch": true,
+      "eqh_eql": true,
+      "pdh_pdl": true,
+      "features": true
+    },
+    "smc": {
+      "_comment": "Window/swing parameters are NOT redeclared here -- they are READ from feature_pipeline so the snapshot can never fork from the canonical 48-dim SMC block. These two keys name the source of truth; they are not values.",
+      "max_window_source": "feature_pipeline.smc_max_window",
+      "swing_window_source": "feature_pipeline.swing_window",
+      "eqh_eql_tolerance_atr": 0.1,
+      "eqh_eql_max_swings": 8,
+      "memoize_break_events": true
+    },
+    "per_run_dir": true,
+    "write_parquet": false
+  },
   "backtest": {
     "timeframe": "M15",
     "sl_anchor": "displacement",

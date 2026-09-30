@@ -66,7 +66,7 @@ def test_llama_gate_key_required(monkeypatch, key):
 
 @pytest.mark.parametrize("key", ["ridge_alpha", "gnb_var_smoothing"])
 def test_rr_model_trainer_key_required(monkeypatch, key):
-    mod = _load_fresh("config_layer/rr/rr_pattern_miner.py", monkeypatch, "rr_model")
+    mod = _load_fresh("config_layer/rr/rr_trained.py", monkeypatch, "rr_model")
     monkeypatch.setattr(mod, "_RR_CFG", {k: v for k, v in mod._RR_CFG.items() if k != key})
     with pytest.raises(ConfigKeyMissingError, match=key):
         mod.RRPatternTrainer()
@@ -74,14 +74,14 @@ def test_rr_model_trainer_key_required(monkeypatch, key):
 
 def test_rr_model_confidence_gate_subsection_required(monkeypatch):
     with pytest.raises(ConfigKeyMissingError, match="confidence_gate"):
-        _load_fresh("config_layer/rr/rr_pattern_miner.py", monkeypatch, "rr_model",
+        _load_fresh("config_layer/rr/rr_trained.py", monkeypatch, "rr_model",
                     ("confidence_gate",))
 
 
 @pytest.mark.parametrize("key", ["mode", "p_threshold", "dof_scaled_max"])
 def test_rr_model_confidence_gate_key_required(monkeypatch, key):
     with pytest.raises(ConfigKeyMissingError, match=key):
-        _load_fresh("config_layer/rr/rr_pattern_miner.py", monkeypatch, "rr_model",
+        _load_fresh("config_layer/rr/rr_trained.py", monkeypatch, "rr_model",
                     (key,), sub="confidence_gate")
 
 

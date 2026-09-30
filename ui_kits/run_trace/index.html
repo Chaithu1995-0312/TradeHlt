@@ -48,6 +48,8 @@ summary{cursor:pointer}
 #cfg{max-height:360px;overflow:auto;padding:6px 10px;font:12px ui-monospace,Consolas,monospace;white-space:pre}
 .empty{padding:24px;text-align:center;color:var(--muted)}
 .err{color:var(--bad)}
+tr.trade td{background:color-mix(in srgb,var(--good) 10%,transparent)}
+.sl{color:var(--bad)}.tp{color:var(--good)}
 </style>
 </head>
 <body>
@@ -67,7 +69,7 @@ summary{cursor:pointer}
   <div class="side">
     <div class="card"><h2>Price &amp; CRT state (engine) <span class="muted" id="legend"></span></h2><div id="chart"></div></div>
     <div class="card"><h2>Bars <span class="muted" id="barCount"></span></h2>
-      <div class="tbl"><table><thead><tr><th class="l">#</th><th class="l">time</th><th>open</th><th>high</th><th>low</th><th>close</th><th class="l">CRT state</th><th class="l">parent</th><th class="l">phase</th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div class="tbl"><table><thead><tr><th class="l">#</th><th class="l">time</th><th>open</th><th>high</th><th>low</th><th>close</th><th class="l">CRT state</th><th class="l">trade</th><th>entry</th><th>SL</th><th>TP1</th><th>TP2</th><th class="l">parent</th><th class="l">phase</th></tr></thead><tbody id="rows"></tbody></table></div>
     </div>
   </div>
   <div class="side">
@@ -79,7 +81,8 @@ summary{cursor:pointer}
 (() => {
   const API = "/api/run_trace";
   const $ = (id) => document.getElementById(id);
-  const S = { runId:null, meta:null, rows:[], byTime:new Map(), offset:0, cursor:"auto", paused:false, sel:null, timer:null, chart:null, candles:null, band:null };
+  const S = { runId:null, meta:null, rows:[], byTime:new Map(), offset:0, cursor:"auto", paused:false, sel:null, timer:null, chart:null, candles:null, band:null, lv:{} };
+  const LEVELS = [["crt_trade_entry","--accent"],["crt_trade_sl","--bad"],["crt_trade_tp1","--good"],["crt_trade_tp2","--good"]];
   const MAX_TABLE = 400;
 
   const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -97,6 +100,8 @@ summary{cursor:pointer}
     S.candles = S.chart.addCandlestickSeries();
     S.band = S.chart.addHistogramSeries({ priceScaleId:"band", priceFormat:{type:"volume"}, lastValueVisible:false, priceLineVisible:false });
     S.chart.priceScale("band").applyOptions({ scaleMargins:{ top:0.9, bottom:0 } });
+    // Open-trade geometry (entry / SL / TP1 / TP2) drawn only on bars where a trade is open.
+    for(const [k,c] of LEVELS) S.lv[k] = S.chart.addLineSeries({ color:cssVar(c), lineWidth:1, lineStyle: k==="crt_trade_entry"?0:2, lastValueVisible:false, priceLineVisible:false, crosshairMarkerVisible:false });
     S.chart.subscribeClick(p => { if(p && p.time && S.byTime.has(p.time)) select(S.byTime.get(p.time)); });
     new ResizeObserver(() => S.chart.applyOptions({ width: el.clientWidth })).observe(el);
   }
@@ -115,7 +120,7 @@ summary{cursor:pointer}
     clearTimeout(S.timer);
     Object.assign(S, { runId, rows:[], byTime:new Map(), offset:0, sel:null });
     $("runSel").value = runId; $("rows").innerHTML = ""; $("inspect").innerHTML = '<div class="empty">Click a bar or row.</div>';
-    S.candles.setData([]); S.band.setData([]);
+    S.candles.setData([]); S.band.setData([]); for(const k in S.lv) S.lv[k].setData([]);
     S.meta = await j(`${API}/meta?run_id=${encodeURIComponent(runId)}`);
     // Pin the cursor unit for this session: a run we start tailing live stays on "byte" even after it finishes.
     S.cursor = S.meta.status === "running" ? "byte" : "auto";
@@ -179,6 +184,7 @@ summary{cursor:pointer}
       cs.push({ time:t, open:r.open, high:r.high, low:r.low, close:r.close });
       const st = r.crt_state_after || (r.phase === "WARMUP" ? "WARMUP" : null);
       bs.push({ time:t, value:1, color: st ? stateColor(st) : "transparent" });
+      for(const [k] of LEVELS) S.lv[k].update(r[k] === null || r[k] === undefined ? { time:t } : { time:t, value:r[k] });
     }
     for(const c of cs) S.candles.update(c);
     for(const b of bs) S.band.update(b);
@@ -192,9 +198,12 @@ summary{cursor:pointer}
     const tail = S.rows.slice(-MAX_TABLE).reverse();
     $("rows").innerHTML = tail.map(r => {
       const st = r.crt_state_after;
-      return `<tr data-i="${r.bar_index}" class="${S.sel && S.sel.bar_index === r.bar_index ? "sel" : ""}"><td class="l">${r.bar_index}</td><td class="l">${esc(r.timestamp||"")}</td>
+      const cls = [S.sel && S.sel.bar_index === r.bar_index ? "sel" : "", r.crt_trade_open ? "trade" : ""].join(" ");
+      return `<tr data-i="${r.bar_index}" class="${cls}"><td class="l">${r.bar_index}</td><td class="l">${esc(r.timestamp||"")}</td>
         <td>${fmt(r.open)}</td><td>${fmt(r.high)}</td><td>${fmt(r.low)}</td><td>${fmt(r.close)}</td>
-        <td class="l">${st ? `<span class="sw" style="background:${stateColor(st)}"></span>${esc(st)}` : "—"}</td><td class="l">${esc(r.parent_crt_state||"—")}</td><td class="l">${esc(r.phase||"")}</td></tr>`;
+        <td class="l">${st ? `<span class="sw" style="background:${stateColor(st)}"></span>${esc(st)}` : "—"}</td>
+        <td class="l">${esc(r.crt_trade_direction||"—")}</td><td>${fmt(r.crt_trade_entry)}</td><td class="sl">${fmt(r.crt_trade_sl)}</td><td class="tp">${fmt(r.crt_trade_tp1)}</td><td class="tp">${fmt(r.crt_trade_tp2)}</td>
+        <td class="l">${esc(r.parent_crt_state||"—")}</td><td class="l">${esc(r.phase||"")}</td></tr>`;
     }).join("");
   }
 

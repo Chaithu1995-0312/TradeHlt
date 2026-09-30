@@ -46,13 +46,13 @@ from config_layer.strict_config import require as _require_cfg
 
 def _require_rr(key: str):
     """Strict read of ``rr_model.<key>`` (EPIC-84: no code default; absent -> raise)."""
-    return _require_cfg(_RR_CFG, key, section_name="rr_model", consumer="rr_pattern_miner")
+    return _require_cfg(_RR_CFG, key, section_name="rr_model", consumer="rr_trained")
 
 
 def _require_rr_gate(key: str):
     """Strict read of ``rr_model.confidence_gate.<key>``."""
     return _require_cfg(_GATE_CFG, key, section_name="rr_model.confidence_gate",
-                        consumer="rr_pattern_miner")
+                        consumer="rr_trained")
 
 
 # RR raw-score clamp bounds: STRUCTURAL algorithm constants, not config knobs (RR-001).
