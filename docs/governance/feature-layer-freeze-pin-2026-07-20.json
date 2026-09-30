@@ -70,7 +70,7 @@
     },
     "active_config": {
       "path": "configs/production/v2_htfcrt_2026_08.json",
-      "sha256": "4f35cdb957997b050feb81b91513d6c6116d45030d2d870855706edbab2c9b3b"
+      "sha256": "4d7d2b1c110d0f52fb869ff5606a349627b3b0afb706d755f210d6ddad96a8fd"
     },
     "ACTIVE_VERSION": {
       "path": "configs/production/ACTIVE_VERSION",
@@ -82,7 +82,7 @@
     },
     "feature_schema.py": {
       "path": "src/features/feature_schema.py",
-      "sha256": "702ae29c4883e5d1b0e286939f74e194594d5160b0f5eec9a113ab5f81f3897d"
+      "sha256": "ac0751b1f35390eb81dd5193a8a35c03b034bb38d6fe1b4dc07937302de0e7fd"
     },
     "candle_math.py": {
       "path": "src/features/candle_math.py",
@@ -94,11 +94,11 @@
     },
     "causal_structure.py": {
       "path": "src/features/causal_structure.py",
-      "sha256": "2574f189cc4c08470d9c39a6e3f612e4f271dbef75ec7f7e0bb260c05b00d155"
+      "sha256": "0c9ee11696aa45154bdae8957255d3cc1122b00431738737ac04d3a995a68c9b"
     },
     "registry_init.py": {
       "path": "src/features/registry/__init__.py",
-      "sha256": "6cb4d8403b766fbbf98c840395283c91d7909930c103f84d5a54988a9f7b931e"
+      "sha256": "d7228bf393d38f94b89bdaf3ff9a5428e3653609680144e6e23f61a0d0aaf3e6"
     }
   },
   "regression_benchmarks": {
@@ -573,6 +573,36 @@
       },
       "value_neutrality": "All 5 pinned-file diffs read in full (not summarized from an external audit) before this entry was written. None touches a CANONICAL_FEATURES entry, a derived_metrics formula, an `active:`/`impl:` binding, or feature_schema.py's SCHEMA_HASH/FEATURE_ORDER_HASH constants. Bounded mechanically: the full 8-test tests/test_feature_layer_freeze.py suite is re-run green in this change set's own verification, with test_xauusd_window_vector_regression's vector_sha256 UNCHANGED from the value already recorded in this pin's own `schema`/`regression_benchmarks` blocks.",
       "authority": "Pin-hygiene restoration + one declared truth-conflict resolution (active_config repoint). Grants no activation authority, no G001, no ACTIVE_VERSION change, no CRT/feature closure reopening. Standalone change set (Stage 0a); the D1/SEM-021 displacement-origin-kill TruthConflict and the EPIC-84 config-missing-key lanes are separate, subsequent work."
+    },
+    {
+      "date_utc": "2026-09-30",
+      "program_id": "EPIC-84 Wave 1 (no defaults, no fallbacks) -- declarations commit + L-C strict-config pass",
+      "source_sha_refresh": "active_config, feature_schema.py, causal_structure.py, registry_init.py",
+      "why_this_refresh_exists": "EPIC-84 lanes L-B/L-E/L-F removed literal defaults from src/core, src/research and 9 other packages; each removed default that fed real running behaviour was declared into configs/production/v2_htfcrt_2026_08.json (commit fc2f661, 33 files) so behaviour stays byte-identical. Separately, L-C's src/features strict-config pass (commit 5c2d733b) added comment-only 'EPIC-84 KEPT' annotations to two of the frozen source files, drifting their pins without changing any code line.",
+      "attribution_measured": {
+        "active_config": {
+          "pinned_before": "4f35cdb957997b050feb81b91513d6c6116d45030d2d870855706edbab2c9b3b",
+          "live_after": "4d7d2b1c110d0f52fb869ff5606a349627b3b0afb706d755f210d6ddad96a8fd",
+          "diff_content": "Additive only: engine_runner.cognitive_layer (enabled:false), fusion_engine.weight_strategy_consensus/regime_fusion_weights, decision_engine.threshold_window/fallback_top_n, acceptance_controller.engine_threshold/fusion_threshold, governance.promotion_base_version, strategy_orchestrator (new section), training_trigger (new section), agent.groq/agent.findings (new sections), bitnet (new section), portfolio.correlation/htf_candles, uat.kill_switch.daily_loss_limit_inr/weekly_loss_limit_inr/state_file, uat.output_dir/signal_accuracy, context_report (new section), capital_management.unknown_pair_pip_value. Every value equals the code literal or dataclass default it replaces, verified against the pre-EPIC-84 source diff key by key before being written, not copied from a lane's self-report."
+        },
+        "feature_schema.py": {
+          "pinned_before": "702ae29c4883e5d1b0e286939f74e194594d5160b0f5eec9a113ab5f81f3897d",
+          "live_after": "ac0751b1f35390eb81dd5193a8a35c03b034bb38d6fe1b4dc07937302de0e7fd",
+          "diff_content": "`git diff 8df8eede HEAD -- src/features/feature_schema.py` is EMPTY -- this pin's prior refresh (Stage 0a, 2026-09-28) already captured this file's content; the sha256 drift here is a core.autocrlf artifact of a fresh worktree checkout (`file` confirms CRLF line terminators on disk; git's blob is LF-normalized so `git diff` sees no change, matching the documented autocrlf gotcha, not a code change). Value-neutral by construction."
+        },
+        "causal_structure.py": {
+          "pinned_before": "2574f189cc4c08470d9c39a6e3f612e4f271dbef75ec7f7e0bb260c05b00d155",
+          "live_after": "0c9ee11696aa45154bdae8957255d3cc1122b00431738737ac04d3a995a68c9b",
+          "diff_content": "Same as feature_schema.py: `git diff 8df8eede HEAD` is EMPTY, drift is a core.autocrlf checkout artifact, not a code change."
+        },
+        "registry_init.py": {
+          "pinned_before": "6cb4d8403b766fbbf98c840395283c91d7909930c103f84d5a54988a9f7b931e",
+          "live_after": "d7228bf393d38f94b89bdaf3ff9a5428e3653609680144e6e23f61a0d0aaf3e6",
+          "diff_content": "Real content change, commit 5c2d733b 'EPIC-84 L-C: src/features strict config read + documented ontology KEPT sites': 5 comment-only 'EPIC-84 KEPT' annotations added above pre-existing `spec.get(key, default)` calls in `validate_registry`/`_validate_spec_schema`, explaining why each safe-navigation default is validator dict-navigation (immediately followed by a completeness check) rather than a masked behavioral default. Zero code-line changes -- read in full, not inferred from the hunk count."
+        }
+      },
+      "value_neutrality": "No key under crt_engine, feature_pipeline, or parent_crt (the sections FeaturePipeline/CRTStateResolver read) was touched, and none of the 4 drifted source files changed a CANONICAL_FEATURES entry, a derived_metrics formula, or an `active:`/`impl:` binding. tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression's vector_sha256 is unchanged from this pin's own regression_benchmarks block. Independently confirmed by a full-corpus oracle-label regeneration the same day: 565,884 rows x 32 value columns bit-identical (same sha256) across the pre-EPIC-84 bar matrix and a fresh bar matrix built on this commit.",
+      "authority": "Config-declaration bookkeeping + comment-only source-drift attribution. Grants no activation authority, no G001, no ACTIVE_VERSION change, no CRT/feature closure reopening."
     }
   ],
   "runtime_benchmarks": {
