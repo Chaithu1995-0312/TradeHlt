@@ -196,8 +196,7 @@
       "stage": "market_understanding",
       "stage_order": 2,
       "semantic_ids": [
-        "M0_SPINE_GAUSSIAN_HEURISTIC",
-        "M0_SPINE_GAUSSIAN_ML_NB"
+        "M0_SPINE_GAUSSIAN_HEURISTIC"
       ]
     },
     {
@@ -323,7 +322,7 @@
       "hypothesis": "Ridge+GNB improves on Gaussian when in-distribution.",
       "inputs": [
         "canonical feature vector",
-        "gaussian_score",
+        "ema_momentum_kernel_score",
         "gaussian_p_win"
       ],
       "outputs": [
@@ -713,6 +712,44 @@
       "stage": "measurement",
       "stage_order": null,
       "semantic_ids": []
+    },
+    {
+      "id": "nb_outcome_classifier",
+      "intent": "What outcome does a naive-Bayes classifier trained on historical labels expect for this state?",
+      "hypothesis": "A naive-Bayes classifier on historical labels separates outcome classes for this state.",
+      "inputs": [
+        "canonical feature vector",
+        "historical outcome labels"
+      ],
+      "outputs": [
+        "class_posterior",
+        "nb_score"
+      ],
+      "semantic_meaning": "Offline naive-Bayes outcome expectation, not the live EMA/momentum kernel and not a calibrated probability",
+      "consumer": [
+        "offline model_runners only"
+      ],
+      "authority_boundary": "NONE",
+      "explicit_non_goals": [
+        "never enter EXPECTED_ENGINES",
+        "never vote in fusion",
+        "never decide whether to trade",
+        "never claim a calibrated probability"
+      ],
+      "dependencies": [
+        "feature_pipeline"
+      ],
+      "falsification": "No discrimination under clean labels, or any live fusion vote",
+      "implementation_status": "PARTIAL",
+      "alignment": "SEMANTIC_DRIFT",
+      "primary_code": [
+        "src/engines/ml_gaussian_engine.py"
+      ],
+      "stage": "opportunity_understanding",
+      "stage_order": null,
+      "semantic_ids": [
+        "M0_SPINE_GAUSSIAN_ML_NB"
+      ]
     }
   ],
   "sidecar_authority": {

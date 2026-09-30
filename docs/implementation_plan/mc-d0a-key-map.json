@@ -1,0 +1,99 @@
+{
+  "schema": "mc-d0a-key-map.v1",
+  "purpose": "Old-to-new labels for parity_v5 on lane/mc-d0a. Pure rename. No numeric change, no alias, no shim. Translate artifact keys with this map. Do not rename anything in left_unchanged.",
+  "base": "50cef11b2cb348d6d20669ab26adeb0ddb884089",
+  "commits": {
+    "rename": "f125339d925836d998d0e68f9a2e45f7f65c4cf7",
+    "history_restore": "be7d2c17d51c623b935584856df4f1a4011ec798"
+  },
+  "in_use_configs": [
+    "configs/production/v2_htfcrt_2026_08.json",
+    "configs/production/v5_htfcrt_sot_dual_k23_2026_09.json",
+    "configs/production/v2_htfcrt_k23_shadow_2026_09.json",
+    "configs/production/v2_dispkill_shadow_2026_08.json",
+    "configs/production/v4_crt_sot_2026_08.json"
+  ],
+  "config_keys": [
+    {"old": "zone_registry_path", "new": "feature_cluster_similarity_registry_path", "value_unchanged": "models/zone_registry_v4_2026_07.json"},
+    {"old": "zone_mode", "new": "feature_cluster_similarity_mode", "value_unchanged": "hard"},
+    {"old": "zone_cluster_threshold", "new": "feature_cluster_similarity_cluster_threshold", "value_unchanged": 0.25},
+    {"old": "zone_min_samples", "new": "feature_cluster_similarity_min_samples", "value_unchanged": 50},
+    {"old": "engine_runner.zone_gate", "new": "engine_runner.feature_cluster_similarity", "value_unchanged": {"top_k": 3, "cluster_min_n": 2, "cluster_spread_max": 0.15}},
+    {"old": "zone_gate_execution_mode", "new": "feature_cluster_similarity_execution_mode", "value_unchanged": "normal"},
+    {"old": "weight_gaussian", "new": "weight_ema_momentum_kernel", "value_unchanged": 0.2},
+    {"old": "weight_zone_gate", "new": "weight_feature_cluster_similarity", "value_unchanged": 0.2},
+    {"old": "weight_rr", "new": "weight_candle_commitment", "value_unchanged": 0.2},
+    {"old": "gaussian_impl", "new": null, "note": "Removed on the five in-use configs. Active value was heuristic, so the slot is fixed to EmaMomentumKernel. Not an alias."}
+  ],
+  "event_keys": [
+    {"old": "gaussian", "new": "ema_momentum_kernel", "where": "FusionResult.to_dict serialized key; EngineScores; fusion engine_results; active_models.yaml family, engines token, philosophy key, fusion_weights, consumer-matrix column, fusion_weight string 'gaussian:0.2'. Field FusionResult.gaussian is unchanged."},
+    {"old": "zone_gate", "new": "feature_cluster_similarity", "where": "fusion engine_results slot and EXPECTED_ENGINES member. Unrelated zone_gate_* config and helper names stay."},
+    {"old": "rr", "new": "candle_commitment", "where": "fusion engine_results slot and EXPECTED_ENGINES member. EngineScores.rr, rr_model section, rr_fusion, and EngineRunner.resolve_model('rr') stay."},
+    {"old": "gaussian_score", "new": "ema_momentum_kernel_score", "where": "Context, trade dict, scorer result, narrative placeholder, rr_fusion extract. Word-boundary only."},
+    {"old": "crt_score", "new": "crt_structure_rule_score", "where": "Research adapter module path and catalog id. Class stays CrtScoreAdapter. Fusion slot key crt stays."},
+    {"old": "gaussian_ml", "new": "nb_outcome_classifier", "where": "MODEL_CATALOG model_id. Not a fusion slot."},
+    {"old": "zone_gate_dead", "new": "feature_cluster_similarity_dead", "where": "FusionSummary and fusion payload flag."}
+  ],
+  "reason_strings": [
+    {"old": "zone_gate_invalid", "new": "feature_cluster_similarity_invalid"},
+    {"old": "zone_gate_dead", "new": "feature_cluster_similarity_dead"},
+    {"old": "startswith('zone_gate')", "new": "startswith('feature_cluster_similarity')", "where": "EngineRunner._infer_stage. No fallback to the old prefix."}
+  ],
+  "module_paths": [
+    {"old": "src/engines/heuristic_gaussian_engine.py", "new": "src/engines/ema_momentum_kernel.py"},
+    {"old": "src/engines/zone_gate_engine.py", "new": "src/engines/feature_cluster_similarity.py"},
+    {"old": "src/engines/rr_engine.py", "new": "src/engines/candle_commitment.py"},
+    {"old": "src/config_layer/rr/rr_pattern_miner.py", "new": "src/config_layer/rr/rr_trained.py"},
+    {"old": "src/research/model_runners/adapters/crt_score.py", "new": "src/research/model_runners/adapters/crt_structure_rule_score.py"},
+    {"old": "src/research/model_runners/adapters/zone_gate.py", "new": "src/research/model_runners/adapters/feature_cluster_similarity.py"},
+    {"old": "tests/test_gaussian_impl_switch.py", "new": "tests/test_ema_momentum_kernel_slot.py", "note": "Add plus delete, not a git rename."}
+  ],
+  "class_names": [
+    {"old": "HeuristicGaussianEngine", "new": "EmaMomentumKernel"},
+    {"old": "RREngine", "new": "CandleCommitment"},
+    {"old": "run_zone_gate_engine", "new": "run_feature_cluster_similarity", "kind": "function"}
+  ],
+  "family_ids": [
+    {"old": "gaussian", "new": "ema_momentum_kernel", "where": "model_resolver._IDENTITY_YAML_KEY, _REGISTRY_PATH, per_inst, production_bundle._IDENTITY_KEY, active_models.yaml family. Registry file stays ModelPaths.GAUSSIAN_REGISTRY."}
+  ],
+  "miar_ids": [
+    {"old": "gaussian", "new": "ema_momentum_kernel", "semantic_ids": ["M0_SPINE_GAUSSIAN_HEURISTIC"]},
+    {"old": "zone_gate", "new": "feature_cluster_similarity"},
+    {"old": "rr", "new": "candle_commitment"},
+    {"old": null, "new": "nb_outcome_classifier", "note": "New entries[] row. stage opportunity_understanding, authority_boundary NONE, off-spine. semantic_id M0_SPINE_GAUSSIAN_ML_NB moved here from ema_momentum_kernel. MODEL_CATALOG nb_outcome_classifier.miar_id points here. primary_code src/engines/ml_gaussian_engine.py."}
+  ],
+  "param_bound_keys": [
+    {"old": "fusion_weight_gaussian", "new": "fusion_weight_ema_momentum_kernel", "bounds": [0.15, 0.50]},
+    {"old": "fusion_weight_rr", "new": "fusion_weight_candle_commitment", "bounds": [0.05, 0.25]},
+    {"old": "fusion_weight_zone", "new": "fusion_weight_zone", "note": "Key name preserved. It clamps fusion_weights.feature_cluster_similarity."}
+  ],
+  "default_fusion_weights": {
+    "crt": 0.40,
+    "ema_momentum_kernel": 0.30,
+    "feature_cluster_similarity": 0.20,
+    "candle_commitment": 0.10
+  },
+  "left_unchanged": [
+    "FusionResult.gaussian field and gaussian_weight (evaluate Gaussian-vs-neural blend, default 0.6; neural_weight 0.4)",
+    "gaussian_p_win",
+    "gaussian_mu / gaussian_sigma",
+    "gaussian_scorer section and load_active_gaussian_scorer / compute_gaussian_score",
+    "rr_model.score_weights key gaussian (value 0.5) and rr_trained._SCORE_WEIGHTS['gaussian']",
+    "ModelPaths.GAUSSIAN_REGISTRY and models/gaussian_registry.json",
+    "registry_id strings gaussian:v5_auto_* and gaussian:p5_*",
+    "version ids v2_gaussian_runtime_2026_07 and v4_gaussian_runtime_2026_07",
+    "feature schema name gaussian / GAUSSIAN_SCHEMA",
+    "avg_gaussian narrative metric key",
+    "ZoneGateAdapter, CrtScoreAdapter, GaussianMLAdapter, MLGaussianEngine, ZoneGateRegistry",
+    "get_zone_gate_counters, zone_gate_threshold, zone_gate_top_k, zone_gate_registry, resolve_zone_gate_runtime",
+    "bypass_zone_invalid and _comment_bypass_zone_invalid key names (comment prose now says feature_cluster_similarity_invalid)",
+    "EngineScores.rr, rr_model section, rr_fusion, resolve_model family rr",
+    "fusion slot key crt",
+    "story synthetic key gaussian and frozen golden expected_engine_signature gaussian",
+    "CRTStateResolver: no gaussian token existed, so nothing changed",
+    "configs/production/ACTIVE_VERSION stays v2_htfcrt_2026_08",
+    "params block and config_hash. Notes text on the five in-use configs matches 50cef11.",
+    "Dated docs/governance artifacts and non-in-use configs were restored to 50cef11 and still contain old names. Do not re-sweep them.",
+    "Two restored configs again contain gaussian_impl=ml: v4_multi_2026_06.json and v2_multi_2026_04_deepdeektry_archived_20260627_160227.json."
+  ]
+}

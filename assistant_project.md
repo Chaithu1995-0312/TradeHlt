@@ -4580,3 +4580,13 @@ Belief Update / ROI / Goal: Goal: a pure label rename Claude can audit without a
 Open Questions: user authorization to commit with --no-verify; completion stays unclaimed; two archived configs that had gaussian_impl=ml now construct EmaMomentumKernel.
 Next Step: on authorization, commit the staged index with the venv Scripts directory first on PATH, then issue the audit line. Otherwise leave the worktree staged.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-30
+Topic: MC-D0a third commit — leftover fusion labels (serialized key, reject reasons, family id, score key, MIAR row)
+Decision/Output: Commits already on lane/mc-d0a: f125339 (rename) and be7d2c1 (restore dated governance artifacts, non-in-use configs, and notes text). This commit finishes the leftover labels without aliases or numeric edits. FusionResult.to_dict key gaussian is ema_momentum_kernel; the FusionResult.gaussian field and gaussian_weight stay. Reject reasons and the stage prefix are feature_cluster_similarity_invalid / feature_cluster_similarity_dead. Resolver family id gaussian is ema_momentum_kernel. Word-boundary gaussian_score is ema_momentum_kernel_score. New MIAR entries[] id nb_outcome_classifier (opportunity_understanding, authority NONE, off-spine); MODEL_CATALOG miar_id retargeted; semantic id M0_SPINE_GAUSSIAN_ML_NB lives only on that row. test_kernel_without_instrument_raises added. Key map: docs/implementation_plan/mc-d0a-key-map.json. Params and ACTIVE_VERSION untouched. validate-completion not run. COMPLETE not claimed.
+Belief Update / ROI / Goal: Goal: a pure label rename Claude can join across old and new artifact keys. Belief: the four fusion slots now use the names of what they compute, and the naive-Bayes classifier is its own off-spine question. Knowledge ROI: high — the key map is the join, so parity does not have to rediscover which gaussian tokens were labels and which are a different object. Action: audit with the key map; do not re-sweep restored history or the preserved gaussian_weight / score_weights / registry paths.
+Open Questions: whether a literal substring grep for gaussian can be zero inside the five in-use configs. It cannot: notes and score_weights["gaussian"] were restored on purpose, and gaussian_weight is the evaluate blend.
+Next Step: Claude audit (scope, no shims, parity_v5 via the key map, MIAR intent). User go/merge before D0b.
+---

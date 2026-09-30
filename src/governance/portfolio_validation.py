@@ -169,14 +169,14 @@ class PortfolioAnalytics:
             wins   = sum(1 for t in trades if t.is_winner)
             total  = len(trades)
             rr     = sum(t.pnl_rr_net for t in trades)
-            scored = [t for t in trades if t.gaussian_score > 0]
+            scored = [t for t in trades if t.ema_momentum_kernel_score > 0]
             result[instr] = {
                 "trades":        total,
                 "win_rate":      round(wins / total, 4) if total else 0.0,
                 "total_pnl_rr":  round(rr, 4),
                 "avg_rr":        round(rr / total, 4) if total else 0.0,
                 "scored_trades": len(scored),
-                "avg_score":     round(sum(t.gaussian_score for t in scored) / len(scored), 4) if scored else 0.0,
+                "avg_score":     round(sum(t.ema_momentum_kernel_score for t in scored) / len(scored), 4) if scored else 0.0,
             }
         return result
 
@@ -189,7 +189,7 @@ class PortfolioAnalytics:
         thresholds = [(0.0, 0.2), (0.2, 0.4), (0.4, 0.6), (0.6, 0.8), (0.8, 1.0)]
 
         for t in self.trades:
-            s = t.gaussian_score
+            s = t.ema_momentum_kernel_score
             for label, (lo, hi) in zip(buckets.keys(), thresholds):
                 if lo <= s < hi:
                     buckets[label].append(t)
@@ -208,9 +208,9 @@ class PortfolioAnalytics:
         return result
 
     def gaussian_correlation(self) -> float:
-        """Pearson correlation: gaussian_score vs binary win/loss outcome."""
-        scored = [(t.gaussian_score, 1.0 if t.is_winner else 0.0)
-                  for t in self.trades if t.gaussian_score > 0]
+        """Pearson correlation: ema_momentum_kernel_score vs binary win/loss outcome."""
+        scored = [(t.ema_momentum_kernel_score, 1.0 if t.is_winner else 0.0)
+                  for t in self.trades if t.ema_momentum_kernel_score > 0]
         if len(scored) < 5:
             return float("nan")
 
@@ -224,9 +224,9 @@ class PortfolioAnalytics:
         return round(cov / (ss * so), 4) if ss > 0 and so > 0 else 0.0
 
     def score_outcome_rr_correlation(self) -> float:
-        """Pearson correlation: gaussian_score vs actual RR (continuous, not binary)."""
-        scored = [(t.gaussian_score, t.pnl_rr_net)
-                  for t in self.trades if t.gaussian_score > 0]
+        """Pearson correlation: ema_momentum_kernel_score vs actual RR (continuous, not binary)."""
+        scored = [(t.ema_momentum_kernel_score, t.pnl_rr_net)
+                  for t in self.trades if t.ema_momentum_kernel_score > 0]
         if len(scored) < 5:
             return float("nan")
 
@@ -542,7 +542,7 @@ def _build_trade_record(row: dict) -> TradeRecord:
         position_size     = _f("position_size"),
         risk_score        = _f("risk_score"),
         risk_pct          = _f("risk_pct") if "risk_pct" in row else 0.01,
-        gaussian_score    = _f("gaussian_score"),
+        ema_momentum_kernel_score    = _f("ema_momentum_kernel_score"),
         gaussian_p_win    = _f("gaussian_p_win"),
         score_retest      = _f("score_retest"),
         score_body        = _f("score_body"),

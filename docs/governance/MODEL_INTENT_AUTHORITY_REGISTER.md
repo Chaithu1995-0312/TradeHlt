@@ -278,6 +278,26 @@ Every MIAR entry **must** fill:
 | **alignment** | 🟡 — design “historically profitable” vs kernel symmetry + p_win consumer drift |
 | **primary_code** | `src/engines/ema_momentum_kernel.py` · optional `ml_gaussian_engine.py` |
 
+### 3.4b Naive-Bayes outcome classifier (off-spine)
+
+| Field | Content |
+|---|---|
+| **id** | `nb_outcome_classifier` |
+| **stage** | `opportunity_understanding` · order **null** (off-spine) |
+| **intent** | What outcome does a naive-Bayes classifier trained on historical labels expect for this state? |
+| **hypothesis** | A naive-Bayes classifier on historical labels separates outcome classes for this state. |
+| **inputs** | Canonical feature vector, historical outcome labels |
+| **outputs** | class posterior, nb score |
+| **semantic_meaning** | Offline naive-Bayes outcome expectation. Not the live EMA/momentum kernel. |
+| **consumer** | Offline model runners only |
+| **authority_boundary** | NONE |
+| **explicit_non_goals** | Never enter EXPECTED_ENGINES. Never vote in fusion. Never decide whether to trade. Never claim a calibrated probability. |
+| **dependencies** | `feature_pipeline` |
+| **falsification** | No discrimination under clean labels, or any live fusion vote |
+| **implementation_status** | PARTIAL |
+| **alignment** | SEMANTIC_DRIFT |
+| **primary_code** | `src/engines/ml_gaussian_engine.py` |
+
 ### 3.5 Feature Cluster Similarity
 
 | Field | Content |
@@ -686,7 +706,7 @@ drops are **silent by design** — telemetry loss is preferred over spine interf
 
 ---
 
-## 5. Rollup verdict table (17)
+## 5. Rollup verdict table (18)
 
 | # | id | alignment | implementation |
 |---:|---|---|---|
@@ -707,6 +727,7 @@ drops are **silent by design** — telemetry loss is preferred over spine interf
 | 15 | qualification_gate | 🟢 | EXECUTABLE |
 | 16 | backtest | 🟢 | EXECUTABLE |
 | 17 | research_runner | 🟢 | EXECUTABLE |
+| 18 | nb_outcome_classifier | 🟡 | PARTIAL (off-spine, authority NONE) |
 
 \*BitNet: contract 🟢 when enabled; active patch inert is intentional config, not missing intent.
 

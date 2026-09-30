@@ -157,5 +157,5 @@ def test_layered_flow_fusion_runs_before_dual_veto(monkeypatch):
 
     out = runner.run(input_data, {"symbol": "AUDUSD"})
     assert runner.fusion.called is True
-    assert set(runner.fusion.last.keys()) == {"crt", "gaussian", "feature_cluster_similarity", "rr"}
+    assert set(runner.fusion.last.keys()) == {"crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment"}
     assert out["decision"] == "REJECT"

@@ -16,7 +16,7 @@ shimmed. There is no RR term in ``evaluate`` anymore.
 
 FIX 1 — Dynamic Threshold Calibration: threshold = percentile(scores, 85),
          clamped [0.45, 0.65]. Falls back to 0.55 until history is available.
-FIX 3 — Dead Engine Neutralization: zone_gate_invalid check is bypassed when
+FIX 3 — Dead Engine Neutralization: feature_cluster_similarity_invalid check is bypassed when
          the feature_cluster_similarity engine is detected as dead across the scoring window.
 FIX 4 — Minimum Acceptance Fallback: decide_batch() promotes top-N signals
          when zero pass, guaranteeing ACCEPT > 0 per batch.
@@ -135,10 +135,10 @@ class DecisionEngine:
         # is decided against historical distribution, not itself
         threshold = self._dynamic_threshold.compute()
 
-        # FIX 3 — bypass zone_gate_invalid rejection when engine is dead
-        zone_gate_dead = bool(fusion.get("zone_gate_dead", False))
-        if not zone_gate_dead and not bool(feature_cluster_similarity.get("valid", False)):
-            result = self._reject("zone_gate_invalid", threshold)
+        # FIX 3 — bypass feature_cluster_similarity_invalid rejection when engine is dead
+        feature_cluster_similarity_dead = bool(fusion.get("feature_cluster_similarity_dead", False))
+        if not feature_cluster_similarity_dead and not bool(feature_cluster_similarity.get("valid", False)):
+            result = self._reject("feature_cluster_similarity_invalid", threshold)
             self._dynamic_threshold.update(effective_score)
             return result
 

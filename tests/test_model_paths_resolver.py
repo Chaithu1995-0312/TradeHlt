@@ -68,7 +68,7 @@ def test_resolve_rr_registry_active_without_how_match() -> None:
 
 def test_resolve_gaussian_per_instrument() -> None:
     r = resolve_model(
-        "gaussian",
+        "ema_momentum_kernel",
         instrument="BNBUSDT",
         require_identity_parity=True,
         repo_root=_REPO,

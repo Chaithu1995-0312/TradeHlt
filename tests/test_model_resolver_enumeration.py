@@ -37,8 +37,8 @@ from config_layer.model_resolver import (  # noqa: E402
 def test_families_are_the_known_set():
     assert list_model_families() == [
         "bitnet",
+        "ema_momentum_kernel",
         "feature_cluster_similarity",
-        "gaussian",
         "rr",
         "rr_fusion",
         "tradenet",

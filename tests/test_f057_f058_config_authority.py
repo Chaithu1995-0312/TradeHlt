@@ -5,7 +5,7 @@ F-057: market_router is config-driven and fail-closed; BacktestRunner's crt_conf
 fallback resolves through the SAME governed loader the CLI uses, instead of the bare
 router-only ConfigBuilder.build().
 
-F-058-class: the zone_gate_invalid backtest bypass is config-declared
+F-058-class: the feature_cluster_similarity_invalid backtest bypass is config-declared
 (backtest.bypass_zone_invalid), not an undeclared os.getenv(..., "1") default.
 """
 from __future__ import annotations

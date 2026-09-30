@@ -23,7 +23,7 @@ class _FakeEngine:
         self.last_nonzero: int | None = None
         self.W = [0.0] * len(CANONICAL_FEATURES)
 
-    def predict(self, features, gaussian_score, gaussian_p_win, threshold=0.5):
+    def predict(self, features, ema_momentum_kernel_score, gaussian_p_win, threshold=0.5):
         self.last_nonzero = sum(1 for f in features if abs(float(f)) > 1e-12)
         return {"final_score": 0.42, "status": "success", "confidence": 0.9,
                 "expected_rr": 0.0, "probability_of_win": 0.5}
@@ -41,7 +41,7 @@ def _layer_with_fake() -> tuple[RRFusionLayer, _FakeEngine]:
 def test_score_dict_starves_the_model_to_three_features():
     """The legacy stub path: only depth/body/disp are nonzero."""
     layer, fake = _layer_with_fake()
-    layer.score_dict(depth=0.2, body=0.8, disp=0.5, gaussian_score=0.7, gaussian_p_win=0.7,
+    layer.score_dict(depth=0.2, body=0.8, disp=0.5, ema_momentum_kernel_score=0.7, gaussian_p_win=0.7,
                      is_asia=0.0, is_london=1.0, is_newyork=0.0, hour=10)
     assert fake.last_nonzero is not None
     assert fake.last_nonzero <= 3   # the F-038 defect: 2-3 of 38
@@ -51,7 +51,7 @@ def test_score_full_feeds_many_features():
     """Fix A path: score() feeds the full canonical vector → many nonzero features."""
     layer, fake = _layer_with_fake()
     trade = {k: 0.25 for k in CANONICAL_FEATURES}   # all continuous, in-range, no drift (<1.5)
-    trade["gaussian_score"] = 0.7
+    trade["ema_momentum_kernel_score"] = 0.7
     trade["gaussian_p_win"] = 0.7
     layer.score(trade)
     assert fake.last_nonzero is not None

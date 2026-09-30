@@ -36,9 +36,9 @@ except ImportError:
 _DRIFT_THRESHOLD: float = _get_section("rr_model")["drift_threshold"]
 
 
-def _passthrough(gaussian_score: float, gaussian_p_win: float, reason: str) -> Dict[str, Any]:
+def _passthrough(ema_momentum_kernel_score: float, gaussian_p_win: float, reason: str) -> Dict[str, Any]:
     return {
-        "final_score": float(gaussian_score),
+        "final_score": float(ema_momentum_kernel_score),
         "expected_rr": 0.0,
         "probability_of_win": float(gaussian_p_win),
         "confidence": 0.0,
@@ -120,7 +120,7 @@ class RRFusionLayer:
         return getattr(obj, attr, default)
 
     def _extract_gaussian_fields(self, trade: Any):
-        g_score = float(self._get(trade, "gaussian_score", 0.0))
+        g_score = float(self._get(trade, "ema_momentum_kernel_score", 0.0))
         g_pwin = float(self._get(trade, "gaussian_p_win", 0.5))
         return g_score, g_pwin
 
@@ -182,7 +182,7 @@ class RRFusionLayer:
             vector = build_feature_vector(features)
             return self._engine.predict(  # type: ignore[union-attr]
                 features=vector,
-                gaussian_score=g_score,
+                ema_momentum_kernel_score=g_score,
                 gaussian_p_win=g_pwin,
                 threshold=thr,
             )
@@ -209,7 +209,7 @@ class RRFusionLayer:
         depth: float,
         body: float,
         disp: float,
-        gaussian_score: float,
+        ema_momentum_kernel_score: float,
         gaussian_p_win: float,
         is_asia: float,
         is_london: float,
@@ -218,12 +218,12 @@ class RRFusionLayer:
         threshold: Optional[float] = None,
     ) -> Dict[str, Any]:
         if not self._enabled:
-            return _passthrough(gaussian_score, gaussian_p_win, "disabled")
+            return _passthrough(ema_momentum_kernel_score, gaussian_p_win, "disabled")
         if not self._loaded:
-            return _passthrough(gaussian_score, gaussian_p_win, "model_not_loaded")
+            return _passthrough(ema_momentum_kernel_score, gaussian_p_win, "model_not_loaded")
 
         if depth > _DRIFT_THRESHOLD or body > _DRIFT_THRESHOLD or disp > _DRIFT_THRESHOLD:
-            return _passthrough(gaussian_score, gaussian_p_win, "drift_detected")
+            return _passthrough(ema_momentum_kernel_score, gaussian_p_win, "drift_detected")
 
         features = _empty_canonical_features()
         features["retest_depth"] = float(depth)
@@ -235,7 +235,7 @@ class RRFusionLayer:
             vector = build_feature_vector(features)
             return self._engine.predict(  # type: ignore[union-attr]
                 features=vector,
-                gaussian_score=float(gaussian_score),
+                ema_momentum_kernel_score=float(ema_momentum_kernel_score),
                 gaussian_p_win=float(gaussian_p_win),
                 threshold=thr,
             )
@@ -251,10 +251,10 @@ class RRFusionLayer:
                 )
             except Exception:
                 pass
-            return _passthrough(gaussian_score, gaussian_p_win, "feature_dimension_mismatch")
+            return _passthrough(ema_momentum_kernel_score, gaussian_p_win, "feature_dimension_mismatch")
         except Exception as exc:
             warnings.warn(f"[RRFusionLayer] Inference error: {exc}")
-            return _passthrough(gaussian_score, gaussian_p_win, "inference_error")
+            return _passthrough(ema_momentum_kernel_score, gaussian_p_win, "inference_error")
 
     @property
     def is_loaded(self) -> bool:

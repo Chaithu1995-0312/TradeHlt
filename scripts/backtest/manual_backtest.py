@@ -113,7 +113,7 @@ def wick_size(o: float, h: float, l: float, c: float) -> float:
     return h - l
 
 # ─── Gaussian scorer ──────────────────────────────────────────────────────────
-def gaussian_score(retest_depth: float, body_rat: float, disp_str: float, candles_since: int) -> dict:
+def ema_momentum_kernel_score(retest_depth: float, body_rat: float, disp_str: float, candles_since: int) -> dict:
     if retest_depth < G_RETEST_MIN or retest_depth > G_RETEST_MAX:
         return {"score": 0.0, "p_win": 0.0, "reject": "retest_depth_filter"}
     if disp_str > G_DISP_MAX:
@@ -490,7 +490,7 @@ def run(csv_path: str) -> list[dict]:
 
             # Gaussian score
             candles_since = candle_idx - (cached_feat.get("retest_idx", candle_idx))
-            gs = gaussian_score(
+            gs = ema_momentum_kernel_score(
                 cached_feat["retest_depth"],
                 cached_feat["body_ratio"],
                 cached_feat["disp_str"],
@@ -579,7 +579,7 @@ def run(csv_path: str) -> list[dict]:
                     "sl":             round(sl_price, 5),
                     "tp1":            round(tp1_price, 5),
                     "tp2":            round(tp2_price, 5),
-                    "gaussian_score": trade_gauss,
+                    "ema_momentum_kernel_score": trade_gauss,
                     "fusion_score":   round(S, 4),
                     "regime":         regime,
                     "risk_multiplier": rm,
@@ -646,9 +646,9 @@ def analyse(trades: list[dict]) -> dict:
     for r in rrs:
         eq += r; pk = max(pk, eq); dd = max(dd, pk - eq)
 
-    # Pearson corr: gaussian_score vs pnl_rr_net (scored trades only)
-    scored = [(t["gaussian_score"], t["pnl_rr_net"])
-              for t in closed if t["gaussian_score"] > 0]
+    # Pearson corr: ema_momentum_kernel_score vs pnl_rr_net (scored trades only)
+    scored = [(t["ema_momentum_kernel_score"], t["pnl_rr_net"])
+              for t in closed if t["ema_momentum_kernel_score"] > 0]
     corr = float("nan")
     if len(scored) >= 3:
         gs_v = [s for s,_ in scored]; rr_v = [r for _,r in scored]

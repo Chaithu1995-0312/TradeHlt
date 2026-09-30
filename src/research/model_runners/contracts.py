@@ -25,7 +25,7 @@ see the plan's "naming collision" section):
 
 `authority` derivation rule (mechanical, not per-row judgment):
     FUSION_VOTE — model_id's engine is one of core.engine_runner.EXPECTED_ENGINES
-                  ({"crt","gaussian","feature_cluster_similarity","rr"}) — the four fusion-completeness votes.
+                  ({"crt","ema_momentum_kernel","feature_cluster_similarity","candle_commitment"}) — the four fusion-completeness votes.
     SPINE       — spine_active=True but not an EXPECTED_ENGINES vote (runs live, not a fusion
                   input/veto in its own right).
     SHADOW      — spine_active=False but historically measured via a shadow A/B (bitnet, F-055).
@@ -113,7 +113,7 @@ MODEL_CATALOG: dict[str, ModelContract] = {
         active_models_absent_reason=None,
         serve_domain="ALL_BARS",
         scale_type="score",
-        authority="FUSION_VOTE",  # EXPECTED_ENGINES member ("gaussian")
+        authority="FUSION_VOTE",  # EXPECTED_ENGINES member ("ema_momentum_kernel")
         trained_on_schema=None,  # unparameterised kernel (F-060) — no mu/sigma ever loaded
     ),
     "feature_cluster_similarity": ModelContract(
@@ -189,7 +189,7 @@ MODEL_CATALOG: dict[str, ModelContract] = {
         active_models_key=None,
         active_models_absent_reason="fusion weights live under engine_runner/fusion_engine config sections, not a dedicated active_models.yaml top-level key",
         serve_domain="COMPOSE",
-        scale_type="composite",  # returns {final_score, scores, missing_engines, zone_gate_dead, ...}
+        scale_type="composite",  # returns {final_score, scores, missing_engines, feature_cluster_similarity_dead, ...}
         authority="SPINE",  # combines the 4 FUSION_VOTE rows; not itself one of them
         trained_on_schema=None,
     ),
@@ -334,12 +334,12 @@ MODEL_CATALOG: dict[str, ModelContract] = {
         runnable=True,
         semantic_id="M0_SPINE_GAUSSIAN_ML_NB",
         tier="M0",
-        miar_id="ema_momentum_kernel",  # shared with the heuristic row — one MIAR intent, two ARM variants
+        miar_id="nb_outcome_classifier",
         miar_absent_reason=None,
         active_models_key="ema_momentum_kernel.trained_registry.entries.v4_mirrored",  # dotted path — nested key
         active_models_absent_reason=None,
         serve_domain="ALL_BARS",
-        scale_type="score",  # NB posteriors are not reliably calibrated; MIAR gaussian intent
+        scale_type="score",  # NB posteriors are not reliably calibrated; MIAR nb_outcome_classifier intent
         # forbids probability framing regardless of variant
         authority="NONE",  # config-gated off; M4 (E0/E1/E2) returned 0 PROMOTE, REGISTRY_ACTIVE != ECONOMIC_AUTHORITY
         trained_on_schema="38dim_legacy",  # Gaussian_v4_mirrored_38dim, per the governance doc's own name

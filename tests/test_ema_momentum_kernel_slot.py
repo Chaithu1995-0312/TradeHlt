@@ -104,3 +104,9 @@ def test_runner_slot_source_is_fixed():
     assert "MLGaussianEngine" not in src
     assert not hasattr(EngineRunner, "_get_gaussian_engine")
     assert not hasattr(EngineRunner, "_get_shadow_gaussian_engine")
+
+
+def test_kernel_without_instrument_raises():
+    from engines.ema_momentum_kernel import EmaMomentumKernel
+    with pytest.raises(ValueError, match="no instrument"):
+        EmaMomentumKernel(config={})

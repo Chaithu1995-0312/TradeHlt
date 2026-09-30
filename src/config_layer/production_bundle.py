@@ -54,7 +54,7 @@ _IDENTITY_KEY: dict[str, str] = {
     "feature_cluster_similarity": "feature_cluster_similarity",
     "rr": "rr_model",
     "rr_fusion": "rr_model",
-    "gaussian": "ema_momentum_kernel",
+    "ema_momentum_kernel": "ema_momentum_kernel",
     "bitnet": "bitnet",
     "tradenet": "tradenet",
 }

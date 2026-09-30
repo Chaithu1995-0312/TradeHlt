@@ -70,7 +70,7 @@ FEATUREISH_NAMES = {
     "volume_range_proxy", "last_swing_high", "last_swing_low",
     "last_swing_high_price", "last_swing_low_price", "retest_flag",
     "true_range", "body", "upper_wick", "lower_wick", "candle_range",
-    "disp_str", "displacement", "time_decay_feature", "gaussian_score",
+    "disp_str", "displacement", "time_decay_feature", "ema_momentum_kernel_score",
     "zone_score", "rr_ratio", "confidence",
 }
 

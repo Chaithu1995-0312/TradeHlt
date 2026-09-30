@@ -516,7 +516,7 @@ class EngineRunner:
             if r.startswith("adapter_") or r.startswith("data_integrity") or r.startswith("missing_fields") \
                or r.startswith("invalid_session") or r.startswith("low_atr") or r.startswith("non_positive_atr"):
                 return "adapter"
-            if r.startswith("zone_gate"):
+            if r.startswith("feature_cluster_similarity"):
                 return "feature_cluster_similarity"
             if r.startswith("ultron_gate"):
                 return "ultron"
@@ -725,7 +725,7 @@ class EngineRunner:
                     # score_dict stub that forces a ~100% low-confidence gaussian bypass.
                     _g = _safe_float(gaussian_result.get("score"), 0.5)
                     _rr_trade = {k: _safe_float(input_data.get(k), 0.0) for k in CANONICAL_FEATURES}
-                    _rr_trade["gaussian_score"] = _g
+                    _rr_trade["ema_momentum_kernel_score"] = _g
                     _rr_trade["gaussian_p_win"] = _g
                     rr_fusion_result = self.rr_fusion.score(_rr_trade, threshold=_rr_thr)
                 else:
@@ -733,7 +733,7 @@ class EngineRunner:
                         depth=_safe_float(input_data.get("retest_depth"), 0.0),
                         body=_safe_float(input_data.get("body_ratio"), 0.0),
                         disp=_safe_float(input_data.get("disp_strength"), 0.0),
-                        gaussian_score=_safe_float(gaussian_result.get("score"), 0.5),
+                        ema_momentum_kernel_score=_safe_float(gaussian_result.get("score"), 0.5),
                         gaussian_p_win=_safe_float(gaussian_result.get("score"), 0.5),
                         is_asia=_safe_float(input_data.get("is_asia"), 0.0),
                         is_london=_safe_float(input_data.get("is_london"), 0.0),

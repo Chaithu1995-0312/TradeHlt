@@ -201,7 +201,7 @@ class FusionResult:
     def to_dict(self) -> dict:
         return {
             "final_score":      round(self.final_score,      4),
-            "gaussian":         round(self.gaussian,         4),
+            "ema_momentum_kernel": round(self.gaussian,         4),
             "neural":           round(self.neural,    4) if self.neural is not None else None,
             "llm":              round(self.llm,       4) if self.llm    is not None else None,
             "llm_fired":        self.llm_fired,
@@ -384,8 +384,8 @@ class FusionEngine:
 
         # FIX 3 — track feature_cluster_similarity health; exclude if always-zero (dead engine)
         self._health_zonegate.push(score_zonegate)
-        zone_gate_dead = self._health_zonegate.is_dead()
-        if zone_gate_dead:
+        feature_cluster_similarity_dead = self._health_zonegate.is_dead()
+        if feature_cluster_similarity_dead:
             logger.warning("feature_cluster_similarity engine dead (mean=0, var=0) — excluded from fusion weights.")
 
         # ── Conflict detection ────────────────────────────────────────────────
@@ -476,7 +476,7 @@ class FusionEngine:
         # permanently-zero engine cannot suppress all signals.
         # 5th engine (strategy_consensus) included only when its weight > 0.
         # Weights come from `weights=` override → regime profile → config defaults.
-        w_zonegate  = 0.0 if zone_gate_dead else w_zone
+        w_zonegate  = 0.0 if feature_cluster_similarity_dead else w_zone
         w_consensus = (
             w_consensus_override if w_consensus_override is not None
             else self.cfg.weight_strategy_consensus
@@ -543,7 +543,7 @@ class FusionEngine:
             "normalized_score": round(normalized,  4),   # FIX 5 — always present
             "scores":           scores_dict,
             "missing_engines": [],
-            "zone_gate_dead":   zone_gate_dead,           # FIX 5 — signals dead engine state
+            "feature_cluster_similarity_dead":   feature_cluster_similarity_dead,           # FIX 5 — signals dead engine state
             **conv_debug,
         }
 

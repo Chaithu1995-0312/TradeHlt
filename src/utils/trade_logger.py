@@ -25,7 +25,7 @@ Entry record:
     },
     "fusion": {
       "final_score": 0.68,
-      "gaussian":    0.62,
+      "ema_momentum_kernel": 0.62,
       "neural":      null,
       "llm":         0.71,
       "llm_fired":   true,

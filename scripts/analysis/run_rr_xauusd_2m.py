@@ -336,7 +336,7 @@ def main() -> int:
             g = float(g_scores[i]) if np.isfinite(g_scores[i]) else 0.5
             out = engine.predict(
                 vec,
-                gaussian_score=g,
+                ema_momentum_kernel_score=g,
                 gaussian_p_win=0.5,
                 threshold=0.5,
             )

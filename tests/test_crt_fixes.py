@@ -220,7 +220,7 @@ class TestDeadZoneGatBypass:
             feature_cluster_similarity = {"valid": False},
             fusion    = {
                 "normalized_score": 0.8,
-                "zone_gate_dead":   True,   # FIX 3 signal
+                "feature_cluster_similarity_dead":   True,   # FIX 3 signal
                 "rr":               2.0,
                 "weak_component":   0.1,
             },
@@ -238,14 +238,14 @@ class TestDeadZoneGatBypass:
             feature_cluster_similarity = {"valid": False},
             fusion    = {
                 "normalized_score": 0.9,
-                "zone_gate_dead":   False,   # engine alive but gate invalid
+                "feature_cluster_similarity_dead":   False,   # engine alive but gate invalid
                 "rr":               2.0,
                 "weak_component":   0.1,
             },
             config    = _CFG,
         )
         assert result["decision"] == "reject"
-        assert result["reason"] == "zone_gate_invalid"
+        assert result["reason"] == "feature_cluster_similarity_invalid"
 
 
 # ═════════════════════════════════════════════════════════════════

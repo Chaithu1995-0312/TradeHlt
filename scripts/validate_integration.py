@@ -208,7 +208,7 @@ try:
         "weight_crt": 0.30, "weight_ema_momentum_kernel": 0.25,
         "weight_feature_cluster_similarity": 0.20, "weight_candle_commitment": 0.15,
         "weight_strategy_consensus": 0.10,
-        "zone_gate_dead_if_missing": False,
+        "feature_cluster_similarity_dead_if_missing": False,
         "min_engines_required": 4,
     }
     fe = FusionEngine.from_prod_config(cfg_dict) if hasattr(FusionEngine, "from_prod_config") \

@@ -188,7 +188,7 @@ def main() -> int:
     rng = np.random.default_rng(0)
     idxs = rng.choice(n_samples, size=min(200, n_samples), replace=False)
     for i in idxs:
-        out = engine.predict(features=list(X[i]), gaussian_score=0.5, gaussian_p_win=0.5, threshold=0.5)
+        out = engine.predict(features=list(X[i]), ema_momentum_kernel_score=0.5, gaussian_p_win=0.5, threshold=0.5)
         xcheck.append({
             "predict_confidence": float(out["confidence"]),
             "my_confidence": float(confidence[i]),
@@ -212,7 +212,7 @@ def main() -> int:
     for i in range(stub_n):
         out = layer.score_dict(
             depth=float(X[i, i_depth]), body=float(X[i, i_body]), disp=float(X[i, i_disp]),
-            gaussian_score=0.5, gaussian_p_win=0.5,
+            ema_momentum_kernel_score=0.5, gaussian_p_win=0.5,
             is_asia=0.0, is_london=0.0, is_newyork=0.0, hour=0, threshold=0.5,
         )
         if out.get("status") in ("bypassed_low_confidence", "drift_detected"):

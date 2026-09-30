@@ -95,7 +95,7 @@ class _DummyFusion:
             def to_dict(self):
                 return {
                     "final_score": self._score,
-                    "gaussian": 0.6,
+                    "ema_momentum_kernel": 0.6,
                     "neural": None,
                     "llm": None,
                     "llm_fired": False,

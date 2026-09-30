@@ -912,10 +912,10 @@ class LiveEngine:
             _rr_layer = _get_rr_layer()
             if _rr_layer.is_loaded:
                 # Augment trade_data with Gaussian results for fusion formula.
-                # gaussian_score = Gaussian confidence (0-1 normalized).
+                # ema_momentum_kernel_score = Gaussian confidence (0-1 normalized).
                 # gaussian_p_win = max class probability from Gaussian model.
                 _aug = dict(trade_data)
-                _aug["gaussian_score"] = confidence
+                _aug["ema_momentum_kernel_score"] = confidence
                 _aug["gaussian_p_win"] = (
                     max(probabilities) if probabilities else 0.5
                 )

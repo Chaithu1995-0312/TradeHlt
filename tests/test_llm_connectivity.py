@@ -535,7 +535,7 @@ class TestLlmInsight:
     CTX = {
         "decision": "APPROVE",
         "reason": "strong sweep",
-        "gaussian_score": "0.82",
+        "ema_momentum_kernel_score": "0.82",
         "ml_expected_rr": "1.5",
         "ml_win_prob": "0.63",
         "sweep": "0.9",
@@ -677,7 +677,7 @@ class TestFallbackInsight:
 
     def test_trade_decision_includes_decision_and_reason(self):
         ctx = {"decision": "REJECT", "reason": "low win_rate",
-               "gaussian_score": "0.4", "ml_expected_rr": "0.8", "ml_win_prob": "0.42"}
+               "ema_momentum_kernel_score": "0.4", "ml_expected_rr": "0.8", "ml_win_prob": "0.42"}
         result = lg._fallback_insight(ctx, "trade_decision")
         assert "REJECT" in result
         assert "low win_rate" in result

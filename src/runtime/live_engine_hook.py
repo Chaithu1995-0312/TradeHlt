@@ -899,7 +899,7 @@ class HookedLiveEngine(LiveEngine):
         }
 
         context = {
-            "gaussian_score": float(result.get("confidence", 0.0)),
+            "ema_momentum_kernel_score": float(result.get("confidence", 0.0)),
             "gaussian_p_win": float(
                 max(result.get("probabilities") or [0.5]) if result.get("probabilities") else 0.5
             ),

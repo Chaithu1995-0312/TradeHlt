@@ -268,7 +268,7 @@ def test_yaml_config_keys_exist_in_schema(doc: dict) -> None:
 
 # ─── feature_lineage block (OHLCV → formula → state → consumer → fusion weight) ───────────
 _LINEAGE_ROLES = {"structural", "advisory", "unused"}
-_LINEAGE_FUSION_WEIGHTS = {"crt:0.4", "gaussian:0.2", "zone:0.2_nonpivotal", "regime_routing", "inert:0"}
+_LINEAGE_FUSION_WEIGHTS = {"crt:0.4", "ema_momentum_kernel:0.2", "zone:0.2_nonpivotal", "regime_routing", "inert:0"}
 
 
 def test_feature_lineage_covers_all_canonical_features_in_order(doc: dict) -> None:

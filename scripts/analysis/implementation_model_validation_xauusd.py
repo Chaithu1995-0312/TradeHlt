@@ -1158,7 +1158,7 @@ def validate_rr_fusion(records: List[dict], reports: List[ModelReport]) -> np.nd
                 try:
                     eng.predict(
                         list(map(float, extract_feature_vector(records[0]))),
-                        gaussian_score=0.5,
+                        ema_momentum_kernel_score=0.5,
                         gaussian_p_win=0.5,
                     )
                     r.add_bug(
@@ -1180,7 +1180,7 @@ def validate_rr_fusion(records: List[dict], reports: List[ModelReport]) -> np.nd
         for i, feat in enumerate(records):
             try:
                 vec = extract_feature_vector(feat)  # 39 floats in v4 order
-                out = engine.predict(list(map(float, vec)), gaussian_score=0.5, gaussian_p_win=0.5)
+                out = engine.predict(list(map(float, vec)), ema_momentum_kernel_score=0.5, gaussian_p_win=0.5)
                 scores[i] = float(out.get("final_score", out.get("ml_score", float("nan"))))
                 confidences[i] = float(out.get("confidence", float("nan")))
                 st = str(out.get("status", ""))

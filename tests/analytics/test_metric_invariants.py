@@ -138,7 +138,7 @@ def test_sharpe_parity_with_production_portfolio_validation():
             self.pnl_rr_net = r
             self.is_winner = r > 0
             self.duration_candles = 1
-            self.gaussian_score = 0.0
+            self.ema_momentum_kernel_score = 0.0
             self.instrument = "TEST"
 
     rng = random.Random(11)

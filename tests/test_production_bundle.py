@@ -95,7 +95,7 @@ def test_contested_status_withholds_the_execution_claim(bundle):
     """Gaussian loads a selected artifact but no entry carries mu/sigma (F-060), so
     identity declares enabled_without_checkpoint while a registry+config derivation
     concludes selected_and_enabled. Unresolvable mechanically => claim withheld."""
-    member = bundle.members["gaussian"]
+    member = bundle.members["ema_momentum_kernel"]
     if member.contested:
         assert not member.executes_checkpoint
         assert any("CONTESTED" in d for d in member.divergences)

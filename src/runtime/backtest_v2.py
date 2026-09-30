@@ -3344,7 +3344,7 @@ class BacktestRunner:
             _gate_enabled = _env_enabled
 
         # F-058-class fix (2026-07-29, target-strategy-architecture.md sec13 item2): the
-        # zone_gate_invalid backtest-mode bypass was read only as
+        # feature_cluster_similarity_invalid backtest-mode bypass was read only as
         # os.getenv("BACKTEST_BYPASS_ZONE_INVALID", "1"), declared in no config — the same
         # undeclared-env-truth class as engine_gate_enabled above. CONFIG is now the
         # authority; the env var stays an explicit override that logs at WARNING on
@@ -3913,14 +3913,14 @@ class BacktestRunner:
                         _decision = (_er_result or {}).get("decision") or (_er_result or {}).get("status", "")
                         _reason = (_er_result or {}).get("reason", "engine_runner_reject")
                         _stage  = (_er_result or {}).get("reject_stage", "?")
-                        # Backtest-mode bypass: zone_gate_invalid is a production-only
+                        # Backtest-mode bypass: feature_cluster_similarity_invalid is a production-only
                         # rule that requires a populated zone_registry.json. With ≤5
                         # zones loaded (treated as "no zones") we can't fairly enforce
                         # it in backtest. Live behavior unchanged. Config-declared —
                         # see _bypass_zone_enabled above (F-058-class fix).
                         _bypass_zone = (
                             _bypass_zone_enabled
-                            and "zone_gate_invalid" in str(_reason)
+                            and "feature_cluster_similarity_invalid" in str(_reason)
                         )
                         if str(_decision).upper() in ("REJECT", "REJECTED", "HOLD") and not _bypass_zone:
                             _engine_vetoed = True

@@ -100,8 +100,8 @@ def collect(
         "feature_cluster_similarity": _engine_value(engine_outputs.get("feature_cluster_similarity"), _zonegate_value_keys()),
         "llm": _engine_value(engine_outputs.get("llm"), ("score",)),
     }
-    gaussian_score = _to_float(
-        context.get("gaussian_score", context.get("score", engines_flat.get("ema_momentum_kernel", 0.0))),
+    ema_momentum_kernel_score = _to_float(
+        context.get("ema_momentum_kernel_score", context.get("score", engines_flat.get("ema_momentum_kernel", 0.0))),
         0.0,
     )
 
@@ -115,7 +115,7 @@ def collect(
             "displacement": _to_float(features.get("displacement", 0.0), 0.0),
         },
         "context": {
-            "gaussian_score": gaussian_score,
+            "ema_momentum_kernel_score": ema_momentum_kernel_score,
             "p_win": p_win,
             "candles_since_sweep": _to_int(
                 context.get(
