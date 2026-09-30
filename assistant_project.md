@@ -4590,3 +4590,13 @@ Belief Update / ROI / Goal: Goal: a pure label rename Claude can join across old
 Open Questions: whether a literal substring grep for gaussian can be zero inside the five in-use configs. It cannot: notes and score_weights["gaussian"] were restored on purpose, and gaussian_weight is the evaluate blend.
 Next Step: Claude audit (scope, no shims, parity_v5 via the key map, MIAR intent). User go/merge before D0b.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-30
+Topic: MC-D0a acceptance after 173577d — audit line withheld
+Decision/Output: Third commit is 173577d620c73851704889fbc458cac69ca24717 on lane/mc-d0a (parents be7d2c1, f125339). A2 params hash 7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613 matches stored. A3 named pytest 4 failed / 450 passed; the four are test_engine_runner_dual_gate AttributeError on run_feature_cluster_similarity. At 50cef11 those tests patch run_zone_gate_engine, which engine_runner.py also lacks. A4 floor 18 failed / 582 passed / 1 skipped in 652.87s, same eighteen nodeids. A1' git grep exit 0, 256 hits, almost all the word gaussian. The step-3 tokens zone_gate_invalid, zone_gate_dead, HeuristicGaussianEngine, heuristic_gaussian_engine, zone_gate_engine, weight_zone_gate, weight_gaussian, weight_rr, gaussian_impl, rr_pattern_miner are zero hits on the named trees. Audit line withheld.
+Belief Update / ROI / Goal: Goal: a label rename an auditor can join. Belief: the fusion slot labels moved, and a zero-hit grep for the word gaussian would require renaming the blend field, the score_weights key, the schema name, registry ids, and the story signature. Knowledge ROI: high — the remaining hits are a different object from the slot rename. Action: hand Claude the key map; do not re-sweep those preserved tokens.
+Open Questions: whether the auditor accepts the preserved gaussian tokens as out of the rename.
+Next Step: Claude audit using docs/implementation_plan/mc-d0a-key-map.json. User go/merge before D0b.
+---
