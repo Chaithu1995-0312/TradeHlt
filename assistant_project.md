@@ -4687,3 +4687,13 @@ Belief Update / ROI / Goal: Goal: strict config without behaviour change. Belief
 Open Questions: governance floor result vs baseline 18 (run pending at log time).
 Next Step: 84.4 L-D runtime.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-30
+Topic: Consolidated grokbotchanges (bot work + 84.4 + mc-d0a/A3b) and Run Trace with entry/SL/TP
+Decision/Output: bc3d408 bot work committed as-is; 466be7d 84.4 merged (b1544bc); lane/mc-d0a merged (330fc1d, no conflicts; rr_pattern_miner->rr_trained rename carried 84.1 edits); d755df0 snapshot rows + Run Trace page gain entry/SL/TP1/TP2 and bar_structure_snapshot enabled (per-run, features) on active v2_htfcrt_2026_08 (params hash unchanged). Last-month XAUUSD (2026-07-06..08-07) run_20260930_123522: 0 trades, 2 retests rejected off_session, identical to before merges.
+Belief Update / ROI / Goal: Goal: see the system end to end. Belief: A3b + D0a + 84.4 do not change this window's outcome; the session filter is the binding gate here. Knowledge ROI: medium. Action: watch a window with trades (full corpus) to see entry/SL/TP.
+Open Questions: ~20 callers still use pip_size 0.0001 for XAUUSD (kept, visible); auto-tuners were already broken.
+Next Step: user choice: full-corpus run in Run Trace, or 84.3 residue / 84.7.
+---
