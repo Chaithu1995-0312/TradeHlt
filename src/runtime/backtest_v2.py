@@ -2740,7 +2740,7 @@ class BacktestRunner:
     # the opposite of the fail-fast discipline that governs decision-bearing config (CLAUDE.md
     # 6.5). Observation is not decision, so the correct failure mode is different.
 
-    def _build_bar_structure_emitter(self, run_id: str):
+    def _build_bar_structure_emitter(self, run_id: str, total_candles: Optional[int] = None):
         """Construct the per-bar snapshot emitter, or None when it is not enabled.
 
         Returns None on ANY problem (section absent, disabled, or construction error) after
@@ -2759,7 +2759,23 @@ class BacktestRunner:
                 return None
 
             from config_layer.production_config import get_prod_section
-            from features.feature_schema import SCHEMA_HASH, SCHEMA_VERSION
+            from features.feature_schema import CANONICAL_FEATURES, SCHEMA_HASH, SCHEMA_VERSION
+
+            # Live Run Trace: the manifest carries the resolved config + corpus row count so the
+            # UI has schema and config before the first bar. Only built when per_run_dir is on.
+            _manifest_extra = None
+            if cfg.per_run_dir:
+                try:
+                    from config_layer.production_config import get_full_config_dict
+                    _resolved = get_full_config_dict()
+                except Exception:  # noqa: BLE001
+                    _resolved = None
+                _manifest_extra = {
+                    "config": _resolved,
+                    # every bar the loop will walk (warmup included) -- the progress denominator
+                    "corpus_rows": (int(total_candles) if total_candles else None),
+                    "feature_rows": (len(self.feature_ts_to_idx) if self.feature_ts_to_idx else None),
+                }
 
             fp = get_prod_section("feature_pipeline")
             try:
@@ -2789,6 +2805,8 @@ class BacktestRunner:
                 htf_thresholds=parent.get("htf_state"),
                 feature_schema_version=SCHEMA_VERSION,
                 feature_schema_hash=SCHEMA_HASH,
+                feature_names=(tuple(CANONICAL_FEATURES) if cfg.include_features else None),
+                manifest_extra=_manifest_extra,
             )
             self.log.info(
                 "BarStructureSnapshot ENABLED (observation only) | schema=%s | -> %s",
@@ -3227,7 +3245,7 @@ class BacktestRunner:
         # default on v3), so on every existing config this is a `None` check per bar and
         # nothing else. Construction failure NEVER breaks a backtest: this surface is an
         # observation sidecar and must not be able to take the spine down with it.
-        _bar_structure = self._build_bar_structure_emitter(writer.run_id)
+        _bar_structure = self._build_bar_structure_emitter(writer.run_id, total_candles=total_candles)
 
         # ── CH-v4-dual-construction-crt-trace-2026-08-30: CRTConstructionTrace ──
         # OBSERVATION ONLY, same discipline as `_bar_structure` immediately above. `None`
@@ -3578,9 +3596,16 @@ class BacktestRunner:
             # Placed AFTER `process_candle` has returned and after `curr_state` is read,
             # so the decision for this bar is already final and unobservable from here.
             # `emit` returns None and nothing below consumes it — the byte-identical
-            # ledger test (tests/test_bar_structure_decision_neutrality.py) is the proof.
+            # ledger comparison (scripts/analysis/v3_config_parity.py arm B) is the proof.
             if _bar_structure is not None:
                 _bos, _tb = self._bar_structure_choch_inputs(candle)
+                # Live Run Trace: read-only lookup of this bar's precomputed canonical vector, the
+                # same timestamp->row map the trade-open path uses. None when absent (never 0-filled).
+                _bs_features = None
+                if _bar_structure.cfg.include_features and self.feature_vectors is not None:
+                    _bs_idx = self.feature_ts_to_idx.get(candle.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
+                    if _bs_idx is not None:
+                        _bs_features = self.feature_vectors[_bs_idx]
                 _bar_structure.emit(
                     candle=candle,
                     bar_index=candle_idx - 1,
@@ -3592,6 +3617,7 @@ class BacktestRunner:
                     parent_feed=parent_feed,
                     break_of_structure=_bos,
                     trend_bias=_tb,
+                    features=_bs_features,
                 )
 
             # ── CH-identity-chain-closure-v1: bar-clock bridge ────────────────
